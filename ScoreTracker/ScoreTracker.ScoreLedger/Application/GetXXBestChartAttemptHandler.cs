@@ -26,7 +26,7 @@ internal sealed class GetXXBestChartAttemptHandler : IRequestHandler<GetXXBestCh
     public async Task<BestXXChartAttempt> Handle(GetXXBestChartAttemptQuery request,
         CancellationToken cancellationToken)
     {
-        var chart = await _charts.GetChart(MixEnum.XX, request.ChartId, cancellationToken);
+        var chart = await _charts.GetChart(request.Mix, request.ChartId, cancellationToken);
         var bestAttempt = await _chartAttempts.GetBestAttempt(_user.User.Id, chart, cancellationToken);
         return new BestXXChartAttempt(chart, bestAttempt);
     }

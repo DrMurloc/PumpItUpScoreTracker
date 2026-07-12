@@ -31,15 +31,19 @@ internal sealed class GetCrossMixPassesHandler : IRequestHandler<GetCrossMixPass
             return new HashSet<Guid>();
 
         var passes = new HashSet<Guid>();
-        // Phoenix-family mixes live in the phoenix records store; mixes without rows
-        // (including future legacy-mix enum values) just contribute nothing.
-        foreach (var mix in Enum.GetValues<MixEnum>().Where(m => m != request.ExcludingMix && m != MixEnum.XX))
+        // Phoenix-family mixes live in the phoenix records store; legacy mixes (XX and
+        // older) live in the BestAttempt store and are skipped here.
+        foreach (var mix in Enum.GetValues<MixEnum>()
+                     .Where(m => m != request.ExcludingMix && !m.UsesLegacyScoring()))
             passes.UnionWith((await _records.GetRecordedScores(mix, userId, cancellationToken))
                 .Where(r => !r.IsBroken)
                 .Select(r => r.ChartId));
 
+        // Legacy side: XX only for now — the per-mix attempt read is a whole-catalog
+        // join, so folding all 28 legacy mixes into this union should wait until legacy
+        // scores exist in volume (and then likely as a single grouped query).
         if (request.ExcludingMix != MixEnum.XX)
-            passes.UnionWith((await _xxAttempts.GetBestAttempts(userId, cancellationToken))
+            passes.UnionWith((await _xxAttempts.GetBestAttempts(userId, MixEnum.XX, cancellationToken))
                 .Where(a => !(a.BestAttempt?.IsBroken ?? true))
                 .Select(a => a.Chart.Id));
 

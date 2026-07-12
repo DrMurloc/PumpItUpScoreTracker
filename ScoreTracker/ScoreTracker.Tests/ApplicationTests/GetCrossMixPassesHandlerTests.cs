@@ -37,7 +37,7 @@ public sealed class GetCrossMixPassesHandlerTests
                 new RecordedPhoenixScore(brokenP2, PhoenixScore.From(700000), null, true, DateTimeOffset.MinValue)
             });
         var xxAttempts = new Mock<IXXChartAttemptRepository>();
-        xxAttempts.Setup(x => x.GetBestAttempts(UserId, It.IsAny<CancellationToken>()))
+        xxAttempts.Setup(x => x.GetBestAttempts(UserId, MixEnum.XX, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new BestXXChartAttempt(xxChart,

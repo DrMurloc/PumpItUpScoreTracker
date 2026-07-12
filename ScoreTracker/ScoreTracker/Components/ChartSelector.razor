@@ -83,16 +83,13 @@
 
     private async Task UpdateChartList()
     {
-        if (Charts == null)
-        {
-            
-            var charts = await Mediator.Send(new GetChartsQuery(Mix));
-            _chartNames = charts.ToDictionary(c => c.Song.Name + " " + c.DifficultyString);
-        }
-        else
-        {
-            _chartNames = Charts.ToDictionary(c => c.Song.Name + " " + c.DifficultyString);
-        }
+        // DifficultyDisplay, not DifficultyString: pre-Exceed slots make "S6" ambiguous
+        // (Hard 6 vs Crazy 6). GroupBy guards the shell against any residual duplicate
+        // display names — a data quirk must not take down the circuit.
+        var source = Charts ?? await Mediator.Send(new GetChartsQuery(Mix));
+        _chartNames = source
+            .GroupBy(c => c.Song.Name + " " + c.DifficultyDisplay, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
     }
     protected override void OnParametersSet()
     {

@@ -2985,4 +2985,43 @@
   <data name="There was an error uploading the snapshot" xml:space="preserve">
     <value>スナップショットのアップロード中にエラーが発生しました</value>
   </data>
+  <data name="More Mixes" xml:space="preserve">
+    <value>その他のバージョン</value>
+  </data>
+  <data name="scale" xml:space="preserve">
+    <value>基準</value>
+  </data>
+  <data name="not comparable to modern levels" xml:space="preserve">
+    <value>現行レベルとは比較できません</value>
+  </data>
+  <data name="Debuted in: X" xml:space="preserve">
+    <value>初出バージョン: {0}</value>
+  </data>
+  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
+    <value>このページはまだ旧バージョンに対応していません</value>
+  </data>
+  <data name="Prime" xml:space="preserve">
+    <value>Prime</value>
+  </data>
+  <data name="Fiesta" xml:space="preserve">
+    <value>Fiesta</value>
+  </data>
+  <data name="NX" xml:space="preserve">
+    <value>NX</value>
+  </data>
+  <data name="Exceed / Zero" xml:space="preserve">
+    <value>Exceed / Zero</value>
+  </data>
+  <data name="Premiere / Prex" xml:space="preserve">
+    <value>Premiere / Prex</value>
+  </data>
+  <data name="Classic" xml:space="preserve">
+    <value>クラシック</value>
+  </data>
+  <data name="American" xml:space="preserve">
+    <value>アメリカ版</value>
+  </data>
+  <data name="Community Rating" xml:space="preserve">
+    <value>コミュニティ評価</value>
+  </data>
 </root>

@@ -7,6 +7,7 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.Theming
 @using ScoreTracker.Application.Events
@@ -77,20 +78,28 @@
                         <button class="top-nav-btn">@L["Play"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
                     </ActivatorContent>
                     <ChildContent>
-                        @if (CurrentUser.IsLoggedIn)
+                        @if (CurrentUser.IsLoggedIn && !_gatedMix)
                         {
                             <MudMenuItem Href="/" Icon="@Icons.Material.Filled.Home">@L["What Should I Play"]</MudMenuItem>
                         }
                         <MudMenuItem Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts"]</MudMenuItem>
-                        @if (CurrentUser.IsLoggedIn)
+                        @if (CurrentUser.IsLoggedIn && !_gatedMix)
                         {
                             <MudMenuItem Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudMenuItem>
+                        }
+                        @if (CurrentUser.IsLoggedIn && _gatedMix)
+                        {
+                            <MudMenuItem Href="/UploadXXScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudMenuItem>
                         }
                     </ChildContent>
                 </MudMenu>
 
                 <a href="/TierLists" class="top-nav-btn">@L["Tier Lists"]</a>
 
+                @* Nav follows LegacyMixGate: destinations a pre-XX mix can't reach yet
+                   simply don't show (docs/design/legacy-mixes.md). *@
+                @if (!_gatedMix)
+                {
                 <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
                     <ActivatorContent>
                         <button class="top-nav-btn">@L["My Progress"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
@@ -113,7 +122,10 @@
                         <MudMenuItem Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</MudMenuItem>
                     </ChildContent>
                 </MudMenu>
+                }
 
+                @if (!_gatedMix)
+                {
                 <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
                     <ActivatorContent>
                         <button class="top-nav-btn">@L["Compete"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
@@ -155,13 +167,17 @@
                         </div>
                     </ChildContent>
                 </MudMenu>
+                }
 
                 <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
                     <ActivatorContent>
                         <button class="top-nav-btn">@L["Community"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
                     </ActivatorContent>
                     <ChildContent>
-                        <MudMenuItem Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</MudMenuItem>
+                        @if (!_gatedMix)
+                        {
+                            <MudMenuItem Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</MudMenuItem>
+                        }
                         <MudMenuItem Href="https://discord.gg/MEYvr3bFte" Target="_blank" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</MudMenuItem>
                     </ChildContent>
                 </MudMenu>
@@ -171,12 +187,15 @@
                         <button class="top-nav-btn">@L["Tools"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
                     </ActivatorContent>
                     <ChildContent>
-                        <MudMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</MudMenuItem>
-                        <MudMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</MudMenuItem>
-                        <MudMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.QuestionMark">@L["Chart Randomizer"]</MudMenuItem>
-                        <MudMenuItem Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</MudMenuItem>
-                        <MudMenuItem Href="/ChartCompare" Icon="@Icons.Material.Filled.Compare">@L["Chart Compare"]</MudMenuItem>
-                        <MudMenuItem Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudMenuItem>
+                        @if (!_gatedMix)
+                        {
+                            <MudMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</MudMenuItem>
+                            <MudMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</MudMenuItem>
+                            <MudMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.QuestionMark">@L["Chart Randomizer"]</MudMenuItem>
+                            <MudMenuItem Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</MudMenuItem>
+                            <MudMenuItem Href="/ChartCompare" Icon="@Icons.Material.Filled.Compare">@L["Chart Compare"]</MudMenuItem>
+                            <MudMenuItem Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudMenuItem>
+                        }
                         <MudMenuItem Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudMenuItem>
                     </ChildContent>
                 </MudMenu>
@@ -197,10 +216,7 @@
                 <button class="mix-pill mr-3" title="@L["Mix"]"><i class="mix-dot"></i>@_currentMix.GetName()</button>
             </ActivatorContent>
             <ChildContent>
-                @foreach (var value in SelectableMixes)
-                {
-                    <MudMenuItem OnClick="() => SetMix(value)">@value.GetName()</MudMenuItem>
-                }
+                <MixSelector OnSelected="SetMix"></MixSelector>
             </ChildContent>
         </MudMenu>
 
@@ -237,6 +253,14 @@
     <MudHidden Breakpoint="Breakpoint.MdAndUp">
         <MudDrawer @bind-Open="_showMore" Anchor="Anchor.Bottom" Variant="@DrawerVariant.Temporary" Height="75vh" Class="more-sheet" Elevation="4">
         <MudNavMenu Class="dense-nav pb-4 pt-2">
+            @* Nav follows LegacyMixGate: destinations a pre-XX mix can't reach yet
+               simply don't show (docs/design/legacy-mixes.md). *@
+            @if (_gatedMix && CurrentUser.IsLoggedIn)
+            {
+                <MudNavLink Href="/UploadXXScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudNavLink>
+            }
+            @if (!_gatedMix)
+            {
             <MudText Typo="Typo.overline" Class="ml-4 mt-2 d-block nav-section">@L["My Progress"]</MudText>
             @if (CurrentUser.IsLoggedIn)
             {
@@ -286,9 +310,12 @@
 
             <MudText Typo="Typo.overline" Class="ml-4 mt-3 d-block nav-section">@L["Community"]</MudText>
             <MudNavLink Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</MudNavLink>
+            }
             <MudNavLink Href="https://discord.gg/MEYvr3bFte" Target="_blank" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</MudNavLink>
 
             <MudDivider Class="my-2"></MudDivider>
+            @if (!_gatedMix)
+            {
             <MudNavGroup Title=@L["Tools"] Icon="@Icons.Material.Filled.Build" Expanded="false">
                 <MudNavLink Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</MudNavLink>
                 <MudNavLink Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</MudNavLink>
@@ -297,6 +324,7 @@
                 <MudNavLink Href="/ChartCompare" Icon="@Icons.Material.Filled.Compare">@L["Chart Compare"]</MudNavLink>
                 <MudNavLink Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudNavLink>
             </MudNavGroup>
+            }
             <MudNavLink Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudNavLink>
         </MudNavMenu>
         </MudDrawer>
@@ -305,26 +333,52 @@
     @* Thumb-reach primary nav at phone/tablet widths; desktop uses the top nav. *@
     <MudHidden Breakpoint="Breakpoint.MdAndUp">
         <nav class="bottom-nav">
-            @if (CurrentUser.IsLoggedIn)
+            @if (CurrentUser.IsLoggedIn && !_gatedMix)
             {
                 <a href="/" class="@BnClass("/")"><MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small"></MudIcon><span>@L["Play"]</span></a>
             }
             <a href="/TierLists" class="@BnClass("/TierLists")"><MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small"></MudIcon><span>@L["Tiers"]</span></a>
             <a href="/Charts" class="@BnClass("/Charts")"><MudIcon Icon="@Icons.Material.Filled.List" Size="Size.Small"></MudIcon><span>@L["Charts"]</span></a>
-            <a href="/WeeklyCharts" class="@BnClass("/WeeklyCharts")"><MudIcon Icon="@Icons.Material.Filled.ViewWeek" Size="Size.Small"></MudIcon><span>@L["Weekly"]</span></a>
+            @if (!_gatedMix)
+            {
+                <a href="/WeeklyCharts" class="@BnClass("/WeeklyCharts")"><MudIcon Icon="@Icons.Material.Filled.ViewWeek" Size="Size.Small"></MudIcon><span>@L["Weekly"]</span></a>
+            }
             @if (!CurrentUser.IsLoggedIn)
             {
                 <a href="/Login" class="@BnClass("/Login")"><MudIcon Icon="@Icons.Material.Filled.Login" Size="Size.Small"></MudIcon><span>@L["Login"]</span></a>
             }
             @* Extra slot for squarish viewports (fold phones, landscape) — hidden on tall phones. *@
-            <a href="/Communities" class="@($"{BnClass("/Communities")} bn-wide")"><MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small"></MudIcon><span>@L["Communities"]</span></a>
+            @if (!_gatedMix)
+            {
+                <a href="/Communities" class="@($"{BnClass("/Communities")} bn-wide")"><MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small"></MudIcon><span>@L["Communities"]</span></a>
+            }
             <button type="button" class="bn" @onclick="() => _showMore = true"><MudIcon Icon="@Icons.Material.Filled.MoreHoriz" Size="Size.Small"></MudIcon><span>@L["More"]</span></button>
         </nav>
     </MudHidden>
     <MudMainContent>
         <MudContainer>
-            @Body
-            
+            @if (!_mixLoaded)
+            {
+                @* Body held until the selected mix is known: rendering it against the
+                   default let gated pages start their (crashing) loads before the gate
+                   could evaluate — the WhatShouldIPlay race from field-test round 2. *@
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary"></MudProgressLinear>
+            }
+            else if (LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath))
+            {
+                @* One render frame at most — RedirectIfGated is already navigating to
+                   /TierLists. The panel is the backstop, not the destination. *@
+                <div class="tier-list-cta">
+                    <MudIcon Icon="@Icons.Material.Filled.Construction"></MudIcon>
+                    <MudText Typo="Typo.h5">@L["This page isn't ready for older mixes yet"]</MudText>
+                    <MudButton Href="/Charts" Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.QueueMusic">@L["Charts"]</MudButton>
+                </div>
+            }
+            else
+            {
+                @Body
+            }
+
             <MudDialog @bind-Visible="_showBite">
                 <DialogContent>
                     <MudImage Src="https://piuimages.arroweclip.se/TheBigOne.png" Height="400" ObjectFit="ObjectFit.ScaleDown" Style="display:block;margin-left:auto;margin-right:auto;"></MudImage>
@@ -387,7 +441,21 @@
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         _showMore = false;
+        RedirectIfGated();
         InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    ///     Gated routes soft-redirect to the tier lists page (the one destination every
+    ///     mix can render) instead of loading — pages that predate legacy mixes throw
+    ///     on them, so they must never begin initializing (docs/design/legacy-mixes.md).
+    /// </summary>
+    private bool RedirectIfGated()
+    {
+        if (!_mixLoaded) return false;
+        if (!LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath)) return false;
+        NavManager.NavigateTo("/TierLists");
+        return true;
     }
 
     public void Dispose()
@@ -401,13 +469,14 @@
     private const string RecapPopupKey = "MainLayout__PhoenixRecapPopupShown";
     public static readonly DateTimeOffset _cutoff = new DateTimeOffset(2024, 10, 15, 0, 0, 0, TimeSpan.FromHours(-5));
     private MixEnum _currentMix = MixEnum.Phoenix;
+    // The body must not render until the real selection is loaded (see the gate above).
+    private bool _mixLoaded;
+    // Pre-XX mixes: nav only offers destinations LegacyMixGate lets through.
+    private bool _gatedMix => LegacyMixGate.IsGatedMix(_currentMix);
     // Theme resolution: /Account override → current mix. Defaults cover the first render;
     // the real values land in OnInitializedAsync before content renders.
     private MixEnum _themeMix = MixEnum.Phoenix;
     private MudTheme _theme = MixThemes.ThemeFor(MixEnum.Phoenix);
-    // Launch order: deploy this build, then run the ChartMix seed script immediately —
-    // Phoenix 2 is briefly selectable-but-empty in between (docs/design/phoenix2-implementation.md).
-    private static readonly MixEnum[] SelectableMixes = MixThemes.ThemedMixes;
     private string _profileImage = string.Empty;
     private string _gamerTag = string.Empty;
     private IEnumerable<TournamentRecord> _highlightedEvents = Array.Empty<TournamentRecord>();
@@ -422,6 +491,12 @@
         _userId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
         // Mix first: the displayed rating follows the viewer's current mix.
         _currentMix = await UiSettings.GetSelectedMix();
+        // Only now can the gate evaluate — the body is held until this point, because
+        // rendering it with the default mix let gated pages begin their crashing loads.
+        // No early return: the layout persists across the soft redirect, so its own
+        // init (theme, events, live updates) must still complete.
+        _mixLoaded = true;
+        RedirectIfGated();
         _themeMix = MixThemes.ResolveThemeMix(
             await UiSettings.GetSetting(MixThemes.OverrideSettingKey), _currentMix);
         _theme = MixThemes.ThemeFor(_themeMix);

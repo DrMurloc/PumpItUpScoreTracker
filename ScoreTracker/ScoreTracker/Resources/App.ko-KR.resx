@@ -2865,4 +2865,43 @@
   <data name="There was an error uploading the snapshot" xml:space="preserve">
     <value>스냅샷 업로드 중 오류가 발생했습니다</value>
   </data>
+  <data name="More Mixes" xml:space="preserve">
+    <value>시리즈 더 보기</value>
+  </data>
+  <data name="scale" xml:space="preserve">
+    <value>기준</value>
+  </data>
+  <data name="not comparable to modern levels" xml:space="preserve">
+    <value>현행 레벨과 비교할 수 없습니다</value>
+  </data>
+  <data name="Debuted in: X" xml:space="preserve">
+    <value>첫 등장 시리즈: {0}</value>
+  </data>
+  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
+    <value>이 페이지는 아직 이전 시리즈를 지원하지 않습니다</value>
+  </data>
+  <data name="Prime" xml:space="preserve">
+    <value>Prime</value>
+  </data>
+  <data name="Fiesta" xml:space="preserve">
+    <value>Fiesta</value>
+  </data>
+  <data name="NX" xml:space="preserve">
+    <value>NX</value>
+  </data>
+  <data name="Exceed / Zero" xml:space="preserve">
+    <value>Exceed / Zero</value>
+  </data>
+  <data name="Premiere / Prex" xml:space="preserve">
+    <value>Premiere / Prex</value>
+  </data>
+  <data name="Classic" xml:space="preserve">
+    <value>클래식</value>
+  </data>
+  <data name="American" xml:space="preserve">
+    <value>미국판</value>
+  </data>
+  <data name="Community Rating" xml:space="preserve">
+    <value>커뮤니티 평가</value>
+  </data>
 </root>

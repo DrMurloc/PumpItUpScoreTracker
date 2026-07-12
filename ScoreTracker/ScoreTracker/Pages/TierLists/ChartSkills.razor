@@ -33,7 +33,7 @@
     <meta name="description" content="PIU Charts organized by difficulty with optional personalization based on individual skill."/>
     <meta property="og:title" content="PIU Tier List">
     <meta property="og:description" content="PIU Charts organized by difficulty with optional personalization based on individual skill." >
-    @if (_currentMix != MixEnum.XX)
+    @if (!_currentMix.UsesLegacyScoring())
     {
         @* C9: the unfurl of a folder link IS the community tier list — the image is
            regenerated daily by the refresh-folder-share-cards job. *@
@@ -41,10 +41,11 @@
         <meta property="og:image" content="@($"https://piuimages.arroweclip.se/tier-lists/{_currentMix}/{_chartType.GetShortHand().ToLower()}{_level}.png")">
     }
 </HeadContent>
-@if (_currentMix == MixEnum.XX)
+@if (_currentMix.UsesLegacyScoring() && !_hasCommunityData)
 {
-    @* Round-5 decision: XX and older mixes get a whole-page coming-soon state — the old
-       silent Phoenix-data masquerade (ListMix) is retired for this page. *@
+    @* Legacy mixes render the Community Rating lens once vote data exists (S4 backfill
+       seeds it; docs/design/legacy-mixes.md). Until then: the round-5 coming-soon state
+       — the old silent Phoenix-data masquerade (ListMix) stays retired. *@
     <div class="tier-list-cta">
         <MudIcon Icon="@Icons.Material.Filled.Construction"></MudIcon>
         <MudText Typo="Typo.h5">@L["Tier lists for XX and older coming soon"]</MudText>
@@ -55,6 +56,16 @@ else
     @* Round 9: the lens controls render in the desktop content bar AND the compact
        Advanced drawer — one fragment so they can't drift. *@
     RenderFragment lensControls = @<text>
+        @if (IsLegacy)
+        {
+            @* Votes are the only tier data legacy mixes have — one fixed lens,
+               same vocabulary and colors as the Phoenix lenses. *@
+            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="true" Value="_tierListType">
+                <MudSelectItem T="string" Value="@("Community")">@L["Community Rating"]</MudSelectItem>
+            </MudSelect>
+        }
+        else
+        {
         <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
             <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
             <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
@@ -65,6 +76,7 @@ else
             }
             <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
         </MudSelect>
+        }
         @if (IsMyProgress)
         {
             <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Grouped by"]" Value="_groupBy" ValueChanged="ChangeGrouping">
@@ -178,14 +190,19 @@ else
 
         <div class="tier-progress-strip tier-desktop-only">
             @folderStatsCore
-            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
-                       StartIcon="@(_titlesCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
-                       OnClick="ToggleTitles" aria-expanded="@(_titlesCollapsed ? "false" : "true")">@L["Folder Levels"]</MudButton>
-            @if (!_titlesCollapsed)
+            @* Folder Levels = Phoenix title-progress; legacy mixes have no title data
+               (owner: legacy title levels are a future-session problem). *@
+            @if (!IsLegacy)
             {
-                <MudGrid>
-                    <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_chartType == ChartType.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
-                </MudGrid>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
+                           StartIcon="@(_titlesCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
+                           OnClick="ToggleTitles" aria-expanded="@(_titlesCollapsed ? "false" : "true")">@L["Folder Levels"]</MudButton>
+                @if (!_titlesCollapsed)
+                {
+                    <MudGrid>
+                        <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_chartType == ChartType.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
+                    </MudGrid>
+                }
             }
         </div>
         @* 4 — the border language, printed (rule 8). *@
@@ -202,10 +219,13 @@ else
                 </div>
                 @folderStatsCore
                 <BorderLegend></BorderLegend>
-                <MudText Typo="Typo.overline">@L["Folder Levels"]</MudText>
-                <MudGrid>
-                    <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_chartType == ChartType.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
-                </MudGrid>
+                @if (!IsLegacy)
+                {
+                    <MudText Typo="Typo.overline">@L["Folder Levels"]</MudText>
+                    <MudGrid>
+                        <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_chartType == ChartType.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
+                    </MudGrid>
+                }
             </div>
         </MudDrawer>
     }
@@ -1199,6 +1219,7 @@ else
         "Pass" => L["Pass Difficulty"],
         "Score" => L["Score Difficulty"],
         "Popularity" => L["Popularity"],
+        "Community" => L["Community Rating"],
         _ => lens
     };
 
@@ -1235,9 +1256,12 @@ else
                 ? L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name].ToString()
                 : L["Community"].ToString();
             var linkUrl = $"https://piuscores.arroweclip.se/TierLists/{_chartType}/{_level}";
+            // The mix rides the card itself: with 31 selectable mixes, a shared
+            // "Singles 18" screenshot is meaningless without it. GetName, not
+            // ToString — "The Perfect Collection", never "PerfectCollection".
             var card = new TierListShareCard(
                 title,
-                $"{LensDisplayName(_tierListType)} · {_currentMix} · {_now:yyyy-MM-dd}",
+                $"{LensDisplayName(_tierListType)} · {_currentMix.GetName()} · {_now:yyyy-MM-dd}",
                 stamp,
                 palette.Primary,
                 palette.Background,
@@ -1253,7 +1277,7 @@ else
             using var streamRef = new DotNetStreamReference(stream);
             var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
             await module.InvokeVoidAsync("downloadFileFromStream",
-                $"TierList_{_chartType}{_level}_{_now:yyyy-MM-dd}.png", streamRef);
+                $"TierList_{_currentMix}_{_chartType}{_level}_{_now:yyyy-MM-dd}.png", streamRef);
         }
         finally
         {
@@ -1324,6 +1348,10 @@ else
     private int _level = 18;
     private IDictionary<Guid, ScoreRankingRecord> _scoreRankings = new Dictionary<Guid, ScoreRankingRecord>();
     private string _tierListType = "Pass";
+    // Legacy mixes render the Community Rating lens only (docs/design/legacy-mixes.md).
+    private bool IsLegacy => _currentMix.UsesLegacyScoring();
+    private SongTierListEntry[] _communityEntries = Array.Empty<SongTierListEntry>();
+    private bool _hasCommunityData = true; // true until a legacy init proves otherwise — Phoenix mixes never gate
     private string? _songFilter;
     private int _competitivePlayerCount = 0;
     private FolderCohortSummaryRecord? _cohortSummary;
@@ -1477,6 +1505,20 @@ else
         _reloadCts?.Dispose();
     }
 
+    private void ComputeFolderFilterRanges(Chart[] charts)
+    {
+        _lowestBpm = charts.Any(c => c.Song.Bpm != null) ? charts.Where(c => c.Song.Bpm != null).Min(c => c.Song.Bpm!.Value.Min) : 0;
+        _settings.MinBpm = null;
+        _highestBpm = charts.Any(c => c.Song.Bpm != null) ? charts.Where(c => c.Song.Bpm != null).Max(c => c.Song.Bpm!.Value.Max) : 0;
+        _settings.MaxBpm = null;
+        _lowestNoteCount = charts.Any(c => c.NoteCount != null) ? charts.Where(c => c.NoteCount != null).Min(c => c.NoteCount!.Value) : 0;
+        _settings.MinNoteCount = null;
+        _highestNoteCount = charts.Any(c => c.NoteCount != null) ? charts.Where(c => c.NoteCount != null).Max(c => c.NoteCount!.Value) : 0;
+        _settings.MaxNoteCount = null;
+        _availableStepArtists = charts.Select(c => c.StepArtist ?? "Unknown").Distinct().OrderBy(s => s).ToArray();
+        _availableSongArtists = charts.Select(c => c.Song.Artist).Distinct().OrderBy(s => s).ToArray();
+    }
+
     private async Task LoadFolder(CancellationToken cancellationToken)
     {
         _isLoading = true;
@@ -1484,9 +1526,14 @@ else
 
         await UiSettings.SetSetting("TierLists__Level", _level.ToString(), cancellationToken);
         await UiSettings.SetSetting("TierLists__ChartType", _chartType.ToString(), cancellationToken);
-        await UiSettings.SetSetting("TierLists__ListType", _tierListType, cancellationToken);
-        await UiSettings.SetSetting("TierLists__UsePersonalized", _usePersonalizedData.ToString(), cancellationToken);
-        await UiSettings.SetSetting("TierLists__GroupBy", _groupBy, cancellationToken);
+        if (!IsLegacy)
+        {
+            // "Community" is forced for legacy mixes, never a saved preference — a later
+            // Phoenix session should restore whatever lens the player actually chose.
+            await UiSettings.SetSetting("TierLists__ListType", _tierListType, cancellationToken);
+            await UiSettings.SetSetting("TierLists__UsePersonalized", _usePersonalizedData.ToString(), cancellationToken);
+            await UiSettings.SetSetting("TierLists__GroupBy", _groupBy, cancellationToken);
+        }
 
         _charts = _allCharts.Values
             .Where(c => c.Level == _level && c.Type == _chartType)
@@ -1495,6 +1542,20 @@ else
         // Dominance-ordered skills + segment coverage for the card chips and the
         // table's Skills column; empty until the first piucenter crawl banks metrics.
         _skillChips = await Mediator.Send(new GetChartSkillChipsQuery(_charts.Keys.ToArray()), cancellationToken);
+
+        if (IsLegacy)
+        {
+            // Community lens only: entries were fetched whole-mix at init; the folder
+            // just filters. No popularity flags, no personal overlay phases.
+            _finalEntries = _communityEntries.Where(e => _charts.ContainsKey(e.ChartId)).ToArray();
+            _isProvisionalFallback = false;
+            _chartDifficulties = _finalEntries.ToDictionary(e => e.ChartId, e => e.Category);
+            ComputeFolderFilterRanges(_finalEntries.Select(e => _charts[e.ChartId]).ToArray());
+            RegroupEntries();
+            _isLoading = false;
+            StateHasChanged();
+            return;
+        }
 
         // Population phase — works logged-out, renders as soon as it lands.
         var blendTask = Mediator.Send(new GetBlendedTierListQuery(_chartType, _level, _tierListType,
@@ -1513,17 +1574,7 @@ else
         _popularCharts = popularity.Where(kv => kv.Value.Category == TierListCategory.Overrated).Select(kv => kv.Key).ToHashSet();
         _unPopularCharts = popularity.Where(kv => kv.Value.Category == TierListCategory.Underrated).Select(kv => kv.Key).ToHashSet();
 
-        var charts = _finalEntries.Select(e => _charts[e.ChartId]).ToArray();
-        _lowestBpm = charts.Any(c => c.Song.Bpm != null) ? charts.Where(c => c.Song.Bpm != null).Min(c => c.Song.Bpm!.Value.Min) : 0;
-        _settings.MinBpm = null;
-        _highestBpm = charts.Any(c => c.Song.Bpm != null) ? charts.Where(c => c.Song.Bpm != null).Max(c => c.Song.Bpm!.Value.Max) : 0;
-        _settings.MaxBpm = null;
-        _lowestNoteCount = charts.Any(c => c.NoteCount != null) ? charts.Where(c => c.NoteCount != null).Min(c => c.NoteCount!.Value) : 0;
-        _settings.MinNoteCount = null;
-        _highestNoteCount = charts.Any(c => c.NoteCount != null) ? charts.Where(c => c.NoteCount != null).Max(c => c.NoteCount!.Value) : 0;
-        _settings.MaxNoteCount = null;
-        _availableStepArtists = charts.Select(c => c.StepArtist ?? "Unknown").Distinct().OrderBy(s => s).ToArray();
-        _availableSongArtists = charts.Select(c => c.Song.Artist).Distinct().OrderBy(s => s).ToArray();
+        ComputeFolderFilterRanges(_finalEntries.Select(e => _charts[e.ChartId]).ToArray());
 
         RegroupEntries();
         _isLoading = false;
@@ -1833,10 +1884,42 @@ else
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
-        if (_currentMix == MixEnum.XX)
+        if (IsLegacy)
         {
-            // Round 5: XX and older render the coming-soon state and load nothing.
-            _isLoading = false;
+            // Legacy mixes load ONLY the Community lens surface — the Phoenix loads
+            // below range from quietly empty to throwing (TitleSaga has no title list
+            // for old mixes). Coming-soon renders when no vote data exists yet.
+            _tierListType = "Community";
+            var legacyChartsTask = Mediator.Send(new GetChartsQuery(_currentMix));
+            var communityTask = Mediator.Send(new GetCommunityTierListQuery(_currentMix));
+            var legacyLevelTask = UiSettings.GetSetting("TierLists__Level");
+            var legacyTypeTask = UiSettings.GetSetting("TierLists__ChartType");
+
+            _allCharts = (await legacyChartsTask).ToDictionary(c => c.Id);
+            _communityEntries = (await communityTask).ToArray();
+            _hasCommunityData = _communityEntries.Any(e => e.Category != TierListCategory.Unrecorded);
+            if (!_hasCommunityData || !_allCharts.Any())
+            {
+                _isLoading = false;
+                return;
+            }
+
+            if (Enum.TryParse<ChartType>(await legacyTypeTask, out var savedLegacyType)) _chartType = savedLegacyType;
+            if (int.TryParse(await legacyLevelTask, out var savedLegacyLevel)) _level = savedLegacyLevel;
+            // Old catalogs don't cover every modern folder — land on the mix's
+            // fullest folder when the remembered one doesn't exist here.
+            if (!_allCharts.Values.Any(c => c.Type == _chartType && c.Level == _level))
+            {
+                var biggest = _allCharts.Values
+                    .Where(c => c.Type is ChartType.Single or ChartType.Double)
+                    .GroupBy(c => (c.Type, Level: (int)c.Level))
+                    .OrderByDescending(g => g.Count())
+                    .First().Key;
+                _chartType = biggest.Type;
+                _level = biggest.Level;
+            }
+
+            await LoadFolder(CancellationToken.None);
             return;
         }
 

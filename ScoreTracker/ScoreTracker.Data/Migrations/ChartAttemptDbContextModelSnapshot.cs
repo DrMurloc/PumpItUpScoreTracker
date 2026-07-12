@@ -605,6 +605,11 @@ namespace ScoreTracker.Data.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValue(new Guid("1abb8f5a-bda3-40f0-9ce7-1c4f9f8f1d3b"));
 
+                    b.Property<int>("PlayerCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
                     b.Property<Guid>("SongId")
                         .HasColumnType("uniqueidentifier");
 
@@ -665,6 +670,10 @@ namespace ScoreTracker.Data.Migrations
 
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("LegacySlot")
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)");
 
                     b.Property<int>("Level")
                         .HasColumnType("int");
@@ -796,10 +805,16 @@ namespace ScoreTracker.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -1901,6 +1916,11 @@ namespace ScoreTracker.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("MixId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValue(new Guid("20f8ccf8-94b1-418d-b923-c375b042bda8"));
+
                     b.Property<DateTimeOffset>("RecordedDate")
                         .HasColumnType("datetimeoffset");
 
@@ -1914,7 +1934,7 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasIndex("ChartId");
 
-                    b.HasIndex("UserId", "ChartId");
+                    b.HasIndex("UserId", "ChartId", "MixId");
 
                     b.ToTable("BestAttempt", "scores");
                 });

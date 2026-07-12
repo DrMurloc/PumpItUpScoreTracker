@@ -12,6 +12,7 @@
 @using ScoreTracker.Domain.Exceptions
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
 
 <PageTitle>@L["Upload XX Scores"]</PageTitle>
 
@@ -28,6 +29,14 @@
                     <br/><br/>
                     @L["After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed."]
                 </p>
+                @* One CSV format, every legacy mix: scores land against the selected mix's
+                   catalog at that mix's own levels (docs/design/legacy-mixes.md). *@
+                <MudSelect T="MixEnum" Label="@L["Mix"]" @bind-Value="_targetMix" Style="max-width: 220px;">
+                    @foreach (var mix in LegacyMixes)
+                    {
+                        <MudSelectItem Value="@mix">@mix.GetName()</MudSelectItem>
+                    }
+                </MudSelect>
                 break;
             case Step.Uploading:
                 <p>
@@ -203,6 +212,7 @@
 @inject ISnackbar Snackbar;
 @inject NavigationManager NavigationManager;
 @inject IJSRuntime JSRuntime;
+@inject IUiSettingsAccessor UiSettings;
 @code
 {
     private enum Step
@@ -233,12 +243,27 @@
     private IEnumerable<BestAttemptDto> _attemptDtos => _spreadSheetScores.Select(BestAttemptDto.From);
 
     private CancellationTokenSource _currentCancellation;
-    protected override Task OnInitializedAsync()
-    {
-        if (CurrentUser.IsLoggedIn) return Task.CompletedTask;
 
-        NavManager.NavigateTo("/Login");
-        return Task.CompletedTask;
+    // Every legacy mix shares the XX upload format; scores land against the target
+    // mix's catalog at that mix's own levels (docs/design/legacy-mixes.md).
+    private static readonly MixEnum[] LegacyMixes = Enum.GetValues<MixEnum>()
+        .Where(m => m.UsesLegacyScoring())
+        .OrderByDescending(m => m.DisplayOrder())
+        .ToArray();
+
+    private MixEnum _targetMix = MixEnum.XX;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
+
+        // Default the target to the viewer's current mix when it's a legacy one.
+        var selected = await UiSettings.GetSelectedMix();
+        if (selected.UsesLegacyScoring()) _targetMix = selected;
     }
 
     private void Cancel()
@@ -340,8 +365,8 @@
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
             try
             {
-                var chart = await Mediator.Send(new GetChartQuery(MixEnum.XX, best.Chart.Song.Name,best.Chart.Level,best.Chart.Type), cancellationToken);
-                await Mediator.Send(new UpdateXXBestAttemptCommand(chart.Id, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true,null), cancellationToken);
+                var chart = await Mediator.Send(new GetChartQuery(_targetMix, best.Chart.Song.Name,best.Chart.Level,best.Chart.Type), cancellationToken);
+                await Mediator.Send(new UpdateXXBestAttemptCommand(chart.Id, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true,null, Mix: _targetMix), cancellationToken);
             }
             catch (OperationCanceledException)
             {

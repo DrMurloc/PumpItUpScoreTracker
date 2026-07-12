@@ -29,7 +29,7 @@
             <MudNumericField T="int?" Disabled="_isSaving" Label=@L["Score"] Value="_inputScore" ValueChanged="ScoreChanged" Min="XXScore.Min" Max="XXScore.Max" Variant="Variant.Text" Clearable="true"></MudNumericField>
         </MudItem>
         <MudItem xs="4">
-            @if (CurrentMix == MixEnum.XX)
+            @if (CurrentMix.UsesLegacyScoring())
             {
 
                 <MudSelect T="XXLetterGrade?" Disabled="_isSaving" Label=@L["Letter Grade"] Value="_selectedLetterGrade" ValueChanged="LetterGradeChanged" Clearable="true">
@@ -50,7 +50,7 @@
         <MudItem xs="4">
             <MudCheckBox T="bool" Disabled="_isSaving" Value="@_isBroken" ValueChanged="BrokenChanged" Label=@L["Broken"]></MudCheckBox>
         </MudItem>        
-        @if (CurrentMix != MixEnum.XX)
+        @if (!CurrentMix.UsesLegacyScoring())
         {
             <MudItem xs="4">
 
@@ -167,10 +167,10 @@
         _isSaving = true;
         try
         {
-            if (CurrentMix == MixEnum.XX)
+            if (CurrentMix.UsesLegacyScoring())
             {
                 
-                await Mediator.Send(new UpdateXXBestAttemptCommand(_selectedChart.Id,  _selectedLetterGrade, _isBroken,_inputScore));
+                await Mediator.Send(new UpdateXXBestAttemptCommand(_selectedChart.Id, _selectedLetterGrade, _isBroken, _inputScore, Mix: CurrentMix));
         
                 var chartName = $"{_selectedChart.Song.Name} {DifficultyLevel.ToShorthand(_selectedChart.Type,_selectedChart.Level)}";
             
@@ -265,7 +265,7 @@
             return;
         }
         _selectedChart = (await Mediator.Send(new GetChartsQuery(CurrentMix, ChartIds: new[] { chartId }))).First();
-        if (CurrentMix != MixEnum.XX)
+        if (!CurrentMix.UsesLegacyScoring())
         {
 
             var bestRecord = await Mediator.Send(new GetPhoenixRecordQuery(chartId, CurrentMix));
@@ -287,7 +287,7 @@
         }
         else
         {
-            var bestRecord = await Mediator.Send(new GetXXBestChartAttemptQuery(chartId));
+            var bestRecord = await Mediator.Send(new GetXXBestChartAttemptQuery(chartId, CurrentMix));
             if (bestRecord.BestAttempt == null)
             {
                 _selectedLetterGrade = null;

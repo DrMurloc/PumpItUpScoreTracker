@@ -8,10 +8,10 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.Mix` | Game version/mix definition (XX, Phoenix, …) |
+| `scores.Mix` | Game version/mix definition — all 31 mixes (1st Dance Floor → Phoenix 2), seeded by migration with picker `SortOrder` + `IsPrimary` (the P2/Phoenix/XX trio; the rest sit behind "More Mixes") |
 | `scores.Song` | Song metadata: artist, name, BPM, duration, image |
-| `scores.Chart` | A playable chart: song, type (Single/Double/CoOp), level, step artist |
-| `scores.ChartMix` | Chart↔mix mapping with the level and note count for that mix |
+| `scores.Chart` | A playable chart: song, type (Single/Double/CoOp/HalfDouble), level, step artist, debut mix (`OriginalMixId`), explicit `PlayerCount` (legacy Routine-era co-ops carry a real difficulty in Level, so player count is no longer derived from it) |
+| `scores.ChartMix` | Chart↔mix mapping with the level and note count for that mix, plus `LegacySlot` (pre-Exceed slot identity — "Crazy", "Another Nightmare" — part of chart identity in those eras; [legacy-mixes design](design/legacy-mixes.md)) |
 | `scores.Country` | Country list with flag image path |
 
 ## Identity & accounts (shared; logically the Identity vertical, physical extraction pending)
@@ -29,7 +29,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | Table | Purpose |
 |---|---|
 | `scores.PhoenixRecord` | Best-known Phoenix-scoring attempt per user+chart+mix: score, plate, broken flag, and the `Source` of the current best (verified ⇔ `officialImport`; NULL predates capture). Unique on UserId+ChartId+MixId; pre-Phoenix-2 rows backfilled as Phoenix — as are all MixId columns below |
-| `scores.BestAttempt` | XX-era best attempts per user+chart |
+| `scores.BestAttempt` | Legacy-model best attempts (letter grade + broken + optional era-scale score) per user+chart+mix; `MixId` defaults to XX — the table's original implicit scope — and every pre-Phoenix mix records here ([legacy-mixes design](design/legacy-mixes.md)) |
 | `scores.PhoenixRecordStats` | Per-score Pumbility stats per user+chart+mix, written by PlayerProgress through a Ledger port |
 | `scores.ScoreEventJournal` | **Append-only** journal of best-attempt *changes* (progress only since 2026-07: first entries incl. broken, unbreaks, score/plate improvements, manual corrections — no-ops are never written; rows from before the guard include them). Rows are never updated or deleted. `SessionId` groups rows into play sessions / import runs (NULL predates capture). Seeded 2026-06 from `PhoenixRecord` (`Source='backfill'`, dated at the record's last update); the foundation of score-progression history |
 

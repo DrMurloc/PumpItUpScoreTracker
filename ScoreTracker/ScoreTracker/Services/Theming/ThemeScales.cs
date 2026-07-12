@@ -74,6 +74,27 @@ public static class ThemeScales
             ? "var(--plate-none)"
             : $"var(--plate-{plate.Value.GetShorthand().ToLowerInvariant()})";
 
+    /// <summary>
+    /// Legacy slot color token — the pre-Exceed song-wheel vocabulary (Crazy red,
+    /// Freestyle green…). Another-variants read as their base slot; null = the neutral
+    /// legacy chip (Half-Double, levelled co-ops). Never the difficulty ramp: old-scale
+    /// levels don't translate to modern ones (docs/design/legacy-mixes.md).
+    /// </summary>
+    public static string SlotColor(LegacySlot? slot) => $"var(--slot-{SlotSlug(slot)})";
+
+    internal static string SlotSlug(LegacySlot? slot) => slot switch
+    {
+        LegacySlot.Easy => "easy",
+        LegacySlot.Normal or LegacySlot.AnotherNormal => "normal",
+        LegacySlot.Hard or LegacySlot.AnotherHard => "hard",
+        LegacySlot.Crazy or LegacySlot.AnotherCrazy => "crazy",
+        LegacySlot.Freestyle or LegacySlot.AnotherFreestyle => "freestyle",
+        LegacySlot.Nightmare or LegacySlot.AnotherNightmare => "nightmare",
+        LegacySlot.Practice => "practice",
+        LegacySlot.Another => "another",
+        _ => "neutral"
+    };
+
     internal static string DifficultySlug(TierListCategory category) => category switch
     {
         TierListCategory.Overrated => "overrated",
