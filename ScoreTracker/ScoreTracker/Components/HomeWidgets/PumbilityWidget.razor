@@ -9,7 +9,7 @@
 @using ScoreTracker.Web.Services.HomeDashboard
 
 @* W2 (design doc §3): PUMBILITY at a glance. Trend renders once the history capture
-   (PR #141) has two points — before that, an honest caption. Targets consume
+   (the projections PR) has two points — before that, an honest caption. Targets consume
    Projections v2 (per-pool baselines, skill-weighted expected scores) and explain
    themselves with skill chips; the list scrolls (never a hard snap to three) and
    every row can be dismissed permanently into this instance's config blacklist. *@
@@ -130,7 +130,7 @@ else
             .OrderBy(h => h.Date)
             .ToArray();
 
-        // Trend + weekly delta light up once the PR #141 capture has data.
+        // Trend + weekly delta light up once the history capture has data.
         _sparkPoints = history.Length >= 2 ? BuildSparkline(history) : null;
         var weekAgo = history.LastOrDefault(h => h.Date <= DateTimeOffset.Now.AddDays(-7));
         _weeklyDelta = weekAgo?.SkillRating is { } baseline ? (int)_stats.SkillRating - baseline : null;
