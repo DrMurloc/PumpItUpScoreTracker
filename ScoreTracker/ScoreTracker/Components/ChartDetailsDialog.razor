@@ -70,28 +70,6 @@
                     }
                 </div>
             }
-            @if (_journey.Any())
-            {
-                <MudText Typo="Typo.overline">@L["Your journey — all mixes"]</MudText>
-                <div class="chart-details-journey">
-                    @foreach (var entry in _journey)
-                    {
-                        <div class="chart-details-journey-row">
-                            <span class="chart-details-journey-date">@entry.OccurredAt.ToString("yyyy-MM-dd")</span>
-                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@MixName(entry.Mix)</MudChip>
-                            <span class="chart-details-journey-score">@(entry.Score?.ToString() ?? "—")</span>
-                            @if (entry.Score != null)
-                            {
-                                <LetterGradeIcon Grade="entry.Score.Value.LetterGrade" IsBroken="entry.IsBroken" Height="16"></LetterGradeIcon>
-                            }
-                        </div>
-                    }
-                </div>
-                @if (CurrentUser.IsLoggedIn)
-                {
-                    <MudLink Href="@($"/Player/{CurrentUser.User.Id}/Sessions")" Typo="Typo.caption">@L["Full score journey"]</MudLink>
-                }
-            }
             @if (_placements.Any())
             {
                 <div class="chart-details-placements">
@@ -133,6 +111,30 @@
                         <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@skill.GetName()</MudChip>
                     }
                 </div>
+            }
+            @* Round 4 (piucenter): "Your journey" renamed Score History and moved next
+               to the recording inputs it feeds — past scores directly above the new one. *@
+            @if (_journey.Any())
+            {
+                <MudText Typo="Typo.overline">@L["Score History"]</MudText>
+                <div class="chart-details-journey">
+                    @foreach (var entry in _journey)
+                    {
+                        <div class="chart-details-journey-row">
+                            <span class="chart-details-journey-date">@entry.OccurredAt.ToString("yyyy-MM-dd")</span>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@MixName(entry.Mix)</MudChip>
+                            <span class="chart-details-journey-score">@(entry.Score?.ToString() ?? "—")</span>
+                            @if (entry.Score != null)
+                            {
+                                <LetterGradeIcon Grade="entry.Score.Value.LetterGrade" IsBroken="entry.IsBroken" Height="16"></LetterGradeIcon>
+                            }
+                        </div>
+                    }
+                </div>
+                @if (CurrentUser.IsLoggedIn)
+                {
+                    <MudLink Href="@($"/Player/{CurrentUser.User.Id}/Sessions")" Typo="Typo.caption">@L["Full score journey"]</MudLink>
+                }
             }
             @* Round 10: buttons never shrink into vertical letter-stacks (nowrap + wrap
                to their own line instead); the PIU Center link gets its own line.
@@ -237,8 +239,9 @@
         font-variant-numeric: tabular-nums;
     }
 
+    /* No flex-grow: the grade icon sits beside the score, not floated to the far
+       right (owner, piucenter round 4). */
     .chart-details-journey-score {
-        flex: 1;
         font-variant-numeric: tabular-nums;
     }
 

@@ -2706,9 +2706,6 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>On Mrgl-Do List</value>
   </data>
-  <data name="Your journey — all mixes" xml:space="preserve">
-    <value>Your mrgljourney — all mixes</value>
-  </data>
   <data name="Full score journey" xml:space="preserve">
     <value>Full mrglscore journey</value>
   </data>
@@ -2948,5 +2945,8 @@
   </data>
   <data name="Your Skills in Folder" xml:space="preserve">
     <value>Yrgr Skrglls in Frglder, mrgl</value>
+  </data>
+  <data name="Score History" xml:space="preserve">
+    <value>Scrgre Histrgry</value>
   </data>
 </root>

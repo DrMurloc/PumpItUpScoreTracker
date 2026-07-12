@@ -2664,9 +2664,6 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>ToDo 목록에 있음</value>
   </data>
-  <data name="Your journey — all mixes" xml:space="preserve">
-    <value>나의 기록 — 모든 시리즈</value>
-  </data>
   <data name="Full score journey" xml:space="preserve">
     <value>전체 기록 보기</value>
   </data>
@@ -2906,5 +2903,8 @@
   </data>
   <data name="Your Skills in Folder" xml:space="preserve">
     <value>이 폴더에서의 내 스킬</value>
+  </data>
+  <data name="Score History" xml:space="preserve">
+    <value>점수 기록</value>
   </data>
 </root>

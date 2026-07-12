@@ -2783,9 +2783,6 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>Nella lista ToDo</value>
   </data>
-  <data name="Your journey — all mixes" xml:space="preserve">
-    <value>Il tuo percorso — tutti i Mix</value>
-  </data>
   <data name="Full score journey" xml:space="preserve">
     <value>Percorso completo</value>
   </data>
@@ -3025,5 +3022,8 @@
   </data>
   <data name="Your Skills in Folder" xml:space="preserve">
     <value>Le tue abilità nella cartella</value>
+  </data>
+  <data name="Score History" xml:space="preserve">
+    <value>Cronologia dei punteggi</value>
   </data>
 </root>
