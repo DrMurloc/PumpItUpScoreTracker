@@ -3251,4 +3251,22 @@
   <data name="Dismiss" xml:space="preserve">
     <value>Scarta</value>
   </data>
+  <data name="This week's board and your placements." xml:space="preserve">
+    <value>La board di questa settimana e i tuoi piazzamenti.</value>
+  </data>
+  <data name="Next rotation in" xml:space="preserve">
+    <value>Prossima rotazione tra {0}</value>
+  </data>
+  <data name="New board soon." xml:space="preserve">
+    <value>Una nuova board in arrivo.</value>
+  </data>
+  <data name="Match my range" xml:space="preserve">
+    <value>Adatta al mio livello</value>
+  </data>
+  <data name="Custom" xml:space="preserve">
+    <value>Personalizzato</value>
+  </data>
+  <data name="Board" xml:space="preserve">
+    <value>Board</value>
+  </data>
 </root>

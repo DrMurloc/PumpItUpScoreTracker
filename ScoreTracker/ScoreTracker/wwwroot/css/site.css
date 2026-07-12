@@ -888,3 +888,47 @@
     color: var(--mud-palette-success);
     flex: none;
 }
+
+/* Weekly widget: board rows + rotation countdown. */
+
+.dash-weekly {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.dash-weekly-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex: none;
+}
+
+.dash-countdown {
+    font-family: var(--font-display);
+    font-size: .7rem;
+    letter-spacing: .08em;
+    color: var(--mix-accent);
+    border: 1px solid color-mix(in srgb, var(--mix-accent) 40%, transparent);
+    border-radius: 10px;
+    padding: 1px 8px;
+    white-space: nowrap;
+}
+
+.dash-weekly-expiry {
+    font-family: var(--font-display);
+    font-size: .68rem;
+    letter-spacing: .05em;
+    color: var(--mix-ink-muted);
+    flex: none;
+}
+
+.dash-weekly-place {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: .75rem;
+    flex: none;
+}

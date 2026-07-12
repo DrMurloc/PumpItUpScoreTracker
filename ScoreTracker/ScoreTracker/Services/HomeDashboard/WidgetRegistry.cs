@@ -34,7 +34,17 @@ public static class WidgetRegistry
             SizePreset.TwoByOne,
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(PumbilityWidget),
-            typeof(PumbilityConfigPanel))
+            typeof(PumbilityConfigPanel)),
+        new("weekly-challenge",
+            "Weekly Charts",
+            "This week's board and your placements.",
+            WidgetCategory.Compete,
+            Icons.Material.Filled.EmojiEvents,
+            new[] { SizePreset.OneByOne, SizePreset.TwoByOne, SizePreset.OneByTwo },
+            SizePreset.OneByOne,
+            new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            typeof(WeeklyWidget),
+            typeof(WeeklyConfigPanel))
     };
 
     private static readonly IReadOnlyDictionary<string, WidgetDescriptor> ByTypeId =

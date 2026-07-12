@@ -3249,4 +3249,22 @@
   <data name="Dismiss" xml:space="preserve">
     <value>Écarter</value>
   </data>
+  <data name="This week's board and your placements." xml:space="preserve">
+    <value>Le tableau de la semaine et vos classements.</value>
+  </data>
+  <data name="Next rotation in" xml:space="preserve">
+    <value>Prochaine rotation dans {0}</value>
+  </data>
+  <data name="New board soon." xml:space="preserve">
+    <value>Un nouveau tableau arrive bientôt.</value>
+  </data>
+  <data name="Match my range" xml:space="preserve">
+    <value>Adapter à mon niveau</value>
+  </data>
+  <data name="Custom" xml:space="preserve">
+    <value>Personnalisé</value>
+  </data>
+  <data name="Board" xml:space="preserve">
+    <value>Tableau</value>
+  </data>
 </root>

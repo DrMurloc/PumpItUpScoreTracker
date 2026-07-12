@@ -3131,4 +3131,22 @@
   <data name="Dismiss" xml:space="preserve">
     <value>Descartar</value>
   </data>
+  <data name="This week's board and your placements." xml:space="preserve">
+    <value>El tablero de esta semana y tus posiciones.</value>
+  </data>
+  <data name="Next rotation in" xml:space="preserve">
+    <value>Próxima rotación en {0}</value>
+  </data>
+  <data name="New board soon." xml:space="preserve">
+    <value>Pronto habrá un nuevo tablero.</value>
+  </data>
+  <data name="Match my range" xml:space="preserve">
+    <value>Ajustar a mi rango</value>
+  </data>
+  <data name="Custom" xml:space="preserve">
+    <value>Personalizado</value>
+  </data>
+  <data name="Board" xml:space="preserve">
+    <value>Tablero</value>
+  </data>
 </root>

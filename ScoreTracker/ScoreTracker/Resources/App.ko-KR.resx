@@ -3132,4 +3132,22 @@
   <data name="Dismiss" xml:space="preserve">
     <value>숨기기</value>
   </data>
+  <data name="This week's board and your placements." xml:space="preserve">
+    <value>이번 주 보드와 내 순위.</value>
+  </data>
+  <data name="Next rotation in" xml:space="preserve">
+    <value>다음 교체까지 {0}</value>
+  </data>
+  <data name="New board soon." xml:space="preserve">
+    <value>곧 새로운 보드가 시작됩니다.</value>
+  </data>
+  <data name="Match my range" xml:space="preserve">
+    <value>내 범위에 맞추기</value>
+  </data>
+  <data name="Custom" xml:space="preserve">
+    <value>사용자 지정</value>
+  </data>
+  <data name="Board" xml:space="preserve">
+    <value>보드</value>
+  </data>
 </root>
