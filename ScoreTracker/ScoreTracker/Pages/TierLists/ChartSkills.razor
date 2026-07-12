@@ -191,11 +191,12 @@ else
                     <MudText Typo="Typo.caption" Class="tier-folder-skills-title">@L["Your Skills in Folder"]</MudText>
                     @foreach (var row in FolderSkillScores())
                     {
-                        var percent = (int)Math.Round(100 * row.Percent);
+                        var percent = (int)Math.Round(100 * row.Ability);
                         <div class="tier-folder-skill-row skillcat-@(row.Skill.GetPrimaryCategory().ToString().ToLowerInvariant())">
                             <span class="tier-folder-skill-label">@row.Skill.GetName()</span>
                             <span class="tier-folder-skill-track"><span class="tier-folder-skill-fill" style="width:@percent%"></span></span>
                             <span class="tier-folder-skill-value">@percent%</span>
+                            <span class="tier-folder-skill-count">@row.Played/@row.Total</span>
                         </div>
                     }
                 </div>
@@ -902,12 +903,14 @@ else
     private IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> _skillChips =
         new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
 
-    // Folder Stats: skill competence per the owner's formula — score-determined, never
-    // pass-determined. Per skill: sum(coverage × score) / sum(coverage × 1,000,000)
-    // over the folder's charts carrying it, so a 40%-stamina chart contributes twice a
-    // 20% one and unplayed charts count as zero. Whole-chart qualities (null coverage)
-    // and pre-crawl fallback tags weigh 1.0. Weakest first; <2 charts is noise.
-    private IEnumerable<(Skill Skill, double Percent, int Total)> FolderSkillScores()
+    // Folder Stats: skill competence split into its two factors (owner workshop) —
+    // ABILITY = sum(coverage × score) / sum(coverage × 1,000,000) over PLAYED charts
+    // ("how well does it go when you play them"), COMPLETION = played/total charts
+    // carrying the skill. Displayed separately; sorted by their product (the original
+    // amalgam), so both "bad at it" and "haven't touched it" float to the top.
+    // Score-determined, never pass-determined. Whole-chart qualities (null coverage)
+    // and pre-crawl fallback tags weigh 1.0. <2 charts is noise.
+    private IEnumerable<(Skill Skill, double Ability, int Played, int Total)> FolderSkillScores()
     {
         const double maxScore = 1_000_000;
         return _charts.Values
@@ -917,16 +920,25 @@ else
                 .GroupBy(p => p.Skill).Select(g => g.First())
                 .Select(p => (p.Skill, p.Weight, Chart: c)))
             .GroupBy(p => p.Skill)
-            .Select(g => (
-                Skill: g.Key,
-                Percent: g.Sum(p => p.Weight *
-                                    (_scores.TryGetValue(p.Chart.Id, out var s) && s.Score != null
-                                        ? Math.Min((int)s.Score.Value, maxScore)
-                                        : 0)) / g.Sum(p => p.Weight * maxScore),
-                Total: g.Count()))
+            .Select(g =>
+            {
+                var played = g
+                    .Where(p => _scores.TryGetValue(p.Chart.Id, out var s) && s.Score != null)
+                    .ToArray();
+                var ability = played.Length == 0
+                    ? 0
+                    : played.Sum(p => p.Weight * Math.Min((int)_scores[p.Chart.Id].Score!.Value, maxScore)) /
+                      played.Sum(p => p.Weight * maxScore);
+                var coverageCompletion = g.Sum(p => p.Weight) == 0
+                    ? 0
+                    : played.Sum(p => p.Weight) / g.Sum(p => p.Weight);
+                return (Skill: g.Key, Ability: ability, Played: played.Length, Total: g.Count(),
+                    Sort: ability * coverageCompletion);
+            })
             .Where(r => r.Total >= 2)
-            .OrderBy(r => r.Percent)
-            .ThenBy(r => r.Skill.GetName());
+            .OrderBy(r => r.Sort)
+            .ThenBy(r => r.Skill.GetName())
+            .Select(r => (r.Skill, r.Ability, r.Played, r.Total));
     }
 
     // Card + table chips: dominance-ordered metrics when banked, mapped tags as the

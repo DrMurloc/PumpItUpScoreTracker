@@ -455,9 +455,11 @@
     color: var(--mix-ink-muted);
 }
 
+/* Bar + % = ability over played charts; the trailing count = completion (played /
+   charts carrying the skill). Sorted by their product upstream. */
 .tier-folder-skill-row {
     display: grid;
-    grid-template-columns: 92px 1fr 56px;
+    grid-template-columns: 92px 1fr 38px 44px;
     align-items: center;
     gap: 8px;
     font-size: .75rem;
@@ -487,7 +489,13 @@
 
 .tier-folder-skill-value {
     text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.tier-folder-skill-count {
+    text-align: right;
     color: var(--mix-ink-muted);
+    font-size: .68rem;
     font-variant-numeric: tabular-nums;
 }
 
