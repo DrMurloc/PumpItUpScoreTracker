@@ -15,10 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Full MassTransit (not just Abstractions): the vertical has bus consumers, and
-         IRegistrationConfigurator for the AddCatalogConsumers hook lives in the full package. -->
-    <PackageReference Include="MassTransit" Version="8.5.7" />
-    <PackageReference Include="MassTransit.Abstractions" Version="8.5.7" />
     <PackageReference Include="MediatR" Version="14.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
   </ItemGroup>
@@ -27,6 +23,10 @@
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
     <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data. -->
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
+    <!-- Transitional (relocated from Catalog at the randomizer overhaul): GetRandomChartsQuery
+         stays in Application (MatchSaga sends it) until the Match subsystem is deleted, and
+         RandomizerSaga is its handler. Unpins together with the Match deletion. -->
+    <ProjectReference Include="..\ScoreTracker.Application\ScoreTracker.Application.csproj" />
   </ItemGroup>
 
 </Project>

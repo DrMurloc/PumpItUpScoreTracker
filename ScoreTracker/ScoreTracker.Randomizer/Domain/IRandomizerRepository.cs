@@ -2,7 +2,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 
-namespace ScoreTracker.Catalog.Domain
+namespace ScoreTracker.Randomizer.Domain
 {
     internal interface IRandomizerRepository
     {

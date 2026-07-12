@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace ScoreTracker.Catalog.Infrastructure.Entities
+namespace ScoreTracker.Randomizer.Infrastructure.Entities
 {
     [Index(nameof(UserId), nameof(Name))]
     internal sealed class UserRandomSettingsEntity

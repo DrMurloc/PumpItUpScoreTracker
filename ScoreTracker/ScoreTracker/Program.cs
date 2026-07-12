@@ -218,6 +218,7 @@ builder.Services.AddBlazorApplicationInsights()
             typeof(ScoreTracker.ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly,
             typeof(ScoreTracker.OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly,
             typeof(ScoreTracker.Catalog.Wiring.CatalogRegistrationExtensions).Assembly,
+            typeof(ScoreTracker.Randomizer.Wiring.RandomizerRegistrationExtensions).Assembly,
             typeof(ChartIntelligenceRegistrationExtensions).Assembly,
             typeof(WeeklyChallengeRegistrationExtensions).Assembly,
             typeof(EventCompetitionRegistrationExtensions).Assembly,

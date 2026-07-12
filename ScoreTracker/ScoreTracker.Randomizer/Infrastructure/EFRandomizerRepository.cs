@@ -1,7 +1,7 @@
-using ScoreTracker.Catalog.Infrastructure.Entities;
-using ScoreTracker.Catalog.Domain;
-using ScoreTracker.Catalog.Contracts.Queries;
-using ScoreTracker.Catalog.Contracts;
+using ScoreTracker.Randomizer.Infrastructure.Entities;
+using ScoreTracker.Randomizer.Domain;
+using ScoreTracker.Randomizer.Contracts.Queries;
+using ScoreTracker.Randomizer.Contracts;
 using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +15,7 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.ValueTypes;
 
-namespace ScoreTracker.Catalog.Infrastructure
+namespace ScoreTracker.Randomizer.Infrastructure
 {
     internal sealed class EFRandomizerRepository(IDbContextFactory<ChartAttemptDbContext> factory,
         IOptions<JsonSerializerOptions> jsonOptions, ICurrentUserAccessor currentUser) : IRandomizerRepository,

@@ -105,7 +105,8 @@ public sealed class LayerDependencyTests
             typeof(WeeklyChallenge.Wiring.WeeklyChallengeRegistrationExtensions).Assembly,
             typeof(EventCompetition.Wiring.EventCompetitionRegistrationExtensions).Assembly,
             typeof(Communities.Wiring.CommunitiesRegistrationExtensions).Assembly,
-            typeof(PlayerProgress.Wiring.PlayerProgressRegistrationExtensions).Assembly
+            typeof(PlayerProgress.Wiring.PlayerProgressRegistrationExtensions).Assembly,
+            typeof(Randomizer.Wiring.RandomizerRegistrationExtensions).Assembly
         };
         var violations = verticalAssemblies.SelectMany(a => a.GetTypes())
             .Where(t => !t.IsInterface)

@@ -43,7 +43,8 @@ public sealed class VerticalBoundaryTests
         typeof(EventCompetition.Wiring.EventCompetitionRegistrationExtensions),
         typeof(Communities.Wiring.CommunitiesRegistrationExtensions),
         typeof(PlayerProgress.Wiring.PlayerProgressRegistrationExtensions),
-        typeof(Identity.Wiring.IdentityRegistrationExtensions)
+        typeof(Identity.Wiring.IdentityRegistrationExtensions),
+        typeof(Randomizer.Wiring.RandomizerRegistrationExtensions)
     };
 
     [Theory]
