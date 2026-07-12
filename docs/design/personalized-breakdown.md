@@ -47,6 +47,26 @@ attribution is the headline win.
    non-legacy mix; everything else soft-lands on the tier list. Entry points: the
    "How is this personalized?" caption link under both Personalized switches and
    the clickable "Personalized for …" chip.
+9. **Score age fades votes, never values (score-age workshop, same day).** A best
+   attempt's age only means "time since last improved" — ceiling scores go stale by
+   definition — so age reduces an observation's *evidence*, not its score. Formula:
+   half-voice per 180 days (owner-locked floor; the half-life stretches to the
+   player's median score age when that's older), normalized against the median
+   factor so a uniformly-old history keeps its shape — a returning player is a
+   coherent snapshot. Applied to the skill estimate's observations AND its folder
+   baselines (or fresh-vs-stale reads as phantom deviation). The breakdown page
+   discloses it at card level only — owner: "it's a disclaimer, not data" — never
+   as per-row decoration.
+10. **Neighbors fade by entry, never by membership.** The owner rejected an
+   activity filter: an inactive player's folder record is a coherent snapshot and a
+   valid witness. Instead each materialized `UserTierListEntry` carries a
+   `Freshness` weight from the same formula, normalized **within that player's own
+   folder** — era-mixed entries whisper, uniform snapshots (including quit
+   players') keep full voice. Computed in `UserTierListSaga`; the Backfill User
+   Tier Lists run re-stamps existing rows (default 1.0 = pre-backfill behavior
+   unchanged). Known second-order effect, deliberately unaddressed in v1: the
+   relative *categories* are still bucketed against a mean that old scores drag
+   down; the freshness weight mutes most of the distortion.
 
 ## The two windows (deliberate)
 
