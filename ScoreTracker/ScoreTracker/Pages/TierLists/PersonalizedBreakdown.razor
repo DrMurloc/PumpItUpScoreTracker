@@ -149,6 +149,61 @@ else
                     </div>
                 </div>
             </section>
+
+            @* Your skill profile — the same skills through two questions. Left: the
+               cross-folder deviations the blend actually uses (owner: users should
+               come out going "oh, that's what all that meant"). Right: the Folder
+               Stats view of this folder, restated so the two connect. *@
+            <section class="bd-block">
+                <MudText Typo="Typo.h5">@L["Your skill profile"]</MudText>
+                <MudText Typo="Typo.caption" Class="bd-caption">@L["Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it."]</MudText>
+                <div class="bd-skills-grid">
+                    <div class="bd-card">
+                        <MudText Typo="Typo.subtitle1">@L["Across everything you've scored nearby"]</MudText>
+                        <MudText Typo="Typo.caption" Class="bd-caption">@L["How each skill runs against your own average"]</MudText>
+                        <div class="bd-dev-head">
+                            <span>@L["Skill"]</span>
+                            <span>← @L["weaker"] · @L["stronger"] →</span>
+                            <span>@L["You"]</span>
+                            <span>@L["Evidence"]</span>
+                            <span>@L["Vs. Peers"]</span>
+                        </div>
+                        @foreach (var row in SkillRows)
+                        {
+                            var widthPercent = row.Usable ? Math.Max(2, (int)Math.Round(48.0 * Math.Abs(row.Deviation) / MaxAbsDeviation)) : 0;
+                            <div class="bd-dev-row skillcat-@(row.Skill.GetPrimaryCategory().ToString().ToLowerInvariant()) @(row.Usable ? "" : "bd-dim")">
+                                <span class="bd-dev-label">@row.Skill.GetName()</span>
+                                <span class="bd-dev-track">
+                                    @if (row.Usable)
+                                    {
+                                        <span class="bd-dev-fill" style="@(row.Deviation < 0 ? $"right:50%;width:{widthPercent}%" : $"left:50%;width:{widthPercent}%")"></span>
+                                    }
+                                </span>
+                                <span class="bd-dev-val">@(row.Usable ? (row.Deviation >= 0 ? "+" : "−") + Math.Abs(row.Deviation * 100).ToString("0.0") + "%" : "—")</span>
+                                <span class="bd-dev-ev">@row.Evidence.ToString("0.0")</span>
+                                <span class="bd-dev-peer">
+                                    @if (row.PeerPercentile != null)
+                                    {
+                                        <span class="@ThemeScales.RarityClass(ThemeScales.BandFor(row.PeerPercentile.Value))" style="@ThemeScales.RarityStyle(row.PeerPercentile.Value)">@((100 * row.PeerPercentile.Value).ToString("N0"))%</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="bd-caption">—</span>
+                                    }
+                                </span>
+                            </div>
+                        }
+                        <MudText Typo="Typo.caption" Class="bd-caption bd-footnote">@L["Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet."]</MudText>
+                    </div>
+                    <div class="bd-card">
+                        <MudText Typo="Typo.subtitle1">@L["In this folder"]</MudText>
+                        <MudText Typo="Typo.caption" Class="bd-caption">@L["Your ability on the charts you've played here — the same numbers as Folder Stats"]</MudText>
+                        <FolderSkillList Charts="_charts.Values" SkillChips="_skillChips" Scores="_scores"></FolderSkillList>
+                        <div class="bd-bridge">@L["Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts."]</div>
+                    </div>
+                </div>
+                <MudText Typo="Typo.caption" Class="bd-attribution">@L["Skill data: PIU Center — maintained by aesthete"]</MudText>
+            </section>
         }
     </div>
 }
@@ -305,6 +360,108 @@ else
     .bd-status-off {
         color: var(--mud-palette-warning);
     }
+
+    .bd-skills-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-top: 12px;
+    }
+
+    @@media (min-width: 900px) {
+        .bd-skills-grid {
+            grid-template-columns: 7fr 5fr;
+        }
+    }
+
+    .bd-dev-head, .bd-dev-row {
+        display: grid;
+        grid-template-columns: minmax(88px, 110px) 1fr 56px 62px 74px;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .bd-dev-head {
+        font-size: .64rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--mud-palette-text-secondary);
+        margin: 10px 0 6px;
+    }
+
+    .bd-dev-row {
+        font-size: .82rem;
+        padding: 3px 0;
+    }
+
+    .bd-dev-row.bd-dim {
+        opacity: .45;
+    }
+
+    .bd-dev-label {
+        color: color-mix(in srgb, var(--skill-chip) 60%, var(--mix-ink));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .bd-dev-track {
+        position: relative;
+        height: 8px;
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--mud-palette-text-secondary) 16%, transparent);
+    }
+
+    .bd-dev-track::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: -2px;
+        bottom: -2px;
+        width: 1px;
+        background: var(--mud-palette-lines-default);
+    }
+
+    .bd-dev-fill {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        border-radius: 4px;
+        background: var(--skill-chip);
+    }
+
+    .bd-dev-val, .bd-dev-ev, .bd-dev-peer {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .bd-dev-val {
+        font-weight: 600;
+    }
+
+    .bd-dev-ev {
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .bd-footnote {
+        margin-top: 8px;
+        max-width: 70ch;
+    }
+
+    .bd-bridge {
+        margin-top: 12px;
+        padding: 10px 12px;
+        background: var(--mix-surface-muted);
+        border-radius: 8px;
+        font-size: .8rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .bd-attribution {
+        color: var(--mud-palette-text-secondary);
+        display: block;
+        margin-top: 6px;
+    }
 </style>
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
@@ -373,6 +530,54 @@ else
     private int CommunityRatedCount => _breakdown == null
         ? 0
         : _breakdown.Charts.Count(c => c.CommunityCategory != TierListCategory.Unrecorded);
+
+    // --- Skill profile ---------------------------------------------------------------------
+
+    private sealed record SkillRow(Skill Skill, double Deviation, double Evidence, bool Usable,
+        double? PeerPercentile);
+
+    // Usable skills weakest-first (the actionable order); below-evidence skills sink
+    // to the bottom, greyed, so "not enough data" never masquerades as "average".
+    private IReadOnlyList<SkillRow> SkillRows => _breakdown == null
+        ? Array.Empty<SkillRow>()
+        : _breakdown.Skills
+            .Select(s => new SkillRow(s.Skill, s.Deviation, s.Evidence, s.Usable, PeerPercentileFor(s.Skill)))
+            .OrderBy(s => s.Usable ? 0 : 1)
+            .ThenBy(s => s.Usable ? s.Deviation : 0)
+            .ThenByDescending(s => s.Evidence)
+            .ThenBy(s => s.Skill.GetName())
+            .ToArray();
+
+    private double MaxAbsDeviation => Math.Max(0.0001, _breakdown == null
+        ? 1
+        : _breakdown.Skills.Where(s => s.Usable).Select(s => Math.Abs(s.Deviation)).DefaultIfEmpty(1).Max());
+
+    // Vs. Peers: the coverage-weighted average of your per-chart "Better Than %"
+    // (players within ±0.5 competitive level — the tier page's Better Than column)
+    // across this folder's charts featuring the skill. Only scored charts have a
+    // percentile, so thin skills aggregate over few charts — the evidence column
+    // beside it keeps that honest. No new cohort SQL (owner, post-incident).
+    private double? PeerPercentileFor(Skill skill)
+    {
+        var weightTotal = 0.0;
+        var weighted = 0.0;
+        foreach (var chart in _charts.Values)
+        {
+            if (!_scoreRankings.TryGetValue(chart.Id, out var rank)) continue;
+            double? weight = _skillChips.TryGetValue(chart.Id, out var chips) && chips.Count > 0
+                ? chips.Where(c => c.Skill == skill)
+                    .Select(c => (double?)((double?)c.SegmentFraction ?? 1.0))
+                    .FirstOrDefault()
+                : chart.Skills.Contains(skill)
+                    ? 1.0
+                    : null;
+            if (weight is not > 0) continue;
+            weightTotal += weight.Value;
+            weighted += weight.Value * rank.Ranking;
+        }
+
+        return weightTotal <= 0 ? null : weighted / weightTotal;
+    }
 
     // --- Navigation ----------------------------------------------------------------------
 
