@@ -2972,4 +2972,157 @@
   <data name="Score History" xml:space="preserve">
     <value>Histórico de pontuações</value>
   </data>
+  <data name="+{0} more" xml:space="preserve">
+    <value>+{0} mais</value>
+  </data>
+  <data name="Across everything you've scored nearby" xml:space="preserve">
+    <value>Em todas as suas pontuações de pastas próximas</value>
+  </data>
+  <data name="Active — {0} scores nearby, {1} skills have enough evidence" xml:space="preserve">
+    <value>Ativo — {0} pontuações próximas, {1} habilidades com evidência suficiente</value>
+  </data>
+  <data name="Back to Tier List" xml:space="preserve">
+    <value>Voltar à Tier List</value>
+  </data>
+  <data name="Charts that moved" xml:space="preserve">
+    <value>Charts que se moveram</value>
+  </data>
+  <data name="Community Tier List" xml:space="preserve">
+    <value>Tier List da comunidade</value>
+  </data>
+  <data name="Easier for you" xml:space="preserve">
+    <value>Mais fácil para você</value>
+  </data>
+  <data name="Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more." xml:space="preserve">
+    <value>Cada chart pontuado em até 3 pastas vota nas suas habilidades — pastas mais próximas e maior cobertura da habilidade contam mais.</value>
+  </data>
+  <data name="Evidence" xml:space="preserve">
+    <value>Evidência</value>
+  </data>
+  <data name="Harder for you" xml:space="preserve">
+    <value>Mais difícil para você</value>
+  </data>
+  <data name="How each skill runs against your own average" xml:space="preserve">
+    <value>Como cada habilidade se sai em relação à sua própria média</value>
+  </data>
+  <data name="How is this personalized?" xml:space="preserve">
+    <value>Como isso é personalizado?</value>
+  </data>
+  <data name="In this folder" xml:space="preserve">
+    <value>Nesta pasta</value>
+  </data>
+  <data name="Personalized Breakdown" xml:space="preserve">
+    <value>Detalhamento personalizado</value>
+  </data>
+  <data name="Players Like You" xml:space="preserve">
+    <value>Jogadores como você</value>
+  </data>
+  <data name="Players like you" xml:space="preserve">
+    <value>Jogadores como você</value>
+  </data>
+  <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
+    <value>Jogadores a um nível competitivo do seu — os mais próximos contam mais, assim como os que avaliam as pastas parecido com você.</value>
+  </data>
+  <data name="Recalculated every few hours" xml:space="preserve">
+    <value>Recalculado a cada poucas horas</value>
+  </data>
+  <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
+    <value>Mesmas habilidades, duas perguntas: a visão da pasta pergunta como vão os charts que você jogou aqui — a visão da mistura pergunta quais habilidades vão bem ou mal em tudo que você pontuou por perto. Uma habilidade pode parecer bem aqui e ainda assim mover charts.</value>
+  </data>
+  <data name="Show all {0}" xml:space="preserve">
+    <value>Mostrar todos ({0})</value>
+  </data>
+  <data name="Show fewer" xml:space="preserve">
+    <value>Mostrar menos</value>
+  </data>
+  <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
+    <value>Silencioso — ainda não há jogadores na sua faixa competitiva.</value>
+  </data>
+  <data name="Silent — only {0} skills have enough evidence. Your list currently matches the community's. Score more charts near this folder to turn this on." xml:space="preserve">
+    <value>Silencioso — só {0} habilidades têm evidência suficiente. Por enquanto sua lista é igual à da comunidade. Pontue mais charts perto desta pasta para ativar.</value>
+  </data>
+  <data name="The shared tier list for this folder, built from everyone's data." xml:space="preserve">
+    <value>A tier list compartilhada desta pasta, construída com os dados de todos.</value>
+  </data>
+  <data name="Three sources vote on every chart. Sources with more weight move charts further." xml:space="preserve">
+    <value>Três fontes votam em cada chart. Fontes com mais peso movem mais os charts.</value>
+  </data>
+  <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
+    <value>Duas visões das mesmas habilidades. A da esquerda alimenta a mistura acima; a da direita é esta pasta como as estatísticas da pasta mostram.</value>
+  </data>
+  <data name="Vs. Peers" xml:space="preserve">
+    <value>Vs. pares</value>
+  </data>
+  <data name="Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet." xml:space="preserve">
+    <value>Vs. pares: como suas pontuações se classificam frente a jogadores de nível competitivo parecido, na média dos charts desta pasta com essa habilidade. Habilidades em cinza ainda não têm evidência suficiente para votar.</value>
+  </data>
+  <data name="What goes into your list" xml:space="preserve">
+    <value>O que entra na sua lista</value>
+  </data>
+  <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
+    <value>Onde sua lista difere da comunidade, e as habilidades que a empurraram. Toque em um chart para ver o detalhamento completo por fonte.</value>
+  </data>
+  <data name="You" xml:space="preserve">
+    <value>Você</value>
+  </data>
+  <data name="Your Skill Estimate" xml:space="preserve">
+    <value>Sua estimativa de habilidades</value>
+  </data>
+  <data name="Your ability on the charts you've played here — the same numbers as Folder Stats" xml:space="preserve">
+    <value>Seu desempenho nos charts que você jogou aqui — os mesmos números das estatísticas da pasta</value>
+  </data>
+  <data name="Your list currently matches the community's on every rated chart." xml:space="preserve">
+    <value>Por enquanto sua lista é igual à da comunidade em todos os charts avaliados.</value>
+  </data>
+  <data name="Your personalized list moves {0} of {1} charts away from the community's." xml:space="preserve">
+    <value>Sua lista personalizada move {0} de {1} charts em relação à comunidade.</value>
+  </data>
+  <data name="Your skill profile" xml:space="preserve">
+    <value>Seu perfil de habilidades</value>
+  </data>
+  <data name="Your skills" xml:space="preserve">
+    <value>Suas habilidades</value>
+  </data>
+  <data name="stronger" xml:space="preserve">
+    <value>mais forte</value>
+  </data>
+  <data name="weaker" xml:space="preserve">
+    <value>mais fraco</value>
+  </data>
+  <data name="{0} / {1} charts rated" xml:space="preserve">
+    <value>{0} / {1} charts avaliados</value>
+  </data>
+  <data name="{0} charts match the community tier" xml:space="preserve">
+    <value>{0} charts coincidem com o tier da comunidade</value>
+  </data>
+  <data name="{0} don't have enough data to move" xml:space="preserve">
+    <value>{0} não têm dados suficientes para se mover</value>
+  </data>
+  <data name="{0} don't have enough skill data to move:" xml:space="preserve">
+    <value>{0} não têm dados de habilidade suficientes para se mover:</value>
+  </data>
+  <data name="{0} easier for you" xml:space="preserve">
+    <value>{0} mais fáceis para você</value>
+  </data>
+  <data name="{0} easier for you — mostly {1}" xml:space="preserve">
+    <value>{0} mais fáceis para você — principalmente {1}</value>
+  </data>
+  <data name="{0} harder for you" xml:space="preserve">
+    <value>{0} mais difíceis para você</value>
+  </data>
+  <data name="{0} harder for you — mostly {1}" xml:space="preserve">
+    <value>{0} mais difíceis para você — principalmente {1}</value>
+  </data>
+  <data name="{0} match the community tier" xml:space="preserve">
+    <value>{0} coincidem com a comunidade</value>
+  </data>
+  <data name="{0} players found" xml:space="preserve">
+    <value>{0} jogadores encontrados</value>
+  </data>
+  <data name="Evidence already includes score age — older scores count for less." xml:space="preserve">
+    <value>A evidência já considera a idade — pontuações antigas contam menos.</value>
+  </data>
+  <data name="Older scores count for less — {0} of your nearby scores are much older than the rest of your record." xml:space="preserve">
+    <value>Pontuações antigas contam menos — {0} das suas pontuações próximas são muito mais antigas que o resto do seu histórico.</value>
+  </data>
 </root>

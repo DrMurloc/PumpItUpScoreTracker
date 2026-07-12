@@ -51,9 +51,14 @@ public sealed class ChartIntelligenceModelContribution : IDbModelContribution
         // aggregation — every user's category for one folder's charts in a single seek.
         modelBuilder.Entity<UserTierListEntryEntity>().ToTable("UserTierListEntry")
             .HasKey(e => new { e.MixId, e.UserId, e.ChartId });
+        // Default 1.0 = full voice, so pre-backfill rows behave exactly as before the
+        // freshness column existed until the Backfill User Tier Lists run re-stamps them.
+        modelBuilder.Entity<UserTierListEntryEntity>()
+            .Property(e => e.Freshness)
+            .HasDefaultValue(1.0);
         modelBuilder.Entity<UserTierListEntryEntity>()
             .HasIndex(e => new { e.MixId, e.ChartId })
-            .IncludeProperties(e => new { e.Category, e.Order });
+            .IncludeProperties(e => new { e.Category, e.Order, e.Freshness });
         modelBuilder.Entity<UserTierListEntryEntity>()
             .HasOne<UserEntity>()
             .WithMany()

@@ -18,6 +18,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -46,7 +47,45 @@ public sealed class UserTierListSagaTests
             It.IsAny<CancellationToken>()), Times.Once);
         userTierLists.Verify(r => r.SaveUserFolder(MixEnum.Phoenix, UserId,
             It.Is<IReadOnlyCollection<Guid>>(ids => ids.Contains(chart.Id)),
-            entries, It.IsAny<CancellationToken>()), Times.Once);
+            entries, It.IsAny<IReadOnlyDictionary<Guid, double>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task MaterializationStampsFolderScopedFreshness()
+    {
+        // Score-age workshop: within the player's own folder, the two-year-old best
+        // sitting next to recent ones is an age outlier and votes quietly; the fresh
+        // entries keep full voice, and the weights ride to the repository.
+        var now = new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero);
+        var freshA = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var freshB = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var staleChart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var charts = ChartsMock(new[] { freshA, freshB, staleChart });
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new RecordedPhoenixScore(freshA.Id, PhoenixScore.From(950000), null, false, now.AddDays(-7)),
+                new RecordedPhoenixScore(freshB.Id, PhoenixScore.From(950000), null, false, now.AddDays(-7)),
+                new RecordedPhoenixScore(staleChart.Id, PhoenixScore.From(950000), null, false, now.AddDays(-730))
+            });
+        var userTierLists = new Mock<IUserTierListRepository>();
+        IReadOnlyDictionary<Guid, double>? saved = null;
+        userTierLists.Setup(r => r.SaveUserFolder(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+                It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<IEnumerable<SongTierListEntry>>(),
+                It.IsAny<IReadOnlyDictionary<Guid, double>>(), It.IsAny<CancellationToken>()))
+            .Callback((MixEnum _, Guid _, IReadOnlyCollection<Guid> _, IEnumerable<SongTierListEntry> _,
+                IReadOnlyDictionary<Guid, double> freshness, CancellationToken _) => saved = freshness)
+            .Returns(Task.CompletedTask);
+        var saga = BuildSaga(charts: charts, scores: scores, userTierLists: userTierLists,
+            clock: FakeDateTime.At(now));
+
+        await saga.Consume(BuildContext(ScoresUpdated(freshA.Id)));
+
+        Assert.NotNull(saved);
+        Assert.Equal(1.0, saved![freshA.Id]);
+        Assert.Equal(1.0, saved[freshB.Id]);
+        Assert.True(saved[staleChart.Id] < 1.0, $"outlier entry should vote quieter ({saved[staleChart.Id]:0.00})");
     }
 
     [Fact]
@@ -86,7 +125,7 @@ public sealed class UserTierListSagaTests
             It.IsAny<CancellationToken>()), Times.Never);
         userTierLists.Verify(r => r.SaveUserFolder(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
             It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<IEnumerable<SongTierListEntry>>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<IReadOnlyDictionary<Guid, double>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -141,10 +180,10 @@ public sealed class UserTierListSagaTests
         // User A scored two folders, user B one — three materializations total.
         userTierLists.Verify(r => r.SaveUserFolder(MixEnum.Phoenix, userA,
             It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<IEnumerable<SongTierListEntry>>(),
-            It.IsAny<CancellationToken>()), Times.Exactly(2));
+            It.IsAny<IReadOnlyDictionary<Guid, double>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
         userTierLists.Verify(r => r.SaveUserFolder(MixEnum.Phoenix, userB,
             It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<IEnumerable<SongTierListEntry>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<IReadOnlyDictionary<Guid, double>>(), It.IsAny<CancellationToken>()), Times.Once);
         mediator.Verify(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(),
             It.IsAny<CancellationToken>()), Times.Exactly(3));
     }
@@ -183,13 +222,15 @@ public sealed class UserTierListSagaTests
         Mock<IChartRepository>? charts = null,
         Mock<IMediator>? mediator = null,
         Mock<IScoreReader>? scores = null,
-        Mock<IUserTierListRepository>? userTierLists = null)
+        Mock<IUserTierListRepository>? userTierLists = null,
+        Mock<IDateTimeOffsetAccessor>? clock = null)
     {
         charts ??= ChartsMock(Array.Empty<Chart>());
         mediator ??= MediatorReturning(Array.Empty<SongTierListEntry>());
         scores ??= new Mock<IScoreReader>();
         userTierLists ??= new Mock<IUserTierListRepository>();
-        return new UserTierListSaga(charts.Object, mediator.Object, scores.Object, userTierLists.Object);
+        return new UserTierListSaga(charts.Object, mediator.Object, scores.Object, userTierLists.Object,
+            (clock ?? FakeDateTime.At(2026, 7, 12)).Object);
     }
 
     private static ConsumeContext<T> BuildContext<T>(T message) where T : class

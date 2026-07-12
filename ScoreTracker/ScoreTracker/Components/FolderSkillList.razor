@@ -1,0 +1,94 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+
+@* The personal skill distribution for one folder — your ability per skill on the
+   charts you've played here, weakest first. One component, two homes: the tier
+   page's Folder Stats drawer and the Personalized Breakdown page (styles live in
+   site.css with the other shared-component styles). *@
+@if (_rows.Any())
+{
+    <div class="tier-folder-skills">
+        @if (!string.IsNullOrWhiteSpace(Title))
+        {
+            <MudText Typo="Typo.caption" Class="tier-folder-skills-title">@Title</MudText>
+        }
+        @foreach (var row in _rows)
+        {
+            var percent = (int)Math.Round(100 * row.Ability);
+            <div class="tier-folder-skill-row skillcat-@(row.Skill.GetPrimaryCategory().ToString().ToLowerInvariant())">
+                <span class="tier-folder-skill-label">@row.Skill.GetName()</span>
+                <span class="tier-folder-skill-track"><span class="tier-folder-skill-fill" style="width:@percent%"></span></span>
+                <span class="tier-folder-skill-value">@percent%</span>
+                <span class="tier-folder-skill-count">@row.Played/@row.Total</span>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IEnumerable<Chart> Charts { get; set; } = Array.Empty<Chart>();
+
+    [Parameter]
+    public IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> SkillChips { get; set; } =
+        new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
+
+    [Parameter]
+    public IDictionary<Guid, RecordedPhoenixScore> Scores { get; set; } =
+        new Dictionary<Guid, RecordedPhoenixScore>();
+
+    [Parameter] public string? Title { get; set; }
+
+    private IReadOnlyList<(Skill Skill, double Ability, int Played, int Total)> _rows =
+        Array.Empty<(Skill, double, int, int)>();
+
+    protected override void OnParametersSet()
+    {
+        _rows = FolderSkillScores().ToArray();
+    }
+
+    // Skill competence split into its two factors (owner workshop) —
+    // ABILITY = sum(coverage × score) / sum(coverage × 1,000,000) over PLAYED charts
+    // ("how well does it go when you play them"), COMPLETION = played/total charts
+    // carrying the skill. Displayed separately; sorted by their product (the original
+    // amalgam), so both "bad at it" and "haven't touched it" float to the top.
+    // Score-determined, never pass-determined. Whole-chart qualities (null coverage)
+    // and pre-crawl fallback tags weigh 1.0. <2 charts is noise.
+    private IEnumerable<(Skill Skill, double Ability, int Played, int Total)> FolderSkillScores()
+    {
+        // Proficiency lives in the 900k-1M band (owner): 990,000 = 90%, anything at or
+        // under 900,000 = 0%. Raw score/1M flattened every skill to ~95%.
+        const double scoreFloor = 900_000;
+        const double scoreRange = 100_000;
+        return Charts
+            .SelectMany(c => (SkillChips.TryGetValue(c.Id, out var chips) && chips.Count > 0
+                    ? chips.Select(chip => (chip.Skill, Weight: (double?)chip.SegmentFraction ?? 1.0))
+                    : c.Skills.Select(s => (Skill: s, Weight: 1.0)))
+                .GroupBy(p => p.Skill).Select(g => g.First())
+                .Select(p => (p.Skill, p.Weight, Chart: c)))
+            .GroupBy(p => p.Skill)
+            .Select(g =>
+            {
+                var played = g
+                    .Where(p => Scores.TryGetValue(p.Chart.Id, out var s) && s.Score != null)
+                    .ToArray();
+                var ability = played.Length == 0
+                    ? 0
+                    : played.Sum(p => p.Weight *
+                                      Math.Clamp((int)Scores[p.Chart.Id].Score!.Value - scoreFloor, 0,
+                                          scoreRange)) /
+                      played.Sum(p => p.Weight * scoreRange);
+                var coverageCompletion = g.Sum(p => p.Weight) == 0
+                    ? 0
+                    : played.Sum(p => p.Weight) / g.Sum(p => p.Weight);
+                return (Skill: g.Key, Ability: ability, Played: played.Length, Total: g.Count(),
+                    Sort: ability * coverageCompletion);
+            })
+            .Where(r => r.Total >= 2)
+            .OrderBy(r => r.Sort)
+            .ThenBy(r => r.Skill.GetName())
+            .Select(r => (r.Skill, r.Ability, r.Played, r.Total));
+    }
+}

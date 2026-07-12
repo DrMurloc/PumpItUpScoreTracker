@@ -9,9 +9,12 @@ internal interface IUserTierListRepository
     ///     Replaces one user's materialized relative tier list for a folder: the given
     ///     entries are upserted and the user's stale rows for the folder's other charts
     ///     are removed. Idempotent — replaying a score event converges on the same rows.
+    ///     Freshness (score-age workshop) rides per chart; missing charts default to
+    ///     full voice.
     /// </summary>
     Task SaveUserFolder(MixEnum mix, Guid userId, IReadOnlyCollection<Guid> folderChartIds,
-        IEnumerable<SongTierListEntry> entries, CancellationToken cancellationToken);
+        IEnumerable<SongTierListEntry> entries, IReadOnlyDictionary<Guid, double> freshnessByChart,
+        CancellationToken cancellationToken);
 
     /// <summary>
     ///     Every user's materialized categories for a set of charts (one folder) — the
@@ -21,4 +24,5 @@ internal interface IUserTierListRepository
         CancellationToken cancellationToken);
 }
 
-internal sealed record UserTierListEntryRecord(Guid UserId, Guid ChartId, TierListCategory Category, int Order);
+internal sealed record UserTierListEntryRecord(Guid UserId, Guid ChartId, TierListCategory Category, int Order,
+    double Freshness = 1.0);

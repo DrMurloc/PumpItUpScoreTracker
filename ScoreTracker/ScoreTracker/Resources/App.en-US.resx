@@ -3020,4 +3020,157 @@
   <data name="Score History" xml:space="preserve">
     <value>Score History</value>
   </data>
+  <data name="+{0} more" xml:space="preserve">
+    <value>+{0} more</value>
+  </data>
+  <data name="Across everything you've scored nearby" xml:space="preserve">
+    <value>Across everything you've scored nearby</value>
+  </data>
+  <data name="Active — {0} scores nearby, {1} skills have enough evidence" xml:space="preserve">
+    <value>Active — {0} scores nearby, {1} skills have enough evidence</value>
+  </data>
+  <data name="Back to Tier List" xml:space="preserve">
+    <value>Back to Tier List</value>
+  </data>
+  <data name="Charts that moved" xml:space="preserve">
+    <value>Charts that moved</value>
+  </data>
+  <data name="Community Tier List" xml:space="preserve">
+    <value>Community Tier List</value>
+  </data>
+  <data name="Easier for you" xml:space="preserve">
+    <value>Easier for you</value>
+  </data>
+  <data name="Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more." xml:space="preserve">
+    <value>Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more.</value>
+  </data>
+  <data name="Evidence" xml:space="preserve">
+    <value>Evidence</value>
+  </data>
+  <data name="Harder for you" xml:space="preserve">
+    <value>Harder for you</value>
+  </data>
+  <data name="How each skill runs against your own average" xml:space="preserve">
+    <value>How each skill runs against your own average</value>
+  </data>
+  <data name="How is this personalized?" xml:space="preserve">
+    <value>How is this personalized?</value>
+  </data>
+  <data name="In this folder" xml:space="preserve">
+    <value>In this folder</value>
+  </data>
+  <data name="Personalized Breakdown" xml:space="preserve">
+    <value>Personalized Breakdown</value>
+  </data>
+  <data name="Players Like You" xml:space="preserve">
+    <value>Players Like You</value>
+  </data>
+  <data name="Players like you" xml:space="preserve">
+    <value>Players like you</value>
+  </data>
+  <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
+    <value>Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours.</value>
+  </data>
+  <data name="Recalculated every few hours" xml:space="preserve">
+    <value>Recalculated every few hours</value>
+  </data>
+  <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
+    <value>Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts.</value>
+  </data>
+  <data name="Show all {0}" xml:space="preserve">
+    <value>Show all {0}</value>
+  </data>
+  <data name="Show fewer" xml:space="preserve">
+    <value>Show fewer</value>
+  </data>
+  <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
+    <value>Silent — no players found in your competitive range yet.</value>
+  </data>
+  <data name="Silent — only {0} skills have enough evidence. Your list currently matches the community's. Score more charts near this folder to turn this on." xml:space="preserve">
+    <value>Silent — only {0} skills have enough evidence. Your list currently matches the community's. Score more charts near this folder to turn this on.</value>
+  </data>
+  <data name="The shared tier list for this folder, built from everyone's data." xml:space="preserve">
+    <value>The shared tier list for this folder, built from everyone's data.</value>
+  </data>
+  <data name="Three sources vote on every chart. Sources with more weight move charts further." xml:space="preserve">
+    <value>Three sources vote on every chart. Sources with more weight move charts further.</value>
+  </data>
+  <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
+    <value>Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it.</value>
+  </data>
+  <data name="Vs. Peers" xml:space="preserve">
+    <value>Vs. Peers</value>
+  </data>
+  <data name="Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet." xml:space="preserve">
+    <value>Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet.</value>
+  </data>
+  <data name="What goes into your list" xml:space="preserve">
+    <value>What goes into your list</value>
+  </data>
+  <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
+    <value>Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown.</value>
+  </data>
+  <data name="You" xml:space="preserve">
+    <value>You</value>
+  </data>
+  <data name="Your Skill Estimate" xml:space="preserve">
+    <value>Your Skill Estimate</value>
+  </data>
+  <data name="Your ability on the charts you've played here — the same numbers as Folder Stats" xml:space="preserve">
+    <value>Your ability on the charts you've played here — the same numbers as Folder Stats</value>
+  </data>
+  <data name="Your list currently matches the community's on every rated chart." xml:space="preserve">
+    <value>Your list currently matches the community's on every rated chart.</value>
+  </data>
+  <data name="Your personalized list moves {0} of {1} charts away from the community's." xml:space="preserve">
+    <value>Your personalized list moves {0} of {1} charts away from the community's.</value>
+  </data>
+  <data name="Your skill profile" xml:space="preserve">
+    <value>Your skill profile</value>
+  </data>
+  <data name="Your skills" xml:space="preserve">
+    <value>Your skills</value>
+  </data>
+  <data name="stronger" xml:space="preserve">
+    <value>stronger</value>
+  </data>
+  <data name="weaker" xml:space="preserve">
+    <value>weaker</value>
+  </data>
+  <data name="{0} / {1} charts rated" xml:space="preserve">
+    <value>{0} / {1} charts rated</value>
+  </data>
+  <data name="{0} charts match the community tier" xml:space="preserve">
+    <value>{0} charts match the community tier</value>
+  </data>
+  <data name="{0} don't have enough data to move" xml:space="preserve">
+    <value>{0} don't have enough data to move</value>
+  </data>
+  <data name="{0} don't have enough skill data to move:" xml:space="preserve">
+    <value>{0} don't have enough skill data to move:</value>
+  </data>
+  <data name="{0} easier for you" xml:space="preserve">
+    <value>{0} easier for you</value>
+  </data>
+  <data name="{0} easier for you — mostly {1}" xml:space="preserve">
+    <value>{0} easier for you — mostly {1}</value>
+  </data>
+  <data name="{0} harder for you" xml:space="preserve">
+    <value>{0} harder for you</value>
+  </data>
+  <data name="{0} harder for you — mostly {1}" xml:space="preserve">
+    <value>{0} harder for you — mostly {1}</value>
+  </data>
+  <data name="{0} match the community tier" xml:space="preserve">
+    <value>{0} match the community tier</value>
+  </data>
+  <data name="{0} players found" xml:space="preserve">
+    <value>{0} players found</value>
+  </data>
+  <data name="Evidence already includes score age — older scores count for less." xml:space="preserve">
+    <value>Evidence already includes score age — older scores count for less.</value>
+  </data>
+  <data name="Older scores count for less — {0} of your nearby scores are much older than the rest of your record." xml:space="preserve">
+    <value>Older scores count for less — {0} of your nearby scores are much older than the rest of your record.</value>
+  </data>
 </root>

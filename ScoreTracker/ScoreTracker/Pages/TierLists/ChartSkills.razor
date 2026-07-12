@@ -114,7 +114,13 @@ else
         <div class="tier-toolbar-row tier-desktop-only">
             @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
             {
-                <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
+                <div class="tier-personalized-cell">
+                    <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
+                    <MudTooltip Text="@L["How is this personalized?"]">
+                        <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" Href="@BreakdownUrl"
+                                       aria-label="@L["How is this personalized?"]"></MudIconButton>
+                    </MudTooltip>
+                </div>
             }
             <MudSpacer></MudSpacer>
             @if (CurrentUser.IsLoggedIn)
@@ -140,19 +146,27 @@ else
             </MudButton>
         </div>
     </div>
-    @if (_isProvisionalFallback || PersonalizedActive)
-    {
-        <div class="tier-badges">
-            @if (_isProvisionalFallback)
-            {
-                <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Construction">@L["Provisional — based on Phoenix data"]</MudChip>
-            }
-            @if (PersonalizedActive)
-            {
-                <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Bolt">@L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name]</MudChip>
-            }
-        </div>
-    }
+    @* The badges row always names the active lens (and the grouping, on My Progress)
+       so a glance tells you what tier list you're looking at — the selects themselves
+       hide inside the Advanced drawer on compact. *@
+    <div class="tier-badges">
+        @if (_isProvisionalFallback)
+        {
+            <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Construction">@L["Provisional — based on Phoenix data"]</MudChip>
+        }
+        @if (PersonalizedActive)
+        {
+            @* The chip doubles as the door to the breakdown page — same destination as
+               the "How is this personalized?" links by the switch. *@
+            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Bolt"
+                     OnClick="@(() => NavManager.NavigateTo(BreakdownUrl))">@L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name]</MudChip>
+        }
+        <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@L["Ranked by"]: @LensDisplayName(_tierListType)</MudChip>
+        @if (IsMyProgress)
+        {
+            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@L["Grouped by"]: @L[_groupBy]</MudChip>
+        }
+    </div>
     @* 3 — folder progress (logged in) or the rule-9 import CTA (anonymous).
        Piucenter round 5: folder progress lives ONLY in the Folder Stats drawer at
        every width — the fold belongs to the tier sections (rule 1). *@
@@ -190,24 +204,13 @@ else
                 </div>
             }
             @* Piucenter round 3: the personal skill distribution, at a glance — your
-               pass rate per skill in this folder, weakest first (the By-Skill grouping
-               is this same data rendered as sections). Category tint + printed name +
-               printed count (rule 8). *@
-            @if (CurrentUser.IsLoggedIn && FolderSkillScores().Any())
+               ability per skill in this folder, weakest first (the By-Skill grouping
+               is this same data rendered as sections). Shared with the Personalized
+               Breakdown page via FolderSkillList. *@
+            @if (CurrentUser.IsLoggedIn)
             {
-                <div class="tier-folder-skills">
-                    <MudText Typo="Typo.caption" Class="tier-folder-skills-title">@L["Your Skills in Folder"]</MudText>
-                    @foreach (var row in FolderSkillScores())
-                    {
-                        var percent = (int)Math.Round(100 * row.Ability);
-                        <div class="tier-folder-skill-row skillcat-@(row.Skill.GetPrimaryCategory().ToString().ToLowerInvariant())">
-                            <span class="tier-folder-skill-label">@row.Skill.GetName()</span>
-                            <span class="tier-folder-skill-track"><span class="tier-folder-skill-fill" style="width:@percent%"></span></span>
-                            <span class="tier-folder-skill-value">@percent%</span>
-                            <span class="tier-folder-skill-count">@row.Played/@row.Total</span>
-                        </div>
-                    }
-                </div>
+                <FolderSkillList Charts="_charts.Values" SkillChips="_skillChips" Scores="_scores"
+                                 Title="@L["Your Skills in Folder"]"></FolderSkillList>
             }
             @if (_unpassedTodos.Any())
             {
@@ -604,7 +607,13 @@ else
             @lensControls
             @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
             {
-                <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
+                <div class="tier-personalized-cell">
+                    <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
+                    <MudTooltip Text="@L["How is this personalized?"]">
+                        <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" Href="@BreakdownUrl"
+                                       aria-label="@L["How is this personalized?"]"></MudIconButton>
+                    </MudTooltip>
+                </div>
             }
             <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
                        StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
@@ -663,6 +672,14 @@ else
 
     .tier-compact-only {
         display: none;
+    }
+
+    /* The Personalized switch and its breakdown ?-icon ride as one toolbar cell
+       (field-test round: the full "How is this personalized?" string was text bloat). */
+    .tier-personalized-cell {
+        display: flex;
+        align-items: center;
+        gap: 0;
     }
 
     @@media (max-width: 959.98px) {
@@ -910,49 +927,6 @@ else
 
     private IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> _skillChips =
         new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
-
-    // Folder Stats: skill competence split into its two factors (owner workshop) —
-    // ABILITY = sum(coverage × score) / sum(coverage × 1,000,000) over PLAYED charts
-    // ("how well does it go when you play them"), COMPLETION = played/total charts
-    // carrying the skill. Displayed separately; sorted by their product (the original
-    // amalgam), so both "bad at it" and "haven't touched it" float to the top.
-    // Score-determined, never pass-determined. Whole-chart qualities (null coverage)
-    // and pre-crawl fallback tags weigh 1.0. <2 charts is noise.
-    private IEnumerable<(Skill Skill, double Ability, int Played, int Total)> FolderSkillScores()
-    {
-        // Proficiency lives in the 900k-1M band (owner): 990,000 = 90%, anything at or
-        // under 900,000 = 0%. Raw score/1M flattened every skill to ~95%.
-        const double scoreFloor = 900_000;
-        const double scoreRange = 100_000;
-        return _charts.Values
-            .SelectMany(c => (_skillChips.TryGetValue(c.Id, out var chips) && chips.Count > 0
-                    ? chips.Select(chip => (chip.Skill, Weight: (double?)chip.SegmentFraction ?? 1.0))
-                    : c.Skills.Select(s => (Skill: s, Weight: 1.0)))
-                .GroupBy(p => p.Skill).Select(g => g.First())
-                .Select(p => (p.Skill, p.Weight, Chart: c)))
-            .GroupBy(p => p.Skill)
-            .Select(g =>
-            {
-                var played = g
-                    .Where(p => _scores.TryGetValue(p.Chart.Id, out var s) && s.Score != null)
-                    .ToArray();
-                var ability = played.Length == 0
-                    ? 0
-                    : played.Sum(p => p.Weight *
-                                      Math.Clamp((int)_scores[p.Chart.Id].Score!.Value - scoreFloor, 0,
-                                          scoreRange)) /
-                      played.Sum(p => p.Weight * scoreRange);
-                var coverageCompletion = g.Sum(p => p.Weight) == 0
-                    ? 0
-                    : played.Sum(p => p.Weight) / g.Sum(p => p.Weight);
-                return (Skill: g.Key, Ability: ability, Played: played.Length, Total: g.Count(),
-                    Sort: ability * coverageCompletion);
-            })
-            .Where(r => r.Total >= 2)
-            .OrderBy(r => r.Sort)
-            .ThenBy(r => r.Skill.GetName())
-            .Select(r => (r.Skill, r.Ability, r.Played, r.Total));
-    }
 
     // Card + table chips: dominance-ordered metrics when banked, mapped tags as the
     // pre-crawl fallback. Metric text is preformatted here so the card stays dumb.
@@ -1431,6 +1405,8 @@ else
     private bool ChabalaAvailable => _currentMix == MixEnum.Phoenix && _chabalaLinks.ContainsKey((_chartType, _level));
 
     private bool PersonalizedActive => _usePersonalizedData && CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score";
+
+    private string BreakdownUrl => $"/TierLists/{_chartType}/{_level}/Breakdown?Lens={_tierListType}";
 
     private bool Passed(Guid chartId) => _scores.TryGetValue(chartId, out var s) && !s.IsBroken;
 

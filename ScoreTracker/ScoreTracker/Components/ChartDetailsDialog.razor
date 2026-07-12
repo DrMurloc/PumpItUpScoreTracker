@@ -383,17 +383,16 @@
     private async Task<IReadOnlyList<(string, string)>> LoadPlacements(Guid chartId)
     {
         var placements = new List<(string, string)>();
-        foreach (var (listName, label, names) in new (string, string, Func<TierListCategory, string>)[]
+        foreach (var (listName, label) in new (string, string)[]
                  {
-                     ("Pass Count", L["Pass Difficulty"].ToString(), DifficultyName),
-                     ("Scores", L["Score Difficulty"].ToString(), DifficultyName),
-                     ("Popularity", L["Popularity"].ToString(), PopularityName)
+                     ("Pass Count", L["Pass Difficulty"].ToString()),
+                     ("Scores", L["Score Difficulty"].ToString())
                  })
         {
             var result = await Mediator.Send(new GetTierListWithFallbackQuery(listName, Mix));
             var entry = result.Entries.FirstOrDefault(e => e.ChartId == chartId);
             if (entry == null || entry.Category == TierListCategory.Unrecorded) continue;
-            placements.Add(($"{label}: {names(entry.Category)}",
+            placements.Add(($"{label}: {DifficultyName(entry.Category)}",
                 ThemeScales.DifficultyColor(entry.Category)));
         }
 
@@ -412,23 +411,6 @@
             TierListCategory.VeryHard => L["Very Hard"],
             TierListCategory.Underrated => L["1+ Level Harder"],
             _ => L["Not Rated"]
-        };
-    }
-
-    // Round 10: the Popularity list speaks popularity, not difficulty — mirrors the
-    // page's popularity bucket names ("Popularity: Very Hard" made no sense).
-    private string PopularityName(TierListCategory category)
-    {
-        return category switch
-        {
-            TierListCategory.Overrated => L["Ultra Popular"],
-            TierListCategory.VeryEasy => L["Very Popular"],
-            TierListCategory.Easy => L["Popular"],
-            TierListCategory.Medium => L["Average"],
-            TierListCategory.Hard => L["Unpopular"],
-            TierListCategory.VeryHard => L["Very Unpopular"],
-            TierListCategory.Underrated => L["Ultra Unpopular"],
-            _ => L["Unknown"]
         };
     }
 
