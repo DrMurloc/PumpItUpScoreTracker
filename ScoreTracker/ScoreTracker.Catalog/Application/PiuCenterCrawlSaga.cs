@@ -1,7 +1,9 @@
+using System.IO.Compression;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Catalog.Contracts.Messages;
 using ScoreTracker.Catalog.Domain;
+using ScoreTracker.Data.Apis;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
@@ -19,8 +21,11 @@ namespace ScoreTracker.Catalog.Application;
 ///     3. Regenerate every chart's Skill tags from the banked metrics — including
 ///        clearing tags on charts piucenter has nothing for. The pre-crawler hand tags
 ///        live on in scores.ChartSkillArchive only (owner-locked full replace).
+///     The snapshot import runs the same pipeline from an uploaded zip of a data
+///     release instead of HTTP — the zero-crawl bootstrap path.
 /// </summary>
-internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>
+internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
+    IConsumer<ImportPiuCenterSnapshotCommand>
 {
     private readonly IExternalChartAliasRepository _aliases;
     private readonly IChartRepository _charts;
@@ -51,14 +56,77 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>
             .ToArray();
 
         var aliases = await ReconcileAliases(table, phoenixCharts, now, cancellationToken);
-        var resolved = aliases
-            .Where(a => a.ChartId != null && a.Status != ExternalAliasStatus.NotFound)
-            .Where(a => table.Any(t => t.ExternalKey == a.ExternalKey))
-            .GroupBy(a => a.ExternalKey).Select(g => g.First())
-            .ToArray();
+        var resolved = ResolvedIn(aliases, table);
 
         await FillMetricGaps(resolved, table, version, cancellationToken);
         await RegenerateSkillTags(resolved, phoenixCharts, cancellationToken);
+    }
+
+    public async Task Consume(ConsumeContext<ImportPiuCenterSnapshotCommand> context)
+    {
+        var cancellationToken = context.CancellationToken;
+        var now = _clock.Now;
+        using var archive = new ZipArchive(new MemoryStream(context.Message.SnapshotZip), ZipArchiveMode.Read);
+
+        string? ReadEntry(string name)
+        {
+            var entry = archive.GetEntry(name);
+            if (entry == null) return null;
+            using var reader = new StreamReader(entry.Open());
+            return reader.ReadToEnd();
+        }
+
+        var version = decimal.Parse((ReadEntry("version.txt") ??
+                                     throw new InvalidOperationException(
+                                         "snapshot zip carries no version.txt")).Trim());
+        var table = PiuCenterDataParser.ParseChartTable(ReadEntry("page-content/chart-table.json") ??
+                                                        throw new InvalidOperationException(
+                                                            "snapshot zip carries no page-content/chart-table.json"));
+        var listingByKey = table.ToDictionary(t => t.ExternalKey);
+        var practiceByKey = PiuCenterDataParser
+            .ParsePracticeLists(ReadEntry("page-content/stepchart-skills.json") ?? "[]")
+            .GroupBy(e => e.ExternalKey)
+            .ToDictionary(g => g.Key, g => g.ToArray());
+        var predictions =
+            PiuCenterDataParser.ParseDifficultyPredictions(ReadEntry("page-content/tierlists.json") ?? "{}");
+
+        _logger.LogInformation("piucenter snapshot import: release {Version}, {Count} listed charts",
+            version, table.Count);
+        var phoenixCharts = (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
+            .ToArray();
+        var aliases = await ReconcileAliases(table, phoenixCharts, now, cancellationToken);
+        var resolved = ResolvedIn(aliases, table);
+
+        var banked = 0;
+        foreach (var alias in resolved)
+        {
+            var body = ReadEntry($"{alias.ExternalKey}.json");
+            if (body == null) continue;
+            var page = PiuCenterDataParser.ParseChartPage(alias.ExternalKey, body);
+            if (page == null) continue;
+            var rows = BuildMetrics(alias.ChartId!.Value, version, page,
+                listingByKey.GetValueOrDefault(alias.ExternalKey),
+                practiceByKey.GetValueOrDefault(alias.ExternalKey),
+                predictions.TryGetValue(alias.ExternalKey, out var prediction) ? prediction : null);
+            await _metrics.ReplaceChartMetrics(alias.ChartId.Value, PiuCenterMetrics.Source, rows,
+                cancellationToken);
+            banked++;
+        }
+
+        _logger.LogInformation("piucenter snapshot import: banked metrics for {Banked}/{Total} resolved charts",
+            banked, resolved.Length);
+        await RegenerateSkillTags(resolved, phoenixCharts, cancellationToken);
+    }
+
+    private static ExternalChartAlias[] ResolvedIn(IReadOnlyList<ExternalChartAlias> aliases,
+        IReadOnlyList<PiuCenterChartListing> table)
+    {
+        var listedKeys = table.Select(t => t.ExternalKey).ToHashSet();
+        return aliases
+            .Where(a => a.ChartId != null && a.Status != ExternalAliasStatus.NotFound)
+            .Where(a => listedKeys.Contains(a.ExternalKey))
+            .GroupBy(a => a.ExternalKey).Select(g => g.First())
+            .ToArray();
     }
 
     private async Task<IReadOnlyList<ExternalChartAlias>> ReconcileAliases(

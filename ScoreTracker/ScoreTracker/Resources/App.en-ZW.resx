@@ -2895,4 +2895,16 @@
   <data name="Bind Selected Chart" xml:space="preserve">
     <value>Brgnd Selrgcted Chrgrt</value>
   </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>Uplrgding</value>
+  </data>
+  <data name="Upload PIU Center Snapshot" xml:space="preserve">
+    <value>Uplrgd PIU Center Snapshrgt, mrgl</value>
+  </data>
+  <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
+    <value>A snapshrgt zip imprgrts a fetched data relrgse directly - same pipelrgn as the crrgwl, no fetchrgn, mrgl</value>
+  </data>
+  <data name="There was an error uploading the snapshot" xml:space="preserve">
+    <value>There was an errgr uplrgding the snapshrgt, mrgl</value>
+  </data>
 </root>

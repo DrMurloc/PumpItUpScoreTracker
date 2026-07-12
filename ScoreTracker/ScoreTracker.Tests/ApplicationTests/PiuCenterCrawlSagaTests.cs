@@ -150,6 +150,80 @@ public sealed class PiuCenterCrawlSagaTests
     }
 
     [Fact]
+    public async Task SnapshotImportBanksMetricsAndFlipsFromTheZipWithoutAnyHttp()
+    {
+        // The zero-crawl bootstrap: a zipped data release runs the same pipeline —
+        // alias reconcile, metric banking (stamped with the zip's version so the
+        // weekly crawl stays a no-op), skill flip — with the client never touched.
+        var chart = new ChartBuilder().WithSongName("Slam").WithArtist("Novasonic").WithLevel(7).Build();
+        var key = "Slam_-_Novasonic_S7_ARCADE";
+        var storage = new List<ChartSkillMetric>();
+        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { chart });
+        _charts.Setup(c => c.GetChartSkills(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartSkillsRecord>());
+        _aliases.Setup(a => a.GetAliases(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ExternalChartAlias>());
+        _metrics.Setup(m => m.ReplaceChartMetrics(chart.Id, PiuCenterMetrics.Source,
+                It.IsAny<IEnumerable<ChartSkillMetric>>(), It.IsAny<CancellationToken>()))
+            .Callback((Guid _, string _, IEnumerable<ChartSkillMetric> rows, CancellationToken _) =>
+                storage.AddRange(rows))
+            .Returns(Task.CompletedTask);
+        _metrics.Setup(m => m.GetMetrics(It.IsAny<IEnumerable<Guid>>(), PiuCenterMetrics.Source,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => storage.ToArray());
+
+        var zip = BuildSnapshotZip(new Dictionary<string, string>
+        {
+            ["version.txt"] = "050726",
+            ["page-content/chart-table.json"] =
+                $"[{{\"name\": \"{key}\", \"sord\": \"singles\", \"level\": 7, \"pack\": \"S.E.~EXTRA\", " +
+                "\"skills\": [\"drill\"], \"NPS\": 4.4, \"BPM info\": \"8th notes @ 132 bpm\", " +
+                "\"Sustain time\": 5, \"Total time under tension\": 5}]",
+            ["page-content/stepchart-skills.json"] = "[{}, {}]",
+            ["page-content/tierlists.json"] = "{}",
+            [$"{key}.json"] =
+                "[[], [], {\"chart_skill_summary\": [\"drill\"], \"Segment metadata\": " +
+                "[{\"level\": 5.0, \"Skill badges\": [\"twist_90\", \"drill\"], \"rare skills\": []}, " +
+                "{\"level\": 6.0, \"Skill badges\": [\"twist_90\"], \"rare skills\": []}], " +
+                "\"nps_summary\": 4.4}]"
+        });
+
+        var context = new Mock<ConsumeContext<ImportPiuCenterSnapshotCommand>>();
+        context.SetupGet(c => c.Message).Returns(new ImportPiuCenterSnapshotCommand(zip));
+        context.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+        await BuildSaga().Consume(context.Object);
+
+        // Auto-matched from the zip's table, banked with the zip's version, flipped.
+        _aliases.Verify(a => a.SaveAliases(PiuCenterMetrics.Source, It.Is<IEnumerable<ExternalChartAlias>>(list =>
+                list.Single().ExternalKey == key && list.Single().ChartId == chart.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Contains(storage, r => r.MetricName == PiuCenterMetrics.DataVersion && r.Value == 50726m);
+        Assert.Contains(storage, r => r.MetricName == "badge_fraction:twist_90" && r.Value == 1m);
+        _charts.Verify(c => c.SaveChartSkills(It.Is<ChartSkillsRecord>(r =>
+                r.ChartId == chart.Id && r.HighlightsSkill.Contains(Skill.Drills) &&
+                r.ContainsSkills.Contains(Skill.Twists)),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _piuCenter.VerifyNoOtherCalls();
+    }
+
+    private static byte[] BuildSnapshotZip(IReadOnlyDictionary<string, string> entries)
+    {
+        using var memory = new System.IO.MemoryStream();
+        using (var archive = new System.IO.Compression.ZipArchive(memory,
+                   System.IO.Compression.ZipArchiveMode.Create, true))
+        {
+            foreach (var (name, content) in entries)
+            {
+                using var writer = new System.IO.StreamWriter(archive.CreateEntry(name).Open());
+                writer.Write(content);
+            }
+        }
+
+        return memory.ToArray();
+    }
+
+    [Fact]
     public async Task RegenerationClearsTagsOnChartsPiuCenterHasNothingFor()
     {
         // The hand-tag purge: a chart with stored tags but no banked metrics gets an

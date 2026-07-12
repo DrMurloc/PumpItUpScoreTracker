@@ -2972,4 +2972,16 @@
   <data name="Bind Selected Chart" xml:space="preserve">
     <value>Collega il chart selezionato</value>
   </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>Caricamento in corso</value>
+  </data>
+  <data name="Upload PIU Center Snapshot" xml:space="preserve">
+    <value>Carica snapshot di PIU Center</value>
+  </data>
+  <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
+    <value>Uno zip di snapshot importa direttamente una versione dei dati già scaricata: stesso processo della scansione, senza download</value>
+  </data>
+  <data name="There was an error uploading the snapshot" xml:space="preserve">
+    <value>Si è verificato un errore durante il caricamento dello snapshot</value>
+  </data>
 </root>

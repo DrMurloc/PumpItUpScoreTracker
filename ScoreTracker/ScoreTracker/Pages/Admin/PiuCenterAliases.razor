@@ -1,6 +1,7 @@
 @page "/Admin/PiuCenter"
 @using MassTransit
 @using MediatR
+@using Microsoft.AspNetCore.Components.Forms
 @using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Commands
 @using ScoreTracker.Catalog.Contracts.Messages
@@ -16,6 +17,16 @@
 <MudText Typo="Typo.h4">PIU Center</MudText>
 <br/>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_crawlQueued" OnClick="RunCrawl">@L["Run PIU Center Crawl"]</MudButton>
+<MudFileUpload T="IBrowserFile" Accept=".zip" MaximumFileCount="1" FilesChanged="UploadSnapshot" Class="d-inline-flex ml-3">
+    <ActivatorContent>
+        <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_snapshotUploading"
+                   StartIcon="@(_snapshotUploading ? null : Icons.Material.Filled.UploadFile)">
+            @(_snapshotUploading ? L["Uploading"] : L["Upload PIU Center Snapshot"])
+        </MudButton>
+    </ActivatorContent>
+</MudFileUpload>
+<br/>
+<MudText Typo="Typo.caption">@L["A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching"]</MudText>
 <br/><br/>
 <MudText Typo="Typo.h5">@L["Unmatched PIU Center Keys"]</MudText>
 @if (!_unresolved.Any())
@@ -68,6 +79,34 @@ else
         _crawlQueued = true;
         await Bus.Publish(new CrawlPiuCenterCommand());
         Snackbar.Add(L["Queued"].Value, Severity.Success);
+    }
+
+    // A full release is ~15-30MB zipped; the stream rides SignalR in chunks.
+    private const long MaxSnapshotBytes = 128 * 1024 * 1024;
+    private bool _snapshotUploading;
+
+    private async Task UploadSnapshot(IBrowserFile? file)
+    {
+        if (file == null) return;
+        _snapshotUploading = true;
+        StateHasChanged();
+        try
+        {
+            using var memory = new MemoryStream();
+            await using (var stream = file.OpenReadStream(MaxSnapshotBytes))
+            {
+                await stream.CopyToAsync(memory);
+            }
+
+            await Bus.Publish(new ImportPiuCenterSnapshotCommand(memory.ToArray()));
+            Snackbar.Add(L["Queued"].Value, Severity.Success);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add(L["There was an error uploading the snapshot"].Value, Severity.Error);
+        }
+
+        _snapshotUploading = false;
     }
 
     private Task SelectChart(Chart chart)

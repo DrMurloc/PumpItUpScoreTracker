@@ -2973,4 +2973,16 @@
   <data name="Bind Selected Chart" xml:space="preserve">
     <value>選択したチャートをバインド</value>
   </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>アップロード中</value>
+  </data>
+  <data name="Upload PIU Center Snapshot" xml:space="preserve">
+    <value>PIU Centerスナップショットをアップロード</value>
+  </data>
+  <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
+    <value>スナップショットzipは取得済みのデータリリースを直接インポートします。クロールと同じ処理で、フェッチはありません</value>
+  </data>
+  <data name="There was an error uploading the snapshot" xml:space="preserve">
+    <value>スナップショットのアップロード中にエラーが発生しました</value>
+  </data>
 </root>

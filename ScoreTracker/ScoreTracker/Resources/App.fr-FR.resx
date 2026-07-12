@@ -2970,4 +2970,16 @@
   <data name="Bind Selected Chart" xml:space="preserve">
     <value>Associer le chart sélectionné</value>
   </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>Envoi en cours</value>
+  </data>
+  <data name="Upload PIU Center Snapshot" xml:space="preserve">
+    <value>Téléverser un snapshot PIU Center</value>
+  </data>
+  <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
+    <value>Un zip de snapshot importe directement une version de données déjà récupérée : même traitement que l'exploration, sans téléchargement</value>
+  </data>
+  <data name="There was an error uploading the snapshot" xml:space="preserve">
+    <value>Une erreur est survenue lors de l'envoi du snapshot</value>
+  </data>
 </root>

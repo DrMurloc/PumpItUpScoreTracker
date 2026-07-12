@@ -2924,4 +2924,16 @@
   <data name="Bind Selected Chart" xml:space="preserve">
     <value>Vincular chart selecionado</value>
   </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>Enviando</value>
+  </data>
+  <data name="Upload PIU Center Snapshot" xml:space="preserve">
+    <value>Enviar snapshot do PIU Center</value>
+  </data>
+  <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
+    <value>Um zip de snapshot importa diretamente uma versão de dados já baixada: mesmo processo da varredura, sem downloads</value>
+  </data>
+  <data name="There was an error uploading the snapshot" xml:space="preserve">
+    <value>Ocorreu um erro ao enviar o snapshot</value>
+  </data>
 </root>

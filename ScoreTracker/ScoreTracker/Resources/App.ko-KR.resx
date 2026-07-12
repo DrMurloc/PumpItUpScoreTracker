@@ -2853,4 +2853,16 @@
   <data name="Bind Selected Chart" xml:space="preserve">
     <value>선택한 채보 연결</value>
   </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>업로드 중</value>
+  </data>
+  <data name="Upload PIU Center Snapshot" xml:space="preserve">
+    <value>PIU Center 스냅샷 업로드</value>
+  </data>
+  <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
+    <value>스냅샷 zip은 이미 받아 둔 데이터 릴리스를 직접 가져옵니다. 크롤과 같은 과정이며 별도 다운로드가 없습니다</value>
+  </data>
+  <data name="There was an error uploading the snapshot" xml:space="preserve">
+    <value>스냅샷 업로드 중 오류가 발생했습니다</value>
+  </data>
 </root>
