@@ -679,17 +679,31 @@ html.nav-away .page-dock,
     max-width: 150px;
 }
 
-/* Match picker row (round 8): the field carries only "which match am I looking at" —
-   an autocomplete, plus New match on desktop (the dock CTA covers phones). */
-.rand-match-row {
+/* Match picker (round 9): rides the header, right-aligned — the field carries only
+   "which match am I looking at". New match joins it on desktop; the dock CTA covers
+   phones. On phone widths it takes its own full line instead of squeezing the title. */
+.rand-header-match {
+    margin-left: auto;
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: 6px 0;
 }
 
-.rand-match-row .rand-match-select {
-    max-width: 340px;
+.rand-header-match .rand-match-select {
+    min-width: 200px;
+    max-width: 300px;
+}
+
+@media (max-width: 599.98px) {
+    .rand-header-match {
+        flex: 1 1 100%;
+        margin-left: 0;
+    }
+
+    .rand-header-match .rand-match-select {
+        max-width: none;
+        flex: 1;
+    }
 }
 
 /* Manage-tournament drawer (round 8): stacked role-layered sections. */

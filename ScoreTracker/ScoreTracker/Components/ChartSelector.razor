@@ -8,7 +8,7 @@
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator;
-<MudAutocomplete Dense="true" Disabled="Disabled" T="string" Value="_selected" ValueChanged="SetChart" MaxItems="15" CoerceValue="false" CoerceText="true" Label="@Label" Placeholder="@Placeholder" Variant="Variant" Margin="Margin" SearchFunc="(s,c)=>SearchSongs(s)">
+<MudAutocomplete @ref="_autocomplete" Dense="true" Disabled="Disabled" T="string" Value="_selected" ValueChanged="SetChart" MaxItems="15" CoerceValue="false" CoerceText="true" Label="@Label" Placeholder="@Placeholder" Variant="Variant" Margin="Margin" SearchFunc="(s,c)=>SearchSongs(s)">
     <ItemTemplate>
         <SongImage Song="_chartNames[context].Song" Small="true"></SongImage>
         <DifficultyBubble Chart="_chartNames[context]" Small="true"></DifficultyBubble> @_chartNames[context].Song.Name
@@ -40,6 +40,14 @@
     public IEnumerable<Chart>? Charts { get; set; } = null;
 
     private string _selected = string.Empty;
+    private MudAutocomplete<string>? _autocomplete;
+
+    /// <summary>Hosts opening this in a popover can put the cursor straight in the search box.</summary>
+    public ValueTask FocusAsync()
+    {
+        return _autocomplete?.FocusAsync() ?? ValueTask.CompletedTask;
+    }
+
     private static readonly Regex DifficultyRegex = new Regex(@"\s(S|D|C)[0-9]{1,2}$",RegexOptions.Compiled |RegexOptions.IgnoreCase);
     private Task<IEnumerable<string>> SearchSongs(string v)
     {

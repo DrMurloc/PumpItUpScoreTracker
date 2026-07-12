@@ -67,8 +67,32 @@ else
             <MudText Typo="Typo.h5">@ContextName</MudText>
             @if (CanOperate)
             {
-                <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Primary"
-                               OnClick="OpenManage" aria-label="@L["Manage tournament"]"></MudIconButton>
+                @* Phone widths carry the cog on the dock — no duplicate (round 9). *@
+                <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                    <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Primary"
+                                   OnClick="OpenManage" aria-label="@L["Manage tournament"]"></MudIconButton>
+                </MudHidden>
+            }
+            @if (_matches.Any())
+            {
+                @* Match picker rides the header, right-aligned (round 9) — a full row of
+                   vertical space back. New match joins it on desktop; the dock CTA covers
+                   phones. *@
+                <div class="rand-header-match">
+                    <MudAutocomplete T="DrawDto" Value="SelectedMatch" ValueChanged="OnMatchPicked"
+                                     SearchFunc="@((s, c) => SearchMatches(s))" ToStringFunc="@(m => m?.Name ?? string.Empty)"
+                                     Label="@L["Match"]" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                     MaxItems="50" Clearable="false" MinCharacters="0" SelectValueOnTab="true"
+                                     Class="rand-match-select"></MudAutocomplete>
+                    @if (CanOperate)
+                    {
+                        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="() => _showNewMatch = !_showNewMatch">@L["New match"]</MudButton>
+                        </MudHidden>
+                    }
+                </div>
             }
         }
         else
@@ -117,25 +141,7 @@ else
     @if (_contextTournamentId != null)
     {
         @* Match management (delete/rename/redraw/invites) lives in the manage drawer
-           (round 8) — the field carries only "which match am I looking at". *@
-        @if (_matches.Any())
-        {
-            <div class="rand-match-row">
-                <MudAutocomplete T="DrawDto" Value="SelectedMatch" ValueChanged="OnMatchPicked"
-                                 SearchFunc="@((s, c) => SearchMatches(s))" ToStringFunc="@(m => m?.Name ?? string.Empty)"
-                                 Label="@L["Match"]" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense"
-                                 MaxItems="50" Clearable="false" MinCharacters="0" SelectValueOnTab="true"
-                                 Class="rand-match-select"></MudAutocomplete>
-                @if (CanOperate)
-                {
-                    <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
-                                   StartIcon="@Icons.Material.Filled.Add"
-                                   OnClick="() => _showNewMatch = !_showNewMatch">@L["New match"]</MudButton>
-                    </MudHidden>
-                }
-            </div>
-        }
+           (round 8); the match picker rides the header (round 9). *@
         @if (_showNewMatch && CanOperate)
         {
             <div class="rand-create-tournament">
@@ -336,17 +342,19 @@ else
             @* Option C (owner-picked): the popup belongs to the slot you tapped — same
                anchor/popover/click-away vocabulary as the level selector. *@
             <div class="folder-picker-anchor rand-add-anchor">
-                <button type="button" class="rand-add-tile" @onclick="() => _showAddChart = !_showAddChart"
+                <button type="button" class="rand-add-tile" @onclick="ToggleAddChart"
                         aria-haspopup="true" aria-expanded="@(_showAddChart ? "true" : "false")"
                         aria-label="@L["Add Chart"]">
                     <span class="rand-add-tile-plus">+</span>
                     <span class="rand-add-tile-label">@L["Add Chart"]</span>
                 </button>
-                <MudPopover Open="_showAddChart" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft">
+                @* Opens upward from the tile's top-left (round 9) — the ghost card sits at
+                   the bottom of the grid, so downward would run off-screen. *@
+                <MudPopover Open="_showAddChart" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft">
                     <div class="folder-picker-pop rand-add-pop">
                         <MudText Typo="Typo.subtitle2">@L["Add a chart to the draw"]</MudText>
                         <MudText Typo="Typo.caption" Class="rand-section-hint">@L["It lands at the end, unprotected."]</MudText>
-                        <ChartSelector Mix="_mix" Label="" Placeholder="@L["Search by song name…"].Value"
+                        <ChartSelector @ref="_addChartSelector" Mix="_mix" Label="" Placeholder="@L["Search by song name…"].Value"
                                        ChartIdSelected="AddChart"></ChartSelector>
                     </div>
                 </MudPopover>
@@ -672,6 +680,8 @@ else
     private bool _loading = true;
     private bool _showSettings;
     private bool _showAddChart;
+    private bool _focusAddChart;
+    private ChartSelector? _addChartSelector;
     private int? _matchCount;
     private CancellationTokenSource? _countCts;
 
@@ -1322,6 +1332,22 @@ else
             _cards.RemoveAll(c => c.State == DrawCardState.Vetoed);
             var order = 1;
             foreach (var card in _cards) card.Order = order++;
+        }
+    }
+
+    private void ToggleAddChart()
+    {
+        _showAddChart = !_showAddChart;
+        // Focus lands after the popover content has rendered (OnAfterRenderAsync).
+        _focusAddChart = _showAddChart;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusAddChart && _showAddChart && _addChartSelector != null)
+        {
+            _focusAddChart = false;
+            await _addChartSelector.FocusAsync();
         }
     }
 
