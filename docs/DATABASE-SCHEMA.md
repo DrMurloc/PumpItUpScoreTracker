@@ -104,6 +104,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.PhotoVerification` | Photo proofs attached to sessions |
 | `scores.TournamentChartLevel` | Per-tournament chart level overrides |
 | `scores.TournamentRole` | Per-tournament roles (organizer, judge, …) |
+| `scores.TournamentRoleInvite` | Role-carrying invite link tokens (Head TO mints; optional expiry) |
 | `scores.QualifiersConfiguration` | Qualifier stage setup: charts, scoring, cutoff, and the mix the qualifier runs on |
 | `scores.UserQualifier` | Qualifier entries and approval status |
 | `scores.UserQualifierHistory` | Timestamped snapshots of qualifier submissions |

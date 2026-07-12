@@ -2,6 +2,7 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.EventCompetition.Contracts;
 using ScoreTracker.EventCompetition.Contracts.Queries;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.EventCompetition.Infrastructure.Entities;
@@ -14,18 +15,21 @@ using ScoreTracker.Domain.SecondaryPorts;
 namespace ScoreTracker.EventCompetition.Infrastructure
 {
     internal sealed class EFTournamentRepository : ITournamentRepository,
-        IRequestHandler<GetTournamentRolesQuery, IEnumerable<UserTournamentRole>>
+        IRequestHandler<GetTournamentRolesQuery, IEnumerable<UserTournamentRole>>,
+        IRequestHandler<GetMyTournamentsQuery, IEnumerable<TournamentRoleListing>>
     {
         private readonly IMemoryCache _memoryCache;
         private readonly IChartRepository _charts;
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
+        private readonly ICurrentUserAccessor _currentUser;
 
         public EFTournamentRepository(IMemoryCache memoryCache, IChartRepository charts,
-            IDbContextFactory<ChartAttemptDbContext> factory)
+            IDbContextFactory<ChartAttemptDbContext> factory, ICurrentUserAccessor currentUser)
         {
             _factory = factory;
             _memoryCache = memoryCache;
             _charts = charts;
+            _currentUser = currentUser;
         }
 
         private static string TourneyCacheKey = $@"{nameof(EFTournamentRepository)}_Tournies";
@@ -42,7 +46,11 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                     .GroupBy(uts => uts.TournamentId)
                     .ToDictionary(g => g.Key, g => g.Count());
 
-                return (await database.Set<TournamentEntity>().ToArrayAsync(cancellationToken)).Select(t =>
+                // Unlisted micro-tournaments are invisible here by design — every existing
+                // consumer (nav, /Tournaments, the API) wants the curated listing. Role
+                // holders reach them through GetMyTournamentsQuery instead.
+                return (await database.Set<TournamentEntity>().Where(t => !t.IsUnlisted)
+                        .ToArrayAsync(cancellationToken)).Select(t =>
                     new TournamentRecord(t.Id,
                         t.Name,
                         counts.TryGetValue(t.Id, out var count) ? count : 0,
@@ -387,6 +395,93 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                     .Select(t => new UserTournamentRole(t.TournamentId, t.UserId, Enum.Parse<TournamentRole>(t.Role)))
                     .ToArrayAsync(cancellationToken);
             });
+        }
+
+        public async Task<IEnumerable<TournamentRoleListing>> Handle(GetMyTournamentsQuery request,
+            CancellationToken cancellationToken)
+        {
+            if (!_currentUser.IsLoggedIn) return Array.Empty<TournamentRoleListing>();
+
+            var userId = _currentUser.User.Id;
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return (await (from r in database.Set<TournamentRoleEntity>()
+                        join t in database.Set<TournamentEntity>() on r.TournamentId equals t.Id
+                        where r.UserId == userId
+                        select new { t.Id, t.Name, r.Role, t.IsUnlisted })
+                    .ToArrayAsync(cancellationToken))
+                .Select(x => new TournamentRoleListing(x.Id, x.Name, Enum.Parse<TournamentRole>(x.Role),
+                    x.IsUnlisted))
+                .ToArray();
+        }
+
+        public async Task CreateUnlistedTournament(TournamentRecord tournament, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            await database.Set<TournamentEntity>().AddAsync(new TournamentEntity
+            {
+                Id = tournament.Id,
+                Configuration = "{}",
+                Name = tournament.Name,
+                Type = tournament.Type.ToString(),
+                Location = tournament.Location,
+                IsHighlighted = false,
+                StartDate = tournament.StartDate,
+                EndDate = tournament.EndDate,
+                IsMoM = false,
+                IsUnlisted = true
+            }, cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
+            // Not in the listed cache, but clear it anyway in case the flag is ever flipped by hand.
+            _memoryCache.Remove(TourneyCacheKey);
+        }
+
+        public async Task<Guid> CreateRoleInvite(Guid tournamentId, TournamentRole role, DateTimeOffset? expiresAt,
+            Guid createdBy, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var token = Guid.NewGuid();
+            await database.Set<TournamentRoleInviteEntity>().AddAsync(new TournamentRoleInviteEntity
+            {
+                Token = token,
+                TournamentId = tournamentId,
+                Role = role.ToString(),
+                ExpiresAt = expiresAt,
+                CreatedBy = createdBy
+            }, cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
+            return token;
+        }
+
+        public async Task<TournamentRoleInviteRecord?> GetRoleInvite(Guid token, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var entity = await database.Set<TournamentRoleInviteEntity>()
+                .FirstOrDefaultAsync(i => i.Token == token, cancellationToken);
+            return entity == null
+                ? null
+                : new TournamentRoleInviteRecord(entity.Token, entity.TournamentId,
+                    Enum.Parse<TournamentRole>(entity.Role), entity.ExpiresAt);
+        }
+
+        public async Task<IEnumerable<TournamentRoleInviteRecord>> GetRoleInvites(Guid tournamentId,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return (await database.Set<TournamentRoleInviteEntity>()
+                    .Where(i => i.TournamentId == tournamentId)
+                    .ToArrayAsync(cancellationToken))
+                .Select(i => new TournamentRoleInviteRecord(i.Token, i.TournamentId,
+                    Enum.Parse<TournamentRole>(i.Role), i.ExpiresAt))
+                .ToArray();
+        }
+
+        public async Task DeleteRoleInvite(Guid token, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var entities = await database.Set<TournamentRoleInviteEntity>()
+                .Where(i => i.Token == token).ToArrayAsync(cancellationToken);
+            database.Set<TournamentRoleInviteEntity>().RemoveRange(entities);
+            await database.SaveChangesAsync(cancellationToken);
         }
     }
 }
