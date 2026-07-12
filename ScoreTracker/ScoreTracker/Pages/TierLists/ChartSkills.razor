@@ -145,10 +145,9 @@ else
             }
         </div>
     }
-    @* 3 — progress strip (logged in) or the rule-9 import CTA (anonymous). Round 8:
-       below 960px the whole strip + legend live behind the Folder Stats drawer —
-       mobile's fold belongs to the tier sections (rule 1). The stats markup is one
-       shared fragment so the inline strip and the drawer can't drift apart. *@
+    @* 3 — folder progress (logged in) or the rule-9 import CTA (anonymous).
+       Piucenter round 5: folder progress lives ONLY in the Folder Stats drawer at
+       every width — the fold belongs to the tier sections (rule 1). *@
     @if (CurrentUser.IsLoggedIn)
     {
         RenderFragment folderStatsCore = @<text>
@@ -206,24 +205,10 @@ else
             }
         </text>;
 
-        <div class="tier-progress-strip tier-desktop-only">
-            @folderStatsCore
-            @* Folder Levels = Phoenix title-progress; legacy mixes have no title data
-               (owner: legacy title levels are a future-session problem). *@
-            @if (!IsLegacy)
-            {
-                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
-                           StartIcon="@(_titlesCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
-                           OnClick="ToggleTitles" aria-expanded="@(_titlesCollapsed ? "false" : "true")">@L["Folder Levels"]</MudButton>
-                @if (!_titlesCollapsed)
-                {
-                    <MudGrid>
-                        <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_chartType == ChartType.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
-                    </MudGrid>
-                }
-            }
-        </div>
-        @* 4 — the border language, printed (rule 8). *@
+        @* Piucenter round 5: the inline desktop strip died — the folder-skills block
+           regrew it past the fold, so the Folder Stats drawer is now folder progress's
+           ONE home at every width (the button shows everywhere). The legend stays
+           inline on desktop: it explains the borders on the cards beside it. *@
         <div class="tier-desktop-only">
             <BorderLegend></BorderLegend>
         </div>
@@ -276,9 +261,9 @@ else
     <div class="tier-content-bar">
         @if (CurrentUser.IsLoggedIn)
         {
-            @* Round 9: on compact, Folder Stats takes the Ranked-by slot (the lens
-               controls live in the Advanced drawer there). *@
-            <MudButton Class="tier-compact-only" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
+            @* Piucenter round 5: Folder Stats shows at every width — the drawer is
+               folder progress's one home now that the inline desktop strip is gone. *@
+            <MudButton Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.QueryStats" OnClick="() => _statsOpen = true">@L["Folder Stats"]</MudButton>
         }
         <div class="tier-flat tier-desktop-only">
@@ -637,7 +622,8 @@ else
 <style>
     /* Round 8: one clamp for 4K, one 960px breakpoint (matches the shell's bottom
        nav). Below it: two explicit toolbar rows, the bottom action bar takes over
-       Download/Filters, and the strip + legend live behind the Folder Stats drawer. */
+       Download/Filters, and the legend lives behind the Folder Stats drawer (folder
+       progress lives there at EVERY width since piucenter round 5). */
     .tier-page {
         max-width: 1680px;
         margin: 0 auto;
@@ -743,13 +729,6 @@ else
         display: flex;
         flex-wrap: wrap;
         gap: 4px;
-        margin: 8px 0;
-    }
-
-    .tier-progress-strip {
-        border: 1px solid var(--mud-palette-lines-default);
-        border-radius: 8px;
-        padding: 8px 12px;
         margin: 8px 0;
     }
 
