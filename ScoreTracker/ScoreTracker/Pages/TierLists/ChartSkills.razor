@@ -479,7 +479,7 @@ else
                                                TierLabel="@(ShowLensAnnotation ? (string)L[TierName(entry.Category)] : null)"
                                                TierColor="@(ShowLensAnnotation ? ThemeScales.DifficultyColor(entry.Category) : null)"
                                                StepArtist="@(_settings.ShowStepArtist ? chart.StepArtist?.ToString() : null)"
-                                               Skills="@(_settings.ShowSkills && !IsSkillView ? SkillChipsFor(chart) : null)"
+                                               Skills="@(_settings.ShowSkills ? SkillChipsFor(chart) : null)"
                                                AgeDays="@(_showAge && score != null ? (int)(_now - score.RecordedDate).TotalDays : null)"
                                                OnToDo="ToggleToDo"
                                                OnOpen="OpenDetails"></TierListChartCard>
