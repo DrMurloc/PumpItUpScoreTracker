@@ -66,7 +66,7 @@
                                     Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
                     @if (ScoreAgeDays != null)
                     {
-                        <MudText Typo="Typo.caption">@L["Recorded {0} days ago", ScoreAgeDays]</MudText>
+                        <MudText Typo="Typo.caption" Class="chart-details-score-age">@L["Recorded {0} days ago", ScoreAgeDays]</MudText>
                     }
                 </div>
             }
@@ -111,16 +111,19 @@
                 <div class="chart-details-skill-bars">
                     @foreach (var chip in _skillChips.Take(6))
                     {
+                        @* Null coverage = a whole-chart quality (piucenter's sustained/
+                           bursty classify the chart, not its sections): full bar, no number. *@
                         var percent = chip.SegmentFraction == null
                             ? (int?)null
                             : (int)Math.Round(chip.SegmentFraction.Value * 100);
                         <div class="chart-details-skill-bar skillcat-@(chip.Skill.GetPrimaryCategory().ToString().ToLowerInvariant())">
                             <span class="chart-details-skill-bar-label">@chip.Skill.GetName()</span>
-                            <span class="chart-details-skill-bar-track"><span class="chart-details-skill-bar-fill" style="width:@(percent ?? 0)%"></span></span>
-                            <span class="chart-details-skill-bar-value">@(percent == null ? "—" : $"{percent}%")</span>
+                            <span class="chart-details-skill-bar-track"><span class="chart-details-skill-bar-fill" style="width:@(percent ?? 100)%"></span></span>
+                            <span class="chart-details-skill-bar-value">@(percent == null ? "" : $"{percent}%")</span>
                         </div>
                     }
                 </div>
+                <MudText Typo="Typo.caption" Class="chart-details-skill-note">@L["Share of chart sections featuring each skill"]</MudText>
             }
             else if (Chart.Skills.Any())
             {
@@ -197,6 +200,28 @@
 
     .chart-details-score {
         margin: 8px 0;
+    }
+
+    /* Age reads under the score, not beside it (owner, piucenter round 3). */
+    .chart-details-score-age {
+        display: block;
+        margin-top: 2px;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    /* Section headings carry a hairline so Journey/Skills/Record read as their own
+       blocks instead of bleeding together (owner, piucenter round 3). */
+    .chart-details-dialog .mud-typography-overline {
+        display: block;
+        border-top: 1px solid var(--mud-palette-lines-default);
+        padding-top: 10px;
+        margin-top: 12px;
+    }
+
+    .chart-details-skill-note {
+        display: block;
+        color: var(--mud-palette-text-secondary);
+        margin-top: 2px;
     }
 
     .chart-details-journey-row {
