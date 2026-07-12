@@ -373,6 +373,25 @@ namespace ScoreTracker.EventCompetition.Infrastructure
             _memoryCache.Remove(TourneyRolesCacheKey(tournamentId));
         }
 
+        public async Task SetDiscordChannel(Guid tournamentId, ulong? channelId, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var entity = await database.Set<TournamentEntity>()
+                .FirstOrDefaultAsync(t => t.Id == tournamentId, cancellationToken);
+            if (entity == null) return;
+
+            entity.DiscordChannelId = channelId;
+            await database.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<ulong?> GetDiscordChannel(Guid tournamentId, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return await database.Set<TournamentEntity>().Where(t => t.Id == tournamentId)
+                .Select(t => t.DiscordChannelId)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
 
         private sealed record UserEntryDto(Guid UserId, string Name, int Score, TimeSpan RestTime, int ChartsPlayed,
             double AverageDifficulty, string VerificationType, bool NeedsApproval, string? VideoUrl)

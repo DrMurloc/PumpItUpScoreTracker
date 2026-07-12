@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
@@ -29,11 +30,14 @@ public sealed class DrawSagaTests
     private readonly Mock<IRandomizerRepository> _settings = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<IChartRepository> _charts = new();
+    private readonly Mock<IBotClient> _bot = new();
     private readonly User _user = new UserBuilder().Build();
 
     private DrawSaga BuildSaga()
     {
-        return new DrawSaga(_draws.Object, _settings.Object, _currentUser.Object, _mediator.Object);
+        return new DrawSaga(_draws.Object, _settings.Object, _currentUser.Object, _mediator.Object,
+            _charts.Object, _bot.Object);
     }
 
     private void LogIn(bool asAdmin = false)
@@ -288,6 +292,110 @@ public sealed class DrawSagaTests
         Assert.Null(result);
         _draws.Verify(d => d.GetActiveDraw(It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task PushSendsThePlayOrderCardToTheConfiguredChannel()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        RolesAre(tournamentId, new UserTournamentRole(tournamentId, _user.Id, TournamentRole.Assistant));
+
+        var district = new ChartBuilder().WithSongName("District 1").WithLevel(17).Build();
+        var achluoias = new ChartBuilder().WithSongName("Achluoias").WithType(ChartType.Double).WithLevel(24).Build();
+        var gargoyle = new ChartBuilder().WithSongName("Gargoyle").WithLevel(19).Build();
+        var draw = new DrawDto(Guid.NewGuid(), Guid.NewGuid(), MixEnum.Phoenix, tournamentId, new[]
+        {
+            new DrawCardDto(Guid.NewGuid(), district.Id, 1, DrawCardState.None),
+            new DrawCardDto(Guid.NewGuid(), achluoias.Id, 2, DrawCardState.Vetoed),
+            new DrawCardDto(Guid.NewGuid(), gargoyle.Id, 3, DrawCardState.Protected)
+        }, "R1 - Ada vs Kei");
+        _draws.Setup(d => d.GetDraw(draw.Id, It.IsAny<CancellationToken>())).ReturnsAsync(draw);
+        _mediator.Setup(m => m.Send(It.Is<GetTournamentDiscordChannelQuery>(q => q.TournamentId == tournamentId),
+            It.IsAny<CancellationToken>())).ReturnsAsync((ulong?)42);
+        _mediator.Setup(m => m.Send(It.Is<GetTournamentQuery>(q => q.TournamentId == tournamentId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TournamentConfiguration(new ScoringConfiguration()) { Name = "Bumble Bee Brawl" });
+        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, It.IsAny<IEnumerable<Guid>>(),
+            It.IsAny<CancellationToken>())).ReturnsAsync(new[] { district, achluoias, gargoyle });
+        RichBotMessage? sent = null;
+        ulong[]? channels = null;
+        _bot.Setup(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(), It.IsAny<IEnumerable<ulong>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<RichBotMessage>, IEnumerable<ulong>, CancellationToken>((messages, channelIds, _) =>
+            {
+                sent = messages.Single();
+                channels = channelIds.ToArray();
+            })
+            .Returns(Task.CompletedTask);
+
+        await BuildSaga().Handle(new PushDrawToDiscordCommand(draw.Id), CancellationToken.None);
+
+        Assert.Equal(42UL, Assert.Single(channels!));
+        Assert.NotNull(sent);
+        Assert.Contains("Bumble Bee Brawl", sent!.Header!.Markdown);
+        Assert.Contains("R1 - Ada vs Kei", sent.Header.Markdown);
+
+        // Played charts lead in play order with jackets and their original badge numbers;
+        // the veto strip trails them, struck and art-free.
+        var blocks = sent.Blocks.ToList();
+        var sections = blocks.OfType<RichBotSection>().ToArray();
+        Assert.Equal(2, sections.Length);
+        Assert.Contains("`1`", sections[0].Markdown);
+        Assert.Contains("District 1", sections[0].Markdown);
+        Assert.NotNull(sections[0].Thumbnail);
+        Assert.Contains("`3`", sections[1].Markdown);
+        Assert.Contains("HELD", sections[1].Markdown);
+        var vetoes = blocks.OfType<RichBotText>().First(t => t.Markdown.Contains("VETOED"));
+        Assert.Contains("~~Achluoias~~", vetoes.Markdown);
+        Assert.True(blocks.IndexOf(vetoes) > blocks.IndexOf(sections[1]));
+        Assert.Contains("2 to play · 1 vetoed · 1 held", blocks.OfType<RichBotText>().Last().Markdown);
+        Assert.Contains(draw.Slug.ToString(), Assert.Single(sent.Links).Url.ToString());
+    }
+
+    [Fact]
+    public async Task PushWithoutAConfiguredChannelSendsNothing()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        var draw = Draw(tournamentId);
+        RolesAre(tournamentId, new UserTournamentRole(tournamentId, _user.Id, TournamentRole.Assistant));
+        _draws.Setup(d => d.GetDraw(draw.Id, It.IsAny<CancellationToken>())).ReturnsAsync(draw);
+        _mediator.Setup(m => m.Send(It.IsAny<GetTournamentDiscordChannelQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ulong?)null);
+
+        await Assert.ThrowsAsync<RandomizerException>(() => BuildSaga()
+            .Handle(new PushDrawToDiscordCommand(draw.Id), CancellationToken.None));
+
+        _bot.Verify(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(), It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task PersonalDrawsCannotPushToDiscord()
+    {
+        LogIn();
+        var draw = Draw();
+        _draws.Setup(d => d.GetDraw(draw.Id, It.IsAny<CancellationToken>())).ReturnsAsync(draw);
+
+        await Assert.ThrowsAsync<RandomizerException>(() => BuildSaga()
+            .Handle(new PushDrawToDiscordCommand(draw.Id), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task PushRequiresAStaffRole()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        var draw = Draw(tournamentId);
+        RolesAre(tournamentId);
+        _draws.Setup(d => d.GetDraw(draw.Id, It.IsAny<CancellationToken>())).ReturnsAsync(draw);
+
+        await Assert.ThrowsAsync<NotAuthorizedException>(() => BuildSaga()
+            .Handle(new PushDrawToDiscordCommand(draw.Id), CancellationToken.None));
+
+        _bot.Verify(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(), It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

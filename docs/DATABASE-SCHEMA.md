@@ -106,7 +106,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.Tournament` | Competitive event definition: configuration, location, visibility |
+| `scores.Tournament` | Competitive event definition: configuration, location, visibility, and the Discord channel the randomizer's Push to Discord posts into |
 | `scores.UserTournamentRegistration` | Player registrations |
 | `scores.UserTournamentSession` | A player's session: charts played, scores, approval state, and the mix it was played on |
 | `scores.PhotoVerification` | Photo proofs attached to sessions |

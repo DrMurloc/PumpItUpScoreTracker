@@ -22,7 +22,9 @@ namespace ScoreTracker.EventCompetition.Application
         IRequestHandler<RedeemTournamentRoleInviteCommand, Guid>,
         IRequestHandler<GetTournamentRoleInvitesQuery, IEnumerable<TournamentRoleInviteRecord>>,
         IRequestHandler<DeleteTournamentRoleInviteCommand>,
-        IRequestHandler<RemoveTournamentRoleCommand>
+        IRequestHandler<RemoveTournamentRoleCommand>,
+        IRequestHandler<SetTournamentDiscordChannelCommand>,
+        IRequestHandler<GetTournamentDiscordChannelQuery, ulong?>
     {
         private readonly ITournamentRepository _tournaments;
         private readonly ICurrentUserAccessor _currentUser;
@@ -89,6 +91,28 @@ namespace ScoreTracker.EventCompetition.Application
                 throw new NotAuthorizedException("remove yourself from your own tournament");
 
             await _tournaments.RevokeRole(request.TournamentId, request.UserId, cancellationToken);
+        }
+
+        public async Task Handle(SetTournamentDiscordChannelCommand request, CancellationToken cancellationToken)
+        {
+            await EnsureHeadOrganizer(request.TournamentId, "configure this tournament's Discord channel",
+                cancellationToken);
+            await _tournaments.SetDiscordChannel(request.TournamentId, request.ChannelId, cancellationToken);
+        }
+
+        public async Task<ulong?> Handle(GetTournamentDiscordChannelQuery request, CancellationToken cancellationToken)
+        {
+            // Any staff role: assistants need it to see the push button. Never anonymous —
+            // a channel id is server-internal.
+            if (!_currentUser.IsLoggedIn) throw new UserNotLoggedInException();
+            if (!_currentUser.IsLoggedInAsAdmin)
+            {
+                var roles = await _mediator.Send(new GetTournamentRolesQuery(request.TournamentId), cancellationToken);
+                if (roles.All(r => r.UserId != _currentUser.User.Id))
+                    throw new NotAuthorizedException("view this tournament's Discord channel");
+            }
+
+            return await _tournaments.GetDiscordChannel(request.TournamentId, cancellationToken);
         }
 
         private async Task EnsureHeadOrganizer(Guid tournamentId, string action, CancellationToken cancellationToken)

@@ -1,5 +1,6 @@
 using MediatR;
 using ScoreTracker.Domain.Exceptions;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.EventCompetition.Contracts.Queries;
 using ScoreTracker.Randomizer.Contracts;
@@ -8,6 +9,8 @@ using ScoreTracker.Randomizer.Contracts.Events;
 using ScoreTracker.Randomizer.Contracts.Queries;
 using ScoreTracker.Randomizer.Domain;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Randomizer.Application
 {
@@ -31,20 +34,27 @@ namespace ScoreTracker.Randomizer.Application
         IRequestHandler<GetActiveDrawQuery, DrawDto?>,
         IRequestHandler<SaveTournamentRandomSettingsCommand>,
         IRequestHandler<DeleteTournamentRandomSettingsCommand>,
-        IRequestHandler<CreateSettingsShareLinkCommand, Guid>
+        IRequestHandler<CreateSettingsShareLinkCommand, Guid>,
+        IRequestHandler<PushDrawToDiscordCommand>
     {
+        private const string SiteBase = "https://piuscores.arroweclip.se";
+
         private readonly IDrawRepository _draws;
         private readonly IRandomizerRepository _settings;
         private readonly ICurrentUserAccessor _currentUser;
         private readonly IMediator _mediator;
+        private readonly IChartRepository _charts;
+        private readonly IBotClient _bot;
 
         public DrawSaga(IDrawRepository draws, IRandomizerRepository settings, ICurrentUserAccessor currentUser,
-            IMediator mediator)
+            IMediator mediator, IChartRepository charts, IBotClient bot)
         {
             _draws = draws;
             _settings = settings;
             _currentUser = currentUser;
             _mediator = mediator;
+            _charts = charts;
+            _bot = bot;
         }
 
         public async Task<DrawDto> Handle(CreateDrawCommand request, CancellationToken cancellationToken)
@@ -155,6 +165,75 @@ namespace ScoreTracker.Randomizer.Application
             if (!_currentUser.IsLoggedIn) throw new UserNotLoggedInException();
 
             return await _settings.EnsureShareToken(_currentUser.User.Id, request.SettingsName, cancellationToken);
+        }
+
+        public async Task Handle(PushDrawToDiscordCommand request, CancellationToken cancellationToken)
+        {
+            var draw = await _draws.GetDraw(request.DrawId, cancellationToken)
+                       ?? throw new RandomizerException("This draw no longer exists.");
+            if (draw.TournamentId == null)
+                throw new RandomizerException("Only tournament matches push to Discord.");
+
+            await EnsureCanOperateDraws(draw.TournamentId, cancellationToken);
+            var channelId = await _mediator.Send(new GetTournamentDiscordChannelQuery(draw.TournamentId.Value),
+                cancellationToken);
+            if (channelId == null)
+                throw new RandomizerException("No Discord channel is configured for this tournament.");
+
+            var tournament = await _mediator.Send(new GetTournamentQuery(draw.TournamentId.Value), cancellationToken);
+            var charts = (await _charts.GetCharts(draw.Mix,
+                    chartIds: draw.Cards.Select(c => c.ChartId).Distinct().ToArray(),
+                    cancellationToken: cancellationToken))
+                .ToDictionary(c => c.Id);
+
+            var message = ComposeDrawCard(tournament.Name, draw, charts);
+            await _bot.SendRichMessages(new[] { message }, new[] { channelId.Value }, cancellationToken);
+        }
+
+        /// <summary>
+        ///     The push card (mock-locked, field-test round 10): charts being played lead in
+        ///     play order, each with its jacket — the community-feed section pattern, so the
+        ///     renderer's art-budget degradation applies to long draws. Vetoes drop to a
+        ///     struck, art-free strip at the end. Numbers stay the draw badge numbers so
+        ///     verbal callouts and the spectate view line up.
+        /// </summary>
+        private static RichBotMessage ComposeDrawCard(Name tournamentName, DrawDto draw,
+            IDictionary<Guid, Chart> charts)
+        {
+            var known = draw.Cards.Where(c => charts.ContainsKey(c.ChartId)).OrderBy(c => c.Order).ToArray();
+            var playing = known.Where(c => c.State != DrawCardState.Vetoed).ToArray();
+            var vetoed = known.Where(c => c.State == DrawCardState.Vetoed).ToArray();
+
+            var blocks = new List<IRichBotBlock>();
+            blocks.AddRange(playing.Select(card =>
+            {
+                var chart = charts[card.ChartId];
+                var held = card.State == DrawCardState.Protected ? " · 🛡️ HELD" : string.Empty;
+                return (IRichBotBlock)new RichBotSection(
+                    $"`{card.Order}` #DIFFICULTY|{chart.DifficultyString}# **{chart.Song.Name}**{held}",
+                    chart.Song.ImagePath);
+            }));
+
+            if (vetoed.Any())
+            {
+                blocks.Add(new RichBotDivider());
+                blocks.Add(new RichBotText("-# VETOED\n" + string.Join("\n", vetoed.Select(card =>
+                {
+                    var chart = charts[card.ChartId];
+                    return $"#DIFFICULTY|{chart.DifficultyString}# ~~{chart.Song.Name}~~";
+                }))));
+            }
+
+            blocks.Add(new RichBotDivider());
+            var heldCount = playing.Count(c => c.State == DrawCardState.Protected);
+            blocks.Add(new RichBotText($"{playing.Length} to play · {vetoed.Length} vetoed · {heldCount} held"));
+
+            return new RichBotMessage(
+                new RichBotSection($"-# 🏆 {tournamentName}\n### {draw.Name}", null),
+                blocks,
+                $"#MIX|{draw.Mix}# {draw.Mix.GetName()} · Chart Randomizer",
+                draw.Mix.GetAccentColor(),
+                new[] { new RichBotLink("Spectate live", new Uri($"{SiteBase}/Randomizer/Live/{draw.Slug}")) });
         }
 
         private async Task<DrawDto> AuthorizeDraw(Guid drawId, CancellationToken cancellationToken)

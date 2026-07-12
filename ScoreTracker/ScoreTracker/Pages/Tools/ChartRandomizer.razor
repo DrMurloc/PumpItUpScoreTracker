@@ -222,6 +222,11 @@ else
                         <MudMenuItem Icon="@Icons.Material.Filled.Sensors"
                                      OnClick="CopySpectateLink">@L["Copy spectate link"]</MudMenuItem>
                     }
+                    @if (_contextTournamentId != null && CanOperate && _discordChannelId != null)
+                    {
+                        <MudMenuItem Icon="@Icons.Custom.Brands.Discord" Disabled="@(_drawId == null || _busy)"
+                                     OnClick="PushToDiscord">@L["Push to Discord"]</MudMenuItem>
+                    }
                 </ChildContent>
             </MudMenu>
         </MudHidden>
@@ -556,6 +561,17 @@ else
                         </div>
                     </div>
                 </div>
+                <div class="rand-manage-section">
+                    <MudText Typo="Typo.subtitle2" Class="rand-manage-heading">@L["Discord"]</MudText>
+                    <div class="rand-manage-rename">
+                        <MudTextField T="string" @bind-Value="_discordChannelText" Label="@L["Channel ID"]"
+                                      Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true"
+                                      Placeholder="@L["Right-click a channel → Copy Channel ID"].Value"></MudTextField>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="_busy"
+                                   OnClick="SaveDiscordChannel">@L["Save"]</MudButton>
+                    </div>
+                    <MudText Typo="Typo.caption" Class="rand-section-hint">@L["When set, staff get Push to Discord in the copy menu — the draw posts to this channel. Clear the field to turn it off."]</MudText>
+                </div>
             }
         </div>
         <div class="rand-drawer-footer">
@@ -624,6 +640,11 @@ else
                 {
                     <MudMenuItem Icon="@Icons.Material.Filled.Sensors"
                                  OnClick="CopySpectateLink">@L["Copy spectate link"]</MudMenuItem>
+                }
+                @if (_contextTournamentId != null && CanOperate && _discordChannelId != null)
+                {
+                    <MudMenuItem Icon="@Icons.Custom.Brands.Discord" Disabled="@(_drawId == null || _busy)"
+                                 OnClick="PushToDiscord">@L["Push to Discord"]</MudMenuItem>
                 }
             </ChildContent>
         </MudMenu>
@@ -720,6 +741,11 @@ else
     private Guid? _confirmingRemoveStaffId;
     private IReadOnlyList<StaffMember> _staff = Array.Empty<StaffMember>();
     private string? _contextTournamentName;
+
+    // Push to Discord (round 10): Head TO points the tournament at a channel; any staff
+    // pushes the current draw from the copy menu. Manual only, fresh message per push.
+    private ulong? _discordChannelId;
+    private string _discordChannelText = string.Empty;
 
     private sealed record StaffMember(User User, TournamentRole Role);
 
@@ -858,6 +884,8 @@ else
         _confirmingRemoveStaffId = null;
         _staff = Array.Empty<StaffMember>();
         _contextTournamentName = null;
+        _discordChannelId = null;
+        _discordChannelText = string.Empty;
 
         if (CurrentUser.IsLoggedIn)
         {
@@ -877,6 +905,10 @@ else
                     {
                         // A garbage ?tournament= id never blocks the page.
                     }
+
+                if (CanOperate)
+                    _discordChannelId =
+                        await Mediator.Send(new GetTournamentDiscordChannelQuery(tournamentId.Value));
                 _tournamentSettings = (await Mediator.Send(new GetTournamentRandomSettingsQuery(tournamentId.Value)))
                     .ToDictionary(s => s.SettingsName.ToString(), s => s, StringComparer.OrdinalIgnoreCase);
                 _matches = (await Mediator.Send(new GetTournamentDrawsQuery(tournamentId.Value))).ToList();
@@ -978,6 +1010,7 @@ else
         _manageRenameText = ManagedMatchName ?? string.Empty;
         _confirmingManageRedraw = _confirmingManageDelete = false;
         _confirmingRemoveStaffId = null;
+        _discordChannelText = _discordChannelId?.ToString() ?? string.Empty;
         _showManage = true;
         if (_isHeadTo && _contextTournamentId != null)
         {
@@ -1166,6 +1199,66 @@ else
     {
         _showManage = false;
         _showSettings = true;
+    }
+
+    private async Task SaveDiscordChannel()
+    {
+        if (_contextTournamentId == null) return;
+
+        var text = _discordChannelText.Trim();
+        ulong? channelId = null;
+        if (text.Length > 0)
+        {
+            if (!ulong.TryParse(text, out var parsed))
+            {
+                Snackbar.Add(L["That doesn't look like a channel ID — right-click the channel in Discord and Copy Channel ID"],
+                    Severity.Warning);
+                return;
+            }
+
+            channelId = parsed;
+        }
+
+        _busy = true;
+        try
+        {
+            await Mediator.Send(new SetTournamentDiscordChannelCommand(_contextTournamentId.Value, channelId));
+            _discordChannelId = channelId;
+            Snackbar.Add(channelId == null ? L["Discord channel cleared"] : L["Discord channel saved"],
+                Severity.Success);
+        }
+        catch (NotAuthorizedException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task PushToDiscord()
+    {
+        if (_drawId == null) return;
+
+        _busy = true;
+        try
+        {
+            await Mediator.Send(new PushDrawToDiscordCommand(_drawId.Value));
+            Snackbar.Add(L["Draw pushed to Discord"], Severity.Success);
+        }
+        catch (RandomizerException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        catch (NotAuthorizedException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
 
     private void SwitchContext(string value)

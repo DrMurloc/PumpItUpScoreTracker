@@ -39,4 +39,9 @@ public interface ITournamentRepository
     Task<TournamentRoleInviteRecord?> GetRoleInvite(Guid token, CancellationToken cancellationToken);
     Task<IEnumerable<TournamentRoleInviteRecord>> GetRoleInvites(Guid tournamentId, CancellationToken cancellationToken);
     Task DeleteRoleInvite(Guid token, CancellationToken cancellationToken);
+
+    /// <summary>Discord channel the randomizer pushes draws into; null clears it.</summary>
+    Task SetDiscordChannel(Guid tournamentId, ulong? channelId, CancellationToken cancellationToken);
+
+    Task<ulong?> GetDiscordChannel(Guid tournamentId, CancellationToken cancellationToken);
 }

@@ -125,6 +125,60 @@ public sealed class TournamentRoleSagaTests
     }
 
     [Fact]
+    public async Task HeadOrganizerPointsTheTournamentAtADiscordChannel()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        RolesAre(tournamentId,
+            new UserTournamentRole(tournamentId, _user.Id, TournamentRole.HeadTournamentOrganizer));
+
+        await BuildSaga().Handle(new SetTournamentDiscordChannelCommand(tournamentId, 42), CancellationToken.None);
+
+        _tournaments.Verify(t => t.SetDiscordChannel(tournamentId, 42, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SettingTheDiscordChannelRequiresHeadOrganizer()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        RolesAre(tournamentId,
+            new UserTournamentRole(tournamentId, _user.Id, TournamentRole.TournamentOrganizer));
+
+        await Assert.ThrowsAsync<NotAuthorizedException>(() => BuildSaga()
+            .Handle(new SetTournamentDiscordChannelCommand(tournamentId, 42), CancellationToken.None));
+
+        _tournaments.Verify(t => t.SetDiscordChannel(It.IsAny<Guid>(), It.IsAny<ulong?>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AnyStaffRoleReadsTheDiscordChannel()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        RolesAre(tournamentId, new UserTournamentRole(tournamentId, _user.Id, TournamentRole.Assistant));
+        _tournaments.Setup(t => t.GetDiscordChannel(tournamentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ulong?)42);
+
+        var result = await BuildSaga()
+            .Handle(new GetTournamentDiscordChannelQuery(tournamentId), CancellationToken.None);
+
+        Assert.Equal(42UL, result);
+    }
+
+    [Fact]
+    public async Task OutsidersCannotReadTheDiscordChannel()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        RolesAre(tournamentId);
+
+        await Assert.ThrowsAsync<NotAuthorizedException>(() => BuildSaga()
+            .Handle(new GetTournamentDiscordChannelQuery(tournamentId), CancellationToken.None));
+    }
+
+    [Fact]
     public async Task CreatingAnInviteRequiresHeadOrganizerOrAdmin()
     {
         LogIn();
