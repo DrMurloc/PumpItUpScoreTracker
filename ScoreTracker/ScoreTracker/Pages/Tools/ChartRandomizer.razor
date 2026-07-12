@@ -80,10 +80,8 @@ else
     }
 
     <div class="rand-chipbar">
-        @foreach (var chip in ConstraintChips)
-        {
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@chip</MudChip>
-        }
+        @* Actions only up top — the draw-settings reference strip lives below the
+           cards (round 7: important to reference, not part of the live decision). *@
         @* Phone widths reach settings through the dock gear — no duplicate chip. *@
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
             <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined"
@@ -376,6 +374,19 @@ else
     <MudOverlay Visible="_showAddChart" OnClick="() => _showAddChart = false" ZIndex="1199"></MudOverlay>
 }
 
+@if (!_draftMode && !_loading)
+{
+    @* Reference strip: what this draw was configured with — below the cards, out of
+       the decision area (round 7). *@
+    <div class="rand-draw-settings">
+        <span class="rand-draw-settings-label">@L["Draw settings"]</span>
+        @foreach (var chip in ConstraintChips)
+        {
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@chip</MudChip>
+        }
+    </div>
+}
+
 @* Settings drawer: panel + live-count footer. Bottom-anchored (thumb reach). *@
 <MudDrawer @bind-Open="_showSettings" Anchor="Anchor.Bottom" Variant="@DrawerVariant.Temporary"
            Height="86vh" Elevation="4" Class="rand-drawer">
@@ -410,34 +421,39 @@ else
                                  SettingsChanged="OnSettingsChanged"></RandomizerSettingsPanel>
     </div>
     <div class="rand-drawer-footer">
-        <div class="rand-drawer-count">
-            <span class="rand-count-n">@(_matchCount?.ToString() ?? "–")</span>
-            <span class="rand-count-label">@L["charts match"]</span>
+        <div class="rand-footer-row">
+            <div class="rand-drawer-count">
+                <span class="rand-count-n">@(_matchCount?.ToString() ?? "–")</span>
+                <span class="rand-count-label">@L["charts match"]</span>
+            </div>
+            <MudSpacer></MudSpacer>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _showSettings = false">@L["Done"]</MudButton>
         </div>
-        <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.RestartAlt"
-                   OnClick="ResetSettings">@L["Reset"]</MudButton>
-        @if (CurrentUser.IsLoggedIn && _contextTournamentId == null && !string.IsNullOrWhiteSpace(_currentSettingsName))
-        {
-            <MudTooltip Text="@L["Share these settings"]">
-                <MudIconButton Icon="@Icons.Material.Filled.Share" Color="Color.Primary"
-                               OnClick="ShareSettings" aria-label="@L["Share these settings"]"></MudIconButton>
-            </MudTooltip>
-        }
-        @if (CurrentUser.IsLoggedIn && (_contextTournamentId == null || CanManageSettings))
-        {
-            <MudTextField T="string" @bind-Value="_saveName" Label="@L["Settings Name"]" Variant="Variant.Outlined"
-                          Margin="Margin.Dense" Class="rand-save-name"
-                          Immediate="true"></MudTextField>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="_busy || string.IsNullOrWhiteSpace(_saveName)"
-                       OnClick="SaveSettings">@(SaveIsNew ? L["Save as new"] : L["Save"])</MudButton>
-            @if (CurrentSettingsMap.ContainsKey(_saveName ?? string.Empty))
+        <div class="rand-footer-row">
+            <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.RestartAlt"
+                       OnClick="ResetSettings">@L["Reset"]</MudButton>
+            @if (CurrentUser.IsLoggedIn && _contextTournamentId == null && !string.IsNullOrWhiteSpace(_currentSettingsName))
             {
-                <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="_busy" OnClick="DeleteSettings">
-                    @(_confirmingDelete ? L["Tap again to delete"] : L["Delete"])
-                </MudButton>
+                <MudTooltip Text="@L["Share these settings"]">
+                    <MudIconButton Icon="@Icons.Material.Filled.Share" Color="Color.Primary"
+                                   OnClick="ShareSettings" aria-label="@L["Share these settings"]"></MudIconButton>
+                </MudTooltip>
             }
-        }
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _showSettings = false">@L["Done"]</MudButton>
+            @if (CurrentUser.IsLoggedIn && (_contextTournamentId == null || CanManageSettings))
+            {
+                <MudTextField T="string" @bind-Value="_saveName" Label="@L["Settings Name"]" Variant="Variant.Outlined"
+                              Margin="Margin.Dense" Class="rand-save-name"
+                              Immediate="true"></MudTextField>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="_busy || string.IsNullOrWhiteSpace(_saveName)"
+                           OnClick="SaveSettings">@(SaveIsNew ? L["Save as new"] : L["Save"])</MudButton>
+                @if (CurrentSettingsMap.ContainsKey(_saveName ?? string.Empty))
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="_busy" OnClick="DeleteSettings">
+                        @(_confirmingDelete ? L["Tap again to delete"] : L["Delete"])
+                    </MudButton>
+                }
+            }
+        </div>
     </div>
 </MudDrawer>
 

@@ -425,6 +425,25 @@ html.nav-away .page-dock,
     margin-bottom: 10px;
 }
 
+/* Reference strip below the cards: what this draw was configured with. */
+.rand-draw-settings {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-top: 18px;
+    opacity: .8;
+}
+
+.rand-draw-settings-label {
+    font-family: var(--font-display);
+    font-size: .68rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    margin-right: 8px;
+}
+
 .rand-grid {
     display: grid;
     gap: 8px;
@@ -553,11 +572,20 @@ html.nav-away .page-dock,
 
 .rand-drawer-footer {
     display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+.rand-footer-row {
+    display: flex;
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-    border-top: 1px solid rgba(255, 255, 255, .08);
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
 }
 
 .rand-drawer-count {
