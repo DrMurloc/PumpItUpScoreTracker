@@ -43,6 +43,17 @@
     // Same art the DifficultyBubble component renders — the game's own vocabulary.
     private static string BubbleUrl(ScoreTracker.SharedKernel.Models.Chart chart) =>
         $"https://piuimages.arroweclip.se/difficulty/{chart.Mix}/{chart.DifficultyString.ToLower()}.png";
+
+    // Every registered mix in timeline order — names are proper nouns, never localized.
+    private static readonly MixEnum[] MixTimeline =
+        Enum.GetValues<MixEnum>().OrderBy(m => m.DisplayOrder()).ToArray();
+
+    // The three themed mixes wear their own brand primaries, straight from the same
+    // MixPalette records the Blazor shell themes from — one source, no literals.
+    private static string MixChipStyle(MixEnum mix) =>
+        MixThemes.ThemedMixes.Contains(mix)
+            ? $"border-color:{MixThemes.PaletteFor(mix).Primary};color:{MixThemes.PaletteFor(mix).Primary}"
+            : string.Empty;
 }
 
 <header class="topbar">
@@ -234,7 +245,116 @@
 
     </div>
 </section>
+
+<section class="showcase soon-section">
+    <div class="sec-head">
+        <h2>@L["More than a tracker"]</h2>
+        <p>@L["Make it your home base — and run your scene from it."]</p>
+    </div>
+    <div class="soon-grid">
+        <div class="soon">
+            <p class="eyebrow">@L["For you"]</p>
+            <h3>@L["A home page that's yours"]</h3>
+            <p>@L["Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call."]</p>
+            <div class="wgrid" aria-hidden="true">
+                <i class="w2"></i><i></i><i class="dragging"></i>
+                <i></i><i class="drop"></i><i class="w2"></i>
+            </div>
+        </div>
+        <div class="soon">
+            <p class="eyebrow">@L["For your scene"]</p>
+            <h3>@L["Run real events"] <span class="live-pill"><i></i>@L["LIVE"]</span></h3>
+            <p>@L["Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round."]</p>
+            <div class="qual-chips" aria-hidden="true">
+                <span class="roll">?</span>
+                <span class="muted-note">@L["{0} viewers watching", 3]</span>
+            </div>
+        </div>
+        <div class="soon">
+            <p class="eyebrow">@L["For competitors"]</p>
+            <h3>@L["Tournaments and qualifiers"] <span class="tag">@L["Expanding soon"]</span></h3>
+            <p>@L["Post qualifier scores for community tournaments right from the site, and take on March of Murlocs — the site-run stamina session series. More formats on the way."]</p>
+            <div class="qual-chips" aria-hidden="true">
+                <span class="qual-chip">@L["Qualifiers open"]</span>
+                <span class="qual-chip alt">March of Murlocs · Stamina</span>
+            </div>
+        </div>
+        <div class="soon">
+            <p class="eyebrow">@L["For your community"]</p>
+            <h3>@L["Discord, wired in"]</h3>
+            <p>@L["Point your community's channel at the bot and placements, milestones, and session highlights land in your server the moment scores come in."]</p>
+            <div class="discord-msg" aria-hidden="true">
+                <span class="bot">PIU Scores<span class="bot-tag">BOT</span></span><br />
+                ✦ @L["Session roundup — 3 highlights: new UG plate, 2 PBs. Weekly board: up to 2nd place."]
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="showcase steward-section">
+    <div class="sec-head">
+        <h2>@L["New mix. Same you."]</h2>
+        <p>@L["This is community infrastructure, not a data silo."]</p>
+    </div>
+    <div class="steward-band">
+        <p class="lede">@L["When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today.", MixTimeline.Length]</p>
+        <div class="mix-line" aria-label="Every mix on record">
+            <span class="mix-era">1999 —</span>
+            @foreach (var mix in MixTimeline)
+            {
+                <span class="mix-chip" style="@MixChipStyle(mix)">@mix.GetName()</span>
+            }
+            <span class="mix-era">— @L["today"]</span>
+        </div>
+    </div>
+    <div class="steward-grid">
+        <div class="steward-tile">
+            <h3>@L["Private by default"]</h3>
+            <p>@L["Your scores stay yours to show. They power the aggregate analysis behind the tier lists, but your name and history are never public unless you switch them on."]</p>
+        </div>
+        <div class="steward-tile">
+            <h3>@L["Your data is yours"]</h3>
+            <p>@L["Download every score you've ever recorded, any time, in one click. No lock-in, no hoarding — if you ever want to leave, your history leaves with you."]</p>
+        </div>
+        <div class="steward-tile">
+            <h3>@L["Built for toolmakers"]</h3>
+            <p>@L["A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use."]
+            <a href="/swagger">@L["API docs"] →</a></p>
+        </div>
+    </div>
+</section>
+
+<section class="showcase browse-section">
+    <div class="sec-head">
+        <h2>@L["No account needed to look around"]</h2>
+        <p>@L["The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture."]</p>
+    </div>
+    <div class="browse-grid">
+        <a class="browse-card" href="/TierLists">
+            <span class="t">@L["Tier Lists"]</span>
+            <span class="d">@L["Which charts are honest for their level — and which lie."]</span>
+            <span class="diff-ramp" aria-hidden="true">
+                <i style="background: var(--diff-easy)"></i><i style="background: var(--diff-medium)"></i><i style="background: var(--diff-hard)"></i><i style="background: var(--diff-veryhard)"></i>
+            </span>
+        </a>
+        <a class="browse-card" href="/PlayerRankings">
+            <span class="t">@L["World Rankings"]</span>
+            <span class="d">@L["Mirrored official leaderboards, player compare, country boards."]</span>
+        </a>
+        <a class="browse-card" href="/PhoenixCalculator">
+            <span class="t">@L["Calculators"]</span>
+            <span class="d">@L["Phoenix score math, life gauge, rating what-ifs."]</span>
+        </a>
+    </div>
+</section>
 </main>
+
+<footer>
+    <span>@L["PIU Scores — free, ad-free, built by a player"]</span>
+    <a href="/Privacy" target="_blank">@L["Full Privacy Policy"]</a>
+    <a href="/swagger">@L["API for tool makers"]</a>
+    <span class="locales">English · 한국어 · 日本語 · Español · Español (España) · Português · Français · Italiano · Mrglglgl</span>
+</footer>
 
 </body>
 </html>

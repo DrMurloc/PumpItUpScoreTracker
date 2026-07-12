@@ -3395,4 +3395,118 @@
   <data name="Browse every title — no account needed" xml:space="preserve">
     <value>Sfoglia tutti i titoli — senza account</value>
   </data>
+  <data name="More than a tracker" xml:space="preserve">
+    <value>Più di un tracker</value>
+  </data>
+  <data name="Make it your home base — and run your scene from it." xml:space="preserve">
+    <value>Fanne la tua base — e gestisci la tua scena da qui.</value>
+  </data>
+  <data name="For you" xml:space="preserve">
+    <value>Per te</value>
+  </data>
+  <data name="A home page that's yours" xml:space="preserve">
+    <value>Una home page tutta tua</value>
+  </data>
+  <data name="Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call." xml:space="preserve">
+    <value>Scegli i tuoi widget — proiezioni, la classifica settimanale, il tuo passo del giorno — e componi la tua dashboard. La tua home page, decidi tu.</value>
+  </data>
+  <data name="For your scene" xml:space="preserve">
+    <value>Per la tua scena</value>
+  </data>
+  <data name="Run real events" xml:space="preserve">
+    <value>Organizza eventi veri</value>
+  </data>
+  <data name="LIVE" xml:space="preserve">
+    <value>LIVE</value>
+  </data>
+  <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
+    <value>Sorteggia chart con il randomizer, gestisci bracket e draft di carte in sala, e condividi una vista live perché tutta la sala — o lo stream — segua il round.</value>
+  </data>
+  <data name="{0} viewers watching" xml:space="preserve">
+    <value>{0} spettatori collegati</value>
+  </data>
+  <data name="For competitors" xml:space="preserve">
+    <value>Per i competitori</value>
+  </data>
+  <data name="Tournaments and qualifiers" xml:space="preserve">
+    <value>Tornei e qualificazioni</value>
+  </data>
+  <data name="Expanding soon" xml:space="preserve">
+    <value>Presto in espansione</value>
+  </data>
+  <data name="Post qualifier scores for community tournaments right from the site, and take on March of Murlocs — the site-run stamina session series. More formats on the way." xml:space="preserve">
+    <value>Registra i punteggi di qualificazione dei tornei della community direttamente dal sito, e affronta March of Murlocs — la serie di sessioni stamina gestita dal sito. Altri formati in arrivo.</value>
+  </data>
+  <data name="Qualifiers open" xml:space="preserve">
+    <value>Qualificazioni aperte</value>
+  </data>
+  <data name="For your community" xml:space="preserve">
+    <value>Per la tua community</value>
+  </data>
+  <data name="Discord, wired in" xml:space="preserve">
+    <value>Discord, collegato</value>
+  </data>
+  <data name="Point your community's channel at the bot and placements, milestones, and session highlights land in your server the moment scores come in." xml:space="preserve">
+    <value>Collega il canale della tua community al bot e piazzamenti, traguardi e highlight di sessione arrivano sul tuo server appena entrano i punteggi.</value>
+  </data>
+  <data name="Session roundup — 3 highlights: new UG plate, 2 PBs. Weekly board: up to 2nd place." xml:space="preserve">
+    <value>Riepilogo sessione — 3 highlight: nuova targa UG, 2 record personali. Classifica settimanale: salito al 2º posto.</value>
+  </data>
+  <data name="New mix. Same you." xml:space="preserve">
+    <value>Nuovo Mix. Sempre tu.</value>
+  </data>
+  <data name="This is community infrastructure, not a data silo." xml:space="preserve">
+    <value>Questa è infrastruttura della community, non un silo di dati.</value>
+  </data>
+  <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
+    <value>Quando arriva un nuovo Mix, qui non si azzera nulla. Ogni punteggio registrato resta — da rivedere, confrontare e da cui ripartire. {0} Mix in archivio, fianco a fianco, dal 1999 a oggi.</value>
+  </data>
+  <data name="today" xml:space="preserve">
+    <value>oggi</value>
+  </data>
+  <data name="Private by default" xml:space="preserve">
+    <value>Privato per impostazione predefinita</value>
+  </data>
+  <data name="Your scores stay yours to show. They power the aggregate analysis behind the tier lists, but your name and history are never public unless you switch them on." xml:space="preserve">
+    <value>I tuoi punteggi li mostri tu. Alimentano l'analisi aggregata dietro le tier list, ma il tuo nome e la tua cronologia non sono mai pubblici finché non li attivi tu.</value>
+  </data>
+  <data name="Your data is yours" xml:space="preserve">
+    <value>I tuoi dati sono tuoi</value>
+  </data>
+  <data name="Download every score you've ever recorded, any time, in one click. No lock-in, no hoarding — if you ever want to leave, your history leaves with you." xml:space="preserve">
+    <value>Scarica ogni punteggio che hai registrato, in qualsiasi momento, con un clic. Nessun vincolo, nessun accaparramento — se un giorno vorrai andartene, la tua cronologia verrà con te.</value>
+  </data>
+  <data name="Built for toolmakers" xml:space="preserve">
+    <value>Fatto per chi crea strumenti</value>
+  </data>
+  <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
+    <value>Un'API pubblica con documentazione completa alimenta gli strumenti della community — bot, overlay, siti di statistiche. Prendi un token dal tuo account e costruisci sugli stessi dati che usiamo noi.</value>
+  </data>
+  <data name="API docs" xml:space="preserve">
+    <value>Documentazione API</value>
+  </data>
+  <data name="No account needed to look around" xml:space="preserve">
+    <value>Niente account per dare un'occhiata</value>
+  </data>
+  <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
+    <value>Tier list, classifiche e calcolatori sono aperti — accedi quando vorrai vederci i tuoi punteggi.</value>
+  </data>
+  <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
+    <value>Quali chart sono onesti per il loro livello — e quali mentono.</value>
+  </data>
+  <data name="Mirrored official leaderboards, player compare, country boards." xml:space="preserve">
+    <value>Classifiche ufficiali replicate, confronto giocatori, classifiche per paese.</value>
+  </data>
+  <data name="Calculators" xml:space="preserve">
+    <value>Calcolatori</value>
+  </data>
+  <data name="Phoenix score math, life gauge, rating what-ifs." xml:space="preserve">
+    <value>Matematica del punteggio Phoenix, barra vita, simulazioni di rating.</value>
+  </data>
+  <data name="PIU Scores — free, ad-free, built by a player" xml:space="preserve">
+    <value>PIU Scores — gratuito, senza pubblicità, creato da un giocatore</value>
+  </data>
+  <data name="API for tool makers" xml:space="preserve">
+    <value>API per chi crea strumenti</value>
+  </data>
 </root>

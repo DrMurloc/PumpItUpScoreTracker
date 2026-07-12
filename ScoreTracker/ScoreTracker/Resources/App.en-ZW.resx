@@ -3318,4 +3318,118 @@
   <data name="Browse every title — no account needed" xml:space="preserve">
     <value>Brglwse mrglvrgl trgltle — nrgl accrglnt nrgldrgld</value>
   </data>
+  <data name="More than a tracker" xml:space="preserve">
+    <value>Mrglre thrgln mrgl trglckrgl</value>
+  </data>
+  <data name="Make it your home base — and run your scene from it." xml:space="preserve">
+    <value>Mrglke mrglt mrgl hrglme brglse — mrgl rrgln mrgl scrglne frglm mrglt.</value>
+  </data>
+  <data name="For you" xml:space="preserve">
+    <value>Frgl mrgl</value>
+  </data>
+  <data name="A home page that's yours" xml:space="preserve">
+    <value>Mrgl hrglme prglge thrglt's mrgls</value>
+  </data>
+  <data name="Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call." xml:space="preserve">
+    <value>Prglck mrgl wrgldgrglts — prgljrglctns, mrgl wrglkly brglrd, mrgl drglly strglp — mrgl mrglrrrglnge mrgl mrglwn drglshbrglrd. Mrgl hrglme prglge, mrgl crglll.</value>
+  </data>
+  <data name="For your scene" xml:space="preserve">
+    <value>Frgl mrgl scrglne</value>
+  </data>
+  <data name="Run real events" xml:space="preserve">
+    <value>Rrgln rrgll mrglvrglnts</value>
+  </data>
+  <data name="LIVE" xml:space="preserve">
+    <value>LRGLVE</value>
+  </data>
+  <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
+    <value>Rrglll chrglrts wrglth mrgl rrglndmrglzrgl, rrgln brglckrglts mrgl crglrd drglfts mrglt mrgl lrglcrgl, mrgl shrglre mrgl lrglve vrglw srgl mrgl whrgle vrglnrgle — mrgl mrgl strglm — crgln frgllrglw mrgl rrglnd.</value>
+  </data>
+  <data name="{0} viewers watching" xml:space="preserve">
+    <value>{0} vrglwrgls wrgltchng</value>
+  </data>
+  <data name="For competitors" xml:space="preserve">
+    <value>Frgl cmrglptrgltrgls</value>
+  </data>
+  <data name="Tournaments and qualifiers" xml:space="preserve">
+    <value>Trglrnmrglnts mrgl qrgllrglfrgls</value>
+  </data>
+  <data name="Expanding soon" xml:space="preserve">
+    <value>Mrglxprglndng srglon</value>
+  </data>
+  <data name="Post qualifier scores for community tournaments right from the site, and take on March of Murlocs — the site-run stamina session series. More formats on the way." xml:space="preserve">
+    <value>Prglst qrgllrglfrgl scrgls frgl cmrglmrglnrglty trglrnmrglnts rrglght frglm mrgl srglte, mrgl trglke mrgln MRGLRCH MRGL MRGLRLRGLCS — mrgl srglte-rrgln strglmrglnrgl srglssn srglrs. MRGLGLGLGL! Mrglre frglmrglts mrgln mrgl wrgly.</value>
+  </data>
+  <data name="Qualifiers open" xml:space="preserve">
+    <value>Qrgllrglfrgls mrglprgln</value>
+  </data>
+  <data name="For your community" xml:space="preserve">
+    <value>Frgl mrgl cmrglmrglnrglty</value>
+  </data>
+  <data name="Discord, wired in" xml:space="preserve">
+    <value>Drglscrglrd, wrglrd mrgln</value>
+  </data>
+  <data name="Point your community's channel at the bot and placements, milestones, and session highlights land in your server the moment scores come in." xml:space="preserve">
+    <value>Prglnt mrgl cmrglmrglnrglty's chrglnnrgl mrglt mrgl brglt mrgl plrglcmrglnts, mrgllstrglns, mrgl srglssn hrglghlrglts lrglnd mrgln mrgl srglrvrgl mrgl mrglmrglnt scrgls crglme mrgln.</value>
+  </data>
+  <data name="Session roundup — 3 highlights: new UG plate, 2 PBs. Weekly board: up to 2nd place." xml:space="preserve">
+    <value>Srglssn rrglndrglp — 3 hrglghlrglts: nrglw UG plrglte, 2 PBs. Wrglkly brglrd: mrglp mrgl 2nd plrglce.</value>
+  </data>
+  <data name="New mix. Same you." xml:space="preserve">
+    <value>Nrglw mrglx. Srglme mrgl.</value>
+  </data>
+  <data name="This is community infrastructure, not a data silo." xml:space="preserve">
+    <value>Thrgls mrgls cmrglmrglnrglty mrglnfrrglstrrglctrgl, nrglt mrgl drglta srgllrgl.</value>
+  </data>
+  <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
+    <value>Whrgln mrgl nrglw mrglx mrglrrrglvs, nrglthng hrglre rrglsrglts. Mrglvrgl scrgle mrgl'vrgl rrglcrgldrgld strglys — mrgl lrglk brglck mrgln, cmrglprglre mrglgrglnst, mrgl brglld frglm. {0} mrglxrgls mrgln rrglcrgld, srglde brgl srglde, 1999 mrgl trgldrgly.</value>
+  </data>
+  <data name="today" xml:space="preserve">
+    <value>trgldrgly</value>
+  </data>
+  <data name="Private by default" xml:space="preserve">
+    <value>Prglvrglte brgl drglfrgllt</value>
+  </data>
+  <data name="Your scores stay yours to show. They power the aggregate analysis behind the tier lists, but your name and history are never public unless you switch them on." xml:space="preserve">
+    <value>Mrgl scrgls strgly mrgls mrgl shrglw. Thrgly prglwrgl mrgl mrglggrrglgrglte mrglnrgllrglss brglhnd mrgl Brglurgbrgl Rglgurggurgrgl, brglt mrgl nrglme mrgl hrglstrgl mrgl nrglvrgl prglblrglc mrglnlrglss mrgl swrgltch thrglm mrgln.</value>
+  </data>
+  <data name="Your data is yours" xml:space="preserve">
+    <value>Mrgl drglta mrgls mrgls</value>
+  </data>
+  <data name="Download every score you've ever recorded, any time, in one click. No lock-in, no hoarding — if you ever want to leave, your history leaves with you." xml:space="preserve">
+    <value>Drglwnlrgld mrglvrgl scrgle mrgl'vrgl mrglvrgl rrglcrgldrgld, mrglny trglme, mrgln mrgl clrglck. Nrgl lrglck-mrgln, nrgl hrglrdng — mrglf mrgl mrglvrgl wrglnt mrgl lrglve, mrgl hrglstrgl lrglvs wrglth mrgl.</value>
+  </data>
+  <data name="Built for toolmakers" xml:space="preserve">
+    <value>Brgllt frgl trglolmrglkrgls</value>
+  </data>
+  <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
+    <value>Mrgl prglblrglc API wrglth frglll drglcs prglwrgls cmrglmrglnrglty-mrglde trglols — brglts, mrglvrgllrglys, strglt srgltrgls. Grrglb mrgl trglkrgln frglm mrgl mrglccrglnt mrgl brglld mrgln mrgl srglme drglta wrgl mrglse.</value>
+  </data>
+  <data name="API docs" xml:space="preserve">
+    <value>API drglcs</value>
+  </data>
+  <data name="No account needed to look around" xml:space="preserve">
+    <value>Nrgl mrglccrglnt nrgldrgld mrgl lrglk mrglrrglnd</value>
+  </data>
+  <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
+    <value>Mrgl Brglurgbrgl Rglgurggurgrgl, rrglnkngs, mrgl crgllcrgllrgltrgls mrglre mrglprgln — srglgn mrgln whrgln mrgl wrglnt mrgl mrglwn scrgls mrgln mrgl prglctrgle.</value>
+  </data>
+  <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
+    <value>Whrglch chrglrts mrglre hrglnrglst frgl thrglr lrglvrgl — mrgl whrglch lrgle.</value>
+  </data>
+  <data name="Mirrored official leaderboards, player compare, country boards." xml:space="preserve">
+    <value>Mrglrrrglrd mrglffrglcrgl lrgldrglbrglrds, plrglyrgl cmrglprglre, crglntrgly brglrds.</value>
+  </data>
+  <data name="Calculators" xml:space="preserve">
+    <value>Crgllcrgllrgltrgls</value>
+  </data>
+  <data name="Phoenix score math, life gauge, rating what-ifs." xml:space="preserve">
+    <value>Phrglnrglx scrgle mrglth, lrglfe grglge, rrgltrglng whrglt-mrglfs.</value>
+  </data>
+  <data name="PIU Scores — free, ad-free, built by a player" xml:space="preserve">
+    <value>PIU Scores — frgle, mrgld-frgle, brgllt brgl mrgl plrglyrgl</value>
+  </data>
+  <data name="API for tool makers" xml:space="preserve">
+    <value>API frgl trglol mrglkrgls</value>
+  </data>
 </root>

@@ -3395,4 +3395,118 @@
   <data name="Browse every title — no account needed" xml:space="preserve">
     <value>Browse every title — no account needed</value>
   </data>
+  <data name="More than a tracker" xml:space="preserve">
+    <value>More than a tracker</value>
+  </data>
+  <data name="Make it your home base — and run your scene from it." xml:space="preserve">
+    <value>Make it your home base — and run your scene from it.</value>
+  </data>
+  <data name="For you" xml:space="preserve">
+    <value>For you</value>
+  </data>
+  <data name="A home page that's yours" xml:space="preserve">
+    <value>A home page that's yours</value>
+  </data>
+  <data name="Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call." xml:space="preserve">
+    <value>Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call.</value>
+  </data>
+  <data name="For your scene" xml:space="preserve">
+    <value>For your scene</value>
+  </data>
+  <data name="Run real events" xml:space="preserve">
+    <value>Run real events</value>
+  </data>
+  <data name="LIVE" xml:space="preserve">
+    <value>LIVE</value>
+  </data>
+  <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
+    <value>Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round.</value>
+  </data>
+  <data name="{0} viewers watching" xml:space="preserve">
+    <value>{0} viewers watching</value>
+  </data>
+  <data name="For competitors" xml:space="preserve">
+    <value>For competitors</value>
+  </data>
+  <data name="Tournaments and qualifiers" xml:space="preserve">
+    <value>Tournaments and qualifiers</value>
+  </data>
+  <data name="Expanding soon" xml:space="preserve">
+    <value>Expanding soon</value>
+  </data>
+  <data name="Post qualifier scores for community tournaments right from the site, and take on March of Murlocs — the site-run stamina session series. More formats on the way." xml:space="preserve">
+    <value>Post qualifier scores for community tournaments right from the site, and take on March of Murlocs — the site-run stamina session series. More formats on the way.</value>
+  </data>
+  <data name="Qualifiers open" xml:space="preserve">
+    <value>Qualifiers open</value>
+  </data>
+  <data name="For your community" xml:space="preserve">
+    <value>For your community</value>
+  </data>
+  <data name="Discord, wired in" xml:space="preserve">
+    <value>Discord, wired in</value>
+  </data>
+  <data name="Point your community's channel at the bot and placements, milestones, and session highlights land in your server the moment scores come in." xml:space="preserve">
+    <value>Point your community's channel at the bot and placements, milestones, and session highlights land in your server the moment scores come in.</value>
+  </data>
+  <data name="Session roundup — 3 highlights: new UG plate, 2 PBs. Weekly board: up to 2nd place." xml:space="preserve">
+    <value>Session roundup — 3 highlights: new UG plate, 2 PBs. Weekly board: up to 2nd place.</value>
+  </data>
+  <data name="New mix. Same you." xml:space="preserve">
+    <value>New mix. Same you.</value>
+  </data>
+  <data name="This is community infrastructure, not a data silo." xml:space="preserve">
+    <value>This is community infrastructure, not a data silo.</value>
+  </data>
+  <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
+    <value>When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today.</value>
+  </data>
+  <data name="today" xml:space="preserve">
+    <value>today</value>
+  </data>
+  <data name="Private by default" xml:space="preserve">
+    <value>Private by default</value>
+  </data>
+  <data name="Your scores stay yours to show. They power the aggregate analysis behind the tier lists, but your name and history are never public unless you switch them on." xml:space="preserve">
+    <value>Your scores stay yours to show. They power the aggregate analysis behind the tier lists, but your name and history are never public unless you switch them on.</value>
+  </data>
+  <data name="Your data is yours" xml:space="preserve">
+    <value>Your data is yours</value>
+  </data>
+  <data name="Download every score you've ever recorded, any time, in one click. No lock-in, no hoarding — if you ever want to leave, your history leaves with you." xml:space="preserve">
+    <value>Download every score you've ever recorded, any time, in one click. No lock-in, no hoarding — if you ever want to leave, your history leaves with you.</value>
+  </data>
+  <data name="Built for toolmakers" xml:space="preserve">
+    <value>Built for toolmakers</value>
+  </data>
+  <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
+    <value>A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use.</value>
+  </data>
+  <data name="API docs" xml:space="preserve">
+    <value>API docs</value>
+  </data>
+  <data name="No account needed to look around" xml:space="preserve">
+    <value>No account needed to look around</value>
+  </data>
+  <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
+    <value>The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture.</value>
+  </data>
+  <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
+    <value>Which charts are honest for their level — and which lie.</value>
+  </data>
+  <data name="Mirrored official leaderboards, player compare, country boards." xml:space="preserve">
+    <value>Mirrored official leaderboards, player compare, country boards.</value>
+  </data>
+  <data name="Calculators" xml:space="preserve">
+    <value>Calculators</value>
+  </data>
+  <data name="Phoenix score math, life gauge, rating what-ifs." xml:space="preserve">
+    <value>Phoenix score math, life gauge, rating what-ifs.</value>
+  </data>
+  <data name="PIU Scores — free, ad-free, built by a player" xml:space="preserve">
+    <value>PIU Scores — free, ad-free, built by a player</value>
+  </data>
+  <data name="API for tool makers" xml:space="preserve">
+    <value>API for tool makers</value>
+  </data>
 </root>

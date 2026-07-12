@@ -3396,4 +3396,118 @@
   <data name="Browse every title — no account needed" xml:space="preserve">
     <value>全タイトルを見る — アカウント不要</value>
   </data>
+  <data name="More than a tracker" xml:space="preserve">
+    <value>トラッカー以上のもの</value>
+  </data>
+  <data name="Make it your home base — and run your scene from it." xml:space="preserve">
+    <value>ここをホームベースに — あなたのシーンをここから動かそう。</value>
+  </data>
+  <data name="For you" xml:space="preserve">
+    <value>あなたに</value>
+  </data>
+  <data name="A home page that's yours" xml:space="preserve">
+    <value>自分だけのホームページ</value>
+  </data>
+  <data name="Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call." xml:space="preserve">
+    <value>ウィジェットを選んで — 予測、週間ボード、今日の一歩 — 自分のダッシュボードを組み立てよう。ホームページはあなたが決める。</value>
+  </data>
+  <data name="For your scene" xml:space="preserve">
+    <value>あなたのシーンに</value>
+  </data>
+  <data name="Run real events" xml:space="preserve">
+    <value>リアルイベントを運営しよう</value>
+  </data>
+  <data name="LIVE" xml:space="preserve">
+    <value>LIVE</value>
+  </data>
+  <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
+    <value>ランダマイザーでチャートを抽選し、ゲーセンでブラケットやカードドラフトを運営、ライブビューを共有すれば会場全体 — や配信 — がラウンドを追えます。</value>
+  </data>
+  <data name="{0} viewers watching" xml:space="preserve">
+    <value>{0} 人が視聴中</value>
+  </data>
+  <data name="For competitors" xml:space="preserve">
+    <value>競技勢に</value>
+  </data>
+  <data name="Tournaments and qualifiers" xml:space="preserve">
+    <value>トーナメントと予選</value>
+  </data>
+  <data name="Expanding soon" xml:space="preserve">
+    <value>まもなく拡張</value>
+  </data>
+  <data name="Post qualifier scores for community tournaments right from the site, and take on March of Murlocs — the site-run stamina session series. More formats on the way." xml:space="preserve">
+    <value>コミュニティトーナメントの予選スコアをサイトから直接提出、そして March of Murlocs — サイト運営のスタミナセッションシリーズ — に挑戦。新フォーマットも準備中。</value>
+  </data>
+  <data name="Qualifiers open" xml:space="preserve">
+    <value>予選受付中</value>
+  </data>
+  <data name="For your community" xml:space="preserve">
+    <value>あなたのコミュニティに</value>
+  </data>
+  <data name="Discord, wired in" xml:space="preserve">
+    <value>Discord 連携</value>
+  </data>
+  <data name="Point your community's channel at the bot and placements, milestones, and session highlights land in your server the moment scores come in." xml:space="preserve">
+    <value>コミュニティのチャンネルをボットにつなげば、スコアが入った瞬間に順位、マイルストーン、セッションハイライトがサーバーに届きます。</value>
+  </data>
+  <data name="Session roundup — 3 highlights: new UG plate, 2 PBs. Weekly board: up to 2nd place." xml:space="preserve">
+    <value>セッションまとめ — ハイライト3件：新しい UG プレート、自己ベスト2件。週間ボード：2位に浮上。</value>
+  </data>
+  <data name="New mix. Same you." xml:space="preserve">
+    <value>新しいバージョン。変わらないあなた。</value>
+  </data>
+  <data name="This is community infrastructure, not a data silo." xml:space="preserve">
+    <value>これはコミュニティのインフラであって、データの囲い込みではありません。</value>
+  </data>
+  <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
+    <value>新しいバージョンが来ても、ここでは何もリセットされません。記録したスコアはすべて残ります — 振り返り、比較し、積み上げるために。{0} バージョンの記録が、1999年から今日まで並んでいます。</value>
+  </data>
+  <data name="today" xml:space="preserve">
+    <value>現在</value>
+  </data>
+  <data name="Private by default" xml:space="preserve">
+    <value>デフォルトで非公開</value>
+  </data>
+  <data name="Your scores stay yours to show. They power the aggregate analysis behind the tier lists, but your name and history are never public unless you switch them on." xml:space="preserve">
+    <value>スコアを見せるかどうかはあなた次第。ティアリストを支える集計分析には使われますが、あなたの名前と履歴はオンにしない限り公開されません。</value>
+  </data>
+  <data name="Your data is yours" xml:space="preserve">
+    <value>データはあなたのもの</value>
+  </data>
+  <data name="Download every score you've ever recorded, any time, in one click. No lock-in, no hoarding — if you ever want to leave, your history leaves with you." xml:space="preserve">
+    <value>記録した全スコアを、いつでもワンクリックでダウンロード。ロックインも囲い込みもなし — 去るときは、履歴も一緒に持っていけます。</value>
+  </data>
+  <data name="Built for toolmakers" xml:space="preserve">
+    <value>ツール開発者のために</value>
+  </data>
+  <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
+    <value>ドキュメント完備の公開 API がコミュニティ製ツールを支えます — ボット、オーバーレイ、統計サイト。アカウントからトークンを取得して、私たちと同じデータの上に作ってください。</value>
+  </data>
+  <data name="API docs" xml:space="preserve">
+    <value>API ドキュメント</value>
+  </data>
+  <data name="No account needed to look around" xml:space="preserve">
+    <value>見て回るのにアカウントは不要</value>
+  </data>
+  <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
+    <value>ティアリスト、ランキング、計算機は誰でも見られます — 自分のスコアを重ねたくなったらログインを。</value>
+  </data>
+  <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
+    <value>レベル表記に正直なチャートはどれか — 嘘をついているのはどれか。</value>
+  </data>
+  <data name="Mirrored official leaderboards, player compare, country boards." xml:space="preserve">
+    <value>公式リーダーボードのミラー、プレイヤー比較、国別ボード。</value>
+  </data>
+  <data name="Calculators" xml:space="preserve">
+    <value>計算機</value>
+  </data>
+  <data name="Phoenix score math, life gauge, rating what-ifs." xml:space="preserve">
+    <value>Phoenix スコア計算、ライフゲージ、レーティングのもしも計算。</value>
+  </data>
+  <data name="PIU Scores — free, ad-free, built by a player" xml:space="preserve">
+    <value>PIU Scores — 無料、広告なし、プレイヤーの手作り</value>
+  </data>
+  <data name="API for tool makers" xml:space="preserve">
+    <value>ツール開発者向け API</value>
+  </data>
 </root>
