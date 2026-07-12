@@ -16,7 +16,16 @@ namespace ScoreTracker.ChartIntelligence.Contracts;
 public sealed record PlayerSkillDeviations(
     IReadOnlyDictionary<Skill, SkillDeviationRecord> Skills,
     bool Usable,
-    int ScoredChartCount);
+    int ScoredChartCount)
+{
+    /// <summary>
+    ///     Deviations are measured on this floored band. They only say something about
+    ///     scores INSIDE it — don't apply them to expectations below the floor.
+    /// </summary>
+    public const int BandFloor = 900_000;
+
+    public const int BandCeiling = 1_000_000;
+}
 
 [ExcludeFromCodeCoverage]
 public sealed record SkillDeviationRecord(double ScoreDeviation, double Evidence, bool Usable);

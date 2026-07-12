@@ -5,8 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Moq;
+using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Commands;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Commands;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Application.Queries;
@@ -205,6 +207,57 @@ public sealed class PumbilityProjectionSagaTests
     }
 
     [Fact]
+    public async Task SkillProfileNudgesExpectedScoreAndExplainsItself()
+    {
+        // Cohort interpolation projects c2 at 955,750 (see the percentile test). A
+        // usable Twists deviation of +8,000 on a full-coverage Twists chart nudges it
+        // by damping·weight·deviation/Σweight = 0.5·1·8,000 = +4,000 → 959,750, and
+        // the why-record carries (Twists, +4,000). c1 has no banked chips → untouched.
+        var c1 = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
+        var c2 = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
+        var ctx = new ProjectionContext()
+            .WithCharts(c1, c2)
+            .WithTopScore(c1.Id, 950_000)
+            .WithBestScore(c1.Id, 950_000)
+            .WithCohortUser()
+            .WithCohortScores(ChartType.Single, c1.Id, 960_000, 950_000, 940_000, 930_000)
+            .WithCohortScores(ChartType.Single, c2.Id, 970_000, 955_000, 945_000, 935_000)
+            .WithSkillProfile(ChartType.Single, (Skill.Twists, 8_000))
+            .WithChartChips(c2.Id, (Skill.Twists, 1.0m));
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+
+        Assert.Equal(959_750, (int)result.ExpectedScores[c2.Id]);
+        Assert.Equal(950_500, (int)result.ExpectedScores[c1.Id]);
+        var why = Assert.Single(result.SkillAdjustments[c2.Id]);
+        Assert.Equal(Skill.Twists, why.Skill);
+        Assert.Equal(4_000, why.ScoreDelta, 3);
+        Assert.False(result.SkillAdjustments.ContainsKey(c1.Id));
+    }
+
+    [Fact]
+    public async Task UnusableSkillProfileLeavesProjectionsUntouched()
+    {
+        // No usable profile (the fixture default) → no deviation queries can nudge
+        // anything; expected scores stay pure cohort interpolation.
+        var c1 = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
+        var c2 = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
+        var ctx = new ProjectionContext()
+            .WithCharts(c1, c2)
+            .WithTopScore(c1.Id, 950_000)
+            .WithBestScore(c1.Id, 950_000)
+            .WithCohortUser()
+            .WithCohortScores(ChartType.Single, c1.Id, 960_000, 950_000, 940_000, 930_000)
+            .WithCohortScores(ChartType.Single, c2.Id, 970_000, 955_000, 945_000, 935_000)
+            .WithChartChips(c2.Id, (Skill.Twists, 1.0m));
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+
+        Assert.Equal(955_750, (int)result.ExpectedScores[c2.Id]);
+        Assert.Empty(result.SkillAdjustments);
+    }
+
+    [Fact]
     public async Task Phoenix2GainsMeasureAgainstTheChartsOwnPool()
     {
         // Singles pool is FULL (50 rated charts) → its baseline is the lowest of those
@@ -303,8 +356,37 @@ public sealed class PumbilityProjectionSagaTests
                 });
             Mediator.Setup(m => m.Send(It.IsAny<GetTierListQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _passCountTierList.AsEnumerable());
+            Mediator.Setup(m => m.Send(It.IsAny<GetPlayerSkillDeviationsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((IRequest<PlayerSkillDeviations> request, CancellationToken _) =>
+                    _skillProfiles.TryGetValue(((GetPlayerSkillDeviationsQuery)request).ChartType, out var p)
+                        ? p
+                        : new PlayerSkillDeviations(new Dictionary<Skill, SkillDeviationRecord>(), false, 0));
+            Mediator.Setup(m => m.Send(It.IsAny<GetChartSkillChipsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() => _chartChips);
 
             Saga = new PumbilityProjectionSaga(Mediator.Object, Stats.Object, PhoenixRecords.Object);
+        }
+
+        private readonly Dictionary<ChartType, PlayerSkillDeviations> _skillProfiles = new();
+
+        private readonly Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> _chartChips = new();
+
+        public ProjectionContext WithSkillProfile(ChartType type,
+            params (Skill Skill, double ScoreDeviation)[] deviations)
+        {
+            _skillProfiles[type] = new PlayerSkillDeviations(
+                deviations.ToDictionary(d => d.Skill,
+                    d => new SkillDeviationRecord(d.ScoreDeviation, Evidence: 5.0, Usable: true)),
+                Usable: true, ScoredChartCount: deviations.Length * 2);
+            return this;
+        }
+
+        public ProjectionContext WithChartChips(Guid chartId, params (Skill Skill, decimal Fraction)[] chips)
+        {
+            _chartChips[chartId] = chips
+                .Select(c => new ChartSkillChipRecord(c.Skill, Highlighted: true, c.Fraction))
+                .ToArray();
+            return this;
         }
 
         public ProjectionContext WithCharts(params Chart[] charts)

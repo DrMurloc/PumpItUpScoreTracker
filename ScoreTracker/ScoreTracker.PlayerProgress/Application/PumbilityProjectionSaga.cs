@@ -1,6 +1,7 @@
 using ScoreTracker.Domain.Services;
 using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -73,7 +74,8 @@ namespace ScoreTracker.PlayerProgress.Application
                     new Dictionary<Guid, PhoenixScore>(),
                     new Dictionary<Guid, int>(),
                     new Dictionary<(ChartType ChartType, DifficultyLevel Level), int>(),
-                    new Dictionary<Guid, TierListCategory>());
+                    new Dictionary<Guid, TierListCategory>(),
+                    new Dictionary<Guid, IReadOnlyList<SkillAdjustmentRecord>>());
 
             var lowestLevel = DifficultyLevel.From(levelRange.Min());
             var highestLevel = DifficultyLevel.From(levelRange.Max());
@@ -150,6 +152,9 @@ namespace ScoreTracker.PlayerProgress.Application
                 }
             }
 
+            var skillAdjustments = await ApplySkillAdjustments(expectedScore, charts, request.UserId, mix,
+                singlesLevel, doublesLevel, cancellationToken);
+
             var projectedGains = new Dictionary<Guid, int>();
             foreach (var kv in expectedScore)
             {
@@ -171,7 +176,75 @@ namespace ScoreTracker.PlayerProgress.Application
                 projectedGains[kv.Key] = (int)expectedGains;
             }
 
-            return new PumbilityProjection(expectedScore, projectedGains, insufficientData, chartDifficulty);
+            return new PumbilityProjection(expectedScore, projectedGains, insufficientData, chartDifficulty,
+                skillAdjustments);
+        }
+
+        // Half-voice on purpose: cohort interpolation is the primary signal; the skill
+        // profile nudges it toward charts whose demands match the player's strengths.
+        private const double SkillDamping = 0.5;
+
+        /// <summary>
+        ///     Skill-weights each expected score (docs/design/home-page-widgets.md §5):
+        ///     a chart's banked skill chips pull its projection toward the player's
+        ///     per-skill deviations (GetPlayerSkillDeviationsQuery — the tier-list
+        ///     competence machinery). Mutates <paramref name="expectedScore" /> and
+        ///     returns the per-chart "why" so targets can explain themselves.
+        /// </summary>
+        private async Task<Dictionary<Guid, IReadOnlyList<SkillAdjustmentRecord>>> ApplySkillAdjustments(
+            Dictionary<Guid, PhoenixScore> expectedScore, IReadOnlyDictionary<Guid, Chart> charts, Guid userId,
+            MixEnum mix, double singlesLevel, double doublesLevel, CancellationToken cancellationToken)
+        {
+            var adjustments = new Dictionary<Guid, IReadOnlyList<SkillAdjustmentRecord>>();
+            if (!expectedScore.Any()) return adjustments;
+
+            var profiles = new Dictionary<ChartType, PlayerSkillDeviations>();
+            foreach (var (type, level) in new[]
+                         { (ChartType.Single, singlesLevel), (ChartType.Double, doublesLevel) })
+            {
+                if (expectedScore.Keys.All(id => charts[id].Type != type)) continue;
+                var anchor = DifficultyLevel.From(Math.Clamp((int)Math.Round(level), 1, DifficultyLevel.Max));
+                var profile = await _mediator.Send(
+                    new GetPlayerSkillDeviationsQuery(userId, type, anchor, mix), cancellationToken);
+                if (profile.Usable) profiles[type] = profile;
+            }
+
+            if (!profiles.Any()) return adjustments;
+
+            var chips = await _mediator.Send(new GetChartSkillChipsQuery(expectedScore.Keys.ToArray()),
+                cancellationToken);
+
+            foreach (var chartId in expectedScore.Keys.ToArray())
+            {
+                var raw = (int)expectedScore[chartId];
+                // Deviations are measured on the floored band — below it they say nothing.
+                if (raw < PlayerSkillDeviations.BandFloor) continue;
+                if (!profiles.TryGetValue(charts[chartId].Type, out var profile)) continue;
+                // Charts without banked step analysis get no adjustment, same as the tier list.
+                if (!chips.TryGetValue(chartId, out var chartChips) || chartChips.Count == 0) continue;
+
+                var weighted = chartChips
+                    .Where(c => profile.Skills.TryGetValue(c.Skill, out var deviation) && deviation.Usable)
+                    .ToArray();
+                if (!weighted.Any()) continue;
+
+                var totalWeight = weighted.Sum(c => c.Weight);
+                var perSkill = weighted
+                    .Select(c => new SkillAdjustmentRecord(c.Skill,
+                        SkillDamping * c.Weight * profile.Skills[c.Skill].ScoreDeviation / totalWeight))
+                    .Where(a => Math.Abs(a.ScoreDelta) >= 1)
+                    .OrderByDescending(a => Math.Abs(a.ScoreDelta))
+                    .ToArray();
+                if (!perSkill.Any()) continue;
+
+                var adjusted = Math.Clamp(raw + (int)perSkill.Sum(a => a.ScoreDelta),
+                    PlayerSkillDeviations.BandFloor, PlayerSkillDeviations.BandCeiling);
+                if (adjusted == raw) continue;
+                expectedScore[chartId] = adjusted;
+                adjustments[chartId] = perSkill;
+            }
+
+            return adjustments;
         }
 
         private async Task<PoolState> BuildPool(ChartType? chartType, Guid userId, MixEnum mix,

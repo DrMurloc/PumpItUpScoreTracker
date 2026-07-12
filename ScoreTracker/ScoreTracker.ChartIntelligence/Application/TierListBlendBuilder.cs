@@ -158,7 +158,6 @@ internal sealed class TierListBlendBuilder
     private const int FolderWindow = 3;
     public const double MinSkillEvidence = 2.0; // effective weighted observations per skill
     public const int MinUsableSkills = 3;
-    private const double DefaultSkillWeight = 0.5; // top3-only chips and pre-crawl boolean tags
     private const double EstimateOffset = 500_000; // ProcessIntoTierList treats exactly 0 as Unrecorded
 
     // Proficiency lives in the 900k-1M band (owner): 990,000 = 90%, anything at or
@@ -269,11 +268,8 @@ internal sealed class TierListBlendBuilder
         IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> chips, Chart chart)
     {
         return chips.TryGetValue(chart.Id, out var chartChips) && chartChips.Count > 0
-            ? chartChips
-                .Select(c => (c.Skill,
-                    c.SegmentFraction != null ? (double)c.SegmentFraction.Value : DefaultSkillWeight))
-                .ToArray()
-            : chart.Skills.Select(s => (s, DefaultSkillWeight)).ToArray();
+            ? chartChips.Select(c => (c.Skill, c.Weight)).ToArray()
+            : chart.Skills.Select(s => (s, ChartSkillChipRecord.DefaultSegmentWeight)).ToArray();
     }
 
     private async Task<SkillSourceComputation> ComputeSkillSource(ChartType chartType, DifficultyLevel level,
