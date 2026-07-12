@@ -46,6 +46,8 @@
     {
         <MudText>@L["Note Count: X", _selectedChart.NoteCount]</MudText>
     }
+    @* True debut attribution backfilled from the pumpout catalog (docs/design/legacy-mixes.md). *@
+    <MudText>@L["Debuted in: X", _selectedChart.OriginalMix.GetName()]</MudText>
     <br/>
     <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Custom.Brands.YouTube" OnClick="()=>VideoDisplayer.ShowVideo(_selectedChart.Id)">@L["Open Video"]</MudButton>
     <br />
@@ -56,7 +58,7 @@
         <MudText Typo="Typo.h5">@L["Your Score"]</MudText>
         <EditChartGrid ChartId="_selectedChart.Id" CurrentMix="_currentMix"></EditChartGrid>
     }
-    @if (_currentMix != MixEnum.XX)
+    @if (!_currentMix.UsesLegacyScoring())
     {
         <MudText Typo="Typo.h5">@L["Chart Difficulty by Letter Grade"]</MudText>
         <ApexChart TItem="LevelDistribution"
@@ -217,7 +219,7 @@
 }
 <MudDialog @bind-Visible="_showChartOverview">
     <DialogContent>
-        @if (_selectedChart != null && _currentMix != MixEnum.XX)
+        @if (_selectedChart != null && !_currentMix.UsesLegacyScoring())
         {
             <ChartOverview ChartId="_selectedChart.Id" Mix="_currentMix"></ChartOverview>
         }
@@ -365,7 +367,10 @@
         _isLoading = false;
         NavManager.NavigateTo("/Chart/" + _selectedChart.Id.ToString());
         ChartId = _selectedChart.Id;
-        _levelDistribution = (await Charts.GetChartLetterGradeDifficulties(new[] { chart.Id })).First().Percentiles.Select(kv => new LevelDistribution(kv.Key, kv.Value)).OrderBy(r => r.Level).ToArray();
+        // FirstOrDefault: legacy/cut-content charts have no letter-grade difficulty rows
+        // (the graph is Phoenix-data-driven and already hidden for legacy mixes).
+        var letterDifficulty = (await Charts.GetChartLetterGradeDifficulties(new[] { chart.Id })).FirstOrDefault();
+        _levelDistribution = letterDifficulty?.Percentiles.Select(kv => new LevelDistribution(kv.Key, kv.Value)).OrderBy(r => r.Level).ToArray() ?? Array.Empty<LevelDistribution>();
         if (CurrentUser.IsLoggedIn)
         {
             _myScore = (await Mediator.Send(new GetPhoenixRecordQuery(_selectedChart.Id, _currentMix)))?.Score;

@@ -2847,4 +2847,43 @@
   <data name="Advanced" xml:space="preserve">
     <value>Advmrglanced</value>
   </data>
+  <data name="More Mixes" xml:space="preserve">
+    <value>More Mixes</value>
+  </data>
+  <data name="scale" xml:space="preserve">
+    <value>scale</value>
+  </data>
+  <data name="not comparable to modern levels" xml:space="preserve">
+    <value>not comparable to modern levels</value>
+  </data>
+  <data name="Debuted in: X" xml:space="preserve">
+    <value>Debuted in: {0}</value>
+  </data>
+  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
+    <value>This page isn't ready for older mixes yet</value>
+  </data>
+  <data name="Prime" xml:space="preserve">
+    <value>Prime</value>
+  </data>
+  <data name="Fiesta" xml:space="preserve">
+    <value>Fiesta</value>
+  </data>
+  <data name="NX" xml:space="preserve">
+    <value>NX</value>
+  </data>
+  <data name="Exceed / Zero" xml:space="preserve">
+    <value>Exceed / Zero</value>
+  </data>
+  <data name="Premiere / Prex" xml:space="preserve">
+    <value>Premiere / Prex</value>
+  </data>
+  <data name="Classic" xml:space="preserve">
+    <value>Classic</value>
+  </data>
+  <data name="American" xml:space="preserve">
+    <value>American</value>
+  </data>
+  <data name="Community Rating" xml:space="preserve">
+    <value>Community Rating</value>
+  </data>
 </root>

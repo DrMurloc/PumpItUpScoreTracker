@@ -413,18 +413,21 @@ internal sealed class EFChartRepository : IChartRepository
             var chartSkills = (await database.Set<ChartSkillEntity>().ToArrayAsync(cancellationToken)).GroupBy(cs => cs.ChartId)
                 .ToDictionary(g => g.Key, g => g.Select(s => Enum.Parse<Skill>(s.SkillName)).Distinct().ToHashSet());
 
+            // OriginalMix maps through MixIds, not Enum.Parse(Mix.Name): legacy mix names
+            // ("Prex 3", "OBG SE") are display strings, not enum identifiers.
             return await (from cm in database.ChartMix
                     join c in database.Chart on cm.ChartId equals c.Id
                     join s in database.Song on c.SongId equals s.Id
-                    join m in database.Mix on c.OriginalMixId equals m.Id
                     where cm.MixId == mixId
-                    select new Chart(c.Id, Enum.Parse<MixEnum>(m.Name),
+                    select new Chart(c.Id, MixIds.ToEnum(c.OriginalMixId),
                         new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration,
                             s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),
                         Enum.Parse<ChartType>(c.Type),
                         cm.Level, mix, c.StepArtist, cm.NoteCount,
-                        new HashSet<Skill>()))
+                        new HashSet<Skill>(),
+                        LegacySlotHelperMethods.ToNullableLegacySlot(cm.LegacySlot),
+                        c.PlayerCount))
                 .ToDictionaryAsync(c => c.Id,
                     c => c with
                     {

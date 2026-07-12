@@ -21,6 +21,9 @@ namespace ScoreTracker.Web.Controllers.Api;
 [EnableCors("API")]
 public sealed class ChartsController : Controller
 {
+    /// <summary>The mixes this endpoint's wire contract accepts — legacy MixEnum members are site-internal.</summary>
+    private static readonly MixEnum[] ApiCatalogMixes = { MixEnum.XX, MixEnum.Phoenix, MixEnum.Phoenix2 };
+
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
 
@@ -155,9 +158,12 @@ public sealed class ChartsController : Controller
         // Grandfathered surface: unlike the ApiMixParser endpoints this one predates the Phoenix 2
         // work and accepts XX (the legacy catalog is real, queryable data). Omission now defaults
         // to Phoenix per the API-wide rule — previously it was a 400, so the change is additive.
+        // Explicit allowlist, not Enum.TryParse: the legacy-mix MixEnum members are site-internal
+        // until an API story exists (docs/design/legacy-mixes.md) — the wire contract stays put.
         var mix = MixEnum.Phoenix;
-        if (mixString != null && !Enum.TryParse(mixString, true, out mix))
-            return BadRequest($"Invalid Mix. Options are: {string.Join(',', Enum.GetValues<MixEnum>())}");
+        if (mixString != null &&
+            (!Enum.TryParse(mixString, true, out mix) || !ApiCatalogMixes.Contains(mix)))
+            return BadRequest($"Invalid Mix. Options are: {string.Join(',', ApiCatalogMixes)}");
 
         if (!Enum.TryParse<ChartType>(chartTypeString, out var chartType) && chartTypeString != null)
             return BadRequest($"Invalid Chart Type. Options are: {string.Join(',', Enum.GetValues<ChartType>())}");
