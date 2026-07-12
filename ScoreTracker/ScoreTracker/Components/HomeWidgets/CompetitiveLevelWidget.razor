@@ -40,7 +40,7 @@ else
                                  Items="series.Points"
                                  Name="@series.Label"
                                  Color="@series.Color"
-                                 SeriesType="SeriesType.Line"
+                                 SeriesType="_useArea ? SeriesType.Area : SeriesType.Line"
                                  XValue="@(e => e.Date)"
                                  YValue="@(e => (decimal)series.YSelector(e))"
                                  OrderBy="e => e.X"/>
@@ -68,6 +68,7 @@ else
         IReadOnlyList<PlayerRatingRecord> Points, Func<PlayerRatingRecord, double> YSelector);
 
     private bool _loaded;
+    private bool _useArea;
     private string _renderKey = string.Empty;
     private string? _loadedFor;
     private List<LevelSeries> _series = new();
@@ -142,11 +143,32 @@ else
             }
         }
 
+        // Single-era boards get the gradient-area treatment (the "PIU Scores" look);
+        // mixed-era keeps clean lines so the dashed history stays legible.
+        _useArea = _series.All(s => !s.Dashed);
+
         _options = new ApexChartOptions<PlayerRatingRecord>
         {
             Chart = new ApexCharts.Chart
-                { Toolbar = new ApexCharts.Toolbar { Show = false }, Background = "transparent" },
-            Stroke = new Stroke { Curve = Curve.Smooth, DashArray = dashes },
+            {
+                Toolbar = new ApexCharts.Toolbar { Show = false },
+                // Freeze the canvas: no zoom, no drag-select — the widget is a
+                // read-only glance, not an explorer (owner, round 3).
+                Zoom = new ApexCharts.Zoom { Enabled = false },
+                Selection = new ApexCharts.Selection { Enabled = false },
+                Background = "transparent",
+                FontFamily = "Barlow Condensed, Bahnschrift, Arial Narrow, sans-serif",
+                ForeColor = palette.InkMuted
+            },
+            Stroke = new Stroke { Curve = Curve.Smooth, DashArray = dashes, Width = 3 },
+            Grid = new ApexCharts.Grid { BorderColor = "rgba(255,255,255,.08)" },
+            Fill = _useArea
+                ? new Fill
+                {
+                    Type = new List<FillType> { FillType.Gradient },
+                    Gradient = new FillGradient { ShadeIntensity = 0, OpacityFrom = 0.20, OpacityTo = 0.0 }
+                }
+                : null,
             Yaxis = new List<YAxis> { new() { DecimalsInFloat = 2 } },
             Annotations = annotations.Any() ? new Annotations { Yaxis = annotations } : null,
             Theme = new ApexCharts.Theme { Mode = Mode.Dark }

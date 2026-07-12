@@ -3254,9 +3254,6 @@
   <data name="This week's board and your placements." xml:space="preserve">
     <value>This week's board and your placements.</value>
   </data>
-  <data name="Next rotation in" xml:space="preserve">
-    <value>Next rotation in {0}</value>
-  </data>
   <data name="New board soon." xml:space="preserve">
     <value>New board soon.</value>
   </data>

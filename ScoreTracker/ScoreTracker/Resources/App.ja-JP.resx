@@ -3255,9 +3255,6 @@
   <data name="This week's board and your placements." xml:space="preserve">
     <value>今週のボードとあなたの順位。</value>
   </data>
-  <data name="Next rotation in" xml:space="preserve">
-    <value>次の入れ替えまで {0}</value>
-  </data>
   <data name="New board soon." xml:space="preserve">
     <value>まもなく新しいボードが登場します。</value>
   </data>

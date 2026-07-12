@@ -34,10 +34,6 @@ else
 {
     <div class="dash-weekly">
         <div class="dash-weekly-meta">
-            @if (_soonestExpiry != null)
-            {
-                <span class="dash-countdown">@L["Next rotation in", Countdown(_soonestExpiry.Value)]</span>
-            }
             <MudLink Href="/WeeklyCharts" Typo="Typo.caption">@L["See Leaderboards"]</MudLink>
         </div>
         <div class="dash-targets">
@@ -51,10 +47,6 @@ else
                     </span>
                     <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
                     <span class="dash-target-name">@chart.Song.Name</span>
-                    @if (_wide)
-                    {
-                        <span class="dash-weekly-expiry">@Countdown(row.Expires)</span>
-                    }
                     @if (row.Place != null && row.Total > 0)
                     {
                         <span class="dash-weekly-place"
@@ -85,12 +77,11 @@ else
 
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
-    private sealed record BoardRow(Chart Chart, DateTimeOffset Expires, int? Place, int Total);
+    private sealed record BoardRow(Chart Chart, int? Place, int Total);
 
     private bool _loaded;
     private bool _wide;
     private string? _loadedFor;
-    private DateTimeOffset? _soonestExpiry;
     private List<BoardRow> _rows = new();
 
     protected override async Task OnParametersSetAsync()
@@ -108,10 +99,9 @@ else
 
         var board = (await Mediator.Send(new GetWeeklyChartsQuery(mix))).ToArray();
         var charts = await ChartCatalog.GetCharts(mix);
-        var known = board.Where(b => charts.ContainsKey(b.ChartId))
-            .ToDictionary(b => b.ChartId, b => b.ExpirationDate);
+        var known = board.Select(b => b.ChartId).Where(charts.ContainsKey).ToHashSet();
 
-        var filtered = await Filter(charts, known.Keys, config, mix);
+        var filtered = await Filter(charts, known, config, mix);
 
         var entries = (await Mediator.Send(new GetWeeklyChartEntriesQuery(Mix: mix))).ToArray();
         var totals = entries.GroupBy(e => e.ChartId).ToDictionary(g => g.Key, g => g.Count());
@@ -125,14 +115,13 @@ else
         // singles on ties; CO-OPs last — their "level" is a player count, which
         // doesn't compare with S/D levels.
         _rows = filtered
-            .Select(c => new BoardRow(c, known[c.Id],
+            .Select(c => new BoardRow(c,
                 placements.TryGetValue(c.Id, out var place) ? place : null,
                 totals.GetValueOrDefault(c.Id)))
             .OrderBy(r => r.Chart.Type == ChartType.CoOp ? 1 : 0)
             .ThenByDescending(r => (int)r.Chart.Level)
             .ThenBy(r => r.Chart.Type == ChartType.Double ? 0 : 1)
             .ToList();
-        _soonestExpiry = _rows.Any() ? _rows.Min(r => r.Expires) : null;
         _loaded = true;
     }
 
@@ -164,15 +153,6 @@ else
             default:
                 return boardCharts;
         }
-    }
-
-    private static string Countdown(DateTimeOffset expires)
-    {
-        var remaining = expires - DateTimeOffset.Now;
-        if (remaining <= TimeSpan.Zero) return "0h";
-        return remaining.TotalHours >= 48
-            ? $"{(int)remaining.TotalDays}d {remaining.Hours}h"
-            : $"{(int)remaining.TotalHours}h";
     }
 
 }

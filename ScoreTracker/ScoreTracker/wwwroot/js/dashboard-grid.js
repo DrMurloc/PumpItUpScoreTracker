@@ -56,9 +56,18 @@ window.dashboardGrid = {
         const startY = downEvent.clientY;
         let target = null;
 
+        let inEndzone = false;
+
         const move = e => {
             ghost.style.transform = 'translate(' + (e.clientX - startX) + 'px,' + (e.clientY - startY) + 'px)';
             target = this._targetAt(board, cell, e.clientX, e.clientY);
+            // No trade partner but still over the board = "park it at the end"
+            // (auto-flow has no persistent holes to aim at — end-of-flow is the one
+            // meaningful empty-space drop).
+            const r = board.getBoundingClientRect();
+            inEndzone = !target && e.clientX >= r.left && e.clientX <= r.right
+                && e.clientY >= r.top && e.clientY <= r.bottom;
+            board.classList.toggle('dash-endzone', inEndzone);
             this._cells(board).forEach(c => c.classList.toggle('dash-swap-target', c === target));
         };
         const up = () => {
@@ -66,10 +75,13 @@ window.dashboardGrid = {
             document.removeEventListener('pointerup', up);
             ghost.remove();
             cell.classList.remove('dash-dragging');
+            board.classList.remove('dash-endzone');
             this._cells(board).forEach(c => c.classList.remove('dash-swap-target'));
             if (target && cell.dataset.widgetId && target.dataset.widgetId)
                 state.dotnetRef.invokeMethodAsync('OnWidgetSwapped',
                     cell.dataset.widgetId, target.dataset.widgetId);
+            else if (inEndzone && cell.dataset.widgetId)
+                state.dotnetRef.invokeMethodAsync('OnWidgetMovedToEnd', cell.dataset.widgetId);
         };
         document.addEventListener('pointermove', move);
         document.addEventListener('pointerup', up);

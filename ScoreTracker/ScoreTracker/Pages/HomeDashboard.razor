@@ -314,6 +314,15 @@ else if (_loaded)
     }
 
     [JSInvokable]
+    public async Task OnWidgetMovedToEnd(string widgetId)
+    {
+        if (!Guid.TryParse(widgetId, out var id)) return;
+        await Mediator.Send(new MoveHomePageWidgetCommand(id, int.MaxValue));
+        await LoadPages();
+        await Track("homedash_widget_dragged");
+    }
+
+    [JSInvokable]
     public async Task OnWidgetSwapped(string widgetId, string targetWidgetId)
     {
         if (!Guid.TryParse(widgetId, out var id) || !Guid.TryParse(targetWidgetId, out var targetId)) return;

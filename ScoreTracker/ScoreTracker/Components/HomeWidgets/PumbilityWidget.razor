@@ -38,9 +38,11 @@ else
             {
                 <span class="dash-stat-delta">▲ @_weeklyDelta.Value.ToString("N0")</span>
             }
-            <MudText Typo="Typo.caption" Class="dash-muted">
-                @L["Singles"] @(((int)_stats.SinglesRating).ToString("N0"))
-                · @L["Doubles"] @(((int)_stats.DoublesRating).ToString("N0"))
+            <MudText Typo="Typo.caption" Class="dash-pools">
+                <span style="color:var(--chart-singles)">@L["Singles"]</span>
+                <span>@(((int)_stats.SinglesRating).ToString("N0"))</span>
+                <span style="color:var(--chart-doubles)">@L["Doubles"]</span>
+                <span>@(((int)_stats.DoublesRating).ToString("N0"))</span>
             </MudText>
             @if (_sparkPoints != null)
             {
@@ -49,7 +51,7 @@ else
                               stroke-width="2" vector-effect="non-scaling-stroke"/>
                 </svg>
             }
-            else if (_compact || !_targets.Any())
+            else if (!_compact && !_targets.Any())
             {
                 <MudText Typo="Typo.caption" Class="dash-muted">@L["Trend starts tracking from today."]</MudText>
             }
@@ -70,6 +72,7 @@ else
                             @if (_tall)
                             {
                                 <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                                <span class="dash-target-name">@chart.Song.Name</span>
                             }
                             else
                             {
