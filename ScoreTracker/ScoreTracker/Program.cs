@@ -221,7 +221,8 @@ builder.Services.AddBlazorApplicationInsights()
             typeof(ChartIntelligenceRegistrationExtensions).Assembly,
             typeof(WeeklyChallengeRegistrationExtensions).Assembly,
             typeof(EventCompetitionRegistrationExtensions).Assembly,
-            typeof(CommunitiesRegistrationExtensions).Assembly);
+            typeof(CommunitiesRegistrationExtensions).Assembly,
+            typeof(ScoreTracker.HomePage.Wiring.HomePageRegistrationExtensions).Assembly);
     })
     .AddTransient<IUserAccessService, UserAccessService>()
     .AddTransient<IBulkChartJsonParser, BulkChartJsonParser>()

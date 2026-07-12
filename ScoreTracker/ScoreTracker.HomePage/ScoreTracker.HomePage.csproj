@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Only Contracts/ and Wiring/ are public (ADR-001 D2); the vertical's tests see the rest.
+         DynamicProxyGenAssembly2 is Moq's proxy assembly — required to mock internal ports. -->
+    <InternalsVisibleTo Include="ScoreTracker.Tests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- No bus consumers in this vertical (layout persistence is synchronous CRUD),
+         so no MassTransit reference at all. -->
+    <PackageReference Include="MediatR" Version="14.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
+    <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data.
+         When Data dissolves at P6, this becomes a reference to the slim shared persistence home. -->
+    <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
+  </ItemGroup>
+
+</Project>
