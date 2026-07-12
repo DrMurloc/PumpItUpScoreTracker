@@ -932,3 +932,35 @@
     font-size: .75rem;
     flex: none;
 }
+
+/* Drag chrome: handle (desktop pointer only), dragged-cell dim, insertion marker. */
+
+.dash-drag-handle {
+    cursor: grab;
+    color: var(--mix-ink-muted);
+    font-size: .9rem;
+    user-select: none;
+    touch-action: none;
+    flex: none;
+}
+
+.dash-dragging {
+    opacity: .35;
+}
+
+.dash-drop-target {
+    outline: 2px dashed var(--mix-primary);
+    outline-offset: 2px;
+    border-radius: 10px;
+}
+
+.dash-json textarea {
+    font-family: Consolas, monospace;
+    font-size: .78rem;
+}
+
+@media (max-width: 959.98px) {
+    .dash-drag-handle {
+        display: none;
+    }
+}

@@ -8,6 +8,12 @@
 
 <div class="dash-widget @(EditMode ? "dash-widget-editing" : "")">
     <div class="dash-widget-head">
+        @if (EditMode)
+        {
+            @* Decorative drag affordance (desktop pointer only) — the arrows are the
+               accessible path and the mobile path (D3/D6). *@
+            <span class="dash-drag-handle" aria-hidden="true">⠿</span>
+        }
         <span class="dash-widget-title">@TitleText</span>
         @if (EditMode)
         {

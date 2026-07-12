@@ -76,6 +76,7 @@ else if (_loaded)
         }
     </div>
 
+    <div @ref="_boardElement">
     @if (_selectedPage != null)
     {
         @if (!_selectedPage.Widgets.Any())
@@ -99,7 +100,8 @@ else if (_loaded)
                 {
                     var w = widget;
                     var size = SizePreset.TryParse(w.SizePreset) ?? SizePreset.OneByOne;
-                    <div @key="w.Id" class="dash-cell dash-cols-@size.Columns dash-rows-@size.Rows">
+                    <div @key="w.Id" class="dash-cell dash-cols-@size.Columns dash-rows-@size.Rows"
+                         data-widget-id="@w.Id">
                         <WidgetHost Widget="w" EffectiveMix="EffectiveMixFor(_selectedPage)"
                                     EditMode="_editMode"
                                     IsFirst="w.Id == ordered.First().Id" IsLast="w.Id == ordered.Last().Id"
@@ -113,6 +115,7 @@ else if (_loaded)
             </div>
         }
     }
+    </div>
 
     <MudDrawer @bind-Open="_drawerOpen" Anchor="Anchor.End" Elevation="2" Width="340px"
                Variant="@DrawerVariant.Temporary" Class="dash-drawer">
@@ -265,12 +268,59 @@ else if (_loaded)
     </MudDialog>
 }
 
+@implements IAsyncDisposable
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject NavigationManager NavManager
 @inject IUiSettingsAccessor UiSettings
+@inject IJSRuntime JS
 
 @code {
+
+    private ElementReference _boardElement;
+    private bool _dragInteropActive;
+    private DotNetObjectReference<HomeDashboard>? _selfReference;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Drag binds only in edit mode, delegated from the stable board wrapper so
+        // Blazor re-renders inside it never orphan the listener (§2.4).
+        var shouldBeActive = _editMode && _selectedPage != null && _selectedPage.Widgets.Any();
+        if (shouldBeActive && !_dragInteropActive)
+        {
+            _selfReference ??= DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("dashboardGrid.init", _boardElement, _selfReference);
+            _dragInteropActive = true;
+        }
+        else if (!shouldBeActive && _dragInteropActive)
+        {
+            await JS.InvokeVoidAsync("dashboardGrid.dispose");
+            _dragInteropActive = false;
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnWidgetDropped(string widgetId, int newIndex)
+    {
+        if (!Guid.TryParse(widgetId, out var id)) return;
+        await Mediator.Send(new MoveHomePageWidgetCommand(id, newIndex));
+        await LoadPages();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_dragInteropActive)
+            try
+            {
+                await JS.InvokeVoidAsync("dashboardGrid.dispose");
+            }
+            catch (JSDisconnectedException)
+            {
+                // Circuit already gone — nothing to clean client-side.
+            }
+
+        _selfReference?.Dispose();
+    }
 
     private IReadOnlyList<HomePageRecord> _pages = Array.Empty<HomePageRecord>();
     private HomePageRecord? _selectedPage;
