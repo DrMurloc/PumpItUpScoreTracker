@@ -164,8 +164,10 @@ internal sealed class TierListBlendBuilder
     // Proficiency lives in the 900k-1M band (owner): 990,000 = 90%, anything at or
     // under 900,000 = 0%. Deviations pool over this floored scale so sub-900k scores
     // read as zero proficiency instead of dragging skill estimates linearly.
+    // SkillScoreRange is public: PlayerSkillDeviationsHandler converts pooled
+    // deviations to score units with it (proficiency × range).
     private const double SkillScoreFloor = 900_000;
-    private const double SkillScoreRange = 100_000;
+    public const double SkillScoreRange = 100_000;
 
     // Score-age workshop (owner-corrected 2026-07-12): a score is "old" only when it
     // is BOTH past the grace floor AND an age OUTLIER in the player's own record —
@@ -202,10 +204,17 @@ internal sealed class TierListBlendBuilder
         return Math.Clamp(score - SkillScoreFloor, 0, SkillScoreRange) / SkillScoreRange;
     }
 
-    private async Task<SkillSourceComputation> ComputeSkillSource(ChartType chartType, DifficultyLevel level,
-        MixEnum mix, Guid userId, IReadOnlyCollection<Chart> folderCharts, CancellationToken cancellationToken)
+    /// <summary>
+    ///     The pooled per-skill evidence around an anchor folder — the reusable core of
+    ///     the Skill source, also served cross-vertical through
+    ///     GetPlayerSkillDeviationsQuery (Pumbility projections v2). extraChipChartIds
+    ///     lets ComputeSkillSource keep its single bulk chips fetch for the
+    ///     folder-estimate stage that follows.
+    /// </summary>
+    public async Task<SkillEvidencePool> ComputeSkillEvidence(ChartType chartType, DifficultyLevel anchorLevel,
+        MixEnum mix, Guid userId, IReadOnlyCollection<Guid> extraChipChartIds, CancellationToken cancellationToken)
     {
-        var intLevel = (int)level;
+        var intLevel = (int)anchorLevel;
         var bestScores = (await _scores.GetBestScores(mix, userId, cancellationToken))
             .Where(s => s is { Score: not null, IsBroken: false })
             .ToDictionary(s => s.ChartId);
@@ -216,18 +225,8 @@ internal sealed class TierListBlendBuilder
             .ToArray();
 
         var chips = await _mediator.Send(new GetChartSkillChipsQuery(
-                scoredWindowCharts.Select(c => c.Id).Union(folderCharts.Select(c => c.Id)).ToArray()),
+                scoredWindowCharts.Select(c => c.Id).Union(extraChipChartIds).ToArray()),
             cancellationToken);
-
-        IReadOnlyList<(Skill Skill, double Weight)> WeightsFor(Chart chart)
-        {
-            return chips.TryGetValue(chart.Id, out var chartChips) && chartChips.Count > 0
-                ? chartChips
-                    .Select(c => (c.Skill,
-                        c.SegmentFraction != null ? (double)c.SegmentFraction.Value : DefaultSkillWeight))
-                    .ToArray()
-                : chart.Skills.Select(s => (s, DefaultSkillWeight)).ToArray();
-        }
 
         // Age outliers over the whole ±3 window: scores much older than the rest of
         // the record vote quietly. Baselines MUST use the same weights — a stale
@@ -249,7 +248,7 @@ internal sealed class TierListBlendBuilder
         {
             var decay = FolderDecay[Math.Abs((int)chart.Level - intLevel)];
             var deviation = Proficiency((int)bestScores[chart.Id].Score!.Value) - folderBaselines[(int)chart.Level];
-            foreach (var (skill, weight) in WeightsFor(chart))
+            foreach (var (skill, weight) in WeightsFor(chips, chart))
             {
                 var observationWeight = decay * weight * ageWeights[chart.Id];
                 var current = pooled.TryGetValue(skill, out var sums) ? sums : (0.0, 0.0);
@@ -263,20 +262,41 @@ internal sealed class TierListBlendBuilder
             kv.Value.Evidence,
             kv.Value.Evidence >= MinSkillEvidence));
 
-        var skillDeviations = pooledSkills
+        return new SkillEvidencePool(pooledSkills, chips, scoredWindowCharts.Length, outdatedScoreCount);
+    }
+
+    private static IReadOnlyList<(Skill Skill, double Weight)> WeightsFor(
+        IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> chips, Chart chart)
+    {
+        return chips.TryGetValue(chart.Id, out var chartChips) && chartChips.Count > 0
+            ? chartChips
+                .Select(c => (c.Skill,
+                    c.SegmentFraction != null ? (double)c.SegmentFraction.Value : DefaultSkillWeight))
+                .ToArray()
+            : chart.Skills.Select(s => (s, DefaultSkillWeight)).ToArray();
+    }
+
+    private async Task<SkillSourceComputation> ComputeSkillSource(ChartType chartType, DifficultyLevel level,
+        MixEnum mix, Guid userId, IReadOnlyCollection<Chart> folderCharts, CancellationToken cancellationToken)
+    {
+        var evidence = await ComputeSkillEvidence(chartType, level, mix, userId,
+            folderCharts.Select(c => c.Id).ToArray(), cancellationToken);
+
+        var skillDeviations = evidence.PooledSkills
             .Where(kv => kv.Value.Usable)
             .ToDictionary(kv => kv.Key, kv => kv.Value.Deviation);
         if (skillDeviations.Count < MinUsableSkills)
             return new SkillSourceComputation(
                 folderCharts.ToDictionary(c => c.Id,
                     c => new SongTierListEntry("Skill", c.Id, TierListCategory.Unrecorded, 0)),
-                pooledSkills, false, scoredWindowCharts.Length, outdatedScoreCount);
+                evidence.PooledSkills, false, evidence.ScoredChartCount, evidence.OutdatedScoreCount);
 
         var estimates = new Dictionary<Guid, double>();
         var silent = new List<SongTierListEntry>();
         foreach (var chart in folderCharts)
         {
-            var usable = WeightsFor(chart).Where(p => skillDeviations.ContainsKey(p.Skill)).ToArray();
+            var usable = WeightsFor(evidence.Chips, chart).Where(p => skillDeviations.ContainsKey(p.Skill))
+                .ToArray();
             if (usable.Length == 0)
             {
                 silent.Add(new SongTierListEntry("Skill", chart.Id, TierListCategory.Unrecorded, 9999));
@@ -291,7 +311,7 @@ internal sealed class TierListBlendBuilder
         return new SkillSourceComputation(
             TierListProcessor.ProcessIntoTierList("Skill", estimates).Concat(silent)
                 .ToDictionary(e => e.ChartId, e => e),
-            pooledSkills, true, scoredWindowCharts.Length, outdatedScoreCount);
+            evidence.PooledSkills, true, evidence.ScoredChartCount, evidence.OutdatedScoreCount);
     }
 
     // Similar players, re-architected on C1's materialization: neighbors' folder
@@ -376,6 +396,16 @@ internal sealed record BlendComputation(
 
 /// <summary>Per-skill pooled deviation on the proficiency scale + its effective evidence.</summary>
 internal sealed record SkillEvidence(double Deviation, double Evidence, bool Usable);
+
+/// <summary>
+///     The pooled evidence around an anchor folder, plus the chips fetched to build it
+///     (returned so ComputeSkillSource's folder-estimate stage reuses the one bulk read).
+/// </summary>
+internal sealed record SkillEvidencePool(
+    IReadOnlyDictionary<Skill, SkillEvidence> PooledSkills,
+    IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> Chips,
+    int ScoredChartCount,
+    int OutdatedScoreCount);
 
 internal sealed record SkillSourceComputation(
     IReadOnlyDictionary<Guid, SongTierListEntry> Entries,
