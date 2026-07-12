@@ -20,7 +20,8 @@ public static class WidgetRegistry
             "Competitive Level over time for your selected mixes.",
             WidgetCategory.Progress,
             Icons.Material.Filled.ShowChart,
-            new[] { SizePreset.TwoByOne, SizePreset.TwoByTwo, SizePreset.ThreeByTwo, SizePreset.ThreeByThree },
+            // No 2x1 — a one-row line chart is a smudge, not a graph (owner, round 2).
+            new[] { SizePreset.TwoByTwo, SizePreset.ThreeByTwo, SizePreset.ThreeByThree },
             SizePreset.TwoByTwo,
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(CompetitiveLevelWidget),

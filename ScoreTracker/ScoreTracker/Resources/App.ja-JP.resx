@@ -3282,4 +3282,7 @@
   <data name="This import will replace this page's widgets." xml:space="preserve">
     <value>インポートするとこのページのウィジェットが置き換えられます。</value>
   </data>
+  <data name="Months" xml:space="preserve">
+    <value>ヶ月</value>
+  </data>
 </root>

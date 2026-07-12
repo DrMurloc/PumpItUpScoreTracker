@@ -1016,3 +1016,27 @@
     border-top: 1px solid rgba(255, 255, 255, .06);
     padding-top: 8px;
 }
+
+/* Round 2: target rows get air (the tall/mobile variant was crushing lines). */
+
+.dash-target-row {
+    min-height: 34px;
+    padding: 3px 0;
+}
+
+.dash-pumbility-tall .dash-target-row {
+    padding: 5px 0;
+}
+
+.dash-mini-art {
+    width: 26px;
+    height: 26px;
+}
+
+@media (max-width: 959.98px) {
+    /* Mobile cells auto-grow — let the page scroll instead of clipping rows. */
+    .dash-targets {
+        overflow-y: visible;
+        mask-image: none;
+    }
+}

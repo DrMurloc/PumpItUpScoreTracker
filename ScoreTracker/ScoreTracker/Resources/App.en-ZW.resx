@@ -3204,4 +3204,7 @@
   <data name="This import will replace this page's widgets." xml:space="preserve">
     <value>Mrgl import GRRBL page widgets mrglglgl!</value>
   </data>
+  <data name="Months" xml:space="preserve">
+    <value>Mrgl-months</value>
+  </data>
 </root>

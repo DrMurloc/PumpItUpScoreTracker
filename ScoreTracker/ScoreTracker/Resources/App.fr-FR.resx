@@ -3279,4 +3279,7 @@
   <data name="This import will replace this page's widgets." xml:space="preserve">
     <value>Cette importation remplacera les widgets de cette page.</value>
   </data>
+  <data name="Months" xml:space="preserve">
+    <value>mois</value>
+  </data>
 </root>

@@ -11,8 +11,8 @@ public sealed record CompetitiveLevelConfig
 {
     public List<MixEnum>? Mixes { get; set; }
 
-    /// <summary>0 = all time.</summary>
-    public int RangeMonths { get; set; } = 6;
+    /// <summary>0 = all time — the default (owner, round 2).</summary>
+    public int RangeMonths { get; set; }
 
     public bool ShowSingles { get; set; } = true;
 

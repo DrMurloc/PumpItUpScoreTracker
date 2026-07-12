@@ -3162,4 +3162,7 @@
   <data name="This import will replace this page's widgets." xml:space="preserve">
     <value>가져오기를 실행하면 이 페이지의 위젯이 교체됩니다.</value>
   </data>
+  <data name="Months" xml:space="preserve">
+    <value>개월</value>
+  </data>
 </root>

@@ -7,10 +7,10 @@
 <MudCheckBox T="bool" @bind-Value="_phoenix" Label="Phoenix"/>
 <MudCheckBox T="bool" @bind-Value="_phoenix2" Label="Phoenix 2"/>
 <MudSelect T="int" @bind-Value="_rangeMonths" Label="@L["Range"]" Class="my-3">
-    <MudSelectItem T="int" Value="3">3</MudSelectItem>
-    <MudSelectItem T="int" Value="6">6</MudSelectItem>
-    <MudSelectItem T="int" Value="12">12</MudSelectItem>
     <MudSelectItem T="int" Value="0">@L["All"]</MudSelectItem>
+    <MudSelectItem T="int" Value="3">3 @L["Months"]</MudSelectItem>
+    <MudSelectItem T="int" Value="6">6 @L["Months"]</MudSelectItem>
+    <MudSelectItem T="int" Value="12">12 @L["Months"]</MudSelectItem>
 </MudSelect>
 <MudCheckBox T="bool" @bind-Value="_showSingles" Label="@L["Singles"]"/>
 <MudCheckBox T="bool" @bind-Value="_showDoubles" Label="@L["Doubles"]"/>
@@ -27,7 +27,7 @@
 
     private bool _phoenix;
     private bool _phoenix2;
-    private int _rangeMonths = 6;
+    private int _rangeMonths;
     private bool _showSingles = true;
     private bool _showDoubles = true;
 
