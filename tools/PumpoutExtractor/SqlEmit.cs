@@ -319,12 +319,17 @@ WHEN NOT MATCHED THEN INSERT ([ChartId], [MixId], [Difficulty], [Count], [Standa
             }
 
             if (final is null) return 0;
+            // A 1-level move is the tier list's mild "Hard"/"Easy" band; the extreme
+            // "1+ level harder/easier" (Underrated/Overrated) is reserved for 3+ levels,
+            // so the common single-level re-rate doesn't read as the top bucket (owner call).
             return (final.Value - row.Level) switch
             {
-                <= -2 => -4, // 2+ Levels Overrated
-                -1 => -3, // 1 Level Overrated
-                1 => 3, // 1 Level Underrated
-                >= 2 => 4, // 2+ Levels Underrated
+                <= -3 => -3, // 3+ levels easier  → Overrated  ("1+ level easier")
+                -2 => -2, // Very Easy
+                -1 => -1, // Easy
+                1 => 1, // Hard
+                2 => 2, // Very Hard
+                >= 3 => 3, // 3+ levels harder  → Underrated ("1+ level harder")
                 _ => 0 // Medium — "landed where it was rated"
             };
         }
