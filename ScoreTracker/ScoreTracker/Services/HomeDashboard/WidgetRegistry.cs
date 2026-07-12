@@ -24,7 +24,8 @@ public static class WidgetRegistry
             SizePreset.TwoByOne,
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(CompetitiveLevelWidget),
-            typeof(CompetitiveLevelConfigPanel)),
+            typeof(CompetitiveLevelConfigPanel),
+            typeof(CompetitiveLevelConfig)),
         new("pumbility",
             "PUMBILITY",
             "Pumbility targets tuned to your skill profile.",
@@ -34,7 +35,8 @@ public static class WidgetRegistry
             SizePreset.TwoByOne,
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(PumbilityWidget),
-            typeof(PumbilityConfigPanel)),
+            typeof(PumbilityConfigPanel),
+            typeof(PumbilityConfig)),
         new("weekly-challenge",
             "Weekly Charts",
             "This week's board and your placements.",
@@ -44,7 +46,8 @@ public static class WidgetRegistry
             SizePreset.OneByOne,
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(WeeklyWidget),
-            typeof(WeeklyConfigPanel))
+            typeof(WeeklyConfigPanel),
+            typeof(WeeklyConfig))
     };
 
     private static readonly IReadOnlyDictionary<string, WidgetDescriptor> ByTypeId =

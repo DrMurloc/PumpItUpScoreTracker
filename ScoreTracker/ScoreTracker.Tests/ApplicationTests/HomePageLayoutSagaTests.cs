@@ -174,6 +174,39 @@ public sealed class HomePageLayoutSagaTests
         Assert.Equal("Home", pages[0].Name.ToString());
     }
 
+    [Fact]
+    public async Task ReplaceSwapsTheWholeWidgetListWithFreshOrdinals()
+    {
+        var ctx = new LayoutContext();
+        var pageId = ctx.WithPage("Home", isDefault: true, widgets: new[] { Widget("old", 0) });
+
+        await ctx.Saga.Handle(new ReplaceHomePageWidgetsCommand(pageId, new[]
+        {
+            new HomePageWidgetSpec("pumbility", null, "2x1", "{}", 1),
+            new HomePageWidgetSpec("weekly-challenge", "My board", "1x1", "{}", 1)
+        }), CancellationToken.None);
+
+        ctx.Repository.Verify(r => r.ReplaceWidgets(pageId,
+            It.Is<IReadOnlyList<HomePageWidgetRecord>>(w =>
+                w.Count == 2 && w[0].WidgetType == "pumbility" && w[0].Ordinal == 0
+                && w[1].WidgetType == "weekly-challenge" && w[1].Ordinal == 1
+                && w[1].Title == "My board"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ReplaceEnforcesTheWidgetCap()
+    {
+        var ctx = new LayoutContext();
+        var pageId = ctx.WithPage("Home", isDefault: true);
+        var specs = Enumerable.Range(0, HomePageRecord.MaxWidgetsPerPage + 1)
+            .Select(i => new HomePageWidgetSpec($"w{i}", null, "1x1", "{}", 1))
+            .ToArray();
+
+        await Assert.ThrowsAsync<HomePageCapReachedException>(() =>
+            ctx.Saga.Handle(new ReplaceHomePageWidgetsCommand(pageId, specs), CancellationToken.None));
+    }
+
     private static HomePageWidgetRecord Widget(string type, int ordinal)
     {
         return new HomePageWidgetRecord(Guid.NewGuid(), type, null, ordinal, "1x1", "{}", 1);

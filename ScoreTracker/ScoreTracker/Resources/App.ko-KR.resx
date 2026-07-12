@@ -3150,4 +3150,16 @@
   <data name="Board" xml:space="preserve">
     <value>보드</value>
   </data>
+  <data name="Export page" xml:space="preserve">
+    <value>페이지 내보내기</value>
+  </data>
+  <data name="Import page" xml:space="preserve">
+    <value>페이지 가져오기</value>
+  </data>
+  <data name="Widget schema" xml:space="preserve">
+    <value>위젯 스키마</value>
+  </data>
+  <data name="This import will replace this page's widgets." xml:space="preserve">
+    <value>가져오기를 실행하면 이 페이지의 위젯이 교체됩니다.</value>
+  </data>
 </root>

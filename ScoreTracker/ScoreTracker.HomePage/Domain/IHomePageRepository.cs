@@ -28,4 +28,8 @@ internal interface IHomePageRepository
     /// <summary>Ordinal rewrite for one page's widgets in one transaction (move, post-remove compaction).</summary>
     Task SetWidgetOrdinals(IReadOnlyList<(Guid WidgetId, int Ordinal)> ordinals,
         CancellationToken cancellationToken);
+
+    /// <summary>Deletes the page's widgets and inserts the given set in one transaction (import, D19).</summary>
+    Task ReplaceWidgets(Guid pageId, IReadOnlyList<HomePageWidgetRecord> widgets,
+        CancellationToken cancellationToken);
 }

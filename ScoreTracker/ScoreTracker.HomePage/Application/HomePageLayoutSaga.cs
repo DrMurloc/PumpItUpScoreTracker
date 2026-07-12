@@ -28,7 +28,8 @@ internal sealed class HomePageLayoutSaga(IHomePageRepository repository, ICurren
     IRequestHandler<MoveHomePageWidgetCommand>,
     IRequestHandler<ResizeHomePageWidgetCommand>,
     IRequestHandler<RenameHomePageWidgetCommand>,
-    IRequestHandler<UpdateHomePageWidgetConfigCommand>
+    IRequestHandler<UpdateHomePageWidgetConfigCommand>,
+    IRequestHandler<ReplaceHomePageWidgetsCommand>
 {
     public async Task<IReadOnlyList<HomePageRecord>> Handle(GetMyHomePagesQuery request,
         CancellationToken cancellationToken)
@@ -167,6 +168,28 @@ internal sealed class HomePageLayoutSaga(IHomePageRepository repository, ICurren
         await repository.UpdateWidget(
             widget with { ConfigJson = request.ConfigJson, ConfigVersion = request.ConfigVersion },
             cancellationToken);
+    }
+
+    public async Task Handle(ReplaceHomePageWidgetsCommand request, CancellationToken cancellationToken)
+    {
+        if (request.Widgets.Count > HomePageRecord.MaxWidgetsPerPage)
+            throw new HomePageCapReachedException(
+                $"A page holds at most {HomePageRecord.MaxWidgetsPerPage} widgets — this import has {request.Widgets.Count}.");
+        foreach (var spec in request.Widgets)
+        {
+            if (string.IsNullOrWhiteSpace(spec.WidgetType) ||
+                spec.WidgetType.Length > HomePageWidgetRecord.MaxTypeLength)
+                throw new HomePageValidationException("Widget type is required (max 64 characters).");
+            ValidateSize(spec.SizePreset);
+            ValidateTitle(spec.Title);
+            ValidateConfig(spec.ConfigJson);
+        }
+
+        var page = await GetMyPage(request.PageId, cancellationToken);
+        await repository.ReplaceWidgets(page.Id, request.Widgets
+            .Select((spec, i) => HomePageFactory.NewWidget(spec.WidgetType, spec.SizePreset, spec.Title,
+                spec.ConfigJson, spec.ConfigVersion, i))
+            .ToArray(), cancellationToken);
     }
 
     private async Task<HomePageRecord> GetMyPage(Guid pageId, CancellationToken cancellationToken)

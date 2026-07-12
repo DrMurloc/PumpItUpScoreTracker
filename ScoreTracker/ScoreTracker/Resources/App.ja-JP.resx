@@ -3270,4 +3270,16 @@
   <data name="Board" xml:space="preserve">
     <value>ボード</value>
   </data>
+  <data name="Export page" xml:space="preserve">
+    <value>ページをエクスポート</value>
+  </data>
+  <data name="Import page" xml:space="preserve">
+    <value>ページをインポート</value>
+  </data>
+  <data name="Widget schema" xml:space="preserve">
+    <value>ウィジェットスキーマ</value>
+  </data>
+  <data name="This import will replace this page's widgets." xml:space="preserve">
+    <value>インポートするとこのページのウィジェットが置き換えられます。</value>
+  </data>
 </root>

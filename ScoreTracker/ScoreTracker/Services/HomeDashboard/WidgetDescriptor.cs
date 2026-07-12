@@ -54,4 +54,7 @@ public sealed record WidgetDescriptor(
     SizePreset DefaultSize,
     IReadOnlyList<MixEnum> SupportedMixes,
     Type RenderComponent,
-    Type? ConfigComponent);
+    Type? ConfigComponent,
+    // The config RECORD type (not the panel) — the capability schema (D19) reflects it
+    // into a JSON schema so AI-built dashboards know each widget's config vocabulary.
+    Type? ConfigType = null);

@@ -3192,4 +3192,16 @@
   <data name="Board" xml:space="preserve">
     <value>Mrgl Board</value>
   </data>
+  <data name="Export page" xml:space="preserve">
+    <value>Ex-mrgl page</value>
+  </data>
+  <data name="Import page" xml:space="preserve">
+    <value>Im-mrgl page</value>
+  </data>
+  <data name="Widget schema" xml:space="preserve">
+    <value>Mrgl schema</value>
+  </data>
+  <data name="This import will replace this page's widgets." xml:space="preserve">
+    <value>Mrgl import GRRBL page widgets mrglglgl!</value>
+  </data>
 </root>

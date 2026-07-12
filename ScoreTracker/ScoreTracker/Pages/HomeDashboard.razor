@@ -51,6 +51,11 @@ else if (_loaded)
         <MudSpacer/>
         @if (_editMode)
         {
+            <MudMenu Dense="true" Icon="@Icons.Material.Filled.MoreVert" title="@L["Export page"]">
+                <MudMenuItem Icon="@Icons.Material.Filled.Output" OnClick="OpenExport">@L["Export page"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Input" OnClick="OpenImport">@L["Import page"]</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Filled.Schema" OnClick="OpenSchema">@L["Widget schema"]</MudMenuItem>
+            </MudMenu>
             <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Settings" OnClick="OpenPageSettings">
                 @L["Settings"]
@@ -180,6 +185,70 @@ else if (_loaded)
                        Disabled="_isSaving">
                 @L["Save"]
             </MudButton>
+        </DialogActions>
+    </MudDialog>
+
+    <MudDialog @bind-Visible="_showExport">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["Export page"]</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudTextField T="string" Value="_documentJson" Lines="14" ReadOnly="true"
+                          Variant="Variant.Outlined" Class="dash-json"/>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => _showExport = false">@L["Close"]</MudButton>
+        </DialogActions>
+    </MudDialog>
+
+    <MudDialog @bind-Visible="_showImport">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["Import page"]</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudTextField T="string" @bind-Value="_importJson" Lines="12" Variant="Variant.Outlined"
+                          Class="dash-json" Immediate="true"/>
+            @foreach (var error in _importErrors)
+            {
+                @* Validation errors stay English on purpose (D19) — they get pasted
+                   back into whatever AI produced the document. *@
+                <MudText Typo="Typo.caption" Color="Color.Error" Style="display:block">@error</MudText>
+            }
+            @if (_importResult != null)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">
+                    @L["This import will replace this page's widgets."] (@_importResult.Widgets.Count)
+                </MudAlert>
+            }
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => _showImport = false">@L["Cancel"]</MudButton>
+            @if (_importResult == null)
+            {
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ValidateImport">
+                    @L["Import"]
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="ConfirmImport"
+                           Disabled="_isSaving">
+                    @L["Import"]
+                </MudButton>
+            }
+        </DialogActions>
+    </MudDialog>
+
+    <MudDialog @bind-Visible="_showSchema">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["Widget schema"]</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudTextField T="string" Value="_documentJson" Lines="14" ReadOnly="true"
+                          Variant="Variant.Outlined" Class="dash-json"/>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => _showSchema = false">@L["Close"]</MudButton>
         </DialogActions>
     </MudDialog>
 
@@ -355,6 +424,57 @@ else if (_loaded)
         await Mediator.Send(new DeleteHomePageCommand(_selectedPage.Id));
         _showPageSettings = false;
         _selectedPage = null;
+        await LoadPages();
+        _isSaving = false;
+    }
+
+    private bool _showExport;
+    private bool _showImport;
+    private bool _showSchema;
+    private string _documentJson = string.Empty;
+    private string _importJson = string.Empty;
+    private IReadOnlyList<string> _importErrors = Array.Empty<string>();
+    private PageImportResult? _importResult;
+
+    private void OpenExport()
+    {
+        if (_selectedPage == null) return;
+        _documentJson = PageExportService.Export(_selectedPage);
+        _showExport = true;
+    }
+
+    private void OpenSchema()
+    {
+        _documentJson = CapabilitySchemaService.Build();
+        _showSchema = true;
+    }
+
+    private void OpenImport()
+    {
+        _importJson = string.Empty;
+        _importErrors = Array.Empty<string>();
+        _importResult = null;
+        _showImport = true;
+    }
+
+    private void ValidateImport()
+    {
+        var result = PageExportService.Parse(_importJson);
+        _importErrors = result.Errors;
+        _importResult = result.IsValid ? result : null;
+    }
+
+    private async Task ConfirmImport()
+    {
+        if (_selectedPage == null || _importResult == null) return;
+        _isSaving = true;
+        await Mediator.Send(new ReplaceHomePageWidgetsCommand(_selectedPage.Id, _importResult.Widgets));
+        var name = _importResult.Name.Trim();
+        if (name.Length is > 0 and <= HomePageRecord.MaxNameLength && name != _selectedPage.Name)
+            await Mediator.Send(new RenameHomePageCommand(_selectedPage.Id, name));
+        if (_importResult.DefaultMix != _selectedPage.DefaultMix)
+            await Mediator.Send(new SetHomePageMixCommand(_selectedPage.Id, _importResult.DefaultMix));
+        _showImport = false;
         await LoadPages();
         _isSaving = false;
     }

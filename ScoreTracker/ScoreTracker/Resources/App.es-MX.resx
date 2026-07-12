@@ -3149,4 +3149,16 @@
   <data name="Board" xml:space="preserve">
     <value>Tablero</value>
   </data>
+  <data name="Export page" xml:space="preserve">
+    <value>Exportar página</value>
+  </data>
+  <data name="Import page" xml:space="preserve">
+    <value>Importar página</value>
+  </data>
+  <data name="Widget schema" xml:space="preserve">
+    <value>Esquema de widgets</value>
+  </data>
+  <data name="This import will replace this page's widgets." xml:space="preserve">
+    <value>Esta importación reemplazará los widgets de esta página.</value>
+  </data>
 </root>

@@ -3218,4 +3218,16 @@
   <data name="Board" xml:space="preserve">
     <value>Quadro</value>
   </data>
+  <data name="Export page" xml:space="preserve">
+    <value>Exportar página</value>
+  </data>
+  <data name="Import page" xml:space="preserve">
+    <value>Importar página</value>
+  </data>
+  <data name="Widget schema" xml:space="preserve">
+    <value>Esquema de widgets</value>
+  </data>
+  <data name="This import will replace this page's widgets." xml:space="preserve">
+    <value>Esta importação substituirá os widgets desta página.</value>
+  </data>
 </root>

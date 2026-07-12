@@ -32,3 +32,18 @@ public sealed record RenameHomePageWidgetCommand(Guid WidgetId, string? Title) :
 [ExcludeFromCodeCoverage]
 public sealed record UpdateHomePageWidgetConfigCommand(Guid WidgetId, string ConfigJson, int ConfigVersion)
     : IRequest;
+
+/// <summary>
+///     The import path (D19): swaps a page's entire widget list in one transaction —
+///     the ONE mutation that is not per-interaction (§2.6). Specs are validated for
+///     shape here; semantic validation (known types, supported sizes) happened at the
+///     Web layer against the registry before dispatch.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ReplaceHomePageWidgetsCommand(Guid PageId, IReadOnlyList<HomePageWidgetSpec> Widgets)
+    : IRequest;
+
+/// <summary>A widget-to-be from an import document — everything but identity and ordinal.</summary>
+[ExcludeFromCodeCoverage]
+public sealed record HomePageWidgetSpec(string WidgetType, string? Title, string SizePreset,
+    string ConfigJson, int ConfigVersion);

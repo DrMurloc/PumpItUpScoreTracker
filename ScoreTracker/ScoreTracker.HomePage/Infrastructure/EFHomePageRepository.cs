@@ -125,6 +125,28 @@ internal sealed class EFHomePageRepository(IDbContextFactory<ChartAttemptDbConte
         await database.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task ReplaceWidgets(Guid pageId, IReadOnlyList<HomePageWidgetRecord> widgets,
+        CancellationToken cancellationToken)
+    {
+        await using var database = await factory.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await database.Database.BeginTransactionAsync(cancellationToken);
+        await database.Set<HomePageWidgetEntity>().Where(w => w.PageId == pageId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await database.Set<HomePageWidgetEntity>().AddRangeAsync(widgets.Select(w => new HomePageWidgetEntity
+        {
+            Id = w.Id,
+            PageId = pageId,
+            WidgetType = w.WidgetType,
+            Title = w.Title,
+            Ordinal = (byte)w.Ordinal,
+            SizePreset = w.SizePreset,
+            ConfigJson = w.ConfigJson,
+            ConfigVersion = w.ConfigVersion
+        }), cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
     private static HomePageRecord ToRecord(HomePageEntity page, IEnumerable<HomePageWidgetEntity> widgets)
     {
         return new HomePageRecord(page.Id, page.Name, page.Ordinal, page.IsDefault,
