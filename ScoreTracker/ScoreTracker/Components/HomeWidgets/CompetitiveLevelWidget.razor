@@ -31,7 +31,7 @@ else if (!_series.Any())
 }
 else
 {
-    <div class="dash-chart-fill">
+    <div class="dash-chart-fill @ApexChartTheming.WrapperClass">
         <ApexChart TItem="PlayerRatingRecord" XAxisType="XAxisType.Datetime" Options="_options"
                    Height="@("100%")" @key="_renderKey">
             @foreach (var series in _series)
@@ -147,32 +147,18 @@ else
         // mixed-era keeps clean lines so the dashed history stays legible.
         _useArea = _series.All(s => !s.Dashed);
 
-        _options = new ApexChartOptions<PlayerRatingRecord>
-        {
-            Chart = new ApexCharts.Chart
+        // Shared canvas (ApexChartTheming) + this chart's specifics on top.
+        _options = ApexChartTheming.BaseOptions<PlayerRatingRecord>(palette);
+        _options.Stroke = new Stroke { Curve = Curve.Smooth, DashArray = dashes, Width = 3 };
+        _options.Fill = _useArea
+            ? new Fill
             {
-                Toolbar = new ApexCharts.Toolbar { Show = false },
-                // Freeze the canvas: no zoom, no drag-select — the widget is a
-                // read-only glance, not an explorer (owner, round 3).
-                Zoom = new ApexCharts.Zoom { Enabled = false },
-                Selection = new ApexCharts.Selection { Enabled = false },
-                Background = "transparent",
-                FontFamily = "Barlow Condensed, Bahnschrift, Arial Narrow, sans-serif",
-                ForeColor = palette.InkMuted
-            },
-            Stroke = new Stroke { Curve = Curve.Smooth, DashArray = dashes, Width = 3 },
-            Grid = new ApexCharts.Grid { BorderColor = "rgba(255,255,255,.08)" },
-            Fill = _useArea
-                ? new Fill
-                {
-                    Type = new List<FillType> { FillType.Gradient },
-                    Gradient = new FillGradient { ShadeIntensity = 0, OpacityFrom = 0.20, OpacityTo = 0.0 }
-                }
-                : null,
-            Yaxis = new List<YAxis> { new() { DecimalsInFloat = 2 } },
-            Annotations = annotations.Any() ? new Annotations { Yaxis = annotations } : null,
-            Theme = new ApexCharts.Theme { Mode = Mode.Dark }
-        };
+                Type = new List<FillType> { FillType.Gradient },
+                Gradient = new FillGradient { ShadeIntensity = 0, OpacityFrom = 0.20, OpacityTo = 0.0 }
+            }
+            : null;
+        _options.Yaxis = new List<YAxis> { new() { DecimalsInFloat = 2 } };
+        _options.Annotations = annotations.Any() ? new Annotations { Yaxis = annotations } : null;
         _renderKey = signature;
         _loaded = true;
     }
