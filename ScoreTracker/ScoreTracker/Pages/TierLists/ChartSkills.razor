@@ -117,6 +117,14 @@ else
                 <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
             }
             <MudSpacer></MudSpacer>
+            @if (CurrentUser.IsLoggedIn)
+            {
+                @* Piucenter round 6: on desktop the Folder Stats trigger rides the
+                   toolbar next to Download, decluttering the row around the sections. *@
+                <MudButton Color="Color.Primary" Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.QueryStats"
+                           OnClick="() => _statsOpen = true">@L["Folder Stats"]</MudButton>
+            }
             <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
                        StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
                        Disabled="_isBuildingImage || _isLoading">
@@ -263,9 +271,9 @@ else
     <div class="tier-content-bar">
         @if (CurrentUser.IsLoggedIn)
         {
-            @* Piucenter round 5: Folder Stats shows at every width — the drawer is
-               folder progress's one home now that the inline desktop strip is gone. *@
-            <MudButton Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
+            @* Round 9: on compact, Folder Stats takes the Ranked-by slot; on desktop
+               it rides the toolbar next to Download (piucenter round 6). *@
+            <MudButton Class="tier-compact-only" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.QueryStats" OnClick="() => _statsOpen = true">@L["Folder Stats"]</MudButton>
         }
         <div class="tier-flat tier-desktop-only">
