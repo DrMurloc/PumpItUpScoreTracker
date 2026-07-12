@@ -2903,4 +2903,7 @@
   <data name="Community Rating" xml:space="preserve">
     <value>Valoración de la comunidad</value>
   </data>
+  <data name="Your Skills in Folder" xml:space="preserve">
+    <value>Tus habilidades en la carpeta</value>
+  </data>
 </root>

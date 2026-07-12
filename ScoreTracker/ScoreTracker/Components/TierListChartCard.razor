@@ -56,8 +56,12 @@ else
         }
         @if (Score?.Score != null)
         {
-            <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" OneLine="true" ShowScore="true"
-                            Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
+            @* Own line always — short song names left the tooltip-wrapped name and the
+               score sharing a row (owner, piucenter round 3). *@
+            <div class="tier-chart-card-scoreline">
+                <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" OneLine="true" ShowScore="true"
+                                Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
+            </div>
         }
         @if (TierLabel != null)
         {

@@ -444,6 +444,57 @@
     margin-right: 3px;
 }
 
+/* Folder Stats: personal per-skill pass rates, weakest first (piucenter round 3).
+   Rides the same --skill-chip category tint the chips use. */
+.tier-folder-skills {
+    margin-top: 8px;
+}
+
+.tier-folder-skills-title {
+    display: block;
+    color: var(--mix-ink-muted);
+}
+
+.tier-folder-skill-row {
+    display: grid;
+    grid-template-columns: 92px 1fr 56px;
+    align-items: center;
+    gap: 8px;
+    font-size: .75rem;
+    padding: 1px 0;
+}
+
+.tier-folder-skill-label {
+    color: color-mix(in srgb, var(--skill-chip) 60%, var(--mix-ink));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tier-folder-skill-track {
+    height: 5px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--skill-chip) 14%, transparent);
+    overflow: hidden;
+}
+
+.tier-folder-skill-fill {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--skill-chip);
+}
+
+.tier-folder-skill-value {
+    text-align: right;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.tier-chart-card-scoreline {
+    display: block;
+}
+
 .lamp-strip {
     display: flex;
     flex-wrap: wrap;

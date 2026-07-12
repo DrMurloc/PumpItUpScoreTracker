@@ -182,6 +182,24 @@ else
                     <span class="tier-cohort-bar-note">@L["You: {0} · similar players average {1}", PassedCount, _cohortSummary.AveragePasses.ToString("N1")]</span>
                 </div>
             }
+            @* Piucenter round 3: the personal skill distribution, at a glance — your
+               pass rate per skill in this folder, weakest first (the By-Skill grouping
+               is this same data rendered as sections). Category tint + printed name +
+               printed count (rule 8). *@
+            @if (CurrentUser.IsLoggedIn && FolderSkillPassRates().Any())
+            {
+                <div class="tier-folder-skills">
+                    <MudText Typo="Typo.caption" Class="tier-folder-skills-title">@L["Your Skills in Folder"]</MudText>
+                    @foreach (var row in FolderSkillPassRates())
+                    {
+                        <div class="tier-folder-skill-row skillcat-@(row.Skill.GetPrimaryCategory().ToString().ToLowerInvariant())">
+                            <span class="tier-folder-skill-label">@row.Skill.GetName()</span>
+                            <span class="tier-folder-skill-track"><span class="tier-folder-skill-fill" style="width:@(row.Total == 0 ? 0 : 100 * row.Passed / row.Total)%"></span></span>
+                            <span class="tier-folder-skill-value">@row.Passed / @row.Total</span>
+                        </div>
+                    }
+                </div>
+            }
             @if (_unpassedTodos.Any())
             {
                 <MudText Typo="Typo.caption">@L.GetString("Unpassed ToDos", _unpassedTodos.Count(), _level)</MudText>
@@ -903,6 +921,24 @@ else
 
     private IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> _skillChips =
         new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
+
+    // Folder Stats: your pass rate per skill in this folder, weakest first. Skill
+    // membership follows the chips (dominance + qualified coverage) with the mapped
+    // tags as the pre-crawl fallback; skills on fewer than two charts are noise.
+    private IEnumerable<(Skill Skill, int Passed, int Total)> FolderSkillPassRates()
+    {
+        return _charts.Values
+            .SelectMany(c => (_skillChips.TryGetValue(c.Id, out var chips) && chips.Count > 0
+                    ? chips.Select(chip => chip.Skill)
+                    : c.Skills)
+                .Distinct()
+                .Select(s => (Skill: s, Chart: c)))
+            .GroupBy(p => p.Skill)
+            .Select(g => (Skill: g.Key, Passed: g.Count(p => Passed(p.Chart.Id)), Total: g.Count()))
+            .Where(r => r.Total >= 2)
+            .OrderBy(r => (double)r.Passed / r.Total)
+            .ThenBy(r => r.Skill.GetName());
+    }
 
     // Card + table chips: dominance-ordered metrics when banked, mapped tags as the
     // pre-crawl fallback. Metric text is preformatted here so the card stays dumb.
