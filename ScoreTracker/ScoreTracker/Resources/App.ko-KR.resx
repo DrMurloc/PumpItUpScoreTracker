@@ -3066,4 +3066,37 @@
   <data name="Something went wrong loading this widget." xml:space="preserve">
     <value>이 위젯을 불러오는 중 문제가 발생했습니다.</value>
   </data>
+  <data name="This page is pre-release — your layout and widget settings may be reset before launch." xml:space="preserve">
+    <value>이 페이지는 정식 출시 전 버전입니다. 레이아웃과 위젯 설정은 출시 전에 초기화될 수 있습니다.</value>
+  </data>
+  <data name="New Page" xml:space="preserve">
+    <value>새 페이지</value>
+  </data>
+  <data name="Add Widgets" xml:space="preserve">
+    <value>위젯 추가</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>이름 변경</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>제거</value>
+  </data>
+  <data name="Configure" xml:space="preserve">
+    <value>설정</value>
+  </data>
+  <data name="Size" xml:space="preserve">
+    <value>크기</value>
+  </data>
+  <data name="Move earlier" xml:space="preserve">
+    <value>앞으로 이동</value>
+  </data>
+  <data name="Move later" xml:space="preserve">
+    <value>뒤로 이동</value>
+  </data>
+  <data name="Follow current mix" xml:space="preserve">
+    <value>현재 시리즈 따르기</value>
+  </data>
+  <data name="This page is full." xml:space="preserve">
+    <value>이 페이지는 가득 찼습니다.</value>
+  </data>
 </root>

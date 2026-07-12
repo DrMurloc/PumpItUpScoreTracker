@@ -741,3 +741,55 @@
 
     .dash-rows-2 { grid-row: span 1; }
 }
+
+/* Edit mode: toolbar, edit chrome, add-drawer. */
+
+.dash-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.dash-toolbar .dash-pagebar {
+    margin-bottom: 0;
+}
+
+.dash-pagetab-new {
+    color: var(--mix-primary);
+}
+
+.dash-widget-editing {
+    border-style: dashed;
+    border-color: color-mix(in srgb, var(--mix-primary) 45%, transparent);
+}
+
+.dash-edit-controls {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+}
+
+.dash-drawer-body {
+    padding: 16px;
+}
+
+.dash-drawer-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.dash-drawer-item:hover {
+    background: rgba(255, 255, 255, .06);
+}
+
+.dash-drawer-item.disabled {
+    opacity: .45;
+    pointer-events: none;
+}

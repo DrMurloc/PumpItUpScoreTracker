@@ -3183,4 +3183,37 @@
   <data name="Something went wrong loading this widget." xml:space="preserve">
     <value>Une erreur est survenue lors du chargement de ce widget.</value>
   </data>
+  <data name="This page is pre-release — your layout and widget settings may be reset before launch." xml:space="preserve">
+    <value>Cette page est en préversion — votre disposition et la configuration de vos widgets pourront être réinitialisées avant le lancement.</value>
+  </data>
+  <data name="New Page" xml:space="preserve">
+    <value>Nouvelle page</value>
+  </data>
+  <data name="Add Widgets" xml:space="preserve">
+    <value>Ajouter des widgets</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>Renommer</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Retirer</value>
+  </data>
+  <data name="Configure" xml:space="preserve">
+    <value>Configurer</value>
+  </data>
+  <data name="Size" xml:space="preserve">
+    <value>Taille</value>
+  </data>
+  <data name="Move earlier" xml:space="preserve">
+    <value>Déplacer avant</value>
+  </data>
+  <data name="Move later" xml:space="preserve">
+    <value>Déplacer après</value>
+  </data>
+  <data name="Follow current mix" xml:space="preserve">
+    <value>Suivre le mix actuel</value>
+  </data>
+  <data name="This page is full." xml:space="preserve">
+    <value>Cette page est pleine.</value>
+  </data>
 </root>

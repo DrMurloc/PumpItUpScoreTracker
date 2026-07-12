@@ -3185,4 +3185,37 @@
   <data name="Something went wrong loading this widget." xml:space="preserve">
     <value>Something went wrong loading this widget.</value>
   </data>
+  <data name="This page is pre-release — your layout and widget settings may be reset before launch." xml:space="preserve">
+    <value>This page is pre-release — your layout and widget settings may be reset before launch.</value>
+  </data>
+  <data name="New Page" xml:space="preserve">
+    <value>New Page</value>
+  </data>
+  <data name="Add Widgets" xml:space="preserve">
+    <value>Add Widgets</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Configure" xml:space="preserve">
+    <value>Configure</value>
+  </data>
+  <data name="Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Move earlier" xml:space="preserve">
+    <value>Move earlier</value>
+  </data>
+  <data name="Move later" xml:space="preserve">
+    <value>Move later</value>
+  </data>
+  <data name="Follow current mix" xml:space="preserve">
+    <value>Follow current mix</value>
+  </data>
+  <data name="This page is full." xml:space="preserve">
+    <value>This page is full.</value>
+  </data>
 </root>

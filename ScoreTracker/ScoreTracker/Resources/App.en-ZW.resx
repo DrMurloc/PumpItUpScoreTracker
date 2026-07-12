@@ -3108,4 +3108,37 @@
   <data name="Something went wrong loading this widget." xml:space="preserve">
     <value>Mrgl widget go boom mrglglgl...</value>
   </data>
+  <data name="This page is pre-release — your layout and widget settings may be reset before launch." xml:space="preserve">
+    <value>Mrglglgl! Page grrbl pre-release — widgets mrgl go poof mrglglgl!</value>
+  </data>
+  <data name="New Page" xml:space="preserve">
+    <value>Mrgl Page</value>
+  </data>
+  <data name="Add Widgets" xml:space="preserve">
+    <value>Mrgl Widgets!</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>Re-mrgl</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Grrbl!</value>
+  </data>
+  <data name="Configure" xml:space="preserve">
+    <value>Mrgl-figure</value>
+  </data>
+  <data name="Size" xml:space="preserve">
+    <value>Mrgl-size</value>
+  </data>
+  <data name="Move earlier" xml:space="preserve">
+    <value>Mrgl bck!</value>
+  </data>
+  <data name="Move later" xml:space="preserve">
+    <value>Mrgl fwd!</value>
+  </data>
+  <data name="Follow current mix" xml:space="preserve">
+    <value>Mrgl current mix mrgl</value>
+  </data>
+  <data name="This page is full." xml:space="preserve">
+    <value>Page mrgl FULL mrglglgl!</value>
+  </data>
 </root>

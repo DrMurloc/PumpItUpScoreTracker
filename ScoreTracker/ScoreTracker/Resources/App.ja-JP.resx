@@ -3186,4 +3186,37 @@
   <data name="Something went wrong loading this widget." xml:space="preserve">
     <value>このウィジェットの読み込み中に問題が発生しました。</value>
   </data>
+  <data name="This page is pre-release — your layout and widget settings may be reset before launch." xml:space="preserve">
+    <value>このページはプレリリース版です。レイアウトやウィジェットの設定は正式リリース前にリセットされる可能性があります。</value>
+  </data>
+  <data name="New Page" xml:space="preserve">
+    <value>新しいページ</value>
+  </data>
+  <data name="Add Widgets" xml:space="preserve">
+    <value>ウィジェットを追加</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>名前を変更</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="Configure" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="Size" xml:space="preserve">
+    <value>サイズ</value>
+  </data>
+  <data name="Move earlier" xml:space="preserve">
+    <value>前へ移動</value>
+  </data>
+  <data name="Move later" xml:space="preserve">
+    <value>後ろへ移動</value>
+  </data>
+  <data name="Follow current mix" xml:space="preserve">
+    <value>現在のバージョンに従う</value>
+  </data>
+  <data name="This page is full." xml:space="preserve">
+    <value>このページは満杯です。</value>
+  </data>
 </root>
