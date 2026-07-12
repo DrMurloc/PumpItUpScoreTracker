@@ -422,6 +422,8 @@ else
         <div class="rand-footer-row">
             <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.RestartAlt"
                        OnClick="ResetSettings">@L["Reset"]</MudButton>
+            @* Reset is the odd one out — keep the save cluster visually away from it. *@
+            <MudSpacer></MudSpacer>
             @if (CurrentUser.IsLoggedIn && _contextTournamentId == null && !string.IsNullOrWhiteSpace(_currentSettingsName))
             {
                 <MudTooltip Text="@L["Share these settings"]">

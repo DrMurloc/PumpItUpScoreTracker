@@ -1001,8 +1001,10 @@ html.nav-away .page-dock,
     font-size: .8rem;
 }
 
-.rand-type-head {
-    justify-content: flex-end;
+/* Slider heads carry a lone switch/note that belongs on the right; the Co-Op head
+   still has its label on the left (round 10 fix — a blanket flex-end dragged it over). */
+.rand-type-head > :only-child {
+    margin-left: auto;
 }
 
 .rand-advanced-body {
