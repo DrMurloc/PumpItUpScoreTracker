@@ -239,6 +239,18 @@ public static class MixThemes
             ["neutral"] = "#90A4AE"
         };
 
+    // Third-party sign-in brand marks (Discord blurple, Google blue, PIUGAME red).
+    // Mix-invariant like the skill categories — brand identity never re-hues — and
+    // emitted as tokens so the front door and sign-in card ship with zero literals
+    // (docs/design/front-door.md, C3).
+    private static readonly IReadOnlyDictionary<string, string> BrandColors =
+        new Dictionary<string, string>
+        {
+            ["discord"] = "#5865F2",
+            ["google"] = "#4285F4",
+            ["piugame"] = "#C4302B"
+        };
+
     /// <summary>
     ///     Raw hex for a difficulty category — for render targets that can't read CSS
     ///     custom properties (the SkiaSharp share card). On-screen consumers keep using
@@ -263,6 +275,8 @@ public static class MixThemes
         // without color literals. Mix-invariant — category identity never re-hues.
         var skillCategories = string.Join("\n", Enum.GetValues<SkillCategory>().Select(c =>
             $"    --skillcat-{c.ToString().ToLowerInvariant()}: {c.GetColor()};"));
+        var brands = string.Join("\n", BrandColors.Select(kv =>
+            $"    --brand-{kv.Key}: {kv.Value};"));
         return $@":root {{
     --mix-bg: {p.Background};
     --mix-surface: {p.Surface};
@@ -286,6 +300,7 @@ public static class MixThemes
 {difficulty}
 {plates}
 {skillCategories}
+{brands}
 }}";
     }
 
