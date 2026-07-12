@@ -3282,4 +3282,109 @@
   <data name="No entries yet." xml:space="preserve">
     <value>Aucune participation pour le moment.</value>
   </data>
+  <data name="Not a good suggestion?" xml:space="preserve">
+    <value>Mauvaise suggestion ?</value>
+  </data>
+  <data name="The level printed on the chart." xml:space="preserve">
+    <value>Le niveau imprimé sur le chart.</value>
+  </data>
+  <data name="Closest PGs, top-50 picks, and old scores due a revisit." xml:space="preserve">
+    <value>Vos PG les plus proches, des choix de votre Top 50 et de vieux scores à revoir.</value>
+  </data>
+  <data name="Chart level" xml:space="preserve">
+    <value>Niveau du chart</value>
+  </data>
+  <data name="Charts toward your next title, plus skill titles one SSS away." xml:space="preserve">
+    <value>Des charts vers votre prochain titre, plus les titres de compétence à un SSS.</value>
+  </data>
+  <data name="Shuffle suggestions" xml:space="preserve">
+    <value>Mélanger les suggestions</value>
+  </data>
+  <data name="Suggested · Fill Gaps" xml:space="preserve">
+    <value>Suggérés · Combler les trous</value>
+  </data>
+  <data name="Suggested Charts" xml:space="preserve">
+    <value>Charts suggérés</value>
+  </data>
+  <data name="Pinned range" xml:space="preserve">
+    <value>Plage fixée</value>
+  </data>
+  <data name="Suggested · Title Hunt" xml:space="preserve">
+    <value>Suggérés · Chasse aux titres</value>
+  </data>
+  <data name="Charts picked for you, tuned by goal." xml:space="preserve">
+    <value>Des charts choisis pour vous, selon votre objectif.</value>
+  </data>
+  <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
+    <value>Rien à suggérer pour l'instant — jouez et importez des scores d'abord.</value>
+  </data>
+  <data name="Feedback Submitted, Thank You!" xml:space="preserve">
+    <value>Merci pour votre retour !</value>
+  </data>
+  <data name="{0} to PG" xml:space="preserve">
+    <value>{0} avant le PG</value>
+  </data>
+  <data name="Score Push" xml:space="preserve">
+    <value>Poussée de score</value>
+  </data>
+  <data name="Pushing Title Charts" xml:space="preserve">
+    <value>Charts du titre en cours</value>
+  </data>
+  <data name="Suggested · Score Push" xml:space="preserve">
+    <value>Suggérés · Poussée de score</value>
+  </data>
+  <data name="Push PGs" xml:space="preserve">
+    <value>Visez les PG</value>
+  </data>
+  <data name="Follows your competitive level as it moves." xml:space="preserve">
+    <value>Suit votre niveau compétitif au fil du temps.</value>
+  </data>
+  <data name="Goal" xml:space="preserve">
+    <value>Objectif</value>
+  </data>
+  <data name="Community-calibrated difficulty — a chart that scores like a 21 counts as a 21." xml:space="preserve">
+    <value>Difficulté calibrée par la communauté — un chart qui se score comme un 21 compte comme un 21.</value>
+  </data>
+  <data name="Level basis" xml:space="preserve">
+    <value>Base de niveau</value>
+  </data>
+  <data name="Skill Title Charts" xml:space="preserve">
+    <value>Charts de titres de compétence</value>
+  </data>
+  <data name="Improve Your Top 50" xml:space="preserve">
+    <value>Améliorez votre Top 50</value>
+  </data>
+  <data name="Any level" xml:space="preserve">
+    <value>Tout niveau</value>
+  </data>
+  <data name="The Category Isn't Interesting to Me" xml:space="preserve">
+    <value>La catégorie ne m'intéresse pas</value>
+  </data>
+  <data name="Title Hunt" xml:space="preserve">
+    <value>Chasse aux titres</value>
+  </data>
+  <data name="Fill Gaps" xml:space="preserve">
+    <value>Combler les trous</value>
+  </data>
+  <data name="Revisit Old Scores" xml:space="preserve">
+    <value>Revisitez vos vieux scores</value>
+  </data>
+  <data name="Fill Scores" xml:space="preserve">
+    <value>Complétez vos scores</value>
+  </data>
+  <data name="Approachable unpassed charts around your level." xml:space="preserve">
+    <value>Des charts abordables non passés autour de votre niveau.</value>
+  </data>
+  <data name="{0} days old" xml:space="preserve">
+    <value>il y a {0} jours</value>
+  </data>
+  <data name="Scoring level" xml:space="preserve">
+    <value>Niveau de score</value>
+  </data>
+  <data name="± levels" xml:space="preserve">
+    <value>± niveaux</value>
+  </data>
+  <data name="Around my level" xml:space="preserve">
+    <value>Autour de mon niveau</value>
+  </data>
 </root>
