@@ -271,12 +271,15 @@ else
                           OnProtect="_ => SetState(card, DrawCardState.Protected)"
                           OnVeto="_ => SetState(card, DrawCardState.Vetoed)"
                           OnUndo="_ => SetState(card, DrawCardState.None)"
-                          OnVideo="chartId => VideoDisplayer.ShowVideo(chartId)"></DrawCardTile>
+                          OnDetails="_ => OpenDetails(card)"></DrawCardTile>
         }
         @if (_contextTournamentId == null || CanOperate)
         {
             <button type="button" class="rand-add-tile" @onclick="() => _showAddChart = !_showAddChart"
-                    aria-label="@L["Add Chart"]">+</button>
+                    aria-label="@L["Add Chart"]">
+                <span class="rand-add-tile-plus">+</span>
+                <span class="rand-add-tile-label">@L["Add Chart"]</span>
+            </button>
         }
     </div>
     @if (_showAddChart)
@@ -325,6 +328,9 @@ else
     </div>
 </MudDrawer>
 
+@* The tier lists' chart details surface — one concept, one component. *@
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="@(_detailsChart?.Mix ?? _mix)"></ChartDetailsDialog>
+
 <PageDock FocusMode="_draftMode">
     @if (_draftMode)
     {
@@ -365,7 +371,6 @@ else
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
 @inject IOptions<JsonSerializerOptions> JsonOptions
-@inject ChartVideoDisplayer VideoDisplayer
 @implements IDisposable
 @code {
 
@@ -668,11 +673,20 @@ else
         }
     }
 
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+
+    private void OpenDetails(CardVm card)
+    {
+        _detailsChart = card.Chart;
+        _detailsOpen = true;
+    }
+
     private Task ApplyArmedAction(CardVm card)
     {
         if (_armedAction == ArmedAction.Details)
         {
-            VideoDisplayer.ShowVideo(card.Chart.Id);
+            OpenDetails(card);
             return Task.CompletedTask;
         }
 

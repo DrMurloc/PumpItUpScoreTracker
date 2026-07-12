@@ -45,12 +45,12 @@ else
         @if (!Disabled)
         {
             <div class="tier-chart-card-actions">
-                @if (OnVideo.HasDelegate)
+                @if (OnDetails.HasDelegate)
                 {
-                    <MudTooltip Text="@L["Video"]">
-                        <MudIconButton Size="Size.Small" Icon="@Icons.Custom.Brands.YouTube"
-                                       OnClick="() => OnVideo.InvokeAsync(Chart.Id)"
-                                       aria-label="@L["Video"]"></MudIconButton>
+                    <MudTooltip Text="@L["Details"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Info"
+                                       OnClick="() => OnDetails.InvokeAsync(PullId)"
+                                       aria-label="@L["Details"]"></MudIconButton>
                     </MudTooltip>
                 }
                 <MudSpacer></MudSpacer>
@@ -105,7 +105,8 @@ else
 
     [Parameter] public EventCallback<Guid> OnUndo { get; set; }
 
-    [Parameter] public EventCallback<Guid> OnVideo { get; set; }
+    /// <summary>Opens the chart-details dialog (the tier lists' ChartDetailsDialog).</summary>
+    [Parameter] public EventCallback<Guid> OnDetails { get; set; }
 
     private string StateClass => State switch
     {

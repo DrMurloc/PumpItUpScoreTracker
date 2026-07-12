@@ -333,16 +333,9 @@ html.nav-away .page-dock,
     box-shadow: 0 1px 4px rgba(0, 0, 0, .55);
 }
 
-.draw-card-held {
-    border-color: var(--mix-primary);
-    border-style: solid;
-    box-shadow: 0 0 0 1px var(--mix-primary), 0 0 14px var(--mix-glow);
-}
-
-.draw-card-vetoed {
-    border-color: var(--mud-palette-error);
-    border-style: solid;
-}
+/* Held/vetoed border rules live with the tier-card border language further down —
+   the base card declares a `border` shorthand at equal specificity, so source order
+   is what lets the state colors win (same rule as the pass/To-Do states). */
 
 .draw-card-vetoed .tier-chart-card-jacket {
     filter: grayscale(.85) brightness(.5);
@@ -449,14 +442,37 @@ html.nav-away .page-dock,
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
 }
 
+/* A ghost of the card that will land there: same shape, surface, and radius as a
+   tier-chart-card, dashed to read as "empty slot". */
 .rand-add-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
     border: 2px dashed var(--mud-palette-lines-default);
     border-radius: 8px;
-    background: none;
+    background: var(--mud-palette-surface);
     color: var(--mix-ink-muted);
-    font-size: 1.7rem;
     min-height: 104px;
     cursor: pointer;
+}
+
+.rand-add-tile:hover {
+    border-color: var(--mix-primary);
+    color: var(--mix-ink);
+}
+
+.rand-add-tile-plus {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.rand-add-tile-label {
+    font-family: var(--font-display);
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .05em;
 }
 
 .rand-add-tile:focus-visible {
@@ -1456,6 +1472,20 @@ html.nav-away .page-dock,
 .tier-chart-card-other-mix {
     border-color: var(--mud-palette-success);
     border-style: dashed;
+}
+
+/* Randomizer draw states join the same source-order contract: held = mix-primary ring
+   (deliberately NOT the pass-green), vetoed = error red — both in every density, on
+   top of the dim/strike second channels. */
+.draw-card-held {
+    border-color: var(--mix-primary);
+    border-style: solid;
+    box-shadow: 0 0 0 1px var(--mix-primary), 0 0 14px var(--mix-glow);
+}
+
+.draw-card-vetoed {
+    border-color: var(--mud-palette-error);
+    border-style: solid;
 }
 
 .folder-picker {
