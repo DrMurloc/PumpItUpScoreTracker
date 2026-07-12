@@ -114,7 +114,10 @@ else
         <div class="tier-toolbar-row tier-desktop-only">
             @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
             {
-                <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
+                <div class="tier-personalized-cell">
+                    <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
+                    <MudLink Href="@BreakdownUrl" Typo="Typo.caption">@L["How is this personalized?"]</MudLink>
+                </div>
             }
             <MudSpacer></MudSpacer>
             @if (CurrentUser.IsLoggedIn)
@@ -150,7 +153,10 @@ else
         }
         @if (PersonalizedActive)
         {
-            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Bolt">@L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name]</MudChip>
+            @* The chip doubles as the door to the breakdown page — same destination as
+               the "How is this personalized?" links by the switch. *@
+            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Bolt"
+                     OnClick="@(() => NavManager.NavigateTo(BreakdownUrl))">@L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name]</MudChip>
         }
         <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@L["Ranked by"]: @LensDisplayName(_tierListType)</MudChip>
         @if (IsMyProgress)
@@ -599,6 +605,7 @@ else
             @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
             {
                 <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
+                <MudLink Href="@BreakdownUrl" Typo="Typo.caption">@L["How is this personalized?"]</MudLink>
             }
             <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
                        StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
@@ -657,6 +664,13 @@ else
 
     .tier-compact-only {
         display: none;
+    }
+
+    /* The Personalized switch and its breakdown link stack as one toolbar cell. */
+    .tier-personalized-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
     }
 
     @@media (max-width: 959.98px) {
@@ -1382,6 +1396,8 @@ else
     private bool ChabalaAvailable => _currentMix == MixEnum.Phoenix && _chabalaLinks.ContainsKey((_chartType, _level));
 
     private bool PersonalizedActive => _usePersonalizedData && CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score";
+
+    private string BreakdownUrl => $"/TierLists/{_chartType}/{_level}/Breakdown?Lens={_tierListType}";
 
     private bool Passed(Guid chartId) => _scores.TryGetValue(chartId, out var s) && !s.IsBroken;
 

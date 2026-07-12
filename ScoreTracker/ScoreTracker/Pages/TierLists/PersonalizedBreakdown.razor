@@ -1,0 +1,474 @@
+@page "/TierLists/{ChartTypeRoute}/{LevelRoute:int}/Breakdown"
+@using MediatR
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+<PageTitle>@L["Personalized Breakdown"]</PageTitle>
+<HeadContent>
+    <meta name="description" content="How your personalized PIU tier list is computed for this folder."/>
+</HeadContent>
+
+@if (!CurrentUser.IsLoggedIn)
+{
+    <div class="tier-list-cta">
+        <MudText Typo="Typo.h6">@L["Import your scores to light this folder up"]</MudText>
+        <div class="tier-list-cta-actions">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/Login">@L["Login"]</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/UploadPhoenixScores">@L["Import Scores"]</MudButton>
+        </div>
+    </div>
+}
+else
+{
+    <div class="bd-page">
+        @* Header: where you are (folder + lens) and the way back. The folder picker and
+           lens select stay live so folder-hopping doesn't bounce through the tier list. *@
+        <div class="bd-toolbar">
+            <MudLink Href="@TierListUrl" Typo="Typo.caption">← @L["Back to Tier List"]</MudLink>
+            <div class="bd-toolbar-row">
+                <MudText Typo="Typo.h4" Class="bd-title">@L["Personalized Breakdown"]</MudText>
+                <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
+                <MudSelect T="string" Class="bd-lens-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_lens" ValueChanged="ChangeLens">
+                    <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+                </MudSelect>
+                <MudSpacer></MudSpacer>
+                <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Bolt">@L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name]</MudChip>
+            </div>
+        </div>
+
+        @if (_isLoading)
+        {
+            <TierListSkeleton></TierListSkeleton>
+        }
+        else if (_breakdown == null)
+        {
+            <div class="tier-list-cta">
+                <MudText>@L["No charts match your filters"]</MudText>
+            </div>
+        }
+        else
+        {
+            @* The verdict: what personalization actually did to this folder, in numbers
+               that always print (rule 8). *@
+            <div class="bd-verdict">
+                <span>@L["Your personalized list moves {0} of {1} charts away from the community's.", MovedCount, _breakdown.Charts.Count]</span>
+                <span class="bd-verdict-detail">
+                    <span class="bd-harder-text">@L["{0} harder for you", HarderMovers.Count]</span>
+                    <span class="bd-dot">·</span>
+                    <span class="bd-easier-text">@L["{0} easier for you", EasierMovers.Count]</span>
+                    <span class="bd-dot">·</span>
+                    <span>@L["{0} match the community tier", UnchangedCount]</span>
+                    @if (NoDataCharts.Any())
+                    {
+                        <span class="bd-dot">·</span>
+                        <span>@L["{0} don't have enough data to move", NoDataCharts.Count]</span>
+                    }
+                </span>
+                <MudText Typo="Typo.caption" Class="bd-caption">@L["Recalculated every few hours"]</MudText>
+            </div>
+
+            @* The recipe: the three sources, their weights, and their status for YOU in
+               this folder — a silent source is a diagnostic, not a mystery. *@
+            <section class="bd-block">
+                <MudText Typo="Typo.h5">@L["What goes into your list"]</MudText>
+                <MudText Typo="Typo.caption" Class="bd-caption">@L["Three sources vote on every chart. Sources with more weight move charts further."]</MudText>
+                <div class="bd-weightbar" aria-hidden="true">
+                    <span class="bd-w-community" style="flex:@_breakdown.CommunityWeight"></span>
+                    <span class="bd-w-skill" style="flex:@_breakdown.SkillWeight"></span>
+                    <span class="bd-w-similar" style="flex:@_breakdown.SimilarPlayersWeight"></span>
+                </div>
+                <div class="bd-recipe-cards">
+                    <div class="bd-card">
+                        <div class="bd-card-head">
+                            <MudText Typo="Typo.subtitle1">@L["Community Tier List"]</MudText>
+                            <span class="bd-weight bd-w-community">×@_breakdown.CommunityWeight</span>
+                        </div>
+                        <MudText Typo="Typo.body2" Class="bd-caption">@L["The shared tier list for this folder, built from everyone's data."]</MudText>
+                        <div class="bd-status">
+                            <span class="bd-status-ok">●</span>
+                            <span>@L["{0} / {1} charts rated", CommunityRatedCount, _breakdown.Charts.Count]</span>
+                        </div>
+                    </div>
+                    <div class="bd-card">
+                        <div class="bd-card-head">
+                            <MudText Typo="Typo.subtitle1">@L["Your Skill Estimate"]</MudText>
+                            <span class="bd-weight bd-w-skill">×@_breakdown.SkillWeight</span>
+                        </div>
+                        <MudText Typo="Typo.body2" Class="bd-caption">@L["Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more."]</MudText>
+                        @if (_breakdown.SkillSourceActive)
+                        {
+                            <div class="bd-status">
+                                <span class="bd-status-ok">●</span>
+                                <span>@L["Active — {0} scores nearby, {1} skills have enough evidence", _breakdown.ScoredChartCount, _breakdown.UsableSkillCount]</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="bd-status">
+                                <span class="bd-status-off">●</span>
+                                <span>@L["Silent — only {0} skills have enough evidence. Your list currently matches the community's. Score more charts near this folder to turn this on.", _breakdown.UsableSkillCount]</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="bd-card">
+                        <div class="bd-card-head">
+                            <MudText Typo="Typo.subtitle1">@L["Players Like You"]</MudText>
+                            <span class="bd-weight bd-w-similar">×@_breakdown.SimilarPlayersWeight</span>
+                        </div>
+                        <MudText Typo="Typo.body2" Class="bd-caption">@L["Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours."]</MudText>
+                        @if (_breakdown.SimilarPlayerCount > 0)
+                        {
+                            <div class="bd-status">
+                                <span class="bd-status-ok">●</span>
+                                <span>@L["{0} players found", _breakdown.SimilarPlayerCount]</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="bd-status">
+                                <span class="bd-status-off">●</span>
+                                <span>@L["Silent — no players found in your competitive range yet."]</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </section>
+        }
+    </div>
+}
+<style>
+    .bd-page {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding-bottom: 24px;
+    }
+
+    .bd-toolbar {
+        margin-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .bd-toolbar-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .bd-title {
+        margin-right: 4px;
+    }
+
+    .bd-lens-select {
+        max-width: 190px;
+    }
+
+    .bd-caption {
+        color: var(--mud-palette-text-secondary);
+        display: block;
+    }
+
+    .bd-verdict {
+        margin: 16px 0 4px;
+        padding: 12px 16px;
+        border-left: 3px solid var(--mud-palette-primary);
+        background: var(--mud-palette-surface);
+        border-radius: 0 8px 8px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .bd-verdict-detail {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: .85rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .bd-harder-text {
+        color: var(--diff-veryhard);
+    }
+
+    .bd-easier-text {
+        color: var(--diff-veryeasy);
+    }
+
+    .bd-dot {
+        opacity: .6;
+    }
+
+    .bd-block {
+        margin-top: 28px;
+    }
+
+    .bd-weightbar {
+        display: flex;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        max-width: 520px;
+        margin: 10px 0 14px;
+    }
+
+    .bd-weightbar span {
+        display: block;
+    }
+
+    .bd-w-community {
+        background: var(--mud-palette-text-secondary);
+    }
+
+    .bd-w-skill {
+        background: var(--mud-palette-primary);
+    }
+
+    .bd-w-similar {
+        background: var(--mix-secondary);
+    }
+
+    span.bd-weight {
+        font-size: .68rem;
+        letter-spacing: .1em;
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-weight: 700;
+        background: transparent;
+    }
+
+    .bd-weight.bd-w-community {
+        background: color-mix(in srgb, var(--mud-palette-text-secondary) 25%, transparent);
+        color: var(--mud-palette-text-primary);
+    }
+
+    .bd-weight.bd-w-skill {
+        background: color-mix(in srgb, var(--mud-palette-primary) 25%, transparent);
+        color: var(--mud-palette-primary);
+    }
+
+    .bd-weight.bd-w-similar {
+        background: color-mix(in srgb, var(--mix-secondary) 25%, transparent);
+        color: var(--mix-secondary);
+    }
+
+    .bd-recipe-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+    }
+
+    .bd-card {
+        background: var(--mud-palette-surface);
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 10px;
+        padding: 14px 16px;
+    }
+
+    .bd-card-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: space-between;
+    }
+
+    .bd-status {
+        margin-top: 8px;
+        display: flex;
+        gap: 6px;
+        align-items: baseline;
+        font-size: .82rem;
+    }
+
+    .bd-status-ok {
+        color: var(--mud-palette-success);
+    }
+
+    .bd-status-off {
+        color: var(--mud-palette-warning);
+    }
+</style>
+@inject ICurrentUserAccessor CurrentUser;
+@inject IMediator Mediator;
+@inject NavigationManager NavManager;
+@inject IUiSettingsAccessor UiSettings;
+@code {
+
+    [Parameter] public string? ChartTypeRoute { get; set; }
+
+    [Parameter] public int? LevelRoute { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "Lens")]
+    public string? LensParam { get; set; }
+
+    private static readonly string[] ValidLenses = { "Pass", "Score" };
+
+    private MixEnum _currentMix = MixEnum.Phoenix;
+    private ChartType _chartType = ChartType.Double;
+    private int _level = 18;
+    private string _lens = "Pass";
+    private bool _isLoading = true;
+
+    private PersonalizedTierListBreakdown? _breakdown;
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IDictionary<Guid, Chart> _allCharts = new Dictionary<Guid, Chart>();
+    private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
+    private IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> _skillChips =
+        new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
+    private IDictionary<Guid, ScoreRankingRecord> _scoreRankings = new Dictionary<Guid, ScoreRankingRecord>();
+
+    private string TierListUrl => $"/TierLists/{_chartType}/{_level}?TierListType={_lens}";
+
+    // --- Verdict + movers buckets --------------------------------------------------------
+
+    // A chart with no recorded vote from either personal source cannot move — that's
+    // the honest "not enough data" bucket, distinct from "agrees with the community".
+    private IReadOnlyList<BreakdownChartRecord> NoDataCharts => _breakdown == null
+        ? Array.Empty<BreakdownChartRecord>()
+        : _breakdown.Charts.Where(c => c.SkillCategory == TierListCategory.Unrecorded &&
+                                       c.SimilarPlayersCategory == TierListCategory.Unrecorded).ToArray();
+
+    private IReadOnlyList<BreakdownChartRecord> HarderMovers => MoversWhere(c => c.PersonalizedCategory > c.CommunityCategory);
+
+    private IReadOnlyList<BreakdownChartRecord> EasierMovers => MoversWhere(c => c.PersonalizedCategory < c.CommunityCategory);
+
+    private IReadOnlyList<BreakdownChartRecord> MoversWhere(Func<BreakdownChartRecord, bool> direction)
+    {
+        return _breakdown == null
+            ? Array.Empty<BreakdownChartRecord>()
+            : _breakdown.Charts
+                .Where(c => c.CommunityCategory != TierListCategory.Unrecorded &&
+                            c.PersonalizedCategory != TierListCategory.Unrecorded)
+                .Where(direction)
+                .OrderByDescending(c => Math.Abs(c.PersonalizedCategory - c.CommunityCategory))
+                .ThenBy(c => _charts.TryGetValue(c.ChartId, out var chart) ? chart.Song.Name.ToString() : "")
+                .ToArray();
+    }
+
+    private int MovedCount => HarderMovers.Count + EasierMovers.Count;
+
+    private int UnchangedCount => _breakdown == null
+        ? 0
+        : _breakdown.Charts.Count - MovedCount - NoDataCharts.Count;
+
+    private int CommunityRatedCount => _breakdown == null
+        ? 0
+        : _breakdown.Charts.Count(c => c.CommunityCategory != TierListCategory.Unrecorded);
+
+    // --- Navigation ----------------------------------------------------------------------
+
+    private async Task ChangeFolder((ChartType Type, int Level) folder)
+    {
+        // CoOp doesn't personalize — hand the folder back to the tier list page.
+        if (folder.Type == ChartType.CoOp)
+        {
+            NavManager.NavigateTo($"/TierLists/{folder.Type}/{folder.Level}");
+            return;
+        }
+
+        _chartType = folder.Type;
+        _level = folder.Level;
+        SetQueryString();
+        await LoadFolder();
+    }
+
+    private async Task ChangeLens(string lens)
+    {
+        _lens = lens;
+        SetQueryString();
+        // Only the blend depends on the lens — charts, scores, chips, and rankings
+        // are folder-scoped and stay.
+        _isLoading = true;
+        StateHasChanged();
+        _breakdown = await Mediator.Send(new GetPersonalizedTierListBreakdownQuery(_chartType, _level, _lens, Mix: _currentMix));
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private void SetQueryString()
+    {
+        NavManager.NavigateTo(NavManager.GetUriWithQueryParameters(
+            $"/TierLists/{_chartType}/{_level}/Breakdown",
+            new Dictionary<string, object?> { { "Lens", _lens } }));
+    }
+
+    // --- Load ----------------------------------------------------------------------------
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currentMix = await UiSettings.GetSelectedMix();
+        // The lenses that personalize don't exist for legacy mixes; CoOp never
+        // personalizes. Soft-land those on the tier list instead of a dead page.
+        if (_currentMix.UsesLegacyScoring())
+        {
+            NavManager.NavigateTo("/TierLists");
+            return;
+        }
+
+        _chartType = Enum.TryParse<ChartType>(ChartTypeRoute, true, out var routeType) ? routeType : ChartType.Double;
+        if (LevelRoute is >= 1 and <= 29)
+        {
+            _level = LevelRoute.Value;
+        }
+
+        if (_chartType == ChartType.CoOp)
+        {
+            NavManager.NavigateTo($"/TierLists/{_chartType}/{_level}");
+            return;
+        }
+
+        _lens = ValidLenses.FirstOrDefault(l => string.Equals(l, LensParam, StringComparison.OrdinalIgnoreCase)) ?? "Pass";
+
+        if (!CurrentUser.IsLoggedIn)
+        {
+            _isLoading = false;
+            return;
+        }
+
+        var chartsTask = Mediator.Send(new GetChartsQuery(_currentMix));
+        var scoresTask = Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _currentMix));
+        _allCharts = (await chartsTask).ToDictionary(c => c.Id);
+        _scores = (await scoresTask).ToDictionary(s => s.ChartId);
+
+        await LoadFolder();
+    }
+
+    private async Task LoadFolder()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        _charts = _allCharts.Values
+            .Where(c => c.Level == _level && c.Type == _chartType)
+            .ToDictionary(c => c.Id);
+
+        var breakdownTask = Mediator.Send(new GetPersonalizedTierListBreakdownQuery(_chartType, _level, _lens, Mix: _currentMix));
+        var chipsTask = Mediator.Send(new GetChartSkillChipsQuery(_charts.Keys.ToArray()));
+        var rankingsTask = Mediator.Send(new GetPlayerScoreQualityQuery(_level, _chartType, _currentMix));
+        _breakdown = await breakdownTask;
+        _skillChips = await chipsTask;
+        _scoreRankings = await rankingsTask;
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+}
