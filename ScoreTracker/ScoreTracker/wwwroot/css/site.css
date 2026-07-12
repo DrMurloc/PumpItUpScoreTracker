@@ -653,6 +653,61 @@ html.nav-away .page-dock,
     margin-bottom: 12px;
 }
 
+.rand-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-display);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    color: var(--mud-palette-error);
+}
+
+.rand-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--mud-palette-error);
+    box-shadow: 0 0 8px var(--mud-palette-error);
+    animation: rand-live-pulse 1.6s infinite;
+}
+
+@keyframes rand-live-pulse {
+    50% {
+        opacity: .35;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rand-live-dot {
+        animation: none;
+    }
+}
+
+.rand-legend {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    margin-left: 10px;
+}
+
+.rand-legend i {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+.rand-legend-held {
+    background: var(--mix-primary);
+}
+
+.rand-legend-vetoed {
+    background: var(--mud-palette-error);
+}
+
 .page-dock .rand-staff-btn {
     border: 1px solid rgba(255, 255, 255, .08);
     border-radius: 12px;

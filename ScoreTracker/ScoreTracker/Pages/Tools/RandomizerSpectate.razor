@@ -1,0 +1,135 @@
+@page "/Randomizer/Live/{Slug:guid}"
+@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.Randomizer.Contracts
+@using ScoreTracker.Randomizer.Contracts.Events
+@using ScoreTracker.Randomizer.Contracts.Queries
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Shared
+
+@* The spectator view (docs/design/randomizer-overhaul.md C10): anonymous, read-only,
+   the link that gets posted to Discord once per night. Same tiles, numbers, and states
+   the staff tablet shows; draws swap under the same URL. Updates ride the in-process
+   DrawUpdatedEvent bridge — state is in SQL, so a refresh always agrees. *@
+<PageTitle>@L["Live Draw"]</PageTitle>
+
+@if (_loading)
+{
+    <div class="rand-grid rand-grid-compact">
+        @for (var i = 0; i < 6; i++)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="110px" Class="tier-chart-card-skeleton"></MudSkeleton>
+        }
+    </div>
+}
+else if (_missing)
+{
+    <div class="rand-empty">
+        <MudIcon Icon="@Icons.Material.Filled.LinkOff" Style="font-size:2.6rem;"></MudIcon>
+        <MudText Typo="Typo.h6">@L["This draw doesn't exist"]</MudText>
+        <MudText Typo="Typo.body2">@L["Check the link, or ask whoever shared it for a fresh one."]</MudText>
+    </div>
+}
+else
+{
+    <div class="rand-draft-head">
+        <MudText Typo="Typo.h5">@_title</MudText>
+        <span class="rand-live"><span class="rand-live-dot"></span>@L["LIVE"]</span>
+    </div>
+    <div class="rand-countline">
+        <span class="rand-count-label">@_mix.GetName() · @L["{0} cards", _cards.Count]</span>
+        <MudSpacer></MudSpacer>
+        <span class="rand-legend"><i class="rand-legend-held"></i>@L["Held"]</span>
+        <span class="rand-legend"><i class="rand-legend-vetoed"></i>@L["Vetoed"]</span>
+    </div>
+    @if (!_cards.Any())
+    {
+        <div class="rand-empty">
+            <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty" Style="font-size:2.6rem;"></MudIcon>
+            <MudText Typo="Typo.body2">@L["No cards drawn yet — hang tight."]</MudText>
+        </div>
+    }
+    else
+    {
+        <div class="rand-grid rand-grid-compact">
+            @foreach (var card in _cards)
+            {
+                <DrawCardTile PullId="card.PullId" Chart="card.Chart" Order="card.Order" State="card.State"
+                              Density="UiDensity.Compact" Disabled="true"></DrawCardTile>
+            }
+        </div>
+    }
+}
+
+@inject IMediator Mediator
+@implements IDisposable
+@code {
+
+    private sealed record CardVm(Guid PullId, Chart Chart, int Order, DrawCardState State);
+
+    [Parameter] public Guid Slug { get; set; }
+
+    private bool _loading = true;
+    private bool _missing;
+    private string _title = string.Empty;
+    private MixEnum _mix = MixEnum.Phoenix;
+    private List<CardVm> _cards = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        MainLayout.DrawUpdated += OnDrawUpdated;
+        await Load();
+        _loading = false;
+    }
+
+    private async Task Load()
+    {
+        var draw = await Mediator.Send(new GetDrawBySlugQuery(Slug));
+        if (draw == null)
+        {
+            _missing = true;
+            return;
+        }
+
+        _mix = draw.Mix;
+        _title = L["Live Draw"];
+        if (draw.TournamentId != null)
+            try
+            {
+                _title = (await Mediator.Send(new GetTournamentQuery(draw.TournamentId.Value))).Name.ToString();
+            }
+            catch (Exception)
+            {
+                // The name is garnish — a spectator link never breaks over it.
+            }
+
+        var charts = (await Mediator.Send(new GetChartsQuery(draw.Mix,
+                ChartIds: draw.Cards.Select(c => c.ChartId).Distinct().ToArray())))
+            .ToDictionary(c => c.Id);
+        _cards = draw.Cards
+            .Where(c => charts.ContainsKey(c.ChartId))
+            .Select(c => new CardVm(c.PullId, charts[c.ChartId], c.Order, c.State))
+            .ToList();
+    }
+
+    private async void OnDrawUpdated(object? sender, DrawUpdatedEvent e)
+    {
+        if (e.Slug != Slug) return;
+
+        await InvokeAsync(async () =>
+        {
+            await Load();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        MainLayout.DrawUpdated -= OnDrawUpdated;
+    }
+}

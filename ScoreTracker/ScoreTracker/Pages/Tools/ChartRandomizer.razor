@@ -8,7 +8,9 @@
 @using ScoreTracker.EventCompetition.Contracts.Queries
 @using ScoreTracker.Randomizer.Contracts
 @using ScoreTracker.Randomizer.Contracts.Commands
+@using ScoreTracker.Randomizer.Contracts.Events
 @using ScoreTracker.Randomizer.Contracts.Queries
+@using ScoreTracker.Web.Shared
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Exceptions
@@ -42,6 +44,12 @@
             <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small"></MudIcon>@L["End draft"]
         </button>
         <span class="rand-tour-pill">@ContextName</span>
+        <span class="rand-live"><span class="rand-live-dot"></span>@L["LIVE"]</span>
+        @if (_drawSlug != null)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Sensors" Size="Size.Small" Color="Color.Secondary"
+                           OnClick="CopySpectateLink" aria-label="@L["Copy spectate link"]"></MudIconButton>
+        }
     </div>
     <div class="rand-draft-armed">
         <ArmedActionSelector @bind-Value="_armedAction" ShowDetails="false" Loud="true"></ArmedActionSelector>
@@ -165,6 +173,13 @@ else
             <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Primary" Disabled="!_cards.Any()"
                            OnClick="CopyResults" aria-label="@L["Copy results"]" Class="ml-2"></MudIconButton>
         </MudHidden>
+        @if (_drawSlug != null)
+        {
+            <MudTooltip Text="@L["Copy spectate link"]">
+                <MudIconButton Icon="@Icons.Material.Filled.Sensors" Color="Color.Secondary"
+                               OnClick="CopySpectateLink" aria-label="@L["Copy spectate link"]" Class="ml-2"></MudIconButton>
+            </MudTooltip>
+        }
         <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" Class="ml-2">
             <MudIconButton Icon="@Icons.Material.Filled.ViewModule" aria-label="@L["Comfortable"]"
                            Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
@@ -286,6 +301,13 @@ else
         </div>
         <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.RestartAlt"
                    OnClick="ResetSettings">@L["Reset"]</MudButton>
+        @if (CurrentUser.IsLoggedIn && _contextTournamentId == null && !string.IsNullOrWhiteSpace(_currentSettingsName))
+        {
+            <MudTooltip Text="@L["Share these settings"]">
+                <MudIconButton Icon="@Icons.Material.Filled.Share" Color="Color.Primary"
+                               OnClick="ShareSettings" aria-label="@L["Share these settings"]"></MudIconButton>
+            </MudTooltip>
+        }
         @if (CurrentUser.IsLoggedIn && (_contextTournamentId == null || CanManageSettings))
         {
             <MudTextField T="string" @bind-Value="_saveName" Label="@L["Settings Name"]" Variant="Variant.Outlined"
@@ -374,6 +396,7 @@ else
     private MixEnum _mix = MixEnum.Phoenix;
     private readonly List<CardVm> _cards = new();
     private Guid? _drawId;
+    private Guid? _drawSlug;
     private IDictionary<string, SavedRandomizerSettings> _personalSettings =
         new Dictionary<string, SavedRandomizerSettings>(StringComparer.OrdinalIgnoreCase);
     private IDictionary<string, SavedRandomizerSettings> _tournamentSettings =
@@ -464,6 +487,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        MainLayout.DrawUpdated += OnDrawUpdated;
         _mix = await UiSettings.GetSelectedMix();
         var densitySetting = await UiSettings.GetSetting(DensityKey);
         if (Enum.TryParse<UiDensity>(densitySetting, out var density)) _density = density;
@@ -517,6 +541,7 @@ else
         _myRole = null;
         _cards.Clear();
         _drawId = null;
+        _drawSlug = null;
 
         if (CurrentUser.IsLoggedIn)
         {
@@ -577,6 +602,7 @@ else
     private async Task LoadDraw(DrawDto draw)
     {
         _drawId = draw.Id;
+        _drawSlug = draw.Slug;
         var charts = (await Mediator.Send(new GetChartsQuery(draw.Mix,
                 ChartIds: draw.Cards.Select(c => c.ChartId).Distinct().ToArray())))
             .ToDictionary(c => c.Id);
@@ -613,6 +639,7 @@ else
                 var byId = charts.GroupBy(c => c.Id).ToDictionary(g => g.Key, g => g.First());
                 _cards.Clear();
                 _drawId = draw.Id;
+                _drawSlug = draw.Slug;
                 _cards.AddRange(draw.Cards.Select(c => new CardVm
                     { PullId = c.PullId, Chart = byId[c.ChartId], Order = c.Order, State = c.State }));
             }
@@ -620,6 +647,7 @@ else
             {
                 _cards.Clear();
                 _drawId = null;
+                _drawSlug = null;
                 _cards.AddRange(charts.Select((c, i) => new CardVm
                     { PullId = Guid.NewGuid(), Chart = c, Order = i + 1, State = DrawCardState.None }));
             }
@@ -909,6 +937,42 @@ else
         _busy = false;
     }
 
+    // Staff multi-device sync: another operator's action re-loads this device's view.
+    // Own actions re-fire it too — the reload agrees with local state, so it's harmless.
+    private async void OnDrawUpdated(object? sender, DrawUpdatedEvent e)
+    {
+        if (_contextTournamentId == null || _drawId == null || e.DrawId != _drawId) return;
+
+        await InvokeAsync(async () =>
+        {
+            var draw = await Mediator.Send(new GetActiveDrawQuery(_contextTournamentId));
+            if (draw != null && draw.Id == _drawId)
+            {
+                await LoadDraw(draw);
+                StateHasChanged();
+            }
+        });
+    }
+
+    private async Task CopySpectateLink()
+    {
+        if (_drawSlug == null) return;
+
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText",
+            $"{NavManager.BaseUri}Randomizer/Live/{_drawSlug}");
+        Snackbar.Add(L["Spectate link copied — it stays the same across redraws"], Severity.Success);
+    }
+
+    private async Task ShareSettings()
+    {
+        if (string.IsNullOrWhiteSpace(_currentSettingsName)) return;
+
+        var token = await Mediator.Send(new CreateSettingsShareLinkCommand(_currentSettingsName));
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText",
+            $"{NavManager.BaseUri}Randomizer/Settings/{token}");
+        Snackbar.Add(L["Settings link copied — anyone can import a copy"], Severity.Success);
+    }
+
     private async Task CopyResults()
     {
         var text = string.Join("\n", _cards.Select(c =>
@@ -921,6 +985,7 @@ else
 
     public void Dispose()
     {
+        MainLayout.DrawUpdated -= OnDrawUpdated;
         _countCts?.Cancel();
     }
 }

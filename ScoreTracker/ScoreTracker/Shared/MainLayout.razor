@@ -22,6 +22,7 @@
 @implements INotificationHandler<ImportStatusUpdatedEvent>
 @implements INotificationHandler<PlayerStatsUpdatedEvent>
 @implements INotificationHandler<ImportStatusErrorEvent>
+@implements INotificationHandler<ScoreTracker.Randomizer.Contracts.Events.DrawUpdatedEvent>
 <PageTitle>@L["PIU Scores"]</PageTitle>
 
 <MudThemeProvider Theme="_theme" />
@@ -573,6 +574,17 @@
     public static event EventHandler<ImportStatusUpdatedEvent>? ImportStatusUpdatedEvent;
     public static event EventHandler<MatchUpdatedEvent>? MatchUpdated;
     public static event EventHandler<ImportStatusErrorEvent>? ImportStatusErrorEvent;
+
+    // Randomizer live draws (docs/design/randomizer-overhaul.md C10): staff devices and
+    // spectator pages subscribe; state is already persisted when this fires.
+    public static event EventHandler<ScoreTracker.Randomizer.Contracts.Events.DrawUpdatedEvent>? DrawUpdated;
+
+    public Task Handle(ScoreTracker.Randomizer.Contracts.Events.DrawUpdatedEvent notification,
+        CancellationToken cancellationToken)
+    {
+        DrawUpdated?.Invoke(this, notification);
+        return Task.CompletedTask;
+    }
     public Task Handle(MatchUpdatedEvent notification, CancellationToken cancellationToken)
     {
         MatchUpdated?.Invoke(this, notification);
