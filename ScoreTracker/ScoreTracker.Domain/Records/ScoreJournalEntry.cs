@@ -18,4 +18,10 @@ public sealed record ScoreJournalEntry(
     public const string ManualSource = "manual";
     public const string OfficialImportSource = "officialImport";
     public const string CsvSource = "csv";
+
+    /// <summary>
+    ///     The 2026-06 journal seed from PhoenixRecord — history, not activity; volume
+    ///     reads exclude it. Only the seed migration ever writes this value.
+    /// </summary>
+    public const string BackfillSource = "backfill";
 }
