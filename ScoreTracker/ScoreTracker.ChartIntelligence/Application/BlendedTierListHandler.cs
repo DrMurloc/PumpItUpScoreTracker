@@ -162,6 +162,17 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
     private const double DefaultSkillWeight = 0.5; // top3-only chips and pre-crawl boolean tags
     private const double EstimateOffset = 500_000; // ProcessIntoTierList treats exactly 0 as Unrecorded
 
+    // Proficiency lives in the 900k-1M band (owner): 990,000 = 90%, anything at or
+    // under 900,000 = 0%. Deviations pool over this floored scale so sub-900k scores
+    // read as zero proficiency instead of dragging skill estimates linearly.
+    private const double SkillScoreFloor = 900_000;
+    private const double SkillScoreRange = 100_000;
+
+    private static double Proficiency(int score)
+    {
+        return Math.Clamp(score - SkillScoreFloor, 0, SkillScoreRange) / SkillScoreRange;
+    }
+
     private async Task<IEnumerable<SongTierListEntry>> BuildSkillEntries(GetBlendedTierListQuery request,
         IReadOnlyCollection<Chart> folderCharts, Guid userId, CancellationToken cancellationToken)
     {
@@ -189,16 +200,17 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
                 : chart.Skills.Select(s => (s, DefaultSkillWeight)).ToArray();
         }
 
-        // Normalize before pooling: deviation from YOUR average within each folder.
+        // Normalize before pooling: deviation from YOUR average within each folder,
+        // measured on the floored proficiency scale.
         var folderBaselines = scoredWindowCharts
             .GroupBy(c => (int)c.Level)
-            .ToDictionary(g => g.Key, g => g.Average(c => (double)(int)bestScores[c.Id].Score!.Value));
+            .ToDictionary(g => g.Key, g => g.Average(c => Proficiency((int)bestScores[c.Id].Score!.Value)));
 
         var pooled = new Dictionary<Skill, (double WeightedDeviation, double Evidence)>();
         foreach (var chart in scoredWindowCharts)
         {
             var decay = FolderDecay[Math.Abs((int)chart.Level - level)];
-            var deviation = (double)(int)bestScores[chart.Id].Score!.Value - folderBaselines[(int)chart.Level];
+            var deviation = Proficiency((int)bestScores[chart.Id].Score!.Value) - folderBaselines[(int)chart.Level];
             foreach (var (skill, weight) in WeightsFor(chart))
             {
                 var observationWeight = decay * weight;

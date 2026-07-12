@@ -920,7 +920,10 @@ else
     // and pre-crawl fallback tags weigh 1.0. <2 charts is noise.
     private IEnumerable<(Skill Skill, double Ability, int Played, int Total)> FolderSkillScores()
     {
-        const double maxScore = 1_000_000;
+        // Proficiency lives in the 900k-1M band (owner): 990,000 = 90%, anything at or
+        // under 900,000 = 0%. Raw score/1M flattened every skill to ~95%.
+        const double scoreFloor = 900_000;
+        const double scoreRange = 100_000;
         return _charts.Values
             .SelectMany(c => (_skillChips.TryGetValue(c.Id, out var chips) && chips.Count > 0
                     ? chips.Select(chip => (chip.Skill, Weight: (double?)chip.SegmentFraction ?? 1.0))
@@ -935,8 +938,10 @@ else
                     .ToArray();
                 var ability = played.Length == 0
                     ? 0
-                    : played.Sum(p => p.Weight * Math.Min((int)_scores[p.Chart.Id].Score!.Value, maxScore)) /
-                      played.Sum(p => p.Weight * maxScore);
+                    : played.Sum(p => p.Weight *
+                                      Math.Clamp((int)_scores[p.Chart.Id].Score!.Value - scoreFloor, 0,
+                                          scoreRange)) /
+                      played.Sum(p => p.Weight * scoreRange);
                 var coverageCompletion = g.Sum(p => p.Weight) == 0
                     ? 0
                     : played.Sum(p => p.Weight) / g.Sum(p => p.Weight);
