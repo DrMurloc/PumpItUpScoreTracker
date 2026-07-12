@@ -38,6 +38,15 @@ public sealed class HomePageDocumentContractTests
 
     private static void AssertMatchesGolden(string goldenFile, string actual)
     {
+        // Deliberate contract changes regenerate with REGENERATE_GOLDENS=1 — the
+        // rewritten golden then shows up as a reviewed diff, which is the point.
+        if (Environment.GetEnvironmentVariable("REGENERATE_GOLDENS") == "1")
+        {
+            File.WriteAllText(
+                Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "Goldens", goldenFile), actual);
+            return;
+        }
+
         var expected = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Goldens", goldenFile));
         Assert.Equal(Normalize(expected), Normalize(actual));
     }

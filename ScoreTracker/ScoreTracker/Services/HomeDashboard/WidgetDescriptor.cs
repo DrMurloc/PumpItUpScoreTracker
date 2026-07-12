@@ -22,6 +22,8 @@ public readonly record struct SizePreset(int Columns, int Rows)
     public static readonly SizePreset TwoByOne = new(2, 1);
     public static readonly SizePreset OneByTwo = new(1, 2);
     public static readonly SizePreset TwoByTwo = new(2, 2);
+    public static readonly SizePreset ThreeByTwo = new(3, 2);
+    public static readonly SizePreset ThreeByThree = new(3, 3);
 
     public string Token => $"{Columns}x{Rows}";
 
@@ -31,7 +33,7 @@ public readonly record struct SizePreset(int Columns, int Rows)
         var parts = token.Split('x');
         if (parts.Length != 2
             || !int.TryParse(parts[0], out var columns) || columns is < 1 or > 4
-            || !int.TryParse(parts[1], out var rows) || rows is < 1 or > 2)
+            || !int.TryParse(parts[1], out var rows) || rows is < 1 or > 3)
             return null;
         return new SizePreset(columns, rows);
     }

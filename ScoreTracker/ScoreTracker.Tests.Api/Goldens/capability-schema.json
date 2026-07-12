@@ -45,9 +45,11 @@
       "category": "Progress",
       "supportedSizes": [
         "2x1",
-        "2x2"
+        "2x2",
+        "3x2",
+        "3x3"
       ],
-      "defaultSize": "2x1",
+      "defaultSize": "2x2",
       "supportedMixes": [
         "Phoenix",
         "Phoenix2"
@@ -113,7 +115,8 @@
       "category": "Progress",
       "supportedSizes": [
         "1x1",
-        "2x1"
+        "2x1",
+        "1x2"
       ],
       "defaultSize": "2x1",
       "supportedMixes": [

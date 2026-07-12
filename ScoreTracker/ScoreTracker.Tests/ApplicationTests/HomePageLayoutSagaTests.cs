@@ -175,6 +175,38 @@ public sealed class HomePageLayoutSagaTests
     }
 
     [Fact]
+    public async Task SwapTradesOrdinalsAndTouchesNothingElse()
+    {
+        // The drag semantic (field-test round 1): A and B trade places; the widget
+        // between them is untouched — no insertion shifting.
+        var ctx = new LayoutContext();
+        var a = Widget("a", 0);
+        var b = Widget("b", 1);
+        var c = Widget("c", 2);
+        ctx.WithPage("Home", isDefault: true, widgets: new[] { a, b, c });
+
+        await ctx.Saga.Handle(new SwapHomePageWidgetsCommand(a.Id, c.Id), CancellationToken.None);
+
+        var expected = new[] { (a.Id, 2), (c.Id, 0) };
+        ctx.Repository.Verify(r => r.SetWidgetOrdinals(
+            It.Is<IReadOnlyList<(Guid WidgetId, int Ordinal)>>(o => OrdinalsAre(o, expected)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SwapAcrossPagesIsRejected()
+    {
+        var ctx = new LayoutContext();
+        var a = Widget("a", 0);
+        var b = Widget("b", 0);
+        ctx.WithPage("Home", isDefault: true, widgets: new[] { a });
+        ctx.WithPage("Session", isDefault: false, widgets: new[] { b });
+
+        await Assert.ThrowsAsync<HomePageValidationException>(() =>
+            ctx.Saga.Handle(new SwapHomePageWidgetsCommand(a.Id, b.Id), CancellationToken.None));
+    }
+
+    [Fact]
     public async Task ReplaceSwapsTheWholeWidgetListWithFreshOrdinals()
     {
         var ctx = new LayoutContext();

@@ -6,13 +6,13 @@
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.HomeDashboard
 
-@* W2 (design doc §3): PUMBILITY at a glance. Trend renders once the history capture
-   (the projections PR) has two points — before that, an honest caption. Targets consume
-   Projections v2 (per-pool baselines, skill-weighted expected scores) and explain
-   themselves with skill chips; the list scrolls (never a hard snap to three) and
-   every row can be dismissed permanently into this instance's config blacklist. *@
+@* W2 (field-test round 1 shape): 1x1 is the stat alone (total + pools + trend);
+   2x1 adds text target rows with mini song art; 1x2 goes art + bubble + gain.
+   Skill chips dropped from the widget — the data stays on the projection contract.
+   Dismiss is an edit-mode affordance; browse-mode clicks open chart details. *@
 
 @if (!_loaded)
 {
@@ -31,13 +31,17 @@ else if (_stats == null || ((int)_stats.SkillRating == 0 && _stats.ClearCount ==
 }
 else
 {
-    <div class="dash-pumbility">
+    <div class="dash-pumbility @(_tall ? "dash-pumbility-tall" : "")">
         <div class="dash-pumbility-left">
             <span class="dash-stat-num rarity-glow-1">@(((int)_stats.SkillRating).ToString("N0"))</span>
             @if (_weeklyDelta is > 0)
             {
                 <span class="dash-stat-delta">▲ @_weeklyDelta.Value.ToString("N0")</span>
             }
+            <MudText Typo="Typo.caption" Class="dash-muted">
+                @L["Singles"] @(((int)_stats.SinglesRating).ToString("N0"))
+                · @L["Doubles"] @(((int)_stats.DoublesRating).ToString("N0"))
+            </MudText>
             @if (_sparkPoints != null)
             {
                 <svg class="dash-sparkline" viewBox="0 0 100 26" preserveAspectRatio="none">
@@ -45,36 +49,41 @@ else
                               stroke-width="2" vector-effect="non-scaling-stroke"/>
                 </svg>
             }
-            else
+            else if (_compact || !_targets.Any())
             {
                 <MudText Typo="Typo.caption" Class="dash-muted">@L["Trend starts tracking from today."]</MudText>
             }
-            @if (_mix == MixEnum.Phoenix2)
-            {
-                <MudText Typo="Typo.caption" Class="dash-muted">
-                    @L["Singles"] @(((int)_stats.SinglesRating).ToString("N0"))
-                    · @L["Doubles"] @(((int)_stats.DoublesRating).ToString("N0"))
-                </MudText>
-            }
         </div>
-        @if (_showTargets && _targets.Any())
+        @if (!_compact && _showTargets && _targets.Any())
         {
             <div class="dash-pumbility-targets">
                 <MudText Typo="Typo.caption" Class="dash-muted">@L["Best projected targets"]</MudText>
                 <div class="dash-targets">
-                    @foreach (var target in _targets.Where(t => !_dismissed.Contains(t.ChartId)))
+                    @foreach (var target in _targets.Where(t => !_dismissed.Contains(t.Chart.Id)))
                     {
-                        <div class="dash-target-row">
-                            <span class="dash-target-name">@target.Label</span>
-                            @foreach (var chip in target.Skills.Take(1))
+                        var chart = target.Chart;
+                        <div class="dash-target-row @(EditMode ? "" : "dash-clickable")"
+                             @onclick="() => OnChartClick.InvokeAsync(chart)">
+                            <span class="dash-mini-art">
+                                <SongImage Song="chart.Song" Small="true"></SongImage>
+                            </span>
+                            @if (_tall)
                             {
-                                <span class="dash-skillchip" style="color:@chip.Skill.GetColor()">
-                                    @(chip.ScoreDelta >= 0 ? "+" : "-")@chip.Skill.GetName()
-                                </span>
+                                <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                            }
+                            else
+                            {
+                                <span class="dash-target-name">@chart.Song.Name @chart.DifficultyString</span>
                             }
                             <span class="dash-target-gain">+@target.Gain.ToString("N0")</span>
-                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
-                                           title="@L["Dismiss"]" OnClick="() => Dismiss(target.ChartId)"/>
+                            @if (EditMode)
+                            {
+                                <span @onclick:stopPropagation="true">
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
+                                                   title="@L["Dismiss"]"
+                                                   OnClick="() => Dismiss(chart.Id)"/>
+                                </span>
+                            }
                         </div>
                     }
                 </div>
@@ -91,13 +100,16 @@ else
 
     [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
     [Parameter] public MixEnum EffectiveMix { get; set; }
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public EventCallback<Chart> OnChartClick { get; set; }
 
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
-    private sealed record TargetRow(Guid ChartId, string Label, int Gain,
-        IReadOnlyList<SkillAdjustmentRecord> Skills);
+    private sealed record TargetRow(Chart Chart, int Gain);
 
     private bool _loaded;
+    private bool _compact;
+    private bool _tall;
     private string? _loadedFor;
     private PlayerStatsRecord? _stats;
     private int? _weeklyDelta;
@@ -109,10 +121,14 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{EffectiveMix}";
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{Widget.SizePreset}|{EffectiveMix}";
         if (signature == _loadedFor) return;
         _loadedFor = signature;
         _loaded = false;
+
+        var size = SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.OneByOne;
+        _compact = size is { Columns: 1, Rows: 1 };
+        _tall = size.Columns == 1 && size.Rows > 1;
 
         var config = WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson);
         _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
@@ -136,7 +152,7 @@ else
         _weeklyDelta = weekAgo?.SkillRating is { } baseline ? (int)_stats.SkillRating - baseline : null;
 
         _targets.Clear();
-        if (_showTargets && ((int)_stats.SkillRating > 0 || _stats.ClearCount > 0))
+        if (!_compact && _showTargets && ((int)_stats.SkillRating > 0 || _stats.ClearCount > 0))
         {
             var projection = await Mediator.Send(new ProjectPumbilityGainsQuery(userId, _mix));
             var charts = await ChartCatalog.GetCharts(_mix);
@@ -144,12 +160,7 @@ else
                 .OrderByDescending(kv => kv.Value)
                 .Take(15)
                 .Where(kv => charts.ContainsKey(kv.Key))
-                .Select(kv => new TargetRow(kv.Key,
-                    $"{charts[kv.Key].Song.Name} {charts[kv.Key].DifficultyString}",
-                    kv.Value,
-                    projection.SkillAdjustments.TryGetValue(kv.Key, out var skills)
-                        ? skills
-                        : Array.Empty<SkillAdjustmentRecord>()))
+                .Select(kv => new TargetRow(charts[kv.Key], kv.Value))
                 .ToList();
         }
 
@@ -170,8 +181,6 @@ else
         _dismissed.Add(chartId);
         var config = WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson);
         if (!config.DismissedCharts.Contains(chartId)) config.DismissedCharts.Add(chartId);
-        // Persist immediately (§2.1) but keep the board un-reloaded — this is the one
-        // widget action that mutates config outside edit mode, by design.
         await Mediator.Send(new UpdateHomePageWidgetConfigCommand(Widget.Id,
             WidgetConfigJson.Write(config), Widget.ConfigVersion));
     }

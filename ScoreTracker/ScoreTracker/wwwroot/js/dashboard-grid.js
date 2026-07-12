@@ -54,56 +54,36 @@ window.dashboardGrid = {
 
         const startX = downEvent.clientX;
         const startY = downEvent.clientY;
-        const origIndex = this._cells(board).indexOf(cell);
-        let targetIndex = origIndex;
+        let target = null;
 
         const move = e => {
             ghost.style.transform = 'translate(' + (e.clientX - startX) + 'px,' + (e.clientY - startY) + 'px)';
-            targetIndex = this._indexAt(board, cell, e.clientX, e.clientY, origIndex);
-            this._indicate(board, cell, targetIndex, origIndex);
+            target = this._targetAt(board, cell, e.clientX, e.clientY);
+            this._cells(board).forEach(c => c.classList.toggle('dash-swap-target', c === target));
         };
         const up = () => {
             document.removeEventListener('pointermove', move);
             document.removeEventListener('pointerup', up);
             ghost.remove();
             cell.classList.remove('dash-dragging');
-            this._cells(board).forEach(c => c.classList.remove('dash-drop-target'));
-            if (targetIndex !== origIndex && cell.dataset.widgetId)
-                state.dotnetRef.invokeMethodAsync('OnWidgetDropped', cell.dataset.widgetId, targetIndex);
+            this._cells(board).forEach(c => c.classList.remove('dash-swap-target'));
+            if (target && cell.dataset.widgetId && target.dataset.widgetId)
+                state.dotnetRef.invokeMethodAsync('OnWidgetSwapped',
+                    cell.dataset.widgetId, target.dataset.widgetId);
         };
         document.addEventListener('pointermove', move);
         document.addEventListener('pointerup', up);
     },
 
-    // Insertion index among the OTHER cells (matches MoveHomePageWidgetCommand's
-    // remove-then-insert semantics): nearest cell center wins, before/after decided
-    // by the pointer's position relative to it in reading order.
-    _indexAt: function (board, dragged, x, y, origIndex) {
-        const others = this._cells(board).filter(c => c !== dragged);
-        if (!others.length) return origIndex;
-        let best = null;
-        let bestDist = Infinity;
-        let bestIndex = -1;
-        others.forEach((c, i) => {
-            const r = c.getBoundingClientRect();
-            const cx = r.left + r.width / 2;
-            const cy = r.top + r.height / 2;
-            const d = (cx - x) * (cx - x) + (cy - y) * (cy - y);
-            if (d < bestDist) {
-                bestDist = d;
-                best = { cx: cx, cy: cy, h: r.height };
-                bestIndex = i;
-            }
-        });
-        const after = y > best.cy + best.h / 4
-            || (Math.abs(y - best.cy) <= best.h / 4 && x > best.cx);
-        return after ? bestIndex + 1 : bestIndex;
-    },
-
-    _indicate: function (board, dragged, index, origIndex) {
-        const others = this._cells(board).filter(c => c !== dragged);
-        others.forEach(c => c.classList.remove('dash-drop-target'));
-        if (index === origIndex || !others.length) return;
-        others[Math.min(index, others.length - 1)].classList.add('dash-drop-target');
+    // Swap semantics (field-test round 1): the cell under the pointer is the trade
+    // partner — nobody else moves. The ghost is pointer-events:none, so
+    // elementsFromPoint sees through it.
+    _targetAt: function (board, dragged, x, y) {
+        for (const el of document.elementsFromPoint(x, y)) {
+            if (!el.closest) continue;
+            const cell = el.closest('.dash-cell');
+            if (cell && cell !== dragged && board.contains(cell)) return cell;
+        }
+        return null;
     }
 };

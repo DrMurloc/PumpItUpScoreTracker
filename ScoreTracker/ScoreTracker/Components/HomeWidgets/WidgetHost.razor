@@ -1,5 +1,6 @@
 @using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Services.HomeDashboard
 
 @* The standard widget frame (§2.3): the host owns the card chrome, the title, the
@@ -86,6 +87,12 @@
     [Parameter] public EventCallback OnRemove { get; set; }
     [Parameter] public EventCallback OnConfigure { get; set; }
 
+    /// <summary>
+    ///     The standing rule (field-test round 1): chart rows/cards inside widgets open
+    ///     the shared ChartDetailsDialog. The page owns the dialog; widgets just raise.
+    /// </summary>
+    [Parameter] public EventCallback<Chart> OnChartClick { get; set; }
+
     private WidgetDescriptor? _descriptor;
     private IDictionary<string, object> _parameters = new Dictionary<string, object>();
 
@@ -95,10 +102,13 @@
     protected override void OnParametersSet()
     {
         _descriptor = WidgetRegistry.TryGet(Widget.WidgetType);
+        // Every widget component declares these four — the render contract (§2.2).
         _parameters = new Dictionary<string, object>
         {
             ["Widget"] = Widget,
-            ["EffectiveMix"] = EffectiveMix
+            ["EffectiveMix"] = EffectiveMix,
+            ["EditMode"] = EditMode,
+            ["OnChartClick"] = OnChartClick
         };
     }
 

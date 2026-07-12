@@ -58,6 +58,10 @@ else
     [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
     [Parameter] public MixEnum EffectiveMix { get; set; }
 
+    // Render-contract parameters (§2.2) — unused here, but every widget declares them.
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public EventCallback<SharedKernel.Models.Chart> OnChartClick { get; set; }
+
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
     private sealed record LevelSeries(string Label, string Color, bool Dashed,

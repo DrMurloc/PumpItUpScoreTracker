@@ -108,3 +108,7 @@ The widget home page ([design doc](design/home-page-widgets.md)) adds a vocabula
 - Chart series colors come from the `MixPalette` chart pair (`--chart-singles`/`--chart-doubles`,
   or `PaletteFor(mix).ChartSingles` for render targets that can't read CSS vars). Era/mix distinction
   rides line *style* (dashed), never a third hue.
+- **Chart rows/cards in widgets open `ChartDetailsDialog` on click** (browse mode only — edit mode
+  owns clicks for arranging). Every catalog widget inherits this rule.
+- **Drag is swap, not insertion**: dropping widget A on widget B trades their places; bystanders
+  never move. The arrows remain the accessible and mobile reorder path.

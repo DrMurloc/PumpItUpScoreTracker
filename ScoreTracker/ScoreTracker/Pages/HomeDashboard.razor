@@ -1,14 +1,19 @@
 @page "/Home"
 @using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.HomePage.Contracts.Commands
 @using ScoreTracker.HomePage.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Components.HomeWidgets
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.HomeDashboard
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
 @* Unlisted pre-release route (D7): no nav links anywhere, but open to whoever finds
    it. Becomes "/" at cutover, when /WhatShouldIPlay retires. *@
@@ -109,7 +114,8 @@ else if (_loaded)
                                     OnResize="s => ResizeWidget(w, s)"
                                     OnRename="() => OpenRename(w)"
                                     OnRemove="() => RemoveWidget(w)"
-                                    OnConfigure="() => OpenConfigure(w)"/>
+                                    OnConfigure="() => OpenConfigure(w)"
+                                    OnChartClick="OpenChartDetails"/>
                     </div>
                 }
             </div>
@@ -144,7 +150,7 @@ else if (_loaded)
         </div>
     </MudDrawer>
 
-    <MudDialog @bind-Visible="_showRename">
+    <MudDialog @bind-Visible="_showRename" Options="CompactDialog">
         <TitleContent>
             <MudText Typo="Typo.h6">@L["Rename"]</MudText>
         </TitleContent>
@@ -159,7 +165,7 @@ else if (_loaded)
         </DialogActions>
     </MudDialog>
 
-    <MudDialog @bind-Visible="_showPageSettings">
+    <MudDialog @bind-Visible="_showPageSettings" Options="CompactDialog">
         <TitleContent>
             <MudText Typo="Typo.h6">@L["Settings"]</MudText>
         </TitleContent>
@@ -191,7 +197,7 @@ else if (_loaded)
         </DialogActions>
     </MudDialog>
 
-    <MudDialog @bind-Visible="_showExport">
+    <MudDialog @bind-Visible="_showExport" Options="DocumentDialog">
         <TitleContent>
             <MudText Typo="Typo.h6">@L["Export page"]</MudText>
         </TitleContent>
@@ -204,7 +210,7 @@ else if (_loaded)
         </DialogActions>
     </MudDialog>
 
-    <MudDialog @bind-Visible="_showImport">
+    <MudDialog @bind-Visible="_showImport" Options="DocumentDialog">
         <TitleContent>
             <MudText Typo="Typo.h6">@L["Import page"]</MudText>
         </TitleContent>
@@ -242,7 +248,7 @@ else if (_loaded)
         </DialogActions>
     </MudDialog>
 
-    <MudDialog @bind-Visible="_showSchema">
+    <MudDialog @bind-Visible="_showSchema" Options="DocumentDialog">
         <TitleContent>
             <MudText Typo="Typo.h6">@L["Widget schema"]</MudText>
         </TitleContent>
@@ -255,7 +261,15 @@ else if (_loaded)
         </DialogActions>
     </MudDialog>
 
-    <MudDialog @bind-Visible="_showConfigure">
+    @if (_selectedPage != null)
+    {
+        <ChartDetailsDialog @bind-Visible="_showChartDetails" Chart="_detailsChart"
+                            Mix="EffectiveMixFor(_selectedPage)"
+                            IsToDo="_detailsChart != null && _todos != null && _todos.Contains(_detailsChart.Id)"
+                            OnToDo="ToggleToDo"/>
+    }
+
+    <MudDialog @bind-Visible="_showConfigure" Options="CompactDialog">
         <TitleContent>
             <MudText Typo="Typo.h6">@L["Configure"]</MudText>
         </TitleContent>
@@ -300,10 +314,10 @@ else if (_loaded)
     }
 
     [JSInvokable]
-    public async Task OnWidgetDropped(string widgetId, int newIndex)
+    public async Task OnWidgetSwapped(string widgetId, string targetWidgetId)
     {
-        if (!Guid.TryParse(widgetId, out var id)) return;
-        await Mediator.Send(new MoveHomePageWidgetCommand(id, newIndex));
+        if (!Guid.TryParse(widgetId, out var id) || !Guid.TryParse(targetWidgetId, out var targetId)) return;
+        await Mediator.Send(new SwapHomePageWidgetsCommand(id, targetId));
         await LoadPages();
         await Track("homedash_widget_dragged");
     }
@@ -387,6 +401,43 @@ else if (_loaded)
         await LoadPages();
         await Track("homedash_first_page_created");
         _isSaving = false;
+    }
+
+    private static readonly DialogOptions CompactDialog = new()
+        { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseOnEscapeKey = true };
+
+    private static readonly DialogOptions DocumentDialog = new()
+        { FullWidth = true, MaxWidth = MaxWidth.Small, CloseOnEscapeKey = true };
+
+    // The standing chart-interaction rule: widget chart rows open the shared details
+    // dialog (browse mode only — edit mode owns clicks for arranging).
+    private bool _showChartDetails;
+    private Chart? _detailsChart;
+    private ISet<Guid>? _todos;
+
+    private async Task OpenChartDetails(Chart chart)
+    {
+        if (_editMode) return;
+        _todos ??= (await Mediator.Send(new GetSavedChartsQuery()))
+            .Where(t => t.ListType == ChartListType.ToDo)
+            .Select(t => t.ChartId)
+            .ToHashSet();
+        _detailsChart = chart;
+        _showChartDetails = true;
+    }
+
+    private async Task ToggleToDo(Guid chartId)
+    {
+        if (_todos == null) return;
+        if (_todos.Add(chartId))
+        {
+            await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
+        }
+        else
+        {
+            _todos.Remove(chartId);
+            await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
+        }
     }
 
     private async Task Track(string eventName)

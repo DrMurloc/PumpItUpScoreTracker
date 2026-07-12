@@ -16,11 +16,19 @@ public sealed record AddHomePageWidgetCommand(Guid PageId, string WidgetType, st
 public sealed record RemoveHomePageWidgetCommand(Guid WidgetId) : IRequest;
 
 /// <summary>
-///     THE reorder operation (D6): drag and the mobile arrows both dispatch this.
-///     NewOrdinal is the insertion index, clamped.
+///     The arrows' reorder operation: remove-and-insert at the clamped index —
+///     adjacent moves read as swaps, which keeps the mental model unified with drag.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record MoveHomePageWidgetCommand(Guid WidgetId, int NewOrdinal) : IRequest;
+
+/// <summary>
+///     Drag's semantic (field-test round 1): on a 2D grid with mixed spans, dropping
+///     A on B means "trade places — nobody else moves". Insertion semantics shoved
+///     bystander widgets around; swap doesn't. Same-page only.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record SwapHomePageWidgetsCommand(Guid WidgetId, Guid TargetWidgetId) : IRequest;
 
 [ExcludeFromCodeCoverage]
 public sealed record ResizeHomePageWidgetCommand(Guid WidgetId, string SizePreset) : IRequest;

@@ -43,9 +43,14 @@ else
         <div class="dash-targets">
             @foreach (var row in _rows)
             {
-                <div class="dash-target-row">
-                    <DifficultyBubble Chart="row.Chart" Small="true"></DifficultyBubble>
-                    <span class="dash-target-name">@row.Chart.Song.Name</span>
+                var chart = row.Chart;
+                <div class="dash-target-row @(EditMode ? "" : "dash-clickable")"
+                     @onclick="() => OnChartClick.InvokeAsync(chart)">
+                    <span class="dash-mini-art">
+                        <SongImage Song="chart.Song" Small="true"></SongImage>
+                    </span>
+                    <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                    <span class="dash-target-name">@chart.Song.Name</span>
                     @if (_wide)
                     {
                         <span class="dash-weekly-expiry">@Countdown(row.Expires)</span>
@@ -75,6 +80,8 @@ else
 
     [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
     [Parameter] public MixEnum EffectiveMix { get; set; }
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public EventCallback<Chart> OnChartClick { get; set; }
 
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
@@ -114,12 +121,16 @@ else
             .ToDictionary(p => p.ChartId, p => p.Place)
             : new Dictionary<Guid, int>();
 
+        // Owner order (field-test round 1): difficulty descending, doubles before
+        // singles on ties; CO-OPs last — their "level" is a player count, which
+        // doesn't compare with S/D levels.
         _rows = filtered
             .Select(c => new BoardRow(c, known[c.Id],
                 placements.TryGetValue(c.Id, out var place) ? place : null,
                 totals.GetValueOrDefault(c.Id)))
-            .OrderByDescending(r => r.Place != null)
-            .ThenBy(r => r.Expires)
+            .OrderBy(r => r.Chart.Type == ChartType.CoOp ? 1 : 0)
+            .ThenByDescending(r => (int)r.Chart.Level)
+            .ThenBy(r => r.Chart.Type == ChartType.Double ? 0 : 1)
             .ToList();
         _soonestExpiry = _rows.Any() ? _rows.Min(r => r.Expires) : null;
         _loaded = true;

@@ -86,6 +86,8 @@ public sealed class HomeDashboardTests : IAsyncLifetime
         await Expect(titles.Nth(0)).ToHaveTextAsync("PUMBILITY",
             new LocatorAssertionsToHaveTextOptions { Timeout = 60_000 });
         await Expect(titles.Nth(1)).ToHaveTextAsync("Competitive Level");
+        // Swap semantics: the bystander widgets don't move (the round-1 bug's pin).
+        await Expect(titles.Nth(2)).ToHaveTextAsync("Weekly Charts");
 
         // The drop dispatched one MoveHomePageWidgetCommand — the order survives a reload.
         await _page.ReloadAsync();

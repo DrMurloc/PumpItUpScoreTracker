@@ -29,7 +29,8 @@ internal sealed class HomePageLayoutSaga(IHomePageRepository repository, ICurren
     IRequestHandler<ResizeHomePageWidgetCommand>,
     IRequestHandler<RenameHomePageWidgetCommand>,
     IRequestHandler<UpdateHomePageWidgetConfigCommand>,
-    IRequestHandler<ReplaceHomePageWidgetsCommand>
+    IRequestHandler<ReplaceHomePageWidgetsCommand>,
+    IRequestHandler<SwapHomePageWidgetsCommand>
 {
     public async Task<IReadOnlyList<HomePageRecord>> Handle(GetMyHomePagesQuery request,
         CancellationToken cancellationToken)
@@ -168,6 +169,21 @@ internal sealed class HomePageLayoutSaga(IHomePageRepository repository, ICurren
         await repository.UpdateWidget(
             widget with { ConfigJson = request.ConfigJson, ConfigVersion = request.ConfigVersion },
             cancellationToken);
+    }
+
+    public async Task Handle(SwapHomePageWidgetsCommand request, CancellationToken cancellationToken)
+    {
+        if (request.WidgetId == request.TargetWidgetId) return;
+        var (pageA, widgetA) = await GetMyWidget(request.WidgetId, cancellationToken);
+        var (pageB, widgetB) = await GetMyWidget(request.TargetWidgetId, cancellationToken);
+        if (pageA.Id != pageB.Id)
+            throw new HomePageValidationException("Widgets can only swap within one page.");
+
+        await repository.SetWidgetOrdinals(new[]
+        {
+            (widgetA.Id, widgetB.Ordinal),
+            (widgetB.Id, widgetA.Ordinal)
+        }, cancellationToken);
     }
 
     public async Task Handle(ReplaceHomePageWidgetsCommand request, CancellationToken cancellationToken)
