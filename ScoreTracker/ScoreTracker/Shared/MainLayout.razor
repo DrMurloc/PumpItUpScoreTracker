@@ -136,6 +136,8 @@
                             <div class="mega-col">
                                 <div class="mega-head">@L["Compete"]</div>
                                 <MudMenuItem Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</MudMenuItem>
+                                @* Compete, not Tools (round 11): the randomizer runs micro-tournaments now. *@
+                                <MudMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.Casino">@L["Chart Randomizer"]</MudMenuItem>
                                 <MudMenuItem Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</MudMenuItem>
                                 @foreach (var tourney in _highlightedEvents)
                                 {
@@ -192,7 +194,6 @@
                         {
                             <MudMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</MudMenuItem>
                             <MudMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</MudMenuItem>
-                            <MudMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.QuestionMark">@L["Chart Randomizer"]</MudMenuItem>
                             <MudMenuItem Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</MudMenuItem>
                             <MudMenuItem Href="/ChartCompare" Icon="@Icons.Material.Filled.Compare">@L["Chart Compare"]</MudMenuItem>
                             <MudMenuItem Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudMenuItem>
@@ -281,6 +282,7 @@
 
             <MudText Typo="Typo.overline" Class="ml-4 mt-3 d-block nav-section">@L["Compete"]</MudText>
             <MudNavLink Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</MudNavLink>
+            <MudNavLink Href="/ChartRandomizer" Icon="@Icons.Material.Filled.Casino">@L["Chart Randomizer"]</MudNavLink>
             <MudNavLink Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</MudNavLink>
             @foreach (var tourney in _highlightedEvents)
             {
@@ -320,7 +322,6 @@
             <MudNavGroup Title=@L["Tools"] Icon="@Icons.Material.Filled.Build" Expanded="false">
                 <MudNavLink Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</MudNavLink>
                 <MudNavLink Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</MudNavLink>
-                <MudNavLink Href="/ChartRandomizer" Icon="@Icons.Material.Filled.QuestionMark">@L["Chart Randomizer"]</MudNavLink>
                 <MudNavLink Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</MudNavLink>
                 <MudNavLink Href="/ChartCompare" Icon="@Icons.Material.Filled.Compare">@L["Chart Compare"]</MudNavLink>
                 <MudNavLink Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudNavLink>
