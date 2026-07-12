@@ -186,6 +186,8 @@ else
             <span class="rand-count-n">@(_matchCount?.ToString() ?? "–")</span>
             <span class="rand-count-label">@L["charts match"]</span>
         </div>
+        <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.RestartAlt"
+                   OnClick="ResetSettings">@L["Reset"]</MudButton>
         @if (CurrentUser.IsLoggedIn)
         {
             <MudTextField T="string" @bind-Value="_saveName" Label="@L["Settings Name"]" Variant="Variant.Outlined"
@@ -299,7 +301,6 @@ else
         var densitySetting = await UiSettings.GetSetting(DensityKey);
         if (Enum.TryParse<UiDensity>(densitySetting, out var density)) _density = density;
 
-        var hasWorkingConfig = false;
         if (CurrentUser.IsLoggedIn)
         {
             _savedSettings = (await Mediator.Send(new GetRandomSettingsQuery()))
@@ -314,7 +315,6 @@ else
                     {
                         _settings = config.Settings;
                         _mix = config.Mix;
-                        hasWorkingConfig = true;
                     }
                 }
                 catch (JsonException)
@@ -326,14 +326,39 @@ else
             if (draw != null) await LoadDraw(draw);
         }
 
-        // Fresh RandomSettings has every weight at zero — an empty pool that "randomizes"
-        // into nothing. First visits start with a usable range instead (field-test round 1).
-        if (!hasWorkingConfig)
-            foreach (var key in _settings.LevelWeights.Keys.ToArray())
-                _settings.LevelWeights[key] = key is >= 15 and <= 18 ? 1 : 0;
-
+        NormalizeEmptyPool(_settings);
         _loading = false;
         await RefreshMatchCount(CancellationToken.None);
+    }
+
+    /// <summary>
+    ///     A fresh RandomSettings defines an empty pool twice over: every level weight AND
+    ///     every song-type weight is zero — and the engine excludes any chart whose song
+    ///     type is 0 (the old page relied on users discovering the Song Types panel).
+    ///     All-zero song types mean "no filter" here, and an all-zero level selection
+    ///     seeds S15–18. Also rescues working configs saved during the zero-pool window.
+    /// </summary>
+    private static void NormalizeEmptyPool(RandomSettings settings)
+    {
+        if (settings.SongTypeWeights.All(kv => kv.Value == 0))
+            foreach (var key in settings.SongTypeWeights.Keys.ToArray())
+                settings.SongTypeWeights[key] = 1;
+
+        if (settings.LevelWeights.All(kv => kv.Value == 0)
+            && settings.DoubleLevelWeights.All(kv => kv.Value == 0)
+            && settings.PlayerCountWeights.All(kv => kv.Value == 0))
+            foreach (var key in settings.LevelWeights.Keys.ToArray())
+                settings.LevelWeights[key] = key is >= 15 and <= 18 ? 1 : 0;
+    }
+
+    private async Task ResetSettings()
+    {
+        _settings = new RandomSettings();
+        NormalizeEmptyPool(_settings);
+        _currentSettingsName = string.Empty;
+        _saveName = string.Empty;
+        _confirmingDelete = false;
+        await OnSettingsChanged();
     }
 
     private async Task LoadDraw(DrawDto draw)
