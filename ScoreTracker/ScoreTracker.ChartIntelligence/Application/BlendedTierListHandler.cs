@@ -43,20 +43,18 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
     private readonly IChartRepository _charts;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
+    private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreReader _scores;
-    private readonly ITierListRepository _tierLists;
-    private readonly ITitleRepository _titles;
     private readonly IUserTierListRepository _userTierLists;
 
     public BlendedTierListHandler(IMediator mediator, IChartRepository charts, IScoreReader scores,
-        ITitleRepository titles, ITierListRepository tierLists, IUserTierListRepository userTierLists,
+        IPlayerStatsReader playerStats, IUserTierListRepository userTierLists,
         ICurrentUserAccessor currentUser, IMemoryCache cache)
     {
         _mediator = mediator;
         _charts = charts;
         _scores = scores;
-        _titles = titles;
-        _tierLists = tierLists;
+        _playerStats = playerStats;
         _userTierLists = userTierLists;
         _currentUser = currentUser;
         _cache = cache;
@@ -246,17 +244,29 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
     }
 
     // Similar players, re-architected on C1's materialization: neighbors' folder
-    // categories come from UserTierListEntry in one read; the similarity weighting math
-    // is ported verbatim from the page's GetSimilarPlayers.
+    // categories come from UserTierListEntry in one read. Neighbors are selected by
+    // COMPETITIVE level (breakdown-page workshop, replacing the old ±1 title level):
+    // players within ±1.0 competitive level for the requested chart type, each vote
+    // scaled by closeness (linear falloff to zero at the window edge) × how much
+    // their folder ratings agree with the requesting player's.
+    private const double CompetitiveWindow = 1.0;
+
     private async Task<IEnumerable<SongTierListEntry>> BuildSimilarPlayerEntries(GetBlendedTierListQuery request,
         IReadOnlyCollection<Chart> folderCharts, Guid userId, CancellationToken cancellationToken)
     {
-        var myLevel = await _titles.GetCurrentTitleLevel(request.Mix, userId, cancellationToken);
-        var neighborIds = new HashSet<Guid>();
-        foreach (var level in NeighboringLevels(myLevel))
-            neighborIds.UnionWith(await _tierLists.GetUsersOnLevel(request.Mix, level, cancellationToken));
+        var myLevel = CompetitiveLevelFor(
+            await _playerStats.GetStats(request.Mix, userId, cancellationToken), request.ChartType);
+        // Competitive level 1 is the no-data floor (same guard the tier page uses).
+        if (myLevel <= 1) return Array.Empty<SongTierListEntry>();
+
+        var neighborIds = (await _playerStats.GetPlayersByCompetitiveRange(request.Mix, request.ChartType,
+                myLevel, CompetitiveWindow, cancellationToken)).ToHashSet();
         neighborIds.Remove(userId);
         if (!neighborIds.Any()) return Array.Empty<SongTierListEntry>();
+
+        var closeness = (await _playerStats.GetStats(request.Mix, neighborIds, cancellationToken))
+            .ToDictionary(s => s.UserId, s => Math.Max(0.0,
+                1.0 - Math.Abs(CompetitiveLevelFor(s, request.ChartType) - myLevel) / CompetitiveWindow));
 
         var myEntries =
             (await _mediator.Send(new GetMyRelativeTierListQuery(request.ChartType, request.Level, userId,
@@ -269,12 +279,12 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
             .ToArray();
 
         var userTotals = neighborEntries.GroupBy(e => e.UserId)
-            .ToDictionary(g => g.Key, g => g.Sum(e =>
+            .ToDictionary(g => g.Key, g => closeness.GetValueOrDefault(g.Key) * g.Sum(e =>
                 myEntries.TryGetValue(e.ChartId, out var mine) && mine.Category != TierListCategory.Unrecorded
                     ? (int)TierListCategory.Unrecorded - Math.Abs(e.Category - mine.Category)
                     : 0));
 
-        var chartWeights = new Dictionary<Guid, int>();
+        var chartWeights = new Dictionary<Guid, double>();
         foreach (var entry in neighborEntries)
         {
             chartWeights.TryGetValue(entry.ChartId, out var current);
@@ -285,13 +295,13 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
         return TierListProcessor.ProcessIntoTierList("Similar Players", chartWeights);
     }
 
-    private static IEnumerable<DifficultyLevel> NeighboringLevels(DifficultyLevel myLevel)
+    private static double CompetitiveLevelFor(PlayerStatsRecord stats, ChartType chartType)
     {
-        // Integer math on purpose: myLevel - 1 as a DifficultyLevel would throw for a
-        // level-1 player before the range check could reject it.
-        int mine = myLevel;
-        for (var level = mine - 1; level <= mine + 1; level++)
-            if (level >= DifficultyLevel.Min && level <= DifficultyLevel.Max)
-                yield return DifficultyLevel.From(level);
+        return chartType switch
+        {
+            ChartType.Single => stats.SinglesCompetitiveLevel,
+            ChartType.Double => stats.DoublesCompetitiveLevel,
+            _ => stats.CompetitiveLevel
+        };
     }
 }

@@ -68,14 +68,17 @@ public sealed class BlendedTierListHandlerTests
         SetupTierList(mediator, "Pass Count",
             new[] { new SongTierListEntry("Pass Count", chart.Id, TierListCategory.Hard, 0) });
         var scores = new Mock<IScoreReader>();
+        var playerStats = new Mock<IPlayerStatsReader>();
         var userTierLists = new Mock<IUserTierListRepository>();
         var handler = BuildHandler(charts: charts, mediator: mediator, scores: scores,
-            userTierLists: userTierLists);
+            playerStats: playerStats, userTierLists: userTierLists);
 
         var result = await handler.Handle(Query("Pass", personalized: false), CancellationToken.None);
 
         Assert.Equal(TierListCategory.Hard, result.Entries.Single(e => e.ChartId == chart.Id).Category);
         scores.Verify(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        playerStats.Verify(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
         userTierLists.Verify(r => r.GetEntriesForCharts(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
             It.IsAny<CancellationToken>()), Times.Never);
@@ -96,18 +99,22 @@ public sealed class BlendedTierListHandlerTests
         mediator.Setup(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
                 { new SongTierListEntry("My Relative Scores", chart.Id, TierListCategory.Medium, 0) });
-        var titles = new Mock<ITitleRepository>();
-        titles.Setup(t => t.GetCurrentTitleLevel(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(DifficultyLevel.From(17));
-        var tierLists = new Mock<ITierListRepository>();
-        tierLists.Setup(t => t.GetUsersOnLevel(MixEnum.Phoenix, It.IsAny<DifficultyLevel>(),
-                It.IsAny<CancellationToken>(), false))
-            .ReturnsAsync(new[] { neighbor });
+        // Neighbors come from the competitive-level cohort; the range read returns the
+        // requesting player too — the handler must drop them from their own cohort.
+        var playerStats = new Mock<IPlayerStatsReader>();
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(StatsFor(userId, doublesCompetitive: 17.4));
+        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(MixEnum.Phoenix, ChartType.Double, 17.4, 1.0,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { neighbor, userId });
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { StatsFor(neighbor, doublesCompetitive: 17.0) });
         var userTierLists = new Mock<IUserTierListRepository>();
         userTierLists.Setup(r => r.GetEntriesForCharts(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { new UserTierListEntryRecord(neighbor, chart.Id, TierListCategory.Easy, 0) });
-        var handler = BuildHandler(charts: charts, mediator: mediator, titles: titles, tierLists: tierLists,
+        var handler = BuildHandler(charts: charts, mediator: mediator, playerStats: playerStats,
             userTierLists: userTierLists);
 
         var result = await handler.Handle(Query("Pass", personalized: true, userId: userId),
@@ -120,6 +127,87 @@ public sealed class BlendedTierListHandlerTests
         // requesting user's own) — never one per neighboring player.
         mediator.Verify(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task SimilarPlayersVotesScaleWithCompetitiveCloseness()
+    {
+        // Two neighbors disagree symmetrically about two charts. Without closeness
+        // weighting their votes cancel; with it, the player at the requesting user's
+        // own level outvotes the one at the window's edge, so each chart lands where
+        // the closer player put it.
+        var chart1 = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var chart2 = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var userId = Guid.NewGuid();
+        var near = Guid.NewGuid();
+        var far = Guid.NewGuid();
+        var charts = ChartsMock(new[] { chart1, chart2 });
+        var mediator = new Mock<IMediator>();
+        SetupTierList(mediator, "Pass Count", Array.Empty<SongTierListEntry>());
+        mediator.Setup(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new SongTierListEntry("My Relative Scores", chart1.Id, TierListCategory.Medium, 0),
+                new SongTierListEntry("My Relative Scores", chart2.Id, TierListCategory.Medium, 0)
+            });
+        var playerStats = new Mock<IPlayerStatsReader>();
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(StatsFor(userId, doublesCompetitive: 17.5));
+        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(MixEnum.Phoenix, ChartType.Double, 17.5, 1.0,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { near, far });
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                StatsFor(near, doublesCompetitive: 17.5),
+                StatsFor(far, doublesCompetitive: 18.4)
+            });
+        var userTierLists = new Mock<IUserTierListRepository>();
+        userTierLists.Setup(r => r.GetEntriesForCharts(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new UserTierListEntryRecord(near, chart1.Id, TierListCategory.Easy, 0),
+                new UserTierListEntryRecord(near, chart2.Id, TierListCategory.Hard, 0),
+                new UserTierListEntryRecord(far, chart1.Id, TierListCategory.Hard, 0),
+                new UserTierListEntryRecord(far, chart2.Id, TierListCategory.Easy, 0)
+            });
+        var handler = BuildHandler(charts: charts, mediator: mediator, playerStats: playerStats,
+            userTierLists: userTierLists);
+
+        var result = await handler.Handle(Query("Pass", personalized: true, userId: userId),
+            CancellationToken.None);
+
+        var entry1 = result.Entries.Single(e => e.ChartId == chart1.Id);
+        var entry2 = result.Entries.Single(e => e.ChartId == chart2.Id);
+        Assert.NotEqual(TierListCategory.Unrecorded, entry1.Category);
+        Assert.NotEqual(TierListCategory.Unrecorded, entry2.Category);
+        Assert.True(entry1.Category < entry2.Category,
+            $"the near player's Easy vote on chart1 ({entry1.Category}) should outweigh the far player's ({entry2.Category})");
+    }
+
+    [Fact]
+    public async Task SimilarPlayersStaySilentForPlayersWithoutCompetitiveData()
+    {
+        // Competitive level 1 is the no-data floor — a fresh player has no cohort, so
+        // the source must say nothing instead of pulling in the whole population.
+        var chart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var userId = Guid.NewGuid();
+        var charts = ChartsMock(new[] { chart });
+        var mediator = new Mock<IMediator>();
+        SetupTierList(mediator, "Pass Count", Array.Empty<SongTierListEntry>());
+        var playerStats = new Mock<IPlayerStatsReader>();
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(StatsFor(userId));
+        var handler = BuildHandler(charts: charts, mediator: mediator, playerStats: playerStats);
+
+        var result = await handler.Handle(Query("Pass", personalized: true, userId: userId),
+            CancellationToken.None);
+
+        Assert.Equal(TierListCategory.Unrecorded, result.Entries.Single(e => e.ChartId == chart.Id).Category);
+        playerStats.Verify(p => p.GetPlayersByCompetitiveRange(It.IsAny<MixEnum>(), It.IsAny<ChartType?>(),
+            It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -163,10 +251,7 @@ public sealed class BlendedTierListHandlerTests
         var scoreReader = new Mock<IScoreReader>();
         scoreReader.Setup(s => s.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(scores);
-        var titles = new Mock<ITitleRepository>();
-        titles.Setup(t => t.GetCurrentTitleLevel(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(DifficultyLevel.From(16));
-        var handler = BuildHandler(charts: charts, mediator: mediator, scores: scoreReader, titles: titles);
+        var handler = BuildHandler(charts: charts, mediator: mediator, scores: scoreReader);
 
         var result = await handler.Handle(Query("Score", personalized: true, userId: userId),
             CancellationToken.None);
@@ -202,10 +287,7 @@ public sealed class BlendedTierListHandlerTests
         scoreReader.Setup(s => s.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
                 { new RecordedPhoenixScore(lone.Id, 950_000, null, false, DateTimeOffset.MinValue) });
-        var titles = new Mock<ITitleRepository>();
-        titles.Setup(t => t.GetCurrentTitleLevel(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(DifficultyLevel.From(16));
-        var handler = BuildHandler(charts: charts, mediator: mediator, scores: scoreReader, titles: titles);
+        var handler = BuildHandler(charts: charts, mediator: mediator, scores: scoreReader);
 
         var result = await handler.Handle(Query("Score", personalized: true, userId: userId),
             CancellationToken.None);
@@ -252,22 +334,40 @@ public sealed class BlendedTierListHandlerTests
         return m;
     }
 
+    private static PlayerStatsRecord StatsFor(Guid userId, double singlesCompetitive = 1,
+        double doublesCompetitive = 1)
+    {
+        return new PlayerStatsRecord(userId,
+            TotalRating: 0, HighestLevel: 1, ClearCount: 0, CoOpRating: 0, CoOpScore: 0,
+            SkillRating: 0, SkillScore: 0, SkillLevel: 0,
+            SinglesRating: 0, SinglesScore: 0, SinglesLevel: 0,
+            DoublesRating: 0, DoublesScore: 0, DoublesLevel: 0,
+            CompetitiveLevel: (singlesCompetitive + doublesCompetitive) / 2,
+            SinglesCompetitiveLevel: singlesCompetitive,
+            DoublesCompetitiveLevel: doublesCompetitive);
+    }
+
     private static BlendedTierListHandler BuildHandler(
         Mock<IChartRepository>? charts = null,
         Mock<IMediator>? mediator = null,
         Mock<IScoreReader>? scores = null,
-        Mock<ITitleRepository>? titles = null,
-        Mock<ITierListRepository>? tierLists = null,
+        Mock<IPlayerStatsReader>? playerStats = null,
         Mock<IUserTierListRepository>? userTierLists = null)
     {
         charts ??= ChartsMock(Array.Empty<Chart>());
         mediator ??= new Mock<IMediator>();
         scores ??= new Mock<IScoreReader>();
-        titles ??= new Mock<ITitleRepository>();
-        tierLists ??= new Mock<ITierListRepository>();
+        if (playerStats == null)
+        {
+            // Default: every player sits at the competitive-level-1 no-data floor, so
+            // the similar-players source stays silent unless a test opts in.
+            playerStats = new Mock<IPlayerStatsReader>();
+            playerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((MixEnum _, Guid id, CancellationToken _) => StatsFor(id));
+        }
         userTierLists ??= new Mock<IUserTierListRepository>();
-        return new BlendedTierListHandler(mediator.Object, charts.Object, scores.Object, titles.Object,
-            tierLists.Object, userTierLists.Object, new Mock<ICurrentUserAccessor>().Object,
+        return new BlendedTierListHandler(mediator.Object, charts.Object, scores.Object, playerStats.Object,
+            userTierLists.Object, new Mock<ICurrentUserAccessor>().Object,
             new MemoryCache(new MemoryCacheOptions()));
     }
 }
