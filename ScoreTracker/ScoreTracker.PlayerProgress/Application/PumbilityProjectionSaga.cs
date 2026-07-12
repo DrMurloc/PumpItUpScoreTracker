@@ -155,7 +155,11 @@ namespace ScoreTracker.PlayerProgress.Application
             {
                 var chart = charts[kv.Key];
                 var pool = pools[chart.Type];
-                var expectedPumbility = scoring.GetScore(chart, kv.Value, PhoenixPlate.ExtremeGame, false);
+                // Plate rides the projected score through the empirical curve — a flat
+                // EG assumption overpriced plate bonuses everywhere under Phoenix 2's
+                // additive formula.
+                var expectedPumbility = scoring.GetScore(chart, kv.Value,
+                    ScoringConfiguration.ExpectedPlateForScore(kv.Value), false);
                 var expectedGains = expectedPumbility - pool.Baseline;
                 if (expectedGains <= 0) continue;
                 if (pool.Ratings.TryGetValue(kv.Key, out var rating))

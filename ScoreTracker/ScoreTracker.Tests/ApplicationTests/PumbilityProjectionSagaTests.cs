@@ -223,7 +223,7 @@ public sealed class PumbilityProjectionSagaTests
             .WithCharts(poolCharts.Concat(new[] { doublesChart, singleCandidate, doubleCandidate }).ToArray())
             .WithTopScore(doublesChart.Id, 951_000)
             .WithCohortUser()
-            .WithCohortScores(ChartType.Single, singleCandidate.Id, 970_000, 960_000, 950_000, 940_000)
+            .WithCohortScores(ChartType.Single, singleCandidate.Id, 992_000, 991_000, 990_000, 989_000)
             .WithCohortScores(ChartType.Double, doubleCandidate.Id, 970_000, 960_000, 950_000, 940_000);
         foreach (var poolChart in poolCharts) ctx.WithTopScore(poolChart.Id, 951_000);
 
@@ -231,14 +231,17 @@ public sealed class PumbilityProjectionSagaTests
             CancellationToken.None);
 
         // No cohort data on my played charts → percentile defaults to 0.5, which lands
-        // exactly on sorted[2] = 950,000 for both candidates.
-        Assert.Equal(950_000, (int)result.ExpectedScores[singleCandidate.Id]);
+        // exactly on sorted[2] for both candidates.
+        Assert.Equal(990_000, (int)result.ExpectedScores[singleCandidate.Id]);
         Assert.Equal(950_000, (int)result.ExpectedScores[doubleCandidate.Id]);
 
+        // Projected scores ride the empirical plate curve (pinned in
+        // ExpectedPlateForScoreTests): 990k → Marvelous Game, 950k → Fair Game. The
+        // doubles gain is full contribution — its pool is underfilled, baseline 0.
         var singlesBaseline = (int)scoring.GetScore(poolCharts[0], 951_000, PhoenixPlate.SuperbGame, false);
-        var expectedSingleGain = (int)(scoring.GetScore(singleCandidate, 950_000, PhoenixPlate.ExtremeGame, false)
+        var expectedSingleGain = (int)(scoring.GetScore(singleCandidate, 990_000, PhoenixPlate.MarvelousGame, false)
                                        - singlesBaseline);
-        var expectedDoubleGain = (int)scoring.GetScore(doubleCandidate, 950_000, PhoenixPlate.ExtremeGame, false);
+        var expectedDoubleGain = (int)scoring.GetScore(doubleCandidate, 950_000, PhoenixPlate.FairGame, false);
         Assert.Equal(expectedSingleGain, result.ProjectedGains[singleCandidate.Id]);
         Assert.Equal(expectedDoubleGain, result.ProjectedGains[doubleCandidate.Id]);
     }

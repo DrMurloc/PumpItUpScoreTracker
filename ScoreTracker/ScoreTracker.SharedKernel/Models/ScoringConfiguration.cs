@@ -250,6 +250,29 @@ namespace ScoreTracker.SharedKernel.Models
             };
         }
 
+        /// <summary>
+        ///     The plate a score most plausibly carries when the score is all you know —
+        ///     the modal plate per band across 922,765 real non-broken Phoenix records
+        ///     (prod-synced local data, 2026-07-12), crossovers measured at 2k-band
+        ///     granularity. SG/EG/RG are never the population mode in any band (real
+        ///     plate progression ladders FG → TG → MG → UG), so the expectation never
+        ///     emits them. Used by the PUMBILITY projection for unplayed charts;
+        ///     deliberately not an exact science — recalibrate per mix once its plate
+        ///     data accumulates (same query, new constants;
+        ///     docs/design/home-page-widgets.md §5).
+        /// </summary>
+        public static PhoenixPlate ExpectedPlateForScore(PhoenixScore score)
+        {
+            return (int)score switch
+            {
+                >= 1_000_000 => PhoenixPlate.PerfectGame,
+                >= 996_000 => PhoenixPlate.UltimateGame,
+                >= 972_000 => PhoenixPlate.MarvelousGame,
+                >= 964_000 => PhoenixPlate.TalentedGame,
+                _ => PhoenixPlate.FairGame
+            };
+        }
+
         private static ScoringConfiguration PhoenixPumbilityScoring(bool includeCoOp)
         {
             var config = new ScoringConfiguration
