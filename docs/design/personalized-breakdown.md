@@ -51,9 +51,12 @@ attribution is the headline win.
    day).** A best attempt's age only means "time since last improved" — ceiling
    scores go stale by definition — so age reduces an observation's *evidence*, not
    its score. "Old" requires BOTH conditions (owner-corrected model): past the
-   **180-day grace floor** (so a new account's three-week-old scores never read as
-   outdated next to last week's) AND an **age outlier in the player's own record**
-   — beyond mean + 1σ of their score ages, the same banding the Age lens uses.
+   **30-day grace floor** (only there so a new account's three-week-old scores
+   never read as outdated next to last week's — beyond a month, the player's own
+   distribution rules) AND an **age outlier in the player's own record** — beyond
+   mean + 1σ of their score ages, the same banding the Age lens uses. The target
+   is the years-old one-and-done chart nobody revisits because the chart design is
+   annoying — sitting 60k under what a bad day would score today.
    Outliers are diminished (half-voice per 180 days beyond the threshold, floored
    at 0.1), everything else keeps weight 1. A uniformly-old history has no spread,
    hence no outliers — a returning player is a coherent snapshot at full voice.
