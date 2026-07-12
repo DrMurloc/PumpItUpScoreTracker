@@ -79,8 +79,8 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
         var cut = Render(WithSinglesRange(15, 18));
         cut.Find(".rand-advanced-toggle").Click();
 
-        // Weighted Levels, Song Types, Minimum Counts, Personal Scores — all visible.
-        Assert.Equal(4, cut.FindAll(".rand-adv-section").Count);
+        // Weighted Levels, Minimum Counts, Personal Scores — all visible, no opt-in toggles.
+        Assert.Equal(3, cut.FindAll(".rand-adv-section").Count);
         // Slider mode: no weight rows yet, just the entry button.
         Assert.Empty(cut.FindAll(".weight-row"));
         Assert.NotEmpty(cut.FindAll(".weight-add-btn"));
@@ -139,21 +139,19 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
     }
 
     [Fact]
-    public void SongTypeChipsToggleAndTheLastActiveTypeCannotBeRemoved()
+    public void SongTypeChipsLiveInBasicAndTheLastActiveTypeCannotBeRemoved()
     {
         var settings = WithSinglesRange(15, 18);
         var cut = Render(settings);
-        cut.Find(".rand-advanced-toggle").Click();
 
-        var chips = cut.FindAll(".rand-adv-section .rand-grade-chip");
-        // Song Types render first among chip rows; all four start lit.
-        chips[0].Click(); // Arcade off
+        // Basic filters now — no Advanced expansion needed.
+        cut.FindAll(".rand-song-chips .rand-grade-chip")[0].Click(); // Arcade off
         Assert.Equal(0, settings.SongTypeWeights[SongType.Arcade]);
 
         // Turning the rest off leaves the final type lit.
-        cut.FindAll(".rand-adv-section .rand-grade-chip")[1].Click();
-        cut.FindAll(".rand-adv-section .rand-grade-chip")[2].Click();
-        cut.FindAll(".rand-adv-section .rand-grade-chip")[3].Click();
+        cut.FindAll(".rand-song-chips .rand-grade-chip")[1].Click();
+        cut.FindAll(".rand-song-chips .rand-grade-chip")[2].Click();
+        cut.FindAll(".rand-song-chips .rand-grade-chip")[3].Click();
         Assert.Equal(1, settings.SongTypeWeights.Values.Count(v => v > 0));
     }
 
@@ -186,7 +184,7 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
         cut.Find(".rand-advanced-toggle").Click();
 
         Assert.DoesNotContain("Filter By Personal Scores", cut.Markup);
-        Assert.Equal(3, cut.FindAll(".rand-adv-section").Count);
+        Assert.Equal(2, cut.FindAll(".rand-adv-section").Count);
     }
 
     [Fact]

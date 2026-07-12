@@ -43,8 +43,8 @@
     </div>
 
     <div class="rand-settings-row">
+        @* The slider carries its own "Singles" label — the head row is just the control. *@
         <div class="rand-type-head">
-            <span class="rand-settings-label">@L["Singles"]</span>
             @if (_weightedMode)
             {
                 <MudText Typo="Typo.caption" Class="rand-owned-note">@L["Managed by Weighted Levels"]</MudText>
@@ -64,7 +64,6 @@
 
     <div class="rand-settings-row">
         <div class="rand-type-head">
-            <span class="rand-settings-label">@L["Doubles"]</span>
             @if (_weightedMode)
             {
                 <MudText Typo="Typo.caption" Class="rand-owned-note">@L["Managed by Weighted Levels"]</MudText>
@@ -102,12 +101,23 @@
     </div>
 
     <div class="rand-settings-row">
+        <span class="rand-settings-label">@L["Song Types"]</span>
+        <div class="rand-grade-chips rand-song-chips">
+            @foreach (var songType in Settings.SongTypeWeights.Keys)
+            {
+                var captured = songType;
+                <button type="button" class="rand-grade-chip @(Settings.SongTypeWeights[captured] > 0 ? "on" : null)"
+                        @onclick="() => ToggleSongType(captured)">@L[captured.ToString()]</button>
+            }
+        </div>
+    </div>
+
+    <div class="rand-settings-row">
         <button type="button" class="rand-advanced-toggle" @onclick="() => _showAdvanced = !_showAdvanced"
                 aria-expanded="@_showAdvanced">
-            <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small"></MudIcon>
+            <MudIcon Icon="@(_showAdvanced ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
+                     Size="Size.Small"></MudIcon>
             @L["Advanced Filters"]
-            <MudIcon Icon="@(_showAdvanced ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
-                     Size="Size.Small" Class="rand-advanced-caret"></MudIcon>
         </button>
         @if (_showAdvanced)
         {
@@ -161,18 +171,6 @@
                             <MudButton Variant="Variant.Text" Color="Color.Warning" Size="Size.Small" Class="rand-back-to-sliders"
                                        StartIcon="@Icons.Material.Filled.Undo"
                                        OnClick="BackToSliders">@(_confirmingBack ? L["Tap again to clear weights"] : L["Back to sliders"])</MudButton>
-                        }
-                    </div>
-                </div>
-
-                <div class="rand-adv-section">
-                    <span class="rand-settings-label">@L["Song Types"]</span>
-                    <div class="rand-grade-chips">
-                        @foreach (var songType in Settings.SongTypeWeights.Keys)
-                        {
-                            var captured = songType;
-                            <button type="button" class="rand-grade-chip @(Settings.SongTypeWeights[captured] > 0 ? "on" : null)"
-                                    @onclick="() => ToggleSongType(captured)">@L[captured.ToString()]</button>
                         }
                     </div>
                 </div>

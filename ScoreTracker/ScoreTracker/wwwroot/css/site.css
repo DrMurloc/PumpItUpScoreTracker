@@ -671,8 +671,8 @@ html.nav-away .page-dock,
     font-size: .8rem;
 }
 
-.rand-advanced-caret {
-    margin-left: auto;
+.rand-type-head {
+    justify-content: flex-end;
 }
 
 .rand-advanced-body {
