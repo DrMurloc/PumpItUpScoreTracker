@@ -340,11 +340,13 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         var index = new Dictionary<string, Guid?>();
         foreach (var chart in phoenixCharts)
         {
+            // ChartType.HalfDouble (#138) is a retired legacy-era chart type and never
+            // appears in the Phoenix set this index is built from — piucenter's
+            // HALFDOUBLE_ key label refers to modern DOUBLE charts (TryMatch's relax).
             var sord = chart.Type switch
             {
                 ChartType.Single => "singles",
                 ChartType.Double => "doubles",
-                ChartType.HalfDouble => "doubles",
                 _ => null
             };
             if (sord == null) continue;
@@ -355,10 +357,6 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
                 SongType.FullSong => "FULLSONG",
                 _ => "ARCADE"
             };
-            // Post-#138 the catalog types half-doubles explicitly; their keys carry the
-            // HALFDOUBLE_ prefix. (Phoenix-era half-doubles still typed Double keep
-            // matching through TryMatch's prefix relax.)
-            if (chart.Type == ChartType.HalfDouble) variant = $"HALFDOUBLE_{variant}";
             var key =
                 $"{PiuCenterSkillMapper.Normalize(chart.Song.Name)}|{PiuCenterSkillMapper.Normalize(chart.Song.Artist)}|{sord}|{(int)chart.Level}|{variant}";
             // Ambiguous keys match nothing — better parked than misbound.
@@ -372,19 +370,14 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
     {
         if (!PiuCenterKeyParser.TryParse(listing.ExternalKey, out var parts)) return null;
         var sord = listing.Type == ChartType.Single ? "singles" : "doubles";
-
-        Guid? Lookup(string variant)
-        {
-            return matchIndex.GetValueOrDefault(
-                $"{PiuCenterSkillMapper.Normalize(parts.SongPart)}|{PiuCenterSkillMapper.Normalize(parts.ArtistPart)}|{sord}|{listing.Level}|{variant}");
-        }
-
-        // Exact variant first (post-#138 half-doubles are typed explicitly); then the
-        // prefix relax for half-doubles our catalog still types as plain Double
-        // (same as the seeding pass's tier 3a).
-        var match = Lookup(listing.Variant);
-        if (match == null && listing.Variant.StartsWith("HALFDOUBLE_", StringComparison.Ordinal))
-            match = Lookup(listing.Variant["HALFDOUBLE_".Length..]);
-        return match;
+        // piucenter labels half-double-style charts with a HALFDOUBLE_ key prefix, but
+        // in the modern catalog those ARE Double charts — strip and match Double
+        // (same as the seeding pass's tier 3a; owner-confirmed).
+        var variant = listing.Variant.StartsWith("HALFDOUBLE_", StringComparison.Ordinal)
+            ? listing.Variant["HALFDOUBLE_".Length..]
+            : listing.Variant;
+        var key =
+            $"{PiuCenterSkillMapper.Normalize(parts.SongPart)}|{PiuCenterSkillMapper.Normalize(parts.ArtistPart)}|{sord}|{listing.Level}|{variant}";
+        return matchIndex.GetValueOrDefault(key);
     }
 }
