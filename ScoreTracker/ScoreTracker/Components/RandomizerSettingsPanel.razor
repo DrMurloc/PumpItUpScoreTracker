@@ -138,10 +138,24 @@
                         </div>
                     }
                     <div class="rand-weighted-actions">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Class="weight-add-btn"
-                                   StartIcon="@(_selectorOpen ? Icons.Material.Filled.Check : Icons.Material.Filled.Add)"
-                                   OnClick="() => _selectorOpen = !_selectorOpen"
-                                   aria-expanded="@(_selectorOpen ? "true" : "false")">@(_selectorOpen ? L["Done"] : L["Add Weighted Levels"])</MudButton>
+                        @* The tier lists' selector popup, verbatim (owner-locked round 3):
+                           same anchor, popover, panel, and click-away overlay as
+                           FolderPicker — only the tap semantics differ (toggle + stay
+                           open; the first toggle engages weighted mode). *@
+                        <div class="folder-picker-anchor">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Class="weight-add-btn"
+                                       StartIcon="@Icons.Material.Filled.Add" OnClick="() => _selectorOpen = !_selectorOpen"
+                                       aria-haspopup="true" aria-expanded="@(_selectorOpen ? "true" : "false")">@L["Add Weighted Levels"]</MudButton>
+                            <MudPopover Open="_selectorOpen" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft">
+                                <div class="folder-picker-pop">
+                                    @if (_selectorOpen)
+                                    {
+                                        <FolderGrid InitialType="ChartType.Single" IsSelected="IsLevelActive"
+                                                    LevelPicked="ToggleFolder"></FolderGrid>
+                                    }
+                                </div>
+                            </MudPopover>
+                        </div>
                         @if (_weightedMode)
                         {
                             <MudButton Variant="Variant.Text" Color="Color.Warning" Size="Size.Small" Class="rand-back-to-sliders"
@@ -149,13 +163,6 @@
                                        OnClick="BackToSliders">@(_confirmingBack ? L["Tap again to clear weights"] : L["Back to sliders"])</MudButton>
                         }
                     </div>
-                    @if (_selectorOpen)
-                    {
-                        @* The tier lists' selector, verbatim — levels the sliders already
-                           cover come in highlighted; the first toggle engages weighted mode. *@
-                        <FolderGrid InitialType="ChartType.Single" IsSelected="IsLevelActive"
-                                    LevelPicked="ToggleFolder"></FolderGrid>
-                    }
                 </div>
 
                 <div class="rand-adv-section">
@@ -327,6 +334,8 @@
         }
     </div>
 </div>
+@* Transparent click-away layer, same as FolderPicker: below the popover (1200), above content. *@
+<MudOverlay Visible="_selectorOpen" OnClick="() => _selectorOpen = false" ZIndex="1199"></MudOverlay>
 
 @code {
 

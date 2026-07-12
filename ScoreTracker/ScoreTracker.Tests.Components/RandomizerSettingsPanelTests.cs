@@ -10,13 +10,22 @@ namespace ScoreTracker.Tests.Components;
 
 public sealed class RandomizerSettingsPanelTests : ComponentTestBase
 {
-    private IRenderedComponent<RandomizerSettingsPanel> Render(RandomSettings settings,
+    // The selector popup renders through MudPopoverProvider (same as on the live page,
+    // where MainLayout hosts it), so the fragment carries a provider sibling and facts
+    // search the whole fragment.
+    private IRenderedFragment Render(RandomSettings settings,
         MixEnum mix = MixEnum.Phoenix, bool loggedIn = true)
     {
         CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(loggedIn);
-        return RenderComponent<RandomizerSettingsPanel>(p => p
-            .Add(x => x.Settings, settings)
-            .Add(x => x.Mix, mix));
+        return base.Render(builder =>
+        {
+            builder.OpenComponent<MudPopoverProvider>(0);
+            builder.CloseComponent();
+            builder.OpenComponent<RandomizerSettingsPanel>(1);
+            builder.AddAttribute(2, nameof(RandomizerSettingsPanel.Settings), settings);
+            builder.AddAttribute(3, nameof(RandomizerSettingsPanel.Mix), mix);
+            builder.CloseComponent();
+        });
     }
 
     private static RandomSettings WithSinglesRange(int min, int max)
