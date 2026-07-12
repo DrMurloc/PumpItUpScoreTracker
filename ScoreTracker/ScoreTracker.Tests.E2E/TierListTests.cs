@@ -143,7 +143,9 @@ public sealed class TierListTests : IAsyncLifetime
                 .GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Download" }).ClickAsync(),
             new PageRunAndWaitForDownloadOptions { Timeout = 60_000 });
 
-        Assert.StartsWith("TierList_Double20_", download.SuggestedFilename);
+        // The mix is part of the filename now — a shared "Double 20" card is
+        // meaningless without it (E2E runs on the default Phoenix mix).
+        Assert.StartsWith("TierList_Phoenix_Double20_", download.SuggestedFilename);
         Assert.EndsWith(".png", download.SuggestedFilename);
         var path = await download.PathAsync();
         var bytes = await File.ReadAllBytesAsync(path!);
