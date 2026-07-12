@@ -1,0 +1,59 @@
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.HomeDashboard
+
+@* The standard widget frame (§2.3): the host owns the card chrome, the title, the
+   per-cell error boundary, and the unknown-type fallback — widget components render
+   bodies only, so every widget wears identical chrome from one place. *@
+
+<div class="dash-widget">
+    <div class="dash-widget-head">
+        <span class="dash-widget-title">@TitleText</span>
+    </div>
+    <div class="dash-widget-body">
+        @if (_descriptor == null)
+        {
+            <div class="dash-widget-message">
+                <MudText Typo="Typo.body2">@L["This widget is no longer available."]</MudText>
+            </div>
+        }
+        else
+        {
+            <ErrorBoundary>
+                <ChildContent>
+                    <DynamicComponent Type="_descriptor.RenderComponent" Parameters="_parameters"/>
+                </ChildContent>
+                <ErrorContent>
+                    <div class="dash-widget-message dash-widget-error">
+                        <MudText Typo="Typo.body2">@L["Something went wrong loading this widget."]</MudText>
+                    </div>
+                </ErrorContent>
+            </ErrorBoundary>
+        }
+    </div>
+</div>
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+
+    /// <summary>Resolved per D13: widget config override → page default → current mix.</summary>
+    [Parameter] public MixEnum EffectiveMix { get; set; }
+
+    private WidgetDescriptor? _descriptor;
+    private IDictionary<string, object> _parameters = new Dictionary<string, object>();
+
+    private string TitleText => Widget.Title
+                                ?? (_descriptor == null ? Widget.WidgetType : L[_descriptor.NameKey].Value);
+
+    protected override void OnParametersSet()
+    {
+        _descriptor = WidgetRegistry.TryGet(Widget.WidgetType);
+        _parameters = new Dictionary<string, object>
+        {
+            ["Widget"] = Widget,
+            ["EffectiveMix"] = EffectiveMix
+        };
+    }
+
+}

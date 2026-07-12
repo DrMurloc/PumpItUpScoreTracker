@@ -3173,4 +3173,16 @@
   <data name="Older scores count for less — {0} of your nearby scores are much older than the rest of your record." xml:space="preserve">
     <value>Older scores count for less — {0} of your nearby scores are much older than the rest of your record.</value>
   </data>
+  <data name="Build your home page from widgets you choose." xml:space="preserve">
+    <value>Build your home page from widgets you choose.</value>
+  </data>
+  <data name="Add widgets to this page in edit mode." xml:space="preserve">
+    <value>Add widgets to this page in edit mode.</value>
+  </data>
+  <data name="This widget is no longer available." xml:space="preserve">
+    <value>This widget is no longer available.</value>
+  </data>
+  <data name="Something went wrong loading this widget." xml:space="preserve">
+    <value>Something went wrong loading this widget.</value>
+  </data>
 </root>

@@ -3174,4 +3174,16 @@
   <data name="Older scores count for less — {0} of your nearby scores are much older than the rest of your record." xml:space="preserve">
     <value>古いスコアは軽く数えられます — 近隣スコアのうち{0}件が他と比べて大幅に古くなっています。</value>
   </data>
+  <data name="Build your home page from widgets you choose." xml:space="preserve">
+    <value>ウィジェットを選んで自分だけのホームページを作ろう。</value>
+  </data>
+  <data name="Add widgets to this page in edit mode." xml:space="preserve">
+    <value>編集モードでこのページにウィジェットを追加できます。</value>
+  </data>
+  <data name="This widget is no longer available." xml:space="preserve">
+    <value>このウィジェットは利用できなくなりました。</value>
+  </data>
+  <data name="Something went wrong loading this widget." xml:space="preserve">
+    <value>このウィジェットの読み込み中に問題が発生しました。</value>
+  </data>
 </root>

@@ -1,0 +1,117 @@
+@page "/Home"
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.HomePage.Contracts.Commands
+@using ScoreTracker.HomePage.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components.HomeWidgets
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
+
+@* Unlisted pre-release route (D7): no nav links anywhere, but open to whoever finds
+   it. Becomes "/" at cutover, when /WhatShouldIPlay retires. *@
+
+<PageTitle>@L["Home"]</PageTitle>
+
+@if (_loaded && !_pages.Any())
+{
+    <div class="dash-hero">
+        <MudText Typo="Typo.h4">@L["Home"]</MudText>
+        <MudText Typo="Typo.body1">@L["Build your home page from widgets you choose."]</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateFirstPage" Disabled="_isSaving">
+            @L["Create"]
+        </MudButton>
+    </div>
+}
+else if (_loaded)
+{
+    @if (_pages.Count > 1)
+    {
+        <div class="dash-pagebar">
+            @foreach (var dashPage in _pages)
+            {
+                <button class="dash-pagetab @(dashPage.Id == _selectedPage!.Id ? "active" : "")"
+                        @onclick="() => SelectPage(dashPage)">
+                    @dashPage.Name.ToString()
+                </button>
+            }
+        </div>
+    }
+
+    @if (_selectedPage != null)
+    {
+        @if (!_selectedPage.Widgets.Any())
+        {
+            <div class="dash-hero">
+                <MudText Typo="Typo.body1">@L["Add widgets to this page in edit mode."]</MudText>
+            </div>
+        }
+        else
+        {
+            <div class="dash-grid">
+                @foreach (var widget in _selectedPage.Widgets.OrderBy(w => w.Ordinal))
+                {
+                    var size = SizePreset.TryParse(widget.SizePreset) ?? SizePreset.OneByOne;
+                    <div @key="widget.Id" class="dash-cell dash-cols-@size.Columns dash-rows-@size.Rows">
+                        <WidgetHost Widget="widget" EffectiveMix="EffectiveMixFor(_selectedPage)"/>
+                    </div>
+                }
+            </div>
+        }
+    }
+}
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject NavigationManager NavManager
+@inject IUiSettingsAccessor UiSettings
+
+@code {
+
+    private IReadOnlyList<HomePageRecord> _pages = Array.Empty<HomePageRecord>();
+    private HomePageRecord? _selectedPage;
+    private MixEnum _currentMix = MixEnum.Phoenix;
+    private bool _loaded;
+    private bool _isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
+
+        _currentMix = await UiSettings.GetSelectedMix();
+        await LoadPages();
+    }
+
+    private async Task LoadPages()
+    {
+        _pages = await Mediator.Send(new GetMyHomePagesQuery());
+        _selectedPage = _pages.FirstOrDefault(p => p.IsDefault) ?? _pages.FirstOrDefault();
+        _loaded = true;
+    }
+
+    private async Task CreateFirstPage()
+    {
+        _isSaving = true;
+        await Mediator.Send(new CreateHomePageCommand(L["Home"].Value));
+        await LoadPages();
+        _isSaving = false;
+    }
+
+    private void SelectPage(HomePageRecord page)
+    {
+        _selectedPage = page;
+    }
+
+    // D13 cascade: page default → current mix (widgets add their own override on top).
+    private MixEnum EffectiveMixFor(HomePageRecord page)
+    {
+        return page.DefaultMix ?? _currentMix;
+    }
+
+}

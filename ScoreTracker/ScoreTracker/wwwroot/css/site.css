@@ -628,3 +628,116 @@
     color: var(--mud-palette-primary);
     font-weight: 600;
 }
+
+/* ===== Home dashboard (unlisted pre-release, D7): 4-column desktop grid, mobile
+   derives a single column from auto-flow order (D3), cells span via size presets
+   (D5). The widget frame is owned by WidgetHost so every widget wears identical
+   chrome. ===== */
+
+.dash-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 56px 16px;
+    text-align: center;
+}
+
+.dash-pagebar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.dash-pagetab {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 14px;
+    border-radius: 8px 8px 0 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: .95rem;
+    letter-spacing: .05em;
+    color: var(--mix-ink-muted);
+    border-bottom: 2px solid transparent;
+}
+
+.dash-pagetab.active {
+    color: var(--mix-ink);
+    border-bottom-color: var(--mix-primary);
+    text-shadow: 0 0 10px var(--mix-glow);
+}
+
+.dash-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 168px;
+    grid-auto-flow: row;
+    gap: 14px;
+}
+
+.dash-cell {
+    min-width: 0;
+}
+
+.dash-cols-2 { grid-column: span 2; }
+.dash-cols-3 { grid-column: span 3; }
+.dash-cols-4 { grid-column: span 4; }
+.dash-rows-2 { grid-row: span 2; }
+
+.dash-widget {
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .06);
+    border-radius: 10px;
+    padding: 12px 14px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.dash-widget-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex: none;
+}
+
+.dash-widget-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: .82rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.dash-widget-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-widget-message {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--mix-ink-muted);
+}
+
+@media (max-width: 959.98px) {
+    .dash-grid {
+        grid-template-columns: 1fr;
+        grid-auto-rows: minmax(168px, auto);
+    }
+
+    .dash-cols-2, .dash-cols-3, .dash-cols-4 { grid-column: span 1; }
+
+    .dash-rows-2 { grid-row: span 1; }
+}
