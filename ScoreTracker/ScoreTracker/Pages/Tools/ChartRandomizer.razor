@@ -41,7 +41,7 @@
 {
     <div class="rand-draft-head">
         <button type="button" class="rand-exit-chip" @onclick="EndDraft">
-            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small"></MudIcon>@L["End draft"]
+            <MudIcon Icon="@Icons.Material.Filled.FullscreenExit" Size="Size.Small"></MudIcon>@L["Exit full screen"]
         </button>
         <span class="rand-tour-pill">@ContextName@(SelectedMatchName == null ? null : $" · {SelectedMatchName}")</span>
         <span class="rand-live"><span class="rand-live-dot"></span>@L["LIVE"]</span>
@@ -52,7 +52,7 @@
         }
     </div>
     <div class="rand-draft-armed">
-        <ArmedActionSelector @bind-Value="_armedAction" ShowDetails="false" Loud="true"></ArmedActionSelector>
+        <ArmedActionSelector @bind-Value="_armedAction" Loud="true"></ArmedActionSelector>
     </div>
 }
 else
@@ -84,8 +84,11 @@ else
         {
             <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@chip</MudChip>
         }
-        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined"
-                 Icon="@Icons.Material.Filled.Tune" OnClick="() => _showSettings = true">@L["Edit settings"]</MudChip>
+        @* Phone widths reach settings through the dock gear — no duplicate chip. *@
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined"
+                     Icon="@Icons.Material.Filled.Tune" OnClick="() => _showSettings = true">@L["Edit settings"]</MudChip>
+        </MudHidden>
         @if (CurrentUser.IsLoggedIn && _contextTournamentId == null)
         {
             <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
@@ -203,32 +206,39 @@ else
     }
 
     <div class="rand-countline">
-        @if (_matchCount != null)
-        {
-            <span class="rand-count-n">@_matchCount</span>
-            <span class="rand-count-label">@L["charts match"]</span>
-        }
         <MudSpacer></MudSpacer>
         @if (_contextTournamentId != null && CanOperate)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small"
-                       StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="() => _draftMode = true"
-                       Class="mr-2">@L["Start draft"]</MudButton>
+                       StartIcon="@Icons.Material.Filled.Fullscreen" OnClick="() => _draftMode = true"
+                       Class="mr-2">@L["Full screen"]</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.Casino"
+                       Disabled="@(_busy || _selectedMatchId == null)"
+                       OnClick="Randomize" Class="mr-2">@L["Redraw"]</MudButton>
         }
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Casino"
-                       Disabled="@(_busy || _contextTournamentId != null && _selectedMatchId == null)"
-                       OnClick="Randomize">@(_contextTournamentId == null ? L["Randomize"] : L["Redraw"])</MudButton>
-            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Primary" Disabled="!_cards.Any()"
-                           OnClick="CopyResults" aria-label="@L["Copy results"]" Class="ml-2"></MudIconButton>
-        </MudHidden>
-        @if (_drawSlug != null)
+        else if (_contextTournamentId == null)
         {
-            <MudTooltip Text="@L["Copy spectate link"]">
-                <MudIconButton Icon="@Icons.Material.Filled.Sensors" Color="Color.Secondary"
-                               OnClick="CopySpectateLink" aria-label="@L["Copy spectate link"]" Class="ml-2"></MudIconButton>
-            </MudTooltip>
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Casino"
+                           Disabled="_busy" OnClick="Randomize" Class="mr-2">@L["Randomize"]</MudButton>
+            </MudHidden>
         }
+        <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+            <ActivatorContent>
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Primary"
+                               Disabled="@(!_cards.Any() && _drawSlug == null)" aria-label="@L["Copy"]"></MudIconButton>
+            </ActivatorContent>
+            <ChildContent>
+                <MudMenuItem Icon="@Icons.Material.Filled.ContentCopy" Disabled="!_cards.Any()"
+                             OnClick="CopyResults">@L["Copy draw results"]</MudMenuItem>
+                @if (_drawSlug != null)
+                {
+                    <MudMenuItem Icon="@Icons.Material.Filled.Sensors"
+                                 OnClick="CopySpectateLink">@L["Copy spectate link"]</MudMenuItem>
+                }
+            </ChildContent>
+        </MudMenu>
         <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" Class="ml-2">
             <MudIconButton Icon="@Icons.Material.Filled.ViewModule" aria-label="@L["Comfortable"]"
                            Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
@@ -307,6 +317,8 @@ else if (GridDensity == UiDensity.Table)
                 <td class="rand-table-name">@card.Chart.Song.Name</td>
                 <td>@(card.State == DrawCardState.Protected ? L["Held"] : card.State == DrawCardState.Vetoed ? L["Vetoed"] : null)</td>
                 <td class="rand-table-actions">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Info"
+                                   OnClick="() => OpenDetails(card)" aria-label="@L["Details"]"></MudIconButton>
                     @if (card.State == DrawCardState.None)
                     {
                         <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Shield" Color="Color.Primary"
@@ -414,9 +426,10 @@ else
         @if (CurrentUser.IsLoggedIn && (_contextTournamentId == null || CanManageSettings))
         {
             <MudTextField T="string" @bind-Value="_saveName" Label="@L["Settings Name"]" Variant="Variant.Outlined"
-                          Margin="Margin.Dense" Class="rand-save-name"></MudTextField>
+                          Margin="Margin.Dense" Class="rand-save-name"
+                          Immediate="true"></MudTextField>
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="_busy || string.IsNullOrWhiteSpace(_saveName)"
-                       OnClick="SaveSettings">@L["Save"]</MudButton>
+                       OnClick="SaveSettings">@(SaveIsNew ? L["Save as new"] : L["Save"])</MudButton>
             @if (CurrentSettingsMap.ContainsKey(_saveName ?? string.Empty))
             {
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="_busy" OnClick="DeleteSettings">
@@ -447,14 +460,15 @@ else
     {
         <MudIconButton Icon="@Icons.Material.Filled.Tune" Class="dock-side" OnClick="() => _showSettings = true"
                        aria-label="@L["Edit settings"]"></MudIconButton>
-        @if (_contextTournamentId != null && _selectedMatchId == null)
+        @if (_contextTournamentId != null)
         {
+            @* Tournament thumb action = the next match; Redraw lives top-right (round 7). *@
             <MudButton Class="dock-cta" Disabled="_busy || !CanOperate" OnClick="() => _showNewMatch = true"
                        StartIcon="@Icons.Material.Filled.Add">@L["New match"]</MudButton>
         }
         else
         {
-            <MudButton Class="dock-cta" Disabled="_busy || _contextTournamentId != null && !CanOperate" OnClick="Randomize"
+            <MudButton Class="dock-cta" Disabled="_busy" OnClick="Randomize"
                        StartIcon="@(_busy ? null : Icons.Material.Filled.Casino)">
                 @if (_busy)
                 {
@@ -462,12 +476,25 @@ else
                 }
                 else
                 {
-                    @(_contextTournamentId == null ? L["Randomize"] : L["Redraw"])
+                    @L["Randomize"]
                 }
             </MudButton>
         }
-        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Class="dock-side" Disabled="!_cards.Any()"
-                       OnClick="CopyResults" aria-label="@L["Copy results"]"></MudIconButton>
+        <MudMenu AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.BottomRight" Dense="true">
+            <ActivatorContent>
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Class="dock-side"
+                               Disabled="@(!_cards.Any() && _drawSlug == null)" aria-label="@L["Copy"]"></MudIconButton>
+            </ActivatorContent>
+            <ChildContent>
+                <MudMenuItem Icon="@Icons.Material.Filled.ContentCopy" Disabled="!_cards.Any()"
+                             OnClick="CopyResults">@L["Copy draw results"]</MudMenuItem>
+                @if (_drawSlug != null)
+                {
+                    <MudMenuItem Icon="@Icons.Material.Filled.Sensors"
+                                 OnClick="CopySpectateLink">@L["Copy spectate link"]</MudMenuItem>
+                }
+            </ChildContent>
+        </MudMenu>
     }
 </PageDock>
 
@@ -551,6 +578,11 @@ else
     private bool _confirmingDeleteMatch;
 
     private string? SelectedMatchName => _matches.FirstOrDefault(m => m.Id == _selectedMatchId)?.Name;
+
+    // Renaming in the name field never renames the loaded preset — it saves a new one
+    // (round 7: the button says so instead of surprising people).
+    private bool SaveIsNew => !string.IsNullOrWhiteSpace(_saveName)
+                              && !CurrentSettingsMap.ContainsKey(_saveName);
 
     private bool CanOperate => CurrentUser.IsLoggedInAsAdmin || _myRole != null;
     private bool CanManageSettings => CurrentUser.IsLoggedInAsAdmin ||
@@ -925,13 +957,8 @@ else
 
     private Task ApplyArmedAction(CardVm card)
     {
-        if (_armedAction == ArmedAction.Details)
-        {
-            OpenDetails(card);
-            return Task.CompletedTask;
-        }
-
-        // Tap applies the armed action; tapping the card again undoes it.
+        // Tap applies the armed action; tapping the card again undoes it. Details live
+        // on the comfortable/table views (round 7).
         var target = _armedAction == ArmedAction.Protect ? DrawCardState.Protected : DrawCardState.Vetoed;
         return SetState(card, card.State == target ? DrawCardState.None : target);
     }

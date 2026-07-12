@@ -8,17 +8,11 @@ namespace ScoreTracker.Tests.Components;
 public sealed class ArmedActionSelectorTests : ComponentTestBase
 {
     [Fact]
-    public void RendersProtectVetoAndDetailsByDefault()
+    public void RendersProtectAndVetoOnly()
     {
+        // Details left the armed selector in field-test round 7 — the comfortable and
+        // table views carry it instead.
         var cut = RenderComponent<ArmedActionSelector>();
-
-        Assert.Equal(3, cut.FindAll(".armed-btn").Count);
-    }
-
-    [Fact]
-    public void TournamentDraftModeHidesDetails()
-    {
-        var cut = RenderComponent<ArmedActionSelector>(p => p.Add(x => x.ShowDetails, false));
 
         Assert.Equal(2, cut.FindAll(".armed-btn").Count);
         Assert.DoesNotContain("Details", cut.Markup);

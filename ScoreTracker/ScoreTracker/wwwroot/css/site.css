@@ -539,6 +539,18 @@ html.nav-away .page-dock,
     padding: 16px 16px 8px;
 }
 
+/* The drawer is viewport-wide (bottom sheet), but its content column isn't — full-bleed
+   controls floated the Advanced toggle mid-screen on desktop (round 7). */
+.rand-drawer-body > * {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.rand-drawer-footer > * {
+    flex-shrink: 0;
+}
+
 .rand-drawer-footer {
     display: flex;
     align-items: center;
@@ -661,9 +673,16 @@ html.nav-away .page-dock,
     font-size: .85rem;
 }
 
+/* Summaries render only inside the dropdown popover — the closed select shows just
+   the preset name (round 7: the two-line clone skewed the input's layout). */
 .rand-preset-summary {
+    display: none;
     font-size: .7rem;
     color: var(--mix-ink-muted);
+}
+
+.mud-popover .rand-preset-summary {
+    display: block;
 }
 
 .rand-preset-select {
@@ -872,6 +891,8 @@ html.nav-away .page-dock,
 .rand-advanced-toggle {
     display: flex;
     align-items: center;
+    justify-content: flex-start;
+    text-align: left;
     gap: 8px;
     width: 100%;
     border: 1px dashed var(--mud-palette-lines-default);
