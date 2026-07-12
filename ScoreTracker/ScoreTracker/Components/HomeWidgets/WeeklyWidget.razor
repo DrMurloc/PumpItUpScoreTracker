@@ -13,10 +13,10 @@
 @using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
-@* W3 (design doc §3): this week's board. Rotation is PER CHART (staggered), so the
-   header shows the soonest expiry and wide sizes carry per-row chips. Placement color
-   is percentile (place ÷ entrant totals) through ThemeScales — never hand-rolled
-   bands. Unplayed charts are content, not emptiness. *@
+@* W3 (design doc §3): this week's board, difficulty descending with CO-OPs last.
+   Placement color is percentile (place ÷ entrant totals) through ThemeScales — never
+   hand-rolled bands. Unplayed charts are content, not emptiness; the row trophy opens
+   the per-chart leaderboard dialog. *@
 
 @if (!_loaded)
 {
@@ -36,7 +36,7 @@ else
         <div class="dash-weekly-meta">
             <MudLink Href="/WeeklyCharts" Typo="Typo.caption">@L["See Leaderboards"]</MudLink>
         </div>
-        <div class="dash-targets">
+        <div class="dash-targets dash-scroll">
             @foreach (var row in _rows)
             {
                 var chart = row.Chart;

@@ -864,10 +864,8 @@
 }
 
 .dash-targets {
-    overflow-y: auto;
     flex: 1;
     min-height: 0;
-    mask-image: linear-gradient(to bottom, #000 85%, transparent);
 }
 
 .dash-target-row {
@@ -1052,6 +1050,7 @@
     .dash-targets {
         overflow-y: visible;
         mask-image: none;
+        animation: none;
     }
 }
 
@@ -1105,4 +1104,92 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* ===== Quiet scrolling (round 4): widget inner scrollers show NO scrollbar at rest —
+   the edge fades are the "there's more" affordance. Desktop reveals a thin themed
+   thumb on hover (hover = intent); touch keeps native auto-hiding overlays. Where
+   scroll-driven animations exist, the fades are honest: top fade only once scrolled,
+   bottom fade gone at the end. Elsewhere the static bottom fade remains. ===== */
+
+@property --dash-fade-top {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+
+@property --dash-fade-bottom {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 24px;
+}
+
+.dash-scroll,
+.dash-drawer .mud-drawer-content {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+.dash-scroll:hover,
+.dash-drawer .mud-drawer-content:hover {
+    scrollbar-color: color-mix(in srgb, var(--mix-ink-muted) 35%, transparent) transparent;
+}
+
+.dash-scroll::-webkit-scrollbar,
+.dash-drawer .mud-drawer-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dash-scroll::-webkit-scrollbar-track,
+.dash-drawer .mud-drawer-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dash-scroll::-webkit-scrollbar-thumb,
+.dash-drawer .mud-drawer-content::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+}
+
+.dash-scroll:hover::-webkit-scrollbar-thumb,
+.dash-drawer .mud-drawer-content:hover::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--mix-ink-muted) 35%, transparent);
+}
+
+.dash-scroll {
+    overflow-y: auto;
+    mask-image: linear-gradient(to bottom,
+        transparent 0,
+        #000 var(--dash-fade-top),
+        #000 calc(100% - var(--dash-fade-bottom)),
+        transparent 100%);
+}
+
+@supports (animation-timeline: scroll()) {
+    .dash-scroll {
+        animation: dash-scroll-fades linear both;
+        animation-timeline: scroll(self);
+    }
+
+    @keyframes dash-scroll-fades {
+        0% {
+            --dash-fade-top: 0px;
+            --dash-fade-bottom: 24px;
+        }
+
+        10% {
+            --dash-fade-top: 24px;
+            --dash-fade-bottom: 24px;
+        }
+
+        90% {
+            --dash-fade-top: 24px;
+            --dash-fade-bottom: 24px;
+        }
+
+        100% {
+            --dash-fade-top: 24px;
+            --dash-fade-bottom: 0px;
+        }
+    }
 }

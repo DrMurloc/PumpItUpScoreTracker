@@ -112,3 +112,6 @@ The widget home page ([design doc](design/home-page-widgets.md)) adds a vocabula
   owns clicks for arranging). Every catalog widget inherits this rule.
 - **Drag is swap, not insertion**: dropping widget A on widget B trades their places; bystanders
   never move. The arrows remain the accessible and mobile reorder path.
+- **Quiet scrolling**: widget inner scrollers use `dash-scroll` — no scrollbar at rest, a thin themed
+  thumb on hover, and edge fades as the "there's more" affordance (scroll-aware where the browser
+  supports scroll-driven animations, static bottom fade elsewhere). Touch keeps native overlays.

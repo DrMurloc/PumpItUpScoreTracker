@@ -60,7 +60,7 @@ else
         {
             <div class="dash-pumbility-targets">
                 <MudText Typo="Typo.caption" Class="dash-muted">@L["Best projected targets"]</MudText>
-                <div class="dash-targets">
+                <div class="dash-targets dash-scroll">
                     @foreach (var target in _targets.Where(t => !_dismissed.Contains(t.Chart.Id)))
                     {
                         var chart = target.Chart;
