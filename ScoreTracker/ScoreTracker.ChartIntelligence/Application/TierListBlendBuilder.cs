@@ -38,19 +38,21 @@ internal sealed class TierListBlendBuilder
         { "Official Scores", "Scores", "Popularity", "Pass Count", "PG", "Chabala" };
 
     private readonly IChartRepository _charts;
+    private readonly IDateTimeOffsetAccessor _clock;
     private readonly IMediator _mediator;
     private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreReader _scores;
     private readonly IUserTierListRepository _userTierLists;
 
     public TierListBlendBuilder(IMediator mediator, IChartRepository charts, IScoreReader scores,
-        IPlayerStatsReader playerStats, IUserTierListRepository userTierLists)
+        IPlayerStatsReader playerStats, IUserTierListRepository userTierLists, IDateTimeOffsetAccessor clock)
     {
         _mediator = mediator;
         _charts = charts;
         _scores = scores;
         _playerStats = playerStats;
         _userTierLists = userTierLists;
+        _clock = clock;
     }
 
     public static bool IsKnownLens(string lens)
@@ -165,6 +167,40 @@ internal sealed class TierListBlendBuilder
     private const double SkillScoreFloor = 900_000;
     private const double SkillScoreRange = 100_000;
 
+    // Score-age workshop (owner-locked 2026-07-12): a best attempt's VOTE fades with
+    // age relative to the player's own record — never its value. Half-voice per 180
+    // days (owner-locked floor; slower for players whose whole history is older),
+    // normalized against the median factor so a uniformly-old history keeps its shape
+    // (a returning player is a coherent snapshot) and only stale-relative-to-you
+    // scores sink. Evidence-weighting, not value-weighting: old ceiling scores still
+    // prove the skill, just more quietly. Clamped so one fresh score in a dead
+    // window can't drown the rest.
+    public const double AgeHalfLifeFloorDays = 180;
+    public const double AgedScoreThresholdDays = 365; // the breakdown page's "over a year old" count
+    private const double MinAgeWeight = 0.1;
+    private const double MaxAgeWeight = 2.0;
+
+    public static IReadOnlyDictionary<Guid, double> RelativeAgeWeights(
+        IEnumerable<(Guid Key, DateTimeOffset RecordedDate)> scores, DateTimeOffset now)
+    {
+        var ages = scores
+            .ToDictionary(s => s.Key, s => Math.Max(0, (now - s.RecordedDate).TotalDays));
+        if (!ages.Any()) return new Dictionary<Guid, double>();
+        var halfLife = Math.Max(AgeHalfLifeFloorDays, Median(ages.Values));
+        var factors = ages.ToDictionary(kv => kv.Key, kv => Math.Pow(0.5, kv.Value / halfLife));
+        var medianFactor = Median(factors.Values);
+        return factors.ToDictionary(kv => kv.Key,
+            kv => Math.Clamp(kv.Value / medianFactor, MinAgeWeight, MaxAgeWeight));
+    }
+
+    private static double Median(IEnumerable<double> values)
+    {
+        var sorted = values.OrderBy(v => v).ToArray();
+        return sorted.Length % 2 == 1
+            ? sorted[sorted.Length / 2]
+            : (sorted[sorted.Length / 2 - 1] + sorted[sorted.Length / 2]) / 2.0;
+    }
+
     private static double Proficiency(int score)
     {
         return Math.Clamp(score - SkillScoreFloor, 0, SkillScoreRange) / SkillScoreRange;
@@ -197,11 +233,23 @@ internal sealed class TierListBlendBuilder
                 : chart.Skills.Select(s => (s, DefaultSkillWeight)).ToArray();
         }
 
+        // Relative recency: each score's age weight, normalized over the whole ±3
+        // window (uniformly-old histories keep full shape). Baselines MUST use the
+        // same weights — a stale baseline against fresh observations reads as a
+        // phantom deviation.
+        var now = _clock.Now;
+        var ageWeights = RelativeAgeWeights(
+            scoredWindowCharts.Select(c => (c.Id, bestScores[c.Id].RecordedDate)), now);
+        var agedScoreCount = scoredWindowCharts
+            .Count(c => (now - bestScores[c.Id].RecordedDate).TotalDays > AgedScoreThresholdDays);
+
         // Normalize before pooling: deviation from YOUR average within each folder,
         // measured on the floored proficiency scale.
         var folderBaselines = scoredWindowCharts
             .GroupBy(c => (int)c.Level)
-            .ToDictionary(g => g.Key, g => g.Average(c => Proficiency((int)bestScores[c.Id].Score!.Value)));
+            .ToDictionary(g => g.Key, g =>
+                g.Sum(c => ageWeights[c.Id] * Proficiency((int)bestScores[c.Id].Score!.Value)) /
+                g.Sum(c => ageWeights[c.Id]));
 
         var pooled = new Dictionary<Skill, (double WeightedDeviation, double Evidence)>();
         foreach (var chart in scoredWindowCharts)
@@ -210,7 +258,7 @@ internal sealed class TierListBlendBuilder
             var deviation = Proficiency((int)bestScores[chart.Id].Score!.Value) - folderBaselines[(int)chart.Level];
             foreach (var (skill, weight) in WeightsFor(chart))
             {
-                var observationWeight = decay * weight;
+                var observationWeight = decay * weight * ageWeights[chart.Id];
                 var current = pooled.TryGetValue(skill, out var sums) ? sums : (0.0, 0.0);
                 pooled[skill] = (current.Item1 + observationWeight * deviation,
                     current.Item2 + observationWeight);
@@ -229,7 +277,7 @@ internal sealed class TierListBlendBuilder
             return new SkillSourceComputation(
                 folderCharts.ToDictionary(c => c.Id,
                     c => new SongTierListEntry("Skill", c.Id, TierListCategory.Unrecorded, 0)),
-                pooledSkills, false, scoredWindowCharts.Length);
+                pooledSkills, false, scoredWindowCharts.Length, agedScoreCount);
 
         var estimates = new Dictionary<Guid, double>();
         var silent = new List<SongTierListEntry>();
@@ -250,7 +298,7 @@ internal sealed class TierListBlendBuilder
         return new SkillSourceComputation(
             TierListProcessor.ProcessIntoTierList("Skill", estimates).Concat(silent)
                 .ToDictionary(e => e.ChartId, e => e),
-            pooledSkills, true, scoredWindowCharts.Length);
+            pooledSkills, true, scoredWindowCharts.Length, agedScoreCount);
     }
 
     // Similar players, re-architected on C1's materialization: neighbors' folder
@@ -336,7 +384,8 @@ internal sealed record SkillSourceComputation(
     IReadOnlyDictionary<Guid, SongTierListEntry> Entries,
     IReadOnlyDictionary<Skill, SkillEvidence> PooledSkills,
     bool Active,
-    int ScoredChartCount);
+    int ScoredChartCount,
+    int AgedScoreCount);
 
 internal sealed record SimilarPlayersComputation(
     IReadOnlyDictionary<Guid, SongTierListEntry> Entries,

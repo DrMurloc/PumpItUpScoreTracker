@@ -29,9 +29,9 @@ internal sealed class PersonalizedBreakdownHandler
 
     public PersonalizedBreakdownHandler(IMediator mediator, IChartRepository charts, IScoreReader scores,
         IPlayerStatsReader playerStats, IUserTierListRepository userTierLists,
-        ICurrentUserAccessor currentUser, IMemoryCache cache)
+        ICurrentUserAccessor currentUser, IMemoryCache cache, IDateTimeOffsetAccessor clock)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, scores, playerStats, userTierLists);
+        _builder = new TierListBlendBuilder(mediator, charts, scores, playerStats, userTierLists, clock);
         _currentUser = currentUser;
         _cache = cache;
     }
@@ -86,6 +86,7 @@ internal sealed class PersonalizedBreakdownHandler
             computation.Skill?.Active ?? false,
             skills.Count(s => s.Usable),
             computation.Skill?.ScoredChartCount ?? 0,
+            computation.Skill?.AgedScoreCount ?? 0,
             computation.Similar?.NeighborCount ?? 0,
             communityModifiers.Values.Sum(),
             computation.Modifiers.GetValueOrDefault("Skill"),

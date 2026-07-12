@@ -19,6 +19,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -368,6 +369,6 @@ public sealed class BlendedTierListHandlerTests
         userTierLists ??= new Mock<IUserTierListRepository>();
         return new BlendedTierListHandler(mediator.Object, charts.Object, scores.Object, playerStats.Object,
             userTierLists.Object, new Mock<ICurrentUserAccessor>().Object,
-            new MemoryCache(new MemoryCacheOptions()));
+            new MemoryCache(new MemoryCacheOptions()), FakeDateTime.At(2026, 7, 12).Object);
     }
 }

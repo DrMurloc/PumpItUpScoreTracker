@@ -19,6 +19,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -163,6 +164,107 @@ public sealed class PersonalizedBreakdownHandlerTests
     }
 
     [Fact]
+    public async Task StaleSkillsFadeRelativeToYourOwnRecord()
+    {
+        // Era-mixing is the distortion (score-age workshop): three skills backed by
+        // fresh scores keep full evidence; the one skill whose scores are two years
+        // old — relative to an otherwise-fresh record — fades below the evidence gate.
+        var now = new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero);
+        var fresh = now.AddDays(-7);
+        var old = now.AddDays(-730);
+        var userId = Guid.NewGuid();
+        var scored = new List<Chart>();
+        var scores = new List<RecordedPhoenixScore>();
+        var chips = new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
+        foreach (var (skill, recordedAt) in new[]
+                 {
+                     (Skill.Runs, fresh), (Skill.Jumps, fresh), (Skill.Bursts, fresh), (Skill.Twists, old)
+                 })
+            for (var i = 0; i < 6; i++)
+            {
+                var chart = new ChartBuilder().WithLevel(16).WithType(ChartType.Double).Build();
+                scored.Add(chart);
+                scores.Add(new RecordedPhoenixScore(chart.Id, 960_000, null, false, recordedAt));
+                chips[chart.Id] = new[] { new ChartSkillChipRecord(skill, true, 0.8m) };
+            }
+
+        var folderChart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        chips[folderChart.Id] = new[] { new ChartSkillChipRecord(Skill.Runs, true, 0.8m) };
+        var charts = ChartsMock(scored.Concat(new[] { folderChart }));
+        var mediator = new Mock<IMediator>();
+        SetupTierList(mediator, "Pass Count", Array.Empty<SongTierListEntry>());
+        mediator.Setup(m => m.Send(It.IsAny<GetChartSkillChipsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(chips);
+        mediator.Setup(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<SongTierListEntry>());
+        var scoreReader = new Mock<IScoreReader>();
+        scoreReader.Setup(s => s.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(scores);
+        var handler = BuildHandler(charts: charts, mediator: mediator, scores: scoreReader,
+            clock: FakeDateTime.At(now));
+
+        var result = await handler.Handle(Query("Pass", userId), CancellationToken.None);
+
+        Assert.True(result.SkillSourceActive);
+        Assert.Equal(6, result.AgedScoreCount);
+        var runs = result.Skills.Single(s => s.Skill == Skill.Runs);
+        var twists = result.Skills.Single(s => s.Skill == Skill.Twists);
+        Assert.True(runs.Usable);
+        Assert.False(twists.Usable, $"stale-relative evidence ({twists.Evidence:0.00}) should fall under the gate");
+        Assert.True(twists.Evidence < runs.Evidence / 2);
+    }
+
+    [Fact]
+    public async Task UniformlyOldHistoryKeepsItsShape()
+    {
+        // A returning player is a coherent snapshot: when EVERYTHING is two years
+        // old, the normalized weights are all 1 and personalization behaves exactly
+        // as it would for a fresh account — the shape survives, nothing silences.
+        var now = new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero);
+        var old = now.AddDays(-900);
+        var userId = Guid.NewGuid();
+        var scored = new List<Chart>();
+        var scores = new List<RecordedPhoenixScore>();
+        var chips = new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
+        for (var i = 0; i < 6; i++)
+        {
+            var runs = new ChartBuilder().WithLevel(16).WithType(ChartType.Double).Build();
+            var twists = new ChartBuilder().WithLevel(16).WithType(ChartType.Double).Build();
+            var jumps = new ChartBuilder().WithLevel(16).WithType(ChartType.Double).Build();
+            scored.AddRange(new[] { runs, twists, jumps });
+            scores.Add(new RecordedPhoenixScore(runs.Id, 960_000 + i * 1000, null, false, old));
+            scores.Add(new RecordedPhoenixScore(twists.Id, 880_000 + i * 1000, null, false, old));
+            scores.Add(new RecordedPhoenixScore(jumps.Id, 920_000 + i * 1000, null, false, old));
+            chips[runs.Id] = new[] { new ChartSkillChipRecord(Skill.Runs, true, 0.8m) };
+            chips[twists.Id] = new[] { new ChartSkillChipRecord(Skill.Twists, true, 0.8m) };
+            chips[jumps.Id] = new[] { new ChartSkillChipRecord(Skill.Jumps, true, 0.8m) };
+        }
+
+        var folderChart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        chips[folderChart.Id] = new[] { new ChartSkillChipRecord(Skill.Runs, true, 0.8m) };
+        var charts = ChartsMock(scored.Concat(new[] { folderChart }));
+        var mediator = new Mock<IMediator>();
+        SetupTierList(mediator, "Pass Count", Array.Empty<SongTierListEntry>());
+        mediator.Setup(m => m.Send(It.IsAny<GetChartSkillChipsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(chips);
+        mediator.Setup(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<SongTierListEntry>());
+        var scoreReader = new Mock<IScoreReader>();
+        scoreReader.Setup(s => s.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(scores);
+        var handler = BuildHandler(charts: charts, mediator: mediator, scores: scoreReader,
+            clock: FakeDateTime.At(now));
+
+        var result = await handler.Handle(Query("Pass", userId), CancellationToken.None);
+
+        Assert.True(result.SkillSourceActive);
+        Assert.Equal(18, result.AgedScoreCount);
+        Assert.Equal(3, result.UsableSkillCount);
+        Assert.True(result.Skills.Single(s => s.Skill == Skill.Runs).Deviation > 0);
+        Assert.True(result.Skills.Single(s => s.Skill == Skill.Twists).Deviation < 0);
+    }
+
+    [Fact]
     public async Task NonPersonalizingLensThrows()
     {
         var handler = BuildHandler();
@@ -217,7 +319,8 @@ public sealed class PersonalizedBreakdownHandlerTests
         Mock<IMediator>? mediator = null,
         Mock<IScoreReader>? scores = null,
         Mock<IPlayerStatsReader>? playerStats = null,
-        Mock<IUserTierListRepository>? userTierLists = null)
+        Mock<IUserTierListRepository>? userTierLists = null,
+        Mock<IDateTimeOffsetAccessor>? clock = null)
     {
         charts ??= ChartsMock(Array.Empty<Chart>());
         mediator ??= new Mock<IMediator>();
@@ -231,6 +334,6 @@ public sealed class PersonalizedBreakdownHandlerTests
         userTierLists ??= new Mock<IUserTierListRepository>();
         return new PersonalizedBreakdownHandler(mediator.Object, charts.Object, scores.Object,
             playerStats.Object, userTierLists.Object, new Mock<ICurrentUserAccessor>().Object,
-            new MemoryCache(new MemoryCacheOptions()));
+            new MemoryCache(new MemoryCacheOptions()), (clock ?? FakeDateTime.At(2026, 7, 12)).Object);
     }
 }
