@@ -140,19 +140,24 @@ else
             </MudButton>
         </div>
     </div>
-    @if (_isProvisionalFallback || PersonalizedActive)
-    {
-        <div class="tier-badges">
-            @if (_isProvisionalFallback)
-            {
-                <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Construction">@L["Provisional — based on Phoenix data"]</MudChip>
-            }
-            @if (PersonalizedActive)
-            {
-                <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Bolt">@L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name]</MudChip>
-            }
-        </div>
-    }
+    @* The badges row always names the active lens (and the grouping, on My Progress)
+       so a glance tells you what tier list you're looking at — the selects themselves
+       hide inside the Advanced drawer on compact. *@
+    <div class="tier-badges">
+        @if (_isProvisionalFallback)
+        {
+            <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Construction">@L["Provisional — based on Phoenix data"]</MudChip>
+        }
+        @if (PersonalizedActive)
+        {
+            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Bolt">@L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name]</MudChip>
+        }
+        <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@L["Ranked by"]: @LensDisplayName(_tierListType)</MudChip>
+        @if (IsMyProgress)
+        {
+            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@L["Grouped by"]: @L[_groupBy]</MudChip>
+        }
+    </div>
     @* 3 — folder progress (logged in) or the rule-9 import CTA (anonymous).
        Piucenter round 5: folder progress lives ONLY in the Folder Stats drawer at
        every width — the fold belongs to the tier sections (rule 1). *@
