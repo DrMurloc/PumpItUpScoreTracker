@@ -16,6 +16,7 @@ public static class RandomizerRegistrationExtensions
     public static IServiceCollection AddRandomizer(this IServiceCollection services)
     {
         services.AddTransient<IRandomizerRepository, EFRandomizerRepository>();
+        services.AddTransient<IDrawRepository, EFDrawRepository>();
         services.AddSingleton<IDbModelContribution, RandomizerModelContribution>();
         return services;
     }

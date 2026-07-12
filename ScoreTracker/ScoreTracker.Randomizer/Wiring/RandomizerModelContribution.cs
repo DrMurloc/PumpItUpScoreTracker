@@ -14,5 +14,32 @@ public sealed class RandomizerModelContribution : IDbModelContribution
     public void Contribute(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UserRandomSettingsEntity>().ToTable("UserRandomSettings");
+        modelBuilder.Entity<UserRandomSettingsEntity>()
+            .Property(e => e.Mix)
+            .HasDefaultValue("Phoenix");
+        modelBuilder.Entity<UserRandomSettingsEntity>()
+            .HasIndex(e => e.ShareToken)
+            .IsUnique()
+            .HasFilter("[ShareToken] IS NOT NULL");
+
+        modelBuilder.Entity<RandomizerDrawEntity>().ToTable("RandomizerDraw");
+        modelBuilder.Entity<RandomizerDrawEntity>().HasIndex(e => e.Slug).IsUnique();
+        // One active draw per context; the filtered unique indexes are the invariant.
+        modelBuilder.Entity<RandomizerDrawEntity>()
+            .HasIndex(e => e.UserId)
+            .IsUnique()
+            .HasFilter("[UserId] IS NOT NULL");
+        modelBuilder.Entity<RandomizerDrawEntity>()
+            .HasIndex(e => e.TournamentId)
+            .IsUnique()
+            .HasFilter("[TournamentId] IS NOT NULL");
+
+        modelBuilder.Entity<RandomizerDrawCardEntity>().ToTable("RandomizerDrawCard")
+            .HasOne<RandomizerDrawEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.DrawId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TournamentRandomSettingsEntity>().ToTable("TournamentRandomSettings");
     }
 }

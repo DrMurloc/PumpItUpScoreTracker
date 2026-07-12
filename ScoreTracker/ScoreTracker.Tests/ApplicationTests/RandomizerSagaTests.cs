@@ -83,11 +83,11 @@ public sealed class RandomizerSagaTests
             EmptyScoringLevels().Object);
 
         var settings = new RandomSettings();
-        await saga.Handle(new SaveUserRandomSettingsCommand(Name.From("favorites"), settings),
+        await saga.Handle(new SaveUserRandomSettingsCommand(Name.From("favorites"), settings, MixEnum.Phoenix2),
             CancellationToken.None);
 
         repo.Verify(r => r.SaveSettings(userId, It.Is<Name>(n => (string)n == "favorites"), settings,
-                It.IsAny<CancellationToken>()),
+                MixEnum.Phoenix2, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

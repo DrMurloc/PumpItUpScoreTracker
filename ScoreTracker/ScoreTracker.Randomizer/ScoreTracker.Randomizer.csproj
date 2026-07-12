@@ -23,6 +23,8 @@
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
     <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data. -->
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
+    <!-- Cross-vertical contracts: tournament roles authorize tournament-context draws/settings. -->
+    <ProjectReference Include="..\ScoreTracker.EventCompetition\ScoreTracker.EventCompetition.csproj" />
     <!-- Transitional (relocated from Catalog at the randomizer overhaul): GetRandomChartsQuery
          stays in Application (MatchSaga sends it) until the Match subsystem is deleted, and
          RandomizerSaga is its handler. Unpins together with the Match deletion. -->

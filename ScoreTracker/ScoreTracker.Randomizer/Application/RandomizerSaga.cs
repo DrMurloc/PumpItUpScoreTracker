@@ -301,7 +301,8 @@ namespace ScoreTracker.Randomizer.Application
 
         public async Task Handle(SaveUserRandomSettingsCommand request, CancellationToken cancellationToken)
         {
-            await _repo.SaveSettings(_currentUser.User.Id, request.SettingsName, request.Settings, cancellationToken);
+            await _repo.SaveSettings(_currentUser.User.Id, request.SettingsName, request.Settings, request.Mix,
+                cancellationToken);
         }
     }
 }
