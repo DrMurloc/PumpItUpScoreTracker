@@ -17,5 +17,11 @@ namespace ScoreTracker.Communities.Domain
             CancellationToken cancellationToken);
 
         Task<Community?> GetCommunityByName(Name communityName, CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     Player-made community count: regional (country) communities excluded, all
+        ///     privacy types included. Front-door stat — the implementation caches.
+        /// </summary>
+        Task<int> CountNonRegionalCommunities(CancellationToken cancellationToken);
     }
 }

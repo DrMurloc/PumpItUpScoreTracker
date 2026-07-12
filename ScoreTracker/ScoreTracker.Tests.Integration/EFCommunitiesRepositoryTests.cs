@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Communities.Domain;
@@ -23,9 +24,11 @@ public sealed class EFCommunitiesRepositoryTests : IAsyncLifetime
     public Task InitializeAsync() => _fixture.ResetAsync();
     public Task DisposeAsync() => Task.CompletedTask;
 
-    // No cache layer in this repo — fresh instance only matters for DbContext lifetime.
+    // A fresh real MemoryCache per repository keeps the cached community count from
+    // leaking between tests (Respawn resets the DB, not the process).
     private EFCommunitiesRepository BuildRepository() =>
-        new(_fixture.DbContextFactory, Mock.Of<IPlayerStatsReader>());
+        new(_fixture.DbContextFactory, Mock.Of<IPlayerStatsReader>(),
+            new MemoryCache(new MemoryCacheOptions()));
 
     [Fact]
     public async Task SaveCommunityAndGetCommunityByNameRoundTripPreservesMembersAndInvites()

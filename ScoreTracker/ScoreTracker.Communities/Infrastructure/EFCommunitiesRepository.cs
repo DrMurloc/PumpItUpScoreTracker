@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Communities.Infrastructure.Entities;
 using ScoreTracker.SharedKernel.Enums;
@@ -13,14 +14,30 @@ namespace ScoreTracker.Communities.Infrastructure
 {
     internal sealed class EFCommunitiesRepository : ICommunityRepository, ICommunityReader
     {
+        private const string CommunityCountCacheKey = $"{nameof(EFCommunitiesRepository)}_NonRegionalCount";
+
+        private readonly IMemoryCache _cache;
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
         private readonly IPlayerStatsReader _playerStats;
 
         public EFCommunitiesRepository(IDbContextFactory<ChartAttemptDbContext> factory,
-            IPlayerStatsReader playerStats)
+            IPlayerStatsReader playerStats, IMemoryCache cache)
         {
             _factory = factory;
             _playerStats = playerStats;
+            _cache = cache;
+        }
+
+        public async Task<int> CountNonRegionalCommunities(CancellationToken cancellationToken)
+        {
+            return await _cache.GetOrCreateAsync(CommunityCountCacheKey, async cache =>
+            {
+                // Anonymous front-door hot path — six hours matches the ledger stats cadence.
+                cache.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);
+                await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+                return await database.Set<CommunityEntity>()
+                    .CountAsync(c => !c.IsRegional, cancellationToken);
+            });
         }
 
         public async Task<Name?> GetCommunityByInviteCode(Guid inviteCode, CancellationToken cancellationToken)
