@@ -116,7 +116,10 @@ else
             {
                 <div class="tier-personalized-cell">
                     <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
-                    <MudLink Href="@BreakdownUrl" Typo="Typo.caption">@L["How is this personalized?"]</MudLink>
+                    <MudTooltip Text="@L["How is this personalized?"]">
+                        <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" Href="@BreakdownUrl"
+                                       aria-label="@L["How is this personalized?"]"></MudIconButton>
+                    </MudTooltip>
                 </div>
             }
             <MudSpacer></MudSpacer>
@@ -604,8 +607,13 @@ else
             @lensControls
             @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
             {
-                <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
-                <MudLink Href="@BreakdownUrl" Typo="Typo.caption">@L["How is this personalized?"]</MudLink>
+                <div class="tier-personalized-cell">
+                    <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
+                    <MudTooltip Text="@L["How is this personalized?"]">
+                        <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" Href="@BreakdownUrl"
+                                       aria-label="@L["How is this personalized?"]"></MudIconButton>
+                    </MudTooltip>
+                </div>
             }
             <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
                        StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
@@ -666,10 +674,11 @@ else
         display: none;
     }
 
-    /* The Personalized switch and its breakdown link stack as one toolbar cell. */
+    /* The Personalized switch and its breakdown ?-icon ride as one toolbar cell
+       (field-test round: the full "How is this personalized?" string was text bloat). */
     .tier-personalized-cell {
         display: flex;
-        flex-direction: column;
+        align-items: center;
         gap: 0;
     }
 

@@ -272,11 +272,14 @@ else
                                 </span>
                                 @if (expanded)
                                 {
+                                    @* Sources with no vote don't render at all (a dangling "—"
+                                       read as a stray dash — owner field-test), and the final
+                                       flows inline instead of floating right. *@
                                     <div class="bd-source-strip">
-                                        <span class="bd-src">@L["Community"] <span class="bd-src-w">×@_breakdown.CommunityWeight</span> @SourceWord(mover.CommunityCategory)</span>
-                                        <span class="bd-src">@L["Players like you"] <span class="bd-src-w">×@_breakdown.SimilarPlayersWeight</span> @SourceWord(mover.SimilarPlayersCategory)</span>
-                                        <span class="bd-src">@L["Your skills"] <span class="bd-src-w">×@_breakdown.SkillWeight</span> @SourceWord(mover.SkillCategory)</span>
-                                        <span class="bd-src-final">= @SourceWord(mover.PersonalizedCategory)</span>
+                                        @SourceSegment(L["Community"], _breakdown.CommunityWeight, mover.CommunityCategory)
+                                        @SourceSegment(L["Players like you"], _breakdown.SimilarPlayersWeight, mover.SimilarPlayersCategory)
+                                        @SourceSegment(L["Your skills"], _breakdown.SkillWeight, mover.SkillCategory)
+                                        <span class="bd-src-final">= <span style="color:@ThemeScales.DifficultyColor(mover.PersonalizedCategory)">@L[TierNameFor(mover.PersonalizedCategory)]</span></span>
                                     </div>
                                 }
                             </div>
@@ -685,7 +688,6 @@ else
     }
 
     .bd-src-final {
-        margin-left: auto;
         color: var(--mud-palette-text-primary);
         font-weight: 600;
     }
@@ -715,6 +717,13 @@ else
         .bd-move, .bd-mover-chips {
             grid-column: 2;
             justify-content: flex-start;
+        }
+
+        /* One source per line on phones — the wrapping row read as compressed noise. */
+        .bd-source-strip {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
         }
     }
 </style>
@@ -860,11 +869,11 @@ else
         return TierNames[category];
     }
 
-    private RenderFragment SourceWord(TierListCategory category)
+    private RenderFragment? SourceSegment(string label, double weight, TierListCategory category)
     {
-        return category == TierListCategory.Unrecorded
-            ? @<span class="bd-caption">—</span>
-            : @<span style="color:@ThemeScales.DifficultyColor(category)">@L[TierNameFor(category)]</span>;
+        if (category == TierListCategory.Unrecorded) return null;
+        return @<span class="bd-src">@label <span class="bd-src-w">×@weight</span>
+            <span style="color:@ThemeScales.DifficultyColor(category)">@L[TierNameFor(category)]</span></span>;
     }
 
     private IReadOnlyList<(string Key, string Title, string CssClass, IReadOnlyList<BreakdownChartRecord> Movers)> MoverGroups => new[]
