@@ -71,25 +71,8 @@ else
                 }
             </MudSelect>
         }
-        @if (CurrentUser.IsLoggedIn && _contextTournamentId == null)
-        {
-            @* Tournament presets live in the settings drawer — matches carry the "which
-               settings" moment there (owner call, round 6). *@
-            <MudSelect T="string" Value="_currentSettingsName" ValueChanged="SelectSavedSettings"
-                       Label="@L["Saved Settings"]" Clearable="true" Dense="true" Class="rand-saved-select"
-                       Variant="Variant.Outlined" Margin="Margin.Dense">
-                @foreach (var saved in CurrentSettingsMap.Values.OrderBy(s => s.SettingsName.ToString()))
-                {
-                    var name = saved.SettingsName.ToString();
-                    <MudSelectItem T="string" Value="name">
-                        <div class="rand-preset-item">
-                            <span class="rand-preset-name">@name</span>
-                            <span class="rand-preset-summary">@SettingsSummary(saved)</span>
-                        </div>
-                    </MudSelectItem>
-                }
-            </MudSelect>
-        }
+        @* Preset selection lives in the settings drawer for both contexts (owner call,
+           round 6) — the header carries only identity and context. *@
     </div>
     @if (!CurrentUser.IsLoggedIn)
     {
@@ -385,15 +368,15 @@ else
 <MudDrawer @bind-Open="_showSettings" Anchor="Anchor.Bottom" Variant="@DrawerVariant.Temporary"
            Height="86vh" Elevation="4" Class="rand-drawer">
     <div class="rand-drawer-body">
-        @if (CurrentUser.IsLoggedIn && _contextTournamentId != null)
+        @if (CurrentUser.IsLoggedIn)
         {
             <div class="rand-drawer-presets">
-                @if (_tournamentSettings.Any())
+                @if (CurrentSettingsMap.Any())
                 {
                     <MudSelect T="string" Value="_currentSettingsName" ValueChanged="SelectSavedSettings"
-                               Label="@L["Tournament Settings"]" Clearable="true" Dense="true"
-                               Variant="Variant.Outlined" Margin="Margin.Dense">
-                        @foreach (var saved in _tournamentSettings.Values.OrderBy(s => s.SettingsName.ToString()))
+                               Label="@(_contextTournamentId == null ? L["Saved Settings"] : L["Tournament Settings"])"
+                               Clearable="true" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        @foreach (var saved in CurrentSettingsMap.Values.OrderBy(s => s.SettingsName.ToString()))
                         {
                             var name = saved.SettingsName.ToString();
                             <MudSelectItem T="string" Value="name">
@@ -405,7 +388,7 @@ else
                         }
                     </MudSelect>
                 }
-                else
+                else if (_contextTournamentId != null)
                 {
                     <MudText Typo="Typo.caption" Class="rand-section-hint">@L["No tournament presets yet — tune below and Save, so your staff and matches can use them."]</MudText>
                 }

@@ -385,10 +385,6 @@ html.nav-away .page-dock,
     margin-bottom: 4px;
 }
 
-.rand-saved-select {
-    max-width: 280px;
-    margin-left: auto;
-}
 
 .rand-anon-note {
     color: var(--mix-ink-muted);
