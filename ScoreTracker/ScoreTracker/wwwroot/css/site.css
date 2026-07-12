@@ -552,6 +552,113 @@ html.nav-away .page-dock,
     border-radius: 12px;
 }
 
+/* Tournament context + draft mode (docs/design/randomizer-overhaul.md C9). */
+
+.rand-context-select {
+    max-width: 260px;
+}
+
+.rand-create-tournament {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    border: 1px dashed var(--mud-palette-lines-default);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin: 6px 0;
+}
+
+.rand-create-tournament .mud-input-control {
+    flex: 1;
+    min-width: 200px;
+}
+
+.rand-invites {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin: 6px 0;
+}
+
+.rand-invite-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rand-invite-role {
+    font-weight: 700;
+    font-size: .82rem;
+    min-width: 82px;
+}
+
+.rand-invite-expiry {
+    font-size: .78rem;
+    color: var(--mix-ink-muted);
+    margin-right: auto;
+}
+
+.rand-invite-mint {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    border-top: 1px dashed var(--mud-palette-lines-default);
+    padding-top: 8px;
+}
+
+.rand-invite-mint .mud-input-control {
+    max-width: 150px;
+}
+
+/* Draft mode: the staff tablet in player hands — loud mode control, explicit exit. */
+.rand-draft-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.rand-exit-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 999px;
+    padding: 6px 14px;
+    background: none;
+    cursor: pointer;
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--mix-ink);
+}
+
+.rand-tour-pill {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: .82rem;
+    font-weight: 700;
+    background: var(--mix-surface);
+}
+
+.rand-draft-armed {
+    margin-bottom: 12px;
+}
+
+.page-dock .rand-staff-btn {
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 12px;
+    color: var(--mud-palette-error);
+}
+
 /* ===== Randomizer settings panel ===== */
 
 .rand-settings {

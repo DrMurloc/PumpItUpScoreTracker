@@ -1,0 +1,58 @@
+@page "/Tournament/Join/{Token:guid}"
+@using MediatR
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.EventCompetition.Contracts.Commands
+
+@* The invite-link landing (docs/design/randomizer-overhaul.md): built for "drop the
+   link in the volunteer Discord channel". Redeeming grants the link's role and lands
+   on the randomizer in that tournament's context. *@
+<PageTitle>@L["Join Tournament"]</PageTitle>
+
+<div class="rand-empty">
+    @if (!CurrentUser.IsLoggedIn)
+    {
+        <MudIcon Icon="@Icons.Material.Filled.Login" Style="font-size:2.6rem;"></MudIcon>
+        <MudText Typo="Typo.h6">@L["Log in to join this tournament"]</MudText>
+        <MudText Typo="Typo.body2">@L["Open this invite link again after logging in."]</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/Login">@L["Login"]</MudButton>
+    }
+    else if (_invalid)
+    {
+        <MudIcon Icon="@Icons.Material.Filled.LinkOff" Style="font-size:2.6rem;"></MudIcon>
+        <MudText Typo="Typo.h6">@L["This invite link is invalid or has expired"]</MudText>
+        <MudText Typo="Typo.body2">@L["Ask the tournament organizer for a fresh link."]</MudText>
+    }
+    else
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary"></MudProgressCircular>
+        <MudText Typo="Typo.body2">@L["Joining…"]</MudText>
+    }
+</div>
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@code {
+
+    [Parameter] public Guid Token { get; set; }
+
+    private bool _invalid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn) return;
+
+        try
+        {
+            var tournamentId = await Mediator.Send(new RedeemTournamentRoleInviteCommand(Token));
+            Snackbar.Add(L["You're in! This tournament is now available on the randomizer."], Severity.Success);
+            NavManager.NavigateTo($"/ChartRandomizer?tournament={tournamentId}");
+        }
+        catch (TournamentInviteInvalidException)
+        {
+            _invalid = true;
+        }
+    }
+}

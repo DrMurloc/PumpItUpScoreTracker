@@ -17,7 +17,9 @@ namespace ScoreTracker.EventCompetition.Application
     internal sealed class TournamentRoleSaga :
         IRequestHandler<CreateUnlistedTournamentCommand>,
         IRequestHandler<CreateTournamentRoleInviteCommand, Guid>,
-        IRequestHandler<RedeemTournamentRoleInviteCommand, Guid>
+        IRequestHandler<RedeemTournamentRoleInviteCommand, Guid>,
+        IRequestHandler<GetTournamentRoleInvitesQuery, IEnumerable<TournamentRoleInviteRecord>>,
+        IRequestHandler<DeleteTournamentRoleInviteCommand>
     {
         private readonly ITournamentRepository _tournaments;
         private readonly ICurrentUserAccessor _currentUser;
@@ -55,6 +57,34 @@ namespace ScoreTracker.EventCompetition.Application
 
             return await _tournaments.CreateRoleInvite(request.TournamentId, request.Role, request.ExpiresAt,
                 _currentUser.User.Id, cancellationToken);
+        }
+
+        public async Task<IEnumerable<TournamentRoleInviteRecord>> Handle(GetTournamentRoleInvitesQuery request,
+            CancellationToken cancellationToken)
+        {
+            await EnsureHeadOrganizer(request.TournamentId, "view this tournament's invites", cancellationToken);
+            return await _tournaments.GetRoleInvites(request.TournamentId, cancellationToken);
+        }
+
+        public async Task Handle(DeleteTournamentRoleInviteCommand request, CancellationToken cancellationToken)
+        {
+            await EnsureHeadOrganizer(request.TournamentId, "revoke this tournament's invites", cancellationToken);
+            var invite = await _tournaments.GetRoleInvite(request.Token, cancellationToken);
+            // Tokens are global; only delete when it actually belongs to the tournament the
+            // caller is authorized on.
+            if (invite == null || invite.TournamentId != request.TournamentId) return;
+
+            await _tournaments.DeleteRoleInvite(request.Token, cancellationToken);
+        }
+
+        private async Task EnsureHeadOrganizer(Guid tournamentId, string action, CancellationToken cancellationToken)
+        {
+            if (!_currentUser.IsLoggedIn) throw new UserNotLoggedInException();
+            if (_currentUser.IsLoggedInAsAdmin) return;
+
+            var roles = await _mediator.Send(new GetTournamentRolesQuery(tournamentId), cancellationToken);
+            if (!roles.Any(r => r.UserId == _currentUser.User.Id && r.Role == TournamentRole.HeadTournamentOrganizer))
+                throw new NotAuthorizedException(action);
         }
 
         public async Task<Guid> Handle(RedeemTournamentRoleInviteCommand request, CancellationToken cancellationToken)

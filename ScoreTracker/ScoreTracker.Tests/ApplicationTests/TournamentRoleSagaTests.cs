@@ -175,6 +175,52 @@ public sealed class TournamentRoleSagaTests
     }
 
     [Fact]
+    public async Task ListingInvitesRequiresHeadOrganizerOrAdmin()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        RolesAre(tournamentId, new UserTournamentRole(tournamentId, _user.Id, TournamentRole.Assistant));
+
+        await Assert.ThrowsAsync<NotAuthorizedException>(() => BuildSaga()
+            .Handle(new GetTournamentRoleInvitesQuery(tournamentId), CancellationToken.None));
+
+        _tournaments.Verify(t => t.GetRoleInvites(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RevokingAnInviteChecksItBelongsToTheAuthorizedTournament()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        var token = Guid.NewGuid();
+        RolesAre(tournamentId,
+            new UserTournamentRole(tournamentId, _user.Id, TournamentRole.HeadTournamentOrganizer));
+        // The token exists but belongs to a different tournament — nothing is deleted.
+        _tournaments.Setup(t => t.GetRoleInvite(token, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TournamentRoleInviteRecord(token, Guid.NewGuid(), TournamentRole.Assistant, null));
+
+        await BuildSaga().Handle(new DeleteTournamentRoleInviteCommand(tournamentId, token), CancellationToken.None);
+
+        _tournaments.Verify(t => t.DeleteRoleInvite(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RevokingAnOwnedInviteDeletesIt()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        var token = Guid.NewGuid();
+        RolesAre(tournamentId,
+            new UserTournamentRole(tournamentId, _user.Id, TournamentRole.HeadTournamentOrganizer));
+        _tournaments.Setup(t => t.GetRoleInvite(token, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TournamentRoleInviteRecord(token, tournamentId, TournamentRole.Assistant, null));
+
+        await BuildSaga().Handle(new DeleteTournamentRoleInviteCommand(tournamentId, token), CancellationToken.None);
+
+        _tournaments.Verify(t => t.DeleteRoleInvite(token, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task RedeemingNeverDowngradesAnExistingRole()
     {
         LogIn();
