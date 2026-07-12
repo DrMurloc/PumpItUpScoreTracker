@@ -1,0 +1,51 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Web.Enums
+
+@* The draft-mode armed action (docs/design/randomizer-overhaul.md): what tapping a
+   card does. Loud on purpose — on a staff tablet in player hands, the room reads the
+   active mode at arm's length (VETO fills red, PROTECT fills mix-primary). *@
+<div class="armed-selector @(Loud ? "armed-selector-loud" : string.Empty)" role="radiogroup"
+     aria-label="@L["Tap a card to"]">
+    <span class="armed-selector-label">@L["Tap a card to"]</span>
+    <button type="button" class="@ButtonClass(ArmedAction.Protect)"
+            aria-pressed="@(Value == ArmedAction.Protect)" @onclick="() => Set(ArmedAction.Protect)">
+        <MudIcon Icon="@Icons.Material.Filled.Shield" Size="Size.Small"></MudIcon>@L["Protect"]
+    </button>
+    <button type="button" class="@ButtonClass(ArmedAction.Veto)"
+            aria-pressed="@(Value == ArmedAction.Veto)" @onclick="() => Set(ArmedAction.Veto)">
+        <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small"></MudIcon>@L["Veto"]
+    </button>
+    @if (ShowDetails)
+    {
+        <button type="button" class="@ButtonClass(ArmedAction.Details)"
+                aria-pressed="@(Value == ArmedAction.Details)" @onclick="() => Set(ArmedAction.Details)">
+            <MudIcon Icon="@Icons.Material.Outlined.Info" Size="Size.Small"></MudIcon>@L["Details"]
+        </button>
+    }
+</div>
+
+@code {
+
+    [Parameter] public ArmedAction Value { get; set; } = ArmedAction.Protect;
+
+    [Parameter] public EventCallback<ArmedAction> ValueChanged { get; set; }
+
+    /// <summary>Hidden in tournament draft mode — no browsing mid-draft.</summary>
+    [Parameter] public bool ShowDetails { get; set; } = true;
+
+    /// <summary>Oversized targets + filled states for the shared staff tablet.</summary>
+    [Parameter] public bool Loud { get; set; }
+
+    private string ButtonClass(ArmedAction action)
+    {
+        if (Value != action) return "armed-btn";
+
+        return action == ArmedAction.Veto ? "armed-btn armed-btn-on-veto" : "armed-btn armed-btn-on";
+    }
+
+    private Task Set(ArmedAction action)
+    {
+        Value = action;
+        return ValueChanged.InvokeAsync(action);
+    }
+}

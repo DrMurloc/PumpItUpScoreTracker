@@ -310,6 +310,264 @@ html.nav-away .page-dock,
     overflow-y: auto;
 }
 
+/* ===== Randomizer draw cards (docs/design/randomizer-overhaul.md) =====
+   Rides the tier-chart-card base. Held deliberately wears the mix-primary ring, NOT
+   the owner-locked pass-green; vetoed dims + strikes in place (state words print in
+   chips/tooltips, so hue never travels alone). */
+
+.draw-card-order {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    background: var(--mix-accent);
+    color: var(--mix-primary-contrast);
+    font-size: .72rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .55);
+}
+
+.draw-card-held {
+    border-color: var(--mix-primary);
+    border-style: solid;
+    box-shadow: 0 0 0 1px var(--mix-primary), 0 0 14px var(--mix-glow);
+}
+
+.draw-card-vetoed {
+    border-color: var(--mud-palette-error);
+    border-style: solid;
+}
+
+.draw-card-vetoed .tier-chart-card-jacket {
+    filter: grayscale(.85) brightness(.5);
+}
+
+.draw-card-vetoed .draw-card-name {
+    text-decoration: line-through;
+    color: var(--mud-palette-text-secondary);
+}
+
+.draw-card-state-chip {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    border-radius: 6px;
+    padding: 1px 7px;
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+
+.draw-card-state-held-chip {
+    background: var(--mix-primary);
+    color: var(--mix-primary-contrast);
+}
+
+.draw-card-state-vetoed-chip {
+    background: var(--mud-palette-error);
+    color: var(--mud-palette-error-text);
+}
+
+/* Compact keeps a name line (identity survives unfamiliar jackets, rule 2). */
+.draw-card .tier-chart-card-name {
+    font-size: .72rem;
+    line-height: 1.5;
+    display: block;
+}
+
+/* ===== Armed action selector ===== */
+
+.armed-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.armed-selector-label {
+    font-family: var(--font-display);
+    font-size: .68rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.armed-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 2px solid var(--mud-palette-lines-default);
+    border-radius: 11px;
+    padding: 8px 16px;
+    background: none;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: .8rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    color: var(--mix-ink-muted);
+}
+
+.armed-btn:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 2px;
+}
+
+.armed-btn-on {
+    background: var(--mix-primary);
+    border-color: var(--mix-primary);
+    color: var(--mix-primary-contrast);
+    box-shadow: 0 0 18px var(--mix-glow);
+}
+
+.armed-btn-on-veto {
+    background: var(--mud-palette-error);
+    border-color: var(--mud-palette-error);
+    color: var(--mud-palette-error-text);
+}
+
+/* Staff-tablet sizing: readable at arm's length, tappable in a hurry. */
+.armed-selector-loud .armed-btn {
+    padding: 12px 24px;
+    font-size: .95rem;
+    border-radius: 13px;
+}
+
+/* ===== Level range slider (dual thumb) ===== */
+
+.range-slider {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.range-slider-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.range-slider-label {
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+
+.range-slider-value {
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-size: .78rem;
+    color: var(--mix-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.range-slider-track-wrap {
+    position: relative;
+    height: 28px;
+}
+
+.range-slider-track {
+    position: absolute;
+    top: 12px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--mix-surface-muted);
+}
+
+.range-slider-fill {
+    position: absolute;
+    top: 12px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--mix-primary);
+    box-shadow: 0 0 8px var(--mix-glow);
+}
+
+/* Two overlaid native inputs; only the thumbs take pointer events. */
+.range-slider-track-wrap input[type=range] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    pointer-events: none;
+}
+
+.range-slider-track-wrap input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: auto;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--mix-primary);
+    border: 3px solid var(--mix-bg);
+    box-shadow: 0 0 0 1.5px var(--mix-primary);
+    cursor: pointer;
+    margin-top: 4px;
+}
+
+.range-slider-track-wrap input[type=range]::-moz-range-thumb {
+    pointer-events: auto;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--mix-primary);
+    border: 3px solid var(--mix-bg);
+    box-shadow: 0 0 0 1.5px var(--mix-primary);
+    cursor: pointer;
+}
+
+.range-slider-ticks {
+    position: relative;
+    height: 14px;
+    margin: 0 10px;
+}
+
+.range-slider-ticks span {
+    position: absolute;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-size: .6rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.range-slider-disabled .range-slider-fill {
+    background: var(--mix-surface-muted);
+    box-shadow: none;
+}
+
+.range-slider-disabled .range-slider-value {
+    color: var(--mix-ink-muted);
+}
+
+.range-slider-disabled input[type=range]::-webkit-slider-thumb {
+    background: var(--mix-ink-muted);
+    box-shadow: 0 0 0 1.5px var(--mix-ink-muted);
+    opacity: .5;
+    cursor: default;
+}
+
+.range-slider-disabled input[type=range]::-moz-range-thumb {
+    background: var(--mix-ink-muted);
+    box-shadow: 0 0 0 1.5px var(--mix-ink-muted);
+    opacity: .5;
+    cursor: default;
+}
+
 /* Rarity treatment ramp — glow intensity rises with the band. Hue alone can't order the
    bands monotonically (gold is brighter than sapphire), so treatment does; the percentile
    number always rides alongside, so color is never the only channel. Shadows omit a color
