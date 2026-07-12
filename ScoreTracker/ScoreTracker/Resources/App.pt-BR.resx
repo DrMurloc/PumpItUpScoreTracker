@@ -3338,4 +3338,10 @@
   <data name="Around my level" xml:space="preserve">
     <value>Perto do meu nível</value>
   </data>
+  <data name="Scroll right" xml:space="preserve">
+    <value>Rolar para a direita</value>
+  </data>
+  <data name="Scroll left" xml:space="preserve">
+    <value>Rolar para a esquerda</value>
+  </data>
 </root>

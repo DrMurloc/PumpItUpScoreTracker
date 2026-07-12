@@ -41,6 +41,8 @@ else
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Shuffle"
                            title="@L["Shuffle suggestions"]" OnClick="Shuffle"/>
         </div>
+        @if (!_useStrips)
+        {
         <div class="dash-targets dash-scroll">
             @foreach (var section in _sections.Where(s => s.Rows.Any()))
             {
@@ -89,6 +91,54 @@ else
                 }
             }
         </div>
+        }
+        else if (_sectionedStrips)
+        {
+            @* 2x2: a captioned card strip per section; the stack scrolls vertically. *@
+            <div class="dash-strips dash-scroll">
+                @foreach (var section in _sections.Where(s => s.Rows.Any()))
+                {
+                    var sect = section;
+                    @if (_sections.Count(s => s.Rows.Any()) > 1)
+                    {
+                        <MudText Typo="Typo.caption" Class="dash-muted dash-target-caption">@section.Caption</MudText>
+                    }
+                    <div class="dash-strip-wrap">
+                        <button type="button" class="dash-strip-arrow dash-strip-arrow-left"
+                                aria-label="@L["Scroll left"]">‹</button>
+                        <div class="dash-card-strip">
+                            @foreach (var row in section.Rows)
+                            {
+                                @Card((sect, row))
+                            }
+                        </div>
+                        <button type="button" class="dash-strip-arrow dash-strip-arrow-right"
+                                aria-label="@L["Scroll right"]">›</button>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            @* 2x1 (owner, field test): one merged card strip — captions don't fit a
+               single card band; the per-card detail carries the category context. *@
+            <div class="dash-strip-wrap">
+                <button type="button" class="dash-strip-arrow dash-strip-arrow-left"
+                        aria-label="@L["Scroll left"]">‹</button>
+                <div class="dash-card-strip">
+                    @foreach (var section in _sections.Where(s => s.Rows.Any()))
+                    {
+                        var sect = section;
+                        @foreach (var row in section.Rows)
+                        {
+                            @Card((sect, row))
+                        }
+                    }
+                </div>
+                <button type="button" class="dash-strip-arrow dash-strip-arrow-right"
+                        aria-label="@L["Scroll right"]">›</button>
+            </div>
+        }
     </div>
 
     @* The WSIP veto flow, widget-shaped: reason + notes + hide, straight into the same
@@ -151,11 +201,13 @@ else
     private bool _loaded;
     private string? _loadedFor;
     private MixEnum _mix = MixEnum.Phoenix;
+    private bool _useStrips;
+    private bool _sectionedStrips;
     private List<SuggestionSection> _sections = new();
 
     protected override async Task OnParametersSetAsync()
     {
-        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{EffectiveMix}";
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{Widget.SizePreset}|{EffectiveMix}";
         if (signature == _loadedFor) return;
         _loadedFor = signature;
         await LoadAsync();
@@ -170,6 +222,11 @@ else
     private async Task LoadAsync()
     {
         _loaded = false;
+        // Wide views read as card strips, not tabled text (owner, field test); the
+        // tall 1x2 keeps vertical rows. 2x2 gets a captioned strip per section.
+        var size = SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.OneByTwo;
+        _useStrips = size.Columns > 1;
+        _sectionedStrips = _useStrips && size.Rows > 1;
         var config = WidgetConfigJson.Read<SuggestedChartsConfig>(Widget.ConfigJson);
         _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
             : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
@@ -207,6 +264,44 @@ else
 
         _loaded = true;
     }
+
+    // The compact chart card the strips render — art-forward, bubble overlaid, veto
+    // overlay in edit mode. Same click/veto semantics as the vertical rows.
+    private RenderFragment<(SuggestionSection Section, SuggestionRow Row)> Card => ctx =>
+        @<div class="dash-chart-card @(EditMode ? "" : "dash-clickable")"
+              @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(ctx.Row.Chart, ctx.Section.CategoryKey))">
+            <div class="dash-card-art">
+                <img src="@ctx.Row.Chart.Song.ImagePath" alt="@ctx.Row.Chart.Song.Name" loading="lazy"/>
+                <span class="dash-card-bubble">
+                    <DifficultyBubble Chart="ctx.Row.Chart" Small="true"></DifficultyBubble>
+                </span>
+                @if (EditMode)
+                {
+                    <span class="dash-card-veto" @onclick:stopPropagation="true">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
+                                       title="@L["Not a good suggestion?"]"
+                                       OnClick="() => OpenVeto(ctx.Section, ctx.Row)"/>
+                    </span>
+                }
+            </div>
+            <div class="dash-card-name">@ctx.Row.Chart.Song.Name</div>
+            <div class="dash-card-score">
+                @if (ctx.Row.Score?.Score != null)
+                {
+                    <LetterGradeIcon Grade="ctx.Row.Score.Score.Value.LetterGrade"
+                                     IsBroken="ctx.Row.Score.IsBroken" Height="14"/>
+                    <span>@(((int)ctx.Row.Score.Score.Value).ToString("N0"))</span>
+                }
+                else
+                {
+                    <span class="dash-muted">—</span>
+                }
+            </div>
+            @if (ctx.Row.Detail != null)
+            {
+                <div class="dash-card-detail dash-muted">@ctx.Row.Detail</div>
+            }
+        </div>;
 
     private bool _showVeto;
     private SuggestionSection? _vetoSection;

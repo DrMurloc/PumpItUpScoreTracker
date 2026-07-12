@@ -3390,4 +3390,10 @@
   <data name="Around my level" xml:space="preserve">
     <value>自分のレベル前後</value>
   </data>
+  <data name="Scroll right" xml:space="preserve">
+    <value>右へスクロール</value>
+  </data>
+  <data name="Scroll left" xml:space="preserve">
+    <value>左へスクロール</value>
+  </data>
 </root>

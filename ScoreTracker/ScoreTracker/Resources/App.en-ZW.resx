@@ -3312,4 +3312,10 @@
   <data name="Around my level" xml:space="preserve">
     <value>Around my mrgl level</value>
   </data>
+  <data name="Scroll right" xml:space="preserve">
+    <value>Scroll mrgl right</value>
+  </data>
+  <data name="Scroll left" xml:space="preserve">
+    <value>Scroll mrgl left</value>
+  </data>
 </root>

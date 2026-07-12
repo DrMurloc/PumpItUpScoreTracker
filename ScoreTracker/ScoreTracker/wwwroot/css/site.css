@@ -1043,6 +1043,184 @@
     font-size: .7rem;
 }
 
+/* Card strips (suggested-charts field test): wide widgets read as compact chart cards
+   scrolling horizontally, not tabled text. Hover-revealed pager arrows (clicks handled
+   by dashboard-grid.js delegation); honest x-axis fades mirror the vertical ones. */
+
+.dash-strips {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dash-strip-wrap {
+    position: relative;
+    flex: none;
+    min-width: 0;
+}
+
+.dash-card-strip {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 2px;
+    mask-image: linear-gradient(to right,
+        transparent 0,
+        #000 var(--dash-fade-left),
+        #000 calc(100% - var(--dash-fade-right)),
+        transparent 100%);
+}
+
+.dash-card-strip::-webkit-scrollbar {
+    display: none;
+}
+
+@property --dash-fade-left {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+
+@property --dash-fade-right {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 20px;
+}
+
+@supports (animation-timeline: scroll()) {
+    .dash-card-strip {
+        animation: dash-strip-fades linear both;
+        animation-timeline: scroll(self x);
+    }
+
+    @keyframes dash-strip-fades {
+        0% {
+            --dash-fade-left: 0px;
+            --dash-fade-right: 20px;
+        }
+
+        10% {
+            --dash-fade-left: 20px;
+            --dash-fade-right: 20px;
+        }
+
+        90% {
+            --dash-fade-left: 20px;
+            --dash-fade-right: 20px;
+        }
+
+        100% {
+            --dash-fade-left: 20px;
+            --dash-fade-right: 0px;
+        }
+    }
+}
+
+.dash-strip-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .14);
+    background: color-mix(in srgb, var(--mix-surface-muted) 88%, transparent);
+    color: var(--mix-ink);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity .15s;
+}
+
+.dash-widget:hover .dash-strip-arrow,
+.dash-strip-arrow:focus-visible {
+    opacity: .85;
+}
+
+.dash-strip-arrow-left {
+    left: 2px;
+}
+
+.dash-strip-arrow-right {
+    right: 2px;
+}
+
+/* Touch scrolls the strip directly — pager arrows are a pointer affordance. */
+@media (hover: none) {
+    .dash-strip-arrow {
+        display: none;
+    }
+}
+
+.dash-chart-card {
+    flex: none;
+    width: 86px;
+    min-width: 0;
+}
+
+.dash-card-art {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--mix-surface-muted);
+}
+
+.dash-card-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dash-card-bubble {
+    position: absolute;
+    left: 3px;
+    bottom: 3px;
+}
+
+.dash-card-veto {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--mix-surface) 78%, transparent);
+}
+
+.dash-card-name {
+    margin-top: 3px;
+    font-family: var(--font-display);
+    font-size: .72rem;
+    letter-spacing: .03em;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash-card-score {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .72rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-card-detail {
+    font-size: .65rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .dash-clickable {
     cursor: pointer;
 }

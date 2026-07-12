@@ -3389,4 +3389,10 @@
   <data name="Around my level" xml:space="preserve">
     <value>Intorno al mio livello</value>
   </data>
+  <data name="Scroll right" xml:space="preserve">
+    <value>Scorri a destra</value>
+  </data>
+  <data name="Scroll left" xml:space="preserve">
+    <value>Scorri a sinistra</value>
+  </data>
 </root>
