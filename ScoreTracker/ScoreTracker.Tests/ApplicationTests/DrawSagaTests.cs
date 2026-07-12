@@ -155,6 +155,96 @@ public sealed class DrawSagaTests
     }
 
     [Fact]
+    public async Task AssistantsCannotDeleteTournamentMatches()
+    {
+        // Round 8: delete is organizer territory — assistants only run the tablet.
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        var draw = Draw(tournamentId);
+        RolesAre(tournamentId, new UserTournamentRole(tournamentId, _user.Id, TournamentRole.Assistant));
+        _draws.Setup(d => d.GetDraw(draw.Id, It.IsAny<CancellationToken>())).ReturnsAsync(draw);
+
+        await Assert.ThrowsAsync<NotAuthorizedException>(() => BuildSaga()
+            .Handle(new DeleteDrawCommand(draw.Id), CancellationToken.None));
+
+        _draws.Verify(d => d.DeleteDraw(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task OrganizersDeleteMatchesAndPublish()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        var draw = Draw(tournamentId);
+        RolesAre(tournamentId, new UserTournamentRole(tournamentId, _user.Id, TournamentRole.TournamentOrganizer));
+        _draws.Setup(d => d.GetDraw(draw.Id, It.IsAny<CancellationToken>())).ReturnsAsync(draw);
+
+        await BuildSaga().Handle(new DeleteDrawCommand(draw.Id), CancellationToken.None);
+
+        _draws.Verify(d => d.DeleteDraw(draw.Id, It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Publish(It.Is<DrawUpdatedEvent>(e => e.DrawId == draw.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task OrganizersRenameAMatchAndTheSlugNeverMoves()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        var draw = Draw(tournamentId);
+        RolesAre(tournamentId, new UserTournamentRole(tournamentId, _user.Id, TournamentRole.TournamentOrganizer));
+        _draws.Setup(d => d.GetDraw(draw.Id, It.IsAny<CancellationToken>())).ReturnsAsync(draw);
+
+        await BuildSaga().Handle(new RenameDrawCommand(draw.Id, "  Grand Final  "), CancellationToken.None);
+
+        _draws.Verify(d => d.RenameDraw(draw.Id, "Grand Final", It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Publish(It.Is<DrawUpdatedEvent>(e => e.DrawId == draw.Id && e.Slug == draw.Slug),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AssistantsCannotRenameMatches()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        var draw = Draw(tournamentId);
+        RolesAre(tournamentId, new UserTournamentRole(tournamentId, _user.Id, TournamentRole.Assistant));
+        _draws.Setup(d => d.GetDraw(draw.Id, It.IsAny<CancellationToken>())).ReturnsAsync(draw);
+
+        await Assert.ThrowsAsync<NotAuthorizedException>(() => BuildSaga()
+            .Handle(new RenameDrawCommand(draw.Id, "Grand Final"), CancellationToken.None));
+
+        _draws.Verify(d => d.RenameDraw(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task PersonalDrawsCannotBeRenamed()
+    {
+        LogIn();
+        var draw = Draw();
+        _draws.Setup(d => d.GetDraw(draw.Id, It.IsAny<CancellationToken>())).ReturnsAsync(draw);
+
+        await Assert.ThrowsAsync<RandomizerException>(() => BuildSaga()
+            .Handle(new RenameDrawCommand(draw.Id, "My Draw"), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task RenamingToABlankNameIsRejected()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        var draw = Draw(tournamentId);
+        _draws.Setup(d => d.GetDraw(draw.Id, It.IsAny<CancellationToken>())).ReturnsAsync(draw);
+
+        await Assert.ThrowsAsync<RandomizerException>(() => BuildSaga()
+            .Handle(new RenameDrawCommand(draw.Id, "   "), CancellationToken.None));
+
+        _draws.Verify(d => d.RenameDraw(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task SettingACardStateAuthorizesAgainstTheDrawsContextAndPublishes()
     {
         LogIn();

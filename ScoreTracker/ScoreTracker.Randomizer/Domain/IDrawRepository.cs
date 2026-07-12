@@ -19,6 +19,7 @@ namespace ScoreTracker.Randomizer.Domain
         Task<DrawDto> RedrawCards(Guid drawId, MixEnum mix, IReadOnlyList<Guid> chartIds,
             CancellationToken cancellationToken);
 
+        Task RenameDraw(Guid drawId, string name, CancellationToken cancellationToken);
         Task SetCardState(Guid drawId, Guid pullId, DrawCardState state, CancellationToken cancellationToken);
         Task<DrawDto> ClearVetoed(Guid drawId, CancellationToken cancellationToken);
         Task<DrawDto> AddChart(Guid drawId, Guid chartId, CancellationToken cancellationToken);

@@ -85,6 +85,19 @@ namespace ScoreTracker.Randomizer.Infrastructure
                    ?? throw new InvalidOperationException("Draw vanished during redraw.");
         }
 
+        public async Task RenameDraw(Guid drawId, string name, CancellationToken cancellationToken)
+        {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            var draw = await database.Set<RandomizerDrawEntity>()
+                .FirstOrDefaultAsync(d => d.Id == drawId, cancellationToken);
+            if (draw == null) return;
+
+            // Deliberately no UpdatedAt touch: the match list is recency-ordered and a
+            // rename shouldn't shuffle it.
+            draw.Name = name;
+            await database.SaveChangesAsync(cancellationToken);
+        }
+
         public async Task SetCardState(Guid drawId, Guid pullId, DrawCardState state,
             CancellationToken cancellationToken)
         {

@@ -11,15 +11,18 @@ namespace ScoreTracker.EventCompetition.Application
     /// <summary>
     ///     Micro-tournament lifecycle (docs/design/randomizer-overhaul.md): any logged-in
     ///     user creates an unlisted tournament and becomes its Head TO; the Head TO mints
-    ///     role-carrying invite links; redeeming one grants the role without ever
-    ///     downgrading an existing one. Listing (IsUnlisted = false) stays owner-curated.
+    ///     role-carrying invite links and removes staff (never themselves — a tournament
+    ///     keeps at least the Head TO who's doing the managing); redeeming an invite grants
+    ///     the role without ever downgrading an existing one. Listing (IsUnlisted = false)
+    ///     stays owner-curated.
     /// </summary>
     internal sealed class TournamentRoleSaga :
         IRequestHandler<CreateUnlistedTournamentCommand>,
         IRequestHandler<CreateTournamentRoleInviteCommand, Guid>,
         IRequestHandler<RedeemTournamentRoleInviteCommand, Guid>,
         IRequestHandler<GetTournamentRoleInvitesQuery, IEnumerable<TournamentRoleInviteRecord>>,
-        IRequestHandler<DeleteTournamentRoleInviteCommand>
+        IRequestHandler<DeleteTournamentRoleInviteCommand>,
+        IRequestHandler<RemoveTournamentRoleCommand>
     {
         private readonly ITournamentRepository _tournaments;
         private readonly ICurrentUserAccessor _currentUser;
@@ -75,6 +78,17 @@ namespace ScoreTracker.EventCompetition.Application
             if (invite == null || invite.TournamentId != request.TournamentId) return;
 
             await _tournaments.DeleteRoleInvite(request.Token, cancellationToken);
+        }
+
+        public async Task Handle(RemoveTournamentRoleCommand request, CancellationToken cancellationToken)
+        {
+            await EnsureHeadOrganizer(request.TournamentId, "remove this tournament's staff", cancellationToken);
+            // Removing yourself would orphan the tournament (or at least strand this
+            // drawer mid-session) — hand the Head TO role off first.
+            if (_currentUser.User.Id == request.UserId)
+                throw new NotAuthorizedException("remove yourself from your own tournament");
+
+            await _tournaments.RevokeRole(request.TournamentId, request.UserId, cancellationToken);
         }
 
         private async Task EnsureHeadOrganizer(Guid tournamentId, string action, CancellationToken cancellationToken)

@@ -14,14 +14,16 @@ namespace ScoreTracker.Randomizer.Application
     /// <summary>
     ///     Draws + tournament settings (docs/design/randomizer-overhaul.md). Personal
     ///     context: any logged-in user. Tournament context: draw operations need any role
-    ///     on the tournament (assistants run the tablet); the settings library needs Head
-    ///     TO/TO. Spectating (GetDrawBySlugQuery) is unauthenticated and handled by the
-    ///     repository. Every mutation publishes DrawUpdatedEvent in-process so staff
-    ///     devices and spectator circuits re-render.
+    ///     on the tournament (assistants run the tablet); match rename/delete and the
+    ///     settings library need Head TO/TO (field-test round 8). Spectating
+    ///     (GetDrawBySlugQuery) is unauthenticated and handled by the repository. Every
+    ///     mutation publishes DrawUpdatedEvent in-process so staff devices and spectator
+    ///     circuits re-render.
     /// </summary>
     internal sealed class DrawSaga :
         IRequestHandler<CreateDrawCommand, DrawDto>,
         IRequestHandler<RedrawCardsCommand, DrawDto>,
+        IRequestHandler<RenameDrawCommand>,
         IRequestHandler<DeleteDrawCommand>,
         IRequestHandler<SetDrawCardStateCommand>,
         IRequestHandler<ClearVetoedCardsCommand, DrawDto>,
@@ -77,9 +79,28 @@ namespace ScoreTracker.Randomizer.Application
             return result;
         }
 
+        public async Task Handle(RenameDrawCommand request, CancellationToken cancellationToken)
+        {
+            var draw = await _draws.GetDraw(request.DrawId, cancellationToken)
+                       ?? throw new RandomizerException("This draw no longer exists.");
+            if (draw.TournamentId == null)
+                throw new RandomizerException("Only tournament matches have names.");
+            if (string.IsNullOrWhiteSpace(request.NewName))
+                throw new RandomizerException("Give the match a name.");
+
+            await EnsureOrganizer(draw.TournamentId.Value, "rename this tournament's matches", cancellationToken);
+            await _draws.RenameDraw(request.DrawId, request.NewName.Trim(), cancellationToken);
+            // Spectate tabs and other staff devices re-label live; the slug never moves.
+            await _mediator.Publish(new DrawUpdatedEvent(draw.Id, draw.Slug), cancellationToken);
+        }
+
         public async Task Handle(DeleteDrawCommand request, CancellationToken cancellationToken)
         {
             var draw = await AuthorizeDraw(request.DrawId, cancellationToken);
+            // Deleting a match is organizer territory — assistants only run the tablet
+            // (field-test round 8). Personal draws stay owner-scoped via AuthorizeDraw.
+            if (draw.TournamentId != null)
+                await EnsureOrganizer(draw.TournamentId.Value, "delete this tournament's matches", cancellationToken);
             await _draws.DeleteDraw(request.DrawId, cancellationToken);
             // Spectators following the deleted match refresh into its siblings.
             await _mediator.Publish(new DrawUpdatedEvent(draw.Id, draw.Slug), cancellationToken);
@@ -154,7 +175,12 @@ namespace ScoreTracker.Randomizer.Application
                 throw new NotAuthorizedException("operate this tournament's draws");
         }
 
-        private async Task EnsureCanManageSettings(Guid tournamentId, CancellationToken cancellationToken)
+        private Task EnsureCanManageSettings(Guid tournamentId, CancellationToken cancellationToken)
+        {
+            return EnsureOrganizer(tournamentId, "manage this tournament's randomizer settings", cancellationToken);
+        }
+
+        private async Task EnsureOrganizer(Guid tournamentId, string action, CancellationToken cancellationToken)
         {
             if (!_currentUser.IsLoggedIn) throw new UserNotLoggedInException();
             if (_currentUser.IsLoggedInAsAdmin) return;
@@ -163,7 +189,7 @@ namespace ScoreTracker.Randomizer.Application
             var allowed = roles.Any(r => r.UserId == _currentUser.User.Id &&
                                          r.Role is TournamentRole.HeadTournamentOrganizer
                                              or TournamentRole.TournamentOrganizer);
-            if (!allowed) throw new NotAuthorizedException("manage this tournament's randomizer settings");
+            if (!allowed) throw new NotAuthorizedException(action);
         }
     }
 }

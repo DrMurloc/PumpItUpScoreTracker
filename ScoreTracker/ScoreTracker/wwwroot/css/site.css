@@ -679,6 +679,61 @@ html.nav-away .page-dock,
     max-width: 150px;
 }
 
+/* Match picker row (round 8): the field carries only "which match am I looking at" —
+   an autocomplete, plus New match on desktop (the dock CTA covers phones). */
+.rand-match-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 6px 0;
+}
+
+.rand-match-row .rand-match-select {
+    max-width: 340px;
+}
+
+/* Manage-tournament drawer (round 8): stacked role-layered sections. */
+.rand-manage-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 26px;
+}
+
+.rand-manage-heading {
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--mix-ink-muted);
+}
+
+.rand-manage-rename {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.rand-manage-rename .mud-input-control {
+    flex: 1;
+    min-width: 200px;
+}
+
+.rand-manage-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.rand-staff-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rand-staff-row .rand-invite-role {
+    margin-right: auto;
+}
+
 /* Draft mode: the staff tablet in player hands — loud mode control, explicit exit. */
 .rand-draft-head {
     display: flex;

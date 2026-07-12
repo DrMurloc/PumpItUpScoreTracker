@@ -77,6 +77,54 @@ public sealed class TournamentRoleSagaTests
     }
 
     [Fact]
+    public async Task HeadOrganizerRemovesAStaffMembersRole()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        var target = Guid.NewGuid();
+        RolesAre(tournamentId,
+            new UserTournamentRole(tournamentId, _user.Id, TournamentRole.HeadTournamentOrganizer),
+            new UserTournamentRole(tournamentId, target, TournamentRole.Assistant));
+
+        await BuildSaga().Handle(new RemoveTournamentRoleCommand(tournamentId, target), CancellationToken.None);
+
+        _tournaments.Verify(t => t.RevokeRole(tournamentId, target, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RemovingStaffRequiresHeadOrganizer()
+    {
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        var target = Guid.NewGuid();
+        RolesAre(tournamentId,
+            new UserTournamentRole(tournamentId, _user.Id, TournamentRole.TournamentOrganizer),
+            new UserTournamentRole(tournamentId, target, TournamentRole.Assistant));
+
+        await Assert.ThrowsAsync<NotAuthorizedException>(() => BuildSaga()
+            .Handle(new RemoveTournamentRoleCommand(tournamentId, target), CancellationToken.None));
+
+        _tournaments.Verify(t => t.RevokeRole(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HeadOrganizerCannotRemoveThemself()
+    {
+        // Removing yourself would orphan the tournament — hand off the role first.
+        LogIn();
+        var tournamentId = Guid.NewGuid();
+        RolesAre(tournamentId,
+            new UserTournamentRole(tournamentId, _user.Id, TournamentRole.HeadTournamentOrganizer));
+
+        await Assert.ThrowsAsync<NotAuthorizedException>(() => BuildSaga()
+            .Handle(new RemoveTournamentRoleCommand(tournamentId, _user.Id), CancellationToken.None));
+
+        _tournaments.Verify(t => t.RevokeRole(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task CreatingAnInviteRequiresHeadOrganizerOrAdmin()
     {
         LogIn();
