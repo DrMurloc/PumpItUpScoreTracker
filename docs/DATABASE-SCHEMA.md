@@ -33,6 +33,13 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.PhoenixRecordStats` | Per-score Pumbility stats per user+chart+mix, written by PlayerProgress through a Ledger port |
 | `scores.ScoreEventJournal` | **Append-only** journal of best-attempt *changes* (progress only since 2026-07: first entries incl. broken, unbreaks, score/plate improvements, manual corrections — no-ops are never written; rows from before the guard include them). Rows are never updated or deleted. `SessionId` groups rows into play sessions / import runs (NULL predates capture). Seeded 2026-06 from `PhoenixRecord` (`Source='backfill'`, dated at the record's last update); the foundation of score-progression history |
 
+## Home Page (vertical: `ScoreTracker.HomePage`)
+
+| Table | Purpose |
+|---|---|
+| `scores.HomePage` | A user's dashboard pages (name, tab ordinal, default flag, optional page-level mix context). Capped at 8 per user in handlers |
+| `scores.HomePageWidget` | Widget instances on a page: registry TypeId, optional title, auto-flow ordinal, size preset, versioned config JSON (public via export/import — D19). Capped at 8 per page in handlers |
+
 ## Player Progress (vertical: `ScoreTracker.PlayerProgress`)
 
 | Table | Purpose |

@@ -1,0 +1,115 @@
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services.HomeDashboard
+
+@* The standard widget frame (§2.3): the host owns the card chrome, the title, the
+   per-cell error boundary, the unknown-type fallback, and the edit-mode controls —
+   widget components render bodies only, so every widget wears identical chrome. *@
+
+<div class="dash-widget @(EditMode ? "dash-widget-editing" : "")">
+    <div class="dash-widget-head">
+        @if (EditMode)
+        {
+            @* Decorative drag affordance (desktop pointer only) — the arrows are the
+               accessible path and the mobile path (D3/D6). *@
+            <span class="dash-drag-handle" aria-hidden="true">⠿</span>
+        }
+        <span class="dash-widget-title">@TitleText</span>
+        @if (EditMode)
+        {
+            <span class="dash-edit-controls">
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ChevronLeft"
+                               title="@L["Move earlier"]" Disabled="IsFirst"
+                               OnClick="() => OnMove.InvokeAsync(-1)"/>
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ChevronRight"
+                               title="@L["Move later"]" Disabled="IsLast"
+                               OnClick="() => OnMove.InvokeAsync(1)"/>
+                @if (_descriptor != null && _descriptor.SupportedSizes.Count > 1)
+                {
+                    <MudMenu Dense="true" Size="Size.Small" Icon="@Icons.Material.Filled.AspectRatio"
+                             title="@L["Size"]">
+                        @foreach (var size in _descriptor.SupportedSizes)
+                        {
+                            var s = size;
+                            <MudMenuItem OnClick="() => OnResize.InvokeAsync(s)">@s.Token</MudMenuItem>
+                        }
+                    </MudMenu>
+                }
+                @if (_descriptor?.ConfigComponent != null)
+                {
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Tune"
+                                   title="@L["Configure"]" OnClick="() => OnConfigure.InvokeAsync()"/>
+                }
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit"
+                               title="@L["Rename"]" OnClick="() => OnRename.InvokeAsync()"/>
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
+                               title="@L["Remove"]" OnClick="() => OnRemove.InvokeAsync()"/>
+            </span>
+        }
+    </div>
+    <div class="dash-widget-body">
+        @if (_descriptor == null)
+        {
+            <div class="dash-widget-message">
+                <MudText Typo="Typo.body2">@L["This widget is no longer available."]</MudText>
+            </div>
+        }
+        else
+        {
+            <ErrorBoundary>
+                <ChildContent>
+                    <DynamicComponent Type="_descriptor.RenderComponent" Parameters="_parameters"/>
+                </ChildContent>
+                <ErrorContent>
+                    <div class="dash-widget-message dash-widget-error">
+                        <MudText Typo="Typo.body2">@L["Something went wrong loading this widget."]</MudText>
+                    </div>
+                </ErrorContent>
+            </ErrorBoundary>
+        }
+    </div>
+</div>
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+
+    /// <summary>Resolved per D13: widget config override → page default → current mix.</summary>
+    [Parameter] public MixEnum EffectiveMix { get; set; }
+
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public bool IsFirst { get; set; }
+    [Parameter] public bool IsLast { get; set; }
+    [Parameter] public EventCallback<int> OnMove { get; set; }
+    [Parameter] public EventCallback<SizePreset> OnResize { get; set; }
+    [Parameter] public EventCallback OnRename { get; set; }
+    [Parameter] public EventCallback OnRemove { get; set; }
+    [Parameter] public EventCallback OnConfigure { get; set; }
+
+    /// <summary>
+    ///     The standing rule (field-test round 1): chart rows/cards inside widgets open
+    ///     the shared ChartDetailsDialog. The page owns the dialog; widgets just raise.
+    /// </summary>
+    [Parameter] public EventCallback<Chart> OnChartClick { get; set; }
+
+    private WidgetDescriptor? _descriptor;
+    private IDictionary<string, object> _parameters = new Dictionary<string, object>();
+
+    private string TitleText => Widget.Title
+                                ?? (_descriptor == null ? Widget.WidgetType : L[_descriptor.NameKey].Value);
+
+    protected override void OnParametersSet()
+    {
+        _descriptor = WidgetRegistry.TryGet(Widget.WidgetType);
+        // Every widget component declares these four — the render contract (§2.2).
+        _parameters = new Dictionary<string, object>
+        {
+            ["Widget"] = Widget,
+            ["EffectiveMix"] = EffectiveMix,
+            ["EditMode"] = EditMode,
+            ["OnChartClick"] = OnChartClick
+        };
+    }
+
+}

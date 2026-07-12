@@ -3174,4 +3174,115 @@
   <data name="Older scores count for less — {0} of your nearby scores are much older than the rest of your record." xml:space="preserve">
     <value>古いスコアは軽く数えられます — 近隣スコアのうち{0}件が他と比べて大幅に古くなっています。</value>
   </data>
+  <data name="Build your home page from widgets you choose." xml:space="preserve">
+    <value>ウィジェットを選んで自分だけのホームページを作ろう。</value>
+  </data>
+  <data name="Add widgets to this page in edit mode." xml:space="preserve">
+    <value>編集モードでこのページにウィジェットを追加できます。</value>
+  </data>
+  <data name="This widget is no longer available." xml:space="preserve">
+    <value>このウィジェットは利用できなくなりました。</value>
+  </data>
+  <data name="Something went wrong loading this widget." xml:space="preserve">
+    <value>このウィジェットの読み込み中に問題が発生しました。</value>
+  </data>
+  <data name="This page is pre-release — your layout and widget settings may be reset before launch." xml:space="preserve">
+    <value>このページはプレリリース版です。レイアウトやウィジェットの設定は正式リリース前にリセットされる可能性があります。</value>
+  </data>
+  <data name="New Page" xml:space="preserve">
+    <value>新しいページ</value>
+  </data>
+  <data name="Add Widgets" xml:space="preserve">
+    <value>ウィジェットを追加</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>名前を変更</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="Configure" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="Size" xml:space="preserve">
+    <value>サイズ</value>
+  </data>
+  <data name="Move earlier" xml:space="preserve">
+    <value>前へ移動</value>
+  </data>
+  <data name="Move later" xml:space="preserve">
+    <value>後ろへ移動</value>
+  </data>
+  <data name="Follow current mix" xml:space="preserve">
+    <value>現在のバージョンに従う</value>
+  </data>
+  <data name="This page is full." xml:space="preserve">
+    <value>このページは満杯です。</value>
+  </data>
+  <data name="Competitive Level over time for your selected mixes." xml:space="preserve">
+    <value>選択したバージョンでの競技レベルの推移。</value>
+  </data>
+  <data name="Your level history starts tracking with your next import." xml:space="preserve">
+    <value>レベル履歴は次回のインポートから記録されます。</value>
+  </data>
+  <data name="Range" xml:space="preserve">
+    <value>期間</value>
+  </data>
+  <data name="Pumbility targets tuned to your skill profile." xml:space="preserve">
+    <value>スキルプロフィールに合わせたPUMBILITY目標。</value>
+  </data>
+  <data name="Trend starts tracking from today." xml:space="preserve">
+    <value>推移は今日から記録されます。</value>
+  </data>
+  <data name="Best projected targets" xml:space="preserve">
+    <value>おすすめの目標チャート</value>
+  </data>
+  <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
+    <value>まだスコアがありません。PUMBILITYは最初のインポートから始まります。</value>
+  </data>
+  <data name="Show projected targets" xml:space="preserve">
+    <value>目標チャートを表示</value>
+  </data>
+  <data name="Dismissed charts" xml:space="preserve">
+    <value>非表示にしたチャート</value>
+  </data>
+  <data name="Restore all" xml:space="preserve">
+    <value>すべて元に戻す</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>非表示</value>
+  </data>
+  <data name="This week's board and your placements." xml:space="preserve">
+    <value>今週のボードとあなたの順位。</value>
+  </data>
+  <data name="New board soon." xml:space="preserve">
+    <value>まもなく新しいボードが登場します。</value>
+  </data>
+  <data name="Match my range" xml:space="preserve">
+    <value>自分のレベルに合わせる</value>
+  </data>
+  <data name="Custom" xml:space="preserve">
+    <value>カスタム</value>
+  </data>
+  <data name="Board" xml:space="preserve">
+    <value>ボード</value>
+  </data>
+  <data name="Export page" xml:space="preserve">
+    <value>ページをエクスポート</value>
+  </data>
+  <data name="Import page" xml:space="preserve">
+    <value>ページをインポート</value>
+  </data>
+  <data name="Widget schema" xml:space="preserve">
+    <value>ウィジェットスキーマ</value>
+  </data>
+  <data name="This import will replace this page's widgets." xml:space="preserve">
+    <value>インポートするとこのページのウィジェットが置き換えられます。</value>
+  </data>
+  <data name="Months" xml:space="preserve">
+    <value>ヶ月</value>
+  </data>
+  <data name="No entries yet." xml:space="preserve">
+    <value>まだエントリーがありません。</value>
+  </data>
 </root>

@@ -1709,3 +1709,593 @@ html.nav-away .page-dock,
     color: var(--mud-palette-primary);
     font-weight: 600;
 }
+
+/* ===== Home dashboard (unlisted pre-release, D7): 4-column desktop grid, mobile
+   derives a single column from auto-flow order (D3), cells span via size presets
+   (D5). The widget frame is owned by WidgetHost so every widget wears identical
+   chrome. ===== */
+
+.dash-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 56px 16px;
+    text-align: center;
+}
+
+.dash-pagebar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.dash-pagetab {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 14px;
+    border-radius: 8px 8px 0 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: .95rem;
+    letter-spacing: .05em;
+    color: var(--mix-ink-muted);
+    border-bottom: 2px solid transparent;
+}
+
+.dash-pagetab.active {
+    color: var(--mix-ink);
+    border-bottom-color: var(--mix-primary);
+    text-shadow: 0 0 10px var(--mix-glow);
+}
+
+.dash-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 168px;
+    grid-auto-flow: row;
+    gap: 14px;
+}
+
+.dash-cell {
+    min-width: 0;
+}
+
+.dash-cols-2 { grid-column: span 2; }
+.dash-cols-3 { grid-column: span 3; }
+.dash-cols-4 { grid-column: span 4; }
+.dash-rows-2 { grid-row: span 2; }
+
+.dash-widget {
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .06);
+    border-radius: 10px;
+    padding: 12px 14px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.dash-widget-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex: none;
+}
+
+.dash-widget-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: .82rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.dash-widget-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-widget-message {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--mix-ink-muted);
+}
+
+/* Column stagger (round 3): 4 on desktop, 3 on small desktop/tablet, 2 on landscape
+   phones, 1 on portrait phones. Spans clamp to the column count. */
+@media (max-width: 1279.98px) {
+    .dash-grid { grid-template-columns: repeat(3, 1fr); }
+
+    .dash-cols-4, .dash-cols-3 { grid-column: span 3; }
+}
+
+@media (max-width: 959.98px) {
+    .dash-grid { grid-template-columns: repeat(2, 1fr); }
+
+    .dash-cols-4, .dash-cols-3, .dash-cols-2 { grid-column: span 2; }
+}
+
+@media (max-width: 599.98px) {
+    .dash-grid {
+        grid-template-columns: 1fr;
+        grid-auto-rows: minmax(168px, auto);
+    }
+
+    .dash-cols-2, .dash-cols-3, .dash-cols-4 { grid-column: span 1; }
+
+    .dash-rows-2, .dash-rows-3 { grid-row: span 1; }
+}
+
+/* Edit mode: toolbar, edit chrome, add-drawer. */
+
+.dash-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.dash-toolbar .dash-pagebar {
+    margin-bottom: 0;
+}
+
+.dash-pagetab-new {
+    color: var(--mix-primary);
+}
+
+.dash-widget-editing {
+    border-style: dashed;
+    border-color: color-mix(in srgb, var(--mix-primary) 45%, transparent);
+}
+
+.dash-edit-controls {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+}
+
+.dash-drawer-body {
+    padding: 16px;
+}
+
+.dash-drawer-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.dash-drawer-item:hover {
+    background: rgba(255, 255, 255, .06);
+}
+
+.dash-drawer-item.disabled {
+    opacity: .45;
+    pointer-events: none;
+}
+
+.dash-chart-fill {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Pumbility widget: stat block + scrollable target list with dismiss. */
+
+.dash-pumbility {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+}
+
+.dash-pumbility-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: none;
+    max-width: 46%;
+}
+
+.dash-stat-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2.2rem;
+    line-height: 1;
+    color: var(--rarity-gold);
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-stat-delta {
+    color: var(--mud-palette-success);
+    font-size: .8rem;
+    font-weight: 600;
+}
+
+.dash-sparkline {
+    width: 100%;
+    height: 26px;
+}
+
+.dash-muted {
+    color: var(--mix-ink-muted);
+}
+
+.dash-pumbility-targets {
+    flex: 1;
+    min-width: 0;
+    min-height: 0; /* flex-column children refuse to shrink without this — the tall variant could never scroll */
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid rgba(255, 255, 255, .06);
+    padding-left: 14px;
+}
+
+.dash-targets {
+    flex: 1;
+    min-height: 0;
+}
+
+.dash-target-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 0;
+    font-size: .8rem;
+}
+
+.dash-target-name {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    letter-spacing: .04em;
+    color: var(--mix-ink-muted);
+}
+
+.dash-skillchip {
+    font-size: .68rem;
+    white-space: nowrap;
+    flex: none;
+}
+
+.dash-target-gain {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--mud-palette-success);
+    flex: none;
+}
+
+/* Weekly widget: board rows + rotation countdown. */
+
+.dash-weekly {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.dash-weekly-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex: none;
+}
+
+.dash-countdown {
+    font-family: var(--font-display);
+    font-size: .7rem;
+    letter-spacing: .08em;
+    color: var(--mix-accent);
+    border: 1px solid color-mix(in srgb, var(--mix-accent) 40%, transparent);
+    border-radius: 10px;
+    padding: 1px 8px;
+    white-space: nowrap;
+}
+
+.dash-weekly-expiry {
+    font-family: var(--font-display);
+    font-size: .68rem;
+    letter-spacing: .05em;
+    color: var(--mix-ink-muted);
+    flex: none;
+}
+
+.dash-weekly-place {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: .75rem;
+    flex: none;
+}
+
+/* Drag chrome: handle (desktop pointer only), dragged-cell dim, insertion marker. */
+
+.dash-drag-handle {
+    cursor: grab;
+    color: var(--mix-ink-muted);
+    font-size: .9rem;
+    user-select: none;
+    touch-action: none;
+    flex: none;
+}
+
+.dash-dragging {
+    opacity: .35;
+}
+
+.dash-drop-target {
+    outline: 2px dashed var(--mix-primary);
+    outline-offset: 2px;
+    border-radius: 10px;
+}
+
+.dash-json textarea {
+    font-family: Consolas, monospace;
+    font-size: .78rem;
+}
+
+@media (max-width: 959.98px) {
+    .dash-drag-handle {
+        display: none;
+    }
+}
+
+/* Field-test round 1: 3-row spans, swap indicator, mini art, clickable rows,
+   tall pumbility. */
+
+.dash-rows-3 { grid-row: span 3; }
+
+.dash-swap-target {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 2px;
+    border-radius: 10px;
+}
+
+.dash-mini-art {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    overflow: hidden;
+    display: inline-flex;
+}
+
+.dash-mini-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dash-clickable {
+    cursor: pointer;
+}
+
+.dash-clickable:hover {
+    background: rgba(255, 255, 255, .05);
+    border-radius: 6px;
+}
+
+.dash-pumbility-tall {
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dash-pumbility-tall .dash-pumbility-left {
+    max-width: none;
+    flex: none;
+}
+
+.dash-pumbility-tall .dash-pumbility-targets {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, .06);
+    padding-top: 8px;
+}
+
+/* Round 2: target rows get air (the tall/mobile variant was crushing lines). */
+
+.dash-target-row {
+    min-height: 34px;
+    padding: 3px 0;
+}
+
+.dash-pumbility-tall .dash-target-row {
+    padding: 5px 0;
+}
+
+.dash-mini-art {
+    width: 26px;
+    height: 26px;
+}
+
+@media (max-width: 599.98px) {
+    /* Mobile cells auto-grow — let the page scroll instead of clipping rows. */
+    .dash-targets {
+        overflow-y: visible;
+        mask-image: none;
+        animation: none;
+    }
+}
+
+.dash-endzone {
+    box-shadow: inset 0 -3px 0 0 var(--mix-primary);
+    border-radius: 10px;
+}
+
+.dash-pools {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Weekly leaderboard dialog (round 3, option 1). */
+
+.weekly-lb-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.weekly-lb-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 6px;
+    border-radius: 6px;
+}
+
+.weekly-lb-row + .weekly-lb-row {
+    border-top: 1px solid rgba(255, 255, 255, .05);
+}
+
+.weekly-lb-me {
+    background: rgba(255, 255, 255, .06);
+    box-shadow: inset 2px 0 0 0 var(--mix-primary);
+}
+
+.weekly-lb-place {
+    font-family: var(--font-display);
+    font-weight: 700;
+    min-width: 36px;
+    font-variant-numeric: tabular-nums;
+}
+
+.weekly-lb-user {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ===== Quiet scrolling (round 4): widget inner scrollers show NO scrollbar at rest —
+   the edge fades are the "there's more" affordance. Desktop reveals a thin themed
+   thumb on hover (hover = intent); touch keeps native auto-hiding overlays. Where
+   scroll-driven animations exist, the fades are honest: top fade only once scrolled,
+   bottom fade gone at the end. Elsewhere the static bottom fade remains. ===== */
+
+@property --dash-fade-top {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+
+@property --dash-fade-bottom {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 24px;
+}
+
+.dash-scroll,
+.dash-drawer .mud-drawer-content {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+.dash-scroll:hover,
+.dash-drawer .mud-drawer-content:hover {
+    scrollbar-color: color-mix(in srgb, var(--mix-ink-muted) 35%, transparent) transparent;
+}
+
+.dash-scroll::-webkit-scrollbar,
+.dash-drawer .mud-drawer-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dash-scroll::-webkit-scrollbar-track,
+.dash-drawer .mud-drawer-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dash-scroll::-webkit-scrollbar-thumb,
+.dash-drawer .mud-drawer-content::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+}
+
+.dash-scroll:hover::-webkit-scrollbar-thumb,
+.dash-drawer .mud-drawer-content:hover::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--mix-ink-muted) 35%, transparent);
+}
+
+.dash-scroll {
+    overflow-y: auto;
+    mask-image: linear-gradient(to bottom,
+        transparent 0,
+        #000 var(--dash-fade-top),
+        #000 calc(100% - var(--dash-fade-bottom)),
+        transparent 100%);
+}
+
+@supports (animation-timeline: scroll()) {
+    .dash-scroll {
+        animation: dash-scroll-fades linear both;
+        animation-timeline: scroll(self);
+    }
+
+    @keyframes dash-scroll-fades {
+        0% {
+            --dash-fade-top: 0px;
+            --dash-fade-bottom: 24px;
+        }
+
+        10% {
+            --dash-fade-top: 24px;
+            --dash-fade-bottom: 24px;
+        }
+
+        90% {
+            --dash-fade-top: 24px;
+            --dash-fade-bottom: 24px;
+        }
+
+        100% {
+            --dash-fade-top: 24px;
+            --dash-fade-bottom: 0px;
+        }
+    }
+}
+
+/* Themed ApexCharts tooltips (round 5): Apex's own dark theme half-applies — pin the
+   popover to our tokens instead. Keyed on the shared wrapper class so every graph on
+   the site can adopt it (ApexChartTheming.WrapperClass). */
+
+.themed-apex .apexcharts-tooltip {
+    background: var(--mix-surface-muted) !important;
+    border: 1px solid rgba(255, 255, 255, .14) !important;
+    color: var(--mix-ink) !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .5) !important;
+}
+
+.themed-apex .apexcharts-tooltip-title {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, .08) !important;
+    color: var(--mix-ink) !important;
+    font-family: var(--font-display) !important;
+}
+
+.themed-apex .apexcharts-tooltip-text,
+.themed-apex .apexcharts-tooltip-y-group,
+.themed-apex .apexcharts-tooltip-series-group {
+    color: var(--mix-ink) !important;
+}

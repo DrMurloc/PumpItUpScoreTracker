@@ -26,4 +26,10 @@
     <ProjectReference Include="..\ScoreTracker\ScoreTracker.Web.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- D19 golden documents: the page export envelope and the capability schema.
+         Too large for inline strings; a changed golden is still a reviewed diff. -->
+    <None Include="Goldens\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

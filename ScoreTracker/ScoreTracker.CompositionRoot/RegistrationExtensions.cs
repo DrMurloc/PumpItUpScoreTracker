@@ -10,6 +10,7 @@ using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.EventCompetition.Wiring;
+using ScoreTracker.HomePage.Wiring;
 using ScoreTracker.Identity.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
@@ -45,6 +46,7 @@ public static class RegistrationExtensions
         builder.AddChartIntelligence();
         builder.AddCommunities();
         builder.AddEventCompetition();
+        builder.AddHomePage();
         builder.AddIdentity();
         builder.AddOfficialMirror();
         builder.AddPlayerProgress();

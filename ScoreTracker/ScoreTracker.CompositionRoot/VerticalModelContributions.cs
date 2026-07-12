@@ -3,6 +3,7 @@ using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.EventCompetition.Wiring;
+using ScoreTracker.HomePage.Wiring;
 using ScoreTracker.Identity.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
@@ -25,7 +26,7 @@ public static class VerticalModelContributions
     {
         return new IDbModelContribution[]
         {
-            new CatalogModelContribution(), new ChartIntelligenceModelContribution(), new CommunitiesModelContribution(), new EventCompetitionModelContribution(), new IdentityModelContribution(), new OfficialMirrorModelContribution(), new PlayerProgressModelContribution(), new RandomizerModelContribution(), new ScoreLedgerModelContribution(), new UcsModelContribution(), new WeeklyChallengeModelContribution()
+            new CatalogModelContribution(), new ChartIntelligenceModelContribution(), new CommunitiesModelContribution(), new EventCompetitionModelContribution(), new HomePageModelContribution(), new IdentityModelContribution(), new OfficialMirrorModelContribution(), new PlayerProgressModelContribution(), new RandomizerModelContribution(), new ScoreLedgerModelContribution(), new UcsModelContribution(), new WeeklyChallengeModelContribution()
         };
     }
 }

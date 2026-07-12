@@ -1,0 +1,177 @@
+@using MediatR
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Services
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.WeeklyChallenge.Contracts.Queries
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* W3 (design doc §3): this week's board, difficulty descending with CO-OPs last.
+   Placement color is percentile (place ÷ entrant totals) through ThemeScales — never
+   hand-rolled bands. Unplayed charts are content, not emptiness; the row trophy opens
+   the per-chart leaderboard dialog. *@
+
+@if (!_loaded)
+{
+    <div class="dash-widget-message">
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+    </div>
+}
+else if (!_rows.Any())
+{
+    <div class="dash-widget-message">
+        <MudText Typo="Typo.body2">@L["New board soon."]</MudText>
+    </div>
+}
+else
+{
+    <div class="dash-weekly">
+        <div class="dash-weekly-meta">
+            <MudLink Href="/WeeklyCharts" Typo="Typo.caption">@L["See Leaderboards"]</MudLink>
+        </div>
+        <div class="dash-targets dash-scroll">
+            @foreach (var row in _rows)
+            {
+                var chart = row.Chart;
+                <div class="dash-target-row @(EditMode ? "" : "dash-clickable")"
+                     @onclick="() => OnChartClick.InvokeAsync(chart)">
+                    <span class="dash-mini-art">
+                        <SongImage Song="chart.Song" Small="true"></SongImage>
+                    </span>
+                    <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                    <span class="dash-target-name">@chart.Song.Name</span>
+                    @if (row.Place != null && row.Total > 0)
+                    {
+                        <span class="dash-weekly-place"
+                              style="@ThemeScales.RarityStyle(1.0 - (double)row.Place.Value / row.Total)">
+                            #@row.Place / @row.Total
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="dash-weekly-place dash-muted">—</span>
+                    }
+                    @if (!EditMode)
+                    {
+                        <span @onclick:stopPropagation="true">
+                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.EmojiEvents"
+                                           title="@L["See Leaderboards"]"
+                                           OnClick="() => OpenLeaderboard(chart)"/>
+                        </span>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <WeeklyLeaderboardDialog @bind-Visible="_showLeaderboard" Chart="_leaderboardChart" Mix="_mix"/>
+}
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ChartCatalogCache ChartCatalog
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public MixEnum EffectiveMix { get; set; }
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public EventCallback<Chart> OnChartClick { get; set; }
+
+    private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+
+    private sealed record BoardRow(Chart Chart, int? Place, int Total);
+
+    private bool _loaded;
+    private bool _wide;
+    private string? _loadedFor;
+    private List<BoardRow> _rows = new();
+    private bool _showLeaderboard;
+    private Chart? _leaderboardChart;
+    private MixEnum _mix = MixEnum.Phoenix;
+
+    private void OpenLeaderboard(Chart chart)
+    {
+        _leaderboardChart = chart;
+        _showLeaderboard = true;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{Widget.SizePreset}|{EffectiveMix}";
+        if (signature == _loadedFor) return;
+        _loadedFor = signature;
+        _loaded = false;
+        _wide = (SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.OneByOne).Columns > 1;
+
+        var config = WidgetConfigJson.Read<WeeklyConfig>(Widget.ConfigJson);
+        _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
+            : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
+        var userId = CurrentUser.User.Id;
+
+        var board = (await Mediator.Send(new GetWeeklyChartsQuery(_mix))).ToArray();
+        var charts = await ChartCatalog.GetCharts(_mix);
+        var known = board.Select(b => b.ChartId).Where(charts.ContainsKey).ToHashSet();
+
+        var filtered = await Filter(charts, known, config, _mix);
+
+        var entries = (await Mediator.Send(new GetWeeklyChartEntriesQuery(Mix: _mix))).ToArray();
+        var totals = entries.GroupBy(e => e.ChartId).ToDictionary(g => g.Key, g => g.Count());
+        var mine = entries.Where(e => e.UserId == userId).Select(e => e.ChartId).ToHashSet();
+        var placements = mine.Any()
+            ? (await Mediator.Send(new GetUserWeeklyPlacementsQuery(userId, _mix, mine.ToArray())))
+            .ToDictionary(p => p.ChartId, p => p.Place)
+            : new Dictionary<Guid, int>();
+
+        // Owner order (field-test round 1): difficulty descending, doubles before
+        // singles on ties; CO-OPs last — their "level" is a player count, which
+        // doesn't compare with S/D levels.
+        _rows = filtered
+            .Select(c => new BoardRow(c,
+                placements.TryGetValue(c.Id, out var place) ? place : null,
+                totals.GetValueOrDefault(c.Id)))
+            .OrderBy(r => r.Chart.Type == ChartType.CoOp ? 1 : 0)
+            .ThenByDescending(r => (int)r.Chart.Level)
+            .ThenBy(r => r.Chart.Type == ChartType.Double ? 0 : 1)
+            .ToList();
+        _loaded = true;
+    }
+
+    private async Task<IReadOnlyList<Chart>> Filter(IReadOnlyDictionary<Guid, Chart> charts,
+        IEnumerable<Guid> boardIds, WeeklyConfig config, MixEnum mix)
+    {
+        var boardCharts = boardIds.Select(id => charts[id]).ToArray();
+        switch (config.Mode)
+        {
+            case WeeklyBoardMode.MatchMyRange:
+            {
+                var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, mix));
+                // Same auto-enable the WeeklyCharts page uses: below competitive level
+                // 10 on either type there's no range to match — show the whole board.
+                return stats is { DoublesCompetitiveLevel: >= 10, SinglesCompetitiveLevel: >= 10 }
+                    ? WeeklyChartSuggestionPolicy.GetSuggestedCharts(boardCharts,
+                        stats.DoublesCompetitiveLevel, stats.SinglesCompetitiveLevel).ToArray()
+                    : boardCharts;
+            }
+            case WeeklyBoardMode.Custom:
+                return boardCharts.Where(c =>
+                        (c.Type == ChartType.Single && config.IncludeSingles)
+                        || (c.Type == ChartType.Double && config.IncludeDoubles)
+                        || (c.Type == ChartType.CoOp && config.IncludeCoOp))
+                    .Where(c => c.Type == ChartType.CoOp
+                                || (((int)c.Level >= (config.MinLevel ?? 1))
+                                    && ((int)c.Level <= (config.MaxLevel ?? DifficultyLevel.Max))))
+                    .ToArray();
+            default:
+                return boardCharts;
+        }
+    }
+
+}

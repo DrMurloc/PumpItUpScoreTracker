@@ -46,7 +46,8 @@ public sealed class PlayerHistorySagaTests
                                             && r.SinglesLevel == 17.0
                                             && r.DoublesLevel == 18.0
                                             && r.CoOpRating == 200
-                                            && r.PassCount == 42),
+                                            && r.PassCount == 42
+                                            && r.SkillRating == 100),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 }
