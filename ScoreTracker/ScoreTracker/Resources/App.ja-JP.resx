@@ -3282,4 +3282,7 @@
   <data name="Months" xml:space="preserve">
     <value>ヶ月</value>
   </data>
+  <data name="No entries yet." xml:space="preserve">
+    <value>まだエントリーがありません。</value>
+  </data>
 </root>

@@ -3281,4 +3281,7 @@
   <data name="Months" xml:space="preserve">
     <value>mesi</value>
   </data>
+  <data name="No entries yet." xml:space="preserve">
+    <value>Ancora nessuna partecipazione.</value>
+  </data>
 </root>

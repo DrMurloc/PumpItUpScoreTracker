@@ -1066,3 +1066,43 @@
     flex-wrap: wrap;
     font-variant-numeric: tabular-nums;
 }
+
+/* Weekly leaderboard dialog (round 3, option 1). */
+
+.weekly-lb-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.weekly-lb-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 6px;
+    border-radius: 6px;
+}
+
+.weekly-lb-row + .weekly-lb-row {
+    border-top: 1px solid rgba(255, 255, 255, .05);
+}
+
+.weekly-lb-me {
+    background: rgba(255, 255, 255, .06);
+    box-shadow: inset 2px 0 0 0 var(--mix-primary);
+}
+
+.weekly-lb-place {
+    font-family: var(--font-display);
+    font-weight: 700;
+    min-width: 36px;
+    font-variant-numeric: tabular-nums;
+}
+
+.weekly-lb-user {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

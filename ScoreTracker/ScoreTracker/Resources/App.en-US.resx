@@ -3281,4 +3281,7 @@
   <data name="Months" xml:space="preserve">
     <value>Months</value>
   </data>
+  <data name="No entries yet." xml:space="preserve">
+    <value>No entries yet.</value>
+  </data>
 </root>

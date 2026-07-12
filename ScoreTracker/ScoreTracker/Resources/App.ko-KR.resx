@@ -3162,4 +3162,7 @@
   <data name="Months" xml:space="preserve">
     <value>개월</value>
   </data>
+  <data name="No entries yet." xml:space="preserve">
+    <value>아직 참가 기록이 없습니다.</value>
+  </data>
 </root>
