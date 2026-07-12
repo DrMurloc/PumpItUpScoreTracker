@@ -38,6 +38,43 @@
     <meta property="og:description" content="Randomize and protect/veto Pump It Up charts">
 </HeadContent>
 
+@* New match panel body, shared by all three triggers (desktop header, empty state,
+   dock) so the fields never duplicate — each trigger just anchors a popover around it
+   (round 12). *@
+@{
+    RenderFragment newMatchBody =
+        @<text>
+            @if (_tournamentSettings.Any())
+            {
+                <MudTextField @ref="_newMatchNameField" T="string" @bind-Value="_newMatchName" Label="@L["Match name"]"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true"></MudTextField>
+                <MudSelect T="string" @bind-Value="_newMatchPreset" Label="@L["Settings preset"]"
+                           Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true" Class="rand-preset-select">
+                    @foreach (var preset in _tournamentSettings.Values.OrderBy(s => s.SettingsName.ToString()))
+                    {
+                        var name = preset.SettingsName.ToString();
+                        <MudSelectItem T="string" Value="name">
+                            <div class="rand-preset-item">
+                                <span class="rand-preset-name">@name</span>
+                                <span class="rand-preset-summary">@SettingsSummary(preset)</span>
+                            </div>
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           Disabled="_busy || string.IsNullOrWhiteSpace(_newMatchName) || string.IsNullOrWhiteSpace(_newMatchPreset)"
+                           OnClick="CreateMatch">@L["Create & draw"]</MudButton>
+            }
+            else
+            {
+                @* Owner-locked (round 6): no matches without a tournament preset. *@
+                <MudText Typo="Typo.body2">@L["Matches draw from a tournament preset — save one first."]</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune"
+                           OnClick="OpenSettingsFromNewMatch">@L["Open Settings"]</MudButton>
+            }
+        </text>;
+}
+
 @if (_draftMode)
 {
     <div class="rand-draft-head">
@@ -86,10 +123,16 @@ else
                                      Class="rand-match-select"></MudAutocomplete>
                     @if (CanOperate)
                     {
+                        @* Desktop New match opens a popover below the top-right button (round 12). *@
                         <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
-                                       StartIcon="@Icons.Material.Filled.Add"
-                                       OnClick="() => _showNewMatch = !_showNewMatch">@L["New match"]</MudButton>
+                            <div class="folder-picker-anchor rand-newmatch-anchor">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.Add"
+                                           OnClick="ToggleNewMatch">@L["New match"]</MudButton>
+                                <MudPopover Open="_showNewMatch" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                                    <div class="rand-new-match-pop">@newMatchBody</div>
+                                </MudPopover>
+                            </div>
                         </MudHidden>
                     }
                 </div>
@@ -138,44 +181,8 @@ else
         </div>
     }
 
-    @if (_contextTournamentId != null)
-    {
-        @* Match management (delete/rename/redraw/invites) lives in the manage drawer
-           (round 8); the match picker rides the header (round 9). *@
-        @if (_showNewMatch && CanOperate)
-        {
-            <div class="rand-create-tournament">
-                @if (_tournamentSettings.Any())
-                {
-                    <MudTextField T="string" @bind-Value="_newMatchName" Label="@L["Match name"]"
-                                  Variant="Variant.Outlined" Margin="Margin.Dense"></MudTextField>
-                    <MudSelect T="string" @bind-Value="_newMatchPreset" Label="@L["Settings preset"]"
-                               Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true" Class="rand-preset-select">
-                        @foreach (var preset in _tournamentSettings.Values.OrderBy(s => s.SettingsName.ToString()))
-                        {
-                            var name = preset.SettingsName.ToString();
-                            <MudSelectItem T="string" Value="name">
-                                <div class="rand-preset-item">
-                                    <span class="rand-preset-name">@name</span>
-                                    <span class="rand-preset-summary">@SettingsSummary(preset)</span>
-                                </div>
-                            </MudSelectItem>
-                        }
-                    </MudSelect>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                               Disabled="_busy || string.IsNullOrWhiteSpace(_newMatchName) || string.IsNullOrWhiteSpace(_newMatchPreset)"
-                               OnClick="CreateMatch">@L["Create & draw"]</MudButton>
-                }
-                else
-                {
-                    @* Owner-locked (round 6): no matches without a tournament preset. *@
-                    <MudText Typo="Typo.body2">@L["Matches draw from a tournament preset — save one first."]</MudText>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune"
-                               OnClick="OpenSettingsFromNewMatch">@L["Open Settings"]</MudButton>
-                }
-            </div>
-        }
-    }
+    @* New match is a popover now (round 12), anchored to whichever trigger you used —
+       the desktop header button, the empty-state button, or the dock. *@
 
     @if (_showCreateTournament)
     {
@@ -279,8 +286,16 @@ else if (!_cards.Any())
             @if (CanOperate)
             {
                 <MudText Typo="Typo.body2">@L["A match is a named draw — create one and it fills from a tournament preset."]</MudText>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-                           Disabled="_busy" OnClick="() => _showNewMatch = true">@L["New match"]</MudButton>
+                @* Popover below on desktop; on phones the dock CTA (popover above) drives it (round 12). *@
+                <div class="folder-picker-anchor rand-newmatch-anchor">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                               Disabled="_busy" OnClick="ToggleNewMatch">@L["New match"]</MudButton>
+                    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                        <MudPopover Open="_showNewMatch" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+                            <div class="rand-new-match-pop">@newMatchBody</div>
+                        </MudPopover>
+                    </MudHidden>
+                </div>
             }
             else
             {
@@ -586,6 +601,9 @@ else
 @* The tier lists' chart details surface — one concept, one component. *@
 <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="@(_detailsChart?.Mix ?? _mix)"></ChartDetailsDialog>
 
+@* Click-away for the New match popover (round 12) — mirrors the Add Chart overlay. *@
+<MudOverlay Visible="_showNewMatch" OnClick="CloseNewMatch" ZIndex="1199"></MudOverlay>
+
 <PageDock FocusMode="_draftMode">
     @if (_draftMode)
     {
@@ -608,8 +626,14 @@ else
             {
                 <MudIconButton Icon="@Icons.Material.Filled.Settings" Class="dock-side" OnClick="OpenManage"
                                aria-label="@L["Manage tournament"]"></MudIconButton>
-                <MudButton Class="dock-cta" Disabled="_busy" OnClick="() => _showNewMatch = true"
-                           StartIcon="@Icons.Material.Filled.Add">@L["New match"]</MudButton>
+                @* Dock New match opens a popover above the bottom bar (round 12). *@
+                <div class="folder-picker-anchor dock-cta-anchor">
+                    <MudButton Class="dock-cta" Disabled="_busy" OnClick="ToggleNewMatch"
+                               StartIcon="@Icons.Material.Filled.Add">@L["New match"]</MudButton>
+                    <MudPopover Open="_showNewMatch" AnchorOrigin="Origin.TopCenter" TransformOrigin="Origin.BottomCenter">
+                        <div class="rand-new-match-pop">@newMatchBody</div>
+                    </MudPopover>
+                </div>
             }
         }
         else
@@ -705,6 +729,8 @@ else
     private bool _showAddChart;
     private bool _focusAddChart;
     private ChartSelector? _addChartSelector;
+    private bool _focusNewMatch;
+    private MudTextField<string>? _newMatchNameField;
     private int? _matchCount;
     private CancellationTokenSource? _countCts;
 
@@ -1437,12 +1463,30 @@ else
         _focusAddChart = _showAddChart;
     }
 
+    private void ToggleNewMatch()
+    {
+        _showNewMatch = !_showNewMatch;
+        // The name field autofocuses once the popover content renders (round 12).
+        _focusNewMatch = _showNewMatch;
+    }
+
+    private void CloseNewMatch()
+    {
+        _showNewMatch = false;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (_focusAddChart && _showAddChart && _addChartSelector != null)
         {
             _focusAddChart = false;
             await _addChartSelector.FocusAsync();
+        }
+
+        if (_focusNewMatch && _showNewMatch && _newMatchNameField != null)
+        {
+            _focusNewMatch = false;
+            await _newMatchNameField.FocusAsync();
         }
     }
 

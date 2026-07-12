@@ -512,6 +512,26 @@ html.nav-away .page-dock,
     max-width: 90vw;
 }
 
+/* New match popover (round 12): the panel content inside whichever trigger's popover. */
+.rand-new-match-pop {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 300px;
+    max-width: 90vw;
+    padding: 14px;
+}
+
+/* Header + empty-state anchors hug their button; the dock anchor fills the CTA slot. */
+.rand-newmatch-anchor {
+    display: inline-flex;
+}
+
+.dock-cta-anchor {
+    flex: 1;
+    display: flex;
+}
+
 .rand-empty {
     display: flex;
     flex-direction: column;
