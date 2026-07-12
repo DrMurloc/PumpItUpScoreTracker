@@ -1,8 +1,9 @@
 # Home Page Widget Builder
 
-**Status**: spec locked 2026-07-12; implementation not started. Sequencing (owner): **PR #1 = Pumbility
-history capture + Projections v2 (§5)** — small, merged fast so trend data accrues immediately;
-**PR #2 = the shell + starter trio (§2–§3)**. Mocks: [dashboard](https://claude.ai/code/artifact/d55215b1-ce72-4623-ba10-9950266f4847)
+**Status**: spec locked 2026-07-12; **PR #1 (§5 + history capture) implemented — this PR**;
+PR #2 (shell + trio) next. Sequencing (owner): **PR #1 = Pumbility history capture + Projections v2
+(§5)** — small, merged fast so trend data accrues immediately; **PR #2 = the shell + starter trio
+(§2–§3)**. Mocks: [dashboard](https://claude.ai/code/artifact/d55215b1-ce72-4623-ba10-9950266f4847)
 · [widget spec sheets](https://claude.ai/code/artifact/809e2710-c596-4454-96fd-f5a8fc765871).
 
 `/WhatShouldIPlay` is being retired. In its place: a fully customizable, multi-page, cross-mix widget
@@ -389,7 +390,9 @@ mixed top-50 pool. Phoenix 2 is explicitly disabled — the in-code TODO defers 
    function with the table pinned by a DomainTest; recalibrate for P2 once its plate data accumulates
    (same query, one constant swap) — explicitly not an exact science.
 4. While in there: assert `PlayerRatingsImprovedEvent.NewTop50` equals the P2 two-pool combined value
-   (feeds the P1 history capture in this same PR).
+   (feeds the P1 history capture in this same PR). *Verified: `PlayerRatingSaga` sums the int-floored
+   S+D pools so `SkillRating == SinglesRating + DoublesRating` exactly, and the same variable feeds
+   the stats record and the event.*
 
 **Tests**: pool math + proficiency adjustment as pure DomainTests; saga component tests with mocked
 readers over a fixed cohort fixture; the skill-deviation query handler gets tests pinning equivalence
