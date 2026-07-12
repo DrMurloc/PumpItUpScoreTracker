@@ -790,15 +790,17 @@ html.nav-away .page-dock,
     font-size: .85rem;
 }
 
-/* Summaries render only inside the dropdown popover — the closed select shows just
-   the preset name (round 7: the two-line clone skewed the input's layout). */
+/* Summaries render only on the open dropdown's list items — the closed select shows
+   just the preset name (round 7: the two-line clone skewed the input's layout).
+   Scoped to .mud-list-item, not .mud-popover, so it stays hidden even when the whole
+   select lives inside another popover, like the New match panel (round 12). */
 .rand-preset-summary {
     display: none;
     font-size: .7rem;
     color: var(--mix-ink-muted);
 }
 
-.mud-popover .rand-preset-summary {
+.mud-list-item .rand-preset-summary {
     display: block;
 }
 
