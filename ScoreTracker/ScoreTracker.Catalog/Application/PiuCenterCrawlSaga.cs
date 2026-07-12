@@ -121,11 +121,11 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
     private static ExternalChartAlias[] ResolvedIn(IReadOnlyList<ExternalChartAlias> aliases,
         IReadOnlyList<PiuCenterChartListing> table)
     {
-        var listedKeys = table.Select(t => t.ExternalKey).ToHashSet();
+        var listedKeys = table.Select(t => t.ExternalKey).ToHashSet(StringComparer.OrdinalIgnoreCase);
         return aliases
             .Where(a => a.ChartId != null && a.Status != ExternalAliasStatus.NotFound)
             .Where(a => listedKeys.Contains(a.ExternalKey))
-            .GroupBy(a => a.ExternalKey).Select(g => g.First())
+            .GroupBy(a => a.ExternalKey, StringComparer.OrdinalIgnoreCase).Select(g => g.First())
             .ToArray();
     }
 
@@ -133,8 +133,11 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         IReadOnlyList<PiuCenterChartListing> table, IReadOnlyList<Chart> phoenixCharts, DateTimeOffset now,
         CancellationToken cancellationToken)
     {
+        // Ordinal-ignore-case throughout the alias path: the SQL unique index compares
+        // case-insensitively, and piucenter's table carries case-twin junk rows
+        // ("..._s19_ARCADE" vs "..._S19_ARCADE") that must not read as new keys.
         var known = (await _aliases.GetAliases(PiuCenterMetrics.Source, cancellationToken))
-            .ToDictionary(a => a.ExternalKey);
+            .ToDictionary(a => a.ExternalKey, StringComparer.OrdinalIgnoreCase);
         var matchIndex = BuildMatchIndex(phoenixCharts);
         var alreadyResolved = known.Values
             .Where(a => a.ChartId != null && a.Status != ExternalAliasStatus.NotFound)

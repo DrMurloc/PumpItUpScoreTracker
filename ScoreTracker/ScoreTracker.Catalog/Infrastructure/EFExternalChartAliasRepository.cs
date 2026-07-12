@@ -18,9 +18,11 @@ internal sealed class EFExternalChartAliasRepository : IExternalChartAliasReposi
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Ignore-case: the unique index on (Source, ExternalKey) compares under the
+        // database's case-insensitive collation — the upsert must agree with it.
         var existing = await database.Set<ExternalChartAliasEntity>()
             .Where(e => e.Source == source)
-            .ToDictionaryAsync(e => e.ExternalKey, cancellationToken);
+            .ToDictionaryAsync(e => e.ExternalKey, StringComparer.OrdinalIgnoreCase, cancellationToken);
 
         foreach (var alias in aliases)
             if (existing.TryGetValue(alias.ExternalKey, out var entity))

@@ -97,6 +97,32 @@ public sealed class PiuCenterCrawlSagaTests
     }
 
     [Fact]
+    public async Task CaseTwinKeysAreNotTreatedAsNewAliases()
+    {
+        // piucenter's table carries case-twin junk rows ("..._s19_ARCADE" next to
+        // "..._S19_ARCADE"); the SQL unique index compares case-insensitively, so
+        // treating the twin as a new key blows up the insert (field-test 2026-07-11).
+        var chart = new ChartBuilder().Build();
+        SetupDefaults(new[] { chart },
+            new[]
+            {
+                Listing("Fallen_Angel_-_DM_Ashura_S19_ARCADE", level: 19),
+                Listing("Fallen_Angel_-_DM_Ashura_s19_ARCADE", level: 19)
+            },
+            new[]
+            {
+                new ExternalChartAlias("Fallen_Angel_-_DM_Ashura_S19_ARCADE", chart.Id,
+                    ExternalAliasStatus.Manual, Now)
+            },
+            new[] { new ChartSkillMetric(chart.Id, PiuCenterMetrics.DataVersion, 50726m, null) });
+
+        await Consume();
+
+        _aliases.Verify(a => a.SaveAliases(It.IsAny<string>(), It.IsAny<IEnumerable<ExternalChartAlias>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task NotFoundCandidateFlipsToAutoWhenItsKeyAppearsUpstream()
     {
         var chart = new ChartBuilder().Build();
