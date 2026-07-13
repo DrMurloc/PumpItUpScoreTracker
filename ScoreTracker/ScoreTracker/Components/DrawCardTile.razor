@@ -1,0 +1,148 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Randomizer.Contracts
+@using ScoreTracker.Web.Enums
+
+@* The randomizer draw card (docs/design/randomizer-overhaul.md): tier-card vocabulary
+   plus a gold order badge (drafts are verbal — "veto four") and protect/veto state
+   rendered IN PLACE — cards never jump; Clear Vetoed is the only compaction. Held wears
+   the mix-primary ring, deliberately not the owner-locked pass-green border. Compact:
+   the whole tile is the tap target for the armed action, tap again to undo. Comfortable:
+   explicit icon actions. Table density is the page's job, not the card's. *@
+@if (Density == UiDensity.Compact)
+{
+    <div class="tier-chart-card tier-chart-card-compact draw-card @StateClass" role="button" tabindex="0"
+         title="@Tooltip" @onclick="HandleTap">
+        <div class="tier-chart-card-jacket tier-chart-card-compact-jacket"
+             style="background-image:url('@Chart.Song.ImagePath')">
+            <div class="tier-chart-card-bubble">
+                <DifficultyBubble Chart="Chart" Height="18"></DifficultyBubble>
+            </div>
+            <span class="draw-card-order">@Order</span>
+            @StateChip
+        </div>
+        <div class="tier-chart-card-body">
+            <span class="tier-chart-card-name draw-card-name">@Chart.Song.Name</span>
+        </div>
+    </div>
+}
+else
+{
+    <div class="tier-chart-card draw-card @StateClass" title="@Tooltip">
+        <div class="tier-chart-card-jacket" style="background-image:url('@Chart.Song.ImagePath')">
+            <div class="tier-chart-card-bubble">
+                <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
+            </div>
+            <span class="draw-card-order">@Order</span>
+            @StateChip
+        </div>
+        <div class="tier-chart-card-body">
+            <MudTooltip Text="@Chart.Song.Name.ToString()" ShowOnFocus="true">
+                <MudText Typo="Typo.subtitle1" Class="tier-chart-card-name draw-card-name">@Chart.Song.Name</MudText>
+            </MudTooltip>
+        </div>
+        @if (!Disabled)
+        {
+            <div class="tier-chart-card-actions">
+                @if (OnDetails.HasDelegate)
+                {
+                    <MudTooltip Text="@L["Details"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Info"
+                                       OnClick="() => OnDetails.InvokeAsync(PullId)"
+                                       aria-label="@L["Details"]"></MudIconButton>
+                    </MudTooltip>
+                }
+                <MudSpacer></MudSpacer>
+                @if (State == DrawCardState.None)
+                {
+                    <MudTooltip Text="@L["Protect"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Shield" Color="Color.Primary"
+                                       OnClick="() => OnProtect.InvokeAsync(PullId)"
+                                       aria-label="@L["Protect"]"></MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="@L["Veto"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                       OnClick="() => OnVeto.InvokeAsync(PullId)"
+                                       aria-label="@L["Veto"]"></MudIconButton>
+                    </MudTooltip>
+                }
+                else
+                {
+                    <MudTooltip Text="@L["Undo"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Undo" Color="Color.Warning"
+                                       OnClick="() => OnUndo.InvokeAsync(PullId)"
+                                       aria-label="@L["Undo"]"></MudIconButton>
+                    </MudTooltip>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+
+    [Parameter] public Guid PullId { get; set; }
+
+    [Parameter] public Chart Chart { get; set; } = null!;
+
+    /// <summary>1-based draw order — the number players call out.</summary>
+    [Parameter] public int Order { get; set; }
+
+    [Parameter] public DrawCardState State { get; set; }
+
+    [Parameter] public UiDensity Density { get; set; } = UiDensity.Compact;
+
+    /// <summary>Read-only rendering (the spectator page): no taps, no action row.</summary>
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Compact tap — the page applies the armed action (or undoes it).</summary>
+    [Parameter] public EventCallback<Guid> OnTap { get; set; }
+
+    [Parameter] public EventCallback<Guid> OnProtect { get; set; }
+
+    [Parameter] public EventCallback<Guid> OnVeto { get; set; }
+
+    [Parameter] public EventCallback<Guid> OnUndo { get; set; }
+
+    /// <summary>Opens the chart-details dialog (the tier lists' ChartDetailsDialog).</summary>
+    [Parameter] public EventCallback<Guid> OnDetails { get; set; }
+
+    private string StateClass => State switch
+    {
+        DrawCardState.Protected => "draw-card-held",
+        DrawCardState.Vetoed => "draw-card-vetoed",
+        _ => string.Empty
+    };
+
+    private string? StateWord => State switch
+    {
+        DrawCardState.Protected => L["Held"],
+        DrawCardState.Vetoed => L["Vetoed"],
+        _ => null
+    };
+
+    // Identity + state in words: the hue and the strike never travel alone (rule 8),
+    // and compact tiles keep a text identity beyond the truncated name (rule 7).
+    private string Tooltip => StateWord == null
+        ? $"{Chart.Song.Name} {Chart.DifficultyString}"
+        : $"{Chart.Song.Name} {Chart.DifficultyString} — {StateWord}";
+
+    private RenderFragment? StateChip => State == DrawCardState.None
+        ? null
+        : builder =>
+        {
+            builder.OpenElement(0, "span");
+            builder.AddAttribute(1, "class",
+                State == DrawCardState.Protected
+                    ? "draw-card-state-chip draw-card-state-held-chip"
+                    : "draw-card-state-chip draw-card-state-vetoed-chip");
+            builder.AddContent(2, StateWord);
+            builder.CloseElement();
+        };
+
+    private Task HandleTap()
+    {
+        return Disabled ? Task.CompletedTask : OnTap.InvokeAsync(PullId);
+    }
+}

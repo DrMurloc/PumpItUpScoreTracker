@@ -14,6 +14,7 @@ using ScoreTracker.HomePage.Wiring;
 using ScoreTracker.Identity.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
+using ScoreTracker.Randomizer.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.Ucs.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
@@ -49,6 +50,7 @@ public static class RegistrationExtensions
         builder.AddIdentity();
         builder.AddOfficialMirror();
         builder.AddPlayerProgress();
+        builder.AddRandomizer();
         builder.AddScoreLedger();
         builder.AddUcs();
         builder.AddWeeklyChallenge();

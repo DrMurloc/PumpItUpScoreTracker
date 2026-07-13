@@ -1,0 +1,84 @@
+@namespace ScoreTracker.Web.Components
+
+@* Dual-thumb level range (docs/design/randomizer-overhaul.md): the primary way to say
+   "S16–S18" — two drags instead of a wall of switches. The working range prints beside
+   the label so the fill is never the only channel (rule 8). Two overlaid native range
+   inputs; thumbs alone take pointer events. Gap-y level sets live under Advanced. *@
+<div class="range-slider @(Disabled ? "range-slider-disabled" : string.Empty)">
+    <div class="range-slider-head">
+        <span class="range-slider-label">@Label</span>
+        <span class="range-slider-value">@Display</span>
+    </div>
+    <div class="range-slider-track-wrap">
+        <span class="range-slider-track"></span>
+        <span class="range-slider-fill" style="left:@(Percent(ValueMin).ToString(System.Globalization.CultureInfo.InvariantCulture))%;right:@((100 - Percent(ValueMax)).ToString(System.Globalization.CultureInfo.InvariantCulture))%"></span>
+        <input type="range" min="@Min" max="@Max" step="1" value="@ValueMin" disabled="@Disabled"
+               aria-label="@($"{Label} {L["Minimum"]}")" @oninput="SetMin"/>
+        <input type="range" min="@Min" max="@Max" step="1" value="@ValueMax" disabled="@Disabled"
+               aria-label="@($"{Label} {L["Maximum"]}")" @oninput="SetMax"/>
+    </div>
+    <div class="range-slider-ticks">
+        @foreach (var tick in Ticks)
+        {
+            <span style="left:@(Percent(tick).ToString(System.Globalization.CultureInfo.InvariantCulture))%">@Prefix@tick</span>
+        }
+    </div>
+</div>
+
+@code {
+
+    [Parameter] public string Label { get; set; } = string.Empty;
+
+    /// <summary>Display prefix for values and ticks ("S", "D"); not part of the data.</summary>
+    [Parameter] public string Prefix { get; set; } = string.Empty;
+
+    [Parameter] public int Min { get; set; } = 1;
+
+    [Parameter] public int Max { get; set; } = 29;
+
+    [Parameter] public int ValueMin { get; set; }
+
+    [Parameter] public EventCallback<int> ValueMinChanged { get; set; }
+
+    [Parameter] public int ValueMax { get; set; }
+
+    [Parameter] public EventCallback<int> ValueMaxChanged { get; set; }
+
+    [Parameter] public bool Disabled { get; set; }
+
+    private string Display => Disabled ? L["Off"] : $"{Prefix}{ValueMin} – {Prefix}{ValueMax}";
+
+    private double Percent(int value)
+    {
+        return Max == Min ? 0 : (value - Min) * 100.0 / (Max - Min);
+    }
+
+    // Ends plus quarter points, deduplicated for small ranges.
+    private IEnumerable<int> Ticks
+    {
+        get
+        {
+            var span = Max - Min;
+            return new[] { Min, Min + span / 4, Min + span / 2, Min + 3 * span / 4, Max }.Distinct();
+        }
+    }
+
+    private async Task SetMin(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var value)) return;
+
+        // Thumbs never cross: the min thumb stops at the max thumb.
+        var clamped = Math.Clamp(value, Min, ValueMax);
+        ValueMin = clamped;
+        await ValueMinChanged.InvokeAsync(clamped);
+    }
+
+    private async Task SetMax(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var value)) return;
+
+        var clamped = Math.Clamp(value, ValueMin, Max);
+        ValueMax = clamped;
+        await ValueMaxChanged.InvokeAsync(clamped);
+    }
+}

@@ -99,3 +99,17 @@ window.dashboardGrid = {
         return null;
     }
 };
+
+// Card-strip pager arrows (suggested-charts field test): delegated once at load so it
+// works in browse mode and survives Blazor re-renders — the click never crosses
+// SignalR, it's pure client-side scrolling. Any widget using the .dash-strip-wrap /
+// .dash-card-strip vocabulary gets paging for free.
+document.addEventListener('click', function (e) {
+    const arrow = e.target.closest && e.target.closest('.dash-strip-arrow');
+    if (!arrow) return;
+    const wrap = arrow.closest('.dash-strip-wrap');
+    const strip = wrap && wrap.querySelector('.dash-card-strip');
+    if (!strip) return;
+    const direction = arrow.classList.contains('dash-strip-arrow-left') ? -1 : 1;
+    strip.scrollBy({ left: direction * strip.clientWidth * 0.8, behavior: 'smooth' });
+});

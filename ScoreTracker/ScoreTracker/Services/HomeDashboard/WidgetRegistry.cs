@@ -59,7 +59,54 @@ public static class WidgetRegistry
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(CommunityHighlightsWidget),
             typeof(CommunityHighlightsConfigPanel),
-            typeof(CommunityHighlightsConfig))
+            typeof(CommunityHighlightsConfig)),
+        new("suggested-charts",
+            "Suggested Charts",
+            "Charts picked for you, tuned by goal.",
+            WidgetCategory.Play,
+            Icons.Material.Filled.Recommend,
+            // 1x3 = the extra-long list (round 4); 3x1/4x1 = wider strips (round 7).
+            new[]
+            {
+                SizePreset.OneByTwo, SizePreset.OneByThree, SizePreset.TwoByOne,
+                SizePreset.ThreeByOne, SizePreset.FourByOne, SizePreset.TwoByTwo
+            },
+            SizePreset.OneByTwo,
+            new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            typeof(SuggestedChartsWidget),
+            typeof(SuggestedChartsConfigPanel),
+            typeof(SuggestedChartsConfig),
+            // One widget type, goal-preset drawer entries (D10).
+            DrawerPresets: new[]
+            {
+                new WidgetDrawerPreset("Suggested · Title Hunt",
+                    "Charts toward your next title, plus skill titles one SSS away.",
+                    WidgetConfigJson.Write(new SuggestedChartsConfig { Goal = SuggestedGoal.TitleHunt })),
+                new WidgetDrawerPreset("Suggested · Score Push",
+                    "Closest PGs, top-50 picks, and old scores due a revisit.",
+                    WidgetConfigJson.Write(new SuggestedChartsConfig { Goal = SuggestedGoal.ScorePush })),
+                new WidgetDrawerPreset("Suggested · Fill Gaps",
+                    "Approachable unpassed charts around your level.",
+                    WidgetConfigJson.Write(new SuggestedChartsConfig
+                    {
+                        Goal = SuggestedGoal.FillGaps,
+                        LevelMode = SuggestedLevelMode.Dynamic,
+                        // Fills reach down by identity; nothing above by default.
+                        SpreadBelow = 3,
+                        SpreadAbove = 0
+                    }))
+            },
+            // Instance titles follow the configured goal so rapid-firing all three
+            // presets never yields three "Suggested Charts" (owner, field test).
+            DynamicNameKey: configJson =>
+                WidgetConfigJson.Read<SuggestedChartsConfig>(configJson).Goal switch
+                {
+                    SuggestedGoal.ScorePush => "Suggested · Score Push",
+                    SuggestedGoal.FillGaps => "Suggested · Fill Gaps",
+                    _ => "Suggested · Title Hunt"
+                },
+            RefreshIcon: Icons.Material.Filled.Shuffle,
+            RefreshTitleKey: "Shuffle suggestions")
     };
 
     private static readonly IReadOnlyDictionary<string, WidgetDescriptor> ByTypeId =

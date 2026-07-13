@@ -1,546 +1,1808 @@
 @page "/ChartRandomizer"
 @using MediatR
+@using System.Text.Json
+@using Microsoft.Extensions.Options
 @using ScoreTracker.Catalog.Contracts.Queries
-@using ScoreTracker.Catalog.Contracts.Commands
-@using ScoreTracker.Catalog.Contracts
-@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.EventCompetition.Contracts
 @using ScoreTracker.EventCompetition.Contracts.Commands
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.Identity.Contracts.Queries
+@using ScoreTracker.Randomizer.Contracts
+@using ScoreTracker.Randomizer.Contracts.Commands
+@using ScoreTracker.Randomizer.Contracts.Events
+@using ScoreTracker.Randomizer.Contracts.Queries
+@using ScoreTracker.Web.Shared
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Domain.Models;
-@using ScoreTracker.Domain.SecondaryPorts
-@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
-@using System.Text.Json
-@using MassTransit.Configuration
-@using Microsoft.Extensions.Options
-@using ScoreTracker.Application.Commands
 @using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services
-<PageTitle>Chart Randomizer</PageTitle>
+@using ScoreTracker.Web.Services.Contracts
+
+@* Draw-first (docs/design/randomizer-overhaul.md): the cards are the answer and they
+   render at the top; settings live behind the drawer; the dock keeps Randomize on the
+   thumb. Card order is frozen — protect/veto restyle in place, Clear Vetoed is the only
+   compaction. Contexts: personal (default) or a tournament the user holds a role in
+   (?tournament=): draws and the settings library swap to the tournament's, and draft
+   mode takes the shell over (focus mode) for the staff tablet players tap. *@
+<PageTitle>@(_contextTournamentId == null ? (string)L["Chart Randomizer"] : ContextName)</PageTitle>
 <HeadContent>
-    <meta name="description" content="Randommize and protect/veto charts for PIU" />
+    <meta name="description" content="Randomize and protect/veto Pump It Up charts"/>
     <meta property="og:title" content="PIU Chart Randomizer">
-    <meta property="og:description" content="Randommize and protect/veto charts for PIU">
+    <meta property="og:description" content="Randomize and protect/veto Pump It Up charts">
 </HeadContent>
-@if (!CurrentUser.IsLoggedIn)
-{
-    <MudText Color="Color.Error" Typo="Typo.body1">You are not logged in, your configuration and results will be lost if you refresh.</MudText>
-}
-@if (CurrentUser.IsLoggedIn)
-{
-    <MudGrid>
-        @if (_tournamentsWithSettings.Any())
-        {
-            <MudItem xs="12">
-                <MudSelect T="Guid?" Value="_selectedTournamentId" ValueChanged="LoadTournamentSettings" Label="Tournament" Clearable="true">
-                    @foreach(var tournament in _tournamentsWithSettings)
-                    {
-                        <MudSelectItem T="Guid?" Value="tournament.Key">@tournament.Value</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-        }
-        @if (_savedSettings.Any())
-        {
 
-            <MudItem xs="12">
-                <MudSelect T="string" Value="_currentSettings" ValueChanged="SelectSettings" Label=@L["Saved Settings"] Clearable="true">
-                    @foreach (var kv in _savedSettings.OrderBy(kv => kv.Key))
-                    {
-                        <MudSelectItem T="string" Value="kv.Key">@kv.Key</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-        }
-        @if (_selectedTournamentId == null)
-        {
-            <MudItem xs="12" sm="8">
-                <MudTextField T="string" @bind-Value="_newSettingsName" Label=@L["Settings Name"]></MudTextField>
-            </MudItem>
-            <MudItem xs="6" sm="2">
-                <MudButton Color="Color.Primary" Disabled="_isSaving || string.IsNullOrWhiteSpace(_newSettingsName)" OnClick="SaveSettings" StartIcon="@Icons.Material.Filled.Save">@L["Save"]</MudButton>
-            </MudItem>
-            <MudItem xs="6" sm="2">
-                @if (_savedSettings.ContainsKey(_newSettingsName))
-                {
-                    <MudButton Color="Color.Warning" Disabled="_isSaving" OnClick="DeleteSettings" StartIcon="@Icons.Material.Filled.DeleteForever">@L["Delete"]</MudButton>
-                }
-            </MudItem>
-        }
-        else
-        {
-            <MudItem xs="6" sm="2">
-                <MudButton Color="Color.Primary" Disabled="_isSaving" OnClick="SaveSettings" StartIcon="@Icons.Material.Filled.Save">@L["Save"]</MudButton>
-            </MudItem>
-        }
-    </MudGrid>
-    <br/>
-}
-<RandomizerSettingsConfiguration Settings="_settings" ></RandomizerSettingsConfiguration>
-<br/>
-<MudGrid>
-    <MudItem sm="3" xs="11">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RandomizeCharts">Randomize Charts</MudButton>
-    </MudItem>
-    @if (_pulledCharts.Any())
-    {
-        
-        <MudItem xs="1">
-            <MudTooltip Text="Copy Results To Clipboard">
-                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" OnClick="CopyDrawState" Color="Color.Primary" Variant="Variant.Outlined"></MudIconButton>
-            </MudTooltip>
-        </MudItem>
-    }
-</MudGrid>
-<br/>
-<MudGrid>
-    @foreach (var (chart,i) in _pulledCharts.Select((chart,i)=>(chart,i)).OrderBy(c=>!_vetoedCharts.Contains(c.i)?0:1).ThenBy(c=>_protectedCharts.Contains(c.i)?_protectedCharts.Count():_protectedCharts.IndexOf(c.i)).ThenBy(c=>c.i))
-    {
-        var index = i;
-        <MudItem xs="6" sm="4" md="3" lg="2" xl="1">
-            <MudCard Class=@CardClass(index) Style="@CardStyle(index)">
-                <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
-                    <DifficultyBubble Chart="chart"></DifficultyBubble>
-                </MudCardHeader>
-                <MudCardActions>
-                    @if (_protectedCharts.Contains(index))
-                    {
-                        <MudIcon Icon="@Icons.Material.Filled.Shield" Color="Color.Success"></MudIcon>
-                    }
-                    @if (_vetoedCharts.Contains(index))
-                    {
-                        <MudIcon Icon="@Icons.Material.Filled.Delete" Color="Color.Error"></MudIcon>
-                    }
-                    <MudSpacer></MudSpacer>
-                    <MudTooltip Text="Open Embeded Video">
-                        <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
-                    </MudTooltip>
-                    @if (!_protectedCharts.Contains(index) && !_vetoedCharts.Contains(index))
-                    {
-                        <MudTooltip Text="Protect">
-                            <MudIconButton Icon="@Icons.Material.Filled.Shield" OnClick="@(() => ProtectChart(index))" Color="Color.Success"></MudIconButton>
-                        </MudTooltip>
-                        <MudTooltip Text="Veto">
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => VetoChart(index))" Color="Color.Error"></MudIconButton>
-                        </MudTooltip>
-                    }
-                    @if (_protectedCharts.Contains(index))
-                    {
-                        <MudTooltip Text="Cancel">
-                            <MudIconButton Icon="@Icons.Material.Filled.Undo" OnClick="() => CancelProtect(index)" Color="Color.Warning"></MudIconButton>
-                        </MudTooltip>
-                    }
-                    @if (_vetoedCharts.Contains(index))
-                    {
-                        <MudTooltip Text="Cancel">
-                            <MudIconButton Icon="@Icons.Material.Filled.Undo" OnClick="() => CancelVeto(index)" Color="Color.Warning"></MudIconButton>
-                        </MudTooltip>
-                    }
-                </MudCardActions>
-            </MudCard>
-        </MudItem>
-    }
-    @if (_pulledCharts.Any())
-    {
-        
-        <MudItem xs="6" sm="4" md="3" lg="2" xl="1">
-            <ChartSelector ChartIdSelected="SelectChart"></ChartSelector><br/>
-
-            <MudButton EndIcon="@Icons.Material.Filled.Add" Disabled="_selectedChart==null || _isSaving" OnClick="AddChartToDraw" Color="Color.Primary">Add Chart</MudButton>
-        </MudItem>
-    }
-
-    @if (_vetoedCharts.Any())
-    {
-        <MudItem xs="12">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RemoveVetoedCharts">Remove Vetoed Charts</MudButton>
-        </MudItem>
-    }
-
-</MudGrid>
-
-
-@inject IMediator Mediator
-@inject ISnackbar Snackbar;
-@inject ICurrentUserAccessor CurrentUser;
-@inject ILogger<ChartRandomizer> Logger;
-@inject IAdminNotificationClient Notifications;
-
-@inject IJSRuntime JSRuntime;
-@inject IOptions<JsonSerializerOptions> JsonOptions;
-@inject IMatchRepository Matches;
-@inject ChartVideoDisplayer VideoDisplayer;
-@code {
-
-    private string CardClass(int chartOrder) => _vetoedCharts.Contains(chartOrder) || _protectedCharts.Contains(chartOrder) ? "chart-card border-solid border-2" : "chart-card";
-    private string CardStyle(int chartOrder) => _protectedCharts.Contains(chartOrder) ? $@"border-color:{Colors.Green.Darken1}" :
-        _vetoedCharts.Contains(chartOrder) ? $@"border-color:{Colors.Red.Darken1}" : "";
-    private RandomSettings _settings = new RandomSettings();
-
-    private int _count = 3;
-    private string _newSettingsName = string.Empty;
-    private string _currentSettings = string.Empty;
-    private Chart[] _pulledCharts = Array.Empty<Chart>();
-    private Guid? _selectedTournamentId = null;
-    private List<int> _protectedCharts = new ();
-    private List<int> _vetoedCharts = new();
-    private IDictionary<string, RandomSettings> _savedSettings = new Dictionary<string, RandomSettings>(StringComparer.OrdinalIgnoreCase);
-
-    private async Task LoadTournamentSettings(Guid? tournamentId)
-    {
-        _selectedTournamentId = tournamentId;
-        _currentSettings = string.Empty;
-        if (tournamentId == null)
-        {
-            _savedSettings = (await Mediator.Send(new GetRandomSettingsQuery())).ToDictionary(r => r.SettingsName.ToString(), r => r.Settings);
-            return;
-        }
-        _savedSettings = (await Matches.GetAllRandomSettings(tournamentId.Value, CancellationToken.None)).ToDictionary(s => s.name.ToString(), s => s.settings, StringComparer.OrdinalIgnoreCase);
-    }
-
-    private IDictionary<Guid, Name> _tournamentsWithSettings = new Dictionary<Guid, Name>();
-    private Chart? _selectedChart = null;
-
-    private Task SelectChart(Chart chart)
-    {
-        _selectedChart = chart;
-        StateHasChanged();
-        return Task.CompletedTask;
-    }
-
-    private async Task AddChartToDraw()
-    {
-        if (_selectedChart == null)
-        {
-            return;
-        }
-        _pulledCharts = _pulledCharts.Append(_selectedChart).ToArray();
-        await SaveLastResults();
-    }
-    private async Task CancelProtect(int order)
-    {
-        _protectedCharts.Remove(order);
-        await SaveLastResults();
-    }
-
-    private async Task CancelVeto(int order)
-    {
-        _vetoedCharts.Remove(order);
-        await SaveLastResults();
-    }
-    private async Task ProtectChart(int order)
-    {
-        _protectedCharts.Add(order);
-        await SaveLastResults();
-    }
-
-    private async Task VetoChart(int order)
-    {
-        _vetoedCharts.Add(order);
-        await SaveLastResults();
-    }
-    private async Task RemoveVetoedCharts()
-    {
-        
-        //God only knows how this works anymore.
-        //Because I have an "allow repeats" option index is the only way I can track protect/vetos.
-        //Possibly could clean up with usage of GUIDs to keep track of specific pulls instead of index but whatever.
-        var newCharts = new List<Chart>();
-        var offset = 0;
-        for(var i=0; i<_pulledCharts.Length-offset;i++)
-        {
-            if (_vetoedCharts.Contains(i))
+@* New match panel body, shared by all three triggers (desktop header, empty state,
+   dock) so the fields never duplicate — each trigger just anchors a popover around it
+   (round 12). *@
+@{
+    RenderFragment newMatchBody =
+        @<text>
+            @if (_tournamentSettings.Any())
             {
-                for (var j = 0; j < _protectedCharts.Count; j++)
-                {
-                    if (_protectedCharts[j] > i)
+                <MudTextField @ref="_newMatchNameField" T="string" @bind-Value="_newMatchName" Label="@L["Match name"]"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true"></MudTextField>
+                <MudSelect T="string" @bind-Value="_newMatchPreset" Label="@L["Settings preset"]"
+                           Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true" Class="rand-preset-select">
+                    @foreach (var preset in _tournamentSettings.Values.OrderBy(s => s.SettingsName.ToString()))
                     {
-                        _protectedCharts[j]--;
+                        var name = preset.SettingsName.ToString();
+                        <MudSelectItem T="string" Value="name">
+                            <div class="rand-preset-item">
+                                <span class="rand-preset-name">@name</span>
+                                <span class="rand-preset-summary">@SettingsSummary(preset)</span>
+                            </div>
+                        </MudSelectItem>
                     }
-                }
-                for (var j = 0; j < _vetoedCharts.Count; j++)
-                {
-                    if (_vetoedCharts[j] == i)
-                    {
-                        _vetoedCharts[j] = -1;
-                    }
-                    else if (_vetoedCharts[j] > i)
-                    {
-                        _vetoedCharts[j]--;
-                    }
-                }
-                offset++;
-                i--;
+                </MudSelect>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           Disabled="_busy || string.IsNullOrWhiteSpace(_newMatchName) || string.IsNullOrWhiteSpace(_newMatchPreset)"
+                           OnClick="CreateMatch">@L["Create & draw"]</MudButton>
             }
             else
             {
-                newCharts.Add(_pulledCharts[i+offset]);
+                @* Owner-locked (round 6): no matches without a tournament preset. *@
+                <MudText Typo="Typo.body2">@L["Matches draw from a tournament preset — save one first."]</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune"
+                           OnClick="OpenSettingsFromNewMatch">@L["Open Settings"]</MudButton>
             }
-        }
-        _vetoedCharts.Clear();
-        _pulledCharts = newCharts.ToArray();
-        await SaveLastResults();
-    }
+        </text>;
+}
 
-    private async Task CopyDrawState()
-    {
-        var text = "";
-        foreach (var (chart, index) in _pulledCharts.Select((chart, i) => (chart, i)).OrderBy(c => !_vetoedCharts.Contains(c.i) ? 0 : 1).ThenBy(c => _protectedCharts.Contains(c.i) ? _protectedCharts.Count() : _protectedCharts.IndexOf(c.i)).ThenBy(c => c.i))
+@if (_draftMode)
+{
+    <div class="rand-draft-head">
+        <button type="button" class="rand-exit-chip" @onclick="EndDraft">
+            <MudIcon Icon="@Icons.Material.Filled.FullscreenExit" Size="Size.Small"></MudIcon>@L["Exit full screen"]
+        </button>
+        <span class="rand-tour-pill">@ContextName@(SelectedMatchName == null ? null : $" · {SelectedMatchName}")</span>
+        <span class="rand-live"><span class="rand-live-dot"></span>@L["LIVE"]</span>
+        @if (_drawSlug != null)
         {
-            if (_vetoedCharts.Contains(index))
+            <MudIconButton Icon="@Icons.Material.Filled.Sensors" Size="Size.Small" Color="Color.Secondary"
+                           OnClick="CopySpectateLink" aria-label="@L["Copy spectate link"]"></MudIconButton>
+        }
+    </div>
+    <div class="rand-draft-armed">
+        <ArmedActionSelector @bind-Value="_armedAction" Loud="true"></ArmedActionSelector>
+    </div>
+}
+else
+{
+    <div class="rand-header">
+        @if (_contextTournamentId != null)
+        {
+            @* The tournament IS the page while you're in it (round 8) — no switcher back
+               to personal; a fresh /ChartRandomizer visit is the way out. The gear is the
+               tournament's control room. *@
+            <MudText Typo="Typo.h5">@ContextName</MudText>
+            @if (CanOperate)
             {
-                text += "~~";
+                @* Phone widths carry the cog on the dock — no duplicate (round 9). *@
+                <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                    <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Primary"
+                                   OnClick="OpenManage" aria-label="@L["Manage tournament"]"></MudIconButton>
+                </MudHidden>
             }
-            text += $"{chart.Song.Name} {chart.DifficultyString}";
-            if (_vetoedCharts.Contains(index))
+            @if (_matches.Any())
             {
-                text += "~~";
+                @* Match picker rides the header, right-aligned (round 9) — a full row of
+                   vertical space back. New match joins it on desktop; the dock CTA covers
+                   phones. *@
+                <div class="rand-header-match">
+                    <MudAutocomplete T="DrawDto" Value="SelectedMatch" ValueChanged="OnMatchPicked"
+                                     SearchFunc="@((s, c) => SearchMatches(s))" ToStringFunc="@(m => m?.Name ?? string.Empty)"
+                                     Label="@L["Match"]" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                     MaxItems="50" Clearable="false" MinCharacters="0" SelectValueOnTab="true"
+                                     Class="rand-match-select"></MudAutocomplete>
+                    @if (CanOperate)
+                    {
+                        @* Desktop New match opens a popover below the top-right button (round 12). *@
+                        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                            <div class="folder-picker-anchor rand-newmatch-anchor">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.Add"
+                                           OnClick="ToggleNewMatch">@L["New match"]</MudButton>
+                                <MudPopover Open="_showNewMatch" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                                    <div class="rand-new-match-pop">@newMatchBody</div>
+                                </MudPopover>
+                            </div>
+                        </MudHidden>
+                    }
+                </div>
             }
-            text += "\n";
-        }
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
-        Snackbar.Add("Results Copied to Clipboard!", Severity.Success);
-    }
-
-    private async Task SaveLastResults()
-    {
-        if (CurrentUser.IsLoggedIn)
-        {
-            _isSaving = true;
-            var savedResults = JsonSerializer.Serialize(new SavedResults
-                {
-                    ChartList = _pulledCharts.Select(c => c.Id).ToArray(),
-                    ProtectedCharts = _protectedCharts.ToArray(),
-                    VetoedCharts = _vetoedCharts.ToArray()
-                });
-            await Mediator.Send(new SaveUserUiSettingCommand(LastResultsKey, savedResults));
-            _isSaving = false;
-        }
-
-    }
-
-    private async Task SaveLastConfig()
-    {
-        if (CurrentUser.IsLoggedIn)
-        {
-            var savedResults = JsonSerializer.Serialize(new SavedConfiguration()
-            {
-                Count=_count,
-                AllowRepeats = _settings.AllowRepeats,
-                LevelWeights = _settings.LevelWeights,
-                    PlayerCountWeights = _settings.PlayerCountWeights,
-                DoubleWeights = _settings.DoubleLevelWeights,
-                SongTypeWeights = _settings.SongTypeWeights,
-                UseScoring = _settings.UseScoringLevels,
-                Buckets = _settings.CustomMinimums,
-            ChartTypeLevelMinimums = _settings.ChartTypeLevelMinimums,
-                ChartTypeMinimums = _settings.ChartTypeMinimums,
-                LevelMinimums = _settings.LevelMinimums,
-                LetterGrades = _settings.LetterGrades,
-                ClearStatus = _settings.ClearStatus
-            });
-            
-            await Mediator.Send(new SaveUserUiSettingCommand(LastConfigKey, savedResults));
-        }
-    }
-
-    private void SelectSettings(string newSettings)
-    {
-        _currentSettings = newSettings;
-        _newSettingsName = newSettings;
-        if (string.IsNullOrWhiteSpace(newSettings))
-        {
-            _settings = new RandomSettings();
-            return;
-        }
-        _settings = JsonSerializer.Deserialize<RandomSettings>(JsonSerializer.Serialize(_savedSettings[newSettings], JsonOptions.Value), JsonOptions.Value) ?? new RandomSettings();
-    }
-
-    private bool _isSaving = false;
-    private async Task SaveSettings()
-    {
-        _isSaving = true;
-        if (_selectedTournamentId == null)
-        {
-
-            await Mediator.Send(new SaveUserRandomSettingsCommand(_newSettingsName, _settings));
-
-            Snackbar.Add($"{_newSettingsName} Saved!", Severity.Success);
         }
         else
         {
-            await Mediator.Send(new SaveRandomSettingsCommand(_selectedTournamentId.Value, _currentSettings, _settings));
-            Snackbar.Add($"{_currentSettings} Saved For {_tournamentsWithSettings[_selectedTournamentId.Value]}!", Severity.Success);
-        }
-        _savedSettings[_newSettingsName] = JsonSerializer.Deserialize<RandomSettings>(JsonSerializer.Serialize(_settings, JsonOptions.Value), JsonOptions.Value) ?? new RandomSettings();
-        _isSaving = false;
-    }
-
-    private async Task DeleteSettings()
-    {
-        _isSaving = true;
-        await Mediator.Send(new DeleteRandomSettingsCommand(_newSettingsName));
-        _savedSettings.Remove(_newSettingsName);
-        _newSettingsName = string.Empty;
-        _currentSettings = string.Empty;
-        _settings = new RandomSettings();
-        _isSaving = false;
-    }
-    private async Task RandomizeCharts()
-    {
-        await SaveLastConfig();
-
-        try
-        {
-            _pulledCharts = (await Mediator.Send(new GetRandomChartsQuery(_settings))).ToArray();
-            _protectedCharts = new();
-            _vetoedCharts = new();
-        }
-        catch (RandomizerException e)
-        {
-            Snackbar.Add(e.Message, Severity.Warning);
-            return;
-        }
-        await SaveLastResults();
-    }
-
-        const string LastResultsKey = $"ChartRandomizer__LastResults";
-        const string LastConfigKey = $"ChartRandomizer__LastConfig";
-
-    private void MergeDictTo<T>(IDictionary<T, int?> from, IDictionary<T, int?> to)
-    {
-        foreach (var kv in from)
-        {
-            if (!to.ContainsKey(kv.Key))
+            <MudText Typo="Typo.h5">@L["Chart Randomizer"]</MudText>
+            @if (CurrentUser.IsLoggedIn && _myTournaments.Any())
             {
-                to[kv.Key] = kv.Value;
+                <MudSelect T="string" Value="ContextValue" ValueChanged="SwitchContext" Label="@L["Running for"]"
+                           Dense="true" Class="rand-context-select" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem T="string" Value="@("personal")">@L["Personal"]</MudSelectItem>
+                    @foreach (var tournament in _myTournaments)
+                    {
+                        var id = tournament.TournamentId.ToString();
+                        <MudSelectItem T="string" Value="id">@tournament.TournamentName (@RoleShort(tournament.Role))</MudSelectItem>
+                    }
+                </MudSelect>
             }
         }
-    }
-    private void MergeDictTo<T>(IDictionary<T, int> from, IDictionary<T, int> to)
+        @* Preset selection lives in the settings drawer for both contexts (owner call,
+           round 6) — the header carries only identity and context. *@
+    </div>
+    @if (!CurrentUser.IsLoggedIn)
     {
-        foreach (var kv in from)
-        {
-            if (!to.ContainsKey(kv.Key))
+        <MudText Typo="Typo.body2" Class="rand-anon-note">@L["Log in to keep your settings and draws — this draw only lives on this page."]</MudText>
+    }
+
+    @if (_contextTournamentId == null)
+    {
+        <div class="rand-chipbar">
+            @* Actions only up top — the draw-settings reference strip lives below the
+               cards (round 7: important to reference, not part of the live decision). *@
+            @* Phone widths reach settings through the dock gear — no duplicate chip. *@
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined"
+                         Icon="@Icons.Material.Filled.Tune" OnClick="() => _showSettings = true">@L["Edit settings"]</MudChip>
+            </MudHidden>
+            @if (CurrentUser.IsLoggedIn)
             {
-                to[kv.Key] = kv.Value;
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                         Icon="@Icons.Material.Filled.EmojiEvents"
+                         OnClick="() => _showCreateTournament = !_showCreateTournament">@L["Run as tournament"]</MudChip>
+            }
+        </div>
+    }
+
+    @* New match is a popover now (round 12), anchored to whichever trigger you used —
+       the desktop header button, the empty-state button, or the dock. *@
+
+    @if (_showCreateTournament)
+    {
+        <div class="rand-create-tournament">
+            <MudTextField T="string" @bind-Value="_newTournamentName" Label="@L["Tournament name"]"
+                          Variant="Variant.Outlined" Margin="Margin.Dense"></MudTextField>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_busy || string.IsNullOrWhiteSpace(_newTournamentName)"
+                       OnClick="CreateTournament">@L["Create"]</MudButton>
+            <MudText Typo="Typo.caption" Class="rand-section-hint">@L["Unlisted — only people with a link see it. Staff you invite can run draws from their own devices."]</MudText>
+        </div>
+    }
+
+    <div class="rand-countline">
+        <MudSpacer></MudSpacer>
+        @if (_contextTournamentId != null && CanOperate)
+        {
+            @* Full screen is the staff-tablet flow — no desktop meaning (round 8).
+               Redraw moved into the manage drawer with the rest of match management. *@
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Fullscreen" OnClick="() => _draftMode = true"
+                           Disabled="_selectedMatchId == null" Class="mr-2">@L["Full screen"]</MudButton>
+            </MudHidden>
+        }
+        else if (_contextTournamentId == null)
+        {
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Casino"
+                           Disabled="_busy" OnClick="Randomize" Class="mr-2">@L["Randomize"]</MudButton>
+            </MudHidden>
+        }
+        @* Phone widths carry copy on the dock — no duplicate icon (round 8). *@
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+                <ActivatorContent>
+                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Primary"
+                                   Disabled="@(!_cards.Any() && _drawSlug == null)" aria-label="@L["Copy"]"></MudIconButton>
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem Icon="@Icons.Material.Filled.ContentCopy" Disabled="!_cards.Any()"
+                                 OnClick="CopyResults">@L["Copy draw results"]</MudMenuItem>
+                    @if (_drawSlug != null)
+                    {
+                        <MudMenuItem Icon="@Icons.Material.Filled.Sensors"
+                                     OnClick="CopySpectateLink">@L["Copy spectate link"]</MudMenuItem>
+                    }
+                    @if (_contextTournamentId != null && CanOperate && _discordChannelId != null)
+                    {
+                        <MudMenuItem Icon="@Icons.Custom.Brands.Discord" Disabled="@(_drawId == null || _busy)"
+                                     OnClick="PushToDiscord">@L["Push to Discord"]</MudMenuItem>
+                    }
+                </ChildContent>
+            </MudMenu>
+        </MudHidden>
+        <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" Class="ml-2">
+            <MudIconButton Icon="@Icons.Material.Filled.ViewModule" aria-label="@L["Comfortable"]"
+                           Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
+                           OnClick="() => SetDensity(UiDensity.Comfortable)"></MudIconButton>
+            <MudIconButton Icon="@Icons.Material.Filled.GridOn" aria-label="@L["Compact"]"
+                           Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
+                           OnClick="() => SetDensity(UiDensity.Compact)"></MudIconButton>
+            <MudIconButton Icon="@Icons.Material.Filled.TableRows" aria-label="@L["Table"]"
+                           Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
+                           OnClick="() => SetDensity(UiDensity.Table)"></MudIconButton>
+        </MudButtonGroup>
+    </div>
+}
+
+@if (!_draftMode && (_cards.Any(c => c.State != DrawCardState.None) || _density == UiDensity.Compact && _cards.Any()))
+{
+    <div class="rand-actionbar">
+        @if (_density == UiDensity.Compact)
+        {
+            <ArmedActionSelector @bind-Value="_armedAction"></ArmedActionSelector>
+        }
+        @if (_cards.Any(c => c.State == DrawCardState.Vetoed))
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.DeleteSweep" Disabled="_busy"
+                       OnClick="ClearVetoed">@L["Clear vetoed"] (@_cards.Count(c => c.State == DrawCardState.Vetoed))</MudButton>
+        }
+    </div>
+}
+
+@if (_loading)
+{
+    <div class="rand-grid rand-grid-compact">
+        @for (var i = 0; i < 6; i++)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="110px" Class="tier-chart-card-skeleton"></MudSkeleton>
+        }
+    </div>
+}
+else if (!_cards.Any())
+{
+    <div class="rand-empty">
+        <MudIcon Icon="@Icons.Material.Filled.Casino" Style="font-size:2.6rem;"></MudIcon>
+        @if (_contextTournamentId != null)
+        {
+            <MudText Typo="Typo.h6">@L["No matches yet"]</MudText>
+            @if (CanOperate)
+            {
+                <MudText Typo="Typo.body2">@L["A match is a named draw — create one and it fills from a tournament preset."]</MudText>
+                @* Popover below on desktop; on phones the dock CTA (popover above) drives it (round 12). *@
+                <div class="folder-picker-anchor rand-newmatch-anchor">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                               Disabled="_busy" OnClick="ToggleNewMatch">@L["New match"]</MudButton>
+                    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                        <MudPopover Open="_showNewMatch" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+                            <div class="rand-new-match-pop">@newMatchBody</div>
+                        </MudPopover>
+                    </MudHidden>
+                </div>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2">@L["Hang tight — the organizers haven't drawn anything yet."]</MudText>
             }
         }
+        else
+        {
+            <MudText Typo="Typo.h6">@L["No draw yet"]</MudText>
+            <MudText Typo="Typo.body2">@L["Set your level range in the settings, then hit Randomize."]</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Casino"
+                       Disabled="_busy" OnClick="Randomize">@L["Randomize"]</MudButton>
+        }
+    </div>
+}
+else if (GridDensity == UiDensity.Table)
+{
+    <MudSimpleTable Dense="true" Class="rand-table">
+        <tbody>
+        @foreach (var card in _cards)
+        {
+            <tr class="@(card.State == DrawCardState.Vetoed ? "rand-row-vetoed" : card.State == DrawCardState.Protected ? "rand-row-held" : null)">
+                <td class="rand-table-order">@card.Order</td>
+                <td><DifficultyBubble Chart="card.Chart" Small="true"></DifficultyBubble></td>
+                <td class="rand-table-name">@card.Chart.Song.Name</td>
+                <td>@(card.State == DrawCardState.Protected ? L["Held"] : card.State == DrawCardState.Vetoed ? L["Vetoed"] : null)</td>
+                <td class="rand-table-actions">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Info"
+                                   OnClick="() => OpenDetails(card)" aria-label="@L["Details"]"></MudIconButton>
+                    @if (card.State == DrawCardState.None)
+                    {
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Shield" Color="Color.Primary"
+                                       OnClick="() => SetState(card, DrawCardState.Protected)" aria-label="@L["Protect"]"></MudIconButton>
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                       OnClick="() => SetState(card, DrawCardState.Vetoed)" aria-label="@L["Veto"]"></MudIconButton>
+                    }
+                    else
+                    {
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Undo" Color="Color.Warning"
+                                       OnClick="() => SetState(card, DrawCardState.None)" aria-label="@L["Undo"]"></MudIconButton>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </MudSimpleTable>
+}
+else
+{
+    <div class="rand-grid @(GridDensity == UiDensity.Compact ? "rand-grid-compact" : "rand-grid-comfortable")">
+        @foreach (var card in _cards)
+        {
+            <DrawCardTile PullId="card.PullId" Chart="card.Chart" Order="card.Order" State="card.State"
+                          Density="GridDensity"
+                          Disabled="@(_contextTournamentId != null && !CanOperate)"
+                          OnTap="_ => ApplyArmedAction(card)"
+                          OnProtect="_ => SetState(card, DrawCardState.Protected)"
+                          OnVeto="_ => SetState(card, DrawCardState.Vetoed)"
+                          OnUndo="_ => SetState(card, DrawCardState.None)"
+                          OnDetails="_ => OpenDetails(card)"></DrawCardTile>
+        }
+        @if (_contextTournamentId == null || CanOperate)
+        {
+            @* Option C (owner-picked): the popup belongs to the slot you tapped — same
+               anchor/popover/click-away vocabulary as the level selector. *@
+            <div class="folder-picker-anchor rand-add-anchor">
+                <button type="button" class="rand-add-tile" @onclick="ToggleAddChart"
+                        aria-haspopup="true" aria-expanded="@(_showAddChart ? "true" : "false")"
+                        aria-label="@L["Add Chart"]">
+                    <span class="rand-add-tile-plus">+</span>
+                    <span class="rand-add-tile-label">@L["Add Chart"]</span>
+                </button>
+                @* Opens upward from the tile's top-left (round 9) — the ghost card sits at
+                   the bottom of the grid, so downward would run off-screen. *@
+                <MudPopover Open="_showAddChart" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft">
+                    <div class="folder-picker-pop rand-add-pop">
+                        <MudText Typo="Typo.subtitle2">@L["Add a chart to the draw"]</MudText>
+                        <MudText Typo="Typo.caption" Class="rand-section-hint">@L["It lands at the end, unprotected."]</MudText>
+                        <ChartSelector @ref="_addChartSelector" Mix="_mix" Label="" Placeholder="@L["Search by song name…"].Value"
+                                       ChartIdSelected="AddChart"></ChartSelector>
+                    </div>
+                </MudPopover>
+            </div>
+        }
+    </div>
+    <MudOverlay Visible="_showAddChart" OnClick="() => _showAddChart = false" ZIndex="1199"></MudOverlay>
+}
+
+@if (!_draftMode && !_loading)
+{
+    @* Reference strip: what this draw was configured with — below the cards, out of
+       the decision area (round 7). *@
+    <div class="rand-draw-settings">
+        <span class="rand-draw-settings-label">@L["Draw settings"]</span>
+        @foreach (var chip in ConstraintChips)
+        {
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@chip</MudChip>
+        }
+    </div>
+}
+
+@* Settings drawer: panel + live-count footer. Bottom-anchored (thumb reach). *@
+<MudDrawer @bind-Open="_showSettings" Anchor="Anchor.Bottom" Variant="@DrawerVariant.Temporary"
+           Height="86vh" Elevation="4" Class="rand-drawer">
+    <div class="rand-drawer-body">
+        @if (CurrentUser.IsLoggedIn)
+        {
+            <div class="rand-drawer-presets">
+                @if (CurrentSettingsMap.Any())
+                {
+                    <MudSelect T="string" Value="_currentSettingsName" ValueChanged="SelectSavedSettings"
+                               Label="@(_contextTournamentId == null ? L["Saved Settings"] : L["Tournament Settings"])"
+                               Clearable="true" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        @foreach (var saved in CurrentSettingsMap.Values.OrderBy(s => s.SettingsName.ToString()))
+                        {
+                            var name = saved.SettingsName.ToString();
+                            <MudSelectItem T="string" Value="name">
+                                <div class="rand-preset-item">
+                                    <span class="rand-preset-name">@name</span>
+                                    <span class="rand-preset-summary">@SettingsSummary(saved)</span>
+                                </div>
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                else if (_contextTournamentId != null)
+                {
+                    <MudText Typo="Typo.caption" Class="rand-section-hint">@L["No tournament presets yet — tune below and Save, so your staff and matches can use them."]</MudText>
+                }
+            </div>
+        }
+        <RandomizerSettingsPanel Settings="_settings" Mix="_mix" MixChanged="OnMixChanged"
+                                 SettingsChanged="OnSettingsChanged"></RandomizerSettingsPanel>
+    </div>
+    <div class="rand-drawer-footer">
+        <div class="rand-footer-row">
+            <div class="rand-drawer-count">
+                <span class="rand-count-n">@(_matchCount?.ToString() ?? "–")</span>
+                <span class="rand-count-label">@L["charts match"]</span>
+            </div>
+            <MudSpacer></MudSpacer>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _showSettings = false">@L["Done"]</MudButton>
+        </div>
+        <div class="rand-footer-row">
+            <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.RestartAlt"
+                       OnClick="ResetSettings">@L["Reset"]</MudButton>
+            @* Reset is the odd one out — keep the save cluster visually away from it. *@
+            <MudSpacer></MudSpacer>
+            @if (CurrentUser.IsLoggedIn && _contextTournamentId == null && !string.IsNullOrWhiteSpace(_currentSettingsName))
+            {
+                <MudTooltip Text="@L["Share these settings"]">
+                    <MudIconButton Icon="@Icons.Material.Filled.Share" Color="Color.Primary"
+                                   OnClick="ShareSettings" aria-label="@L["Share these settings"]"></MudIconButton>
+                </MudTooltip>
+            }
+            @if (CurrentUser.IsLoggedIn && (_contextTournamentId == null || CanManageSettings))
+            {
+                <MudTextField T="string" @bind-Value="_saveName" Label="@L["Settings Name"]" Variant="Variant.Outlined"
+                              Margin="Margin.Dense" Class="rand-save-name"
+                              Immediate="true"></MudTextField>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="_busy || string.IsNullOrWhiteSpace(_saveName)"
+                           OnClick="SaveSettings">@(SaveIsNew ? L["Save as new"] : L["Save"])</MudButton>
+                @if (CurrentSettingsMap.ContainsKey(_saveName ?? string.Empty))
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="_busy" OnClick="DeleteSettings">
+                        @(_confirmingDelete ? L["Tap again to delete"] : L["Delete"])
+                    </MudButton>
+                }
+            }
+        </div>
+    </div>
+</MudDrawer>
+
+@* Manage-tournament drawer (round 8): the tournament's control room. Match rename/
+   delete/redraw for organizers (redraw for every staff role — assistants included),
+   the settings hop for TOs, and the staff roster + invites for the Head TO. Same
+   frame as the settings drawer, so "Edit settings" reads as switching drawers. *@
+@if (_contextTournamentId != null)
+{
+    <MudDrawer @bind-Open="_showManage" Anchor="Anchor.Bottom" Variant="@DrawerVariant.Temporary"
+               Height="86vh" Elevation="4" Class="rand-drawer">
+        <div class="rand-drawer-body">
+            <div class="rand-manage-section">
+                <MudText Typo="Typo.subtitle2" Class="rand-manage-heading">@L["Match"]</MudText>
+                @if (_matches.Any())
+                {
+                    <MudSelect T="string" Value="ManageMatchValue" ValueChanged="OnManageMatchChanged"
+                               Label="@L["Match"]" Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        @foreach (var match in _matches)
+                        {
+                            var id = match.Id.ToString();
+                            <MudSelectItem T="string" Value="id">@match.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    @if (CanManageSettings)
+                    {
+                        <div class="rand-manage-rename">
+                            <MudTextField T="string" @bind-Value="_manageRenameText" Label="@L["Match name"]"
+                                          Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true"></MudTextField>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                                       Disabled="@(_busy || _manageMatchId == null || string.IsNullOrWhiteSpace(_manageRenameText) || _manageRenameText.Trim() == ManagedMatchName)"
+                                       OnClick="RenameManagedMatch">@L["Rename"]</MudButton>
+                        </div>
+                    }
+                    <div class="rand-manage-actions">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Casino" Disabled="@(_busy || _manageMatchId == null)"
+                                   OnClick="ManageRedraw">@(_confirmingManageRedraw ? L["Tap again"] : L["Redraw"])</MudButton>
+                        @if (CanManageSettings)
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Delete" Disabled="@(_busy || _manageMatchId == null)"
+                                       OnClick="ManageDelete">@(_confirmingManageDelete ? L["Tap again"] : L["Delete match"])</MudButton>
+                        }
+                    </div>
+                    <MudText Typo="Typo.caption" Class="rand-section-hint">@L["Redraw refills this match from your current settings — its spectate link never changes."]</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption" Class="rand-section-hint">@L["No matches yet — create one from the field."]</MudText>
+                }
+            </div>
+            @if (CanManageSettings)
+            {
+                <div class="rand-manage-section">
+                    <MudText Typo="Typo.subtitle2" Class="rand-manage-heading">@L["Settings"]</MudText>
+                    <div>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune"
+                                   OnClick="SwitchToSettings">@L["Edit settings"]</MudButton>
+                    </div>
+                    <MudText Typo="Typo.caption" Class="rand-section-hint">@L["Presets, level ranges, and filters — new matches draw from a preset."]</MudText>
+                </div>
+            }
+            @if (_isHeadTo)
+            {
+                <div class="rand-manage-section">
+                    <MudText Typo="Typo.subtitle2" Class="rand-manage-heading">@L["Staff"]</MudText>
+                    @foreach (var member in _staff)
+                    {
+                        var m = member;
+                        <div class="rand-staff-row">
+                            <UserLabel User="m.User"></UserLabel>
+                            <span class="rand-invite-role">@RoleShort(m.Role)</span>
+                            @if (CurrentUser.IsLoggedIn && m.User.Id != CurrentUser.User.Id)
+                            {
+                                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error" Disabled="_busy"
+                                           OnClick="() => RemoveStaff(m.User.Id)">@(_confirmingRemoveStaffId == m.User.Id ? L["Tap again"] : L["Remove"])</MudButton>
+                            }
+                        </div>
+                    }
+                    <div class="rand-invites">
+                        @foreach (var invite in _invites)
+                        {
+                            var token = invite.Token;
+                            <div class="rand-invite-row">
+                                <span class="rand-invite-role">@RoleShort(invite.Role)</span>
+                                <span class="rand-invite-expiry">@(invite.ExpiresAt == null ? L["No expiry"] : L["Expires {0:d}", invite.ExpiresAt.Value])</span>
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ContentCopy"
+                                               OnClick="() => CopyInviteLink(token)" aria-label="@L["Copy invite link"]"></MudIconButton>
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                               OnClick="() => RevokeInvite(token)" aria-label="@L["Revoke"]"></MudIconButton>
+                            </div>
+                        }
+                        <div class="rand-invite-mint">
+                            <MudSelect T="TournamentRole" @bind-Value="_inviteRole" Label="@L["Role"]" Dense="true"
+                                       Variant="Variant.Outlined" Margin="Margin.Dense">
+                                <MudSelectItem T="TournamentRole" Value="TournamentRole.TournamentOrganizer">@RoleShort(TournamentRole.TournamentOrganizer)</MudSelectItem>
+                                <MudSelectItem T="TournamentRole" Value="TournamentRole.Assistant">@RoleShort(TournamentRole.Assistant)</MudSelectItem>
+                            </MudSelect>
+                            <MudSelect T="int" @bind-Value="_inviteExpiryDays" Label="@L["Expires"]" Dense="true"
+                                       Variant="Variant.Outlined" Margin="Margin.Dense">
+                                <MudSelectItem T="int" Value="1">@L["1 day"]</MudSelectItem>
+                                <MudSelectItem T="int" Value="7">@L["7 days"]</MudSelectItem>
+                                <MudSelectItem T="int" Value="0">@L["No expiry"]</MudSelectItem>
+                            </MudSelect>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="_busy"
+                                       StartIcon="@Icons.Material.Filled.Add" OnClick="CreateInvite">@L["Create invite"]</MudButton>
+                        </div>
+                    </div>
+                </div>
+                <div class="rand-manage-section">
+                    <MudText Typo="Typo.subtitle2" Class="rand-manage-heading">@L["Discord"]</MudText>
+                    <div class="rand-manage-rename">
+                        <MudTextField T="string" @bind-Value="_discordChannelText" Label="@L["Channel ID"]"
+                                      Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true"
+                                      Placeholder="@L["Right-click a channel → Copy Channel ID"].Value"></MudTextField>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="_busy"
+                                   OnClick="SaveDiscordChannel">@L["Save"]</MudButton>
+                    </div>
+                    <MudText Typo="Typo.caption" Class="rand-section-hint">@L["When set, staff get Push to Discord in the copy menu — the draw posts to this channel. Clear the field to turn it off."]</MudText>
+                </div>
+            }
+        </div>
+        <div class="rand-drawer-footer">
+            <div class="rand-footer-row">
+                <MudSpacer></MudSpacer>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _showManage = false">@L["Done"]</MudButton>
+            </div>
+        </div>
+    </MudDrawer>
+}
+
+@* The tier lists' chart details surface — one concept, one component. *@
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="@(_detailsChart?.Mix ?? _mix)"></ChartDetailsDialog>
+
+@* Click-away for the New match popover (round 12) — mirrors the Add Chart overlay. *@
+<MudOverlay Visible="_showNewMatch" OnClick="CloseNewMatch" ZIndex="1199"></MudOverlay>
+
+<PageDock FocusMode="_draftMode">
+    @if (_draftMode)
+    {
+        <MudButton Class="dock-side rand-staff-btn" Disabled="_busy || !_cards.Any(c => c.State == DrawCardState.Vetoed)"
+                   StartIcon="@Icons.Material.Filled.DeleteSweep" OnClick="DraftClearVetoed">
+            @(_confirmingClear ? L["Tap again"] : $"{L["Clear vetoed"]} ({_cards.Count(c => c.State == DrawCardState.Vetoed)})")
+        </MudButton>
+        <MudButton Class="dock-cta" Disabled="_busy" OnClick="DraftRedraw"
+                   StartIcon="@(_busy ? null : Icons.Material.Filled.Casino)">
+            @(_confirmingRedraw ? L["Tap again"] : L["Redraw"])
+        </MudButton>
+    }
+    else
+    {
+        @if (_contextTournamentId != null)
+        {
+            @* Tournament gear = the manage drawer (round 8); thumb action = the next
+               match. Non-staff visitors only get the copy menu. *@
+            @if (CanOperate)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Settings" Class="dock-side" OnClick="OpenManage"
+                               aria-label="@L["Manage tournament"]"></MudIconButton>
+                @* Dock New match opens a popover above the bottom bar (round 12). *@
+                <div class="folder-picker-anchor dock-cta-anchor">
+                    <MudButton Class="dock-cta" Disabled="_busy" OnClick="ToggleNewMatch"
+                               StartIcon="@Icons.Material.Filled.Add">@L["New match"]</MudButton>
+                    <MudPopover Open="_showNewMatch" AnchorOrigin="Origin.TopCenter" TransformOrigin="Origin.BottomCenter">
+                        <div class="rand-new-match-pop">@newMatchBody</div>
+                    </MudPopover>
+                </div>
+            }
+        }
+        else
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Tune" Class="dock-side" OnClick="() => _showSettings = true"
+                           aria-label="@L["Edit settings"]"></MudIconButton>
+            <MudButton Class="dock-cta" Disabled="_busy" OnClick="Randomize"
+                       StartIcon="@(_busy ? null : Icons.Material.Filled.Casino)">
+                @if (_busy)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Inherit"></MudProgressCircular>
+                }
+                else
+                {
+                    @L["Randomize"]
+                }
+            </MudButton>
+        }
+        <MudMenu AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.BottomRight" Dense="true">
+            <ActivatorContent>
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Class="dock-side"
+                               Disabled="@(!_cards.Any() && _drawSlug == null)" aria-label="@L["Copy"]"></MudIconButton>
+            </ActivatorContent>
+            <ChildContent>
+                <MudMenuItem Icon="@Icons.Material.Filled.ContentCopy" Disabled="!_cards.Any()"
+                             OnClick="CopyResults">@L["Copy draw results"]</MudMenuItem>
+                @if (_drawSlug != null)
+                {
+                    <MudMenuItem Icon="@Icons.Material.Filled.Sensors"
+                                 OnClick="CopySpectateLink">@L["Copy spectate link"]</MudMenuItem>
+                }
+                @if (_contextTournamentId != null && CanOperate && _discordChannelId != null)
+                {
+                    <MudMenuItem Icon="@Icons.Custom.Brands.Discord" Disabled="@(_drawId == null || _busy)"
+                                 OnClick="PushToDiscord">@L["Push to Discord"]</MudMenuItem>
+                }
+            </ChildContent>
+        </MudMenu>
+    }
+</PageDock>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+@inject IDateTimeOffsetAccessor Clock
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavManager
+@inject IOptions<JsonSerializerOptions> JsonOptions
+@implements IDisposable
+@code {
+
+    private const string ConfigKey = "ChartRandomizer__Config";
+    private const string DensityKey = "Density__ChartRandomizer";
+
+    private sealed class CardVm
+    {
+        public Guid PullId { get; init; }
+        public Chart Chart { get; init; } = null!;
+        public int Order { get; set; }
+        public DrawCardState State { get; set; }
+    }
+
+    // Working config persisted verbatim (the old hand-copied DTO dropped Count/Ordering/
+    // co-op bounds on the floor — serializing RandomSettings itself is the fix).
+    private sealed class SavedWorkingConfig
+    {
+        public RandomSettings Settings { get; set; } = new();
+        public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+    }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "tournament")]
+    public Guid? TournamentQuery { get; set; }
+
+    private RandomSettings _settings = new();
+    private MixEnum _mix = MixEnum.Phoenix;
+    private readonly List<CardVm> _cards = new();
+    private Guid? _drawId;
+    private Guid? _drawSlug;
+    private IDictionary<string, SavedRandomizerSettings> _personalSettings =
+        new Dictionary<string, SavedRandomizerSettings>(StringComparer.OrdinalIgnoreCase);
+    private IDictionary<string, SavedRandomizerSettings> _tournamentSettings =
+        new Dictionary<string, SavedRandomizerSettings>(StringComparer.OrdinalIgnoreCase);
+    private string _currentSettingsName = string.Empty;
+    private string? _saveName;
+    private bool _confirmingDelete;
+    private UiDensity _density = UiDensity.Compact;
+    private ArmedAction _armedAction = ArmedAction.Protect;
+    private bool _busy;
+    private bool _loading = true;
+    private bool _showSettings;
+    private bool _showAddChart;
+    private bool _focusAddChart;
+    private ChartSelector? _addChartSelector;
+    private bool _focusNewMatch;
+    private MudTextField<string>? _newMatchNameField;
+    private int? _matchCount;
+    private CancellationTokenSource? _countCts;
+
+    // Tournament context (docs/design/randomizer-overhaul.md C9).
+    private bool _baseLoaded;
+    private bool _contextLoaded;
+    private Guid? _contextTournamentId;
+    private IReadOnlyList<TournamentRoleListing> _myTournaments = Array.Empty<TournamentRoleListing>();
+    private TournamentRole? _myRole;
+    private bool _showCreateTournament;
+    private string _newTournamentName = string.Empty;
+    private IReadOnlyList<TournamentRoleInviteRecord> _invites = Array.Empty<TournamentRoleInviteRecord>();
+    private TournamentRole _inviteRole = TournamentRole.Assistant;
+    private int _inviteExpiryDays = 7;
+    private bool _draftMode;
+    private bool _confirmingClear;
+    private bool _confirmingRedraw;
+
+    // Matches (field-test round 6): a match is a named draw, many per tournament.
+    private List<DrawDto> _matches = new();
+    private Guid? _selectedMatchId;
+    private bool _showNewMatch;
+    private string _newMatchName = string.Empty;
+    private string _newMatchPreset = string.Empty;
+
+    // Manage-tournament drawer (round 8): its match selection is drawer-local state,
+    // seeded from the playing field on open — a TO can re-roll match B while the
+    // field displays match A.
+    private bool _showManage;
+    private Guid? _manageMatchId;
+    private string _manageRenameText = string.Empty;
+    private bool _confirmingManageRedraw;
+    private bool _confirmingManageDelete;
+    private Guid? _confirmingRemoveStaffId;
+    private IReadOnlyList<StaffMember> _staff = Array.Empty<StaffMember>();
+    private string? _contextTournamentName;
+
+    // Push to Discord (round 10): Head TO points the tournament at a channel; any staff
+    // pushes the current draw from the copy menu. Manual only, fresh message per push.
+    private ulong? _discordChannelId;
+    private string _discordChannelText = string.Empty;
+
+    private sealed record StaffMember(User User, TournamentRole Role);
+
+    private string? SelectedMatchName => _matches.FirstOrDefault(m => m.Id == _selectedMatchId)?.Name;
+    private DrawDto? SelectedMatch => _matches.FirstOrDefault(m => m.Id == _selectedMatchId);
+    private string? ManagedMatchName => _matches.FirstOrDefault(m => m.Id == _manageMatchId)?.Name;
+    private string ManageMatchValue => _manageMatchId?.ToString() ?? string.Empty;
+
+    // Renaming in the name field never renames the loaded preset — it saves a new one
+    // (round 7: the button says so instead of surprising people).
+    private bool SaveIsNew => !string.IsNullOrWhiteSpace(_saveName)
+                              && !CurrentSettingsMap.ContainsKey(_saveName);
+
+    private bool CanOperate => CurrentUser.IsLoggedInAsAdmin || _myRole != null;
+    private bool CanManageSettings => CurrentUser.IsLoggedInAsAdmin ||
+                                      _myRole is TournamentRole.HeadTournamentOrganizer
+                                          or TournamentRole.TournamentOrganizer;
+    private bool _isHeadTo => CurrentUser.IsLoggedInAsAdmin || _myRole == TournamentRole.HeadTournamentOrganizer;
+
+    private IDictionary<string, SavedRandomizerSettings> CurrentSettingsMap =>
+        _contextTournamentId == null ? _personalSettings : _tournamentSettings;
+
+    private string ContextValue => _contextTournamentId?.ToString() ?? "personal";
+
+    private string ContextName => _contextTournamentId == null
+        ? L["Personal"]
+        : _myTournaments.FirstOrDefault(t => t.TournamentId == _contextTournamentId)?.TournamentName.ToString()
+          ?? _contextTournamentName
+          ?? L["Tournament"];
+
+    private UiDensity GridDensity => _draftMode ? UiDensity.Compact : _density;
+
+    private string RoleShort(TournamentRole role)
+    {
+        return role switch
+        {
+            TournamentRole.HeadTournamentOrganizer => L["Head TO"],
+            TournamentRole.TournamentOrganizer => L["TO"],
+            _ => L["Assistant"]
+        };
+    }
+
+    private IEnumerable<string> ConstraintChips
+    {
+        get
+        {
+            yield return _mix.GetName();
+            var singles = ActiveRange(_settings.LevelWeights);
+            if (singles != null) yield return $"S{singles.Value.min}–{singles.Value.max}";
+            var doubles = ActiveRange(_settings.DoubleLevelWeights);
+            if (doubles != null) yield return $"D{doubles.Value.min}–{doubles.Value.max}";
+            var coops = _settings.PlayerCountWeights.Where(kv => kv.Value > 0).Select(kv => kv.Key).ToArray();
+            if (coops.Any()) yield return $"Co-Op ×{string.Join(",×", coops)}";
+            var excludedTypes = _settings.SongTypeWeights.Where(kv => kv.Value == 0).Select(kv => kv.Key).ToArray();
+            if (excludedTypes.Any() && excludedTypes.Length < _settings.SongTypeWeights.Count)
+                yield return L["No {0}", string.Join("/", excludedTypes.Select(t => t.ToString()))];
+            yield return L["{0} cards", _settings.Count];
+            if (_settings.AllowRepeats) yield return L["Repeats"];
+            if (_settings.ClearStatus == false) yield return L["Not Passed"];
+            if (_settings.ClearStatus == true) yield return L["Passed"];
+            if (_settings.LetterGrades.Any()) yield return string.Join("/", _settings.LetterGrades.Select(g => g.GetName()));
+        }
+    }
+
+    private static (int min, int max)? ActiveRange(IDictionary<int, int> weights)
+    {
+        var active = weights.Where(kv => kv.Value > 0).Select(kv => kv.Key).ToArray();
+        return active.Length == 0 ? null : (active.Min(), active.Max());
     }
 
     protected override async Task OnInitializedAsync()
     {
+        MainLayout.DrawUpdated += OnDrawUpdated;
+        _mix = await UiSettings.GetSelectedMix();
+        var densitySetting = await UiSettings.GetSetting(DensityKey);
+        if (Enum.TryParse<UiDensity>(densitySetting, out var density)) _density = density;
+
         if (CurrentUser.IsLoggedIn)
         {
-            _savedSettings = (await Mediator.Send(new GetRandomSettingsQuery())).ToDictionary(r => r.SettingsName.ToString(), r => r.Settings);
-            var uiSettings = await Mediator.Send(new GetUserUiSettingsQuery());
-            if (uiSettings.TryGetValue(LastResultsKey, out var uiSetting))
-            {
-                try
-                {
-                    var lastResults = JsonSerializer.Deserialize<SavedResults>(uiSetting)?? throw new ArgumentNullException($"Couldn't deserialize Saved  Results settings for Chart Randomizer");
+            _personalSettings = (await Mediator.Send(new GetRandomSettingsQuery()))
+                .ToDictionary(s => s.SettingsName.ToString(), s => s, StringComparer.OrdinalIgnoreCase);
+            _myTournaments = (await Mediator.Send(new GetMyTournamentsQuery())).ToArray();
 
-                    var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix, ChartIds: lastResults.ChartList))).ToDictionary(c => c.Id);
-                    _pulledCharts = lastResults.ChartList.Select(id => charts[id]).ToArray();
-                    _protectedCharts = lastResults.ProtectedCharts.ToList();
-                    _vetoedCharts = lastResults.VetoedCharts.ToList();
-                }
-                catch (Exception e)
-                {
-                    Logger.LogWarning(e,$"There was an issue deserializing LastResults");
-                }
-            }
-            if (uiSettings.TryGetValue(LastConfigKey, out var setting))
-            {
+            var configJson = await UiSettings.GetSetting(ConfigKey);
+            if (configJson != null)
                 try
                 {
-                    var lastConfig = JsonSerializer.Deserialize<SavedConfiguration>(setting) ?? throw new ArgumentNullException($"Couldn't deserialize configuration for Chart Randomizer");
-                    MergeDictTo(_settings.LevelWeights, lastConfig.LevelWeights);
-                    _settings.LevelWeights = lastConfig.LevelWeights;
-                    MergeDictTo(_settings.DoubleLevelWeights,lastConfig.DoubleWeights);
-                    _settings.DoubleLevelWeights = lastConfig.DoubleWeights;
-                    MergeDictTo(_settings.PlayerCountWeights, lastConfig.PlayerCountWeights);
-                    _settings.PlayerCountWeights = lastConfig.PlayerCountWeights;
-                    MergeDictTo(_settings.SongTypeWeights, lastConfig.SongTypeWeights);
-                    _settings.SongTypeWeights = lastConfig.SongTypeWeights;
-                    MergeDictTo(_settings.LevelMinimums, lastConfig.LevelMinimums);
-                    _settings.LevelMinimums = lastConfig.LevelMinimums;
-                    MergeDictTo(_settings.ChartTypeMinimums, lastConfig.ChartTypeMinimums);
-                    _settings.ChartTypeMinimums = lastConfig.ChartTypeMinimums;
-                    MergeDictTo(_settings.ChartTypeLevelMinimums, lastConfig.ChartTypeLevelMinimums);
-                    _settings.ChartTypeLevelMinimums = lastConfig.ChartTypeLevelMinimums;
-                    MergeDictTo(_settings.CustomMinimums, lastConfig.Buckets);
-                    _settings.CustomMinimums = lastConfig.Buckets;
-                    _settings.UseScoringLevels = lastConfig.UseScoring;
-                    _settings.AllowRepeats = lastConfig.AllowRepeats;
-                    _settings.ClearStatus = lastConfig.ClearStatus;
-                    _settings.LetterGrades = lastConfig.LetterGrades;
-                    _count = lastConfig.Count;
+                    var config = JsonSerializer.Deserialize<SavedWorkingConfig>(configJson, JsonOptions.Value);
+                    if (config != null)
+                    {
+                        _settings = config.Settings;
+                        _mix = config.Mix;
+                    }
                 }
-                catch (Exception e)
+                catch (JsonException)
                 {
-                    Logger.LogWarning(e, $"There was an issue deserializing Last Configs");
+                    // A malformed working config never blocks the page; defaults stand in.
                 }
-            }
         }
-        var now = DateTimeOffset.Now-TimeSpan.FromDays(1);
+
+        NormalizeEmptyPool(_settings);
+        _baseLoaded = true;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!_baseLoaded) return;
+        if (_contextLoaded && TournamentQuery == _contextTournamentId) return;
+
+        await EnterContext(TournamentQuery);
+    }
+
+    private async Task EnterContext(Guid? tournamentId)
+    {
+        _loading = true;
+        _contextLoaded = true;
+        _contextTournamentId = tournamentId;
+        _draftMode = false;
+        _showCreateTournament = false;
+        _confirmingClear = _confirmingRedraw = _confirmingDelete = false;
+        _currentSettingsName = string.Empty;
+        _saveName = string.Empty;
+        _myRole = null;
+        _cards.Clear();
+        _drawId = null;
+        _drawSlug = null;
+        _matches = new List<DrawDto>();
+        _selectedMatchId = null;
+        _showNewMatch = false;
+        _newMatchName = string.Empty;
+        _newMatchPreset = string.Empty;
+        _showManage = false;
+        _manageMatchId = null;
+        _manageRenameText = string.Empty;
+        _confirmingManageRedraw = _confirmingManageDelete = false;
+        _confirmingRemoveStaffId = null;
+        _staff = Array.Empty<StaffMember>();
+        _contextTournamentName = null;
+        _discordChannelId = null;
+        _discordChannelText = string.Empty;
+
         if (CurrentUser.IsLoggedIn)
         {
-            
-            _tournamentsWithSettings = (await Mediator.Send(new GetAllTournamentsQuery())).Where(t => t.Type == TournamentType.Match && t.EndDate >= now)
-                .ToDictionary(t => t.Id, t => t.Name);
-            foreach (var tournamentId in _tournamentsWithSettings.Keys.ToArray())
+            if (tournamentId != null)
             {
-                var settings = await Matches.GetAllRandomSettings(tournamentId, CancellationToken.None);
-                if (!settings.Any())
+                var roles = await Mediator.Send(new GetTournamentRolesQuery(tournamentId.Value));
+                _myRole = roles.FirstOrDefault(r => r.UserId == CurrentUser.User.Id)?.Role;
+                // The header carries the tournament's name (round 8); staff get it from
+                // GetMyTournamentsQuery, anyone else from the tournament itself.
+                if (_myTournaments.All(t => t.TournamentId != tournamentId.Value))
+                    try
+                    {
+                        _contextTournamentName =
+                            (await Mediator.Send(new GetTournamentQuery(tournamentId.Value))).Name;
+                    }
+                    catch (Exception)
+                    {
+                        // A garbage ?tournament= id never blocks the page.
+                    }
+
+                if (CanOperate)
+                    _discordChannelId =
+                        await Mediator.Send(new GetTournamentDiscordChannelQuery(tournamentId.Value));
+                _tournamentSettings = (await Mediator.Send(new GetTournamentRandomSettingsQuery(tournamentId.Value)))
+                    .ToDictionary(s => s.SettingsName.ToString(), s => s, StringComparer.OrdinalIgnoreCase);
+                _matches = (await Mediator.Send(new GetTournamentDrawsQuery(tournamentId.Value))).ToList();
+                var newest = _matches.FirstOrDefault();
+                if (newest != null)
                 {
-                    _tournamentsWithSettings.Remove(tournamentId);
-                    continue;
+                    _selectedMatchId = newest.Id;
+                    await LoadDraw(newest);
                 }
-                if (CurrentUser.IsLoggedInAsAdmin)
-                {
-                    continue;
-                }
-                var roles = await Mediator.Send(new GetTournamentRolesQuery(tournamentId));
-                if (roles.All(r => r.UserId != CurrentUser.User.Id))
-                {
-                    _tournamentsWithSettings.Remove(tournamentId);
-                    
-                }
+            }
+            else
+            {
+                var draw = await Mediator.Send(new GetActiveDrawQuery(null));
+                if (draw != null) await LoadDraw(draw);
             }
         }
 
-    }
-    private string ChartString(Chart chart) => $"{chart.Song.Name} {chart.DifficultyString}";
-    private string ChartSearch(Chart chart)
-    {
-        var searchString = "Pump It Up " + chart.Song.Name + " " + chart.DifficultyString;
-        return $"https://www.youtube.com/results?search_query={searchString.Replace("%", "Percent ").Replace(" ", "+")}";
+        _loading = false;
+        await RefreshMatchCount(CancellationToken.None);
     }
 
-    private sealed class SavedResults
+    private async Task SelectMatch(DrawDto match)
     {
-        public int[] VetoedCharts { get; set; } = Array.Empty<int>();
-        public int[] ProtectedCharts { get; set; } = Array.Empty<int>();
-        public Guid[] ChartList { get; set; } = Array.Empty<Guid>();
+        _selectedMatchId = match.Id;
+        await LoadDraw(match);
     }
 
-    private sealed class SavedConfiguration
+    private void OpenSettingsFromNewMatch()
     {
-        public IDictionary<int, int> LevelWeights { get; set; } = new Dictionary<int, int>();
-        public IDictionary<int, int> DoubleWeights { get; set; } = new Dictionary<int, int>();
-        public IDictionary<SongType, int> SongTypeWeights { get; set; } = new Dictionary<SongType, int>();
-        public IDictionary<int, int> PlayerCountWeights { get; set; } = new Dictionary<int, int>();
-        public IDictionary<ChartType, int?> ChartTypeMinimums { get; set; } = new Dictionary<ChartType, int?>();
-        public IDictionary<int, int?> LevelMinimums { get; set; } = new Dictionary<int, int?>();
-        public IDictionary<string, int?> ChartTypeLevelMinimums { get; set; } = new Dictionary<string, int?>();
-        public IDictionary<string, int> Buckets { get; set; } = new Dictionary<string, int>();
-        public  bool UseScoring { get; set; }
-        public int Count { get; set; }
-        public bool AllowRepeats { get; set; }
-        public ISet<PhoenixLetterGrade> LetterGrades { get; set; } = new HashSet<PhoenixLetterGrade>();
-        public bool? ClearStatus { get; set; }
+        _showNewMatch = false;
+        _showSettings = true;
+    }
+
+    private async Task CreateMatch()
+    {
+        if (_contextTournamentId == null || string.IsNullOrWhiteSpace(_newMatchName)
+            || !_tournamentSettings.TryGetValue(_newMatchPreset, out var preset)) return;
+
+        _busy = true;
+        try
+        {
+            // The preset becomes the working settings — what the match draws from is
+            // what the drawer then shows.
+            _settings = JsonSerializer.Deserialize<RandomSettings>(
+                JsonSerializer.Serialize(preset.Settings, JsonOptions.Value), JsonOptions.Value) ?? new RandomSettings();
+            NormalizeEmptyPool(_settings);
+            _mix = preset.Mix;
+            _currentSettingsName = preset.SettingsName.ToString();
+            _saveName = _currentSettingsName;
+
+            var charts = (await Mediator.Send(new GetRandomChartsQuery(_settings, _mix))).ToArray();
+            if (!charts.Any())
+            {
+                Snackbar.Add(L["No charts match this preset — widen it in Settings"], Severity.Warning);
+                return;
+            }
+
+            var draw = await Mediator.Send(new CreateDrawCommand(_contextTournamentId, _mix,
+                charts.Select(c => c.Id).ToArray(), _newMatchName));
+            _matches.Insert(0, draw);
+            _selectedMatchId = draw.Id;
+            await LoadDraw(draw);
+            _showNewMatch = false;
+            _newMatchName = string.Empty;
+            await RefreshMatchCount(CancellationToken.None);
+        }
+        catch (RandomizerException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        catch (NotAuthorizedException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private Task<IEnumerable<DrawDto>> SearchMatches(string? value)
+    {
+        var result = string.IsNullOrWhiteSpace(value)
+            ? _matches
+            : _matches.Where(m => m.Name != null && m.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(result.AsEnumerable());
+    }
+
+    private async Task OnMatchPicked(DrawDto? match)
+    {
+        if (match == null) return;
+
+        await SelectMatch(match);
+    }
+
+    private async Task OpenManage()
+    {
+        _manageMatchId = _selectedMatchId ?? _matches.FirstOrDefault()?.Id;
+        _manageRenameText = ManagedMatchName ?? string.Empty;
+        _confirmingManageRedraw = _confirmingManageDelete = false;
+        _confirmingRemoveStaffId = null;
+        _discordChannelText = _discordChannelId?.ToString() ?? string.Empty;
+        _showManage = true;
+        if (_isHeadTo && _contextTournamentId != null)
+        {
+            _invites = (await Mediator.Send(new GetTournamentRoleInvitesQuery(_contextTournamentId.Value))).ToArray();
+            await LoadStaff();
+        }
+    }
+
+    private async Task LoadStaff()
+    {
+        if (_contextTournamentId == null) return;
+
+        var roles = await Mediator.Send(new GetTournamentRolesQuery(_contextTournamentId.Value));
+        var members = new List<StaffMember>();
+        // Staff lists are a handful of people; per-user lookups beat a new bulk query.
+        foreach (var role in roles.OrderBy(r => r.Role))
+        {
+            var user = await Mediator.Send(new GetUserByIdQuery(role.UserId));
+            if (user != null) members.Add(new StaffMember(user, role.Role));
+        }
+
+        _staff = members;
+    }
+
+    private void OnManageMatchChanged(string value)
+    {
+        _manageMatchId = Guid.TryParse(value, out var id) ? id : null;
+        _manageRenameText = ManagedMatchName ?? string.Empty;
+        _confirmingManageRedraw = _confirmingManageDelete = false;
+    }
+
+    private async Task RenameManagedMatch()
+    {
+        if (_manageMatchId == null || string.IsNullOrWhiteSpace(_manageRenameText)) return;
+
+        _busy = true;
+        try
+        {
+            var name = _manageRenameText.Trim();
+            await Mediator.Send(new RenameDrawCommand(_manageMatchId.Value, name));
+            var index = _matches.FindIndex(m => m.Id == _manageMatchId);
+            if (index >= 0) _matches[index] = _matches[index] with { Name = name };
+            Snackbar.Add(L["Match renamed"], Severity.Success);
+        }
+        catch (RandomizerException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        catch (NotAuthorizedException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ManageRedraw()
+    {
+        if (_manageMatchId == null) return;
+
+        // Destructive-ish on a live match: second tap confirms (owner call, round 8).
+        if (!_confirmingManageRedraw)
+        {
+            _confirmingManageRedraw = true;
+            _confirmingManageDelete = false;
+            return;
+        }
+
+        _confirmingManageRedraw = false;
+        _busy = true;
+        try
+        {
+            await SaveWorkingConfig();
+            var charts = (await Mediator.Send(new GetRandomChartsQuery(_settings, _mix))).ToArray();
+            if (!charts.Any())
+            {
+                Snackbar.Add(L["No charts match your filters — open Settings and widen the range"],
+                    Severity.Warning);
+                return;
+            }
+
+            if (charts.Length < _settings.Count)
+                Snackbar.Add(L["Only {0} charts match your filters", charts.Length], Severity.Info);
+
+            var draw = await Mediator.Send(new RedrawCardsCommand(_manageMatchId.Value, _mix,
+                charts.Select(c => c.Id).ToArray()));
+            var index = _matches.FindIndex(m => m.Id == draw.Id);
+            if (index >= 0) _matches[index] = draw;
+            // If the playing field shows this match, it updates in place — locally, not
+            // just via the event bridge (owner call, round 8).
+            if (_selectedMatchId == draw.Id) await LoadDraw(draw);
+        }
+        catch (RandomizerException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        catch (NotAuthorizedException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ManageDelete()
+    {
+        if (_manageMatchId == null) return;
+
+        // Destructive: second tap confirms.
+        if (!_confirmingManageDelete)
+        {
+            _confirmingManageDelete = true;
+            _confirmingManageRedraw = false;
+            return;
+        }
+
+        _confirmingManageDelete = false;
+        _busy = true;
+        try
+        {
+            var deletedId = _manageMatchId.Value;
+            await Mediator.Send(new DeleteDrawCommand(deletedId));
+            _matches.RemoveAll(m => m.Id == deletedId);
+            if (_selectedMatchId == deletedId)
+            {
+                var newest = _matches.FirstOrDefault();
+                _selectedMatchId = newest?.Id;
+                if (newest != null)
+                {
+                    await LoadDraw(newest);
+                }
+                else
+                {
+                    _cards.Clear();
+                    _drawId = null;
+                    _drawSlug = null;
+                }
+            }
+
+            _manageMatchId = _matches.FirstOrDefault()?.Id;
+            _manageRenameText = ManagedMatchName ?? string.Empty;
+        }
+        catch (NotAuthorizedException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task RemoveStaff(Guid userId)
+    {
+        if (_contextTournamentId == null) return;
+
+        // Destructive: second tap confirms, per row.
+        if (_confirmingRemoveStaffId != userId)
+        {
+            _confirmingRemoveStaffId = userId;
+            return;
+        }
+
+        _confirmingRemoveStaffId = null;
+        _busy = true;
+        try
+        {
+            await Mediator.Send(new RemoveTournamentRoleCommand(_contextTournamentId.Value, userId));
+            await LoadStaff();
+        }
+        catch (NotAuthorizedException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void SwitchToSettings()
+    {
+        _showManage = false;
+        _showSettings = true;
+    }
+
+    private async Task SaveDiscordChannel()
+    {
+        if (_contextTournamentId == null) return;
+
+        var text = _discordChannelText.Trim();
+        ulong? channelId = null;
+        if (text.Length > 0)
+        {
+            if (!ulong.TryParse(text, out var parsed))
+            {
+                Snackbar.Add(L["That doesn't look like a channel ID — right-click the channel in Discord and Copy Channel ID"],
+                    Severity.Warning);
+                return;
+            }
+
+            channelId = parsed;
+        }
+
+        _busy = true;
+        try
+        {
+            await Mediator.Send(new SetTournamentDiscordChannelCommand(_contextTournamentId.Value, channelId));
+            _discordChannelId = channelId;
+            Snackbar.Add(channelId == null ? L["Discord channel cleared"] : L["Discord channel saved"],
+                Severity.Success);
+        }
+        catch (NotAuthorizedException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task PushToDiscord()
+    {
+        if (_drawId == null) return;
+
+        _busy = true;
+        try
+        {
+            await Mediator.Send(new PushDrawToDiscordCommand(_drawId.Value));
+            Snackbar.Add(L["Draw pushed to Discord"], Severity.Success);
+        }
+        catch (RandomizerException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        catch (NotAuthorizedException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void SwitchContext(string value)
+    {
+        var target = value == "personal" || string.IsNullOrEmpty(value)
+            ? "/ChartRandomizer"
+            : $"/ChartRandomizer?tournament={value}";
+        NavManager.NavigateTo(target);
+    }
+
+    /// <summary>
+    ///     A fresh RandomSettings defines an empty pool twice over: every level weight AND
+    ///     every song-type weight is zero — and the engine excludes any chart whose song
+    ///     type is 0 (the old page relied on users discovering the Song Types panel).
+    ///     All-zero song types mean "no filter" here, and an all-zero level selection
+    ///     seeds S15–18. Also rescues working configs saved during the zero-pool window.
+    /// </summary>
+    private static void NormalizeEmptyPool(RandomSettings settings)
+    {
+        if (settings.SongTypeWeights.All(kv => kv.Value == 0))
+            foreach (var key in settings.SongTypeWeights.Keys.ToArray())
+                settings.SongTypeWeights[key] = 1;
+
+        if (settings.LevelWeights.All(kv => kv.Value == 0)
+            && settings.DoubleLevelWeights.All(kv => kv.Value == 0)
+            && settings.PlayerCountWeights.All(kv => kv.Value == 0))
+            foreach (var key in settings.LevelWeights.Keys.ToArray())
+                settings.LevelWeights[key] = key is >= 15 and <= 18 ? 1 : 0;
+    }
+
+    private async Task ResetSettings()
+    {
+        _settings = new RandomSettings();
+        NormalizeEmptyPool(_settings);
+        _currentSettingsName = string.Empty;
+        _saveName = string.Empty;
+        _confirmingDelete = false;
+        await OnSettingsChanged();
+    }
+
+    private async Task LoadDraw(DrawDto draw)
+    {
+        _drawId = draw.Id;
+        _drawSlug = draw.Slug;
+        var charts = (await Mediator.Send(new GetChartsQuery(draw.Mix,
+                ChartIds: draw.Cards.Select(c => c.ChartId).Distinct().ToArray())))
+            .ToDictionary(c => c.Id);
+        _cards.Clear();
+        _cards.AddRange(draw.Cards
+            .Where(c => charts.ContainsKey(c.ChartId))
+            .Select(c => new CardVm { PullId = c.PullId, Chart = charts[c.ChartId], Order = c.Order, State = c.State }));
+    }
+
+    private async Task Randomize()
+    {
+        if (_busy) return;
+
+        _busy = true;
+        try
+        {
+            await SaveWorkingConfig();
+            var charts = (await Mediator.Send(new GetRandomChartsQuery(_settings, _mix))).ToArray();
+            // Never fail silently: an empty pool keeps the previous draw and says why.
+            if (!charts.Any())
+            {
+                Snackbar.Add(L["No charts match your filters — open Settings and widen the range"],
+                    Severity.Warning);
+                return;
+            }
+
+            if (charts.Length < _settings.Count)
+                Snackbar.Add(L["Only {0} charts match your filters", charts.Length], Severity.Info);
+
+            if (CurrentUser.IsLoggedIn && _contextTournamentId != null)
+            {
+                // Tournament context: Redraw refills the SELECTED match under its slug —
+                // new matches only come from the New match flow.
+                if (_selectedMatchId == null)
+                {
+                    Snackbar.Add(L["Create a match first"], Severity.Info);
+                    return;
+                }
+
+                var draw = await Mediator.Send(new RedrawCardsCommand(_selectedMatchId.Value, _mix,
+                    charts.Select(c => c.Id).ToArray()));
+                _matches[_matches.FindIndex(m => m.Id == draw.Id)] = draw;
+                var byId = charts.GroupBy(c => c.Id).ToDictionary(g => g.Key, g => g.First());
+                _cards.Clear();
+                _drawId = draw.Id;
+                _drawSlug = draw.Slug;
+                _cards.AddRange(draw.Cards.Select(c => new CardVm
+                    { PullId = c.PullId, Chart = byId[c.ChartId], Order = c.Order, State = c.State }));
+            }
+            else if (CurrentUser.IsLoggedIn)
+            {
+                var draw = await Mediator.Send(new CreateDrawCommand(null, _mix,
+                    charts.Select(c => c.Id).ToArray()));
+                var byId = charts.GroupBy(c => c.Id).ToDictionary(g => g.Key, g => g.First());
+                _cards.Clear();
+                _drawId = draw.Id;
+                _drawSlug = draw.Slug;
+                _cards.AddRange(draw.Cards.Select(c => new CardVm
+                    { PullId = c.PullId, Chart = byId[c.ChartId], Order = c.Order, State = c.State }));
+            }
+            else
+            {
+                _cards.Clear();
+                _drawId = null;
+                _drawSlug = null;
+                _cards.AddRange(charts.Select((c, i) => new CardVm
+                    { PullId = Guid.NewGuid(), Chart = c, Order = i + 1, State = DrawCardState.None }));
+            }
+
+            _showAddChart = false;
+        }
+        catch (RandomizerException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        catch (NotAuthorizedException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+
+    private void OpenDetails(CardVm card)
+    {
+        _detailsChart = card.Chart;
+        _detailsOpen = true;
+    }
+
+    private Task ApplyArmedAction(CardVm card)
+    {
+        // Tap applies the armed action; tapping the card again undoes it. Details live
+        // on the comfortable/table views (round 7).
+        var target = _armedAction == ArmedAction.Protect ? DrawCardState.Protected : DrawCardState.Vetoed;
+        return SetState(card, card.State == target ? DrawCardState.None : target);
+    }
+
+    private async Task SetState(CardVm card, DrawCardState state)
+    {
+        card.State = state;
+        if (CurrentUser.IsLoggedIn && _drawId != null)
+            await Mediator.Send(new SetDrawCardStateCommand(_drawId.Value, card.PullId, state));
+    }
+
+    private async Task ClearVetoed()
+    {
+        if (CurrentUser.IsLoggedIn && _drawId != null)
+        {
+            var draw = await Mediator.Send(new ClearVetoedCardsCommand(_drawId.Value));
+            _cards.RemoveAll(c => !draw.Cards.Any(d => d.PullId == c.PullId));
+            foreach (var card in _cards)
+                card.Order = draw.Cards.First(d => d.PullId == card.PullId).Order;
+            _cards.Sort((a, b) => a.Order.CompareTo(b.Order));
+        }
+        else
+        {
+            _cards.RemoveAll(c => c.State == DrawCardState.Vetoed);
+            var order = 1;
+            foreach (var card in _cards) card.Order = order++;
+        }
+    }
+
+    private void ToggleAddChart()
+    {
+        _showAddChart = !_showAddChart;
+        // Focus lands after the popover content has rendered (OnAfterRenderAsync).
+        _focusAddChart = _showAddChart;
+    }
+
+    private void ToggleNewMatch()
+    {
+        _showNewMatch = !_showNewMatch;
+        // The name field autofocuses once the popover content renders (round 12).
+        _focusNewMatch = _showNewMatch;
+    }
+
+    private void CloseNewMatch()
+    {
+        _showNewMatch = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusAddChart && _showAddChart && _addChartSelector != null)
+        {
+            _focusAddChart = false;
+            await _addChartSelector.FocusAsync();
+        }
+
+        if (_focusNewMatch && _showNewMatch && _newMatchNameField != null)
+        {
+            _focusNewMatch = false;
+            await _newMatchNameField.FocusAsync();
+        }
+    }
+
+    private async Task AddChart(Chart chart)
+    {
+        _showAddChart = false;
+        if (CurrentUser.IsLoggedIn && _drawId != null)
+        {
+            var draw = await Mediator.Send(new AddChartToDrawCommand(_drawId.Value, chart.Id));
+            var added = draw.Cards.OrderBy(c => c.Order).Last();
+            _cards.Add(new CardVm { PullId = added.PullId, Chart = chart, Order = added.Order, State = added.State });
+        }
+        else
+        {
+            _cards.Add(new CardVm
+                { PullId = Guid.NewGuid(), Chart = chart, Order = _cards.Count + 1, State = DrawCardState.None });
+        }
+
+        Snackbar.Add(L["{0} added to the draw", chart.Song.Name.ToString()], Severity.Success);
+        // ChartSelector's callback is a plain delegate (no EventCallback auto-render),
+        // and this fires from the popover's render scope — poke the page explicitly.
+        StateHasChanged();
+    }
+
+    // Draft-mode staff actions: confirm-on-second-tap — the tablet is in player hands.
+    private async Task DraftClearVetoed()
+    {
+        if (!_confirmingClear)
+        {
+            _confirmingClear = true;
+            _confirmingRedraw = false;
+            return;
+        }
+
+        _confirmingClear = false;
+        await ClearVetoed();
+    }
+
+    private async Task DraftRedraw()
+    {
+        if (!_confirmingRedraw)
+        {
+            _confirmingRedraw = true;
+            _confirmingClear = false;
+            return;
+        }
+
+        _confirmingRedraw = false;
+        await Randomize();
+    }
+
+    private void EndDraft()
+    {
+        _draftMode = false;
+        _confirmingClear = _confirmingRedraw = false;
+    }
+
+    private async Task CreateTournament()
+    {
+        if (string.IsNullOrWhiteSpace(_newTournamentName)) return;
+
+        _busy = true;
+        try
+        {
+            var tournamentId = Guid.NewGuid();
+            await Mediator.Send(new CreateUnlistedTournamentCommand(tournamentId, _newTournamentName));
+            _newTournamentName = string.Empty;
+            _showCreateTournament = false;
+            _myTournaments = (await Mediator.Send(new GetMyTournamentsQuery())).ToArray();
+            NavManager.NavigateTo($"/ChartRandomizer?tournament={tournamentId}");
+        }
+        catch (InvalidNameException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task CreateInvite()
+    {
+        if (_contextTournamentId == null) return;
+
+        _busy = true;
+        var expiry = _inviteExpiryDays == 0 ? (DateTimeOffset?)null : Clock.Now + TimeSpan.FromDays(_inviteExpiryDays);
+        var token = await Mediator.Send(
+            new CreateTournamentRoleInviteCommand(_contextTournamentId.Value, _inviteRole, expiry));
+        _invites = (await Mediator.Send(new GetTournamentRoleInvitesQuery(_contextTournamentId.Value))).ToArray();
+        await CopyInviteLink(token);
+        _busy = false;
+    }
+
+    private async Task CopyInviteLink(Guid token)
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", $"{NavManager.BaseUri}Tournament/Join/{token}");
+        Snackbar.Add(L["Invite link copied — drop it in your staff channel"], Severity.Success);
+    }
+
+    private async Task RevokeInvite(Guid token)
+    {
+        if (_contextTournamentId == null) return;
+
+        await Mediator.Send(new DeleteTournamentRoleInviteCommand(_contextTournamentId.Value, token));
+        _invites = (await Mediator.Send(new GetTournamentRoleInvitesQuery(_contextTournamentId.Value))).ToArray();
+    }
+
+    private async Task SetDensity(UiDensity density)
+    {
+        _density = density;
+        if (CurrentUser.IsLoggedIn) await UiSettings.SetSetting(DensityKey, density.ToString());
+    }
+
+    private Task OnMixChanged(MixEnum mix)
+    {
+        _mix = mix;
+        return Task.CompletedTask;
+    }
+
+    private async Task OnSettingsChanged()
+    {
+        _countCts?.Cancel();
+        var cts = _countCts = new CancellationTokenSource();
+        try
+        {
+            // Debounced: slider drags shouldn't machine-gun the pool query.
+            await Task.Delay(300, cts.Token);
+            await RefreshMatchCount(cts.Token);
+            StateHasChanged();
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    private async Task RefreshMatchCount(CancellationToken cancellationToken)
+    {
+        try
+        {
+            _matchCount = (await Mediator.Send(new GetIncludedRandomChartsQuery(_settings, _mix), cancellationToken))
+                .Count();
+        }
+        catch (RandomizerException)
+        {
+            _matchCount = null;
+        }
+    }
+
+    private async Task SaveWorkingConfig()
+    {
+        if (!CurrentUser.IsLoggedIn) return;
+
+        var json = JsonSerializer.Serialize(new SavedWorkingConfig { Settings = _settings, Mix = _mix },
+            JsonOptions.Value);
+        await UiSettings.SetSetting(ConfigKey, json);
+    }
+
+    private void SelectSavedSettings(string name)
+    {
+        _currentSettingsName = name ?? string.Empty;
+        _saveName = name;
+        _confirmingDelete = false;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            _settings = new RandomSettings();
+            NormalizeEmptyPool(_settings);
+            _ = OnSettingsChanged();
+            return;
+        }
+
+        var saved = CurrentSettingsMap[name];
+        // Deep copy so edits never mutate the saved snapshot until Save.
+        _settings = JsonSerializer.Deserialize<RandomSettings>(
+            JsonSerializer.Serialize(saved.Settings, JsonOptions.Value), JsonOptions.Value) ?? new RandomSettings();
+        NormalizeEmptyPool(_settings);
+        _mix = saved.Mix;
+        _ = OnSettingsChanged();
+    }
+
+    private async Task SaveSettings()
+    {
+        if (string.IsNullOrWhiteSpace(_saveName)) return;
+
+        _busy = true;
+        try
+        {
+            var snapshot = JsonSerializer.Deserialize<RandomSettings>(
+                JsonSerializer.Serialize(_settings, JsonOptions.Value), JsonOptions.Value) ?? new RandomSettings();
+            if (_contextTournamentId == null)
+                await Mediator.Send(new SaveUserRandomSettingsCommand(_saveName, _settings, _mix));
+            else
+                await Mediator.Send(new SaveTournamentRandomSettingsCommand(_contextTournamentId.Value, _saveName,
+                    _settings, _mix));
+
+            CurrentSettingsMap[_saveName] = new SavedRandomizerSettings(_saveName, snapshot, _mix);
+            _currentSettingsName = _saveName;
+            Snackbar.Add(L["{0} Saved!", _saveName], Severity.Success);
+        }
+        catch (NotAuthorizedException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task DeleteSettings()
+    {
+        if (string.IsNullOrWhiteSpace(_saveName)) return;
+
+        // Destructive: second tap confirms (owner-locked fix — no silent DeleteForever).
+        if (!_confirmingDelete)
+        {
+            _confirmingDelete = true;
+            return;
+        }
+
+        _busy = true;
+        if (_contextTournamentId == null)
+            await Mediator.Send(new DeleteRandomSettingsCommand(_saveName));
+        else
+            await Mediator.Send(new DeleteTournamentRandomSettingsCommand(_contextTournamentId.Value, _saveName));
+        CurrentSettingsMap.Remove(_saveName);
+        _saveName = string.Empty;
+        _currentSettingsName = string.Empty;
+        _confirmingDelete = false;
+        _busy = false;
+    }
+
+    // Staff multi-device sync: another operator's action re-loads this device's match
+    // list and selected match. Own actions re-fire it too — the reload agrees with
+    // local state, so it's harmless.
+    private async void OnDrawUpdated(object? sender, DrawUpdatedEvent e)
+    {
+        if (_contextTournamentId == null) return;
+
+        await InvokeAsync(async () =>
+        {
+            _matches = (await Mediator.Send(new GetTournamentDrawsQuery(_contextTournamentId.Value))).ToList();
+            var selected = _matches.FirstOrDefault(m => m.Id == _selectedMatchId) ?? _matches.FirstOrDefault();
+            _selectedMatchId = selected?.Id;
+            if (selected != null)
+            {
+                await LoadDraw(selected);
+            }
+            else
+            {
+                _cards.Clear();
+                _drawId = null;
+                _drawSlug = null;
+            }
+
+            // If another device deleted the match this drawer was managing, roll to the
+            // newest sibling; an in-flight rename edit is left alone otherwise.
+            if (_manageMatchId != null && _matches.All(m => m.Id != _manageMatchId))
+            {
+                _manageMatchId = _matches.FirstOrDefault()?.Id;
+                _manageRenameText = ManagedMatchName ?? string.Empty;
+                _confirmingManageRedraw = _confirmingManageDelete = false;
+            }
+
+            StateHasChanged();
+        });
+    }
+
+    private string SettingsSummary(SavedRandomizerSettings preset)
+    {
+        var parts = new List<string> { preset.Mix.GetName() };
+        var singles = ActiveRange(preset.Settings.LevelWeights);
+        if (singles != null) parts.Add($"S{singles.Value.min}–{singles.Value.max}");
+        var doubles = ActiveRange(preset.Settings.DoubleLevelWeights);
+        if (doubles != null) parts.Add($"D{doubles.Value.min}–{doubles.Value.max}");
+        var coops = preset.Settings.PlayerCountWeights.Where(kv => kv.Value > 0).Select(kv => kv.Key).ToArray();
+        if (coops.Any()) parts.Add($"Co-Op ×{string.Join(",×", coops)}");
+        parts.Add(L["{0} cards", preset.Settings.Count]);
+        if (preset.Settings.ClearStatus == false) parts.Add(L["Not Passed"]);
+        if (preset.Settings.ClearStatus == true) parts.Add(L["Passed"]);
+        if (preset.Settings.AllowRepeats) parts.Add(L["Repeats"]);
+        return string.Join(" · ", parts);
+    }
+
+    private async Task CopySpectateLink()
+    {
+        if (_drawSlug == null) return;
+
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText",
+            $"{NavManager.BaseUri}Randomizer/Live/{_drawSlug}");
+        Snackbar.Add(L["Spectate link copied — it stays the same across redraws"], Severity.Success);
+    }
+
+    private async Task ShareSettings()
+    {
+        if (string.IsNullOrWhiteSpace(_currentSettingsName)) return;
+
+        var token = await Mediator.Send(new CreateSettingsShareLinkCommand(_currentSettingsName));
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText",
+            $"{NavManager.BaseUri}Randomizer/Settings/{token}");
+        Snackbar.Add(L["Settings link copied — anyone can import a copy"], Severity.Success);
+    }
+
+    private async Task CopyResults()
+    {
+        var text = string.Join("\n", _cards.Select(c =>
+            c.State == DrawCardState.Vetoed
+                ? $"~~{c.Chart.Song.Name} {c.Chart.DifficultyString}~~"
+                : $"{c.Chart.Song.Name} {c.Chart.DifficultyString}"));
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        Snackbar.Add(L["Results copied to clipboard"], Severity.Success);
+    }
+
+    public void Dispose()
+    {
+        MainLayout.DrawUpdated -= OnDrawUpdated;
+        _countCts?.Cancel();
     }
 }

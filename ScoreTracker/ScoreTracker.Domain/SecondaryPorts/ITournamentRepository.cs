@@ -25,4 +25,23 @@ public interface ITournamentRepository
 
     Task SetRole(Guid tournamentId, Guid userId, TournamentRole role, CancellationToken cancellationToken);
     Task RevokeRole(Guid tournamentId, Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Micro-tournament creation (docs/design/randomizer-overhaul.md): the row is written
+    ///     with IsUnlisted = true, so it never appears in GetAllTournaments — reachable only
+    ///     through roles (GetMyTournamentsQuery) until an admin lists it.
+    /// </summary>
+    Task CreateUnlistedTournament(TournamentRecord tournament, CancellationToken cancellationToken);
+
+    Task<Guid> CreateRoleInvite(Guid tournamentId, TournamentRole role, DateTimeOffset? expiresAt, Guid createdBy,
+        CancellationToken cancellationToken);
+
+    Task<TournamentRoleInviteRecord?> GetRoleInvite(Guid token, CancellationToken cancellationToken);
+    Task<IEnumerable<TournamentRoleInviteRecord>> GetRoleInvites(Guid tournamentId, CancellationToken cancellationToken);
+    Task DeleteRoleInvite(Guid token, CancellationToken cancellationToken);
+
+    /// <summary>Discord channel the randomizer pushes draws into; null clears it.</summary>
+    Task SetDiscordChannel(Guid tournamentId, ulong? channelId, CancellationToken cancellationToken);
+
+    Task<ulong?> GetDiscordChannel(Guid tournamentId, CancellationToken cancellationToken);
 }

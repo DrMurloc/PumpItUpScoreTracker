@@ -32,9 +32,14 @@ dotnet test ScoreTracker/ScoreTracker.Tests/ScoreTracker.Tests.csproj
 
 # API wire-shape approval tests
 dotnet test ScoreTracker/ScoreTracker.Tests.Api/ScoreTracker.Tests.Api.csproj
+
+# Blazor component tests (bUnit, mocked data)
+dotnet test ScoreTracker/ScoreTracker.Tests.Components/ScoreTracker.Tests.Components.csproj
 ```
 
-These are the PR gate. Run both before opening a PR.
+These are the PR gate. Run all three before opening a PR. The granularity ladder for UI
+work: component behavior belongs in the bUnit suite with mocked data; Playwright (below)
+is reserved for critical whole-workflow user journeys.
 
 ### Integration suite — Docker required
 
@@ -87,11 +92,11 @@ dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integ
 
 ### What CI runs
 
-Every PR and every merge to `main` runs all four suites on [Azure Pipelines](https://dev.azure.com/joneccker/ScoreTracker) — the fast suites on a Windows agent, the integration and E2E suites on parallel Linux agents with Docker. **The live-site smoke tests run in CI too**: the integration job pulls a PIU test account from Azure Key Vault, so scraper breakage fails the build — and since the deploy stage only runs after a green Build stage, a broken importer can't reach production. Merges to `main` additionally build the deployable artifact and wait at a manual approval gate before deploying.
+Every PR and every merge to `main` runs all five suites on [Azure Pipelines](https://dev.azure.com/joneccker/ScoreTracker) — the fast suites (unit/component, API approval, bUnit components) on a Windows agent, the integration and E2E suites on parallel Linux agents with Docker. **The live-site smoke tests run in CI too**: the integration job pulls a PIU test account from Azure Key Vault, so scraper breakage fails the build — and since the deploy stage only runs after a green Build stage, a broken importer can't reach production. Merges to `main` additionally build the deployable artifact and wait at a manual approval gate before deploying.
 
 ## Conventions
 
-- **Frameworks**: xUnit + Moq. Don't introduce other doubling libraries (FakeItEasy, NSubstitute, AutoFixture) without prior approval.
+- **Frameworks**: xUnit + Moq (+ bUnit in `Tests.Components` only). Don't introduce other doubling libraries (FakeItEasy, NSubstitute, AutoFixture) without prior approval.
 - **Naming**: test names describe *behavior*, not implementation — `ApproveClearsNeedsApprovalAndSnapshotsVerificationType`, not `CallsRepository`.
 - **Builders**: construct test data with the fluent builders in `ScoreTracker.Tests/TestData/` (`UserBuilder`, `ChartBuilder`, …). Add a builder once you hand-construct the same type in two tests.
 - **Clock seam**: never call `DateTime.Now` / `DateTimeOffset.UtcNow` in Application code or tests — inject `IDateTimeOffsetAccessor`, and in tests use `FakeDateTime.At(...)` from `TestHelpers/`.
