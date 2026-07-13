@@ -251,6 +251,15 @@ builder.Services.AddCookiePolicy(opts =>
 
 var app = builder.Build();
 
+// Baseline security headers on every response.
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    await next();
+});
+
 // AutoMigrate is set by the Aspire AppHost for local dev; everywhere else this only
 // logs drift (migrations stay manually applied in production).
 await app.Services.ApplyOrReportMigrationsAsync(builder.Configuration["AutoMigrate"] == "true");
