@@ -38,5 +38,6 @@ public static class CommunitiesRegistrationExtensions
     {
         configurator.AddConsumer<CommunitySaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();
+        configurator.AddConsumer<CommunityHighlightSaga>();
     }
 }
