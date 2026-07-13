@@ -25,6 +25,7 @@
           "mix": "Phoenix2",
           "scope": "SinglesDoubles",
           "separateSinglesDoubles": true,
+          "separateDisplay": "Median",
           "minLevel": 20,
           "maxLevel": 24,
           "minPlayers": 2,

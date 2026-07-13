@@ -46,8 +46,8 @@ public static class ByLevelConfigRules
         BreakdownMetric.Score => new[] { BreakdownAggregation.Distribution, BreakdownAggregation.Completion },
         // Pass is binary → stacked pass/fail or % passed.
         BreakdownMetric.Pass => new[] { BreakdownAggregation.Breakdown, BreakdownAggregation.Completion },
-        // Age is a spread of days → distribution only.
-        BreakdownMetric.ChartAge => new[] { BreakdownAggregation.Distribution },
+        // Age mirrors Score: a spread of days, or % of the folder recorded recently.
+        BreakdownMetric.ChartAge => new[] { BreakdownAggregation.Distribution, BreakdownAggregation.Completion },
         // Grade / Plate are ordinal categories → all three (distribution = an average line).
         _ => new[]
         {

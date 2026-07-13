@@ -13,13 +13,16 @@ public sealed class ByLevelBreakdownConfigPanelTests : ComponentTestBase
     // ---- adaptive rules (pure) ----
 
     [Fact]
-    public void LegacyMixesOfferOnlyGradeAndPass()
+    public void LegacyMixesDropScoreAndPlate()
     {
-        Assert.Equal(4, ByLevelConfigRules.MetricsFor(null).Count);
-        Assert.Equal(4, ByLevelConfigRules.MetricsFor(MixEnum.Phoenix2).Count);
-        Assert.Equal(new[] { BreakdownMetric.LetterGrade, BreakdownMetric.Pass },
+        // Phoenix mixes: Score, Letter Grade, Plate, Pass, Chart Age.
+        Assert.Equal(5, ByLevelConfigRules.MetricsFor(null).Count);
+        Assert.Equal(5, ByLevelConfigRules.MetricsFor(MixEnum.Phoenix2).Count);
+        // Legacy scoring has no 1M-normalized score and no plates, but grades, clears, and the
+        // date-based Chart Age all still apply.
+        Assert.Equal(new[] { BreakdownMetric.LetterGrade, BreakdownMetric.Pass, BreakdownMetric.ChartAge },
             ByLevelConfigRules.MetricsFor(MixEnum.XX));
-        Assert.Equal(new[] { BreakdownMetric.LetterGrade, BreakdownMetric.Pass },
+        Assert.Equal(new[] { BreakdownMetric.LetterGrade, BreakdownMetric.Pass, BreakdownMetric.ChartAge },
             ByLevelConfigRules.MetricsFor(MixEnum.Prime2));
     }
 

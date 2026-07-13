@@ -3356,8 +3356,8 @@
   <data name="Singles / Doubles" xml:space="preserve">
     <value>Singles / Doubles</value>
   </data>
-  <data name="Show Singles &amp; Doubles as separate lines" xml:space="preserve">
-    <value>Mostrar Singles e Doubles como linhas separadas</value>
+  <data name="Show Singles &amp; Doubles as separate data" xml:space="preserve">
+    <value>Mostrar Singles e Doubles como dados separados</value>
   </data>
   <data name="Metric" xml:space="preserve">
     <value>Métrica</value>
@@ -3574,5 +3574,8 @@
   </data>
   <data name="How stale your scores are per folder — the spread of days since you set them." xml:space="preserve">
     <value>How stale your scores are per folder — the spread of days since you set them.</value>
+  </data>
+  <data name="Within days" xml:space="preserve">
+    <value>Dias (máx.)</value>
   </data>
 </root>

@@ -81,7 +81,10 @@ public enum ThresholdKind
     Score,
     Grade,
     Plate,
-    Pass
+    Pass,
+
+    /// <summary>Recorded within N days — recent scores are the "met" side (Chart Age metric).</summary>
+    Age
 }
 
 /// <summary>

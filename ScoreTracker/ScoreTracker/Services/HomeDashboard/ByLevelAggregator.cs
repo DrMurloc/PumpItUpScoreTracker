@@ -181,8 +181,9 @@ public static class ByLevelAggregator
             case BreakdownChartScope.CoOp:
                 yield return new Draw(ChartType.CoOp, "Co-Op", 'C', false);
                 break;
-            default: // SinglesDoubles — split only when the separate toggle is on
-                if (config.SeparateSinglesDoubles)
+            default: // SinglesDoubles — split only for a separated Distribution. Stacked bars
+                     // can't do grouped S/D cleanly (ApexCharts group), so they stay combined.
+                if (config.SeparateSinglesDoubles && config.Aggregation == BreakdownAggregation.Distribution)
                 {
                     yield return new Draw(ChartType.Single, "Singles", 'S', false);
                     yield return new Draw(ChartType.Double, "Doubles", 'D', false);
@@ -323,6 +324,10 @@ public static class ByLevelAggregator
 
             bands.Add(new BreakdownBandArea(SeriesColor.ByChartType, draws[d].Type, lower, upper));
 
+            // A solid median line centers the band — and guarantees a point series exists, since a
+            // bands-only chart makes ApexCharts throw on an empty stroke.
+            AddStatLine(series, sorted, d, draws, buckets, DistributionSeries.Median, false, ref min, ref max);
+
             // Dotted min/max outside an IQR / ±σ band so the extremes still read (owner).
             if (display != SeparateDisplay.RangeMinMax)
             {
@@ -390,7 +395,9 @@ public static class ByLevelAggregator
         Dictionary<(int, int), double[]> sorted, bool ordinal, ref double min, ref double max)
     {
         var bands = new List<BreakdownBandArea>();
-        if (ordinal || config.Metric != BreakdownMetric.Score || config.Band == BreakdownBand.None) return bands;
+        // Continuous metrics (Score, Chart Age) support a shaded band; ordinal ladders don't.
+        var bandable = config.Metric is BreakdownMetric.Score or BreakdownMetric.ChartAge;
+        if (ordinal || !bandable || config.Band == BreakdownBand.None) return bands;
 
         for (var d = 0; d < draws.Length; d++)
         {
@@ -546,6 +553,8 @@ public static class ByLevelAggregator
         ThresholdKind.Score => int.TryParse(t.Value, out var v) ? v : 0,
         ThresholdKind.Grade => IndexOf(scales.GradeNames, t.Value),
         ThresholdKind.Plate => IndexOf(scales.PlateNames, t.Value),
+        // Fewer days is the stricter (higher) tier — recent scores cap the stack.
+        ThresholdKind.Age => int.TryParse(t.Value, out var d) ? -d : 0,
         _ => 0
     };
 
@@ -553,6 +562,8 @@ public static class ByLevelAggregator
     {
         ThresholdKind.Pass => "Not cleared",
         ThresholdKind.Score => int.TryParse(t.Value, out var v) ? $"< {v:N0}" : "< ?",
+        // Below the loosest age tier = the stale/never-played remainder.
+        ThresholdKind.Age => int.TryParse(t.Value, out var d) ? $"> {d} days" : "Stale",
         _ => $"< {t.Value}"
     };
 
@@ -571,6 +582,7 @@ public static class ByLevelAggregator
         BreakdownMetric.Score => new CompletionThreshold { Kind = ThresholdKind.Score, Value = "990000" },
         BreakdownMetric.Plate => new CompletionThreshold { Kind = ThresholdKind.Plate, Value = "PG" },
         BreakdownMetric.LetterGrade => new CompletionThreshold { Kind = ThresholdKind.Grade, Value = "SSS" },
+        BreakdownMetric.ChartAge => new CompletionThreshold { Kind = ThresholdKind.Age, Value = "30" },
         _ => new CompletionThreshold { Kind = ThresholdKind.Pass }
     };
 
@@ -589,6 +601,11 @@ public static class ByLevelAggregator
             case ThresholdKind.Plate:
                 var pRank = IndexOf(scales.PlateNames, threshold.Value);
                 return r => r.IsPassed && r.PlateRank >= pRank;
+            case ThresholdKind.Age:
+                // "Met" = recorded within N days. Any played chart counts (a stale fail is still
+                // stale); unplayed charts meet nothing and fall to the muted remainder.
+                var maxDays = int.TryParse(threshold.Value, out var days) ? days : int.MaxValue;
+                return r => r.IsPlayed && r.AgeDays.HasValue && r.AgeDays <= maxDays;
             default:
                 return _ => false;
         }
@@ -606,6 +623,7 @@ public static class ByLevelAggregator
     {
         ThresholdKind.Pass => "Passed",
         ThresholdKind.Score => int.TryParse(t.Value, out var v) ? $"≥ {v:N0}" : "≥ ?",
+        ThresholdKind.Age => int.TryParse(t.Value, out var d) ? $"≤ {d} days" : "≤ ? days",
         _ => $"≥ {t.Value}"
     };
 

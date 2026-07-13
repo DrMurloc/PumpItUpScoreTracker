@@ -36,9 +36,9 @@ else
     <LevelRangeSlider Label="@L["Level"]" Prefix="" Min="MinLevel" Max="MaxLevel"
                       ValueMin="_minLevel" ValueMax="_maxLevel"
                       ValueMinChanged="v => _minLevel = v" ValueMaxChanged="v => _maxLevel = v"/>
-    @if (_scope == BreakdownChartScope.SinglesDoubles)
+    @if (_scope == BreakdownChartScope.SinglesDoubles && _aggregation == BreakdownAggregation.Distribution)
     {
-        <MudCheckBox T="bool" @bind-Value="_separate" Label="@L["Show Singles & Doubles separately"]" Dense="true"/>
+        <MudCheckBox T="bool" @bind-Value="_separate" Label="@L["Show Singles & Doubles as separate data"]" Dense="true"/>
     }
 }
 
@@ -90,7 +90,7 @@ else
                              Label="@SeriesLabel(s)" Dense="true"/>
             }
         </div>
-        @if (_metric == BreakdownMetric.Score)
+        @if (ContinuousMetric)
         {
             <div class="d-flex align-center gap-2 mt-1">
                 <MudNumericField T="int?" @bind-Value="_pctInput" Label="@L["Percentile"]" Placeholder="1–99" Min="1"
@@ -143,6 +143,11 @@ else
                 <MudNumericField T="int?" @bind-Value="_scoreInput" Label="@L["Score"]" Min="0" Max="1000000" Step="1000"
                                  Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true" Style="max-width:150px"/>
             }
+            else if (_metric == BreakdownMetric.ChartAge)
+            {
+                <MudNumericField T="int?" @bind-Value="_ageInput" Label="@L["Within days"]" Min="1" Max="3650" Step="7"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true" Style="max-width:150px"/>
+            }
             else
             {
                 <MudSelect T="string" @bind-Value="_ordinalInput" Label="@L["At least"]" Dense="true"
@@ -192,12 +197,17 @@ else
     private readonly List<CompletionThreshold> _thresholds = new();
     private int? _pctInput;
     private int? _scoreInput = 990000;
+    private int? _ageInput = 30;
     private string? _ordinalInput;
 
     private bool LegacyMix => _mix.HasValue && _mix.Value.UsesLegacyScoring();
 
     // The separate S/D display (single stat vs shaded range) only applies to the Singles+Doubles scope.
     private bool SeparateActive => _scope == BreakdownChartScope.SinglesDoubles && _separate;
+
+    // Score and Chart Age are continuous → full percentile series + a shaded band; grades/plates
+    // are ordinal (a fixed ladder), Pass is binary.
+    private bool ContinuousMetric => _metric is BreakdownMetric.Score or BreakdownMetric.ChartAge;
 
     private IReadOnlyList<BreakdownMetric> AvailableMetrics => ByLevelConfigRules.MetricsFor(_mix);
 
@@ -207,7 +217,7 @@ else
         { DistributionSeries.Min, DistributionSeries.Average, DistributionSeries.Max };
 
     private IReadOnlyList<DistributionSeries> AvailableSeries =>
-        _metric == BreakdownMetric.Score ? Enum.GetValues<DistributionSeries>() : OrdinalSeries;
+        ContinuousMetric ? Enum.GetValues<DistributionSeries>() : OrdinalSeries;
 
     private IEnumerable<string> OrdinalThresholdOptions =>
         ByLevelDataSource.ScalesFor(_mix ?? MixEnum.Phoenix2) is var scales && _metric == BreakdownMetric.Plate
@@ -289,6 +299,8 @@ else
         if (_thresholds.Count >= 6) return;
         if (_metric == BreakdownMetric.Score && _scoreInput is >= 0 and <= 1000000)
             _thresholds.Add(new CompletionThreshold { Kind = ThresholdKind.Score, Value = _scoreInput.Value.ToString() });
+        else if (_metric == BreakdownMetric.ChartAge && _ageInput is >= 1 and <= 3650)
+            _thresholds.Add(new CompletionThreshold { Kind = ThresholdKind.Age, Value = _ageInput.Value.ToString() });
         else if (_metric == BreakdownMetric.LetterGrade && _ordinalInput != null)
             _thresholds.Add(new CompletionThreshold { Kind = ThresholdKind.Grade, Value = _ordinalInput });
         else if (_metric == BreakdownMetric.Plate && _ordinalInput != null)
@@ -346,6 +358,7 @@ else
     private string ThresholdLabel(CompletionThreshold t) => t.Kind switch
     {
         ThresholdKind.Score => int.TryParse(t.Value, out var v) ? $"≥ {v:N0}" : "≥ ?",
+        ThresholdKind.Age => int.TryParse(t.Value, out var d) ? $"≤ {d} days" : "≤ ?",
         _ => $"≥ {t.Value}"
     };
 

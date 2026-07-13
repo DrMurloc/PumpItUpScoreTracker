@@ -2,13 +2,15 @@
 
 Part of the home dashboard widget catalog — see [README.md](README.md) for architecture, locked
 decisions (D1–D19), the widget registry contract, and the widget index. **Status: BUILT (C0–C7,
-2026-07-12) — awaiting owner field test, then UX iteration.** Catalog-walk widget (D18).
+2026-07-12) + UX rounds 1–2 (2026-07-13) — awaiting owner field test.** Catalog-walk widget (D18).
 
 **Render notes:** the shaded distribution band draws as a native `ApexRangeAreaSeries`
-(Blazor-ApexCharts 6.1.0 `Top`/`Bottom`), muted and translucent behind the stat lines. One v1
-limitation remains: **Breakdown renders one combined stack per level rather than grouped S/D bars**
-(`ApexPointSeries` exposes no series-group property) — S/D separation lives in the line aggregations,
-and the config/aggregator/contract already support the grouped form for when the render catches up.
+(Blazor-ApexCharts 6.1.0 `Top`/`Bottom`), muted and translucent behind the stat lines. **Separate
+S/D is a Distribution-only opt-in** — Blazor-ApexCharts 6.1.0 ignores `ApexBaseSeries.Group`, so
+grouped S/D bars render as duplicate-labelled overlaps; the stacked aggregations (Breakdown,
+Completion) therefore stay combined ("S + D") and S/D separation lives only in the line
+distributions. When separated, each type reads by **color** (red Singles / green Doubles), showing
+one stat line or a shaded range per type (§ UX iterations).
 
 Mock (interactive config flow, fake data): https://claude.ai/code/artifact/77692444-46e8-451c-ac17-f3f5e2ba6604
 
@@ -29,7 +31,7 @@ edit mode (D14).
 
 ## Model
 
-Three **aggregations** over four **metrics**. The config is *adaptive*: the chosen metric (and mix)
+Three **aggregations** over five **metrics**. The config is *adaptive*: the chosen metric (and mix)
 lights up only the options that mean something.
 
 | Metric | Distribution | Breakdown (stacked count / %) | Completion % (threshold → % of folder) |
@@ -38,6 +40,12 @@ lights up only the options that mean something.
 | **Letter Grade** (ordinal) | ~ ordinal average line only | ✅ count per grade | ✅ % with grade ≥ **G** |
 | **Plate** (ordinal) | ~ ordinal average line only | ✅ count per plate | ✅ % with plate ≥ **P** |
 | **Pass / Clear** (binary) | — | ✅ passed vs unpassed | ✅ % passed |
+| **Chart Age** (numeric days) | ✅ full peer of Score (percentiles / ±1σ / band) — the spread of days since each score was set | — | ✅ % recorded within **N** days (recency tiers, fresh = brightest) |
+
+**Chart Age** is a full peer of Score: continuous, so it gets the same distribution stats *and* a
+Completion mode ("what fraction of this folder did I touch in the last N days"). Its recency tiers
+climb the rarity ramp (freshest on top) since days carry no metal/grade identity. Available for
+**every** mix — legacy imports carry a recorded date too.
 
 "Completion Rates" is **not** a metric — it is the Completion aggregation pointed at any metric; plain
 pass-rate is Completion-of-Pass. Multi-threshold is allowed (each threshold = one line); misconfiguration
@@ -64,9 +72,11 @@ Set once for the whole widget (there is only one graph):
   component (already extracted during the randomizer overhaul; the randomizer's settings panel uses it
   for its Singles/Doubles rows). One instance here — the widget applies a single level range to both S
   and D. "All" = drag to the full 1–28 span (no suggestion chips — owner).
-- **Chart scope** — **Singles / Doubles** (with a "show S & D as separate lines" toggle) **or**
-  **Co-Op** (mutually exclusive; swaps the x-axis from difficulty 1–28 to **player count** — `Chart.Level`
-  encodes player count for co-op charts — with a player-count range).
+- **Chart scope** — a four-option dropdown: **Singles + Doubles**, **Singles**, **Doubles**, or
+  **Co-Op**. Singles + Doubles pools both types; under a **Distribution** aggregation it also offers a
+  "show Singles & Doubles as separate data" toggle (Distribution-only — see the render note). Co-Op
+  swaps the x-axis from difficulty 1–28 to **player count** (`Chart.Level` encodes player count for
+  co-op charts) with a player-count range.
 
 ## Metrics & mixes
 
@@ -74,8 +84,9 @@ Metric availability keys off `MixEnumHelperMethods.UsesLegacyScoring(mix)` (= `n
 
 - **Phoenix / Phoenix 2** (`!UsesLegacyScoring`) → all four metrics. Data: `GetPhoenixRecordsQuery(userId, mix)`
   → `RecordedPhoenixScore` (numeric `Score`, `Plate`, `IsBroken`, derived `LetterGrade`).
-- **XX and every older mix** (`UsesLegacyScoring`) → **Letter Grade + Pass only** (score is not
-  1M-normalized — there is no meaningful "max" — and there are no plates). Data:
+- **XX and every older mix** (`UsesLegacyScoring`) → **Letter Grade, Pass, and Chart Age** (score is
+  not 1M-normalized — there is no meaningful "max" — and there are no plates; Chart Age needs only a
+  recorded date, which legacy scores have). Data:
   `GetXXBestChartAttemptsQuery(userId, mix)` → `BestXXChartAttempt` (letter grade + broken flag). The
   read seam is **already mix-generic** (the query takes a mix; `IXXChartAttemptRepository.GetBestAttempts(userId, mix)`
   keys off it) — nothing to wire on the read side; the widget lights up per mix as scores exist.
@@ -103,9 +114,12 @@ which charts are co-op and their player count. Reuses `BoxPlotData.From`-style m
 Blazor-ApexCharts (the existing dependency the Competitive Level widget and the Progress pages use), not
 the mock's hand-SVG. Line charts for Distribution/Completion, stacked bars for Breakdown.
 
-- **Series colors**: S/D lines from the `MixPalette` chart pair (README §2.5). In Distribution, color
-  encodes the **stat** and line style encodes the **type** (S solid / D dashed) — the second axis is
-  "which stat," not "which era," so this differs from the Competitive Level widget's color=type / style=era.
+- **Series colors**: when S/D are **pooled**, a single combined distribution reads by stat — center
+  stats (median/avg) strongest, extremes faintest (line-emphasis alpha), one neutral hue. When S/D are
+  **separated**, color encodes the **type** (red Singles / green Doubles, the app's S/D game vocabulary
+  from `MixThemes.ChartTypeHex`); each type shows one stat line or a shaded range band, dotted min/max
+  outside an IQR/±σ band. Grade/plate/score-tier segments wear their own identity color (grade & plate
+  metals, or the rarity ramp for score/recency tiers) resolved from the segment label.
 - **Category colors** (grade/plate breakdown): from a new **`ThemeScales.RarityHex(...)`** literal-hex
   accessor — ApexCharts can't read CSS custom properties at config time, so the rarity ramp needs a
   literal-hex sibling to the CSS tokens (precedent: `DifficultyHex` already serves the SkiaSharp share
@@ -156,11 +170,33 @@ the emitted JSON-Schema stays clean and stable.
 
 ### Drawer presets (D10)
 
-One add-drawer card per pre-filled config, so the multi-personality type stays discoverable:
+One add-drawer card per pre-filled config, so the multi-personality type stays discoverable. Current
+registry set (`WidgetRegistry`):
 
-- **Box Plot** — Score · Distribution · Min/P25/Median/P75/Max · IQR band · S&D separate · Lv 17–23.
+- **Score Distribution** — Score · Distribution · Min/P25/Median/P75/Max · IQR band · pooled · Lv 17–23.
 - **Grade Wall** — Letter Grade · Breakdown · 100%-normalized · include unplayed · Lv 17–24.
-- **PG Race** — Plate · Completion · thresholds MG / UG / PG · S&D separate · Lv 17–23.
-- **Clear Progress** — Pass · Completion · S&D separate · all levels.
-- **Nerd Mode** — Score · Distribution · deciles + ±1σ · Lv 20–23 (the deliberately busy case).
-- **Score Push %** — Score · Completion · thresholds ≥950k / ≥990k / 1,000,000 · Lv 17–23.
+- **Plate Distribution** — Plate · Completion · tiers MG / UG / PG · Lv 17–23.
+- **Clear Progress** — Pass · Breakdown · Lv 1–28.
+- **Score Completion** — Score · Completion · tiers ≥950k / ≥990k / 1,000,000 · Lv 17–23.
+- **Chart Age** — Chart Age · Distribution · Min/P25/Median/P75/Max · IQR band · Lv 17–23.
+
+The dynamic instance title follows `(metric, aggregation)` (`ByLevelConfigRules.TitleKey`), so rapid-firing
+presets never yields two identically-named widgets.
+
+## UX iterations (2026-07-13)
+
+Field-test rounds after the C0–C7 build; the owner runs, these are the ratified changes:
+
+- **Round 1** — presets renamed to say what they show (Box Plot → Score Distribution, PG Race → Plate
+  Distribution, Score Push % → Score Completion); tooltip labels made legible (white, numeric x-axis kills
+  the "undefined – undefined" mis-bind); grade/plate segments recolored to the **game's** grade/plate
+  colors, not the rarity ranking (`MixThemes.GradeHex`/`PlateHex`, documented as reusable tokens in
+  UX-GUIDELINES); Score Completion switched to the stacked-tier form.
+- **Round 2** — S/D coloring is **red Singles / green Doubles** (`ChartTypeHex`); separated S/D limited to
+  one line/range per type; a **separate-display picker** (Average / Median / Min / Max / shaded range
+  IQR / Min–Max / ±1σ, with dotted min/max outside a range band); **Chart Age** metric added, then given
+  **Completion** parity with Score (recency tiers); four-option Charts dropdown.
+- **Grouped S/D bars: shelved.** Blazor-ApexCharts 6.1.0 ignores `ApexBaseSeries.Group`, so a grouped
+  stacked bar renders as duplicate-labelled overlaps. Stacked aggregations stay combined; the
+  "separate data" toggle is Distribution-only and self-hides elsewhere. Revisit if the wrapper gains real
+  grouped-bar support.

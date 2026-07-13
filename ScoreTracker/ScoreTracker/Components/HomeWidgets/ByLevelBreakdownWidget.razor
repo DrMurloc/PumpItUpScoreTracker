@@ -150,21 +150,25 @@ else
         }
         else
         {
-            // S/D read by color; the stat by line emphasis (alpha). Dotted min/max ride a dash array.
-            _options.Stroke = new Stroke
-            {
-                Curve = Curve.Straight, Width = 2.5,
-                DashArray = _series.Select(s => s.Dashed ? 4.0 : 0.0).ToList()
-            };
+            // S/D read by color; the stat by line emphasis (alpha). Only add a dash array when a
+            // line actually needs it — an empty/whole-zero array trips the ApexCharts serializer.
             _options.Markers = new Markers { Size = 0 };
+            _options.Stroke = _series.Any(s => s.Dashed)
+                ? new Stroke
+                {
+                    Curve = Curve.Straight, Width = 2.5,
+                    DashArray = _series.Select(s => s.Dashed ? 4.0 : 0.0).ToList()
+                }
+                : new Stroke { Curve = Curve.Straight, Width = 2.5 };
             if (_bands.Count > 0)
             {
                 _options.Fill = new Fill { Opacity = 0.16 };
                 // Trigger the tooltip on the stat lines only, keeping the band's range out of it.
-                _options.Tooltip = new Tooltip
-                {
-                    EnabledOnSeries = Enumerable.Range(_bands.Count, _series.Count).Select(i => (double)i).ToList()
-                };
+                if (_series.Count > 0)
+                    _options.Tooltip = new Tooltip
+                    {
+                        EnabledOnSeries = Enumerable.Range(_bands.Count, _series.Count).Select(i => (double)i).ToList()
+                    };
             }
         }
 
@@ -174,13 +178,11 @@ else
         {
             Type = XAxisType.Numeric, DecimalsInFloat = 0, TickAmount = Math.Max(1, result.Buckets.Count - 1)
         };
+        // Everything the y-axis shows is a whole number (score, days, %, counts, ranks) — no decimals,
+        // which also kills the "890.900000000000" float labels.
         _options.Yaxis = new List<YAxis>
         {
-            new()
-            {
-                Min = result.SuggestedYMin, Max = result.SuggestedYMax,
-                DecimalsInFloat = result.Normalized || result.YAxisTitle == "% of folder" ? 0 : (int?)null
-            }
+            new() { Min = result.SuggestedYMin, Max = result.SuggestedYMax, DecimalsInFloat = 0 }
         };
         // Distribution (lines) leans on the hover tooltip; stacked bars keep the category legend.
         _options.Legend = new Legend { Show = isBars };

@@ -3291,8 +3291,8 @@
   <data name="Singles / Doubles" xml:space="preserve">
     <value>싱글 / 더블</value>
   </data>
-  <data name="Show Singles &amp; Doubles as separate lines" xml:space="preserve">
-    <value>싱글과 더블을 별도 선으로 표시</value>
+  <data name="Show Singles &amp; Doubles as separate data" xml:space="preserve">
+    <value>싱글과 더블을 개별 데이터로 표시</value>
   </data>
   <data name="Metric" xml:space="preserve">
     <value>지표</value>
@@ -3509,5 +3509,8 @@
   </data>
   <data name="How stale your scores are per folder — the spread of days since you set them." xml:space="preserve">
     <value>How stale your scores are per folder — the spread of days since you set them.</value>
+  </data>
+  <data name="Within days" xml:space="preserve">
+    <value>최대 일수</value>
   </data>
 </root>

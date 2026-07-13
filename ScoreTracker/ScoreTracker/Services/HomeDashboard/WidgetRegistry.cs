@@ -158,14 +158,14 @@ public static class WidgetRegistry
                             new() { Kind = ThresholdKind.Plate, Value = "UG" },
                             new() { Kind = ThresholdKind.Plate, Value = "PG" }
                         },
-                        SeparateSinglesDoubles = true, MinLevel = 17, MaxLevel = 23
+                        SeparateSinglesDoubles = false, MinLevel = 17, MaxLevel = 23
                     })),
                 new WidgetDrawerPreset("Clear Progress",
-                    "How much of every folder you've cleared, Singles vs Doubles.",
+                    "How much of every folder you've cleared, per level.",
                     WidgetConfigJson.Write(new ByLevelBreakdownConfig
                     {
                         Metric = BreakdownMetric.Pass, Aggregation = BreakdownAggregation.Breakdown,
-                        SeparateSinglesDoubles = true, MinLevel = 1, MaxLevel = 28
+                        SeparateSinglesDoubles = false, MinLevel = 1, MaxLevel = 28
                     })),
                 new WidgetDrawerPreset("Score Completion",
                     "How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000.",

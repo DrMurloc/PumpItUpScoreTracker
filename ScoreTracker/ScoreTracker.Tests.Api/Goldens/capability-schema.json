@@ -529,11 +529,24 @@
           "scope": {
             "enum": [
               "SinglesDoubles",
+              "Singles",
+              "Doubles",
               "CoOp"
             ]
           },
           "separateSinglesDoubles": {
             "type": "boolean"
+          },
+          "separateDisplay": {
+            "enum": [
+              "Average",
+              "Median",
+              "Min",
+              "Max",
+              "RangeIqr",
+              "RangeMinMax",
+              "RangeStdDev"
+            ]
           },
           "minLevel": {
             "type": "integer"
@@ -552,7 +565,8 @@
               "Score",
               "LetterGrade",
               "Plate",
-              "Pass"
+              "Pass",
+              "ChartAge"
             ]
           },
           "aggregation": {
@@ -611,7 +625,8 @@
                     "Score",
                     "Grade",
                     "Plate",
-                    "Pass"
+                    "Pass",
+                    "Age"
                   ]
                 },
                 "value": {

@@ -376,7 +376,11 @@ public sealed class ByLevelAggregatorTests
         var s = Assert.Single(result.Bands, b => b.Type == ChartType.Single);
         Assert.Equal(900_000, s.Lower[0]);
         Assert.Equal(1_000_000, s.Upper[0]);
-        Assert.Empty(result.Series); // Min–Max range needs no extra lines
+        // A solid median line per type centers each band (min–max mode adds no dotted extremes).
+        Assert.Equal(2, result.Series.Count);
+        Assert.All(result.Series, line => Assert.False(line.Dashed));
+        Assert.Contains(result.Series, line => line.Type == ChartType.Single && line.Values[0] == 950_000);
+        Assert.Contains(result.Series, line => line.Type == ChartType.Double && line.Values[0] == 850_000);
     }
 
     [Fact]
@@ -401,8 +405,9 @@ public sealed class ByLevelAggregatorTests
         var result = ByLevelAggregator.Aggregate(config, records, Scales);
 
         Assert.Equal(2, result.Bands.Count); // IQR band per type
-        Assert.NotEmpty(result.Series);
-        Assert.All(result.Series, s => Assert.True(s.Dashed)); // min & max drawn dotted
+        // Each type: a solid median line down the band, plus dotted min & max outside it.
+        Assert.Contains(result.Series, s => !s.Dashed); // median
+        Assert.Equal(4, result.Series.Count(s => s.Dashed)); // min + max per type
     }
 
     [Fact]
@@ -425,6 +430,38 @@ public sealed class ByLevelAggregatorTests
 
         Assert.Equal(BreakdownChartKind.Lines, result.Kind);
         Assert.Equal(20, Assert.Single(result.Series).Values[0]); // median of 10 & 30 days
+    }
+
+    [Fact]
+    public void ChartAgeCompletionStacksRecencyTiersOverTheWholeFolder()
+    {
+        var records = new[]
+        {
+            new BreakdownRecord(ChartType.Single, 20, true, true, 1_000_000, 7, 5, 3), // ≤ 7 days
+            new BreakdownRecord(ChartType.Single, 20, true, true, 950_000, 5, 5, 20), // ≤ 30, > 7
+            new BreakdownRecord(ChartType.Single, 20, true, true, 800_000, 4, 3, 100), // stale
+            Unplayed(ChartType.Single, 20) // never played → stale remainder
+        };
+        var config = new ByLevelBreakdownConfig
+        {
+            Scope = BreakdownChartScope.Singles,
+            Metric = BreakdownMetric.ChartAge, Aggregation = BreakdownAggregation.Completion,
+            Thresholds = new()
+            {
+                new CompletionThreshold { Kind = ThresholdKind.Age, Value = "7" },
+                new CompletionThreshold { Kind = ThresholdKind.Age, Value = "30" }
+            },
+            MinLevel = 20, MaxLevel = 20
+        };
+
+        var result = ByLevelAggregator.Aggregate(config, records, Scales);
+
+        Assert.Equal(BreakdownChartKind.StackedBars, result.Kind);
+        Assert.Equal(25, Value(result, "≤ 7 days")); // 1 of 4 charts
+        Assert.Equal(25, Value(result, "≤ 30 days")); // the age-20 chart, disjoint from ≤ 7
+        Assert.Equal(50, Value(result, "> 30 days")); // stale played + unplayed
+        // Recency has no metal/grade identity → it climbs the rarity ramp, fresh = brightest.
+        Assert.Equal(SeriesColorRole.Rarity, result.Series.Single(s => s.Label == "≤ 7 days").Color.Role);
     }
 
     [Fact]
