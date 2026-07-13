@@ -2868,8 +2868,40 @@ html.nav-away .page-dock,
 
 .dash-acct-hero {
     display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.dash-acct-total {
+    display: inline-flex;
     align-items: baseline;
-    gap: 10px;
+    gap: 8px;
+    flex: none;
+}
+
+/* S/D Pumbility pools stacked to the right of the big total (owner, field-test). */
+.dash-acct-pools {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    font-size: .82rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-acct-poolrow {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    white-space: nowrap;
+}
+
+.dash-acct-poolrow > span:first-child {
+    font-weight: 600;
+}
+
+.dash-acct-poolnum {
+    font-weight: 700;
 }
 
 .dash-acct-active {
@@ -2951,12 +2983,6 @@ html.nav-away .page-dock,
 
 .dash-acct-lvl {
     font-weight: 700;
-    font-variant-numeric: tabular-nums;
-}
-
-.dash-acct-gap {
-    font-size: .68rem;
-    color: var(--mud-palette-text-disabled);
     font-variant-numeric: tabular-nums;
 }
 

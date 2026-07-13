@@ -36,17 +36,23 @@ else
         <div class="dash-acct-stats">
             <div class="dash-acct-eyebrow">@L["Pumbility"]</div>
             <div class="dash-acct-hero">
-                <span class="dash-stat-num rarity-glow-1">@(((int)_stats.SkillRating).ToString("N0"))</span>
-                @if (_weeklyDelta is > 0)
-                {
-                    <span class="dash-stat-delta">▲ @_weeklyDelta.Value.ToString("N0")</span>
-                }
-            </div>
-            <div class="dash-pools">
-                <span style="color:var(--chart-singles)">@L["Singles"]</span>
-                <span>@(((int)_stats.SinglesRating).ToString("N0"))</span>
-                <span style="color:var(--chart-doubles)">@L["Doubles"]</span>
-                <span>@(((int)_stats.DoublesRating).ToString("N0"))</span>
+                <span class="dash-acct-total">
+                    <span class="dash-stat-num rarity-glow-1">@(((int)_stats.SkillRating).ToString("N0"))</span>
+                    @if (_weeklyDelta is > 0)
+                    {
+                        <span class="dash-stat-delta">▲ @_weeklyDelta.Value.ToString("N0")</span>
+                    }
+                </span>
+                <div class="dash-acct-pools">
+                    <div class="dash-acct-poolrow">
+                        <span style="color:var(--chart-singles)">@L["Singles"]</span>
+                        <span class="dash-acct-poolnum">@(((int)_stats.SinglesRating).ToString("N0"))</span>
+                    </div>
+                    <div class="dash-acct-poolrow">
+                        <span style="color:var(--chart-doubles)">@L["Doubles"]</span>
+                        <span class="dash-acct-poolnum">@(((int)_stats.DoublesRating).ToString("N0"))</span>
+                    </div>
+                </div>
             </div>
 
             <div class="dash-acct-eyebrow dash-acct-cl-eyebrow">@L["Competitive Level"]</div>
@@ -82,7 +88,6 @@ else
                                 </span>
                                 <span class="dash-acct-trail">
                                     <span class="dash-acct-lvl">@r.Level.ToString("N2")</span>
-                                    <span class="dash-acct-gap">@GapText(r.Level)</span>
                                 </span>
                             </div>
                         }
@@ -221,13 +226,6 @@ else
     }
 
     private RenderFragment MixPill(MixEnum mix) =>@<span class="dash-acct-mixpill">@mix.GetName()</span>;
-
-    private string GapText(double level)
-    {
-        var diff = level - _myLevel;
-        var sign = diff > 0 ? "+" : diff < 0 ? "−" : "±";
-        return sign + Math.Abs(diff).ToString("N2");
-    }
 
     private void OpenPlayer(MatchRow row)
     {
