@@ -71,8 +71,8 @@ public sealed class ByLevelAggregatorTests
         Assert.Equal(2, result.Series.Count);
         var singles = Assert.Single(result.Series, s => s.Type == ChartType.Single);
         var doubles = Assert.Single(result.Series, s => s.Type == ChartType.Double);
-        Assert.False(singles.Dashed);
-        Assert.True(doubles.Dashed); // Doubles = dashed, never a second hue
+        Assert.False(doubles.Dashed); // S/D now read by color (red S / blue D), not dash
+        Assert.Equal(SeriesColorRole.Type, singles.Color.Role);
         Assert.Equal(950_000, singles.Values[0]); // median of 900k / 1M
         Assert.Equal(850_000, doubles.Values[0]); // median of 800k / 900k
     }
@@ -129,14 +129,14 @@ public sealed class ByLevelAggregatorTests
     // ---- Completion ----
 
     [Fact]
-    public void CompletionCountsOverTheWholeFolderUnplayedIsNotMet()
+    public void CompletionStacksTiersOverTheWholeFolder()
     {
         var records = new[]
         {
             Passed(ChartType.Single, 20, 1_000_000, 7),
             Passed(ChartType.Single, 20, 990_000, 6),
-            Passed(ChartType.Single, 20, 950_000, 5), // below threshold
-            Unplayed(ChartType.Single, 20) // counts against completion
+            Passed(ChartType.Single, 20, 950_000, 5), // below the threshold
+            Unplayed(ChartType.Single, 20) // counts against the whole folder
         };
         var config = new ByLevelBreakdownConfig
         {
@@ -149,13 +149,13 @@ public sealed class ByLevelAggregatorTests
 
         var result = ByLevelAggregator.Aggregate(config, records, Scales);
 
-        Assert.Equal(50, Assert.Single(result.Series).Values[0]); // 2 of 4, not 2 of 3
-        Assert.Equal(0, result.SuggestedYMin);
-        Assert.Equal(100, result.SuggestedYMax);
+        Assert.Equal(BreakdownChartKind.StackedBars, result.Kind);
+        Assert.Equal(50, Value(result, "≥ 990,000")); // 2 of 4
+        Assert.Equal(50, Value(result, "< 990,000")); // remainder over the folder, not 2 of 3
     }
 
     [Fact]
-    public void CompletionSupportsMultipleThresholdsAsMultipleLines()
+    public void CompletionStacksDisjointThresholdTiers()
     {
         var records = new[]
         {
@@ -179,13 +179,14 @@ public sealed class ByLevelAggregatorTests
 
         var result = ByLevelAggregator.Aggregate(config, records, Scales);
 
-        Assert.Equal(2, result.Series.Count);
-        Assert.Equal(75, result.Series[0].Values[0]); // >= 900k : 3 of 4
-        Assert.Equal(50, result.Series[1].Values[0]); // >= 990k : 2 of 4
+        Assert.Equal(BreakdownChartKind.StackedBars, result.Kind);
+        Assert.Equal(25, Value(result, "< 900,000")); // 1 of 4 below everything
+        Assert.Equal(25, Value(result, "≥ 900,000")); // just 920k — met 900k, not 990k
+        Assert.Equal(50, Value(result, "≥ 990,000")); // 990k + 1M
     }
 
     [Fact]
-    public void CompletionPassIsShareOfFolderCleared()
+    public void CompletionPassStacksClearedVsNotCleared()
     {
         var records = new[]
         {
@@ -204,7 +205,9 @@ public sealed class ByLevelAggregatorTests
 
         var result = ByLevelAggregator.Aggregate(config, records, Scales);
 
-        Assert.Equal(75, Assert.Single(result.Series).Values[0]); // 3 cleared of 4
+        Assert.Equal(BreakdownChartKind.StackedBars, result.Kind);
+        Assert.Equal(75, Value(result, "Passed")); // 3 cleared of 4
+        Assert.Equal(25, Value(result, "Not cleared"));
     }
 
     // ---- Breakdown ----

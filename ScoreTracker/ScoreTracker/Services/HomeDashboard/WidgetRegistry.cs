@@ -124,7 +124,7 @@ public static class WidgetRegistry
             typeof(ByLevelBreakdownConfig),
             DrawerPresets: new[]
             {
-                new WidgetDrawerPreset("Box Plot",
+                new WidgetDrawerPreset("Score Distribution",
                     "Score spread per level — min, quartiles, max, with the IQR shaded.",
                     WidgetConfigJson.Write(new ByLevelBreakdownConfig
                     {
@@ -145,8 +145,8 @@ public static class WidgetRegistry
                         Normalize = true, IncludeUnplayed = true, SeparateSinglesDoubles = false,
                         MinLevel = 17, MaxLevel = 24
                     })),
-                new WidgetDrawerPreset("PG Race",
-                    "Chasing plates — % of each folder at MG, UG, and full Perfect Game.",
+                new WidgetDrawerPreset("Plate Distribution",
+                    "How each folder's plates stack up — Marvelous, Ultimate, and Perfect Game.",
                     WidgetConfigJson.Write(new ByLevelBreakdownConfig
                     {
                         Metric = BreakdownMetric.Plate, Aggregation = BreakdownAggregation.Completion,
@@ -156,17 +156,17 @@ public static class WidgetRegistry
                             new() { Kind = ThresholdKind.Plate, Value = "UG" },
                             new() { Kind = ThresholdKind.Plate, Value = "PG" }
                         },
-                        SeparateSinglesDoubles = true, MinLevel = 17, MaxLevel = 23
+                        SeparateSinglesDoubles = false, MinLevel = 17, MaxLevel = 23
                     })),
                 new WidgetDrawerPreset("Clear Progress",
-                    "How much of every folder you've passed, Singles vs Doubles.",
+                    "How much of every folder you've cleared, per level.",
                     WidgetConfigJson.Write(new ByLevelBreakdownConfig
                     {
-                        Metric = BreakdownMetric.Pass, Aggregation = BreakdownAggregation.Completion,
-                        SeparateSinglesDoubles = true, MinLevel = 1, MaxLevel = 28
+                        Metric = BreakdownMetric.Pass, Aggregation = BreakdownAggregation.Breakdown,
+                        SeparateSinglesDoubles = false, MinLevel = 1, MaxLevel = 28
                     })),
-                new WidgetDrawerPreset("Score Push %",
-                    "Multi-threshold completion: ≥950k, ≥990k, and 1,000,000.",
+                new WidgetDrawerPreset("Score Completion",
+                    "How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000.",
                     WidgetConfigJson.Write(new ByLevelBreakdownConfig
                     {
                         Metric = BreakdownMetric.Score, Aggregation = BreakdownAggregation.Completion,

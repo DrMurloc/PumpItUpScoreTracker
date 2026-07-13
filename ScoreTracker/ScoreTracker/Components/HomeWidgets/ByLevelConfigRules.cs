@@ -31,7 +31,7 @@ public static class ByLevelConfigRules
         (BreakdownMetric.LetterGrade, BreakdownAggregation.Completion) => "Grade Completion",
         (BreakdownMetric.LetterGrade, BreakdownAggregation.Distribution) => "Average Grade by Level",
         (BreakdownMetric.Plate, BreakdownAggregation.Breakdown) => "Plate Breakdown",
-        (BreakdownMetric.Plate, BreakdownAggregation.Completion) => "Plate Completion",
+        (BreakdownMetric.Plate, BreakdownAggregation.Completion) => "Plate Distribution",
         (BreakdownMetric.Plate, BreakdownAggregation.Distribution) => "Average Plate by Level",
         (BreakdownMetric.Pass, BreakdownAggregation.Breakdown) => "Pass Breakdown",
         (BreakdownMetric.Pass, BreakdownAggregation.Completion) => "Clear Progress",

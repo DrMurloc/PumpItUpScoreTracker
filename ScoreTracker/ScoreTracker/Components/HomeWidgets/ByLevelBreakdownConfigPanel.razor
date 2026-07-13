@@ -72,8 +72,9 @@ else
     @if (_metric == BreakdownMetric.Score)
     {
         <div class="d-flex align-center gap-2 mt-1">
-            <MudNumericField T="int?" @bind-Value="_pctInput" Label="@L["Custom percentile"]" Min="1" Max="99"
-                             Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true" Style="max-width:140px"/>
+            <MudNumericField T="int?" @bind-Value="_pctInput" Label="@L["Percentile"]" Placeholder="1–99" Min="1"
+                             Max="99" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true"
+                             Style="max-width:120px"/>
             <MudButton Size="Size.Small" OnClick="AddPercentile">@L["Add"]</MudButton>
         </div>
         <div class="d-flex flex-wrap gap-1 mt-1">

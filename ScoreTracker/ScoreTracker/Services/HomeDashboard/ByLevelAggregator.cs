@@ -36,16 +36,25 @@ public enum BreakdownChartKind
 /// <summary>How the render component resolves a series/segment to a literal hex.</summary>
 public enum SeriesColorRole
 {
-    /// <summary>Qualitative palette by <see cref="SeriesColor.Index" /> (stats, thresholds).</summary>
+    /// <summary>Qualitative palette by <see cref="SeriesColor.Index" /> (stats).</summary>
     Qualitative,
 
-    /// <summary>Rarity ramp at <see cref="SeriesColor.RarityFraction" /> (grade/plate segments).</summary>
+    /// <summary>Chart-type color (red Single / blue Double / neutral combined) — the app's S/D language.</summary>
+    Type,
+
+    /// <summary>Rarity ramp at <see cref="SeriesColor.RarityFraction" /> (completion tiers).</summary>
     Rarity,
+
+    /// <summary>Letter-grade identity color, resolved from the segment's label (grade name).</summary>
+    Grade,
+
+    /// <summary>Plate identity color, resolved from the segment's label (plate shorthand).</summary>
+    Plate,
 
     /// <summary>The "passed / cleared" success color.</summary>
     Pass,
 
-    /// <summary>Muted remainder (unplayed / not-cleared / unpassed).</summary>
+    /// <summary>Muted remainder (unplayed / not-cleared / unpassed / below lowest threshold).</summary>
     Muted
 }
 
@@ -53,6 +62,9 @@ public readonly record struct SeriesColor(SeriesColorRole Role, int Index, doubl
 {
     public static SeriesColor Qualitative(int index) => new(SeriesColorRole.Qualitative, index, 0);
     public static SeriesColor Rarity(double fraction) => new(SeriesColorRole.Rarity, 0, fraction);
+    public static readonly SeriesColor ByChartType = new(SeriesColorRole.Type, 0, 0);
+    public static readonly SeriesColor Grade = new(SeriesColorRole.Grade, 0, 0);
+    public static readonly SeriesColor Plate = new(SeriesColorRole.Plate, 0, 0);
     public static readonly SeriesColor Pass = new(SeriesColorRole.Pass, 0, 0);
     public static readonly SeriesColor Muted = new(SeriesColorRole.Muted, 0, 0);
 }
@@ -66,7 +78,10 @@ public sealed record BreakdownSeries(
     SeriesColor Color,
     bool Dashed,
     ChartType? Type,
-    IReadOnlyList<double?> Values);
+    IReadOnlyList<double?> Values,
+    // Line-weight tier for distribution stats: 2 = center (median/avg), 1 = quartiles,
+    // 0 = extremes/percentiles. Lets one hue read as a distribution shape (owner, field test).
+    int Emphasis = 1);
 
 /// <summary>A shaded band between two series (Distribution, Score only).</summary>
 public sealed record BreakdownBandArea(
@@ -223,9 +238,10 @@ public static class ByLevelAggregator
                 }
 
                 var label = custom.HasValue ? $"P{custom.Value}" : StatLabel(named!.Value);
+                var emphasis = custom.HasValue ? 0 : EmphasisFor(named!.Value);
                 series.Add(new BreakdownSeries(
                     separate ? $"{label} · {draws[d].Suffix}" : label,
-                    SeriesColor.Qualitative(k), draws[d].Dashed, draws[d].Type, values));
+                    SeriesColor.ByChartType, false, draws[d].Type, values, emphasis));
             }
         }
 
@@ -327,8 +343,11 @@ public static class ByLevelAggregator
                 series, Array.Empty<BreakdownBandArea>(), config.Normalize, separate, null, null, null, legendNote);
         }
 
-        var names = config.Metric == BreakdownMetric.Plate ? scales.PlateNames : scales.GradeNames;
-        Func<BreakdownRecord, int?> rankOf = config.Metric == BreakdownMetric.Plate ? r => r.PlateRank : r => r.GradeRank;
+        var isPlate = config.Metric == BreakdownMetric.Plate;
+        var names = isPlate ? scales.PlateNames : scales.GradeNames;
+        Func<BreakdownRecord, int?> rankOf = isPlate ? r => r.PlateRank : r => r.GradeRank;
+        // Grade/plate segments carry their own identity color, resolved from the label.
+        var segmentColor = isPlate ? SeriesColor.Plate : SeriesColor.Grade;
 
         // Denominator = whole folder when the remainder is shown; else cleared-only.
         Func<int, IReadOnlyList<BreakdownRecord>, int> denom = config.IncludeUnplayed
@@ -343,8 +362,7 @@ public static class ByLevelAggregator
         for (var rank = 0; rank < names.Count; rank++)
         {
             var capturedRank = rank;
-            var frac = names.Count <= 1 ? 1.0 : rank / (double)(names.Count - 1);
-            AddSegment(series, names[rank], SeriesColor.Rarity(frac), draws, buckets, records, config.Normalize,
+            AddSegment(series, names[rank], segmentColor, draws, buckets, records, config.Normalize,
                 (folder, _) => folder.Count(r => r.IsPassed && rankOf(r) == capturedRank),
                 total => 0, denom);
         }
@@ -384,33 +402,53 @@ public static class ByLevelAggregator
     {
         var thresholds = config.Metric == BreakdownMetric.Pass
             ? new List<CompletionThreshold> { new() { Kind = ThresholdKind.Pass } }
-            : config.Thresholds;
+            : config.Thresholds.ToList();
         if (thresholds.Count == 0) thresholds = new List<CompletionThreshold> { DefaultThreshold(config.Metric) };
 
-        var series = new List<BreakdownSeries>();
-        for (var t = 0; t < thresholds.Count; t++)
-        {
-            var predicate = MeetsPredicate(thresholds[t], scales);
-            var label = ThresholdLabel(thresholds[t]);
-            foreach (var draw in draws)
-            {
-                var values = new double?[buckets.Count];
-                for (var i = 0; i < buckets.Count; i++)
-                {
-                    var folder = Folder(records, draw, buckets[i]);
-                    values[i] = folder.Count == 0 ? null : 100.0 * folder.Count(predicate) / folder.Count;
-                }
+        // Order loosest → strictest. A stricter threshold's meeters are a subset, so the
+        // disjoint bands tier_i = (met t_i) − (met t_{i+1}) stack up to the whole folder —
+        // a stacked "how much of the folder cleared each bar", not climbing % lines.
+        var ordered = thresholds
+            .Select(t => (Threshold: t, Predicate: MeetsPredicate(t, scales), Key: StrictnessKey(t, scales)))
+            .OrderBy(x => x.Key)
+            .ToArray();
 
-                series.Add(new BreakdownSeries(
-                    separate ? $"{label} · {draw.Suffix}" : label,
-                    config.Metric == BreakdownMetric.Pass ? SeriesColor.Pass : SeriesColor.Qualitative(t),
-                    draw.Dashed, draw.Type, values));
-            }
+        var series = new List<BreakdownSeries>();
+
+        // Bottom band: below the loosest threshold (muted remainder).
+        AddSegment(series, BelowLabel(ordered[0].Threshold), SeriesColor.Muted, draws, buckets, records, true,
+            (folder, total) => total - folder.Count(ordered[0].Predicate), total => total);
+
+        // One disjoint band per threshold, loosest → strictest (achievement climbs the stack).
+        for (var t = 0; t < ordered.Length; t++)
+        {
+            var i = t;
+            var frac = ordered.Length == 1 ? 1.0 : (i + 1) / (double)ordered.Length;
+            AddSegment(series, ThresholdLabel(ordered[i].Threshold), SeriesColor.Rarity(frac), draws, buckets, records,
+                true,
+                (folder, _) => folder.Count(ordered[i].Predicate)
+                               - (i + 1 < ordered.Length ? folder.Count(ordered[i + 1].Predicate) : 0),
+                total => total);
         }
 
-        return new BreakdownResult(BreakdownChartKind.Lines, buckets, xTitle, "% of folder", series,
-            Array.Empty<BreakdownBandArea>(), false, separate, 0, 100, null, legendNote);
+        return new BreakdownResult(BreakdownChartKind.StackedBars, buckets, xTitle, "% of folder", series,
+            Array.Empty<BreakdownBandArea>(), true, separate, null, null, null, legendNote);
     }
+
+    private static int StrictnessKey(CompletionThreshold t, BreakdownScales scales) => t.Kind switch
+    {
+        ThresholdKind.Score => int.TryParse(t.Value, out var v) ? v : 0,
+        ThresholdKind.Grade => IndexOf(scales.GradeNames, t.Value),
+        ThresholdKind.Plate => IndexOf(scales.PlateNames, t.Value),
+        _ => 0
+    };
+
+    private static string BelowLabel(CompletionThreshold t) => t.Kind switch
+    {
+        ThresholdKind.Pass => "Not cleared",
+        ThresholdKind.Score => int.TryParse(t.Value, out var v) ? $"< {v:N0}" : "< ?",
+        _ => $"< {t.Value}"
+    };
 
     private static CompletionThreshold DefaultThreshold(BreakdownMetric metric) => metric switch
     {
@@ -495,6 +533,14 @@ public static class ByLevelAggregator
         var mean = values.Average();
         return Math.Sqrt(values.Sum(v => (v - mean) * (v - mean)) / values.Count);
     }
+
+    // Center stats read strongest, extremes faintest — one hue then shows a distribution shape.
+    private static int EmphasisFor(DistributionSeries key) => key switch
+    {
+        DistributionSeries.Median or DistributionSeries.Average => 2,
+        DistributionSeries.P25 or DistributionSeries.P75 => 1,
+        _ => 0
+    };
 
     private static string StatLabel(DistributionSeries key) => key switch
     {

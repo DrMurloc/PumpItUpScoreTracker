@@ -3467,4 +3467,16 @@
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} en el tablero</value>
   </data>
+  <data name="Percentile" xml:space="preserve">
+    <value>Percentile</value>
+  </data>
+  <data name="How each folder's plates stack up — Marvelous, Ultimate, and Perfect Game." xml:space="preserve">
+    <value>How each folder's plates stack up — Marvelous, Ultimate, and Perfect Game.</value>
+  </data>
+  <data name="How much of every folder you've cleared, per level." xml:space="preserve">
+    <value>How much of every folder you've cleared, per level.</value>
+  </data>
+  <data name="How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000." xml:space="preserve">
+    <value>How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000.</value>
+  </data>
 </root>

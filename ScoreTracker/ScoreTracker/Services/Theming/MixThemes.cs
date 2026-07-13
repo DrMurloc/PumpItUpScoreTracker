@@ -269,6 +269,40 @@ public static class MixThemes
         };
     }
 
+    // Letter-grade identity colors — the game's own grade language (red/orange danger →
+    // yellow → green → blue/violet elite → gold SSS), NOT the rarity ramp. Grades render as
+    // art everywhere else; the By-Level Breakdown bars are the first text-rendered consumer,
+    // so the tokens land here (UX-GUIDELINES §4). Keyed by display name so Phoenix (16) and
+    // the XX ladder (F..SSS, a subset) both resolve. Mix-invariant for now.
+    private static readonly IReadOnlyDictionary<string, string> GradeColors =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["F"] = "#7C7C86",
+            ["D"] = "#B85C5C",
+            ["C"] = "#C77A3F",
+            ["B"] = "#D0A03C",
+            ["A"] = "#9FB84E",
+            ["A+"] = "#6FB84E",
+            ["AA"] = "#4FB06A",
+            ["AA+"] = "#34B08A",
+            ["AAA"] = "#2FA6B6",
+            ["AAA+"] = "#33A0D0",
+            ["S"] = "#3B82F6",
+            ["S+"] = "#5A6FE0",
+            ["SS"] = "#7C5CE0",
+            ["SS+"] = "#9B57D6",
+            ["SSS"] = "#E0B23C",
+            ["SSS+"] = "#F2D45C"
+        };
+
+    /// <summary>Raw hex for a letter grade (display name), for ApexCharts grade bars. Unknown → grey.</summary>
+    public static string GradeHex(string gradeName) =>
+        GradeColors.TryGetValue(gradeName, out var hex) ? hex : "#7C7C86";
+
+    /// <summary>Raw hex for a plate (shorthand, e.g. "PG"), for ApexCharts plate bars.</summary>
+    public static string PlateHex(string plateShorthand) =>
+        PlateColors[PhoenixPlateHelperMethods.ParseShorthand(plateShorthand)];
+
     // Qualitative series palette for chart lines that carry no semantic-ramp meaning
     // (By-Level Breakdown distribution stats and completion thresholds). ApexCharts needs
     // literals; these are CVD-spaced and distinct on the dark canvas. Mix-invariant.
