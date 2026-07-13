@@ -1,5 +1,4 @@
 @using MediatR
-@using ScoreTracker.Communities.Contracts.Queries
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
@@ -137,6 +136,7 @@ else
 @inject ICurrentUserAccessor CurrentUser
 @inject IUserRepository Users
 @inject ChartCatalogCache ChartCatalog
+@inject CommunityGlowReader CommunityGlow
 
 @code {
 
@@ -156,7 +156,6 @@ else
 
     private const int BoardCap = 50;
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
-    private static readonly IReadOnlySet<Guid> NoCommunity = new HashSet<Guid>();
 
     private sealed record Row(int Place, DailyStepEntry Entry, User? User, bool IsYou, bool IsCommunity);
 
@@ -239,7 +238,7 @@ else
             _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
                 : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
 
-            _communityIds = await LoadMyCommunityMemberIds();
+            _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
 
             var board = await Mediator.Send(new GetDailyStepQuery(_mix));
             _chart = null;
@@ -283,24 +282,6 @@ else
             e.IsBroken, null, e.CompetitiveLevel)).ToArray();
         _officialUserIds = entries.Where(e => e.Source == DailyStepSource.Official).Select(e => e.UserId).ToHashSet();
         _manualUserIds = entries.Where(e => e.Source == DailyStepSource.Manual).Select(e => e.UserId).ToHashSet();
-    }
-
-    // Your community crews — the ones you actually joined, so the auto region and world communities are
-    // dropped. Their members glow green on the board. Membership doesn't change between reloads, so this
-    // runs once per load, not per record.
-    private async Task<IReadOnlySet<Guid>> LoadMyCommunityMemberIds()
-    {
-        if (!CurrentUser.IsLoggedIn) return NoCommunity;
-        var mine = (await Mediator.Send(new GetMyCommunitiesQuery()))
-            .Where(c => !c.IsRegional && c.CommunityName.ToString() != "World")
-            .ToArray();
-        if (mine.Length == 0) return NoCommunity;
-        var ids = new HashSet<Guid>();
-        foreach (var community in mine)
-        foreach (var id in await Mediator.Send(new GetCommunityMembersQuery(community.CommunityName)))
-            ids.Add(id);
-        ids.Remove(CurrentUser.User.Id); // you glow blue, not green
-        return ids;
     }
 
     private void UpdateHeaderSlot()

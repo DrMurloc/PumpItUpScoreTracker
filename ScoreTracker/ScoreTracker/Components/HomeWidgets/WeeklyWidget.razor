@@ -71,12 +71,14 @@ else
         </div>
     </div>
 
-    <LeaderboardDialog @bind-Visible="_showLeaderboard" Chart="_leaderboardChart" Entries="_entries"/>
+    <LeaderboardDialog @bind-Visible="_showLeaderboard" Chart="_leaderboardChart" Entries="_entries"
+                       CommunityUserIds="_communityIds"/>
 }
 
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject ChartCatalogCache ChartCatalog
+@inject CommunityGlowReader CommunityGlow
 
 @code {
 
@@ -98,6 +100,7 @@ else
     private Chart? _leaderboardChart;
     private MixEnum _mix = MixEnum.Phoenix;
     private WeeklyTournamentEntry[] _entries = Array.Empty<WeeklyTournamentEntry>();
+    private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
 
     private void OpenLeaderboard(Chart chart)
     {
@@ -117,6 +120,7 @@ else
         _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
             : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
         var userId = CurrentUser.User.Id;
+        _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
 
         var board = (await Mediator.Send(new GetWeeklyChartsQuery(_mix))).ToArray();
         var charts = await ChartCatalog.GetCharts(_mix);
