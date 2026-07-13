@@ -8,7 +8,10 @@ public enum BreakdownMetric
     Score,
     LetterGrade,
     Plate,
-    Pass
+    Pass,
+
+    /// <summary>Days since the score was recorded — "how stale are my scores in this folder".</summary>
+    ChartAge
 }
 
 /// <summary>How a folder of records collapses to numbers per level (docs §by-level-breakdown).</summary>
@@ -24,11 +27,28 @@ public enum BreakdownAggregation
     Completion
 }
 
-/// <summary>Singles/Doubles (level x-axis) or Co-Op (player-count x-axis) — mutually exclusive.</summary>
+/// <summary>Which charts the graph covers. Singles/Doubles use the level x-axis; Co-Op uses player count.</summary>
 public enum BreakdownChartScope
 {
     SinglesDoubles,
+    Singles,
+    Doubles,
     CoOp
+}
+
+/// <summary>
+///     What a *separated* Singles-vs-Doubles distribution shows: one stat line per type, or a shaded
+///     range band per type. Multi-stat box plots overlaid for both types are unreadable (owner).
+/// </summary>
+public enum SeparateDisplay
+{
+    Average,
+    Median,
+    Min,
+    Max,
+    RangeIqr,
+    RangeMinMax,
+    RangeStdDev
 }
 
 /// <summary>Distribution stat series (Score). Ordinal metrics use Min / Average / Max only.</summary>
@@ -93,6 +113,9 @@ public sealed record ByLevelBreakdownConfig
 
     /// <summary>Draw Singles and Doubles as separate series (SinglesDoubles scope only).</summary>
     public bool SeparateSinglesDoubles { get; set; } = true;
+
+    /// <summary>What a separated distribution shows per type (single stat line or a shaded range band).</summary>
+    public SeparateDisplay SeparateDisplay { get; set; } = SeparateDisplay.Median;
 
     public int MinLevel { get; set; } = 17;
 

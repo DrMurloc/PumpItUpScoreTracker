@@ -2,6 +2,7 @@ using MediatR;
 using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -25,8 +26,11 @@ public sealed class ByLevelDataSourceTests
         new(id, mix, new Song("Song", SongType.Arcade, new Uri("https://x/y.png"), TimeSpan.FromMinutes(2), "Artist",
             null), type, level, mix, null, null, new HashSet<Skill>(), null, playerCount);
 
+    private static readonly IDateTimeOffsetAccessor Clock =
+        Mock.Of<IDateTimeOffsetAccessor>(c => c.Now == new DateTimeOffset(2026, 7, 13, 0, 0, 0, TimeSpan.Zero));
+
     private static ByLevelDataSource Source(Mock<IMediator> mediator) =>
-        new(mediator.Object, new ChartCatalogCache(mediator.Object));
+        new(mediator.Object, new ChartCatalogCache(mediator.Object), Clock);
 
     [Fact]
     public async Task PhoenixMapsScoreGradePlateAndIncludesUnplayedCharts()

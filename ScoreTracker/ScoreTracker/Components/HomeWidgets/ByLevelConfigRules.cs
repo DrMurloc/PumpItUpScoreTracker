@@ -13,10 +13,11 @@ public static class ByLevelConfigRules
 {
     public static IReadOnlyList<BreakdownMetric> MetricsFor(MixEnum? mix) =>
         mix is { } m && m.UsesLegacyScoring()
-            ? new[] { BreakdownMetric.LetterGrade, BreakdownMetric.Pass }
+            ? new[] { BreakdownMetric.LetterGrade, BreakdownMetric.Pass, BreakdownMetric.ChartAge }
             : new[]
             {
-                BreakdownMetric.Score, BreakdownMetric.LetterGrade, BreakdownMetric.Plate, BreakdownMetric.Pass
+                BreakdownMetric.Score, BreakdownMetric.LetterGrade, BreakdownMetric.Plate, BreakdownMetric.Pass,
+                BreakdownMetric.ChartAge
             };
 
     /// <summary>
@@ -35,6 +36,7 @@ public static class ByLevelConfigRules
         (BreakdownMetric.Plate, BreakdownAggregation.Distribution) => "Average Plate by Level",
         (BreakdownMetric.Pass, BreakdownAggregation.Breakdown) => "Pass Breakdown",
         (BreakdownMetric.Pass, BreakdownAggregation.Completion) => "Clear Progress",
+        (BreakdownMetric.ChartAge, _) => "Chart Age by Level",
         _ => "By-Level Breakdown"
     };
 
@@ -44,6 +46,8 @@ public static class ByLevelConfigRules
         BreakdownMetric.Score => new[] { BreakdownAggregation.Distribution, BreakdownAggregation.Completion },
         // Pass is binary → stacked pass/fail or % passed.
         BreakdownMetric.Pass => new[] { BreakdownAggregation.Breakdown, BreakdownAggregation.Completion },
+        // Age is a spread of days → distribution only.
+        BreakdownMetric.ChartAge => new[] { BreakdownAggregation.Distribution },
         // Grade / Plate are ordinal categories → all three (distribution = an average line).
         _ => new[]
         {

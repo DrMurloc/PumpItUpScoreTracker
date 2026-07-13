@@ -47,6 +47,7 @@ else
                                  Items="series.Points"
                                  Name="@series.Name"
                                  Color="@series.Color"
+                                 Group="@series.Group"
                                  SeriesType="@(_kind == BreakdownChartKind.StackedBars ? SeriesType.Bar : SeriesType.Line)"
                                  XValue="@(p => p.X)"
                                  YValue="@(p => p.Y)"/>
@@ -71,7 +72,7 @@ else
 
     private sealed record Pt(double X, decimal Y, decimal Low = 0, decimal High = 0);
 
-    private sealed record RenderSeries(string Name, string Color, IReadOnlyList<Pt> Points);
+    private sealed record RenderSeries(string Name, string Color, bool Dashed, string? Group, IReadOnlyList<Pt> Points);
 
     private bool _loaded;
     private string? _loadedFor;
@@ -109,6 +110,7 @@ else
 
         _series = new List<RenderSeries>();
         _bands = new();
+        var isBars = _kind == BreakdownChartKind.StackedBars;
         if (result.Kind != BreakdownChartKind.Empty)
         {
             foreach (var series in result.Series)
@@ -117,23 +119,27 @@ else
                 for (var i = 0; i < result.Buckets.Count; i++)
                     if (series.Values[i] is { } v)
                         points.Add(new Pt(result.Buckets[i], (decimal)v));
-                _series.Add(new RenderSeries(series.Label, ResolveSeriesColor(series, palette, themeMix), points));
+                // Grouped stacked bars: S and D become two bars per level (ApexBaseSeries.Group).
+                var group = isBars && result.SeparateTypes && series.Type is { } gt ? TypeLabel(gt) : null;
+                _series.Add(new RenderSeries(series.Label, ResolveSeriesColor(series, palette, themeMix),
+                    series.Dashed, group, points));
             }
 
-            // Distribution band (Score) → a translucent range fill behind the stat lines.
+            // Range bands — muted grey for the combined box plot, the type color when separated.
             foreach (var band in result.Bands)
             {
                 var pts = new List<Pt>();
                 for (var i = 0; i < result.Buckets.Count; i++)
                     if (band.Lower[i] is { } lo && band.Upper[i] is { } hi)
                         pts.Add(new Pt(result.Buckets[i], 0, (decimal)lo, (decimal)hi));
-                if (pts.Count > 0)
-                    _bands.Add((BandLabel(config.Band), palette.InkMuted, pts));
+                if (pts.Count == 0) continue;
+                var color = band.Type is { } bt ? MixThemes.ChartTypeHex(bt) : palette.InkMuted;
+                var name = band.Type is { } bt2 ? TypeLabel(bt2) : BandLabel(config.Band);
+                _bands.Add((name, color, pts));
             }
         }
 
         _options = ApexChartTheming.BaseOptions<Pt>(palette);
-        var isBars = _kind == BreakdownChartKind.StackedBars;
         if (isBars)
         {
             _options.Chart.Stacked = true;
@@ -144,13 +150,16 @@ else
         }
         else
         {
-            // S/D read by color (red Single / blue Double); the stat reads by line emphasis
-            // (baked into alpha). No dashes — the owner said they didn't click.
-            _options.Stroke = new Stroke { Curve = Curve.Straight, Width = 2.5 };
+            // S/D read by color; the stat by line emphasis (alpha). Dotted min/max ride a dash array.
+            _options.Stroke = new Stroke
+            {
+                Curve = Curve.Straight, Width = 2.5,
+                DashArray = _series.Select(s => s.Dashed ? 4.0 : 0.0).ToList()
+            };
             _options.Markers = new Markers { Size = 0 };
             if (_bands.Count > 0)
             {
-                _options.Fill = new Fill { Opacity = 0.14 };
+                _options.Fill = new Fill { Opacity = 0.16 };
                 // Trigger the tooltip on the stat lines only, keeping the band's range out of it.
                 _options.Tooltip = new Tooltip
                 {
@@ -178,6 +187,11 @@ else
         _renderKey = signature;
         _loaded = true;
     }
+
+    private string TypeLabel(ChartType type) =>
+        type == ChartType.Double ? L["Doubles"].Value
+        : type == ChartType.CoOp ? L["Co-Op"].Value
+        : L["Singles"].Value;
 
     private string BandLabel(BreakdownBand band) => band switch
     {

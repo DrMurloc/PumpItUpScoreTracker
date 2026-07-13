@@ -3522,4 +3522,34 @@
   <data name="How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000." xml:space="preserve">
     <value>How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000.</value>
   </data>
+  <data name="Singles + Doubles" xml:space="preserve">
+    <value>Singles + Doubles</value>
+  </data>
+  <data name="Show Singles &amp; Doubles separately" xml:space="preserve">
+    <value>Show Singles &amp; Doubles separately</value>
+  </data>
+  <data name="Show per type" xml:space="preserve">
+    <value>Show per type</value>
+  </data>
+  <data name="Shaded range: IQR (P25–P75)" xml:space="preserve">
+    <value>Shaded range: IQR (P25–P75)</value>
+  </data>
+  <data name="Shaded range: Min–Max" xml:space="preserve">
+    <value>Shaded range: Min–Max</value>
+  </data>
+  <data name="Shaded range: ±1σ" xml:space="preserve">
+    <value>Shaded range: ±1σ</value>
+  </data>
+  <data name="Chart Age" xml:space="preserve">
+    <value>Chart Age</value>
+  </data>
+  <data name="Chart Age by Level" xml:space="preserve">
+    <value>Chart Age by Level</value>
+  </data>
+  <data name="How much of every folder you've cleared, Singles vs Doubles." xml:space="preserve">
+    <value>How much of every folder you've cleared, Singles vs Doubles.</value>
+  </data>
+  <data name="How stale your scores are per folder — the spread of days since you set them." xml:space="preserve">
+    <value>How stale your scores are per folder — the spread of days since you set them.</value>
+  </data>
 </root>

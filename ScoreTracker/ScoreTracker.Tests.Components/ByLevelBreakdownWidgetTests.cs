@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.HomePage.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -27,7 +28,8 @@ public sealed class ByLevelBreakdownWidgetTests : ComponentTestBase
         mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(charts);
         mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(records);
-        Services.AddSingleton(new ByLevelDataSource(mediator.Object, new ChartCatalogCache(mediator.Object)));
+        Services.AddSingleton(new ByLevelDataSource(mediator.Object, new ChartCatalogCache(mediator.Object),
+            Mock.Of<IDateTimeOffsetAccessor>(c => c.Now == new DateTimeOffset(2026, 7, 13, 0, 0, 0, TimeSpan.Zero))));
 
         var settings = new Mock<IUiSettingsAccessor>();
         settings.Setup(s => s.GetSetting(It.IsAny<string>())).ReturnsAsync((string?)null);

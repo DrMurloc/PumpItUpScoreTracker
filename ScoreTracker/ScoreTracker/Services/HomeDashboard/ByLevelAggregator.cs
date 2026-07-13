@@ -19,7 +19,10 @@ public sealed record BreakdownRecord(
     bool IsPassed,
     int? Score,
     int? GradeRank,
-    int? PlateRank);
+    int? PlateRank,
+    // Days since the best score was recorded (any played chart, not just cleared). The read
+    // seam stamps this via the clock; the aggregator stays time-free.
+    int? AgeDays = null);
 
 /// <summary>Ordered category labels for the active mix's scales (worst → best).</summary>
 public sealed record BreakdownScales(
@@ -83,9 +86,10 @@ public sealed record BreakdownSeries(
     // 0 = extremes/percentiles. Lets one hue read as a distribution shape (owner, field test).
     int Emphasis = 1);
 
-/// <summary>A shaded band between two series (Distribution, Score only).</summary>
+/// <summary>A shaded band between two series. Type non-null → colored by chart type (separate ranges).</summary>
 public sealed record BreakdownBandArea(
     SeriesColor Color,
+    ChartType? Type,
     IReadOnlyList<double?> Lower,
     IReadOnlyList<double?> Upper);
 
@@ -166,20 +170,30 @@ public static class ByLevelAggregator
 
     private static IEnumerable<Draw> Draws(ByLevelBreakdownConfig config)
     {
-        if (config.Scope == BreakdownChartScope.CoOp)
+        switch (config.Scope)
         {
-            yield return new Draw(ChartType.CoOp, "Co-Op", 'C', false);
-            yield break;
-        }
+            case BreakdownChartScope.Singles:
+                yield return new Draw(ChartType.Single, "Singles", 'S', false);
+                break;
+            case BreakdownChartScope.Doubles:
+                yield return new Draw(ChartType.Double, "Doubles", 'D', false);
+                break;
+            case BreakdownChartScope.CoOp:
+                yield return new Draw(ChartType.CoOp, "Co-Op", 'C', false);
+                break;
+            default: // SinglesDoubles — split only when the separate toggle is on
+                if (config.SeparateSinglesDoubles)
+                {
+                    yield return new Draw(ChartType.Single, "Singles", 'S', false);
+                    yield return new Draw(ChartType.Double, "Doubles", 'D', false);
+                }
+                else
+                {
+                    yield return new Draw(null, "S + D", ' ', false);
+                }
 
-        if (config.SeparateSinglesDoubles)
-        {
-            yield return new Draw(ChartType.Single, "Singles", 'S', false);
-            yield return new Draw(ChartType.Double, "Doubles", 'D', true);
-            yield break;
+                break;
         }
-
-        yield return new Draw(null, "S + D", ' ', false);
     }
 
     private static bool Matches(BreakdownRecord r, Draw draw) =>
@@ -203,29 +217,7 @@ public static class ByLevelAggregator
         var ordinal = config.Metric is BreakdownMetric.LetterGrade or BreakdownMetric.Plate;
         if (config.Metric == BreakdownMetric.Pass) return BreakdownResult.Empty; // Pass has no distribution
 
-        // Which stat keys, in a stable order.
-        var keys = new List<(DistributionSeries? Named, int? Custom)>();
-        foreach (var s in Enum.GetValues<DistributionSeries>())
-            if (config.Series.Contains(s) && (!ordinal || OrdinalAllowed.Contains(s)))
-                keys.Add((s, null));
-        if (!ordinal)
-            foreach (var p in config.CustomPercentiles.Where(p => p is >= 1 and <= 99).Distinct().OrderBy(p => p))
-                keys.Add((null, p));
-        if (keys.Count == 0) keys.Add((DistributionSeries.Average, null)); // never draw nothing
-
-        // Separate S/D collapses to ONE line per type — two overlaid multi-stat distributions
-        // are unreadable (owner). Prefer the median, else the average, else the first pick.
-        if (separate && keys.Count > 1)
-        {
-            var median = keys.FirstOrDefault(k => k.Named == DistributionSeries.Median);
-            var average = keys.FirstOrDefault(k => k.Named == DistributionSeries.Average);
-            var pick = median.Named == DistributionSeries.Median ? median
-                : average.Named == DistributionSeries.Average ? average
-                : keys[0];
-            keys = new List<(DistributionSeries? Named, int? Custom)> { pick };
-        }
-
-        // Per draw × bucket: the sorted cleared metric values.
+        // Per draw × bucket: the sorted metric values.
         var sorted = new Dictionary<(int Draw, int Bucket), double[]>();
         for (var d = 0; d < draws.Length; d++)
             foreach (var bucket in buckets)
@@ -233,40 +225,19 @@ public static class ByLevelAggregator
                     .OrderBy(v => v).ToArray();
 
         var series = new List<BreakdownSeries>();
+        var bands = new List<BreakdownBandArea>();
         double min = double.PositiveInfinity, max = double.NegativeInfinity;
-        for (var d = 0; d < draws.Length; d++)
-        {
-            for (var k = 0; k < keys.Count; k++)
-            {
-                var (named, custom) = keys[k];
-                var values = new double?[buckets.Count];
-                for (var i = 0; i < buckets.Count; i++)
-                {
-                    var v = custom.HasValue
-                        ? Percentile(sorted[(d, buckets[i])], custom.Value)
-                        : StatValue(sorted[(d, buckets[i])], named!.Value);
-                    values[i] = v;
-                    if (v.HasValue) { min = Math.Min(min, v.Value); max = Math.Max(max, v.Value); }
-                }
 
-                var label = custom.HasValue ? $"P{custom.Value}" : StatLabel(named!.Value);
-                var emphasis = custom.HasValue ? 0 : EmphasisFor(named!.Value);
-                series.Add(new BreakdownSeries(
-                    separate ? $"{label} · {draws[d].Suffix}" : label,
-                    SeriesColor.ByChartType, false, draws[d].Type, values, emphasis));
-            }
-        }
-
-        // No band when separated — a single median line per type is the whole point.
-        var bands = separate
-            ? new List<BreakdownBandArea>()
-            : Bands(config, draws, buckets, sorted, ordinal, ref min, ref max);
+        if (separate)
+            SeparateDistribution(config, draws, buckets, sorted, series, bands, ref min, ref max);
+        else
+            CombinedDistribution(config, draws, buckets, sorted, ordinal, series, bands, ref min, ref max);
 
         if (double.IsInfinity(min)) return BreakdownResult.Empty;
 
         double? yMin, yMax;
         IReadOnlyList<string>? yLabels = null;
-        var yTitle = config.Metric.ToString();
+        var yTitle = YTitle(config.Metric);
         if (ordinal)
         {
             yLabels = config.Metric == BreakdownMetric.Plate ? scales.PlateNames : scales.GradeNames;
@@ -278,13 +249,130 @@ public static class ByLevelAggregator
             var pad = (max - min) * 0.12;
             if (pad < 1) pad = Math.Max(1, (max - min) * 0.05 + 1);
             yMin = Math.Max(0, min - pad);
-            yMax = Math.Min(1_000_000, max + pad);
-            yTitle = "Score";
+            yMax = config.Metric == BreakdownMetric.Score ? Math.Min(1_000_000, max + pad) : max + pad;
         }
 
         return new BreakdownResult(BreakdownChartKind.Lines, buckets, xTitle, yTitle, series, bands,
             false, separate, yMin, yMax, yLabels, legendNote);
     }
+
+    // Combined: the full multi-stat box plot in one hue (stat separated by line emphasis) + band.
+    private static void CombinedDistribution(
+        ByLevelBreakdownConfig config, Draw[] draws, IReadOnlyList<int> buckets,
+        Dictionary<(int Draw, int Bucket), double[]> sorted, bool ordinal,
+        List<BreakdownSeries> series, List<BreakdownBandArea> bands, ref double min, ref double max)
+    {
+        var keys = new List<(DistributionSeries? Named, int? Custom)>();
+        foreach (var s in Enum.GetValues<DistributionSeries>())
+            if (config.Series.Contains(s) && (!ordinal || OrdinalAllowed.Contains(s)))
+                keys.Add((s, null));
+        if (!ordinal)
+            foreach (var p in config.CustomPercentiles.Where(p => p is >= 1 and <= 99).Distinct().OrderBy(p => p))
+                keys.Add((null, p));
+        if (keys.Count == 0) keys.Add((DistributionSeries.Average, null)); // never draw nothing
+
+        var draw = draws[0]; // combined = a single draw
+        foreach (var (named, custom) in keys)
+        {
+            var values = new double?[buckets.Count];
+            for (var i = 0; i < buckets.Count; i++)
+            {
+                var v = custom.HasValue
+                    ? Percentile(sorted[(0, buckets[i])], custom.Value)
+                    : StatValue(sorted[(0, buckets[i])], named!.Value);
+                values[i] = v;
+                if (v.HasValue) { min = Math.Min(min, v.Value); max = Math.Max(max, v.Value); }
+            }
+
+            var label = custom.HasValue ? $"P{custom.Value}" : StatLabel(named!.Value);
+            var emphasis = custom.HasValue ? 0 : EmphasisFor(named!.Value);
+            series.Add(new BreakdownSeries(label, SeriesColor.ByChartType, false, draw.Type, values, emphasis));
+        }
+
+        bands.AddRange(Bands(config, draws, buckets, sorted, ordinal, ref min, ref max));
+    }
+
+    // Separate S/D: one stat line per type, or a shaded range band per type (owner) — configurable,
+    // because two overlaid multi-stat box plots are unreadable.
+    private static void SeparateDistribution(
+        ByLevelBreakdownConfig config, Draw[] draws, IReadOnlyList<int> buckets,
+        Dictionary<(int Draw, int Bucket), double[]> sorted,
+        List<BreakdownSeries> series, List<BreakdownBandArea> bands, ref double min, ref double max)
+    {
+        var display = config.SeparateDisplay;
+        var isRange = display is SeparateDisplay.RangeIqr or SeparateDisplay.RangeMinMax or SeparateDisplay.RangeStdDev;
+
+        for (var d = 0; d < draws.Length; d++)
+        {
+            if (!isRange)
+            {
+                AddStatLine(series, sorted, d, draws, buckets, SeparateStat(display), false, ref min, ref max);
+                continue;
+            }
+
+            var lower = new double?[buckets.Count];
+            var upper = new double?[buckets.Count];
+            for (var i = 0; i < buckets.Count; i++)
+            {
+                var (lo, hi) = RangeBounds(sorted[(d, buckets[i])], display);
+                lower[i] = lo;
+                upper[i] = hi;
+                if (lo.HasValue) min = Math.Min(min, lo.Value);
+                if (hi.HasValue) max = Math.Max(max, hi.Value);
+            }
+
+            bands.Add(new BreakdownBandArea(SeriesColor.ByChartType, draws[d].Type, lower, upper));
+
+            // Dotted min/max outside an IQR / ±σ band so the extremes still read (owner).
+            if (display != SeparateDisplay.RangeMinMax)
+            {
+                AddStatLine(series, sorted, d, draws, buckets, DistributionSeries.Min, true, ref min, ref max);
+                AddStatLine(series, sorted, d, draws, buckets, DistributionSeries.Max, true, ref min, ref max);
+            }
+        }
+    }
+
+    private static void AddStatLine(
+        List<BreakdownSeries> series, Dictionary<(int Draw, int Bucket), double[]> sorted, int d, Draw[] draws,
+        IReadOnlyList<int> buckets, DistributionSeries stat, bool dashed, ref double min, ref double max)
+    {
+        var values = new double?[buckets.Count];
+        for (var i = 0; i < buckets.Count; i++)
+        {
+            var v = StatValue(sorted[(d, buckets[i])], stat);
+            values[i] = v;
+            if (v.HasValue) { min = Math.Min(min, v.Value); max = Math.Max(max, v.Value); }
+        }
+
+        series.Add(new BreakdownSeries($"{StatLabel(stat)} · {draws[d].Suffix}", SeriesColor.ByChartType, dashed,
+            draws[d].Type, values, dashed ? 0 : 2));
+    }
+
+    private static (double? Lo, double? Hi) RangeBounds(IReadOnlyList<double> sorted, SeparateDisplay display)
+    {
+        if (sorted.Count == 0) return (null, null);
+        return display switch
+        {
+            SeparateDisplay.RangeIqr => (Percentile(sorted, 25), Percentile(sorted, 75)),
+            SeparateDisplay.RangeStdDev => (sorted.Average() - StdDev(sorted), sorted.Average() + StdDev(sorted)),
+            _ => (sorted[0], sorted[^1]) // MinMax
+        };
+    }
+
+    private static DistributionSeries SeparateStat(SeparateDisplay display) => display switch
+    {
+        SeparateDisplay.Average => DistributionSeries.Average,
+        SeparateDisplay.Min => DistributionSeries.Min,
+        SeparateDisplay.Max => DistributionSeries.Max,
+        _ => DistributionSeries.Median
+    };
+
+    private static string YTitle(BreakdownMetric metric) => metric switch
+    {
+        BreakdownMetric.Score => "Score",
+        BreakdownMetric.ChartAge => "Days",
+        _ => metric.ToString()
+    };
 
     private static IEnumerable<double> ClearedValues(IReadOnlyList<BreakdownRecord> folder, BreakdownMetric metric) =>
         metric switch
@@ -292,6 +380,8 @@ public static class ByLevelAggregator
             BreakdownMetric.Score => folder.Where(r => r.IsPassed && r.Score.HasValue).Select(r => (double)r.Score!.Value),
             BreakdownMetric.LetterGrade => folder.Where(r => r.IsPassed && r.GradeRank.HasValue).Select(r => (double)r.GradeRank!.Value),
             BreakdownMetric.Plate => folder.Where(r => r.IsPassed && r.PlateRank.HasValue).Select(r => (double)r.PlateRank!.Value),
+            // Age is over every played chart (passed or not) — "how old is my score here".
+            BreakdownMetric.ChartAge => folder.Where(r => r.IsPlayed && r.AgeDays.HasValue).Select(r => (double)r.AgeDays!.Value),
             _ => Enumerable.Empty<double>()
         };
 
@@ -321,7 +411,7 @@ public static class ByLevelAggregator
                 if (hi.HasValue) max = Math.Max(max, hi.Value);
             }
 
-            bands.Add(new BreakdownBandArea(SeriesColor.Muted, lower, upper));
+            bands.Add(new BreakdownBandArea(SeriesColor.Muted, null, lower, upper));
         }
 
         return bands;
@@ -435,12 +525,13 @@ public static class ByLevelAggregator
             (folder, total) => total - folder.Count(ordered[0].Predicate), total => total);
 
         // One disjoint band per threshold, loosest → strictest (achievement climbs the stack).
+        // Each tier wears its threshold's identity color — plate tiers are plate metals, grade
+        // tiers are grade colors, score tiers climb the rarity ramp.
         for (var t = 0; t < ordered.Length; t++)
         {
             var i = t;
-            var frac = ordered.Length == 1 ? 1.0 : (i + 1) / (double)ordered.Length;
-            AddSegment(series, ThresholdLabel(ordered[i].Threshold), SeriesColor.Rarity(frac), draws, buckets, records,
-                true,
+            var (label, color) = TierStyle(ordered[i].Threshold, ordered.Length == 1 ? 1.0 : (i + 1) / (double)ordered.Length);
+            AddSegment(series, label, color, draws, buckets, records, true,
                 (folder, _) => folder.Count(ordered[i].Predicate)
                                - (i + 1 < ordered.Length ? folder.Count(ordered[i + 1].Predicate) : 0),
                 total => total);
@@ -463,6 +554,16 @@ public static class ByLevelAggregator
         ThresholdKind.Pass => "Not cleared",
         ThresholdKind.Score => int.TryParse(t.Value, out var v) ? $"< {v:N0}" : "< ?",
         _ => $"< {t.Value}"
+    };
+
+    // A tier's label + identity color. Plate/grade tiers are labelled by the plate/grade name so the
+    // render can resolve their color; score tiers keep the "≥ X" label and the rarity ramp.
+    private static (string Label, SeriesColor Color) TierStyle(CompletionThreshold t, double fraction) => t.Kind switch
+    {
+        ThresholdKind.Plate => (t.Value ?? "", SeriesColor.Plate),
+        ThresholdKind.Grade => (t.Value ?? "", SeriesColor.Grade),
+        ThresholdKind.Pass => ("Passed", SeriesColor.Pass),
+        _ => (ThresholdLabel(t), SeriesColor.Rarity(fraction))
     };
 
     private static CompletionThreshold DefaultThreshold(BreakdownMetric metric) => metric switch

@@ -158,14 +158,14 @@ public static class WidgetRegistry
                             new() { Kind = ThresholdKind.Plate, Value = "UG" },
                             new() { Kind = ThresholdKind.Plate, Value = "PG" }
                         },
-                        SeparateSinglesDoubles = false, MinLevel = 17, MaxLevel = 23
+                        SeparateSinglesDoubles = true, MinLevel = 17, MaxLevel = 23
                     })),
                 new WidgetDrawerPreset("Clear Progress",
-                    "How much of every folder you've cleared, per level.",
+                    "How much of every folder you've cleared, Singles vs Doubles.",
                     WidgetConfigJson.Write(new ByLevelBreakdownConfig
                     {
                         Metric = BreakdownMetric.Pass, Aggregation = BreakdownAggregation.Breakdown,
-                        SeparateSinglesDoubles = false, MinLevel = 1, MaxLevel = 28
+                        SeparateSinglesDoubles = true, MinLevel = 1, MaxLevel = 28
                     })),
                 new WidgetDrawerPreset("Score Completion",
                     "How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000.",
@@ -179,6 +179,19 @@ public static class WidgetRegistry
                             new() { Kind = ThresholdKind.Score, Value = "1000000" }
                         },
                         SeparateSinglesDoubles = false, MinLevel = 17, MaxLevel = 23
+                    })),
+                new WidgetDrawerPreset("Chart Age",
+                    "How stale your scores are per folder — the spread of days since you set them.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Metric = BreakdownMetric.ChartAge, Aggregation = BreakdownAggregation.Distribution,
+                        Series = new List<DistributionSeries>
+                        {
+                            DistributionSeries.Min, DistributionSeries.P25, DistributionSeries.Median,
+                            DistributionSeries.P75, DistributionSeries.Max
+                        },
+                        Band = BreakdownBand.InterQuartile, SeparateSinglesDoubles = false,
+                        MinLevel = 17, MaxLevel = 23
                     }))
             },
             DynamicNameKey: configJson =>

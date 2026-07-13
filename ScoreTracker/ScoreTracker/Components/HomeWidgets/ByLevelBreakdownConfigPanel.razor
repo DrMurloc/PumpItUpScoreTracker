@@ -19,22 +19,27 @@
 
 <MudSelect T="BreakdownChartScope" Value="_scope" ValueChanged="SetScope" Label="@L["Charts"]" Dense="true"
            Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-3">
-    <MudSelectItem T="BreakdownChartScope" Value="BreakdownChartScope.SinglesDoubles">@L["Singles / Doubles"]</MudSelectItem>
+    <MudSelectItem T="BreakdownChartScope" Value="BreakdownChartScope.SinglesDoubles">@L["Singles + Doubles"]</MudSelectItem>
+    <MudSelectItem T="BreakdownChartScope" Value="BreakdownChartScope.Singles">@L["Singles"]</MudSelectItem>
+    <MudSelectItem T="BreakdownChartScope" Value="BreakdownChartScope.Doubles">@L["Doubles"]</MudSelectItem>
     <MudSelectItem T="BreakdownChartScope" Value="BreakdownChartScope.CoOp">@L["Co-Op"]</MudSelectItem>
 </MudSelect>
 
-@if (_scope == BreakdownChartScope.SinglesDoubles)
-{
-    <LevelRangeSlider Label="@L["Level"]" Prefix="" Min="MinLevel" Max="MaxLevel"
-                      ValueMin="_minLevel" ValueMax="_maxLevel"
-                      ValueMinChanged="v => _minLevel = v" ValueMaxChanged="v => _maxLevel = v"/>
-    <MudCheckBox T="bool" @bind-Value="_separate" Label="@L["Show Singles & Doubles as separate lines"]" Dense="true"/>
-}
-else
+@if (_scope == BreakdownChartScope.CoOp)
 {
     <LevelRangeSlider Label="@L["Players"]" Prefix="P" Min="2" Max="5"
                       ValueMin="_minPlayers" ValueMax="_maxPlayers"
                       ValueMinChanged="v => _minPlayers = v" ValueMaxChanged="v => _maxPlayers = v"/>
+}
+else
+{
+    <LevelRangeSlider Label="@L["Level"]" Prefix="" Min="MinLevel" Max="MaxLevel"
+                      ValueMin="_minLevel" ValueMax="_maxLevel"
+                      ValueMinChanged="v => _minLevel = v" ValueMaxChanged="v => _maxLevel = v"/>
+    @if (_scope == BreakdownChartScope.SinglesDoubles)
+    {
+        <MudCheckBox T="bool" @bind-Value="_separate" Label="@L["Show Singles & Doubles separately"]" Dense="true"/>
+    }
 }
 
 <MudSelect T="BreakdownMetric" Value="_metric" ValueChanged="SetMetric" Label="@L["Metric"]" Dense="true"
@@ -61,35 +66,52 @@ else
 
 @if (_aggregation == BreakdownAggregation.Distribution)
 {
-    <MudText Typo="Typo.subtitle2" Class="mt-3">@L["Series"]</MudText>
-    <div class="d-flex flex-wrap">
-        @foreach (var s in AvailableSeries)
-        {
-            <MudCheckBox T="bool" Value="_series.Contains(s)" ValueChanged="v => ToggleSeries(s, v)"
-                         Label="@SeriesLabel(s)" Dense="true"/>
-        }
-    </div>
-    @if (_metric == BreakdownMetric.Score)
+    @if (SeparateActive)
     {
-        <div class="d-flex align-center gap-2 mt-1">
-            <MudNumericField T="int?" @bind-Value="_pctInput" Label="@L["Percentile"]" Placeholder="1–99" Min="1"
-                             Max="99" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true"
-                             Style="max-width:120px"/>
-            <MudButton Size="Size.Small" OnClick="AddPercentile">@L["Add"]</MudButton>
-        </div>
-        <div class="d-flex flex-wrap gap-1 mt-1">
-            @foreach (var p in _customPercentiles)
+        @* Separated S/D shows one thing per type — a single stat line, or a shaded range band. *@
+        <MudSelect T="SeparateDisplay" @bind-Value="_separateDisplay" Label="@L["Show per type"]" Dense="true"
+                   Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-3">
+            <MudSelectItem T="SeparateDisplay" Value="SeparateDisplay.Median">@L["Median"]</MudSelectItem>
+            <MudSelectItem T="SeparateDisplay" Value="SeparateDisplay.Average">@L["Avg"]</MudSelectItem>
+            <MudSelectItem T="SeparateDisplay" Value="SeparateDisplay.Min">@L["Min"]</MudSelectItem>
+            <MudSelectItem T="SeparateDisplay" Value="SeparateDisplay.Max">@L["Max"]</MudSelectItem>
+            <MudSelectItem T="SeparateDisplay" Value="SeparateDisplay.RangeIqr">@L["Shaded range: IQR (P25–P75)"]</MudSelectItem>
+            <MudSelectItem T="SeparateDisplay" Value="SeparateDisplay.RangeMinMax">@L["Shaded range: Min–Max"]</MudSelectItem>
+            <MudSelectItem T="SeparateDisplay" Value="SeparateDisplay.RangeStdDev">@L["Shaded range: ±1σ"]</MudSelectItem>
+        </MudSelect>
+    }
+    else
+    {
+        <MudText Typo="Typo.subtitle2" Class="mt-3">@L["Series"]</MudText>
+        <div class="d-flex flex-wrap">
+            @foreach (var s in AvailableSeries)
             {
-                <MudChip T="string" Size="Size.Small" OnClose="() => _customPercentiles.Remove(p)">P@(p)</MudChip>
+                <MudCheckBox T="bool" Value="_series.Contains(s)" ValueChanged="v => ToggleSeries(s, v)"
+                             Label="@SeriesLabel(s)" Dense="true"/>
             }
         </div>
-        <MudSelect T="BreakdownBand" @bind-Value="_band" Label="@L["Shade band"]" Dense="true"
-                   Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2">
-            <MudSelectItem T="BreakdownBand" Value="BreakdownBand.None">@L["None"]</MudSelectItem>
-            <MudSelectItem T="BreakdownBand" Value="BreakdownBand.InterQuartile">P25 – P75</MudSelectItem>
-            <MudSelectItem T="BreakdownBand" Value="BreakdownBand.MinMax">@L["Min"] – @L["Max"]</MudSelectItem>
-            <MudSelectItem T="BreakdownBand" Value="BreakdownBand.StdDev">@L["Avg"] ± 1σ</MudSelectItem>
-        </MudSelect>
+        @if (_metric == BreakdownMetric.Score)
+        {
+            <div class="d-flex align-center gap-2 mt-1">
+                <MudNumericField T="int?" @bind-Value="_pctInput" Label="@L["Percentile"]" Placeholder="1–99" Min="1"
+                                 Max="99" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true"
+                                 Style="max-width:120px"/>
+                <MudButton Size="Size.Small" OnClick="AddPercentile">@L["Add"]</MudButton>
+            </div>
+            <div class="d-flex flex-wrap gap-1 mt-1">
+                @foreach (var p in _customPercentiles)
+                {
+                    <MudChip T="string" Size="Size.Small" OnClose="() => _customPercentiles.Remove(p)">P@(p)</MudChip>
+                }
+            </div>
+            <MudSelect T="BreakdownBand" @bind-Value="_band" Label="@L["Shade band"]" Dense="true"
+                       Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2">
+                <MudSelectItem T="BreakdownBand" Value="BreakdownBand.None">@L["None"]</MudSelectItem>
+                <MudSelectItem T="BreakdownBand" Value="BreakdownBand.InterQuartile">P25 – P75</MudSelectItem>
+                <MudSelectItem T="BreakdownBand" Value="BreakdownBand.MinMax">@L["Min"] – @L["Max"]</MudSelectItem>
+                <MudSelectItem T="BreakdownBand" Value="BreakdownBand.StdDev">@L["Avg"] ± 1σ</MudSelectItem>
+            </MudSelect>
+        }
     }
 }
 else if (_aggregation == BreakdownAggregation.Breakdown)
@@ -155,6 +177,7 @@ else
     private MixEnum? _mix;
     private BreakdownChartScope _scope = BreakdownChartScope.SinglesDoubles;
     private bool _separate = true;
+    private SeparateDisplay _separateDisplay = SeparateDisplay.Median;
     private int _minLevel = 17;
     private int _maxLevel = 23;
     private int _minPlayers = 2;
@@ -172,6 +195,9 @@ else
     private string? _ordinalInput;
 
     private bool LegacyMix => _mix.HasValue && _mix.Value.UsesLegacyScoring();
+
+    // The separate S/D display (single stat vs shaded range) only applies to the Singles+Doubles scope.
+    private bool SeparateActive => _scope == BreakdownChartScope.SinglesDoubles && _separate;
 
     private IReadOnlyList<BreakdownMetric> AvailableMetrics => ByLevelConfigRules.MetricsFor(_mix);
 
@@ -194,6 +220,7 @@ else
         _mix = config.Mix;
         _scope = config.Scope;
         _separate = config.SeparateSinglesDoubles;
+        _separateDisplay = config.SeparateDisplay;
         _minLevel = config.MinLevel;
         _maxLevel = config.MaxLevel;
         _minPlayers = config.MinPlayers;
@@ -275,6 +302,7 @@ else
             Mix = _mix,
             Scope = _scope,
             SeparateSinglesDoubles = _separate,
+            SeparateDisplay = _separateDisplay,
             MinLevel = _minLevel,
             MaxLevel = _maxLevel,
             MinPlayers = _minPlayers,
@@ -296,6 +324,7 @@ else
         BreakdownMetric.Score => L["Score"],
         BreakdownMetric.LetterGrade => L["Letter Grade"],
         BreakdownMetric.Plate => L["Plate"],
+        BreakdownMetric.ChartAge => L["Chart Age"],
         _ => L["Pass"]
     };
 

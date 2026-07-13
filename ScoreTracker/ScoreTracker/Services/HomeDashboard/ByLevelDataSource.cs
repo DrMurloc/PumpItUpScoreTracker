@@ -1,5 +1,6 @@
 using MediatR;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -26,12 +27,14 @@ public sealed class ByLevelDataSource
         Array.Empty<string>());
 
     private readonly ChartCatalogCache _catalog;
+    private readonly IDateTimeOffsetAccessor _clock;
     private readonly IMediator _mediator;
 
-    public ByLevelDataSource(IMediator mediator, ChartCatalogCache catalog)
+    public ByLevelDataSource(IMediator mediator, ChartCatalogCache catalog, IDateTimeOffsetAccessor clock)
     {
         _mediator = mediator;
         _catalog = catalog;
+        _clock = clock;
     }
 
     public static BreakdownScales ScalesFor(MixEnum mix) =>
@@ -41,16 +44,17 @@ public sealed class ByLevelDataSource
         Guid userId, MixEnum mix, CancellationToken cancellationToken = default)
     {
         var charts = await _catalog.GetCharts(mix, cancellationToken);
+        var now = _clock.Now;
         var records = mix.UsesLegacyScoring()
             ? BuildLegacy(charts,
-                await _mediator.Send(new GetXXBestChartAttemptsQuery(userId, mix), cancellationToken))
+                await _mediator.Send(new GetXXBestChartAttemptsQuery(userId, mix), cancellationToken), now)
             : BuildPhoenix(charts,
-                await _mediator.Send(new GetPhoenixRecordsQuery(userId, mix), cancellationToken));
+                await _mediator.Send(new GetPhoenixRecordsQuery(userId, mix), cancellationToken), now);
         return (records, ScalesFor(mix));
     }
 
     private static IReadOnlyList<BreakdownRecord> BuildPhoenix(
-        IReadOnlyDictionary<Guid, Chart> charts, IEnumerable<RecordedPhoenixScore> scores)
+        IReadOnlyDictionary<Guid, Chart> charts, IEnumerable<RecordedPhoenixScore> scores, DateTimeOffset now)
     {
         var byChart = scores.GroupBy(s => s.ChartId).ToDictionary(g => g.Key, g => g.First());
         var records = new List<BreakdownRecord>(charts.Count);
@@ -67,15 +71,16 @@ public sealed class ByLevelDataSource
             int? scoreValue = passed && score.Score != null ? (int)score.Score.Value : null;
             int? gradeRank = passed && score.Score != null ? (int)score.Score.Value.LetterGrade : null;
             int? plateRank = passed && score.Plate != null ? (int)score.Plate.Value : null;
+            var age = Math.Max(0, (int)(now - score.RecordedDate).TotalDays);
             records.Add(new BreakdownRecord(Normalize(chart.Type), Bucket(chart), true, passed,
-                scoreValue, gradeRank, plateRank));
+                scoreValue, gradeRank, plateRank, age));
         }
 
         return records;
     }
 
     private static IReadOnlyList<BreakdownRecord> BuildLegacy(
-        IReadOnlyDictionary<Guid, Chart> charts, IEnumerable<BestXXChartAttempt> attempts)
+        IReadOnlyDictionary<Guid, Chart> charts, IEnumerable<BestXXChartAttempt> attempts, DateTimeOffset now)
     {
         var byChart = attempts
             .Where(a => a.BestAttempt != null)
@@ -92,9 +97,10 @@ public sealed class ByLevelDataSource
 
             var passed = !attempt.IsBroken;
             int? gradeRank = passed ? (int)attempt.LetterGrade : null;
+            var age = Math.Max(0, (int)(now - attempt.RecordedOn).TotalDays);
             // Legacy scoring: no 1M-normalized score, no plates.
             records.Add(new BreakdownRecord(Normalize(chart.Type), Bucket(chart), true, passed,
-                null, gradeRank, null));
+                null, gradeRank, null, age));
         }
 
         return records;

@@ -326,6 +326,134 @@ public sealed class ByLevelAggregatorTests
         Assert.Equal(BreakdownChartKind.Empty, result.Kind);
     }
 
+    // ---- round 2: scope, separate range, chart age, plate-tier colors ----
+
+    [Fact]
+    public void SinglesScopeCoversOnlySingles()
+    {
+        var records = new[]
+        {
+            Passed(ChartType.Single, 20, 900_000, 5),
+            Passed(ChartType.Double, 20, 800_000, 4)
+        };
+        var config = new ByLevelBreakdownConfig
+        {
+            Scope = BreakdownChartScope.Singles,
+            Metric = BreakdownMetric.Score,
+            Aggregation = BreakdownAggregation.Distribution,
+            Series = new() { DistributionSeries.Average },
+            MinLevel = 20, MaxLevel = 20
+        };
+
+        var result = ByLevelAggregator.Aggregate(config, records, Scales);
+
+        var s = Assert.Single(result.Series);
+        Assert.Equal(ChartType.Single, s.Type);
+        Assert.Equal(900_000, s.Values[0]); // the doubles chart is out of scope
+    }
+
+    [Fact]
+    public void SeparateMinMaxRangeEmitsOneBandPerType()
+    {
+        var records = new[]
+        {
+            Passed(ChartType.Single, 20, 900_000, 5),
+            Passed(ChartType.Single, 20, 1_000_000, 7),
+            Passed(ChartType.Double, 20, 800_000, 4),
+            Passed(ChartType.Double, 20, 900_000, 5)
+        };
+        var config = new ByLevelBreakdownConfig
+        {
+            Scope = BreakdownChartScope.SinglesDoubles, SeparateSinglesDoubles = true,
+            SeparateDisplay = SeparateDisplay.RangeMinMax,
+            Metric = BreakdownMetric.Score, Aggregation = BreakdownAggregation.Distribution,
+            MinLevel = 20, MaxLevel = 20
+        };
+
+        var result = ByLevelAggregator.Aggregate(config, records, Scales);
+
+        Assert.Equal(2, result.Bands.Count);
+        var s = Assert.Single(result.Bands, b => b.Type == ChartType.Single);
+        Assert.Equal(900_000, s.Lower[0]);
+        Assert.Equal(1_000_000, s.Upper[0]);
+        Assert.Empty(result.Series); // Min–Max range needs no extra lines
+    }
+
+    [Fact]
+    public void SeparateIqrRangeAlsoDrawsDottedMinMax()
+    {
+        var records = new[]
+        {
+            Passed(ChartType.Single, 20, 900_000, 5),
+            Passed(ChartType.Single, 20, 950_000, 5),
+            Passed(ChartType.Single, 20, 1_000_000, 7),
+            Passed(ChartType.Double, 20, 800_000, 4),
+            Passed(ChartType.Double, 20, 900_000, 5)
+        };
+        var config = new ByLevelBreakdownConfig
+        {
+            Scope = BreakdownChartScope.SinglesDoubles, SeparateSinglesDoubles = true,
+            SeparateDisplay = SeparateDisplay.RangeIqr,
+            Metric = BreakdownMetric.Score, Aggregation = BreakdownAggregation.Distribution,
+            MinLevel = 20, MaxLevel = 20
+        };
+
+        var result = ByLevelAggregator.Aggregate(config, records, Scales);
+
+        Assert.Equal(2, result.Bands.Count); // IQR band per type
+        Assert.NotEmpty(result.Series);
+        Assert.All(result.Series, s => Assert.True(s.Dashed)); // min & max drawn dotted
+    }
+
+    [Fact]
+    public void ChartAgeDistributesDaysOverPlayedCharts()
+    {
+        var records = new[]
+        {
+            new BreakdownRecord(ChartType.Single, 20, true, true, 900_000, 5, 5, 10),
+            new BreakdownRecord(ChartType.Single, 20, true, true, 950_000, 5, 5, 30),
+            new BreakdownRecord(ChartType.Single, 20, false, false, null, null, null) // unplayed → no age
+        };
+        var config = new ByLevelBreakdownConfig
+        {
+            Scope = BreakdownChartScope.Singles,
+            Metric = BreakdownMetric.ChartAge, Aggregation = BreakdownAggregation.Distribution,
+            Series = new() { DistributionSeries.Median }, MinLevel = 20, MaxLevel = 20
+        };
+
+        var result = ByLevelAggregator.Aggregate(config, records, Scales);
+
+        Assert.Equal(BreakdownChartKind.Lines, result.Kind);
+        Assert.Equal(20, Assert.Single(result.Series).Values[0]); // median of 10 & 30 days
+    }
+
+    [Fact]
+    public void PlateCompletionTiersWearPlateIdentityColors()
+    {
+        var records = new[]
+        {
+            Passed(ChartType.Single, 20, 1_000_000, 7, 5), // PG (rank 5)
+            Passed(ChartType.Single, 20, 990_000, 6, 3), // MG (rank 3)
+            Unplayed(ChartType.Single, 20)
+        };
+        var config = new ByLevelBreakdownConfig
+        {
+            Scope = BreakdownChartScope.Singles,
+            Metric = BreakdownMetric.Plate, Aggregation = BreakdownAggregation.Completion,
+            Thresholds = new()
+            {
+                new CompletionThreshold { Kind = ThresholdKind.Plate, Value = "MG" },
+                new CompletionThreshold { Kind = ThresholdKind.Plate, Value = "PG" }
+            },
+            MinLevel = 20, MaxLevel = 20
+        };
+
+        var result = ByLevelAggregator.Aggregate(config, records, Scales);
+
+        var pg = Assert.Single(result.Series, s => s.Label == "PG");
+        Assert.Equal(SeriesColorRole.Plate, pg.Color.Role); // plate metal, not the rarity ramp
+    }
+
     private static double? Value(BreakdownResult result, string label) =>
         result.Series.Single(s => s.Label == label).Values[0];
 }
