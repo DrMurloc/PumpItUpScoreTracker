@@ -176,7 +176,7 @@ public sealed class OfficialSiteClientTests
         return new OfficialSiteClient(piuGame.Object, Mock.Of<IChartRepository>(),
             NullLogger<OfficialSiteClient>.Instance, Mock.Of<IMediator>(), Mock.Of<ICurrentUserAccessor>(),
             Mock.Of<IScoreReader>(), Mock.Of<IFileUploadClient>(), Mock.Of<IOfficialLeaderboardRepository>(),
-            Mock.Of<IBus>(), FakeDateTime.At(Now).Object,
+            Mock.Of<IBus>(), FakeDateTime.At(Now).Object, Mock.Of<IDailyStepReader>(),
             Options.Create(new PiuGameConfiguration
             {
                 ServiceUsername = serviceUsername,

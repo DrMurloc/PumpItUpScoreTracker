@@ -24,6 +24,20 @@ public static class WeeklyChartSuggestionPolicy
         }
     }
 
+    // Limbo Day inverts the board (Daily Step): only passing (non-broken) runs qualify, and the
+    // LOWEST score wins. Ties share a place and the next place jumps by the tie count — the same
+    // laddering as ProcessIntoPlaces, just ascending.
+    public static IEnumerable<(int, WeeklyTournamentEntry)> ProcessIntoPlacesAscending(
+        IEnumerable<WeeklyTournamentEntry> entries)
+    {
+        var place = 1;
+        foreach (var scoreGroup in entries.Where(e => !e.IsBroken).GroupBy(e => e.Score).OrderBy(g => g.Key))
+        {
+            foreach (var score in scoreGroup) yield return (place, score);
+            place += scoreGroup.Count();
+        }
+    }
+
     public static IEnumerable<Chart> GetSuggestedCharts(IEnumerable<Chart> chart, double doublesCompetitive,
         double singlesCompetitive)
     {

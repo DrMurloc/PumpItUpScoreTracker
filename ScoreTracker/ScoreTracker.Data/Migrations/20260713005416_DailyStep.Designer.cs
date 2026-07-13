@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ScoreTracker.Data.Persistence;
 
@@ -11,9 +12,11 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    partial class ChartAttemptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260713005416_DailyStep")]
+    partial class DailyStep
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -190,6 +193,32 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("CultureCode");
 
                     b.ToTable("SongNameLanguage", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.UserRandomSettingsEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Json")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Name");
+
+                    b.ToTable("UserRandomSettings", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartDifficultyRatingEntity", b =>
@@ -1186,9 +1215,6 @@ namespace ScoreTracker.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal?>("DiscordChannelId")
-                        .HasColumnType("decimal(20,0)");
-
                     b.Property<DateTimeOffset?>("EndDate")
                         .HasColumnType("datetimeoffset");
 
@@ -1196,9 +1222,6 @@ namespace ScoreTracker.Data.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsMoM")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsUnlisted")
                         .HasColumnType("bit");
 
                     b.Property<string>("LinkOverride")
@@ -1251,32 +1274,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("TournamentId");
 
                     b.ToTable("TournamentRole", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.EventCompetition.Infrastructure.Entities.TournamentRoleInviteEntity", b =>
-                {
-                    b.Property<Guid>("Token")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("ExpiresAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("TournamentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Token");
-
-                    b.HasIndex("TournamentId");
-
-                    b.ToTable("TournamentRoleInvite", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.EventCompetition.Infrastructure.Entities.UserQualifierEntity", b =>
@@ -1985,143 +1982,6 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserTitle", "scores");
                 });
 
-            modelBuilder.Entity("ScoreTracker.Randomizer.Infrastructure.Entities.RandomizerDrawCardEntity", b =>
-                {
-                    b.Property<Guid>("PullId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("DrawId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("int");
-
-                    b.Property<string>("State")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("PullId");
-
-                    b.HasIndex("DrawId");
-
-                    b.ToTable("RandomizerDrawCard", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Randomizer.Infrastructure.Entities.RandomizerDrawEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Mix")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("Slug")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("TournamentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Slug")
-                        .IsUnique();
-
-                    b.HasIndex("TournamentId");
-
-                    b.HasIndex("UserId")
-                        .IsUnique()
-                        .HasFilter("[UserId] IS NOT NULL");
-
-                    b.ToTable("RandomizerDraw", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Randomizer.Infrastructure.Entities.TournamentRandomSettingsEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Json")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Mix")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<Guid>("TournamentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TournamentId", "Name");
-
-                    b.ToTable("TournamentRandomSettings", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Randomizer.Infrastructure.Entities.UserRandomSettingsEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Json")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Mix")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(max)")
-                        .HasDefaultValue("Phoenix");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<Guid?>("ShareToken")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ShareToken")
-                        .IsUnique()
-                        .HasFilter("[ShareToken] IS NOT NULL");
-
-                    b.HasIndex("UserId", "Name");
-
-                    b.ToTable("UserRandomSettings", "scores");
-                });
-
             modelBuilder.Entity("ScoreTracker.ScoreLedger.Infrastructure.Entities.BestAttemptEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2465,9 +2325,6 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<int>("Score")
                         .HasColumnType("int");
 
-                    b.Property<int>("Source")
-                        .HasColumnType("int");
-
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -2781,15 +2638,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.UserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ScoreTracker.Randomizer.Infrastructure.Entities.RandomizerDrawCardEntity", b =>
-                {
-                    b.HasOne("ScoreTracker.Randomizer.Infrastructure.Entities.RandomizerDrawEntity", null)
-                        .WithMany()
-                        .HasForeignKey("DrawId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

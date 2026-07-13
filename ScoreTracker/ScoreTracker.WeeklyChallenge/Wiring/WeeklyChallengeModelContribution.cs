@@ -17,5 +17,10 @@ public sealed class WeeklyChallengeModelContribution : IDbModelContribution
         modelBuilder.Entity<WeeklyUserEntry>().ToTable("WeeklyUserEntry");
         modelBuilder.Entity<UserWeeklyPlacingEntity>().ToTable("UserWeeklyPlacing");
         modelBuilder.Entity<PastTourneyChartsEntity>().ToTable("PastTourneyCharts");
+
+        // Daily Step (sibling feature, same bounded context): its own board + entries + history.
+        modelBuilder.Entity<DailyStepChartEntity>().ToTable("DailyStepChart");
+        modelBuilder.Entity<DailyStepEntryEntity>().ToTable("DailyStepEntry");
+        modelBuilder.Entity<UserDailyStepPlacingEntity>().ToTable("UserDailyStepPlacing");
     }
 }

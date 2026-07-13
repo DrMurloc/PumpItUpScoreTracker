@@ -231,7 +231,28 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             // The board read is a flex, not a fact the card owes anyone.
         }
 
-        var inputs = new SnapshotInputs(e, user, known, notable, moreScores, coOpScores, charts, bests, weekly);
+        // The Daily Step read: the player's standing on today's shared chart, but only when this
+        // batch actually includes it (they played it this session) — the same "freshly imported"
+        // gate as the weekly lines. Best-effort; a failure costs the line, never the card.
+        DailyStepPlacement? daily = null;
+        var dailyChartId = Guid.Empty;
+        try
+        {
+            var board = await _mediator.Send(new GetDailyStepQuery(e.Mix), context.CancellationToken);
+            if (board != null && known.Any(c => c.ChartId == board.ChartId))
+            {
+                dailyChartId = board.ChartId;
+                daily = await _mediator.Send(new GetDailyStepPlacementQuery(e.UserId, e.Mix),
+                    context.CancellationToken);
+            }
+        }
+        catch
+        {
+            // ditto — the daily standing is a flex.
+        }
+
+        var inputs = new SnapshotInputs(e, user, known, notable, moreScores, coOpScores, charts, bests, weekly,
+            daily, dailyChartId);
         var message = await BuildSnapshotCard(inputs, context.CancellationToken);
         await SendRichToCommunityDiscords(user.Id, new[] { message }, context.CancellationToken);
     }
@@ -246,14 +267,17 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         ScoreHighlightsCapturedEvent.HighlightedChange[] CoOpScores,
         Dictionary<Guid, Chart> Charts,
         Dictionary<Guid, RecordedPhoenixScore> Bests,
-        WeeklyPlacementRecord[] Weekly);
+        WeeklyPlacementRecord[] Weekly,
+        DailyStepPlacement? Daily,
+        Guid DailyChartId);
 
     private async Task<RichBotMessage> BuildSnapshotCard(SnapshotInputs inputs,
         CancellationToken cancellationToken)
     {
         var header = HeaderSection(inputs);
         var statLines = StatLines(inputs.E.Milestones);
-        var achievementLines = AchievementLines(inputs.E, inputs.Weekly, inputs.Charts);
+        var achievementLines = AchievementLines(inputs.E, inputs.Weekly, inputs.Charts, inputs.Daily,
+            inputs.DailyChartId);
 
         // The folder breakdown is computed and reserved up front (owner call): scores yield
         // to it, never the reverse, so a title-heavy or score-heavy card still ends with it.
@@ -476,7 +500,8 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     }
 
     private static List<string> AchievementLines(ScoreHighlightsCapturedEvent e,
-        WeeklyPlacementRecord[] weekly, Dictionary<Guid, Chart> charts)
+        WeeklyPlacementRecord[] weekly, Dictionary<Guid, Chart> charts,
+        DailyStepPlacement? daily, Guid dailyChartId)
     {
         var lines = new List<string>();
         var titles = e.Milestones.Where(m => m.Kind == MilestoneKind.TitleCompleted).ToArray();
@@ -496,6 +521,13 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         lines.AddRange(weekly.Select(w =>
             $"🏆 **#{w.Place}** on {charts[w.ChartId].Song.Name} " +
             $"#DIFFICULTY|{charts[w.ChartId].DifficultyString}# weekly"));
+
+        // Daily Step standing (no competitive gate — the shared daily is a communal event, and a
+        // Limbo-day placement on an easy chart is the whole point).
+        if (daily != null && charts.ContainsKey(dailyChartId))
+            lines.Add($"🏆 **#{daily.Place}** on {charts[dailyChartId].Song.Name} " +
+                      $"#DIFFICULTY|{charts[dailyChartId].DifficultyString}# " +
+                      (daily.IsLimbo ? "Daily Step (Limbo)" : "Daily Step"));
 
         // Generic title progress (difficulty/co-op) always rides the top section, nearest to
         // complete first (owner call) — completed titles show only their completion line, and

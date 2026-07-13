@@ -257,6 +257,63 @@
       }
     },
     {
+      "type": "daily-step",
+      "name": "Daily Step",
+      "description": "Today\u0027s shared chart, plus a weekly Limbo Day.",
+      "category": "Compete",
+      "supportedSizes": [
+        "1x1",
+        "1x2",
+        "1x3"
+      ],
+      "defaultSize": "1x1",
+      "supportedMixes": [
+        "Phoenix",
+        "Phoenix2"
+      ],
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "mix": {
+            "enum": [
+              "XX",
+              "Phoenix",
+              "Phoenix2",
+              "FirstDanceFloor",
+              "SecondUltimateRemix",
+              "ThirdObg",
+              "ObgSeasonEvolution",
+              "Collection",
+              "PerfectCollection",
+              "Extra",
+              "Premiere",
+              "Prex",
+              "Rebirth",
+              "Premiere2",
+              "Prex2",
+              "Premiere3",
+              "Prex3",
+              "Exceed",
+              "Exceed2",
+              "Zero",
+              "Nx",
+              "Nx2",
+              "NxAbsolute",
+              "Fiesta",
+              "FiestaEx",
+              "Fiesta2",
+              "Prime",
+              "Prime2",
+              "Infinity",
+              "Pro",
+              "Pro2"
+            ],
+            "nullable": true
+          }
+        }
+      }
+    },
+    {
       "type": "suggested-charts",
       "name": "Suggested Charts",
       "description": "Charts picked for you, tuned by goal.",
