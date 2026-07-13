@@ -97,13 +97,17 @@ else
             }
             @if (_isLegacy)
             {
-                @* Legacy (XX and older): letter grade is an input, no plate, no auto-grade. *@
+                @* Legacy (XX and older): letter grade is a manual input, no plate, no auto-grade.
+                   Score takes its own full-width row so it reads big (owner, field test); the grade
+                   select drops its label for a placeholder so it stays compact and clickable. *@
                 <div class="qr-scorerow">
                     <MudNumericField T="int?" @bind-Value="_score" Immediate="true" Label="@L["Score"]"
                                      Min="0" Max="XXScore.Max" HideSpinButtons="true" Clearable="true"
                                      Disabled="EditMode || _isSaving" Variant="Variant.Outlined"
                                      Margin="Margin.Dense" Class="qr-score-field"/>
-                    <MudSelect T="XXLetterGrade?" @bind-Value="_letterGrade" Label="@L["Letter Grade"]" Clearable="true"
+                </div>
+                <div class="qr-actionrow qr-actionrow-save">
+                    <MudSelect T="XXLetterGrade?" @bind-Value="_letterGrade" Placeholder="@L["Letter Grade"]"
                                Dense="true" Margin="Margin.Dense" Disabled="EditMode || _isSaving"
                                Class="qr-grade-field">
                         @foreach (var grade in Enum.GetValues<XXLetterGrade>())
@@ -111,8 +115,6 @@ else
                             <MudSelectItem T="XXLetterGrade?" Value="@grade">@grade.ToString()</MudSelectItem>
                         }
                     </MudSelect>
-                </div>
-                <div class="qr-actionrow qr-actionrow-save">
                     <MudCheckBox T="bool" @bind-Value="_broken" Label="@L["Broken"]" Dense="true"
                                  Disabled="EditMode || _isSaving"></MudCheckBox>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="qr-save-btn"
