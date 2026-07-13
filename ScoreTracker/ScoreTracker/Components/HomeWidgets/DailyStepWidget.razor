@@ -68,17 +68,29 @@ else
         }
         else
         {
-            <div class="dash-daily-board">
+            @* 1x1 is a glance, not a list: the top-three podium + your row anchored below. *@
+            <div class="dash-daily-podium">
                 @foreach (var row in _rows.Take(3))
                 {
-                    @RowFragment(row)
-                }
-                @if (_myRow != null && _myRow.Place > 3)
-                {
-                    <div class="dash-lb-divider">@L["Your standing"]</div>
-                    @RowFragment(_myRow)
+                    <div class="dash-podium-slot @(row.IsYou ? "dash-lb-you" : row.IsCommunity ? "dash-lb-community" : "")">
+                        <span class="dash-podium-medal">@Medal(row.Place)</span>
+                        <span class="dash-podium-name" title="@row.User?.Name">@row.User?.Name</span>
+                        <span class="dash-podium-score">@(((int)row.Entry.Score).ToString("N0"))</span>
+                    </div>
                 }
             </div>
+            @if (_myRow != null)
+            {
+                <div class="dash-daily-youbar dash-lb-you">
+                    <span class="dash-youbar-label">@L["You"]</span>
+                    <span class="dash-youbar-rank">#@_myRow.Place</span>
+                    <span class="dash-youbar-score">
+                        <LetterGradeIcon Grade="_myRow.Entry.Score.LetterGrade" IsBroken="_myRow.Entry.IsBroken"
+                                         Height="15"></LetterGradeIcon>
+                        <span class="dash-lb-pts">@(((int)_myRow.Entry.Score).ToString("N0"))</span>
+                    </span>
+                </div>
+            }
         }
     </div>
 
@@ -180,6 +192,8 @@ else
             <span class="dash-lb-pts">@(((int)row.Entry.Score).ToString("N0"))</span>
         </span>
     </div>;
+
+    private static string Medal(int place) => place switch { 1 => "🥇", 2 => "🥈", 3 => "🥉", _ => $"#{place}" };
 
     private RenderFragment HeaderControls =>@<text>
         <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.AddCircleOutline"
