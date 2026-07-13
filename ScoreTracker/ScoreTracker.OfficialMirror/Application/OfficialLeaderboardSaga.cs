@@ -127,8 +127,8 @@ namespace ScoreTracker.OfficialMirror.Application
         public async Task<PiuGameAccountDataImport> Handle(GetOfficialAccountDataQuery request,
             CancellationToken cancellationToken)
         {
-            return await _officialSite.GetAccountData(request.Mix, request.Username, request.Password, null,
-                cancellationToken);
+            var sid = await _officialSite.SignIn(request.Mix, request.Username, request.Password, cancellationToken);
+            return await _officialSite.GetAccountData(request.Mix, sid, null, cancellationToken);
         }
 
         public async Task<Contracts.PiuGameAccountIdentity> Handle(GetPiuGameAccountIdentityQuery request,
@@ -275,31 +275,38 @@ namespace ScoreTracker.OfficialMirror.Application
 
         public async Task Handle(ImportOfficialPlayerScoresCommand request, CancellationToken cancellationToken)
         {
-            var userId = _currentUser.User.Id;
-            // One import run = one session: every score this run submits shares this id
-            // (the Session Batcher honors explicit run ids over its gap-based envelopes).
+            var sid = await _officialSite.SignIn(request.Mix, request.Username, request.Password, cancellationToken);
+            await RunImport(_currentUser.User.Id, request.Mix, sid, request.Id, request.ExpectedGameTag,
+                request.IncludeBroken, request.SyncPiuTracker, cancellationToken);
+        }
+
+        // Runs the scrape+save for one import off a pre-minted session id and an explicit user id,
+        // so the same body serves the synchronous API path and the background consumer (which has
+        // no circuit user). One import = one session id for the Session Batcher.
+        internal async Task RunImport(Guid userId, MixEnum mix, string sid, string cardId, string expectedGameTag,
+            bool includeBroken, bool syncPiuTracker, CancellationToken cancellationToken)
+        {
             var importSessionId = Guid.NewGuid();
 
             var accountData =
-                await _officialSite.GetAccountData(request.Mix, request.Username, request.Password, request.Id,
-                    cancellationToken);
-            if (accountData.AccountName != request.ExpectedGameTag)
+                await _officialSite.GetAccountData(mix, sid, cardId, cancellationToken);
+            if (accountData.AccountName != expectedGameTag)
             {
             }
 
             if (accountData.AccountName == "INVALID")
-                await _mediator.Publish(new ImportStatusUpdatedEvent(_currentUser.User.Id,
-                    "Invalid Login Information", Array.Empty<RecordedPhoenixScore>(), request.Mix),
+                await _mediator.Publish(new ImportStatusUpdatedEvent(userId,
+                    "Invalid Login Information", Array.Empty<RecordedPhoenixScore>(), mix),
                     cancellationToken);
 
-            if (request.Mix == MixEnum.Phoenix2)
-                await BackfillCardAliases(userId, request, cancellationToken);
+            if (mix == MixEnum.Phoenix2)
+                await BackfillCardAliases(userId, mix, sid, cancellationToken);
 
-            if (request.SyncPiuTracker)
+            if (syncPiuTracker)
             {
-                await _mediator.Publish(new ImportStatusUpdatedEvent(_currentUser.User.Id,
+                await _mediator.Publish(new ImportStatusUpdatedEvent(userId,
                     "Syncing PIU Tracker... (Can take a while if it's your first time)",
-                    Array.Empty<RecordedPhoenixScore>(), request.Mix));
+                    Array.Empty<RecordedPhoenixScore>(), mix));
                 try
                 {
                     await _piuTracker.SyncData(accountData.AccountName, accountData.Sid, cancellationToken);
@@ -308,7 +315,7 @@ namespace ScoreTracker.OfficialMirror.Application
                 {
                     await _mediator.Publish(
                         new ImportStatusErrorEvent(userId,
-                            "PIU Tracker sync failed, you've imported too recently.", request.Mix),
+                            "PIU Tracker sync failed, you've imported too recently.", mix),
                         cancellationToken);
                 }
                 catch (Exception e)
@@ -316,7 +323,7 @@ namespace ScoreTracker.OfficialMirror.Application
                     await _mediator.Publish(
                         new ImportStatusErrorEvent(userId,
                             "PIU Tracker sync failed. Check with DrMurloc or Tusa if this persists",
-                            request.Mix),
+                            mix),
                         cancellationToken);
                     _logger.LogWarning(e, "PIU Tracker sync failed");
                 }
@@ -335,14 +342,13 @@ namespace ScoreTracker.OfficialMirror.Application
                 cancellationToken);
 
             var maxPages =
-                await _officialSite.GetScorePageCount(request.Mix, request.Username, request.Password,
-                    cancellationToken);
+                await _officialSite.GetScorePageCount(mix, sid, cancellationToken);
             // Page-count memory is per mix — the parallel sites paginate independently, so a
             // Phoenix 2 import must not shrink (or inflate) the next Phoenix 1 delta read.
             // Phoenix keeps the legacy key so existing users' next import stays incremental.
-            var pageCountSetting = request.Mix == MixEnum.Phoenix
+            var pageCountSetting = mix == MixEnum.Phoenix
                 ? "PreviousPageCount"
-                : $"PreviousPageCount__{request.Mix}";
+                : $"PreviousPageCount__{mix}";
             var limit = (await _mediator.Send(new GetUserUiSettingsQuery(userId), cancellationToken)).TryGetValue(
                 pageCountSetting,
                 out var result)
@@ -350,16 +356,13 @@ namespace ScoreTracker.OfficialMirror.Application
                 : null;
 
             var scores =
-                (await _officialSite.GetRecordedScores(request.Mix, _currentUser.User.Id, request.Username,
-                    request.Password,
-                    request.Id,
-                    request.IncludeBroken, limit,
+                (await _officialSite.GetRecordedScores(mix, userId, sid, cardId, includeBroken, limit,
                     cancellationToken))
                 .ToArray();
             var count = 0;
             var batch = new List<RecordedPhoenixScore>();
             var existingScores =
-                (await _mediator.Send(new GetPhoenixRecordsQuery(userId, request.Mix), cancellationToken))
+                (await _mediator.Send(new GetPhoenixRecordsQuery(userId, mix), cancellationToken))
                 .ToDictionary(s =>
                     s.ChartId);
             var toSave = scores.Where(s =>
@@ -371,7 +374,7 @@ namespace ScoreTracker.OfficialMirror.Application
             {
                 await _mediator.Send(
                     new UpdatePhoenixBestAttemptCommand(score.Chart.Id, score.IsBroken, score.Score, score.Plate,
-                        Source: ScoreJournalEntry.OfficialImportSource, Mix: request.Mix,
+                        Source: ScoreJournalEntry.OfficialImportSource, Mix: mix,
                         SessionId: importSessionId),
                     cancellationToken);
                 count++;
@@ -381,17 +384,17 @@ namespace ScoreTracker.OfficialMirror.Application
                 if (count % 10 != 0) continue;
 
                 await _mediator.Publish(
-                    new ImportStatusUpdatedEvent(_currentUser.User.Id,
+                    new ImportStatusUpdatedEvent(userId,
                         $"Saving chart result {count} of {scores.Length}",
-                        batch.ToArray(), request.Mix),
+                        batch.ToArray(), mix),
                     cancellationToken);
                 batch.Clear();
             }
 
             await _mediator.Publish(
-                new ImportStatusUpdatedEvent(_currentUser.User.Id,
+                new ImportStatusUpdatedEvent(userId,
                     "Charts finished saving",
-                    batch.ToArray(), request.Mix),
+                    batch.ToArray(), mix),
                 cancellationToken);
             batch.Clear();
 
@@ -399,7 +402,7 @@ namespace ScoreTracker.OfficialMirror.Application
             // With a score batch, they ride its session snapshot card (SessionId flows to the
             // title path); with none, SessionId stays null and they get their own announcement.
             await _bus.Publish(new TitlesDetectedEvent(userId, accountData.Titles.Select(t => t.ToString()),
-                    request.Mix, toSave.Length > 0 ? importSessionId : null),
+                    mix, toSave.Length > 0 ? importSessionId : null),
                 cancellationToken);
 
             await _mediator.Send(new SaveUserUiSettingCommand(pageCountSetting, maxPages.ToString()),
@@ -413,11 +416,10 @@ namespace ScoreTracker.OfficialMirror.Application
         ///     mirroring ResolveExternalUserCommand's backfill: aliases owned by a different
         ///     account are never re-pointed, they stay where they are.
         /// </summary>
-        private async Task BackfillCardAliases(Guid userId, ImportOfficialPlayerScoresCommand request,
+        private async Task BackfillCardAliases(Guid userId, MixEnum mix, string sid,
             CancellationToken cancellationToken)
         {
-            var cards = await _officialSite.GetGameCards(request.Mix, request.Username, request.Password,
-                cancellationToken);
+            var cards = await _officialSite.GetGameCards(mix, sid, cancellationToken);
             foreach (var alias in cards.Select(c => $"card:{c.Id}"))
             {
                 var owner = await _mediator.Send(new GetUserByExternalLoginQuery(alias, "PiuGame"),
@@ -457,8 +459,8 @@ namespace ScoreTracker.OfficialMirror.Application
         public async Task<IEnumerable<GameCardRecord>> Handle(GetGameCardsQuery request,
             CancellationToken cancellationToken)
         {
-            return await _officialSite.GetGameCards(request.Mix, request.Username, request.Password,
-                cancellationToken);
+            var sid = await _officialSite.SignIn(request.Mix, request.Username, request.Password, cancellationToken);
+            return await _officialSite.GetGameCards(request.Mix, sid, cancellationToken);
         }
 
         public Task<DateTimeOffset?> Handle(GetLastLeaderboardImportTimestampQuery request,

@@ -77,7 +77,7 @@ public sealed class OfficialSiteClientTests
         var client = BuildClient(piuGame);
 
         await Assert.ThrowsAsync<NoGameAccountAssociatedException>(() =>
-            client.GetAccountData(MixEnum.Phoenix2, "user", "pass", null, CancellationToken.None));
+            client.GetAccountData(MixEnum.Phoenix2, "sid123", null, CancellationToken.None));
     }
 
     private static Mock<IPiuGameApi> ArrangeSessionWithAccountData(MixEnum mix,
@@ -86,6 +86,7 @@ public sealed class OfficialSiteClientTests
         var piuGame = new Mock<IPiuGameApi>();
         piuGame.Setup(p => p.GetSessionId(mix, "user", "pass", It.IsAny<CancellationToken>()))
             .ReturnsAsync((new HttpClient(), "sid123"));
+        piuGame.Setup(p => p.ClientForSid(mix, It.IsAny<string>())).Returns(new HttpClient());
         piuGame.Setup(p => p.GetAccountData(mix, It.IsAny<HttpClient>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(accountData);
         return piuGame;

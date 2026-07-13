@@ -40,6 +40,11 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Apis.Contracts
         Task<(HttpClient client, string sid)> GetSessionId(MixEnum mix, string username, string password,
             CancellationToken cancellationToken);
 
+        // Rebuilds an authenticated client from a session id minted earlier by GetSessionId (no
+        // network) — lets a single login serve many calls, including from a background job that
+        // only carries the sid.
+        HttpClient ClientForSid(MixEnum mix, string sid);
+
         Task<PiuGameGetBestScoresResult>
             GetBestScores(MixEnum mix, HttpClient client, int page, CancellationToken cancellationToken);
 

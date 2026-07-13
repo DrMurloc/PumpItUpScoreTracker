@@ -187,10 +187,15 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     private static readonly Uri DefaultAvatar =
         new("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png");
 
-    public async Task<int> GetScorePageCount(MixEnum mix, string username, string password,
+    public async Task<string> SignIn(MixEnum mix, string username, string password,
         CancellationToken cancellationToken)
     {
-        var sessionId = (await _piuGame.GetSessionId(mix, username, password, cancellationToken)).client;
+        return (await _piuGame.GetSessionId(mix, username, password, cancellationToken)).sid;
+    }
+
+    public async Task<int> GetScorePageCount(MixEnum mix, string sid, CancellationToken cancellationToken)
+    {
+        var sessionId = _piuGame.ClientForSid(mix, sid);
         var response = await _piuGame.GetBestScores(mix, sessionId, 0, cancellationToken);
         return response.MaxPage;
     }
@@ -213,16 +218,15 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     }
 
     public async Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(MixEnum mix, Guid userId,
-        string username,
-        string password, string id,
+        string sid, string id,
         bool includeBroken,
         int? maxPages, CancellationToken cancellationToken)
     {
         var currentPage = 1;
         await _mediator.Publish(
-            new ImportStatusUpdatedEvent(_currentUser.User.Id, "Logging In",
+            new ImportStatusUpdatedEvent(userId, "Logging In",
                 Array.Empty<RecordedPhoenixScore>(), mix), cancellationToken);
-        var sessionId = (await _piuGame.GetSessionId(mix, username, password, cancellationToken)).client;
+        var sessionId = _piuGame.ClientForSid(mix, sid);
 
         var gameCards = await _piuGame.GetCards(mix, sessionId, cancellationToken);
         var activeCard = gameCards.FirstOrDefault(c => c.IsActive);
@@ -236,7 +240,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         while (currentPage <= maxPages.Value)
         {
             await _mediator.Publish(
-                new ImportStatusUpdatedEvent(_currentUser.User.Id, $"Reading page {currentPage} of {maxPages} (New Passes)",
+                new ImportStatusUpdatedEvent(userId, $"Reading page {currentPage} of {maxPages} (New Passes)",
                     Array.Empty<RecordedPhoenixScore>(), mix),
                 cancellationToken);
             var nextPage = await _piuGame.GetBestScores(mix, sessionId, currentPage, cancellationToken);
@@ -247,7 +251,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
 
         var pagesWithNoUpscore = 0;
         var bestScores =
-            (await _phoenixRecords.GetBestScores(mix, _currentUser.User.Id, cancellationToken))
+            (await _phoenixRecords.GetBestScores(mix, userId, cancellationToken))
             .ToDictionary(r =>
                 r.ChartId);
         while (pagesWithNoUpscore <= 3 && currentPage <= finalPage)
@@ -255,7 +259,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             pagesWithNoUpscore++;
             var nextPage = await _piuGame.GetBestScores(mix, sessionId, currentPage, cancellationToken);
             await _mediator.Publish(
-                new ImportStatusUpdatedEvent(_currentUser.User.Id, $"Reading page {currentPage} (Up-scores)",
+                new ImportStatusUpdatedEvent(userId, $"Reading page {currentPage} (Up-scores)",
                     Array.Empty<RecordedPhoenixScore>(), mix),
                 cancellationToken);
 
@@ -380,12 +384,10 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     private readonly Regex ImageRegex = new(@"avatar_img\/([A-Za-z0-9_\-]+\.[A-Za-z]{3,4})",
         RegexOptions.Compiled);
 
-    public async Task<PiuGameAccountDataImport> GetAccountData(MixEnum mix, string username, string password,
-        string? id,
+    public async Task<PiuGameAccountDataImport> GetAccountData(MixEnum mix, string sid, string? id,
         CancellationToken cancellationToken)
     {
-        var session = await _piuGame.GetSessionId(mix, username, password, cancellationToken);
-        var client = session.client;
+        var client = _piuGame.ClientForSid(mix, sid);
 
         if (id != null) await _piuGame.SetCard(mix, client, id, cancellationToken);
 
@@ -403,13 +405,13 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                     _ => ""
                 }
                 : "")).Select(Name.From).ToArray();
-        return new PiuGameAccountDataImport(imagePath, importedData.AccountName, titles, session.sid);
+        return new PiuGameAccountDataImport(imagePath, importedData.AccountName, titles, sid);
     }
 
-    public async Task<IEnumerable<GameCardRecord>> GetGameCards(MixEnum mix, string username, string password,
+    public async Task<IEnumerable<GameCardRecord>> GetGameCards(MixEnum mix, string sid,
         CancellationToken cancellationToken)
     {
-        var session = (await _piuGame.GetSessionId(mix, username, password, cancellationToken)).client;
+        var session = _piuGame.ClientForSid(mix, sid);
         var account = await _piuGame.GetAccountData(mix, session, cancellationToken);
         ThrowIfAccountInvalid(account);
         return await _piuGame.GetCards(mix, session, cancellationToken);
