@@ -428,9 +428,9 @@ recorder** — the chart display is not clickable, no ChartDetailsDialog, no nav
   a record *removal* — that deletion path stays the dialog's job, not the arcade widget's.
 - **Sizes**: **1×1 only** — `SupportedSizes = [1×1]`, `DefaultSize = 1×1`. The one widget whose
   per-widget size list is a single entry.
-- **Config v1**: **`Mix` scope** — `Follow current mix` / Phoenix / Phoenix 2 / **All mixes** (owner,
-  2026-07-12). The panel (`QuickRecordConfigPanel`) mirrors `WeeklyConfigPanel`'s mix `MudSelect`.
-  `ClearAfterSave` was considered and dropped — it always clears.
+- **Config v1**: **`Mix` scope** — `Follow current mix` / Phoenix / Phoenix 2 / **All mixes**, plus a
+  **Remember last mix** toggle shown only under All mixes (owner, 2026-07-12/13). `ClearAfterSave` was
+  considered and dropped — it always clears.
 - **EditMode**: inputs render disabled while the board is being arranged (no accidental writes
   mid-drag); the selector shows its resting frame. Grid data refresh is already paused in edit mode by
   the shell (§2.3).
@@ -438,15 +438,20 @@ recorder** — the chart display is not clickable, no ChartDetailsDialog, no nav
   IS the CTA (logged-out → "Sign in to record"); isolated error = a failed save shows an inline retry,
   board stays up; persisted vs transient = the half-typed entry is session-only, only Save writes;
   config + version = `{ mix }`, version 1.
-- **Mixes & scoring (owner, 2026-07-12)**: pinned/follow modes stay Phoenix-era
-  (`SupportedMixes = [Phoenix, Phoenix 2]`, mix cascade untouched). **All mixes** adds a **runtime mix
-  picker over every mix** (newest first via `MixEnum.DisplayOrder`): the `ChartSelector` stays disabled
-  and the score/grade/plate row stays hidden until a mix is chosen — chart set *and* scoring model vary
-  by mix. The record row then adapts by `UsesLegacyScoring()`: Phoenix / Phoenix 2 → score + derived
-  grade + plate → `UpdatePhoenixBestAttemptCommand`; **XX and older → score + manual `XXLetterGrade` +
-  broken, no plate → `UpdateXXBestAttemptCommand`** (the existing legacy path, reused — the "XX out of
-  scope" line from round 1 is reversed). In recording, the chosen mix reads as a neutral chip on the
-  chart header; clearing the chart keeps the mix so you can rapid-fire the same board.
+- **Mixes & scoring (owner, 2026-07-12/13)**: the widget records to **every mix** (`SupportedMixes =
+  all`). "Follow current mix" honours whatever the site is set to — legacy included; there is **no clamp
+  to Phoenix** (that clamp was the "always snaps to Phoenix" bug). The record row adapts by
+  `UsesLegacyScoring()`: Phoenix / Phoenix 2 → score + derived grade + plate →
+  `UpdatePhoenixBestAttemptCommand`; **XX and older → score + manual `XXLetterGrade` + broken, no plate
+  → `UpdateXXBestAttemptCommand`** (the existing legacy path, reused). The **active mix rides the header
+  slot** (§2.3) as a chip — the old "Posts to {mix}" footer is gone. Legacy row weights Score wide,
+  Letter Grade narrow; Save always right-aligned.
+- **All-mixes flow (owner, 2026-07-13)**: (1) no mix → the body shows **only the picker**; (2) pick a mix
+  → the mix chip + a change-✕ appear in the header, body switches to the chart selector; (3) pick a chart
+  → art + bubble join the header, body is the inputs. The header **✕ clears one step back** — the chart
+  first (keep the mix, rapid-fire the same board), then the mix (back to the picker). A per-instance
+  **Remember last mix** toggle stores the pick in UserSettings (keyed by widget id) and **auto-jumps**
+  straight to it next time instead of the picker.
 - **Shell extensions: none.** Quick Record is the first catalog widget that needs nothing new from the
   shell — no `DrawerPresets`, no `DynamicNameKey`, no `RefreshIcon`, and it never raises `OnChartClick`
   (it declares the five render-contract params and ignores `OnChartClick`/`RefreshToken`).

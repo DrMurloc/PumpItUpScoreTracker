@@ -19,6 +19,7 @@ using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Components.HomeWidgets;
+using ScoreTracker.Web.Services.Contracts;
 using ScoreTracker.Web.Services.HomeDashboard;
 using Xunit;
 using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
@@ -33,10 +34,16 @@ namespace ScoreTracker.Tests.Components;
 public sealed class QuickRecordWidgetTests : ComponentTestBase
 {
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<IUiSettingsAccessor> _uiSettings = new();
     private readonly Chart _chart = MakeChart();
 
     public QuickRecordWidgetTests()
     {
+        _uiSettings.Setup(u => u.GetSetting(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
+            .ReturnsAsync((string?)null);
+        _uiSettings.Setup(u => u.SetSetting(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        Services.AddSingleton(_uiSettings.Object);
         // DifficultyBubble's scoring-level cache resolves through the last-registered mediator.
         _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double>());
@@ -119,13 +126,14 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
     }
 
     [Fact]
-    public void SearchStateShowsTheSelectorAndTheTargetMix()
+    public void SearchStateShowsTheChartSelectorAndPutsTheMixInTheHeader()
     {
-        var cut = Render();
+        var slot = new WidgetHeaderSlot(() => { });
+        var cut = RenderWithSlot(slot);
 
         Assert.NotEmpty(cut.FindComponents<ChartSelector>());
-        // "Posts to {0}" formatted with the resolved mix name.
-        Assert.Contains("Posts to Phoenix", cut.Markup);
+        // Single-mix resolves immediately, so the mix chip rides the header even before a chart.
+        Assert.NotNull(slot.Content);
     }
 
     [Fact]
@@ -183,13 +191,28 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
     }
 
     [Fact]
-    public void AllMixesModeDisablesTheChartSelectorUntilAMixIsChosen()
+    public void AllMixesModeShowsOnlyTheMixPickerUntilAMixIsChosen()
     {
         var cut = Render(configJson: "{\"allMixes\":true}");
 
+        // Only the picker — no chart selector yet (owner, 2026-07-13).
         Assert.NotEmpty(cut.FindComponents<MudSelect<MixEnum?>>());
-        Assert.True(cut.FindComponent<ChartSelector>().Instance.Disabled);
-        Assert.Contains("Select a mix", cut.Markup);
+        Assert.Empty(cut.FindComponents<ChartSelector>());
+    }
+
+    [Fact]
+    public async Task RememberLastMixAutoJumpsPastThePicker()
+    {
+        _uiSettings.Setup(u => u.GetSetting(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
+            .ReturnsAsync(MixEnum.XX.ToString());
+        _mediator.Setup(m => m.Send(It.Is<GetChartsQuery>(q => q.Mix == MixEnum.XX), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { MakeXxChart() });
+
+        var cut = Render(configJson: "{\"allMixes\":true,\"rememberLastMix\":true}");
+
+        // Jumped straight to the remembered mix's chart selector — no picker.
+        Assert.Empty(cut.FindComponents<MudSelect<MixEnum?>>());
+        Assert.NotEmpty(cut.FindComponents<ChartSelector>());
     }
 
     [Fact]
