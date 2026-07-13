@@ -96,7 +96,10 @@ else
             }
             else
             {
-                @* Phoenix / Phoenix 2: score → derived grade, plate, broken. *@
+                @* Phoenix / Phoenix 2: score → derived grade + a compact plate dropdown
+                   (shorthand) that carries a Broken shortcut. Clicking the grade icon toggles
+                   broken WITHOUT clearing the plate — the subtle path to a plated broken grade
+                   (owner, 2026-07-13). Broken has no separate checkbox anymore. *@
                 <div class="qr-scorerow">
                     <MudNumericField T="int?" @bind-Value="_score" Immediate="true" Label="@L["Score"]"
                                      Min="0" Max="1000000" HideSpinButtons="true" Clearable="true"
@@ -104,20 +107,21 @@ else
                                      Margin="Margin.Dense" Class="qr-score-field"/>
                     @if (_derivedGrade != null)
                     {
-                        <LetterGradeIcon Grade="_derivedGrade" IsBroken="_broken" Height="26"/>
+                        <span class="qr-grade-toggle" title="@L["Broken"]" @onclick="ToggleBroken">
+                            <LetterGradeIcon Grade="_derivedGrade" IsBroken="_broken" Height="26"/>
+                        </span>
                     }
-                </div>
-                <div class="qr-actionrow">
-                    <MudSelect T="PhoenixPlate?" @bind-Value="_plate" Label="@L["Plate"]" Clearable="true"
-                               Dense="true" Margin="Margin.Dense" Disabled="EditMode || _isSaving"
+                    <MudSelect T="string" Value="_resultValue" ValueChanged="OnResultChanged" Label="@L["Plate"]"
+                               Clearable="true" Dense="true" Margin="Margin.Dense" Disabled="EditMode || _isSaving"
                                Class="qr-plate-field">
+                        <MudSelectItem T="string" Value="@BrokenResult">@L["Broken"]</MudSelectItem>
                         @foreach (var plate in Enum.GetValues<PhoenixPlate>())
                         {
-                            <MudSelectItem T="PhoenixPlate?" Value="@plate">@plate.GetName()</MudSelectItem>
+                            <MudSelectItem T="string" Value="@plate.GetShorthand()">@plate.GetShorthand()</MudSelectItem>
                         }
                     </MudSelect>
-                    <MudCheckBox T="bool" @bind-Value="_broken" Label="@L["Broken"]" Dense="true"
-                                 Disabled="EditMode || _isSaving"></MudCheckBox>
+                </div>
+                <div class="qr-actionrow qr-actionrow-save">
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="qr-save-btn"
                                Disabled="EditMode || _isSaving || !CanSave" OnClick="Save">@L["Save"]</MudButton>
                 </div>
@@ -209,6 +213,39 @@ else
     // derives the grade from the score on save, we never send it.
     private PhoenixLetterGrade? _derivedGrade =>
         !_isLegacy && _score is { } v && PhoenixScore.TryParse(v, out var s) ? s.LetterGrade : null;
+
+    // The plate dropdown doubles as the result picker: a plate shorthand, "Broken", or empty.
+    // Selecting a plate is a pass; "Broken" is the clean fail (no plate). The grade-icon
+    // toggle is the only thing that sets broken WITHOUT clearing the plate (plated broken).
+    private const string BrokenResult = "Broken";
+
+    private string _resultValue =>
+        _plate is { } p ? p.GetShorthand() : _broken ? BrokenResult : string.Empty;
+
+    private void OnResultChanged(string? value)
+    {
+        if (value == BrokenResult)
+        {
+            _broken = true;
+            _plate = null;
+        }
+        else if (string.IsNullOrEmpty(value))
+        {
+            _plate = null;
+            _broken = false;
+        }
+        else
+        {
+            _plate = PhoenixPlateHelperMethods.ParseShorthand(value);
+            _broken = false;
+        }
+    }
+
+    private void ToggleBroken()
+    {
+        if (EditMode || _isSaving) return;
+        _broken = !_broken;
+    }
 
     protected override async Task OnParametersSetAsync()
     {

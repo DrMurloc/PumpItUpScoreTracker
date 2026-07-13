@@ -1880,11 +1880,34 @@ html.nav-away .page-dock,
 .qr-scorerow {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
+/* Score and the plate/result dropdown share the row (owner, 2026-07-13): score cut to
+   ~half, plate lifted up beside it as shorthand. */
 .qr-score-field {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 82px;
+}
+
+.qr-plate-field {
+    flex: 1 1 0;
+    min-width: 82px;
+}
+
+/* The derived grade doubles as the broken toggle — click to flip pass/broken while keeping
+   the plate (plated broken). Deliberately subtle: pointer + a hover tint, no label. */
+.qr-grade-toggle {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 6px;
+    padding: 2px;
+}
+
+.qr-grade-toggle:hover {
+    background: rgba(255, 255, 255, .07);
 }
 
 .qr-actionrow {
@@ -1893,9 +1916,11 @@ html.nav-away .page-dock,
     gap: 6px;
 }
 
-.qr-plate-field {
-    flex: 1;
-    min-width: 0;
+/* Save gets its own row now that broken folded into the plate dropdown — a full-height,
+   right-aligned target that never clips on narrow widths (the mobile bug). */
+.qr-actionrow-save {
+    justify-content: flex-end;
+    margin-top: auto;
 }
 
 /* MudBlazor fields carry generous default margins — reclaim them for the tight footprint. */
