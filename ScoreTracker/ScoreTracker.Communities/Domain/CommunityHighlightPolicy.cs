@@ -1,0 +1,159 @@
+using ScoreTracker.Communities.Contracts;
+using ScoreTracker.Domain.Models.Titles.Phoenix;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
+using ScoreTracker.PlayerProgress.Contracts;
+using ScoreTracker.PlayerProgress.Contracts.Events;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
+
+namespace ScoreTracker.Communities.Domain;
+
+/// <summary>
+///     Decides which of a score batch's changes/milestones are community-scoped BIG wins
+///     (docs/design/home-page-widgets.md §7). Pure — the saga loads the population snapshots
+///     (cached) and passes them in, so every cutoff is pinned by DomainTest and tunable without
+///     touching plumbing. Significance is a COMMUNITY judgment (fork b): this lives in Communities,
+///     not in the PlayerProgress highlight engine.
+/// </summary>
+internal static class CommunityHighlightPolicy
+{
+    // ── Cutoffs (owner 2026-07-12). Higher bars than the per-player highlight flags. ──
+    /// <summary>A PG fewer than this fraction of active players hold is notable.</summary>
+    public const double PgRarityThreshold = 0.01;
+
+    /// <summary>PG rarity self-selects hard charts, but a new easy chart reads "rare" too — floor it.</summary>
+    public const int PgMinLevel = 20;
+
+    /// <summary>A title held by fewer than this fraction of titled players is a rare title.</summary>
+    public const double TitleRarityThreshold = 0.01;
+
+    /// <summary>A pumbility rank at or above this (i.e. ≤ N) is a huge pumbility win.</summary>
+    public const int PumbilityTopRank = 10;
+
+    /// <summary>Among the first N passes ever in a folder.</summary>
+    public const int FolderFirstMaxOrdinal = 3;
+
+    /// <summary>Top this fraction of the ±0.5 competitive cohort (i.e. &gt; 95th percentile).</summary>
+    public const double PeerEliteFraction = 0.05;
+
+    /// <summary>Below this cohort size, "top 5%" is noise.</summary>
+    public const int PeerEliteMinCohort = 10;
+
+    /// <summary>A summary is a summary — the most impressive few, not a wall.</summary>
+    public const int MaxWinsPerEvent = 4;
+
+    private const string PerfectGamePlate = "Perfect Game";
+    private const string DifficultyCategory = "Difficulty";
+
+    // Difficulty titles (Phoenix) and PUMBILITY titles (Phoenix 2) both carry Category "Difficulty" —
+    // exactly the owner's "big title" set. Names come from the shipped title taxonomy.
+    private static readonly IReadOnlySet<string> PhoenixDifficultyTitles = DifficultyTitleNames(PhoenixTitleList.BuildList());
+    private static readonly IReadOnlySet<string> Phoenix2DifficultyTitles = DifficultyTitleNames(Phoenix2TitleList.BuildList());
+
+    public static IReadOnlyList<SignificantWin> Classify(ScoreHighlightsCapturedEvent e,
+        IReadOnlyDictionary<Guid, Chart> charts, RaritySnapshot snapshot)
+    {
+        var wins = new List<(int Priority, SignificantWin Win)>();
+
+        foreach (var milestone in e.Milestones)
+        {
+            if (milestone.Kind != MilestoneKind.TitleCompleted || milestone.Title is null) continue;
+            var title = milestone.Title;
+            if (IsBigTitle(e.Mix, title))
+                wins.Add((PriorityBigTitle, new SignificantWin(WinKind.BigTitle, TitleName: title)));
+            else if (TitleShare(title, snapshot) is { } share && share < TitleRarityThreshold)
+                wins.Add((PriorityRareTitle, new SignificantWin(WinKind.RareTitle, TitleName: title, RarityShare: share)));
+        }
+
+        foreach (var change in e.Changes)
+        {
+            if (!charts.TryGetValue(change.ChartId, out var chart)) continue;
+            var win = ClassifyChange(change, chart, snapshot);
+            if (win is not null) wins.Add(win.Value);
+        }
+
+        return wins
+            .OrderBy(w => w.Priority)
+            .ThenBy(w => w.Win.RarityShare ?? 1.0)
+            .ThenBy(w => w.Win.Rank ?? int.MaxValue)
+            .Take(MaxWinsPerEvent)
+            .Select(w => w.Win)
+            .ToArray();
+    }
+
+    private static (int Priority, SignificantWin Win)? ClassifyChange(
+        ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart, RaritySnapshot snapshot)
+    {
+        // A PG routes to the sitewide-rarity track only (never doubled as a peer-elite score).
+        if (IsPerfectGame(change) && !change.IsBroken && (int)chart.Level >= PgMinLevel)
+        {
+            var share = PgShare(chart.Id, snapshot);
+            return share < PgRarityThreshold
+                ? (PriorityNotablePg, Win(WinKind.NotablePg, chart, rarityShare: share))
+                : null;
+        }
+
+        if (change.Flags.HasFlag(HighlightFlags.PumbilityTop50)
+            && change.Detail?.PumbilityRank is { } rank && rank <= PumbilityTopRank)
+            return (PriorityTopPumbility, Win(WinKind.TopPumbility, chart, rank: rank));
+
+        if (change.Flags.HasFlag(HighlightFlags.ScoreQuality90)
+            && change.Detail is { PeerCount: >= PeerEliteMinCohort } detail
+            && (detail.PeerBetterCount ?? 0) / (double)detail.PeerCount!.Value <= PeerEliteFraction)
+        {
+            var topPercent = Math.Max(1,
+                (int)Math.Ceiling(100.0 * ((detail.PeerBetterCount ?? 0) + 1) / detail.PeerCount!.Value));
+            return (PriorityPeerElite, Win(WinKind.PeerElite, chart, rank: topPercent));
+        }
+
+        if (change.Flags.HasFlag(HighlightFlags.FolderDebut)
+            && change.Detail?.FolderDebutOrdinal is { } ordinal && ordinal <= FolderFirstMaxOrdinal)
+            return (PriorityFolderFirst, Win(WinKind.FolderFirst, chart, rank: ordinal));
+
+        return null;
+    }
+
+    private static SignificantWin Win(WinKind kind, Chart chart, double? rarityShare = null, int? rank = null) =>
+        new(kind, ChartId: chart.Id, ChartName: chart.Song.Name.ToString(), Difficulty: chart.DifficultyString,
+            RarityShare: rarityShare, Rank: rank);
+
+    private static bool IsPerfectGame(ScoreHighlightsCapturedEvent.HighlightedChange change) =>
+        string.Equals(change.Plate, PerfectGamePlate, StringComparison.OrdinalIgnoreCase);
+
+    private static double PgShare(Guid chartId, RaritySnapshot snapshot) =>
+        snapshot.ActivePlayerCount <= 0
+            ? 0
+            : snapshot.PgHoldersByChart.GetValueOrDefault(chartId) / (double)snapshot.ActivePlayerCount;
+
+    private static double? TitleShare(string title, RaritySnapshot snapshot) =>
+        snapshot.TitledUserCount > 0 && snapshot.TitleHoldersByName.TryGetValue(title, out var holders)
+            ? holders / (double)snapshot.TitledUserCount
+            : null;
+
+    private static bool IsBigTitle(MixEnum mix, string titleName) => mix == MixEnum.Phoenix2
+        ? Phoenix2DifficultyTitles.Contains(titleName)
+        : PhoenixDifficultyTitles.Contains(titleName);
+
+    private static IReadOnlySet<string> DifficultyTitleNames(IEnumerable<PhoenixTitle> titles) =>
+        titles.Where(t => string.Equals(t.Category.ToString(), DifficultyCategory, StringComparison.OrdinalIgnoreCase))
+            .Select(t => t.Name.ToString())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    // Priority: lower renders first. Rarity-defined wins lead, then the huge-number wins.
+    private const int PriorityRareTitle = 0;
+    private const int PriorityNotablePg = 1;
+    private const int PriorityTopPumbility = 2;
+    private const int PriorityBigTitle = 3;
+    private const int PriorityPeerElite = 4;
+    private const int PriorityFolderFirst = 5;
+}
+
+/// <summary>
+///     The slow-moving population aggregates the policy needs, snapshotted so the busy import path
+///     doesn't recompute them per event. Loaded by the saga behind a per-mix memory cache.
+/// </summary>
+internal sealed record RaritySnapshot(
+    IReadOnlyDictionary<Guid, int> PgHoldersByChart,
+    int ActivePlayerCount,
+    IReadOnlyDictionary<string, int> TitleHoldersByName,
+    int TitledUserCount);
