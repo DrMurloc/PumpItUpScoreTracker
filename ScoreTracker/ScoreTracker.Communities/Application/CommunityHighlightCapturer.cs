@@ -23,16 +23,18 @@ internal sealed class CommunityHighlightCapturer : ICommunityHighlightCapturer
     private readonly IMemoryCache _cache;
     private readonly IChartRepository _charts;
     private readonly ICommunityHighlightRepository _highlights;
+    private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreReader _scores;
     private readonly ITitleRepository _titles;
 
     public CommunityHighlightCapturer(IChartRepository charts, IScoreReader scores, ITitleRepository titles,
-        ICommunityHighlightRepository highlights, IMemoryCache cache)
+        ICommunityHighlightRepository highlights, IPlayerStatsReader playerStats, IMemoryCache cache)
     {
         _charts = charts;
         _scores = scores;
         _titles = titles;
         _highlights = highlights;
+        _playerStats = playerStats;
         _cache = cache;
     }
 
@@ -46,7 +48,8 @@ internal sealed class CommunityHighlightCapturer : ICommunityHighlightCapturer
             .ToDictionary(c => c.Id);
 
         var snapshot = await GetRaritySnapshot(e.Mix, cancellationToken);
-        var wins = CommunityHighlightPolicy.Classify(e, charts, snapshot);
+        var stats = await _playerStats.GetStats(e.Mix, e.UserId, cancellationToken);
+        var wins = CommunityHighlightPolicy.Classify(e, charts, snapshot, stats);
         if (wins.Count == 0) return;
 
         await _highlights.AddForUserCommunities(e.EventId, e.UserId, e.Mix, e.OccurredAt, e.SessionId, wins,

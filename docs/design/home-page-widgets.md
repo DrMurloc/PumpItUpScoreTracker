@@ -586,7 +586,7 @@ Classified at capture from the event's own flags/detail plus two rarity readers.
 | `BigTitle` | any Phoenix **difficulty** title or P2 **pumbility** title completed | `Milestones` TitleCompleted + `PhoenixTitleList`/`Phoenix2TitleList` concrete type |
 | `RareTitle` | any title held by **< 1%** of titled players | `ITitleRepository.GetTitleAggregations` ÷ `CountTitledUsers` (the recap Snowflake rule) |
 | `FolderComplete` | every chart in a (type, level) folder passed — 100% | `FolderPassLamp` milestone (Detail = folder, e.g. "D23") |
-| `FolderFirst` | first 3 passes in a (type, level) folder — `FolderDebutOrdinal ≤ 3` | event `HighlightDetail` |
+| `FolderFirst` | first 3 passes in a (type, level) folder — `FolderDebutOrdinal ≤ 3`, gated to **folder level ≥ ⌊competitive level⌋** for that discipline | event `HighlightDetail` + `IPlayerStatsReader` (Singles/Doubles competitive level) |
 | `TopPumbility` | `PumbilityRank ≤ 10` | event `HighlightDetail` (PumbilityTop50 flag) |
 | `PeerElite` | **> 95th** percentile vs the ±0.5 competitive cohort | event `HighlightDetail` `Peer{Count,BetterCount}` → `(better+1)/count ≤ .05` |
 | `NotablePg` | PG on a chart **< 1%** of active players hold, **level ≥ 20** | `IScoreReader.GetChartScoreAggregates` (`PgCount`) ÷ `GetActiveUserIds` |

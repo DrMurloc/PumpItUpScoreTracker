@@ -28,12 +28,18 @@ public sealed class CommunityHighlightSagaTests
 
     private readonly Mock<IChartRepository> _charts = new();
     private readonly Mock<ICommunityHighlightRepository> _highlights = new();
+    private readonly Mock<IPlayerStatsReader> _playerStats = new();
     private readonly Mock<IScoreReader> _scores = new();
     private readonly Mock<ITitleRepository> _titles = new();
 
     // The capture logic lives in the capturer now; the saga just delegates + isolates failures.
-    private CommunityHighlightCapturer Capturer() => new(_charts.Object, _scores.Object, _titles.Object,
-        _highlights.Object, new MemoryCache(new MemoryCacheOptions()));
+    private CommunityHighlightCapturer Capturer()
+    {
+        _playerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PlayerStatsRecord(Guid.NewGuid(), 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0));
+        return new(_charts.Object, _scores.Object, _titles.Object, _highlights.Object, _playerStats.Object,
+            new MemoryCache(new MemoryCacheOptions()));
+    }
 
     private void SetupPopulation(Chart chart, int pgHolders, int activePlayers)
     {

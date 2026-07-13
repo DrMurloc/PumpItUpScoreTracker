@@ -5,6 +5,7 @@ using System.Linq;
 using Xunit;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Domain;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.SharedKernel.Enums;
@@ -52,10 +53,19 @@ public sealed class CommunityHighlightPolicyTests
         return new RaritySnapshot(pgs, activePlayers, titles, titledUsers);
     }
 
+    // Default player: zero competitive level, so the folder-debut gate never blocks unless a test
+    // supplies one. Field order mirrors PlayerStatsRecord; only the competitive levels vary.
+    private static PlayerStatsRecord Stats(double singles = 0, double doubles = 0, double overall = 0) =>
+        new(Guid.NewGuid(), 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, overall, singles, doubles);
+
+    private static IReadOnlyList<SignificantWin> Classify(ScoreHighlightsCapturedEvent e,
+        IReadOnlyDictionary<Guid, Chart> charts, RaritySnapshot snapshot, PlayerStatsRecord? stats = null) =>
+        CommunityHighlightPolicy.Classify(e, charts, snapshot, stats ?? Stats());
+
     [Fact]
     public void DifficultyTitleCompletionIsABigTitle()
     {
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
                 TitleCompleted(DifficultyTitle)),
             new Dictionary<Guid, Chart>(), Snapshot());
@@ -68,7 +78,7 @@ public sealed class CommunityHighlightPolicyTests
     [Fact]
     public void ATitleHeldByUnderOnePercentOfTitledPlayersIsARareTitle()
     {
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
                 TitleCompleted("SCROOGE")),
             new Dictionary<Guid, Chart>(), Snapshot(title: ("SCROOGE", 5), titledUsers: 1000));
@@ -81,7 +91,7 @@ public sealed class CommunityHighlightPolicyTests
     [Fact]
     public void ACommonTitleIsNotAWin()
     {
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
                 TitleCompleted("SCROOGE")),
             new Dictionary<Guid, Chart>(), Snapshot(title: ("SCROOGE", 500), titledUsers: 1000));
@@ -93,7 +103,7 @@ public sealed class CommunityHighlightPolicyTests
     public void APgFewerThanOnePercentHoldOnAHardChartIsNotable()
     {
         var chartId = Guid.NewGuid();
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix, new[] { Change(chartId, plate: "Perfect Game") }),
             Charts(Chart(chartId, 24)), Snapshot(pg: (chartId, 5), activePlayers: 1463));
 
@@ -107,7 +117,7 @@ public sealed class CommunityHighlightPolicyTests
     public void APgBelowTheLevelFloorIsNotNotable()
     {
         var chartId = Guid.NewGuid();
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix, new[] { Change(chartId, plate: "Perfect Game") }),
             Charts(Chart(chartId, 19)), Snapshot(pg: (chartId, 1), activePlayers: 1463));
 
@@ -118,7 +128,7 @@ public sealed class CommunityHighlightPolicyTests
     public void ACommonPgIsNotNotable()
     {
         var chartId = Guid.NewGuid();
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix, new[] { Change(chartId, plate: "Perfect Game") }),
             Charts(Chart(chartId, 24)), Snapshot(pg: (chartId, 100), activePlayers: 1463));
 
@@ -129,7 +139,7 @@ public sealed class CommunityHighlightPolicyTests
     public void ATopTenPumbilityScoreIsAWin()
     {
         var chartId = Guid.NewGuid();
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix,
                 new[] { Change(chartId, HighlightFlags.PumbilityTop50, new HighlightDetail(PumbilityRank: 10)) }),
             Charts(Chart(chartId, 26)), Snapshot());
@@ -143,7 +153,7 @@ public sealed class CommunityHighlightPolicyTests
     public void APumbilityRankPastTenIsNotAWin()
     {
         var chartId = Guid.NewGuid();
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix,
                 new[] { Change(chartId, HighlightFlags.PumbilityTop50, new HighlightDetail(PumbilityRank: 11)) }),
             Charts(Chart(chartId, 26)), Snapshot());
@@ -155,7 +165,7 @@ public sealed class CommunityHighlightPolicyTests
     public void TheBestScoreAmongPeersIsPeerEliteAtPositionOne()
     {
         var chartId = Guid.NewGuid();
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix,
                 new[] { Change(chartId, HighlightFlags.ScoreQuality90, new HighlightDetail(PeerCount: 20, PeerBetterCount: 0)) }),
             Charts(Chart(chartId, 25)), Snapshot());
@@ -169,7 +179,7 @@ public sealed class CommunityHighlightPolicyTests
     public void ATopFivePercentButNotFirstScoreCarriesItsPositionAndFraction()
     {
         var chartId = Guid.NewGuid();
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix,
                 new[] { Change(chartId, HighlightFlags.ScoreQuality90, new HighlightDetail(PeerCount: 100, PeerBetterCount: 3)) }),
             Charts(Chart(chartId, 25)), Snapshot());
@@ -184,7 +194,7 @@ public sealed class CommunityHighlightPolicyTests
     public void AScoreOutsideTheTopFivePercentIsNotPeerElite()
     {
         var chartId = Guid.NewGuid();
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix,
                 new[] { Change(chartId, HighlightFlags.ScoreQuality90, new HighlightDetail(PeerCount: 20, PeerBetterCount: 2)) }),
             Charts(Chart(chartId, 25)), Snapshot());
@@ -196,7 +206,7 @@ public sealed class CommunityHighlightPolicyTests
     public void ASmallCohortIsNotPeerElite()
     {
         var chartId = Guid.NewGuid();
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix,
                 new[] { Change(chartId, HighlightFlags.ScoreQuality90, new HighlightDetail(PeerCount: 5, PeerBetterCount: 0)) }),
             Charts(Chart(chartId, 25)), Snapshot());
@@ -208,7 +218,7 @@ public sealed class CommunityHighlightPolicyTests
     public void OneOfTheFirstThreePassesInAFolderIsAWin()
     {
         var chartId = Guid.NewGuid();
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix,
                 new[] { Change(chartId, HighlightFlags.FolderDebut, new HighlightDetail(FolderDebutOrdinal: 3)) }),
             Charts(Chart(chartId, 23)), Snapshot());
@@ -222,7 +232,7 @@ public sealed class CommunityHighlightPolicyTests
     public void TheFourthPassInAFolderIsNotAWin()
     {
         var chartId = Guid.NewGuid();
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix,
                 new[] { Change(chartId, HighlightFlags.FolderDebut, new HighlightDetail(FolderDebutOrdinal: 4)) }),
             Charts(Chart(chartId, 23)), Snapshot());
@@ -235,7 +245,7 @@ public sealed class CommunityHighlightPolicyTests
     {
         // A PG flagged ScoreQuality90 but common sitewide must produce NO win (not a peer-elite line).
         var chartId = Guid.NewGuid();
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix, new[]
             {
                 Change(chartId, HighlightFlags.ScoreQuality90, new HighlightDetail(PeerCount: 20, PeerBetterCount: 0),
@@ -249,7 +259,7 @@ public sealed class CommunityHighlightPolicyTests
     [Fact]
     public void AFullFolderClearIsAFolderCompleteWin()
     {
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
                 FolderPassLamp("D23")),
             new Dictionary<Guid, Chart>(), Snapshot());
@@ -263,7 +273,7 @@ public sealed class CommunityHighlightPolicyTests
     public void AChartWinCarriesTheScore()
     {
         var chartId = Guid.NewGuid();
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix,
                 new[]
                 {
@@ -280,7 +290,7 @@ public sealed class CommunityHighlightPolicyTests
     [Fact]
     public void TheSummaryIsCappedAtFourWins()
     {
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
                 TitleCompleted("Expert Lv. 1"), TitleCompleted("Expert Lv. 2"), TitleCompleted("Expert Lv. 3"),
                 TitleCompleted("Expert Lv. 4"), TitleCompleted("Expert Lv. 5")),
@@ -293,10 +303,53 @@ public sealed class CommunityHighlightPolicyTests
     public void ABatchWithNoBigWinsYieldsNothing()
     {
         var chartId = Guid.NewGuid();
-        var wins = CommunityHighlightPolicy.Classify(
+        var wins = Classify(
             Event(MixEnum.Phoenix, new[] { Change(chartId) }),
             Charts(Chart(chartId, 18)), Snapshot());
 
         Assert.Empty(wins);
+    }
+
+    [Fact]
+    public void AFolderDebutBelowFlooredCompetitiveLevelIsNotAWin()
+    {
+        var chartId = Guid.NewGuid();
+        var wins = Classify(
+            Event(MixEnum.Phoenix,
+                new[] { Change(chartId, HighlightFlags.FolderDebut, new HighlightDetail(FolderDebutOrdinal: 1)) }),
+            Charts(Chart(chartId, 20, ChartType.Double)), Snapshot(),
+            Stats(doubles: 24.5));
+
+        Assert.Empty(wins);
+    }
+
+    [Fact]
+    public void AFolderDebutAtTheFlooredCompetitiveLevelIsAWin()
+    {
+        var chartId = Guid.NewGuid();
+        var wins = Classify(
+            Event(MixEnum.Phoenix,
+                new[] { Change(chartId, HighlightFlags.FolderDebut, new HighlightDetail(FolderDebutOrdinal: 2)) }),
+            Charts(Chart(chartId, 24, ChartType.Double)), Snapshot(),
+            Stats(doubles: 24.5));
+
+        var win = Assert.Single(wins);
+        Assert.Equal(WinKind.FolderFirst, win.Kind);
+        Assert.Equal(2, win.Rank);
+    }
+
+    [Fact]
+    public void AFolderDebutIsGatedByTheCompetitiveLevelForItsOwnType()
+    {
+        // A Singles folder gates on Singles competitive level, not the higher Doubles one.
+        var chartId = Guid.NewGuid();
+        var wins = Classify(
+            Event(MixEnum.Phoenix,
+                new[] { Change(chartId, HighlightFlags.FolderDebut, new HighlightDetail(FolderDebutOrdinal: 1)) }),
+            Charts(Chart(chartId, 20, ChartType.Single)), Snapshot(),
+            Stats(singles: 18, doubles: 26));
+
+        var win = Assert.Single(wins);
+        Assert.Equal(WinKind.FolderFirst, win.Kind);
     }
 }

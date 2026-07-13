@@ -1,6 +1,7 @@
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Domain.Models.Titles.Phoenix;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.SharedKernel.Enums;
@@ -51,7 +52,7 @@ internal static class CommunityHighlightPolicy
     private static readonly IReadOnlySet<string> Phoenix2DifficultyTitles = DifficultyTitleNames(Phoenix2TitleList.BuildList());
 
     public static IReadOnlyList<SignificantWin> Classify(ScoreHighlightsCapturedEvent e,
-        IReadOnlyDictionary<Guid, Chart> charts, RaritySnapshot snapshot)
+        IReadOnlyDictionary<Guid, Chart> charts, RaritySnapshot snapshot, PlayerStatsRecord stats)
     {
         var wins = new List<(int Priority, SignificantWin Win)>();
 
@@ -75,7 +76,7 @@ internal static class CommunityHighlightPolicy
         foreach (var change in e.Changes)
         {
             if (!charts.TryGetValue(change.ChartId, out var chart)) continue;
-            var win = ClassifyChange(change, chart, snapshot);
+            var win = ClassifyChange(change, chart, snapshot, stats);
             if (win is not null) wins.Add(win.Value);
         }
 
@@ -89,7 +90,8 @@ internal static class CommunityHighlightPolicy
     }
 
     private static (int Priority, SignificantWin Win)? ClassifyChange(
-        ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart, RaritySnapshot snapshot)
+        ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart, RaritySnapshot snapshot,
+        PlayerStatsRecord stats)
     {
         // A PG routes to the sitewide-rarity track only (never doubled as a peer-elite score).
         if (IsPerfectGame(change) && !change.IsBroken && (int)chart.Level >= PgMinLevel)
@@ -115,12 +117,25 @@ internal static class CommunityHighlightPolicy
                 rarityShare: position / (double)detail.PeerCount!.Value, rank: position));
         }
 
+        // A folder debut only counts at or above the player's floored competitive level for that
+        // discipline — an early pass in a folder well below your skill isn't a community big win.
         if (change.Flags.HasFlag(HighlightFlags.FolderDebut)
-            && change.Detail?.FolderDebutOrdinal is { } ordinal && ordinal <= FolderFirstMaxOrdinal)
+            && change.Detail?.FolderDebutOrdinal is { } ordinal && ordinal <= FolderFirstMaxOrdinal
+            && (int)chart.Level >= FlooredCompetitiveLevel(chart.Type, stats))
             return (PriorityFolderFirst, Win(WinKind.FolderFirst, chart, change.NewScore, rank: ordinal));
 
         return null;
     }
+
+    // A (type, level) folder is gated by the competitive level for its own discipline, falling back
+    // to the overall level for non-Singles/Doubles folders.
+    private static int FlooredCompetitiveLevel(ChartType type, PlayerStatsRecord stats) =>
+        (int)Math.Floor(type switch
+        {
+            ChartType.Single => stats.SinglesCompetitiveLevel,
+            ChartType.Double => stats.DoublesCompetitiveLevel,
+            _ => stats.CompetitiveLevel
+        });
 
     private static SignificantWin Win(WinKind kind, Chart chart, int? score, double? rarityShare = null,
         int? rank = null) =>
