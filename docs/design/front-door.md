@@ -4,6 +4,15 @@ The logged-out experience: one page replacing the bare `/Login` card, doubling a
 page for newcomers. Decided in the 2026-07-12 front-door workshop (visual mock iterated with
 the owner through seven rounds; final state reflected here).
 
+**Status (2026-07-13).** The front-door page (hero, sign-in card, showcase, stewardship, browse)
+is built and live at `/`+`/Login` (build-plan C1–C6). The scope then merged with the home-page
+go-live: WhatShouldIPlay is deleted, the home dashboard is `/` for signed-in visitors, the
+per-page widget cap is 10, and "Create" seeds the curated default (see
+[HomePageWidgets/README.md](HomePageWidgets/README.md) §3). The **server-side `/` dispatcher** (this
+doc's D2 context 3) is implemented on the `FrontDoor` Razor Page and verified by
+`FrontDoorDispatcherTests` (E2E). Still pending: the sign-in dialog (D2 context 2), returnUrl
+through the login flow (D4), and the SEO head/meta/OG/`robots.txt`/sitemap pass.
+
 **Context.** Today a logged-out visitor hitting `/` is hard-bounced to `/Login` — a bare card
 with three provider buttons and an "Account Creation?" dialog, zero explanation of what the
 site is. Meanwhile the logged-out shell already exposes the public surfaces (tier lists,

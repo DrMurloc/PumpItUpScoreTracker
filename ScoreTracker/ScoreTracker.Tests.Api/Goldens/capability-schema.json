@@ -1,7 +1,7 @@
 {
   "version": 1,
   "limits": {
-    "widgetsPerPage": 8,
+    "widgetsPerPage": 10,
     "pagesPerUser": 8
   },
   "mixes": [
