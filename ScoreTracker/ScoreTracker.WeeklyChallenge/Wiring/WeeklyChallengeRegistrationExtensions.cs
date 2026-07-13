@@ -36,6 +36,7 @@ public static class WeeklyChallengeRegistrationExtensions
     public static void AddWeeklyChallengeConsumers(this IRegistrationConfigurator configurator)
     {
         configurator.AddConsumer<WeeklyTournamentSaga>();
+        configurator.AddConsumer<DailyStepSaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();
     }
 }

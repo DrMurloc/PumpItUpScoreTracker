@@ -128,6 +128,10 @@ public sealed class VerticalBoundaryTests
 
         Assert.Contains(services,
             d => d.ServiceType == typeof(ScoreTracker.WeeklyChallenge.Application.WeeklyTournamentSaga));
+        // DailyStepSaga rotates the daily board and registers observed daily scores — internal, so
+        // the AddWeeklyChallengeConsumers hook is its only registration path.
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.WeeklyChallenge.Application.DailyStepSaga));
     }
 
     [Fact]
