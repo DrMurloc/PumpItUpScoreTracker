@@ -1968,11 +1968,12 @@ html.nav-away .page-dock,
 
 /* Legacy grade strip (owner, 2026-07-13): tap a grade image to pick it (passing), tap the
    selected one again to mark broken (its art goes cracked). Replaces the select + checkbox. */
-/* The strip shares the row with Save now (4 primaries + a "more" menu), left-packed. */
+/* The grade strip is the primary/lead row in legacy (score dropped below it); 4 primaries +
+   a "more" menu, spread with a little air. */
 .qr-graderow {
     display: flex;
     align-items: center;
-    gap: 3px;
+    gap: 6px;
     min-width: 0;
 }
 
@@ -2007,7 +2008,7 @@ html.nav-away .page-dock,
 }
 
 .qr-grade-opt {
-    height: 26px;
+    height: 30px;
     width: auto;
     cursor: pointer;
     border-radius: 5px;
