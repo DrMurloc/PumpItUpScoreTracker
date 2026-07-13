@@ -95,7 +95,21 @@ public static class WidgetRegistry
                     _ => "Suggested · Title Hunt"
                 },
             RefreshIcon: Icons.Material.Filled.Shuffle,
-            RefreshTitleKey: "Shuffle suggestions")
+            RefreshTitleKey: "Shuffle suggestions"),
+        new("quick-record",
+            "Quick Record",
+            "Record a score by hand for any chart.",
+            WidgetCategory.Play,
+            Icons.Material.Filled.EditNote,
+            // 1x1 only (owner): the one widget whose size list is a single entry.
+            new[] { SizePreset.OneByOne },
+            SizePreset.OneByOne,
+            // Records to every mix (owner, 2026-07-13): Phoenix path for P1/P2, the legacy
+            // letter-grade path for XX and older. "Follow current mix" honours any of them.
+            Enum.GetValues<MixEnum>(),
+            typeof(QuickRecordWidget),
+            typeof(QuickRecordConfigPanel),
+            typeof(QuickRecordConfig))
     };
 
     private static readonly IReadOnlyDictionary<string, WidgetDescriptor> ByTypeId =

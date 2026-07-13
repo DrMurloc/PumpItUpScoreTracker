@@ -3285,4 +3285,43 @@
   <data name="Tier list difficulty" xml:space="preserve">
     <value>Dificultad de tier list</value>
   </data>
+  <data name="Quick Record" xml:space="preserve">
+    <value>Registro rápido</value>
+  </data>
+  <data name="Record a score by hand for any chart." xml:space="preserve">
+    <value>Anota una puntuación a mano para cualquier chart.</value>
+  </data>
+  <data name="Search a chart" xml:space="preserve">
+    <value>Busca un chart</value>
+  </data>
+  <data name="Name, or shorthand like S18" xml:space="preserve">
+    <value>Nombre o abreviatura como S18</value>
+  </data>
+  <data name="Recorded" xml:space="preserve">
+    <value>Registrado</value>
+  </data>
+  <data name="Change chart" xml:space="preserve">
+    <value>Cambiar chart</value>
+  </data>
+  <data name="Sign in to record." xml:space="preserve">
+    <value>Inicia sesión para registrar.</value>
+  </data>
+  <data name="There was an error while recording the score" xml:space="preserve">
+    <value>Se produjo un error al registrar la puntuación</value>
+  </data>
+  <data name="All mixes" xml:space="preserve">
+    <value>Todas las versiones</value>
+  </data>
+  <data name="Record to" xml:space="preserve">
+    <value>Registrar en</value>
+  </data>
+  <data name="Select a mix" xml:space="preserve">
+    <value>Selecciona una versión</value>
+  </data>
+  <data name="Change mix" xml:space="preserve">
+    <value>Cambiar versión</value>
+  </data>
+  <data name="Remember last mix" xml:space="preserve">
+    <value>Recordar última versión</value>
+  </data>
 </root>

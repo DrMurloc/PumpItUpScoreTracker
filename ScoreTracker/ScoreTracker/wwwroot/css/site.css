@@ -1812,6 +1812,240 @@ html.nav-away .page-dock,
     color: var(--mix-ink-muted);
 }
 
+/* Quick Record widget (§4.2): the arcade recorder, purpose-built to fit a 1x1 body. */
+.qr-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.qr-hint {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+}
+
+/* The selected chart — a display header, not a chip: nothing here navigates. */
+.qr-selected {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.qr-mini-art {
+    flex: none;
+    display: inline-flex;
+}
+
+.qr-mini-art img {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+}
+
+.qr-selected-name {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-display);
+    letter-spacing: .03em;
+    font-size: .9rem;
+    color: var(--mix-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.qr-scorerow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Score and the plate/result dropdown share the row (owner, 2026-07-13): score cut to
+   ~half, plate lifted up beside it as shorthand. On the legacy row the score dominates and
+   the letter-grade box stays compact (owner, field test). */
+.qr-score-field {
+    flex: 1 1 0;
+    min-width: 96px;
+}
+
+/* Plate lives on the Save row (owner, 2026-07-13): compact on the left, Save pushed right. */
+.qr-plate-field {
+    flex: 0 1 auto;
+    min-width: 104px;
+    max-width: 168px;
+}
+
+/* The derived grade doubles as the broken toggle — click to flip pass/broken while keeping
+   the plate (plated broken). Deliberately subtle: pointer + a hover tint, no label. */
+.qr-grade-toggle {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 6px;
+    padding: 2px;
+}
+
+.qr-grade-toggle:hover {
+    background: rgba(255, 255, 255, .07);
+}
+
+.qr-actionrow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Second row: plate on the left, Save pushed to the right (margin-left auto) so it never
+   clips on narrow widths (the mobile bug). Pinned to the bottom of the body. */
+.qr-actionrow-save {
+    margin-top: auto;
+}
+
+.qr-actionrow-save .qr-save-btn {
+    margin-left: auto;
+}
+
+/* MudBlazor fields carry generous default margins — reclaim them for the tight footprint. */
+.qr-body .mud-input-control {
+    margin-top: 0;
+}
+
+.qr-saved {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.qr-saved-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.qr-saved-title {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: .13em;
+    font-size: .74rem;
+    color: var(--mud-palette-success);
+}
+
+.qr-saved-song {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--mix-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.qr-saved-detail {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .78rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.qr-saved-grade {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--mix-ink);
+}
+
+/* All-mixes mode: the runtime picker + the mix chip on the recording header. The chip is
+   neutral (not the theme accent) so it doesn't imply the active theme is the record mix. */
+.qr-mix-field {
+    flex: none;
+}
+
+/* Legacy grade strip (owner, 2026-07-13): tap a grade image to pick it (passing), tap the
+   selected one again to mark broken (its art goes cracked). Replaces the select + checkbox. */
+/* The grade strip is the primary/lead row in legacy (score dropped below it); 4 primaries +
+   a "more" menu, spread with a little air. */
+.qr-graderow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.qr-graderow-disabled {
+    pointer-events: none;
+    opacity: .5;
+}
+
+/* "More" overflow (B and lower) — either a … affordance or the selected lower grade. */
+.qr-grade-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 26px;
+    min-width: 26px;
+    cursor: pointer;
+    border-radius: 5px;
+    color: var(--mix-ink-muted);
+    font-size: 1.15rem;
+    line-height: 1;
+    opacity: .75;
+}
+
+.qr-grade-more:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, .06);
+}
+
+.qr-grade-menu-img {
+    height: 24px;
+    width: auto;
+}
+
+.qr-grade-opt {
+    height: 30px;
+    width: auto;
+    cursor: pointer;
+    border-radius: 5px;
+    padding: 2px 3px;
+    opacity: .5;
+    transition: opacity .12s, transform .12s, background .12s;
+}
+
+.qr-grade-opt:hover {
+    opacity: .85;
+    background: rgba(255, 255, 255, .06);
+}
+
+.qr-grade-opt-sel {
+    opacity: 1;
+    background: color-mix(in srgb, var(--mix-primary) 22%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mix-primary) 55%, transparent);
+    transform: scale(1.08);
+}
+
+.qr-mixchip {
+    font-family: var(--font-display);
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--mix-ink-muted);
+    background: var(--mix-surface-muted);
+    border: 1px solid rgba(255, 255, 255, .08);
+    padding: 1px 6px;
+    border-radius: 5px;
+    flex: none;
+    max-width: 88px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Column stagger (round 3): 4 on desktop, 3 on small desktop/tablet, 2 on landscape
    phones, 1 on portrait phones. Spans clamp to the column count. */
 @media (max-width: 1279.98px) {
@@ -1872,6 +2106,23 @@ html.nav-away .page-dock,
 .dash-head-action {
     margin-left: auto;
     flex: none;
+}
+
+/* Widget-pushed title-bar content (§2.3 header slot) — e.g. Quick Record's selected chart.
+   Sits at the right of the title; the mini-art/bubble/✕ line up compactly. */
+.dash-head-slot {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.dash-head-slot .qr-mini-art img {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
 }
 
 .dash-drawer-body {
