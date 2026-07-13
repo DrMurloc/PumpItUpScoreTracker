@@ -35,7 +35,8 @@ public sealed class EFTournamentRepositoryTests : IAsyncLifetime
     // by GetSession; tests that don't touch sessions use a bare Mock.Of, the session round-trip
     // tests stub it explicitly (chart loading is incidental to the persistence under test).
     private EFTournamentRepository BuildRepository() =>
-        new(new MemoryCache(new MemoryCacheOptions()), Mock.Of<IChartRepository>(), _fixture.DbContextFactory);
+        new(new MemoryCache(new MemoryCacheOptions()), Mock.Of<IChartRepository>(), _fixture.DbContextFactory,
+            Mock.Of<ICurrentUserAccessor>());
 
     [Fact]
     public async Task CreateOrSaveTournamentInsertsAndGetAllTournamentsReturnsIt()
@@ -161,7 +162,8 @@ public sealed class EFTournamentRepositoryTests : IAsyncLifetime
     }
 
     private EFTournamentRepository BuildRepository(IChartRepository charts) =>
-        new(new MemoryCache(new MemoryCacheOptions()), charts, _fixture.DbContextFactory);
+        new(new MemoryCache(new MemoryCacheOptions()), charts, _fixture.DbContextFactory,
+            Mock.Of<ICurrentUserAccessor>());
 
     [Fact]
     public async Task SessionSavedWithPhoenix2RoundTripsItsMixAndLoadsChartsFromThatMix()

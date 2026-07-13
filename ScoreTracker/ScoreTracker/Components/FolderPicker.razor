@@ -16,23 +16,12 @@
                    aria-haspopup="true" aria-expanded="@(_open ? "true" : "false")">@FolderLabel</MudButton>
         <MudPopover Open="_open" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft">
             <div class="folder-picker-pop">
-                <MudButtonGroup OverrideStyles="false" Class="folder-picker-types">
-                    <MudButton Variant="@TypeVariant(ChartType.Single)" Color="Color.Primary" Size="Size.Small"
-                               OnClick="() => SetPendingType(ChartType.Single)">@L["Singles"]</MudButton>
-                    <MudButton Variant="@TypeVariant(ChartType.Double)" Color="Color.Primary" Size="Size.Small"
-                               OnClick="() => SetPendingType(ChartType.Double)">@L["Doubles"]</MudButton>
-                    <MudButton Variant="@TypeVariant(ChartType.CoOp)" Color="Color.Primary" Size="Size.Small"
-                               OnClick="() => SetPendingType(ChartType.CoOp)">@L["CoOp"]</MudButton>
-                </MudButtonGroup>
-                <div class="folder-picker-levels">
-                    @foreach (var level in LevelsFor(_pendingType))
-                    {
-                        var captured = level;
-                        <button type="button"
-                                class="folder-picker-level @(captured == Level && _pendingType == Type ? "folder-picker-current" : null)"
-                                @onclick="() => Pick(captured)">@captured</button>
-                    }
-                </div>
+                @* Re-created per open so the grid re-anchors on the current folder. *@
+                @if (_open)
+                {
+                    <FolderGrid InitialType="Type" IsSelected="(t, l) => t == Type && l == Level"
+                                LevelPicked="Pick"></FolderGrid>
+                }
             </div>
         </MudPopover>
     </div>
@@ -44,7 +33,6 @@
 
 @code {
     private bool _open;
-    private ChartType _pendingType;
 
     [Parameter] public ChartType Type { get; set; } = ChartType.Double;
 
@@ -60,26 +48,10 @@
 
     private void ToggleOpen()
     {
-        _pendingType = Type;
         _open = !_open;
     }
 
-    private Variant TypeVariant(ChartType type)
-    {
-        return _pendingType == type ? Variant.Filled : Variant.Outlined;
-    }
-
-    private void SetPendingType(ChartType type)
-    {
-        _pendingType = type;
-    }
-
-    private static IEnumerable<int> LevelsFor(ChartType type)
-    {
-        return type == ChartType.CoOp ? Enumerable.Range(2, 4) : Enumerable.Range(1, DifficultyLevel.Max);
-    }
-
-    private (int Min, int Max) Bounds(ChartType type)
+    private static (int Min, int Max) Bounds(ChartType type)
     {
         return type == ChartType.CoOp ? (2, 5) : (1, DifficultyLevel.Max);
     }
@@ -97,10 +69,10 @@
         await FolderChanged.InvokeAsync((Type, Level + direction));
     }
 
-    private async Task Pick(int level)
+    private async Task Pick((ChartType Type, int Level) folder)
     {
         _open = false;
-        var (min, max) = Bounds(_pendingType);
-        await FolderChanged.InvokeAsync((_pendingType, Math.Clamp(level, min, max)));
+        var (min, max) = Bounds(folder.Type);
+        await FolderChanged.InvokeAsync((folder.Type, Math.Clamp(folder.Level, min, max)));
     }
 }

@@ -6,6 +6,7 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts.Commands
 @using ScoreTracker.ScoreLedger.Contracts.Commands
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
@@ -162,6 +163,15 @@
         }
     </DialogContent>
     <DialogActions>
+        @* Suggestion context (opened from a Suggested Charts row): a quick thumbs-up
+           feeds the same store as WSIP's feedback. The veto path lives on the widget's
+           edit-mode ✕ — negative feedback wants the reason dialog, not one tap. *@
+        @if (SuggestionCategory != null && CurrentUser.IsLoggedIn && Chart != null)
+        {
+            <MudButton StartIcon="@Icons.Material.Filled.ThumbUp" Color="Color.Secondary"
+                       Disabled="_isSaving || _feedbackSent"
+                       OnClick="SubmitGoodSuggestion">@L["Good Suggestion"]</MudButton>
+        }
         <MudSpacer></MudSpacer>
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close"
                    OnClick="Close">@L["Close"]</MudButton>
@@ -365,10 +375,17 @@
     // name every lens's tier, so it double-printed the active one.
     [Parameter] public int? ScoreAgeDays { get; set; }
 
+    /// <summary>
+    ///     The recommendation category this chart was suggested under (Suggested Charts
+    ///     widget). Non-null unlocks the Good Suggestion action.
+    /// </summary>
+    [Parameter] public string? SuggestionCategory { get; set; }
+
     protected override async Task OnParametersSetAsync()
     {
         if (!Visible || Chart == null || Chart.Id == _loadedChartId) return;
         _loadedChartId = Chart.Id;
+        _feedbackSent = false;
         // Prefill the recording inputs from the current best (round 11).
         _inputScore = Score?.Score == null ? null : (int)Score.Score.Value;
         _inputPlate = Score?.Plate;
@@ -471,6 +488,19 @@
             Snackbar.Add("There was an error while recording the score", Severity.Error);
         }
 
+        _isSaving = false;
+    }
+
+    private bool _feedbackSent;
+
+    private async Task SubmitGoodSuggestion()
+    {
+        if (Chart == null || SuggestionCategory == null) return;
+        _isSaving = true;
+        await Mediator.Send(new SubmitFeedbackCommand(new SuggestionFeedbackRecord(
+            SuggestionCategory, "Positive", string.Empty, ShouldHide: false, IsPositive: true, Chart.Id)));
+        Snackbar.Add(L["Feedback Submitted, Thank You!"].Value, Severity.Success);
+        _feedbackSent = true;
         _isSaving = false;
     }
 

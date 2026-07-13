@@ -137,14 +137,33 @@ else if (_loaded)
                 @foreach (var descriptor in category)
                 {
                     var d = descriptor;
-                    <div class="dash-drawer-item @(PageIsFull ? "disabled" : "")"
-                         @onclick="() => AddWidget(d)">
-                        <MudIcon Icon="@d.Icon" Size="Size.Small"/>
-                        <div>
-                            <MudText Typo="Typo.body2">@L[d.NameKey]</MudText>
-                            <MudText Typo="Typo.caption">@L[d.DescriptionKey]</MudText>
+                    @if (d.DrawerPresets != null)
+                    {
+                        @* Multi-personality types list one card per preset (D10). *@
+                        @foreach (var preset in d.DrawerPresets)
+                        {
+                            var p = preset;
+                            <div class="dash-drawer-item @(PageIsFull ? "disabled" : "")"
+                                 @onclick="() => AddWidget(d, p.ConfigJson)">
+                                <MudIcon Icon="@d.Icon" Size="Size.Small"/>
+                                <div>
+                                    <MudText Typo="Typo.body2">@L[p.NameKey]</MudText>
+                                    <MudText Typo="Typo.caption">@L[p.DescriptionKey]</MudText>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="dash-drawer-item @(PageIsFull ? "disabled" : "")"
+                             @onclick="() => AddWidget(d)">
+                            <MudIcon Icon="@d.Icon" Size="Size.Small"/>
+                            <div>
+                                <MudText Typo="Typo.body2">@L[d.NameKey]</MudText>
+                                <MudText Typo="Typo.caption">@L[d.DescriptionKey]</MudText>
+                            </div>
                         </div>
-                    </div>
+                    }
                 }
             }
         </div>
@@ -266,7 +285,8 @@ else if (_loaded)
         <ChartDetailsDialog @bind-Visible="_showChartDetails" Chart="_detailsChart"
                             Mix="EffectiveMixFor(_selectedPage)"
                             IsToDo="_detailsChart != null && _todos != null && _todos.Contains(_detailsChart.Id)"
-                            OnToDo="ToggleToDo"/>
+                            OnToDo="ToggleToDo"
+                            SuggestionCategory="_detailsSuggestionCategory"/>
     }
 
     <MudDialog @bind-Visible="_showConfigure" Options="CompactDialog">
@@ -422,16 +442,18 @@ else if (_loaded)
     // dialog (browse mode only — edit mode owns clicks for arranging).
     private bool _showChartDetails;
     private Chart? _detailsChart;
+    private string? _detailsSuggestionCategory;
     private ISet<Guid>? _todos;
 
-    private async Task OpenChartDetails(Chart chart)
+    private async Task OpenChartDetails(ChartClickContext context)
     {
         if (_editMode) return;
         _todos ??= (await Mediator.Send(new GetSavedChartsQuery()))
             .Where(t => t.ListType == ChartListType.ToDo)
             .Select(t => t.ChartId)
             .ToHashSet();
-        _detailsChart = chart;
+        _detailsChart = context.Chart;
+        _detailsSuggestionCategory = context.SuggestionCategory;
         _showChartDetails = true;
     }
 
@@ -487,12 +509,12 @@ else if (_loaded)
         return page.DefaultMix ?? _currentMix;
     }
 
-    private async Task AddWidget(WidgetDescriptor descriptor)
+    private async Task AddWidget(WidgetDescriptor descriptor, string configJson = "{}")
     {
         if (_selectedPage == null || PageIsFull) return;
         _isSaving = true;
         await Mediator.Send(new AddHomePageWidgetCommand(_selectedPage.Id, descriptor.TypeId,
-            descriptor.DefaultSize.Token, null, "{}", 1));
+            descriptor.DefaultSize.Token, null, configJson, 1));
         await LoadPages();
         await Track("homedash_widget_added_" + descriptor.TypeId);
         _isSaving = false;

@@ -3285,6 +3285,126 @@
   <data name="No entries yet." xml:space="preserve">
     <value>まだエントリーがありません。</value>
   </data>
+  <data name="Not a good suggestion?" xml:space="preserve">
+    <value>良くない提案ですか？</value>
+  </data>
+  <data name="The level printed on the chart." xml:space="preserve">
+    <value>譜面に表記されたレベル。</value>
+  </data>
+  <data name="Closest PGs, top-50 picks, and old scores due a revisit." xml:space="preserve">
+    <value>PGに最も近い譜面、トップ50からの抽選、見直すべき昔のスコア。</value>
+  </data>
+  <data name="Chart level" xml:space="preserve">
+    <value>譜面レベル</value>
+  </data>
+  <data name="Charts toward your next title, plus skill titles one SSS away." xml:space="preserve">
+    <value>次の称号に向けた譜面と、SSSまであと一歩のスキル称号。</value>
+  </data>
+  <data name="Shuffle suggestions" xml:space="preserve">
+    <value>候補をシャッフル</value>
+  </data>
+  <data name="Suggested · Fill Gaps" xml:space="preserve">
+    <value>おすすめ · 穴埋め</value>
+  </data>
+  <data name="Suggested Charts" xml:space="preserve">
+    <value>おすすめ譜面</value>
+  </data>
+  <data name="Pinned range" xml:space="preserve">
+    <value>固定範囲</value>
+  </data>
+  <data name="Suggested · Title Hunt" xml:space="preserve">
+    <value>おすすめ · 称号ハント</value>
+  </data>
+  <data name="Charts picked for you, tuned by goal." xml:space="preserve">
+    <value>目標に合わせて選ばれた譜面。</value>
+  </data>
+  <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
+    <value>まだ提案できるものがありません — プレイしてスコアをインポートしてください。</value>
+  </data>
+  <data name="Feedback Submitted, Thank You!" xml:space="preserve">
+    <value>フィードバックありがとうございます！</value>
+  </data>
+  <data name="{0} to PG" xml:space="preserve">
+    <value>PGまで{0}</value>
+  </data>
+  <data name="Score Push" xml:space="preserve">
+    <value>スコア更新</value>
+  </data>
+  <data name="Pushing Title Charts" xml:space="preserve">
+    <value>挑戦中の称号の譜面</value>
+  </data>
+  <data name="Suggested · Score Push" xml:space="preserve">
+    <value>おすすめ · スコア更新</value>
+  </data>
+  <data name="Push PGs" xml:space="preserve">
+    <value>PGを狙う</value>
+  </data>
+  <data name="Follows your competitive level as it moves." xml:space="preserve">
+    <value>コンペティティブレベルの変化に追従します。</value>
+  </data>
+  <data name="Goal" xml:space="preserve">
+    <value>目標</value>
+  </data>
+  <data name="Community-calibrated difficulty — a chart that scores like a 21 counts as a 21." xml:space="preserve">
+    <value>コミュニティ調整の難易度 — 21相当のスコアが出る譜面は21として扱います。</value>
+  </data>
+  <data name="Level basis" xml:space="preserve">
+    <value>レベル基準</value>
+  </data>
+  <data name="Skill Title Charts" xml:space="preserve">
+    <value>スキル称号の譜面</value>
+  </data>
+  <data name="Improve Your Top 50" xml:space="preserve">
+    <value>トップ50を伸ばす</value>
+  </data>
+  <data name="Any level" xml:space="preserve">
+    <value>レベル指定なし</value>
+  </data>
+  <data name="The Category Isn't Interesting to Me" xml:space="preserve">
+    <value>このカテゴリに興味がない</value>
+  </data>
+  <data name="Title Hunt" xml:space="preserve">
+    <value>称号ハント</value>
+  </data>
+  <data name="Fill Gaps" xml:space="preserve">
+    <value>穴埋め</value>
+  </data>
+  <data name="Revisit Old Scores" xml:space="preserve">
+    <value>昔のスコアを見直す</value>
+  </data>
+  <data name="Fill Scores" xml:space="preserve">
+    <value>スコア埋め</value>
+  </data>
+  <data name="Approachable unpassed charts around your level." xml:space="preserve">
+    <value>自分のレベル前後の、まだクリアしていない取り組みやすい譜面。</value>
+  </data>
+  <data name="{0} days old" xml:space="preserve">
+    <value>{0}日前</value>
+  </data>
+  <data name="Scoring level" xml:space="preserve">
+    <value>スコアリングレベル</value>
+  </data>
+  <data name="± levels" xml:space="preserve">
+    <value>±レベル</value>
+  </data>
+  <data name="Around my level" xml:space="preserve">
+    <value>自分のレベル前後</value>
+  </data>
+  <data name="Scroll right" xml:space="preserve">
+    <value>右へスクロール</value>
+  </data>
+  <data name="Scroll left" xml:space="preserve">
+    <value>左へスクロール</value>
+  </data>
+  <data name="Levels above" xml:space="preserve">
+    <value>上のレベル数</value>
+  </data>
+  <data name="Levels below" xml:space="preserve">
+    <value>下のレベル数</value>
+  </data>
+  <data name="Tier list difficulty" xml:space="preserve">
+    <value>ティアリスト難易度</value>
+  </data>
   <data name="Daily Step" xml:space="preserve">
     <value>デイリーステップ</value>
   </data>

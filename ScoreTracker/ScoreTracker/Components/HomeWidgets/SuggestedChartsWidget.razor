@@ -1,0 +1,406 @@
+@using MediatR
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Commands
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* W4 (design doc §4, catalog walk pick 1): the WSIP suggester as one widget type —
+   goal bundles are config (D10), the engine's veto store carries over untouched.
+   Rows are the dash-targets vocabulary; multi-category goals get section captions
+   inside the scroll. Shuffle re-runs the query so the engine re-rolls its picks. *@
+
+@if (!_loaded)
+{
+    <div class="dash-widget-message">
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+    </div>
+}
+else if (!_sections.Any(s => s.Rows.Any()))
+{
+    <div class="dash-widget-message">
+        <div>
+            <MudText Typo="Typo.body2">@L["Nothing to suggest yet — play and import some scores first."]</MudText>
+            <MudLink Href="/UploadPhoenixScores" Typo="Typo.body2">@L["Upload Scores"]</MudLink>
+        </div>
+    </div>
+}
+else
+{
+    <div class="dash-suggested">
+        @if (!_useStrips)
+        {
+        <div class="dash-targets dash-scroll">
+            @foreach (var section in _sections.Where(s => s.Rows.Any()))
+            {
+                @if (_sections.Count(s => s.Rows.Any()) > 1)
+                {
+                    <MudText Typo="Typo.caption" Class="dash-muted dash-target-caption">@section.Caption</MudText>
+                }
+                @foreach (var row in section.Rows)
+                {
+                    var chart = row.Chart;
+                    var sect = section;
+                    var r = row;
+                    @* Names only at 2 columns wide (rounds 3–4) — narrow rows give the
+                       width to the score; the art tooltip and details dialog carry it. *@
+                    <div class="dash-target-row @(EditMode ? "" : "dash-clickable")"
+                         @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart, sect.CategoryKey))">
+                        <span class="dash-mini-art">
+                            <SongImage Song="chart.Song" Small="true"></SongImage>
+                        </span>
+                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                        @if (_showNames)
+                        {
+                            <span class="dash-target-name">@chart.Song.Name</span>
+                        }
+                        <span class="dash-target-score">
+                            @if (row.Tier != null)
+                            {
+                                <span style="@($"color:{ThemeScales.DifficultyColor(row.Tier.Value)}")">
+                                    @TierName(row.Tier.Value)
+                                </span>
+                            }
+                            else if (row.ShowScore && row.Score?.Score != null)
+                            {
+                                <LetterGradeIcon Grade="row.Score.Score.Value.LetterGrade"
+                                                 IsBroken="row.Score.IsBroken" Height="16"/>
+                                <span>@(((int)row.Score.Score.Value).ToString("N0"))</span>
+                            }
+                            else if (row.ShowScore)
+                            {
+                                <span class="dash-muted">—</span>
+                            }
+                            @if (row.Detail != null)
+                            {
+                                <span class="dash-target-detail dash-muted">@row.Detail</span>
+                            }
+                        </span>
+                        @if (EditMode)
+                        {
+                            @* Veto lives in edit mode (owner: declutters browse). *@
+                            <span @onclick:stopPropagation="true">
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
+                                               title="@L["Not a good suggestion?"]"
+                                               OnClick="() => OpenVeto(sect, r)"/>
+                            </span>
+                        }
+                    </div>
+                }
+            }
+        </div>
+        }
+        else
+        {
+            @* Single-row wide sizes (rounds 2–7): one merged card strip; slim vertical
+               labels open each category group. Taller sizes read as text rows. *@
+            <div class="dash-strip-wrap">
+                <button type="button" class="dash-strip-arrow dash-strip-arrow-left"
+                        aria-label="@L["Scroll left"]">‹</button>
+                <div class="dash-card-strip">
+                    @foreach (var section in _sections.Where(s => s.Rows.Any()))
+                    {
+                        var sect = section;
+                        @if (_sections.Count(s => s.Rows.Any()) > 1)
+                        {
+                            <div class="dash-strip-divider" title="@section.Caption">@section.Caption</div>
+                        }
+                        @foreach (var row in section.Rows)
+                        {
+                            @Card((sect, row))
+                        }
+                    }
+                </div>
+                <button type="button" class="dash-strip-arrow dash-strip-arrow-right"
+                        aria-label="@L["Scroll right"]">›</button>
+            </div>
+        }
+    </div>
+
+    @* The WSIP veto flow, widget-shaped: reason + notes + hide, straight into the same
+       per-category feedback store the engine already honors. *@
+    <MudDialog @bind-Visible="_showVeto">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["Not a good suggestion?"]</MudText>
+        </TitleContent>
+        <DialogContent>
+            @if (_vetoRow != null)
+            {
+                <div class="dash-target-row mb-2">
+                    <span class="dash-mini-art">
+                        <SongImage Song="_vetoRow.Chart.Song" Small="true"></SongImage>
+                    </span>
+                    <DifficultyBubble Chart="_vetoRow.Chart" Small="true"></DifficultyBubble>
+                    <span class="dash-target-name">@_vetoRow.Chart.Song.Name</span>
+                </div>
+            }
+            <MudSelect T="string" @bind-Value="_vetoReason" Label="@L["Reason"]" Class="mb-2">
+                <MudSelectItem Value="@("Doesn't Match My Personal Skills")">@L["Doesn't Match My Personal Skills"]</MudSelectItem>
+                <MudSelectItem Value="@("I Don't Like The Chart")">@L["I Don't Like The Chart"]</MudSelectItem>
+                <MudSelectItem Value="@("Not Relevant to Category")">@L["Not Relevant to Category"]</MudSelectItem>
+                <MudSelectItem Value="@("I Just Want to Hide The Chart")">@L["I Just Want to Hide The Chart"]</MudSelectItem>
+                <MudSelectItem Value="@("The Category Isn't Interesting to Me")">@L["The Category Isn't Interesting to Me"]</MudSelectItem>
+                <MudSelectItem Value="@("Other")">@L["Other"]</MudSelectItem>
+            </MudSelect>
+            <MudTextField @bind-Value="_vetoNotes" Lines="3" MaxLength="250" Label="@L["Additional Comments"]"/>
+            <MudCheckBox T="bool" @bind-Value="_vetoHide" Label="@L["Hide Chart for this Category"]"/>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => _showVeto = false">@L["Cancel"]</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_isSavingVeto"
+                       OnClick="SubmitVeto">@L["Submit"]</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ChartCatalogCache ChartCatalog
+@inject IDateTimeOffsetAccessor Clock
+@inject ISnackbar Snackbar
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public MixEnum EffectiveMix { get; set; }
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
+
+    /// <summary>Bumped by the host's header shuffle — the engine re-rolls its picks.</summary>
+    [Parameter] public int RefreshToken { get; set; }
+
+    private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+
+    // Fill rows never show a score (they're unpassed by definition, owner round 3) —
+    // ShowScore is false and Tier optionally carries the configured tier-list lens.
+    private sealed record SuggestionRow(Chart Chart, RecordedPhoenixScore? Score, string? Detail,
+        TierListCategory? Tier = null, bool ShowScore = true);
+
+    // CategoryKey is the engine's raw category name — the feedback store's key (the
+    // pushing-title section's key is the title's own name, matching WSIP's behavior).
+    private sealed record SuggestionSection(string CategoryKey, string Caption, List<SuggestionRow> Rows);
+
+    private bool _loaded;
+    private string? _loadedFor;
+    private MixEnum _mix = MixEnum.Phoenix;
+    private bool _useStrips;
+    private bool _showNames;
+    private List<SuggestionSection> _sections = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{Widget.SizePreset}|{EffectiveMix}|{RefreshToken}";
+        if (signature == _loadedFor) return;
+        _loadedFor = signature;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loaded = false;
+        // 2x1 is the card strip; everything else is text rows, with song names only
+        // when the widget is two columns wide (owner, rounds 2-4).
+        var size = SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.OneByTwo;
+        _useStrips = size is { Columns: > 1, Rows: 1 };
+        _showNames = size.Columns > 1 && !_useStrips;
+        var config = WidgetConfigJson.Read<SuggestedChartsConfig>(Widget.ConfigJson);
+        _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
+            : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
+
+        var categories = SuggestedGoals.EffectiveCategories(config);
+        var recommendations = (await Mediator.Send(new GetRecommendedChartsQuery(
+                config.ChartType, LevelOffset: 0, _mix,
+                Categories: categories.ToHashSet(),
+                LevelWindow: SuggestedGoals.BuildWindow(config))))
+            .ToArray();
+
+        var charts = await ChartCatalog.GetCharts(_mix);
+        var scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _mix)))
+            .ToDictionary(s => s.ChartId);
+
+        // Fill Gaps lens (owner, round 3): tier-list difficulty per fill chart — the
+        // blended list covers unplayed charts, and Personalized bends it with the
+        // player's skill estimates. One query per (type, level) folder in the results.
+        _lensTiers.Clear();
+        if (config.DifficultyLens != SuggestedDifficultyLens.None
+            && categories.Contains(RecommendationCategory.FillScores))
+        {
+            var lens = config.DifficultyLens == SuggestedDifficultyLens.PassDifficulty ? "Pass" : "Score";
+            var fillCharts = recommendations
+                .Where(r => (string)r.Category == RecommendationCategories.FillScores
+                            && charts.ContainsKey(r.ChartId))
+                .Select(r => charts[r.ChartId]);
+            foreach (var folder in fillCharts.GroupBy(c => (c.Type, c.Level)))
+            {
+                var tierList = await Mediator.Send(new GetBlendedTierListQuery(folder.Key.Type,
+                    folder.Key.Level, lens, config.PersonalizedLens, Mix: _mix));
+                foreach (var entry in tierList.Entries.Where(e => e.Category != TierListCategory.Unrecorded))
+                    _lensTiers[entry.ChartId] = entry.Category;
+            }
+        }
+
+        // Category → section, in the goal's bundle order. The pushing-title category has
+        // no fixed name (it's the title's own name), so it matches "everything else".
+        var byName = recommendations.Where(r => charts.ContainsKey(r.ChartId))
+            .GroupBy(r => (string)r.Category)
+            .ToDictionary(g => g.Key, g => g.ToArray());
+        _sections = new List<SuggestionSection>();
+        foreach (var category in categories)
+        {
+            var known = CategoryName(category);
+            var matches = known != null
+                ? byName.TryGetValue(known, out var m) ? new[] { (known, m) } : Array.Empty<(string, ChartRecommendation[])>()
+                : byName.Where(kv => KnownNames.All(n => n != kv.Key)).Select(kv => (kv.Key, kv.Value)).ToArray();
+            foreach (var (name, items) in matches)
+                _sections.Add(new SuggestionSection(
+                    name,
+                    known != null ? L[name].Value : name,
+                    items.Select(r => BuildRow(category, charts[r.ChartId], scores.GetValueOrDefault(r.ChartId)))
+                        .ToList()));
+        }
+
+        _loaded = true;
+    }
+
+    // The compact chart card the strips render — art-forward, bubble overlaid, veto
+    // overlay in edit mode. Same click/veto semantics as the vertical rows.
+    private RenderFragment<(SuggestionSection Section, SuggestionRow Row)> Card => ctx =>
+        @<div class="dash-chart-card @(EditMode ? "" : "dash-clickable")"
+              @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(ctx.Row.Chart, ctx.Section.CategoryKey))">
+            <div class="dash-card-art">
+                <img src="@ctx.Row.Chart.Song.ImagePath" alt="@ctx.Row.Chart.Song.Name" loading="lazy"/>
+                <span class="dash-card-bubble">
+                    <DifficultyBubble Chart="ctx.Row.Chart" Small="true"></DifficultyBubble>
+                </span>
+                @if (EditMode)
+                {
+                    <span class="dash-card-veto" @onclick:stopPropagation="true">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
+                                       title="@L["Not a good suggestion?"]"
+                                       OnClick="() => OpenVeto(ctx.Section, ctx.Row)"/>
+                    </span>
+                }
+            </div>
+            <div class="dash-card-name">@ctx.Row.Chart.Song.Name</div>
+            <div class="dash-card-score">
+                @if (ctx.Row.Tier != null)
+                {
+                    <span style="@($"color:{ThemeScales.DifficultyColor(ctx.Row.Tier.Value)}")">
+                        @TierName(ctx.Row.Tier.Value)
+                    </span>
+                }
+                else if (ctx.Row.ShowScore && ctx.Row.Score?.Score != null)
+                {
+                    <LetterGradeIcon Grade="ctx.Row.Score.Score.Value.LetterGrade"
+                                     IsBroken="ctx.Row.Score.IsBroken" Height="14"/>
+                    <span>@(((int)ctx.Row.Score.Score.Value).ToString("N0"))</span>
+                }
+                else if (ctx.Row.ShowScore)
+                {
+                    <span class="dash-muted">—</span>
+                }
+            </div>
+            @if (ctx.Row.Detail != null)
+            {
+                <div class="dash-card-detail dash-muted">@ctx.Row.Detail</div>
+            }
+        </div>;
+
+    private bool _showVeto;
+    private SuggestionSection? _vetoSection;
+    private SuggestionRow? _vetoRow;
+    private string _vetoReason = "Doesn't Match My Personal Skills";
+    private string _vetoNotes = string.Empty;
+    private bool _vetoHide = true;
+    private bool _isSavingVeto;
+
+    private void OpenVeto(SuggestionSection section, SuggestionRow row)
+    {
+        _vetoSection = section;
+        _vetoRow = row;
+        _vetoReason = "Doesn't Match My Personal Skills";
+        _vetoNotes = string.Empty;
+        _vetoHide = true;
+        _showVeto = true;
+    }
+
+    private async Task SubmitVeto()
+    {
+        if (_vetoSection == null || _vetoRow == null) return;
+        _isSavingVeto = true;
+        await Mediator.Send(new SubmitFeedbackCommand(new SuggestionFeedbackRecord(
+            _vetoSection.CategoryKey, _vetoReason, _vetoNotes, _vetoHide, IsPositive: false,
+            _vetoRow.Chart.Id)));
+        // Hidden charts leave the board immediately; the engine honors the hide on
+        // every future load, so this is just the optimistic version of the truth.
+        if (_vetoHide) _vetoSection.Rows.Remove(_vetoRow);
+        Snackbar.Add(L["Feedback Submitted, Thank You!"].Value, Severity.Success);
+        _showVeto = false;
+        _isSavingVeto = false;
+    }
+
+    private readonly Dictionary<Guid, TierListCategory> _lensTiers = new();
+
+    private SuggestionRow BuildRow(RecommendationCategory category, Chart chart, RecordedPhoenixScore? score)
+    {
+        var detail = category switch
+        {
+            RecommendationCategory.PushPGs when score?.Score != null =>
+                L["{0} to PG", (1000000 - (int)score.Score.Value).ToString("N0")].Value,
+            RecommendationCategory.RevisitOldScores when score != null =>
+                L["{0} days old", (int)(Clock.Now - score.RecordedDate).TotalDays].Value,
+            _ => null
+        };
+        var isFill = category == RecommendationCategory.FillScores;
+        return new SuggestionRow(chart, score, detail,
+            isFill && _lensTiers.TryGetValue(chart.Id, out var tier) ? tier : null,
+            ShowScore: !isFill);
+    }
+
+    private string TierName(TierListCategory category)
+    {
+        return category switch
+        {
+            TierListCategory.Overrated => L["1+ Level Easier"],
+            TierListCategory.VeryEasy => L["Very Easy"],
+            TierListCategory.Easy => L["Easy"],
+            TierListCategory.Medium => L["Medium"],
+            TierListCategory.Hard => L["Hard"],
+            TierListCategory.VeryHard => L["Very Hard"],
+            TierListCategory.Underrated => L["1+ Level Harder"],
+            _ => L["Not Rated"]
+        };
+    }
+
+    private static readonly string[] KnownNames =
+    {
+        RecommendationCategories.SkillTitles, RecommendationCategories.PushPGs,
+        RecommendationCategories.ImproveTop50, RecommendationCategories.RevisitOldScores,
+        RecommendationCategories.FillScores, RecommendationCategories.WeeklyCharts
+    };
+
+    private static string? CategoryName(RecommendationCategory category)
+    {
+        return category switch
+        {
+            RecommendationCategory.SkillTitles => RecommendationCategories.SkillTitles,
+            RecommendationCategory.PushPGs => RecommendationCategories.PushPGs,
+            RecommendationCategory.ImproveTop50 => RecommendationCategories.ImproveTop50,
+            RecommendationCategory.RevisitOldScores => RecommendationCategories.RevisitOldScores,
+            RecommendationCategory.FillScores => RecommendationCategories.FillScores,
+            RecommendationCategory.WeeklyCharts => RecommendationCategories.WeeklyCharts,
+            _ => null
+        };
+    }
+
+}

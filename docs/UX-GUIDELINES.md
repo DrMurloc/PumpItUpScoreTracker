@@ -75,7 +75,7 @@ Percentile semantics are the established `ScoreRankingRecord.Ranking` convention
 
 **9. Loading looks like the layout.** Skeletons match the shape of the content they become — never a lone centered spinner on a data page. Empty states name the action that fills them ("Import your scores to light this up"), not just the absence.
 
-**10. Thumbs first on mobile.** Primary navigation and primary actions live in the bottom third at phone widths (the bottom nav is this rule applied to the shell). The top corners are for identity and context, not workflows.
+**10. Thumbs first on mobile.** Primary navigation and primary actions live in the bottom third at phone widths (the bottom nav is this rule applied to the shell). The top corners are for identity and context, not workflows. Action-heavy pages claim the bottom third through the **page dock** (`PageDock` component → shell slot above the bottom nav): scrolling down slides the nav away so the two bars only coexist at rest, and the nav's items never move or reflow. **Focus mode** (`PageDock FocusMode`) drops the shell chrome entirely for takeover tasks — kiosk-style flows like tournament drafts — and the page owes the user an explicit exit affordance in return. A page that registers no dock gets the unchanged shell. (Landed with the randomizer overhaul, [docs/design/randomizer-overhaul.md](design/randomizer-overhaul.md).)
 
 ---
 
