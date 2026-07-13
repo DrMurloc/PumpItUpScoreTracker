@@ -26,6 +26,7 @@ public readonly record struct SizePreset(int Columns, int Rows)
     public static readonly SizePreset OneByThree = new(1, 3);
     public static readonly SizePreset TwoByTwo = new(2, 2);
     public static readonly SizePreset ThreeByTwo = new(3, 2);
+    public static readonly SizePreset FourByTwo = new(4, 2);
     public static readonly SizePreset ThreeByThree = new(3, 3);
 
     public string Token => $"{Columns}x{Rows}";

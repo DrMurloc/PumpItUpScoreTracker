@@ -249,6 +249,26 @@ public static class MixThemes
         return DifficultyColors[category];
     }
 
+    /// <summary>
+    ///     Raw hex for a rarity band in a mix — for render targets that can't read CSS
+    ///     custom properties (ApexCharts config, e.g. the By-Level Breakdown grade/plate
+    ///     bars). Rarity hues are per-mix (unlike difficulty), so this takes the mix.
+    ///     On-screen consumers keep using ThemeScales/var(--rarity-*).
+    /// </summary>
+    public static string RarityHex(MixEnum mix, RarityBand band)
+    {
+        var rarity = PaletteFor(mix).Rarity;
+        return band switch
+        {
+            RarityBand.Common => rarity.Common,
+            RarityBand.Silver => rarity.Silver,
+            RarityBand.Emerald => rarity.Emerald,
+            RarityBand.Gold => rarity.Gold,
+            RarityBand.Sapphire => rarity.Sapphire,
+            _ => rarity.Prism
+        };
+    }
+
     public static string CssVariablesFor(MixEnum mix)
     {
         var p = PaletteFor(mix);
