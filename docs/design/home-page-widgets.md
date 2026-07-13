@@ -107,6 +107,12 @@ Rendering rules: widgets render with `@key="InstanceId"` (reorders move componen
 internal state); **widget data refresh is paused while edit mode is active** (nothing re-renders the
 grid mid-drag, and a board shouldn't reshuffle while being rearranged).
 
+**Optional header slot (owner, 2026-07-13).** The host owns the title bar, but a widget may push a small
+fragment into it to reclaim body space. `WidgetHost` cascades a `WidgetHeaderSlot`; a widget opts in via
+`[CascadingParameter]` and calls `Set(fragment)` — the host renders it right of the title (suppressed in
+edit mode, where the edit controls own the bar). Opt-in and generic: widgets that ignore it are
+unaffected. Quick Record (§4.2) is the first consumer — the selected chart's art/bubble/✕ ride up there.
+
 ### 2.4 Grid + drag
 
 - CSS grid, 4 columns desktop, auto-flow; widgets are `(Ordinal, SizePreset)` — D6.
@@ -401,8 +407,9 @@ recorder** — the chart display is not clickable, no ChartDetailsDialog, no nav
 - **States** (one 1×1 frame, three faces):
   - **Search** (resting) — the selector (placeholder) + a shorthand hint + a muted "Posts to {Mix}"
     footer (the mix cascade D13 is real; the recorder should see which board it writes to).
-  - **Recording** — the selector now holds the pick (search glyph + `DifficultyBubble` + name +
-    clear ✕); a half-width tabular Score field beside a **live-derived letter-grade badge** (display
+  - **Recording** — the selected chart's identity (art + `DifficultyBubble` + clear ✕, **no song name**)
+    rides up into the host **title bar** via the header slot (§2.3, owner 2026-07-13), so the body opens
+    straight into a half-width tabular Score field beside a **live-derived letter-grade badge** (display
     only — the domain derives the grade from the score, we send score + plate + broken) and a compact
     **plate/result dropdown** (shorthand: RG…PG). Save sits on its own row so it never clips on narrow
     widths. **Broken has no checkbox** (owner, 2026-07-13): the dropdown carries a `Broken` shortcut at

@@ -57,19 +57,24 @@ else
     <div class="qr-body">
         @if (_chart != null)
         {
-            @* Recording — the pick (not clickable) + score/grade/plate/broken/save. *@
-            <div class="qr-selected">
-                @if (_allMixes && _mix != null)
-                {
-                    <span class="qr-mixchip" title="@_mix.Value.GetName()">@_mix.Value.GetName()</span>
-                }
-                <span class="qr-mini-art"><SongImage Song="_chart.Song" Small="true"></SongImage></span>
-                <DifficultyBubble Chart="_chart" Small="true"></DifficultyBubble>
-                <span class="qr-selected-name" title="@_chart.Song.Name">@_chart.Song.Name</span>
-                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
-                               title="@L["Change chart"]" Disabled="EditMode || _isSaving"
-                               OnClick="ClearChart"/>
-            </div>
+            @* Recording — the pick (not clickable) + score/grade/plate/save. When the host
+               offers a header slot the chart identity lives up in the title bar (see
+               ChartHeaderContent); the in-body header is the host-less fallback. *@
+            @if (HeaderSlot == null)
+            {
+                <div class="qr-selected">
+                    @if (_allMixes && _mix != null)
+                    {
+                        <span class="qr-mixchip" title="@_mix.Value.GetName()">@_mix.Value.GetName()</span>
+                    }
+                    <span class="qr-mini-art"><SongImage Song="_chart.Song" Small="true"></SongImage></span>
+                    <DifficultyBubble Chart="_chart" Small="true"></DifficultyBubble>
+                    <span class="qr-selected-name" title="@_chart.Song.Name">@_chart.Song.Name</span>
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
+                                   title="@L["Change chart"]" Disabled="EditMode || _isSaving"
+                                   OnClick="ClearChart"/>
+                </div>
+            }
             @if (_isLegacy)
             {
                 @* Legacy (XX and older): letter grade is an input, no plate, no auto-grade. *@
@@ -178,6 +183,12 @@ else
     [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
     [Parameter] public int RefreshToken { get; set; }
 
+    // Opt-in title-bar slot (§2.3): once a chart is selected, its art/bubble/✕ move up into
+    // the header so the whole chart-header row's vertical goes to the inputs (owner,
+    // 2026-07-13). Null when the host offers no slot (bare renders) — then the in-body
+    // header is the fallback.
+    [CascadingParameter] private WidgetHeaderSlot? HeaderSlot { get; set; }
+
     // Pinned/follow scope stays Phoenix-era (the documented default); "All mixes" is the
     // explicit escape hatch to every mix via the runtime picker.
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
@@ -257,31 +268,35 @@ else
             : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
 
         var signature = $"{Widget.Id}|{allMixes}|{pinned}";
-        if (signature == _loadedFor) return;
-        _loadedFor = signature;
-        _allMixes = allMixes;
-        ResetEntry();
+        if (signature != _loadedFor)
+        {
+            _loadedFor = signature;
+            _allMixes = allMixes;
+            ResetEntry();
 
-        if (!CurrentUser.IsLoggedIn)
-        {
-            _loaded = true;
-            return;
+            if (!CurrentUser.IsLoggedIn)
+            {
+                _loaded = true;
+            }
+            else if (allMixes)
+            {
+                // The picker drives everything; no mix (and no chart list) until chosen.
+                _mix = null;
+                _chartList = Array.Empty<Chart>();
+                _loaded = true;
+            }
+            else
+            {
+                _mix = pinned;
+                _loaded = false;
+                await LoadCharts(pinned!.Value);
+                _loaded = true;
+            }
         }
 
-        if (allMixes)
-        {
-            // The picker drives everything; no mix (and no chart list) until the user chooses.
-            _mix = null;
-            _chartList = Array.Empty<Chart>();
-            _loaded = true;
-        }
-        else
-        {
-            _mix = pinned;
-            _loaded = false;
-            await LoadCharts(pinned!.Value);
-            _loaded = true;
-        }
+        // Runs every param set (not just on signature change) so an EditMode toggle
+        // re-evaluates whether the chart belongs in the title bar.
+        UpdateHeaderSlot();
     }
 
     private async Task LoadCharts(MixEnum mix)
@@ -340,12 +355,14 @@ else
         // ChartSelector's callback is a plain delegate (no EventCallback auto-render), and
         // it fires from the selector's render scope — poke the widget to show the record row.
         StateHasChanged();
+        UpdateHeaderSlot();
     }
 
     private void ClearChart()
     {
         // Keep the chosen mix (rapid-fire the same board); just drop the chart + entry.
         ResetEntry();
+        UpdateHeaderSlot();
     }
 
     private void ResetEntry()
@@ -381,6 +398,7 @@ else
             }
 
             ResetEntry();
+            UpdateHeaderSlot();
             _isSaving = false;
 
             _flashCts?.Cancel();
@@ -410,10 +428,48 @@ else
         await InvokeAsync(StateHasChanged);
     }
 
+    // What we push into the host's title bar while a chart is selected (owner, 2026-07-13):
+    // art + difficulty + change-✕, no song name. Mirrors the in-body fallback header.
+    private RenderFragment ChartHeaderContent => @<text>
+        @if (_chart != null)
+        {
+            @if (_allMixes && _mix != null)
+            {
+                <span class="qr-mixchip" title="@_mix.Value.GetName()">@_mix.Value.GetName()</span>
+            }
+            <span class="qr-mini-art"><SongImage Song="_chart.Song" Small="true"></SongImage></span>
+            <DifficultyBubble Chart="_chart" Small="true"></DifficultyBubble>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
+                           title="@L["Change chart"]" Disabled="_isSaving" OnClick="ClearChart"/>
+        }
+    </text>;
+
+    // Dedup by the shown chart id so re-renders don't churn the host: only (re)push when the
+    // chart in the header actually changes (pick / clear / edit-mode toggle).
+    private Guid? _headerSlotKey;
+
+    private void UpdateHeaderSlot()
+    {
+        if (HeaderSlot == null) return;
+        var show = _chart != null && !EditMode && CurrentUser.IsLoggedIn && _savedFlash == null;
+        var key = show ? _chart!.Id : (Guid?)null;
+        if (key == _headerSlotKey) return;
+        _headerSlotKey = key;
+        HeaderSlot.Set(show ? ChartHeaderContent : null);
+    }
+
     public void Dispose()
     {
         _flashCts?.Cancel();
         _flashCts?.Dispose();
+        try
+        {
+            HeaderSlot?.Set(null);
+        }
+        catch
+        {
+            // The host may already be tearing down — a stale header clear is harmless.
+        }
     }
 
 }

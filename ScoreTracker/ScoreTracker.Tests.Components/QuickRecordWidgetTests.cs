@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bunit;
 using MediatR;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
@@ -83,6 +84,28 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
     {
         var selector = cut.FindComponent<ChartSelector>();
         return cut.InvokeAsync(() => selector.Instance.ChartIdSelected(chart));
+    }
+
+    // Renders the widget under a host-style header slot (a WidgetHost cascades one in prod).
+    private IRenderedComponent<QuickRecordWidget> RenderWithSlot(WidgetHeaderSlot slot)
+    {
+        var widget = new HomePageWidgetRecord(Guid.NewGuid(), "quick-record", null, 0, "1x1", "{}", 1);
+        return base.Render(builder =>
+        {
+            builder.OpenComponent<MudPopoverProvider>(0);
+            builder.CloseComponent();
+            builder.OpenComponent<CascadingValue<WidgetHeaderSlot>>(1);
+            builder.AddAttribute(2, "Value", slot);
+            builder.AddAttribute(3, "IsFixed", true);
+            builder.AddAttribute(4, "ChildContent", (RenderFragment)(b =>
+            {
+                b.OpenComponent<QuickRecordWidget>(0);
+                b.AddAttribute(1, nameof(QuickRecordWidget.Widget), widget);
+                b.AddAttribute(2, nameof(QuickRecordWidget.EffectiveMix), MixEnum.Phoenix);
+                b.CloseComponent();
+            }));
+            builder.CloseComponent();
+        }).FindComponent<QuickRecordWidget>();
     }
 
     [Fact]
@@ -233,5 +256,20 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
             It.Is<UpdatePhoenixBestAttemptCommand>(c =>
                 c.ChartId == _chart.Id && c.IsBroken && c.Plate == null),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AHostHeaderSlotPullsTheChartOutOfTheBody()
+    {
+        var slot = new WidgetHeaderSlot(() => { });
+        var cut = RenderWithSlot(slot);
+
+        await Pick(cut, _chart);
+
+        // The chart identity is pushed to the title bar; the in-body header is gone.
+        Assert.NotNull(slot.Content);
+        Assert.Empty(cut.FindAll(".qr-selected"));
+        // The inputs still render in the body.
+        Assert.NotEmpty(cut.FindAll(".qr-save-btn"));
     }
 }
