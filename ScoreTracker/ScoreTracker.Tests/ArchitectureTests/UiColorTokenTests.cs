@@ -41,7 +41,6 @@ public sealed class UiColorTokenTests
         ["Pages/Dev/Populate.razor"] = 4,
         ["Pages/Experiments/ChartLetterDifficulties.razor"] = 8,
         ["Pages/Experiments/GameStats.razor"] = 12,
-        ["Pages/Login.razor"] = 6,
         ["Pages/Progress/PhoenixProgress.razor"] = 2,
         // The recap deck is deliberately self-styled slide art (its design doc owns its
         // palette); it stays allowlisted rather than tokenized.
