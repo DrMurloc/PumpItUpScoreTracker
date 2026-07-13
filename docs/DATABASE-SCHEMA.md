@@ -23,6 +23,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.UserApiToken` | API tokens for the partner API, with usage tracking |
 | `scores.UserSettings` | Per-user UI settings key/value store |
 | `scores.MergeRequest` | Durable account-merge record: survivor/retired users, moved logins + retired-user snapshot (JSON, for undo), state, and the grace-window purge schedule (Identity-vertical entity) |
+| `scores.UserImportCredentialKey` | Per-device wrapped data-key for a remembered PIUGAME credential (envelope encryption): `KeyId`, `UserId`, the Key-Vault-wrapped DEK, `CreatedAt`. **Holds no password** — the AES-GCM ciphertext lives in the user's browser local storage and the master key never leaves Key Vault; deleting rows revokes ([remember-my-password design](design/import-widget-remember-password.md)) |
 
 ## Score Ledger (vertical: `ScoreTracker.ScoreLedger`)
 
