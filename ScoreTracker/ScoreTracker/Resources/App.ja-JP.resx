@@ -2662,6 +2662,9 @@
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>リキャップPGカード再構築</value>
   </data>
+  <data name="Rebuild Recap Total PUMBILITY" xml:space="preserve">
+    <value>リキャップ合計PUMBILITY再構築</value>
+  </data>
   <data name="Site Theme" xml:space="preserve">
     <value>サイトテーマ</value>
   </data>
@@ -3467,5 +3470,44 @@
   </data>
   <data name="Cleared all of {0}" xml:space="preserve">
     <value>{0} 全曲クリア</value>
+  </data>
+  <data name="Quick Record" xml:space="preserve">
+    <value>クイック記録</value>
+  </data>
+  <data name="Record a score by hand for any chart." xml:space="preserve">
+    <value>任意の譜面のスコアを手入力で記録します。</value>
+  </data>
+  <data name="Search a chart" xml:space="preserve">
+    <value>譜面を検索</value>
+  </data>
+  <data name="Name, or shorthand like S18" xml:space="preserve">
+    <value>曲名、または S18 のような略記</value>
+  </data>
+  <data name="Recorded" xml:space="preserve">
+    <value>記録しました</value>
+  </data>
+  <data name="Change chart" xml:space="preserve">
+    <value>譜面を変更</value>
+  </data>
+  <data name="Sign in to record." xml:space="preserve">
+    <value>記録するにはログインしてください。</value>
+  </data>
+  <data name="There was an error while recording the score" xml:space="preserve">
+    <value>スコアの記録中にエラーが発生しました</value>
+  </data>
+  <data name="All mixes" xml:space="preserve">
+    <value>全バージョン</value>
+  </data>
+  <data name="Record to" xml:space="preserve">
+    <value>記録先</value>
+  </data>
+  <data name="Select a mix" xml:space="preserve">
+    <value>バージョンを選択</value>
+  </data>
+  <data name="Change mix" xml:space="preserve">
+    <value>バージョンを変更</value>
+  </data>
+  <data name="Remember last mix" xml:space="preserve">
+    <value>前回のバージョンを記憶</value>
   </data>
 </root>

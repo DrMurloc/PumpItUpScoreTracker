@@ -2542,6 +2542,9 @@
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>리캡 PG 카드 재구축</value>
   </data>
+  <data name="Rebuild Recap Total PUMBILITY" xml:space="preserve">
+    <value>리캡 전체 PUMBILITY 재구축</value>
+  </data>
   <data name="Site Theme" xml:space="preserve">
     <value>사이트 테마</value>
   </data>
@@ -3347,5 +3350,44 @@
   </data>
   <data name="Cleared all of {0}" xml:space="preserve">
     <value>{0} 전부 클리어</value>
+  </data>
+  <data name="Quick Record" xml:space="preserve">
+    <value>빠른 기록</value>
+  </data>
+  <data name="Record a score by hand for any chart." xml:space="preserve">
+    <value>아무 채보나 점수를 직접 입력해 기록하세요.</value>
+  </data>
+  <data name="Search a chart" xml:space="preserve">
+    <value>채보 검색</value>
+  </data>
+  <data name="Name, or shorthand like S18" xml:space="preserve">
+    <value>곡명 또는 S18 같은 약어</value>
+  </data>
+  <data name="Recorded" xml:space="preserve">
+    <value>기록됨</value>
+  </data>
+  <data name="Change chart" xml:space="preserve">
+    <value>채보 변경</value>
+  </data>
+  <data name="Sign in to record." xml:space="preserve">
+    <value>기록하려면 로그인하세요.</value>
+  </data>
+  <data name="There was an error while recording the score" xml:space="preserve">
+    <value>점수를 기록하는 중 오류가 발생했습니다</value>
+  </data>
+  <data name="All mixes" xml:space="preserve">
+    <value>모든 시리즈</value>
+  </data>
+  <data name="Record to" xml:space="preserve">
+    <value>기록 대상</value>
+  </data>
+  <data name="Select a mix" xml:space="preserve">
+    <value>시리즈 선택</value>
+  </data>
+  <data name="Change mix" xml:space="preserve">
+    <value>시리즈 변경</value>
+  </data>
+  <data name="Remember last mix" xml:space="preserve">
+    <value>마지막 시리즈 기억</value>
   </data>
 </root>

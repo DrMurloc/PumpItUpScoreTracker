@@ -236,14 +236,9 @@ internal sealed class PlayerRatingSaga :
                 .Take(50).Select(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score))
                 .ToArray());
 
-        // Phoenix 2's official PUMBILITY is TWO independent top-50 pools — Singles and
-        // Doubles — summed (the mixed pool stays Phoenix-only). Summing the int-floored
-        // pools keeps SkillRating == SinglesRating + DoublesRating exactly, so the three
-        // displayed values always reconcile.
-        var skillPool = mix == MixEnum.Phoenix2 ? top50Singles.Concat(top50Doubles).ToArray() : top50;
-        var skillRating = mix == MixEnum.Phoenix2
-            ? (int)top50Singles.Sum(s => s.Rating) + (int)top50Doubles.Sum(s => s.Rating)
-            : (int)top50.Sum(s => s.Rating);
+        // Overall rating is the mixed top-50; Singles/Doubles below are the per-type top-50s.
+        var skillPool = top50;
+        var skillRating = (int)top50.Sum(s => s.Rating);
 
         var newStats = new PlayerStatsRecord(request.UserId, (int)scores.Sum(s => s.Rating),
             recorded.Any(r => !r.IsBroken) ? recorded.Where(r => !r.IsBroken).Max(r => charts[r.ChartId].Level) : 1,
