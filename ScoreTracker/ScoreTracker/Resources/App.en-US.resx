@@ -3425,4 +3425,46 @@
   <data name="Verified from official import" xml:space="preserve">
     <value>Verified from official import</value>
   </data>
+  <data name="Quick Record" xml:space="preserve">
+    <value>Quick Record</value>
+  </data>
+  <data name="Record a score by hand for any chart." xml:space="preserve">
+    <value>Record a score by hand for any chart.</value>
+  </data>
+  <data name="Search a chart" xml:space="preserve">
+    <value>Search a chart</value>
+  </data>
+  <data name="Name, or shorthand like S18" xml:space="preserve">
+    <value>Name, or shorthand like S18</value>
+  </data>
+  <data name="Posts to {0}" xml:space="preserve">
+    <value>Posts to {0}</value>
+  </data>
+  <data name="Recorded" xml:space="preserve">
+    <value>Recorded</value>
+  </data>
+  <data name="Change chart" xml:space="preserve">
+    <value>Change chart</value>
+  </data>
+  <data name="Sign in to record." xml:space="preserve">
+    <value>Sign in to record.</value>
+  </data>
+  <data name="There was an error while recording the score" xml:space="preserve">
+    <value>There was an error while recording the score</value>
+  </data>
+  <data name="All mixes" xml:space="preserve">
+    <value>All mixes</value>
+  </data>
+  <data name="Record to" xml:space="preserve">
+    <value>Record to</value>
+  </data>
+  <data name="Select a mix" xml:space="preserve">
+    <value>Select a mix</value>
+  </data>
+  <data name="Change mix" xml:space="preserve">
+    <value>Change mix</value>
+  </data>
+  <data name="Remember last mix" xml:space="preserve">
+    <value>Remember last mix</value>
+  </data>
 </root>

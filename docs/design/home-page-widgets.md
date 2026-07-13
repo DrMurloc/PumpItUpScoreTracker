@@ -107,6 +107,12 @@ Rendering rules: widgets render with `@key="InstanceId"` (reorders move componen
 internal state); **widget data refresh is paused while edit mode is active** (nothing re-renders the
 grid mid-drag, and a board shouldn't reshuffle while being rearranged).
 
+**Optional header slot (owner, 2026-07-13).** The host owns the title bar, but a widget may push a small
+fragment into it to reclaim body space. `WidgetHost` cascades a `WidgetHeaderSlot`; a widget opts in via
+`[CascadingParameter]` and calls `Set(fragment)` — the host renders it right of the title (suppressed in
+edit mode, where the edit controls own the bar). Opt-in and generic: widgets that ignore it are
+unaffected. Quick Record (§4.2) is the first consumer — the selected chart's art/bubble/✕ ride up there.
+
 ### 2.4 Grid + drag
 
 - CSS grid, 4 columns desktop, auto-flow; widgets are `(Ordinal, SizePreset)` — D6.
@@ -309,7 +315,7 @@ Readiness: ✅ published contract already serves it · 🔨 needs new data/query
 | ScoreLedger | Session Journal | ✅ | `GetRecentSessionsQuery`; score history was a top user ask |
 | ScoreLedger | Chart Journey | ✅ | pin a white-whale chart, `GetChartScoreJourneyQuery` sparkline |
 | ScoreLedger | To-Do List | ✅ | must survive WSIP (parity phase) |
-| ScoreLedger | Quick Record | ✅ | ChartSelector + EditChartGrid inline; the arcade widget |
+| ScoreLedger | Quick Record | ✅ | **SPEC'd — catalog-walk pick (§4.2)**; ChartSelector + a purpose-built record row (not EditChartGrid); the arcade widget |
 | ScoreLedger | On the bubble | 🔨 | near-miss grades/plates ("18,797 from AAA+"); compute from records |
 | ScoreLedger | Activity heatmap | 🔨 | calendar of play days from the journal |
 | ScoreLedger | Mix Migration | ✅ | D11 — own widget; `GetCrossMixPassesQuery`; featured at P2 launch |
@@ -375,6 +381,83 @@ re-roll in the body meta row. The page's vestigial `LevelOffset` UI is supersede
   suggestion category; all widgets raise it).
 - **Phoenix 2**: supported; the 272 P2 titles (PR #128) should light Title Hunt up — verify at field
   test, the old page-level P2 gate stays dead (D14).
+
+### 4.2 Quick Record (catalog-walk pick — the arcade widget)
+
+The manual recorder's widget: search a chart, punch the score, Save, on to the next. One
+`UpdatePhoenixBestAttemptCommand` per save — the same write path the ChartDetailsDialog uses. Owner
+field-test (2026-07-12, one round) locked it deliberately tiny. Mock:
+[artifact](https://claude.ai/code/artifact/5d4bce53-a5e1-4610-8af2-f62fcea24436).
+
+**Locked decisions (owner, 2026-07-12):** (1) **no recent-charts shortcut** — replaying a chart you just
+played doesn't mean re-keying a score every time; (2) **Plate + Broken inline** on the action row;
+(3) **always clears to Search after Save** — rapid-fire, no toggle; (4) **1×1 only**; (5) **pure
+recorder** — the chart display is not clickable, no ChartDetailsDialog, no navigation of any kind.
+
+- **Composition**: reuses `ChartSelector` (its `S18`/`D22` shorthand is already built in) as the
+  persistent top row; the record inputs are a **purpose-built compact row, NOT `EditChartGrid`**. The
+  ChartDetailsDialog already hit this wall at round 11 — *"EditChartGrid brought duplicate
+  To-Do/favorite buttons and a layout that fell apart on phones"* — so Quick Record borrows the
+  selector but rebuilds score/plate/broken to fit the ~114px of body a 1×1 gives. Save dispatches
+  `UpdatePhoenixBestAttemptCommand(chartId, isBroken, score, plate, Mix)`.
+- **Data — all existing ScoreLedger contracts; no new query, table, or vertical**: the chart list comes
+  from the shell's `ChartCatalogCache` (shared per mix, no per-widget `GetChartsQuery`) and is passed
+  into `ChartSelector` via its `Charts` param; on pick, `GetPhoenixRecordQuery(chartId, mix)` prefills
+  the current best so it's an edit, not a blank; Save writes through the existing best-attempt command.
+- **States** (one 1×1 frame, three faces):
+  - **Search** (resting) — the selector (placeholder) + a shorthand hint + a muted "Posts to {Mix}"
+    footer (the mix cascade D13 is real; the recorder should see which board it writes to).
+  - **Recording** — the selected chart's identity (art + `DifficultyBubble` + clear ✕, **no song name**)
+    rides up into the host **title bar** via the header slot (§2.3, owner 2026-07-13), so the body opens
+    straight into a half-width tabular Score field beside a **live-derived letter-grade badge** (display
+    only — the domain derives the grade from the score, we send score + plate + broken) and a compact
+    **plate/result dropdown** (shorthand: RG…PG). Save sits on its own row so it never clips on narrow
+    widths. **Broken has no checkbox** (owner, 2026-07-13): the dropdown carries a `Broken` shortcut at
+    top (→ broken, no plate — the clean-fail path), and **clicking the grade icon toggles broken without
+    clearing the plate** — the subtle, undocumented-by-design path to a *plated broken* grade (a fail
+    whose accuracy still earned a plate; the owner captures those). Both write the same
+    `UpdatePhoenixBestAttemptCommand`. Legacy/XX keeps its own Broken checkbox (no plate dropdown there).
+  - **Saved** — an inline success flash ("Recorded · SS+ 985,320 · Marvelous") for ~1.4s, then
+    **always** back to Search. The `UpdatePhoenixBestAttemptCommand` Snackbar is suppressed in-widget to
+    avoid a double confirmation.
+- **Grade badge**: score → Phoenix letter grade via `PhoenixLetterGrade`'s own thresholds (feedback
+  only — never sent). Colored off the rarity ramp through `ThemeScales`/tokens (SSS→sapphire, SS/S→gold,
+  AAA/AA→emerald, A/B→silver, C/D/F→common) — never a hand-rolled color.
+- **Validation / edges**: Save is disabled until a score is entered (score is the minimum; plate/broken
+  optional). Broken defaults **off** — a hand-keyed record is usually a pass. An empty score never sends
+  a record *removal* — that deletion path stays the dialog's job, not the arcade widget's.
+- **Sizes**: **1×1 only** — `SupportedSizes = [1×1]`, `DefaultSize = 1×1`. The one widget whose
+  per-widget size list is a single entry.
+- **Config v1**: **`Mix` scope** — `Follow current mix` / Phoenix / Phoenix 2 / **All mixes**, plus a
+  **Remember last mix** toggle shown only under All mixes (owner, 2026-07-12/13). `ClearAfterSave` was
+  considered and dropped — it always clears.
+- **EditMode**: inputs render disabled while the board is being arranged (no accidental writes
+  mid-drag); the selector shows its resting frame. Grid data refresh is already paused in edit mode by
+  the shell (§2.3).
+- **Lifecycle (§2.3)**: skeleton = the selector frame at fixed footprint; empty state = the search box
+  IS the CTA (logged-out → "Sign in to record"); isolated error = a failed save shows an inline retry,
+  board stays up; persisted vs transient = the half-typed entry is session-only, only Save writes;
+  config + version = `{ mix }`, version 1.
+- **Mixes & scoring (owner, 2026-07-12/13)**: the widget records to **every mix** (`SupportedMixes =
+  all`). "Follow current mix" honours whatever the site is set to — legacy included; there is **no clamp
+  to Phoenix** (that clamp was the "always snaps to Phoenix" bug). The record row adapts by
+  `UsesLegacyScoring()`: Phoenix / Phoenix 2 → score + derived grade + plate →
+  `UpdatePhoenixBestAttemptCommand`; **XX and older → score + manual `XXLetterGrade` + broken, no plate
+  → `UpdateXXBestAttemptCommand`** (the existing legacy path, reused). The **active mix rides the header
+  slot** (§2.3) as a chip — the old "Posts to {mix}" footer is gone. Legacy row weights Score wide,
+  Letter Grade narrow; Save always right-aligned.
+- **All-mixes flow (owner, 2026-07-13)**: (1) no mix → the body shows **only the picker**; (2) pick a mix
+  → the mix chip + a change-✕ appear in the header, body switches to the chart selector; (3) pick a chart
+  → art + bubble join the header, body is the inputs. The header **✕ clears one step back** — the chart
+  first (keep the mix, rapid-fire the same board), then the mix (back to the picker). A per-instance
+  **Remember last mix** toggle stores the pick in UserSettings (keyed by widget id) and **auto-jumps**
+  straight to it next time instead of the picker.
+- **Shell extensions: none.** Quick Record is the first catalog widget that needs nothing new from the
+  shell — no `DrawerPresets`, no `DynamicNameKey`, no `RefreshIcon`, and it never raises `OnChartClick`
+  (it declares the five render-contract params and ignores `OnChartClick`/`RefreshToken`).
+- **Not in scope**: favorites / To-Do (the dialog and EditChartGrid own those), score history (the
+  Session Journal and Chart Journey widgets own that), bulk entry (the Upload pages own that).
+  Deliberately one chart, one score, fast.
 
 ## 5. Pumbility Projections v2 — **PR #1**, ships before the shell (D17)
 

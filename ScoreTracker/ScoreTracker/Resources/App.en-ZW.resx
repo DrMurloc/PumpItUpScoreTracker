@@ -3348,4 +3348,46 @@
   <data name="Verified from official import" xml:space="preserve">
     <value>Verified from official import</value>
   </data>
+  <data name="Quick Record" xml:space="preserve">
+    <value>Qrglck Mrglcord</value>
+  </data>
+  <data name="Record a score by hand for any chart." xml:space="preserve">
+    <value>Mrglcord a grglrgl by hand for any chrgl.</value>
+  </data>
+  <data name="Search a chart" xml:space="preserve">
+    <value>Srglarch a chrgl</value>
+  </data>
+  <data name="Name, or shorthand like S18" xml:space="preserve">
+    <value>Nrgl, or shorthand like S18</value>
+  </data>
+  <data name="Posts to {0}" xml:space="preserve">
+    <value>Mrglposts to {0}</value>
+  </data>
+  <data name="Recorded" xml:space="preserve">
+    <value>Rgrglcord</value>
+  </data>
+  <data name="Change chart" xml:space="preserve">
+    <value>Chrglange chrgl</value>
+  </data>
+  <data name="Sign in to record." xml:space="preserve">
+    <value>Srgln in to mrglcord.</value>
+  </data>
+  <data name="There was an error while recording the score" xml:space="preserve">
+    <value>Thrgle was a mrglror while recording the grglrgl</value>
+  </data>
+  <data name="All mixes" xml:space="preserve">
+    <value>All Mrglas</value>
+  </data>
+  <data name="Record to" xml:space="preserve">
+    <value>Mrglcord to</value>
+  </data>
+  <data name="Select a mix" xml:space="preserve">
+    <value>Select a Mrgla</value>
+  </data>
+  <data name="Change mix" xml:space="preserve">
+    <value>Chrglange Mrgla</value>
+  </data>
+  <data name="Remember last mix" xml:space="preserve">
+    <value>Rmrglember last Mrgla</value>
+  </data>
 </root>
