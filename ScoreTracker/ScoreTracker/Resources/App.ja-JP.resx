@@ -3285,4 +3285,49 @@
   <data name="No entries yet." xml:space="preserve">
     <value>まだエントリーがありません。</value>
   </data>
+  <data name="Community Highlights" xml:space="preserve">
+    <value>コミュニティのハイライト</value>
+  </data>
+  <data name="Recent big wins from the communities you pick." xml:space="preserve">
+    <value>選んだコミュニティの最近の大きな記録。</value>
+  </data>
+  <data name="No big wins yet" xml:space="preserve">
+    <value>まだ大きな記録はありません</value>
+  </data>
+  <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
+    <value>コミュニティの珍しいPG、大きな称号、トップスコアがここに表示されます。</value>
+  </data>
+  <data name="only {0} have it" xml:space="preserve">
+    <value>{0} のみ達成</value>
+  </data>
+  <data name="#{0} PUMBILITY" xml:space="preserve">
+    <value>PUMBILITY #{0}</value>
+  </data>
+  <data name="top {0}% of peers" xml:space="preserve">
+    <value>同格プレイヤーの上位{0}%</value>
+  </data>
+  <data name="#{0} to pass this folder" xml:space="preserve">
+    <value>このフォルダを {0} 番目にクリア</value>
+  </data>
+  <data name="only {0} hold it" xml:space="preserve">
+    <value>{0} のみ保持</value>
+  </data>
+  <data name="completed" xml:space="preserve">
+    <value>達成</value>
+  </data>
+  <data name="now" xml:space="preserve">
+    <value>たった今</value>
+  </data>
+  <data name="Communities to include" xml:space="preserve">
+    <value>含めるコミュニティ</value>
+  </data>
+  <data name="Join a community to use this widget." xml:space="preserve">
+    <value>このウィジェットを使うにはコミュニティに参加してください。</value>
+  </data>
+  <data name="Leave all unchecked to follow your non-regional communities." xml:space="preserve">
+    <value>すべて未選択にすると、地域以外のコミュニティに従います。</value>
+  </data>
+  <data name="Include my own wins" xml:space="preserve">
+    <value>自分の記録も含める</value>
+  </data>
 </root>

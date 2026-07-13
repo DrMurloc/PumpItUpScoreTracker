@@ -3164,4 +3164,49 @@
   <data name="No entries yet." xml:space="preserve">
     <value>Aún no hay participaciones.</value>
   </data>
+  <data name="Community Highlights" xml:space="preserve">
+    <value>Destacados de la comunidad</value>
+  </data>
+  <data name="Recent big wins from the communities you pick." xml:space="preserve">
+    <value>Grandes logros recientes de las comunidades que elijas.</value>
+  </data>
+  <data name="No big wins yet" xml:space="preserve">
+    <value>Aún no hay grandes logros</value>
+  </data>
+  <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
+    <value>Aquí aparecen PG raros, grandes títulos y mejores puntajes de tus comunidades.</value>
+  </data>
+  <data name="only {0} have it" xml:space="preserve">
+    <value>solo {0} lo tienen</value>
+  </data>
+  <data name="#{0} PUMBILITY" xml:space="preserve">
+    <value>#{0} en PUMBILITY</value>
+  </data>
+  <data name="top {0}% of peers" xml:space="preserve">
+    <value>top {0}% entre pares</value>
+  </data>
+  <data name="#{0} to pass this folder" xml:space="preserve">
+    <value>#{0} en pasar este folder</value>
+  </data>
+  <data name="only {0} hold it" xml:space="preserve">
+    <value>solo {0} lo poseen</value>
+  </data>
+  <data name="completed" xml:space="preserve">
+    <value>completado</value>
+  </data>
+  <data name="now" xml:space="preserve">
+    <value>ahora</value>
+  </data>
+  <data name="Communities to include" xml:space="preserve">
+    <value>Comunidades a incluir</value>
+  </data>
+  <data name="Join a community to use this widget." xml:space="preserve">
+    <value>Únete a una comunidad para usar este widget.</value>
+  </data>
+  <data name="Leave all unchecked to follow your non-regional communities." xml:space="preserve">
+    <value>Deja todo sin marcar para seguir tus comunidades no regionales.</value>
+  </data>
+  <data name="Include my own wins" xml:space="preserve">
+    <value>Incluir mis propios logros</value>
+  </data>
 </root>

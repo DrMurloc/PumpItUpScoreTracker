@@ -3284,4 +3284,49 @@
   <data name="No entries yet." xml:space="preserve">
     <value>Ancora nessuna partecipazione.</value>
   </data>
+  <data name="Community Highlights" xml:space="preserve">
+    <value>In evidenza dalla comunità</value>
+  </data>
+  <data name="Recent big wins from the communities you pick." xml:space="preserve">
+    <value>Le grandi vittorie recenti dalle comunità che scegli.</value>
+  </data>
+  <data name="No big wins yet" xml:space="preserve">
+    <value>Ancora nessuna grande vittoria</value>
+  </data>
+  <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
+    <value>Qui compaiono PG rari, grandi titoli e migliori punteggi dalle tue comunità.</value>
+  </data>
+  <data name="only {0} have it" xml:space="preserve">
+    <value>solo {0} ce l'hanno</value>
+  </data>
+  <data name="#{0} PUMBILITY" xml:space="preserve">
+    <value>#{0} in PUMBILITY</value>
+  </data>
+  <data name="top {0}% of peers" xml:space="preserve">
+    <value>top {0}% tra i pari</value>
+  </data>
+  <data name="#{0} to pass this folder" xml:space="preserve">
+    <value>#{0} a passare questo folder</value>
+  </data>
+  <data name="only {0} hold it" xml:space="preserve">
+    <value>solo {0} lo possiedono</value>
+  </data>
+  <data name="completed" xml:space="preserve">
+    <value>completato</value>
+  </data>
+  <data name="now" xml:space="preserve">
+    <value>ora</value>
+  </data>
+  <data name="Communities to include" xml:space="preserve">
+    <value>Comunità da includere</value>
+  </data>
+  <data name="Join a community to use this widget." xml:space="preserve">
+    <value>Unisciti a una comunità per usare questo widget.</value>
+  </data>
+  <data name="Leave all unchecked to follow your non-regional communities." xml:space="preserve">
+    <value>Lascia tutto deselezionato per seguire le tue comunità non regionali.</value>
+  </data>
+  <data name="Include my own wins" xml:space="preserve">
+    <value>Includi le mie vittorie</value>
+  </data>
 </root>
