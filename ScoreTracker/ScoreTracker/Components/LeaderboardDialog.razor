@@ -33,7 +33,7 @@
         {
             @foreach (var row in _rows)
             {
-                <div class="weekly-lb-row @(row.IsMe ? "weekly-lb-me" : "")">
+                <div class="weekly-lb-row @(row.IsMe ? "weekly-lb-me" : CommunityUserIds?.Contains(row.Entry.UserId) == true ? "weekly-lb-community" : "")">
                     <span class="weekly-lb-place" style="@ThemeScales.RarityStyle(row.Percentile)">
                         #@row.Place
                     </span>
@@ -89,6 +89,9 @@
 
     /// <summary>How deep the board shows before it's just you (Weekly: 10; Daily Step: 50).</summary>
     [Parameter] public int MaxPlaces { get; set; } = 10;
+
+    /// <summary>Optional (Daily Step): user ids in a community you share — their rows glow green.</summary>
+    [Parameter] public IReadOnlySet<Guid>? CommunityUserIds { get; set; }
 
     private static readonly DialogOptions DialogSizing = new()
         { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseOnEscapeKey = true };

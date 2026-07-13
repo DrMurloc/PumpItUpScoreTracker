@@ -2601,10 +2601,13 @@ html.nav-away .page-dock,
 
 /* Daily Step widget (docs/design/daily-step.md): the shared daily chart as a leaderboard card. */
 
-.dash-daily {
-    /* Row-highlight tokens: your row (blue) and a community member's (green). */
+/* Row-highlight tokens, global so the leaderboard dialog can glow too: you (blue), community (green). */
+:root {
     --daily-you: #4bb8ff;
     --daily-community: #43dc86;
+}
+
+.dash-daily {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -2839,8 +2842,13 @@ html.nav-away .page-dock,
 }
 
 .weekly-lb-me {
-    background: rgba(255, 255, 255, .06);
-    box-shadow: inset 2px 0 0 0 var(--mix-primary);
+    background: color-mix(in srgb, var(--daily-you) 15%, transparent);
+    box-shadow: inset 0 0 0 1.5px var(--daily-you);
+}
+
+.weekly-lb-community {
+    background: color-mix(in srgb, var(--daily-community) 13%, transparent);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--daily-community) 60%, transparent);
 }
 
 .weekly-lb-place {
