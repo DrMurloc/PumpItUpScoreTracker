@@ -3389,4 +3389,10 @@
   <data name="Select a mix" xml:space="preserve">
     <value>Selecione uma versão</value>
   </data>
+  <data name="Change mix" xml:space="preserve">
+    <value>Trocar versão</value>
+  </data>
+  <data name="Remember last mix" xml:space="preserve">
+    <value>Lembrar última versão</value>
+  </data>
 </root>

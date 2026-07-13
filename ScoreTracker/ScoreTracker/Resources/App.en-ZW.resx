@@ -3363,4 +3363,10 @@
   <data name="Select a mix" xml:space="preserve">
     <value>Select a Mrgla</value>
   </data>
+  <data name="Change mix" xml:space="preserve">
+    <value>Chrglange Mrgla</value>
+  </data>
+  <data name="Remember last mix" xml:space="preserve">
+    <value>Rmrglember last Mrgla</value>
+  </data>
 </root>

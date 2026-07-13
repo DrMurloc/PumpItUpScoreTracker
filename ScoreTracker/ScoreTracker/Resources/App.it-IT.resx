@@ -3440,4 +3440,10 @@
   <data name="Select a mix" xml:space="preserve">
     <value>Seleziona un Mix</value>
   </data>
+  <data name="Change mix" xml:space="preserve">
+    <value>Cambia Mix</value>
+  </data>
+  <data name="Remember last mix" xml:space="preserve">
+    <value>Ricorda l'ultimo Mix</value>
+  </data>
 </root>

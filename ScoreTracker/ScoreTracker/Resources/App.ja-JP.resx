@@ -3441,4 +3441,10 @@
   <data name="Select a mix" xml:space="preserve">
     <value>バージョンを選択</value>
   </data>
+  <data name="Change mix" xml:space="preserve">
+    <value>バージョンを変更</value>
+  </data>
+  <data name="Remember last mix" xml:space="preserve">
+    <value>前回のバージョンを記憶</value>
+  </data>
 </root>
