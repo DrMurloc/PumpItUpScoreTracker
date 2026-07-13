@@ -16,6 +16,16 @@
             <span class="dash-drag-handle" aria-hidden="true">⠿</span>
         }
         <span class="dash-widget-title">@TitleText</span>
+        @if (_descriptor?.RefreshIcon != null)
+        {
+            @* Header refresh (owner, round 5): bumps RefreshToken so the widget reloads
+               without spending body space on a meta row. *@
+            <span class="dash-head-action">
+                <MudIconButton Size="Size.Small" Icon="@_descriptor.RefreshIcon"
+                               title="@L[_descriptor.RefreshTitleKey ?? _descriptor.NameKey]"
+                               OnClick="Refresh"/>
+            </span>
+        }
         @if (EditMode)
         {
             <span class="dash-edit-controls">
@@ -90,25 +100,43 @@
     /// <summary>
     ///     The standing rule (field-test round 1): chart rows/cards inside widgets open
     ///     the shared ChartDetailsDialog. The page owns the dialog; widgets just raise.
+    ///     Suggestion widgets stamp their category on the context for dialog feedback.
     /// </summary>
-    [Parameter] public EventCallback<Chart> OnChartClick { get; set; }
+    [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
 
     private WidgetDescriptor? _descriptor;
+    private int _refreshToken;
     private IDictionary<string, object> _parameters = new Dictionary<string, object>();
 
     private string TitleText => Widget.Title
-                                ?? (_descriptor == null ? Widget.WidgetType : L[_descriptor.NameKey].Value);
+                                ?? (_descriptor == null
+                                    ? Widget.WidgetType
+                                    : L[_descriptor.DynamicNameKey?.Invoke(Widget.ConfigJson)
+                                        ?? _descriptor.NameKey].Value);
 
     protected override void OnParametersSet()
     {
         _descriptor = WidgetRegistry.TryGet(Widget.WidgetType);
-        // Every widget component declares these four — the render contract (§2.2).
-        _parameters = new Dictionary<string, object>
+        _parameters = BuildParameters();
+    }
+
+    private void Refresh()
+    {
+        _refreshToken++;
+        // Self-triggered change: OnParametersSet won't re-run, rebuild by hand.
+        _parameters = BuildParameters();
+    }
+
+    private IDictionary<string, object> BuildParameters()
+    {
+        // Every widget component declares these five — the render contract (§2.2).
+        return new Dictionary<string, object>
         {
             ["Widget"] = Widget,
             ["EffectiveMix"] = EffectiveMix,
             ["EditMode"] = EditMode,
-            ["OnChartClick"] = OnChartClick
+            ["OnChartClick"] = OnChartClick,
+            ["RefreshToken"] = _refreshToken
         };
     }
 
