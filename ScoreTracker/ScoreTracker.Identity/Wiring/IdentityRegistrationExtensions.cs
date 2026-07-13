@@ -20,6 +20,7 @@ public static class IdentityRegistrationExtensions
     {
         services.AddTransient<IMergeRequestRepository, EFMergeRequestRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
+        services.AddTransient<IImportCredentialKeyStore, EFImportCredentialKeyStore>();
         services.AddSingleton<IDbModelContribution, IdentityModelContribution>();
         return services;
     }
