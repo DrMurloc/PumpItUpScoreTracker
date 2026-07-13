@@ -402,9 +402,14 @@ recorder** — the chart display is not clickable, no ChartDetailsDialog, no nav
   - **Search** (resting) — the selector (placeholder) + a shorthand hint + a muted "Posts to {Mix}"
     footer (the mix cascade D13 is real; the recorder should see which board it writes to).
   - **Recording** — the selector now holds the pick (search glyph + `DifficultyBubble` + name +
-    clear ✕); a large tabular Score field with a **live-derived letter-grade badge** (display only — the
-    domain derives the grade from the score, we send score + plate + broken); Plate select + Broken
-    toggle + Save.
+    clear ✕); a half-width tabular Score field beside a **live-derived letter-grade badge** (display
+    only — the domain derives the grade from the score, we send score + plate + broken) and a compact
+    **plate/result dropdown** (shorthand: RG…PG). Save sits on its own row so it never clips on narrow
+    widths. **Broken has no checkbox** (owner, 2026-07-13): the dropdown carries a `Broken` shortcut at
+    top (→ broken, no plate — the clean-fail path), and **clicking the grade icon toggles broken without
+    clearing the plate** — the subtle, undocumented-by-design path to a *plated broken* grade (a fail
+    whose accuracy still earned a plate; the owner captures those). Both write the same
+    `UpdatePhoenixBestAttemptCommand`. Legacy/XX keeps its own Broken checkbox (no plate dropdown there).
   - **Saved** — an inline success flash ("Recorded · SS+ 985,320 · Marvelous") for ~1.4s, then
     **always** back to Search. The `UpdatePhoenixBestAttemptCommand` Snackbar is suppressed in-widget to
     avoid a double confirmation.

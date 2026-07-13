@@ -196,4 +196,42 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
         _mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
+
+    [Fact]
+    public async Task ClickingTheGradeIconRecordsAPlatedBrokenGrade()
+    {
+        // A plated broken: the grade-icon toggle flips broken but keeps the plate.
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RecordedPhoenixScore(_chart.Id, 991000, PhoenixPlate.MarvelousGame, false,
+                new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero)));
+        var cut = Render();
+        await Pick(cut, _chart);
+
+        cut.Find(".qr-grade-toggle").Click();
+        cut.Find(".qr-save-btn").Click();
+
+        _mediator.Verify(m => m.Send(
+            It.Is<UpdatePhoenixBestAttemptCommand>(c =>
+                c.ChartId == _chart.Id && c.IsBroken && c.Plate == PhoenixPlate.MarvelousGame),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SelectingBrokenInTheResultDropdownClearsThePlate()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RecordedPhoenixScore(_chart.Id, 991000, PhoenixPlate.MarvelousGame, false,
+                new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero)));
+        var cut = Render();
+        await Pick(cut, _chart);
+
+        await cut.InvokeAsync(() =>
+            cut.FindComponent<MudSelect<string>>().Instance.ValueChanged.InvokeAsync("Broken"));
+        cut.Find(".qr-save-btn").Click();
+
+        _mediator.Verify(m => m.Send(
+            It.Is<UpdatePhoenixBestAttemptCommand>(c =>
+                c.ChartId == _chart.Id && c.IsBroken && c.Plate == null),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
 }
