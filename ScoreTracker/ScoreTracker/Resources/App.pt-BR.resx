@@ -3365,6 +3365,18 @@
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>PGs raros, grandes títulos e melhores pontuações das suas comunidades aparecem aqui.</value>
   </data>
+  <data name="Rare Title" xml:space="preserve">
+    <value>Título raro</value>
+  </data>
+  <data name="Rare PG" xml:space="preserve">
+    <value>PG raro</value>
+  </data>
+  <data name="Folder Cleared" xml:space="preserve">
+    <value>Pasta concluída</value>
+  </data>
+  <data name="Top {0}%" xml:space="preserve">
+    <value>Top {0}%</value>
+  </data>
   <data name="only {0} have PG" xml:space="preserve">
     <value>só {0} têm PG</value>
   </data>

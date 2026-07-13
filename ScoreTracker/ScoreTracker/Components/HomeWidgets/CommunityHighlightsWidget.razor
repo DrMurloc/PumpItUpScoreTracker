@@ -6,6 +6,7 @@
 @using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.HomeDashboard
@@ -160,6 +161,7 @@ else
     private string? _loadedFor;
     private IReadOnlyList<CommunityHighlightRecord> _records = Array.Empty<CommunityHighlightRecord>();
     private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private MixEnum _mix = MixEnum.Phoenix;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -169,7 +171,7 @@ else
         _loaded = false;
 
         var config = WidgetConfigJson.Read<CommunityHighlightsConfig>(Widget.ConfigJson);
-        var mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
+        _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
             : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
 
         // Empty config follows your non-regional crews (CH1) — World/country are opt-in.
@@ -187,8 +189,8 @@ else
         }
 
         _records = (await Mediator.Send(
-            new GetMyCommunityHighlightsQuery(communities, mix, config.IncludeOwnWins, FeedTake))).ToList();
-        _charts = await ChartCatalog.GetCharts(mix);
+            new GetMyCommunityHighlightsQuery(communities, _mix, config.IncludeOwnWins, FeedTake))).ToList();
+        _charts = await ChartCatalog.GetCharts(_mix);
         _loaded = true;
     }
 
@@ -230,6 +232,20 @@ else
     private static string Bracket(string title) =>
         string.IsNullOrEmpty(title) ? "" : title.StartsWith('[') ? title : $"[{title}]";
 
+    // Split a folder label ("D24") into type + level so a chart-less DifficultyBubble can render it.
+    private static (ChartType? Type, DifficultyLevel? Level) ParseFolder(string? difficulty)
+    {
+        if (string.IsNullOrEmpty(difficulty)) return (null, null);
+        foreach (var type in new[] { ChartType.Double, ChartType.Single, ChartType.CoOp, ChartType.HalfDouble })
+        {
+            var shorthand = type.GetShortHand();
+            if (difficulty.StartsWith(shorthand, StringComparison.OrdinalIgnoreCase)
+                && int.TryParse(difficulty[shorthand.Length..], out var level))
+                return (type, DifficultyLevel.From(level));
+        }
+        return (null, null);
+    }
+
     private bool IsMe(CommunityHighlightRecord record) =>
         CurrentUser.IsLoggedIn && CurrentUser.User.Id == record.UserId;
 
@@ -240,16 +256,16 @@ else
     // Cards get the *shortest* form — the full sentence lives in the tooltip (owner: lean hard on tooltips).
     private string ShortCaption(SignificantWin win) => win.Kind switch
     {
-        WinKind.NotablePg => $"💎 {Pct(win.RarityShare)}",
-        WinKind.TopPumbility => $"👑 #{win.Rank ?? 0}",
-        WinKind.PeerElite => win.Rank == 1 ? "📊 #1" : $"📊 {PeerPct(win)}%",
-        WinKind.FolderFirst => $"🆕 {Ordinal(win.Rank ?? 0)}",
+        WinKind.NotablePg => $"💎 {L["Rare PG"]}",
+        WinKind.TopPumbility => $"👑 #{win.Rank ?? 0} PUMB",
+        WinKind.PeerElite => $"📊 {L["Top {0}%", PeerPct(win)]}",
+        WinKind.FolderFirst => $"🆕 {Ordinal(win.Rank ?? 0)} {win.Difficulty}",
         _ => string.Empty
     };
 
-    private string ShortTitleSub(SignificantWin win) => win.Kind == WinKind.RareTitle && win.RarityShare != null
-        ? Pct(win.RarityShare)
-        : L["completed"].Value;
+    // Rare titles get a "Rare Title" tag; big titles get nothing (no "completed").
+    private string ShortTitleSub(SignificantWin win) =>
+        win.Kind == WinKind.RareTitle ? L["Rare Title"].Value : string.Empty;
 
     // A win as a strip card. Chart wins = art + grade/plate + score + the short caption; titles + folder
     // clears are text cards. The full detail + song name ride a MudTooltip on hover (owner).
@@ -282,15 +298,30 @@ else
                     </div>
                 </MudTooltip>
             }
-            else
+            else if (win.Kind == WinKind.FolderComplete)
             {
+                var folder = ParseFolder(win.Difficulty);
                 <MudTooltip Text="@NonChartTip(win)" Arrow="true">
                     <div class="dash-chart-card dash-card-text">
-                        <div class="dash-card-emoji">@(win.Kind == WinKind.FolderComplete ? "🎉" : "🏅")</div>
-                        <div class="dash-card-name">@(win.Kind == WinKind.FolderComplete ? win.Difficulty : Bracket(win.TitleName ?? ""))</div>
-                        @if (win.Kind != WinKind.FolderComplete)
+                        <div class="dash-card-emoji">🎉</div>
+                        @if (folder.Type != null && folder.Level != null)
                         {
-                            <div class="dash-card-detail dash-muted">@ShortTitleSub(win)</div>
+                            <DifficultyBubble Type="folder.Type" Level="folder.Level" Mix="_mix" Small="true"></DifficultyBubble>
+                        }
+                        <div class="dash-card-name">@L["Folder Cleared"]</div>
+                    </div>
+                </MudTooltip>
+            }
+            else
+            {
+                @* Big + rare titles: name, plus "Rare Title" for a rare-title win only (no "completed"). *@
+                <MudTooltip Text="@NonChartTip(win)" Arrow="true">
+                    <div class="dash-chart-card dash-card-text">
+                        <div class="dash-card-emoji">🏅</div>
+                        <div class="dash-card-name">@Bracket(win.TitleName ?? "")</div>
+                        @if (ShortTitleSub(win) is { Length: > 0 } sub)
+                        {
+                            <div class="dash-card-detail dash-muted">@sub</div>
                         }
                     </div>
                 </MudTooltip>

@@ -3297,6 +3297,18 @@
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>커뮤니티의 희귀한 PG, 큰 칭호, 최고 점수가 여기에 표시됩니다.</value>
   </data>
+  <data name="Rare Title" xml:space="preserve">
+    <value>희귀 칭호</value>
+  </data>
+  <data name="Rare PG" xml:space="preserve">
+    <value>희귀 PG</value>
+  </data>
+  <data name="Folder Cleared" xml:space="preserve">
+    <value>폴더 클리어</value>
+  </data>
+  <data name="Top {0}%" xml:space="preserve">
+    <value>상위 {0}%</value>
+  </data>
   <data name="only {0} have PG" xml:space="preserve">
     <value>{0}만 PG 보유</value>
   </data>
