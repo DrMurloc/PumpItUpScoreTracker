@@ -3233,4 +3233,19 @@
   <data name="No entries yet." xml:space="preserve">
     <value>Nenhuma participação ainda.</value>
   </data>
+  <data name="Daily Step" xml:space="preserve">
+    <value>Passo Diário</value>
+  </data>
+  <data name="Today's shared chart, plus a weekly Limbo Day." xml:space="preserve">
+    <value>O chart compartilhado de hoje, mais um Dia Limbo semanal.</value>
+  </data>
+  <data name="Today's Step posts at midnight." xml:space="preserve">
+    <value>O Passo de hoje sai à meia-noite.</value>
+  </data>
+  <data name="Limbo Day: lowest passing score wins!" xml:space="preserve">
+    <value>Dia Limbo: a menor pontuação que passa vence!</value>
+  </data>
+  <data name="No entry yet" xml:space="preserve">
+    <value>Ainda sem tentativa</value>
+  </data>
 </root>

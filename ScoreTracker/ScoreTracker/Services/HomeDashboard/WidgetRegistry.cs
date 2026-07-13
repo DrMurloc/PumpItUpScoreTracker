@@ -48,7 +48,18 @@ public static class WidgetRegistry
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(WeeklyWidget),
             typeof(WeeklyConfigPanel),
-            typeof(WeeklyConfig))
+            typeof(WeeklyConfig)),
+        new("daily-step",
+            "Daily Step",
+            "Today's shared chart, plus a weekly Limbo Day.",
+            WidgetCategory.Compete,
+            Icons.Material.Filled.Today,
+            new[] { SizePreset.OneByOne, SizePreset.TwoByOne },
+            SizePreset.OneByOne,
+            new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            typeof(DailyStepWidget),
+            typeof(DailyStepConfigPanel),
+            typeof(DailyStepConfig))
     };
 
     private static readonly IReadOnlyDictionary<string, WidgetDescriptor> ByTypeId =

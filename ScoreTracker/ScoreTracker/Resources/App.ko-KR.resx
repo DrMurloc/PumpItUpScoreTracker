@@ -3165,4 +3165,19 @@
   <data name="No entries yet." xml:space="preserve">
     <value>아직 참가 기록이 없습니다.</value>
   </data>
+  <data name="Daily Step" xml:space="preserve">
+    <value>데일리 스텝</value>
+  </data>
+  <data name="Today's shared chart, plus a weekly Limbo Day." xml:space="preserve">
+    <value>오늘의 공유 차트, 그리고 주 1회 림보 데이.</value>
+  </data>
+  <data name="Today's Step posts at midnight." xml:space="preserve">
+    <value>오늘의 스텝은 자정에 공개됩니다.</value>
+  </data>
+  <data name="Limbo Day: lowest passing score wins!" xml:space="preserve">
+    <value>림보 데이: 통과한 최저 점수가 승리!</value>
+  </data>
+  <data name="No entry yet" xml:space="preserve">
+    <value>아직 기록 없음</value>
+  </data>
 </root>

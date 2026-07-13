@@ -71,7 +71,7 @@ else
         </div>
     </div>
 
-    <WeeklyLeaderboardDialog @bind-Visible="_showLeaderboard" Chart="_leaderboardChart" Mix="_mix"/>
+    <LeaderboardDialog @bind-Visible="_showLeaderboard" Chart="_leaderboardChart" Entries="_entries"/>
 }
 
 @inject IMediator Mediator
@@ -96,6 +96,7 @@ else
     private bool _showLeaderboard;
     private Chart? _leaderboardChart;
     private MixEnum _mix = MixEnum.Phoenix;
+    private WeeklyTournamentEntry[] _entries = Array.Empty<WeeklyTournamentEntry>();
 
     private void OpenLeaderboard(Chart chart)
     {
@@ -123,6 +124,7 @@ else
         var filtered = await Filter(charts, known, config, _mix);
 
         var entries = (await Mediator.Send(new GetWeeklyChartEntriesQuery(Mix: _mix))).ToArray();
+        _entries = entries;
         var totals = entries.GroupBy(e => e.ChartId).ToDictionary(g => g.Key, g => g.Count());
         var mine = entries.Where(e => e.UserId == userId).Select(e => e.ChartId).ToHashSet();
         var placements = mine.Any()

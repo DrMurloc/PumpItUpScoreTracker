@@ -1,0 +1,141 @@
+@using MediatR
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.WeeklyChallenge.Contracts
+@using ScoreTracker.WeeklyChallenge.Contracts.Queries
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.Theming
+
+@* Daily Step (docs/design/daily-step.md): the site-wide shared daily chart + your standing.
+   Limbo Day (once per ISO week) flips the board to lowest-passing-score-wins. The chart opens the
+   shared ChartDetailsDialog; the trophy opens the compact leaderboard (ascending on Limbo days). *@
+
+@if (!_loaded)
+{
+    <div class="dash-widget-message">
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+    </div>
+}
+else if (_chart == null)
+{
+    <div class="dash-widget-message">
+        <MudText Typo="Typo.body2">@L["Today's Step posts at midnight."]</MudText>
+    </div>
+}
+else
+{
+    <div class="dash-daily">
+        @if (_isLimbo)
+        {
+            <div class="dash-daily-limbo">@L["Limbo Day: lowest passing score wins!"]</div>
+        }
+        <div class="dash-daily-chart @(EditMode ? "" : "dash-clickable")"
+             @onclick="() => OnChartClick.InvokeAsync(_chart)">
+            <span class="@(_wide ? "dash-daily-art" : "dash-mini-art")">
+                <SongImage Song="_chart.Song" Small="!_wide"></SongImage>
+            </span>
+            <div class="dash-daily-title">
+                <DifficultyBubble Chart="_chart" Small="true"></DifficultyBubble>
+                <span class="dash-target-name">@_chart.Song.Name</span>
+            </div>
+        </div>
+
+        @if (_wide && _myEntry != null)
+        {
+            <div class="dash-daily-yours">
+                <ScoreBreakdown Score="_myEntry.Score" Plate="_myEntry.Plate" IsBroken="_myEntry.IsBroken"
+                                OneLine="true" ShowScore="true"></ScoreBreakdown>
+            </div>
+        }
+
+        <div class="dash-daily-standing">
+            @if (_placement != null)
+            {
+                <span class="dash-weekly-place"
+                      style="@ThemeScales.RarityStyle(_placement.Total <= 0 ? 0 : 1.0 - (double)_placement.Place / _placement.Total)">
+                    #@_placement.Place / @_placement.Total
+                </span>
+            }
+            else
+            {
+                <span class="dash-muted">@L["No entry yet"]</span>
+            }
+            @if (!EditMode)
+            {
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.EmojiEvents"
+                               title="@L["See Leaderboards"]" OnClick="OpenLeaderboard"/>
+            }
+        </div>
+    </div>
+
+    <LeaderboardDialog @bind-Visible="_showLeaderboard" Chart="_chart" Entries="_entries" Ascending="_isLimbo"/>
+}
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ChartCatalogCache ChartCatalog
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public MixEnum EffectiveMix { get; set; }
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public EventCallback<Chart> OnChartClick { get; set; }
+
+    private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+
+    private bool _loaded;
+    private bool _wide;
+    private string? _loadedFor;
+    private Chart? _chart;
+    private bool _isLimbo;
+    private DailyStepPlacement? _placement;
+    private WeeklyTournamentEntry? _myEntry;
+    private WeeklyTournamentEntry[] _entries = Array.Empty<WeeklyTournamentEntry>();
+    private bool _showLeaderboard;
+    private MixEnum _mix = MixEnum.Phoenix;
+
+    private void OpenLeaderboard()
+    {
+        _showLeaderboard = true;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{Widget.SizePreset}|{EffectiveMix}";
+        if (signature == _loadedFor) return;
+        _loadedFor = signature;
+        _loaded = false;
+        _wide = (SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.OneByOne).Columns > 1;
+
+        var config = WidgetConfigJson.Read<DailyStepConfig>(Widget.ConfigJson);
+        _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
+            : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
+
+        var board = await Mediator.Send(new GetDailyStepQuery(_mix));
+        _chart = null;
+        _placement = null;
+        _myEntry = null;
+        _entries = Array.Empty<WeeklyTournamentEntry>();
+        if (board != null)
+        {
+            _isLimbo = board.IsLimbo;
+            var charts = await ChartCatalog.GetCharts(_mix);
+            _chart = charts.TryGetValue(board.ChartId, out var chart) ? chart : null;
+            if (_chart != null)
+            {
+                var userId = CurrentUser.User.Id;
+                _placement = await Mediator.Send(new GetDailyStepPlacementQuery(userId, _mix));
+                _entries = (await Mediator.Send(new GetDailyStepEntriesQuery(_mix))).ToArray();
+                _myEntry = _entries.FirstOrDefault(e => e.UserId == userId && e.ChartId == board.ChartId);
+            }
+        }
+
+        _loaded = true;
+    }
+
+}

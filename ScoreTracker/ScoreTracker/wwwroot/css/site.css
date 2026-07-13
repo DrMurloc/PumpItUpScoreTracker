@@ -1067,6 +1067,66 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* Daily Step widget (docs/design/daily-step.md). */
+
+.dash-daily {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+}
+
+.dash-daily-limbo {
+    align-self: flex-start;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: .78rem;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--mix-primary);
+    color: var(--mix-primary);
+}
+
+.dash-daily-chart {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.dash-daily-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.dash-daily-art {
+    flex: none;
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.dash-daily-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dash-daily-yours {
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-daily-standing {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+}
+
 /* Weekly leaderboard dialog (round 3, option 1). */
 
 .weekly-lb-title {

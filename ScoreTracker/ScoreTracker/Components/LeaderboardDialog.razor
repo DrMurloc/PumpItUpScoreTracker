@@ -1,17 +1,15 @@
 @namespace ScoreTracker.Web.Components
-@using MediatR
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
-@using ScoreTracker.WeeklyChallenge.Contracts.Queries
 @using ScoreTracker.Web.Services.Theming
 
-@* Compact weekly leaderboard for one chart (widget-shell round 3, option 1): the top
-   ten plus your own row when you sit outside it. Deliberately reusable — the Daily
-   Step widget will want exactly this shape. Name lookup mirrors the WeeklyCharts
-   page's established read path. *@
+@* Compact leaderboard for one chart: the top ten plus your own row when you sit outside it.
+   Shared by the Weekly Charts and Daily Step widgets — the caller passes the entries and a sort
+   direction (Daily Step's Limbo Day ranks the LOWEST passing score first). Name lookup mirrors the
+   WeeklyCharts page's established read path. *@
 <MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="DialogSizing" Class="weekly-lb-dialog">
     <TitleContent>
         @if (Chart != null)
@@ -58,7 +56,6 @@
     </DialogActions>
 </MudDialog>
 
-@inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject IUserRepository Users
 
@@ -67,7 +64,10 @@
     [Parameter] public bool Visible { get; set; }
     [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
     [Parameter] public Chart? Chart { get; set; }
-    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+    [Parameter] public IEnumerable<WeeklyTournamentEntry> Entries { get; set; } = Array.Empty<WeeklyTournamentEntry>();
+
+    /// <summary>Limbo Day inverts the board: passing runs only, lowest score first.</summary>
+    [Parameter] public bool Ascending { get; set; }
 
     private static readonly DialogOptions DialogSizing = new()
         { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseOnEscapeKey = true };
@@ -75,25 +75,27 @@
     private sealed record LeaderboardRow(int Place, double Percentile, WeeklyTournamentEntry Entry, bool IsMe);
 
     private bool _loaded;
-    private Guid? _loadedFor;
+    private string? _loadedFor;
     private List<LeaderboardRow> _rows = new();
     private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!Visible || Chart == null || Chart.Id == _loadedFor) return;
-        _loadedFor = Chart.Id;
+        if (!Visible || Chart == null) return;
+        var signature = $"{Chart.Id}|{Ascending}|{Entries.Count()}";
+        if (signature == _loadedFor) return;
+        _loadedFor = signature;
         _loaded = false;
 
-        var entries = (await Mediator.Send(new GetWeeklyChartEntriesQuery(Mix: Mix)))
-            .Where(e => e.ChartId == Chart.Id)
-            .OrderBy(e => e.IsBroken)
-            .ThenByDescending(e => (int)e.Score)
+        var forChart = Entries.Where(e => e.ChartId == Chart.Id);
+        var ordered = (Ascending
+                ? forChart.Where(e => !e.IsBroken).OrderBy(e => (int)e.Score)
+                : forChart.OrderBy(e => e.IsBroken).ThenByDescending(e => (int)e.Score))
             .ToArray();
 
         var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
-        _rows = entries
-            .Select((e, i) => new LeaderboardRow(i + 1, 1.0 - (double)(i + 1) / entries.Length, e,
+        _rows = ordered
+            .Select((e, i) => new LeaderboardRow(i + 1, ordered.Length <= 0 ? 0 : 1.0 - (double)(i + 1) / ordered.Length, e,
                 e.UserId == me))
             .Where(r => r.Place <= 10 || r.IsMe)
             .ToList();

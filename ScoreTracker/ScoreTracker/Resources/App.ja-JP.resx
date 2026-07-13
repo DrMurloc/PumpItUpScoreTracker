@@ -3285,4 +3285,19 @@
   <data name="No entries yet." xml:space="preserve">
     <value>まだエントリーがありません。</value>
   </data>
+  <data name="Daily Step" xml:space="preserve">
+    <value>デイリーステップ</value>
+  </data>
+  <data name="Today's shared chart, plus a weekly Limbo Day." xml:space="preserve">
+    <value>今日の共有チャートと、週に一度のリンボーデー。</value>
+  </data>
+  <data name="Today's Step posts at midnight." xml:space="preserve">
+    <value>今日のステップは深夜に公開されます。</value>
+  </data>
+  <data name="Limbo Day: lowest passing score wins!" xml:space="preserve">
+    <value>リンボーデー：クリアした最低スコアが勝ち！</value>
+  </data>
+  <data name="No entry yet" xml:space="preserve">
+    <value>まだ記録なし</value>
+  </data>
 </root>

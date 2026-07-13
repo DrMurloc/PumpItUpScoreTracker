@@ -3207,4 +3207,19 @@
   <data name="No entries yet." xml:space="preserve">
     <value>No mrgl entries yet mrglglgl.</value>
   </data>
+  <data name="Daily Step" xml:space="preserve">
+    <value>Daily Step</value>
+  </data>
+  <data name="Today's shared chart, plus a weekly Limbo Day." xml:space="preserve">
+    <value>Today's shared chart, plus a weekly Limbo Day.</value>
+  </data>
+  <data name="Today's Step posts at midnight." xml:space="preserve">
+    <value>Today's Step posts at midnight.</value>
+  </data>
+  <data name="Limbo Day: lowest passing score wins!" xml:space="preserve">
+    <value>Limbo Day: lowest passing score wins!</value>
+  </data>
+  <data name="No entry yet" xml:space="preserve">
+    <value>No entry yet</value>
+  </data>
 </root>
