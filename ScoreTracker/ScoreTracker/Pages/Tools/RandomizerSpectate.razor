@@ -1,0 +1,197 @@
+@page "/Randomizer/Live/{Slug:guid}"
+@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.Randomizer.Contracts
+@using ScoreTracker.Randomizer.Contracts.Events
+@using ScoreTracker.Randomizer.Contracts.Queries
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Shared
+
+@* The spectator view (docs/design/randomizer-overhaul.md C10): anonymous, read-only,
+   the link that gets posted to Discord once per night. Same tiles, numbers, and states
+   the staff tablet shows; draws swap under the same URL. Updates ride the in-process
+   DrawUpdatedEvent bridge — state is in SQL, so a refresh always agrees. *@
+<PageTitle>@L["Live Draw"]</PageTitle>
+
+@if (_loading)
+{
+    <div class="rand-grid rand-grid-compact">
+        @for (var i = 0; i < 6; i++)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="110px" Class="tier-chart-card-skeleton"></MudSkeleton>
+        }
+    </div>
+}
+else if (_missing)
+{
+    <div class="rand-empty">
+        <MudIcon Icon="@Icons.Material.Filled.LinkOff" Style="font-size:2.6rem;"></MudIcon>
+        <MudText Typo="Typo.h6">@L["This draw doesn't exist"]</MudText>
+        <MudText Typo="Typo.body2">@L["Check the link, or ask whoever shared it for a fresh one."]</MudText>
+    </div>
+}
+else
+{
+    <div class="rand-draft-head">
+        <MudText Typo="Typo.h5">@_title</MudText>
+        <span class="rand-live"><span class="rand-live-dot"></span>@L["LIVE"]</span>
+    </div>
+    @if (_siblings.Count > 1)
+    {
+        @* Any match link opens with tabs to the night's other matches (round 6). *@
+        <div class="rand-chipbar">
+            @foreach (var sibling in _siblings)
+            {
+                var m = sibling;
+                <MudChip T="string" Size="Size.Small"
+                         Variant="@(m.Slug == Slug ? Variant.Filled : Variant.Outlined)"
+                         Color="@(m.Slug == Slug ? Color.Primary : Color.Default)"
+                         OnClick="() => FollowMatch(m)">@m.Name</MudChip>
+            }
+        </div>
+    }
+    <div class="rand-countline">
+        <span class="rand-count-label">@(_matchName == null ? null : $"{_matchName} · ")@_mix.GetName() · @L["{0} cards", _cards.Count]</span>
+        <MudSpacer></MudSpacer>
+        <span class="rand-legend"><i class="rand-legend-held"></i>@L["Held"]</span>
+        <span class="rand-legend"><i class="rand-legend-vetoed"></i>@L["Vetoed"]</span>
+    </div>
+    @if (!_cards.Any())
+    {
+        <div class="rand-empty">
+            <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty" Style="font-size:2.6rem;"></MudIcon>
+            <MudText Typo="Typo.body2">@L["No cards drawn yet — hang tight."]</MudText>
+        </div>
+    }
+    else
+    {
+        <div class="rand-grid rand-grid-compact">
+            @foreach (var card in _cards)
+            {
+                var captured = card;
+                @* Spectators can't mark cards, but details are fair game — the tap opens
+                   the same ChartDetailsDialog the staff sees. *@
+                <DrawCardTile PullId="card.PullId" Chart="card.Chart" Order="card.Order" State="card.State"
+                              Density="UiDensity.Compact" OnTap="_ => OpenDetails(captured)"></DrawCardTile>
+            }
+        </div>
+    }
+}
+
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="@(_detailsChart?.Mix ?? _mix)"></ChartDetailsDialog>
+
+@inject IMediator Mediator
+@inject NavigationManager NavManager
+@implements IDisposable
+@code {
+
+    private sealed record CardVm(Guid PullId, Chart Chart, int Order, DrawCardState State);
+
+    [Parameter] public Guid Slug { get; set; }
+
+    private bool _loading = true;
+    private bool _missing;
+    private Guid _loadedSlug;
+    private string _title = string.Empty;
+    private string? _matchName;
+    private MixEnum _mix = MixEnum.Phoenix;
+    private List<CardVm> _cards = new();
+    private List<DrawDto> _siblings = new();
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+
+    private void OpenDetails(CardVm card)
+    {
+        _detailsChart = card.Chart;
+        _detailsOpen = true;
+    }
+
+    protected override void OnInitialized()
+    {
+        MainLayout.DrawUpdated += OnDrawUpdated;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Also covers tab navigation between sibling matches (slug param changes).
+        if (_loadedSlug == Slug) return;
+
+        _loadedSlug = Slug;
+        _loading = true;
+        await Load();
+        _loading = false;
+    }
+
+    private void FollowMatch(DrawDto match)
+    {
+        if (match.Slug == Slug) return;
+
+        NavManager.NavigateTo($"/Randomizer/Live/{match.Slug}");
+    }
+
+    private async Task Load()
+    {
+        _missing = false;
+        var draw = await Mediator.Send(new GetDrawBySlugQuery(Slug));
+        if (draw == null)
+        {
+            // The match may have been deleted mid-night — follow its newest sibling
+            // instead of dead-ending the viewer.
+            var sibling = _siblings.FirstOrDefault(s => s.Slug != Slug);
+            if (sibling != null)
+            {
+                NavManager.NavigateTo($"/Randomizer/Live/{sibling.Slug}");
+                return;
+            }
+
+            _missing = true;
+            return;
+        }
+
+        _mix = draw.Mix;
+        _matchName = draw.Name;
+        _title = L["Live Draw"];
+        if (draw.TournamentId != null)
+        {
+            _siblings = (await Mediator.Send(new GetTournamentDrawsQuery(draw.TournamentId.Value))).ToList();
+            try
+            {
+                _title = (await Mediator.Send(new GetTournamentQuery(draw.TournamentId.Value))).Name.ToString();
+            }
+            catch (Exception)
+            {
+                // The name is garnish — a spectator link never breaks over it.
+            }
+        }
+
+        var charts = (await Mediator.Send(new GetChartsQuery(draw.Mix,
+                ChartIds: draw.Cards.Select(c => c.ChartId).Distinct().ToArray())))
+            .ToDictionary(c => c.Id);
+        _cards = draw.Cards
+            .Where(c => charts.ContainsKey(c.ChartId))
+            .Select(c => new CardVm(c.PullId, charts[c.ChartId], c.Order, c.State))
+            .ToList();
+    }
+
+    private async void OnDrawUpdated(object? sender, DrawUpdatedEvent e)
+    {
+        // Our match, or any sibling (a new match appearing should light up the tabs).
+        if (e.Slug != Slug && _siblings.All(s => s.Id != e.DrawId) && _siblings.Count > 0) return;
+
+        await InvokeAsync(async () =>
+        {
+            await Load();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        MainLayout.DrawUpdated -= OnDrawUpdated;
+    }
+}

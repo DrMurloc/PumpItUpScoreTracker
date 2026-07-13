@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.PlayerProgress.Infrastructure.Entities;
@@ -12,7 +13,8 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
 {
     internal sealed class EFPlayerStatsRepository : IPlayerStatsRepository,
         IPlayerStatsReader,
-        IRequestHandler<GetPlayerStatsQuery, PlayerStatsRecord>
+        IRequestHandler<GetPlayerStatsQuery, PlayerStatsRecord>,
+        IRequestHandler<GetCompetitiveNeighborsQuery, IReadOnlyList<CompetitiveNeighborRecord>>
     {
         private readonly IMemoryCache _cache;
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
@@ -158,6 +160,38 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
         public async Task<PlayerStatsRecord> Handle(GetPlayerStatsQuery request, CancellationToken cancellationToken)
         {
             return await GetStats(request.Mix, request.UserId, cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<CompetitiveNeighborRecord>> Handle(GetCompetitiveNeighborsQuery request,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(request.Mix);
+            var my = request.MyLevel;
+            var min = my - request.Range;
+            var max = my + request.Range;
+            var all = database.Set<PlayerStatsEntity>().Where(p => p.MixId == mixId);
+
+            // The range WHERE bounds the row set first, so the ABS ordering only sorts the
+            // handful in the band. Eligibility (public / community) is the caller's — the
+            // caller over-fetches by Count and takes its final cut after that filter.
+            var query = request.Dimension switch
+            {
+                ChartType.Single => all
+                    .Where(p => p.SinglesCompetitiveLevel >= min && p.SinglesCompetitiveLevel <= max)
+                    .OrderBy(p => Math.Abs(p.SinglesCompetitiveLevel - my))
+                    .Select(p => new CompetitiveNeighborRecord(p.UserId, p.SinglesCompetitiveLevel)),
+                ChartType.Double => all
+                    .Where(p => p.DoublesCompetitiveLevel >= min && p.DoublesCompetitiveLevel <= max)
+                    .OrderBy(p => Math.Abs(p.DoublesCompetitiveLevel - my))
+                    .Select(p => new CompetitiveNeighborRecord(p.UserId, p.DoublesCompetitiveLevel)),
+                _ => all
+                    .Where(p => p.CompetitiveLevel >= min && p.CompetitiveLevel <= max)
+                    .OrderBy(p => Math.Abs(p.CompetitiveLevel - my))
+                    .Select(p => new CompetitiveNeighborRecord(p.UserId, p.CompetitiveLevel))
+            };
+
+            return await query.Take(request.Count).ToArrayAsync(cancellationToken);
         }
 
         public async Task DeleteStats(MixEnum mix, Guid userId, CancellationToken cancellationToken)

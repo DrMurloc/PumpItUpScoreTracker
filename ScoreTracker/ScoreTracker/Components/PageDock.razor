@@ -1,0 +1,28 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
+@implements IDisposable
+@inject PageDockService DockService
+@* Renders nothing where it sits — the content is handed to MainLayout's dock slot.
+   Drop one per page at most; disposal (navigation) clears the slot automatically. *@
+@code {
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    ///     Drops the shell nav entirely (kiosk/takeover tasks). The page must render its
+    ///     own exit affordance — the shell shows no way out in focus mode.
+    /// </summary>
+    [Parameter]
+    public bool FocusMode { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        DockService.Set(ChildContent, FocusMode);
+    }
+
+    public void Dispose()
+    {
+        DockService.Clear();
+    }
+}

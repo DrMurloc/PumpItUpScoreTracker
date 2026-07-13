@@ -22,6 +22,7 @@ public sealed class EventCompetitionModelContribution : IDbModelContribution
         modelBuilder.Entity<PhotoVerificationEntity>().ToTable("PhotoVerification");
         modelBuilder.Entity<TournamentChartLevelEntity>().ToTable("TournamentChartLevel");
         modelBuilder.Entity<TournamentRoleEntity>().ToTable("TournamentRole");
+        modelBuilder.Entity<TournamentRoleInviteEntity>().ToTable("TournamentRoleInvite");
         modelBuilder.Entity<UserQualifierEntity>().ToTable("UserQualifier");
         modelBuilder.Entity<UserQualifierHistoryEntity>().ToTable("UserQualifierHistory");
         modelBuilder.Entity<QualifiersConfigurationEntity>().ToTable("QualifiersConfiguration");

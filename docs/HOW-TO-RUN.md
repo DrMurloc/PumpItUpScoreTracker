@@ -91,7 +91,7 @@ Caveat: uploaded-image *URLs* are currently hardcoded to the production CDN host
 
 ### Other knobs
 
-- `PreventRecurringJobs=true` (already set in `appsettings.Development.json`) keeps the [Hangfire recurring jobs](SCHEDULED-JOBS.md) from running locally. Remove it if you're working on one of those jobs; you can also trigger any job manually from the `/hangfire` dashboard (admin only).
+- `PreventRecurringJobs=true` (already set in `appsettings.Development.json`) parks the [Hangfire recurring jobs](SCHEDULED-JOBS.md) on a yearly Jan-1 schedule so they never fire on their own locally — but they still appear in the `/hangfire` dashboard (admin only), where **Trigger now** runs any of them by hand. Remove the flag if you want a job on its real cadence.
 - Running the web project directly (`dotnet run` on `ScoreTracker.Web`, without the AppHost) is unsupported for local dev: you'd need to supply your own SQL connection string, apply migrations yourself, and you won't get the dev login. Use the AppHost.
 
 ## Running the tests

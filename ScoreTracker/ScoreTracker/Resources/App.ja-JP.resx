@@ -2662,6 +2662,9 @@
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>リキャップPGカード再構築</value>
   </data>
+  <data name="Rebuild Recap Total PUMBILITY" xml:space="preserve">
+    <value>リキャップ合計PUMBILITY再構築</value>
+  </data>
   <data name="Site Theme" xml:space="preserve">
     <value>サイトテーマ</value>
   </data>
@@ -3509,5 +3512,473 @@
   </data>
   <data name="API for tool makers" xml:space="preserve">
     <value>ツール開発者向け API</value>
+  </data>
+  <data name="Not a good suggestion?" xml:space="preserve">
+    <value>良くない提案ですか？</value>
+  </data>
+  <data name="The level printed on the chart." xml:space="preserve">
+    <value>譜面に表記されたレベル。</value>
+  </data>
+  <data name="Closest PGs, top-50 picks, and old scores due a revisit." xml:space="preserve">
+    <value>PGに最も近い譜面、トップ50からの抽選、見直すべき昔のスコア。</value>
+  </data>
+  <data name="Chart level" xml:space="preserve">
+    <value>譜面レベル</value>
+  </data>
+  <data name="Charts toward your next title, plus skill titles one SSS away." xml:space="preserve">
+    <value>次の称号に向けた譜面と、SSSまであと一歩のスキル称号。</value>
+  </data>
+  <data name="Shuffle suggestions" xml:space="preserve">
+    <value>候補をシャッフル</value>
+  </data>
+  <data name="Suggested · Fill Gaps" xml:space="preserve">
+    <value>おすすめ · 穴埋め</value>
+  </data>
+  <data name="Suggested Charts" xml:space="preserve">
+    <value>おすすめ譜面</value>
+  </data>
+  <data name="Pinned range" xml:space="preserve">
+    <value>固定範囲</value>
+  </data>
+  <data name="Suggested · Title Hunt" xml:space="preserve">
+    <value>おすすめ · 称号ハント</value>
+  </data>
+  <data name="Charts picked for you, tuned by goal." xml:space="preserve">
+    <value>目標に合わせて選ばれた譜面。</value>
+  </data>
+  <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
+    <value>まだ提案できるものがありません — プレイしてスコアをインポートしてください。</value>
+  </data>
+  <data name="Feedback Submitted, Thank You!" xml:space="preserve">
+    <value>フィードバックありがとうございます！</value>
+  </data>
+  <data name="{0} to PG" xml:space="preserve">
+    <value>PGまで{0}</value>
+  </data>
+  <data name="Score Push" xml:space="preserve">
+    <value>スコア更新</value>
+  </data>
+  <data name="Pushing Title Charts" xml:space="preserve">
+    <value>挑戦中の称号の譜面</value>
+  </data>
+  <data name="Suggested · Score Push" xml:space="preserve">
+    <value>おすすめ · スコア更新</value>
+  </data>
+  <data name="Push PGs" xml:space="preserve">
+    <value>PGを狙う</value>
+  </data>
+  <data name="Follows your competitive level as it moves." xml:space="preserve">
+    <value>コンペティティブレベルの変化に追従します。</value>
+  </data>
+  <data name="Goal" xml:space="preserve">
+    <value>目標</value>
+  </data>
+  <data name="Community-calibrated difficulty — a chart that scores like a 21 counts as a 21." xml:space="preserve">
+    <value>コミュニティ調整の難易度 — 21相当のスコアが出る譜面は21として扱います。</value>
+  </data>
+  <data name="Level basis" xml:space="preserve">
+    <value>レベル基準</value>
+  </data>
+  <data name="Skill Title Charts" xml:space="preserve">
+    <value>スキル称号の譜面</value>
+  </data>
+  <data name="Improve Your Top 50" xml:space="preserve">
+    <value>トップ50を伸ばす</value>
+  </data>
+  <data name="Any level" xml:space="preserve">
+    <value>レベル指定なし</value>
+  </data>
+  <data name="The Category Isn't Interesting to Me" xml:space="preserve">
+    <value>このカテゴリに興味がない</value>
+  </data>
+  <data name="Title Hunt" xml:space="preserve">
+    <value>称号ハント</value>
+  </data>
+  <data name="Fill Gaps" xml:space="preserve">
+    <value>穴埋め</value>
+  </data>
+  <data name="Revisit Old Scores" xml:space="preserve">
+    <value>昔のスコアを見直す</value>
+  </data>
+  <data name="Fill Scores" xml:space="preserve">
+    <value>スコア埋め</value>
+  </data>
+  <data name="Approachable unpassed charts around your level." xml:space="preserve">
+    <value>自分のレベル前後の、まだクリアしていない取り組みやすい譜面。</value>
+  </data>
+  <data name="{0} days old" xml:space="preserve">
+    <value>{0}日前</value>
+  </data>
+  <data name="Scoring level" xml:space="preserve">
+    <value>スコアリングレベル</value>
+  </data>
+  <data name="± levels" xml:space="preserve">
+    <value>±レベル</value>
+  </data>
+  <data name="Around my level" xml:space="preserve">
+    <value>自分のレベル前後</value>
+  </data>
+  <data name="Scroll right" xml:space="preserve">
+    <value>右へスクロール</value>
+  </data>
+  <data name="Scroll left" xml:space="preserve">
+    <value>左へスクロール</value>
+  </data>
+  <data name="Levels above" xml:space="preserve">
+    <value>上のレベル数</value>
+  </data>
+  <data name="Levels below" xml:space="preserve">
+    <value>下のレベル数</value>
+  </data>
+  <data name="Tier list difficulty" xml:space="preserve">
+    <value>ティアリスト難易度</value>
+  </data>
+  <data name="Community Highlights" xml:space="preserve">
+    <value>コミュニティのハイライト</value>
+  </data>
+  <data name="Recent big wins from the communities you pick." xml:space="preserve">
+    <value>選んだコミュニティの最近の大きな記録。</value>
+  </data>
+  <data name="No big wins yet" xml:space="preserve">
+    <value>まだ大きな記録はありません</value>
+  </data>
+  <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
+    <value>コミュニティの珍しいPG、大きな称号、トップスコアがここに表示されます。</value>
+  </data>
+  <data name="Rare Title" xml:space="preserve">
+    <value>珍しい称号</value>
+  </data>
+  <data name="Rare PG" xml:space="preserve">
+    <value>珍しいPG</value>
+  </data>
+  <data name="Folder Cleared" xml:space="preserve">
+    <value>フォルダクリア</value>
+  </data>
+  <data name="Top {0}%" xml:space="preserve">
+    <value>上位{0}%</value>
+  </data>
+  <data name="only {0} have PG" xml:space="preserve">
+    <value>PG保持者 {0} のみ</value>
+  </data>
+  <data name="#{0} PUMBILITY" xml:space="preserve">
+    <value>PUMBILITY #{0}</value>
+  </data>
+  <data name="top {0}% of peers" xml:space="preserve">
+    <value>同格プレイヤーの上位{0}%</value>
+  </data>
+  <data name="{0} pass in this folder" xml:space="preserve">
+    <value>このフォルダ {0} 通過</value>
+  </data>
+  <data name="#1 of all peers" xml:space="preserve">
+    <value>同格プレイヤー中 #1</value>
+  </data>
+  <data name="only {0} hold it" xml:space="preserve">
+    <value>{0} のみ保持</value>
+  </data>
+  <data name="completed" xml:space="preserve">
+    <value>達成</value>
+  </data>
+  <data name="now" xml:space="preserve">
+    <value>たった今</value>
+  </data>
+  <data name="Communities to include" xml:space="preserve">
+    <value>含めるコミュニティ</value>
+  </data>
+  <data name="Join a community to use this widget." xml:space="preserve">
+    <value>このウィジェットを使うにはコミュニティに参加してください。</value>
+  </data>
+  <data name="Leave all unchecked to follow your non-regional communities." xml:space="preserve">
+    <value>すべて未選択にすると、地域以外のコミュニティに従います。</value>
+  </data>
+  <data name="Include my own wins" xml:space="preserve">
+    <value>自分の記録も含める</value>
+  </data>
+  <data name="Cleared all of {0}" xml:space="preserve">
+    <value>{0} 全曲クリア</value>
+  </data>
+  <data name="Daily Step" xml:space="preserve">
+    <value>デイリーステップ</value>
+  </data>
+  <data name="Today's shared chart, plus a weekly Limbo Day." xml:space="preserve">
+    <value>今日の共有チャートと、週に一度のリンボーデー。</value>
+  </data>
+  <data name="Today's Step posts at midnight." xml:space="preserve">
+    <value>今日のステップは深夜に公開されます。</value>
+  </data>
+  <data name="Limbo Day: lowest passing score wins!" xml:space="preserve">
+    <value>リンボーデー：クリアした最低スコアが勝ち！</value>
+  </data>
+  <data name="No entry yet" xml:space="preserve">
+    <value>まだ記録なし</value>
+  </data>
+  <data name="Record" xml:space="preserve">
+    <value>記録</value>
+  </data>
+  <data name="Verified from official import" xml:space="preserve">
+    <value>公式インポートで確認済み</value>
+  </data>
+  <data name="Quick Record" xml:space="preserve">
+    <value>クイック記録</value>
+  </data>
+  <data name="Record a score by hand for any chart." xml:space="preserve">
+    <value>任意の譜面のスコアを手入力で記録します。</value>
+  </data>
+  <data name="Search a chart" xml:space="preserve">
+    <value>譜面を検索</value>
+  </data>
+  <data name="Name, or shorthand like S18" xml:space="preserve">
+    <value>曲名、または S18 のような略記</value>
+  </data>
+  <data name="Recorded" xml:space="preserve">
+    <value>記録しました</value>
+  </data>
+  <data name="Change chart" xml:space="preserve">
+    <value>譜面を変更</value>
+  </data>
+  <data name="Sign in to record." xml:space="preserve">
+    <value>記録するにはログインしてください。</value>
+  </data>
+  <data name="There was an error while recording the score" xml:space="preserve">
+    <value>スコアの記録中にエラーが発生しました</value>
+  </data>
+  <data name="All mixes" xml:space="preserve">
+    <value>全バージョン</value>
+  </data>
+  <data name="Record to" xml:space="preserve">
+    <value>記録先</value>
+  </data>
+  <data name="Select a mix" xml:space="preserve">
+    <value>バージョンを選択</value>
+  </data>
+  <data name="Change mix" xml:space="preserve">
+    <value>バージョンを変更</value>
+  </data>
+  <data name="Remember last mix" xml:space="preserve">
+    <value>前回のバージョンを記憶</value>
+  </data>
+  <data name="Your standing" xml:space="preserve">
+    <value>あなたの順位</value>
+  </data>
+  <data name="manual" xml:space="preserve">
+    <value>手動</value>
+  </data>
+  <data name="Not played" xml:space="preserve">
+    <value>未プレイ</value>
+  </data>
+  <data name="{0} on the board" xml:space="preserve">
+    <value>{0}人が参加中</value>
+  </data>
+  <data name="Account Stats" xml:space="preserve">
+    <value>アカウント統計</value>
+  </data>
+  <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
+    <value>あなたのPumbilityと競技レベル、そして最も近いライバル。</value>
+  </data>
+  <data name="Pumbility" xml:space="preserve">
+    <value>Pumbility</value>
+  </data>
+  <data name="Match players on" xml:space="preserve">
+    <value>プレイヤーの一致基準</value>
+  </data>
+  <data name="Singles competitive level" xml:space="preserve">
+    <value>Singlesの競技レベル</value>
+  </data>
+  <data name="Doubles competitive level" xml:space="preserve">
+    <value>Doublesの競技レベル</value>
+  </data>
+  <data name="Combined competitive level" xml:space="preserve">
+    <value>総合競技レベル</value>
+  </data>
+  <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
+    <value>最も近いライバルは1×2以上のサイズで表示されます。</value>
+  </data>
+  <data name="Closest · Singles" xml:space="preserve">
+    <value>最も近い · Singles</value>
+  </data>
+  <data name="Closest · Doubles" xml:space="preserve">
+    <value>最も近い · Doubles</value>
+  </data>
+  <data name="Closest · Combined" xml:space="preserve">
+    <value>最も近い · 総合</value>
+  </data>
+  <data name="No close matches yet." xml:space="preserve">
+    <value>近いライバルはまだいません。</value>
+  </data>
+  <data name="Pumbility Push" xml:space="preserve">
+    <value>Pumbility更新</value>
+  </data>
+  <data name="Suggested · Pumbility Push" xml:space="preserve">
+    <value>おすすめ · Pumbility更新</value>
+  </data>
+  <data name="The biggest Pumbility gains available to you right now." xml:space="preserve">
+    <value>今のあなたが狙えるPumbilityの伸びが大きい順。</value>
+  </data>
+  <data name="Singles / Doubles" xml:space="preserve">
+    <value>シングル / ダブル</value>
+  </data>
+  <data name="Show Singles &amp; Doubles as separate data" xml:space="preserve">
+    <value>シングルとダブルを個別のデータで表示</value>
+  </data>
+  <data name="Metric" xml:space="preserve">
+    <value>指標</value>
+  </data>
+  <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
+    <value>このバージョンはスコア正規化されていません — レターグレードとクリアのみ利用可能です。</value>
+  </data>
+  <data name="Aggregation" xml:space="preserve">
+    <value>集計</value>
+  </data>
+  <data name="Series" xml:space="preserve">
+    <value>系列</value>
+  </data>
+  <data name="Custom percentile" xml:space="preserve">
+    <value>カスタムパーセンタイル</value>
+  </data>
+  <data name="Avg" xml:space="preserve">
+    <value>平均</value>
+  </data>
+  <data name="Distribution" xml:space="preserve">
+    <value>分布</value>
+  </data>
+  <data name="Breakdown" xml:space="preserve">
+    <value>内訳</value>
+  </data>
+  <data name="Completion %" xml:space="preserve">
+    <value>達成率 %</value>
+  </data>
+  <data name="Normalize to 100%" xml:space="preserve">
+    <value>100%に正規化</value>
+  </data>
+  <data name="Include an unplayed segment" xml:space="preserve">
+    <value>未プレイのセグメントを含める</value>
+  </data>
+  <data name="Thresholds — each becomes a line" xml:space="preserve">
+    <value>しきい値 — それぞれが1本の線になります</value>
+  </data>
+  <data name="At least" xml:space="preserve">
+    <value>以上</value>
+  </data>
+  <data name="Shade band" xml:space="preserve">
+    <value>帯を表示</value>
+  </data>
+  <data name="No scores in this range yet — record or import to see your breakdown." xml:space="preserve">
+    <value>この範囲のスコアはまだありません — 記録またはインポートすると内訳が表示されます。</value>
+  </data>
+  <data name="By-Level Breakdown" xml:space="preserve">
+    <value>レベル別内訳</value>
+  </data>
+  <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
+    <value>スコア・グレード・プレート・クリアをレベル別に表示する設定可能なグラフ。</value>
+  </data>
+  <data name="Score Completion" xml:space="preserve">
+    <value>スコア達成率</value>
+  </data>
+  <data name="Grade Completion" xml:space="preserve">
+    <value>グレード達成率</value>
+  </data>
+  <data name="Average Grade by Level" xml:space="preserve">
+    <value>レベル別平均グレード</value>
+  </data>
+  <data name="Plate Completion" xml:space="preserve">
+    <value>プレート達成率</value>
+  </data>
+  <data name="Average Plate by Level" xml:space="preserve">
+    <value>レベル別平均プレート</value>
+  </data>
+  <data name="Pass Breakdown" xml:space="preserve">
+    <value>クリア内訳</value>
+  </data>
+  <data name="Clear Progress" xml:space="preserve">
+    <value>クリア進捗</value>
+  </data>
+  <data name="Box Plot" xml:space="preserve">
+    <value>箱ひげ図</value>
+  </data>
+  <data name="Grade Wall" xml:space="preserve">
+    <value>グレードウォール</value>
+  </data>
+  <data name="PG Race" xml:space="preserve">
+    <value>PGレース</value>
+  </data>
+  <data name="Score Push %" xml:space="preserve">
+    <value>スコアプッシュ %</value>
+  </data>
+  <data name="Score spread per level — min, quartiles, max, with the IQR shaded." xml:space="preserve">
+    <value>レベル別のスコア分布 — 最小・四分位・最大、IQRを帯で表示。</value>
+  </data>
+  <data name="What grades fill each folder, normalized so shape beats volume." xml:space="preserve">
+    <value>各フォルダを埋めるグレードの内訳。量より形が分かるよう正規化。</value>
+  </data>
+  <data name="Chasing plates — % of each folder at MG, UG, and full Perfect Game." xml:space="preserve">
+    <value>プレート狙い — 各フォルダのMG・UG・パーフェクトゲーム達成率。</value>
+  </data>
+  <data name="How much of every folder you've passed, Singles vs Doubles." xml:space="preserve">
+    <value>各フォルダのクリア率、シングルとダブルの比較。</value>
+  </data>
+  <data name="Multi-threshold completion: ≥950k, ≥990k, and 1,000,000." xml:space="preserve">
+    <value>複数しきい値の達成率：≥950k、≥990k、1,000,000。</value>
+  </data>
+  <data name="Percentile" xml:space="preserve">
+    <value>Percentile</value>
+  </data>
+  <data name="How each folder's plates stack up — Marvelous, Ultimate, and Perfect Game." xml:space="preserve">
+    <value>How each folder's plates stack up — Marvelous, Ultimate, and Perfect Game.</value>
+  </data>
+  <data name="How much of every folder you've cleared, per level." xml:space="preserve">
+    <value>How much of every folder you've cleared, per level.</value>
+  </data>
+  <data name="How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000." xml:space="preserve">
+    <value>How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000.</value>
+  </data>
+  <data name="Singles + Doubles" xml:space="preserve">
+    <value>Singles + Doubles</value>
+  </data>
+  <data name="Show Singles &amp; Doubles separately" xml:space="preserve">
+    <value>Show Singles &amp; Doubles separately</value>
+  </data>
+  <data name="Show per type" xml:space="preserve">
+    <value>Show per type</value>
+  </data>
+  <data name="Shaded range: IQR (P25–P75)" xml:space="preserve">
+    <value>Shaded range: IQR (P25–P75)</value>
+  </data>
+  <data name="Shaded range: Min–Max" xml:space="preserve">
+    <value>Shaded range: Min–Max</value>
+  </data>
+  <data name="Shaded range: ±1σ" xml:space="preserve">
+    <value>Shaded range: ±1σ</value>
+  </data>
+  <data name="Chart Age" xml:space="preserve">
+    <value>Chart Age</value>
+  </data>
+  <data name="Chart Age by Level" xml:space="preserve">
+    <value>Chart Age by Level</value>
+  </data>
+  <data name="How much of every folder you've cleared, Singles vs Doubles." xml:space="preserve">
+    <value>How much of every folder you've cleared, Singles vs Doubles.</value>
+  </data>
+  <data name="How stale your scores are per folder — the spread of days since you set them." xml:space="preserve">
+    <value>How stale your scores are per folder — the spread of days since you set them.</value>
+  </data>
+  <data name="Within days" xml:space="preserve">
+    <value>最大日数</value>
+  </data>
+  <data name="Grade Distribution" xml:space="preserve">
+    <value>グレード分布</value>
+  </data>
+  <data name="Co-Op Completion" xml:space="preserve">
+    <value>Co-Op達成度</value>
+  </data>
+  <data name="Your score spread per level, Singles against Doubles, the middle 50% shaded." xml:space="preserve">
+    <value>レベルごとのスコア分布、シングル対ダブル、中央50%を網掛け。</value>
+  </data>
+  <data name="Every grade stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
+    <value>フォルダごとに全グレードを積み上げ、未クリア／未プレイの区分でフォルダ総数も表示。</value>
+  </data>
+  <data name="Every plate stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
+    <value>フォルダごとに全プレートを積み上げ、未クリア／未プレイの区分でフォルダ総数も表示。</value>
+  </data>
+  <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
+    <value>プレイ人数別に、クリアしたCo-Op譜面の数。</value>
   </data>
 </root>

@@ -37,8 +37,10 @@ public sealed class Phoenix2ProjectionCalculatorTests
     }
 
     [Fact]
-    public void PoolsSplitSinglesAndDoublesAndSumToTheTotal()
+    public void PoolsSplitSinglesAndDoublesAndTotalIsAMergedTop50()
     {
+        // Two charts fit inside one merged top-50, so the total here coincides with
+        // Singles + Doubles; TotalIsAMergedTop50NotTwoPoolsSummed covers where they diverge.
         var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var dbl = new ChartBuilder().WithType(ChartType.Double).WithLevel(22).Build();
         var p2Charts = new Dictionary<Guid, Chart> { [single.Id] = single, [dbl.Id] = dbl };
@@ -49,6 +51,33 @@ public sealed class Phoenix2ProjectionCalculatorTests
         Assert.Equal((int)P2Rating(single, 975_000), projection!.SinglesPumbility);
         Assert.Equal((int)P2Rating(dbl, 960_000), projection.DoublesPumbility);
         Assert.Equal(projection.SinglesPumbility + projection.DoublesPumbility, projection.TotalPumbility);
+    }
+
+    [Fact]
+    public void TotalIsAMergedTop50NotTwoPoolsSummed()
+    {
+        // 30 singles (level 22) outrate 30 doubles (level 20). Each per-type pool holds all
+        // 30 of its type, but the merged total keeps only the 50 best of the 60 — the 30
+        // singles plus the 20 best doubles — so Total < Singles + Doubles.
+        var singles = Enumerable.Range(0, 30)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(22).Build()).ToArray();
+        var doubles = Enumerable.Range(0, 30)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Double).WithLevel(20).Build()).ToArray();
+        var all = singles.Concat(doubles).ToArray();
+        var p2Charts = all.ToDictionary(c => c.Id);
+        var records = all.Select(c => Record(c, 975_000)).ToArray();
+
+        var vs = P2Rating(singles[0], 975_000);
+        var vd = P2Rating(doubles[0], 975_000);
+        Assert.True(vs > vd, "test setup: singles must outrate doubles so doubles are dropped");
+
+        var projection = Phoenix2ProjectionCalculator.Calculate(records, p2Charts)!;
+
+        // Accumulate exactly as the calculator's LINQ Sum does (order + flooring).
+        var expectedTotal = (int)Enumerable.Repeat(vs, 30).Concat(Enumerable.Repeat(vd, 20)).Sum();
+        Assert.Equal(expectedTotal, projection.TotalPumbility);
+        Assert.True(projection.TotalPumbility < projection.SinglesPumbility + projection.DoublesPumbility);
+        Assert.True(projection.TotalPumbility > Math.Max(projection.SinglesPumbility, projection.DoublesPumbility));
     }
 
     [Fact]

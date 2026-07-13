@@ -30,7 +30,8 @@ The palette record is the single source of truth: it builds the MudBlazor `MudTh
    - `--diff-*` — the difficulty ramp (below)
    - `--plate-*` — plate colors on the official metal ladder (PG/UG ice-blue, SG/EG gold, TG/MG silver, FG/RG bronze, `--plate-none` for unplayed)
    - `--slot-*` — legacy slot colors, the pre-Exceed song-wheel vocabulary (Crazy red, Freestyle green, Nightmare purple, `--slot-neutral` for HDB/levelled co-ops). **Deliberately not the difficulty ramp**: old-scale levels don't translate to modern ones, and legacy chips render as CSS (never image bubbles) so the different look announces the different scale ([legacy-mixes design](design/legacy-mixes.md)).
-   - Grade tokens are deliberately deferred: grades render as images today, and Phoenix 2 ships a different grade set (art pending). They land with their first text-rendered consumer.
+   - **Grade colors** (`MixThemes.GradeHex(name)`) reuse the **plate ladder by tier** (owner, 2026-07-13, sampled from the Play Data art): SSS+/SSS = PG/UG ice-blue, SS/S = EG/SG gold, AAA+/AAA = MG/TG silver, AA/A = FG/RG copper, and everything **below A = the in-game sub-A green**. Grades still render as art in most places; these literal hexes exist for chart bars (the first text-rendered consumer). `MixThemes.PlateHex(shorthand)` is the plate sibling.
+   - **Chart-type colors** (`MixThemes.ChartTypeHex(type)`): the difficulty-ball vocabulary — **red Single, green Double, gold Co-Op**. `MixThemes.UnpassedHex` is the broken-grade grey for unpassed / not-cleared / below-threshold segments.
 
 Consumers never look up hues. C# code calls the [`ThemeScales`](../ScoreTracker/ScoreTracker/Services/Theming/ThemeScales.cs) façade; markup uses `var(--…)`. Both return token references, so components stay theme-blind.
 
@@ -75,7 +76,7 @@ Percentile semantics are the established `ScoreRankingRecord.Ranking` convention
 
 **9. Loading looks like the layout.** Skeletons match the shape of the content they become — never a lone centered spinner on a data page. Empty states name the action that fills them ("Import your scores to light this up"), not just the absence.
 
-**10. Thumbs first on mobile.** Primary navigation and primary actions live in the bottom third at phone widths (the bottom nav is this rule applied to the shell). The top corners are for identity and context, not workflows.
+**10. Thumbs first on mobile.** Primary navigation and primary actions live in the bottom third at phone widths (the bottom nav is this rule applied to the shell). The top corners are for identity and context, not workflows. Action-heavy pages claim the bottom third through the **page dock** (`PageDock` component → shell slot above the bottom nav): scrolling down slides the nav away so the two bars only coexist at rest, and the nav's items never move or reflow. **Focus mode** (`PageDock FocusMode`) drops the shell chrome entirely for takeover tasks — kiosk-style flows like tournament drafts — and the page owes the user an explicit exit affordance in return. A page that registers no dock gets the unchanged shell. (Landed with the randomizer overhaul, [docs/design/randomizer-overhaul.md](design/randomizer-overhaul.md).)
 
 ---
 
@@ -87,7 +88,7 @@ Percentile semantics are the established `ScoreRankingRecord.Ranking` convention
 
 ## 4. Home dashboard widgets
 
-The widget home page ([design doc](design/home-page-widgets.md)) adds a vocabulary with its own rules:
+The widget home page ([design doc](design/HomePageWidgets/README.md)) adds a vocabulary with its own rules:
 
 - **The host owns the chrome.** `WidgetHost` renders the card frame, title, edit controls, per-cell
   `ErrorBoundary`, and the unknown-type fallback. Widget components render **bodies only** — never
@@ -105,11 +106,19 @@ The widget home page ([design doc](design/home-page-widgets.md)) adds a vocabula
   or a `TypeId` is breaking-change review.
 - **Widgets reload only when their identity inputs change** (instance id, config, effective mix) —
   edit-mode mutations elsewhere on the board must not refetch every widget.
-- Chart series colors come from the `MixPalette` chart pair (`--chart-singles`/`--chart-doubles`,
-  or `PaletteFor(mix).ChartSingles` for render targets that can't read CSS vars). Era/mix distinction
-  rides line *style* (dashed), never a third hue.
+- Chart series colors resolve through literal-hex accessors on `MixThemes` (ApexCharts can't read CSS
+  vars), all mirroring `DifficultyHex`: **chart type** = `ChartTypeHex` (red Single / green Double / gold
+  Co-Op, the ball vocabulary — the By-Level Breakdown distribution lines encode S/D by this color, the
+  stat by line emphasis); **grade / plate bars** = `GradeHex` / `PlateHex` (identity colors, *not* the
+  rarity ramp); **rarity / completion tiers** = `RarityHex(mix, band)`; **qualitative** = `SeriesHex(i)`.
+  The Competitive Level graph still uses the per-mix `MixPalette` chart pair — a candidate to unify onto
+  `ChartTypeHex` so red/green S/D reads the same everywhere.
 - **Chart rows/cards in widgets open `ChartDetailsDialog` on click** (browse mode only — edit mode
   owns clicks for arranging). Every catalog widget inherits this rule.
+- **Per-chart leaderboards use the shared `LeaderboardDialog`** (top ten plus your own row when you
+  sit outside it): the caller passes the entries and a sort direction, so an inverted board — Daily
+  Step's weekly **Limbo Day**, where the lowest *passing* score wins — ranks ascending without a
+  second component.
 - **Drag is swap, not insertion**: dropping widget A on widget B trades their places; bystanders
   never move. The arrows remain the accessible and mobile reorder path.
 - **Quiet scrolling**: widget inner scrollers use `dash-scroll` — no scrollbar at rest, a thin themed
@@ -118,3 +127,8 @@ The widget home page ([design doc](design/home-page-widgets.md)) adds a vocabula
 - **Graphs start from `ApexChartTheming.BaseOptions` + its `WrapperClass`** on the container: frozen
   canvas, display face, palette fore color, whisper-grid, dark theme, themed tooltips. Charts layer
   their specifics (strokes, fills, axes) on top — never rebuild the base by hand.
+- **Community-scoped feeds reuse the shipped vocabulary**: the Community Highlights widget renders each
+  big win with the Discord card's own caption emoji (👑 pumbility, 📊 peers, 🆕 folder, 🏅 title, 💎 rare
+  PG) and colors the "% have it" rarity through the rarity ramp — the on-site feed and the Discord cards
+  read as one system. Persisted win data is structured, never pre-rendered text: the row localizes every
+  caption (a UI string never rides the DB payload).

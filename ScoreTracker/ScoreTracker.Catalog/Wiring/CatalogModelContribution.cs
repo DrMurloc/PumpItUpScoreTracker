@@ -15,7 +15,6 @@ public sealed class CatalogModelContribution : IDbModelContribution
 {
     public void Contribute(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<UserRandomSettingsEntity>().ToTable("UserRandomSettings");
         modelBuilder.Entity<ChartSkillEntity>().ToTable("ChartSkill");
         modelBuilder.Entity<SongNameLanguageEntity>().ToTable("SongNameLanguage");
         modelBuilder.Entity<ExternalChartAliasEntity>().ToTable("ExternalChartAlias");

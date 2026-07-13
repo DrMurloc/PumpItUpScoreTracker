@@ -109,15 +109,15 @@
     },
     {
       "type": "pumbility",
-      "name": "PUMBILITY",
-      "description": "Pumbility targets tuned to your skill profile.",
+      "name": "Account Stats",
+      "description": "Your Pumbility and competitive level, plus your closest matches.",
       "category": "Progress",
       "supportedSizes": [
         "1x1",
-        "2x1",
-        "1x2"
+        "1x2",
+        "1x3"
       ],
-      "defaultSize": "2x1",
+      "defaultSize": "1x2",
       "supportedMixes": [
         "Phoenix",
         "Phoenix2"
@@ -161,15 +161,15 @@
             ],
             "nullable": true
           },
-          "showProjections": {
-            "type": "boolean"
-          },
-          "dismissedCharts": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "uuid"
-            },
+          "matchDimension": {
+            "enum": [
+              "Single",
+              "Double",
+              "SinglePerformance",
+              "DoublePerformance",
+              "CoOp",
+              "HalfDouble"
+            ],
             "nullable": true
           }
         }
@@ -252,6 +252,551 @@
           "maxLevel": {
             "type": "integer",
             "nullable": true
+          }
+        }
+      }
+    },
+    {
+      "type": "community-highlights",
+      "name": "Community Highlights",
+      "description": "Recent big wins from the communities you pick.",
+      "category": "Compete",
+      "supportedSizes": [
+        "1x2",
+        "2x1",
+        "3x1",
+        "4x1",
+        "2x2",
+        "1x3"
+      ],
+      "defaultSize": "2x2",
+      "supportedMixes": [
+        "Phoenix",
+        "Phoenix2"
+      ],
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "mix": {
+            "enum": [
+              "XX",
+              "Phoenix",
+              "Phoenix2",
+              "FirstDanceFloor",
+              "SecondUltimateRemix",
+              "ThirdObg",
+              "ObgSeasonEvolution",
+              "Collection",
+              "PerfectCollection",
+              "Extra",
+              "Premiere",
+              "Prex",
+              "Rebirth",
+              "Premiere2",
+              "Prex2",
+              "Premiere3",
+              "Prex3",
+              "Exceed",
+              "Exceed2",
+              "Zero",
+              "Nx",
+              "Nx2",
+              "NxAbsolute",
+              "Fiesta",
+              "FiestaEx",
+              "Fiesta2",
+              "Prime",
+              "Prime2",
+              "Infinity",
+              "Pro",
+              "Pro2"
+            ],
+            "nullable": true
+          },
+          "communities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "includeOwnWins": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
+      "type": "daily-step",
+      "name": "Daily Step",
+      "description": "Today\u0027s shared chart, plus a weekly Limbo Day.",
+      "category": "Compete",
+      "supportedSizes": [
+        "1x1",
+        "1x2",
+        "1x3"
+      ],
+      "defaultSize": "1x1",
+      "supportedMixes": [
+        "Phoenix",
+        "Phoenix2"
+      ],
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "mix": {
+            "enum": [
+              "XX",
+              "Phoenix",
+              "Phoenix2",
+              "FirstDanceFloor",
+              "SecondUltimateRemix",
+              "ThirdObg",
+              "ObgSeasonEvolution",
+              "Collection",
+              "PerfectCollection",
+              "Extra",
+              "Premiere",
+              "Prex",
+              "Rebirth",
+              "Premiere2",
+              "Prex2",
+              "Premiere3",
+              "Prex3",
+              "Exceed",
+              "Exceed2",
+              "Zero",
+              "Nx",
+              "Nx2",
+              "NxAbsolute",
+              "Fiesta",
+              "FiestaEx",
+              "Fiesta2",
+              "Prime",
+              "Prime2",
+              "Infinity",
+              "Pro",
+              "Pro2"
+            ],
+            "nullable": true
+          }
+        }
+      }
+    },
+    {
+      "type": "suggested-charts",
+      "name": "Suggested Charts",
+      "description": "Charts picked for you, tuned by goal.",
+      "category": "Play",
+      "supportedSizes": [
+        "1x2",
+        "1x3",
+        "2x1",
+        "3x1",
+        "4x1",
+        "2x2"
+      ],
+      "defaultSize": "1x2",
+      "supportedMixes": [
+        "Phoenix",
+        "Phoenix2"
+      ],
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "goal": {
+            "enum": [
+              "TitleHunt",
+              "ScorePush",
+              "FillGaps",
+              "PumbilityPush"
+            ]
+          },
+          "mix": {
+            "enum": [
+              "XX",
+              "Phoenix",
+              "Phoenix2",
+              "FirstDanceFloor",
+              "SecondUltimateRemix",
+              "ThirdObg",
+              "ObgSeasonEvolution",
+              "Collection",
+              "PerfectCollection",
+              "Extra",
+              "Premiere",
+              "Prex",
+              "Rebirth",
+              "Premiere2",
+              "Prex2",
+              "Premiere3",
+              "Prex3",
+              "Exceed",
+              "Exceed2",
+              "Zero",
+              "Nx",
+              "Nx2",
+              "NxAbsolute",
+              "Fiesta",
+              "FiestaEx",
+              "Fiesta2",
+              "Prime",
+              "Prime2",
+              "Infinity",
+              "Pro",
+              "Pro2"
+            ],
+            "nullable": true
+          },
+          "chartType": {
+            "enum": [
+              "Single",
+              "Double",
+              "SinglePerformance",
+              "DoublePerformance",
+              "CoOp",
+              "HalfDouble"
+            ],
+            "nullable": true
+          },
+          "disabledCategories": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "PushLevel",
+                "SkillTitles",
+                "PushPGs",
+                "ImproveTop50",
+                "RevisitOldScores",
+                "FillScores",
+                "WeeklyCharts",
+                "PushPumbility"
+              ]
+            },
+            "nullable": true
+          },
+          "levelMode": {
+            "enum": [
+              "Any",
+              "Dynamic",
+              "Static"
+            ]
+          },
+          "spreadBelow": {
+            "type": "integer"
+          },
+          "spreadAbove": {
+            "type": "integer"
+          },
+          "minLevel": {
+            "type": "integer",
+            "nullable": true
+          },
+          "maxLevel": {
+            "type": "integer",
+            "nullable": true
+          },
+          "levelBasis": {
+            "enum": [
+              "ChartLevel",
+              "ScoringLevel"
+            ]
+          },
+          "difficultyLens": {
+            "enum": [
+              "None",
+              "PassDifficulty",
+              "ScoreDifficulty"
+            ]
+          },
+          "personalizedLens": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
+      "type": "by-level-breakdown",
+      "name": "By-Level Breakdown",
+      "description": "One configurable graph of your scores, grades, plates, or clears by level.",
+      "category": "Progress",
+      "supportedSizes": [
+        "2x2",
+        "3x2",
+        "4x2"
+      ],
+      "defaultSize": "2x2",
+      "supportedMixes": [
+        "XX",
+        "Phoenix",
+        "Phoenix2",
+        "FirstDanceFloor",
+        "SecondUltimateRemix",
+        "ThirdObg",
+        "ObgSeasonEvolution",
+        "Collection",
+        "PerfectCollection",
+        "Extra",
+        "Premiere",
+        "Prex",
+        "Rebirth",
+        "Premiere2",
+        "Prex2",
+        "Premiere3",
+        "Prex3",
+        "Exceed",
+        "Exceed2",
+        "Zero",
+        "Nx",
+        "Nx2",
+        "NxAbsolute",
+        "Fiesta",
+        "FiestaEx",
+        "Fiesta2",
+        "Prime",
+        "Prime2",
+        "Infinity",
+        "Pro",
+        "Pro2"
+      ],
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "mix": {
+            "enum": [
+              "XX",
+              "Phoenix",
+              "Phoenix2",
+              "FirstDanceFloor",
+              "SecondUltimateRemix",
+              "ThirdObg",
+              "ObgSeasonEvolution",
+              "Collection",
+              "PerfectCollection",
+              "Extra",
+              "Premiere",
+              "Prex",
+              "Rebirth",
+              "Premiere2",
+              "Prex2",
+              "Premiere3",
+              "Prex3",
+              "Exceed",
+              "Exceed2",
+              "Zero",
+              "Nx",
+              "Nx2",
+              "NxAbsolute",
+              "Fiesta",
+              "FiestaEx",
+              "Fiesta2",
+              "Prime",
+              "Prime2",
+              "Infinity",
+              "Pro",
+              "Pro2"
+            ],
+            "nullable": true
+          },
+          "scope": {
+            "enum": [
+              "SinglesDoubles",
+              "Singles",
+              "Doubles",
+              "CoOp"
+            ]
+          },
+          "separateSinglesDoubles": {
+            "type": "boolean"
+          },
+          "separateDisplay": {
+            "enum": [
+              "Average",
+              "Median",
+              "Min",
+              "Max",
+              "RangeIqr",
+              "RangeMinMax",
+              "RangeStdDev"
+            ]
+          },
+          "minLevel": {
+            "type": "integer"
+          },
+          "maxLevel": {
+            "type": "integer"
+          },
+          "minPlayers": {
+            "type": "integer"
+          },
+          "maxPlayers": {
+            "type": "integer"
+          },
+          "metric": {
+            "enum": [
+              "Score",
+              "LetterGrade",
+              "Plate",
+              "Pass",
+              "ChartAge"
+            ]
+          },
+          "aggregation": {
+            "enum": [
+              "Distribution",
+              "Breakdown",
+              "Completion"
+            ]
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "Min",
+                "P10",
+                "P25",
+                "Median",
+                "Average",
+                "P75",
+                "P90",
+                "Max",
+                "MinusSigma",
+                "PlusSigma"
+              ]
+            },
+            "nullable": true
+          },
+          "customPercentiles": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "nullable": true
+          },
+          "band": {
+            "enum": [
+              "None",
+              "InterQuartile",
+              "MinMax",
+              "StdDev"
+            ]
+          },
+          "normalize": {
+            "type": "boolean"
+          },
+          "includeUnplayed": {
+            "type": "boolean"
+          },
+          "thresholds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "Score",
+                    "Grade",
+                    "Plate",
+                    "Pass",
+                    "Age"
+                  ]
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            },
+            "nullable": true
+          }
+        }
+      }
+    },
+    {
+      "type": "quick-record",
+      "name": "Quick Record",
+      "description": "Record a score by hand for any chart.",
+      "category": "Play",
+      "supportedSizes": [
+        "1x1"
+      ],
+      "defaultSize": "1x1",
+      "supportedMixes": [
+        "XX",
+        "Phoenix",
+        "Phoenix2",
+        "FirstDanceFloor",
+        "SecondUltimateRemix",
+        "ThirdObg",
+        "ObgSeasonEvolution",
+        "Collection",
+        "PerfectCollection",
+        "Extra",
+        "Premiere",
+        "Prex",
+        "Rebirth",
+        "Premiere2",
+        "Prex2",
+        "Premiere3",
+        "Prex3",
+        "Exceed",
+        "Exceed2",
+        "Zero",
+        "Nx",
+        "Nx2",
+        "NxAbsolute",
+        "Fiesta",
+        "FiestaEx",
+        "Fiesta2",
+        "Prime",
+        "Prime2",
+        "Infinity",
+        "Pro",
+        "Pro2"
+      ],
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "mix": {
+            "enum": [
+              "XX",
+              "Phoenix",
+              "Phoenix2",
+              "FirstDanceFloor",
+              "SecondUltimateRemix",
+              "ThirdObg",
+              "ObgSeasonEvolution",
+              "Collection",
+              "PerfectCollection",
+              "Extra",
+              "Premiere",
+              "Prex",
+              "Rebirth",
+              "Premiere2",
+              "Prex2",
+              "Premiere3",
+              "Prex3",
+              "Exceed",
+              "Exceed2",
+              "Zero",
+              "Nx",
+              "Nx2",
+              "NxAbsolute",
+              "Fiesta",
+              "FiestaEx",
+              "Fiesta2",
+              "Prime",
+              "Prime2",
+              "Infinity",
+              "Pro",
+              "Pro2"
+            ],
+            "nullable": true
+          },
+          "allMixes": {
+            "type": "boolean"
+          },
+          "rememberLastMix": {
+            "type": "boolean"
           }
         }
       }

@@ -1,0 +1,189 @@
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+<MudSelect T="SuggestedGoal" Value="_goal" ValueChanged="SetGoal" Label="@L["Goal"]" Class="mb-3">
+    <MudSelectItem T="SuggestedGoal" Value="SuggestedGoal.TitleHunt">@L["Title Hunt"]</MudSelectItem>
+    <MudSelectItem T="SuggestedGoal" Value="SuggestedGoal.ScorePush">@L["Score Push"]</MudSelectItem>
+    <MudSelectItem T="SuggestedGoal" Value="SuggestedGoal.FillGaps">@L["Fill Gaps"]</MudSelectItem>
+    <MudSelectItem T="SuggestedGoal" Value="SuggestedGoal.PumbilityPush">@L["Pumbility Push"]</MudSelectItem>
+</MudSelect>
+@if (SuggestedGoals.CategoriesFor(_goal).Count > 1)
+{
+    @foreach (var category in SuggestedGoals.CategoriesFor(_goal))
+    {
+        var c = category;
+        <MudCheckBox T="bool" Value="!_disabled.Contains(c)" ValueChanged="v => ToggleCategory(c, v)"
+                     Label="@CategoryLabel(c)"/>
+    }
+}
+<MudSelect T="ChartType?" @bind-Value="_chartType" Label="@L["Chart Type"]" Class="mb-3 mt-2">
+    <MudSelectItem T="ChartType?" Value="null">@L["All"]</MudSelectItem>
+    <MudSelectItem T="ChartType?" Value="ChartType.Single">@L["Singles"]</MudSelectItem>
+    <MudSelectItem T="ChartType?" Value="ChartType.Double">@L["Doubles"]</MudSelectItem>
+</MudSelect>
+@if (_goal != SuggestedGoal.TitleHunt)
+{
+    @* Title Hunt pins its own levels (the pushing title), so no level config there. *@
+    <MudSelect T="SuggestedLevelMode" @bind-Value="_levelMode" Label="@L["Levels"]" Class="mb-2">
+        <MudSelectItem T="SuggestedLevelMode" Value="SuggestedLevelMode.Any">@L["Any level"]</MudSelectItem>
+        <MudSelectItem T="SuggestedLevelMode" Value="SuggestedLevelMode.Dynamic">@L["Around my level"]</MudSelectItem>
+        <MudSelectItem T="SuggestedLevelMode" Value="SuggestedLevelMode.Static">@L["Pinned range"]</MudSelectItem>
+    </MudSelect>
+    @if (_levelMode == SuggestedLevelMode.Dynamic)
+    {
+        @* Asymmetric on purpose (owner): push above the comfort zone, or relax below. *@
+        <div class="d-flex gap-3 mb-1">
+            <MudNumericField T="int" @bind-Value="_spreadBelow" Min="0" Max="5" Label="@L["Levels below"]"/>
+            <MudNumericField T="int" @bind-Value="_spreadAbove" Min="0" Max="5" Label="@L["Levels above"]"/>
+        </div>
+        <MudText Typo="Typo.caption" Class="dash-muted">@L["Follows your competitive level as it moves."]</MudText>
+    }
+    else if (_levelMode == SuggestedLevelMode.Static)
+    {
+        <div class="d-flex gap-3">
+            <MudNumericField T="int" @bind-Value="_minLevel" Min="1" Max="DifficultyLevel.Max" Label="@L["Min"]"/>
+            <MudNumericField T="int" @bind-Value="_maxLevel" Min="1" Max="DifficultyLevel.Max" Label="@L["Max"]"/>
+        </div>
+    }
+    @if (_levelMode != SuggestedLevelMode.Any)
+    {
+        <MudSelect T="RecommendationLevelBasis" @bind-Value="_basis" Label="@L["Level basis"]" Class="mb-1 mt-2">
+            <MudSelectItem T="RecommendationLevelBasis" Value="RecommendationLevelBasis.ChartLevel">
+                @L["Chart level"]
+            </MudSelectItem>
+            <MudSelectItem T="RecommendationLevelBasis" Value="RecommendationLevelBasis.ScoringLevel">
+                @L["Scoring level"]
+            </MudSelectItem>
+        </MudSelect>
+        <MudText Typo="Typo.caption" Class="dash-muted">
+            @(_basis == RecommendationLevelBasis.ScoringLevel
+                ? L["Community-calibrated difficulty — a chart that scores like a 21 counts as a 21."]
+                : L["The level printed on the chart."])
+        </MudText>
+    }
+}
+@if (_goal == SuggestedGoal.FillGaps)
+{
+    @* Unpassed charts have no score to show — an optional tier-list difficulty
+       fills the right column instead (owner, field-test round 3). *@
+    <MudSelect T="SuggestedDifficultyLens" @bind-Value="_lens" Label="@L["Tier list difficulty"]" Class="mb-1 mt-2">
+        <MudSelectItem T="SuggestedDifficultyLens" Value="SuggestedDifficultyLens.None">@L["None"]</MudSelectItem>
+        <MudSelectItem T="SuggestedDifficultyLens" Value="SuggestedDifficultyLens.PassDifficulty">
+            @L["Pass Difficulty"]
+        </MudSelectItem>
+        <MudSelectItem T="SuggestedDifficultyLens" Value="SuggestedDifficultyLens.ScoreDifficulty">
+            @L["Score Difficulty"]
+        </MudSelectItem>
+    </MudSelect>
+    @if (_lens != SuggestedDifficultyLens.None)
+    {
+        <MudCheckBox T="bool" @bind-Value="_personalized" Label="@L["Personalized"]"/>
+    }
+}
+<MudSelect T="MixEnum?" @bind-Value="_mix" Label="@L["Mix"]" Class="mb-3 mt-2">
+    <MudSelectItem T="MixEnum?" Value="null">@L["Follow current mix"]</MudSelectItem>
+    <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix">Phoenix</MudSelectItem>
+    <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix2">Phoenix 2</MudSelectItem>
+</MudSelect>
+<div class="d-flex justify-end gap-2 mt-4">
+    <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">@L["Save"]</MudButton>
+</div>
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public EventCallback<(string ConfigJson, int ConfigVersion)> OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private SuggestedGoal _goal = SuggestedGoal.TitleHunt;
+    private MixEnum? _mix;
+    private ChartType? _chartType;
+    private readonly HashSet<RecommendationCategory> _disabled = new();
+    private SuggestedLevelMode _levelMode = SuggestedLevelMode.Any;
+    private int _spreadBelow = 2;
+    private int _spreadAbove = 2;
+    private int _minLevel = 1;
+    private int _maxLevel = DifficultyLevel.Max;
+    private RecommendationLevelBasis _basis = RecommendationLevelBasis.ChartLevel;
+    private SuggestedDifficultyLens _lens = SuggestedDifficultyLens.None;
+    private bool _personalized;
+
+    protected override void OnParametersSet()
+    {
+        var config = WidgetConfigJson.Read<SuggestedChartsConfig>(Widget.ConfigJson);
+        _goal = config.Goal;
+        _mix = config.Mix;
+        _chartType = config.ChartType;
+        _disabled.Clear();
+        foreach (var category in config.DisabledCategories) _disabled.Add(category);
+        _levelMode = config.LevelMode;
+        _spreadBelow = config.SpreadBelow;
+        _spreadAbove = config.SpreadAbove;
+        _minLevel = config.MinLevel ?? 1;
+        _maxLevel = config.MaxLevel ?? DifficultyLevel.Max;
+        _basis = config.LevelBasis;
+        _lens = config.DifficultyLens;
+        _personalized = config.PersonalizedLens;
+    }
+
+    private void SetGoal(SuggestedGoal goal)
+    {
+        _goal = goal;
+        // Disables are per-goal choices; switching goals starts the new bundle whole.
+        _disabled.Clear();
+    }
+
+    private void ToggleCategory(RecommendationCategory category, bool enabled)
+    {
+        if (enabled)
+        {
+            _disabled.Remove(category);
+            return;
+        }
+
+        // Never allow the last enabled category off — an empty goal is no goal.
+        var wouldRemain = SuggestedGoals.CategoriesFor(_goal)
+            .Count(c => c != category && !_disabled.Contains(c));
+        if (wouldRemain > 0) _disabled.Add(category);
+    }
+
+    private string CategoryLabel(RecommendationCategory category)
+    {
+        return category switch
+        {
+            RecommendationCategory.PushLevel => L["Pushing Title Charts"],
+            RecommendationCategory.SkillTitles => L[RecommendationCategories.SkillTitles],
+            RecommendationCategory.PushPGs => L[RecommendationCategories.PushPGs],
+            RecommendationCategory.ImproveTop50 => L[RecommendationCategories.ImproveTop50],
+            RecommendationCategory.RevisitOldScores => L[RecommendationCategories.RevisitOldScores],
+            _ => L[RecommendationCategories.FillScores]
+        };
+    }
+
+    private async Task Save()
+    {
+        var config = new SuggestedChartsConfig
+        {
+            Goal = _goal,
+            Mix = _mix,
+            ChartType = _chartType,
+            DisabledCategories = _disabled.ToList(),
+            LevelMode = _goal == SuggestedGoal.TitleHunt ? SuggestedLevelMode.Any : _levelMode,
+            SpreadBelow = _spreadBelow,
+            SpreadAbove = _spreadAbove,
+            MinLevel = _minLevel <= 1 ? null : _minLevel,
+            MaxLevel = _maxLevel >= DifficultyLevel.Max ? null : _maxLevel,
+            LevelBasis = _basis,
+            DifficultyLens = _goal == SuggestedGoal.FillGaps ? _lens : SuggestedDifficultyLens.None,
+            PersonalizedLens = _goal == SuggestedGoal.FillGaps && _lens != SuggestedDifficultyLens.None
+                               && _personalized
+        };
+        await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
+    }
+
+}

@@ -80,8 +80,16 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.ChartSkillMetric` | Banked per-chart numeric step-analysis facts per external source ((ChartId, Source, MetricName) → decimal + optional grade): badge fractions, top-3 ranks, practice ranks, NPS/sustain/difficulty prediction |
 | `scores.ExternalChartAlias` | Generic external-name map ((Source, ExternalKey) → nullable ChartId) with Auto/Manual/NotFound status + last-checked stamp; for piucenter the key doubles as the fetch URL, so this is also the crawl plan and negative cache |
 | `scores.SongNameLanguage` | Localized song names per culture |
-| `scores.UserRandomSettings` | Saved randomizer presets (JSON) |
 | `scores.SavedChart` | User bookmark lists of charts *(ownership split pending — currently shared)* |
+
+## Randomizer (vertical: `ScoreTracker.Randomizer`)
+
+| Table | Purpose |
+|---|---|
+| `scores.UserRandomSettings` | Saved randomizer presets (JSON) + mix + optional share token |
+| `scores.TournamentRandomSettings` | Tournament-scoped randomizer presets (replaces the Match-subsystem storage) |
+| `scores.RandomizerDraw` | The active draw per context (user or tournament); slug = stable spectator link |
+| `scores.RandomizerDrawCard` | Pulled cards with per-pull identity, stable order, and protect/veto state |
 
 ## Official Game Mirror (vertical: `ScoreTracker.OfficialMirror`)
 
@@ -100,17 +108,21 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.WeeklyUserEntry` | Player entries per mix: score, plate, verification |
 | `scores.UserWeeklyPlacing` | Historical placements from finished weeks, per mix |
 | `scores.PastTourneyCharts` | Archive of previously used weekly charts per mix (avoids repeats; PK ChartId+MixId) |
+| `scores.DailyStepChart` | The one live Daily Step chart per mix (0–1 rows): ChartId, ForDate, IsLimbo, ExpirationDate. Redrawn each midnight-ET rotation |
+| `scores.DailyStepEntry` | Player entries on today's Daily Step chart per mix (score, plate, competitive level, source: official import vs manual widget submission); cleared at rotation |
+| `scores.UserDailyStepPlacing` | Retained per-user Daily Step history, snapshotted at each rotation (ForDate, IsLimbo, Place) |
 
 ## Event Competition (vertical: `ScoreTracker.EventCompetition`)
 
 | Table | Purpose |
 |---|---|
-| `scores.Tournament` | Competitive event definition: configuration, location, visibility |
+| `scores.Tournament` | Competitive event definition: configuration, location, visibility, and the Discord channel the randomizer's Push to Discord posts into |
 | `scores.UserTournamentRegistration` | Player registrations |
 | `scores.UserTournamentSession` | A player's session: charts played, scores, approval state, and the mix it was played on |
 | `scores.PhotoVerification` | Photo proofs attached to sessions |
 | `scores.TournamentChartLevel` | Per-tournament chart level overrides |
 | `scores.TournamentRole` | Per-tournament roles (organizer, judge, …) |
+| `scores.TournamentRoleInvite` | Role-carrying invite link tokens (Head TO mints; optional expiry) |
 | `scores.QualifiersConfiguration` | Qualifier stage setup: charts, scoring, cutoff, and the mix the qualifier runs on |
 | `scores.UserQualifier` | Qualifier entries and approval status |
 | `scores.UserQualifierHistory` | Timestamped snapshots of qualifier submissions |
@@ -132,6 +144,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.CommunityMembership` | Community membership |
 | `scores.CommunityInviteCode` | Invite codes, optionally expiring |
 | `scores.CommunityChannel` | Discord channels wired to a community's event feed |
+| `scores.CommunityHighlight` | Community big-wins feed: one summary row per (score-event × community the winner belongs to), `Payload` a JSON list of `SignificantWin`, `EventId` dedupes across shared communities. Written by the highlight saga off `ScoreHighlightsCapturedEvent`, purged weekly after 30 days ([home-page-widgets §7](design/home-page-widgets.md)) |
 
 ## Match subsystem (shared; deprecated, deletion gated on an owner announcement)
 

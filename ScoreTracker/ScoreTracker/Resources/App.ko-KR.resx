@@ -2542,6 +2542,9 @@
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>리캡 PG 카드 재구축</value>
   </data>
+  <data name="Rebuild Recap Total PUMBILITY" xml:space="preserve">
+    <value>리캡 전체 PUMBILITY 재구축</value>
+  </data>
   <data name="Site Theme" xml:space="preserve">
     <value>사이트 테마</value>
   </data>
@@ -3389,5 +3392,473 @@
   </data>
   <data name="API for tool makers" xml:space="preserve">
     <value>툴 제작자용 API</value>
+  </data>
+  <data name="Not a good suggestion?" xml:space="preserve">
+    <value>좋은 추천이 아닌가요?</value>
+  </data>
+  <data name="The level printed on the chart." xml:space="preserve">
+    <value>채보에 표기된 레벨.</value>
+  </data>
+  <data name="Closest PGs, top-50 picks, and old scores due a revisit." xml:space="preserve">
+    <value>PG에 가장 가까운 채보, 탑 50 추첨, 다시 볼 오래된 점수.</value>
+  </data>
+  <data name="Chart level" xml:space="preserve">
+    <value>채보 레벨</value>
+  </data>
+  <data name="Charts toward your next title, plus skill titles one SSS away." xml:space="preserve">
+    <value>다음 칭호를 위한 채보와 SSS까지 한 걸음 남은 스킬 칭호.</value>
+  </data>
+  <data name="Shuffle suggestions" xml:space="preserve">
+    <value>추천 섞기</value>
+  </data>
+  <data name="Suggested · Fill Gaps" xml:space="preserve">
+    <value>추천 · 빈칸 채우기</value>
+  </data>
+  <data name="Suggested Charts" xml:space="preserve">
+    <value>추천 채보</value>
+  </data>
+  <data name="Pinned range" xml:space="preserve">
+    <value>고정 범위</value>
+  </data>
+  <data name="Suggested · Title Hunt" xml:space="preserve">
+    <value>추천 · 칭호 사냥</value>
+  </data>
+  <data name="Charts picked for you, tuned by goal." xml:space="preserve">
+    <value>목표에 맞춰 고른 채보.</value>
+  </data>
+  <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
+    <value>아직 추천할 것이 없습니다 — 먼저 플레이하고 점수를 가져오세요.</value>
+  </data>
+  <data name="Feedback Submitted, Thank You!" xml:space="preserve">
+    <value>피드백 감사합니다!</value>
+  </data>
+  <data name="{0} to PG" xml:space="preserve">
+    <value>PG까지 {0}</value>
+  </data>
+  <data name="Score Push" xml:space="preserve">
+    <value>점수 올리기</value>
+  </data>
+  <data name="Pushing Title Charts" xml:space="preserve">
+    <value>도전 중인 칭호 채보</value>
+  </data>
+  <data name="Suggested · Score Push" xml:space="preserve">
+    <value>추천 · 점수 올리기</value>
+  </data>
+  <data name="Push PGs" xml:space="preserve">
+    <value>PG 도전</value>
+  </data>
+  <data name="Follows your competitive level as it moves." xml:space="preserve">
+    <value>경쟁 레벨 변화를 따라갑니다.</value>
+  </data>
+  <data name="Goal" xml:space="preserve">
+    <value>목표</value>
+  </data>
+  <data name="Community-calibrated difficulty — a chart that scores like a 21 counts as a 21." xml:space="preserve">
+    <value>커뮤니티 보정 난이도 — 21처럼 점수가 나오는 채보는 21로 칩니다.</value>
+  </data>
+  <data name="Level basis" xml:space="preserve">
+    <value>레벨 기준</value>
+  </data>
+  <data name="Skill Title Charts" xml:space="preserve">
+    <value>스킬 칭호 채보</value>
+  </data>
+  <data name="Improve Your Top 50" xml:space="preserve">
+    <value>탑 50 올리기</value>
+  </data>
+  <data name="Any level" xml:space="preserve">
+    <value>모든 레벨</value>
+  </data>
+  <data name="The Category Isn't Interesting to Me" xml:space="preserve">
+    <value>이 카테고리에 관심 없음</value>
+  </data>
+  <data name="Title Hunt" xml:space="preserve">
+    <value>칭호 사냥</value>
+  </data>
+  <data name="Fill Gaps" xml:space="preserve">
+    <value>빈칸 채우기</value>
+  </data>
+  <data name="Revisit Old Scores" xml:space="preserve">
+    <value>오래된 점수 다시 보기</value>
+  </data>
+  <data name="Fill Scores" xml:space="preserve">
+    <value>점수 채우기</value>
+  </data>
+  <data name="Approachable unpassed charts around your level." xml:space="preserve">
+    <value>내 레벨 주변의 아직 못 깬 만만한 채보.</value>
+  </data>
+  <data name="{0} days old" xml:space="preserve">
+    <value>{0}일 전</value>
+  </data>
+  <data name="Scoring level" xml:space="preserve">
+    <value>스코어링 레벨</value>
+  </data>
+  <data name="± levels" xml:space="preserve">
+    <value>± 레벨</value>
+  </data>
+  <data name="Around my level" xml:space="preserve">
+    <value>내 레벨 주변</value>
+  </data>
+  <data name="Scroll right" xml:space="preserve">
+    <value>오른쪽으로 스크롤</value>
+  </data>
+  <data name="Scroll left" xml:space="preserve">
+    <value>왼쪽으로 스크롤</value>
+  </data>
+  <data name="Levels above" xml:space="preserve">
+    <value>위 레벨 수</value>
+  </data>
+  <data name="Levels below" xml:space="preserve">
+    <value>아래 레벨 수</value>
+  </data>
+  <data name="Tier list difficulty" xml:space="preserve">
+    <value>티어리스트 난이도</value>
+  </data>
+  <data name="Community Highlights" xml:space="preserve">
+    <value>커뮤니티 하이라이트</value>
+  </data>
+  <data name="Recent big wins from the communities you pick." xml:space="preserve">
+    <value>선택한 커뮤니티의 최근 큰 성과.</value>
+  </data>
+  <data name="No big wins yet" xml:space="preserve">
+    <value>아직 큰 성과가 없습니다</value>
+  </data>
+  <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
+    <value>커뮤니티의 희귀한 PG, 큰 칭호, 최고 점수가 여기에 표시됩니다.</value>
+  </data>
+  <data name="Rare Title" xml:space="preserve">
+    <value>희귀 칭호</value>
+  </data>
+  <data name="Rare PG" xml:space="preserve">
+    <value>희귀 PG</value>
+  </data>
+  <data name="Folder Cleared" xml:space="preserve">
+    <value>폴더 클리어</value>
+  </data>
+  <data name="Top {0}%" xml:space="preserve">
+    <value>상위 {0}%</value>
+  </data>
+  <data name="only {0} have PG" xml:space="preserve">
+    <value>{0}만 PG 보유</value>
+  </data>
+  <data name="#{0} PUMBILITY" xml:space="preserve">
+    <value>PUMBILITY #{0}</value>
+  </data>
+  <data name="top {0}% of peers" xml:space="preserve">
+    <value>동급 상위 {0}%</value>
+  </data>
+  <data name="{0} pass in this folder" xml:space="preserve">
+    <value>이 폴더 {0} 통과</value>
+  </data>
+  <data name="#1 of all peers" xml:space="preserve">
+    <value>동급 중 #1</value>
+  </data>
+  <data name="only {0} hold it" xml:space="preserve">
+    <value>{0}만 보유</value>
+  </data>
+  <data name="completed" xml:space="preserve">
+    <value>달성</value>
+  </data>
+  <data name="now" xml:space="preserve">
+    <value>방금</value>
+  </data>
+  <data name="Communities to include" xml:space="preserve">
+    <value>포함할 커뮤니티</value>
+  </data>
+  <data name="Join a community to use this widget." xml:space="preserve">
+    <value>이 위젯을 사용하려면 커뮤니티에 참여하세요.</value>
+  </data>
+  <data name="Leave all unchecked to follow your non-regional communities." xml:space="preserve">
+    <value>모두 선택 해제하면 지역 외 커뮤니티를 따릅니다.</value>
+  </data>
+  <data name="Include my own wins" xml:space="preserve">
+    <value>내 성과도 포함</value>
+  </data>
+  <data name="Cleared all of {0}" xml:space="preserve">
+    <value>{0} 전부 클리어</value>
+  </data>
+  <data name="Daily Step" xml:space="preserve">
+    <value>데일리 스텝</value>
+  </data>
+  <data name="Today's shared chart, plus a weekly Limbo Day." xml:space="preserve">
+    <value>오늘의 공유 차트, 그리고 주 1회 림보 데이.</value>
+  </data>
+  <data name="Today's Step posts at midnight." xml:space="preserve">
+    <value>오늘의 스텝은 자정에 공개됩니다.</value>
+  </data>
+  <data name="Limbo Day: lowest passing score wins!" xml:space="preserve">
+    <value>림보 데이: 통과한 최저 점수가 승리!</value>
+  </data>
+  <data name="No entry yet" xml:space="preserve">
+    <value>아직 기록 없음</value>
+  </data>
+  <data name="Record" xml:space="preserve">
+    <value>기록</value>
+  </data>
+  <data name="Verified from official import" xml:space="preserve">
+    <value>공식 가져오기로 확인됨</value>
+  </data>
+  <data name="Quick Record" xml:space="preserve">
+    <value>빠른 기록</value>
+  </data>
+  <data name="Record a score by hand for any chart." xml:space="preserve">
+    <value>아무 채보나 점수를 직접 입력해 기록하세요.</value>
+  </data>
+  <data name="Search a chart" xml:space="preserve">
+    <value>채보 검색</value>
+  </data>
+  <data name="Name, or shorthand like S18" xml:space="preserve">
+    <value>곡명 또는 S18 같은 약어</value>
+  </data>
+  <data name="Recorded" xml:space="preserve">
+    <value>기록됨</value>
+  </data>
+  <data name="Change chart" xml:space="preserve">
+    <value>채보 변경</value>
+  </data>
+  <data name="Sign in to record." xml:space="preserve">
+    <value>기록하려면 로그인하세요.</value>
+  </data>
+  <data name="There was an error while recording the score" xml:space="preserve">
+    <value>점수를 기록하는 중 오류가 발생했습니다</value>
+  </data>
+  <data name="All mixes" xml:space="preserve">
+    <value>모든 시리즈</value>
+  </data>
+  <data name="Record to" xml:space="preserve">
+    <value>기록 대상</value>
+  </data>
+  <data name="Select a mix" xml:space="preserve">
+    <value>시리즈 선택</value>
+  </data>
+  <data name="Change mix" xml:space="preserve">
+    <value>시리즈 변경</value>
+  </data>
+  <data name="Remember last mix" xml:space="preserve">
+    <value>마지막 시리즈 기억</value>
+  </data>
+  <data name="Your standing" xml:space="preserve">
+    <value>내 순위</value>
+  </data>
+  <data name="manual" xml:space="preserve">
+    <value>수동</value>
+  </data>
+  <data name="Not played" xml:space="preserve">
+    <value>미플레이</value>
+  </data>
+  <data name="{0} on the board" xml:space="preserve">
+    <value>{0}명 참여 중</value>
+  </data>
+  <data name="Account Stats" xml:space="preserve">
+    <value>계정 통계</value>
+  </data>
+  <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
+    <value>당신의 Pumbility와 경쟁 레벨, 그리고 가장 가까운 상대.</value>
+  </data>
+  <data name="Pumbility" xml:space="preserve">
+    <value>Pumbility</value>
+  </data>
+  <data name="Match players on" xml:space="preserve">
+    <value>매칭 기준</value>
+  </data>
+  <data name="Singles competitive level" xml:space="preserve">
+    <value>싱글 경쟁 레벨</value>
+  </data>
+  <data name="Doubles competitive level" xml:space="preserve">
+    <value>더블 경쟁 레벨</value>
+  </data>
+  <data name="Combined competitive level" xml:space="preserve">
+    <value>종합 경쟁 레벨</value>
+  </data>
+  <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
+    <value>가장 가까운 상대는 1×2 이상 크기에서 표시됩니다.</value>
+  </data>
+  <data name="Closest · Singles" xml:space="preserve">
+    <value>가장 가까움 · 싱글</value>
+  </data>
+  <data name="Closest · Doubles" xml:space="preserve">
+    <value>가장 가까움 · 더블</value>
+  </data>
+  <data name="Closest · Combined" xml:space="preserve">
+    <value>가장 가까움 · 종합</value>
+  </data>
+  <data name="No close matches yet." xml:space="preserve">
+    <value>아직 가까운 상대가 없습니다.</value>
+  </data>
+  <data name="Pumbility Push" xml:space="preserve">
+    <value>Pumbility 올리기</value>
+  </data>
+  <data name="Suggested · Pumbility Push" xml:space="preserve">
+    <value>추천 · Pumbility 올리기</value>
+  </data>
+  <data name="The biggest Pumbility gains available to you right now." xml:space="preserve">
+    <value>지금 당신이 얻을 수 있는 가장 큰 Pumbility 상승.</value>
+  </data>
+  <data name="Singles / Doubles" xml:space="preserve">
+    <value>싱글 / 더블</value>
+  </data>
+  <data name="Show Singles &amp; Doubles as separate data" xml:space="preserve">
+    <value>싱글과 더블을 개별 데이터로 표시</value>
+  </data>
+  <data name="Metric" xml:space="preserve">
+    <value>지표</value>
+  </data>
+  <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
+    <value>이 시리즈는 점수 정규화가 없습니다 — 등급과 클리어만 사용할 수 있습니다.</value>
+  </data>
+  <data name="Aggregation" xml:space="preserve">
+    <value>집계</value>
+  </data>
+  <data name="Series" xml:space="preserve">
+    <value>계열</value>
+  </data>
+  <data name="Custom percentile" xml:space="preserve">
+    <value>사용자 백분위수</value>
+  </data>
+  <data name="Avg" xml:space="preserve">
+    <value>평균</value>
+  </data>
+  <data name="Distribution" xml:space="preserve">
+    <value>분포</value>
+  </data>
+  <data name="Breakdown" xml:space="preserve">
+    <value>구성</value>
+  </data>
+  <data name="Completion %" xml:space="preserve">
+    <value>완료율 %</value>
+  </data>
+  <data name="Normalize to 100%" xml:space="preserve">
+    <value>100%로 정규화</value>
+  </data>
+  <data name="Include an unplayed segment" xml:space="preserve">
+    <value>미플레이 구간 포함</value>
+  </data>
+  <data name="Thresholds — each becomes a line" xml:space="preserve">
+    <value>임계값 — 각각 하나의 선이 됩니다</value>
+  </data>
+  <data name="At least" xml:space="preserve">
+    <value>이상</value>
+  </data>
+  <data name="Shade band" xml:space="preserve">
+    <value>음영 밴드</value>
+  </data>
+  <data name="No scores in this range yet — record or import to see your breakdown." xml:space="preserve">
+    <value>이 범위에 아직 점수가 없습니다 — 기록하거나 가져오면 구성을 볼 수 있습니다.</value>
+  </data>
+  <data name="By-Level Breakdown" xml:space="preserve">
+    <value>레벨별 구성</value>
+  </data>
+  <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
+    <value>점수, 등급, 플레이트 또는 클리어를 레벨별로 보여주는 구성 가능한 그래프.</value>
+  </data>
+  <data name="Score Completion" xml:space="preserve">
+    <value>점수 완료율</value>
+  </data>
+  <data name="Grade Completion" xml:space="preserve">
+    <value>등급 완료율</value>
+  </data>
+  <data name="Average Grade by Level" xml:space="preserve">
+    <value>레벨별 평균 등급</value>
+  </data>
+  <data name="Plate Completion" xml:space="preserve">
+    <value>플레이트 완료율</value>
+  </data>
+  <data name="Average Plate by Level" xml:space="preserve">
+    <value>레벨별 평균 플레이트</value>
+  </data>
+  <data name="Pass Breakdown" xml:space="preserve">
+    <value>클리어 구성</value>
+  </data>
+  <data name="Clear Progress" xml:space="preserve">
+    <value>클리어 진행도</value>
+  </data>
+  <data name="Box Plot" xml:space="preserve">
+    <value>상자 그림</value>
+  </data>
+  <data name="Grade Wall" xml:space="preserve">
+    <value>등급 월</value>
+  </data>
+  <data name="PG Race" xml:space="preserve">
+    <value>PG 레이스</value>
+  </data>
+  <data name="Score Push %" xml:space="preserve">
+    <value>점수 올리기 %</value>
+  </data>
+  <data name="Score spread per level — min, quartiles, max, with the IQR shaded." xml:space="preserve">
+    <value>레벨별 점수 분포 — 최소, 사분위수, 최대, IQR 음영 표시.</value>
+  </data>
+  <data name="What grades fill each folder, normalized so shape beats volume." xml:space="preserve">
+    <value>각 폴더를 채우는 등급 구성. 양보다 형태가 보이도록 정규화.</value>
+  </data>
+  <data name="Chasing plates — % of each folder at MG, UG, and full Perfect Game." xml:space="preserve">
+    <value>플레이트 도전 — 각 폴더의 MG, UG, 퍼펙트 게임 비율.</value>
+  </data>
+  <data name="How much of every folder you've passed, Singles vs Doubles." xml:space="preserve">
+    <value>각 폴더의 클리어 비율, 싱글 대 더블.</value>
+  </data>
+  <data name="Multi-threshold completion: ≥950k, ≥990k, and 1,000,000." xml:space="preserve">
+    <value>다중 임계값 완료율: ≥950k, ≥990k, 1,000,000.</value>
+  </data>
+  <data name="Percentile" xml:space="preserve">
+    <value>Percentile</value>
+  </data>
+  <data name="How each folder's plates stack up — Marvelous, Ultimate, and Perfect Game." xml:space="preserve">
+    <value>How each folder's plates stack up — Marvelous, Ultimate, and Perfect Game.</value>
+  </data>
+  <data name="How much of every folder you've cleared, per level." xml:space="preserve">
+    <value>How much of every folder you've cleared, per level.</value>
+  </data>
+  <data name="How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000." xml:space="preserve">
+    <value>How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000.</value>
+  </data>
+  <data name="Singles + Doubles" xml:space="preserve">
+    <value>Singles + Doubles</value>
+  </data>
+  <data name="Show Singles &amp; Doubles separately" xml:space="preserve">
+    <value>Show Singles &amp; Doubles separately</value>
+  </data>
+  <data name="Show per type" xml:space="preserve">
+    <value>Show per type</value>
+  </data>
+  <data name="Shaded range: IQR (P25–P75)" xml:space="preserve">
+    <value>Shaded range: IQR (P25–P75)</value>
+  </data>
+  <data name="Shaded range: Min–Max" xml:space="preserve">
+    <value>Shaded range: Min–Max</value>
+  </data>
+  <data name="Shaded range: ±1σ" xml:space="preserve">
+    <value>Shaded range: ±1σ</value>
+  </data>
+  <data name="Chart Age" xml:space="preserve">
+    <value>Chart Age</value>
+  </data>
+  <data name="Chart Age by Level" xml:space="preserve">
+    <value>Chart Age by Level</value>
+  </data>
+  <data name="How much of every folder you've cleared, Singles vs Doubles." xml:space="preserve">
+    <value>How much of every folder you've cleared, Singles vs Doubles.</value>
+  </data>
+  <data name="How stale your scores are per folder — the spread of days since you set them." xml:space="preserve">
+    <value>How stale your scores are per folder — the spread of days since you set them.</value>
+  </data>
+  <data name="Within days" xml:space="preserve">
+    <value>최대 일수</value>
+  </data>
+  <data name="Grade Distribution" xml:space="preserve">
+    <value>등급 분포</value>
+  </data>
+  <data name="Co-Op Completion" xml:space="preserve">
+    <value>Co-Op 완료</value>
+  </data>
+  <data name="Your score spread per level, Singles against Doubles, the middle 50% shaded." xml:space="preserve">
+    <value>레벨별 점수 분포, 싱글 대 더블, 가운데 50% 음영.</value>
+  </data>
+  <data name="Every grade stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
+    <value>폴더별로 모든 등급을 쌓고, 실패 / 미플레이 구간으로 폴더 전체 수까지 표시.</value>
+  </data>
+  <data name="Every plate stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
+    <value>폴더별로 모든 플레이트를 쌓고, 실패 / 미플레이 구간으로 폴더 전체 수까지 표시.</value>
+  </data>
+  <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
+    <value>플레이 인원수별로 클리어한 Co-Op 채보 수.</value>
   </data>
 </root>

@@ -446,9 +446,9 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
-    public async Task Phoenix2SkillRatingIsTheSumOfTheSinglesAndDoublesTop50Pools()
+    public async Task Phoenix2SkillRatingIsTheMergedTop50AcrossSinglesAndDoubles()
     {
-        // Phoenix 2's official PUMBILITY: two independent top-50 pools summed, each chart
+        // Phoenix 2's official overall PUMBILITY is ONE merged top-50; each chart is
         // worth Base(level) x (grade + plate) — additive. All four charts carry the SG
         // plate (+0.008) from the Score helper.
         var userId = Guid.NewGuid();
@@ -471,9 +471,55 @@ public sealed class PlayerRatingSagaTests
         await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix2), CancellationToken.None);
 
         // Singles pool: 346.84 + 342.63 = 689.47 -> 689; Doubles pool: 354.5 + 342.51 = 697.01 -> 697.
+        // Only four charts, so the merged top-50 holds all of them and Total == 689 + 697
+        // here; Phoenix2SkillRatingIsAMergedTop50NotTwoPoolsSummed covers where they diverge.
         stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, userId,
             It.Is<PlayerStatsRecord>(p => p.SinglesRating == 689 && p.DoublesRating == 697
                                           && p.SkillRating == 689 + 697),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Phoenix2SkillRatingIsAMergedTop50NotTwoPoolsSummed()
+    {
+        // 30 singles (level 23) outrate 30 doubles (level 20), all clean SG plays. Each
+        // per-type pool holds all 30 of its type, but the overall top-50 keeps only 50 of
+        // the 60 — the 30 singles plus the 20 best doubles — so Total < Singles + Doubles.
+        var userId = Guid.NewGuid();
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var vs = scoring.GetScore(ChartType.Single, DifficultyLevel.From(23), PhoenixScore.From(995000),
+            PhoenixPlate.SuperbGame);
+        var vd = scoring.GetScore(ChartType.Double, DifficultyLevel.From(20), PhoenixScore.From(995000),
+            PhoenixPlate.SuperbGame);
+        Assert.True(vs > vd, "test setup: singles must outrate doubles so doubles are the ones dropped");
+
+        var singleCharts = Enumerable.Range(0, 30)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(23).Build()).ToArray();
+        var doubleCharts = Enumerable.Range(0, 30)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Double).WithLevel(20).Build()).ToArray();
+        var allCharts = singleCharts.Concat(doubleCharts).ToArray();
+        var allScores = allCharts.Select(c => Score(c.Id, 995000)).ToArray();
+
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix2, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(allCharts, MixEnum.Phoenix2),
+            scores: ScoresMockReturning(userId, allScores, MixEnum.Phoenix2),
+            stats: stats);
+
+        await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix2), CancellationToken.None);
+
+        // Accumulate the doubles exactly as production's LINQ Sum does (order + flooring).
+        var expectedSingles = (int)Enumerable.Repeat(vs, 30).Sum();
+        var expectedDoubles = (int)Enumerable.Repeat(vd, 30).Sum();
+        var expectedTotal = (int)Enumerable.Repeat(vs, 30).Concat(Enumerable.Repeat(vd, 20)).Sum();
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, userId,
+            It.Is<PlayerStatsRecord>(p => p.SinglesRating == expectedSingles
+                                          && p.DoublesRating == expectedDoubles
+                                          && p.SkillRating == expectedTotal
+                                          && p.SkillRating < p.SinglesRating + p.DoublesRating
+                                          && p.SkillRating > p.SinglesRating),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

@@ -21,7 +21,7 @@ Cross-vertical communication happens two ways, and only two ways:
 
 **Never SQL joins onto another vertical's tables.** A vertical's tables are private storage, not an integration surface. This is what keeps a vertical extractable: its data model can change shape without a ripple, because nothing else touches it below the contract line.
 
-The verticals: **ScoreLedger** (the system of record for scores), **PlayerProgress** (ratings, titles, history), **ChartIntelligence** (tier lists, difficulty analytics), **Catalog** (game content reads, videos, skills), **OfficialMirror** (the anti-corruption layer against the official PiuGame site), **WeeklyChallenge**, **EventCompetition** (tournaments), **Communities**, **Ucs** (user-created steps), **Identity** (accounts, logins, tokens), and **HomePage** (dashboard layout persistence — pages and widget instances; the widget *render components* live in Web's registry, see [docs/design/home-page-widgets.md](design/home-page-widgets.md)).
+The verticals: **ScoreLedger** (the system of record for scores), **PlayerProgress** (ratings, titles, history), **ChartIntelligence** (tier lists, difficulty analytics), **Catalog** (game content reads, videos, skills), **Randomizer** (chart draw generation, randomizer settings, tournament draws), **OfficialMirror** (the anti-corruption layer against the official PiuGame site), **WeeklyChallenge**, **EventCompetition** (tournaments), **Communities**, **Ucs** (user-created steps), **Identity** (accounts, logins, tokens), and **HomePage** (dashboard layout persistence — pages and widget instances; the widget *render components* live in Web's registry, see [docs/design/HomePageWidgets/README.md](design/HomePageWidgets/README.md)).
 
 ### Onion (dependency direction)
 
@@ -79,7 +79,8 @@ ScoreTracker.sln
 │   │                                  append-only ScoreEventJournal, IScoreReader
 │   ├── ScoreTracker.PlayerProgress    ratings, titles, player history, recommendations
 │   ├── ScoreTracker.ChartIntelligence tier lists, scoring/letter difficulties, votes
-│   ├── ScoreTracker.Catalog           chart/song reads, videos, skills, randomizer
+│   ├── ScoreTracker.Catalog           chart/song reads, videos, skills
+│   ├── ScoreTracker.Randomizer        chart draw generation + randomizer settings
 │   ├── ScoreTracker.OfficialMirror    PiuGame ACL: scraping, leaderboard mirror,
 │   │                                  world rankings, score import saga
 │   ├── ScoreTracker.WeeklyChallenge   weekly board rotation, entries, placements
@@ -127,7 +128,7 @@ Every vertical's model contribution must be listed in [`VerticalModelContributio
 
 | Folder | What's there |
 |---|---|
-| *(root)* | `/WhatShouldIPlay` (home: recommendations + quick recording), `/Home` (the widget dashboard — unlisted pre-release, becomes `/` at cutover; see [docs/design/home-page-widgets.md](design/home-page-widgets.md)), `/Charts` (the core browser), `/Chart/{id}` (record + detail), `/Login`, `/Welcome`, `/Account` (profile, API tokens), `/UploadPhoenixScores` (bulk CSV import), `/UploadXXScores` |
+| *(root)* | `/WhatShouldIPlay` (home: recommendations + quick recording), `/Home` (the widget dashboard — unlisted pre-release, becomes `/` at cutover; see [docs/design/HomePageWidgets/README.md](design/HomePageWidgets/README.md)), `/Charts` (the core browser), `/Chart/{id}` (record + detail), `/Login`, `/Welcome`, `/Account` (profile, API tokens), `/UploadPhoenixScores` (bulk CSV import), `/UploadXXScores` |
 | `TierLists/` | `/TierLists` (+ `/TierLists/{type}/{level}`, the consolidated tier-list page — the site's most-used feature) and `/TierLists/{type}/{level}/Breakdown` (the Personalized Breakdown: what goes into your personalized blend and which charts it moves — see [docs/design/personalized-breakdown.md](design/personalized-breakdown.md)) |
 | `Progress/` | `/Progress`, `/Phoenix/Progress`, `/Pumbility`, `/Titles`, `/CompetitiveLevel`, `/Player/{id}/Sessions` (public session roundups + score journal — the Discord score card's link target), `/Player/{id}/PhoenixRecap` (the season-recap slide deck, admin-computed — see [docs/design/phoenix-season-recap.md](design/phoenix-season-recap.md)) |
 | `Competition/` | `/Tournaments`, stamina + match tournament flows, qualifiers submission, `/WeeklyCharts`, `/UcsLeaderboards`, `/ScoreRankings`, `/Completion` |

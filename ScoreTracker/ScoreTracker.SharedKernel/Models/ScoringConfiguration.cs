@@ -259,7 +259,7 @@ namespace ScoreTracker.SharedKernel.Models
         ///     emits them. Used by the PUMBILITY projection for unplayed charts;
         ///     deliberately not an exact science — recalibrate per mix once its plate
         ///     data accumulates (same query, new constants;
-        ///     docs/design/home-page-widgets.md §5).
+        ///     docs/design/HomePageWidgets/README.md §5).
         /// </summary>
         public static PhoenixPlate ExpectedPlateForScore(PhoenixScore score)
         {
@@ -294,14 +294,12 @@ namespace ScoreTracker.SharedKernel.Models
         }
 
         /// <summary>
-        ///     Phoenix 2's official PUMBILITY per-chart formula, reverse-engineered from the
-        ///     live pumbility rankings + per-chart leaderboards and validated against owner-
-        ///     collected real per-chart values (2026-07): contribution =
-        ///     Base(level) × (gradeMultiplier + plateBonus) — grade and plate combine
+        ///     Phoenix 2's PUMBILITY per-chart formula: contribution =
+        ///     Base(level) × (gradeMultiplier + plateBonus), grade and plate combining
         ///     ADDITIVELY. CO-OP, U.C.S. and half-double (performance) charts never
-        ///     contribute (official site text), and broken plays never contribute
-        ///     (owner-confirmed). Totals are TWO independent top-50 pools — Singles and
-        ///     Doubles — summed by the caller; this config only prices a single chart.
+        ///     contribute, and broken plays never contribute. This config prices a single
+        ///     chart; the caller aggregates — Singles and Doubles each into their own top-50
+        ///     pool, and the overall total from the top 50 across both types.
         /// </summary>
         private static ScoringConfiguration Phoenix2PumbilityScoring()
         {

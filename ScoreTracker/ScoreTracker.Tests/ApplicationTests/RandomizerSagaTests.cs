@@ -1,7 +1,7 @@
-using ScoreTracker.Catalog.Domain;
-using ScoreTracker.Catalog.Contracts.Queries;
-using ScoreTracker.Catalog.Contracts.Commands;
-using ScoreTracker.Catalog.Application;
+using ScoreTracker.Randomizer.Domain;
+using ScoreTracker.Randomizer.Contracts.Queries;
+using ScoreTracker.Randomizer.Contracts.Commands;
+using ScoreTracker.Randomizer.Application;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -83,11 +83,11 @@ public sealed class RandomizerSagaTests
             EmptyScoringLevels().Object);
 
         var settings = new RandomSettings();
-        await saga.Handle(new SaveUserRandomSettingsCommand(Name.From("favorites"), settings),
+        await saga.Handle(new SaveUserRandomSettingsCommand(Name.From("favorites"), settings, MixEnum.Phoenix2),
             CancellationToken.None);
 
         repo.Verify(r => r.SaveSettings(userId, It.Is<Name>(n => (string)n == "favorites"), settings,
-                It.IsAny<CancellationToken>()),
+                MixEnum.Phoenix2, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

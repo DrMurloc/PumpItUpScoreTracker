@@ -13,6 +13,7 @@ using ScoreTracker.Application.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Application;
 using ScoreTracker.PlayerProgress.Domain;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Commands;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Commands;
@@ -128,6 +129,218 @@ public sealed class RecommendedChartsSagaTests
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task CategoriesFilterOnlyRunsRequestedBuilders()
+    {
+        var ctx = new RecommendedChartsContext();
+
+        await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: new HashSet<RecommendationCategory> { RecommendationCategory.FillScores }),
+            CancellationToken.None);
+
+        // Fill Scores runs (it ranks by the approachable-chart tier lists)…
+        ctx.Mediator.Verify(m => m.Send(It.IsAny<GetTierListQuery>(), It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce);
+        // …while the title- and top-50-backed categories never even fetch their data.
+        ctx.Mediator.Verify(m => m.Send(It.IsAny<GetTitleProgressQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        ctx.Mediator.Verify(m => m.Send(It.IsAny<GetTop50CompetitiveQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task StaticLevelWindowFiltersPushPGsByChartLevel()
+    {
+        var inWindow = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var below = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(inWindow, below)
+            .WithScores(Score(inWindow.Id, 999500), Score(below.Id, 999500));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                LevelWindow: RecommendationLevelWindow.Static(18, 22)),
+            CancellationToken.None)).ToArray();
+
+        Assert.Contains(result,
+            r => (string)r.Category == RecommendationCategories.PushPGs && r.ChartId == inWindow.Id);
+        Assert.DoesNotContain(result, r => r.ChartId == below.Id);
+    }
+
+    [Fact]
+    public async Task DynamicLevelWindowFollowsCompetitiveLevel()
+    {
+        // CL 18, 1 below / 1 above → window 17–19; the level-20 SSS+ falls outside it.
+        var inWindow = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
+        var outside = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCompetitiveLevel(18)
+            .WithCharts(inWindow, outside)
+            .WithScores(Score(inWindow.Id, 999500), Score(outside.Id, 999500));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                LevelWindow: RecommendationLevelWindow.Dynamic(1, 1)),
+            CancellationToken.None)).ToArray();
+
+        Assert.Contains(result,
+            r => (string)r.Category == RecommendationCategories.PushPGs && r.ChartId == inWindow.Id);
+        Assert.DoesNotContain(result, r => r.ChartId == outside.Id);
+    }
+
+    [Fact]
+    public async Task DynamicLevelWindowSpreadsAreAsymmetric()
+    {
+        // 3 below / 0 above at CL 18 → 15–18: relaxed picks below, nothing above.
+        var below = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        var above = new ChartBuilder().WithType(ChartType.Single).WithLevel(19).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCompetitiveLevel(18)
+            .WithCharts(below, above)
+            .WithScores(Score(below.Id, 999500), Score(above.Id, 999500));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                LevelWindow: RecommendationLevelWindow.Dynamic(3, 0)),
+            CancellationToken.None)).ToArray();
+
+        Assert.Contains(result,
+            r => (string)r.Category == RecommendationCategories.PushPGs && r.ChartId == below.Id);
+        Assert.DoesNotContain(result, r => r.ChartId == above.Id);
+    }
+
+    [Fact]
+    public async Task ScoringLevelBasisRatesChartsByCalibratedDifficulty()
+    {
+        // A printed 15 that scores like a 19.7 belongs in an 18–22 window; a printed 20
+        // that scores like a 16.2 does not. Uncalibrated charts fall back to printed level.
+        var sandbagged = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        var inflated = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(sandbagged, inflated)
+            .WithScores(Score(sandbagged.Id, 999500), Score(inflated.Id, 999500));
+        ctx.Mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, double>
+            {
+                [sandbagged.Id] = 19.7,
+                [inflated.Id] = 16.2
+            });
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                LevelWindow: RecommendationLevelWindow.Static(18, 22, RecommendationLevelBasis.ScoringLevel)),
+            CancellationToken.None)).ToArray();
+
+        Assert.Contains(result,
+            r => (string)r.Category == RecommendationCategories.PushPGs && r.ChartId == sandbagged.Id);
+        Assert.DoesNotContain(result, r => r.ChartId == inflated.Id);
+    }
+
+    [Fact]
+    public async Task StaticLevelWindowReplacesFillScoresLegacyBand()
+    {
+        // Legacy fills = CL−3..CL−1 (17–19 at CL 20). A pinned 15–16 window replaces
+        // that band outright rather than intersecting it.
+        var pinned = new ChartBuilder().WithType(ChartType.Single).WithLevel(16).Build();
+        var legacy = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCompetitiveLevel(20)
+            .WithCharts(pinned, legacy);
+        ctx.Mediator.Setup(m => m.Send(It.IsAny<GetTierListQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new SongTierListEntry("Popularity", pinned.Id, TierListCategory.Easy, 0),
+                new SongTierListEntry("Popularity", legacy.Id, TierListCategory.Easy, 0)
+            });
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                LevelWindow: RecommendationLevelWindow.Static(15, 16)),
+            CancellationToken.None)).ToArray();
+
+        Assert.Contains(result,
+            r => (string)r.Category == RecommendationCategories.FillScores && r.ChartId == pinned.Id);
+        Assert.DoesNotContain(result,
+            r => (string)r.Category == RecommendationCategories.FillScores && r.ChartId == legacy.Id);
+    }
+
+    [Fact]
+    public async Task StaticLevelWindowReplacesRevisitOldScoresLegacyBand()
+    {
+        // CL 20 legacy band = CL−2..CL (18–20); a 15–16 window pulls the old level-16
+        // score in and drives which relative tier lists get fetched.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(16).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCompetitiveLevel(20)
+            .WithCharts(chart)
+            .WithScores(Score(chart.Id, 950000)); // recorded 2026-01-01 → older than 30 days
+        ctx.Mediator.Setup(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new SongTierListEntry("Relative", chart.Id, TierListCategory.Underrated, 0) });
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                LevelWindow: RecommendationLevelWindow.Static(15, 16)),
+            CancellationToken.None)).ToArray();
+
+        Assert.Contains(result,
+            r => (string)r.Category == RecommendationCategories.RevisitOldScores && r.ChartId == chart.Id);
+        ctx.Mediator.Verify(m => m.Send(It.Is<GetMyRelativeTierListQuery>(q => (int)q.Level == 16),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task StaticLevelWindowFiltersImproveTop50()
+    {
+        var inWindow = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var outside = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        var ctx = new RecommendedChartsContext().WithCharts(inWindow, outside);
+        ctx.Mediator.Setup(m => m.Send(It.IsAny<GetTop50CompetitiveQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Score(inWindow.Id, 980000), Score(outside.Id, 980000) });
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                LevelWindow: RecommendationLevelWindow.Static(18, 22)),
+            CancellationToken.None)).ToArray();
+
+        Assert.Contains(result,
+            r => (string)r.Category == RecommendationCategories.ImproveTop50 && r.ChartId == inWindow.Id);
+        Assert.DoesNotContain(result,
+            r => (string)r.Category == RecommendationCategories.ImproveTop50 && r.ChartId == outside.Id);
+    }
+
+    [Fact]
+    public async Task PumbilityPushRanksChartsByProjectedGainAndStampsTheGain()
+    {
+        var big = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var small = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(big, small)
+            .WithPumbilityGains((small.Id, 7), (big.Id, 42));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: new HashSet<RecommendationCategory> { RecommendationCategory.PushPumbility }),
+            CancellationToken.None)).ToArray();
+
+        var pushes = result.Where(r => (string)r.Category == RecommendationCategories.PushPumbility).ToArray();
+        Assert.Equal(new[] { big.Id, small.Id }, pushes.Select(p => p.ChartId).ToArray());
+        Assert.Equal("+42", pushes[0].ChartDetails);
+    }
+
+    [Fact]
+    public async Task PumbilityPushExcludesHiddenChartsAndNonPositiveGains()
+    {
+        var gainer = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var hidden = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var zeroGain = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(gainer, hidden, zeroGain)
+            .WithPumbilityGains((gainer.Id, 30), (hidden.Id, 25), (zeroGain.Id, 0))
+            .WithFeedback(new SuggestionFeedbackRecord(Name.From(RecommendationCategories.PushPumbility),
+                Name.From("NotInterested"), Notes: "", ShouldHide: true, IsPositive: false, ChartId: hidden.Id));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: new HashSet<RecommendationCategory> { RecommendationCategory.PushPumbility }),
+            CancellationToken.None)).ToArray();
+
+        Assert.Contains(result,
+            r => (string)r.Category == RecommendationCategories.PushPumbility && r.ChartId == gainer.Id);
+        Assert.DoesNotContain(result, r => r.ChartId == hidden.Id);
+        Assert.DoesNotContain(result, r => r.ChartId == zeroGain.Id);
+    }
+
     private sealed class RecommendedChartsContext
     {
         public Mock<IMediator> Mediator { get; } = new();
@@ -160,6 +373,8 @@ public sealed class RecommendedChartsSagaTests
                 .ReturnsAsync(Array.Empty<SongTierListEntry>());
             Mediator.Setup(m => m.Send(It.IsAny<GetTop50CompetitiveQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+            Mediator.Setup(m => m.Send(It.IsAny<ProjectPumbilityGainsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(EmptyProjection());
             Users.Setup(u => u.GetFeedback(userId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<SuggestionFeedbackRecord>());
             Weekly.Setup(w => w.GetWeeklyCharts(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
@@ -191,6 +406,18 @@ public sealed class RecommendedChartsSagaTests
             return this;
         }
 
+        public RecommendedChartsContext WithPumbilityGains(params (Guid ChartId, int Gain)[] gains)
+        {
+            Mediator.Setup(m => m.Send(It.IsAny<ProjectPumbilityGainsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PumbilityProjection(
+                    new Dictionary<Guid, PhoenixScore>(),
+                    gains.ToDictionary(g => g.ChartId, g => g.Gain),
+                    new Dictionary<(ChartType, DifficultyLevel), int>(),
+                    new Dictionary<Guid, TierListCategory>(),
+                    new Dictionary<Guid, IReadOnlyList<SkillAdjustmentRecord>>()));
+            return this;
+        }
+
         public RecommendedChartsContext WithCompetitiveLevel(double level)
         {
             Stats.Setup(s => s.GetStats(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
@@ -215,6 +442,11 @@ public sealed class RecommendedChartsSagaTests
     private static RecordedPhoenixScore Score(Guid chartId, int score) =>
         new(chartId, score, PhoenixPlate.SuperbGame, IsBroken: false,
             new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+
+    private static PumbilityProjection EmptyProjection() =>
+        new(new Dictionary<Guid, PhoenixScore>(), new Dictionary<Guid, int>(),
+            new Dictionary<(ChartType, DifficultyLevel), int>(), new Dictionary<Guid, TierListCategory>(),
+            new Dictionary<Guid, IReadOnlyList<SkillAdjustmentRecord>>());
 
     private static PlayerStatsRecord ZeroStats(Guid userId) =>
         new(userId, TotalRating: 0, HighestLevel: 1, ClearCount: 0, CoOpRating: 0, CoOpScore: 0,

@@ -7,7 +7,7 @@ namespace ScoreTracker.Tests.DomainTests;
 /// <summary>
 ///     Pins the empirically calibrated score→plate expectation (modal plate of
 ///     922,765 real records; boundaries measured at 2k granularity — see
-///     docs/design/home-page-widgets.md §5). Moving a boundary is a deliberate
+///     docs/design/HomePageWidgets/README.md §5). Moving a boundary is a deliberate
 ///     recalibration, not a refactor.
 /// </summary>
 public sealed class ExpectedPlateForScoreTests

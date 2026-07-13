@@ -1,5 +1,6 @@
 using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.Catalog.Contracts.Messages;
+using ScoreTracker.Communities.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using MassTransit;
@@ -30,6 +31,14 @@ public sealed class RecurringJobRunner
     public Task PublishUpdateWeeklyCharts() =>
         _bus.Publish(new RotateWeeklyChartsCommand());
 
+    // Daily Step runs parallel per-mix boards (owner); the daily cadence can't rely on the manual
+    // per-mix trigger the Weekly page uses, so the job fans out to each supported mix. A mix without
+    // a chart catalog yet no-ops in the consumer.
+    public Task PublishRotateDailyStep() =>
+        Task.WhenAll(
+            _bus.Publish(new RotateDailyStepCommand(MixEnum.Phoenix)),
+            _bus.Publish(new RotateDailyStepCommand(MixEnum.Phoenix2)));
+
     public Task PublishProcessPassTierList() =>
         _bus.Publish(new ProcessPassTierListCommand());
 
@@ -56,6 +65,9 @@ public sealed class RecurringJobRunner
 
     public Task PublishCrawlPiuCenter() =>
         _bus.Publish(new CrawlPiuCenterCommand());
+
+    public Task PublishPurgeCommunityHighlights() =>
+        _bus.Publish(new PurgeCommunityHighlightsCommand());
 
     // The Web layer resolves presentation (MixThemes is the single palette source);
     // the vertical's share-card saga stays palette-blind.

@@ -27,9 +27,6 @@
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
     <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data. -->
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
-    <!-- Transitional (P5): GetRandomChartsQuery stays in Application (MatchSaga sends it)
-         until the Match subsystem is deleted (C5) or EventCompetition extracts. -->
-    <ProjectReference Include="..\ScoreTracker.Application\ScoreTracker.Application.csproj" />
   </ItemGroup>
 
 </Project>

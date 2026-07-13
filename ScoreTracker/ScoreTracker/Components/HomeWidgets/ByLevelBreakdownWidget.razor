@@ -1,0 +1,248 @@
+@using ApexCharts
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* By-Level Breakdown (docs …/HomePageWidgets/by-level-breakdown.md): one configurable
+   per-level graph. Lines for Distribution/Completion, stacked bars for Breakdown. Colors
+   resolve through MixThemes (literals for ApexCharts); the pure math lives in
+   ByLevelAggregator. *@
+
+@if (!_loaded)
+{
+    <div class="dash-widget-message">
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+    </div>
+}
+else if (_kind == BreakdownChartKind.Empty)
+{
+    <div class="dash-widget-message">
+        <div>
+            <MudText Typo="Typo.body2">@L["No scores in this range yet — record or import to see your breakdown."]</MudText>
+            <MudLink Href="/UploadPhoenixScores" Typo="Typo.body2">@L["Upload Scores"]</MudLink>
+        </div>
+    </div>
+}
+else
+{
+    <div class="dash-chart-fill @ApexChartTheming.WrapperClass">
+        <ApexChart TItem="Pt" Options="_options" Height="@("100%")" @key="_renderKey">
+            @foreach (var band in _bands)
+            {
+                <ApexRangeAreaSeries TItem="Pt"
+                                     Items="band.Points"
+                                     Name="@band.Name"
+                                     Color="@band.Color"
+                                     XValue="@(p => p.X)"
+                                     Top="@(p => p.High)"
+                                     Bottom="@(p => p.Low)"/>
+            }
+            @foreach (var series in _series)
+            {
+                <ApexPointSeries TItem="Pt"
+                                 Items="series.Points"
+                                 Name="@series.Name"
+                                 Color="@series.Color"
+                                 Group="@series.Group"
+                                 SeriesType="@(_kind == BreakdownChartKind.StackedBars ? SeriesType.Bar : SeriesType.Line)"
+                                 XValue="@(p => p.X)"
+                                 YValue="@(p => p.Y)"/>
+            }
+        </ApexChart>
+    </div>
+}
+
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+@inject ByLevelDataSource DataSource
+
+@code {
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public MixEnum EffectiveMix { get; set; }
+
+    // Render-contract parameters (§2.2) — declared by every widget; this one is a graph
+    // with no per-chart click target, so OnChartClick stays unraised.
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
+    [Parameter] public int RefreshToken { get; set; }
+
+    // Shared distribution tooltip built by hand — one row per line series at the hovered level,
+    // matched by x-VALUE (series skip empty buckets, so a shared index can point at different levels),
+    // band (range-area) series skipped via the NaN guard, values as thousands-separated integers.
+    // A chart mixing range-area + line otherwise renders line values as "undefined – undefined".
+    // Single-quoted HTML attrs keep the C# verbatim string quote-free.
+    private const string DistributionTooltip =
+        @"function(o){var w=o.w,hi=o.dataPointIndex,hs=o.seriesIndex,hx=null;if(w.globals.seriesX[hs]&&w.globals.seriesX[hs][hi]!=null)hx=w.globals.seriesX[hs][hi];var rows='';for(var s=0;s<w.config.series.length;s++){if(w.config.series[s].type==='rangeArea')continue;var v=null;if(hx!=null&&w.globals.seriesX[s]){var j=w.globals.seriesX[s].indexOf(hx);if(j>=0)v=w.globals.series[s][j];}else v=w.globals.series[s][hi];if(v==null||isNaN(v))continue;var c=w.globals.colors[s],n=w.config.series[s].name;rows+=`<div style='display:flex;align-items:center;gap:6px;padding:1px 0'><span style='width:9px;height:9px;border-radius:50%;background:${c};flex:none'></span><span style='opacity:.75'>${n}</span><b style='margin-left:auto;padding-left:14px'>${Math.round(v).toLocaleString()}</b></div>`;}if(!rows)return '';return `<div style='padding:6px 9px;font-size:12px;line-height:1.5'>${hx!=null?`<div style='font-weight:700;margin-bottom:3px'>${hx}</div>`:''}${rows}</div>`;}";
+
+    private sealed record Pt(double X, decimal Y, decimal Low = 0, decimal High = 0);
+
+    private sealed record RenderSeries(string Name, string Color, bool Dashed, string? Group, IReadOnlyList<Pt> Points);
+
+    private bool _loaded;
+    private string? _loadedFor;
+    private string _renderKey = string.Empty;
+    private BreakdownChartKind _kind = BreakdownChartKind.Empty;
+    private List<RenderSeries> _series = new();
+    private List<(string Name, string Color, IReadOnlyList<Pt> Points)> _bands = new();
+    private ApexChartOptions<Pt> _options = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{EffectiveMix}";
+        if (signature == _loadedFor) return;
+        _loadedFor = signature;
+        _loaded = false;
+
+        if (!CurrentUser.IsLoggedIn)
+        {
+            _kind = BreakdownChartKind.Empty;
+            _series = new List<RenderSeries>();
+            _bands = new();
+            _loaded = true;
+            return;
+        }
+
+        var config = WidgetConfigJson.Read<ByLevelBreakdownConfig>(Widget.ConfigJson);
+        var dataMix = config.Mix ?? EffectiveMix;
+        var (records, scales) = await DataSource.Load(CurrentUser.User.Id, dataMix);
+        var result = ByLevelAggregator.Aggregate(config, records, scales);
+        _kind = result.Kind;
+
+        var themeMix = MixThemes.ResolveThemeMix(
+            await UiSettings.GetSetting(MixThemes.OverrideSettingKey), await UiSettings.GetSelectedMix());
+        var palette = MixThemes.PaletteFor(themeMix);
+
+        _series = new List<RenderSeries>();
+        _bands = new();
+        var isBars = _kind == BreakdownChartKind.StackedBars;
+        if (result.Kind != BreakdownChartKind.Empty)
+        {
+            foreach (var series in result.Series)
+            {
+                var points = new List<Pt>();
+                for (var i = 0; i < result.Buckets.Count; i++)
+                    if (series.Values[i] is { } v)
+                        points.Add(new Pt(result.Buckets[i], (decimal)v));
+                // Grouped stacked bars: S and D become two bars per level (ApexBaseSeries.Group).
+                var group = isBars && result.SeparateTypes && series.Type is { } gt ? TypeLabel(gt) : null;
+                _series.Add(new RenderSeries(series.Label, ResolveSeriesColor(series, palette, themeMix),
+                    series.Dashed, group, points));
+            }
+
+            // Range bands — muted grey for the combined box plot, the type color when separated.
+            foreach (var band in result.Bands)
+            {
+                var pts = new List<Pt>();
+                for (var i = 0; i < result.Buckets.Count; i++)
+                    if (band.Lower[i] is { } lo && band.Upper[i] is { } hi)
+                        pts.Add(new Pt(result.Buckets[i], 0, (decimal)lo, (decimal)hi));
+                if (pts.Count == 0) continue;
+                var color = band.Type is { } bt ? MixThemes.ChartTypeHex(bt) : palette.InkMuted;
+                var name = band.Type is { } bt2 ? TypeLabel(bt2) : BandLabel(config.Band);
+                _bands.Add((name, color, pts));
+            }
+        }
+
+        _options = ApexChartTheming.BaseOptions<Pt>(palette);
+        if (isBars)
+        {
+            _options.Chart.Stacked = true;
+            _options.PlotOptions = new PlotOptions
+            {
+                Bar = new PlotOptionsBar { ColumnWidth = "72%", BorderRadius = 2 }
+            };
+        }
+        else
+        {
+            // S/D read by color; stat by line style (solid anchors, dashed band edges). The dash
+            // array is indexed over ALL series and the range-area bands render first, so pad the
+            // front with one solid entry per band — otherwise the dash pattern lands on the wrong
+            // lines and Singles/Doubles come out mismatched.
+            _options.Markers = new Markers { Size = 0 };
+            _options.Stroke = _series.Any(s => s.Dashed)
+                ? new Stroke
+                {
+                    Curve = Curve.Straight, Width = 2.5,
+                    DashArray = Enumerable.Repeat(0.0, _bands.Count)
+                        .Concat(_series.Select(s => s.Dashed ? 4.0 : 0.0)).ToList()
+                }
+                : new Stroke { Curve = Curve.Straight, Width = 2.5 };
+            if (_bands.Count > 0)
+                _options.Fill = new Fill { Opacity = 0.16 };
+            // Own the tooltip HTML: a chart mixing range-area bands with line series otherwise
+            // renders every line value as an undefined range ("undefined – undefined"). Shared
+            // readout, band series skipped (their y is NaN).
+            _options.Tooltip = new Tooltip { Shared = true, Custom = DistributionTooltip };
+        }
+
+        // Numeric x-axis: series align by level/player VALUE, not point index — a category axis
+        // mis-binds series that skip empty buckets, which is what showed "undefined" in the tooltip.
+        _options.Xaxis = new XAxis
+        {
+            Type = XAxisType.Numeric, DecimalsInFloat = 0, TickAmount = Math.Max(1, result.Buckets.Count - 1)
+        };
+        // Everything the y-axis shows is a whole number (score, days, %, counts, ranks) — no decimals,
+        // which also kills the "890.900000000000" float labels.
+        _options.Yaxis = new List<YAxis>
+        {
+            new() { Min = result.SuggestedYMin, Max = result.SuggestedYMax, DecimalsInFloat = 0 }
+        };
+        // Distribution (lines) leans on the hover tooltip; stacked bars keep the category legend.
+        _options.Legend = new Legend { Show = isBars };
+        _renderKey = signature;
+        _loaded = true;
+    }
+
+    private string TypeLabel(ChartType type) =>
+        type == ChartType.Double ? L["Doubles"].Value
+        : type == ChartType.CoOp ? L["Co-Op"].Value
+        : L["Singles"].Value;
+
+    private string BandLabel(BreakdownBand band) => band switch
+    {
+        BreakdownBand.InterQuartile => "P25–P75",
+        BreakdownBand.MinMax => $"{L["Min"]} – {L["Max"]}",
+        BreakdownBand.StdDev => "±1σ",
+        _ => L["Shade band"]
+    };
+
+    private static string ResolveSeriesColor(BreakdownSeries s, MixPalette palette, MixEnum mix) => s.Color.Role switch
+    {
+        // Grade/plate segments wear their own identity color, keyed off the segment label.
+        SeriesColorRole.Grade => MixThemes.GradeHex(s.Label),
+        SeriesColorRole.Plate => MixThemes.PlateHex(s.Label),
+        // Distribution lines: hue = chart type, alpha = stat emphasis (center strongest).
+        SeriesColorRole.Type => Rgba(TypeHex(s.Type, palette), AlphaFor(s.Emphasis)),
+        _ => Resolve(s.Color, palette, mix)
+    };
+
+    private static string Resolve(SeriesColor color, MixPalette palette, MixEnum mix) => color.Role switch
+    {
+        SeriesColorRole.Qualitative => MixThemes.SeriesHex(color.Index),
+        SeriesColorRole.Rarity => MixThemes.RarityHex(mix, ThemeScales.BandFor(color.RarityFraction)),
+        SeriesColorRole.Pass => MixPalette.Success,
+        SeriesColorRole.Muted => MixThemes.UnpassedHex,
+        _ => palette.InkMuted
+    };
+
+    // Red Single / green Double / gold Co-Op (game vocabulary); combined = a neutral hue,
+    // stats separated by emphasis.
+    private static string TypeHex(ChartType? type, MixPalette p) =>
+        type is null ? p.Ink : MixThemes.ChartTypeHex(type.Value);
+
+    private static double AlphaFor(int emphasis) => emphasis >= 2 ? 1.0 : emphasis == 1 ? 0.82 : 0.58;
+
+    private static string Rgba(string hex, double alpha)
+    {
+        hex = hex.TrimStart('#');
+        var r = Convert.ToInt32(hex.Substring(0, 2), 16);
+        var g = Convert.ToInt32(hex.Substring(2, 2), 16);
+        var b = Convert.ToInt32(hex.Substring(4, 2), 16);
+        return $"rgba({r},{g},{b},{alpha.ToString(System.Globalization.CultureInfo.InvariantCulture)})";
+    }
+
+}

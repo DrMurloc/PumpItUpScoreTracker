@@ -103,12 +103,13 @@ public sealed class WeeklyTournamentSagaTests
         // Required-bucket fixture has 8 charts; after merging CoOp 4-5 → 3,
         // S26 → S25, and D28+D29 → D27, only 3 buckets remain. Each gets one chart.
         var ctx = ExpiredWeekContext();
-        var nextMonday3am = new DateTimeOffset(2026, 5, 4, 3, 0, 0, TimeSpan.Zero);
+        // 05:00 UTC = midnight ET on the EST reference — the corrected Monday reset (was 03:00).
+        var nextMondayReset = new DateTimeOffset(2026, 5, 4, 5, 0, 0, TimeSpan.Zero);
 
         await ctx.Saga.Consume(BuildContext(new RotateWeeklyChartsCommand()));
 
         ctx.WeeklyTournies.Verify(w => w.RegisterWeeklyChart(MixEnum.Phoenix,
-            It.Is<WeeklyTournamentChart>(c => c.ExpirationDate == nextMonday3am),
+            It.Is<WeeklyTournamentChart>(c => c.ExpirationDate == nextMondayReset),
             It.IsAny<CancellationToken>()), Times.Exactly(3));
     }
 
