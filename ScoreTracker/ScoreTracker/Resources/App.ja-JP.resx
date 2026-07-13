@@ -3405,4 +3405,112 @@
   <data name="Tier list difficulty" xml:space="preserve">
     <value>ティアリスト難易度</value>
   </data>
+  <data name="Singles / Doubles" xml:space="preserve">
+    <value>シングル / ダブル</value>
+  </data>
+  <data name="Show Singles &amp; Doubles as separate lines" xml:space="preserve">
+    <value>シングルとダブルを別々の線で表示</value>
+  </data>
+  <data name="Metric" xml:space="preserve">
+    <value>指標</value>
+  </data>
+  <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
+    <value>このバージョンはスコア正規化されていません — レターグレードとクリアのみ利用可能です。</value>
+  </data>
+  <data name="Aggregation" xml:space="preserve">
+    <value>集計</value>
+  </data>
+  <data name="Series" xml:space="preserve">
+    <value>系列</value>
+  </data>
+  <data name="Custom percentile" xml:space="preserve">
+    <value>カスタムパーセンタイル</value>
+  </data>
+  <data name="Avg" xml:space="preserve">
+    <value>平均</value>
+  </data>
+  <data name="Distribution" xml:space="preserve">
+    <value>分布</value>
+  </data>
+  <data name="Breakdown" xml:space="preserve">
+    <value>内訳</value>
+  </data>
+  <data name="Completion %" xml:space="preserve">
+    <value>達成率 %</value>
+  </data>
+  <data name="Normalize to 100%" xml:space="preserve">
+    <value>100%に正規化</value>
+  </data>
+  <data name="Include an unplayed segment" xml:space="preserve">
+    <value>未プレイのセグメントを含める</value>
+  </data>
+  <data name="Thresholds — each becomes a line" xml:space="preserve">
+    <value>しきい値 — それぞれが1本の線になります</value>
+  </data>
+  <data name="At least" xml:space="preserve">
+    <value>以上</value>
+  </data>
+  <data name="Shade band" xml:space="preserve">
+    <value>帯を表示</value>
+  </data>
+  <data name="No scores in this range yet — record or import to see your breakdown." xml:space="preserve">
+    <value>この範囲のスコアはまだありません — 記録またはインポートすると内訳が表示されます。</value>
+  </data>
+  <data name="By-Level Breakdown" xml:space="preserve">
+    <value>レベル別内訳</value>
+  </data>
+  <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
+    <value>スコア・グレード・プレート・クリアをレベル別に表示する設定可能なグラフ。</value>
+  </data>
+  <data name="Score Completion" xml:space="preserve">
+    <value>スコア達成率</value>
+  </data>
+  <data name="Grade Breakdown" xml:space="preserve">
+    <value>グレード内訳</value>
+  </data>
+  <data name="Grade Completion" xml:space="preserve">
+    <value>グレード達成率</value>
+  </data>
+  <data name="Average Grade by Level" xml:space="preserve">
+    <value>レベル別平均グレード</value>
+  </data>
+  <data name="Plate Completion" xml:space="preserve">
+    <value>プレート達成率</value>
+  </data>
+  <data name="Average Plate by Level" xml:space="preserve">
+    <value>レベル別平均プレート</value>
+  </data>
+  <data name="Pass Breakdown" xml:space="preserve">
+    <value>クリア内訳</value>
+  </data>
+  <data name="Clear Progress" xml:space="preserve">
+    <value>クリア進捗</value>
+  </data>
+  <data name="Box Plot" xml:space="preserve">
+    <value>箱ひげ図</value>
+  </data>
+  <data name="Grade Wall" xml:space="preserve">
+    <value>グレードウォール</value>
+  </data>
+  <data name="PG Race" xml:space="preserve">
+    <value>PGレース</value>
+  </data>
+  <data name="Score Push %" xml:space="preserve">
+    <value>スコアプッシュ %</value>
+  </data>
+  <data name="Score spread per level — min, quartiles, max, with the IQR shaded." xml:space="preserve">
+    <value>レベル別のスコア分布 — 最小・四分位・最大、IQRを帯で表示。</value>
+  </data>
+  <data name="What grades fill each folder, normalized so shape beats volume." xml:space="preserve">
+    <value>各フォルダを埋めるグレードの内訳。量より形が分かるよう正規化。</value>
+  </data>
+  <data name="Chasing plates — % of each folder at MG, UG, and full Perfect Game." xml:space="preserve">
+    <value>プレート狙い — 各フォルダのMG・UG・パーフェクトゲーム達成率。</value>
+  </data>
+  <data name="How much of every folder you've passed, Singles vs Doubles." xml:space="preserve">
+    <value>各フォルダのクリア率、シングルとダブルの比較。</value>
+  </data>
+  <data name="Multi-threshold completion: ≥950k, ≥990k, and 1,000,000." xml:space="preserve">
+    <value>複数しきい値の達成率：≥950k、≥990k、1,000,000。</value>
+  </data>
 </root>

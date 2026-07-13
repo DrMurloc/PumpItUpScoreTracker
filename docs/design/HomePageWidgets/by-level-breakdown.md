@@ -1,8 +1,13 @@
 # By-Level Breakdown widget
 
 Part of the home dashboard widget catalog — see [README.md](README.md) for architecture, locked
-decisions (D1–D19), the widget registry contract, and the widget index. **Status: BUILDING
-(2026-07-12) — model + decisions A–E locked, mock signed off.** Catalog-walk widget (D18).
+decisions (D1–D19), the widget registry contract, and the widget index. **Status: BUILT (C0–C7,
+2026-07-12) — awaiting owner field test, then UX iteration.** Catalog-walk widget (D18).
+
+**Deferred to a UX iteration (v1 render limitations):** the shaded distribution band is modeled and
+configurable but not yet drawn; Breakdown renders one combined stack per level rather than grouped
+S/D bars (`ApexPointSeries` exposes no series-group property) — S/D separation lives in the line
+aggregations. Both are render-only gaps; the config, aggregator, and contract already support them.
 
 Mock (interactive config flow, fake data): https://claude.ai/code/artifact/77692444-46e8-451c-ac17-f3f5e2ba6604
 

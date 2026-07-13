@@ -107,7 +107,10 @@ The widget home page ([design doc](design/HomePageWidgets/README.md)) adds a voc
   edit-mode mutations elsewhere on the board must not refetch every widget.
 - Chart series colors come from the `MixPalette` chart pair (`--chart-singles`/`--chart-doubles`,
   or `PaletteFor(mix).ChartSingles` for render targets that can't read CSS vars). Era/mix distinction
-  rides line *style* (dashed), never a third hue.
+  rides line *style* (dashed), never a third hue. Series that aren't chart-type-colored resolve through
+  the same literal-hex path (ApexCharts can't read CSS vars): `MixThemes.SeriesHex(i)` for qualitative
+  lines (By-Level Breakdown distribution stats, completion thresholds) and `MixThemes.RarityHex(mix, band)`
+  for grade/plate bar categories — both mirror `DifficultyHex`, so the ramp stays sanctioned.
 - **Chart rows/cards in widgets open `ChartDetailsDialog` on click** (browse mode only — edit mode
   owns clicks for arranging). Every catalog widget inherits this rule.
 - **Drag is swap, not insertion**: dropping widget A on widget B trades their places; bystanders

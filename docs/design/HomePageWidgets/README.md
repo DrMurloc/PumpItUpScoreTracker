@@ -245,7 +245,7 @@ Readiness: ✅ published contract already serves it · 🔨 needs new data/query
 | ScoreLedger | On the bubble | 🔨 | near-miss grades/plates ("18,797 from AAA+"); compute from records |
 | ScoreLedger | Activity heatmap | 🔨 | calendar of play days from the journal |
 | ScoreLedger | Mix Migration | ✅ | D11 — own widget; `GetCrossMixPassesQuery`; featured at P2 launch |
-| ScoreLedger | By-Level Breakdown | ✅ | **BUILDING** — one configurable per-level graph (spec [by-level-breakdown.md](by-level-breakdown.md)) |
+| ScoreLedger | By-Level Breakdown | ✅ | **BUILT (C0–C7)** — one configurable per-level graph (spec [by-level-breakdown.md](by-level-breakdown.md)) |
 | ChartIntelligence | Tier-list folder peek | ✅ | 28% of traffic deserves a home-page hook |
 | ChartIntelligence | Next breaks | ✅ | closest-to-passing from tier data |
 | ChartIntelligence | Vote prompt | 🔨 | "you played X — rate it"; community-rating engagement |
