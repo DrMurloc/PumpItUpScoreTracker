@@ -108,7 +108,10 @@ namespace ScoreTracker.WeeklyChallenge.Application
             var daysUntilMonday = ((int)DayOfWeek.Monday - (int)now.DayOfWeek + 7) % 7;
             if (daysUntilMonday == 0) daysUntilMonday = 7;
             var nextMonday = now.AddDays(daysUntilMonday);
-            var nextExpiration = new DateTimeOffset(nextMonday.Year, nextMonday.Month, nextMonday.Day, 3, 0, 0, 0, 0,
+            // Reset at 05:00 UTC — midnight ET on the codebase's EST reference, matching the
+            // update-weekly-charts cron slot. Was 03:00, but the reset users actually saw was gated
+            // by the old 09:00 UTC (5am EDT) cron — the Hangfire-extraction regression this fixes.
+            var nextExpiration = new DateTimeOffset(nextMonday.Year, nextMonday.Month, nextMonday.Day, 5, 0, 0, 0, 0,
                 nextMonday.Offset);
             var scores = await weeklyTournies.GetEntries(mix, null, context.CancellationToken);
             foreach (var chartGroup in scores.GroupBy(s => s.ChartId))

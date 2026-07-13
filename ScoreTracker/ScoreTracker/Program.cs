@@ -317,7 +317,7 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
 {
     ("process-scores-tier-list",         r => r.PublishProcessScoresTiersList(),          "0 7 * * *"),  // 02:00 ET
     ("calculate-scoring-difficulty",     r => r.PublishCalculateScoringDifficulty(),      "0 8 * * *"),  // 03:00 ET
-    ("update-weekly-charts",             r => r.PublishUpdateWeeklyCharts(),              "0 9 * * *"),  // 04:00 ET
+    ("update-weekly-charts",             r => r.PublishUpdateWeeklyCharts(),              "0 5 * * *"),  // 00:00 ET (EST) — Monday board reset; was 0 9 (5am EDT), a Hangfire-extraction regression
     ("rotate-daily-step",                r => r.PublishRotateDailyStep(),                 "0 5 * * *"),  // 00:00 ET (EST) — Daily Step reset, per mix
     ("process-pass-tier-list",           r => r.PublishProcessPassTierList(),             "30 9 * * *"), // 04:30 ET
     ("calculate-chart-letter-difficulties", r => r.PublishCalculateChartLetterDifficulties(), "0 10 * * *"), // 05:00 ET
