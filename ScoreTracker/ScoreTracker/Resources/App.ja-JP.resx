@@ -3888,4 +3888,22 @@
   <data name="Import scores" xml:space="preserve">
     <value>スコアをインポート</value>
   </data>
+  <data name="Imported {0} new scores" xml:space="preserve">
+    <value>{0}件の新しいスコアをインポートしました</value>
+  </data>
+  <data name="No new scores found" xml:space="preserve">
+    <value>新しいスコアはありませんでした</value>
+  </data>
+  <data name="An import is already running" xml:space="preserve">
+    <value>インポートは既に実行中です</value>
+  </data>
+  <data name="Also Sync for PIU Tracker" xml:space="preserve">
+    <value>PIU Tracker にも同期する</value>
+  </data>
+  <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
+    <value>インポートしたスコアをコミュニティのスコアサイト PIU Tracker にも送信します。</value>
+  </data>
+  <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
+    <value>PIU Tracker は完全に公開されています。プロフィールが非公開でも、送信したスコアは公開されます。</value>
+  </data>
 </root>

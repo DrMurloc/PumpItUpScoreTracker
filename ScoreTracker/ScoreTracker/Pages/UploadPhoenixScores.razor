@@ -507,10 +507,20 @@
             // The session snapshot's page is the import's natural landing spot.
             _importCompleted = true;
             // Remember only after a successful import, so we never store credentials that don't work.
+            // A storage failure is isolated so it can't read as an import failure — the scores are
+            // already in by this point.
             if (_rememberPassword)
             {
-                var stored = await Mediator.Send(new StoreImportCredentialCommand(_username, _password));
-                await ClientStore.Write(new StoredCredentialBlob(stored.KeyId, stored.Ciphertext, 0));
+                try
+                {
+                    var stored = await Mediator.Send(new StoreImportCredentialCommand(_username, _password));
+                    await ClientStore.Write(new StoredCredentialBlob(stored.KeyId, stored.Ciphertext, 0));
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError(e, "Import succeeded but storing the remembered credential failed");
+                    Snackbar.Add(L["Could not save your password"].Value, Severity.Error);
+                }
             }
         }
         catch (InvalidCredentialException)

@@ -3768,4 +3768,22 @@
   <data name="Import scores" xml:space="preserve">
     <value>점수 가져오기</value>
   </data>
+  <data name="Imported {0} new scores" xml:space="preserve">
+    <value>새 점수 {0}개를 가져왔습니다</value>
+  </data>
+  <data name="No new scores found" xml:space="preserve">
+    <value>새로운 점수가 없습니다</value>
+  </data>
+  <data name="An import is already running" xml:space="preserve">
+    <value>이미 가져오기가 실행 중입니다</value>
+  </data>
+  <data name="Also Sync for PIU Tracker" xml:space="preserve">
+    <value>PIU Tracker에도 동기화</value>
+  </data>
+  <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
+    <value>가져온 점수를 커뮤니티 점수 사이트인 PIU Tracker에도 전송합니다.</value>
+  </data>
+  <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
+    <value>PIU Tracker는 완전히 공개됩니다 — 프로필이 비공개여도 전송한 점수는 공개됩니다.</value>
+  </data>
 </root>

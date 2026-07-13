@@ -62,7 +62,14 @@ else
                     }
                     <MudButton Class="mt-3" FullWidth="true" Variant="Variant.Filled" Color="Color.Primary"
                                Disabled="EditMode" OnClick="ImportFromStored">@L["Import scores"]</MudButton>
-                    <MudText Typo="Typo.caption" Align="MudBlazor.Align.Center" Class="mt-1">@L["Runs in the background."]</MudText>
+                    @if (_error != null)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Error" Align="MudBlazor.Align.Center" Class="mt-1">@_error</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Align="MudBlazor.Align.Center" Class="mt-1">@L["Runs in the background."]</MudText>
+                    }
                 </div>
                 break;
 
@@ -70,22 +77,22 @@ else
             case ImportUiState.UnlockFailed:
                 @if (_state == ImportUiState.UnlockFailed)
                 {
-                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2">
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-1">
                         @L["Couldn't unlock your saved password. Enter it to import."]
                     </MudAlert>
                 }
                 <MudTextField @bind-Value="_username" Label="PIUGame.com Username" Margin="Margin.Dense"
                               Variant="Variant.Outlined" Disabled="EditMode"/>
                 <MudTextField @bind-Value="_password" InputType="InputType.Password" Label="PIUGame.com Password"
-                              Margin="Margin.Dense" Variant="Variant.Outlined" Class="mt-2" Disabled="EditMode"/>
+                              Margin="Margin.Dense" Variant="Variant.Outlined" Class="mt-1" Disabled="EditMode"/>
                 @if (_error != null)
                 {
-                    <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">@_error</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Error">@_error</MudText>
                 }
-                <MudButton Class="mt-3" FullWidth="true" Variant="Variant.Filled" Color="Color.Primary"
+                <MudButton Class="mt-1" FullWidth="true" Variant="Variant.Filled" Color="Color.Primary"
                            Disabled="EditMode || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)"
                            OnClick="ImportFromTyped">@L["Import scores"]</MudButton>
-                <MudText Typo="Typo.caption" Align="MudBlazor.Align.Center" Class="mt-1">
+                <MudText Typo="Typo.caption" Align="MudBlazor.Align.Center">
                     @L["One-time — nothing saved."]
                 </MudText>
                 break;
@@ -102,8 +109,14 @@ else
                 <div class="import-progress">
                     <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large"/>
                     <MudText Typo="Typo.body2" Class="mt-2"><b>@L["Import complete"]</b></MudText>
-                    <MudButton Class="mt-2" Variant="Variant.Text" Color="Color.Primary"
-                               Href="@($"/Player/{CurrentUser.User.Id}/Sessions")">@L["View your session"]</MudButton>
+                    <MudText Typo="Typo.caption">
+                        @(_importedCount > 0 ? L["Imported {0} new scores", _importedCount] : L["No new scores found"])
+                    </MudText>
+                    @if (_importedCount > 0)
+                    {
+                        <MudButton Class="mt-2" Variant="Variant.Text" Color="Color.Primary"
+                                   Href="@($"/Player/{CurrentUser.User.Id}/Sessions")">@L["View your session"]</MudButton>
+                    }
                 </div>
                 break;
         }
@@ -133,6 +146,7 @@ else
     private string? _loadedFor;
     private bool _allMixes;
     private bool _skipGameTag = true;
+    private bool _syncPiuTracker;
     private MixEnum? _mix;
 
     private ImportUiState _state = ImportUiState.Idle;
@@ -142,6 +156,7 @@ else
     private string _password = "";
     private string? _status;
     private string? _error;
+    private int _importedCount;
     private Guid _userId;
 
     protected override async Task OnParametersSetAsync()
@@ -149,11 +164,12 @@ else
         var config = WidgetConfigJson.Read<ImportScoresConfig>(Widget.ConfigJson);
         var allMixes = config.AllMixes;
         var pinned = allMixes ? (MixEnum?)null : config.Mix ?? EffectiveMix;
-        var signature = $"{Widget.Id}|{allMixes}|{pinned}|{config.SkipGameTag}";
+        var signature = $"{Widget.Id}|{allMixes}|{pinned}|{config.SkipGameTag}|{config.SyncPiuTracker}";
         if (signature == _loadedFor) return;
         _loadedFor = signature;
         _allMixes = allMixes;
         _skipGameTag = config.SkipGameTag;
+        _syncPiuTracker = config.SyncPiuTracker;
         _mix = pinned;
         _state = ImportUiState.Idle;
         _error = null;
@@ -214,6 +230,7 @@ else
     private async Task Start(ImportCredentialSource source)
     {
         _error = null;
+        _importedCount = 0;
         _status = L["Starting import…"].Value;
         _state = ImportUiState.Importing;
 
@@ -221,7 +238,7 @@ else
         var gameTag = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameTag") ?? "";
 
         var result = await Mediator.Send(new StartOfficialImportCommand(source, _mix!.Value, cardId, gameTag,
-            false, false));
+            false, _syncPiuTracker));
 
         switch (result.Outcome)
         {
@@ -235,6 +252,10 @@ else
                 _hasStored = false;
                 _state = ImportUiState.UnlockFailed;
                 break;
+            case ImportStartOutcome.AlreadyRunning:
+                _state = ImportUiState.Idle;
+                _error = L["An import is already running"].Value;
+                break;
         }
     }
 
@@ -242,6 +263,8 @@ else
     {
         if (e.UserId != _userId || _mix == null || e.Mix != _mix.Value) return;
         _status = e.Status;
+        // Each status carries the batch it just saved; summing them is the new-score total.
+        _importedCount += e.Scores.Count();
         if (e.Status == "Charts finished saving") _state = ImportUiState.Done;
         InvokeAsync(StateHasChanged);
     }

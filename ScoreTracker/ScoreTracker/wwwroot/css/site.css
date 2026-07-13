@@ -1812,6 +1812,30 @@ html.nav-away .page-dock,
     color: var(--mix-ink-muted);
 }
 
+/* Import Scores widget (§4): a credential form has to live in a 1x1 body, so the fields and
+   button pack into a tight flex column that scrolls rather than clipping the action off. */
+.import-widget-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.import-widget-body .mud-input-control {
+    margin-top: 0;
+}
+
+.import-saved,
+.import-progress {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
 /* Quick Record widget (§4.2): the arcade recorder, purpose-built to fit a 1x1 body. */
 .qr-body {
     flex: 1;

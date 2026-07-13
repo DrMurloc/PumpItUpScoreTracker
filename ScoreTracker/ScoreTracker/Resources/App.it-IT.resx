@@ -3887,4 +3887,22 @@
   <data name="Import scores" xml:space="preserve">
     <value>Importa i punteggi</value>
   </data>
+  <data name="Imported {0} new scores" xml:space="preserve">
+    <value>Importati {0} nuovi punteggi</value>
+  </data>
+  <data name="No new scores found" xml:space="preserve">
+    <value>Nessun nuovo punteggio trovato</value>
+  </data>
+  <data name="An import is already running" xml:space="preserve">
+    <value>Un'importazione è già in corso</value>
+  </data>
+  <data name="Also Sync for PIU Tracker" xml:space="preserve">
+    <value>Sincronizza anche con PIU Tracker</value>
+  </data>
+  <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
+    <value>Invia anche i punteggi importati a PIU Tracker, un sito di punteggi della community.</value>
+  </data>
+  <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
+    <value>PIU Tracker è completamente pubblico: i punteggi che invii lì sono pubblici anche se il tuo profilo non lo è.</value>
+  </data>
 </root>

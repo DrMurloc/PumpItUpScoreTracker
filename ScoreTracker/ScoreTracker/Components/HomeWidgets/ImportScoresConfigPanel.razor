@@ -1,4 +1,5 @@
 @using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.Identity.Contracts.Commands
 @using ScoreTracker.SharedKernel.Enums
@@ -11,7 +12,9 @@
 @inject IDialogService DialogService
 @inject IImportCredentialClientStore ClientStore
 @inject IUiSettingsAccessor UiSettings
+@inject ICurrentUserAccessor CurrentUser
 @inject ISnackbar Snackbar
+@inject ILogger<ImportScoresConfigPanel> Logger
 
 @* Import Scores config: mix scope + skip-gametag, plus the ONLY place a remembered credential is
    captured (Store form, gated by the first-time disclaimer). §4 of the design doc. *@
@@ -27,6 +30,22 @@
 <MudText Typo="Typo.caption" Class="d-block mb-3">
     @L["Use your saved game tag and import straight away. Off = pick a card each time after sign-in."]
 </MudText>
+
+<MudCheckBox T="bool" @bind-Value="_syncPiuTracker" Label="@L["Also Sync for PIU Tracker"]" Dense="true"/>
+<MudText Typo="Typo.caption" Class="d-block">
+    @L["Also send imported scores to PIU Tracker, a community score site."]
+    <MudLink Target="_blank" Href="https://piutracker.app/">piutracker.app</MudLink>
+</MudText>
+@if (_syncPiuTracker && !_isPublic)
+{
+    <MudText Typo="Typo.caption" Color="Color.Warning" Class="d-block mb-3">
+        @L["PIU Tracker is fully public — scores you send there are public even if your profile isn't."]
+    </MudText>
+}
+else
+{
+    <div class="mb-3"></div>
+}
 
 <MudCheckBox T="bool" Value="_remember" ValueChanged="OnRememberChanged"
              Label="@L["Remember my password on this device"]" Dense="true"/>
@@ -85,6 +104,8 @@ else if (_hasStoredCredential)
 
     private MixMode _mode;
     private bool _skipGameTag = true;
+    private bool _syncPiuTracker;
+    private bool _isPublic;
     private bool _remember;
     private bool _showStoreForm;
     private bool _hasStoredCredential;
@@ -104,6 +125,8 @@ else if (_hasStoredCredential)
                 _ => MixMode.Follow
             };
         _skipGameTag = config.SkipGameTag;
+        _syncPiuTracker = config.SyncPiuTracker;
+        _isPublic = CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic;
         _hasStoredCredential = await ClientStore.Read() != null;
         _remember = _hasStoredCredential;
     }
@@ -149,8 +172,11 @@ else if (_hasStoredCredential)
             _password = "";
             Snackbar.Add(L["Password saved on this device"].Value, Severity.Success);
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            // The credential itself never reaches the log — only why the wrap/persist failed
+            // (most often the credential key isn't configured on this server).
+            Logger.LogError(e, "Failed to store an import credential for the current user");
             Snackbar.Add(L["Could not save your password"].Value, Severity.Error);
         }
 
@@ -176,10 +202,13 @@ else if (_hasStoredCredential)
     {
         var config = _mode switch
         {
-            MixMode.All => new ImportScoresConfig { AllMixes = true, SkipGameTag = _skipGameTag },
-            MixMode.Phoenix => new ImportScoresConfig { Mix = MixEnum.Phoenix, SkipGameTag = _skipGameTag },
-            MixMode.Phoenix2 => new ImportScoresConfig { Mix = MixEnum.Phoenix2, SkipGameTag = _skipGameTag },
-            _ => new ImportScoresConfig { SkipGameTag = _skipGameTag }
+            MixMode.All => new ImportScoresConfig
+                { AllMixes = true, SkipGameTag = _skipGameTag, SyncPiuTracker = _syncPiuTracker },
+            MixMode.Phoenix => new ImportScoresConfig
+                { Mix = MixEnum.Phoenix, SkipGameTag = _skipGameTag, SyncPiuTracker = _syncPiuTracker },
+            MixMode.Phoenix2 => new ImportScoresConfig
+                { Mix = MixEnum.Phoenix2, SkipGameTag = _skipGameTag, SyncPiuTracker = _syncPiuTracker },
+            _ => new ImportScoresConfig { SkipGameTag = _skipGameTag, SyncPiuTracker = _syncPiuTracker }
         };
         await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
     }

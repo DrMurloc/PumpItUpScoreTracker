@@ -3887,4 +3887,22 @@
   <data name="Import scores" xml:space="preserve">
     <value>Import scores</value>
   </data>
+  <data name="Imported {0} new scores" xml:space="preserve">
+    <value>Imported {0} new scores</value>
+  </data>
+  <data name="No new scores found" xml:space="preserve">
+    <value>No new scores found</value>
+  </data>
+  <data name="An import is already running" xml:space="preserve">
+    <value>An import is already running</value>
+  </data>
+  <data name="Also Sync for PIU Tracker" xml:space="preserve">
+    <value>Also Sync for PIU Tracker</value>
+  </data>
+  <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
+    <value>Also send imported scores to PIU Tracker, a community score site.</value>
+  </data>
+  <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
+    <value>PIU Tracker is fully public — scores you send there are public even if your profile isn't.</value>
+  </data>
 </root>

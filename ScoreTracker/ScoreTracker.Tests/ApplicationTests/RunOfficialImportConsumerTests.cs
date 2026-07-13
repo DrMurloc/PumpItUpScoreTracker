@@ -11,6 +11,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Application;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
+using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.TestData;
 using Xunit;
@@ -31,7 +32,8 @@ public sealed class RunOfficialImportConsumerTests
     public async Task RunsTheImportForTheMessagesUserAndSid()
     {
         var mediator = new Mock<IMediator>();
-        var consumer = new RunOfficialImportConsumer(mediator.Object, new Mock<ICurrentUserAccessor>().Object);
+        var consumer = new RunOfficialImportConsumer(mediator.Object, new Mock<ICurrentUserAccessor>().Object,
+            new Mock<IImportConcurrencyGuard>().Object);
         var userId = Guid.NewGuid();
 
         await consumer.Consume(Context(new RunOfficialImportCommand(userId, MixEnum.Phoenix, "sid123", "card1",
@@ -44,6 +46,38 @@ public sealed class RunOfficialImportConsumerTests
     }
 
     [Fact]
+    public async Task ReleasesTheImportSlotWhenTheJobFinishes()
+    {
+        var mediator = new Mock<IMediator>();
+        var guard = new Mock<IImportConcurrencyGuard>();
+        var consumer = new RunOfficialImportConsumer(mediator.Object, new Mock<ICurrentUserAccessor>().Object,
+            guard.Object);
+        var userId = Guid.NewGuid();
+
+        await consumer.Consume(Context(new RunOfficialImportCommand(userId, MixEnum.Phoenix, "sid123", "card1",
+            "TAG", false, false)));
+
+        guard.Verify(g => g.End(userId), Times.Once);
+    }
+
+    [Fact]
+    public async Task ReleasesTheImportSlotEvenWhenTheImportThrows()
+    {
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<ExecuteImportCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidCredentialException("bad"));
+        var guard = new Mock<IImportConcurrencyGuard>();
+        var consumer = new RunOfficialImportConsumer(mediator.Object, new Mock<ICurrentUserAccessor>().Object,
+            guard.Object);
+        var userId = Guid.NewGuid();
+
+        await consumer.Consume(Context(new RunOfficialImportCommand(userId, MixEnum.Phoenix, "sid123", "card1",
+            "TAG", false, false)));
+
+        guard.Verify(g => g.End(userId), Times.Once);
+    }
+
+    [Fact]
     public async Task EstablishesTheJobsUserForTheConsumerScope()
     {
         var userId = Guid.NewGuid();
@@ -52,7 +86,8 @@ public sealed class RunOfficialImportConsumerTests
         mediator.Setup(m => m.Send(It.IsAny<GetUserByIdQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         var currentUser = new Mock<ICurrentUserAccessor>();
-        var consumer = new RunOfficialImportConsumer(mediator.Object, currentUser.Object);
+        var consumer = new RunOfficialImportConsumer(mediator.Object, currentUser.Object,
+            new Mock<IImportConcurrencyGuard>().Object);
 
         await consumer.Consume(Context(new RunOfficialImportCommand(userId, MixEnum.Phoenix, "sid123", "card1",
             "TAG", false, false)));
@@ -66,7 +101,8 @@ public sealed class RunOfficialImportConsumerTests
         var mediator = new Mock<IMediator>();
         mediator.Setup(m => m.Send(It.IsAny<ExecuteImportCommand>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidCredentialException("bad"));
-        var consumer = new RunOfficialImportConsumer(mediator.Object, new Mock<ICurrentUserAccessor>().Object);
+        var consumer = new RunOfficialImportConsumer(mediator.Object, new Mock<ICurrentUserAccessor>().Object,
+            new Mock<IImportConcurrencyGuard>().Object);
         var userId = Guid.NewGuid();
 
         await consumer.Consume(Context(new RunOfficialImportCommand(userId, MixEnum.Phoenix, "sid123", "card1",
