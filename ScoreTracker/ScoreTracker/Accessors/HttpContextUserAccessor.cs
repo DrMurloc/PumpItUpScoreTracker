@@ -30,14 +30,19 @@ public sealed class HttpContextUserAccessor : ICurrentUserAccessor
 
     public async Task SetCurrentUser(User user)
     {
-        // Always set the ambient user so a no-HttpContext scope (a bus consumer) has a current
-        // user; when an HttpContext exists, also issue the sign-in cookie.
+        // Set the ambient user, then issue the sign-in cookie. Reserved for real HTTP requests —
+        // a background job must use SetScopedUser so it never signs the flowed circuit out.
         _ambient.User = user;
         var context = _context.HttpContext;
         if (context == null) return;
         var principal = user.GetClaimsPrincipal();
         await context.SignOutAsync();
         await context.SignInAsync(principal);
+    }
+
+    public void SetScopedUser(User user)
+    {
+        _ambient.User = user;
     }
 
     public bool IsLoggedInAsAdmin => IsLoggedIn && User.IsAdmin;

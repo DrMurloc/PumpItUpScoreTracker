@@ -92,7 +92,9 @@ public sealed class RunOfficialImportConsumerTests
         await consumer.Consume(Context(new RunOfficialImportCommand(userId, MixEnum.Phoenix, "sid123", "card1",
             "TAG", false, false)));
 
-        currentUser.Verify(c => c.SetCurrentUser(It.Is<User>(u => u.Id == userId)), Times.Once);
+        // Scope-only (no cookie) so the live circuit that flowed in isn't signed out.
+        currentUser.Verify(c => c.SetScopedUser(It.Is<User>(u => u.Id == userId)), Times.Once);
+        currentUser.Verify(c => c.SetCurrentUser(It.IsAny<User>()), Times.Never);
     }
 
     [Fact]

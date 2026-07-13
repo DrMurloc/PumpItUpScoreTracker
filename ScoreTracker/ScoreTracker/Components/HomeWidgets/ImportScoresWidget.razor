@@ -66,10 +66,6 @@ else
                     {
                         <MudText Typo="Typo.caption" Color="Color.Error" Align="MudBlazor.Align.Center" Class="mt-1">@_error</MudText>
                     }
-                    else
-                    {
-                        <MudText Typo="Typo.caption" Align="MudBlazor.Align.Center" Class="mt-1">@L["Runs in the background."]</MudText>
-                    }
                 </div>
                 break;
 
@@ -81,20 +77,24 @@ else
                         @L["Couldn't unlock your saved password. Enter it to import."]
                     </MudAlert>
                 }
-                <MudTextField @bind-Value="_username" Label="PIUGame.com Username" Margin="Margin.Dense"
-                              Variant="Variant.Outlined" Disabled="EditMode"/>
-                <MudTextField @bind-Value="_password" InputType="InputType.Password" Label="PIUGame.com Password"
-                              Margin="Margin.Dense" Variant="Variant.Outlined" Class="mt-1" Disabled="EditMode"/>
+                <div class="import-typed">
+                    <div class="import-typed-fields">
+                        <MudTextField @bind-Value="_username" Label="PIUGame.com Username" Margin="Margin.Dense"
+                                      Variant="Variant.Outlined" Disabled="EditMode"/>
+                        <MudTextField @bind-Value="_password" InputType="InputType.Password" Label="PIUGame.com Password"
+                                      Margin="Margin.Dense" Variant="Variant.Outlined" Disabled="EditMode"/>
+                    </div>
+                    <MudButton Class="import-typed-go" Variant="Variant.Filled" Color="Color.Primary"
+                               title="@L["Import scores"].Value"
+                               Disabled="EditMode || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)"
+                               OnClick="ImportFromTyped">
+                        <MudIcon Icon="@Icons.Material.Filled.CloudDownload"/>
+                    </MudButton>
+                </div>
                 @if (_error != null)
                 {
-                    <MudText Typo="Typo.caption" Color="Color.Error">@_error</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">@_error</MudText>
                 }
-                <MudButton Class="mt-1" FullWidth="true" Variant="Variant.Filled" Color="Color.Primary"
-                           Disabled="EditMode || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)"
-                           OnClick="ImportFromTyped">@L["Import scores"]</MudButton>
-                <MudText Typo="Typo.caption" Align="MudBlazor.Align.Center">
-                    @L["One-time — nothing saved."]
-                </MudText>
                 break;
 
             case ImportUiState.Importing:
@@ -211,6 +211,7 @@ else
 
     private async Task ImportFromStored()
     {
+        if (!BeginImport()) return;
         var blob = await ClientStore.Read();
         if (blob == null)
         {
@@ -224,16 +225,25 @@ else
 
     private Task ImportFromTyped()
     {
+        if (!BeginImport()) return Task.CompletedTask;
         return Start(new TypedCredentialSource(_username, _password));
     }
 
-    private async Task Start(ImportCredentialSource source)
+    // Flip to the spinner and render before the slow sign-in runs, so the click has an immediate
+    // effect and the (now hidden) button can't be spammed. Returns false if one is already running.
+    private bool BeginImport()
     {
+        if (_state == ImportUiState.Importing) return false;
         _error = null;
         _importedCount = 0;
         _status = L["Starting import…"].Value;
         _state = ImportUiState.Importing;
+        StateHasChanged();
+        return true;
+    }
 
+    private async Task Start(ImportCredentialSource source)
+    {
         var cardId = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameId") ?? "";
         var gameTag = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameTag") ?? "";
 

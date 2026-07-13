@@ -35,8 +35,10 @@ internal sealed class RunOfficialImportConsumer : IConsumer<RunOfficialImportCom
         {
             // A bus consumer has no HttpContext, so establish the job's user for this scope; the
             // import's inner handlers (UI settings, game-profile writes) then resolve it as usual.
+            // SetScopedUser (not SetCurrentUser) so we never issue a cookie — a request context can
+            // flow into the consumer, and signing it out would drop the live user's session.
             var user = await _mediator.Send(new GetUserByIdQuery(message.UserId), context.CancellationToken);
-            if (user != null) await _currentUser.SetCurrentUser(user);
+            if (user != null) _currentUser.SetScopedUser(user);
 
             await _mediator.Send(new ExecuteImportCommand(message.UserId, message.Mix, message.Sid, message.CardId,
                 message.ExpectedGameTag, message.IncludeBroken, message.SyncPiuTracker), context.CancellationToken);
