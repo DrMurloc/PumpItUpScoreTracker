@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.14.2" />
+    <PackageReference Include="Azure.Security.KeyVault.Keys" Version="4.7.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.27.0" />
     <PackageReference Include="Discord.Net" Version="3.18.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />

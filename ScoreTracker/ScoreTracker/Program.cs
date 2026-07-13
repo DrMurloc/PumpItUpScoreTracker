@@ -233,6 +233,7 @@ builder.Services.AddBlazorApplicationInsights()
     .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>()
     .AddTransient<IRandomNumberGenerator, RandomNumberGenerator>()
     .AddControllers();
+builder.Services.Configure<KeyVaultConfiguration>(builder.Configuration.GetSection("KeyVault"));
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.AddScoped<IStringLocalizer<App>, StringLocalizer<App>>();
 builder.Services.AddScoped<ChartVideoDisplayer>();
