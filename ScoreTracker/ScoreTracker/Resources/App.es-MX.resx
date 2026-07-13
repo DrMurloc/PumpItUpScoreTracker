@@ -3299,9 +3299,6 @@
   <data name="Name, or shorthand like S18" xml:space="preserve">
     <value>Nombre o abreviatura como S18</value>
   </data>
-  <data name="Posts to {0}" xml:space="preserve">
-    <value>Se registra en {0}</value>
-  </data>
   <data name="Recorded" xml:space="preserve">
     <value>Registrado</value>
   </data>

@@ -3420,9 +3420,6 @@
   <data name="Name, or shorthand like S18" xml:space="preserve">
     <value>曲名、または S18 のような略記</value>
   </data>
-  <data name="Posts to {0}" xml:space="preserve">
-    <value>{0} に記録</value>
-  </data>
   <data name="Recorded" xml:space="preserve">
     <value>記録しました</value>
   </data>
