@@ -385,6 +385,187 @@
           }
         }
       }
+    },
+    {
+      "type": "by-level-breakdown",
+      "name": "By-Level Breakdown",
+      "description": "One configurable graph of your scores, grades, plates, or clears by level.",
+      "category": "Progress",
+      "supportedSizes": [
+        "2x2",
+        "3x2",
+        "4x2"
+      ],
+      "defaultSize": "2x2",
+      "supportedMixes": [
+        "XX",
+        "Phoenix",
+        "Phoenix2",
+        "FirstDanceFloor",
+        "SecondUltimateRemix",
+        "ThirdObg",
+        "ObgSeasonEvolution",
+        "Collection",
+        "PerfectCollection",
+        "Extra",
+        "Premiere",
+        "Prex",
+        "Rebirth",
+        "Premiere2",
+        "Prex2",
+        "Premiere3",
+        "Prex3",
+        "Exceed",
+        "Exceed2",
+        "Zero",
+        "Nx",
+        "Nx2",
+        "NxAbsolute",
+        "Fiesta",
+        "FiestaEx",
+        "Fiesta2",
+        "Prime",
+        "Prime2",
+        "Infinity",
+        "Pro",
+        "Pro2"
+      ],
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "mix": {
+            "enum": [
+              "XX",
+              "Phoenix",
+              "Phoenix2",
+              "FirstDanceFloor",
+              "SecondUltimateRemix",
+              "ThirdObg",
+              "ObgSeasonEvolution",
+              "Collection",
+              "PerfectCollection",
+              "Extra",
+              "Premiere",
+              "Prex",
+              "Rebirth",
+              "Premiere2",
+              "Prex2",
+              "Premiere3",
+              "Prex3",
+              "Exceed",
+              "Exceed2",
+              "Zero",
+              "Nx",
+              "Nx2",
+              "NxAbsolute",
+              "Fiesta",
+              "FiestaEx",
+              "Fiesta2",
+              "Prime",
+              "Prime2",
+              "Infinity",
+              "Pro",
+              "Pro2"
+            ],
+            "nullable": true
+          },
+          "scope": {
+            "enum": [
+              "SinglesDoubles",
+              "CoOp"
+            ]
+          },
+          "separateSinglesDoubles": {
+            "type": "boolean"
+          },
+          "minLevel": {
+            "type": "integer"
+          },
+          "maxLevel": {
+            "type": "integer"
+          },
+          "minPlayers": {
+            "type": "integer"
+          },
+          "maxPlayers": {
+            "type": "integer"
+          },
+          "metric": {
+            "enum": [
+              "Score",
+              "LetterGrade",
+              "Plate",
+              "Pass"
+            ]
+          },
+          "aggregation": {
+            "enum": [
+              "Distribution",
+              "Breakdown",
+              "Completion"
+            ]
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "Min",
+                "P10",
+                "P25",
+                "Median",
+                "Average",
+                "P75",
+                "P90",
+                "Max",
+                "MinusSigma",
+                "PlusSigma"
+              ]
+            },
+            "nullable": true
+          },
+          "customPercentiles": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "nullable": true
+          },
+          "band": {
+            "enum": [
+              "None",
+              "InterQuartile",
+              "MinMax",
+              "StdDev"
+            ]
+          },
+          "normalize": {
+            "type": "boolean"
+          },
+          "includeUnplayed": {
+            "type": "boolean"
+          },
+          "thresholds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "Score",
+                    "Grade",
+                    "Plate",
+                    "Pass"
+                  ]
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            },
+            "nullable": true
+          }
+        }
+      }
     }
   ]
 }
