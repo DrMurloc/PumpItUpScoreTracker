@@ -1,0 +1,35 @@
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.HomeDashboard
+
+@* Quick Record config (§4.2): mix scope only. Mirrors WeeklyConfigPanel's mix select. *@
+
+<MudSelect T="MixEnum?" @bind-Value="_mix" Label="@L["Mix"]" Class="mb-3">
+    <MudSelectItem T="MixEnum?" Value="null">@L["Follow current mix"]</MudSelectItem>
+    <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix">Phoenix</MudSelectItem>
+    <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix2">Phoenix 2</MudSelectItem>
+</MudSelect>
+<div class="d-flex justify-end gap-2 mt-4">
+    <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">@L["Save"]</MudButton>
+</div>
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public EventCallback<(string ConfigJson, int ConfigVersion)> OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private MixEnum? _mix;
+
+    protected override void OnParametersSet()
+    {
+        _mix = WidgetConfigJson.Read<QuickRecordConfig>(Widget.ConfigJson).Mix;
+    }
+
+    private async Task Save()
+    {
+        await OnSave.InvokeAsync((WidgetConfigJson.Write(new QuickRecordConfig { Mix = _mix }), 1));
+    }
+
+}
