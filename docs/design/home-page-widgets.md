@@ -309,7 +309,7 @@ Readiness: ✅ published contract already serves it · 🔨 needs new data/query
 | ScoreLedger | Session Journal | ✅ | `GetRecentSessionsQuery`; score history was a top user ask |
 | ScoreLedger | Chart Journey | ✅ | pin a white-whale chart, `GetChartScoreJourneyQuery` sparkline |
 | ScoreLedger | To-Do List | ✅ | must survive WSIP (parity phase) |
-| ScoreLedger | Quick Record | ✅ | ChartSelector + EditChartGrid inline; the arcade widget |
+| ScoreLedger | Quick Record | ✅ | **SPEC'd — catalog-walk pick (§4.2)**; ChartSelector + a purpose-built record row (not EditChartGrid); the arcade widget |
 | ScoreLedger | On the bubble | 🔨 | near-miss grades/plates ("18,797 from AAA+"); compute from records |
 | ScoreLedger | Activity heatmap | 🔨 | calendar of play days from the journal |
 | ScoreLedger | Mix Migration | ✅ | D11 — own widget; `GetCrossMixPassesQuery`; featured at P2 launch |
@@ -375,6 +375,66 @@ re-roll in the body meta row. The page's vestigial `LevelOffset` UI is supersede
   suggestion category; all widgets raise it).
 - **Phoenix 2**: supported; the 272 P2 titles (PR #128) should light Title Hunt up — verify at field
   test, the old page-level P2 gate stays dead (D14).
+
+### 4.2 Quick Record (catalog-walk pick — the arcade widget)
+
+The manual recorder's widget: search a chart, punch the score, Save, on to the next. One
+`UpdatePhoenixBestAttemptCommand` per save — the same write path the ChartDetailsDialog uses. Owner
+field-test (2026-07-12, one round) locked it deliberately tiny. Mock:
+[artifact](https://claude.ai/code/artifact/5d4bce53-a5e1-4610-8af2-f62fcea24436).
+
+**Locked decisions (owner, 2026-07-12):** (1) **no recent-charts shortcut** — replaying a chart you just
+played doesn't mean re-keying a score every time; (2) **Plate + Broken inline** on the action row;
+(3) **always clears to Search after Save** — rapid-fire, no toggle; (4) **1×1 only**; (5) **pure
+recorder** — the chart display is not clickable, no ChartDetailsDialog, no navigation of any kind.
+
+- **Composition**: reuses `ChartSelector` (its `S18`/`D22` shorthand is already built in) as the
+  persistent top row; the record inputs are a **purpose-built compact row, NOT `EditChartGrid`**. The
+  ChartDetailsDialog already hit this wall at round 11 — *"EditChartGrid brought duplicate
+  To-Do/favorite buttons and a layout that fell apart on phones"* — so Quick Record borrows the
+  selector but rebuilds score/plate/broken to fit the ~114px of body a 1×1 gives. Save dispatches
+  `UpdatePhoenixBestAttemptCommand(chartId, isBroken, score, plate, Mix)`.
+- **Data — all existing ScoreLedger contracts; no new query, table, or vertical**: the chart list comes
+  from the shell's `ChartCatalogCache` (shared per mix, no per-widget `GetChartsQuery`) and is passed
+  into `ChartSelector` via its `Charts` param; on pick, `GetPhoenixRecordQuery(chartId, mix)` prefills
+  the current best so it's an edit, not a blank; Save writes through the existing best-attempt command.
+- **States** (one 1×1 frame, three faces):
+  - **Search** (resting) — the selector (placeholder) + a shorthand hint + a muted "Posts to {Mix}"
+    footer (the mix cascade D13 is real; the recorder should see which board it writes to).
+  - **Recording** — the selector now holds the pick (search glyph + `DifficultyBubble` + name +
+    clear ✕); a large tabular Score field with a **live-derived letter-grade badge** (display only — the
+    domain derives the grade from the score, we send score + plate + broken); Plate select + Broken
+    toggle + Save.
+  - **Saved** — an inline success flash ("Recorded · SS+ 985,320 · Marvelous") for ~1.4s, then
+    **always** back to Search. The `UpdatePhoenixBestAttemptCommand` Snackbar is suppressed in-widget to
+    avoid a double confirmation.
+- **Grade badge**: score → Phoenix letter grade via `PhoenixLetterGrade`'s own thresholds (feedback
+  only — never sent). Colored off the rarity ramp through `ThemeScales`/tokens (SSS→sapphire, SS/S→gold,
+  AAA/AA→emerald, A/B→silver, C/D/F→common) — never a hand-rolled color.
+- **Validation / edges**: Save is disabled until a score is entered (score is the minimum; plate/broken
+  optional). Broken defaults **off** — a hand-keyed record is usually a pass. An empty score never sends
+  a record *removal* — that deletion path stays the dialog's job, not the arcade widget's.
+- **Sizes**: **1×1 only** — `SupportedSizes = [1×1]`, `DefaultSize = 1×1`. The one widget whose
+  per-widget size list is a single entry.
+- **Config v1**: **`Mix` scope only** (`Follow current mix` / Phoenix / Phoenix 2), same panel shape as
+  the trio (`QuickRecordConfigPanel` mirrors `WeeklyConfigPanel`'s mix `MudSelect`). `ClearAfterSave` was
+  considered and dropped — it always clears.
+- **EditMode**: inputs render disabled while the board is being arranged (no accidental writes
+  mid-drag); the selector shows its resting frame. Grid data refresh is already paused in edit mode by
+  the shell (§2.3).
+- **Lifecycle (§2.3)**: skeleton = the selector frame at fixed footprint; empty state = the search box
+  IS the CTA (logged-out → "Sign in to record"); isolated error = a failed save shows an inline retry,
+  board stays up; persisted vs transient = the half-typed entry is session-only, only Save writes;
+  config + version = `{ mix }`, version 1.
+- **Mixes**: Phoenix, Phoenix 2 (Phoenix scoring: score→grade, plate, broken). XX legacy is out of
+  scope — matches the trio's `SupportedMixes` and the dead-XX telemetry; a manual XX recorder, if ever
+  wanted, is a separate legacy-scoring variant.
+- **Shell extensions: none.** Quick Record is the first catalog widget that needs nothing new from the
+  shell — no `DrawerPresets`, no `DynamicNameKey`, no `RefreshIcon`, and it never raises `OnChartClick`
+  (it declares the five render-contract params and ignores `OnChartClick`/`RefreshToken`).
+- **Not in scope**: favorites / To-Do (the dialog and EditChartGrid own those), score history (the
+  Session Journal and Chart Journey widgets own that), bulk entry (the Upload pages own that).
+  Deliberately one chart, one score, fast.
 
 ## 5. Pumbility Projections v2 — **PR #1**, ships before the shell (D17)
 
