@@ -57,7 +57,8 @@ else
                     @RowFragment(row)
                 }
             </div>
-            @if (_myRow != null && _myRow.Place > BoardCap)
+            @* Your row always floats at the bottom so your standing is visible without scrolling. *@
+            @if (_myRow != null)
             {
                 <div class="dash-lb-pinned">
                     <div class="dash-lb-divider">@L["Your standing"]</div>

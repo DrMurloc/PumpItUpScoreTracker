@@ -2701,12 +2701,13 @@ html.nav-away .page-dock,
     padding: 4px 2px 1px;
 }
 
-/* Your row stays pinned to the bottom while the board scrolls past 50. */
+/* Your row always sits below the scrolling board — the board takes the flex space and scrolls
+   internally, so this stays anchored at the widget's bottom. */
 .dash-lb-pinned {
-    position: sticky;
-    bottom: 0;
+    flex: none;
     padding-top: 4px;
-    background: linear-gradient(180deg, transparent, var(--mix-surface) 45%);
+    margin-top: 2px;
+    border-top: 1px solid rgba(255, 255, 255, .1);
 }
 
 .dash-daily-controls {
