@@ -45,11 +45,11 @@ else
                 </span>
                 <div class="dash-acct-pools">
                     <div class="dash-acct-poolrow">
-                        <span style="color:var(--chart-singles)">@L["Singles"]</span>
+                        <span style="color:var(--chart-singles)">S</span>
                         <span class="dash-acct-poolnum">@(((int)_stats.SinglesRating).ToString("N0"))</span>
                     </div>
                     <div class="dash-acct-poolrow">
-                        <span style="color:var(--chart-doubles)">@L["Doubles"]</span>
+                        <span style="color:var(--chart-doubles)">D</span>
                         <span class="dash-acct-poolnum">@(((int)_stats.DoublesRating).ToString("N0"))</span>
                     </div>
                 </div>
@@ -57,10 +57,10 @@ else
 
             <div class="dash-acct-eyebrow dash-acct-cl-eyebrow">@L["Competitive Level"]</div>
             <div class="dash-pools">
-                <span style="color:var(--chart-singles)">@L["Singles"]</span>
+                <span style="color:var(--chart-singles)">S</span>
                 <span class="@(_dimension == ChartType.Single ? "dash-acct-active" : "")">
                     @_stats.SinglesCompetitiveLevel.ToString("N2")</span>
-                <span style="color:var(--chart-doubles)">@L["Doubles"]</span>
+                <span style="color:var(--chart-doubles)">D</span>
                 <span class="@(_dimension == ChartType.Double ? "dash-acct-active" : "")">
                     @_stats.DoublesCompetitiveLevel.ToString("N2")</span>
             </div>
