@@ -1,6 +1,8 @@
 # Import widget + Remember My Password — technical scope
 
-Status: **scoping (pre-build)**. Branch `claude/import-widget-password-memory-5628e5`.
+Status: **built (C1–C12)** on branch `claude/import-widget-password-memory-5628e5`.
+
+**Deferred to follow-up** (tracked here, not blockers): a nonce-based *enforced* CSP (C11 shipped the baseline headers; the inline theme `<style>` needs a per-request nonce before CSP can enforce); the localization sweep across the 8 non-English locales (new strings display in English via key-fallback until then); backgrounding the `/UploadPhoenixScores` entry point (it shares the `RunImport` body from C5 but keeps its synchronous progress flow — the widget is the backgrounded entry); the credential-generation client self-purge (the admin key-cycle already bricks every blob server-side by deleting the key rows); and removing the now-unused `_currentUser` field in `OfficialSiteClient`.
 
 Three shipped things + one hardening pass:
 
