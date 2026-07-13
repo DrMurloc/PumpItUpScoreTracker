@@ -2164,6 +2164,50 @@ html.nav-away .page-dock,
     .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; }
 }
 
+/* Card-strip person divider (avatar + vertical name) — the community analog of the
+   Suggested-Charts category divider, reusing that strip's card CSS + arrow pager. */
+.dash-strip-person {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 3px;
+    min-width: 0;
+}
+
+.dash-strip-pname {
+    writing-mode: vertical-rl;
+    font-family: var(--font-display);
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    max-height: 62px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--mix-ink);
+}
+
+.dash-strip-person.you .dash-strip-pname {
+    color: var(--mix-primary);
+}
+
+/* A title or full-folder clear has no chart art — it reads as a centered text card. */
+.dash-card-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 3px;
+}
+
+.dash-card-emoji {
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
 /* Drag chrome: handle (desktop pointer only), dragged-cell dim, insertion marker. */
 
 .dash-drag-handle {

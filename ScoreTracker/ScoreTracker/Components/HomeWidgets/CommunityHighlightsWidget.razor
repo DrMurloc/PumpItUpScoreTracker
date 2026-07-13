@@ -30,6 +30,30 @@ else if (!_records.Any())
         </MudText>
     </div>
 }
+else if (UseStrips)
+{
+    @* Horizontal sizes (2×1/3×1/4×1): a card strip grouped by person — reuses the Suggested
+       Charts strip vocabulary (CSS + the dashboard-grid.js arrow pager, both class-based). *@
+    <div class="dash-strip-wrap">
+        <button type="button" class="dash-strip-arrow dash-strip-arrow-left" aria-label="@L["Scroll left"]">‹</button>
+        <div class="dash-card-strip">
+            @foreach (var record in _records)
+            {
+                <div class="dash-strip-person @(IsMe(record) ? "you" : "")" title="@record.PlayerName">
+                    <MudAvatar Size="Size.Small" Class="dash-ch-avatar">
+                        <MudImage Src="@record.Avatar.ToString()" Alt="@record.PlayerName"/>
+                    </MudAvatar>
+                    <span class="dash-strip-pname">@record.PlayerName</span>
+                </div>
+                @foreach (var win in record.Wins)
+                {
+                    @WinCard(win)
+                }
+            }
+        </div>
+        <button type="button" class="dash-strip-arrow dash-strip-arrow-right" aria-label="@L["Scroll right"]">›</button>
+    </div>
+}
 else
 {
     <div class="dash-ch-feed dash-scroll">
@@ -127,6 +151,9 @@ else
     private const int FeedTake = 30;
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
+    // Short + wide (2x1/3x1/4x1) → the horizontal card strip; everything else stays the vertical feed.
+    private bool UseStrips => SizePreset.TryParse(Widget.SizePreset) is { Columns: > 1, Rows: 1 };
+
     private bool _loaded;
     private string? _loadedFor;
     private IReadOnlyList<CommunityHighlightRecord> _records = Array.Empty<CommunityHighlightRecord>();
@@ -200,5 +227,55 @@ else
 
     private static string Bracket(string title) =>
         string.IsNullOrEmpty(title) ? "" : title.StartsWith('[') ? title : $"[{title}]";
+
+    private bool IsMe(CommunityHighlightRecord record) =>
+        CurrentUser.IsLoggedIn && CurrentUser.User.Id == record.UserId;
+
+    private string NonChartTip(SignificantWin win) => win.Kind == WinKind.FolderComplete
+        ? $"🎉 {L["Cleared all of {0}", win.Difficulty ?? ""].Value}"
+        : $"🏅 {Bracket(win.TitleName ?? "")} {TitleSuffix(win)}";
+
+    // A win as a strip card. Chart wins = art + grade/plate + score + a truncated caption (the full
+    // detail + song name ride the native title tooltip, per owner); titles + folder clears are text cards.
+    private RenderFragment<SignificantWin> WinCard => win =>
+        @<text>
+            @if (win.ChartId is { } cid && _charts.TryGetValue(cid, out var c))
+            {
+                <div class="dash-chart-card @(EditMode ? "" : "dash-clickable")"
+                     title="@($"{c.Song.Name} ({c.DifficultyString}) · {Caption(win)}")"
+                     @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(c))">
+                    <div class="dash-card-art">
+                        <img src="@c.Song.ImagePath" alt="@c.Song.Name" loading="lazy"/>
+                        <span class="dash-card-bubble"><DifficultyBubble Chart="c" Small="true"></DifficultyBubble></span>
+                    </div>
+                    <div class="dash-card-score">
+                        @if (win.Score is { } sc)
+                        {
+                            @if (win.Kind == WinKind.NotablePg)
+                            {
+                                <ScoreBreakdown Plate="PhoenixPlate.PerfectGame" Height="14"/>
+                            }
+                            else
+                            {
+                                <LetterGradeIcon Grade="PhoenixScore.From(sc).LetterGrade" Height="14"/>
+                            }
+                            <span>@sc.ToString("N0")</span>
+                        }
+                    </div>
+                    <div class="dash-card-detail dash-muted">@Caption(win)</div>
+                </div>
+            }
+            else
+            {
+                <div class="dash-chart-card dash-card-text" title="@NonChartTip(win)">
+                    <div class="dash-card-emoji">@(win.Kind == WinKind.FolderComplete ? "🎉" : "🏅")</div>
+                    <div class="dash-card-name">@(win.Kind == WinKind.FolderComplete ? win.Difficulty : Bracket(win.TitleName ?? ""))</div>
+                    @if (win.Kind != WinKind.FolderComplete)
+                    {
+                        <div class="dash-card-detail dash-muted">@TitleSuffix(win)</div>
+                    }
+                </div>
+            }
+        </text>;
 
 }

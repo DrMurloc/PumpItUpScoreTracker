@@ -54,7 +54,11 @@ public static class WidgetRegistry
             "Recent big wins from the communities you pick.",
             WidgetCategory.Compete,
             Icons.Material.Filled.Groups,
-            new[] { SizePreset.OneByTwo, SizePreset.TwoByOne, SizePreset.TwoByTwo, SizePreset.OneByThree },
+            new[]
+            {
+                SizePreset.OneByTwo, SizePreset.TwoByOne, SizePreset.ThreeByOne, SizePreset.FourByOne,
+                SizePreset.TwoByTwo, SizePreset.OneByThree
+            },
             SizePreset.TwoByTwo,
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(CommunityHighlightsWidget),
