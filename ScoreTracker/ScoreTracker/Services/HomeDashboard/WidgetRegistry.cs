@@ -95,7 +95,19 @@ public static class WidgetRegistry
                     _ => "Suggested · Title Hunt"
                 },
             RefreshIcon: Icons.Material.Filled.Shuffle,
-            RefreshTitleKey: "Shuffle suggestions")
+            RefreshTitleKey: "Shuffle suggestions"),
+        new("quick-record",
+            "Quick Record",
+            "Record a score by hand for any chart.",
+            WidgetCategory.Play,
+            Icons.Material.Filled.EditNote,
+            // 1x1 only (owner): the one widget whose size list is a single entry.
+            new[] { SizePreset.OneByOne },
+            SizePreset.OneByOne,
+            new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            typeof(QuickRecordWidget),
+            typeof(QuickRecordConfigPanel),
+            typeof(QuickRecordConfig))
     };
 
     private static readonly IReadOnlyDictionary<string, WidgetDescriptor> ByTypeId =

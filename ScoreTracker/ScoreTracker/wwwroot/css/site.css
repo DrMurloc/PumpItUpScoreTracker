@@ -1812,6 +1812,138 @@ html.nav-away .page-dock,
     color: var(--mix-ink-muted);
 }
 
+/* Quick Record widget (§4.2): the arcade recorder, purpose-built to fit a 1x1 body. */
+.qr-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.qr-hint {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+}
+
+/* Which board this posts to (mix cascade D13) — pinned to the bottom in the resting state. */
+.qr-target {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .66rem;
+    color: var(--mix-ink-muted);
+    border-top: 1px solid rgba(255, 255, 255, .06);
+    padding-top: 6px;
+}
+
+.qr-target-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--mix-primary);
+    box-shadow: 0 0 7px var(--mix-primary);
+    flex: none;
+}
+
+/* The selected chart — a display header, not a chip: nothing here navigates. */
+.qr-selected {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.qr-mini-art {
+    flex: none;
+    display: inline-flex;
+}
+
+.qr-mini-art img {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+}
+
+.qr-selected-name {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-display);
+    letter-spacing: .03em;
+    font-size: .9rem;
+    color: var(--mix-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.qr-scorerow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.qr-score-field {
+    flex: 1;
+}
+
+.qr-actionrow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.qr-plate-field {
+    flex: 1;
+    min-width: 0;
+}
+
+/* MudBlazor fields carry generous default margins — reclaim them for the tight footprint. */
+.qr-body .mud-input-control {
+    margin-top: 0;
+}
+
+.qr-saved {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.qr-saved-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.qr-saved-title {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: .13em;
+    font-size: .74rem;
+    color: var(--mud-palette-success);
+}
+
+.qr-saved-song {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    color: var(--mix-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.qr-saved-detail {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .78rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
 /* Column stagger (round 3): 4 on desktop, 3 on small desktop/tablet, 2 on landscape
    phones, 1 on portrait phones. Spans clamp to the column count. */
 @media (max-width: 1279.98px) {
