@@ -71,14 +71,15 @@ else
             @* 1x1 is a glance: a short top-three on the left, your standing on the right. *@
             <div class="dash-daily-split">
                 <div class="dash-daily-top3">
-                    @foreach (var row in _rows.Take(3))
+                    @for (var p = 1; p <= 3; p++)
                     {
-                        <div class="dash-top3-row @(row.IsYou ? "dash-lb-you" : row.IsCommunity ? "dash-lb-community" : "")"
-                             title="@(((int)row.Entry.Score).ToString("N0"))">
+                        var row = _rows.Count >= p ? _rows[p - 1] : null;
+                        <div class="dash-top3-row @(row == null ? "dash-top3-empty" : row.IsYou ? "dash-lb-you" : row.IsCommunity ? "dash-lb-community" : "")"
+                             title="@(row == null ? null : ((int)row.Entry.Score).ToString("N0"))">
                             <span class="dash-top3-place"
-                                  style="@ThemeScales.RarityStyle(_rows.Count <= 0 ? 0 : 1.0 - (double)row.Place / _rows.Count)">@row.Place</span>
-                            <span class="dash-top3-name">@row.User?.Name</span>
-                            <span class="dash-top3-grade">@GradeText(row.Entry)</span>
+                                  style="@(row == null ? null : ThemeScales.RarityStyle(1.0 - (double)p / _rows.Count))">@p</span>
+                            <span class="dash-top3-name">@(row?.User?.Name.ToString() ?? "—")</span>
+                            <span class="dash-top3-grade">@(row == null ? "—" : GradeText(row.Entry))</span>
                         </div>
                     }
                 </div>

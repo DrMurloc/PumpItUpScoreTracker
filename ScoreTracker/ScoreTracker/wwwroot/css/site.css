@@ -2607,7 +2607,7 @@ html.nav-away .page-dock,
     --daily-community: #43dc86;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     min-height: 0;
 }
 
@@ -2627,7 +2627,7 @@ html.nav-away .page-dock,
     align-items: center;
     gap: 8px;
     min-width: 0;
-    padding-bottom: 6px;
+    padding-bottom: 2px;
     border-bottom: 1px solid rgba(255, 255, 255, .08);
 }
 
@@ -2762,6 +2762,11 @@ html.nav-away .page-dock,
 .dash-top3-grade {
     font-weight: 800;
     font-size: .72rem;
+}
+
+/* A place with no entrant yet — the rank still shows, the rest dashes out. */
+.dash-top3-empty {
+    opacity: .45;
 }
 
 .dash-daily-mine {
