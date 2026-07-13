@@ -3390,4 +3390,10 @@
   <data name="Remember last mix" xml:space="preserve">
     <value>Rmrglember last Mrgla</value>
   </data>
+  <data name="Your standing" xml:space="preserve">
+    <value>Your standing</value>
+  </data>
+  <data name="manual" xml:space="preserve">
+    <value>manual</value>
+  </data>
 </root>

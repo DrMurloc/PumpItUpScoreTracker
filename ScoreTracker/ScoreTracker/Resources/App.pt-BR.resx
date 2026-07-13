@@ -3416,4 +3416,10 @@
   <data name="Remember last mix" xml:space="preserve">
     <value>Lembrar última versão</value>
   </data>
+  <data name="Your standing" xml:space="preserve">
+    <value>Sua posição</value>
+  </data>
+  <data name="manual" xml:space="preserve">
+    <value>manual</value>
+  </data>
 </root>

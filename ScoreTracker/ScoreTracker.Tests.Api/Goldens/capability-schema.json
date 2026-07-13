@@ -263,7 +263,8 @@
       "category": "Compete",
       "supportedSizes": [
         "1x1",
-        "2x1"
+        "1x2",
+        "1x3"
       ],
       "defaultSize": "1x1",
       "supportedMixes": [

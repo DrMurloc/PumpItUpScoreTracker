@@ -1,9 +1,12 @@
 @using MediatR
+@using ScoreTracker.Communities.Contracts.Queries
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.WeeklyChallenge.Contracts
 @using ScoreTracker.WeeklyChallenge.Contracts.Commands
 @using ScoreTracker.WeeklyChallenge.Contracts.Queries
@@ -11,11 +14,10 @@
 @using ScoreTracker.Web.Services.HomeDashboard
 @using ScoreTracker.Web.Services.Theming
 
-@* Daily Step (docs/design/daily-step.md): the site-wide shared daily chart + your standing.
-   Limbo Day (once per ISO week) flips the board to lowest-passing-score-wins. The chart opens the
-   shared ChartDetailsDialog; the trophy opens the compact leaderboard (ascending on Limbo days).
-   The Record popover logs a score straight to the board (marked Manual) — the only way to submit a
-   deliberate Limbo low-pass, since imports only ever keep your best. *@
+@* Daily Step (docs/design/daily-step.md): the shared daily chart as a leaderboard card. 1x1 shows the
+   top three plus your row; the taller sizes scroll the whole board (up to 50) with your row pinned when
+   you sit past it. Your row glows blue, anyone from your communities glows green. Record and the full
+   dialog ride the host's title-bar slot to keep the body all leaderboard. *@
 
 @if (!_loaded)
 {
@@ -38,87 +40,82 @@ else
         }
         <div class="dash-daily-chart @(EditMode ? "" : "dash-clickable")"
              @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(_chart!))">
-            <span class="@(_wide ? "dash-daily-art" : "dash-mini-art")">
-                <SongImage Song="_chart.Song" Small="!_wide"></SongImage>
-            </span>
-            <div class="dash-daily-title">
-                <DifficultyBubble Chart="_chart" Small="true"></DifficultyBubble>
-                <span class="dash-target-name">@_chart.Song.Name</span>
-            </div>
+            <span class="dash-mini-art"><SongImage Song="_chart.Song" Small="true"></SongImage></span>
+            <DifficultyBubble Chart="_chart" Small="true"></DifficultyBubble>
+            <span class="dash-target-name">@_chart.Song.Name</span>
         </div>
 
-        @if (_wide && _myEntry != null)
+        @if (!_rows.Any())
         {
-            <div class="dash-daily-yours">
-                <ScoreBreakdown Score="_myEntry.Score" Plate="_myEntry.Plate" IsBroken="_myEntry.IsBroken"
-                                OneLine="true" ShowScore="true"></ScoreBreakdown>
-                @if (_myEntry.Source == DailyStepSource.Official)
+            <div class="dash-daily-board"><span class="dash-muted">@L["No entries yet."]</span></div>
+        }
+        else if (_tall)
+        {
+            <div class="dash-daily-board dash-scroll">
+                @foreach (var row in _rows.Take(BoardCap))
                 {
-                    <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small"
-                             title="@L["Verified from official import"]"/>
+                    @RowFragment(row)
+                }
+            </div>
+            @if (_myRow != null && _myRow.Place > BoardCap)
+            {
+                <div class="dash-lb-pinned">
+                    <div class="dash-lb-divider">@L["Your standing"]</div>
+                    @RowFragment(_myRow)
+                </div>
+            }
+        }
+        else
+        {
+            <div class="dash-daily-board">
+                @foreach (var row in _rows.Take(3))
+                {
+                    @RowFragment(row)
+                }
+                @if (_myRow != null && _myRow.Place > 3)
+                {
+                    <div class="dash-lb-divider">@L["Your standing"]</div>
+                    @RowFragment(_myRow)
                 }
             </div>
         }
-
-        <div class="dash-daily-standing">
-            @if (_placement != null)
-            {
-                <span class="dash-weekly-place"
-                      style="@ThemeScales.RarityStyle(_placement.Total <= 0 ? 0 : 1.0 - (double)_placement.Place / _placement.Total)">
-                    #@_placement.Place / @_placement.Total
-                </span>
-            }
-            else
-            {
-                <span class="dash-muted">@L["No entry yet"]</span>
-            }
-            @if (!EditMode)
-            {
-                @if (CurrentUser.IsLoggedIn)
-                {
-                    <span class="dash-daily-record-anchor">
-                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.AddCircleOutline"
-                                       title="@L["Record"]" OnClick="ToggleRecord"/>
-                        <MudPopover Open="_recordOpen" AnchorOrigin="Origin.TopRight"
-                                    TransformOrigin="Origin.BottomRight" Class="dash-daily-record">
-                            <div class="pa-3">
-                                <MudNumericField @ref="_scoreField" T="int?" @bind-Value="_recordScore"
-                                                 Label="@L["Score"]" Min="0" Max="1000000" Variant="Variant.Text"
-                                                 Immediate="true"/>
-                                <MudSelect T="PhoenixPlate" @bind-Value="_recordPlate" Label="@L["Plate"]"
-                                           Dense="true" Class="mt-2">
-                                    @foreach (var plate in Enum.GetValues<PhoenixPlate>())
-                                    {
-                                        <MudSelectItem T="PhoenixPlate" Value="@plate">@plate.GetName()</MudSelectItem>
-                                    }
-                                </MudSelect>
-                                <div class="d-flex justify-end gap-2 mt-3">
-                                    <MudButton Size="Size.Small" OnClick="() => _recordOpen = false">
-                                        @L["Cancel"]
-                                    </MudButton>
-                                    <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled"
-                                               Disabled="_submitting || _recordScore == null" OnClick="Submit">
-                                        @L["Submit"]
-                                    </MudButton>
-                                </div>
-                            </div>
-                        </MudPopover>
-                    </span>
-                    <MudOverlay Visible="_recordOpen" OnClick="() => _recordOpen = false" AutoClose="true"
-                                Style="background:transparent"/>
-                }
-                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.EmojiEvents"
-                               title="@L["See Leaderboards"]" OnClick="OpenLeaderboard"/>
-            }
-        </div>
     </div>
 
+    @* Host-less fallback (bare renders / component tests): the controls the header slot normally holds. *@
+    @if (HeaderSlot == null && !EditMode && CurrentUser.IsLoggedIn)
+    {
+        <div class="dash-daily-controls">@HeaderControls</div>
+    }
+
+    <MudDialog @bind-Visible="_recordOpen" Options="RecordDialogOptions">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["Record"] — @_chart.Song.Name</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudNumericField @ref="_scoreField" T="int?" @bind-Value="_recordScore" Label="@L["Score"]"
+                             Min="0" Max="1000000" Variant="Variant.Text" Immediate="true"/>
+            <MudSelect T="PhoenixPlate" @bind-Value="_recordPlate" Label="@L["Plate"]" Dense="true" Class="mt-3">
+                @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                {
+                    <MudSelectItem T="PhoenixPlate" Value="@plate">@plate.GetName()</MudSelectItem>
+                }
+            </MudSelect>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="() => _recordOpen = false">@L["Cancel"]</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                       Disabled="_submitting || _recordScore == null" OnClick="SubmitRecord">@L["Submit"]</MudButton>
+        </DialogActions>
+    </MudDialog>
+
     <LeaderboardDialog @bind-Visible="_showLeaderboard" Chart="_chart" Entries="_dialogEntries"
-                       Ascending="_isLimbo" OfficialUserIds="_officialUserIds"/>
+                       Ascending="_isLimbo" MaxPlaces="BoardCap"
+                       OfficialUserIds="_officialUserIds" ManualUserIds="_manualUserIds"/>
 }
 
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
+@inject IUserRepository Users
 @inject ChartCatalogCache ChartCatalog
 
 @code {
@@ -133,45 +130,72 @@ else
     /// <summary>Bumped by the host's refresh control; part of the five-param render contract.</summary>
     [Parameter] public int RefreshToken { get; set; }
 
+    /// <summary>Opt-in title-bar slot (§2.3): Record + full-leaderboard controls ride here so the body
+    /// is all board. Null on bare renders, where the fallback puts them back in the body.</summary>
+    [CascadingParameter] private WidgetHeaderSlot? HeaderSlot { get; set; }
+
+    private const int BoardCap = 50;
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+    private static readonly IReadOnlySet<Guid> NoCommunity = new HashSet<Guid>();
+
+    private sealed record Row(int Place, DailyStepEntry Entry, User? User, bool IsYou, bool IsCommunity);
 
     private bool _loaded;
-    private bool _wide;
+    private bool _tall;
     private string? _loadedFor;
     private Chart? _chart;
     private bool _isLimbo;
-    private DailyStepPlacement? _placement;
-    private DailyStepEntry? _myEntry;
-    private DailyStepEntry[] _entries = Array.Empty<DailyStepEntry>();
+    private List<Row> _rows = new();
+    private Row? _myRow;
     private WeeklyTournamentEntry[] _dialogEntries = Array.Empty<WeeklyTournamentEntry>();
     private IReadOnlySet<Guid> _officialUserIds = new HashSet<Guid>();
-    private bool _showLeaderboard;
+    private IReadOnlySet<Guid> _manualUserIds = new HashSet<Guid>();
+    private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
     private MixEnum _mix = MixEnum.Phoenix;
 
-    // Record popover state (session-transient — never persisted).
+    private bool _showLeaderboard;
     private bool _recordOpen;
     private bool _submitting;
     private bool _focusQueued;
     private int? _recordScore;
     private PhoenixPlate _recordPlate = PhoenixPlate.SuperbGame;
     private MudNumericField<int?>? _scoreField;
+    private string? _headerSlotKey;
 
-    private void OpenLeaderboard()
-    {
-        _showLeaderboard = true;
-    }
+    private static readonly DialogOptions RecordDialogOptions = new()
+        { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseOnEscapeKey = true };
 
-    private void ToggleRecord()
+    private RenderFragment RowFragment(Row row) =>@<div class="dash-lb-row @(row.IsYou ? "dash-lb-you" : row.IsCommunity ? "dash-lb-community" : "")">
+        <span class="dash-lb-place"
+              style="@ThemeScales.RarityStyle(_rows.Count <= 0 ? 0 : 1.0 - (double)row.Place / _rows.Count)">@row.Place</span>
+        <span class="dash-lb-who">
+            @if (row.User != null)
+            {
+                <UserLabel User="row.User"></UserLabel>
+            }
+        </span>
+        <span class="dash-lb-score">
+            <LetterGradeIcon Grade="row.Entry.Score.LetterGrade" IsBroken="row.Entry.IsBroken" Height="16"></LetterGradeIcon>
+            <span class="dash-lb-pts">@(((int)row.Entry.Score).ToString("N0"))</span>
+        </span>
+    </div>;
+
+    private RenderFragment HeaderControls =>@<text>
+        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.AddCircleOutline"
+                       title="@L["Record"]" OnClick="OpenRecord"></MudIconButton>
+        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.EmojiEvents"
+                       title="@L["See Leaderboards"]" OnClick="() => _showLeaderboard = true"></MudIconButton>
+    </text>;
+
+    private void OpenRecord()
     {
-        _recordOpen = !_recordOpen;
-        if (_recordOpen) _focusQueued = true;
+        _recordOpen = true;
+        _focusQueued = true;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // Autofocus the score field when the popover opens (owner). The field only exists once the
-        // popover has rendered, so keep the request queued until the ref is live.
-        if (_focusQueued && _scoreField != null)
+        if (_focusQueued && _recordOpen && _scoreField != null)
         {
             _focusQueued = false;
             await _scoreField.FocusAsync();
@@ -181,47 +205,91 @@ else
     protected override async Task OnParametersSetAsync()
     {
         var signature = $"{Widget.Id}|{Widget.ConfigJson}|{Widget.SizePreset}|{EffectiveMix}|{RefreshToken}";
-        if (signature == _loadedFor) return;
-        _loadedFor = signature;
-        _loaded = false;
-        _wide = (SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.OneByOne).Columns > 1;
-
-        var config = WidgetConfigJson.Read<DailyStepConfig>(Widget.ConfigJson);
-        _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
-            : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
-
-        var board = await Mediator.Send(new GetDailyStepQuery(_mix));
-        _chart = null;
-        _placement = null;
-        _myEntry = null;
-        _entries = Array.Empty<DailyStepEntry>();
-        _dialogEntries = Array.Empty<WeeklyTournamentEntry>();
-        _officialUserIds = new HashSet<Guid>();
-        if (board != null)
+        if (signature != _loadedFor)
         {
-            _isLimbo = board.IsLimbo;
-            var charts = await ChartCatalog.GetCharts(_mix);
-            _chart = charts.TryGetValue(board.ChartId, out var chart) ? chart : null;
-            if (_chart != null) await ReloadBoardData();
+            _loadedFor = signature;
+            _loaded = false;
+            _tall = (SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.OneByOne).Rows > 1;
+
+            var config = WidgetConfigJson.Read<DailyStepConfig>(Widget.ConfigJson);
+            _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
+                : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
+
+            _communityIds = await LoadMyCommunityMemberIds();
+
+            var board = await Mediator.Send(new GetDailyStepQuery(_mix));
+            _chart = null;
+            _rows = new List<Row>();
+            _myRow = null;
+            _dialogEntries = Array.Empty<WeeklyTournamentEntry>();
+            if (board != null)
+            {
+                _isLimbo = board.IsLimbo;
+                var charts = await ChartCatalog.GetCharts(_mix);
+                _chart = charts.TryGetValue(board.ChartId, out var chart) ? chart : null;
+                if (_chart != null) await ReloadBoardData();
+            }
+
+            _loaded = true;
         }
 
-        _loaded = true;
+        // Every param set (not only on reload) so an EditMode toggle re-evaluates the header slot.
+        UpdateHeaderSlot();
     }
 
     private async Task ReloadBoardData()
     {
         if (_chart == null) return;
-        var userId = CurrentUser.User.Id;
-        _placement = await Mediator.Send(new GetDailyStepPlacementQuery(userId, _mix));
-        _entries = (await Mediator.Send(new GetDailyStepEntriesQuery(_mix))).ToArray();
-        _myEntry = _entries.FirstOrDefault(e => e.UserId == userId && e.ChartId == _chart.Id);
-        _dialogEntries = _entries.Select(e => new WeeklyTournamentEntry(e.UserId, e.ChartId, e.Score, e.Plate,
+        var me = CurrentUser.User.Id;
+        var entries = (await Mediator.Send(new GetDailyStepEntriesQuery(_mix)))
+            .Where(e => e.ChartId == _chart.Id).ToArray();
+        var users = (await Users.GetUsers(entries.Select(e => e.UserId).Distinct().ToArray()))
+            .ToDictionary(u => u.Id);
+
+        // Limbo ranks passing runs ascending; a normal day ranks highest-first, broken last.
+        var ordered = (_isLimbo
+                ? entries.Where(e => !e.IsBroken).OrderBy(e => (int)e.Score)
+                : entries.OrderBy(e => e.IsBroken).ThenByDescending(e => (int)e.Score))
+            .ToArray();
+        _rows = ordered.Select((e, i) => new Row(i + 1, e, users.GetValueOrDefault(e.UserId),
+            e.UserId == me, _communityIds.Contains(e.UserId))).ToList();
+        _myRow = _rows.FirstOrDefault(r => r.IsYou);
+
+        _dialogEntries = ordered.Select(e => new WeeklyTournamentEntry(e.UserId, e.ChartId, e.Score, e.Plate,
             e.IsBroken, null, e.CompetitiveLevel)).ToArray();
-        _officialUserIds = _entries.Where(e => e.Source == DailyStepSource.Official)
-            .Select(e => e.UserId).ToHashSet();
+        _officialUserIds = entries.Where(e => e.Source == DailyStepSource.Official).Select(e => e.UserId).ToHashSet();
+        _manualUserIds = entries.Where(e => e.Source == DailyStepSource.Manual).Select(e => e.UserId).ToHashSet();
     }
 
-    private async Task Submit()
+    // Your community crews — the ones you actually joined, so the auto region and world communities are
+    // dropped. Their members glow green on the board. Membership doesn't change between reloads, so this
+    // runs once per load, not per record.
+    private async Task<IReadOnlySet<Guid>> LoadMyCommunityMemberIds()
+    {
+        if (!CurrentUser.IsLoggedIn) return NoCommunity;
+        var mine = (await Mediator.Send(new GetMyCommunitiesQuery()))
+            .Where(c => !c.IsRegional && c.CommunityName.ToString() != "World")
+            .ToArray();
+        if (mine.Length == 0) return NoCommunity;
+        var ids = new HashSet<Guid>();
+        foreach (var community in mine)
+        foreach (var id in await Mediator.Send(new GetCommunityMembersQuery(community.CommunityName)))
+            ids.Add(id);
+        ids.Remove(CurrentUser.User.Id); // you glow blue, not green
+        return ids;
+    }
+
+    private void UpdateHeaderSlot()
+    {
+        if (HeaderSlot == null) return;
+        var show = _chart != null && !EditMode && CurrentUser.IsLoggedIn;
+        var key = show ? "controls" : null;
+        if (key == _headerSlotKey) return;
+        _headerSlotKey = key;
+        HeaderSlot.Set(show ? HeaderControls : null);
+    }
+
+    private async Task SubmitRecord()
     {
         if (_recordScore == null) return;
         _submitting = true;

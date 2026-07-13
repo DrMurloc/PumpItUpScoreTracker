@@ -2599,9 +2599,12 @@ html.nav-away .page-dock,
     font-variant-numeric: tabular-nums;
 }
 
-/* Daily Step widget (docs/design/daily-step.md). */
+/* Daily Step widget (docs/design/daily-step.md): the shared daily chart as a leaderboard card. */
 
 .dash-daily {
+    /* Row-highlight tokens: your row (blue) and a community member's (green). */
+    --daily-you: #4bb8ff;
+    --daily-community: #43dc86;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -2622,60 +2625,105 @@ html.nav-away .page-dock,
 .dash-daily-chart {
     display: flex;
     align-items: center;
-    gap: 10px;
-    min-width: 0;
-}
-
-.dash-daily-title {
-    display: flex;
-    align-items: center;
     gap: 8px;
     min-width: 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
 }
 
-.dash-daily-art {
-    flex: none;
-    width: 56px;
-    height: 56px;
-    border-radius: 8px;
+.dash-daily-board {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-height: 0;
+}
+
+/* The taller sizes scroll the whole board; dash-scroll supplies the quiet themed scrollbar. */
+.dash-daily-board.dash-scroll {
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
+
+.dash-lb-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 7px;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--mix-surface-muted) 55%, transparent);
+    font-size: .82rem;
+}
+
+.dash-lb-place {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.dash-lb-who {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.dash-daily-art img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.dash-daily-yours {
+.dash-lb-score {
     display: flex;
     align-items: center;
     gap: 6px;
+    justify-content: flex-end;
     font-variant-numeric: tabular-nums;
 }
 
-.dash-daily-standing {
+.dash-lb-pts {
+    font-weight: 600;
+}
+
+.dash-lb-you {
+    background: color-mix(in srgb, var(--daily-you) 15%, transparent);
+    box-shadow: inset 0 0 0 1px var(--daily-you), 0 0 12px -4px var(--daily-you);
+}
+
+.dash-lb-community {
+    background: color-mix(in srgb, var(--daily-community) 13%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--daily-community) 60%, transparent);
+}
+
+.dash-lb-divider {
+    font-size: .62rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--mix-ink) 55%, transparent);
+    padding: 4px 2px 1px;
+}
+
+/* Your row stays pinned to the bottom while the board scrolls past 50. */
+.dash-lb-pinned {
+    position: sticky;
+    bottom: 0;
+    padding-top: 4px;
+    background: linear-gradient(180deg, transparent, var(--mix-surface) 45%);
+}
+
+.dash-daily-controls {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-top: auto;
-}
-
-/* Record popover — a manual daily-board submission (marked Manual), the only path to a
-   deliberate Limbo low-pass. Portaled by MudPopover, so it escapes the widget's clipping. */
-.dash-daily-record-anchor {
-    position: relative;
-    display: inline-flex;
-}
-
-.dash-daily-record {
-    min-width: 220px;
+    justify-content: flex-end;
+    gap: 2px;
 }
 
 .weekly-lb-verified {
     font-size: 0.9rem;
     opacity: 0.75;
+}
+
+.weekly-lb-manual {
+    font-size: .68rem;
+    font-style: italic;
+    color: color-mix(in srgb, var(--mix-ink) 55%, transparent);
 }
 
 /* Weekly leaderboard dialog (round 3, option 1). */

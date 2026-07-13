@@ -47,6 +47,10 @@
                             <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small"
                                      Class="weekly-lb-verified" title="@L["Verified from official import"]"/>
                         }
+                        else if (ManualUserIds?.Contains(row.Entry.UserId) == true)
+                        {
+                            <span class="weekly-lb-manual">@L["manual"]</span>
+                        }
                     </span>
                     <ScoreBreakdown Score="row.Entry.Score" Plate="row.Entry.Plate"
                                     IsBroken="row.Entry.IsBroken" OneLine="true" ShowScore="true">
@@ -80,6 +84,12 @@
     /// </summary>
     [Parameter] public IReadOnlySet<Guid>? OfficialUserIds { get; set; }
 
+    /// <summary>Optional (Daily Step): user ids whose entry was submitted by hand — tagged "manual".</summary>
+    [Parameter] public IReadOnlySet<Guid>? ManualUserIds { get; set; }
+
+    /// <summary>How deep the board shows before it's just you (Weekly: 10; Daily Step: 50).</summary>
+    [Parameter] public int MaxPlaces { get; set; } = 10;
+
     private static readonly DialogOptions DialogSizing = new()
         { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseOnEscapeKey = true };
 
@@ -108,7 +118,7 @@
         _rows = ordered
             .Select((e, i) => new LeaderboardRow(i + 1, ordered.Length <= 0 ? 0 : 1.0 - (double)(i + 1) / ordered.Length, e,
                 e.UserId == me))
-            .Where(r => r.Place <= 10 || r.IsMe)
+            .Where(r => r.Place <= MaxPlaces || r.IsMe)
             .ToList();
 
         var users = await Users.GetUsers(_rows.Select(r => r.Entry.UserId).Distinct().ToArray());

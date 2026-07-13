@@ -54,7 +54,8 @@ public static class WidgetRegistry
             "Today's shared chart, plus a weekly Limbo Day.",
             WidgetCategory.Compete,
             Icons.Material.Filled.Today,
-            new[] { SizePreset.OneByOne, SizePreset.TwoByOne },
+            // 1x1 = top three + you; the taller sizes open into the full scrollable board.
+            new[] { SizePreset.OneByOne, SizePreset.OneByTwo, SizePreset.OneByThree },
             SizePreset.OneByOne,
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(DailyStepWidget),

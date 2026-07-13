@@ -3465,4 +3465,10 @@
   <data name="Remember last mix" xml:space="preserve">
     <value>Se souvenir du dernier Mix</value>
   </data>
+  <data name="Your standing" xml:space="preserve">
+    <value>Votre classement</value>
+  </data>
+  <data name="manual" xml:space="preserve">
+    <value>manuel</value>
+  </data>
 </root>

@@ -3348,4 +3348,10 @@
   <data name="Remember last mix" xml:space="preserve">
     <value>마지막 시리즈 기억</value>
   </data>
+  <data name="Your standing" xml:space="preserve">
+    <value>내 순위</value>
+  </data>
+  <data name="manual" xml:space="preserve">
+    <value>수동</value>
+  </data>
 </root>
