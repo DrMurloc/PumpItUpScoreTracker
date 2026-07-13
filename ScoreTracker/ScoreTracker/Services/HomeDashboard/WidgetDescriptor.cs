@@ -73,4 +73,9 @@ public sealed record WidgetDescriptor(
     // Optional config-aware title: given an instance's ConfigJson, return the name KEY
     // to display (null → fall back to NameKey). Lets three rapid-fired presets of one
     // type wear distinct titles, live-localized, with no title stored per instance.
-    Func<string, string?>? DynamicNameKey = null);
+    Func<string, string?>? DynamicNameKey = null,
+    // Optional header refresh action (owner, round 5): the host renders this icon in
+    // the title bar and bumps the RefreshToken contract parameter — body real estate
+    // stays with the content. TitleKey is the button's localized tooltip.
+    string? RefreshIcon = null,
+    string? RefreshTitleKey = null);

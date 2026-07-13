@@ -89,7 +89,9 @@ public static class WidgetRegistry
                     SuggestedGoal.ScorePush => "Suggested · Score Push",
                     SuggestedGoal.FillGaps => "Suggested · Fill Gaps",
                     _ => "Suggested · Title Hunt"
-                })
+                },
+            RefreshIcon: Icons.Material.Filled.Shuffle,
+            RefreshTitleKey: "Shuffle suggestions")
     };
 
     private static readonly IReadOnlyDictionary<string, WidgetDescriptor> ByTypeId =

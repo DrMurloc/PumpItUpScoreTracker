@@ -38,11 +38,6 @@ else if (!_sections.Any(s => s.Rows.Any()))
 else
 {
     <div class="dash-suggested">
-        <div class="dash-widget-meta">
-            <span></span>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Shuffle"
-                           title="@L["Shuffle suggestions"]" OnClick="Shuffle"/>
-        </div>
         @if (!_useStrips)
         {
         <div class="dash-targets dash-scroll">
@@ -178,6 +173,9 @@ else
     [Parameter] public bool EditMode { get; set; }
     [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
 
+    /// <summary>Bumped by the host's header shuffle — the engine re-rolls its picks.</summary>
+    [Parameter] public int RefreshToken { get; set; }
+
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
     // Fill rows never show a score (they're unpassed by definition, owner round 3) —
@@ -198,15 +196,9 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{Widget.SizePreset}|{EffectiveMix}";
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{Widget.SizePreset}|{EffectiveMix}|{RefreshToken}";
         if (signature == _loadedFor) return;
         _loadedFor = signature;
-        await LoadAsync();
-    }
-
-    private async Task Shuffle()
-    {
-        // Same load, fresh dispatch — the engine's randomized picks re-roll server-side.
         await LoadAsync();
     }
 
