@@ -3353,4 +3353,31 @@
   <data name="Tier list difficulty" xml:space="preserve">
     <value>Dificuldade da tier list</value>
   </data>
+  <data name="Quick Record" xml:space="preserve">
+    <value>Registro rápido</value>
+  </data>
+  <data name="Record a score by hand for any chart." xml:space="preserve">
+    <value>Registre uma pontuação à mão para qualquer chart.</value>
+  </data>
+  <data name="Search a chart" xml:space="preserve">
+    <value>Buscar um chart</value>
+  </data>
+  <data name="Name, or shorthand like S18" xml:space="preserve">
+    <value>Nome ou abreviação como S18</value>
+  </data>
+  <data name="Posts to {0}" xml:space="preserve">
+    <value>Registra em {0}</value>
+  </data>
+  <data name="Recorded" xml:space="preserve">
+    <value>Registrado</value>
+  </data>
+  <data name="Change chart" xml:space="preserve">
+    <value>Trocar chart</value>
+  </data>
+  <data name="Sign in to record." xml:space="preserve">
+    <value>Entre para registrar.</value>
+  </data>
+  <data name="There was an error while recording the score" xml:space="preserve">
+    <value>Ocorreu um erro ao registrar a pontuação</value>
+  </data>
 </root>
