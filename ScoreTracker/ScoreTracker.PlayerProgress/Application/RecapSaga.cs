@@ -28,6 +28,7 @@ namespace ScoreTracker.PlayerProgress.Application;
 /// </summary>
 internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
     IConsumer<RebuildRecapPgCardsCommand>,
+    IConsumer<RebuildRecapTotalPumbilityCommand>,
     IConsumer<ScoreHighlightsCapturedEvent>
 {
     /// <summary>Below this many passes there isn't enough data for a meaningful recap.</summary>
@@ -358,6 +359,47 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             }
 
         _logger.LogInformation("PG-card rebuild finished: {Patched} of {Count} on {Mix}",
+            patched, userIds.Length, mix);
+    }
+
+    /// <summary>
+    ///     Patch-only sweep: recomputes ONLY the Phoenix 2 finale's projected
+    ///     <c>TotalPumbility</c> on every stored recap and writes nothing else — the targeted
+    ///     backfill for the 2026-07-13 aggregation fix (overall PUMBILITY is a single merged
+    ///     top-50, not the two per-type pools summed). Recaps without a projection, and those
+    ///     that no longer carry anything onto Phoenix 2, are left untouched.
+    /// </summary>
+    public async Task Consume(ConsumeContext<RebuildRecapTotalPumbilityCommand> context)
+    {
+        var mix = context.Message.Mix;
+        var cancellationToken = context.CancellationToken;
+        // The finale projects Phoenix onto Phoenix 2, so the projection needs the P2 catalog.
+        var phoenix2Charts = (await _charts.GetCharts(MixEnum.Phoenix2, cancellationToken: cancellationToken))
+            .ToDictionary(c => c.Id);
+
+        var userIds = (await _recaps.GetRecapUserIds(mix, cancellationToken)).ToArray();
+        _logger.LogInformation("Recap total-PUMBILITY rebuild starting for {Count} recaps on {Mix}",
+            userIds.Length, mix);
+        var patched = 0;
+        foreach (var userId in userIds)
+            try
+            {
+                var recap = await _recaps.GetRecap(userId, mix, cancellationToken);
+                if (recap?.Projection == null) continue;
+                var bests = (await _scores.GetBestScores(mix, userId, cancellationToken)).ToArray();
+                var fresh = Phoenix2ProjectionCalculator.Calculate(bests, phoenix2Charts);
+                if (fresh == null) continue;
+                await _recaps.SaveRecap(userId, mix,
+                    recap with { Projection = recap.Projection with { TotalPumbility = fresh.TotalPumbility } },
+                    cancellationToken);
+                patched++;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Recap total-PUMBILITY rebuild failed for {UserId} on {Mix}", userId, mix);
+            }
+
+        _logger.LogInformation("Recap total-PUMBILITY rebuild finished: {Patched} of {Count} on {Mix}",
             patched, userIds.Length, mix);
     }
 

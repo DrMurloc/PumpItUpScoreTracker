@@ -300,8 +300,11 @@ namespace ScoreTracker.SharedKernel.Models
         ///     Base(level) × (gradeMultiplier + plateBonus) — grade and plate combine
         ///     ADDITIVELY. CO-OP, U.C.S. and half-double (performance) charts never
         ///     contribute (official site text), and broken plays never contribute
-        ///     (owner-confirmed). Totals are TWO independent top-50 pools — Singles and
-        ///     Doubles — summed by the caller; this config only prices a single chart.
+        ///     (owner-confirmed). This config only prices a single chart; the caller
+        ///     aggregates. The per-type Singles and Doubles totals are each their own
+        ///     top-50 pool (the site's ?t=s / ?t=d boards), but overall PUMBILITY is ONE
+        ///     merged top-50 across both types — confirmed from the live "All" board
+        ///     (2026-07-13), NOT the two per-type pools summed.
         /// </summary>
         private static ScoringConfiguration Phoenix2PumbilityScoring()
         {

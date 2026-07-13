@@ -150,8 +150,9 @@ public sealed record RecapPlateCount(PhoenixPlate Plate, int Count);
 public sealed record RecapGradeCount(PhoenixLetterGrade Grade, int Count);
 
 /// <summary>
-///     Phoenix 1 scores rescored on Phoenix 2 levels with the P2 formula: two top-50
-///     pools plus the highest [S]- and [D]-ladder pumbility titles those pools reach.
+///     Phoenix 1 scores rescored on Phoenix 2 levels with the P2 formula: per-type Singles
+///     and Doubles top-50 pools, a merged-top-50 overall total (NOT singles + doubles), and
+///     the highest [S]- and [D]-ladder pumbility titles the per-type pools reach.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record RecapPhoenix2Projection(

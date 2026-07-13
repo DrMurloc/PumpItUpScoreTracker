@@ -61,6 +61,9 @@
     <MudButton OnClick="ComputeAllRecaps" Color="Color.Secondary" Variant="Variant.Filled">@L["Compute All Season Recaps"]</MudButton>
     @* Targeted patch: rewrites only the PG card on stored recaps, no full rebuilds. *@
     <MudButton OnClick="RebuildRecapPgCards" Variant="Variant.Outlined">@L["Rebuild Recap PG Cards"]</MudButton>
+    @* Targeted patch: recomputes only the Phoenix 2 finale's projected total PUMBILITY
+       (the 2026-07-13 merged-top-50 fix), leaving the rest of each recap untouched. *@
+    <MudButton OnClick="RebuildRecapTotalPumbility" Variant="Variant.Outlined">@L["Rebuild Recap Total PUMBILITY"]</MudButton>
 </MudCard>
 <MudCard>
     <MudCardHeader>@L["Content Lock"]</MudCardHeader>
@@ -481,6 +484,12 @@
     private async Task RebuildRecapPgCards()
     {
         await Bus.Publish(new RebuildRecapPgCardsCommand());
+        Snackbar.Add(L["Done"].Value, Severity.Success);
+    }
+
+    private async Task RebuildRecapTotalPumbility()
+    {
+        await Bus.Publish(new RebuildRecapTotalPumbilityCommand());
         Snackbar.Add(L["Done"].Value, Severity.Success);
     }
 

@@ -2662,6 +2662,9 @@
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>リキャップPGカード再構築</value>
   </data>
+  <data name="Rebuild Recap Total PUMBILITY" xml:space="preserve">
+    <value>リキャップ合計PUMBILITY再構築</value>
+  </data>
   <data name="Site Theme" xml:space="preserve">
     <value>サイトテーマ</value>
   </data>
