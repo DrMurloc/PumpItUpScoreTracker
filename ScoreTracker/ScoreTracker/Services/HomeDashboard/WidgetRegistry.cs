@@ -104,7 +104,9 @@ public static class WidgetRegistry
             // 1x1 only (owner): the one widget whose size list is a single entry.
             new[] { SizePreset.OneByOne },
             SizePreset.OneByOne,
-            new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            // Records to every mix (owner, 2026-07-13): Phoenix path for P1/P2, the legacy
+            // letter-grade path for XX and older. "Follow current mix" honours any of them.
+            Enum.GetValues<MixEnum>(),
             typeof(QuickRecordWidget),
             typeof(QuickRecordConfigPanel),
             typeof(QuickRecordConfig))

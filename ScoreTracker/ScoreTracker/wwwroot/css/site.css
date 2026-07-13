@@ -1826,27 +1826,6 @@ html.nav-away .page-dock,
     color: var(--mix-ink-muted);
 }
 
-/* Which board this posts to (mix cascade D13) — pinned to the bottom in the resting state. */
-.qr-target {
-    margin-top: auto;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: .66rem;
-    color: var(--mix-ink-muted);
-    border-top: 1px solid rgba(255, 255, 255, .06);
-    padding-top: 6px;
-}
-
-.qr-target-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--mix-primary);
-    box-shadow: 0 0 7px var(--mix-primary);
-    flex: none;
-}
-
 /* The selected chart — a display header, not a chip: nothing here navigates. */
 .qr-selected {
     display: flex;
@@ -1884,10 +1863,11 @@ html.nav-away .page-dock,
 }
 
 /* Score and the plate/result dropdown share the row (owner, 2026-07-13): score cut to
-   ~half, plate lifted up beside it as shorthand. */
+   ~half, plate lifted up beside it as shorthand. On the legacy row the score dominates and
+   the letter-grade box stays compact (owner, field test). */
 .qr-score-field {
     flex: 1 1 0;
-    min-width: 82px;
+    min-width: 96px;
 }
 
 /* Plate lives on the Save row (owner, 2026-07-13): compact on the left, Save pushed right. */
@@ -1987,8 +1967,9 @@ html.nav-away .page-dock,
 }
 
 .qr-grade-field {
-    flex: none;
-    min-width: 92px;
+    flex: 0 1 auto;
+    min-width: 80px;
+    max-width: 104px;
 }
 
 .qr-mixchip {

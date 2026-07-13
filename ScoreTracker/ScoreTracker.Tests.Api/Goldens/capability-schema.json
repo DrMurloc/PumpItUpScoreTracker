@@ -396,8 +396,37 @@
       ],
       "defaultSize": "1x1",
       "supportedMixes": [
+        "XX",
         "Phoenix",
-        "Phoenix2"
+        "Phoenix2",
+        "FirstDanceFloor",
+        "SecondUltimateRemix",
+        "ThirdObg",
+        "ObgSeasonEvolution",
+        "Collection",
+        "PerfectCollection",
+        "Extra",
+        "Premiere",
+        "Prex",
+        "Rebirth",
+        "Premiere2",
+        "Prex2",
+        "Premiere3",
+        "Prex3",
+        "Exceed",
+        "Exceed2",
+        "Zero",
+        "Nx",
+        "Nx2",
+        "NxAbsolute",
+        "Fiesta",
+        "FiestaEx",
+        "Fiesta2",
+        "Prime",
+        "Prime2",
+        "Infinity",
+        "Pro",
+        "Pro2"
       ],
       "configSchema": {
         "type": "object",
@@ -439,6 +468,9 @@
             "nullable": true
           },
           "allMixes": {
+            "type": "boolean"
+          },
+          "rememberLastMix": {
             "type": "boolean"
           }
         }
