@@ -1177,7 +1177,9 @@
     background: var(--mix-surface-muted);
 }
 
-.dash-card-art img {
+/* Direct child only — the DifficultyBubble overlay nests its own img inside this box,
+   and a blanket rule blew it up to full card size (owner, round 4). */
+.dash-card-art > img {
     width: 100%;
     height: 100%;
     object-fit: cover;
