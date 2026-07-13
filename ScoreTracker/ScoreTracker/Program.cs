@@ -239,6 +239,7 @@ builder.Services.AddScoped<IStringLocalizer<App>, StringLocalizer<App>>();
 builder.Services.AddScoped<ChartVideoDisplayer>();
 builder.Services.AddScoped<ChartScoringLevels>();
 builder.Services.AddScoped<PageDockService>();
+builder.Services.AddScoped<IImportCredentialClientStore, ImportCredentialClientStore>();
 // Circuit-scoped: widgets on a home-page board share one chart catalog per mix (§2.5).
 builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.ChartCatalogCache>();
 builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.CommunityGlowReader>();
