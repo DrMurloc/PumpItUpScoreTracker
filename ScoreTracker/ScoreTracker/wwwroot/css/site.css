@@ -946,6 +946,92 @@
     flex: none;
 }
 
+/* Community Highlights feed (docs/design/home-page-widgets.md §7). */
+.dash-ch-feed {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    height: 100%;
+}
+
+.dash-ch-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .25rem;
+    text-align: center;
+    padding: 1rem;
+}
+
+.dash-ch-entry {
+    display: flex;
+    gap: .6rem;
+    padding: .55rem .25rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink-muted) 15%, transparent);
+}
+
+.dash-ch-avatar {
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+}
+
+.dash-ch-body {
+    min-width: 0;
+    flex: 1;
+}
+
+.dash-ch-head {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+}
+
+.dash-ch-name {
+    font-weight: 600;
+    font-size: .85rem;
+}
+
+.dash-ch-time {
+    margin-left: auto;
+    font-size: .7rem;
+    white-space: nowrap;
+}
+
+.dash-ch-wins {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    margin-top: .15rem;
+}
+
+.dash-ch-win {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .35rem;
+    font-size: .78rem;
+}
+
+.dash-ch-chart {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    min-width: 0;
+}
+
+.dash-ch-song {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 12rem;
+}
+
+.dash-ch-why {
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
 /* Drag chrome: handle (desktop pointer only), dragged-cell dim, insertion marker. */
 
 .dash-drag-handle {

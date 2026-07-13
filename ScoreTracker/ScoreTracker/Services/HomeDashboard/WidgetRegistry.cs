@@ -48,7 +48,18 @@ public static class WidgetRegistry
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(WeeklyWidget),
             typeof(WeeklyConfigPanel),
-            typeof(WeeklyConfig))
+            typeof(WeeklyConfig)),
+        new("community-highlights",
+            "Community Highlights",
+            "Recent big wins from the communities you pick.",
+            WidgetCategory.Compete,
+            Icons.Material.Filled.Groups,
+            new[] { SizePreset.OneByTwo, SizePreset.TwoByOne, SizePreset.TwoByTwo, SizePreset.OneByThree },
+            SizePreset.TwoByTwo,
+            new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            typeof(CommunityHighlightsWidget),
+            typeof(CommunityHighlightsConfigPanel),
+            typeof(CommunityHighlightsConfig))
     };
 
     private static readonly IReadOnlyDictionary<string, WidgetDescriptor> ByTypeId =
