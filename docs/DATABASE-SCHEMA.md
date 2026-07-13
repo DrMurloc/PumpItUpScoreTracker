@@ -132,6 +132,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.CommunityMembership` | Community membership |
 | `scores.CommunityInviteCode` | Invite codes, optionally expiring |
 | `scores.CommunityChannel` | Discord channels wired to a community's event feed |
+| `scores.CommunityHighlight` | Community big-wins feed: one summary row per (score-event × community the winner belongs to), `Payload` a JSON list of `SignificantWin`, `EventId` dedupes across shared communities. Written by the highlight saga off `ScoreHighlightsCapturedEvent`, purged weekly after 30 days ([home-page-widgets §7](design/home-page-widgets.md)) |
 
 ## Match subsystem (shared; deprecated, deletion gated on an owner announcement)
 
