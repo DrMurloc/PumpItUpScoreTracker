@@ -107,17 +107,41 @@ else
                                      Disabled="EditMode || _isSaving" Variant="Variant.Outlined"
                                      Margin="Margin.Dense" Class="qr-score-field"/>
                 </div>
-                <div class="qr-graderow @(EditMode || _isSaving ? "qr-graderow-disabled" : "")">
-                    @foreach (var grade in LegacyGradesDescending)
-                    {
-                        var g = grade;
-                        var isSel = _letterGrade == g;
-                        <img class="qr-grade-opt @(isSel ? "qr-grade-opt-sel" : "")"
-                             src="@LegacyGradeImage(g, isSel && _broken)" alt="@g.ToString()" title="@g.ToString()"
-                             @onclick="() => PickLegacyGrade(g)"/>
-                    }
-                </div>
                 <div class="qr-actionrow qr-actionrow-save">
+                    <div class="qr-graderow @(EditMode || _isSaving ? "qr-graderow-disabled" : "")">
+                        @foreach (var grade in LegacyPrimaryGrades)
+                        {
+                            var g = grade;
+                            var isSel = _letterGrade == g;
+                            <img class="qr-grade-opt @(isSel ? "qr-grade-opt-sel" : "")"
+                                 src="@LegacyGradeImage(g, isSel && _broken)" alt="@g.ToString()" title="@g.ToString()"
+                                 @onclick="() => PickLegacyGrade(g)"/>
+                        }
+                        @{ var lower = _letterGrade is { } lg && LegacyMoreGrades.Contains(lg) ? (XXLetterGrade?)lg : null; }
+                        <MudMenu Dense="true" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft">
+                            <ActivatorContent>
+                                @if (lower is { } low)
+                                {
+                                    <img class="qr-grade-opt qr-grade-opt-sel" src="@LegacyGradeImage(low, _broken)"
+                                         alt="@low.ToString()" title="@low.ToString()"/>
+                                }
+                                else
+                                {
+                                    <span class="qr-grade-more" title="@L["More"]">&hellip;</span>
+                                }
+                            </ActivatorContent>
+                            <ChildContent>
+                                @foreach (var grade in LegacyMoreGrades)
+                                {
+                                    var g = grade;
+                                    <MudMenuItem OnClick="() => PickLegacyGrade(g)">
+                                        <img class="qr-grade-menu-img" src="@LegacyGradeImage(g, false)"
+                                             alt="@g.ToString()"/>
+                                    </MudMenuItem>
+                                }
+                            </ChildContent>
+                        </MudMenu>
+                    </div>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="qr-save-btn"
                                Disabled="EditMode || _isSaving || !CanSave" OnClick="Save">@L["Save"]</MudButton>
                 </div>
@@ -245,11 +269,15 @@ else
         _broken = !_broken;
     }
 
-    // Legacy grade strip (owner, 2026-07-13): grades descending; tap to pick (passing), tap
-    // the selected one again to mark it broken (its image goes cracked). Replaces the grade
-    // select AND the Broken checkbox.
-    private static readonly XXLetterGrade[] LegacyGradesDescending =
-        Enum.GetValues<XXLetterGrade>().Reverse().ToArray();
+    // Legacy grade strip (owner, 2026-07-13): tap to pick (passing), tap the selected one
+    // again to mark it broken (its image goes cracked). Replaces the grade select AND the
+    // Broken checkbox. Only the common grades ride the strip; B and lower (a rare record)
+    // live behind a "more" menu so the strip + Save fit one row.
+    private static readonly XXLetterGrade[] LegacyPrimaryGrades =
+        { XXLetterGrade.SSS, XXLetterGrade.SS, XXLetterGrade.S, XXLetterGrade.A };
+
+    private static readonly XXLetterGrade[] LegacyMoreGrades =
+        { XXLetterGrade.B, XXLetterGrade.C, XXLetterGrade.D, XXLetterGrade.F };
 
     private static string LegacyGradeImage(XXLetterGrade grade, bool broken) =>
         $"https://piuimages.arroweclip.se/letters/{grade.ToString().ToLower()}{(broken ? "_broken" : "")}.png";

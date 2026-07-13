@@ -1968,17 +1968,42 @@ html.nav-away .page-dock,
 
 /* Legacy grade strip (owner, 2026-07-13): tap a grade image to pick it (passing), tap the
    selected one again to mark broken (its art goes cracked). Replaces the select + checkbox. */
+/* The strip shares the row with Save now (4 primaries + a "more" menu), left-packed. */
 .qr-graderow {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 2px;
-    padding: 2px 0;
+    gap: 3px;
+    min-width: 0;
 }
 
 .qr-graderow-disabled {
     pointer-events: none;
     opacity: .5;
+}
+
+/* "More" overflow (B and lower) — either a … affordance or the selected lower grade. */
+.qr-grade-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 26px;
+    min-width: 26px;
+    cursor: pointer;
+    border-radius: 5px;
+    color: var(--mix-ink-muted);
+    font-size: 1.15rem;
+    line-height: 1;
+    opacity: .75;
+}
+
+.qr-grade-more:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, .06);
+}
+
+.qr-grade-menu-img {
+    height: 24px;
+    width: auto;
 }
 
 .qr-grade-opt {
