@@ -290,7 +290,7 @@ public static class ByLevelAggregator
                 if (hi.HasValue) max = Math.Max(max, hi.Value);
             }
 
-            bands.Add(new BreakdownBandArea(SeriesColor.Qualitative(0), lower, upper));
+            bands.Add(new BreakdownBandArea(SeriesColor.Muted, lower, upper));
         }
 
         return bands;

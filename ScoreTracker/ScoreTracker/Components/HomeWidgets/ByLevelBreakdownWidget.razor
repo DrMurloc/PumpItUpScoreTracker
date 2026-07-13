@@ -31,6 +31,16 @@ else
 {
     <div class="dash-chart-fill @ApexChartTheming.WrapperClass">
         <ApexChart TItem="Pt" Options="_options" Height="@("100%")" @key="_renderKey">
+            @foreach (var band in _bands)
+            {
+                <ApexRangeAreaSeries TItem="Pt"
+                                     Items="band.Points"
+                                     Name="@band.Name"
+                                     Color="@band.Color"
+                                     XValue="@(p => p.Label)"
+                                     Top="@(p => p.High)"
+                                     Bottom="@(p => p.Low)"/>
+            }
             @foreach (var series in _series)
             {
                 <ApexPointSeries TItem="Pt"
@@ -59,7 +69,7 @@ else
     [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
     [Parameter] public int RefreshToken { get; set; }
 
-    private sealed record Pt(string Label, decimal Y);
+    private sealed record Pt(string Label, decimal Y, decimal Low = 0, decimal High = 0);
 
     private sealed record RenderSeries(string Name, string Color, bool Dashed, IReadOnlyList<Pt> Points);
 
@@ -68,6 +78,7 @@ else
     private string _renderKey = string.Empty;
     private BreakdownChartKind _kind = BreakdownChartKind.Empty;
     private List<RenderSeries> _series = new();
+    private List<(string Name, string Color, IReadOnlyList<Pt> Points)> _bands = new();
     private ApexChartOptions<Pt> _options = new();
 
     protected override async Task OnParametersSetAsync()
@@ -81,6 +92,7 @@ else
         {
             _kind = BreakdownChartKind.Empty;
             _series = new List<RenderSeries>();
+            _bands = new();
             _loaded = true;
             return;
         }
@@ -96,6 +108,7 @@ else
         var palette = MixThemes.PaletteFor(themeMix);
 
         _series = new List<RenderSeries>();
+        _bands = new();
         var dashes = new List<double>();
         if (result.Kind != BreakdownChartKind.Empty)
         {
@@ -112,6 +125,17 @@ else
                     points));
                 dashes.Add(series.Dashed ? 5 : 0);
             }
+
+            // Distribution band (Score) → a translucent range fill behind the stat lines.
+            foreach (var band in result.Bands)
+            {
+                var pts = new List<Pt>();
+                for (var i = 0; i < result.Buckets.Count; i++)
+                    if (band.Lower[i] is { } lo && band.Upper[i] is { } hi)
+                        pts.Add(new Pt(labels[i], 0, (decimal)lo, (decimal)hi));
+                if (pts.Count > 0)
+                    _bands.Add((BandLabel(config.Band), Resolve(band.Color, palette, themeMix), pts));
+            }
         }
 
         _options = ApexChartTheming.BaseOptions<Pt>(palette);
@@ -127,6 +151,7 @@ else
         {
             _options.Stroke = new Stroke { Curve = Curve.Straight, Width = 2, DashArray = dashes };
             _options.Markers = new Markers { Size = 0 };
+            if (_bands.Count > 0) _options.Fill = new Fill { Opacity = 0.15 };
         }
 
         _options.Yaxis = new List<YAxis>
@@ -141,6 +166,14 @@ else
         _renderKey = signature;
         _loaded = true;
     }
+
+    private string BandLabel(BreakdownBand band) => band switch
+    {
+        BreakdownBand.InterQuartile => "P25–P75",
+        BreakdownBand.MinMax => $"{L["Min"]} – {L["Max"]}",
+        BreakdownBand.StdDev => "±1σ",
+        _ => L["Shade band"]
+    };
 
     private static string Resolve(SeriesColor color, MixPalette palette, MixEnum mix) => color.Role switch
     {

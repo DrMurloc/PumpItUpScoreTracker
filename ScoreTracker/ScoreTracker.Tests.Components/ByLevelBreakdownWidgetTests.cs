@@ -76,6 +76,41 @@ public sealed class ByLevelBreakdownWidgetTests : ComponentTestBase
     }
 
     [Fact]
+    public void RendersADistributionBandWithoutError()
+    {
+        var user = new User(Guid.NewGuid(), "Test", true, null, new Uri("https://x/y.png"), null);
+        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        CurrentUser.SetupGet(c => c.User).Returns(user);
+        var a = Guid.NewGuid();
+        var b = Guid.NewGuid();
+        var c = Guid.NewGuid();
+        SetupServices(
+            new[] { Chart(a, ChartType.Single, 20), Chart(b, ChartType.Single, 20), Chart(c, ChartType.Single, 20) },
+            new[]
+            {
+                new RecordedPhoenixScore(a, 900_000, PhoenixPlate.MarvelousGame, false, default),
+                new RecordedPhoenixScore(b, 950_000, PhoenixPlate.MarvelousGame, false, default),
+                new RecordedPhoenixScore(c, 1_000_000, PhoenixPlate.PerfectGame, false, default)
+            });
+        var config = WidgetConfigJson.Write(new ByLevelBreakdownConfig
+        {
+            Metric = BreakdownMetric.Score,
+            Aggregation = BreakdownAggregation.Distribution,
+            Series = new() { DistributionSeries.Median },
+            Band = BreakdownBand.MinMax,
+            SeparateSinglesDoubles = false,
+            MinLevel = 20,
+            MaxLevel = 20
+        });
+
+        var cut = RenderComponent<ByLevelBreakdownWidget>(p => p
+            .Add(x => x.Widget, Widget(config))
+            .Add(x => x.EffectiveMix, MixEnum.Phoenix2));
+
+        Assert.Contains("dash-chart-fill", cut.Markup);
+    }
+
+    [Fact]
     public void LoggedInWithNoClearedScoresFallsBackToEmptyState()
     {
         var user = new User(Guid.NewGuid(), "Test", true, null, new Uri("https://x/y.png"), null);
