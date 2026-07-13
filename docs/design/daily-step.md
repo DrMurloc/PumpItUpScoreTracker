@@ -202,8 +202,10 @@ scores flow → visible → announced → weekly bug fix. End-to-end live after 
 
 The widget renders the board inline, not just your standing.
 
-- **1×1**: a **podium** — the top three as medals (community members tinted green, you blue if you're up
-  there) with your row anchored below. Not a list: a three-row list clipped in the small square.
+- **1×1**: a **split** (a list clipped in the square) — left: a short top three, each `place · name ·
+  letter grade` ("PG" instead of the grade on a Perfect Game; full score on hover). Right: your standing
+  — `#place` + grade/score, or **"Not played" + how many are on the board** when you haven't. Community
+  green / you blue tints carry across.
 - **1×2 / 1×3**: the full board (up to 50), scrollable (`dash-scroll`), with your row **always floating** at
   the bottom below the board (the board flex-scrolls, the row stays put). Supported sizes moved from
   `1x1/2x1` to **`1x1/1x2/1x3`** — the layout keys on `Rows > 1` (tall), not columns.

@@ -3474,4 +3474,10 @@
   <data name="manual" xml:space="preserve">
     <value>手動</value>
   </data>
+  <data name="Not played" xml:space="preserve">
+    <value>未プレイ</value>
+  </data>
+  <data name="{0} on the board" xml:space="preserve">
+    <value>{0}人が参加中</value>
+  </data>
 </root>

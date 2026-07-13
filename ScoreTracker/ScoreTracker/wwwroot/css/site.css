@@ -2716,77 +2716,90 @@ html.nav-away .page-dock,
     gap: 2px;
 }
 
-/* 1x1 podium: top-three medals with your row anchored at the bottom (no list in the small square). */
-.dash-daily-podium {
+/* 1x1 split: a short top-three (name + grade, score on hover) on the left, your standing on the right. */
+.dash-daily-split {
     flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: space-around;
-    gap: 6px;
-    padding: 6px 0;
+    gap: 8px;
+    min-height: 0;
+    align-items: stretch;
 }
 
-.dash-podium-slot {
+.dash-daily-top3 {
+    flex: 1.15;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+}
+
+.dash-top3-row {
+    display: grid;
+    grid-template-columns: 16px 1fr auto;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--mix-surface-muted) 50%, transparent);
+    font-size: .78rem;
+}
+
+.dash-top3-place {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.dash-top3-name {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+}
+
+.dash-top3-grade {
+    font-weight: 800;
+    font-size: .72rem;
+}
+
+.dash-daily-mine {
     flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
-    padding: 8px 4px;
-    border-radius: 8px;
-    background: color-mix(in srgb, var(--mix-surface-muted) 55%, transparent);
+    justify-content: center;
+    gap: 2px;
+    padding: 8px;
+    border-radius: 9px;
     text-align: center;
 }
 
-.dash-podium-medal {
-    font-size: 18px;
-    line-height: 1;
+.dash-daily-mine-empty {
+    background: color-mix(in srgb, var(--mix-surface-muted) 45%, transparent);
 }
 
-.dash-podium-name {
-    max-width: 100%;
-    font-size: .72rem;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.dash-podium-score {
-    font-size: .7rem;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-}
-
-.dash-daily-youbar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: auto;
-    padding: 8px 11px;
-    border-radius: 9px;
-    font-variant-numeric: tabular-nums;
-}
-
-.dash-youbar-label {
-    font-size: .62rem;
-    letter-spacing: .08em;
+.dash-mine-label {
+    font-size: .6rem;
+    letter-spacing: .1em;
     text-transform: uppercase;
     font-weight: 800;
+    opacity: .85;
 }
 
-.dash-youbar-rank {
-    font-size: 1rem;
+.dash-mine-rank {
+    font-size: 1.6rem;
     font-weight: 800;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
 }
 
-.dash-youbar-score {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 700;
+.dash-mine-line {
+    font-size: .74rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
 }
 
 .weekly-lb-verified {

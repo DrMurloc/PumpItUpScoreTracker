@@ -3473,4 +3473,10 @@
   <data name="manual" xml:space="preserve">
     <value>manuale</value>
   </data>
+  <data name="Not played" xml:space="preserve">
+    <value>Non giocato</value>
+  </data>
+  <data name="{0} on the board" xml:space="preserve">
+    <value>{0} in classifica</value>
+  </data>
 </root>
