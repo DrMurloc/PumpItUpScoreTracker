@@ -45,7 +45,9 @@ builder.Services.Configure<JsonSerializerOptions>(o =>
 });
 
 // Add services to the container.
-builder.Services.AddRazorPages();
+// The front door owns "/" via its @page directive; a Razor Page can declare only one
+// route, so "/Login" is attached as a second route to the same page here.
+builder.Services.AddRazorPages(options => options.Conventions.AddPageRoute("/FrontDoor", "Login"));
 builder.Services.AddServerSideBlazor(options =>
 {
     options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromHours(1);

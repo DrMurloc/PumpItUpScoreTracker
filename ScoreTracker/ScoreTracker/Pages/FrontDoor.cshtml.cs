@@ -74,11 +74,25 @@ public sealed class FrontDoorModel : PageModel
         ? $"{Ledger.TotalRecords / 1_000_000d:0.#}M+"
         : Ledger.TotalRecords.ToString("N0");
 
+    /// <summary>
+    ///     True when this render should boot the Blazor app instead of the front door —
+    ///     a signed-in visitor at "/". The dispatcher owns both "/" and "/Login": anon
+    ///     gets the circuit-free front door, signed-in gets the dashboard, and "/Login"
+    ///     for the signed-in just bounces home.
+    /// </summary>
+    public bool ShowApp { get; private set; }
+
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
-        // Same guards the Blazor login page had: signed-in users skip the door, and a
-        // fresh local database routes the developer to the populate harness.
-        if (User.Identity?.IsAuthenticated == true) return Redirect("/Charts");
+        var isLoginRoute = Request.Path.StartsWithSegments("/Login", StringComparison.OrdinalIgnoreCase);
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            if (isLoginRoute) return Redirect("/");
+            ShowApp = true;
+            return Page();
+        }
+
+        // A fresh local database routes the developer to the populate harness.
         if (_devAuth.Value.Enabled &&
             !(await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken)).Any())
             return Redirect("/Dev/Populate");

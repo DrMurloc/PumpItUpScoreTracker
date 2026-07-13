@@ -1,4 +1,6 @@
-﻿@page "/"
+﻿@* The "/" route moved to the FrontDoor dispatcher (front door for anon, dashboard
+   for signed-in). This stays the Blazor host for every other route via the fallback. *@
+@page
 @using System.Globalization
 @using Microsoft.AspNetCore.Localization
 @namespace ScoreTracker.Web.Pages

@@ -1,13 +1,34 @@
-@page "/Login"
+@page "/"
 @using System.Globalization
+@using Microsoft.AspNetCore.Localization
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Pages
 @using ScoreTracker.Web.Services.Theming
 @model ScoreTracker.Web.Pages.FrontDoorModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @inject Microsoft.Extensions.Localization.IStringLocalizer<ScoreTracker.Web.App> L
 @{
-    Layout = null;
+    if (Model.ShowApp)
+    {
+        @* Signed-in "/" boots the Blazor app under the normal shell; the Router
+           resolves "/" to the home dashboard. Mirror the host's culture-cookie write. *@
+        Layout = "_Layout";
+        HttpContext.Response.Cookies.Append(
+            CookieRequestCultureProvider.DefaultCookieName,
+            CookieRequestCultureProvider.MakeCookieValue(
+                new RequestCulture(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture)));
+    }
+    else
+    {
+        Layout = null;
+    }
 }
+@if (Model.ShowApp)
+{
+    <component type="typeof(ScoreTracker.Web.App)" render-mode="Server" />
+}
+else
+{
 <!DOCTYPE html>
 <html lang="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
 <head>
@@ -358,3 +379,4 @@
 
 </body>
 </html>
+}
