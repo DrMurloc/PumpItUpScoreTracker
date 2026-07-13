@@ -199,6 +199,60 @@ public sealed class RecapSagaTests
     }
 
     [Fact]
+    public async Task TotalPumbilityRebuildPatchesOnlyTheProjectionTotal()
+    {
+        // A stored recap whose finale projection carries a bogus old two-pool total. The
+        // rebuild must overwrite ONLY TotalPumbility (with the merged top-50) and leave the
+        // Singles/Doubles projections, the projected titles, and ComputedAt untouched.
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(23).Build();
+        var dbl = new ChartBuilder().WithType(ChartType.Double).WithLevel(23).Build();
+        var ctx = new HandlerContext(single, dbl);
+        ctx.GivenPass(single, 975_000, PhoenixPlate.MarvelousGame);
+        ctx.GivenPass(dbl, 960_000, PhoenixPlate.FairGame);
+
+        var staleProjection = new RecapPhoenix2Projection(
+            SinglesPumbility: 111, DoublesPumbility: 222, TotalPumbility: 999_999,
+            ProjectedSinglesTitle: "[S] INTERMEDIATE LV.1", ProjectedDoublesTitle: "[D] INTERMEDIATE LV.1",
+            CarriedOverPasses: 2, TotalPasses: 2);
+        var existing = new PlayerRecap(PlayerRecap.CurrentSchemaVersion, Now.AddDays(-3), null,
+            new RecapRollup(10, Now.AddYears(-1), 100, 1, .5, null, null, null, null, 0, 0,
+                Array.Empty<RecapStepArtist>()),
+            RecapPlayerType.Competitive, 985_000,
+            Array.Empty<RecapEarnedBadge>(), null,
+            Array.Empty<RecapRareChart>(), Array.Empty<RecapScoreHighlight>(), Array.Empty<RecapRareChart>(),
+            null,
+            new RecapTrophies(Array.Empty<RecapRareTitle>(), Array.Empty<RecapPlateCount>(), null, null,
+                Array.Empty<RecapGradeCount>(), 1, 0),
+            staleProjection);
+        ctx.Recaps.Setup(r => r.GetRecapUserIds(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { UserId });
+        ctx.Recaps.Setup(r => r.GetRecap(UserId, MixEnum.Phoenix, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existing);
+
+        await ctx.Saga.Consume(ctx.Context(new RebuildRecapTotalPumbilityCommand()));
+
+        Assert.NotNull(ctx.Saved);
+        var projection = ctx.Saved!.Projection!;
+        // Two carried charts fit one merged top-50, so the total is their summed P2
+        // contributions (int-floored once), computed via the public scoring config.
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var expectedTotal = (int)(
+            scoring.GetScore(ChartType.Single, DifficultyLevel.From(23), PhoenixScore.From(975_000),
+                PhoenixPlate.MarvelousGame)
+            + scoring.GetScore(ChartType.Double, DifficultyLevel.From(23), PhoenixScore.From(960_000),
+                PhoenixPlate.FairGame));
+        Assert.Equal(expectedTotal, projection.TotalPumbility);
+        Assert.NotEqual(999_999, projection.TotalPumbility);
+        // The rest of the projection — and the recap — rides through untouched.
+        Assert.Equal(111, projection.SinglesPumbility);
+        Assert.Equal(222, projection.DoublesPumbility);
+        Assert.Equal("[S] INTERMEDIATE LV.1", projection.ProjectedSinglesTitle);
+        Assert.Equal("[D] INTERMEDIATE LV.1", projection.ProjectedDoublesTitle);
+        Assert.Equal(existing.ComputedAt, ctx.Saved.ComputedAt);
+        Assert.Same(existing.Trophies, ctx.Saved.Trophies);
+    }
+
+    [Fact]
     public async Task ImpressivePgPoolIsTheTopFiftyByLevel()
     {
         // Fifty level-20 PGs fill the pool; a level-1 PG with the rarest holder count
@@ -677,6 +731,14 @@ public sealed class RecapSagaTests
         public ConsumeContext<RebuildRecapPgCardsCommand> Context(RebuildRecapPgCardsCommand message)
         {
             var ctx = new Mock<ConsumeContext<RebuildRecapPgCardsCommand>>();
+            ctx.SetupGet(c => c.Message).Returns(message);
+            ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+            return ctx.Object;
+        }
+
+        public ConsumeContext<RebuildRecapTotalPumbilityCommand> Context(RebuildRecapTotalPumbilityCommand message)
+        {
+            var ctx = new Mock<ConsumeContext<RebuildRecapTotalPumbilityCommand>>();
             ctx.SetupGet(c => c.Message).Returns(message);
             ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
             return ctx.Object;

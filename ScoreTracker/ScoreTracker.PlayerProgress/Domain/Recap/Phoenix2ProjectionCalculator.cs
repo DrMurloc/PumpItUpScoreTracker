@@ -8,9 +8,9 @@ namespace ScoreTracker.PlayerProgress.Domain.Recap;
 
 /// <summary>
 ///     Projects Phoenix scores onto Phoenix 2: carried-over charts are rescored at their
-///     P2 levels with the P2 formula (plate-priced, break-zeroing), pooled into the two
-///     official int-floored top-50 sums — mirroring PlayerRatingSaga's P2 math — and
-///     mapped to the highest [S]/[D] pumbility-ladder titles those pools reach.
+///     P2 levels with the P2 formula (plate-priced, break-zeroing). Singles and Doubles are
+///     each a top-50 pool; the overall total is the top 50 across both types. The [S]/[D]
+///     ladder titles come from the per-type pools.
 /// </summary>
 internal static class Phoenix2ProjectionCalculator
 {
@@ -27,11 +27,18 @@ internal static class Phoenix2ProjectionCalculator
         var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
         var singles = PoolTotal(ChartType.Single);
         var doubles = PoolTotal(ChartType.Double);
+        // Overall total: the top 50 across both types.
+        var total = (int)carried
+            .Select(x => scoring.GetScore(x.Chart.Type, x.Chart.Level, x.Record.Score!.Value,
+                x.Record.Plate ?? PhoenixPlate.RoughGame, x.Record.IsBroken))
+            .OrderByDescending(r => r)
+            .Take(50)
+            .Sum();
 
         return new RecapPhoenix2Projection(
             singles,
             doubles,
-            singles + doubles,
+            total,
             ProjectedTitle(PumbilityPool.Singles, singles),
             ProjectedTitle(PumbilityPool.Doubles, doubles),
             phoenixBests.Count(b => !b.IsBroken && phoenix2Charts.ContainsKey(b.ChartId)),

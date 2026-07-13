@@ -2659,6 +2659,9 @@
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>Reconstruire les cartes PG du récap</value>
   </data>
+  <data name="Rebuild Recap Total PUMBILITY" xml:space="preserve">
+    <value>Reconstruire le PUMBILITY total du récap</value>
+  </data>
   <data name="Site Theme" xml:space="preserve">
     <value>Thème du site</value>
   </data>

@@ -17,7 +17,7 @@ Phoenix 1's per-folder progress display leans on level-based titles (Intermediat
 1. **Percentage lamps** — folder progress as % thresholds on the existing lamp ladder (Pass %, AA %, … PG %).
    - *Growth behavior*: honest but demotivating — percentages drop when songs land.
 2. **Top-N folder points ("folder Pumbility")** — sum of best N chart ratings within the folder, fixed N.
-   - *Growth behavior*: immune by construction (same trick as Pumbility's top-50; matches the P2 two-pool additive formula players are learning).
+   - *Growth behavior*: immune by construction (same trick as Pumbility's top-50; matches the P2 additive formula players are learning).
    - Owner invented Pumbility; strongest mathematical footing.
 3. **Threshold tiers ("folder plates")** — Bronze/Silver/Gold/Sapphire folder tiers at fixed pass-%/grade gates, **achieved-forever** (trophy semantics dodge regression).
    - Maps directly onto the plate metal ladder and rarity ramp tokens from the 2026-07 theme system; renders as one glanceable strip.

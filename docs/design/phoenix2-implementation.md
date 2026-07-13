@@ -42,13 +42,15 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
 - **Phoenix 2 PUMBILITY confirmed different and implemented.** Reverse-engineered from the live
   pumbility rankings + per-chart boards, validated against owner-collected real per-chart values
   (48 pinned as golden unit tests). Per chart: `Base(level) × (gradeMultiplier + plateBonus)` —
-  ADDITIVE grade+plate, `Base = 130 + 5·L + 5·max(0, L−24)`; totals are two independent top-50
-  pools (Singles + Doubles) summed. Grades 1.35 (A+) → 1.50 (SSS+); plates RG 0.000 → PG +0.020
+  ADDITIVE grade+plate, `Base = 130 + 5·L + 5·max(0, L−24)`; the per-type Singles and
+  Doubles totals are each a top-50 pool, but overall PUMBILITY is ONE merged top-50 across
+  both types (corrected 2026-07-13, see below). Grades 1.35 (A+) → 1.50 (SSS+); plates RG 0.000 → PG +0.020
   (doubles-verified table applied to both types — the community's singles-specific UG/EG/RG values
   treated as data error, owner call 2026-07-09; TODO in `ScoringConfiguration`). Below-A+ grades
   pattern-extended, unverified. Broken plays never count (owner-confirmed). Everything dispatches
   through `ScoringConfiguration.PumbilityScoring(mix, …)`; Phoenix arm byte-identical.
-  `SkillRating = SinglesRating + DoublesRating` on P2 rows; S/D pool gains mint their own
+  `SkillRating` on P2 rows is the merged top-50, so it no longer equals
+  `SinglesRating + DoublesRating`; S/D pool gains mint their own
   milestones (P2 only). Exit path for constant adjustments: edit the config, hit the admin
   "Recalculate Phoenix 2 Player Ratings" button (`RecalculateMixRatingsCommand` bus sweep).
 - **All 272 Phoenix 2 titles landed** (crawled authenticated from my_page/title.php 2026-07-09):
@@ -69,6 +71,27 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   account — and fail loudly when unset. Repository reads/clears/world-rankings went per-mix
   end-to-end (chart-board names collide across mixes). The three OfficialLeaderboards pages
   un-gated; `start-phoenix2-leaderboard-import` runs Sundays 16:30 UTC.
+
+## Update 2026-07-13 — overall PUMBILITY is a merged top-50, not two pools summed (bug fix)
+
+The 2026-07-09 note was wrong on one point: overall ("All" tab) PUMBILITY is a SINGLE top-50
+across the merged Singles+Doubles set, not the two per-type pools summed. Reverse-engineered
+from the live `pumbility_ranking.php` board (authenticated crawl, 597 dual-type players matched
+across the All / `s` / `d` tabs): every player satisfies `max(S,D) <= All <= S+D`, and ~19% sit
+strictly below `S+D` — impossible under a two-pool sum, which forces `All == S+D`. The per-type
+Singles/Doubles pools (the `?t=s` / `?t=d` boards, and `SinglesRating`/`DoublesRating`) were
+already correct.
+
+Fixed: `PlayerRatingSaga.RecalculateCore` (`SkillRating` = merged top-50, same shape as Phoenix),
+`Phoenix2TitleList.BuildProgress` (Total ladder = merged top-50), and `PumbilityProjectionSaga`
+(one mixed pool). The per-chart formula, `SinglesRating`, and `DoublesRating` are unchanged.
+Locked by a live canary (`Phoenix2PumbilityAggregationTests`) and a >50-chart unit test
+(`Phoenix2SkillRatingIsAMergedTop50NotTwoPoolsSummed`). **Post-deploy: press the admin
+"Recalculate Phoenix 2 Player Ratings" button once** — stored P2 `SkillRating` and Total-tier
+titles carry the old inflated two-pool total until the sweep recomputes them. The season-recap
+finale's projected total has its own targeted **"Rebuild Recap Total PUMBILITY"** admin button
+(`RebuildRecapTotalPumbilityCommand` — patches just that field on stored recaps; new recaps are
+already correct); cosmetic, so run it only if you want existing recaps updated.
 
 ## Commit sequence
 
