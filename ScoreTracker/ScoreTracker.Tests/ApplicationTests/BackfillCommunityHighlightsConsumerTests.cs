@@ -1,11 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MassTransit;
 using MediatR;
 using Moq;
 using ScoreTracker.Communities.Application;
-using ScoreTracker.Communities.Contracts.Commands;
+using ScoreTracker.Communities.Contracts.Messages;
 using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -14,7 +14,7 @@ using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
 
-public sealed class BackfillCommunityHighlightsHandlerTests
+public sealed class BackfillCommunityHighlightsConsumerTests
 {
     private static readonly DateTimeOffset Now = new(2026, 7, 12, 0, 0, 0, TimeSpan.Zero);
 
@@ -23,7 +23,7 @@ public sealed class BackfillCommunityHighlightsHandlerTests
             Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>());
 
     [Fact]
-    public async Task CapturesEachReconstructedEventForTheWindowAndReturnsTheCount()
+    public async Task CapturesEachReconstructedEventForTheWindow()
     {
         var first = Reconstructed();
         var second = Reconstructed();
@@ -31,12 +31,15 @@ public sealed class BackfillCommunityHighlightsHandlerTests
         mediator.Setup(m => m.Send(It.IsAny<GetRecentHighlightEventsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { first, second });
         var capturer = new Mock<ICommunityHighlightCapturer>();
-        var handler = new BackfillCommunityHighlightsHandler(mediator.Object, capturer.Object,
+        var consumer = new BackfillCommunityHighlightsConsumer(mediator.Object, capturer.Object,
             FakeDateTime.At(Now).Object);
 
-        var count = await handler.Handle(new BackfillCommunityHighlightsCommand(7), CancellationToken.None);
+        var ctx = new Mock<ConsumeContext<BackfillCommunityHighlightsCommand>>();
+        ctx.SetupGet(c => c.Message).Returns(new BackfillCommunityHighlightsCommand(7));
+        ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
 
-        Assert.Equal(2, count);
+        await consumer.Consume(ctx.Object);
+
         capturer.Verify(c => c.Capture(first, It.IsAny<CancellationToken>()), Times.Once);
         capturer.Verify(c => c.Capture(second, It.IsAny<CancellationToken>()), Times.Once);
         // The window is Now − 7 days.

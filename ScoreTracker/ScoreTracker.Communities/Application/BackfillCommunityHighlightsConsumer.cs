@@ -1,0 +1,36 @@
+using MassTransit;
+using MediatR;
+using ScoreTracker.Communities.Contracts.Messages;
+using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
+
+namespace ScoreTracker.Communities.Application;
+
+/// <summary>
+///     Runs the community-feed backfill off the bus (CH7): pulls reconstructed events from PlayerProgress
+///     (published query — no SQL onto its tables) and runs each through the shared capturer, exactly as
+///     the live consumer would. Idempotent, so a re-published trigger writes nothing new. Off the request
+///     thread in its own message scope — the heavy reconstruction never blocks (or outlives) the admin circuit.
+/// </summary>
+internal sealed class BackfillCommunityHighlightsConsumer : IConsumer<BackfillCommunityHighlightsCommand>
+{
+    private readonly ICommunityHighlightCapturer _capturer;
+    private readonly IDateTimeOffsetAccessor _dateTime;
+    private readonly IMediator _mediator;
+
+    public BackfillCommunityHighlightsConsumer(IMediator mediator, ICommunityHighlightCapturer capturer,
+        IDateTimeOffsetAccessor dateTime)
+    {
+        _mediator = mediator;
+        _capturer = capturer;
+        _dateTime = dateTime;
+    }
+
+    public async Task Consume(ConsumeContext<BackfillCommunityHighlightsCommand> context)
+    {
+        var since = _dateTime.Now.AddDays(-Math.Abs(context.Message.Days));
+        var events = await _mediator.Send(new GetRecentHighlightEventsQuery(since), context.CancellationToken);
+        foreach (var reconstructed in events)
+            await _capturer.Capture(reconstructed, context.CancellationToken);
+    }
+}

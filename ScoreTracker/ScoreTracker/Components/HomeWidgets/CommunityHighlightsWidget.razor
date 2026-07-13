@@ -58,7 +58,7 @@ else
                                 @if (win.ChartId is { } chartId && _charts.TryGetValue(chartId, out var chart))
                                 {
                                     <span class="dash-ch-chart @(EditMode ? "" : "dash-clickable")"
-                                          @onclick="() => OnChartClick.InvokeAsync(chart)">
+                                          @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart))">
                                         <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
                                         <span class="dash-ch-song">@chart.Song.Name</span>
                                     </span>
@@ -91,7 +91,7 @@ else
     [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
     [Parameter] public MixEnum EffectiveMix { get; set; }
     [Parameter] public bool EditMode { get; set; }
-    [Parameter] public EventCallback<Chart> OnChartClick { get; set; }
+    [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
 
     private const int FeedTake = 30;
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };

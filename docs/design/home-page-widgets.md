@@ -515,9 +515,11 @@ user belongs to**. The widget reads via `GetMyCommunityHighlightsQuery` (members
 names/avatars resolved fresh via `IUserReader`). A weekly Hangfire purge drops 30-day-old rows. The table
 stores a JSON `Payload` of the win list (the `PlayerSeasonRecap` precedent).
 
-An admin **Backfill Community Highlights** button (last 7 days) reconstructs capture events from the
-persisted highlight + title-milestone tables (`GetRecentHighlightEventsQuery`, a PlayerProgress published
-query) and runs each through the same `CommunityHighlightCapturer` the live consumer uses — idempotent
+An admin **Backfill Community Highlights** button (last 7 days) publishes a bus trigger — the backfill
+runs off the request thread in its own consumer, never blocking or outliving the admin circuit — that
+reconstructs capture events from the persisted highlight + title-milestone tables
+(`GetRecentHighlightEventsQuery`, a PlayerProgress published query) and runs each through the same
+`CommunityHighlightCapturer` the live consumer uses — idempotent
 (EventId = SessionId; `AddForUserCommunities` skips existing events). **PGs are not backfilled**: they live
 in the score journal, not the flagged-only highlight table, so only flag-based wins + titles reconstruct;
 PGs accrue live from capture.
