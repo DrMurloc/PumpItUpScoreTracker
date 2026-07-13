@@ -202,10 +202,11 @@ scores flow → visible → announced → weekly bug fix. End-to-end live after 
 
 The widget renders the board inline, not just your standing.
 
-- **1×1**: top three + your row (under a "Your standing" divider when you're outside it).
-- **1×2 / 1×3**: the full board (up to 50), scrollable (`dash-scroll`), with your row **sticky-pinned** to
-  the bottom when you sit past 50. Supported sizes moved from `1x1/2x1` to **`1x1/1x2/1x3`** — the layout
-  keys on `Rows > 1` (tall), not columns.
+- **1×1**: a **podium** — the top three as medals (community members tinted green, you blue if you're up
+  there) with your row anchored below. Not a list: a three-row list clipped in the small square.
+- **1×2 / 1×3**: the full board (up to 50), scrollable (`dash-scroll`), with your row **always floating** at
+  the bottom below the board (the board flex-scrolls, the row stays put). Supported sizes moved from
+  `1x1/2x1` to **`1x1/1x2/1x3`** — the layout keys on `Rows > 1` (tall), not columns.
 - **Row** = place (rarity ramp) · avatar + flag + name · **grade + score**. Plate and the source tags stay
   off the card; they live in the dialog.
 - **Glows**: your row blue (`--daily-you`), community members green (`--daily-community`) — shared
