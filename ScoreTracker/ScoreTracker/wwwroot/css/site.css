@@ -2070,6 +2070,23 @@ html.nav-away .page-dock,
     flex: none;
 }
 
+/* Widget-pushed title-bar content (§2.3 header slot) — e.g. Quick Record's selected chart.
+   Sits at the right of the title; the mini-art/bubble/✕ line up compactly. */
+.dash-head-slot {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.dash-head-slot .qr-mini-art img {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+
 .dash-drawer-body {
     padding: 16px;
 }
