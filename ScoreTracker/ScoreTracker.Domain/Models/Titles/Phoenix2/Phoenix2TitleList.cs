@@ -354,9 +354,8 @@ public static class Phoenix2TitleList
         foreach (var title in progress)
             title.ApplyAttempt(charts[attempt.ChartId], attempt);
 
-        // The PUMBILITY-pool titles gate on the official Phoenix 2 values: per chart
-        // Base x (grade + plate), floored per pool; [S]/[D] each a top 50 of their own type â€”
-        // mirroring PlayerRatingSaga's stats computation exactly.
+        // Each contribution is Base x (grade + plate). [S] and [D] gate on the top 50 of
+        // their own type; Total gates on the top 50 across both types.
         var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
         var contributions = attemptList
             .Where(a => a.Score != null && charts.ContainsKey(a.ChartId))
@@ -367,8 +366,6 @@ public static class Phoenix2TitleList
             .Select(c => c.Value).OrderByDescending(v => v).Take(50).Sum();
         var doubles = (int)contributions.Where(c => c.Type == ChartType.Double)
             .Select(c => c.Value).OrderByDescending(v => v).Take(50).Sum();
-        // Total gates on ONE merged top 50 across both types (the live "All" board is a
-        // single merged pool, not the two per-type pools summed).
         var total = (int)contributions
             .Select(c => c.Value).OrderByDescending(v => v).Take(50).Sum();
         foreach (var title in progress)

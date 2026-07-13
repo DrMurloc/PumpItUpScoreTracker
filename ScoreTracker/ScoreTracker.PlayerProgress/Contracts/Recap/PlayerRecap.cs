@@ -151,7 +151,7 @@ public sealed record RecapGradeCount(PhoenixLetterGrade Grade, int Count);
 
 /// <summary>
 ///     Phoenix 1 scores rescored on Phoenix 2 levels with the P2 formula: per-type Singles
-///     and Doubles top-50 pools, a merged-top-50 overall total (NOT singles + doubles), and
+///     and Doubles top-50 pools, an overall total from the top 50 across both types, and
 ///     the highest [S]- and [D]-ladder pumbility titles the per-type pools reach.
 /// </summary>
 [ExcludeFromCodeCoverage]

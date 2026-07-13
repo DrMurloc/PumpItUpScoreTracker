@@ -363,11 +363,10 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
     }
 
     /// <summary>
-    ///     Patch-only sweep: recomputes ONLY the Phoenix 2 finale's projected
-    ///     <c>TotalPumbility</c> on every stored recap and writes nothing else — the targeted
-    ///     backfill for the 2026-07-13 aggregation fix (overall PUMBILITY is a single merged
-    ///     top-50, not the two per-type pools summed). Recaps without a projection, and those
-    ///     that no longer carry anything onto Phoenix 2, are left untouched.
+    ///     Patch-only sweep: recomputes the Phoenix 2 finale's projected
+    ///     <c>TotalPumbility</c> on every stored recap and writes nothing else. Recaps
+    ///     without a projection, and those that no longer carry anything onto Phoenix 2, are
+    ///     left untouched.
     /// </summary>
     public async Task Consume(ConsumeContext<RebuildRecapTotalPumbilityCommand> context)
     {

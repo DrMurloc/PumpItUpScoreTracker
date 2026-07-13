@@ -482,11 +482,9 @@ public sealed class PlayerRatingSagaTests
     [Fact]
     public async Task Phoenix2SkillRatingIsAMergedTop50NotTwoPoolsSummed()
     {
-        // The discriminator between the merged-top-50 model and the old two-pool-sum bug:
-        // 30 singles (level 23) worth more than 30 doubles (level 20), all clean SG plays.
-        // Singles pool = all 30 singles; Doubles pool = all 30 doubles; but the OVERALL
-        // top-50 keeps only 50 of the 60 — the 30 singles plus the 20 best doubles — so
-        // Total < Singles + Doubles. The old two-pool sum would (wrongly) report equality.
+        // 30 singles (level 23) outrate 30 doubles (level 20), all clean SG plays. Each
+        // per-type pool holds all 30 of its type, but the overall top-50 keeps only 50 of
+        // the 60 — the 30 singles plus the 20 best doubles — so Total < Singles + Doubles.
         var userId = Guid.NewGuid();
         var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
         var vs = scoring.GetScore(ChartType.Single, DifficultyLevel.From(23), PhoenixScore.From(995000),

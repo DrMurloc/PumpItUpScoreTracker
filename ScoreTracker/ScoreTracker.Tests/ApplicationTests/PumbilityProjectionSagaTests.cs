@@ -170,9 +170,7 @@ public sealed class PumbilityProjectionSagaTests
     [Fact]
     public async Task Phoenix2RanksOneMergedPoolLikePhoenix()
     {
-        // Phoenix 2's overall PUMBILITY is a single merged top-50 (confirmed against the
-        // live "All" board), so the projection ranks ONE mixed pool — the same shape as
-        // Phoenix, only the per-chart scoring config differs.
+        // Phoenix 2 ranks ONE mixed pool (ChartType null), never a per-type pool.
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
         var ctx = new ProjectionContext().WithCharts(chart).WithTopScore(chart.Id);
 
@@ -261,12 +259,9 @@ public sealed class PumbilityProjectionSagaTests
     [Fact]
     public async Task Phoenix2GainsMeasureAgainstTheMergedPool()
     {
-        // Phoenix 2's overall PUMBILITY is a single merged top-50, so a doubles chart's
-        // gain is measured against the SAME merged baseline as a singles chart — not a
-        // separate doubles pool. The merged pool here is full (50 deliberately-low singles
-        // set a low, nonzero baseline both candidates clear), so BOTH gains subtract that
-        // baseline. The old two-pool code gave the doubles chart a full-contribution gain
-        // against an empty doubles pool (baseline 0) — this is the discriminating case.
+        // One merged pool, so a doubles chart's gain is measured against the SAME baseline
+        // as a singles chart. The pool here is full (50 deliberately-low singles set a low,
+        // nonzero baseline both candidates clear), so both gains subtract that baseline.
         var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
         var poolCharts = Enumerable.Range(0, 50)
             .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build())

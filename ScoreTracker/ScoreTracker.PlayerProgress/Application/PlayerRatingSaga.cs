@@ -236,14 +236,7 @@ internal sealed class PlayerRatingSaga :
                 .Take(50).Select(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score))
                 .ToArray());
 
-        // Overall PUMBILITY is ONE top-50 across the merged Singles+Doubles pool — for
-        // BOTH mixes. Reverse-engineered from the live Phoenix 2 pumbility_ranking board
-        // (2026-07-13): the "All" tab satisfies max(S,D) <= All <= S+D across every
-        // dual-type player, i.e. a single merged top-50, NOT the two per-type pools summed
-        // (that would force All == S+D, which 112/597 sampled players violate). The
-        // SinglesRating/DoublesRating below stay the separate per-type top-50 pools that
-        // back the ?t=s / ?t=d boards and the [S]/[D] title ladders, so Total is no longer
-        // equal to Singles + Doubles.
+        // Overall rating is the mixed top-50; Singles/Doubles below are the per-type top-50s.
         var skillPool = top50;
         var skillRating = (int)top50.Sum(s => s.Rating);
 

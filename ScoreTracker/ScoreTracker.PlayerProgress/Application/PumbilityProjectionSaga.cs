@@ -39,12 +39,8 @@ namespace ScoreTracker.PlayerProgress.Application
                 .ToDictionary(s => s.ChartId);
             var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
 
-            // Both mixes rank ONE mixed top-50 pool, so the gain baseline ("lowest of the
-            // top 50") is a single number that a chart of either type can displace.
-            // Phoenix 2's overall PUMBILITY was confirmed to be a merged top-50, not two
-            // per-type pools summed (see PlayerRatingSaga.RecalculateCore), so its
-            // projection takes Phoenix's shape — only the per-chart scoring config differs
-            // (plate-priced on Phoenix 2).
+            // One mixed top-50 pool shared by both chart types: a single gain baseline
+            // (the pool's lowest rating) that a chart of either type can displace.
             var mixed = await BuildPool(null, request.UserId, mix, charts, scoring, cancellationToken);
             var pools = new Dictionary<ChartType, PoolState>
             {

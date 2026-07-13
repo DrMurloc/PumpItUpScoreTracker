@@ -13,8 +13,7 @@ namespace ScoreTracker.Tests.Integration.LiveSite;
 ///         <item>every dual-type player satisfies max(S,D) &lt;= All &lt;= S+D, and</item>
 ///         <item>some strictly satisfy All &lt; S+D (impossible if All == S+D always).</item>
 ///     </list>
-///     This is what caught the 2026-07-13 fix: the app had been summing the two pools. Goes
-///     red if PIU ever changes back to (or the parser mis-reads) a two-pool total. Gated on
+///     Goes red if PIU ever changes to (or the parser mis-reads) a two-pool total. Gated on
 ///     the same PIU creds as the other live-site tests; skipped in CI.
 /// </summary>
 [ExcludeFromCodeCoverage]
@@ -69,8 +68,8 @@ public sealed class Phoenix2PumbilityAggregationTests : IClassFixture<PiuGameSes
             "Found players whose All PUMBILITY is outside [max(S,D), S+D] — not a merged top-50: " +
             string.Join(", ", violations.Take(5).Select(r => $"{r.Name} All={r.All:N0} S={r.S:N0} D={r.D:N0}")));
 
-        // The killer: a two-pool sum would force All == S+D for everyone. A merged top-50
-        // drops charts once a player has >50 across both, so some sit strictly below S+D.
+        // A two-pool sum would force All == S+D for everyone; a merged top-50 drops charts
+        // once a player has >50 across both, so some sit strictly below S+D.
         var strictlyBelowSum = dual.Count(r => r.All < r.S + r.D - Slack);
         _output.WriteLine($"dual players: {dual.Count}; strictly below S+D (merged signature): {strictlyBelowSum}");
         Assert.True(strictlyBelowSum > 0,
