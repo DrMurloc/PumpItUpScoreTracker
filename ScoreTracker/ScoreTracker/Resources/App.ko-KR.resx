@@ -3330,4 +3330,7 @@
   <data name="Include my own wins" xml:space="preserve">
     <value>내 성과도 포함</value>
   </data>
+  <data name="Cleared all of {0}" xml:space="preserve">
+    <value>{0} 전부 클리어</value>
+  </data>
 </root>

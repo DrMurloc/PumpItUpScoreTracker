@@ -3329,4 +3329,7 @@
   <data name="Include my own wins" xml:space="preserve">
     <value>Incluir mis propios logros</value>
   </data>
+  <data name="Cleared all of {0}" xml:space="preserve">
+    <value>Completó todo {0}</value>
+  </data>
 </root>

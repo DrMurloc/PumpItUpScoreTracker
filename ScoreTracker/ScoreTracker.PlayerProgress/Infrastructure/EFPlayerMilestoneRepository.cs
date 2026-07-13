@@ -73,16 +73,16 @@ internal sealed class EFPlayerMilestoneRepository : IPlayerMilestoneRepository
             .Cast<PlayerMilestoneRecord>();
     }
 
-    public async Task<IEnumerable<(Guid UserId, MixEnum Mix, PlayerMilestoneRecord Record)>> GetTitleCompletionsSince(
+    public async Task<IEnumerable<(Guid UserId, MixEnum Mix, PlayerMilestoneRecord Record)>> GetFeedMilestonesSince(
         DateTimeOffset since, CancellationToken cancellationToken)
     {
-        var kind = MilestoneKind.TitleCompleted.ToString();
+        var kinds = new[] { MilestoneKind.TitleCompleted.ToString(), MilestoneKind.FolderPassLamp.ToString() };
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var rows = await database.Set<PlayerMilestoneEntity>()
-            .Where(e => e.OccurredAt >= since && e.Kind == kind && e.SessionId != null)
+            .Where(e => e.OccurredAt >= since && kinds.Contains(e.Kind) && e.SessionId != null)
             .ToArrayAsync(cancellationToken);
         return rows.Select(e => (e.UserId, MixIds.ToEnum(e.MixId),
-            new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, e.SessionId, e.OccurredAt, e.OldValue,
+            new PlayerMilestoneRecord(Enum.Parse<MilestoneKind>(e.Kind), e.SessionId, e.OccurredAt, e.OldValue,
                 e.NewValue, e.Title, e.Detail)));
     }
 }

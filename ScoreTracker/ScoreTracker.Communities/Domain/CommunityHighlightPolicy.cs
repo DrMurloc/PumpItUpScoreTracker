@@ -57,6 +57,13 @@ internal static class CommunityHighlightPolicy
 
         foreach (var milestone in e.Milestones)
         {
+            // A full-folder clear (100% passed) rides its own milestone — Detail is the folder ("D23").
+            if (milestone.Kind == MilestoneKind.FolderPassLamp && milestone.Detail is { Length: > 0 } folder)
+            {
+                wins.Add((PriorityFolderComplete, new SignificantWin(WinKind.FolderComplete, Difficulty: folder)));
+                continue;
+            }
+
             if (milestone.Kind != MilestoneKind.TitleCompleted || milestone.Title is null) continue;
             var title = milestone.Title;
             if (IsBigTitle(e.Mix, title))
@@ -89,13 +96,13 @@ internal static class CommunityHighlightPolicy
         {
             var share = PgShare(chart.Id, snapshot);
             return share < PgRarityThreshold
-                ? (PriorityNotablePg, Win(WinKind.NotablePg, chart, rarityShare: share))
+                ? (PriorityNotablePg, Win(WinKind.NotablePg, chart, change.NewScore, rarityShare: share))
                 : null;
         }
 
         if (change.Flags.HasFlag(HighlightFlags.PumbilityTop50)
             && change.Detail?.PumbilityRank is { } rank && rank <= PumbilityTopRank)
-            return (PriorityTopPumbility, Win(WinKind.TopPumbility, chart, rank: rank));
+            return (PriorityTopPumbility, Win(WinKind.TopPumbility, chart, change.NewScore, rank: rank));
 
         if (change.Flags.HasFlag(HighlightFlags.ScoreQuality90)
             && change.Detail is { PeerCount: >= PeerEliteMinCohort } detail
@@ -103,19 +110,20 @@ internal static class CommunityHighlightPolicy
         {
             var topPercent = Math.Max(1,
                 (int)Math.Ceiling(100.0 * ((detail.PeerBetterCount ?? 0) + 1) / detail.PeerCount!.Value));
-            return (PriorityPeerElite, Win(WinKind.PeerElite, chart, rank: topPercent));
+            return (PriorityPeerElite, Win(WinKind.PeerElite, chart, change.NewScore, rank: topPercent));
         }
 
         if (change.Flags.HasFlag(HighlightFlags.FolderDebut)
             && change.Detail?.FolderDebutOrdinal is { } ordinal && ordinal <= FolderFirstMaxOrdinal)
-            return (PriorityFolderFirst, Win(WinKind.FolderFirst, chart, rank: ordinal));
+            return (PriorityFolderFirst, Win(WinKind.FolderFirst, chart, change.NewScore, rank: ordinal));
 
         return null;
     }
 
-    private static SignificantWin Win(WinKind kind, Chart chart, double? rarityShare = null, int? rank = null) =>
+    private static SignificantWin Win(WinKind kind, Chart chart, int? score, double? rarityShare = null,
+        int? rank = null) =>
         new(kind, ChartId: chart.Id, ChartName: chart.Song.Name.ToString(), Difficulty: chart.DifficultyString,
-            RarityShare: rarityShare, Rank: rank);
+            RarityShare: rarityShare, Rank: rank, Score: score);
 
     private static bool IsPerfectGame(ScoreHighlightsCapturedEvent.HighlightedChange change) =>
         string.Equals(change.Plate, PerfectGamePlate, StringComparison.OrdinalIgnoreCase);
@@ -139,13 +147,14 @@ internal static class CommunityHighlightPolicy
             .Select(t => t.Name.ToString())
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-    // Priority: lower renders first. Rarity-defined wins lead, then the huge-number wins.
+    // Priority: lower renders first. Rarity-defined wins lead, then completionist + huge-number wins.
     private const int PriorityRareTitle = 0;
     private const int PriorityNotablePg = 1;
-    private const int PriorityTopPumbility = 2;
-    private const int PriorityBigTitle = 3;
-    private const int PriorityPeerElite = 4;
-    private const int PriorityFolderFirst = 5;
+    private const int PriorityFolderComplete = 2;
+    private const int PriorityTopPumbility = 3;
+    private const int PriorityBigTitle = 4;
+    private const int PriorityPeerElite = 5;
+    private const int PriorityFolderFirst = 6;
 }
 
 /// <summary>

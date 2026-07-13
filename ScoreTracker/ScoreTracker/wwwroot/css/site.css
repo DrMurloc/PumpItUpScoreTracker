@@ -2120,6 +2120,35 @@ html.nav-away .page-dock,
     white-space: nowrap;
 }
 
+/* 1-wide win: image + bubble + score stacked over a subtitle detail. */
+.dash-ch-win-narrow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: .1rem;
+}
+
+.dash-ch-line {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+}
+
+.dash-ch-sub {
+    color: var(--mix-ink-muted);
+    font-size: .72rem;
+    line-height: 1.15;
+}
+
+.dash-ch-score {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.dash-ch-score-right {
+    margin-left: auto;
+}
+
 /* Drag chrome: handle (desktop pointer only), dragged-cell dim, insertion marker. */
 
 .dash-drag-handle {

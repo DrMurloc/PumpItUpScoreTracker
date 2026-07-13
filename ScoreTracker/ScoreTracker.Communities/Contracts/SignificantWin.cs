@@ -11,10 +11,11 @@ namespace ScoreTracker.Communities.Contracts;
 ///     <list type="bullet">
 ///         <item>BigTitle — TitleName</item>
 ///         <item>RareTitle — TitleName + RarityShare (holder fraction, e.g. 0.004)</item>
-///         <item>FolderFirst — Chart* + Rank (folder ordinal 1/2/3)</item>
-///         <item>TopPumbility — Chart* + Rank (pumbility rank, e.g. 2 for #2)</item>
-///         <item>PeerElite — Chart* + Rank ("top N%" among the ±0.5 cohort)</item>
-///         <item>NotablePg — Chart* + RarityShare (fraction of active players holding the PG)</item>
+///         <item>FolderComplete — Difficulty (the folder, e.g. "D23") — every chart in it passed</item>
+///         <item>FolderFirst — Chart* + Score + Rank (folder ordinal 1/2/3)</item>
+///         <item>TopPumbility — Chart* + Score + Rank (pumbility rank, e.g. 2 for #2)</item>
+///         <item>PeerElite — Chart* + Score + Rank ("top N%" among the ±0.5 cohort)</item>
+///         <item>NotablePg — Chart* + Score + RarityShare (fraction of active players holding the PG)</item>
 ///     </list>
 /// </summary>
 [ExcludeFromCodeCoverage]
@@ -25,12 +26,14 @@ public sealed record SignificantWin(
     string? Difficulty = null,
     string? TitleName = null,
     double? RarityShare = null,
-    int? Rank = null);
+    int? Rank = null,
+    int? Score = null);
 
 public enum WinKind
 {
     BigTitle,
     RareTitle,
+    FolderComplete,
     FolderFirst,
     TopPumbility,
     PeerElite,

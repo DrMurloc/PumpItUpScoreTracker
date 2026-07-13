@@ -54,25 +54,60 @@ else
                     <div class="dash-ch-wins">
                         @foreach (var win in record.Wins)
                         {
-                            <div class="dash-ch-win">
-                                @if (win.ChartId is { } chartId && _charts.TryGetValue(chartId, out var chart))
+                            @if (win.ChartId is { } chartId && _charts.TryGetValue(chartId, out var chart))
+                            {
+                                @if (Narrow)
                                 {
-                                    <span class="dash-ch-chart @(EditMode ? "" : "dash-clickable")"
-                                          @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart))">
-                                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
-                                        <span class="dash-ch-song">@chart.Song.Name</span>
-                                    </span>
-                                    <span class="dash-ch-why">@Caption(win)</span>
+                                    @* 1-wide: image + bubble + score on one line, detail as a subtitle beneath. *@
+                                    <div class="dash-ch-win dash-ch-win-narrow">
+                                        <div class="dash-ch-line @(EditMode ? "" : "dash-clickable")"
+                                             @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart))">
+                                            <SongImage Song="chart.Song" Small="true"/>
+                                            <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                                            @if (win.Score is { } narrowScore)
+                                            {
+                                                <span class="dash-ch-score dash-ch-score-right">@narrowScore.ToString("N0")</span>
+                                            }
+                                        </div>
+                                        <div class="dash-ch-sub">@Caption(win)</div>
+                                    </div>
                                 }
-                                else if (win.TitleName != null)
+                                else
                                 {
+                                    @* 2-wide+: image + bubble + name + detail, score right-aligned. *@
+                                    <div class="dash-ch-win">
+                                        <span class="dash-ch-chart @(EditMode ? "" : "dash-clickable")"
+                                              @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart))">
+                                            <SongImage Song="chart.Song" Small="true"/>
+                                            <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                                            <span class="dash-ch-song">@chart.Song.Name</span>
+                                        </span>
+                                        <span class="dash-ch-why">@Caption(win)</span>
+                                        @if (win.Score is { } wideScore)
+                                        {
+                                            <span class="dash-ch-score dash-ch-score-right">@wideScore.ToString("N0")</span>
+                                        }
+                                    </div>
+                                }
+                            }
+                            else if (win.Kind == WinKind.FolderComplete)
+                            {
+                                <div class="dash-ch-win">
+                                    <span class="dash-ch-why">🎉 @L["Cleared all of {0}", win.Difficulty ?? ""]</span>
+                                </div>
+                            }
+                            else if (win.TitleName != null)
+                            {
+                                <div class="dash-ch-win">
                                     <span class="dash-ch-why">🏅 <b>@Bracket(win.TitleName)</b> @TitleSuffix(win)</span>
-                                }
-                                else if (win.ChartName != null)
-                                {
+                                </div>
+                            }
+                            else if (win.ChartName != null)
+                            {
+                                <div class="dash-ch-win">
                                     <span class="dash-ch-why">@win.Difficulty @win.ChartName · @Caption(win)</span>
-                                }
-                            </div>
+                                </div>
+                            }
                         }
                     </div>
                 </div>
@@ -97,6 +132,9 @@ else
 
     private const int FeedTake = 30;
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+
+    // 1-wide cells stack the score over a subtitle; 2-wide+ put it on one right-aligned line.
+    private bool Narrow => SizePreset.TryParse(Widget.SizePreset)?.Columns == 1;
 
     private bool _loaded;
     private string? _loadedFor;

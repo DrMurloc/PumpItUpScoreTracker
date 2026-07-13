@@ -3449,4 +3449,7 @@
   <data name="Include my own wins" xml:space="preserve">
     <value>Includi le mie vittorie</value>
   </data>
+  <data name="Cleared all of {0}" xml:space="preserve">
+    <value>Tutto {0} superato</value>
+  </data>
 </root>

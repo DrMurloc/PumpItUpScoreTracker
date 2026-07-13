@@ -28,11 +28,15 @@ public sealed class CommunityHighlightPolicyTests
 
     private static ScoreHighlightsCapturedEvent.HighlightedChange Change(Guid chartId,
         HighlightFlags flags = HighlightFlags.None, HighlightDetail? detail = null,
-        string? plate = null, bool isBroken = false) =>
-        new(chartId, IsNewPass: true, OldScore: null, NewScore: null, plate, isBroken, flags, detail);
+        string? plate = null, bool isBroken = false, int? newScore = null) =>
+        new(chartId, IsNewPass: true, OldScore: null, NewScore: newScore, plate, isBroken, flags, detail);
 
     private static PlayerMilestoneRecord TitleCompleted(string title) =>
         new(MilestoneKind.TitleCompleted, SessionId: null, When, OldValue: null, NewValue: null, title, Detail: null);
+
+    private static PlayerMilestoneRecord FolderPassLamp(string folder) =>
+        new(MilestoneKind.FolderPassLamp, SessionId: null, When, OldValue: null, NewValue: null, Title: null,
+            Detail: folder);
 
     private static Chart Chart(Guid id, int level, ChartType type = ChartType.Double, string song = "Bee") =>
         new ChartBuilder().WithId(id).WithLevel(level).WithType(type).WithSongName(song).Build();
@@ -225,6 +229,37 @@ public sealed class CommunityHighlightPolicyTests
             Charts(Chart(chartId, 24)), Snapshot(pg: (chartId, 100), activePlayers: 1463));
 
         Assert.Empty(wins);
+    }
+
+    [Fact]
+    public void AFullFolderClearIsAFolderCompleteWin()
+    {
+        var wins = CommunityHighlightPolicy.Classify(
+            Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                FolderPassLamp("D23")),
+            new Dictionary<Guid, Chart>(), Snapshot());
+
+        var win = Assert.Single(wins);
+        Assert.Equal(WinKind.FolderComplete, win.Kind);
+        Assert.Equal("D23", win.Difficulty);
+    }
+
+    [Fact]
+    public void AChartWinCarriesTheScore()
+    {
+        var chartId = Guid.NewGuid();
+        var wins = CommunityHighlightPolicy.Classify(
+            Event(MixEnum.Phoenix,
+                new[]
+                {
+                    Change(chartId, HighlightFlags.PumbilityTop50, new HighlightDetail(PumbilityRank: 3),
+                        newScore: 998_000)
+                }),
+            Charts(Chart(chartId, 26)), Snapshot());
+
+        var win = Assert.Single(wins);
+        Assert.Equal(WinKind.TopPumbility, win.Kind);
+        Assert.Equal(998_000, win.Score);
     }
 
     [Fact]

@@ -493,6 +493,7 @@ Classified at capture from the event's own flags/detail plus two rarity readers.
 |---|---|---|
 | `BigTitle` | any Phoenix **difficulty** title or P2 **pumbility** title completed | `Milestones` TitleCompleted + `PhoenixTitleList`/`Phoenix2TitleList` concrete type |
 | `RareTitle` | any title held by **< 1%** of titled players | `ITitleRepository.GetTitleAggregations` ÷ `CountTitledUsers` (the recap Snowflake rule) |
+| `FolderComplete` | every chart in a (type, level) folder passed — 100% | `FolderPassLamp` milestone (Detail = folder, e.g. "D23") |
 | `FolderFirst` | first 3 passes in a (type, level) folder — `FolderDebutOrdinal ≤ 3` | event `HighlightDetail` |
 | `TopPumbility` | `PumbilityRank ≤ 10` | event `HighlightDetail` (PumbilityTop50 flag) |
 | `PeerElite` | **> 95th** percentile vs the ±0.5 competitive cohort | event `HighlightDetail` `Peer{Count,BetterCount}` → `(better+1)/count ≤ .05` |
@@ -520,9 +521,9 @@ runs off the request thread in its own consumer, never blocking or outliving the
 reconstructs capture events from the persisted highlight + title-milestone tables
 (`GetRecentHighlightEventsQuery`, a PlayerProgress published query) and runs each through the same
 `CommunityHighlightCapturer` the live consumer uses — idempotent
-(EventId = SessionId; `AddForUserCommunities` skips existing events). **PGs are not backfilled**: they live
-in the score journal, not the flagged-only highlight table, so only flag-based wins + titles reconstruct;
-PGs accrue live from capture.
+(EventId = SessionId; `AddForUserCommunities` skips existing events). The highlight table stores neither
+score nor plate, so each highlighted chart is enriched from the player's current best — which supplies the
+score the feed renders **and** the plate that lets PGs backfill too (one best-scores read per user).
 
 ### Commit plan
 

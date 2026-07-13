@@ -15,8 +15,11 @@ internal interface IPlayerMilestoneRepository
     Task<IEnumerable<PlayerMilestoneRecord>> GetMilestonesBySessions(Guid userId, IEnumerable<Guid> sessionIds,
         CancellationToken cancellationToken);
 
-    /// <summary>Every title completion across all users on or after the cutoff — community-feed backfill source.</summary>
-    Task<IEnumerable<(Guid UserId, MixEnum Mix, PlayerMilestoneRecord Record)>> GetTitleCompletionsSince(
+    /// <summary>
+    ///     Every title completion + full-folder clear (FolderPassLamp) across all users on or after the
+    ///     cutoff — the community-feed backfill source.
+    /// </summary>
+    Task<IEnumerable<(Guid UserId, MixEnum Mix, PlayerMilestoneRecord Record)>> GetFeedMilestonesSince(
         DateTimeOffset since, CancellationToken cancellationToken);
 }
 
