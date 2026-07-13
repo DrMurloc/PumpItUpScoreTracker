@@ -11,21 +11,28 @@ namespace ScoreTracker.Web.Accessors;
 public sealed class HttpContextUserAccessor : ICurrentUserAccessor
 {
     private readonly IHttpContextAccessor _context;
+    private readonly AmbientUserContext _ambient;
 
-    public HttpContextUserAccessor(IHttpContextAccessor httpContext)
+    public HttpContextUserAccessor(IHttpContextAccessor httpContext, AmbientUserContext ambient)
     {
         _context = httpContext;
+        _ambient = ambient;
     }
 
-    public bool IsLoggedIn => _context?.HttpContext?.User.Identity?.IsAuthenticated ?? false;
+    private bool HttpAuthenticated => _context?.HttpContext?.User.Identity?.IsAuthenticated ?? false;
 
-    public User User => !IsLoggedIn
-        ? throw new UserNotLoggedInException()
-        : _context.HttpContext?.User.GetUser() ?? throw new UserNotLoggedInException();
+    // An authenticated HttpContext wins; otherwise fall back to the user a background job set.
+    public bool IsLoggedIn => HttpAuthenticated || _ambient.User != null;
 
+    public User User => HttpAuthenticated
+        ? _context.HttpContext!.User.GetUser()
+        : _ambient.User ?? throw new UserNotLoggedInException();
 
     public async Task SetCurrentUser(User user)
     {
+        // Always set the ambient user so a no-HttpContext scope (a bus consumer) has a current
+        // user; when an HttpContext exists, also issue the sign-in cookie.
+        _ambient.User = user;
         var context = _context.HttpContext;
         if (context == null) return;
         var principal = user.GetClaimsPrincipal();

@@ -6,9 +6,13 @@ using MassTransit;
 using MediatR;
 using Moq;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Application;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Tests.TestData;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -27,7 +31,7 @@ public sealed class RunOfficialImportConsumerTests
     public async Task RunsTheImportForTheMessagesUserAndSid()
     {
         var mediator = new Mock<IMediator>();
-        var consumer = new RunOfficialImportConsumer(mediator.Object);
+        var consumer = new RunOfficialImportConsumer(mediator.Object, new Mock<ICurrentUserAccessor>().Object);
         var userId = Guid.NewGuid();
 
         await consumer.Consume(Context(new RunOfficialImportCommand(userId, MixEnum.Phoenix, "sid123", "card1",
@@ -40,12 +44,29 @@ public sealed class RunOfficialImportConsumerTests
     }
 
     [Fact]
+    public async Task EstablishesTheJobsUserForTheConsumerScope()
+    {
+        var userId = Guid.NewGuid();
+        var user = new UserBuilder().WithId(userId).Build();
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<GetUserByIdQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        var currentUser = new Mock<ICurrentUserAccessor>();
+        var consumer = new RunOfficialImportConsumer(mediator.Object, currentUser.Object);
+
+        await consumer.Consume(Context(new RunOfficialImportCommand(userId, MixEnum.Phoenix, "sid123", "card1",
+            "TAG", false, false)));
+
+        currentUser.Verify(c => c.SetCurrentUser(It.Is<User>(u => u.Id == userId)), Times.Once);
+    }
+
+    [Fact]
     public async Task InvalidCredentialAtTheSiteSurfacesAsAStatusError()
     {
         var mediator = new Mock<IMediator>();
         mediator.Setup(m => m.Send(It.IsAny<ExecuteImportCommand>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidCredentialException("bad"));
-        var consumer = new RunOfficialImportConsumer(mediator.Object);
+        var consumer = new RunOfficialImportConsumer(mediator.Object, new Mock<ICurrentUserAccessor>().Object);
         var userId = Guid.NewGuid();
 
         await consumer.Consume(Context(new RunOfficialImportCommand(userId, MixEnum.Phoenix, "sid123", "card1",

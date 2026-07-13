@@ -3,6 +3,8 @@ using MassTransit;
 using MediatR;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Exceptions;
+using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 
 namespace ScoreTracker.OfficialMirror.Application;
@@ -13,15 +15,23 @@ namespace ScoreTracker.OfficialMirror.Application;
 internal sealed class RunOfficialImportConsumer : IConsumer<RunOfficialImportCommand>
 {
     private readonly IMediator _mediator;
+    private readonly ICurrentUserAccessor _currentUser;
 
-    public RunOfficialImportConsumer(IMediator mediator)
+    public RunOfficialImportConsumer(IMediator mediator, ICurrentUserAccessor currentUser)
     {
         _mediator = mediator;
+        _currentUser = currentUser;
     }
 
     public async Task Consume(ConsumeContext<RunOfficialImportCommand> context)
     {
         var message = context.Message;
+
+        // A bus consumer has no HttpContext, so establish the job's user for this scope; the
+        // import's inner handlers (UI settings, game-profile writes) then resolve it as usual.
+        var user = await _mediator.Send(new GetUserByIdQuery(message.UserId), context.CancellationToken);
+        if (user != null) await _currentUser.SetCurrentUser(user);
+
         try
         {
             await _mediator.Send(new ExecuteImportCommand(message.UserId, message.Mix, message.Sid, message.CardId,
