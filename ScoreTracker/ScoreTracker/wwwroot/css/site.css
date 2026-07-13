@@ -1944,6 +1944,40 @@ html.nav-away .page-dock,
     font-variant-numeric: tabular-nums;
 }
 
+.qr-saved-grade {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--mix-ink);
+}
+
+/* All-mixes mode: the runtime picker + the mix chip on the recording header. The chip is
+   neutral (not the theme accent) so it doesn't imply the active theme is the record mix. */
+.qr-mix-field {
+    flex: none;
+}
+
+.qr-grade-field {
+    flex: none;
+    min-width: 92px;
+}
+
+.qr-mixchip {
+    font-family: var(--font-display);
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--mix-ink-muted);
+    background: var(--mix-surface-muted);
+    border: 1px solid rgba(255, 255, 255, .08);
+    padding: 1px 6px;
+    border-radius: 5px;
+    flex: none;
+    max-width: 88px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Column stagger (round 3): 4 on desktop, 3 on small desktop/tablet, 2 on landscape
    phones, 1 on portrait phones. Spans clamp to the column count. */
 @media (max-width: 1279.98px) {

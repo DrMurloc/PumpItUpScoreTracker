@@ -13,8 +13,10 @@
 
 @* §4.2 Quick Record — the arcade widget: search a chart, punch a score, Save, on to the
    next. Reuses ChartSelector; the record inputs are purpose-built (NOT EditChartGrid — the
-   ChartDetailsDialog round-11 lesson). One UpdatePhoenixBestAttemptCommand per save, then
-   always back to search. Pure recorder: the chart display is not clickable, no dialog. *@
+   ChartDetailsDialog round-11 lesson). Pure recorder: the chart display is not clickable.
+   "All mixes" config adds a runtime mix picker and records through the mix's scoring model —
+   Phoenix/Phoenix 2 keep score+plate+derived-grade; XX and older use the legacy letter-grade
+   path (no plate). ChartSelector + the record row stay hidden until a mix is chosen. *@
 
 @if (!CurrentUser.IsLoggedIn)
 {
@@ -37,7 +39,14 @@ else if (_savedFlash != null)
             <span class="qr-saved-title">@L["Recorded"]</span>
             <span class="qr-saved-song">@_savedFlash.ChartName</span>
             <span class="qr-saved-detail">
-                <LetterGradeIcon Grade="_savedFlash.Grade" IsBroken="_savedFlash.IsBroken" Height="14"/>
+                @if (_savedFlash.PhoenixGrade != null)
+                {
+                    <LetterGradeIcon Grade="_savedFlash.PhoenixGrade" IsBroken="_savedFlash.IsBroken" Height="14"/>
+                }
+                else if (_savedFlash.LegacyGrade != null)
+                {
+                    <span class="qr-saved-grade">@_savedFlash.LegacyGrade@(_savedFlash.IsBroken ? " ⨯" : "")</span>
+                }
                 @_savedFlash.ScoreText
             </span>
         </div>
@@ -46,21 +55,14 @@ else if (_savedFlash != null)
 else
 {
     <div class="qr-body">
-        @if (_chart == null)
+        @if (_chart != null)
         {
-            @* Search — the persistent selector + hint + which board this posts to. *@
-            <ChartSelector Mix="_mix" Charts="_chartList" ChartIdSelected="OnChartPicked"
-                           Label="@L["Search a chart"]" Placeholder="@L["Search a chart"]"
-                           Disabled="EditMode" Variant="Variant.Outlined" Margin="Margin.Dense"/>
-            <div class="qr-hint">@L["Name, or shorthand like S18"]</div>
-            <div class="qr-target">
-                <span class="qr-target-dot"></span>@L["Posts to {0}", MixName(_mix)]
-            </div>
-        }
-        else
-        {
-            @* Recording — the pick (not clickable) + score/plate/broken/save. *@
+            @* Recording — the pick (not clickable) + score/grade/plate/broken/save. *@
             <div class="qr-selected">
+                @if (_allMixes && _mix != null)
+                {
+                    <span class="qr-mixchip" title="@_mix.Value.GetName()">@_mix.Value.GetName()</span>
+                }
                 <span class="qr-mini-art"><SongImage Song="_chart.Song" Small="true"></SongImage></span>
                 <DifficultyBubble Chart="_chart" Small="true"></DifficultyBubble>
                 <span class="qr-selected-name" title="@_chart.Song.Name">@_chart.Song.Name</span>
@@ -68,30 +70,91 @@ else
                                title="@L["Change chart"]" Disabled="EditMode || _isSaving"
                                OnClick="ClearChart"/>
             </div>
-            <div class="qr-scorerow">
-                <MudNumericField T="int?" @bind-Value="_score" Immediate="true" Label="@L["Score"]"
-                                 Min="0" Max="1000000" HideSpinButtons="true" Clearable="true"
-                                 Disabled="EditMode || _isSaving" Variant="Variant.Outlined"
-                                 Margin="Margin.Dense" Class="qr-score-field"/>
-                @if (_derivedGrade != null)
-                {
-                    <LetterGradeIcon Grade="_derivedGrade" IsBroken="_broken" Height="26"/>
-                }
-            </div>
-            <div class="qr-actionrow">
-                <MudSelect T="PhoenixPlate?" @bind-Value="_plate" Label="@L["Plate"]" Clearable="true"
-                           Dense="true" Margin="Margin.Dense" Disabled="EditMode || _isSaving"
-                           Class="qr-plate-field">
-                    @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+            @if (_isLegacy)
+            {
+                @* Legacy (XX and older): letter grade is an input, no plate, no auto-grade. *@
+                <div class="qr-scorerow">
+                    <MudNumericField T="int?" @bind-Value="_score" Immediate="true" Label="@L["Score"]"
+                                     Min="0" Max="XXScore.Max" HideSpinButtons="true" Clearable="true"
+                                     Disabled="EditMode || _isSaving" Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" Class="qr-score-field"/>
+                    <MudSelect T="XXLetterGrade?" @bind-Value="_letterGrade" Label="@L["Letter Grade"]" Clearable="true"
+                               Dense="true" Margin="Margin.Dense" Disabled="EditMode || _isSaving"
+                               Class="qr-grade-field">
+                        @foreach (var grade in Enum.GetValues<XXLetterGrade>())
+                        {
+                            <MudSelectItem T="XXLetterGrade?" Value="@grade">@grade.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+                <div class="qr-actionrow">
+                    <MudCheckBox T="bool" @bind-Value="_broken" Label="@L["Broken"]" Dense="true"
+                                 Disabled="EditMode || _isSaving"></MudCheckBox>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="qr-save-btn"
+                               Disabled="EditMode || _isSaving || !CanSave" OnClick="Save">@L["Save"]</MudButton>
+                </div>
+            }
+            else
+            {
+                @* Phoenix / Phoenix 2: score → derived grade, plate, broken. *@
+                <div class="qr-scorerow">
+                    <MudNumericField T="int?" @bind-Value="_score" Immediate="true" Label="@L["Score"]"
+                                     Min="0" Max="1000000" HideSpinButtons="true" Clearable="true"
+                                     Disabled="EditMode || _isSaving" Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" Class="qr-score-field"/>
+                    @if (_derivedGrade != null)
                     {
-                        <MudSelectItem T="PhoenixPlate?" Value="@plate">@plate.GetName()</MudSelectItem>
+                        <LetterGradeIcon Grade="_derivedGrade" IsBroken="_broken" Height="26"/>
+                    }
+                </div>
+                <div class="qr-actionrow">
+                    <MudSelect T="PhoenixPlate?" @bind-Value="_plate" Label="@L["Plate"]" Clearable="true"
+                               Dense="true" Margin="Margin.Dense" Disabled="EditMode || _isSaving"
+                               Class="qr-plate-field">
+                        @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                        {
+                            <MudSelectItem T="PhoenixPlate?" Value="@plate">@plate.GetName()</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudCheckBox T="bool" @bind-Value="_broken" Label="@L["Broken"]" Dense="true"
+                                 Disabled="EditMode || _isSaving"></MudCheckBox>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="qr-save-btn"
+                               Disabled="EditMode || _isSaving || !CanSave" OnClick="Save">@L["Save"]</MudButton>
+                </div>
+            }
+        }
+        else
+        {
+            @* Search — All mode leads with the mix picker; the selector stays disabled
+               (and the record fields absent) until a mix is chosen. *@
+            @if (_allMixes)
+            {
+                <MudSelect T="MixEnum?" Value="_mix" ValueChanged="OnMixPicked" Label="@L["Record to"]"
+                           Placeholder="@L["Select a mix"]" Dense="true" Margin="Margin.Dense"
+                           Disabled="EditMode" Class="qr-mix-field">
+                    @foreach (var mix in AllMixesOrdered)
+                    {
+                        <MudSelectItem T="MixEnum?" Value="@((MixEnum?)mix)">@mix.GetName()</MudSelectItem>
                     }
                 </MudSelect>
-                <MudCheckBox T="bool" @bind-Value="_broken" Label="@L["Broken"]" Dense="true"
-                             Disabled="EditMode || _isSaving"></MudCheckBox>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="qr-save-btn"
-                           Disabled="EditMode || _isSaving || _score == null" OnClick="Save">@L["Save"]</MudButton>
-            </div>
+            }
+            <ChartSelector Mix="@(_mix ?? MixEnum.Phoenix)" Charts="_chartList" ChartIdSelected="OnChartPicked"
+                           Label="@L["Search a chart"]" Placeholder="@L["Search a chart"]"
+                           Disabled="EditMode || _mix == null" Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            @if (_mix == null)
+            {
+                <div class="qr-hint">@L["Select a mix"]</div>
+            }
+            else
+            {
+                <div class="qr-hint">@L["Name, or shorthand like S18"]</div>
+                @if (!_allMixes)
+                {
+                    <div class="qr-target">
+                        <span class="qr-target-dot"></span>@L["Posts to {0}", _mix.Value.GetName()]
+                    </div>
+                }
+            }
         }
     </div>
 }
@@ -104,73 +167,137 @@ else
 @code {
 
     // The five render-contract parameters (§2.2). OnChartClick/RefreshToken are declared
-    // to satisfy the contract but unused: Quick Record is a pure recorder — no chart-click
-    // dialog, no header refresh.
+    // to satisfy the contract but unused: Quick Record is a pure recorder.
     [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
     [Parameter] public MixEnum EffectiveMix { get; set; }
     [Parameter] public bool EditMode { get; set; }
     [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
     [Parameter] public int RefreshToken { get; set; }
 
+    // Pinned/follow scope stays Phoenix-era (the documented default); "All mixes" is the
+    // explicit escape hatch to every mix via the runtime picker.
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
-    private sealed record SavedFlash(string ChartName, PhoenixLetterGrade? Grade, bool IsBroken, string ScoreText);
+    // Newest first — Phoenix 2 / Phoenix / XX lead, ancient mixes trail.
+    private static readonly MixEnum[] AllMixesOrdered =
+        Enum.GetValues<MixEnum>().OrderByDescending(m => m.DisplayOrder()).ToArray();
+
+    private sealed record SavedFlash(string ChartName, PhoenixLetterGrade? PhoenixGrade, string? LegacyGrade,
+        bool IsBroken, string ScoreText);
 
     private bool _loaded;
     private string? _loadedFor;
-    private MixEnum _mix = MixEnum.Phoenix;
+    private bool _allMixes;
+    private MixEnum? _mix;
     private IReadOnlyList<Chart> _chartList = Array.Empty<Chart>();
 
     private Chart? _chart;
     private int? _score;
     private PhoenixPlate? _plate;
+    private XXLetterGrade? _letterGrade;
     private bool _broken;
     private bool _isSaving;
     private SavedFlash? _savedFlash;
     private CancellationTokenSource? _flashCts;
 
-    // Live letter grade off the typed score — display only; the domain derives the grade
-    // from the score on save, we never send it.
+    private bool _isLegacy => _mix is { } m && m.UsesLegacyScoring();
+
+    // Phoenix needs a score; legacy needs a letter grade (its primary datum).
+    private bool CanSave => _isLegacy ? _letterGrade != null : _score != null;
+
+    // Live letter grade off the typed score (Phoenix only) — display only; the domain
+    // derives the grade from the score on save, we never send it.
     private PhoenixLetterGrade? _derivedGrade =>
-        _score is { } v && PhoenixScore.TryParse(v, out var s) ? s.LetterGrade : null;
+        !_isLegacy && _score is { } v && PhoenixScore.TryParse(v, out var s) ? s.LetterGrade : null;
 
     protected override async Task OnParametersSetAsync()
     {
         var config = WidgetConfigJson.Read<QuickRecordConfig>(Widget.ConfigJson);
-        var resolved = config.Mix is { } m && Supported.Contains(m) ? m
+        var allMixes = config.AllMixes;
+        var pinned = allMixes
+            ? (MixEnum?)null
+            : config.Mix is { } m && Supported.Contains(m) ? m
             : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
 
-        var signature = $"{Widget.Id}|{resolved}";
+        var signature = $"{Widget.Id}|{allMixes}|{pinned}";
         if (signature == _loadedFor) return;
         _loadedFor = signature;
-        _mix = resolved;
-
-        // A new context resets the recorder (a half-typed entry for the old mix is stale).
+        _allMixes = allMixes;
         ResetEntry();
-        if (!CurrentUser.IsLoggedIn) { _loaded = true; return; }
 
-        _loaded = false;
-        var charts = await ChartCatalog.GetCharts(_mix);
+        if (!CurrentUser.IsLoggedIn)
+        {
+            _loaded = true;
+            return;
+        }
+
+        if (allMixes)
+        {
+            // The picker drives everything; no mix (and no chart list) until the user chooses.
+            _mix = null;
+            _chartList = Array.Empty<Chart>();
+            _loaded = true;
+        }
+        else
+        {
+            _mix = pinned;
+            _loaded = false;
+            await LoadCharts(pinned!.Value);
+            _loaded = true;
+        }
+    }
+
+    private async Task LoadCharts(MixEnum mix)
+    {
+        var charts = await ChartCatalog.GetCharts(mix);
         _chartList = charts.Values.ToArray();
-        _loaded = true;
+    }
+
+    private async Task OnMixPicked(MixEnum? mix)
+    {
+        _mix = mix;
+        ResetEntry();
+        if (mix != null) await LoadCharts(mix.Value);
+        else _chartList = Array.Empty<Chart>();
     }
 
     private async Task OnChartPicked(Chart chart)
     {
+        if (_mix == null) return;
         _chart = chart;
-        // Prefill the current best so it's an edit, not a blank (matches EditChartGrid/dialog).
-        var best = await Mediator.Send(new GetPhoenixRecordQuery(chart.Id, _mix));
-        if (best is { Score: not null })
+
+        // Prefill the current best so it's an edit, not a blank — per scoring model.
+        if (_isLegacy)
         {
-            _score = (int)best.Score.Value;
-            _plate = best.Plate;
-            _broken = best.IsBroken;
+            var best = await Mediator.Send(new GetXXBestChartAttemptQuery(chart.Id, _mix.Value));
+            if (best.BestAttempt != null)
+            {
+                _letterGrade = best.BestAttempt.LetterGrade;
+                _broken = best.BestAttempt.IsBroken;
+                _score = best.BestAttempt.Score is { } xs ? (int?)xs : null;
+            }
+            else
+            {
+                _letterGrade = null;
+                _broken = false;
+                _score = null;
+            }
         }
         else
         {
-            _score = null;
-            _plate = null;
-            _broken = false;
+            var best = await Mediator.Send(new GetPhoenixRecordQuery(chart.Id, _mix.Value));
+            if (best is { Score: not null })
+            {
+                _score = (int)best.Score.Value;
+                _plate = best.Plate;
+                _broken = best.IsBroken;
+            }
+            else
+            {
+                _score = null;
+                _plate = null;
+                _broken = false;
+            }
         }
 
         // ChartSelector's callback is a plain delegate (no EventCallback auto-render), and
@@ -180,6 +307,7 @@ else
 
     private void ClearChart()
     {
+        // Keep the chosen mix (rapid-fire the same board); just drop the chart + entry.
         ResetEntry();
     }
 
@@ -188,20 +316,33 @@ else
         _chart = null;
         _score = null;
         _plate = null;
+        _letterGrade = null;
         _broken = false;
     }
 
     private async Task Save()
     {
-        if (_chart == null || _score == null) return;
+        if (_chart == null || _mix == null || !CanSave) return;
         _isSaving = true;
         try
         {
-            var parsed = PhoenixScore.TryParse(_score.Value, out var score) ? (PhoenixScore?)score : null;
-            await Mediator.Send(new UpdatePhoenixBestAttemptCommand(_chart.Id, _broken, parsed, _plate, Mix: _mix));
+            if (_isLegacy)
+            {
+                XXScore? score = _score is { } v ? (XXScore?)v : null;
+                await Mediator.Send(new UpdateXXBestAttemptCommand(_chart.Id, _letterGrade, _broken, score,
+                    Mix: _mix.Value));
+                _savedFlash = new SavedFlash(_chart.Song.Name, null, _letterGrade?.ToString(), _broken,
+                    _score is { } s ? s.ToString("N0") : "");
+            }
+            else
+            {
+                var parsed = PhoenixScore.TryParse(_score!.Value, out var s) ? (PhoenixScore?)s : null;
+                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(_chart.Id, _broken, parsed, _plate,
+                    Mix: _mix.Value));
+                _savedFlash = new SavedFlash(_chart.Song.Name, parsed?.LetterGrade, null, _broken,
+                    parsed?.ToString() ?? "");
+            }
 
-            // In-widget flash instead of the command's snackbar (avoids a double confirm).
-            _savedFlash = new SavedFlash(_chart.Song.Name, parsed?.LetterGrade, _broken, parsed?.ToString() ?? "");
             ResetEntry();
             _isSaving = false;
 
@@ -231,8 +372,6 @@ else
         _savedFlash = null;
         await InvokeAsync(StateHasChanged);
     }
-
-    private static string MixName(MixEnum mix) => mix == MixEnum.Phoenix2 ? "Phoenix 2" : mix.ToString();
 
     public void Dispose()
     {

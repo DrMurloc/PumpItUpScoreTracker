@@ -437,6 +437,9 @@
               "Pro2"
             ],
             "nullable": true
+          },
+          "allMixes": {
+            "type": "boolean"
           }
         }
       }
