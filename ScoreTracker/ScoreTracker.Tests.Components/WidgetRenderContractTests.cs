@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Components;
 using ScoreTracker.HomePage.Contracts;
@@ -10,12 +8,13 @@ using Xunit;
 namespace ScoreTracker.Tests.Components;
 
 /// <summary>
-///     WidgetHost supplies a fixed set of parameters to every widget by reflection
-///     (DynamicComponent), so a widget that fails to declare one compiles cleanly and throws only
-///     at render — Community Highlights hit this twice across a shell-contract merge (OnChartClick's
-///     type change and the new RefreshToken). This ratchet asserts every registered widget declares
-///     the full render contract (§2.2). If WidgetHost.BuildParameters gains a parameter, update this
-///     Contract list AND every widget in the same PR.
+///     Home-widget render params are bound reflectively by <c>DynamicComponent</c> in
+///     <c>WidgetHost</c>, so a widget that misses a parameter or declares the wrong type still
+///     compiles — and only blows up at render (unknown-parameter / <see cref="InvalidCastException" />).
+///     That trap has bitten a main-merge before (the shell moved <c>OnChartClick</c> from
+///     <c>EventCallback&lt;Chart&gt;</c> to <c>EventCallback&lt;ChartClickContext&gt;</c> and added
+///     <c>RefreshToken</c>). This pins the five-param contract for every registered widget so a shell
+///     change — or a new widget — can't ship a render crash. See home-page-widgets.md §2.2.
 /// </summary>
 public sealed class WidgetRenderContractTests
 {
@@ -29,19 +28,23 @@ public sealed class WidgetRenderContractTests
     };
 
     [Fact]
-    public void EveryRegisteredWidgetDeclaresTheFullRenderContract()
+    public void EveryRegisteredWidgetDeclaresTheRenderContract()
     {
-        var failures = (
-            from descriptor in WidgetRegistry.All
-            from param in Contract
-            let prop = descriptor.RenderComponent.GetProperty(param.Name,
-                BindingFlags.Public | BindingFlags.Instance)
-            where prop == null
-                  || prop.PropertyType != param.Type
-                  || !prop.IsDefined(typeof(ParameterAttribute), inherit: true)
-            select $"{descriptor.RenderComponent.Name} must declare [Parameter] {param.Type.Name} {param.Name}"
-        ).ToArray();
+        foreach (var descriptor in WidgetRegistry.All)
+        {
+            var parameters = descriptor.RenderComponent
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => p.GetCustomAttribute<ParameterAttribute>() != null)
+                .ToDictionary(p => p.Name, p => p.PropertyType);
 
-        Assert.True(failures.Length == 0, string.Join(Environment.NewLine, failures));
+            foreach (var (name, type) in Contract)
+            {
+                Assert.True(parameters.TryGetValue(name, out var actual),
+                    $"{descriptor.RenderComponent.Name} ({descriptor.TypeId}) is missing [Parameter] {name} — " +
+                    "DynamicComponent would throw at render.");
+                Assert.True(actual == type,
+                    $"{descriptor.RenderComponent.Name} ({descriptor.TypeId}).{name} is {actual}, expected {type}.");
+            }
+        }
     }
 }

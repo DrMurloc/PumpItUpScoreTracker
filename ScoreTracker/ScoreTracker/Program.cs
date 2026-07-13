@@ -240,6 +240,7 @@ builder.Services.AddScoped<ChartScoringLevels>();
 builder.Services.AddScoped<PageDockService>();
 // Circuit-scoped: widgets on a home-page board share one chart catalog per mix (§2.5).
 builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.ChartCatalogCache>();
+builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.CommunityGlowReader>();
 builder.Services.AddCookiePolicy(opts =>
 {
     opts.CheckConsentNeeded = ctx => false;
@@ -319,7 +320,8 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
 {
     ("process-scores-tier-list",         r => r.PublishProcessScoresTiersList(),          "0 7 * * *"),  // 02:00 ET
     ("calculate-scoring-difficulty",     r => r.PublishCalculateScoringDifficulty(),      "0 8 * * *"),  // 03:00 ET
-    ("update-weekly-charts",             r => r.PublishUpdateWeeklyCharts(),              "0 9 * * *"),  // 04:00 ET
+    ("update-weekly-charts",             r => r.PublishUpdateWeeklyCharts(),              "0 5 * * *"),  // 00:00 ET (EST) — Monday board reset; was 0 9 (5am EDT), a Hangfire-extraction regression
+    ("rotate-daily-step",                r => r.PublishRotateDailyStep(),                 "0 5 * * *"),  // 00:00 ET (EST) — Daily Step reset, per mix
     ("process-pass-tier-list",           r => r.PublishProcessPassTierList(),             "30 9 * * *"), // 04:30 ET
     ("calculate-chart-letter-difficulties", r => r.PublishCalculateChartLetterDifficulties(), "0 10 * * *"), // 05:00 ET
     ("start-leaderboard-import",         r => r.PublishStartLeaderboardImport(),          "30 10 * * 0"), // Sundays 05:30 ET
@@ -336,8 +338,13 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {
-    foreach (var (id, _, _) in recurringJobs)
-        RecurringJob.RemoveIfExists(id);
+    // Local dev: we don't want jobs auto-firing, but *removing* them hides them from the Hangfire
+    // dashboard — where "Trigger now" is the one-click way to run any of them by hand (no per-job
+    // admin buttons needed). So park them on a yearly Jan-1 schedule instead: still registered and
+    // visible, manually runnable, but effectively never on their own during a dev session.
+    // "0 0 1 1 *" = Jan 1 00:00 UTC.
+    foreach (var (id, job, _) in recurringJobs)
+        RecurringJob.AddOrUpdate(id, job, "0 0 1 1 *");
 }
 else
 {

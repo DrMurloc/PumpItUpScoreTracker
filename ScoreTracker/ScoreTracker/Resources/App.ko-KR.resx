@@ -3351,6 +3351,27 @@
   <data name="Cleared all of {0}" xml:space="preserve">
     <value>{0} 전부 클리어</value>
   </data>
+  <data name="Daily Step" xml:space="preserve">
+    <value>데일리 스텝</value>
+  </data>
+  <data name="Today's shared chart, plus a weekly Limbo Day." xml:space="preserve">
+    <value>오늘의 공유 차트, 그리고 주 1회 림보 데이.</value>
+  </data>
+  <data name="Today's Step posts at midnight." xml:space="preserve">
+    <value>오늘의 스텝은 자정에 공개됩니다.</value>
+  </data>
+  <data name="Limbo Day: lowest passing score wins!" xml:space="preserve">
+    <value>림보 데이: 통과한 최저 점수가 승리!</value>
+  </data>
+  <data name="No entry yet" xml:space="preserve">
+    <value>아직 기록 없음</value>
+  </data>
+  <data name="Record" xml:space="preserve">
+    <value>기록</value>
+  </data>
+  <data name="Verified from official import" xml:space="preserve">
+    <value>공식 가져오기로 확인됨</value>
+  </data>
   <data name="Quick Record" xml:space="preserve">
     <value>빠른 기록</value>
   </data>
@@ -3389,5 +3410,17 @@
   </data>
   <data name="Remember last mix" xml:space="preserve">
     <value>마지막 시리즈 기억</value>
+  </data>
+  <data name="Your standing" xml:space="preserve">
+    <value>내 순위</value>
+  </data>
+  <data name="manual" xml:space="preserve">
+    <value>수동</value>
+  </data>
+  <data name="Not played" xml:space="preserve">
+    <value>미플레이</value>
+  </data>
+  <data name="{0} on the board" xml:space="preserve">
+    <value>{0}명 참여 중</value>
   </data>
 </root>

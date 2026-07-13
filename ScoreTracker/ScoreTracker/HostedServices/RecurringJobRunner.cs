@@ -31,6 +31,14 @@ public sealed class RecurringJobRunner
     public Task PublishUpdateWeeklyCharts() =>
         _bus.Publish(new RotateWeeklyChartsCommand());
 
+    // Daily Step runs parallel per-mix boards (owner); the daily cadence can't rely on the manual
+    // per-mix trigger the Weekly page uses, so the job fans out to each supported mix. A mix without
+    // a chart catalog yet no-ops in the consumer.
+    public Task PublishRotateDailyStep() =>
+        Task.WhenAll(
+            _bus.Publish(new RotateDailyStepCommand(MixEnum.Phoenix)),
+            _bus.Publish(new RotateDailyStepCommand(MixEnum.Phoenix2)));
+
     public Task PublishProcessPassTierList() =>
         _bus.Publish(new ProcessPassTierListCommand());
 

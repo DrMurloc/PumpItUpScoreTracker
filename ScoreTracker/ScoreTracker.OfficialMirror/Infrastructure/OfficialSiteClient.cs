@@ -32,6 +32,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     private readonly IFileUploadClient _fileUpload;
     private readonly IOfficialLeaderboardRepository _leaderboards;
     private readonly IDateTimeOffsetAccessor _dateTime;
+    private readonly IDailyStepReader _dailyStep;
     private readonly PiuGameConfiguration _configuration;
 
     public OfficialSiteClient(IPiuGameApi piuGame, IChartRepository charts, ILogger<OfficialSiteClient> logger,
@@ -41,6 +42,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         IOfficialLeaderboardRepository leaderboards,
         IBus bus,
         IDateTimeOffsetAccessor dateTime,
+        IDailyStepReader dailyStep,
         IOptions<PiuGameConfiguration> configuration)
     {
         _piuGame = piuGame;
@@ -53,6 +55,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         _leaderboards = leaderboards;
         _bus = bus;
         _dateTime = dateTime;
+        _dailyStep = dailyStep;
         _configuration = configuration.Value;
     }
 
@@ -288,6 +291,10 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         }
 
         var recent = (await _piuGame.GetRecentScores(mix, sessionId, cancellationToken)).ToArray();
+        // Daily Step's Limbo Day needs the lowest PASSING recent score — data the best-only
+        // ScoreImportCompletedEvent can't carry, but the raw recent plays here can. Read today's
+        // daily chart id(s) once, then emit a targeted observation for a matching chart below.
+        var dailyChartIds = (await _dailyStep.GetCurrentChartIds(mix, cancellationToken)).ToHashSet();
         var entries = new List<ScoreImportCompletedEvent.ImportedScore>();
         foreach (var songGroup in recent.GroupBy(s => s.SongName))
         {
@@ -308,6 +315,18 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 var bestPlate = chartGroup.Max(s => s.Plate);
                 var isBroken = chartGroup.All(s => s.IsBroken);
                 entries.Add(new ScoreImportCompletedEvent.ImportedScore(chart.Id, bestScore, bestPlate.ToString(), isBroken));
+
+                if (dailyChartIds.Contains(chart.Id))
+                {
+                    // Best feeds a normal-day board; lowest passing feeds a Limbo-day board — the
+                    // WeeklyChallenge consumer picks which. Null lowest-pass = no recent run passed.
+                    var lowestPass = chartGroup.Where(s => !s.IsBroken).OrderBy(s => (int)s.Score)
+                        .FirstOrDefault();
+                    await _bus.Publish(new DailyStepScoreObservedEvent(userId, mix, chart.Id,
+                        (int)bestScore, bestPlate.ToString(), isBroken,
+                        lowestPass == null ? (int?)null : (int)lowestPass.Score,
+                        lowestPass?.Plate.ToString()), cancellationToken);
+                }
 
                 if (!includeBroken || results.ContainsKey(chart.Id)) continue;
 

@@ -2838,6 +2838,228 @@ html.nav-away .page-dock,
     font-variant-numeric: tabular-nums;
 }
 
+/* Daily Step widget (docs/design/daily-step.md): the shared daily chart as a leaderboard card. */
+
+/* Row-highlight tokens, global so the leaderboard dialog can glow too: you (blue), community (green). */
+:root {
+    --daily-you: #4bb8ff;
+    --daily-community: #43dc86;
+}
+
+.dash-daily {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+}
+
+.dash-daily-limbo {
+    align-self: flex-start;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: .78rem;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--mix-primary);
+    color: var(--mix-primary);
+}
+
+.dash-daily-chart {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding-bottom: 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+
+.dash-daily-board {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-height: 0;
+}
+
+/* The taller sizes scroll the whole board; dash-scroll supplies the quiet themed scrollbar. */
+.dash-daily-board.dash-scroll {
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
+
+.dash-lb-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 7px;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--mix-surface-muted) 55%, transparent);
+    font-size: .82rem;
+}
+
+.dash-lb-place {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.dash-lb-who {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash-lb-score {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-lb-pts {
+    font-weight: 600;
+}
+
+.dash-lb-you {
+    background: color-mix(in srgb, var(--daily-you) 15%, transparent);
+    box-shadow: inset 0 0 0 1px var(--daily-you), 0 0 12px -4px var(--daily-you);
+}
+
+.dash-lb-community {
+    background: color-mix(in srgb, var(--daily-community) 13%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--daily-community) 60%, transparent);
+}
+
+.dash-lb-divider {
+    font-size: .62rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--mix-ink) 55%, transparent);
+    padding: 4px 2px 1px;
+}
+
+/* Your row always sits below the scrolling board — the board takes the flex space and scrolls
+   internally, so this stays anchored at the widget's bottom. */
+.dash-lb-pinned {
+    flex: none;
+    padding-top: 4px;
+    margin-top: 2px;
+    border-top: 1px solid rgba(255, 255, 255, .1);
+}
+
+.dash-daily-controls {
+    display: flex;
+    justify-content: flex-end;
+    gap: 2px;
+}
+
+/* 1x1 split: a short top-three (name + grade, score on hover) on the left, your standing on the right. */
+.dash-daily-split {
+    flex: 1;
+    display: flex;
+    gap: 8px;
+    min-height: 0;
+    align-items: stretch;
+}
+
+.dash-daily-top3 {
+    flex: 1.15;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+}
+
+.dash-top3-row {
+    display: grid;
+    grid-template-columns: 16px 1fr auto;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--mix-surface-muted) 50%, transparent);
+    font-size: .78rem;
+}
+
+.dash-top3-place {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.dash-top3-name {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+}
+
+.dash-top3-grade {
+    font-weight: 800;
+    font-size: .72rem;
+}
+
+/* A place with no entrant yet — the rank still shows, the rest dashes out. */
+.dash-top3-empty {
+    opacity: .45;
+}
+
+.dash-daily-mine {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 8px;
+    border-radius: 9px;
+    text-align: center;
+}
+
+.dash-daily-mine-empty {
+    background: color-mix(in srgb, var(--mix-surface-muted) 45%, transparent);
+}
+
+.dash-mine-label {
+    font-size: .6rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    font-weight: 800;
+    opacity: .85;
+}
+
+.dash-mine-rank {
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-mine-line {
+    font-size: .74rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.weekly-lb-verified {
+    font-size: 0.9rem;
+    opacity: 0.75;
+}
+
+.weekly-lb-manual {
+    font-size: .68rem;
+    font-style: italic;
+    color: color-mix(in srgb, var(--mix-ink) 55%, transparent);
+}
+
 /* Weekly leaderboard dialog (round 3, option 1). */
 
 .weekly-lb-title {
@@ -2859,8 +3081,13 @@ html.nav-away .page-dock,
 }
 
 .weekly-lb-me {
-    background: rgba(255, 255, 255, .06);
-    box-shadow: inset 2px 0 0 0 var(--mix-primary);
+    background: color-mix(in srgb, var(--daily-you) 15%, transparent);
+    box-shadow: inset 0 0 0 1.5px var(--daily-you);
+}
+
+.weekly-lb-community {
+    background: color-mix(in srgb, var(--daily-community) 13%, transparent);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--daily-community) 60%, transparent);
 }
 
 .weekly-lb-place {

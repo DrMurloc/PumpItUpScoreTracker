@@ -3471,6 +3471,27 @@
   <data name="Cleared all of {0}" xml:space="preserve">
     <value>{0} 全曲クリア</value>
   </data>
+  <data name="Daily Step" xml:space="preserve">
+    <value>デイリーステップ</value>
+  </data>
+  <data name="Today's shared chart, plus a weekly Limbo Day." xml:space="preserve">
+    <value>今日の共有チャートと、週に一度のリンボーデー。</value>
+  </data>
+  <data name="Today's Step posts at midnight." xml:space="preserve">
+    <value>今日のステップは深夜に公開されます。</value>
+  </data>
+  <data name="Limbo Day: lowest passing score wins!" xml:space="preserve">
+    <value>リンボーデー：クリアした最低スコアが勝ち！</value>
+  </data>
+  <data name="No entry yet" xml:space="preserve">
+    <value>まだ記録なし</value>
+  </data>
+  <data name="Record" xml:space="preserve">
+    <value>記録</value>
+  </data>
+  <data name="Verified from official import" xml:space="preserve">
+    <value>公式インポートで確認済み</value>
+  </data>
   <data name="Quick Record" xml:space="preserve">
     <value>クイック記録</value>
   </data>
@@ -3509,5 +3530,17 @@
   </data>
   <data name="Remember last mix" xml:space="preserve">
     <value>前回のバージョンを記憶</value>
+  </data>
+  <data name="Your standing" xml:space="preserve">
+    <value>あなたの順位</value>
+  </data>
+  <data name="manual" xml:space="preserve">
+    <value>手動</value>
+  </data>
+  <data name="Not played" xml:space="preserve">
+    <value>未プレイ</value>
+  </data>
+  <data name="{0} on the board" xml:space="preserve">
+    <value>{0}人が参加中</value>
   </data>
 </root>

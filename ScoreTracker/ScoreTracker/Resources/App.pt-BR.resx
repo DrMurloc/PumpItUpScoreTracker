@@ -3419,6 +3419,27 @@
   <data name="Cleared all of {0}" xml:space="preserve">
     <value>Completou tudo {0}</value>
   </data>
+  <data name="Daily Step" xml:space="preserve">
+    <value>Passo Diário</value>
+  </data>
+  <data name="Today's shared chart, plus a weekly Limbo Day." xml:space="preserve">
+    <value>O chart compartilhado de hoje, mais um Dia Limbo semanal.</value>
+  </data>
+  <data name="Today's Step posts at midnight." xml:space="preserve">
+    <value>O Passo de hoje sai à meia-noite.</value>
+  </data>
+  <data name="Limbo Day: lowest passing score wins!" xml:space="preserve">
+    <value>Dia Limbo: a menor pontuação que passa vence!</value>
+  </data>
+  <data name="No entry yet" xml:space="preserve">
+    <value>Ainda sem tentativa</value>
+  </data>
+  <data name="Record" xml:space="preserve">
+    <value>Registrar</value>
+  </data>
+  <data name="Verified from official import" xml:space="preserve">
+    <value>Verificado pela importação oficial</value>
+  </data>
   <data name="Quick Record" xml:space="preserve">
     <value>Registro rápido</value>
   </data>
@@ -3457,5 +3478,17 @@
   </data>
   <data name="Remember last mix" xml:space="preserve">
     <value>Lembrar última versão</value>
+  </data>
+  <data name="Your standing" xml:space="preserve">
+    <value>Sua posição</value>
+  </data>
+  <data name="manual" xml:space="preserve">
+    <value>manual</value>
+  </data>
+  <data name="Not played" xml:space="preserve">
+    <value>Não jogado</value>
+  </data>
+  <data name="{0} on the board" xml:space="preserve">
+    <value>{0} no ranking</value>
   </data>
 </root>

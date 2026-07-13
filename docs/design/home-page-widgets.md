@@ -330,7 +330,7 @@ Readiness: ✅ published contract already serves it · 🔨 needs new data/query
 | OfficialMirror | Import nudge | ✅ | "last sync 9 days ago" + one-tap re-import; upload is the #2 page |
 | OfficialMirror | Benchmark player | 🔮 | rivals-lite on mirror data; decided during the catalog walk (D18), rival machinery stays out until the Rivals project |
 | WeeklyChallenge | Weekly Challenge | ✅ | shell trio (W3) |
-| WeeklyChallenge | Daily Step | 🔨 | D12 — daily rotation job + shared board + Limbo Day; own PR |
+| WeeklyChallenge | Daily Step | ✅ | D12 — shipped: per-mix daily board + Limbo Day + widget ([docs/design/daily-step.md](daily-step.md)) |
 | WeeklyChallenge | Per-player daily challenge | 🔮 | owner has plans — separate concept from Daily Step; its own future session (D12/D18) |
 | EventCompetition | Active tournaments | ⏸ | HELD (D8) |
 | EventCompetition | Qualifiers countdown | ⏸ | HELD (D8) |
