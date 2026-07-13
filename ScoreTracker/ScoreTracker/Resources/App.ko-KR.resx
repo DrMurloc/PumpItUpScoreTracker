@@ -3297,8 +3297,8 @@
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>커뮤니티의 희귀한 PG, 큰 칭호, 최고 점수가 여기에 표시됩니다.</value>
   </data>
-  <data name="only {0} have it" xml:space="preserve">
-    <value>{0}만 보유</value>
+  <data name="only {0} have PG" xml:space="preserve">
+    <value>{0}만 PG 보유</value>
   </data>
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>PUMBILITY #{0}</value>

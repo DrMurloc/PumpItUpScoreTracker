@@ -56,25 +56,34 @@ else
                         {
                             @if (win.ChartId is { } chartId && _charts.TryGetValue(chartId, out var chart))
                             {
-                                @* One reflowing line: image + bubble + song name + detail, then a right-aligned
-                                   grade/plate + score. The song name hides on narrow cells (1-wide widget or
-                                   mobile) via the container/mobile CSS — no separate layout branch. *@
-                                <div class="dash-ch-win">
-                                    <span class="dash-ch-chart @(EditMode ? "" : "dash-clickable")"
-                                          @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart))">
-                                        <SongImage Song="chart.Song" Small="true"/>
-                                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
-                                        <span class="dash-ch-song">@chart.Song.Name</span>
-                                    </span>
-                                    <span class="dash-ch-why">@Caption(win)</span>
-                                    @if (win.Score is { } score)
-                                    {
-                                        <span class="dash-ch-score-right">
-                                            <ScoreBreakdown Score="PhoenixScore.From(score)" IsBroken="false"
-                                                            Plate="@(score == 1_000_000 ? PhoenixPlate.PerfectGame : (PhoenixPlate?)null)"
-                                                            ShowScore="true" OneLine="true" Height="16"/>
+                                @* Chart wins are two lines: the chart + a right-aligned grade/plate + score,
+                                   then the highlight detail as a subtitle. The song name hides on narrow
+                                   cells (1-wide widget or mobile) via the container/mobile CSS. *@
+                                <div class="dash-ch-win dash-ch-win-scored">
+                                    <div class="dash-ch-line">
+                                        <span class="dash-ch-chart @(EditMode ? "" : "dash-clickable")"
+                                              @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart))">
+                                            <SongImage Song="chart.Song" Small="true"/>
+                                            <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                                            <span class="dash-ch-song">@chart.Song.Name</span>
                                         </span>
-                                    }
+                                        @if (win.Score is { } score)
+                                        {
+                                            <span class="dash-ch-score-right">
+                                                @if (win.Kind == WinKind.NotablePg)
+                                                {
+                                                    @* PG highlight → the PG plate stands in for the SSS+ grade. *@
+                                                    <ScoreBreakdown Plate="PhoenixPlate.PerfectGame" Height="16"/>
+                                                }
+                                                else
+                                                {
+                                                    <LetterGradeIcon Grade="PhoenixScore.From(score).LetterGrade" Height="16"/>
+                                                }
+                                                <span class="dash-ch-score">@score.ToString("N0")</span>
+                                            </span>
+                                        }
+                                    </div>
+                                    <div class="dash-ch-sub">@Caption(win)</div>
                                 </div>
                             }
                             else if (win.Kind == WinKind.FolderComplete)
@@ -171,7 +180,7 @@ else
 
     private string Caption(SignificantWin win) => win.Kind switch
     {
-        WinKind.NotablePg => $"💎 {L["only {0} have it", Pct(win.RarityShare)]}",
+        WinKind.NotablePg => $"💎 {L["only {0} have PG", Pct(win.RarityShare)]}",
         WinKind.TopPumbility => $"👑 {L["#{0} PUMBILITY", win.Rank ?? 0]}",
         WinKind.PeerElite => win.Rank == 1
             ? $"📊 {L["#1 of all peers"]}"

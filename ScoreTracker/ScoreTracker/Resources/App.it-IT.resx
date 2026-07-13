@@ -3416,8 +3416,8 @@
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>Qui compaiono PG rari, grandi titoli e migliori punteggi dalle tue comunità.</value>
   </data>
-  <data name="only {0} have it" xml:space="preserve">
-    <value>solo {0} ce l'hanno</value>
+  <data name="only {0} have PG" xml:space="preserve">
+    <value>solo {0} hanno il PG</value>
   </data>
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>#{0} in PUMBILITY</value>

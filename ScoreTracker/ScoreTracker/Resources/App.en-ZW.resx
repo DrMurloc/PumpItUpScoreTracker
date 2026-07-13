@@ -3339,8 +3339,8 @@
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>Rare PGs, big titles, and top scores from your communities show up here.</value>
   </data>
-  <data name="only {0} have it" xml:space="preserve">
-    <value>only {0} have it</value>
+  <data name="only {0} have PG" xml:space="preserve">
+    <value>only {0} have PG</value>
   </data>
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>#{0} PUMBILITY</value>

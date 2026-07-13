@@ -3414,8 +3414,8 @@
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>Les PG rares, grands titres et meilleurs scores de vos communautés apparaissent ici.</value>
   </data>
-  <data name="only {0} have it" xml:space="preserve">
-    <value>seuls {0} l'ont</value>
+  <data name="only {0} have PG" xml:space="preserve">
+    <value>seuls {0} ont le PG</value>
   </data>
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>#{0} en PUMBILITY</value>

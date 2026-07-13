@@ -3417,8 +3417,8 @@
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>コミュニティの珍しいPG、大きな称号、トップスコアがここに表示されます。</value>
   </data>
-  <data name="only {0} have it" xml:space="preserve">
-    <value>{0} のみ達成</value>
+  <data name="only {0} have PG" xml:space="preserve">
+    <value>PG保持者 {0} のみ</value>
   </data>
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>PUMBILITY #{0}</value>

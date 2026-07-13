@@ -2122,13 +2122,38 @@ html.nav-away .page-dock,
     white-space: nowrap;
 }
 
-/* The grade/plate + score cluster right-aligns on the win line. */
+/* Scored wins stack a main line (chart + right-aligned grade/plate + score) over a detail subtitle. */
+.dash-ch-win-scored {
+    flex-direction: column;
+    align-items: stretch;
+    gap: .1rem;
+}
+
+.dash-ch-line {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+}
+
+.dash-ch-sub {
+    color: var(--mix-ink-muted);
+    font-size: .72rem;
+    line-height: 1.15;
+}
+
+/* The grade/plate + score cluster right-aligns on the main line. */
 .dash-ch-score-right {
     margin-left: auto;
     display: inline-flex;
     align-items: center;
     white-space: nowrap;
     padding-left: .4rem;
+}
+
+.dash-ch-score {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    padding-left: .25rem;
 }
 
 /* Song name is first to drop when the cell is physically narrow — a 1-wide widget (container
