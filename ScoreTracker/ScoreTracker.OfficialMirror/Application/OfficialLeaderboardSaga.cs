@@ -27,6 +27,7 @@ namespace ScoreTracker.OfficialMirror.Application
     internal sealed class OfficialLeaderboardSaga : IRequestHandler<ProcessOfficialLeaderboardsCommand>,
         IRequestHandler<ProcessChartPopularityCommand>,
         IRequestHandler<ImportOfficialPlayerScoresCommand>,
+        IRequestHandler<ExecuteImportCommand>,
         IRequestHandler<UpdateSongImagesCommand>,
         IRequestHandler<GetGameCardsQuery, IEnumerable<GameCardRecord>>,
         IRequestHandler<GetLastLeaderboardImportTimestampQuery, DateTimeOffset?>,
@@ -277,6 +278,12 @@ namespace ScoreTracker.OfficialMirror.Application
         {
             var sid = await _officialSite.SignIn(request.Mix, request.Username, request.Password, cancellationToken);
             await RunImport(_currentUser.User.Id, request.Mix, sid, request.Id, request.ExpectedGameTag,
+                request.IncludeBroken, request.SyncPiuTracker, cancellationToken);
+        }
+
+        public Task Handle(ExecuteImportCommand request, CancellationToken cancellationToken)
+        {
+            return RunImport(request.UserId, request.Mix, request.Sid, request.CardId, request.ExpectedGameTag,
                 request.IncludeBroken, request.SyncPiuTracker, cancellationToken);
         }
 
