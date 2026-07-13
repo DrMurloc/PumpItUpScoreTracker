@@ -195,3 +195,23 @@ scores flow → visible → announced → weekly bug fix. End-to-end live after 
 | C6 | **Widget**: `DailyStepWidget` + config + panel + registry entry + generalized `LeaderboardDialog` (update its one consumer) + l10n ×9 + site.css + UX-GUIDELINES note |
 | C7 | **Community card**: Daily Step placement line in `CommunitySaga`'s snapshot card via `GetDailyStepPlacementQuery` |
 | C8 | **Weekly reset fix (bundled, isolated)**: Program.cs `update-weekly-charts` `0 9`→`0 5` + `WeeklyTournamentSaga` expiration to match + SCHEDULED-JOBS update + saga test tweak + home-page-widgets §4 readiness flip 🔨→✅ |
+
+---
+
+## 8. Leaderboard beef-up (owner, 2026-07-13; mock 09bf3592)
+
+The widget renders the board inline, not just your standing.
+
+- **1×1**: top three + your row (under a "Your standing" divider when you're outside it).
+- **1×2 / 1×3**: the full board (up to 50), scrollable (`dash-scroll`), with your row **sticky-pinned** to
+  the bottom when you sit past 50. Supported sizes moved from `1x1/2x1` to **`1x1/1x2/1x3`** — the layout
+  keys on `Rows > 1` (tall), not columns.
+- **Row** = place (rarity ramp) · avatar + flag + name · **grade + score**. Plate and the source tags stay
+  off the card; they live in the dialog.
+- **Glows**: your row blue (`--daily-you`), community members green (`--daily-community`) — shared
+  communities minus `IsRegional` minus the `"World"` system community, unioned in-widget from
+  `GetMyCommunitiesQuery` + `GetCommunityMembersQuery`.
+- **Controls** ride the `WidgetHeaderSlot` (from the Quick Record merge, PR #147): Record — now a small
+  MudDialog — and the full-board `LeaderboardDialog`. That dialog is the rich view: plate, ✓ verified /
+  *manual* tags, up to 50 rows (its `MaxPlaces` is parameterized so Weekly stays 10). A `HeaderSlot == null`
+  body fallback keeps the controls reachable in bare renders.
