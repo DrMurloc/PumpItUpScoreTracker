@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -3755,5 +3755,137 @@
   </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>プレイ人数別に、クリアしたCo-Op譜面の数。</value>
+  </data>
+  <data name="Import to" xml:space="preserve">
+    <value>インポート先</value>
+  </data>
+  <data name="Sign in to import." xml:space="preserve">
+    <value>インポートするにはサインインしてください。</value>
+  </data>
+  <data name="Upload file" xml:space="preserve">
+    <value>ファイルをアップロード</value>
+  </data>
+  <data name="Game tag" xml:space="preserve">
+    <value>ゲームタグ</value>
+  </data>
+  <data name="Store" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="Saved on this device" xml:space="preserve">
+    <value>このデバイスに保存済み</value>
+  </data>
+  <data name="Saved credentials loaded" xml:space="preserve">
+    <value>保存済みの認証情報を読み込みました</value>
+  </data>
+  <data name="Forget here" xml:space="preserve">
+    <value>この端末で削除</value>
+  </data>
+  <data name="Forget everywhere" xml:space="preserve">
+    <value>すべての端末で削除</value>
+  </data>
+  <data name="Skip the game-tag step" xml:space="preserve">
+    <value>ゲームタグの手順をスキップ</value>
+  </data>
+  <data name="Remember my password on this device" xml:space="preserve">
+    <value>このデバイスにパスワードを記憶する</value>
+  </data>
+  <data name="Runs in the background." xml:space="preserve">
+    <value>バックグラウンドで実行されます。</value>
+  </data>
+  <data name="You can leave this page." xml:space="preserve">
+    <value>このページを離れても大丈夫です。</value>
+  </data>
+  <data name="One-time — nothing saved." xml:space="preserve">
+    <value>一回限り — 何も保存されません。</value>
+  </data>
+  <data name="Import complete" xml:space="preserve">
+    <value>インポート完了</value>
+  </data>
+  <data name="Starting import…" xml:space="preserve">
+    <value>インポートを開始しています…</value>
+  </data>
+  <data name="Invalid username or password." xml:space="preserve">
+    <value>ユーザー名またはパスワードが正しくありません。</value>
+  </data>
+  <data name="Password saved on this device" xml:space="preserve">
+    <value>パスワードをこのデバイスに保存しました</value>
+  </data>
+  <data name="Could not save your password" xml:space="preserve">
+    <value>パスワードを保存できませんでした</value>
+  </data>
+  <data name="Couldn't unlock your saved password. Enter it to import." xml:space="preserve">
+    <value>保存済みのパスワードを解除できませんでした。インポートするには入力してください。</value>
+  </data>
+  <data name="{0} scores import from a spreadsheet." xml:space="preserve">
+    <value>{0} のスコアはスプレッドシートからインポートします。</value>
+  </data>
+  <data name="Credential security" xml:space="preserve">
+    <value>認証情報のセキュリティ</value>
+  </data>
+  <data name="Cycle all credential keys" xml:space="preserve">
+    <value>すべての認証キーを再生成</value>
+  </data>
+  <data name="Yes, cycle all keys" xml:space="preserve">
+    <value>はい、すべてのキーを再生成</value>
+  </data>
+  <data name="All saved credentials have been cleared." xml:space="preserve">
+    <value>保存済みの認証情報をすべて削除しました。</value>
+  </data>
+  <data name="Deletes every saved import password on every device. Users re-enter on their next import. Use if you suspect a breach." xml:space="preserve">
+    <value>すべてのデバイスに保存されたインポート用パスワードを削除します。ユーザーは次回のインポート時に再入力します。情報漏洩が疑われる場合に使用してください。</value>
+  </data>
+  <data name="Before we remember your password" xml:space="preserve">
+    <value>パスワードを記憶する前に</value>
+  </data>
+  <data name="I understand — remember it" xml:space="preserve">
+    <value>理解しました — 記憶する</value>
+  </data>
+  <data name="For the technically curious — how it actually works" xml:space="preserve">
+    <value>技術的に詳しく — 実際の仕組み</value>
+  </data>
+  <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
+    <value>読み解くには、3つの異なる場所に保管された3つのものが同時に必要です：</value>
+  </data>
+  <data name="You hold the coded note" xml:space="preserve">
+    <value>あなたは暗号化されたメモを持っています</value>
+  </data>
+  <data name="on this device only. Useless on its own." xml:space="preserve">
+    <value>このデバイスのみ。それ単体では役に立ちません。</value>
+  </data>
+  <data name="We hold a sealed key" xml:space="preserve">
+    <value>私たちは封印された鍵を保管しています</value>
+  </data>
+  <data name="in our database, locked so it can't be opened alone." xml:space="preserve">
+    <value>私たちのデータベース内にあり、単体では開けないようロックされています。</value>
+  </data>
+  <data name="We hold the master key" xml:space="preserve">
+    <value>私たちはマスターキーを保管しています</value>
+  </data>
+  <data name="locked in a vault inside Microsoft Azure." xml:space="preserve">
+    <value>Microsoft Azure 内の保管庫にロックされています。</value>
+  </data>
+  <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
+    <value>これを有効にするのは、自分のポケットに入れた付箋にパスワードを書くようなものです。ただし、そのメモは誰も — 私たちでさえ — 見ただけでは読めない暗号で書かれています。</value>
+  </data>
+  <data name="All three come together only for the split second you press Import — we decode it, log in for you, and immediately forget it. Your real password is never written down anywhere." xml:space="preserve">
+    <value>3つが揃うのは、あなたがインポートを押すほんの一瞬だけです。私たちはそれを復号し、あなたの代わりにログインし、すぐに忘れます。あなたの本当のパスワードはどこにも記録されません。</value>
+  </data>
+  <data name="Because a coded copy of your password lives on this device, please make sure your Pump It Up password is one you use only here — not the one that also opens your email or your bank." xml:space="preserve">
+    <value>このデバイスにはパスワードの暗号化されたコピーが残るため、Pump It Up のパスワードはここだけで使うものにしてください。メールや銀行にも使うパスワードは避けてください。</value>
+  </data>
+  <data name="Enter your piugame login once. It's encrypted on this device the moment you press Store — we never keep a readable copy." xml:space="preserve">
+    <value>piugame のログイン情報を一度だけ入力してください。保存を押した瞬間にこのデバイス上で暗号化され、読み取れるコピーは一切保持しません。</value>
+  </data>
+  <data name="Your username and password are sealed together with AES-256-GCM under a random data key. That data key is wrapped by a master key that never leaves Azure Key Vault." xml:space="preserve">
+    <value>ユーザー名とパスワードは、ランダムなデータキーの下で AES-256-GCM により一緒に封印されます。そのデータキーは、Azure Key Vault から決して出ないマスターキーでラップされます。</value>
+  </data>
+  <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
+    <value>暗号文はブラウザに、ラップされた鍵はデータベースに、マスターキーは Key Vault にあります。復号には3つすべてが必要です。1つ、あるいは2つが流出しても何も得られません。パスワードがデータベースやログに書き込まれることは決してありません。</value>
+  </data>
+  <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
+    <value>これはゼロ知識ではありません。ログインは私たちのサーバーで実行されるため、あなたがインポートする瞬間には技術的には認証情報を復号できます。私たちはそれを記録も保持もしませんが、手動インポートのたびに既に持っているのと同じアクセスを、あなたは私たちに委ねていることになります。</value>
+  </data>
+  <data name="Import scores" xml:space="preserve">
+    <value>スコアをインポート</value>
   </data>
 </root>
