@@ -2122,26 +2122,18 @@ html.nav-away .page-dock,
     white-space: nowrap;
 }
 
-/* Scored wins stack a main line (chart + right-aligned grade/plate + score) over a detail subtitle. */
+/* Scored win = one line on wide: chart (the song name truncates) + highlight, then a right-aligned
+   grade/plate + score. The narrow queries below reflow it into a chart+score line and a subtitle. */
 .dash-ch-win-scored {
-    flex-direction: column;
-    align-items: stretch;
-    gap: .1rem;
-}
-
-.dash-ch-line {
-    display: flex;
+    flex-wrap: nowrap;
     align-items: center;
     gap: .35rem;
 }
 
-.dash-ch-sub {
-    color: var(--mix-ink-muted);
-    font-size: .72rem;
-    line-height: 1.15;
+.dash-ch-win-scored .dash-ch-chart {
+    min-width: 0; /* the song name ellipsises rather than shove the score off the line */
 }
 
-/* The grade/plate + score cluster right-aligns on the main line. */
 .dash-ch-score-right {
     margin-left: auto;
     display: inline-flex;
@@ -2156,14 +2148,20 @@ html.nav-away .page-dock,
     padding-left: .25rem;
 }
 
-/* Song name is first to drop when the cell is physically narrow — a 1-wide widget (container
-   query on the feed) or mobile, where the dashboard collapses to one column (media query). */
+/* Narrow — a 1-wide widget (container query on the feed) or mobile, where the dashboard is one
+   column (media query): hide the song name and drop the highlight onto its own subtitle line. */
 @container (max-width: 300px) {
     .dash-ch-song { display: none; }
+    .dash-ch-win-scored { flex-wrap: wrap; }
+    .dash-ch-win-scored .dash-ch-score-right { order: 2; }
+    .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; }
 }
 
 @media (max-width: 600px) {
     .dash-ch-song { display: none; }
+    .dash-ch-win-scored { flex-wrap: wrap; }
+    .dash-ch-win-scored .dash-ch-score-right { order: 2; }
+    .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; }
 }
 
 /* Drag chrome: handle (desktop pointer only), dragged-cell dim, insertion marker. */
