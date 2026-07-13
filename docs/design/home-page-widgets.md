@@ -444,8 +444,12 @@ recorder** — the chart display is not clickable, no ChartDetailsDialog, no nav
   `UsesLegacyScoring()`: Phoenix / Phoenix 2 → score + derived grade + plate →
   `UpdatePhoenixBestAttemptCommand`; **XX and older → score + manual `XXLetterGrade` + broken, no plate
   → `UpdateXXBestAttemptCommand`** (the existing legacy path, reused). The **active mix rides the header
-  slot** (§2.3) as a chip — the old "Posts to {mix}" footer is gone. Legacy row weights Score wide,
-  Letter Grade narrow; Save always right-aligned.
+  slot** (§2.3) as a chip — the old "Posts to {mix}" footer is gone. The **legacy row** is
+  purpose-built (owner, 2026-07-13): Score on its own full-width row, then a **grade image strip** —
+  the 8 XX grades descending (SSS→F) as tappable art (same CDN as `LetterGradeIcon`). Tap a grade to
+  pick it (passing, it highlights); tap the selected one again to mark it **broken** (its art goes
+  cracked). That one control replaces both the grade select and the Broken checkbox — the same
+  tap-the-grade-toggles-broken gesture as the Phoenix side. Save always right-aligned.
 - **All-mixes flow (owner, 2026-07-13)**: (1) no mix → the body shows **only the picker**; (2) pick a mix
   → the mix chip + a change-✕ appear in the header, body switches to the chart selector; (3) pick a chart
   → art + bubble join the header, body is the inputs. The header **✕ clears one step back** — the chart

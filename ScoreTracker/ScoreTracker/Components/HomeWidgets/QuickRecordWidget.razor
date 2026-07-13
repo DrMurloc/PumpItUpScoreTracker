@@ -97,26 +97,27 @@ else
             }
             @if (_isLegacy)
             {
-                @* Legacy (XX and older): letter grade is a manual input, no plate, no auto-grade.
-                   Score takes its own full-width row so it reads big (owner, field test); the grade
-                   select drops its label for a placeholder so it stays compact and clickable. *@
+                @* Legacy (XX and older): score (big, own row) → a tap-to-pick grade strip →
+                   Save. Tap a grade to pick it (passing); tap the selected one again to mark it
+                   broken (its art goes cracked). Replaces the select AND the Broken checkbox
+                   (owner, 2026-07-13). *@
                 <div class="qr-scorerow">
                     <MudNumericField T="int?" @bind-Value="_score" Immediate="true" Label="@L["Score"]"
                                      Min="0" Max="XXScore.Max" HideSpinButtons="true" Clearable="true"
                                      Disabled="EditMode || _isSaving" Variant="Variant.Outlined"
                                      Margin="Margin.Dense" Class="qr-score-field"/>
                 </div>
+                <div class="qr-graderow @(EditMode || _isSaving ? "qr-graderow-disabled" : "")">
+                    @foreach (var grade in LegacyGradesDescending)
+                    {
+                        var g = grade;
+                        var isSel = _letterGrade == g;
+                        <img class="qr-grade-opt @(isSel ? "qr-grade-opt-sel" : "")"
+                             src="@LegacyGradeImage(g, isSel && _broken)" alt="@g.ToString()" title="@g.ToString()"
+                             @onclick="() => PickLegacyGrade(g)"/>
+                    }
+                </div>
                 <div class="qr-actionrow qr-actionrow-save">
-                    <MudSelect T="XXLetterGrade?" @bind-Value="_letterGrade" Placeholder="@L["Letter Grade"]"
-                               Dense="true" Margin="Margin.Dense" Disabled="EditMode || _isSaving"
-                               Class="qr-grade-field">
-                        @foreach (var grade in Enum.GetValues<XXLetterGrade>())
-                        {
-                            <MudSelectItem T="XXLetterGrade?" Value="@grade">@grade.ToString()</MudSelectItem>
-                        }
-                    </MudSelect>
-                    <MudCheckBox T="bool" @bind-Value="_broken" Label="@L["Broken"]" Dense="true"
-                                 Disabled="EditMode || _isSaving"></MudCheckBox>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="qr-save-btn"
                                Disabled="EditMode || _isSaving || !CanSave" OnClick="Save">@L["Save"]</MudButton>
                 </div>
@@ -242,6 +243,29 @@ else
     {
         if (EditMode || _isSaving) return;
         _broken = !_broken;
+    }
+
+    // Legacy grade strip (owner, 2026-07-13): grades descending; tap to pick (passing), tap
+    // the selected one again to mark it broken (its image goes cracked). Replaces the grade
+    // select AND the Broken checkbox.
+    private static readonly XXLetterGrade[] LegacyGradesDescending =
+        Enum.GetValues<XXLetterGrade>().Reverse().ToArray();
+
+    private static string LegacyGradeImage(XXLetterGrade grade, bool broken) =>
+        $"https://piuimages.arroweclip.se/letters/{grade.ToString().ToLower()}{(broken ? "_broken" : "")}.png";
+
+    private void PickLegacyGrade(XXLetterGrade grade)
+    {
+        if (EditMode || _isSaving) return;
+        if (_letterGrade == grade)
+        {
+            _broken = !_broken; // tap the selected grade again → toggle broken
+        }
+        else
+        {
+            _letterGrade = grade;
+            _broken = false;
+        }
     }
 
     protected override async Task OnParametersSetAsync()

@@ -1966,10 +1966,41 @@ html.nav-away .page-dock,
     flex: none;
 }
 
-.qr-grade-field {
-    flex: 0 1 auto;
-    min-width: 80px;
-    max-width: 104px;
+/* Legacy grade strip (owner, 2026-07-13): tap a grade image to pick it (passing), tap the
+   selected one again to mark broken (its art goes cracked). Replaces the select + checkbox. */
+.qr-graderow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2px;
+    padding: 2px 0;
+}
+
+.qr-graderow-disabled {
+    pointer-events: none;
+    opacity: .5;
+}
+
+.qr-grade-opt {
+    height: 26px;
+    width: auto;
+    cursor: pointer;
+    border-radius: 5px;
+    padding: 2px 3px;
+    opacity: .5;
+    transition: opacity .12s, transform .12s, background .12s;
+}
+
+.qr-grade-opt:hover {
+    opacity: .85;
+    background: rgba(255, 255, 255, .06);
+}
+
+.qr-grade-opt-sel {
+    opacity: 1;
+    background: color-mix(in srgb, var(--mix-primary) 22%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mix-primary) 55%, transparent);
+    transform: scale(1.08);
 }
 
 .qr-mixchip {

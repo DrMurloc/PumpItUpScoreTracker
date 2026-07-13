@@ -244,6 +244,32 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
     }
 
     [Fact]
+    public async Task LegacyGradeStripPicksAGradeThenTogglesBroken()
+    {
+        var xxChart = MakeXxChart();
+        _mediator.Setup(m => m.Send(It.Is<GetChartsQuery>(q => q.Mix == MixEnum.XX), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { xxChart });
+        _mediator.Setup(m => m.Send(It.IsAny<GetXXBestChartAttemptQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BestXXChartAttempt(xxChart, null));
+        _mediator.Setup(m => m.Send(It.IsAny<UpdateXXBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // A directly-pinned legacy mix (no picker) — the record row is the grade strip.
+        var cut = Render(configJson: "{\"mix\":\"XX\"}");
+        await Pick(cut, xxChart);
+
+        // Descending strip → the first image is SSS. Tap it (passing), then again (broken).
+        cut.FindAll(".qr-grade-opt")[0].Click();
+        cut.FindAll(".qr-grade-opt")[0].Click();
+        cut.Find(".qr-save-btn").Click();
+
+        _mediator.Verify(m => m.Send(
+            It.Is<UpdateXXBestAttemptCommand>(c =>
+                c.chartId == xxChart.Id && c.LetterGrade == XXLetterGrade.SSS && c.IsBroken),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task ClickingTheGradeIconRecordsAPlatedBrokenGrade()
     {
         // A plated broken: the grade-icon toggle flips broken but keeps the plate.
