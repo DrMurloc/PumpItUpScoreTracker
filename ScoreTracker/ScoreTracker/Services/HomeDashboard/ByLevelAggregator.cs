@@ -213,6 +213,18 @@ public static class ByLevelAggregator
                 keys.Add((null, p));
         if (keys.Count == 0) keys.Add((DistributionSeries.Average, null)); // never draw nothing
 
+        // Separate S/D collapses to ONE line per type — two overlaid multi-stat distributions
+        // are unreadable (owner). Prefer the median, else the average, else the first pick.
+        if (separate && keys.Count > 1)
+        {
+            var median = keys.FirstOrDefault(k => k.Named == DistributionSeries.Median);
+            var average = keys.FirstOrDefault(k => k.Named == DistributionSeries.Average);
+            var pick = median.Named == DistributionSeries.Median ? median
+                : average.Named == DistributionSeries.Average ? average
+                : keys[0];
+            keys = new List<(DistributionSeries? Named, int? Custom)> { pick };
+        }
+
         // Per draw × bucket: the sorted cleared metric values.
         var sorted = new Dictionary<(int Draw, int Bucket), double[]>();
         for (var d = 0; d < draws.Length; d++)
@@ -245,7 +257,10 @@ public static class ByLevelAggregator
             }
         }
 
-        var bands = Bands(config, draws, buckets, sorted, ordinal, ref min, ref max);
+        // No band when separated — a single median line per type is the whole point.
+        var bands = separate
+            ? new List<BreakdownBandArea>()
+            : Bands(config, draws, buckets, sorted, ordinal, ref min, ref max);
 
         if (double.IsInfinity(min)) return BreakdownResult.Empty;
 

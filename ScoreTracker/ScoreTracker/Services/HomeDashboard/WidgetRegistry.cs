@@ -134,7 +134,9 @@ public static class WidgetRegistry
                             DistributionSeries.Min, DistributionSeries.P25, DistributionSeries.Median,
                             DistributionSeries.P75, DistributionSeries.Max
                         },
-                        Band = BreakdownBand.InterQuartile, SeparateSinglesDoubles = true,
+                        // Combined so the full box plot reads; separate S/D is the simpler
+                        // median-vs-median opt-in.
+                        Band = BreakdownBand.InterQuartile, SeparateSinglesDoubles = false,
                         MinLevel = 17, MaxLevel = 23
                     })),
                 new WidgetDrawerPreset("Grade Wall",

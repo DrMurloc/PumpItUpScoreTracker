@@ -202,15 +202,14 @@ else
         SeriesColorRole.Qualitative => MixThemes.SeriesHex(color.Index),
         SeriesColorRole.Rarity => MixThemes.RarityHex(mix, ThemeScales.BandFor(color.RarityFraction)),
         SeriesColorRole.Pass => MixPalette.Success,
+        SeriesColorRole.Muted => MixThemes.UnpassedHex,
         _ => palette.InkMuted
     };
 
-    private static string TypeHex(ChartType? type, MixPalette p) => type switch
-    {
-        ChartType.Single => p.ChartSingles,
-        ChartType.Double => p.ChartDoubles,
-        _ => p.Ink // combined = a neutral hue; the stats separate by emphasis
-    };
+    // Red Single / green Double / gold Co-Op (game vocabulary); combined = a neutral hue,
+    // stats separated by emphasis.
+    private static string TypeHex(ChartType? type, MixPalette p) =>
+        type is null ? p.Ink : MixThemes.ChartTypeHex(type.Value);
 
     private static double AlphaFor(int emphasis) => emphasis >= 2 ? 1.0 : emphasis == 1 ? 0.82 : 0.58;
 
