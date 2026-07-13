@@ -2,12 +2,14 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services.HomeDashboard
 
-@* Quick Record config (§4.2): mix scope only. Mirrors WeeklyConfigPanel's mix select. *@
+@* Quick Record config (§4.2): mix scope. "All mixes" turns on the runtime mix picker
+   (records to any mix, legacy scoring included); the rest pin a single Phoenix-era mix. *@
 
-<MudSelect T="MixEnum?" @bind-Value="_mix" Label="@L["Mix"]" Class="mb-3">
-    <MudSelectItem T="MixEnum?" Value="null">@L["Follow current mix"]</MudSelectItem>
-    <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix">Phoenix</MudSelectItem>
-    <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix2">Phoenix 2</MudSelectItem>
+<MudSelect T="MixMode" @bind-Value="_mode" Label="@L["Mix"]" Class="mb-3">
+    <MudSelectItem T="MixMode" Value="MixMode.Follow">@L["Follow current mix"]</MudSelectItem>
+    <MudSelectItem T="MixMode" Value="MixMode.Phoenix">Phoenix</MudSelectItem>
+    <MudSelectItem T="MixMode" Value="MixMode.Phoenix2">Phoenix 2</MudSelectItem>
+    <MudSelectItem T="MixMode" Value="MixMode.All">@L["All mixes"]</MudSelectItem>
 </MudSelect>
 <div class="d-flex justify-end gap-2 mt-4">
     <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
@@ -16,20 +18,42 @@
 
 @code {
 
+    private enum MixMode
+    {
+        Follow,
+        Phoenix,
+        Phoenix2,
+        All
+    }
+
     [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
     [Parameter] public EventCallback<(string ConfigJson, int ConfigVersion)> OnSave { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
-    private MixEnum? _mix;
+    private MixMode _mode;
 
     protected override void OnParametersSet()
     {
-        _mix = WidgetConfigJson.Read<QuickRecordConfig>(Widget.ConfigJson).Mix;
+        var config = WidgetConfigJson.Read<QuickRecordConfig>(Widget.ConfigJson);
+        _mode = config.AllMixes ? MixMode.All
+            : config.Mix switch
+            {
+                MixEnum.Phoenix => MixMode.Phoenix,
+                MixEnum.Phoenix2 => MixMode.Phoenix2,
+                _ => MixMode.Follow
+            };
     }
 
     private async Task Save()
     {
-        await OnSave.InvokeAsync((WidgetConfigJson.Write(new QuickRecordConfig { Mix = _mix }), 1));
+        var config = _mode switch
+        {
+            MixMode.All => new QuickRecordConfig { AllMixes = true },
+            MixMode.Phoenix => new QuickRecordConfig { Mix = MixEnum.Phoenix },
+            MixMode.Phoenix2 => new QuickRecordConfig { Mix = MixEnum.Phoenix2 },
+            _ => new QuickRecordConfig()
+        };
+        await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
     }
 
 }
