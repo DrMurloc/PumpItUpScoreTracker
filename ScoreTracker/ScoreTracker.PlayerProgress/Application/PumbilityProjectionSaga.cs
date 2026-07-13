@@ -39,23 +39,14 @@ namespace ScoreTracker.PlayerProgress.Application
                 .ToDictionary(s => s.ChartId);
             var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
 
-            // Phoenix ranks ONE mixed top-50 pool; Phoenix 2's official PUMBILITY is two
-            // independent per-type pools, so gain baselines ("lowest of the top 50") are
-            // per-pool — a doubles chart can only ever displace a doubles chart.
-            var pools = new Dictionary<ChartType, PoolState>();
-            if (mix == MixEnum.Phoenix2)
+            // One mixed top-50 pool shared by both chart types: a single gain baseline
+            // (the pool's lowest rating) that a chart of either type can displace.
+            var mixed = await BuildPool(null, request.UserId, mix, charts, scoring, cancellationToken);
+            var pools = new Dictionary<ChartType, PoolState>
             {
-                pools[ChartType.Single] = await BuildPool(ChartType.Single, request.UserId, mix, charts, scoring,
-                    cancellationToken);
-                pools[ChartType.Double] = await BuildPool(ChartType.Double, request.UserId, mix, charts, scoring,
-                    cancellationToken);
-            }
-            else
-            {
-                var mixed = await BuildPool(null, request.UserId, mix, charts, scoring, cancellationToken);
-                pools[ChartType.Single] = mixed;
-                pools[ChartType.Double] = mixed;
-            }
+                [ChartType.Single] = mixed,
+                [ChartType.Double] = mixed
+            };
 
             var pooledTop50 = pools.Values.Distinct()
                 .SelectMany(p => p.Top50)

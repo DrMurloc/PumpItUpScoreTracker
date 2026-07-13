@@ -168,19 +168,18 @@ public sealed class PumbilityProjectionSagaTests
     }
 
     [Fact]
-    public async Task Phoenix2RanksIndependentSinglesAndDoublesPools()
+    public async Task Phoenix2RanksOneMergedPoolLikePhoenix()
     {
+        // Phoenix 2 ranks ONE mixed pool (ChartType null), never a per-type pool.
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
         var ctx = new ProjectionContext().WithCharts(chart).WithTopScore(chart.Id);
 
         await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
             CancellationToken.None);
 
-        ctx.Mediator.Verify(m => m.Send(It.Is<GetTop50ForPlayerQuery>(q => q.ChartType == ChartType.Single),
-            It.IsAny<CancellationToken>()), Times.Once);
-        ctx.Mediator.Verify(m => m.Send(It.Is<GetTop50ForPlayerQuery>(q => q.ChartType == ChartType.Double),
-            It.IsAny<CancellationToken>()), Times.Once);
         ctx.Mediator.Verify(m => m.Send(It.Is<GetTop50ForPlayerQuery>(q => q.ChartType == null),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Mediator.Verify(m => m.Send(It.Is<GetTop50ForPlayerQuery>(q => q.ChartType != null),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -258,27 +257,24 @@ public sealed class PumbilityProjectionSagaTests
     }
 
     [Fact]
-    public async Task Phoenix2GainsMeasureAgainstTheChartsOwnPool()
+    public async Task Phoenix2GainsMeasureAgainstTheMergedPool()
     {
-        // Singles pool is FULL (50 rated charts) → its baseline is the lowest of those
-        // ratings; the doubles pool has one score → underfilled, baseline 0. The same
-        // expected score therefore yields a full-contribution gain on a doubles chart
-        // and a baseline-reduced gain on a singles chart.
+        // One merged pool, so a doubles chart's gain is measured against the SAME baseline
+        // as a singles chart. The pool here is full (50 deliberately-low singles set a low,
+        // nonzero baseline both candidates clear), so both gains subtract that baseline.
         var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
         var poolCharts = Enumerable.Range(0, 50)
             .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build())
             .ToArray();
-        var doublesChart = new ChartBuilder().WithType(ChartType.Double).WithLevel(18).Build();
         var singleCandidate = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
         var doubleCandidate = new ChartBuilder().WithType(ChartType.Double).WithLevel(18).Build();
 
         var ctx = new ProjectionContext()
-            .WithCharts(poolCharts.Concat(new[] { doublesChart, singleCandidate, doubleCandidate }).ToArray())
-            .WithTopScore(doublesChart.Id, 951_000)
+            .WithCharts(poolCharts.Concat(new[] { singleCandidate, doubleCandidate }).ToArray())
             .WithCohortUser()
             .WithCohortScores(ChartType.Single, singleCandidate.Id, 992_000, 991_000, 990_000, 989_000)
             .WithCohortScores(ChartType.Double, doubleCandidate.Id, 970_000, 960_000, 950_000, 940_000);
-        foreach (var poolChart in poolCharts) ctx.WithTopScore(poolChart.Id, 951_000);
+        foreach (var poolChart in poolCharts) ctx.WithTopScore(poolChart.Id, 700_000);
 
         var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
             CancellationToken.None);
@@ -288,13 +284,16 @@ public sealed class PumbilityProjectionSagaTests
         Assert.Equal(990_000, (int)result.ExpectedScores[singleCandidate.Id]);
         Assert.Equal(950_000, (int)result.ExpectedScores[doubleCandidate.Id]);
 
-        // Projected scores ride the empirical plate curve (pinned in
-        // ExpectedPlateForScoreTests): 990k → Marvelous Game, 950k → Fair Game. The
-        // doubles gain is full contribution — its pool is underfilled, baseline 0.
-        var singlesBaseline = (int)scoring.GetScore(poolCharts[0], 951_000, PhoenixPlate.SuperbGame, false);
+        // ONE merged baseline (pool full at 50). Projected scores ride the empirical plate
+        // curve (pinned in ExpectedPlateForScoreTests): 990k → Marvelous Game, 950k → Fair
+        // Game. The doubles gain subtracts the SAME baseline the singles gain does — the
+        // merged-pool signature.
+        var baseline = (int)scoring.GetScore(poolCharts[0], 700_000, PhoenixPlate.SuperbGame, false);
         var expectedSingleGain = (int)(scoring.GetScore(singleCandidate, 990_000, PhoenixPlate.MarvelousGame, false)
-                                       - singlesBaseline);
-        var expectedDoubleGain = (int)scoring.GetScore(doubleCandidate, 950_000, PhoenixPlate.FairGame, false);
+                                       - baseline);
+        var expectedDoubleGain = (int)(scoring.GetScore(doubleCandidate, 950_000, PhoenixPlate.FairGame, false)
+                                       - baseline);
+        Assert.True(expectedDoubleGain > 0, "test setup: doubles candidate must clear the merged baseline");
         Assert.Equal(expectedSingleGain, result.ProjectedGains[singleCandidate.Id]);
         Assert.Equal(expectedDoubleGain, result.ProjectedGains[doubleCandidate.Id]);
     }

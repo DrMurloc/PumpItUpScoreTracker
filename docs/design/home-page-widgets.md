@@ -233,8 +233,8 @@ Pumbility widget consumes finished contracts.
 
 ### W2 — Pumbility (data: PlayerProgress)
 
-- **Data**: `GetPlayerStatsQuery` → `SkillRating` (+ `SinglesRating`/`DoublesRating` for the two-pool
-  sub-line); `ProjectPumbilityGainsQuery` → `PumbilityProjection.ProjectedGains` → top entry(ies),
+- **Data**: `GetPlayerStatsQuery` → `SkillRating` (the merged top-50; + `SinglesRating`/`DoublesRating`
+  for the per-pool sub-line — note `SkillRating` is NOT their sum); `ProjectPumbilityGainsQuery` → `PumbilityProjection.ProjectedGains` → top entry(ies),
   chart names via `ChartCatalogCache`. Live pull, queries fanned with `Task.WhenAll`.
 - **Config v1**: mix scope; show-projection toggle (default on); **dismissed-charts blacklist** (see below).
 - **Sizes**: 1×1 (big number + top next-best-gain line), 2×1 (adds S/D pool breakdown + a **scrollable**
@@ -246,7 +246,8 @@ Pumbility widget consumes finished contracts.
   can dismiss different charts than your singles one. Distinct from the suggester's veto/feedback system —
   no feedback record, just personal noise control.
 - **States**: no scores → CTA to `/UploadPhoenixScores`. Error isolated.
-- **Mixes**: Phoenix, Phoenix 2 (two-pool formula live since PR #128).
+- **Mixes**: Phoenix, Phoenix 2 (additive formula live since PR #128; overall PUMBILITY corrected to a
+  merged top-50 on 2026-07-13 — it is not the two per-type pools summed).
 - **Data gap — sparkline/delta**: `PlayerRatingRecord` does **not** carry Pumbility, so there is no
   trend source today. Archaeology (484e58ad, June 2024): the `PlayerHistory` table was *born* with
   exactly today's columns — competitive levels, co-op rating, pass count — and has only ever fed the
@@ -255,11 +256,11 @@ Pumbility widget consumes finished contracts.
   simply doesn't persist it. **Capture lands in PR #1** (owner: "get that PR in first and I'll push it
   quick"): `SkillRating` on the history entity + record + saga mapping + migration — forward-only data;
   the widget renders its sparkline/weekly-delta conditionally once ≥ 2 points exist ("trend starts
-  tracking from today" until then). Implementation note: verify `NewTop50` equals the P2 two-pool
-  combined value before mapping. Optional backfill: Pumbility-as-of-date is reconstructible from the
+  tracking from today" until then). Implementation note: `NewTop50` is the overall PUMBILITY
+  (`SkillRating`, the merged top-50) — map it straight through. Optional backfill: Pumbility-as-of-date is reconstructible from the
   ScoreLedger journal, but only back to journal capture start (weeks) — likely not worth a job.
-- **Projected targets consume Projections v2 (PR #1) from day one** — per-pool P2 baselines, skill-match
-  chips, the plate curve. The widget's stats/pools render from `GetPlayerStatsQuery` regardless, and
+- **Projected targets consume Projections v2 (PR #1) from day one** — the merged P2 baseline (one mixed
+  top-50, corrected 2026-07-13), skill-match chips, the plate curve. The widget's stats/pools render from `GetPlayerStatsQuery` regardless, and
   insufficient-data degradation stays (per-widget degradation, D14).
 
 ### W3 — Weekly Challenge (data: WeeklyChallenge)
@@ -476,8 +477,9 @@ there) before the widget exists.
 cohort = players within ±1 competitive level per chart type; my expected score on a candidate chart =
 cohort score distribution interpolated at my average percentile across played charts in that (type, level)
 slice (×0.95 damping); expected pumbility assumes an EG plate; gains measured against the lowest of ONE
-mixed top-50 pool. Phoenix 2 is explicitly disabled — the in-code TODO defers two-pool projection to
-"the What-Should-I-Play overhaul," i.e. this project.
+mixed top-50 pool. Phoenix 2 is explicitly disabled — the in-code TODO defers the Phoenix 2 projection to
+"the What-Should-I-Play overhaul," i.e. this project. (Since 2026-07-13, Phoenix 2 uses the same single
+mixed pool as Phoenix.)
 
 **V2 scope:**
 
@@ -520,10 +522,10 @@ mixed top-50 pool. Phoenix 2 is explicitly disabled — the in-code TODO defers 
    measured at 2k-band granularity (FG→TG at 964k, TG→MG at 972k, MG→UG at 996k). Ship as a pure Domain
    function with the table pinned by a DomainTest; recalibrate for P2 once its plate data accumulates
    (same query, one constant swap) — explicitly not an exact science.
-4. While in there: assert `PlayerRatingsImprovedEvent.NewTop50` equals the P2 two-pool combined value
-   (feeds the P1 history capture in this same PR). *Verified: `PlayerRatingSaga` sums the int-floored
-   S+D pools so `SkillRating == SinglesRating + DoublesRating` exactly, and the same variable feeds
-   the stats record and the event.*
+4. While in there: `PlayerRatingsImprovedEvent.NewTop50` is the overall PUMBILITY (`SkillRating`) that
+   feeds the P1 history capture in this same PR. *Corrected 2026-07-13: `SkillRating` is the merged
+   top-50, NOT `SinglesRating + DoublesRating` — the same variable feeds the stats record and the
+   event, so map `NewTop50` straight through.*
 
 **Tests**: pool math + proficiency adjustment as pure DomainTests; saga component tests with mocked
 readers over a fixed cohort fixture; the skill-deviation query handler gets tests pinning equivalence
@@ -534,9 +536,9 @@ pin the builder's behavior from the tier-list side).
 
 | P | Content |
 |---|---|
-| P1 | **History capture**: `SkillRating` column on the history entity + migration; `PlayerRatingRecord` field; `PlayerHistorySaga` maps `NewTop50`; repository read/write mapping; NewTop50 ≡ two-pool-combined assertion; DATABASE-SCHEMA row |
+| P1 | **History capture**: `SkillRating` column on the history entity + migration; `PlayerRatingRecord` field; `PlayerHistorySaga` maps `NewTop50`; repository read/write mapping; NewTop50 ≡ `SkillRating` (merged top-50); DATABASE-SCHEMA row |
 | P2 | **Skill-deviation query**: expose `TierListBlendBuilder`'s skill computation (post-#140 home of the machinery) through a published `GetPlayerSkillDeviationsQuery`; equivalence tests pin same-inputs-same-outputs |
-| P3 | **Pools abstraction** in `PumbilityProjectionSaga`: Phoenix single mixed pool, P2 independent S+D pools; DomainTests for the pool math |
+| P3 | **Pools abstraction** in `PumbilityProjectionSaga`: Phoenix and Phoenix 2 both a single mixed pool (P2 corrected 2026-07-13 — was two S+D pools); DomainTests for the pool math |
 | P4 | **Plate curve**: pure Domain step function (empirical table pinned by DomainTest) replaces the flat-EG assumption |
 | P5 | **Skill adjustment + "why"**: damped deviation adjustment on expected scores; signed skill-match contributions on `PumbilityProjection`; enable Phoenix 2 on `/Pumbility` (delete the in-code TODO) |
 | P6 | Docs + localization for any new `/Pumbility` strings (all locales, one pass) |
