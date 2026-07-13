@@ -1890,9 +1890,11 @@ html.nav-away .page-dock,
     min-width: 82px;
 }
 
+/* Plate lives on the Save row (owner, 2026-07-13): compact on the left, Save pushed right. */
 .qr-plate-field {
-    flex: 1 1 0;
-    min-width: 82px;
+    flex: 0 1 auto;
+    min-width: 104px;
+    max-width: 168px;
 }
 
 /* The derived grade doubles as the broken toggle — click to flip pass/broken while keeping
@@ -1916,11 +1918,14 @@ html.nav-away .page-dock,
     gap: 6px;
 }
 
-/* Save gets its own row now that broken folded into the plate dropdown — a full-height,
-   right-aligned target that never clips on narrow widths (the mobile bug). */
+/* Second row: plate on the left, Save pushed to the right (margin-left auto) so it never
+   clips on narrow widths (the mobile bug). Pinned to the bottom of the body. */
 .qr-actionrow-save {
-    justify-content: flex-end;
     margin-top: auto;
+}
+
+.qr-actionrow-save .qr-save-btn {
+    margin-left: auto;
 }
 
 /* MudBlazor fields carry generous default margins — reclaim them for the tight footprint. */

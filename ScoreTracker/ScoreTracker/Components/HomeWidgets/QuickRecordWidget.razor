@@ -111,6 +111,8 @@ else
                             <LetterGradeIcon Grade="_derivedGrade" IsBroken="_broken" Height="26"/>
                         </span>
                     }
+                </div>
+                <div class="qr-actionrow qr-actionrow-save">
                     <MudSelect T="string" Value="_resultValue" ValueChanged="OnResultChanged" Label="@L["Plate"]"
                                Clearable="true" Dense="true" Margin="Margin.Dense" Disabled="EditMode || _isSaving"
                                Class="qr-plate-field">
@@ -120,8 +122,6 @@ else
                             <MudSelectItem T="string" Value="@plate.GetShorthand()">@plate.GetShorthand()</MudSelectItem>
                         }
                     </MudSelect>
-                </div>
-                <div class="qr-actionrow qr-actionrow-save">
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="qr-save-btn"
                                Disabled="EditMode || _isSaving || !CanSave" OnClick="Save">@L["Save"]</MudButton>
                 </div>
