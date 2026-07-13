@@ -1,4 +1,5 @@
 using ScoreTracker.WeeklyChallenge.Contracts;
+using ScoreTracker.WeeklyChallenge.Contracts.Commands;
 using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.WeeklyChallenge.Contracts.Queries;
 using ScoreTracker.WeeklyChallenge.Domain;
@@ -10,23 +11,27 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.WeeklyChallenge.Application;
 
 // Daily Step: the site-run daily challenge board (sibling of the weekly tournament, same bounded
 // context). Rotates once a day at midnight ET, registers imported scores that land on the live
-// chart, and flips to "lowest passing wins" on the deterministic weekly Limbo day.
+// chart (marked Official), accepts manual widget submissions (marked Manual — the only path to a
+// deliberate Limbo low-pass), and flips to "lowest passing wins" on the deterministic weekly Limbo day.
 internal sealed class DailyStepSaga(
     IDailyStepRepository dailySteps,
     IChartRepository charts,
     IPlayerStatsReader playerStats,
+    ICurrentUserAccessor currentUser,
     IDateTimeOffsetAccessor dateTime,
     IRandomNumberGenerator random,
     ILogger<DailyStepSaga> logger) :
     IConsumer<RotateDailyStepCommand>,
     IConsumer<DailyStepScoreObservedEvent>,
+    IRequestHandler<RecordDailyStepScoreCommand>,
     IRequestHandler<GetDailyStepQuery, DailyStepBoard?>,
-    IRequestHandler<GetDailyStepEntriesQuery, IEnumerable<WeeklyTournamentEntry>>,
+    IRequestHandler<GetDailyStepEntriesQuery, IEnumerable<DailyStepEntry>>,
     IRequestHandler<GetDailyStepPlacementQuery, DailyStepPlacement?>
 {
     // Normal days draw a challenge-worthy chart; Limbo days drop to something almost anyone can
@@ -81,7 +86,7 @@ internal sealed class DailyStepSaga(
 
     private async Task SnapshotFinishingBoard(MixEnum mix, DailyStepBoard finishing, CancellationToken ct)
     {
-        var entries = (await dailySteps.GetEntries(mix, finishing.ChartId, ct)).ToArray();
+        var entries = (await dailySteps.GetEntries(mix, finishing.ChartId, ct)).Select(ToRanked).ToArray();
         if (entries.Length == 0) return;
         var ranked = finishing.IsLimbo
             ? WeeklyChartSuggestionPolicy.ProcessIntoPlacesAscending(entries)
@@ -121,23 +126,43 @@ internal sealed class DailyStepSaga(
             isBroken = msg.BestIsBroken;
         }
 
-        var chart = (await charts.GetCharts(msg.Mix, chartIds: new[] { msg.ChartId }, cancellationToken: ct))
+        await UpsertEntry(msg.Mix, board, msg.UserId, score, plate, isBroken, DailyStepSource.Official, ct);
+    }
+
+    // A manual submission from the widget's Record popover: daily-board-only (never the ledger, so a
+    // deliberate Limbo low never pollutes a PB), stamped Manual. The caller is resolved server-side
+    // and the score always counts as a pass — a selected plate implies completion.
+    public async Task Handle(RecordDailyStepScoreCommand request, CancellationToken cancellationToken)
+    {
+        var board = await dailySteps.GetCurrentChart(request.Mix, cancellationToken);
+        if (board == null) return;
+        await UpsertEntry(request.Mix, board, currentUser.User.Id, request.Score, request.Plate, false,
+            DailyStepSource.Manual, cancellationToken);
+    }
+
+    // The single intake seam for both sources: keep the board-appropriate extreme — lowest passing on
+    // Limbo, highest otherwise — and stamp the winning score's source. So a manual Limbo low naturally
+    // beats an official best on a Limbo day (and reads Manual), while a higher official best wins a
+    // normal day (and reads Official).
+    private async Task UpsertEntry(MixEnum mix, DailyStepBoard board, Guid userId, PhoenixScore score,
+        PhoenixPlate plate, bool isBroken, DailyStepSource source, CancellationToken ct)
+    {
+        var chart = (await charts.GetCharts(mix, chartIds: new[] { board.ChartId }, cancellationToken: ct))
             .SingleOrDefault();
         if (chart == null) return;
-        var stats = await playerStats.GetStats(msg.Mix, msg.UserId, ct);
+        var stats = await playerStats.GetStats(mix, userId, ct);
         var competitiveLevel = chart.Type == ChartType.Single ? stats.SinglesCompetitiveLevel
             : chart.Type == ChartType.Double ? stats.DoublesCompetitiveLevel
             : stats.CompetitiveLevel;
 
-        var existing = (await dailySteps.GetEntries(msg.Mix, msg.ChartId, ct))
-            .FirstOrDefault(e => e.UserId == msg.UserId);
-        // Keep the board-appropriate extreme: lowest passing on Limbo, highest otherwise.
-        if (existing != null && !(board.IsLimbo ? score < (int)existing.Score : score > (int)existing.Score))
+        var existing = (await dailySteps.GetEntries(mix, board.ChartId, ct))
+            .FirstOrDefault(e => e.UserId == userId);
+        if (existing != null &&
+            !(board.IsLimbo ? (int)score < (int)existing.Score : (int)score > (int)existing.Score))
             return;
 
-        await dailySteps.SaveEntry(msg.Mix,
-            new WeeklyTournamentEntry(msg.UserId, msg.ChartId, score, plate, isBroken, null, competitiveLevel),
-            ct);
+        await dailySteps.SaveEntry(mix,
+            new DailyStepEntry(userId, board.ChartId, score, plate, isBroken, competitiveLevel, source), ct);
     }
 
     public async Task<DailyStepBoard?> Handle(GetDailyStepQuery request, CancellationToken cancellationToken)
@@ -145,7 +170,7 @@ internal sealed class DailyStepSaga(
         return await dailySteps.GetCurrentChart(request.Mix, cancellationToken);
     }
 
-    public async Task<IEnumerable<WeeklyTournamentEntry>> Handle(GetDailyStepEntriesQuery request,
+    public async Task<IEnumerable<DailyStepEntry>> Handle(GetDailyStepEntriesQuery request,
         CancellationToken cancellationToken)
     {
         return await dailySteps.GetEntries(request.Mix, null, cancellationToken);
@@ -156,7 +181,8 @@ internal sealed class DailyStepSaga(
     {
         var board = await dailySteps.GetCurrentChart(request.Mix, cancellationToken);
         if (board == null) return null;
-        var entries = (await dailySteps.GetEntries(request.Mix, board.ChartId, cancellationToken)).ToArray();
+        var entries = (await dailySteps.GetEntries(request.Mix, board.ChartId, cancellationToken))
+            .Select(ToRanked).ToArray();
         var ranked = (board.IsLimbo
             ? WeeklyChartSuggestionPolicy.ProcessIntoPlacesAscending(entries)
             : WeeklyChartSuggestionPolicy.ProcessIntoPlaces(entries)).ToArray();
@@ -164,6 +190,11 @@ internal sealed class DailyStepSaga(
             .FirstOrDefault();
         return mine == null ? null : new DailyStepPlacement(mine.Value, ranked.Length, board.IsLimbo);
     }
+
+    // The placement policy (shared with Weekly) ranks WeeklyTournamentEntry; Daily entries carry an
+    // extra Source that ordering ignores, so map across for the ranking only.
+    private static WeeklyTournamentEntry ToRanked(DailyStepEntry e) =>
+        new(e.UserId, e.ChartId, e.Score, e.Plate, e.IsBroken, null, e.CompetitiveLevel);
 
     // The board resets at 05:00 UTC — midnight ET on the codebase's EST reference (the
     // rotate-daily-step cron slot). ExpirationDate is that exact moment so the widget countdown is

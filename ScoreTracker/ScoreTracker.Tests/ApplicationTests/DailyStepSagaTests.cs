@@ -1,5 +1,6 @@
 using ScoreTracker.WeeklyChallenge.Application;
 using ScoreTracker.WeeklyChallenge.Contracts;
+using ScoreTracker.WeeklyChallenge.Contracts.Commands;
 using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.WeeklyChallenge.Contracts.Queries;
 using ScoreTracker.WeeklyChallenge.Domain;
@@ -136,7 +137,8 @@ public sealed class DailyStepSagaTests
         await saga.Consume(Context(Observed(userId, chart.Id, best: 950_000, lowestPass: 800_000)));
 
         daily.Verify(d => d.SaveEntry(MixEnum.Phoenix,
-            It.Is<WeeklyTournamentEntry>(e => e.UserId == userId && e.Score == (PhoenixScore)950_000),
+            It.Is<DailyStepEntry>(e => e.UserId == userId && e.Score == (PhoenixScore)950_000
+                                       && e.Source == DailyStepSource.Official),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -150,7 +152,7 @@ public sealed class DailyStepSagaTests
 
         await saga.Consume(Context(Observed(userId, chart.Id, best: 900_000, lowestPass: 850_000)));
 
-        daily.Verify(d => d.SaveEntry(It.IsAny<MixEnum>(), It.IsAny<WeeklyTournamentEntry>(),
+        daily.Verify(d => d.SaveEntry(It.IsAny<MixEnum>(), It.IsAny<DailyStepEntry>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -166,8 +168,8 @@ public sealed class DailyStepSagaTests
         await saga.Consume(Context(Observed(userId, chart.Id, best: 990_000, lowestPass: 720_000)));
 
         daily.Verify(d => d.SaveEntry(MixEnum.Phoenix,
-            It.Is<WeeklyTournamentEntry>(e => e.UserId == userId && e.Score == (PhoenixScore)720_000
-                                              && !e.IsBroken),
+            It.Is<DailyStepEntry>(e => e.UserId == userId && e.Score == (PhoenixScore)720_000
+                                       && !e.IsBroken && e.Source == DailyStepSource.Official),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -181,7 +183,7 @@ public sealed class DailyStepSagaTests
         await saga.Consume(Context(Observed(userId, chart.Id, best: 700_000, lowestPass: null,
             bestIsBroken: true)));
 
-        daily.Verify(d => d.SaveEntry(It.IsAny<MixEnum>(), It.IsAny<WeeklyTournamentEntry>(),
+        daily.Verify(d => d.SaveEntry(It.IsAny<MixEnum>(), It.IsAny<DailyStepEntry>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -193,7 +195,7 @@ public sealed class DailyStepSagaTests
 
         await saga.Consume(Context(Observed(Guid.NewGuid(), Guid.NewGuid(), best: 950_000, lowestPass: 900_000)));
 
-        daily.Verify(d => d.SaveEntry(It.IsAny<MixEnum>(), It.IsAny<WeeklyTournamentEntry>(),
+        daily.Verify(d => d.SaveEntry(It.IsAny<MixEnum>(), It.IsAny<DailyStepEntry>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -222,6 +224,45 @@ public sealed class DailyStepSagaTests
         Assert.False(placement.IsLimbo);
     }
 
+    [Fact]
+    public async Task ManualRecordSavesTheSubmittedScoreStampedManual()
+    {
+        var chart = ChartAt(ChartType.Single, 20);
+        var me = new UserBuilder().Build();
+        var meId = me.Id;
+        var (daily, saga) = IntakeContext(Board(chart.Id, isLimbo: false), chart, NormalDay,
+            currentUser: CurrentUserReturning(me));
+
+        await saga.Handle(new RecordDailyStepScoreCommand(875_000, PhoenixPlate.MarvelousGame),
+            CancellationToken.None);
+
+        daily.Verify(d => d.SaveEntry(MixEnum.Phoenix,
+            It.Is<DailyStepEntry>(e => e.UserId == meId && e.Score == (PhoenixScore)875_000
+                                       && e.Plate == PhoenixPlate.MarvelousGame && !e.IsBroken
+                                       && e.Source == DailyStepSource.Manual),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ManualLimboLowReplacesAHigherOfficialEntry()
+    {
+        var chart = ChartAt(ChartType.Single, 10);
+        var me = new UserBuilder().Build();
+        var meId = me.Id;
+        // A deliberate low pass typed into the widget beats the player's official best on Limbo day.
+        var (daily, saga) = IntakeContext(Board(chart.Id, isLimbo: true), chart, LimboDay,
+            existing: new[] { Entry(chart.Id, 970_000, meId) },
+            currentUser: CurrentUserReturning(me));
+
+        await saga.Handle(new RecordDailyStepScoreCommand(680_000, PhoenixPlate.FairGame),
+            CancellationToken.None);
+
+        daily.Verify(d => d.SaveEntry(MixEnum.Phoenix,
+            It.Is<DailyStepEntry>(e => e.UserId == meId && e.Score == (PhoenixScore)680_000
+                                       && e.Source == DailyStepSource.Manual),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     // --- fixtures ---------------------------------------------------------------------------
 
     private static Mock<IDailyStepRepository> FreshBoard()
@@ -234,17 +275,17 @@ public sealed class DailyStepSagaTests
 
     private static (Mock<IDailyStepRepository> Daily, DailyStepSaga Saga) IntakeContext(
         DailyStepBoard board, Chart chart, DateTimeOffset now,
-        IEnumerable<WeeklyTournamentEntry>? existing = null)
+        IEnumerable<DailyStepEntry>? existing = null, Mock<ICurrentUserAccessor>? currentUser = null)
     {
         var daily = new Mock<IDailyStepRepository>();
         daily.Setup(d => d.GetCurrentChart(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(board);
         daily.Setup(d => d.GetEntries(It.IsAny<MixEnum>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existing ?? Array.Empty<WeeklyTournamentEntry>());
+            .ReturnsAsync(existing ?? Array.Empty<DailyStepEntry>());
         var stats = new Mock<IPlayerStatsReader>();
         stats.Setup(s => s.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Stats(singles: 18.5, doubles: 12.0));
-        return (daily, BuildSaga(daily, ChartsReturning(new[] { chart }), stats, now));
+        return (daily, BuildSaga(daily, ChartsReturning(new[] { chart }), stats, now, currentUser));
     }
 
     private static DailyStepBoard Board(Guid chartId, bool isLimbo) =>
@@ -258,8 +299,9 @@ public sealed class DailyStepSagaTests
     private static Chart ChartAt(ChartType type, int level) =>
         new ChartBuilder().WithType(type).WithLevel(level).WithSongName($"{type}-{level}").Build();
 
-    private static WeeklyTournamentEntry Entry(Guid chartId, int score, Guid userId, bool isBroken = false) =>
-        new(userId, chartId, score, PhoenixPlate.SuperbGame, isBroken, null, 20.0);
+    private static DailyStepEntry Entry(Guid chartId, int score, Guid userId, bool isBroken = false,
+        DailyStepSource source = DailyStepSource.Official) =>
+        new(userId, chartId, score, PhoenixPlate.SuperbGame, isBroken, 20.0, source);
 
     private static Mock<IChartRepository> ChartsReturning(IEnumerable<Chart> charts)
     {
@@ -280,14 +322,24 @@ public sealed class DailyStepSagaTests
         Mock<IDailyStepRepository> daily,
         Mock<IChartRepository>? charts = null,
         Mock<IPlayerStatsReader>? playerStats = null,
-        DateTimeOffset? now = null)
+        DateTimeOffset? now = null,
+        Mock<ICurrentUserAccessor>? currentUser = null)
     {
         charts ??= new Mock<IChartRepository>();
         playerStats ??= new Mock<IPlayerStatsReader>();
+        currentUser ??= CurrentUserReturning(new UserBuilder().Build());
         var random = new Mock<IRandomNumberGenerator>();
         random.Setup(r => r.Next(It.IsAny<int>())).Returns(0);
-        return new DailyStepSaga(daily.Object, charts.Object, playerStats.Object,
+        return new DailyStepSaga(daily.Object, charts.Object, playerStats.Object, currentUser.Object,
             FakeDateTime.At(now ?? NormalDay).Object, random.Object, NullLogger<DailyStepSaga>.Instance);
+    }
+
+    private static Mock<ICurrentUserAccessor> CurrentUserReturning(User user)
+    {
+        var mock = new Mock<ICurrentUserAccessor>();
+        mock.Setup(c => c.User).Returns(user);
+        mock.Setup(c => c.IsLoggedIn).Returns(true);
+        return mock;
     }
 
     private static ConsumeContext<T> Context<T>(T message) where T : class

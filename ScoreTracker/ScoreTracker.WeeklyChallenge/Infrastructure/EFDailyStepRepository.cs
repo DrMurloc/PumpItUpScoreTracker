@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.SharedKernel.Enums;
-using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.WeeklyChallenge.Infrastructure
@@ -76,7 +75,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
             cache.Remove(CurrentChartKey(mix));
         }
 
-        public async Task<IEnumerable<WeeklyTournamentEntry>> GetEntries(MixEnum mix, Guid? chartId,
+        public async Task<IEnumerable<DailyStepEntry>> GetEntries(MixEnum mix, Guid? chartId,
             CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
@@ -84,12 +83,11 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
             var query = database.Set<DailyStepEntryEntity>().Where(e => e.MixId == mixId);
             if (chartId != null) query = query.Where(e => e.ChartId == chartId);
 
-            return (await query.ToArrayAsync(cancellationToken)).Select(e => new WeeklyTournamentEntry(e.UserId,
-                e.ChartId, e.Score, Enum.Parse<PhoenixPlate>(e.Plate), e.IsBroken,
-                e.Photo == null ? null : new Uri(e.Photo, UriKind.Absolute), e.CompetitiveLevel));
+            return (await query.ToArrayAsync(cancellationToken)).Select(e => new DailyStepEntry(e.UserId,
+                e.ChartId, e.Score, Enum.Parse<PhoenixPlate>(e.Plate), e.IsBroken, e.CompetitiveLevel, e.Source));
         }
 
-        public async Task SaveEntry(MixEnum mix, WeeklyTournamentEntry entry, CancellationToken cancellationToken)
+        public async Task SaveEntry(MixEnum mix, DailyStepEntry entry, CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
             var mixId = MixIds.For(mix);
@@ -105,8 +103,8 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                     Plate = entry.Plate.ToString(),
                     Score = entry.Score,
                     UserId = entry.UserId,
-                    Photo = entry.PhotoUrl?.ToString(),
-                    CompetitiveLevel = entry.CompetitiveLevel
+                    CompetitiveLevel = entry.CompetitiveLevel,
+                    Source = entry.Source
                 }, cancellationToken);
             }
             else
@@ -115,7 +113,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                 entity.Score = entry.Score;
                 entity.CompetitiveLevel = entry.CompetitiveLevel;
                 entity.IsBroken = entry.IsBroken;
-                entity.Photo = entry.PhotoUrl?.ToString();
+                entity.Source = entry.Source;
             }
 
             await database.SaveChangesAsync(cancellationToken);
