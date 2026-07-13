@@ -92,6 +92,8 @@ else
     [Parameter] public MixEnum EffectiveMix { get; set; }
     [Parameter] public bool EditMode { get; set; }
     [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
+    // Part of the widget render contract (§2.2) — the host bumps this to force a reload.
+    [Parameter] public int RefreshToken { get; set; }
 
     private const int FeedTake = 30;
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
@@ -103,7 +105,7 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{Widget.SizePreset}|{EffectiveMix}";
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{Widget.SizePreset}|{EffectiveMix}|{RefreshToken}";
         if (signature == _loadedFor) return;
         _loadedFor = signature;
         _loaded = false;
