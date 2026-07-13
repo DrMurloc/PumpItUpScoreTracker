@@ -87,7 +87,7 @@ Percentile semantics are the established `ScoreRankingRecord.Ranking` convention
 
 ## 4. Home dashboard widgets
 
-The widget home page ([design doc](design/home-page-widgets.md)) adds a vocabulary with its own rules:
+The widget home page ([design doc](design/HomePageWidgets/README.md)) adds a vocabulary with its own rules:
 
 - **The host owns the chrome.** `WidgetHost` renders the card frame, title, edit controls, per-cell
   `ErrorBoundary`, and the unknown-type fallback. Widget components render **bodies only** — never

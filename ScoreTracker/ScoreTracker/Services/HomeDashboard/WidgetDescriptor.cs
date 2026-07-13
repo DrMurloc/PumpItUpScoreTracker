@@ -2,7 +2,7 @@ using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Web.Services.HomeDashboard;
 
-/// <summary>Add-drawer grouping (docs/design/home-page-widgets.md §2.2).</summary>
+/// <summary>Add-drawer grouping (docs/design/HomePageWidgets/README.md §2.2).</summary>
 public enum WidgetCategory
 {
     Play,
