@@ -58,6 +58,12 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
                 TimeSpan.FromMinutes(2), "Nomico", Bpm.From(140, 140)),
             ChartType.Double, 22, MixEnum.Phoenix, null, 1200, new HashSet<Skill>());
 
+    private static Chart MakeXxChart() =>
+        new(Guid.NewGuid(), MixEnum.XX,
+            new Song("Chimera", SongType.Arcade, new Uri("https://piu.test/xx.png"),
+                TimeSpan.FromMinutes(2), "SHK", Bpm.From(200, 200)),
+            ChartType.Single, 18, MixEnum.XX, null, 800, new HashSet<Skill>());
+
     private IRenderedComponent<QuickRecordWidget> Render(bool editMode = false, string configJson = "{}")
     {
         var widget = new HomePageWidgetRecord(Guid.NewGuid(), "quick-record", null, 0, "1x1", configJson, 1);
@@ -151,5 +157,43 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
         var cut = Render(editMode: true);
 
         Assert.True(cut.FindComponent<ChartSelector>().Instance.Disabled);
+    }
+
+    [Fact]
+    public void AllMixesModeDisablesTheChartSelectorUntilAMixIsChosen()
+    {
+        var cut = Render(configJson: "{\"allMixes\":true}");
+
+        Assert.NotEmpty(cut.FindComponents<MudSelect<MixEnum?>>());
+        Assert.True(cut.FindComponent<ChartSelector>().Instance.Disabled);
+        Assert.Contains("Select a mix", cut.Markup);
+    }
+
+    [Fact]
+    public async Task PickingALegacyMixThenSavingUsesTheXxCommand()
+    {
+        var xxChart = MakeXxChart();
+        _mediator.Setup(m => m.Send(It.Is<GetChartsQuery>(q => q.Mix == MixEnum.XX), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { xxChart });
+        _mediator.Setup(m => m.Send(It.IsAny<GetXXBestChartAttemptQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BestXXChartAttempt(xxChart,
+                new XXChartAttempt(XXLetterGrade.SSS, false, (XXScore?)98000,
+                    new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero))));
+        _mediator.Setup(m => m.Send(It.IsAny<UpdateXXBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var cut = Render(configJson: "{\"allMixes\":true}");
+        await cut.InvokeAsync(() =>
+            cut.FindComponent<MudSelect<MixEnum?>>().Instance.ValueChanged.InvokeAsync(MixEnum.XX));
+        await Pick(cut, xxChart); // legacy prefill sets the letter grade → Save enabled
+
+        cut.Find(".qr-save-btn").Click();
+
+        _mediator.Verify(m => m.Send(
+            It.Is<UpdateXXBestAttemptCommand>(c =>
+                c.chartId == xxChart.Id && c.Mix == MixEnum.XX && c.LetterGrade == XXLetterGrade.SSS && !c.IsBroken),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }
