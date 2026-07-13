@@ -3542,4 +3542,49 @@
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} on the board</value>
   </data>
+  <data name="Account Stats" xml:space="preserve">
+    <value>Account Stats</value>
+  </data>
+  <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
+    <value>Your Pumbility and competitive level, plus your closest matches.</value>
+  </data>
+  <data name="Pumbility" xml:space="preserve">
+    <value>Pumbility</value>
+  </data>
+  <data name="Match players on" xml:space="preserve">
+    <value>Match players on</value>
+  </data>
+  <data name="Singles competitive level" xml:space="preserve">
+    <value>Singles competitive level</value>
+  </data>
+  <data name="Doubles competitive level" xml:space="preserve">
+    <value>Doubles competitive level</value>
+  </data>
+  <data name="Combined competitive level" xml:space="preserve">
+    <value>Combined competitive level</value>
+  </data>
+  <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
+    <value>Your closest matches show at 1×2 and taller.</value>
+  </data>
+  <data name="Closest · Singles" xml:space="preserve">
+    <value>Closest · Singles</value>
+  </data>
+  <data name="Closest · Doubles" xml:space="preserve">
+    <value>Closest · Doubles</value>
+  </data>
+  <data name="Closest · Combined" xml:space="preserve">
+    <value>Closest · Combined</value>
+  </data>
+  <data name="No close matches yet." xml:space="preserve">
+    <value>No close matches yet.</value>
+  </data>
+  <data name="Pumbility Push" xml:space="preserve">
+    <value>Pumbility Push</value>
+  </data>
+  <data name="Suggested · Pumbility Push" xml:space="preserve">
+    <value>Suggested · Pumbility Push</value>
+  </data>
+  <data name="The biggest Pumbility gains available to you right now." xml:space="preserve">
+    <value>The biggest Pumbility gains available to you right now.</value>
+  </data>
 </root>

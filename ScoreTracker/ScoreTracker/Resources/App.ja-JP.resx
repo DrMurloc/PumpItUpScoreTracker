@@ -3543,4 +3543,49 @@
   <data name="{0} on the board" xml:space="preserve">
     <value>{0}人が参加中</value>
   </data>
+  <data name="Account Stats" xml:space="preserve">
+    <value>アカウント統計</value>
+  </data>
+  <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
+    <value>あなたのPumbilityと競技レベル、そして最も近いライバル。</value>
+  </data>
+  <data name="Pumbility" xml:space="preserve">
+    <value>Pumbility</value>
+  </data>
+  <data name="Match players on" xml:space="preserve">
+    <value>プレイヤーの一致基準</value>
+  </data>
+  <data name="Singles competitive level" xml:space="preserve">
+    <value>Singlesの競技レベル</value>
+  </data>
+  <data name="Doubles competitive level" xml:space="preserve">
+    <value>Doublesの競技レベル</value>
+  </data>
+  <data name="Combined competitive level" xml:space="preserve">
+    <value>総合競技レベル</value>
+  </data>
+  <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
+    <value>最も近いライバルは1×2以上のサイズで表示されます。</value>
+  </data>
+  <data name="Closest · Singles" xml:space="preserve">
+    <value>最も近い · Singles</value>
+  </data>
+  <data name="Closest · Doubles" xml:space="preserve">
+    <value>最も近い · Doubles</value>
+  </data>
+  <data name="Closest · Combined" xml:space="preserve">
+    <value>最も近い · 総合</value>
+  </data>
+  <data name="No close matches yet." xml:space="preserve">
+    <value>近いライバルはまだいません。</value>
+  </data>
+  <data name="Pumbility Push" xml:space="preserve">
+    <value>Pumbility更新</value>
+  </data>
+  <data name="Suggested · Pumbility Push" xml:space="preserve">
+    <value>おすすめ · Pumbility更新</value>
+  </data>
+  <data name="The biggest Pumbility gains available to you right now." xml:space="preserve">
+    <value>今のあなたが狙えるPumbilityの伸びが大きい順。</value>
+  </data>
 </root>

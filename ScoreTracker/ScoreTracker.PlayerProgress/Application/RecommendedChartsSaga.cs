@@ -106,6 +106,9 @@ namespace ScoreTracker.PlayerProgress.Application
                 result = result.Concat(
                     await GetRandomFromTop50Charts(mix, feedback, request.ChartType, cancellationToken, charts,
                         window));
+            if (Include(RecommendationCategory.PushPumbility))
+                result = result.Concat(
+                    await GetPumbilityPushes(mix, feedback, request.ChartType, cancellationToken, charts, window));
             return result.ToArray();
         }
 
@@ -266,6 +269,33 @@ namespace ScoreTracker.PlayerProgress.Application
             return result
                 .Select(c => new ChartRecommendation(RecommendationCategories.ImproveTop50, c.ChartId,
                     "These are randomly pulled from your best 100 charts based on competitive score. Push that score!"));
+        }
+
+        /// <summary>
+        ///     The projected-Pumbility targets that used to live in the Pumbility widget: each
+        ///     chart's expected gain to your overall rating, biggest first. Unlike
+        ///     <see cref="GetRandomFromTop50Charts" />, which shuffles the top 50, these are
+        ///     ranked by gain and stamp the "+N" onto the recommendation.
+        /// </summary>
+        private async Task<IEnumerable<ChartRecommendation>> GetPumbilityPushes(MixEnum mix,
+            IDictionary<string, ISet<Guid>> ignoredChartIds, ChartType? chartType,
+            CancellationToken cancellationToken, IDictionary<Guid, Chart> charts, Func<Chart, bool>? window)
+        {
+            var skipped = ignoredChartIds.TryGetValue(RecommendationCategories.PushPumbility, out var s)
+                ? s
+                : new HashSet<Guid>();
+
+            var projection =
+                await _mediator.Send(new ProjectPumbilityGainsQuery(_currentUser.User.Id, mix), cancellationToken);
+
+            return projection.ProjectedGains
+                .Where(kv => kv.Value > 0 && charts.ContainsKey(kv.Key) && !skipped.Contains(kv.Key))
+                .Where(kv => chartType == null || charts[kv.Key].Type == chartType)
+                .Where(kv => window == null || window(charts[kv.Key]))
+                .OrderByDescending(kv => kv.Value)
+                .Take(12)
+                .Select(kv => new ChartRecommendation(RecommendationCategories.PushPumbility, kv.Key,
+                    "The biggest Pumbility gains available to you right now", "+" + kv.Value.ToString("N0")));
         }
 
         private async Task<IEnumerable<ChartRecommendation>> GetSkillTitleCharts(

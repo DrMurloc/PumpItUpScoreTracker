@@ -231,7 +231,20 @@ Pumbility widget consumes finished contracts.
   next import." Error isolated.
 - **Mixes**: Phoenix, Phoenix 2 (multi).
 
-### W2 — Pumbility (data: PlayerProgress)
+### W2 — Account Stats (data: PlayerProgress)
+
+> **Refactor (2026-07-13): Pumbility widget → Account Stats.** The glowy total Pumbility + S/D pools
+> stay and **competitive level (S/D)** joins them. The **projected-target list moved out** to Suggested
+> Charts' new **Pumbility Push** goal (§4) — gain-ranked, not the random Improve-Top-50 category. At
+> **1×2 and taller** the widget adds your **closest competitive matches**: the nearest 25 players within
+> **±1.0** on the configured dimension (Singles / Doubles / Combined → `GetCompetitiveNeighborsQuery`,
+> range + top-N ordered in SQL), eligibility = **public OR in your non-region communities** (the
+> `CommunityGlowReader` set, which also drives the **green glow**, mirroring the weekly/daily boards);
+> rows link to `/Player/{id}/Sessions`. Config drops show-projections / dismissed-charts and gains a
+> **Match dimension**; the **Mix** override follows the current mix but falls back to **Phoenix 2** on
+> pre-Phoenix mixes, and a pinned mix that differs from the current one shows as a pill in the title.
+> Sizes are now **1×1 / 1×2 / 1×3**. TypeId stays `pumbility` (export vocabulary). The historical W2
+> spec below describes the original Pumbility widget.
 
 - **Data**: `GetPlayerStatsQuery` → `SkillRating` (the merged top-50; + `SinglesRating`/`DoublesRating`
   for the per-pool sub-line — note `SkillRating` is NOT their sum); `ProjectPumbilityGainsQuery` → `PumbilityProjection.ProjectedGains` → top entry(ies),
@@ -353,7 +366,10 @@ scoring-level basis** toggle (`GetChartScoringLevelsQuery`, printed-level fallba
 re-roll in the body meta row. The page's vestigial `LevelOffset` UI is superseded by the level modes.
 
 - **Goal bundles** (`SuggestedGoal` → engine categories): *Title Hunt* = PushLevel + SkillTitles ·
-  *Score Push* = PushPGs + ImproveTop50 + RevisitOldScores · *Fill Gaps* = FillScores. The Weekly
+  *Score Push* = PushPGs + ImproveTop50 + RevisitOldScores · *Fill Gaps* = FillScores · *Pumbility
+  Push* = PushPumbility (2026-07-13: the gain-ranked projected targets that moved off the Account Stats
+  widget — `ProjectPumbilityGainsQuery`, biggest overall-rating gain first, stamps "+N"; distinct from
+  the random ImproveTop50, and has its own drawer preset). The Weekly
   category is dropped from the widget — the Weekly widget owns that board. Defaults per drawer preset:
   Score Push = Any level; Fill Gaps = Dynamic ±3.
 - **Engine** (`RecommendedChartsSaga`): `GetRecommendedChartsQuery` gained additive `Categories` +

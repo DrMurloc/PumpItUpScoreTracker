@@ -109,15 +109,15 @@
     },
     {
       "type": "pumbility",
-      "name": "PUMBILITY",
-      "description": "Pumbility targets tuned to your skill profile.",
+      "name": "Account Stats",
+      "description": "Your Pumbility and competitive level, plus your closest matches.",
       "category": "Progress",
       "supportedSizes": [
         "1x1",
-        "2x1",
-        "1x2"
+        "1x2",
+        "1x3"
       ],
-      "defaultSize": "2x1",
+      "defaultSize": "1x2",
       "supportedMixes": [
         "Phoenix",
         "Phoenix2"
@@ -161,15 +161,15 @@
             ],
             "nullable": true
           },
-          "showProjections": {
-            "type": "boolean"
-          },
-          "dismissedCharts": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "uuid"
-            },
+          "matchDimension": {
+            "enum": [
+              "Single",
+              "Double",
+              "SinglePerformance",
+              "DoublePerformance",
+              "CoOp",
+              "HalfDouble"
+            ],
             "nullable": true
           }
         }
@@ -408,7 +408,8 @@
             "enum": [
               "TitleHunt",
               "ScorePush",
-              "FillGaps"
+              "FillGaps",
+              "PumbilityPush"
             ]
           },
           "mix": {
@@ -468,7 +469,8 @@
                 "ImproveTop50",
                 "RevisitOldScores",
                 "FillScores",
-                "WeeklyCharts"
+                "WeeklyCharts",
+                "PushPumbility"
               ]
             },
             "nullable": true

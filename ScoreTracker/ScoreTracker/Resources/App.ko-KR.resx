@@ -3423,4 +3423,49 @@
   <data name="{0} on the board" xml:space="preserve">
     <value>{0}명 참여 중</value>
   </data>
+  <data name="Account Stats" xml:space="preserve">
+    <value>계정 통계</value>
+  </data>
+  <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
+    <value>당신의 Pumbility와 경쟁 레벨, 그리고 가장 가까운 상대.</value>
+  </data>
+  <data name="Pumbility" xml:space="preserve">
+    <value>Pumbility</value>
+  </data>
+  <data name="Match players on" xml:space="preserve">
+    <value>매칭 기준</value>
+  </data>
+  <data name="Singles competitive level" xml:space="preserve">
+    <value>싱글 경쟁 레벨</value>
+  </data>
+  <data name="Doubles competitive level" xml:space="preserve">
+    <value>더블 경쟁 레벨</value>
+  </data>
+  <data name="Combined competitive level" xml:space="preserve">
+    <value>종합 경쟁 레벨</value>
+  </data>
+  <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
+    <value>가장 가까운 상대는 1×2 이상 크기에서 표시됩니다.</value>
+  </data>
+  <data name="Closest · Singles" xml:space="preserve">
+    <value>가장 가까움 · 싱글</value>
+  </data>
+  <data name="Closest · Doubles" xml:space="preserve">
+    <value>가장 가까움 · 더블</value>
+  </data>
+  <data name="Closest · Combined" xml:space="preserve">
+    <value>가장 가까움 · 종합</value>
+  </data>
+  <data name="No close matches yet." xml:space="preserve">
+    <value>아직 가까운 상대가 없습니다.</value>
+  </data>
+  <data name="Pumbility Push" xml:space="preserve">
+    <value>Pumbility 올리기</value>
+  </data>
+  <data name="Suggested · Pumbility Push" xml:space="preserve">
+    <value>추천 · Pumbility 올리기</value>
+  </data>
+  <data name="The biggest Pumbility gains available to you right now." xml:space="preserve">
+    <value>지금 당신이 얻을 수 있는 가장 큰 Pumbility 상승.</value>
+  </data>
 </root>
