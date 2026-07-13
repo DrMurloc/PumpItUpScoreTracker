@@ -417,14 +417,14 @@ else if (_loaded)
     {
         _isSaving = true;
         var page = await Mediator.Send(new CreateHomePageCommand(L["Home"].Value));
-        // Beta starter: the trio, pre-placed — field-testers get a living board, not a
-        // blank canvas. The full curated default (D1) ships with the cutover.
-        foreach (var typeId in new[] { "competitive-level", "pumbility", "weekly-challenge" })
+        // The curated default (DefaultDashboardTemplate): eight widgets, pre-placed to
+        // pack the 4-column grid. A TypeId the registry doesn't know is skipped rather
+        // than seeded blank — the template stays valid if a widget is ever pulled.
+        foreach (var entry in DefaultDashboardTemplate.Entries)
         {
-            var descriptor = WidgetRegistry.TryGet(typeId);
-            if (descriptor == null) continue;
-            await Mediator.Send(new AddHomePageWidgetCommand(page.Id, descriptor.TypeId,
-                descriptor.DefaultSize.Token, null, "{}", 1));
+            if (WidgetRegistry.TryGet(entry.TypeId) == null) continue;
+            await Mediator.Send(new AddHomePageWidgetCommand(page.Id, entry.TypeId,
+                entry.SizeToken, null, entry.ConfigJson, 1));
         }
 
         await LoadPages();
