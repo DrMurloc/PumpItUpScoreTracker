@@ -109,4 +109,14 @@ internal sealed class EFScoreHighlightRepository : IScoreHighlightRepository
                 .ToArrayAsync(cancellationToken))
             .Select(ToRecord);
     }
+
+    public async Task<IEnumerable<(Guid UserId, MixEnum Mix, ScoreHighlightRecord Record)>> GetHighlightsSince(
+        DateTimeOffset since, CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var rows = await database.Set<ScoreHighlightEntity>()
+            .Where(e => e.OccurredAt >= since && e.SessionId != null)
+            .ToArrayAsync(cancellationToken);
+        return rows.Select(e => (e.UserId, MixIds.ToEnum(e.MixId), ToRecord(e)));
+    }
 }

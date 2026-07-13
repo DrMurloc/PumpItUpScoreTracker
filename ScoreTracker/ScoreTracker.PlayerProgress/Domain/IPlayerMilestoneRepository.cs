@@ -14,6 +14,10 @@ internal interface IPlayerMilestoneRepository
     /// <summary>Reads session-attached milestones for specific sessions (FK by SessionId).</summary>
     Task<IEnumerable<PlayerMilestoneRecord>> GetMilestonesBySessions(Guid userId, IEnumerable<Guid> sessionIds,
         CancellationToken cancellationToken);
+
+    /// <summary>Every title completion across all users on or after the cutoff — community-feed backfill source.</summary>
+    Task<IEnumerable<(Guid UserId, MixEnum Mix, PlayerMilestoneRecord Record)>> GetTitleCompletionsSince(
+        DateTimeOffset since, CancellationToken cancellationToken);
 }
 
 internal sealed record PlayerMilestoneWrite(

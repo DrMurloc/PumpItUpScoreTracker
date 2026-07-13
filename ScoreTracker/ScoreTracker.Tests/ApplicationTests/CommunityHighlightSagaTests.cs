@@ -31,11 +31,10 @@ public sealed class CommunityHighlightSagaTests
     private readonly Mock<IScoreReader> _scores = new();
     private readonly Mock<ITitleRepository> _titles = new();
 
-    private CommunityHighlightSaga Saga() => new(_charts.Object, _scores.Object, _titles.Object,
-        _highlights.Object, new MemoryCache(new MemoryCacheOptions()),
-        NullLogger<CommunityHighlightSaga>.Instance);
+    // The capture logic lives in the capturer now; the saga just delegates + isolates failures.
+    private CommunityHighlightCapturer Capturer() => new(_charts.Object, _scores.Object, _titles.Object,
+        _highlights.Object, new MemoryCache(new MemoryCacheOptions()));
 
-    // Wires the whole population read path around a single chart.
     private void SetupPopulation(Chart chart, int pgHolders, int activePlayers)
     {
         _charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
@@ -67,14 +66,14 @@ public sealed class CommunityHighlightSagaTests
     }
 
     [Fact]
-    public async Task PersistsANotablePgToTheWinnersCommunities()
+    public async Task CapturerPersistsANotablePgToTheWinnersCommunities()
     {
         var chart = new ChartBuilder().WithLevel(24).WithType(ChartType.Double).WithSongName("Bee").Build();
-        SetupPopulation(chart, pgHolders: 5, activePlayers: 1000); // 0.5% hold it → notable
+        SetupPopulation(chart, pgHolders: 5, activePlayers: 1000);
         var userId = Guid.NewGuid();
         var e = PgEvent(userId, chart.Id);
 
-        await Saga().Consume(Context(e));
+        await Capturer().Capture(e, CancellationToken.None);
 
         _highlights.Verify(h => h.AddForUserCommunities(e.EventId, userId, MixEnum.Phoenix, When, null,
             It.Is<IReadOnlyList<SignificantWin>>(w => w.Any(x => x.Kind == WinKind.NotablePg && x.ChartId == chart.Id)),
@@ -82,13 +81,12 @@ public sealed class CommunityHighlightSagaTests
     }
 
     [Fact]
-    public async Task WritesNothingWhenThereAreNoBigWins()
+    public async Task CapturerWritesNothingWhenThereAreNoBigWins()
     {
         var chart = new ChartBuilder().WithLevel(18).WithType(ChartType.Single).Build();
         SetupPopulation(chart, pgHolders: 5, activePlayers: 1000);
-        var e = PgEvent(Guid.NewGuid(), chart.Id, plate: null); // just a pass, no PG, low level
 
-        await Saga().Consume(Context(e));
+        await Capturer().Capture(PgEvent(Guid.NewGuid(), chart.Id, plate: null), CancellationToken.None);
 
         _highlights.Verify(h => h.AddForUserCommunities(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<MixEnum>(),
             It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<IReadOnlyList<SignificantWin>>(),
@@ -96,16 +94,14 @@ public sealed class CommunityHighlightSagaTests
     }
 
     [Fact]
-    public async Task SwallowsFailuresSoImportsAreNeverDisrupted()
+    public async Task SagaSwallowsCapturerFailuresSoImportsAreNeverDisrupted()
     {
-        var chart = new ChartBuilder().WithLevel(24).WithType(ChartType.Double).Build();
-        SetupPopulation(chart, pgHolders: 5, activePlayers: 1000);
-        _highlights.Setup(h => h.AddForUserCommunities(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<MixEnum>(),
-                It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<IReadOnlyList<SignificantWin>>(),
-                It.IsAny<CancellationToken>()))
+        var capturer = new Mock<ICommunityHighlightCapturer>();
+        capturer.Setup(c => c.Capture(It.IsAny<ScoreHighlightsCapturedEvent>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("db down"));
+        var saga = new CommunityHighlightSaga(capturer.Object, NullLogger<CommunityHighlightSaga>.Instance);
 
-        var thrown = await Record.ExceptionAsync(() => Saga().Consume(Context(PgEvent(Guid.NewGuid(), chart.Id))));
+        var thrown = await Record.ExceptionAsync(() => saga.Consume(Context(PgEvent(Guid.NewGuid(), Guid.NewGuid()))));
 
         Assert.Null(thrown);
     }

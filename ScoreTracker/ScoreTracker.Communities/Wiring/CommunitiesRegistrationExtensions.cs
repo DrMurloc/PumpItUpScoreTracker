@@ -22,6 +22,7 @@ public static class CommunitiesRegistrationExtensions
         services.AddTransient<ICommunityReader, EFCommunitiesRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddTransient<ICommunityHighlightRepository, EFCommunityHighlightRepository>();
+        services.AddTransient<ICommunityHighlightCapturer, CommunityHighlightCapturer>();
         services.AddSingleton<IDbModelContribution, CommunitiesModelContribution>();
         return services;
     }

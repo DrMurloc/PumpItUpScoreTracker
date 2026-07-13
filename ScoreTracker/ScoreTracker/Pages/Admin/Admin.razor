@@ -3,6 +3,7 @@
 @using ScoreTracker.ChartIntelligence.Contracts.Messages
 @using ScoreTracker.OfficialMirror.Contracts.Commands
 @using ScoreTracker.OfficialMirror.Contracts.Messages
+@using ScoreTracker.Communities.Contracts.Commands
 @using Microsoft.EntityFrameworkCore
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
@@ -33,6 +34,7 @@
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="ClearCache">@L["Clear Cache"]</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_backfillQueued" OnClick="BackfillUserTierLists">@L["Backfill User Tier Lists"]</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_tierListRebuildQueued" OnClick="RebuildTierLists">@L["Rebuild Tier Lists"]</MudButton>
+<MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_communityHighlightsBackfillQueued" OnClick="BackfillCommunityHighlights">Backfill Community Highlights (7d)</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/PiuCenter">PIU Center</MudButton>
 @foreach (var name in MissingUsers)
 {
@@ -327,6 +329,17 @@
         await Bus.Publish(new ProcessScoresTiersListCommand());
         await Bus.Publish(new ProcessPassTierListCommand());
         Snackbar.Add("Tier list rebuild queued", Severity.Success);
+    }
+
+    private bool _communityHighlightsBackfillQueued;
+    // Rebuilds the community big-wins feed from the last week of captured highlights (runs inline;
+    // idempotent — safe to re-click). PGs aren't backfilled (not in the highlight table).
+    private async Task BackfillCommunityHighlights()
+    {
+        _communityHighlightsBackfillQueued = true;
+        var count = await Mediator.Send(new BackfillCommunityHighlightsCommand(7));
+        Snackbar.Add($"Community highlights backfilled from {count} recent sessions", Severity.Success);
+        _communityHighlightsBackfillQueued = false;
     }
     private async Task RebuildOfficialLeaderboard()
     {

@@ -30,6 +30,9 @@ internal sealed class EFCommunityHighlightRepository : ICommunityHighlightReposi
     {
         if (wins.Count == 0) return;
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Idempotent by event: a redelivered bus event, or a re-run backfill, writes nothing new.
+        if (await database.Set<CommunityHighlightEntity>().AnyAsync(h => h.EventId == eventId, cancellationToken))
+            return;
         var communityIds = await database.Set<CommunityMembershipEntity>()
             .Where(m => m.UserId == userId)
             .Select(m => m.CommunityId)
