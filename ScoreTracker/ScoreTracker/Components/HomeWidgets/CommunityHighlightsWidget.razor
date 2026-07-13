@@ -1,0 +1,331 @@
+@using System.Globalization
+@using MediatR
+@using ScoreTracker.Communities.Contracts
+@using ScoreTracker.Communities.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.HomeDashboard
+
+@* Community Highlights (docs/design/home-page-widgets.md §7): recent big wins from the
+   communities you pick. Membership is the consent boundary; a row's chart opens the shared
+   ChartDetailsDialog; "See more" deep-links a public player's Sessions page. *@
+
+@if (!_loaded)
+{
+    <div class="dash-widget-message">
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+    </div>
+}
+else if (!_records.Any())
+{
+    <div class="dash-widget-message dash-ch-empty">
+        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Large"/>
+        <MudText Typo="Typo.body2">@L["No big wins yet"]</MudText>
+        <MudText Typo="Typo.caption" Class="dash-muted">
+            @L["Rare PGs, big titles, and top scores from your communities show up here."]
+        </MudText>
+    </div>
+}
+else if (UseStrips)
+{
+    @* Horizontal sizes (2×1/3×1/4×1): a card strip grouped by person — reuses the Suggested
+       Charts strip vocabulary (CSS + the dashboard-grid.js arrow pager, both class-based). *@
+    <div class="dash-strip-wrap">
+        <button type="button" class="dash-strip-arrow dash-strip-arrow-left" aria-label="@L["Scroll left"]">‹</button>
+        <div class="dash-card-strip">
+            @foreach (var record in _records)
+            {
+                <MudTooltip Text="@record.PlayerName" Arrow="true">
+                    <div class="dash-strip-person @(IsMe(record) ? "you" : "")">
+                        <MudAvatar Size="Size.Small" Class="dash-ch-avatar">
+                            <MudImage Src="@record.Avatar.ToString()" Alt="@record.PlayerName"/>
+                        </MudAvatar>
+                        <span class="dash-strip-pname">@record.PlayerName</span>
+                    </div>
+                </MudTooltip>
+                @foreach (var win in record.Wins)
+                {
+                    @WinCard(win)
+                }
+            }
+        </div>
+        <button type="button" class="dash-strip-arrow dash-strip-arrow-right" aria-label="@L["Scroll right"]">›</button>
+    </div>
+}
+else
+{
+    <div class="dash-ch-feed dash-scroll">
+        @foreach (var record in _records)
+        {
+            <div class="dash-ch-entry">
+                <MudAvatar Size="Size.Small" Class="dash-ch-avatar">
+                    <MudImage Src="@record.Avatar.ToString()" Alt="@record.PlayerName"/>
+                </MudAvatar>
+                <div class="dash-ch-body">
+                    <div class="dash-ch-head">
+                        @if (record.IsPublic)
+                        {
+                            <MudLink Href="@SessionsLink(record)" Typo="Typo.body2" Class="dash-ch-name">@record.PlayerName</MudLink>
+                        }
+                        else
+                        {
+                            <span class="dash-ch-name">@record.PlayerName</span>
+                        }
+                        <span class="dash-ch-time dash-muted">@Relative(record.OccurredAt)</span>
+                    </div>
+                    <div class="dash-ch-wins">
+                        @foreach (var win in record.Wins)
+                        {
+                            @if (win.ChartId is { } chartId && _charts.TryGetValue(chartId, out var chart))
+                            {
+                                @* Wide = one line: image, bubble, song name (truncates), highlight, then a
+                                   right-aligned grade/plate + score. On a 1-wide cell or mobile the highlight
+                                   drops to a subtitle line and the song name hides (container/mobile CSS). *@
+                                <div class="dash-ch-win dash-ch-win-scored">
+                                    <span class="dash-ch-chart @(EditMode ? "" : "dash-clickable")"
+                                          @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart))">
+                                        <SongImage Song="chart.Song" Small="true"/>
+                                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                                        <span class="dash-ch-song">@chart.Song.Name</span>
+                                    </span>
+                                    <span class="dash-ch-why">@Caption(win)</span>
+                                    @if (win.Score is { } score)
+                                    {
+                                        <span class="dash-ch-score-right">
+                                            @if (win.Kind == WinKind.NotablePg)
+                                            {
+                                                @* PG highlight → the PG plate stands in for the SSS+ grade. *@
+                                                <ScoreBreakdown Plate="PhoenixPlate.PerfectGame" Height="16"/>
+                                            }
+                                            else
+                                            {
+                                                <LetterGradeIcon Grade="PhoenixScore.From(score).LetterGrade" Height="16"/>
+                                            }
+                                            <span class="dash-ch-score">@score.ToString("N0")</span>
+                                        </span>
+                                    }
+                                </div>
+                            }
+                            else if (win.Kind == WinKind.FolderComplete)
+                            {
+                                <div class="dash-ch-win">
+                                    <span class="dash-ch-why">🎉 @L["Cleared all of {0}", win.Difficulty ?? ""]</span>
+                                </div>
+                            }
+                            else if (win.TitleName != null)
+                            {
+                                <div class="dash-ch-win">
+                                    <span class="dash-ch-why">🏅 <b>@Bracket(win.TitleName)</b> @TitleSuffix(win)</span>
+                                </div>
+                            }
+                            else if (win.ChartName != null)
+                            {
+                                <div class="dash-ch-win">
+                                    <span class="dash-ch-why">@win.Difficulty @win.ChartName · @Caption(win)</span>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IDateTimeOffsetAccessor Clock
+@inject ChartCatalogCache ChartCatalog
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public MixEnum EffectiveMix { get; set; }
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
+    // Part of the widget render contract (§2.2) — the host bumps this to force a reload.
+    [Parameter] public int RefreshToken { get; set; }
+
+    private const int FeedTake = 30;
+    private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+
+    // Short + wide (2x1/3x1/4x1) → the horizontal card strip; everything else stays the vertical feed.
+    private bool UseStrips => SizePreset.TryParse(Widget.SizePreset) is { Columns: > 1, Rows: 1 };
+
+    private bool _loaded;
+    private string? _loadedFor;
+    private IReadOnlyList<CommunityHighlightRecord> _records = Array.Empty<CommunityHighlightRecord>();
+    private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private MixEnum _mix = MixEnum.Phoenix;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{Widget.SizePreset}|{EffectiveMix}|{RefreshToken}";
+        if (signature == _loadedFor) return;
+        _loadedFor = signature;
+        _loaded = false;
+
+        var config = WidgetConfigJson.Read<CommunityHighlightsConfig>(Widget.ConfigJson);
+        _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
+            : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
+
+        // Empty config follows your non-regional crews (CH1) — World/country are opt-in.
+        var communities = config.Communities.Count > 0
+            ? config.Communities.Select(Name.From).ToList()
+            : (await Mediator.Send(new GetMyCommunitiesQuery()))
+                .Where(c => !c.IsRegional).Select(c => c.CommunityName).ToList();
+
+        if (communities.Count == 0)
+        {
+            _records = Array.Empty<CommunityHighlightRecord>();
+            _charts = new Dictionary<Guid, Chart>();
+            _loaded = true;
+            return;
+        }
+
+        _records = (await Mediator.Send(
+            new GetMyCommunityHighlightsQuery(communities, _mix, config.IncludeOwnWins, FeedTake))).ToList();
+        _charts = await ChartCatalog.GetCharts(_mix);
+        _loaded = true;
+    }
+
+    private static string SessionsLink(CommunityHighlightRecord r) =>
+        r.SessionId == null ? $"/Player/{r.UserId}/Sessions" : $"/Player/{r.UserId}/Sessions?session={r.SessionId}";
+
+    private string Relative(DateTimeOffset when)
+    {
+        var span = Clock.Now - when;
+        if (span.TotalMinutes < 1) return L["now"];
+        if (span.TotalHours < 1) return $"{(int)span.TotalMinutes}m";
+        if (span.TotalDays < 1) return $"{(int)span.TotalHours}h";
+        if (span.TotalDays < 7) return $"{(int)span.TotalDays}d";
+        return $"{(int)(span.TotalDays / 7)}w";
+    }
+
+    private string Caption(SignificantWin win) => win.Kind switch
+    {
+        WinKind.NotablePg => $"💎 {L["only {0} have PG", Pct(win.RarityShare)]}",
+        WinKind.TopPumbility => $"👑 {L["#{0} PUMBILITY", win.Rank ?? 0]}",
+        WinKind.PeerElite => win.Rank == 1
+            ? $"📊 {L["#1 of all peers"]}"
+            : $"📊 {L["top {0}% of peers", PeerPct(win)]}",
+        WinKind.FolderFirst => $"🆕 {L["{0} pass in this folder", Ordinal(win.Rank ?? 0)]}",
+        _ => string.Empty
+    };
+
+    private static string Ordinal(int n) => n switch { 1 => "1st", 2 => "2nd", 3 => "3rd", _ => $"{n}th" };
+
+    private static int PeerPct(SignificantWin win) => Math.Max(1, (int)Math.Ceiling((win.RarityShare ?? 0) * 100));
+
+    private string TitleSuffix(SignificantWin win) => win.Kind == WinKind.RareTitle && win.RarityShare != null
+        ? $"· {L["only {0} hold it", Pct(win.RarityShare)]}"
+        : L["completed"];
+
+    private static string Pct(double? share) =>
+        share == null ? "" : (share.Value * 100).ToString("0.#", CultureInfo.InvariantCulture) + "%";
+
+    private static string Bracket(string title) =>
+        string.IsNullOrEmpty(title) ? "" : title.StartsWith('[') ? title : $"[{title}]";
+
+    // Split a folder label ("D24") into type + level so a chart-less DifficultyBubble can render it.
+    private static (ChartType? Type, DifficultyLevel? Level) ParseFolder(string? difficulty)
+    {
+        if (string.IsNullOrEmpty(difficulty)) return (null, null);
+        foreach (var type in new[] { ChartType.Double, ChartType.Single, ChartType.CoOp, ChartType.HalfDouble })
+        {
+            var shorthand = type.GetShortHand();
+            if (difficulty.StartsWith(shorthand, StringComparison.OrdinalIgnoreCase)
+                && int.TryParse(difficulty[shorthand.Length..], out var level))
+                return (type, DifficultyLevel.From(level));
+        }
+        return (null, null);
+    }
+
+    private bool IsMe(CommunityHighlightRecord record) =>
+        CurrentUser.IsLoggedIn && CurrentUser.User.Id == record.UserId;
+
+    private string NonChartTip(SignificantWin win) => win.Kind == WinKind.FolderComplete
+        ? $"🎉 {L["Cleared all of {0}", win.Difficulty ?? ""].Value}"
+        : $"🏅 {Bracket(win.TitleName ?? "")} {TitleSuffix(win)}";
+
+    // Cards get the *shortest* form — the full sentence lives in the tooltip (owner: lean hard on tooltips).
+    private string ShortCaption(SignificantWin win) => win.Kind switch
+    {
+        WinKind.NotablePg => $"💎 {L["Rare PG"]}",
+        WinKind.TopPumbility => $"👑 #{win.Rank ?? 0} PUMB",
+        WinKind.PeerElite => $"📊 {L["Top {0}%", PeerPct(win)]}",
+        WinKind.FolderFirst => $"🆕 {Ordinal(win.Rank ?? 0)} {win.Difficulty}",
+        _ => string.Empty
+    };
+
+    // Rare titles get a "Rare Title" tag; big titles get nothing (no "completed").
+    private string ShortTitleSub(SignificantWin win) =>
+        win.Kind == WinKind.RareTitle ? L["Rare Title"].Value : string.Empty;
+
+    // A win as a strip card. Chart wins = art + grade/plate + score + the short caption; titles + folder
+    // clears are text cards. The full detail + song name ride a MudTooltip on hover (owner).
+    private RenderFragment<SignificantWin> WinCard => win =>
+        @<text>
+            @if (win.ChartId is { } cid && _charts.TryGetValue(cid, out var c))
+            {
+                <MudTooltip Text="@($"{c.Song.Name} ({c.DifficultyString}) · {Caption(win)}")" Arrow="true">
+                    <div class="dash-chart-card @(EditMode ? "" : "dash-clickable")"
+                         @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(c))">
+                        <div class="dash-card-art">
+                            <img src="@c.Song.ImagePath" alt="@c.Song.Name" loading="lazy"/>
+                            <span class="dash-card-bubble"><DifficultyBubble Chart="c" Small="true"></DifficultyBubble></span>
+                        </div>
+                        <div class="dash-card-score">
+                            @if (win.Score is { } sc)
+                            {
+                                @if (win.Kind == WinKind.NotablePg)
+                                {
+                                    <ScoreBreakdown Plate="PhoenixPlate.PerfectGame" Height="14"/>
+                                }
+                                else
+                                {
+                                    <LetterGradeIcon Grade="PhoenixScore.From(sc).LetterGrade" Height="14"/>
+                                }
+                                <span>@sc.ToString("N0")</span>
+                            }
+                        </div>
+                        <div class="dash-card-detail dash-muted">@ShortCaption(win)</div>
+                    </div>
+                </MudTooltip>
+            }
+            else if (win.Kind == WinKind.FolderComplete)
+            {
+                var folder = ParseFolder(win.Difficulty);
+                <MudTooltip Text="@NonChartTip(win)" Arrow="true">
+                    <div class="dash-chart-card dash-card-text">
+                        <div class="dash-card-emoji">🎉</div>
+                        @if (folder.Type != null && folder.Level != null)
+                        {
+                            <DifficultyBubble Type="folder.Type" Level="folder.Level" Mix="_mix" Small="true"></DifficultyBubble>
+                        }
+                        <div class="dash-card-name">@L["Folder Cleared"]</div>
+                    </div>
+                </MudTooltip>
+            }
+            else
+            {
+                @* Big + rare titles: name, plus "Rare Title" for a rare-title win only (no "completed"). *@
+                <MudTooltip Text="@NonChartTip(win)" Arrow="true">
+                    <div class="dash-chart-card dash-card-text">
+                        <div class="dash-card-emoji">🏅</div>
+                        <div class="dash-card-name">@Bracket(win.TitleName ?? "")</div>
+                        @if (ShortTitleSub(win) is { Length: > 0 } sub)
+                        {
+                            <div class="dash-card-detail dash-muted">@sub</div>
+                        }
+                    </div>
+                </MudTooltip>
+            }
+        </text>;
+
+}

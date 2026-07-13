@@ -1,5 +1,6 @@
 using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.Catalog.Contracts.Messages;
+using ScoreTracker.Communities.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using MassTransit;
@@ -64,6 +65,9 @@ public sealed class RecurringJobRunner
 
     public Task PublishCrawlPiuCenter() =>
         _bus.Publish(new CrawlPiuCenterCommand());
+
+    public Task PublishPurgeCommunityHighlights() =>
+        _bus.Publish(new PurgeCommunityHighlightsCommand());
 
     // The Web layer resolves presentation (MixThemes is the single palette source);
     // the vertical's share-card saga stays palette-blind.

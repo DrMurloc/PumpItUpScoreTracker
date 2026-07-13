@@ -3288,6 +3288,69 @@
   <data name="Tier list difficulty" xml:space="preserve">
     <value>티어리스트 난이도</value>
   </data>
+  <data name="Community Highlights" xml:space="preserve">
+    <value>커뮤니티 하이라이트</value>
+  </data>
+  <data name="Recent big wins from the communities you pick." xml:space="preserve">
+    <value>선택한 커뮤니티의 최근 큰 성과.</value>
+  </data>
+  <data name="No big wins yet" xml:space="preserve">
+    <value>아직 큰 성과가 없습니다</value>
+  </data>
+  <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
+    <value>커뮤니티의 희귀한 PG, 큰 칭호, 최고 점수가 여기에 표시됩니다.</value>
+  </data>
+  <data name="Rare Title" xml:space="preserve">
+    <value>희귀 칭호</value>
+  </data>
+  <data name="Rare PG" xml:space="preserve">
+    <value>희귀 PG</value>
+  </data>
+  <data name="Folder Cleared" xml:space="preserve">
+    <value>폴더 클리어</value>
+  </data>
+  <data name="Top {0}%" xml:space="preserve">
+    <value>상위 {0}%</value>
+  </data>
+  <data name="only {0} have PG" xml:space="preserve">
+    <value>{0}만 PG 보유</value>
+  </data>
+  <data name="#{0} PUMBILITY" xml:space="preserve">
+    <value>PUMBILITY #{0}</value>
+  </data>
+  <data name="top {0}% of peers" xml:space="preserve">
+    <value>동급 상위 {0}%</value>
+  </data>
+  <data name="{0} pass in this folder" xml:space="preserve">
+    <value>이 폴더 {0} 통과</value>
+  </data>
+  <data name="#1 of all peers" xml:space="preserve">
+    <value>동급 중 #1</value>
+  </data>
+  <data name="only {0} hold it" xml:space="preserve">
+    <value>{0}만 보유</value>
+  </data>
+  <data name="completed" xml:space="preserve">
+    <value>달성</value>
+  </data>
+  <data name="now" xml:space="preserve">
+    <value>방금</value>
+  </data>
+  <data name="Communities to include" xml:space="preserve">
+    <value>포함할 커뮤니티</value>
+  </data>
+  <data name="Join a community to use this widget." xml:space="preserve">
+    <value>이 위젯을 사용하려면 커뮤니티에 참여하세요.</value>
+  </data>
+  <data name="Leave all unchecked to follow your non-regional communities." xml:space="preserve">
+    <value>모두 선택 해제하면 지역 외 커뮤니티를 따릅니다.</value>
+  </data>
+  <data name="Include my own wins" xml:space="preserve">
+    <value>내 성과도 포함</value>
+  </data>
+  <data name="Cleared all of {0}" xml:space="preserve">
+    <value>{0} 전부 클리어</value>
+  </data>
   <data name="Daily Step" xml:space="preserve">
     <value>데일리 스텝</value>
   </data>

@@ -553,3 +553,79 @@ pin the builder's behavior from the tier-list side).
 3. **Catalog**: §4, one widget per PR — sequenced by the owner's one-at-a-time walk (D18).
 4. **Rivals**: entire ecosystem, one standalone project/session (D9).
 5. **Per-player daily challenge**: owner has plans; separate concept from Daily Step, its own session.
+
+---
+
+## 7. Community Highlights widget (scoped 2026-07-12)
+
+A ledger of recent **big wins across your communities** — the catalog's "Recent Highlights" (own) and
+"Community Feed" (scoped) rows (§4) fused into one widget. Neither was ever spec'd; the owner scoped it
+this session. Mock: <https://claude.ai/code/artifact/19334150-aaae-4c1e-ac4b-946197e97860>. Its own PR (D7).
+The `/Communities/{name}` page reuse (a "recent big wins" strip off the same table) is **deferred to that
+page's own overhaul** — dropped from this PR.
+
+### Locked decisions (owner, 2026-07-12)
+
+| # | Decision |
+|---|---|
+| CH1 | Config = a multi-select of **your** communities; World + your country **unchecked by default** (opt-in firehose — public players auto-join both, so a naive "all my communities" would drown the crew feed). Replaces the old "specific / non-region / non-world / all" one-liner. |
+| CH2 | **Membership implies consent** to share within the community — no per-profile privacy gate on the feed. Click-through to a player's detail rides `/Player/{id}/Sessions`, which already redirects private profiles. |
+| CH3 | **Write-side projection, not read-time fan-out**: a Communities consumer of `ScoreHighlightsCapturedEvent` persists a per-community summary row; the feed reads its own table. Kills the perf cliff of a cross-member `UserId IN (...)` at read time and matches write-time-frozen-truth (the highlight system's existing philosophy). |
+| CH4 | **"Show my own wins"** — a config toggle, **default on**. |
+| CH5 | Significance is a **community judgment**, so Communities computes it itself (fork b), calling the rarity readers via published ports. **PlayerProgress is untouched.** |
+| CH6 | Sizes: 1×2, 2×1, 2×2, **1×3** (the tall feed column — a feed's natural shape). |
+| CH7 | Purge summaries older than **30 days**, weekly (Hangfire). |
+
+### What counts as a BIG win
+
+Classified at capture from the event's own flags/detail plus two rarity readers. ~4 of 6 criteria ride
+`ScoreHighlightsCapturedEvent` directly:
+
+| Win (`WinKind`) | Rule | Source |
+|---|---|---|
+| `BigTitle` | any Phoenix **difficulty** title or P2 **pumbility** title completed | `Milestones` TitleCompleted + `PhoenixTitleList`/`Phoenix2TitleList` concrete type |
+| `RareTitle` | any title held by **< 1%** of titled players | `ITitleRepository.GetTitleAggregations` ÷ `CountTitledUsers` (the recap Snowflake rule) |
+| `FolderComplete` | every chart in a (type, level) folder passed — 100% | `FolderPassLamp` milestone (Detail = folder, e.g. "D23") |
+| `FolderFirst` | first 3 passes in a (type, level) folder — `FolderDebutOrdinal ≤ 3`, gated to **folder level ≥ ⌊competitive level⌋** for that discipline | event `HighlightDetail` + `IPlayerStatsReader` (Singles/Doubles competitive level) |
+| `TopPumbility` | `PumbilityRank ≤ 10` | event `HighlightDetail` (PumbilityTop50 flag) |
+| `PeerElite` | **> 95th** percentile vs the ±0.5 competitive cohort | event `HighlightDetail` `Peer{Count,BetterCount}` → `(better+1)/count ≤ .05` |
+| `NotablePg` | PG on a chart **< 1%** of active players hold, **level ≥ 20** | `IScoreReader.GetChartScoreAggregates` (`PgCount`) ÷ `GetActiveUserIds` |
+
+PG-cutoff calibration (prod 2026-07-12, 1,463 active Phoenix players): the 189 rarest PGs (1 holder each)
+are all D23–25 — rarity self-selects hard charts, so no floor is needed for *old* junk. The `≥ 20` floor
+exists only to stop a content drop from flooding the feed with "rare" PGs on brand-new *easy* charts
+(few holders because new, not because hard). All cutoffs are pure-Domain constants pinned by DomainTest —
+tunable without plumbing.
+
+### Architecture
+
+`CommunityHighlightSaga` (Communities) consumes `ScoreHighlightsCapturedEvent` — a **second** consumer
+alongside `CommunitySaga`'s Discord card, cleanly separated. It loads the four population snapshots
+(`GetChartScoreAggregates`, `GetActiveUserIds`, `GetTitleAggregations`, `CountTitledUsers`) behind
+`IMemoryCache` per mix (~1–6 h, the recap's pattern — these ride the busy import path), runs the pure
+`CommunityHighlightPolicy`, and on any hit writes one `CommunityHighlight` summary row **per community the
+user belongs to**. The widget reads via `GetMyCommunityHighlightsQuery` (membership-gated, own-wins filter,
+names/avatars resolved fresh via `IUserReader`). A weekly Hangfire purge drops 30-day-old rows. The table
+stores a JSON `Payload` of the win list (the `PlayerSeasonRecap` precedent).
+
+An admin **Backfill Community Highlights** button (last 7 days) publishes a bus trigger — the backfill
+runs off the request thread in its own consumer, never blocking or outliving the admin circuit — that
+reconstructs capture events from the persisted highlight + title-milestone tables
+(`GetRecentHighlightEventsQuery`, a PlayerProgress published query) and runs each through the same
+`CommunityHighlightCapturer` the live consumer uses — idempotent
+(EventId = SessionId; `AddForUserCommunities` skips existing events). The highlight table stores neither
+score nor plate, so each highlighted chart is enriched from the player's current best — which supplies the
+score the feed renders **and** the plate that lets PGs backfill too (one best-scores read per user).
+
+### Commit plan
+
+| C | Content |
+|---|---|
+| C1 | Persistence: `CommunityHighlightEntity` + `ICommunityHighlightRepository`/`EFCommunityHighlightRepository` + `.ToTable` in `CommunitiesModelContribution` + register in `AddCommunities` + migration + DATABASE-SCHEMA row. Integration repo test (real SQL: ordering, take, purge). |
+| C2 | `CommunityHighlightPolicy` (pure) + `SignificantWin`/`WinKind` contracts + the six cutoffs + title classification via the existing title lists. DomainTests per win type + each boundary. |
+| C3 | `CommunityHighlightSaga` capture consumer: cached rarity snapshots, policy run, per-community fan-out; register in `AddCommunitiesConsumers`. ApplicationTests (event in → rows persisted). |
+| C4 | `GetMyCommunityHighlightsQuery` + handler + `CommunityHighlightRecord`; `CommunityHighlightsWidget`/`ConfigPanel`/`Config` + shared `CommunityHighlightRow`; `SizePreset.OneByThree`; `WidgetRegistry` descriptor. ApplicationTests for the handler. |
+| C5 | Purge: `PurgeCommunityHighlightsCommand` + consumer → `PurgeBefore(now−30d)`; `RecurringJobRunner` + `Program.cs` weekly registration + SCHEDULED-JOBS row. ApplicationTest with `FakeDateTime`. |
+| C6 | Wrap: regenerate `Tests.Api` capability-schema golden; resx ×9; docs. |
+
+*(Original C5 "community-page reuse" dropped — folds into the `/Communities` page overhaul later.)*

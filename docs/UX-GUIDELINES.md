@@ -122,3 +122,8 @@ The widget home page ([design doc](design/home-page-widgets.md)) adds a vocabula
 - **Graphs start from `ApexChartTheming.BaseOptions` + its `WrapperClass`** on the container: frozen
   canvas, display face, palette fore color, whisper-grid, dark theme, themed tooltips. Charts layer
   their specifics (strokes, fills, axes) on top — never rebuild the base by hand.
+- **Community-scoped feeds reuse the shipped vocabulary**: the Community Highlights widget renders each
+  big win with the Discord card's own caption emoji (👑 pumbility, 📊 peers, 🆕 folder, 🏅 title, 💎 rare
+  PG) and colors the "% have it" rarity through the rarity ramp — the on-site feed and the Discord cards
+  read as one system. Persisted win data is structured, never pre-rendered text: the row localizes every
+  caption (a UI string never rides the DB payload).

@@ -257,6 +257,76 @@
       }
     },
     {
+      "type": "community-highlights",
+      "name": "Community Highlights",
+      "description": "Recent big wins from the communities you pick.",
+      "category": "Compete",
+      "supportedSizes": [
+        "1x2",
+        "2x1",
+        "3x1",
+        "4x1",
+        "2x2",
+        "1x3"
+      ],
+      "defaultSize": "2x2",
+      "supportedMixes": [
+        "Phoenix",
+        "Phoenix2"
+      ],
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "mix": {
+            "enum": [
+              "XX",
+              "Phoenix",
+              "Phoenix2",
+              "FirstDanceFloor",
+              "SecondUltimateRemix",
+              "ThirdObg",
+              "ObgSeasonEvolution",
+              "Collection",
+              "PerfectCollection",
+              "Extra",
+              "Premiere",
+              "Prex",
+              "Rebirth",
+              "Premiere2",
+              "Prex2",
+              "Premiere3",
+              "Prex3",
+              "Exceed",
+              "Exceed2",
+              "Zero",
+              "Nx",
+              "Nx2",
+              "NxAbsolute",
+              "Fiesta",
+              "FiestaEx",
+              "Fiesta2",
+              "Prime",
+              "Prime2",
+              "Infinity",
+              "Pro",
+              "Pro2"
+            ],
+            "nullable": true
+          },
+          "communities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "includeOwnWins": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
       "type": "daily-step",
       "name": "Daily Step",
       "description": "Today\u0027s shared chart, plus a weekly Limbo Day.",

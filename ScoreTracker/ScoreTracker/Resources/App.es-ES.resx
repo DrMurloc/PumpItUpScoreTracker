@@ -3285,6 +3285,69 @@
   <data name="Tier list difficulty" xml:space="preserve">
     <value>Dificultad de tier list</value>
   </data>
+  <data name="Community Highlights" xml:space="preserve">
+    <value>Destacados de la comunidad</value>
+  </data>
+  <data name="Recent big wins from the communities you pick." xml:space="preserve">
+    <value>Grandes logros recientes de las comunidades que elijas.</value>
+  </data>
+  <data name="No big wins yet" xml:space="preserve">
+    <value>Aún no hay grandes logros</value>
+  </data>
+  <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
+    <value>Aquí aparecen PG raros, grandes títulos y mejores puntuaciones de tus comunidades.</value>
+  </data>
+  <data name="Rare Title" xml:space="preserve">
+    <value>Título raro</value>
+  </data>
+  <data name="Rare PG" xml:space="preserve">
+    <value>PG raro</value>
+  </data>
+  <data name="Folder Cleared" xml:space="preserve">
+    <value>Carpeta completada</value>
+  </data>
+  <data name="Top {0}%" xml:space="preserve">
+    <value>Top {0}%</value>
+  </data>
+  <data name="only {0} have PG" xml:space="preserve">
+    <value>solo {0} tienen PG</value>
+  </data>
+  <data name="#{0} PUMBILITY" xml:space="preserve">
+    <value>#{0} en PUMBILITY</value>
+  </data>
+  <data name="top {0}% of peers" xml:space="preserve">
+    <value>top {0}% entre pares</value>
+  </data>
+  <data name="{0} pass in this folder" xml:space="preserve">
+    <value>{0} paso en este folder</value>
+  </data>
+  <data name="#1 of all peers" xml:space="preserve">
+    <value>#1 entre todos los pares</value>
+  </data>
+  <data name="only {0} hold it" xml:space="preserve">
+    <value>solo {0} lo poseen</value>
+  </data>
+  <data name="completed" xml:space="preserve">
+    <value>completado</value>
+  </data>
+  <data name="now" xml:space="preserve">
+    <value>ahora</value>
+  </data>
+  <data name="Communities to include" xml:space="preserve">
+    <value>Comunidades a incluir</value>
+  </data>
+  <data name="Join a community to use this widget." xml:space="preserve">
+    <value>Únete a una comunidad para usar este widget.</value>
+  </data>
+  <data name="Leave all unchecked to follow your non-regional communities." xml:space="preserve">
+    <value>Deja todo sin marcar para seguir tus comunidades no regionales.</value>
+  </data>
+  <data name="Include my own wins" xml:space="preserve">
+    <value>Incluir mis propios logros</value>
+  </data>
+  <data name="Cleared all of {0}" xml:space="preserve">
+    <value>Completó todo {0}</value>
+  </data>
   <data name="Daily Step" xml:space="preserve">
     <value>Paso Diario</value>
   </data>

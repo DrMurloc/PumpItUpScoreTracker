@@ -2285,6 +2285,188 @@ html.nav-away .page-dock,
     flex: none;
 }
 
+/* Community Highlights feed (docs/design/home-page-widgets.md §7). */
+.dash-ch-feed {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    height: 100%;
+    /* So win rows can respond to the widget's own width, not just the viewport. */
+    container-type: inline-size;
+}
+
+.dash-ch-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .25rem;
+    text-align: center;
+    padding: 1rem;
+}
+
+.dash-ch-entry {
+    display: flex;
+    gap: .6rem;
+    padding: .55rem .25rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink-muted) 15%, transparent);
+}
+
+.dash-ch-avatar {
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+}
+
+.dash-ch-body {
+    min-width: 0;
+    flex: 1;
+}
+
+.dash-ch-head {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+}
+
+.dash-ch-name {
+    font-weight: 600;
+    font-size: .85rem;
+}
+
+.dash-ch-time {
+    margin-left: auto;
+    font-size: .7rem;
+    white-space: nowrap;
+}
+
+.dash-ch-wins {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    margin-top: .15rem;
+}
+
+.dash-ch-win {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .35rem;
+    font-size: .78rem;
+}
+
+.dash-ch-chart {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    min-width: 0;
+}
+
+.dash-ch-song {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 12rem;
+}
+
+.dash-ch-why {
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
+/* Scored win = one line on wide: chart (the song name truncates) + highlight, then a right-aligned
+   grade/plate + score. The narrow queries below reflow it into a chart+score line and a subtitle. */
+.dash-ch-win-scored {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: .35rem;
+}
+
+.dash-ch-win-scored .dash-ch-chart {
+    min-width: 0; /* the song name ellipsises rather than shove the score off the line */
+}
+
+.dash-ch-score-right {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    padding-left: .4rem;
+}
+
+.dash-ch-score {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    padding-left: .25rem;
+}
+
+/* Narrow — a 1-wide widget (container query on the feed) or mobile, where the dashboard is one
+   column (media query): hide the song name and drop the highlight onto its own subtitle line. */
+@container (max-width: 300px) {
+    .dash-ch-song { display: none; }
+    .dash-ch-win-scored { flex-wrap: wrap; }
+    .dash-ch-win-scored .dash-ch-score-right { order: 2; }
+    .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; }
+}
+
+@media (max-width: 600px) {
+    .dash-ch-song { display: none; }
+    .dash-ch-win-scored { flex-wrap: wrap; }
+    .dash-ch-win-scored .dash-ch-score-right { order: 2; }
+    .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; }
+}
+
+/* Card-strip person divider (avatar + vertical name) — the community analog of the
+   Suggested-Charts category divider, reusing that strip's card CSS + arrow pager. */
+.dash-strip-person {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 3px;
+    min-width: 0;
+}
+
+.dash-strip-pname {
+    writing-mode: vertical-rl;
+    font-family: var(--font-display);
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    max-height: 62px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--mix-ink);
+}
+
+.dash-strip-person.you .dash-strip-pname {
+    color: var(--mix-primary);
+}
+
+/* A title or full-folder clear has no chart art — it reads as a centered text card. */
+.dash-card-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 3px;
+}
+
+.dash-card-emoji {
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+/* The cards/dividers are wrapped in MudTooltip, so its root is the strip's flex child —
+   keep it a fixed-size item so the cards don't grow or shrink. */
+.dash-card-strip > .mud-tooltip-root {
+    flex: none;
+    min-width: 0;
+    display: inline-flex;
+}
+
 /* Drag chrome: handle (desktop pointer only), dragged-cell dim, insertion marker. */
 
 .dash-drag-handle {
