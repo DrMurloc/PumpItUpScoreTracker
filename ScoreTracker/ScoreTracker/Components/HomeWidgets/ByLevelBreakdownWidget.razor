@@ -70,6 +70,14 @@ else
     [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
     [Parameter] public int RefreshToken { get; set; }
 
+    // Shared distribution tooltip built by hand — one row per line series at the hovered level,
+    // matched by x-VALUE (series skip empty buckets, so a shared index can point at different levels),
+    // band (range-area) series skipped via the NaN guard, values as thousands-separated integers.
+    // A chart mixing range-area + line otherwise renders line values as "undefined – undefined".
+    // Single-quoted HTML attrs keep the C# verbatim string quote-free.
+    private const string DistributionTooltip =
+        @"function(o){var w=o.w,hi=o.dataPointIndex,hs=o.seriesIndex,hx=null;if(w.globals.seriesX[hs]&&w.globals.seriesX[hs][hi]!=null)hx=w.globals.seriesX[hs][hi];var rows='';for(var s=0;s<w.config.series.length;s++){if(w.config.series[s].type==='rangeArea')continue;var v=null;if(hx!=null&&w.globals.seriesX[s]){var j=w.globals.seriesX[s].indexOf(hx);if(j>=0)v=w.globals.series[s][j];}else v=w.globals.series[s][hi];if(v==null||isNaN(v))continue;var c=w.globals.colors[s],n=w.config.series[s].name;rows+=`<div style='display:flex;align-items:center;gap:6px;padding:1px 0'><span style='width:9px;height:9px;border-radius:50%;background:${c};flex:none'></span><span style='opacity:.75'>${n}</span><b style='margin-left:auto;padding-left:14px'>${Math.round(v).toLocaleString()}</b></div>`;}if(!rows)return '';return `<div style='padding:6px 9px;font-size:12px;line-height:1.5'>${hx!=null?`<div style='font-weight:700;margin-bottom:3px'>${hx}</div>`:''}${rows}</div>`;}";
+
     private sealed record Pt(double X, decimal Y, decimal Low = 0, decimal High = 0);
 
     private sealed record RenderSeries(string Name, string Color, bool Dashed, string? Group, IReadOnlyList<Pt> Points);
@@ -150,26 +158,25 @@ else
         }
         else
         {
-            // S/D read by color; the stat by line emphasis (alpha). Only add a dash array when a
-            // line actually needs it — an empty/whole-zero array trips the ApexCharts serializer.
+            // S/D read by color; stat by line style (solid anchors, dashed band edges). The dash
+            // array is indexed over ALL series and the range-area bands render first, so pad the
+            // front with one solid entry per band — otherwise the dash pattern lands on the wrong
+            // lines and Singles/Doubles come out mismatched.
             _options.Markers = new Markers { Size = 0 };
             _options.Stroke = _series.Any(s => s.Dashed)
                 ? new Stroke
                 {
                     Curve = Curve.Straight, Width = 2.5,
-                    DashArray = _series.Select(s => s.Dashed ? 4.0 : 0.0).ToList()
+                    DashArray = Enumerable.Repeat(0.0, _bands.Count)
+                        .Concat(_series.Select(s => s.Dashed ? 4.0 : 0.0)).ToList()
                 }
                 : new Stroke { Curve = Curve.Straight, Width = 2.5 };
             if (_bands.Count > 0)
-            {
                 _options.Fill = new Fill { Opacity = 0.16 };
-                // Trigger the tooltip on the stat lines only, keeping the band's range out of it.
-                if (_series.Count > 0)
-                    _options.Tooltip = new Tooltip
-                    {
-                        EnabledOnSeries = Enumerable.Range(_bands.Count, _series.Count).Select(i => (double)i).ToList()
-                    };
-            }
+            // Own the tooltip HTML: a chart mixing range-area bands with line series otherwise
+            // renders every line value as an undefined range ("undefined – undefined"). Shared
+            // readout, band series skipped (their y is NaN).
+            _options.Tooltip = new Tooltip { Shared = true, Custom = DistributionTooltip };
         }
 
         // Numeric x-axis: series align by level/player VALUE, not point index — a category axis

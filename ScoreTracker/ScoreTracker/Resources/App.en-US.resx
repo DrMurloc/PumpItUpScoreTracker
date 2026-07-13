@@ -3632,4 +3632,22 @@
   <data name="Within days" xml:space="preserve">
     <value>Within days</value>
   </data>
+  <data name="Grade Distribution" xml:space="preserve">
+    <value>Grade Distribution</value>
+  </data>
+  <data name="Co-Op Completion" xml:space="preserve">
+    <value>Co-Op Completion</value>
+  </data>
+  <data name="Your score spread per level, Singles against Doubles, the middle 50% shaded." xml:space="preserve">
+    <value>Your score spread per level, Singles against Doubles, the middle 50% shaded.</value>
+  </data>
+  <data name="Every grade stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
+    <value>Every grade stacked per folder, with a broken / unplayed cap for the folder count.</value>
+  </data>
+  <data name="Every plate stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
+    <value>Every plate stacked per folder, with a broken / unplayed cap for the folder count.</value>
+  </data>
+  <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
+    <value>How many co-op charts you've cleared, by player count.</value>
+  </data>
 </root>

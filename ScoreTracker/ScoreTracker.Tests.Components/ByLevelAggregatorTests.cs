@@ -376,11 +376,12 @@ public sealed class ByLevelAggregatorTests
         var s = Assert.Single(result.Bands, b => b.Type == ChartType.Single);
         Assert.Equal(900_000, s.Lower[0]);
         Assert.Equal(1_000_000, s.Upper[0]);
-        // A solid median line per type centers each band (min–max mode adds no dotted extremes).
-        Assert.Equal(2, result.Series.Count);
+        // Min–Max shades to the extremes → solid min/median/max per type, no dashed edges.
+        Assert.Equal(6, result.Series.Count);
         Assert.All(result.Series, line => Assert.False(line.Dashed));
-        Assert.Contains(result.Series, line => line.Type == ChartType.Single && line.Values[0] == 950_000);
-        Assert.Contains(result.Series, line => line.Type == ChartType.Double && line.Values[0] == 850_000);
+        Assert.Contains(result.Series, line => line.Type == ChartType.Single && line.Values[0] == 900_000); // min
+        Assert.Contains(result.Series, line => line.Type == ChartType.Single && line.Values[0] == 950_000); // median
+        Assert.Contains(result.Series, line => line.Type == ChartType.Single && line.Values[0] == 1_000_000); // max
     }
 
     [Fact]
@@ -405,9 +406,9 @@ public sealed class ByLevelAggregatorTests
         var result = ByLevelAggregator.Aggregate(config, records, Scales);
 
         Assert.Equal(2, result.Bands.Count); // IQR band per type
-        // Each type: a solid median line down the band, plus dotted min & max outside it.
-        Assert.Contains(result.Series, s => !s.Dashed); // median
-        Assert.Equal(4, result.Series.Count(s => s.Dashed)); // min + max per type
+        // Each type: solid min/median/max anchors + dashed P25/P75 edges along the shade.
+        Assert.Equal(6, result.Series.Count(s => !s.Dashed)); // min/median/max × 2 types
+        Assert.Equal(4, result.Series.Count(s => s.Dashed)); // P25/P75 × 2 types
     }
 
     [Fact]

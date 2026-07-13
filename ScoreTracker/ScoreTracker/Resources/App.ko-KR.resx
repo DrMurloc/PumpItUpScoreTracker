@@ -3513,4 +3513,22 @@
   <data name="Within days" xml:space="preserve">
     <value>최대 일수</value>
   </data>
+  <data name="Grade Distribution" xml:space="preserve">
+    <value>등급 분포</value>
+  </data>
+  <data name="Co-Op Completion" xml:space="preserve">
+    <value>Co-Op 완료</value>
+  </data>
+  <data name="Your score spread per level, Singles against Doubles, the middle 50% shaded." xml:space="preserve">
+    <value>레벨별 점수 분포, 싱글 대 더블, 가운데 50% 음영.</value>
+  </data>
+  <data name="Every grade stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
+    <value>폴더별로 모든 등급을 쌓고, 실패 / 미플레이 구간으로 폴더 전체 수까지 표시.</value>
+  </data>
+  <data name="Every plate stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
+    <value>폴더별로 모든 플레이트를 쌓고, 실패 / 미플레이 구간으로 폴더 전체 수까지 표시.</value>
+  </data>
+  <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
+    <value>플레이 인원수별로 클리어한 Co-Op 채보 수.</value>
+  </data>
 </root>

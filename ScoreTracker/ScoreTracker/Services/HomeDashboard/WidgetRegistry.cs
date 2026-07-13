@@ -134,31 +134,33 @@ public static class WidgetRegistry
                             DistributionSeries.Min, DistributionSeries.P25, DistributionSeries.Median,
                             DistributionSeries.P75, DistributionSeries.Max
                         },
-                        // Combined so the full box plot reads; separate S/D is the simpler
-                        // median-vs-median opt-in.
+                        // Combined so the full box plot reads; Singles vs Doubles is the separate cut.
                         Band = BreakdownBand.InterQuartile, SeparateSinglesDoubles = false,
                         MinLevel = 17, MaxLevel = 23
                     })),
-                new WidgetDrawerPreset("Grade Wall",
-                    "What grades fill each folder, normalized so shape beats volume.",
+                new WidgetDrawerPreset("Singles vs Doubles",
+                    "Your score spread per level, Singles against Doubles, the middle 50% shaded.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Metric = BreakdownMetric.Score, Aggregation = BreakdownAggregation.Distribution,
+                        SeparateSinglesDoubles = true, SeparateDisplay = SeparateDisplay.RangeIqr,
+                        MinLevel = 17, MaxLevel = 23
+                    })),
+                new WidgetDrawerPreset("Grade Distribution",
+                    "Every grade stacked per folder, with a broken / unplayed cap for the folder count.",
                     WidgetConfigJson.Write(new ByLevelBreakdownConfig
                     {
                         Metric = BreakdownMetric.LetterGrade, Aggregation = BreakdownAggregation.Breakdown,
-                        Normalize = true, IncludeUnplayed = true, SeparateSinglesDoubles = false,
+                        Normalize = false, IncludeUnplayed = true, SeparateSinglesDoubles = false,
                         MinLevel = 17, MaxLevel = 24
                     })),
                 new WidgetDrawerPreset("Plate Distribution",
-                    "How each folder's plates stack up — Marvelous, Ultimate, and Perfect Game.",
+                    "Every plate stacked per folder, with a broken / unplayed cap for the folder count.",
                     WidgetConfigJson.Write(new ByLevelBreakdownConfig
                     {
-                        Metric = BreakdownMetric.Plate, Aggregation = BreakdownAggregation.Completion,
-                        Thresholds = new List<CompletionThreshold>
-                        {
-                            new() { Kind = ThresholdKind.Plate, Value = "MG" },
-                            new() { Kind = ThresholdKind.Plate, Value = "UG" },
-                            new() { Kind = ThresholdKind.Plate, Value = "PG" }
-                        },
-                        SeparateSinglesDoubles = false, MinLevel = 17, MaxLevel = 23
+                        Metric = BreakdownMetric.Plate, Aggregation = BreakdownAggregation.Breakdown,
+                        Normalize = false, IncludeUnplayed = true, SeparateSinglesDoubles = false,
+                        MinLevel = 17, MaxLevel = 23
                     })),
                 new WidgetDrawerPreset("Clear Progress",
                     "How much of every folder you've cleared, per level.",
@@ -167,36 +169,25 @@ public static class WidgetRegistry
                         Metric = BreakdownMetric.Pass, Aggregation = BreakdownAggregation.Breakdown,
                         SeparateSinglesDoubles = false, MinLevel = 1, MaxLevel = 28
                     })),
-                new WidgetDrawerPreset("Score Completion",
-                    "How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000.",
+                new WidgetDrawerPreset("Co-Op Completion",
+                    "How many co-op charts you've cleared, by player count.",
                     WidgetConfigJson.Write(new ByLevelBreakdownConfig
                     {
-                        Metric = BreakdownMetric.Score, Aggregation = BreakdownAggregation.Completion,
-                        Thresholds = new List<CompletionThreshold>
-                        {
-                            new() { Kind = ThresholdKind.Score, Value = "950000" },
-                            new() { Kind = ThresholdKind.Score, Value = "990000" },
-                            new() { Kind = ThresholdKind.Score, Value = "1000000" }
-                        },
-                        SeparateSinglesDoubles = false, MinLevel = 17, MaxLevel = 23
-                    })),
-                new WidgetDrawerPreset("Chart Age",
-                    "How stale your scores are per folder — the spread of days since you set them.",
-                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
-                    {
-                        Metric = BreakdownMetric.ChartAge, Aggregation = BreakdownAggregation.Distribution,
-                        Series = new List<DistributionSeries>
-                        {
-                            DistributionSeries.Min, DistributionSeries.P25, DistributionSeries.Median,
-                            DistributionSeries.P75, DistributionSeries.Max
-                        },
-                        Band = BreakdownBand.InterQuartile, SeparateSinglesDoubles = false,
-                        MinLevel = 17, MaxLevel = 23
+                        Scope = BreakdownChartScope.CoOp,
+                        Metric = BreakdownMetric.Pass, Aggregation = BreakdownAggregation.Breakdown,
+                        MinPlayers = 2, MaxPlayers = 5
                     }))
             },
             DynamicNameKey: configJson =>
             {
                 var config = WidgetConfigJson.Read<ByLevelBreakdownConfig>(configJson);
+                // Two configs wear their own name instead of the generic metric/aggregation title.
+                if (config.Scope == BreakdownChartScope.SinglesDoubles && config.SeparateSinglesDoubles
+                    && config.Metric == BreakdownMetric.Score
+                    && config.Aggregation == BreakdownAggregation.Distribution)
+                    return "Singles vs Doubles";
+                if (config.Scope == BreakdownChartScope.CoOp && config.Metric == BreakdownMetric.Pass)
+                    return "Co-Op Completion";
                 return ByLevelConfigRules.TitleKey(config.Metric, config.Aggregation);
             }),
         new("quick-record",

@@ -311,11 +311,22 @@ public static class ByLevelAggregator
                 continue;
             }
 
+            // The shaded region and the stats that bound it. Min–Max shades to the extremes, so its
+            // edges ARE the solid min/max lines; IQR/±σ shade an inner band with its own edges.
+            var (lowEdge, highEdge) = display switch
+            {
+                SeparateDisplay.RangeIqr => (DistributionSeries.P25, DistributionSeries.P75),
+                SeparateDisplay.RangeStdDev => (DistributionSeries.MinusSigma, DistributionSeries.PlusSigma),
+                _ => (DistributionSeries.Min, DistributionSeries.Max)
+            };
+
             var lower = new double?[buckets.Count];
             var upper = new double?[buckets.Count];
             for (var i = 0; i < buckets.Count; i++)
             {
-                var (lo, hi) = RangeBounds(sorted[(d, buckets[i])], display);
+                var s = sorted[(d, buckets[i])];
+                var lo = StatValue(s, lowEdge);
+                var hi = StatValue(s, highEdge);
                 lower[i] = lo;
                 upper[i] = hi;
                 if (lo.HasValue) min = Math.Min(min, lo.Value);
@@ -324,15 +335,16 @@ public static class ByLevelAggregator
 
             bands.Add(new BreakdownBandArea(SeriesColor.ByChartType, draws[d].Type, lower, upper));
 
-            // A solid median line centers the band — and guarantees a point series exists, since a
-            // bands-only chart makes ApexCharts throw on an empty stroke.
+            // Solid five-number anchors: min, median (center), max (owner's preferred read).
+            AddStatLine(series, sorted, d, draws, buckets, DistributionSeries.Min, false, ref min, ref max);
             AddStatLine(series, sorted, d, draws, buckets, DistributionSeries.Median, false, ref min, ref max);
+            AddStatLine(series, sorted, d, draws, buckets, DistributionSeries.Max, false, ref min, ref max);
 
-            // Dotted min/max outside an IQR / ±σ band so the extremes still read (owner).
+            // Dashed lines sitting along the shaded edges (Min–Max's edges are already the solid lines).
             if (display != SeparateDisplay.RangeMinMax)
             {
-                AddStatLine(series, sorted, d, draws, buckets, DistributionSeries.Min, true, ref min, ref max);
-                AddStatLine(series, sorted, d, draws, buckets, DistributionSeries.Max, true, ref min, ref max);
+                AddStatLine(series, sorted, d, draws, buckets, lowEdge, true, ref min, ref max);
+                AddStatLine(series, sorted, d, draws, buckets, highEdge, true, ref min, ref max);
             }
         }
     }
@@ -351,17 +363,6 @@ public static class ByLevelAggregator
 
         series.Add(new BreakdownSeries($"{StatLabel(stat)} · {draws[d].Suffix}", SeriesColor.ByChartType, dashed,
             draws[d].Type, values, dashed ? 0 : 2));
-    }
-
-    private static (double? Lo, double? Hi) RangeBounds(IReadOnlyList<double> sorted, SeparateDisplay display)
-    {
-        if (sorted.Count == 0) return (null, null);
-        return display switch
-        {
-            SeparateDisplay.RangeIqr => (Percentile(sorted, 25), Percentile(sorted, 75)),
-            SeparateDisplay.RangeStdDev => (sorted.Average() - StdDev(sorted), sorted.Average() + StdDev(sorted)),
-            _ => (sorted[0], sorted[^1]) // MinMax
-        };
     }
 
     private static DistributionSeries SeparateStat(SeparateDisplay display) => display switch

@@ -3633,4 +3633,22 @@
   <data name="Within days" xml:space="preserve">
     <value>最大日数</value>
   </data>
+  <data name="Grade Distribution" xml:space="preserve">
+    <value>グレード分布</value>
+  </data>
+  <data name="Co-Op Completion" xml:space="preserve">
+    <value>Co-Op達成度</value>
+  </data>
+  <data name="Your score spread per level, Singles against Doubles, the middle 50% shaded." xml:space="preserve">
+    <value>レベルごとのスコア分布、シングル対ダブル、中央50%を網掛け。</value>
+  </data>
+  <data name="Every grade stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
+    <value>フォルダごとに全グレードを積み上げ、未クリア／未プレイの区分でフォルダ総数も表示。</value>
+  </data>
+  <data name="Every plate stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
+    <value>フォルダごとに全プレートを積み上げ、未クリア／未プレイの区分でフォルダ総数も表示。</value>
+  </data>
+  <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
+    <value>プレイ人数別に、クリアしたCo-Op譜面の数。</value>
+  </data>
 </root>

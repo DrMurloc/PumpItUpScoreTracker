@@ -174,14 +174,17 @@ One add-drawer card per pre-filled config, so the multi-personality type stays d
 registry set (`WidgetRegistry`):
 
 - **Score Distribution** — Score · Distribution · Min/P25/Median/P75/Max · IQR band · pooled · Lv 17–23.
-- **Grade Wall** — Letter Grade · Breakdown · 100%-normalized · include unplayed · Lv 17–24.
-- **Plate Distribution** — Plate · Completion · tiers MG / UG / PG · Lv 17–23.
+- **Singles vs Doubles** — Score · Distribution · separated · IQR shaded range per type · Lv 17–23.
+- **Grade Distribution** — Letter Grade · Breakdown · raw counts · include broken/unplayed · Lv 17–24.
+- **Plate Distribution** — Plate · Breakdown · raw counts · include broken/unplayed · Lv 17–23.
 - **Clear Progress** — Pass · Breakdown · Lv 1–28.
-- **Score Completion** — Score · Completion · tiers ≥950k / ≥990k / 1,000,000 · Lv 17–23.
-- **Chart Age** — Chart Age · Distribution · Min/P25/Median/P75/Max · IQR band · Lv 17–23.
+- **Co-Op Completion** — Pass · Breakdown · Co-Op scope · 2–5 players.
 
-The dynamic instance title follows `(metric, aggregation)` (`ByLevelConfigRules.TitleKey`), so rapid-firing
-presets never yields two identically-named widgets.
+The dynamic instance title follows `(metric, aggregation)` (`ByLevelConfigRules.TitleKey`), with two
+named exceptions (`WidgetRegistry.DynamicNameKey`) so the separated Score-Distribution config keeps the
+title **Singles vs Doubles** and the Co-Op Pass config keeps **Co-Op Completion**. Chart Age and Score
+Completion are still fully configurable for power users — they are just no longer *suggested* presets
+(Chart Age confuses most players; Score Completion overlaps Grade Distribution).
 
 ## UX iterations (2026-07-13)
 
@@ -200,3 +203,14 @@ Field-test rounds after the C0–C7 build; the owner runs, these are the ratifie
   stacked bar renders as duplicate-labelled overlaps. Stacked aggregations stay combined; the
   "separate data" toggle is Distribution-only and self-hides elsewhere. Revisit if the wrapper gains real
   grouped-bar support.
+- **Round 3 (V1 lock)** — preset roster trimmed to the six above: Score Completion dropped (it overlaps a
+  normalized Grade Distribution), Chart Age dropped as a *suggested* graph (kept configurable); added
+  **Singles vs Doubles** (separated Score, IQR shaded) and **Co-Op Completion** (Co-Op Pass breakdown).
+  Grade & Plate presets flipped to raw-count Breakdown with the broken/unplayed cap on, so the bar height
+  reads as folder size with your distribution stacked inside. Two rendering fixes: (1) the shared
+  distribution tooltip is now hand-built (`DistributionTooltip`), because a chart mixing range-area bands
+  with line series otherwise renders every line value as `undefined – undefined`; (2) the stroke dash
+  array is front-padded by the band count — it is indexed over *all* series and the range-area bands
+  render first, so without the pad the dash pattern landed on the wrong lines and Singles/Doubles looked
+  mismatched. Separated ranges now read as a box-plot ribbon per type: **solid** min / median / max,
+  **dashed** lines along the shaded edges (owner's preferred read).
