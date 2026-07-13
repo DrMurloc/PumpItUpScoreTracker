@@ -1183,6 +1183,16 @@
     background: var(--mix-surface-muted);
 }
 
+@media (min-width: 600px) {
+    /* Desktop strip cells are fixed-height (168px rows): landscape-crop the art so
+       name + score + detail all clear the cell (owner, round 7). Mobile cells
+       auto-grow, so the square art stays there. */
+    .dash-card-art {
+        aspect-ratio: auto;
+        height: 52px;
+    }
+}
+
 /* Direct child only — the DifficultyBubble overlay nests its own img inside this box,
    and a blanket rule blew it up to full card size (owner, round 4). */
 .dash-card-art > img {
@@ -1209,6 +1219,7 @@
     margin-top: 3px;
     font-family: var(--font-display);
     font-size: .72rem;
+    line-height: 1.25;
     letter-spacing: .03em;
     color: var(--mix-ink-muted);
     white-space: nowrap;
@@ -1221,14 +1232,33 @@
     align-items: center;
     gap: 4px;
     font-size: .72rem;
+    line-height: 1.2;
     font-variant-numeric: tabular-nums;
 }
 
 .dash-card-detail {
     font-size: .65rem;
+    line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Category context inside a merged strip: a slim vertical label opens each group
+   (owner, round 7 — "which flavor of Score Push is this?"). */
+.dash-strip-divider {
+    flex: none;
+    writing-mode: vertical-rl;
+    font-family: var(--font-display);
+    font-size: .62rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 2px 1px;
+    border-left: 1px solid rgba(255, 255, 255, .10);
 }
 
 .dash-clickable {

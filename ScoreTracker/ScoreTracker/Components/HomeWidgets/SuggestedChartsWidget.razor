@@ -102,9 +102,8 @@ else
         }
         else
         {
-            @* 2x1 only (rounds 2–4): one merged card strip — captions don't fit a
-               single card band; the per-card detail carries the category context.
-               Every other size reads as text rows. *@
+            @* Single-row wide sizes (rounds 2–7): one merged card strip; slim vertical
+               labels open each category group. Taller sizes read as text rows. *@
             <div class="dash-strip-wrap">
                 <button type="button" class="dash-strip-arrow dash-strip-arrow-left"
                         aria-label="@L["Scroll left"]">‹</button>
@@ -112,6 +111,10 @@ else
                     @foreach (var section in _sections.Where(s => s.Rows.Any()))
                     {
                         var sect = section;
+                        @if (_sections.Count(s => s.Rows.Any()) > 1)
+                        {
+                            <div class="dash-strip-divider" title="@section.Caption">@section.Caption</div>
+                        }
                         @foreach (var row in section.Rows)
                         {
                             @Card((sect, row))

@@ -20,6 +20,8 @@ public readonly record struct SizePreset(int Columns, int Rows)
 {
     public static readonly SizePreset OneByOne = new(1, 1);
     public static readonly SizePreset TwoByOne = new(2, 1);
+    public static readonly SizePreset ThreeByOne = new(3, 1);
+    public static readonly SizePreset FourByOne = new(4, 1);
     public static readonly SizePreset OneByTwo = new(1, 2);
     public static readonly SizePreset OneByThree = new(1, 3);
     public static readonly SizePreset TwoByTwo = new(2, 2);

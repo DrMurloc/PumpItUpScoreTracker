@@ -54,8 +54,12 @@ public static class WidgetRegistry
             "Charts picked for you, tuned by goal.",
             WidgetCategory.Play,
             Icons.Material.Filled.Recommend,
-            // 1x3 = the extra-long list (owner, round 4).
-            new[] { SizePreset.OneByTwo, SizePreset.OneByThree, SizePreset.TwoByOne, SizePreset.TwoByTwo },
+            // 1x3 = the extra-long list (round 4); 3x1/4x1 = wider strips (round 7).
+            new[]
+            {
+                SizePreset.OneByTwo, SizePreset.OneByThree, SizePreset.TwoByOne,
+                SizePreset.ThreeByOne, SizePreset.FourByOne, SizePreset.TwoByTwo
+            },
             SizePreset.OneByTwo,
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(SuggestedChartsWidget),
