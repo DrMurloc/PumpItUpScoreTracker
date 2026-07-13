@@ -336,8 +336,13 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {
-    foreach (var (id, _, _) in recurringJobs)
-        RecurringJob.RemoveIfExists(id);
+    // Local dev: we don't want jobs auto-firing, but *removing* them hides them from the Hangfire
+    // dashboard — where "Trigger now" is the one-click way to run any of them by hand (no per-job
+    // admin buttons needed). So park them on a yearly Jan-1 schedule instead: still registered and
+    // visible, manually runnable, but effectively never on their own during a dev session.
+    // "0 0 1 1 *" = Jan 1 00:00 UTC.
+    foreach (var (id, job, _) in recurringJobs)
+        RecurringJob.AddOrUpdate(id, job, "0 0 1 1 *");
 }
 else
 {

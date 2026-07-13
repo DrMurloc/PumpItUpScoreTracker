@@ -23,7 +23,7 @@ All cron expressions are **UTC**.
 ## Operational notes
 
 - **Dashboard**: `/hangfire`, gated on admin (`HangfireDashboardAuthorization`). Use it to inspect, trigger, or retry jobs.
-- **`PreventRecurringJobs=true`** (config flag) removes all registrations instead of scheduling them — set in environments that shouldn't run background work.
+- **`PreventRecurringJobs=true`** (config flag) parks every job on a yearly Jan-1 cron (`0 0 1 1 *`) instead of its real cadence — so they stay visible in the `/hangfire` dashboard and can be run by hand with **Trigger now**, but never fire on their own. Set in environments that shouldn't run background work automatically (local dev, E2E).
 - **Restart semantics**: schedules live in SQL and re-fire per Hangfire's misfire handling; but the MassTransit transport is **in-memory**, so a message that was mid-flight when the process died is gone. Jobs are designed to tolerate this (idempotent consumers, the flush job as a catch-up).
 - **Adding a job** = one method on `RecurringJobRunner` + one `RecurringJob.AddOrUpdate` line in `Program.cs` + a consumer in the owning vertical. Do not introduce a second scheduler library or hosted-timer patterns.
 - **Phoenix 2**: the compute-trigger messages (tier lists, scoring difficulty, weekly rotation, leaderboard import) carry a `MixEnum` defaulting to Phoenix. The **leaderboard import and the Daily Step rotation now run for both mixes** (Daily Step because a daily cadence can't rely on the manual per-mix trigger the Weekly page uses); the remaining compute jobs deliberately stay **Phoenix-only** until real Phoenix 2 score volume exists.
