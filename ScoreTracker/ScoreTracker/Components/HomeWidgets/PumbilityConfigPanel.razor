@@ -1,24 +1,19 @@
 @using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services.HomeDashboard
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
 <MudSelect T="MixEnum?" @bind-Value="_mix" Label="@L["Mix"]" Class="mb-3">
     <MudSelectItem T="MixEnum?" Value="null">@L["Follow current mix"]</MudSelectItem>
     <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix">Phoenix</MudSelectItem>
     <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix2">Phoenix 2</MudSelectItem>
 </MudSelect>
-<MudSwitch T="bool" @bind-Value="_showProjections" Color="Color.Primary"
-           Label="@L["Show projected targets"]"/>
-@if (_dismissedCount > 0)
-{
-    <div class="d-flex align-center gap-2 mt-2">
-        <MudText Typo="Typo.body2">@L["Dismissed charts"]: @_dismissedCount</MudText>
-        <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => _restoreAll = true"
-                   Disabled="_restoreAll">
-            @L["Restore all"]
-        </MudButton>
-    </div>
-}
+<MudSelect T="ChartType?" @bind-Value="_dimension" Label="@L["Match players on"]" Class="mb-2">
+    <MudSelectItem T="ChartType?" Value="ChartType.Single">@L["Singles competitive level"]</MudSelectItem>
+    <MudSelectItem T="ChartType?" Value="ChartType.Double">@L["Doubles competitive level"]</MudSelectItem>
+    <MudSelectItem T="ChartType?" Value="null">@L["Combined competitive level"]</MudSelectItem>
+</MudSelect>
+<MudText Typo="Typo.caption" Class="dash-muted">@L["Your closest matches show at 1×2 and taller."]</MudText>
 <div class="d-flex justify-end gap-2 mt-4">
     <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">@L["Save"]</MudButton>
@@ -31,28 +26,18 @@
     [Parameter] public EventCallback OnCancel { get; set; }
 
     private MixEnum? _mix;
-    private bool _showProjections = true;
-    private int _dismissedCount;
-    private bool _restoreAll;
+    private ChartType? _dimension;
 
     protected override void OnParametersSet()
     {
         var config = WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson);
         _mix = config.Mix;
-        _showProjections = config.ShowProjections;
-        _dismissedCount = config.DismissedCharts.Count;
-        _restoreAll = false;
+        _dimension = config.MatchDimension;
     }
 
     private async Task Save()
     {
-        var existing = WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson);
-        var config = new PumbilityConfig
-        {
-            Mix = _mix,
-            ShowProjections = _showProjections,
-            DismissedCharts = _restoreAll ? new List<Guid>() : existing.DismissedCharts
-        };
+        var config = new PumbilityConfig { Mix = _mix, MatchDimension = _dimension };
         await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
     }
 

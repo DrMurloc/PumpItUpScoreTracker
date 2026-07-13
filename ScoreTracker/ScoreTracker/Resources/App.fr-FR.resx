@@ -3405,113 +3405,68 @@
   <data name="Tier list difficulty" xml:space="preserve">
     <value>Difficulté de tier list</value>
   </data>
-  <data name="Singles / Doubles" xml:space="preserve">
-    <value>Singles / Doubles</value>
+  <data name="Community Highlights" xml:space="preserve">
+    <value>Faits marquants de la communauté</value>
   </data>
-  <data name="Show Singles &amp; Doubles as separate data" xml:space="preserve">
-    <value>Afficher Singles et Doubles en données distinctes</value>
+  <data name="Recent big wins from the communities you pick." xml:space="preserve">
+    <value>Les grandes réussites récentes des communautés que vous choisissez.</value>
   </data>
-  <data name="Metric" xml:space="preserve">
-    <value>Métrique</value>
+  <data name="No big wins yet" xml:space="preserve">
+    <value>Pas encore de grandes réussites</value>
   </data>
-  <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
-    <value>Ce Mix n'est pas normalisé en score — seuls la Note et le Pass sont disponibles.</value>
+  <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
+    <value>Les PG rares, grands titres et meilleurs scores de vos communautés apparaissent ici.</value>
   </data>
-  <data name="Aggregation" xml:space="preserve">
-    <value>Agrégation</value>
+  <data name="Rare Title" xml:space="preserve">
+    <value>Titre rare</value>
   </data>
-  <data name="Series" xml:space="preserve">
-    <value>Séries</value>
+  <data name="Rare PG" xml:space="preserve">
+    <value>PG rare</value>
   </data>
-  <data name="Custom percentile" xml:space="preserve">
-    <value>Centile personnalisé</value>
+  <data name="Folder Cleared" xml:space="preserve">
+    <value>Dossier terminé</value>
   </data>
-  <data name="Avg" xml:space="preserve">
-    <value>Moy</value>
+  <data name="Top {0}%" xml:space="preserve">
+    <value>Top {0}%</value>
   </data>
-  <data name="Distribution" xml:space="preserve">
-    <value>Distribution</value>
+  <data name="only {0} have PG" xml:space="preserve">
+    <value>seuls {0} ont le PG</value>
   </data>
-  <data name="Breakdown" xml:space="preserve">
-    <value>Répartition</value>
+  <data name="#{0} PUMBILITY" xml:space="preserve">
+    <value>#{0} en PUMBILITY</value>
   </data>
-  <data name="Completion %" xml:space="preserve">
-    <value>% d'achèvement</value>
+  <data name="top {0}% of peers" xml:space="preserve">
+    <value>top {0}% des pairs</value>
   </data>
-  <data name="Normalize to 100%" xml:space="preserve">
-    <value>Normaliser à 100 %</value>
+  <data name="{0} pass in this folder" xml:space="preserve">
+    <value>{0} passe dans ce folder</value>
   </data>
-  <data name="Include an unplayed segment" xml:space="preserve">
-    <value>Inclure un segment non joué</value>
+  <data name="#1 of all peers" xml:space="preserve">
+    <value>#1 parmi tous les pairs</value>
   </data>
-  <data name="Thresholds — each becomes a line" xml:space="preserve">
-    <value>Seuils — chacun devient une ligne</value>
+  <data name="only {0} hold it" xml:space="preserve">
+    <value>seuls {0} le détiennent</value>
   </data>
-  <data name="At least" xml:space="preserve">
-    <value>Au moins</value>
+  <data name="completed" xml:space="preserve">
+    <value>terminé</value>
   </data>
-  <data name="Shade band" xml:space="preserve">
-    <value>Bande ombrée</value>
+  <data name="now" xml:space="preserve">
+    <value>maintenant</value>
   </data>
-  <data name="No scores in this range yet — record or import to see your breakdown." xml:space="preserve">
-    <value>Aucun score dans cette plage pour l'instant — enregistrez ou importez pour voir votre répartition.</value>
+  <data name="Communities to include" xml:space="preserve">
+    <value>Communautés à inclure</value>
   </data>
-  <data name="By-Level Breakdown" xml:space="preserve">
-    <value>Répartition par niveau</value>
+  <data name="Join a community to use this widget." xml:space="preserve">
+    <value>Rejoignez une communauté pour utiliser ce widget.</value>
   </data>
-  <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
-    <value>Un graphique configurable de vos scores, notes, plates ou pass par niveau.</value>
+  <data name="Leave all unchecked to follow your non-regional communities." xml:space="preserve">
+    <value>Ne cochez rien pour suivre vos communautés non régionales.</value>
   </data>
-  <data name="Score Completion" xml:space="preserve">
-    <value>Achèvement du score</value>
+  <data name="Include my own wins" xml:space="preserve">
+    <value>Inclure mes propres réussites</value>
   </data>
-  <data name="Grade Breakdown" xml:space="preserve">
-    <value>Répartition des notes</value>
-  </data>
-  <data name="Grade Completion" xml:space="preserve">
-    <value>Achèvement des notes</value>
-  </data>
-  <data name="Average Grade by Level" xml:space="preserve">
-    <value>Note moyenne par niveau</value>
-  </data>
-  <data name="Plate Completion" xml:space="preserve">
-    <value>Achèvement des plates</value>
-  </data>
-  <data name="Average Plate by Level" xml:space="preserve">
-    <value>Plate moyenne par niveau</value>
-  </data>
-  <data name="Pass Breakdown" xml:space="preserve">
-    <value>Répartition des pass</value>
-  </data>
-  <data name="Clear Progress" xml:space="preserve">
-    <value>Progression des pass</value>
-  </data>
-  <data name="Box Plot" xml:space="preserve">
-    <value>Boîte à moustaches</value>
-  </data>
-  <data name="Grade Wall" xml:space="preserve">
-    <value>Mur de notes</value>
-  </data>
-  <data name="PG Race" xml:space="preserve">
-    <value>Course au PG</value>
-  </data>
-  <data name="Score Push %" xml:space="preserve">
-    <value>% de progression du score</value>
-  </data>
-  <data name="Score spread per level — min, quartiles, max, with the IQR shaded." xml:space="preserve">
-    <value>Dispersion du score par niveau — min, quartiles, max, avec l'IQR ombré.</value>
-  </data>
-  <data name="What grades fill each folder, normalized so shape beats volume." xml:space="preserve">
-    <value>Quelles notes remplissent chaque dossier, normalisé pour que la forme prime sur le volume.</value>
-  </data>
-  <data name="Chasing plates — % of each folder at MG, UG, and full Perfect Game." xml:space="preserve">
-    <value>À la chasse aux plates — % de chaque dossier en MG, UG et Perfect Game complet.</value>
-  </data>
-  <data name="How much of every folder you've passed, Singles vs Doubles." xml:space="preserve">
-    <value>Quelle part de chaque dossier vous avez passée, Singles contre Doubles.</value>
-  </data>
-  <data name="Multi-threshold completion: ≥950k, ≥990k, and 1,000,000." xml:space="preserve">
-    <value>Achèvement multi-seuils : ≥950k, ≥990k et 1 000 000.</value>
+  <data name="Cleared all of {0}" xml:space="preserve">
+    <value>Tout {0} réussi</value>
   </data>
   <data name="Daily Step" xml:space="preserve">
     <value>Pas du Jour</value>
@@ -3584,6 +3539,156 @@
   </data>
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} au classement</value>
+  </data>
+  <data name="Account Stats" xml:space="preserve">
+    <value>Statistiques du compte</value>
+  </data>
+  <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
+    <value>Ton Pumbility et ton niveau compétitif, plus tes rivaux les plus proches.</value>
+  </data>
+  <data name="Pumbility" xml:space="preserve">
+    <value>Pumbility</value>
+  </data>
+  <data name="Match players on" xml:space="preserve">
+    <value>Associer les joueurs selon</value>
+  </data>
+  <data name="Singles competitive level" xml:space="preserve">
+    <value>Niveau compétitif Singles</value>
+  </data>
+  <data name="Doubles competitive level" xml:space="preserve">
+    <value>Niveau compétitif Doubles</value>
+  </data>
+  <data name="Combined competitive level" xml:space="preserve">
+    <value>Niveau compétitif combiné</value>
+  </data>
+  <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
+    <value>Tes rivaux les plus proches apparaissent en 1×2 et plus grand.</value>
+  </data>
+  <data name="Closest · Singles" xml:space="preserve">
+    <value>Plus proches · Singles</value>
+  </data>
+  <data name="Closest · Doubles" xml:space="preserve">
+    <value>Plus proches · Doubles</value>
+  </data>
+  <data name="Closest · Combined" xml:space="preserve">
+    <value>Plus proches · Combiné</value>
+  </data>
+  <data name="No close matches yet." xml:space="preserve">
+    <value>Pas encore de rivaux proches.</value>
+  </data>
+  <data name="Pumbility Push" xml:space="preserve">
+    <value>Poussée de Pumbility</value>
+  </data>
+  <data name="Suggested · Pumbility Push" xml:space="preserve">
+    <value>Suggérés · Poussée de Pumbility</value>
+  </data>
+  <data name="The biggest Pumbility gains available to you right now." xml:space="preserve">
+    <value>Les plus gros gains de Pumbility disponibles pour toi en ce moment.</value>
+  </data>
+  <data name="Singles / Doubles" xml:space="preserve">
+    <value>Singles / Doubles</value>
+  </data>
+  <data name="Show Singles &amp; Doubles as separate data" xml:space="preserve">
+    <value>Afficher Singles et Doubles en données distinctes</value>
+  </data>
+  <data name="Metric" xml:space="preserve">
+    <value>Métrique</value>
+  </data>
+  <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
+    <value>Ce Mix n'est pas normalisé en score — seuls la Note et le Pass sont disponibles.</value>
+  </data>
+  <data name="Aggregation" xml:space="preserve">
+    <value>Agrégation</value>
+  </data>
+  <data name="Series" xml:space="preserve">
+    <value>Séries</value>
+  </data>
+  <data name="Custom percentile" xml:space="preserve">
+    <value>Centile personnalisé</value>
+  </data>
+  <data name="Avg" xml:space="preserve">
+    <value>Moy</value>
+  </data>
+  <data name="Distribution" xml:space="preserve">
+    <value>Distribution</value>
+  </data>
+  <data name="Breakdown" xml:space="preserve">
+    <value>Répartition</value>
+  </data>
+  <data name="Completion %" xml:space="preserve">
+    <value>% d'achèvement</value>
+  </data>
+  <data name="Normalize to 100%" xml:space="preserve">
+    <value>Normaliser à 100 %</value>
+  </data>
+  <data name="Include an unplayed segment" xml:space="preserve">
+    <value>Inclure un segment non joué</value>
+  </data>
+  <data name="Thresholds — each becomes a line" xml:space="preserve">
+    <value>Seuils — chacun devient une ligne</value>
+  </data>
+  <data name="At least" xml:space="preserve">
+    <value>Au moins</value>
+  </data>
+  <data name="Shade band" xml:space="preserve">
+    <value>Bande ombrée</value>
+  </data>
+  <data name="No scores in this range yet — record or import to see your breakdown." xml:space="preserve">
+    <value>Aucun score dans cette plage pour l'instant — enregistrez ou importez pour voir votre répartition.</value>
+  </data>
+  <data name="By-Level Breakdown" xml:space="preserve">
+    <value>Répartition par niveau</value>
+  </data>
+  <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
+    <value>Un graphique configurable de vos scores, notes, plates ou pass par niveau.</value>
+  </data>
+  <data name="Score Completion" xml:space="preserve">
+    <value>Achèvement du score</value>
+  </data>
+  <data name="Grade Completion" xml:space="preserve">
+    <value>Achèvement des notes</value>
+  </data>
+  <data name="Average Grade by Level" xml:space="preserve">
+    <value>Note moyenne par niveau</value>
+  </data>
+  <data name="Plate Completion" xml:space="preserve">
+    <value>Achèvement des plates</value>
+  </data>
+  <data name="Average Plate by Level" xml:space="preserve">
+    <value>Plate moyenne par niveau</value>
+  </data>
+  <data name="Pass Breakdown" xml:space="preserve">
+    <value>Répartition des pass</value>
+  </data>
+  <data name="Clear Progress" xml:space="preserve">
+    <value>Progression des pass</value>
+  </data>
+  <data name="Box Plot" xml:space="preserve">
+    <value>Boîte à moustaches</value>
+  </data>
+  <data name="Grade Wall" xml:space="preserve">
+    <value>Mur de notes</value>
+  </data>
+  <data name="PG Race" xml:space="preserve">
+    <value>Course au PG</value>
+  </data>
+  <data name="Score Push %" xml:space="preserve">
+    <value>% de progression du score</value>
+  </data>
+  <data name="Score spread per level — min, quartiles, max, with the IQR shaded." xml:space="preserve">
+    <value>Dispersion du score par niveau — min, quartiles, max, avec l'IQR ombré.</value>
+  </data>
+  <data name="What grades fill each folder, normalized so shape beats volume." xml:space="preserve">
+    <value>Quelles notes remplissent chaque dossier, normalisé pour que la forme prime sur le volume.</value>
+  </data>
+  <data name="Chasing plates — % of each folder at MG, UG, and full Perfect Game." xml:space="preserve">
+    <value>À la chasse aux plates — % de chaque dossier en MG, UG et Perfect Game complet.</value>
+  </data>
+  <data name="How much of every folder you've passed, Singles vs Doubles." xml:space="preserve">
+    <value>Quelle part de chaque dossier vous avez passée, Singles contre Doubles.</value>
+  </data>
+  <data name="Multi-threshold completion: ≥950k, ≥990k, and 1,000,000." xml:space="preserve">
+    <value>Achèvement multi-seuils : ≥950k, ≥990k et 1 000 000.</value>
   </data>
   <data name="Percentile" xml:space="preserve">
     <value>Percentile</value>

@@ -2285,6 +2285,188 @@ html.nav-away .page-dock,
     flex: none;
 }
 
+/* Community Highlights feed (docs/design/home-page-widgets.md §7). */
+.dash-ch-feed {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    height: 100%;
+    /* So win rows can respond to the widget's own width, not just the viewport. */
+    container-type: inline-size;
+}
+
+.dash-ch-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .25rem;
+    text-align: center;
+    padding: 1rem;
+}
+
+.dash-ch-entry {
+    display: flex;
+    gap: .6rem;
+    padding: .55rem .25rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink-muted) 15%, transparent);
+}
+
+.dash-ch-avatar {
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+}
+
+.dash-ch-body {
+    min-width: 0;
+    flex: 1;
+}
+
+.dash-ch-head {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+}
+
+.dash-ch-name {
+    font-weight: 600;
+    font-size: .85rem;
+}
+
+.dash-ch-time {
+    margin-left: auto;
+    font-size: .7rem;
+    white-space: nowrap;
+}
+
+.dash-ch-wins {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    margin-top: .15rem;
+}
+
+.dash-ch-win {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .35rem;
+    font-size: .78rem;
+}
+
+.dash-ch-chart {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    min-width: 0;
+}
+
+.dash-ch-song {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 12rem;
+}
+
+.dash-ch-why {
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
+/* Scored win = one line on wide: chart (the song name truncates) + highlight, then a right-aligned
+   grade/plate + score. The narrow queries below reflow it into a chart+score line and a subtitle. */
+.dash-ch-win-scored {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: .35rem;
+}
+
+.dash-ch-win-scored .dash-ch-chart {
+    min-width: 0; /* the song name ellipsises rather than shove the score off the line */
+}
+
+.dash-ch-score-right {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    padding-left: .4rem;
+}
+
+.dash-ch-score {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    padding-left: .25rem;
+}
+
+/* Narrow — a 1-wide widget (container query on the feed) or mobile, where the dashboard is one
+   column (media query): hide the song name and drop the highlight onto its own subtitle line. */
+@container (max-width: 300px) {
+    .dash-ch-song { display: none; }
+    .dash-ch-win-scored { flex-wrap: wrap; }
+    .dash-ch-win-scored .dash-ch-score-right { order: 2; }
+    .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; }
+}
+
+@media (max-width: 600px) {
+    .dash-ch-song { display: none; }
+    .dash-ch-win-scored { flex-wrap: wrap; }
+    .dash-ch-win-scored .dash-ch-score-right { order: 2; }
+    .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; }
+}
+
+/* Card-strip person divider (avatar + vertical name) — the community analog of the
+   Suggested-Charts category divider, reusing that strip's card CSS + arrow pager. */
+.dash-strip-person {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 3px;
+    min-width: 0;
+}
+
+.dash-strip-pname {
+    writing-mode: vertical-rl;
+    font-family: var(--font-display);
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    max-height: 62px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--mix-ink);
+}
+
+.dash-strip-person.you .dash-strip-pname {
+    color: var(--mix-primary);
+}
+
+/* A title or full-folder clear has no chart art — it reads as a centered text card. */
+.dash-card-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 3px;
+}
+
+.dash-card-emoji {
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+/* The cards/dividers are wrapped in MudTooltip, so its root is the strip's flex child —
+   keep it a fixed-size item so the cards don't grow or shrink. */
+.dash-card-strip > .mud-tooltip-root {
+    flex: none;
+    min-width: 0;
+    display: inline-flex;
+}
+
 /* Drag chrome: handle (desktop pointer only), dragged-cell dim, insertion marker. */
 
 .dash-drag-handle {
@@ -2654,6 +2836,173 @@ html.nav-away .page-dock,
     gap: 6px;
     flex-wrap: wrap;
     font-variant-numeric: tabular-nums;
+}
+
+/* Account Stats widget: glowy Pumbility + competitive level, then the closest matches. */
+.dash-acct {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+}
+
+.dash-acct-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: none;
+}
+
+.dash-acct-eyebrow {
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    font-weight: 700;
+    color: var(--mud-palette-text-disabled);
+}
+
+.dash-acct-cl-eyebrow {
+    margin-top: 6px;
+}
+
+.dash-acct-hero {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.dash-acct-total {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    flex: none;
+}
+
+/* S/D Pumbility pools stacked to the right of the big total (owner, field-test). */
+.dash-acct-pools {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    font-size: .82rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-acct-poolrow {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    white-space: nowrap;
+}
+
+.dash-acct-poolrow > span:first-child {
+    font-weight: 600;
+}
+
+.dash-acct-poolnum {
+    font-weight: 700;
+}
+
+.dash-acct-active {
+    box-shadow: 0 2px 0 var(--mix-primary);
+}
+
+.dash-acct-matches {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    border-top: 1px solid rgba(255, 255, 255, .06);
+    padding-top: 8px;
+}
+
+.dash-acct-mhead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.dash-acct-mlabel {
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    font-weight: 700;
+    color: var(--mud-palette-text-disabled);
+}
+
+.dash-acct-you {
+    font-size: .72rem;
+    color: var(--mud-palette-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-acct-you b {
+    color: var(--daily-you);
+    font-weight: 700;
+}
+
+.dash-acct-mlist {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.dash-acct-who {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+.dash-acct-av {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: none;
+}
+
+.dash-acct-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.dash-acct-trail {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.dash-acct-lvl {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-acct-empty {
+    font-size: .72rem;
+    font-style: italic;
+    color: var(--mud-palette-text-disabled);
+    padding: 8px 4px;
+    text-align: center;
+}
+
+.dash-acct-mixpill {
+    font-size: .58rem;
+    font-weight: 800;
+    letter-spacing: .03em;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--mix-primary) 16%, transparent);
+    color: var(--mix-primary);
+    border: 1px solid color-mix(in srgb, var(--mix-primary) 40%, transparent);
 }
 
 /* Daily Step widget (docs/design/daily-step.md): the shared daily chart as a leaderboard card. */

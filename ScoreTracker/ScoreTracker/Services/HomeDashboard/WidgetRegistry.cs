@@ -27,13 +27,15 @@ public static class WidgetRegistry
             typeof(CompetitiveLevelWidget),
             typeof(CompetitiveLevelConfigPanel),
             typeof(CompetitiveLevelConfig)),
+        // TypeId stays "pumbility" (public export vocabulary, never renamed) though the
+        // widget is now Account Stats. 1x2+ adds the closest-competitive-matches list.
         new("pumbility",
-            "PUMBILITY",
-            "Pumbility targets tuned to your skill profile.",
+            "Account Stats",
+            "Your Pumbility and competitive level, plus your closest matches.",
             WidgetCategory.Progress,
-            Icons.Material.Filled.TrendingUp,
-            new[] { SizePreset.OneByOne, SizePreset.TwoByOne, SizePreset.OneByTwo },
-            SizePreset.TwoByOne,
+            Icons.Material.Filled.Leaderboard,
+            new[] { SizePreset.OneByOne, SizePreset.OneByTwo, SizePreset.OneByThree },
+            SizePreset.OneByTwo,
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(PumbilityWidget),
             typeof(PumbilityConfigPanel),
@@ -49,6 +51,21 @@ public static class WidgetRegistry
             typeof(WeeklyWidget),
             typeof(WeeklyConfigPanel),
             typeof(WeeklyConfig)),
+        new("community-highlights",
+            "Community Highlights",
+            "Recent big wins from the communities you pick.",
+            WidgetCategory.Compete,
+            Icons.Material.Filled.Groups,
+            new[]
+            {
+                SizePreset.OneByTwo, SizePreset.TwoByOne, SizePreset.ThreeByOne, SizePreset.FourByOne,
+                SizePreset.TwoByTwo, SizePreset.OneByThree
+            },
+            SizePreset.TwoByTwo,
+            new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            typeof(CommunityHighlightsWidget),
+            typeof(CommunityHighlightsConfigPanel),
+            typeof(CommunityHighlightsConfig)),
         new("daily-step",
             "Daily Step",
             "Today's shared chart, plus a weekly Limbo Day.",
@@ -95,7 +112,10 @@ public static class WidgetRegistry
                         // Fills reach down by identity; nothing above by default.
                         SpreadBelow = 3,
                         SpreadAbove = 0
-                    }))
+                    })),
+                new WidgetDrawerPreset("Suggested · Pumbility Push",
+                    "The biggest Pumbility gains available to you right now.",
+                    WidgetConfigJson.Write(new SuggestedChartsConfig { Goal = SuggestedGoal.PumbilityPush }))
             },
             // Instance titles follow the configured goal so rapid-firing all three
             // presets never yields three "Suggested Charts" (owner, field test).
@@ -104,6 +124,7 @@ public static class WidgetRegistry
                 {
                     SuggestedGoal.ScorePush => "Suggested · Score Push",
                     SuggestedGoal.FillGaps => "Suggested · Fill Gaps",
+                    SuggestedGoal.PumbilityPush => "Suggested · Pumbility Push",
                     _ => "Suggested · Title Hunt"
                 },
             RefreshIcon: Icons.Material.Filled.Shuffle,

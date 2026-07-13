@@ -301,6 +301,46 @@ public sealed class RecommendedChartsSagaTests
             r => (string)r.Category == RecommendationCategories.ImproveTop50 && r.ChartId == outside.Id);
     }
 
+    [Fact]
+    public async Task PumbilityPushRanksChartsByProjectedGainAndStampsTheGain()
+    {
+        var big = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var small = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(big, small)
+            .WithPumbilityGains((small.Id, 7), (big.Id, 42));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: new HashSet<RecommendationCategory> { RecommendationCategory.PushPumbility }),
+            CancellationToken.None)).ToArray();
+
+        var pushes = result.Where(r => (string)r.Category == RecommendationCategories.PushPumbility).ToArray();
+        Assert.Equal(new[] { big.Id, small.Id }, pushes.Select(p => p.ChartId).ToArray());
+        Assert.Equal("+42", pushes[0].ChartDetails);
+    }
+
+    [Fact]
+    public async Task PumbilityPushExcludesHiddenChartsAndNonPositiveGains()
+    {
+        var gainer = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var hidden = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var zeroGain = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(gainer, hidden, zeroGain)
+            .WithPumbilityGains((gainer.Id, 30), (hidden.Id, 25), (zeroGain.Id, 0))
+            .WithFeedback(new SuggestionFeedbackRecord(Name.From(RecommendationCategories.PushPumbility),
+                Name.From("NotInterested"), Notes: "", ShouldHide: true, IsPositive: false, ChartId: hidden.Id));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: new HashSet<RecommendationCategory> { RecommendationCategory.PushPumbility }),
+            CancellationToken.None)).ToArray();
+
+        Assert.Contains(result,
+            r => (string)r.Category == RecommendationCategories.PushPumbility && r.ChartId == gainer.Id);
+        Assert.DoesNotContain(result, r => r.ChartId == hidden.Id);
+        Assert.DoesNotContain(result, r => r.ChartId == zeroGain.Id);
+    }
+
     private sealed class RecommendedChartsContext
     {
         public Mock<IMediator> Mediator { get; } = new();
@@ -333,6 +373,8 @@ public sealed class RecommendedChartsSagaTests
                 .ReturnsAsync(Array.Empty<SongTierListEntry>());
             Mediator.Setup(m => m.Send(It.IsAny<GetTop50CompetitiveQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+            Mediator.Setup(m => m.Send(It.IsAny<ProjectPumbilityGainsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(EmptyProjection());
             Users.Setup(u => u.GetFeedback(userId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<SuggestionFeedbackRecord>());
             Weekly.Setup(w => w.GetWeeklyCharts(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
@@ -364,6 +406,18 @@ public sealed class RecommendedChartsSagaTests
             return this;
         }
 
+        public RecommendedChartsContext WithPumbilityGains(params (Guid ChartId, int Gain)[] gains)
+        {
+            Mediator.Setup(m => m.Send(It.IsAny<ProjectPumbilityGainsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PumbilityProjection(
+                    new Dictionary<Guid, PhoenixScore>(),
+                    gains.ToDictionary(g => g.ChartId, g => g.Gain),
+                    new Dictionary<(ChartType, DifficultyLevel), int>(),
+                    new Dictionary<Guid, TierListCategory>(),
+                    new Dictionary<Guid, IReadOnlyList<SkillAdjustmentRecord>>()));
+            return this;
+        }
+
         public RecommendedChartsContext WithCompetitiveLevel(double level)
         {
             Stats.Setup(s => s.GetStats(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
@@ -388,6 +442,11 @@ public sealed class RecommendedChartsSagaTests
     private static RecordedPhoenixScore Score(Guid chartId, int score) =>
         new(chartId, score, PhoenixPlate.SuperbGame, IsBroken: false,
             new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+
+    private static PumbilityProjection EmptyProjection() =>
+        new(new Dictionary<Guid, PhoenixScore>(), new Dictionary<Guid, int>(),
+            new Dictionary<(ChartType, DifficultyLevel), int>(), new Dictionary<Guid, TierListCategory>(),
+            new Dictionary<Guid, IReadOnlyList<SkillAdjustmentRecord>>());
 
     private static PlayerStatsRecord ZeroStats(Guid userId) =>
         new(userId, TotalRating: 0, HighestLevel: 1, ClearCount: 0, CoOpRating: 0, CoOpScore: 0,

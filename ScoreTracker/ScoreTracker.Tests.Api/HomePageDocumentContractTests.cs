@@ -19,8 +19,8 @@ public sealed class HomePageDocumentContractTests
         return new HomePageRecord(Guid.Empty, "Session Day", 0, true, SharedKernel.Enums.MixEnum.Phoenix2,
             new[]
             {
-                new HomePageWidgetRecord(Guid.Empty, "pumbility", "Doubles push", 0, "2x1",
-                    "{\"mix\":\"Phoenix2\",\"showProjections\":true}", 1),
+                new HomePageWidgetRecord(Guid.Empty, "pumbility", "Doubles push", 0, "1x2",
+                    "{\"mix\":\"Phoenix2\",\"matchDimension\":\"Double\"}", 1),
                 new HomePageWidgetRecord(Guid.Empty, "weekly-challenge", null, 1, "1x1", "{}", 1),
                 new HomePageWidgetRecord(Guid.Empty, "by-level-breakdown", "PG chase", 2, "2x2",
                     WidgetConfigJson.Write(new ByLevelBreakdownConfig
@@ -82,7 +82,7 @@ public sealed class HomePageDocumentContractTests
         Assert.Equal(SharedKernel.Enums.MixEnum.Phoenix2, result.DefaultMix);
         Assert.Equal(3, result.Widgets.Count);
         Assert.Equal("pumbility", result.Widgets[0].WidgetType);
-        Assert.Equal("2x1", result.Widgets[0].SizePreset);
+        Assert.Equal("1x2", result.Widgets[0].SizePreset);
 
         // The By-Level Breakdown config survives the public export/import round-trip,
         // including its discriminated {kind, value} threshold list (decision D).

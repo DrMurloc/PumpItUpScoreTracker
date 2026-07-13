@@ -23,6 +23,13 @@ internal interface IScoreHighlightRepository
     /// </summary>
     Task<IEnumerable<ScoreHighlightRecord>> GetHighlightsBySessions(Guid userId, IEnumerable<Guid> sessionIds,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Every flagged highlight across all users on or after the cutoff — the community-feed
+    ///     backfill source (session-keyed rows only). The tuple carries the owning user + mix.
+    /// </summary>
+    Task<IEnumerable<(Guid UserId, MixEnum Mix, ScoreHighlightRecord Record)>> GetHighlightsSince(
+        DateTimeOffset since, CancellationToken cancellationToken);
 }
 
 internal sealed record ScoreHighlightWrite(

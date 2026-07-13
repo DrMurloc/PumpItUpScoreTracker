@@ -1,8 +1,22 @@
-# Pumbility widget (W2)
+# Account Stats widget (W2, TypeId `pumbility`)
 
 Part of the home dashboard widget catalog — see [README.md](README.md) for architecture, locked
 decisions (D1–D19), the widget registry contract, and the widget index. **Shipped in PR #2 (the shell
-starter trio).** Consumes the Projections v2 work (README §5, shipped as PR #1/#141).
+starter trio); refactored Pumbility → Account Stats in PR #149.** Consumes the Projections v2 work
+(README §5, shipped as PR #1/#141).
+
+> **Refactor (2026-07-13): Pumbility widget → Account Stats (PR #149).** The glowy total Pumbility + S/D
+> pools stay and **competitive level (S/D)** joins them. The **projected-target list moved out** to
+> Suggested Charts' new **Pumbility Push** goal — gain-ranked, not the random Improve-Top-50 category. At
+> **1×2 and taller** the widget adds your **closest competitive matches**: the nearest 25 players within
+> **±1.0** on the configured dimension (Singles / Doubles / Combined → `GetCompetitiveNeighborsQuery`,
+> range + top-N ordered in SQL), eligibility = **public OR in your non-region communities** (the
+> `CommunityGlowReader` set, which also drives the **green glow**, mirroring the weekly/daily boards);
+> rows link to `/Player/{id}/Sessions`. Config drops show-projections / dismissed-charts and gains a
+> **Match dimension**; the **Mix** override follows the current mix but falls back to **Phoenix 2** on
+> pre-Phoenix mixes, and a pinned mix that differs from the current one shows as a pill in the title.
+> Sizes are now **1×1 / 1×2 / 1×3**. TypeId stays `pumbility` (export vocabulary). The historical spec
+> below describes the original Pumbility widget.
 
 ---
 

@@ -532,6 +532,46 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("Community", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.CommunityHighlightEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CommunityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SchemaVersion")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("CommunityId", "OccurredAt");
+
+                    b.ToTable("CommunityHighlight", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.CommunityInviteCodeEntity", b =>
                 {
                     b.Property<Guid>("InviteCode")

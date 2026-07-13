@@ -21,6 +21,8 @@ public static class CommunitiesRegistrationExtensions
         services.AddTransient<ICommunityRepository, EFCommunitiesRepository>();
         services.AddTransient<ICommunityReader, EFCommunitiesRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
+        services.AddTransient<ICommunityHighlightRepository, EFCommunityHighlightRepository>();
+        services.AddTransient<ICommunityHighlightCapturer, CommunityHighlightCapturer>();
         services.AddSingleton<IDbModelContribution, CommunitiesModelContribution>();
         return services;
     }
@@ -37,5 +39,8 @@ public static class CommunitiesRegistrationExtensions
     {
         configurator.AddConsumer<CommunitySaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();
+        configurator.AddConsumer<CommunityHighlightSaga>();
+        configurator.AddConsumer<CommunityHighlightPurgeConsumer>();
+        configurator.AddConsumer<BackfillCommunityHighlightsConsumer>();
     }
 }

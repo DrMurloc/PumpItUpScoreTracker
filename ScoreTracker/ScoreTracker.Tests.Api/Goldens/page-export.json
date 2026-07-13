@@ -7,10 +7,10 @@
       {
         "type": "pumbility",
         "title": "Doubles push",
-        "size": "2x1",
+        "size": "1x2",
         "config": {
           "mix": "Phoenix2",
-          "showProjections": true
+          "matchDimension": "Double"
         }
       },
       {

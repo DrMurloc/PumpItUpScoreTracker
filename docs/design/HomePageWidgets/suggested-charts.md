@@ -14,9 +14,12 @@ scoring-level basis** toggle (`GetChartScoringLevelsQuery`, printed-level fallba
 re-roll in the body meta row. The page's vestigial `LevelOffset` UI is superseded by the level modes.
 
 - **Goal bundles** (`SuggestedGoal` → engine categories): *Title Hunt* = PushLevel + SkillTitles ·
-  *Score Push* = PushPGs + ImproveTop50 + RevisitOldScores · *Fill Gaps* = FillScores. The Weekly
-  category is dropped from the widget — the Weekly widget owns that board. Defaults per drawer preset:
-  Score Push = Any level; Fill Gaps = Dynamic ±3.
+  *Score Push* = PushPGs + ImproveTop50 + RevisitOldScores · *Fill Gaps* = FillScores · *Pumbility
+  Push* = PushPumbility (PR #149: the gain-ranked projected targets that moved off the Account Stats
+  widget — `ProjectPumbilityGainsQuery`, biggest overall-rating gain first, stamps "+N"; distinct from
+  the random ImproveTop50, and has its own drawer preset). The Weekly category is dropped from the
+  widget — the Weekly widget owns that board. Defaults per drawer preset: Score Push = Any level;
+  Fill Gaps = Dynamic ±3.
 - **Engine** (`RecommendedChartsSaga`): `GetRecommendedChartsQuery` gained additive `Categories` +
   `RecommendationLevelWindow` params — null = legacy, the WSIP page is untouched until cutover.
   An explicit window REPLACES the legacy per-category bands (fills CL−3..CL−1, old scores CL−2..CL)

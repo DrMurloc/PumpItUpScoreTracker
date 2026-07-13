@@ -211,7 +211,7 @@ Full specs now live in their own files (C0 split — each widget's spec is edite
 widget PRs stop colliding on this doc):
 
 - **W1 — Competitive Level graph** → [competitive-level.md](competitive-level.md)
-- **W2 — Pumbility** → [pumbility.md](pumbility.md) (consumes the Projections v2 work in §5)
+- **W2 — Account Stats** (TypeId `pumbility`) → [pumbility.md](pumbility.md) (consumes the Projections v2 work in §5)
 - **W3 — Weekly Challenge** → [weekly-challenge.md](weekly-challenge.md)
 
 ### PR #2 (shell) commit plan
