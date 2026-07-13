@@ -1065,7 +1065,8 @@
     gap: 8px;
     overflow-x: auto;
     scrollbar-width: none;
-    padding: 2px;
+    /* Bottom padding keeps the score line off the widget edge (owner, round 6). */
+    padding: 2px 2px 8px;
     mask-image: linear-gradient(to right,
         transparent 0,
         #000 var(--dash-fade-left),
@@ -1160,9 +1161,17 @@
 }
 
 .dash-chart-card {
+    /* Sized so art + name + score clear a 2x1 cell on desktop (owner, round 6). */
     flex: none;
-    width: 86px;
+    width: 76px;
     min-width: 0;
+}
+
+@media (max-width: 599.98px) {
+    /* Mobile cells auto-grow — the roomier card reads better there. */
+    .dash-chart-card {
+        width: 86px;
+    }
 }
 
 .dash-card-art {
