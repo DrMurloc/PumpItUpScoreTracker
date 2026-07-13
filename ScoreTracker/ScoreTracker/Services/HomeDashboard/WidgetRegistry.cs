@@ -121,7 +121,20 @@ public static class WidgetRegistry
             Enum.GetValues<MixEnum>(),
             typeof(QuickRecordWidget),
             typeof(QuickRecordConfigPanel),
-            typeof(QuickRecordConfig))
+            typeof(QuickRecordConfig)),
+        new("import-scores",
+            "Import Scores",
+            "Import your scores from piugame.com — remembered, one tap, in the background.",
+            WidgetCategory.Utility,
+            Icons.Material.Filled.CloudDownload,
+            // 1x1 only, like Quick Record.
+            new[] { SizePreset.OneByOne },
+            SizePreset.OneByOne,
+            // Every mix: Phoenix 1/2 import with credentials, XX and older via spreadsheet upload.
+            Enum.GetValues<MixEnum>(),
+            typeof(ImportScoresWidget),
+            typeof(ImportScoresConfigPanel),
+            typeof(ImportScoresConfig))
     };
 
     private static readonly IReadOnlyDictionary<string, WidgetDescriptor> ByTypeId =

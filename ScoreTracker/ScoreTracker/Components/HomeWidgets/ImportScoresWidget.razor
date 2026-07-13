@@ -1,0 +1,263 @@
+@using MediatR
+@using ScoreTracker.Domain.Events
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Commands
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Shared
+@implements IDisposable
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IImportCredentialClientStore ClientStore
+@inject IUiSettingsAccessor UiSettings
+@inject NavigationManager Nav
+
+@* Import Scores — 1x1. Mirrors quick-record's mix handling. Never stores credentials (that is the
+   configurator's job); it imports from a stored credential or a one-time typed one, and hands the
+   scrape to a background job (StartOfficialImportCommand). §4 of the design doc. *@
+
+@if (!CurrentUser.IsLoggedIn)
+{
+    <div class="dash-widget-message"><MudText Typo="Typo.body2">@L["Sign in to import."]</MudText></div>
+}
+else if (!_loaded)
+{
+    <div class="dash-widget-message"><MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/></div>
+}
+else if (_allMixes && _mix == null)
+{
+    <MudSelect T="MixEnum?" Value="_mix" ValueChanged="OnMixPicked" Label="@L["Import to"]"
+               Placeholder="@L["Select a mix"]" Dense="true" Margin="Margin.Dense" Disabled="EditMode">
+        @foreach (var mix in AllMixesOrdered)
+        {
+            <MudSelectItem T="MixEnum?" Value="@((MixEnum?)mix)">@mix.GetName()</MudSelectItem>
+        }
+    </MudSelect>
+}
+else if (_mix is { } m && m.UsesLegacyScoring())
+{
+    <div class="dash-widget-message" style="gap:.75rem">
+        <MudText Typo="Typo.body2">@L["{0} scores import from a spreadsheet.", m.GetName()]</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile"
+                   Disabled="EditMode" OnClick="GoToUpload">@L["Upload file"]</MudButton>
+    </div>
+}
+else
+{
+    <div class="import-widget-body">
+        @switch (_state)
+        {
+            case ImportUiState.Idle when _hasStored:
+                <div class="import-saved">
+                    <MudAlert Severity="Severity.Success" Dense="true" Icon="@Icons.Material.Filled.Lock">
+                        @L["Saved credentials loaded"]
+                    </MudAlert>
+                    @if (!string.IsNullOrWhiteSpace(_gameTag))
+                    {
+                        <MudText Typo="Typo.caption" Class="mt-1">@L["Game tag"]: @_gameTag</MudText>
+                    }
+                    <MudButton Class="mt-3" FullWidth="true" Variant="Variant.Filled" Color="Color.Primary"
+                               Disabled="EditMode" OnClick="ImportFromStored">@L["Import scores"]</MudButton>
+                    <MudText Typo="Typo.caption" Align="MudBlazor.Align.Center" Class="mt-1">@L["Runs in the background."]</MudText>
+                </div>
+                break;
+
+            case ImportUiState.Idle:
+            case ImportUiState.UnlockFailed:
+                @if (_state == ImportUiState.UnlockFailed)
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2">
+                        @L["Couldn't unlock your saved password. Enter it to import."]
+                    </MudAlert>
+                }
+                <MudTextField @bind-Value="_username" Label="PIUGame.com Username" Margin="Margin.Dense"
+                              Variant="Variant.Outlined" Disabled="EditMode"/>
+                <MudTextField @bind-Value="_password" InputType="InputType.Password" Label="PIUGame.com Password"
+                              Margin="Margin.Dense" Variant="Variant.Outlined" Class="mt-2" Disabled="EditMode"/>
+                @if (_error != null)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">@_error</MudText>
+                }
+                <MudButton Class="mt-3" FullWidth="true" Variant="Variant.Filled" Color="Color.Primary"
+                           Disabled="EditMode || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)"
+                           OnClick="ImportFromTyped">@L["Import scores"]</MudButton>
+                <MudText Typo="Typo.caption" Align="MudBlazor.Align.Center" Class="mt-1">
+                    @L["One-time — nothing saved."]
+                </MudText>
+                break;
+
+            case ImportUiState.Importing:
+                <div class="import-progress">
+                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Medium"/>
+                    <MudText Typo="Typo.body2" Class="mt-2">@_status</MudText>
+                    <MudText Typo="Typo.caption" Class="mt-1">@L["You can leave this page."]</MudText>
+                </div>
+                break;
+
+            case ImportUiState.Done:
+                <div class="import-progress">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large"/>
+                    <MudText Typo="Typo.body2" Class="mt-2"><b>@L["Import complete"]</b></MudText>
+                    <MudButton Class="mt-2" Variant="Variant.Text" Color="Color.Primary"
+                               Href="@($"/Player/{CurrentUser.User.Id}/Sessions")">@L["View your session"]</MudButton>
+                </div>
+                break;
+        }
+    </div>
+}
+
+@code {
+
+    private enum ImportUiState
+    {
+        Idle,
+        UnlockFailed,
+        Importing,
+        Done
+    }
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public MixEnum EffectiveMix { get; set; }
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
+    [Parameter] public int RefreshToken { get; set; }
+
+    private static readonly MixEnum[] AllMixesOrdered =
+        Enum.GetValues<MixEnum>().OrderByDescending(m => m.DisplayOrder()).ToArray();
+
+    private bool _loaded;
+    private string? _loadedFor;
+    private bool _allMixes;
+    private bool _skipGameTag = true;
+    private MixEnum? _mix;
+
+    private ImportUiState _state = ImportUiState.Idle;
+    private bool _hasStored;
+    private string? _gameTag;
+    private string _username = "";
+    private string _password = "";
+    private string? _status;
+    private string? _error;
+    private Guid _userId;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var config = WidgetConfigJson.Read<ImportScoresConfig>(Widget.ConfigJson);
+        var allMixes = config.AllMixes;
+        var pinned = allMixes ? (MixEnum?)null : config.Mix ?? EffectiveMix;
+        var signature = $"{Widget.Id}|{allMixes}|{pinned}|{config.SkipGameTag}";
+        if (signature == _loadedFor) return;
+        _loadedFor = signature;
+        _allMixes = allMixes;
+        _skipGameTag = config.SkipGameTag;
+        _mix = pinned;
+        _state = ImportUiState.Idle;
+        _error = null;
+
+        if (!CurrentUser.IsLoggedIn)
+        {
+            _loaded = true;
+            return;
+        }
+
+        _userId = CurrentUser.User.Id;
+        MainLayout.ImportStatusUpdatedEvent += OnStatus;
+        MainLayout.ImportStatusErrorEvent += OnError;
+
+        if (_mix != null && !_mix.Value.UsesLegacyScoring())
+            await RefreshCredentialState();
+        _loaded = true;
+    }
+
+    private async Task RefreshCredentialState()
+    {
+        _hasStored = await ClientStore.Read() != null;
+        _gameTag = await UiSettings.GetSetting("GameTag");
+    }
+
+    private async Task OnMixPicked(MixEnum? mix)
+    {
+        _mix = mix;
+        _state = ImportUiState.Idle;
+        _error = null;
+        if (mix != null && !mix.Value.UsesLegacyScoring())
+            await RefreshCredentialState();
+    }
+
+    private void GoToUpload()
+    {
+        Nav.NavigateTo("/UploadPhoenixScores");
+    }
+
+    private async Task ImportFromStored()
+    {
+        var blob = await ClientStore.Read();
+        if (blob == null)
+        {
+            await RefreshCredentialState();
+            _state = ImportUiState.Idle;
+            return;
+        }
+
+        await Start(new StoredCredentialSource(blob.KeyId, blob.Ciphertext));
+    }
+
+    private Task ImportFromTyped()
+    {
+        return Start(new TypedCredentialSource(_username, _password));
+    }
+
+    private async Task Start(ImportCredentialSource source)
+    {
+        _error = null;
+        _status = L["Starting import…"].Value;
+        _state = ImportUiState.Importing;
+
+        var cardId = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameId") ?? "";
+        var gameTag = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameTag") ?? "";
+
+        var result = await Mediator.Send(new StartOfficialImportCommand(source, _mix!.Value, cardId, gameTag,
+            false, false));
+
+        switch (result.Outcome)
+        {
+            case ImportStartOutcome.Started:
+                break;
+            case ImportStartOutcome.InvalidCredentials:
+                _state = ImportUiState.Idle;
+                _error = L["Invalid username or password."].Value;
+                break;
+            case ImportStartOutcome.CredentialUnlockFailed:
+                _hasStored = false;
+                _state = ImportUiState.UnlockFailed;
+                break;
+        }
+    }
+
+    private void OnStatus(object? sender, ImportStatusUpdatedEvent e)
+    {
+        if (e.UserId != _userId || _mix == null || e.Mix != _mix.Value) return;
+        _status = e.Status;
+        if (e.Status == "Charts finished saving") _state = ImportUiState.Done;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnError(object? sender, ImportStatusErrorEvent e)
+    {
+        if (e.UserId != _userId || _mix == null || e.Mix != _mix.Value) return;
+        _error = e.Error;
+        _state = ImportUiState.Idle;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        MainLayout.ImportStatusUpdatedEvent -= OnStatus;
+        MainLayout.ImportStatusErrorEvent -= OnError;
+    }
+
+}
