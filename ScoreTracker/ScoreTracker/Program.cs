@@ -233,11 +233,13 @@ builder.Services.AddBlazorApplicationInsights()
     .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>()
     .AddTransient<IRandomNumberGenerator, RandomNumberGenerator>()
     .AddControllers();
+builder.Services.Configure<KeyVaultConfiguration>(builder.Configuration.GetSection("KeyVault"));
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.AddScoped<IStringLocalizer<App>, StringLocalizer<App>>();
 builder.Services.AddScoped<ChartVideoDisplayer>();
 builder.Services.AddScoped<ChartScoringLevels>();
 builder.Services.AddScoped<PageDockService>();
+builder.Services.AddScoped<IImportCredentialClientStore, ImportCredentialClientStore>();
 // Circuit-scoped: widgets on a home-page board share one chart catalog per mix (§2.5).
 builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.ChartCatalogCache>();
 builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.ByLevelDataSource>();
@@ -249,6 +251,15 @@ builder.Services.AddCookiePolicy(opts =>
 });
 
 var app = builder.Build();
+
+// Baseline security headers on every response.
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    await next();
+});
 
 // AutoMigrate is set by the Aspire AppHost for local dev; everywhere else this only
 // logs drift (migrations stay manually applied in production).

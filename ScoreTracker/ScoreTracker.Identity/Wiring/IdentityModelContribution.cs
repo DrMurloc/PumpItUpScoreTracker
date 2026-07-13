@@ -20,5 +20,10 @@ public sealed class IdentityModelContribution : IDbModelContribution
         merge.HasIndex(m => m.SurvivorUserId);
         merge.HasIndex(m => m.RetiredUserId);
         merge.HasIndex(m => new { m.State, m.PurgeAfter });
+
+        var credentialKey = modelBuilder.Entity<UserImportCredentialKeyEntity>();
+        credentialKey.ToTable("UserImportCredentialKey");
+        credentialKey.HasKey(k => k.KeyId);
+        credentialKey.HasIndex(k => k.UserId);
     }
 }

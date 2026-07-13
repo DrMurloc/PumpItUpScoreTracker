@@ -1,0 +1,187 @@
+@using MediatR
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.Identity.Contracts.Commands
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
+@inject IStringLocalizer<App> L
+@inject IMediator Mediator
+@inject IDialogService DialogService
+@inject IImportCredentialClientStore ClientStore
+@inject IUiSettingsAccessor UiSettings
+@inject ISnackbar Snackbar
+
+@* Import Scores config: mix scope + skip-gametag, plus the ONLY place a remembered credential is
+   captured (Store form, gated by the first-time disclaimer). §4 of the design doc. *@
+
+<MudSelect T="MixMode" @bind-Value="_mode" Label="@L["Mix"]" Class="mb-3">
+    <MudSelectItem T="MixMode" Value="MixMode.Follow">@L["Follow current mix"]</MudSelectItem>
+    <MudSelectItem T="MixMode" Value="MixMode.Phoenix">Phoenix</MudSelectItem>
+    <MudSelectItem T="MixMode" Value="MixMode.Phoenix2">Phoenix 2</MudSelectItem>
+    <MudSelectItem T="MixMode" Value="MixMode.All">@L["All mixes"]</MudSelectItem>
+</MudSelect>
+
+<MudCheckBox T="bool" @bind-Value="_skipGameTag" Label="@L["Skip the game-tag step"]" Dense="true"/>
+<MudText Typo="Typo.caption" Class="d-block mb-3">
+    @L["Use your saved game tag and import straight away. Off = pick a card each time after sign-in."]
+</MudText>
+
+<MudCheckBox T="bool" Value="_remember" ValueChanged="OnRememberChanged"
+             Label="@L["Remember my password on this device"]" Dense="true"/>
+
+@if (_showStoreForm)
+{
+    <MudPaper Class="pa-3 mt-2" Elevation="0" Outlined="true">
+        <MudText Typo="Typo.caption" Class="mb-2">
+            @L["Enter your piugame login once. It's encrypted on this device the moment you press Store — we never keep a readable copy."]
+        </MudText>
+        <MudTextField @bind-Value="_username" Label="PIUGame.com Username" Margin="Margin.Dense"
+                      Variant="Variant.Outlined"/>
+        <MudTextField @bind-Value="_password" InputType="InputType.Password" Label="PIUGame.com Password"
+                      Margin="Margin.Dense" Variant="Variant.Outlined" Class="mt-2"/>
+        <div class="d-flex justify-end mt-2">
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Store"
+                       Disabled="_storing || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)">
+                @L["Store"]
+            </MudButton>
+        </div>
+    </MudPaper>
+}
+else if (_hasStoredCredential)
+{
+    <MudAlert Severity="Severity.Success" Dense="true" Class="mt-2">
+        <div class="d-flex align-center gap-2">
+            <span>@L["Saved on this device"]</span>
+            <MudSpacer/>
+            <MudButton Size="Size.Small" OnClick="ForgetHere">@L["Forget here"]</MudButton>
+            <MudButton Size="Size.Small" Color="Color.Error" OnClick="ForgetEverywhere">@L["Forget everywhere"]</MudButton>
+        </div>
+    </MudAlert>
+}
+
+<div class="d-flex justify-end gap-2 mt-4">
+    <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">@L["Save"]</MudButton>
+</div>
+
+@code {
+
+    private enum MixMode
+    {
+        Follow,
+        Phoenix,
+        Phoenix2,
+        All
+    }
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public EventCallback<(string ConfigJson, int ConfigVersion)> OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private const string ConsentKey = "RememberPasswordConsent";
+    private const string ConsentVersion = "1";
+
+    private MixMode _mode;
+    private bool _skipGameTag = true;
+    private bool _remember;
+    private bool _showStoreForm;
+    private bool _hasStoredCredential;
+    private bool _storing;
+    private string _username = "";
+    private string _password = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var config = WidgetConfigJson.Read<ImportScoresConfig>(Widget.ConfigJson);
+        _mode = config.AllMixes
+            ? MixMode.All
+            : config.Mix switch
+            {
+                MixEnum.Phoenix => MixMode.Phoenix,
+                MixEnum.Phoenix2 => MixMode.Phoenix2,
+                _ => MixMode.Follow
+            };
+        _skipGameTag = config.SkipGameTag;
+        _hasStoredCredential = await ClientStore.Read() != null;
+        _remember = _hasStoredCredential;
+    }
+
+    private async Task OnRememberChanged(bool value)
+    {
+        if (!value)
+        {
+            _remember = false;
+            _showStoreForm = false;
+            return;
+        }
+
+        var consent = await UiSettings.GetSetting(ConsentKey);
+        if (consent != ConsentVersion)
+        {
+            var dialog = await DialogService.ShowAsync<RememberPasswordDisclaimerDialog>(
+                L["Before we remember your password"].Value);
+            var result = await dialog.Result;
+            if (result is null || result.Canceled)
+            {
+                _remember = false;
+                return;
+            }
+
+            await UiSettings.SetSetting(ConsentKey, ConsentVersion);
+        }
+
+        _remember = true;
+        _showStoreForm = !_hasStoredCredential;
+    }
+
+    private async Task Store()
+    {
+        _storing = true;
+        try
+        {
+            var stored = await Mediator.Send(new StoreImportCredentialCommand(_username, _password));
+            await ClientStore.Write(new StoredCredentialBlob(stored.KeyId, stored.Ciphertext, 0));
+            _hasStoredCredential = true;
+            _showStoreForm = false;
+            _username = "";
+            _password = "";
+            Snackbar.Add(L["Password saved on this device"].Value, Severity.Success);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add(L["Could not save your password"].Value, Severity.Error);
+        }
+
+        _storing = false;
+    }
+
+    private async Task ForgetHere()
+    {
+        await ClientStore.Clear();
+        _hasStoredCredential = false;
+        _remember = false;
+    }
+
+    private async Task ForgetEverywhere()
+    {
+        await Mediator.Send(new ForgetAllImportCredentialsCommand());
+        await ClientStore.Clear();
+        _hasStoredCredential = false;
+        _remember = false;
+    }
+
+    private async Task Save()
+    {
+        var config = _mode switch
+        {
+            MixMode.All => new ImportScoresConfig { AllMixes = true, SkipGameTag = _skipGameTag },
+            MixMode.Phoenix => new ImportScoresConfig { Mix = MixEnum.Phoenix, SkipGameTag = _skipGameTag },
+            MixMode.Phoenix2 => new ImportScoresConfig { Mix = MixEnum.Phoenix2, SkipGameTag = _skipGameTag },
+            _ => new ImportScoresConfig { SkipGameTag = _skipGameTag }
+        };
+        await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
+    }
+
+}

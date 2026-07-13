@@ -45,5 +45,6 @@ public static class OfficialMirrorRegistrationExtensions
     public static void AddOfficialMirrorConsumers(this IRegistrationConfigurator configurator)
     {
         configurator.AddConsumer<OfficialLeaderboardSaga>();
+        configurator.AddConsumer<RunOfficialImportConsumer>();
     }
 }

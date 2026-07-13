@@ -6,6 +6,7 @@
 @using ScoreTracker.ScoreLedger.Contracts.Commands
 @using ScoreTracker.OfficialMirror.Contracts.Commands
 @using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.Identity.Contracts.Commands
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.SharedKernel.Models
 @using MediatR
@@ -120,6 +121,10 @@
                             
                             <MudCheckBox T="bool" Label=@L["Include Broken Scores"] @bind-Value="_includeBroken" Disabled="_isImporting"></MudCheckBox>
                         </MudTooltip>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudCheckBox T="bool" Value="_rememberPassword" ValueChanged="OnRememberChanged" Disabled="_isImporting"
+                                     Label=@L["Remember my password on this device"]></MudCheckBox>
                     </MudItem>
                     <MudItem xs="12" sm="6">
                         <MudCheckBox T="bool" Label=@L["Also Sync for PIU Tracker"] Disabled="_isImporting" Value="_alsoImportPiuTracker" ValueChanged="d=>SetPiuTrackerImport(d)"></MudCheckBox>
@@ -351,6 +356,8 @@
 @inject IJSRuntime JSRuntime;
 @inject ILogger<UploadPhoenixScores> Logger;
 @inject IBus Bus;
+@inject IImportCredentialClientStore ClientStore;
+@inject IDialogService DialogService;
 @code
 {
     private enum Step
@@ -371,9 +378,8 @@
     private bool _isScoreTableShowing = false;
     private Step _currentStep = Step.UsePassword;
     private MixEnum _currentMix = MixEnum.Phoenix;
-    // Locked decision (docs/design/phoenix2-implementation.md): official-site import stays
-    // gated for Phoenix 2 until the owner verifies against his own kit. CSV upload stays open.
-    private bool IsImportGated => _currentMix == MixEnum.Phoenix2;
+    // Official-site import is available for every supported mix.
+    private bool IsImportGated => false;
     private int _maxSaving = 0;
     private int _currentSaved = 0;
     private int _startPage = 1;
@@ -381,6 +387,35 @@
     private string _username = "";
     private string _password = "";
     private bool _includeBroken = false;
+    private bool _rememberPassword = false;
+    private const string RememberConsentKey = "RememberPasswordConsent";
+    private const string RememberConsentVersion = "1";
+
+    private async Task OnRememberChanged(bool value)
+    {
+        if (!value)
+        {
+            _rememberPassword = false;
+            return;
+        }
+
+        var consent = await UiSettings.GetSetting(RememberConsentKey);
+        if (consent != RememberConsentVersion)
+        {
+            var dialog = await DialogService.ShowAsync<RememberPasswordDisclaimerDialog>(
+                L["Before we remember your password"].Value);
+            var result = await dialog.Result;
+            if (result is null || result.Canceled)
+            {
+                _rememberPassword = false;
+                return;
+            }
+
+            await UiSettings.SetSetting(RememberConsentKey, RememberConsentVersion);
+        }
+
+        _rememberPassword = true;
+    }
     private bool _alsoImportPiuTracker  = false;
     private const string PiuTrackerKey = "UploadPhoenixScores__ImportPiuTracker";
     public async Task SetPiuTrackerImport(bool newValue)
@@ -471,6 +506,12 @@
             _passwordImportStatus = "Import Completed!";
             // The session snapshot's page is the import's natural landing spot.
             _importCompleted = true;
+            // Remember only after a successful import, so we never store credentials that don't work.
+            if (_rememberPassword)
+            {
+                var stored = await Mediator.Send(new StoreImportCredentialCommand(_username, _password));
+                await ClientStore.Write(new StoredCredentialBlob(stored.KeyId, stored.Ciphertext, 0));
+            }
         }
         catch (InvalidCredentialException)
         {

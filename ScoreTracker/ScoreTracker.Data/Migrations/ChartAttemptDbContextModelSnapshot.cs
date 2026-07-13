@@ -1575,6 +1575,29 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("MergeRequest", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Identity.Infrastructure.Entities.UserImportCredentialKeyEntity", b =>
+                {
+                    b.Property<Guid>("KeyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("WrappedDataKey")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.HasKey("KeyId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserImportCredentialKey", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialLeaderboardImportStateEntity", b =>
                 {
                     b.Property<Guid>("MixId")

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -3928,5 +3928,137 @@
   </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>Quantos charts de Co-Op você limpou, por número de jogadores.</value>
+  </data>
+  <data name="Import to" xml:space="preserve">
+    <value>Importar para</value>
+  </data>
+  <data name="Sign in to import." xml:space="preserve">
+    <value>Entre para importar.</value>
+  </data>
+  <data name="Upload file" xml:space="preserve">
+    <value>Enviar arquivo</value>
+  </data>
+  <data name="Game tag" xml:space="preserve">
+    <value>Etiqueta de jogo</value>
+  </data>
+  <data name="Store" xml:space="preserve">
+    <value>Guardar</value>
+  </data>
+  <data name="Saved on this device" xml:space="preserve">
+    <value>Salvo neste dispositivo</value>
+  </data>
+  <data name="Saved credentials loaded" xml:space="preserve">
+    <value>Credenciais salvas carregadas</value>
+  </data>
+  <data name="Forget here" xml:space="preserve">
+    <value>Esquecer aqui</value>
+  </data>
+  <data name="Forget everywhere" xml:space="preserve">
+    <value>Esquecer em todos os lugares</value>
+  </data>
+  <data name="Skip the game-tag step" xml:space="preserve">
+    <value>Pular a etapa da etiqueta de jogo</value>
+  </data>
+  <data name="Remember my password on this device" xml:space="preserve">
+    <value>Lembrar minha senha neste dispositivo</value>
+  </data>
+  <data name="Runs in the background." xml:space="preserve">
+    <value>Executa em segundo plano.</value>
+  </data>
+  <data name="You can leave this page." xml:space="preserve">
+    <value>Você pode sair desta página.</value>
+  </data>
+  <data name="One-time — nothing saved." xml:space="preserve">
+    <value>Uma vez só — nada é salvo.</value>
+  </data>
+  <data name="Import complete" xml:space="preserve">
+    <value>Importação concluída</value>
+  </data>
+  <data name="Starting import…" xml:space="preserve">
+    <value>Iniciando importação…</value>
+  </data>
+  <data name="Invalid username or password." xml:space="preserve">
+    <value>Usuário ou senha inválidos.</value>
+  </data>
+  <data name="Password saved on this device" xml:space="preserve">
+    <value>Senha salva neste dispositivo</value>
+  </data>
+  <data name="Could not save your password" xml:space="preserve">
+    <value>Não foi possível salvar sua senha</value>
+  </data>
+  <data name="Couldn't unlock your saved password. Enter it to import." xml:space="preserve">
+    <value>Não foi possível desbloquear sua senha salva. Digite-a para importar.</value>
+  </data>
+  <data name="{0} scores import from a spreadsheet." xml:space="preserve">
+    <value>As pontuações de {0} são importadas de uma planilha.</value>
+  </data>
+  <data name="Credential security" xml:space="preserve">
+    <value>Segurança de credenciais</value>
+  </data>
+  <data name="Cycle all credential keys" xml:space="preserve">
+    <value>Rotacionar todas as chaves de credenciais</value>
+  </data>
+  <data name="Yes, cycle all keys" xml:space="preserve">
+    <value>Sim, rotacionar todas as chaves</value>
+  </data>
+  <data name="All saved credentials have been cleared." xml:space="preserve">
+    <value>Todas as credenciais salvas foram apagadas.</value>
+  </data>
+  <data name="Deletes every saved import password on every device. Users re-enter on their next import. Use if you suspect a breach." xml:space="preserve">
+    <value>Exclui todas as senhas de importação salvas em todos os dispositivos. Os usuários digitam novamente na próxima importação. Use se suspeitar de vazamento.</value>
+  </data>
+  <data name="Before we remember your password" xml:space="preserve">
+    <value>Antes de lembrar sua senha</value>
+  </data>
+  <data name="I understand — remember it" xml:space="preserve">
+    <value>Entendi — lembrar</value>
+  </data>
+  <data name="For the technically curious — how it actually works" xml:space="preserve">
+    <value>Para os curiosos técnicos: como funciona de verdade</value>
+  </data>
+  <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
+    <value>Para lê-la são necessárias três coisas ao mesmo tempo, guardadas em três lugares diferentes:</value>
+  </data>
+  <data name="You hold the coded note" xml:space="preserve">
+    <value>Você guarda o bilhete codificado</value>
+  </data>
+  <data name="on this device only. Useless on its own." xml:space="preserve">
+    <value>apenas neste dispositivo. Inútil sozinho.</value>
+  </data>
+  <data name="We hold a sealed key" xml:space="preserve">
+    <value>Nós guardamos uma chave selada</value>
+  </data>
+  <data name="in our database, locked so it can't be opened alone." xml:space="preserve">
+    <value>no nosso banco de dados, trancada para não poder ser aberta sozinha.</value>
+  </data>
+  <data name="We hold the master key" xml:space="preserve">
+    <value>Nós guardamos a chave mestra</value>
+  </data>
+  <data name="locked in a vault inside Microsoft Azure." xml:space="preserve">
+    <value>guardada em um cofre dentro do Microsoft Azure.</value>
+  </data>
+  <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
+    <value>Ativar isto é como escrever sua senha num bilhete adesivo que você guarda no próprio bolso — só que o bilhete está num código que ninguém consegue ler só de olhar, nem nós.</value>
+  </data>
+  <data name="All three come together only for the split second you press Import — we decode it, log in for you, and immediately forget it. Your real password is never written down anywhere." xml:space="preserve">
+    <value>Os três se juntam apenas na fração de segundo em que você pressiona Importar — nós decodificamos, entramos por você e esquecemos na hora. Sua senha real nunca é escrita em lugar nenhum.</value>
+  </data>
+  <data name="Because a coded copy of your password lives on this device, please make sure your Pump It Up password is one you use only here — not the one that also opens your email or your bank." xml:space="preserve">
+    <value>Como uma cópia codificada da sua senha fica neste dispositivo, garanta que sua senha do Pump It Up seja usada só aqui — não a mesma que abre seu e-mail ou seu banco.</value>
+  </data>
+  <data name="Enter your piugame login once. It's encrypted on this device the moment you press Store — we never keep a readable copy." xml:space="preserve">
+    <value>Digite seu login do piugame uma vez. Ele é criptografado neste dispositivo no momento em que você aperta Guardar — nunca mantemos uma cópia legível.</value>
+  </data>
+  <data name="Your username and password are sealed together with AES-256-GCM under a random data key. That data key is wrapped by a master key that never leaves Azure Key Vault." xml:space="preserve">
+    <value>Seu usuário e senha são selados juntos com AES-256-GCM sob uma chave de dados aleatória. Essa chave de dados é envelopada por uma chave mestra que nunca sai do Azure Key Vault.</value>
+  </data>
+  <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
+    <value>O texto cifrado fica no seu navegador; a chave envelopada no nosso banco de dados; a chave mestra no Key Vault. A descriptografia precisa das três — um vazamento de uma, ou de duas, não revela nada. Nenhuma senha é jamais escrita no nosso banco de dados ou nos logs.</value>
+  </data>
+  <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
+    <value>Isto não é conhecimento zero: como o login roda no nosso servidor, tecnicamente podemos descriptografar sua credencial no momento em que você importa. Não registramos nem guardamos — mas você está nos confiando o mesmo acesso que já temos em cada importação manual.</value>
+  </data>
+  <data name="Import scores" xml:space="preserve">
+    <value>Importar pontuações</value>
   </data>
 </root>

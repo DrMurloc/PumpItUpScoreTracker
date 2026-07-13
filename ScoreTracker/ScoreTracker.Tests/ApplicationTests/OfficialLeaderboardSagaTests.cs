@@ -85,7 +85,9 @@ public sealed class OfficialLeaderboardSagaTests
     {
         var officialSite = new Mock<IOfficialSiteClient>();
         var expected = new[] { new GameCardRecord(Name.From("alice"), Id: "card1", IsActive: true) };
-        officialSite.Setup(s => s.GetGameCards(MixEnum.Phoenix, "user", "pass", It.IsAny<CancellationToken>()))
+        officialSite.Setup(s => s.SignIn(MixEnum.Phoenix, "user", "pass", It.IsAny<CancellationToken>()))
+            .ReturnsAsync("sid123");
+        officialSite.Setup(s => s.GetGameCards(MixEnum.Phoenix, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
         var saga = BuildSaga(officialSite: officialSite);
 
@@ -268,15 +270,17 @@ public sealed class OfficialLeaderboardSagaTests
         // User reads and writes go through Identity contracts now, so the mediator
         // stands in where the repository mock used to.
         var site = new Mock<IOfficialSiteClient>();
-        site.Setup(s => s.GetAccountData(mix, "user", "pass", "card1", It.IsAny<CancellationToken>()))
+        site.Setup(s => s.SignIn(mix, "user", "pass", It.IsAny<CancellationToken>()))
+            .ReturnsAsync("sid123");
+        site.Setup(s => s.GetAccountData(mix, It.IsAny<string>(), "card1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PiuGameAccountDataImport(NewAvatar, Name.From(accountName),
                 new[] { Name.From("Title A"), Name.From("Title B") }, "sid123"));
-        site.Setup(s => s.GetScorePageCount(mix, "user", "pass", It.IsAny<CancellationToken>()))
+        site.Setup(s => s.GetScorePageCount(mix, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(maxPages);
-        site.Setup(s => s.GetRecordedScores(mix, ImportUserId, "user", "pass", "card1", It.IsAny<bool>(),
+        site.Setup(s => s.GetRecordedScores(mix, ImportUserId, It.IsAny<string>(), "card1", It.IsAny<bool>(),
                 It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(officialScores ?? Array.Empty<OfficialRecordedScore>());
-        site.Setup(s => s.GetGameCards(mix, "user", "pass", It.IsAny<CancellationToken>()))
+        site.Setup(s => s.GetGameCards(mix, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<GameCardRecord>());
 
         var mediator = new Mock<IMediator>();
@@ -435,7 +439,7 @@ public sealed class OfficialLeaderboardSagaTests
         await saga.Handle(ImportCommand(), CancellationToken.None);
 
         // limit = maxPages - previous + 1 = 5 - 3 + 1
-        f.Site.Verify(s => s.GetRecordedScores(MixEnum.Phoenix, ImportUserId, "user", "pass", "card1", false, 3,
+        f.Site.Verify(s => s.GetRecordedScores(MixEnum.Phoenix, ImportUserId, It.IsAny<string>(), "card1", false, 3,
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -481,9 +485,9 @@ public sealed class OfficialLeaderboardSagaTests
         await saga.Handle(ImportCommand(mix: MixEnum.Phoenix2), CancellationToken.None);
 
         // Site calls carry the mix — chart resolution and page reads hit the P2 site.
-        f.Site.Verify(s => s.GetAccountData(MixEnum.Phoenix2, "user", "pass", "card1",
+        f.Site.Verify(s => s.GetAccountData(MixEnum.Phoenix2, It.IsAny<string>(), "card1",
             It.IsAny<CancellationToken>()), Times.Once);
-        f.Site.Verify(s => s.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "user", "pass", "card1",
+        f.Site.Verify(s => s.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, It.IsAny<string>(), "card1",
             It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Once);
 
         // Existing-score comparison reads the Phoenix 2 rows, not Phoenix 1's.
@@ -523,7 +527,7 @@ public sealed class OfficialLeaderboardSagaTests
         await saga.Handle(ImportCommand(mix: MixEnum.Phoenix2), CancellationToken.None);
 
         // limit = maxPages - previous + 1 = 5 - 4 + 1 (from the __Phoenix2 key, not "2").
-        f.Site.Verify(s => s.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "user", "pass", "card1", false, 2,
+        f.Site.Verify(s => s.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, It.IsAny<string>(), "card1", false, 2,
             It.IsAny<CancellationToken>()), Times.Once);
         f.Mediator.Verify(m => m.Send(It.Is<SaveUserUiSettingCommand>(c =>
                 c.SettingName == "PreviousPageCount__Phoenix2" && c.NewValue == "5"),
@@ -539,7 +543,7 @@ public sealed class OfficialLeaderboardSagaTests
         // Locked decision: /Login/PiuGame stays pinned to Phoenix 1 as the identity source,
         // so P2 card aliases enter through the first P2 import — additively only.
         var f = ArrangeImport(mix: MixEnum.Phoenix2);
-        f.Site.Setup(s => s.GetGameCards(MixEnum.Phoenix2, "user", "pass", It.IsAny<CancellationToken>()))
+        f.Site.Setup(s => s.GetGameCards(MixEnum.Phoenix2, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new GameCardRecord(Name.From("NEWTAG"), Id: "7770001", IsActive: true),
@@ -572,7 +576,7 @@ public sealed class OfficialLeaderboardSagaTests
 
         await saga.Handle(ImportCommand(), CancellationToken.None);
 
-        f.Site.Verify(s => s.GetGameCards(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
+        f.Site.Verify(s => s.GetGameCards(It.IsAny<MixEnum>(), It.IsAny<string>(),
             It.IsAny<CancellationToken>()), Times.Never);
         f.Mediator.Verify(m => m.Send(It.IsAny<CreateExternalLoginCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
