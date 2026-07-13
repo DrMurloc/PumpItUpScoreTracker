@@ -18,4 +18,11 @@ public sealed record QuickRecordConfig
     public MixEnum? Mix { get; set; }
 
     public bool AllMixes { get; set; }
+
+    /// <summary>
+    ///     Only meaningful with <see cref="AllMixes"/>: remember the last mix this instance
+    ///     recorded to (stored per widget id in UserSettings, not in this blob) and jump
+    ///     straight to it next time instead of the picker.
+    /// </summary>
+    public bool RememberLastMix { get; set; }
 }

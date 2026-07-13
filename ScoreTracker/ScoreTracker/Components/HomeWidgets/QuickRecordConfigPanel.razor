@@ -11,6 +11,10 @@
     <MudSelectItem T="MixMode" Value="MixMode.Phoenix2">Phoenix 2</MudSelectItem>
     <MudSelectItem T="MixMode" Value="MixMode.All">@L["All mixes"]</MudSelectItem>
 </MudSelect>
+@if (_mode == MixMode.All)
+{
+    <MudCheckBox T="bool" @bind-Value="_rememberLastMix" Label="@L["Remember last mix"]" Dense="true"/>
+}
 <div class="d-flex justify-end gap-2 mt-4">
     <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">@L["Save"]</MudButton>
@@ -31,6 +35,7 @@
     [Parameter] public EventCallback OnCancel { get; set; }
 
     private MixMode _mode;
+    private bool _rememberLastMix;
 
     protected override void OnParametersSet()
     {
@@ -42,13 +47,14 @@
                 MixEnum.Phoenix2 => MixMode.Phoenix2,
                 _ => MixMode.Follow
             };
+        _rememberLastMix = config.RememberLastMix;
     }
 
     private async Task Save()
     {
         var config = _mode switch
         {
-            MixMode.All => new QuickRecordConfig { AllMixes = true },
+            MixMode.All => new QuickRecordConfig { AllMixes = true, RememberLastMix = _rememberLastMix },
             MixMode.Phoenix => new QuickRecordConfig { Mix = MixEnum.Phoenix },
             MixMode.Phoenix2 => new QuickRecordConfig { Mix = MixEnum.Phoenix2 },
             _ => new QuickRecordConfig()
