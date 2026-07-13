@@ -3432,4 +3432,13 @@
   <data name="There was an error while recording the score" xml:space="preserve">
     <value>スコアの記録中にエラーが発生しました</value>
   </data>
+  <data name="All mixes" xml:space="preserve">
+    <value>全バージョン</value>
+  </data>
+  <data name="Record to" xml:space="preserve">
+    <value>記録先</value>
+  </data>
+  <data name="Select a mix" xml:space="preserve">
+    <value>バージョンを選択</value>
+  </data>
 </root>

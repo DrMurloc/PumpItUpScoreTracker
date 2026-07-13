@@ -3312,4 +3312,13 @@
   <data name="There was an error while recording the score" xml:space="preserve">
     <value>점수를 기록하는 중 오류가 발생했습니다</value>
   </data>
+  <data name="All mixes" xml:space="preserve">
+    <value>모든 시리즈</value>
+  </data>
+  <data name="Record to" xml:space="preserve">
+    <value>기록 대상</value>
+  </data>
+  <data name="Select a mix" xml:space="preserve">
+    <value>시리즈 선택</value>
+  </data>
 </root>

@@ -3429,4 +3429,13 @@
   <data name="There was an error while recording the score" xml:space="preserve">
     <value>Une erreur s'est produite lors de l'enregistrement du score</value>
   </data>
+  <data name="All mixes" xml:space="preserve">
+    <value>Tous les Mix</value>
+  </data>
+  <data name="Record to" xml:space="preserve">
+    <value>Enregistrer dans</value>
+  </data>
+  <data name="Select a mix" xml:space="preserve">
+    <value>Choisissez un Mix</value>
+  </data>
 </root>

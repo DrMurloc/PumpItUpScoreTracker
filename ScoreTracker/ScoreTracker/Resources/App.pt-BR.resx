@@ -3380,4 +3380,13 @@
   <data name="There was an error while recording the score" xml:space="preserve">
     <value>Ocorreu um erro ao registrar a pontuação</value>
   </data>
+  <data name="All mixes" xml:space="preserve">
+    <value>Todas as versões</value>
+  </data>
+  <data name="Record to" xml:space="preserve">
+    <value>Registrar em</value>
+  </data>
+  <data name="Select a mix" xml:space="preserve">
+    <value>Selecione uma versão</value>
+  </data>
 </root>
