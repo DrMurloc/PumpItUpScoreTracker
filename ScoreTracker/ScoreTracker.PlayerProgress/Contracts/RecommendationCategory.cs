@@ -14,7 +14,10 @@ public enum RecommendationCategory
     ImproveTop50,
     RevisitOldScores,
     FillScores,
-    WeeklyCharts
+    WeeklyCharts,
+
+    /// <summary>Charts ranked by the Pumbility they would add — the projected-gain targets.</summary>
+    PushPumbility
 }
 
 /// <summary>
@@ -31,4 +34,5 @@ public static class RecommendationCategories
     public const string RevisitOldScores = "Revisit Old Scores";
     public const string FillScores = "Fill Scores";
     public const string WeeklyCharts = "Weekly Charts";
+    public const string PushPumbility = "Pumbility Push";
 }

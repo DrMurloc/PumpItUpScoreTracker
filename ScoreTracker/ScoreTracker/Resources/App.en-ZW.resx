@@ -3465,4 +3465,49 @@
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} on the board</value>
   </data>
+  <data name="Account Stats" xml:space="preserve">
+    <value>Account Mrglstats</value>
+  </data>
+  <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
+    <value>Yer Pumbility an' competitive level, plus yer closest mrglmates.</value>
+  </data>
+  <data name="Pumbility" xml:space="preserve">
+    <value>Pumbility</value>
+  </data>
+  <data name="Match players on" xml:space="preserve">
+    <value>Mrgl players by</value>
+  </data>
+  <data name="Singles competitive level" xml:space="preserve">
+    <value>Mrglargrlrgl Grrrmrrglmrg Rglmrgl</value>
+  </data>
+  <data name="Doubles competitive level" xml:space="preserve">
+    <value>Argrlargl Grrrmrrglmrg Rglmrgl</value>
+  </data>
+  <data name="Combined competitive level" xml:space="preserve">
+    <value>Combined Grrrmrrglmrg Rglmrgl</value>
+  </data>
+  <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
+    <value>Yer closest mrglmates show at 1×2 an' bigger.</value>
+  </data>
+  <data name="Closest · Singles" xml:space="preserve">
+    <value>Closest · Mrglargrlrgl</value>
+  </data>
+  <data name="Closest · Doubles" xml:space="preserve">
+    <value>Closest · Argrlargl</value>
+  </data>
+  <data name="Closest · Combined" xml:space="preserve">
+    <value>Closest · Combined</value>
+  </data>
+  <data name="No close matches yet." xml:space="preserve">
+    <value>No close mrglmates yet.</value>
+  </data>
+  <data name="Pumbility Push" xml:space="preserve">
+    <value>Pumbility Mrgl Push</value>
+  </data>
+  <data name="Suggested · Pumbility Push" xml:space="preserve">
+    <value>Suggested · Pumbility Mrgl Push</value>
+  </data>
+  <data name="The biggest Pumbility gains available to you right now." xml:space="preserve">
+    <value>The biggest Pumbility gains available to mrgl right now.</value>
+  </data>
 </root>

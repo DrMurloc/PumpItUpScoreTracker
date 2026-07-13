@@ -2838,6 +2838,173 @@ html.nav-away .page-dock,
     font-variant-numeric: tabular-nums;
 }
 
+/* Account Stats widget: glowy Pumbility + competitive level, then the closest matches. */
+.dash-acct {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+}
+
+.dash-acct-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: none;
+}
+
+.dash-acct-eyebrow {
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    font-weight: 700;
+    color: var(--mud-palette-text-disabled);
+}
+
+.dash-acct-cl-eyebrow {
+    margin-top: 6px;
+}
+
+.dash-acct-hero {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.dash-acct-total {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    flex: none;
+}
+
+/* S/D Pumbility pools stacked to the right of the big total (owner, field-test). */
+.dash-acct-pools {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    font-size: .82rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-acct-poolrow {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    white-space: nowrap;
+}
+
+.dash-acct-poolrow > span:first-child {
+    font-weight: 600;
+}
+
+.dash-acct-poolnum {
+    font-weight: 700;
+}
+
+.dash-acct-active {
+    box-shadow: 0 2px 0 var(--mix-primary);
+}
+
+.dash-acct-matches {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    border-top: 1px solid rgba(255, 255, 255, .06);
+    padding-top: 8px;
+}
+
+.dash-acct-mhead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.dash-acct-mlabel {
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    font-weight: 700;
+    color: var(--mud-palette-text-disabled);
+}
+
+.dash-acct-you {
+    font-size: .72rem;
+    color: var(--mud-palette-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-acct-you b {
+    color: var(--daily-you);
+    font-weight: 700;
+}
+
+.dash-acct-mlist {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.dash-acct-who {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+.dash-acct-av {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: none;
+}
+
+.dash-acct-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.dash-acct-trail {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.dash-acct-lvl {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-acct-empty {
+    font-size: .72rem;
+    font-style: italic;
+    color: var(--mud-palette-text-disabled);
+    padding: 8px 4px;
+    text-align: center;
+}
+
+.dash-acct-mixpill {
+    font-size: .58rem;
+    font-weight: 800;
+    letter-spacing: .03em;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--mix-primary) 16%, transparent);
+    color: var(--mix-primary);
+    border: 1px solid color-mix(in srgb, var(--mix-primary) 40%, transparent);
+}
+
 /* Daily Step widget (docs/design/daily-step.md): the shared daily chart as a leaderboard card. */
 
 /* Row-highlight tokens, global so the leaderboard dialog can glow too: you (blue), community (green). */

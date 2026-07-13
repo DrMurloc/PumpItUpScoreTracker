@@ -3540,4 +3540,49 @@
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} au classement</value>
   </data>
+  <data name="Account Stats" xml:space="preserve">
+    <value>Statistiques du compte</value>
+  </data>
+  <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
+    <value>Ton Pumbility et ton niveau compétitif, plus tes rivaux les plus proches.</value>
+  </data>
+  <data name="Pumbility" xml:space="preserve">
+    <value>Pumbility</value>
+  </data>
+  <data name="Match players on" xml:space="preserve">
+    <value>Associer les joueurs selon</value>
+  </data>
+  <data name="Singles competitive level" xml:space="preserve">
+    <value>Niveau compétitif Singles</value>
+  </data>
+  <data name="Doubles competitive level" xml:space="preserve">
+    <value>Niveau compétitif Doubles</value>
+  </data>
+  <data name="Combined competitive level" xml:space="preserve">
+    <value>Niveau compétitif combiné</value>
+  </data>
+  <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
+    <value>Tes rivaux les plus proches apparaissent en 1×2 et plus grand.</value>
+  </data>
+  <data name="Closest · Singles" xml:space="preserve">
+    <value>Plus proches · Singles</value>
+  </data>
+  <data name="Closest · Doubles" xml:space="preserve">
+    <value>Plus proches · Doubles</value>
+  </data>
+  <data name="Closest · Combined" xml:space="preserve">
+    <value>Plus proches · Combiné</value>
+  </data>
+  <data name="No close matches yet." xml:space="preserve">
+    <value>Pas encore de rivaux proches.</value>
+  </data>
+  <data name="Pumbility Push" xml:space="preserve">
+    <value>Poussée de Pumbility</value>
+  </data>
+  <data name="Suggested · Pumbility Push" xml:space="preserve">
+    <value>Suggérés · Poussée de Pumbility</value>
+  </data>
+  <data name="The biggest Pumbility gains available to you right now." xml:space="preserve">
+    <value>Les plus gros gains de Pumbility disponibles pour toi en ce moment.</value>
+  </data>
 </root>

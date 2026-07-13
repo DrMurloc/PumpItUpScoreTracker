@@ -3420,4 +3420,49 @@
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} en el tablero</value>
   </data>
+  <data name="Account Stats" xml:space="preserve">
+    <value>Estadísticas de cuenta</value>
+  </data>
+  <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
+    <value>Tu Pumbility y nivel competitivo, además de tus rivales más cercanos.</value>
+  </data>
+  <data name="Pumbility" xml:space="preserve">
+    <value>Pumbility</value>
+  </data>
+  <data name="Match players on" xml:space="preserve">
+    <value>Emparejar jugadores por</value>
+  </data>
+  <data name="Singles competitive level" xml:space="preserve">
+    <value>Nivel competitivo de Singles</value>
+  </data>
+  <data name="Doubles competitive level" xml:space="preserve">
+    <value>Nivel competitivo de Doubles</value>
+  </data>
+  <data name="Combined competitive level" xml:space="preserve">
+    <value>Nivel competitivo combinado</value>
+  </data>
+  <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
+    <value>Tus rivales más cercanos aparecen en 1×2 o más grande.</value>
+  </data>
+  <data name="Closest · Singles" xml:space="preserve">
+    <value>Más cercanos · Singles</value>
+  </data>
+  <data name="Closest · Doubles" xml:space="preserve">
+    <value>Más cercanos · Doubles</value>
+  </data>
+  <data name="Closest · Combined" xml:space="preserve">
+    <value>Más cercanos · Combinado</value>
+  </data>
+  <data name="No close matches yet." xml:space="preserve">
+    <value>Aún no hay rivales cercanos.</value>
+  </data>
+  <data name="Pumbility Push" xml:space="preserve">
+    <value>Subida de Pumbility</value>
+  </data>
+  <data name="Suggested · Pumbility Push" xml:space="preserve">
+    <value>Sugeridos · Subida de Pumbility</value>
+  </data>
+  <data name="The biggest Pumbility gains available to you right now." xml:space="preserve">
+    <value>Las mayores subidas de Pumbility disponibles para ti ahora mismo.</value>
+  </data>
 </root>

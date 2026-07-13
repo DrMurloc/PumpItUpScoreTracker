@@ -3542,4 +3542,49 @@
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} in classifica</value>
   </data>
+  <data name="Account Stats" xml:space="preserve">
+    <value>Statistiche account</value>
+  </data>
+  <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
+    <value>Il tuo Pumbility e livello competitivo, più i rivali più vicini a te.</value>
+  </data>
+  <data name="Pumbility" xml:space="preserve">
+    <value>Pumbility</value>
+  </data>
+  <data name="Match players on" xml:space="preserve">
+    <value>Abbina i giocatori per</value>
+  </data>
+  <data name="Singles competitive level" xml:space="preserve">
+    <value>Livello competitivo Singles</value>
+  </data>
+  <data name="Doubles competitive level" xml:space="preserve">
+    <value>Livello competitivo Doubles</value>
+  </data>
+  <data name="Combined competitive level" xml:space="preserve">
+    <value>Livello competitivo combinato</value>
+  </data>
+  <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
+    <value>I tuoi rivali più vicini compaiono in 1×2 e formati più grandi.</value>
+  </data>
+  <data name="Closest · Singles" xml:space="preserve">
+    <value>Più vicini · Singles</value>
+  </data>
+  <data name="Closest · Doubles" xml:space="preserve">
+    <value>Più vicini · Doubles</value>
+  </data>
+  <data name="Closest · Combined" xml:space="preserve">
+    <value>Più vicini · Combinato</value>
+  </data>
+  <data name="No close matches yet." xml:space="preserve">
+    <value>Ancora nessun rivale vicino.</value>
+  </data>
+  <data name="Pumbility Push" xml:space="preserve">
+    <value>Spinta al Pumbility</value>
+  </data>
+  <data name="Suggested · Pumbility Push" xml:space="preserve">
+    <value>Suggeriti · Spinta al Pumbility</value>
+  </data>
+  <data name="The biggest Pumbility gains available to you right now." xml:space="preserve">
+    <value>I maggiori guadagni di Pumbility disponibili per te in questo momento.</value>
+  </data>
 </root>

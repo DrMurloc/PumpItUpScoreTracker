@@ -1,18 +1,19 @@
 @using MediatR
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
-@using ScoreTracker.HomePage.Contracts.Commands
+@using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.HomeDashboard
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
-@* W2 (field-test round 1 shape): 1x1 is the stat alone (total + pools + trend);
-   2x1 adds text target rows with mini song art; 1x2 goes art + bubble + gain.
-   Skill chips dropped from the widget — the data stays on the projection contract.
-   Dismiss is an edit-mode affordance; browse-mode clicks open chart details. *@
+@* Account Stats (TypeId stays "pumbility"): the glowy total Pumbility + S/D pools stay —
+   competitive level joins them, and the projected-target list left for Suggested Charts'
+   Pumbility Push goal. 1x2 and taller add your closest competitive matches; a pinned mix
+   that differs from the current one shows as a pill in the title (via the header slot). *@
 
 @if (!_loaded)
 {
@@ -31,65 +32,71 @@ else if (_stats == null || ((int)_stats.SkillRating == 0 && _stats.ClearCount ==
 }
 else
 {
-    <div class="dash-pumbility @(_tall ? "dash-pumbility-tall" : "")">
-        <div class="dash-pumbility-left">
-            <span class="dash-stat-num rarity-glow-1">@(((int)_stats.SkillRating).ToString("N0"))</span>
-            @if (_weeklyDelta is > 0)
-            {
-                <span class="dash-stat-delta">▲ @_weeklyDelta.Value.ToString("N0")</span>
-            }
-            <MudText Typo="Typo.caption" Class="dash-pools">
-                <span style="color:var(--chart-singles)">@L["Singles"]</span>
-                <span>@(((int)_stats.SinglesRating).ToString("N0"))</span>
-                <span style="color:var(--chart-doubles)">@L["Doubles"]</span>
-                <span>@(((int)_stats.DoublesRating).ToString("N0"))</span>
-            </MudText>
-            @if (_sparkPoints != null)
-            {
-                <svg class="dash-sparkline" viewBox="0 0 100 26" preserveAspectRatio="none">
-                    <polyline points="@_sparkPoints" fill="none" stroke="var(--rarity-gold)"
-                              stroke-width="2" vector-effect="non-scaling-stroke"/>
-                </svg>
-            }
-            else if (!_compact && !_targets.Any())
-            {
-                <MudText Typo="Typo.caption" Class="dash-muted">@L["Trend starts tracking from today."]</MudText>
-            }
-        </div>
-        @if (!_compact && _showTargets && _targets.Any())
-        {
-            <div class="dash-pumbility-targets">
-                <MudText Typo="Typo.caption" Class="dash-muted">@L["Best projected targets"]</MudText>
-                <div class="dash-targets dash-scroll">
-                    @foreach (var target in _targets.Where(t => !_dismissed.Contains(t.Chart.Id)))
+    <div class="dash-acct">
+        <div class="dash-acct-stats">
+            <div class="dash-acct-eyebrow">@L["Pumbility"]</div>
+            <div class="dash-acct-hero">
+                <span class="dash-acct-total">
+                    <span class="dash-stat-num rarity-glow-1">@(((int)_stats.SkillRating).ToString("N0"))</span>
+                    @if (_weeklyDelta is > 0)
                     {
-                        var chart = target.Chart;
-                        <div class="dash-target-row @(EditMode ? "" : "dash-clickable")"
-                             @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart))">
-                            <span class="dash-mini-art">
-                                <SongImage Song="chart.Song" Small="true"></SongImage>
-                            </span>
-                            @if (_tall)
-                            {
-                                <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
-                                <span class="dash-target-name">@chart.Song.Name</span>
-                            }
-                            else
-                            {
-                                <span class="dash-target-name">@chart.Song.Name @chart.DifficultyString</span>
-                            }
-                            <span class="dash-target-gain">+@target.Gain.ToString("N0")</span>
-                            @if (EditMode)
-                            {
-                                <span @onclick:stopPropagation="true">
-                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
-                                                   title="@L["Dismiss"]"
-                                                   OnClick="() => Dismiss(chart.Id)"/>
-                                </span>
-                            }
-                        </div>
+                        <span class="dash-stat-delta">▲ @_weeklyDelta.Value.ToString("N0")</span>
                     }
+                </span>
+                <div class="dash-acct-pools">
+                    <div class="dash-acct-poolrow">
+                        <span style="color:var(--chart-singles)">S</span>
+                        <span class="dash-acct-poolnum">@(((int)_stats.SinglesRating).ToString("N0"))</span>
+                    </div>
+                    <div class="dash-acct-poolrow">
+                        <span style="color:var(--chart-doubles)">D</span>
+                        <span class="dash-acct-poolnum">@(((int)_stats.DoublesRating).ToString("N0"))</span>
+                    </div>
                 </div>
+            </div>
+
+            <div class="dash-acct-eyebrow dash-acct-cl-eyebrow">@L["Competitive Level"]</div>
+            <div class="dash-pools">
+                <span style="color:var(--chart-singles)">S</span>
+                <span class="@(_dimension == ChartType.Single ? "dash-acct-active" : "")">
+                    @_stats.SinglesCompetitiveLevel.ToString("N2")</span>
+                <span style="color:var(--chart-doubles)">D</span>
+                <span class="@(_dimension == ChartType.Double ? "dash-acct-active" : "")">
+                    @_stats.DoublesCompetitiveLevel.ToString("N2")</span>
+            </div>
+        </div>
+
+        @if (_showMatches)
+        {
+            <div class="dash-acct-matches">
+                <div class="dash-acct-mhead">
+                    <span class="dash-acct-mlabel">@MatchesLabel</span>
+                    <span class="dash-acct-you">@L["You"] <b>@_myLevel.ToString("N2")</b></span>
+                </div>
+                @if (_matches.Any())
+                {
+                    <div class="dash-acct-mlist dash-scroll">
+                        @foreach (var (row, i) in _matches.Select((r, i) => (r, i)))
+                        {
+                            var r = row;
+                            <div class="dash-lb-row @(r.IsCommunity ? "dash-lb-community" : "") @(EditMode ? "" : "dash-clickable")"
+                                 @onclick="() => OpenPlayer(r)">
+                                <span class="dash-lb-place">@(i + 1)</span>
+                                <span class="dash-lb-who dash-acct-who">
+                                    <img class="dash-acct-av" src="@r.User.ProfileImage.ToString()" alt="" loading="lazy"/>
+                                    <span class="dash-acct-name"><UserLabel User="r.User"></UserLabel></span>
+                                </span>
+                                <span class="dash-acct-trail">
+                                    <span class="dash-acct-lvl">@r.Level.ToString("N2")</span>
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="dash-acct-empty">@L["No close matches yet."]</div>
+                }
             </div>
         }
     </div>
@@ -97,96 +104,133 @@ else
 
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
-@inject ChartCatalogCache ChartCatalog
+@inject IUserRepository Users
+@inject CommunityGlowReader CommunityGlow
+@inject NavigationManager Nav
 
 @code {
 
     [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
     [Parameter] public MixEnum EffectiveMix { get; set; }
     [Parameter] public bool EditMode { get; set; }
+
+    /// <summary>Part of the five-param render contract (§2.2) — Account Stats rows link to
+    /// player pages, not charts, so this stays declared but unused.</summary>
     [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
+
     [Parameter] public int RefreshToken { get; set; }
 
+    /// <summary>Title-bar slot (§2.3): a pinned mix that differs from the current one rides
+    /// here as a pill, keeping the body clear of a mix chip (owner, 2026-07-13).</summary>
+    [CascadingParameter] private WidgetHeaderSlot? HeaderSlot { get; set; }
+
+    private const int Range = 1;         // hard ±1.0 competitive-level cap (owner)
+    private const int MatchCount = 25;   // the closest N shown (owner)
+    private const int CandidateFetch = 200; // over-fetch, then keep the eligible closest 25
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
-    private sealed record TargetRow(Chart Chart, int Gain);
+    private sealed record MatchRow(User User, double Level, bool IsCommunity);
 
     private bool _loaded;
-    private bool _compact;
-    private bool _tall;
+    private bool _showMatches;
     private string? _loadedFor;
+    private MixEnum _mix;
+    private ChartType? _dimension;
     private PlayerStatsRecord? _stats;
     private int? _weeklyDelta;
-    private string? _sparkPoints;
-    private bool _showTargets;
-    private MixEnum _mix;
-    private List<TargetRow> _targets = new();
-    private readonly HashSet<Guid> _dismissed = new();
+    private double _myLevel;
+    private List<MatchRow> _matches = new();
+    private string? _headerSlotKey;
+
+    private string MatchesLabel => _dimension switch
+    {
+        ChartType.Single => L["Closest · Singles"],
+        ChartType.Double => L["Closest · Doubles"],
+        _ => L["Closest · Combined"]
+    };
 
     protected override async Task OnParametersSetAsync()
     {
-        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{Widget.SizePreset}|{EffectiveMix}";
-        if (signature == _loadedFor) return;
-        _loadedFor = signature;
-        _loaded = false;
-
-        var size = SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.OneByOne;
-        _compact = size is { Columns: 1, Rows: 1 };
-        _tall = size.Columns == 1 && size.Rows > 1;
-
-        var config = WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson);
-        _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
-            : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
-        _showTargets = config.ShowProjections;
-        _dismissed.Clear();
-        foreach (var id in config.DismissedCharts) _dismissed.Add(id);
-
-        var userId = CurrentUser.User.Id;
-        var statsTask = Mediator.Send(new GetPlayerStatsQuery(userId, _mix));
-        var historyTask = Mediator.Send(new GetPlayerHistoryQuery(userId, _mix));
-        _stats = await statsTask;
-        var history = (await historyTask)
-            .Where(h => h.SkillRating != null)
-            .OrderBy(h => h.Date)
-            .ToArray();
-
-        // Trend + weekly delta light up once the history capture has data.
-        _sparkPoints = history.Length >= 2 ? BuildSparkline(history) : null;
-        var weekAgo = history.LastOrDefault(h => h.Date <= DateTimeOffset.Now.AddDays(-7));
-        _weeklyDelta = weekAgo?.SkillRating is { } baseline ? (int)_stats.SkillRating - baseline : null;
-
-        _targets.Clear();
-        if (!_compact && _showTargets && ((int)_stats.SkillRating > 0 || _stats.ClearCount > 0))
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{Widget.SizePreset}|{EffectiveMix}|{RefreshToken}";
+        if (signature != _loadedFor)
         {
-            var projection = await Mediator.Send(new ProjectPumbilityGainsQuery(userId, _mix));
-            var charts = await ChartCatalog.GetCharts(_mix);
-            _targets = projection.ProjectedGains
-                .OrderByDescending(kv => kv.Value)
-                .Take(15)
-                .Where(kv => charts.ContainsKey(kv.Key))
-                .Select(kv => new TargetRow(charts[kv.Key], kv.Value))
-                .ToList();
+            _loadedFor = signature;
+            _loaded = false;
+
+            var size = SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.OneByOne;
+            _showMatches = size is { Columns: 1, Rows: > 1 };
+
+            var config = WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson);
+            // Follow current mix, but Phoenix-eras only — pre-Phoenix mixes fall to Phoenix 2.
+            _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
+                : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix2;
+            _dimension = config.MatchDimension;
+
+            var userId = CurrentUser.User.Id;
+            _stats = await Mediator.Send(new GetPlayerStatsQuery(userId, _mix));
+
+            var history = (await Mediator.Send(new GetPlayerHistoryQuery(userId, _mix)))
+                .Where(h => h.SkillRating != null)
+                .OrderBy(h => h.Date)
+                .ToArray();
+            var weekAgo = history.LastOrDefault(h => h.Date <= DateTimeOffset.Now.AddDays(-7));
+            _weeklyDelta = weekAgo?.SkillRating is { } baseline && _stats != null
+                ? (int)_stats.SkillRating - baseline
+                : null;
+
+            _matches = new List<MatchRow>();
+            if (_showMatches && _stats != null) await LoadMatches(userId);
+
+            _loaded = true;
         }
 
-        _loaded = true;
+        UpdateHeaderSlot(WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson).Mix);
     }
 
-    private static string BuildSparkline(IReadOnlyList<PlayerRatingRecord> history)
+    private async Task LoadMatches(Guid userId)
     {
-        var values = history.Select(h => (double)h.SkillRating!.Value).ToArray();
-        var min = values.Min();
-        var range = Math.Max(1, values.Max() - min);
-        return string.Join(" ", values.Select((v, i) =>
-            $"{(values.Length == 1 ? 0 : 100.0 * i / (values.Length - 1)):0.#},{(24 - 22.0 * (v - min) / range):0.#}"));
+        _myLevel = _dimension switch
+        {
+            ChartType.Single => _stats!.SinglesCompetitiveLevel,
+            ChartType.Double => _stats!.DoublesCompetitiveLevel,
+            _ => _stats!.CompetitiveLevel
+        };
+        if (_myLevel <= 0) return;
+
+        // The cohort (in-range, nearest first) comes ranked from SQL; eligibility is applied
+        // here where the community set and privacy flags live: public players, plus anyone
+        // from your non-region communities (who also get the green glow), closest 25.
+        var neighbors = await Mediator.Send(
+            new GetCompetitiveNeighborsQuery(_mix, _dimension, _myLevel, Range, CandidateFetch));
+        var community = await CommunityGlow.GetMyCommunityMemberIds();
+        var users = (await Users.GetUsers(neighbors.Select(n => n.UserId).Where(id => id != userId)))
+            .ToDictionary(u => u.Id);
+
+        _matches = neighbors
+            .Where(n => n.UserId != userId && users.ContainsKey(n.UserId))
+            .Where(n => users[n.UserId].IsPublic || community.Contains(n.UserId))
+            .Take(MatchCount)
+            .Select(n => new MatchRow(users[n.UserId], n.CompetitiveLevel, community.Contains(n.UserId)))
+            .ToList();
     }
 
-    private async Task Dismiss(Guid chartId)
+    private void UpdateHeaderSlot(MixEnum? pinned)
     {
-        _dismissed.Add(chartId);
-        var config = WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson);
-        if (!config.DismissedCharts.Contains(chartId)) config.DismissedCharts.Add(chartId);
-        await Mediator.Send(new UpdateHomePageWidgetConfigCommand(Widget.Id,
-            WidgetConfigJson.Write(config), Widget.ConfigVersion));
+        if (HeaderSlot == null) return;
+        // Pill only when a specific mix is pinned that isn't the current one (owner).
+        var show = pinned is { } p && Supported.Contains(p) && p != EffectiveMix;
+        var key = show ? pinned!.Value.ToString() : null;
+        if (key == _headerSlotKey) return;
+        _headerSlotKey = key;
+        HeaderSlot.Set(show ? MixPill(pinned!.Value) : null);
+    }
+
+    private RenderFragment MixPill(MixEnum mix) =>@<span class="dash-acct-mixpill">@mix.GetName()</span>;
+
+    private void OpenPlayer(MatchRow row)
+    {
+        if (EditMode) return;
+        Nav.NavigateTo($"/Player/{row.User.Id}/Sessions");
     }
 
 }
