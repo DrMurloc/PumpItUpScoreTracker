@@ -12,8 +12,9 @@ namespace ScoreTracker.Domain.Models.Titles.Phoenix2;
 ///     included). Names are the site's exact data-name values so site-detection matches.
 ///     Chart-specific titles reference songs by the requirement's naming; ones whose song
 ///     isn't in the Phoenix 2 catalog yet never progress until the song imports.
-///     The [S]/[D]/Total PUMBILITY ladders gate on the two-pool PUMBILITY values and are
-///     computed by <see cref="BuildProgress" /> with the official Phoenix 2 formula.
+///     The [S]/[D] ladders gate on the per-type top-50 pools and the Total ladder on the
+///     merged top-50 across both types, all computed by <see cref="BuildProgress" /> with
+///     the official Phoenix 2 formula.
 /// </summary>
 public static class Phoenix2TitleList
 {
@@ -353,9 +354,8 @@ public static class Phoenix2TitleList
         foreach (var title in progress)
             title.ApplyAttempt(charts[attempt.ChartId], attempt);
 
-        // The PUMBILITY-pool titles gate on the official two-pool values: per chart
-        // Base x (grade + plate), top 50 per type, each pool floored then summed â€”
-        // mirroring PlayerRatingSaga's stats computation exactly.
+        // Each contribution is Base x (grade + plate). [S] and [D] gate on the top 50 of
+        // their own type; Total gates on the top 50 across both types.
         var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
         var contributions = attemptList
             .Where(a => a.Score != null && charts.ContainsKey(a.ChartId))
@@ -366,13 +366,15 @@ public static class Phoenix2TitleList
             .Select(c => c.Value).OrderByDescending(v => v).Take(50).Sum();
         var doubles = (int)contributions.Where(c => c.Type == ChartType.Double)
             .Select(c => c.Value).OrderByDescending(v => v).Take(50).Sum();
+        var total = (int)contributions
+            .Select(c => c.Value).OrderByDescending(v => v).Take(50).Sum();
         foreach (var title in progress)
             if (title.PhoenixTitle is Phoenix2PumbilityTitle pumbility)
                 title.ApplyDirectProgress(pumbility.Pool switch
                 {
                     PumbilityPool.Singles => singles,
                     PumbilityPool.Doubles => doubles,
-                    _ => singles + doubles
+                    _ => total
                 });
 
         foreach (var title in progress)

@@ -107,6 +107,12 @@ Rendering rules: widgets render with `@key="InstanceId"` (reorders move componen
 internal state); **widget data refresh is paused while edit mode is active** (nothing re-renders the
 grid mid-drag, and a board shouldn't reshuffle while being rearranged).
 
+**Optional header slot (owner, 2026-07-13).** The host owns the title bar, but a widget may push a small
+fragment into it to reclaim body space. `WidgetHost` cascades a `WidgetHeaderSlot`; a widget opts in via
+`[CascadingParameter]` and calls `Set(fragment)` — the host renders it right of the title (suppressed in
+edit mode, where the edit controls own the bar). Opt-in and generic: widgets that ignore it are
+unaffected. Quick Record (§4.2) is the first consumer — the selected chart's art/bubble/✕ ride up there.
+
 ### 2.4 Grid + drag
 
 - CSS grid, 4 columns desktop, auto-flow; widgets are `(Ordinal, SizePreset)` — D6.
@@ -241,7 +247,7 @@ Readiness: ✅ published contract already serves it · 🔨 needs new data/query
 | ScoreLedger | Session Journal | ✅ | `GetRecentSessionsQuery`; score history was a top user ask |
 | ScoreLedger | Chart Journey | ✅ | pin a white-whale chart, `GetChartScoreJourneyQuery` sparkline |
 | ScoreLedger | To-Do List | ✅ | must survive WSIP (parity phase) |
-| ScoreLedger | Quick Record | ✅ | ChartSelector + EditChartGrid inline; the arcade widget |
+| ScoreLedger | Quick Record | ✅ | **SPEC'd — catalog-walk pick (§4.2)**; ChartSelector + a purpose-built record row (not EditChartGrid); the arcade widget |
 | ScoreLedger | On the bubble | 🔨 | near-miss grades/plates ("18,797 from AAA+"); compute from records |
 | ScoreLedger | Activity heatmap | 🔨 | calendar of play days from the journal |
 | ScoreLedger | Mix Migration | ✅ | D11 — own widget; `GetCrossMixPassesQuery`; featured at P2 launch |
@@ -256,7 +262,7 @@ Readiness: ✅ published contract already serves it · 🔨 needs new data/query
 | OfficialMirror | Import nudge | ✅ | "last sync 9 days ago" + one-tap re-import; upload is the #2 page |
 | OfficialMirror | Benchmark player | 🔮 | rivals-lite on mirror data; decided during the catalog walk (D18), rival machinery stays out until the Rivals project |
 | WeeklyChallenge | Weekly Challenge | ✅ | shell trio (W3) |
-| WeeklyChallenge | Daily Step | 🔨 | D12 — daily rotation job + shared board + Limbo Day; own PR ([daily-step.md](../daily-step.md)) |
+| WeeklyChallenge | Daily Step | ✅ | D12 — shipped: per-mix daily board + Limbo Day + widget ([daily-step.md](../daily-step.md)) |
 | WeeklyChallenge | Per-player daily challenge | 🔮 | owner has plans — separate concept from Daily Step; its own future session (D12/D18) |
 | EventCompetition | Active tournaments | ⏸ | HELD (D8) |
 | EventCompetition | Qualifiers countdown | ⏸ | HELD (D8) |
@@ -271,6 +277,90 @@ affordances (video / record / todo) as shared components.
 
 ### 4.1 Suggested Charts → [suggested-charts.md](suggested-charts.md)
 
+### 4.2 Quick Record (catalog-walk pick — the arcade widget)
+
+The manual recorder's widget: search a chart, punch the score, Save, on to the next. One
+`UpdatePhoenixBestAttemptCommand` per save — the same write path the ChartDetailsDialog uses. Owner
+field-test (2026-07-12, one round) locked it deliberately tiny. Mock:
+[artifact](https://claude.ai/code/artifact/5d4bce53-a5e1-4610-8af2-f62fcea24436).
+
+**Locked decisions (owner, 2026-07-12):** (1) **no recent-charts shortcut** — replaying a chart you just
+played doesn't mean re-keying a score every time; (2) **Plate + Broken inline** on the action row;
+(3) **always clears to Search after Save** — rapid-fire, no toggle; (4) **1×1 only**; (5) **pure
+recorder** — the chart display is not clickable, no ChartDetailsDialog, no navigation of any kind.
+
+- **Composition**: reuses `ChartSelector` (its `S18`/`D22` shorthand is already built in) as the
+  persistent top row; the record inputs are a **purpose-built compact row, NOT `EditChartGrid`**. The
+  ChartDetailsDialog already hit this wall at round 11 — *"EditChartGrid brought duplicate
+  To-Do/favorite buttons and a layout that fell apart on phones"* — so Quick Record borrows the
+  selector but rebuilds score/plate/broken to fit the ~114px of body a 1×1 gives. Save dispatches
+  `UpdatePhoenixBestAttemptCommand(chartId, isBroken, score, plate, Mix)`.
+- **Data — all existing ScoreLedger contracts; no new query, table, or vertical**: the chart list comes
+  from the shell's `ChartCatalogCache` (shared per mix, no per-widget `GetChartsQuery`) and is passed
+  into `ChartSelector` via its `Charts` param; on pick, `GetPhoenixRecordQuery(chartId, mix)` prefills
+  the current best so it's an edit, not a blank; Save writes through the existing best-attempt command.
+- **States** (one 1×1 frame, three faces):
+  - **Search** (resting) — the selector (placeholder) + a shorthand hint + a muted "Posts to {Mix}"
+    footer (the mix cascade D13 is real; the recorder should see which board it writes to).
+  - **Recording** — the selected chart's identity (art + `DifficultyBubble` + clear ✕, **no song name**)
+    rides up into the host **title bar** via the header slot (§2.3, owner 2026-07-13), so the body opens
+    straight into a half-width tabular Score field beside a **live-derived letter-grade badge** (display
+    only — the domain derives the grade from the score, we send score + plate + broken) and a compact
+    **plate/result dropdown** (shorthand: RG…PG). Save sits on its own row so it never clips on narrow
+    widths. **Broken has no checkbox** (owner, 2026-07-13): the dropdown carries a `Broken` shortcut at
+    top (→ broken, no plate — the clean-fail path), and **clicking the grade icon toggles broken without
+    clearing the plate** — the subtle, undocumented-by-design path to a *plated broken* grade (a fail
+    whose accuracy still earned a plate; the owner captures those). Both write the same
+    `UpdatePhoenixBestAttemptCommand`. Legacy/XX keeps its own Broken checkbox (no plate dropdown there).
+  - **Saved** — an inline success flash ("Recorded · SS+ 985,320 · Marvelous") for ~1.4s, then
+    **always** back to Search. The `UpdatePhoenixBestAttemptCommand` Snackbar is suppressed in-widget to
+    avoid a double confirmation.
+- **Grade badge**: score → Phoenix letter grade via `PhoenixLetterGrade`'s own thresholds (feedback
+  only — never sent). Colored off the rarity ramp through `ThemeScales`/tokens (SSS→sapphire, SS/S→gold,
+  AAA/AA→emerald, A/B→silver, C/D/F→common) — never a hand-rolled color.
+- **Validation / edges**: Save is disabled until a score is entered (score is the minimum; plate/broken
+  optional). Broken defaults **off** — a hand-keyed record is usually a pass. An empty score never sends
+  a record *removal* — that deletion path stays the dialog's job, not the arcade widget's.
+- **Sizes**: **1×1 only** — `SupportedSizes = [1×1]`, `DefaultSize = 1×1`. The one widget whose
+  per-widget size list is a single entry.
+- **Config v1**: **`Mix` scope** — `Follow current mix` / Phoenix / Phoenix 2 / **All mixes**, plus a
+  **Remember last mix** toggle shown only under All mixes (owner, 2026-07-12/13). `ClearAfterSave` was
+  considered and dropped — it always clears.
+- **EditMode**: inputs render disabled while the board is being arranged (no accidental writes
+  mid-drag); the selector shows its resting frame. Grid data refresh is already paused in edit mode by
+  the shell (§2.3).
+- **Lifecycle (§2.3)**: skeleton = the selector frame at fixed footprint; empty state = the search box
+  IS the CTA (logged-out → "Sign in to record"); isolated error = a failed save shows an inline retry,
+  board stays up; persisted vs transient = the half-typed entry is session-only, only Save writes;
+  config + version = `{ mix }`, version 1.
+- **Mixes & scoring (owner, 2026-07-12/13)**: the widget records to **every mix** (`SupportedMixes =
+  all`). "Follow current mix" honours whatever the site is set to — legacy included; there is **no clamp
+  to Phoenix** (that clamp was the "always snaps to Phoenix" bug). The record row adapts by
+  `UsesLegacyScoring()`: Phoenix / Phoenix 2 → score + derived grade + plate →
+  `UpdatePhoenixBestAttemptCommand`; **XX and older → score + manual `XXLetterGrade` + broken, no plate
+  → `UpdateXXBestAttemptCommand`** (the existing legacy path, reused). The **active mix rides the header
+  slot** (§2.3) as a chip — the old "Posts to {mix}" footer is gone. The **legacy row** is
+  purpose-built (owner, 2026-07-13). In legacy the **letter grade is the primary datum** (players
+  record grades, not scores — the score is optional), so the **grade image strip leads** and Score
+  drops to the second line. The strip = the common grades **SSS / SS / S / A** as tappable art (the same
+  `letters/*.png` CDN the rest of the app uses — the *only* place XX grades render as images; elsewhere
+  they're text) with a **"…" more menu** for the rare B-and-lower records. Tap a grade to pick it
+  (passing, it highlights); tap the selected one again to mark it **broken** (its art goes cracked) —
+  one control replaces the grade select AND the Broken checkbox, the same gesture as the Phoenix side.
+  Row 2 = the optional Score field + Save (right-aligned). Legacy `CanSave` needs only a grade.
+- **All-mixes flow (owner, 2026-07-13)**: (1) no mix → the body shows **only the picker**; (2) pick a mix
+  → the mix chip + a change-✕ appear in the header, body switches to the chart selector; (3) pick a chart
+  → art + bubble join the header, body is the inputs. The header **✕ clears one step back** — the chart
+  first (keep the mix, rapid-fire the same board), then the mix (back to the picker). A per-instance
+  **Remember last mix** toggle stores the pick in UserSettings (keyed by widget id) and **auto-jumps**
+  straight to it next time instead of the picker.
+- **Shell extensions: none.** Quick Record is the first catalog widget that needs nothing new from the
+  shell — no `DrawerPresets`, no `DynamicNameKey`, no `RefreshIcon`, and it never raises `OnChartClick`
+  (it declares the five render-contract params and ignores `OnChartClick`/`RefreshToken`).
+- **Not in scope**: favorites / To-Do (the dialog and EditChartGrid own those), score history (the
+  Session Journal and Chart Journey widgets own that), bulk entry (the Upload pages own that).
+  Deliberately one chart, one score, fast.
+
 ## 5. Pumbility Projections v2 — **PR #1**, ships before the shell (D17)
 
 Bundled with the SkillRating history capture into one small PR the owner merges fast — trend data starts
@@ -281,8 +371,9 @@ there) before the widget exists.
 cohort = players within ±1 competitive level per chart type; my expected score on a candidate chart =
 cohort score distribution interpolated at my average percentile across played charts in that (type, level)
 slice (×0.95 damping); expected pumbility assumes an EG plate; gains measured against the lowest of ONE
-mixed top-50 pool. Phoenix 2 is explicitly disabled — the in-code TODO defers two-pool projection to
-"the What-Should-I-Play overhaul," i.e. this project.
+mixed top-50 pool. Phoenix 2 is explicitly disabled — the in-code TODO defers the Phoenix 2 projection to
+"the What-Should-I-Play overhaul," i.e. this project. (Since 2026-07-13, Phoenix 2 uses the same single
+mixed pool as Phoenix.)
 
 **V2 scope:**
 
@@ -325,10 +416,10 @@ mixed top-50 pool. Phoenix 2 is explicitly disabled — the in-code TODO defers 
    measured at 2k-band granularity (FG→TG at 964k, TG→MG at 972k, MG→UG at 996k). Ship as a pure Domain
    function with the table pinned by a DomainTest; recalibrate for P2 once its plate data accumulates
    (same query, one constant swap) — explicitly not an exact science.
-4. While in there: assert `PlayerRatingsImprovedEvent.NewTop50` equals the P2 two-pool combined value
-   (feeds the P1 history capture in this same PR). *Verified: `PlayerRatingSaga` sums the int-floored
-   S+D pools so `SkillRating == SinglesRating + DoublesRating` exactly, and the same variable feeds
-   the stats record and the event.*
+4. While in there: `PlayerRatingsImprovedEvent.NewTop50` is the overall PUMBILITY (`SkillRating`) that
+   feeds the P1 history capture in this same PR. *Corrected 2026-07-13: `SkillRating` is the merged
+   top-50, NOT `SinglesRating + DoublesRating` — the same variable feeds the stats record and the
+   event, so map `NewTop50` straight through.*
 
 **Tests**: pool math + proficiency adjustment as pure DomainTests; saga component tests with mocked
 readers over a fixed cohort fixture; the skill-deviation query handler gets tests pinning equivalence
@@ -339,9 +430,9 @@ pin the builder's behavior from the tier-list side).
 
 | P | Content |
 |---|---|
-| P1 | **History capture**: `SkillRating` column on the history entity + migration; `PlayerRatingRecord` field; `PlayerHistorySaga` maps `NewTop50`; repository read/write mapping; NewTop50 ≡ two-pool-combined assertion; DATABASE-SCHEMA row |
+| P1 | **History capture**: `SkillRating` column on the history entity + migration; `PlayerRatingRecord` field; `PlayerHistorySaga` maps `NewTop50`; repository read/write mapping; NewTop50 ≡ `SkillRating` (merged top-50); DATABASE-SCHEMA row |
 | P2 | **Skill-deviation query**: expose `TierListBlendBuilder`'s skill computation (post-#140 home of the machinery) through a published `GetPlayerSkillDeviationsQuery`; equivalence tests pin same-inputs-same-outputs |
-| P3 | **Pools abstraction** in `PumbilityProjectionSaga`: Phoenix single mixed pool, P2 independent S+D pools; DomainTests for the pool math |
+| P3 | **Pools abstraction** in `PumbilityProjectionSaga`: Phoenix and Phoenix 2 both a single mixed pool (P2 corrected 2026-07-13 — was two S+D pools); DomainTests for the pool math |
 | P4 | **Plate curve**: pure Domain step function (empirical table pinned by DomainTest) replaces the flat-EG assumption |
 | P5 | **Skill adjustment + "why"**: damped deviation adjustment on expected scores; signed skill-match contributions on `PumbilityProjection`; enable Phoenix 2 on `/Pumbility` (delete the in-code TODO) |
 | P6 | Docs + localization for any new `/Pumbility` strings (all locales, one pass) |

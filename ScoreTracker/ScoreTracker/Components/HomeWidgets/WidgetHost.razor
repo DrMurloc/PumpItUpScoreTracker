@@ -16,6 +16,13 @@
             <span class="dash-drag-handle" aria-hidden="true">⠿</span>
         }
         <span class="dash-widget-title">@TitleText</span>
+        @if (!EditMode && _headerSlot.Content != null)
+        {
+            @* Header slot (§2.3): a widget may push content — its selected chart, a freshness
+               stamp — into the title bar to reclaim body space. Suppressed in edit mode so the
+               edit controls keep the bar to themselves. *@
+            <span class="dash-head-slot">@_headerSlot.Content</span>
+        }
         @if (_descriptor?.RefreshIcon != null)
         {
             @* Header refresh (owner, round 5): bumps RefreshToken so the widget reloads
@@ -69,7 +76,9 @@
         {
             <ErrorBoundary>
                 <ChildContent>
-                    <DynamicComponent Type="_descriptor.RenderComponent" Parameters="_parameters"/>
+                    <CascadingValue Value="_headerSlot" IsFixed="true">
+                        <DynamicComponent Type="_descriptor.RenderComponent" Parameters="_parameters"/>
+                    </CascadingValue>
                 </ChildContent>
                 <ErrorContent>
                     <div class="dash-widget-message dash-widget-error">
@@ -107,6 +116,14 @@
     private WidgetDescriptor? _descriptor;
     private int _refreshToken;
     private IDictionary<string, object> _parameters = new Dictionary<string, object>();
+
+    // Header slot (§2.3): opt-in title-bar real estate a widget can push a fragment into.
+    private WidgetHeaderSlot _headerSlot = null!;
+
+    protected override void OnInitialized()
+    {
+        _headerSlot = new WidgetHeaderSlot(() => InvokeAsync(StateHasChanged));
+    }
 
     private string TitleText => Widget.Title
                                 ?? (_descriptor == null

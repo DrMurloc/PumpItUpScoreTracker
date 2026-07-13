@@ -2659,6 +2659,9 @@
   <data name="Rebuild Recap PG Cards" xml:space="preserve">
     <value>Reconstruire les cartes PG du récap</value>
   </data>
+  <data name="Rebuild Recap Total PUMBILITY" xml:space="preserve">
+    <value>Reconstruire le PUMBILITY total du récap</value>
+  </data>
   <data name="Site Theme" xml:space="preserve">
     <value>Thème du site</value>
   </data>
@@ -3509,5 +3512,77 @@
   </data>
   <data name="Multi-threshold completion: ≥950k, ≥990k, and 1,000,000." xml:space="preserve">
     <value>Achèvement multi-seuils : ≥950k, ≥990k et 1 000 000.</value>
+  </data>
+  <data name="Daily Step" xml:space="preserve">
+    <value>Pas du Jour</value>
+  </data>
+  <data name="Today's shared chart, plus a weekly Limbo Day." xml:space="preserve">
+    <value>Le chart partagé du jour, plus un Jour Limbo hebdomadaire.</value>
+  </data>
+  <data name="Today's Step posts at midnight." xml:space="preserve">
+    <value>Le Pas du jour paraît à minuit.</value>
+  </data>
+  <data name="Limbo Day: lowest passing score wins!" xml:space="preserve">
+    <value>Jour Limbo : le score le plus bas qui passe l'emporte !</value>
+  </data>
+  <data name="No entry yet" xml:space="preserve">
+    <value>Pas encore de tentative</value>
+  </data>
+  <data name="Record" xml:space="preserve">
+    <value>Enregistrer</value>
+  </data>
+  <data name="Verified from official import" xml:space="preserve">
+    <value>Vérifié via l'import officiel</value>
+  </data>
+  <data name="Quick Record" xml:space="preserve">
+    <value>Enregistrement rapide</value>
+  </data>
+  <data name="Record a score by hand for any chart." xml:space="preserve">
+    <value>Saisissez un score à la main pour n'importe quel chart.</value>
+  </data>
+  <data name="Search a chart" xml:space="preserve">
+    <value>Rechercher un chart</value>
+  </data>
+  <data name="Name, or shorthand like S18" xml:space="preserve">
+    <value>Nom ou abrégé comme S18</value>
+  </data>
+  <data name="Recorded" xml:space="preserve">
+    <value>Enregistré</value>
+  </data>
+  <data name="Change chart" xml:space="preserve">
+    <value>Changer de chart</value>
+  </data>
+  <data name="Sign in to record." xml:space="preserve">
+    <value>Connectez-vous pour enregistrer.</value>
+  </data>
+  <data name="There was an error while recording the score" xml:space="preserve">
+    <value>Une erreur s'est produite lors de l'enregistrement du score</value>
+  </data>
+  <data name="All mixes" xml:space="preserve">
+    <value>Tous les Mix</value>
+  </data>
+  <data name="Record to" xml:space="preserve">
+    <value>Enregistrer dans</value>
+  </data>
+  <data name="Select a mix" xml:space="preserve">
+    <value>Choisissez un Mix</value>
+  </data>
+  <data name="Change mix" xml:space="preserve">
+    <value>Changer de Mix</value>
+  </data>
+  <data name="Remember last mix" xml:space="preserve">
+    <value>Se souvenir du dernier Mix</value>
+  </data>
+  <data name="Your standing" xml:space="preserve">
+    <value>Votre classement</value>
+  </data>
+  <data name="manual" xml:space="preserve">
+    <value>manuel</value>
+  </data>
+  <data name="Not played" xml:space="preserve">
+    <value>Non joué</value>
+  </data>
+  <data name="{0} on the board" xml:space="preserve">
+    <value>{0} au classement</value>
   </data>
 </root>

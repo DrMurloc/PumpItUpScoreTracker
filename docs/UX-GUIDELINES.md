@@ -113,6 +113,10 @@ The widget home page ([design doc](design/HomePageWidgets/README.md)) adds a voc
   for grade/plate bar categories — both mirror `DifficultyHex`, so the ramp stays sanctioned.
 - **Chart rows/cards in widgets open `ChartDetailsDialog` on click** (browse mode only — edit mode
   owns clicks for arranging). Every catalog widget inherits this rule.
+- **Per-chart leaderboards use the shared `LeaderboardDialog`** (top ten plus your own row when you
+  sit outside it): the caller passes the entries and a sort direction, so an inverted board — Daily
+  Step's weekly **Limbo Day**, where the lowest *passing* score wins — ranks ascending without a
+  second component.
 - **Drag is swap, not insertion**: dropping widget A on widget B trades their places; bystanders
   never move. The arrows remain the accessible and mobile reorder path.
 - **Quiet scrolling**: widget inner scrollers use `dash-scroll` — no scrollbar at rest, a thin themed

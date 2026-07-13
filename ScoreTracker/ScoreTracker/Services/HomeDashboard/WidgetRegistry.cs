@@ -49,6 +49,18 @@ public static class WidgetRegistry
             typeof(WeeklyWidget),
             typeof(WeeklyConfigPanel),
             typeof(WeeklyConfig)),
+        new("daily-step",
+            "Daily Step",
+            "Today's shared chart, plus a weekly Limbo Day.",
+            WidgetCategory.Compete,
+            Icons.Material.Filled.Today,
+            // 1x1 = top three + you; the taller sizes open into the full scrollable board.
+            new[] { SizePreset.OneByOne, SizePreset.OneByTwo, SizePreset.OneByThree },
+            SizePreset.OneByOne,
+            new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            typeof(DailyStepWidget),
+            typeof(DailyStepConfigPanel),
+            typeof(DailyStepConfig)),
         new("suggested-charts",
             "Suggested Charts",
             "Charts picked for you, tuned by goal.",
@@ -171,7 +183,21 @@ public static class WidgetRegistry
             {
                 var config = WidgetConfigJson.Read<ByLevelBreakdownConfig>(configJson);
                 return ByLevelConfigRules.TitleKey(config.Metric, config.Aggregation);
-            })
+            }),
+        new("quick-record",
+            "Quick Record",
+            "Record a score by hand for any chart.",
+            WidgetCategory.Play,
+            Icons.Material.Filled.EditNote,
+            // 1x1 only (owner): the one widget whose size list is a single entry.
+            new[] { SizePreset.OneByOne },
+            SizePreset.OneByOne,
+            // Records to every mix (owner, 2026-07-13): Phoenix path for P1/P2, the legacy
+            // letter-grade path for XX and older. "Follow current mix" honours any of them.
+            Enum.GetValues<MixEnum>(),
+            typeof(QuickRecordWidget),
+            typeof(QuickRecordConfigPanel),
+            typeof(QuickRecordConfig))
     };
 
     private static readonly IReadOnlyDictionary<string, WidgetDescriptor> ByTypeId =
