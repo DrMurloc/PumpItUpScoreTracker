@@ -41,7 +41,7 @@ public static class LegacyMixGate
     {
         if (!IsGatedMix(mix)) return false;
         var firstSegment = path.Trim('/').Split('/')[0];
-        if (firstSegment.Length == 0) return true; // home (WhatShouldIPlay) is not legacy-ready
+        if (firstSegment.Length == 0) return true; // the home dashboard is not legacy-ready
         return !ReadySegments.Contains(firstSegment);
     }
 }

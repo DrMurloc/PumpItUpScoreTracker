@@ -81,7 +81,7 @@
                     <ChildContent>
                         @if (CurrentUser.IsLoggedIn && !_gatedMix)
                         {
-                            <MudMenuItem Href="/" Icon="@Icons.Material.Filled.Home">@L["What Should I Play"]</MudMenuItem>
+                            <MudMenuItem Href="/" Icon="@Icons.Material.Filled.Home">@L["Home"]</MudMenuItem>
                         }
                         <MudMenuItem Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts"]</MudMenuItem>
                         @if (CurrentUser.IsLoggedIn && !_gatedMix)

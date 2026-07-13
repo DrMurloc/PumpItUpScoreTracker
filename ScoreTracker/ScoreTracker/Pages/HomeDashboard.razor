@@ -1,7 +1,10 @@
+@page "/"
 @page "/Home"
 @using MediatR
+@using Microsoft.Extensions.Options
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.HomePage.Contracts.Commands
@@ -10,13 +13,14 @@
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Components.HomeWidgets
+@using ScoreTracker.Web.Configuration
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.HomeDashboard
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
-@* Unlisted pre-release route (D7): no nav links anywhere, but open to whoever finds
-   it. Becomes "/" at cutover, when /WhatShouldIPlay retires. *@
+@* The signed-in home. Anonymous visitors are served the front door by the "/"
+   dispatcher and never boot this; the guard below is defense for the /Home alias. *@
 
 <PageTitle>@L["Home"]</PageTitle>
 
@@ -32,13 +36,6 @@
 }
 else if (_loaded)
 {
-    @if (_editMode && !CurrentUser.IsLoggedInAsAdmin)
-    {
-        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2">
-            @L["This page is pre-release — your layout and widget settings may be reset before launch."]
-        </MudAlert>
-    }
-
     <div class="dash-toolbar">
         <div class="dash-pagebar">
             @foreach (var dashPage in _pages)
@@ -308,6 +305,7 @@ else if (_loaded)
 @inject NavigationManager NavManager
 @inject IUiSettingsAccessor UiSettings
 @inject IJSRuntime JS
+@inject IOptions<DevAuthConfiguration> DevAuth
 
 @code {
 
@@ -396,6 +394,16 @@ else if (_loaded)
         if (!CurrentUser.IsLoggedIn)
         {
             NavManager.NavigateTo("/Login");
+            return;
+        }
+
+        // Dev-only: a freshly-provisioned local database has no charts — route the
+        // developer to the setup harness (moved from the retired WhatShouldIPlay page,
+        // which used to own "/").
+        if (DevAuth.Value.Enabled &&
+            !(await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).Any())
+        {
+            NavManager.NavigateTo("/Dev/Populate");
             return;
         }
 

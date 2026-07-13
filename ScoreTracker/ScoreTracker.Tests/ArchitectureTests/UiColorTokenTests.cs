@@ -50,7 +50,6 @@ public sealed class UiColorTokenTests
         // radar removal) and left the allowlist entirely; the old page at /TierLists/Old
         // (26 entries) was deleted outright in the same series (C14). ChartRandomizer's
         // two entries burned in the randomizer overhaul page rebuild.
-        ["Pages/WhatShouldIPlay.razor"] = 4
     };
 
     [Fact]

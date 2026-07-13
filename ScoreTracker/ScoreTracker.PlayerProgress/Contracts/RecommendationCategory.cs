@@ -3,7 +3,7 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 /// <summary>
 ///     The recommendation engine's categories, addressable individually so callers (the
 ///     Suggested Charts widget's goal bundles) can request a subset instead of paying for
-///     all seven. Null on the query means "everything" — the legacy WhatShouldIPlay page.
+///     all seven. Null on the query means "every category".
 /// </summary>
 public enum RecommendationCategory
 {

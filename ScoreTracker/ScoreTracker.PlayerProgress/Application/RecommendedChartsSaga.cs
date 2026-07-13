@@ -55,9 +55,9 @@ namespace ScoreTracker.PlayerProgress.Application
             // launch: empty title list, no scores) naturally yields few or no suggestions.
             var mix = request.Mix;
 
-            // Null = everything (the legacy WhatShouldIPlay page). The Suggested Charts
-            // widget requests only its goal bundle's categories, so unrequested builders
-            // — and the title fetch that only they need — are skipped entirely.
+            // Null = every category. The Suggested Charts widget requests only its goal
+            // bundle's categories, so unrequested builders — and the title fetch that
+            // only they need — are skipped entirely.
             bool Include(RecommendationCategory category)
             {
                 return request.Categories == null || request.Categories.Contains(category);
