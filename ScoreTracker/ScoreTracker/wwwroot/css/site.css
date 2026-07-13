@@ -2208,6 +2208,14 @@ html.nav-away .page-dock,
     line-height: 1;
 }
 
+/* The cards/dividers are wrapped in MudTooltip, so its root is the strip's flex child —
+   keep it a fixed-size item so the cards don't grow or shrink. */
+.dash-card-strip > .mud-tooltip-root {
+    flex: none;
+    min-width: 0;
+    display: inline-flex;
+}
+
 /* Drag chrome: handle (desktop pointer only), dragged-cell dim, insertion marker. */
 
 .dash-drag-handle {

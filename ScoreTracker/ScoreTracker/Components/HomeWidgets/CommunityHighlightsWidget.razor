@@ -39,12 +39,14 @@ else if (UseStrips)
         <div class="dash-card-strip">
             @foreach (var record in _records)
             {
-                <div class="dash-strip-person @(IsMe(record) ? "you" : "")" title="@record.PlayerName">
-                    <MudAvatar Size="Size.Small" Class="dash-ch-avatar">
-                        <MudImage Src="@record.Avatar.ToString()" Alt="@record.PlayerName"/>
-                    </MudAvatar>
-                    <span class="dash-strip-pname">@record.PlayerName</span>
-                </div>
+                <MudTooltip Text="@record.PlayerName" Arrow="true">
+                    <div class="dash-strip-person @(IsMe(record) ? "you" : "")">
+                        <MudAvatar Size="Size.Small" Class="dash-ch-avatar">
+                            <MudImage Src="@record.Avatar.ToString()" Alt="@record.PlayerName"/>
+                        </MudAvatar>
+                        <span class="dash-strip-pname">@record.PlayerName</span>
+                    </div>
+                </MudTooltip>
                 @foreach (var win in record.Wins)
                 {
                     @WinCard(win)
@@ -235,46 +237,63 @@ else
         ? $"🎉 {L["Cleared all of {0}", win.Difficulty ?? ""].Value}"
         : $"🏅 {Bracket(win.TitleName ?? "")} {TitleSuffix(win)}";
 
-    // A win as a strip card. Chart wins = art + grade/plate + score + a truncated caption (the full
-    // detail + song name ride the native title tooltip, per owner); titles + folder clears are text cards.
+    // Cards get the *shortest* form — the full sentence lives in the tooltip (owner: lean hard on tooltips).
+    private string ShortCaption(SignificantWin win) => win.Kind switch
+    {
+        WinKind.NotablePg => $"💎 {Pct(win.RarityShare)}",
+        WinKind.TopPumbility => $"👑 #{win.Rank ?? 0}",
+        WinKind.PeerElite => win.Rank == 1 ? "📊 #1" : $"📊 {PeerPct(win)}%",
+        WinKind.FolderFirst => $"🆕 {Ordinal(win.Rank ?? 0)}",
+        _ => string.Empty
+    };
+
+    private string ShortTitleSub(SignificantWin win) => win.Kind == WinKind.RareTitle && win.RarityShare != null
+        ? Pct(win.RarityShare)
+        : L["completed"].Value;
+
+    // A win as a strip card. Chart wins = art + grade/plate + score + the short caption; titles + folder
+    // clears are text cards. The full detail + song name ride a MudTooltip on hover (owner).
     private RenderFragment<SignificantWin> WinCard => win =>
         @<text>
             @if (win.ChartId is { } cid && _charts.TryGetValue(cid, out var c))
             {
-                <div class="dash-chart-card @(EditMode ? "" : "dash-clickable")"
-                     title="@($"{c.Song.Name} ({c.DifficultyString}) · {Caption(win)}")"
-                     @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(c))">
-                    <div class="dash-card-art">
-                        <img src="@c.Song.ImagePath" alt="@c.Song.Name" loading="lazy"/>
-                        <span class="dash-card-bubble"><DifficultyBubble Chart="c" Small="true"></DifficultyBubble></span>
-                    </div>
-                    <div class="dash-card-score">
-                        @if (win.Score is { } sc)
-                        {
-                            @if (win.Kind == WinKind.NotablePg)
+                <MudTooltip Text="@($"{c.Song.Name} ({c.DifficultyString}) · {Caption(win)}")" Arrow="true">
+                    <div class="dash-chart-card @(EditMode ? "" : "dash-clickable")"
+                         @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(c))">
+                        <div class="dash-card-art">
+                            <img src="@c.Song.ImagePath" alt="@c.Song.Name" loading="lazy"/>
+                            <span class="dash-card-bubble"><DifficultyBubble Chart="c" Small="true"></DifficultyBubble></span>
+                        </div>
+                        <div class="dash-card-score">
+                            @if (win.Score is { } sc)
                             {
-                                <ScoreBreakdown Plate="PhoenixPlate.PerfectGame" Height="14"/>
+                                @if (win.Kind == WinKind.NotablePg)
+                                {
+                                    <ScoreBreakdown Plate="PhoenixPlate.PerfectGame" Height="14"/>
+                                }
+                                else
+                                {
+                                    <LetterGradeIcon Grade="PhoenixScore.From(sc).LetterGrade" Height="14"/>
+                                }
+                                <span>@sc.ToString("N0")</span>
                             }
-                            else
-                            {
-                                <LetterGradeIcon Grade="PhoenixScore.From(sc).LetterGrade" Height="14"/>
-                            }
-                            <span>@sc.ToString("N0")</span>
-                        }
+                        </div>
+                        <div class="dash-card-detail dash-muted">@ShortCaption(win)</div>
                     </div>
-                    <div class="dash-card-detail dash-muted">@Caption(win)</div>
-                </div>
+                </MudTooltip>
             }
             else
             {
-                <div class="dash-chart-card dash-card-text" title="@NonChartTip(win)">
-                    <div class="dash-card-emoji">@(win.Kind == WinKind.FolderComplete ? "🎉" : "🏅")</div>
-                    <div class="dash-card-name">@(win.Kind == WinKind.FolderComplete ? win.Difficulty : Bracket(win.TitleName ?? ""))</div>
-                    @if (win.Kind != WinKind.FolderComplete)
-                    {
-                        <div class="dash-card-detail dash-muted">@TitleSuffix(win)</div>
-                    }
-                </div>
+                <MudTooltip Text="@NonChartTip(win)" Arrow="true">
+                    <div class="dash-chart-card dash-card-text">
+                        <div class="dash-card-emoji">@(win.Kind == WinKind.FolderComplete ? "🎉" : "🏅")</div>
+                        <div class="dash-card-name">@(win.Kind == WinKind.FolderComplete ? win.Difficulty : Bracket(win.TitleName ?? ""))</div>
+                        @if (win.Kind != WinKind.FolderComplete)
+                        {
+                            <div class="dash-card-detail dash-muted">@ShortTitleSub(win)</div>
+                        }
+                    </div>
+                </MudTooltip>
             }
         </text>;
 
