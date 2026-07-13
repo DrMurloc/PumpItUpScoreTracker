@@ -42,6 +42,11 @@
                         {
                             <UserLabel User="user"></UserLabel>
                         }
+                        @if (OfficialUserIds?.Contains(row.Entry.UserId) == true)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small"
+                                     Class="weekly-lb-verified" title="@L["Verified from official import"]"/>
+                        }
                     </span>
                     <ScoreBreakdown Score="row.Entry.Score" Plate="row.Entry.Plate"
                                     IsBroken="row.Entry.IsBroken" OneLine="true" ShowScore="true">
@@ -68,6 +73,12 @@
 
     /// <summary>Limbo Day inverts the board: passing runs only, lowest score first.</summary>
     [Parameter] public bool Ascending { get; set; }
+
+    /// <summary>
+    ///     Optional (Daily Step): user ids whose entry came from an official import — rendered with a
+    ///     verified badge so self-reported manual submissions are distinguishable. Weekly omits it.
+    /// </summary>
+    [Parameter] public IReadOnlySet<Guid>? OfficialUserIds { get; set; }
 
     private static readonly DialogOptions DialogSizing = new()
         { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseOnEscapeKey = true };

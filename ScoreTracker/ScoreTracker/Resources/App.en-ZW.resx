@@ -3342,4 +3342,10 @@
   <data name="No entry yet" xml:space="preserve">
     <value>No entry yet</value>
   </data>
+  <data name="Record" xml:space="preserve">
+    <value>Record</value>
+  </data>
+  <data name="Verified from official import" xml:space="preserve">
+    <value>Verified from official import</value>
+  </data>
 </root>

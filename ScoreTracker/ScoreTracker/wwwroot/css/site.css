@@ -2454,6 +2454,9 @@ html.nav-away .page-dock,
 }
 
 .dash-daily-yours {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-variant-numeric: tabular-nums;
 }
 
@@ -2463,6 +2466,22 @@ html.nav-away .page-dock,
     justify-content: space-between;
     gap: 8px;
     margin-top: auto;
+}
+
+/* Record popover — a manual daily-board submission (marked Manual), the only path to a
+   deliberate Limbo low-pass. Portaled by MudPopover, so it escapes the widget's clipping. */
+.dash-daily-record-anchor {
+    position: relative;
+    display: inline-flex;
+}
+
+.dash-daily-record {
+    min-width: 220px;
+}
+
+.weekly-lb-verified {
+    font-size: 0.9rem;
+    opacity: 0.75;
 }
 
 /* Weekly leaderboard dialog (round 3, option 1). */

@@ -3419,4 +3419,10 @@
   <data name="No entry yet" xml:space="preserve">
     <value>Ancora nessun tentativo</value>
   </data>
+  <data name="Record" xml:space="preserve">
+    <value>Registra</value>
+  </data>
+  <data name="Verified from official import" xml:space="preserve">
+    <value>Verificato dall'importazione ufficiale</value>
+  </data>
 </root>

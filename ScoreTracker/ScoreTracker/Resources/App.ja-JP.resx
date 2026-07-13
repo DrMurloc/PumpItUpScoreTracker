@@ -3420,4 +3420,10 @@
   <data name="No entry yet" xml:space="preserve">
     <value>まだ記録なし</value>
   </data>
+  <data name="Record" xml:space="preserve">
+    <value>記録</value>
+  </data>
+  <data name="Verified from official import" xml:space="preserve">
+    <value>公式インポートで確認済み</value>
+  </data>
 </root>

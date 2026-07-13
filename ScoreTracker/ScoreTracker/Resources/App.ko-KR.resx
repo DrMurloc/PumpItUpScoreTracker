@@ -3300,4 +3300,10 @@
   <data name="No entry yet" xml:space="preserve">
     <value>아직 기록 없음</value>
   </data>
+  <data name="Record" xml:space="preserve">
+    <value>기록</value>
+  </data>
+  <data name="Verified from official import" xml:space="preserve">
+    <value>공식 가져오기로 확인됨</value>
+  </data>
 </root>
