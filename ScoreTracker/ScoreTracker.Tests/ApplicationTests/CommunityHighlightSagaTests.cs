@@ -100,6 +100,21 @@ public sealed class CommunityHighlightSagaTests
     }
 
     [Fact]
+    public async Task CapturerWritesNothingForAnEmptyEvent()
+    {
+        var e = ScoreHighlightsCapturedEvent.Create(When, Guid.NewGuid(), MixEnum.Phoenix, sessionId: null,
+            Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>());
+
+        await Capturer().Capture(e, CancellationToken.None);
+
+        _charts.Verify(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
+            It.IsAny<IEnumerable<Guid>?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _highlights.Verify(h => h.AddForUserCommunities(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<IReadOnlyList<SignificantWin>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task SagaSwallowsCapturerFailuresSoImportsAreNeverDisrupted()
     {
         var capturer = new Mock<ICommunityHighlightCapturer>();

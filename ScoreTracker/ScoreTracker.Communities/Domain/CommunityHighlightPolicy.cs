@@ -58,19 +58,8 @@ internal static class CommunityHighlightPolicy
 
         foreach (var milestone in e.Milestones)
         {
-            // A full-folder clear (100% passed) rides its own milestone — Detail is the folder ("D23").
-            if (milestone.Kind == MilestoneKind.FolderPassLamp && milestone.Detail is { Length: > 0 } folder)
-            {
-                wins.Add((PriorityFolderComplete, new SignificantWin(WinKind.FolderComplete, Difficulty: folder)));
-                continue;
-            }
-
-            if (milestone.Kind != MilestoneKind.TitleCompleted || milestone.Title is null) continue;
-            var title = milestone.Title;
-            if (IsBigTitle(e.Mix, title))
-                wins.Add((PriorityBigTitle, new SignificantWin(WinKind.BigTitle, TitleName: title)));
-            else if (TitleShare(title, snapshot) is { } share && share < TitleRarityThreshold)
-                wins.Add((PriorityRareTitle, new SignificantWin(WinKind.RareTitle, TitleName: title, RarityShare: share)));
+            var win = ClassifyMilestone(milestone, e.Mix, snapshot);
+            if (win is not null) wins.Add(win.Value);
         }
 
         foreach (var change in e.Changes)
@@ -87,6 +76,23 @@ internal static class CommunityHighlightPolicy
             .Take(MaxWinsPerEvent)
             .Select(w => w.Win)
             .ToArray();
+    }
+
+    // A title completion or full-folder clear → its win. FolderPassLamp Detail is the folder ("D23");
+    // titles split into difficulty/pumbility "big" titles and sub-1%-held "rare" ones.
+    private static (int Priority, SignificantWin Win)? ClassifyMilestone(PlayerMilestoneRecord milestone,
+        MixEnum mix, RaritySnapshot snapshot)
+    {
+        if (milestone.Kind == MilestoneKind.FolderPassLamp && milestone.Detail is { Length: > 0 } folder)
+            return (PriorityFolderComplete, new SignificantWin(WinKind.FolderComplete, Difficulty: folder));
+
+        if (milestone.Kind != MilestoneKind.TitleCompleted || milestone.Title is null) return null;
+        var title = milestone.Title;
+        if (IsBigTitle(mix, title))
+            return (PriorityBigTitle, new SignificantWin(WinKind.BigTitle, TitleName: title));
+        if (TitleShare(title, snapshot) is { } share && share < TitleRarityThreshold)
+            return (PriorityRareTitle, new SignificantWin(WinKind.RareTitle, TitleName: title, RarityShare: share));
+        return null;
     }
 
     private static (int Priority, SignificantWin Win)? ClassifyChange(
