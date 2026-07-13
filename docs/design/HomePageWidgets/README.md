@@ -207,81 +207,12 @@ itself — they prove the registry, live-pull rendering, per-widget states, and 
 The one domain prerequisite (Projections v2 + history capture, §5) ships first as **PR #1**, so the
 Pumbility widget consumes finished contracts.
 
-### W1 — Competitive Level graph (data: PlayerProgress)
+Full specs now live in their own files (C0 split — each widget's spec is edited in isolation, so
+widget PRs stop colliding on this doc):
 
-- **Data**: `GetPlayerHistoryQuery(userId, mix)`, one call **per selected mix**. Live pull.
-- **Multi-mix (owner, 2026-07-12)**: Phoenix and Phoenix 2 are selectable **together** — P2 lines start
-  at 0 and climb (players enjoy the re-grind); Phoenix lines tell the pre-switch story. XX excluded.
-- **No Combined series** — removed as an option entirely (owner). Series = Singles / Doubles only,
-  per selected mix (max 4 lines).
-- **Series encoding**: color = chart type (`--chart-singles`/`--chart-doubles` from the active theme);
-  era = line *style* — current mix solid, the other mix dashed at reduced opacity. Style is a
-  CVD-independent channel, so four series stay separable with two hues.
-- **"Where you left off" marker**: when Phoenix is selected but all its points fall left of the visible
-  range (typical post-P2-switch), render left-edge ghost ticks at Phoenix's final Singles/Doubles values
-  with a small "Phoenix: S 20.4 · D 21.1" label — the regrind's reference line. Values are just the last
-  records of the Phoenix history call; no new query.
-- **Config v1**: mixes (multi-select: Phoenix / Phoenix 2; default = current mix); range
-  (3/6/12 months/all — default 6); series toggles (Singles / Doubles, both on).
-- **Sizes**: 2×1 (default), 2×2. No 1×1 — line charts need width; per-widget `SupportedSizes` exists
-  for exactly this.
-- **Render**: Blazor-ApexCharts (existing dependency; WSIP renders this chart today) with series colors
-  from the new `MixPalette` chart pair (§2.5). Legend + end-of-line labels; identity never color-alone.
-- **States**: < 2 history points in every selected mix → "Your level history starts tracking with your
-  next import." Error isolated.
-- **Mixes**: Phoenix, Phoenix 2 (multi).
-
-### W2 — Pumbility (data: PlayerProgress)
-
-- **Data**: `GetPlayerStatsQuery` → `SkillRating` (the merged top-50; + `SinglesRating`/`DoublesRating`
-  for the per-pool sub-line — note `SkillRating` is NOT their sum); `ProjectPumbilityGainsQuery` → `PumbilityProjection.ProjectedGains` → top entry(ies),
-  chart names via `ChartCatalogCache`. Live pull, queries fanned with `Task.WhenAll`.
-- **Config v1**: mix scope; show-projection toggle (default on); **dismissed-charts blacklist** (see below).
-- **Sizes**: 1×1 (big number + top next-best-gain line), 2×1 (adds S/D pool breakdown + a **scrollable**
-  target list — top ~15 by gain, inner scroll; never a hard snap to 3, players who are stuck on the top
-  suggestions need to see past them — owner, 2026-07-12).
-- **Target dismissal**: every target row carries a permanent-dismiss ✕ → chart id joins a blacklist in
-  the widget's config JSON; the widget filters `ProjectedGains` against it. The config panel manages the
-  list ("Dismissed charts (3) — restore"). Per-instance by design: your "Doubles push" Pumbility widget
-  can dismiss different charts than your singles one. Distinct from the suggester's veto/feedback system —
-  no feedback record, just personal noise control.
-- **States**: no scores → CTA to `/UploadPhoenixScores`. Error isolated.
-- **Mixes**: Phoenix, Phoenix 2 (additive formula live since PR #128; overall PUMBILITY corrected to a
-  merged top-50 on 2026-07-13 — it is not the two per-type pools summed).
-- **Data gap — sparkline/delta**: `PlayerRatingRecord` does **not** carry Pumbility, so there is no
-  trend source today. Archaeology (484e58ad, June 2024): the `PlayerHistory` table was *born* with
-  exactly today's columns — competitive levels, co-op rating, pass count — and has only ever fed the
-  Competitive Level graph. Pumbility was never persisted; nothing was dropped in the vertical
-  extraction. However `PlayerRatingsImprovedEvent` already carries `NewTop50` and `PlayerHistorySaga`
-  simply doesn't persist it. **Capture lands in PR #1** (owner: "get that PR in first and I'll push it
-  quick"): `SkillRating` on the history entity + record + saga mapping + migration — forward-only data;
-  the widget renders its sparkline/weekly-delta conditionally once ≥ 2 points exist ("trend starts
-  tracking from today" until then). Implementation note: `NewTop50` is the overall PUMBILITY
-  (`SkillRating`, the merged top-50) — map it straight through. Optional backfill: Pumbility-as-of-date is reconstructible from the
-  ScoreLedger journal, but only back to journal capture start (weeks) — likely not worth a job.
-- **Projected targets consume Projections v2 (PR #1) from day one** — the merged P2 baseline (one mixed
-  top-50, corrected 2026-07-13), skill-match chips, the plate curve. The widget's stats/pools render from `GetPlayerStatsQuery` regardless, and
-  insufficient-data degradation stays (per-widget degradation, D14).
-
-### W3 — Weekly Challenge (data: WeeklyChallenge)
-
-- **Data**: `GetWeeklyChartsQuery(mix)` → `WeeklyTournamentChart(ChartId, ExpirationDate)` —
-  **expiration is per chart** (staggered rotation, not one board reset; the mock's single countdown was
-  a simplification). `GetWeeklyChartEntriesQuery(mix)` → my entries **and** per-chart entrant totals;
-  `GetUserWeeklyPlacementsQuery(userId, mix, chartIds)` → `(ChartId, Place)`. Percentile =
-  `1 − place/total` → `ThemeScales.RarityStyle` (never hand-rolled bands). Live pull.
-- **Config v1**: mix scope (boards are parallel per mix); **board filter mode** (owner, 2026-07-12):
-  - **Match my range** (default) — reuses `WeeklyChartSuggestionPolicy.GetSuggestedCharts`, the exact
-    logic behind the WeeklyCharts page's competitive filter (including its "only when both competitive
-    levels ≥ 10" auto-enable; below that, fall back to all charts).
-  - **Custom preset** — a filter the player wants every week: chart types (S/D/co-op), level range,
-    and it applies to every future board without re-configuring.
-  - **All charts** — the whole board.
-- **Sizes**: 1×1 compact (name + placement rows, soonest expiry as "Next rotation in …"), 2×1 (art
-  cards, `ScoreBreakdown` of my entry, per-chart expiry chips, link to `/WeeklyCharts`).
-- **States**: board gap → "New board soon." Unplayed charts are content, not emptiness (muted "—").
-  Error isolated.
-- **Mixes**: per board availability.
+- **W1 — Competitive Level graph** → [competitive-level.md](competitive-level.md)
+- **W2 — Account Stats** (TypeId `pumbility`) → [pumbility.md](pumbility.md) (consumes the Projections v2 work in §5)
+- **W3 — Weekly Challenge** → [weekly-challenge.md](weekly-challenge.md)
 
 ### PR #2 (shell) commit plan
 
@@ -307,7 +238,7 @@ Readiness: ✅ published contract already serves it · 🔨 needs new data/query
 
 | Vertical | Widget | Ready | Note |
 |---|---|---|---|
-| PlayerProgress | Suggested Charts | ✅ | **SHIPPED — catalog-walk pick 1** (spec §4.1) |
+| PlayerProgress | Suggested Charts | ✅ | **SHIPPED — catalog-walk pick 1** (spec [suggested-charts.md](suggested-charts.md)) |
 | PlayerProgress | Title Progress | ✅ | pushing title + remaining-charts math from WSIP |
 | PlayerProgress | Stats snapshot | ✅ | competitive levels block (Pumbility has its own widget) |
 | PlayerProgress | Recent Highlights | ✅ | `GetScoreHighlightsQuery` — the Discord-card engine, on the home page |
@@ -320,6 +251,7 @@ Readiness: ✅ published contract already serves it · 🔨 needs new data/query
 | ScoreLedger | On the bubble | 🔨 | near-miss grades/plates ("18,797 from AAA+"); compute from records |
 | ScoreLedger | Activity heatmap | 🔨 | calendar of play days from the journal |
 | ScoreLedger | Mix Migration | ✅ | D11 — own widget; `GetCrossMixPassesQuery`; featured at P2 launch |
+| ScoreLedger | By-Level Breakdown | ✅ | **BUILT (C0–C7)** — one configurable per-level graph (spec [by-level-breakdown.md](by-level-breakdown.md)) |
 | ChartIntelligence | Tier-list folder peek | ✅ | 28% of traffic deserves a home-page hook |
 | ChartIntelligence | Next breaks | ✅ | closest-to-passing from tier data |
 | ChartIntelligence | Vote prompt | 🔨 | "you played X — rate it"; community-rating engagement |
@@ -330,8 +262,8 @@ Readiness: ✅ published contract already serves it · 🔨 needs new data/query
 | OfficialMirror | Import nudge | ✅ | "last sync 9 days ago" + one-tap re-import; upload is the #2 page |
 | OfficialMirror | Benchmark player | 🔮 | rivals-lite on mirror data; decided during the catalog walk (D18), rival machinery stays out until the Rivals project |
 | WeeklyChallenge | Weekly Challenge | ✅ | shell trio (W3) |
-| WeeklyChallenge | Daily Step | ✅ | D12 — shipped: per-mix daily board + Limbo Day + widget ([docs/design/daily-step.md](daily-step.md)) |
-| OfficialMirror | Import Scores | ✅ | **BUILT** — 1x1 credentialed import (background job + remembered password, [import-widget-remember-password.md](import-widget-remember-password.md)); XX/older route to the spreadsheet upload |
+| WeeklyChallenge | Daily Step | ✅ | D12 — shipped: per-mix daily board + Limbo Day + widget ([daily-step.md](../daily-step.md)) |
+| OfficialMirror | Import Scores | ✅ | **BUILT** — 1x1 credentialed import (background job + remembered password, [import-widget-remember-password.md](../import-widget-remember-password.md)); XX/older route to the spreadsheet upload |
 | WeeklyChallenge | Per-player daily challenge | 🔮 | owner has plans — separate concept from Daily Step; its own future session (D12/D18) |
 | EventCompetition | Active tournaments | ⏸ | HELD (D8) |
 | EventCompetition | Qualifiers countdown | ⏸ | HELD (D8) |
@@ -344,45 +276,7 @@ Standing rules: folder-completion widgets frame as **self-progress, never peer c
 rarity/difficulty coloring only ever via `ThemeScales`; every chart row carries the standard card
 affordances (video / record / todo) as shared components.
 
-### 4.1 Suggested Charts (catalog-walk pick 1 — the WSIP release blocker)
-
-One widget type, goal as config (D10). Owner decisions (2026-07-12): goal bundles with per-category
-toggles; the deviation-powered **skill-gaps goal is HELD** pending owner iteration; **veto ✕ is
-edit-mode only** (declutters browse — revisit if people complain); level config = **Any / Dynamic
-(competitive level ± spread, follows the player) / Static (pinned range)** with a **chart-level vs
-scoring-level basis** toggle (`GetChartScoringLevelsQuery`, printed-level fallback); **shuffle**
-re-roll in the body meta row. The page's vestigial `LevelOffset` UI is superseded by the level modes.
-
-- **Goal bundles** (`SuggestedGoal` → engine categories): *Title Hunt* = PushLevel + SkillTitles ·
-  *Score Push* = PushPGs + ImproveTop50 + RevisitOldScores · *Fill Gaps* = FillScores. The Weekly
-  category is dropped from the widget — the Weekly widget owns that board. Defaults per drawer preset:
-  Score Push = Any level; Fill Gaps = Dynamic ±3.
-- **Engine** (`RecommendedChartsSaga`): `GetRecommendedChartsQuery` gained additive `Categories` +
-  `RecommendationLevelWindow` params — null = legacy, the WSIP page is untouched until cutover.
-  An explicit window REPLACES the legacy per-category bands (fills CL−3..CL−1, old scores CL−2..CL)
-  and filters the previously unbounded PG/Top-50 categories; title-driven categories ignore it.
-  Category names live in `RecommendationCategories` consts (the pushing-title category's name is the
-  title's own name).
-- **Rendering** (through field-test rounds 2–3): wide sizes (columns > 1) render **horizontal card
-  strips** — compact art-forward chart cards with hover-revealed pager arrows (delegated clicks in
-  `dashboard-grid.js`, hidden on touch) and honest x-axis edge fades; 2x1 = one merged strip, 2x2 = a
-  captioned strip per section. The tall 1x2 keeps `dash-targets` rows but **drops the song name**
-  (art tooltip + details dialog carry it) — right column = `LetterGradeIcon` + score with per-category
-  detail ("−1,656 to PG", "74 days old"). Fill Gaps rows never show scores (unpassed by definition);
-  an optional **tier-list difficulty lens** (Pass/Score, `GetBlendedTierListQuery`, optional
-  Personalized blend) fills the column instead, colored via `ThemeScales.DifficultyColor`. Dynamic
-  level spreads are **asymmetric** (levels below / levels above). Instance titles follow the
-  configured goal via `WidgetDescriptor.DynamicNameKey` so three rapid-fired presets wear distinct
-  names. Sizes 1x2 / 2x1 / 2x2, default 1x2.
-- **Feedback**: veto ✕ (edit mode) → WSIP's reason dialog (reason/notes/hide, hide default-on) →
-  `SubmitFeedbackCommand` into the same per-category server-side store the engine already honors —
-  deliberately NOT widget config. Thumbs-up = one-tap **Good Suggestion** in the shared
-  ChartDetailsDialog, unlocked when the row click carries a suggestion category.
-- **Shell extensions this widget introduced**: `WidgetDescriptor.DrawerPresets` (one add-drawer card
-  per pre-filled config, D10) and `ChartClickContext` (the OnChartClick payload — chart + optional
-  suggestion category; all widgets raise it).
-- **Phoenix 2**: supported; the 272 P2 titles (PR #128) should light Title Hunt up — verify at field
-  test, the old page-level P2 gate stays dead (D14).
+### 4.1 Suggested Charts → [suggested-charts.md](suggested-charts.md)
 
 ### 4.2 Quick Record (catalog-walk pick — the arcade widget)
 
@@ -474,7 +368,7 @@ Bundled with the SkillRating history capture into one small PR the owner merges 
 accruing immediately, and v2 goes live on the existing `/Pumbility` page (including enabling Phoenix 2
 there) before the widget exists.
 
-**Current algorithm** ([PumbilityProjectionSaga](../../ScoreTracker/ScoreTracker.PlayerProgress/Application/PumbilityProjectionSaga.cs)):
+**Current algorithm** ([PumbilityProjectionSaga](../../../ScoreTracker/ScoreTracker.PlayerProgress/Application/PumbilityProjectionSaga.cs)):
 cohort = players within ±1 competitive level per chart type; my expected score on a candidate chart =
 cohort score distribution interpolated at my average percentile across played charts in that (type, level)
 slice (×0.95 damping); expected pumbility assumes an EG plate; gains measured against the lowest of ONE

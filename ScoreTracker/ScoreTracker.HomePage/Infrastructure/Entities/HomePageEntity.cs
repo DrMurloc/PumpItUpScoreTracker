@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ScoreTracker.HomePage.Infrastructure.Entities;
 
 /// <summary>
-///     One of a user's dashboard pages (docs/design/home-page-widgets.md §2.1). Ordinal
+///     One of a user's dashboard pages (docs/design/HomePageWidgets/README.md §2.1). Ordinal
 ///     is the tab order; DefaultMixId is the page-level mix context widgets inherit
 ///     (D13: widget override → page default → current mix), null = follow current mix.
 /// </summary>

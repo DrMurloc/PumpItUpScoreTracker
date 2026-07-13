@@ -176,7 +176,7 @@ namespace ScoreTracker.PlayerProgress.Application
         private const double SkillDamping = 0.5;
 
         /// <summary>
-        ///     Skill-weights each expected score (docs/design/home-page-widgets.md §5):
+        ///     Skill-weights each expected score (docs/design/HomePageWidgets/README.md §5):
         ///     a chart's banked skill chips pull its projection toward the player's
         ///     per-skill deviations (GetPlayerSkillDeviationsQuery — the tier-list
         ///     competence machinery). Mutates <paramref name="expectedScore" /> and

@@ -1,0 +1,82 @@
+@using MediatR
+@using ScoreTracker.Communities.Contracts.Queries
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.HomeDashboard
+
+<MudSelect T="MixEnum?" @bind-Value="_mix" Label="@L["Mix"]" Class="mb-3">
+    <MudSelectItem T="MixEnum?" Value="null">@L["Follow current mix"]</MudSelectItem>
+    <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix">Phoenix</MudSelectItem>
+    <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix2">Phoenix 2</MudSelectItem>
+</MudSelect>
+
+<MudText Typo="Typo.caption" Class="mb-1">@L["Communities to include"]</MudText>
+@if (_myCommunities == null)
+{
+    <MudProgressCircular Indeterminate="true" Size="Size.Small"/>
+}
+else if (!_myCommunities.Any())
+{
+    <MudText Typo="Typo.body2" Class="mb-2 dash-muted">@L["Join a community to use this widget."]</MudText>
+}
+else
+{
+    @foreach (var community in _myCommunities)
+    {
+        var name = community.CommunityName.ToString();
+        <MudCheckBox T="bool" Value="@_selected.Contains(name)" ValueChanged="@(v => Toggle(name, v))"
+                     Label="@name" Dense="true"/>
+    }
+    <MudText Typo="Typo.caption" Class="dash-muted">
+        @L["Leave all unchecked to follow your non-regional communities."]
+    </MudText>
+}
+
+<MudSwitch T="bool" @bind-Value="_includeOwnWins" Label="@L["Include my own wins"]" Color="Color.Primary" Class="mt-2"/>
+
+<div class="d-flex justify-end gap-2 mt-4">
+    <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">@L["Save"]</MudButton>
+</div>
+
+@inject IMediator Mediator
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public EventCallback<(string ConfigJson, int ConfigVersion)> OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private MixEnum? _mix;
+    private bool _includeOwnWins = true;
+    private readonly HashSet<string> _selected = new();
+    private List<CommunityOverviewRecord>? _myCommunities;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var config = WidgetConfigJson.Read<CommunityHighlightsConfig>(Widget.ConfigJson);
+        _mix = config.Mix;
+        _includeOwnWins = config.IncludeOwnWins;
+        foreach (var community in config.Communities) _selected.Add(community);
+        _myCommunities = (await Mediator.Send(new GetMyCommunitiesQuery())).ToList();
+    }
+
+    private void Toggle(string name, bool on)
+    {
+        if (on) _selected.Add(name);
+        else _selected.Remove(name);
+    }
+
+    private async Task Save()
+    {
+        var config = new CommunityHighlightsConfig
+        {
+            Mix = _mix,
+            Communities = _selected.ToList(),
+            IncludeOwnWins = _includeOwnWins
+        };
+        await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
+    }
+
+}

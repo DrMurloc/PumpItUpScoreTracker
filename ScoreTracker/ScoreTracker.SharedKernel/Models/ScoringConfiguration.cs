@@ -259,7 +259,7 @@ namespace ScoreTracker.SharedKernel.Models
         ///     emits them. Used by the PUMBILITY projection for unplayed charts;
         ///     deliberately not an exact science — recalibrate per mix once its plate
         ///     data accumulates (same query, new constants;
-        ///     docs/design/home-page-widgets.md §5).
+        ///     docs/design/HomePageWidgets/README.md §5).
         /// </summary>
         public static PhoenixPlate ExpectedPlateForScore(PhoenixScore score)
         {

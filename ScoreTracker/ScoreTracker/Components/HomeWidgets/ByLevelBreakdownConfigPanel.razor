@@ -1,0 +1,365 @@
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.HomeDashboard
+
+@* Config contract (C4): receives Widget + OnSave/OnCancel; the page persists. The form is
+   adaptive — the chosen mix restricts the metrics, the metric restricts the aggregations,
+   and only the relevant aggregation controls show. *@
+
+<MudSelect T="MixEnum?" Value="_mix" ValueChanged="SetMix" Label="@L["Mix"]" Dense="true"
+           Variant="Variant.Outlined" Margin="Margin.Dense">
+    <MudSelectItem T="MixEnum?" Value="@((MixEnum?)null)">@L["Follow current mix"]</MudSelectItem>
+    @foreach (var mix in Mixes)
+    {
+        <MudSelectItem T="MixEnum?" Value="@mix">@mix.GetName()</MudSelectItem>
+    }
+</MudSelect>
+
+<MudSelect T="BreakdownChartScope" Value="_scope" ValueChanged="SetScope" Label="@L["Charts"]" Dense="true"
+           Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-3">
+    <MudSelectItem T="BreakdownChartScope" Value="BreakdownChartScope.SinglesDoubles">@L["Singles + Doubles"]</MudSelectItem>
+    <MudSelectItem T="BreakdownChartScope" Value="BreakdownChartScope.Singles">@L["Singles"]</MudSelectItem>
+    <MudSelectItem T="BreakdownChartScope" Value="BreakdownChartScope.Doubles">@L["Doubles"]</MudSelectItem>
+    <MudSelectItem T="BreakdownChartScope" Value="BreakdownChartScope.CoOp">@L["Co-Op"]</MudSelectItem>
+</MudSelect>
+
+@if (_scope == BreakdownChartScope.CoOp)
+{
+    <LevelRangeSlider Label="@L["Players"]" Prefix="P" Min="2" Max="5"
+                      ValueMin="_minPlayers" ValueMax="_maxPlayers"
+                      ValueMinChanged="v => _minPlayers = v" ValueMaxChanged="v => _maxPlayers = v"/>
+}
+else
+{
+    <LevelRangeSlider Label="@L["Level"]" Prefix="" Min="MinLevel" Max="MaxLevel"
+                      ValueMin="_minLevel" ValueMax="_maxLevel"
+                      ValueMinChanged="v => _minLevel = v" ValueMaxChanged="v => _maxLevel = v"/>
+    @if (_scope == BreakdownChartScope.SinglesDoubles && _aggregation == BreakdownAggregation.Distribution)
+    {
+        <MudCheckBox T="bool" @bind-Value="_separate" Label="@L["Show Singles & Doubles as separate data"]" Dense="true"/>
+    }
+}
+
+<MudSelect T="BreakdownMetric" Value="_metric" ValueChanged="SetMetric" Label="@L["Metric"]" Dense="true"
+           Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-3">
+    @foreach (var metric in AvailableMetrics)
+    {
+        <MudSelectItem T="BreakdownMetric" Value="@metric">@MetricLabel(metric)</MudSelectItem>
+    }
+</MudSelect>
+@if (LegacyMix)
+{
+    <MudText Typo="Typo.caption" Color="Color.Warning">
+        @L["This mix isn't score-normalized — only Letter Grade & Pass are available."]
+    </MudText>
+}
+
+<MudSelect T="BreakdownAggregation" Value="_aggregation" ValueChanged="SetAggregation" Label="@L["Aggregation"]"
+           Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-3">
+    @foreach (var agg in AvailableAggregations)
+    {
+        <MudSelectItem T="BreakdownAggregation" Value="@agg">@AggregationLabel(agg)</MudSelectItem>
+    }
+</MudSelect>
+
+@if (_aggregation == BreakdownAggregation.Distribution)
+{
+    @if (SeparateActive)
+    {
+        @* Separated S/D shows one thing per type — a single stat line, or a shaded range band. *@
+        <MudSelect T="SeparateDisplay" @bind-Value="_separateDisplay" Label="@L["Show per type"]" Dense="true"
+                   Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-3">
+            <MudSelectItem T="SeparateDisplay" Value="SeparateDisplay.Median">@L["Median"]</MudSelectItem>
+            <MudSelectItem T="SeparateDisplay" Value="SeparateDisplay.Average">@L["Avg"]</MudSelectItem>
+            <MudSelectItem T="SeparateDisplay" Value="SeparateDisplay.Min">@L["Min"]</MudSelectItem>
+            <MudSelectItem T="SeparateDisplay" Value="SeparateDisplay.Max">@L["Max"]</MudSelectItem>
+            <MudSelectItem T="SeparateDisplay" Value="SeparateDisplay.RangeIqr">@L["Shaded range: IQR (P25–P75)"]</MudSelectItem>
+            <MudSelectItem T="SeparateDisplay" Value="SeparateDisplay.RangeMinMax">@L["Shaded range: Min–Max"]</MudSelectItem>
+            <MudSelectItem T="SeparateDisplay" Value="SeparateDisplay.RangeStdDev">@L["Shaded range: ±1σ"]</MudSelectItem>
+        </MudSelect>
+    }
+    else
+    {
+        <MudText Typo="Typo.subtitle2" Class="mt-3">@L["Series"]</MudText>
+        <div class="d-flex flex-wrap">
+            @foreach (var s in AvailableSeries)
+            {
+                <MudCheckBox T="bool" Value="_series.Contains(s)" ValueChanged="v => ToggleSeries(s, v)"
+                             Label="@SeriesLabel(s)" Dense="true"/>
+            }
+        </div>
+        @if (ContinuousMetric)
+        {
+            <div class="d-flex align-center gap-2 mt-1">
+                <MudNumericField T="int?" @bind-Value="_pctInput" Label="@L["Percentile"]" Placeholder="1–99" Min="1"
+                                 Max="99" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true"
+                                 Style="max-width:120px"/>
+                <MudButton Size="Size.Small" OnClick="AddPercentile">@L["Add"]</MudButton>
+            </div>
+            <div class="d-flex flex-wrap gap-1 mt-1">
+                @foreach (var p in _customPercentiles)
+                {
+                    <MudChip T="string" Size="Size.Small" OnClose="() => _customPercentiles.Remove(p)">P@(p)</MudChip>
+                }
+            </div>
+            <MudSelect T="BreakdownBand" @bind-Value="_band" Label="@L["Shade band"]" Dense="true"
+                       Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2">
+                <MudSelectItem T="BreakdownBand" Value="BreakdownBand.None">@L["None"]</MudSelectItem>
+                <MudSelectItem T="BreakdownBand" Value="BreakdownBand.InterQuartile">P25 – P75</MudSelectItem>
+                <MudSelectItem T="BreakdownBand" Value="BreakdownBand.MinMax">@L["Min"] – @L["Max"]</MudSelectItem>
+                <MudSelectItem T="BreakdownBand" Value="BreakdownBand.StdDev">@L["Avg"] ± 1σ</MudSelectItem>
+            </MudSelect>
+        }
+    }
+}
+else if (_aggregation == BreakdownAggregation.Breakdown)
+{
+    <MudCheckBox T="bool" @bind-Value="_normalize" Label="@L["Normalize to 100%"]" Dense="true" Class="mt-2"/>
+    @if (_metric != BreakdownMetric.Pass)
+    {
+        <MudCheckBox T="bool" @bind-Value="_includeUnplayed" Label="@L["Include an unplayed segment"]" Dense="true"/>
+    }
+}
+else
+{
+    <MudText Typo="Typo.subtitle2" Class="mt-3">@L["Thresholds — each becomes a line"]</MudText>
+    @if (_metric == BreakdownMetric.Pass)
+    {
+        <MudChip T="string" Size="Size.Small" Color="Color.Success">@L["Passed"]</MudChip>
+    }
+    else
+    {
+        <div class="d-flex flex-wrap gap-1 mb-1">
+            @foreach (var t in _thresholds)
+            {
+                <MudChip T="string" Size="Size.Small" OnClose="() => _thresholds.Remove(t)">@ThresholdLabel(t)</MudChip>
+            }
+        </div>
+        <div class="d-flex align-center gap-2">
+            @if (_metric == BreakdownMetric.Score)
+            {
+                <MudNumericField T="int?" @bind-Value="_scoreInput" Label="@L["Score"]" Min="0" Max="1000000" Step="1000"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true" Style="max-width:150px"/>
+            }
+            else if (_metric == BreakdownMetric.ChartAge)
+            {
+                <MudNumericField T="int?" @bind-Value="_ageInput" Label="@L["Within days"]" Min="1" Max="3650" Step="7"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true" Style="max-width:150px"/>
+            }
+            else
+            {
+                <MudSelect T="string" @bind-Value="_ordinalInput" Label="@L["At least"]" Dense="true"
+                           Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:150px">
+                    @foreach (var name in OrdinalThresholdOptions)
+                    {
+                        <MudSelectItem T="string" Value="@name">@name</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            <MudButton Size="Size.Small" OnClick="AddThreshold">@L["Add"]</MudButton>
+        </div>
+    }
+}
+
+<div class="d-flex justify-end gap-2 mt-4">
+    <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">@L["Save"]</MudButton>
+</div>
+
+@code {
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public EventCallback<(string ConfigJson, int ConfigVersion)> OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private static int MinLevel => (int)DifficultyLevel.Min;
+    private static int MaxLevel => (int)DifficultyLevel.Max;
+
+    private static IEnumerable<MixEnum> Mixes =>
+        Enum.GetValues<MixEnum>().OrderByDescending(m => m.DisplayOrder());
+
+    private MixEnum? _mix;
+    private BreakdownChartScope _scope = BreakdownChartScope.SinglesDoubles;
+    private bool _separate = true;
+    private SeparateDisplay _separateDisplay = SeparateDisplay.Median;
+    private int _minLevel = 17;
+    private int _maxLevel = 23;
+    private int _minPlayers = 2;
+    private int _maxPlayers = 5;
+    private BreakdownMetric _metric = BreakdownMetric.Score;
+    private BreakdownAggregation _aggregation = BreakdownAggregation.Distribution;
+    private readonly HashSet<DistributionSeries> _series = new();
+    private readonly List<int> _customPercentiles = new();
+    private BreakdownBand _band = BreakdownBand.None;
+    private bool _normalize;
+    private bool _includeUnplayed = true;
+    private readonly List<CompletionThreshold> _thresholds = new();
+    private int? _pctInput;
+    private int? _scoreInput = 990000;
+    private int? _ageInput = 30;
+    private string? _ordinalInput;
+
+    private bool LegacyMix => _mix.HasValue && _mix.Value.UsesLegacyScoring();
+
+    // The separate S/D display (single stat vs shaded range) only applies to the Singles+Doubles scope.
+    private bool SeparateActive => _scope == BreakdownChartScope.SinglesDoubles && _separate;
+
+    // Score and Chart Age are continuous → full percentile series + a shaded band; grades/plates
+    // are ordinal (a fixed ladder), Pass is binary.
+    private bool ContinuousMetric => _metric is BreakdownMetric.Score or BreakdownMetric.ChartAge;
+
+    private IReadOnlyList<BreakdownMetric> AvailableMetrics => ByLevelConfigRules.MetricsFor(_mix);
+
+    private IReadOnlyList<BreakdownAggregation> AvailableAggregations => ByLevelConfigRules.AggregationsFor(_metric);
+
+    private static readonly DistributionSeries[] OrdinalSeries =
+        { DistributionSeries.Min, DistributionSeries.Average, DistributionSeries.Max };
+
+    private IReadOnlyList<DistributionSeries> AvailableSeries =>
+        ContinuousMetric ? Enum.GetValues<DistributionSeries>() : OrdinalSeries;
+
+    private IEnumerable<string> OrdinalThresholdOptions =>
+        ByLevelDataSource.ScalesFor(_mix ?? MixEnum.Phoenix2) is var scales && _metric == BreakdownMetric.Plate
+            ? scales.PlateNames
+            : scales.GradeNames;
+
+    protected override void OnParametersSet()
+    {
+        var config = WidgetConfigJson.Read<ByLevelBreakdownConfig>(Widget.ConfigJson);
+        _mix = config.Mix;
+        _scope = config.Scope;
+        _separate = config.SeparateSinglesDoubles;
+        _separateDisplay = config.SeparateDisplay;
+        _minLevel = config.MinLevel;
+        _maxLevel = config.MaxLevel;
+        _minPlayers = config.MinPlayers;
+        _maxPlayers = config.MaxPlayers;
+        _metric = config.Metric;
+        _aggregation = config.Aggregation;
+        _series.Clear();
+        foreach (var s in config.Series) _series.Add(s);
+        _customPercentiles.Clear();
+        _customPercentiles.AddRange(config.CustomPercentiles);
+        _band = config.Band;
+        _normalize = config.Normalize;
+        _includeUnplayed = config.IncludeUnplayed;
+        _thresholds.Clear();
+        _thresholds.AddRange(config.Thresholds);
+        Coerce();
+    }
+
+    private void SetMix(MixEnum? mix)
+    {
+        _mix = mix;
+        Coerce();
+    }
+
+    private void SetScope(BreakdownChartScope scope)
+    {
+        _scope = scope;
+    }
+
+    private void SetMetric(BreakdownMetric metric)
+    {
+        _metric = metric;
+        Coerce();
+    }
+
+    private void SetAggregation(BreakdownAggregation aggregation)
+    {
+        _aggregation = aggregation;
+    }
+
+    // Keep metric/aggregation valid for the current mix, and seed sensible series defaults.
+    private void Coerce()
+    {
+        if (!AvailableMetrics.Contains(_metric)) _metric = AvailableMetrics[0];
+        if (!AvailableAggregations.Contains(_aggregation)) _aggregation = AvailableAggregations[0];
+        if (_series.Count == 0)
+            foreach (var s in new[] { DistributionSeries.P25, DistributionSeries.Median, DistributionSeries.P75 })
+                _series.Add(s);
+    }
+
+    private void ToggleSeries(DistributionSeries s, bool on)
+    {
+        if (on) _series.Add(s);
+        else _series.Remove(s);
+    }
+
+    private void AddPercentile()
+    {
+        if (_pctInput is >= 1 and <= 99 && !_customPercentiles.Contains(_pctInput.Value))
+            _customPercentiles.Add(_pctInput.Value);
+        _pctInput = null;
+    }
+
+    private void AddThreshold()
+    {
+        if (_thresholds.Count >= 6) return;
+        if (_metric == BreakdownMetric.Score && _scoreInput is >= 0 and <= 1000000)
+            _thresholds.Add(new CompletionThreshold { Kind = ThresholdKind.Score, Value = _scoreInput.Value.ToString() });
+        else if (_metric == BreakdownMetric.ChartAge && _ageInput is >= 1 and <= 3650)
+            _thresholds.Add(new CompletionThreshold { Kind = ThresholdKind.Age, Value = _ageInput.Value.ToString() });
+        else if (_metric == BreakdownMetric.LetterGrade && _ordinalInput != null)
+            _thresholds.Add(new CompletionThreshold { Kind = ThresholdKind.Grade, Value = _ordinalInput });
+        else if (_metric == BreakdownMetric.Plate && _ordinalInput != null)
+            _thresholds.Add(new CompletionThreshold { Kind = ThresholdKind.Plate, Value = _ordinalInput });
+    }
+
+    private async Task Save()
+    {
+        var config = new ByLevelBreakdownConfig
+        {
+            Mix = _mix,
+            Scope = _scope,
+            SeparateSinglesDoubles = _separate,
+            SeparateDisplay = _separateDisplay,
+            MinLevel = _minLevel,
+            MaxLevel = _maxLevel,
+            MinPlayers = _minPlayers,
+            MaxPlayers = _maxPlayers,
+            Metric = _metric,
+            Aggregation = _aggregation,
+            Series = Enum.GetValues<DistributionSeries>().Where(_series.Contains).ToList(),
+            CustomPercentiles = _customPercentiles.OrderBy(p => p).ToList(),
+            Band = _band,
+            Normalize = _normalize,
+            IncludeUnplayed = _includeUnplayed,
+            Thresholds = _thresholds.ToList()
+        };
+        await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
+    }
+
+    private string MetricLabel(BreakdownMetric metric) => metric switch
+    {
+        BreakdownMetric.Score => L["Score"],
+        BreakdownMetric.LetterGrade => L["Letter Grade"],
+        BreakdownMetric.Plate => L["Plate"],
+        BreakdownMetric.ChartAge => L["Chart Age"],
+        _ => L["Pass"]
+    };
+
+    private string AggregationLabel(BreakdownAggregation agg) => agg switch
+    {
+        BreakdownAggregation.Distribution => L["Distribution"],
+        BreakdownAggregation.Breakdown => L["Breakdown"],
+        _ => L["Completion %"]
+    };
+
+    private string SeriesLabel(DistributionSeries s) => s switch
+    {
+        DistributionSeries.Average => L["Avg"],
+        DistributionSeries.MinusSigma => "−1σ",
+        DistributionSeries.PlusSigma => "+1σ",
+        _ => s.ToString()
+    };
+
+    private string ThresholdLabel(CompletionThreshold t) => t.Kind switch
+    {
+        ThresholdKind.Score => int.TryParse(t.Value, out var v) ? $"≥ {v:N0}" : "≥ ?",
+        ThresholdKind.Age => int.TryParse(t.Value, out var d) ? $"≤ {d} days" : "≤ ?",
+        _ => $"≥ {t.Value}"
+    };
+
+}

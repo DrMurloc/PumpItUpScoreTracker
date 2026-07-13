@@ -18,7 +18,10 @@ public enum SuggestedGoal
     ScorePush,
 
     /// <summary>Approachable unpassed charts around (default: below) your level.</summary>
-    FillGaps
+    FillGaps,
+
+    /// <summary>The projected-Pumbility targets, ranked by the rating each chart would add.</summary>
+    PumbilityPush
 }
 
 public enum SuggestedLevelMode
@@ -94,6 +97,7 @@ public static class SuggestedGoals
                 RecommendationCategory.RevisitOldScores
             },
             SuggestedGoal.FillGaps => new[] { RecommendationCategory.FillScores },
+            SuggestedGoal.PumbilityPush => new[] { RecommendationCategory.PushPumbility },
             _ => new[] { RecommendationCategory.PushLevel, RecommendationCategory.SkillTitles }
         };
     }

@@ -265,7 +265,8 @@ else
                 _sections.Add(new SuggestionSection(
                     name,
                     known != null ? L[name].Value : name,
-                    items.Select(r => BuildRow(category, charts[r.ChartId], scores.GetValueOrDefault(r.ChartId)))
+                    items.Select(r => BuildRow(category, charts[r.ChartId], scores.GetValueOrDefault(r.ChartId),
+                            r.ChartDetails))
                         .ToList()));
         }
 
@@ -351,7 +352,8 @@ else
 
     private readonly Dictionary<Guid, TierListCategory> _lensTiers = new();
 
-    private SuggestionRow BuildRow(RecommendationCategory category, Chart chart, RecordedPhoenixScore? score)
+    private SuggestionRow BuildRow(RecommendationCategory category, Chart chart, RecordedPhoenixScore? score,
+        string stampedDetail)
     {
         var detail = category switch
         {
@@ -359,6 +361,8 @@ else
                 L["{0} to PG", (1000000 - (int)score.Score.Value).ToString("N0")].Value,
             RecommendationCategory.RevisitOldScores when score != null =>
                 L["{0} days old", (int)(Clock.Now - score.RecordedDate).TotalDays].Value,
+            // The engine ranks these and stamps the projected "+N" gain onto the row.
+            RecommendationCategory.PushPumbility => stampedDetail,
             _ => null
         };
         var isFill = category == RecommendationCategory.FillScores;
@@ -386,7 +390,8 @@ else
     {
         RecommendationCategories.SkillTitles, RecommendationCategories.PushPGs,
         RecommendationCategories.ImproveTop50, RecommendationCategories.RevisitOldScores,
-        RecommendationCategories.FillScores, RecommendationCategories.WeeklyCharts
+        RecommendationCategories.FillScores, RecommendationCategories.WeeklyCharts,
+        RecommendationCategories.PushPumbility
     };
 
     private static string? CategoryName(RecommendationCategory category)
@@ -399,6 +404,7 @@ else
             RecommendationCategory.RevisitOldScores => RecommendationCategories.RevisitOldScores,
             RecommendationCategory.FillScores => RecommendationCategories.FillScores,
             RecommendationCategory.WeeklyCharts => RecommendationCategories.WeeklyCharts,
+            RecommendationCategory.PushPumbility => RecommendationCategories.PushPumbility,
             _ => null
         };
     }

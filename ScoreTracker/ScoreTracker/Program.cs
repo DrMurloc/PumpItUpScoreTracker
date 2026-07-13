@@ -242,6 +242,7 @@ builder.Services.AddScoped<PageDockService>();
 builder.Services.AddScoped<IImportCredentialClientStore, ImportCredentialClientStore>();
 // Circuit-scoped: widgets on a home-page board share one chart catalog per mix (§2.5).
 builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.ChartCatalogCache>();
+builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.ByLevelDataSource>();
 builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.CommunityGlowReader>();
 builder.Services.AddCookiePolicy(opts =>
 {
@@ -344,7 +345,8 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("flush-overdue-score-batches",      r => r.PublishFlushOverdueScoreBatches(),        "*/5 * * * *"), // every 5 min — safety net for stuck batches
     ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *"), // 06:30 ET — merged-account grace-window purges
     ("refresh-folder-share-cards",       r => r.PublishRefreshFolderShareCards(),         "30 10 * * *"), // 05:30 ET — og:images, right after the tier-list rebuilds
-    ("crawl-piucenter",                  r => r.PublishCrawlPiuCenter(),                  "0 6 * * 1")   // Mondays 01:00 ET — gap-driven, near no-op unless piucenter shipped a new data release
+    ("crawl-piucenter",                  r => r.PublishCrawlPiuCenter(),                  "0 6 * * 1"),  // Mondays 01:00 ET — gap-driven, near no-op unless piucenter shipped a new data release
+    ("purge-community-highlights",       r => r.PublishPurgeCommunityHighlights(),        "0 9 * * 0")   // Sundays 09:00 UTC — 30-day community-highlights retention
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {

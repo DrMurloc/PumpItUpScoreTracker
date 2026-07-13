@@ -2,7 +2,7 @@ using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Web.Services.HomeDashboard;
 
-/// <summary>Add-drawer grouping (docs/design/home-page-widgets.md §2.2).</summary>
+/// <summary>Add-drawer grouping (docs/design/HomePageWidgets/README.md §2.2).</summary>
 public enum WidgetCategory
 {
     Play,
@@ -26,6 +26,7 @@ public readonly record struct SizePreset(int Columns, int Rows)
     public static readonly SizePreset OneByThree = new(1, 3);
     public static readonly SizePreset TwoByTwo = new(2, 2);
     public static readonly SizePreset ThreeByTwo = new(3, 2);
+    public static readonly SizePreset FourByTwo = new(4, 2);
     public static readonly SizePreset ThreeByThree = new(3, 3);
 
     public string Token => $"{Columns}x{Rows}";

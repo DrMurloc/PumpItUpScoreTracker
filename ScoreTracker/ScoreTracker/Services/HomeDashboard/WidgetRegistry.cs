@@ -27,13 +27,15 @@ public static class WidgetRegistry
             typeof(CompetitiveLevelWidget),
             typeof(CompetitiveLevelConfigPanel),
             typeof(CompetitiveLevelConfig)),
+        // TypeId stays "pumbility" (public export vocabulary, never renamed) though the
+        // widget is now Account Stats. 1x2+ adds the closest-competitive-matches list.
         new("pumbility",
-            "PUMBILITY",
-            "Pumbility targets tuned to your skill profile.",
+            "Account Stats",
+            "Your Pumbility and competitive level, plus your closest matches.",
             WidgetCategory.Progress,
-            Icons.Material.Filled.TrendingUp,
-            new[] { SizePreset.OneByOne, SizePreset.TwoByOne, SizePreset.OneByTwo },
-            SizePreset.TwoByOne,
+            Icons.Material.Filled.Leaderboard,
+            new[] { SizePreset.OneByOne, SizePreset.OneByTwo, SizePreset.OneByThree },
+            SizePreset.OneByTwo,
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(PumbilityWidget),
             typeof(PumbilityConfigPanel),
@@ -49,6 +51,21 @@ public static class WidgetRegistry
             typeof(WeeklyWidget),
             typeof(WeeklyConfigPanel),
             typeof(WeeklyConfig)),
+        new("community-highlights",
+            "Community Highlights",
+            "Recent big wins from the communities you pick.",
+            WidgetCategory.Compete,
+            Icons.Material.Filled.Groups,
+            new[]
+            {
+                SizePreset.OneByTwo, SizePreset.TwoByOne, SizePreset.ThreeByOne, SizePreset.FourByOne,
+                SizePreset.TwoByTwo, SizePreset.OneByThree
+            },
+            SizePreset.TwoByTwo,
+            new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            typeof(CommunityHighlightsWidget),
+            typeof(CommunityHighlightsConfigPanel),
+            typeof(CommunityHighlightsConfig)),
         new("daily-step",
             "Daily Step",
             "Today's shared chart, plus a weekly Limbo Day.",
@@ -95,7 +112,10 @@ public static class WidgetRegistry
                         // Fills reach down by identity; nothing above by default.
                         SpreadBelow = 3,
                         SpreadAbove = 0
-                    }))
+                    })),
+                new WidgetDrawerPreset("Suggested · Pumbility Push",
+                    "The biggest Pumbility gains available to you right now.",
+                    WidgetConfigJson.Write(new SuggestedChartsConfig { Goal = SuggestedGoal.PumbilityPush }))
             },
             // Instance titles follow the configured goal so rapid-firing all three
             // presets never yields three "Suggested Charts" (owner, field test).
@@ -104,10 +124,93 @@ public static class WidgetRegistry
                 {
                     SuggestedGoal.ScorePush => "Suggested · Score Push",
                     SuggestedGoal.FillGaps => "Suggested · Fill Gaps",
+                    SuggestedGoal.PumbilityPush => "Suggested · Pumbility Push",
                     _ => "Suggested · Title Hunt"
                 },
             RefreshIcon: Icons.Material.Filled.Shuffle,
             RefreshTitleKey: "Shuffle suggestions"),
+        new("by-level-breakdown",
+            "By-Level Breakdown",
+            "One configurable graph of your scores, grades, plates, or clears by level.",
+            WidgetCategory.Progress,
+            Icons.Material.Filled.BarChart,
+            // 2-row minimum: a one-row graph is a smudge (owner, established on W1).
+            new[] { SizePreset.TwoByTwo, SizePreset.ThreeByTwo, SizePreset.FourByTwo },
+            SizePreset.TwoByTwo,
+            // Every recordable mix; the config panel + aggregator restrict metrics for
+            // legacy scoring (Grade + Pass only). Read seam already mix-generic.
+            Enum.GetValues<MixEnum>(),
+            typeof(ByLevelBreakdownWidget),
+            typeof(ByLevelBreakdownConfigPanel),
+            typeof(ByLevelBreakdownConfig),
+            DrawerPresets: new[]
+            {
+                new WidgetDrawerPreset("Score Distribution",
+                    "Score spread per level — min, quartiles, max, with the IQR shaded.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Metric = BreakdownMetric.Score, Aggregation = BreakdownAggregation.Distribution,
+                        Series = new List<DistributionSeries>
+                        {
+                            DistributionSeries.Min, DistributionSeries.P25, DistributionSeries.Median,
+                            DistributionSeries.P75, DistributionSeries.Max
+                        },
+                        // Combined so the full box plot reads; Singles vs Doubles is the separate cut.
+                        Band = BreakdownBand.InterQuartile, SeparateSinglesDoubles = false,
+                        MinLevel = 17, MaxLevel = 23
+                    })),
+                new WidgetDrawerPreset("Singles vs Doubles",
+                    "Your score spread per level, Singles against Doubles, the middle 50% shaded.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Metric = BreakdownMetric.Score, Aggregation = BreakdownAggregation.Distribution,
+                        SeparateSinglesDoubles = true, SeparateDisplay = SeparateDisplay.RangeIqr,
+                        MinLevel = 17, MaxLevel = 23
+                    })),
+                new WidgetDrawerPreset("Grade Distribution",
+                    "Every grade stacked per folder, with a broken / unplayed cap for the folder count.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Metric = BreakdownMetric.LetterGrade, Aggregation = BreakdownAggregation.Breakdown,
+                        Normalize = false, IncludeUnplayed = true, SeparateSinglesDoubles = false,
+                        MinLevel = 17, MaxLevel = 24
+                    })),
+                new WidgetDrawerPreset("Plate Distribution",
+                    "Every plate stacked per folder, with a broken / unplayed cap for the folder count.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Metric = BreakdownMetric.Plate, Aggregation = BreakdownAggregation.Breakdown,
+                        Normalize = false, IncludeUnplayed = true, SeparateSinglesDoubles = false,
+                        MinLevel = 17, MaxLevel = 23
+                    })),
+                new WidgetDrawerPreset("Clear Progress",
+                    "How much of every folder you've cleared, per level.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Metric = BreakdownMetric.Pass, Aggregation = BreakdownAggregation.Breakdown,
+                        SeparateSinglesDoubles = false, MinLevel = 1, MaxLevel = 28
+                    })),
+                new WidgetDrawerPreset("Co-Op Completion",
+                    "How many co-op charts you've cleared, by player count.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Scope = BreakdownChartScope.CoOp,
+                        Metric = BreakdownMetric.Pass, Aggregation = BreakdownAggregation.Breakdown,
+                        MinPlayers = 2, MaxPlayers = 5
+                    }))
+            },
+            DynamicNameKey: configJson =>
+            {
+                var config = WidgetConfigJson.Read<ByLevelBreakdownConfig>(configJson);
+                // Two configs wear their own name instead of the generic metric/aggregation title.
+                if (config.Scope == BreakdownChartScope.SinglesDoubles && config.SeparateSinglesDoubles
+                    && config.Metric == BreakdownMetric.Score
+                    && config.Aggregation == BreakdownAggregation.Distribution)
+                    return "Singles vs Doubles";
+                if (config.Scope == BreakdownChartScope.CoOp && config.Metric == BreakdownMetric.Pass)
+                    return "Co-Op Completion";
+                return ByLevelConfigRules.TitleKey(config.Metric, config.Aggregation);
+            }),
         new("quick-record",
             "Quick Record",
             "Record a score by hand for any chart.",
