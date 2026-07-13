@@ -3365,21 +3365,26 @@ html.nav-away .page-dock,
    the site can adopt it (ApexChartTheming.WrapperClass). */
 
 .themed-apex .apexcharts-tooltip {
-    background: var(--mix-surface-muted) !important;
-    border: 1px solid rgba(255, 255, 255, .14) !important;
-    color: var(--mix-ink) !important;
+    background: rgba(8, 12, 18, .94) !important;
+    border: 1px solid rgba(255, 255, 255, .16) !important;
+    color: #ffffff !important;
     box-shadow: 0 6px 18px rgba(0, 0, 0, .5) !important;
 }
 
 .themed-apex .apexcharts-tooltip-title {
-    background: transparent !important;
-    border-bottom: 1px solid rgba(255, 255, 255, .08) !important;
-    color: var(--mix-ink) !important;
+    background: rgba(255, 255, 255, .06) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, .1) !important;
+    color: #ffffff !important;
     font-family: var(--font-display) !important;
 }
 
+/* All the tooltip text runs white — the token ink was too dim to read over the chart (owner). */
 .themed-apex .apexcharts-tooltip-text,
+.themed-apex .apexcharts-tooltip-text-y-label,
+.themed-apex .apexcharts-tooltip-text-y-value,
+.themed-apex .apexcharts-tooltip-text-label,
+.themed-apex .apexcharts-tooltip-text-value,
 .themed-apex .apexcharts-tooltip-y-group,
 .themed-apex .apexcharts-tooltip-series-group {
-    color: var(--mix-ink) !important;
+    color: #ffffff !important;
 }

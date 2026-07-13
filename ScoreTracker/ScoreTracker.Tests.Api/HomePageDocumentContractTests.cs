@@ -1,5 +1,6 @@
 using System.IO;
 using ScoreTracker.HomePage.Contracts;
+using ScoreTracker.Web.Components.HomeWidgets;
 using ScoreTracker.Web.Services.HomeDashboard;
 
 namespace ScoreTracker.Tests.Api;
@@ -20,7 +21,22 @@ public sealed class HomePageDocumentContractTests
             {
                 new HomePageWidgetRecord(Guid.Empty, "pumbility", "Doubles push", 0, "1x2",
                     "{\"mix\":\"Phoenix2\",\"matchDimension\":\"Double\"}", 1),
-                new HomePageWidgetRecord(Guid.Empty, "weekly-challenge", null, 1, "1x1", "{}", 1)
+                new HomePageWidgetRecord(Guid.Empty, "weekly-challenge", null, 1, "1x1", "{}", 1),
+                new HomePageWidgetRecord(Guid.Empty, "by-level-breakdown", "PG chase", 2, "2x2",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Mix = SharedKernel.Enums.MixEnum.Phoenix2,
+                        Metric = BreakdownMetric.Score,
+                        Aggregation = BreakdownAggregation.Completion,
+                        SeparateSinglesDoubles = true,
+                        MinLevel = 20,
+                        MaxLevel = 24,
+                        Thresholds = new List<CompletionThreshold>
+                        {
+                            new() { Kind = ThresholdKind.Score, Value = "990000" },
+                            new() { Kind = ThresholdKind.Score, Value = "1000000" }
+                        }
+                    }), 1)
             });
     }
 
@@ -64,8 +80,17 @@ public sealed class HomePageDocumentContractTests
         Assert.True(result.IsValid, string.Join("; ", result.Errors));
         Assert.Equal("Session Day", result.Name);
         Assert.Equal(SharedKernel.Enums.MixEnum.Phoenix2, result.DefaultMix);
-        Assert.Equal(2, result.Widgets.Count);
+        Assert.Equal(3, result.Widgets.Count);
         Assert.Equal("pumbility", result.Widgets[0].WidgetType);
         Assert.Equal("1x2", result.Widgets[0].SizePreset);
+
+        // The By-Level Breakdown config survives the public export/import round-trip,
+        // including its discriminated {kind, value} threshold list (decision D).
+        Assert.Equal("by-level-breakdown", result.Widgets[2].WidgetType);
+        var breakdown = WidgetConfigJson.Read<ByLevelBreakdownConfig>(result.Widgets[2].ConfigJson);
+        Assert.Equal(BreakdownAggregation.Completion, breakdown.Aggregation);
+        Assert.Equal(2, breakdown.Thresholds.Count);
+        Assert.Equal(ThresholdKind.Score, breakdown.Thresholds[1].Kind);
+        Assert.Equal("1000000", breakdown.Thresholds[1].Value);
     }
 }

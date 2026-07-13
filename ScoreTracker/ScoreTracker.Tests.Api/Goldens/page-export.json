@@ -16,6 +16,42 @@
       {
         "type": "weekly-challenge",
         "size": "1x1"
+      },
+      {
+        "type": "by-level-breakdown",
+        "title": "PG chase",
+        "size": "2x2",
+        "config": {
+          "mix": "Phoenix2",
+          "scope": "SinglesDoubles",
+          "separateSinglesDoubles": true,
+          "separateDisplay": "Median",
+          "minLevel": 20,
+          "maxLevel": 24,
+          "minPlayers": 2,
+          "maxPlayers": 5,
+          "metric": "Score",
+          "aggregation": "Completion",
+          "series": [
+            "P25",
+            "Median",
+            "P75"
+          ],
+          "customPercentiles": [],
+          "band": "None",
+          "normalize": false,
+          "includeUnplayed": true,
+          "thresholds": [
+            {
+              "kind": "Score",
+              "value": "990000"
+            },
+            {
+              "kind": "Score",
+              "value": "1000000"
+            }
+          ]
+        }
       }
     ]
   }

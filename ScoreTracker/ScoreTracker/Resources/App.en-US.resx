@@ -3587,4 +3587,172 @@
   <data name="The biggest Pumbility gains available to you right now." xml:space="preserve">
     <value>The biggest Pumbility gains available to you right now.</value>
   </data>
+  <data name="Singles / Doubles" xml:space="preserve">
+    <value>Singles / Doubles</value>
+  </data>
+  <data name="Show Singles &amp; Doubles as separate data" xml:space="preserve">
+    <value>Show Singles &amp; Doubles as separate data</value>
+  </data>
+  <data name="Metric" xml:space="preserve">
+    <value>Metric</value>
+  </data>
+  <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
+    <value>This mix isn't score-normalized — only Letter Grade &amp; Pass are available.</value>
+  </data>
+  <data name="Aggregation" xml:space="preserve">
+    <value>Aggregation</value>
+  </data>
+  <data name="Series" xml:space="preserve">
+    <value>Series</value>
+  </data>
+  <data name="Custom percentile" xml:space="preserve">
+    <value>Custom percentile</value>
+  </data>
+  <data name="Avg" xml:space="preserve">
+    <value>Avg</value>
+  </data>
+  <data name="Distribution" xml:space="preserve">
+    <value>Distribution</value>
+  </data>
+  <data name="Breakdown" xml:space="preserve">
+    <value>Breakdown</value>
+  </data>
+  <data name="Completion %" xml:space="preserve">
+    <value>Completion %</value>
+  </data>
+  <data name="Normalize to 100%" xml:space="preserve">
+    <value>Normalize to 100%</value>
+  </data>
+  <data name="Include an unplayed segment" xml:space="preserve">
+    <value>Include an unplayed segment</value>
+  </data>
+  <data name="Thresholds — each becomes a line" xml:space="preserve">
+    <value>Thresholds — each becomes a line</value>
+  </data>
+  <data name="At least" xml:space="preserve">
+    <value>At least</value>
+  </data>
+  <data name="Shade band" xml:space="preserve">
+    <value>Shade band</value>
+  </data>
+  <data name="No scores in this range yet — record or import to see your breakdown." xml:space="preserve">
+    <value>No scores in this range yet — record or import to see your breakdown.</value>
+  </data>
+  <data name="By-Level Breakdown" xml:space="preserve">
+    <value>By-Level Breakdown</value>
+  </data>
+  <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
+    <value>One configurable graph of your scores, grades, plates, or clears by level.</value>
+  </data>
+  <data name="Score Completion" xml:space="preserve">
+    <value>Score Completion</value>
+  </data>
+  <data name="Grade Completion" xml:space="preserve">
+    <value>Grade Completion</value>
+  </data>
+  <data name="Average Grade by Level" xml:space="preserve">
+    <value>Average Grade by Level</value>
+  </data>
+  <data name="Plate Completion" xml:space="preserve">
+    <value>Plate Completion</value>
+  </data>
+  <data name="Average Plate by Level" xml:space="preserve">
+    <value>Average Plate by Level</value>
+  </data>
+  <data name="Pass Breakdown" xml:space="preserve">
+    <value>Pass Breakdown</value>
+  </data>
+  <data name="Clear Progress" xml:space="preserve">
+    <value>Clear Progress</value>
+  </data>
+  <data name="Box Plot" xml:space="preserve">
+    <value>Box Plot</value>
+  </data>
+  <data name="Grade Wall" xml:space="preserve">
+    <value>Grade Wall</value>
+  </data>
+  <data name="PG Race" xml:space="preserve">
+    <value>PG Race</value>
+  </data>
+  <data name="Score Push %" xml:space="preserve">
+    <value>Score Push %</value>
+  </data>
+  <data name="Score spread per level — min, quartiles, max, with the IQR shaded." xml:space="preserve">
+    <value>Score spread per level — min, quartiles, max, with the IQR shaded.</value>
+  </data>
+  <data name="What grades fill each folder, normalized so shape beats volume." xml:space="preserve">
+    <value>What grades fill each folder, normalized so shape beats volume.</value>
+  </data>
+  <data name="Chasing plates — % of each folder at MG, UG, and full Perfect Game." xml:space="preserve">
+    <value>Chasing plates — % of each folder at MG, UG, and full Perfect Game.</value>
+  </data>
+  <data name="How much of every folder you've passed, Singles vs Doubles." xml:space="preserve">
+    <value>How much of every folder you've passed, Singles vs Doubles.</value>
+  </data>
+  <data name="Multi-threshold completion: ≥950k, ≥990k, and 1,000,000." xml:space="preserve">
+    <value>Multi-threshold completion: ≥950k, ≥990k, and 1,000,000.</value>
+  </data>
+  <data name="Percentile" xml:space="preserve">
+    <value>Percentile</value>
+  </data>
+  <data name="How each folder's plates stack up — Marvelous, Ultimate, and Perfect Game." xml:space="preserve">
+    <value>How each folder's plates stack up — Marvelous, Ultimate, and Perfect Game.</value>
+  </data>
+  <data name="How much of every folder you've cleared, per level." xml:space="preserve">
+    <value>How much of every folder you've cleared, per level.</value>
+  </data>
+  <data name="How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000." xml:space="preserve">
+    <value>How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000.</value>
+  </data>
+  <data name="Singles + Doubles" xml:space="preserve">
+    <value>Singles + Doubles</value>
+  </data>
+  <data name="Show Singles &amp; Doubles separately" xml:space="preserve">
+    <value>Show Singles &amp; Doubles separately</value>
+  </data>
+  <data name="Show per type" xml:space="preserve">
+    <value>Show per type</value>
+  </data>
+  <data name="Shaded range: IQR (P25–P75)" xml:space="preserve">
+    <value>Shaded range: IQR (P25–P75)</value>
+  </data>
+  <data name="Shaded range: Min–Max" xml:space="preserve">
+    <value>Shaded range: Min–Max</value>
+  </data>
+  <data name="Shaded range: ±1σ" xml:space="preserve">
+    <value>Shaded range: ±1σ</value>
+  </data>
+  <data name="Chart Age" xml:space="preserve">
+    <value>Chart Age</value>
+  </data>
+  <data name="Chart Age by Level" xml:space="preserve">
+    <value>Chart Age by Level</value>
+  </data>
+  <data name="How much of every folder you've cleared, Singles vs Doubles." xml:space="preserve">
+    <value>How much of every folder you've cleared, Singles vs Doubles.</value>
+  </data>
+  <data name="How stale your scores are per folder — the spread of days since you set them." xml:space="preserve">
+    <value>How stale your scores are per folder — the spread of days since you set them.</value>
+  </data>
+  <data name="Within days" xml:space="preserve">
+    <value>Within days</value>
+  </data>
+  <data name="Grade Distribution" xml:space="preserve">
+    <value>Grade Distribution</value>
+  </data>
+  <data name="Co-Op Completion" xml:space="preserve">
+    <value>Co-Op Completion</value>
+  </data>
+  <data name="Your score spread per level, Singles against Doubles, the middle 50% shaded." xml:space="preserve">
+    <value>Your score spread per level, Singles against Doubles, the middle 50% shaded.</value>
+  </data>
+  <data name="Every grade stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
+    <value>Every grade stacked per folder, with a broken / unplayed cap for the folder count.</value>
+  </data>
+  <data name="Every plate stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
+    <value>Every plate stacked per folder, with a broken / unplayed cap for the folder count.</value>
+  </data>
+  <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
+    <value>How many co-op charts you've cleared, by player count.</value>
+  </data>
 </root>

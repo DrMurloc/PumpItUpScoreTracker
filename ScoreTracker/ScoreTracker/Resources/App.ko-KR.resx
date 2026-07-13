@@ -3468,4 +3468,172 @@
   <data name="The biggest Pumbility gains available to you right now." xml:space="preserve">
     <value>지금 당신이 얻을 수 있는 가장 큰 Pumbility 상승.</value>
   </data>
+  <data name="Singles / Doubles" xml:space="preserve">
+    <value>싱글 / 더블</value>
+  </data>
+  <data name="Show Singles &amp; Doubles as separate data" xml:space="preserve">
+    <value>싱글과 더블을 개별 데이터로 표시</value>
+  </data>
+  <data name="Metric" xml:space="preserve">
+    <value>지표</value>
+  </data>
+  <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
+    <value>이 시리즈는 점수 정규화가 없습니다 — 등급과 클리어만 사용할 수 있습니다.</value>
+  </data>
+  <data name="Aggregation" xml:space="preserve">
+    <value>집계</value>
+  </data>
+  <data name="Series" xml:space="preserve">
+    <value>계열</value>
+  </data>
+  <data name="Custom percentile" xml:space="preserve">
+    <value>사용자 백분위수</value>
+  </data>
+  <data name="Avg" xml:space="preserve">
+    <value>평균</value>
+  </data>
+  <data name="Distribution" xml:space="preserve">
+    <value>분포</value>
+  </data>
+  <data name="Breakdown" xml:space="preserve">
+    <value>구성</value>
+  </data>
+  <data name="Completion %" xml:space="preserve">
+    <value>완료율 %</value>
+  </data>
+  <data name="Normalize to 100%" xml:space="preserve">
+    <value>100%로 정규화</value>
+  </data>
+  <data name="Include an unplayed segment" xml:space="preserve">
+    <value>미플레이 구간 포함</value>
+  </data>
+  <data name="Thresholds — each becomes a line" xml:space="preserve">
+    <value>임계값 — 각각 하나의 선이 됩니다</value>
+  </data>
+  <data name="At least" xml:space="preserve">
+    <value>이상</value>
+  </data>
+  <data name="Shade band" xml:space="preserve">
+    <value>음영 밴드</value>
+  </data>
+  <data name="No scores in this range yet — record or import to see your breakdown." xml:space="preserve">
+    <value>이 범위에 아직 점수가 없습니다 — 기록하거나 가져오면 구성을 볼 수 있습니다.</value>
+  </data>
+  <data name="By-Level Breakdown" xml:space="preserve">
+    <value>레벨별 구성</value>
+  </data>
+  <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
+    <value>점수, 등급, 플레이트 또는 클리어를 레벨별로 보여주는 구성 가능한 그래프.</value>
+  </data>
+  <data name="Score Completion" xml:space="preserve">
+    <value>점수 완료율</value>
+  </data>
+  <data name="Grade Completion" xml:space="preserve">
+    <value>등급 완료율</value>
+  </data>
+  <data name="Average Grade by Level" xml:space="preserve">
+    <value>레벨별 평균 등급</value>
+  </data>
+  <data name="Plate Completion" xml:space="preserve">
+    <value>플레이트 완료율</value>
+  </data>
+  <data name="Average Plate by Level" xml:space="preserve">
+    <value>레벨별 평균 플레이트</value>
+  </data>
+  <data name="Pass Breakdown" xml:space="preserve">
+    <value>클리어 구성</value>
+  </data>
+  <data name="Clear Progress" xml:space="preserve">
+    <value>클리어 진행도</value>
+  </data>
+  <data name="Box Plot" xml:space="preserve">
+    <value>상자 그림</value>
+  </data>
+  <data name="Grade Wall" xml:space="preserve">
+    <value>등급 월</value>
+  </data>
+  <data name="PG Race" xml:space="preserve">
+    <value>PG 레이스</value>
+  </data>
+  <data name="Score Push %" xml:space="preserve">
+    <value>점수 올리기 %</value>
+  </data>
+  <data name="Score spread per level — min, quartiles, max, with the IQR shaded." xml:space="preserve">
+    <value>레벨별 점수 분포 — 최소, 사분위수, 최대, IQR 음영 표시.</value>
+  </data>
+  <data name="What grades fill each folder, normalized so shape beats volume." xml:space="preserve">
+    <value>각 폴더를 채우는 등급 구성. 양보다 형태가 보이도록 정규화.</value>
+  </data>
+  <data name="Chasing plates — % of each folder at MG, UG, and full Perfect Game." xml:space="preserve">
+    <value>플레이트 도전 — 각 폴더의 MG, UG, 퍼펙트 게임 비율.</value>
+  </data>
+  <data name="How much of every folder you've passed, Singles vs Doubles." xml:space="preserve">
+    <value>각 폴더의 클리어 비율, 싱글 대 더블.</value>
+  </data>
+  <data name="Multi-threshold completion: ≥950k, ≥990k, and 1,000,000." xml:space="preserve">
+    <value>다중 임계값 완료율: ≥950k, ≥990k, 1,000,000.</value>
+  </data>
+  <data name="Percentile" xml:space="preserve">
+    <value>Percentile</value>
+  </data>
+  <data name="How each folder's plates stack up — Marvelous, Ultimate, and Perfect Game." xml:space="preserve">
+    <value>How each folder's plates stack up — Marvelous, Ultimate, and Perfect Game.</value>
+  </data>
+  <data name="How much of every folder you've cleared, per level." xml:space="preserve">
+    <value>How much of every folder you've cleared, per level.</value>
+  </data>
+  <data name="How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000." xml:space="preserve">
+    <value>How each folder stacks up by score tier: ≥950k, ≥990k, and 1,000,000.</value>
+  </data>
+  <data name="Singles + Doubles" xml:space="preserve">
+    <value>Singles + Doubles</value>
+  </data>
+  <data name="Show Singles &amp; Doubles separately" xml:space="preserve">
+    <value>Show Singles &amp; Doubles separately</value>
+  </data>
+  <data name="Show per type" xml:space="preserve">
+    <value>Show per type</value>
+  </data>
+  <data name="Shaded range: IQR (P25–P75)" xml:space="preserve">
+    <value>Shaded range: IQR (P25–P75)</value>
+  </data>
+  <data name="Shaded range: Min–Max" xml:space="preserve">
+    <value>Shaded range: Min–Max</value>
+  </data>
+  <data name="Shaded range: ±1σ" xml:space="preserve">
+    <value>Shaded range: ±1σ</value>
+  </data>
+  <data name="Chart Age" xml:space="preserve">
+    <value>Chart Age</value>
+  </data>
+  <data name="Chart Age by Level" xml:space="preserve">
+    <value>Chart Age by Level</value>
+  </data>
+  <data name="How much of every folder you've cleared, Singles vs Doubles." xml:space="preserve">
+    <value>How much of every folder you've cleared, Singles vs Doubles.</value>
+  </data>
+  <data name="How stale your scores are per folder — the spread of days since you set them." xml:space="preserve">
+    <value>How stale your scores are per folder — the spread of days since you set them.</value>
+  </data>
+  <data name="Within days" xml:space="preserve">
+    <value>최대 일수</value>
+  </data>
+  <data name="Grade Distribution" xml:space="preserve">
+    <value>등급 분포</value>
+  </data>
+  <data name="Co-Op Completion" xml:space="preserve">
+    <value>Co-Op 완료</value>
+  </data>
+  <data name="Your score spread per level, Singles against Doubles, the middle 50% shaded." xml:space="preserve">
+    <value>레벨별 점수 분포, 싱글 대 더블, 가운데 50% 음영.</value>
+  </data>
+  <data name="Every grade stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
+    <value>폴더별로 모든 등급을 쌓고, 실패 / 미플레이 구간으로 폴더 전체 수까지 표시.</value>
+  </data>
+  <data name="Every plate stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
+    <value>폴더별로 모든 플레이트를 쌓고, 실패 / 미플레이 구간으로 폴더 전체 수까지 표시.</value>
+  </data>
+  <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
+    <value>플레이 인원수별로 클리어한 Co-Op 채보 수.</value>
+  </data>
 </root>

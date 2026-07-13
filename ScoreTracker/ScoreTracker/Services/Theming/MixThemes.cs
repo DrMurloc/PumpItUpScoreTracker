@@ -1,5 +1,6 @@
 using MudBlazor;
 using ScoreTracker.SharedKernel.Enums;
+using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 
 namespace ScoreTracker.Web.Services.Theming;
 
@@ -199,22 +200,32 @@ public static class MixThemes
             [TierListCategory.Unrecorded] = "#757575"
         };
 
-    // Plate chip/border colors, following the official Play Data page's metal ladder:
-    // bronze (RG/FG) → silver (TG/MG) → gold (SG/EG) → ice-blue (UG/PG). Shared across
-    // mixes today; when the owner's Phoenix 2 plate art arrives (P2's colors are close
-    // but not identical), these lift into MixPalette per mix — consumers already read
-    // the vars, so that change costs nothing downstream. "None" marks unplayed charts.
+    // The plate/grade metal ladder, sampled from the game's Play Data plate art (owner,
+    // 2026-07-13): copper RG/FG → silver TG/MG → gold SG/EG → ice-blue UG/PG. Letter grades
+    // reuse these by tier (see GradeColors); sub-A grades render green in-game; a broken grade
+    // is the grey we use for unpassed. Shared across mixes today. "None" marks unplayed charts.
+    private const string PgHex = "#7FC7EF";
+    private const string UgHex = "#62B4E8";
+    private const string EgHex = "#F2C233";
+    private const string SgHex = "#EDBB2E";
+    private const string MgHex = "#D9DDE1";
+    private const string TgHex = "#C4C9CE";
+    private const string FgHex = "#DE863A";
+    private const string RgHex = "#CE6A2E";
+    private const string SubAGradeHex = "#34BE6A";
+    private const string UnpassedGradeHex = "#5E5866";
+
     private static readonly IReadOnlyDictionary<PhoenixPlate, string> PlateColors =
         new Dictionary<PhoenixPlate, string>
         {
-            [PhoenixPlate.PerfectGame] = "#6FD1F6",
-            [PhoenixPlate.UltimateGame] = "#4FB3E8",
-            [PhoenixPlate.ExtremeGame] = "#FFD24A",
-            [PhoenixPlate.SuperbGame] = "#F5C02E",
-            [PhoenixPlate.MarvelousGame] = "#C9CED4",
-            [PhoenixPlate.TalentedGame] = "#B4BCC4",
-            [PhoenixPlate.FairGame] = "#D97742",
-            [PhoenixPlate.RoughGame] = "#C05C2E"
+            [PhoenixPlate.PerfectGame] = PgHex,
+            [PhoenixPlate.UltimateGame] = UgHex,
+            [PhoenixPlate.ExtremeGame] = EgHex,
+            [PhoenixPlate.SuperbGame] = SgHex,
+            [PhoenixPlate.MarvelousGame] = MgHex,
+            [PhoenixPlate.TalentedGame] = TgHex,
+            [PhoenixPlate.FairGame] = FgHex,
+            [PhoenixPlate.RoughGame] = RgHex
         };
 
     private const string PlateNoneColor = "#8E24AA";
@@ -248,6 +259,78 @@ public static class MixThemes
     {
         return DifficultyColors[category];
     }
+
+    /// <summary>
+    ///     Raw hex for a rarity band in a mix — for render targets that can't read CSS
+    ///     custom properties (ApexCharts config, e.g. the By-Level Breakdown grade/plate
+    ///     bars). Rarity hues are per-mix (unlike difficulty), so this takes the mix.
+    ///     On-screen consumers keep using ThemeScales/var(--rarity-*).
+    /// </summary>
+    public static string RarityHex(MixEnum mix, RarityBand band)
+    {
+        var rarity = PaletteFor(mix).Rarity;
+        return band switch
+        {
+            RarityBand.Common => rarity.Common,
+            RarityBand.Silver => rarity.Silver,
+            RarityBand.Emerald => rarity.Emerald,
+            RarityBand.Gold => rarity.Gold,
+            RarityBand.Sapphire => rarity.Sapphire,
+            _ => rarity.Prism
+        };
+    }
+
+    // Letter grades wear the PLATE colors by tier (owner, 2026-07-13): SSS+/SSS = PG/UG
+    // ice-blue, SS/S = EG/SG gold, AAA+/AAA = MG/TG silver, AA/A = FG/RG copper, and
+    // everything below A is the in-game sub-A green. Grades render as art everywhere else;
+    // the By-Level Breakdown bars are the first text-rendered consumer (UX-GUIDELINES §4).
+    // Keyed by display name so Phoenix (16) and the XX ladder (F..SSS) both resolve.
+    private static readonly IReadOnlyDictionary<string, string> GradeColors =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["SSS+"] = PgHex, ["SSS"] = UgHex,
+            ["SS+"] = EgHex, ["SS"] = EgHex, ["S+"] = SgHex, ["S"] = SgHex,
+            ["AAA+"] = MgHex, ["AAA"] = TgHex,
+            ["AA+"] = FgHex, ["AA"] = FgHex, ["A+"] = RgHex, ["A"] = RgHex,
+            ["B"] = SubAGradeHex, ["C"] = SubAGradeHex, ["D"] = SubAGradeHex, ["F"] = SubAGradeHex
+        };
+
+    // The difficulty-ball vocabulary (Phoenix 2 art): red Single, green Double, gold Co-Op.
+    private const string SinglesTypeHex = "#C83A32";
+    private const string DoublesTypeHex = "#33A653";
+    private const string CoOpTypeHex = "#D9A82E";
+
+    /// <summary>Raw hex for a letter grade (display name), for ApexCharts grade bars. Unknown → the unpassed grey.</summary>
+    public static string GradeHex(string gradeName) =>
+        GradeColors.TryGetValue(gradeName, out var hex) ? hex : UnpassedGradeHex;
+
+    /// <summary>Raw hex for a plate (shorthand, e.g. "PG"), for ApexCharts plate bars.</summary>
+    public static string PlateHex(string plateShorthand) =>
+        PlateColors[PhoenixPlateHelperMethods.ParseShorthand(plateShorthand)];
+
+    /// <summary>Chart-type color — red Single / green Double / gold Co-Op, the game's ball vocabulary.</summary>
+    public static string ChartTypeHex(ChartType type) => type switch
+    {
+        ChartType.Single or ChartType.SinglePerformance => SinglesTypeHex,
+        ChartType.Double or ChartType.DoublePerformance or ChartType.HalfDouble => DoublesTypeHex,
+        ChartType.CoOp => CoOpTypeHex,
+        _ => SinglesTypeHex
+    };
+
+    /// <summary>Muted grey for unpassed / not-cleared / below-threshold segments (the broken-grade grey).</summary>
+    public static string UnpassedHex => UnpassedGradeHex;
+
+    // Qualitative series palette for chart lines that carry no semantic-ramp meaning
+    // (By-Level Breakdown distribution stats and completion thresholds). ApexCharts needs
+    // literals; these are CVD-spaced and distinct on the dark canvas. Mix-invariant.
+    private static readonly string[] SeriesPalette =
+    {
+        "#38BDF8", "#E879F9", "#F5A524", "#34D399", "#F43F5E", "#A78BFA", "#22D3EE", "#FB923C"
+    };
+
+    /// <summary>Nth qualitative chart-series hex (wraps). For ApexCharts, which can't read CSS vars.</summary>
+    public static string SeriesHex(int index) =>
+        SeriesPalette[((index % SeriesPalette.Length) + SeriesPalette.Length) % SeriesPalette.Length];
 
     public static string CssVariablesFor(MixEnum mix)
     {

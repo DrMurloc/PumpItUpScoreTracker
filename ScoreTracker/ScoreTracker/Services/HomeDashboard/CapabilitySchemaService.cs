@@ -42,29 +42,30 @@ public static class CapabilitySchemaService
                 SupportedSizes = d.SupportedSizes.Select(s => s.Token).ToArray(),
                 DefaultSize = d.DefaultSize.Token,
                 SupportedMixes = d.SupportedMixes.Select(m => m.ToString()).ToArray(),
-                ConfigSchema = d.ConfigType == null ? null : SchemaFor(d.ConfigType)
+                ConfigSchema = d.ConfigType == null ? null : SchemaFor(d.ConfigType, new HashSet<Type>())
             }).ToArray()
         };
         return JsonSerializer.Serialize(schema, Document);
     }
 
-    private static Dictionary<string, object?> SchemaFor(Type type)
+    private static Dictionary<string, object?> SchemaFor(Type type, HashSet<Type> seen)
     {
+        seen.Add(type);
         return new Dictionary<string, object?>
         {
             ["type"] = "object",
             ["properties"] = type.GetProperties()
                 .ToDictionary(p => JsonNamingPolicy.CamelCase.ConvertName(p.Name),
-                    p => PropertySchema(p.PropertyType))
+                    p => PropertySchema(p.PropertyType, seen))
         };
     }
 
-    private static object PropertySchema(Type type)
+    private static object PropertySchema(Type type, HashSet<Type> seen)
     {
         var underlying = Nullable.GetUnderlyingType(type);
         if (underlying != null)
         {
-            var inner = PropertySchema(underlying) as Dictionary<string, object?>
+            var inner = PropertySchema(underlying, seen) as Dictionary<string, object?>
                         ?? new Dictionary<string, object?>();
             inner["nullable"] = true;
             return inner;
@@ -86,9 +87,14 @@ public static class CapabilitySchemaService
             return new Dictionary<string, object?>
             {
                 ["type"] = "array",
-                ["items"] = PropertySchema(type.GetGenericArguments()[0]),
+                ["items"] = PropertySchema(type.GetGenericArguments()[0], seen),
                 ["nullable"] = true
             };
+        // A nested record we own (e.g. the completion threshold's {kind, value}) → recurse
+        // so its shape is explicit for AI-built configs; framework objects stay opaque, and
+        // the seen-set breaks any (currently nonexistent) config self-reference.
+        if (type.Namespace?.StartsWith("ScoreTracker", StringComparison.Ordinal) == true && !seen.Contains(type))
+            return SchemaFor(type, seen);
         return new Dictionary<string, object?> { ["type"] = "object" };
     }
 }
