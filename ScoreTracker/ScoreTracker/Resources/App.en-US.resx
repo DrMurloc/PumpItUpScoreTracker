@@ -3425,8 +3425,11 @@
   <data name="top {0}% of peers" xml:space="preserve">
     <value>top {0}% of peers</value>
   </data>
-  <data name="#{0} to pass this folder" xml:space="preserve">
-    <value>#{0} to pass this folder</value>
+  <data name="{0} pass in this folder" xml:space="preserve">
+    <value>{0} pass in this folder</value>
+  </data>
+  <data name="#1 of all peers" xml:space="preserve">
+    <value>#1 of all peers</value>
   </data>
   <data name="only {0} hold it" xml:space="preserve">
     <value>only {0} hold it</value>

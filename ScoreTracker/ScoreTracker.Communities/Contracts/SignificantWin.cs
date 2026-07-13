@@ -14,7 +14,7 @@ namespace ScoreTracker.Communities.Contracts;
 ///         <item>FolderComplete — Difficulty (the folder, e.g. "D23") — every chart in it passed</item>
 ///         <item>FolderFirst — Chart* + Score + Rank (folder ordinal 1/2/3)</item>
 ///         <item>TopPumbility — Chart* + Score + Rank (pumbility rank, e.g. 2 for #2)</item>
-///         <item>PeerElite — Chart* + Score + Rank ("top N%" among the ±0.5 cohort)</item>
+///         <item>PeerElite — Chart* + Score + Rank (peer position, 1 = #1) + RarityShare (top fraction → "top N%")</item>
 ///         <item>NotablePg — Chart* + Score + RarityShare (fraction of active players holding the PG)</item>
 ///     </list>
 /// </summary>

@@ -56,39 +56,26 @@ else
                         {
                             @if (win.ChartId is { } chartId && _charts.TryGetValue(chartId, out var chart))
                             {
-                                @if (Narrow)
-                                {
-                                    @* 1-wide: image + bubble + score on one line, detail as a subtitle beneath. *@
-                                    <div class="dash-ch-win dash-ch-win-narrow">
-                                        <div class="dash-ch-line @(EditMode ? "" : "dash-clickable")"
-                                             @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart))">
-                                            <SongImage Song="chart.Song" Small="true"/>
-                                            <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
-                                            @if (win.Score is { } narrowScore)
-                                            {
-                                                <span class="dash-ch-score dash-ch-score-right">@narrowScore.ToString("N0")</span>
-                                            }
-                                        </div>
-                                        <div class="dash-ch-sub">@Caption(win)</div>
-                                    </div>
-                                }
-                                else
-                                {
-                                    @* 2-wide+: image + bubble + name + detail, score right-aligned. *@
-                                    <div class="dash-ch-win">
-                                        <span class="dash-ch-chart @(EditMode ? "" : "dash-clickable")"
-                                              @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart))">
-                                            <SongImage Song="chart.Song" Small="true"/>
-                                            <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
-                                            <span class="dash-ch-song">@chart.Song.Name</span>
+                                @* One reflowing line: image + bubble + song name + detail, then a right-aligned
+                                   grade/plate + score. The song name hides on narrow cells (1-wide widget or
+                                   mobile) via the container/mobile CSS — no separate layout branch. *@
+                                <div class="dash-ch-win">
+                                    <span class="dash-ch-chart @(EditMode ? "" : "dash-clickable")"
+                                          @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart))">
+                                        <SongImage Song="chart.Song" Small="true"/>
+                                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                                        <span class="dash-ch-song">@chart.Song.Name</span>
+                                    </span>
+                                    <span class="dash-ch-why">@Caption(win)</span>
+                                    @if (win.Score is { } score)
+                                    {
+                                        <span class="dash-ch-score-right">
+                                            <ScoreBreakdown Score="PhoenixScore.From(score)" IsBroken="false"
+                                                            Plate="@(score == 1_000_000 ? PhoenixPlate.PerfectGame : (PhoenixPlate?)null)"
+                                                            ShowScore="true" OneLine="true" Height="16"/>
                                         </span>
-                                        <span class="dash-ch-why">@Caption(win)</span>
-                                        @if (win.Score is { } wideScore)
-                                        {
-                                            <span class="dash-ch-score dash-ch-score-right">@wideScore.ToString("N0")</span>
-                                        }
-                                    </div>
-                                }
+                                    }
+                                </div>
                             }
                             else if (win.Kind == WinKind.FolderComplete)
                             {
@@ -132,9 +119,6 @@ else
 
     private const int FeedTake = 30;
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
-
-    // 1-wide cells stack the score over a subtitle; 2-wide+ put it on one right-aligned line.
-    private bool Narrow => SizePreset.TryParse(Widget.SizePreset)?.Columns == 1;
 
     private bool _loaded;
     private string? _loadedFor;
@@ -189,10 +173,16 @@ else
     {
         WinKind.NotablePg => $"💎 {L["only {0} have it", Pct(win.RarityShare)]}",
         WinKind.TopPumbility => $"👑 {L["#{0} PUMBILITY", win.Rank ?? 0]}",
-        WinKind.PeerElite => $"📊 {L["top {0}% of peers", win.Rank ?? 0]}",
-        WinKind.FolderFirst => $"🆕 {L["#{0} to pass this folder", win.Rank ?? 0]}",
+        WinKind.PeerElite => win.Rank == 1
+            ? $"📊 {L["#1 of all peers"]}"
+            : $"📊 {L["top {0}% of peers", PeerPct(win)]}",
+        WinKind.FolderFirst => $"🆕 {L["{0} pass in this folder", Ordinal(win.Rank ?? 0)]}",
         _ => string.Empty
     };
+
+    private static string Ordinal(int n) => n switch { 1 => "1st", 2 => "2nd", 3 => "3rd", _ => $"{n}th" };
+
+    private static int PeerPct(SignificantWin win) => Math.Max(1, (int)Math.Ceiling((win.RarityShare ?? 0) * 100));
 
     private string TitleSuffix(SignificantWin win) => win.Kind == WinKind.RareTitle && win.RarityShare != null
         ? $"· {L["only {0} hold it", Pct(win.RarityShare)]}"

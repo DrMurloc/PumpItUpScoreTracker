@@ -152,7 +152,7 @@ public sealed class CommunityHighlightPolicyTests
     }
 
     [Fact]
-    public void AScoreInTheTopFivePercentOfPeersIsPeerElite()
+    public void TheBestScoreAmongPeersIsPeerEliteAtPositionOne()
     {
         var chartId = Guid.NewGuid();
         var wins = CommunityHighlightPolicy.Classify(
@@ -162,7 +162,22 @@ public sealed class CommunityHighlightPolicyTests
 
         var win = Assert.Single(wins);
         Assert.Equal(WinKind.PeerElite, win.Kind);
-        Assert.Equal(5, win.Rank); // ceil(100 * 1/20) = top 5%
+        Assert.Equal(1, win.Rank); // #1 — nobody beat you; the widget renders "#1 of all peers"
+    }
+
+    [Fact]
+    public void ATopFivePercentButNotFirstScoreCarriesItsPositionAndFraction()
+    {
+        var chartId = Guid.NewGuid();
+        var wins = CommunityHighlightPolicy.Classify(
+            Event(MixEnum.Phoenix,
+                new[] { Change(chartId, HighlightFlags.ScoreQuality90, new HighlightDetail(PeerCount: 100, PeerBetterCount: 3)) }),
+            Charts(Chart(chartId, 25)), Snapshot());
+
+        var win = Assert.Single(wins);
+        Assert.Equal(WinKind.PeerElite, win.Kind);
+        Assert.Equal(4, win.Rank);           // 3 beat you → position #4
+        Assert.Equal(0.04, win.RarityShare); // 4/100 → widget shows "top 4%"
     }
 
     [Fact]

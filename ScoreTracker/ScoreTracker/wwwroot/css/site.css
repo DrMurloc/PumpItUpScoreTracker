@@ -2040,6 +2040,8 @@ html.nav-away .page-dock,
     flex-direction: column;
     overflow-y: auto;
     height: 100%;
+    /* So win rows can respond to the widget's own width, not just the viewport. */
+    container-type: inline-size;
 }
 
 .dash-ch-empty {
@@ -2120,33 +2122,23 @@ html.nav-away .page-dock,
     white-space: nowrap;
 }
 
-/* 1-wide win: image + bubble + score stacked over a subtitle detail. */
-.dash-ch-win-narrow {
-    flex-direction: column;
-    align-items: stretch;
-    gap: .1rem;
-}
-
-.dash-ch-line {
-    display: flex;
-    align-items: center;
-    gap: .3rem;
-}
-
-.dash-ch-sub {
-    color: var(--mix-ink-muted);
-    font-size: .72rem;
-    line-height: 1.15;
-}
-
-.dash-ch-score {
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
-
+/* The grade/plate + score cluster right-aligns on the win line. */
 .dash-ch-score-right {
     margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    padding-left: .4rem;
+}
+
+/* Song name is first to drop when the cell is physically narrow — a 1-wide widget (container
+   query on the feed) or mobile, where the dashboard collapses to one column (media query). */
+@container (max-width: 300px) {
+    .dash-ch-song { display: none; }
+}
+
+@media (max-width: 600px) {
+    .dash-ch-song { display: none; }
 }
 
 /* Drag chrome: handle (desktop pointer only), dragged-cell dim, insertion marker. */

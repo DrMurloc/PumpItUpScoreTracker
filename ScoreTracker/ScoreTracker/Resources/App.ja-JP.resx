@@ -3426,8 +3426,11 @@
   <data name="top {0}% of peers" xml:space="preserve">
     <value>同格プレイヤーの上位{0}%</value>
   </data>
-  <data name="#{0} to pass this folder" xml:space="preserve">
-    <value>このフォルダを {0} 番目にクリア</value>
+  <data name="{0} pass in this folder" xml:space="preserve">
+    <value>このフォルダ {0} 通過</value>
+  </data>
+  <data name="#1 of all peers" xml:space="preserve">
+    <value>同格プレイヤー中 #1</value>
   </data>
   <data name="only {0} hold it" xml:space="preserve">
     <value>{0} のみ保持</value>

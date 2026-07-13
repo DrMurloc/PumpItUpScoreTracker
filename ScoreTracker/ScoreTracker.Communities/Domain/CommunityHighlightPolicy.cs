@@ -108,9 +108,11 @@ internal static class CommunityHighlightPolicy
             && change.Detail is { PeerCount: >= PeerEliteMinCohort } detail
             && (detail.PeerBetterCount ?? 0) / (double)detail.PeerCount!.Value <= PeerEliteFraction)
         {
-            var topPercent = Math.Max(1,
-                (int)Math.Ceiling(100.0 * ((detail.PeerBetterCount ?? 0) + 1) / detail.PeerCount!.Value));
-            return (PriorityPeerElite, Win(WinKind.PeerElite, chart, change.NewScore, rank: topPercent));
+            // Rank = peer position (1 = nobody beat you); RarityShare = the top fraction the widget
+            // turns into "top N%". Position 1 renders as "#1 of all peers", never "top 0%".
+            var position = (detail.PeerBetterCount ?? 0) + 1;
+            return (PriorityPeerElite, Win(WinKind.PeerElite, chart, change.NewScore,
+                rarityShare: position / (double)detail.PeerCount!.Value, rank: position));
         }
 
         if (change.Flags.HasFlag(HighlightFlags.FolderDebut)
@@ -147,14 +149,15 @@ internal static class CommunityHighlightPolicy
             .Select(t => t.Name.ToString())
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-    // Priority: lower renders first. Rarity-defined wins lead, then completionist + huge-number wins.
+    // Priority: lower renders first (owner order 2026-07-13): titles, then folder wins, then the
+    // number wins. Within titles, rare above big.
     private const int PriorityRareTitle = 0;
-    private const int PriorityNotablePg = 1;
+    private const int PriorityBigTitle = 1;
     private const int PriorityFolderComplete = 2;
-    private const int PriorityTopPumbility = 3;
-    private const int PriorityBigTitle = 4;
-    private const int PriorityPeerElite = 5;
-    private const int PriorityFolderFirst = 6;
+    private const int PriorityFolderFirst = 3;
+    private const int PriorityTopPumbility = 4;
+    private const int PriorityNotablePg = 5;
+    private const int PriorityPeerElite = 6;
 }
 
 /// <summary>

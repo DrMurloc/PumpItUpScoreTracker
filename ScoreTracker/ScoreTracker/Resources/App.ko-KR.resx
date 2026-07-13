@@ -3306,8 +3306,11 @@
   <data name="top {0}% of peers" xml:space="preserve">
     <value>동급 상위 {0}%</value>
   </data>
-  <data name="#{0} to pass this folder" xml:space="preserve">
-    <value>이 폴더를 {0}번째로 통과</value>
+  <data name="{0} pass in this folder" xml:space="preserve">
+    <value>이 폴더 {0} 통과</value>
+  </data>
+  <data name="#1 of all peers" xml:space="preserve">
+    <value>동급 중 #1</value>
   </data>
   <data name="only {0} hold it" xml:space="preserve">
     <value>{0}만 보유</value>
