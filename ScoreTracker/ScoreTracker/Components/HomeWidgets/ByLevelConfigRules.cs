@@ -19,6 +19,25 @@ public static class ByLevelConfigRules
                 BreakdownMetric.Score, BreakdownMetric.LetterGrade, BreakdownMetric.Plate, BreakdownMetric.Pass
             };
 
+    /// <summary>
+    ///     A stable, config-driven instance title (localization key) so three rapid-fired
+    ///     drawer presets of one widget type wear distinct names (D10 / DynamicNameKey).
+    /// </summary>
+    public static string TitleKey(BreakdownMetric metric, BreakdownAggregation aggregation) => (metric, aggregation) switch
+    {
+        (BreakdownMetric.Score, BreakdownAggregation.Distribution) => "Score Distribution",
+        (BreakdownMetric.Score, BreakdownAggregation.Completion) => "Score Completion",
+        (BreakdownMetric.LetterGrade, BreakdownAggregation.Breakdown) => "Grade Breakdown",
+        (BreakdownMetric.LetterGrade, BreakdownAggregation.Completion) => "Grade Completion",
+        (BreakdownMetric.LetterGrade, BreakdownAggregation.Distribution) => "Average Grade by Level",
+        (BreakdownMetric.Plate, BreakdownAggregation.Breakdown) => "Plate Breakdown",
+        (BreakdownMetric.Plate, BreakdownAggregation.Completion) => "Plate Completion",
+        (BreakdownMetric.Plate, BreakdownAggregation.Distribution) => "Average Plate by Level",
+        (BreakdownMetric.Pass, BreakdownAggregation.Breakdown) => "Pass Breakdown",
+        (BreakdownMetric.Pass, BreakdownAggregation.Completion) => "Clear Progress",
+        _ => "By-Level Breakdown"
+    };
+
     public static IReadOnlyList<BreakdownAggregation> AggregationsFor(BreakdownMetric metric) => metric switch
     {
         // Score is continuous → distribution or threshold completion (grades ARE its bands).

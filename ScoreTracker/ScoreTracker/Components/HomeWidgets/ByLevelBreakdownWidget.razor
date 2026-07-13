@@ -1,0 +1,153 @@
+@using ApexCharts
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* By-Level Breakdown (docs …/HomePageWidgets/by-level-breakdown.md): one configurable
+   per-level graph. Lines for Distribution/Completion, stacked bars for Breakdown. Colors
+   resolve through MixThemes (literals for ApexCharts); the pure math lives in
+   ByLevelAggregator. *@
+
+@if (!_loaded)
+{
+    <div class="dash-widget-message">
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+    </div>
+}
+else if (_kind == BreakdownChartKind.Empty)
+{
+    <div class="dash-widget-message">
+        <div>
+            <MudText Typo="Typo.body2">@L["No scores in this range yet — record or import to see your breakdown."]</MudText>
+            <MudLink Href="/UploadPhoenixScores" Typo="Typo.body2">@L["Upload Scores"]</MudLink>
+        </div>
+    </div>
+}
+else
+{
+    <div class="dash-chart-fill @ApexChartTheming.WrapperClass">
+        <ApexChart TItem="Pt" Options="_options" Height="@("100%")" @key="_renderKey">
+            @foreach (var series in _series)
+            {
+                <ApexPointSeries TItem="Pt"
+                                 Items="series.Points"
+                                 Name="@series.Name"
+                                 Color="@series.Color"
+                                 SeriesType="@(_kind == BreakdownChartKind.StackedBars ? SeriesType.Bar : SeriesType.Line)"
+                                 XValue="@(p => p.Label)"
+                                 YValue="@(p => p.Y)"/>
+            }
+        </ApexChart>
+    </div>
+}
+
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+@inject ByLevelDataSource DataSource
+
+@code {
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public MixEnum EffectiveMix { get; set; }
+
+    // Render-contract parameters (§2.2) — declared by every widget; this one is a graph
+    // with no per-chart click target, so OnChartClick stays unraised.
+    [Parameter] public bool EditMode { get; set; }
+    [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
+    [Parameter] public int RefreshToken { get; set; }
+
+    private sealed record Pt(string Label, decimal Y);
+
+    private sealed record RenderSeries(string Name, string Color, bool Dashed, IReadOnlyList<Pt> Points);
+
+    private bool _loaded;
+    private string? _loadedFor;
+    private string _renderKey = string.Empty;
+    private BreakdownChartKind _kind = BreakdownChartKind.Empty;
+    private List<RenderSeries> _series = new();
+    private ApexChartOptions<Pt> _options = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{EffectiveMix}";
+        if (signature == _loadedFor) return;
+        _loadedFor = signature;
+        _loaded = false;
+
+        if (!CurrentUser.IsLoggedIn)
+        {
+            _kind = BreakdownChartKind.Empty;
+            _series = new List<RenderSeries>();
+            _loaded = true;
+            return;
+        }
+
+        var config = WidgetConfigJson.Read<ByLevelBreakdownConfig>(Widget.ConfigJson);
+        var dataMix = config.Mix ?? EffectiveMix;
+        var (records, scales) = await DataSource.Load(CurrentUser.User.Id, dataMix);
+        var result = ByLevelAggregator.Aggregate(config, records, scales);
+        _kind = result.Kind;
+
+        var themeMix = MixThemes.ResolveThemeMix(
+            await UiSettings.GetSetting(MixThemes.OverrideSettingKey), await UiSettings.GetSelectedMix());
+        var palette = MixThemes.PaletteFor(themeMix);
+
+        _series = new List<RenderSeries>();
+        var dashes = new List<double>();
+        if (result.Kind != BreakdownChartKind.Empty)
+        {
+            var labels = result.Buckets
+                .Select(b => result.XAxisTitle == "Players" ? $"{b}P" : b.ToString())
+                .ToArray();
+            foreach (var series in result.Series)
+            {
+                var points = new List<Pt>();
+                for (var i = 0; i < result.Buckets.Count; i++)
+                    if (series.Values[i] is { } v)
+                        points.Add(new Pt(labels[i], (decimal)v));
+                _series.Add(new RenderSeries(series.Label, Resolve(series.Color, palette, themeMix), series.Dashed,
+                    points));
+                dashes.Add(series.Dashed ? 5 : 0);
+            }
+        }
+
+        _options = ApexChartTheming.BaseOptions<Pt>(palette);
+        if (_kind == BreakdownChartKind.StackedBars)
+        {
+            _options.Chart.Stacked = true;
+            _options.PlotOptions = new PlotOptions
+            {
+                Bar = new PlotOptionsBar { ColumnWidth = "70%", BorderRadius = 2 }
+            };
+        }
+        else
+        {
+            _options.Stroke = new Stroke { Curve = Curve.Straight, Width = 2, DashArray = dashes };
+            _options.Markers = new Markers { Size = 0 };
+        }
+
+        _options.Yaxis = new List<YAxis>
+        {
+            new()
+            {
+                Min = result.SuggestedYMin, Max = result.SuggestedYMax,
+                DecimalsInFloat = result.Normalized || result.YAxisTitle == "% of folder" ? 0 : null
+            }
+        };
+        _options.Legend = new Legend { Show = _series.Count > 1 };
+        _renderKey = signature;
+        _loaded = true;
+    }
+
+    private static string Resolve(SeriesColor color, MixPalette palette, MixEnum mix) => color.Role switch
+    {
+        SeriesColorRole.Qualitative => MixThemes.SeriesHex(color.Index),
+        SeriesColorRole.Rarity => MixThemes.RarityHex(mix, ThemeScales.BandFor(color.RarityFraction)),
+        SeriesColorRole.Pass => MixPalette.Success,
+        _ => palette.InkMuted
+    };
+
+}

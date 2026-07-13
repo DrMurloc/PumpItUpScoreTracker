@@ -95,7 +95,83 @@ public static class WidgetRegistry
                     _ => "Suggested · Title Hunt"
                 },
             RefreshIcon: Icons.Material.Filled.Shuffle,
-            RefreshTitleKey: "Shuffle suggestions")
+            RefreshTitleKey: "Shuffle suggestions"),
+        new("by-level-breakdown",
+            "By-Level Breakdown",
+            "One configurable graph of your scores, grades, plates, or clears by level.",
+            WidgetCategory.Progress,
+            Icons.Material.Filled.BarChart,
+            // 2-row minimum: a one-row graph is a smudge (owner, established on W1).
+            new[] { SizePreset.TwoByTwo, SizePreset.ThreeByTwo, SizePreset.FourByTwo },
+            SizePreset.TwoByTwo,
+            // Every recordable mix; the config panel + aggregator restrict metrics for
+            // legacy scoring (Grade + Pass only). Read seam already mix-generic.
+            Enum.GetValues<MixEnum>(),
+            typeof(ByLevelBreakdownWidget),
+            typeof(ByLevelBreakdownConfigPanel),
+            typeof(ByLevelBreakdownConfig),
+            DrawerPresets: new[]
+            {
+                new WidgetDrawerPreset("Box Plot",
+                    "Score spread per level — min, quartiles, max, with the IQR shaded.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Metric = BreakdownMetric.Score, Aggregation = BreakdownAggregation.Distribution,
+                        Series = new List<DistributionSeries>
+                        {
+                            DistributionSeries.Min, DistributionSeries.P25, DistributionSeries.Median,
+                            DistributionSeries.P75, DistributionSeries.Max
+                        },
+                        Band = BreakdownBand.InterQuartile, SeparateSinglesDoubles = true,
+                        MinLevel = 17, MaxLevel = 23
+                    })),
+                new WidgetDrawerPreset("Grade Wall",
+                    "What grades fill each folder, normalized so shape beats volume.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Metric = BreakdownMetric.LetterGrade, Aggregation = BreakdownAggregation.Breakdown,
+                        Normalize = true, IncludeUnplayed = true, SeparateSinglesDoubles = false,
+                        MinLevel = 17, MaxLevel = 24
+                    })),
+                new WidgetDrawerPreset("PG Race",
+                    "Chasing plates — % of each folder at MG, UG, and full Perfect Game.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Metric = BreakdownMetric.Plate, Aggregation = BreakdownAggregation.Completion,
+                        Thresholds = new List<CompletionThreshold>
+                        {
+                            new() { Kind = ThresholdKind.Plate, Value = "MG" },
+                            new() { Kind = ThresholdKind.Plate, Value = "UG" },
+                            new() { Kind = ThresholdKind.Plate, Value = "PG" }
+                        },
+                        SeparateSinglesDoubles = true, MinLevel = 17, MaxLevel = 23
+                    })),
+                new WidgetDrawerPreset("Clear Progress",
+                    "How much of every folder you've passed, Singles vs Doubles.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Metric = BreakdownMetric.Pass, Aggregation = BreakdownAggregation.Completion,
+                        SeparateSinglesDoubles = true, MinLevel = 1, MaxLevel = 28
+                    })),
+                new WidgetDrawerPreset("Score Push %",
+                    "Multi-threshold completion: ≥950k, ≥990k, and 1,000,000.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Metric = BreakdownMetric.Score, Aggregation = BreakdownAggregation.Completion,
+                        Thresholds = new List<CompletionThreshold>
+                        {
+                            new() { Kind = ThresholdKind.Score, Value = "950000" },
+                            new() { Kind = ThresholdKind.Score, Value = "990000" },
+                            new() { Kind = ThresholdKind.Score, Value = "1000000" }
+                        },
+                        SeparateSinglesDoubles = false, MinLevel = 17, MaxLevel = 23
+                    }))
+            },
+            DynamicNameKey: configJson =>
+            {
+                var config = WidgetConfigJson.Read<ByLevelBreakdownConfig>(configJson);
+                return ByLevelConfigRules.TitleKey(config.Metric, config.Aggregation);
+            })
     };
 
     private static readonly IReadOnlyDictionary<string, WidgetDescriptor> ByTypeId =

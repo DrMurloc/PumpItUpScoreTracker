@@ -304,6 +304,17 @@ public static class ByLevelAggregator
     {
         if (config.Metric is BreakdownMetric.Score) return BreakdownResult.Empty; // grades ARE the score bands
 
+        // Breakdown renders one stack per level (grouped stacked bars are a later UX
+        // iteration); S/D separation lives in the line aggregations.
+        draws = new[]
+        {
+            config.Scope == BreakdownChartScope.CoOp
+                ? new Draw(ChartType.CoOp, "Co-Op", 'C', false)
+                : new Draw(null, "S + D", ' ', false)
+        };
+        separate = false;
+        legendNote = null;
+
         var series = new List<BreakdownSeries>();
 
         if (config.Metric == BreakdownMetric.Pass)

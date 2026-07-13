@@ -269,6 +269,18 @@ public static class MixThemes
         };
     }
 
+    // Qualitative series palette for chart lines that carry no semantic-ramp meaning
+    // (By-Level Breakdown distribution stats and completion thresholds). ApexCharts needs
+    // literals; these are CVD-spaced and distinct on the dark canvas. Mix-invariant.
+    private static readonly string[] SeriesPalette =
+    {
+        "#38BDF8", "#E879F9", "#F5A524", "#34D399", "#F43F5E", "#A78BFA", "#22D3EE", "#FB923C"
+    };
+
+    /// <summary>Nth qualitative chart-series hex (wraps). For ApexCharts, which can't read CSS vars.</summary>
+    public static string SeriesHex(int index) =>
+        SeriesPalette[((index % SeriesPalette.Length) + SeriesPalette.Length) % SeriesPalette.Length];
+
     public static string CssVariablesFor(MixEnum mix)
     {
         var p = PaletteFor(mix);
