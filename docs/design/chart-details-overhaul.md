@@ -127,12 +127,22 @@ shell's search covers "find another chart". Leaderboard rows reflow two-line; sc
   `MudAvatar`) is static-safe; behavioral MudBlazor (`MudMenu`/`MudDialog`/`MudSelect`/
   autocomplete/snackbar) only inside islands.
 - **Islands never prerender** (owner rule: prerendering stays off, permanently). Their slots are
-  empty in the initial HTML, so each island's static wrapper carries a layout-matched CSS
-  skeleton (UX rule 9) that the island replaces on circuit connect.
-- **Caching**: unchanged intent — the anonymous page opts into the output-cache policy landing
-  with Stages 1–2 (vary: path, culture, mix); signed-in renders at origin per request. Query
-  results shared with the nightly analytics (verdicts, similarity, letter difficulties) are
-  `IMemoryCache`d with TTLs aligned to the recompute cadence.
+  empty in the initial HTML, so each island's **static wrapper** carries a layout-matched CSS
+  skeleton (UX rule 9). Because a `prerender: false` island renders nothing server-side, it
+  cannot remove a skeleton it never rendered — the settled mechanism (one pattern for all four
+  islands, decided 2026-07-14): every island root renders `data-island-ready` on its outermost
+  element, and the wrapper hides its skeleton via
+  `.island-wrap:has([data-island-ready]) .island-skeleton { display: none }`.
+- **Caching — this page ships it** (stage-plan call, 2026-07-14: output caching pays nothing
+  while every page still boots a circuit for its content, so it lands with the first static
+  page — this one). This work owns: the anonymous output-cache policy (GETs only, vary by path +
+  resolved culture + mix, TTL from config), the response-header audit (no `Set-Cookie` on
+  cacheable paths — the culture-cookie writer fix itself is Stage 2's), and the CDN rule spec
+  (bypass on auth cookies; never-cache list). Post-flip the static body reads `HttpContext`
+  directly, so the Stage-1 mix-as-root-param cache-poisoning hazard doesn't apply here.
+  Signed-in renders at origin per request. Query results shared with the nightly analytics
+  (verdicts, similarity, letter difficulties) are `IMemoryCache`d with TTLs aligned to the
+  recompute cadence.
 - **Retirement within the rebuild**: the dead `ChartOverview` dialog, the `TournamentId`
   query-param relic, the admin form's mid-page squat, and the `/Record` route alias all go;
   navigation into charts keeps working everywhere because `/Chart/{guid}` 301s forever.
@@ -155,7 +165,7 @@ checkpoint; FT = owner field test.
 | B4 | URL lattice (dark) | slug service + historical (mix, song, level) resolver + 301 controller, tested; not yet linked or sitemapped |
 | P1 | The page, hero → evidence | `ChartDetails.razor` rebuilt in place: static SSR body + video/record/graphs islands (`@rendermode InteractiveServer`), `--mud-*` audit on statically-used components — needs Stages 1–2 merged forward |
 | P2 | History, leaderboard, shelf | timeline, glowing top-10 + explorer island, similarity shelf, sibling bubbles, admin island |
-| P3 | SEO cutover | static head/JSON-LD live (old dead-channel `HeadContent` retired), sitemap swaps to vanity, 301 lattice goes public, in-app links switch to vanity URLs — **FT: view-source is real HTML; Discord unfurl shows the jacket** |
+| P3 | SEO cutover + caching | static head/JSON-LD live (old dead-channel `HeadContent` retired), sitemap swaps to vanity, 301 lattice goes public, in-app links switch to vanity URLs, output-cache policy + CDN header spec ship (first meaningfully cacheable page — verify cached anon HTML actually contains content) — **FT: view-source is real HTML; Discord unfurl shows the jacket** |
 | P4 | Tests + docs | E2E facts (anon chart page serves content pre-circuit; GUID 301s; glow only when signed in), bUnit island coverage, ARCHITECTURE/UX-GUIDELINES/API/DATABASE-SCHEMA sync |
 
 ## Out of scope now, recorded for future iterations (owner, 2026-07-14)
