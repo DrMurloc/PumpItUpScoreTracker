@@ -17,6 +17,11 @@ public interface IUiNotificationHub
     Task PublishAsync<T>(string topic, T message);
 }
 
+// A device-local import credential was stored or forgotten (configurator / upload page). The
+// import widget listens so its saved-vs-typed state flips without a page refresh. UI-only — this
+// never travels the domain bus (no password, no persistence; just a nudge to re-read local storage).
+public sealed record ImportCredentialChanged(Guid UserId);
+
 // Topic keys. Per-user topics keep one user's updates off every other user's circuits.
 public static class UiTopics
 {

@@ -295,6 +295,11 @@ namespace ScoreTracker.OfficialMirror.Application
         {
             var importSessionId = Guid.NewGuid();
 
+            // Announce the run right away so the nav-bar "importing" indicator lights up while the
+            // scrape works, even for a small import that saves fewer than one progress batch.
+            await _mediator.Publish(new ImportStatusUpdatedEvent(userId, "Importing your scores…",
+                Array.Empty<RecordedPhoenixScore>(), mix), cancellationToken);
+
             var accountData =
                 await _officialSite.GetAccountData(mix, sid, cardId, cancellationToken);
             if (accountData.AccountName != expectedGameTag)

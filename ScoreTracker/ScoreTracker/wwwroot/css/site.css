@@ -1866,6 +1866,30 @@ html.nav-away .page-dock,
     height: auto;
 }
 
+/* Nav-bar import indicator: a pulsing dot on the avatar while a background import runs. */
+.nav-avatar-wrap {
+    position: relative;
+    display: inline-flex;
+}
+
+.nav-import-pulse {
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--mix-primary);
+    border: 1px solid var(--mix-surface);
+    animation: nav-import-pulse 1.4s ease-out infinite;
+}
+
+@keyframes nav-import-pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--mix-primary) 65%, transparent); }
+    70% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--mix-primary) 0%, transparent); }
+    100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--mix-primary) 0%, transparent); }
+}
+
 /* Quick Record widget (§4.2): the arcade recorder, purpose-built to fit a 1x1 body. */
 .qr-body {
     flex: 1;

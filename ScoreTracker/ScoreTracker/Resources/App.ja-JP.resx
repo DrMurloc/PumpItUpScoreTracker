@@ -3774,6 +3774,9 @@
   <data name="Import with saved credentials" xml:space="preserve">
     <value>保存した認証情報でインポート</value>
   </data>
+  <data name="Importing scores…" xml:space="preserve">
+    <value>スコアをインポート中…</value>
+  </data>
   <data name="Saved on this device" xml:space="preserve">
     <value>このデバイスに保存済み</value>
   </data>

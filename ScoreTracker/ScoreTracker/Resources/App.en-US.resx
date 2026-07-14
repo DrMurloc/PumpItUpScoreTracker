@@ -3773,6 +3773,9 @@
   <data name="Import with saved credentials" xml:space="preserve">
     <value>Import with saved credentials</value>
   </data>
+  <data name="Importing scores…" xml:space="preserve">
+    <value>Importing scores…</value>
+  </data>
   <data name="Saved on this device" xml:space="preserve">
     <value>Saved on this device</value>
   </data>

@@ -168,6 +168,25 @@ else
         _userId = CurrentUser.User.Id;
         _subscriptions.Add(UiHub.Subscribe<ImportStatusUpdatedEvent>(UiTopics.User(_userId), OnStatus));
         _subscriptions.Add(UiHub.Subscribe<ImportStatusErrorEvent>(UiTopics.User(_userId), OnError));
+        // The configurator/upload page stores or forgets a credential on the same circuit; re-read
+        // the saved-vs-typed state live instead of waiting for a page refresh.
+        _subscriptions.Add(UiHub.Subscribe<ImportCredentialChanged>(UiTopics.User(_userId), OnCredentialChanged));
+    }
+
+    private Task OnCredentialChanged(ImportCredentialChanged e)
+    {
+        return InvokeAsync(async () =>
+        {
+            if (_mix != null && !_mix.Value.UsesLegacyScoring())
+                await RefreshCredentialState();
+            // Drop back to the idle view so the refreshed credential picks the right variant.
+            if (_state is ImportUiState.Idle or ImportUiState.UnlockFailed)
+            {
+                _state = ImportUiState.Idle;
+                _error = null;
+            }
+            StateHasChanged();
+        });
     }
 
     protected override async Task OnParametersSetAsync()
