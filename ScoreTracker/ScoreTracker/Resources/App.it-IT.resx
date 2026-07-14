@@ -4112,4 +4112,7 @@
   <data name="Import scores" xml:space="preserve">
     <value>Importa i punteggi</value>
   </data>
+  <data name="Creating Your Home Page" xml:space="preserve">
+    <value>Creazione della tua home page</value>
+  </data>
 </root>
