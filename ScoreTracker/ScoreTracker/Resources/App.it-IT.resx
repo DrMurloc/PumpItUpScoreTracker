@@ -482,7 +482,7 @@
     <value>Per ridurre al minimo le chiamate a https://phoenix.piugame.com importerò solo punteggi nuovi o migliorati. Ogni utente riceve solo un'importazione completa tramite Username/Password. Usa l'importatore dev-tools se vuoi reimportare punteggi precedenti.</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
-    <value>Una volta avviato, non lasciare questa pagina o i tuoi punteggi non finiranno di essere salvati.</value>
+    <value>Una volta avviato, puoi lasciare questa pagina: l'importazione si completa in background.</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Usato principalmente per il debugging</value>

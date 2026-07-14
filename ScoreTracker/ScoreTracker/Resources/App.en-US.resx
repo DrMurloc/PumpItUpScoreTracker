@@ -482,7 +482,7 @@
     <value>To minimize calls to https://phoenix.piugame.com I will only import new or improved scores. Every user only gets one full import using Username/Password. Use the dev-tools importer if you wish to re-import older scores.</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
-    <value>Once started, don't leave this page or else your scores will not finish saving.</value>
+    <value>Once started, you can leave this page — the import finishes in the background.</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Used primarily for debugging</value>

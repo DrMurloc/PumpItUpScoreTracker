@@ -1759,7 +1759,7 @@
     <value>Para minimizar las llamadas para https://phoenix.piugame.com/, solo importaremos scores nuevos o mejorados. Cada usuario recibirá importación completa usando usuario/contraseña solo una vez. Use el importador dev-tools si quiere reimportar puntajes más antiguas.</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
-    <value>Una vez iniciado, no salga de esta página, de lo contrario sus puntajes no serán guardadas.</value>
+    <value>Una vez iniciado, puedes salir de esta página: la importación termina en segundo plano.</value>
   </data>
   <data name="Use Script" xml:space="preserve">
     <value>Usar script</value>

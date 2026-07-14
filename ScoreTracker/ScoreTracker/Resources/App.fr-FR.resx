@@ -482,7 +482,7 @@
     <value>Pour limiter les requètes vers https://phoenix.piugame.com, je n'importe que les scores nouveaux ou améliorés. Chaque utilisateur a un import entier avec son nom d'utilisateur et mot de passe. Utilisez l'importateur outils developpeur si vous souhaitez réimporter des scores plus anciens.</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
-    <value>Une fois démarré, ne pas quitter cette page pour ne pas interrompre la sauvegarde des scores.</value>
+    <value>Une fois démarré, vous pouvez quitter cette page — l'importation se termine en arrière-plan.</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Utilisé principalement pour déboguer</value>

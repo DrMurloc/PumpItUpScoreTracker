@@ -483,7 +483,7 @@
           も一回インポート場合、dev-toolsのスクリプト使ってください。</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
-    <value>インポート始まるとこのページを離さないでください。離したら、新しくスコアが保存しない場合もあります。</value>
+    <value>開始後はこのページを離れても大丈夫です。インポートはバックグラウンドで完了します。</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>デバッグ用</value>
