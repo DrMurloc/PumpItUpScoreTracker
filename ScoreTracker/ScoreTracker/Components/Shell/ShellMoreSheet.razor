@@ -1,0 +1,101 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+
+@* Everything that didn't earn a bottom-nav slot, mirroring the desktop menu groups in the same
+   order. Bottom-anchored for thumb reach; nav.js toggles .open and the scrim. The Rankings and
+   Tools subgroups use native <details>, so the sheet needs no circuit. *@
+<div class="more-sheet-scrim" data-sheet-scrim></div>
+<div class="more-sheet shell-mobile-only" data-more-sheet aria-hidden="true">
+    <div class="more-sheet-body">
+        @* Nav follows LegacyMixGate: destinations a pre-XX mix can't reach yet
+           simply don't show (docs/design/legacy-mixes.md). *@
+        @if (Model.IsGatedMix && Model.IsLoggedIn)
+        {
+            <ShellMenuItem Href="/UploadXXScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</ShellMenuItem>
+        }
+        @if (!Model.IsGatedMix)
+        {
+            <div class="nav-section">@L["My Progress"]</div>
+            @if (Model.IsLoggedIn)
+            {
+                @* XX keeps its legacy progress page; Phoenix and Phoenix 2 share the Phoenix-style pages. *@
+                <ShellMenuItem Href=@(Model.CurrentMix == MixEnum.XX ? "/Progress" : "/Phoenix/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</ShellMenuItem>
+                @if (Model.CurrentMix != MixEnum.XX)
+                {
+                    <ShellMenuItem Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</ShellMenuItem>
+                }
+                @if (Model.HasRecap)
+                {
+                    <ShellMenuItem Href=@($"/Player/{Model.UserId}/PhoenixRecap") Icon="@Icons.Material.Filled.LocalFireDepartment">@L["My Recap"]</ShellMenuItem>
+                }
+                <ShellMenuItem Href=@($"/Player/{Model.UserId}/Sessions") Icon="@Icons.Material.Filled.History">@L["My Sessions"]</ShellMenuItem>
+            }
+            <ShellMenuItem Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</ShellMenuItem>
+
+            <div class="nav-section">@L["Compete"]</div>
+            <ShellMenuItem Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</ShellMenuItem>
+            <ShellMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.Casino">@L["Chart Randomizer"]</ShellMenuItem>
+            <ShellMenuItem Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</ShellMenuItem>
+            @foreach (var tourney in Model.HighlightedEvents)
+            {
+                @if (tourney.Type == TournamentType.Stamina)
+                {
+                    <ShellMenuItem Href=@($"/Tournament/Stamina/{tourney.Id}") Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
+                }
+                else if (tourney.LinkOverride != null)
+                {
+                    <ShellMenuItem Href="@tourney.LinkOverride.ToString()" External="true" Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
+                }
+                else
+                {
+                    <ShellMenuItem Href=@($"/Tournament/{tourney.Id}/Qualifiers") Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
+                }
+            }
+            <details class="shell-disclosure">
+                <summary class="shell-menu-item">
+                    <MudIcon Icon="@Icons.Material.Filled.Leaderboard" Size="Size.Small"></MudIcon>
+                    <span>@L["Rankings"]</span>
+                </summary>
+                <div class="shell-disclosure-body">
+                    @if (Model.IsLoggedIn)
+                    {
+                        <ShellMenuItem Href="/ScoreRankings" Icon="@Icons.Material.Filled.Stars">@L["Score Ranking"]</ShellMenuItem>
+                    }
+                    <ShellMenuItem Href="/Completion" Icon="@Icons.Material.Filled.Done">@L["Completion Leaderboards"]</ShellMenuItem>
+                    <ShellMenuItem Href="/UcsLeaderboards" Icon="@Icons.Material.Filled.EditNote">@L["UCS Leaderboards"]</ShellMenuItem>
+                    <ShellMenuItem Href="/PlayerRankings" Icon="@Icons.Material.Filled.Public">@L["World Rankings"]</ShellMenuItem>
+                    <ShellMenuItem Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Score">@L["Official Leaderboard Search"]</ShellMenuItem>
+                    <ShellMenuItem Href="/OfficialLeaderboards/PlayerCompare" Icon="@Icons.Material.Filled.CompareArrows">@L["Leaderboard Player Compare"]</ShellMenuItem>
+                </div>
+            </details>
+
+            <div class="nav-section">@L["Community"]</div>
+            <ShellMenuItem Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</ShellMenuItem>
+        }
+        <ShellMenuItem Href="https://discord.gg/MEYvr3bFte" External="true" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</ShellMenuItem>
+
+        <div class="shell-menu-divider"></div>
+        @if (!Model.IsGatedMix)
+        {
+            <details class="shell-disclosure">
+                <summary class="shell-menu-item">
+                    <MudIcon Icon="@Icons.Material.Filled.Build" Size="Size.Small"></MudIcon>
+                    <span>@L["Tools"]</span>
+                </summary>
+                <div class="shell-disclosure-body">
+                    <ShellMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</ShellMenuItem>
+                    <ShellMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</ShellMenuItem>
+                    <ShellMenuItem Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</ShellMenuItem>
+                    <ShellMenuItem Href="/ChartCompare" Icon="@Icons.Material.Filled.Compare">@L["Chart Compare"]</ShellMenuItem>
+                    <ShellMenuItem Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</ShellMenuItem>
+                </div>
+            </details>
+        }
+        <ShellMenuItem Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</ShellMenuItem>
+    </div>
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public ShellViewModel Model { get; set; } = null!;
+}

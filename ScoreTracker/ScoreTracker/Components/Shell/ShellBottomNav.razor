@@ -1,0 +1,44 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
+
+@* Thumb-reach primary nav at phone/tablet widths; desktop uses the top nav. Pages may register
+   a dock of primary actions above it (PageDock); scrolling down slides the nav away so both
+   bars only coexist at rest. Focus mode drops the shell nav entirely — the page owns its exit
+   affordance. The active slot is rendered from the request path and kept honest across
+   client-side navigation by nav.js, which the shell never re-renders for. *@
+<nav class="bottom-nav shell-mobile-only">
+    @if (Model.IsLoggedIn && !Model.IsGatedMix)
+    {
+        <a href="/" data-href="/" class="@BnClass("/")"><MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small"></MudIcon><span>@L["Play"]</span></a>
+    }
+    <a href="/TierLists" data-href="/TierLists" class="@BnClass("/TierLists")"><MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small"></MudIcon><span>@L["Tiers"]</span></a>
+    <a href="/Charts" data-href="/Charts" class="@BnClass("/Charts")"><MudIcon Icon="@Icons.Material.Filled.List" Size="Size.Small"></MudIcon><span>@L["Charts"]</span></a>
+    @if (!Model.IsGatedMix)
+    {
+        <a href="/WeeklyCharts" data-href="/WeeklyCharts" class="@BnClass("/WeeklyCharts")"><MudIcon Icon="@Icons.Material.Filled.ViewWeek" Size="Size.Small"></MudIcon><span>@L["Weekly"]</span></a>
+    }
+    @if (!Model.IsLoggedIn)
+    {
+        @* The front door is a Razor Page, not a Blazor route. *@
+        <a href="/Login" data-href="/Login" target="_top" class="@BnClass("/Login")"><MudIcon Icon="@Icons.Material.Filled.Login" Size="Size.Small"></MudIcon><span>@L["Login"]</span></a>
+    }
+    @* Extra slot for squarish viewports (fold phones, landscape) — hidden on tall phones. *@
+    @if (!Model.IsGatedMix)
+    {
+        <a href="/Communities" data-href="/Communities" class="@($"{BnClass("/Communities")} bn-wide")"><MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small"></MudIcon><span>@L["Communities"]</span></a>
+    }
+    <button type="button" class="bn" data-more-btn aria-expanded="false"><MudIcon Icon="@Icons.Material.Filled.MoreHoriz" Size="Size.Small"></MudIcon><span>@L["More"]</span></button>
+</nav>
+
+@code {
+    [Parameter] [EditorRequired] public ShellViewModel Model { get; set; } = null!;
+
+    private string BnClass(string href)
+    {
+        var path = "/" + Model.ActivePath.TrimStart('/').TrimEnd('/');
+        var active = href == "/"
+            ? path == "/"
+            : path.StartsWith(href, StringComparison.OrdinalIgnoreCase);
+        return active ? "bn active" : "bn";
+    }
+}

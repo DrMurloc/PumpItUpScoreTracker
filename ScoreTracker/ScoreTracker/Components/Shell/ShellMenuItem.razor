@@ -1,0 +1,31 @@
+@namespace ScoreTracker.Web.Components
+
+@* One row in a shell menu or the More sheet — the static stand-in for MudMenuItem/MudNavLink.
+   Blazor's router intercepts every same-origin anchor on the page, including these, which is
+   what keeps nav clicks a fast in-app navigation. Routes that MVC or Razor Pages own must set
+   FullLoad so the browser handles them instead; without it they resolve to NotFound. *@
+<a class="shell-menu-item" href="@Href" target="@Target" rel="@Rel">
+    @if (!string.IsNullOrWhiteSpace(Icon))
+    {
+        <MudIcon Icon="@Icon" Size="Size.Small"></MudIcon>
+    }
+    <span>@ChildContent</span>
+</a>
+
+@code {
+    [Parameter] [EditorRequired] public string Href { get; set; } = string.Empty;
+
+    [Parameter] public string? Icon { get; set; }
+
+    /// <summary>Opens in a new tab.</summary>
+    [Parameter] public bool External { get; set; }
+
+    /// <summary>For routes Blazor has no page for — MVC actions and Razor Pages.</summary>
+    [Parameter] public bool FullLoad { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string? Target => External ? "_blank" : FullLoad ? "_top" : null;
+
+    private string? Rel => External ? "noopener" : null;
+}
