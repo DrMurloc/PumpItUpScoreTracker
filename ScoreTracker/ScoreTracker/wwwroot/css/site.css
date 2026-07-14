@@ -87,18 +87,18 @@ body {
 }
 
 /* Breakpoint seam at Mud's Md (960px), replacing MudHidden — which needed JS to measure the
-   viewport before it could decide what to render. */
-.shell-mobile-only {
-    display: none;
-}
-
+   viewport before it could decide what to render. Each side only ever hides: the elements
+   themselves own their display value, because the bottom nav (flex) and the More sheet
+   (block) don't share one. */
 @media (max-width: 959.98px) {
     .shell-desktop-only {
         display: none !important;
     }
+}
 
+@media (min-width: 960px) {
     .shell-mobile-only {
-        display: flex;
+        display: none !important;
     }
 }
 
