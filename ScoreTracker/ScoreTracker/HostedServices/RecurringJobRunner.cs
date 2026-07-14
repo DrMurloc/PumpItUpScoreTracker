@@ -45,6 +45,9 @@ public sealed class RecurringJobRunner
     public Task PublishCalculateChartLetterDifficulties() =>
         _bus.Publish(new RecalculateChartLetterDifficultiesCommand());
 
+    public Task PublishRecalculateChartSimilarity() =>
+        _bus.Publish(new RecalculateChartSimilarityCommand());
+
     public Task PublishStartLeaderboardImport() =>
         _bus.Publish(new StartLeaderboardImportCommand());
 

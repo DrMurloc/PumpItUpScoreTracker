@@ -63,6 +63,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.ChartScoreStats` | Population score variance per chart, refreshed by the daily scores tier-list rebuild (tier-lists overhaul C1) |
 | `scores.FolderCohortStats` | Folder pass-count histograms per competitive-level bucket, refreshed by the daily scores tier-list rebuild — powers the "Folder Passes vs Similar Players" bar (tier-lists overhaul C16) |
 | `scores.ChartScoringLevel` | Calculated scoring-difficulty level per chart+mix |
+| `scores.ChartSimilarity` | Similarity-graph edges: top-8 evidence-weighted neighbors per chart+mix with the per-signal breakdown JSON the why-chips render from, rebuilt wholesale by the nightly similarity job (chart-details overhaul B1) |
 | `scores.ChartLetterDifficulty` | Letter-grade (AA–PG) difficulty percentiles per chart |
 | `scores.ChartDifficultyRating` | Aggregated community difficulty ratings (count + std dev) |
 | `scores.UserChartDifficultyRating` | An individual user's difficulty vote |
