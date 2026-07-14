@@ -152,10 +152,54 @@ shell's search covers "find another chart". Leaderboard rows reflow two-line; sc
   templates live Web-side (see [chart-verdicts.md](chart-verdicts.md) — the engine returns
   structured facts; Web renders words).
 
+## Technical scope by layer (settled 2026-07-14)
+
+**Core (SharedKernel + Domain): untouched.** No new value types, no scoring-engine changes, no
+new shared secondary ports — every read goes through ports/contracts that already exist
+(`IScoreReader`, `IPlayerStatsReader`, `IChartRepository`, Catalog's published queries).
+**Core `ScoreTracker.Application`: untouched** (it stays shrinking).
+
+**ChartIntelligence — the only vertical with changes:**
+- `Domain/` (internal, pure, unit-tested): `ChartSimilarityCalculator` — the settled formula
+  (gates → five signals → weight renormalization → level affinity → top-8 @ 0.55) over internal
+  feature models (`ChartSimilarityFeatures`, `SimilarityEdge`); `ChartVerdictService` — the
+  eight facet computers with min-evidence bars and quantization, returning facts, never strings.
+- `Contracts/`: `GetSimilarChartsQuery` + `ChartSimilarityRecord` (edge + per-signal breakdown),
+  `GetChartVerdictQuery` + `ChartVerdictFacet`, `Contracts/Messages/RecalculateChartSimilarityCommand`.
+- `Application/` (internal): the similarity saga (`IConsumer` + the two query handlers; verdicts
+  computed on read, `IMemoryCache` daily TTL, no verdict table v1).
+- `Infrastructure/` (internal): `ChartSimilarityEntity` + EF repository behind an internal port,
+  registered on the vertical's **existing** model contribution — no CompositionRoot change.
+- `Wiring/`: one consumer-hook line.
+
+**Read-only vertical touchpoints** (existing contracts, no code changes expected): Catalog
+(skills, step analysis, videos), ScoreLedger (scores, journey), PlayerProgress (stats),
+Communities (glow membership). Two flagged possible additions, decided when hit: a **bulk
+step-analysis read** on Catalog if the nightly sweep is too chatty per-chart (B2), and a
+**capped top-N-plus-rank leaderboard read** so the page never inherits the uncapped World
+query (P2).
+
+**Infrastructure (`ScoreTracker.Data`): migration only** — the `ChartSimilarity` table. No new
+clients, no new external APIs.
+
+**Presentation (Web)**: `ChartDetails.razor` rebuilt + five islands + presentational components
+(verdict card, timeline, shelf card, fact strip, extracted skill bars) + the `--mud-*` token
+audit; `ChartPermalinkController` + `ChartSlugService`; sitemap swap; `Program.cs` job line +
+output-cache policy (P3); verdict templates ×9 locales; `UiColorTokenTests` allowlist burn;
+deletions (`ChartOverview`, `TournamentId` relic, mid-page admin form, `/Record`).
+
+**Hangfire**: exactly one new recurring job — `recalculate-chart-similarity`, cron
+`0 12 * * *` UTC (07:00 ET), deliberately after the analytics chain it reads (tier lists
+07:00–09:30, letter difficulties 10:00 UTC). Verdicts add no job.
+
+**Secrets: none.** No new external calls anywhere in this branch; nothing lands in AppHost
+user-secrets or pipeline variables.
+
 ## Build plan
 
-Backend first (zero dependency on wave 2), page last (needs shell C1/C2). Suites green at each
-checkpoint; FT = owner field test.
+**The table below is the commit order.** B1→B4 sequential on this branch with zero stage
+dependency; P1→P4 sequential and gated on Stage 2 (hosting flip) merged forward. Suites green at
+every row; FT = owner field test.
 
 | # | Commit | Contents |
 |---|---|---|
