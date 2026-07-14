@@ -19,14 +19,22 @@ public sealed class HttpContextUserAccessor : ICurrentUserAccessor
         _ambient = ambient;
     }
 
-    private bool HttpAuthenticated => _context?.HttpContext?.User.Identity?.IsAuthenticated ?? false;
+    // The circuit's current user. IHttpContextAccessor is only reliable during the initial request,
+    // not during later interactive renders (its HttpContext goes null once the request completes),
+    // so the first authenticated read memoizes into the circuit-scoped AmbientUserContext and every
+    // later read serves that cache. Without this, a background-driven re-render sees a null
+    // HttpContext and the component flips to "logged out" mid-session.
+    private User? ResolveUser()
+    {
+        if (_ambient.User != null) return _ambient.User;
+        var principal = _context.HttpContext?.User;
+        if (principal?.Identity?.IsAuthenticated == true) return _ambient.User = principal.GetUser();
+        return null;
+    }
 
-    // An authenticated HttpContext wins; otherwise fall back to the user a background job set.
-    public bool IsLoggedIn => HttpAuthenticated || _ambient.User != null;
+    public bool IsLoggedIn => ResolveUser() != null;
 
-    public User User => HttpAuthenticated
-        ? _context.HttpContext!.User.GetUser()
-        : _ambient.User ?? throw new UserNotLoggedInException();
+    public User User => ResolveUser() ?? throw new UserNotLoggedInException();
 
     public async Task SetCurrentUser(User user)
     {
@@ -45,7 +53,7 @@ public sealed class HttpContextUserAccessor : ICurrentUserAccessor
         _ambient.User = user;
     }
 
-    public bool IsLoggedInAsAdmin => IsLoggedIn && User.IsAdmin;
+    public bool IsLoggedInAsAdmin => ResolveUser() is { IsAdmin: true };
 }
 
 public static class UserExtensions

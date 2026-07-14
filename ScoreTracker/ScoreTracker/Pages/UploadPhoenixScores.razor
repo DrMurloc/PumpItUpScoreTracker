@@ -24,6 +24,7 @@
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.UiNotifications
 @using ScoreTracker.Web.Shared
 @implements IDisposable
 <PageTitle>@L["Import Phoenix Scores"]</PageTitle>
@@ -358,6 +359,7 @@
 @inject IBus Bus;
 @inject IImportCredentialClientStore ClientStore;
 @inject IDialogService DialogService;
+@inject IUiNotificationHub UiHub;
 @code
 {
     private enum Step
@@ -547,6 +549,7 @@
     private CancellationTokenSource _currentCancellation = new CancellationTokenSource();
     private string _passwordImportStatus = string.Empty;
     private Guid _userId;
+    private readonly List<IDisposable> _subscriptions = new();
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
@@ -556,10 +559,11 @@
             NavManager.NavigateTo("/Login");
             return;
         }
-        MainLayout.ImportStatusUpdatedEvent += StatusUpdate;
-        MainLayout.ImportStatusErrorEvent += ImportError;
         _isPublic = CurrentUser.User.IsPublic;
         _userId = CurrentUser.User.Id;
+        // This user's import feed, routed by user topic (no cross-user status/culture leak).
+        _subscriptions.Add(UiHub.Subscribe<ImportStatusUpdatedEvent>(UiTopics.User(_userId), StatusUpdate));
+        _subscriptions.Add(UiHub.Subscribe<ImportStatusErrorEvent>(UiTopics.User(_userId), ImportError));
         _selectedId = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameId") ?? "";
         _selectedGameTag = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameTag") ?? "";
         _alsoImportPiuTracker = bool.TryParse(await UiSettings.GetSetting(PiuTrackerKey), out var v) && v;
@@ -567,22 +571,27 @@
     }
 
     private List<string> _errors = new List<string>();
-    private void ImportError(object? origin, ImportStatusErrorEvent e)
+    // The hub already routed by user; only mix labelling remains. Marshal onto the circuit.
+    private Task ImportError(ImportStatusErrorEvent e)
     {
-        if (e.UserId != _userId) return;
-        // Events arrive per mix now — name the mix when it isn't the Phoenix default.
-        _errors.Add(e.Mix != MixEnum.Phoenix ? $"[{e.Mix.GetName()}] {e.Error}" : e.Error);
-        InvokeAsync(StateHasChanged);
-    }
-    private void StatusUpdate(object? origin, ImportStatusUpdatedEvent e)
-    {
-        if (e.UserId != _userId) return;
-        foreach (var score in e.Scores)
+        return InvokeAsync(() =>
         {
-            _scores.Add(score);
-        }
-        _passwordImportStatus = e.Mix != MixEnum.Phoenix ? $"[{e.Mix.GetName()}] {e.Status}" : e.Status;
-        InvokeAsync(GetRatings);
+            // Events arrive per mix now — name the mix when it isn't the Phoenix default.
+            _errors.Add(e.Mix != MixEnum.Phoenix ? $"[{e.Mix.GetName()}] {e.Error}" : e.Error);
+            StateHasChanged();
+        });
+    }
+    private Task StatusUpdate(ImportStatusUpdatedEvent e)
+    {
+        return InvokeAsync(async () =>
+        {
+            foreach (var score in e.Scores)
+            {
+                _scores.Add(score);
+            }
+            _passwordImportStatus = e.Mix != MixEnum.Phoenix ? $"[{e.Mix.GetName()}] {e.Status}" : e.Status;
+            await GetRatings();
+        });
     }
 
     private IDictionary<Guid, ScoreRankingRecord> _rankings;
@@ -736,7 +745,6 @@ var csvString=""data:text/csv;charset=utf-8,"";
 
     public void Dispose()
     {
-        MainLayout.ImportStatusUpdatedEvent -= StatusUpdate;
-        MainLayout.ImportStatusErrorEvent -= ImportError;
+        foreach (var subscription in _subscriptions) subscription.Dispose();
     }
 }

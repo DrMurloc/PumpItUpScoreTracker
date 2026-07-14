@@ -11,6 +11,7 @@
 @using ScoreTracker.Randomizer.Contracts.Commands
 @using ScoreTracker.Randomizer.Contracts.Events
 @using ScoreTracker.Randomizer.Contracts.Queries
+@using ScoreTracker.Web.Services.UiNotifications
 @using ScoreTracker.Web.Shared
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.SharedKernel.Enums
@@ -683,6 +684,7 @@ else
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavManager
 @inject IOptions<JsonSerializerOptions> JsonOptions
+@inject IUiNotificationHub UiHub
 @implements IDisposable
 @code {
 
@@ -842,9 +844,11 @@ else
         return active.Length == 0 ? null : (active.Min(), active.Max());
     }
 
+    private IDisposable? _drawSubscription;
+
     protected override async Task OnInitializedAsync()
     {
-        MainLayout.DrawUpdated += OnDrawUpdated;
+        _drawSubscription = UiHub.Subscribe<DrawUpdatedEvent>(UiTopics.Draws, OnDrawUpdated);
         _mix = await UiSettings.GetSelectedMix();
         var densitySetting = await UiSettings.GetSetting(DensityKey);
         if (Enum.TryParse<UiDensity>(densitySetting, out var density)) _density = density;
@@ -1722,11 +1726,11 @@ else
     // Staff multi-device sync: another operator's action re-loads this device's match
     // list and selected match. Own actions re-fire it too — the reload agrees with
     // local state, so it's harmless.
-    private async void OnDrawUpdated(object? sender, DrawUpdatedEvent e)
+    private Task OnDrawUpdated(DrawUpdatedEvent e)
     {
-        if (_contextTournamentId == null) return;
+        if (_contextTournamentId == null) return Task.CompletedTask;
 
-        await InvokeAsync(async () =>
+        return InvokeAsync(async () =>
         {
             _matches = (await Mediator.Send(new GetTournamentDrawsQuery(_contextTournamentId.Value))).ToList();
             var selected = _matches.FirstOrDefault(m => m.Id == _selectedMatchId) ?? _matches.FirstOrDefault();
@@ -1802,7 +1806,7 @@ else
 
     public void Dispose()
     {
-        MainLayout.DrawUpdated -= OnDrawUpdated;
+        _drawSubscription?.Dispose();
         _countCts?.Cancel();
     }
 }

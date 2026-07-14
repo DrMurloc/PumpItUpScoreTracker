@@ -8,12 +8,13 @@
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.HomeDashboard
-@using ScoreTracker.Web.Shared
+@using ScoreTracker.Web.Services.UiNotifications
 @implements IDisposable
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject IImportCredentialClientStore ClientStore
 @inject IUiSettingsAccessor UiSettings
+@inject IUiNotificationHub UiHub
 @inject NavigationManager Nav
 
 @* Import Scores — 1x1. Mirrors quick-record's mix handling. Never stores credentials (that is the
@@ -158,6 +159,16 @@ else
     private string? _error;
     private int _importedCount;
     private Guid _userId;
+    private readonly List<IDisposable> _subscriptions = new();
+
+    protected override void OnInitialized()
+    {
+        // Subscribe once to this user's import feed (routed by user topic — no cross-user leak).
+        if (!CurrentUser.IsLoggedIn) return;
+        _userId = CurrentUser.User.Id;
+        _subscriptions.Add(UiHub.Subscribe<ImportStatusUpdatedEvent>(UiTopics.User(_userId), OnStatus));
+        _subscriptions.Add(UiHub.Subscribe<ImportStatusErrorEvent>(UiTopics.User(_userId), OnError));
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -179,10 +190,6 @@ else
             _loaded = true;
             return;
         }
-
-        _userId = CurrentUser.User.Id;
-        MainLayout.ImportStatusUpdatedEvent += OnStatus;
-        MainLayout.ImportStatusErrorEvent += OnError;
 
         if (_mix != null && !_mix.Value.UsesLegacyScoring())
             await RefreshCredentialState();
@@ -269,28 +276,34 @@ else
         }
     }
 
-    private void OnStatus(object? sender, ImportStatusUpdatedEvent e)
+    // The user is already matched by the hub topic; only the mix still needs filtering.
+    private Task OnStatus(ImportStatusUpdatedEvent e)
     {
-        if (e.UserId != _userId || _mix == null || e.Mix != _mix.Value) return;
-        _status = e.Status;
-        // Each status carries the batch it just saved; summing them is the new-score total.
-        _importedCount += e.Scores.Count();
-        if (e.Status == "Charts finished saving") _state = ImportUiState.Done;
-        InvokeAsync(StateHasChanged);
+        if (_mix == null || e.Mix != _mix.Value) return Task.CompletedTask;
+        return InvokeAsync(() =>
+        {
+            _status = e.Status;
+            // Each status carries the batch it just saved; summing them is the new-score total.
+            _importedCount += e.Scores.Count();
+            if (e.Status == "Charts finished saving") _state = ImportUiState.Done;
+            StateHasChanged();
+        });
     }
 
-    private void OnError(object? sender, ImportStatusErrorEvent e)
+    private Task OnError(ImportStatusErrorEvent e)
     {
-        if (e.UserId != _userId || _mix == null || e.Mix != _mix.Value) return;
-        _error = e.Error;
-        _state = ImportUiState.Idle;
-        InvokeAsync(StateHasChanged);
+        if (_mix == null || e.Mix != _mix.Value) return Task.CompletedTask;
+        return InvokeAsync(() =>
+        {
+            _error = e.Error;
+            _state = ImportUiState.Idle;
+            StateHasChanged();
+        });
     }
 
     public void Dispose()
     {
-        MainLayout.ImportStatusUpdatedEvent -= OnStatus;
-        MainLayout.ImportStatusErrorEvent -= OnError;
+        foreach (var subscription in _subscriptions) subscription.Dispose();
     }
 
 }
