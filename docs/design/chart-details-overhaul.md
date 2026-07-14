@@ -1,10 +1,19 @@
-# Chart details overhaul — design (wave 1 of the SEO/islands plan)
+# Chart details overhaul — design (Stage 3 of the SSR/islands migration)
 
 Decided in the 2026-07-14 chart-details workshop (owner + Claude); visual mock approved the same
 day (round 2 — community glow + honest plate framing). Companion specs:
 [chart-similarity.md](chart-similarity.md) (the similarity graph + settled formula) and
-[chart-verdicts.md](chart-verdicts.md) (the verdict engine). This work **branches off and codes
-against** [static-shell.md](static-shell.md) §7 (wave 2, built in a parallel session).
+[chart-verdicts.md](chart-verdicts.md) (the verdict engine).
+
+**Stage context (owner-approved 2026-07-14, aligned with the shell/hosting session):** the site
+moves to SSR-by-default + islands in three stages — Stage 1 the static shell (every page, one
+unavoidable site-wide QA), Stage 2 the hosting flip (`AddServerSideBlazor` → Blazor Web App
+render modes, shipped `prerender: false` globally, zero intended behavior change; `_Host` and
+`_Layout` die), Stage 3 pages one at a time, **this page first**. Page work here depends on
+Stages 1–2 being merged forward. **Prerendering stays off permanently — static SSR ≠
+prerendering; never conflate them.** (An earlier revision of this doc coded against
+static-shell.md §7's Razor-Page-plus-`<component>`-islands shape; that is obsolete and was never
+built.)
 
 **Context.** `/Chart/{id}` (`Pages/ChartDetails.razor`) is the pre-overhaul chart surface: no
 jacket, no tier placement, raw `#FF0000/#00FF00` graph literals, an uncapped world leaderboard
@@ -48,7 +57,9 @@ surface and the destination worthy of the dialog's vocabulary.
 
 ## Page anatomy (mock R2, approved 2026-07-14)
 
-Server HTML unless marked **[island]**. Section order = answer → evidence → record → onward.
+Static SSR (real server HTML) unless marked **[island]** = a child component with
+`@rendermode InteractiveServer`, never prerendered. Section order = answer → evidence → record →
+onward.
 
 1. **Hero** — jacket-led (`SongImage` art as a real `<img>`, also the `og:image`; the LCP).
    Click-to-load video overlay on the jacket **[island: video]** — no iframe weight until asked.
@@ -86,25 +97,47 @@ Mobile (390×844): hero stacks jacket-row → verdict → your best inside the f
 **Record score owns the page dock** (`PageDock` contract); no chart selector on the page — the
 shell's search covers "find another chart". Leaderboard rows reflow two-line; scores never clip.
 
-## Technical shape
+## Technical shape (Stage-3 form)
 
-- **The page**: a Razor Page (route table above) on `_SiteLayout` (shell contract §7),
-  `IncludeBlazorScripts = true`, owning its `Head` section: title, meta-description-from-verdict,
-  OG set, canonical, JSON-LD (`MusicRecording` + `additionalProperty` for difficulty/pass-rate/
-  skills — exact vocabulary settled at implementation). All dispatch via `IMediator` (unchanged
-  rule); no repository injection.
-- **Islands**: this work defines **`IslandRoot`** (per shell doc §7) — the MudBlazor provider +
-  theme wrapper for islands on Razor pages; every island above mounts inside one. Never
-  `ServerPrerendered`.
-- **Caching**: the anonymous page opts into the `AnonShell` output-cache policy (vary: path,
-  culture, mix cookie). Signed-in renders at origin per request. Query results the page shares
-  with the nightly analytics (verdicts, similarity, letter difficulties) are `IMemoryCache`d
-  with TTLs aligned to the recompute cadence.
-- **Retirement**: `ChartDetails.razor` deletes (routes move to the lattice); the dead
-  `ChartOverview` dialog and the `TournamentId` query-param relic go with it; navigation into
-  charts keeps working everywhere because `/Chart/{guid}` 301s forever. `ChartDetailsDialog`
-  stays (widgets' quick-look surface) — shared pieces (skill bars, meta grid) extract into
-  components both consume where practical (one concept, one component).
+- **The page stays `Pages/ChartDetails.razor`, rebuilt in place**: it drops `@rendermode` →
+  static SSR. Interactive regions are child components marked `@rendermode InteractiveServer`
+  (the islands). No Razor Page, no `<component>` tag helpers, no `IslandRoot`, no
+  `ShellModelFactory` handoff — those were the pre-Stage-2 shape. All dispatch via `IMediator`
+  (unchanged rule); no repository injection.
+- **Routes**: the component declares only the canonical vanity route. The GUID permalink
+  `/Chart/{id}`, legacy `/Record`, and historical (mix, song, level) resolution live in an MVC
+  controller issuing **real 301s** — a redirect from a static component is a 302, which doesn't
+  consolidate SEO signals. ⚠ Blazor's link interception is a global document click listener:
+  an in-app `<a>` to an MVC endpoint renders `<NotFound>` unless it carries `target="_top"` —
+  so **in-app chart links build the canonical vanity URL directly** (the slug is deterministic
+  from the chart record); the 301 endpoints exist for external/legacy links only.
+- **Head**: `PageTitle` + `HeadContent` render server-side under static SSR — title,
+  meta-description-from-verdict, OG set, canonical `<link>`, JSON-LD `<script>`
+  (`MusicRecording` + `additionalProperty`; exact vocabulary settled at implementation). The
+  page's current dead-channel `HeadContent` block retires with the rebuild.
+- **Auth/personalization**: `HttpContext` is available during static SSR — "your best" and
+  leaderboard glow render server-side for signed-in requests (which bypass response caching);
+  the anonymous cached copy contains neither.
+- **Token discipline (verified against shipped source by the hosting session)**: every
+  `--mud-*` custom property is emitted by `MudThemeProvider` *inside the circuit* — zero
+  declarations in `MudBlazor.min.css`. Static regions style from `--mix-*`/semantic tokens
+  only, or they FOUC. **Audit the statically-used shared components** (`DifficultyBubble`,
+  `ScoreBreakdown`, `UserLabel`, `SongImage`) for `--mud-palette-*`/`--mud-elevation-*` usage
+  and migrate to mix tokens. Presentational MudBlazor (`MudText`/`MudIcon`/`MudPaper`/
+  `MudAvatar`) is static-safe; behavioral MudBlazor (`MudMenu`/`MudDialog`/`MudSelect`/
+  autocomplete/snackbar) only inside islands.
+- **Islands never prerender** (owner rule: prerendering stays off, permanently). Their slots are
+  empty in the initial HTML, so each island's static wrapper carries a layout-matched CSS
+  skeleton (UX rule 9) that the island replaces on circuit connect.
+- **Caching**: unchanged intent — the anonymous page opts into the output-cache policy landing
+  with Stages 1–2 (vary: path, culture, mix); signed-in renders at origin per request. Query
+  results shared with the nightly analytics (verdicts, similarity, letter difficulties) are
+  `IMemoryCache`d with TTLs aligned to the recompute cadence.
+- **Retirement within the rebuild**: the dead `ChartOverview` dialog, the `TournamentId`
+  query-param relic, the admin form's mid-page squat, and the `/Record` route alias all go;
+  navigation into charts keeps working everywhere because `/Chart/{guid}` 301s forever.
+  `ChartDetailsDialog` stays (widgets' quick-look surface) — shared pieces (skill bars, meta
+  grid) extract into components both consume where practical (one concept, one component).
 - **Localization**: every new string through `L[…]`, all nine locales in the same pass. Verdict
   templates live Web-side (see [chart-verdicts.md](chart-verdicts.md) — the engine returns
   structured facts; Web renders words).
@@ -120,9 +153,9 @@ checkpoint; FT = owner field test.
 | B2 | Similarity: signals + formula | per-signal scorers + combiner (unit-tested against hand-built fixtures), `GetSimilarChartsQuery` — **calibration artifact: top-K dump for ~20 known charts → owner eyeball, weights adjust by PR** |
 | B3 | Verdict engine | facet computers + salience ranking (unit-tested), `GetChartVerdictQuery`, caching |
 | B4 | URL lattice (dark) | slug service + historical (mix, song, level) resolver + 301 controller, tested; not yet linked or sitemapped |
-| P1 | The page, hero → evidence | Razor page on `_SiteLayout` + `IslandRoot` + video/record/graphs islands — needs wave-2 C1/C2 merged forward |
+| P1 | The page, hero → evidence | `ChartDetails.razor` rebuilt in place: static SSR body + video/record/graphs islands (`@rendermode InteractiveServer`), `--mud-*` audit on statically-used components — needs Stages 1–2 merged forward |
 | P2 | History, leaderboard, shelf | timeline, glowing top-10 + explorer island, similarity shelf, sibling bubbles, admin island |
-| P3 | SEO cutover | head/JSON-LD live, sitemap swaps to vanity, `ChartDetails.razor` retired, lattice goes public — **FT: view-source is real HTML; Discord unfurl shows the jacket** |
+| P3 | SEO cutover | static head/JSON-LD live (old dead-channel `HeadContent` retired), sitemap swaps to vanity, 301 lattice goes public, in-app links switch to vanity URLs — **FT: view-source is real HTML; Discord unfurl shows the jacket** |
 | P4 | Tests + docs | E2E facts (anon chart page serves content pre-circuit; GUID 301s; glow only when signed in), bUnit island coverage, ARCHITECTURE/UX-GUIDELINES/API/DATABASE-SCHEMA sync |
 
 ## Out of scope now, recorded for future iterations (owner, 2026-07-14)
@@ -143,8 +176,10 @@ checkpoint; FT = owner field test.
 
 ## Risks
 
-- **Stacked-branch drift**: wave 2's shell contract may move under FT — §7 of static-shell.md is
-  the API; changes land there loudly and this branch merges forward before P1.
+- **Stage dependency**: P1+ requires the Stage-2 hosting flip (unscoped as of 2026-07-14). Its
+  enhanced-navigation default (`blazor.web.js`) interacts with ApexCharts re-initialization —
+  this page's graphs island is a named stakeholder in that scoping. Backend commits B1–B4 have
+  no stage dependency and proceed now.
 - **Similarity cold start**: sparse charts (few scores, no piucenter data) must still get
   neighbors (weight renormalization) or gracefully render a shorter shelf — never an empty box
   without a reason (UX rule 9).
