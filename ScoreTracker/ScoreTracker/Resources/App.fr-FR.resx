@@ -476,13 +476,13 @@
     <value>Ceci permet à PIUScores de se connecter à votre compte et d'importer les scores pour vous.</value>
   </data>
   <data name="Use Password 2" xml:space="preserve">
-    <value>Je ne garde aucune trace de votre nom d'utilisateur ou mot de passe, vous devrez les entrer a chaque fois que vous utilisez ceci.</value>
+    <value>Par défaut, je ne garde ni votre nom d'utilisateur ni votre mot de passe — vous les saisissez à chaque fois. Ou utilisez l'option « se souvenir du mot de passe » ci-dessous pour l'enregistrer, chiffré et uniquement sur cet appareil.</value>
   </data>
   <data name="Use Password 3" xml:space="preserve">
     <value>Pour limiter les requètes vers https://phoenix.piugame.com, je n'importe que les scores nouveaux ou améliorés. Chaque utilisateur a un import entier avec son nom d'utilisateur et mot de passe. Utilisez l'importateur outils developpeur si vous souhaitez réimporter des scores plus anciens.</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
-    <value>Une fois démarré, ne pas quitter cette page pour ne pas interrompre la sauvegarde des scores.</value>
+    <value>Une fois démarré, vous pouvez quitter cette page — l'importation se termine en arrière-plan.</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Utilisé principalement pour déboguer</value>
@@ -3995,6 +3995,9 @@
   </data>
   <data name="Import with saved credentials" xml:space="preserve">
     <value>Importer avec les identifiants enregistrés</value>
+  </data>
+  <data name="Importing scores…" xml:space="preserve">
+    <value>Importation des scores…</value>
   </data>
   <data name="Saved on this device" xml:space="preserve">
     <value>Enregistré sur cet appareil</value>

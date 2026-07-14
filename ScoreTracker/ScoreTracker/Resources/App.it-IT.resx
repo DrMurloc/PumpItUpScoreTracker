@@ -476,13 +476,13 @@
     <value>Questo farà accedere PIUScores al tuo account e importare i punteggi per te.</value>
   </data>
   <data name="Use Password 2" xml:space="preserve">
-    <value>Non memorizzo alcuna registrazione del tuo nome utente o della tua password, dovrai digitarli ogni volta che usi questa funzione.</value>
+    <value>Per impostazione predefinita non memorizzo il tuo nome utente o la password: li digiti ogni volta. Oppure usa l'opzione ricorda password qui sotto per salvarla, cifrata e solo su questo dispositivo.</value>
   </data>
   <data name="Use Password 3" xml:space="preserve">
     <value>Per ridurre al minimo le chiamate a https://phoenix.piugame.com importerò solo punteggi nuovi o migliorati. Ogni utente riceve solo un'importazione completa tramite Username/Password. Usa l'importatore dev-tools se vuoi reimportare punteggi precedenti.</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
-    <value>Una volta avviato, non lasciare questa pagina o i tuoi punteggi non finiranno di essere salvati.</value>
+    <value>Una volta avviato, puoi lasciare questa pagina: l'importazione si completa in background.</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Usato principalmente per il debugging</value>
@@ -3997,6 +3997,9 @@
   </data>
   <data name="Import with saved credentials" xml:space="preserve">
     <value>Importa con le credenziali salvate</value>
+  </data>
+  <data name="Importing scores…" xml:space="preserve">
+    <value>Importazione dei punteggi…</value>
   </data>
   <data name="Saved on this device" xml:space="preserve">
     <value>Salvato su questo dispositivo</value>

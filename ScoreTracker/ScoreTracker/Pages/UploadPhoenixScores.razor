@@ -84,25 +84,27 @@
                     </MudItem>
                     @if (_hasStoredCredential)
                     {
-                        <MudItem xs="12">
-                            <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Lock">
+                        @* Saved credential replaces the username/password fields — the rest of the
+                           import (options, game card) proceeds normally against it. *@
+                        <MudItem xs="12" sm="8">
+                            <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Lock" Dense="true">
                                 <div class="d-flex align-center flex-wrap" style="gap:.5rem">
                                     <span>@L["Saved on this device"]</span>
-                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                                               StartIcon="@Icons.Material.Filled.ImportExport" Disabled="_isImporting"
-                                               OnClick="ImportWithSavedCredentials">@L["Import with saved credentials"]</MudButton>
                                     <MudButton Size="Size.Small" Disabled="_isImporting"
                                                OnClick="ForgetSavedCredentials">@L["Forget here"]</MudButton>
                                 </div>
                             </MudAlert>
                         </MudItem>
                     }
-                    <MudItem xs="12" sm="4">
-                        <MudTextField Label="PIUGame.com Username" Disabled="_isImporting" @bind-Value="_username"></MudTextField>
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudTextField InputType="InputType.Password" Disabled="_isImporting" Label="PIUGame.com Password" @bind-Value="_password"></MudTextField>
-                    </MudItem>
+                    else
+                    {
+                        <MudItem xs="12" sm="4">
+                            <MudTextField Label="PIUGame.com Username" Disabled="_isImporting" @bind-Value="_username"></MudTextField>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudTextField InputType="InputType.Password" Disabled="_isImporting" Label="PIUGame.com Password" @bind-Value="_password"></MudTextField>
+                        </MudItem>
+                    }
                     <MudItem xs="12" sm="4">
                         @if (_cards.Any())
                         {
@@ -157,12 +159,11 @@
                     @if (_isImporting)
                     {
                         <MudItem xs="12">
-                            <MudText>Importing... (Can take a few minutes)</MudText>
-                            <br/>
                             @if (!_scores.Any())
                             {
                                 <MudText>@_passwordImportStatus</MudText>
                             }
+                            <MudText Typo="Typo.caption">@L["You can leave this page."]</MudText>
                         </MudItem>
                     }
                     @if (_importCompleted && CurrentUser.User.IsPublic)
@@ -340,11 +341,19 @@
         @if (_currentStep == Step.UsePassword && !IsImportGated)
         {
             <MudButton Variant="@Variant.Filled"
-                       Disabled="_isImporting || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)"
+                       Disabled="@(_isImporting || (!_hasStoredCredential && (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password))))"
                        Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.ImportExport"
-                       OnClick="ImportScores">Import</MudButton>
-            @if (!_cards.Any() && !string.IsNullOrWhiteSpace(_selectedId))
+                       StartIcon="@(_isImporting ? null : Icons.Material.Filled.ImportExport)"
+                       OnClick="ImportScores">
+                @if (_isImporting)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+                }
+                Import
+            </MudButton>
+            @* Card switching needs the typed password (a saved credential stays sealed), so it's
+               only offered on the typed path. *@
+            @if (!_cards.Any() && !string.IsNullOrWhiteSpace(_selectedId) && !_hasStoredCredential)
             {
                 <MudButton Variant="Variant.Filled"
                            Disabled="_isImporting || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)"
@@ -410,14 +419,16 @@
     private const string RememberConsentKey = "RememberPasswordConsent";
     private const string RememberConsentVersion = "1";
 
-    // One-click import from the credential saved on this device (§B saved variant): reuses the
-    // background path, so the password is never re-typed and never leaves the encrypted blob.
+    // Import using the credential saved on this device — the Import button routes here when one is
+    // stored. Reuses the background path (StoredCredentialSource), so the password is never re-typed
+    // and never leaves the encrypted blob. Options (broken scores, PIU Tracker, game card) apply.
     private async Task ImportWithSavedCredentials()
     {
         var blob = await ClientStore.Read();
         if (blob == null)
         {
             _hasStoredCredential = false;
+            _isImporting = false;
             return;
         }
 
@@ -541,8 +552,20 @@
     }
     private async Task ImportScores()
     {
+        if (_isImporting) return;
+        // Flip to importing and render before the slow sign-in so the button disables and shows a
+        // spinner immediately, instead of looking inert and staying spammable while SignIn runs.
         _isImporting = true;
         _errors.Clear();
+        StateHasChanged();
+
+        // A saved credential takes the sealed-blob path; typing takes the credential path below.
+        if (_hasStoredCredential)
+        {
+            await ImportWithSavedCredentials();
+            return;
+        }
+
         try
         {
         if (string.IsNullOrWhiteSpace(_selectedId))
@@ -570,39 +593,57 @@
         _scores.Clear();
         _importCompleted = false;
         _passwordImportStatus = "Starting Import...";
-            await Mediator.Send(new ImportOfficialPlayerScoresCommand(_username, _password, _selectedId, _selectedGameTag,_includeBroken,_alsoImportPiuTracker));
-            _passwordImportStatus = "Import Completed!";
-            // The session snapshot's page is the import's natural landing spot.
-            _importCompleted = true;
-            // Remember only after a successful import, so we never store credentials that don't work.
-            // A storage failure is isolated so it can't read as an import failure — the scores are
-            // already in by this point.
-            if (_rememberPassword)
+            // Hand the scrape to the background job: SignIn runs now (a bad password is caught
+            // immediately), then status + completion arrive over the hub while the page stays
+            // usable — the user can leave. Terminal state is flipped by StatusUpdate/ImportError.
+            var result = await Mediator.Send(new StartOfficialImportCommand(
+                new TypedCredentialSource(_username, _password), _currentMix, _selectedId, _selectedGameTag,
+                _includeBroken, _alsoImportPiuTracker));
+            switch (result.Outcome)
             {
-                try
-                {
-                    var stored = await Mediator.Send(new StoreImportCredentialCommand(_username, _password));
-                    await ClientStore.Write(new StoredCredentialBlob(stored.KeyId, stored.Ciphertext, 0));
-                }
-                catch (Exception e)
-                {
-                    Logger.LogError(e, "Import succeeded but storing the remembered credential failed");
-                    Snackbar.Add(L["Could not save your password"].Value, Severity.Error);
-                }
+                case ImportStartOutcome.Started:
+                    // SignIn succeeded, so the credentials authenticated — safe to remember now.
+                    // A storage failure is isolated so it can't read as an import failure.
+                    if (_rememberPassword)
+                    {
+                        try
+                        {
+                            var stored = await Mediator.Send(new StoreImportCredentialCommand(_username, _password));
+                            await ClientStore.Write(new StoredCredentialBlob(stored.KeyId, stored.Ciphertext, 0));
+                            _hasStoredCredential = true;
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.LogError(e, "Import started but storing the remembered credential failed");
+                            Snackbar.Add(L["Could not save your password"].Value, Severity.Error);
+                        }
+                    }
+                    break;
+                case ImportStartOutcome.InvalidCredentials:
+                case ImportStartOutcome.CredentialUnlockFailed:
+                    _isImporting = false;
+                    _passwordImportStatus = "Invalid Username/Password";
+                    Snackbar.Add("Your password appears to be incorrect, could not log into https://phoenix.piugame.com", Severity.Error);
+                    break;
+                case ImportStartOutcome.AlreadyRunning:
+                    _isImporting = false;
+                    Snackbar.Add(L["An import is already running"].Value, Severity.Info);
+                    break;
             }
         }
         catch (InvalidCredentialException)
         {
+            _isImporting = false;
             _passwordImportStatus = "Invalid Username/Password";
             Snackbar.Add("Your password appears to be incorrect, could not log into https://phoenix.piugame.com", Severity.Error);
         }
         catch (Exception e)
         {
+            _isImporting = false;
             _passwordImportStatus = "Import Experienced an Error";
             Logger.LogError(e, $"There was an error while importing scores");
             Snackbar.Add("There was an error while trying to import your scores. Try again later. If this persists notify DrMurloc",Severity.Error);
         }
-        _isImporting = false;
     }
     private bool _isImporting = false;
     private bool _importCompleted = false;

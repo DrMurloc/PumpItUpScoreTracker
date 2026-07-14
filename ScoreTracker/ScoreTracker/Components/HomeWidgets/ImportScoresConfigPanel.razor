@@ -7,12 +7,14 @@
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.UiNotifications
 @inject IStringLocalizer<App> L
 @inject IMediator Mediator
 @inject IDialogService DialogService
 @inject IImportCredentialClientStore ClientStore
 @inject IUiSettingsAccessor UiSettings
 @inject ICurrentUserAccessor CurrentUser
+@inject IUiNotificationHub UiHub
 @inject ISnackbar Snackbar
 @inject ILogger<ImportScoresConfigPanel> Logger
 
@@ -171,6 +173,7 @@ else if (_hasStoredCredential)
             _username = "";
             _password = "";
             Snackbar.Add(L["Password saved on this device"].Value, Severity.Success);
+            await NotifyCredentialChanged();
         }
         catch (Exception e)
         {
@@ -188,6 +191,7 @@ else if (_hasStoredCredential)
         await ClientStore.Clear();
         _hasStoredCredential = false;
         _remember = false;
+        await NotifyCredentialChanged();
     }
 
     private async Task ForgetEverywhere()
@@ -196,6 +200,15 @@ else if (_hasStoredCredential)
         await ClientStore.Clear();
         _hasStoredCredential = false;
         _remember = false;
+        await NotifyCredentialChanged();
+    }
+
+    // Nudge the (still-mounted) widget under this dialog to re-read its saved-vs-typed state.
+    private Task NotifyCredentialChanged()
+    {
+        return CurrentUser.IsLoggedIn
+            ? UiHub.PublishAsync(UiTopics.User(CurrentUser.User.Id), new ImportCredentialChanged(CurrentUser.User.Id))
+            : Task.CompletedTask;
     }
 
     private async Task Save()

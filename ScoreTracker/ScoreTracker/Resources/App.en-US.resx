@@ -476,13 +476,13 @@
     <value>This will have PIUScores log into your account and import scores for you.</value>
   </data>
   <data name="Use Password 2" xml:space="preserve">
-    <value>I do not store a record of your username or password, you will have to type them in every time you use this.</value>
+    <value>By default I don't keep your username or password — you type them in each time. Or use the remember-password option below to save it, encrypted and only on this device.</value>
   </data>
   <data name="Use Password 3" xml:space="preserve">
     <value>To minimize calls to https://phoenix.piugame.com I will only import new or improved scores. Every user only gets one full import using Username/Password. Use the dev-tools importer if you wish to re-import older scores.</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
-    <value>Once started, don't leave this page or else your scores will not finish saving.</value>
+    <value>Once started, you can leave this page — the import finishes in the background.</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Used primarily for debugging</value>
@@ -3997,6 +3997,9 @@
   </data>
   <data name="Import with saved credentials" xml:space="preserve">
     <value>Import with saved credentials</value>
+  </data>
+  <data name="Importing scores…" xml:space="preserve">
+    <value>Importing scores…</value>
   </data>
   <data name="Saved on this device" xml:space="preserve">
     <value>Saved on this device</value>
