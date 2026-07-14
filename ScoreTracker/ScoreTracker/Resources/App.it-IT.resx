@@ -3770,6 +3770,9 @@
   <data name="Store" xml:space="preserve">
     <value>Salva</value>
   </data>
+  <data name="Import with saved credentials" xml:space="preserve">
+    <value>Importa con le credenziali salvate</value>
+  </data>
   <data name="Saved on this device" xml:space="preserve">
     <value>Salvato su questo dispositivo</value>
   </data>

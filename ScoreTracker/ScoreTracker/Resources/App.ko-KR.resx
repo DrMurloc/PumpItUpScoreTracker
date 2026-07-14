@@ -3651,6 +3651,9 @@
   <data name="Store" xml:space="preserve">
     <value>저장</value>
   </data>
+  <data name="Import with saved credentials" xml:space="preserve">
+    <value>저장된 자격 증명으로 가져오기</value>
+  </data>
   <data name="Saved on this device" xml:space="preserve">
     <value>이 기기에 저장됨</value>
   </data>
