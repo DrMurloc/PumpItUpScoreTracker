@@ -5,6 +5,18 @@ day (round 2 — community glow + honest plate framing). Companion specs:
 [chart-similarity.md](chart-similarity.md) (the similarity graph + settled formula) and
 [chart-verdicts.md](chart-verdicts.md) (the verdict engine).
 
+**Status (2026-07-14).** B1–B4 and P1+P2 are built and on this branch: the similarity graph
+(table, nightly job, calculator, query), the verdict engine, the URL lattice services (dark),
+and the page itself — rebuilt to the approved mock anatomy in **circuit form** (today's
+hosting), with every island-to-be a self-loading component keyed by chart id. Remaining:
+**P3** (301 lattice live, sitemap vanity swap, static head/JSON-LD, output caching — ships
+as ONE unit, never split: pretty URLs must never point at empty shells) and **P4** (E2E
+facts + doc sync), both gated on the Stage-2 hosting flip. Owner-only steps: UX field-test
+rounds on the built page, and the similarity **calibration eyeball** (trigger
+`recalculate-chart-similarity` in /hangfire, review top-K for ~20 known charts). ⚠ Weight
+tuning is a deliberate breaking change: the calculator's unit fixtures hand-compute expected
+scores from the exact weights — a weight PR must recompute them.
+
 **Stage context (owner-approved 2026-07-14, aligned with the shell/hosting session):** the site
 moves to SSR-by-default + islands in three stages — Stage 1 the static shell (every page, one
 unavoidable site-wide QA), Stage 2 the hosting flip (`AddServerSideBlazor` → Blazor Web App
