@@ -1,0 +1,380 @@
+@page "/"
+@using System.Globalization
+@using Microsoft.AspNetCore.Localization
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Pages
+@using ScoreTracker.Web.Services.Theming
+@model ScoreTracker.Web.Pages.FrontDoorModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@inject Microsoft.Extensions.Localization.IStringLocalizer<ScoreTracker.Web.App> L
+@{
+    if (Model.ShowApp)
+    {
+        @* Signed-in "/" boots the Blazor app under the normal shell; the Router
+           resolves "/" to the home dashboard. Mirror the host's culture-cookie write. *@
+        Layout = "_Layout";
+        HttpContext.Response.Cookies.Append(
+            CookieRequestCultureProvider.DefaultCookieName,
+            CookieRequestCultureProvider.MakeCookieValue(
+                new RequestCulture(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture)));
+    }
+    else
+    {
+        Layout = null;
+    }
+}
+@if (Model.ShowApp)
+{
+    <component type="typeof(ScoreTracker.Web.App)" render-mode="Server" />
+}
+else
+{
+<!DOCTYPE html>
+<html lang="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="~/" />
+    <title>@L["PIU Scores"]</title>
+    @* The shipped theme tokens — same single source as the Blazor shell (MixThemes),
+       so this page can never drift from the site palette. Anonymous visitors resolve
+       to Phoenix by the same rule the layout uses. *@
+    <style>@Html.Raw(MixThemes.CssVariablesFor(MixEnum.Phoenix))</style>
+    <link href="/css/front-door.css" rel="stylesheet" asp-append-version="true" />
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "d2n3fzq6v8");
+    </script>
+</head>
+<body class="front-door">
+
+@functions {
+    private static string BandKey(TierListCategory category) => category switch
+    {
+        TierListCategory.Easy => "Easy",
+        TierListCategory.Medium => "Medium",
+        TierListCategory.Hard => "Hard",
+        TierListCategory.VeryHard => "Very Hard",
+        _ => category.ToString()
+    };
+
+    // Same art the DifficultyBubble component renders — the game's own vocabulary.
+    private static string BubbleUrl(ScoreTracker.SharedKernel.Models.Chart chart) =>
+        $"https://piuimages.arroweclip.se/difficulty/{chart.Mix}/{chart.DifficultyString.ToLower()}.png";
+
+    // Every registered mix in timeline order — names are proper nouns, never localized.
+    private static readonly MixEnum[] MixTimeline =
+        Enum.GetValues<MixEnum>().OrderBy(m => m.DisplayOrder()).ToArray();
+
+    // The three themed mixes wear their own brand primaries, straight from the same
+    // MixPalette records the Blazor shell themes from — one source, no literals.
+    private static string MixChipStyle(MixEnum mix) =>
+        MixThemes.ThemedMixes.Contains(mix)
+            ? $"border-color:{MixThemes.PaletteFor(mix).Primary};color:{MixThemes.PaletteFor(mix).Primary}"
+            : string.Empty;
+}
+
+<header class="topbar">
+    <a class="wordmark" href="/">PIU <b>SCORES</b></a>
+    <span class="mix-pill">PHOENIX</span>
+    <nav class="topnav">
+        <a href="/TierLists">@L["Tier Lists"]</a>
+    </nav>
+    <span class="spacer"></span>
+    <a class="topbar-signin" href="#signin">@L["Sign in"]</a>
+</header>
+
+<main>
+<section class="hero">
+    <div class="hero-copy">
+        <p class="eyebrow">@L["Score tracking for Pump It Up"]</p>
+        <h1>@L["Track the grind."]<br />@L["Find your next pass."]</h1>
+        <p class="sub">
+            @L["PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play."]
+            <b>@L["Free, and built by a player."]</b>
+        </p>
+    </div>
+
+    <div class="hero-signin" id="signin">
+        <div class="signin">
+            <h2>@L["Sign in"]</h2>
+            <p class="new-here">@L["New here? Signing in creates your account automatically — no forms, no site password."]</p>
+
+            <div class="provider-stack">
+                <a class="btn" href="/Login/Discord">
+                    <span class="badge badge-discord" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="8.5" cy="12" rx="2" ry="2.3"/><ellipse cx="15.5" cy="12" rx="2" ry="2.3"/><path d="M4 17c1.5 1.6 4.2 2.5 8 2.5s6.5-.9 8-2.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                    </span>
+                    @L["Log In With", "Discord"]
+                </a>
+                <a class="btn" href="/Login/Google">
+                    <span class="badge badge-google" aria-hidden="true">G</span>
+                    @L["Log In With", "Google"]
+                </a>
+                <a class="btn" href="/PiuGameLogin">
+                    <span class="badge badge-piugame" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2 L14 8 H11.5 V14 H8.5 V8 H6 Z"/><rect x="6" y="15.5" width="8" height="2.5" rx="1"/></svg>
+                    </span>
+                    @L["Log In With", "PIUGAME"]
+                </a>
+            </div>
+
+            <p class="trust">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                @L["PIUGAME sign-in goes directly to piugame.com — your password is never stored or logged here."]
+            </p>
+
+            <p class="fineprint">
+                @L["Already have an account? Any sign-in method you've linked works — and you can link more from your Account page."]
+                <a href="/Privacy" target="_blank">@L["Full Privacy Policy"]</a>
+            </p>
+        </div>
+        <p class="browse-hatch">@L["Just browsing?"] <a href="/TierLists">@L["Explore the tier lists"] →</a></p>
+    </div>
+
+    <div class="hero-stats">
+        <div class="stat-row">
+            <div class="stat"><div class="n">@Model.Ledger.TotalRecords.ToString("N0")</div><div class="l">@L["Scores tracked"]</div></div>
+            <div class="stat"><div class="n">@Model.Playerbase.Players.ToString("N0")</div><div class="l">@L["Players"]</div></div>
+            <div class="stat"><div class="n">@Model.Playerbase.Countries.ToString("N0")</div><div class="l">@L["Countries"]</div></div>
+            <div class="stat"><div class="n">@Model.CommunityCount.ToString("N0")</div><div class="l">@L["Communities"]</div></div>
+        </div>
+        <div class="pulse">
+            <div class="bars" aria-hidden="true">
+                @foreach (var day in Model.Ledger.DailyVolumes)
+                {
+                    var pct = Math.Min(day.Count, Model.PulseCap) * 100.0 / Model.PulseCap;
+                    <i style="height:@(pct.ToString("0", CultureInfo.InvariantCulture))%"></i>
+                }
+            </div>
+            <div class="cap">
+                <span>@L["Scores recorded, last {0} days", Model.Ledger.DailyVolumes.Count]</span>
+                <b>@Model.Ledger.DailyVolumes.Sum(v => (long)v.Count).ToString("N0")</b>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="showcase">
+    <div class="sec-head">
+        <h2>@L["See where you stand"]</h2>
+        <p>@L["Everything below is live site data — the actual product, not screenshots."]</p>
+    </div>
+    <div class="cards">
+
+        <div class="card">
+            <h3>
+                <img class="bubble" src="https://piuimages.arroweclip.se/difficulty/Phoenix/s@(FrontDoorModel.ShowcaseLevel).png" alt="S@(FrontDoorModel.ShowcaseLevel)" height="30" loading="lazy" />
+                @L["Tier lists, backed by data"]
+                <span class="tag">@L["From {0} scores", Model.ScoreBasisShort]</span>
+            </h3>
+            <p class="blurb">@L["Difficulty bands computed from the community's real pass and score data — recalculated as scores come in, not argued into a wiki."]</p>
+            @foreach (var band in Model.TierBands)
+            {
+                <div class="tier-row">
+                    <span class="tier-band" style="color: var(--diff-@ThemeScales.DifficultySlug(band.Category))">@L[BandKey(band.Category)]</span>
+                    <span class="jackets">
+                        @foreach (var chart in band.Charts)
+                        {
+                            <img class="jacket" src="@chart.Song.ImagePath" alt="@chart.Song.Name" loading="lazy" />
+                        }
+                        <span class="tier-name">
+                            @string.Join(" · ", band.Charts.Select(c => c.Song.Name))@(band.MoreCount > 0 ? " · " + L["+ {0} more", band.MoreCount] : "")
+                        </span>
+                    </span>
+                </div>
+            }
+            <a class="cta" href="/TierLists">@L["Every level, Singles and Doubles"] →</a>
+        </div>
+
+        <div class="card">
+            <h3>
+                @L["This week's charts"]
+                @if (Model.WeeklyRotatesIn is { } left)
+                {
+                    <span class="tag tag-countdown">@L["Rotates in {0}d {1}h", left.Days, left.Hours]</span>
+                }
+            </h3>
+            <p class="blurb">@L["One shared board, one week — everyone posts their best on the same charts."]</p>
+            @foreach (var row in Model.WeeklyRows)
+            {
+                <div class="score-row">
+                    <img class="jacket" src="@row.Chart.Song.ImagePath" alt="" loading="lazy" />
+                    <span class="nm">
+                        @row.Chart.Song.Name
+                        <img class="bubble-sm" src="@BubbleUrl(row.Chart)" alt="@row.Chart.DifficultyString" height="22" loading="lazy" />
+                    </span>
+                    @if (row.LeaderScore is { } leaderScore)
+                    {
+                        <span class="who">@L["leader"]</span>
+                        <span class="sc">@leaderScore.ToString("N0")</span>
+                    }
+                </div>
+            }
+            @if (Model.WeeklyMoreCount > 0)
+            {
+                <div class="score-row"><span class="nm muted">@L["+ {0} more on this week's board", Model.WeeklyMoreCount]</span></div>
+            }
+            <a class="cta" href="/WeeklyCharts">@L["See the full board"] →</a>
+        </div>
+
+        <div class="card">
+            <h3>@L["One-click import"]</h3>
+            <p class="blurb">@L["Point it at your PIUGAME account once — grades, plates, and history land intact."]</p>
+            @* Example rows — illustrative by design; the import itself is the live feature. *@
+            <div class="score-row">
+                <span class="nm">Moonlight</span><span class="sc">998,404</span>
+                <span class="chip chip-grade">SSS+</span><span class="chip chip-ug">UG</span>
+            </div>
+            <div class="score-row">
+                <span class="nm">Sarabande</span><span class="sc">981,762</span>
+                <span class="chip chip-grade">SSS</span><span class="chip chip-eg">EG</span>
+            </div>
+            <div class="score-row">
+                <span class="nm">Sorceress Elise</span><span class="sc">942,310</span>
+                <span class="chip chip-grade">AA+</span><span class="chip chip-mg">MG</span>
+            </div>
+            <div class="import-meter">
+                <div class="bar"><div class="fill"></div></div>
+                <div class="cap">@L["{0} scores imported from PIUGAME", 2431.ToString("N0")]</div>
+            </div>
+            <div class="hl-row"><span class="star">✦</span> @L["Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp."]</div>
+            <a class="cta" href="#signin">@L["Sign in and import yours"] →</a>
+        </div>
+
+        <div class="card pumbility">
+            <h3>@L["Watch yourself climb"]</h3>
+            <p class="blurb">@L["Pumbility rating, titles, and a season recap worth screenshotting."]</p>
+            <div class="big"><small>@L["PUMBILITY"]</small>68,412</div>
+            <span class="rarity-chip">@L["Top 8% · Sapphire"]</span>
+            <svg class="spark" width="100%" height="46" viewBox="0 0 260 46" preserveAspectRatio="none" aria-hidden="true">
+                <polyline points="0,40 30,38 60,34 90,35 120,28 150,24 180,25 210,16 245,8"
+                          fill="none" stroke="var(--mix-primary)" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="245" cy="8" r="3.5" fill="var(--mix-accent)"/>
+            </svg>
+            <div class="title-progress">
+                <div class="lbl"><b>INTERMEDIATE Lv.10</b><span>@L["{0}% to next title", 73]</span></div>
+                <div class="bar"><div class="fill"></div></div>
+            </div>
+            <a class="cta" href="/Titles">@L["Browse every title — no account needed"] →</a>
+        </div>
+
+    </div>
+</section>
+
+<section class="showcase soon-section">
+    <div class="sec-head">
+        <h2>@L["More than a tracker"]</h2>
+        <p>@L["Make it your home base — and run your scene from it."]</p>
+    </div>
+    <div class="soon-grid">
+        <div class="soon">
+            <p class="eyebrow">@L["For you"]</p>
+            <h3>@L["A home page that's yours"]</h3>
+            <p>@L["Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call."]</p>
+            <div class="wgrid" aria-hidden="true">
+                <i class="w2"></i><i></i><i class="dragging"></i>
+                <i></i><i class="drop"></i><i class="w2"></i>
+            </div>
+        </div>
+        <div class="soon">
+            <p class="eyebrow">@L["For your scene"]</p>
+            <h3>@L["Run real events"] <span class="live-pill"><i></i>@L["LIVE"]</span></h3>
+            <p>@L["Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round."]</p>
+            <div class="qual-chips" aria-hidden="true">
+                <span class="roll">?</span>
+                <span class="muted-note">@L["{0} viewers watching", 3]</span>
+            </div>
+        </div>
+        <div class="soon">
+            <p class="eyebrow">@L["For competitors"]</p>
+            <h3>@L["Tournaments and qualifiers"] <span class="tag">@L["Expanding soon"]</span></h3>
+            <p>@L["Post qualifier scores for community tournaments right from the site, and take on March of Murlocs — the site-run stamina session series. More formats on the way."]</p>
+            <div class="qual-chips" aria-hidden="true">
+                <span class="qual-chip">@L["Qualifiers open"]</span>
+                <span class="qual-chip alt">March of Murlocs · Stamina</span>
+            </div>
+        </div>
+        <div class="soon">
+            <p class="eyebrow">@L["For your community"]</p>
+            <h3>@L["Discord, wired in"]</h3>
+            <p>@L["Point your community's channel at the bot and placements, milestones, and session highlights land in your server the moment scores come in."]</p>
+            <div class="discord-msg" aria-hidden="true">
+                <span class="bot">PIU Scores<span class="bot-tag">BOT</span></span><br />
+                ✦ @L["Session roundup — 3 highlights: new UG plate, 2 PBs. Weekly board: up to 2nd place."]
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="showcase steward-section">
+    <div class="sec-head">
+        <h2>@L["New mix. Same you."]</h2>
+        <p>@L["This is community infrastructure, not a data silo."]</p>
+    </div>
+    <div class="steward-band">
+        <p class="lede">@L["When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today.", MixTimeline.Length]</p>
+        <div class="mix-line" aria-label="Every mix on record">
+            <span class="mix-era">1999 —</span>
+            @foreach (var mix in MixTimeline)
+            {
+                <span class="mix-chip" style="@MixChipStyle(mix)">@mix.GetName()</span>
+            }
+            <span class="mix-era">— @L["today"]</span>
+        </div>
+    </div>
+    <div class="steward-grid">
+        <div class="steward-tile">
+            <h3>@L["Private by default"]</h3>
+            <p>@L["Your scores stay yours to show. They power the aggregate analysis behind the tier lists, but your name and history are never public unless you switch them on."]</p>
+        </div>
+        <div class="steward-tile">
+            <h3>@L["Your data is yours"]</h3>
+            <p>@L["Download every score you've ever recorded, any time, in one click. No lock-in, no hoarding — if you ever want to leave, your history leaves with you."]</p>
+        </div>
+        <div class="steward-tile">
+            <h3>@L["Built for toolmakers"]</h3>
+            <p>@L["A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use."]
+            <a href="/swagger">@L["API docs"] →</a></p>
+        </div>
+    </div>
+</section>
+
+<section class="showcase browse-section">
+    <div class="sec-head">
+        <h2>@L["No account needed to look around"]</h2>
+        <p>@L["The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture."]</p>
+    </div>
+    <div class="browse-grid">
+        <a class="browse-card" href="/TierLists">
+            <span class="t">@L["Tier Lists"]</span>
+            <span class="d">@L["Which charts are honest for their level — and which lie."]</span>
+            <span class="diff-ramp" aria-hidden="true">
+                <i style="background: var(--diff-easy)"></i><i style="background: var(--diff-medium)"></i><i style="background: var(--diff-hard)"></i><i style="background: var(--diff-veryhard)"></i>
+            </span>
+        </a>
+        <a class="browse-card" href="/PlayerRankings">
+            <span class="t">@L["World Rankings"]</span>
+            <span class="d">@L["Mirrored official leaderboards, player compare, country boards."]</span>
+        </a>
+        <a class="browse-card" href="/PhoenixCalculator">
+            <span class="t">@L["Calculators"]</span>
+            <span class="d">@L["Phoenix score math, life gauge, rating what-ifs."]</span>
+        </a>
+    </div>
+</section>
+</main>
+
+<footer>
+    <span>@L["PIU Scores — free, ad-free, built by a player"]</span>
+    <a href="/Privacy" target="_blank">@L["Full Privacy Policy"]</a>
+    <a href="/swagger">@L["API for tool makers"]</a>
+    <span class="locales">English · 한국어 · 日本語 · Español · Español (España) · Português · Français · Italiano · Mrglglgl</span>
+</footer>
+
+</body>
+</html>
+}

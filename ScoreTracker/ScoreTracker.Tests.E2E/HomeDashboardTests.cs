@@ -5,10 +5,11 @@ using static Microsoft.Playwright.Assertions;
 namespace ScoreTracker.Tests.E2E;
 
 /// <summary>
-///     The home dashboard's critical workflow: build a page in edit mode and reorder
-///     by drag. Drag is exactly the regression class unit tests can't see (pointer
-///     geometry + JS interop + persistence round-trip), which is why it earns an E2E
-///     fact (design doc §2.4 / C9).
+///     The home dashboard's critical workflow: create the curated default and reorder by
+///     drag. Drag is exactly the regression class unit tests can't see (pointer geometry +
+///     JS interop + persistence round-trip), which is why it earns an E2E fact. The seeded
+///     chart matters — the harness runs with DevAuth on, which arms the empty-database
+///     guard that would otherwise bounce the dashboard to /Dev/Populate.
 /// </summary>
 [Collection("E2E")]
 public sealed class HomeDashboardTests : IAsyncLifetime
@@ -26,6 +27,7 @@ public sealed class HomeDashboardTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _fixture.ResetDatabaseAsync();
+        await _fixture.Seed.SeedPhoenixChartAsync("Conflict", 20, "Single");
         _user = await _fixture.Seed.SeedUserAsync("DashBuilder");
         _browser = await _fixture.NewBrowserContextAsync();
         _page = await _browser.NewPageAsync();
@@ -44,33 +46,25 @@ public sealed class HomeDashboardTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task BuildsAPageAndDragReordersWidgetsPersistently()
+    public async Task CreatesTheCuratedDefaultAndDragReordersPersistently()
     {
         var timeout = new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 };
-        await _page.GotoAsync("/Home");
+        // Signed-in "/" is the dashboard now (the dispatcher boots the app here).
+        await _page.GotoAsync("/");
 
-        // First-visit hero → create the first page; the beta starter pre-places the trio.
+        // First visit → create the curated default: eight widgets, pre-placed.
         await _page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Create" })
             .ClickAsync(new LocatorClickOptions { Timeout = 60_000 });
         var titles = _page.Locator(".dash-cell .dash-widget-title");
         await Expect(titles.First).ToBeVisibleAsync(timeout);
-        await Expect(titles).ToHaveCountAsync(3);
-        await Expect(titles.Nth(0)).ToHaveTextAsync("Competitive Level");
+        await Expect(titles).ToHaveCountAsync(8);
 
-        // Edit mode: the drawer adds a SECOND Pumbility — multiple instances of one
-        // type are supported by design (per-instance config).
+        // Title-agnostic so a widget rename never breaks the drag regression.
+        var first = (await titles.Nth(0).TextContentAsync() ?? string.Empty).Trim();
+        var second = (await titles.Nth(1).TextContentAsync() ?? string.Empty).Trim();
+
+        // Edit mode: drag the first widget's handle onto the far side of the second.
         await _page.Locator("button[title='Edit']").ClickAsync(new LocatorClickOptions { Timeout = 60_000 });
-        await _page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Add Widgets" }).First
-            .ClickAsync();
-        await _page.Locator(".dash-drawer-item", new PageLocatorOptions { HasTextString = "PUMBILITY" })
-            .ClickAsync(new LocatorClickOptions { Timeout = 60_000 });
-        // The temporary drawer closes via its overlay — Escape isn't bound.
-        await _page.Locator(".mud-overlay").ClickAsync();
-        await Expect(_page.Locator(".mud-overlay")).ToBeHiddenAsync();
-        await Expect(titles).ToHaveCountAsync(4);
-        await Expect(titles.Nth(3)).ToHaveTextAsync("PUMBILITY");
-
-        // Drag the first widget's handle onto the far side of the second widget.
         var handle = _page.Locator(".dash-cell").Nth(0).Locator(".dash-drag-handle");
         var handleBox = await handle.BoundingBoxAsync()
                         ?? throw new InvalidOperationException("Drag handle not visible");
@@ -83,16 +77,15 @@ public sealed class HomeDashboardTests : IAsyncLifetime
             (float)(targetBox.Y + targetBox.Height / 2), new MouseMoveOptions { Steps = 12 });
         await _page.Mouse.UpAsync();
 
-        await Expect(titles.Nth(0)).ToHaveTextAsync("PUMBILITY",
+        // Swap semantics: 0 and 1 trade places, bystanders stay put.
+        await Expect(titles.Nth(0)).ToHaveTextAsync(second,
             new LocatorAssertionsToHaveTextOptions { Timeout = 60_000 });
-        await Expect(titles.Nth(1)).ToHaveTextAsync("Competitive Level");
-        // Swap semantics: the bystander widgets don't move (the round-1 bug's pin).
-        await Expect(titles.Nth(2)).ToHaveTextAsync("Weekly Charts");
+        await Expect(titles.Nth(1)).ToHaveTextAsync(first);
 
         // The drop dispatched one MoveHomePageWidgetCommand — the order survives a reload.
         await _page.ReloadAsync();
         await Expect(titles.First).ToBeVisibleAsync(timeout);
-        await Expect(titles.Nth(0)).ToHaveTextAsync("PUMBILITY");
-        await Expect(titles.Nth(1)).ToHaveTextAsync("Competitive Level");
+        await Expect(titles.Nth(0)).ToHaveTextAsync(second);
+        await Expect(titles.Nth(1)).ToHaveTextAsync(first);
     }
 }

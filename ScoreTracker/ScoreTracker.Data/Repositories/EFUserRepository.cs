@@ -56,6 +56,24 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
         _cache.Remove(ClaimsInvalidatedAtCacheKey(user.Id));
     }
 
+    private const string PlayerbaseCountsCacheKey = $"{nameof(EFUserRepository)}_PlayerbaseCounts";
+
+    public async Task<PlayerbaseCounts> GetPlayerbaseCounts(CancellationToken cancellationToken = default)
+    {
+        return (await _cache.GetOrCreateAsync(PlayerbaseCountsCacheKey, async cache =>
+        {
+            // Anonymous front-door hot path — six hours matches the ledger stats cadence.
+            cache.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return new PlayerbaseCounts(
+                await database.User.LongCountAsync(cancellationToken),
+                await database.User.Where(u => u.CountryName != null)
+                    .Select(u => u.CountryName)
+                    .Distinct()
+                    .CountAsync(cancellationToken));
+        }))!;
+    }
+
     private static string ClaimsInvalidatedAtCacheKey(Guid userId) =>
         $"{nameof(EFUserRepository)}_ClaimsInvalidatedAt_{userId}";
 

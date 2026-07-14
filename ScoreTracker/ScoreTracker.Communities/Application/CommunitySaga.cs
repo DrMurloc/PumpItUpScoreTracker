@@ -30,6 +30,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     IRequestHandler<CreateInviteLinkCommand, Guid>,
     IRequestHandler<GetMyCommunitiesQuery, IEnumerable<CommunityOverviewRecord>>,
     IRequestHandler<GetPublicCommunitiesQuery, IEnumerable<CommunityOverviewRecord>>,
+    IRequestHandler<GetCommunityCountQuery, int>,
     IRequestHandler<GetCommunityQuery, Community>,
     IRequestHandler<JoinCommunityByInviteCodeCommand>,
     IRequestHandler<AddDiscordChannelToCommunityCommand>,
@@ -815,6 +816,11 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         CancellationToken cancellationToken)
     {
         return await _communities.GetPublicCommunities(cancellationToken);
+    }
+
+    public async Task<int> Handle(GetCommunityCountQuery request, CancellationToken cancellationToken)
+    {
+        return await _communities.CountNonRegionalCommunities(cancellationToken);
     }
 
     public async Task<IEnumerable<Guid>> Handle(GetCommunityMembersQuery request,

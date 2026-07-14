@@ -13,8 +13,10 @@ public sealed record HomePageRecord(Guid Id, Name Name, int Ordinal, bool IsDefa
     IReadOnlyList<HomePageWidgetRecord> Widgets)
 {
     // D4 caps — enforced in the handlers, raised only on pain points + telemetry.
+    // Widgets raised 8 → 10 with the home-page cutover: the curated default alone
+    // seeds eight, so the ceiling needs headroom to add.
     public const int MaxPagesPerUser = 8;
-    public const int MaxWidgetsPerPage = 8;
+    public const int MaxWidgetsPerPage = 10;
     public const int MaxNameLength = 64;
 }
 

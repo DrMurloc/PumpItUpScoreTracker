@@ -12,7 +12,7 @@ namespace ScoreTracker.HomePage.Application;
 ///     The dashboard layout use cases (feature-grouped handlers, "Saga" in this
 ///     codebase's sense). Everything is scoped to the CURRENT user (D2: private in v1) —
 ///     a foreign or stale page/widget id reads as not-found. Caps (D4) are enforced
-///     here, not just in the UI. The full working set is at most 8 pages × 8 widgets,
+///     here, not just in the UI. The full working set is at most 8 pages × 10 widgets,
 ///     so handlers load the user's pages once and reason in memory.
 /// </summary>
 internal sealed class HomePageLayoutSaga(IHomePageRepository repository, ICurrentUserAccessor currentUser) :

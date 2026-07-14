@@ -967,6 +967,18 @@ public sealed class CommunitySagaTests
             Times.Never);
     }
 
+    [Fact]
+    public async Task CommunityCountReturnsTheNonRegionalCount()
+    {
+        var ctx = new HandlerContext();
+        ctx.Communities.Setup(c => c.CountNonRegionalCommunities(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(58);
+
+        var result = await ctx.Saga.Handle(new GetCommunityCountQuery(), CancellationToken.None);
+
+        Assert.Equal(58, result);
+    }
+
     private sealed class HandlerContext
     {
         public Mock<ICurrentUserAccessor> CurrentUser { get; } = new();

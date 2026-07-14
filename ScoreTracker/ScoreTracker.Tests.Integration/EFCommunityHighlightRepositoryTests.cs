@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Infrastructure;
@@ -30,7 +31,8 @@ public sealed class EFCommunityHighlightRepositoryTests : IAsyncLifetime
 
     // Seeds a real Community + memberships through the sibling repo, the same rows the feed joins to.
     private async Task SeedCommunity(string name, params Guid[] members) =>
-        await new EFCommunitiesRepository(_fixture.DbContextFactory, Mock.Of<IPlayerStatsReader>())
+        await new EFCommunitiesRepository(_fixture.DbContextFactory, Mock.Of<IPlayerStatsReader>(),
+                new MemoryCache(new MemoryCacheOptions()))
             .SaveCommunity(new Community(name, members.FirstOrDefault(), CommunityPrivacyType.Public,
                     members, Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(), false),
                 CancellationToken.None);

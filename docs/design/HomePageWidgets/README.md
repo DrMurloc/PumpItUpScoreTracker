@@ -17,7 +17,7 @@ catalog) get their sections as they start.
 
 | # | Decision |
 |---|---|
-| D1 | Clean-slate curated default at cutover — **no migration** of WSIP settings. Missing-thing complaints are answered with "add it to your page." Default templates ship, including a solid "Home" built for the 90% who never customize. |
+| D1 | Clean-slate curated default at cutover — **no migration** of WSIP settings. Missing-thing complaints are answered with "add it to your page." Default template ships as `DefaultDashboardTemplate` (see §3), a solid "Home" built for the 90% who never customize. |
 | D2 | Pages are **private** in v1. Widget configs must never contain secrets — sharing may come later. |
 | D3 | Mobile layout is **derived**: single column in desktop grid reading order. Mobile edit = ↑↓ reorder arrows + size sheet (no touch drag). Pages swipe on mobile. |
 | D4 | Caps: **8 widgets per page, 8 pages per user**. Raised only on pain points + healthy telemetry. |
@@ -200,12 +200,33 @@ breaking-change review, exactly like `api/*`):
 
 ---
 
-## 3. Shell PR (PR #2) — starter trio specs
+## 3. The curated default (`DefaultDashboardTemplate`)
 
-Chosen because all three are existing single-query reads with zero new business logic in the shell
-itself — they prove the registry, live-pull rendering, per-widget states, and the chart pipeline.
-The one domain prerequisite (Projections v2 + history capture, §5) ships first as **PR #1**, so the
-Pumbility widget consumes finished contracts.
+At the go-live cutover, "Create" seeds the curated default (D1) — eight widgets ordered to pack the
+4-column, non-dense (`grid-auto-flow: row`) grid into a 4×4 block plus a full-width footer strip,
+with no gaps. Every widget follows the current mix (nothing pins a `Mix`, the page's `DefaultMix`
+stays null). Order is load-bearing — gaps never backfill, so Folder Completion must precede Weekly
+or Weekly claims the open bottom-left slot:
+
+```
+row 1: [Account Stats 1x2][Suggested·Pumbility 1x2][Import 1x1 ][Daily 1x2 ]
+row 2: [    (cont.)      ][       (cont.)         ][Community  ][ (cont.)  ]
+row 3: [Folder Completion 2x2                     ][ 1x3       ][Weekly 1x2]
+row 4: [       (cont.)                            ][ (cont.)   ][ (cont.)  ]
+row 5: [Suggested·Title Hunt — full width 4x1                             ]
+```
+
+Folder Completion is the By-Level Breakdown widget on `Pass`/`Breakdown`, singles+doubles combined,
+levels 1–29. Suggested·Pumbility and Suggested·Title Hunt are the Suggested Charts widget on the
+`PumbilityPush` and `TitleHunt` goals (natural ranges — no dynamic spread). The per-page cap is 10,
+so the default leaves two slots to add. `DefaultDashboardTemplateTests` (Tests.Components) pins the
+template against registry drift: every TypeId resolves, every size is supported, configs round-trip,
+nothing pins a mix.
+
+The **pre-release starter trio** (Competitive Level, Account Stats, Weekly Challenge) that PR #2
+shipped is retired by the cutover — chosen then because all three were existing single-query reads
+with zero new business logic, proving the registry, live-pull rendering, per-widget states, and the
+chart pipeline. Their specs live in their own files:
 
 Full specs now live in their own files (C0 split — each widget's spec is edited in isolation, so
 widget PRs stop colliding on this doc):
