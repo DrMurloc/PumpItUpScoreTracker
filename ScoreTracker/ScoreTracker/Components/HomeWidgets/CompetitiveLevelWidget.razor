@@ -79,7 +79,7 @@ else
     {
         // Reload only when identity-relevant inputs change — parent re-renders (edit
         // mode mutations elsewhere on the page) must not refetch every widget (§2.3).
-        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{EffectiveMix}";
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{EffectiveMix}|{RefreshToken}";
         if (signature == _loadedFor) return;
         _loadedFor = signature;
         _loaded = false;
