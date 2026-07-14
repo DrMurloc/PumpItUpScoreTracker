@@ -478,7 +478,7 @@
     <value>공식 랭킹 검색</value>
   </data>
   <data name="Use Password 2" xml:space="preserve">
-    <value>저는 아이디와 비밀번호를 수집하지 않습니다. 따라서, 사용하실 때마다 매번 입력을 부탁드립니다.</value>
+    <value>기본적으로 아이디와 비밀번호를 저장하지 않으므로 매번 입력해야 합니다. 아래의 비밀번호 기억 옵션을 사용하면 암호화되어 이 기기에만 저장됩니다.</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
     <value>시작한 후에는 이 페이지를 떠나도 됩니다. 가져오기는 백그라운드에서 완료됩니다.</value>

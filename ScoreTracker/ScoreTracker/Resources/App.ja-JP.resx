@@ -476,7 +476,7 @@
     <value>このツルーはpiugame.comにログインして、自動でスコアアップロードすます。</value>
   </data>
   <data name="Use Password 2" xml:space="preserve">
-    <value>注意：ユーザーとパスワードを記録しないから、毎回使う場合はも一回入力必要あります。</value>
+    <value>通常はユーザー名やパスワードを保存しないので、毎回入力してください。下のパスワードを記憶するオプションを使うと、暗号化してこのデバイスにのみ保存できます。</value>
   </data>
   <data name="Use Password 3" xml:space="preserve">
     <value>https://phoenix.piugame.comのAPI呼び出すのを減らすなめに、新しいとか改良スコアどけインポートする。各ユーザーは完全インポート（ユーザーとパスワード）一回だけのサービスを上げます。古いスコアが

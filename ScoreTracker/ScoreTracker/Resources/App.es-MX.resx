@@ -1753,7 +1753,7 @@
     <value>Esto hará que PIUScores haga login en su cuenta e importe sus scores:</value>
   </data>
   <data name="Use Password 2" xml:space="preserve">
-    <value>No almacenamos un registro de tu usuario o contraseña, tendrá que introducirlos siempre que uses esa opción.</value>
+    <value>Por defecto no guardo tu usuario ni tu contraseña: los escribes cada vez. O usa la opción de recordar contraseña de abajo para guardarla, cifrada y solo en este dispositivo.</value>
   </data>
   <data name="Use Password 3" xml:space="preserve">
     <value>Para minimizar las llamadas para https://phoenix.piugame.com/, solo importaremos scores nuevos o mejorados. Cada usuario recibirá importación completa usando usuario/contraseña solo una vez. Use el importador dev-tools si quiere reimportar puntajes más antiguas.</value>
