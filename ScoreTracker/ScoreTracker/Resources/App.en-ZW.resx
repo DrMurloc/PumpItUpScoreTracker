@@ -3249,8 +3249,8 @@
   <data name="Scores tracked" xml:space="preserve">
     <value>Scrgls trglckd</value>
   </data>
-  <data name="Scores recorded, last 30 days" xml:space="preserve">
-    <value>Scrgls rrglcrgldd, lrglst 30 drglys</value>
+  <data name="Scores recorded, last {0} days" xml:space="preserve">
+    <value>Scrgls rrglcrgldd, lrglst {0} drglys</value>
   </data>
   <data name="See where you stand" xml:space="preserve">
     <value>Srgle whrgl mrgl strglnd</value>

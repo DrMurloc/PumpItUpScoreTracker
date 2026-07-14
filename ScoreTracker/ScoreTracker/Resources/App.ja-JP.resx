@@ -3327,8 +3327,8 @@
   <data name="Scores tracked" xml:space="preserve">
     <value>記録済みスコア</value>
   </data>
-  <data name="Scores recorded, last 30 days" xml:space="preserve">
-    <value>過去30日間のスコア記録</value>
+  <data name="Scores recorded, last {0} days" xml:space="preserve">
+    <value>過去{0}日間のスコア記録</value>
   </data>
   <data name="See where you stand" xml:space="preserve">
     <value>自分の立ち位置を知ろう</value>

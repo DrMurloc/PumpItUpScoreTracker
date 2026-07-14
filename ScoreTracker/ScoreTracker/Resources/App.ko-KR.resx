@@ -3207,8 +3207,8 @@
   <data name="Scores tracked" xml:space="preserve">
     <value>기록된 스코어</value>
   </data>
-  <data name="Scores recorded, last 30 days" xml:space="preserve">
-    <value>최근 30일간 기록된 스코어</value>
+  <data name="Scores recorded, last {0} days" xml:space="preserve">
+    <value>최근 {0}일간 기록된 스코어</value>
   </data>
   <data name="See where you stand" xml:space="preserve">
     <value>내 위치를 확인하세요</value>

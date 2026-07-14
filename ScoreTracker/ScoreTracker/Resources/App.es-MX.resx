@@ -3206,8 +3206,8 @@
   <data name="Scores tracked" xml:space="preserve">
     <value>Puntuaciones guardadas</value>
   </data>
-  <data name="Scores recorded, last 30 days" xml:space="preserve">
-    <value>Puntuaciones registradas en los últimos 30 días</value>
+  <data name="Scores recorded, last {0} days" xml:space="preserve">
+    <value>Puntuaciones registradas en los últimos {0} días</value>
   </data>
   <data name="See where you stand" xml:space="preserve">
     <value>Mira dónde estás</value>

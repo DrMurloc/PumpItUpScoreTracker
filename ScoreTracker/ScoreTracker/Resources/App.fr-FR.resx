@@ -3324,8 +3324,8 @@
   <data name="Scores tracked" xml:space="preserve">
     <value>Scores conservés</value>
   </data>
-  <data name="Scores recorded, last 30 days" xml:space="preserve">
-    <value>Scores enregistrés sur les 30 derniers jours</value>
+  <data name="Scores recorded, last {0} days" xml:space="preserve">
+    <value>Scores enregistrés sur les {0} derniers jours</value>
   </data>
   <data name="See where you stand" xml:space="preserve">
     <value>Voyez où vous en êtes</value>

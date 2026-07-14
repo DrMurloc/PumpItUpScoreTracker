@@ -153,7 +153,7 @@ else
                 }
             </div>
             <div class="cap">
-                <span>@L["Scores recorded, last 30 days"]</span>
+                <span>@L["Scores recorded, last {0} days", Model.Ledger.DailyVolumes.Count]</span>
                 <b>@Model.Ledger.DailyVolumes.Sum(v => (long)v.Count).ToString("N0")</b>
             </div>
         </div>

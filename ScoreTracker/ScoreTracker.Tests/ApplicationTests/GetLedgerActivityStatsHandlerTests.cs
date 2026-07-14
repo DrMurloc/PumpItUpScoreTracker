@@ -16,12 +16,12 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class GetLedgerActivityStatsHandlerTests
 {
     [Fact]
-    public async Task ZeroFillsQuietDaysAcrossTheFullWindowOldestFirst()
+    public async Task ClipsThePulseToTheFirstDayWithActivity()
     {
         var stats = new Mock<ILedgerStatsRepository>();
         stats.Setup(s => s.GetTotals(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new LedgerTotals(0, 0));
-        // Sparse repo result: activity on only two days of the window.
+        // Capture only reaches back to Jul 3 — younger than the 30-day floor (Jun 13).
         stats.Setup(s => s.GetDailyVolumes(It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
@@ -32,13 +32,38 @@ public sealed class GetLedgerActivityStatsHandlerTests
 
         var result = await handler.Handle(new GetLedgerActivityStatsQuery(), CancellationToken.None);
 
-        Assert.Equal(GetLedgerActivityStatsHandler.PulseDays, result.DailyVolumes.Count);
-        Assert.Equal(new DateOnly(2026, 6, 13), result.DailyVolumes.First().Day);
+        // Window starts at the first active day (Jul 3), not the 30-day floor — no empty
+        // lead-in that would read as "brand new". Jul 3 → Jul 12 inclusive = 10 bars.
+        Assert.Equal(10, result.DailyVolumes.Count);
+        Assert.Equal(new DateOnly(2026, 7, 3), result.DailyVolumes.First().Day);
         Assert.Equal(new DateOnly(2026, 7, 12), result.DailyVolumes.Last().Day);
         Assert.Equal(33732, result.DailyVolumes.Single(v => v.Day == new DateOnly(2026, 7, 10)).Count);
         Assert.Equal(1072, result.DailyVolumes.Single(v => v.Day == new DateOnly(2026, 7, 3)).Count);
+        // The quiet days between the first activity and today still zero-fill.
         Assert.Equal(2, result.DailyVolumes.Count(v => v.Count > 0));
         Assert.Equal(result.DailyVolumes.OrderBy(v => v.Day), result.DailyVolumes);
+    }
+
+    [Fact]
+    public async Task UsesTheFullWindowOnceActivityReachesTheFloor()
+    {
+        var stats = new Mock<ILedgerStatsRepository>();
+        stats.Setup(s => s.GetTotals(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LedgerTotals(0, 0));
+        // Activity as old as the 30-day floor (Jun 13) → the pulse fills the whole window.
+        stats.Setup(s => s.GetDailyVolumes(It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new LedgerDayVolume(new DateOnly(2026, 6, 13), 5),
+                new LedgerDayVolume(new DateOnly(2026, 7, 12), 9)
+            });
+        var handler = BuildHandler(stats);
+
+        var result = await handler.Handle(new GetLedgerActivityStatsQuery(), CancellationToken.None);
+
+        Assert.Equal(GetLedgerActivityStatsHandler.PulseDays, result.DailyVolumes.Count);
+        Assert.Equal(new DateOnly(2026, 6, 13), result.DailyVolumes.First().Day);
+        Assert.Equal(new DateOnly(2026, 7, 12), result.DailyVolumes.Last().Day);
     }
 
     [Fact]
