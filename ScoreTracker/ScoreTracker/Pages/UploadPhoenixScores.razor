@@ -343,8 +343,14 @@
             <MudButton Variant="@Variant.Filled"
                        Disabled="@(_isImporting || (!_hasStoredCredential && (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password))))"
                        Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.ImportExport"
-                       OnClick="ImportScores">Import</MudButton>
+                       StartIcon="@(_isImporting ? null : Icons.Material.Filled.ImportExport)"
+                       OnClick="ImportScores">
+                @if (_isImporting)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+                }
+                Import
+            </MudButton>
             @* Card switching needs the typed password (a saved credential stays sealed), so it's
                only offered on the typed path. *@
             @if (!_cards.Any() && !string.IsNullOrWhiteSpace(_selectedId) && !_hasStoredCredential)
@@ -422,6 +428,7 @@
         if (blob == null)
         {
             _hasStoredCredential = false;
+            _isImporting = false;
             return;
         }
 
@@ -545,6 +552,13 @@
     }
     private async Task ImportScores()
     {
+        if (_isImporting) return;
+        // Flip to importing and render before the slow sign-in so the button disables and shows a
+        // spinner immediately, instead of looking inert and staying spammable while SignIn runs.
+        _isImporting = true;
+        _errors.Clear();
+        StateHasChanged();
+
         // A saved credential takes the sealed-blob path; typing takes the credential path below.
         if (_hasStoredCredential)
         {
@@ -552,8 +566,6 @@
             return;
         }
 
-        _isImporting = true;
-        _errors.Clear();
         try
         {
         if (string.IsNullOrWhiteSpace(_selectedId))
