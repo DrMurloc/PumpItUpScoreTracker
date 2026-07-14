@@ -11,6 +11,7 @@ namespace ScoreTracker.Catalog.Application;
 
 internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumerable<ChartSkillsRecord>>,
     IRequestHandler<GetChartStepAnalysisQuery, ChartStepAnalysisRecord?>,
+    IRequestHandler<GetChartStepAnalysesQuery, IReadOnlyDictionary<Guid, ChartStepAnalysisRecord>>,
     IRequestHandler<GetChartSkillChipsQuery, IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>>,
     IRequestHandler<GetUnresolvedAliasesQuery, IReadOnlyList<UnresolvedAliasRecord>>,
     IRequestHandler<ResolveExternalAliasCommand>
@@ -99,7 +100,22 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
             cancellationToken);
         if (metrics.Count == 0) return null;
         var alias = await _aliases.GetAliasForChart(PiuCenterMetrics.Source, request.ChartId, cancellationToken);
+        return ToAnalysisRecord(metrics, alias?.ExternalKey);
+    }
 
+    public async Task<IReadOnlyDictionary<Guid, ChartStepAnalysisRecord>> Handle(GetChartStepAnalysesQuery request,
+        CancellationToken cancellationToken)
+    {
+        // One metrics read for the whole sweep, no alias lookups — bulk consumers (the
+        // similarity job) read scalars, never link out (the query doc pins ExternalKey null).
+        var metrics = await _metrics.GetMetrics(request.ChartIds, PiuCenterMetrics.Source, cancellationToken);
+        return metrics.GroupBy(m => m.ChartId)
+            .ToDictionary(g => g.Key, g => ToAnalysisRecord(g.ToArray(), externalKey: null));
+    }
+
+    private static ChartStepAnalysisRecord ToAnalysisRecord(IReadOnlyList<ChartSkillMetric> metrics,
+        string? externalKey)
+    {
         decimal? Single(string name)
         {
             return metrics.FirstOrDefault(m => m.MetricName == name)?.Value;
@@ -117,7 +133,7 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
             Single(PiuCenterMetrics.SustainTime),
             Single(PiuCenterMetrics.TimeUnderTension),
             Single(PiuCenterMetrics.DifficultyPrediction),
-            alias?.ExternalKey);
+            externalKey);
     }
 
     public async Task<IEnumerable<ChartSkillsRecord>> Handle(GetChartSkillsQuery request,

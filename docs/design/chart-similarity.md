@@ -95,8 +95,10 @@ Per-edge, persist the sub-scores; the UI derives at most **two** chips by priori
   are in SCHEDULED-JOBS.md; slot this ≥ 06:00 ET). Work shape: bucket charts by (type, level
   window); build per-chart residual maps in one pass over scores; pair-score within buckets.
   Idempotent full rewrite per (mix, chart).
-- **Read**: `GetSimilarChartsQuery(chartId, mix)` → ordered edges + signal breakdown;
-  `IMemoryCache` daily TTL (the page is output-cached anyway).
+- **Read**: `GetSimilarChartsQuery(chartId, mix)` → ordered edges + signal breakdown. No
+  read-side cache (revised at B2): the read is a single PK-prefix seek returning ≤ 8 rows,
+  and the page's output cache is the real caching layer — a memory cache here would only
+  add a staleness window after the nightly rebuild.
 
 ## Future upgrades (recorded, out of scope)
 
