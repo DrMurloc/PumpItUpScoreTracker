@@ -1,0 +1,264 @@
+@using MediatR
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+
+@* The evidence graphs (mock R2): each one led by its verdict caption — the sentence is
+   the answer, the curve is the proof. Themed from ApexChartTheming.BaseOptions (the old
+   raw red/green threshold hack is dead); plates wear their identity metals. Becomes the
+   graphs island at Stage 3; the static wrapper will carry the skeleton. *@
+@if (_loaded)
+{
+    <div class="chart-evidence">
+        @if (_letterPoints.Any())
+        {
+            <div class="chart-evidence-card">
+                <span class="chart-overline">@L["Letter grades on this board"]</span>
+                <p class="chart-evidence-caption">
+                    @if (Facet<LetterWallVerdict>() is { } wall)
+                    {
+                        <VerdictSentence Facet="wall"></VerdictSentence>
+                    }
+                    else
+                    {
+                        @L["How this board's letter grades distribute."]
+                    }
+                </p>
+                <div class="@ApexChartTheming.WrapperClass">
+                    <ApexChart TItem="LetterPoint" Options="_letterOptions" Height="240">
+                        <ApexPointSeries TItem="LetterPoint"
+                                         Items="_letterPoints"
+                                         Name="@L["Difficulty By Letter"]"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="@(e => e.Label)"
+                                         YValue="@(e => (decimal)e.Percentile)"/>
+                    </ApexChart>
+                </div>
+            </div>
+        }
+        @if (_hasScores)
+        {
+            <div class="chart-evidence-card">
+                <span class="chart-overline">@L["Plates earned"]</span>
+                <p class="chart-evidence-caption">
+                    @if (Facet<PlateResidualVerdict>() is { } plates)
+                    {
+                        <VerdictSentence Facet="plates"></VerdictSentence>
+                    }
+                    else
+                    {
+                        @L["Plates earned by this board's clears."]
+                    }
+                </p>
+                <div class="@ApexChartTheming.WrapperClass">
+                    <ApexChart TItem="PlatePoint" Options="_plateOptions" Height="240">
+                        <ApexPointSeries TItem="PlatePoint"
+                                         Items="_platePoints"
+                                         Name="@L["Plates"]"
+                                         SeriesType="SeriesType.Bar"
+                                         XValue="@(e => e.Label)"
+                                         YValue="@(e => (decimal)e.Count)"/>
+                    </ApexChart>
+                </div>
+            </div>
+            <div class="chart-evidence-card">
+                <span class="chart-overline">@L["Scores by competitive level"]</span>
+                <p class="chart-evidence-caption">
+                    @if (Facet<YieldKneeVerdict>() is { } knee)
+                    {
+                        <VerdictSentence Facet="knee"></VerdictSentence>
+                    }
+                    else
+                    {
+                        @L["Minimum, average, and maximum score at each competitive level."]
+                    }
+                </p>
+                <div class="@ApexChartTheming.WrapperClass">
+                    <ApexChart TItem="LevelPoint" Options="_scoreOptions" Height="260">
+                        <ApexPointSeries TItem="LevelPoint"
+                                         Items="_minimums"
+                                         Name="@L["Min"]"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="@(e => e.Level)"
+                                         YValue="@(e => (decimal)e.Value)"/>
+                        <ApexPointSeries TItem="LevelPoint"
+                                         Items="_averages"
+                                         Name="@L["Average"]"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="@(e => e.Level)"
+                                         YValue="@(e => (decimal)e.Value)"/>
+                        <ApexPointSeries TItem="LevelPoint"
+                                         Items="_maximums"
+                                         Name="@L["Max"]"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="@(e => e.Level)"
+                                         YValue="@(e => (decimal)e.Value)"/>
+                        @if (_myPoint != null)
+                        {
+                            <ApexPointSeries TItem="LevelPoint"
+                                             Items="new[] { _myPoint }"
+                                             Name="@L["My Score"]"
+                                             SeriesType="SeriesType.Scatter"
+                                             XValue="@(e => e.Level)"
+                                             YValue="@(e => (decimal)e.Value)"/>
+                        }
+                    </ApexChart>
+                </div>
+            </div>
+            <div class="chart-evidence-card">
+                <span class="chart-overline">@L["Passes by competitive level"]</span>
+                <p class="chart-evidence-caption">
+                    @if (Facet<FirstPassBandVerdict>() is { } band)
+                    {
+                        <VerdictSentence Facet="band"></VerdictSentence>
+                    }
+                    else
+                    {
+                        @L["Where this chart's passes sit, by competitive level."]
+                    }
+                </p>
+                <div class="@ApexChartTheming.WrapperClass">
+                    <ApexChart TItem="LevelPoint" Options="_passOptions" Height="240">
+                        <ApexPointSeries TItem="LevelPoint"
+                                         Items="_passes"
+                                         Name="@L["Passes"]"
+                                         SeriesType="SeriesType.Area"
+                                         XValue="@(e => e.Level)"
+                                         YValue="@(e => (decimal)e.Value)"/>
+                    </ApexChart>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="chart-evidence-card chart-evidence-empty">
+                <MudText Typo="Typo.body2">@L["No scores recorded yet — import yours to light this up."]</MudText>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Chart? Chart { get; set; }
+
+    [Parameter]
+    public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    [Parameter]
+    public IReadOnlyList<ChartVerdictFacet>? Facets { get; set; }
+
+    private sealed record LetterPoint(string Label, double Percentile);
+
+    private sealed record PlatePoint(string Label, int Count);
+
+    private sealed record LevelPoint(int Level, int Value);
+
+    private bool _loaded;
+    private bool _hasScores;
+    private IReadOnlyList<LetterPoint> _letterPoints = Array.Empty<LetterPoint>();
+    private IReadOnlyList<PlatePoint> _platePoints = Array.Empty<PlatePoint>();
+    private IReadOnlyList<LevelPoint> _minimums = Array.Empty<LevelPoint>();
+    private IReadOnlyList<LevelPoint> _averages = Array.Empty<LevelPoint>();
+    private IReadOnlyList<LevelPoint> _maximums = Array.Empty<LevelPoint>();
+    private IReadOnlyList<LevelPoint> _passes = Array.Empty<LevelPoint>();
+    private LevelPoint? _myPoint;
+    private ApexChartOptions<LetterPoint> _letterOptions = new();
+    private ApexChartOptions<PlatePoint> _plateOptions = new();
+    private ApexChartOptions<LevelPoint> _scoreOptions = new();
+    private ApexChartOptions<LevelPoint> _passOptions = new();
+    private Guid _loadedFor;
+
+    private TFacet? Facet<TFacet>() where TFacet : ChartVerdictFacet
+    {
+        return Facets?.OfType<TFacet>().FirstOrDefault();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Chart == null || Chart.Id == _loadedFor) return;
+        _loadedFor = Chart.Id;
+        var palette = MixThemes.PaletteFor(Mix);
+
+        var letters = (await Mediator.Send(new GetChartLetterDifficultiesQuery(new[] { Chart.Id })))
+            .TryGetValue(Chart.Id, out var percentiles)
+            ? percentiles
+            : null;
+        _letterPoints = letters == null
+            ? Array.Empty<LetterPoint>()
+            : letters.OrderBy(kv => kv.Key).Select(kv => new LetterPoint(kv.Key.GetName(), kv.Value)).ToArray();
+        _letterOptions = ApexChartTheming.BaseOptions<LetterPoint>(palette);
+        _letterOptions.Colors = new List<string> { palette.Primary };
+        _letterOptions.Yaxis = new List<YAxis> { new() { Min = 0.0, Max = 100.0 } };
+        _letterOptions.Stroke = new Stroke { Curve = Curve.Smooth };
+
+        var scores = (await Mediator.Send(new GetPhoenixScoresForChartQuery(Chart.Id, Mix))).ToArray();
+        _hasScores = scores.Any();
+        if (_hasScores)
+        {
+            // Plates wear their identity metals (never the rarity ramp) — distributed
+            // bars, one color per plate, ladder order.
+            var plateCounts = scores.Where(s => !s.IsBroken && s.Plate != null)
+                .GroupBy(s => s.Plate!.Value)
+                .ToDictionary(g => g.Key, g => g.Count());
+            _platePoints = Enum.GetValues<PhoenixPlate>()
+                .Select(p => new PlatePoint(p.GetShorthand(), plateCounts.GetValueOrDefault(p)))
+                .ToArray();
+            _plateOptions = ApexChartTheming.BaseOptions<PlatePoint>(palette);
+            _plateOptions.Colors = Enum.GetValues<PhoenixPlate>()
+                .Select(p => MixThemes.PlateHex(p.GetShorthand())).ToList();
+            _plateOptions.PlotOptions = new PlotOptions { Bar = new PlotOptionsBar { Distributed = true } };
+            _plateOptions.Legend = new Legend { Show = false };
+
+            var buckets = (await Mediator.Send(new GetPlayersStatsQuery(scores.Select(s => s.UserId).Distinct(), Mix)))
+                .ToDictionary(s => s.UserId, s => (int)Math.Round(Chart.Type == ChartType.Single
+                    ? s.SinglesCompetitiveLevel
+                    : s.DoublesCompetitiveLevel));
+            var byLevel = scores.Where(s => buckets.ContainsKey(s.UserId))
+                .GroupBy(s => buckets[s.UserId])
+                .OrderBy(g => g.Key)
+                .ToArray();
+            _minimums = byLevel.Select(g => new LevelPoint(g.Key, g.Min(s => (int)s.Score))).ToArray();
+            _averages = byLevel.Select(g => new LevelPoint(g.Key, (int)g.Average(s => (int)s.Score))).ToArray();
+            _maximums = byLevel.Select(g => new LevelPoint(g.Key, g.Max(s => (int)s.Score))).ToArray();
+            _passes = byLevel.Select(g => new LevelPoint(g.Key, g.Count(s => !s.IsBroken))).ToArray();
+
+            _myPoint = null;
+            if (CurrentUser.IsLoggedIn)
+            {
+                var mine = await Mediator.Send(new GetPhoenixRecordQuery(Chart.Id, Mix));
+                if (mine?.Score != null)
+                {
+                    var myStats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, Mix));
+                    var myLevel = (int)Math.Round(Chart.Type == ChartType.Single
+                        ? myStats.SinglesCompetitiveLevel
+                        : myStats.DoublesCompetitiveLevel);
+                    // A real point this time — not the old flat-line-between-two-levels hack.
+                    _myPoint = new LevelPoint(myLevel, (int)mine.Score.Value);
+                }
+            }
+
+            _scoreOptions = ApexChartTheming.BaseOptions<LevelPoint>(palette);
+            _scoreOptions.Colors = new List<string>
+                { palette.InkMuted, palette.Primary, palette.InkMuted, palette.Accent };
+            _scoreOptions.Stroke = new Stroke { Curve = Curve.Smooth };
+            _scoreOptions.Yaxis = new List<YAxis> { new() { Max = 1_000_000 } };
+
+            _passOptions = ApexChartTheming.BaseOptions<LevelPoint>(palette);
+            _passOptions.Colors = new List<string> { palette.Primary };
+            _passOptions.Stroke = new Stroke { Curve = Curve.Smooth };
+        }
+
+        _loaded = true;
+    }
+}

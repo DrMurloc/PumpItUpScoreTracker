@@ -1,0 +1,44 @@
+@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.SharedKernel.Models
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+
+@* The hero jacket with a click-to-load video (mock R2): the jacket is the LCP and the
+   og:image; the iframe only exists after a click, so the page never pays YouTube's
+   weight up front. Becomes an island at Stage 3 (the click needs a circuit). *@
+<div class="chart-jacket">
+    @if (_playing && _videoUrl != null)
+    {
+        <iframe class="chart-jacket-video" src="@_videoUrl" allow="encrypted-media" allowfullscreen title="@Chart?.Song.Name"></iframe>
+    }
+    else if (Chart != null)
+    {
+        <SongImage Song="Chart.Song" Height="280"></SongImage>
+        @if (_videoUrl != null)
+        {
+            <button type="button" class="chart-jacket-play" @onclick="() => _playing = true">
+                <i></i>@L["Watch chart video"]
+            </button>
+        }
+        <span class="chart-jacket-bubble"><DifficultyBubble Chart="Chart"></DifficultyBubble></span>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Chart? Chart { get; set; }
+
+    private string? _videoUrl;
+    private bool _playing;
+    private Guid _loadedFor;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Chart == null || Chart.Id == _loadedFor) return;
+        _loadedFor = Chart.Id;
+        _playing = false;
+        _videoUrl = (await Mediator.Send(new GetChartVideosQuery(new[] { Chart.Id })))
+            .FirstOrDefault()?.VideoUrl.ToString();
+    }
+}

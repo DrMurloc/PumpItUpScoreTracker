@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -4019,5 +4019,194 @@
   </data>
   <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
     <value>PIU Tracker는 완전히 공개됩니다 — 프로필이 비공개여도 전송한 점수는 공개됩니다.</value>
+  </data>
+  <data name="{0} — {1}." xml:space="preserve">
+    <value>{0} — {1}.</value>
+  </data>
+  <data name="Most clears stall below {0} — the steepest step on this board." xml:space="preserve">
+    <value>대부분의 클리어가 {0} 아래에서 멈춥니다 — 이 보드에서 가장 가파른 구간입니다.</value>
+  </data>
+  <data name="Scores open up around competitive level {0}." xml:space="preserve">
+    <value>점수는 경쟁 레벨 {0} 부근부터 오르기 시작합니다.</value>
+  </data>
+  <data name="Dominated by {0} and {1}." xml:space="preserve">
+    <value>{0}과(와) {1}이(가) 지배적입니다.</value>
+  </data>
+  <data name="Dominated by {0}." xml:space="preserve">
+    <value>{0}이(가) 지배적입니다.</value>
+  </data>
+  <data name="Sustained — it holds you under tension for most of its runtime." xml:space="preserve">
+    <value>지속형 — 곡 대부분 동안 긴장을 유지시킵니다.</value>
+  </data>
+  <data name="First passes cluster between competitive levels {0} and {1}." xml:space="preserve">
+    <value>첫 클리어는 경쟁 레벨 {0}~{1} 사이에 몰려 있습니다.</value>
+  </data>
+  <data name="Plates run worse than scores predict — a kill-spot signature." xml:space="preserve">
+    <value>플레이트가 점수 예측보다 나쁩니다 — 특정 구간에서 무너진다는 신호입니다.</value>
+  </data>
+  <data name="Plates run cleaner than scores predict — smooth attrition." xml:space="preserve">
+    <value>플레이트가 점수 예측보다 깨끗합니다 — 고르게 닳는 채보입니다.</value>
+  </data>
+  <data name="Debuted in {0}." xml:space="preserve">
+    <value>{0}에서 데뷔했습니다.</value>
+  </data>
+  <data name="{0} scores tracked · {1}% pass rate" xml:space="preserve">
+    <value>기록된 점수 {0}개 · 클리어율 {1}%</value>
+  </data>
+  <data name="Plays a level easier than its label" xml:space="preserve">
+    <value>표기보다 한 레벨 쉽게 느껴짐</value>
+  </data>
+  <data name="Very easy to pass for its level" xml:space="preserve">
+    <value>레벨 대비 클리어가 매우 쉬움</value>
+  </data>
+  <data name="Easy to pass for its level" xml:space="preserve">
+    <value>레벨 대비 클리어가 쉬움</value>
+  </data>
+  <data name="Fairly rated to pass" xml:space="preserve">
+    <value>클리어 난이도는 표기 그대로</value>
+  </data>
+  <data name="Hard to pass for its level" xml:space="preserve">
+    <value>레벨 대비 클리어가 어려움</value>
+  </data>
+  <data name="Very hard to pass for its level" xml:space="preserve">
+    <value>레벨 대비 클리어가 매우 어려움</value>
+  </data>
+  <data name="Plays a level harder than its label" xml:space="preserve">
+    <value>표기보다 한 레벨 어렵게 느껴짐</value>
+  </data>
+  <data name="generous to score once you're through" xml:space="preserve">
+    <value>클리어만 하면 점수는 후하게 나옵니다</value>
+  </data>
+  <data name="stingy to score even when passed" xml:space="preserve">
+    <value>클리어해도 점수는 짜게 나옵니다</value>
+  </data>
+  <data name="scores about as expected" xml:space="preserve">
+    <value>점수는 예상 수준입니다</value>
+  </data>
+  <data name="Plates · spiky" xml:space="preserve">
+    <value>플레이트 · 들쭉날쭉</value>
+  </data>
+  <data name="Plates · smooth" xml:space="preserve">
+    <value>플레이트 · 매끈함</value>
+  </data>
+  <data name="debuted at {0}" xml:space="preserve">
+    <value>{0}로 데뷔</value>
+  </data>
+  <data name="rerated {0}" xml:space="preserve">
+    <value>{0}로 조정됨</value>
+  </data>
+  <data name="unchanged · {0}" xml:space="preserve">
+    <value>변동 없음 · {0}</value>
+  </data>
+  <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
+    <value>비슷한 채보를 꼽기엔 아직 데이터가 부족합니다 — 그래프는 매일 밤 다시 계산됩니다.</value>
+  </data>
+  <data name="players score alike" xml:space="preserve">
+    <value>플레이어 점수 경향이 비슷함</value>
+  </data>
+  <data name="same skill profile" xml:space="preserve">
+    <value>스킬 구성이 동일</value>
+  </data>
+  <data name="behaves the same for its level" xml:space="preserve">
+    <value>레벨 대비 난이도 거동이 동일</value>
+  </data>
+  <data name="same intensity" xml:space="preserve">
+    <value>밀도/강도가 비슷함</value>
+  </data>
+  <data name="level neighbor" xml:space="preserve">
+    <value>이웃 레벨</value>
+  </data>
+  <data name="Watch chart video" xml:space="preserve">
+    <value>채보 영상 보기</value>
+  </data>
+  <data name="Your best" xml:space="preserve">
+    <value>내 최고 기록</value>
+  </data>
+  <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
+    <value>아직 기록이 없습니다 — 첫 시도를 기록하면 여기가 채워집니다.</value>
+  </data>
+  <data name="Prefilled from your best — saves to the score journal." xml:space="preserve">
+    <value>최고 기록으로 미리 채워짐 — 점수 저널에 저장됩니다.</value>
+  </data>
+  <data name="Score recorded for {0}" xml:space="preserve">
+    <value>{0} 점수가 기록되었습니다</value>
+  </data>
+  <data name="Letter grades on this board" xml:space="preserve">
+    <value>이 보드의 레터 등급</value>
+  </data>
+  <data name="How this board's letter grades distribute." xml:space="preserve">
+    <value>이 보드의 레터 등급 분포입니다.</value>
+  </data>
+  <data name="Plates earned" xml:space="preserve">
+    <value>획득한 플레이트</value>
+  </data>
+  <data name="Plates earned by this board's clears." xml:space="preserve">
+    <value>이 보드의 클리어가 획득한 플레이트입니다.</value>
+  </data>
+  <data name="Scores by competitive level" xml:space="preserve">
+    <value>경쟁 레벨별 점수</value>
+  </data>
+  <data name="Minimum, average, and maximum score at each competitive level." xml:space="preserve">
+    <value>경쟁 레벨별 최소·평균·최대 점수입니다.</value>
+  </data>
+  <data name="Passes by competitive level" xml:space="preserve">
+    <value>경쟁 레벨별 클리어</value>
+  </data>
+  <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
+    <value>이 채보의 클리어가 어느 경쟁 레벨에 있는지 보여줍니다.</value>
+  </data>
+  <data name="No scores recorded yet — import yours to light this up." xml:space="preserve">
+    <value>아직 기록된 점수가 없습니다 — 점수를 가져오면 여기가 켜집니다.</value>
+  </data>
+  <data name="No scores recorded yet — be the first." xml:space="preserve">
+    <value>아직 기록된 점수가 없습니다 — 첫 주인공이 되어 보세요.</value>
+  </data>
+  <data name="your communities" xml:space="preserve">
+    <value>내 커뮤니티</value>
+  </data>
+  <data name="you" xml:space="preserve">
+    <value>나</value>
+  </data>
+  <data name="Show more of {0} scores" xml:space="preserve">
+    <value>{0}개 점수 더 보기</value>
+  </data>
+  <data name="Search by song name — every chart has its own page." xml:space="preserve">
+    <value>곡 이름으로 검색하세요 — 모든 채보에 전용 페이지가 있습니다.</value>
+  </data>
+  <data name="song by {0}" xml:space="preserve">
+    <value>곡: {0}</value>
+  </data>
+  <data name="steps by {0}" xml:space="preserve">
+    <value>스텝: {0}</value>
+  </data>
+  <data name="Debuted in" xml:space="preserve">
+    <value>데뷔 시리즈</value>
+  </data>
+  <data name="Pass rate" xml:space="preserve">
+    <value>클리어율</value>
+  </data>
+  <data name="Record score" xml:space="preserve">
+    <value>점수 기록</value>
+  </data>
+  <data name="The evidence" xml:space="preserve">
+    <value>근거 데이터</value>
+  </data>
+  <data name="Each graph answers one sentence." xml:space="preserve">
+    <value>각 그래프는 한 문장에 답합니다.</value>
+  </data>
+  <data name="Skill fingerprint" xml:space="preserve">
+    <value>스킬 지문</value>
+  </data>
+  <data name="History" xml:space="preserve">
+    <value>역사</value>
+  </data>
+  <data name="Level changes across mixes, from the catalog record." xml:space="preserve">
+    <value>시리즈별 레벨 변화 — 카탈로그 기록에서 가져옵니다.</value>
+  </data>
+  <data name="Charts like this" xml:space="preserve">
+    <value>이 채보와 비슷한 채보</value>
+  </data>
+  <data name="From the similarity graph — evidence-weighted, rebuilt nightly." xml:space="preserve">
+    <value>유사도 그래프에서 — 근거 가중치 기반, 매일 밤 재계산.</value>
   </data>
 </root>

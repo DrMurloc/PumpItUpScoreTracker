@@ -1,0 +1,89 @@
+@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+@inject NavigationManager NavManager
+
+@* The similarity graph's shelf (docs/design/chart-similarity.md): jacket cards with
+   why-chips derived from the edge's persisted signal breakdown. Doubles as the internal
+   link mesh — static content at Stage 3. Why-chip thresholds are the design doc's. *@
+@if (_loaded)
+{
+    @if (_entries.Count == 0)
+    {
+        <MudText Typo="Typo.body2" Class="chart-shelf-empty">@L["Not enough data yet to name similar charts — the graph rebuilds nightly."]</MudText>
+    }
+    else
+    {
+        <div class="chart-shelf">
+            @foreach (var entry in _entries)
+            {
+                <a class="chart-shelf-card" href="@($"/Chart/{entry.Chart.Id}")">
+                    <div class="chart-shelf-art">
+                        <SongImage Song="entry.Chart.Song" Height="96"></SongImage>
+                        <span class="chart-shelf-bubble"><DifficultyBubble Chart="entry.Chart" Small="true"></DifficultyBubble></span>
+                    </div>
+                    <div class="chart-shelf-name">@entry.Chart.Song.Name</div>
+                    <div class="chart-shelf-why">
+                        @foreach (var reason in entry.Reasons)
+                        {
+                            <span>@reason</span>
+                        }
+                    </div>
+                    <div class="chart-shelf-match">
+                        <span class="chart-shelf-match-bar"><i style="width:@((int)(entry.Record.Score * 100))%"></i></span>
+                        <span class="chart-shelf-match-value">@entry.Record.Score.ToString("0.00")</span>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid ChartId { get; set; }
+
+    [Parameter]
+    public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    private bool _loaded;
+    private IReadOnlyList<(ChartSimilarityRecord Record, Chart Chart, IReadOnlyList<string> Reasons)> _entries =
+        Array.Empty<(ChartSimilarityRecord, Chart, IReadOnlyList<string>)>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var edges = await Mediator.Send(new GetSimilarChartsQuery(ChartId, Mix));
+        if (edges.Count == 0)
+        {
+            _entries = Array.Empty<(ChartSimilarityRecord, Chart, IReadOnlyList<string>)>();
+            _loaded = true;
+            return;
+        }
+
+        var charts = (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: edges.Select(e => e.ChartId))))
+            .ToDictionary(c => c.Id);
+        _entries = edges
+            .Where(e => charts.ContainsKey(e.ChartId))
+            .Select(e => (e, charts[e.ChartId], Reasons(e)))
+            .ToArray();
+        _loaded = true;
+    }
+
+    /// <summary>At most two chips, design-doc priority order and thresholds.</summary>
+    internal IReadOnlyList<string> Reasons(ChartSimilarityRecord record)
+    {
+        var reasons = new List<string>();
+        if (record.PlayersScore >= 0.45 && record.SharedScorers >= 30)
+            reasons.Add(L["players score alike"]);
+        if (record.StyleScore >= 0.75) reasons.Add(L["same skill profile"]);
+        if (record.BehaviorScore >= 0.8) reasons.Add(L["behaves the same for its level"]);
+        if (record.IntensityScore >= 0.8) reasons.Add(L["same intensity"]);
+        if (reasons.Count == 0) reasons.Add(L["level neighbor"]);
+        return reasons.Take(2).ToArray();
+    }
+}

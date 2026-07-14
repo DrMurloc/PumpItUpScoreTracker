@@ -14,12 +14,23 @@ namespace ScoreTracker.ChartIntelligence.Application
 {
     internal sealed class ScoringDifficultySaga : IConsumer<RecalculateScoringDifficultyCommand>,
         IConsumer<RecalculateChartLetterDifficultiesCommand>,
-        IRequestHandler<GetChartScoringLevelsQuery, IDictionary<Guid, double>>
+        IRequestHandler<GetChartScoringLevelsQuery, IDictionary<Guid, double>>,
+        IRequestHandler<GetChartLetterDifficultiesQuery,
+            IReadOnlyDictionary<Guid, IReadOnlyDictionary<ParagonLevel, double>>>
     {
         public Task<IDictionary<Guid, double>> Handle(GetChartScoringLevelsQuery request,
             CancellationToken cancellationToken)
         {
             return _scoringLevels.GetScoringLevels(request.Mix, cancellationToken);
+        }
+
+        public async Task<IReadOnlyDictionary<Guid, IReadOnlyDictionary<ParagonLevel, double>>> Handle(
+            GetChartLetterDifficultiesQuery request, CancellationToken cancellationToken)
+        {
+            return (await _chartRepository.GetChartLetterGradeDifficulties(request.ChartIds, cancellationToken))
+                .ToDictionary(d => d.ChartId,
+                    d => (IReadOnlyDictionary<ParagonLevel, double>)d.Percentiles
+                        .ToDictionary(kv => kv.Key, kv => kv.Value));
         }
 
         private const int LevelDiff = 3;

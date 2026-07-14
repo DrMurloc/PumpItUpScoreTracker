@@ -1,0 +1,154 @@
+@using MediatR
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUserRepository Users
+@inject CommunityGlowReader CommunityGlow
+
+@* Top ten server-side + your pinned row + show-more paging — never the old uncapped
+   dump. Row glow reuses the widgets' vocabulary (--daily-you / --daily-community via
+   CommunityGlowReader: opt-in crews only). Personal bits render only signed-in, so the
+   Stage-3 cached anonymous copy carries neither. The expander becomes the explorer
+   island. *@
+@if (_loaded && Chart != null)
+{
+    @if (_scores.Count == 0)
+    {
+        <MudText Typo="Typo.body2" Class="chart-lb-empty">@L["No scores recorded yet — be the first."]</MudText>
+    }
+    else
+    {
+        <div class="chart-lb">
+            <table class="chart-lb-table">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>@L["Name"]</th>
+                    <th>@L["Level"]</th>
+                    <th class="chart-lb-score-col">@L["Score"]</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var (score, place) in _scores.Take(_visible).Select((s, i) => (s, i + 1)))
+                {
+                    @Row(score, place)
+                }
+                @if (_myPlace is { } myPlace && myPlace > _visible)
+                {
+                    <tr class="chart-lb-gap"><td colspan="4">···</td></tr>
+                    @Row(_scores[myPlace - 1], myPlace)
+                }
+                </tbody>
+            </table>
+            <div class="chart-lb-foot">
+                <span class="chart-lb-legend">
+                    <i class="chart-lb-dot chart-lb-dot-community"></i>@L["your communities"]
+                    <i class="chart-lb-dot chart-lb-dot-me"></i>@L["you"]
+                </span>
+                @if (_visible < _scores.Count)
+                {
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="ShowMore">
+                        @L["Show more of {0} scores", _scores.Count]
+                    </MudButton>
+                }
+            </div>
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public Chart? Chart { get; set; }
+
+    [Parameter]
+    public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    private const int InitialPlaces = 10;
+    private const int PageSize = 25;
+
+    private bool _loaded;
+    private IReadOnlyList<UserPhoenixScore> _scores = Array.Empty<UserPhoenixScore>();
+    private readonly Dictionary<Guid, User> _users = new();
+    private readonly Dictionary<Guid, double> _levels = new();
+    private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
+    private int _visible = InitialPlaces;
+    private int? _myPlace;
+    private Guid _loadedFor;
+
+    private RenderFragment Row(UserPhoenixScore score, int place) => __builder =>
+    {
+        var rowClass = CurrentUser.IsLoggedIn && score.UserId == CurrentUser.User.Id
+            ? "chart-lb-me"
+            : _communityIds.Contains(score.UserId)
+                ? "chart-lb-community"
+                : "";
+        <tr class="@rowClass">
+            <td class="chart-lb-place">@place</td>
+            <td>
+                @if (_users.TryGetValue(score.UserId, out var user))
+                {
+                    <UserLabel User="user"></UserLabel>
+                }
+                else
+                {
+                    @score.UserName
+                }
+            </td>
+            <td class="chart-lb-level">@(_levels.TryGetValue(score.UserId, out var level) ? level.ToString("N1") : "")</td>
+            <td class="chart-lb-score-col">
+                <ScoreBreakdown Score="score.Score" Plate="score.Plate" IsBroken="score.IsBroken" ShowScore="true"
+                                OneLine="true"></ScoreBreakdown>
+            </td>
+        </tr>
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Chart == null || Chart.Id == _loadedFor) return;
+        _loadedFor = Chart.Id;
+        _visible = InitialPlaces;
+        _scores = (await Mediator.Send(new GetPhoenixScoresForChartQuery(Chart.Id, Mix)))
+            .OrderByDescending(s => (int)s.Score)
+            .ToArray();
+        _myPlace = CurrentUser.IsLoggedIn
+            ? _scores.Select((s, i) => (s.UserId, Place: i + 1))
+                .Where(x => x.UserId == CurrentUser.User.Id)
+                .Select(x => (int?)x.Place)
+                .FirstOrDefault()
+            : null;
+        _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
+        _users.Clear();
+        _levels.Clear();
+        await LoadDetails();
+        _loaded = true;
+    }
+
+    private async Task ShowMore()
+    {
+        _visible = Math.Min(_visible + PageSize, _scores.Count);
+        await LoadDetails();
+    }
+
+    /// <summary>Names and levels only for the rows actually on screen — never the whole board.</summary>
+    private async Task LoadDetails()
+    {
+        var visibleIds = _scores.Take(_visible).Select(s => s.UserId).ToList();
+        if (_myPlace is { } myPlace && myPlace > _visible) visibleIds.Add(_scores[myPlace - 1].UserId);
+        var missing = visibleIds.Where(id => !_users.ContainsKey(id)).Distinct().ToArray();
+        if (missing.Length == 0) return;
+        foreach (var user in await Users.GetUsers(missing)) _users[user.Id] = user;
+        foreach (var stats in await Mediator.Send(new GetPlayersStatsQuery(missing, Mix)))
+            _levels[stats.UserId] = Chart!.Type == ChartType.Single
+                ? stats.SinglesCompetitiveLevel
+                : stats.DoublesCompetitiveLevel;
+    }
+}

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -4061,5 +4061,194 @@
   </data>
   <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
     <value>PIU Tracker is fully public — scores you send there are public even if your profile isn't.</value>
+  </data>
+  <data name="{0} — {1}." xml:space="preserve">
+    <value>Mrgl {0} — {1}!</value>
+  </data>
+  <data name="Most clears stall below {0} — the steepest step on this board." xml:space="preserve">
+    <value>Mrglrgl {0} grlblrgl — mrgl aaaughibbrgubugbugrguburgle!</value>
+  </data>
+  <data name="Scores open up around competitive level {0}." xml:space="preserve">
+    <value>Mrgl scores mrglrgl {0} rlrlrlr!</value>
+  </data>
+  <data name="Dominated by {0} and {1}." xml:space="preserve">
+    <value>Mrgl {0} mrgl {1} grrrl!</value>
+  </data>
+  <data name="Dominated by {0}." xml:space="preserve">
+    <value>Mrgl {0} grrrl!</value>
+  </data>
+  <data name="Sustained — it holds you under tension for most of its runtime." xml:space="preserve">
+    <value>Mrglllll grlgl tensionrlgl mrgl!</value>
+  </data>
+  <data name="First passes cluster between competitive levels {0} and {1}." xml:space="preserve">
+    <value>Mrgl pass mrglrgl {0} rgl {1}!</value>
+  </data>
+  <data name="Plates run worse than scores predict — a kill-spot signature." xml:space="preserve">
+    <value>Mrgl plates grrrblgl — MRGLRGL SPOT!</value>
+  </data>
+  <data name="Plates run cleaner than scores predict — smooth attrition." xml:space="preserve">
+    <value>Mrgl plates rlglglgl — smoooorgl!</value>
+  </data>
+  <data name="Debuted in {0}." xml:space="preserve">
+    <value>Mrgl debut {0}!</value>
+  </data>
+  <data name="{0} scores tracked · {1}% pass rate" xml:space="preserve">
+    <value>{0} mrgl scores · {1}% mrgl!</value>
+  </data>
+  <data name="Plays a level easier than its label" xml:space="preserve">
+    <value>Mrgl ez-rgl</value>
+  </data>
+  <data name="Very easy to pass for its level" xml:space="preserve">
+    <value>Mrgl very ez-rgl</value>
+  </data>
+  <data name="Easy to pass for its level" xml:space="preserve">
+    <value>Mrgl ez pass-rgl</value>
+  </data>
+  <data name="Fairly rated to pass" xml:space="preserve">
+    <value>Mrgl fair-rgl</value>
+  </data>
+  <data name="Hard to pass for its level" xml:space="preserve">
+    <value>Mrgl hard pass-rgl</value>
+  </data>
+  <data name="Very hard to pass for its level" xml:space="preserve">
+    <value>MRGL HARD-RGL</value>
+  </data>
+  <data name="Plays a level harder than its label" xml:space="preserve">
+    <value>MRGLRGL HARD</value>
+  </data>
+  <data name="generous to score once you're through" xml:space="preserve">
+    <value>mrgl generous scorlgl</value>
+  </data>
+  <data name="stingy to score even when passed" xml:space="preserve">
+    <value>mrgl stingy scorlgl</value>
+  </data>
+  <data name="scores about as expected" xml:space="preserve">
+    <value>mrgl expected-rgl</value>
+  </data>
+  <data name="Plates · spiky" xml:space="preserve">
+    <value>Plates · MRGL!</value>
+  </data>
+  <data name="Plates · smooth" xml:space="preserve">
+    <value>Plates · smoorgl</value>
+  </data>
+  <data name="debuted at {0}" xml:space="preserve">
+    <value>mrgl debut {0}</value>
+  </data>
+  <data name="rerated {0}" xml:space="preserve">
+    <value>mrgl re-rgl {0}</value>
+  </data>
+  <data name="unchanged · {0}" xml:space="preserve">
+    <value>mrgl same · {0}</value>
+  </data>
+  <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
+    <value>Mrgl no datarlgl — mrgl nightly rebuildrgl!</value>
+  </data>
+  <data name="players score alike" xml:space="preserve">
+    <value>mrgl players alike-rgl</value>
+  </data>
+  <data name="same skill profile" xml:space="preserve">
+    <value>mrgl same skillrgl</value>
+  </data>
+  <data name="behaves the same for its level" xml:space="preserve">
+    <value>mrgl same-rgl level</value>
+  </data>
+  <data name="same intensity" xml:space="preserve">
+    <value>mrgl same intensrgl</value>
+  </data>
+  <data name="level neighbor" xml:space="preserve">
+    <value>mrgl neighborgl</value>
+  </data>
+  <data name="Watch chart video" xml:space="preserve">
+    <value>Mrgl video-rgl!</value>
+  </data>
+  <data name="Your best" xml:space="preserve">
+    <value>Mrgl best-rgl</value>
+  </data>
+  <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
+    <value>Mrgl no scorlgl — MRGL RECORD!</value>
+  </data>
+  <data name="Prefilled from your best — saves to the score journal." xml:space="preserve">
+    <value>Mrgl prefillrgl — journalgl!</value>
+  </data>
+  <data name="Score recorded for {0}" xml:space="preserve">
+    <value>Mrgl score {0} recordrgl!</value>
+  </data>
+  <data name="Letter grades on this board" xml:space="preserve">
+    <value>Mrgl letterrgl</value>
+  </data>
+  <data name="How this board's letter grades distribute." xml:space="preserve">
+    <value>Mrgl letters mrglrgl.</value>
+  </data>
+  <data name="Plates earned" xml:space="preserve">
+    <value>Mrgl plates-rgl</value>
+  </data>
+  <data name="Plates earned by this board's clears." xml:space="preserve">
+    <value>Mrgl plates clearrgl.</value>
+  </data>
+  <data name="Scores by competitive level" xml:space="preserve">
+    <value>Mrgl scores levelrgl</value>
+  </data>
+  <data name="Minimum, average, and maximum score at each competitive level." xml:space="preserve">
+    <value>Mrgl min avg max rgl.</value>
+  </data>
+  <data name="Passes by competitive level" xml:space="preserve">
+    <value>Mrgl passes levelrgl</value>
+  </data>
+  <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
+    <value>Mrgl passes wherlgl.</value>
+  </data>
+  <data name="No scores recorded yet — import yours to light this up." xml:space="preserve">
+    <value>Mrgl no scores — IMPORTRGL!</value>
+  </data>
+  <data name="No scores recorded yet — be the first." xml:space="preserve">
+    <value>Mrgl first-rgl!</value>
+  </data>
+  <data name="your communities" xml:space="preserve">
+    <value>mrgl tribergl</value>
+  </data>
+  <data name="you" xml:space="preserve">
+    <value>mrgl (you)</value>
+  </data>
+  <data name="Show more of {0} scores" xml:space="preserve">
+    <value>Mrgl more {0} scorlgl</value>
+  </data>
+  <data name="Search by song name — every chart has its own page." xml:space="preserve">
+    <value>Mrgl search songrgl!</value>
+  </data>
+  <data name="song by {0}" xml:space="preserve">
+    <value>mrgl song {0}</value>
+  </data>
+  <data name="steps by {0}" xml:space="preserve">
+    <value>mrgl steps {0}</value>
+  </data>
+  <data name="Debuted in" xml:space="preserve">
+    <value>Debutrgl</value>
+  </data>
+  <data name="Pass rate" xml:space="preserve">
+    <value>Passrglrate</value>
+  </data>
+  <data name="Record score" xml:space="preserve">
+    <value>MRGL RECORD!</value>
+  </data>
+  <data name="The evidence" xml:space="preserve">
+    <value>Mrgl evidencergl</value>
+  </data>
+  <data name="Each graph answers one sentence." xml:space="preserve">
+    <value>Mrgl graph one sentencergl.</value>
+  </data>
+  <data name="Skill fingerprint" xml:space="preserve">
+    <value>Skillrgl fingerprintrgl</value>
+  </data>
+  <data name="History" xml:space="preserve">
+    <value>Historgl</value>
+  </data>
+  <data name="Level changes across mixes, from the catalog record." xml:space="preserve">
+    <value>Mrgl levels mixrgl.</value>
+  </data>
+  <data name="Charts like this" xml:space="preserve">
+    <value>Mrgl chartz like thisrgl</value>
+  </data>
+  <data name="From the similarity graph — evidence-weighted, rebuilt nightly." xml:space="preserve">
+    <value>Mrgl graphrgl nightly!</value>
   </data>
 </root>
