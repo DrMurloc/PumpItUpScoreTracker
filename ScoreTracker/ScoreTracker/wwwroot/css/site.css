@@ -1812,6 +1812,84 @@ html.nav-away .page-dock,
     color: var(--mix-ink-muted);
 }
 
+/* Import Scores widget (§4): a credential form has to live in a 1x1 body, so the fields and
+   button pack into a tight flex column that scrolls rather than clipping the action off. */
+.import-widget-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.import-widget-body .mud-input-control {
+    margin-top: 0;
+}
+
+/* Saved-credential state: alert + full-width action, packed to the middle. */
+.import-saved {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Spinner / done state: everything centered on both axes. */
+.import-progress {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+/* Typed one-time credentials: username/password stacked, a tall import button beside them. */
+.import-typed {
+    display: flex;
+    gap: 6px;
+    align-items: stretch;
+}
+
+.import-typed-fields {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.import-typed-go {
+    min-width: 48px;
+    height: auto;
+}
+
+/* Nav-bar import indicator: a pulsing dot on the avatar while a background import runs. */
+.nav-avatar-wrap {
+    position: relative;
+    display: inline-flex;
+}
+
+.nav-import-pulse {
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--mix-primary);
+    border: 1px solid var(--mix-surface);
+    animation: nav-import-pulse 1.4s ease-out infinite;
+}
+
+@keyframes nav-import-pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--mix-primary) 65%, transparent); }
+    70% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--mix-primary) 0%, transparent); }
+    100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--mix-primary) 0%, transparent); }
+}
+
 /* Quick Record widget (§4.2): the arcade recorder, purpose-built to fit a 1x1 body. */
 .qr-body {
     flex: 1;

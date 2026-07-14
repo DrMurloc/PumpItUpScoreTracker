@@ -44,7 +44,9 @@ var web = builder.AddProject<Projects.ScoreTracker_Web>("web")
 // Caution: pasting Discord:BotToken makes the LOCAL app connect as the real prod bot
 // (two live gateway sessions, slash commands answered from an empty local DB) - leave
 // it out unless that's what you want; OAuth ClientId/ClientSecret are harmless.
-string[] forwardedSections = ["Discord", "Google", "Facebook", "AzureBlob", "Sendgrid"];
+// KeyVault flows through so remembered-credential storage works locally: set
+// KeyVault:LocalKey (base64 32-byte AES key) to exercise it without a real vault.
+string[] forwardedSections = ["Discord", "Google", "Facebook", "AzureBlob", "Sendgrid", "KeyVault"];
 foreach (var sectionName in forwardedSections)
 foreach (var entry in builder.Configuration.GetSection(sectionName).AsEnumerable())
     if (entry.Value is not null)

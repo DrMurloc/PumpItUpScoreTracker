@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -476,13 +476,13 @@
     <value>This will have PIUScores log into your account and import scores for you.</value>
   </data>
   <data name="Use Password 2" xml:space="preserve">
-    <value>I do not store a record of your username or password, you will have to type them in every time you use this.</value>
+    <value>By default I don't keep your username or password — you type them in each time. Or use the remember-password option below to save it, encrypted and only on this device.</value>
   </data>
   <data name="Use Password 3" xml:space="preserve">
     <value>To minimize calls to https://phoenix.piugame.com I will only import new or improved scores. Every user only gets one full import using Username/Password. Use the dev-tools importer if you wish to re-import older scores.</value>
   </data>
   <data name="Use Password 4" xml:space="preserve">
-    <value>Once started, don't leave this page or else your scores will not finish saving.</value>
+    <value>Once started, you can leave this page — the import finishes in the background.</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Used primarily for debugging</value>
@@ -3754,5 +3754,161 @@
   </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>How many co-op charts you've cleared, by player count.</value>
+  </data>
+  <data name="Import to" xml:space="preserve">
+    <value>Import to</value>
+  </data>
+  <data name="Sign in to import." xml:space="preserve">
+    <value>Sign in to import.</value>
+  </data>
+  <data name="Upload file" xml:space="preserve">
+    <value>Upload file</value>
+  </data>
+  <data name="Game tag" xml:space="preserve">
+    <value>Game tag</value>
+  </data>
+  <data name="Store" xml:space="preserve">
+    <value>Store</value>
+  </data>
+  <data name="Import with saved credentials" xml:space="preserve">
+    <value>Import with saved credentials</value>
+  </data>
+  <data name="Importing scores…" xml:space="preserve">
+    <value>Importing scores…</value>
+  </data>
+  <data name="Saved on this device" xml:space="preserve">
+    <value>Saved on this device</value>
+  </data>
+  <data name="Saved credentials loaded" xml:space="preserve">
+    <value>Saved credentials loaded</value>
+  </data>
+  <data name="Forget here" xml:space="preserve">
+    <value>Forget here</value>
+  </data>
+  <data name="Forget everywhere" xml:space="preserve">
+    <value>Forget everywhere</value>
+  </data>
+  <data name="Skip the game-tag step" xml:space="preserve">
+    <value>Skip the game-tag step</value>
+  </data>
+  <data name="Remember my password on this device" xml:space="preserve">
+    <value>Remember my password on this device</value>
+  </data>
+  <data name="Runs in the background." xml:space="preserve">
+    <value>Runs in the background.</value>
+  </data>
+  <data name="You can leave this page." xml:space="preserve">
+    <value>You can leave this page.</value>
+  </data>
+  <data name="One-time — nothing saved." xml:space="preserve">
+    <value>One-time — nothing saved.</value>
+  </data>
+  <data name="Import complete" xml:space="preserve">
+    <value>Import complete</value>
+  </data>
+  <data name="Starting import…" xml:space="preserve">
+    <value>Starting import…</value>
+  </data>
+  <data name="Invalid username or password." xml:space="preserve">
+    <value>Invalid username or password.</value>
+  </data>
+  <data name="Password saved on this device" xml:space="preserve">
+    <value>Password saved on this device</value>
+  </data>
+  <data name="Could not save your password" xml:space="preserve">
+    <value>Could not save your password</value>
+  </data>
+  <data name="Couldn't unlock your saved password. Enter it to import." xml:space="preserve">
+    <value>Couldn't unlock your saved password. Enter it to import.</value>
+  </data>
+  <data name="{0} scores import from a spreadsheet." xml:space="preserve">
+    <value>{0} scores import from a spreadsheet.</value>
+  </data>
+  <data name="Credential security" xml:space="preserve">
+    <value>Credential security</value>
+  </data>
+  <data name="Cycle all credential keys" xml:space="preserve">
+    <value>Cycle all credential keys</value>
+  </data>
+  <data name="Yes, cycle all keys" xml:space="preserve">
+    <value>Yes, cycle all keys</value>
+  </data>
+  <data name="All saved credentials have been cleared." xml:space="preserve">
+    <value>All saved credentials have been cleared.</value>
+  </data>
+  <data name="Deletes every saved import password on every device. Users re-enter on their next import. Use if you suspect a breach." xml:space="preserve">
+    <value>Deletes every saved import password on every device. Users re-enter on their next import. Use if you suspect a breach.</value>
+  </data>
+  <data name="Before we remember your password" xml:space="preserve">
+    <value>Before we remember your password</value>
+  </data>
+  <data name="I understand — remember it" xml:space="preserve">
+    <value>I understand — remember it</value>
+  </data>
+  <data name="For the technically curious — how it actually works" xml:space="preserve">
+    <value>For the technically curious — how it actually works</value>
+  </data>
+  <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
+    <value>Reading it takes three things at once, held in three different places:</value>
+  </data>
+  <data name="You hold the coded note" xml:space="preserve">
+    <value>You hold the coded note</value>
+  </data>
+  <data name="on this device only. Useless on its own." xml:space="preserve">
+    <value>on this device only. Useless on its own.</value>
+  </data>
+  <data name="We hold a sealed key" xml:space="preserve">
+    <value>We hold a sealed key</value>
+  </data>
+  <data name="in our database, locked so it can't be opened alone." xml:space="preserve">
+    <value>in our database, locked so it can't be opened alone.</value>
+  </data>
+  <data name="We hold the master key" xml:space="preserve">
+    <value>We hold the master key</value>
+  </data>
+  <data name="locked in a vault inside Microsoft Azure." xml:space="preserve">
+    <value>locked in a vault inside Microsoft Azure.</value>
+  </data>
+  <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
+    <value>Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us.</value>
+  </data>
+  <data name="All three come together only for the split second you press Import — we decode it, log in for you, and immediately forget it. Your real password is never written down anywhere." xml:space="preserve">
+    <value>All three come together only for the split second you press Import — we decode it, log in for you, and immediately forget it. Your real password is never written down anywhere.</value>
+  </data>
+  <data name="Because a coded copy of your password lives on this device, please make sure your Pump It Up password is one you use only here — not the one that also opens your email or your bank." xml:space="preserve">
+    <value>Because a coded copy of your password lives on this device, please make sure your Pump It Up password is one you use only here — not the one that also opens your email or your bank.</value>
+  </data>
+  <data name="Enter your piugame login once. It's encrypted on this device the moment you press Store — we never keep a readable copy." xml:space="preserve">
+    <value>Enter your piugame login once. It's encrypted on this device the moment you press Store — we never keep a readable copy.</value>
+  </data>
+  <data name="Your username and password are sealed together with AES-256-GCM under a random data key. That data key is wrapped by a master key that never leaves Azure Key Vault." xml:space="preserve">
+    <value>Your username and password are sealed together with AES-256-GCM under a random data key. That data key is wrapped by a master key that never leaves Azure Key Vault.</value>
+  </data>
+  <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
+    <value>The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs.</value>
+  </data>
+  <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
+    <value>This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import.</value>
+  </data>
+  <data name="Import scores" xml:space="preserve">
+    <value>Import scores</value>
+  </data>
+  <data name="Imported {0} new scores" xml:space="preserve">
+    <value>Imported {0} new scores</value>
+  </data>
+  <data name="No new scores found" xml:space="preserve">
+    <value>No new scores found</value>
+  </data>
+  <data name="An import is already running" xml:space="preserve">
+    <value>An import is already running</value>
+  </data>
+  <data name="Also Sync for PIU Tracker" xml:space="preserve">
+    <value>Also Sync for PIU Tracker</value>
+  </data>
+  <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
+    <value>Also send imported scores to PIU Tracker, a community score site.</value>
+  </data>
+  <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
+    <value>PIU Tracker is fully public — scores you send there are public even if your profile isn't.</value>
   </data>
 </root>

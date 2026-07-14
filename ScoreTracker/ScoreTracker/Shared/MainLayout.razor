@@ -10,6 +10,7 @@
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.Theming
+@using ScoreTracker.Web.Services.UiNotifications
 @using ScoreTracker.Application.Events
 @using ScoreTracker.Domain.Events
 @using MassTransit
@@ -18,11 +19,6 @@
 @inherits LayoutComponentBase
 @inject ICurrentUserAccessor CurrentUser
 @implements IDisposable
-@implements INotificationHandler<MatchUpdatedEvent>
-@implements INotificationHandler<ImportStatusUpdatedEvent>
-@implements INotificationHandler<PlayerStatsUpdatedEvent>
-@implements INotificationHandler<ImportStatusErrorEvent>
-@implements INotificationHandler<ScoreTracker.Randomizer.Contracts.Events.DrawUpdatedEvent>
 <PageTitle>@L["PIU Scores"]</PageTitle>
 
 <MudThemeProvider Theme="_theme" />
@@ -226,14 +222,20 @@
         {
             <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
                 <ActivatorContent>
-                    <MudAvatar Size="Size.Small" Style="cursor: pointer;">
-                        @* Native img with an onerror fallback: stored avatar URLs go stale when
-                           piugame rehosts its images (they moved with the Phoenix 2 rollout), so
-                           a broken URL degrades to the default avatar instead of a broken-image glyph. *@
-                        <img src="@_profileImage" alt=""
-                             onerror="this.onerror=null;this.src='https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png';"
-                             style="width: 100%; height: 100%; object-fit: cover;"/>
-                    </MudAvatar>
+                    <div class="nav-avatar-wrap">
+                        <MudAvatar Size="Size.Small" Style="cursor: pointer;">
+                            @* Native img with an onerror fallback: stored avatar URLs go stale when
+                               piugame rehosts its images (they moved with the Phoenix 2 rollout), so
+                               a broken URL degrades to the default avatar instead of a broken-image glyph. *@
+                            <img src="@_profileImage" alt=""
+                                 onerror="this.onerror=null;this.src='https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png';"
+                                 style="width: 100%; height: 100%; object-fit: cover;"/>
+                        </MudAvatar>
+                        @if (_importRunning)
+                        {
+                            <span class="nav-import-pulse" title="@L["Importing scores…"].Value"></span>
+                        }
+                    </div>
                 </ActivatorContent>
                 <ChildContent>
                     <div class="px-4 py-1" style="color: var(--mix-ink-muted); font-size: .8rem;">@UserName</div>
@@ -430,10 +432,14 @@
 @inject NavigationManager NavManager;
 @inject PageDockService PageDock;
 @inject IJSRuntime JSRuntime;
+@inject IUiNotificationHub UiHub;
 @code
 {
     private bool _showMore = false;
     private Guid? _userId = null;
+    private IDisposable? _statsSubscription;
+    private IDisposable? _importStatusSubscription;
+    private IDisposable? _importErrorSubscription;
 
     // Mix theme class + dock state classes; focus-mode also collapses the app bar (CSS).
     private string LayoutClass =>
@@ -499,6 +505,9 @@
         // layout before injection finished — observed once in the field as an NRE here.
         if (NavManager is not null) NavManager.LocationChanged -= OnLocationChanged;
         if (PageDock is not null) PageDock.Changed -= OnDockChanged;
+        _statsSubscription?.Dispose();
+        _importStatusSubscription?.Dispose();
+        _importErrorSubscription?.Dispose();
     }
     private bool _showBite = false;
     private bool _showRecapPopup = false;
@@ -571,52 +580,42 @@
                 UserName += $" ({_gamerTag})";
             }
             Rating = (await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix))).SkillRating;
+            // Live rating + the nav-bar import indicator: only this user's events reach this circuit
+            // (routed by user topic), so a background import shows up wherever the user has navigated.
+            var topic = UiTopics.User(CurrentUser.User.Id);
+            _statsSubscription = UiHub.Subscribe<PlayerStatsUpdatedEvent>(topic, OnPlayerStatsUpdated);
+            _importStatusSubscription = UiHub.Subscribe<ImportStatusUpdatedEvent>(topic, OnImportStatus);
+            _importErrorSubscription = UiHub.Subscribe<ImportStatusErrorEvent>(topic, OnImportError);
         }
     }
 
-    public static event EventHandler<ImportStatusUpdatedEvent>? ImportStatusUpdatedEvent;
-    public static event EventHandler<MatchUpdatedEvent>? MatchUpdated;
-    public static event EventHandler<ImportStatusErrorEvent>? ImportStatusErrorEvent;
-
-    // Randomizer live draws (docs/design/randomizer-overhaul.md C10): staff devices and
-    // spectator pages subscribe; state is already persisted when this fires.
-    public static event EventHandler<ScoreTracker.Randomizer.Contracts.Events.DrawUpdatedEvent>? DrawUpdated;
-
-    public Task Handle(ScoreTracker.Randomizer.Contracts.Events.DrawUpdatedEvent notification,
-        CancellationToken cancellationToken)
-    {
-        DrawUpdated?.Invoke(this, notification);
-        return Task.CompletedTask;
-    }
-    public Task Handle(MatchUpdatedEvent notification, CancellationToken cancellationToken)
-    {
-        MatchUpdated?.Invoke(this, notification);
-        return Task.CompletedTask;
-    }
     private string UserName { get; set; }
     public int Rating { get; set; }
+    private bool _importRunning;
 
-    public Task Handle(ImportStatusUpdatedEvent notification, CancellationToken cancellationToken)
+    // The app-bar rating follows the viewer's own live stat updates (subscribed by user topic in
+    // OnInitializedAsync); only the current mix's number is shown.
+    private Task OnPlayerStatsUpdated(PlayerStatsUpdatedEvent e)
     {
-        ImportStatusUpdatedEvent?.Invoke(this, notification);
-        return Task.CompletedTask;
+        if (e.Mix != _currentMix) return Task.CompletedTask;
+        Rating = e.NewStats.SkillRating;
+        return InvokeAsync(StateHasChanged);
     }
 
-    public Task Handle(PlayerStatsUpdatedEvent notification, CancellationToken cancellationToken)
+    // A background import (any mix) pulses the avatar until its terminal status or an error — so the
+    // user knows a scrape is still running after they've navigated off the page that started it.
+    private Task OnImportStatus(ImportStatusUpdatedEvent e)
     {
-        // Stats events now arrive per mix — only reflect the one the viewer is looking at.
-        if (_userId != notification.UserId || notification.Mix != _currentMix)
-        {
-            return Task.CompletedTask;
-        }
-        Rating = notification.NewStats.SkillRating;
-        InvokeAsync(StateHasChanged);
-        return Task.CompletedTask;
+        var running = e.Status != "Charts finished saving";
+        if (running == _importRunning) return Task.CompletedTask;
+        _importRunning = running;
+        return InvokeAsync(StateHasChanged);
     }
 
-    public Task Handle(ImportStatusErrorEvent notification, CancellationToken cancellationToken)
+    private Task OnImportError(ImportStatusErrorEvent e)
     {
-        ImportStatusErrorEvent?.Invoke(this, notification);
-        return Task.CompletedTask;
+        if (!_importRunning) return Task.CompletedTask;
+        _importRunning = false;
+        return InvokeAsync(StateHasChanged);
     }
 }

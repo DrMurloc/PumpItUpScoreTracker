@@ -601,6 +601,16 @@ internal sealed class PiuGameApi : IPiuGameApi
         return (client, sid);
     }
 
+    public HttpClient ClientForSid(MixEnum mix, string sid)
+    {
+        var baseUrl = _urls.BaseUrlFor(mix);
+        var cookieContainer = new CookieContainer();
+        cookieContainer.Add(new Uri(baseUrl), new Cookie("sid", sid));
+        var client = new HttpClient(new HttpClientHandler { CookieContainer = cookieContainer });
+        client.DefaultRequestHeaders.Add("origin", baseUrl);
+        return client;
+    }
+
     public async Task<PiuGameGetBestScoresResult> GetBestScores(MixEnum mix, HttpClient client, int page,
         CancellationToken cancellationToken)
     {

@@ -81,4 +81,7 @@ public sealed record WidgetDescriptor(
     // the title bar and bumps the RefreshToken contract parameter — body real estate
     // stays with the content. TitleKey is the button's localized tooltip.
     string? RefreshIcon = null,
-    string? RefreshTitleKey = null);
+    string? RefreshTitleKey = null,
+    // When true, the host auto-bumps RefreshToken after the viewer's score import lands, so
+    // personal-score widgets reflect the new scores/rating without a manual refresh.
+    bool RefreshOnScoreImport = false);

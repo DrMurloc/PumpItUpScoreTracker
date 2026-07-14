@@ -92,7 +92,7 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{EffectiveMix}";
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{EffectiveMix}|{RefreshToken}";
         if (signature == _loadedFor) return;
         _loadedFor = signature;
         _loaded = false;
