@@ -84,25 +84,27 @@
                     </MudItem>
                     @if (_hasStoredCredential)
                     {
-                        <MudItem xs="12">
-                            <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Lock">
+                        @* Saved credential replaces the username/password fields — the rest of the
+                           import (options, game card) proceeds normally against it. *@
+                        <MudItem xs="12" sm="8">
+                            <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Lock" Dense="true">
                                 <div class="d-flex align-center flex-wrap" style="gap:.5rem">
                                     <span>@L["Saved on this device"]</span>
-                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                                               StartIcon="@Icons.Material.Filled.ImportExport" Disabled="_isImporting"
-                                               OnClick="ImportWithSavedCredentials">@L["Import with saved credentials"]</MudButton>
                                     <MudButton Size="Size.Small" Disabled="_isImporting"
                                                OnClick="ForgetSavedCredentials">@L["Forget here"]</MudButton>
                                 </div>
                             </MudAlert>
                         </MudItem>
                     }
-                    <MudItem xs="12" sm="4">
-                        <MudTextField Label="PIUGame.com Username" Disabled="_isImporting" @bind-Value="_username"></MudTextField>
-                    </MudItem>
-                    <MudItem xs="12" sm="4">
-                        <MudTextField InputType="InputType.Password" Disabled="_isImporting" Label="PIUGame.com Password" @bind-Value="_password"></MudTextField>
-                    </MudItem>
+                    else
+                    {
+                        <MudItem xs="12" sm="4">
+                            <MudTextField Label="PIUGame.com Username" Disabled="_isImporting" @bind-Value="_username"></MudTextField>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudTextField InputType="InputType.Password" Disabled="_isImporting" Label="PIUGame.com Password" @bind-Value="_password"></MudTextField>
+                        </MudItem>
+                    }
                     <MudItem xs="12" sm="4">
                         @if (_cards.Any())
                         {
@@ -339,11 +341,13 @@
         @if (_currentStep == Step.UsePassword && !IsImportGated)
         {
             <MudButton Variant="@Variant.Filled"
-                       Disabled="_isImporting || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)"
+                       Disabled="@(_isImporting || (!_hasStoredCredential && (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password))))"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.ImportExport"
                        OnClick="ImportScores">Import</MudButton>
-            @if (!_cards.Any() && !string.IsNullOrWhiteSpace(_selectedId))
+            @* Card switching needs the typed password (a saved credential stays sealed), so it's
+               only offered on the typed path. *@
+            @if (!_cards.Any() && !string.IsNullOrWhiteSpace(_selectedId) && !_hasStoredCredential)
             {
                 <MudButton Variant="Variant.Filled"
                            Disabled="_isImporting || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)"
@@ -409,8 +413,9 @@
     private const string RememberConsentKey = "RememberPasswordConsent";
     private const string RememberConsentVersion = "1";
 
-    // One-click import from the credential saved on this device (§B saved variant): reuses the
-    // background path, so the password is never re-typed and never leaves the encrypted blob.
+    // Import using the credential saved on this device — the Import button routes here when one is
+    // stored. Reuses the background path (StoredCredentialSource), so the password is never re-typed
+    // and never leaves the encrypted blob. Options (broken scores, PIU Tracker, game card) apply.
     private async Task ImportWithSavedCredentials()
     {
         var blob = await ClientStore.Read();
@@ -540,6 +545,13 @@
     }
     private async Task ImportScores()
     {
+        // A saved credential takes the sealed-blob path; typing takes the credential path below.
+        if (_hasStoredCredential)
+        {
+            await ImportWithSavedCredentials();
+            return;
+        }
+
         _isImporting = true;
         _errors.Clear();
         try
