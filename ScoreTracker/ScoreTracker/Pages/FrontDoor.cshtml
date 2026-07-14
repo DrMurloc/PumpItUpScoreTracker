@@ -7,12 +7,13 @@
 @model ScoreTracker.Web.Pages.FrontDoorModel
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @inject Microsoft.Extensions.Localization.IStringLocalizer<ScoreTracker.Web.App> L
+@inject ScoreTracker.Web.Services.ShellModelFactory ShellFactory
 @{
     if (Model.ShowApp)
     {
         @* Signed-in "/" boots the Blazor app under the normal shell; the Router
            resolves "/" to the home dashboard. Mirror the host's culture-cookie write. *@
-        Layout = "_Layout";
+        Layout = "_SiteLayout";
         HttpContext.Response.Cookies.Append(
             CookieRequestCultureProvider.DefaultCookieName,
             CookieRequestCultureProvider.MakeCookieValue(
@@ -25,7 +26,8 @@
 }
 @if (Model.ShowApp)
 {
-    <component type="typeof(ScoreTracker.Web.App)" render-mode="Server" />
+    var shell = await ShellFactory.BuildAsync(HttpContext);
+    <component type="typeof(ScoreTracker.Web.App)" render-mode="Server" param-CurrentMix="@shell.CurrentMix" />
 }
 else
 {

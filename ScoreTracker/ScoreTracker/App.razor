@@ -1,4 +1,7 @@
-﻿@using ScoreTracker.Web.Shared
+﻿@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Shared
+@inject ShellContext Shell
 <Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
@@ -11,3 +14,17 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    // The shell resolves the mix from the request, where the cookie and the user's settings are
+    // both readable, and hands it down here. Seeding before the router renders lets every page
+    // read it synchronously rather than re-deriving request state the circuit cannot see.
+    // Root parameters travel through the client, so this carries display preferences only — an
+    // anonymous visitor already controls their own mix, and nothing here gates access.
+    [Parameter] public MixEnum CurrentMix { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Shell.CurrentMix = CurrentMix;
+    }
+}
