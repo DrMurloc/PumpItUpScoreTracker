@@ -21,14 +21,18 @@
 <MudSnackbarProvider />
 <ChartVideoDisplay></ChartVideoDisplay>
 
-@* Fixed-position, so where it sits in the tree doesn't matter. Mobile only — it exists to
-   put primary actions in thumb reach above the bottom nav, and desktop has neither. *@
-@if (PageDock.DockContent != null)
-{
-    <div class="page-dock shell-mobile-only">@PageDock.DockContent</div>
-}
+@* MudLayout is MudBlazor's drawer host (it derives from MudDrawerContainer), not chrome —
+   a MudDrawer anchors to it and falls into normal flow without one. It carries no app bar
+   and no nav; it is here for the pages that open drawers. *@
+<MudLayout>
+    @* Fixed-position, so where it sits in the tree doesn't matter. Mobile only — it exists to
+       put primary actions in thumb reach above the bottom nav, and desktop has neither. *@
+    @if (PageDock.DockContent != null)
+    {
+        <div class="page-dock shell-mobile-only">@PageDock.DockContent</div>
+    }
 
-<MudContainer>
+    <MudContainer>
     @if (LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath))
     {
         @* One render frame at most — RedirectIfGated is already navigating to
@@ -58,9 +62,10 @@
             <MudButton Variant="Variant.Text"
                        OnClick="()=>_showRecapPopup=false"
                        Color="Color.Primary">@L["Close"]</MudButton>
-        </DialogActions>
-    </MudDialog>
-</MudContainer>
+            </DialogActions>
+        </MudDialog>
+    </MudContainer>
+</MudLayout>
 @inject IMediator Mediator;
 @inject IUiSettingsAccessor UiSettings;
 @inject NavigationManager NavManager;
