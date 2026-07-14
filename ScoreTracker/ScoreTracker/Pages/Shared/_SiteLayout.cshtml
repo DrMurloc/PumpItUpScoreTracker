@@ -61,11 +61,14 @@
 <header class="shell-appbar">
     <component type="typeof(ShellNav)" render-mode="Static" param-Model="@shell" />
     <span class="shell-spacer"></span>
+    <component type="typeof(AppBarSearch)" render-mode="Server" param-Mix="@shell.CurrentMix" />
     <component type="typeof(ShellMixMenu)" render-mode="Static" param-Model="@shell" />
     <component type="typeof(ShellUserMenu)" render-mode="Static" param-Model="@shell" />
 </header>
 <component type="typeof(ShellMoreSheet)" render-mode="Static" param-Model="@shell" />
 <component type="typeof(ShellBottomNav)" render-mode="Static" param-Model="@shell" />
+@* Renders nothing; it drives the hidden pulse dot the shell put in the avatar. *@
+<component type="typeof(ShellImportPulse)" render-mode="Server" />
 
 <main class="shell-main">
     @RenderBody()
