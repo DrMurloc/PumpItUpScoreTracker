@@ -203,7 +203,13 @@ Leaning 1. It is the only option that leaves the routing legible afterwards.
   `/Culture/Set`. Lands here rather than Stage 1 because `_Host.cshtml` dies here — writing it
   in Stage 1 means writing it into a corpse. **Prerequisite for the output caching that lands at
   Stage 3.**
-  Verify: `curl -sI` an anon page twice → **no `Set-Cookie`** on the second.
+  Verify: `curl -sI` an anon page twice → **no `.AspNetCore.Culture` `Set-Cookie`** on the second.
+
+  Confirmed live 2026-07-14 — a cookieless GET of `/TierLists` returns
+  `Set-Cookie: .AspNetCore.Culture=c%3Den-US%7Cuic%3Den-US; path=/`. It also returns
+  `Cache-Control: no-cache, no-store, max-age=0` and **two Azure ARR affinity cookies**; see
+  static-shell.md D18 — fixing the culture cookie is necessary but **not sufficient** for a
+  cacheable anonymous response.
 - The hosting swap (§2 table, lines 51–55, 381–383).
 - Every `<component>` call site → `@rendermode` (§2).
 - `App.razor` → `App.razor` (document root) + `Routes.razor` (the Router).

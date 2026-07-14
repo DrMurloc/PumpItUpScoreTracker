@@ -119,6 +119,19 @@ why they are `.razor` and not cshtml partial markup** — cshtml markup would be
   the first static page: caching pays ~nothing while every page still boots a circuit, and it
   is only meaningfully testable once anonymous HTML contains content.
 
+  ⚠ **Two obstacles Stage 3 inherits, observed live on production** (`curl` of
+  `https://piuscores.arroweclip.se/TierLists`, 2026-07-14):
+  - `Cache-Control: no-cache, no-store, max-age=0` on every response. Stage 3's caching must
+    overturn this, and must find out what sets it first.
+  - **Azure App Service ARR affinity**: `Set-Cookie: ARRAffinity=…` +
+    `Set-Cookie: ARRAffinitySameSite=…` on a cookieless request. Platform-set (not app code),
+    it's the sticky-session cookie that binds a client to one instance. A response carrying it
+    can't be edge-cached as-is without leaking one instance's affinity to every visitor. It
+    appears to be first-response-only (a client that already holds it doesn't get a new one),
+    so the D9 culture fix isn't the whole story — **the cacheable-response question is
+    "cookieless first hit sets three cookies," not one.** Blazor Server needs affinity only
+    across multiple instances; whether the plan is scaled out is an owner question.
+
 ## 3. The islands audit
 
 `Shared/MainLayout.razor` @ `01904329`, every interactive/dynamic element:
@@ -249,12 +262,14 @@ listens to `popstate`. (4) `shell.setDockState(hasDock, focusMode)` — toggles 
 `html.focus-mode`. (5) `shell.setImportPulse(bool)`. (6) on `DOMContentLoaded`:
 `pageDock.watch()` + `refreshActiveNav()`. No colors, no `innerHTML`.
 
-⚠ **Menu positioning is not in this contract and needs a decision.** Today each mega-menu is a
-`MudPopover` — rendered at end of `<body>`, `position: fixed`, **JS-positioned with viewport
-flip/shift**. Statically it's a `position: absolute` child of the appbar with no flip. At
-960–1100px a wide two-column panel (Compete) can overflow and cause horizontal scroll where Mud
-would have shifted it back. Options: right-anchor the right-side menus, clamp the wide ones, or
-~15 lines of nudge JS.
+(7) **`shell.positionMenu(panel)` — viewport flip/shift.** Today each mega-menu is a
+`MudPopover`: rendered at end of `<body>`, `position: fixed`, **JS-positioned with viewport
+flip/shift**. Statically it's a `position: absolute` child of the appbar with no flip, so at
+960–1100px a wide two-column panel (Compete) overflows into horizontal scroll where Mud would
+have shifted it back on-screen. On open, measure the panel against `innerWidth` and clamp/flip
+its inline offset. **Owner call: match Mud's behavior rather than approximate it in CSS** —
+pure-CSS right-anchoring is cheaper but isn't pixel-identical at the extreme, and the gate for
+this project is that pixels don't move.
 
 ### NEW `Components/ShellImportPulse.razor` + `Components/AppBarSearch.razor` (islands)
 
@@ -378,12 +393,9 @@ scan to `.cshtml`, which is currently invisible to it. Doing so surfaces real pr
 ### MODIFIED `Program.cs`
 
 Register `ShellContext` and `ShellModelFactory` scoped next to the other Web services (~247–254).
-
-⚠ **Verify response compression.** Nothing registers `UseResponseCompression`; today it rides
-entirely on Azure App Service's IIS-level dynamic compression. The shell emits ~117 nav rows
-(~25KB uncompressed) on every page against today's 7.9KB total — a 4× HTML increase.
-Compressed that's ~4KB on the wire and the shell is a win; **uncompressed it makes slow
-networks worse**, which is the one scenario the owner carved out. Confirm or register it.
+Nothing else. **Response compression needs no change** — it's already on in production via
+Azure's IIS dynamic compression (§9), so the shell's ~117 nav rows (~25KB uncompressed against
+today's ~5KB) cost ~4KB on the wire.
 
 ### UNCHANGED but load-bearing
 
@@ -483,6 +495,15 @@ The load-bearing facts. Each was checked, not assumed — do not re-litigate wit
   outside the component tree. → D8.
 - **Blazor navigation goes through `history.pushState`/`replaceState`** (present in
   `blazor.server.js`), so D12's wrapper premise holds.
+- **The baseline, confirmed live** (`curl -H "Accept-Encoding: gzip,br"` of
+  `https://piuscores.arroweclip.se/TierLists`, 2026-07-14): **5,283 bytes decompressed, zero
+  `<title>` elements, zero nav markup.** The site really does serve an empty themeless shell to
+  every crawler and every first paint.
+- **Response compression is ON in production** — `Content-Encoding: gzip` +
+  `Vary: Accept-Encoding`, applied by Azure App Service's IIS dynamic compression (nothing in
+  `Program.cs` registers it). So the shell's 4× HTML increase costs ~4KB on the wire, and
+  registering `UseResponseCompression` is unnecessary. (gzip, not brotli — brotli would be
+  ~15–20% smaller; not worth fighting for.)
 - **8 pages already emit SEO metadata no crawler has ever seen** — `ChartDetails`,
   `ChartSkills` (including the daily-regenerated folder share card), `PersonalizedBreakdown`,
   `ChartRandomizer`, `LifeCalculator`, `PhoenixCalculator`, `PhoenixToXXCalculator`. All of it
@@ -491,9 +512,6 @@ The load-bearing facts. Each was checked, not assumed — do not re-litigate wit
 
 ## 10. Open
 
-- **Response compression** — confirm it's on in production, or register it. Gates whether the
-  4× HTML increase helps or hurts slow networks.
-- **Menu positioning** at the 960–1100px seam (§4 `nav.js`).
 - **`/Login` + `/Logout` today** — both are non-Blazor routes linked from the shell, and both
   work, so MudBlazor's `Href` dodges interception by a mechanism not yet identified. Doesn't
   block D8 (plain anchors get `target="_top"` regardless), but worth knowing whether the shell
