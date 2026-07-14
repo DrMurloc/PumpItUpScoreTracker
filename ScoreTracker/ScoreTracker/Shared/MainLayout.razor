@@ -21,10 +21,11 @@
 <MudSnackbarProvider />
 <ChartVideoDisplay></ChartVideoDisplay>
 
-@* Fixed-position, so where it sits in the tree doesn't matter. *@
+@* Fixed-position, so where it sits in the tree doesn't matter. Mobile only — it exists to
+   put primary actions in thumb reach above the bottom nav, and desktop has neither. *@
 @if (PageDock.DockContent != null)
 {
-    <div class="page-dock">@PageDock.DockContent</div>
+    <div class="page-dock shell-mobile-only">@PageDock.DockContent</div>
 }
 
 <MudContainer>
@@ -102,6 +103,15 @@
         if (!LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath)) return false;
         NavManager.NavigateTo("/TierLists");
         return true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // nav.js starts the scroll watcher with the page, before any content exists, so its
+        // idea of where the page was scrolled to predates the content. Re-sync once the
+        // circuit has actually rendered something, or the first scroll is measured against a
+        // page that was 48px tall and the nav flicks in and out.
+        if (firstRender) await JSRuntime.InvokeVoidAsync("pageDock.reset");
     }
 
     public void Dispose()

@@ -454,10 +454,11 @@ html.focus-mode .page-dock {
     }
 }
 
-/* Focus mode: shell chrome gone (bottom nav is unrendered; the app bar collapses
-   here). The page owes the user an explicit exit affordance. */
-html.focus-mode .shell-appbar {
-    display: none;
+/* Focus mode: shell chrome gone. The page owes the user an explicit exit affordance.
+   Both bars are server-rendered now, so both are hidden here rather than skipped. */
+html.focus-mode .shell-appbar,
+html.focus-mode .bottom-nav {
+    display: none !important;
 }
 
 html.focus-mode .shell-main {
