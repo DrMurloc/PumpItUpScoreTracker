@@ -503,6 +503,7 @@ public sealed class RealSessionShowcaseTests
         public User User => throw new InvalidOperationException("The showcase pipeline has no current user.");
         public bool IsLoggedInAsAdmin => false;
         public Task SetCurrentUser(User user) => throw new InvalidOperationException();
+        public void SetScopedUser(User user) => throw new InvalidOperationException();
     }
 
     private sealed class SystemClock : IDateTimeOffsetAccessor

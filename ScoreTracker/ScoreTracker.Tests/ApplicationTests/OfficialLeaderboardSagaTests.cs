@@ -457,16 +457,19 @@ public sealed class OfficialLeaderboardSagaTests
     }
 
     [Fact]
-    public async Task ImportReportsInvalidLoginStatus()
+    public async Task ImportReportsInvalidLoginAsAnErrorAndStops()
     {
         var f = ArrangeImport(accountName: "INVALID");
         var saga = BuildImportSaga(f);
 
         await saga.Handle(ImportCommand(), CancellationToken.None);
 
-        f.Mediator.Verify(m => m.Publish(It.Is<ImportStatusUpdatedEvent>(s =>
-                s.Status == "Invalid Login Information"),
+        f.Mediator.Verify(m => m.Publish(It.Is<ImportStatusErrorEvent>(e =>
+                e.Error == "Invalid Login Information"),
             It.IsAny<CancellationToken>()), Times.Once);
+        // A session that can't resolve to an account is terminal — no scrape follows.
+        f.Site.Verify(s => s.GetRecordedScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+            It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     // ───────────────────────────────────────────────────────────────────────────

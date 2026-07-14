@@ -301,10 +301,15 @@ namespace ScoreTracker.OfficialMirror.Application
             {
             }
 
+            // A signed-in session that can't resolve to a game account (wrong card, no profile
+            // yet) is terminal — surface it as an error and stop rather than scraping nothing
+            // and reporting a hollow "complete".
             if (accountData.AccountName == "INVALID")
-                await _mediator.Publish(new ImportStatusUpdatedEvent(userId,
-                    "Invalid Login Information", Array.Empty<RecordedPhoenixScore>(), mix),
+            {
+                await _mediator.Publish(new ImportStatusErrorEvent(userId, "Invalid Login Information", mix),
                     cancellationToken);
+                return;
+            }
 
             if (mix == MixEnum.Phoenix2)
                 await BackfillCardAliases(userId, mix, sid, cancellationToken);

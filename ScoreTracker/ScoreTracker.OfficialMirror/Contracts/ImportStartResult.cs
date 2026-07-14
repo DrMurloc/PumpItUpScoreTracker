@@ -9,5 +9,8 @@ public enum ImportStartOutcome
 {
     Started,
     CredentialUnlockFailed,
-    InvalidCredentials
+    InvalidCredentials,
+
+    // This user already has an import in flight — don't kick off a second scrape of the site.
+    AlreadyRunning
 }

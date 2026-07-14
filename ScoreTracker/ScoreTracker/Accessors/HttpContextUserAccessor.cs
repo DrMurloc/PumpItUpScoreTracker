@@ -11,21 +11,36 @@ namespace ScoreTracker.Web.Accessors;
 public sealed class HttpContextUserAccessor : ICurrentUserAccessor
 {
     private readonly IHttpContextAccessor _context;
+    private readonly AmbientUserContext _ambient;
 
-    public HttpContextUserAccessor(IHttpContextAccessor httpContext)
+    public HttpContextUserAccessor(IHttpContextAccessor httpContext, AmbientUserContext ambient)
     {
         _context = httpContext;
+        _ambient = ambient;
     }
 
-    public bool IsLoggedIn => _context?.HttpContext?.User.Identity?.IsAuthenticated ?? false;
+    // The circuit's current user. IHttpContextAccessor is only reliable during the initial request,
+    // not during later interactive renders (its HttpContext goes null once the request completes),
+    // so the first authenticated read memoizes into the circuit-scoped AmbientUserContext and every
+    // later read serves that cache. Without this, a background-driven re-render sees a null
+    // HttpContext and the component flips to "logged out" mid-session.
+    private User? ResolveUser()
+    {
+        if (_ambient.User != null) return _ambient.User;
+        var principal = _context.HttpContext?.User;
+        if (principal?.Identity?.IsAuthenticated == true) return _ambient.User = principal.GetUser();
+        return null;
+    }
 
-    public User User => !IsLoggedIn
-        ? throw new UserNotLoggedInException()
-        : _context.HttpContext?.User.GetUser() ?? throw new UserNotLoggedInException();
+    public bool IsLoggedIn => ResolveUser() != null;
 
+    public User User => ResolveUser() ?? throw new UserNotLoggedInException();
 
     public async Task SetCurrentUser(User user)
     {
+        // Set the ambient user, then issue the sign-in cookie. Reserved for real HTTP requests —
+        // a background job must use SetScopedUser so it never signs the flowed circuit out.
+        _ambient.User = user;
         var context = _context.HttpContext;
         if (context == null) return;
         var principal = user.GetClaimsPrincipal();
@@ -33,7 +48,12 @@ public sealed class HttpContextUserAccessor : ICurrentUserAccessor
         await context.SignInAsync(principal);
     }
 
-    public bool IsLoggedInAsAdmin => IsLoggedIn && User.IsAdmin;
+    public void SetScopedUser(User user)
+    {
+        _ambient.User = user;
+    }
+
+    public bool IsLoggedInAsAdmin => ResolveUser() is { IsAdmin: true };
 }
 
 public static class UserExtensions

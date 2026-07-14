@@ -26,7 +26,8 @@ public static class WidgetRegistry
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(CompetitiveLevelWidget),
             typeof(CompetitiveLevelConfigPanel),
-            typeof(CompetitiveLevelConfig)),
+            typeof(CompetitiveLevelConfig),
+            RefreshOnScoreImport: true),
         // TypeId stays "pumbility" (public export vocabulary, never renamed) though the
         // widget is now Account Stats. 1x2+ adds the closest-competitive-matches list.
         new("pumbility",
@@ -39,7 +40,8 @@ public static class WidgetRegistry
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(PumbilityWidget),
             typeof(PumbilityConfigPanel),
-            typeof(PumbilityConfig)),
+            typeof(PumbilityConfig),
+            RefreshOnScoreImport: true),
         new("weekly-challenge",
             "Weekly Charts",
             "This week's board and your placements.",
@@ -50,7 +52,8 @@ public static class WidgetRegistry
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(WeeklyWidget),
             typeof(WeeklyConfigPanel),
-            typeof(WeeklyConfig)),
+            typeof(WeeklyConfig),
+            RefreshOnScoreImport: true),
         new("community-highlights",
             "Community Highlights",
             "Recent big wins from the communities you pick.",
@@ -77,7 +80,8 @@ public static class WidgetRegistry
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(DailyStepWidget),
             typeof(DailyStepConfigPanel),
-            typeof(DailyStepConfig)),
+            typeof(DailyStepConfig),
+            RefreshOnScoreImport: true),
         new("suggested-charts",
             "Suggested Charts",
             "Charts picked for you, tuned by goal.",
@@ -128,7 +132,8 @@ public static class WidgetRegistry
                     _ => "Suggested · Title Hunt"
                 },
             RefreshIcon: Icons.Material.Filled.Shuffle,
-            RefreshTitleKey: "Shuffle suggestions"),
+            RefreshTitleKey: "Shuffle suggestions",
+            RefreshOnScoreImport: true),
         new("by-level-breakdown",
             "By-Level Breakdown",
             "One configurable graph of your scores, grades, plates, or clears by level.",
@@ -210,7 +215,8 @@ public static class WidgetRegistry
                 if (config.Scope == BreakdownChartScope.CoOp && config.Metric == BreakdownMetric.Pass)
                     return "Co-Op Completion";
                 return ByLevelConfigRules.TitleKey(config.Metric, config.Aggregation);
-            }),
+            },
+            RefreshOnScoreImport: true),
         new("quick-record",
             "Quick Record",
             "Record a score by hand for any chart.",

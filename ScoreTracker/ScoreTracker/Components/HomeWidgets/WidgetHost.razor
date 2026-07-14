@@ -1,7 +1,13 @@
+@using ScoreTracker.Domain.Events
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.UiNotifications
+@inject IUiNotificationHub UiHub
+@inject ICurrentUserAccessor CurrentUser
+@implements IDisposable
 
 @* The standard widget frame (§2.3): the host owns the card chrome, the title, the
    per-cell error boundary, the unknown-type fallback, and the edit-mode controls —
@@ -117,6 +123,11 @@
     private int _refreshToken;
     private IDictionary<string, object> _parameters = new Dictionary<string, object>();
 
+    // Auto-refresh subscriptions (opt-in per descriptor); held for the host's lifetime.
+    private IDisposable? _importSubscription;
+    private IDisposable? _statsSubscription;
+    private bool _subscribedForImport;
+
     // Header slot (§2.3): opt-in title-bar real estate a widget can push a fragment into.
     private WidgetHeaderSlot _headerSlot = null!;
 
@@ -135,6 +146,7 @@
     {
         _descriptor = WidgetRegistry.TryGet(Widget.WidgetType);
         _parameters = BuildParameters();
+        EnsureImportRefreshSubscription();
     }
 
     private void Refresh()
@@ -142,6 +154,43 @@
         _refreshToken++;
         // Self-triggered change: OnParametersSet won't re-run, rebuild by hand.
         _parameters = BuildParameters();
+    }
+
+    // Owner "fire on both": a personal-score widget reloads after the viewer's import lands —
+    // once when the scores finish saving, and again when the derived rating settles — so
+    // score-based and rating-based widgets are each current. Routed by user topic, so only this
+    // viewer's import triggers it.
+    private void EnsureImportRefreshSubscription()
+    {
+        if (_subscribedForImport || _descriptor?.RefreshOnScoreImport != true || !CurrentUser.IsLoggedIn) return;
+        _subscribedForImport = true;
+        var topic = UiTopics.User(CurrentUser.User.Id);
+        _importSubscription = UiHub.Subscribe<ImportStatusUpdatedEvent>(topic, OnImportStatus);
+        _statsSubscription = UiHub.Subscribe<PlayerStatsUpdatedEvent>(topic, OnPlayerStats);
+    }
+
+    private Task OnImportStatus(ImportStatusUpdatedEvent e)
+    {
+        // Only the terminal status — the per-chart progress ticks would thrash the reload.
+        if (e.Status != "Charts finished saving") return Task.CompletedTask;
+        return InvokeAsync(BumpRefresh);
+    }
+
+    private Task OnPlayerStats(PlayerStatsUpdatedEvent e)
+    {
+        return InvokeAsync(BumpRefresh);
+    }
+
+    private void BumpRefresh()
+    {
+        Refresh();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _importSubscription?.Dispose();
+        _statsSubscription?.Dispose();
     }
 
     private IDictionary<string, object> BuildParameters()

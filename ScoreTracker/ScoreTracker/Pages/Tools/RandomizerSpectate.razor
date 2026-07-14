@@ -10,6 +10,7 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services.UiNotifications
 @using ScoreTracker.Web.Shared
 
 @* The spectator view (docs/design/randomizer-overhaul.md C10): anonymous, read-only,
@@ -87,6 +88,7 @@ else
 
 @inject IMediator Mediator
 @inject NavigationManager NavManager
+@inject IUiNotificationHub UiHub
 @implements IDisposable
 @code {
 
@@ -111,9 +113,12 @@ else
         _detailsOpen = true;
     }
 
+    private IDisposable? _drawSubscription;
+
     protected override void OnInitialized()
     {
-        MainLayout.DrawUpdated += OnDrawUpdated;
+        // All live viewers share the draws feed; the handler filters to this slug and its siblings.
+        _drawSubscription = UiHub.Subscribe<DrawUpdatedEvent>(UiTopics.Draws, OnDrawUpdated);
     }
 
     protected override async Task OnParametersSetAsync()
@@ -178,12 +183,12 @@ else
             .ToList();
     }
 
-    private async void OnDrawUpdated(object? sender, DrawUpdatedEvent e)
+    private Task OnDrawUpdated(DrawUpdatedEvent e)
     {
         // Our match, or any sibling (a new match appearing should light up the tabs).
-        if (e.Slug != Slug && _siblings.All(s => s.Id != e.DrawId) && _siblings.Count > 0) return;
+        if (e.Slug != Slug && _siblings.All(s => s.Id != e.DrawId) && _siblings.Count > 0) return Task.CompletedTask;
 
-        await InvokeAsync(async () =>
+        return InvokeAsync(async () =>
         {
             await Load();
             StateHasChanged();
@@ -192,6 +197,6 @@ else
 
     public void Dispose()
     {
-        MainLayout.DrawUpdated -= OnDrawUpdated;
+        _drawSubscription?.Dispose();
     }
 }

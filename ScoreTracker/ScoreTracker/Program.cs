@@ -30,6 +30,7 @@ using ScoreTracker.Web.HostedServices;
 using ScoreTracker.Web.Security;
 using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.Contracts;
+using ScoreTracker.Web.Services.UiNotifications;
 using ScoreTracker.Web.Shared;
 using ScoreTracker.Web.Swagger;
 using Swashbuckle.AspNetCore.Filters;
@@ -201,6 +202,11 @@ builder.Services.AddBlazorApplicationInsights()
     .AddTransient<IPhoenixScoreFileExtractor, PhoenixScoreFileExtractor>()
     .AddMudServices()
     .AddScoped<ICurrentUserAccessor, HttpContextUserAccessor>()
+    .AddScoped<AmbientUserContext>()
+    // The UI notification hub is a singleton (shared across every circuit and the bus consumers
+    // that publish through its MediatR bridges); the bridge handlers are picked up by the MediatR
+    // assembly scan below.
+    .AddSingleton<IUiNotificationHub, UiNotificationHub>()
     .AddTransient<IUiSettingsAccessor, UiSettingsAccessor>()
     .AddSingleton<AccountProofService>()
     .AddTransient<DevSyncService>()

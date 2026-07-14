@@ -3993,6 +3993,9 @@
   <data name="Store" xml:space="preserve">
     <value>Enregistrer</value>
   </data>
+  <data name="Import with saved credentials" xml:space="preserve">
+    <value>Importer avec les identifiants enregistrés</value>
+  </data>
   <data name="Saved on this device" xml:space="preserve">
     <value>Enregistré sur cet appareil</value>
   </data>
@@ -4112,5 +4115,23 @@
   </data>
   <data name="Creating Your Home Page" xml:space="preserve">
     <value>Création de votre page d’accueil</value>
+  </data>
+  <data name="Imported {0} new scores" xml:space="preserve">
+    <value>{0} nouveaux scores importés</value>
+  </data>
+  <data name="No new scores found" xml:space="preserve">
+    <value>Aucun nouveau score trouvé</value>
+  </data>
+  <data name="An import is already running" xml:space="preserve">
+    <value>Un import est déjà en cours</value>
+  </data>
+  <data name="Also Sync for PIU Tracker" xml:space="preserve">
+    <value>Synchroniser aussi avec PIU Tracker</value>
+  </data>
+  <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
+    <value>Envoie aussi les scores importés vers PIU Tracker, un site de scores communautaire.</value>
+  </data>
+  <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
+    <value>PIU Tracker est entièrement public — les scores que vous y envoyez sont publics même si votre profil ne l'est pas.</value>
   </data>
 </root>

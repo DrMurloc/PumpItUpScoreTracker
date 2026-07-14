@@ -13,4 +13,7 @@ public sealed record ImportScoresConfig
 
     // On: use the saved game tag and import immediately. Off: pick a card after sign-in.
     public bool SkipGameTag { get; set; } = true;
+
+    // Also push imported scores to the community PIU Tracker site (the /UploadPhoenixScores option).
+    public bool SyncPiuTracker { get; set; }
 }

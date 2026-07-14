@@ -10,6 +10,7 @@
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.Theming
+@using ScoreTracker.Web.Services.UiNotifications
 @using ScoreTracker.Application.Events
 @using ScoreTracker.Domain.Events
 @using MassTransit
@@ -18,11 +19,6 @@
 @inherits LayoutComponentBase
 @inject ICurrentUserAccessor CurrentUser
 @implements IDisposable
-@implements INotificationHandler<MatchUpdatedEvent>
-@implements INotificationHandler<ImportStatusUpdatedEvent>
-@implements INotificationHandler<PlayerStatsUpdatedEvent>
-@implements INotificationHandler<ImportStatusErrorEvent>
-@implements INotificationHandler<ScoreTracker.Randomizer.Contracts.Events.DrawUpdatedEvent>
 <PageTitle>@L["PIU Scores"]</PageTitle>
 
 <MudThemeProvider Theme="_theme" />
@@ -430,10 +426,12 @@
 @inject NavigationManager NavManager;
 @inject PageDockService PageDock;
 @inject IJSRuntime JSRuntime;
+@inject IUiNotificationHub UiHub;
 @code
 {
     private bool _showMore = false;
     private Guid? _userId = null;
+    private IDisposable? _statsSubscription;
 
     // Mix theme class + dock state classes; focus-mode also collapses the app bar (CSS).
     private string LayoutClass =>
@@ -499,6 +497,7 @@
         // layout before injection finished — observed once in the field as an NRE here.
         if (NavManager is not null) NavManager.LocationChanged -= OnLocationChanged;
         if (PageDock is not null) PageDock.Changed -= OnDockChanged;
+        _statsSubscription?.Dispose();
     }
     private bool _showBite = false;
     private bool _showRecapPopup = false;
@@ -571,52 +570,21 @@
                 UserName += $" ({_gamerTag})";
             }
             Rating = (await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix))).SkillRating;
+            // Live rating: only this user's stat updates reach this circuit (routed by user topic).
+            _statsSubscription = UiHub.Subscribe<PlayerStatsUpdatedEvent>(
+                UiTopics.User(CurrentUser.User.Id), OnPlayerStatsUpdated);
         }
     }
 
-    public static event EventHandler<ImportStatusUpdatedEvent>? ImportStatusUpdatedEvent;
-    public static event EventHandler<MatchUpdatedEvent>? MatchUpdated;
-    public static event EventHandler<ImportStatusErrorEvent>? ImportStatusErrorEvent;
-
-    // Randomizer live draws (docs/design/randomizer-overhaul.md C10): staff devices and
-    // spectator pages subscribe; state is already persisted when this fires.
-    public static event EventHandler<ScoreTracker.Randomizer.Contracts.Events.DrawUpdatedEvent>? DrawUpdated;
-
-    public Task Handle(ScoreTracker.Randomizer.Contracts.Events.DrawUpdatedEvent notification,
-        CancellationToken cancellationToken)
-    {
-        DrawUpdated?.Invoke(this, notification);
-        return Task.CompletedTask;
-    }
-    public Task Handle(MatchUpdatedEvent notification, CancellationToken cancellationToken)
-    {
-        MatchUpdated?.Invoke(this, notification);
-        return Task.CompletedTask;
-    }
     private string UserName { get; set; }
     public int Rating { get; set; }
 
-    public Task Handle(ImportStatusUpdatedEvent notification, CancellationToken cancellationToken)
+    // The app-bar rating follows the viewer's own live stat updates (subscribed by user topic in
+    // OnInitializedAsync); only the current mix's number is shown.
+    private Task OnPlayerStatsUpdated(PlayerStatsUpdatedEvent e)
     {
-        ImportStatusUpdatedEvent?.Invoke(this, notification);
-        return Task.CompletedTask;
-    }
-
-    public Task Handle(PlayerStatsUpdatedEvent notification, CancellationToken cancellationToken)
-    {
-        // Stats events now arrive per mix — only reflect the one the viewer is looking at.
-        if (_userId != notification.UserId || notification.Mix != _currentMix)
-        {
-            return Task.CompletedTask;
-        }
-        Rating = notification.NewStats.SkillRating;
-        InvokeAsync(StateHasChanged);
-        return Task.CompletedTask;
-    }
-
-    public Task Handle(ImportStatusErrorEvent notification, CancellationToken cancellationToken)
-    {
-        ImportStatusErrorEvent?.Invoke(this, notification);
-        return Task.CompletedTask;
+        if (e.Mix != _currentMix) return Task.CompletedTask;
+        Rating = e.NewStats.SkillRating;
+        return InvokeAsync(StateHasChanged);
     }
 }
