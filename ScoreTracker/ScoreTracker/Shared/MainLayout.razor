@@ -1,485 +1,95 @@
-﻿@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.SecondaryPorts
 @using MediatR
 @using ScoreTracker.PlayerProgress.Contracts.Queries
-@using ScoreTracker.Application.Commands
-@using ScoreTracker.EventCompetition.Contracts.Queries
-@using ScoreTracker.EventCompetition.Contracts.Commands
-@using ScoreTracker.Application.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.Theming
-@using ScoreTracker.Web.Services.UiNotifications
-@using ScoreTracker.Application.Events
-@using ScoreTracker.Domain.Events
-@using MassTransit
-@using ScoreTracker.Domain.Records
 @using Microsoft.AspNetCore.Components.Routing
 @inherits LayoutComponentBase
 @inject ICurrentUserAccessor CurrentUser
 @implements IDisposable
 <PageTitle>@L["PIU Scores"]</PageTitle>
 
-<MudThemeProvider Theme="_theme" />
-<MudPopoverProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />
+@* Shell chrome — nav, mix pill, bottom nav, More sheet — is server-rendered by _SiteLayout
+   (docs/design/static-shell.md). What stays here is the legacy-mix gate, the page dock, the
+   drawer host and the recap pointer.
+
+   The Mud providers are NOT here. They mount ahead of the shell as their own root, because
+   this layout is the last root to initialise and an island in the app bar would ask for a
+   popover before it existed. *@
 <ChartVideoDisplay></ChartVideoDisplay>
-@* The active palette's --mix-* tokens; pages style against these, never literal colors. *@
-<style>
-    @((MarkupString)MixThemes.CssVariablesFor(_themeMix))
-</style>
-<style>
-    .dense-nav .mud-nav-link {
-        padding-top: 4px;
-        padding-bottom: 4px;
-        min-height: unset;
+
+@* MudLayout is MudBlazor's drawer host (it derives from MudDrawerContainer), not chrome —
+   a MudDrawer anchors to it and falls into normal flow without one. It carries no app bar
+   and no nav; it is here for the pages that open drawers. *@
+<MudLayout>
+    @* Fixed-position, so where it sits in the tree doesn't matter. Mobile only — it exists to
+       put primary actions in thumb reach above the bottom nav, and desktop has neither. *@
+    @if (PageDock.DockContent != null)
+    {
+        <div class="page-dock shell-mobile-only">@PageDock.DockContent</div>
     }
 
-    .dense-nav .mud-nav-link-text {
-        font-size: .8125rem;
-        line-height: 1.4;
+    <MudContainer>
+    @if (LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath))
+    {
+        @* One render frame at most — RedirectIfGated is already navigating to
+           /TierLists. The panel is the backstop, not the destination. *@
+        <div class="tier-list-cta">
+            <MudIcon Icon="@Icons.Material.Filled.Construction"></MudIcon>
+            <MudText Typo="Typo.h5">@L["This page isn't ready for older mixes yet"]</MudText>
+            <MudButton Href="/Charts" Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.QueueMusic">@L["Charts"]</MudButton>
+        </div>
+    }
+    else
+    {
+        @Body
     }
 
-    .dense-nav .mud-nav-link-icon,
-    .dense-nav .mud-nav-link .mud-icon-root {
-        font-size: 1.125rem;
-    }
-
-    .dense-nav .nav-section {
-        font-size: .6875rem;
-        letter-spacing: .08em;
-        line-height: 1.4;
-        opacity: .65;
-    }
-
-    .mud-drawer {
-        scrollbar-width: none;
-    }
-
-    .mud-drawer::-webkit-scrollbar {
-        display: none;
-    }
-</style>
-<MudLayout Class="@LayoutClass">
-    @* Fixed: the drawer is viewport-pinned, so a scrolling app bar visibly detaches from it. *@
-    @* No Color: the bar wears the palette's AppbarBackground so the shell re-skins per mix. *@
-    <MudAppBar Fixed="true" Dense="true">
-        <a href="/" class="wordmark mr-2">PIU SCORES</a>
-
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <nav class="top-nav">
-                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
-                    <ActivatorContent>
-                        <button class="top-nav-btn">@L["Play"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
-                    </ActivatorContent>
-                    <ChildContent>
-                        @if (CurrentUser.IsLoggedIn && !_gatedMix)
-                        {
-                            <MudMenuItem Href="/" Icon="@Icons.Material.Filled.Home">@L["Home"]</MudMenuItem>
-                        }
-                        <MudMenuItem Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts"]</MudMenuItem>
-                        @if (CurrentUser.IsLoggedIn && !_gatedMix)
-                        {
-                            <MudMenuItem Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudMenuItem>
-                        }
-                        @if (CurrentUser.IsLoggedIn && _gatedMix)
-                        {
-                            <MudMenuItem Href="/UploadXXScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudMenuItem>
-                        }
-                    </ChildContent>
-                </MudMenu>
-
-                <a href="/TierLists" class="top-nav-btn">@L["Tier Lists"]</a>
-
-                @* Nav follows LegacyMixGate: destinations a pre-XX mix can't reach yet
-                   simply don't show (docs/design/legacy-mixes.md). *@
-                @if (!_gatedMix)
-                {
-                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
-                    <ActivatorContent>
-                        <button class="top-nav-btn">@L["My Progress"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
-                    </ActivatorContent>
-                    <ChildContent>
-                        @if (CurrentUser.IsLoggedIn)
-                        {
-                            @* XX keeps its legacy progress page; Phoenix and Phoenix 2 share the Phoenix-style pages. *@
-                            <MudMenuItem Href=@(_currentMix == MixEnum.XX ? "/Progress" : "/Phoenix/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudMenuItem>
-                            @if (_currentMix != MixEnum.XX)
-                            {
-                                <MudMenuItem Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</MudMenuItem>
-                            }
-                            @if (_hasRecap)
-                            {
-                                <MudMenuItem Href=@($"/Player/{_userId}/PhoenixRecap") Icon="@Icons.Material.Filled.LocalFireDepartment">@L["My Recap"]</MudMenuItem>
-                            }
-                            <MudMenuItem Href=@($"/Player/{_userId}/Sessions") Icon="@Icons.Material.Filled.History">@L["My Sessions"]</MudMenuItem>
-                        }
-                        <MudMenuItem Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</MudMenuItem>
-                    </ChildContent>
-                </MudMenu>
-                }
-
-                @if (!_gatedMix)
-                {
-                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
-                    <ActivatorContent>
-                        <button class="top-nav-btn">@L["Compete"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
-                    </ActivatorContent>
-                    <ChildContent>
-                        <div class="mega-panel">
-                            <div class="mega-col">
-                                <div class="mega-head">@L["Compete"]</div>
-                                <MudMenuItem Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</MudMenuItem>
-                                @* Compete, not Tools (round 11): the randomizer runs micro-tournaments now. *@
-                                <MudMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.Casino">@L["Chart Randomizer"]</MudMenuItem>
-                                <MudMenuItem Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</MudMenuItem>
-                                @foreach (var tourney in _highlightedEvents)
-                                {
-                                    @if (tourney.Type == TournamentType.Stamina)
-                                    {
-                                        <MudMenuItem Href=@($"/Tournament/Stamina/{tourney.Id}") Icon="@Icons.Material.Filled.Event">@tourney.Name</MudMenuItem>
-                                    }
-                                    else if (tourney.LinkOverride != null)
-                                    {
-                                        <MudMenuItem Href="@tourney.LinkOverride.ToString()" Target="_blank" Icon="@Icons.Material.Filled.Event">@tourney.Name</MudMenuItem>
-                                    }
-                                    else
-                                    {
-                                        <MudMenuItem Href=@($"/Tournament/{tourney.Id}/Qualifiers") Icon="@Icons.Material.Filled.Event">@tourney.Name</MudMenuItem>
-                                    }
-                                }
-                            </div>
-                            <div class="mega-col">
-                                <div class="mega-head">@L["Rankings"]</div>
-                                @if (CurrentUser.IsLoggedIn)
-                                {
-                                    <MudMenuItem Href="/ScoreRankings" Icon="@Icons.Material.Filled.Stars">@L["Score Ranking"]</MudMenuItem>
-                                }
-                                <MudMenuItem Href="/Completion" Icon="@Icons.Material.Filled.Done">@L["Completion Leaderboards"]</MudMenuItem>
-                                <MudMenuItem Href="/UcsLeaderboards" Icon="@Icons.Material.Filled.EditNote">@L["UCS Leaderboards"]</MudMenuItem>
-                                <MudMenuItem Href="/PlayerRankings" Icon="@Icons.Material.Filled.Public">@L["World Rankings"]</MudMenuItem>
-                                <MudMenuItem Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Score">@L["Official Leaderboard Search"]</MudMenuItem>
-                                <MudMenuItem Href="/OfficialLeaderboards/PlayerCompare" Icon="@Icons.Material.Filled.CompareArrows">@L["Leaderboard Player Compare"]</MudMenuItem>
-                            </div>
-                        </div>
-                    </ChildContent>
-                </MudMenu>
-                }
-
-                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
-                    <ActivatorContent>
-                        <button class="top-nav-btn">@L["Community"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
-                    </ActivatorContent>
-                    <ChildContent>
-                        @if (!_gatedMix)
-                        {
-                            <MudMenuItem Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</MudMenuItem>
-                        }
-                        <MudMenuItem Href="https://discord.gg/MEYvr3bFte" Target="_blank" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</MudMenuItem>
-                    </ChildContent>
-                </MudMenu>
-
-                <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true">
-                    <ActivatorContent>
-                        <button class="top-nav-btn">@L["Tools"] <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon></button>
-                    </ActivatorContent>
-                    <ChildContent>
-                        @if (!_gatedMix)
-                        {
-                            <MudMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</MudMenuItem>
-                            <MudMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</MudMenuItem>
-                            <MudMenuItem Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</MudMenuItem>
-                            <MudMenuItem Href="/ChartCompare" Icon="@Icons.Material.Filled.Compare">@L["Chart Compare"]</MudMenuItem>
-                            <MudMenuItem Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudMenuItem>
-                        }
-                        <MudMenuItem Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudMenuItem>
-                    </ChildContent>
-                </MudMenu>
-            </nav>
-        </MudHidden>
-
-        <MudSpacer></MudSpacer>
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <div class="d-flex align-center appbar-search mr-3" style="min-width: 170px; max-width: 220px;">
-                <ChartSelector Mix="_currentMix" Label="" Placeholder="@L["Find a chart"].Value" Variant="Variant.Outlined" Margin="Margin.Dense" ChartIdSelected="GoToChart"></ChartSelector>
-            </div>
-        </MudHidden>
-
-        @* The mix switcher: promoted from the bottom of the drawer — it changes the whole
-           site's data context, so it lives in the shell header like an org switcher. *@
-        <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
-            <ActivatorContent>
-                <button class="mix-pill mr-3" title="@L["Mix"]"><i class="mix-dot"></i>@_currentMix.GetName()</button>
-            </ActivatorContent>
-            <ChildContent>
-                <MixSelector OnSelected="SetMix"></MixSelector>
-            </ChildContent>
-        </MudMenu>
-
-        @if (CurrentUser.IsLoggedIn)
-        {
-            <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
-                <ActivatorContent>
-                    <div class="nav-avatar-wrap">
-                        <MudAvatar Size="Size.Small" Style="cursor: pointer;">
-                            @* Native img with an onerror fallback: stored avatar URLs go stale when
-                               piugame rehosts its images (they moved with the Phoenix 2 rollout), so
-                               a broken URL degrades to the default avatar instead of a broken-image glyph. *@
-                            <img src="@_profileImage" alt=""
-                                 onerror="this.onerror=null;this.src='https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png';"
-                                 style="width: 100%; height: 100%; object-fit: cover;"/>
-                        </MudAvatar>
-                        @if (_importRunning)
-                        {
-                            <span class="nav-import-pulse" title="@L["Importing scores…"].Value"></span>
-                        }
-                    </div>
-                </ActivatorContent>
-                <ChildContent>
-                    <div class="px-4 py-1" style="color: var(--mix-ink-muted); font-size: .8rem;">@UserName</div>
-                    <MudMenuItem Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudMenuItem>
-                    <MudMenuItem Href="/Account" Icon="@Icons.Material.Filled.AccountCircle">@L["Account"]</MudMenuItem>
-                    <MudMenuItem Href="/Logout" Icon="@Icons.Material.Filled.Logout">@L["Logout"]</MudMenuItem>
-                </ChildContent>
-            </MudMenu>
-        }
-        else
-        {
-            <MudIconButton Icon="@Icons.Material.Filled.NoAccounts" Color="Color.Inherit" Edge="Edge.Start" Href="/Login"></MudIconButton>
-        }
-    </MudAppBar>
-    @* The mobile "More" sheet: everything that didn't earn a bottom-nav slot, mirroring
-       the desktop menu groups in the same order. Bottom-anchored for thumb reach.
-       Fixed Height: a bottom drawer hides by translating its own height off-screen, so
-       "auto" breaks the closed state and the sheet renders permanently open. *@
-    <MudHidden Breakpoint="Breakpoint.MdAndUp">
-        <MudDrawer @bind-Open="_showMore" Anchor="Anchor.Bottom" Variant="@DrawerVariant.Temporary" Height="75vh" Class="more-sheet" Elevation="4">
-        <MudNavMenu Class="dense-nav pb-4 pt-2">
-            @* Nav follows LegacyMixGate: destinations a pre-XX mix can't reach yet
-               simply don't show (docs/design/legacy-mixes.md). *@
-            @if (_gatedMix && CurrentUser.IsLoggedIn)
-            {
-                <MudNavLink Href="/UploadXXScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</MudNavLink>
-            }
-            @if (!_gatedMix)
-            {
-            <MudText Typo="Typo.overline" Class="ml-4 mt-2 d-block nav-section">@L["My Progress"]</MudText>
-            @if (CurrentUser.IsLoggedIn)
-            {
-                @* XX keeps its legacy progress page; Phoenix and Phoenix 2 share the Phoenix-style pages. *@
-                <MudNavLink Href=@(_currentMix==MixEnum.XX?"/Progress":"/Phoenix/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</MudNavLink>
-                @if (_currentMix != MixEnum.XX)
-                {
-                    <MudNavLink Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</MudNavLink>
-                }
-                @if (_hasRecap)
-                {
-                    <MudNavLink Href=@($"/Player/{_userId}/PhoenixRecap") Icon="@Icons.Material.Filled.LocalFireDepartment">@L["My Recap"]</MudNavLink>
-                }
-                <MudNavLink Href=@($"/Player/{_userId}/Sessions") Icon="@Icons.Material.Filled.History">@L["My Sessions"]</MudNavLink>
-            }
-            <MudNavLink Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</MudNavLink>
-
-            <MudText Typo="Typo.overline" Class="ml-4 mt-3 d-block nav-section">@L["Compete"]</MudText>
-            <MudNavLink Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</MudNavLink>
-            <MudNavLink Href="/ChartRandomizer" Icon="@Icons.Material.Filled.Casino">@L["Chart Randomizer"]</MudNavLink>
-            <MudNavLink Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</MudNavLink>
-            @foreach (var tourney in _highlightedEvents)
-            {
-                @if (tourney.Type == TournamentType.Stamina)
-                {
-                    <MudNavLink Href=@($"/Tournament/Stamina/{tourney.Id}") Icon="@Icons.Material.Filled.Event">@tourney.Name</MudNavLink>
-                }
-                else if (tourney.LinkOverride != null)
-                {
-                    <MudNavLink Href="@tourney.LinkOverride.ToString()" Target="_blank" Icon="@Icons.Material.Filled.Event">@tourney.Name</MudNavLink>
-                }
-                else
-                {
-                    <MudNavLink Href=@($"/Tournament/{tourney.Id}/Qualifiers") Icon="@Icons.Material.Filled.Event">@tourney.Name</MudNavLink>
-                }
-            }
-            <MudNavGroup Title=@L["Rankings"] Icon="@Icons.Material.Filled.Leaderboard" Expanded="false">
-                @if (CurrentUser.IsLoggedIn)
-                {
-                    <MudNavLink Href="ScoreRankings" Icon="@Icons.Material.Filled.Stars">@L["Score Ranking"]</MudNavLink>
-                }
-                <MudNavLink Href="/Completion" Icon="@Icons.Material.Filled.Done">@L["Completion Leaderboards"]</MudNavLink>
-                <MudNavLink Href="/UcsLeaderboards" Icon="@Icons.Material.Filled.EditNote">@L["UCS Leaderboards"]</MudNavLink>
-                <MudNavLink Href="/PlayerRankings" Icon="@Icons.Material.Filled.Public">@L["World Rankings"]</MudNavLink>
-                <MudNavLink Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Score">@L["Official Leaderboard Search"]</MudNavLink>
-                <MudNavLink Href="/OfficialLeaderboards/PlayerCompare" Icon="@Icons.Material.Filled.CompareArrows">@L["Leaderboard Player Compare"]</MudNavLink>
-            </MudNavGroup>
-
-            <MudText Typo="Typo.overline" Class="ml-4 mt-3 d-block nav-section">@L["Community"]</MudText>
-            <MudNavLink Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</MudNavLink>
-            }
-            <MudNavLink Href="https://discord.gg/MEYvr3bFte" Target="_blank" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</MudNavLink>
-
-            <MudDivider Class="my-2"></MudDivider>
-            @if (!_gatedMix)
-            {
-            <MudNavGroup Title=@L["Tools"] Icon="@Icons.Material.Filled.Build" Expanded="false">
-                <MudNavLink Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</MudNavLink>
-                <MudNavLink Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</MudNavLink>
-                <MudNavLink Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</MudNavLink>
-                <MudNavLink Href="/ChartCompare" Icon="@Icons.Material.Filled.Compare">@L["Chart Compare"]</MudNavLink>
-                <MudNavLink Href="/StepArtists" Icon="@Icons.Material.Filled.Brush">@L["Step Artists"]</MudNavLink>
-            </MudNavGroup>
-            }
-            <MudNavLink Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</MudNavLink>
-        </MudNavMenu>
-        </MudDrawer>
-    </MudHidden>
-
-    @* Thumb-reach primary nav at phone/tablet widths; desktop uses the top nav.
-       Pages may register a dock of primary actions above it (PageDock component);
-       scrolling down slides the nav away so both bars only coexist at rest. Focus
-       mode drops the shell nav entirely — the page owns its exit affordance. *@
-    <MudHidden Breakpoint="Breakpoint.MdAndUp">
-        @if (PageDock.DockContent != null)
-        {
-            <div class="page-dock">@PageDock.DockContent</div>
-        }
-        @if (!PageDock.FocusMode)
-        {
-        <nav class="bottom-nav">
-            @if (CurrentUser.IsLoggedIn && !_gatedMix)
-            {
-                <a href="/" class="@BnClass("/")"><MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small"></MudIcon><span>@L["Play"]</span></a>
-            }
-            <a href="/TierLists" class="@BnClass("/TierLists")"><MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small"></MudIcon><span>@L["Tiers"]</span></a>
-            <a href="/Charts" class="@BnClass("/Charts")"><MudIcon Icon="@Icons.Material.Filled.List" Size="Size.Small"></MudIcon><span>@L["Charts"]</span></a>
-            @if (!_gatedMix)
-            {
-                <a href="/WeeklyCharts" class="@BnClass("/WeeklyCharts")"><MudIcon Icon="@Icons.Material.Filled.ViewWeek" Size="Size.Small"></MudIcon><span>@L["Weekly"]</span></a>
-            }
-            @if (!CurrentUser.IsLoggedIn)
-            {
-                <a href="/Login" class="@BnClass("/Login")"><MudIcon Icon="@Icons.Material.Filled.Login" Size="Size.Small"></MudIcon><span>@L["Login"]</span></a>
-            }
-            @* Extra slot for squarish viewports (fold phones, landscape) — hidden on tall phones. *@
-            @if (!_gatedMix)
-            {
-                <a href="/Communities" class="@($"{BnClass("/Communities")} bn-wide")"><MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small"></MudIcon><span>@L["Communities"]</span></a>
-            }
-            <button type="button" class="bn" @onclick="() => _showMore = true"><MudIcon Icon="@Icons.Material.Filled.MoreHoriz" Size="Size.Small"></MudIcon><span>@L["More"]</span></button>
-        </nav>
-        }
-    </MudHidden>
-    <MudMainContent>
-        <MudContainer>
-            @if (!_mixLoaded)
-            {
-                @* Body held until the selected mix is known: rendering it against the
-                   default let gated pages start their (crashing) loads before the gate
-                   could evaluate — the WhatShouldIPlay race from field-test round 2. *@
-                <MudProgressLinear Indeterminate="true" Color="Color.Primary"></MudProgressLinear>
-            }
-            else if (LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath))
-            {
-                @* One render frame at most — RedirectIfGated is already navigating to
-                   /TierLists. The panel is the backstop, not the destination. *@
-                <div class="tier-list-cta">
-                    <MudIcon Icon="@Icons.Material.Filled.Construction"></MudIcon>
-                    <MudText Typo="Typo.h5">@L["This page isn't ready for older mixes yet"]</MudText>
-                    <MudButton Href="/Charts" Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.QueueMusic">@L["Charts"]</MudButton>
-                </div>
-            }
-            else
-            {
-                @Body
-            }
-
-            <MudDialog @bind-Visible="_showBite">
-                <DialogContent>
-                    <MudImage Src="https://piuimages.arroweclip.se/TheBigOne.png" Height="400" ObjectFit="ObjectFit.ScaleDown" Style="display:block;margin-left:auto;margin-right:auto;"></MudImage>
-
-                </DialogContent>
-                <DialogActions>
-                    <MudSpacer></MudSpacer>
-                    <MudButton Href="https://bigone.cl/en/index.html" Target="_blank" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Link" Variant="Variant.Outlined">@L["Open"]</MudButton>
-                    <MudButton Variant="Variant.Text"
-                               OnClick="()=>_showBite=false"
-                               Color="Color.Primary">@L["Close"]</MudButton>
-                </DialogActions>
-            </MudDialog>
-
-            @* One-time Phoenix Recap pointer (B1G ONE pattern): shows once per user, only
-               after their recap row exists. No expiry cutoff yet — set one when the
-               Phoenix 2 launch date is known (docs/design/phoenix-season-recap.md). *@
-            <MudDialog @bind-Visible="_showRecapPopup">
-                <DialogContent>
-                    <MudText Typo="Typo.h5">@L["Your Phoenix Story is ready"]</MudText>
-                    <MudText Class="mt-2">@L["Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts."]</MudText>
-                </DialogContent>
-                <DialogActions>
-                    <MudSpacer></MudSpacer>
-                    <MudButton Href=@($"/Player/{_userId}/PhoenixRecap") Color="Color.Primary" StartIcon="@Icons.Material.Filled.LocalFireDepartment" Variant="Variant.Filled" OnClick="()=>_showRecapPopup=false">@L["Open"]</MudButton>
-                    <MudButton Variant="Variant.Text"
-                               OnClick="()=>_showRecapPopup=false"
-                               Color="Color.Primary">@L["Close"]</MudButton>
-                </DialogActions>
-            </MudDialog>
-
-        </MudContainer>
-    </MudMainContent>
+    @* One-time Phoenix Recap pointer: shows once per user, only after their recap row
+       exists. No expiry cutoff yet — set one when the Phoenix 2 launch date is known
+       (docs/design/phoenix-season-recap.md). *@
+    <MudDialog @bind-Visible="_showRecapPopup">
+        <DialogContent>
+            <MudText Typo="Typo.h5">@L["Your Phoenix Story is ready"]</MudText>
+            <MudText Class="mt-2">@L["Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts."]</MudText>
+        </DialogContent>
+        <DialogActions>
+            <MudSpacer></MudSpacer>
+            <MudButton Href=@($"/Player/{_userId}/PhoenixRecap") Color="Color.Primary" StartIcon="@Icons.Material.Filled.LocalFireDepartment" Variant="Variant.Filled" OnClick="()=>_showRecapPopup=false">@L["Open"]</MudButton>
+            <MudButton Variant="Variant.Text"
+                       OnClick="()=>_showRecapPopup=false"
+                       Color="Color.Primary">@L["Close"]</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </MudContainer>
 </MudLayout>
 @inject IMediator Mediator;
 @inject IUiSettingsAccessor UiSettings;
 @inject NavigationManager NavManager;
 @inject PageDockService PageDock;
 @inject IJSRuntime JSRuntime;
-@inject IUiNotificationHub UiHub;
 @code
 {
-    private bool _showMore = false;
     private Guid? _userId = null;
-    private IDisposable? _statsSubscription;
-    private IDisposable? _importStatusSubscription;
-    private IDisposable? _importErrorSubscription;
+    private bool _showRecapPopup = false;
+    private bool _hasRecap = false;
+    private const string RecapPopupKey = "MainLayout__PhoenixRecapPopupShown";
+    // Seeded by App from the shell's root parameter, so it is known before the first render.
+    private MixEnum _currentMix = MixEnum.Phoenix;
 
-    // Mix theme class + dock state classes; focus-mode also collapses the app bar (CSS).
-    private string LayoutClass =>
-        MixThemes.CssClassFor(_themeMix)
-        + (PageDock.FocusMode ? " focus-mode" : "")
-        + (PageDock.DockContent != null ? " has-dock" : "");
-
+    // The dock and focus-mode classes live on <html>: the chrome that reacts to them is
+    // server-rendered, outside this root.
     private void OnDockChanged()
     {
+        _ = JSRuntime.InvokeVoidAsync("shell.setDockState", PageDock.DockContent != null, PageDock.FocusMode);
         InvokeAsync(StateHasChanged);
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await JSRuntime.InvokeVoidAsync("pageDock.watch");
-        }
-    }
-
-    private Task GoToChart(Chart chart)
-    {
-        NavManager.NavigateTo($"/Chart/{chart.Id}");
-        return Task.CompletedTask;
-    }
-
-    // Bottom-nav active state. The layout doesn't re-render on navigation by itself,
-    // so OnLocationChanged below nudges it (and closes the More sheet).
-    private string BnClass(string href)
-    {
-        var path = "/" + NavManager.ToBaseRelativePath(NavManager.Uri).Split('?')[0].TrimEnd('/');
-        var active = href == "/"
-            ? path == "/"
-            : path.StartsWith(href, StringComparison.OrdinalIgnoreCase);
-        return active ? "bn active" : "bn";
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        _showMore = false;
         RedirectIfGated();
         // Fresh page starts with the nav visible again.
         _ = JSRuntime.InvokeVoidAsync("pageDock.reset");
@@ -493,70 +103,38 @@
     /// </summary>
     private bool RedirectIfGated()
     {
-        if (!_mixLoaded) return false;
         if (!LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath)) return false;
         NavManager.NavigateTo("/TierLists");
         return true;
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // nav.js starts the scroll watcher with the page, before any content exists, so its
+        // idea of where the page was scrolled to predates the content. Re-sync once the
+        // circuit has actually rendered something, or the first scroll is measured against a
+        // page that was 48px tall and the nav flicks in and out.
+        if (firstRender) await JSRuntime.InvokeVoidAsync("pageDock.reset");
+    }
+
     public void Dispose()
     {
-        // Defensive: a circuit torn down mid-prerender (hard refresh) can dispose the
-        // layout before injection finished — observed once in the field as an NRE here.
+        // Defensive: a circuit torn down mid-render (hard refresh) can dispose the layout
+        // before injection finished — observed once in the field as an NRE here.
         if (NavManager is not null) NavManager.LocationChanged -= OnLocationChanged;
         if (PageDock is not null) PageDock.Changed -= OnDockChanged;
-        _statsSubscription?.Dispose();
-        _importStatusSubscription?.Dispose();
-        _importErrorSubscription?.Dispose();
     }
-    private bool _showBite = false;
-    private bool _showRecapPopup = false;
-    private bool _hasRecap = false;
-    private const string BitePopupKey = "MainLayout__BigOne2024PopupShown";
-    private const string RecapPopupKey = "MainLayout__PhoenixRecapPopupShown";
-    public static readonly DateTimeOffset _cutoff = new DateTimeOffset(2024, 10, 15, 0, 0, 0, TimeSpan.FromHours(-5));
-    private MixEnum _currentMix = MixEnum.Phoenix;
-    // The body must not render until the real selection is loaded (see the gate above).
-    private bool _mixLoaded;
-    // Pre-XX mixes: nav only offers destinations LegacyMixGate lets through.
-    private bool _gatedMix => LegacyMixGate.IsGatedMix(_currentMix);
-    // Theme resolution: /Account override → current mix. Defaults cover the first render;
-    // the real values land in OnInitializedAsync before content renders.
-    private MixEnum _themeMix = MixEnum.Phoenix;
-    private MudTheme _theme = MixThemes.ThemeFor(MixEnum.Phoenix);
-    private string _profileImage = string.Empty;
-    private string _gamerTag = string.Empty;
-    private IEnumerable<TournamentRecord> _highlightedEvents = Array.Empty<TournamentRecord>();
-    private async Task SetMix(MixEnum mix)
-    {
-        await UiSettings.SetSelectedMix(mix);
-        NavManager.NavigateTo(NavManager.Uri, true);
-    }
+
     protected override async Task OnInitializedAsync()
     {
         NavManager.LocationChanged += OnLocationChanged;
         PageDock.Changed += OnDockChanged;
         _userId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
-        // Mix first: the displayed rating follows the viewer's current mix.
+        // Resolved from the request by the shell, so the gate can evaluate on the first render
+        // — the body no longer has to be held behind a spinner waiting for it.
         _currentMix = await UiSettings.GetSelectedMix();
-        // Only now can the gate evaluate — the body is held until this point, because
-        // rendering it with the default mix let gated pages begin their crashing loads.
-        // No early return: the layout persists across the soft redirect, so its own
-        // init (theme, events, live updates) must still complete.
-        _mixLoaded = true;
         RedirectIfGated();
-        _themeMix = MixThemes.ResolveThemeMix(
-            await UiSettings.GetSetting(MixThemes.OverrideSettingKey), _currentMix);
-        _theme = MixThemes.ThemeFor(_themeMix);
-        _highlightedEvents = (await Mediator.Send(new GetAllTournamentsQuery()))
-            .Where(e => e.IsHighlighted);
 
-        var hasShown = await UiSettings.GetSetting(BitePopupKey);
-        if (DateTimeOffset.Now<_cutoff && string.IsNullOrWhiteSpace(hasShown))
-        {
-            _showBite = true;
-            await UiSettings.SetSetting(BitePopupKey,"true");
-        }
         if (CurrentUser.IsLoggedIn)
         {
             // Only pester players whose recap actually exists; the flag flips on first show.
@@ -568,54 +146,5 @@
                 await UiSettings.SetSetting(RecapPopupKey, "true");
             }
         }
-        if (CurrentUser.IsLoggedIn)
-        {
-            var settings = await Mediator.Send(new GetUserUiSettingsQuery());
-            _profileImage = settings.TryGetValue("ProfileImage", out var image) ? image :
-                "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
-            _gamerTag = settings.TryGetValue("GameTag", out var tag) ? tag : "";
-            UserName = CurrentUser.User.Name;
-            if (!string.IsNullOrWhiteSpace(_gamerTag))
-        {
-                UserName += $" ({_gamerTag})";
-            }
-            Rating = (await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix))).SkillRating;
-            // Live rating + the nav-bar import indicator: only this user's events reach this circuit
-            // (routed by user topic), so a background import shows up wherever the user has navigated.
-            var topic = UiTopics.User(CurrentUser.User.Id);
-            _statsSubscription = UiHub.Subscribe<PlayerStatsUpdatedEvent>(topic, OnPlayerStatsUpdated);
-            _importStatusSubscription = UiHub.Subscribe<ImportStatusUpdatedEvent>(topic, OnImportStatus);
-            _importErrorSubscription = UiHub.Subscribe<ImportStatusErrorEvent>(topic, OnImportError);
-        }
-    }
-
-    private string UserName { get; set; }
-    public int Rating { get; set; }
-    private bool _importRunning;
-
-    // The app-bar rating follows the viewer's own live stat updates (subscribed by user topic in
-    // OnInitializedAsync); only the current mix's number is shown.
-    private Task OnPlayerStatsUpdated(PlayerStatsUpdatedEvent e)
-    {
-        if (e.Mix != _currentMix) return Task.CompletedTask;
-        Rating = e.NewStats.SkillRating;
-        return InvokeAsync(StateHasChanged);
-    }
-
-    // A background import (any mix) pulses the avatar until its terminal status or an error — so the
-    // user knows a scrape is still running after they've navigated off the page that started it.
-    private Task OnImportStatus(ImportStatusUpdatedEvent e)
-    {
-        var running = e.Status != "Charts finished saving";
-        if (running == _importRunning) return Task.CompletedTask;
-        _importRunning = running;
-        return InvokeAsync(StateHasChanged);
-    }
-
-    private Task OnImportError(ImportStatusErrorEvent e)
-    {
-        if (!_importRunning) return Task.CompletedTask;
-        _importRunning = false;
-        return InvokeAsync(StateHasChanged);
     }
 }

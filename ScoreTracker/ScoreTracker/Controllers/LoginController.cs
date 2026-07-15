@@ -102,7 +102,7 @@ public sealed class LoginController : Controller
                 CookieRequestCultureProvider.DefaultCookieName,
                 CookieRequestCultureProvider.MakeCookieValue(
                     new RequestCulture(culture, culture)));
-        var url = isNewUser ? "/Welcome" : returnUrl;
+        var url = isNewUser ? "/" : returnUrl;
 
         return LocalRedirect(url ?? "/");
     }
@@ -181,10 +181,10 @@ public sealed class LoginController : Controller
                 .FirstOrDefault(u => u.Id != resolution.User.Id);
             if (tagMatch != null)
                 return LocalRedirect(
-                    $"/Account/Merge?with={tagMatch.Id}&returnUrl={Uri.EscapeDataString("/Welcome")}");
+                    $"/Account/Merge?with={tagMatch.Id}&returnUrl={Uri.EscapeDataString("/")}");
         }
 
-        return LocalRedirect(resolution.IsNew ? "/Welcome" : string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl);
+        return LocalRedirect(resolution.IsNew ? "/" : string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl);
     }
 
     private static string AppendError(string url, string error)
@@ -314,7 +314,7 @@ public sealed class LoginController : Controller
     private async Task<string> DevLandingPage()
     {
         var hasCharts = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), HttpContext.RequestAborted)).Any();
-        return hasCharts ? "/Welcome" : "/Dev/Populate";
+        return hasCharts ? "/" : "/Dev/Populate";
     }
 }
 

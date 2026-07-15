@@ -11,14 +11,17 @@ internal static class PiuGameLoginFlow
     public const string Username = "e2euser";
     public const string Password = "correct-horse-battery";
 
-    /// <summary>Signs in as a brand-new account; lands on /Welcome.</summary>
+    /// <summary>Signs in as a brand-new account; lands on the dashboard.</summary>
     public static async Task LogInAsNewUserAsync(IPage page)
     {
         await OpenFormAsync(page);
         await page.Locator("input[name='username']").FillAsync(Username);
         await page.Locator("input[name='password']").FillAsync(Password);
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Log In" }).ClickAsync();
-        await page.WaitForURLAsync("**/Welcome", new PageWaitForURLOptions { Timeout = 60_000 });
+        // The dashboard's own empty state is the new-account landing now; "/" only resolves for
+        // someone signed in, so arriving here at all is the proof the account exists.
+        await page.WaitForURLAsync(u => new Uri(u).AbsolutePath == "/",
+            new PageWaitForURLOptions { Timeout = 60_000 });
     }
 
     /// <summary>Navigates to the form and fails with the served HTML if it never renders.</summary>

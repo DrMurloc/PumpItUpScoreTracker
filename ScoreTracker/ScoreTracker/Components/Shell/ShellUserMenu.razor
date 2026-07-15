@@ -1,0 +1,41 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
+
+@* The app bar's right edge: avatar menu when signed in, a sign-in link when not. *@
+@if (Model.IsLoggedIn)
+{
+    <div class="shell-menu" data-menu>
+        <button type="button" class="shell-avatar-btn" data-menu-activator aria-haspopup="true" aria-expanded="false">
+            <div class="nav-avatar-wrap">
+                <MudAvatar Size="Size.Small">
+                    @* Native img with an onerror fallback: stored avatar URLs go stale when
+                       piugame rehosts its images (they moved with the Phoenix 2 rollout), so
+                       a broken URL degrades to the default avatar instead of a broken-image glyph. *@
+                    <img src="@Model.AvatarUrl" alt=""
+                         onerror="this.onerror=null;this.src='https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png';"
+                         style="width: 100%; height: 100%; object-fit: cover;"/>
+                </MudAvatar>
+                @* Toggled by the ShellImportPulse island; a page with no circuit shows none. *@
+                <span class="nav-import-pulse" id="shell-import-pulse" title=@L["Importing scores…"] hidden></span>
+            </div>
+        </button>
+        <div class="shell-menu-panel shell-menu-panel-end" data-menu-panel>
+            <div class="shell-menu-caption">@Model.DisplayName</div>
+            <ShellMenuItem Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</ShellMenuItem>
+            <ShellMenuItem Href="/Account" Icon="@Icons.Material.Filled.AccountCircle">@L["Account"]</ShellMenuItem>
+            @* Logout is an MVC action, not a Blazor page — it has to leave the router. *@
+            <ShellMenuItem Href="/Logout" Icon="@Icons.Material.Filled.Logout" FullLoad="true">@L["Logout"]</ShellMenuItem>
+        </div>
+    </div>
+}
+else
+{
+    @* The front door is a Razor Page, not a Blazor route. *@
+    <a class="shell-icon-btn" href="/Login" target="_top" title=@L["Login"]>
+        <MudIcon Icon="@Icons.Material.Filled.NoAccounts"></MudIcon>
+    </a>
+}
+
+@code {
+    [Parameter] [EditorRequired] public ShellViewModel Model { get; set; } = null!;
+}
