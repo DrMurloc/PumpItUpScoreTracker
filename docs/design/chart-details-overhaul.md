@@ -5,27 +5,31 @@ day (round 2 — community glow + honest plate framing). Companion specs:
 [chart-similarity.md](chart-similarity.md) (the similarity graph + settled formula) and
 [chart-verdicts.md](chart-verdicts.md) (the verdict engine).
 
-**Status (2026-07-15).** B1–B4 and P1+P2 are built and on this branch: the similarity graph
-(table, nightly job, calculator, query), the verdict engine, the URL lattice services (dark),
-and the page itself — rebuilt to the approved mock anatomy in **circuit form** (today's
-hosting), with every island-to-be a self-loading component keyed by chart id.
+**Status (2026-07-15).** B1–B4, P1+P2 and **the whole R-series (R1–R8)** are built and on this
+branch: the similarity graph (table, nightly job, calculator, three read queries), the verdict
+engine, the URL lattice services (dark), and the page itself — rebuilt to the approved mock
+anatomy in **circuit form** (today's hosting), with every island-to-be a self-loading component
+keyed by chart id.
 
-⚠ **The similarity formula is mid-rework.** A 07-14/07-15 calibration session against real data
-found B2's shape unsalvageable — it flattened to `sd = 0.030` across a whole folder because it
-averaged a chart property (is this the same kind of problem?) with a viewer property (how hard
-is it?). V1 is settled and rewritten in [chart-similarity.md](chart-similarity.md): **similarity
-is skill + intensity only**, difficulty becomes an ordering layer, metadata becomes filters.
-See the **R-series** in the build plan. Partly landed; that doc's §9 records every rejected
-alternative *with its measurement* — read it before changing the formula, because nearly all of
-them were tried and killed for a recorded reason. The old ⚠ about weight-tuning breaking the
-hand-computed fixtures still holds and now applies to the R-series too.
+**The similarity rework is complete and the formula is V1.** A 07-14/07-15 calibration session
+against real data found B2's shape unsalvageable — it flattened to `sd = 0.030` across a whole
+folder because it averaged a chart property (is this the same kind of problem?) with a viewer
+property (how hard is it?). V1, now built: **similarity is skill + intensity only**
+(`S_skill^0.75 · S_intensity^0.25`), difficulty is an ordering layer applied per viewer at read
+time, metadata is filters that reduce the target list and recompute live.
+⚠ **Read [chart-similarity.md](chart-similarity.md) §9 before touching the formula.** It records
+every rejected alternative *with its measurement* — nearly all of them were tried and killed for
+a recorded reason, including two claims this very doc set used to make. Weight-tuning breaks the
+hand-computed fixtures; that warning still holds.
 
-Remaining beyond the rework: **P3** (301 lattice live, sitemap vanity swap, static head/JSON-LD,
-output caching — ships as ONE unit, never split: pretty URLs must never point at empty shells)
-and **P4** (E2E facts + doc sync), both gated on the Stage-2 hosting flip. Owner-only steps: UX
-field-test rounds, and the **floor calibration run** (trigger `recalculate-chart-similarity` in
-/hangfire, then set the floor from the score distribution — it is a render constant now, so that
-is a redeploy rather than a job run).
+Remaining: **P3** (301 lattice live, sitemap vanity swap, static head/JSON-LD, output caching —
+ships as ONE unit, never split: pretty URLs must never point at empty shells) and **P4** (E2E
+facts + doc sync), both gated on the Stage-2 hosting flip. **R6's island packaging moved into
+P3** for the same reason — `data-island-ready` needs render modes that do not exist on this
+branch. Owner-only steps: UX field-test rounds, and the **floor calibration run** (trigger
+`recalculate-chart-similarity` in /hangfire, then set the floor from the score distribution — it
+is a render constant now, so that is a redeploy rather than a job run). **Nothing before that run
+says anything about how many cards the shelf shows.**
 
 **Stage context (owner-approved 2026-07-14, aligned with the shell/hosting session):** the site
 moves to SSR-by-default + islands in three stages — Stage 1 the static shell (every page, one
@@ -240,14 +244,14 @@ and deleted.
 
 | # | Commit | Contents |
 |---|---|---|
-| R1 | Strip similarity to skill + intensity | Delete `DifficultySimilarity` / `PlayerSimilarity` / `MetaSimilarity` + their weights + `MinimumSharedScorers`; `ChartSimilarityFeatures` 17 fields → 7; `ChartSimilarityEdge` sheds Difficulty/Players/Meta/SharedScorers; the saga loses `BuildResiduals` and its tier-list / letter-percentile / scoring-level reads — **and with them `IScoreReader.GetScores` (a ~50k-row folder read per level) and the `IPlayerStatsReader` fan-out**. Rewrite the `nonMetaAvailable >= 2` gate to say what it now means (both signals mandatory). Fixtures shed ~8 of 19 cases. |
-| R2 | Intensity: decompose + geometric | `susFrac`/`burstFrac` replace `tensionFrac` (sustain ⊆ tension was double-counted); geometric over the three dims; weights `burst .40 / sus .40 / nps .20`, K = 3. **Fixtures: Gargoyle - FULL SONG - D25 sentinel + the Hymn S19-vs-S22 controlled inversion** (chart-similarity.md §8). |
-| R3 | Storage: top-20, floor-free, match reasons | `ChartSimilarityEdge` gains `SharedBadges` (the `min(a,b)` terms); entity drops `SharedScorers`; `SignalsJson` reshape; migration; `TopK` → 20; `ScoreFloor` leaves the domain and becomes a render constant. **Cron dependency drops** — SCHEDULED-JOBS row. |
-| R4 | Read contracts | `GetSimilarChartsQuery` (precalculated default) + a live filtered query (filters reduce the target list, then recompute) + `GetOppositeChartQuery` (novelty; live, no storage). |
-| R5 | The card + static shelf | `SimilarChartCard`: 16:9 art, `DifficultyBubble` on the corner, original mix on the meta line, named match chips, `<a href>` wrapping art+body with the **play button as a sibling overlay**. Static server-rendered default list — crawlable, cacheable, the link mesh. 3-across → 2 → 1. |
-| R6 | The controls | Sort (No sorting / Community / Pass·me / Score·me), filters + reach line, near-misses, degraded state. **The island packaging moved to P3** — `data-island-ready` needs Stage 2's render modes, which are not on this branch (the app is still classic `AddServerSideBlazor`). Built as circuit components, which is what the page already is; the crawlable `<a href>` + sibling play button that P3 depends on are already pinned. |
-| R7 | Localization | ~15 new keys × 9 locales. |
-| R8 | Tests + docs | bUnit shelf coverage, `SimilarChartsShelfTests` rewrite, DATABASE-SCHEMA + SCHEDULED-JOBS sync. |
+| R1 ✅ | Strip similarity to skill + intensity | Delete `DifficultySimilarity` / `PlayerSimilarity` / `MetaSimilarity` + their weights + `MinimumSharedScorers`; `ChartSimilarityFeatures` 17 fields → 7; `ChartSimilarityEdge` sheds Difficulty/Players/Meta/SharedScorers; the saga loses `BuildResiduals` and its tier-list / letter-percentile / scoring-level reads — **and with them `IScoreReader.GetScores` (a ~50k-row folder read per level) and the `IPlayerStatsReader` fan-out**. Rewrite the `nonMetaAvailable >= 2` gate to say what it now means (both signals mandatory). Fixtures shed ~8 of 19 cases. |
+| R2 ✅ | Intensity: decompose + geometric | `susFrac`/`burstFrac` replace `tensionFrac` (sustain ⊆ tension was double-counted); geometric over the three dims; weights `burst .40 / sus .40 / nps .20`, K = 3. **Fixtures: Gargoyle - FULL SONG - D25 sentinel + the Hymn S19-vs-S22 controlled inversion** (chart-similarity.md §8). |
+| R3 ✅ | Storage: top-20, floor-free, match reasons | `ChartSimilarityEdge` gains `SharedBadges` (the `min(a,b)` terms); entity drops `SharedScorers`; `SignalsJson` reshape; migration; `TopK` → 20; `ScoreFloor` leaves the domain and becomes a render constant. **Cron dependency drops** — SCHEDULED-JOBS row. |
+| R4 ✅ | Read contracts | `GetSimilarChartsQuery` (precalculated default) + a live filtered query (filters reduce the target list, then recompute) + `GetOppositeChartQuery` (novelty; live, no storage). |
+| R5 ✅ | The card | `SimilarChartCard`: 16:9 art, `DifficultyBubble` on the corner, original mix on the meta line, named match chips, `<a href>` wrapping art+body with the **play button as a sibling overlay** (both pinned by bUnit — they are the two halves P3's caching depends on). Video swaps into the art's exact box, so nothing reflows. 3-across → 2 → 1. |
+| R6 ✅ | The controls | Sort (No sorting / Community / Pass·me / Score·me), filters + reach line, near-misses, degraded state. **The island packaging moved to P3** — `data-island-ready` needs Stage 2's render modes, which are not on this branch (the app is still classic `AddServerSideBlazor`). Built as circuit components, which is what the page already is; the crawlable `<a href>` + sibling play button that P3 depends on are already pinned. |
+| R7 ✅ | Localization | 21 new keys × 9 locales, and the 5 keys the rework killed removed from each. **The 29 badge labels are deliberately untranslated** — the site does not localize its pattern vocabulary at all (`Skill.GetName()` bypasses the localizer entirely), so they fall back to English through `L[…]` exactly as skills do, leaving the hook for a later resx-only change. |
+| R8 ✅ | Tests + docs | bUnit card + shelf coverage, `SimilarChartsShelfTests` rewrite, DATABASE-SCHEMA + SCHEDULED-JOBS sync. |
 | **FT** | **Calibration run** | Owner runs the analyzer → query the score distribution → **set the floor** (chart-similarity.md §10). Nothing before this teaches us anything about shelf sizes. |
 
 | # | Commit | Contents |
