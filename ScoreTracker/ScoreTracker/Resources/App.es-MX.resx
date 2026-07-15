@@ -4235,25 +4235,22 @@
   <data name="No sorting" xml:space="preserve">
     <value>Sin ordenar</value>
   </data>
-  <data name="Pass · for me" xml:space="preserve">
-    <value>Pase · para mí</value>
-  </data>
-  <data name="Score · for me" xml:space="preserve">
-    <value>Puntaje · para mí</value>
-  </data>
   <data name="Sign in to order by your own tier lists" xml:space="preserve">
     <value>Inicia sesión para ordenar según tus propias tier lists</value>
   </data>
   <data name="Strongest match first — no difficulty applied" xml:space="preserve">
     <value>Mejor coincidencia primero: sin aplicar dificultad</value>
   </data>
-  <data name="Closest on the community tier lists and scoring level" xml:space="preserve">
-    <value>Lo más cercano en las tier lists de la comunidad y el scoring level</value>
+  <data name="Easiest to clear first, from your Pass tier list" xml:space="preserve">
+    <value>Del más fácil de pasar: según tu tier list de Pase</value>
   </data>
-  <data name="From your Pass tier list" xml:space="preserve">
-    <value>Según tu tier list de Pase</value>
+  <data name="Easiest to clear first, from the community Pass tier list" xml:space="preserve">
+    <value>Del más fácil de pasar: según la tier list de Pase de la comunidad</value>
   </data>
-  <data name="From your Score tier list" xml:space="preserve">
-    <value>Según tu tier list de Puntaje</value>
+  <data name="Easiest to score first, from your Score tier list" xml:space="preserve">
+    <value>Del más fácil de puntuar: según tu tier list de Puntaje</value>
+  </data>
+  <data name="Easiest to score first, by scoring level" xml:space="preserve">
+    <value>Del más fácil de puntuar: según el scoring level</value>
   </data>
 </root>

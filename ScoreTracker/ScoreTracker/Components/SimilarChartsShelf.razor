@@ -30,11 +30,18 @@
         <div class="chart-shelf-sort" role="group" aria-label="@L["Order by"]">
             @foreach (var option in SortOptions)
             {
-                <button type="button" disabled="@(!IsAvailable(option))"
-                        aria-pressed="@(_sort == option ? "true" : "false")"
+                <button type="button" aria-pressed="@(_sort == option ? "true" : "false")"
                         @onclick="() => SetSort(option)">@L[Label(option)]</button>
             }
         </div>
+        @* Personalization is a property of the difficulty question, not a fourth answer to
+           it — so it rides orthogonal to the lens rather than doubling the buttons. *@
+        <label class="chart-shelf-personal"
+               title="@(CanPersonalize ? null : L["Sign in to order by your own tier lists"].ToString())">
+            <input type="checkbox" checked="@_personalized" disabled="@(!CanPersonalize)"
+                   @onchange="OnPersonalizedChanged"/>
+            <span>@L["Personalized"]</span>
+        </label>
         <span class="chart-shelf-hint">@L[Hint]</span>
     </div>
     @if (_filter != null)
@@ -102,17 +109,21 @@
     /// <summary>How many near-misses are worth curiosity before it turns into a list of everything.</summary>
     internal const int NearMissCount = 10;
 
+    /// <summary>
+    ///     Which difficulty question the shelf is ordered by. Pass and Score are genuinely
+    ///     different — a chart can be a wall to clear and generous to score, or the reverse
+    ///     — and personalization is a modifier on either, not a third lens.
+    /// </summary>
     internal enum ShelfSort
     {
         /// <summary>The match order itself — the only option that shows it. Every difficulty sort reorders away from it.</summary>
         None,
-        Community,
-        PassForMe,
-        ScoreForMe
+        PassDifficulty,
+        ScoreDifficulty
     }
 
     private static readonly ShelfSort[] SortOptions =
-        { ShelfSort.None, ShelfSort.Community, ShelfSort.PassForMe, ShelfSort.ScoreForMe };
+        { ShelfSort.None, ShelfSort.PassDifficulty, ShelfSort.ScoreDifficulty };
 
     [Parameter]
     public Guid ChartId { get; set; }
@@ -128,7 +139,8 @@
     private Guid _loadedFor;
     private decimal? _anchorNps;
     private Chart? _anchor;
-    private ShelfSort _sort = ShelfSort.Community;
+    private ShelfSort _sort = ShelfSort.PassDifficulty;
+    private bool _personalized;
     private ActiveFilter? _filter;
     private int? _compared;
     private IReadOnlyList<Entry> _all = Array.Empty<Entry>();
@@ -139,26 +151,28 @@
         @<SimilarChartCard Chart="entry.Chart" Record="entry.Record" Nps="entry.Nps" AnchorNps="_anchorNps"
                            VideoUrl="entry.VideoUrl" @key="entry.Chart.Id"></SimilarChartCard>;
 
-    private bool IsAvailable(ShelfSort sort) =>
-        sort is ShelfSort.None or ShelfSort.Community || CurrentUser.IsLoggedIn;
+    /// <summary>Only the personal lists need an account; the community ones are always there.</summary>
+    private bool CanPersonalize => CurrentUser.IsLoggedIn;
 
+    // The verdict card at the top of this page already names these two — same words, same
+    // key, so the shelf cannot end up disagreeing with the hero in translation.
     private static string Label(ShelfSort sort) => sort switch
     {
         ShelfSort.None => "No sorting",
-        ShelfSort.Community => "Community",
-        ShelfSort.PassForMe => "Pass · for me",
-        _ => "Score · for me"
+        ShelfSort.PassDifficulty => "Pass Difficulty",
+        _ => "Score Difficulty"
     };
 
-    private string Hint => !IsAvailable(_sort)
-        ? "Sign in to order by your own tier lists"
-        : _sort switch
-        {
-            ShelfSort.None => "Strongest match first — no difficulty applied",
-            ShelfSort.Community => "Closest on the community tier lists and scoring level",
-            ShelfSort.PassForMe => "From your Pass tier list",
-            _ => "From your Score tier list"
-        };
+    private string Hint => _sort switch
+    {
+        ShelfSort.None => "Strongest match first — no difficulty applied",
+        ShelfSort.PassDifficulty => _personalized
+            ? "Easiest to clear first, from your Pass tier list"
+            : "Easiest to clear first, from the community Pass tier list",
+        _ => _personalized
+            ? "Easiest to score first, from your Score tier list"
+            : "Easiest to score first, by scoring level"
+    };
 
     /// <summary>
     ///     What was searched, so "1 match" reads as a narrow filter rather than a broken
@@ -179,7 +193,8 @@
         _loadedFor = ChartId;
         _filter = null;
         _compared = null;
-        _sort = ShelfSort.Community;
+        _sort = ShelfSort.PassDifficulty;
+        _personalized = false;
         await Load(await Mediator.Send(new GetSimilarChartsQuery(ChartId, Mix)));
     }
 
@@ -220,73 +235,94 @@
         _nearMisses = ordered.Where(e => e.Record.Score < ScoreFloor).Take(NearMissCount).ToArray();
     }
 
+    /// <summary>
+    ///     Easiest first. Charts we cannot place sort last rather than pretending to be
+    ///     easy, and ties fall back to the match order.
+    /// </summary>
     private async Task<IReadOnlyList<Entry>> Ordered(IReadOnlyList<Entry> entries)
     {
         if (_sort == ShelfSort.None || _anchor == null) return entries;
 
-        if (_sort == ShelfSort.Community)
-        {
-            // Scoring level is the fine instrument, but ~46% of the catalog has none — so
-            // charts that have it are ordered by it and rank ahead of those that fall back
-            // to the community pass tier, which is a seven-bucket ordinal and ties freely.
-            var anchorLevel = await ScoringLevels.GetScoringLevel(_anchor.Id);
-            var tiers = await CommunityTiers();
-            var keyed = new List<(Entry Entry, int Group, double Distance)>();
-            foreach (var entry in entries)
-            {
-                var level = await ScoringLevels.GetScoringLevel(entry.Chart.Id);
-                if (anchorLevel != null && level != null)
-                    keyed.Add((entry, 0, Math.Abs(level.Value - anchorLevel.Value)));
-                else if (tiers.TryGetValue(_anchor.Id, out var anchorTier) &&
-                         tiers.TryGetValue(entry.Chart.Id, out var tier))
-                    keyed.Add((entry, 1, Math.Abs((int)tier - (int)anchorTier)));
-                else
-                    keyed.Add((entry, 2, 0));
-            }
-
-            return keyed.OrderBy(k => k.Group).ThenBy(k => k.Distance)
-                .ThenByDescending(k => k.Entry.Record.Score).Select(k => k.Entry).ToArray();
-        }
-
-        var lens = _sort == ShelfSort.PassForMe ? "Pass" : "Score";
-        var personal = await PersonalTiers(lens);
+        var difficulty = await Difficulties();
         return entries
-            .OrderBy(e => personal.TryGetValue(e.Chart.Id, out var tier) ? (int)tier : int.MaxValue)
+            .OrderBy(e => difficulty.TryGetValue(e.Chart.Id, out var d) ? d : double.MaxValue)
             .ThenByDescending(e => e.Record.Score)
             .ToArray();
     }
 
-    private async Task<IReadOnlyDictionary<Guid, TierListCategory>> CommunityTiers()
-    {
-        return (await Mediator.Send(new GetCommunityTierListQuery(Mix)))
-            .Where(e => e.Category != TierListCategory.Unrecorded)
-            .GroupBy(e => e.ChartId)
-            .ToDictionary(g => g.Key, g => g.First().Category);
-    }
-
     /// <summary>
-    ///     The reader's own tier list across the folders the shelf reaches — one read per
-    ///     folder, because the blend is computed per (type, level).
+    ///     Every reachable chart's difficulty on the current lens, as an **effective level**
+    ///     — one number comparable across the folders the shelf spans.
+    ///     That comparability is the whole problem. A tier list ranks charts *within* one
+    ///     folder, so its `Order` is 0..N per folder and its category means "hard for a D21"
+    ///     rather than "hard": neither survives a shelf reaching ±2 levels. Nudging the
+    ///     folder's own level by the category is what makes them commensurable — a D21 the
+    ///     list calls Underrated and a D22 it calls Overrated meet in the middle, which is
+    ///     precisely what those two verdicts are saying.
+    ///     Community score difficulty skips all of that: the scoring level already *is* an
+    ///     effective level, measured rather than voted (~87% of charts in the 17–26 range
+    ///     have one; the rest sort last).
     /// </summary>
-    private async Task<IReadOnlyDictionary<Guid, TierListCategory>> PersonalTiers(string lens)
+    private async Task<IReadOnlyDictionary<Guid, double>> Difficulties()
     {
-        var result = new Dictionary<Guid, TierListCategory>();
-        if (_anchor == null || !CurrentUser.IsLoggedIn) return result;
+        if (_sort == ShelfSort.ScoreDifficulty && !_personalized)
+        {
+            var levels = new Dictionary<Guid, double>();
+            foreach (var entry in _all)
+                if (await ScoringLevels.GetScoringLevel(entry.Chart.Id) is { } level)
+                    levels[entry.Chart.Id] = level;
+            return levels;
+        }
+
+        var lens = Name.From(_sort == ShelfSort.PassDifficulty ? "Pass" : "Score");
+        var result = new Dictionary<Guid, double>();
+        if (_anchor == null) return result;
+        // A blended list covers its whole folder, so most of what comes back is not on this
+        // shelf. Projecting a chart against the folder we happened to be asking about rather
+        // than against its own level would misplace it by however far the two differ.
+        var shelfLevels = _all.ToDictionary(e => e.Chart.Id, e => (int)e.Chart.Level);
+        // The blend is computed per (type, level), so the shelf's reach costs one read per
+        // folder it touches — at most five.
         foreach (var level in _all.Select(e => e.Chart.Level).Distinct())
         {
-            var list = await Mediator.Send(new GetBlendedTierListQuery(_anchor.Type, level, Name.From(lens),
-                Personalized: true));
+            var list = await Mediator.Send(new GetBlendedTierListQuery(_anchor.Type, level, lens,
+                Personalized: _personalized && CanPersonalize));
             foreach (var entry in list.Entries.Where(e => e.Category != TierListCategory.Unrecorded))
-                result[entry.ChartId] = entry.Category;
+                if (shelfLevels.TryGetValue(entry.ChartId, out var chartLevel))
+                    result[entry.ChartId] = EffectiveLevel(chartLevel, entry.Category);
         }
 
         return result;
     }
 
+    /// <summary>
+    ///     A folder-relative verdict projected onto the absolute level scale. The spread is
+    ///     deliberately under half a level: the tier list is saying a chart is misplaced
+    ///     *within* its folder, never that it belongs in a different one.
+    /// </summary>
+    internal static double EffectiveLevel(int level, TierListCategory category) =>
+        level + category switch
+        {
+            TierListCategory.Overrated => -0.45,
+            TierListCategory.VeryEasy => -0.30,
+            TierListCategory.Easy => -0.15,
+            TierListCategory.Medium => 0.0,
+            TierListCategory.Hard => 0.15,
+            TierListCategory.VeryHard => 0.30,
+            TierListCategory.Underrated => 0.45,
+            _ => 0.0
+        };
+
     private async Task SetSort(ShelfSort sort)
     {
         if (_sort == sort) return;
         _sort = sort;
+        await Split();
+    }
+
+    private async Task OnPersonalizedChanged(ChangeEventArgs e)
+    {
+        _personalized = e.Value is true;
         await Split();
     }
 

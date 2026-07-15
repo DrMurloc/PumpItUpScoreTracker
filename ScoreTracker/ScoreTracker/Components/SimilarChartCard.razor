@@ -16,11 +16,12 @@
 <div class="chart-card">
     @if (_playing && VideoUrl != null)
     {
+        @* No bubble while playing: it labels the jacket, and there is no jacket — over a
+           video it is just something sitting on the picture. *@
         <div class="chart-card-link">
             <span class="chart-card-art chart-card-art-playing">
                 <iframe class="chart-card-video" src="@($"{VideoUrl}?autoplay=1")" allow="autoplay; encrypted-media"
                         allowfullscreen title="@Chart.Song.Name"></iframe>
-                <span class="chart-card-bubble"><DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble></span>
             </span>
             @Body()
         </div>
@@ -31,7 +32,10 @@
     {
         <a class="chart-card-link" href="@Href">
             <span class="chart-card-art">
-                <SongImage Song="Chart.Song" Height="128"></SongImage>
+                @* The jacket gets its own wrapper so "fill the 16:9 box" can be said about
+                   it alone. Said about the art box instead, it also lands on the bubble's
+                   image and blows it up to the width of the card. *@
+                <span class="chart-card-jacket"><SongImage Song="Chart.Song" Height="128"></SongImage></span>
                 <span class="chart-card-bubble"><DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble></span>
             </span>
             @Body()

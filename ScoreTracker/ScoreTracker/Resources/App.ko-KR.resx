@@ -4236,25 +4236,22 @@
   <data name="No sorting" xml:space="preserve">
     <value>정렬 안 함</value>
   </data>
-  <data name="Pass · for me" xml:space="preserve">
-    <value>클리어 · 내 기준</value>
-  </data>
-  <data name="Score · for me" xml:space="preserve">
-    <value>점수 · 내 기준</value>
-  </data>
   <data name="Sign in to order by your own tier lists" xml:space="preserve">
     <value>내 티어 리스트로 정렬하려면 로그인하세요</value>
   </data>
   <data name="Strongest match first — no difficulty applied" xml:space="preserve">
     <value>일치도 순 — 난이도 미적용</value>
   </data>
-  <data name="Closest on the community tier lists and scoring level" xml:space="preserve">
-    <value>커뮤니티 티어 리스트와 채점 레벨 기준으로 가장 가까운 순</value>
+  <data name="Easiest to clear first, from your Pass tier list" xml:space="preserve">
+    <value>클리어하기 쉬운 순 — 내 클리어 티어 리스트 기준</value>
   </data>
-  <data name="From your Pass tier list" xml:space="preserve">
-    <value>내 클리어 티어 리스트 기준</value>
+  <data name="Easiest to clear first, from the community Pass tier list" xml:space="preserve">
+    <value>클리어하기 쉬운 순 — 커뮤니티 클리어 티어 리스트 기준</value>
   </data>
-  <data name="From your Score tier list" xml:space="preserve">
-    <value>내 점수 티어 리스트 기준</value>
+  <data name="Easiest to score first, from your Score tier list" xml:space="preserve">
+    <value>점수 내기 쉬운 순 — 내 점수 티어 리스트 기준</value>
+  </data>
+  <data name="Easiest to score first, by scoring level" xml:space="preserve">
+    <value>점수 내기 쉬운 순 — 채점 레벨 기준</value>
   </data>
 </root>

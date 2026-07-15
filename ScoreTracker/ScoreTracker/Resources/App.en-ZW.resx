@@ -4278,25 +4278,22 @@
   <data name="No sorting" xml:space="preserve">
     <value>Nrgl sortingrgl</value>
   </data>
-  <data name="Pass · for me" xml:space="preserve">
-    <value>Mrgl pass · for mergl</value>
-  </data>
-  <data name="Score · for me" xml:space="preserve">
-    <value>Mrgl score · for mergl</value>
-  </data>
   <data name="Sign in to order by your own tier lists" xml:space="preserve">
     <value>Mrgl sign in trgl order by yrglur rgluwn tier listsrgl</value>
   </data>
   <data name="Strongest match first — no difficulty applied" xml:space="preserve">
     <value>Strrglngest match first — nrgl difficulty appliedrgl</value>
   </data>
-  <data name="Closest on the community tier lists and scoring level" xml:space="preserve">
-    <value>Clrglsest on the cmrglmunity tier lists and scoring levelrgl</value>
+  <data name="Easiest to clear first, from your Pass tier list" xml:space="preserve">
+    <value>Mrgl easiest to clear firstrgl — frrglm yrglur Pass tier listrgl</value>
   </data>
-  <data name="From your Pass tier list" xml:space="preserve">
-    <value>Frrglm yrglur Pass tier listrgl</value>
+  <data name="Easiest to clear first, from the community Pass tier list" xml:space="preserve">
+    <value>Mrgl easiest to clear firstrgl — frrglm the cmrglmunity Pass tier listrgl</value>
   </data>
-  <data name="From your Score tier list" xml:space="preserve">
-    <value>Frrglm yrglur Score tier listrgl</value>
+  <data name="Easiest to score first, from your Score tier list" xml:space="preserve">
+    <value>Mrgl easiest to score firstrgl — frrglm yrglur Score tier listrgl</value>
+  </data>
+  <data name="Easiest to score first, by scoring level" xml:space="preserve">
+    <value>Mrgl easiest to score firstrgl — by scoring levelrgl</value>
   </data>
 </root>

@@ -40,8 +40,10 @@ public sealed class SimilarChartsShelfTests : TestContext
         Services.AddMudServices(o => o.PopoverOptions.CheckForPopoverProvider = false);
         _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double>());
-        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityTierListQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IEnumerable<SongTierListEntry>)Array.Empty<SongTierListEntry>());
+        // The default sort is a difficulty lens, so every render reads a tier list. Empty
+        // unless a test says otherwise — SetupBlend overrides.
+        _mediator.Setup(m => m.Send(It.IsAny<GetBlendedTierListQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TierListResult(Array.Empty<SongTierListEntry>(), IsProvisionalFallback: false));
         Services.AddSingleton(_mediator.Object);
         Services.AddSingleton(_currentUser.Object);
         Services.AddScoped<ChartScoringLevels>();
@@ -75,11 +77,18 @@ public sealed class SimilarChartsShelfTests : TestContext
 
     private void SetupEdges(Guid chartId, params ChartSimilarityRecord[] edges)
     {
+        SetupEdges(chartId, edges, levels: null);
+    }
+
+    private void SetupEdges(Guid chartId, ChartSimilarityRecord[] edges, IReadOnlyDictionary<Guid, int>? levels)
+    {
         _mediator.Setup(m => m.Send(It.Is<GetSimilarChartsQuery>(q => q.ChartId == chartId),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(edges);
         var charts = new List<Chart> { ChartSlugsTests.BuildChart(chartId, song: "Anchor") };
-        foreach (var edge in edges) charts.Add(ChartSlugsTests.BuildChart(edge.ChartId, song: $"Song {edge.ChartId:N}"));
+        foreach (var edge in edges)
+            charts.Add(ChartSlugsTests.BuildChart(edge.ChartId, song: $"Song {edge.ChartId:N}",
+                level: levels != null && levels.TryGetValue(edge.ChartId, out var l) ? l : 21));
         _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(charts);
         _mediator.Setup(m => m.Send(It.IsAny<GetChartStepAnalysesQuery>(), It.IsAny<CancellationToken>()))
@@ -194,8 +203,16 @@ public sealed class SimilarChartsShelfTests : TestContext
         return cut.FindAll(".chart-shelf .chart-card-title h3").Select(e => e.TextContent.Trim()).ToArray();
     }
 
+    private void SetupBlend(params (Guid ChartId, TierListCategory Category)[] entries)
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetBlendedTierListQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TierListResult(
+                entries.Select(e => new SongTierListEntry("Pass", e.ChartId, e.Category, 0)).ToArray(),
+                IsProvisionalFallback: false));
+    }
+
     [Fact]
-    public void PersonalSortsNeedASignInAndSaySo()
+    public void PersonalizingNeedsASignInButTheLensesNeverDo()
     {
         var anchor = Guid.NewGuid();
         _currentUser.SetupGet(u => u.IsLoggedIn).Returns(false);
@@ -203,16 +220,14 @@ public sealed class SimilarChartsShelfTests : TestContext
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
-        var buttons = cut.FindAll(".chart-shelf-sort button");
-        // No sorting and Community always work; the two personal orders need a tier list.
-        Assert.False(buttons[0].HasAttribute("disabled"));
-        Assert.False(buttons[1].HasAttribute("disabled"));
-        Assert.True(buttons[2].HasAttribute("disabled"));
-        Assert.True(buttons[3].HasAttribute("disabled"));
+        // Pass and Score difficulty are community facts — always available. Only bending
+        // them toward the reader needs an account.
+        Assert.All(cut.FindAll(".chart-shelf-sort button"), b => Assert.False(b.HasAttribute("disabled")));
+        Assert.True(cut.Find(".chart-shelf-personal input").HasAttribute("disabled"));
     }
 
     [Fact]
-    public void SigningInUnlocksTheTierListSorts()
+    public void SigningInUnlocksPersonalization()
     {
         var anchor = Guid.NewGuid();
         _currentUser.SetupGet(u => u.IsLoggedIn).Returns(true);
@@ -220,7 +235,7 @@ public sealed class SimilarChartsShelfTests : TestContext
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
-        Assert.All(cut.FindAll(".chart-shelf-sort button"), b => Assert.False(b.HasAttribute("disabled")));
+        Assert.False(cut.Find(".chart-shelf-personal input").HasAttribute("disabled"));
     }
 
     [Fact]
@@ -241,48 +256,60 @@ public sealed class SimilarChartsShelfTests : TestContext
     }
 
     [Fact]
-    public void CommunitySortOrdersByScoringLevelClosenessToTheAnchor()
+    public void ScoreDifficultyOrdersByScoringLevelEasiestFirst()
     {
         var anchor = Guid.NewGuid();
-        var far = Edge(0.90, Badge("bracket", 0.5));
-        var near = Edge(0.60, Badge("bracket", 0.5));
-        SetupEdges(anchor, far, near);
-        // The anchor sits at 21.0; `near` is a tenth away and `far` is a full level away,
-        // so the weaker match leads despite scoring lower.
+        var harder = Edge(0.90, Badge("bracket", 0.5));
+        var easier = Edge(0.60, Badge("bracket", 0.5));
+        SetupEdges(anchor, harder, easier);
         _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double>
             {
-                [anchor] = 21.0, [near.ChartId] = 21.1, [far.ChartId] = 22.0
+                [anchor] = 21.0, [easier.ChartId] = 20.4, [harder.ChartId] = 22.6
             });
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+        cut.FindAll(".chart-shelf-sort button")[2].Click();
 
-        Assert.Equal(new[] { $"Song {near.ChartId:N}", $"Song {far.ChartId:N}" }, CardTitles(cut));
+        // The weaker match leads because it is the easier chart — the ordering is difficulty,
+        // not match strength.
+        Assert.Equal(new[] { $"Song {easier.ChartId:N}", $"Song {harder.ChartId:N}" }, CardTitles(cut));
     }
 
     [Fact]
-    public void CommunitySortFallsBackToTheTierListWhereNoScoringLevelExists()
+    public void PassDifficultyProjectsTheFolderRelativeTierOntoTheLevelScale()
     {
-        // ~46% of the catalog has no scoring level. A chart that has one is ordered by it
-        // and ranks ahead of one that can only be placed by its coarse tier bucket.
+        // The whole cross-folder problem in one case: a D21 the list calls Underrated
+        // (21.45) against a D22 it calls Overrated (21.55). The tier list ranks within a
+        // folder, so its own Order cannot say which of these is harder — the projection can,
+        // and it puts the D21 first by a tenth. Sorting on the raw category would have said
+        // "Overrated beats Underrated" and inverted them.
         var anchor = Guid.NewGuid();
-        var scored = Edge(0.60, Badge("bracket", 0.5));
-        var tieredOnly = Edge(0.90, Badge("bracket", 0.5));
-        SetupEdges(anchor, tieredOnly, scored);
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, double> { [anchor] = 21.0, [scored.ChartId] = 23.0 });
-        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityTierListQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IEnumerable<SongTierListEntry>)new[]
-            {
-                new SongTierListEntry("Pass Count", anchor, TierListCategory.Medium, 1),
-                new SongTierListEntry("Pass Count", tieredOnly.ChartId, TierListCategory.Medium, 2)
-            });
+        var hardD21 = Edge(0.90, Badge("bracket", 0.5));
+        var easyD22 = Edge(0.60, Badge("bracket", 0.5));
+        SetupEdges(anchor, new[] { hardD21, easyD22 }, new Dictionary<Guid, int>
+        {
+            [hardD21.ChartId] = 21, [easyD22.ChartId] = 22
+        });
+        SetupBlend((hardD21.ChartId, TierListCategory.Underrated), (easyD22.ChartId, TierListCategory.Overrated));
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
-        // `scored` leads on a two-level gap; `tieredOnly` is an exact tier match but the
-        // coarser instrument, so it cannot jump the one we can actually measure.
-        Assert.Equal(new[] { $"Song {scored.ChartId:N}", $"Song {tieredOnly.ChartId:N}" }, CardTitles(cut));
+        Assert.Equal(new[] { $"Song {hardD21.ChartId:N}", $"Song {easyD22.ChartId:N}" }, CardTitles(cut));
+    }
+
+    [Fact]
+    public void AChartTheTierListCannotPlaceSortsLastRatherThanReadingAsEasy()
+    {
+        var anchor = Guid.NewGuid();
+        var placed = Edge(0.60, Badge("bracket", 0.5));
+        var unplaced = Edge(0.90, Badge("bracket", 0.5));
+        SetupEdges(anchor, unplaced, placed);
+        SetupBlend((placed.ChartId, TierListCategory.VeryHard));
+
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+
+        Assert.Equal(new[] { $"Song {placed.ChartId:N}", $"Song {unplaced.ChartId:N}" }, CardTitles(cut));
     }
 
     private IRenderedComponent<SimilarChartCard> RenderCard(string? videoUrl = null,
@@ -338,6 +365,31 @@ public sealed class SimilarChartsShelfTests : TestContext
 
         var frame = cut.Find("iframe.chart-card-video");
         Assert.Contains("https://example.invalid/v", frame.GetAttribute("src"));
+    }
+
+    [Fact]
+    public void TheJacketAndTheBubbleAreSeparatelyAddressable()
+    {
+        // The bubble is an <img> inside the art box, so a rule aimed at the art box hits it
+        // too and blows it up to the width of the card. The jacket wrapper is what keeps
+        // "fill the 16:9 box" addressable to the jacket alone — if it goes, so does the
+        // only thing stopping that.
+        var cut = RenderCard(badges: Badge("bracket", 0.5));
+
+        Assert.Single(cut.FindAll(".chart-card-art > .chart-card-jacket"));
+        Assert.Empty(cut.FindAll(".chart-card-jacket .chart-card-bubble"));
+    }
+
+    [Fact]
+    public void TheBubbleLeavesWithTheJacketWhenTheVideoStarts()
+    {
+        // It labels the jacket. Over a video it is just something sitting on the picture.
+        var cut = RenderCard(videoUrl: "https://example.invalid/v", badges: Badge("bracket", 0.5));
+        Assert.Single(cut.FindAll(".chart-card-bubble"));
+
+        cut.Find("button.chart-card-play").Click();
+
+        Assert.Empty(cut.FindAll(".chart-card-bubble"));
     }
 
     [Fact]

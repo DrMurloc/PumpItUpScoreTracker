@@ -4356,25 +4356,22 @@
   <data name="No sorting" xml:space="preserve">
     <value>並び替えなし</value>
   </data>
-  <data name="Pass · for me" xml:space="preserve">
-    <value>クリア · 自分基準</value>
-  </data>
-  <data name="Score · for me" xml:space="preserve">
-    <value>スコア · 自分基準</value>
-  </data>
   <data name="Sign in to order by your own tier lists" xml:space="preserve">
     <value>自分のティアリストで並び替えるにはログインしてください</value>
   </data>
   <data name="Strongest match first — no difficulty applied" xml:space="preserve">
     <value>一致度順 — 難易度は考慮しません</value>
   </data>
-  <data name="Closest on the community tier lists and scoring level" xml:space="preserve">
-    <value>コミュニティのティアリストとスコアレベルで最も近い順</value>
+  <data name="Easiest to clear first, from your Pass tier list" xml:space="preserve">
+    <value>クリアしやすい順 — 自分のクリアティアリスト基準</value>
   </data>
-  <data name="From your Pass tier list" xml:space="preserve">
-    <value>自分のクリアティアリストから</value>
+  <data name="Easiest to clear first, from the community Pass tier list" xml:space="preserve">
+    <value>クリアしやすい順 — コミュニティのクリアティアリスト基準</value>
   </data>
-  <data name="From your Score tier list" xml:space="preserve">
-    <value>自分のスコアティアリストから</value>
+  <data name="Easiest to score first, from your Score tier list" xml:space="preserve">
+    <value>スコアを出しやすい順 — 自分のスコアティアリスト基準</value>
+  </data>
+  <data name="Easiest to score first, by scoring level" xml:space="preserve">
+    <value>スコアを出しやすい順 — スコアレベル基準</value>
   </data>
 </root>

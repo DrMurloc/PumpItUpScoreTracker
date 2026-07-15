@@ -14,7 +14,10 @@
     }
     else if (Chart != null)
     {
-        <SongImage Song="Chart.Song" Height="280"></SongImage>
+        @* The jacket gets its own wrapper so "fill the frame" can be said about it alone.
+           Said about the whole jacket box instead, it also lands on the bubble's image and
+           stretches it to the frame's full width. *@
+        <span class="chart-jacket-art"><SongImage Song="Chart.Song" Height="280"></SongImage></span>
         @if (_videoUrl != null)
         {
             <button type="button" class="chart-jacket-play" @onclick="() => _playing = true">
