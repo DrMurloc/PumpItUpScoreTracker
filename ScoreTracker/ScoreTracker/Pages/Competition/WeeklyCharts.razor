@@ -158,6 +158,10 @@ else
             }
         </div>
     </div>
+
+    @* The one island: the static controls above reach it through challenge-board.js. Not
+       prerendered — the page is static, the dialogs are the only circuit on it (§3.3). *@
+    <ChallengeDialogHost @rendermode="@(new InteractiveServerRenderMode(prerender: false))" Mix="_mix"/>
 }
 
 @inject IMediator Mediator

@@ -4161,4 +4161,31 @@
   <data name="{0}m" xml:space="preserve">
     <value>{0}m</value>
   </data>
+  <data name="Add photo" xml:space="preserve">
+    <value>사진 추가</value>
+  </data>
+  <data name="Importing with your PIUGAME login records scores automatically — manual entry is the fallback." xml:space="preserve">
+    <value>PIUGAME 로그인으로 가져오면 점수가 자동 기록됩니다 — 수동 입력은 대체 수단입니다.</value>
+  </data>
+  <data name="Optional — a photo is your proof if a score's legitimacy is ever disputed." xml:space="preserve">
+    <value>선택 사항 — 점수의 정당성에 이의가 제기될 경우 사진이 증빙이 됩니다.</value>
+  </data>
+  <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
+    <value>이번 주 보드를 지금 교체할까요? 현재 주가 마감되고 다음 세트가 뽑힙니다.</value>
+  </data>
+  <data name="Rotation started." xml:space="preserve">
+    <value>교체를 시작했습니다.</value>
+  </data>
+  <data name="Suspected cheaters will be required to attach photos for future competition entries." xml:space="preserve">
+    <value>부정 의심 사용자는 향후 대회 제출 시 사진 첨부가 필수가 됩니다.</value>
+  </data>
+  <data name="There was an error while recording the score." xml:space="preserve">
+    <value>점수를 기록하는 중 오류가 발생했습니다.</value>
+  </data>
+  <data name="There was an error while uploading your image, please try again." xml:space="preserve">
+    <value>이미지를 업로드하는 중 오류가 발생했습니다. 다시 시도해 주세요.</value>
+  </data>
+  <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
+    <value>파일이 10MB를 초과했습니다. 크기를 줄여 다시 시도해 주세요.</value>
+  </data>
 </root>

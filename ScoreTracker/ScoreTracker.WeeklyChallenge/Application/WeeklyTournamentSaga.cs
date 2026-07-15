@@ -31,8 +31,26 @@ namespace ScoreTracker.WeeklyChallenge.Application
         IRequestHandler<GetAlreadyPlayedWeeklyChartsQuery, IEnumerable<Guid>>,
         IRequestHandler<GetUserWeeklyPlacementsQuery, IEnumerable<WeeklyPlacementRecord>>,
         IRequestHandler<GetWeeklyBoardQuery, WeeklyBoardView>,
-        IRequestHandler<GetMonthlyLeaderboardQuery, MonthlyLeaderboardView>
+        IRequestHandler<GetMonthlyLeaderboardQuery, MonthlyLeaderboardView>,
+        IRequestHandler<GetWeeklyChartBoardQuery, IReadOnlyList<WeeklyBoardRow>>
     {
+        // One chart's full ranked board with trust sources — the challenges page's leaderboard
+        // dialog read. The shared LeaderboardDialog re-ranks and looks players up itself, so this
+        // exists for the source per row (the ✔/📷 ladder); the plain entries query can't carry it.
+        public async Task<IReadOnlyList<WeeklyBoardRow>> Handle(GetWeeklyChartBoardQuery request,
+            CancellationToken cancellationToken)
+        {
+            var withSources = (await weeklyTournies.GetEntriesWithSources(request.Mix, request.ChartId,
+                cancellationToken)).ToArray();
+            var entries = withSources.Select(e => e.Entry).ToArray();
+            var sources = withSources.ToDictionary(e => e.Entry.UserId, e => e.Source);
+            var ranked = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(entries).ToArray();
+            var userDict = (await users.GetUsers(ranked.Select(r => r.Item2.UserId).Distinct().ToArray(),
+                cancellationToken)).ToDictionary(u => u.Id);
+            return ranked.Select(r => new WeeklyBoardRow(r.Item1, userDict.GetValueOrDefault(r.Item2.UserId),
+                r.Item2, sources.TryGetValue(r.Item2.UserId, out var s) ? s : null)).ToList();
+        }
+
         // The challenges page's board read: ranked heads + the caller's standing per chart,
         // display-enriched through IUserReader so the page dispatches one query instead of a
         // charts + entries + identity cascade.

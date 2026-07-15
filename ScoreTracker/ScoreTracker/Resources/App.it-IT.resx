@@ -4280,4 +4280,31 @@
   <data name="{0}m" xml:space="preserve">
     <value>{0}m</value>
   </data>
+  <data name="Add photo" xml:space="preserve">
+    <value>Aggiungi foto</value>
+  </data>
+  <data name="Importing with your PIUGAME login records scores automatically — manual entry is the fallback." xml:space="preserve">
+    <value>Importando col tuo login PIUGAME i punteggi si registrano da soli — l'inserimento manuale è il ripiego.</value>
+  </data>
+  <data name="Optional — a photo is your proof if a score's legitimacy is ever disputed." xml:space="preserve">
+    <value>Facoltativo — una foto è la tua prova se la legittimità di un punteggio viene contestata.</value>
+  </data>
+  <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
+    <value>Ruotare ora il tabellone della settimana? Chiude la settimana attuale ed estrae il set successivo.</value>
+  </data>
+  <data name="Rotation started." xml:space="preserve">
+    <value>Rotazione avviata.</value>
+  </data>
+  <data name="Suspected cheaters will be required to attach photos for future competition entries." xml:space="preserve">
+    <value>Ai sospetti imbroglioni sarà richiesto di allegare foto per le future partecipazioni.</value>
+  </data>
+  <data name="There was an error while recording the score." xml:space="preserve">
+    <value>Si è verificato un errore durante la registrazione del punteggio.</value>
+  </data>
+  <data name="There was an error while uploading your image, please try again." xml:space="preserve">
+    <value>Si è verificato un errore durante il caricamento dell'immagine, riprova.</value>
+  </data>
+  <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
+    <value>Il file superava i 10MB, riducilo e riprova.</value>
+  </data>
 </root>

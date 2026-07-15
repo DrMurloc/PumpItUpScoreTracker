@@ -870,6 +870,30 @@ public sealed class WeeklyTournamentSagaTests
             .ReturnsAsync(entries.Select(e => (e, source)).ToArray());
     }
 
+    [Fact]
+    public async Task ChartBoardReturnsEveryRowRankedWithItsSource()
+    {
+        var chartId = Guid.NewGuid();
+        var official = Guid.NewGuid();
+        var selfReported = Guid.NewGuid();
+        var weeklyTournies = new Mock<IWeeklyTournamentRepository>();
+        weeklyTournies.Setup(w => w.GetEntriesWithSources(MixEnum.Phoenix, chartId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                (Entry(chartId, 950_000, selfReported), ChallengeEntrySource.Manual),
+                (Entry(chartId, 990_000, official), ChallengeEntrySource.Official)
+            });
+        var saga = BuildSaga(weeklyTournies: weeklyTournies, users: UsersEcho());
+
+        var rows = await saga.Handle(new GetWeeklyChartBoardQuery(chartId, MixEnum.Phoenix), CancellationToken.None);
+
+        Assert.Equal(new[] { 1, 2 }, rows.Select(r => r.Place).ToArray());
+        Assert.Equal(official, rows[0].Entry.UserId);
+        Assert.Equal(ChallengeEntrySource.Official, rows[0].Source);
+        Assert.Equal(ChallengeEntrySource.Manual, rows[1].Source);
+        Assert.All(rows, r => Assert.NotNull(r.Player));
+    }
+
     // Display enrichment defaults to echoing whatever ids the handler asks for, so board tests
     // never pre-register players.
     private static Mock<IUserReader> UsersEcho(params User[] known)
