@@ -1,0 +1,60 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Domain.Events
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Services.UiNotifications
+@implements IDisposable
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiNotificationHub UiHub
+@inject IJSRuntime JSRuntime
+
+@* Renders nothing. The dot itself is server-rendered into the avatar by the shell, hidden;
+   this toggles it. A background import (any mix) pulses the avatar until its terminal status
+   or an error, so the user knows a scrape is still running after they have navigated off the
+   page that started it. Only this user's events reach this circuit — they are routed by user
+   topic. A page with no circuit shows no pulse, which is accepted. *@
+
+@code {
+    private IDisposable? _statusSubscription;
+    private IDisposable? _errorSubscription;
+    private bool _running;
+
+    protected override void OnInitialized()
+    {
+        if (!CurrentUser.IsLoggedIn) return;
+        var topic = UiTopics.User(CurrentUser.User.Id);
+        _statusSubscription = UiHub.Subscribe<ImportStatusUpdatedEvent>(topic, OnImportStatus);
+        _errorSubscription = UiHub.Subscribe<ImportStatusErrorEvent>(topic, OnImportError);
+    }
+
+    private Task OnImportStatus(ImportStatusUpdatedEvent e)
+    {
+        return Set(e.Status != "Charts finished saving");
+    }
+
+    private Task OnImportError(ImportStatusErrorEvent e)
+    {
+        return Set(false);
+    }
+
+    private async Task Set(bool running)
+    {
+        if (running == _running) return;
+        _running = running;
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("shell.setImportPulse", running);
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit went away mid-import; there is no dot left to toggle.
+        }
+    }
+
+    public void Dispose()
+    {
+        // Defensive: a circuit torn down mid-render can dispose before injection finished —
+        // observed once in the field as an NRE in the layout's own Dispose.
+        _statusSubscription?.Dispose();
+        _errorSubscription?.Dispose();
+    }
+}

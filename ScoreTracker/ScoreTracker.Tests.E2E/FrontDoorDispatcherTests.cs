@@ -56,8 +56,12 @@ public sealed class FrontDoorDispatcherTests : IAsyncLifetime
             .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
         await Expect(_page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Sign in" }))
             .ToBeVisibleAsync();
-        // No Blazor host: the MudBlazor layout wrapper only exists inside the app.
-        await Expect(_page.Locator(".mud-layout")).ToHaveCountAsync(0);
+        // No Blazor host at all: the front door boots no circuit, which is the entire reason
+        // it is a Razor Page. Asserted against the script the app cannot run without — the
+        // MudBlazor wrapper this used to check is the app's to keep or drop, so it would go
+        // quiet the day the app stopped rendering one.
+        await Expect(_page.Locator("script[src*='blazor.server.js']")).ToHaveCountAsync(0);
+        await Expect(_page.Locator("#blazor-error-ui")).ToHaveCountAsync(0);
     }
 
     [Fact]

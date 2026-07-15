@@ -139,7 +139,14 @@ Every vertical's model contribution must be listed in [`VerticalModelContributio
 | `Admin/` | admin dashboard, chart maintenance, bulk voting |
 | `Dev/` | `/Dev/Populate` — the local-database setup harness (dev-only, see [HOW-TO-RUN.md](HOW-TO-RUN.md)) |
 
-**Components** (`Components/`): the reusable vocabulary of the UI — `ChartSelector` (autocomplete), `DifficultyBubble`, `SongImage`, `LetterGradeIcon`, `ScoreBreakdown`, `UserLabel`, `TierListSection`, `ChartVideoDisplay`, etc. `Shared/MainLayout.razor` owns the shell — desktop top nav with click mega-menus, the mobile bottom nav + More sheet, the app-bar mix pill — resolves the per-mix theme (`Services/Theming/MixThemes`, see [UX-GUIDELINES.md](UX-GUIDELINES.md)), and subscribes to live-update events (import status, player stats).
+**Components** (`Components/`): the reusable vocabulary of the UI — `ChartSelector` (autocomplete), `DifficultyBubble`, `SongImage`, `LetterGradeIcon`, `ScoreBreakdown`, `UserLabel`, `TierListSection`, `ChartVideoDisplay`, etc.
+
+**The shell** (`Pages/Shared/_SiteLayout.cshtml` + `Components/Shell/`) is **server-rendered HTML on every page**, not a Blazor component ([static-shell.md](design/static-shell.md)): the top nav and its mega-menus, the mobile bottom nav and More sheet, the mix pill, and the theme tokens all render before any circuit exists, so a crawler sees the nav and the page paints without waiting on a websocket. `ShellModelFactory` builds its model from the request — the one place the anonymous mix cookie is readable, since a circuit cannot see the request — and hands the mix to the app as a root parameter. Menus are vanilla (`wwwroot/js/nav.js`); native `<details>` carries the mix picker's disclosure. Two things stay interactive as islands: the app-bar chart search and the import pulse dot.
+
+Three rules follow, and they bind anything the SSR migration touches next:
+- **A static region is `--mix-*`-only.** Every `--mud-*` custom property is emitted by `MudThemeProvider` *inside* the circuit, and MudBlazor's own `body` rule reads them — so a `var(--mud-…)` in the shell paints unthemed until the circuit arrives.
+- **MudBlazor's providers mount as the first root** (`Components/MudProviders.razor`), not in `MainLayout`. There is one popover provider per circuit and roots initialise in document order, so a provider in the layout — the last root — is behind every island that might ask it for a popover.
+- **`MainLayout` keeps only what an app root owns**: the legacy-mix gate, the page dock, the recap pointer, and `MudLayout` — which is MudBlazor's *drawer host*, not chrome, and stays until the last `MudDrawer` goes.
 
 **Controllers** (`Controllers/`): the [API surface](API.md) — thin MediatR dispatchers under `api/*`, the dev-harness exports under `dev/export/*`, and UI-support endpoints (`login`, `logout`, `culture`, sitemap).
 

@@ -1,0 +1,77 @@
+@namespace ScoreTracker.Web.Components
+@using System.Web
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+
+@* The mix switcher: it changes the whole site's data context, so it lives in the shell header
+   like an org switcher. The primary trio up front, and the 28 legacy mixes grouped into the
+   collections the community actually thinks in (docs/design/legacy-mixes.md) — a flat list of
+   28 was unusable. Native <details> carries the two-level disclosure, so the whole menu works
+   with no circuit. Selecting a mix hits /Mix/Set and reloads the current page. *@
+<div class="shell-menu" data-menu>
+    <button type="button" class="mix-pill mr-3" title=@L["Mix"] data-menu-activator aria-haspopup="true" aria-expanded="false">
+        <i class="mix-dot"></i>@Model.CurrentMix.GetName()
+    </button>
+    <div class="shell-menu-panel" data-menu-panel>
+        @foreach (var mix in Primary)
+        {
+            <ShellMenuItem Href="@SetMixHref(mix)" FullLoad="true">@mix.GetName()</ShellMenuItem>
+        }
+        <details class="shell-disclosure">
+            <summary class="shell-menu-item">
+                <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small"></MudIcon>
+                <span>@L["More Mixes"]</span>
+            </summary>
+            <div class="shell-menu-divider"></div>
+            @foreach (var collection in Collections)
+            {
+                <details class="shell-disclosure">
+                    <summary class="shell-menu-item">
+                        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small"></MudIcon>
+                        <span>@L[collection.Label]</span>
+                    </summary>
+                    <div class="shell-disclosure-body">
+                        @foreach (var mix in collection.Mixes)
+                        {
+                            <ShellMenuItem Href="@SetMixHref(mix)" FullLoad="true">@mix.GetName()</ShellMenuItem>
+                        }
+                    </div>
+                </details>
+            }
+        </details>
+    </div>
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public ShellViewModel Model { get; set; } = null!;
+
+    private static readonly MixEnum[] Primary = Enum.GetValues<MixEnum>()
+        .Where(m => m.IsPrimary())
+        .OrderByDescending(m => m.DisplayOrder())
+        .ToArray();
+
+    // Newest collection first; newest mix first within each — matching the picker's
+    // recency ordering everywhere else. Labels are localization keys (proper nouns
+    // pass through unchanged in most locales).
+    private static readonly (string Label, MixEnum[] Mixes)[] Collections =
+    {
+        ("Prime", new[] { MixEnum.Prime2, MixEnum.Prime }),
+        ("Fiesta", new[] { MixEnum.Fiesta2, MixEnum.FiestaEx, MixEnum.Fiesta }),
+        ("NX", new[] { MixEnum.NxAbsolute, MixEnum.Nx2, MixEnum.Nx }),
+        ("Exceed / Zero", new[] { MixEnum.Zero, MixEnum.Exceed2, MixEnum.Exceed }),
+        ("Premiere / Prex", new[]
+        {
+            MixEnum.Prex3, MixEnum.Premiere3, MixEnum.Prex2, MixEnum.Premiere2,
+            MixEnum.Rebirth, MixEnum.Prex, MixEnum.Premiere
+        }),
+        ("Classic", new[]
+        {
+            MixEnum.Extra, MixEnum.PerfectCollection, MixEnum.Collection,
+            MixEnum.ObgSeasonEvolution, MixEnum.ThirdObg, MixEnum.SecondUltimateRemix, MixEnum.FirstDanceFloor
+        }),
+        ("American", new[] { MixEnum.Infinity, MixEnum.Pro2, MixEnum.Pro })
+    };
+
+    private string SetMixHref(MixEnum mix) =>
+        $"/Mix/Set?mix={mix}&redirectUrl={HttpUtility.UrlEncode(Model.ReturnUrl)}";
+}

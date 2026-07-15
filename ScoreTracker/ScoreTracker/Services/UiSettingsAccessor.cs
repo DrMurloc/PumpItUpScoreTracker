@@ -16,40 +16,29 @@ public sealed class UiSettingsAccessor : IUiSettingsAccessor
     private const string MixKey = "Universal__CurrentMix";
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
+    private readonly ShellContext _shell;
     private readonly ProtectedLocalStorage _browserStorage;
 
     public UiSettingsAccessor(IMediator mediator, ICurrentUserAccessor currentUser,
-        ProtectedLocalStorage browserStorage)
+        ProtectedLocalStorage browserStorage, ShellContext shell)
     {
         _mediator = mediator;
         _currentUser = currentUser;
         _browserStorage = browserStorage;
+        _shell = shell;
     }
 
     public async Task<MixEnum> GetSelectedMix(CancellationToken cancellationToken = default)
     {
-        if (!_currentUser.IsLoggedIn)
-        {
-            var browserValue = await _browserStorage.GetAsync<string>(MixKey);
-            if (browserValue.Success && Enum.TryParse<MixEnum>(browserValue.Value, out var browserMix))
-                return browserMix;
-            return MixEnum.Phoenix;
-        }
+        // The shell resolved this from the request and seeded it, so a caller inside a circuit
+        // gets the answer without a query and without reaching for request state it can't see.
+        if (_shell.CurrentMix is { } resolved) return resolved;
+
+        if (!_currentUser.IsLoggedIn) return MixEnum.Phoenix;
 
         var settings = await _mediator.Send(new GetUserUiSettingsQuery(), cancellationToken);
         if (!settings.ContainsKey(MixKey)) return MixEnum.Phoenix;
         return Enum.TryParse<MixEnum>(settings[MixKey], out var mix) ? mix : MixEnum.Phoenix;
-    }
-
-    public async Task SetSelectedMix(MixEnum mix, CancellationToken cancellationToken = default)
-    {
-        if (!_currentUser.IsLoggedIn)
-        {
-            await _browserStorage.SetAsync(MixKey, mix.ToString());
-            return;
-        }
-
-        await _mediator.Send(new SaveUserUiSettingCommand(MixKey, mix.ToString()), cancellationToken);
     }
 
     public async Task<string?> GetSetting(string key, CancellationToken cancellationToken = default,

@@ -1,0 +1,20 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.SharedKernel.Enums
+@inject NavigationManager NavManager
+
+@* The app bar's chart search. An island: the shell around it is static HTML, but an
+   autocomplete needs a circuit. Desktop only, as it was under MudHidden. *@
+<div class="d-flex align-center appbar-search mr-3 shell-desktop-only" style="min-width: 170px; max-width: 220px;">
+    <ChartSelector Mix="Mix" Label="" Placeholder="@L["Find a chart"].Value" Variant="Variant.Outlined"
+                   Margin="Margin.Dense" ChartIdSelected="GoToChart"></ChartSelector>
+</div>
+
+@code {
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    private Task GoToChart(Chart chart)
+    {
+        NavManager.NavigateTo($"/Chart/{chart.Id}");
+        return Task.CompletedTask;
+    }
+}

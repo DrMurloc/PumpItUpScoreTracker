@@ -1,0 +1,100 @@
+@using System.Globalization
+@using Microsoft.AspNetCore.Components.Web
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@inject ShellModelFactory ShellFactory
+@inject Microsoft.Extensions.Localization.IStringLocalizer<ScoreTracker.Web.App> L
+@{
+    // Memoized per request — the host page builds this too, to hand the mix to the circuit.
+    var shell = await ShellFactory.BuildAsync(Context);
+}
+<!DOCTYPE html>
+<html lang="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="~/" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" asp-append-version="true" />
+    <link href="/css/site.css" rel="stylesheet" asp-append-version="true" />
+    <link href="/css/charts.css" rel="stylesheet" asp-append-version="true" />
+    @* The active palette's --mix-* tokens. Server-side: the shell paints before any circuit,
+       and MudThemeProvider's own vars only arrive with one. *@
+    <style>@Html.Raw(MixThemes.CssVariablesFor(shell.ThemeMix))</style>
+    @* A real title for readers that run no JS. Blazor removes it on boot and HeadOutlet takes
+       over, so <PageTitle> keeps working unchanged. *@
+    <title>@L["PIU Scores"]</title>
+    @await RenderSectionAsync("Head", required: false)
+    <component type="typeof(HeadOutlet)" render-mode="Server" />
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "d2n3fzq6v8");
+    </script>
+    <style>
+        .apexcharts-legend-text {
+            color: #ffffff !important
+        }
+
+        .apexcharts-tooltip-text-y-value {
+            color: #000000 !important;
+        }
+
+        .apexcharts-tooltip-text-y-label {
+            color: #000000 !important;
+        }
+
+        .apexcharts-text tspan {
+            fill: #FFFFFF
+        }
+    </style>
+</head>
+<body class="@MixThemes.CssClassFor(shell.ThemeMix) @ViewData["BodyClass"]">
+@* First root on the page, deliberately: roots initialise in document order, and the single
+   popover provider has to exist before any island asks it for one. *@
+<component type="typeof(MudProviders)" render-mode="Server" param-ThemeMix="@shell.ThemeMix" />
+
+@* The app bar is assembled here rather than inside one component because the chart search is
+   an island, and a render-mode tag can only be written from a page. Stage 2 moves these same
+   lines into the static root; the structure is what carries over. *@
+<header class="shell-appbar">
+    <component type="typeof(ShellNav)" render-mode="Static" param-Model="@shell" />
+    <span class="shell-spacer"></span>
+    <component type="typeof(AppBarSearch)" render-mode="Server" param-Mix="@shell.CurrentMix" />
+    <component type="typeof(ShellMixMenu)" render-mode="Static" param-Model="@shell" />
+    <component type="typeof(ShellUserMenu)" render-mode="Static" param-Model="@shell" />
+</header>
+<component type="typeof(ShellMoreSheet)" render-mode="Static" param-Model="@shell" />
+<component type="typeof(ShellBottomNav)" render-mode="Static" param-Model="@shell" />
+@* Renders nothing; it drives the hidden pulse dot the shell put in the avatar. *@
+<component type="typeof(ShellImportPulse)" render-mode="Server" />
+
+<main class="shell-main">
+    @RenderBody()
+</main>
+
+<div id="blazor-error-ui">
+    <environment include="Staging,Production">
+        An error has occurred. This application may no longer respond until reloaded.
+    </environment>
+    <environment include="Development">
+        An unhandled exception has occurred. See browser dev tools for details.
+    </environment>
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+<script src="_framework/blazor.server.js" asp-append-version="true"></script>
+<script src="_content/MudBlazor/MudBlazor.min.js" asp-append-version="true"></script>
+<script src="/js/page-dock.js" asp-append-version="true"></script>
+<script src="/js/nav.js" asp-append-version="true"></script>
+<script src="~/js/dashboard-grid.js" asp-append-version="true"></script>
+<script src="~/js/credential-storage.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

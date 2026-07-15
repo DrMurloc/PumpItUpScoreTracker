@@ -1,0 +1,20 @@
+@namespace ScoreTracker.Web.Components
+
+@* A top-nav menu: an activator button and a panel that nav.js opens and positions. Replaces
+   MudMenu, which needs a circuit the static shell doesn't have. Click to open, one at a time,
+   closes on outside click / Escape / link click. *@
+<div class="shell-menu" data-menu>
+    <button type="button" class="top-nav-btn" data-menu-activator aria-haspopup="true" aria-expanded="false">
+        @Label
+        <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small"></MudIcon>
+    </button>
+    <div class="shell-menu-panel" data-menu-panel>
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public string Label { get; set; } = string.Empty;
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}
