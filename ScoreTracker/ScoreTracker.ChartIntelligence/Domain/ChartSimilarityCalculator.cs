@@ -109,22 +109,11 @@ internal static class ChartSimilarityCalculator
             var a = pool[i];
             var b = pool[j];
             if (Math.Abs(a.Level - b.Level) > LevelWindow) continue;
-            if (a.SongName.Equals(b.SongName)) continue;
+            var edge = ScorePair(a, b, intensityZ);
+            if (edge == null) continue;
 
-            // Both signals are mandatory: they come from the same piucenter crawl, so in
-            // practice a chart has both or neither, and a pair matched on one of the two
-            // is a pair we know half of — not a neighbor.
-            var skill = SkillSimilarity(a, b);
-            var intensity = IntensitySimilarity(intensityZ[a.ChartId], intensityZ[b.ChartId]);
-            if (skill == null || intensity == null) continue;
-
-            var score = Math.Pow(Math.Max(skill.Score, SignalFloor), SkillWeight)
-                        * Math.Pow(Math.Max(intensity.Value, SignalFloor), IntensityWeight);
-
-            candidates[a.ChartId]
-                .Add(new ChartSimilarityEdge(b.ChartId, score, skill.Score, intensity.Value, skill.SharedBadges));
-            candidates[b.ChartId]
-                .Add(new ChartSimilarityEdge(a.ChartId, score, skill.Score, intensity.Value, skill.SharedBadges));
+            candidates[a.ChartId].Add(edge with { SimilarChartId = b.ChartId });
+            candidates[b.ChartId].Add(edge with { SimilarChartId = a.ChartId });
         }
 
         return candidates.ToDictionary(kv => kv.Key,
@@ -132,6 +121,55 @@ internal static class ChartSimilarityCalculator
                 .OrderByDescending(e => e.Score)
                 .Take(TopK)
                 .ToArray());
+    }
+
+    /// <summary>
+    ///     One anchor against an explicit target list, best first — the live path behind
+    ///     filtered reads and the out-of-window "I liked this D18, what D23s play like it"
+    ///     case. **No level window**: the caller has already decided what to compare
+    ///     against, and that is the whole point of asking live instead of reading the
+    ///     precalculated graph.
+    ///     <paramref name="cohort" /> is what intensity z-scores against and must be the
+    ///     anchor's full (mix, type) pool, not the filtered targets — a chart's intensity
+    ///     is unusual relative to its folder, not relative to whatever the reader happened
+    ///     to filter to. Scoring against the filtered set would let a filter change the
+    ///     scores.
+    /// </summary>
+    public static IReadOnlyList<ChartSimilarityEdge> BuildEdgesFor(ChartSimilarityFeatures anchor,
+        IReadOnlyList<ChartSimilarityFeatures> targets, IReadOnlyList<ChartSimilarityFeatures> cohort)
+    {
+        var intensityZ = ComputeIntensityZScores(cohort);
+        if (!intensityZ.ContainsKey(anchor.ChartId)) return Array.Empty<ChartSimilarityEdge>();
+
+        return targets
+            .Where(t => intensityZ.ContainsKey(t.ChartId))
+            .Select(t => ScorePair(anchor, t, intensityZ) is { } edge ? edge with { SimilarChartId = t.ChartId } : null)
+            .Where(e => e != null)
+            .Select(e => e!)
+            .OrderByDescending(e => e.Score)
+            .ToArray();
+    }
+
+    /// <summary>
+    ///     The pair's score, or null if they are siblings or either lacks a mandatory
+    ///     signal. Both signals are mandatory because they come from the same piucenter
+    ///     crawl: in practice a chart has both or neither, and a pair matched on one of
+    ///     the two is a pair we know half of, not a neighbor. SimilarChartId is left
+    ///     unset — the caller knows which end it is looking from.
+    /// </summary>
+    private static ChartSimilarityEdge? ScorePair(ChartSimilarityFeatures a, ChartSimilarityFeatures b,
+        IReadOnlyDictionary<Guid, double?[]> intensityZ)
+    {
+        if (a.ChartId == b.ChartId) return null;
+        if (a.SongName.Equals(b.SongName)) return null;
+
+        var skill = SkillSimilarity(a, b);
+        var intensity = IntensitySimilarity(intensityZ[a.ChartId], intensityZ[b.ChartId]);
+        if (skill == null || intensity == null) return null;
+
+        var score = Math.Pow(Math.Max(skill.Score, SignalFloor), SkillWeight)
+                    * Math.Pow(Math.Max(intensity.Value, SignalFloor), IntensityWeight);
+        return new ChartSimilarityEdge(b.ChartId, score, skill.Score, intensity.Value, skill.SharedBadges);
     }
 
     /// <summary>

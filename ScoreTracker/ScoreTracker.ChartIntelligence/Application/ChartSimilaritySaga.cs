@@ -23,9 +23,16 @@ namespace ScoreTracker.ChartIntelligence.Application;
 ///     Nothing here reads scores. Similarity is a statement about charts, so the rebuild
 ///     depends on the crawl and not on play data — which is also why it no longer sweeps
 ///     a folder's scores per level, and why its output only changes when piucenter's does.
+///     Three reads, two of them live. The precalculated graph answers the common case in a
+///     PK-prefix seek; filtered and out-of-window searches rebuild one anchor's row against
+///     a reduced target list, because filtering the stored top-20 would return nothing (they
+///     are the nearest charts overall — any filter worth applying excludes all of them).
+///     The live reads cost one badge sweep of the anchor's (mix, type) pool.
 /// </summary>
 internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarityCommand>,
-    IRequestHandler<GetSimilarChartsQuery, IReadOnlyList<ChartSimilarityRecord>>
+    IRequestHandler<GetSimilarChartsQuery, IReadOnlyList<ChartSimilarityRecord>>,
+    IRequestHandler<GetFilteredSimilarChartsQuery, FilteredSimilarChartsRecord>,
+    IRequestHandler<GetOppositeChartQuery, ChartSimilarityRecord?>
 {
     private static readonly ChartType[] SimilarityChartTypes = { ChartType.Single, ChartType.Double };
 
@@ -79,6 +86,78 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
     {
         var edges = await _similarity.GetEdges(request.Mix, request.ChartId, cancellationToken);
         return edges.Select(ToRecord).ToArray();
+    }
+
+    public async Task<FilteredSimilarChartsRecord> Handle(GetFilteredSimilarChartsQuery request,
+        CancellationToken cancellationToken)
+    {
+        var pool = await BuildPoolFor(request.Mix, request.ChartId, cancellationToken);
+        if (pool == null) return new FilteredSimilarChartsRecord(Array.Empty<ChartSimilarityRecord>(), 0);
+        var (anchor, anchorChart, features, charts) = pool.Value;
+
+        // The level range is the reader's, not the anchor's neighbourhood: unfiltered it
+        // defaults to the ±2 the graph would have precalculated, but D18→D23 is the point
+        // of asking live.
+        var minLevel = request.MinLevel ?? anchorChart.Level - ChartSimilarityCalculator.LevelWindow;
+        var maxLevel = request.MaxLevel ?? anchorChart.Level + ChartSimilarityCalculator.LevelWindow;
+        var targets = charts
+            .Where(c => c.Id != anchorChart.Id)
+            .Where(c => c.Level >= minLevel && c.Level <= maxLevel)
+            .Where(c => request.StepArtist == null ||
+                        (c.StepArtist != null && c.StepArtist.Value.Equals(request.StepArtist.Value)))
+            .Where(c => request.MinBpm == null || (c.Song.Bpm != null && c.Song.Bpm.Value.Max >= request.MinBpm))
+            .Where(c => request.MaxBpm == null || (c.Song.Bpm != null && c.Song.Bpm.Value.Min <= request.MaxBpm))
+            .Where(c => request.DebutFrom == null || c.OriginalMix >= request.DebutFrom)
+            .ToArray();
+
+        var edges = ChartSimilarityCalculator.BuildEdgesFor(anchor,
+            targets.Select(c => features[c.Id]).ToArray(), features.Values.ToArray());
+
+        // Compared counts what the reader's filter selected, not what survived scoring —
+        // it exists to make "1 match" read as a narrow filter rather than a broken feature,
+        // and a target we had no evidence for was still looked at.
+        return new FilteredSimilarChartsRecord(edges.Select(ToRecord).ToArray(), targets.Length);
+    }
+
+    public async Task<ChartSimilarityRecord?> Handle(GetOppositeChartQuery request,
+        CancellationToken cancellationToken)
+    {
+        var pool = await BuildPoolFor(request.Mix, request.ChartId, cancellationToken);
+        if (pool == null) return null;
+        var (anchor, anchorChart, features, charts) = pool.Value;
+
+        var window = ChartSimilarityCalculator.LevelWindow;
+        var targets = charts
+            .Where(c => c.Id != anchorChart.Id)
+            .Where(c => Math.Abs(c.Level - anchorChart.Level) <= window)
+            .Select(c => features[c.Id])
+            .ToArray();
+
+        // BuildEdgesFor ranks best-first; the joke is at the other end.
+        return ChartSimilarityCalculator.BuildEdgesFor(anchor, targets, features.Values.ToArray())
+            .Select(ToRecord).LastOrDefault();
+    }
+
+    /// <summary>
+    ///     The anchor's whole (mix, chart type) pool, or null when the anchor is missing,
+    ///     is a Co-Op chart, or the crawl never covered it. The full pool comes back rather
+    ///     than just the targets because intensity z-scores against the folder — a chart is
+    ///     unusual relative to its peers, never relative to a filter someone typed.
+    /// </summary>
+    private async Task<(ChartSimilarityFeatures Anchor, Chart AnchorChart,
+        IReadOnlyDictionary<Guid, ChartSimilarityFeatures> Features, IReadOnlyList<Chart> Charts)?> BuildPoolFor(
+        MixEnum mix, Guid chartId, CancellationToken cancellationToken)
+    {
+        var allCharts = (await _charts.GetCharts(mix, cancellationToken: cancellationToken)).ToArray();
+        var anchorChart = allCharts.FirstOrDefault(c => c.Id == chartId);
+        if (anchorChart == null || !SimilarityChartTypes.Contains(anchorChart.Type)) return null;
+
+        var charts = allCharts.Where(c => c.Type == anchorChart.Type).ToArray();
+        var chartIds = charts.Select(c => c.Id).ToArray();
+        var badgeCoverage = await _mediator.Send(new GetChartBadgeCoverageQuery(chartIds), cancellationToken);
+        var stepAnalyses = await _mediator.Send(new GetChartStepAnalysesQuery(chartIds), cancellationToken);
+        var features = charts.ToDictionary(c => c.Id, c => BuildFeatures(c, badgeCoverage, stepAnalyses));
+        return (features[anchorChart.Id], anchorChart, features, charts);
     }
 
     private static ChartSimilarityRecord ToRecord(ChartSimilarityEdge edge)

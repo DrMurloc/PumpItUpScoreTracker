@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
@@ -13,6 +14,8 @@ using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using ScoreTracker.Tests.TestHelpers;
 using Xunit;
@@ -156,6 +159,118 @@ public sealed class ChartSimilaritySagaTests
             It.Is<IReadOnlyList<ChartSimilarityEdge>>(e =>
                 e.Count == 1 && Math.Abs(e[0].IntensityScore - 0.4152436465) < 1e-6),
             Now, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     An anchor plus three targets spread over D20–D23, so a live search has something
+    ///     to include and something to leave out. Every chart carries the same badge and
+    ///     NPS, so the scores are flat and the assertions are about *which charts were
+    ///     compared*, never about ranking.
+    /// </summary>
+    private (Chart Anchor, Chart[] Targets) SetupLivePool()
+    {
+        var anchor = new ChartBuilder().WithSongName("Anchor").WithType(ChartType.Double).WithLevel(21)
+            .WithStepArtist("SPHAM").Build();
+        var nearby = new ChartBuilder().WithSongName("Nearby").WithType(ChartType.Double).WithLevel(22)
+            .WithStepArtist("SPHAM").Build();
+        var farUp = new ChartBuilder().WithSongName("Far Up").WithType(ChartType.Double).WithLevel(23)
+            .WithStepArtist("NIMGO").Build();
+        var farDown = new ChartBuilder().WithSongName("Far Down").WithType(ChartType.Double).WithLevel(20)
+            .WithStepArtist("NIMGO").Build();
+        var coOp = new ChartBuilder().WithSongName("Co-Op").WithType(ChartType.CoOp).WithLevel(3).Build();
+        var all = new[] { anchor, nearby, farUp, farDown, coOp };
+        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(all);
+        SetupBadges(all.ToDictionary(c => c.Id,
+            c => (IReadOnlyDictionary<string, double>)new Dictionary<string, double> { ["bracket"] = 1.0 }));
+        SetupStepAnalyses(all.ToDictionary(c => c.Id, _ => Analysis(10)));
+        return (anchor, new[] { nearby, farUp, farDown });
+    }
+
+    [Fact]
+    public async Task AFilteredSearchDefaultsToTheSameTwoFolderReachTheGraphPrecalculates()
+    {
+        var (anchor, targets) = SetupLivePool();
+
+        var result = await BuildSaga().Handle(new GetFilteredSimilarChartsQuery(anchor.Id),
+            CancellationToken.None);
+
+        // D20, D22 and D23 are all within two folders of D21; Co-Op is a different pool.
+        Assert.Equal(3, result.ChartsCompared);
+        Assert.Equal(targets.Select(t => t.Id).OrderBy(id => id),
+            result.Matches.Select(m => m.ChartId).OrderBy(id => id));
+    }
+
+    [Fact]
+    public async Task AFilteredSearchReachesOutsideThePrecalculatedWindowWhenAsked()
+    {
+        // "I liked this D18, what D23s play like it" — the level range is the reader's,
+        // and the whole reason this query exists rather than reading the stored graph.
+        var (anchor, targets) = SetupLivePool();
+        var onlyD23 = targets.Single(t => t.Level == 23);
+
+        var result = await BuildSaga().Handle(
+            new GetFilteredSimilarChartsQuery(anchor.Id, MinLevel: 23, MaxLevel: 23), CancellationToken.None);
+
+        Assert.Equal(1, result.ChartsCompared);
+        var match = Assert.Single(result.Matches);
+        Assert.Equal(onlyD23.Id, match.ChartId);
+    }
+
+    [Fact]
+    public async Task AFilteredSearchReportsWhatItComparedEvenWhenItNarrowsToNothingWorthShowing()
+    {
+        // Compared is what the filter selected, not what scored — it is what turns
+        // "1 match" from a bug report into a sentence.
+        var (anchor, _) = SetupLivePool();
+
+        var result = await BuildSaga().Handle(
+            new GetFilteredSimilarChartsQuery(anchor.Id, StepArtist: Name.From("SPHAM")), CancellationToken.None);
+
+        Assert.Equal(1, result.ChartsCompared);
+        Assert.Single(result.Matches);
+    }
+
+    [Fact]
+    public async Task AFilteredSearchOnAChartTheCrawlNeverCoveredComparesNothing()
+    {
+        var missing = new ChartBuilder().WithSongName("Ghost").WithType(ChartType.Double).WithLevel(21).Build();
+        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+        SetupBadges(new Dictionary<Guid, IReadOnlyDictionary<string, double>>());
+        SetupStepAnalyses(new Dictionary<Guid, ChartStepAnalysisRecord>());
+
+        var result = await BuildSaga().Handle(new GetFilteredSimilarChartsQuery(missing.Id),
+            CancellationToken.None);
+
+        Assert.Equal(0, result.ChartsCompared);
+        Assert.Empty(result.Matches);
+    }
+
+    [Fact]
+    public async Task TheOppositeChartIsTheWorstMatchInReachRatherThanTheBest()
+    {
+        // The graph banks the twenty nearest, so the furthest is the one thing ranking
+        // never keeps — it has to be computed. Anchor is all brackets; the joke is the
+        // chart that shares none of them.
+        var anchor = new ChartBuilder().WithSongName("Anchor").WithType(ChartType.Double).WithLevel(21).Build();
+        var alike = new ChartBuilder().WithSongName("Alike").WithType(ChartType.Double).WithLevel(21).Build();
+        var opposite = new ChartBuilder().WithSongName("Opposite").WithType(ChartType.Double).WithLevel(21).Build();
+        var all = new[] { anchor, alike, opposite };
+        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(all);
+        SetupBadges(new Dictionary<Guid, IReadOnlyDictionary<string, double>>
+        {
+            [anchor.Id] = new Dictionary<string, double> { ["bracket"] = 1.0 },
+            [alike.Id] = new Dictionary<string, double> { ["bracket"] = 0.9 },
+            [opposite.Id] = new Dictionary<string, double> { ["twist_90"] = 1.0 }
+        });
+        SetupStepAnalyses(all.ToDictionary(c => c.Id, _ => Analysis(10)));
+
+        var result = await BuildSaga().Handle(new GetOppositeChartQuery(anchor.Id), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal(opposite.Id, result!.ChartId);
     }
 
     [Fact]
