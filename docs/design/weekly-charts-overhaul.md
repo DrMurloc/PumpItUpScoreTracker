@@ -1,10 +1,13 @@
 # Weekly Charts overhaul — the challenges hub, and a static page
 
-**Status**: designed 2026-07-15, owner calls locked in-session; executing per §9. Builds on the
-Stage-2 hosting flip (this branch descends from `claude/render-modes-scope`). The chart-details
-overhaul (branch `claude/chart-details-overhaul`) pilots the same static-SSR-with-islands shape
-on `/Chart/{id}`; **the two pages are independent** (owner call) and share exactly one commit's
-worth of mechanism (§3.1) — whichever merges second rebases that commit away.
+**Status**: designed 2026-07-15; **visual mock approved the same day (round 9)** after nine
+owner rounds — the living mock is artifact `1d0c26e7` (labels `round-1` … `round-9-compact-chip`
+in its version picker). Foundation commits are in (§9); page work executes against the R9
+anatomy. Builds on the Stage-2 hosting flip (this branch descends from
+`claude/render-modes-scope`). The chart-details overhaul (branch `claude/chart-details-overhaul`)
+pilots the same static-SSR-with-islands shape on `/Chart/{id}`; **the two pages are independent**
+(owner call) and share exactly one commit's worth of mechanism (§3.1) — whichever merges second
+rebases that commit away.
 
 **The page**: `/WeeklyCharts` becomes the challenges hub — Weekly Charts and Daily Step
 ([daily-step.md](daily-step.md)) on one page, statically rendered so crawlers finally see the
@@ -13,246 +16,258 @@ per-user history view "for a future view on the Weekly-charts rebuild"; this is 
 
 ---
 
-## 1. Owner calls (2026-07-15)
+## 1. Owner calls
+
+Scope calls (2026-07-15, pre-mock):
 
 | # | Call |
 |---|---|
 | O1 | **Static SSR + islands here too**, independent of the chart-details pilot — neither blocks the other. |
 | O2 | Route and name stay **`/WeeklyCharts`**. Daily Step integrates into the page. |
-| O3 | Monthly leaderboard **stays mechanically the same** (best-N-per-window, weekly windows into a monthly board). The **BITE relic drops** (hardcoded July 2024 event, dead since August 2024). Aggregation moves out of the page into the vertical. |
-| O4 | **Scoring: the game's own PUMBILITY replaces the homebrew PUMBILITY+** — per mix, through the existing `ScoringConfiguration.PumbilityScoring(mix, includeCoOp)` seam (Phoenix formula on the Phoenix board, Phoenix 2's additive grade+plate formula on the Phoenix 2 board). Consequences spelled in §6 — they are the formulas' own rules, not new design. |
-| O5 | **Per-user Daily Step history ships** on this page (new read over `UserDailyStepPlacing`, which rotation has been writing since Daily Step landed). |
+| O3 | Monthly leaderboard **stays mechanically the same** (best-N-per-window). The **BITE relic drops**. Aggregation moves out of the page into the vertical. |
+| O4 | **Scoring: the game's own PUMBILITY replaces the homebrew PUMBILITY+** — per mix, through `ScoringConfiguration.PumbilityScoring(mix, includeCoOp)`. Consequences in §6. |
+| O5 | **Per-user Daily Step history ships** on this page. |
+
+Mock-round calls (R1–R9, all locked):
+
+| # | Round | Call |
+|---|---|---|
+| M1 | R2 | **The fold answers "what's up for competition now."** Daily Step is a slim **strip**, not a hero; the concept paragraph is deleted from the page — it lives in the **meta description** only. Weekly cards compress until the whole week fits ~3 rows at desktop. |
+| M2 | R4 | The record dialog speaks **Quick Record's vocabulary** (§8): live derived grade, plate dropdown, prefill from your current entry, in-place "Recorded" flash. |
+| M3 | R5 | **Photos are optional.** Disclaimers: a photo is your proof if a score's legitimacy is disputed; suspected cheaters will be *required* to attach photos for future competition entries (the enforcement mechanism itself is future scope — the words set the policy now). |
+| M4 | R5 | **No broken concept in the record dialogs.** Manual competitive entries are **score + plate, period** — always a pass. Plated brokens matter for personal recording (Quick Record → ledger), not competition; real brokens ride the official import. |
+| M5 | R6 | **Trust ladder on board rows**: ✔ officially imported > 📷 photo attached (opens the proof) > **blank** for bare self-reports (no "unverified" text — R8). Footer legend: "✔ imported · 📷 photo proof". |
+| M6 | R7 | **Boards show every entry.** The `MaxPlaces` cap dies in the shared `LeaderboardDialog`, so the home-page widgets inherit full boards in the same commit; the dialog scrolls; pagination only if a board ever outgrows a scroll (not expected under ~50). |
+| M7 | R7 | Unplayed cards show a **dim "—"** (hover title "Not played yet"), never words. **Suggested-only stays the default** for calibrated players, `?suggested=all` the escape. |
+| M8 | R8 | **Grade glues to the score** — one right-aligned pair per row, never orphaned next to the name. |
+| M9 | R8 | **Chart identity opens the shared `ChartDetailsDialog`** (video included) from every density and the Daily strip. Anchors keep real `/Chart/{id}` hrefs for the crawl mesh; the island upgrades the click. |
+| M10 | R8 | **Density switcher is on-page UI** — the Tier Lists treatment (three small icon buttons, active = primary), right-aligned above the weekly grid. |
+| M11 | R9 | **No "Suggested" chips on cards** — the gold border is the only on-card signal; the filter note above the grid does the explaining. |
+| M12 | R9 | **Compact keeps one action**: a bottom-right **entry-count chip** (tier-list corner-chip vocabulary) opens the leaderboard. Record has no Compact affordance by design — Compact is a scanning mode. |
 
 ## 2. Sins this pays down
 
-The 2026-07 audit of [WeeklyCharts.razor](../../ScoreTracker/ScoreTracker/Pages/Competition/WeeklyCharts.razor)
-against [UX-GUIDELINES.md](../UX-GUIDELINES.md), kept here as the acceptance list:
+The 2026-07 audit of the old page against [UX-GUIDELINES.md](../UX-GUIDELINES.md), kept as the
+acceptance list:
 
 | Rule | Today | After |
 |---|---|---|
-| 1 — answer above the fold | Filter furniture renders before the first chart; no "your week" anywhere | Daily hero + weekly grid lead; controls become furniture (§4) |
-| 3 — one concept, one component | Hand-rolled per-chart leaderboard dialog beside the shared `LeaderboardDialog`; hand-rolled grade `MudImage`s off a hardcoded CDN URL; avatar `MudImage`s beside `UserLabel` | Shared `LeaderboardDialog`, `LetterGradeIcon`, `UserLabel`, `ScoreBreakdown` everywhere |
-| 5 — density | None — one fixed card grid | `Density__WeeklyCharts`: Comfortable / Compact / Table on the weekly grid (§8) |
-| 6 — filters are furniture | Selects strewn above content; "Leaderboard Type" floats mid-page with ambiguous scope; week selection is circuit state | Week + type are **URL state** (crawlable links); communities a compact disclosure form above the board they filter (§5) |
-| 7 — +40% text | ~10 raw-English strings (submit dialog warning, dialog headers, snackbars, `Singles/Doubles/CoOp`, admin button); a dead localized key with 2024 dates baked in | Every string through `L[…]`, all nine locales, in the same commit each key lands |
-| 9 — loading looks like the layout | One monolithic sequential `OnInitializedAsync` (N+1 per community and per week-of-month); blank page until the last query; no empty states | Static core arrives *with the document* (no skeleton can beat that); islands have fixed footprints; every section has a named empty state (§4) |
-| 10 — thumbs first | No dock; primary actions are per-card icon slivers; admin button parked after four `<br/>`s | Page dock with section jumps + reset countdown; record stays per-card but thumb-sized in Comfortable/Compact (§4) |
+| 1 — answer above the fold | Filter furniture renders before the first chart; no "your week" anywhere | One header row (title · your chips · pickers), the Daily strip, and the whole week's grid land in the first viewport (M1) |
+| 3 — one concept, one component | Hand-rolled per-chart leaderboard dialog beside the shared `LeaderboardDialog`; hand-rolled grade `MudImage`s off a hardcoded CDN; avatar `MudImage`s beside `UserLabel` | Shared `LeaderboardDialog`, `ChartDetailsDialog`, `LetterGradeIcon`, `UserLabel`, `ScoreBreakdown` everywhere |
+| 5 — density | None — one fixed card grid | `Density__WeeklyCharts`: Comfortable / Compact / Table, switcher above the grid (M10/M12) |
+| 6 — filters are furniture | Selects strewn above content; "Leaderboard Type" floats mid-page; week selection is circuit state | Week + type are **URL state** (crawlable links); communities a compact disclosure form; type pills live in the monthly section header |
+| 7 — +40% text | ~10 raw-English strings; a dead localized key with 2024 dates baked in | Every string through `L[…]`, ×9 locales, in the same commit each key lands |
+| 9 — loading looks like the layout | Monolithic sequential `OnInitializedAsync` (N+1 per community and per week); blank until the last query; no empty states | Static core arrives *with the document*; islands have fixed footprints; every section has a named empty state |
+| 10 — thumbs first | No dock; admin button parked after four `<br/>`s | Page dock (mobile) with section jumps + reset countdown; admin action moves into the dialog host |
 
-Non-UX repairs riding along: `@inject IUserRepository` leaves the page (queries return
-display-ready rows, §7); dead compute deleted (`_userCharts`/`_userTopFour*`/`_userTotalPlace`
-computed and never rendered, `_countryFlags` never read); the 10 MB limit that reports "20MB";
-five raw `DateTimeOffset.Now` calls (the reset-drift bug class daily-step.md §6 diagnosed);
-the stray `@if` inside a C# method; zero test coverage.
+Non-UX repairs riding along: `@inject IUserRepository` leaves the page (§7); dead compute
+deleted (`_userCharts`/`_userTopFour*`/`_userTotalPlace` computed and never rendered,
+`_countryFlags` never read); the 10 MB limit that reports "20MB"; five raw `DateTimeOffset.Now`
+calls; the stray `@if` inside a C# method; zero test coverage.
 
-**Untouched**: `api/weeklyCharts` (contract-pinned by `Tests.Api`), both home widgets, the
+**Untouched**: `api/weeklyCharts` (contract-pinned by `Tests.Api` — see the §7 caution), the
 Discord card path (`GetUserWeeklyPlacementsQuery`), the rotation sagas and their cron slots.
 
 ## 3. The render split
 
-### 3.1 Mechanism — the framework's own per-page opt-out
+### 3.1 Mechanism — the framework's own per-page opt-out ✅ landed
 
 Verified present in the installed net10.0.9 shared framework:
 `ExcludeFromInteractiveRoutingAttribute` (`Microsoft.AspNetCore.Components.dll`) and
 `HttpContext.AcceptsInteractiveRouting()` (`Microsoft.AspNetCore.Components.Endpoints.dll`).
 
-- `WeeklyCharts.razor` declares `@attribute [ExcludeFromInteractiveRouting]`. The interactive
-  router then treats every navigation to it as a full document load, and the endpoint renders
-  it **statically** — real HTML, live `HttpContext`, no circuit, no prerender double-render
-  (static rendering runs once; the prerender ban is about rendering *twice*).
-- `App.razor` makes the render mode conditional — the standard shape:
-  `IComponentRenderMode? PageRenderMode => HttpContext.AcceptsInteractiveRouting() ? Interactive : null;`
-  applied to **both** `<Routes>` and `<HeadOutlet>`. On every existing page that resolves to
-  today's exact behavior; on an excluded page both render statically, so the page's
-  `<PageTitle>`/`<HeadContent>` land in the raw HTML — the SEO payoff. The hardcoded fallback
-  `<title>` emits only when interactive routing is accepted (an excluded page owns its title;
-  two `<title>`s is a crawler ambiguity).
-- **This is the one commit the chart-details pilot also needs.** Kept mechanism-only and
-  page-free so either branch can carry it and the other rebases it away.
+- `WeeklyCharts.razor` declares `@attribute [ExcludeFromInteractiveRouting]` → static SSR:
+  real HTML, live `HttpContext`, no circuit for the page region; the interactive router
+  full-loads across its boundary. Render once — never prerender (the ban stands).
+- `App.razor`'s `PageRenderMode => AcceptsInteractiveRouting() ? Interactive : null` rides both
+  `<Routes>` and `<HeadOutlet>`; the hardcoded fallback `<title>` yields to a static page's own
+  head. **This is the one commit the chart-details pilot also needs** — mechanism-only,
+  page-free, rebased away by whichever branch merges second.
 
 ### 3.2 The static core
 
-Everything you can *read* renders statically, anonymous and signed-in alike: the Daily Step
-hero and its board, the weekly grid (jackets, bubbles, top-3s, entry counts), your per-chart
-entries and standing (static SSR reads the auth cookie — personalization is per-request
-server-side, **not** an island), the monthly table with expandable per-player best-lists
-(native `<details>` in the row — the shell's mix-picker precedent), the daily history, the
-scoring legend, and every empty state. Display vocabulary in static regions is already
-sanctioned by static-shell.md: `SongImage`, `DifficultyBubble`, `LetterGradeIcon`,
-`ScoreBreakdown`, `UserLabel` — with the rule that **no static row may rely on a Mud popover**
-(no `MudTooltip` modes; the number is always printed, per UX rule 8).
+Everything you can *read* renders statically, anonymous and signed-in alike: the Daily strip
+and its standing, the weekly grid (all densities are server-rendered variants of the same
+rows), your per-chart lines, the monthly table with `<details>` row expansion, the daily
+history, the scoring legend, every empty state, and the not-yet-featured pool behind
+`?pool=1`. Static display vocabulary per static-shell.md: `SongImage`, `DifficultyBubble`,
+`LetterGradeIcon`, `ScoreBreakdown`, `UserLabel`; `--mix-*` tokens only; no Mud popover
+dependencies; numbers always printed.
 
-### 3.3 Exactly one island
+### 3.3 One island: the dialog host
 
-`ChallengeDialogHost` — one `@rendermode Interactive` root hosting the three dialogs: **Record**
-(score/plate/broken/photo, the photo requirement unchanged), the shared **`LeaderboardDialog`**
-(full per-chart board, `MaxPlaces` 10 weekly / 50 daily, `Ascending` on Limbo), and the admin
-**rotate** confirm. Static buttons carry `data-challenge-action="record|board|rotate"` +
-`data-chart-id`; a small `wwwroot/js/challenge-board.js` registers one delegated click listener
-and forwards to the host's `DotNetObjectReference`. One island, zero per-card circuit weight,
-buttons paint with the document. The host self-loads dialog data on demand (the chart-details
-island grammar: self-loading, keyed by primitive ids — parameters cross a serialization
-boundary, so nothing rich crosses it). Mud popovers work because `MudProviders` mounts ahead of
-every island in App.razor — the Stage-1 cross-root proof, unchanged.
-
-Buttons are live once the circuit connects (sub-second); until then they are honest inert
-HTML — same progressive posture as the shell's static nav.
+`ChallengeDialogHost` — one `@rendermode Interactive` root hosting **three dialogs plus the
+admin action**: **Record** (§8), the shared **`LeaderboardDialog`** (§5), the shared
+**`ChartDetailsDialog`** (M9), and the admin rotate confirm (publishes
+`RotateWeeklyChartsCommand`). Static elements carry `data-challenge-action` +
+`data-chart-id`; `wwwroot/js/challenge-board.js` registers one delegated click listener and
+forwards to the host's `DotNetObjectReference`. Chart-identity anchors keep their real
+`/Chart/{id}` hrefs — crawlers follow them (the internal-link mesh), the listener
+`preventDefault`s and opens the dialog for humans. The host self-loads dialog data on demand,
+keyed by primitive ids (the chart-details island grammar). Mud popovers work because
+`MudProviders` mounts ahead of every island (the Stage-1 cross-root proof).
 
 ### 3.4 Layout, head, navigation
 
-- **`Shared/StaticPageLayout.razor`** (new, ~10 lines): `MudContainer` + `@Body`. MainLayout is
-  circuit-shaped (recap `MudDialog` could static-render stuck open, `LocationChanged` wiring,
-  JS-interop lifecycle, `PageDockService`) — the static page does not fight it, it opts out via
-  `@layout`. The dock renders as plain markup from the page itself (§4); `page-dock.js` already
-  operates on the class, not the component.
-- Mix resolution: the page reads the request itself (that is static SSR's whole advantage) —
-  selected mix via `IUiSettingsAccessor`, then **any mix without a weekly board falls back to
-  Phoenix** (`mix is not (Phoenix or Phoenix2) → Phoenix`, superseding the XX-only check). No
-  legacy-mix gate needed.
-- Head: `<PageTitle>` "Weekly Charts — PIU Scores" (localized), `<HeadContent>` meta
-  description naming the concept and the week's chart count, canonical `/WeeklyCharts` (filter
-  variants canonicalize to the clean URL), OG title/description/image (the current daily
-  jacket), and a JSON-LD `ItemList` of this week's charts. `/WeeklyCharts` joins the sitemap
-  (it is absent today).
-- Navigation: links *to* the page from circuit pages full-load (the attribute's contract);
-  links *out* are plain anchors. Enhanced nav stays off app-wide, so nothing new to test there.
+- **`Shared/StaticPageLayout.razor`** ✅ landed: `MudContainer` + `@Body` — MainLayout is
+  circuit-shaped and static pages opt out via `@layout`. The dock renders as plain markup from
+  the page; `challenge-board.js` calls `shell.setDockState(true, false)` on load.
+- Mix resolution: request-side via `IUiSettingsAccessor`; **any mix without a weekly board
+  falls back to Phoenix** (`mix is not (Phoenix or Phoenix2) → Phoenix`).
+- Head: localized `<PageTitle>`, `<HeadContent>` meta description **carrying the concept copy
+  the fold no longer holds** (M1), canonical `/WeeklyCharts` (filter variants canonicalize to
+  clean), OG tags (the daily jacket), JSON-LD `ItemList` of the week's charts, sitemap entry
+  (absent today).
+- Navigation: links to the page full-load (the attribute's contract); links out are plain
+  anchors. Enhanced nav stays off app-wide.
 
 ### 3.5 Explicitly not here
 
-Output caching / CDN work — the production `no-store` header and ARR-affinity cookies
-(static-shell.md D18) are a platform fight the chart-details P3 owns. Crawlability does not
-need caching; caching is a later perf bonus. Also not here: any change to other pages' render
-modes.
+Output caching / CDN (the D18 platform fights — chart-details P3 owns the groundwork); other
+pages' render modes; the cheater photo-enforcement mechanism (M3 — needs a per-user flag and
+an admin surface; the disclaimer ships now, the lever when first needed).
 
-## 4. Anatomy
+## 4. Anatomy (R9)
 
-Section order = answer → evidence → history → methodology. Sections carry anchors
-(`#daily`, `#weekly`, `#monthly`, `#history`); the page dock (mobile) is static markup with
-jump links + the next-reset countdown (server-computed text; `challenge-board.js` ticks it).
+Sections carry anchors (`#daily`, `#weekly`, `#monthly`, `#history`); the mobile dock is static
+markup with jump links + the next-reset countdown.
 
-1. **Header strip** — h1, one localized sentence of concept copy (the crawlable pitch: new
-   charts Monday, a fresh chart daily at midnight ET, Limbo Thursdays-or-whenever), the week
-   picker (disclosure of past-week **links**), and for signed-in players the "your week" line:
-   charts played / suggested remaining / current monthly place.
-2. **Daily Step hero** (`#daily`) — jacket-led card: chart identity (links to `/Chart/{id}`),
-   Limbo banner on Limbo days ("lowest passing score wins"), top-3 rows + your row, entry
-   count, "resets in …", Record + full-board buttons. Empty state: "Today's Step posts at
+1. **Header row** — h1, the "your week" chips (`Played 4/18` · `3 suggested left` ·
+   `Monthly #7`), and right-aligned pickers: **Week** (a disclosure of past-week **links** —
+   `?week=…`) and **Communities** (checkbox disclosure, GET form, persisted). No prose.
+2. **Daily Step strip** (`#daily`) — one slim bar: jacket thumb (chart-details on click),
+   "Daily Step" kicker + chart name + bubble, the top-3 inline, your standing chip, count +
+   "resets in …", Record + Board buttons. Limbo Day = same bar, secondary-color edge, a
+   "Limbo — lowest pass wins" chip, ascending board. Empty state: "Today's Step posts at
    midnight." (existing key).
-3. **Weekly grid** (`#weekly`) — the density-managed grid (§8). Card = jacket header +
-   `DifficultyBubble` + top-3 (`ScoreBreakdown` + `UserLabel`) + your entry line when you sit
-   past third + entry-count button (full board) + Record. Suggested charts wear a chip;
-   the suggested-only toggle is presentation (§8). Jacket links to `/Chart/{id}` — the
-   YouTube button drops (the chart page owns video). Empty state: "This week's charts post
-   Monday at midnight ET."
-4. **Monthly board** (`#monthly`) — type links (Combined / Singles / Doubles / Co-Op → `?type=`),
-   the window subtitle (week N of the month, dates), then the table: rarity-ramp place, player,
-   top-4 chart chips, count (a `<details>` disclosure expanding the player's full best-list),
-   PUMBILITY total. Empty state: "Scores land here as boards close."
-5. **Your Daily Step history** (`#history`, signed-in) — last 14 days: date, chart chip, Limbo
-   tag, place/total that day, grade + score. Empty state names the action ("Play today's Step
-   to start your streak").
-6. **Scoring legend** — rendered from the active mix's `ScoringConfiguration` dictionaries
-   (never hardcoded values): grade multipliers (`LetterGradeIcon`), plate bonuses (plate art),
-   and the three sentences: best 4 per week window count; broken plays score 0; co-op counts on
-   Phoenix, never on Phoenix 2, and the Co-Op view ranks raw score (§6).
-7. **The pool** (`?pool=1`) — the not-yet-rotated chart list (today's "Show Remaining Charts"
-   dialog), server-rendered only when asked, grouped by level. A real URL, so it is also
-   crawlable inventory.
-8. **Admin** — the rotate trigger, admin-only, restyled as a quiet card at the true bottom
-   (via the dialog host's confirm — it publishes the same `RotateWeeklyChartsCommand`).
+3. **Weekly grid** (`#weekly`) — grid bar: heading + count/rotation sub + suggested filter note
+   ("showing suggested — show all N") + the **density switcher** right-aligned (M10).
+   Card (Comfortable): jacket + bubble (chart-details on click), name, **top-1 line** and
+   **your line** (dim "—" when unplayed), footer count + ▲ Record + ☰ Board. Compact: jacket
+   sticker + count-chip → board (M12). Table: rows with name, top-1, your line, count, actions.
+   Suggested = gold border only (M11). Empty state: "This week's charts post Monday at
+   midnight ET."
+4. **Monthly board** (`#monthly`) — type pills in the section header (`?type=` links), window
+   subtitle (week N, best M count, PUMBILITY), the table: rarity place, player, top-4 chips,
+   count (a `<details>` expansion with all counted scores), total. Empty state: "Scores land
+   here as boards close."
+5. **Your Daily Step history** (`#history`, signed-in) — last 14 days: date, chart chip
+   (chart-details on click), Limbo tag, place/total, grade + score pair. Empty state names the
+   action. Anonymous visitors get a sign-in CTA card instead.
+6. **Scoring legend** — rendered from the active mix's `ScoringConfiguration` (never
+   hand-copied): grade multipliers, Phoenix 2's additive plate bonuses, and the rules
+   sentences (§6).
+7. **The pool** (`?pool=1`) — the not-yet-featured chart list, server-rendered on its own URL.
+8. **Admin** — the rotate trigger via the dialog host's confirm; a quiet card at the bottom,
+   admin-only.
 
-## 5. URL grammar
+## 5. The shared LeaderboardDialog (changes land once, all consumers inherit)
 
-| URL | Meaning |
-|---|---|
-| `/WeeklyCharts` | Current week, Combined monthly view, persisted community filter — **canonical** |
-| `/WeeklyCharts?week=2026-07-06` | A finished week (its boards + that month's window) — every past week is a shareable, crawlable page; the picker is links, not a select |
-| `/WeeklyCharts?type=Single` (`Double`, `CoOp`) | Monthly view filter — canonicalizes to clean |
-| `/WeeklyCharts?suggested=all` | Escape hatch for the suggested-default (server-rendered default comes from your stats, as today) |
-| `/WeeklyCharts?pool=1` | Renders §4.7 |
-| Community filter | GET form (checkbox disclosure) → `?communities=a,b`; persisted to `WeeklyCharts__SelectedCommunities` on render when present, read back when absent. Signed-in only; never emitted as crawlable links |
+[LeaderboardDialog](../../ScoreTracker/ScoreTracker/Components/LeaderboardDialog.razor) already
+serves the Daily/Weekly widgets and UCS leaderboards. This overhaul changes it for everyone:
+
+- **The `MaxPlaces` cap dies** (M6): every entry renders; the content area scrolls; your row
+  glows in place. (Pagination is a future lever, not built now.)
+- **Trust ladder** (M5): ✔ imported · 📷 photo (click opens the proof photo) · blank.
+  Weekly rows can carry the tags once §7's `Source` column exists; daily rows already can —
+  but daily has no photo intake, so its ladder is ✔/blank in v1 (the mock's daily 📷 rows were
+  illustrative; giving Daily an optional photo is a trim-able follow-up, not in scope).
+- Row layout keeps grade+score+plate as the glued right group (M8 — `ScoreBreakdown` already
+  does this; the page's own compact rows follow the same rule).
 
 ## 6. Scoring — PUMBILITY per mix (O4)
 
-`ScoringConfiguration.PumbilityScoring(mix, includeCoOp: true)` prices every entry
-(per-chart points chips and monthly totals). Spelled-out consequences, all of them the game
+`ScoringConfiguration.PumbilityScoring(mix, includeCoOp: false)` prices per-chart points and
+monthly totals (the co-op flag is irrelevant here — see below). Consequences, all the game
 formulas' own rules:
 
-- **Phoenix board** → Phoenix PUMBILITY (the same config `PlayerRatingSaga` uses): co-op
-  included at its in-game 2000 base, brokens at 0.
-- **Phoenix 2 board** → Phoenix 2 PUMBILITY (`GradePlusPlate`, additive plate bonus, the
-  verified grade table): co-op **never** counts (the flag deliberately doesn't apply), brokens
-  at 0.
-- **Broken plays score 0** toward totals on both mixes (`StageBreakModifier = 0`). They still
-  appear on per-chart boards, ranked below passes as today. (Under PUMBILITY+ a broken AAA
-  earned full points — that quirk dies with it.)
-- **The Co-Op monthly view ranks by raw score sum** (top-4 raw scores) on both mixes — P2
-  prices all co-op at zero, and Phoenix's 2000-base would swamp the table anyway; raw score is
-  the only comparable co-op currency. Combined view keeps excluding co-op (now *consistent*
-  with P2's own rule instead of merely conventional).
-- **Ties**: stepped grade multipliers tie more often than PUMBILITY+'s continuous scale;
-  tiebreak = higher raw-score sum.
-- The legend (§4.6) renders from the config so the page can never drift from the engine. UI
-  says **PUMBILITY** — the game's word — everywhere PUMBILITY+ appeared.
+- **Phoenix board** → Phoenix PUMBILITY; **Phoenix 2 board** → Phoenix 2 PUMBILITY
+  (`GradePlusPlate`, additive plate bonus, verified grade table).
+- **Broken plays score 0** toward totals (`StageBreakModifier = 0`). They still appear on
+  per-chart boards, ranked by the existing policies. (Under PUMBILITY+ a broken AAA earned
+  full points — that quirk dies.)
+- **Co-op is never PUMBILITY-priced on this page**: Combined excludes co-op (now Phoenix 2's
+  own rule rather than convention), and the **Co-Op view ranks raw score sum** — the only
+  currency co-op charts share.
+- **Ties** break by total raw score (stepped grades tie more than the old continuous scale).
+- The legend renders from the config so the page can never drift from the engine. UI says
+  **PUMBILITY** everywhere PUMBILITY+ appeared.
 
-## 7. Contracts (WeeklyChallenge `Contracts/Queries/`, display-enriched via `IUserReader`)
+## 7. Contracts and data ✅ queries landed, Source pending
 
-All rows carry player display fields (name, avatar, country) so the page never touches
-`IUserRepository`. Chart pricing inside handlers uses the chart port the sagas already read
-(type + level per chart id suffice — `AdjustToTime` is off in both PUMBILITY configs).
+Landed (C1): `GetWeeklyBoardQuery`, `GetMonthlyLeaderboardQuery`, `GetDailyStepBoardQuery`,
+`GetUserDailyStepHistoryQuery` — display-enriched via `IUserReader` (the page drops
+`IUserRepository`), priced per §6, one batched history read (the per-week N+1 died), handlers
+on the existing sagas with component tests.
 
-| Query | Returns | Notes |
+Still to land (the trust ladder's data):
+
+- **`Source` column on the weekly entries table** (`WeeklyUserEntry` entity): `Official` |
+  `Manual`, migration defaults existing rows to `Official` (historically imports dominate and
+  photos were mandatory for the manual path). Write paths: the import consumer stamps
+  Official; `RegisterWeeklyChartScoreCommand` stamps Manual.
+- **⚠ The API golden caution**: `api/weeklyCharts` serializes weekly entries and is pinned by
+  `Tests.Api`. The shared `WeeklyTournamentEntry` record does **not** grow a Source property —
+  the entity column surfaces only through `WeeklyBoardRow` (which gains `Source` + the photo
+  URL for the 📷 tier). Run the API goldens in the same commit as the migration to prove the
+  wire shape never moved.
+- The 📷 tier derives from the entry's existing nullable `PhotoUrl` — no third flag.
+- `RegisterWeeklyChartScoreCommand` semantics per M3/M4: photo optional (already nullable),
+  `IsBroken` always false from the dialog.
+
+## 8. The record dialog (Quick Record vocabulary, M2–M4)
+
+One dialog, two modes, hosted by the island:
+
+- **Fields**: score (live derived grade beside it, display-only) + plate dropdown
+  (shorthands; empty = no plate). **No broken control of any kind.**
+- **Prefill from your current entry** — an edit, not a blank. A fresh photo is never
+  prefilled: it proves *this* score.
+- **Weekly adds the optional photo block**: add → uploading (progress) → done (thumb +
+  Replace/Remove), captioned "Optional — a photo is your proof if a score's legitimacy is ever
+  disputed," footnoted "Suspected cheaters will be required to attach photos for future
+  competition entries."
+- **Daily**: score + plate only (no photo, always a pass — `RecordDailyStepScoreCommand`
+  unchanged).
+- **Submit** enables on score alone → in-place **"Recorded"** flash (check, chart, grade,
+  score), auto-dismiss ~1.4s, no snackbar.
+
+## 9. Commit order
+
+l10n keys land ×9 locales **within each commit** (house rule). ✅ = already in on this branch.
+
+| # | SHA | Content |
 |---|---|---|
-| `GetWeeklyBoardQuery(Mix, WeekStart?, UserId?, CommunityFilter?)` | Per chart: top-3 rows, entry count, caller's entry + place, suggested flag, board expiration | Replaces the page's `GetWeeklyCharts` + `GetWeeklyChartEntries` + user-lookup cascade (those stay for widgets/API). Past weeks served by the same query via `WeekStart`. Suggestion via `WeeklyChartSuggestionPolicy` + `IPlayerStatsReader` when `UserId` present |
-| `GetMonthlyLeaderboardQuery(Mix, AnchorWeek?, Type?, UserId?, CommunityFilter?)` | Window meta (weeks, dates, week-N) + ordered rows: place, player, top-4 entries with points, total, full best-list | One repo read over the window's dates — the per-week N+1 dies. Prices per §6; `Type = CoOp` ranks raw score |
-| `GetDailyStepBoardQuery(Mix, UserId?)` | Board meta (chart id, IsLimbo, expiration) + ordered rows + caller's row + source/community sets for the dialog | The page-side sibling of the widget's raw reads; Limbo ordering ascending, brokens excluded on Limbo (existing policy) |
-| `GetUserDailyStepHistoryQuery(UserId, Mix, Take)` | Per day: ForDate, chart id, IsLimbo, Place, TotalThatDay, Score, Plate, IsBroken | Reads `UserDailyStepPlacing` (+ per-date entry counts). First consumer of the L6 history table |
-
-Handlers live on the existing sagas (`WeeklyTournamentSaga` / `DailyStepSaga`) as
-`IRequestHandler`s with component tests; no schema changes, no new tables.
-
-## 8. Presentation preferences
-
-- **Density** (`Density__WeeklyCharts`, default Comfortable): Comfortable cards / Compact
-  sticker-sheet / Table rows, all three server-rendered from the same rows. Toggle =
-  `challenge-board.js` swaps a `data-density` attribute (instant, no reload, no circuit) and
-  POSTs the persisted value.
-- **Suggested-only** toggle: same JS pattern over `data-suggested` card attributes;
-  server-rendered default from stats (as today); not persisted (as today).
-- **`POST /Preferences/Set`** (new, tiny MVC controller in the `/Mix/Set` / `/Culture/Set`
-  lineage): authenticated, allowlisted key prefixes (`Density__`), writes through
-  `IUiSettingsAccessor`. Anonymous visitors get the in-page toggle without persistence.
-
-## 9. Commit plan
-
-l10n keys land ×9 locales **within each commit** (house rule), never as a sweep commit.
-
-| C | Content |
-|---|---|
-| C1 | **Vertical read model**: the four §7 queries + repo methods + saga handlers + builders + component tests. Nothing visual changes |
-| C2 | **Static-page mechanism** (the shared commit): App.razor conditional `PageRenderMode` + fallback-title guard; `StaticPageLayout`; nothing uses it yet |
-| C3 | **The static core**: WeeklyCharts rebuilt on C1+C2 — anatomy §4, URL grammar §5, scoring display §6, empty states, dock, dead-code deletion. Old dialogs/toggles temporarily absent (page is read-complete, act-light for one commit) |
-| C4 | **The island**: `ChallengeDialogHost` + `challenge-board.js` bridge + Record/board/rotate wired through the shared `LeaderboardDialog` |
-| C5 | **Presentation prefs**: density variants + suggested toggle + `POST /Preferences/Set` |
-| C6 | **Head/SEO**: PageTitle/HeadContent/OG/JSON-LD, sitemap entry, canonical rules |
-| C7 | **Tests as facts**: bUnit over the §4 components (static markup, empty states, density variants); E2E — anonymous GET of `/WeeklyCharts` contains this week's chart names in raw HTML (the payoff, pinned), plus one signed-in record round-trip |
-| C8 | **Doc sync**: UX-GUIDELINES (static-page grammar note if it graduates a pattern), daily-step.md L6 flip, DATABASE-SCHEMA untouched (no new tables), this doc's status stamp |
+| ✅ 0 | `53d1cb2d` | **Design doc v1** (this file's first cut) |
+| ✅ 1 | `a6048ee8` | **Vertical read model**: the four §7 queries + repo methods + saga handlers + PUMBILITY pricing + 17 component tests. Fast suites 1309/60/102 |
+| ✅ 2 | `0573d0e3` | **Static-page mechanism**: App.razor conditional `PageRenderMode` + fallback-title guard + `StaticPageLayout`. Mechanism-only; shared with the chart-details pilot |
+| — | | *(mock rounds R1–R9 happened here; this doc updated to as-decided)* |
+| 3 | | **Trust source schema**: `Source` on `WeeklyUserEntry` + migration + DATABASE-SCHEMA row; import stamps Official, manual command stamps Manual; `WeeklyBoardRow` gains `Source` + `PhotoUrl`; **API goldens run in-commit** (§7 caution); saga/component tests |
+| 4 | | **Shared LeaderboardDialog** (§5): cap removed (full board, scrolling), trust tags ✔/📷/blank with photo-open, consumers untouched by construction; bUnit over the dialog states |
+| 5 | | **The static core**: WeeklyCharts rebuilt to the R9 anatomy (§4) on `[ExcludeFromInteractiveRouting]` + `StaticPageLayout` — header row, Daily strip, dense grid (all three density variants server-rendered; switcher markup present), monthly, history, legend, pool, empty states, dock markup, URL grammar, dead-code deletion, l10n ×9. Read-complete, act-light for one commit (buttons render; the island wires them next) |
+| 6 | | **The island**: `ChallengeDialogHost` (Record §8 + LeaderboardDialog + ChartDetailsDialog + admin rotate) + `challenge-board.js` (delegated bridge, href-upgrade clicks, dock state, countdown tick) |
+| 7 | | **Presentation prefs**: density switcher live (Tier Lists pattern) + `Density__WeeklyCharts` persistence via `POST /Preferences/Set` (allowlisted keys, `/Mix/Set` lineage) + suggested toggle (default on for calibrated players, `?suggested=all` escape) |
+| 8 | | **Head/SEO**: PageTitle/HeadContent (meta description carries the concept copy), OG, JSON-LD ItemList, canonical rules, sitemap entry |
+| 9 | | **Tests as facts**: bUnit over the section components (markup, empty states, density variants, trust tags); E2E — anonymous GET of `/WeeklyCharts` contains chart names + title + JSON-LD in raw HTML (the payoff, pinned) + one signed-in record round-trip through the island |
+| 10 | | **Doc sync**: UX-GUIDELINES (static-page grammar + trust-ladder vocabulary notes), daily-step.md L6 flip, this doc's as-built stamp, DATABASE-SCHEMA verified (row added at #3) |
 
 ## 10. Verification
 
-- `dotnet test` fast suites green per commit; Integration/E2E at C7.
-- The SEO fact: `curl -s https://localhost/WeeklyCharts` (anon) contains chart names, the
-  concept sentence, `<title>Weekly Charts`, and the JSON-LD block — asserted in E2E, eyeballed
-  via Aspire before merge.
-- Localization: every new key present in all nine resx files (`grep -c` parity).
-- `UiColorTokenTests` allowlist only shrinks.
+- Fast suites green per commit; Integration/E2E at #9.
+- The SEO fact: anonymous GET of `/WeeklyCharts` contains chart names, `<title>`, the meta
+  description, and the JSON-LD block — asserted in E2E, eyeballed via Aspire before merge.
+- Localization: every new key present in all nine resx files.
+- `UiColorTokenTests` allowlist only shrinks. API goldens prove `api/weeklyCharts` never moved.
 
-## 11. Open
+## 11. Open (deliberately parked)
 
-- The `<details>`-heavy static grammar (monthly row expansion, week picker, community form) has
-  no field test yet at phone widths — first UX round after C3 decides if any of it wants
-  promotion into the island.
-- `page-dock.js` interplay with a dock that exists at first paint (no circuit re-sync): verify
-  during C3; the script was written for circuit-born docks.
-- Whether the suggested-chip treatment reads at Compact density (may collapse to a border tick).
+- **Daily photos**: the daily record has no photo intake, so daily boards cap at ✔/blank.
+  Adding the same optional photo block to Daily is cheap if wanted later.
+- **Record from Compact**: none by design (M12); revisit only if players ask.
+- **Photo-required enforcement for suspected cheaters** (M3): per-user flag + admin surface,
+  future scope; the dialog's disclaimer already states the policy.
+- **Board pagination**: only if a board outgrows a scrollable dialog (~50+ sustained).
+- The `<details>`-heavy static grammar (monthly expansion, pickers) gets its first phone-width
+  field test after commit #5.
 - Chart-details convergence: if that branch merges first with its own App.razor conditional,
-  C2 here rebases to nothing — coordinate at merge time, not before.
+  commit ✅2 here rebases to nothing — coordinate at merge time.
