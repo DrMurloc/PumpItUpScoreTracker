@@ -3931,6 +3931,91 @@ html.nav-away .page-dock,
     gap: 12px;
 }
 
+.chart-shelf-controls {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.chart-shelf-sort {
+    display: flex;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.chart-shelf-sort button {
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+    background: transparent;
+    border: 0;
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: color .12s, background .12s;
+}
+
+.chart-shelf-sort button + button {
+    border-left: 1px solid rgba(255, 255, 255, .12);
+}
+
+.chart-shelf-sort button[aria-pressed="true"] {
+    color: var(--mix-ink);
+    background: var(--mix-surface-muted);
+}
+
+.chart-shelf-sort button:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+.chart-shelf-hint,
+.chart-shelf-reach {
+    font-size: .74rem;
+    color: var(--mix-ink-muted);
+}
+
+.chart-shelf-reach {
+    margin-top: 10px;
+}
+
+.chart-shelf-filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.chart-shelf-fchip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 4px;
+    padding: 4px 4px 4px 8px;
+}
+
+.chart-shelf-fchip span {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.chart-shelf-fchip button {
+    background: transparent;
+    border: 0;
+    color: var(--mix-ink-muted);
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.chart-shelf-fchip button:hover {
+    color: var(--mix-primary);
+}
+
 .chart-shelf-nearmiss {
     margin-top: 18px;
 }

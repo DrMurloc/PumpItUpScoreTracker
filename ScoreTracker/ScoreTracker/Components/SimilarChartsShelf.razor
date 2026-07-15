@@ -3,54 +3,89 @@
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.ChartIntelligence.Contracts
 @using ScoreTracker.ChartIntelligence.Contracts.Queries
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services
 @namespace ScoreTracker.Web.Components
 @inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ChartScoringLevels ScoringLevels
 
 @* The similarity graph's shelf (docs/design/chart-similarity.md): cards naming the badges
-   each pair actually shares. Doubles as the internal link mesh — static content at
-   Stage 3, which is why the default list renders server-side with no interaction. *@
+   each pair actually shares. Doubles as the internal link mesh.
+   Three questions, three mechanisms — the shelf is where the last two land. Similarity is
+   precalculated and never re-scored here; DIFFICULTY is the ordering, applied per viewer at
+   read time; METADATA is the filters, which reduce the target list and recompute live
+   (filtering the stored top-20 would return nothing — those twenty are the nearest charts
+   overall, so any filter worth applying excludes all of them).
+   The static-list/island split rides with P3: prerendering is off permanently and there is
+   no render-mode infrastructure on this branch yet, so today the whole page is one
+   circuit and the cards are already real <a href>s. *@
 @if (_loaded)
 {
+    <div class="chart-shelf-controls">
+        <div class="chart-shelf-sort" role="group" aria-label="@L["Order by"]">
+            @foreach (var option in SortOptions)
+            {
+                <button type="button" disabled="@(!IsAvailable(option))"
+                        aria-pressed="@(_sort == option ? "true" : "false")"
+                        @onclick="() => SetSort(option)">@L[Label(option)]</button>
+            }
+        </div>
+        <span class="chart-shelf-hint">@L[Hint]</span>
+    </div>
+    @if (_filter != null)
+    {
+        <div class="chart-shelf-filters">
+            <span class="chart-shelf-fchip">
+                @L[_filter.Label]<span>@_filter.Value</span>
+                <button type="button" @onclick="ClearFilter" aria-label="@L["Remove filter"]">×</button>
+            </span>
+        </div>
+    }
+
     @if (_matches.Count == 0 && _nearMisses.Count == 0)
     {
-        <MudText Typo="Typo.body2" Class="chart-shelf-empty">@L["Not enough data yet to name similar charts — the graph rebuilds nightly."]</MudText>
+        @* Two different nothings. A filter that narrowed to zero has to say what it
+           searched; a chart the crawl never covered has nothing to report a reach over. *@
+        <MudText Typo="Typo.body2" Class="chart-shelf-empty">
+            @(_filter != null
+                ? Reach(none: true)
+                : L["Not enough data yet to name similar charts — the graph rebuilds nightly."].ToString())
+        </MudText>
     }
     else
     {
         @if (_matches.Count == 0)
         {
-            @* Never an empty box: the tail is stored precisely so there is always
-               something honest to show. *@
+            @* Never an empty box: the tail is stored precisely so there is always something
+               honest to show. *@
             <MudText Typo="Typo.body2" Class="chart-shelf-empty">@L["No significant matches — here's the closest we could find."]</MudText>
-            <div class="chart-shelf">
-                @foreach (var entry in _nearMisses)
-                {
-                    @Card(entry)
-                }
-            </div>
         }
-        else
-        {
-            <div class="chart-shelf">
-                @foreach (var entry in _matches)
-                {
-                    @Card(entry)
-                }
-            </div>
-            @if (_nearMisses.Count > 0)
+        <div class="chart-shelf">
+            @foreach (var entry in _matches.Count == 0 ? _nearMisses : _matches)
             {
-                <details class="chart-shelf-nearmiss">
-                    <summary>@L["Didn't quite make the cut ({0})", _nearMisses.Count]</summary>
-                    <div class="chart-shelf">
-                        @foreach (var entry in _nearMisses)
-                        {
-                            @Card(entry)
-                        }
-                    </div>
-                </details>
+                @Card(entry)
             }
+        </div>
+        @if (_filter != null || _compared != null)
+        {
+            <p class="chart-shelf-reach">@Reach(none: _matches.Count == 0)</p>
+        }
+        @if (_matches.Count > 0 && _nearMisses.Count > 0)
+        {
+            <details class="chart-shelf-nearmiss">
+                <summary>@L["Didn't quite make the cut ({0})", _nearMisses.Count]</summary>
+                <div class="chart-shelf">
+                    @foreach (var entry in _nearMisses)
+                    {
+                        @Card(entry)
+                    }
+                </div>
+            </details>
         }
     }
 }
@@ -67,6 +102,18 @@
     /// <summary>How many near-misses are worth curiosity before it turns into a list of everything.</summary>
     internal const int NearMissCount = 10;
 
+    internal enum ShelfSort
+    {
+        /// <summary>The match order itself — the only option that shows it. Every difficulty sort reorders away from it.</summary>
+        None,
+        Community,
+        PassForMe,
+        ScoreForMe
+    }
+
+    private static readonly ShelfSort[] SortOptions =
+        { ShelfSort.None, ShelfSort.Community, ShelfSort.PassForMe, ShelfSort.ScoreForMe };
+
     [Parameter]
     public Guid ChartId { get; set; }
 
@@ -75,8 +122,16 @@
 
     private sealed record Entry(ChartSimilarityRecord Record, Chart Chart, decimal? Nps, string? VideoUrl);
 
+    private sealed record ActiveFilter(string Label, string Value);
+
     private bool _loaded;
+    private Guid _loadedFor;
     private decimal? _anchorNps;
+    private Chart? _anchor;
+    private ShelfSort _sort = ShelfSort.Community;
+    private ActiveFilter? _filter;
+    private int? _compared;
+    private IReadOnlyList<Entry> _all = Array.Empty<Entry>();
     private IReadOnlyList<Entry> _matches = Array.Empty<Entry>();
     private IReadOnlyList<Entry> _nearMisses = Array.Empty<Entry>();
 
@@ -84,12 +139,55 @@
         @<SimilarChartCard Chart="entry.Chart" Record="entry.Record" Nps="entry.Nps" AnchorNps="_anchorNps"
                            VideoUrl="entry.VideoUrl" @key="entry.Chart.Id"></SimilarChartCard>;
 
+    private bool IsAvailable(ShelfSort sort) =>
+        sort is ShelfSort.None or ShelfSort.Community || CurrentUser.IsLoggedIn;
+
+    private static string Label(ShelfSort sort) => sort switch
+    {
+        ShelfSort.None => "No sorting",
+        ShelfSort.Community => "Community",
+        ShelfSort.PassForMe => "Pass · for me",
+        _ => "Score · for me"
+    };
+
+    private string Hint => !IsAvailable(_sort)
+        ? "Sign in to order by your own tier lists"
+        : _sort switch
+        {
+            ShelfSort.None => "Strongest match first — no difficulty applied",
+            ShelfSort.Community => "Closest on the community tier lists and scoring level",
+            ShelfSort.PassForMe => "From your Pass tier list",
+            _ => "From your Score tier list"
+        };
+
+    /// <summary>
+    ///     What was searched, so "1 match" reads as a narrow filter rather than a broken
+    ///     feature. Only meaningful once a filter has actually narrowed something.
+    /// </summary>
+    private string Reach(bool none)
+    {
+        var compared = _compared ?? _all.Count;
+        var scope = _filter != null ? $"{L[_filter.Label]} {_filter.Value}" : L["within 2 levels"].ToString();
+        return none
+            ? L["Compared {0} charts ({1}) — none cleared the bar.", compared, scope].ToString()
+            : L["Compared {0} charts ({1}) — {2} matches.", compared, scope, _matches.Count].ToString();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
-        var edges = await Mediator.Send(new GetSimilarChartsQuery(ChartId, Mix));
+        if (ChartId == _loadedFor) return;
+        _loadedFor = ChartId;
+        _filter = null;
+        _compared = null;
+        _sort = ShelfSort.Community;
+        await Load(await Mediator.Send(new GetSimilarChartsQuery(ChartId, Mix)));
+    }
+
+    private async Task Load(IReadOnlyList<ChartSimilarityRecord> edges)
+    {
         if (edges.Count == 0)
         {
-            _matches = _nearMisses = Array.Empty<Entry>();
+            _all = _matches = _nearMisses = Array.Empty<Entry>();
             _loaded = true;
             return;
         }
@@ -100,16 +198,114 @@
         var videos = (await Mediator.Send(new GetChartVideosQuery(edges.Select(e => e.ChartId))))
             .ToDictionary(v => v.ChartId, v => v.VideoUrl.ToString());
         _anchorNps = analyses.GetValueOrDefault(ChartId)?.Nps;
+        _anchor = charts.GetValueOrDefault(ChartId);
 
-        var entries = edges
+        _all = edges
             .Where(e => charts.ContainsKey(e.ChartId))
             .Select(e => new Entry(e, charts[e.ChartId], analyses.GetValueOrDefault(e.ChartId)?.Nps,
                 videos.GetValueOrDefault(e.ChartId)))
             .ToArray();
-
-        // The graph hands over its whole tail; where the bar falls is ours.
-        _matches = entries.Where(e => e.Record.Score >= ScoreFloor).ToArray();
-        _nearMisses = entries.Where(e => e.Record.Score < ScoreFloor).Take(NearMissCount).ToArray();
+        await Split();
         _loaded = true;
+    }
+
+    /// <summary>
+    ///     The graph hands over its whole tail; where the bar falls is ours, and so is the
+    ///     order — similarity is never re-scored here.
+    /// </summary>
+    private async Task Split()
+    {
+        var ordered = await Ordered(_all);
+        _matches = ordered.Where(e => e.Record.Score >= ScoreFloor).ToArray();
+        _nearMisses = ordered.Where(e => e.Record.Score < ScoreFloor).Take(NearMissCount).ToArray();
+    }
+
+    private async Task<IReadOnlyList<Entry>> Ordered(IReadOnlyList<Entry> entries)
+    {
+        if (_sort == ShelfSort.None || _anchor == null) return entries;
+
+        if (_sort == ShelfSort.Community)
+        {
+            // Scoring level is the fine instrument, but ~46% of the catalog has none — so
+            // charts that have it are ordered by it and rank ahead of those that fall back
+            // to the community pass tier, which is a seven-bucket ordinal and ties freely.
+            var anchorLevel = await ScoringLevels.GetScoringLevel(_anchor.Id);
+            var tiers = await CommunityTiers();
+            var keyed = new List<(Entry Entry, int Group, double Distance)>();
+            foreach (var entry in entries)
+            {
+                var level = await ScoringLevels.GetScoringLevel(entry.Chart.Id);
+                if (anchorLevel != null && level != null)
+                    keyed.Add((entry, 0, Math.Abs(level.Value - anchorLevel.Value)));
+                else if (tiers.TryGetValue(_anchor.Id, out var anchorTier) &&
+                         tiers.TryGetValue(entry.Chart.Id, out var tier))
+                    keyed.Add((entry, 1, Math.Abs((int)tier - (int)anchorTier)));
+                else
+                    keyed.Add((entry, 2, 0));
+            }
+
+            return keyed.OrderBy(k => k.Group).ThenBy(k => k.Distance)
+                .ThenByDescending(k => k.Entry.Record.Score).Select(k => k.Entry).ToArray();
+        }
+
+        var lens = _sort == ShelfSort.PassForMe ? "Pass" : "Score";
+        var personal = await PersonalTiers(lens);
+        return entries
+            .OrderBy(e => personal.TryGetValue(e.Chart.Id, out var tier) ? (int)tier : int.MaxValue)
+            .ThenByDescending(e => e.Record.Score)
+            .ToArray();
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, TierListCategory>> CommunityTiers()
+    {
+        return (await Mediator.Send(new GetCommunityTierListQuery(Mix)))
+            .Where(e => e.Category != TierListCategory.Unrecorded)
+            .GroupBy(e => e.ChartId)
+            .ToDictionary(g => g.Key, g => g.First().Category);
+    }
+
+    /// <summary>
+    ///     The reader's own tier list across the folders the shelf reaches — one read per
+    ///     folder, because the blend is computed per (type, level).
+    /// </summary>
+    private async Task<IReadOnlyDictionary<Guid, TierListCategory>> PersonalTiers(string lens)
+    {
+        var result = new Dictionary<Guid, TierListCategory>();
+        if (_anchor == null || !CurrentUser.IsLoggedIn) return result;
+        foreach (var level in _all.Select(e => e.Chart.Level).Distinct())
+        {
+            var list = await Mediator.Send(new GetBlendedTierListQuery(_anchor.Type, level, Name.From(lens),
+                Personalized: true));
+            foreach (var entry in list.Entries.Where(e => e.Category != TierListCategory.Unrecorded))
+                result[entry.ChartId] = entry.Category;
+        }
+
+        return result;
+    }
+
+    private async Task SetSort(ShelfSort sort)
+    {
+        if (_sort == sort) return;
+        _sort = sort;
+        await Split();
+    }
+
+    private async Task ClearFilter()
+    {
+        _filter = null;
+        _compared = null;
+        await Load(await Mediator.Send(new GetSimilarChartsQuery(ChartId, Mix)));
+    }
+
+    /// <summary>
+    ///     Narrows the target list and recomputes — never a sieve over the stored top-20.
+    ///     Public so the page's filter affordances can drive it as they land.
+    /// </summary>
+    internal async Task ApplyFilter(GetFilteredSimilarChartsQuery query, string label, string value)
+    {
+        var result = await Mediator.Send(query);
+        _filter = new ActiveFilter(label, value);
+        _compared = result.ChartsCompared;
+        await Load(result.Matches);
     }
 }

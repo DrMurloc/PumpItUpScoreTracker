@@ -13,6 +13,9 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Components;
@@ -29,6 +32,7 @@ namespace ScoreTracker.Tests.Components;
 public sealed class SimilarChartsShelfTests : TestContext
 {
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<ICurrentUserAccessor> _currentUser = new();
 
     public SimilarChartsShelfTests()
     {
@@ -36,7 +40,10 @@ public sealed class SimilarChartsShelfTests : TestContext
         Services.AddMudServices(o => o.PopoverOptions.CheckForPopoverProvider = false);
         _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityTierListQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IEnumerable<SongTierListEntry>)Array.Empty<SongTierListEntry>());
         Services.AddSingleton(_mediator.Object);
+        Services.AddSingleton(_currentUser.Object);
         Services.AddScoped<ChartScoringLevels>();
         var localizer = new Mock<IStringLocalizer<App>>();
         localizer.Setup(l => l[It.IsAny<string>()])
@@ -177,6 +184,102 @@ public sealed class SimilarChartsShelfTests : TestContext
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
         Assert.Contains("Not enough data yet to name similar charts", cut.Markup);
+    }
+
+    private static string[] CardTitles(IRenderedFragment cut)
+    {
+        return cut.FindAll(".chart-shelf .chart-card-title h3").Select(e => e.TextContent.Trim()).ToArray();
+    }
+
+    [Fact]
+    public void PersonalSortsNeedASignInAndSaySo()
+    {
+        var anchor = Guid.NewGuid();
+        _currentUser.SetupGet(u => u.IsLoggedIn).Returns(false);
+        SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5)));
+
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+
+        var buttons = cut.FindAll(".chart-shelf-sort button");
+        // No sorting and Community always work; the two personal orders need a tier list.
+        Assert.False(buttons[0].HasAttribute("disabled"));
+        Assert.False(buttons[1].HasAttribute("disabled"));
+        Assert.True(buttons[2].HasAttribute("disabled"));
+        Assert.True(buttons[3].HasAttribute("disabled"));
+    }
+
+    [Fact]
+    public void SigningInUnlocksTheTierListSorts()
+    {
+        var anchor = Guid.NewGuid();
+        _currentUser.SetupGet(u => u.IsLoggedIn).Returns(true);
+        SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5)));
+
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+
+        Assert.All(cut.FindAll(".chart-shelf-sort button"), b => Assert.False(b.HasAttribute("disabled")));
+    }
+
+    [Fact]
+    public void NoSortingShowsTheMatchOrderItself()
+    {
+        // Every difficulty sort reorders away from the true match order — this is the only
+        // option that shows it, so it must not be quietly re-ranked.
+        var anchor = Guid.NewGuid();
+        var best = Edge(0.90, Badge("bracket", 0.5));
+        var worst = Edge(0.60, Badge("bracket", 0.5));
+        SetupEdges(anchor, worst, best);
+
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+        cut.FindAll(".chart-shelf-sort button")[0].Click();
+
+        // The graph already ordered them; the shelf hands them over untouched.
+        Assert.Equal(new[] { $"Song {worst.ChartId:N}", $"Song {best.ChartId:N}" }, CardTitles(cut));
+    }
+
+    [Fact]
+    public void CommunitySortOrdersByScoringLevelClosenessToTheAnchor()
+    {
+        var anchor = Guid.NewGuid();
+        var far = Edge(0.90, Badge("bracket", 0.5));
+        var near = Edge(0.60, Badge("bracket", 0.5));
+        SetupEdges(anchor, far, near);
+        // The anchor sits at 21.0; `near` is a tenth away and `far` is a full level away,
+        // so the weaker match leads despite scoring lower.
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, double>
+            {
+                [anchor] = 21.0, [near.ChartId] = 21.1, [far.ChartId] = 22.0
+            });
+
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+
+        Assert.Equal(new[] { $"Song {near.ChartId:N}", $"Song {far.ChartId:N}" }, CardTitles(cut));
+    }
+
+    [Fact]
+    public void CommunitySortFallsBackToTheTierListWhereNoScoringLevelExists()
+    {
+        // ~46% of the catalog has no scoring level. A chart that has one is ordered by it
+        // and ranks ahead of one that can only be placed by its coarse tier bucket.
+        var anchor = Guid.NewGuid();
+        var scored = Edge(0.60, Badge("bracket", 0.5));
+        var tieredOnly = Edge(0.90, Badge("bracket", 0.5));
+        SetupEdges(anchor, tieredOnly, scored);
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, double> { [anchor] = 21.0, [scored.ChartId] = 23.0 });
+        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityTierListQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IEnumerable<SongTierListEntry>)new[]
+            {
+                new SongTierListEntry("Pass Count", anchor, TierListCategory.Medium, 1),
+                new SongTierListEntry("Pass Count", tieredOnly.ChartId, TierListCategory.Medium, 2)
+            });
+
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+
+        // `scored` leads on a two-level gap; `tieredOnly` is an exact tier match but the
+        // coarser instrument, so it cannot jump the one we can actually measure.
+        Assert.Equal(new[] { $"Song {scored.ChartId:N}", $"Song {tieredOnly.ChartId:N}" }, CardTitles(cut));
     }
 
     private IRenderedComponent<SimilarChartCard> RenderCard(string? videoUrl = null,

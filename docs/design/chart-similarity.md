@@ -322,12 +322,20 @@ Measured on the Curiosity Overdrive ↔ BOOOM!! pair and the S20/D23 folders unl
 - **The floor value.** 0.55 was calibrated against a five-signal arithmetic mean that no longer
   exists. Meaningless until a run with skill+intensity only; owner will run the analyzer and
   calibrate from the distribution. It is a render constant, so this is a redeploy, not a job run.
-- **Static shelf vs interactive controls.** The shelf **is** the internal-link mesh and must sit in
-  the anonymous output cache — but sort and filters are interactive, and an island renders nothing
-  server-side (prerendering is off permanently). Settled shape: static server-rendered default list
-  (real `<a href>`, crawlable) + an island for the controls that swaps the list on interaction,
-  using the doc's `data-island-ready` pattern. The card's play button is a **sibling** of the `<a>`,
-  never a child — a `<button>` inside an `<a>` is invalid and the click targets collide.
+- **Static shelf vs interactive controls — settled, and gated on Stage 2.** The shelf **is** the
+  internal-link mesh and must sit in the anonymous output cache — but sort and filters are
+  interactive, and an island renders nothing server-side (prerendering is off permanently). Settled
+  shape: static server-rendered default list (real `<a href>`, crawlable) + an island for the
+  controls that swaps the list on interaction, using the `data-island-ready` pattern. The card's
+  play button is a **sibling** of the `<a>`, never a child — a `<button>` inside an `<a>` is invalid
+  and the click targets collide.
+  **The split is not built and cannot be on this branch.** `data-island-ready` exists only in these
+  design docs; the app is still classic Blazor Server (`AddServerSideBlazor`, no `@rendermode`
+  anywhere), so there is no render-mode infrastructure to island *into*. R6 therefore built the
+  controls as circuit components — which is what the whole page already is — and the packaging
+  rides with **P3**, once Stage 2 (`claude/static-shell-wave2-746ce2`) merges forward. What R6 did
+  guarantee is the part that would be expensive to retrofit: the cards are already real `<a href>`s
+  with the play button as a sibling, bUnit-pinned both ways.
 - **Video embed shape.** The card art is 16:9 so the video takes its exact box — no reflow, the grid
   never jumps. Nothing loads until asked (the hero's rule). Autoplay is unreliable unmuted, so
   expect a second click; don't let the UI promise playback.
