@@ -11,6 +11,12 @@ namespace ScoreTracker.Web.Services;
 ///     without touching the shelf. Values are English keys for <c>IStringLocalizer</c>.
 ///     An unmapped badge falls back to its raw name rather than vanishing, so a new
 ///     piucenter badge degrades to jargon instead of to nothing.
+///     These keys are deliberately **not** in the resx catalogues, so every locale renders
+///     the English term — which is exactly what the site already does with the whole skill
+///     vocabulary (`Skill.GetName()` never passes through the localizer, so "Brackets" and
+///     "Twists" are English in Korean and Japanese today). Routing them through
+///     <c>L[…]</c> anyway costs nothing and leaves the hook in place, so translating the
+///     pattern vocabulary later is a resx change and not a code change.
 /// </summary>
 internal static class SimilarityBadgeLabels
 {

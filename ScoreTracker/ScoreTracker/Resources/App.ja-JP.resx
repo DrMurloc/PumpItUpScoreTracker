@@ -4221,21 +4221,6 @@
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>似ている譜面を挙げるにはまだデータ不足です——グラフは毎晩再計算されます。</value>
   </data>
-  <data name="players score alike" xml:space="preserve">
-    <value>プレイヤーのスコア傾向が近い</value>
-  </data>
-  <data name="same skill profile" xml:space="preserve">
-    <value>スキル構成が同じ</value>
-  </data>
-  <data name="behaves the same for its level" xml:space="preserve">
-    <value>レベル比の挙動が同じ</value>
-  </data>
-  <data name="same intensity" xml:space="preserve">
-    <value>密度・強度が近い</value>
-  </data>
-  <data name="level neighbor" xml:space="preserve">
-    <value>近いレベル</value>
-  </data>
   <data name="Watch chart video" xml:space="preserve">
     <value>譜面動画を見る</value>
   </data>
@@ -4328,5 +4313,68 @@
   </data>
   <data name="From the similarity graph — evidence-weighted, rebuilt nightly." xml:space="preserve">
     <value>類似度グラフより——根拠で重み付けし、毎晩再計算。</value>
+  </data>
+  <data name="Close video" xml:space="preserve">
+    <value>動画を閉じる</value>
+  </data>
+  <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
+    <value>譜面{0}件を比較（{1}）— 基準を超えた譜面はありません。</value>
+  </data>
+  <data name="Compared {0} charts ({1}) — {2} matches." xml:space="preserve">
+    <value>譜面{0}件を比較（{1}）— {2}件一致。</value>
+  </data>
+  <data name="Didn't quite make the cut ({0})" xml:space="preserve">
+    <value>あと一歩だった譜面（{0}）</value>
+  </data>
+  <data name="Matched on" xml:space="preserve">
+    <value>一致した要素</value>
+  </data>
+  <data name="NPS" xml:space="preserve">
+    <value>NPS</value>
+  </data>
+  <data name="No significant matches — here's the closest we could find." xml:space="preserve">
+    <value>明確な一致はありません — 最も近い譜面です。</value>
+  </data>
+  <data name="Order by" xml:space="preserve">
+    <value>並び替え</value>
+  </data>
+  <data name="Remove filter" xml:space="preserve">
+    <value>フィルターを解除</value>
+  </data>
+  <data name="Watch {0}" xml:space="preserve">
+    <value>{0} の動画を見る</value>
+  </data>
+  <data name="within 2 levels" xml:space="preserve">
+    <value>レベル±2以内</value>
+  </data>
+  <data name="{0} BPM" xml:space="preserve">
+    <value>{0} BPM</value>
+  </data>
+  <data name="{0} NPS" xml:space="preserve">
+    <value>{0} NPS</value>
+  </data>
+  <data name="No sorting" xml:space="preserve">
+    <value>並び替えなし</value>
+  </data>
+  <data name="Pass · for me" xml:space="preserve">
+    <value>クリア · 自分基準</value>
+  </data>
+  <data name="Score · for me" xml:space="preserve">
+    <value>スコア · 自分基準</value>
+  </data>
+  <data name="Sign in to order by your own tier lists" xml:space="preserve">
+    <value>自分のティアリストで並び替えるにはログインしてください</value>
+  </data>
+  <data name="Strongest match first — no difficulty applied" xml:space="preserve">
+    <value>一致度順 — 難易度は考慮しません</value>
+  </data>
+  <data name="Closest on the community tier lists and scoring level" xml:space="preserve">
+    <value>コミュニティのティアリストとスコアレベルで最も近い順</value>
+  </data>
+  <data name="From your Pass tier list" xml:space="preserve">
+    <value>自分のクリアティアリストから</value>
+  </data>
+  <data name="From your Score tier list" xml:space="preserve">
+    <value>自分のスコアティアリストから</value>
   </data>
 </root>

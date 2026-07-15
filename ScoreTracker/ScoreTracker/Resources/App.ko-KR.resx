@@ -4101,21 +4101,6 @@
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>비슷한 채보를 꼽기엔 아직 데이터가 부족합니다 — 그래프는 매일 밤 다시 계산됩니다.</value>
   </data>
-  <data name="players score alike" xml:space="preserve">
-    <value>플레이어 점수 경향이 비슷함</value>
-  </data>
-  <data name="same skill profile" xml:space="preserve">
-    <value>스킬 구성이 동일</value>
-  </data>
-  <data name="behaves the same for its level" xml:space="preserve">
-    <value>레벨 대비 난이도 거동이 동일</value>
-  </data>
-  <data name="same intensity" xml:space="preserve">
-    <value>밀도/강도가 비슷함</value>
-  </data>
-  <data name="level neighbor" xml:space="preserve">
-    <value>이웃 레벨</value>
-  </data>
   <data name="Watch chart video" xml:space="preserve">
     <value>채보 영상 보기</value>
   </data>
@@ -4208,5 +4193,68 @@
   </data>
   <data name="From the similarity graph — evidence-weighted, rebuilt nightly." xml:space="preserve">
     <value>유사도 그래프에서 — 근거 가중치 기반, 매일 밤 재계산.</value>
+  </data>
+  <data name="Close video" xml:space="preserve">
+    <value>영상 닫기</value>
+  </data>
+  <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
+    <value>채보 {0}개 비교 ({1}) — 기준을 넘은 채보가 없습니다.</value>
+  </data>
+  <data name="Compared {0} charts ({1}) — {2} matches." xml:space="preserve">
+    <value>채보 {0}개 비교 ({1}) — {2}개 일치.</value>
+  </data>
+  <data name="Didn't quite make the cut ({0})" xml:space="preserve">
+    <value>아쉽게 탈락한 채보 ({0})</value>
+  </data>
+  <data name="Matched on" xml:space="preserve">
+    <value>일치 항목</value>
+  </data>
+  <data name="NPS" xml:space="preserve">
+    <value>NPS</value>
+  </data>
+  <data name="No significant matches — here's the closest we could find." xml:space="preserve">
+    <value>뚜렷한 일치 항목이 없습니다 — 가장 비슷한 채보입니다.</value>
+  </data>
+  <data name="Order by" xml:space="preserve">
+    <value>정렬 기준</value>
+  </data>
+  <data name="Remove filter" xml:space="preserve">
+    <value>필터 제거</value>
+  </data>
+  <data name="Watch {0}" xml:space="preserve">
+    <value>{0} 영상 보기</value>
+  </data>
+  <data name="within 2 levels" xml:space="preserve">
+    <value>레벨 ±2 이내</value>
+  </data>
+  <data name="{0} BPM" xml:space="preserve">
+    <value>{0} BPM</value>
+  </data>
+  <data name="{0} NPS" xml:space="preserve">
+    <value>{0} NPS</value>
+  </data>
+  <data name="No sorting" xml:space="preserve">
+    <value>정렬 안 함</value>
+  </data>
+  <data name="Pass · for me" xml:space="preserve">
+    <value>클리어 · 내 기준</value>
+  </data>
+  <data name="Score · for me" xml:space="preserve">
+    <value>점수 · 내 기준</value>
+  </data>
+  <data name="Sign in to order by your own tier lists" xml:space="preserve">
+    <value>내 티어 리스트로 정렬하려면 로그인하세요</value>
+  </data>
+  <data name="Strongest match first — no difficulty applied" xml:space="preserve">
+    <value>일치도 순 — 난이도 미적용</value>
+  </data>
+  <data name="Closest on the community tier lists and scoring level" xml:space="preserve">
+    <value>커뮤니티 티어 리스트와 채점 레벨 기준으로 가장 가까운 순</value>
+  </data>
+  <data name="From your Pass tier list" xml:space="preserve">
+    <value>내 클리어 티어 리스트 기준</value>
+  </data>
+  <data name="From your Score tier list" xml:space="preserve">
+    <value>내 점수 티어 리스트 기준</value>
   </data>
 </root>

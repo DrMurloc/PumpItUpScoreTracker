@@ -4143,21 +4143,6 @@
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>Mrgl no datarlgl — mrgl nightly rebuildrgl!</value>
   </data>
-  <data name="players score alike" xml:space="preserve">
-    <value>mrgl players alike-rgl</value>
-  </data>
-  <data name="same skill profile" xml:space="preserve">
-    <value>mrgl same skillrgl</value>
-  </data>
-  <data name="behaves the same for its level" xml:space="preserve">
-    <value>mrgl same-rgl level</value>
-  </data>
-  <data name="same intensity" xml:space="preserve">
-    <value>mrgl same intensrgl</value>
-  </data>
-  <data name="level neighbor" xml:space="preserve">
-    <value>mrgl neighborgl</value>
-  </data>
   <data name="Watch chart video" xml:space="preserve">
     <value>Mrgl video-rgl!</value>
   </data>
@@ -4250,5 +4235,68 @@
   </data>
   <data name="From the similarity graph — evidence-weighted, rebuilt nightly." xml:space="preserve">
     <value>Mrgl graphrgl nightly!</value>
+  </data>
+  <data name="Close video" xml:space="preserve">
+    <value>Mrgl close videorgl</value>
+  </data>
+  <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
+    <value>Mrgl compared {0} chartz ({1}) — nrglne cleared the barrgl.</value>
+  </data>
+  <data name="Compared {0} charts ({1}) — {2} matches." xml:space="preserve">
+    <value>Mrgl compared {0} chartz ({1}) — {2} matchesrgl.</value>
+  </data>
+  <data name="Didn't quite make the cut ({0})" xml:space="preserve">
+    <value>Mrgl didn't quite make the cutrgl ({0})</value>
+  </data>
+  <data name="Matched on" xml:space="preserve">
+    <value>Mrgl matched onrgl</value>
+  </data>
+  <data name="NPS" xml:space="preserve">
+    <value>NPSrgl</value>
+  </data>
+  <data name="No significant matches — here's the closest we could find." xml:space="preserve">
+    <value>Nrgl significant matchesrgl — here's the closest we crgluld find.</value>
+  </data>
+  <data name="Order by" xml:space="preserve">
+    <value>Mrgl order byrgl</value>
+  </data>
+  <data name="Remove filter" xml:space="preserve">
+    <value>Mrgl remove filterrgl</value>
+  </data>
+  <data name="Watch {0}" xml:space="preserve">
+    <value>Mrgl watch {0}rgl</value>
+  </data>
+  <data name="within 2 levels" xml:space="preserve">
+    <value>mrglthin 2 levelsrgl</value>
+  </data>
+  <data name="{0} BPM" xml:space="preserve">
+    <value>{0} BPMrgl</value>
+  </data>
+  <data name="{0} NPS" xml:space="preserve">
+    <value>{0} NPSrgl</value>
+  </data>
+  <data name="No sorting" xml:space="preserve">
+    <value>Nrgl sortingrgl</value>
+  </data>
+  <data name="Pass · for me" xml:space="preserve">
+    <value>Mrgl pass · for mergl</value>
+  </data>
+  <data name="Score · for me" xml:space="preserve">
+    <value>Mrgl score · for mergl</value>
+  </data>
+  <data name="Sign in to order by your own tier lists" xml:space="preserve">
+    <value>Mrgl sign in trgl order by yrglur rgluwn tier listsrgl</value>
+  </data>
+  <data name="Strongest match first — no difficulty applied" xml:space="preserve">
+    <value>Strrglngest match first — nrgl difficulty appliedrgl</value>
+  </data>
+  <data name="Closest on the community tier lists and scoring level" xml:space="preserve">
+    <value>Clrglsest on the cmrglmunity tier lists and scoring levelrgl</value>
+  </data>
+  <data name="From your Pass tier list" xml:space="preserve">
+    <value>Frrglm yrglur Pass tier listrgl</value>
+  </data>
+  <data name="From your Score tier list" xml:space="preserve">
+    <value>Frrglm yrglur Score tier listrgl</value>
   </data>
 </root>

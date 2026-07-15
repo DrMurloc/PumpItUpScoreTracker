@@ -4220,21 +4220,6 @@
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>Non ci sono ancora abbastanza dati per indicare chart simili — il grafo si ricalcola ogni notte.</value>
   </data>
-  <data name="players score alike" xml:space="preserve">
-    <value>i giocatori fanno punteggi simili</value>
-  </data>
-  <data name="same skill profile" xml:space="preserve">
-    <value>stesso profilo di skill</value>
-  </data>
-  <data name="behaves the same for its level" xml:space="preserve">
-    <value>si comporta allo stesso modo per il livello</value>
-  </data>
-  <data name="same intensity" xml:space="preserve">
-    <value>stessa intensità</value>
-  </data>
-  <data name="level neighbor" xml:space="preserve">
-    <value>livello vicino</value>
-  </data>
   <data name="Watch chart video" xml:space="preserve">
     <value>Guarda il video del chart</value>
   </data>
@@ -4327,5 +4312,68 @@
   </data>
   <data name="From the similarity graph — evidence-weighted, rebuilt nightly." xml:space="preserve">
     <value>Dal grafo di similarità — pesato sulle prove, ricalcolato ogni notte.</value>
+  </data>
+  <data name="Close video" xml:space="preserve">
+    <value>Chiudi il video</value>
+  </data>
+  <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
+    <value>{0} chart confrontate ({1}) — nessuna ha superato la soglia.</value>
+  </data>
+  <data name="Compared {0} charts ({1}) — {2} matches." xml:space="preserve">
+    <value>{0} chart confrontate ({1}) — {2} corrispondenze.</value>
+  </data>
+  <data name="Didn't quite make the cut ({0})" xml:space="preserve">
+    <value>Non ce l'hanno fatta per poco ({0})</value>
+  </data>
+  <data name="Matched on" xml:space="preserve">
+    <value>Corrisponde su</value>
+  </data>
+  <data name="NPS" xml:space="preserve">
+    <value>NPS</value>
+  </data>
+  <data name="No significant matches — here's the closest we could find." xml:space="preserve">
+    <value>Nessuna corrispondenza significativa — ecco le più vicine.</value>
+  </data>
+  <data name="Order by" xml:space="preserve">
+    <value>Ordina per</value>
+  </data>
+  <data name="Remove filter" xml:space="preserve">
+    <value>Rimuovi filtro</value>
+  </data>
+  <data name="Watch {0}" xml:space="preserve">
+    <value>Guarda {0}</value>
+  </data>
+  <data name="within 2 levels" xml:space="preserve">
+    <value>entro ±2 livelli</value>
+  </data>
+  <data name="{0} BPM" xml:space="preserve">
+    <value>{0} BPM</value>
+  </data>
+  <data name="{0} NPS" xml:space="preserve">
+    <value>{0} NPS</value>
+  </data>
+  <data name="No sorting" xml:space="preserve">
+    <value>Senza ordinamento</value>
+  </data>
+  <data name="Pass · for me" xml:space="preserve">
+    <value>Pass · per me</value>
+  </data>
+  <data name="Score · for me" xml:space="preserve">
+    <value>Punteggio · per me</value>
+  </data>
+  <data name="Sign in to order by your own tier lists" xml:space="preserve">
+    <value>Accedi per ordinare in base alle tue tier list</value>
+  </data>
+  <data name="Strongest match first — no difficulty applied" xml:space="preserve">
+    <value>Corrispondenza migliore prima — nessuna difficoltà applicata</value>
+  </data>
+  <data name="Closest on the community tier lists and scoring level" xml:space="preserve">
+    <value>Le più vicine nelle tier list della community e nello scoring level</value>
+  </data>
+  <data name="From your Pass tier list" xml:space="preserve">
+    <value>Dalla tua tier list Pass</value>
+  </data>
+  <data name="From your Score tier list" xml:space="preserve">
+    <value>Dalla tua tier list Punteggio</value>
   </data>
 </root>
