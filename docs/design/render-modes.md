@@ -304,11 +304,22 @@ Facts established during Stage 1 scoping that Stage 2 inherits. Re-check before 
    | 4 | `ShellImportPulse` (island) | no Mud, position irrelevant |
    | 5 | `App` → MainLayout | the app's own dialogs/popovers |
 
-   ⚠ Confirm that `@rendermode` subtrees in Blazor Web App activate in document order the same
-   way `<component>` roots do. The whole arrangement rests on it, and it is an implementation
-   detail, not a documented contract — **this is the single highest-value thing to verify before
-   building Stage 2**, because if it holds the shape carries over unchanged, and if it doesn't,
-   MudBlazor + islands needs a different answer entirely.
+   **Order is guaranteed, and the guarantee is identical in both hosting models.** From
+   `blazor.web.js` (net10) — and `blazor.server.js` uses the same mechanism:
+
+   ```js
+   case "server": return K(e, "server").sort((e, t) => e.sequence - t.sequence)
+   ...
+   const { descriptor: t, sequence: n } = e;
+   if (void 0 === n) throw new Error("sequence must be defined when using a descriptor.");
+   ```
+
+   `sequence` is a **required** field on every server component marker, emitted by the server in
+   render order, and the client sorts by it before creating roots. So root activation order is
+   server render order is document order — by explicit sort, not by DOM-walk luck. Putting
+   `<MudProviders @rendermode="…" />` above the shell in `App.razor` behaves exactly as
+   `_SiteLayout.cshtml` does today. **The hoist carries over unchanged, and the reason it works
+   is a framework contract rather than an observation.**
 5. **Auth.** `[Authorize]`, the `DefaultAuthentication` cookie scheme, `ExternalAuthentication`,
    `ApiToken` Basic auth, and the DevAuth backdoor (`/Login/Dev`, `/Login/Dev/Bootstrap`) under
    the new endpoint mapping.
