@@ -148,11 +148,7 @@
             var dot = document.getElementById('shell-import-pulse');
             if (dot) dot.hidden = !running;
         },
-        refreshActiveNav: refreshActiveNav,
-        closeMenus: function () {
-            closeMenu();
-            setSheet(false);
-        }
+        refreshActiveNav: refreshActiveNav
     };
 
     function init() {

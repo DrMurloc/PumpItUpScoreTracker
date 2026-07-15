@@ -478,10 +478,20 @@ The load-bearing facts. Each was checked, not assumed — do not re-litigate wit
   popover sits *below* the appbar — that works only because menus hang beneath the bar. Mud also
   layers things at `calc(var(--mud-zindex-appbar) + 1/2/4)`, so the value is load-bearing.
 - **`MudIcon` renders statically.** `.mud-icon-root` and `.mud-icon-size-small` are in the
-  static stylesheet, not the runtime palette vars. Icons are identical pre-circuit. (General
-  rule: in a static region Mud components **render but don't respond** —
-  `OnAfterRenderAsync` never runs, so a `MudButton` looks perfect and does nothing. Sort by
-  *display vs interaction*, never by *does it render*.)
+  static stylesheet, not the runtime palette vars, so icons are identical pre-circuit and the
+  shell reuses `<MudIcon Icon="@Icons.…" />` unchanged. (General rule: in a static region Mud
+  components **render but don't respond** — `OnAfterRenderAsync` never runs, so a `MudButton`
+  looks perfect and does nothing. Sort by *display vs interaction*, never by *does it render*.)
+- **⚠ MudBlazor assumes ONE interactive tree with its providers at the top; islands are many
+  trees.** There is exactly one `MudPopoverProvider` per circuit — it subscribes a section
+  outlet by a fixed id, so a second throws *"already a subscriber to the content with the given
+  section ID 'mud-overlay-to-popover-provider'"*. Roots initialise in **document order**, so any
+  island ahead of the provider gets *"Missing `<MudPopoverProvider />`"* the moment it opens a
+  popover, select, menu, tooltip or dialog. **Therefore the providers mount as the first root
+  on the page** (`Components/MudProviders.razor`), not in MainLayout — which is the *last* root
+  and so is behind every island. This replaces the original §7 `IslandRoot` idea, which had each
+  island bring its own providers: that is impossible, not merely undesirable. **Stage 3 inherits
+  this rule** — every page it makes static hosts islands under the same constraint.
 - **A static `<title>` is safe.** `blazor.server.js`'s `getAndRemoveExistingTitle()` iterates
   `<head>`'s titles backwards and removes any **not** preceded by a Blazor marker comment,
   returning its text as the fallback. So: crawlers read the static title from raw HTML; browsers
