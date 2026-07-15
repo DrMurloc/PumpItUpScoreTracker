@@ -1,0 +1,22 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.Theming
+
+@* MudBlazor's providers, hoisted out of MainLayout into their own root.
+
+   There is one popover provider per circuit — it subscribes a section outlet by a fixed id, so
+   a second one throws. Roots initialise in document order, so wherever the single set lives,
+   every root ahead of it is on its own: an island in the app bar asking for a popover before
+   MainLayout has rendered gets "Missing <MudPopoverProvider />". Mounting them first, above
+   the shell, is what lets any island anywhere use MudBlazor.
+
+   The theme arrives as a parameter because the shell already resolved the mix from the
+   request; nothing here needs to wait on a query to know what to paint. *@
+<MudThemeProvider Theme="@MixThemes.ThemeFor(ThemeMix)" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@code {
+    [Parameter] public MixEnum ThemeMix { get; set; } = MixEnum.Phoenix;
+}

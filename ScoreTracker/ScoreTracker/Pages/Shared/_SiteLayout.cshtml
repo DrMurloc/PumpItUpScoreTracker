@@ -55,6 +55,10 @@
     </style>
 </head>
 <body class="@MixThemes.CssClassFor(shell.ThemeMix) @ViewData["BodyClass"]">
+@* First root on the page, deliberately: roots initialise in document order, and the single
+   popover provider has to exist before any island asks it for one. *@
+<component type="typeof(MudProviders)" render-mode="Server" param-ThemeMix="@shell.ThemeMix" />
+
 @* The app bar is assembled here rather than inside one component because the chart search is
    an island, and a render-mode tag can only be written from a page. Stage 2 moves these same
    lines into the static root; the structure is what carries over. *@

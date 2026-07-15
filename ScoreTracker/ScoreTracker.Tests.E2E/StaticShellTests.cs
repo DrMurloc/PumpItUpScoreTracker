@@ -64,19 +64,27 @@ public sealed class StaticShellTests : IAsyncLifetime
     ///     which nothing else would catch.
     /// </summary>
     [Fact]
-    public async Task TheSearchIslandBootsAndItsPopoverRegistersWithTheLayoutsProvider()
+    public async Task TheSearchIslandOpensItsPopover()
     {
+        var errors = new List<string>();
+        _page.PageError += (_, e) => errors.Add(e);
+
         await _page.GotoAsync("/TierLists");
 
-        // The input only exists if the island's own root booted on the shared circuit.
-        await Expect(_page.Locator(".appbar-search input"))
-            .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
+        var search = _page.Locator(".appbar-search input");
+        await Expect(search).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
 
-        // ...and this holder is rendered by MainLayout's provider, in the other root, for a
-        // popover the island registered. Its presence is the cross-root proof; whether it is
-        // open depends on what the user typed, which is the autocomplete's business, not the
-        // shell's.
-        await Expect(_page.Locator("[id^='popovercontent-']").First)
-            .ToHaveCountAsync(1, new LocatorAssertionsToHaveCountOptions { Timeout = 30_000 });
+        // Typed, not filled: MudAutocomplete opens off the keystrokes.
+        await search.ClickAsync();
+        await search.PressSequentiallyAsync("Conflict", new LocatorPressSequentiallyOptions { Delay = 60 });
+
+        // The open popover is the assertion. A holder proves nothing — MudBlazor renders one
+        // per popover regardless, and asking the service to open it is what throws when the
+        // island can't reach a provider.
+        await Expect(_page.Locator(".mud-popover-open").First)
+            .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
+        await Expect(_page.Locator(".mud-popover-open").GetByText("Conflict").First).ToBeVisibleAsync();
+
+        Assert.Empty(errors);
     }
 }

@@ -13,12 +13,12 @@
 <PageTitle>@L["PIU Scores"]</PageTitle>
 
 @* Shell chrome — nav, mix pill, bottom nav, More sheet — is server-rendered by _SiteLayout
-   (docs/design/static-shell.md). What stays here is what only the app root can own: the Mud
-   providers every page needs, the legacy-mix gate, the page dock, and the recap pointer. *@
-<MudThemeProvider Theme="_theme" />
-<MudPopoverProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />
+   (docs/design/static-shell.md). What stays here is the legacy-mix gate, the page dock, the
+   drawer host and the recap pointer.
+
+   The Mud providers are NOT here. They mount ahead of the shell as their own root, because
+   this layout is the last root to initialise and an island in the app bar would ask for a
+   popover before it existed. *@
 <ChartVideoDisplay></ChartVideoDisplay>
 
 @* MudLayout is MudBlazor's drawer host (it derives from MudDrawerContainer), not chrome —
@@ -79,8 +79,6 @@
     private const string RecapPopupKey = "MainLayout__PhoenixRecapPopupShown";
     // Seeded by App from the shell's root parameter, so it is known before the first render.
     private MixEnum _currentMix = MixEnum.Phoenix;
-    private MixEnum _themeMix = MixEnum.Phoenix;
-    private MudTheme _theme = MixThemes.ThemeFor(MixEnum.Phoenix);
 
     // The dock and focus-mode classes live on <html>: the chrome that reacts to them is
     // server-rendered, outside this root.
@@ -136,9 +134,6 @@
         // — the body no longer has to be held behind a spinner waiting for it.
         _currentMix = await UiSettings.GetSelectedMix();
         RedirectIfGated();
-        _themeMix = MixThemes.ResolveThemeMix(
-            await UiSettings.GetSetting(MixThemes.OverrideSettingKey), _currentMix);
-        _theme = MixThemes.ThemeFor(_themeMix);
 
         if (CurrentUser.IsLoggedIn)
         {

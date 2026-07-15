@@ -3,8 +3,7 @@
 @inject NavigationManager NavManager
 
 @* The app bar's chart search. An island: the shell around it is static HTML, but an
-   autocomplete needs a circuit. Its own root, sharing the circuit — and therefore the scoped
-   services and the Mud providers — with the app. Desktop only, as it was under MudHidden. *@
+   autocomplete needs a circuit. Desktop only, as it was under MudHidden. *@
 <div class="d-flex align-center appbar-search mr-3 shell-desktop-only" style="min-width: 170px; max-width: 220px;">
     <ChartSelector Mix="Mix" Label="" Placeholder="@L["Find a chart"].Value" Variant="Variant.Outlined"
                    Margin="Margin.Dense" ChartIdSelected="GoToChart"></ChartSelector>
