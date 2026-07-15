@@ -1,13 +1,14 @@
 # Weekly Charts overhaul — the challenges hub, and a static page
 
-**Status**: designed 2026-07-15; **visual mock approved the same day (round 9)** after nine
-owner rounds — the living mock is artifact `1d0c26e7` (labels `round-1` … `round-9-compact-chip`
-in its version picker). Foundation commits are in (§9); page work executes against the R9
-anatomy. Builds on the Stage-2 hosting flip (this branch descends from
-`claude/render-modes-scope`). The chart-details overhaul (branch `claude/chart-details-overhaul`)
-pilots the same static-SSR-with-islands shape on `/Chart/{id}`; **the two pages are independent**
-(owner call) and share exactly one commit's worth of mechanism (§3.1) — whichever merges second
-rebases that commit away.
+**Status**: **as-built 2026-07-15** — all ten commits landed on `claude/weekly-charts-ux-overhaul-003e40`
+(§9 has the SHAs). Designed the same day; visual mock approved at round 9 (artifact `1d0c26e7`,
+labels `round-1` … `round-9-compact-chip`). ⚠ **The E2E suite has not run in the build
+environment** (Testcontainers can't open the local Docker pipe); the static page's runtime render
+is validated by CI's Linux Docker run and manual QA, not yet locally — §10/§11. Builds on the
+Stage-2 hosting flip (this branch descends from `claude/render-modes-scope`). The chart-details
+overhaul (branch `claude/chart-details-overhaul`) pilots the same static-SSR-with-islands shape on
+`/Chart/{id}`; **the two pages are independent** (owner call) and share exactly one commit's worth
+of mechanism (§3.1) — whichever merges second rebases that commit away.
 
 **The page**: `/WeeklyCharts` becomes the challenges hub — Weekly Charts and Daily Step
 ([daily-step.md](daily-step.md)) on one page, statically rendered so crawlers finally see the
@@ -241,15 +242,19 @@ l10n keys land ×9 locales **within each commit** (house rule). ✅ = already in
 | ✅ 0 | `53d1cb2d` | **Design doc v1** (this file's first cut) |
 | ✅ 1 | `a6048ee8` | **Vertical read model**: the four §7 queries + repo methods + saga handlers + PUMBILITY pricing + 17 component tests. Fast suites 1309/60/102 |
 | ✅ 2 | `0573d0e3` | **Static-page mechanism**: App.razor conditional `PageRenderMode` + fallback-title guard + `StaticPageLayout`. Mechanism-only; shared with the chart-details pilot |
-| — | | *(mock rounds R1–R9 happened here; this doc updated to as-decided)* |
-| 3 | | **Trust source schema**: `Source` on `WeeklyUserEntry` + migration + DATABASE-SCHEMA row; import stamps Official, manual command stamps Manual; `WeeklyBoardRow` gains `Source` + `PhotoUrl`; **API goldens run in-commit** (§7 caution); saga/component tests |
-| 4 | | **Shared LeaderboardDialog** (§5): cap removed (full board, scrolling), trust tags ✔/📷/blank with photo-open, consumers untouched by construction; bUnit over the dialog states |
-| 5 | | **The static core**: WeeklyCharts rebuilt to the R9 anatomy (§4) on `[ExcludeFromInteractiveRouting]` + `StaticPageLayout` — header row, Daily strip, dense grid (all three density variants server-rendered; switcher markup present), monthly, history, legend, pool, empty states, dock markup, URL grammar, dead-code deletion, l10n ×9. Read-complete, act-light for one commit (buttons render; the island wires them next) |
-| 6 | | **The island**: `ChallengeDialogHost` (Record §8 + LeaderboardDialog + ChartDetailsDialog + admin rotate) + `challenge-board.js` (delegated bridge, href-upgrade clicks, dock state, countdown tick) |
-| 7 | | **Presentation prefs**: density switcher live (Tier Lists pattern) + `Density__WeeklyCharts` persistence via `POST /Preferences/Set` (allowlisted keys, `/Mix/Set` lineage) + suggested toggle (default on for calibrated players, `?suggested=all` escape) |
-| 8 | | **Head/SEO**: PageTitle/HeadContent (meta description carries the concept copy), OG, JSON-LD ItemList, canonical rules, sitemap entry |
-| 9 | | **Tests as facts**: bUnit over the section components (markup, empty states, density variants, trust tags); E2E — anonymous GET of `/WeeklyCharts` contains chart names + title + JSON-LD in raw HTML (the payoff, pinned) + one signed-in record round-trip through the island |
-| 10 | | **Doc sync**: UX-GUIDELINES (static-page grammar + trust-ladder vocabulary notes), daily-step.md L6 flip, this doc's as-built stamp, DATABASE-SCHEMA verified (row added at #3) |
+| ✅ — | `ec21c8a8` | **Design doc v2**: mock rounds R1–R9 folded in; commit order re-cut |
+| ✅ 3 | `9b20a78e` | **Trust source schema**: `ChallengeEntrySource` (Daily's enum promoted to `Domain.Records`) + `Source` on `WeeklyUserEntry` + migration (existing rows → Official) + DATABASE-SCHEMA row; import stamps Official, manual command defaults Manual; `WeeklyBoardRow` gains `Source`; `GetEntriesWithSources` port method; **API goldens ran in-commit** (§7 caution) — wire shape unmoved |
+| ✅ 4 | `5eafcce4` | **Shared LeaderboardDialog** (§5): cap removed (full board, scrolling), trust tags ✔/📷/blank with photo-open; Daily widget drops `ManualUserIds`; 5 bUnit facts |
+| ✅ 5 | `f2bb0a01` | **The static core**: WeeklyCharts rebuilt to the R9 anatomy (§4) on `[ExcludeFromInteractiveRouting]` + `StaticPageLayout` + six `Components/Challenges/` display components; URL grammar, PUMBILITY display, dead-code deletion, 45 l10n keys ×9. Read-complete, act-light |
+| ✅ 6 | `a1ab2758` | **The island**: `ChallengeDialogHost` (Record §8 + LeaderboardDialog + ChartDetailsDialog + admin rotate) + `challenge-board.js` (delegated bridge, href-upgrade clicks, dock state) + `GetWeeklyChartBoardQuery`; 18 l10n keys ×9 |
+| ✅ 7 | `9b6d7119` | **Presentation prefs**: density swap live + `PreferencesController` (`POST /Preferences/Set`, allowlisted keys, `[IgnoreAntiforgeryToken]`); suggested toggle is the server-rendered `?suggested=all` links |
+| ✅ 8 | `99ba1cf4` | **Head/SEO**: PageTitle/HeadContent (meta description carries the concept copy + count), OG, JSON-LD ItemList (default encoder — no `<script>` breakout), canonical, sitemap entry |
+| ✅ 9 | `8877bc87` | **Tests as facts**: 9 bUnit section facts; E2E `WeeklyChartsTests` (anon raw-HTML fact + signed-in record round-trip) + `SeedWeeklyChart/Entry` helpers. ⚠ E2E written but not locally executed (Docker pipe unreachable from the test host) |
+| ✅ 10 | *(this)* | **Doc sync**: UX-GUIDELINES §5 + LeaderboardDialog note, daily-step.md L6 flipped to shipped, this as-built stamp |
+
+Countdown-tick polish for the dock (design §3.3's "countdown tick") was dropped from #6 to avoid
+duplicating the localized reset text in JS — the server-rendered "resets in …" is the value at
+load. Noted in §11.
 
 ## 10. Verification
 
@@ -271,3 +276,11 @@ l10n keys land ×9 locales **within each commit** (house rule). ✅ = already in
   field test after commit #5.
 - Chart-details convergence: if that branch merges first with its own App.razor conditional,
   commit ✅2 here rebases to nothing — coordinate at merge time.
+- **E2E not locally validated**: the suite couldn't reach Docker from the test host in the build
+  environment, so the static page's runtime render (and the island round-trip) rest on CI's Linux
+  Docker run + manual QA. First manual pass should confirm: anon `/WeeklyCharts` shows the week and
+  the `<script type="application/ld+json">`; the Record button opens the island dialog and a submit
+  reloads with your row; density buttons swap + persist; the mobile dock appears.
+- **Dock countdown is static** (server value at load), not ticking — dropped to avoid duplicating
+  the localized reset string in JS. Revisit if a live countdown is wanted (needs a format the
+  client can localize).

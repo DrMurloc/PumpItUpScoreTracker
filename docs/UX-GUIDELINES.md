@@ -115,10 +115,12 @@ The widget home page ([design doc](design/HomePageWidgets/README.md)) adds a voc
   `ChartTypeHex` so red/green S/D reads the same everywhere.
 - **Chart rows/cards in widgets open `ChartDetailsDialog` on click** (browse mode only — edit mode
   owns clicks for arranging). Every catalog widget inherits this rule.
-- **Per-chart leaderboards use the shared `LeaderboardDialog`** (top ten plus your own row when you
-  sit outside it): the caller passes the entries and a sort direction, so an inverted board — Daily
-  Step's weekly **Limbo Day**, where the lowest *passing* score wins — ranks ascending without a
-  second component.
+- **Per-chart leaderboards use the shared `LeaderboardDialog`** (every entry, your own row glowing
+  in place — the `MaxPlaces` cap was retired in the challenges-hub overhaul; the dialog scrolls):
+  the caller passes the entries and a sort direction, so an inverted board — Daily Step's weekly
+  **Limbo Day**, where the lowest *passing* score wins — ranks ascending without a second component.
+  Rows wear the **trust ladder** when the caller tracks provenance: ✔ officially imported > 📷 photo
+  attached (the icon opens the proof) > nothing for a bare self-report (weekly-charts-overhaul.md M5).
 - **Drag is swap, not insertion**: dropping widget A on widget B trades their places; bystanders
   never move. The arrows remain the accessible and mobile reorder path.
 - **Quiet scrolling**: widget inner scrollers use `dash-scroll` — no scrollbar at rest, a thin themed
@@ -132,3 +134,25 @@ The widget home page ([design doc](design/HomePageWidgets/README.md)) adds a voc
   PG) and colors the "% have it" rarity through the rarity ramp — the on-site feed and the Discord cards
   read as one system. Persisted win data is structured, never pre-rendered text: the row localizes every
   caption (a UI string never rides the DB payload).
+
+## 5. Challenge boards (Weekly Charts + Daily Step)
+
+The `/WeeklyCharts` challenges hub ([design](design/weekly-charts-overhaul.md)) is the first page
+rebuilt as **static SSR + one island**, and it adds a small vocabulary of its own:
+
+- **The page is a static region** (static-shell.md rules): `--mix-*` and semantic tokens only, no
+  `--mud-*`; every number is printed alongside its color; no row depends on a Mud popover. The one
+  interactive root is `ChallengeDialogHost` — Record, the shared board and chart-details dialogs, and
+  the admin rotate — reached from static `data-challenge-*` controls through `challenge-board.js`.
+- **State that changes *what data* you see is URL state**, so it is shareable and crawlable: the week
+  (`?week=`), the monthly type (`?type=`), the suggested filter (`?suggested=all`), the pool
+  (`?pool=1`). Presentation travels separately — density via `Density__WeeklyCharts` (rule 5), swapped
+  in JS and persisted through `POST /Preferences/Set`.
+- **Chart identity opens `ChartDetailsDialog` from everywhere** — every density and the Daily strip —
+  but the jacket/name stay real `/Chart/{id}` anchors so a crawler follows the internal-link mesh; the
+  island upgrades the click.
+- **The trust ladder** (✔ imported · 📷 photo proof · blank) is the shared board vocabulary — see the
+  `LeaderboardDialog` note in §4. It pairs an icon with a printed score, never color alone (rule 8).
+- **Manual competitive entries are score + plate, a pass** — no broken, no plated-broken (those are
+  personal-recording concerns). Photos are optional proof, not a gate; the enforcement lever for
+  suspected cheaters is stated in the Record dialog, not yet built.
