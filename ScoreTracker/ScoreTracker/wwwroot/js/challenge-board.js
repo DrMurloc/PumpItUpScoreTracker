@@ -12,7 +12,36 @@
         }
     };
 
+    // Density is pure presentation: swap the grid variant instantly (no circuit), then persist
+    // in the background. Anonymous visitors get the swap; the POST 401s for them, harmlessly.
+    function applyDensity(button) {
+        var value = button.getAttribute('data-den');
+        var grid = document.querySelector('#weekly .challenge-grid');
+        if (grid) grid.setAttribute('data-density', value);
+        var group = button.closest('.challenge-den-group');
+        if (group) {
+            group.querySelectorAll('[data-den]').forEach(function (b) {
+                b.classList.toggle('on', b === button);
+            });
+        }
+        var body = new URLSearchParams();
+        body.set('key', 'Density__WeeklyCharts');
+        body.set('value', value);
+        fetch('/Preferences/Set', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body.toString()
+        }).catch(function () { /* preference is best-effort; the swap already happened */ });
+    }
+
     document.addEventListener('click', function (e) {
+        var den = e.target.closest('[data-den]');
+        if (den) {
+            e.preventDefault();
+            applyDensity(den);
+            return;
+        }
         var record = e.target.closest('[data-challenge-record]');
         var board = e.target.closest('[data-challenge-board]');
         var chart = e.target.closest('[data-challenge-chart]');
