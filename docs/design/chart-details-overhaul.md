@@ -22,14 +22,21 @@ every rejected alternative *with its measurement* — nearly all of them were tr
 a recorded reason, including two claims this very doc set used to make. Weight-tuning breaks the
 hand-computed fixtures; that warning still holds.
 
+**Stage 2 is merged in** (`20c6b41e`, 2026-07-15) — the render-mode infrastructure exists and
+this branch carries it. It did **not** make any page static: `<Routes @rendermode="Interactive">`
+keeps the whole router in one circuit, which was Stage 2's deliberate "zero behaviour change".
+So P3 is unblocked in the sense that the machinery is here, and **still blocked** in the sense
+that one site-wide flip has to precede it — see "What P3 actually costs" under the build plan,
+which also records the head problem that has no answer yet.
+
 Remaining: **P3** (301 lattice live, sitemap vanity swap, static head/JSON-LD, output caching —
 ships as ONE unit, never split: pretty URLs must never point at empty shells) and **P4** (E2E
-facts + doc sync), both gated on the Stage-2 hosting flip. **R6's island packaging moved into
-P3** for the same reason — `data-island-ready` needs render modes that do not exist on this
-branch. Owner-only steps: UX field-test rounds, and the **floor calibration run** (trigger
+facts + doc sync). **R6's island packaging folds into P3-1** for the same reason.
+Owner-only steps: UX field-test rounds, and the **floor calibration run** (trigger
 `recalculate-chart-similarity` in /hangfire, then set the floor from the score distribution — it
-is a render constant now, so that is a redeploy rather than a job run). **Nothing before that run
-says anything about how many cards the shelf shows.**
+is a render constant now, so that is a redeploy rather than a job run). **The 2026-07-15 run
+validated 0.55 against Rush-More exactly** (3 matches, all owner-graded good) — but on a
+0.013-wide window, with THE REVOLUTION missing by 0.0004. Any constant that moves puts it back.
 
 **Stage context (owner-approved 2026-07-14, aligned with the shell/hosting session):** the site
 moves to SSR-by-default + islands in three stages — Stage 1 the static shell (every page, one
@@ -258,6 +265,51 @@ and deleted.
 |---|---|---|
 | P3 | SEO cutover + caching | static head/JSON-LD live (old dead-channel `HeadContent` retired), sitemap swaps to vanity, 301 lattice goes public, in-app links switch to vanity URLs, output-cache policy + CDN header spec ship (first meaningfully cacheable page — verify cached anon HTML actually contains content) — **FT: view-source is real HTML; Discord unfurl shows the jacket** |
 | P4 | Tests + docs | E2E facts (anon chart page serves content pre-circuit; GUID 301s; glow only when signed in), bUnit island coverage, ARCHITECTURE/UX-GUIDELINES/API/DATABASE-SCHEMA sync |
+
+### What P3 actually costs — scoped 2026-07-15, against shipped source
+
+Stage 2 **is merged** (`20c6b41e`), so the render-mode infrastructure exists. It did not,
+however, make any page static, and **this page cannot go static on its own.**
+
+**The blocker is one line in `App.razor`:**
+
+```razor
+<main class="shell-main">
+    <Routes @rendermode="Interactive" CurrentMix="_shell.CurrentMix" />
+</main>
+```
+
+The shell paints statically around it, but the **whole router is one circuit**, and a render
+mode propagates *down* — a child cannot opt back out. Nothing under `<Routes>` can be static
+while that attribute is there, and **no page carries a render mode of its own** (verified: zero
+hits across all 38 routable pages). Stage 2's "zero intended behaviour change" was achieved
+exactly this way, and it was the right call — but it means the entry ticket to Stage 3 is a
+site-wide flip, not a per-page one.
+
+⚠ **An earlier revision of this doc said the page "goes static SSR by dropping `@rendermode` at
+the hosting flip". That is wrong** — there is no `@rendermode` on the page to drop. It inherits.
+
+**P3-0 — the prerequisite, and it is not this page's work.** One mechanical commit plus a
+site-wide QA, the same shape as Stage 1's:
+1. Drop `@rendermode="Interactive"` from `<Routes>` — the router renders static.
+2. Add `@rendermode InteractiveServer` to **all 38 routable pages** — every page still a
+   circuit, still zero behaviour change.
+3. From then on, a page converts by deleting its own line and islanding its children.
+
+**P3-1 — then this page.** Delete `ChartDetails`' `@rendermode`; island what needs a circuit:
+`ChartVideoPlayer`, `ChartRecordPanel` (also personal → must never enter the cache),
+`ChartEvidenceSection` (Apex), `ChartLeaderboardSection`, `SimilarChartsShelf`'s controls (the
+cards are already real `<a href>`s and stay static), and `ChartSelector` on the empty state.
+
+⚠ **The head is an unsolved problem, and it is the whole SEO point.** `HeadOutlet` is
+`@rendermode="Interactive"`, so it collects from *interactive* components only. The moment
+`ChartDetails` goes static, its `<PageTitle>`/`<HeadContent>` stop being collected — and
+`App.razor`'s static `<title>` is a fixed string ("PIU Scores"), so **every crawled chart page
+would share one title.** A static `HeadOutlet` is not the answer either: it would break the
+`<PageTitle>` on all 38 still-interactive pages. This needs a real mechanism (the shell
+resolving per-route head content server-side, or a second outlet) and it should be scoped
+before P3 starts, not during. render-modes.md §7.2 flagged the composition question; this is
+its sharp end.
 
 ## Out of scope now, recorded for future iterations (owner, 2026-07-14)
 

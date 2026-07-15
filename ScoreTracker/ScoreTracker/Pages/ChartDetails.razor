@@ -16,9 +16,13 @@
 
 @* The chart drill-down (docs/design/chart-details-overhaul.md, mock R2): answer →
    evidence → record → onward. Rebuilt in place for the Stage-3 conversion — every
-   circuit-needing section is its own child component (the islands-to-be); this page
-   body goes static SSR by dropping @@rendermode at the hosting flip. The /Record and
-   bare /Chart aliases die at P3 when the 301 lattice goes live. *@
+   circuit-needing section is its own child component, so islanding them is a render-mode
+   line each rather than a rewrite.
+   This page has no render mode of its own: it inherits the circuit from
+   App.razor's `<Routes @@rendermode="Interactive">`, and a child cannot opt back out of
+   one. Going static therefore waits on that attribute leaving Routes and every page
+   opting in individually — see "What P3 actually costs" in the design doc. The /Record
+   and bare /Chart aliases die at P3 when the 301 lattice goes live. *@
 <PageTitle>@(_chart == null ? L["Chart Details"].Value : $"{_chart.Song.Name} {_chart.DifficultyString}")</PageTitle>
 <HeadContent>
     @* Dead channel until Stage 3 (HeadOutlet renders in the circuit; crawlers never see

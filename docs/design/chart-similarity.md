@@ -340,9 +340,32 @@ Measured on the Curiosity Overdrive ↔ BOOOM!! pair and the S20/D23 folders unl
 
 ## 10. Open
 
-- **The floor value.** 0.55 was calibrated against a five-signal arithmetic mean that no longer
-  exists. Meaningless until a run with skill+intensity only; owner will run the analyzer and
-  calibrate from the distribution. It is a render constant, so this is a redeploy, not a job run.
+- **The floor value — CALIBRATED 2026-07-15, and it holds on a knife edge.** The first real run
+  of the V1 formula (87,612 edges over 4,409 charts) put **0.55 exactly between the owner's good
+  and bad matches** on his graded shelf:
+
+  | # | Rush-More D23's neighbour | score | owner |
+  |---|---|---|---|
+  | 1 | Meteo5cience | .5859 | *"one of the best matches"* |
+  | 2 | Your Mind | .5762 | good |
+  | 3 | TRICKL4SH 220 | .5626 | good |
+  | | *— floor 0.55 —* | | |
+  | 4 | THE REVOLUTION | **.5496** | *"absolutely not"* |
+  | 5 | Passacaglia | .5471 | bad |
+
+  **The window is 0.013 wide and THE REVOLUTION misses by 0.0004.** The floor cannot rise above
+  .5626 without cutting a good match, nor fall to .5496 without admitting the rejected one. It is
+  landing there by luck, not by design: **any retune — K, the weights, γ — puts THE REVOLUTION
+  back on that shelf.** Treat 0.55 as pinned, and re-check this table after touching any constant.
+
+  **Coverage:** 139 of 4,426 Phoenix S/D charts (3.1%) have nothing clearing the floor, 17 have
+  no edges at all — so 96.9% show a real match, and the 139 still get "closest we could find".
+
+  **Rush-More is atypical.** Shelf sizes at 0.55: 61% of charts show 16–20 cards, 7.6% show 1–3.
+  Owner's read (2026-07-15): *"that 60% with a high chart rate feels like a legitimate read on how
+  much of the game feels like practically the same chart"* — so the fat end is honest, not broken.
+  It does mean one global floor cannot both keep Rush-More's three and thin a 20-card S20 shelf;
+  it is already pinned to ±0.006 by the table above and has no freedom left to try.
 - **Static shelf vs interactive controls — settled, and gated on Stage 2.** The shelf **is** the
   internal-link mesh and must sit in the anonymous output cache — but sort and filters are
   interactive, and an island renders nothing server-side (prerendering is off permanently). Settled
