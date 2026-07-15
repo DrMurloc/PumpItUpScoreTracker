@@ -66,11 +66,11 @@ public sealed class ChartSimilaritySagaTests
         Assert.Equal(2, result.Count);
         Assert.Equal(first.SimilarChartId, result[0].ChartId);
         Assert.Equal(0.9, result[0].Score);
-        Assert.Equal(1.0, result[0].StyleScore);
+        Assert.Equal(1.0, result[0].SkillScore);
         Assert.Equal(0.6, result[0].PlayersScore);
         Assert.Equal(42, result[0].SharedScorers);
         Assert.Equal(second.SimilarChartId, result[1].ChartId);
-        Assert.Null(result[1].StyleScore);
+        Assert.Null(result[1].SkillScore);
         Assert.Equal(0.5, result[1].IntensityScore);
     }
 
@@ -85,12 +85,12 @@ public sealed class ChartSimilaritySagaTests
         _charts.Setup(c => c.GetChartLetterGradeDifficulties(It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ChartLetterGradeDifficulty>());
-        // Style evidence: both singles share one banked skill at full coverage.
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartSkillChipsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>
+        // Skill evidence: both singles carry one banked badge at full coverage.
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartBadgeCoverageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, IReadOnlyDictionary<string, double>>
             {
-                [chartA.Id] = new[] { new ChartSkillChipRecord(Skill.Stamina, true, 1.0m) },
-                [chartB.Id] = new[] { new ChartSkillChipRecord(Skill.Stamina, true, 1.0m) }
+                [chartA.Id] = new Dictionary<string, double> { ["bracket"] = 1.0 },
+                [chartB.Id] = new Dictionary<string, double> { ["bracket"] = 1.0 }
             });
         _mediator.Setup(m => m.Send(It.IsAny<GetChartStepAnalysesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, ChartStepAnalysisRecord>());
@@ -138,8 +138,8 @@ public sealed class ChartSimilaritySagaTests
         _charts.Setup(c => c.GetChartLetterGradeDifficulties(It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ChartLetterGradeDifficulty>());
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartSkillChipsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartBadgeCoverageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, IReadOnlyDictionary<string, double>>());
         _mediator.Setup(m => m.Send(It.IsAny<GetChartStepAnalysesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, ChartStepAnalysisRecord>());
         _tierLists.Setup(t => t.GetAllEntries(MixEnum.Phoenix, It.IsAny<Name>(), It.IsAny<CancellationToken>()))

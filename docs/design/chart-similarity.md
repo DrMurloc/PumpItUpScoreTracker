@@ -2,109 +2,332 @@
 
 Companion to [chart-details-overhaul.md](chart-details-overhaul.md). A **database graph** (owner
 call, 2026-07-14: nodes = charts, edges = evidence-weighted similarity — no visualization in this
-wave; a visual map is a possible later toy). Owned by **ChartIntelligence** (difficulty
-analytics), following its existing nightly `Recalculate*` message pattern.
+wave). Owned by **ChartIntelligence**, following its existing nightly `Recalculate*` pattern.
 
-## What an edge means
+**Status (2026-07-15).** V1 settled at the 07-15 workshop after a full night of calibration
+against real data. This is a **rewrite of the shipped B1–B2 formula, not an extension** — three of
+its five signals leave the score entirely. Read §"Rejected, with evidence" before changing
+anything: nearly every alternative here was tried, measured on the dev corpus, and killed for a
+recorded reason.
 
-"Players who care about chart A will recognize chart B as *the same kind of problem*" — same
-demanded skillset, same difficulty behavior, similar body of evidence. Edges power the
-chart page's **similar shelf** (jacket cards + why-chips) and double as the site's internal-link
-mesh for SEO.
+---
 
-## Gates (hard filters, before any scoring)
+## 1. Three questions, three mechanisms
+
+The shipped formula flattened to `sd = 0.030` across an entire folder — it could not rank
+anything. The cause was structural, not tuning: **it was averaging a chart property with a viewer
+property and calling the result one number.** V1 splits them (owner, 2026-07-15):
+
+| Question | Nature | Mechanism |
+|---|---|---|
+| **Which charts have matching profiles?** | property of the *chart pair* | **precalculated** — skill + intensity, nightly |
+| **How hard will it be?** | property of the *viewer* | **ordering**, at read time |
+| **Which charts do I want to see?** | property of the *request* | **filters**, computed live |
+
+Corollaries, all of which the data had been shouting:
+- **Difficulty is personalized.** Community tier lists and scoring level are a sane *default* order
+  for anonymous readers; the personalized tier lists are what actually answer "will this be hard
+  **for me**". It is never a match criterion.
+- **Metadata is a filter, never a score.** "By this artist", "at this BPM", "from X mix or newer",
+  "in this level range" are things a user *asks for*. Meta out-discriminated both Players and
+  Difficulty in S20 and D23 precisely because it is filter-shaped (binary, high variance) — that
+  was the tell, not a mystery.
+- **Similarity means "same kind of problem", full stop.** Not "similar and also equally hard".
+
+---
+
+## 2. Gates (hard filters, before any scoring)
 
 - Same mix (the graph is per-mix; edges never cross mixes).
-- Same chart type (Single↔Single, Double↔Double). **Co-Op excluded v1** (no competitive-level
-  semantics, tiny population).
-- Level within ±2 of the anchor.
+- Same chart type (Single↔Single, Double↔Double). **Co-Op excluded v1.**
+- Level within **±2 folders** of the anchor — **a reach limiter, not a difficulty statement**.
+  Distance inside the window costs **nothing** (owner, 2026-07-15: the folder level is Andamiro's
+  *passing* level, applied inconsistently; it is not a truth source). The 0.15-per-folder affinity
+  penalty this replaces was the single largest reordering force in the old formula and it fired
+  blind — on Rush-More D23 it buried Meteo5cience (3rd-best skill+intensity in the folder, and the
+  owner's pick for one of the best matches in the list) to 12th for being D22, alongside two D22s
+  that deserved it. Folder level cannot tell those apart, so it must not try.
+  **Folder, not scoring level:** the gate is baked into the precalc, so it must be cheap,
+  universal, and dependency-free. Scoring level is a nightly-job output — gating on it would
+  re-couple similarity to the analytics chain it currently escapes (§7), and ~46% of the catalog
+  has none. Scoring level does its work in the **sort** (§5), where it is free.
 - **Same-song charts excluded** — siblings are navigation (the hero's sibling bubbles), not
-  discovery; they'd otherwise dominate every shelf.
+  discovery; they would otherwise dominate every shelf.
 
-## Signals — each sub-score in [0, 1]
+---
 
-**S_style — skill-coverage cosine (weight 0.30).** Vector over the mapped skill vocabulary
-(`GetChartSkillChipsQuery`): component = segment-coverage fraction; whole-chart qualities (null
-coverage — piucenter's sustained/bursty) contribute a fixed 0.6 component. Cosine similarity.
-Missing when either chart has no banked skill data.
-
-**S_behavior — difficulty behavior (weight 0.25).** Mean of available components:
-- Pass tier category distance: `1 − |catA − catB| / 6` (7-step `TierListCategory` scale).
-- Score tier ("Scores" list) distance: same form.
-- Letter-grade percentile curve: `1 − mean(|pA(g) − pB(g)|)` over the shared grade axis.
-- Continuous scoring level (`GetChartScoringLevelsQuery`): `1 − min(1, |slA − slB| / 2)`.
-
-**S_players — population residual correlation (weight 0.25; the strongest signal).** For every
-user with scores on both charts (same mix): residual = user's score minus the chart's
-population-average score at that user's competitive-level bucket (the score-by-level curve the
-page already draws). Then:
+## 3. The formula
 
 ```
-S_players = max(0, pearson(residualsA, residualsB)) · n / (n + 20)
+S_skill      = Bray-Curtis over gamma-shaped raw badge coverage        (§3.1)
+S_intensity  = geometric mean over three z-scored scalars              (§3.2)
+
+score        = exp( (w_s·ln(S_skill) + w_i·ln(S_intensity)) / (w_s + w_i) )
+               w_s = 0.30, w_i = 0.10   →  75 / 25 renormalized
 ```
 
-`n` = shared scorers; **missing when n < 30**. The shrinkage term keeps thin overlaps honest;
-negative correlation clamps to 0 (actively-dissimilar is not an edge, and the shelf never needs
-"opposites").
+Both signals are mandatory: a chart missing either gets no edge. In practice they co-occur — both
+come from the same piucenter crawl (4,411 charts each) — but the old `nonMetaAvailable >= 2` gate
+meant "some real evidence" when there were four signals and now means "everything". Say what it
+means.
 
-**S_intensity — step-analysis profile (weight 0.10).** Scalars: NPS, sustain fraction
-(sustain seconds / duration), time-under-tension fraction, note count — each z-scored within the
-(type, level) cohort; `S_intensity = clamp01(1 − mean(|zA − zB|) / 3)`. Missing without
-step-analysis rows.
+### 3.1 S_skill — Bray-Curtis over gamma-shaped raw badge coverage
 
-**S_meta — metadata prior (weight 0.10).** `0.5·sameStepArtist + 0.2·sameSongType +
-0.2·clamp01(1 − |bpmA − bpmB| / 60) + 0.1·sameDebutMix`.
-
-## Combination (settled)
+Vector over piucenter's **own** badge vocabulary via `GetChartBadgeCoverageQuery` (~29 badges,
+banked as measured). Component = fraction of the chart's segments carrying that badge.
 
 ```
-available = signals present for the pair
-score     = Σ (w_i · S_i) / Σ w_i      over available          (weight renormalization)
-score    ×= 1 − 0.15 · |levelA − levelB|                        (level affinity inside the ±2 gate)
-edge exists only if ≥ 2 non-meta signals are available          (meta alone never makes a neighbor)
+cov'    = cov ^ γ                                   γ = 2 (CoverageGamma)
+S_skill = 1 − Σ|cov'_a − cov'_b| / Σ(cov'_a + cov'_b)          over the UNION
 ```
 
-- **Top-K = 8** per (chart, mix), **floor = 0.55** — fewer than 8 neighbors is fine; the shelf
-  renders what exists (with its empty-state sentence when a chart is too sparse for any edge).
-- Symmetric by construction → compute once per unordered pair, store both directions for query
-  simplicity.
-- Weights are constants in the domain service (unit-tested breakdown); tuning happens by PR after
-  the **calibration checkpoint**: dump top-K for ~20 charts the community has strong opinions
-  about, owner eyeballs, weights adjust. Not config — the formula is product behavior.
+A badge one side never carries is zero coverage — a real difference, not missing data.
 
-## Why-chips (explainability is the product)
+**Why mass normalization.** Dividing by the pair's own coverage mass rather than a dimension count
+makes the profile's *shape* decide the score: a badge neither chart carries costs nothing on
+either side of the ratio (shared absence is free, and the sparse tail cannot dilute a real gap); a
+badge one chart is built on and the other never touches contributes its whole magnitude; shared
+high coverage lands in the denominator and argues *for* the pair.
 
-Per-edge, persist the sub-scores; the UI derives at most **two** chips by priority:
+**Why gamma.** The common badges average ~0.3 coverage across the corpus (`doublestep` .38,
+`jump` .36, `jack` .33, `twist_90` .33) — every chart runs, jumps and jacks a bit. That is the
+baseline, not a property. Squaring keeps a 0.9 badge at 0.81 while a 0.3 drops to 0.09, so a badge
+a chart is **built on** outweighs one it brushes past **52:1 instead of 7:1**. γ = 1 disables it.
 
-| Priority | Condition | Chip (localized) |
+**Explainability is free** — and this is load-bearing, see §4:
+
+```
+S_skill = Σ 2·min(cov'_a, cov'_b) / Σ(cov'_a + cov'_b)
+```
+
+`min(a,b)` **is** the shared coverage of that badge. The match reasons fall out of the formula;
+nothing extra is computed or stored to explain a match.
+
+### 3.2 S_intensity — geometric over three z-scored scalars
+
+From piucenter step analysis (`nps`, `sustain_time`, `time_under_tension`) plus `Song.Duration`:
+
+```
+susFrac    = sustain_time / duration                              the grind
+burstFrac  = (time_under_tension − sustain_time) / duration       the spikes
+nps                                                               does it feel fast
+
+per dimension d:  z_d  = z-score within the (type, level) cohort   (population sd)
+                  s_d  = clamp01(1 − |z_dA − z_dB| / K)            K = 3
+
+S_intensity = exp( Σ w_d·ln(max(s_d, 0.01)) / Σ w_d )
+              burstFrac 0.40 · susFrac 0.35 · nps 0.25
+```
+
+**Why decompose tension.** `sustain_time ⊆ time_under_tension`, **always** — Gargoyle proves it at
+`sustain 362 / TUT 362`. So the old `susFrac`/`tensionFrac` pair double-counted sustain and gave
+burst no dimension of its own. `susFrac` + `burstFrac` are the two halves, independent, and they
+map onto the owner's taxonomy directly (§8).
+
+**Why geometric, and why NPS is only 0.25.** NPS is **orthogonal** to the stamina axis, not
+redundant with it — and that is a feature, not a reason to drop it. It is what correctly saw
+through Altale's 90 BPM (12.0 nps) and TRICKL4SH's 220 BPM (11.5 nps) when nominal BPM said they
+were 60–75 apart. But averaging two orthogonal axes collapses **both**: Conflict D21 (sustain,
+TUT .467) and Viyella's D21 (burst, TUT .281) scored **.787** because their NPS coincided at
+10.7/10.5. Geometric means a matching NPS can never rescue a mismatched burstFrac.
+
+**Why z-scores here and absolute coverage in skill — the asymmetry is deliberate.** Low intensity
+is a *valid property*: two charts both unusually chill for their level genuinely are alike, so
+z-scores are centred and `|Δz| ≈ 0` → similarity 1.0. Low skill coverage is *absence*: two charts
+both lacking brackets are not thereby alike, so Bray-Curtis makes shared absence free. Never
+gamma or mass-normalize intensity; never z-score skill.
+
+**K = 3 is provisional.** Typical `|Δz|` is ~0.6, so the divisor only uses a fifth of its range —
+but the bug was dilution, not scale, and geometric fixes dilution. Dropping K *and* going geometric
+at once would prune twice and teach us nothing. One-constant retune after a calibration run.
+
+### 3.3 Why geometric and not a weighted mean
+
+An arithmetic mean **squares its weights** — `Var(Σw_i·S_i) = Σw_i²·Var(S_i)` — so a signal at 0.25
+weight contributes a *sixteenth* of its variance and agreeing signals bury the one that dissents.
+Measured on S20, the five old signals' spreads ran through that algebra to a combined
+`sd ≈ 0.062`, and the floor truncated it to the **0.030** actually observed. That is why Players at
+0.251 with **478 shared scorers** could not kill an edge, and why Meta — the weakest prior, at 0.10
+— out-discriminated Players *and* Difficulty. In log space a low signal drags the score down and
+cannot be outvoted: "alike in **every** way that matters", not "alike on average".
+
+`SignalFloor = 0.01` exists because `ln(0)` is `−∞`, which would hand any single zeroed signal a
+hard veto it has not earned.
+
+---
+
+## 4. Match reasons (explainability is the product)
+
+**Owner, 2026-07-15, binding:** *"I want to see specifically the skills and intensity metrics that
+the chart matched on — saying 'skills match' is going to be confusing as shit and make people think
+it's broken."*
+
+Per edge, persist the top shared badges — the `min(cov'_a, cov'_b)` terms from §3.1, rendered as
+raw (un-gamma'd) coverage so the number means something to a human:
+
+> **Matched on** · `Brackets 50%` · `Bracket jumps 37%` · `Anchor runs 25%`
+
+The `%` is the **shared** coverage, so "Brackets 50%" honestly means *both* are at least half
+brackets. Intensity contributes its own chip in a distinct colour (`NPS 10.7 → 11.9`) — a different
+*kind* of reason, and it must not read as a skill.
+
+This is not decoration. Conflict↔Viyella's would have rendered **"matched on: NPS (10.7 vs 10.5)"**
+— and a human reads that as a coincidence in two seconds. The chip catches what three separate
+analyses missed.
+
+---
+
+## 5. Ordering (difficulty), filtering (metadata)
+
+**Order by** — a runtime concern over the precalculated set:
+
+| Option | Source | Available |
 |---|---|---|
-| 1 | S_players ≥ 0.45 (n ≥ 30) | "players score alike" |
-| 2 | S_style ≥ 0.75 | "same skill profile" — named when one shared skill has ≥ 30% coverage on both ("twist-heavy like this") |
-| 3 | S_behavior ≥ 0.8 | "behaves the same for its level" |
-| 4 | same step artist | "same step artist" |
-| 5 | S_intensity ≥ 0.8 | "same intensity" |
+| **No sorting** | the match order itself, strongest first | always |
+| **Community** *(default)* | community tier lists + scoring level, closest to the anchor | always |
+| **Pass · for me** | the reader's personalized Pass tier list | signed in |
+| **Score · for me** | the reader's personalized Score tier list | signed in |
 
-## Storage & compute
+Pass and Score are both offered because they genuinely differ — a chart can be a wall to clear and
+generous to score, or the reverse. "No sorting" is the only option that shows the true match
+order; every difficulty sort reorders away from it.
+
+**Filters** reduce the *target list* and then **recompute live** — they never filter the stored
+top-20 (which would trivially return zero). Dimensions: step artist, BPM range, level range, mix
+("from X or newer"). The reach must be stated: *"Compared **30 charts** by SPHAM within 2 levels —
+**1 match**."* — that reads as a narrow filter rather than a broken feature.
+
+**The D18→D23 case is a live call.** "I liked this D18, what D23s are like it" is a real use case
+and is deliberately **outside** the precalculated ±2 window; it computes on demand.
+
+---
+
+## 6. Degradation and near-misses
+
+The floor is a **render-time constant, not a storage decision** (§7) — which makes both of these
+free, and lets the floor be retuned without a job run.
+
+- **Near-misses.** Even with matches, show *"Didn't quite make the cut"* — the rows below the
+  floor. People are curious, and it is the same stored data.
+- **No matches.** *"No significant matches — here's the closest we could find."* Never an empty
+  box. In the filtered case say what was searched: *"Compared 128 charts at 195–225 BPM — none
+  cleared the bar."*
+
+---
+
+## 7. Storage & compute
 
 - **Table `ChartSimilarity`** (ChartIntelligence contribution, internal entity):
-  `(Mix, ChartId, SimilarChartId, Score, SignalsJson, SharedScorers, ComputedAt)`,
-  PK (Mix, ChartId, SimilarChartId), index (Mix, ChartId, Score DESC). Row in
-  DATABASE-SCHEMA.md with the migration.
-- **Nightly** `RecalculateChartSimilarityCommand` (Hangfire one-liner → bus consumer, per mix),
-  scheduled **after** the tier-list/letter-difficulty recomputes it reads from (their UTC slots
-  are in SCHEDULED-JOBS.md; slot this ≥ 06:00 ET). Work shape: bucket charts by (type, level
-  window); build per-chart residual maps in one pass over scores; pair-score within buckets.
-  Idempotent full rewrite per (mix, chart).
-- **Read**: `GetSimilarChartsQuery(chartId, mix)` → ordered edges + signal breakdown. No
-  read-side cache (revised at B2): the read is a single PK-prefix seek returning ≤ 8 rows,
-  and the page's output cache is the real caching layer — a memory cache here would only
-  add a staleness window after the nightly rebuild.
+  `(MixId, ChartId, SimilarChartId, Score, SignalsJson, ComputedAt)`, PK
+  `(MixId, ChartId, SimilarChartId)`, index `(MixId, ChartId, Score DESC)`. `SharedScorers` is
+  dropped with Players. `SignalsJson` carries skill, intensity, and the shared-badge breakdown.
+- **Top-20 per (mix, chart), floor-free.** ~84k rows at 4,213 charts, against 18k today. Trivial,
+  and it is what buys near-misses, the degraded state, and a retunable floor.
+- **Nightly** `RecalculateChartSimilarityCommand` — **no longer has a cron dependency.** With
+  Players, Difficulty and Meta gone, it reads *only* badge coverage and step analyses, i.e. the
+  piucenter crawl. It was pinned at `0 12 * * *` "deliberately after the analytics chain it reads";
+  that chain is no longer an input. It also loses `IScoreReader.GetScores` (a ~50k-row folder read
+  per level) and the `IPlayerStatsReader` fan-out entirely.
+- **Read**: `GetSimilarChartsQuery(chartId, mix)` → a PK-prefix seek returning ≤20 rows. Filtered
+  and out-of-range reads compute live from badge coverage — one metrics read plus dictionary math.
 
-## Future upgrades (recorded, out of scope)
+---
 
-- **Judgment distributions** (once OfficialMirror starts banking recorded plays): a
-  judgment-shape vector per chart — sharper than score residuals for "same kind of problem".
-- **piucenter section density/difficulty**: upgrades S_intensity from whole-chart scalars to a
-  section-profile distance, and localizes *where* two charts are alike.
-- Cross-mix edges ("this Phoenix 2 chart plays like that XX classic") — needs residuals
-  normalized across scoring eras; revisit with demand.
+## 8. Reference fixtures (owner-verified — use these, don't invent new ones)
+
+**The stamina axis.** `TutFrac` orders the owner's entire taxonomy, verified against six
+independently-labelled charts (2026-07-15):
+
+| label | chart | NPS | susFrac | burstFrac |
+|---|---|---|---|---|
+| full stamina (extreme) | Gargoyle - FULL SONG - D25 | 10.0 | **.958** | **.000** |
+| sustain + big bursts | Papa Gonzales S22 | 13.0 | .242 | **.440** |
+| high stamina | Conflict D21 | 10.7 | .217 | .250 |
+| pure burst | Viyella's Nightmare D21 | 10.5 | .133 | .148 |
+| big burst moments | MilK S20 | 10.2 | .065 | .154 |
+| chill / "fake fast runs" | Hymn of Golden Glory S22 | 13.2 | .033 | .033 |
+
+- **Gargoyle - FULL SONG - D25 is the sentinel**: `sustain 362 / TUT 362` — every second of tension
+  is sustained, zero bursts, and the only chart in the set where `top3:sustained` fires at #1.
+- **Hymn of Golden Glory S19 vs S22 is the controlled inversion**: same song, same 121s, adjacent
+  rungs — `S19 nps 10.2 / TutFrac .579` (real runs) vs `S22 nps 13.2 / TutFrac .066` (triplet
+  "fake fast runs" — faster *and* less taxing). Every variable except the one being measured is
+  identical by construction. **Any intensity formula that calls S19 and S22 similar is broken**, and
+  an averaging one does.
+
+**The graded shelf.** Rush-More D23 (SPHAM, 160 BPM, 10.7 nps, bracket .50 / anchor_run .50 /
+drill .375), owner-graded 2026-07-15 — top 8 all good, precision@8 effectively 100%:
+
+- **Good:** Dream To Nightmare, TRICKL4SH 220, Your Mind, What Happened, Glimmer Gleam, Altale
+  (*"really good"*), Pop Sequence, Demon of Laplace, **Meteo5cience** (*"one of the best matches in
+  the list"* — the chart the level tax buried to 12th).
+- **Bad:** Passacaglia D22, THE REVOLUTION D22 (*"absolutely not"*), Chase Me (*"nope, try again"*).
+- **Baroque Virus - FULL SONG - D23:** owner says *"actually perfect match"* — **but piucenter has
+  the wrong chart** (the one they hold no longer exists; owner raising it upstream). Its
+  `sustain 35 / TUT 156` against Rush-More's `13/33` is independent confirmation. **Do not calibrate
+  against this chart.**
+
+---
+
+## 9. Rejected, with evidence (do not re-derive)
+
+Measured on the Curiosity Overdrive ↔ BOOOM!! pair and the S20/D23 folders unless noted.
+
+| Rejected | Why |
+|---|---|
+| **Cosine** for skill | Scale-invariant — reads only the angle. 10%-brackets and 95%-brackets score a perfect **1.0**. All 11 original fixtures used *identical* vectors, so it was never tested. |
+| **Mean over the union** | Rewards sparsity — drifts to 1.0 as dimensions are added. Raw badges + mean = **0.81** vs coarse chips' 0.75: *worse with better data*. |
+| **Magnitude-weighted mean** | **0.79** — the weights land in the denominator and cancel. Any weighted-average form has this. |
+| **IDF on badge rarity** | Owner: a badge riding many charts doesn't make those charts *about* it — mass normalization already handles it. |
+| **The display chips** (`GetChartSkillChipsQuery`) | Max-per-mapped-skill + per-badge thresholds. Collapses `bracket .43 + bracket_jump .43 + staggered_bracket .14` vs a lone `bracket_jump .38` into `0.43 vs 0.38`; a chart with four sub-threshold twist badges gets **no Twists tag at all**. Right for chips, lossy for comparison. Also drops `doublestep` (3,848 charts) and `side3_singles` (1,644). |
+| **Arithmetic combination** | Squares the weights → `sd 0.030` across a folder. §3.3. |
+| **`top3:` dominance picks** | **59.1% of gated S20 pairs have zero overlap; median 0, mean .079.** Zero overlap is the *norm*, so as a geometric factor it would cost ×0.50 on the majority case. It does track owner grades (9/9 of >0 overlaps were good matches) and it explains Dream To Nightmare (its top3 is `anchor_run, bursty, split` — **no bracket**, despite .625 bracket coverage: *made of* brackets, *about* splits) — so it may return as a **bonus**, never a penalty. `GetChartDominancePicksQuery` was built and deleted; resurrect from git if needed. |
+| **Players (residual correlation)** | Out of scope V1 (owner, 2026-07-15) pending a "player type" project. It was honest — Rush-More's pair had a Pearson of **0.26 across 478 shared scorers**, and score-age analysis ruled out era mismatch (56% played both within a month; pair ages 470/478d vs their own 459d average). It just cannot be *acted on* without knowing what kind of player is correlating. Removing it also removes a ~50k-row folder read from the nightly job. |
+| **Difficulty as a score** | It is a **viewer** property. Measured pre-floor across all 99,422 gated S20 pairs: `avg .649, sd .150` — a healthy, well-scaled signal. Its post-floor `avg .854, sd .084` was **selection-on-the-outcome** (the floor cuts on the score; the score is made of these signals), not a pedestal. Any signal looks flat through that lens. |
+| **Meta as a score** | Filter-shaped. It out-discriminated Players *and* Difficulty in both S20 and D23 at a third of their weight — because binary facts have high variance, not because it knows anything. |
+| **Note count in intensity** | Andamiro pads charts toward a per-folder note-count norm, so within-cohort spread is tiny and z-scoring *divides by it*, amplifying differences the padding was designed to erase. Also `NPS × duration = note count` — never independent. |
+| **The level-affinity penalty** | §2. |
+| **A BPM plateau (±10, decay beyond)** | Nominal BPM is **noise**: slow songs multiply. Altale 90 BPM → **12.0 nps**; Glimmer Gleam 85 → 8.8; TRICKL4SH 220 → 11.5 — all within ~2 of Rush-More's 10.7, while raw BPM said 60–75 apart. A ±10 band would have deleted two owner-approved matches and promoted THE REVOLUTION (exactly 160 BPM, *"absolutely not"*). **NPS already carries it.** BPM survives only as a filter. |
+
+---
+
+## 10. Open
+
+- **The floor value.** 0.55 was calibrated against a five-signal arithmetic mean that no longer
+  exists. Meaningless until a run with skill+intensity only; owner will run the analyzer and
+  calibrate from the distribution. It is a render constant, so this is a redeploy, not a job run.
+- **Static shelf vs interactive controls.** The shelf **is** the internal-link mesh and must sit in
+  the anonymous output cache — but sort and filters are interactive, and an island renders nothing
+  server-side (prerendering is off permanently). Settled shape: static server-rendered default list
+  (real `<a href>`, crawlable) + an island for the controls that swaps the list on interaction,
+  using the doc's `data-island-ready` pattern. The card's play button is a **sibling** of the `<a>`,
+  never a child — a `<button>` inside an `<a>` is invalid and the click targets collide.
+- **Video embed shape.** The card art is 16:9 so the video takes its exact box — no reflow, the grid
+  never jumps. Nothing loads until asked (the hero's rule). Autoplay is unreliable unmuted, so
+  expect a second click; don't let the UI promise playback.
+- **`ChartVerdictHandler`'s folder read** — unrelated to similarity, same page, same branch, still
+  there. `GetScores(mix, chartType, level)` materializes ~50k rows for Phoenix S20 and filters to
+  one chart in memory. Its result is cached per (chart, mix) daily, so it is one read per chart per
+  day — but the SEO goal is 4,213 crawled chart pages, each a cold verdict.
+
+---
+
+## 11. Future upgrades (recorded, out of scope)
+
+- **Player type** — the prerequisite for Players returning. Needs patterns that identify *what kind
+  of player* is correlating; its own project.
+- **`top3:` as a bonus** — see §9. High precision, low recall; can confirm a match, never refute.
+- **Rare-pattern signals.** `rare:*` (3,464 rows) and `practice_rank:*` (14,533 rows) are banked
+  from piucenter and read by **nothing**. `badge_fraction` measures *pervasiveness*; `rare:split-2`
+  means "there is a run of 2+ splits" and `practice_rank:split = 2` means it is the #2 thing to
+  practice. Dream To Nightmare's uniqueness lives entirely there. Four skills — `bursty`,
+  `sustained`, `run_without_twists`, `twists` — have **zero** coverage fractions corpus-wide and are
+  reachable only this way.
+- **"Most opposite chart"** — a live query, no storage, **1.66s** in raw SQL over all 1,731 Doubles
+  (milliseconds in-process). Owner-verified as a fun/meme feature: the most opposite chart to
+  Rush-More is **Hymn of Golden Glory - SHORT CUT - D20** at **0.0000** — zero shared mass, all
+  twists against all brackets. Only 4 charts tie under .02, so the answer is essentially unique.
+  Caveat: Bray-Curtis punishes sparsity, so the tail fills with thin old ANDAMIRO charts — needs a
+  minimum-badge guard or same-level scoping. Bonus finding: the *maximum* similarity across every
+  Double is **0.6154**, so the shelf's 49–62% range is genuinely the top of the distribution.
+- **Judgment distributions**, **piucenter section density**, **cross-mix edges** — as before.

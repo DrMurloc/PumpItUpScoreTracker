@@ -10,8 +10,8 @@ namespace ScoreTracker.ChartIntelligence.Domain;
 internal sealed record ChartSimilarityEdge(
     Guid SimilarChartId,
     double Score,
-    double? StyleScore,
-    double? BehaviorScore,
+    double? SkillScore,
+    double? DifficultyScore,
     double? PlayersScore,
     double? IntensityScore,
     double? MetaScore,

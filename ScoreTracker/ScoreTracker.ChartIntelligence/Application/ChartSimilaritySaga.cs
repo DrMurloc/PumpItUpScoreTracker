@@ -14,12 +14,13 @@ namespace ScoreTracker.ChartIntelligence.Application;
 
 /// <summary>
 ///     The similarity-graph saga (docs/design/chart-similarity.md): the nightly rebuild
-///     assembles every chart's evidence — banked skills and step analysis (Catalog
+///     assembles every chart's evidence — raw badge coverage and step analysis (Catalog
 ///     contracts), this vertical's own tier lists / letter percentiles / scoring levels,
 ///     and score residuals against the population curve (Ledger + Progression read
 ///     ports) — runs the pure calculator per chart type, and rewrites each chart's
 ///     edges wholesale. Singles and Doubles only (Co-Op has no competitive-level
-///     semantics; excluded v1).
+///     semantics; excluded v1). Badges come from GetChartBadgeCoverageQuery, never the
+///     display chips: comparison needs what was measured, not what reads well as a tag.
 /// </summary>
 internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarityCommand>,
     IRequestHandler<GetSimilarChartsQuery, IReadOnlyList<ChartSimilarityRecord>>
@@ -60,7 +61,7 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
         if (charts.Length == 0) return;
         var chartIds = charts.Select(c => c.Id).ToArray();
 
-        var skillChips = await _mediator.Send(new GetChartSkillChipsQuery(chartIds), cancellationToken);
+        var badgeCoverage = await _mediator.Send(new GetChartBadgeCoverageQuery(chartIds), cancellationToken);
         var stepAnalyses = await _mediator.Send(new GetChartStepAnalysesQuery(chartIds), cancellationToken);
         var passTiers = await TierCategories(mix, "Pass Count", cancellationToken);
         var scoreTiers = await TierCategories(mix, "Scores", cancellationToken);
@@ -76,7 +77,7 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
             if (typeCharts.Length == 0) continue;
 
             var residuals = await BuildResiduals(mix, chartType, typeCharts, cancellationToken);
-            var pool = typeCharts.Select(chart => BuildFeatures(chart, skillChips, stepAnalyses, passTiers,
+            var pool = typeCharts.Select(chart => BuildFeatures(chart, badgeCoverage, stepAnalyses, passTiers,
                 scoreTiers, letterPercentiles, scoringLevels, residuals)).ToArray();
 
             var edges = ChartSimilarityCalculator.BuildEdges(pool);
@@ -94,8 +95,8 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
         CancellationToken cancellationToken)
     {
         var edges = await _similarity.GetEdges(request.Mix, request.ChartId, cancellationToken);
-        return edges.Select(e => new ChartSimilarityRecord(e.SimilarChartId, e.Score, e.StyleScore,
-            e.BehaviorScore, e.PlayersScore, e.IntensityScore, e.MetaScore, e.SharedScorers)).ToArray();
+        return edges.Select(e => new ChartSimilarityRecord(e.SimilarChartId, e.Score, e.SkillScore,
+            e.DifficultyScore, e.PlayersScore, e.IntensityScore, e.MetaScore, e.SharedScorers)).ToArray();
     }
 
     private async Task<IReadOnlyDictionary<Guid, TierListCategory>> TierCategories(MixEnum mix, string tierListName,
@@ -149,7 +150,7 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
     }
 
     private static ChartSimilarityFeatures BuildFeatures(Chart chart,
-        IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> skillChips,
+        IReadOnlyDictionary<Guid, IReadOnlyDictionary<string, double>> badgeCoverage,
         IReadOnlyDictionary<Guid, ChartStepAnalysisRecord> stepAnalyses,
         IReadOnlyDictionary<Guid, TierListCategory> passTiers,
         IReadOnlyDictionary<Guid, TierListCategory> scoreTiers,
@@ -157,10 +158,9 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
         IDictionary<Guid, double> scoringLevels,
         IReadOnlyDictionary<Guid, IReadOnlyDictionary<Guid, double>> residuals)
     {
-        var weights = skillChips.TryGetValue(chart.Id, out var chips)
-            ? chips.GroupBy(c => c.Skill)
-                .ToDictionary(g => g.Key, g => g.Max(c => c.Weight))
-            : new Dictionary<Skill, double>();
+        var badges = badgeCoverage.TryGetValue(chart.Id, out var banked)
+            ? banked
+            : new Dictionary<string, double>();
 
         var analysis = stepAnalyses.GetValueOrDefault(chart.Id);
         var durationSeconds = chart.Song.Duration.TotalSeconds;
@@ -173,7 +173,7 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
             chart.Id,
             chart.Song.Name,
             chart.Level,
-            weights,
+            badges,
             passTiers.TryGetValue(chart.Id, out var pass) ? pass : null,
             scoreTiers.TryGetValue(chart.Id, out var scoreTier) ? scoreTier : null,
             letterPercentiles.GetValueOrDefault(chart.Id),
@@ -181,7 +181,6 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
             (double?)analysis?.Nps,
             Fraction(analysis?.SustainTimeSeconds),
             Fraction(analysis?.TimeUnderTensionSeconds),
-            chart.NoteCount,
             chart.StepArtist,
             chart.Song.Type,
             (double?)chart.Song.Bpm?.Average,

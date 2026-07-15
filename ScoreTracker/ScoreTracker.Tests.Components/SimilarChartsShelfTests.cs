@@ -60,7 +60,7 @@ public sealed class SimilarChartsShelfTests : TestContext
         var anchor = Guid.NewGuid();
         // Players + style both qualify → they are the two chips; behavior misses its bar.
         SetupEdges(anchor, new ChartSimilarityRecord(Guid.NewGuid(), 0.9,
-            StyleScore: 0.8, BehaviorScore: 0.7, PlayersScore: 0.5, IntensityScore: null, MetaScore: 0.3,
+            SkillScore: 0.8, DifficultyScore: 0.7, PlayersScore: 0.5, IntensityScore: null, MetaScore: 0.3,
             SharedScorers: 40));
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
@@ -76,7 +76,7 @@ public sealed class SimilarChartsShelfTests : TestContext
         var anchor = Guid.NewGuid();
         // High correlation but under the 30-scorer confidence floor.
         SetupEdges(anchor, new ChartSimilarityRecord(Guid.NewGuid(), 0.8,
-            StyleScore: null, BehaviorScore: 0.9, PlayersScore: 0.6, IntensityScore: null, MetaScore: 0.3,
+            SkillScore: null, DifficultyScore: 0.9, PlayersScore: 0.6, IntensityScore: null, MetaScore: 0.3,
             SharedScorers: 12));
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
@@ -90,7 +90,7 @@ public sealed class SimilarChartsShelfTests : TestContext
     {
         var anchor = Guid.NewGuid();
         SetupEdges(anchor, new ChartSimilarityRecord(Guid.NewGuid(), 0.6,
-            StyleScore: 0.6, BehaviorScore: 0.6, PlayersScore: null, IntensityScore: 0.5, MetaScore: 0.3,
+            SkillScore: 0.6, DifficultyScore: 0.6, PlayersScore: null, IntensityScore: 0.5, MetaScore: 0.3,
             SharedScorers: 0));
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));

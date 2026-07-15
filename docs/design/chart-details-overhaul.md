@@ -5,17 +5,27 @@ day (round 2 — community glow + honest plate framing). Companion specs:
 [chart-similarity.md](chart-similarity.md) (the similarity graph + settled formula) and
 [chart-verdicts.md](chart-verdicts.md) (the verdict engine).
 
-**Status (2026-07-14).** B1–B4 and P1+P2 are built and on this branch: the similarity graph
+**Status (2026-07-15).** B1–B4 and P1+P2 are built and on this branch: the similarity graph
 (table, nightly job, calculator, query), the verdict engine, the URL lattice services (dark),
 and the page itself — rebuilt to the approved mock anatomy in **circuit form** (today's
-hosting), with every island-to-be a self-loading component keyed by chart id. Remaining:
-**P3** (301 lattice live, sitemap vanity swap, static head/JSON-LD, output caching — ships
-as ONE unit, never split: pretty URLs must never point at empty shells) and **P4** (E2E
-facts + doc sync), both gated on the Stage-2 hosting flip. Owner-only steps: UX field-test
-rounds on the built page, and the similarity **calibration eyeball** (trigger
-`recalculate-chart-similarity` in /hangfire, review top-K for ~20 known charts). ⚠ Weight
-tuning is a deliberate breaking change: the calculator's unit fixtures hand-compute expected
-scores from the exact weights — a weight PR must recompute them.
+hosting), with every island-to-be a self-loading component keyed by chart id.
+
+⚠ **The similarity formula is mid-rework.** A 07-14/07-15 calibration session against real data
+found B2's shape unsalvageable — it flattened to `sd = 0.030` across a whole folder because it
+averaged a chart property (is this the same kind of problem?) with a viewer property (how hard
+is it?). V1 is settled and rewritten in [chart-similarity.md](chart-similarity.md): **similarity
+is skill + intensity only**, difficulty becomes an ordering layer, metadata becomes filters.
+See the **R-series** in the build plan. Partly landed; that doc's §9 records every rejected
+alternative *with its measurement* — read it before changing the formula, because nearly all of
+them were tried and killed for a recorded reason. The old ⚠ about weight-tuning breaking the
+hand-computed fixtures still holds and now applies to the R-series too.
+
+Remaining beyond the rework: **P3** (301 lattice live, sitemap vanity swap, static head/JSON-LD,
+output caching — ships as ONE unit, never split: pretty URLs must never point at empty shells)
+and **P4** (E2E facts + doc sync), both gated on the Stage-2 hosting flip. Owner-only steps: UX
+field-test rounds, and the **floor calibration run** (trigger `recalculate-chart-similarity` in
+/hangfire, then set the floor from the score distribution — it is a render constant now, so that
+is a redeploy rather than a job run).
 
 **Stage context (owner-approved 2026-07-14, aligned with the shell/hosting session):** the site
 moves to SSR-by-default + islands in three stages — Stage 1 the static shell (every page, one
@@ -209,18 +219,39 @@ user-secrets or pipeline variables.
 
 ## Build plan
 
-**The table below is the commit order.** B1→B4 sequential on this branch with zero stage
-dependency; P1→P4 sequential and gated on Stage 2 (hosting flip) merged forward. Suites green at
-every row; FT = owner field test.
+**The table below is the commit order.** B1→B4 and P1→P2 are **built and on the branch**; R1→R8 is
+the similarity rework settled at the 2026-07-15 workshop; P3→P4 remain gated on Stage 2 (hosting
+flip) merged forward. Suites green at every row; FT = owner field test.
 
 | # | Commit | Contents |
 |---|---|---|
-| B1 | Similarity: table + job skeleton | `ChartSimilarity` contribution + migration, `RecalculateChartSimilarityCommand` + consumer + Hangfire line, DATABASE-SCHEMA + SCHEDULED-JOBS rows |
-| B2 | Similarity: signals + formula | per-signal scorers + combiner (unit-tested against hand-built fixtures), `GetSimilarChartsQuery` — **calibration artifact: top-K dump for ~20 known charts → owner eyeball, weights adjust by PR** |
-| B3 | Verdict engine | facet computers + salience ranking (unit-tested), `GetChartVerdictQuery`, caching |
-| B4 | URL lattice (dark) | slug service + historical (mix, song, level) resolver + 301 controller, tested; not yet linked or sitemapped |
-| P1 | The page, hero → evidence | `ChartDetails.razor` rebuilt in place: static SSR body + video/record/graphs islands (`@rendermode InteractiveServer`), `--mud-*` audit on statically-used components — needs Stages 1–2 merged forward |
-| P2 | History, leaderboard, shelf | timeline, glowing top-10 + explorer island, similarity shelf, sibling bubbles, admin island |
+| B1 ✅ | Similarity: table + job skeleton | `ChartSimilarity` contribution + migration, `RecalculateChartSimilarityCommand` + consumer + Hangfire line, DATABASE-SCHEMA + SCHEDULED-JOBS rows |
+| B2 ✅ | Similarity: signals + formula | **superseded by R1–R4** — three of its five signals leave the score |
+| B3 ✅ | Verdict engine | facet computers + salience ranking (unit-tested), `GetChartVerdictQuery`, caching |
+| B4 ✅ | URL lattice (dark) | slug service + historical (mix, song, level) resolver, tested; not yet linked or sitemapped |
+| P1 ✅ | The page, hero → evidence | `ChartDetails.razor` rebuilt in place, circuit form |
+| P2 ✅ | History, leaderboard, shelf | timeline, glowing top-10 + explorer island, similarity shelf, sibling bubbles, admin island |
+
+**The similarity rework (R-series).** Settled 2026-07-15 — see
+[chart-similarity.md](chart-similarity.md), which is a rewrite, not an edit. R1→R4 have no stage
+dependency. Partly landed already: Bray-Curtis + γ over raw badges, the geometric combiner, note
+count out, and the level tax removed are **on the branch**; `GetChartDominancePicksQuery` was built
+and deleted.
+
+| # | Commit | Contents |
+|---|---|---|
+| R1 | Strip similarity to skill + intensity | Delete `DifficultySimilarity` / `PlayerSimilarity` / `MetaSimilarity` + their weights + `MinimumSharedScorers`; `ChartSimilarityFeatures` 17 fields → 7; `ChartSimilarityEdge` sheds Difficulty/Players/Meta/SharedScorers; the saga loses `BuildResiduals` and its tier-list / letter-percentile / scoring-level reads — **and with them `IScoreReader.GetScores` (a ~50k-row folder read per level) and the `IPlayerStatsReader` fan-out**. Rewrite the `nonMetaAvailable >= 2` gate to say what it now means (both signals mandatory). Fixtures shed ~8 of 19 cases. |
+| R2 | Intensity: decompose + geometric | `susFrac`/`burstFrac` replace `tensionFrac` (sustain ⊆ tension was double-counted); geometric over the three dims; weights `burst .40 / sus .35 / nps .25`, K = 3. **Fixtures: Gargoyle - FULL SONG - D25 sentinel + the Hymn S19-vs-S22 controlled inversion** (chart-similarity.md §8). |
+| R3 | Storage: top-20, floor-free, match reasons | `ChartSimilarityEdge` gains `SharedBadges` (the `min(a,b)` terms); entity drops `SharedScorers`; `SignalsJson` reshape; migration; `TopK` → 20; `ScoreFloor` leaves the domain and becomes a render constant. **Cron dependency drops** — SCHEDULED-JOBS row. |
+| R4 | Read contracts | `GetSimilarChartsQuery` (precalculated default) + a live filtered query (filters reduce the target list, then recompute) + `GetOppositeChartQuery` (novelty; live, no storage). |
+| R5 | The card + static shelf | `SimilarChartCard`: 16:9 art, `DifficultyBubble` on the corner, original mix on the meta line, named match chips, `<a href>` wrapping art+body with the **play button as a sibling overlay**. Static server-rendered default list — crawlable, cacheable, the link mesh. 3-across → 2 → 1. |
+| R6 | The controls island | Sort (No sorting / Community / Pass·me / Score·me), filters + reach line, near-misses, degraded state, video swap. Island hides the static list via `data-island-ready`. |
+| R7 | Localization | ~15 new keys × 9 locales. |
+| R8 | Tests + docs | bUnit shelf coverage, `SimilarChartsShelfTests` rewrite, DATABASE-SCHEMA + SCHEDULED-JOBS sync. |
+| **FT** | **Calibration run** | Owner runs the analyzer → query the score distribution → **set the floor** (chart-similarity.md §10). Nothing before this teaches us anything about shelf sizes. |
+
+| # | Commit | Contents |
+|---|---|---|
 | P3 | SEO cutover + caching | static head/JSON-LD live (old dead-channel `HeadContent` retired), sitemap swaps to vanity, 301 lattice goes public, in-app links switch to vanity URLs, output-cache policy + CDN header spec ship (first meaningfully cacheable page — verify cached anon HTML actually contains content) — **FT: view-source is real HTML; Discord unfurl shows the jacket** |
 | P4 | Tests + docs | E2E facts (anon chart page serves content pre-circuit; GUID 301s; glow only when signed in), bUnit island coverage, ARCHITECTURE/UX-GUIDELINES/API/DATABASE-SCHEMA sync |
 

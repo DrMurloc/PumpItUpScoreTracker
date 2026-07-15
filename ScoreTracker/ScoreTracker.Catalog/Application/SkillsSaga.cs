@@ -13,6 +13,7 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
     IRequestHandler<GetChartStepAnalysisQuery, ChartStepAnalysisRecord?>,
     IRequestHandler<GetChartStepAnalysesQuery, IReadOnlyDictionary<Guid, ChartStepAnalysisRecord>>,
     IRequestHandler<GetChartSkillChipsQuery, IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>>,
+    IRequestHandler<GetChartBadgeCoverageQuery, IReadOnlyDictionary<Guid, IReadOnlyDictionary<string, double>>>,
     IRequestHandler<GetUnresolvedAliasesQuery, IReadOnlyList<UnresolvedAliasRecord>>,
     IRequestHandler<ResolveExternalAliasCommand>
 {
@@ -44,6 +45,18 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
     {
         await _aliases.ResolveAlias(request.Source, request.ExternalKey, request.ChartId, _clock.Now,
             cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyDictionary<string, double>>> Handle(
+        GetChartBadgeCoverageQuery request, CancellationToken cancellationToken)
+    {
+        var metrics = await _metrics.GetMetrics(request.ChartIds, PiuCenterMetrics.Source, cancellationToken);
+        return metrics
+            .Where(m => m.MetricName.StartsWith(PiuCenterMetrics.BadgeFractionPrefix, StringComparison.Ordinal))
+            .GroupBy(m => m.ChartId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyDictionary<string, double>)g.ToDictionary(
+                m => m.MetricName[PiuCenterMetrics.BadgeFractionPrefix.Length..],
+                m => (double)m.Value));
     }
 
     public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>> Handle(

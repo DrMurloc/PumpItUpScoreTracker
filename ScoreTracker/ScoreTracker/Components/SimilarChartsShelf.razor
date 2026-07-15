@@ -80,8 +80,8 @@
         var reasons = new List<string>();
         if (record.PlayersScore >= 0.45 && record.SharedScorers >= 30)
             reasons.Add(L["players score alike"]);
-        if (record.StyleScore >= 0.75) reasons.Add(L["same skill profile"]);
-        if (record.BehaviorScore >= 0.8) reasons.Add(L["behaves the same for its level"]);
+        if (record.SkillScore >= 0.75) reasons.Add(L["same skill profile"]);
+        if (record.DifficultyScore >= 0.8) reasons.Add(L["behaves the same for its level"]);
         if (record.IntensityScore >= 0.8) reasons.Add(L["same intensity"]);
         if (reasons.Count == 0) reasons.Add(L["level neighbor"]);
         return reasons.Take(2).ToArray();

@@ -33,7 +33,7 @@ public sealed class EFChartSimilarityRepositoryTests : IAsyncLifetime
 
         // Null sub-scores are meaningful (signal unavailable for the pair) and must survive
         // the SignalsJson round trip alongside the real ones.
-        var edge = new ChartSimilarityEdge(neighbor, 0.87, StyleScore: 0.91, BehaviorScore: 0.8,
+        var edge = new ChartSimilarityEdge(neighbor, 0.87, SkillScore: 0.91, DifficultyScore: 0.8,
             PlayersScore: null, IntensityScore: 0.75, MetaScore: 0.2, SharedScorers: 12);
         await BuildRepository().ReplaceEdges(MixEnum.Phoenix, chart, new[] { edge }, ComputedAt,
             CancellationToken.None);
@@ -43,8 +43,8 @@ public sealed class EFChartSimilarityRepositoryTests : IAsyncLifetime
         var stored = Assert.Single(edges);
         Assert.Equal(neighbor, stored.SimilarChartId);
         Assert.Equal(0.87, stored.Score);
-        Assert.Equal(0.91, stored.StyleScore);
-        Assert.Equal(0.8, stored.BehaviorScore);
+        Assert.Equal(0.91, stored.SkillScore);
+        Assert.Equal(0.8, stored.DifficultyScore);
         Assert.Null(stored.PlayersScore);
         Assert.Equal(0.75, stored.IntensityScore);
         Assert.Equal(0.2, stored.MetaScore);

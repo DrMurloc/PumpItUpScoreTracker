@@ -32,7 +32,7 @@ internal sealed class EFChartSimilarityRepository : IChartSimilarityRepository
                 ChartId = chartId,
                 SimilarChartId = edge.SimilarChartId,
                 Score = edge.Score,
-                SignalsJson = JsonSerializer.Serialize(new SignalsDto(edge.StyleScore, edge.BehaviorScore,
+                SignalsJson = JsonSerializer.Serialize(new SignalsDto(edge.SkillScore, edge.DifficultyScore,
                     edge.PlayersScore, edge.IntensityScore, edge.MetaScore)),
                 SharedScorers = edge.SharedScorers,
                 ComputedAt = computedAt
@@ -54,14 +54,16 @@ internal sealed class EFChartSimilarityRepository : IChartSimilarityRepository
             {
                 var signals = JsonSerializer.Deserialize<SignalsDto>(e.SignalsJson) ??
                               new SignalsDto(null, null, null, null, null);
-                return new ChartSimilarityEdge(e.SimilarChartId, e.Score, signals.Style, signals.Behavior,
+                return new ChartSimilarityEdge(e.SimilarChartId, e.Score, signals.Skill, signals.Difficulty,
                     signals.Players, signals.Intensity, signals.Meta, e.SharedScorers);
             })
             .ToArray();
     }
 
     // The persisted breakdown shape — additive-only: the why-chips tolerate missing keys,
-    // so new signals can join without rewriting banked edges.
-    private sealed record SignalsDto(double? Style, double? Behavior, double? Players, double? Intensity,
+    // so new signals can join without rewriting banked edges. Renaming a key is NOT
+    // additive: edges banked under the old name deserialize as missing until the nightly
+    // rebuild rewrites them.
+    private sealed record SignalsDto(double? Skill, double? Difficulty, double? Players, double? Intensity,
         double? Meta);
 }
