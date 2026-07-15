@@ -127,8 +127,7 @@ else
     </MudDialog>
 
     <LeaderboardDialog @bind-Visible="_showLeaderboard" Chart="_chart" Entries="_dialogEntries"
-                       Ascending="_isLimbo" MaxPlaces="BoardCap"
-                       OfficialUserIds="_officialUserIds" ManualUserIds="_manualUserIds"
+                       Ascending="_isLimbo" OfficialUserIds="_officialUserIds"
                        CommunityUserIds="_communityIds"/>
 }
 
@@ -168,7 +167,6 @@ else
     private Row? _myRow;
     private WeeklyTournamentEntry[] _dialogEntries = Array.Empty<WeeklyTournamentEntry>();
     private IReadOnlySet<Guid> _officialUserIds = new HashSet<Guid>();
-    private IReadOnlySet<Guid> _manualUserIds = new HashSet<Guid>();
     private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
     private MixEnum _mix = MixEnum.Phoenix;
 
@@ -281,7 +279,6 @@ else
         _dialogEntries = ordered.Select(e => new WeeklyTournamentEntry(e.UserId, e.ChartId, e.Score, e.Plate,
             e.IsBroken, null, e.CompetitiveLevel)).ToArray();
         _officialUserIds = entries.Where(e => e.Source == ChallengeEntrySource.Official).Select(e => e.UserId).ToHashSet();
-        _manualUserIds = entries.Where(e => e.Source == ChallengeEntrySource.Manual).Select(e => e.UserId).ToHashSet();
     }
 
     private void UpdateHeaderSlot()

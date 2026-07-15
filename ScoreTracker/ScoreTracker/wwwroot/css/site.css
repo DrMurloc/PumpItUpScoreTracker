@@ -3515,9 +3515,16 @@ html.sheet-open .more-sheet-scrim {
     opacity: 0.75;
 }
 
-.weekly-lb-manual {
-    font-size: .68rem;
-    font-style: italic;
+.weekly-lb-photo {
+    /* An icon-button squeezed to text scale so the proof link sits inline with the name. */
+    padding: 0 2px;
+}
+
+.weekly-lb-photo .mud-icon-root {
+    font-size: 0.95rem;
+}
+
+.weekly-lb-legend {
     color: color-mix(in srgb, var(--mix-ink) 55%, transparent);
 }
 

@@ -4139,4 +4139,10 @@
   <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
     <value>PIU Tracker è completamente pubblico: i punteggi che invii lì sono pubblici anche se il tuo profilo non lo è.</value>
   </data>
+  <data name="Imported" xml:space="preserve">
+    <value>Importato</value>
+  </data>
+  <data name="Photo proof" xml:space="preserve">
+    <value>Prova fotografica</value>
+  </data>
 </root>
