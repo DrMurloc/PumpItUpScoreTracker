@@ -421,12 +421,23 @@ Adding one would clean up all five files; optional.
 
 ## 6. Build plan
 
-| # | Commit | Contents |
-|---|---|---|
-| C1 | Shell components + factory + nav.js | `Shell.razor` et al, `ShellViewModel`/`Factory`/`ShellContext`, `nav.js`, site.css additions + re-scopes. Not yet wired. |
-| C2 | The cutover | `_SiteLayout`, `_Host` → it, MainLayout gutted per §4, `MixController`, `UiSettingsAccessor` + `App.razor` param, FrontDoor ShowApp branch, dead-code deletions — **FT1: full §5 matrix** |
-| C3 | Islands | `ShellImportPulse`; `AppBarSearch` + the cross-root popover proof (→ `IslandRoot` if it fails) |
-| C4 | Tests + docs | E2E guard re-point, new facts (anon HTML contains nav pre-circuit; static `<title>` present), optional `.cshtml` ratchet widening, ARCHITECTURE.md shell paragraph, UX-GUIDELINES.md shell note, sync this doc |
+| # | Commit | Contents | |
+|---|---|---|---|
+| C1 | Shell components + factory + nav.js | `Components/Shell/*`, `ShellViewModel`/`Factory`/`ShellContext`, `nav.js`, site.css additions + re-scopes. Not yet wired. | done |
+| C2 | The cutover | `_SiteLayout`, `_Host` → it, MainLayout gutted, `MixController`, `UiSettingsAccessor` + `App.razor` param, FrontDoor ShowApp branch, dead-code deletions | done |
+| C3 | Islands + the provider hoist | `ShellImportPulse`, `AppBarSearch`, `MudProviders` as the first root, `StaticShellTests` | done |
+| C4 | Tests + docs | Front-door guard re-pointed at `blazor.server.js`, ARCHITECTURE.md shell section, this sync | done |
+
+**What C1–C3 did differently from the plan above, and why:**
+
+- **The app bar is assembled in `_SiteLayout`, not inside one `Shell` component.** `<component render-mode="…" />` is a cshtml tag helper and does not exist in `.razor`, so the search island cannot nest inside a static component. The layout owns a five-line `<header>` that interleaves static components with the island; Stage 2 moves the same five lines into `App.razor`.
+- **`MudLayout` came back** (§3) — it is MudBlazor's drawer host, not chrome.
+- **The providers hoisted out of MainLayout** into `MudProviders`, mounted first (§9). This replaces `IslandRoot`, which cannot work.
+- **`ShellViewModel` gained `ReturnUrl`** — `ActivePath` is path-only for the bottom nav's active slot, but a mix switch reloads the current page *with its query*. Different values, different fields.
+- **`MixSelector` deleted** — its only consumer was the nav, and its collection data moved into `ShellMixMenu`.
+- **The `.cshtml` ratchet widening was not done.** Optional, and `UiColorTokenTests` already covers the shell because D2 kept it `.razor`. `_Layout.cshtml`'s 4 literals left with the file; `Privacy.cshtml`'s 7 remain invisible.
+
+**Lesson worth keeping.** Every bug in C1–C3 that reached the owner came from one of two places: *chrome that was conditionally rendered is now always rendered, so its `@if`/`MudHidden` had to become CSS* (the dock, focus mode, the scroll baseline), or *the audit above miscategorising infrastructure as chrome* (`MudLayout`, `IslandRoot`). Neither was caught by a compile or a suite. Both were catchable by reading the original for what it *needed*, not just what it *rendered*.
 
 ## 7. Contract for Stage 2/3
 
