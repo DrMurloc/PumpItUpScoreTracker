@@ -1,30 +1,134 @@
-﻿@using ScoreTracker.SharedKernel.Enums
+@using System.Globalization
+@using Microsoft.AspNetCore.Localization
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
-@using ScoreTracker.Web.Shared
-@inject ShellContext Shell
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
+@using ScoreTracker.Web.Services.Theming
+@inject ShellModelFactory ShellFactory
+@inject IWebHostEnvironment Env
+
+@* The document root, rendered statically: the shell paints as real HTML and the app boots into
+   the content region under it (docs/design/static-shell.md). Nothing here prerenders. *@
+<!DOCTYPE html>
+<html lang="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link href="/css/site.css" rel="stylesheet" />
+    <link href="/css/charts.css" rel="stylesheet" />
+    @* The active palette's --mix-* tokens. Server-side: the shell paints before any circuit, and
+       MudThemeProvider's own vars only arrive with one. *@
+    <style>@((MarkupString)MixThemes.CssVariablesFor(_shell.ThemeMix))</style>
+    @* A real title for readers that run no JS. Blazor removes it on boot and HeadOutlet takes
+       over, so <PageTitle> keeps working unchanged. *@
+    <title>@L["PIU Scores"]</title>
+    @* Interactive, and not prerendered — matching every <PageTitle> in the app. Static, it would
+       only ever see static components and every page's title would read "PIU Scores". *@
+    <HeadOutlet @rendermode="Interactive" />
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "d2n3fzq6v8");
+    </script>
+    <style>
+        .apexcharts-legend-text {
+            color: #ffffff !important
+        }
+
+        .apexcharts-tooltip-text-y-value {
+            color: #000000 !important;
+        }
+
+        .apexcharts-tooltip-text-y-label {
+            color: #000000 !important;
+        }
+
+        .apexcharts-text tspan {
+            fill: #FFFFFF
+        }
+    </style>
+</head>
+@* Enhanced navigation off: blazor.web.js turns it on by default, and it fetches and patches the
+   DOM instead of loading a page — which the dock's scroll watcher, ApexCharts and Clarity have
+   never been asked to survive. The attribute is read through closest(), so one here covers every
+   link. Turning it on is its own change, with its own field test. *@
+<body data-enhance-nav="false" class="@MixThemes.CssClassFor(_shell.ThemeMix)">
+@* Ahead of every island, deliberately. There is one popover provider per circuit and roots
+   activate in render order, so an island that asks for a popover before this rendered would get
+   "Missing <MudPopoverProvider />". *@
+<MudProviders @rendermode="Interactive" ThemeMix="_shell.ThemeMix" />
+
+<header class="shell-appbar">
+    <ShellNav Model="_shell" />
+    <span class="shell-spacer"></span>
+    <AppBarSearch @rendermode="Interactive" Mix="_shell.CurrentMix" />
+    <ShellMixMenu Model="_shell" />
+    <ShellUserMenu Model="_shell" />
+</header>
+<ShellMoreSheet Model="_shell" />
+<ShellBottomNav Model="_shell" />
+@* Renders nothing; it drives the hidden pulse dot the shell put in the avatar. *@
+<ShellImportPulse @rendermode="Interactive" />
+
+<main class="shell-main">
+    <Routes @rendermode="Interactive" CurrentMix="_shell.CurrentMix" />
+</main>
+
+<div id="blazor-error-ui">
+    @if (Env.IsDevelopment())
+    {
+        <text>An unhandled exception has occurred. See browser dev tools for details.</text>
+    }
+    else
+    {
+        <text>An error has occurred. This application may no longer respond until reloaded.</text>
+    }
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+<script src="_framework/blazor.web.js"></script>
+<script src="_content/MudBlazor/MudBlazor.min.js"></script>
+<script src="/js/page-dock.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/dashboard-grid.js"></script>
+<script src="/js/credential-storage.js"></script>
+</body>
+</html>
 
 @code {
-    // The shell resolves the mix from the request, where the cookie and the user's settings are
-    // both readable, and hands it down here. Seeding before the router renders lets every page
-    // read it synchronously rather than re-deriving request state the circuit cannot see.
-    // Root parameters travel through the client, so this carries display preferences only — an
-    // anonymous visitor already controls their own mix, and nothing here gates access.
-    [Parameter] public MixEnum CurrentMix { get; set; }
+    // Interactive, never prerendered. Prerendering renders everything twice — a second
+    // OnInitializedAsync, JS interop before the circuit exists — and is the app-wide flip that
+    // broke this site once already (docs/design/render-modes.md).
+    private static readonly IComponentRenderMode Interactive =
+        new InteractiveServerRenderMode(prerender: false);
 
-    protected override void OnInitialized()
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = null!;
+
+    private ShellViewModel _shell = null!;
+
+    // Resolved here rather than in OnInitializedAsync: an async init renders once at its first
+    // await, before it has assigned anything. A page can show a spinner through that render —
+    // the document cannot, because every line of it reads the model.
+    public override async Task SetParametersAsync(ParameterView parameters)
     {
-        Shell.CurrentMix = CurrentMix;
+        parameters.SetParameterProperties(this);
+        await Resolve();
+        await base.SetParametersAsync(ParameterView.Empty);
+    }
+
+    private async Task Resolve()
+    {
+        _shell = await ShellFactory.BuildAsync(HttpContext);
+        // Only when it is missing or stale: an unconditional Set-Cookie makes every response
+        // uncacheable, and explicit changes already go through /Culture/Set.
+        var resolved = CookieRequestCultureProvider.MakeCookieValue(
+            new RequestCulture(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture));
+        if (HttpContext.Request.Cookies[CookieRequestCultureProvider.DefaultCookieName] != resolved)
+            HttpContext.Response.Cookies.Append(CookieRequestCultureProvider.DefaultCookieName, resolved);
     }
 }
