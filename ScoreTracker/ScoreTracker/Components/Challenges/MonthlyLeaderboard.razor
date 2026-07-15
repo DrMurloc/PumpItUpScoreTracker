@@ -1,0 +1,104 @@
+@namespace ScoreTracker.Web.Components.Challenges
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.WeeklyChallenge.Contracts
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* Monthly leaderboard (weekly-charts-overhaul.md §4.4): the month's best-N-per-week board, priced
+   by the mix's own PUMBILITY (the Co-Op view ranks raw score). Type pills switch the view by URL;
+   each row's counted-score breakdown expands inline via native <details> — no dialog. *@
+
+<div class="challenge-sect-head">
+    <h2>@L["Monthly Leaderboard"]</h2>
+    <span class="sub">@Subtitle</span>
+    <span class="right challenge-typelinks">
+        <a class="challenge-pill @(Type == null ? "on" : "")" href="@HrefFor(null)">@L["Combined"]</a>
+        <a class="challenge-pill @(Type == ChartType.Single ? "on" : "")" href="@HrefFor(ChartType.Single)">@L["Singles"]</a>
+        <a class="challenge-pill @(Type == ChartType.Double ? "on" : "")" href="@HrefFor(ChartType.Double)">@L["Doubles"]</a>
+        <a class="challenge-pill @(Type == ChartType.CoOp ? "on" : "")" href="@HrefFor(ChartType.CoOp)">@L["Co-Op"]</a>
+    </span>
+</div>
+
+@if (!View.Rows.Any())
+{
+    <div class="challenge-empty">@L["Scores land here as boards close."]</div>
+}
+else
+{
+    <div class="challenge-tablewrap">
+        <table class="challenge-monthly">
+            <thead>
+                <tr>
+                    <th style="width:40px">#</th>
+                    <th>@L["Player"]</th>
+                    <th>@L["Top scores"]</th>
+                    <th style="width:80px">@L["Counted"]</th>
+                    <th style="width:100px">@(Type == ChartType.CoOp ? L["Score"] : "PUMBILITY")</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in View.Rows)
+                {
+                    <tr class="@(row.Player?.Id == UserId ? "mine" : "")">
+                        <td class="challenge-mono-place" style="@ThemeScales.RarityStyle(Fraction(row.Place))">@row.Place</td>
+                        <td><UserLabel User="row.Player"></UserLabel></td>
+                        <td>
+                            <div class="challenge-chips">
+                                @foreach (var entry in row.TopFour)
+                                {
+                                    @ChartChip(entry)
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <details class="challenge-expand">
+                                <summary>@row.AllCounted.Count</summary>
+                                <div class="challenge-expand-body">
+                                    @foreach (var entry in row.AllCounted)
+                                    {
+                                        @ChartChip(entry)
+                                    }
+                                </div>
+                            </details>
+                        </td>
+                        <td class="challenge-total">@row.Total.ToString("N0")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter] public MonthlyLeaderboardView View { get; set; } = null!;
+    [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+    [Parameter] public ChartType? Type { get; set; }
+    [Parameter] public Guid? UserId { get; set; }
+
+    /// <summary>Localized window subtitle ("Week N of July — best M count · PUMBILITY"), built by the page.</summary>
+    [Parameter] public string Subtitle { get; set; } = string.Empty;
+
+    /// <summary>Base path the type pills append ?type= to (carries the current ?week=).</summary>
+    [Parameter] public string BasePath { get; set; } = "/WeeklyCharts";
+
+    private double Fraction(int place) => View.Rows.Count <= 0 ? 0 : 1.0 - (double)place / View.Rows.Count;
+
+    private string HrefFor(ChartType? type)
+    {
+        var sep = BasePath.Contains('?') ? "&" : "?";
+        return type == null ? BasePath : $"{BasePath}{sep}type={type}";
+    }
+
+    private RenderFragment ChartChip(MonthlyEntry entry) =>@<text>
+        @{ var chart = Charts.GetValueOrDefault(entry.ChartId); }
+        @if (chart != null)
+        {
+            <span class="challenge-minichart">
+                <a href="/Chart/@chart.Id" data-challenge-chart="@chart.Id"><SongImage Song="chart.Song" Small="true"></SongImage></a>
+                <DifficultyBubble Chart="chart" Small="true" Height="14"></DifficultyBubble>
+            </span>
+        }
+    </text>;
+}

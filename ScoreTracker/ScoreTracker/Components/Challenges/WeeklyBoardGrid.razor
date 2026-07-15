@@ -1,0 +1,132 @@
+@namespace ScoreTracker.Web.Components.Challenges
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.WeeklyChallenge.Contracts
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services.Theming
+
+@* This week's board (weekly-charts-overhaul.md §4.3): the density-managed grid. Each card leads
+   with its jacket (opens chart details), the score to beat, and your standing — a dim "—" when
+   you haven't played it. Suggested charts wear the gold border only; the filter note above says
+   what's showing. Compact drops to a sticker whose corner count-chip opens the board. Every
+   density is a server-rendered variant of these same cards (CSS keys on data-density). *@
+
+<div class="challenge-gridbar">
+    <h2>@L["This Week"]</h2>
+    <span class="sub">@Rotation</span>
+    @if (IsLoggedIn && ShowingSuggestedOnly)
+    {
+        <span class="challenge-filter-note">
+            @L["showing suggested"] — <a href="@ToggleHref">@L["show all {0}", TotalCount]</a>
+        </span>
+    }
+    else if (IsLoggedIn && SuggestionsAvailable && TotalCount > Summaries.Count)
+    {
+        <span class="challenge-filter-note"><a href="@ToggleHref">@L["show suggested only"]</a></span>
+    }
+    <span class="challenge-den-group" role="group" aria-label="@L["Density"]">
+        <button class="challenge-den-btn @(Density == UiDensity.Comfortable ? "on" : "")"
+                data-den="Comfortable" title="@L["Comfortable"]" aria-label="@L["Comfortable"]">
+            <MudIcon Icon="@Icons.Material.Filled.ViewAgenda" Size="Size.Small"></MudIcon>
+        </button>
+        <button class="challenge-den-btn @(Density == UiDensity.Compact ? "on" : "")"
+                data-den="Compact" title="@L["Compact"]" aria-label="@L["Compact"]">
+            <MudIcon Icon="@Icons.Material.Filled.GridView" Size="Size.Small"></MudIcon>
+        </button>
+        <button class="challenge-den-btn @(Density == UiDensity.Table ? "on" : "")"
+                data-den="Table" title="@L["Table"]" aria-label="@L["Table"]">
+            <MudIcon Icon="@Icons.Material.Filled.TableRows" Size="Size.Small"></MudIcon>
+        </button>
+    </span>
+</div>
+
+@if (!Summaries.Any())
+{
+    <div class="challenge-empty">@L["This week's charts post Monday at midnight ET."]</div>
+}
+else
+{
+    <div class="challenge-grid" data-density="@Density">
+        @foreach (var summary in Summaries)
+        {
+            var chart = Charts.GetValueOrDefault(summary.ChartId);
+            if (chart == null) continue;
+            var top = summary.TopPlaces.FirstOrDefault();
+            <div class="challenge-card" data-suggested="@summary.IsSuggested.ToString().ToLowerInvariant()">
+                <a class="challenge-card-jacket" href="/Chart/@chart.Id" data-challenge-chart="@chart.Id"
+                   style="background-image:url('@chart.Song.ImagePath')" aria-label="@chart.Song.Name">
+                    <span class="challenge-card-bubble"><DifficultyBubble Chart="chart" Small="true"></DifficultyBubble></span>
+                </a>
+                <button class="challenge-count-chip" data-challenge-board="@chart.Id"
+                        title="@L["Leaderboard"]">@summary.EntryCount</button>
+                <div class="challenge-card-body">
+                    <a class="challenge-card-name" href="/Chart/@chart.Id" data-challenge-chart="@chart.Id">@chart.Song.Name</a>
+                    @if (top != null)
+                    {
+                        <div class="challenge-card-line">
+                            <span class="challenge-lb-place" style="@ThemeScales.RarityStyle(Fraction(summary, top.Place))">@top.Place</span>
+                            <span class="who">@(top.Player?.Name.ToString())</span>
+                            <span class="score"><ScoreBreakdown Score="top.Entry.Score" Plate="top.Entry.Plate"
+                                                                IsBroken="top.Entry.IsBroken" OneLine="true" ShowScore="true" Height="15"></ScoreBreakdown></span>
+                        </div>
+                    }
+                    @if (IsLoggedIn)
+                    {
+                        @if (summary.MyRow != null)
+                        {
+                            <div class="challenge-card-line mine">
+                                <span class="challenge-lb-place">#@summary.MyRow.Place</span>
+                                <span class="who">@L["you"]</span>
+                                <span class="score"><ScoreBreakdown Score="summary.MyRow.Entry.Score" Plate="summary.MyRow.Entry.Plate"
+                                                                    IsBroken="summary.MyRow.Entry.IsBroken" OneLine="true" ShowScore="true" Height="15"></ScoreBreakdown></span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="challenge-card-line unplayed" title="@L["Not played yet"]">—</div>
+                        }
+                    }
+                </div>
+                <div class="challenge-card-foot">
+                    <span class="count">@summary.EntryCount</span>
+                    @if (IsLoggedIn)
+                    {
+                        <button class="challenge-iconbtn" data-challenge-record="@chart.Id" title="@L["Record"]">▲</button>
+                    }
+                    <button class="challenge-iconbtn" data-challenge-board="@chart.Id" title="@L["Leaderboard"]">☰</button>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<p class="challenge-poollink"><a href="@PoolHref">@L["Charts not yet featured"]</a></p>
+
+@code {
+    [Parameter] public IReadOnlyList<WeeklyBoardChartSummary> Summaries { get; set; } = Array.Empty<WeeklyBoardChartSummary>();
+    [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+    [Parameter] public UiDensity Density { get; set; } = UiDensity.Comfortable;
+    [Parameter] public bool IsLoggedIn { get; set; }
+
+    /// <summary>True when the grid is currently filtered to the caller's suggested charts.</summary>
+    [Parameter] public bool ShowingSuggestedOnly { get; set; }
+
+    /// <summary>Whether the caller has calibrated stats at all — gates the suggested affordance.</summary>
+    [Parameter] public bool SuggestionsAvailable { get; set; }
+
+    /// <summary>Count across the whole week, for the "show all N" note.</summary>
+    [Parameter] public int TotalCount { get; set; }
+
+    /// <summary>URL that flips the suggested filter (?suggested=all / clean).</summary>
+    [Parameter] public string ToggleHref { get; set; } = "/WeeklyCharts";
+
+    /// <summary>URL of the not-yet-featured pool (?pool=1).</summary>
+    [Parameter] public string PoolHref { get; set; } = "/WeeklyCharts?pool=1";
+
+    /// <summary>Localized "N charts · rotates …" subtitle, built by the page.</summary>
+    [Parameter] public string Rotation { get; set; } = string.Empty;
+
+    private static double Fraction(WeeklyBoardChartSummary s, int place) =>
+        s.EntryCount <= 0 ? 0 : 1.0 - (double)place / s.EntryCount;
+}

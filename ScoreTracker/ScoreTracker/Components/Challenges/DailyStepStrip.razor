@@ -1,0 +1,83 @@
+@namespace ScoreTracker.Web.Components.Challenges
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.WeeklyChallenge.Contracts
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Theming
+
+@* Daily Step as a slim strip (weekly-charts-overhaul.md §4.2): jacket, identity, the top three
+   inline, your standing, count + reset countdown, and the Record / full-board actions. Exactly
+   one live chart per mix — Limbo just flips the treatment and ranks lowest-passing-first. Static:
+   the buttons and chart links are inert markup here; the island wires them (§3.3). *@
+
+@if (View == null || Chart == null)
+{
+    <div class="challenge-empty">@L["Today's Step posts at midnight."]</div>
+}
+else
+{
+    <div class="challenge-daily-strip @(View.Board.IsLimbo ? "limbo" : "")">
+        <a class="challenge-daily-jacket" href="/Chart/@Chart.Id" data-challenge-chart="@Chart.Id"
+           style="background-image:url('@Chart.Song.ImagePath')" aria-label="@Chart.Song.Name"></a>
+        <span class="challenge-daily-id">
+            <span>
+                <span class="challenge-daily-kicker">@L["Daily Step"]</span>
+                <a class="challenge-daily-name" href="/Chart/@Chart.Id" data-challenge-chart="@Chart.Id">@Chart.Song.Name</a>
+            </span>
+            <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
+            @if (View.Board.IsLimbo)
+            {
+                <span class="challenge-limbo-chip">@L["Limbo — lowest pass wins"]</span>
+            }
+        </span>
+
+        <span class="challenge-daily-top3">
+            @foreach (var row in View.Rows.Take(3))
+            {
+                <span class="challenge-mini">
+                    <span class="challenge-lb-place" style="@ThemeScales.RarityStyle(Fraction(row.Place))">@row.Place</span>
+                    @if (row.Player != null)
+                    {
+                        <span class="challenge-flag">@(row.Player.Country?.ToString())</span><span>@row.Player.Name</span>
+                    }
+                    <ScoreBreakdown Score="row.Entry.Score" Plate="row.Entry.Plate" IsBroken="row.Entry.IsBroken"
+                                    OneLine="true" ShowScore="true" Height="16"></ScoreBreakdown>
+                </span>
+            }
+            @if (View.MyRow != null)
+            {
+                <span class="challenge-you-chip">
+                    <b>@L["You"]</b>
+                    <span class="challenge-lb-place" style="@ThemeScales.RarityStyle(Fraction(View.MyRow.Place))">#@View.MyRow.Place</span>
+                    <ScoreBreakdown Score="View.MyRow.Entry.Score" Plate="View.MyRow.Entry.Plate"
+                                    IsBroken="View.MyRow.Entry.IsBroken" OneLine="true" ShowScore="true" Height="16"></ScoreBreakdown>
+                </span>
+            }
+        </span>
+
+        <span class="challenge-daily-right">
+            <span class="resets">
+                @L["{0} on board", View.Rows.Count]@(ResetsIn == null ? "" : " · " + L["resets in {0}", ResetsIn])
+            </span>
+            @if (IsLoggedIn)
+            {
+                <button class="challenge-btn" data-challenge-record="@Chart.Id" data-daily="true">@L["Record"]</button>
+            }
+            <button class="challenge-btn ghost" data-challenge-board="@Chart.Id" data-daily="true">@L["Leaderboard"]</button>
+        </span>
+    </div>
+}
+
+@code {
+    [Parameter] public DailyStepBoardView? View { get; set; }
+
+    /// <summary>The board's chart, resolved from the catalog by the page; null hides the strip.</summary>
+    [Parameter] public Chart? Chart { get; set; }
+
+    /// <summary>Server-computed "resets in …" text (the page owns the clock seam); null omits it.</summary>
+    [Parameter] public string? ResetsIn { get; set; }
+
+    [Parameter] public bool IsLoggedIn { get; set; }
+
+    private double Fraction(int place) => View!.Rows.Count <= 0 ? 0 : 1.0 - (double)place / View.Rows.Count;
+}

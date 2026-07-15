@@ -4145,4 +4145,139 @@
   <data name="Photo proof" xml:space="preserve">
     <value>Prova fotografica</value>
   </data>
+  <data name="#{0} / {1}" xml:space="preserve">
+    <value>#{0} / {1}</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Applica</value>
+  </data>
+  <data name="Back to Weekly Charts" xml:space="preserve">
+    <value>Torna a Weekly Charts</value>
+  </data>
+  <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
+    <value>Le giocate rotte valgono 0 — superala per fare punti.</value>
+  </data>
+  <data name="Charts Not Yet Featured" xml:space="preserve">
+    <value>Chart non ancora proposti</value>
+  </data>
+  <data name="Charts not yet featured" xml:space="preserve">
+    <value>Chart non ancora proposti</value>
+  </data>
+  <data name="Co-op earns no PUMBILITY; the Co-Op view ranks raw score." xml:space="preserve">
+    <value>Il co-op non dà PUMBILITY; la vista Co-Op ordina per punteggio grezzo.</value>
+  </data>
+  <data name="Counted" xml:space="preserve">
+    <value>Conteggiate</value>
+  </data>
+  <data name="Daily" xml:space="preserve">
+    <value>Giornaliero</value>
+  </data>
+  <data name="Density" xml:space="preserve">
+    <value>Densità</value>
+  </data>
+  <data name="Every eligible chart has been featured." xml:space="preserve">
+    <value>Tutti i chart idonei sono già stati proposti.</value>
+  </data>
+  <data name="Grade multipliers" xml:space="preserve">
+    <value>Moltiplicatori di grado</value>
+  </data>
+  <data name="How Scoring Works" xml:space="preserve">
+    <value>Come funziona il punteggio</value>
+  </data>
+  <data name="Level {0}" xml:space="preserve">
+    <value>Livello {0}</value>
+  </data>
+  <data name="Limbo" xml:space="preserve">
+    <value>Limbo</value>
+  </data>
+  <data name="Limbo — lowest pass wins" xml:space="preserve">
+    <value>Limbo — vince il punteggio superato più basso</value>
+  </data>
+  <data name="Monthly" xml:space="preserve">
+    <value>Mensile</value>
+  </data>
+  <data name="Not played yet" xml:space="preserve">
+    <value>Non ancora giocato</value>
+  </data>
+  <data name="Plate bonuses" xml:space="preserve">
+    <value>Bonus targa</value>
+  </data>
+  <data name="Play today's Step to start your streak." xml:space="preserve">
+    <value>Gioca il Daily Step di oggi per iniziare la tua serie.</value>
+  </data>
+  <data name="Process Weekly Charts" xml:space="preserve">
+    <value>Elabora i Weekly Charts</value>
+  </data>
+  <data name="Scores land here as boards close." xml:space="preserve">
+    <value>I punteggi compaiono qui alla chiusura dei tabelloni.</value>
+  </data>
+  <data name="Sign in to record scores, track your standings and keep your Daily Step history." xml:space="preserve">
+    <value>Accedi per registrare i punteggi, seguire la tua posizione e conservare la cronologia Daily Step.</value>
+  </data>
+  <data name="The rules" xml:space="preserve">
+    <value>Le regole</value>
+  </data>
+  <data name="This Week" xml:space="preserve">
+    <value>Questa settimana</value>
+  </data>
+  <data name="This week's charts post Monday at midnight ET." xml:space="preserve">
+    <value>I chart di questa settimana escono lunedì a mezzanotte (ET).</value>
+  </data>
+  <data name="Ties break by total raw score." xml:space="preserve">
+    <value>I pari merito si decidono col punteggio grezzo totale.</value>
+  </data>
+  <data name="Top scores" xml:space="preserve">
+    <value>Punteggi migliori</value>
+  </data>
+  <data name="Week" xml:space="preserve">
+    <value>Settimana</value>
+  </data>
+  <data name="Week {0} — best {1} count · PUMBILITY" xml:space="preserve">
+    <value>Settimana {0} — contano i {1} migliori · PUMBILITY</value>
+  </data>
+  <data name="Your Daily Step History" xml:space="preserve">
+    <value>La tua cronologia Daily Step</value>
+  </data>
+  <data name="Your best 4 scores per week of the month count." xml:space="preserve">
+    <value>Contano i tuoi 4 migliori punteggi per settimana del mese.</value>
+  </data>
+  <data name="current" xml:space="preserve">
+    <value>attuale</value>
+  </data>
+  <data name="last 14 days" xml:space="preserve">
+    <value>ultimi 14 giorni</value>
+  </data>
+  <data name="resets in {0}" xml:space="preserve">
+    <value>si azzera tra {0}</value>
+  </data>
+  <data name="show all {0}" xml:space="preserve">
+    <value>mostra tutti i {0}</value>
+  </data>
+  <data name="show suggested only" xml:space="preserve">
+    <value>mostra solo consigliati</value>
+  </data>
+  <data name="showing suggested" xml:space="preserve">
+    <value>consigliati mostrati</value>
+  </data>
+  <data name="suggested left" xml:space="preserve">
+    <value>consigliati rimasti</value>
+  </data>
+  <data name="you" xml:space="preserve">
+    <value>tu</value>
+  </data>
+  <data name="{0} charts · rotates Monday midnight ET" xml:space="preserve">
+    <value>{0} chart · cambio lunedì mezzanotte (ET)</value>
+  </data>
+  <data name="{0} on board" xml:space="preserve">
+    <value>{0} sul tabellone</value>
+  </data>
+  <data name="{0}d {1}h" xml:space="preserve">
+    <value>{0}d {1}h</value>
+  </data>
+  <data name="{0}h {1}m" xml:space="preserve">
+    <value>{0}h {1}m</value>
+  </data>
+  <data name="{0}m" xml:space="preserve">
+    <value>{0}m</value>
+  </data>
 </root>

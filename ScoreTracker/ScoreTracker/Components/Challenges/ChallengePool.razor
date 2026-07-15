@@ -1,0 +1,36 @@
+@namespace ScoreTracker.Web.Components.Challenges
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+
+@* The not-yet-featured pool (weekly-charts-overhaul.md §4.7): charts that haven't been drawn onto
+   a weekly board yet, grouped by level — its own URL (?pool=1), so it's crawlable inventory too. *@
+
+@if (!Charts.Any())
+{
+    <div class="challenge-empty">@L["Every eligible chart has been featured."]</div>
+}
+else
+{
+    @foreach (var group in Charts.GroupBy(c => (int)c.Level).OrderByDescending(g => g.Key))
+    {
+        <div class="challenge-sect-head" style="margin-top:12px">
+            <h3 style="margin:0">@L["Level {0}", group.Key]</h3>
+            <span class="sub">@L["{0} charts", group.Count()]</span>
+        </div>
+        <div class="challenge-grid" data-density="Compact">
+            @foreach (var chart in group.OrderBy(c => c.Type).ThenBy(c => c.Song.Name.ToString()))
+            {
+                <div class="challenge-card">
+                    <a class="challenge-card-jacket" href="/Chart/@chart.Id" data-challenge-chart="@chart.Id"
+                       style="background-image:url('@chart.Song.ImagePath')" aria-label="@chart.Song.Name">
+                        <span class="challenge-card-bubble"><DifficultyBubble Chart="chart" Small="true"></DifficultyBubble></span>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public IReadOnlyList<Chart> Charts { get; set; } = Array.Empty<Chart>();
+}
