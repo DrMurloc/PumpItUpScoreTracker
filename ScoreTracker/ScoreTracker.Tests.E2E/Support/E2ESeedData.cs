@@ -110,6 +110,26 @@ public sealed class E2ESeedData
         return userId;
     }
 
+    /// <summary>Puts a chart on the live weekly board (WeeklyChallenge-internal table — SQL, per the house rule).</summary>
+    public async Task SeedWeeklyChartAsync(Guid chartId, DateTimeOffset expiration,
+        CancellationToken cancellationToken = default)
+    {
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO [scores].[WeeklyTournamentChart] ([ChartId], [MixId], [ExpirationDate]) VALUES ({chartId}, {PhoenixMixId}, {expiration})",
+            cancellationToken);
+    }
+
+    /// <summary>An entry on the live weekly board. <paramref name="source" />: 0 = Official, 1 = Manual.</summary>
+    public async Task SeedWeeklyEntryAsync(Guid userId, Guid chartId, int score, string plate = "SuperbGame",
+        int source = 0, double competitiveLevel = 18.0, CancellationToken cancellationToken = default)
+    {
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO [scores].[WeeklyUserEntry] ([UserId], [ChartId], [MixId], [Score], [Plate], [IsBroken], [WasWithinRange], [CompetitiveLevel], [Photo], [Source]) VALUES ({userId}, {chartId}, {PhoenixMixId}, {score}, {plate}, {false}, {true}, {competitiveLevel}, {null}, {source})",
+            cancellationToken);
+    }
+
     /// <summary>Journal, highlight, and milestone rows belong to vertical-internal entities — seeded with SQL.</summary>
     public async Task SeedJournalRowAsync(Guid userId, Guid chartId, DateTimeOffset occurredAt, int? score,
         string? plate, bool isBroken, Guid? sessionId, string source = "manual",
