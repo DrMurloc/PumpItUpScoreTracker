@@ -52,6 +52,9 @@ public sealed class FrontDoorDispatcherTests : IAsyncLifetime
     public async Task AnonymousRootServesTheCircuitFreeFrontDoor()
     {
         await _page.GotoAsync("/");
+        // "/" is the dashboard and needs an account; without one you are sent to the front door
+        // server-side, before any JS could have run.
+        await Expect(_page).ToHaveURLAsync($"{_fixture.BaseUrl}/Welcome");
         await Expect(_page.Locator("body.front-door"))
             .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
         await Expect(_page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Sign in" }))

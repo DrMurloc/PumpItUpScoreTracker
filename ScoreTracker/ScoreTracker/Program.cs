@@ -331,6 +331,22 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// "/" is the dashboard, which needs an account; a visitor without one goes to the front door
+// (docs/design/front-door.md). Middleware rather than a redirect inside the page, because the
+// dashboard renders in the circuit: a crawler runs no JS, sees no content, and would never find
+// out it was meant to be somewhere else. It has to sit after authentication — ahead of it every
+// visitor reads as anonymous, and a signed-in one would bounce between "/" and "/Welcome".
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/" && context.User.Identity?.IsAuthenticated != true)
+    {
+        context.Response.Redirect("/Welcome");
+        return;
+    }
+
+    await next();
+});
+
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
     Authorization = new[] { new HangfireDashboardAuthorization() }
