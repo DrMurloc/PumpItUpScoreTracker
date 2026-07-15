@@ -129,7 +129,7 @@ internal sealed class DailyStepSaga(
             isBroken = msg.BestIsBroken;
         }
 
-        await UpsertEntry(msg.Mix, board, msg.UserId, score, plate, isBroken, DailyStepSource.Official, ct);
+        await UpsertEntry(msg.Mix, board, msg.UserId, score, plate, isBroken, ChallengeEntrySource.Official, ct);
     }
 
     // A manual submission from the widget's Record popover: daily-board-only (never the ledger, so a
@@ -140,7 +140,7 @@ internal sealed class DailyStepSaga(
         var board = await dailySteps.GetCurrentChart(request.Mix, cancellationToken);
         if (board == null) return;
         await UpsertEntry(request.Mix, board, currentUser.User.Id, request.Score, request.Plate, false,
-            DailyStepSource.Manual, cancellationToken);
+            ChallengeEntrySource.Manual, cancellationToken);
     }
 
     // The single intake seam for both sources: keep the board-appropriate extreme — lowest passing on
@@ -148,7 +148,7 @@ internal sealed class DailyStepSaga(
     // beats an official best on a Limbo day (and reads Manual), while a higher official best wins a
     // normal day (and reads Official).
     private async Task UpsertEntry(MixEnum mix, DailyStepBoard board, Guid userId, PhoenixScore score,
-        PhoenixPlate plate, bool isBroken, DailyStepSource source, CancellationToken ct)
+        PhoenixPlate plate, bool isBroken, ChallengeEntrySource source, CancellationToken ct)
     {
         var chart = (await charts.GetCharts(mix, chartIds: new[] { board.ChartId }, cancellationToken: ct))
             .SingleOrDefault();

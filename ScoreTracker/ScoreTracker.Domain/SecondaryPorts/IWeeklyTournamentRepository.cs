@@ -19,7 +19,16 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task<IEnumerable<WeeklyTournamentEntry>> GetEntries(MixEnum mix, Guid? chartId,
             CancellationToken cancellationToken);
 
-        Task SaveEntry(MixEnum mix, WeeklyTournamentEntry entry, CancellationToken cancellationToken);
+        /// <summary>
+        ///     Live entries with their trust source (weekly-charts-overhaul.md M5). The shared
+        ///     <see cref="WeeklyTournamentEntry" /> deliberately does not carry the source — the
+        ///     api/weeklyCharts wire shape is pinned — so source-aware reads use this.
+        /// </summary>
+        Task<IEnumerable<(WeeklyTournamentEntry Entry, ChallengeEntrySource Source)>> GetEntriesWithSources(
+            MixEnum mix, Guid? chartId, CancellationToken cancellationToken);
+
+        Task SaveEntry(MixEnum mix, WeeklyTournamentEntry entry, ChallengeEntrySource source,
+            CancellationToken cancellationToken);
         Task<IEnumerable<DateTimeOffset>> GetPastDates(MixEnum mix, CancellationToken cancellationToken);
 
         Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(MixEnum mix, DateTimeOffset date,

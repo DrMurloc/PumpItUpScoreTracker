@@ -29,6 +29,11 @@ public sealed record WeeklyBoardChartSummary(
     WeeklyBoardRow? MyRow,
     bool IsSuggested);
 
-/// <summary>A ranked row on one weekly chart's board. <c>Player</c> is null for a deleted account.</summary>
+/// <summary>
+///     A ranked row on one weekly chart's board. <c>Player</c> is null for a deleted account.
+///     <c>Source</c> is the trust tier of the ranked score (M5) — null on finished weeks, whose
+///     histories don't carry it; the photo tier derives from <c>Entry.PhotoUrl</c>.
+/// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record WeeklyBoardRow(int Place, User? Player, WeeklyTournamentEntry Entry);
+public sealed record WeeklyBoardRow(int Place, User? Player, WeeklyTournamentEntry Entry,
+    ChallengeEntrySource? Source = null);

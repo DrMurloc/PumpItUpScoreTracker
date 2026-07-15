@@ -138,7 +138,7 @@ public sealed class DailyStepSagaTests
 
         daily.Verify(d => d.SaveEntry(MixEnum.Phoenix,
             It.Is<DailyStepEntry>(e => e.UserId == userId && e.Score == (PhoenixScore)950_000
-                                       && e.Source == DailyStepSource.Official),
+                                       && e.Source == ChallengeEntrySource.Official),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -169,7 +169,7 @@ public sealed class DailyStepSagaTests
 
         daily.Verify(d => d.SaveEntry(MixEnum.Phoenix,
             It.Is<DailyStepEntry>(e => e.UserId == userId && e.Score == (PhoenixScore)720_000
-                                       && !e.IsBroken && e.Source == DailyStepSource.Official),
+                                       && !e.IsBroken && e.Source == ChallengeEntrySource.Official),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -239,7 +239,7 @@ public sealed class DailyStepSagaTests
         daily.Verify(d => d.SaveEntry(MixEnum.Phoenix,
             It.Is<DailyStepEntry>(e => e.UserId == meId && e.Score == (PhoenixScore)875_000
                                        && e.Plate == PhoenixPlate.MarvelousGame && !e.IsBroken
-                                       && e.Source == DailyStepSource.Manual),
+                                       && e.Source == ChallengeEntrySource.Manual),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -259,7 +259,7 @@ public sealed class DailyStepSagaTests
 
         daily.Verify(d => d.SaveEntry(MixEnum.Phoenix,
             It.Is<DailyStepEntry>(e => e.UserId == meId && e.Score == (PhoenixScore)680_000
-                                       && e.Source == DailyStepSource.Manual),
+                                       && e.Source == ChallengeEntrySource.Manual),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -300,7 +300,7 @@ public sealed class DailyStepSagaTests
         daily.Setup(d => d.GetEntries(MixEnum.Phoenix, chartId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                Entry(chartId, 970_000, me, source: DailyStepSource.Manual),
+                Entry(chartId, 970_000, me, source: ChallengeEntrySource.Manual),
                 Entry(chartId, 990_000, rival)
             });
         var saga = BuildSaga(daily);
@@ -311,7 +311,7 @@ public sealed class DailyStepSagaTests
         Assert.Equal(new[] { 1, 2 }, view.Rows.Select(r => r.Place).ToArray());
         Assert.All(view.Rows, r => Assert.NotNull(r.Player));
         Assert.Equal(2, view.MyRow!.Place);
-        Assert.Equal(DailyStepSource.Manual, view.MyRow.Entry.Source);
+        Assert.Equal(ChallengeEntrySource.Manual, view.MyRow.Entry.Source);
     }
 
     [Fact]
@@ -383,7 +383,7 @@ public sealed class DailyStepSagaTests
         new ChartBuilder().WithType(type).WithLevel(level).WithSongName($"{type}-{level}").Build();
 
     private static DailyStepEntry Entry(Guid chartId, int score, Guid userId, bool isBroken = false,
-        DailyStepSource source = DailyStepSource.Official) =>
+        ChallengeEntrySource source = ChallengeEntrySource.Official) =>
         new(userId, chartId, score, PhoenixPlate.SuperbGame, isBroken, 20.0, source);
 
     private static Mock<IChartRepository> ChartsReturning(IEnumerable<Chart> charts)

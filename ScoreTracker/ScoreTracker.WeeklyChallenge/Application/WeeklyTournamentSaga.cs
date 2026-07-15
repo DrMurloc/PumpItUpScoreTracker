@@ -41,10 +41,16 @@ namespace ScoreTracker.WeeklyChallenge.Application
             var isLive = request.WeekStart == null;
             IReadOnlyList<WeeklyTournamentChart> boardCharts;
             WeeklyTournamentEntry[] entries;
+            // Trust sources exist on the live table only — finished weeks read from the
+            // histories, which don't carry them, so past rows render tagless.
+            var sources = new Dictionary<(Guid UserId, Guid ChartId), ChallengeEntrySource>();
             if (isLive)
             {
                 boardCharts = (await weeklyTournies.GetWeeklyCharts(request.Mix, cancellationToken)).ToArray();
-                entries = (await weeklyTournies.GetEntries(request.Mix, null, cancellationToken)).ToArray();
+                var withSources =
+                    (await weeklyTournies.GetEntriesWithSources(request.Mix, null, cancellationToken)).ToArray();
+                entries = withSources.Select(e => e.Entry).ToArray();
+                foreach (var (entry, source) in withSources) sources[(entry.UserId, entry.ChartId)] = source;
             }
             else
             {
@@ -99,13 +105,16 @@ namespace ScoreTracker.WeeklyChallenge.Application
             var summaries = boardCharts.Select(chart =>
             {
                 var chartRanked = ranked[chart.ChartId];
-                var top = chartRanked.Take(3)
-                    .Select(r => new WeeklyBoardRow(r.Item1, userDict.GetValueOrDefault(r.Item2.UserId), r.Item2))
-                    .ToArray();
+                WeeklyBoardRow ToRow((int, WeeklyTournamentEntry) r) => new(r.Item1,
+                    userDict.GetValueOrDefault(r.Item2.UserId), r.Item2,
+                    sources.TryGetValue((r.Item2.UserId, r.Item2.ChartId), out var source)
+                        ? source
+                        : null);
+                var top = chartRanked.Take(3).Select(ToRow).ToArray();
                 var mine = request.UserId == null
                     ? null
                     : chartRanked.Where(r => r.Item2.UserId == request.UserId)
-                        .Select(r => new WeeklyBoardRow(r.Item1, userDict.GetValueOrDefault(r.Item2.UserId), r.Item2))
+                        .Select(ToRow)
                         .FirstOrDefault();
                 return new WeeklyBoardChartSummary(chart.ChartId, chart.ExpirationDate, chartRanked.Length, top,
                     mine, suggested.Contains(chart.ChartId));
@@ -364,7 +373,8 @@ namespace ScoreTracker.WeeklyChallenge.Application
             foreach (var score in context.Message.Scores.Where(s => weeklyChartIds.Contains(s.ChartId)))
                 await Handle(new RegisterWeeklyChartScoreCommand(
                         new WeeklyTournamentEntry(context.Message.UserId, score.ChartId, score.Score,
-                            Enum.Parse<PhoenixPlate>(score.Plate), score.IsBroken, null, 10.0), mix),
+                            Enum.Parse<PhoenixPlate>(score.Plate), score.IsBroken, null, 10.0), mix,
+                        ChallengeEntrySource.Official),
                     context.CancellationToken);
         }
 
@@ -384,19 +394,26 @@ namespace ScoreTracker.WeeklyChallenge.Application
             var competitiveLevel = chart.Type == ChartType.Single ? stats.SinglesCompetitiveLevel :
                 chart.Type == ChartType.Double ? stats.DoublesCompetitiveLevel : stats.CompetitiveLevel;
 
-            var existingEntries =
-                (await weeklyTournies.GetEntries(mix, request.Entry.ChartId, cancellationToken)).ToArray();
-            var existingEntry =
-                existingEntries.FirstOrDefault(u =>
-                    u.UserId == request.Entry.UserId);
+            var existingWithSources =
+                (await weeklyTournies.GetEntriesWithSources(mix, request.Entry.ChartId, cancellationToken))
+                .ToArray();
+            var existingEntries = existingWithSources.Select(e => e.Entry).ToArray();
+            var existingPair = existingWithSources.FirstOrDefault(u => u.Entry.UserId == request.Entry.UserId);
+            var existingEntry = existingPair.Entry;
             var existingPlace = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(existingEntries)
                 .Where(u => u.Item2.UserId == request.Entry.UserId)
                 .Select(u => (int?)u.Item1).FirstOrDefault();
 
             if (existingEntry != null)
             {
+                // The source tag describes the ranked score's provenance — it only moves when
+                // the score does (a weaker manual submit never demotes a verified score).
+                var entrySource = existingPair.Source;
                 if (request.Entry.Score > existingEntry.Score)
+                {
                     existingEntry = existingEntry with { Score = request.Entry.Score };
+                    entrySource = request.Source;
+                }
 
                 if (request.Entry.Plate > existingEntry.Plate)
                     existingEntry = existingEntry with { Plate = request.Entry.Plate };
@@ -405,13 +422,14 @@ namespace ScoreTracker.WeeklyChallenge.Application
                     existingEntry = existingEntry with { IsBroken = false };
 
                 existingEntry = existingEntry with { CompetitiveLevel = competitiveLevel };
-                existingEntry = existingEntry with { PhotoUrl = request.Entry.PhotoUrl };
-                await weeklyTournies.SaveEntry(mix, existingEntry, cancellationToken);
+                // Photos are optional proof (M3): a photo-less submit must not wipe one already attached.
+                existingEntry = existingEntry with { PhotoUrl = request.Entry.PhotoUrl ?? existingEntry.PhotoUrl };
+                await weeklyTournies.SaveEntry(mix, existingEntry, entrySource, cancellationToken);
             }
             else
             {
                 existingEntry = request.Entry with { CompetitiveLevel = competitiveLevel };
-                await weeklyTournies.SaveEntry(mix, existingEntry, cancellationToken);
+                await weeklyTournies.SaveEntry(mix, existingEntry, request.Source, cancellationToken);
             }
 
             var newPlace = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(existingEntries.Where(u => u.UserId != request.Entry.UserId)

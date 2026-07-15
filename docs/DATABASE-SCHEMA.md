@@ -106,7 +106,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | Table | Purpose |
 |---|---|
 | `scores.WeeklyTournamentChart` | The active weekly chart set per mix, with expiration |
-| `scores.WeeklyUserEntry` | Player entries per mix: score, plate, verification |
+| `scores.WeeklyUserEntry` | Player entries per mix: score, plate, optional photo proof, trust source (official import vs manual self-report) |
 | `scores.UserWeeklyPlacing` | Historical placements from finished weeks, per mix |
 | `scores.PastTourneyCharts` | Archive of previously used weekly charts per mix (avoids repeats; PK ChartId+MixId) |
 | `scores.DailyStepChart` | The one live Daily Step chart per mix (0–1 rows): ChartId, ForDate, IsLimbo, ExpirationDate. Redrawn each midnight-ET rotation |

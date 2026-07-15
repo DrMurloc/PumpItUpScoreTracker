@@ -5,7 +5,7 @@ namespace ScoreTracker.WeeklyChallenge.Domain;
 
 /// <summary>
 ///     Vertical-internal persistence port for the Daily Step board. Entries carry their
-///     <see cref="DailyStepSource" /> (official import vs manual widget submission). The
+///     <see cref="ChallengeEntrySource" /> (official import vs manual widget submission). The
 ///     cross-vertical slice — today's chart ids, consumed by the import Limbo hook — is the separate
 ///     published <see cref="ScoreTracker.Domain.SecondaryPorts.IDailyStepReader" />.
 /// </summary>
