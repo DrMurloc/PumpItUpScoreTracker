@@ -91,7 +91,10 @@
         </div>
     </section>
 
-    <ChartRecordPanel Chart="_chart" Mix="_mix" @key="_chart.Id"></ChartRecordPanel>
+    @* Keys carry the panel's identity alongside the chart id: Blazor's sibling key lookup
+       compares key values only, so two keyed siblings sharing a chart id collide even when
+       they're different component types. *@
+    <ChartRecordPanel Chart="_chart" Mix="_mix" @key="(_chart.Id, nameof(ChartRecordPanel))"></ChartRecordPanel>
 
     <section class="chart-section">
         <div class="chart-section-head">
@@ -154,7 +157,7 @@
         <SimilarChartsShelf ChartId="_chart.Id" Mix="_mix" @key="_chart.Id"></SimilarChartsShelf>
     </section>
 
-    <ChartAdminPanel Chart="_chart" Mix="_mix" @key="_chart.Id"></ChartAdminPanel>
+    <ChartAdminPanel Chart="_chart" Mix="_mix" @key="(_chart.Id, nameof(ChartAdminPanel))"></ChartAdminPanel>
 
     @if (CurrentUser.IsLoggedIn)
     {
