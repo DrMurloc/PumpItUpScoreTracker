@@ -35,8 +35,9 @@ public sealed class PiuGameLoginTests : IAsyncLifetime
     {
         await PiuGameLoginFlow.LogInAsNewUserAsync(_page);
 
-        // A brand-new PIU identity lands on the welcome flow…
-        Assert.EndsWith("/Welcome", new Uri(_page.Url).AbsolutePath);
+        // A brand-new PIU identity lands on the dashboard — and "/" bounces anyone without an
+        // account to the front door, so staying here is itself proof the sign-in took.
+        Assert.Equal("/", new Uri(_page.Url).AbsolutePath);
 
         // …with an account created from the stubbed PIU profile (name = game tag)…
         await using var context = await _fixture.DbContextFactory.CreateDbContextAsync();

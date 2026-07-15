@@ -49,10 +49,13 @@ builder.Services.Configure<JsonSerializerOptions>(o =>
 // The front door owns "/" via its @page directive; a Razor Page can declare only one
 // route, so "/Login" is attached as a second route to the same page here.
 builder.Services.AddRazorPages(options => options.Conventions.AddPageRoute("/FrontDoor", "Login"));
-builder.Services.AddServerSideBlazor(options =>
-{
-    options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromHours(1);
-});
+// Render modes: components render as static HTML by default, and only what asks for it gets a
+// circuit (docs/design/render-modes.md). Prerendering stays off — see App.razor.
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents(options =>
+    {
+        options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromHours(1);
+    });
 var discordConfig = builder.Configuration.GetSection("Discord").Get<DiscordConfiguration>();
 var googleConfig = builder.Configuration.GetSection("Google").Get<GoogleConfiguration>();
 var facebookConfig = builder.Configuration.GetSection("Facebook").Get<FacebookConfiguration>();
@@ -330,6 +333,27 @@ app.UseRouting();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+// Required by MapRazorComponents: a static-rendered form posts back to its own endpoint, so the
+// endpoint carries an antiforgery requirement and the middleware is what satisfies it. Without
+// this every component endpoint throws on the first request. After authorization, before the
+// endpoints it protects.
+app.UseAntiforgery();
+
+// "/" is the dashboard, which needs an account; a visitor without one goes to the front door
+// (docs/design/front-door.md). Middleware rather than a redirect inside the page, because the
+// dashboard renders in the circuit: a crawler runs no JS, sees no content, and would never find
+// out it was meant to be somewhere else. It has to sit after authentication — ahead of it every
+// visitor reads as anonymous, and a signed-in one would bounce between "/" and "/Welcome".
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/" && context.User.Identity?.IsAuthenticated != true)
+    {
+        context.Response.Redirect("/Welcome");
+        return;
+    }
+
+    await next();
+});
 
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
@@ -381,8 +405,10 @@ app.MapDefaultEndpoints();
 // Real Razor Pages (the static front door) route ahead of the Blazor fallback —
 // AddRazorPages() alone only wires services, not endpoints.
 app.MapRazorPages();
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
+// Component routes are real endpoints now, not a fallback — which is why "/" had to stop being
+// claimed by both the front door and the dashboard.
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
 app.Run();
 

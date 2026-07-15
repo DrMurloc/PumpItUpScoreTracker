@@ -47,12 +47,13 @@ public sealed class ScoreImportTests : IAsyncLifetime
             .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
         await import.ClickAsync();
 
-        await Expect(_page.GetByText("Import Completed!"))
+        // Two of the captured best scores streamed into the results table. The scores are the
+        // completion signal — waiting on the status text instead would tie this to whatever
+        // wording the import happens to report, which is what broke it last time.
+        await Expect(_page.GetByText("999,231").First)
             .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 120_000 });
-
-        // Two of the captured best scores streamed into the results table…
-        await Expect(_page.GetByText("999,231").First).ToBeVisibleAsync();
-        await Expect(_page.GetByText("1,000,000").First).ToBeVisibleAsync();
+        await Expect(_page.GetByText("1,000,000").First)
+            .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 120_000 });
 
         // …and were persisted to the ledger, mapped onto the right charts.
         Assert.Equal(999231, await LedgerScoreFor(_fixture.Seed.Tricklash220Double20));
