@@ -4382,4 +4382,19 @@
   <data name="Show all {0} scores" xml:space="preserve">
     <value>Mostra tutti i {0} punteggi</value>
   </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filtra</value>
+  </data>
+  <data name="By {0}" xml:space="preserve">
+    <value>Di {0}</value>
+  </data>
+  <data name="{0}–{1} BPM" xml:space="preserve">
+    <value>{0}–{1} BPM</value>
+  </data>
+  <data name="Only {0}" xml:space="preserve">
+    <value>Solo {0}</value>
+  </data>
+  <data name="Step artist" xml:space="preserve">
+    <value>Autore degli step</value>
+  </data>
 </root>

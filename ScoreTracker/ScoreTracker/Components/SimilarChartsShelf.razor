@@ -46,6 +46,34 @@
                 <span>@L["Personalized"]</span>
             </label>
         }
+        @* Every option is derived from the anchor, so a filter is one click and can never
+           be typed into nonsense. Filters narrow what we COMPARE AGAINST and rescore —
+           they never sieve the stored top-20, which are the nearest charts overall and so
+           would survive nothing worth filtering by. *@
+        @if (_anchor != null)
+        {
+            <MudMenu Dense="true" Disabled="_sorting" Class="chart-shelf-addfilter"
+                     StartIcon="@Icons.Material.Filled.FilterList" Label="@L["Filter"]"
+                     Variant="Variant.Outlined" Size="Size.Small">
+                @if (_anchor.StepArtist is { } artist && artist.ToString() != "Unknown")
+                {
+                    <MudMenuItem OnClick="() => FilterByArtist(artist)">@L["By {0}", artist]</MudMenuItem>
+                }
+                @if (BpmBand is { } band)
+                {
+                    <MudMenuItem OnClick="() => FilterByBpm(band.Min, band.Max)">
+                        @L["{0}–{1} BPM", (int)band.Min, (int)band.Max]
+                    </MudMenuItem>
+                }
+                @foreach (var level in ReachableLevels)
+                {
+                    var target = level;
+                    <MudMenuItem OnClick="() => FilterByLevel(target)">
+                        @L["Only {0}", $"{_anchor.Type.GetShortHand()}{target}"]
+                    </MudMenuItem>
+                }
+            </MudMenu>
+        }
         <span class="chart-shelf-hint">
             @if (_sorting)
             {
@@ -379,14 +407,70 @@
     }
 
     /// <summary>
-    ///     Narrows the target list and recomputes — never a sieve over the stored top-20.
-    ///     Public so the page's filter affordances can drive it as they land.
+    ///     How far out the level filter offers to reach. Wider than the graph's own ±1
+    ///     window on purpose: "I liked this D18, what D23s play like it" is the whole
+    ///     reason the live query exists, and it is deliberately outside what gets
+    ///     precalculated.
     /// </summary>
-    internal async Task ApplyFilter(GetFilteredSimilarChartsQuery query, string label, string value)
+    internal const int LevelFilterReach = 5;
+
+    internal IReadOnlyList<int> ReachableLevels
     {
-        var result = await Mediator.Send(query);
-        _filter = new ActiveFilter(label, value);
-        _compared = result.ChartsCompared;
-        await Load(result.Matches);
+        get
+        {
+            if (_anchor == null) return Array.Empty<int>();
+            var anchor = (int)_anchor.Level;
+            return Enumerable.Range(anchor - LevelFilterReach, LevelFilterReach * 2 + 1)
+                .Where(l => l is >= 1 and <= 28 && l != anchor)
+                .ToArray();
+        }
+    }
+
+    /// <summary>
+    ///     A tenth either side of the anchor's own tempo. Nominal BPM is noise as a score —
+    ///     slow songs multiply, so Altale's 90 runs at 12 NPS — but as a filter it is
+    ///     exactly what someone means by "at this speed".
+    /// </summary>
+    private (decimal Min, decimal Max)? BpmBand
+    {
+        get
+        {
+            if (_anchor?.Song.Bpm is not { } bpm) return null;
+            return (Math.Round(bpm.Min * 0.9m), Math.Round(bpm.Max * 1.1m));
+        }
+    }
+
+    // The chip and the reach line both read (dimension, value), so a filter carries the two
+    // separately rather than a pre-baked sentence. Internal so tests can drive a filter
+    // without going through MudMenu's popover, which bUnit does not host.
+    internal Task FilterByArtist(Name artist) =>
+        ApplyFilter(new GetFilteredSimilarChartsQuery(ChartId, Mix, StepArtist: artist),
+            "Step artist", artist.ToString());
+
+    internal Task FilterByBpm(decimal min, decimal max) =>
+        ApplyFilter(new GetFilteredSimilarChartsQuery(ChartId, Mix, MinBpm: min, MaxBpm: max),
+            "BPM", $"{(int)min}–{(int)max}");
+
+    internal Task FilterByLevel(int level) =>
+        ApplyFilter(new GetFilteredSimilarChartsQuery(ChartId, Mix, MinLevel: level, MaxLevel: level),
+            "Level", $"{_anchor?.Type.GetShortHand()}{level}");
+
+    /// <summary>
+    ///     Narrows the target list and recomputes — never a sieve over the stored top-20.
+    /// </summary>
+    private async Task ApplyFilter(GetFilteredSimilarChartsQuery query, string label, string value)
+    {
+        _sorting = true;
+        try
+        {
+            var result = await Mediator.Send(query);
+            _filter = new ActiveFilter(label, value);
+            _compared = result.ChartsCompared;
+            await Load(result.Matches);
+        }
+        finally
+        {
+            _sorting = false;
+        }
     }
 }

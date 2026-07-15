@@ -183,6 +183,45 @@
         return Facets?.OfType<TFacet>().FirstOrDefault();
     }
 
+    /// <summary>
+    ///     Competitive level is a number, so the axis is a scale rather than a row of
+    ///     labels — which is also what lets an annotation land on a level instead of on a
+    ///     category's index.
+    /// </summary>
+    private static XAxis LevelAxis()
+    {
+        return new XAxis { Type = XAxisType.Numeric, DecimalsInFloat = 0 };
+    }
+
+    /// <summary>
+    ///     The chart's own folder, drawn where it falls on the competitive-level axis. It
+    ///     is the reference the whole graph is read against — "who clears this, relative to
+    ///     what it claims to be" — and without it the reader has to remember the level and
+    ///     eyeball the axis.
+    /// </summary>
+    private Annotations? FolderLevelMarker(MixPalette palette)
+    {
+        if (Chart == null) return null;
+        return new Annotations
+        {
+            Xaxis = new List<AnnotationsXAxis>
+            {
+                new()
+                {
+                    X = (int)Chart.Level,
+                    BorderColor = palette.Accent,
+                    StrokeDashArray = 4,
+                    Label = new Label
+                    {
+                        Text = Chart.DifficultyString,
+                        BorderColor = palette.Accent,
+                        Style = new Style { Background = palette.Accent, Color = palette.Background }
+                    }
+                }
+            }
+        };
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         if (Chart == null || Chart.Id == _loadedFor) return;
@@ -254,10 +293,14 @@
                 { palette.InkMuted, palette.Primary, palette.InkMuted, palette.Accent };
             _scoreOptions.Stroke = new Stroke { Curve = Curve.Smooth };
             _scoreOptions.Yaxis = new List<YAxis> { new() { Max = 1_000_000 } };
+            _scoreOptions.Xaxis = LevelAxis();
+            _scoreOptions.Annotations = FolderLevelMarker(palette);
 
             _passOptions = ApexChartTheming.BaseOptions<LevelPoint>(palette);
             _passOptions.Colors = new List<string> { palette.Primary };
             _passOptions.Stroke = new Stroke { Curve = Curve.Smooth };
+            _passOptions.Xaxis = LevelAxis();
+            _passOptions.Annotations = FolderLevelMarker(palette);
         }
 
         _loaded = true;

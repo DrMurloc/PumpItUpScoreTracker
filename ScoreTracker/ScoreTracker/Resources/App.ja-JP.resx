@@ -4383,4 +4383,19 @@
   <data name="Show all {0} scores" xml:space="preserve">
     <value>{0}件の記録をすべて表示</value>
   </data>
+  <data name="Filter" xml:space="preserve">
+    <value>フィルター</value>
+  </data>
+  <data name="By {0}" xml:space="preserve">
+    <value>{0} の譜面</value>
+  </data>
+  <data name="{0}–{1} BPM" xml:space="preserve">
+    <value>{0}–{1} BPM</value>
+  </data>
+  <data name="Only {0}" xml:space="preserve">
+    <value>{0} のみ</value>
+  </data>
+  <data name="Step artist" xml:space="preserve">
+    <value>ステップアーティスト</value>
+  </data>
 </root>

@@ -189,6 +189,81 @@ public sealed class SimilarChartsShelfTests : TestContext
 
 
     [Fact]
+    public void TheLevelFilterReachesPastWhatTheGraphPrecalculates()
+    {
+        // "I liked this D18, what D23s play like it" is the reason the live query exists,
+        // and it is deliberately outside the ±1 the nightly job stores. If the menu only
+        // offered the precalculated window there would be no way to ask.
+        var anchor = Guid.NewGuid();
+        SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5)));
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+
+        var levels = cut.Instance.ReachableLevels;
+
+        // The anchor is D20 (the test chart's default), so the menu must reach D23 and D15.
+        Assert.Contains(23, levels);
+        Assert.Contains(15, levels);
+        Assert.DoesNotContain(20, levels);
+    }
+
+    [Fact]
+    public void AFilterNarrowsTheTargetListAndSaysWhatItSearched()
+    {
+        // The filter reduces what we COMPARE AGAINST and rescores — it never sieves the
+        // stored top-20, which are the nearest charts overall and would survive nothing
+        // worth filtering by. The reach line is what turns "1 match" from a bug report
+        // into a sentence.
+        var anchor = Guid.NewGuid();
+        SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5)));
+        var filtered = Edge(0.7, Badge("bracket", 0.4));
+        _mediator.Setup(m => m.Send(It.IsAny<GetFilteredSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FilteredSimilarChartsRecord(new[] { filtered }, ChartsCompared: 30));
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+
+        cut.InvokeAsync(() => cut.Instance.FilterByArtist(Name.From("SPHAM"))).Wait();
+        cut.Render();
+
+        Assert.Contains("Compared 30 charts", cut.Markup);
+        Assert.Single(cut.FindAll(".chart-shelf-fchip"));
+    }
+
+    [Fact]
+    public void ClearingAFilterGoesBackToThePrecalculatedGraph()
+    {
+        var anchor = Guid.NewGuid();
+        SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5)));
+        _mediator.Setup(m => m.Send(It.IsAny<GetFilteredSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FilteredSimilarChartsRecord(Array.Empty<ChartSimilarityRecord>(), ChartsCompared: 30));
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+        cut.InvokeAsync(() => cut.Instance.FilterByArtist(Name.From("SPHAM"))).Wait();
+        cut.Render();
+        Assert.Single(cut.FindAll(".chart-shelf-fchip"));
+
+        cut.Find(".chart-shelf-fchip button").Click();
+
+        Assert.Empty(cut.FindAll(".chart-shelf-fchip"));
+        Assert.Contains("Brackets50%", Chips(cut));
+    }
+
+    [Fact]
+    public void AFilterThatFindsNothingStillSaysWhatItLookedThrough()
+    {
+        // A narrow filter is not a broken feature, and the difference is whether the shelf
+        // can say what it searched.
+        var anchor = Guid.NewGuid();
+        SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5)));
+        _mediator.Setup(m => m.Send(It.IsAny<GetFilteredSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FilteredSimilarChartsRecord(Array.Empty<ChartSimilarityRecord>(), ChartsCompared: 128));
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+
+        cut.InvokeAsync(() => cut.Instance.FilterByArtist(Name.From("SPHAM"))).Wait();
+        cut.Render();
+
+        Assert.Contains("Compared 128 charts", cut.Markup);
+        Assert.Contains("none cleared the bar", cut.Markup);
+    }
+
+    [Fact]
     public void AnEmptyGraphExplainsItselfInsteadOfRenderingNothing()
     {
         var anchor = Guid.NewGuid();

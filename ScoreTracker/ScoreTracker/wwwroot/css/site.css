@@ -4034,6 +4034,10 @@ html.nav-away .page-dock,
     cursor: not-allowed;
 }
 
+.chart-shelf-addfilter {
+    flex: none;
+}
+
 .chart-shelf-hint,
 .chart-shelf-reach {
     font-size: .74rem;

@@ -4382,4 +4382,19 @@
   <data name="Show all {0} scores" xml:space="preserve">
     <value>Show all {0} scores</value>
   </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="By {0}" xml:space="preserve">
+    <value>By {0}</value>
+  </data>
+  <data name="{0}–{1} BPM" xml:space="preserve">
+    <value>{0}–{1} BPM</value>
+  </data>
+  <data name="Only {0}" xml:space="preserve">
+    <value>Only {0}</value>
+  </data>
+  <data name="Step artist" xml:space="preserve">
+    <value>Step artist</value>
+  </data>
 </root>

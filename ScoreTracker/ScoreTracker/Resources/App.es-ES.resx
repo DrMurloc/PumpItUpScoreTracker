@@ -4260,4 +4260,19 @@
   <data name="Show all {0} scores" xml:space="preserve">
     <value>Ver los {0} scores</value>
   </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filtrar</value>
+  </data>
+  <data name="By {0}" xml:space="preserve">
+    <value>De {0}</value>
+  </data>
+  <data name="{0}–{1} BPM" xml:space="preserve">
+    <value>{0}–{1} BPM</value>
+  </data>
+  <data name="Only {0}" xml:space="preserve">
+    <value>Solo {0}</value>
+  </data>
+  <data name="Step artist" xml:space="preserve">
+    <value>Autor de los steps</value>
+  </data>
 </root>
