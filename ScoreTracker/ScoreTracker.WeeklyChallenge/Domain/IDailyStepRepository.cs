@@ -20,4 +20,11 @@ internal interface IDailyStepRepository
 
     Task SaveEntry(MixEnum mix, DailyStepEntry entry, CancellationToken cancellationToken);
     Task WriteHistories(MixEnum mix, IEnumerable<DailyStepPlacing> placings, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     The player's most recent finished days, newest first, with each day's board size —
+    ///     the L6 history read (first surfaced by the challenges page).
+    /// </summary>
+    Task<IEnumerable<DailyStepHistoryRecord>> GetUserHistory(MixEnum mix, Guid userId, int take,
+        CancellationToken cancellationToken);
 }

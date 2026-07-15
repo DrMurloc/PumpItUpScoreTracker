@@ -24,5 +24,9 @@ namespace ScoreTracker.Domain.SecondaryPorts
 
         Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(MixEnum mix, DateTimeOffset date,
             CancellationToken cancellationToken);
+
+        /// <summary>All entries across a set of finished weeks in one read (the monthly window).</summary>
+        Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(MixEnum mix,
+            IReadOnlyCollection<DateTimeOffset> dates, CancellationToken cancellationToken);
     }
 }

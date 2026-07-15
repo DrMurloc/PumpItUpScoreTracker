@@ -194,5 +194,18 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                 new WeeklyTournamentEntry(u.UserId, u.ChartId, u.Score, Enum.Parse<PhoenixPlate>(u.Plate), u.IsBroken,
                     null, u.CompetitiveLevel));
         }
+
+        public async Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(MixEnum mix,
+            IReadOnlyCollection<DateTimeOffset> dates, CancellationToken cancellationToken)
+        {
+            if (dates.Count == 0) return Array.Empty<WeeklyTournamentEntry>();
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            return (await database.Set<UserWeeklyPlacingEntity>()
+                    .Where(e => dates.Contains(e.ObtainedDate) && e.MixId == mixId)
+                    .ToArrayAsync(cancellationToken))
+                .Select(u => new WeeklyTournamentEntry(u.UserId, u.ChartId, u.Score,
+                    Enum.Parse<PhoenixPlate>(u.Plate), u.IsBroken, null, u.CompetitiveLevel));
+        }
     }
 }

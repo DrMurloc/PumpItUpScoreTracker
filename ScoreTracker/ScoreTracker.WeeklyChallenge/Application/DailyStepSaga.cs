@@ -26,13 +26,16 @@ internal sealed class DailyStepSaga(
     ICurrentUserAccessor currentUser,
     IDateTimeOffsetAccessor dateTime,
     IRandomNumberGenerator random,
+    IUserReader users,
     ILogger<DailyStepSaga> logger) :
     IConsumer<RotateDailyStepCommand>,
     IConsumer<DailyStepScoreObservedEvent>,
     IRequestHandler<RecordDailyStepScoreCommand>,
     IRequestHandler<GetDailyStepQuery, DailyStepBoard?>,
     IRequestHandler<GetDailyStepEntriesQuery, IEnumerable<DailyStepEntry>>,
-    IRequestHandler<GetDailyStepPlacementQuery, DailyStepPlacement?>
+    IRequestHandler<GetDailyStepPlacementQuery, DailyStepPlacement?>,
+    IRequestHandler<GetDailyStepBoardQuery, DailyStepBoardView?>,
+    IRequestHandler<GetUserDailyStepHistoryQuery, IEnumerable<DailyStepHistoryRecord>>
 {
     // Normal days draw a challenge-worthy chart; Limbo days drop to something almost anyone can
     // pass (levels 1–15, owner). Singles/doubles only — a shared solo daily, no co-op.
@@ -189,6 +192,36 @@ internal sealed class DailyStepSaga(
         var mine = ranked.Where(r => r.Item2.UserId == request.UserId).Select(r => (int?)r.Item1)
             .FirstOrDefault();
         return mine == null ? null : new DailyStepPlacement(mine.Value, ranked.Length, board.IsLimbo);
+    }
+
+    // The challenges page's board read: ranked, display-enriched rows in one dispatch. Ranking is
+    // the same policy the rotation snapshots and the placement query report — one truth for places.
+    public async Task<DailyStepBoardView?> Handle(GetDailyStepBoardQuery request,
+        CancellationToken cancellationToken)
+    {
+        var board = await dailySteps.GetCurrentChart(request.Mix, cancellationToken);
+        if (board == null) return null;
+        var entries = (await dailySteps.GetEntries(request.Mix, board.ChartId, cancellationToken)).ToArray();
+        // Entries are unique per user on one chart, so ranked rows map back to their Source-bearing
+        // originals by user id.
+        var byUser = entries.ToDictionary(e => e.UserId);
+        var ranked = (board.IsLimbo
+            ? WeeklyChartSuggestionPolicy.ProcessIntoPlacesAscending(entries.Select(ToRanked))
+            : WeeklyChartSuggestionPolicy.ProcessIntoPlaces(entries.Select(ToRanked))).ToArray();
+        var userDict = (await users.GetUsers(ranked.Select(r => r.Item2.UserId).Distinct().ToArray(),
+            cancellationToken)).ToDictionary(u => u.Id);
+        var rows = ranked
+            .Select(r => new DailyStepBoardRow(r.Item1, userDict.GetValueOrDefault(r.Item2.UserId),
+                byUser[r.Item2.UserId]))
+            .ToArray();
+        var myRow = request.UserId == null ? null : rows.FirstOrDefault(r => r.Entry.UserId == request.UserId);
+        return new DailyStepBoardView(board, rows, myRow);
+    }
+
+    public async Task<IEnumerable<DailyStepHistoryRecord>> Handle(GetUserDailyStepHistoryQuery request,
+        CancellationToken cancellationToken)
+    {
+        return await dailySteps.GetUserHistory(request.Mix, request.UserId, request.Take, cancellationToken);
     }
 
     // The placement policy (shared with Weekly) ranks WeeklyTournamentEntry; Daily entries carry an

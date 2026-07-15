@@ -29,8 +29,176 @@ namespace ScoreTracker.WeeklyChallenge.Application
         IRequestHandler<GetPastWeeklyEntriesQuery, IEnumerable<WeeklyTournamentEntry>>,
         IRequestHandler<GetPastWeeklyDatesQuery, IEnumerable<DateTimeOffset>>,
         IRequestHandler<GetAlreadyPlayedWeeklyChartsQuery, IEnumerable<Guid>>,
-        IRequestHandler<GetUserWeeklyPlacementsQuery, IEnumerable<WeeklyPlacementRecord>>
+        IRequestHandler<GetUserWeeklyPlacementsQuery, IEnumerable<WeeklyPlacementRecord>>,
+        IRequestHandler<GetWeeklyBoardQuery, WeeklyBoardView>,
+        IRequestHandler<GetMonthlyLeaderboardQuery, MonthlyLeaderboardView>
     {
+        // The challenges page's board read: ranked heads + the caller's standing per chart,
+        // display-enriched through IUserReader so the page dispatches one query instead of a
+        // charts + entries + identity cascade.
+        public async Task<WeeklyBoardView> Handle(GetWeeklyBoardQuery request, CancellationToken cancellationToken)
+        {
+            var isLive = request.WeekStart == null;
+            IReadOnlyList<WeeklyTournamentChart> boardCharts;
+            WeeklyTournamentEntry[] entries;
+            if (isLive)
+            {
+                boardCharts = (await weeklyTournies.GetWeeklyCharts(request.Mix, cancellationToken)).ToArray();
+                entries = (await weeklyTournies.GetEntries(request.Mix, null, cancellationToken)).ToArray();
+            }
+            else
+            {
+                entries = (await weeklyTournies.GetPastEntries(request.Mix, request.WeekStart!.Value,
+                    cancellationToken)).ToArray();
+                // A finished week has no chart table of its own — its charts are whatever got played.
+                boardCharts = entries.Select(e => e.ChartId).Distinct()
+                    .Select(id => new WeeklyTournamentChart(id, request.WeekStart!.Value)).ToArray();
+            }
+
+            if (request.OnlyUserIds is { Count: > 0 })
+            {
+                var allowed = request.OnlyUserIds.ToHashSet();
+                entries = entries.Where(e => allowed.Contains(e.UserId)).ToArray();
+            }
+
+            var byChart = entries.GroupBy(e => e.ChartId).ToDictionary(g => g.Key, g => g.ToArray());
+            var ranked = boardCharts.ToDictionary(c => c.ChartId, c =>
+                WeeklyChartSuggestionPolicy.ProcessIntoPlaces(
+                    byChart.TryGetValue(c.ChartId, out var chartEntries)
+                        ? chartEntries
+                        : Array.Empty<WeeklyTournamentEntry>()).ToArray());
+
+            // Suggestion flags only mean something on the live board, and only for a caller with
+            // calibrated competitive levels.
+            var suggested = new HashSet<Guid>();
+            var suggestionsAvailable = false;
+            if (isLive && request.UserId != null && boardCharts.Any())
+            {
+                var stats = await playerStats.GetStats(request.Mix, request.UserId.Value, cancellationToken);
+                suggestionsAvailable = stats is { DoublesCompetitiveLevel: >= 10, SinglesCompetitiveLevel: >= 10 };
+                if (suggestionsAvailable)
+                {
+                    var chartDict = (await charts.GetCharts(request.Mix,
+                            chartIds: boardCharts.Select(c => c.ChartId).ToArray(),
+                            cancellationToken: cancellationToken))
+                        .ToDictionary(c => c.Id);
+                    suggested = WeeklyChartSuggestionPolicy.GetSuggestedCharts(
+                            boardCharts.Where(c => chartDict.ContainsKey(c.ChartId))
+                                .Select(c => chartDict[c.ChartId]),
+                            stats.DoublesCompetitiveLevel, stats.SinglesCompetitiveLevel)
+                        .Select(c => c.Id).ToHashSet();
+                }
+            }
+
+            var visibleUserIds = ranked.Values
+                .SelectMany(r => r.Take(3).Select(row => row.Item2.UserId))
+                .Concat(request.UserId is { } caller ? new[] { caller } : Array.Empty<Guid>())
+                .Distinct().ToArray();
+            var userDict = (await users.GetUsers(visibleUserIds, cancellationToken)).ToDictionary(u => u.Id);
+
+            var summaries = boardCharts.Select(chart =>
+            {
+                var chartRanked = ranked[chart.ChartId];
+                var top = chartRanked.Take(3)
+                    .Select(r => new WeeklyBoardRow(r.Item1, userDict.GetValueOrDefault(r.Item2.UserId), r.Item2))
+                    .ToArray();
+                var mine = request.UserId == null
+                    ? null
+                    : chartRanked.Where(r => r.Item2.UserId == request.UserId)
+                        .Select(r => new WeeklyBoardRow(r.Item1, userDict.GetValueOrDefault(r.Item2.UserId), r.Item2))
+                        .FirstOrDefault();
+                return new WeeklyBoardChartSummary(chart.ChartId, chart.ExpirationDate, chartRanked.Length, top,
+                    mine, suggested.Contains(chart.ChartId));
+            }).ToArray();
+
+            return new WeeklyBoardView(summaries, isLive, suggestionsAvailable);
+        }
+
+        // The monthly board, aggregated and priced here instead of week-by-week in the page.
+        // Pricing is the mix's own PUMBILITY (O4, weekly-charts-overhaul.md §6): brokens price
+        // at zero per the game; Combined excludes co-op (Phoenix 2's own rule); the Co-Op view
+        // ranks raw score — the only currency co-op charts share across a month.
+        public async Task<MonthlyLeaderboardView> Handle(GetMonthlyLeaderboardQuery request,
+            CancellationToken cancellationToken)
+        {
+            var now = dateTime.Now;
+            // Weeks belong to the month their board started in (rotation date − 7 days).
+            var anchorStart = request.AnchorWeek == null ? now : request.AnchorWeek.Value - TimeSpan.FromDays(7);
+            var monthDates = (await weeklyTournies.GetPastDates(request.Mix, cancellationToken))
+                .Where(d => (d - TimeSpan.FromDays(7)).Year == anchorStart.Year &&
+                            (d - TimeSpan.FromDays(7)).Month == anchorStart.Month)
+                .ToArray();
+            var isCurrentMonth = anchorStart.Year == now.Year && anchorStart.Month == now.Month;
+
+            var entries = new List<WeeklyTournamentEntry>();
+            entries.AddRange(await weeklyTournies.GetPastEntries(request.Mix, monthDates, cancellationToken));
+            DateTimeOffset? liveWeekStart = null;
+            if (isCurrentMonth)
+            {
+                var liveCharts = (await weeklyTournies.GetWeeklyCharts(request.Mix, cancellationToken)).ToArray();
+                if (liveCharts.Any()) liveWeekStart = liveCharts.Max(c => c.ExpirationDate) - TimeSpan.FromDays(7);
+                entries.AddRange(await weeklyTournies.GetEntries(request.Mix, null, cancellationToken));
+            }
+
+            var weekInMonth = monthDates.Length + (isCurrentMonth ? 1 : 0);
+            var countedPerPlayer = 4 * weekInMonth;
+            DateTimeOffset? windowStart = monthDates.Any() ? monthDates.Min() - TimeSpan.FromDays(7) : liveWeekStart;
+            DateTimeOffset? windowEnd = isCurrentMonth ? null :
+                monthDates.Any() ? monthDates.Max() - TimeSpan.FromDays(1) : null;
+
+            if (request.OnlyUserIds is { Count: > 0 })
+            {
+                var allowed = request.OnlyUserIds.ToHashSet();
+                entries = entries.Where(e => allowed.Contains(e.UserId)).ToList();
+            }
+
+            if (!entries.Any())
+                return new MonthlyLeaderboardView(Array.Empty<MonthlyLeaderboardRow>(), weekInMonth,
+                    countedPerPlayer, windowStart, windowEnd);
+
+            var chartDict = (await charts.GetCharts(request.Mix,
+                    chartIds: entries.Select(e => e.ChartId).Distinct().ToArray(),
+                    cancellationToken: cancellationToken))
+                .ToDictionary(c => c.Id);
+            entries = entries.Where(e => chartDict.TryGetValue(e.ChartId, out var chart) &&
+                                         (request.Type == null
+                                             ? chart.Type != ChartType.CoOp
+                                             : chart.Type == request.Type)).ToList();
+
+            var scoring = ScoringConfiguration.PumbilityScoring(request.Mix, false);
+            double Price(WeeklyTournamentEntry entry)
+            {
+                var chart = chartDict[entry.ChartId];
+                return request.Type == ChartType.CoOp
+                    ? (int)entry.Score
+                    : scoring.GetScore(chart.Type, chart.Level, entry.Score, entry.Plate, entry.IsBroken);
+            }
+
+            var totals = entries.GroupBy(e => e.UserId).Select(g =>
+                {
+                    var counted = g
+                        .Select(e => new MonthlyEntry(e.ChartId, e.Score, e.Plate, e.IsBroken, Price(e)))
+                        .OrderByDescending(m => m.Points).ThenByDescending(m => (int)m.Score)
+                        .Take(countedPerPlayer).ToArray();
+                    return (UserId: g.Key, Counted: counted,
+                        Total: counted.Sum(m => m.Points),
+                        RawSum: counted.Sum(m => (int)m.Score));
+                })
+                // Stepped grade multipliers tie more often than the old continuous scale;
+                // raw-score sum breaks them (§6).
+                .OrderByDescending(r => r.Total).ThenByDescending(r => r.RawSum)
+                .ToArray();
+
+            var userDict = (await users.GetUsers(totals.Select(t => t.UserId).ToArray(), cancellationToken))
+                .ToDictionary(u => u.Id);
+            var rows = totals.Select((r, i) => new MonthlyLeaderboardRow(i + 1,
+                    userDict.GetValueOrDefault(r.UserId), r.Total,
+                    r.Counted.Take(4).ToArray(), r.Counted))
+                .ToArray();
+
+            return new MonthlyLeaderboardView(rows, weekInMonth, countedPerPlayer, windowStart, windowEnd);
+        }
+
         // The session-snapshot card's weekly read: current placements for whichever of
         // the batch's charts sit on this week's board.
         public async Task<IEnumerable<WeeklyPlacementRecord>> Handle(GetUserWeeklyPlacementsQuery request,

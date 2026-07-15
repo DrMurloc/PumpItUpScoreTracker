@@ -288,6 +288,89 @@ public sealed class DailyStepSagaTests
         return (daily, BuildSaga(daily, ChartsReturning(new[] { chart }), stats, now, currentUser));
     }
 
+    [Fact]
+    public async Task DailyBoardRanksByScoreAndCarriesSourceBearingEntries()
+    {
+        var chartId = Guid.NewGuid();
+        var me = Guid.NewGuid();
+        var rival = Guid.NewGuid();
+        var daily = new Mock<IDailyStepRepository>();
+        daily.Setup(d => d.GetCurrentChart(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Board(chartId, isLimbo: false));
+        daily.Setup(d => d.GetEntries(MixEnum.Phoenix, chartId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                Entry(chartId, 970_000, me, source: DailyStepSource.Manual),
+                Entry(chartId, 990_000, rival)
+            });
+        var saga = BuildSaga(daily);
+
+        var view = await saga.Handle(new GetDailyStepBoardQuery(MixEnum.Phoenix, me), CancellationToken.None);
+
+        Assert.Equal(new[] { rival, me }, view!.Rows.Select(r => r.Entry.UserId).ToArray());
+        Assert.Equal(new[] { 1, 2 }, view.Rows.Select(r => r.Place).ToArray());
+        Assert.All(view.Rows, r => Assert.NotNull(r.Player));
+        Assert.Equal(2, view.MyRow!.Place);
+        Assert.Equal(DailyStepSource.Manual, view.MyRow.Entry.Source);
+    }
+
+    [Fact]
+    public async Task DailyBoardOnLimboRanksAscendingAndDropsBrokenRuns()
+    {
+        var chartId = Guid.NewGuid();
+        var lowest = Guid.NewGuid();
+        var daily = new Mock<IDailyStepRepository>();
+        daily.Setup(d => d.GetCurrentChart(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Board(chartId, isLimbo: true));
+        daily.Setup(d => d.GetEntries(MixEnum.Phoenix, chartId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                Entry(chartId, 900_000, Guid.NewGuid()),
+                Entry(chartId, 850_000, lowest),
+                // The lowest score of all, but broken — Limbo only ranks passes.
+                Entry(chartId, 800_000, Guid.NewGuid(), isBroken: true)
+            });
+        var saga = BuildSaga(daily);
+
+        var view = await saga.Handle(new GetDailyStepBoardQuery(MixEnum.Phoenix), CancellationToken.None);
+
+        Assert.Equal(2, view!.Rows.Count);
+        Assert.Equal(lowest, view.Rows[0].Entry.UserId);
+        Assert.Equal(1, view.Rows[0].Place);
+        Assert.Null(view.MyRow);
+    }
+
+    [Fact]
+    public async Task DailyBoardIsNullBetweenRotations()
+    {
+        var daily = new Mock<IDailyStepRepository>();
+        daily.Setup(d => d.GetCurrentChart(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((DailyStepBoard?)null);
+        var saga = BuildSaga(daily);
+
+        Assert.Null(await saga.Handle(new GetDailyStepBoardQuery(MixEnum.Phoenix), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task DailyHistoryReadsThePlacingsSnapshot()
+    {
+        var me = Guid.NewGuid();
+        var records = new[]
+        {
+            new DailyStepHistoryRecord(NormalDay, Guid.NewGuid(), IsLimbo: false, Place: 3, TotalPlayers: 12,
+                Score: 950_000, Plate: PhoenixPlate.SuperbGame, IsBroken: false)
+        };
+        var daily = new Mock<IDailyStepRepository>();
+        daily.Setup(d => d.GetUserHistory(MixEnum.Phoenix, me, 14, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(records);
+        var saga = BuildSaga(daily);
+
+        var result = await saga.Handle(new GetUserDailyStepHistoryQuery(me), CancellationToken.None);
+
+        Assert.Equal(records, result);
+        daily.Verify(d => d.GetUserHistory(MixEnum.Phoenix, me, 14, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static DailyStepBoard Board(Guid chartId, bool isLimbo) =>
         new(chartId, NormalDay, isLimbo, NormalDay.AddDays(1));
 
@@ -323,15 +406,30 @@ public sealed class DailyStepSagaTests
         Mock<IChartRepository>? charts = null,
         Mock<IPlayerStatsReader>? playerStats = null,
         DateTimeOffset? now = null,
-        Mock<ICurrentUserAccessor>? currentUser = null)
+        Mock<ICurrentUserAccessor>? currentUser = null,
+        Mock<IUserReader>? users = null)
     {
         charts ??= new Mock<IChartRepository>();
         playerStats ??= new Mock<IPlayerStatsReader>();
         currentUser ??= CurrentUserReturning(new UserBuilder().Build());
+        users ??= UsersReturning();
         var random = new Mock<IRandomNumberGenerator>();
         random.Setup(r => r.Next(It.IsAny<int>())).Returns(0);
         return new DailyStepSaga(daily.Object, charts.Object, playerStats.Object, currentUser.Object,
-            FakeDateTime.At(now ?? NormalDay).Object, random.Object, NullLogger<DailyStepSaga>.Instance);
+            FakeDateTime.At(now ?? NormalDay).Object, random.Object, users.Object,
+            NullLogger<DailyStepSaga>.Instance);
+    }
+
+    // Display enrichment defaults to echoing whatever ids the handler asks for, so ranking
+    // tests never have to pre-register their players.
+    private static Mock<IUserReader> UsersReturning(params User[] known)
+    {
+        var mock = new Mock<IUserReader>();
+        mock.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IEnumerable<Guid> ids, CancellationToken _) =>
+                ids.Select(id => known.FirstOrDefault(k => k.Id == id)
+                                 ?? new UserBuilder().WithId(id).Build()).ToArray());
+        return mock;
     }
 
     private static Mock<ICurrentUserAccessor> CurrentUserReturning(User user)
