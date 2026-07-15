@@ -133,14 +133,17 @@ public sealed class SimilarChartsShelfTests : TestContext
     }
 
     [Fact]
-    public void AnUnmappedBadgeFallsBackToItsRawNameRatherThanVanishing()
+    public void AnUnmappedBadgeIsHumanizedRatherThanDumpedRaw()
     {
+        // A badge piucenter adds after us degrades to readable jargon, never to a key with
+        // underscores in it. The hyphen is the term's own punctuation and stays.
         var anchor = Guid.NewGuid();
-        SetupEdges(anchor, Edge(0.9, Badge("some_new_piucenter_badge", 0.5)));
+        SetupEdges(anchor, Edge(0.9, Badge("spin_move", 0.5), Badge("cross-pad_shuffle", 0.4)));
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
-        Assert.Contains("some_new_piucenter_badge50%", Chips(cut));
+        Assert.Contains("Spin Move50%", Chips(cut));
+        Assert.Contains("Cross-pad Shuffle40%", Chips(cut));
     }
 
     [Fact]

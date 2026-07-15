@@ -9,8 +9,10 @@ namespace ScoreTracker.Web.Services;
 ///     thresholds, and drops <c>doublestep</c> and <c>side3_singles</c> entirely), and it
 ///     is slated for a rename or a deletion. A label table is what lets that happen
 ///     without touching the shelf. Values are English keys for <c>IStringLocalizer</c>.
-///     An unmapped badge falls back to its raw name rather than vanishing, so a new
-///     piucenter badge degrades to jargon instead of to nothing.
+///     The table picks one name per badge without claiming it is the name — the community
+///     calls most of these several things — so it exists to be readable and stable, not
+///     canonical. An unmapped badge is humanized rather than dropped, so a new piucenter
+///     badge degrades to "Yog Walk" instead of to `yog_walk` or to nothing.
 ///     These keys are deliberately **not** in the resx catalogues, so every locale renders
 ///     the English term — which is exactly what the site already does with the whole skill
 ///     vocabulary (`Skill.GetName()` never passes through the localizer, so "Brackets" and
@@ -56,6 +58,18 @@ internal static class SimilarityBadgeLabels
 
     public static string For(string badge)
     {
-        return Labels.TryGetValue(badge, out var label) ? label : badge;
+        return Labels.TryGetValue(badge, out var label) ? label : Humanize(badge);
+    }
+
+    /// <summary>
+    ///     <c>yog_walk</c> → <c>Yog Walk</c>. Underscores are piucenter's key separator, not
+    ///     something a reader should ever see; a hyphen is punctuation the term itself owns
+    ///     (<c>cross-pad</c>, <c>5-stair</c>) and survives.
+    /// </summary>
+    private static string Humanize(string badge)
+    {
+        var words = badge.Split('_', StringSplitOptions.RemoveEmptyEntries)
+            .Select(w => char.ToUpperInvariant(w[0]) + w[1..]);
+        return string.Join(' ', words);
     }
 }
