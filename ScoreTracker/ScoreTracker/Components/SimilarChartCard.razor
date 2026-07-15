@@ -4,50 +4,87 @@
 @using ScoreTracker.Web.Services
 @namespace ScoreTracker.Web.Components
 
-@* One card on the similar-charts shelf (docs/design/chart-similarity.md, mock approved
-   2026-07-15). Two jobs that fight each other: it must be a real <a href> so crawlers
-   follow it — the shelf IS the internal-link mesh — and it must let you watch, because
-   "this chart is similar" is only half an answer. A <button> cannot live inside an <a>,
-   so the play control is a SIBLING overlaid on the art, never a child of the link.
+@* One card on the similar-charts shelf (docs/design/chart-similarity.md).
+   The jacket plays and the name links out — two disjoint targets, which is what lets the
+   card do both jobs at once. It must carry a real <a href> because the shelf IS the
+   internal-link mesh, and it must let you watch, because "this chart is similar" is only
+   half an answer. An earlier revision wrapped the whole card in the <a> and overlaid the
+   play control as a sibling; the link then owned every pixel the video wanted.
    The art is 16:9 because that is the shape of a video: the iframe drops into the art's
-   exact box, so watching costs no reflow and the grid never jumps. A square jacket would
-   have to grow or letterbox, and either shoves every card below it down the page.
-   Nothing loads until asked — six embeds on page load would outweigh the rest of it. *@
+   exact box, so watching costs no reflow and the grid never jumps. Nothing loads until
+   asked — six embeds on page load would outweigh the rest of it. *@
 <div class="chart-card">
     @if (_playing && VideoUrl != null)
     {
-        @* No bubble while playing: it labels the jacket, and there is no jacket — over a
-           video it is just something sitting on the picture. *@
-        <div class="chart-card-link">
-            <span class="chart-card-art chart-card-art-playing">
-                <iframe class="chart-card-video" src="@($"{VideoUrl}?autoplay=1")" allow="autoplay; encrypted-media"
-                        allowfullscreen title="@Chart.Song.Name"></iframe>
-            </span>
-            @Body()
+        @* No bubble while playing: it labels the jacket, and there is no jacket. *@
+        <div class="chart-card-art chart-card-art-playing">
+            <iframe class="chart-card-video" src="@($"{VideoUrl}?autoplay=1")" allow="autoplay; encrypted-media"
+                    allowfullscreen title="@Chart.Song.Name"></iframe>
         </div>
         <button type="button" class="chart-card-close" @onclick="() => _playing = false"
                 aria-label="@L["Close video"]">✕</button>
     }
+    else if (VideoUrl != null)
+    {
+        <button type="button" class="chart-card-art chart-card-art-playable" @onclick="() => _playing = true"
+                aria-label="@L["Watch {0}", Chart.Song.Name]">
+            @Jacket()
+            <span class="chart-card-play" aria-hidden="true"></span>
+        </button>
+    }
     else
     {
-        <a class="chart-card-link" href="@Href">
-            <span class="chart-card-art">
-                @* The jacket gets its own wrapper so "fill the 16:9 box" can be said about
-                   it alone. Said about the art box instead, it also lands on the bubble's
-                   image and blows it up to the width of the card. *@
-                <span class="chart-card-jacket"><SongImage Song="Chart.Song" Height="128"></SongImage></span>
-                <span class="chart-card-bubble"><DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble></span>
-            </span>
-            @Body()
-        </a>
-        @if (VideoUrl != null)
+        <div class="chart-card-art">@Jacket()</div>
+    }
+    <div class="chart-card-body">
+        <div class="chart-card-title">
+            <h3>
+                @Chart.Song.Name
+                <a class="chart-card-golink" href="@Href" title="@L["Open chart details"]"
+                   aria-label="@L["Open {0}", Chart.Song.Name]">
+                    <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small"></MudIcon>
+                </a>
+            </h3>
+            <span class="chart-card-pct">@((int)Math.Round(Record.Score * 100))%</span>
+        </div>
+        <span class="chart-card-meta">
+            @if (Chart.StepArtist != null && Chart.StepArtist.ToString() != "Unknown")
+            {
+                <em>@Chart.StepArtist</em><i>·</i>
+            }
+            @Chart.OriginalMix.GetName()
+            @if (Chart.Song.Bpm != null || Nps != null)
+            {
+                <br/>
+                @if (Chart.Song.Bpm != null)
+                {
+                    <text>@L["{0} BPM", Chart.Song.Bpm.Value.ToString()]</text>
+                }
+                @if (Chart.Song.Bpm != null && Nps != null)
+                {
+                    <i>·</i>
+                }
+                @if (Nps != null)
+                {
+                    <text>@L["{0} NPS", Nps.Value.ToString("0.0")]</text>
+                }
+            }
+        </span>
+        @if (Reasons.Count > 0 || IntensityReason != null)
         {
-            <span class="chart-card-playzone">
-                <button type="button" class="chart-card-play" @onclick="() => _playing = true"
-                        aria-label="@L["Watch {0}", Chart.Song.Name]"></button>
+            <span class="chart-card-wl">@L["Matched on"]</span>
+            <span class="chart-card-why">
+                @foreach (var reason in Reasons)
+                {
+                    <b>@reason.Label<var>@reason.Value</var></b>
+                }
+                @if (IntensityReason != null)
+                {
+                    <b class="chart-card-why-intensity">@L["NPS"]<var>@IntensityReason</var></b>
+                }
             </span>
         }
-    }
+    </div>
 </div>
 
 @code {
@@ -64,7 +101,7 @@
     [Parameter]
     public decimal? Nps { get; set; }
 
-    /// <summary>Null when the chart has no video banked — the play affordance is then absent, not dead.</summary>
+    /// <summary>Null when the chart has no video banked — the jacket is then inert, not a dead button.</summary>
     [Parameter]
     public string? VideoUrl { get; set; }
 
@@ -73,58 +110,22 @@
     private string Href => $"/Chart/{Chart.Id}";
 
     /// <summary>
-    ///     Shared with the playing state so the card's text never moves when the art
-    ///     becomes a video — only the art's contents change.
+    ///     The jacket gets its own wrapper so "fill the 16:9 box" can be said about it
+    ///     alone. Said about the art box instead, it also lands on the bubble's image and
+    ///     blows it up to the width of the card.
     /// </summary>
-    private RenderFragment Body() =>
-        @<span class="chart-card-body">
-            <span class="chart-card-title">
-                <h3>@Chart.Song.Name</h3>
-                <span class="chart-card-pct">@((int)Math.Round(Record.Score * 100))%</span>
-            </span>
-            <span class="chart-card-meta">
-                @if (Chart.StepArtist != null && Chart.StepArtist.ToString() != "Unknown")
-                {
-                    <em>@Chart.StepArtist</em><i>·</i>
-                }
-                @Chart.OriginalMix.GetName()
-                @if (Chart.Song.Bpm != null || Nps != null)
-                {
-                    <br/>
-                    @if (Chart.Song.Bpm != null)
-                    {
-                        <text>@L["{0} BPM", Chart.Song.Bpm.Value.ToString()]</text>
-                    }
-                    @if (Chart.Song.Bpm != null && Nps != null)
-                    {
-                        <i>·</i>
-                    }
-                    @if (Nps != null)
-                    {
-                        <text>@L["{0} NPS", Nps.Value.ToString("0.0")]</text>
-                    }
-                }
-            </span>
-            @if (Reasons.Count > 0 || IntensityReason != null)
-            {
-                <span class="chart-card-wl">@L["Matched on"]</span>
-                <span class="chart-card-why">
-                    @foreach (var reason in Reasons)
-                    {
-                        <b>@reason.Label<var>@reason.Value</var></b>
-                    }
-                    @if (IntensityReason != null)
-                    {
-                        <b class="chart-card-why-intensity">@L["NPS"]<var>@IntensityReason</var></b>
-                    }
-                </span>
-            }
-        </span>;
+    private RenderFragment Jacket() =>
+        @<text>
+            <span class="chart-card-jacket"><SongImage Song="Chart.Song" Height="128"></SongImage></span>
+            <span class="chart-card-bubble"><DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble></span>
+        </text>;
 
     /// <summary>
     ///     What the pair actually matched on, named — never "skills match", which reads as
     ///     broken. The value is the coverage the two charts SHARE, so "Brackets 50%" says
-    ///     both are at least half brackets.
+    ///     both are at least half brackets. A badge whose shared coverage is a rounding
+    ///     error is not a reason, so the chips can come back empty; that is honest, and the
+    ///     match percentage still says how close the pair is.
     /// </summary>
     internal IReadOnlyList<(string Label, string Value)> Reasons =>
         Record.SharedBadges

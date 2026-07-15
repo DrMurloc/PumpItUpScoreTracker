@@ -18,10 +18,11 @@ public sealed class ChartSimilarityCalculatorTests
         IReadOnlyDictionary<string, double>? badges = null,
         double? nps = null,
         double? sustain = null,
-        double? burst = null)
+        double? burst = null,
+        double? scoringLevel = null)
     {
         return new ChartSimilarityFeatures(id, Name.From(song), level,
-            badges ?? new Dictionary<string, double>(), nps, sustain, burst);
+            badges ?? new Dictionary<string, double>(), nps, sustain, burst, scoringLevel);
     }
 
     [Fact]
@@ -94,11 +95,11 @@ public sealed class ChartSimilarityCalculatorTests
     }
 
     [Fact]
-    public void LevelsMoreThanTwoApartAreNeverNeighbors()
+    public void LevelsMoreThanOneApartAreNeverNeighbors()
     {
         var a = Features(Guid.NewGuid(), "Song A", level: 20,
             badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 10);
-        var b = Features(Guid.NewGuid(), "Song B", level: 23,
+        var b = Features(Guid.NewGuid(), "Song B", level: 22,
             badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 10);
 
         var edges = ChartSimilarityCalculator.BuildEdges(new[] { a, b });
@@ -109,7 +110,7 @@ public sealed class ChartSimilarityCalculatorTests
     [Fact]
     public void LevelDistanceInsideTheWindowCostsNothing()
     {
-        // B (same level) and C (two folders up) present identical evidence. The folder
+        // B (same level) and C (one folder up) present identical evidence. The folder
         // level is Andamiro's passing level, inconsistently applied, so it earns no
         // penalty of its own: the window limits reach, and how hard the chart will be for
         // the viewer is the shelf's ordering, not the score's business. Both edges read 1.0.
@@ -117,14 +118,65 @@ public sealed class ChartSimilarityCalculatorTests
             badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 10);
         var sameLevel = Features(Guid.NewGuid(), "Song B", level: 20,
             badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 10);
-        var twoUp = Features(Guid.NewGuid(), "Song C", level: 22,
+        var oneUp = Features(Guid.NewGuid(), "Song C", level: 21,
             badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 10);
 
-        var edges = ChartSimilarityCalculator.BuildEdges(new[] { anchor, sameLevel, twoUp });
+        var edges = ChartSimilarityCalculator.BuildEdges(new[] { anchor, sameLevel, oneUp });
 
         var anchorEdges = edges[anchor.ChartId].ToDictionary(e => e.SimilarChartId, e => e.Score);
         Assert.Equal(1.0, anchorEdges[sameLevel.ChartId], Tolerance);
-        Assert.Equal(1.0, anchorEdges[twoUp.ChartId], Tolerance);
+        Assert.Equal(1.0, anchorEdges[oneUp.ChartId], Tolerance);
+    }
+
+    [Fact]
+    public void TheFolderAloneIsNotEnoughReachLimiterWhenTheScoresDisagreeWithIt()
+    {
+        // Two D21s the folder calls identical, which the scores put 2.4 levels apart. The
+        // folder is Andamiro's passing level, applied inconsistently: 19% of charts sit
+        // more than a level off theirs, so it cannot bound reach on its own. Identical
+        // evidence on both signals — the gate is the only thing separating this pair.
+        var a = Features(Guid.NewGuid(), "Song A", level: 21, scoringLevel: 20.0,
+            badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 10);
+        var b = Features(Guid.NewGuid(), "Song B", level: 21, scoringLevel: 22.4,
+            badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 10);
+
+        var edges = ChartSimilarityCalculator.BuildEdges(new[] { a, b });
+
+        Assert.Empty(edges[a.ChartId]);
+    }
+
+    [Fact]
+    public void AChartWithNoScoringLevelIsGatedOnTheFolderAlone()
+    {
+        // ~13% of charts in the competitive range have no scoring level. A missing
+        // measurement is not a reason to be unreachable.
+        var scored = Features(Guid.NewGuid(), "Song A", level: 21, scoringLevel: 20.0,
+            badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 10);
+        var unscored = Features(Guid.NewGuid(), "Song B", level: 21,
+            badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 10);
+
+        var edges = ChartSimilarityCalculator.BuildEdges(new[] { scored, unscored });
+
+        Assert.Single(edges[scored.ChartId]);
+    }
+
+    [Fact]
+    public void ScoringLevelInsideItsWindowCostsNothingEither()
+    {
+        // Both halves of the gate are reach limiters, not difficulty statements: a chart
+        // 1.2 scoring levels away is as eligible as one at the same level.
+        var anchor = Features(Guid.NewGuid(), "Anchor", level: 21, scoringLevel: 21.0,
+            badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 10);
+        var close = Features(Guid.NewGuid(), "Song B", level: 21, scoringLevel: 21.0,
+            badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 10);
+        var edge = Features(Guid.NewGuid(), "Song C", level: 21, scoringLevel: 22.2,
+            badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 10);
+
+        var edges = ChartSimilarityCalculator.BuildEdges(new[] { anchor, close, edge });
+
+        var anchorEdges = edges[anchor.ChartId].ToDictionary(e => e.SimilarChartId, e => e.Score);
+        Assert.Equal(1.0, anchorEdges[close.ChartId], Tolerance);
+        Assert.Equal(1.0, anchorEdges[edge.ChartId], Tolerance);
     }
 
     [Fact]

@@ -4066,25 +4066,24 @@ html.nav-away .page-dock,
     background: var(--mix-surface-muted);
 }
 
-/* The <a> is the whole card. The play button is a SIBLING overlaid on the art - a
-   <button> inside an <a> is invalid HTML and the click targets would collide. */
-.chart-card-link {
-    display: block;
-    padding: 10px;
-    border-radius: 4px;
-    color: var(--mix-ink);
-    text-decoration: none;
-}
-
 /* 16:9 from the start, so the video drops into the art's exact box: the card never
-   changes height and the grid never jumps. */
+   changes height and the grid never jumps. The jacket is the play target; the link out
+   is the icon by the name, so the two never fight over a pixel. */
 .chart-card-art {
     position: relative;
     display: block;
     width: 100%;
     aspect-ratio: 16 / 9;
+    margin: 10px 10px 0;
+    width: calc(100% - 20px);
     border-radius: 2px;
     background: rgba(0, 0, 0, .35);
+    padding: 0;
+    border: 0;
+}
+
+button.chart-card-art {
+    cursor: pointer;
 }
 
 /* Scoped to the jacket wrapper, never `.chart-card-art img`: the bubble is an <img> in
@@ -4126,7 +4125,7 @@ html.nav-away .page-dock,
 .chart-card-body {
     display: block;
     min-width: 0;
-    padding: 12px 2px 2px;
+    padding: 12px 12px 12px;
 }
 
 .chart-card-title {
@@ -4137,6 +4136,10 @@ html.nav-away .page-dock,
 }
 
 .chart-card-title h3 {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
     margin: 0;
     font-weight: 600;
     font-size: .88rem;
@@ -4144,6 +4147,25 @@ html.nav-away .page-dock,
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* The card's only <a>. Small, but a real link — the crawler follows this. */
+.chart-card-golink {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    color: var(--mix-primary);
+    opacity: .65;
+    transition: opacity .12s;
+}
+
+.chart-card-golink:hover,
+.chart-card-golink:focus-visible {
+    opacity: 1;
+}
+
+.chart-card-golink .mud-icon-root {
+    font-size: .95rem;
 }
 
 .chart-card-pct {
@@ -4222,28 +4244,20 @@ html.nav-away .page-dock,
 
 /* Mirrors the art's box so the button centres on the art without knowing its height.
    Transparent to the mouse, so the link underneath keeps the whole card as its target
-   and only the button itself steals a click. */
-.chart-card-playzone {
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    top: 10px;
-    aspect-ratio: 16 / 9;
-    z-index: 2;
-    display: grid;
-    place-items: center;
-    pointer-events: none;
-}
-
+/* Decoration: the whole jacket is the button, so this only says so. */
 .chart-card-play {
-    pointer-events: auto;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+    z-index: 2;
     display: grid;
     place-items: center;
     width: 50px;
     height: 50px;
     padding-left: 3px;
     border-radius: 99px;
-    cursor: pointer;
+    pointer-events: none;
     background: rgba(0, 0, 0, .8);
     border: 1px solid rgba(255, 255, 255, .2);
     color: #fff;
@@ -4259,13 +4273,13 @@ html.nav-away .page-dock,
     border-color: transparent transparent transparent currentColor;
 }
 
-.chart-card:hover .chart-card-play,
-.chart-card-play:focus-visible {
+.chart-card-art-playable:hover .chart-card-play,
+.chart-card-art-playable:focus-visible .chart-card-play {
     opacity: 1;
     transform: scale(1);
 }
 
-.chart-card-play:hover {
+.chart-card-art-playable:hover .chart-card-play {
     background: rgba(0, 0, 0, .93);
     border-color: var(--mix-primary);
 }

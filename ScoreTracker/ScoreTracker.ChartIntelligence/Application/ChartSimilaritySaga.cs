@@ -20,9 +20,13 @@ namespace ScoreTracker.ChartIntelligence.Application;
 ///     (Co-Op has no competitive-level semantics; excluded v1). Badges come from
 ///     GetChartBadgeCoverageQuery, never the display chips: comparison needs what was
 ///     measured, not what reads well as a tag.
-///     Nothing here reads scores. Similarity is a statement about charts, so the rebuild
-///     depends on the crawl and not on play data — which is also why it no longer sweeps
-///     a folder's scores per level, and why its output only changes when piucenter's does.
+///     Nothing here SCORES a chart on play data — the formula reads only the crawl. But
+///     the reach limiter does read scoring levels, which makes this job order-dependent on
+///     ScoringDifficultySaga (owner-accepted 2026-07-15). It buys a gate the folder alone
+///     cannot give: scoring level roams from folder level by `sd 0.95`, 19% of charts sit
+///     more than a level off, and a ±2-folder gate was admitting pairs six scoring levels
+///     apart. That is a projection of ~50k rows per mix, not a sweep of them — the old
+///     per-level score read this job shed in R1 is not coming back.
 ///     Three reads, two of them live. The precalculated graph answers the common case in a
 ///     PK-prefix seek; filtered and out-of-window searches rebuild one anchor's row against
 ///     a reduced target list, because filtering the stored top-20 would return nothing (they
@@ -39,14 +43,16 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
     private readonly IChartRepository _charts;
     private readonly IDateTimeOffsetAccessor _clock;
     private readonly IMediator _mediator;
+    private readonly IChartScoringLevelRepository _scoringLevels;
     private readonly IChartSimilarityRepository _similarity;
 
     public ChartSimilaritySaga(IChartRepository charts, IMediator mediator, IChartSimilarityRepository similarity,
-        IDateTimeOffsetAccessor clock)
+        IChartScoringLevelRepository scoringLevels, IDateTimeOffsetAccessor clock)
     {
         _charts = charts;
         _mediator = mediator;
         _similarity = similarity;
+        _scoringLevels = scoringLevels;
         _clock = clock;
     }
 
@@ -63,13 +69,14 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
 
         var badgeCoverage = await _mediator.Send(new GetChartBadgeCoverageQuery(chartIds), cancellationToken);
         var stepAnalyses = await _mediator.Send(new GetChartStepAnalysesQuery(chartIds), cancellationToken);
+        var scoringLevels = await _scoringLevels.GetScoringLevels(mix, cancellationToken);
 
         foreach (var chartType in SimilarityChartTypes)
         {
             var typeCharts = charts.Where(c => c.Type == chartType).ToArray();
             if (typeCharts.Length == 0) continue;
 
-            var pool = typeCharts.Select(chart => BuildFeatures(chart, badgeCoverage, stepAnalyses)).ToArray();
+            var pool = typeCharts.Select(chart => BuildFeatures(chart, badgeCoverage, stepAnalyses, scoringLevels)).ToArray();
             var edges = ChartSimilarityCalculator.BuildEdges(pool);
             var computedAt = _clock.Now;
             foreach (var chart in typeCharts)
@@ -156,7 +163,9 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
         var chartIds = charts.Select(c => c.Id).ToArray();
         var badgeCoverage = await _mediator.Send(new GetChartBadgeCoverageQuery(chartIds), cancellationToken);
         var stepAnalyses = await _mediator.Send(new GetChartStepAnalysesQuery(chartIds), cancellationToken);
-        var features = charts.ToDictionary(c => c.Id, c => BuildFeatures(c, badgeCoverage, stepAnalyses));
+        var scoringLevels = await _scoringLevels.GetScoringLevels(mix, cancellationToken);
+        var features = charts.ToDictionary(c => c.Id,
+            c => BuildFeatures(c, badgeCoverage, stepAnalyses, scoringLevels));
         return (features[anchorChart.Id], anchorChart, features, charts);
     }
 
@@ -168,7 +177,8 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
 
     private static ChartSimilarityFeatures BuildFeatures(Chart chart,
         IReadOnlyDictionary<Guid, IReadOnlyDictionary<string, double>> badgeCoverage,
-        IReadOnlyDictionary<Guid, ChartStepAnalysisRecord> stepAnalyses)
+        IReadOnlyDictionary<Guid, ChartStepAnalysisRecord> stepAnalyses,
+        IDictionary<Guid, double> scoringLevels)
     {
         var badges = badgeCoverage.TryGetValue(chart.Id, out var banked)
             ? banked
@@ -197,6 +207,7 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
             badges,
             (double?)analysis?.Nps,
             Fraction(analysis?.SustainTimeSeconds),
-            Fraction(burstSeconds));
+            Fraction(burstSeconds),
+            scoringLevels.TryGetValue(chart.Id, out var scoringLevel) ? scoringLevel : null);
     }
 }

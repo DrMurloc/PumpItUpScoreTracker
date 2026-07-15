@@ -17,6 +17,7 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Services;
@@ -325,32 +326,36 @@ public sealed class SimilarChartsShelfTests : TestContext
     }
 
     [Fact]
-    public void TheCardIsARealLinkSoCrawlersFollowIt()
+    public void TheNameCarriesARealLinkSoCrawlersFollowIt()
     {
-        // The shelf IS the internal-link mesh. If this ever becomes a click handler, the
-        // SEO reason for the whole feature evaporates.
+        // The shelf IS the internal-link mesh. The link is small now — an icon beside the
+        // name rather than the whole card — but it stays a real <a href>, or the SEO reason
+        // for the entire feature evaporates.
         var cut = RenderCard(badges: Badge("bracket", 0.5));
 
-        var link = cut.Find("a.chart-card-link");
+        var link = cut.Find(".chart-card-title a.chart-card-golink");
         Assert.StartsWith("/Chart/", link.GetAttribute("href"));
     }
 
     [Fact]
-    public void ThePlayButtonIsASiblingOfTheLinkRatherThanInsideIt()
+    public void TheJacketPlaysAndTheLinkIsNowhereNearIt()
     {
-        // A <button> inside an <a> is invalid HTML and the click targets collide.
+        // Two disjoint targets, which is what dissolved the old problem: the play control
+        // used to be a sibling overlaid on an <a> that owned every pixel it wanted.
         var cut = RenderCard(videoUrl: "https://example.invalid/v", badges: Badge("bracket", 0.5));
 
-        Assert.Empty(cut.FindAll("a.chart-card-link button"));
-        Assert.Single(cut.FindAll("div.chart-card > .chart-card-playzone > button.chart-card-play"));
+        Assert.Single(cut.FindAll("button.chart-card-art-playable"));
+        Assert.Empty(cut.FindAll("button.chart-card-art a"));
+        Assert.Empty(cut.FindAll("a .chart-card-art"));
     }
 
     [Fact]
-    public void NoVideoMeansNoPlayAffordanceRatherThanADeadOne()
+    public void NoVideoMeansAnInertJacketRatherThanADeadButton()
     {
         var cut = RenderCard(badges: Badge("bracket", 0.5));
 
-        Assert.Empty(cut.FindAll("button.chart-card-play"));
+        Assert.Empty(cut.FindAll("button.chart-card-art"));
+        Assert.Single(cut.FindAll("div.chart-card-art"));
     }
 
     [Fact]
@@ -361,10 +366,34 @@ public sealed class SimilarChartsShelfTests : TestContext
 
         Assert.Empty(cut.FindAll("iframe"));
 
-        cut.Find("button.chart-card-play").Click();
+        cut.Find("button.chart-card-art-playable").Click();
 
-        var frame = cut.Find("iframe.chart-card-video");
-        Assert.Contains("https://example.invalid/v", frame.GetAttribute("src"));
+        Assert.Equal("https://example.invalid/v?autoplay=1",
+            cut.Find("iframe.chart-card-video").GetAttribute("src"));
+    }
+
+    [Fact]
+    public void TheShelfHandsTheCardARealVideoUrl()
+    {
+        // Regression: the shelf passed VideoUrl unprefixed. It is a STRING parameter, so
+        // Blazor read the value as literal text and every card asked the origin for
+        // "/entry.VideoUrl?autoplay=1". Rendering the card directly cannot catch this — the
+        // typed parameter API bypasses the markup that was wrong.
+        var anchor = Guid.NewGuid();
+        var edge = Edge(0.9, Badge("bracket", 0.5));
+        SetupEdges(anchor, edge);
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartVideosQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IEnumerable<ChartVideoInformation>)new[]
+            {
+                new ChartVideoInformation(edge.ChartId, new Uri("https://example.invalid/watch"),
+                    Name.From("Channel"))
+            });
+
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+        cut.Find("button.chart-card-art-playable").Click();
+
+        Assert.Equal("https://example.invalid/watch?autoplay=1",
+            cut.Find("iframe.chart-card-video").GetAttribute("src"));
     }
 
     [Fact]
@@ -387,7 +416,7 @@ public sealed class SimilarChartsShelfTests : TestContext
         var cut = RenderCard(videoUrl: "https://example.invalid/v", badges: Badge("bracket", 0.5));
         Assert.Single(cut.FindAll(".chart-card-bubble"));
 
-        cut.Find("button.chart-card-play").Click();
+        cut.Find("button.chart-card-art-playable").Click();
 
         Assert.Empty(cut.FindAll(".chart-card-bubble"));
     }
@@ -395,15 +424,15 @@ public sealed class SimilarChartsShelfTests : TestContext
     [Fact]
     public void WatchingReplacesTheArtRatherThanGrowingTheCard()
     {
-        // The video takes the art's exact 16:9 box, so the grid never jumps — and the
-        // link is gone while playing, because the card is now a player.
+        // The video takes the art's exact 16:9 box, so the grid never jumps.
         var cut = RenderCard(videoUrl: "https://example.invalid/v", badges: Badge("bracket", 0.5));
-        cut.Find("button.chart-card-play").Click();
+        cut.Find("button.chart-card-art-playable").Click();
 
-        Assert.Empty(cut.FindAll("a.chart-card-link"));
         Assert.Single(cut.FindAll(".chart-card-art-playing"));
-        // The body is unchanged underneath: only the art's contents swapped.
+        // The body is unchanged underneath: only the art's contents swapped, and the way
+        // out is still there.
         Assert.Contains("Brackets50%", Chips(cut));
+        Assert.Single(cut.FindAll("a.chart-card-golink"));
     }
 
     [Fact]

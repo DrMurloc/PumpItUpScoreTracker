@@ -69,12 +69,26 @@ internal static class ChartSimilarityCalculator
     /// <summary>
     ///     How far a chart may reach for neighbours, in folders. A reach limiter, not a
     ///     difficulty statement: the folder level is Andamiro's passing level, applied
-    ///     inconsistently, so distance within the window carries no penalty — a chart two
-    ///     folders away is as eligible as one in the same folder. What a chart actually
+    ///     inconsistently, so distance within the window carries no penalty — a chart one
+    ///     folder away is as eligible as one in the same folder. What a chart actually
     ///     demands is what Skill reads; how hard it will be for the viewer is the shelf's
     ///     ordering, not the score's business.
     /// </summary>
-    internal const int LevelWindow = 2;
+    internal const int LevelWindow = 1;
+
+    /// <summary>
+    ///     The second half of the reach limiter, in scoring levels, intersected with
+    ///     <see cref="LevelWindow" />. The folder alone is too blunt to bound reach with:
+    ///     scoring level roams from it by `sd 0.95` and as far as `+3.94`, and **19% of
+    ///     charts sit more than a full level off their folder**, so a ±2-folder gate was
+    ///     admitting pairs six scoring levels apart. Measured against a Rush-More D23
+    ///     anchor, 201 of the 878 charts that gate let through were more than two scoring
+    ///     levels away.
+    ///     A chart with no scoring level (~13% in the 17–26 range) is gated on the folder
+    ///     alone rather than excluded — a missing measurement is not a reason to be
+    ///     unreachable.
+    /// </summary>
+    internal const double ScoringLevelWindow = 1.25;
 
     /// <summary>
     ///     Neighbors persisted per (mix, chart). Twenty rather than eight, and with no
@@ -108,7 +122,7 @@ internal static class ChartSimilarityCalculator
         {
             var a = pool[i];
             var b = pool[j];
-            if (Math.Abs(a.Level - b.Level) > LevelWindow) continue;
+            if (!WithinReach(a, b)) continue;
             var edge = ScorePair(a, b, intensityZ);
             if (edge == null) continue;
 
@@ -148,6 +162,21 @@ internal static class ChartSimilarityCalculator
             .Select(e => e!)
             .OrderByDescending(e => e.Score)
             .ToArray();
+    }
+
+    /// <summary>
+    ///     Both halves of the reach limiter, intersected: near enough in the folder AND
+    ///     near enough on what the scores actually say. Neither alone is sufficient —
+    ///     the folder is inconsistently applied, and scoring level is missing for ~13% of
+    ///     charts, so a pair only needs to clear the scoring-level test when both ends
+    ///     have one.
+    /// </summary>
+    internal static bool WithinReach(ChartSimilarityFeatures a, ChartSimilarityFeatures b)
+    {
+        if (Math.Abs(a.Level - b.Level) > LevelWindow) return false;
+        if (a.ScoringLevel is { } scoringA && b.ScoringLevel is { } scoringB)
+            return Math.Abs(scoringA - scoringB) <= ScoringLevelWindow;
+        return true;
     }
 
     /// <summary>

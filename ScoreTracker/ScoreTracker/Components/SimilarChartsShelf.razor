@@ -147,9 +147,12 @@
     private IReadOnlyList<Entry> _matches = Array.Empty<Entry>();
     private IReadOnlyList<Entry> _nearMisses = Array.Empty<Entry>();
 
+    // VideoUrl needs the @: it is a string parameter, and Blazor reads an unprefixed value
+    // on one of those as literal text rather than an expression — silently, and only for
+    // strings, which is why every other parameter here is fine without it.
     private RenderFragment Card(Entry entry) =>
         @<SimilarChartCard Chart="entry.Chart" Record="entry.Record" Nps="entry.Nps" AnchorNps="_anchorNps"
-                           VideoUrl="entry.VideoUrl" @key="entry.Chart.Id"></SimilarChartCard>;
+                           VideoUrl="@entry.VideoUrl" @key="entry.Chart.Id"></SimilarChartCard>;
 
     /// <summary>Only the personal lists need an account; the community ones are always there.</summary>
     private bool CanPersonalize => CurrentUser.IsLoggedIn;

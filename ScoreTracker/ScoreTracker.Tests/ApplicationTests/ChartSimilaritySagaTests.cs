@@ -28,12 +28,20 @@ public sealed class ChartSimilaritySagaTests
 
     private readonly Mock<IChartRepository> _charts = new();
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<IChartScoringLevelRepository> _scoringLevels = new();
     private readonly Mock<IChartSimilarityRepository> _similarity = new();
 
     private ChartSimilaritySaga BuildSaga()
     {
         return new ChartSimilaritySaga(_charts.Object, _mediator.Object, _similarity.Object,
-            FakeDateTime.At(Now).Object);
+            _scoringLevels.Object, FakeDateTime.At(Now).Object);
+    }
+
+    /// <summary>Charts with no scoring level are gated on the folder alone — the default here.</summary>
+    private void SetupScoringLevels(IDictionary<Guid, double>? levels = null)
+    {
+        _scoringLevels.Setup(s => s.GetScoringLevels(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(levels ?? new Dictionary<Guid, double>());
     }
 
     private static ConsumeContext<RecalculateChartSimilarityCommand> Context(
@@ -97,6 +105,7 @@ public sealed class ChartSimilaritySagaTests
         var chartA = new ChartBuilder().WithSongName("Song A").WithType(ChartType.Single).WithLevel(20).Build();
         var chartB = new ChartBuilder().WithSongName("Song B").WithType(ChartType.Single).WithLevel(20).Build();
         var coOp = new ChartBuilder().WithSongName("Song C").WithType(ChartType.CoOp).WithLevel(3).Build();
+        SetupScoringLevels();
         _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chartA, chartB, coOp });
         // Both singles carry the same badge at full coverage and the same NPS: identical
@@ -140,6 +149,7 @@ public sealed class ChartSimilaritySagaTests
         // 0.4152.
         var grind = new ChartBuilder().WithSongName("Grind").WithType(ChartType.Double).WithLevel(21).Build();
         var spikes = new ChartBuilder().WithSongName("Spikes").WithType(ChartType.Double).WithLevel(21).Build();
+        SetupScoringLevels();
         _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { grind, spikes });
         SetupBadges(new Dictionary<Guid, IReadOnlyDictionary<string, double>>
@@ -179,6 +189,7 @@ public sealed class ChartSimilaritySagaTests
             .WithStepArtist("NIMGO").Build();
         var coOp = new ChartBuilder().WithSongName("Co-Op").WithType(ChartType.CoOp).WithLevel(3).Build();
         var all = new[] { anchor, nearby, farUp, farDown, coOp };
+        SetupScoringLevels();
         _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(all);
         SetupBadges(all.ToDictionary(c => c.Id,
@@ -188,16 +199,18 @@ public sealed class ChartSimilaritySagaTests
     }
 
     [Fact]
-    public async Task AFilteredSearchDefaultsToTheSameTwoFolderReachTheGraphPrecalculates()
+    public async Task AFilteredSearchDefaultsToTheSameFolderReachTheGraphPrecalculates()
     {
         var (anchor, targets) = SetupLivePool();
 
         var result = await BuildSaga().Handle(new GetFilteredSimilarChartsQuery(anchor.Id),
             CancellationToken.None);
 
-        // D20, D22 and D23 are all within two folders of D21; Co-Op is a different pool.
-        Assert.Equal(3, result.ChartsCompared);
-        Assert.Equal(targets.Select(t => t.Id).OrderBy(id => id),
+        // D20 and D22 are within a folder of D21; the D23 is not, and Co-Op is a different
+        // pool entirely.
+        var inReach = targets.Where(t => Math.Abs(t.Level - 21) <= 1).ToArray();
+        Assert.Equal(inReach.Length, result.ChartsCompared);
+        Assert.Equal(inReach.Select(t => t.Id).OrderBy(id => id),
             result.Matches.Select(m => m.ChartId).OrderBy(id => id));
     }
 
@@ -235,6 +248,7 @@ public sealed class ChartSimilaritySagaTests
     public async Task AFilteredSearchOnAChartTheCrawlNeverCoveredComparesNothing()
     {
         var missing = new ChartBuilder().WithSongName("Ghost").WithType(ChartType.Double).WithLevel(21).Build();
+        SetupScoringLevels();
         _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
         SetupBadges(new Dictionary<Guid, IReadOnlyDictionary<string, double>>());
@@ -257,6 +271,7 @@ public sealed class ChartSimilaritySagaTests
         var alike = new ChartBuilder().WithSongName("Alike").WithType(ChartType.Double).WithLevel(21).Build();
         var opposite = new ChartBuilder().WithSongName("Opposite").WithType(ChartType.Double).WithLevel(21).Build();
         var all = new[] { anchor, alike, opposite };
+        SetupScoringLevels();
         _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(all);
         SetupBadges(new Dictionary<Guid, IReadOnlyDictionary<string, double>>
@@ -281,6 +296,7 @@ public sealed class ChartSimilaritySagaTests
         // to rot.
         var chartA = new ChartBuilder().WithSongName("Song A").WithType(ChartType.Double).WithLevel(15).Build();
         var chartB = new ChartBuilder().WithSongName("Song B").WithType(ChartType.Double).WithLevel(15).Build();
+        SetupScoringLevels();
         _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chartA, chartB });
         SetupBadges(new Dictionary<Guid, IReadOnlyDictionary<string, double>>());

@@ -9,9 +9,10 @@ namespace ScoreTracker.ChartIntelligence.Domain;
 ///     ordering and metadata is its filters, both applied at read time, neither part of
 ///     what "similar" means. BadgeCoverage is piucenter's raw badge name → segment-
 ///     coverage fraction, banked as measured rather than mapped onto the display
-///     vocabulary. SongName is carried only to gate siblings out; Level only to bound
-///     reach and to pick the z-score cohort. The scalars are null when piucenter banked
-///     no step analysis, which costs the chart its edges — both signals are mandatory.
+///     vocabulary. SongName is carried only to gate siblings out; Level and ScoringLevel
+///     only to bound reach and pick the z-score cohort — neither is ever scored. The
+///     scalars are null when piucenter banked no step analysis, which costs the chart its
+///     edges — both signals are mandatory.
 ///     SustainFraction and BurstFraction are the two halves of time under tension — the
 ///     grind and the spikes — as fractions of the song's length. They are disjoint by
 ///     construction, which is the point: sustain is a subset of tension, so carrying
@@ -26,4 +27,5 @@ internal sealed record ChartSimilarityFeatures(
     IReadOnlyDictionary<string, double> BadgeCoverage,
     double? Nps,
     double? SustainFraction,
-    double? BurstFraction);
+    double? BurstFraction,
+    double? ScoringLevel = null);
