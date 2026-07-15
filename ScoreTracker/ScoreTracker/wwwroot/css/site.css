@@ -4331,6 +4331,33 @@ html.sheet-open .more-sheet-scrim {
     cursor: not-allowed;
 }
 
+/* Below the line because it is not one of the four: it asks the opposite question rather
+   than narrowing this one. */
+.chart-shelf-fopposite {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+    cursor: pointer;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+.chart-shelf-fopposite input {
+    accent-color: var(--mix-primary);
+    cursor: pointer;
+}
+
+.chart-shelf-fopposite:has(input:checked) {
+    color: var(--mix-ink);
+}
+
+.chart-shelf-fopposite:has(input:disabled) {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
 .chart-shelf-fapply {
     display: flex;
     align-items: center;

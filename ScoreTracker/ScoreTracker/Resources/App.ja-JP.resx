@@ -4401,4 +4401,16 @@
   <data name="This chart has no {0} on record" xml:space="preserve">
     <value>この譜面には{0}のデータがありません</value>
   </data>
+  <data name="Show the least matching chart instead" xml:space="preserve">
+    <value>最も似ていない譜面を表示</value>
+  </data>
+  <data name="One chart, chosen for being nothing like this one." xml:space="preserve">
+    <value>この譜面とまったく似ていない、という理由で選ばれた1譜面。</value>
+  </data>
+  <data name="Of everything within reach, this is the least like it." xml:space="preserve">
+    <value>対象範囲の中で、これが最も似ていない譜面です。</value>
+  </data>
+  <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
+    <value>対極は対象範囲全体から選ばれるため、範囲指定は適用されません</value>
+  </data>
 </root>

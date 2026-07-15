@@ -267,6 +267,24 @@ NPS filter rather than admitted at unknown speed.
 and is deliberately **outside** the precalculated ±1 window; it computes on demand. The folder
 track spans what the pool actually holds, so the reach is "every level that exists", not a constant.
 
+### 5.1 The opposite chart
+
+`GetOppositeChartQuery` — the chart in reach that poses the *least* similar problem. A novelty
+(owner: *"that'll just be used for memes/fun"*), so it is not held to the shelf's standard: nothing
+is stored for it, and it needs to be funny and defensible rather than right. Computed live because
+the graph banks the twenty **nearest**, and the furthest is by construction the one thing that
+ranking never keeps.
+
+It lives as a toggle **inside the filter panel, below a divider** (owner, 2026-07-15: *"technically
+not a filter but i don't want it top level"*). Three consequences worth keeping straight:
+
+- **It is a mode, not a filter.** It asks the opposite question rather than narrowing this one.
+- **It cannot honour the ranges**, because it is picked from everything in reach — so switching it
+  on disables the four toggles rather than leaving them implying they apply.
+- **It bypasses the floor.** It is the furthest chart in reach, so it scores under any bar worth
+  having; run through the normal split it would file itself under *"Didn't quite make the cut"*.
+  It renders on its own path, with its own caption. It is not competing — it is the punchline.
+
 ---
 
 ## 6. Degradation and near-misses

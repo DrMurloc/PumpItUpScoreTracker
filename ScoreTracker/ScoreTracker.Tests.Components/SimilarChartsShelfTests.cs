@@ -336,6 +336,65 @@ public sealed class SimilarChartsShelfTests : TestContext
     }
 
     [Fact]
+    public void TheOppositeIsShownRatherThanFiledUnderDidntQuiteMakeTheCut()
+    {
+        // It is the furthest chart in reach, so it scores under any floor worth having and
+        // the near-miss machinery would swallow the joke. It is not competing.
+        var anchor = Guid.NewGuid();
+        var good = Edge(0.9, Badge("bracket", 0.5));
+        var worst = Edge(0.02, Badge("bracket", 0.01));
+        SetupEdges(anchor, new[] { good, worst }, levels: null);
+        _mediator.Setup(m => m.Send(It.IsAny<GetOppositeChartQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(worst);
+        var cut = OpenPanel(RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor)));
+
+        cut.Find(".chart-shelf-fopposite input").Change(true);
+        cut.Find(".chart-shelf-fgo").Click();
+
+        // One card, and it is the terrible one — not the two the graph would have shown, and
+        // not tucked under the near-miss disclosure where a 0.02 would normally land.
+        Assert.Contains("the least like it", cut.Markup);
+        Assert.Single(cut.FindAll(".chart-shelf .chart-card-title h3"));
+        Assert.Empty(cut.FindAll(".chart-shelf-nearmiss"));
+    }
+
+    [Fact]
+    public void TheOppositeNeedsNoRangesAndSilencesTheOnesItCannotHonour()
+    {
+        // It is picked from everything in reach, so a range cannot apply to it. The toggles
+        // go quiet rather than sitting there implying they do.
+        var anchor = Guid.NewGuid();
+        SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5)));
+        var cut = OpenPanel(RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor)));
+
+        cut.Find(".chart-shelf-fopposite input").Change(true);
+
+        Assert.All(cut.FindAll(".chart-shelf-ftoggles input"), i => Assert.True(i.HasAttribute("disabled")));
+        // No range is on, but Apply is still live — the opposite selects nothing itself.
+        Assert.False(cut.Find(".chart-shelf-fgo").HasAttribute("disabled"));
+    }
+
+    [Fact]
+    public void ClearingTheOppositeGoesBackToThePrecalculatedGraph()
+    {
+        var anchor = Guid.NewGuid();
+        var good = Edge(0.9, Badge("bracket", 0.5));
+        var worst = Edge(0.02, Badge("bracket", 0.01));
+        SetupEdges(anchor, new[] { good, worst }, levels: null);
+        _mediator.Setup(m => m.Send(It.IsAny<GetOppositeChartQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(worst);
+        var cut = OpenPanel(RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor)));
+        cut.Find(".chart-shelf-fopposite input").Change(true);
+        cut.Find(".chart-shelf-fgo").Click();
+        Assert.Contains("the least like it", cut.Markup);
+
+        cut.Find(".chart-shelf-fclear").Click();
+
+        Assert.DoesNotContain("the least like it", cut.Markup);
+        Assert.Contains("Brackets50%", Chips(cut));
+    }
+
+    [Fact]
     public void AFilterThatFindsNothingStillSaysWhatItLookedThrough()
     {
         // A narrow filter is not a broken feature, and the difference is whether the shelf

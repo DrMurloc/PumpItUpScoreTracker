@@ -4400,4 +4400,16 @@
   <data name="This chart has no {0} on record" xml:space="preserve">
     <value>This chart has no {0} on record</value>
   </data>
+  <data name="Show the least matching chart instead" xml:space="preserve">
+    <value>Show the least matching chart instead</value>
+  </data>
+  <data name="One chart, chosen for being nothing like this one." xml:space="preserve">
+    <value>One chart, chosen for being nothing like this one.</value>
+  </data>
+  <data name="Of everything within reach, this is the least like it." xml:space="preserve">
+    <value>Of everything within reach, this is the least like it.</value>
+  </data>
+  <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
+    <value>The opposite is picked from everything in reach, so ranges don't apply to it</value>
+  </data>
 </root>

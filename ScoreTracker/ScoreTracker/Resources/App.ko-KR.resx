@@ -4281,4 +4281,16 @@
   <data name="This chart has no {0} on record" xml:space="preserve">
     <value>이 채보에는 {0} 데이터가 없습니다</value>
   </data>
+  <data name="Show the least matching chart instead" xml:space="preserve">
+    <value>가장 안 닮은 채보 보기</value>
+  </data>
+  <data name="One chart, chosen for being nothing like this one." xml:space="preserve">
+    <value>이 채보와 전혀 닮지 않았다는 이유로 뽑힌 채보 하나.</value>
+  </data>
+  <data name="Of everything within reach, this is the least like it." xml:space="preserve">
+    <value>비교 범위 안에서 이 채보와 가장 안 닮은 채보입니다.</value>
+  </data>
+  <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
+    <value>정반대 채보는 비교 범위 전체에서 뽑히므로 범위 설정이 적용되지 않습니다</value>
+  </data>
 </root>
