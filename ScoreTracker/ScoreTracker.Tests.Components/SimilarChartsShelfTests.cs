@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Bunit;
 using MediatR;
@@ -7,9 +8,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Moq;
 using MudBlazor.Services;
+using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Components;
@@ -48,6 +51,15 @@ public sealed class SimilarChartsShelfTests : TestContext
         return new ChartSharedBadgeRecord(badge, coverage);
     }
 
+    /// <summary>
+    ///     The rendered match chips. A chip is a label and a value in separate elements —
+    ///     the gap between them is CSS, not a space — so the text reads "Brackets50%".
+    /// </summary>
+    private static string[] Chips(IRenderedFragment cut)
+    {
+        return cut.FindAll(".chart-card-why b").Select(e => e.TextContent.Trim()).ToArray();
+    }
+
     private static ChartSimilarityRecord Edge(double score, params ChartSharedBadgeRecord[] badges)
     {
         return new ChartSimilarityRecord(Guid.NewGuid(), score, SkillScore: score, IntensityScore: score,
@@ -59,10 +71,15 @@ public sealed class SimilarChartsShelfTests : TestContext
         _mediator.Setup(m => m.Send(It.Is<GetSimilarChartsQuery>(q => q.ChartId == chartId),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(edges);
-        var charts = new List<Chart>();
+        var charts = new List<Chart> { ChartSlugsTests.BuildChart(chartId, song: "Anchor") };
         foreach (var edge in edges) charts.Add(ChartSlugsTests.BuildChart(edge.ChartId, song: $"Song {edge.ChartId:N}"));
         _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(charts);
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartStepAnalysesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyDictionary<Guid, ChartStepAnalysisRecord>)
+                new Dictionary<Guid, ChartStepAnalysisRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartVideosQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IEnumerable<ChartVideoInformation>)Array.Empty<ChartVideoInformation>());
     }
 
     [Fact]
@@ -75,8 +92,8 @@ public sealed class SimilarChartsShelfTests : TestContext
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
-        Assert.Contains("Brackets 50%", cut.Markup);
-        Assert.Contains("Anchor runs 25%", cut.Markup);
+        Assert.Contains("Brackets50%", Chips(cut));
+        Assert.Contains("Anchor runs25%", Chips(cut));
         Assert.DoesNotContain("same skill profile", cut.Markup);
     }
 
@@ -89,7 +106,7 @@ public sealed class SimilarChartsShelfTests : TestContext
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
-        Assert.Contains("Brackets 50%", cut.Markup);
+        Assert.Contains("Brackets50%", Chips(cut));
         Assert.DoesNotContain("Drills", cut.Markup);
     }
 
@@ -102,9 +119,9 @@ public sealed class SimilarChartsShelfTests : TestContext
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
-        Assert.Contains("Brackets 90%", cut.Markup);
-        Assert.Contains("Anchor runs 80%", cut.Markup);
-        Assert.Contains("Drills 70%", cut.Markup);
+        Assert.Contains("Brackets90%", Chips(cut));
+        Assert.Contains("Anchor runs80%", Chips(cut));
+        Assert.Contains("Drills70%", Chips(cut));
         Assert.DoesNotContain("Jacks", cut.Markup);
     }
 
@@ -116,22 +133,40 @@ public sealed class SimilarChartsShelfTests : TestContext
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
-        Assert.Contains("some_new_piucenter_badge 50%", cut.Markup);
+        Assert.Contains("some_new_piucenter_badge50%", Chips(cut));
     }
 
     [Fact]
-    public void EdgesUnderTheRenderFloorAreNotMatches()
+    public void EdgesUnderTheRenderFloorAreNotMatchesButAreStillOffered()
     {
         var anchor = Guid.NewGuid();
         // The graph stores its whole tail floor-free; deciding what counts as a match is
-        // the shelf's job, so a tail row must not render as one.
+        // the shelf's job. A tail row must not render as a match — but it must not vanish
+        // either, because "no significant matches, here's the closest we could find" beats
+        // an empty box, and storing the tail is what pays for that.
         SetupEdges(anchor, Edge(0.30, Badge("bracket", 0.5)));
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
-        Assert.Contains("Not enough data yet to name similar charts", cut.Markup);
-        Assert.DoesNotContain("Brackets", cut.Markup);
+        Assert.Contains("No significant matches", cut.Markup);
+        Assert.Contains("Brackets50%", Chips(cut));
     }
+
+    [Fact]
+    public void MatchesAndNearMissesAreSeparatedRatherThanBlended()
+    {
+        var anchor = Guid.NewGuid();
+        SetupEdges(anchor, Edge(0.80, Badge("bracket", 0.5)), Edge(0.30, Badge("twist_90", 0.4)));
+
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+
+        Assert.DoesNotContain("No significant matches", cut.Markup);
+        Assert.Contains("Brackets50%", Chips(cut));
+        // The near-miss is behind its own disclosure, counted so the offer is honest.
+        Assert.Contains("Didn't quite make the cut (1)", cut.Markup);
+        Assert.Contains("90° twists40%", Chips(cut));
+    }
+
 
     [Fact]
     public void AnEmptyGraphExplainsItselfInsteadOfRenderingNothing()
@@ -142,5 +177,86 @@ public sealed class SimilarChartsShelfTests : TestContext
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
         Assert.Contains("Not enough data yet to name similar charts", cut.Markup);
+    }
+
+    private IRenderedComponent<SimilarChartCard> RenderCard(string? videoUrl = null,
+        decimal? anchorNps = null, decimal? nps = null, params ChartSharedBadgeRecord[] badges)
+    {
+        var record = Edge(0.8, badges);
+        return RenderComponent<SimilarChartCard>(p => p
+            .Add(c => c.Chart, ChartSlugsTests.BuildChart(record.ChartId, song: "Neighbour"))
+            .Add(c => c.Record, record)
+            .Add(c => c.VideoUrl, videoUrl)
+            .Add(c => c.AnchorNps, anchorNps)
+            .Add(c => c.Nps, nps));
+    }
+
+    [Fact]
+    public void TheCardIsARealLinkSoCrawlersFollowIt()
+    {
+        // The shelf IS the internal-link mesh. If this ever becomes a click handler, the
+        // SEO reason for the whole feature evaporates.
+        var cut = RenderCard(badges: Badge("bracket", 0.5));
+
+        var link = cut.Find("a.chart-card-link");
+        Assert.StartsWith("/Chart/", link.GetAttribute("href"));
+    }
+
+    [Fact]
+    public void ThePlayButtonIsASiblingOfTheLinkRatherThanInsideIt()
+    {
+        // A <button> inside an <a> is invalid HTML and the click targets collide.
+        var cut = RenderCard(videoUrl: "https://example.invalid/v", badges: Badge("bracket", 0.5));
+
+        Assert.Empty(cut.FindAll("a.chart-card-link button"));
+        Assert.Single(cut.FindAll("div.chart-card > .chart-card-playzone > button.chart-card-play"));
+    }
+
+    [Fact]
+    public void NoVideoMeansNoPlayAffordanceRatherThanADeadOne()
+    {
+        var cut = RenderCard(badges: Badge("bracket", 0.5));
+
+        Assert.Empty(cut.FindAll("button.chart-card-play"));
+    }
+
+    [Fact]
+    public void NothingLoadsUntilAsked()
+    {
+        // Six embeds on page load would outweigh the rest of the page.
+        var cut = RenderCard(videoUrl: "https://example.invalid/v", badges: Badge("bracket", 0.5));
+
+        Assert.Empty(cut.FindAll("iframe"));
+
+        cut.Find("button.chart-card-play").Click();
+
+        var frame = cut.Find("iframe.chart-card-video");
+        Assert.Contains("https://example.invalid/v", frame.GetAttribute("src"));
+    }
+
+    [Fact]
+    public void WatchingReplacesTheArtRatherThanGrowingTheCard()
+    {
+        // The video takes the art's exact 16:9 box, so the grid never jumps — and the
+        // link is gone while playing, because the card is now a player.
+        var cut = RenderCard(videoUrl: "https://example.invalid/v", badges: Badge("bracket", 0.5));
+        cut.Find("button.chart-card-play").Click();
+
+        Assert.Empty(cut.FindAll("a.chart-card-link"));
+        Assert.Single(cut.FindAll(".chart-card-art-playing"));
+        // The body is unchanged underneath: only the art's contents swapped.
+        Assert.Contains("Brackets50%", Chips(cut));
+    }
+
+    [Fact]
+    public void TheIntensityChipNamesBothSidesOrDoesNotRender()
+    {
+        // "NPS" alone is a label; "10.7 → 11.9" is a fact the reader can judge. Without
+        // both sides there is nothing honest to say.
+        var withBoth = RenderCard(anchorNps: 10.7m, nps: 11.9m, badges: Badge("bracket", 0.5));
+        Assert.Contains("10.7 → 11.9", withBoth.Markup);
+
+        var anchorOnly = RenderCard(anchorNps: 10.7m, badges: Badge("bracket", 0.5));
+        Assert.DoesNotContain("10.7", anchorOnly.Markup);
     }
 }

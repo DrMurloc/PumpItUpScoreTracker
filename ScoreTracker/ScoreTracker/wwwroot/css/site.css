@@ -3923,90 +3923,254 @@ html.nav-away .page-dock,
     color: var(--mix-ink-muted);
 }
 
-/* Similar-charts shelf - the internal link mesh. */
+/* Similar-charts shelf - the internal link mesh. Three across, then two, then one; no
+   density modes, because the card is sized around 16:9 art and that shape is the point. */
 .chart-shelf {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
 }
 
-.chart-shelf-card {
-    display: block;
+.chart-shelf-nearmiss {
+    margin-top: 18px;
+}
+
+.chart-shelf-nearmiss > summary {
+    cursor: pointer;
+    color: var(--mix-ink-muted);
+    font-size: .8rem;
+    padding: 6px 0;
+}
+
+.chart-shelf-nearmiss > .chart-shelf {
+    margin-top: 10px;
+}
+
+.chart-card {
+    position: relative;
     background: var(--mix-surface);
     border: 1px solid rgba(255, 255, 255, .10);
-    border-radius: 12px;
-    padding: 12px;
-    color: var(--mix-ink);
-    text-decoration: none;
-    transition: border-color .15s;
+    border-radius: 4px;
+    transition: border-color .12s, background .12s;
 }
 
-.chart-shelf-card:hover {
+.chart-card:hover {
+    border-color: var(--mix-primary);
+    background: var(--mix-surface-muted);
+}
+
+/* The <a> is the whole card. The play button is a SIBLING overlaid on the art - a
+   <button> inside an <a> is invalid HTML and the click targets would collide. */
+.chart-card-link {
+    display: block;
+    padding: 10px;
+    border-radius: 4px;
+    color: var(--mix-ink);
+    text-decoration: none;
+}
+
+/* 16:9 from the start, so the video drops into the art's exact box: the card never
+   changes height and the grid never jumps. */
+.chart-card-art {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 2px;
+    background: rgba(0, 0, 0, .35);
+}
+
+.chart-card-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 2px;
+}
+
+.chart-card-art-playing {
+    overflow: hidden;
+    border: 1px solid var(--mix-primary);
+}
+
+.chart-card-video {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+}
+
+.chart-card-bubble {
+    position: absolute;
+    right: -6px;
+    bottom: -8px;
+    z-index: 3;
+    filter: drop-shadow(0 2px 7px rgba(0, 0, 0, .6));
+}
+
+.chart-card-body {
+    display: block;
+    min-width: 0;
+    padding: 12px 2px 2px;
+}
+
+.chart-card-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 9px;
+}
+
+.chart-card-title h3 {
+    margin: 0;
+    font-weight: 600;
+    font-size: .88rem;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chart-card-pct {
+    font-weight: 700;
+    font-size: .8rem;
+    color: var(--mix-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-card-meta {
+    display: block;
+    margin-top: 4px;
+    font-size: .69rem;
+    line-height: 1.5;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-card-meta em {
+    font-style: normal;
+    color: var(--mix-ink);
+}
+
+.chart-card-meta i {
+    font-style: normal;
+    opacity: .45;
+    padding: 0 4px;
+}
+
+.chart-card-wl {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: 600;
+    font-size: .56rem;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.chart-card-why {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.chart-card-why b {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    font-weight: 500;
+    font-size: .69rem;
+    padding: 4px 6px;
+    border-radius: 2px;
+    color: var(--mix-ink);
+    background: color-mix(in srgb, var(--mix-primary) 11%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mix-primary) 40%, transparent);
+}
+
+.chart-card-why b var {
+    font-weight: 600;
+    font-size: .62rem;
+    font-style: normal;
+    color: var(--mix-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Intensity is a different KIND of reason and must not read as a skill. */
+.chart-card-why-intensity {
+    background: color-mix(in srgb, var(--mix-secondary) 11%, transparent) !important;
+    border-color: color-mix(in srgb, var(--mix-secondary) 40%, transparent) !important;
+}
+
+.chart-card-why-intensity var {
+    color: var(--mix-secondary) !important;
+}
+
+/* Mirrors the art's box so the button centres on the art without knowing its height.
+   Transparent to the mouse, so the link underneath keeps the whole card as its target
+   and only the button itself steals a click. */
+.chart-card-playzone {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    top: 10px;
+    aspect-ratio: 16 / 9;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+}
+
+.chart-card-play {
+    pointer-events: auto;
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    padding-left: 3px;
+    border-radius: 99px;
+    cursor: pointer;
+    background: rgba(0, 0, 0, .8);
+    border: 1px solid rgba(255, 255, 255, .2);
+    color: #fff;
+    opacity: 0;
+    transform: scale(.88);
+    transition: opacity .13s, transform .13s, background .13s, border-color .13s;
+}
+
+.chart-card-play::before {
+    content: "";
+    border-style: solid;
+    border-width: 8px 0 8px 13px;
+    border-color: transparent transparent transparent currentColor;
+}
+
+.chart-card:hover .chart-card-play,
+.chart-card-play:focus-visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.chart-card-play:hover {
+    background: rgba(0, 0, 0, .93);
     border-color: var(--mix-primary);
 }
 
-.chart-shelf-art {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    min-height: 96px;
-}
-
-.chart-shelf-bubble {
+.chart-card-close {
     position: absolute;
-    right: 2px;
-    bottom: 2px;
-    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, .6));
-}
-
-.chart-shelf-name {
-    font-weight: 700;
-    font-size: .9rem;
-    line-height: 1.3;
-    margin-top: 9px;
-}
-
-.chart-shelf-why {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-top: 7px;
-}
-
-.chart-shelf-why span {
+    right: 15px;
+    top: 15px;
+    z-index: 4;
+    cursor: pointer;
+    font-weight: 600;
     font-size: .68rem;
-    color: var(--mix-ink-muted);
-    border: 1px solid rgba(255, 255, 255, .16);
-    border-radius: 99px;
-    padding: 1px 8px;
+    color: #fff;
+    background: rgba(0, 0, 0, .8);
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 2px;
+    padding: 4px 6px;
 }
 
-.chart-shelf-match {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-    font-size: .72rem;
-    color: var(--mix-ink-muted);
-}
-
-.chart-shelf-match-bar {
-    flex: 1;
-    height: 4px;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, .10);
-    overflow: hidden;
-}
-
-.chart-shelf-match-bar i {
-    display: block;
-    height: 100%;
-    background: var(--mix-primary);
-    border-radius: 4px;
-}
-
-.chart-shelf-match-value {
-    font-variant-numeric: tabular-nums;
+.chart-card-close:hover {
+    border-color: var(--mix-primary);
 }
 
 .chart-admin {
@@ -4032,5 +4196,11 @@ html.nav-away .page-dock,
 
     .chart-shelf {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .chart-shelf {
+        grid-template-columns: 1fr;
     }
 }

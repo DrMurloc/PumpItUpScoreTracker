@@ -1,47 +1,57 @@
 @using MediatR
+@using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.ChartIntelligence.Contracts
 @using ScoreTracker.ChartIntelligence.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
-@using ScoreTracker.Web.Services
 @namespace ScoreTracker.Web.Components
 @inject IMediator Mediator
-@inject NavigationManager NavManager
 
-@* The similarity graph's shelf (docs/design/chart-similarity.md): jacket cards naming
-   the badges each pair actually shares. Doubles as the internal link mesh — static
-   content at Stage 3. *@
+@* The similarity graph's shelf (docs/design/chart-similarity.md): cards naming the badges
+   each pair actually shares. Doubles as the internal link mesh — static content at
+   Stage 3, which is why the default list renders server-side with no interaction. *@
 @if (_loaded)
 {
-    @if (_entries.Count == 0)
+    @if (_matches.Count == 0 && _nearMisses.Count == 0)
     {
         <MudText Typo="Typo.body2" Class="chart-shelf-empty">@L["Not enough data yet to name similar charts — the graph rebuilds nightly."]</MudText>
     }
     else
     {
-        <div class="chart-shelf">
-            @foreach (var entry in _entries)
+        @if (_matches.Count == 0)
+        {
+            @* Never an empty box: the tail is stored precisely so there is always
+               something honest to show. *@
+            <MudText Typo="Typo.body2" Class="chart-shelf-empty">@L["No significant matches — here's the closest we could find."]</MudText>
+            <div class="chart-shelf">
+                @foreach (var entry in _nearMisses)
+                {
+                    @Card(entry)
+                }
+            </div>
+        }
+        else
+        {
+            <div class="chart-shelf">
+                @foreach (var entry in _matches)
+                {
+                    @Card(entry)
+                }
+            </div>
+            @if (_nearMisses.Count > 0)
             {
-                <a class="chart-shelf-card" href="@($"/Chart/{entry.Chart.Id}")">
-                    <div class="chart-shelf-art">
-                        <SongImage Song="entry.Chart.Song" Height="96"></SongImage>
-                        <span class="chart-shelf-bubble"><DifficultyBubble Chart="entry.Chart" Small="true"></DifficultyBubble></span>
-                    </div>
-                    <div class="chart-shelf-name">@entry.Chart.Song.Name</div>
-                    <div class="chart-shelf-why">
-                        @foreach (var reason in entry.Reasons)
+                <details class="chart-shelf-nearmiss">
+                    <summary>@L["Didn't quite make the cut ({0})", _nearMisses.Count]</summary>
+                    <div class="chart-shelf">
+                        @foreach (var entry in _nearMisses)
                         {
-                            <span>@reason</span>
+                            @Card(entry)
                         }
                     </div>
-                    <div class="chart-shelf-match">
-                        <span class="chart-shelf-match-bar"><i style="width:@((int)(entry.Record.Score * 100))%"></i></span>
-                        <span class="chart-shelf-match-value">@entry.Record.Score.ToString("0.00")</span>
-                    </div>
-                </a>
+                </details>
             }
-        </div>
+        }
     }
 }
 
@@ -54,13 +64,8 @@
     /// </summary>
     internal const double ScoreFloor = 0.55;
 
-    /// <summary>
-    ///     Below this shared coverage a badge is a trace both charts happen to brush past,
-    ///     not something they have in common worth saying out loud.
-    /// </summary>
-    internal const double MinimumReasonCoverage = 0.15;
-
-    internal const int MaximumReasons = 3;
+    /// <summary>How many near-misses are worth curiosity before it turns into a list of everything.</summary>
+    internal const int NearMissCount = 10;
 
     [Parameter]
     public Guid ChartId { get; set; }
@@ -68,44 +73,43 @@
     [Parameter]
     public MixEnum Mix { get; set; } = MixEnum.Phoenix;
 
+    private sealed record Entry(ChartSimilarityRecord Record, Chart Chart, decimal? Nps, string? VideoUrl);
+
     private bool _loaded;
-    private IReadOnlyList<(ChartSimilarityRecord Record, Chart Chart, IReadOnlyList<string> Reasons)> _entries =
-        Array.Empty<(ChartSimilarityRecord, Chart, IReadOnlyList<string>)>();
+    private decimal? _anchorNps;
+    private IReadOnlyList<Entry> _matches = Array.Empty<Entry>();
+    private IReadOnlyList<Entry> _nearMisses = Array.Empty<Entry>();
+
+    private RenderFragment Card(Entry entry) =>
+        @<SimilarChartCard Chart="entry.Chart" Record="entry.Record" Nps="entry.Nps" AnchorNps="_anchorNps"
+                           VideoUrl="entry.VideoUrl" @key="entry.Chart.Id"></SimilarChartCard>;
 
     protected override async Task OnParametersSetAsync()
     {
         var edges = await Mediator.Send(new GetSimilarChartsQuery(ChartId, Mix));
         if (edges.Count == 0)
         {
-            _entries = Array.Empty<(ChartSimilarityRecord, Chart, IReadOnlyList<string>)>();
+            _matches = _nearMisses = Array.Empty<Entry>();
             _loaded = true;
             return;
         }
 
-        var charts = (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: edges.Select(e => e.ChartId))))
-            .ToDictionary(c => c.Id);
-        // The graph hands over its whole tail; the bar is ours to apply.
-        _entries = edges
-            .Where(e => e.Score >= ScoreFloor && charts.ContainsKey(e.ChartId))
-            .Select(e => (e, charts[e.ChartId], Reasons(e)))
-            .ToArray();
-        _loaded = true;
-    }
+        var chartIds = edges.Select(e => e.ChartId).Append(ChartId).ToArray();
+        var charts = (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: chartIds))).ToDictionary(c => c.Id);
+        var analyses = await Mediator.Send(new GetChartStepAnalysesQuery(chartIds));
+        var videos = (await Mediator.Send(new GetChartVideosQuery(edges.Select(e => e.ChartId))))
+            .ToDictionary(v => v.ChartId, v => v.VideoUrl.ToString());
+        _anchorNps = analyses.GetValueOrDefault(ChartId)?.Nps;
 
-    /// <summary>
-    ///     What the pair actually matched on, strongest overlap first — never "skills
-    ///     match", which reads as broken. The percentage is the coverage the two charts
-    ///     *share*, so "Brackets 50%" says both are at least half brackets. A badge whose
-    ///     shared coverage is a rounding error is not a reason, so the chips can come back
-    ///     empty; that is honest, and the score bar still says how close the pair is.
-    /// </summary>
-    internal IReadOnlyList<string> Reasons(ChartSimilarityRecord record)
-    {
-        return record.SharedBadges
-            .Where(b => b.Coverage >= MinimumReasonCoverage)
-            .Take(MaximumReasons)
-            .Select(b => L["{0} {1}%", L[SimilarityBadgeLabels.For(b.Badge)], (int)Math.Round(b.Coverage * 100)]
-                .ToString())
+        var entries = edges
+            .Where(e => charts.ContainsKey(e.ChartId))
+            .Select(e => new Entry(e, charts[e.ChartId], analyses.GetValueOrDefault(e.ChartId)?.Nps,
+                videos.GetValueOrDefault(e.ChartId)))
             .ToArray();
+
+        // The graph hands over its whole tail; where the bar falls is ours.
+        _matches = entries.Where(e => e.Record.Score >= ScoreFloor).ToArray();
+        _nearMisses = entries.Where(e => e.Record.Score < ScoreFloor).Take(NearMissCount).ToArray();
+        _loaded = true;
     }
 }
