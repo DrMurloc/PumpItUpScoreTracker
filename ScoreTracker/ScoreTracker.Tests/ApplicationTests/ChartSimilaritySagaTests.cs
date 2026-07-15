@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
@@ -12,11 +11,8 @@ using ScoreTracker.ChartIntelligence.Application;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Domain;
-using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
-using ScoreTracker.SharedKernel.Models;
-using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using ScoreTracker.Tests.TestHelpers;
 using Xunit;
@@ -28,17 +24,12 @@ public sealed class ChartSimilaritySagaTests
     private static readonly DateTimeOffset Now = new(2026, 7, 14, 12, 0, 0, TimeSpan.Zero);
 
     private readonly Mock<IChartRepository> _charts = new();
-    private readonly Mock<ITierListRepository> _tierLists = new();
-    private readonly Mock<IChartScoringLevelRepository> _scoringLevels = new();
-    private readonly Mock<IScoreReader> _scores = new();
-    private readonly Mock<IPlayerStatsReader> _playerStats = new();
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IChartSimilarityRepository> _similarity = new();
 
     private ChartSimilaritySaga BuildSaga()
     {
-        return new ChartSimilaritySaga(_charts.Object, _tierLists.Object, _scoringLevels.Object,
-            _scores.Object, _playerStats.Object, _mediator.Object, _similarity.Object,
+        return new ChartSimilaritySaga(_charts.Object, _mediator.Object, _similarity.Object,
             FakeDateTime.At(Now).Object);
     }
 
@@ -51,12 +42,31 @@ public sealed class ChartSimilaritySagaTests
         return context.Object;
     }
 
+    private void SetupBadges(IReadOnlyDictionary<Guid, IReadOnlyDictionary<string, double>> badges)
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartBadgeCoverageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(badges);
+    }
+
+    private void SetupStepAnalyses(IReadOnlyDictionary<Guid, ChartStepAnalysisRecord> analyses)
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartStepAnalysesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(analyses);
+    }
+
+    private static ChartStepAnalysisRecord Analysis(decimal nps)
+    {
+        return new ChartStepAnalysisRecord(Array.Empty<string>(), new Dictionary<string, decimal>(),
+            nps, SustainTimeSeconds: null, TimeUnderTensionSeconds: null, DifficultyPrediction: null,
+            ExternalKey: null);
+    }
+
     [Fact]
     public async Task GetSimilarChartsReturnsStoredEdgesInStoredOrder()
     {
         var chartId = Guid.NewGuid();
-        var first = new ChartSimilarityEdge(Guid.NewGuid(), 0.9, 1.0, null, 0.6, null, 0.3, 42);
-        var second = new ChartSimilarityEdge(Guid.NewGuid(), 0.7, null, 0.8, null, 0.5, 0.0, 0);
+        var first = new ChartSimilarityEdge(Guid.NewGuid(), 0.9, 1.0, 0.6);
+        var second = new ChartSimilarityEdge(Guid.NewGuid(), 0.7, 0.8, 0.5);
         _similarity.Setup(s => s.GetEdges(MixEnum.Phoenix, chartId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { first, second });
 
@@ -67,10 +77,9 @@ public sealed class ChartSimilaritySagaTests
         Assert.Equal(first.SimilarChartId, result[0].ChartId);
         Assert.Equal(0.9, result[0].Score);
         Assert.Equal(1.0, result[0].SkillScore);
-        Assert.Equal(0.6, result[0].PlayersScore);
-        Assert.Equal(42, result[0].SharedScorers);
+        Assert.Equal(0.6, result[0].IntensityScore);
         Assert.Equal(second.SimilarChartId, result[1].ChartId);
-        Assert.Null(result[1].SkillScore);
+        Assert.Equal(0.8, result[1].SkillScore);
         Assert.Equal(0.5, result[1].IntensityScore);
     }
 
@@ -82,39 +91,23 @@ public sealed class ChartSimilaritySagaTests
         var coOp = new ChartBuilder().WithSongName("Song C").WithType(ChartType.CoOp).WithLevel(3).Build();
         _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chartA, chartB, coOp });
-        _charts.Setup(c => c.GetChartLetterGradeDifficulties(It.IsAny<IEnumerable<Guid>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<ChartLetterGradeDifficulty>());
-        // Skill evidence: both singles carry one banked badge at full coverage.
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartBadgeCoverageQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, IReadOnlyDictionary<string, double>>
-            {
-                [chartA.Id] = new Dictionary<string, double> { ["bracket"] = 1.0 },
-                [chartB.Id] = new Dictionary<string, double> { ["bracket"] = 1.0 }
-            });
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartStepAnalysesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, ChartStepAnalysisRecord>());
-        // Behavior evidence: both sit Medium on the pass tier list; the Scores list is empty.
-        _tierLists.Setup(t => t.GetAllEntries(MixEnum.Phoenix, It.Is<Name>(n => n.ToString() == "Pass Count"),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new SongTierListEntry("Pass Count", chartA.Id, TierListCategory.Medium, 1),
-                new SongTierListEntry("Pass Count", chartB.Id, TierListCategory.Medium, 2)
-            });
-        _tierLists.Setup(t => t.GetAllEntries(MixEnum.Phoenix, It.Is<Name>(n => n.ToString() == "Scores"),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<SongTierListEntry>());
-        _scoringLevels.Setup(s => s.GetScoringLevels(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, double>());
-        _scores.Setup(s => s.GetScores(MixEnum.Phoenix, ChartType.Single, It.IsAny<DifficultyLevel>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<(Guid, ScoreTracker.Domain.Models.RecordedPhoenixScore)>());
+        // Both singles carry the same badge at full coverage and the same NPS: identical
+        // evidence on both mandatory signals.
+        SetupBadges(new Dictionary<Guid, IReadOnlyDictionary<string, double>>
+        {
+            [chartA.Id] = new Dictionary<string, double> { ["bracket"] = 1.0 },
+            [chartB.Id] = new Dictionary<string, double> { ["bracket"] = 1.0 }
+        });
+        SetupStepAnalyses(new Dictionary<Guid, ChartStepAnalysisRecord>
+        {
+            [chartA.Id] = Analysis(10),
+            [chartB.Id] = Analysis(10)
+        });
 
         await BuildSaga().Consume(Context());
 
-        // Two real signals (style + pass tier) → one edge each way; the wholesale rewrite
-        // carries the clock's timestamp; Co-Op never participates.
+        // One edge each way; the wholesale rewrite carries the clock's timestamp; Co-Op
+        // never participates.
         _similarity.Verify(s => s.ReplaceEdges(MixEnum.Phoenix, chartA.Id,
             It.Is<IReadOnlyList<ChartSimilarityEdge>>(e => e.Count == 1 && e[0].SimilarChartId == chartB.Id),
             Now, It.IsAny<CancellationToken>()), Times.Once);
@@ -127,28 +120,17 @@ public sealed class ChartSimilaritySagaTests
     }
 
     [Fact]
-    public async Task ConsumeWritesEmptyEdgeSetsForChartsWithoutEnoughEvidence()
+    public async Task ConsumeWritesEmptyEdgeSetsForChartsTheCrawlNeverCovered()
     {
-        // No skills, no tiers, no scores — no pair clears the two-non-meta-signals gate,
-        // but the rewrite still happens so stale edges from a previous run are cleared.
+        // No badges, no step analysis — nothing to compare, so no pair earns an edge. The
+        // rewrite still happens, so edges from a previous run are cleared rather than left
+        // to rot.
         var chartA = new ChartBuilder().WithSongName("Song A").WithType(ChartType.Double).WithLevel(15).Build();
         var chartB = new ChartBuilder().WithSongName("Song B").WithType(ChartType.Double).WithLevel(15).Build();
         _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chartA, chartB });
-        _charts.Setup(c => c.GetChartLetterGradeDifficulties(It.IsAny<IEnumerable<Guid>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<ChartLetterGradeDifficulty>());
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartBadgeCoverageQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, IReadOnlyDictionary<string, double>>());
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartStepAnalysesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, ChartStepAnalysisRecord>());
-        _tierLists.Setup(t => t.GetAllEntries(MixEnum.Phoenix, It.IsAny<Name>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<SongTierListEntry>());
-        _scoringLevels.Setup(s => s.GetScoringLevels(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, double>());
-        _scores.Setup(s => s.GetScores(MixEnum.Phoenix, ChartType.Double, It.IsAny<DifficultyLevel>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<(Guid, ScoreTracker.Domain.Models.RecordedPhoenixScore)>());
+        SetupBadges(new Dictionary<Guid, IReadOnlyDictionary<string, double>>());
+        SetupStepAnalyses(new Dictionary<Guid, ChartStepAnalysisRecord>());
 
         await BuildSaga().Consume(Context());
 

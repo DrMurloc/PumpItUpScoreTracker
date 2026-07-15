@@ -2,10 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ScoreTracker.ChartIntelligence.Infrastructure.Entities;
 
-// The similarity graph's persisted edges (chart-details overhaul B1): top-K neighbors per
-// (mix, chart), rebuilt wholesale by the nightly job. SignalsJson keeps the per-signal
-// breakdown the similar-shelf why-chips render from; SharedScorers is surfaced separately
-// because the S_players confidence floor (n ≥ 30) is a product rule, not a display detail.
+// The similarity graph's persisted edges: top-K neighbors per (mix, chart), rebuilt
+// wholesale by the nightly job. SignalsJson keeps the per-signal breakdown the shelf names
+// its matches from. SharedScorers is dead weight — nothing writes it since the collaborative
+// signal left the formula, so every row carries a 0.
 internal sealed class ChartSimilarityEntity
 {
     [Required] public Guid MixId { get; set; }

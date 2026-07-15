@@ -31,10 +31,9 @@ public sealed class EFChartSimilarityRepositoryTests : IAsyncLifetime
         var chart = await seeder.SeedChartAsync();
         var neighbor = await seeder.SeedChartAsync();
 
-        // Null sub-scores are meaningful (signal unavailable for the pair) and must survive
-        // the SignalsJson round trip alongside the real ones.
-        var edge = new ChartSimilarityEdge(neighbor, 0.87, SkillScore: 0.91, DifficultyScore: 0.8,
-            PlayersScore: null, IntensityScore: 0.75, MetaScore: 0.2, SharedScorers: 12);
+        // The shelf names what a pair matched on, so the sub-scores are product data and
+        // must survive the SignalsJson round trip — not just the headline score.
+        var edge = new ChartSimilarityEdge(neighbor, 0.87, SkillScore: 0.91, IntensityScore: 0.75);
         await BuildRepository().ReplaceEdges(MixEnum.Phoenix, chart, new[] { edge }, ComputedAt,
             CancellationToken.None);
 
@@ -44,11 +43,7 @@ public sealed class EFChartSimilarityRepositoryTests : IAsyncLifetime
         Assert.Equal(neighbor, stored.SimilarChartId);
         Assert.Equal(0.87, stored.Score);
         Assert.Equal(0.91, stored.SkillScore);
-        Assert.Equal(0.8, stored.DifficultyScore);
-        Assert.Null(stored.PlayersScore);
         Assert.Equal(0.75, stored.IntensityScore);
-        Assert.Equal(0.2, stored.MetaScore);
-        Assert.Equal(12, stored.SharedScorers);
     }
 
     [Fact]
@@ -62,11 +57,11 @@ public sealed class EFChartSimilarityRepositoryTests : IAsyncLifetime
         var newNeighbor = await seeder.SeedChartAsync();
         var writer = BuildRepository();
         await writer.ReplaceEdges(MixEnum.Phoenix, chart,
-            new[] { new ChartSimilarityEdge(oldNeighbor, 0.9, null, null, null, null, null, 0) },
+            new[] { new ChartSimilarityEdge(oldNeighbor, 0.9, 0.9, 0.9) },
             ComputedAt, CancellationToken.None);
 
         await writer.ReplaceEdges(MixEnum.Phoenix, chart,
-            new[] { new ChartSimilarityEdge(newNeighbor, 0.7, null, null, null, null, null, 0) },
+            new[] { new ChartSimilarityEdge(newNeighbor, 0.7, 0.7, 0.7) },
             ComputedAt.AddDays(1), CancellationToken.None);
 
         var edges = await BuildRepository().GetEdges(MixEnum.Phoenix, chart, CancellationToken.None);
@@ -85,11 +80,11 @@ public sealed class EFChartSimilarityRepositoryTests : IAsyncLifetime
         var writer = BuildRepository();
         await writer.ReplaceEdges(MixEnum.Phoenix, chart, new[]
         {
-            new ChartSimilarityEdge(farther, 0.6, null, null, null, null, null, 0),
-            new ChartSimilarityEdge(closest, 0.92, null, null, null, null, null, 0)
+            new ChartSimilarityEdge(farther, 0.6, 0.6, 0.6),
+            new ChartSimilarityEdge(closest, 0.92, 0.92, 0.92)
         }, ComputedAt, CancellationToken.None);
         await writer.ReplaceEdges(MixEnum.Phoenix2, chart,
-            new[] { new ChartSimilarityEdge(phoenix2Neighbor, 0.5, null, null, null, null, null, 0) },
+            new[] { new ChartSimilarityEdge(phoenix2Neighbor, 0.5, 0.5, 0.5) },
             ComputedAt, CancellationToken.None);
 
         var phoenix = await BuildRepository().GetEdges(MixEnum.Phoenix, chart, CancellationToken.None);

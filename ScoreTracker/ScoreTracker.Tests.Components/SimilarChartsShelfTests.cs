@@ -55,34 +55,18 @@ public sealed class SimilarChartsShelfTests : TestContext
     }
 
     [Fact]
-    public void WhyChipsFollowTheDesignDocThresholdsAndPriority()
+    public void WhyChipsFollowTheDesignDocThresholds()
     {
         var anchor = Guid.NewGuid();
-        // Players + style both qualify → they are the two chips; behavior misses its bar.
+        // Skill clears its bar, intensity misses: the pair asks for the same things but
+        // asks rather differently hard, and only the true claim gets a chip.
         SetupEdges(anchor, new ChartSimilarityRecord(Guid.NewGuid(), 0.9,
-            SkillScore: 0.8, DifficultyScore: 0.7, PlayersScore: 0.5, IntensityScore: null, MetaScore: 0.3,
-            SharedScorers: 40));
+            SkillScore: 0.8, IntensityScore: 0.5));
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
-        Assert.Contains("players score alike", cut.Markup);
         Assert.Contains("same skill profile", cut.Markup);
-        Assert.DoesNotContain("behaves the same for its level", cut.Markup);
-    }
-
-    [Fact]
-    public void ThinPlayerOverlapNeverEarnsThePlayersChip()
-    {
-        var anchor = Guid.NewGuid();
-        // High correlation but under the 30-scorer confidence floor.
-        SetupEdges(anchor, new ChartSimilarityRecord(Guid.NewGuid(), 0.8,
-            SkillScore: null, DifficultyScore: 0.9, PlayersScore: 0.6, IntensityScore: null, MetaScore: 0.3,
-            SharedScorers: 12));
-
-        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
-
-        Assert.DoesNotContain("players score alike", cut.Markup);
-        Assert.Contains("behaves the same for its level", cut.Markup);
+        Assert.DoesNotContain("same intensity", cut.Markup);
     }
 
     [Fact]
@@ -90,8 +74,7 @@ public sealed class SimilarChartsShelfTests : TestContext
     {
         var anchor = Guid.NewGuid();
         SetupEdges(anchor, new ChartSimilarityRecord(Guid.NewGuid(), 0.6,
-            SkillScore: 0.6, DifficultyScore: 0.6, PlayersScore: null, IntensityScore: 0.5, MetaScore: 0.3,
-            SharedScorers: 0));
+            SkillScore: 0.6, IntensityScore: 0.5));
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 

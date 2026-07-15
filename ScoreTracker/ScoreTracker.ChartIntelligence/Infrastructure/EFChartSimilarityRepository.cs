@@ -32,9 +32,7 @@ internal sealed class EFChartSimilarityRepository : IChartSimilarityRepository
                 ChartId = chartId,
                 SimilarChartId = edge.SimilarChartId,
                 Score = edge.Score,
-                SignalsJson = JsonSerializer.Serialize(new SignalsDto(edge.SkillScore, edge.DifficultyScore,
-                    edge.PlayersScore, edge.IntensityScore, edge.MetaScore)),
-                SharedScorers = edge.SharedScorers,
+                SignalsJson = JsonSerializer.Serialize(new SignalsDto(edge.SkillScore, edge.IntensityScore)),
                 ComputedAt = computedAt
             }), cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
@@ -52,18 +50,15 @@ internal sealed class EFChartSimilarityRepository : IChartSimilarityRepository
             .OrderByDescending(e => e.Score)
             .Select(e =>
             {
-                var signals = JsonSerializer.Deserialize<SignalsDto>(e.SignalsJson) ??
-                              new SignalsDto(null, null, null, null, null);
-                return new ChartSimilarityEdge(e.SimilarChartId, e.Score, signals.Skill, signals.Difficulty,
-                    signals.Players, signals.Intensity, signals.Meta, e.SharedScorers);
+                var signals = JsonSerializer.Deserialize<SignalsDto>(e.SignalsJson);
+                return new ChartSimilarityEdge(e.SimilarChartId, e.Score, signals?.Skill ?? 0,
+                    signals?.Intensity ?? 0);
             })
             .ToArray();
     }
 
-    // The persisted breakdown shape — additive-only: the why-chips tolerate missing keys,
-    // so new signals can join without rewriting banked edges. Renaming a key is NOT
-    // additive: edges banked under the old name deserialize as missing until the nightly
-    // rebuild rewrites them.
-    private sealed record SignalsDto(double? Skill, double? Difficulty, double? Players, double? Intensity,
-        double? Meta);
+    // The persisted breakdown shape. Nullable on the way in because an edge banked under
+    // an older shape deserializes as missing rather than throwing; the nightly rebuild
+    // rewrites every edge wholesale, so a stale row is transient by construction.
+    private sealed record SignalsDto(double? Skill, double? Intensity);
 }

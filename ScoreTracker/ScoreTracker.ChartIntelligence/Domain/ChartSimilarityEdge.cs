@@ -2,17 +2,13 @@ namespace ScoreTracker.ChartIntelligence.Domain;
 
 /// <summary>
 ///     One directed edge in the similarity graph (docs/design/chart-similarity.md): the
-///     persisted output of the nightly calculator. A null sub-score means that signal was
-///     unavailable for the pair (weight renormalization already accounted for it) — the
-///     why-chips read the breakdown, so it rides the edge rather than being recomputed.
+///     persisted output of the nightly calculator. Both sub-scores are always present —
+///     an edge exists only when the pair had both signals — and ride the edge rather than
+///     being recomputed, because the shelf names what a pair matched on.
 /// </summary>
 [ExcludeFromCodeCoverage]
 internal sealed record ChartSimilarityEdge(
     Guid SimilarChartId,
     double Score,
-    double? SkillScore,
-    double? DifficultyScore,
-    double? PlayersScore,
-    double? IntensityScore,
-    double? MetaScore,
-    int SharedScorers);
+    double SkillScore,
+    double IntensityScore);

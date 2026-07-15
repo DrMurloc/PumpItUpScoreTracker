@@ -62,14 +62,17 @@ Corollaries, all of which the data had been shouting:
 S_skill      = Bray-Curtis over gamma-shaped raw badge coverage        (§3.1)
 S_intensity  = geometric mean over three z-scored scalars              (§3.2)
 
-score        = exp( (w_s·ln(S_skill) + w_i·ln(S_intensity)) / (w_s + w_i) )
-               w_s = 0.30, w_i = 0.10   →  75 / 25 renormalized
+score        = S_skill^0.75 · S_intensity^0.25
 ```
 
 Both signals are mandatory: a chart missing either gets no edge. In practice they co-occur — both
 come from the same piucenter crawl (4,411 charts each) — but the old `nonMetaAvailable >= 2` gate
 meant "some real evidence" when there were four signals and now means "everything". Say what it
 means.
+
+Mandatory is also what makes the score that clean product: the weights sum to 1 and both terms are
+always present, so there is nothing to renormalize and no mean to take. Skill leads 3:1 because two
+charts that demand different things are not alike however similarly they exhaust you.
 
 ### 3.1 S_skill — Bray-Curtis over gamma-shaped raw badge coverage
 
@@ -116,8 +119,15 @@ per dimension d:  z_d  = z-score within the (type, level) cohort   (population s
                   s_d  = clamp01(1 − |z_dA − z_dB| / K)            K = 3
 
 S_intensity = exp( Σ w_d·ln(max(s_d, 0.01)) / Σ w_d )
-              burstFrac 0.40 · susFrac 0.35 · nps 0.25
+              burstFrac 0.40 · susFrac 0.40 · nps 0.20
 ```
+
+**Why burst and sustain weigh the same.** They are the two halves of one decomposition, and the
+owner's taxonomy turns on both ends of it: Gargoyle is all sustain, Viyella's is all burst, and
+neither is the senior partner. NPS trails at 0.20 because it is the corroborating axis, not a
+verdict — a chart's feel-fast is real evidence but it is the thing most likely to coincide by
+accident (Conflict and Viyella's, 10.7 against 10.5). Weights renormalize over whichever dimensions
+a pair has, so a chart with no duration still scores on NPS alone.
 
 **Why decompose tension.** `sustain_time ⊆ time_under_tension`, **always** — Gargoyle proves it at
 `sustain 362 / TUT 362`. So the old `susFrac`/`tensionFrac` pair double-counted sustain and gave
