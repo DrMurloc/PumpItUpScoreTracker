@@ -2927,17 +2927,8 @@
   <data name="Notes per Second" xml:space="preserve">
     <value>Notes per Second</value>
   </data>
-  <data name="Sustain Time" xml:space="preserve">
-    <value>Sustain Time</value>
-  </data>
-  <data name="Time Under Tension" xml:space="preserve">
-    <value>Time Under Tension</value>
-  </data>
   <data name="Step analysis data from PIU Center" xml:space="preserve">
     <value>Step analysis data from PIU Center</value>
-  </data>
-  <data name="Share of chart sections featuring each skill" xml:space="preserve">
-    <value>Share of chart sections featuring each skill</value>
   </data>
   <data name="Show Skill Metric" xml:space="preserve">
     <value>Show Skill Metric</value>
@@ -4160,12 +4151,6 @@
   <data name="First passes cluster between competitive levels {0} and {1}." xml:space="preserve">
     <value>First passes cluster between competitive levels {0} and {1}.</value>
   </data>
-  <data name="Plates run worse than scores predict — a kill-spot signature." xml:space="preserve">
-    <value>Plates run worse than scores predict — a kill-spot signature.</value>
-  </data>
-  <data name="Plates run cleaner than scores predict — smooth attrition." xml:space="preserve">
-    <value>Plates run cleaner than scores predict — smooth attrition.</value>
-  </data>
   <data name="Debuted in {0}." xml:space="preserve">
     <value>Debuted in {0}.</value>
   </data>
@@ -4229,9 +4214,6 @@
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>No score yet — record your first attempt and this lights up.</value>
   </data>
-  <data name="Prefilled from your best — saves to the score journal." xml:space="preserve">
-    <value>Prefilled from your best — saves to the score journal.</value>
-  </data>
   <data name="Score recorded for {0}" xml:space="preserve">
     <value>Score recorded for {0}</value>
   </data>
@@ -4289,14 +4271,8 @@
   <data name="Pass rate" xml:space="preserve">
     <value>Pass rate</value>
   </data>
-  <data name="Record score" xml:space="preserve">
-    <value>Record score</value>
-  </data>
   <data name="The evidence" xml:space="preserve">
     <value>The evidence</value>
-  </data>
-  <data name="Each graph answers one sentence." xml:space="preserve">
-    <value>Each graph answers one sentence.</value>
   </data>
   <data name="Skill fingerprint" xml:space="preserve">
     <value>Skill fingerprint</value>
@@ -4372,5 +4348,38 @@
   </data>
   <data name="Easiest to score first, by scoring level" xml:space="preserve">
     <value>Easiest to score first, by scoring level</value>
+  </data>
+  <data name="Chart Stats" xml:space="preserve">
+    <value>Chart Stats</value>
+  </data>
+  <data name="Chart analysis made possible by" xml:space="preserve">
+    <value>Chart analysis made possible by</value>
+  </data>
+  <data name="Reordering…" xml:space="preserve">
+    <value>Reordering…</value>
+  </data>
+  <data name="Sustain" xml:space="preserve">
+    <value>Sustain</value>
+  </data>
+  <data name="Bursts" xml:space="preserve">
+    <value>Bursts</value>
+  </data>
+  <data name="Grind" xml:space="preserve">
+    <value>Grind</value>
+  </data>
+  <data name="Spikes" xml:space="preserve">
+    <value>Spikes</value>
+  </data>
+  <data name="Share of the chart each pattern and demand covers" xml:space="preserve">
+    <value>Share of the chart each pattern and demand covers</value>
+  </data>
+  <data name="Open chart details" xml:space="preserve">
+    <value>Open chart details</value>
+  </data>
+  <data name="Open {0}" xml:space="preserve">
+    <value>Open {0}</value>
+  </data>
+  <data name="Show all {0} scores" xml:space="preserve">
+    <value>Show all {0} scores</value>
   </data>
 </root>

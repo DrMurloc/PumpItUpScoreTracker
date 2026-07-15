@@ -53,24 +53,13 @@
                 <em>@Chart.StepArtist</em><i>·</i>
             }
             @Chart.OriginalMix.GetName()
-            @if (Chart.Song.Bpm != null || Nps != null)
+            @if (Chart.Song.Bpm != null)
             {
                 <br/>
-                @if (Chart.Song.Bpm != null)
-                {
-                    <text>@L["{0} BPM", Chart.Song.Bpm.Value.ToString()]</text>
-                }
-                @if (Chart.Song.Bpm != null && Nps != null)
-                {
-                    <i>·</i>
-                }
-                @if (Nps != null)
-                {
-                    <text>@L["{0} NPS", Nps.Value.ToString("0.0")]</text>
-                }
+                <text>@L["{0} BPM", Chart.Song.Bpm.Value.ToString()]</text>
             }
         </span>
-        @if (Reasons.Count > 0 || IntensityReason != null)
+        @if (Reasons.Count > 0 || IntensityReasons.Count > 0)
         {
             <span class="chart-card-wl">@L["Matched on"]</span>
             <span class="chart-card-why">
@@ -78,9 +67,11 @@
                 {
                     <b>@reason.Label<var>@reason.Value</var></b>
                 }
-                @if (IntensityReason != null)
+                @* Intensity wears its own colour: a different KIND of reason, and it must
+                   not read as a skill. *@
+                @foreach (var reason in IntensityReasons)
                 {
-                    <b class="chart-card-why-intensity">@L["NPS"]<var>@IntensityReason</var></b>
+                    <b class="chart-card-why-intensity">@L[reason.Label]<var>@reason.Value</var></b>
                 }
             </span>
         }
@@ -94,12 +85,12 @@
     [Parameter, EditorRequired]
     public ChartSimilarityRecord Record { get; set; } = default!;
 
-    /// <summary>The anchor's NPS, so the intensity chip can say what it is comparing to.</summary>
+    /// <summary>The anchor's intensity, so the chips can say what they are comparing to.</summary>
     [Parameter]
-    public decimal? AnchorNps { get; set; }
+    public ChartIntensityFacts? AnchorIntensity { get; set; }
 
     [Parameter]
-    public decimal? Nps { get; set; }
+    public ChartIntensityFacts? Intensity { get; set; }
 
     /// <summary>Null when the chart has no video banked — the jacket is then inert, not a dead button.</summary>
     [Parameter]
@@ -136,12 +127,29 @@
             .ToArray();
 
     /// <summary>
-    ///     Intensity's own chip, in its own colour: a different KIND of reason, and it must
-    ///     not read as a skill. Both NPS values are needed to say anything honest — "NPS" on
-    ///     its own is a label, "10.7 → 11.9" is a fact the reader can judge.
+    ///     What intensity matched on: the same three dimensions the formula scores, each
+    ///     showing both sides. A dimension needs both ends to say anything honest — "NPS"
+    ///     alone is a label, "10.7 → 11.9" is a fact the reader can judge, and judging is
+    ///     the point. They are shown rather than filtered to the close ones: the anchor is
+    ///     a chart the reader knows, so two numbers tell them more than a verdict would.
     /// </summary>
-    internal string? IntensityReason =>
-        AnchorNps != null && Nps != null ? $"{AnchorNps.Value:0.0} → {Nps.Value:0.0}" : null;
+    internal IReadOnlyList<(string Label, string Value)> IntensityReasons
+    {
+        get
+        {
+            if (AnchorIntensity == null || Intensity == null) return Array.Empty<(string, string)>();
+            var reasons = new List<(string, string)>(3);
+            if (AnchorIntensity.Nps is { } anchorNps && Intensity.Nps is { } nps)
+                reasons.Add(("NPS", $"{anchorNps:0.0} → {nps:0.0}"));
+            if (AnchorIntensity.SustainFraction is { } anchorSus && Intensity.SustainFraction is { } sus)
+                reasons.Add(("Sustain", $"{Percent(anchorSus)} → {Percent(sus)}"));
+            if (AnchorIntensity.BurstFraction is { } anchorBurst && Intensity.BurstFraction is { } burst)
+                reasons.Add(("Bursts", $"{Percent(anchorBurst)} → {Percent(burst)}"));
+            return reasons;
+        }
+    }
+
+    private static string Percent(double fraction) => $"{(int)Math.Round(fraction * 100)}%";
 
     internal const double MinimumReasonCoverage = 0.15;
     internal const int MaximumReasons = 3;

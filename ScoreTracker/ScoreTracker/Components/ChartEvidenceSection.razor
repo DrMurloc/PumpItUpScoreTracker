@@ -20,54 +20,30 @@
 @if (_loaded)
 {
     <div class="chart-evidence">
-        @if (_letterPoints.Any())
-        {
-            <div class="chart-evidence-card">
-                <span class="chart-overline">@L["Letter grades on this board"]</span>
-                <p class="chart-evidence-caption">
-                    @if (Facet<LetterWallVerdict>() is { } wall)
-                    {
-                        <VerdictSentence Facet="wall"></VerdictSentence>
-                    }
-                    else
-                    {
-                        @L["How this board's letter grades distribute."]
-                    }
-                </p>
-                <div class="@ApexChartTheming.WrapperClass">
-                    <ApexChart TItem="LetterPoint" Options="_letterOptions" Height="240">
-                        <ApexPointSeries TItem="LetterPoint"
-                                         Items="_letterPoints"
-                                         Name="@L["Difficulty By Letter"]"
-                                         SeriesType="SeriesType.Line"
-                                         XValue="@(e => e.Label)"
-                                         YValue="@(e => (decimal)e.Percentile)"/>
-                    </ApexChart>
-                </div>
-            </div>
-        }
+        @* Passes and scores by competitive level lead: they are the two that answer "can I
+           do this, and what will I get". Letters and plates are supporting detail. *@
         @if (_hasScores)
         {
             <div class="chart-evidence-card">
-                <span class="chart-overline">@L["Plates earned"]</span>
+                <span class="chart-overline">@L["Passes by competitive level"]</span>
                 <p class="chart-evidence-caption">
-                    @if (Facet<PlateResidualVerdict>() is { } plates)
+                    @if (Facet<FirstPassBandVerdict>() is { } band)
                     {
-                        <VerdictSentence Facet="plates"></VerdictSentence>
+                        <VerdictSentence Facet="band"></VerdictSentence>
                     }
                     else
                     {
-                        @L["Plates earned by this board's clears."]
+                        @L["Where this chart's passes sit, by competitive level."]
                     }
                 </p>
                 <div class="@ApexChartTheming.WrapperClass">
-                    <ApexChart TItem="PlatePoint" Options="_plateOptions" Height="240">
-                        <ApexPointSeries TItem="PlatePoint"
-                                         Items="_platePoints"
-                                         Name="@L["Plates"]"
-                                         SeriesType="SeriesType.Bar"
-                                         XValue="@(e => e.Label)"
-                                         YValue="@(e => (decimal)e.Count)"/>
+                    <ApexChart TItem="LevelPoint" Options="_passOptions" Height="240">
+                        <ApexPointSeries TItem="LevelPoint"
+                                         Items="_passes"
+                                         Name="@L["Passes"]"
+                                         SeriesType="SeriesType.Area"
+                                         XValue="@(e => e.Level)"
+                                         YValue="@(e => (decimal)e.Value)"/>
                     </ApexChart>
                 </div>
             </div>
@@ -115,26 +91,49 @@
                     </ApexChart>
                 </div>
             </div>
+        }
+        @if (_letterPoints.Any())
+        {
             <div class="chart-evidence-card">
-                <span class="chart-overline">@L["Passes by competitive level"]</span>
+                <span class="chart-overline">@L["Letter grades on this board"]</span>
                 <p class="chart-evidence-caption">
-                    @if (Facet<FirstPassBandVerdict>() is { } band)
+                    @if (Facet<LetterWallVerdict>() is { } wall)
                     {
-                        <VerdictSentence Facet="band"></VerdictSentence>
+                        <VerdictSentence Facet="wall"></VerdictSentence>
                     }
                     else
                     {
-                        @L["Where this chart's passes sit, by competitive level."]
+                        @L["How this board's letter grades distribute."]
                     }
                 </p>
                 <div class="@ApexChartTheming.WrapperClass">
-                    <ApexChart TItem="LevelPoint" Options="_passOptions" Height="240">
-                        <ApexPointSeries TItem="LevelPoint"
-                                         Items="_passes"
-                                         Name="@L["Passes"]"
-                                         SeriesType="SeriesType.Area"
-                                         XValue="@(e => e.Level)"
-                                         YValue="@(e => (decimal)e.Value)"/>
+                    <ApexChart TItem="LetterPoint" Options="_letterOptions" Height="240">
+                        <ApexPointSeries TItem="LetterPoint"
+                                         Items="_letterPoints"
+                                         Name="@L["Difficulty By Letter"]"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="@(e => e.Label)"
+                                         YValue="@(e => (decimal)e.Percentile)"/>
+                    </ApexChart>
+                </div>
+            </div>
+        }
+        @if (_hasScores)
+        {
+            @* The caption describes the distribution and asserts nothing: plates mostly
+               restate scores, so a plate cannot tell you why a chart is hard. The shape
+               chip on the verdict card is the whole plate story. *@
+            <div class="chart-evidence-card">
+                <span class="chart-overline">@L["Plates earned"]</span>
+                <p class="chart-evidence-caption">@L["Plates earned by this board's clears."]</p>
+                <div class="@ApexChartTheming.WrapperClass">
+                    <ApexChart TItem="PlatePoint" Options="_plateOptions" Height="240">
+                        <ApexPointSeries TItem="PlatePoint"
+                                         Items="_platePoints"
+                                         Name="@L["Plates"]"
+                                         SeriesType="SeriesType.Bar"
+                                         XValue="@(e => e.Label)"
+                                         YValue="@(e => (decimal)e.Count)"/>
                     </ApexChart>
                 </div>
             </div>
@@ -199,7 +198,9 @@
             : letters.OrderBy(kv => kv.Key).Select(kv => new LetterPoint(kv.Key.GetName(), kv.Value)).ToArray();
         _letterOptions = ApexChartTheming.BaseOptions<LetterPoint>(palette);
         _letterOptions.Colors = new List<string> { palette.Primary };
-        _letterOptions.Yaxis = new List<YAxis> { new() { Min = 0.0, Max = 100.0 } };
+        // Percentiles are whole numbers; Apex floats its axis labels by default and prints
+        // them as 0.0000 / 25.0000.
+        _letterOptions.Yaxis = new List<YAxis> { new() { Min = 0.0, Max = 100.0, DecimalsInFloat = 0 } };
         _letterOptions.Stroke = new Stroke { Curve = Curve.Smooth };
 
         var scores = (await Mediator.Send(new GetPhoenixScoresForChartQuery(Chart.Id, Mix))).ToArray();

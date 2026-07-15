@@ -30,19 +30,33 @@
         <div class="chart-shelf-sort" role="group" aria-label="@L["Order by"]">
             @foreach (var option in SortOptions)
             {
-                <button type="button" aria-pressed="@(_sort == option ? "true" : "false")"
+                <button type="button" aria-pressed="@(_sort == option ? "true" : "false")" disabled="@_sorting"
                         @onclick="() => SetSort(option)">@L[Label(option)]</button>
             }
         </div>
         @* Personalization is a property of the difficulty question, not a fourth answer to
-           it — so it rides orthogonal to the lens rather than doubling the buttons. *@
-        <label class="chart-shelf-personal"
-               title="@(CanPersonalize ? null : L["Sign in to order by your own tier lists"].ToString())">
-            <input type="checkbox" checked="@_personalized" disabled="@(!CanPersonalize)"
-                   @onchange="OnPersonalizedChanged"/>
-            <span>@L["Personalized"]</span>
-        </label>
-        <span class="chart-shelf-hint">@L[Hint]</span>
+           it — so it rides orthogonal to the lens rather than doubling the buttons, and it
+           has nothing to modify when nothing is being ordered. *@
+        @if (_sort != ShelfSort.None)
+        {
+            <label class="chart-shelf-personal"
+                   title="@(CanPersonalize ? null : L["Sign in to order by your own tier lists"].ToString())">
+                <input type="checkbox" checked="@_personalized" disabled="@(!CanPersonalize || _sorting)"
+                       @onchange="OnPersonalizedChanged"/>
+                <span>@L["Personalized"]</span>
+            </label>
+        }
+        <span class="chart-shelf-hint">
+            @if (_sorting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="chart-shelf-spinner"></MudProgressCircular>
+                @L["Reordering…"]
+            }
+            else
+            {
+                @L[Hint]
+            }
+        </span>
     </div>
     @if (_filter != null)
     {
@@ -131,16 +145,18 @@
     [Parameter]
     public MixEnum Mix { get; set; } = MixEnum.Phoenix;
 
-    private sealed record Entry(ChartSimilarityRecord Record, Chart Chart, decimal? Nps, string? VideoUrl);
+    private sealed record Entry(ChartSimilarityRecord Record, Chart Chart, ChartIntensityFacts? Intensity,
+        string? VideoUrl);
 
     private sealed record ActiveFilter(string Label, string Value);
 
     private bool _loaded;
     private Guid _loadedFor;
-    private decimal? _anchorNps;
+    private ChartIntensityFacts? _anchorIntensity;
     private Chart? _anchor;
     private ShelfSort _sort = ShelfSort.PassDifficulty;
     private bool _personalized;
+    private bool _sorting;
     private ActiveFilter? _filter;
     private int? _compared;
     private IReadOnlyList<Entry> _all = Array.Empty<Entry>();
@@ -150,9 +166,13 @@
     // VideoUrl needs the @: it is a string parameter, and Blazor reads an unprefixed value
     // on one of those as literal text rather than an expression — silently, and only for
     // strings, which is why every other parameter here is fine without it.
+    // VideoUrl needs the @: it is a string parameter, and Blazor reads an unprefixed value
+    // on one of those as literal text rather than an expression — silently, and only for
+    // strings, which is why every other parameter here is fine without it.
     private RenderFragment Card(Entry entry) =>
-        @<SimilarChartCard Chart="entry.Chart" Record="entry.Record" Nps="entry.Nps" AnchorNps="_anchorNps"
-                           VideoUrl="@entry.VideoUrl" @key="entry.Chart.Id"></SimilarChartCard>;
+        @<SimilarChartCard Chart="entry.Chart" Record="entry.Record" Intensity="entry.Intensity"
+                           AnchorIntensity="_anchorIntensity" VideoUrl="@entry.VideoUrl"
+                           @key="entry.Chart.Id"></SimilarChartCard>;
 
     /// <summary>Only the personal lists need an account; the community ones are always there.</summary>
     private bool CanPersonalize => CurrentUser.IsLoggedIn;
@@ -215,12 +235,15 @@
         var analyses = await Mediator.Send(new GetChartStepAnalysesQuery(chartIds));
         var videos = (await Mediator.Send(new GetChartVideosQuery(edges.Select(e => e.ChartId))))
             .ToDictionary(v => v.ChartId, v => v.VideoUrl.ToString());
-        _anchorNps = analyses.GetValueOrDefault(ChartId)?.Nps;
         _anchor = charts.GetValueOrDefault(ChartId);
+        _anchorIntensity = _anchor == null
+            ? null
+            : ChartIntensityFacts.For(_anchor, analyses.GetValueOrDefault(ChartId));
 
         _all = edges
             .Where(e => charts.ContainsKey(e.ChartId))
-            .Select(e => new Entry(e, charts[e.ChartId], analyses.GetValueOrDefault(e.ChartId)?.Nps,
+            .Select(e => new Entry(e, charts[e.ChartId],
+                ChartIntensityFacts.For(charts[e.ChartId], analyses.GetValueOrDefault(e.ChartId)),
                 videos.GetValueOrDefault(e.ChartId)))
             .ToArray();
         await Split();
@@ -320,13 +343,32 @@
     {
         if (_sort == sort) return;
         _sort = sort;
-        await Split();
+        await Resort();
     }
 
     private async Task OnPersonalizedChanged(ChangeEventArgs e)
     {
         _personalized = e.Value is true;
-        await Split();
+        await Resort();
+    }
+
+    /// <summary>
+    ///     A difficulty lens costs one tier-list read per folder the shelf reaches — up to
+    ///     five round trips, and the personalized blend is the slow one. Say so and lock
+    ///     the controls, rather than letting the cards sit in the old order looking like
+    ///     the click missed.
+    /// </summary>
+    private async Task Resort()
+    {
+        _sorting = true;
+        try
+        {
+            await Split();
+        }
+        finally
+        {
+            _sorting = false;
+        }
     }
 
     private async Task ClearFilter()

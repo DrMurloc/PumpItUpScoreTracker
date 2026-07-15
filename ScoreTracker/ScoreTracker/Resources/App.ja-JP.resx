@@ -2928,17 +2928,8 @@
   <data name="Notes per Second" xml:space="preserve">
     <value>秒間ノーツ数</value>
   </data>
-  <data name="Sustain Time" xml:space="preserve">
-    <value>サステイン時間</value>
-  </data>
-  <data name="Time Under Tension" xml:space="preserve">
-    <value>負荷継続時間</value>
-  </data>
   <data name="Step analysis data from PIU Center" xml:space="preserve">
     <value>ステップ分析データ提供：PIU Center</value>
-  </data>
-  <data name="Share of chart sections featuring each skill" xml:space="preserve">
-    <value>各スキルが登場するチャートセクションの割合</value>
   </data>
   <data name="Show Skill Metric" xml:space="preserve">
     <value>スキル指標を表示</value>
@@ -4161,12 +4152,6 @@
   <data name="First passes cluster between competitive levels {0} and {1}." xml:space="preserve">
     <value>初クリアは競技レベル{0}〜{1}に集中しています。</value>
   </data>
-  <data name="Plates run worse than scores predict — a kill-spot signature." xml:space="preserve">
-    <value>プレートがスコアの予測より悪い——キルスポットの兆候です。</value>
-  </data>
-  <data name="Plates run cleaner than scores predict — smooth attrition." xml:space="preserve">
-    <value>プレートがスコアの予測よりきれい——じわじわ削られるタイプです。</value>
-  </data>
   <data name="Debuted in {0}." xml:space="preserve">
     <value>{0}で初登場。</value>
   </data>
@@ -4230,9 +4215,6 @@
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>まだ記録がありません——最初の挑戦を記録するとここが灯ります。</value>
   </data>
-  <data name="Prefilled from your best — saves to the score journal." xml:space="preserve">
-    <value>自己ベストで事前入力——スコアジャーナルに保存されます。</value>
-  </data>
   <data name="Score recorded for {0}" xml:space="preserve">
     <value>{0}のスコアを記録しました</value>
   </data>
@@ -4290,14 +4272,8 @@
   <data name="Pass rate" xml:space="preserve">
     <value>クリア率</value>
   </data>
-  <data name="Record score" xml:space="preserve">
-    <value>スコアを記録</value>
-  </data>
   <data name="The evidence" xml:space="preserve">
     <value>根拠データ</value>
-  </data>
-  <data name="Each graph answers one sentence." xml:space="preserve">
-    <value>各グラフは一つの文に答えます。</value>
   </data>
   <data name="Skill fingerprint" xml:space="preserve">
     <value>スキルの指紋</value>
@@ -4373,5 +4349,38 @@
   </data>
   <data name="Easiest to score first, by scoring level" xml:space="preserve">
     <value>スコアを出しやすい順 — スコアレベル基準</value>
+  </data>
+  <data name="Chart Stats" xml:space="preserve">
+    <value>譜面統計</value>
+  </data>
+  <data name="Chart analysis made possible by" xml:space="preserve">
+    <value>譜面分析の提供</value>
+  </data>
+  <data name="Reordering…" xml:space="preserve">
+    <value>並び替え中…</value>
+  </data>
+  <data name="Sustain" xml:space="preserve">
+    <value>持続</value>
+  </data>
+  <data name="Bursts" xml:space="preserve">
+    <value>連打</value>
+  </data>
+  <data name="Grind" xml:space="preserve">
+    <value>持続区間</value>
+  </data>
+  <data name="Spikes" xml:space="preserve">
+    <value>連打区間</value>
+  </data>
+  <data name="Share of the chart each pattern and demand covers" xml:space="preserve">
+    <value>各パターンと負荷が譜面に占める割合</value>
+  </data>
+  <data name="Open chart details" xml:space="preserve">
+    <value>譜面の詳細を開く</value>
+  </data>
+  <data name="Open {0}" xml:space="preserve">
+    <value>{0} を開く</value>
+  </data>
+  <data name="Show all {0} scores" xml:space="preserve">
+    <value>{0}件の記録をすべて表示</value>
   </data>
 </root>

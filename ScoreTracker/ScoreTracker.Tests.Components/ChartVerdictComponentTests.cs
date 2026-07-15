@@ -35,13 +35,17 @@ public sealed class ChartVerdictComponentTests : ComponentTestBase
     }
 
     [Fact]
-    public void PlateResidualSentenceFollowsTheSign()
+    public void PlatesAssertNothingInProse()
     {
+        // Plates mostly restate scores, so a plate cannot know why a chart is hard. This
+        // used to read "a kill-spot signature" / "smooth attrition"; the facet now lives
+        // only as the verdict card's shape chip, which describes the distribution and
+        // draws no conclusion from it.
         var spiky = RenderComponent<VerdictSentence>(p => p.Add(s => s.Facet, new PlateResidualVerdict(-2)));
         var smooth = RenderComponent<VerdictSentence>(p => p.Add(s => s.Facet, new PlateResidualVerdict(2)));
 
-        Assert.Contains("kill-spot signature", spiky.Markup);
-        Assert.Contains("smooth attrition", smooth.Markup);
+        Assert.Empty(spiky.Markup.Trim());
+        Assert.Empty(smooth.Markup.Trim());
     }
 
     [Fact]

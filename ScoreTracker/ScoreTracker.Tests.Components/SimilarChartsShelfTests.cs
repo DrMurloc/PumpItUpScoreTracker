@@ -314,15 +314,16 @@ public sealed class SimilarChartsShelfTests : TestContext
     }
 
     private IRenderedComponent<SimilarChartCard> RenderCard(string? videoUrl = null,
-        decimal? anchorNps = null, decimal? nps = null, params ChartSharedBadgeRecord[] badges)
+        ChartIntensityFacts? anchorIntensity = null, ChartIntensityFacts? intensity = null,
+        params ChartSharedBadgeRecord[] badges)
     {
         var record = Edge(0.8, badges);
         return RenderComponent<SimilarChartCard>(p => p
             .Add(c => c.Chart, ChartSlugsTests.BuildChart(record.ChartId, song: "Neighbour"))
             .Add(c => c.Record, record)
             .Add(c => c.VideoUrl, videoUrl)
-            .Add(c => c.AnchorNps, anchorNps)
-            .Add(c => c.Nps, nps));
+            .Add(c => c.AnchorIntensity, anchorIntensity)
+            .Add(c => c.Intensity, intensity));
     }
 
     [Fact]
@@ -436,14 +437,38 @@ public sealed class SimilarChartsShelfTests : TestContext
     }
 
     [Fact]
-    public void TheIntensityChipNamesBothSidesOrDoesNotRender()
+    public void IntensityChipsNameAllThreeDimensionsWithBothSides()
     {
-        // "NPS" alone is a label; "10.7 → 11.9" is a fact the reader can judge. Without
-        // both sides there is nothing honest to say.
-        var withBoth = RenderCard(anchorNps: 10.7m, nps: 11.9m, badges: Badge("bracket", 0.5));
-        Assert.Contains("10.7 → 11.9", withBoth.Markup);
+        // "NPS" alone is a label; "10.7 → 11.9" is a fact the reader can judge — and the
+        // anchor is a chart they know, so two numbers beat a verdict. Sustain and burst
+        // get the same treatment: they are what the formula actually scores.
+        var cut = RenderCard(
+            anchorIntensity: new ChartIntensityFacts(10.7m, 0.217, 0.250),
+            intensity: new ChartIntensityFacts(11.9m, 0.242, 0.148),
+            badges: Badge("bracket", 0.5));
 
-        var anchorOnly = RenderCard(anchorNps: 10.7m, badges: Badge("bracket", 0.5));
-        Assert.DoesNotContain("10.7", anchorOnly.Markup);
+        var chips = cut.FindAll(".chart-card-why-intensity").Select(e => e.TextContent.Trim()).ToArray();
+        Assert.Equal(new[] { "NPS10.7 → 11.9", "Sustain22% → 24%", "Bursts25% → 15%" }, chips);
+    }
+
+    [Fact]
+    public void AnIntensityDimensionWithOnlyOneSideSaysNothing()
+    {
+        // A dimension needs both ends to be a comparison at all.
+        var cut = RenderCard(
+            anchorIntensity: new ChartIntensityFacts(10.7m, 0.217, null),
+            intensity: new ChartIntensityFacts(11.9m, null, 0.148),
+            badges: Badge("bracket", 0.5));
+
+        var chips = cut.FindAll(".chart-card-why-intensity").Select(e => e.TextContent.Trim()).ToArray();
+        Assert.Equal(new[] { "NPS10.7 → 11.9" }, chips);
+    }
+
+    [Fact]
+    public void NoStepAnalysisMeansNoIntensityChips()
+    {
+        var cut = RenderCard(badges: Badge("bracket", 0.5));
+
+        Assert.Empty(cut.FindAll(".chart-card-why-intensity"));
     }
 }

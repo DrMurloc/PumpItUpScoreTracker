@@ -3490,6 +3490,31 @@ html.nav-away .page-dock,
     padding: 18px 0 8px;
 }
 
+/* The jacket column: art, then your score in the nook beneath it. */
+.chart-hero-jacket-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 300px;
+    flex: none;
+}
+
+/* The chart you are on stays in its song's lineup, ringed rather than removed — taking it
+   out made the row read as "the other ones" and hid where you sit in the ladder. */
+.chart-hero-sibling-current {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid var(--mix-primary);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 45%, transparent);
+}
+
+.chart-section-credit {
+    margin-top: 14px;
+    font-size: .74rem;
+    color: var(--mix-ink-muted);
+}
+
 .chart-jacket {
     position: relative;
     width: 300px;
@@ -3679,19 +3704,36 @@ html.nav-away .page-dock,
 }
 
 /* Your best + record inputs (the record island at Stage 3). */
+/* One card in the hero's nook, not two panels down the page: your score is the first thing
+   you look for, and recording is a mode of it rather than a separate destination. */
 .chart-record {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 16px;
-    margin: 20px 0;
-    scroll-margin-top: 70px;
-}
-
-.chart-record-best, .chart-record-inputs {
     background: var(--mix-surface);
     border: 1px solid rgba(255, 255, 255, .10);
     border-radius: 12px;
     padding: 14px 16px;
+}
+
+.chart-record-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.chart-record-edit {
+    flex: none;
+    color: var(--mix-ink-muted);
+}
+
+.chart-record-edit:hover {
+    color: var(--mix-primary);
+}
+
+.chart-record-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
 }
 
 .chart-record-score {

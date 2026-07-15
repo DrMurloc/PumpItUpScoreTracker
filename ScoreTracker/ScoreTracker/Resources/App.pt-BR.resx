@@ -2879,17 +2879,8 @@
   <data name="Notes per Second" xml:space="preserve">
     <value>Notas por segundo</value>
   </data>
-  <data name="Sustain Time" xml:space="preserve">
-    <value>Tempo sustentado</value>
-  </data>
-  <data name="Time Under Tension" xml:space="preserve">
-    <value>Tempo sob tensão</value>
-  </data>
   <data name="Step analysis data from PIU Center" xml:space="preserve">
     <value>Dados de análise de passos do PIU Center</value>
-  </data>
-  <data name="Share of chart sections featuring each skill" xml:space="preserve">
-    <value>Proporção de seções do chart com cada habilidade</value>
   </data>
   <data name="Show Skill Metric" xml:space="preserve">
     <value>Mostrar métrica de habilidade</value>
@@ -4106,12 +4097,6 @@
   <data name="First passes cluster between competitive levels {0} and {1}." xml:space="preserve">
     <value>Os primeiros passes se concentram entre os níveis competitivos {0} e {1}.</value>
   </data>
-  <data name="Plates run worse than scores predict — a kill-spot signature." xml:space="preserve">
-    <value>Os plates saem piores do que as pontuações preveem — assinatura de um ponto fatal.</value>
-  </data>
-  <data name="Plates run cleaner than scores predict — smooth attrition." xml:space="preserve">
-    <value>Os plates saem mais limpos do que as pontuações preveem — desgaste uniforme.</value>
-  </data>
   <data name="Debuted in {0}." xml:space="preserve">
     <value>Estreou em {0}.</value>
   </data>
@@ -4175,9 +4160,6 @@
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>Ainda sem pontuação — registre sua primeira tentativa e isto acende.</value>
   </data>
-  <data name="Prefilled from your best — saves to the score journal." xml:space="preserve">
-    <value>Preenchido com seu melhor — salva no diário de pontuações.</value>
-  </data>
   <data name="Score recorded for {0}" xml:space="preserve">
     <value>Pontuação registrada para {0}</value>
   </data>
@@ -4235,14 +4217,8 @@
   <data name="Pass rate" xml:space="preserve">
     <value>Taxa de passes</value>
   </data>
-  <data name="Record score" xml:space="preserve">
-    <value>Registrar pontuação</value>
-  </data>
   <data name="The evidence" xml:space="preserve">
     <value>As evidências</value>
-  </data>
-  <data name="Each graph answers one sentence." xml:space="preserve">
-    <value>Cada gráfico responde a uma frase.</value>
   </data>
   <data name="Skill fingerprint" xml:space="preserve">
     <value>Impressão digital de skills</value>
@@ -4318,5 +4294,38 @@
   </data>
   <data name="Easiest to score first, by scoring level" xml:space="preserve">
     <value>Do mais fácil de pontuar — pelo scoring level</value>
+  </data>
+  <data name="Chart Stats" xml:space="preserve">
+    <value>Estatísticas do chart</value>
+  </data>
+  <data name="Chart analysis made possible by" xml:space="preserve">
+    <value>Análise de charts possível graças a</value>
+  </data>
+  <data name="Reordering…" xml:space="preserve">
+    <value>Reordenando…</value>
+  </data>
+  <data name="Sustain" xml:space="preserve">
+    <value>Sustentado</value>
+  </data>
+  <data name="Bursts" xml:space="preserve">
+    <value>Rajadas</value>
+  </data>
+  <data name="Grind" xml:space="preserve">
+    <value>Sustentado</value>
+  </data>
+  <data name="Spikes" xml:space="preserve">
+    <value>Rajadas</value>
+  </data>
+  <data name="Share of the chart each pattern and demand covers" xml:space="preserve">
+    <value>Parte do chart que cada pattern e cada exigência cobre</value>
+  </data>
+  <data name="Open chart details" xml:space="preserve">
+    <value>Abrir detalhes do chart</value>
+  </data>
+  <data name="Open {0}" xml:space="preserve">
+    <value>Abrir {0}</value>
+  </data>
+  <data name="Show all {0} scores" xml:space="preserve">
+    <value>Ver todas as {0} pontuações</value>
   </data>
 </root>

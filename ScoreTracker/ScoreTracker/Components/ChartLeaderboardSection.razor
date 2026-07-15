@@ -57,7 +57,9 @@
                 @if (_visible < _scores.Count)
                 {
                     <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="ShowMore">
-                        @L["Show more of {0} scores", _scores.Count]
+                        @(ShowAllNext
+                            ? L["Show all {0} scores", _scores.Count]
+                            : L["Show more of {0} scores", _scores.Count])
                     </MudButton>
                 }
             </div>
@@ -81,6 +83,7 @@
     private readonly Dictionary<Guid, double> _levels = new();
     private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
     private int _visible = InitialPlaces;
+    private int _pagesShown;
     private int? _myPlace;
     private Guid _loadedFor;
 
@@ -132,9 +135,18 @@
         _loaded = true;
     }
 
+    /// <summary>
+    ///     Two pages in, someone is not browsing any more — they are looking for something.
+    ///     Offer the whole board rather than making them keep asking.
+    /// </summary>
+    private const int PagesBeforeShowAll = 2;
+
+    private bool ShowAllNext => _pagesShown >= PagesBeforeShowAll;
+
     private async Task ShowMore()
     {
-        _visible = Math.Min(_visible + PageSize, _scores.Count);
+        _pagesShown++;
+        _visible = ShowAllNext ? _scores.Count : Math.Min(_visible + PageSize, _scores.Count);
         await LoadDetails();
     }
 

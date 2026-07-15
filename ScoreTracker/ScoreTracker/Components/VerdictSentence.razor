@@ -31,12 +31,10 @@ else if (Facet is FirstPassBandVerdict band)
 {
     @L["First passes cluster between competitive levels {0} and {1}.", band.LowerLevel, band.UpperLevel]
 }
-else if (Facet is PlateResidualVerdict plates)
-{
-    @(plates.StepsVsExpected < 0
-        ? L["Plates run worse than scores predict — a kill-spot signature."]
-        : L["Plates run cleaner than scores predict — smooth attrition."])
-}
+@* PlateResidualVerdict deliberately has no sentence. It used to claim "a kill-spot
+   signature" / "smooth attrition"; plates mostly restate scores, so neither is something
+   a plate can know. The facet survives only as the verdict card's shape chip, which
+   describes the distribution without reading anything into it. *@
 else if (Facet is HistoryVerdict history)
 {
     @L["Debuted in {0}.", history.DebutMix.GetName()]

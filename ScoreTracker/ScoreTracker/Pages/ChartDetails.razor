@@ -10,6 +10,7 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
@@ -39,7 +40,14 @@
 @if (_chart != null)
 {
     <section class="chart-hero">
-        <ChartVideoPlayer Chart="_chart" @key="_chart.Id"></ChartVideoPlayer>
+        @* The jacket column: art, then your score in the nook beneath it. Keys carry the
+           panel's identity alongside the chart id — Blazor's sibling key lookup compares
+           key values only, so two keyed siblings sharing a chart id collide even when
+           they are different component types. *@
+        <div class="chart-hero-jacket-col">
+            <ChartVideoPlayer Chart="_chart" @key="(_chart.Id, nameof(ChartVideoPlayer))"></ChartVideoPlayer>
+            <ChartRecordPanel Chart="_chart" Mix="_mix" @key="(_chart.Id, nameof(ChartRecordPanel))"></ChartRecordPanel>
+        </div>
         <div class="chart-hero-id">
             <h1 class="chart-hero-title">@_chart.Song.Name</h1>
             <div class="chart-hero-sub">
@@ -50,12 +58,19 @@
                     <span>· @L["steps by {0}", _chart.StepArtist]</span>
                 }
             </div>
-            @if (_siblings.Any())
+            @if (_siblings.Count > 1)
             {
                 <div class="chart-hero-siblings">
                     @foreach (var sibling in _siblings)
                     {
-                        <a href="@($"/Chart/{sibling.Id}")"><DifficultyBubble Chart="sibling" Small="true"></DifficultyBubble></a>
+                        @if (sibling.Id == _chart.Id)
+                        {
+                            <span class="chart-hero-sibling-current"><DifficultyBubble Chart="sibling" Small="true"></DifficultyBubble></span>
+                        }
+                        else
+                        {
+                            <a href="@($"/Chart/{sibling.Id}")"><DifficultyBubble Chart="sibling" Small="true"></DifficultyBubble></a>
+                        }
                     }
                 </div>
             }
@@ -81,25 +96,14 @@
             </div>
             <ChartVerdictCard Facets="_facets"></ChartVerdictCard>
             <div class="chart-hero-actions">
-                @if (CurrentUser.IsLoggedIn)
-                {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
-                               OnClick="ScrollToRecord">@L["Record score"]</MudButton>
-                }
                 <MudLink Href="@PiuCenterUrl" Target="_blank" Typo="Typo.caption">@L["View full chart on PIU Center"]</MudLink>
             </div>
         </div>
     </section>
 
-    @* Keys carry the panel's identity alongside the chart id: Blazor's sibling key lookup
-       compares key values only, so two keyed siblings sharing a chart id collide even when
-       they're different component types. *@
-    <ChartRecordPanel Chart="_chart" Mix="_mix" @key="(_chart.Id, nameof(ChartRecordPanel))"></ChartRecordPanel>
-
     <section class="chart-section">
         <div class="chart-section-head">
-            <MudText Typo="Typo.h5">@L["The evidence"]</MudText>
-            <MudText Typo="Typo.caption" Class="chart-section-sub">@L["Each graph answers one sentence."]</MudText>
+            <MudText Typo="Typo.h5">@L["Chart Stats"]</MudText>
         </div>
         <ChartEvidenceSection Chart="_chart" Mix="_mix" Facets="_facets" @key="_chart.Id"></ChartEvidenceSection>
     </section>
@@ -115,17 +119,13 @@
                 }
             </div>
             <SkillCoverageBars Chips="_skillChips"></SkillCoverageBars>
+            @* Intensity reads as bars beside the skills because it is the same kind of
+               fact — a share of the chart — and the two together are what "what is this
+               chart made of" means. Grind and spikes rather than sustain and tension:
+               sustain is a subset of tension, so showing both counts the grind twice. *@
+            <IntensityBars Intensity="Intensity" Duration="_chart.Song.Duration"></IntensityBars>
             <div class="chart-skill-foot">
-                <span>
-                    @if (_analysis?.SustainTimeSeconds != null)
-                    {
-                        @L["Sustain Time"]<b> @_analysis.SustainTimeSeconds.Value.ToString("0")s</b>
-                    }
-                    @if (_analysis?.TimeUnderTensionSeconds != null)
-                    {
-                        <text> · </text>@L["Time Under Tension"]<b> @_analysis.TimeUnderTensionSeconds.Value.ToString("0")s</b>
-                    }
-                </span>
+                <span>@L["Share of the chart each pattern and demand covers"]</span>
                 <span>@L["Step analysis data from PIU Center"]</span>
             </div>
         </section>
@@ -155,24 +155,18 @@
             <MudText Typo="Typo.caption" Class="chart-section-sub">@L["From the similarity graph — evidence-weighted, rebuilt nightly."]</MudText>
         </div>
         <SimilarChartsShelf ChartId="_chart.Id" Mix="_mix" @key="_chart.Id"></SimilarChartsShelf>
+        <p class="chart-section-credit">
+            @L["Chart analysis made possible by"]
+            <MudLink Href="https://piucenter.com" Target="_blank" Typo="Typo.caption">PIU Center</MudLink>
+        </p>
     </section>
 
-    <ChartAdminPanel Chart="_chart" Mix="_mix" @key="(_chart.Id, nameof(ChartAdminPanel))"></ChartAdminPanel>
-
-    @if (CurrentUser.IsLoggedIn)
-    {
-        <PageDock>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="dock-cta"
-                       StartIcon="@Icons.Material.Filled.Edit" OnClick="ScrollToRecord">@L["Record score"]</MudButton>
-        </PageDock>
-    }
 }
 
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser
 @inject IUiSettingsAccessor UiSettings
-@inject IScrollManager ScrollManager
 @code {
     [Parameter]
     public Guid? ChartId { get; set; }
@@ -184,6 +178,8 @@
     private IReadOnlyList<Chart> _siblings = Array.Empty<Chart>();
     private IReadOnlyList<ChartSkillChipRecord> _skillChips = Array.Empty<ChartSkillChipRecord>();
     private ChartStepAnalysisRecord? _analysis;
+
+    private ChartIntensityFacts? Intensity => _chart == null ? null : ChartIntensityFacts.For(_chart, _analysis);
 
     private PopulationVerdict? Population => _facets.OfType<PopulationVerdict>().FirstOrDefault();
     private HistoryVerdict? History => _facets.OfType<HistoryVerdict>().FirstOrDefault();
@@ -227,8 +223,9 @@
 
         _chart = chart;
         _facets = await Mediator.Send(new GetChartVerdictQuery(chart.Id, _mix));
+        // The current chart stays in its own lineup — leaving it out makes the row read as
+        // "the other ones" and hides where you are in the song's ladder.
         _siblings = (await Mediator.Send(new GetChartsBySongQuery(_mix, chart.Song.Name)))
-            .Where(c => c.Id != chart.Id)
             .OrderBy(c => c.Type)
             .ThenBy(c => (int)c.Level)
             .ToArray();
@@ -237,11 +234,6 @@
             ? chips
             : Array.Empty<ChartSkillChipRecord>();
         _analysis = await Mediator.Send(new GetChartStepAnalysisQuery(chart.Id));
-    }
-
-    private async Task ScrollToRecord()
-    {
-        await ScrollManager.ScrollIntoViewAsync("#chart-record", ScrollBehavior.Smooth);
     }
 
     private Task GoToChart(Chart chart)

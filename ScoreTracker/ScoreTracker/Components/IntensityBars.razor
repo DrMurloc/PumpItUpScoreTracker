@@ -1,0 +1,100 @@
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components
+
+@* Intensity as coverage bars, mirroring the skill bars' shape (label / track / value) —
+   they answer the same question in the same units, so they read as one list. Own classes
+   and own styles rather than borrowing SkillCoverageBars': that component's <style> only
+   exists when it renders, and a chart can have step analysis without a single mapped skill.
+   Grind and spikes, never sustain and time-under-tension: sustain is a SUBSET of tension,
+   so showing both spends two rows saying the grind twice and leaves the spikes unnamed
+   (docs/design/chart-similarity.md §3.2). The seconds ride alongside the percentage
+   because a third of a two-minute song and a third of a five-minute one are not the same
+   experience. *@
+@if (Rows.Count > 0)
+{
+    <div class="chart-intensity-bars">
+        @foreach (var row in Rows)
+        {
+            <div class="chart-intensity-bar">
+                <span class="chart-intensity-bar-label">@L[row.Label]</span>
+                <span class="chart-intensity-bar-track">
+                    <span class="chart-intensity-bar-fill" style="width:@row.Percent%"></span>
+                </span>
+                <span class="chart-intensity-bar-value">@row.Value</span>
+            </div>
+        }
+    </div>
+}
+
+<style>
+    .chart-intensity-bars {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 4px 16px;
+        margin: 2px 0 8px;
+    }
+
+    .chart-intensity-bar {
+        display: grid;
+        grid-template-columns: 92px 1fr 76px;
+        align-items: center;
+        gap: 8px;
+        font-size: .75rem;
+    }
+
+    .chart-intensity-bar-label {
+        color: color-mix(in srgb, var(--mix-secondary) 60%, var(--mix-ink));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .chart-intensity-bar-track {
+        height: 5px;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--mix-secondary) 14%, transparent);
+        overflow: hidden;
+    }
+
+    .chart-intensity-bar-fill {
+        display: block;
+        height: 100%;
+        border-radius: 3px;
+        background: var(--mix-secondary);
+    }
+
+    .chart-intensity-bar-value {
+        text-align: right;
+        color: var(--mix-ink-muted);
+        font-variant-numeric: tabular-nums;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public ChartIntensityFacts? Intensity { get; set; }
+
+    [Parameter]
+    public TimeSpan Duration { get; set; }
+
+    private sealed record Row(string Label, int Percent, string Value);
+
+    private IReadOnlyList<Row> Rows
+    {
+        get
+        {
+            if (Intensity == null) return Array.Empty<Row>();
+            var rows = new List<Row>(2);
+            if (Intensity.SustainFraction is { } sustain) rows.Add(Bar("Grind", sustain));
+            if (Intensity.BurstFraction is { } burst) rows.Add(Bar("Spikes", burst));
+            return rows;
+        }
+    }
+
+    private Row Bar(string label, double fraction)
+    {
+        var percent = (int)Math.Round(fraction * 100);
+        var seconds = (int)Math.Round(Duration.TotalSeconds * fraction);
+        return new Row(label, Math.Clamp(percent, 0, 100), $"{percent}% ({seconds}s)");
+    }
+}

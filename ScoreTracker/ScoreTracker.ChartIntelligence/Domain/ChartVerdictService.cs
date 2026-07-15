@@ -18,6 +18,20 @@ internal static class ChartVerdictService
     /// <summary>The yield knee: where the population's average crosses SS+ (975k).</summary>
     internal const int YieldKneeScore = 975_000;
 
+    /// <summary>
+    ///     Passers a competitive-level bucket needs before its average may be read as the
+    ///     knee. Without it the knee is whatever the *lowest* level with a good score
+    ///     happens to be, and one player is enough to be a level's whole population — an
+    ///     S20 with a single competitive-level-12 passer reported that scores open up at
+    ///     12. It also filters the unrated: ~900 accounts carry a competitive level of 1.0
+    ///     or below (a "not enough data" floor, not a skill), and they scatter a passer or
+    ///     two across charts far above them.
+    ///     A healthy bucket in the range that matters runs 15–90 passers, so ten is a low
+    ///     bar that still demands a population. The knee only ever moves later, never
+    ///     earlier — this cannot invent a knee, only decline to believe one.
+    /// </summary>
+    internal const int YieldKneeMinimumPassesPerLevel = 10;
+
     /// <summary>An adjacent percentile jump this big is a letter wall.</summary>
     internal const double LetterWallMinimumJump = 0.25;
 
@@ -80,9 +94,19 @@ internal static class ChartVerdictService
 
     private static YieldKneeVerdict? YieldKnee(ChartVerdictInputs inputs)
     {
+        // Only levels a real population reached: an average over one or two players is a
+        // fact about those players, and this facet reads the FIRST level to cross, so the
+        // thinnest bucket on the curve is exactly the one that gets believed.
+        var populated = inputs.PassCountByLevel
+            .Where(l => l.Passes >= YieldKneeMinimumPassesPerLevel)
+            .Select(l => l.Level)
+            .ToHashSet();
         // The crossing must happen inside the observed range — a curve that starts
         // above (free for everyone we can see) or never arrives has no knee to report.
-        var ordered = inputs.ScoreAverageByLevel.OrderBy(l => l.Level).ToArray();
+        var ordered = inputs.ScoreAverageByLevel
+            .Where(l => populated.Contains(l.Level))
+            .OrderBy(l => l.Level)
+            .ToArray();
         if (ordered.Length < 2) return null;
         if (ordered[0].AverageScore >= YieldKneeScore) return null;
         var knee = ordered.FirstOrDefault(l => l.AverageScore >= YieldKneeScore);

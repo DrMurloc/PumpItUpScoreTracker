@@ -2850,17 +2850,8 @@
   <data name="Notes per Second" xml:space="preserve">
     <value>Nrgtes per Secrnd</value>
   </data>
-  <data name="Sustain Time" xml:space="preserve">
-    <value>Sustrgn Time</value>
-  </data>
-  <data name="Time Under Tension" xml:space="preserve">
-    <value>Time Undrgr Tensrgn</value>
-  </data>
   <data name="Step analysis data from PIU Center" xml:space="preserve">
     <value>Sterp analrgsis data from PIU Center, mrgl</value>
-  </data>
-  <data name="Share of chart sections featuring each skill" xml:space="preserve">
-    <value>Shrgre of chart sectrgns featrgring each skrgll</value>
   </data>
   <data name="Show Skill Metric" xml:space="preserve">
     <value>Shrgw Skrgll Metrgc</value>
@@ -4083,12 +4074,6 @@
   <data name="First passes cluster between competitive levels {0} and {1}." xml:space="preserve">
     <value>Mrgl pass mrglrgl {0} rgl {1}!</value>
   </data>
-  <data name="Plates run worse than scores predict — a kill-spot signature." xml:space="preserve">
-    <value>Mrgl plates grrrblgl — MRGLRGL SPOT!</value>
-  </data>
-  <data name="Plates run cleaner than scores predict — smooth attrition." xml:space="preserve">
-    <value>Mrgl plates rlglglgl — smoooorgl!</value>
-  </data>
   <data name="Debuted in {0}." xml:space="preserve">
     <value>Mrgl debut {0}!</value>
   </data>
@@ -4152,9 +4137,6 @@
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>Mrgl no scorlgl — MRGL RECORD!</value>
   </data>
-  <data name="Prefilled from your best — saves to the score journal." xml:space="preserve">
-    <value>Mrgl prefillrgl — journalgl!</value>
-  </data>
   <data name="Score recorded for {0}" xml:space="preserve">
     <value>Mrgl score {0} recordrgl!</value>
   </data>
@@ -4212,14 +4194,8 @@
   <data name="Pass rate" xml:space="preserve">
     <value>Passrglrate</value>
   </data>
-  <data name="Record score" xml:space="preserve">
-    <value>MRGL RECORD!</value>
-  </data>
   <data name="The evidence" xml:space="preserve">
     <value>Mrgl evidencergl</value>
-  </data>
-  <data name="Each graph answers one sentence." xml:space="preserve">
-    <value>Mrgl graph one sentencergl.</value>
   </data>
   <data name="Skill fingerprint" xml:space="preserve">
     <value>Skillrgl fingerprintrgl</value>
@@ -4295,5 +4271,38 @@
   </data>
   <data name="Easiest to score first, by scoring level" xml:space="preserve">
     <value>Mrgl easiest to score firstrgl — by scoring levelrgl</value>
+  </data>
+  <data name="Chart Stats" xml:space="preserve">
+    <value>Mrgl chart statzrgl</value>
+  </data>
+  <data name="Chart analysis made possible by" xml:space="preserve">
+    <value>Mrgl chart analysis made prglssible byrgl</value>
+  </data>
+  <data name="Reordering…" xml:space="preserve">
+    <value>Rerglrdering…</value>
+  </data>
+  <data name="Sustain" xml:space="preserve">
+    <value>Mrgl sustainrgl</value>
+  </data>
+  <data name="Bursts" xml:space="preserve">
+    <value>Mrgl burstsrgl</value>
+  </data>
+  <data name="Grind" xml:space="preserve">
+    <value>Mrgl grindrgl</value>
+  </data>
+  <data name="Spikes" xml:space="preserve">
+    <value>Mrgl spikesrgl</value>
+  </data>
+  <data name="Share of the chart each pattern and demand covers" xml:space="preserve">
+    <value>Mrgl share of the chart each pattern and demand crglversrgl</value>
+  </data>
+  <data name="Open chart details" xml:space="preserve">
+    <value>Mrgl open chart detailsrgl</value>
+  </data>
+  <data name="Open {0}" xml:space="preserve">
+    <value>Mrgl open {0}rgl</value>
+  </data>
+  <data name="Show all {0} scores" xml:space="preserve">
+    <value>Mrgl show all {0} scoresrgl</value>
   </data>
 </root>

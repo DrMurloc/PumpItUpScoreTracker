@@ -26,11 +26,20 @@ public sealed class ChartVerdictServiceTests
         MixEnum debutMix = MixEnum.Phoenix,
         IReadOnlyList<MixLevel>? mixLevels = null)
     {
+        // Averages and pass counts come from one population in production, so a level with
+        // a score average has passers behind it unless a test says otherwise. Without this
+        // every averages-only fixture would silently describe a curve nobody played.
+        passes ??= (averages ?? Array.Empty<LevelAverage>())
+            .Select(a => new LevelPasses(a.Level, PopulatedBucket))
+            .ToArray();
         return new ChartVerdictInputs(passTier, scoreTier, letters, averages ?? Array.Empty<LevelAverage>(),
-            passes ?? Array.Empty<LevelPasses>(), plates ?? Array.Empty<PhoenixPlate>(), medianClearScore,
+            passes, plates ?? Array.Empty<PhoenixPlate>(), medianClearScore,
             scoresTracked, passCount, skills ?? new Dictionary<Skill, double>(), tensionFraction, currentMix,
             debutMix, mixLevels ?? Array.Empty<MixLevel>());
     }
+
+    /// <summary>Comfortably over <see cref="ChartVerdictService.YieldKneeMinimumPassesPerLevel" />.</summary>
+    private const int PopulatedBucket = 40;
 
     [Fact]
     public void PassVsScoreFiresWhenEitherTierLeavesMedium()
@@ -97,6 +106,47 @@ public sealed class ChartVerdictServiceTests
         }));
 
         Assert.Equal(22, facets.OfType<YieldKneeVerdict>().Single().KneeLevel);
+    }
+
+    [Fact]
+    public void OneStrayPasserFarBelowTheFolderIsNotWhereScoresOpenUp()
+    {
+        // A real S20 reported that scores open up at competitive level 12, on the strength
+        // of a single passer there. The knee reads the FIRST level to cross, so the
+        // thinnest bucket on the curve is exactly the one that gets believed — and one
+        // player is enough to be a level's entire population. It also catches the unrated:
+        // ~900 accounts sit at competitive level 1.0 or below, a "not enough data" floor
+        // rather than a skill, and they scatter a passer or two across charts far above
+        // themselves.
+        var facets = ChartVerdictService.ComputeFacets(Inputs(
+            averages: new[]
+            {
+                new LevelAverage(12, 985_000),
+                new LevelAverage(20, 940_000),
+                new LevelAverage(21, 960_000),
+                new LevelAverage(22, 978_000)
+            },
+            passes: new[]
+            {
+                new LevelPasses(12, 1),
+                new LevelPasses(20, 40),
+                new LevelPasses(21, 55),
+                new LevelPasses(22, 70)
+            }));
+
+        Assert.Equal(22, facets.OfType<YieldKneeVerdict>().Single().KneeLevel);
+    }
+
+    [Fact]
+    public void AThinBucketCanDelayTheKneeButNeverInventOne()
+    {
+        // The guard only ever declines to believe a level — it cannot manufacture a
+        // crossing that the populated curve never makes.
+        var facets = ChartVerdictService.ComputeFacets(Inputs(
+            averages: new[] { new LevelAverage(20, 940_000), new LevelAverage(21, 950_000) },
+            passes: new[] { new LevelPasses(20, 40), new LevelPasses(21, 40) }));
+
+        Assert.Empty(facets.OfType<YieldKneeVerdict>());
     }
 
     [Fact]
@@ -226,7 +276,8 @@ public sealed class ChartVerdictServiceTests
             scoreTier: TierListCategory.Easy,
             letters: new Dictionary<ParagonLevel, double> { [ParagonLevel.SS] = 0.4, [ParagonLevel.SSS] = 0.8 },
             averages: new[] { new LevelAverage(20, 900_000), new LevelAverage(22, 980_000) },
-            passes: new[] { new LevelPasses(21, 25) },
+            // Passes sit on the levels the averages describe — they are one population.
+            passes: new[] { new LevelPasses(20, 25), new LevelPasses(22, 25) },
             plates: Enumerable.Repeat(PhoenixPlate.RoughGame, 50).ToArray(),
             medianClearScore: 975_000,
             scoresTracked: 115,

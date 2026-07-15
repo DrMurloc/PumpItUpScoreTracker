@@ -2808,17 +2808,8 @@
   <data name="Notes per Second" xml:space="preserve">
     <value>초당 노트 수</value>
   </data>
-  <data name="Sustain Time" xml:space="preserve">
-    <value>지속 시간</value>
-  </data>
-  <data name="Time Under Tension" xml:space="preserve">
-    <value>부하 지속 시간</value>
-  </data>
   <data name="Step analysis data from PIU Center" xml:space="preserve">
     <value>스텝 분석 데이터 제공: PIU Center</value>
-  </data>
-  <data name="Share of chart sections featuring each skill" xml:space="preserve">
-    <value>각 스킬이 나오는 채보 구간 비율</value>
   </data>
   <data name="Show Skill Metric" xml:space="preserve">
     <value>스킬 지표 표시</value>
@@ -4041,12 +4032,6 @@
   <data name="First passes cluster between competitive levels {0} and {1}." xml:space="preserve">
     <value>첫 클리어는 경쟁 레벨 {0}~{1} 사이에 몰려 있습니다.</value>
   </data>
-  <data name="Plates run worse than scores predict — a kill-spot signature." xml:space="preserve">
-    <value>플레이트가 점수 예측보다 나쁩니다 — 특정 구간에서 무너진다는 신호입니다.</value>
-  </data>
-  <data name="Plates run cleaner than scores predict — smooth attrition." xml:space="preserve">
-    <value>플레이트가 점수 예측보다 깨끗합니다 — 고르게 닳는 채보입니다.</value>
-  </data>
   <data name="Debuted in {0}." xml:space="preserve">
     <value>{0}에서 데뷔했습니다.</value>
   </data>
@@ -4110,9 +4095,6 @@
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>아직 기록이 없습니다 — 첫 시도를 기록하면 여기가 채워집니다.</value>
   </data>
-  <data name="Prefilled from your best — saves to the score journal." xml:space="preserve">
-    <value>최고 기록으로 미리 채워짐 — 점수 저널에 저장됩니다.</value>
-  </data>
   <data name="Score recorded for {0}" xml:space="preserve">
     <value>{0} 점수가 기록되었습니다</value>
   </data>
@@ -4170,14 +4152,8 @@
   <data name="Pass rate" xml:space="preserve">
     <value>클리어율</value>
   </data>
-  <data name="Record score" xml:space="preserve">
-    <value>점수 기록</value>
-  </data>
   <data name="The evidence" xml:space="preserve">
     <value>근거 데이터</value>
-  </data>
-  <data name="Each graph answers one sentence." xml:space="preserve">
-    <value>각 그래프는 한 문장에 답합니다.</value>
   </data>
   <data name="Skill fingerprint" xml:space="preserve">
     <value>스킬 지문</value>
@@ -4253,5 +4229,38 @@
   </data>
   <data name="Easiest to score first, by scoring level" xml:space="preserve">
     <value>점수 내기 쉬운 순 — 채점 레벨 기준</value>
+  </data>
+  <data name="Chart Stats" xml:space="preserve">
+    <value>채보 통계</value>
+  </data>
+  <data name="Chart analysis made possible by" xml:space="preserve">
+    <value>채보 분석 제공</value>
+  </data>
+  <data name="Reordering…" xml:space="preserve">
+    <value>정렬 중…</value>
+  </data>
+  <data name="Sustain" xml:space="preserve">
+    <value>지속</value>
+  </data>
+  <data name="Bursts" xml:space="preserve">
+    <value>폭타</value>
+  </data>
+  <data name="Grind" xml:space="preserve">
+    <value>지속 구간</value>
+  </data>
+  <data name="Spikes" xml:space="preserve">
+    <value>폭타 구간</value>
+  </data>
+  <data name="Share of the chart each pattern and demand covers" xml:space="preserve">
+    <value>각 패턴과 체력 요소가 채보에서 차지하는 비율</value>
+  </data>
+  <data name="Open chart details" xml:space="preserve">
+    <value>채보 상세 보기</value>
+  </data>
+  <data name="Open {0}" xml:space="preserve">
+    <value>{0} 열기</value>
+  </data>
+  <data name="Show all {0} scores" xml:space="preserve">
+    <value>{0}개 기록 모두 보기</value>
   </data>
 </root>
