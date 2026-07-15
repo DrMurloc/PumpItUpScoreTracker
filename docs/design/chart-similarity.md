@@ -272,6 +272,20 @@ independently-labelled charts (2026-07-15):
 | big burst moments | MilK S20 | 10.2 | .065 | .154 |
 | chill / "fake fast runs" | Hymn of Golden Glory S22 | 13.2 | .033 | .033 |
 
+**Grind and spikes are style; NPS is difficulty.** Measured across every Singles folder 15–25
+(2026-07-15) — this is *why* the decomposition carries information NPS cannot:
+
+| level | 15 | 18 | 21 | 23 | 25 |
+|---|---|---|---|---|---|
+| **NPS** | 7.81 | 10.10 | 11.74 | 13.52 | **14.46** |
+| **susFrac** | .140 | .126 | .144 | .141 | **.134** |
+| **burstFrac** | .205 | .159 | .184 | .120 | **.154** |
+
+**NPS nearly doubles; sustain and burst do not move.** An S15 is as likely to be 14% sustain as an
+S25 — how much of a chart is grind is a *decision the stepmaker made*, not a consequence of its
+level. That orthogonality is the whole reason `susFrac`/`burstFrac` earn dimensions of their own,
+and it is also why their z-score cohort is nearly a no-op (§9 — do **not** "fix" NPS the same way).
+
 **The two axes are orthogonal — measure both before concluding anything.** Conflict D21 and
 Viyella's D21 are the case that proves it (2026-07-15, real D21 badge data):
 
@@ -333,6 +347,8 @@ Measured on the Curiosity Overdrive ↔ BOOOM!! pair and the S20/D23 folders unl
 | **Meta as a score** | Filter-shaped. It out-discriminated Players *and* Difficulty in both S20 and D23 at a third of their weight — because binary facts have high variance, not because it knows anything. |
 | **Note count in intensity** | Andamiro pads charts toward a per-folder note-count norm, so within-cohort spread is tiny and z-scoring *divides by it*, amplifying differences the padding was designed to erase. Also `NPS × duration = note count` — never independent. |
 | **The level-affinity penalty** | §2. |
+| **Dropping the z-score cohort for sustain and burst** | **Over-engineered, correctly, and still not worth unwinding.** Measured across Singles 15–25 (2026-07-15), the mean shift per one-level step — the only distance the ±1 gate ever spans — is `NPS 0.512 SD · sustain 0.116 SD · burst 0.194 SD`. When two folders share a mean and a spread the folder terms cancel and `\|z_a − z_b\|` collapses to `\|x_a − x_b\| / σ`, so for sustain and burst the cohort lookup computes a division by a near-constant ~0.15. **But removing it buys nothing**: NPS still needs the cohort, so the folder's scalars are read regardless, and the read is the only thing that costs. It would change every score, invalidate §8's fixtures, and move a floor pinned inside a 0.013-wide window (§10). Real regression risk to delete a constant divisor. |
+| **A global SD for NPS** (the tempting corollary) | **No — this is the trap the row above sets.** "If sustain doesn't need the folder, nothing does" is exactly backwards. NPS climbs **7.81 → 14.46 monotonically** across S15–S25; its variance is *dominated* by between-folder differences, so a corpus-wide SD (~2.5) would flatten a real 2-NPS gap to 0.8σ where the folder's own ~1.3 correctly calls it 1.5σ. The folder is the honest ruler for NPS precisely *because* it is redundant for the other two. |
 | **Conflict ↔ Viyella's as the geometric's proof case** | This doc used to cite the pair as a false match rescued by coinciding NPS (10.7/10.5). It is not one — but *not* for the reason first recorded here, and the correction matters (§8, "the two axes"). **Intensity cannot separate them**: `s_sus .748 / s_burst .742 / s_nps .953`, and old-intensity .787 → new-intensity .783, so the decomposition and the geometric both find nothing to catch. **Skill separates them decisively**: `S_skill = .6498`, and since skill carries three-quarters of the weight the full V1 score is **.6808**, not the ~.78 an intensity-only reading implies. Measuring one signal and generalizing to "the formula" is the mistake to avoid here. Use Slapstick Parfait ↔ Horang Pungryuga (§3.2) as the *geometric's* proof case, because that pair is one; this pair proves something else. |
 | **A BPM plateau (±10, decay beyond)** | Nominal BPM is **noise**: slow songs multiply. Altale 90 BPM → **12.0 nps**; Glimmer Gleam 85 → 8.8; TRICKL4SH 220 → 11.5 — all within ~2 of Rush-More's 10.7, while raw BPM said 60–75 apart. A ±10 band would have deleted two owner-approved matches and promoted THE REVOLUTION (exactly 160 BPM, *"absolutely not"*). **NPS already carries it.** BPM survives only as a filter. |
 

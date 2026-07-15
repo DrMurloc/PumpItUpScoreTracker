@@ -247,7 +247,15 @@ internal static class ChartSimilarityCalculator
     /// <summary>
     ///     Step-analysis scalars z-scored within each chart's own (type, level) cohort —
     ///     the pool is one type, so the cohort is the level group. A cohort with no
-    ///     spread pins z to 0 (everyone is the cohort norm). Z-scores here and absolute
+    ///     spread pins z to 0 (everyone is the cohort norm).
+    ///     **The cohort is here for NPS.** It climbs 7.81 → 14.46 across S15–S25, so its
+    ///     variance is dominated by between-folder differences and only the folder's own
+    ///     spread is an honest ruler — a corpus-wide sd would flatten a real gap to
+    ///     nothing. Sustain and burst do not move with level at all (0.116 and 0.194 sd
+    ///     per level step, against NPS's 0.512), so for them this is very nearly a
+    ///     division by a constant. That is measured, deliberate, and **not** an invitation
+    ///     to give NPS the same treatment — see the two rows in chart-similarity.md §9.
+    ///     Z-scores here and absolute
     ///     coverage in skill is deliberate: low intensity is a property (two charts both
     ///     unusually chill for their level genuinely are alike), where low badge coverage
     ///     is absence (two charts both lacking brackets are not thereby alike). Note count
