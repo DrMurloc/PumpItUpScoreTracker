@@ -48,8 +48,8 @@ public sealed class ScoreImportTests : IAsyncLifetime
         await import.ClickAsync();
 
         // Two of the captured best scores streamed into the results table. The scores are the
-        // completion signal: the import runs in the background and reports status only until the
-        // first score lands, so a status string would be raced by the very thing it announces.
+        // completion signal — waiting on the status text instead would tie this to whatever
+        // wording the import happens to report, which is what broke it last time.
         await Expect(_page.GetByText("999,231").First)
             .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 120_000 });
         await Expect(_page.GetByText("1,000,000").First)
