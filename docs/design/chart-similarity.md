@@ -369,6 +369,31 @@ Measured on the Curiosity Overdrive ↔ BOOOM!! pair and the S20/D23 folders unl
 
 ## 11. Future upgrades (recorded, out of scope)
 
+- **A projected passing level** (a `ChartPassingLevel` to sit beside `ChartScoringLevel`, mapping to
+  real levels the way scoring level does — *"there are 23s that pass like a 20"*). **Owner revisits
+  this roughly every six months; it dies for the same reasons each time. Read this before spending
+  another round on it.**
+  - **Don't interpolate the pass total.** `TierListSaga` builds the Pass Count list from
+    `Σ log(28 − competitiveLevel)` over passers — a *sum*, so it scales with how many people played
+    the chart. Scoring level interpolates an *average* score, which is why popularity cancels there
+    and would not here. Popularity is its own tier list for a reason.
+  - **Nor does a rate fix it.** `P(pass | competitive level)` from `IsBroken` looks native to the
+    level scale and needs no conversion constant — but every objection below lives in its
+    denominator, which is "players who have a record on this chart", and that set is never a random
+    sample.
+  - **Three biases, all owner-raised, all structural:** broken-score import is optional, so a fail
+    exists only if someone bothered to upload it; retired players leave *negative space* on charts
+    released after they quit, so a new chart is measured against a different population than an old
+    one; and popularity picks who plays an obscure chart at all (enthusiasts), which reads as easy.
+  - **And the signal is poisoned at the source, which is the one that actually settles it:**
+    players walk off the pads to kill a PG attempt the moment they drop a Great. A broken record
+    from a strong player chasing perfection is *indistinguishable* from one from a player who
+    cannot clear the chart. Unlike the other three, **collecting better data prospectively does not
+    fix this** — the measurement itself is ambiguous.
+  - So the fix is not a better statistic over this data. It is different data, or a model that
+    estimates the selection rather than assuming it away — its own project.
+  - **Meanwhile the Pass Count tier list is a "good enough" state (owner, 2026-07-15)**, and the
+    similarity gate uses scoring level, which is measured and has none of this.
 - **Player type** — the prerequisite for Players returning. Needs patterns that identify *what kind
   of player* is correlating; its own project.
 - **`top3:` as a bonus** — see §9. High precision, low recall; can confirm a match, never refute.
