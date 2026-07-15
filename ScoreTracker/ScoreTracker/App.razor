@@ -22,11 +22,18 @@
        MudThemeProvider's own vars only arrive with one. *@
     <style>@((MarkupString)MixThemes.CssVariablesFor(_shell.ThemeMix))</style>
     @* A real title for readers that run no JS. Blazor removes it on boot and HeadOutlet takes
-       over, so <PageTitle> keeps working unchanged. *@
-    <title>@L["PIU Scores"]</title>
-    @* Interactive, and not prerendered — matching every <PageTitle> in the app. Static, it would
-       only ever see static components and every page's title would read "PIU Scores". *@
-    <HeadOutlet @rendermode="Interactive" />
+       over, so <PageTitle> keeps working unchanged. A static page owns its whole head through
+       the static HeadOutlet below — emitting the fallback too would put two <title>s in the
+       document, and crawlers pick one at random. *@
+    @if (HttpContext.AcceptsInteractiveRouting())
+    {
+        <title>@L["PIU Scores"]</title>
+    }
+    @* Follows the page: interactive (not prerendered) for circuit pages, so every <PageTitle>
+       behaves as it always has; static on an [ExcludeFromInteractiveRouting] page, where it
+       renders the page's <PageTitle>/<HeadContent> as real HTML — the SEO surface
+       (docs/design/weekly-charts-overhaul.md §3.1). *@
+    <HeadOutlet @rendermode="PageRenderMode" />
     <script type="text/javascript">
         (function(c,l,a,r,i,t,y){
             c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -75,7 +82,7 @@
 <ShellImportPulse @rendermode="Interactive" />
 
 <main class="shell-main">
-    <Routes @rendermode="Interactive" CurrentMix="_shell.CurrentMix" />
+    <Routes @rendermode="PageRenderMode" CurrentMix="_shell.CurrentMix" />
 </main>
 
 <div id="blazor-error-ui">
@@ -108,6 +115,14 @@
         new InteractiveServerRenderMode(prerender: false);
 
     [CascadingParameter] private HttpContext HttpContext { get; set; } = null!;
+
+    // The per-page opt-out (weekly-charts-overhaul.md §3.1): a page carrying
+    // [ExcludeFromInteractiveRouting] renders statically — real HTML, live HttpContext, no
+    // circuit for the page region (the shell's islands above keep theirs) — and the interactive
+    // router full-loads across its boundary. Every other page resolves to Interactive exactly
+    // as before. Null is "static", not a default: render once, never prerender.
+    private IComponentRenderMode? PageRenderMode =>
+        HttpContext.AcceptsInteractiveRouting() ? Interactive : null;
 
     private ShellViewModel _shell = null!;
 
