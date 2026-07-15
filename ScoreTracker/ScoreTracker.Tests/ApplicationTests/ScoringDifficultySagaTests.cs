@@ -1,5 +1,7 @@
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Application;
+using ScoreTracker.Tests.TestData;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -26,14 +28,24 @@ public sealed class ScoringDifficultySagaTests
         Mock<IPlayerStatsReader>? playerStats = null,
         Mock<IChartScoringLevelRepository>? scoringLevels = null)
     {
-        charts ??= new Mock<IChartRepository>();
-        charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
-                It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<Chart>());
-        scores ??= new Mock<IScoreReader>();
-        scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
+        // Defaults are for the ports a test did not bring — a caller that passes its own mock
+        // has already said what it wants back, and stubbing over it would silently win.
+        if (charts is null)
+        {
+            charts = new Mock<IChartRepository>();
+            charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
+                    It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<Chart>());
+        }
+
+        if (scores is null)
+        {
+            scores = new Mock<IScoreReader>();
+            scores.Setup(s => s.GetScores(MixEnum.Phoenix, It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
+        }
+
         playerStats ??= new Mock<IPlayerStatsReader>();
         return new ScoringDifficultySaga(charts.Object, scores.Object, playerStats.Object,
             scoringLevels?.Object ?? new Mock<IChartScoringLevelRepository>().Object);
@@ -95,5 +107,29 @@ public sealed class ScoringDifficultySagaTests
         scoringLevels.Verify(c => c.SaveScoringLevel(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<double?>(),
                 It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task AnUnmeasuredChartScoresAtItsListedLevel()
+    {
+        // ~13% of the competitive range has no measured scoring level. Returning nothing made
+        // every caller invent its own answer; the listed level is what the chart claims about
+        // itself, so it is the honest prior until scores disagree.
+        var measured = new ChartBuilder().WithLevel(23).Build();
+        var unmeasured = new ChartBuilder().WithLevel(21).Build();
+        var charts = new Mock<IChartRepository>();
+        charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { measured, unmeasured });
+        var scoringLevels = new Mock<IChartScoringLevelRepository>();
+        scoringLevels.Setup(s => s.GetScoringLevels(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, double> { [measured.Id] = 22.3 });
+
+        var result = await Build(charts: charts, scoringLevels: scoringLevels)
+            .Handle(new GetChartScoringLevelsQuery(), CancellationToken.None);
+
+        // The measured one keeps its measurement — the fallback fills gaps, it never overwrites.
+        Assert.Equal(22.3, result[measured.Id]);
+        Assert.Equal(21, result[unmeasured.Id]);
     }
 }
