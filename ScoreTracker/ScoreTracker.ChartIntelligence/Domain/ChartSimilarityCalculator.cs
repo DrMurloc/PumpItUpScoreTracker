@@ -33,8 +33,26 @@ internal static class ChartSimilarityCalculator
 
     internal const double IntensityWeight = 0.25;
 
-    /// <summary>NPS, sustain fraction, time-under-tension fraction.</summary>
+    /// <summary>NPS, sustain fraction, burst fraction — in <see cref="IntensityWeights" /> order.</summary>
     internal const int IntensityDimensions = 3;
+
+    /// <summary>
+    ///     The grind and the spikes weigh the same: they are the two halves of one
+    ///     decomposition and the taxonomy turns on both ends of it — Gargoyle is all
+    ///     sustain, Viyella's is all spikes, neither is the senior partner. NPS trails
+    ///     because it is the corroborating axis rather than a verdict: real evidence (it
+    ///     saw through Altale's 90 BPM and TRICKL4SH's 220 when nominal BPM had them
+    ///     60–75 apart) but the dimension most likely to coincide by accident.
+    /// </summary>
+    private static readonly double[] IntensityWeights = { 0.20, 0.40, 0.40 };
+
+    /// <summary>
+    ///     How many cohort sigma of distance on one dimension takes it from "identical" to
+    ///     "nothing in common". Typical |Δz| is ~0.6, so this uses only a fifth of its
+    ///     range — provisional, and a one-constant retune once a calibration run says what
+    ///     the score distribution actually looks like.
+    /// </summary>
+    internal const double IntensityK = 3.0;
 
     /// <summary>
     ///     Applied to badge coverage before the distance, so what a chart is built on
@@ -144,7 +162,10 @@ internal static class ChartSimilarityCalculator
     ///     is deliberately not a dimension: charts are padded toward a per-folder
     ///     note-count norm, so the within-cohort spread is tiny and dividing by it would
     ///     amplify differences the padding was designed to erase — and NPS already carries
-    ///     density.
+    ///     density. Nor is time under tension: sustain is a subset of it, so pairing the
+    ///     two counted the grind twice and left the spikes with no dimension at all —
+    ///     <see cref="ChartSimilarityFeatures.BurstFraction" /> is the half that was
+    ///     missing.
     /// </summary>
     private static IReadOnlyDictionary<Guid, double?[]> ComputeIntensityZScores(
         IReadOnlyList<ChartSimilarityFeatures> pool)
@@ -174,18 +195,34 @@ internal static class ChartSimilarityCalculator
             {
                 0 => c.Nps,
                 1 => c.SustainFraction,
-                _ => c.TensionFraction
+                _ => c.BurstFraction
             };
         }
     }
 
+    /// <summary>
+    ///     Weighted geometric mean of the per-dimension similarities, renormalized over
+    ///     whichever dimensions both charts have. Geometric for the same reason the outer
+    ///     combination is: averaging lets the dimensions that agree pay for the one that
+    ///     does not. Slapstick Parfait and Horang Pungryuga (D21) run at the same 10.7 NPS
+    ///     over near-identical sustain — .109 against .095 — and one of them spends half
+    ///     its length bursting (.118 against .516). Averaging called that pair 0.75 and
+    ///     shipped it; in log space the dead burst dimension is not something a matching
+    ///     NPS can buy back.
+    /// </summary>
     private static double? IntensitySimilarity(double?[] zA, double?[] zB)
     {
-        var deltas = new List<double>(IntensityDimensions);
-        for (var dimension = 0; dimension < zA.Length; dimension++)
-            if (zA[dimension] is { } a && zB[dimension] is { } b)
-                deltas.Add(Math.Abs(a - b));
-        if (deltas.Count == 0) return null;
-        return Math.Clamp(1 - deltas.Average() / 3.0, 0, 1);
+        var logSum = 0.0;
+        var weightTotal = 0.0;
+        for (var dimension = 0; dimension < IntensityDimensions; dimension++)
+        {
+            if (zA[dimension] is not { } a || zB[dimension] is not { } b) continue;
+            var similarity = Math.Clamp(1 - Math.Abs(a - b) / IntensityK, 0, 1);
+            var weight = IntensityWeights[dimension];
+            logSum += weight * Math.Log(Math.Max(similarity, SignalFloor));
+            weightTotal += weight;
+        }
+
+        return weightTotal == 0 ? null : Math.Exp(logSum / weightTotal);
     }
 }

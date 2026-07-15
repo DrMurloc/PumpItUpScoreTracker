@@ -12,6 +12,11 @@ namespace ScoreTracker.ChartIntelligence.Domain;
 ///     vocabulary. SongName is carried only to gate siblings out; Level only to bound
 ///     reach and to pick the z-score cohort. The scalars are null when piucenter banked
 ///     no step analysis, which costs the chart its edges — both signals are mandatory.
+///     SustainFraction and BurstFraction are the two halves of time under tension — the
+///     grind and the spikes — as fractions of the song's length. They are disjoint by
+///     construction, which is the point: sustain is a subset of tension, so carrying
+///     tension itself alongside sustain would count the grind twice and leave the spikes
+///     with no dimension of their own.
 /// </summary>
 [ExcludeFromCodeCoverage]
 internal sealed record ChartSimilarityFeatures(
@@ -21,4 +26,4 @@ internal sealed record ChartSimilarityFeatures(
     IReadOnlyDictionary<string, double> BadgeCoverage,
     double? Nps,
     double? SustainFraction,
-    double? TensionFraction);
+    double? BurstFraction);

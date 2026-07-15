@@ -18,10 +18,10 @@ public sealed class ChartSimilarityCalculatorTests
         IReadOnlyDictionary<string, double>? badges = null,
         double? nps = null,
         double? sustain = null,
-        double? tension = null)
+        double? burst = null)
     {
         return new ChartSimilarityFeatures(id, Name.From(song), level,
-            badges ?? new Dictionary<string, double>(), nps, sustain, tension);
+            badges ?? new Dictionary<string, double>(), nps, sustain, burst);
     }
 
     [Fact]
@@ -161,6 +161,51 @@ public sealed class ChartSimilarityCalculatorTests
         Assert.DoesNotContain(anchorEdges, e => e.SimilarChartId == neighbors[8].ChartId);
         Assert.Equal(anchorEdges.OrderByDescending(e => e.Score).Select(e => e.SimilarChartId),
             anchorEdges.Select(e => e.SimilarChartId));
+    }
+
+    [Fact]
+    public void AMatchingNpsAndSustainCannotRescueAMismatchedBurstProfile()
+    {
+        // Eight charts cluster at a 0.10 burst fraction; the ninth spends half its length
+        // bursting. Every NPS and every sustain fraction is identical, so those two
+        // dimensions read a perfect 1.0 and only burst separates the outlier — at 3.18
+        // cohort sigma, which clamps its similarity to zero. The geometric mean returns
+        // 0.1584893, where a flat 20/40/40 arithmetic mean over the very same dimensions
+        // reads 0.60 and would ship the pair. This is the real D21 shape: Slapstick
+        // Parfait and Horang Pungryuga run at the same 10.7 NPS over .109-vs-.095
+        // sustain and .118-vs-.516 burst, and measured 0.1558 against arithmetic's 0.5831.
+        var badges = new Dictionary<string, double> { ["bracket"] = 1.0 };
+        var cluster = Enumerable.Range(1, 8).Select(i => Features(Guid.NewGuid(), $"Song {i}", level: 21,
+            badges: badges, nps: 10, sustain: 0.10, burst: 0.10)).ToArray();
+        var outlier = Features(Guid.NewGuid(), "Horang-like", level: 21,
+            badges: badges, nps: 10, sustain: 0.10, burst: 0.50);
+
+        var edges = ChartSimilarityCalculator.BuildEdges(cluster.Append(outlier).ToArray());
+
+        var anchor = edges[cluster[0].ChartId];
+        var toOutlier = Assert.Single(anchor, e => e.SimilarChartId == outlier.ChartId);
+        Assert.Equal(0.1584893192, toOutlier.IntensityScore, Tolerance);
+        Assert.Equal(0.6309573445, toOutlier.Score, Tolerance);
+        // Its clustered siblings are identical on all three dimensions.
+        Assert.All(anchor.Where(e => e.SimilarChartId != outlier.ChartId),
+            e => Assert.Equal(1.0, e.IntensityScore, Tolerance));
+    }
+
+    [Fact]
+    public void IntensityRenormalizesOverTheDimensionsThePairActuallyHas()
+    {
+        // A song with no duration banked has no sustain or burst fraction, so NPS carries
+        // the signal alone and takes the full weight rather than two-tenths of it: |Δz| = 2
+        // → 1 − 2/3 = 0.3333, not 0.3333 diluted by two absent dimensions.
+        var a = Features(Guid.NewGuid(), "Song A",
+            badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 8);
+        var b = Features(Guid.NewGuid(), "Song B",
+            badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 12);
+
+        var edges = ChartSimilarityCalculator.BuildEdges(new[] { a, b });
+
+        var edge = Assert.Single(edges[a.ChartId]);
+        Assert.Equal(0.3333333333, edge.IntensityScore, Tolerance);
     }
 
     [Fact]

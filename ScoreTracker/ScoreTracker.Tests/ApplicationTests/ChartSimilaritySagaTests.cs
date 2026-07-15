@@ -54,11 +54,10 @@ public sealed class ChartSimilaritySagaTests
             .ReturnsAsync(analyses);
     }
 
-    private static ChartStepAnalysisRecord Analysis(decimal nps)
+    private static ChartStepAnalysisRecord Analysis(decimal nps, decimal? sustain = null, decimal? tension = null)
     {
         return new ChartStepAnalysisRecord(Array.Empty<string>(), new Dictionary<string, decimal>(),
-            nps, SustainTimeSeconds: null, TimeUnderTensionSeconds: null, DifficultyPrediction: null,
-            ExternalKey: null);
+            nps, sustain, tension, DifficultyPrediction: null, ExternalKey: null);
     }
 
     [Fact]
@@ -117,6 +116,40 @@ public sealed class ChartSimilaritySagaTests
         _similarity.Verify(s => s.ReplaceEdges(It.IsAny<MixEnum>(), coOp.Id,
             It.IsAny<IReadOnlyList<ChartSimilarityEdge>>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheSpikesAreTheTensionThatIsNotGrind()
+    {
+        // Two 120-second charts spending the identical 60 seconds under tension, composed
+        // oppositely: A never lets up (sustain 60 of 60, the Gargoyle - FULL SONG - D25
+        // shape) and B is nothing but spikes (sustain 0, so all 60 seconds are burst).
+        // Time under tension cannot tell them apart — it is the same number — which is
+        // exactly why carrying it alongside sustain counted the grind twice and gave the
+        // spikes no dimension at all. On (nps, susFrac, tensionFrac) this pair read
+        // 0.7778, its identical tension arguing the two were alike; decomposed, it reads
+        // 0.4152.
+        var grind = new ChartBuilder().WithSongName("Grind").WithType(ChartType.Double).WithLevel(21).Build();
+        var spikes = new ChartBuilder().WithSongName("Spikes").WithType(ChartType.Double).WithLevel(21).Build();
+        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { grind, spikes });
+        SetupBadges(new Dictionary<Guid, IReadOnlyDictionary<string, double>>
+        {
+            [grind.Id] = new Dictionary<string, double> { ["bracket"] = 1.0 },
+            [spikes.Id] = new Dictionary<string, double> { ["bracket"] = 1.0 }
+        });
+        SetupStepAnalyses(new Dictionary<Guid, ChartStepAnalysisRecord>
+        {
+            [grind.Id] = Analysis(10, sustain: 60, tension: 60),
+            [spikes.Id] = Analysis(10, sustain: 0, tension: 60)
+        });
+
+        await BuildSaga().Consume(Context());
+
+        _similarity.Verify(s => s.ReplaceEdges(MixEnum.Phoenix, grind.Id,
+            It.Is<IReadOnlyList<ChartSimilarityEdge>>(e =>
+                e.Count == 1 && Math.Abs(e[0].IntensityScore - 0.4152436465) < 1e-6),
+            Now, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

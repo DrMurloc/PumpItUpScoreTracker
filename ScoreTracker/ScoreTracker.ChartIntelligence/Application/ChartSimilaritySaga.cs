@@ -98,6 +98,14 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
             return seconds != null && durationSeconds > 0 ? (double)seconds.Value / durationSeconds : null;
         }
 
+        // The spikes are the tension that isn't grind. Sustain is a subset of time under
+        // tension — Gargoyle - FULL SONG - D25 sits at the boundary with sustain 362 of
+        // 362 — so the remainder is what's left once the sustained runs are accounted for,
+        // and it can't go below zero however the crawl rounds.
+        var burstSeconds = analysis?.TimeUnderTensionSeconds != null && analysis.SustainTimeSeconds != null
+            ? Math.Max(0, analysis.TimeUnderTensionSeconds.Value - analysis.SustainTimeSeconds.Value)
+            : (decimal?)null;
+
         return new ChartSimilarityFeatures(
             chart.Id,
             chart.Song.Name,
@@ -105,6 +113,6 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
             badges,
             (double?)analysis?.Nps,
             Fraction(analysis?.SustainTimeSeconds),
-            Fraction(analysis?.TimeUnderTensionSeconds));
+            Fraction(burstSeconds));
     }
 }

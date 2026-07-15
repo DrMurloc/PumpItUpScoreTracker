@@ -134,12 +134,23 @@ a pair has, so a chart with no duration still scores on NPS alone.
 burst no dimension of its own. `susFrac` + `burstFrac` are the two halves, independent, and they
 map onto the owner's taxonomy directly (§8).
 
-**Why geometric, and why NPS is only 0.25.** NPS is **orthogonal** to the stamina axis, not
+**Why geometric, and why NPS is only 0.20.** NPS is **orthogonal** to the stamina axis, not
 redundant with it — and that is a feature, not a reason to drop it. It is what correctly saw
 through Altale's 90 BPM (12.0 nps) and TRICKL4SH's 220 BPM (11.5 nps) when nominal BPM said they
-were 60–75 apart. But averaging two orthogonal axes collapses **both**: Conflict D21 (sustain,
-TUT .467) and Viyella's D21 (burst, TUT .281) scored **.787** because their NPS coincided at
-10.7/10.5. Geometric means a matching NPS can never rescue a mismatched burstFrac.
+were 60–75 apart. But averaging lets the dimensions that agree pay for the one that does not.
+Measured on the real D21 cohort (n=128, 2026-07-15):
+
+| | NPS | susFrac | burstFrac | TutFrac |
+|---|---|---|---|---|
+| Slapstick Parfait D21 | 10.70 | .109 | **.118** | .227 |
+| Horang Pungryuga D21 | 10.70 | .095 | **.516** | .611 |
+
+Same NPS to the decimal, sustain within .014 — and one of them spends half its length bursting.
+`s_nps 1.000 · s_sus 0.958 · s_burst 0.000`. **The old formula scored this pair .751 and would have
+shipped it**; decomposed and geometric it scores **.156**. A flat arithmetic mean over the *same*
+decomposed dimensions still reads .583, so the decomposition and the geometric mean are both
+load-bearing — neither fixes this alone. Across the cohort, **34 pairs that scored ≥.75 now score
+<.55**.
 
 **Why z-scores here and absolute coverage in skill — the asymmetry is deliberate.** Low intensity
 is a *valid property*: two charts both unusually chill for their level genuinely are alike, so
@@ -297,6 +308,7 @@ Measured on the Curiosity Overdrive ↔ BOOOM!! pair and the S20/D23 folders unl
 | **Meta as a score** | Filter-shaped. It out-discriminated Players *and* Difficulty in both S20 and D23 at a third of their weight — because binary facts have high variance, not because it knows anything. |
 | **Note count in intensity** | Andamiro pads charts toward a per-folder note-count norm, so within-cohort spread is tiny and z-scoring *divides by it*, amplifying differences the padding was designed to erase. Also `NPS × duration = note count` — never independent. |
 | **The level-affinity penalty** | §2. |
+| **Conflict ↔ Viyella's as the geometric's proof case** | This doc used to cite the pair as a false match rescued by coinciding NPS (10.7/10.5). It is not one, and the rework does not move it: measured on the real D21 cohort, **old .787 → new .783**. Their decomposed profiles are genuinely close — Conflict is ~1.65× Viyella's on *both* axes (sus .217/.133, burst .250/.148), so `s_sus .748 / s_burst .742` and there is no mismatched dimension for the geometric to catch. They are also adjacent rungs in the owner's own six-chart ordering, so ~.78 may simply be right. **What the owner's labels separate ("high stamina" vs "pure burst") is TutFrac — total load, .467 vs .281 — not composition**; note Viyella's has the *lower* burstFrac of the two. Use Slapstick Parfait ↔ Horang Pungryuga (§3.2) as the proof case instead. |
 | **A BPM plateau (±10, decay beyond)** | Nominal BPM is **noise**: slow songs multiply. Altale 90 BPM → **12.0 nps**; Glimmer Gleam 85 → 8.8; TRICKL4SH 220 → 11.5 — all within ~2 of Rush-More's 10.7, while raw BPM said 60–75 apart. A ±10 band would have deleted two owner-approved matches and promoted THE REVOLUTION (exactly 160 BPM, *"absolutely not"*). **NPS already carries it.** BPM survives only as a filter. |
 
 ---
