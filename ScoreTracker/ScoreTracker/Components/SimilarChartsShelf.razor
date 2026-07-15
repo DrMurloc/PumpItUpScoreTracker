@@ -86,7 +86,7 @@
                     var state = _filters[dimension.Key];
                     <label class="@(state.Available ? null : "chart-shelf-funavailable")"
                            title="@(state.Available ? null : L["This chart has no {0} on record", L[dimension.Label]].ToString())">
-                        <input type="checkbox" checked="@state.On" disabled="@(!state.Available || _sorting)"
+                        <input type="checkbox" checked="@state.On" disabled="@(!state.Available || Busy)"
                                @onchange="e => ToggleDimension(dimension.Key, e)"/>
                         <span>@L[dimension.Label]</span>
                     </label>
@@ -97,7 +97,7 @@
                 var state = _filters[dimension.Key];
                 var key = dimension.Key;
                 <LevelRangeSlider Label="@L[dimension.Label]" Min="state.TrackMin" Max="state.TrackMax"
-                                  ValueMin="state.From" ValueMax="state.To" Disabled="_sorting"
+                                  ValueMin="state.From" ValueMax="state.To" Disabled="Busy"
                                   Format="v => Format(key, v)"
                                   ValueMinChanged="v => SetRange(key, v, null)"
                                   ValueMaxChanged="v => SetRange(key, null, v)"/>
@@ -107,13 +107,20 @@
                before the click rather than after. *@
             <div class="chart-shelf-fapply">
                 <span class="chart-shelf-fcompare">
-                    @(AnyFilterOn
-                        ? L["Comparing {0} charts", CandidateCount].ToString()
-                        : L["Switch on a filter to narrow what this chart is compared against."].ToString())
+                    @if (_loadingFacts)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="chart-shelf-spinner"></MudProgressCircular>
+                    }
+                    else
+                    {
+                        @(AnyFilterOn
+                            ? L["Comparing {0} charts", CandidateCount].ToString()
+                            : L["Switch on a filter to narrow what this chart is compared against."].ToString())
+                    }
                 </span>
-                <button type="button" class="chart-shelf-fclear" disabled="@(_sorting || (!AnyFilterOn && _applied.Count == 0))"
+                <button type="button" class="chart-shelf-fclear" disabled="@(Busy || (!AnyFilterOn && _applied.Count == 0))"
                         @onclick="ClearFilter">@L["Clear"]</button>
-                <button type="button" class="chart-shelf-fgo" disabled="@(_sorting || !AnyFilterOn || CandidateCount == 0)"
+                <button type="button" class="chart-shelf-fgo" disabled="@(Busy || !AnyFilterOn || CandidateCount == 0)"
                         @onclick="ApplyFilters">@L["Apply"]</button>
             </div>
         </div>
@@ -495,12 +502,16 @@
         double? Nps);
 
     private bool _filtersOpen;
+    private bool _loadingFacts;
     private IReadOnlyList<Facts> _facts = Array.Empty<Facts>();
     private readonly Dictionary<FilterDimension, FilterState> _filters =
         Dimensions.ToDictionary(d => d.Key, _ => new FilterState());
     private IReadOnlyList<ActiveFilter> _applied = Array.Empty<ActiveFilter>();
 
     private bool AnyFilterOn => _filters.Values.Any(f => f.On);
+
+    /// <summary>Anything the panel must not be touched during — a lens reordering or its own pool loading.</summary>
+    private bool Busy => _sorting || _loadingFacts;
 
     private static Dimension Of(FilterDimension key) => Dimensions.First(d => d.Key == key);
 
@@ -526,7 +537,8 @@
     private async Task LoadFacts()
     {
         if (_anchor == null) return;
-        _sorting = true;
+        // Not _sorting: nothing is being reordered, and the shelf's hint would say so.
+        _loadingFacts = true;
         try
         {
             var charts = (await Mediator.Send(new GetChartsQuery(Mix, Type: _anchor.Type))).ToArray();
@@ -545,7 +557,7 @@
         }
         finally
         {
-            _sorting = false;
+            _loadingFacts = false;
         }
     }
 
@@ -595,10 +607,9 @@
         _ => facts.Nps == null ? null : (int)Math.Round(facts.Nps.Value * 10)
     };
 
-    private async Task ToggleDimension(FilterDimension key, ChangeEventArgs e)
+    private void ToggleDimension(FilterDimension key, ChangeEventArgs e)
     {
         _filters[key].On = e.Value is true;
-        await Task.CompletedTask;
     }
 
     private void SetRange(FilterDimension key, int? from, int? to)
