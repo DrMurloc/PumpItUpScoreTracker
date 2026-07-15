@@ -4314,14 +4314,11 @@
   <data name="Order by" xml:space="preserve">
     <value>並び替え</value>
   </data>
-  <data name="Remove filter" xml:space="preserve">
-    <value>フィルターを解除</value>
-  </data>
   <data name="Watch {0}" xml:space="preserve">
     <value>{0} の動画を見る</value>
   </data>
-  <data name="within 2 levels" xml:space="preserve">
-    <value>レベル±2以内</value>
+  <data name="within 1 level" xml:space="preserve">
+    <value>レベル±1以内</value>
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
@@ -4386,16 +4383,22 @@
   <data name="Filter" xml:space="preserve">
     <value>フィルター</value>
   </data>
-  <data name="By {0}" xml:space="preserve">
-    <value>{0} の譜面</value>
+  <data name="Folder" xml:space="preserve">
+    <value>フォルダ</value>
   </data>
-  <data name="{0}–{1} BPM" xml:space="preserve">
-    <value>{0}–{1} BPM</value>
+  <data name="Comparing {0} charts" xml:space="preserve">
+    <value>譜面{0}件と比較</value>
   </data>
-  <data name="Only {0}" xml:space="preserve">
-    <value>{0} のみ</value>
+  <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
+    <value>フィルターをオンにすると、この譜面の比較対象を絞り込めます。</value>
   </data>
-  <data name="Step artist" xml:space="preserve">
-    <value>ステップアーティスト</value>
+  <data name="Apply" xml:space="preserve">
+    <value>適用</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>クリア</value>
+  </data>
+  <data name="This chart has no {0} on record" xml:space="preserve">
+    <value>この譜面には{0}のデータがありません</value>
   </data>
 </root>

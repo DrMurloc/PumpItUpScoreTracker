@@ -188,26 +188,112 @@ public sealed class SimilarChartsShelfTests : TestContext
     }
 
 
-    [Fact]
-    public void TheLevelFilterReachesPastWhatTheGraphPrecalculates()
+    /// <summary>
+    ///     The panel is plain HTML precisely so it can be driven like this — the old menu
+    ///     lived in a MudBlazor popover, which bUnit does not host, so its filters could
+    ///     only ever be tested by calling methods behind the UI.
+    /// </summary>
+    private static IRenderedComponent<SimilarChartsShelf> OpenPanel(IRenderedComponent<SimilarChartsShelf> cut)
     {
-        // "I liked this D18, what D23s play like it" is the reason the live query exists,
-        // and it is deliberately outside the ±1 the nightly job stores. If the menu only
-        // offered the precalculated window there would be no way to ask.
+        cut.Find(".chart-shelf-addfilter").Click();
+        return cut;
+    }
+
+    private static void SwitchOn(IRenderedComponent<SimilarChartsShelf> cut, int dimension)
+    {
+        cut.FindAll(".chart-shelf-ftoggles input")[dimension].Change(true);
+    }
+
+    private const int Folder = 0;
+    private const int ScoringLevel = 1;
+    private const int Bpm = 2;
+    private const int Nps = 3;
+
+    [Fact]
+    public void NoFilterIsOnUntilOneIsSwitchedOn()
+    {
+        // An unfiltered shelf already answers "what plays like this". Opening with four
+        // ranges pre-applied would put four decisions in front of a reader who wanted none.
         var anchor = Guid.NewGuid();
         SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5)));
-        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+        var cut = OpenPanel(RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor)));
 
-        var levels = cut.Instance.ReachableLevels;
-
-        // The anchor is D20 (the test chart's default), so the menu must reach D23 and D15.
-        Assert.Contains(23, levels);
-        Assert.Contains(15, levels);
-        Assert.DoesNotContain(20, levels);
+        Assert.All(cut.FindAll(".chart-shelf-ftoggles input"), i => Assert.False(i.HasAttribute("checked")));
+        Assert.Empty(cut.FindAll(".range-slider"));
+        Assert.Contains("Switch on a filter", cut.Markup);
     }
 
     [Fact]
-    public void AFilterNarrowsTheTargetListAndSaysWhatItSearched()
+    public void SwitchingOnAFilterOpensItOnTheAnchorsOwnNeighbourhood()
+    {
+        // "Near this chart" is the only range anyone starts from, so the toggle seeds it
+        // rather than making the reader find the anchor on a bare track first.
+        var anchor = Guid.NewGuid();
+        SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5)));
+        var cut = OpenPanel(RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor)));
+
+        SwitchOn(cut, Folder);
+
+        // The anchor is D20 (the test chart's default) and the folder reach is ±2.
+        Assert.Contains("D18 – D22", cut.Find(".range-slider-value").TextContent);
+    }
+
+    [Fact]
+    public void TheCountIsWhatApplyWillActuallyCompare()
+    {
+        // The count is the honest half of Apply: it is computed from the same numbers the
+        // server filters on, so a count that counted differently would be a promise the
+        // server breaks. Two D21 edges are in range of a D20 anchor's ±2; the D25 is not,
+        // and the anchor never counts itself.
+        var anchor = Guid.NewGuid();
+        var near = Edge(0.9, Badge("bracket", 0.5));
+        var far = Edge(0.8, Badge("bracket", 0.4));
+        SetupEdges(anchor, new[] { near, far }, new Dictionary<Guid, int> { [far.ChartId] = 25 });
+        var cut = OpenPanel(RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor)));
+
+        SwitchOn(cut, Folder);
+
+        Assert.Contains("Comparing 1 charts", cut.Markup);
+    }
+
+    [Fact]
+    public void ADimensionTheAnchorHasNoValueForCannotBeSwitchedOn()
+    {
+        // There is nothing to open a range around. Offering the toggle anyway would seed it
+        // from nothing, and the reader would be filtering on a number we do not have.
+        var anchor = Guid.NewGuid();
+        SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5)));
+        var cut = OpenPanel(RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor)));
+
+        // The test charts carry no BPM and the crawl banked no step analysis, so those two
+        // have nothing to say; folder and scoring level always do.
+        var toggles = cut.FindAll(".chart-shelf-ftoggles input");
+        Assert.False(toggles[Folder].HasAttribute("disabled"));
+        Assert.False(toggles[ScoringLevel].HasAttribute("disabled"));
+        Assert.True(toggles[Bpm].HasAttribute("disabled"));
+        Assert.True(toggles[Nps].HasAttribute("disabled"));
+    }
+
+    [Fact]
+    public void AnUnmeasuredChartFiltersAtItsListedLevel()
+    {
+        // GetChartScoringLevelsQuery reports the listed level for a chart nothing has
+        // measured, and the shelf agrees with it — otherwise switching on scoring level
+        // would silently drop every unmeasured chart out of the count.
+        var anchor = Guid.NewGuid();
+        SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5)));
+        var cut = OpenPanel(RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor)));
+
+        SwitchOn(cut, ScoringLevel);
+
+        // Nothing is measured here, so the anchor sits at its listed 20.0 and the D21 edge
+        // at 21.0 — inside ±2, and counted.
+        Assert.Contains("18.0 – 22.0", cut.Find(".range-slider-value").TextContent);
+        Assert.Contains("Comparing 1 charts", cut.Markup);
+    }
+
+    [Fact]
+    public void ApplyNarrowsTheTargetListAndSaysWhatItSearched()
     {
         // The filter reduces what we COMPARE AGAINST and rescores — it never sieves the
         // stored top-20, which are the nearest charts overall and would survive nothing
@@ -216,13 +302,17 @@ public sealed class SimilarChartsShelfTests : TestContext
         var anchor = Guid.NewGuid();
         SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5)));
         var filtered = Edge(0.7, Badge("bracket", 0.4));
+        GetFilteredSimilarChartsQuery? sent = null;
         _mediator.Setup(m => m.Send(It.IsAny<GetFilteredSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
+            .Callback((object q, CancellationToken _) => sent = (GetFilteredSimilarChartsQuery)q)
             .ReturnsAsync(new FilteredSimilarChartsRecord(new[] { filtered }, ChartsCompared: 30));
-        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+        var cut = OpenPanel(RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor)));
+        SwitchOn(cut, Folder);
 
-        cut.InvokeAsync(() => cut.Instance.FilterByArtist(Name.From("SPHAM"))).Wait();
-        cut.Render();
+        cut.Find(".chart-shelf-fgo").Click();
 
+        Assert.Equal(18, sent!.MinLevel);
+        Assert.Equal(22, sent.MaxLevel);
         Assert.Contains("Compared 30 charts", cut.Markup);
         Assert.Single(cut.FindAll(".chart-shelf-fchip"));
     }
@@ -234,12 +324,12 @@ public sealed class SimilarChartsShelfTests : TestContext
         SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5)));
         _mediator.Setup(m => m.Send(It.IsAny<GetFilteredSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FilteredSimilarChartsRecord(Array.Empty<ChartSimilarityRecord>(), ChartsCompared: 30));
-        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
-        cut.InvokeAsync(() => cut.Instance.FilterByArtist(Name.From("SPHAM"))).Wait();
-        cut.Render();
+        var cut = OpenPanel(RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor)));
+        SwitchOn(cut, Folder);
+        cut.Find(".chart-shelf-fgo").Click();
         Assert.Single(cut.FindAll(".chart-shelf-fchip"));
 
-        cut.Find(".chart-shelf-fchip button").Click();
+        cut.Find(".chart-shelf-fclear").Click();
 
         Assert.Empty(cut.FindAll(".chart-shelf-fchip"));
         Assert.Contains("Brackets50%", Chips(cut));
@@ -254,10 +344,10 @@ public sealed class SimilarChartsShelfTests : TestContext
         SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5)));
         _mediator.Setup(m => m.Send(It.IsAny<GetFilteredSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FilteredSimilarChartsRecord(Array.Empty<ChartSimilarityRecord>(), ChartsCompared: 128));
-        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+        var cut = OpenPanel(RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor)));
+        SwitchOn(cut, Folder);
 
-        cut.InvokeAsync(() => cut.Instance.FilterByArtist(Name.From("SPHAM"))).Wait();
-        cut.Render();
+        cut.Find(".chart-shelf-fgo").Click();
 
         Assert.Contains("Compared 128 charts", cut.Markup);
         Assert.Contains("none cleared the bar", cut.Markup);

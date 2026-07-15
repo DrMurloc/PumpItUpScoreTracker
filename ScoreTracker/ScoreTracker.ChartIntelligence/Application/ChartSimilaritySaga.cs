@@ -103,18 +103,17 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
         var (anchor, anchorChart, features, charts) = pool.Value;
 
         // The level range is the reader's, not the anchor's neighbourhood: unfiltered it
-        // defaults to the ±2 the graph would have precalculated, but D18→D23 is the point
+        // defaults to the ±1 the graph would have precalculated, but D18→D23 is the point
         // of asking live.
         var minLevel = request.MinLevel ?? anchorChart.Level - ChartSimilarityCalculator.LevelWindow;
         var maxLevel = request.MaxLevel ?? anchorChart.Level + ChartSimilarityCalculator.LevelWindow;
         var targets = charts
             .Where(c => c.Id != anchorChart.Id)
             .Where(c => c.Level >= minLevel && c.Level <= maxLevel)
-            .Where(c => request.StepArtist == null ||
-                        (c.StepArtist != null && c.StepArtist.Value.Equals(request.StepArtist.Value)))
             .Where(c => request.MinBpm == null || (c.Song.Bpm != null && c.Song.Bpm.Value.Max >= request.MinBpm))
             .Where(c => request.MaxBpm == null || (c.Song.Bpm != null && c.Song.Bpm.Value.Min <= request.MaxBpm))
-            .Where(c => request.DebutFrom == null || c.OriginalMix >= request.DebutFrom)
+            .Where(c => WithinScoringLevel(request, features[c.Id], c))
+            .Where(c => WithinNps(request, features[c.Id]))
             .ToArray();
 
         var edges = ChartSimilarityCalculator.BuildEdgesFor(anchor,
@@ -124,6 +123,39 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
         // it exists to make "1 match" read as a narrow filter rather than a broken feature,
         // and a target we had no evidence for was still looked at.
         return new FilteredSimilarChartsRecord(edges.Select(ToRecord).ToArray(), targets.Length);
+    }
+
+    /// <summary>
+    ///     An unmeasured chart filters at its listed level, which is what
+    ///     GetChartScoringLevelsQuery reports for it everywhere else — so the count the
+    ///     reader watched while dragging is the count they get back.
+    ///     Deliberately NOT the same reading as
+    ///     <see cref="ChartSimilarityCalculator.WithinReach" />, which stays measured-only.
+    ///     The gate asks whether we have evidence two charts score alike; a filter asks
+    ///     whether a chart is in the range someone pointed at. Feeding the fallback to the
+    ///     gate would apply the ±1.25 test to the ~13% that currently escape it on a
+    ///     folder-only pass, quietly re-cutting every chart's suggestions.
+    /// </summary>
+    private static bool WithinScoringLevel(GetFilteredSimilarChartsQuery request, ChartSimilarityFeatures features,
+        Chart chart)
+    {
+        if (request.MinScoringLevel == null && request.MaxScoringLevel == null) return true;
+        var scoringLevel = features.ScoringLevel ?? chart.Level;
+        return (request.MinScoringLevel == null || scoringLevel >= request.MinScoringLevel)
+               && (request.MaxScoringLevel == null || scoringLevel <= request.MaxScoringLevel);
+    }
+
+    /// <summary>
+    ///     No NPS means no answer. There is no listed value to fall back to the way a
+    ///     scoring level has its folder, and admitting the chart anyway would put charts
+    ///     of unknown speed inside a speed filter.
+    /// </summary>
+    private static bool WithinNps(GetFilteredSimilarChartsQuery request, ChartSimilarityFeatures features)
+    {
+        if (request.MinNps == null && request.MaxNps == null) return true;
+        if (features.Nps is not { } nps) return false;
+        return (request.MinNps == null || nps >= request.MinNps)
+               && (request.MaxNps == null || nps <= request.MaxNps);
     }
 
     public async Task<ChartSimilarityRecord?> Handle(GetOppositeChartQuery request,

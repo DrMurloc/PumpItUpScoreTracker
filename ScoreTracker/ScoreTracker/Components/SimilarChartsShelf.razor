@@ -46,33 +46,20 @@
                 <span>@L["Personalized"]</span>
             </label>
         }
-        @* Every option is derived from the anchor, so a filter is one click and can never
-           be typed into nonsense. Filters narrow what we COMPARE AGAINST and rescore —
-           they never sieve the stored top-20, which are the nearest charts overall and so
-           would survive nothing worth filtering by. *@
+        @* Filters narrow what we COMPARE AGAINST and rescore — they never sieve the stored
+           top-20, which are the nearest charts overall and so would survive nothing worth
+           filtering by. *@
         @if (_anchor != null)
         {
-            <MudMenu Dense="true" Disabled="_sorting" Class="chart-shelf-addfilter"
-                     StartIcon="@Icons.Material.Filled.FilterList" Label="@L["Filter"]"
-                     Variant="Variant.Outlined" Size="Size.Small">
-                @if (_anchor.StepArtist is { } artist && artist.ToString() != "Unknown")
+            <button type="button" class="chart-shelf-addfilter" disabled="@_sorting"
+                    aria-expanded="@(_filtersOpen ? "true" : "false")" @onclick="ToggleFilterPanel">
+                <MudIcon Icon="@Icons.Material.Filled.FilterList" Size="Size.Small"/>
+                <span>@L["Filter"]</span>
+                @if (_applied.Count > 0)
                 {
-                    <MudMenuItem OnClick="() => FilterByArtist(artist)">@L["By {0}", artist]</MudMenuItem>
+                    <span class="chart-shelf-fcount">@_applied.Count</span>
                 }
-                @if (BpmBand is { } band)
-                {
-                    <MudMenuItem OnClick="() => FilterByBpm(band.Min, band.Max)">
-                        @L["{0}–{1} BPM", (int)band.Min, (int)band.Max]
-                    </MudMenuItem>
-                }
-                @foreach (var level in ReachableLevels)
-                {
-                    var target = level;
-                    <MudMenuItem OnClick="() => FilterByLevel(target)">
-                        @L["Only {0}", $"{_anchor.Type.GetShortHand()}{target}"]
-                    </MudMenuItem>
-                }
-            </MudMenu>
+            </button>
         }
         <span class="chart-shelf-hint">
             @if (_sorting)
@@ -86,13 +73,61 @@
             }
         </span>
     </div>
-    @if (_filter != null)
+    @* Nothing is pre-selected. An unfiltered shelf is already the answer to "what plays like
+       this", so every filter on by default would be four decisions in front of a reader who
+       came for none — but each one, once switched on, opens on the anchor's own neighbourhood,
+       because "near this chart" is the only range anyone starts from. *@
+    @if (_filtersOpen && _anchor != null)
+    {
+        <div class="chart-shelf-filterpanel">
+            <div class="chart-shelf-ftoggles" role="group" aria-label="@L["Filter"]">
+                @foreach (var dimension in Dimensions)
+                {
+                    var state = _filters[dimension.Key];
+                    <label class="@(state.Available ? null : "chart-shelf-funavailable")"
+                           title="@(state.Available ? null : L["This chart has no {0} on record", L[dimension.Label]].ToString())">
+                        <input type="checkbox" checked="@state.On" disabled="@(!state.Available || _sorting)"
+                               @onchange="e => ToggleDimension(dimension.Key, e)"/>
+                        <span>@L[dimension.Label]</span>
+                    </label>
+                }
+            </div>
+            @foreach (var dimension in Dimensions.Where(d => _filters[d.Key].On))
+            {
+                var state = _filters[dimension.Key];
+                var key = dimension.Key;
+                <LevelRangeSlider Label="@L[dimension.Label]" Min="state.TrackMin" Max="state.TrackMax"
+                                  ValueMin="state.From" ValueMax="state.To" Disabled="_sorting"
+                                  Format="v => Format(key, v)"
+                                  ValueMinChanged="v => SetRange(key, v, null)"
+                                  ValueMaxChanged="v => SetRange(key, null, v)"/>
+            }
+            @* The count is the honest half of Apply: it is computed from the same numbers the
+               server filters on, so what it promises is what comes back — and it says so
+               before the click rather than after. *@
+            <div class="chart-shelf-fapply">
+                <span class="chart-shelf-fcompare">
+                    @(AnyFilterOn
+                        ? L["Comparing {0} charts", CandidateCount].ToString()
+                        : L["Switch on a filter to narrow what this chart is compared against."].ToString())
+                </span>
+                <button type="button" class="chart-shelf-fclear" disabled="@(_sorting || (!AnyFilterOn && _applied.Count == 0))"
+                        @onclick="ClearFilter">@L["Clear"]</button>
+                <button type="button" class="chart-shelf-fgo" disabled="@(_sorting || !AnyFilterOn || CandidateCount == 0)"
+                        @onclick="ApplyFilters">@L["Apply"]</button>
+            </div>
+        </div>
+    }
+    @if (_applied.Count > 0)
     {
         <div class="chart-shelf-filters">
-            <span class="chart-shelf-fchip">
-                @L[_filter.Label]<span>@_filter.Value</span>
-                <button type="button" @onclick="ClearFilter" aria-label="@L["Remove filter"]">×</button>
-            </span>
+            @foreach (var applied in _applied)
+            {
+                <span class="chart-shelf-fchip">
+                    @L[applied.Label]<span>@applied.Value</span>
+                </span>
+            }
+            <button type="button" class="chart-shelf-fchipclear" @onclick="ClearFilter">@L["Clear"]</button>
         </div>
     }
 
@@ -101,7 +136,7 @@
         @* Two different nothings. A filter that narrowed to zero has to say what it
            searched; a chart the crawl never covered has nothing to report a reach over. *@
         <MudText Typo="Typo.body2" Class="chart-shelf-empty">
-            @(_filter != null
+            @(_applied.Count > 0
                 ? Reach(none: true)
                 : L["Not enough data yet to name similar charts — the graph rebuilds nightly."].ToString())
         </MudText>
@@ -120,7 +155,7 @@
                 @Card(entry)
             }
         </div>
-        @if (_filter != null || _compared != null)
+        @if (_compared != null)
         {
             <p class="chart-shelf-reach">@Reach(none: _matches.Count == 0)</p>
         }
@@ -185,7 +220,6 @@
     private ShelfSort _sort = ShelfSort.PassDifficulty;
     private bool _personalized;
     private bool _sorting;
-    private ActiveFilter? _filter;
     private int? _compared;
     private IReadOnlyList<Entry> _all = Array.Empty<Entry>();
     private IReadOnlyList<Entry> _matches = Array.Empty<Entry>();
@@ -232,7 +266,9 @@
     private string Reach(bool none)
     {
         var compared = _compared ?? _all.Count;
-        var scope = _filter != null ? $"{L[_filter.Label]} {_filter.Value}" : L["within 2 levels"].ToString();
+        var scope = _applied.Count > 0
+            ? string.Join(", ", _applied.Select(f => $"{L[f.Label]} {f.Value}"))
+            : L["within 1 level"].ToString();
         return none
             ? L["Compared {0} charts ({1}) — none cleared the bar.", compared, scope].ToString()
             : L["Compared {0} charts ({1}) — {2} matches.", compared, scope, _matches.Count].ToString();
@@ -242,7 +278,13 @@
     {
         if (ChartId == _loadedFor) return;
         _loadedFor = ChartId;
-        _filter = null;
+        // A new anchor invalidates every filter: the ranges were seeded around the old chart
+        // and the facts are the old chart's pool, which is not even the same pool if the
+        // type changed.
+        foreach (var state in _filters.Values) state.On = false;
+        _applied = Array.Empty<ActiveFilter>();
+        _facts = Array.Empty<Facts>();
+        _filtersOpen = false;
         _compared = null;
         _sort = ShelfSort.PassDifficulty;
         _personalized = false;
@@ -399,72 +441,234 @@
         }
     }
 
-    private async Task ClearFilter()
+    // ---- Filters -----------------------------------------------------------------------
+
+    /// <summary>
+    ///     The four dimensions, and they are the whole set. Two the chart declares (folder,
+    ///     BPM) and two measured from it (scoring level, NPS) — each one a range the reader
+    ///     can already see elsewhere on this page, which is the bar for being here at all.
+    /// </summary>
+    internal enum FilterDimension
     {
-        _filter = null;
-        _compared = null;
-        await Load(await Mediator.Send(new GetSimilarChartsQuery(ChartId, Mix)));
+        Folder,
+        ScoringLevel,
+        Bpm,
+        Nps
     }
 
     /// <summary>
-    ///     How far out the level filter offers to reach. Wider than the graph's own ±1
-    ///     window on purpose: "I liked this D18, what D23s play like it" is the whole
-    ///     reason the live query exists, and it is deliberately outside what gets
-    ///     precalculated.
+    ///     What each dimension is made of. <c>Scale</c> is track units per real unit: a
+    ///     range input steps in whole numbers, so the two dimensions that need a fraction
+    ///     ride as tenths and format back. <c>Reach</c> is how far either side of the
+    ///     anchor the filter opens, in track units.
     /// </summary>
-    internal const int LevelFilterReach = 5;
+    private sealed record Dimension(FilterDimension Key, string Label, int Scale, int Reach);
 
-    internal IReadOnlyList<int> ReachableLevels
+    private static readonly Dimension[] Dimensions =
     {
-        get
+        new(FilterDimension.Folder, "Folder", 1, 2),
+        new(FilterDimension.ScoringLevel, "Scoring level", 10, 20),
+        new(FilterDimension.Bpm, "BPM", 1, 10),
+        new(FilterDimension.Nps, "NPS", 10, 10)
+    };
+
+    private sealed class FilterState
+    {
+        public bool On;
+
+        /// <summary>False when the anchor has no value here — there is nothing to open around.</summary>
+        public bool Available;
+
+        public int TrackMin;
+        public int TrackMax;
+        public int From;
+        public int To;
+    }
+
+    /// <summary>
+    ///     One chart reduced to the four numbers a filter asks about. Assembled once when the
+    ///     panel first opens, from three reads that are all already cached — the charts and
+    ///     their crawl metrics repository-side, the scoring levels per circuit — so dragging a
+    ///     thumb costs a count over an array in memory and no database at all.
+    /// </summary>
+    private sealed record Facts(Guid Id, int Level, double ScoringLevel, decimal? BpmMin, decimal? BpmMax,
+        double? Nps);
+
+    private bool _filtersOpen;
+    private IReadOnlyList<Facts> _facts = Array.Empty<Facts>();
+    private readonly Dictionary<FilterDimension, FilterState> _filters =
+        Dimensions.ToDictionary(d => d.Key, _ => new FilterState());
+    private IReadOnlyList<ActiveFilter> _applied = Array.Empty<ActiveFilter>();
+
+    private bool AnyFilterOn => _filters.Values.Any(f => f.On);
+
+    private static Dimension Of(FilterDimension key) => Dimensions.First(d => d.Key == key);
+
+    private string Format(FilterDimension key, int value) => key switch
+    {
+        FilterDimension.Folder => $"{_anchor?.Type.GetShortHand()}{value}",
+        FilterDimension.ScoringLevel => (value / 10.0).ToString("0.0"),
+        FilterDimension.Bpm => value.ToString(),
+        _ => (value / 10.0).ToString("0.0")
+    };
+
+    private async Task ToggleFilterPanel()
+    {
+        _filtersOpen = !_filtersOpen;
+        if (_filtersOpen && _facts.Count == 0) await LoadFacts();
+    }
+
+    /// <summary>
+    ///     Everything the count needs, for the anchor's whole (mix, type) pool. Deliberately
+    ///     lazy: the great majority of readers never open the panel, and this is three reads
+    ///     they would otherwise pay for on every chart page.
+    /// </summary>
+    private async Task LoadFacts()
+    {
+        if (_anchor == null) return;
+        _sorting = true;
+        try
         {
-            if (_anchor == null) return Array.Empty<int>();
-            var anchor = (int)_anchor.Level;
-            return Enumerable.Range(anchor - LevelFilterReach, LevelFilterReach * 2 + 1)
-                .Where(l => l is >= 1 and <= 28 && l != anchor)
+            var charts = (await Mediator.Send(new GetChartsQuery(Mix, Type: _anchor.Type))).ToArray();
+            var analyses = await Mediator.Send(new GetChartStepAnalysesQuery(charts.Select(c => c.Id).ToArray()));
+            var facts = new List<Facts>(charts.Length);
+            foreach (var chart in charts)
+            {
+                var nps = analyses.GetValueOrDefault(chart.Id)?.Nps;
+                facts.Add(new Facts(chart.Id, chart.Level,
+                    await ScoringLevels.GetScoringLevel(chart.Id) ?? chart.Level,
+                    chart.Song.Bpm?.Min, chart.Song.Bpm?.Max, nps == null ? null : (double)nps.Value));
+            }
+
+            _facts = facts;
+            Seed();
+        }
+        finally
+        {
+            _sorting = false;
+        }
+    }
+
+    /// <summary>
+    ///     Opens every dimension on the anchor's own neighbourhood, and sizes each track to
+    ///     what the pool actually holds rather than to the theoretical scale — a thumb is
+    ///     worth dragging over the range where charts exist, and an NPS track running to 30
+    ///     would spend most of itself over nothing.
+    /// </summary>
+    private void Seed()
+    {
+        var anchor = _facts.FirstOrDefault(f => f.Id == ChartId);
+        if (anchor == null) return;
+
+        foreach (var dimension in Dimensions)
+        {
+            var state = _filters[dimension.Key];
+            var values = _facts.Select(f => Track(dimension.Key, f)).Where(v => v != null).Select(v => v!.Value)
                 .ToArray();
+            var at = Track(dimension.Key, anchor);
+            state.Available = at != null && values.Length > 0;
+            if (!state.Available)
+            {
+                state.On = false;
+                continue;
+            }
+
+            state.From = at!.Value - dimension.Reach;
+            state.To = at.Value + dimension.Reach;
+            // The seeded range is the point of the toggle, so the track widens to hold it
+            // rather than the range being clipped to fit the track.
+            state.TrackMin = Math.Min(values.Min(), state.From);
+            state.TrackMax = Math.Max(values.Max(), state.To);
         }
     }
 
     /// <summary>
-    ///     A tenth either side of the anchor's own tempo. Nominal BPM is noise as a score —
-    ///     slow songs multiply, so Altale's 90 runs at 12 NPS — but as a filter it is
-    ///     exactly what someone means by "at this speed".
+    ///     A chart's position on one dimension's track, or null when it has no answer.
+    ///     BPM reports its low end here purely to size the track; the filter itself tests
+    ///     the whole range for overlap (<see cref="Passes" />).
     /// </summary>
-    private (decimal Min, decimal Max)? BpmBand
+    private static int? Track(FilterDimension key, Facts facts) => key switch
     {
-        get
-        {
-            if (_anchor?.Song.Bpm is not { } bpm) return null;
-            return (Math.Round(bpm.Min * 0.9m), Math.Round(bpm.Max * 1.1m));
-        }
+        FilterDimension.Folder => facts.Level,
+        FilterDimension.ScoringLevel => (int)Math.Round(facts.ScoringLevel * 10),
+        FilterDimension.Bpm => facts.BpmMin == null ? null : (int)Math.Round(facts.BpmMin.Value),
+        _ => facts.Nps == null ? null : (int)Math.Round(facts.Nps.Value * 10)
+    };
+
+    private async Task ToggleDimension(FilterDimension key, ChangeEventArgs e)
+    {
+        _filters[key].On = e.Value is true;
+        await Task.CompletedTask;
     }
 
-    // The chip and the reach line both read (dimension, value), so a filter carries the two
-    // separately rather than a pre-baked sentence. Internal so tests can drive a filter
-    // without going through MudMenu's popover, which bUnit does not host.
-    internal Task FilterByArtist(Name artist) =>
-        ApplyFilter(new GetFilteredSimilarChartsQuery(ChartId, Mix, StepArtist: artist),
-            "Step artist", artist.ToString());
+    private void SetRange(FilterDimension key, int? from, int? to)
+    {
+        var state = _filters[key];
+        if (from != null) state.From = from.Value;
+        if (to != null) state.To = to.Value;
+    }
 
-    internal Task FilterByBpm(decimal min, decimal max) =>
-        ApplyFilter(new GetFilteredSimilarChartsQuery(ChartId, Mix, MinBpm: min, MaxBpm: max),
-            "BPM", $"{(int)min}–{(int)max}");
+    /// <summary>
+    ///     How many charts Apply would compare against. Mirrors the handler's predicates
+    ///     exactly — a count that counted differently would be a promise the server breaks.
+    ///     The anchor is never one of them.
+    /// </summary>
+    private int CandidateCount => _facts.Count(f => f.Id != ChartId && Passes(f));
 
-    internal Task FilterByLevel(int level) =>
-        ApplyFilter(new GetFilteredSimilarChartsQuery(ChartId, Mix, MinLevel: level, MaxLevel: level),
-            "Level", $"{_anchor?.Type.GetShortHand()}{level}");
+    private bool Passes(Facts facts)
+    {
+        foreach (var dimension in Dimensions)
+        {
+            var state = _filters[dimension.Key];
+            if (!state.On) continue;
+            var (lo, hi) = Real(dimension, state);
+            var ok = dimension.Key switch
+            {
+                FilterDimension.Folder => facts.Level >= lo && facts.Level <= hi,
+                FilterDimension.ScoringLevel => facts.ScoringLevel >= lo && facts.ScoringLevel <= hi,
+                // A tempo range overlaps rather than contains: a 150–190 chart is "at 180".
+                FilterDimension.Bpm => facts.BpmMax != null && facts.BpmMin != null &&
+                                       (double)facts.BpmMax.Value >= lo && (double)facts.BpmMin.Value <= hi,
+                _ => facts.Nps != null && facts.Nps >= lo && facts.Nps <= hi
+            };
+            if (!ok) return false;
+        }
+
+        return true;
+    }
+
+    private static (double Lo, double Hi) Real(Dimension dimension, FilterState state) =>
+        ((double)state.From / dimension.Scale, (double)state.To / dimension.Scale);
 
     /// <summary>
     ///     Narrows the target list and recomputes — never a sieve over the stored top-20.
     /// </summary>
-    private async Task ApplyFilter(GetFilteredSimilarChartsQuery query, string label, string value)
+    private async Task ApplyFilters()
     {
+        if (_anchor == null) return;
+        var query = new GetFilteredSimilarChartsQuery(ChartId, Mix);
+        var applied = new List<ActiveFilter>();
+        foreach (var dimension in Dimensions)
+        {
+            var state = _filters[dimension.Key];
+            if (!state.On) continue;
+            var (lo, hi) = Real(dimension, state);
+            query = dimension.Key switch
+            {
+                FilterDimension.Folder => query with { MinLevel = (int)lo, MaxLevel = (int)hi },
+                FilterDimension.ScoringLevel => query with { MinScoringLevel = lo, MaxScoringLevel = hi },
+                FilterDimension.Bpm => query with { MinBpm = (decimal)lo, MaxBpm = (decimal)hi },
+                _ => query with { MinNps = lo, MaxNps = hi }
+            };
+            applied.Add(new ActiveFilter(dimension.Label,
+                $"{Format(dimension.Key, state.From)}–{Format(dimension.Key, state.To)}"));
+        }
+
         _sorting = true;
         try
         {
             var result = await Mediator.Send(query);
-            _filter = new ActiveFilter(label, value);
+            _applied = applied;
             _compared = result.ChartsCompared;
             await Load(result.Matches);
         }
@@ -472,5 +676,16 @@
         {
             _sorting = false;
         }
+    }
+
+    private async Task ClearFilter()
+    {
+        var wasFiltered = _applied.Count > 0;
+        foreach (var state in _filters.Values) state.On = false;
+        _applied = Array.Empty<ActiveFilter>();
+        _compared = null;
+        // Clearing a filter that never ran has nothing to put back, and re-reading the graph
+        // would replace the shelf with an identical shelf.
+        if (wasFiltered) await Load(await Mediator.Send(new GetSimilarChartsQuery(ChartId, Mix)));
     }
 }

@@ -4194,14 +4194,11 @@
   <data name="Order by" xml:space="preserve">
     <value>정렬 기준</value>
   </data>
-  <data name="Remove filter" xml:space="preserve">
-    <value>필터 제거</value>
-  </data>
   <data name="Watch {0}" xml:space="preserve">
     <value>{0} 영상 보기</value>
   </data>
-  <data name="within 2 levels" xml:space="preserve">
-    <value>레벨 ±2 이내</value>
+  <data name="within 1 level" xml:space="preserve">
+    <value>레벨 ±1 이내</value>
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
@@ -4266,16 +4263,22 @@
   <data name="Filter" xml:space="preserve">
     <value>필터</value>
   </data>
-  <data name="By {0}" xml:space="preserve">
-    <value>{0} 제작</value>
+  <data name="Folder" xml:space="preserve">
+    <value>폴더</value>
   </data>
-  <data name="{0}–{1} BPM" xml:space="preserve">
-    <value>{0}–{1} BPM</value>
+  <data name="Comparing {0} charts" xml:space="preserve">
+    <value>채보 {0}개 비교</value>
   </data>
-  <data name="Only {0}" xml:space="preserve">
-    <value>{0}만</value>
+  <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
+    <value>필터를 켜면 이 채보의 비교 대상을 좁힐 수 있습니다.</value>
   </data>
-  <data name="Step artist" xml:space="preserve">
-    <value>스텝 아티스트</value>
+  <data name="Apply" xml:space="preserve">
+    <value>적용</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>지우기</value>
+  </data>
+  <data name="This chart has no {0} on record" xml:space="preserve">
+    <value>이 채보에는 {0} 데이터가 없습니다</value>
   </data>
 </root>

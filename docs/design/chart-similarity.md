@@ -202,24 +202,70 @@ analyses missed.
 
 **Order by** — a runtime concern over the precalculated set:
 
-| Option | Source | Available |
-|---|---|---|
-| **No sorting** | the match order itself, strongest first | always |
-| **Community** *(default)* | community tier lists + scoring level, closest to the anchor | always |
-| **Pass · for me** | the reader's personalized Pass tier list | signed in |
-| **Score · for me** | the reader's personalized Score tier list | signed in |
+| Option | Source |
+|---|---|
+| **No sorting** | the match order itself, strongest first |
+| **Pass Difficulty** *(default)* | the community Pass tier list, projected onto the level scale |
+| **Score Difficulty** | scoring level, which already *is* an effective level |
 
 Pass and Score are both offered because they genuinely differ — a chart can be a wall to clear and
 generous to score, or the reverse. "No sorting" is the only option that shows the true match
 order; every difficulty sort reorders away from it.
 
+**Personalized** is a checkbox *across* the two lenses, not a third and fourth option: it is a
+property of the difficulty question rather than a different answer to it, and it has nothing to
+modify while nothing is being ordered (so it only appears once a lens is picked). It swaps the
+community list for the reader's own blend, and needs a sign-in; the community lenses never do.
+
+A tier list ranks charts *within* one folder, so its `Order` is 0..N per folder and its category
+means "hard for a D21" rather than "hard" — neither survives a shelf that reaches across folders.
+Nudging each chart's own level by its category is what makes them commensurable, deliberately by
+under half a level (`EffectiveLevel`): the list is saying a chart is misplaced *within* its folder,
+never that it belongs in a different one. Charts the list cannot place sort last rather than
+pretending to be easy.
+
 **Filters** reduce the *target list* and then **recompute live** — they never filter the stored
-top-20 (which would trivially return zero). Dimensions: step artist, BPM range, level range, mix
-("from X or newer"). The reach must be stated: *"Compared **30 charts** by SPHAM within 2 levels —
-**1 match**."* — that reads as a narrow filter rather than a broken feature.
+top-20 (which would trivially return zero). The reach must be stated: *"Compared **30 charts**
+(Folder D18–D22) — **1 match**."* — that reads as a narrow filter rather than a broken feature.
+
+**Four dimensions, and that is the whole set** (owner, 2026-07-15). Two the chart declares and two
+measured from it:
+
+| Filter | Seeded at | Unit |
+|---|---|---|
+| **Folder** | anchor ±2 | whole levels |
+| **Scoring level** | anchor ±2 | tenths |
+| **BPM** | anchor ±10 | whole BPM, and a range **overlaps** rather than contains — a 150–190 chart is "at 180" |
+| **NPS** | anchor ±1 | tenths |
+
+Every one is a **range**, and every one is something the reader can already see on this page. Step
+artist and debut mix used to be here and are gone: neither is a range, and "charts by SPHAM" is a
+question the chart browser answers better than a similarity shelf can.
+
+Three rules the panel exists to enforce:
+
+- **Nothing is on by default.** An unfiltered shelf is already the answer to "what plays like this",
+  so four ranges pre-applied would be four decisions in front of a reader who wanted none.
+- **Switching one on opens it on the anchor's own neighbourhood**, because "near this chart" is the
+  only range anyone starts from — never a bare track to go find the anchor on.
+- **The live count is computed from the same numbers the server filters on**, so what it promises is
+  what comes back. It costs no database: the charts and their crawl metrics are cached
+  repository-side and the scoring levels per circuit, so the panel assembles the pool once (lazily,
+  on first open — most readers never open it) and a thumb-drag counts an array in memory.
+
+**Scoring level always answers.** A chart nothing has measured filters at its listed level, which is
+what `GetChartScoringLevelsQuery` reports for it everywhere else — otherwise switching the filter on
+would silently drop the ~13% with no measurement, and the count would not be the list. This is
+deliberately *not* the same reading as the gate's `WithinReach` (§2), which stays measured-only: the
+gate asks whether there is evidence two charts score alike, a filter asks whether a chart is in the
+range someone pointed at. Feeding the fallback to the gate would apply the ±1.25 test to the charts
+that currently escape it on a folder-only pass and quietly re-cut every chart's suggestions. **NPS
+has no such fallback** — nothing is listed to fall back to, so a chart without one is excluded by an
+NPS filter rather than admitted at unknown speed.
 
 **The D18→D23 case is a live call.** "I liked this D18, what D23s are like it" is a real use case
-and is deliberately **outside** the precalculated ±2 window; it computes on demand.
+and is deliberately **outside** the precalculated ±1 window; it computes on demand. The folder
+track spans what the pool actually holds, so the reach is "every level that exists", not a constant.
 
 ---
 

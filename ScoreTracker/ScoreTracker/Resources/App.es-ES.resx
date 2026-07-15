@@ -4191,14 +4191,11 @@
   <data name="Order by" xml:space="preserve">
     <value>Ordenar por</value>
   </data>
-  <data name="Remove filter" xml:space="preserve">
-    <value>Quitar filtro</value>
-  </data>
   <data name="Watch {0}" xml:space="preserve">
     <value>Ver {0}</value>
   </data>
-  <data name="within 2 levels" xml:space="preserve">
-    <value>a ±2 niveles</value>
+  <data name="within 1 level" xml:space="preserve">
+    <value>a ±1 nivel</value>
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
@@ -4263,16 +4260,22 @@
   <data name="Filter" xml:space="preserve">
     <value>Filtrar</value>
   </data>
-  <data name="By {0}" xml:space="preserve">
-    <value>De {0}</value>
+  <data name="Folder" xml:space="preserve">
+    <value>Carpeta</value>
   </data>
-  <data name="{0}–{1} BPM" xml:space="preserve">
-    <value>{0}–{1} BPM</value>
+  <data name="Comparing {0} charts" xml:space="preserve">
+    <value>Comparando {0} charts</value>
   </data>
-  <data name="Only {0}" xml:space="preserve">
-    <value>Solo {0}</value>
+  <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
+    <value>Activa un filtro para acotar con qué se compara este chart.</value>
   </data>
-  <data name="Step artist" xml:space="preserve">
-    <value>Autor de los steps</value>
+  <data name="Apply" xml:space="preserve">
+    <value>Aplicar</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Borrar</value>
+  </data>
+  <data name="This chart has no {0} on record" xml:space="preserve">
+    <value>No hay {0} registrado para este chart</value>
   </data>
 </root>

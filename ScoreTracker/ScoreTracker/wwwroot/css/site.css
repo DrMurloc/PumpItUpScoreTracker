@@ -4252,6 +4252,141 @@ html.sheet-open .more-sheet-scrim {
 
 .chart-shelf-addfilter {
     flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: color .12s, border-color .12s;
+}
+
+.chart-shelf-addfilter:hover:not(:disabled),
+.chart-shelf-addfilter[aria-expanded="true"] {
+    color: var(--mix-ink);
+    border-color: var(--mix-primary);
+}
+
+.chart-shelf-addfilter:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+/* How many filters are on, when the panel that would show you is shut. */
+.chart-shelf-fcount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    font-size: .65rem;
+    font-weight: 700;
+    color: var(--mix-primary-contrast);
+    background: var(--mix-primary);
+}
+
+.chart-shelf-filterpanel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 14px;
+    padding: 14px;
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 6px;
+}
+
+.chart-shelf-ftoggles {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.chart-shelf-ftoggles label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+    cursor: pointer;
+}
+
+.chart-shelf-ftoggles input {
+    accent-color: var(--mix-primary);
+    cursor: pointer;
+}
+
+.chart-shelf-ftoggles label:has(input:checked) {
+    color: var(--mix-ink);
+}
+
+.chart-shelf-funavailable {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+.chart-shelf-fapply {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* The count owns the row; the buttons sit at the end of it. */
+.chart-shelf-fcompare {
+    flex: 1 1 auto;
+    font-size: .74rem;
+    color: var(--mix-ink-muted);
+}
+
+.chart-shelf-fclear,
+.chart-shelf-fgo {
+    font-size: .75rem;
+    border-radius: 4px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: opacity .12s;
+}
+
+.chart-shelf-fclear {
+    color: var(--mix-ink-muted);
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, .12);
+}
+
+.chart-shelf-fgo {
+    color: var(--mix-primary-contrast);
+    background: var(--mix-primary);
+    border: 1px solid var(--mix-primary);
+    font-weight: 600;
+}
+
+.chart-shelf-fclear:disabled,
+.chart-shelf-fgo:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+/* Filters that ran, as against filters being chosen — read-only, because the panel
+   above is where they change and two edit points would fight. */
+.chart-shelf-fchipclear {
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    background: transparent;
+    border: 0;
+    padding: 4px 6px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.chart-shelf-fchipclear:hover {
+    color: var(--mix-primary);
 }
 
 .chart-shelf-hint,
@@ -4288,17 +4423,6 @@ html.sheet-open .more-sheet-scrim {
     font-weight: 600;
 }
 
-.chart-shelf-fchip button {
-    background: transparent;
-    border: 0;
-    color: var(--mix-ink-muted);
-    cursor: pointer;
-    padding: 0 4px;
-}
-
-.chart-shelf-fchip button:hover {
-    color: var(--mix-primary);
-}
 
 .chart-shelf-nearmiss {
     margin-top: 18px;

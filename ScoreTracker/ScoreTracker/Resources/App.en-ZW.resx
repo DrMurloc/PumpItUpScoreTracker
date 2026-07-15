@@ -4236,14 +4236,11 @@
   <data name="Order by" xml:space="preserve">
     <value>Mrgl order byrgl</value>
   </data>
-  <data name="Remove filter" xml:space="preserve">
-    <value>Mrgl remove filterrgl</value>
-  </data>
   <data name="Watch {0}" xml:space="preserve">
     <value>Mrgl watch {0}rgl</value>
   </data>
-  <data name="within 2 levels" xml:space="preserve">
-    <value>mrglthin 2 levelsrgl</value>
+  <data name="within 1 level" xml:space="preserve">
+    <value>mrglthin 1 levelrgl</value>
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPMrgl</value>
@@ -4308,16 +4305,22 @@
   <data name="Filter" xml:space="preserve">
     <value>Mrgl filterrgl</value>
   </data>
-  <data name="By {0}" xml:space="preserve">
-    <value>Mrgl by {0}rgl</value>
+  <data name="Folder" xml:space="preserve">
+    <value>Mrgl folderrgl</value>
   </data>
-  <data name="{0}–{1} BPM" xml:space="preserve">
-    <value>{0}–{1} BPMrgl</value>
+  <data name="Comparing {0} charts" xml:space="preserve">
+    <value>Mrgl comparing {0} chartz</value>
   </data>
-  <data name="Only {0}" xml:space="preserve">
-    <value>Mrgl only {0}rgl</value>
+  <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
+    <value>Mrgl switch on a filterrgl to narrow what dis chart gets compared againstrgl.</value>
   </data>
-  <data name="Step artist" xml:space="preserve">
-    <value>Mrgl step artistrgl</value>
+  <data name="Apply" xml:space="preserve">
+    <value>Mrgl applyrgl</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Mrgl clearrgl</value>
+  </data>
+  <data name="This chart has no {0} on record" xml:space="preserve">
+    <value>Mrgl dis chart got no {0} on recordrgl</value>
   </data>
 </root>

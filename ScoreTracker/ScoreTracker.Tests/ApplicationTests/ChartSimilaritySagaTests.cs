@@ -235,13 +235,58 @@ public sealed class ChartSimilaritySagaTests
     {
         // Compared is what the filter selected, not what scored — it is what turns
         // "1 match" from a bug report into a sentence.
-        var (anchor, _) = SetupLivePool();
+        var (anchor, targets) = SetupLivePool();
+        var onlyD22 = targets.Single(t => t.Level == 22);
 
         var result = await BuildSaga().Handle(
-            new GetFilteredSimilarChartsQuery(anchor.Id, StepArtist: Name.From("SPHAM")), CancellationToken.None);
+            new GetFilteredSimilarChartsQuery(anchor.Id, MinLevel: 22, MaxLevel: 22), CancellationToken.None);
 
         Assert.Equal(1, result.ChartsCompared);
-        Assert.Single(result.Matches);
+        Assert.Equal(onlyD22.Id, Assert.Single(result.Matches).ChartId);
+    }
+
+    [Fact]
+    public async Task AnUnmeasuredChartFiltersAtItsListedLevelRatherThanFallingOutOfTheRange()
+    {
+        // The rest of the app reports the listed level for a chart nothing has measured, so
+        // a scoring-level filter has to agree with it — otherwise switching one on would
+        // silently drop the ~13% that have no measurement, and the count the reader watched
+        // while dragging would not be the list they got back.
+        var (anchor, targets) = SetupLivePool();
+        var measured = targets.Single(t => t.Level == 22);
+        SetupScoringLevels(new Dictionary<Guid, double> { [measured.Id] = 25.0 });
+
+        // Every unmeasured chart sits at its folder, so D20–D22 answers this; the one chart
+        // that HAS a measurement answers at 25.0 and is out.
+        var result = await BuildSaga().Handle(
+            new GetFilteredSimilarChartsQuery(anchor.Id, MinScoringLevel: 19.5, MaxScoringLevel: 22.5),
+            CancellationToken.None);
+
+        Assert.Equal(targets.Where(t => t.Level == 20 && t.Id != measured.Id).Select(t => t.Id).OrderBy(id => id),
+            result.Matches.Select(m => m.ChartId).OrderBy(id => id));
+    }
+
+    [Fact]
+    public async Task AChartWithNoNpsCannotAnswerAnNpsFilter()
+    {
+        // There is no listed value to fall back to the way a scoring level has its folder,
+        // and admitting it anyway would put a chart of unknown speed inside a speed filter.
+        var (anchor, targets) = SetupLivePool();
+        var fast = targets.Single(t => t.Level == 22);
+        var silent = targets.Single(t => t.Level == 20);
+        SetupStepAnalyses(new Dictionary<Guid, ChartStepAnalysisRecord>
+        {
+            [anchor.Id] = Analysis(10),
+            [fast.Id] = Analysis(12)
+            // silent is absent: the crawl banked no analysis for it.
+        });
+
+        var result = await BuildSaga().Handle(
+            new GetFilteredSimilarChartsQuery(anchor.Id, MinNps: 11, MaxNps: 13), CancellationToken.None);
+
+        Assert.Equal(1, result.ChartsCompared);
+        Assert.Equal(fast.Id, Assert.Single(result.Matches).ChartId);
+        Assert.DoesNotContain(result.Matches, m => m.ChartId == silent.Id);
     }
 
     [Fact]
