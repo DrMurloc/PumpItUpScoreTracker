@@ -255,12 +255,28 @@ Facts established during Stage 1 scoping that Stage 2 inherits. Re-check before 
 
 ## 7. Open questions — what scoping must answer
 
-1. **Enhanced navigation.** `blazor.web.js` enables it by default: it fetches and DOM-patches
-   rather than full-loading. Unexamined interactions: `page-dock.js` (scroll listeners,
-   `html.nav-away`, `pageDock.watch/reset`), **ApexCharts re-initialization** (the chart-details
-   session's graphs island is a direct stakeholder — loop them in), Clarity, `dashboard-grid.js`,
-   `credential-storage.js`. Can it be disabled globally? Is `data-enhance-nav="false"` per-link
-   only? Does it change static-shell.md D8's interception qualification or add a second path?
+1. ~~**Enhanced navigation.**~~ **ANSWERED — it can be turned off with one attribute.** From
+   `blazor.web.js` (net10):
+
+   ```js
+   const t = e.closest("[data-enhance-nav]");
+   if (t) { const e = t.getAttribute("data-enhance-nav");
+            return "" === e || "true" === e.toLowerCase(); }   // false → NOT enhanced
+   return !0;                                                   // default: enhanced
+   ```
+
+   `closest()` walks **up** the tree, so the attribute is *inherited*, not per-link:
+   `<body data-enhance-nav="false">` disables it app-wide. **Stage 2 ships with it off**, which
+   makes "zero intended behaviour change" literally true — `blazor.web.js` swaps in but
+   navigation keeps working exactly as it does today. Enhanced nav then becomes its own opt-in
+   change, with its own field test, and the interactions that worried us (`page-dock.js`'s
+   scroll listeners and `html.nav-away`, **ApexCharts re-initialisation**, Clarity,
+   `dashboard-grid.js`, `credential-storage.js`) get examined then rather than as a rider.
+   A narrower lever exists if we later want enhanced nav without DOM patching:
+   `Blazor.start({ ssr: { disableDomPreservation: true } })`.
+
+   ⚠ Still open when we do opt in: whether enhanced nav adds a second interception path
+   alongside static-shell.md D8's `target="_top"` rule.
 2. **`HeadOutlet`'s render mode.** If static, it only collects head content from static
    components — the 54 pages' `<PageTitle>` and 8 pages' `<HeadContent>` stop working. If
    `InteractiveServer(prerender: false)`, it renders nothing server-side and appears when the
@@ -269,10 +285,30 @@ Facts established during Stage 1 scoping that Stage 2 inherits. Re-check before 
    HeadOutlet) the same way it does under Stage 1.
 3. **`HttpContext` in static SSR vs. the `AmbientUserContext` memo.** Confirm the memo still
    behaves for both worlds and that `SetScopedUser` (the background-job path) is unaffected.
-4. **MudBlazor provider placement.** `MudThemeProvider`/`MudPopoverProvider`/`MudDialogProvider`/
-   `MudSnackbarProvider` need interactivity. Under §3's shape they live in MainLayout, inside
-   `<Routes>`. Confirm that's sufficient, and that `IslandRoot` is still the answer for islands
-   outside that umbrella (Stage 1 C3 may already have built it).
+4. ~~**MudBlazor provider placement.**~~ **ANSWERED BY STAGE 1 — and `IslandRoot` is dead.**
+   The providers do **not** live in MainLayout. There is one `MudPopoverProvider` per circuit (it
+   subscribes a section outlet by a fixed id, so a second throws *"already a subscriber"*), and
+   roots initialise in **document order** — so a provider in MainLayout, the last root, is behind
+   every island. They mount as `Components/MudProviders.razor`, ahead of anything that asks, with
+   the theme as a parameter because the shell already resolved the mix from the request.
+
+   **Stage 2 must reproduce this order in `App.razor`.** The rule is not "providers first" — it
+   is **"providers ahead of every consumer"**. `HeadOutlet` legitimately precedes them; it asks
+   for nothing. Shipped order in `_SiteLayout.cshtml`:
+
+   | | root | why the position matters |
+   |---|---|---|
+   | 1 | `HeadOutlet` | none — asks for no provider |
+   | 2 | **`MudProviders`** | must precede every island below |
+   | 3 | `AppBarSearch` (island) | its autocomplete opens a popover |
+   | 4 | `ShellImportPulse` (island) | no Mud, position irrelevant |
+   | 5 | `App` → MainLayout | the app's own dialogs/popovers |
+
+   ⚠ Confirm that `@rendermode` subtrees in Blazor Web App activate in document order the same
+   way `<component>` roots do. The whole arrangement rests on it, and it is an implementation
+   detail, not a documented contract — **this is the single highest-value thing to verify before
+   building Stage 2**, because if it holds the shape carries over unchanged, and if it doesn't,
+   MudBlazor + islands needs a different answer entirely.
 5. **Auth.** `[Authorize]`, the `DefaultAuthentication` cookie scheme, `ExternalAuthentication`,
    `ApiToken` Basic auth, and the DevAuth backdoor (`/Login/Dev`, `/Login/Dev/Bootstrap`) under
    the new endpoint mapping.
