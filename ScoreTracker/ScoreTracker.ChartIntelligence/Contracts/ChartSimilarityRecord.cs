@@ -6,10 +6,25 @@ namespace ScoreTracker.ChartIntelligence.Contracts;
 ///     signals. Score answers "same kind of problem", nothing more: the shelf orders by
 ///     difficulty and filters by metadata on top of this, neither of which is baked in
 ///     here.
+///     The list is **not** pre-filtered by quality — it runs down into the tail, because
+///     where the bar falls is a render decision. Readers that want only real matches
+///     apply their own.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record ChartSimilarityRecord(
     Guid ChartId,
     double Score,
     double SkillScore,
-    double IntensityScore);
+    double IntensityScore,
+    IReadOnlyList<ChartSharedBadgeRecord> SharedBadges);
+
+/// <summary>
+///     A badge both charts carry, at the coverage they share, keyed by piucenter's raw
+///     badge name (<c>bracket</c>, <c>twist_90</c>, …) — deliberately not the display
+///     skill vocabulary, which is a projection this must not inherit. Naming it for a
+///     human is the reader's job.
+///     Coverage is the shared fraction, so "bracket 0.50" means *both* charts are at
+///     least half brackets.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ChartSharedBadgeRecord(string Badge, double Coverage);

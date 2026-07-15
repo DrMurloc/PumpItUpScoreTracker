@@ -12,7 +12,9 @@ namespace ScoreTracker.ChartIntelligence.Domain;
 ///     a folder.
 ///     Hard gates — level within ±2, never the same song (siblings are navigation, not
 ///     discovery); the pool itself carries the same-mix/same-type gates. Level distance
-///     costs nothing inside the window, see <see cref="LevelWindow" />.
+///     costs nothing inside the window, see <see cref="LevelWindow" />. Those gates are
+///     the only thing that removes a pair: what survives is ranked and the best
+///     <see cref="TopK" /> are kept, tail included, with no score bar anywhere.
 ///     The two signals combine as a weighted **geometric** mean. Geometric, not
 ///     arithmetic: an arithmetic mean squares its weights, so a light signal contributes
 ///     a fraction of its variance and the heavy one buries it. In log space a low signal
@@ -74,8 +76,17 @@ internal static class ChartSimilarityCalculator
     /// </summary>
     internal const int LevelWindow = 2;
 
-    internal const double ScoreFloor = 0.55;
-    internal const int TopK = 8;
+    /// <summary>
+    ///     Neighbors persisted per (mix, chart). Twenty rather than eight, and with no
+    ///     score bar of any kind: ~84k rows across the catalog is nothing, and storing the
+    ///     tail is what pays for the near-misses shelf, the "closest we could find"
+    ///     degraded state, and a floor that can be retuned by redeploy instead of by a
+    ///     rebuild. Where the bar falls is the shelf's call, not the graph's.
+    /// </summary>
+    internal const int TopK = 20;
+
+    /// <summary>How many of a pair's shared badges ride the edge; the shelf renders fewer.</summary>
+    internal const int SharedBadgeCount = 5;
 
     /// <summary>
     ///     What a signal of exactly zero is worth to the geometric mean. Bray-Curtis
@@ -107,12 +118,13 @@ internal static class ChartSimilarityCalculator
             var intensity = IntensitySimilarity(intensityZ[a.ChartId], intensityZ[b.ChartId]);
             if (skill == null || intensity == null) continue;
 
-            var score = Math.Pow(Math.Max(skill.Value, SignalFloor), SkillWeight)
+            var score = Math.Pow(Math.Max(skill.Score, SignalFloor), SkillWeight)
                         * Math.Pow(Math.Max(intensity.Value, SignalFloor), IntensityWeight);
-            if (score < ScoreFloor) continue;
 
-            candidates[a.ChartId].Add(new ChartSimilarityEdge(b.ChartId, score, skill.Value, intensity.Value));
-            candidates[b.ChartId].Add(new ChartSimilarityEdge(a.ChartId, score, skill.Value, intensity.Value));
+            candidates[a.ChartId]
+                .Add(new ChartSimilarityEdge(b.ChartId, score, skill.Score, intensity.Value, skill.SharedBadges));
+            candidates[b.ChartId]
+                .Add(new ChartSimilarityEdge(a.ChartId, score, skill.Score, intensity.Value, skill.SharedBadges));
         }
 
         return candidates.ToDictionary(kv => kv.Key,
@@ -131,26 +143,39 @@ internal static class ChartSimilarityCalculator
     ///     why a weighted mean cannot fix it either (the weights land in the denominator and
     ///     cancel). A badge one chart is built on and the other never touches contributes
     ///     its whole magnitude to the distance. Missing without banked badges on both sides.
+    ///     The shared terms come back with the score because they are the same arithmetic —
+    ///     see <see cref="SharedBadgeCoverage" />.
     /// </summary>
-    internal static double? SkillSimilarity(ChartSimilarityFeatures a, ChartSimilarityFeatures b)
+    internal static SkillMatch? SkillSimilarity(ChartSimilarityFeatures a, ChartSimilarityFeatures b)
     {
         if (a.BadgeCoverage.Count == 0 || b.BadgeCoverage.Count == 0) return null;
         double difference = 0, mass = 0;
+        var shared = new List<SharedBadgeCoverage>();
         foreach (var badge in a.BadgeCoverage.Keys.Union(b.BadgeCoverage.Keys))
         {
-            var coverageA = Shaped(a.BadgeCoverage.GetValueOrDefault(badge));
-            var coverageB = Shaped(b.BadgeCoverage.GetValueOrDefault(badge));
+            var rawA = a.BadgeCoverage.GetValueOrDefault(badge);
+            var rawB = b.BadgeCoverage.GetValueOrDefault(badge);
+            var coverageA = Shaped(rawA);
+            var coverageB = Shaped(rawB);
             difference += Math.Abs(coverageA - coverageB);
             mass += coverageA + coverageB;
+            var overlap = Math.Min(rawA, rawB);
+            if (overlap > 0) shared.Add(new SharedBadgeCoverage(badge, overlap));
         }
 
-        return mass == 0 ? null : 1 - difference / mass;
+        if (mass == 0) return null;
+        return new SkillMatch(1 - difference / mass,
+            shared.OrderByDescending(s => s.Coverage).ThenBy(s => s.Badge, StringComparer.Ordinal)
+                .Take(SharedBadgeCount).ToArray());
 
         static double Shaped(double coverage)
         {
             return Math.Pow(coverage, CoverageGamma);
         }
     }
+
+    /// <summary>The skill signal and the badges it was made of.</summary>
+    internal sealed record SkillMatch(double Score, IReadOnlyList<SharedBadgeCoverage> SharedBadges);
 
     /// <summary>
     ///     Step-analysis scalars z-scored within each chart's own (type, level) cohort —

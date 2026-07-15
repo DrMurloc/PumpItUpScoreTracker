@@ -240,8 +240,12 @@ free, and lets the floor be retuned without a job run.
 
 - **Table `ChartSimilarity`** (ChartIntelligence contribution, internal entity):
   `(MixId, ChartId, SimilarChartId, Score, SignalsJson, ComputedAt)`, PK
-  `(MixId, ChartId, SimilarChartId)`, index `(MixId, ChartId, Score DESC)`. `SharedScorers` is
-  dropped with Players. `SignalsJson` carries skill, intensity, and the shared-badge breakdown.
+  `(MixId, ChartId, SimilarChartId)`. `SharedScorers` is dropped with Players. `SignalsJson`
+  carries skill, intensity, and the shared-badge breakdown — a blob because it is read whole,
+  only by this vertical, and never queried into.
+  **No `Score DESC` index** (this doc used to spec one): the read is a PK-prefix seek on
+  `(MixId, ChartId)` returning ≤20 rows, and ordering twenty rows in memory is free. An index
+  whose only job is to sort a set that small earns nothing.
 - **Top-20 per (mix, chart), floor-free.** ~84k rows at 4,213 charts, against 18k today. Trivial,
   and it is what buys near-misses, the degraded state, and a retunable floor.
 - **Nightly** `RecalculateChartSimilarityCommand` — **no longer has a cron dependency.** With

@@ -128,11 +128,13 @@ public sealed class ChartSimilarityCalculatorTests
     }
 
     [Fact]
-    public void EdgesBelowTheFloorAreDropped()
+    public void APoorPairIsStoredRatherThanDropped()
     {
-        // Gamma-shaped 1.0 vs (0.36, 0.64): skill = 1 − 1.28/2.0 = 0.36. Intensity is a
-        // perfect 1.0 — identical NPS, so the cohort has no spread — and cannot buy the
-        // pair in: 0.36^0.75 · 1 = 0.4647580 < 0.55.
+        // Gamma-shaped 1.0 vs (0.36, 0.64): skill = 1 − 1.28/2.0 = 0.36, intensity a
+        // perfect 1.0, so the pair scores 0.36^0.75 = 0.4647580 — under any floor the
+        // shelf is likely to set. It is kept anyway. Nothing but the gates removes a
+        // pair: this row is what the near-misses section renders, and it is why the bar
+        // can move without a rebuild.
         var a = Features(Guid.NewGuid(), "Song A",
             badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 10);
         var b = Features(Guid.NewGuid(), "Song B",
@@ -140,27 +142,67 @@ public sealed class ChartSimilarityCalculatorTests
 
         var edges = ChartSimilarityCalculator.BuildEdges(new[] { a, b });
 
-        Assert.Empty(edges[a.ChartId]);
+        var edge = Assert.Single(edges[a.ChartId]);
+        Assert.Equal(0.4647580015, edge.Score, Tolerance);
     }
 
     [Fact]
-    public void OnlyTheTopEightNeighborsSurvive()
+    public void OnlyTheTopTwentyNeighborsSurvive()
     {
-        // Nine candidates, scores strictly decreasing via a bracket-coverage gradient —
-        // the ninth-best is the one that must fall off. Every NPS is identical, so
-        // intensity is 1.0 throughout and skill alone does the ordering.
+        // Twenty-one candidates, scores strictly decreasing via a bracket-coverage
+        // gradient — the twenty-first is the one that must fall off. Every NPS is
+        // identical, so intensity is 1.0 throughout and skill alone does the ordering.
         var anchor = Features(Guid.NewGuid(), "Anchor",
             badges: new Dictionary<string, double> { ["bracket"] = 1.0 }, nps: 10);
-        var neighbors = Enumerable.Range(1, 9).Select(i => Features(Guid.NewGuid(), $"Song {i}",
+        var neighbors = Enumerable.Range(1, 21).Select(i => Features(Guid.NewGuid(), $"Song {i}",
             badges: new Dictionary<string, double> { ["bracket"] = 1.0 - i * 0.01 }, nps: 10)).ToArray();
 
         var edges = ChartSimilarityCalculator.BuildEdges(new[] { anchor }.Concat(neighbors).ToArray());
 
         var anchorEdges = edges[anchor.ChartId];
-        Assert.Equal(8, anchorEdges.Count);
-        Assert.DoesNotContain(anchorEdges, e => e.SimilarChartId == neighbors[8].ChartId);
+        Assert.Equal(20, anchorEdges.Count);
+        Assert.DoesNotContain(anchorEdges, e => e.SimilarChartId == neighbors[20].ChartId);
         Assert.Equal(anchorEdges.OrderByDescending(e => e.Score).Select(e => e.SimilarChartId),
             anchorEdges.Select(e => e.SimilarChartId));
+    }
+
+    [Fact]
+    public void TheSharedBadgesAreTheOverlapBestFirstAndReadAsRawCoverage()
+    {
+        // What the two charts have in common is min(a, b) per badge, on raw coverage: the
+        // pair shares half its brackets and a quarter of its anchor runs. Reported
+        // un-gamma'd, because "bracket 0.50" has to mean both charts really are at least
+        // half brackets — squaring is for the distance, not for the human. drill rides A
+        // alone and jack rides B alone, so neither is shared at any coverage.
+        var a = Features(Guid.NewGuid(), "Song A", nps: 10,
+            badges: new Dictionary<string, double>
+                { ["bracket"] = 0.50, ["anchor_run"] = 0.90, ["drill"] = 0.40 });
+        var b = Features(Guid.NewGuid(), "Song B", nps: 10,
+            badges: new Dictionary<string, double>
+                { ["bracket"] = 0.80, ["anchor_run"] = 0.25, ["jack"] = 0.60 });
+
+        var edge = Assert.Single(ChartSimilarityCalculator.BuildEdges(new[] { a, b })[a.ChartId]);
+
+        Assert.Equal(new[] { "bracket", "anchor_run" }, edge.SharedBadges.Select(s => s.Badge).ToArray());
+        Assert.Equal(0.50, edge.SharedBadges[0].Coverage, Tolerance);
+        Assert.Equal(0.25, edge.SharedBadges[1].Coverage, Tolerance);
+    }
+
+    [Fact]
+    public void OnlyTheTopFiveSharedBadgesRideTheEdge()
+    {
+        var badges = new Dictionary<string, double>
+        {
+            ["bracket"] = 0.9, ["anchor_run"] = 0.8, ["drill"] = 0.7, ["jack"] = 0.6,
+            ["jump"] = 0.5, ["run"] = 0.4, ["twist_90"] = 0.3
+        };
+        var a = Features(Guid.NewGuid(), "Song A", badges: badges, nps: 10);
+        var b = Features(Guid.NewGuid(), "Song B", badges: badges, nps: 10);
+
+        var edge = Assert.Single(ChartSimilarityCalculator.BuildEdges(new[] { a, b })[a.ChartId]);
+
+        Assert.Equal(new[] { "bracket", "anchor_run", "drill", "jack", "jump" },
+            edge.SharedBadges.Select(s => s.Badge).ToArray());
     }
 
     [Fact]
@@ -232,7 +274,7 @@ public sealed class ChartSimilarityCalculatorTests
     {
         return ChartSimilarityCalculator.SkillSimilarity(
             Features(Guid.NewGuid(), "Song A", badges: a),
-            Features(Guid.NewGuid(), "Song B", badges: b))!.Value;
+            Features(Guid.NewGuid(), "Song B", badges: b))!.Score;
     }
 
     [Fact]

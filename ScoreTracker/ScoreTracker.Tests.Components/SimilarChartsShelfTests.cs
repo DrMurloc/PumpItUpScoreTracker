@@ -43,6 +43,17 @@ public sealed class SimilarChartsShelfTests : TestContext
         Services.AddSingleton(localizer.Object);
     }
 
+    private static ChartSharedBadgeRecord Badge(string badge, double coverage)
+    {
+        return new ChartSharedBadgeRecord(badge, coverage);
+    }
+
+    private static ChartSimilarityRecord Edge(double score, params ChartSharedBadgeRecord[] badges)
+    {
+        return new ChartSimilarityRecord(Guid.NewGuid(), score, SkillScore: score, IntensityScore: score,
+            SharedBadges: badges);
+    }
+
     private void SetupEdges(Guid chartId, params ChartSimilarityRecord[] edges)
     {
         _mediator.Setup(m => m.Send(It.Is<GetSimilarChartsQuery>(q => q.ChartId == chartId),
@@ -55,30 +66,71 @@ public sealed class SimilarChartsShelfTests : TestContext
     }
 
     [Fact]
-    public void WhyChipsFollowTheDesignDocThresholds()
+    public void ChipsNameTheBadgesThePairSharesAtTheirSharedCoverage()
     {
         var anchor = Guid.NewGuid();
-        // Skill clears its bar, intensity misses: the pair asks for the same things but
-        // asks rather differently hard, and only the true claim gets a chip.
-        SetupEdges(anchor, new ChartSimilarityRecord(Guid.NewGuid(), 0.9,
-            SkillScore: 0.8, IntensityScore: 0.5));
+        // "Brackets 50%" means BOTH charts are at least half brackets — the shared
+        // coverage, not either chart's own. Named badges, never "skills match".
+        SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5), Badge("anchor_run", 0.25)));
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
-        Assert.Contains("same skill profile", cut.Markup);
-        Assert.DoesNotContain("same intensity", cut.Markup);
+        Assert.Contains("Brackets 50%", cut.Markup);
+        Assert.Contains("Anchor runs 25%", cut.Markup);
+        Assert.DoesNotContain("same skill profile", cut.Markup);
     }
 
     [Fact]
-    public void NoQualifyingSignalFallsBackToTheLevelNeighborChip()
+    public void ATraceOfABadgeIsNotAReason()
     {
         var anchor = Guid.NewGuid();
-        SetupEdges(anchor, new ChartSimilarityRecord(Guid.NewGuid(), 0.6,
-            SkillScore: 0.6, IntensityScore: 0.5));
+        // Both charts brush past a drill. That is not something they have in common.
+        SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.5), Badge("drill", 0.04)));
 
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
-        Assert.Contains("level neighbor", cut.Markup);
+        Assert.Contains("Brackets 50%", cut.Markup);
+        Assert.DoesNotContain("Drills", cut.Markup);
+    }
+
+    [Fact]
+    public void AtMostThreeChipsRender()
+    {
+        var anchor = Guid.NewGuid();
+        SetupEdges(anchor, Edge(0.9, Badge("bracket", 0.9), Badge("anchor_run", 0.8),
+            Badge("drill", 0.7), Badge("jack", 0.6)));
+
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+
+        Assert.Contains("Brackets 90%", cut.Markup);
+        Assert.Contains("Anchor runs 80%", cut.Markup);
+        Assert.Contains("Drills 70%", cut.Markup);
+        Assert.DoesNotContain("Jacks", cut.Markup);
+    }
+
+    [Fact]
+    public void AnUnmappedBadgeFallsBackToItsRawNameRatherThanVanishing()
+    {
+        var anchor = Guid.NewGuid();
+        SetupEdges(anchor, Edge(0.9, Badge("some_new_piucenter_badge", 0.5)));
+
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+
+        Assert.Contains("some_new_piucenter_badge 50%", cut.Markup);
+    }
+
+    [Fact]
+    public void EdgesUnderTheRenderFloorAreNotMatches()
+    {
+        var anchor = Guid.NewGuid();
+        // The graph stores its whole tail floor-free; deciding what counts as a match is
+        // the shelf's job, so a tail row must not render as one.
+        SetupEdges(anchor, Edge(0.30, Badge("bracket", 0.5)));
+
+        var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
+
+        Assert.Contains("Not enough data yet to name similar charts", cut.Markup);
+        Assert.DoesNotContain("Brackets", cut.Markup);
     }
 
     [Fact]

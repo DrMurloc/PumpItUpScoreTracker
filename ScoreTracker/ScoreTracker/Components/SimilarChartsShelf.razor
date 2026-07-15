@@ -4,13 +4,14 @@
 @using ScoreTracker.ChartIntelligence.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services
 @namespace ScoreTracker.Web.Components
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 
-@* The similarity graph's shelf (docs/design/chart-similarity.md): jacket cards with
-   why-chips derived from the edge's persisted signal breakdown. Doubles as the internal
-   link mesh — static content at Stage 3. Why-chip thresholds are the design doc's. *@
+@* The similarity graph's shelf (docs/design/chart-similarity.md): jacket cards naming
+   the badges each pair actually shares. Doubles as the internal link mesh — static
+   content at Stage 3. *@
 @if (_loaded)
 {
     @if (_entries.Count == 0)
@@ -45,6 +46,22 @@
 }
 
 @code {
+    /// <summary>
+    ///     What counts as a real match. A render-time constant by design: the graph stores
+    ///     its top 20 floor-free, so moving this bar is a redeploy rather than a rebuild,
+    ///     and the rows below it are the near-misses rather than rows that never existed.
+    ///     Pending calibration against a real score distribution.
+    /// </summary>
+    internal const double ScoreFloor = 0.55;
+
+    /// <summary>
+    ///     Below this shared coverage a badge is a trace both charts happen to brush past,
+    ///     not something they have in common worth saying out loud.
+    /// </summary>
+    internal const double MinimumReasonCoverage = 0.15;
+
+    internal const int MaximumReasons = 3;
+
     [Parameter]
     public Guid ChartId { get; set; }
 
@@ -67,20 +84,28 @@
 
         var charts = (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: edges.Select(e => e.ChartId))))
             .ToDictionary(c => c.Id);
+        // The graph hands over its whole tail; the bar is ours to apply.
         _entries = edges
-            .Where(e => charts.ContainsKey(e.ChartId))
+            .Where(e => e.Score >= ScoreFloor && charts.ContainsKey(e.ChartId))
             .Select(e => (e, charts[e.ChartId], Reasons(e)))
             .ToArray();
         _loaded = true;
     }
 
-    /// <summary>At most two chips, design-doc priority order and thresholds.</summary>
+    /// <summary>
+    ///     What the pair actually matched on, strongest overlap first — never "skills
+    ///     match", which reads as broken. The percentage is the coverage the two charts
+    ///     *share*, so "Brackets 50%" says both are at least half brackets. A badge whose
+    ///     shared coverage is a rounding error is not a reason, so the chips can come back
+    ///     empty; that is honest, and the score bar still says how close the pair is.
+    /// </summary>
     internal IReadOnlyList<string> Reasons(ChartSimilarityRecord record)
     {
-        var reasons = new List<string>();
-        if (record.SkillScore >= 0.75) reasons.Add(L["same skill profile"]);
-        if (record.IntensityScore >= 0.8) reasons.Add(L["same intensity"]);
-        if (reasons.Count == 0) reasons.Add(L["level neighbor"]);
-        return reasons.Take(2).ToArray();
+        return record.SharedBadges
+            .Where(b => b.Coverage >= MinimumReasonCoverage)
+            .Take(MaximumReasons)
+            .Select(b => L["{0} {1}%", L[SimilarityBadgeLabels.For(b.Badge)], (int)Math.Round(b.Coverage * 100)]
+                .ToString())
+            .ToArray();
     }
 }

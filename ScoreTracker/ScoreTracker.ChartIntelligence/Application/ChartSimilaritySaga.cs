@@ -78,8 +78,13 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
         CancellationToken cancellationToken)
     {
         var edges = await _similarity.GetEdges(request.Mix, request.ChartId, cancellationToken);
-        return edges.Select(e => new ChartSimilarityRecord(e.SimilarChartId, e.Score, e.SkillScore, e.IntensityScore))
-            .ToArray();
+        return edges.Select(ToRecord).ToArray();
+    }
+
+    private static ChartSimilarityRecord ToRecord(ChartSimilarityEdge edge)
+    {
+        return new ChartSimilarityRecord(edge.SimilarChartId, edge.Score, edge.SkillScore, edge.IntensityScore,
+            edge.SharedBadges.Select(b => new ChartSharedBadgeRecord(b.Badge, b.Coverage)).ToArray());
     }
 
     private static ChartSimilarityFeatures BuildFeatures(Chart chart,

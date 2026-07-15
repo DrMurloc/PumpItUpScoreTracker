@@ -64,8 +64,10 @@ public sealed class ChartSimilaritySagaTests
     public async Task GetSimilarChartsReturnsStoredEdgesInStoredOrder()
     {
         var chartId = Guid.NewGuid();
-        var first = new ChartSimilarityEdge(Guid.NewGuid(), 0.9, 1.0, 0.6);
-        var second = new ChartSimilarityEdge(Guid.NewGuid(), 0.7, 0.8, 0.5);
+        var first = new ChartSimilarityEdge(Guid.NewGuid(), 0.9, 1.0, 0.6,
+            new[] { new SharedBadgeCoverage("bracket", 0.5) });
+        var second = new ChartSimilarityEdge(Guid.NewGuid(), 0.7, 0.8, 0.5,
+            Array.Empty<SharedBadgeCoverage>());
         _similarity.Setup(s => s.GetEdges(MixEnum.Phoenix, chartId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { first, second });
 
@@ -77,9 +79,13 @@ public sealed class ChartSimilaritySagaTests
         Assert.Equal(0.9, result[0].Score);
         Assert.Equal(1.0, result[0].SkillScore);
         Assert.Equal(0.6, result[0].IntensityScore);
+        var badge = Assert.Single(result[0].SharedBadges);
+        Assert.Equal("bracket", badge.Badge);
+        Assert.Equal(0.5, badge.Coverage);
         Assert.Equal(second.SimilarChartId, result[1].ChartId);
         Assert.Equal(0.8, result[1].SkillScore);
         Assert.Equal(0.5, result[1].IntensityScore);
+        Assert.Empty(result[1].SharedBadges);
     }
 
     [Fact]

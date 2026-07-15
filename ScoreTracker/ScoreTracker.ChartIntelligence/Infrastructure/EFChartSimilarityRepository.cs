@@ -32,7 +32,8 @@ internal sealed class EFChartSimilarityRepository : IChartSimilarityRepository
                 ChartId = chartId,
                 SimilarChartId = edge.SimilarChartId,
                 Score = edge.Score,
-                SignalsJson = JsonSerializer.Serialize(new SignalsDto(edge.SkillScore, edge.IntensityScore)),
+                SignalsJson = JsonSerializer.Serialize(new SignalsDto(edge.SkillScore, edge.IntensityScore,
+                    edge.SharedBadges.Select(b => new SharedBadgeDto(b.Badge, b.Coverage)).ToArray())),
                 ComputedAt = computedAt
             }), cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
@@ -52,7 +53,9 @@ internal sealed class EFChartSimilarityRepository : IChartSimilarityRepository
             {
                 var signals = JsonSerializer.Deserialize<SignalsDto>(e.SignalsJson);
                 return new ChartSimilarityEdge(e.SimilarChartId, e.Score, signals?.Skill ?? 0,
-                    signals?.Intensity ?? 0);
+                    signals?.Intensity ?? 0,
+                    signals?.SharedBadges?.Select(b => new SharedBadgeCoverage(b.Badge, b.Coverage)).ToArray()
+                    ?? Array.Empty<SharedBadgeCoverage>());
             })
             .ToArray();
     }
@@ -60,5 +63,7 @@ internal sealed class EFChartSimilarityRepository : IChartSimilarityRepository
     // The persisted breakdown shape. Nullable on the way in because an edge banked under
     // an older shape deserializes as missing rather than throwing; the nightly rebuild
     // rewrites every edge wholesale, so a stale row is transient by construction.
-    private sealed record SignalsDto(double? Skill, double? Intensity);
+    private sealed record SignalsDto(double? Skill, double? Intensity, SharedBadgeDto[]? SharedBadges);
+
+    private sealed record SharedBadgeDto(string Badge, double Coverage);
 }
