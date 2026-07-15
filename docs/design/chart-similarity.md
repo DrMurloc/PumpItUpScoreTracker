@@ -272,6 +272,27 @@ independently-labelled charts (2026-07-15):
 | big burst moments | MilK S20 | 10.2 | .065 | .154 |
 | chill / "fake fast runs" | Hymn of Golden Glory S22 | 13.2 | .033 | .033 |
 
+**The two axes are orthogonal — measure both before concluding anything.** Conflict D21 and
+Viyella's D21 are the case that proves it (2026-07-15, real D21 badge data):
+
+| badge | Conflict | Viyella's | |
+|---|---|---|---|
+| `run` | **.333** | **.000** | 16.8% of the skill distance |
+| `drill` | **.000** | **.286** | 12.4% |
+| `doublestep` | **.000** | **.286** | 12.4% |
+| `twist_90` | .333 | .143 | 13.7% |
+
+**Conflict is a run chart with no drills; Viyella's is a drill chart with no runs** — near-disjoint
+on what defines each. Yet their `susFrac`/`burstFrac` are within a hair (`s_sus .748 / s_burst
+.742`), because *intensity* asks **how much of the song taxes you** (TutFrac .467 vs .281) while
+*skill* asks **what the taxing parts are made of**. Both are real; neither substitutes for the
+other. `S_skill .6498 · S_intensity .7830 → .6808`.
+
+This vindicates the owner's taxonomy rather than contradicting it: **drills are bursts, runs are
+stamina**, and "pure burst" means *low total load, and what load exists is drills*. An earlier
+revision of §9 concluded the opposite ("what the labels separate is TutFrac, not composition")
+from an intensity-only measurement. **Do not diagnose a pair on one signal.**
+
 - **Gargoyle - FULL SONG - D25 is the sentinel**: `sustain 362 / TUT 362` — every second of tension
   is sustained, zero bursts, and the only chart in the set where `top3:sustained` fires at #1.
 - **Hymn of Golden Glory S19 vs S22 is the controlled inversion**: same song, same 121s, adjacent
@@ -312,7 +333,7 @@ Measured on the Curiosity Overdrive ↔ BOOOM!! pair and the S20/D23 folders unl
 | **Meta as a score** | Filter-shaped. It out-discriminated Players *and* Difficulty in both S20 and D23 at a third of their weight — because binary facts have high variance, not because it knows anything. |
 | **Note count in intensity** | Andamiro pads charts toward a per-folder note-count norm, so within-cohort spread is tiny and z-scoring *divides by it*, amplifying differences the padding was designed to erase. Also `NPS × duration = note count` — never independent. |
 | **The level-affinity penalty** | §2. |
-| **Conflict ↔ Viyella's as the geometric's proof case** | This doc used to cite the pair as a false match rescued by coinciding NPS (10.7/10.5). It is not one, and the rework does not move it: measured on the real D21 cohort, **old .787 → new .783**. Their decomposed profiles are genuinely close — Conflict is ~1.65× Viyella's on *both* axes (sus .217/.133, burst .250/.148), so `s_sus .748 / s_burst .742` and there is no mismatched dimension for the geometric to catch. They are also adjacent rungs in the owner's own six-chart ordering, so ~.78 may simply be right. **What the owner's labels separate ("high stamina" vs "pure burst") is TutFrac — total load, .467 vs .281 — not composition**; note Viyella's has the *lower* burstFrac of the two. Use Slapstick Parfait ↔ Horang Pungryuga (§3.2) as the proof case instead. |
+| **Conflict ↔ Viyella's as the geometric's proof case** | This doc used to cite the pair as a false match rescued by coinciding NPS (10.7/10.5). It is not one — but *not* for the reason first recorded here, and the correction matters (§8, "the two axes"). **Intensity cannot separate them**: `s_sus .748 / s_burst .742 / s_nps .953`, and old-intensity .787 → new-intensity .783, so the decomposition and the geometric both find nothing to catch. **Skill separates them decisively**: `S_skill = .6498`, and since skill carries three-quarters of the weight the full V1 score is **.6808**, not the ~.78 an intensity-only reading implies. Measuring one signal and generalizing to "the formula" is the mistake to avoid here. Use Slapstick Parfait ↔ Horang Pungryuga (§3.2) as the *geometric's* proof case, because that pair is one; this pair proves something else. |
 | **A BPM plateau (±10, decay beyond)** | Nominal BPM is **noise**: slow songs multiply. Altale 90 BPM → **12.0 nps**; Glimmer Gleam 85 → 8.8; TRICKL4SH 220 → 11.5 — all within ~2 of Rush-More's 10.7, while raw BPM said 60–75 apart. A ±10 band would have deleted two owner-approved matches and promoted THE REVOLUTION (exactly 160 BPM, *"absolutely not"*). **NPS already carries it.** BPM survives only as a filter. |
 
 ---
