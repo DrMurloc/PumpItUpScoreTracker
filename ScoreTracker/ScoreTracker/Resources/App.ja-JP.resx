@@ -4308,4 +4308,10 @@
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>ファイルが10MBを超えています。サイズを小さくして再試行してください。</value>
   </data>
+  <data name="Weekly Charts — Pump It Up" xml:space="preserve">
+    <value>Weekly Charts — Pump It Up</value>
+  </data>
+  <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
+    <value>今週の Pump It Up チャレンジ譜面{0}件、ライブ順位付きのデイリー譜面、そして月間 PUMBILITY ボード。</value>
+  </data>
 </root>

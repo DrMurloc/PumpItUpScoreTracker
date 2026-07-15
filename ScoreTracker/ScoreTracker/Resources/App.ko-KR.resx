@@ -4188,4 +4188,10 @@
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>파일이 10MB를 초과했습니다. 크기를 줄여 다시 시도해 주세요.</value>
   </data>
+  <data name="Weekly Charts — Pump It Up" xml:space="preserve">
+    <value>Weekly Charts — Pump It Up</value>
+  </data>
+  <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
+    <value>이번 주 Pump It Up 챌린지 채보 {0}개, 실시간 순위가 있는 데일리 채보, 그리고 월간 PUMBILITY 보드.</value>
+  </data>
 </root>

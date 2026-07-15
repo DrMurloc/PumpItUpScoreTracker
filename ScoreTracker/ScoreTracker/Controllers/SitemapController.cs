@@ -16,6 +16,9 @@ namespace ScoreTracker.Web.Controllers
             var charts = (await _charts.GetCharts(MixEnum.Phoenix)).ToArray();
             var pages = charts.Select(chart => $"https://piuscores.arroweclip.se/Chart/{chart.Id}").ToList();
             pages.Add("https://piuscores.arroweclip.se/TierLists");
+            // The challenges hub — a fresh weekly chart set + a daily chart, now real HTML
+            // (weekly-charts-overhaul.md §3.4). Absent before the static rebuild.
+            pages.Add("https://piuscores.arroweclip.se/WeeklyCharts");
             // Tier-lists overhaul C3: one canonical URL per Singles/Doubles folder that
             // actually has charts — each is an indexable community tier list.
             pages.AddRange(charts
