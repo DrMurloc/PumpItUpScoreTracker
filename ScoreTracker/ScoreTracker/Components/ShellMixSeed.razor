@@ -1,0 +1,21 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+@inject ShellContext Shell
+
+@* Renders nothing. The shell resolves the mix from the request, where the cookie and the
+   user's settings are both readable, and hands it here; the circuit gets its own DI
+   scope, so the value the static render resolved does not reach it on its own. This root
+   mounts ahead of <Routes> and roots activate in document order, so the seed lands before
+   any page root reads it. Parameters to an interactive root travel through the client, so
+   this carries a display preference only: an anonymous visitor already controls their own
+   mix, and nothing here gates access. *@
+
+@code {
+    [Parameter] public MixEnum CurrentMix { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Shell.CurrentMix = CurrentMix;
+    }
+}

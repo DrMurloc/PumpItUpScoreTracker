@@ -98,9 +98,13 @@ calls `IJSRuntime` from `OnAfterRenderAsync` — none of which happens in a stat
 
 - **The legacy-mix gate.** It currently calls `NavManager.NavigateTo` client-side. In static SSR
   that becomes a real server redirect — strictly better than a bounce after paint.
-- **`NavManager.LocationChanged` + most of `OnAfterRenderAsync`** become dead weight. Enhanced
-  navigation is **off** (`data-enhance-nav="false"`, render-modes.md §7.1), so every navigation is
-  already a full page load and a static layout re-renders per request anyway.
+- **`NavManager.LocationChanged` + most of `OnAfterRenderAsync`** die with in-circuit
+  navigation. ⚠ An earlier revision of this doc claimed navigation was "already a full page
+  load" — **false**: pre-flip, the interactive router swapped pages inside one living circuit
+  (SPA). **The flip itself is what makes every navigation a full document load**
+  (owner-accepted 2026-07-16): the static shell paints instantly from server HTML, the page's
+  circuit boots per view, and enhanced navigation (render-modes.md §7.1) is the designed
+  SPA-feel mitigation, parked for its own field test.
 
 **Shape of the fix:** two island components (a recap pointer and a page-dock host —
 `ChartVideoDisplay` retires at PR-2 rather than islanding), `MudLayout` relocated into the 3
@@ -305,6 +309,20 @@ QA on its own branch, exactly like Stage 1's.
   (§5), so "a new page forgot to opt in" must fail as a file scan, not a rendering test.
 - **Verification**: the fast suites stay green through every render-mode violation (§5). E2E
   full pass + the owner FT matrix are the actual gate.
+
+**Shipped 2026-07-16, with three reality corrections found by building:**
+- **The navigation model changes — this is the flip's one user-visible cost.** The §2 mechanics
+  above were right; the "zero behavior change" banner was not: killing the interactive router
+  ends SPA navigation, and every in-app click is a full document load now (accepted; enhanced
+  nav is the chase).
+- **Real 404s came free**: the static router answers unmatched routes itself — real 404, empty
+  body — and the Router's `NotFound` fragment never renders under it. The planned status-setting
+  component was dead on arrival and deleted; a branded not-found page is `NotFoundPage` polish,
+  recorded as follow-up.
+- **`MudLayout` relocated per drawer, not per page**: all six drawers are `Temporary`
+  (fixed-position), so each wraps itself in a zero-footprint container where it stands.
+Four layout-contract E2E pins (dock, drawer, gate redirect, anon-mix-reaches-circuit) were
+landed green against the pre-flip router first, then held through the flip.
 
 ### PR-4 — ChartDetails static + output caching + the URL cutover [L — ships as ONE unit]
 

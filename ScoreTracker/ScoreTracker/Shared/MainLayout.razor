@@ -1,37 +1,23 @@
-@using ScoreTracker.Domain.SecondaryPorts
-@using MediatR
-@using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
-@using ScoreTracker.Web.Services.Theming
-@using Microsoft.AspNetCore.Components.Routing
 @inherits LayoutComponentBase
-@inject ICurrentUserAccessor CurrentUser
-@implements IDisposable
-<PageTitle>@L["PIU Scores"]</PageTitle>
+@inject IUiSettingsAccessor UiSettings
+@inject NavigationManager NavManager
 
-@* Shell chrome — nav, mix pill, bottom nav, More sheet — is server-rendered by _SiteLayout
-   (docs/design/static-shell.md). What stays here is the legacy-mix gate, the page dock, the
-   drawer host and the recap pointer.
+@* The layout renders statically around every page (the page itself is the island). Shell
+   chrome — nav, mix pill, bottom nav, More sheet — is server-rendered by App.razor
+   (docs/design/static-shell.md). What stays here is the legacy-mix gate, evaluated per
+   request, and the two islands: the dock slot's host and the recap pointer. The drawer
+   host went with the drawers: the three pages that open one wrap it in their own
+   MudLayout.
 
-   The Mud providers are NOT here. They mount ahead of the shell as their own root, because
-   this layout is the last root to initialise and an island in the app bar would ask for a
-   popover before it existed. *@
+   The Mud providers are NOT here. They mount ahead of the shell as their own root, and an
+   island in the app bar would ask for a popover before a provider this late existed. *@
+<PageDockHost @rendermode="RenderModes.Interactive"></PageDockHost>
 
-@* MudLayout is MudBlazor's drawer host (it derives from MudDrawerContainer), not chrome —
-   a MudDrawer anchors to it and falls into normal flow without one. It carries no app bar
-   and no nav; it is here for the pages that open drawers. *@
-<MudLayout>
-    @* Fixed-position, so where it sits in the tree doesn't matter. Mobile only — it exists to
-       put primary actions in thumb reach above the bottom nav, and desktop has neither. *@
-    @if (PageDock.DockContent != null)
-    {
-        <div class="page-dock shell-mobile-only">@PageDock.DockContent</div>
-    }
-
-    <MudContainer>
+<MudContainer>
     @if (LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath))
     {
         @* One render frame at most — RedirectIfGated is already navigating to
@@ -46,104 +32,24 @@
     {
         @Body
     }
+</MudContainer>
 
-    @* One-time Phoenix Recap pointer: shows once per user, only after their recap row
-       exists. No expiry cutoff yet — set one when the Phoenix 2 launch date is known
-       (docs/design/phoenix-season-recap.md). *@
-    <MudDialog @bind-Visible="_showRecapPopup">
-        <DialogContent>
-            <MudText Typo="Typo.h5">@L["Your Phoenix Story is ready"]</MudText>
-            <MudText Class="mt-2">@L["Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts."]</MudText>
-        </DialogContent>
-        <DialogActions>
-            <MudSpacer></MudSpacer>
-            <MudButton Href=@($"/Player/{_userId}/PhoenixRecap") Color="Color.Primary" StartIcon="@Icons.Material.Filled.LocalFireDepartment" Variant="Variant.Filled" OnClick="()=>_showRecapPopup=false">@L["Open"]</MudButton>
-            <MudButton Variant="Variant.Text"
-                       OnClick="()=>_showRecapPopup=false"
-                       Color="Color.Primary">@L["Close"]</MudButton>
-            </DialogActions>
-        </MudDialog>
-    </MudContainer>
-</MudLayout>
-@inject IMediator Mediator;
-@inject IUiSettingsAccessor UiSettings;
-@inject NavigationManager NavManager;
-@inject PageDockService PageDock;
-@inject IJSRuntime JSRuntime;
+<RecapPointer @rendermode="RenderModes.Interactive"></RecapPointer>
+
 @code
 {
-    private Guid? _userId = null;
-    private bool _showRecapPopup = false;
-    private bool _hasRecap = false;
-    private const string RecapPopupKey = "MainLayout__PhoenixRecapPopupShown";
-    // Seeded by App from the shell's root parameter, so it is known before the first render.
+    // Resolved from the request by the shell, so the gate can evaluate on the first render.
     private MixEnum _currentMix = MixEnum.Phoenix;
-
-    // The dock and focus-mode classes live on <html>: the chrome that reacts to them is
-    // server-rendered, outside this root.
-    private void OnDockChanged()
-    {
-        _ = JSRuntime.InvokeVoidAsync("shell.setDockState", PageDock.DockContent != null, PageDock.FocusMode);
-        InvokeAsync(StateHasChanged);
-    }
-
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        RedirectIfGated();
-        // Fresh page starts with the nav visible again.
-        _ = JSRuntime.InvokeVoidAsync("pageDock.reset");
-        InvokeAsync(StateHasChanged);
-    }
-
-    /// <summary>
-    ///     Gated routes soft-redirect to the tier lists page (the one destination every
-    ///     mix can render) instead of loading — pages that predate legacy mixes throw
-    ///     on them, so they must never begin initializing (docs/design/legacy-mixes.md).
-    /// </summary>
-    private bool RedirectIfGated()
-    {
-        if (!LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath)) return false;
-        NavManager.NavigateTo("/TierLists");
-        return true;
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        // nav.js starts the scroll watcher with the page, before any content exists, so its
-        // idea of where the page was scrolled to predates the content. Re-sync once the
-        // circuit has actually rendered something, or the first scroll is measured against a
-        // page that was 48px tall and the nav flicks in and out.
-        if (firstRender) await JSRuntime.InvokeVoidAsync("pageDock.reset");
-    }
-
-    public void Dispose()
-    {
-        // Defensive: a circuit torn down mid-render (hard refresh) can dispose the layout
-        // before injection finished — observed once in the field as an NRE here.
-        if (NavManager is not null) NavManager.LocationChanged -= OnLocationChanged;
-        if (PageDock is not null) PageDock.Changed -= OnDockChanged;
-    }
 
     protected override async Task OnInitializedAsync()
     {
-        NavManager.LocationChanged += OnLocationChanged;
-        PageDock.Changed += OnDockChanged;
-        _userId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
-        // Resolved from the request by the shell, so the gate can evaluate on the first render
-        // — the body no longer has to be held behind a spinner waiting for it.
         _currentMix = await UiSettings.GetSelectedMix();
-        RedirectIfGated();
-
-        if (CurrentUser.IsLoggedIn)
-        {
-            // Only pester players whose recap actually exists; the flag flips on first show.
-            _hasRecap = await Mediator.Send(new GetPlayerRecapQuery(CurrentUser.User.Id)) != null;
-            var recapShown = await UiSettings.GetSetting(RecapPopupKey);
-            if (_hasRecap && string.IsNullOrWhiteSpace(recapShown))
-            {
-                _showRecapPopup = true;
-                await UiSettings.SetSetting(RecapPopupKey, "true");
-            }
-        }
+        // Gated routes redirect to the tier lists (the one destination every mix can
+        // render) instead of loading — pages that predate legacy mixes throw on them, so
+        // they must never begin initializing (docs/design/legacy-mixes.md). Under static
+        // SSR this NavigateTo is a real HTTP redirect, issued before anything paints;
+        // every navigation is a full request, so it runs per page view.
+        if (LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath))
+            NavManager.NavigateTo("/TierLists");
     }
 }
