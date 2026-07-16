@@ -4293,6 +4293,13 @@ html.sheet-open .more-sheet-scrim {
     gap: 12px;
 }
 
+/* The static card grid is the crawlable mesh; the interactive shelf renders the same cards
+   plus its controls and marks its root data-island-ready the moment it connects, which
+   hides the static copy. Both render real <a href> cards, so nothing reflows on handoff. */
+.chart-shelf-wrap:has([data-island-ready]) .chart-shelf-static {
+    display: none;
+}
+
 .chart-shelf-controls {
     display: flex;
     gap: 14px;

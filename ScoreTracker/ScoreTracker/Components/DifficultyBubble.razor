@@ -10,40 +10,44 @@
 @inject ChartScoringLevels ScoringLevels
 @if (Chart != null || (Type != null && Level != null))
 {
-    <MudTooltip ShowOnFocus="true" Placement="Placement.Right">
-        <ChildContent>
-            @if (UseLegacyChip)
-            {
-                @* Legacy chips are deliberately rendered, not image bubbles: pre-Exceed
-                   slots have no official art, and looking different from the modern
-                   bubbles IS the message — these numbers live on a different scale
-                   (docs/design/legacy-mixes.md). *@
-                <span tabindex="0" class="legacy-chip" style="border-color:@ThemeScales.SlotColor(Chart?.Slot);color:@ThemeScales.SlotColor(Chart?.Slot);font-size:@(Small ? ".62rem" : ".78rem");">@ChipText</span>
-            }
-            else
-            {
-                <MudImage tabindex="0" Src="@DifficultyBubblePath" Height="Height ?? (Small ? 22 : 35)" Alt="@DiffString" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-            }
-        </ChildContent>
-        <TooltipContent>
-            @if (Chart != null)
-            {
-                <MudText Typo="Typo.caption">@Chart.Song.Name @(UseLegacyChip ? ChipText : Chart.DifficultyString)</MudText><br/>
-                @if (UseLegacyChip && Chart.Slot != null)
+    @* MudTooltip renders a popover, which throws in static SSR (no provider in the static
+       tree). The tooltip is a hover affordance, so a static render drops it and keeps the
+       bubble; in a circuit it comes back. *@
+    @if (RendererInfo.IsInteractive)
+    {
+        <MudTooltip ShowOnFocus="true" Placement="Placement.Right">
+            <ChildContent>@Bubble</ChildContent>
+            <TooltipContent>
+                @if (Chart != null)
                 {
-                    <MudText Typo="Typo.caption">@Chart.Mix.GetName() @L["scale"] — @L["not comparable to modern levels"]</MudText><br/>
+                    <MudText Typo="Typo.caption">@Chart.Song.Name @(UseLegacyChip ? ChipText : Chart.DifficultyString)</MudText><br/>
+                    @if (UseLegacyChip && Chart.Slot != null)
+                    {
+                        <MudText Typo="Typo.caption">@Chart.Mix.GetName() @L["scale"] — @L["not comparable to modern levels"]</MudText><br/>
+                    }
+                    <MudText Typo="Typo.caption">@Chart.StepArtist</MudText><br/>
+                    <MudText Typo="Typo.caption">@ScoringLevelString</MudText>
                 }
-                <MudText Typo="Typo.caption">@Chart.StepArtist</MudText><br/>
-                <MudText Typo="Typo.caption">@ScoringLevelString</MudText>
-            }
-            else
-            {
-                <MudText Typo="Typo.caption">@DiffString</MudText>
-            }
-        </TooltipContent>
+                else
+                {
+                    <MudText Typo="Typo.caption">@DiffString</MudText>
+                }
+            </TooltipContent>
         </MudTooltip>
+    }
+    else
+    {
+        @Bubble
+    }
 }
 @code {
+    private RenderFragment Bubble => UseLegacyChip
+        ? @<span tabindex="0" class="legacy-chip" style="border-color:@ThemeScales.SlotColor(Chart?.Slot);color:@ThemeScales.SlotColor(Chart?.Slot);font-size:@(Small ? ".62rem" : ".78rem");">@ChipText</span>
+        @* Legacy chips are deliberately rendered, not image bubbles: pre-Exceed slots have no
+           official art, and looking different from the modern bubbles IS the message — these
+           numbers live on a different scale (docs/design/legacy-mixes.md). *@
+        : @<MudImage tabindex="0" Src="@DifficultyBubblePath" Height="Height ?? (Small ? 22 : 35)" Alt="@DiffString" ObjectFit="ObjectFit.ScaleDown"></MudImage>;
+
     private double? _scoringLevel;
     private string ScoringLevelString => _scoringLevel == null ? "" : $"{_scoringLevel:0.0}";
 

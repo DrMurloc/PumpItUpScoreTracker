@@ -54,6 +54,9 @@ public sealed class SimilarChartsShelfTests : TestContext
         localizer.Setup(l => l[It.IsAny<string>(), It.IsAny<object[]>()])
             .Returns((string key, object[] args) => new LocalizedString(key, string.Format(key, args)));
         Services.AddSingleton(localizer.Object);
+        // Last: it reads the renderer, locking the service collection. The shelf renders on
+        // its interactive path (RendererInfo gates the cards' bubble/image tooltips).
+        this.RenderInteractive();
     }
 
     private static ChartSharedBadgeRecord Badge(string badge, double coverage)

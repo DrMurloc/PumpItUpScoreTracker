@@ -12,6 +12,10 @@ namespace ScoreTracker.Tests.Components;
 
 public sealed class DrawCardTileTests : ComponentTestBase
 {
+    // The tile's DifficultyBubble gates its tooltip on RendererInfo; render it interactive.
+    // Last after the base's registrations — reading the renderer locks the service collection.
+    public DrawCardTileTests() => this.RenderInteractive();
+
     private static Chart TestChart()
     {
         var song = new Song("Nxde", SongType.Arcade, new Uri("https://example.invalid/nxde.png"),
