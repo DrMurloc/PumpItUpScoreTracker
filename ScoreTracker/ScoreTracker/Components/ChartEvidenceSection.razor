@@ -29,7 +29,7 @@
             <div class="chart-evidence-card">
                 <span class="chart-overline">@L["Passes by competitive level"]</span>
                 <p class="chart-evidence-caption">
-                    @if (Facet<FirstPassBandVerdict>() is { } band)
+                    @if (Facet<PassBandVerdict>() is { } band)
                     {
                         <VerdictSentence Facet="band"></VerdictSentence>
                     }

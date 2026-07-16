@@ -4029,8 +4029,8 @@
   <data name="Sustained — it holds you under tension for most of its runtime." xml:space="preserve">
     <value>지속형 — 곡 대부분 동안 긴장을 유지시킵니다.</value>
   </data>
-  <data name="First passes cluster between competitive levels {0} and {1}." xml:space="preserve">
-    <value>첫 클리어는 경쟁 레벨 {0}~{1} 사이에 몰려 있습니다.</value>
+  <data name="Passes cluster between competitive levels {0} and {1}." xml:space="preserve">
+    <value>클리어는 경쟁 레벨 {0}~{1} 사이에 몰려 있습니다.</value>
   </data>
   <data name="Debuted in {0}." xml:space="preserve">
     <value>{0}에서 데뷔했습니다.</value>

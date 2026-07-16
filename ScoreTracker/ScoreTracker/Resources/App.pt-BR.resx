@@ -4094,8 +4094,8 @@
   <data name="Sustained — it holds you under tension for most of its runtime." xml:space="preserve">
     <value>Sustentado — mantém você sob tensão durante quase toda a música.</value>
   </data>
-  <data name="First passes cluster between competitive levels {0} and {1}." xml:space="preserve">
-    <value>Os primeiros passes se concentram entre os níveis competitivos {0} e {1}.</value>
+  <data name="Passes cluster between competitive levels {0} and {1}." xml:space="preserve">
+    <value>Os passes se concentram entre os níveis competitivos {0} e {1}.</value>
   </data>
   <data name="Debuted in {0}." xml:space="preserve">
     <value>Estreou em {0}.</value>
