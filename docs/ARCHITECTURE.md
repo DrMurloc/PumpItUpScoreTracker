@@ -133,7 +133,7 @@ Every vertical's model contribution must be listed in [`VerticalModelContributio
 | `Progress/` | `/Progress`, `/Phoenix/Progress`, `/Pumbility`, `/Titles`, `/CompetitiveLevel`, `/Player/{id}/Sessions` (public session roundups + score journal — the Discord score card's link target), `/Player/{id}/PhoenixRecap` (the season-recap slide deck, admin-computed — see [docs/design/phoenix-season-recap.md](design/phoenix-season-recap.md)) |
 | `Competition/` | `/Tournaments`, stamina + match tournament flows, qualifiers submission, `/WeeklyCharts`, `/UcsLeaderboards`, `/ScoreRankings`, `/Completion` |
 | `Communities/` | `/Communities`, invite links, community leaderboards |
-| `OfficialLeaderboards/` | mirrored official leaderboards, player compare, `/PlayerRankings` |
+| `OfficialLeaderboards/` | the `/OfficialLeaderboards` hub (This Week highlights, PUMBILITY/computed rankings, player history, popularity — [official-leaderboards-overhaul.md](design/official-leaderboards-overhaul.md)); `/PlayerRankings` aliases into its Rankings view |
 | `Tools/` | calculators (`/LifeCalculator`, `/PhoenixCalculator`, rating/conversion), `/ChartRandomizer`, `/ChartCompare`, `/StepArtists` |
 | `Experiments/` | stats playground: `/GameStats`, score distributions, letter-difficulty data |
 | `Admin/` | admin dashboard, chart maintenance, bulk voting |

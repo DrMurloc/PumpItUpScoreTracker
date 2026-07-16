@@ -1,6 +1,6 @@
 # Official Leaderboards Overhaul — Phoenix 2, history, and the snapshot model
 
-Status: **approved direction, awaiting build go** (2026-07-16). Mock: rev 2 artifact (workshop notes toggle) field-tested by owner; "in a good place."
+Status: **shipped on this branch** (2026-07-16, C0–C13). Post-deploy owner steps: press **Seed baseline from legacy tables** per mix on `/Admin/OfficialLeaderboards` (once, before the first Sunday sweep), optionally **Run import now**; refresh the `PiuTest:Password` user-secret (stale — every authenticated live canary is red) and verify the prod service account still logs in. Follow-up PR after prod verification drops the four legacy tables. The P2 board-depth recon (`Phoenix2ChartBoardReconTests`) runs once credentials are fixed; the pager handles one page or many either way.
 
 The Official Mirror's leaderboard side gets rebuilt bottoms-up: Phoenix 2 boards (top 300, PUMBILITY), a week-over-week history mechanic, weekly editorial highlights, player identity (game tag → UserId, board → ChartId), and the two standing bugs fixed *by construction*. Phoenix 1 imports keep running until that site sunsets, then its final snapshot becomes the permanent archive. The player score-import path (`RunImport`, `/Login/PiuGame`, api/* endpoints) is **out of scope** except where it gains the identity hook.
 
