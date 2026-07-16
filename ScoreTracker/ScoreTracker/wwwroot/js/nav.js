@@ -198,7 +198,18 @@
                 return;
             }
             var field = document.querySelector('.shell-appbar .appbar-search input');
-            if (field) field.focus();
+            if (!field) return;
+            field.focus();
+            // Focus alone is easy to miss up in the app bar — flash the field once.
+            var wrap = field.closest('.appbar-search');
+            if (!wrap) return;
+            wrap.classList.remove('search-flash');
+            void wrap.offsetWidth; // restart the animation on a second click
+            wrap.classList.add('search-flash');
+            wrap.addEventListener('animationend', function done() {
+                wrap.classList.remove('search-flash');
+                wrap.removeEventListener('animationend', done);
+            });
         },
         // Dock and focus classes live on <html> because the shell that reacts to them is
         // outside the Blazor root that knows about them.

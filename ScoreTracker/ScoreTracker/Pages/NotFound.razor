@@ -20,11 +20,14 @@
 <p class="nf-explain">@L["There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart."]</p>
 
 <div class="nf-actions">
-    @* Static page, so a raw onclick attribute (via UserAttributes — on a component tag the
-       bare name compiles as C#): it opens whichever search bar this viewport has, the
-       mobile sheet or the desktop app-bar field. *@
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" UserAttributes="@SearchClick"
-               StartIcon="@Icons.Material.Filled.Search">@L["Find a chart"]</MudButton>
+    @* Static page, so the click is a raw onclick on a plain wrapper — MudButton's own
+       @onclick directive clobbers a splatted onclick attribute, and a directive renders as
+       nothing without a circuit. Opens whichever search bar this viewport has: the mobile
+       sheet or the desktop app-bar field. *@
+    <span onclick="shell.openSearch()">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Search">@L["Find a chart"]</MudButton>
+    </span>
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/">@L["Home"]</MudButton>
     <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/TierLists">@L["Tier Lists"]</MudButton>
 </div>
@@ -32,12 +35,5 @@
 <p class="nf-credit">CREDIT(S) 404 [4/0]</p>
 
 @* No status-setting here: a 404 stamped DURING a static render is the framework's signal
-   to skip the body entirely. The re-execution middleware in Program.cs carries the 404 in
-   and this page just renders the human half. *@
-
-@code {
-    private static readonly Dictionary<string, object?> SearchClick = new()
-    {
-        ["onclick"] = "shell.openSearch()"
-    };
-}
+   to skip the body entirely. NotFoundCatchAll's NavigationManager.NotFound() carries the
+   404 in and this page just renders the human half. *@

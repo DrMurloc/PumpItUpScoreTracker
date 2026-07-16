@@ -318,6 +318,19 @@ body {
     display: none;
 }
 
+/* One pulse when something opens the search programmatically (shell.openSearch) —
+   settles into the same ring the focused field already wears. */
+@media (prefers-reduced-motion: no-preference) {
+    .appbar-search.search-flash .mud-input.mud-input-outlined {
+        animation: search-flash .9s ease-out;
+    }
+
+    @keyframes search-flash {
+        0% { box-shadow: 0 0 0 5px var(--mix-primary), 0 0 26px var(--mix-glow); }
+        100% { box-shadow: 0 0 0 1px var(--mix-primary); }
+    }
+}
+
 /* ===== Atmosphere: per-mix page-ground light, derived from each game's attract screen.
    Ground only — cards and surfaces stay flat so contrast is untouched. Trial feature:
    deleting a theme's block (or all three) fully removes it. ===== */
