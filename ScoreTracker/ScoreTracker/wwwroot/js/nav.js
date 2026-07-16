@@ -191,8 +191,12 @@
         // its own input), desktop's search already sits in the app bar so opening it just
         // means focusing it. Must run in the caller's click stack for the iOS keyboard.
         openSearch: function () {
+            // Geometry, not computed display: the bottom nav hides by display:none on the
+            // WRAPPER, which leaves the button's own computed display untouched — but a
+            // hidden ancestor zeroes the rect. Opening the sheet on desktop shows only its
+            // scrim (the sheet itself is mobile-only): a dark screen and nothing else.
             var button = document.querySelector(SEARCH_SHEET.button);
-            if (button && getComputedStyle(button).display !== 'none') {
+            if (button && button.getBoundingClientRect().width > 0) {
                 closeSheets();
                 setSheet(SEARCH_SHEET, true);
                 return;
