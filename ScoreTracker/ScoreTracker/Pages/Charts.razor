@@ -18,7 +18,6 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
-@inject ChartVideoDisplayer VideoDisplayer
 <PageTitle>@L["Charts"]</PageTitle>
 
 <MudGrid>
@@ -281,7 +280,7 @@
         @if (ColumnStatus(ColumnEnum.Video))
         {
             <MudTd>
-                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="()=>VideoDisplayer.ShowVideo(context.ChartId)"></MudIconButton>
+                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="()=>ShowChartDetails(context.ChartId)"></MudIconButton>
                   
             </MudTd>
         }
@@ -431,6 +430,7 @@
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showChartOverview = false">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"></ChartDetailsDialog>
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
@@ -444,6 +444,18 @@
     private bool _showChartOverview = false;
     private Guid? _overViewChart = null;
     private MixEnum _currentMix = MixEnum.Phoenix;
+    private Chart? _detailsChart;
+    private bool _detailsOpen;
+
+    // Rows carry DTOs, not Chart records — the dialog wants the full chart, so look it up.
+    private async Task ShowChartDetails(Guid chartId)
+    {
+        var chart = (await Mediator.Send(new GetChartsQuery(_currentMix, ChartIds: new[] { chartId })))
+            .FirstOrDefault();
+        if (chart == null) return;
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
 
     [Parameter]
     public Guid? RequestedUserId { get => _requestedUserId;

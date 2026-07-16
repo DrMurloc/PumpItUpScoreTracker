@@ -131,7 +131,7 @@
                     <MudCardActions>
                         <MudSpacer></MudSpacer>
                         <MudTooltip Text="Open Video">
-                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => VideoDisplayer.ShowVideo(chart.Id)"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Custom.Brands.YouTube" Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => ShowChartDetails(chart)"></MudIconButton>
                         </MudTooltip>
 
                         <MudSpacer></MudSpacer>
@@ -326,13 +326,23 @@
 @inject ILogger<MatchTournamentQualifiersSubmit> Logger
 @inject IAdminNotificationClient Notifications;
 @inject NavigationManager NavManager;
-@inject ChartVideoDisplayer VideoDisplayer;
 
 @inject IAdminNotificationClient AdminNotification;
+
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_configuration.Mix"></ChartDetailsDialog>
+
 @code
 {
 
     private ISet<Guid> _registeredUserIds = new HashSet<Guid>();
+    private Chart? _detailsChart;
+    private bool _detailsOpen;
+
+    private void ShowChartDetails(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
     private QualifiersConfiguration _configuration = new QualifiersConfiguration(Array.Empty<Chart>(), new Dictionary<Guid, int>(),"Phoenix",1,2,null,false);
     private UserQualifiers? _currentQualifiers;
     private Chart? _submittingChart;
