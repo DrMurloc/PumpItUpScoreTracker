@@ -1,10 +1,9 @@
-using ScoreTracker.PlayerProgress.Contracts.Recap;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
-namespace ScoreTracker.PlayerProgress.Domain.Recap;
+namespace ScoreTracker.SharedKernel.Models;
 
-internal static class RecapPlayerTypeCalculator
+public static class RecapPlayerTypeCalculator
 {
     /// <summary>
     ///     Below this many top-Pumbility scores an average grade says more about

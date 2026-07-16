@@ -1,4 +1,4 @@
-namespace ScoreTracker.PlayerProgress.Contracts.Recap;
+namespace ScoreTracker.SharedKernel.Enums;
 
 public enum RecapPlayerType
 {
