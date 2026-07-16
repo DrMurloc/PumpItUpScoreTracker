@@ -30,8 +30,17 @@ else if (!_sections.Any(s => s.Rows.Any()))
 {
     <div class="dash-widget-message">
         <div>
-            <MudText Typo="Typo.body2">@L["Nothing to suggest yet — play and import some scores first."]</MudText>
-            <MudLink Href="/UploadPhoenixScores" Typo="Typo.body2">@L["Upload Scores"]</MudLink>
+            @if (_isHotStreak)
+            {
+                @* Hot Streak runs dry legitimately: no recent plays raised a competitive
+                   level (or none cleared the bar). Different fix, different message. *@
+                <MudText Typo="Typo.body2">@L["No matching standouts yet, go push yourself to start getting suggestions!"]</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2">@L["Nothing to suggest yet — play and import some scores first."]</MudText>
+                <MudLink Href="/UploadPhoenixScores" Typo="Typo.body2">@L["Upload Scores"]</MudLink>
+            }
         </div>
     </div>
 }
@@ -43,7 +52,7 @@ else
         <div class="dash-targets dash-scroll">
             @foreach (var section in _sections.Where(s => s.Rows.Any()))
             {
-                @if (_sections.Count(s => s.Rows.Any()) > 1)
+                @if (ShowCaptions)
                 {
                     <MudText Typo="Typo.caption" Class="dash-muted dash-target-caption">@section.Caption</MudText>
                 }
@@ -111,7 +120,7 @@ else
                     @foreach (var section in _sections.Where(s => s.Rows.Any()))
                     {
                         var sect = section;
-                        @if (_sections.Count(s => s.Rows.Any()) > 1)
+                        @if (ShowCaptions)
                         {
                             <div class="dash-strip-divider" title="@section.Caption">@section.Caption</div>
                         }
@@ -221,12 +230,21 @@ else
         var recommendations = (await Mediator.Send(new GetRecommendedChartsQuery(
                 config.ChartType, LevelOffset: 0, _mix,
                 Categories: categories.ToHashSet(),
-                LevelWindow: SuggestedGoals.BuildWindow(config))))
+                LevelWindow: SuggestedGoals.BuildWindow(config),
+                HotStreak: SuggestedGoals.BuildHotStreakOptions(config))))
             .ToArray();
 
         var charts = await ChartCatalog.GetCharts(_mix);
         var scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _mix)))
             .ToDictionary(s => s.ChartId);
+
+        _isHotStreak = config.Goal == SuggestedGoal.HotStreak;
+        if (_isHotStreak)
+        {
+            await LoadHotStreakAsync(recommendations, charts, scores, config.GroupBySeed);
+            _loaded = true;
+            return;
+        }
 
         // Fill Gaps lens (owner, round 3): tier-list difficulty per fill chart — the
         // blended list covers unplayed charts, and Personalized bends it with the
@@ -271,6 +289,94 @@ else
         }
 
         _loaded = true;
+    }
+
+    private bool _isHotStreak;
+    private bool _groupBySeedMode;
+
+    // A lone Hot Streak seed still deserves its caption — the caption IS the goal's
+    // provenance ("more like X, you beat Y% of Peers"), not a disambiguator.
+    private bool ShowCaptions => _isHotStreak
+        ? _groupBySeedMode
+        : _sections.Count(s => s.Rows.Any()) > 1;
+
+    // Hot Streak sections: one per seed (newest first, the engine's order), captioned
+    // with the seed and the Peers bar it cleared; flat mode is one section with the
+    // seed riding each row's detail. The right column is the personalized Pass blend —
+    // targets are unpassed, so pass difficulty is the honest read — fetched once per
+    // folder present, which also drives the easiest-first ordering inside a group.
+    private async Task LoadHotStreakAsync(ChartRecommendation[] recommendations,
+        IReadOnlyDictionary<Guid, Chart> charts, IReadOnlyDictionary<Guid, RecordedPhoenixScore> scores,
+        bool groupBySeed)
+    {
+        _groupBySeedMode = groupBySeed;
+        var known = recommendations.Where(r => charts.ContainsKey(r.ChartId)).ToArray();
+
+        _lensTiers.Clear();
+        foreach (var folder in known.Select(r => charts[r.ChartId]).GroupBy(c => (c.Type, c.Level)))
+        {
+            var tierList = await Mediator.Send(new GetBlendedTierListQuery(folder.Key.Type,
+                folder.Key.Level, "Pass", Personalized: true, Mix: _mix));
+            foreach (var entry in tierList.Entries.Where(e => e.Category != TierListCategory.Unrecorded))
+                _lensTiers[entry.ChartId] = entry.Category;
+        }
+
+        _sections = new List<SuggestionSection>();
+        if (groupBySeed)
+        {
+            foreach (var group in known.GroupBy(r => r.SeedChartId))
+            {
+                var rows = group
+                    .Select(r => BuildHotStreakRow(charts[r.ChartId], scores.GetValueOrDefault(r.ChartId),
+                        seedLabel: null))
+                    .OrderBy(r => r.Tier ?? TierListCategory.Unrecorded)
+                    .ToList();
+                _sections.Add(new SuggestionSection(RecommendationCategories.HotStreak,
+                    HotStreakCaption(group.Key, group.First().SeedPeerRanking, charts), rows));
+            }
+        }
+        else
+        {
+            var rows = known
+                .Select(r => BuildHotStreakRow(charts[r.ChartId], scores.GetValueOrDefault(r.ChartId),
+                    SeedLabel(r.SeedChartId, charts)))
+                .ToList();
+            _sections.Add(new SuggestionSection(RecommendationCategories.HotStreak,
+                L[RecommendationCategories.HotStreak].Value, rows));
+        }
+    }
+
+    private string HotStreakCaption(Guid? seedChartId, double? peerRanking,
+        IReadOnlyDictionary<Guid, Chart> charts)
+    {
+        var label = SeedLabel(seedChartId, charts);
+        if (label == null) return L[RecommendationCategories.HotStreak].Value;
+        return peerRanking != null
+            ? L["More like {0} · you beat {1}% of Peers", label, (int)Math.Round(peerRanking.Value * 100)].Value
+            : L["More like {0}", label].Value;
+    }
+
+    private static string? SeedLabel(Guid? seedChartId, IReadOnlyDictionary<Guid, Chart> charts)
+    {
+        return seedChartId != null && charts.TryGetValue(seedChartId.Value, out var seed)
+            ? $"{seed.Song.Name} {seed.DifficultyString}"
+            : null;
+    }
+
+    // Unpassed targets carry the tier; outdated-score targets (the toggle) keep their
+    // stale score with its age — the row says why it counts as unexplored.
+    private SuggestionRow BuildHotStreakRow(Chart chart, RecordedPhoenixScore? score, string? seedLabel)
+    {
+        var hasScore = score is { IsBroken: false, Score: not null };
+        var age = hasScore
+            ? L["{0} days old", (int)(Clock.Now - score!.RecordedDate).TotalDays].Value
+            : null;
+        var detail = seedLabel != null
+            ? age != null ? $"≈ {seedLabel} · {age}" : $"≈ {seedLabel}"
+            : age;
+        return new SuggestionRow(chart, score, detail,
+            hasScore ? null : _lensTiers.TryGetValue(chart.Id, out var tier) ? tier : (TierListCategory?)null,
+            ShowScore: hasScore);
     }
 
     // The compact chart card the strips render — art-forward, bubble overlaid, veto
@@ -391,7 +497,7 @@ else
         RecommendationCategories.SkillTitles, RecommendationCategories.PushPGs,
         RecommendationCategories.ImproveTop50, RecommendationCategories.RevisitOldScores,
         RecommendationCategories.FillScores, RecommendationCategories.WeeklyCharts,
-        RecommendationCategories.PushPumbility
+        RecommendationCategories.PushPumbility, RecommendationCategories.HotStreak
     };
 
     private static string? CategoryName(RecommendationCategory category)
@@ -405,6 +511,7 @@ else
             RecommendationCategory.FillScores => RecommendationCategories.FillScores,
             RecommendationCategory.WeeklyCharts => RecommendationCategories.WeeklyCharts,
             RecommendationCategory.PushPumbility => RecommendationCategories.PushPumbility,
+            RecommendationCategory.HotStreak => RecommendationCategories.HotStreak,
             _ => null
         };
     }

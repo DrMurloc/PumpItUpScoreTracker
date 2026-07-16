@@ -409,7 +409,8 @@
               "TitleHunt",
               "ScorePush",
               "FillGaps",
-              "PumbilityPush"
+              "PumbilityPush",
+              "HotStreak"
             ]
           },
           "mix": {
@@ -511,6 +512,23 @@
             ]
           },
           "personalizedLens": {
+            "type": "boolean"
+          },
+          "hotStreakPeerPercentile": {
+            "type": "integer"
+          },
+          "hotStreakLookback": {
+            "enum": [
+              "Days30",
+              "Days90",
+              "Year1",
+              "AllTime"
+            ]
+          },
+          "hotStreakIncludeOldScores": {
+            "type": "boolean"
+          },
+          "groupBySeed": {
             "type": "boolean"
           }
         }
