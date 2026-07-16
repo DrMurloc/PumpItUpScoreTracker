@@ -17,9 +17,12 @@ re-roll in the body meta row. The page's vestigial `LevelOffset` UI is supersede
   *Score Push* = PushPGs + ImproveTop50 + RevisitOldScores · *Fill Gaps* = FillScores · *Pumbility
   Push* = PushPumbility (PR #149: the gain-ranked projected targets that moved off the Account Stats
   widget — `ProjectPumbilityGainsQuery`, biggest overall-rating gain first, stamps "+N"; distinct from
-  the random ImproveTop50, and has its own drawer preset). The Weekly category is dropped from the
-  widget — the Weekly widget owns that board. Defaults per drawer preset: Score Push = Any level;
-  Fill Gaps = Dynamic ±3.
+  the random ImproveTop50, and has its own drawer preset) · *Hot Streak* = HotStreak (the
+  seed-and-expand goal, spec in §Hot Streak below — the one category that never runs for
+  null-Categories callers, and the one whose sections group by seed rather than by category). The
+  Weekly category is dropped from the widget — the Weekly widget owns that board. Defaults per
+  drawer preset: Score Push = Any level; Fill Gaps = Dynamic ±3; Hot Streak = 80% bar, 30-day
+  look-back, grouped.
 - **Engine** (`RecommendedChartsSaga`): `GetRecommendedChartsQuery` gained additive `Categories` +
   `RecommendationLevelWindow` params — null = legacy, the WSIP page is untouched until cutover.
   An explicit window REPLACES the legacy per-category bands (fills CL−3..CL−1, old scores CL−2..CL)
@@ -49,10 +52,10 @@ re-roll in the body meta row. The page's vestigial `LevelOffset` UI is supersede
 
 ---
 
-## Hot Streak goal (decisions locked 2026-07-16 — BUILDING)
+## Hot Streak goal (decisions locked 2026-07-16 — BUILT, awaiting field test)
 
-> **STATUS: fully scoped, all owner questions answered; in build on this section's commit plan.**
-> Workshop mock (grouped/flat treatments, config panel, empty state):
+> **STATUS: implemented per this section's commit plan (C0–C6 on one branch).**
+> As-built mock (grouped/flat treatments, config panel, empty state):
 > https://claude.ai/code/artifact/6291253d-ed3e-44a6-9bbb-6a2cd141eea5
 
 **The pitch, in the owner's shape:** take the charts you *crushed* in recent sessions, and offer
