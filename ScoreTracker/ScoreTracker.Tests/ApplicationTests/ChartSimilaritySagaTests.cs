@@ -336,6 +336,40 @@ public sealed class ChartSimilaritySagaTests
     }
 
     [Fact]
+    public async Task TheLeastSimilarChartsRespectTheScoringLevelHalfOfTheReachToo()
+    {
+        // The pairs the scoring-level gate throws out are the ones furthest apart in
+        // scoreability — which makes them exactly the ones that would win "least similar".
+        // Gate on the folder alone and the joke fills up with charts the graph refuses to
+        // compare at all.
+        var anchor = new ChartBuilder().WithSongName("Anchor").WithType(ChartType.Double).WithLevel(21).Build();
+        var comparable = new ChartBuilder().WithSongName("Comparable").WithType(ChartType.Double).WithLevel(21)
+            .Build();
+        var outOfReach = new ChartBuilder().WithSongName("Out Of Reach").WithType(ChartType.Double).WithLevel(21)
+            .Build();
+        var all = new[] { anchor, comparable, outOfReach };
+        // Same folder for all three; the odd one out scores four levels away.
+        SetupScoringLevels(new Dictionary<Guid, double>
+        {
+            [anchor.Id] = 21.0, [comparable.Id] = 21.5, [outOfReach.Id] = 25.0
+        });
+        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(all);
+        SetupBadges(new Dictionary<Guid, IReadOnlyDictionary<string, double>>
+        {
+            [anchor.Id] = new Dictionary<string, double> { ["bracket"] = 1.0 },
+            [comparable.Id] = new Dictionary<string, double> { ["bracket"] = 0.9 },
+            // The worst match in the folder by a mile — and the one that must not appear.
+            [outOfReach.Id] = new Dictionary<string, double> { ["twist_90"] = 1.0 }
+        });
+        SetupStepAnalyses(all.ToDictionary(c => c.Id, _ => Analysis(10)));
+
+        var result = await BuildSaga().Handle(new GetLeastSimilarChartsQuery(anchor.Id), CancellationToken.None);
+
+        Assert.Equal(comparable.Id, Assert.Single(result).ChartId);
+    }
+
+    [Fact]
     public async Task TheLeastSimilarChartsStopAtTheCountAsked()
     {
         var (anchor, _) = SetupLivePool();

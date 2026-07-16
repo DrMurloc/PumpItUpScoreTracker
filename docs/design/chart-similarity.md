@@ -282,6 +282,11 @@ straight:
 - **It is a mode, not a filter.** It asks the opposite question rather than narrowing this one.
 - **It cannot honour the ranges**, because they are picked from everything in reach — so switching
   it on disables the four toggles rather than leaving them implying they apply.
+- **Same reach as the shelf, both halves** (`WithinReach`, §2) — not the folder alone. The pairs the
+  scoring-level half throws out are the ones furthest apart in scoreability, which makes them
+  exactly the ones that win "least similar": gate on the folder alone and the joke fills with
+  charts the graph refuses to compare at all. The claim is *"least like this, of the charts we'd
+  compare it to"* — anything else is a list of things that were never in the conversation.
 - **It bypasses the floor** — but nothing else. They are the furthest charts in reach, so every one
   is under any bar worth having and the normal split would file the whole joke under *"Didn't quite
   make the cut"*. They still take the **difficulty lens** like any other list: "least similar first"

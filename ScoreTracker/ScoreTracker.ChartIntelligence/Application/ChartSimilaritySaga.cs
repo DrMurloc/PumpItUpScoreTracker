@@ -165,11 +165,16 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
         if (pool == null) return Array.Empty<ChartSimilarityRecord>();
         var (anchor, anchorChart, features, charts) = pool.Value;
 
-        var window = ChartSimilarityCalculator.LevelWindow;
+        // The SAME reach the graph uses, both halves — not just the folder. The pairs the
+        // scoring-level half throws out are the ones furthest apart in scoreability, which
+        // makes them the ones that would win "least similar": gate on the folder alone and
+        // the joke fills up with charts the graph refuses to compare at all. "Least like
+        // this, of the charts we'd compare it to" is the claim; anything else is a list of
+        // things that were never in the conversation.
         var targets = charts
             .Where(c => c.Id != anchorChart.Id)
-            .Where(c => Math.Abs(c.Level - anchorChart.Level) <= window)
             .Select(c => features[c.Id])
+            .Where(t => ChartSimilarityCalculator.WithinReach(anchor, t))
             .ToArray();
 
         // BuildEdgesFor ranks best-first; the joke is at the other end, and the worst of
