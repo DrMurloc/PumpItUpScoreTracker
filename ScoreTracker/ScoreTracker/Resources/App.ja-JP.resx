@@ -215,9 +215,6 @@
   <data name="Easy" xml:space="preserve">
     <value>簡単</value>
   </data>
-  <data name="Ending Page" xml:space="preserve">
-    <value>最後のページ</value>
-  </data>
   <data name="Favorites" xml:space="preserve">
     <value>気に入れ</value>
   </data>
@@ -305,27 +302,6 @@
   </data>
   <data name="Passed Count" xml:space="preserve">
     <value>クリア数</value>
-  </data>
-  <data name="Phoenix Import Confirming" xml:space="preserve">
-    <value>注意：新しくスコアは古いスコアの上に書きます。元に戻せないようになります。保存の過程が止まれば、変更のロールバック出来ません。</value>
-  </data>
-  <data name="Phoenix Import Info 1" xml:space="preserve">
-    <value>下のコピーバトン使ってください</value>
-  </data>
-  <data name="Phoenix Import Info 2" xml:space="preserve">
-    <value>CHROMEのDEV TOOLSでhttps://phoenix.piugame.comがログインしてる状態にスクリプトを走ってください。phoenix.piugame.comが使ってない状態が気をつけてください</value>
-  </data>
-  <data name="Phoenix Import Info 3" xml:space="preserve">
-    <value>スクリプトが作ったCSVファイルここでアップロード出来ます。</value>
-  </data>
-  <data name="Phoenix Import Info 4" xml:space="preserve">
-    <value>注意：このスクリプトが壊しやすいと気難しいですから、ちょっとデバグ必要あるかも。絶対ADBLOCKが無効してください。</value>
-  </data>
-  <data name="Phoenix Import Saving" xml:space="preserve">
-    <value>このページを離れたら、アップロードしたスコアは失わないです。</value>
-  </data>
-  <data name="Phoenix Import Saving Failures" xml:space="preserve">
-    <value>一部のスコアダウンロードが失敗しまいました。失敗なCSVファイルはダウンロードして編集しても一回アップロード可能です。</value>
   </data>
   <data name="Phoenix Import Saving Progress" xml:space="preserve">
     <value>{0}/{1} 成功. {2} 残り. {3}登録失敗</value>
@@ -438,9 +414,6 @@
     <value>曲種類</value>
     
   <comment>Song Types = Arcade, Full Song, etc.</comment></data>
-  <data name="Starting Page" xml:space="preserve">
-    <value>再開のページ</value>
-  </data>
   <data name="Tier Lists" xml:space="preserve">
     <value>ティアリスト</value>
   </data>
@@ -471,19 +444,6 @@
   </data>
   <data name="Upload XX Scores" xml:space="preserve">
     <value>XXスコア更新</value>
-  </data>
-  <data name="Use Password 1" xml:space="preserve">
-    <value>このツルーはpiugame.comにログインして、自動でスコアアップロードすます。</value>
-  </data>
-  <data name="Use Password 2" xml:space="preserve">
-    <value>通常はユーザー名やパスワードを保存しないので、毎回入力してください。下のパスワードを記憶するオプションを使うと、暗号化してこのデバイスにのみ保存できます。</value>
-  </data>
-  <data name="Use Password 3" xml:space="preserve">
-    <value>https://phoenix.piugame.comのAPI呼び出すのを減らすなめに、新しいとか改良スコアどけインポートする。各ユーザーは完全インポート（ユーザーとパスワード）一回だけのサービスを上げます。古いスコアが
-          も一回インポート場合、dev-toolsのスクリプト使ってください。</value>
-  </data>
-  <data name="Use Password 4" xml:space="preserve">
-    <value>開始後はこのページを離れても大丈夫です。インポートはバックグラウンドで完了します。</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>デバッグ用</value>
@@ -582,9 +542,6 @@
   </data>
   <data name="Upload Image" xml:space="preserve">
     <value>画像アップロード</value>
-  </data>
-  <data name="Use Script" xml:space="preserve">
-    <value>スクリプト使用</value>
   </data>
   <data name="World Rankings" xml:space="preserve">
     <value>世界ランキング</value>
@@ -2187,9 +2144,6 @@
   </data>
   <data name="Phoenix 2 recommendations are coming soon. Check back after launch!" xml:space="preserve">
     <value>Phoenix 2のおすすめは近日公開予定です。リリース後にご確認ください。</value>
-  </data>
-  <data name="Coming soon — score import for Phoenix 2 will open after hardware verification." xml:space="preserve">
-    <value>Phoenix 2のスコアインポートは、実機での検証が完了した後に開放されます。近日公開予定です。</value>
   </data>
   <data name="Phoenix 2 official leaderboards are coming soon." xml:space="preserve">
     <value>Phoenix 2の公式ランキングは近日公開予定です。</value>
@@ -4122,9 +4076,6 @@
   <data name="An import is already running" xml:space="preserve">
     <value>インポートは既に実行中です</value>
   </data>
-  <data name="Also Sync for PIU Tracker" xml:space="preserve">
-    <value>PIU Tracker にも同期する</value>
-  </data>
   <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
     <value>インポートしたスコアをコミュニティのスコアサイト PIU Tracker にも送信します。</value>
   </data>
@@ -4412,5 +4363,80 @@
   </data>
   <data name="Search" xml:space="preserve">
     <value>検索</value>
+  </data>
+  <data name="Import Lede" xml:space="preserve">
+    <value>PIU Scores が piugame.com のアカウントにログインし、新しいスコアと更新されたスコアをインポートします。開始後はこのページを離れても、バックグラウンドで完了します。</value>
+  </data>
+  <data name="Import Password Helper" xml:space="preserve">
+    <value>ログインにのみ使用し、保存されません。下の「記憶する」をオンにした場合を除きます。</value>
+  </data>
+  <data name="Import Broken Helper" xml:space="preserve">
+    <value>最近のプレイの失敗スコアもインポートします。後でクリアすると置き換えられます。</value>
+  </data>
+  <data name="Also send scores to piutracker.app" xml:space="preserve">
+    <value>piutracker.app にもスコアを送信する</value>
+  </data>
+  <data name="Manual import — console script + CSV" xml:space="preserve">
+    <value>手動インポート — コンソールスクリプト + CSV</value>
+  </data>
+  <data name="For re-importing older scores" xml:space="preserve">
+    <value>古いスコアの再インポート用</value>
+  </data>
+  <data name="Import Manual Step 1" xml:space="preserve">
+    <value>スクリプトをコピーします。</value>
+  </data>
+  <data name="Import Manual Step 2" xml:space="preserve">
+    <value>phoenix.piugame.com にログインした状態で、ブラウザのコンソール（F12）に貼り付けると、スコアの CSV がダウンロードされます。広告ブロッカーが動作を妨げることがあります。</value>
+  </data>
+  <data name="Import Manual Step 3" xml:space="preserve">
+    <value>その CSV をここにアップロードします。同じ列構成の自作スプレッドシートも使えます。</value>
+  </data>
+  <data name="From page" xml:space="preserve">
+    <value>開始ページ</value>
+  </data>
+  <data name="To page" xml:space="preserve">
+    <value>終了ページ</value>
+  </data>
+  <data name="Upload CSV" xml:space="preserve">
+    <value>CSVをアップロード</value>
+  </data>
+  <data name="Game Card" xml:space="preserve">
+    <value>ゲームカード</value>
+  </data>
+  <data name="Include Broken Scores" xml:space="preserve">
+    <value>Break Offスコアを含める</value>
+  </data>
+  <data name="Change Card" xml:space="preserve">
+    <value>カードを変更</value>
+  </data>
+  <data name="Starting Import..." xml:space="preserve">
+    <value>インポートを開始しています...</value>
+  </data>
+  <data name="Invalid Username/Password" xml:space="preserve">
+    <value>ユーザー名またはパスワードが無効です</value>
+  </data>
+  <data name="The import ran into an error." xml:space="preserve">
+    <value>インポート中にエラーが発生しました。</value>
+  </data>
+  <data name="Password Incorrect" xml:space="preserve">
+    <value>パスワードが正しくないようです。phoenix.piugame.com にログインできませんでした。</value>
+  </data>
+  <data name="Saved Password Incorrect" xml:space="preserve">
+    <value>保存済みのパスワードが正しくないようです。phoenix.piugame.com にログインできませんでした。</value>
+  </data>
+  <data name="Import Error Notify" xml:space="preserve">
+    <value>スコアのインポート中にエラーが発生しました。後でもう一度お試しください。続く場合は DrMurloc にお知らせください。</value>
+  </data>
+  <data name="Choose a game card, then press Import again." xml:space="preserve">
+    <value>ゲームカードを選んでから、もう一度インポートを押してください。</value>
+  </data>
+  <data name="Import Confirming" xml:space="preserve">
+    <value>保存されるのは新しいスコアと更新されたスコアだけです。保存は取り消せません。途中で止めても、保存済みの分は残ります。</value>
+  </data>
+  <data name="Import Saving" xml:space="preserve">
+    <value>ページを離れたりキャンセルしたりするとアップロードは止まりますが、保存済みのスコアは残ります。</value>
+  </data>
+  <data name="Import Failures" xml:space="preserve">
+    <value>インポートできなかった行があります。失敗分をダウンロードして修正し、再アップロードしてください。</value>
   </data>
 </root>
