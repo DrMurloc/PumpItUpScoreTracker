@@ -2628,9 +2628,6 @@
   <data name="More" xml:space="preserve">
     <value>Mais</value>
   </data>
-  <data name="Import" xml:space="preserve">
-    <value>Importar</value>
-  </data>
   <data name="Tiers" xml:space="preserve">
     <value>Tiers</value>
   </data>
@@ -4357,5 +4354,8 @@
   </data>
   <data name="Search" xml:space="preserve">
     <value>Buscar</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Proporção de seções do chart com cada habilidade</value>
   </data>
 </root>

@@ -4410,4 +4410,7 @@
   <data name="Search" xml:space="preserve">
     <value>Chercher</value>
   </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Part des sections du chart présentant chaque compétence</value>
+  </data>
 </root>
