@@ -51,7 +51,7 @@
     // which is why the chrome opens from here and not from a circuit.
     var SHEETS = [
         { sheet: '[data-more-sheet]', button: '[data-more-btn]' },
-        { sheet: '[data-search-sheet]', button: '[data-search-btn]' }
+        { sheet: '[data-search-sheet]', button: '[data-search-btn]', focus: 'input' }
     ];
 
     function sheetNode(spec) {
@@ -75,6 +75,18 @@
         if (button) button.setAttribute('aria-expanded', String(open));
         // Read back rather than trust `open`: the flag means "some sheet is up".
         document.documentElement.classList.toggle('sheet-open', !!openSheet());
+        if (open && spec.focus) focusInto(node, spec.focus);
+    }
+
+    // A sheet that exists to be typed into should be ready to type into. This has to run in
+    // the opening click's OWN call stack: iOS raises the keyboard only for a focus() it can
+    // trace back to a user gesture, so deferring it behind a timeout or the slide-in
+    // transition would open the sheet and leave the field cold.
+    // The field can legitimately be missing — it belongs to an island, and prerendering is
+    // off, so a tap landing before the circuit connects finds nothing to focus.
+    function focusInto(node, selector) {
+        var field = node.querySelector(selector);
+        if (field) field.focus();
     }
 
     function closeSheets() {

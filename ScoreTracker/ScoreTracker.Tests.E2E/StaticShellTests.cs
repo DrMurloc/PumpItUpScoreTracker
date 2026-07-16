@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 using ScoreTracker.Tests.E2E.Support;
 using static Microsoft.Playwright.Assertions;
@@ -88,6 +89,35 @@ public sealed class StaticShellTests : IAsyncLifetime
             .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
         await Expect(_page.Locator(".mud-popover-open").GetByText("Conflict").First).ToBeVisibleAsync();
 
+        Assert.Empty(errors);
+    }
+
+    /// <summary>
+    ///     A phone's only door to /Chart/{id} — /Charts lists charts without linking to one, so
+    ///     before this sheet existed there was no route at all. Three things have to hold at
+    ///     once and only a hosted run can see any of them: nav.js opens a sheet it did not
+    ///     render, an INTERACTIVE island renders inside STATIC shell chrome (the first place
+    ///     the shell does this), and the field is focused by the opening click so the keyboard
+    ///     comes up with it.
+    /// </summary>
+    [Fact]
+    public async Task TheMobileSearchSheetOpensFocusedOnItsField()
+    {
+        var errors = new List<string>();
+        _page.PageError += (_, e) => errors.Add(e);
+
+        // Below the shell's 960px breakpoint, where the bottom nav takes over from the top nav.
+        await _page.SetViewportSizeAsync(390, 844);
+        await _page.GotoAsync("/TierLists");
+
+        var field = _page.Locator("[data-search-sheet] input");
+        // The island fills static chrome, so it arrives with the circuit rather than the HTML.
+        await Expect(field).ToBeAttachedAsync(new LocatorAssertionsToBeAttachedOptions { Timeout = 60_000 });
+
+        await _page.Locator("[data-search-btn]").ClickAsync();
+
+        await Expect(_page.Locator("[data-search-sheet]")).ToHaveClassAsync(new Regex(@"\bopen\b"));
+        await Expect(field).ToBeFocusedAsync();
         Assert.Empty(errors);
     }
 }
