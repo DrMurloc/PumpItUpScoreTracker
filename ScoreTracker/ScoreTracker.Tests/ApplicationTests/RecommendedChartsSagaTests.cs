@@ -518,6 +518,97 @@ public sealed class RecommendedChartsSagaTests
     }
 
     [Fact]
+    public async Task HotStreakFallsBackToTheCompetitivePoolWhenNoFlagSeedSurvives()
+    {
+        // No highlights at all: the standing competitive top-50 seeds instead, newest
+        // score first, and the recommendations wear the fallback mark.
+        var newerSeed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var olderSeed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var match = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(newerSeed, olderSeed, match)
+            .WithCompetitivePool(
+                new RecordedPhoenixScore(olderSeed.Id, 990000, PhoenixPlate.SuperbGame, false, Now.AddDays(-300)),
+                new RecordedPhoenixScore(newerSeed.Id, 985000, PhoenixPlate.SuperbGame, false, Now.AddDays(-100)))
+            .WithSimilar(newerSeed.Id, Edge(match.Id, 0.8));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: HotStreakOnly, HotStreak: new HotStreakOptions(PeerPercentile: 0, LookbackDays: 30)),
+            CancellationToken.None)).ToArray();
+
+        var rec = Assert.Single(result);
+        Assert.Equal(match.Id, rec.ChartId);
+        Assert.Equal(newerSeed.Id, rec.SeedChartId);
+        Assert.True(rec.SeedIsFallback);
+    }
+
+    [Fact]
+    public async Task HotStreakFallbackStillRespectsThePeersBar()
+    {
+        var seed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var match = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(seed, match)
+            .WithCompetitivePool(Score(seed.Id, 985000))
+            .WithRankings((seed.Id, 0.5))
+            .WithSimilar(seed.Id, Edge(match.Id, 0.8));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: HotStreakOnly, HotStreak: new HotStreakOptions(PeerPercentile: 80)),
+            CancellationToken.None)).ToArray();
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task HotStreakFlagSeedsSuppressTheFallback()
+    {
+        var flaggedSeed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var match = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(flaggedSeed, match)
+            .WithHighlights(Improver(flaggedSeed.Id, daysAgo: 2))
+            .WithCompetitivePool(Score(flaggedSeed.Id, 985000))
+            .WithSimilar(flaggedSeed.Id, Edge(match.Id, 0.8));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: HotStreakOnly, HotStreak: new HotStreakOptions(PeerPercentile: 0)),
+            CancellationToken.None)).ToArray();
+
+        Assert.False(Assert.Single(result).SeedIsFallback);
+    }
+
+    [Fact]
+    public async Task HotStreakSeedsNeverAppearAsAnotherSeedsTarget()
+    {
+        // Both pool charts seed; the older one's stale score would qualify it as a
+        // target under the outdated toggle, but a seed never suggests another seed.
+        var newerSeed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var olderSeed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var fresh = Enumerable.Range(0, 8)
+            .Select(_ => new RecordedPhoenixScore(Guid.NewGuid(), 950000, PhoenixPlate.SuperbGame, false,
+                Now.AddDays(-1)))
+            .ToArray();
+        var poolScores = new[]
+        {
+            new RecordedPhoenixScore(newerSeed.Id, 985000, PhoenixPlate.SuperbGame, false, Now.AddDays(-1)),
+            new RecordedPhoenixScore(olderSeed.Id, 990000, PhoenixPlate.SuperbGame, false, Now.AddDays(-900))
+        };
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(newerSeed, olderSeed)
+            .WithScores(fresh.Concat(poolScores).ToArray())
+            .WithCompetitivePool(poolScores)
+            .WithSimilar(newerSeed.Id, Edge(olderSeed.Id, 0.9));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: HotStreakOnly,
+                HotStreak: new HotStreakOptions(PeerPercentile: 0, IncludeOutdatedScores: true)),
+            CancellationToken.None)).ToArray();
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
     public async Task HotStreakNeverRunsForNullCategoriesCallers()
     {
         var ctx = new RecommendedChartsContext();

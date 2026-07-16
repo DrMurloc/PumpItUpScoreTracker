@@ -126,10 +126,11 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     CompetitiveImprover (optionally also clearing the Peers percentile bar),
         ///     each expanded through the similarity graph into charts the player hasn't
         ///     passed — or whose score is an age outlier, when the toggle says outdated
-        ///     counts as unplayed. Targets below the per-type push floor are dropped:
-        ///     folders that cannot move the rating pools are not a push. Each target is
-        ///     attributed to its newest seed and carries the seed + cleared bar as
-        ///     provenance.
+        ///     counts as unplayed. When no flagged seed survives, the player's standing
+        ///     competitive top-50 seeds instead (marked SeedIsFallback, window ignored).
+        ///     Targets below the per-type push floor are dropped: folders that cannot
+        ///     move the rating pools are not a push. Each target is attributed to its
+        ///     newest seed and carries the seed + cleared bar as provenance.
         /// </summary>
         private async Task<IEnumerable<ChartRecommendation>> GetHotStreakCharts(MixEnum mix,
             IDictionary<string, ISet<Guid>> ignoredChartIds, ChartType? chartType,
@@ -140,6 +141,28 @@ namespace ScoreTracker.PlayerProgress.Application
                 ? s
                 : new HashSet<Guid>();
 
+            // Bar at 0 = off: no cohort reads at all, the seed source alone qualifies.
+            async Task<(Guid ChartId, DateTimeOffset OccurredAt, double? Ranking)[]> ApplyBar(
+                IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt)> candidates)
+            {
+                if (!candidates.Any())
+                    return Array.Empty<(Guid, DateTimeOffset, double?)>();
+                var rankings = options.PeerPercentile > 0
+                    ? await _mediator.Send(new GetChartScoreRankingsQuery(
+                        candidates.Select(c => c.ChartId).ToArray(), mix), cancellationToken)
+                    : null;
+                var bar = options.PeerPercentile / 100.0;
+                return candidates
+                    .Select(c => (c.ChartId, c.OccurredAt,
+                        Ranking: rankings != null && rankings.TryGetValue(c.ChartId, out var r)
+                            ? r.Ranking
+                            : (double?)null))
+                    .Where(t => rankings == null || (t.Ranking != null && t.Ranking >= bar))
+                    .OrderByDescending(t => t.OccurredAt)
+                    .ThenByDescending(t => t.Ranking ?? 0)
+                    .ToArray();
+            }
+
             var since = options.LookbackDays == null
                 ? (DateTimeOffset?)null
                 : _dateTime.Now.AddDays(-options.LookbackDays.Value);
@@ -148,29 +171,41 @@ namespace ScoreTracker.PlayerProgress.Application
 
             // Rows arrive newest-first; a chart flagged in several sessions seeds once,
             // from its newest.
-            var seedCharts = flagged
+            var seeds = await ApplyBar(flagged
                 .Where(h => charts.TryGetValue(h.ChartId, out var chart)
                             && (chartType == null || chart.Type == chartType))
                 .GroupBy(h => h.ChartId)
-                .Select(g => g.First())
-                .ToArray();
-            if (!seedCharts.Any()) return Array.Empty<ChartRecommendation>();
+                .Select(g => (g.First().ChartId, g.First().OccurredAt))
+                .ToArray());
 
-            // Bar at 0 = off: no cohort reads at all, the improver flag alone qualifies.
-            var rankings = options.PeerPercentile > 0
-                ? await _mediator.Send(new GetChartScoreRankingsQuery(
-                    seedCharts.Select(h => h.ChartId).ToArray(), mix), cancellationToken)
-                : null;
-            var bar = options.PeerPercentile / 100.0;
-            var seeds = seedCharts
-                .Select(h => (h.ChartId, h.OccurredAt,
-                    Ranking: rankings != null && rankings.TryGetValue(h.ChartId, out var r)
-                        ? r.Ranking
-                        : (double?)null))
-                .Where(t => rankings == null || (t.Ranking != null && t.Ranking >= bar))
-                .OrderByDescending(t => t.OccurredAt)
-                .ThenByDescending(t => t.Ranking ?? 0)
-                .ToArray();
+            // Fallback: improver flags are write-time-only and never backfilled, so a
+            // player whose plays predate the pipeline — or whose rating simply hasn't
+            // moved lately — has none at ANY window. Their standing best pool seeds
+            // instead: those charts are, by definition, the plays that made their level.
+            // The look-back deliberately does not apply here — this path exists exactly
+            // because recency had nothing to offer.
+            var usedFallback = false;
+            if (!seeds.Any())
+            {
+                usedFallback = true;
+                var pool = new List<RecordedPhoenixScore>();
+                foreach (var type in new[] { ChartType.Single, ChartType.Double })
+                {
+                    if (chartType != null && chartType != type) continue;
+                    pool.AddRange((await _mediator.Send(
+                            new GetTop50CompetitiveQuery(_currentUser.User.Id, type, mix), cancellationToken))
+                        .Where(p => charts.ContainsKey(p.ChartId)));
+                }
+
+                seeds = await ApplyBar(pool
+                    .GroupBy(p => p.ChartId)
+                    .Select(g => g.First())
+                    .OrderByDescending(p => p.RecordedDate)
+                    .Take(HotStreakPolicy.SeedScanCap)
+                    .Select(p => (p.ChartId, p.RecordedDate))
+                    .ToArray());
+            }
+
             if (!seeds.Any()) return Array.Empty<ChartRecommendation>();
 
             var floors = await GetPushFloors(mix, chartType, charts, cancellationToken);
@@ -189,7 +224,9 @@ namespace ScoreTracker.PlayerProgress.Application
                        outdated.Contains(id);
             }
 
-            var claimed = new HashSet<Guid>();
+            // Seeds pre-claim themselves: a fallback seed with an outdated score would
+            // otherwise qualify as another seed's target and suggest what it seeded from.
+            var claimed = new HashSet<Guid>(seeds.Select(s => s.ChartId));
             var result = new List<ChartRecommendation>();
             var seedsUsed = 0;
             foreach (var seed in seeds)
@@ -212,7 +249,8 @@ namespace ScoreTracker.PlayerProgress.Application
                     claimed.Add(target.ChartId);
                     result.Add(new ChartRecommendation(RecommendationCategories.HotStreak, target.ChartId,
                         "More charts like your recent standout plays",
-                        SeedChartId: seed.ChartId, SeedPeerRanking: seed.Ranking));
+                        SeedChartId: seed.ChartId, SeedPeerRanking: seed.Ranking,
+                        SeedIsFallback: usedFallback));
                 }
             }
 
