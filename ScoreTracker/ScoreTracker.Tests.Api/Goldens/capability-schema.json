@@ -470,7 +470,8 @@
                 "RevisitOldScores",
                 "FillScores",
                 "WeeklyCharts",
-                "PushPumbility"
+                "PushPumbility",
+                "HotStreak"
               ]
             },
             "nullable": true

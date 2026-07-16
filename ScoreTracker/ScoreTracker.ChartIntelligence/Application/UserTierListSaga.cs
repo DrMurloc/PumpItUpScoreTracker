@@ -6,6 +6,7 @@ using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -110,7 +111,7 @@ internal sealed class UserTierListSaga : IConsumer<PlayerScoresUpdatedEvent>,
         // uniformly-old folder is a coherent snapshot with no age outliers, so it
         // keeps full voice; only entries much older than the rest of the player's
         // own record here are diminished.
-        var freshness = TierListBlendBuilder.AgeOutlierWeights(
+        var freshness = ScoreAgePolicy.AgeOutlierWeights(
             folderChartIds.Where(bestScores.ContainsKey)
                 .Select(id => (id, bestScores[id].RecordedDate)),
             _clock.Now);

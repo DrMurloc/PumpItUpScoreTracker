@@ -17,7 +17,10 @@ public enum RecommendationCategory
     WeeklyCharts,
 
     /// <summary>Charts ranked by the Pumbility they would add — the projected-gain targets.</summary>
-    PushPumbility
+    PushPumbility,
+
+    /// <summary>Unpassed charts similar to recent plays that raised your competitive level.</summary>
+    HotStreak
 }
 
 /// <summary>
@@ -35,4 +38,5 @@ public static class RecommendationCategories
     public const string FillScores = "Fill Scores";
     public const string WeeklyCharts = "Weekly Charts";
     public const string PushPumbility = "Pumbility Push";
+    public const string HotStreak = "Hot Streak";
 }
