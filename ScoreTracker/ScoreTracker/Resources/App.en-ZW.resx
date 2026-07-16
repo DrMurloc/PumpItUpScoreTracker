@@ -4362,4 +4362,7 @@
   <data name="Import Failures" xml:space="preserve">
     <value>Some rows couldn't be mrglported. Download the failures, fix them, and re-upload.</value>
   </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Shrgre of chart sectrgns featrgring each skrgll</value>
+  </data>
 </root>

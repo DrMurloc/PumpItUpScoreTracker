@@ -1,4 +1,5 @@
 using System.Net;
+using System.Xml.Linq;
 using ScoreTracker.Tests.E2E.Support;
 
 namespace ScoreTracker.Tests.E2E;
@@ -63,14 +64,42 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
+    /// <summary>
+    ///     Google rejects a sitemap whose elements sit outside the sitemap namespace.
+    ///     LINQ-to-XML children do not inherit their parent's namespace, so the regression
+    ///     serializes every url element with an empty xmlns and the whole file reads as
+    ///     invalid — this parses the document and holds each element to the namespace.
+    /// </summary>
     [Fact]
-    public async Task TheSitemapStillServesXml()
+    public async Task TheSitemapIsNamespaceValidXml()
     {
         var response = await _client.GetAsync("/sitemap.xml");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.StartsWith("application/xml", response.Content.Headers.ContentType?.ToString());
+
         var body = await response.Content.ReadAsStringAsync();
-        Assert.Contains("<urlset", body);
+        Assert.StartsWith("<?xml", body);
+
+        var document = XDocument.Parse(body);
+        XNamespace ns = "http://www.sitemaps.org/schemas/sitemap/0.9";
+        Assert.Equal(ns + "urlset", document.Root!.Name);
+        Assert.All(document.Descendants(), element => Assert.Equal(ns, element.Name.Namespace));
+
+        var urls = document.Descendants(ns + "loc").Select(loc => loc.Value).ToArray();
+        Assert.Contains("https://piuscores.arroweclip.se/Welcome", urls);
+        Assert.Contains(urls, url => url.StartsWith("https://piuscores.arroweclip.se/Chart/"));
+    }
+
+    /// <summary>Crawlers discover the sitemap through robots.txt, not Search Console alone.</summary>
+    [Fact]
+    public async Task RobotsTxtPointsCrawlersAtTheSitemap()
+    {
+        var response = await _client.GetAsync("/robots.txt");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Sitemap: https://piuscores.arroweclip.se/sitemap.xml", body);
     }
 
     /// <summary>

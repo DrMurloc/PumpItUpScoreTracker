@@ -4439,4 +4439,7 @@
   <data name="Import Failures" xml:space="preserve">
     <value>インポートできなかった行があります。失敗分をダウンロードして修正し、再アップロードしてください。</value>
   </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>各スキルが登場するチャートセクションの割合</value>
+  </data>
 </root>

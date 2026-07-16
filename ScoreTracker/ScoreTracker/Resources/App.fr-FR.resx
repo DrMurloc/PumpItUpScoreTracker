@@ -4437,4 +4437,7 @@
   <data name="Import Failures" xml:space="preserve">
     <value>Certaines lignes n'ont pas pu être importées. Téléchargez les échecs, corrigez-les et réuploadez.</value>
   </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Part des sections du chart présentant chaque compétence</value>
+  </data>
 </root>

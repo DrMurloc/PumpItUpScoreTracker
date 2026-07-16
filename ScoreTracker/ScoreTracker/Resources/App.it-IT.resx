@@ -4439,4 +4439,7 @@
   <data name="Import Failures" xml:space="preserve">
     <value>Alcune righe non sono state importate. Scarica gli errori, correggili e ricaricali.</value>
   </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Quota di sezioni del chart con ogni abilità</value>
+  </data>
 </root>

@@ -75,6 +75,22 @@ public sealed class FrontDoorDispatcherTests : IAsyncLifetime
             .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
     }
 
+    /// <summary>
+    ///     "/Welcome" and "/Login" serve the same HTML; the canonical link is what tells a
+    ///     crawler they are one page — and that "/Welcome" is the URL that owns the result.
+    /// </summary>
+    [Fact]
+    public async Task BothFrontDoorRoutesCanonicalizeToWelcome()
+    {
+        foreach (var route in new[] { "/Welcome", "/Login" })
+        {
+            await _page.GotoAsync(route);
+            await Expect(_page.Locator("link[rel='canonical']"))
+                .ToHaveAttributeAsync("href", "https://piuscores.arroweclip.se/Welcome",
+                    new LocatorAssertionsToHaveAttributeOptions { Timeout = 60_000 });
+        }
+    }
+
     [Fact]
     public async Task SignedInRootServesTheHomeDashboard()
     {

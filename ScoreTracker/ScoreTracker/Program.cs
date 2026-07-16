@@ -46,8 +46,8 @@ builder.Services.Configure<JsonSerializerOptions>(o =>
 });
 
 // Add services to the container.
-// The front door owns "/" via its @page directive; a Razor Page can declare only one
-// route, so "/Login" is attached as a second route to the same page here.
+// The front door owns "/Welcome" via its @page directive; a Razor Page can declare only
+// one route, so "/Login" is attached as a second route to the same page here.
 builder.Services.AddRazorPages(options => options.Conventions.AddPageRoute("/FrontDoor", "Login"));
 // Render modes: components render as static HTML by default, and only what asks for it gets a
 // circuit (docs/design/render-modes.md). Prerendering stays off — see App.razor.
