@@ -372,19 +372,53 @@ work is caching and the lattice.
     that is the "mix-specific link" case, and the mix segment makes it resolve correctly.
   - **Sitemap swap** to vanity (one line, post-PR-1 shape) + the PR-2 head resolver gains the
     vanity route, self-canonical `<link>`, and JSON-LD.
-- **Output caching — this page ships it**: anonymous GETs only; vary by path + resolved culture
-  + mix cookie; bypass on auth cookie; TTL from config. Spike ①: does
-  `@attribute [OutputCache(...)]` on a component page flow into endpoint metadata (fallback:
-  path-keyed policy/middleware). Spike ②: find the live `Cache-Control: no-cache, no-store`
-  writer — prime suspect is antiforgery on the component endpoints (`UseAntiforgery`,
-  `Program.cs:340`) — and neutralize it for cacheable anonymous GETs. Owner/Azure item
-  (static-shell.md D18): ARR affinity cookies make first-hit responses edge-uncacheable — if the
-  plan runs a single instance, disable ARR affinity.
-- **Corrections to carry into chart-details-overhaul.md when syncing**: `ChartOverview` is NOT
-  dead — `Charts.razor:426` still opens it; its retirement belongs to `/Charts`' own conversion.
+- **Output caching — investigated, then split out (see K4 finding below).**
 - **FT**: view-source is real HTML; Discord unfurl shows the jacket; a GUID URL 301s.
 - **Owner decision ③:** hold the vanity sitemap swap for this PR (default, the ONE-unit rule) or
   advertise correct-head-over-empty-body earlier once PR-2 lands.
+
+**Shipped 2026-07-16 as K1–K3 + K5 (branch `claude/chart-page-static-url-cutover`); K4 caching
+split out.** The ONE-unit rule is satisfied — vanity URLs, real HTML, and the 301 lattice ship
+together, so a pretty URL never points at an empty body. What landed:
+- **K1** slug rules — `/Charts/{mix}/{song}/{difficulty}` (decision ④), `chart.CanonicalPath()`
+  extension, slot-aware `DifficultySlug`, `!`→`exclamation` fallback, deterministic dup-row
+  tiebreak (lowest chart id owns the URL).
+- **K2** the page goes static, five islands, the shelf splits into a crawlable
+  `SimilarChartsStaticGrid` + the interactive island (`data-island-ready` swap). **⚠ Trap caught
+  by building**: `MudTooltip` renders a popover that **throws in static SSR**, and
+  `DifficultyBubble`/`SongImage` wrapped one unconditionally — a lone-chart page dodged it
+  (no siblings, empty graph) but a chart *with* siblings 500'd. Fix: gate the tooltip on
+  `RendererInfo.IsInteractive` (tooltip in a circuit, bare image/bubble static). Same fix the
+  weekly-charts branch needs on the same shared components — coordinate the merge. bUnit needs
+  `RendererInfo` set (`BunitInteractive.RenderInteractive()`, called *last* — reading the
+  renderer locks the service collection).
+- **K3** the cutover — page-issued 301 for historical/stale/**mixed-case** slugs (case-sensitive
+  canonical compare normalizes casing in one hop; **proven that a static SSR page CAN emit a
+  real 301**, not just a 302), `ChartPermalinkController` for GUID/`/Record`, in-app links via
+  `chart.CanonicalPath()` (4 live sites — `GoToChart` died with the finder in K2), sitemap
+  swapped to vanity, `<link rel="canonical">` + `MusicRecording` JSON-LD in the static head.
+- **K5** E2E (`ChartUrlCutoverTests`, auto-redirect off — every 301 asserted directly) + this
+  sync. Suites: Tests 1347 / Api 60 / Components 173 / E2E 37.
+
+**K4 — output caching, FINDING + DEFERRED to its own verified follow-up.** Baseline captured
+2026-07-16 (E2E header dump of the live canonical page): the anonymous chart GET returns
+`Cache-Control: no-store, no-cache, max-age=0` **and** `Set-Cookie: .AspNetCore.Antiforgery.*`
+(the component endpoint's antiforgery token) plus the first-hit culture cookie. Two blockers,
+both framework-level: (1) `OutputCache` refuses to store any response carrying a `Set-Cookie`,
+so the antiforgery cookie alone defeats caching; (2) the `no-store` is emitted by the razor
+component endpoint, not app code. Neutralizing the antiforgery cookie safely — without weakening
+antiforgery on the many pages that *do* post forms — is a real spike, and getting the cache-vary
+or auth-bypass wrong risks serving one user's personalized chart page to another. **Split out
+because**: caching changes no URL and breaks no crawler (fully separable from the SEO cutover);
+it carries a correctness/security dimension that warrants its own review; and it needs owner
+field-verification (it's the fix for the first-load latency noticed after PR-3). The follow-up
+owns: the anon-GET output-cache policy (vary by path + culture + mix cookie, bypass on the
+`DefaultAuthentication` cookie, TTL config `OutputCache:ChartPageSeconds` ≈ 600), a targeted
+antiforgery-cookie/no-store suppression scoped to anonymous 3-segment `/Charts/*` GETs, an E2E
+matrix (warm anon GET cacheable + no `Set-Cookie` / signed-in bypasses / form posts elsewhere
+still validate), and the ARR-affinity owner item (static-shell.md D18).
+- **Correction carried into chart-details-overhaul.md**: `ChartOverview` is NOT dead —
+  `Charts.razor` still opens it; its retirement belongs to `/Charts`' own conversion.
 
 ### PR-5 — E2E facts + doc sync [S–M]
 
