@@ -345,10 +345,13 @@ work is caching and the lattice.
     is welded to this PR.
   - **New `ChartPermalinkController`** (MVC): `/Chart/{guid}` → 301 canonical, forever;
     `/Record` + bare `/Chart` → 301 `/Charts`.
-  - **In-app links → `ChartSlugs.CanonicalPath(chart)`** — full verified inventory, 5 sites:
+  - **In-app links → `chart.CanonicalPath()`** — `ChartSlugs.CanonicalPath` becomes a
+    `this Chart` extension (owner call 2026-07-16: canonical links sitewide; the GUID permalink
+    demotes to sharing/debugging/external-tool duty). Full verified inventory, 5 sites:
     `ChartDetails.razor:76` (siblings), `:245` (`GoToChart`), `AppBarSearch.razor:26`,
     `SimilarChartCard.razor:101`, `Sessions/HighlightRow.razor:15`. All hold a full `Chart`.
-    Caveat: a non-default-mix record yields that mix's historical URL → one 301 hop; accepted.
+    Caveat: a non-default-mix record yields that mix's historical URL → one 301 hop; accepted —
+    that is the "mix-specific link" case, and the mix segment makes it resolve correctly.
   - **Sitemap swap** to vanity (one line, post-PR-1 shape) + the PR-2 head resolver gains the
     vanity route, self-canonical `<link>`, and JSON-LD.
 - **Output caching — this page ships it**: anonymous GETs only; vary by path + resolved culture
