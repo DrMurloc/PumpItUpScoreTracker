@@ -2,9 +2,11 @@
 @using ScoreTracker.SharedKernel.Enums
 @inject NavigationManager NavManager
 
-@* The app bar's chart search. An island: the shell around it is static HTML, but an
-   autocomplete needs a circuit. Desktop only, as it was under MudHidden. *@
-<div class="d-flex align-center appbar-search mr-3 shell-desktop-only" style="min-width: 170px; max-width: 220px;">
+@* The chart search. An island: the shell around it is static HTML, but an autocomplete needs
+   a circuit. Mounted twice — the app bar on desktop, the search sheet on mobile — because it
+   is the same question in two places and the answer must not drift; the caller supplies the
+   frame, this owns the behaviour. *@
+<div class="@Class" style="@Style">
     <ChartSelector Mix="Mix" Label="" Placeholder="@L["Find a chart"].Value" Variant="Variant.Outlined"
                    Margin="Margin.Dense" ChartIdSelected="GoToChart"></ChartSelector>
 </div>
@@ -12,8 +14,15 @@
 @code {
     [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
 
+    /// <summary>The frame is the caller's — an app-bar slot and a sheet want different boxes.</summary>
+    [Parameter] public string Class { get; set; } = "d-flex align-center appbar-search mr-3 shell-desktop-only";
+
+    [Parameter] public string? Style { get; set; } = "min-width: 170px; max-width: 220px;";
+
     private Task GoToChart(Chart chart)
     {
+        // nav.js closes the mobile sheet off the history push this causes — the sheet is
+        // chrome over the page you left, and no link click happens here to catch.
         NavManager.NavigateTo($"/Chart/{chart.Id}");
         return Task.CompletedTask;
     }

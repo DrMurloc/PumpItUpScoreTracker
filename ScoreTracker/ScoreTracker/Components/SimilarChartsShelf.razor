@@ -1,0 +1,808 @@
+@using MediatR
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ChartScoringLevels ScoringLevels
+
+@* The similarity graph's shelf (docs/design/chart-similarity.md): cards naming the badges
+   each pair actually shares. Doubles as the internal link mesh.
+   Three questions, three mechanisms — the shelf is where the last two land. Similarity is
+   precalculated and never re-scored here; DIFFICULTY is the ordering, applied per viewer at
+   read time; METADATA is the filters, which reduce the target list and recompute live
+   (filtering the stored top-20 would return nothing — those twenty are the nearest charts
+   overall, so any filter worth applying excludes all of them).
+   The static-list/island split rides with P3: prerendering is off permanently and there is
+   no render-mode infrastructure on this branch yet, so today the whole page is one
+   circuit and the cards are already real <a href>s. *@
+@if (_loaded)
+{
+    <div class="chart-shelf-controls">
+        <div class="chart-shelf-sort" role="group" aria-label="@L["Order by"]">
+            @foreach (var option in SortOptions)
+            {
+                <button type="button" aria-pressed="@(_sort == option ? "true" : "false")" disabled="@_sorting"
+                        @onclick="() => SetSort(option)">@L[Label(option)]</button>
+            }
+        </div>
+        @* Personalization is a property of the difficulty question, not a fourth answer to
+           it — so it rides orthogonal to the lens rather than doubling the buttons, and it
+           has nothing to modify when nothing is being ordered. *@
+        @if (_sort != ShelfSort.None)
+        {
+            <label class="chart-shelf-personal"
+                   title="@(CanPersonalize ? null : L["Sign in to order by your own tier lists"].ToString())">
+                <input type="checkbox" checked="@_personalized" disabled="@(!CanPersonalize || _sorting)"
+                       @onchange="OnPersonalizedChanged"/>
+                <span>@L["Personalized"]</span>
+            </label>
+        }
+        @* Filters narrow what we COMPARE AGAINST and rescore — they never sieve the stored
+           top-20, which are the nearest charts overall and so would survive nothing worth
+           filtering by. *@
+        @if (_anchor != null)
+        {
+            <button type="button" class="chart-shelf-addfilter" disabled="@_sorting"
+                    aria-expanded="@(_filtersOpen ? "true" : "false")" @onclick="ToggleFilterPanel">
+                <MudIcon Icon="@Icons.Material.Filled.FilterList" Size="Size.Small"/>
+                <span>@L["Filter"]</span>
+                @if (_applied.Count > 0)
+                {
+                    <span class="chart-shelf-fcount">@_applied.Count</span>
+                }
+            </button>
+        }
+        <span class="chart-shelf-hint">
+            @if (_sorting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="chart-shelf-spinner"></MudProgressCircular>
+                @L["Reordering…"]
+            }
+            else
+            {
+                @L[Hint]
+            }
+        </span>
+    </div>
+    @* Nothing is pre-selected. An unfiltered shelf is already the answer to "what plays like
+       this", so every filter on by default would be four decisions in front of a reader who
+       came for none — but each one, once switched on, opens on the anchor's own neighbourhood,
+       because "near this chart" is the only range anyone starts from. *@
+    @if (_filtersOpen && _anchor != null)
+    {
+        <div class="chart-shelf-filterpanel">
+            <div class="chart-shelf-ftoggles" role="group" aria-label="@L["Filter"]">
+                @foreach (var dimension in Dimensions)
+                {
+                    var state = _filters[dimension.Key];
+                    var blocked = !state.Available || _opposite;
+                    <label class="@(blocked ? "chart-shelf-funavailable" : null)"
+                           title="@(state.Available
+                                      ? _opposite ? L["The opposite is picked from everything in reach, so ranges don't apply to it"].ToString() : null
+                                      : L["This chart has no {0} on record", L[dimension.Label]].ToString())">
+                        <input type="checkbox" checked="@state.On" disabled="@(blocked || Busy)"
+                               @onchange="e => ToggleDimension(dimension.Key, e)"/>
+                        <span>@L[dimension.Label]</span>
+                    </label>
+                }
+            </div>
+            @foreach (var dimension in Dimensions.Where(d => _filters[d.Key].On && !_opposite))
+            {
+                var state = _filters[dimension.Key];
+                var key = dimension.Key;
+                <LevelRangeSlider Label="@L[dimension.Label]" Min="state.TrackMin" Max="state.TrackMax"
+                                  ValueMin="state.From" ValueMax="state.To" Disabled="Busy"
+                                  Format="v => Format(key, v)"
+                                  ValueMinChanged="v => SetRange(key, v, null)"
+                                  ValueMaxChanged="v => SetRange(key, null, v)"/>
+            }
+            @* Not a filter and it knows it: it asks the opposite question rather than narrowing
+               this one, and it is picked from everything in reach — so it cannot honour the
+               ranges, and they go quiet rather than lying about applying. Last, under a rule,
+               because it is a joke, and a joke does not get to be top-level furniture. *@
+            <label class="chart-shelf-fopposite">
+                <input type="checkbox" checked="@_opposite" disabled="@Busy" @onchange="ToggleOpposite"/>
+                <span>@L["Show the least matching charts instead"]</span>
+            </label>
+            @* The count is the honest half of Apply: it is computed from the same numbers the
+               server filters on, so what it promises is what comes back — and it says so
+               before the click rather than after. *@
+            <div class="chart-shelf-fapply">
+                <span class="chart-shelf-fcompare">
+                    @if (_loadingFacts)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="chart-shelf-spinner"></MudProgressCircular>
+                    }
+                    else if (_opposite)
+                    {
+                        @L["{0} charts, chosen for being nothing like this one.", OppositeCount]
+                    }
+                    else
+                    {
+                        @(AnyFilterOn
+                            ? L["Comparing {0} charts", CandidateCount].ToString()
+                            : L["Switch on a filter to narrow what this chart is compared against."].ToString())
+                    }
+                </span>
+                <button type="button" class="chart-shelf-fclear" disabled="@(Busy || (!AnyFilterOn && !_opposite && _applied.Count == 0))"
+                        @onclick="ClearFilter">@L["Clear"]</button>
+                <button type="button" class="chart-shelf-fgo" disabled="@(Busy || !CanApply)"
+                        @onclick="ApplyFilters">@L["Apply"]</button>
+            </div>
+        </div>
+    }
+    @if (_applied.Count > 0)
+    {
+        <div class="chart-shelf-filters">
+            @foreach (var applied in _applied)
+            {
+                <span class="chart-shelf-fchip">
+                    @L[applied.Label]<span>@applied.Value</span>
+                </span>
+            }
+            <button type="button" class="chart-shelf-fchipclear" @onclick="ClearFilter">@L["Clear"]</button>
+        </div>
+    }
+
+    @* The opposite skips the floor by construction — it is the furthest chart in reach, so it
+       scores below any bar worth having and the near-miss machinery would file the joke under
+       "didn't quite make the cut". It is not competing; it is the punchline. *@
+    @if (_oppositeEntries.Count > 0)
+    {
+        <p class="chart-shelf-reach">@L["Of everything within reach, these are the least like it."]</p>
+        <div class="chart-shelf">
+            @foreach (var entry in _oppositeEntries)
+            {
+                @Card(entry)
+            }
+        </div>
+    }
+    else if (_matches.Count == 0 && _nearMisses.Count == 0)
+    {
+        @* Two different nothings. A filter that narrowed to zero has to say what it
+           searched; a chart the crawl never covered has nothing to report a reach over. *@
+        <MudText Typo="Typo.body2" Class="chart-shelf-empty">
+            @(_applied.Count > 0
+                ? Reach(none: true)
+                : L["Not enough data yet to name similar charts — the graph rebuilds nightly."].ToString())
+        </MudText>
+    }
+    else
+    {
+        @if (_matches.Count == 0)
+        {
+            @* Never an empty box: the tail is stored precisely so there is always something
+               honest to show. *@
+            <MudText Typo="Typo.body2" Class="chart-shelf-empty">@L["No significant matches — here's the closest we could find."]</MudText>
+        }
+        <div class="chart-shelf">
+            @foreach (var entry in _matches.Count == 0 ? _nearMisses : _matches)
+            {
+                @Card(entry)
+            }
+        </div>
+        @if (_compared != null)
+        {
+            <p class="chart-shelf-reach">@Reach(none: _matches.Count == 0)</p>
+        }
+        @if (_matches.Count > 0 && _nearMisses.Count > 0)
+        {
+            <details class="chart-shelf-nearmiss">
+                <summary>@L["Didn't quite make the cut ({0})", _nearMisses.Count]</summary>
+                <div class="chart-shelf">
+                    @foreach (var entry in _nearMisses)
+                    {
+                        @Card(entry)
+                    }
+                </div>
+            </details>
+        }
+    }
+}
+
+@code {
+    /// <summary>
+    ///     What counts as a real match. A render-time constant by design: the graph stores
+    ///     its top 20 floor-free, so moving this bar is a redeploy rather than a rebuild,
+    ///     and the rows below it are the near-misses rather than rows that never existed.
+    ///     Pending calibration against a real score distribution.
+    /// </summary>
+    internal const double ScoreFloor = 0.55;
+
+    /// <summary>How many near-misses are worth curiosity before it turns into a list of everything.</summary>
+    internal const int NearMissCount = 10;
+
+    /// <summary>
+    ///     Which difficulty question the shelf is ordered by. Pass and Score are genuinely
+    ///     different — a chart can be a wall to clear and generous to score, or the reverse
+    ///     — and personalization is a modifier on either, not a third lens.
+    /// </summary>
+    internal enum ShelfSort
+    {
+        /// <summary>The match order itself — the only option that shows it. Every difficulty sort reorders away from it.</summary>
+        None,
+        PassDifficulty,
+        ScoreDifficulty
+    }
+
+    private static readonly ShelfSort[] SortOptions =
+        { ShelfSort.None, ShelfSort.PassDifficulty, ShelfSort.ScoreDifficulty };
+
+    [Parameter]
+    public Guid ChartId { get; set; }
+
+    [Parameter]
+    public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    private sealed record Entry(ChartSimilarityRecord Record, Chart Chart, ChartIntensityFacts? Intensity,
+        string? VideoUrl);
+
+    private sealed record ActiveFilter(string Label, string Value);
+
+    private bool _loaded;
+    private Guid _loadedFor;
+    private ChartIntensityFacts? _anchorIntensity;
+    private Chart? _anchor;
+    private ShelfSort _sort = ShelfSort.PassDifficulty;
+    private bool _personalized;
+    private bool _sorting;
+    private int? _compared;
+    private IReadOnlyList<Entry> _all = Array.Empty<Entry>();
+    private IReadOnlyList<Entry> _matches = Array.Empty<Entry>();
+    private IReadOnlyList<Entry> _nearMisses = Array.Empty<Entry>();
+
+    // VideoUrl needs the @: it is a string parameter, and Blazor reads an unprefixed value
+    // on one of those as literal text rather than an expression — silently, and only for
+    // strings, which is why every other parameter here is fine without it.
+    // VideoUrl needs the @: it is a string parameter, and Blazor reads an unprefixed value
+    // on one of those as literal text rather than an expression — silently, and only for
+    // strings, which is why every other parameter here is fine without it.
+    private RenderFragment Card(Entry entry) =>
+        @<SimilarChartCard Chart="entry.Chart" Record="entry.Record" Intensity="entry.Intensity"
+                           AnchorIntensity="_anchorIntensity" VideoUrl="@entry.VideoUrl"
+                           @key="entry.Chart.Id"></SimilarChartCard>;
+
+    /// <summary>Only the personal lists need an account; the community ones are always there.</summary>
+    private bool CanPersonalize => CurrentUser.IsLoggedIn;
+
+    // The verdict card at the top of this page already names these two — same words, same
+    // key, so the shelf cannot end up disagreeing with the hero in translation.
+    private static string Label(ShelfSort sort) => sort switch
+    {
+        ShelfSort.None => "No sorting",
+        ShelfSort.PassDifficulty => "Pass Difficulty",
+        _ => "Score Difficulty"
+    };
+
+    private string Hint => _sort switch
+    {
+        ShelfSort.None => "Strongest match first — no difficulty applied",
+        ShelfSort.PassDifficulty => _personalized
+            ? "Easiest to clear first, from your Pass tier list"
+            : "Easiest to clear first, from the community Pass tier list",
+        _ => _personalized
+            ? "Easiest to score first, from your Score tier list"
+            : "Easiest to score first, by scoring level"
+    };
+
+    /// <summary>
+    ///     What was searched, so "1 match" reads as a narrow filter rather than a broken
+    ///     feature. Only meaningful once a filter has actually narrowed something.
+    /// </summary>
+    private string Reach(bool none)
+    {
+        var compared = _compared ?? _all.Count;
+        var scope = _applied.Count > 0
+            ? string.Join(", ", _applied.Select(f => $"{L[f.Label]} {f.Value}"))
+            : L["within 1 level"].ToString();
+        return none
+            ? L["Compared {0} charts ({1}) — none cleared the bar.", compared, scope].ToString()
+            : L["Compared {0} charts ({1}) — {2} matches.", compared, scope, _matches.Count].ToString();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ChartId == _loadedFor) return;
+        _loadedFor = ChartId;
+        // A new anchor invalidates every filter: the ranges were seeded around the old chart
+        // and the facts are the old chart's pool, which is not even the same pool if the
+        // type changed.
+        foreach (var state in _filters.Values) state.On = false;
+        _applied = Array.Empty<ActiveFilter>();
+        _facts = Array.Empty<Facts>();
+        _filtersOpen = false;
+        _opposite = false;
+        _oppositeApplied = false;
+        _oppositeEntries = Array.Empty<Entry>();
+        _compared = null;
+        _sort = ShelfSort.PassDifficulty;
+        _personalized = false;
+        await Load(await Mediator.Send(new GetSimilarChartsQuery(ChartId, Mix)));
+    }
+
+    private async Task Load(IReadOnlyList<ChartSimilarityRecord> edges)
+    {
+        if (edges.Count == 0)
+        {
+            _all = _matches = _nearMisses = Array.Empty<Entry>();
+            _loaded = true;
+            return;
+        }
+
+        var chartIds = edges.Select(e => e.ChartId).Append(ChartId).ToArray();
+        var charts = (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: chartIds))).ToDictionary(c => c.Id);
+        var analyses = await Mediator.Send(new GetChartStepAnalysesQuery(chartIds));
+        var videos = (await Mediator.Send(new GetChartVideosQuery(edges.Select(e => e.ChartId))))
+            .ToDictionary(v => v.ChartId, v => v.VideoUrl.ToString());
+        _anchor = charts.GetValueOrDefault(ChartId);
+        _anchorIntensity = _anchor == null
+            ? null
+            : ChartIntensityFacts.For(_anchor, analyses.GetValueOrDefault(ChartId));
+
+        _all = edges
+            .Where(e => charts.ContainsKey(e.ChartId))
+            .Select(e => new Entry(e, charts[e.ChartId],
+                ChartIntensityFacts.For(charts[e.ChartId], analyses.GetValueOrDefault(e.ChartId)),
+                videos.GetValueOrDefault(e.ChartId)))
+            .ToArray();
+        await Split();
+        _loaded = true;
+    }
+
+    /// <summary>
+    ///     The graph hands over its whole tail; where the bar falls is ours, and so is the
+    ///     order — similarity is never re-scored here.
+    ///     The opposites get ordered like anything else — a lens reorders away from match
+    ///     order, and "least similar first" is just another match order — but they skip the
+    ///     floor: they are the furthest charts in reach, so every one is under any bar worth
+    ///     having and the split would file the whole joke under "didn't quite make the cut".
+    /// </summary>
+    private async Task Split()
+    {
+        var ordered = await Ordered(_all);
+        if (_oppositeApplied)
+        {
+            _oppositeEntries = ordered;
+            _matches = _nearMisses = Array.Empty<Entry>();
+            return;
+        }
+
+        _matches = ordered.Where(e => e.Record.Score >= ScoreFloor).ToArray();
+        _nearMisses = ordered.Where(e => e.Record.Score < ScoreFloor).Take(NearMissCount).ToArray();
+    }
+
+    /// <summary>
+    ///     Easiest first. Charts we cannot place sort last rather than pretending to be
+    ///     easy, and ties fall back to the match order.
+    /// </summary>
+    private async Task<IReadOnlyList<Entry>> Ordered(IReadOnlyList<Entry> entries)
+    {
+        if (_sort == ShelfSort.None || _anchor == null) return entries;
+
+        var difficulty = await Difficulties();
+        return entries
+            .OrderBy(e => difficulty.TryGetValue(e.Chart.Id, out var d) ? d : double.MaxValue)
+            .ThenByDescending(e => e.Record.Score)
+            .ToArray();
+    }
+
+    /// <summary>
+    ///     Every reachable chart's difficulty on the current lens, as an **effective level**
+    ///     — one number comparable across the folders the shelf spans.
+    ///     That comparability is the whole problem. A tier list ranks charts *within* one
+    ///     folder, so its `Order` is 0..N per folder and its category means "hard for a D21"
+    ///     rather than "hard": neither survives a shelf reaching ±2 levels. Nudging the
+    ///     folder's own level by the category is what makes them commensurable — a D21 the
+    ///     list calls Underrated and a D22 it calls Overrated meet in the middle, which is
+    ///     precisely what those two verdicts are saying.
+    ///     Community score difficulty skips all of that: the scoring level already *is* an
+    ///     effective level, measured rather than voted (~87% of charts in the 17–26 range
+    ///     have one; the rest sort last).
+    /// </summary>
+    private async Task<IReadOnlyDictionary<Guid, double>> Difficulties()
+    {
+        if (_sort == ShelfSort.ScoreDifficulty && !_personalized)
+        {
+            var levels = new Dictionary<Guid, double>();
+            foreach (var entry in _all)
+                if (await ScoringLevels.GetScoringLevel(entry.Chart.Id) is { } level)
+                    levels[entry.Chart.Id] = level;
+            return levels;
+        }
+
+        var lens = Name.From(_sort == ShelfSort.PassDifficulty ? "Pass" : "Score");
+        var result = new Dictionary<Guid, double>();
+        if (_anchor == null) return result;
+        // A blended list covers its whole folder, so most of what comes back is not on this
+        // shelf. Projecting a chart against the folder we happened to be asking about rather
+        // than against its own level would misplace it by however far the two differ.
+        var shelfLevels = _all.ToDictionary(e => e.Chart.Id, e => (int)e.Chart.Level);
+        // The blend is computed per (type, level), so the shelf's reach costs one read per
+        // folder it touches — at most five.
+        foreach (var level in _all.Select(e => e.Chart.Level).Distinct())
+        {
+            var list = await Mediator.Send(new GetBlendedTierListQuery(_anchor.Type, level, lens,
+                Personalized: _personalized && CanPersonalize));
+            foreach (var entry in list.Entries.Where(e => e.Category != TierListCategory.Unrecorded))
+                if (shelfLevels.TryGetValue(entry.ChartId, out var chartLevel))
+                    result[entry.ChartId] = EffectiveLevel(chartLevel, entry.Category);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    ///     A folder-relative verdict projected onto the absolute level scale. The spread is
+    ///     deliberately under half a level: the tier list is saying a chart is misplaced
+    ///     *within* its folder, never that it belongs in a different one.
+    /// </summary>
+    internal static double EffectiveLevel(int level, TierListCategory category) =>
+        level + category switch
+        {
+            TierListCategory.Overrated => -0.45,
+            TierListCategory.VeryEasy => -0.30,
+            TierListCategory.Easy => -0.15,
+            TierListCategory.Medium => 0.0,
+            TierListCategory.Hard => 0.15,
+            TierListCategory.VeryHard => 0.30,
+            TierListCategory.Underrated => 0.45,
+            _ => 0.0
+        };
+
+    private async Task SetSort(ShelfSort sort)
+    {
+        if (_sort == sort) return;
+        _sort = sort;
+        await Resort();
+    }
+
+    private async Task OnPersonalizedChanged(ChangeEventArgs e)
+    {
+        _personalized = e.Value is true;
+        await Resort();
+    }
+
+    /// <summary>
+    ///     A difficulty lens costs one tier-list read per folder the shelf reaches — up to
+    ///     five round trips, and the personalized blend is the slow one. Say so and lock
+    ///     the controls, rather than letting the cards sit in the old order looking like
+    ///     the click missed.
+    /// </summary>
+    private async Task Resort()
+    {
+        _sorting = true;
+        try
+        {
+            await Split();
+        }
+        finally
+        {
+            _sorting = false;
+        }
+    }
+
+    // ---- Filters -----------------------------------------------------------------------
+
+    /// <summary>
+    ///     The four dimensions, and they are the whole set. Two the chart declares (folder,
+    ///     BPM) and two measured from it (scoring level, NPS) — each one a range the reader
+    ///     can already see elsewhere on this page, which is the bar for being here at all.
+    /// </summary>
+    internal enum FilterDimension
+    {
+        Folder,
+        ScoringLevel,
+        Bpm,
+        Nps
+    }
+
+    /// <summary>
+    ///     What each dimension is made of. <c>Scale</c> is track units per real unit: a
+    ///     range input steps in whole numbers, so the two dimensions that need a fraction
+    ///     ride as tenths and format back. <c>Reach</c> is how far either side of the
+    ///     anchor the filter opens, in track units.
+    /// </summary>
+    private sealed record Dimension(FilterDimension Key, string Label, int Scale, int Reach);
+
+    private static readonly Dimension[] Dimensions =
+    {
+        new(FilterDimension.Folder, "Folder", 1, 2),
+        new(FilterDimension.ScoringLevel, "Scoring level", 10, 20),
+        new(FilterDimension.Bpm, "BPM", 1, 10),
+        new(FilterDimension.Nps, "NPS", 10, 10)
+    };
+
+    private sealed class FilterState
+    {
+        public bool On;
+
+        /// <summary>False when the anchor has no value here — there is nothing to open around.</summary>
+        public bool Available;
+
+        public int TrackMin;
+        public int TrackMax;
+        public int From;
+        public int To;
+    }
+
+    /// <summary>
+    ///     One chart reduced to the four numbers a filter asks about. Assembled once when the
+    ///     panel first opens, from three reads that are all already cached — the charts and
+    ///     their crawl metrics repository-side, the scoring levels per circuit — so dragging a
+    ///     thumb costs a count over an array in memory and no database at all.
+    /// </summary>
+    private sealed record Facts(Guid Id, int Level, double ScoringLevel, decimal? BpmMin, decimal? BpmMax,
+        double? Nps);
+
+    private bool _filtersOpen;
+    private bool _loadingFacts;
+
+    /// <summary>How many opposites are funny before the joke becomes a list.</summary>
+    internal const int OppositeCount = 6;
+
+    /// <summary>
+    ///     The joke mode (docs/design/chart-similarity.md §5.1): show the charts in reach
+    ///     that are *least* like this one. Held apart from <see cref="_matches" /> because
+    ///     they are not competing on the same scale — they are the furthest things away, so
+    ///     they score under any floor and the near-miss list would swallow them.
+    ///     Two flags rather than one: this is what the panel has *selected*, and
+    ///     <see cref="_oppositeApplied" /> is what the shelf is *showing*. Splitting them is
+    ///     what stops a sort click, made after ticking the box but before pressing Apply,
+    ///     from re-filing the real matches as opposites.
+    /// </summary>
+    private bool _opposite;
+
+    private bool _oppositeApplied;
+    private IReadOnlyList<Entry> _oppositeEntries = Array.Empty<Entry>();
+    private IReadOnlyList<Facts> _facts = Array.Empty<Facts>();
+    private readonly Dictionary<FilterDimension, FilterState> _filters =
+        Dimensions.ToDictionary(d => d.Key, _ => new FilterState());
+    private IReadOnlyList<ActiveFilter> _applied = Array.Empty<ActiveFilter>();
+
+    private bool AnyFilterOn => _filters.Values.Any(f => f.On);
+
+    /// <summary>Anything the panel must not be touched during — a lens reordering or its own pool loading.</summary>
+    private bool Busy => _sorting || _loadingFacts;
+
+    /// <summary>
+    ///     The opposite needs no ranges — it is picked from everything in reach — so it can
+    ///     Apply on its own. A range filter still has to select something first.
+    /// </summary>
+    private bool CanApply => _opposite || (AnyFilterOn && CandidateCount > 0);
+
+    private static Dimension Of(FilterDimension key) => Dimensions.First(d => d.Key == key);
+
+    private string Format(FilterDimension key, int value) => key switch
+    {
+        FilterDimension.Folder => $"{_anchor?.Type.GetShortHand()}{value}",
+        FilterDimension.ScoringLevel => (value / 10.0).ToString("0.0"),
+        FilterDimension.Bpm => value.ToString(),
+        _ => (value / 10.0).ToString("0.0")
+    };
+
+    private async Task ToggleFilterPanel()
+    {
+        _filtersOpen = !_filtersOpen;
+        if (_filtersOpen && _facts.Count == 0) await LoadFacts();
+    }
+
+    /// <summary>
+    ///     Everything the count needs, for the anchor's whole (mix, type) pool. Deliberately
+    ///     lazy: the great majority of readers never open the panel, and this is three reads
+    ///     they would otherwise pay for on every chart page.
+    /// </summary>
+    private async Task LoadFacts()
+    {
+        if (_anchor == null) return;
+        // Not _sorting: nothing is being reordered, and the shelf's hint would say so.
+        _loadingFacts = true;
+        try
+        {
+            var charts = (await Mediator.Send(new GetChartsQuery(Mix, Type: _anchor.Type))).ToArray();
+            var analyses = await Mediator.Send(new GetChartStepAnalysesQuery(charts.Select(c => c.Id).ToArray()));
+            var facts = new List<Facts>(charts.Length);
+            foreach (var chart in charts)
+            {
+                var nps = analyses.GetValueOrDefault(chart.Id)?.Nps;
+                facts.Add(new Facts(chart.Id, chart.Level,
+                    await ScoringLevels.GetScoringLevel(chart.Id) ?? chart.Level,
+                    chart.Song.Bpm?.Min, chart.Song.Bpm?.Max, nps == null ? null : (double)nps.Value));
+            }
+
+            _facts = facts;
+            Seed();
+        }
+        finally
+        {
+            _loadingFacts = false;
+        }
+    }
+
+    /// <summary>
+    ///     Opens every dimension on the anchor's own neighbourhood, and sizes each track to
+    ///     what the pool actually holds rather than to the theoretical scale — a thumb is
+    ///     worth dragging over the range where charts exist, and an NPS track running to 30
+    ///     would spend most of itself over nothing.
+    /// </summary>
+    private void Seed()
+    {
+        var anchor = _facts.FirstOrDefault(f => f.Id == ChartId);
+        if (anchor == null) return;
+
+        foreach (var dimension in Dimensions)
+        {
+            var state = _filters[dimension.Key];
+            var values = _facts.Select(f => Track(dimension.Key, f)).Where(v => v != null).Select(v => v!.Value)
+                .ToArray();
+            var at = Track(dimension.Key, anchor);
+            state.Available = at != null && values.Length > 0;
+            if (!state.Available)
+            {
+                state.On = false;
+                continue;
+            }
+
+            state.From = at!.Value - dimension.Reach;
+            state.To = at.Value + dimension.Reach;
+            // The seeded range is the point of the toggle, so the track widens to hold it
+            // rather than the range being clipped to fit the track.
+            state.TrackMin = Math.Min(values.Min(), state.From);
+            state.TrackMax = Math.Max(values.Max(), state.To);
+        }
+    }
+
+    /// <summary>
+    ///     A chart's position on one dimension's track, or null when it has no answer.
+    ///     BPM reports its low end here purely to size the track; the filter itself tests
+    ///     the whole range for overlap (<see cref="Passes" />).
+    /// </summary>
+    private static int? Track(FilterDimension key, Facts facts) => key switch
+    {
+        FilterDimension.Folder => facts.Level,
+        FilterDimension.ScoringLevel => (int)Math.Round(facts.ScoringLevel * 10),
+        FilterDimension.Bpm => facts.BpmMin == null ? null : (int)Math.Round(facts.BpmMin.Value),
+        _ => facts.Nps == null ? null : (int)Math.Round(facts.Nps.Value * 10)
+    };
+
+    private void ToggleDimension(FilterDimension key, ChangeEventArgs e)
+    {
+        _filters[key].On = e.Value is true;
+    }
+
+    private void ToggleOpposite(ChangeEventArgs e)
+    {
+        _opposite = e.Value is true;
+    }
+
+    private void SetRange(FilterDimension key, int? from, int? to)
+    {
+        var state = _filters[key];
+        if (from != null) state.From = from.Value;
+        if (to != null) state.To = to.Value;
+    }
+
+    /// <summary>
+    ///     How many charts Apply would compare against. Mirrors the handler's predicates
+    ///     exactly — a count that counted differently would be a promise the server breaks.
+    ///     The anchor is never one of them.
+    /// </summary>
+    private int CandidateCount => _facts.Count(f => f.Id != ChartId && Passes(f));
+
+    private bool Passes(Facts facts)
+    {
+        foreach (var dimension in Dimensions)
+        {
+            var state = _filters[dimension.Key];
+            if (!state.On) continue;
+            var (lo, hi) = Real(dimension, state);
+            var ok = dimension.Key switch
+            {
+                FilterDimension.Folder => facts.Level >= lo && facts.Level <= hi,
+                FilterDimension.ScoringLevel => facts.ScoringLevel >= lo && facts.ScoringLevel <= hi,
+                // A tempo range overlaps rather than contains: a 150–190 chart is "at 180".
+                FilterDimension.Bpm => facts.BpmMax != null && facts.BpmMin != null &&
+                                       (double)facts.BpmMax.Value >= lo && (double)facts.BpmMin.Value <= hi,
+                _ => facts.Nps != null && facts.Nps >= lo && facts.Nps <= hi
+            };
+            if (!ok) return false;
+        }
+
+        return true;
+    }
+
+    private static (double Lo, double Hi) Real(Dimension dimension, FilterState state) =>
+        ((double)state.From / dimension.Scale, (double)state.To / dimension.Scale);
+
+    /// <summary>
+    ///     Narrows the target list and recomputes — never a sieve over the stored top-20.
+    /// </summary>
+    private async Task ApplyFilters()
+    {
+        if (_anchor == null) return;
+        if (_opposite)
+        {
+            await ApplyOpposite();
+            return;
+        }
+
+        var query = new GetFilteredSimilarChartsQuery(ChartId, Mix);
+        var applied = new List<ActiveFilter>();
+        foreach (var dimension in Dimensions)
+        {
+            var state = _filters[dimension.Key];
+            if (!state.On) continue;
+            var (lo, hi) = Real(dimension, state);
+            query = dimension.Key switch
+            {
+                FilterDimension.Folder => query with { MinLevel = (int)lo, MaxLevel = (int)hi },
+                FilterDimension.ScoringLevel => query with { MinScoringLevel = lo, MaxScoringLevel = hi },
+                FilterDimension.Bpm => query with { MinBpm = (decimal)lo, MaxBpm = (decimal)hi },
+                _ => query with { MinNps = lo, MaxNps = hi }
+            };
+            applied.Add(new ActiveFilter(dimension.Label,
+                $"{Format(dimension.Key, state.From)}–{Format(dimension.Key, state.To)}"));
+        }
+
+        _sorting = true;
+        try
+        {
+            var result = await Mediator.Send(query);
+            _applied = applied;
+            _compared = result.ChartsCompared;
+            // Applying ranges after the joke goes back to real matches; Split reads this.
+            _oppositeApplied = false;
+            _oppositeEntries = Array.Empty<Entry>();
+            await Load(result.Matches);
+        }
+        finally
+        {
+            _sorting = false;
+        }
+    }
+
+    /// <summary>
+    ///     Six cards, and they are allowed to be terrible — that is the joke. Computed live
+    ///     because the graph banks the twenty *nearest*, and the furthest are by
+    ///     construction the ones that ranking never keeps.
+    /// </summary>
+    private async Task ApplyOpposite()
+    {
+        _sorting = true;
+        try
+        {
+            var records = await Mediator.Send(new GetLeastSimilarChartsQuery(ChartId, Mix, OppositeCount));
+            _applied = Array.Empty<ActiveFilter>();
+            _compared = null;
+            _oppositeApplied = true;
+            _oppositeEntries = Array.Empty<Entry>();
+            if (records.Count > 0) await Load(records);
+        }
+        finally
+        {
+            _sorting = false;
+        }
+    }
+
+    private async Task ClearFilter()
+    {
+        var wasNarrowed = _applied.Count > 0 || _oppositeApplied;
+        foreach (var state in _filters.Values) state.On = false;
+        _opposite = false;
+        _oppositeApplied = false;
+        _oppositeEntries = Array.Empty<Entry>();
+        _applied = Array.Empty<ActiveFilter>();
+        _compared = null;
+        // Clearing a filter that never ran has nothing to put back, and re-reading the graph
+        // would replace the shelf with an identical shelf.
+        if (wasNarrowed) await Load(await Mediator.Send(new GetSimilarChartsQuery(ChartId, Mix)));
+    }
+}

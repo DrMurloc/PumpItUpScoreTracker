@@ -27,6 +27,7 @@ public static class ChartIntelligenceRegistrationExtensions
         services.AddTransient<IUserTierListRepository, EFUserTierListRepository>();
         services.AddTransient<IChartScoreStatsRepository, EFChartScoreStatsRepository>();
         services.AddTransient<IFolderCohortStatsRepository, EFFolderCohortStatsRepository>();
+        services.AddTransient<IChartSimilarityRepository, EFChartSimilarityRepository>();
         services.AddSingleton<IDbModelContribution, ChartIntelligenceModelContribution>();
         return services;
     }
@@ -43,5 +44,6 @@ public static class ChartIntelligenceRegistrationExtensions
         configurator.AddConsumer<AccountPurgeConsumer>();
         configurator.AddConsumer<UserTierListSaga>();
         configurator.AddConsumer<FolderShareCardSaga>();
+        configurator.AddConsumer<ChartSimilaritySaga>();
     }
 }

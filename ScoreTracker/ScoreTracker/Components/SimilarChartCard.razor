@@ -1,0 +1,156 @@
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components
+
+@* One card on the similar-charts shelf (docs/design/chart-similarity.md).
+   The jacket plays and the name links out — two disjoint targets, which is what lets the
+   card do both jobs at once. It must carry a real <a href> because the shelf IS the
+   internal-link mesh, and it must let you watch, because "this chart is similar" is only
+   half an answer. An earlier revision wrapped the whole card in the <a> and overlaid the
+   play control as a sibling; the link then owned every pixel the video wanted.
+   The art is 16:9 because that is the shape of a video: the iframe drops into the art's
+   exact box, so watching costs no reflow and the grid never jumps. Nothing loads until
+   asked — six embeds on page load would outweigh the rest of it. *@
+<div class="chart-card">
+    @if (_playing && VideoUrl != null)
+    {
+        @* No bubble while playing: it labels the jacket, and there is no jacket. *@
+        <div class="chart-card-art chart-card-art-playing">
+            <iframe class="chart-card-video" src="@($"{VideoUrl}?autoplay=1")" allow="autoplay; encrypted-media"
+                    allowfullscreen title="@Chart.Song.Name"></iframe>
+        </div>
+        <button type="button" class="chart-card-close" @onclick="() => _playing = false"
+                aria-label="@L["Close video"]">✕</button>
+    }
+    else if (VideoUrl != null)
+    {
+        <button type="button" class="chart-card-art chart-card-art-playable" @onclick="() => _playing = true"
+                aria-label="@L["Watch {0}", Chart.Song.Name]">
+            @Jacket()
+            <span class="chart-card-play" aria-hidden="true"></span>
+        </button>
+    }
+    else
+    {
+        <div class="chart-card-art">@Jacket()</div>
+    }
+    <div class="chart-card-body">
+        <div class="chart-card-title">
+            <h3>
+                @Chart.Song.Name
+                <a class="chart-card-golink" href="@Href" title="@L["Open chart details"]"
+                   aria-label="@L["Open {0}", Chart.Song.Name]">
+                    <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small"></MudIcon>
+                </a>
+            </h3>
+            <span class="chart-card-pct">@((int)Math.Round(Record.Score * 100))%</span>
+        </div>
+        <span class="chart-card-meta">
+            @if (Chart.StepArtist != null && Chart.StepArtist.ToString() != "Unknown")
+            {
+                <em>@Chart.StepArtist</em><i>·</i>
+            }
+            @Chart.OriginalMix.GetName()
+            @if (Chart.Song.Bpm != null)
+            {
+                <br/>
+                <text>@L["{0} BPM", Chart.Song.Bpm.Value.ToString()]</text>
+            }
+        </span>
+        @if (Reasons.Count > 0 || IntensityReasons.Count > 0)
+        {
+            <span class="chart-card-wl">@L["Matched on"]</span>
+            <span class="chart-card-why">
+                @foreach (var reason in Reasons)
+                {
+                    <b>@reason.Label<var>@reason.Value</var></b>
+                }
+                @* Intensity wears its own colour: a different KIND of reason, and it must
+                   not read as a skill. *@
+                @foreach (var reason in IntensityReasons)
+                {
+                    <b class="chart-card-why-intensity">@L[reason.Label]<var>@reason.Value</var></b>
+                }
+            </span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Chart Chart { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public ChartSimilarityRecord Record { get; set; } = default!;
+
+    /// <summary>The anchor's intensity, so the chips can say what they are comparing to.</summary>
+    [Parameter]
+    public ChartIntensityFacts? AnchorIntensity { get; set; }
+
+    [Parameter]
+    public ChartIntensityFacts? Intensity { get; set; }
+
+    /// <summary>Null when the chart has no video banked — the jacket is then inert, not a dead button.</summary>
+    [Parameter]
+    public string? VideoUrl { get; set; }
+
+    private bool _playing;
+
+    private string Href => $"/Chart/{Chart.Id}";
+
+    /// <summary>
+    ///     The jacket gets its own wrapper so "fill the 16:9 box" can be said about it
+    ///     alone. Said about the art box instead, it also lands on the bubble's image and
+    ///     blows it up to the width of the card.
+    /// </summary>
+    private RenderFragment Jacket() =>
+        @<text>
+            <span class="chart-card-jacket"><SongImage Song="Chart.Song" Height="128"></SongImage></span>
+            <span class="chart-card-bubble"><DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble></span>
+        </text>;
+
+    /// <summary>
+    ///     What the pair actually matched on, named — never "skills match", which reads as
+    ///     broken. The value is the coverage the two charts SHARE, so "Brackets 50%" says
+    ///     both are at least half brackets. A badge whose shared coverage is a rounding
+    ///     error is not a reason, so the chips can come back empty; that is honest, and the
+    ///     match percentage still says how close the pair is.
+    /// </summary>
+    internal IReadOnlyList<(string Label, string Value)> Reasons =>
+        Record.SharedBadges
+            .Where(b => b.Coverage >= MinimumReasonCoverage)
+            .Take(MaximumReasons)
+            .Select(b => (L[SimilarityBadgeLabels.For(b.Badge)].ToString(),
+                $"{(int)Math.Round(b.Coverage * 100)}%"))
+            .ToArray();
+
+    /// <summary>
+    ///     What intensity matched on: the same three dimensions the formula scores, each
+    ///     showing both sides. A dimension needs both ends to say anything honest — "NPS"
+    ///     alone is a label, "10.7 → 11.9" is a fact the reader can judge, and judging is
+    ///     the point. They are shown rather than filtered to the close ones: the anchor is
+    ///     a chart the reader knows, so two numbers tell them more than a verdict would.
+    /// </summary>
+    internal IReadOnlyList<(string Label, string Value)> IntensityReasons
+    {
+        get
+        {
+            if (AnchorIntensity == null || Intensity == null) return Array.Empty<(string, string)>();
+            var reasons = new List<(string, string)>(3);
+            if (AnchorIntensity.Nps is { } anchorNps && Intensity.Nps is { } nps)
+                reasons.Add(("NPS", $"{anchorNps:0.0} → {nps:0.0}"));
+            if (AnchorIntensity.SustainFraction is { } anchorSus && Intensity.SustainFraction is { } sus)
+                reasons.Add(("Sustain", $"{Percent(anchorSus)} → {Percent(sus)}"));
+            if (AnchorIntensity.BurstFraction is { } anchorBurst && Intensity.BurstFraction is { } burst)
+                reasons.Add(("Bursts", $"{Percent(anchorBurst)} → {Percent(burst)}"));
+            return reasons;
+        }
+    }
+
+    private static string Percent(double fraction) => $"{(int)Math.Round(fraction * 100)}%";
+
+    internal const double MinimumReasonCoverage = 0.15;
+    internal const int MaximumReasons = 3;
+}

@@ -4,581 +4,245 @@
 @using MediatR
 @using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
-@using ScoreTracker.PlayerProgress.Contracts.Queries
-@using ScoreTracker.ScoreLedger.Contracts.Queries
-@using Microsoft.AspNetCore.Mvc
-@using ScoreTracker.Communities.Contracts.Queries
-@using ScoreTracker.Communities.Contracts.Commands
-@using ScoreTracker.Application.Queries
-@using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Domain.Records
-@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.Web.Components;
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
-@using System.Text.RegularExpressions
-@using ScoreTracker.Domain.Models
-@using ScoreTracker.SharedKernel.Models
-@using ScoreTracker.Web.Services
-<PageTitle>@(_selectedChart==null?L["Chart Details"].Value:$"{_selectedChart.Song.Name} {_selectedChart.DifficultyString}")</PageTitle>
+
+@* The chart drill-down (docs/design/chart-details-overhaul.md, mock R2): answer →
+   evidence → record → onward. Rebuilt in place for the Stage-3 conversion — every
+   circuit-needing section is its own child component, so islanding them is a render-mode
+   line each rather than a rewrite.
+   This page has no render mode of its own: it inherits the circuit from
+   App.razor's `<Routes @@rendermode="Interactive">`, and a child cannot opt back out of
+   one. Going static therefore waits on that attribute leaving Routes and every page
+   opting in individually — see "What P3 actually costs" in the design doc. The /Record
+   and bare /Chart aliases die at P3 when the 301 lattice goes live. *@
+<PageTitle>@(_chart == null ? L["Chart Details"].Value : $"{_chart.Song.Name} {_chart.DifficultyString}")</PageTitle>
 <HeadContent>
-    <meta name="description" content=@(_selectedChart==null?"Look up statistics and leaderboards on specific PIU charts!":$"Statistic and Leaderboards for {_selectedChart.Song.Name} {_selectedChart.DifficultyString} by {_selectedChart.Song.Artist}{(_selectedChart.StepArtist==null?"":$", charted by {_selectedChart.StepArtist}")}.")/>
-    <meta property="og:image" content=@(_selectedChart==null?"":_selectedChart.Song.ImagePath.ToString())>
-    <meta property="og:title" content=@(_selectedChart==null?"Chart Details":$"{_selectedChart.Song.Name} {_selectedChart.DifficultyString}")>
-    <meta property="og:description" content=@(_selectedChart==null?"Look up statistics and leaderboards on specific PIU charts!":$"Statistic and Leaderboards for {_selectedChart.Song.Name} {_selectedChart.DifficultyString} by {_selectedChart.Song.Artist}{(_selectedChart.StepArtist==null?"":$", charted by {_selectedChart.StepArtist}")}.")>
-    </HeadContent>
+    @* Dead channel until Stage 3 (HeadOutlet renders in the circuit; crawlers never see
+       this) — P3 moves title/meta/OG/JSON-LD into the static head for real. *@
+    <meta name="description" content="@MetaDescription"/>
+    <meta property="og:title" content="@(_chart == null ? "Chart Details" : $"{_chart.Song.Name} {_chart.DifficultyString}")">
+    <meta property="og:image" content="@(_chart?.Song.ImagePath.ToString() ?? "")">
+    <meta property="og:description" content="@MetaDescription">
+</HeadContent>
 
-<MudText Typo="Typo.h3">@L["Chart Details"]</MudText>
-@if (_initialized)
+@if (_initialized && _chart == null)
 {
-    @* Gated on init (not on leaderboard data) — the selector must work even when the
-       current mix has no leaderboard rows yet (Phoenix 2 launch week). *@
-    <ChartSelector ChartIdSelected="SelectChart" Mix="_currentMix"></ChartSelector>
+    <div class="chart-empty">
+        <MudText Typo="Typo.h5">@L["Find a chart"]</MudText>
+        <MudText Typo="Typo.body2" Class="chart-empty-sub">@L["Search by song name — every chart has its own page."]</MudText>
+        <ChartSelector ChartIdSelected="GoToChart" Mix="_mix"></ChartSelector>
+    </div>
 }
-@if (!_isLoading && _selectedChart != null)
+@if (_chart != null)
 {
-    <br/><br/>
-    <MudText Typo="Typo.h4">@_selectedChart.Song.Name @_selectedChart.DifficultyString</MudText>
-    @if (_selectedChart.StepArtist != null && _selectedChart.StepArtist != "Unknown")
-    {
-        <MudText>@L["Step Artist: X", _selectedChart.StepArtist]</MudText>
-    }
-    @if (_selectedChart.NoteCount > 0)
-    {
-        <MudText>@L["Note Count: X", _selectedChart.NoteCount]</MudText>
-    }
-    @* True debut attribution backfilled from the pumpout catalog (docs/design/legacy-mixes.md). *@
-    <MudText>@L["Debuted in: X", _selectedChart.OriginalMix.GetName()]</MudText>
-    <br/>
-    <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Custom.Brands.YouTube" OnClick="()=>VideoDisplayer.ShowVideo(_selectedChart.Id)">@L["Open Video"]</MudButton>
-    <br />
-    <br/>
-    @if (_stepAnalysis != null)
-    {
-        @* The ingested slice of piucenter's per-chart analysis (design doc §8a):
-           their dominant-skill pick, per-skill segment coverage, and headline numbers.
-           Their full scrollable chart rendering is deliberately NOT imported — the
-           link-out is the "see more". *@
-        <MudText Typo="Typo.h5">@L["Step Analysis"]</MudText>
-        <div class="step-analysis">
-            @if (_stepAnalysis.TopSkills.Any())
-            {
-                <div class="step-analysis-skills">
-                    <MudText Typo="Typo.caption" Class="step-analysis-label">@L["Dominant Skills"]</MudText>
-                    @foreach (var skill in _stepAnalysis.TopSkills)
-                    {
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@PrettySkill(skill)</MudChip>
-                    }
-                </div>
-            }
-            @if (_stepAnalysis.BadgeFractions.Any())
-            {
-                <div class="step-analysis-bars">
-                    @foreach (var pair in _stepAnalysis.BadgeFractions.OrderByDescending(kv => kv.Value).Take(8))
-                    {
-                        <div class="step-analysis-bar">
-                            <span class="step-analysis-bar-label">@PrettySkill(pair.Key)</span>
-                            <MudProgressLinear Color="Color.Primary" Value="@((double)(pair.Value * 100))"/>
-                            <span class="step-analysis-bar-value">@pair.Value.ToString("P0")</span>
-                        </div>
-                    }
-                </div>
-                <MudText Typo="Typo.caption" Class="step-analysis-note">@L["Share of chart sections featuring each skill"]</MudText>
-            }
-            <div class="step-analysis-stats">
-                @if (_stepAnalysis.Nps != null)
-                {
-                    <span>@L["Notes per Second"]: <b>@_stepAnalysis.Nps.Value.ToString("0.#")</b></span>
-                }
-                @if (_stepAnalysis.SustainTimeSeconds != null)
-                {
-                    <span>@L["Sustain Time"]: <b>@_stepAnalysis.SustainTimeSeconds.Value.ToString("0")s</b></span>
-                }
-                @if (_stepAnalysis.TimeUnderTensionSeconds != null)
-                {
-                    <span>@L["Time Under Tension"]: <b>@_stepAnalysis.TimeUnderTensionSeconds.Value.ToString("0")s</b></span>
-                }
-            </div>
-            <div class="step-analysis-footer">
-                <MudText Typo="Typo.caption">@L["Step analysis data from PIU Center"]</MudText>
-                <MudLink Href="@StepAnalysisUrl" Target="_blank" Typo="Typo.caption">@L["View full chart on PIU Center"]</MudLink>
-            </div>
+    <section class="chart-hero">
+        @* The jacket column: art, then your score in the nook beneath it. Keys carry the
+           panel's identity alongside the chart id — Blazor's sibling key lookup compares
+           key values only, so two keyed siblings sharing a chart id collide even when
+           they are different component types. *@
+        <div class="chart-hero-jacket-col">
+            <ChartVideoPlayer Chart="_chart" @key="(_chart.Id, nameof(ChartVideoPlayer))"></ChartVideoPlayer>
+            <ChartRecordPanel Chart="_chart" Mix="_mix" @key="(_chart.Id, nameof(ChartRecordPanel))"></ChartRecordPanel>
         </div>
-        <br/>
-    }
-    @if (CurrentUser.IsLoggedIn)
-    {
-        <br/>
-        <MudText Typo="Typo.h5">@L["Your Score"]</MudText>
-        <EditChartGrid ChartId="_selectedChart.Id" CurrentMix="_currentMix"></EditChartGrid>
-    }
-    @if (!_currentMix.UsesLegacyScoring())
-    {
-        <MudText Typo="Typo.h5">@L["Chart Difficulty by Letter Grade"]</MudText>
-        <ApexChart TItem="LevelDistribution"
-                   Title=@L["Difficulty By Letter"]
-                   @ref=_percentChart
-                   Options="_percentOptions">
-            <ApexPointSeries TItem="LevelDistribution"
-                             Items="_levelDistribution"
-                             Name=@L["Difficulty By Letter"]
-                             SeriesType="SeriesType.Line"
-                             XValue="@(e => e.Level.GetName())"
-                             YValue="@(e => (decimal)e.Percentile)"
-                             OrderBy="e => ParagonLevelGradeHelperMethods.GetParagonLevel((string)e.X)" />
-
-        </ApexChart>
-        @if (_plateBreakdowns.Any(kv => kv.Value > 0))
-        {
-            <br/>
-            <MudText Typo="Typo.h5">@L["Plate Distribution"]</MudText>
-            <ApexChart TItem="StringDataPoint"
-                       @ref=_plateGraph
-                       Title=@L["Plate Breakdown"]>
-                <ApexPointSeries TItem="StringDataPoint"
-                                 Items="_plateBreakdowns.Select(kv=>new StringDataPoint(kv.Key.GetShorthand(),kv.Value))"
-                                 SeriesType="SeriesType.Bar"
-                                 Name=@L["Plates"]
-                                 XValue="@(e => e.X)"
-                                 YValue="@(e => e.Y)"
-                                 OrderBy="e => (int)PhoenixPlateHelperMethods.ParseShorthand((string)e.X)"/>
-            </ApexChart>
-            <br/>
-            <MudText Typo="Typo.h5">@L["Score Distribution By Player Level"]</MudText>
-            <ApexChart TItem="DataPoint"
-                       Title=@L["Scores by Competitive Level"]
-                       @ref=_scoreGraph
-                       Options="_scoreBoxesOptions">
-                <ApexPointSeries TItem="DataPoint"
-                                 Items="_scoreMinimums.Select(kv=>new DataPoint(kv.Key,kv.Value))"
-                                 Name=@L["Min"]
-                                 SeriesType="SeriesType.Line"
-                                 XValue="@(e => e.X)"
-                                 YValue="@(e => e.Y)"
-                                 OrderBy="e => e.X" />
-                <ApexPointSeries TItem="DataPoint"
-                                 Items="_scoreMaximums.Select(kv=>new DataPoint(kv.Key,kv.Value))"
-                                 Name=@L["Max"]
-                                 SeriesType="SeriesType.Line"
-                                 XValue="@(e => e.X)"
-                                 YValue="@(e => e.Y)"
-                                 OrderBy="e => e.X" />
-                <ApexPointSeries TItem="DataPoint"
-                                 Items="_scoreAverages.Select(kv=>new DataPoint(kv.Key,kv.Value))"
-                                 Name=@L["Average"]
-                                 SeriesType="SeriesType.Line"
-                                 XValue="@(e => e.X)"
-                                 YValue="@(e => e.Y)"
-                                 OrderBy="e => e.X" />
-                @if (CurrentUser.IsLoggedIn && _myScore != null)
+        <div class="chart-hero-id">
+            <h1 class="chart-hero-title">@_chart.Song.Name</h1>
+            <div class="chart-hero-sub">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@_chart.Song.Type</MudChip>
+                <span>@L["song by {0}", _chart.Song.Artist]</span>
+                @if (_chart.StepArtist != null && _chart.StepArtist.ToString() != "Unknown")
                 {
-
-                    <ApexPointSeries TItem="DataPoint"
-                                     Items="new[]{ new DataPoint(_myLevel,_myScore.Value),new DataPoint(_myLevel+1,_myScore.Value)}"
-                                     Name=@L["My Score"]
-                                     SeriesType="SeriesType.Line"
-                                     XValue="@(e => e.X)"
-                                     YValue="@(e => e.Y)"
-                                     OrderBy="e => e.X" />
+                    <span>· @L["steps by {0}", _chart.StepArtist]</span>
                 }
-            </ApexChart>
-            <br/>
-            <ApexChart TItem="DataPoint"
-                       Title=@L["Passes by Competitive Level"]
-                       @ref=_passGraph>
-                <ApexPointSeries TItem="DataPoint"
-                                 Items="_passCounts.Select(kv=>new DataPoint(kv.Key,kv.Value))"
-                                 Name=@L["Passes"]
-                                 SeriesType="SeriesType.Line"
-                                 XValue="@(e => e.X)"
-                                 YValue="@(e => e.Y)"
-                                 OrderBy="e => e.X" />
-            </ApexChart>
-        }
-        
-        @if (_worldScores.Any())
-        {
-            <br/>
-            <MudText Typo="Typo.h5">@L["Chart Leaderboard"]</MudText>
-            <MudTable T="(int,UserPhoenixScore)" Items="_worldScores.OrderByDescending(s => s.Score).Select((s, i) => (i + 1,s))" Breakpoint="Breakpoint.None" Dense="true">
-                <HeaderContent>
-                    <MudTh>@L["Place"]</MudTh>
-                    <MudTh>@L["Avatar"]</MudTh>
-                    <MudTh>@L["Name"]</MudTh>
-                    <MudTh>@L["Level"]</MudTh>
-                    <MudTh>@L["Score"]</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd>@context.Item1</MudTd>
-                    <MudTd>
-                        @if (_nameAvatars.TryGetValue(context.Item2.UserId, out var avatarUrl))
+            </div>
+            @if (_siblings.Count > 1)
+            {
+                <div class="chart-hero-siblings">
+                    @foreach (var sibling in _siblings)
+                    {
+                        @if (sibling.Id == _chart.Id)
                         {
-                        
-                            <MudImage Src="@avatarUrl" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-                        }
-                    </MudTd>
-                    <MudTd>
-                        @if (_users.TryGetValue(context.Item2.UserId, out var scoreUser))
-                        {
-                            <UserLabel User="scoreUser"></UserLabel>
+                            <span class="chart-hero-sibling-current"><DifficultyBubble Chart="sibling" Small="true"></DifficultyBubble></span>
                         }
                         else
                         {
-                            @* Scorer without stats in the current mix (possible in Phoenix 2 launch week). *@
-                            <MudText>@context.Item2.UserName</MudText>
+                            <a href="@($"/Chart/{sibling.Id}")"><DifficultyBubble Chart="sibling" Small="true"></DifficultyBubble></a>
                         }
-                    </MudTd>
-                    <MudTd>
-                        @if (_playerLevels.TryGetValue(context.Item2.UserId, out var s))
-                        {
-                            <MudText>@s.ToString("N2")</MudText>
-                        }
-                    </MudTd>
-                    <MudTd><ScoreBreakdown Score="context.Item2.Score" Plate="context.Item2.Plate" IsBroken="context.Item2.IsBroken" ShowScore="true"></ScoreBreakdown></MudTd>
-                </RowTemplate>
-            </MudTable>
-        }
+                    }
+                </div>
+            }
+            <div class="chart-hero-facts">
+                @if (_chart.Song.Bpm != null)
+                {
+                    <div><span class="chart-fact-value">@BpmDisplay</span><span class="chart-fact-label">@L["BPM"]</span></div>
+                }
+                @if (_chart.NoteCount > 0)
+                {
+                    <div><span class="chart-fact-value">@($"{_chart.NoteCount:N0}")</span><span class="chart-fact-label">@L["Notes"]</span></div>
+                }
+                @if (_analysis?.Nps != null)
+                {
+                    <div><span class="chart-fact-value">@_analysis.Nps.Value.ToString("0.#")</span><span class="chart-fact-label">@L["Notes per Second"]</span></div>
+                }
+                <div><span class="chart-fact-value">@_chart.OriginalMix.GetName()</span><span class="chart-fact-label">@L["Debuted in"]</span></div>
+                @if (Population != null)
+                {
+                    <div><span class="chart-fact-value">@($"{Population.ScoresTracked:N0}")</span><span class="chart-fact-label">@L["Scores tracked"]</span></div>
+                    <div><span class="chart-fact-value">@((int)Math.Round(Population.PassRate * 100))%</span><span class="chart-fact-label">@L["Pass rate"]</span></div>
+                }
+            </div>
+            <ChartVerdictCard Facets="_facets"></ChartVerdictCard>
+            <div class="chart-hero-actions">
+                <MudLink Href="@PiuCenterUrl" Target="_blank" Typo="Typo.caption">@L["View full chart on PIU Center"]</MudLink>
+            </div>
+        </div>
+    </section>
 
+    <section class="chart-section">
+        <div class="chart-section-head">
+            <MudText Typo="Typo.h5">@L["Chart Stats"]</MudText>
+        </div>
+        <ChartEvidenceSection Chart="_chart" Mix="_mix" Facets="_facets" @key="_chart.Id"></ChartEvidenceSection>
+    </section>
+
+    @if (_skillChips.Any() || _analysis != null)
+    {
+        <section class="chart-section">
+            <div class="chart-section-head">
+                <MudText Typo="Typo.h5">@L["Skill fingerprint"]</MudText>
+                @if (Fingerprint != null)
+                {
+                    <MudText Typo="Typo.caption" Class="chart-section-sub"><VerdictSentence Facet="Fingerprint"></VerdictSentence></MudText>
+                }
+            </div>
+            <SkillCoverageBars Chips="_skillChips"></SkillCoverageBars>
+            @* Intensity reads as bars beside the skills because it is the same kind of
+               fact — a share of the chart — and the two together are what "what is this
+               chart made of" means. Grind and spikes rather than sustain and tension:
+               sustain is a subset of tension, so showing both counts the grind twice. *@
+            <IntensityBars Intensity="Intensity" Duration="_chart.Song.Duration"></IntensityBars>
+            <div class="chart-skill-foot">
+                <span>@L["Share of the chart each pattern and demand covers"]</span>
+                <span>@L["Step analysis data from PIU Center"]</span>
+            </div>
+        </section>
     }
 
-    @if (CurrentUser.IsLoggedInAsAdmin)
+    @if (History != null)
     {
-        <br/><br/>
-        <MudGrid>
-            <MudItem xs="4">
-                <MudNumericField T="decimal" Label="Min BPM" ValueChanged="SetMin" Value="_minBpm"></MudNumericField>
-            </MudItem>
-            <MudItem xs="4">
-                <MudNumericField T="decimal" Label="Max BPM" @bind-Value="_maxBpm"></MudNumericField>
-            </MudItem>
-            <MudItem xs="12">
-                <MudAutocomplete T="string"
-                                 Label="Step Artist"
-                                 @bind-Value="_artist"
-                                 CoerceValue="true"
-                                 SearchFunc="(s,c)=>Task.FromResult(_artists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
-            </MudItem>
-            <MudItem xs="12">
-                <MudTextField T="string" Immediate="true" Label=@("Video "+_video) Value="_video" ValueChanged="SetVideo"></MudTextField>
-            </MudItem>
-            <MudItem xs="12">
-                <MudButton Color="Color.Warning" OnClick="UpdateChart">Save</MudButton>
-            </MudItem>
-        </MudGrid>
+        <section class="chart-section">
+            <div class="chart-section-head">
+                <MudText Typo="Typo.h5">@L["History"]</MudText>
+                <MudText Typo="Typo.caption" Class="chart-section-sub">@L["Level changes across mixes, from the catalog record."]</MudText>
+            </div>
+            <ChartHistoryTimeline History="History" Type="_chart.Type"></ChartHistoryTimeline>
+        </section>
     }
-    @if (CurrentUser.IsLoggedInAsAdmin)
-    {
-        <MudText>@_selectedChart.Id</MudText>
-    }
+
+    <section class="chart-section">
+        <div class="chart-section-head">
+            <MudText Typo="Typo.h5">@L["Leaderboard"]</MudText>
+        </div>
+        <ChartLeaderboardSection Chart="_chart" Mix="_mix" @key="_chart.Id"></ChartLeaderboardSection>
+    </section>
+
+    <section class="chart-section">
+        <div class="chart-section-head">
+            <MudText Typo="Typo.h5">@L["Charts like this"]</MudText>
+            <MudText Typo="Typo.caption" Class="chart-section-sub">@L["From the similarity graph — evidence-weighted, rebuilt nightly."]</MudText>
+        </div>
+        <SimilarChartsShelf ChartId="_chart.Id" Mix="_mix" @key="_chart.Id"></SimilarChartsShelf>
+        <p class="chart-section-credit">
+            @L["Chart analysis made possible by"]
+            <MudLink Href="https://piucenter.com" Target="_blank" Typo="Typo.caption">PIU Center</MudLink>
+        </p>
+    </section>
+
 }
-<style>
-    .step-analysis {
-        max-width: 640px;
-    }
-
-    .step-analysis-skills {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        flex-wrap: wrap;
-        margin-bottom: 8px;
-    }
-
-    .step-analysis-label {
-        margin-right: 4px;
-        color: var(--mix-ink-muted);
-    }
-
-    .step-analysis-bars {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 4px 24px;
-    }
-
-    .step-analysis-bar {
-        display: grid;
-        grid-template-columns: 150px 1fr 44px;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.8rem;
-    }
-
-    .step-analysis-bar-value {
-        text-align: right;
-        color: var(--mix-ink-muted);
-    }
-
-    .step-analysis-note {
-        color: var(--mix-ink-muted);
-    }
-
-    .step-analysis-stats {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-        margin-top: 8px;
-        font-size: 0.85rem;
-    }
-
-    .step-analysis-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        gap: 8px;
-        flex-wrap: wrap;
-        border-top: 1px solid var(--mix-ink-muted);
-        margin-top: 10px;
-        padding-top: 6px;
-        opacity: 0.9;
-    }
-</style>
-
-<MudDialog @bind-Visible="_showChartOverview">
-    <DialogContent>
-        @if (_selectedChart != null && !_currentMix.UsesLegacyScoring())
-        {
-            <ChartOverview ChartId="_selectedChart.Id" Mix="_currentMix"></ChartOverview>
-        }
-    </DialogContent>
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showChartOverview = false">Close</MudButton>
-    </DialogActions>
-</MudDialog>
 
 @inject IMediator Mediator
 @inject NavigationManager NavManager
-@inject ICurrentUserAccessor CurrentUser;
-@inject IUiSettingsAccessor UiSettings;
-@inject IPlayerStatsRepository PlayerStats;
-@inject ChartVideoDisplayer VideoDisplayer;
-@inject ISnackbar Snackbar;
-@inject IUserRepository Users;
-@inject IChartRepository Charts;
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
 @code {
-    private MixEnum _currentMix = MixEnum.Phoenix;
-    private bool _initialized = false;
-    private bool _showChartOverview = false;
-    private string _video = string.Empty;
-    private string _artist = string.Empty;
-    private MudAutocomplete<string> _autocomplete;
-    private ApexChartOptions<LevelDistribution> _percentOptions { get; set; } = new()
-    {
-        Yaxis = new List<YAxis>(new []
-        {
-            new YAxis()
-            {
-                Min=0.0,
-                Max=100.0,
-                Labels = new YAxisLabels()
-                {
-                    Formatter = @"function (value, index, w) {
-                    return Number(value).toLocaleString();}"
-                }
-            },
-        }),
-        PlotOptions = new PlotOptions
-        {
-            Line = new PlotOptionsLine
-            {
-                Colors = new LineColors
-                {
-                    Threshold = 50,
-                    ColorAboveThreshold = "#00FF00",
-                    ColorBelowThreshold = "#FF0000"
-                }
-            }
-        }
-    };
-    private decimal _minBpm;
-    private decimal _maxBpm;
-    private ApexChart<DataPoint>? _scoreGraph;
-    private ApexChart<StringDataPoint>? _plateGraph;
-    private ApexChart<DataPoint>? _passGraph;
-    private ApexChart<LevelDistribution> _percentChart = new ApexChart<LevelDistribution>();
-    private IEnumerable<string> _artists = Array.Empty<string>();
-    private readonly ApexChartOptions<DataPoint> _scoreBoxesOptions = new ApexChartOptions<DataPoint>()
-    {
-        Stroke = new Stroke { Curve = Curve.Smooth },
-        Yaxis = new[]{new YAxis()
-        {
-            Max=1000000
-        }}.ToList(),
-
-    };
-    private void SetMin(decimal newMin)
-    {
-        _minBpm = newMin;
-        _maxBpm = newMin;
-    }
-
-    private static readonly Regex VideoRegex = new Regex(@"https\:\/\/www\.youtube\.com\/watch\?v\=(.*)", RegexOptions.Compiled);
-    private static readonly Regex VideoRegex2 = new Regex(@"https\:\/\/youtu\.be\/([^?]+)", RegexOptions.Compiled);
-    private void SetVideo(string video)
-    {
-        var match = VideoRegex.Match(video);
-        if (match.Success)
-        {
-            var hash = match.Groups[1].Value;
-            _video = $"https://www.youtube.com/embed/{hash}";
-            StateHasChanged();
-            Snackbar.Add(_video, Severity.Error);
-            return;
-        }
-        match = VideoRegex2.Match(video);
-        if(match.Success)
-        {
-            
-            var hash = match.Groups[1].Value;
-            _video = $"https://www.youtube.com/embed/{hash}";
-            StateHasChanged();
-            Snackbar.Add(_video, Severity.Error);
-            return;
-        }
-        _video = video;
-        Snackbar.Add(_video, Severity.Error);
-        StateHasChanged();
-    }
-    private Chart? _selectedChart = null;
-    private bool _isLoading = false;
-    private ChartStepAnalysisRecord? _stepAnalysis;
-
-    // piucenter's skill vocabulary renders as attributed source data — underscores
-    // prettified, names untranslated (like the key itself).
-    private static string PrettySkill(string skill) => skill.Replace('_', ' ');
-
-    private string StepAnalysisUrl => _stepAnalysis?.ExternalKey == null
-        ? "https://www.piucenter.com"
-        : $"https://www.piucenter.com/chart/{Uri.EscapeDataString(_stepAnalysis.ExternalKey)}";
-    private IDictionary<PhoenixPlate, int> _plateBreakdowns = new Dictionary<PhoenixPlate, int>();
-    private IDictionary<int, PhoenixScore> _scoreMinimums = new Dictionary<int, PhoenixScore>();
-    private IDictionary<int,PhoenixScore> _scoreMaximums = new Dictionary<int,PhoenixScore>();
-    private IDictionary<int, PhoenixScore> _scoreAverages = new Dictionary<int, PhoenixScore>();
-    private IDictionary<int, int> _passCounts = new Dictionary<int, int>();
-    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
-    private PhoenixScore? _myScore = null;
-    private int _myLevel = 1;
-    private IEnumerable<UserPhoenixScore> _worldScores = Array.Empty<UserPhoenixScore>();
-    private IDictionary<Guid, string> _nameAvatars = new Dictionary<Guid, string>();
-    private IDictionary<Guid, double> _playerLevels = new Dictionary<Guid, double>();
-    private sealed record DataPoint(int X, int Y);
-
-    private sealed record StringDataPoint(string X, int Y);
-
-    private IEnumerable<LevelDistribution> _levelDistribution = Array.Empty<LevelDistribution>();
-    private sealed record LevelDistribution(ParagonLevel Level, double Percentile);
-    private async Task SelectChart(Chart chart)
-    {
-        _isLoading = true;
-        _selectedChart = chart;
-        StateHasChanged();
-        _stepAnalysis = await Mediator.Send(new GetChartStepAnalysisQuery(chart.Id));
-        var scores = (await Mediator.Send(new GetPhoenixScoresForChartQuery(chart.Id, _currentMix))).ToArray();
-        _plateBreakdowns = scores.Where(s => s.Plate != null).GroupBy(s => s.Plate!.Value).ToDictionary(g => g.Key, g => g.Count());
-        foreach (var plate in Enum.GetValues<PhoenixPlate>().Where(p => !_plateBreakdowns.ContainsKey(p)))
-        {
-            _plateBreakdowns[plate] = 0;
-        }
-        var playerScores = scores.ToDictionary(p => p.UserId);
-        var stats = (await PlayerStats.GetStats(_currentMix, scores.Select(s=>s.UserId).Distinct().ToArray(),CancellationToken.None)).ToArray();
-        _playerLevels = stats.ToDictionary(p => p.UserId, p => chart.Type == ChartType.Single ? p.SinglesCompetitiveLevel : p.DoublesCompetitiveLevel);
-        var playerGroupings = stats.GroupBy(s => (int)Math.Round(_selectedChart.Type == ChartType.Double ? s.DoublesCompetitiveLevel :
-            _selectedChart.Type == ChartType.Single ? s.SinglesCompetitiveLevel : s.CompetitiveLevel)).ToArray();
-        _scoreMinimums = playerGroupings.ToDictionary(g => g.Key, g => (PhoenixScore)(int)g.Min(s => playerScores[s.UserId].Score));;
-        _scoreMaximums = playerGroupings.ToDictionary(g => g.Key, g => (PhoenixScore)(int)g.Max(s => playerScores[s.UserId].Score));;
-
-        _scoreAverages = playerGroupings.ToDictionary(g => g.Key, g => (PhoenixScore)(int)g.Average(s => playerScores[s.UserId].Score));
-        _worldScores = (await Mediator.Send(new GetPhoenixRecordsForCommunityQuery("World", chart.Id, _currentMix))).ToArray();
-        _passCounts = playerGroupings.ToDictionary(g => g.Key, g => g.Count(s => !playerScores[s.UserId].IsBroken));
-        _isLoading = false;
-        NavManager.NavigateTo("/Chart/" + _selectedChart.Id.ToString());
-        ChartId = _selectedChart.Id;
-        // FirstOrDefault: legacy/cut-content charts have no letter-grade difficulty rows
-        // (the graph is Phoenix-data-driven and already hidden for legacy mixes).
-        var letterDifficulty = (await Charts.GetChartLetterGradeDifficulties(new[] { chart.Id })).FirstOrDefault();
-        _levelDistribution = letterDifficulty?.Percentiles.Select(kv => new LevelDistribution(kv.Key, kv.Value)).OrderBy(r => r.Level).ToArray() ?? Array.Empty<LevelDistribution>();
-        if (CurrentUser.IsLoggedIn)
-        {
-            _myScore = (await Mediator.Send(new GetPhoenixRecordQuery(_selectedChart.Id, _currentMix)))?.Score;
-            var myStats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix));
-            _myLevel = (int)Math.Floor(_selectedChart.Type == ChartType.Single ? myStats.SinglesCompetitiveLevel : _selectedChart.Type == ChartType.Double ? myStats.DoublesCompetitiveLevel : myStats.CompetitiveLevel);
-        }
-        if (_scoreGraph != null)
-        {
-            await _scoreGraph.UpdateSeriesAsync(true);
-            await _scoreGraph.UpdateOptionsAsync(true, true, true);
-        }
-        if (_plateGraph != null)
-        {
-            await _plateGraph.UpdateSeriesAsync(true);
-            await _plateGraph.UpdateOptionsAsync(true, true, true);
-        }
-        if (_passGraph != null)
-        {
-            await _passGraph.UpdateSeriesAsync(true);
-            await _passGraph.UpdateOptionsAsync(true, true, true);
-        }
-        _video = (await Mediator.Send(new GetChartVideosQuery(new[] { _selectedChart.Id }))).FirstOrDefault()?.VideoUrl.ToString() ?? "";
-        _artist = _selectedChart.StepArtist?.ToString() ?? "";
-        _minBpm = _selectedChart.Song.Bpm?.Min??0;
-        _maxBpm = _selectedChart.Song.Bpm?.Max??0;
-        await _percentChart.UpdateSeriesAsync(true);
-        StateHasChanged();
-    }
-
-    private bool _isSaving = false;
-    private async Task UpdateChart()
-    {
-        if (_selectedChart == null)
-        {
-            return;
-        }
-        _isSaving = true;
-        await Charts.UpdateChart(_selectedChart.Id, _artist);
-        await Charts.UpdateSong(_selectedChart.Song.Name, Bpm.From(_minBpm, _maxBpm));
-        await Charts.SetChartVideo(_selectedChart.Id, new Uri(_video), "NOT KNOWN");
-        Snackbar.Add("Updated Chart");
-        _isSaving = false;
-    }
     [Parameter]
-    [SupplyParameterFromQuery(Name = "TournamentId")]
     public Guid? ChartId { get; set; }
+
+    private MixEnum _mix = MixEnum.Phoenix;
+    private bool _initialized;
+    private Chart? _chart;
+    private IReadOnlyList<ChartVerdictFacet> _facets = Array.Empty<ChartVerdictFacet>();
+    private IReadOnlyList<Chart> _siblings = Array.Empty<Chart>();
+    private IReadOnlyList<ChartSkillChipRecord> _skillChips = Array.Empty<ChartSkillChipRecord>();
+    private ChartStepAnalysisRecord? _analysis;
+
+    private ChartIntensityFacts? Intensity => _chart == null ? null : ChartIntensityFacts.For(_chart, _analysis);
+
+    private PopulationVerdict? Population => _facets.OfType<PopulationVerdict>().FirstOrDefault();
+    private HistoryVerdict? History => _facets.OfType<HistoryVerdict>().FirstOrDefault();
+    private StyleFingerprintVerdict? Fingerprint => _facets.OfType<StyleFingerprintVerdict>().FirstOrDefault();
+
+    // Bpm.ToString prints Min twice on ranges (pre-existing) — format locally.
+    private string BpmDisplay => _chart?.Song.Bpm is not { } bpm ? "" :
+        bpm.Min == bpm.Max ? bpm.Min.ToString("0.##") : $"{bpm.Min:0.##}–{bpm.Max:0.##}";
+
+    private string MetaDescription => _chart == null
+        ? "Look up statistics and leaderboards on specific PIU charts!"
+        : $"Statistics and leaderboards for {_chart.Song.Name} {_chart.DifficultyString} by {_chart.Song.Artist}.";
+
+    private string PiuCenterUrl => _analysis?.ExternalKey == null
+        ? "https://www.piucenter.com"
+        : $"https://www.piucenter.com/chart/{Uri.EscapeDataString(_analysis.ExternalKey)}";
 
     protected override async Task OnInitializedAsync()
     {
-        _currentMix = await UiSettings.GetSelectedMix();
-
-        _nameAvatars = (await Mediator.Send(new GetCommunityLeaderboardQuery("World", _currentMix))).ToDictionary(u => u.UserId, u => u.ProfileImage.ToString());
-        _users = (await Users.GetUsers(_nameAvatars.Keys)).ToDictionary(u => u.Id, u => u);
+        _mix = await UiSettings.GetSelectedMix();
         _initialized = true;
-        if (ChartId != null)
-        {
-            var chart = (await Mediator.Send(new GetChartsQuery(_currentMix, null, null, new[] { ChartId.Value }))).FirstOrDefault();
-            if (chart != null)
-            {
-
-                await SelectChart(chart);
-            }
-        }
-        if (CurrentUser.IsLoggedInAsAdmin)
-        {
-            _artists = (await Mediator.Send(new GetChartsQuery(_currentMix))).Where(c => c.StepArtist != null).Select(c => c.StepArtist!.Value.ToString()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        }
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        if (ChartId != null)
+        // One load per chart id — the old page's init/params double-fetch is dead.
+        if (ChartId == null)
         {
-            var chart = (await Mediator.Send(new GetChartsQuery(_currentMix, null, null, new[] { ChartId.Value }))).FirstOrDefault();
-            if (chart != null)
-            {
-
-                await SelectChart(chart);
-            }
+            _chart = null;
+            return;
         }
-    }
-    
 
+        if (_chart?.Id == ChartId) return;
+        var chart = (await Mediator.Send(new GetChartsQuery(_mix, ChartIds: new[] { ChartId.Value })))
+            .FirstOrDefault();
+        if (chart == null)
+        {
+            _chart = null;
+            return;
+        }
+
+        _chart = chart;
+        _facets = await Mediator.Send(new GetChartVerdictQuery(chart.Id, _mix));
+        // The current chart stays in its own lineup — leaving it out makes the row read as
+        // "the other ones" and hides where you are in the song's ladder.
+        _siblings = (await Mediator.Send(new GetChartsBySongQuery(_mix, chart.Song.Name)))
+            .OrderBy(c => c.Type)
+            .ThenBy(c => (int)c.Level)
+            .ToArray();
+        _skillChips = (await Mediator.Send(new GetChartSkillChipsQuery(new[] { chart.Id })))
+            .TryGetValue(chart.Id, out var chips)
+            ? chips
+            : Array.Empty<ChartSkillChipRecord>();
+        _analysis = await Mediator.Send(new GetChartStepAnalysisQuery(chart.Id));
+    }
+
+    private Task GoToChart(Chart chart)
+    {
+        NavManager.NavigateTo($"/Chart/{chart.Id}");
+        return Task.CompletedTask;
+    }
 }

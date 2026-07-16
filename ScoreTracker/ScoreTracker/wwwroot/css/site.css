@@ -509,6 +509,60 @@ html.sheet-open .more-sheet-scrim {
     pointer-events: auto;
 }
 
+/* The search sheet drops from the TOP, unlike More. The phone keyboard takes the bottom half
+   of the screen the moment the input focuses, so a bottom-anchored field opens underneath the
+   thing typing into it. It is only as tall as it needs to be — this asks one question. */
+.search-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 1400;
+    background: var(--mix-nav);
+    border-bottom: 1px solid rgba(255, 255, 255, .10);
+    transform: translateY(-100%);
+    transition: transform .225s cubic-bezier(0, 0, .2, 1);
+}
+
+.search-sheet.open {
+    transform: translateY(0);
+}
+
+.search-sheet-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px 18px;
+}
+
+.search-sheet-label {
+    font-family: var(--font-display);
+    font-size: .6875rem;
+    letter-spacing: .08em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+/* The autocomplete's popover is teleported to the provider at the document root, so it is
+   never clipped by this box — the sheet only has to frame the input. */
+.search-sheet-input {
+    display: flex;
+    align-items: center;
+}
+
+/* A thumb target, not an app-bar accent: taller than the desktop pill, and never under 16px
+   — iOS Safari zooms the whole viewport when a smaller input takes focus. */
+.search-sheet-input .mud-input.mud-input-outlined {
+    width: 100%;
+    border-radius: 10px;
+}
+
+.search-sheet-input .mud-input.mud-input-outlined input {
+    padding: 11px 14px;
+    font-size: 1rem;
+}
+
 .more-sheet .nav-section {
     padding: 12px 16px 2px;
     font-family: var(--font-display);
@@ -3688,6 +3742,1118 @@ html.sheet-open .more-sheet-scrim {
 .themed-apex .apexcharts-tooltip-y-group,
 .themed-apex .apexcharts-tooltip-series-group {
     color: #ffffff !important;
+}
+
+/* ===== Chart details page (docs/design/chart-details-overhaul.md, mock R2) =====
+   Answer -> evidence -> record -> onward. Static-SSR-ready: everything here styles from
+   tokens; the sections that need a circuit are components (the Stage-3 islands). */
+
+.chart-empty {
+    max-width: 560px;
+    margin: 32px auto;
+    display: grid;
+    gap: 10px;
+}
+
+.chart-empty-sub {
+    color: var(--mix-ink-muted);
+}
+
+.chart-hero {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 28px;
+    align-items: start;
+    padding: 18px 0 8px;
+}
+
+/* The jacket column: art, then your score in the nook beneath it. */
+.chart-hero-jacket-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 300px;
+    flex: none;
+}
+
+/* The chart you are on stays in its song's lineup, ringed rather than removed — taking it
+   out made the row read as "the other ones" and hid where you sit in the ladder. */
+.chart-hero-sibling-current {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid var(--mix-primary);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 45%, transparent);
+}
+
+.chart-section-credit {
+    margin-top: 14px;
+    font-size: .74rem;
+    color: var(--mix-ink-muted);
+}
+
+.chart-jacket {
+    position: relative;
+    width: 300px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .10);
+    background: var(--mix-surface);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .5);
+}
+
+/* Scoped to the jacket wrapper, never `.chart-jacket .mud-image`: the difficulty bubble is
+   a MudImage in this box too, and telling it to fill the frame made it 300px wide. */
+.chart-jacket-art,
+.chart-jacket-art .mud-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.chart-jacket-video {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    display: block;
+}
+
+/* The jacket is the button, same as the shelf's cards — two ways to start a video on one
+   page is one too many. The bubble stays outside it: it labels the art, it does not play. */
+.chart-jacket-playable {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    position: relative;
+}
+
+/* Centred circle, revealed on hover — .chart-card-play's treatment at the hero's scale.
+   pointer-events: none so the button underneath owns every pixel of the art. */
+.chart-jacket-play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 62px;
+    height: 62px;
+    padding-left: 4px;
+    border-radius: 99px;
+    pointer-events: none;
+    background: rgba(0, 0, 0, .8);
+    border: 1px solid rgba(255, 255, 255, .2);
+    color: #fff;
+    opacity: .85;
+    transform: scale(.94);
+    transition: opacity .12s, transform .12s, background .12s, border-color .12s;
+}
+
+.chart-jacket-play::before {
+    content: "";
+    border-style: solid;
+    border-width: 10px 0 10px 16px;
+    border-color: transparent transparent transparent currentColor;
+}
+
+.chart-jacket-playable:hover .chart-jacket-play,
+.chart-jacket-playable:focus-visible .chart-jacket-play {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.chart-jacket-playable:hover .chart-jacket-play {
+    background: rgba(0, 0, 0, .93);
+    border-color: var(--mix-primary);
+}
+
+.chart-jacket-close {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    z-index: 4;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: .68rem;
+    color: #fff;
+    background: rgba(0, 0, 0, .8);
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 99px;
+    width: 24px;
+    height: 24px;
+    line-height: 1;
+}
+
+.chart-jacket-close:hover {
+    border-color: var(--mix-primary);
+}
+
+.chart-jacket-bubble {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .6));
+}
+
+.chart-hero-title {
+    font-family: var(--font-display);
+    font-size: 2.3rem;
+    font-weight: 800;
+    line-height: 1.05;
+    margin: 0;
+    text-wrap: balance;
+}
+
+.chart-hero-sub {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    color: var(--mix-ink-muted);
+    font-size: .9rem;
+}
+
+.chart-hero-siblings {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.chart-hero-facts {
+    display: flex;
+    gap: 26px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.chart-fact-value {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-fact-label {
+    display: block;
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    margin-top: 1px;
+}
+
+.chart-verdict {
+    margin-top: 16px;
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-left: 3px solid var(--mix-accent);
+    border-radius: 12px;
+    padding: 14px 17px;
+}
+
+.chart-verdict-head {
+    font-size: 1.12rem;
+    font-weight: 700;
+    line-height: 1.35;
+    text-wrap: balance;
+}
+
+.chart-verdict-sub {
+    color: var(--mix-ink-muted);
+    font-size: .86rem;
+    margin-top: 5px;
+    max-width: 62ch;
+}
+
+.chart-verdict-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 11px;
+}
+
+.chart-verdict-chip {
+    border: 1px solid;
+    border-radius: 99px;
+    font-size: .74rem;
+    font-weight: 700;
+    padding: 3px 11px;
+    white-space: nowrap;
+}
+
+.chart-verdict-chip-muted {
+    color: var(--mix-ink-muted);
+    border-color: rgba(255, 255, 255, .22);
+}
+
+.chart-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.chart-overline {
+    display: block;
+    font-size: .68rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    font-weight: 600;
+}
+
+.chart-section {
+    margin: 26px 0;
+}
+
+.chart-section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.chart-section-sub {
+    color: var(--mix-ink-muted);
+}
+
+/* Your best + record inputs (the record island at Stage 3). */
+/* One card in the hero's nook, not two panels down the page: your score is the first thing
+   you look for, and recording is a mode of it rather than a separate destination. */
+.chart-record {
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 12px;
+    padding: 14px 16px;
+}
+
+.chart-record-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.chart-record-edit {
+    flex: none;
+    color: var(--mix-ink-muted);
+}
+
+.chart-record-edit:hover {
+    color: var(--mix-primary);
+}
+
+.chart-record-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.chart-record-score {
+    margin-top: 8px;
+}
+
+.chart-record-age, .chart-record-note {
+    display: block;
+    color: var(--mix-ink-muted);
+    margin-top: 4px;
+}
+
+.chart-record-empty {
+    color: var(--mix-ink-muted);
+    margin-top: 8px;
+}
+
+.chart-record-journey {
+    margin-top: 12px;
+    border-top: 1px dashed rgba(255, 255, 255, .14);
+    padding-top: 9px;
+}
+
+.chart-record-journey-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 0;
+}
+
+.chart-record-journey-date {
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-record-journey-score {
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-record-row {
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) minmax(120px, 1fr);
+    gap: 10px 12px;
+    align-items: center;
+    margin-top: 8px;
+}
+
+/* Evidence graph cards - sentence first, curve second. */
+.chart-evidence {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+.chart-evidence-card {
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 12px;
+    padding: 13px 15px;
+}
+
+.chart-evidence-caption {
+    font-size: .92rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 4px 0 8px;
+    max-width: 48ch;
+}
+
+.chart-evidence-empty {
+    grid-column: 1 / -1;
+    color: var(--mix-ink-muted);
+}
+
+.chart-skill-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    font-size: .78rem;
+    color: var(--mix-ink-muted);
+}
+
+/* History band. */
+.chart-timeline {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.chart-timeline-node {
+    flex: 1;
+    min-width: 150px;
+    position: relative;
+    padding: 14px 18px 4px 0;
+}
+
+.chart-timeline-node::before {
+    content: "";
+    position: absolute;
+    top: 21px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(255, 255, 255, .18);
+}
+
+.chart-timeline-node::after {
+    content: "";
+    position: absolute;
+    top: 16px;
+    left: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 99px;
+    background: var(--mix-bg);
+    border: 3px solid var(--mix-primary);
+}
+
+.chart-timeline-dim::after {
+    border-color: var(--mix-ink-muted);
+}
+
+.chart-timeline-mix {
+    margin-top: 22px;
+    font-weight: 800;
+    font-size: .92rem;
+}
+
+.chart-timeline-level {
+    margin-top: 4px;
+    font-size: .82rem;
+    color: var(--mix-ink-muted);
+}
+
+.chart-timeline-delta {
+    margin-left: 6px;
+    color: var(--diff-hard);
+    font-weight: 800;
+}
+
+/* Leaderboard - the widgets' glow vocabulary at page scale. */
+.chart-lb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .88rem;
+}
+
+.chart-lb-table th {
+    text-align: left;
+    font-size: .66rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    font-weight: 600;
+    padding: 4px 10px 7px;
+}
+
+.chart-lb-table td {
+    padding: 6px 10px;
+    border-top: 1px solid rgba(255, 255, 255, .07);
+}
+
+.chart-lb-place {
+    color: var(--mix-ink-muted);
+    width: 34px;
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-lb-level {
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-lb-score-col {
+    text-align: right;
+}
+
+.chart-lb-me td {
+    background: color-mix(in srgb, var(--daily-you) 15%, transparent);
+    box-shadow: inset 0 1.5px 0 var(--daily-you), inset 0 -1.5px 0 var(--daily-you);
+}
+
+.chart-lb-community td {
+    background: color-mix(in srgb, var(--daily-community) 13%, transparent);
+}
+
+.chart-lb-gap td {
+    text-align: center;
+    color: var(--mix-ink-muted);
+    font-size: .74rem;
+    padding: 2px;
+    border-top: none;
+}
+
+.chart-lb-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.chart-lb-legend {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .74rem;
+    color: var(--mix-ink-muted);
+}
+
+.chart-lb-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+}
+
+.chart-lb-dot-community {
+    background: var(--daily-community);
+}
+
+.chart-lb-dot-me {
+    background: var(--daily-you);
+    margin-left: 10px;
+}
+
+.chart-lb-empty, .chart-shelf-empty {
+    color: var(--mix-ink-muted);
+}
+
+/* Similar-charts shelf - the internal link mesh. Three across, then two, then one; no
+   density modes, because the card is sized around 16:9 art and that shape is the point. */
+.chart-shelf {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.chart-shelf-controls {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.chart-shelf-sort {
+    display: flex;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.chart-shelf-sort button {
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+    background: transparent;
+    border: 0;
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: color .12s, background .12s;
+}
+
+.chart-shelf-sort button + button {
+    border-left: 1px solid rgba(255, 255, 255, .12);
+}
+
+.chart-shelf-sort button[aria-pressed="true"] {
+    color: var(--mix-ink);
+    background: var(--mix-surface-muted);
+}
+
+.chart-shelf-sort button:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+.chart-shelf-personal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+    cursor: pointer;
+}
+
+.chart-shelf-personal input {
+    accent-color: var(--mix-primary);
+    cursor: pointer;
+}
+
+.chart-shelf-personal:has(input:disabled) {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+.chart-shelf-addfilter {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: color .12s, border-color .12s;
+}
+
+.chart-shelf-addfilter:hover:not(:disabled),
+.chart-shelf-addfilter[aria-expanded="true"] {
+    color: var(--mix-ink);
+    border-color: var(--mix-primary);
+}
+
+.chart-shelf-addfilter:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+/* How many filters are on, when the panel that would show you is shut. */
+.chart-shelf-fcount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    font-size: .65rem;
+    font-weight: 700;
+    color: var(--mix-primary-contrast);
+    background: var(--mix-primary);
+}
+
+.chart-shelf-filterpanel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 14px;
+    padding: 14px;
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 6px;
+}
+
+.chart-shelf-ftoggles {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.chart-shelf-ftoggles label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+    cursor: pointer;
+}
+
+.chart-shelf-ftoggles input {
+    accent-color: var(--mix-primary);
+    cursor: pointer;
+}
+
+.chart-shelf-ftoggles label:has(input:checked) {
+    color: var(--mix-ink);
+}
+
+.chart-shelf-funavailable {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+/* Below the line because it is not one of the four: it asks the opposite question rather
+   than narrowing this one. */
+.chart-shelf-fopposite {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+    cursor: pointer;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+.chart-shelf-fopposite input {
+    accent-color: var(--mix-primary);
+    cursor: pointer;
+}
+
+.chart-shelf-fopposite:has(input:checked) {
+    color: var(--mix-ink);
+}
+
+.chart-shelf-fopposite:has(input:disabled) {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+.chart-shelf-fapply {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* The count owns the row; the buttons sit at the end of it. */
+.chart-shelf-fcompare {
+    flex: 1 1 auto;
+    font-size: .74rem;
+    color: var(--mix-ink-muted);
+}
+
+.chart-shelf-fclear,
+.chart-shelf-fgo {
+    font-size: .75rem;
+    border-radius: 4px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: opacity .12s;
+}
+
+.chart-shelf-fclear {
+    color: var(--mix-ink-muted);
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, .12);
+}
+
+.chart-shelf-fgo {
+    color: var(--mix-primary-contrast);
+    background: var(--mix-primary);
+    border: 1px solid var(--mix-primary);
+    font-weight: 600;
+}
+
+.chart-shelf-fclear:disabled,
+.chart-shelf-fgo:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+/* Filters that ran, as against filters being chosen — read-only, because the panel
+   above is where they change and two edit points would fight. */
+.chart-shelf-fchipclear {
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    background: transparent;
+    border: 0;
+    padding: 4px 6px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.chart-shelf-fchipclear:hover {
+    color: var(--mix-primary);
+}
+
+.chart-shelf-hint,
+.chart-shelf-reach {
+    font-size: .74rem;
+    color: var(--mix-ink-muted);
+}
+
+.chart-shelf-reach {
+    margin-top: 10px;
+}
+
+.chart-shelf-filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.chart-shelf-fchip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 4px;
+    padding: 4px 4px 4px 8px;
+}
+
+.chart-shelf-fchip span {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+
+.chart-shelf-nearmiss {
+    margin-top: 18px;
+}
+
+.chart-shelf-nearmiss > summary {
+    cursor: pointer;
+    color: var(--mix-ink-muted);
+    font-size: .8rem;
+    padding: 6px 0;
+}
+
+.chart-shelf-nearmiss > .chart-shelf {
+    margin-top: 10px;
+}
+
+.chart-card {
+    position: relative;
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 4px;
+    transition: border-color .12s, background .12s;
+}
+
+.chart-card:hover {
+    border-color: var(--mix-primary);
+    background: var(--mix-surface-muted);
+}
+
+/* 16:9 from the start, so the video drops into the art's exact box: the card never
+   changes height and the grid never jumps. The jacket is the play target; the link out
+   is the icon by the name, so the two never fight over a pixel. */
+.chart-card-art {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin: 10px 10px 0;
+    width: calc(100% - 20px);
+    border-radius: 2px;
+    background: rgba(0, 0, 0, .35);
+    padding: 0;
+    border: 0;
+}
+
+button.chart-card-art {
+    cursor: pointer;
+}
+
+/* Scoped to the jacket wrapper, never `.chart-card-art img`: the bubble is an <img> in
+   that box too, and telling it to fill the box makes it the size of the card. */
+.chart-card-jacket,
+.chart-card-jacket > * {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.chart-card-jacket img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 2px;
+}
+
+.chart-card-art-playing {
+    overflow: hidden;
+    border: 1px solid var(--mix-primary);
+}
+
+.chart-card-video {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+}
+
+.chart-card-bubble {
+    position: absolute;
+    right: -6px;
+    bottom: -8px;
+    z-index: 3;
+    filter: drop-shadow(0 2px 7px rgba(0, 0, 0, .6));
+}
+
+.chart-card-body {
+    display: block;
+    min-width: 0;
+    padding: 12px 12px 12px;
+}
+
+.chart-card-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 9px;
+}
+
+.chart-card-title h3 {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    margin: 0;
+    font-weight: 600;
+    font-size: .88rem;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* The card's only <a>. Small, but a real link — the crawler follows this. */
+.chart-card-golink {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    color: var(--mix-primary);
+    opacity: .65;
+    transition: opacity .12s;
+}
+
+.chart-card-golink:hover,
+.chart-card-golink:focus-visible {
+    opacity: 1;
+}
+
+.chart-card-golink .mud-icon-root {
+    font-size: .95rem;
+}
+
+.chart-card-pct {
+    font-weight: 700;
+    font-size: .8rem;
+    color: var(--mix-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-card-meta {
+    display: block;
+    margin-top: 4px;
+    font-size: .69rem;
+    line-height: 1.5;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-card-meta em {
+    font-style: normal;
+    color: var(--mix-ink);
+}
+
+.chart-card-meta i {
+    font-style: normal;
+    opacity: .45;
+    padding: 0 4px;
+}
+
+.chart-card-wl {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: 600;
+    font-size: .56rem;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.chart-card-why {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.chart-card-why b {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    font-weight: 500;
+    font-size: .69rem;
+    padding: 4px 6px;
+    border-radius: 2px;
+    color: var(--mix-ink);
+    background: color-mix(in srgb, var(--mix-primary) 11%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mix-primary) 40%, transparent);
+}
+
+.chart-card-why b var {
+    font-weight: 600;
+    font-size: .62rem;
+    font-style: normal;
+    color: var(--mix-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Intensity is a different KIND of reason and must not read as a skill. */
+.chart-card-why-intensity {
+    background: color-mix(in srgb, var(--mix-secondary) 11%, transparent) !important;
+    border-color: color-mix(in srgb, var(--mix-secondary) 40%, transparent) !important;
+}
+
+.chart-card-why-intensity var {
+    color: var(--mix-secondary) !important;
+}
+
+/* Mirrors the art's box so the button centres on the art without knowing its height.
+   Transparent to the mouse, so the link underneath keeps the whole card as its target
+/* Decoration: the whole jacket is the button, so this only says so. */
+.chart-card-play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    padding-left: 3px;
+    border-radius: 99px;
+    pointer-events: none;
+    background: rgba(0, 0, 0, .8);
+    border: 1px solid rgba(255, 255, 255, .2);
+    color: #fff;
+    opacity: 0;
+    transform: scale(.88);
+    transition: opacity .13s, transform .13s, background .13s, border-color .13s;
+}
+
+.chart-card-play::before {
+    content: "";
+    border-style: solid;
+    border-width: 8px 0 8px 13px;
+    border-color: transparent transparent transparent currentColor;
+}
+
+.chart-card-art-playable:hover .chart-card-play,
+.chart-card-art-playable:focus-visible .chart-card-play {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.chart-card-art-playable:hover .chart-card-play {
+    background: rgba(0, 0, 0, .93);
+    border-color: var(--mix-primary);
+}
+
+.chart-card-close {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    z-index: 4;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: .68rem;
+    color: #fff;
+    background: rgba(0, 0, 0, .8);
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 2px;
+    padding: 4px 6px;
+}
+
+.chart-card-close:hover {
+    border-color: var(--mix-primary);
+}
+
+.chart-admin {
+    margin: 26px 0 12px;
+}
+
+@media (max-width: 900px) {
+    .chart-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-jacket {
+        width: min(300px, 100%);
+    }
+
+    .chart-hero-title {
+        font-size: 1.7rem;
+    }
+
+    .chart-record, .chart-evidence {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-shelf {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .chart-shelf {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ============================================================================

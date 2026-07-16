@@ -84,5 +84,23 @@ public sealed class ChartIntelligenceModelContribution : IDbModelContribution
         modelBuilder.Entity<ChartScoringLevelEntity>().ToTable("ChartScoringLevel");
         modelBuilder.Entity<UserPreferenceRatingEntity>().ToTable("UserPreferenceRating");
         modelBuilder.Entity<ChartPreferenceRatingEntity>().ToTable("ChartPreferenceRating");
+
+        // The similarity graph's edges (chart-details overhaul B1): top-K per (mix, chart),
+        // rebuilt wholesale by the nightly job. The PK prefix serves the page's only read
+        // (one chart's neighbors); K ≤ 8 makes ordering in memory free. Two FKs onto Chart
+        // can't both cascade (SQL Server multiple-cascade-paths), so the neighbor side
+        // restricts — charts are never deleted in practice, and the nightly rebuild would
+        // drop orphaned edges anyway.
+        modelBuilder.Entity<ChartSimilarityEntity>().ToTable("ChartSimilarity")
+            .HasKey(e => new { e.MixId, e.ChartId, e.SimilarChartId });
+        modelBuilder.Entity<ChartSimilarityEntity>()
+            .HasOne<ChartEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.ChartId);
+        modelBuilder.Entity<ChartSimilarityEntity>()
+            .HasOne<ChartEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.SimilarChartId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

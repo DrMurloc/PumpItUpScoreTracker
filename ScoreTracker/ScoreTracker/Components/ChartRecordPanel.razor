@@ -1,0 +1,151 @@
+@using MediatR
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Commands
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IDateTimeOffsetAccessor Clock
+@inject ISnackbar Snackbar
+
+@* Your best + the cross-mix journey, with recording folded in behind an edit toggle
+   (mock R2, the dialog's round-11 pattern — never EditChartGrid). It sits in the hero's
+   nook under the jacket: your score is the first thing you look for, and a page-bottom
+   form plus two "Record score" buttons that only scrolled you to it was three affordances
+   for one job. Becomes the record island at Stage 3; everything here is personal, so none
+   of it belongs in cached anonymous HTML anyway. *@
+@if (CurrentUser.IsLoggedIn && Chart != null)
+{
+    <div class="chart-record" id="chart-record">
+        <div class="chart-record-head">
+            <span class="chart-overline">@(_editing ? L["Record Score"] : L["Your best"]) · @Mix.GetName()</span>
+            <MudIconButton Icon="@(_editing ? Icons.Material.Filled.Close : Icons.Material.Filled.Edit)"
+                           Size="Size.Small" Class="chart-record-edit"
+                           aria-label="@(_editing ? L["Close"] : L["Record Score"])"
+                           OnClick="@(() => _editing = !_editing)"></MudIconButton>
+        </div>
+        @if (_editing)
+        {
+            <div class="chart-record-inputs">
+                <MudNumericField T="int?" Label="@L["Score"]" @bind-Value="_inputScore" Min="0" Max="1000000"
+                                 HideSpinButtons="true" Margin="Margin.Dense"></MudNumericField>
+                <MudSelect T="PhoenixPlate?" Label="@L["Plate"]" @bind-Value="_inputPlate" Clearable="true"
+                           Margin="Margin.Dense">
+                    @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                    {
+                        <MudSelectItem T="PhoenixPlate?" Value="plate">@plate.GetName()</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudCheckBox T="bool" @bind-Value="_inputBroken" Label="@L["Broken"]" Dense="true"></MudCheckBox>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving" FullWidth="true"
+                           OnClick="SaveScore">@L["Save"]</MudButton>
+            </div>
+        }
+        else
+        {
+            @if (_best?.Score != null)
+            {
+                <div class="chart-record-score">
+                    <ScoreBreakdown Score="_best.Score.Value" IsBroken="_best.IsBroken" OneLine="true"
+                                    ShowScore="true" Plate="_best.Plate" Ranking="_ranking"></ScoreBreakdown>
+                </div>
+                @if (_ageDays != null)
+                {
+                    <MudText Typo="Typo.caption" Class="chart-record-age">@L["Recorded {0} days ago", _ageDays]</MudText>
+                }
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Class="chart-record-empty">@L["No score yet — record your first attempt and this lights up."]</MudText>
+            }
+            @if (_journey.Any())
+            {
+                <div class="chart-record-journey">
+                    @foreach (var entry in _journey)
+                    {
+                        <div class="chart-record-journey-row">
+                            <span class="chart-record-journey-date">@entry.OccurredAt.ToString("yyyy-MM-dd")</span>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@entry.Mix.GetName()</MudChip>
+                            <span class="chart-record-journey-score">@(entry.Score?.ToString() ?? "—")</span>
+                            @if (entry.Score != null)
+                            {
+                                <LetterGradeIcon Grade="entry.Score.Value.LetterGrade" IsBroken="entry.IsBroken" Height="16"></LetterGradeIcon>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Chart? Chart { get; set; }
+
+    [Parameter]
+    public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    private RecordedPhoenixScore? _best;
+    private ScoreRankingRecord? _ranking;
+    private int? _ageDays;
+    private IReadOnlyList<ScoreJournalEntry> _journey = Array.Empty<ScoreJournalEntry>();
+    private int? _inputScore;
+    private PhoenixPlate? _inputPlate;
+    private bool _inputBroken;
+    private bool _isSaving;
+    private bool _editing;
+    private Guid _loadedFor;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!CurrentUser.IsLoggedIn || Chart == null || Chart.Id == _loadedFor) return;
+        _loadedFor = Chart.Id;
+        await LoadBest();
+        _journey = (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray();
+    }
+
+    private async Task LoadBest()
+    {
+        if (Chart == null) return;
+        _best = await Mediator.Send(new GetPhoenixRecordQuery(Chart.Id, Mix));
+        _ranking = (await Mediator.Send(new GetChartScoreRankingsQuery(new[] { Chart.Id }, Mix)))
+            .TryGetValue(Chart.Id, out var ranking)
+            ? ranking
+            : null;
+        _ageDays = _best == null ? null : (int)(Clock.Now - _best.RecordedDate).TotalDays;
+        _inputScore = _best?.Score == null ? null : (int)_best.Score.Value;
+        _inputPlate = _best?.Plate;
+        _inputBroken = _best?.IsBroken ?? false;
+    }
+
+    private async Task SaveScore()
+    {
+        if (Chart == null) return;
+        _isSaving = true;
+        try
+        {
+            var parsedScore = _inputScore == null ? null :
+                PhoenixScore.TryParse(_inputScore.Value, out var score) ? (PhoenixScore?)score : null;
+            await Mediator.Send(new UpdatePhoenixBestAttemptCommand(Chart.Id, _inputBroken, parsedScore,
+                _inputPlate, Mix: Mix));
+            Snackbar.Add(L["Score recorded for {0}", Chart.Song.Name.ToString()].Value, Severity.Success);
+            await LoadBest();
+            _journey = (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray();
+            // Back to the score itself — the thing you just changed is the thing to show.
+            _editing = false;
+        }
+        catch (Exception)
+        {
+            Snackbar.Add(L["There was an error while recording the score"].Value, Severity.Error);
+        }
+
+        _isSaving = false;
+    }
+}

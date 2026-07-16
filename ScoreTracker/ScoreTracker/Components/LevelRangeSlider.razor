@@ -20,7 +20,7 @@
     <div class="range-slider-ticks">
         @foreach (var tick in Ticks)
         {
-            <span style="left:@(Percent(tick).ToString(System.Globalization.CultureInfo.InvariantCulture))%">@Prefix@tick</span>
+            <span style="left:@(Percent(tick).ToString(System.Globalization.CultureInfo.InvariantCulture))%">@Text(tick)</span>
         }
     </div>
 </div>
@@ -46,7 +46,17 @@
 
     [Parameter] public bool Disabled { get; set; }
 
-    private string Display => Disabled ? L["Off"] : $"{Prefix}{ValueMin} – {Prefix}{ValueMax}";
+    /// <summary>
+    ///     How a position reads to a human, when the number on the track is not it. The
+    ///     track is integers because that is what a range input steps in, so a scale that
+    ///     needs a fraction rides as tenths and formats back — 107 on the track, "10.7" on
+    ///     the page. Default is the value itself behind <see cref="Prefix" />.
+    /// </summary>
+    [Parameter] public Func<int, string>? Format { get; set; }
+
+    private string Text(int value) => Format?.Invoke(value) ?? $"{Prefix}{value}";
+
+    private string Display => Disabled ? L["Off"] : $"{Text(ValueMin)} – {Text(ValueMax)}";
 
     private double Percent(int value)
     {

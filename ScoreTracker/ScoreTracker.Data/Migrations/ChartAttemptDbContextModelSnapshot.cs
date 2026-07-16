@@ -283,6 +283,36 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("ChartScoringLevel", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartSimilarityEntity", b =>
+                {
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SimilarChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ComputedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<double>("Score")
+                        .HasColumnType("float");
+
+                    b.Property<string>("SignalsJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("MixId", "ChartId", "SimilarChartId");
+
+                    b.HasIndex("ChartId");
+
+                    b.HasIndex("SimilarChartId");
+
+                    b.ToTable("ChartSimilarity", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.CoOpRatingEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2737,6 +2767,21 @@ namespace ScoreTracker.Data.Migrations
                         .WithMany()
                         .HasForeignKey("ChartId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartSimilarityEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ChartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SimilarChartId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

@@ -32,7 +32,8 @@ public sealed class UiColorTokenTests
     // when a page overhaul cleans a file, lower (or remove) its entry in the same PR.
     private static readonly IReadOnlyDictionary<string, int> Allowance = new Dictionary<string, int>
     {
-        ["Pages/ChartDetails.razor"] = 2,
+        // ChartDetails burned its 2 literals in the chart-page overhaul (the old
+        // #FF0000/#00FF00 letter-graph threshold hack) — entry removed, ratchet tightened.
         ["Pages/Communities/CommunityLeaderboard.razor"] = 4,
         ["Pages/Competition/MatchTournamentQualifiers.razor"] = 1,
         ["Pages/Competition/MatchTournamentQualifiersSubmit.razor"] = 4,

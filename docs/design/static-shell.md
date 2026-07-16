@@ -70,6 +70,10 @@ why they are `.razor` and not cshtml partial markup** — cshtml markup would be
   time, close on outside click / Escape / link click. More sheet = fixed bottom sheet, 75vh,
   toggled class. `MudHidden` → media queries at **960px** (Mud md: desktop `min-width: 960px`,
   bottom nav + sheet `max-width: 959.98px`).
+  **Sheets are a set, not a thing** (2026-07-15): More and Search share the scrim, so at most
+  one is open and `nav.js` drives both off one `SHEETS` table. A sheet also closes on history
+  push — the search autocomplete navigates from a circuit with no link click to catch, and
+  a sheet is chrome over the page you left.
 - **D7 — Mix switching = endpoint + reload.** `GET /Mix/Set?mix=Phoenix2&redirectUrl=/TierLists`,
   modeled on [CultureController](../../ScoreTracker/ScoreTracker/Controllers/CultureController.cs).
   Mix switching already forces a full reload (MainLayout 530–534), so UX is unchanged.
@@ -148,6 +152,7 @@ why they are `.razor` and not cshtml partial markup** — cshtml markup would be
 | Live SkillRating subscription | 582, 586, 598–603 | **DELETE — dead code.** `Rating` is assigned at 582, declared at 593, reassigned at 601, and rendered nowhere. Audited: only self-references. Deleting it also removes a `GetPlayerStatsQuery` from every signed-in page load. | n/a |
 | More sheet (mobile) | `MudDrawer` 257–335 | static bottom sheet + `nav.js` toggle | no |
 | Bottom nav + active state | 341–371 | static HTML; active class server-rendered from path, re-evaluated by `nav.js` on SPA navigation | no |
+| Search sheet (mobile) | *(added 2026-07-15)* | static top sheet + `nav.js` toggle, with the **app-bar search island mounted inside it** | chrome no / filling **yes** |
 | PageDock slot + focus mode | 342–347, 445–453 | dock content stays in the Blazor root (page-supplied); `has-dock`/`focus-mode` move to `<html>` classes via a JS bridge | no |
 | `pageDock.watch()` bootstrap | 455–461 | called by `nav.js` on DOMContentLoaded. **`watch()` is idempotent** (guards on `watching`), so an overlapping MainLayout call is harmless during the transition. | no |
 | Theme vars `<style>` block | 30–32 | emitted server-side by the layout | no |

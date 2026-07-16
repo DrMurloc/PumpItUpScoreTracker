@@ -115,6 +115,10 @@ public sealed class VerticalBoundaryTests
             d => d.ServiceType == typeof(ScoreTracker.ChartIntelligence.Application.TierListSaga));
         Assert.Contains(services,
             d => d.ServiceType == typeof(ScoreTracker.ChartIntelligence.Application.ScoringDifficultySaga));
+        // ChartSimilaritySaga consumes the nightly RecalculateChartSimilarityCommand — if the
+        // hook stops covering it, the similarity graph silently never rebuilds.
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.ChartIntelligence.Application.ChartSimilaritySaga));
     }
 
     [Fact]

@@ -12,7 +12,6 @@
         <a href="/" data-href="/" class="@BnClass("/")"><MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small"></MudIcon><span>@L["Play"]</span></a>
     }
     <a href="/TierLists" data-href="/TierLists" class="@BnClass("/TierLists")"><MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small"></MudIcon><span>@L["Tiers"]</span></a>
-    <a href="/Charts" data-href="/Charts" class="@BnClass("/Charts")"><MudIcon Icon="@Icons.Material.Filled.List" Size="Size.Small"></MudIcon><span>@L["Charts"]</span></a>
     @if (!Model.IsGatedMix)
     {
         <a href="/WeeklyCharts" data-href="/WeeklyCharts" class="@BnClass("/WeeklyCharts")"><MudIcon Icon="@Icons.Material.Filled.ViewWeek" Size="Size.Small"></MudIcon><span>@L["Weekly"]</span></a>
@@ -22,11 +21,16 @@
         @* The front door is a Razor Page, not a Blazor route. *@
         <a href="/Login" data-href="/Login" target="_top" class="@BnClass("/Login")"><MudIcon Icon="@Icons.Material.Filled.Login" Size="Size.Small"></MudIcon><span>@L["Login"]</span></a>
     }
-    @* Extra slot for squarish viewports (fold phones, landscape) — hidden on tall phones. *@
     @if (!Model.IsGatedMix)
     {
+        @* Extra slot for squarish viewports (fold phones, landscape) — hidden on tall phones. *@
         <a href="/Communities" data-href="/Communities" class="@($"{BnClass("/Communities")} bn-wide")"><MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small"></MudIcon><span>@L["Communities"]</span></a>
     }
+    @* The phone's only door to a chart page. The full list took its slot into More: browsing
+       4,400 charts is rare and deliberate, while "take me to THIS chart" is the trip people
+       actually make — and it had no door here at all. Slot count is unchanged, so the wide-only
+       Communities slot still behaves as it did. *@
+    <button type="button" class="bn" data-search-btn aria-expanded="false"><MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small"></MudIcon><span>@L["Search"]</span></button>
     <button type="button" class="bn" data-more-btn aria-expanded="false"><MudIcon Icon="@Icons.Material.Filled.MoreHoriz" Size="Size.Small"></MudIcon><span>@L["More"]</span></button>
 </nav>
 
