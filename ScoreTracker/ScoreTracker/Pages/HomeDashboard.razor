@@ -1,5 +1,6 @@
 @page "/"
 @page "/Home"
+@rendermode RenderModes.Interactive
 @using MediatR
 @using Microsoft.Extensions.Options
 @using ScoreTracker.Application.Commands
@@ -128,6 +129,9 @@ else if (_loaded)
     }
     </div>
 
+    @* MudLayout is the drawer's container, not chrome — the layout stopped hosting one
+       when it went chrome-free, so the drawer brings its own. *@
+    <MudLayout>
     <MudDrawer @bind-Open="_drawerOpen" Anchor="Anchor.End" Elevation="2" Width="340px"
                Variant="@DrawerVariant.Temporary" Class="dash-drawer">
         <div class="dash-drawer-body">
@@ -173,6 +177,7 @@ else if (_loaded)
             }
         </div>
     </MudDrawer>
+    </MudLayout>
 
     <MudDialog @bind-Visible="_showRename" Options="CompactDialog">
         <TitleContent>

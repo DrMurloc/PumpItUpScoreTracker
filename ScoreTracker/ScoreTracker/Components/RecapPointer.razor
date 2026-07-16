@@ -1,0 +1,46 @@
+@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.Web.Services.Contracts
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+
+@* One-time Phoenix Recap pointer: shows once per user, only after their recap row
+   exists. No expiry cutoff yet — set one when the Phoenix 2 launch date is known
+   (docs/design/phoenix-season-recap.md). *@
+<MudDialog @bind-Visible="_showRecapPopup">
+    <DialogContent>
+        <MudText Typo="Typo.h5">@L["Your Phoenix Story is ready"]</MudText>
+        <MudText Class="mt-2">@L["Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts."]</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Href=@($"/Player/{_userId}/PhoenixRecap") Color="Color.Primary" StartIcon="@Icons.Material.Filled.LocalFireDepartment" Variant="Variant.Filled" OnClick="() => _showRecapPopup = false">@L["Open"]</MudButton>
+        <MudButton Variant="Variant.Text"
+                   OnClick="() => _showRecapPopup = false"
+                   Color="Color.Primary">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    // The key users' shown-flags are already stored under — never rename it.
+    private const string RecapPopupKey = "MainLayout__PhoenixRecapPopupShown";
+    private Guid? _userId;
+    private bool _showRecapPopup;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn) return;
+        _userId = CurrentUser.User.Id;
+        // Only pester players whose recap actually exists; the flag flips on first show.
+        var hasRecap = await Mediator.Send(new GetPlayerRecapQuery(CurrentUser.User.Id)) != null;
+        var recapShown = await UiSettings.GetSetting(RecapPopupKey);
+        if (hasRecap && string.IsNullOrWhiteSpace(recapShown))
+        {
+            _showRecapPopup = true;
+            await UiSettings.SetSetting(RecapPopupKey, "true");
+        }
+    }
+}

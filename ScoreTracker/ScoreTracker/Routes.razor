@@ -1,36 +1,13 @@
-@using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Shared
-@inject ShellContext Shell
 
-@* The interactive region. App.razor renders the document and the shell statically around this;
-   everything from here down runs in the circuit, exactly as the whole app did before. *@
+@* The router renders statically: each page declares its own circuit
+   (@rendermode RenderModes.Interactive), so interactivity is per page and a page converts
+   to static SSR by deleting its line. The layout renders statically around every page.
+   Unmatched routes are the framework's: a real 404 with an empty body — a branded
+   not-found page is NotFoundPage polish, recorded in the SSR ladder docs. *@
 <Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
-        </LayoutView>
-    </NotFound>
 </Router>
-
-@code {
-    // The shell resolves the mix from the request, where the cookie and the user's settings are
-    // both readable, and hands it down here. The circuit gets its own DI scope, so the value the
-    // static render resolved does not reach it on its own — this seeds it before the router
-    // renders, and every page then reads it synchronously instead of re-deriving request state
-    // the circuit cannot see.
-    // Parameters to an interactive root travel through the client, so this carries display
-    // preferences only: an anonymous visitor already controls their own mix, and nothing here
-    // gates access.
-    [Parameter] public MixEnum CurrentMix { get; set; }
-
-    protected override void OnInitialized()
-    {
-        Shell.CurrentMix = CurrentMix;
-    }
-}

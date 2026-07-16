@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /hangfire
+Disallow: /api/
+Disallow: /Dev/
+Disallow: /Admin
+
+Sitemap: https://piuscores.arroweclip.se/sitemap.xml

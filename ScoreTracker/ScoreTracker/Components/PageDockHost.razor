@@ -1,0 +1,58 @@
+@namespace ScoreTracker.Web.Components
+@using Microsoft.AspNetCore.Components.Routing
+@using ScoreTracker.Web.Services
+@implements IDisposable
+@inject PageDockService PageDock
+@inject NavigationManager NavManager
+@inject IJSRuntime JSRuntime
+
+@* The layout's dock slot. Pages hand PageDockService a RenderFragment through the
+   PageDock component; this host renders it inside the circuit — a fragment can never
+   cross a render-mode boundary as a parameter, so it travels through the shared scope
+   instead. Fixed-position, so where the host sits in the tree doesn't matter; mobile
+   only via CSS. *@
+@if (PageDock.DockContent != null)
+{
+    <div class="page-dock shell-mobile-only">@PageDock.DockContent</div>
+}
+
+@code {
+
+    // The dock and focus-mode classes live on <html>: the chrome that reacts to them is
+    // server-rendered, outside this root.
+    private void OnDockChanged()
+    {
+        _ = JSRuntime.InvokeVoidAsync("shell.setDockState", PageDock.DockContent != null, PageDock.FocusMode);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        // Fresh page starts with the nav visible again.
+        _ = JSRuntime.InvokeVoidAsync("pageDock.reset");
+    }
+
+    protected override void OnInitialized()
+    {
+        PageDock.Changed += OnDockChanged;
+        NavManager.LocationChanged += OnLocationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        // nav.js starts the scroll watcher before any circuit content exists — re-sync so
+        // the first scroll isn't measured against a page that was 48px tall. The state
+        // push covers a dock that registered before this host subscribed.
+        await JSRuntime.InvokeVoidAsync("shell.setDockState", PageDock.DockContent != null, PageDock.FocusMode);
+        await JSRuntime.InvokeVoidAsync("pageDock.reset");
+    }
+
+    public void Dispose()
+    {
+        // Defensive: a circuit torn down mid-render (hard refresh) can dispose this host
+        // before injection finished.
+        if (PageDock is not null) PageDock.Changed -= OnDockChanged;
+        if (NavManager is not null) NavManager.LocationChanged -= OnLocationChanged;
+    }
+}

@@ -4856,6 +4856,7 @@ button.chart-card-art {
     }
 }
 
+<<<<<<< HEAD
 /* ============================================================================
    Weekly Charts — the challenges hub (docs/design/weekly-charts-overhaul.md).
    A static-SSR page: --mix-* / semantic tokens only, no --mud-* (static-shell.md
@@ -5653,4 +5654,13 @@ button.chart-card-art {
     margin-left: auto;
     color: var(--mix-ink-muted);
     font-size: 12px;
+=======
+/* /UploadPhoenixScores - the manual-import expander's numbered steps. */
+.import-manual-steps {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+>>>>>>> origin/main
 }

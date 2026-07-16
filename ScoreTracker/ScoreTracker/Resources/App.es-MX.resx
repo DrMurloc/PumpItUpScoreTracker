@@ -121,10 +121,10 @@
     <value>(Opcional) Borrar también los datos históricos</value>
   </data>
   <data name="1+ Level Easier" xml:space="preserve">
-    <value>1+ Nivel más fácil</value>
+    <value>1+ nivel más fácil</value>
   </data>
   <data name="1+ Level Harder" xml:space="preserve">
-    <value>1+ Nivel más difícil</value>
+    <value>1+ nivel más difícil</value>
   </data>
   <data name="100% (or everyone with a PG)" xml:space="preserve">
     <value>100% (o todos con un PG)</value>
@@ -163,7 +163,7 @@
     <value>Agregar jugador</value>
   </data>
   <data name="Add to Favorites" xml:space="preserve">
-    <value>Agregar a Favoritos</value>
+    <value>Agregar a favoritos</value>
   </data>
   <data name="Add to ToDo" xml:space="preserve">
     <value>Agregar a Cosas que hacer</value>
@@ -271,7 +271,7 @@
     <value>BPM</value>
   </data>
   <data name="Broken" xml:space="preserve">
-    <value>Rota</value>
+    <value>Roto</value>
   </data>
   <data name="Broken scores get a multiplier of X" xml:space="preserve">
     <value>Los puntajes rotos reciben un multiplicador de {0}</value>
@@ -343,7 +343,7 @@
     <value>Estadísticas del chart</value>
   </data>
   <data name="Chart Type" xml:space="preserve">
-    <value>Tipo de Charts</value>
+    <value>Tipo de charts</value>
   </data>
   <data name="Chart Update" xml:space="preserve">
     <value>Actualización de chart</value>
@@ -555,9 +555,6 @@
   <data name="End Date: X" xml:space="preserve">
     <value>Fecha de finalización: {0}</value>
   </data>
-  <data name="Ending Page" xml:space="preserve">
-    <value>Página final</value>
-  </data>
   <data name="Estimated Point Gain Timeline" xml:space="preserve">
     <value>Cronología estimada de ganancia de puntos</value>
   </data>
@@ -634,7 +631,7 @@
     <value>Ocultar chart para esta categoría</value>
   </data>
   <data name="Hide Completed Charts" xml:space="preserve">
-    <value>Esconder charts completos</value>
+    <value>Ocultar charts completos</value>
   </data>
   <data name="Hide Record-less Charts" xml:space="preserve">
     <value>Ocultar charts sin record</value>
@@ -775,13 +772,13 @@
     <value>Bloquear establecerá el nombre de usuario de este usuario en su GameTag.</value>
   </data>
   <data name="Log In With" xml:space="preserve">
-    <value>Entrar con {0}</value>
+    <value>Iniciar sesión con {0}</value>
   </data>
   <data name="Login" xml:space="preserve">
-    <value>Entrar sesión</value>
+    <value>Iniciar sesión</value>
   </data>
   <data name="Logout" xml:space="preserve">
-    <value>Salir sesión</value>
+    <value>Cerrar sesión</value>
   </data>
   <data name="Machine Name" xml:space="preserve">
     <value>Nombre de la máquina</value>
@@ -901,7 +898,7 @@
     <value>Nuevo nombre de usuario</value>
   </data>
   <data name="Next Letter" xml:space="preserve">
-    <value>Siguiente Letra</value>
+    <value>Siguiente letra</value>
   </data>
   <data name="No one has passed this CoOp yet so no level is assigned." xml:space="preserve">
     <value>Nadie ha pasado este CoOp aún, así que no se le asigna nivel.</value>
@@ -916,7 +913,7 @@
     <value>No clasificado</value>
   </data>
   <data name="Not Passed Count" xml:space="preserve">
-    <value>Conteo de No Pasados</value>
+    <value>Conteo de no pasados</value>
   </data>
   <data name="Not Relevant to Category" xml:space="preserve">
     <value>No relevante para la categoría</value>
@@ -991,7 +988,7 @@
     <value>Pasado</value>
   </data>
   <data name="Passed Count" xml:space="preserve">
-    <value>Conteo de Pasados</value>
+    <value>Conteo de pasados</value>
   </data>
   <data name="Passes" xml:space="preserve">
     <value>Pases</value>
@@ -1025,27 +1022,6 @@
   </data>
   <data name="Personalized Difficulty" xml:space="preserve">
     <value>Dificultad personalizada</value>
-  </data>
-  <data name="Phoenix Import Confirming" xml:space="preserve">
-    <value>Continuar comenzará a guardar los puntajes subidos sobre sus registros existentes. No podrá deshacer esto. Podrá detener el proceso de guardado, pero no se revertirán las cargas.</value>
-  </data>
-  <data name="Phoenix Import Info 1" xml:space="preserve">
-    <value>Use el botón Copiar script de abajo</value>
-  </data>
-  <data name="Phoenix Import Info 2" xml:space="preserve">
-    <value>Use ese script en las dev tools mientras esté con sesión iniciada en https://phoenix.piugame.com para descargar un CSV de sus puntajes. (Asegúrese de no estar en phoenix.piugame.com)</value>
-  </data>
-  <data name="Phoenix Import Info 3" xml:space="preserve">
-    <value>Después puede subir ese CSV aquí para que sus puntajes aparezcan.</value>
-  </data>
-  <data name="Phoenix Import Info 4" xml:space="preserve">
-    <value>Nota: esta herramienta es bastante hacky y puede requerir algo de debugging de su parte para que funcione. Asegúrese de desactivar los bloqueadores de anuncios.</value>
-  </data>
-  <data name="Phoenix Import Saving" xml:space="preserve">
-    <value>Si abandona esta página o cancela, la carga se detendrá pero no perderá ningún puntaje que ya haya sido registrado desde su carga.</value>
-  </data>
-  <data name="Phoenix Import Saving Failures" xml:space="preserve">
-    <value>Tenía algunos charts que no se pudieron descargar. Puede descargar un CSV de las fallas para hacer ajustes e intentar de nuevo.</value>
   </data>
   <data name="Phoenix Import Saving Progress" xml:space="preserve">
     <value>{0}/{1} subidos. {2} restantes. {3} fallaron al registrarse</value>
@@ -1264,7 +1240,7 @@
     <value>Guardar puntajes</value>
   </data>
   <data name="Saved Charts" xml:space="preserve">
-    <value>Guardar Charts</value>
+    <value>Charts guardados</value>
   </data>
   <data name="Saved!" xml:space="preserve">
     <value>¡Guardado!</value>
@@ -1441,7 +1417,7 @@
     <value>Duración de canción</value>
   </data>
   <data name="Song Image" xml:space="preserve">
-    <value>Imágen de canción</value>
+    <value>Imagen de canción</value>
   </data>
   <data name="Song Name" xml:space="preserve">
     <value>Nombre de canción</value>
@@ -1505,9 +1481,6 @@
   </data>
   <data name="Starting life is 500, visible  Life (Rainbow life bar) is 1000." xml:space="preserve">
     <value>La vida inicial es 500; la vida visible (Rainbow life bar) es 1000.</value>
-  </data>
-  <data name="Starting Page" xml:space="preserve">
-    <value>Página inicial</value>
   </data>
   <data name="Stats" xml:space="preserve">
     <value>Estadísticas</value>
@@ -1741,28 +1714,13 @@
     <value>Subir imagen</value>
   </data>
   <data name="Upload Scores" xml:space="preserve">
-    <value>Subir Puntajes</value>
+    <value>Subir puntajes</value>
   </data>
   <data name="Upload XX Scores" xml:space="preserve">
     <value>Subir puntajes de XX</value>
   </data>
   <data name="Uploader" xml:space="preserve">
     <value>Uploader</value>
-  </data>
-  <data name="Use Password 1" xml:space="preserve">
-    <value>Esto hará que PIUScores haga login en su cuenta e importe sus scores:</value>
-  </data>
-  <data name="Use Password 2" xml:space="preserve">
-    <value>Por defecto no guardo tu usuario ni tu contraseña: los escribes cada vez. O usa la opción de recordar contraseña de abajo para guardarla, cifrada y solo en este dispositivo.</value>
-  </data>
-  <data name="Use Password 3" xml:space="preserve">
-    <value>Para minimizar las llamadas para https://phoenix.piugame.com/, solo importaremos scores nuevos o mejorados. Cada usuario recibirá importación completa usando usuario/contraseña solo una vez. Use el importador dev-tools si quiere reimportar puntajes más antiguas.</value>
-  </data>
-  <data name="Use Password 4" xml:space="preserve">
-    <value>Una vez iniciado, puedes salir de esta página: la importación termina en segundo plano.</value>
-  </data>
-  <data name="Use Script" xml:space="preserve">
-    <value>Usar script</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Se usa principalmente para debugging</value>
@@ -1804,7 +1762,7 @@
     <value>Vida visible</value>
   </data>
   <data name="Vote Count" xml:space="preserve">
-    <value>{0} Conteo de votos</value>
+    <value>{0} votos</value>
   </data>
   <data name="Website" xml:space="preserve">
     <value>Sitio web</value>
@@ -2066,9 +2024,6 @@
   </data>
   <data name="Phoenix 2 recommendations are coming soon. Check back after launch!" xml:space="preserve">
     <value>Las recomendaciones para Phoenix 2 estarán disponibles próximamente. ¡Vuelva después del lanzamiento!</value>
-  </data>
-  <data name="Coming soon — score import for Phoenix 2 will open after hardware verification." xml:space="preserve">
-    <value>Próximamente — la importación de puntajes de Phoenix 2 se abrirá después de la verificación del hardware.</value>
   </data>
   <data name="Phoenix 2 official leaderboards are coming soon." xml:space="preserve">
     <value>Las clasificaciones oficiales de Phoenix 2 estarán disponibles próximamente.</value>
@@ -4001,9 +3956,6 @@
   <data name="An import is already running" xml:space="preserve">
     <value>Ya hay una importación en curso</value>
   </data>
-  <data name="Also Sync for PIU Tracker" xml:space="preserve">
-    <value>Sincronizar también con PIU Tracker</value>
-  </data>
   <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
     <value>También envía las puntuaciones importadas a PIU Tracker, un sitio comunitario de puntuaciones.</value>
   </data>
@@ -4291,6 +4243,90 @@
   </data>
   <data name="Search" xml:space="preserve">
     <value>Buscar</value>
+  </data>
+  <data name="Import Lede" xml:space="preserve">
+    <value>PIU Scores inicia sesión en tu cuenta de piugame.com e importa tus puntajes nuevos y mejorados. Una vez iniciada, puedes salir: termina en segundo plano.</value>
+  </data>
+  <data name="Import Password Helper" xml:space="preserve">
+    <value>Solo se usa para iniciar sesión, nunca se guarda — salvo que actives Recordar abajo.</value>
+  </data>
+  <data name="Import Broken Helper" xml:space="preserve">
+    <value>También importa los puntajes rotos de tus partidas recientes; al pasar el chart, se reemplazan.</value>
+  </data>
+  <data name="Also send scores to piutracker.app" xml:space="preserve">
+    <value>Enviar también los puntajes a piutracker.app</value>
+  </data>
+  <data name="Manual import — console script + CSV" xml:space="preserve">
+    <value>Importación manual — script de consola + CSV</value>
+  </data>
+  <data name="For re-importing older scores" xml:space="preserve">
+    <value>Para reimportar puntajes antiguos</value>
+  </data>
+  <data name="Import Manual Step 1" xml:space="preserve">
+    <value>Elige qué páginas de tus mejores puntajes extraer. Deja Hasta la página vacío para todas.</value>
+  </data>
+  <data name="Import Manual Step 2" xml:space="preserve">
+    <value>Copia el script.</value>
+  </data>
+  <data name="Import Manual Step 3" xml:space="preserve">
+    <value>Con la sesión iniciada en phoenix.piugame.com, pégalo en la consola del navegador (F12): descargará un CSV con tus puntajes. Los bloqueadores de anuncios pueden romperlo.</value>
+  </data>
+  <data name="From page" xml:space="preserve">
+    <value>Desde la página</value>
+  </data>
+  <data name="To page" xml:space="preserve">
+    <value>Hasta la página</value>
+  </data>
+  <data name="Upload CSV" xml:space="preserve">
+    <value>Subir CSV</value>
+  </data>
+  <data name="Game Card" xml:space="preserve">
+    <value>Tarjeta de juego</value>
+  </data>
+  <data name="Include Broken Scores" xml:space="preserve">
+    <value>Incluir puntajes rotos</value>
+  </data>
+  <data name="Change Card" xml:space="preserve">
+    <value>Cambiar tarjeta</value>
+  </data>
+  <data name="Starting Import..." xml:space="preserve">
+    <value>Iniciando importación...</value>
+  </data>
+  <data name="Invalid Username/Password" xml:space="preserve">
+    <value>Usuario o contraseña inválidos</value>
+  </data>
+  <data name="The import ran into an error." xml:space="preserve">
+    <value>La importación encontró un error.</value>
+  </data>
+  <data name="Password Incorrect" xml:space="preserve">
+    <value>Tu contraseña parece incorrecta: no se pudo iniciar sesión en phoenix.piugame.com.</value>
+  </data>
+  <data name="Saved Password Incorrect" xml:space="preserve">
+    <value>Tu contraseña guardada parece incorrecta: no se pudo iniciar sesión en phoenix.piugame.com.</value>
+  </data>
+  <data name="Import Error Notify" xml:space="preserve">
+    <value>Hubo un error al importar tus puntajes. Inténtalo más tarde. Si persiste, avisa a DrMurloc.</value>
+  </data>
+  <data name="Choose a game card, then press Import again." xml:space="preserve">
+    <value>Elige una tarjeta de juego y vuelve a presionar Importar.</value>
+  </data>
+  <data name="Import Confirming" xml:space="preserve">
+    <value>Solo se guardarán los puntajes nuevos o mejorados. El guardado no se puede deshacer; si lo detienes a medias, lo ya guardado se conserva.</value>
+  </data>
+  <data name="Import Saving" xml:space="preserve">
+    <value>Si sales o cancelas, la subida se detiene; los puntajes ya guardados se conservan.</value>
+  </data>
+  <data name="Import Failures" xml:space="preserve">
+    <value>Algunas filas no se pudieron importar. Descarga las fallas, corrígelas y vuelve a subirlas.</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Proporción de secciones del chart con cada habilidad</value>
+  </data>
+  <data name="Import Manual Step 4" xml:space="preserve">
+    <value>Sube aquí el CSV — también acepta una hoja de cálculo propia con las mismas columnas.</value>
+  </data>
+  <data name="Imported scores will appear here as they come in." xml:space="preserve">
+    <value>Los puntajes importados aparecerán aquí a medida que lleguen.</value>
   </data>
   <data name="Imported" xml:space="preserve">
     <value>Importado</value>

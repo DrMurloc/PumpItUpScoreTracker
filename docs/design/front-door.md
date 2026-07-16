@@ -180,7 +180,7 @@ Checkpoint commits, suites green at each. FT = owner field-test checkpoint.
 | C8 | Retire `Login.razor` | Blazor login page deleted; its `UiColorTokenTests` allowlist entries burned; "Account Creation?" strings retired into card microcopy |
 | C9 | Sign-in dialog | Blazor `SignInCard` component + app-bar hookup: opens in place on public pages, bottom sheet at phone widths (static twin documented) |
 | C10 | returnUrl | all eight gated-page redirects, OAuth state + PIUGAME flow carry-through, post-auth resume — **FT2: flows** |
-| C11 | Head + crawl surface | front-door meta/OG/JSON-LD/canonical, site-wide OG defaults in `_Layout`, `robots.txt`, sitemap additions — **FT3: view-source is real HTML; Discord unfurl works** |
+| C11 | Head + crawl surface | front-door meta/OG/JSON-LD/canonical, site-wide OG defaults in `_Layout`, `robots.txt`, sitemap additions — **FT3: view-source is real HTML; Discord unfurl works**. *Partially landed 2026-07-16 by the SSR ladder's PR-1 ([seo-friendly-site.md](seo-friendly-site.md) §7): canonical → `/Welcome` + meta/OG on the front door, `robots.txt`, sitemap namespace fix + `/Welcome` entry. Still open: JSON-LD, site-wide OG defaults (now the route-aware head, ladder PR-2), extra public-page sitemap entries.* |
 | C12 | E2E | update PIUGAME-login selectors; new facts: anonymous `/` serves the front door, authenticated `/` serves the app, dialog sign-in path |
 | C13 | Docs | ARCHITECTURE.md (pages table + login-flow paragraph + front-door link), UX-GUIDELINES if the dialog pattern earns a rule, this doc synced |
 

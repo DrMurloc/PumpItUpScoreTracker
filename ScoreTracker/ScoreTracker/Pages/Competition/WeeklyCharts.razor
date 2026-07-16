@@ -1,6 +1,4 @@
 @page "/WeeklyCharts"
-@attribute [ExcludeFromInteractiveRouting]
-@layout ScoreTracker.Web.Shared.StaticPageLayout
 @using System.Globalization
 @using System.Text.Json
 @using MediatR
@@ -19,28 +17,18 @@
 
 @* The challenges hub (docs/design/weekly-charts-overhaul.md): Weekly Charts + Daily Step on one
    statically rendered page — real HTML for crawlers, one dialog-host island for the interactive
-   bits (wired in the next commit). Reads the request directly (static SSR has a live HttpContext),
-   so mix, user and query-string state all resolve here without a circuit. *@
+   bits. No @rendermode: under the static router a page without one renders static SSR
+   (RenderModeDeclarationTests lists it as a deliberate conversion). Reads the request directly,
+   so mix, user and query-string state all resolve here without a circuit. Title, description,
+   OG and canonical are served by StaticHeadResolver — a static page's PageTitle/HeadContent
+   would render into a HeadOutlet island it never reaches. *@
 
-<PageTitle>@L["Weekly Charts"]</PageTitle>
-@* The SEO payoff (weekly-charts-overhaul.md §3.4): on this static page HeadOutlet renders
-   statically, so this lands in the raw HTML a crawler receives. The concept copy that left the
-   fold (M1) lives in the description; the JSON-LD lists the week's charts. Canonical is the clean
-   URL, so filter/week variants fold into it. *@
-<HeadContent>
-    <meta name="description" content="@_metaDescription"/>
-    <link rel="canonical" href="@NavManager.ToAbsoluteUri("/WeeklyCharts")"/>
-    <meta property="og:title" content="@L["Weekly Charts — Pump It Up"]"/>
-    <meta property="og:description" content="@_metaDescription"/>
-    @if (!string.IsNullOrEmpty(_ogImage))
-    {
-        <meta property="og:image" content="@_ogImage"/>
-    }
-    @if (_jsonLd != null)
-    {
-        <script type="application/ld+json">@((MarkupString)_jsonLd)</script>
-    }
-</HeadContent>
+@if (_jsonLd != null)
+{
+    @* The JSON-LD ItemList of the week's charts. Structured data is valid anywhere in the
+       document, and the body is the one place a static page can render markup. *@
+    <script type="application/ld+json">@((MarkupString)_jsonLd)</script>
+}
 
 @if (_pool != null)
 {
@@ -178,9 +166,9 @@ else
         </div>
     </div>
 
-    @* The one island: the static controls above reach it through challenge-board.js. Not
-       prerendered — the page is static, the dialogs are the only circuit on it (§3.3). *@
-    <ChallengeDialogHost @rendermode="@(new InteractiveServerRenderMode(prerender: false))" Mix="_mix"/>
+    @* The one island: the static controls above reach it through challenge-board.js. The
+       dialogs are the only circuit the page itself brings (§3.3). *@
+    <ChallengeDialogHost @rendermode="RenderModes.Interactive" Mix="_mix"/>
 }
 
 @inject IMediator Mediator
@@ -233,8 +221,6 @@ else
     private string _monthlyBasePath = "/WeeklyCharts";
     private string _suggestedToggleHref = "/WeeklyCharts";
 
-    private string _metaDescription = string.Empty;
-    private string? _ogImage;
     private string? _jsonLd;
 
     protected override async Task OnInitializedAsync()
@@ -293,7 +279,6 @@ else
             _pool = _charts.Values
                 .Where(c => (c.Type == ChartType.CoOp || (int)c.Level >= 10) && !already.Contains(c.Id))
                 .ToArray();
-            _metaDescription = L["{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board.", 0];
             return;
         }
 
@@ -342,19 +327,14 @@ else
             ? L["Week {0} — best {1} count · PUMBILITY", _monthly.WeekInMonth, _monthly.CountedPerPlayer]
             : "PUMBILITY";
 
-        BuildHead();
+        BuildJsonLd();
     }
 
-    // The crawler-facing head (weekly-charts-overhaul.md §3.4): concept copy + OG + a JSON-LD
-    // ItemList of the week's charts. Serialized with the default encoder, which escapes '<' —
-    // so a song name can never break out of the <script> block.
-    private void BuildHead()
+    // A JSON-LD ItemList of the week's charts, rendered in the body (the meta/OG head lives in
+    // StaticHeadResolver). Serialized with the default encoder, which escapes '<' — so a song
+    // name can never break out of the <script> block.
+    private void BuildJsonLd()
     {
-        _metaDescription = L["{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board.", _board.Charts.Count];
-        _ogImage = _dailyChart?.Song.ImagePath.ToString()
-                   ?? _board.Charts.Select(c => _charts.GetValueOrDefault(c.ChartId))
-                       .FirstOrDefault(c => c != null)?.Song.ImagePath.ToString();
-
         var pos = 1;
         var items = new List<object>();
         foreach (var summary in _board.Charts)

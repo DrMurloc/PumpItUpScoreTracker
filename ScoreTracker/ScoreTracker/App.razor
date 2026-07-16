@@ -4,6 +4,7 @@
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Theming
 @inject ShellModelFactory ShellFactory
+@inject StaticHeadResolver HeadResolver
 @inject IWebHostEnvironment Env
 
 @* The document root, rendered statically: the shell paints as real HTML and the app boots into
@@ -21,19 +22,30 @@
     @* The active palette's --mix-* tokens. Server-side: the shell paints before any circuit, and
        MudThemeProvider's own vars only arrive with one. *@
     <style>@((MarkupString)MixThemes.CssVariablesFor(_shell.ThemeMix))</style>
-    @* A real title for readers that run no JS. Blazor removes it on boot and HeadOutlet takes
-       over, so <PageTitle> keeps working unchanged. A static page owns its whole head through
-       the static HeadOutlet below — emitting the fallback too would put two <title>s in the
-       document, and crawlers pick one at random. *@
-    @if (HttpContext.AcceptsInteractiveRouting())
+    @* A real head for readers that run no JS, resolved from the route (StaticHeadResolver):
+       chart routes get their name, description and jacket; unmatched routes get the bare site
+       title and no meta. Blazor removes the title on boot and HeadOutlet takes over, so
+       <PageTitle> keeps working unchanged. *@
+    <title>@(_head?.Title ?? L["PIU Scores"].Value)</title>
+    @if (_head != null)
     {
-        <title>@L["PIU Scores"]</title>
+        <meta name="description" content="@_head.Description" />
+        <meta property="og:title" content="@_head.Title" />
+        <meta property="og:description" content="@_head.Description" />
+        <meta property="og:type" content="website" />
+        @if (_head.OgImage != null)
+        {
+            <meta property="og:image" content="@_head.OgImage" />
+        }
+        @if (_head.Canonical != null)
+        {
+            @* Folds query variants (filters, past weeks) into the clean URL. *@
+            <link rel="canonical" href="@($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{_head.Canonical}")" />
+        }
     }
-    @* Follows the page: interactive (not prerendered) for circuit pages, so every <PageTitle>
-       behaves as it always has; static on an [ExcludeFromInteractiveRouting] page, where it
-       renders the page's <PageTitle>/<HeadContent> as real HTML — the SEO surface
-       (docs/design/weekly-charts-overhaul.md §3.1). *@
-    <HeadOutlet @rendermode="PageRenderMode" />
+    @* Interactive, and not prerendered — matching every <PageTitle> in the app. Static, it would
+       only ever see static components and every page's title would read "PIU Scores". *@
+    <HeadOutlet @rendermode="RenderModes.Interactive" />
     <script type="text/javascript">
         (function(c,l,a,r,i,t,y){
             c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -67,12 +79,12 @@
 @* Ahead of every island, deliberately. There is one popover provider per circuit and roots
    activate in render order, so an island that asks for a popover before this rendered would get
    "Missing <MudPopoverProvider />". *@
-<MudProviders @rendermode="Interactive" ThemeMix="_shell.ThemeMix" />
+<MudProviders @rendermode="RenderModes.Interactive" ThemeMix="_shell.ThemeMix" />
 
 <header class="shell-appbar">
     <ShellNav Model="_shell" />
     <span class="shell-spacer"></span>
-    <AppBarSearch @rendermode="Interactive" Mix="_shell.CurrentMix" />
+    <AppBarSearch @rendermode="RenderModes.Interactive" Mix="_shell.CurrentMix" />
     <ShellMixMenu Model="_shell" />
     <ShellUserMenu Model="_shell" />
 </header>
@@ -80,10 +92,16 @@
 <ShellSearchSheet Model="_shell" />
 <ShellBottomNav Model="_shell" />
 @* Renders nothing; it drives the hidden pulse dot the shell put in the avatar. *@
-<ShellImportPulse @rendermode="Interactive" />
+<ShellImportPulse @rendermode="RenderModes.Interactive" />
+@* Renders nothing; it seeds the circuit's ShellContext with the request-resolved mix
+   before any page root initializes (roots activate in document order). *@
+<ShellMixSeed @rendermode="RenderModes.Interactive" CurrentMix="_shell.CurrentMix" />
 
 <main class="shell-main">
-    <Routes @rendermode="PageRenderMode" CurrentMix="_shell.CurrentMix" />
+    @* Static: pages declare their own circuits (@rendermode RenderModes.Interactive) and
+       every navigation is a full document load. A page converts to static SSR by deleting
+       its own line (docs/design/seo-friendly-site.md §7). *@
+    <Routes />
 </main>
 
 <div id="blazor-error-ui">
@@ -110,23 +128,10 @@
 </html>
 
 @code {
-    // Interactive, never prerendered. Prerendering renders everything twice — a second
-    // OnInitializedAsync, JS interop before the circuit exists — and is the app-wide flip that
-    // broke this site once already (docs/design/render-modes.md).
-    private static readonly IComponentRenderMode Interactive =
-        new InteractiveServerRenderMode(prerender: false);
-
     [CascadingParameter] private HttpContext HttpContext { get; set; } = null!;
 
-    // The per-page opt-out (weekly-charts-overhaul.md §3.1): a page carrying
-    // [ExcludeFromInteractiveRouting] renders statically — real HTML, live HttpContext, no
-    // circuit for the page region (the shell's islands above keep theirs) — and the interactive
-    // router full-loads across its boundary. Every other page resolves to Interactive exactly
-    // as before. Null is "static", not a default: render once, never prerender.
-    private IComponentRenderMode? PageRenderMode =>
-        HttpContext.AcceptsInteractiveRouting() ? Interactive : null;
-
     private ShellViewModel _shell = null!;
+    private StaticHeadModel? _head;
 
     // Resolved here rather than in OnInitializedAsync: an async init renders once at its first
     // await, before it has assigned anything. A page can show a spinner through that render —
@@ -141,6 +146,8 @@
     private async Task Resolve()
     {
         _shell = await ShellFactory.BuildAsync(HttpContext);
+        _head = await HeadResolver.Resolve(HttpContext.Request.Path, _shell.CurrentMix,
+            HttpContext.RequestAborted);
         // Only when it is missing or stale: an unconditional Set-Cookie makes every response
         // uncacheable, and explicit changes already go through /Culture/Set.
         var resolved = CookieRequestCultureProvider.MakeCookieValue(

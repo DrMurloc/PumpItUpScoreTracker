@@ -212,9 +212,6 @@
   <data name="Easy" xml:space="preserve">
     <value>Mrrgl</value>
   </data>
-  <data name="Ending Page" xml:space="preserve">
-    <value>Glrglmgla Gurgglub</value>
-  </data>
   <data name="Favorites" xml:space="preserve">
     <value>Mrrglrglrgl</value>
   </data>
@@ -302,27 +299,6 @@
   </data>
   <data name="Passed Count" xml:space="preserve">
     <value>Glubglarprgl Argrlglarmrogl</value>
-  </data>
-  <data name="Phoenix Import Confirming" xml:space="preserve">
-    <value>Phoenix Glubrglmrrr Blubblgrlglrglmroglargl</value>
-  </data>
-  <data name="Phoenix Import Info 1" xml:space="preserve">
-    <value>Phoenix Glubrglmrrr Rrglrulgbrglrulggurgrgl 1</value>
-  </data>
-  <data name="Phoenix Import Info 2" xml:space="preserve">
-    <value>Phoenix Glubrglmrrr Rrglrulgbrglrulggurgrgl 2</value>
-  </data>
-  <data name="Phoenix Import Info 3" xml:space="preserve">
-    <value>Phoenix Glubrglmrrr Rrglrulgbrglrulggurgrgl 3</value>
-  </data>
-  <data name="Phoenix Import Info 4" xml:space="preserve">
-    <value>Phoenix Glubrglmrrr Rrglrulgbrglrulggurgrgl 4</value>
-  </data>
-  <data name="Phoenix Import Saving" xml:space="preserve">
-    <value>Phoenix Glubrglmrrr Mrrglargrlmurgrgl</value>
-  </data>
-  <data name="Phoenix Import Saving Failures" xml:space="preserve">
-    <value>Phoenix Glubrglmrrr Mrrglargrlmurgrgl Grglglrgl</value>
   </data>
   <data name="Phoenix Import Saving Progress" xml:space="preserve">
     <value>{0}/{1} Mrglmrrrbrgl. {2} Grrrrgl. {3} Lurg rrglrulgargrlrgl argrlglar</value>
@@ -435,9 +411,6 @@
     <value>Blgrl Mrrglmurg</value>
     <comment>Song Types = Arcade, Full Song, etc.</comment>
   </data>
-  <data name="Starting Page" xml:space="preserve">
-    <value>Grarglorgglrgl Gurgglub</value>
-  </data>
   <data name="Tier Lists" xml:space="preserve">
     <value>Brglurgbrgl Rglgurggurgrgl</value>
   </data>
@@ -514,18 +487,6 @@
   <data name="Communities" xml:space="preserve">
     <value>Murlgrglrgl</value>
   </data>
-  <data name="Use Password 1" xml:space="preserve">
-    <value>Mrglrgl mrgl magrgl PIUScores mrgllug gluburgglorg murlgrgl mrrglargrl mrrgl murgmrg grglrglrgl mrlgrgl murlg.</value>
-  </data>
-  <data name="Use Password 2" xml:space="preserve">
-    <value>Mrg mrg grrrgl rgrlmrlgmrrgl mrg rglurg glub murlgrgl — murlg mrgl magrgl glurgl murg glrglrgl murgll, argrlg grrrmrrgl mrglrgl mrrglubgl arglmrgl murglargrgl.</value>
-  </data>
-  <data name="Use Password 3" xml:space="preserve">
-    <value>Rgl rulggurgmrrr grglgrglgrrrrgl rgl https://phoenix.piugame.com Mrg mrgl mglrgl murgmrg mrglgrgl argrlg mrrglubrgl grglrglrgl. Glrglrgl murglar mglrgl gurgrgl mrg blubmrrr murgmrg urgmrgl Murglargrgl/Grrrmrrgl. Urgmrg mrgl mrgblub-grglurgrgl mrlgargl arglgl murlg argl rgl grarrgrlgrrr-murgmrg prglplgl grglrglrgl.</value>
-  </data>
-  <data name="Use Password 4" xml:space="preserve">
-    <value>Blubargrl glrgl, murgle blgrl arglgrgl grrrgl mrgl — mrrglubgl arglmrgl grglrglrgl murgbagl blgrlargl.</value>
-  </data>
   <data name="Photos" xml:space="preserve">
     <value>Glarblubrgl</value>
     <comment>Photos</comment>
@@ -590,9 +551,6 @@
   </data>
   <data name="To Leaderboard" xml:space="preserve">
     <value>Rgl Arglmrgl</value>
-  </data>
-  <data name="Use Script" xml:space="preserve">
-    <value>Urgmrg  Glrglmrg</value>
   </data>
   <data name="World Rankings" xml:space="preserve">
     <value>Glubmurg Grglarglrglrgl</value>
@@ -2110,9 +2068,6 @@
   </data>
   <data name="Phoenix 2 recommendations are coming soon. Check back after launch!" xml:space="preserve">
     <value>Phoenix 2 mrglmendations mrgl soon. Mrgl back after mrgllaunch!</value>
-  </data>
-  <data name="Coming soon — score import for Phoenix 2 will open after hardware verification." xml:space="preserve">
-    <value>Mrgl soon — Phoenix 2 mrglport mrgl open after mrglware mrglrification.</value>
   </data>
   <data name="Phoenix 2 official leaderboards are coming soon." xml:space="preserve">
     <value>Phoenix 2 official mrglrankings mrgl soon.</value>
@@ -4044,9 +3999,6 @@
   <data name="An import is already running" xml:space="preserve">
     <value>An import is already running</value>
   </data>
-  <data name="Also Sync for PIU Tracker" xml:space="preserve">
-    <value>Also Sync for PIU Tracker</value>
-  </data>
   <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
     <value>Also send imported scores to PIU Tracker, a community score site.</value>
   </data>
@@ -4334,6 +4286,90 @@
   </data>
   <data name="Search" xml:space="preserve">
     <value>Srgl</value>
+  </data>
+  <data name="Import Lede" xml:space="preserve">
+    <value>PIU Scores mrgls into your piugame.com account and glubs in your new and improved scores. Once it starts, you can swim away — it finishes in the background.</value>
+  </data>
+  <data name="Import Password Helper" xml:space="preserve">
+    <value>Used to mrgl in, never stored — unless you turn on Remember below.</value>
+  </data>
+  <data name="Import Broken Helper" xml:space="preserve">
+    <value>Also glubs in Brglubrgl scores from your recent plays; passing scores replace them later.</value>
+  </data>
+  <data name="Also send scores to piutracker.app" xml:space="preserve">
+    <value>Also send glublrgl to piutracker.app</value>
+  </data>
+  <data name="Manual import — console script + CSV" xml:space="preserve">
+    <value>Manual mrglport — console script + CSV</value>
+  </data>
+  <data name="For re-importing older scores" xml:space="preserve">
+    <value>For re-importing older glublrgl</value>
+  </data>
+  <data name="Import Manual Step 1" xml:space="preserve">
+    <value>Choose which pages of your best glublrgl to pull. Leave To page empty for all of them.</value>
+  </data>
+  <data name="Import Manual Step 2" xml:space="preserve">
+    <value>Mrrr the script.</value>
+  </data>
+  <data name="Import Manual Step 3" xml:space="preserve">
+    <value>While logged in on phoenix.piugame.com, paste it into the browser console (F12) — it downloads a CSV of your scores. Ad blockers can mrgl it up.</value>
+  </data>
+  <data name="From page" xml:space="preserve">
+    <value>From page</value>
+  </data>
+  <data name="To page" xml:space="preserve">
+    <value>To page</value>
+  </data>
+  <data name="Upload CSV" xml:space="preserve">
+    <value>Upload CSV</value>
+  </data>
+  <data name="Game Card" xml:space="preserve">
+    <value>Mrglcard</value>
+  </data>
+  <data name="Include Broken Scores" xml:space="preserve">
+    <value>Include Brglubrgl Glublrgl</value>
+  </data>
+  <data name="Change Card" xml:space="preserve">
+    <value>Change Mrglcard</value>
+  </data>
+  <data name="Starting Import..." xml:space="preserve">
+    <value>Starting Mrglport...</value>
+  </data>
+  <data name="Invalid Username/Password" xml:space="preserve">
+    <value>Invalid Mrglname/Shhhcret</value>
+  </data>
+  <data name="The import ran into an error." xml:space="preserve">
+    <value>The mrglport ran into an error.</value>
+  </data>
+  <data name="Password Incorrect" xml:space="preserve">
+    <value>Your shhhcret appears to be incorrect — could not mrgl in to phoenix.piugame.com.</value>
+  </data>
+  <data name="Saved Password Incorrect" xml:space="preserve">
+    <value>Your saved shhhcret appears to be incorrect — could not mrgl in to phoenix.piugame.com.</value>
+  </data>
+  <data name="Import Error Notify" xml:space="preserve">
+    <value>There was an error while glubbing your scores. Try again later. If this persists, notify DrMurloc.</value>
+  </data>
+  <data name="Choose a game card, then press Import again." xml:space="preserve">
+    <value>Choose a Mrglcard, then press Mrglport again.</value>
+  </data>
+  <data name="Import Confirming" xml:space="preserve">
+    <value>Only new or improved glublrgl will be saved. Saving can't be undone — stopping midway keeps what's already saved.</value>
+  </data>
+  <data name="Import Saving" xml:space="preserve">
+    <value>Leaving or cancelling stops the upload; glublrgl already saved stay.</value>
+  </data>
+  <data name="Import Failures" xml:space="preserve">
+    <value>Some rows couldn't be mrglported. Download the failures, fix them, and re-upload.</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Shrgre of chart sectrgns featrgring each skrgll</value>
+  </data>
+  <data name="Import Manual Step 4" xml:space="preserve">
+    <value>Upload the CSV here — also takes a hand-kept spreadsheet with the same columns.</value>
+  </data>
+  <data name="Imported scores will appear here as they come in." xml:space="preserve">
+    <value>Mrglported glublrgl will appear here as they come in.</value>
   </data>
   <data name="Imported" xml:space="preserve">
     <value>Imported</value>

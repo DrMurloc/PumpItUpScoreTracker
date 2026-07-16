@@ -1,7 +1,8 @@
 # Weekly Charts overhaul — the challenges hub, and a static page
 
 **Status**: **as-built 2026-07-15** — all ten commits landed on `claude/weekly-charts-ux-overhaul-003e40`
-(§9 has the SHAs). Designed the same day; visual mock approved at round 9 (artifact `1d0c26e7`,
+(§9 has the SHAs). **Reconciled to the static router 2026-07-16** after the app-wide flip
+(seo-friendly-site.md §7 PR-3) merged: §3.1 records what replaced the branch's own mechanism. Designed the same day; visual mock approved at round 9 (artifact `1d0c26e7`,
 labels `round-1` … `round-9-compact-chip`). ⚠ **The E2E suite has not run in the build
 environment** (Testcontainers can't open the local Docker pipe); the static page's runtime render
 is validated by CI's Linux Docker run and manual QA, not yet locally — §10/§11. Builds on the
@@ -71,19 +72,20 @@ Discord card path (`GetUserWeeklyPlacementsQuery`), the rotation sagas and their
 
 ## 3. The render split
 
-### 3.1 Mechanism — the framework's own per-page opt-out ✅ landed
+### 3.1 Mechanism — superseded by the flip (SSR ladder PR-3)
 
-Verified present in the installed net10.0.9 shared framework:
-`ExcludeFromInteractiveRoutingAttribute` (`Microsoft.AspNetCore.Components.dll`) and
-`HttpContext.AcceptsInteractiveRouting()` (`Microsoft.AspNetCore.Components.Endpoints.dll`).
+This branch originally landed a per-page opt-out (`[ExcludeFromInteractiveRouting]` + a
+conditional `PageRenderMode` in `App.razor`). The app-wide flip merged first
+(`seo-friendly-site.md` §7 PR-3): the router renders statically and every interactive page
+declares `@rendermode RenderModes.Interactive`, so a page converts to static SSR by *omitting*
+the declaration. Reconciled at the 2026-07-16 main-merge:
 
-- `WeeklyCharts.razor` declares `@attribute [ExcludeFromInteractiveRouting]` → static SSR:
-  real HTML, live `HttpContext`, no circuit for the page region; the interactive router
-  full-loads across its boundary. Render once — never prerender (the ban stands).
-- `App.razor`'s `PageRenderMode => AcceptsInteractiveRouting() ? Interactive : null` rides both
-  `<Routes>` and `<HeadOutlet>`; the hardcoded fallback `<title>` yields to a static page's own
-  head. **This is the one commit the chart-details pilot also needs** — mechanism-only,
-  page-free, rebased away by whichever branch merges second.
+- `WeeklyCharts.razor` carries no `@rendermode` and is the first entry in
+  `RenderModeDeclarationTests.StaticPages` (the ratchet that makes static-by-omission a
+  deliberate act, never an accident).
+- The opt-out attribute, the `App.razor` conditional, and `StaticPageLayout` are gone —
+  MainLayout renders statically around every page since the flip, so static pages use it
+  like everyone else.
 
 ### 3.2 The static core
 
@@ -110,15 +112,18 @@ keyed by primitive ids (the chart-details island grammar). Mud popovers work bec
 
 ### 3.4 Layout, head, navigation
 
-- **`Shared/StaticPageLayout.razor`** ✅ landed: `MudContainer` + `@Body` — MainLayout is
-  circuit-shaped and static pages opt out via `@layout`. The dock renders as plain markup from
-  the page; `challenge-board.js` calls `shell.setDockState(true, false)` on load.
+- **Layout: MainLayout** (post-flip it renders statically around every page; the branch's
+  interim `StaticPageLayout` was deleted at the reconciliation). The dock renders as plain
+  markup from the page; `challenge-board.js` calls `shell.setDockState(true, false)` on load.
 - Mix resolution: request-side via `IUiSettingsAccessor`; **any mix without a weekly board
   falls back to Phoenix** (`mix is not (Phoenix or Phoenix2) → Phoenix`).
-- Head: localized `<PageTitle>`, `<HeadContent>` meta description **carrying the concept copy
-  the fold no longer holds** (M1), canonical `/WeeklyCharts` (filter variants canonicalize to
-  clean), OG tags (the daily jacket), JSON-LD `ItemList` of the week's charts, sitemap entry
-  (absent today).
+- Head: served by **`StaticHeadResolver`'s `/WeeklyCharts` branch** — a static page's
+  `PageTitle`/`HeadContent` would render into a HeadOutlet island it never reaches. Title,
+  meta description **carrying the concept copy the fold no longer holds** (M1), OG tags (the
+  daily jacket, falling back to the week's first), and canonical `/WeeklyCharts` via
+  `StaticHeadModel.Canonical` (filter/week variants fold into clean). The JSON-LD `ItemList`
+  renders in the **body** (valid placement; the body is what a static page owns). Sitemap
+  entry ships in `SitemapController`.
 - Navigation: links to the page full-load (the attribute's contract); links out are plain
   anchors. Enhanced nav stays off app-wide.
 
@@ -274,8 +279,9 @@ load. Noted in §11.
 - **Board pagination**: only if a board outgrows a scrollable dialog (~50+ sustained).
 - The `<details>`-heavy static grammar (monthly expansion, pickers) gets its first phone-width
   field test after commit #5.
-- Chart-details convergence: if that branch merges first with its own App.razor conditional,
-  commit ✅2 here rebases to nothing — coordinate at merge time.
+- Chart-details convergence: resolved by the flip (SSR ladder PR-3) — the app-wide static
+  router superseded both branches' per-page mechanisms; this branch reconciled at the
+  2026-07-16 main-merge (§3.1).
 - **E2E not locally validated**: the suite couldn't reach Docker from the test host in the build
   environment, so the static page's runtime render (and the island round-trip) rest on CI's Linux
   Docker run + manual QA. First manual pass should confirm: anon `/WeeklyCharts` shows the week and

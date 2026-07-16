@@ -210,9 +210,6 @@
   <data name="Easy" xml:space="preserve">
     <value>Mais fácil</value>
   </data>
-  <data name="Ending Page" xml:space="preserve">
-    <value>Página final</value>
-  </data>
   <data name="Favorites" xml:space="preserve">
     <value>Favoritos</value>
   </data>
@@ -293,27 +290,6 @@
   </data>
   <data name="Passed Count" xml:space="preserve">
     <value>Contagem de pass</value>
-  </data>
-  <data name="Phoenix Import Confirming" xml:space="preserve">
-    <value>Ao prosseguir, iremos sobrescrever as pontuações carregadas sobre os registros existentes. Você não poderá desfazer isso. Você poderá interromper o processo de salvamento, mas isso não poderá reverter os carregamentos.</value>
-  </data>
-  <data name="Phoenix Import Info 1" xml:space="preserve">
-    <value>Use o botão Copiar script abaixo</value>
-  </data>
-  <data name="Phoenix Import Info 2" xml:space="preserve">
-    <value>Use esse script nas ferramentas de desenvolvimento enquanto estiver conectado em https://phoenix.piugame.com para baixar um CSV de suas pontuações. (Certifique-se de que não esteja em phoenix.piugame.com)</value>
-  </data>
-  <data name="Phoenix Import Info 3" xml:space="preserve">
-    <value>Em seguida, você pode carregar esse CSV aqui para que suas pontuações sejam exibidas.</value>
-  </data>
-  <data name="Phoenix Import Info 4" xml:space="preserve">
-    <value>Observação: essa ferramenta é bastante complicada e pode exigir alguma depuração de sua parte para que funcione. Certifique-se de desativar os bloqueadores de anúncios.</value>
-  </data>
-  <data name="Phoenix Import Saving" xml:space="preserve">
-    <value>Se você sair desta página ou cancelar, o upload será interrompido, mas você não perderá nenhuma pontuação que já tenha sido registrada no upload.</value>
-  </data>
-  <data name="Phoenix Import Saving Failures" xml:space="preserve">
-    <value>Você tinha alguns charts que não puderam ser baixados. Você pode baixar o CSV das falhas para fazer ajustes e tentar novamente.</value>
   </data>
   <data name="Phoenix Import Saving Progress" xml:space="preserve">
     <value>{0}/{1} Carregado. {2} Restante. {3} Falha no registro</value>
@@ -417,9 +393,6 @@
   <data name="Song Type" xml:space="preserve">
     <value>Tipo de música</value>
   </data>
-  <data name="Starting Page" xml:space="preserve">
-    <value>Página inicial</value>
-  </data>
   <data name="Tier Lists" xml:space="preserve">
     <value>Faixas de dificuldade</value>
   </data>
@@ -449,18 +422,6 @@
   </data>
   <data name="Upload XX Scores" xml:space="preserve">
     <value>Upload de pontuações da XX</value>
-  </data>
-  <data name="Use Password 1" xml:space="preserve">
-    <value>Isso fará com que o PIUScores faça login na sua conta e importe seus scores.</value>
-  </data>
-  <data name="Use Password 2" xml:space="preserve">
-    <value>Por padrão não guardo seu nome de usuário nem sua senha — você os digita a cada vez. Ou use a opção de lembrar senha abaixo para salvá-la, criptografada e apenas neste dispositivo.</value>
-  </data>
-  <data name="Use Password 3" xml:space="preserve">
-    <value>Para minimizar as chamadas para https://phoenix.piugame.com/, somente importaremos scores novos ou melhorados. Cada usuário receberá importação completa usando nome de usuário/senha apenas uma vez. Use o importador dev-tools se quiser re-importar pontuações mais antigas.</value>
-  </data>
-  <data name="Use Password 4" xml:space="preserve">
-    <value>Depois de iniciada, você pode sair desta página — a importação termina em segundo plano.</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Usado principalmente para depuração</value>
@@ -503,9 +464,6 @@
   </data>
   <data name="BPM" xml:space="preserve">
     <value>BPM</value>
-  </data>
-  <data name="Days Old" xml:space="preserve">
-    <value>dias de idade</value>
   </data>
   <data name="Difficulty Categorization" xml:space="preserve">
     <value>Categorização de dificuldade</value>
@@ -660,12 +618,6 @@
   <data name="My Relative Difficulty" xml:space="preserve">
     <value>Minha dificuldade relativa</value>
   </data>
-  <data name="New Letter Grade" xml:space="preserve">
-    <value>Letra de nota nova</value>
-  </data>
-  <data name="Old Letter Grade" xml:space="preserve">
-    <value>Letra de nota antiga</value>
-  </data>
   <data name="Overall Letters" xml:space="preserve">
     <value>Letras gerais</value>
   </data>
@@ -789,17 +741,8 @@
   <data name="Last Updated" xml:space="preserve">
     <value>Última atualização</value>
   </data>
-  <data name="Leaderboard Name" xml:space="preserve">
-    <value>Nome da classificação</value>
-  </data>
   <data name="Level/Players" xml:space="preserve">
     <value>Nível/Jogadores</value>
-  </data>
-  <data name="Maximum Level" xml:space="preserve">
-    <value>Nível máximo</value>
-  </data>
-  <data name="Minimum Level" xml:space="preserve">
-    <value>Nível mínimo</value>
   </data>
   <data name="Minutes" xml:space="preserve">
     <value>Minutos</value>
@@ -822,9 +765,6 @@
   <data name="Seconds" xml:space="preserve">
     <value>Segundos</value>
   </data>
-  <data name="Show Regional Guests" xml:space="preserve">
-    <value>Mostrar convidados regionais</value>
-  </data>
   <data name="Update Chart" xml:space="preserve">
     <value>Atualizar chart</value>
   </data>
@@ -845,9 +785,6 @@
   </data>
   <data name="Added" xml:space="preserve">
     <value>Adicionado</value>
-  </data>
-  <data name="Arrows Pressed" xml:space="preserve">
-    <value>Setas pressionadas</value>
   </data>
   <data name="Bads vs Misses Observations" xml:space="preserve">
     <value>Observações: Bads vs Misses</value>
@@ -923,12 +860,6 @@
   </data>
   <data name="Removed" xml:space="preserve">
     <value>Removido</value>
-  </data>
-  <data name="Saved Settings" xml:space="preserve">
-    <value>Configurações salvas</value>
-  </data>
-  <data name="Settings Name" xml:space="preserve">
-    <value>Nome das configurações</value>
   </data>
   <data name="Source" xml:space="preserve">
     <value>Fonte</value>
@@ -1206,17 +1137,11 @@
   <data name="Additional Comments" xml:space="preserve">
     <value>Comentários adicionais</value>
   </data>
-  <data name="Also Sync for PIU Tracker" xml:space="preserve">
-    <value>Sincronizar também com o PIU Tracker</value>
-  </data>
   <data name="An unknown error occurred" xml:space="preserve">
     <value>Ocorreu um erro desconhecido</value>
   </data>
   <data name="Bad Suggestion" xml:space="preserve">
     <value>Sugestão ruim</value>
-  </data>
-  <data name="Change Card" xml:space="preserve">
-    <value>Trocar cartão</value>
   </data>
   <data name="Chart Details" xml:space="preserve">
     <value>Detalhes do chart</value>
@@ -1254,9 +1179,6 @@
   <data name="From" xml:space="preserve">
     <value>De</value>
   </data>
-  <data name="Game Card" xml:space="preserve">
-    <value>Cartão do jogo</value>
-  </data>
   <data name="Good Suggestion" xml:space="preserve">
     <value>Boa sugestão</value>
   </data>
@@ -1271,9 +1193,6 @@
   </data>
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
     <value>Só quero ocultar este chart</value>
-  </data>
-  <data name="Include Broken Scores" xml:space="preserve">
-    <value>Incluir pontuações quebradas</value>
   </data>
   <data name="IsBroken" xml:space="preserve">
     <value>Quebrada</value>
@@ -1371,12 +1290,6 @@
   <data name="Type" xml:space="preserve">
     <value>Tipo</value>
   </data>
-  <data name="Use Password" xml:space="preserve">
-    <value>Usar senha</value>
-  </data>
-  <data name="Use Script" xml:space="preserve">
-    <value>Usar script</value>
-  </data>
   <data name="Welcome" xml:space="preserve">
     <value>Bem-vindo</value>
   </data>
@@ -1443,9 +1356,6 @@
   <data name="Add Player" xml:space="preserve">
     <value>Adicionar jogador</value>
   </data>
-  <data name="Add Scores" xml:space="preserve">
-    <value>Adicionar pontuações</value>
-  </data>
   <data name="Always" xml:space="preserve">
     <value>Sempre</value>
   </data>
@@ -1460,12 +1370,6 @@
   </data>
   <data name="Broken scores get a multiplier of X" xml:space="preserve">
     <value>Pontuações quebradas recebem um multiplicador de {0}</value>
-  </data>
-  <data name="Chart Types" xml:space="preserve">
-    <value>Tipos de chart</value>
-  </data>
-  <data name="Check Your Best Pumbility Charts" xml:space="preserve">
-    <value>Verifique seus melhores charts de Pumbility</value>
   </data>
   <data name="Discord Id" xml:space="preserve">
     <value>ID do Discord</value>
@@ -1488,9 +1392,6 @@
   <data name="Is Warmup" xml:space="preserve">
     <value>Aquecimento</value>
   </data>
-  <data name="Letter Grades" xml:space="preserve">
-    <value>Letras de nota</value>
-  </data>
   <data name="Link" xml:space="preserve">
     <value>Link</value>
   </data>
@@ -1511,9 +1412,6 @@
   </data>
   <data name="Notes" xml:space="preserve">
     <value>Notas</value>
-  </data>
-  <data name="Password" xml:space="preserve">
-    <value>Senha</value>
   </data>
   <data name="Pending" xml:space="preserve">
     <value>Pendente</value>
@@ -1558,10 +1456,10 @@
     <value>Este é seu primeiro envio! Certifique-se de que seu nome de usuário seja identificável via Discord ou Start.GG.</value>
   </data>
   <data name="Qualifiers Leaderboard" xml:space="preserve">
-    <value>Classificação dos qualifiers</value>
+    <value>Classificação dos qualifiers de {0}</value>
   </data>
   <data name="Qualifiers Submission" xml:space="preserve">
-    <value>Envio dos qualifiers</value>
+    <value>Envio dos qualifiers de {0}</value>
   </data>
   <data name="Repeated charts X allowed." xml:space="preserve">
     <value>Charts repetidos {0} permitidos.</value>
@@ -1571,9 +1469,6 @@
   </data>
   <data name="Seed" xml:space="preserve">
     <value>Seed</value>
-  </data>
-  <data name="Song Types" xml:space="preserve">
-    <value>Tipos de música</value>
   </data>
   <data name="Songs will have score adjusted based on song length (treating 2 minutes as baseline)" xml:space="preserve">
     <value>As músicas terão a pontuação ajustada com base na duração da música (considerando 2 minutos como base)</value>
@@ -1628,9 +1523,6 @@
   </data>
   <data name="Average PPS" xml:space="preserve">
     <value>PPS médio</value>
-  </data>
-  <data name="Average Score" xml:space="preserve">
-    <value>Pontuação média</value>
   </data>
   <data name="Best Score" xml:space="preserve">
     <value>Melhor pontuação</value>
@@ -2139,9 +2031,6 @@
   <data name="Phoenix 2 recommendations are coming soon. Check back after launch!" xml:space="preserve">
     <value>As recomendações para a Phoenix 2 chegam em breve. Volte após o lançamento!</value>
   </data>
-  <data name="Coming soon — score import for Phoenix 2 will open after hardware verification." xml:space="preserve">
-    <value>Em breve — a importação de pontuações da Phoenix 2 será liberada após a verificação do hardware.</value>
-  </data>
   <data name="Phoenix 2 official leaderboards are coming soon." xml:space="preserve">
     <value>As classificações oficiais da Phoenix 2 chegam em breve.</value>
   </data>
@@ -2627,9 +2516,6 @@
   </data>
   <data name="More" xml:space="preserve">
     <value>Mais</value>
-  </data>
-  <data name="Import" xml:space="preserve">
-    <value>Importar</value>
   </data>
   <data name="Tiers" xml:space="preserve">
     <value>Tiers</value>
@@ -4357,6 +4243,81 @@
   </data>
   <data name="Search" xml:space="preserve">
     <value>Buscar</value>
+  </data>
+  <data name="Import Lede" xml:space="preserve">
+    <value>O PIU Scores entra na sua conta do piugame.com e importa suas pontuações novas e melhoradas. Depois de iniciar, você pode sair — ele termina em segundo plano.</value>
+  </data>
+  <data name="Import Password Helper" xml:space="preserve">
+    <value>Usada só para entrar, nunca armazenada — a menos que você ative Lembrar abaixo.</value>
+  </data>
+  <data name="Import Broken Helper" xml:space="preserve">
+    <value>Também importa as pontuações quebradas das suas jogadas recentes; ao passar o chart, elas são substituídas.</value>
+  </data>
+  <data name="Also send scores to piutracker.app" xml:space="preserve">
+    <value>Enviar as pontuações também para o piutracker.app</value>
+  </data>
+  <data name="Manual import — console script + CSV" xml:space="preserve">
+    <value>Importação manual — script de console + CSV</value>
+  </data>
+  <data name="For re-importing older scores" xml:space="preserve">
+    <value>Para reimportar pontuações antigas</value>
+  </data>
+  <data name="Import Manual Step 1" xml:space="preserve">
+    <value>Escolha quais páginas das suas melhores pontuações puxar. Deixe Até a página vazio para todas.</value>
+  </data>
+  <data name="Import Manual Step 2" xml:space="preserve">
+    <value>Copie o script.</value>
+  </data>
+  <data name="Import Manual Step 3" xml:space="preserve">
+    <value>Conectado no phoenix.piugame.com, cole-o no console do navegador (F12) — ele baixa um CSV das suas pontuações. Bloqueadores de anúncio podem quebrá-lo.</value>
+  </data>
+  <data name="From page" xml:space="preserve">
+    <value>Da página</value>
+  </data>
+  <data name="To page" xml:space="preserve">
+    <value>Até a página</value>
+  </data>
+  <data name="Upload CSV" xml:space="preserve">
+    <value>Enviar CSV</value>
+  </data>
+  <data name="Starting Import..." xml:space="preserve">
+    <value>Iniciando importação...</value>
+  </data>
+  <data name="Invalid Username/Password" xml:space="preserve">
+    <value>Usuário ou senha inválidos</value>
+  </data>
+  <data name="The import ran into an error." xml:space="preserve">
+    <value>A importação encontrou um erro.</value>
+  </data>
+  <data name="Password Incorrect" xml:space="preserve">
+    <value>Sua senha parece incorreta — não foi possível entrar no phoenix.piugame.com.</value>
+  </data>
+  <data name="Saved Password Incorrect" xml:space="preserve">
+    <value>Sua senha salva parece incorreta — não foi possível entrar no phoenix.piugame.com.</value>
+  </data>
+  <data name="Import Error Notify" xml:space="preserve">
+    <value>Houve um erro ao importar suas pontuações. Tente novamente mais tarde. Se persistir, avise o DrMurloc.</value>
+  </data>
+  <data name="Choose a game card, then press Import again." xml:space="preserve">
+    <value>Escolha um cartão de jogo e aperte Importar de novo.</value>
+  </data>
+  <data name="Import Confirming" xml:space="preserve">
+    <value>Só pontuações novas ou melhoradas serão salvas. O salvamento não pode ser desfeito — parar no meio mantém o que já foi salvo.</value>
+  </data>
+  <data name="Import Saving" xml:space="preserve">
+    <value>Sair ou cancelar interrompe o envio; as pontuações já salvas permanecem.</value>
+  </data>
+  <data name="Import Failures" xml:space="preserve">
+    <value>Algumas linhas não puderam ser importadas. Baixe as falhas, corrija e envie de novo.</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Proporção de seções do chart com cada habilidade</value>
+  </data>
+  <data name="Import Manual Step 4" xml:space="preserve">
+    <value>Envie o CSV aqui — também aceita uma planilha própria com as mesmas colunas.</value>
+  </data>
+  <data name="Imported scores will appear here as they come in." xml:space="preserve">
+    <value>As pontuações importadas aparecerão aqui conforme chegarem.</value>
   </data>
   <data name="Imported" xml:space="preserve">
     <value>Importado</value>

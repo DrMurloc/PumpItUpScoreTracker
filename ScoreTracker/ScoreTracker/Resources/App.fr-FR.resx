@@ -189,7 +189,7 @@
     <value>CoOp</value>
   </data>
   <data name="CoOp Aggregation" xml:space="preserve">
-    <value>Aggregation des CoOps</value>
+    <value>Agrégation des CoOp</value>
   </data>
   <data name="Copy Script" xml:space="preserve">
     <value>Copier le Script</value>
@@ -204,7 +204,7 @@
     <value>Doubles</value>
   </data>
   <data name="Download Failures" xml:space="preserve">
-    <value>Echecs de téléchargement</value>
+    <value>Échecs de téléchargement</value>
   </data>
   <data name="Download Scores" xml:space="preserve">
     <value>Télécharger les scores</value>
@@ -215,14 +215,11 @@
   <data name="Easy" xml:space="preserve">
     <value>Facile</value>
   </data>
-  <data name="Ending Page" xml:space="preserve">
-    <value>Page de fin</value>
-  </data>
   <data name="Favorites" xml:space="preserve">
     <value>Favoris</value>
   </data>
   <data name="Full Privacy Policy" xml:space="preserve">
-    <value>Politique de Confidentialité Complète</value>
+    <value>Politique de confidentialité complète</value>
   </data>
   <data name="Hard" xml:space="preserve">
     <value>Difficile</value>
@@ -268,10 +265,10 @@
     <value>Rendre public</value>
   </data>
   <data name="Make Public Disclaimer 1" xml:space="preserve">
-    <value>Rendre votre compte public rendra vos scores et progression accessibles au public. Vous serez également ajouté de la communauté Monde.</value>
+    <value>Rendre votre compte public rendra vos scores et progression accessibles au public. Vous serez également ajouté à la communauté Monde.</value>
   </data>
   <data name="Make Public Disclaimer 2" xml:space="preserve">
-    <value>Si votre compte était prédcédemment public et que vous l'avez passé en privé, le passer à nouveau en public permettra à nouveau à vos followers de consulter votre progression.</value>
+    <value>Si votre compte était précédemment public et que vous l'avez passé en privé, le passer à nouveau en public permettra à nouveau à vos followers de consulter votre progression.</value>
   </data>
   <data name="Medium" xml:space="preserve">
     <value>Moyen</value>
@@ -280,10 +277,10 @@
     <value>Mix</value>
   </data>
   <data name="My Score" xml:space="preserve">
-    <value>Mon Score</value>
+    <value>Mon score</value>
   </data>
   <data name="Next Letter" xml:space="preserve">
-    <value>Prochaine Lettre</value>
+    <value>Prochaine lettre</value>
   </data>
   <data name="Not Graded Count" xml:space="preserve">
     <value>Non Gradé</value>
@@ -301,31 +298,10 @@
     <value>Ouvrir Vidéo</value>
   </data>
   <data name="Parse Failures" xml:space="preserve">
-    <value>Echecs d'analyse des données</value>
+    <value>Échecs d'analyse des données</value>
   </data>
   <data name="Passed Count" xml:space="preserve">
     <value>Passed</value>
-  </data>
-  <data name="Phoenix Import Confirming" xml:space="preserve">
-    <value>En continuant, les scores uploadés écraseront vos records existants. Il ne sera pas possible d'annuler le processus. Vous pourrez interrompre l'importation, mais les scores mis à jour ne seront pas annulés.</value>
-  </data>
-  <data name="Phoenix Import Info 1" xml:space="preserve">
-    <value>Utilisez le bouton Copier le script ci-dessous</value>
-  </data>
-  <data name="Phoenix Import Info 2" xml:space="preserve">
-    <value>Utilisez ce script dans la Console de Développement en étant connecté sur https://phoenix.piugame.com pour télécharger un CSV de vos scores. (Vérifiez bien que vous n'êtes pas sur phoenix.piugame.com)</value>
-  </data>
-  <data name="Phoenix Import Info 3" xml:space="preserve">
-    <value>Vous pourrez par la suite uploader ce CSV sur le site pour que vos scores y apparaissent.</value>
-  </data>
-  <data name="Phoenix Import Info 4" xml:space="preserve">
-    <value>NB: cet outil est expérimental et demandera surement un peu de debugging de votre côté pour fonctionner. Vérifiez bien que vos bloqueurs de publicité sont désactivés.</value>
-  </data>
-  <data name="Phoenix Import Saving" xml:space="preserve">
-    <value>Si vous quittez la page ou annulez, l'upload s'arrêtera mais vous conserverez les scores qui ont déja sauvegardés pendant cet upload.</value>
-  </data>
-  <data name="Phoenix Import Saving Failures" xml:space="preserve">
-    <value>Certains charts n'ont pas pu être téléchargés. Vous pouvez télécharger un CSV récapitulant les échecs pour faire des corrections et tenter à nouveau.</value>
   </data>
   <data name="Phoenix Import Saving Progress" xml:space="preserve">
     <value>{0}/{1} Uploadés. {2} Restants. {3} Problèmes d'enregistrement</value>
@@ -364,16 +340,16 @@
     <value>Date d'enregistrement</value>
   </data>
   <data name="Recorded On" xml:space="preserve">
-    <value>Enregistré Le {0}</value>
-    <comment>par exemple, Enregistré Le 12/6/2023 (pas de support de format locaux pour le moment)</comment>
+    <value>Enregistré le {0}</value>
+    <comment>par exemple, Enregistré le 12/6/2023 (pas de support de format locaux pour le moment)</comment>
   </data>
   <data name="Remaining Charts" xml:space="preserve">
-    <value>{0} (SSS+) - {1} (AA) Charts Restants</value>
-    <comment>par exemple : 6 (SSS+) - 10 (AA) Charts Restants</comment>
+    <value>{0} (SSS+) - {1} (AA) Charts Restantes</value>
+    <comment>par exemple : 6 (SSS+) - 10 (AA) Charts Restantes</comment>
   </data>
   <data name="Remaining Charts For You" xml:space="preserve">
-    <value>{0} Charts Restants pour Vous</value>
-    <comment>par exemple : 8 Charts Restants pour Vousu</comment>
+    <value>{0} Charts Restantes pour Vous</value>
+    <comment>par exemple : 8 Charts Restantes pour Vous</comment>
   </data>
   <data name="Remove from ToDo" xml:space="preserve">
     <value>Enlever de la ToDo List</value>
@@ -391,7 +367,7 @@
     <value>Sauvegarder les Scores</value>
   </data>
   <data name="Saved Charts" xml:space="preserve">
-    <value>Charts Sauvegardées</value>
+    <value>Charts sauvegardées</value>
   </data>
   <data name="Score" xml:space="preserve">
     <value>Score</value>
@@ -404,23 +380,23 @@
     <comment>par exemple : Perte de Score liée aux Goods</comment>
   </data>
   <data name="Score Loss Note" xml:space="preserve">
-    <value>NB : la perte de scopre peut être incorrecte de 1 à 4 points à cause de l'arrondi</value>
+    <value>NB : la perte de score peut être incorrecte de 1 à 4 points à cause de l'arrondi</value>
   </data>
   <data name="Score Range Shoutout" xml:space="preserve">
     <value>Shout out à daryen pour la collecte de données et la finalisation des intervalles de scores pour les lettres de Rang !</value>
   </data>
   <data name="Score State" xml:space="preserve">
-    <value>Statut du Score</value>
+    <value>Statut du score</value>
     <comment>Statuts du Score = Passed, Unpassed, Unscored</comment>
   </data>
   <data name="Scores Parsed" xml:space="preserve">
     <value>Scores Analysés</value>
   </data>
   <data name="Show Only ToDo Charts" xml:space="preserve">
-    <value>Afficher Seulement les Charts ToDo</value>
+    <value>Montrer seulement les Charts ToDo</value>
   </data>
   <data name="Show Score Distribution" xml:space="preserve">
-    <value>Afficher la Distribution des Scores</value>
+    <value>Montrer la distribution des scores</value>
   </data>
   <data name="Singles" xml:space="preserve">
     <value>Singles</value>
@@ -435,11 +411,8 @@
     <value>Nom de la chanson</value>
   </data>
   <data name="Song Type" xml:space="preserve">
-    <value>Type de Chanson</value>
+    <value>Type de chanson</value>
     <comment>Types de Chanson = Arcade, Full Song, etc.</comment>
-  </data>
-  <data name="Starting Page" xml:space="preserve">
-    <value>Page de début</value>
   </data>
   <data name="Tier Lists" xml:space="preserve">
     <value>Tier Lists</value>
@@ -467,22 +440,10 @@
     <comment>par exemple, voius avez 19 charts de niveau 24 dans votre ToDo list que vous n'avez pas Pass</comment>
   </data>
   <data name="Upload Scores" xml:space="preserve">
-    <value>Télécharger Scores</value>
+    <value>Téléverser les scores</value>
   </data>
   <data name="Upload XX Scores" xml:space="preserve">
-    <value>Télécharger Scores XX</value>
-  </data>
-  <data name="Use Password 1" xml:space="preserve">
-    <value>Ceci permet à PIUScores de se connecter à votre compte et d'importer les scores pour vous.</value>
-  </data>
-  <data name="Use Password 2" xml:space="preserve">
-    <value>Par défaut, je ne garde ni votre nom d'utilisateur ni votre mot de passe — vous les saisissez à chaque fois. Ou utilisez l'option « se souvenir du mot de passe » ci-dessous pour l'enregistrer, chiffré et uniquement sur cet appareil.</value>
-  </data>
-  <data name="Use Password 3" xml:space="preserve">
-    <value>Pour limiter les requètes vers https://phoenix.piugame.com, je n'importe que les scores nouveaux ou améliorés. Chaque utilisateur a un import entier avec son nom d'utilisateur et mot de passe. Utilisez l'importateur outils developpeur si vous souhaitez réimporter des scores plus anciens.</value>
-  </data>
-  <data name="Use Password 4" xml:space="preserve">
-    <value>Une fois démarré, vous pouvez quitter cette page — l'importation se termine en arrière-plan.</value>
+    <value>Téléverser les scores XX</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Utilisé principalement pour déboguer</value>
@@ -507,8 +468,8 @@
     <comment>Photos</comment>
   </data>
   <data name="Qualifiers Leaderboard" xml:space="preserve">
-    <value>{0} Leaderboard de Qualification</value>
-    <comment>Leaderboard de Qualification</comment>
+    <value>{0} Leaderboard de qualifications</value>
+    <comment>Leaderboard de qualifications</comment>
   </data>
   <data name="Place" xml:space="preserve">
     <value>Place</value>
@@ -550,10 +511,10 @@
     <value>Rating Max</value>
   </data>
   <data name="Qualifier Submit Phrase 1" xml:space="preserve">
-    <value>Vous n'avez pas besoin d'être identifié pour utilsier cet outil. Entrez un nom d'utilisateur pour commencer à envoyer</value>
+    <value>Vous n'avez pas besoin d'être identifié pour utiliser cet outil. Entrez un nom d'utilisateur pour commencer à envoyer</value>
   </data>
   <data name="Qualifier Submit Phrase 2" xml:space="preserve">
-    <value>C'est votre premier envoi !  Assurez vous que votre nom d'utilisateur est identifiable depuis Discord ou Start.GG</value>
+    <value>C'est votre premier envoi ! Assurez-vous que votre nom d'utilisateur est identifiable depuis Discord ou Start.GG</value>
   </data>
   <data name="Qualifiers Submission" xml:space="preserve">
     <value>{0} envois pour qualifications</value>
@@ -565,7 +526,7 @@
     <value>Chanson</value>
   </data>
   <data name="Song Artist" xml:space="preserve">
-    <value>Song Artist</value>
+    <value>Artiste de la chanson</value>
   </data>
   <data name="Submission Page" xml:space="preserve">
     <value>Page d'envoi</value>
@@ -581,9 +542,6 @@
   </data>
   <data name="Upload Image" xml:space="preserve">
     <value>Uploader l'image</value>
-  </data>
-  <data name="Use Script" xml:space="preserve">
-    <value>Utiliser le script</value>
   </data>
   <data name="World Rankings" xml:space="preserve">
     <value>Classements mondiaux</value>
@@ -663,10 +621,6 @@
 	  <value>Nombre de Notes</value>
 	  <comment>Nombre de Notes</comment>
   </data>
-  <data name="Pass (Avec Données)" xml:space="preserve">
-	  <value>Pass (Avec Données)</value>
-	  <comment>Pass (Avec Données)</comment>
-  </data>
   <data name="Score (Data Backed)" xml:space="preserve">
 	  <value>Score (Avec Données)</value>
 	  <comment>Score (Avec Données)</comment>
@@ -680,8 +634,8 @@
 	  <comment>Nombre de Joueurs</comment>
   </data>
   <data name="Difficulty Categorization" xml:space="preserve">
-	  <value>Catégorisation par Difficulté</value>
-	  <comment>Catégorisation par Difficulté</comment>
+	  <value>Catégorisation par difficulté</value>
+	  <comment>Catégorisation par difficulté</comment>
   </data>
   <data name="Scoring Level" xml:space="preserve">
 	  <value>Niveau de Score</value>
@@ -1515,7 +1469,7 @@
     <comment>Titre de page sur /Tournament/{id}/Admin. {0} = nom du tournoi.</comment>
   </data>
   <data name="Sync Qualifier Leaderboard" xml:space="preserve">
-    <value>Synchroniser le Leaderboard de qualification</value>
+    <value>Synchroniser le Leaderboard de qualifications</value>
   </data>
   <data name="New Player Name" xml:space="preserve">
     <value>Nom du nouveau joueur</value>
@@ -2184,9 +2138,6 @@
   </data>
   <data name="Phoenix 2 recommendations are coming soon. Check back after launch!" xml:space="preserve">
     <value>Les recommandations pour Phoenix 2 arrivent bientôt. Revenez après le lancement !</value>
-  </data>
-  <data name="Coming soon — score import for Phoenix 2 will open after hardware verification." xml:space="preserve">
-    <value>Bientôt disponible — l'importation des scores pour Phoenix 2 ouvrira après la vérification du matériel.</value>
   </data>
   <data name="Phoenix 2 official leaderboards are coming soon." xml:space="preserve">
     <value>Les classements officiels de Phoenix 2 arrivent bientôt.</value>
@@ -4119,9 +4070,6 @@
   <data name="An import is already running" xml:space="preserve">
     <value>Un import est déjà en cours</value>
   </data>
-  <data name="Also Sync for PIU Tracker" xml:space="preserve">
-    <value>Synchroniser aussi avec PIU Tracker</value>
-  </data>
   <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
     <value>Envoie aussi les scores importés vers PIU Tracker, un site de scores communautaire.</value>
   </data>
@@ -4409,6 +4357,90 @@
   </data>
   <data name="Search" xml:space="preserve">
     <value>Chercher</value>
+  </data>
+  <data name="Import Lede" xml:space="preserve">
+    <value>PIU Scores se connecte à votre compte piugame.com et importe vos scores nouveaux et améliorés. Une fois l'import lancé, vous pouvez quitter — il se termine en arrière-plan.</value>
+  </data>
+  <data name="Import Password Helper" xml:space="preserve">
+    <value>Utilisé uniquement pour la connexion, jamais enregistré — sauf si vous activez Mémoriser ci-dessous.</value>
+  </data>
+  <data name="Import Broken Helper" xml:space="preserve">
+    <value>Importe aussi les scores cassés de vos parties récentes ; un score réussi les remplace ensuite.</value>
+  </data>
+  <data name="Also send scores to piutracker.app" xml:space="preserve">
+    <value>Envoyer aussi les scores à piutracker.app</value>
+  </data>
+  <data name="Manual import — console script + CSV" xml:space="preserve">
+    <value>Import manuel — script console + CSV</value>
+  </data>
+  <data name="For re-importing older scores" xml:space="preserve">
+    <value>Pour réimporter d'anciens scores</value>
+  </data>
+  <data name="Import Manual Step 1" xml:space="preserve">
+    <value>Choisissez les pages de vos meilleurs scores à récupérer. Laissez À la page vide pour tout prendre.</value>
+  </data>
+  <data name="Import Manual Step 2" xml:space="preserve">
+    <value>Copiez le script.</value>
+  </data>
+  <data name="Import Manual Step 3" xml:space="preserve">
+    <value>Connecté sur phoenix.piugame.com, collez-le dans la console du navigateur (F12) — il télécharge un CSV de vos scores. Les bloqueurs de publicité peuvent le casser.</value>
+  </data>
+  <data name="From page" xml:space="preserve">
+    <value>De la page</value>
+  </data>
+  <data name="To page" xml:space="preserve">
+    <value>À la page</value>
+  </data>
+  <data name="Upload CSV" xml:space="preserve">
+    <value>Uploader le CSV</value>
+  </data>
+  <data name="Game Card" xml:space="preserve">
+    <value>Carte de jeu</value>
+  </data>
+  <data name="Include Broken Scores" xml:space="preserve">
+    <value>Inclure les scores cassés</value>
+  </data>
+  <data name="Change Card" xml:space="preserve">
+    <value>Changer de carte</value>
+  </data>
+  <data name="Starting Import..." xml:space="preserve">
+    <value>Démarrage de l'import...</value>
+  </data>
+  <data name="Invalid Username/Password" xml:space="preserve">
+    <value>Identifiant ou mot de passe invalide</value>
+  </data>
+  <data name="The import ran into an error." xml:space="preserve">
+    <value>L'import a rencontré une erreur.</value>
+  </data>
+  <data name="Password Incorrect" xml:space="preserve">
+    <value>Votre mot de passe semble incorrect — connexion à phoenix.piugame.com impossible.</value>
+  </data>
+  <data name="Saved Password Incorrect" xml:space="preserve">
+    <value>Votre mot de passe enregistré semble incorrect — connexion à phoenix.piugame.com impossible.</value>
+  </data>
+  <data name="Import Error Notify" xml:space="preserve">
+    <value>Une erreur est survenue lors de l'import de vos scores. Réessayez plus tard. Si cela persiste, prévenez DrMurloc.</value>
+  </data>
+  <data name="Choose a game card, then press Import again." xml:space="preserve">
+    <value>Choisissez une carte de jeu, puis appuyez de nouveau sur Importer.</value>
+  </data>
+  <data name="Import Confirming" xml:space="preserve">
+    <value>Seuls les scores nouveaux ou améliorés seront enregistrés. L'enregistrement est irréversible — un arrêt en cours conserve ce qui est déjà enregistré.</value>
+  </data>
+  <data name="Import Saving" xml:space="preserve">
+    <value>Quitter ou annuler arrête l'upload ; les scores déjà enregistrés restent.</value>
+  </data>
+  <data name="Import Failures" xml:space="preserve">
+    <value>Certaines lignes n'ont pas pu être importées. Téléchargez les échecs, corrigez-les et réuploadez.</value>
+  </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Part des sections du chart présentant chaque compétence</value>
+  </data>
+  <data name="Import Manual Step 4" xml:space="preserve">
+    <value>Uploadez le CSV ici — accepte aussi un tableur tenu à la main avec les mêmes colonnes.</value>
+  </data>
+  <data name="Imported scores will appear here as they come in." xml:space="preserve">
+    <value>Les scores importés apparaîtront ici au fur et à mesure.</value>
   </data>
   <data name="Imported" xml:space="preserve">
     <value>Importé</value>

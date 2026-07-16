@@ -7,9 +7,9 @@ For the localization mechanism itself (resx layout, `L["..."]` usage, key conven
 ## Style conventions
 
 - **Address the user with formal `vous`.** Every existing prose string uses `vous` / `votre` / `vos`, never `tu`. Examples: `Si vous n'avez pas de compte`, `Vous serez retiré de la communauté Monde`, `Vérifiez bien que vos bloqueurs de publicité sont désactivés`. Match that — French web UI default is `vous` and the existing voice is consistent on this one point.
-- **Capitalization in values is inconsistent.** The existing file mixes sentence case (`Niveau de difficulté`, `Joueur le plus facile`, `Recherche sur le classement officiel`) with English-influenced Title Case (`Statut du Score`, `Mon Score`, `Prochaine Lettre`, `Charts Sauvegardées`, `Catégorisation par Difficulté`). Native French orthography uses **sentence case** (only the first word capitalized, plus proper nouns). Lean toward sentence case for new entries; the Title Case forms are an inherited inconsistency to fix in a separate sweep, not perpetuate. See Known issues.
+- **Capitalization in values is inconsistent.** Native French orthography uses **sentence case** (only the first word capitalized, plus proper nouns). The worst Title Case offenders (`Statut du Score`, `Mon Score`, `Prochaine Lettre`, `Charts Sauvegardées`, `Catégorisation par Difficulté`, `Politique de Confidentialité Complète`, `Type de Chanson`, `Enregistré Le`) were swept to sentence case in the 2026-07 QC pass, but plenty of Title Case remains (`Sauvegarder les Scores`, `Nombre de Charts`, `Très Facile`, …). Use sentence case for new entries; the full-file sweep is still an open item — see Known issues.
 - **Brand and proper-noun casing is preserved verbatim.** `Score Tracker`, `Phoenix`, `XX`, `PIU`, `PIUScores`, `Discord`, `Start.GG`, `https://piugame.com` — keep their original casing inside French sentences.
-- **Preserve positional placeholders verbatim.** `{0}`, `{1}`, `{2}` go into the value untouched, in whatever order French grammar wants. Examples: `Se connecter avec {0}`; `{0}/{1} Uploadés. {2} Restants. {3} Problèmes d'enregistrement`; `{0} Charts Restants pour Vous`; `Vous avez {0} charts de niveau {1} dans votre ToDo list que vous n'avez pas Pass`.
+- **Preserve positional placeholders verbatim.** `{0}`, `{1}`, `{2}` go into the value untouched, in whatever order French grammar wants. Examples: `Se connecter avec {0}`; `{0}/{1} Uploadés. {2} Restants. {3} Problèmes d'enregistrement`; `{0} Charts Restantes pour Vous`; `Vous avez {0} charts de niveau {1} dans votre ToDo list que vous n'avez pas Pass`.
 - **Skip prose with inline markup.** Per CLAUDE.md, `<MudText>` bodies with embedded `<MudLink>`/other elements stay hardcoded English. Don't extract them, don't translate them.
 - **Use proper French orthography.** Acute, grave, circumflex, cedilla, diaeresis — `àâäéèêëîïôöùûüç`. Don't ASCII-fold. The existing file already uses `À`, `é`, `è`, `ê`, `ç`, `î`, `ô`, `û` correctly in most places (see Known issues for a few stripped-accent typos).
 - **French typographic spacing is not currently enforced.** Standard French typography requires a non-breaking space (`U+00A0`) before `?`, `!`, `:`, `;`, and inside `« »`. The existing file is inconsistent: `Création de compte?` (no space), `succès !` (regular space), `envoi !  Assurez vous` (regular space + double space). Do not introduce new violations; preferably normalize to NBSP before high punctuation, but flag rather than churn the whole file in one pass — see Known issues.
@@ -44,8 +44,8 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 | Copy to Clipboard | Copier dans le presse-papiers | |
 | Country | Pays | |
 | Difficulty Level | Niveau de difficulté | Sentence case. |
-| Download Failures | Echecs de téléchargement | Should be `Échecs` with capital É — see Known issues. |
-| Download Scores | Télécharger les scores | Note: `Télécharger` is also (incorrectly) used for `Upload Scores` — see Known issues. |
+| Download Failures | Échecs de téléchargement | Capital É at sentence start (`Échecs d'analyse des données` likewise). |
+| Download Scores | Télécharger les scores | `Télécharger` = download only; upload is `Téléverser` (see Upload Scores). |
 | Easiest Player | Joueur le plus facile | Comparative. Feminine form would be `Joueuse la plus facile` if needed. |
 | Easy / Hard | Facile / Difficile | Plain adjectives, masculine default. |
 | Ending Page | Page de fin | "Starting Page" → "Page de début". |
@@ -53,7 +53,7 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 | Event Links | Liens Évènements | Note: `Liens Évènements` lacks `des`/`d'` — `Liens d'évènements` would be more standard. Acceptable as a label. |
 | Favorites | Favoris | |
 | Filters | Filtres | |
-| Full Privacy Policy | Politique de Confidentialité Complète | Title Case throughout — sentence case (`Politique de confidentialité complète`) would be more standard. |
+| Full Privacy Policy | Politique de confidentialité complète | |
 | Home | Accueil | Sidebar nav label. |
 | Language | Langue | |
 | Last Updated | Dernière mise à jour | |
@@ -68,9 +68,9 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 | Min/Max BPM | BPM Min / BPM Max | Postfixed abbreviation. |
 | Min/Max Letter Grade | Rang Min (lettres) / Rang Max (lettres) | Postfixed `Min`/`Max`; the `(lettres)` parenthetical disambiguates `Rang` (which alone could mean a numeric rank). |
 | Min/Max Note Count | Nombre de Notes Min / Nombre de Notes Max | Postfixed. |
-| My Score | Mon Score | Title Case on `Score`. |
+| My Score | Mon score | |
 | Name | Nom | |
-| Next Letter | Prochaine Lettre | "Next" rendered as `Prochaine` (feminine, agreeing with `Lettre`). Title Case. |
+| Next Letter | Prochaine lettre | "Next" rendered as `Prochaine` (feminine, agreeing with `lettre`). |
 | Not Graded Count | Non Gradé | "Not Graded" with `Count` left implicit. Masculine default. |
 | Open | Ouvert | Masculine default. |
 | Pending | En attente | |
@@ -81,24 +81,24 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 | Progress | Progression | |
 | Public | Publique | Note: written as `Publique` (feminine) even though referenced as a generic on/off label. Standard masculine would be `Public` — `Publique` is the feminine form. The label likely refers to "[ta] visibilité publique" but as a bare adjective it should agree with whatever it modifies. See Known issues. |
 | Recorded Date | Date d'enregistrement | |
-| Recorded On X | Enregistré Le {0} | Note: `Le` is capitalized mid-sentence — should be `Enregistré le {0}`. See Known issues. |
+| Recorded On X | Enregistré le {0} | |
 | Remove from ToDo | Enlever de la ToDo List | Matches "Add to ToDo" → "Ajouter à la ToDo List". |
 | Report Video | Signaler vidéo | |
 | Report Video Tooltip | Signaler lien endommagé, ou vidéo incorrecte | |
 | Restart | Recommencer | |
 | Rules | Règles | |
-| Save Scores | Sauvegarder les Scores | Title Case on `Scores`. |
-| Saved Charts | Charts Sauvegardées | Feminine plural agreement (`Charts` → feminine here). Compare `Charts Restants` (masculine in another entry) — gender treatment is inconsistent. See Known issues. |
+| Save Scores | Sauvegarder les Scores | Title Case on `Scores` — still un-swept (full sentence-case sweep is an open item). |
+| Saved Charts | Charts sauvegardées | Feminine plural agreement — `Charts` is committed feminine file-wide (the old masculine `Restants` outliers were swept to `Restantes`). |
 | Score | Score | Identical, loanword. |
-| Score (Data Backed) | Score (Avec Données) | The English key suffix `(Data Backed)` is rendered as `(Avec Données)`. **Note:** the Pass equivalent has its key incorrectly translated (`Pass (Avec Données)` as the resx key, not `Pass (Data Backed)`) — see Known issues. |
+| Score (Data Backed) | Score (Avec Données) | The English key suffix `(Data Backed)` is rendered as `(Avec Données)`. The orphan entry keyed by its own French value (`Pass (Avec Données)`) was deleted in the 2026-07 QC pass. |
 | Score Loss | Perte de Score liée aux {0} | Note: adds `liée aux` before placeholder (assumes feminine plural — `liée` agrees with `Perte`, `aux` with judgment-term plural). For singular or masculine placeholders the agreement may be wrong. See Known issues. |
 | Score Ranking | Classement par Score | Compare `Leaderboard` → `Leaderboard` (loanword); `World Rankings` → `Classements mondiaux`. Three different renderings for the ranking family. |
-| Score State | Statut du Score | Title Case on `Score`. |
+| Score State | Statut du score | |
 | Scores Parsed | Scores Analysés | |
 | Settings | Réglages | |
 | Show X | Montrer X | Suffix pattern: `Show Skills` → `Montrer les Compétences`, `Show Difficulty` → `Montrer la Difficulté`, `Show Song Name` → `Montrer le Nom de la Chanson`, `Show Step Artist` → `Montrer le Step Artist`, `Show Age` → `Montrer l'ancienneté`. Article (`les`/`la`/`le`/`l'`) per gender of the modified noun. |
-| Show Score Distribution | Afficher la Distribution des Scores | Outlier — uses `Afficher` instead of `Montrer`. The other Show entries use `Montrer`. See Known issues. |
-| Show Only ToDo Charts | Afficher Seulement les Charts ToDo | Also uses `Afficher`. `ToDo` kept English as the chart-state qualifier. |
+| Show Score Distribution | Montrer la distribution des scores | Converged on `Montrer` (was the `Afficher` outlier). |
+| Show Only ToDo Charts | Montrer seulement les Charts ToDo | `ToDo` kept English as the chart-state qualifier. |
 | Site | Site | (Implicit in "Site web".) |
 | Skill | Compétence | Chart trait/skill (runs, drills, twists, etc.). |
 | Submission Page | Page d'envoi | |
@@ -116,8 +116,8 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 | Tournaments | Tournois | |
 | UCS Leaderboard | Leaderboard UCS | Postfixed UCS. |
 | Upload Image | Uploader l'image | Loanword verb `uploader`. |
-| Upload Scores | Télécharger Scores | **Wrong direction:** `Télécharger` means *download*, not upload. See Known issues. |
-| Upload XX Scores | Télécharger Scores XX | Same wrong-direction issue. |
+| Upload Scores | Téléverser les scores | `Téléverser` = upload (the old `Télécharger` wrong-direction values were fixed in the 2026-07 QC pass). |
+| Upload XX Scores | Téléverser les scores XX | |
 | Uploader | Uploadeur | Role/agent noun derived from `uploader`. |
 | Use Script | Utiliser le script | |
 | Used Primarily for debugging | Utilisé principalement pour déboguer | |
@@ -134,14 +134,14 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 
 | English | fr-FR | Notes |
 |---|---|---|
-| Chart(s) | Chart / Charts | **Untranslated**, kept English. Used compositionally with French articles: `Type de Chart`, `Liste des Charts`, `Charts Sauvegardées`, `Charts Restants`, `Masquer les Charts`. Gender treatment is inconsistent — see Known issues. |
+| Chart(s) | Chart / Charts | **Untranslated**, kept English. Used compositionally with French articles: `Type de Chart`, `Liste des Charts`, `Charts sauvegardées`, `Charts Restantes`, `Masquer les Charts`. Feminine file-wide. |
 | Chart List | Liste des Charts | |
 | Chart Randomizer | Randomizer de Chart | `Randomizer` kept English (no native French equivalent in use). |
 | Chart Type | Type de Chart | |
-| CoOp | CoOp | Untranslated. "CoOp Aggregation" → "Aggregation des CoOps". |
+| CoOp | CoOp | Untranslated. "CoOp Aggregation" → "Agrégation des CoOp". |
 | Singles / Doubles | Singles / Doubles | Untranslated. |
 | Difficulty Level | Niveau de difficulté | Sentence case. |
-| Difficulty Categorization | Catégorisation par Difficulté | Title Case on `Difficulté`. |
+| Difficulty Categorization | Catégorisation par difficulté | |
 | Letter Grade | Rang (lettres) | Translated as `Rang` with parenthetical `(lettres)` to disambiguate from numeric rank. Min/Max forms keep the parenthetical. |
 | Mix | Mix | Untranslated. (Compare ja-JP `バージョン`/`ベーション`, ko-KR `시리즈`, pt-BR `Versão`.) |
 | Phoenix / XX | Phoenix / XX | Game versions, untranslated proper nouns. "Phoenix Score Calculator" → "Calculateur de score Phoenix" (Phoenix postfixed). "Import Phoenix Scores" → "Importer les Scores Phoenix"; "Upload XX Scores" → "Télécharger Scores XX". |
@@ -163,7 +163,7 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 | Players | Joueurs | Masculine plural default. |
 | Player Count | Nombre de Joueurs | |
 | Tournaments | Tournois | |
-| Qualifiers | Qualification(s) | "Qualifiers Leaderboard" → "{0} Leaderboard de Qualification" (singular); "Qualifiers Submission" → "{0} envois pour qualifications" (plural lowercase). Number/case inconsistency — see Known issues. |
+| Qualifiers | qualifications | Converged plural lowercase: "Qualifiers Leaderboard" → "{0} Leaderboard de qualifications"; "Qualifiers Submission" → "{0} envois pour qualifications"; "Sync Qualifier Leaderboard" → "Synchroniser le Leaderboard de qualifications". |
 | Rating | Rating | **Untranslated**. Loanword. "Max Rating" → "Rating Max"; "Rating Calculator" → "Calculateur de Rating". |
 | Rating Calculator | Calculateur de Rating | |
 | Pumbility | (none yet) | Not yet translated. Recommend leaving as `Pumbility` (proper-noun loanword) per the Phoenix/XX/Rating policy. |
@@ -171,8 +171,8 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 | Song Name | Nom de la chanson | |
 | Song Image | Image de la chanson | |
 | Song Duration | Durée de la chanson | |
-| Song Type | Type de Chanson | Title Case here, sentence case in the other Song compounds. Inconsistent — see Known issues. |
-| Song Artist | Song Artist | **Untranslated**. Inconsistent with other Song compounds which translate. See Known issues. |
+| Song Type | Type de chanson | |
+| Song Artist | Artiste de la chanson | Matches the other Song compounds. |
 | Personalized Difficulty | Difficulté Personnalisée | |
 | Scoring Level | Niveau de Score | |
 | Skill | Compétence | |
@@ -196,7 +196,7 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 - **Formal `vous` register.** Every prose string uses `vous` / `votre` / `vos`. Don't introduce `tu`. Example: `Si vous n'avez pas de compte avec Score Tracker, un compte sera créé lorsque vous sélectionnez une des méthodes d'authentification.`
 - **`NB :` or `NB:` prefix for warnings/disclaimers.** Used for technical notes: `NB : la perte de score peut être incorrecte de 1 à 4 points à cause de l'arrondi`, `NB: cet outil est expérimental...`. Place at sentence start. Spacing inconsistent (`NB :` vs `NB:`) — pick one and standardize. French typography wants `NB :` with NBSP.
 - **`Shout out à X pour Y` for credit lines.** `Shout out à MR_WEQ pour le reverse-engineering de la formule !`, `Shout out à daryen pour la collecte de données et la finalisation des intervalles de scores pour les lettres de Rang !`. Loanword `Shout out` kept English; `à` introduces the credited person.
-- **Show / Hide as verb-prefix `Montrer X` / `Masquer X`.** `Show Skills` → `Montrer les Compétences`, `Hide Completed Charts` → `Masquer les Charts terminées`. Article (`les`/`la`/`le`/`l'`) per gender of the modified noun. The `Afficher` variant exists in two entries (`Afficher la Distribution des Scores`, `Afficher Seulement les Charts ToDo`) — converge on `Montrer` for new entries.
+- **Show / Hide as verb-prefix `Montrer X` / `Masquer X`.** `Show Skills` → `Montrer les Compétences`, `Hide Completed Charts` → `Masquer les Charts terminées`. Article (`les`/`la`/`le`/`l'`) per gender of the modified noun. The old `Afficher` variants were converged to `Montrer` in the 2026-07 QC pass — `Montrer` only for new entries.
 - **`Min` / `Max` postfixed with space.** `BPM Min`, `BPM Max`, `Rating Max`, `Nombre de Notes Min`, `Rang Min (lettres)`. Don't switch to `Min. BPM` or prefix forms.
 - **Possessives**: `votre compte`, `vos scores`, `votre progression`, `vos followers`. Possessive precedes noun, agrees in gender/number.
 - **English brand and PIU jargon stay verbatim mid-sentence.** `Score Tracker`, `Phoenix`, `XX`, `PIU`, `PIUScores`, `Discord`, `Start.GG`, `Pass`, `ToDo`, `Charts`, `CoOp`, `Singles`, `Doubles`, `Mix`, `Tier Lists`, `Leaderboard`, `Rating`, `Step Artist`, `Stage Pass`, `BPM`, `UCS`, `Avatar`, `Tag`, `Tags`, judgment terms (`Bad`, `Miss`, `Perfect`, `Great`, `Good`, plural `Goods`).
@@ -204,68 +204,29 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 
 ## Known issues / native review needed
 
-These were carried over from the existing translations and should be reviewed by a native speaker. Keep structural and quality changes separate diffs.
+The mechanical items originally tracked here were fixed in the 2026-07 QC pass:
 
-### Critical bugs
+- **Critical**: the orphan `<data name="Pass (Avec Données)">` entry (keyed by its own French value, resolvable by no `L["..."]` call) was deleted.
+- **Wrong-direction**: `Upload Scores` / `Upload XX Scores` now use `Téléverser les scores` / `Téléverser les scores XX`; `Télécharger` remains download-only. (`Upload Image` had always been correct with `Uploader l'image`.)
+- **Spelling**: `Agrégation des CoOp` (was `Aggregation des CoOps`), `précédemment`, `sûrement`, `déjà été sauvegardés` (accent + the missing `été`), `score` (was `scopre`), `requêtes` and `développeur` (both in Use Password 3), `Échecs` ×2, `utiliser` (was `utilsier`), `Assurez-vous` (hyphen + the double space before it), `ajouté à la communauté Monde` (was `de`), and the `Vousu` typo in the Remaining Charts For You comment.
+- **Capitalization**: the worst offenders swept to sentence case (`Politique de confidentialité complète`, `Statut du score`, `Mon score`, `Prochaine lettre`, `Catégorisation par difficulté`, `Charts sauvegardées`, `Type de chanson`, `Enregistré le {0}`).
+- **Charts gender**: committed **feminine**; the masculine `Charts Restants` outliers swept to `Charts Restantes` (both Remaining-Charts keys and their comments).
+- **Show verb**: converged on `Montrer` (the two `Afficher` entries rewritten).
+- **Qualifiers number**: converged on plural lowercase `qualifications` (Leaderboard, Submission, and Sync entries).
+- **`Song Artist`**: translated to `Artiste de la chanson`.
 
-- **`Pass (Data Backed)` correct entry now exists; broken legacy entry still in file.** The 2026-04-26 batch added a correct `Pass (Data Backed)` entry with value `Pass (Avec Données)`. The pre-existing broken entry whose `name` attribute is the *translated* string `Pass (Avec Données)` is still in the file as an orphan that no `L["..."]` call resolves to. **Cleanup task:** delete the orphan `<data name="Pass (Avec Données)">` entry. Compare to `Score (Data Backed)` which has always been keyed correctly (English key, French value).
+Still open for a native/owner pass:
 
-### Wrong-direction translations
+### Full sentence-case sweep
 
-- **`Upload Scores` / `Upload XX Scores` → `Télécharger Scores` / `Télécharger Scores XX`.** `Télécharger` means *download*, not upload. The same word `Télécharger` is also used for `Download Scores` → `Télécharger les scores`, so the file says "download" for both directions of transfer. **Fix:** use `Téléverser` (the standard French for upload) or the loanword `Uploader` (already established for `Upload Image` → `Uploader l'image`). Recommend `Téléverser les scores` / `Téléverser les scores XX` for consistency with formal French; alternative is `Uploader les scores` to match the verb already in the prose.
-- **`Upload Image` correctly uses `Uploader l'image`.** Consistent with the `uploader` verb in `Vous pourrez par la suite uploader ce CSV` prose. The Score upload entries are the outliers.
-
-### Spelling typos
-
-- **`Aggregation` → `Agrégation`.** Current: `CoOp Aggregation` → `Aggregation des CoOps`. `Aggregation` is the English spelling; French is `Agrégation` (acute on first `e`, single `g`).
-- **`prédcédemment` → `précédemment`.** In Make Public Disclaimer 2.
-- **`surement` → `sûrement`.** In Phoenix Import Info 4.
-- **`déja` → `déjà`.** In Phoenix Import Saving (`les scores qui ont déja sauvegardés` — also missing `été`: should be `qui ont déjà été sauvegardés`).
-- **`scopre` → `score`.** In Score Loss Note (`la perte de scopre`).
-- **`requètes` → `requêtes`.** In Use Password 3 (`Pour limiter les requètes`).
-- **`Echecs` → `Échecs`.** In `Download Failures` and `Parse Failures`. Capital É required at sentence start.
-- **`utilsier` → `utiliser`.** In Qualifier Submit Phrase 1.
-- **`Vousu` → `Vous`.** In the comment for `Remaining Charts For You` (`8 Charts Restants pour Vousu`).
-- **`Assurez vous` → `Assurez-vous`.** In Qualifier Submit Phrase 2 — imperative + reflexive pronoun takes a hyphen.
-- **`ajouté de la communauté Monde` → `ajouté à la communauté Monde`.** In Make Public Disclaimer 1. Wrong preposition — `ajouté` takes `à`, not `de`. Likely a copy-paste from the parallel `retiré de la communauté` in the Make Not Public Disclaimer.
-
-### Capitalization inconsistencies
-
-- **Mixed sentence case vs Title Case in values.** The file freely mixes `Niveau de difficulté` (sentence) with `Statut du Score` (Title), `Recherche sur le classement officiel` (sentence) with `Catégorisation par Difficulté` (Title), `Joueur le plus facile` (sentence) with `Charts Sauvegardées` (Title). Standard French is **sentence case**. Recommend a one-shot sweep to lowercase non-initial, non-proper-noun words. Examples to fix:
-  - `Politique de Confidentialité Complète` → `Politique de confidentialité complète`
-  - `Statut du Score` → `Statut du score`
-  - `Mon Score` → `Mon score`
-  - `Prochaine Lettre` → `Prochaine lettre`
-  - `Catégorisation par Difficulté` → `Catégorisation par difficulté`
-  - `Charts Sauvegardées` → `Charts sauvegardées` (keep `Charts` capitalized as proper-noun loanword)
-- **`Recorded On` → `Enregistré Le {0}`.** `Le` should be lowercase — French preposition mid-sentence: `Enregistré le {0}`.
-
-### Gender treatment of `Charts`
-
-The English loanword `Charts` is treated inconsistently as masculine and feminine across entries:
-
-- **Feminine:** `Charts terminées`, `Charts Sauvegardées`, `Chart Suggérée`.
-- **Masculine:** `Charts Restants`, `Charts ToDo`.
-
-Pick one. Brazilian PIU community treats `chart` as masculine; French community usage isn't established in this file. Recommend **feminine** (`la chart`, `les charts`) to match the most-recent entries (`Sauvegardées`, `Suggérée`), and sweep `Restants` → `Restantes`. Or pick masculine and sweep the others. Either way, do it in one batch.
-
-### Show / Hide verb inconsistency
-
-- **`Show X` mostly uses `Montrer`** (`Montrer les Compétences`, `Montrer la Difficulté`, `Montrer le Nom de la Chanson`, `Montrer le Step Artist`, `Montrer l'ancienneté`).
-- **Two entries use `Afficher`** (`Afficher la Distribution des Scores`, `Afficher Seulement les Charts ToDo`).
-
-Both verbs are valid French; converge on one. Recommend **`Montrer`** since it has 5 entries vs 2.
+Only the worst Title Case offenders were fixed. Plenty remains (`Sauvegarder les Scores`, `Nombre de Charts`, `Nombre de Notes Min/Max`, `Très Facile / Très Difficile`, `Ouvrir Vidéo`, `Chart Suggérée`, `Statistiques Joueur`, `Vue Textuelle`, `Classement par Score`, …). Standard French is **sentence case**; a one-shot sweep to lowercase non-initial, non-proper-noun words is still recommended — separate diff, not mixed into a feature batch.
 
 ### Questionable word choices
 
 - **`Public` → `Publique`.** `Publique` is the feminine singular form. As a generic on/off label whose grammatical antecedent isn't in the key, the masculine `Public` would be safer. The comment (`(on/off, si le compte est configuré en tant que publique)`) implies the antecedent is `[la visibilité]`, justifying feminine — but as a bare label this is fragile. Compare `Make Public` → `Rendre public` (masculine), so the file is internally split.
 - **`Score Loss` → `Perte de Score liée aux {0}`.** Adds `liée` (feminine, agrees with `Perte`) and `aux` (plural). Works for plural masculine judgment terms (`Goods`, `Greats`, `Bads`, `Misses`). For singular or ambiguous placeholders the agreement may be wrong. The English source is `{0} Score Loss` (e.g. "Goods Score Loss") — known to be plural in current usage, so this is currently safe but fragile.
 - **`Progress Charts` → `Statistiques Joueur`.** "Player statistics" rather than literal "progress charts" — interpretive, like nabulator's ja-JP `進捗中の譜面` for `Player Stats`. May or may not be the right call depending on the page-context label.
-- **`Plate` → `Plaque`.** Literal French translation. Other locales (ja-JP, ko-KR, pt-BR) keep `Plate` or use a phonetic loanword. The PIU community in France probably uses `Plate` in conversation; `Plaque` reads as an over-translation. Consider switching to `Plate`. The comment lists `MG, PG, UG` (in-game tier names) which stay untranslated regardless.
-- **`Song Artist` → `Song Artist` (untranslated).** All other Song compounds translate (`Nom de la chanson`, `Image de la chanson`, etc.). Should likely be `Artiste de la chanson` (or `Compositeur` if treated as composer like ko-KR's 작곡자). Currently the only Song compound left in English.
-- **`Song Type` → `Type de Chanson`** uses Title Case while sibling Song compounds (`Nom de la chanson`, `Image de la chanson`, `Durée de la chanson`) use sentence case. Should be `Type de chanson`.
-- **`Qualifiers Leaderboard` → `{0} Leaderboard de Qualification`** uses singular `Qualification`; **`Qualifiers Submission` → `{0} envois pour qualifications`** uses plural `qualifications`. English is plural in both. Pick one (recommend `qualifications` plural) and sweep.
-- **`CoOp Aggregation` → `Aggregation des CoOps`.** `Aggregation` is the English spelling — French is `Agrégation`. Also the plural `CoOps` is unusual; English-source writers usually treat `CoOp` as a non-count noun. Recommend `Agrégation des CoOp` (no plural `s`).
+- **`Plate` → `Plaque`.** Literal French translation. Other locales (ja-JP, ko-KR, pt-BR, it-IT) keep `Plate` or use a phonetic loanword. The PIU community in France probably uses `Plate` in conversation; `Plaque` reads as an over-translation. Consider switching to `Plate`. The comment lists `MG, PG, UG` (in-game tier names) which stay untranslated regardless.
 
 ### Typographic spacing
 
@@ -273,7 +234,7 @@ French typography requires a non-breaking space (`U+00A0`, `&#160;` in resx) bef
 
 - `Création de compte?` — no space (should be `Création de compte ?`)
 - `succès !` — regular ASCII space (should be `succès !`)
-- `C'est votre premier envoi !  Assurez vous` — regular space + double space (should be `envoi ! Assurez-vous` with single trailing space)
+- `C'est votre premier envoi ! Assurez-vous` — regular ASCII space (should be `envoi ! Assurez-vous` with NBSP)
 - `NB : la perte` — regular space (should be `NB :`)
 - `NB:` — no space (inconsistent with `NB :`)
 
@@ -285,7 +246,7 @@ The 405 entries added on 2026-04-26 made structural choices that should be honor
 
 ### Conventions committed by the bulk batch
 
-- **`Charts` is feminine.** All new agreement-bearing entries treat `Chart`/`Charts` as feminine (`Chart sauvegardée`, `Chart sélectionnée`, `Charts répétées`). This aligns with the most-recent older entries (`Charts Sauvegardées`, `Chart Suggérée`, `Charts terminées`). The two older masculine outliers (`Charts Restants`, `Charts ToDo`) remain to fix in a future sweep.
+- **`Charts` is feminine.** All new agreement-bearing entries treat `Chart`/`Charts` as feminine (`Chart sauvegardée`, `Chart sélectionnée`, `Charts répétées`). This aligns with the older entries (`Charts sauvegardées`, `Chart Suggérée`, `Charts terminées`); the last masculine outliers (`Charts Restants`) were swept to `Charts Restantes` in the 2026-07 QC pass.
 - **Sentence case is the new default.** New entries use sentence case throughout (`Niveau Min`, `Score moyen`, `Détails du chart`, `Distribution des plaques`). The older Title Case entries are not retro-fixed in this batch.
 - **`Show` → `Montrer` only.** `Afficher` was not used in any new entry.
 - **`Hide` → `Masquer`.**
@@ -300,7 +261,7 @@ The 405 entries added on 2026-04-26 made structural choices that should be honor
 - **`PUMBILITY` (uppercase) preserved.** When the source has `PUMBILITY` in caps, the value mirrors that. Lowercase `Pumbility` would be used elsewhere (none yet).
 - **`Leaderboard` reserved for the `Leaderboard` keyword.** New compound forms: `Leaderboard mensuel`, `Leaderboard du chart`, `Leaderboard des Bounties`, `Leaderboards officiels`, `Leaderboards de complétion`, `Leaderboards UCS`. `Classement(s)` is reserved for `Score Ranking(s)` / `World Rankings`.
 - **Decimal separator: comma.** `0,5`, `9,6` in prose. Half-width Arabic numerals.
-- **Critical-bug fix shipped.** Added correct `Pass (Data Backed)` resx entry. The orphan broken-key entry from the previous file remains and should be deleted in a follow-up.
+- **Critical-bug fix shipped.** Added correct `Pass (Data Backed)` resx entry. (The orphan broken-key entry it replaced was deleted in the 2026-07 QC pass.)
 
 ### Established term mappings added 2026-04-26
 
@@ -591,6 +552,6 @@ Short labels (column headers, button text) are likely fine.
 2. List its English keys (`grep -oP '(?<=L\[")[^"]+' ScoreTracker/ScoreTracker/Pages/<Folder>/**/*.razor` or similar).
 3. Cross-reference against `App.fr-FR.resx` to find which are missing.
 4. Translate using this glossary. **If a new term needs a decision, add a row to "Established term mappings" before translating.**
-5. For inconsistency fixes (e.g. converging `Montrer`/`Afficher`, fixing the wrong-direction `Télécharger`/`Téléverser`, fixing the broken `Pass (Avec Données)` key, sweeping Title Case to sentence case, normalizing French typographic spacing), do **one batch per category** so the diff is reviewable.
+5. For the remaining inconsistency fixes (the full Title Case → sentence case sweep, French typographic NBSP normalization, the `Plaque`→`Plate` question if adopted), do **one batch per category** so the diff is reviewable.
 6. `dotnet build ScoreTracker/ScoreTracker.sln -c Release` to confirm resx well-formedness.
 7. PR titled like `Translate <Folder> to fr-FR` or `Fix fr-FR <inconsistency>`.

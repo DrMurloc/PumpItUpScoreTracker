@@ -13,7 +13,7 @@ For the localization mechanism itself (resx layout, `L["..."]` usage, key conven
 - **Spacing around English brand names mid-sentence.** Korean inserts a space between Hangul and embedded Latin tokens: `Phoenix 점수 계산기`, `Score Tracker 소개`, `Score Tracker에는 암호가...` (the particle `에는` attaches directly with no space, but the word boundary before the brand name has a space). Match the existing examples; particles attach to whichever side is grammatically attached.
 - **Preserve positional placeholders verbatim.** `{0}`, `{1}`, `{2}` go into the value untouched, in whatever order Korean grammar wants. Example: key `Remaining Charts` (English value `{0} (SSS+) - {1} (AA) Charts Remaining`) → ko-KR value `{0} (SSS+) - {1} (AA) 남은 채보`. Example: key `Remaining Charts For You` → `{0}개의 채보가 남았습니다` (counter `개` follows the placeholder, then particle).
 - **Skip prose with inline markup.** Per CLAUDE.md, `<MudText>` bodies with embedded `<MudLink>`/other elements stay hardcoded English. Don't extract them, don't translate them.
-- **Honorific `님` for proper names in credits.** Same role as Japanese `さん`. Examples: `Mr_WEQ 님에게 감사드립니다`, `daryen님에게 감사드립니다`. Note: existing entries are inconsistent on the space before `님` (`Mr_WEQ 님` vs `daryen님`). Recommend **no space** before `님` — that's the more standard form. See Known issues.
+- **Honorific `님` for proper names in credits.** Same role as Japanese `さん`. Examples: `Mr_WEQ님에게 감사드립니다`, `daryen님에게 감사드립니다`. **No space** before `님` — the file is converged on that form.
 
 ## Established term mappings
 
@@ -83,8 +83,8 @@ These have at least one existing translation in `App.ko-KR.resx`. New translatio
 
 | English | ko-KR | Notes |
 |---|---|---|
-| Chart(s) | 채보 | Translated, not loanword. Plural "Charts" → 채보들 (with 들 marker). Used compositionally: `채보 목록`, `채보 종류`, `채보 갯수`, `저장된 채보`, `남은 채보`, `진행중인 채보`, `목표 채보`, `채보 무작위 생성기`. **Don't switch to 차트 mid-file** (one legacy entry uses 차트 — see Known issues). |
-| Chart List Share | 차트 목록 공유 | One legacy `Chart List Share Description` uses 차트; everywhere else is 채보. See Known issues. |
+| Chart(s) | 채보 | Translated, not loanword. Plural "Charts" → 채보들 (with 들 marker). Used compositionally: `채보 목록`, `채보 종류`, `채보 갯수`, `저장된 채보`, `남은 채보`, `진행중인 채보`, `목표 채보`, `채보 무작위 생성기`, `채보 찾기`. **Don't switch to 차트 mid-file** — new batches keep drifting to 차트 and getting swept back (three entries fixed in the 2026-07 QC pass). |
+| Chart List Share | 채보 목록 공유 | The Description prose uses 채보 목록 too. |
 | CoOp | 코옵 | **Translated** (loanword in Hangul), unlike ja-JP/pt-BR which keep "CoOp" English. "CoOp Aggregation" → 코옵 난이도 (rendered as "CoOp difficulty" — see Known issues). |
 | Singles / Doubles | 싱글 / 더블 | Loanwords in Hangul, not 단식/복식. |
 | Difficulty Level | 난이도 | (Repeated from generic UI for cross-reference.) |
@@ -94,7 +94,7 @@ These have at least one existing translation in `App.ko-KR.resx`. New translatio
 | Plate | 플레이트 | Loanword (Hangul). |
 | Pass (verb / noun for clearing a chart) | 클리어 / 성공 | Mixed. "Hide Completed Charts" → 클리어한 차트 숨기기 (uses Konglish 클리어한 = "cleared"); "Passed Count" → 성공; "Not Passed Count" → 실패; "Stage Pass" — not yet present. The pass/fail dyad is 성공/실패 for counts; 클리어 for the verb sense. |
 | Score | 점수 | Translated (not loanword). "Score" → 점수, "Score State" → 기록 상태 (note: 기록 = "record"), "My Score" → 내 점수, "Score Loss" → "{0} 점수 감소", "Save Scores" → 점수 저장, "Official Scores" → 공식 점수, "Score Range" → score-range (in shoutout: 점수 등급의 범위). |
-| Score (occasionally) | 스코어 | "Download Scores" → 스코어 다운로드 — one entry uses Konglish 스코어 instead of 점수. Inconsistency — see Known issues. |
+| Score (occasionally) | ~~스코어~~ | The lone Konglish outlier (`Download Scores` → 스코어 다운로드) was swept to 점수 다운로드; the file is uniformly 점수 now. |
 | Phoenix Score Calculator | Phoenix 점수 계산기 | |
 | Score Loss | 점수 감소 | "{0} Score Loss" → "{0} 점수 감소" (placeholder is the magnitude). |
 | Note Count | (none yet) | Not yet present in ko-KR. |
@@ -107,7 +107,7 @@ These have at least one existing translation in `App.ko-KR.resx`. New translatio
 | Qualifiers | 예선과제 | Rendered as "preliminary task." "Qualifiers Leaderboard" → "{0} 예선과제 등수", "Qualifiers Submission" → "{0} 예선과제 제출". |
 | Rating | 레이팅 | Loanword (Hangul). "Max Rating" → 최고 레이팅, "Rating Calculator" → 레이팅 계산기. |
 | Pumbility | (none yet) | Not yet translated. Recommend leaving as `Pumbility` (proper-noun loanword) per the Phoenix/XX pattern. |
-| Song | 음악 / 노래 | **Inconsistent.** Bare "Song" → 음악 ("music"); compounds use 노래 ("song"): `Song Name` → 노래 이름, `Song Image` → 노래 이미지, `Song Type` → 노래 종류, `Song Duration` → 노래 길이. See Known issues — should converge on one. |
+| Song | 노래 | Converged on 노래 (bare "Song" had been 음악): `Song Name` → 노래 이름, `Song Image` → 노래 이미지, `Song Type` → 노래 종류, `Song Duration` → 노래 길이. |
 | Song Artist | 작곡자 | Rendered as "composer." |
 | Suggested Chart | 추천 채보 | |
 | Title (in-game title award) | 칭호 | (Cross-reference: same as generic UI Title.) |
@@ -136,20 +136,9 @@ These have at least one existing translation in `App.ko-KR.resx`. New translatio
 
 ## Known issues / native review needed
 
-These were carried over from the existing translations and should be reviewed by a native speaker. Keep structural and quality changes separate diffs.
+The mechanical items originally tracked here were fixed in the 2026-07 QC pass: bare `Song` converged on 노래; the Konglish 차트 outliers swept to 채보 (`Hide Completed Charts`, `Chart List Share Description`, plus two newer drifts `Find a chart` and the Daily Step caption); `Download Scores` swept to 점수 다운로드; `님` spacing converged on no-space (`Mr_WEQ님에게`); the broken placeholder order in `Log In With X` fixed to `{0} 계정으로 로그인` (the 계정으로 form sidesteps the 로/으로 particle alternation on English brand names); `Recorded On X` fixed to `{0}에 기록됨`; and the trailing spaces in Phoenix Import Info 4 / Phoenix Import Saving Failures trimmed. What remains is judgment territory:
 
-### Inconsistencies
-
-- **`Song` → 음악 vs 노래.** Bare `Song` → 음악, but every `Song X` compound (`Song Name`, `Song Image`, `Song Type`, `Song Duration`) → 노래 X. Pick one: 노래 is the more colloquial fit; 음악 is more formal/musical. Recommend **converging on 노래** since the compounds outnumber the bare entry 4:1.
-- **`Charts` → 채보 (consistent) except `Hide Completed Charts` → 클리어한 차트 숨기기.** That one entry uses Konglish 차트 instead of the file-wide 채보. Should be 클리어한 채보 숨기기.
-- **`Score` → 점수 (consistent) except `Download Scores` → 스코어 다운로드.** That one entry uses Konglish 스코어. Should be 점수 다운로드 to match the rest of the file (`Save Scores` → 점수 저장, `Official Scores` → 공식 점수).
-- **Honorific `님` spacing.** `Mr_WEQ 님에게` (with space) vs `daryen님에게` (no space). Korean style guide recommends **no space before `님`** — converge on `Mr_WEQ님에게`.
 - **Loanword vs translation policy is not uniform.** `Charts` translated (채보) but `Plate` loanworded (플레이트); `Letter Grade` loanworded (랭크) but `Tier List` translated (서열표); `Leaderboard` loanworded (리더보드) but `World Rankings` partly-translated (세계 랭킹). The choices are individually defensible but the mix can feel arbitrary. No action recommended — document and continue, but note the pattern when adding new terms (default toward the choice the most-similar existing term made).
-
-### Placeholder-order issues
-
-- **`Log In With X` → "로 로그인 {0}".** Korean grammar wants `{0}로 로그인` (placeholder before the particle `로`). The current value is grammatically broken — placeholder comes after the particle that's supposed to attach to it. Should be `{0}로 로그인` or `{0} 계정으로 로그인`.
-- **`Recorded On X` → "기록됨 {0}".** Korean wants `{0}에 기록됨` (placeholder + temporal particle `에` + verb). Current rendering puts the verb before the date, which reads awkwardly.
 - **`Phoenix Import Saving Progress` → "{0}/{1} 업로드됨 {2} 남음 {3} 기록 실패".** Four-placeholder string with no connecting punctuation; reads as a terse status line. Acceptable but spartan; a native pass might add commas (`{0}/{1} 업로드됨, {2} 남음, {3} 기록 실패`).
 
 ### Questionable word choices
@@ -161,7 +150,7 @@ These were carried over from the existing translations and should be reviewed by
 - **`CoOp Aggregation` → 코옵 난이도.** `난이도` means "difficulty," not "aggregation." The aggregation in question is the calculated CoOp difficulty score, so the rendering is contextually correct but lexically off — equivalent to ja-JP's `集合` / `集計` confusion. Better candidate: 코옵 집계.
 - **`Username` → 아이디.** Standard Korean web UI but a loanword for a noun that has native Korean equivalents (사용자 이름, 사용자명, 닉네임). 아이디 reads natural for login forms; if `Username` ever appears as a generic profile-display label, 닉네임 might fit better.
 - **`Starting Page` → 홈페이지.** Rendered as "homepage" rather than "starting page" — context-dependent (was used for the Phoenix-import script's start-from-page param). If `Starting Page` ever appears in a different context, this rendering will mislead.
-- **`Score Range Shoutout` mixes 점수 (translated) and 스코어 (loanword).** "데이터 수집과 점수 등급의 범위" uses 점수, consistent with the file. No issue here — flagging only as a contrast to the `Download Scores` entry that uses 스코어 instead.
+- **`Score Range Shoutout`** — "데이터 수집과 점수 등급의 범위" uses 점수, consistent with the file-wide convention. No issue; kept here as the reference example for the 점수-everywhere rule.
 
 ## Open decisions (terms upcoming batches will need)
 
