@@ -86,12 +86,15 @@
 }
 
 @code {
+    // Serializable parameters only: a Chart record faults the circuit if passed to an island,
+    // so the island takes the id and self-loads (docs/design/chart-details-overhaul.md).
     [Parameter]
-    public Chart? Chart { get; set; }
+    public Guid ChartId { get; set; }
 
     [Parameter]
     public MixEnum Mix { get; set; } = MixEnum.Phoenix;
 
+    private Chart? Chart { get; set; }
     private RecordedPhoenixScore? _best;
     private ScoreRankingRecord? _ranking;
     private int? _ageDays;
@@ -105,8 +108,11 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!CurrentUser.IsLoggedIn || Chart == null || Chart.Id == _loadedFor) return;
-        _loadedFor = Chart.Id;
+        // Everything here is personal, so anonymous renders nothing and skips the load.
+        if (!CurrentUser.IsLoggedIn || ChartId == _loadedFor) return;
+        _loadedFor = ChartId;
+        Chart = (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: new[] { ChartId }))).FirstOrDefault();
+        if (Chart == null) return;
         await LoadBest();
         _journey = (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray();
     }

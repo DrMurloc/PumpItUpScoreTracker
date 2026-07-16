@@ -7,12 +7,24 @@
 @using ScoreTracker.Web.Services.Contracts
 @namespace ScoreTracker.Web.Components
 @if (Song != null)
-{                                
-    <MudTooltip Text=@($"{Song.Name} - {Song.Artist}") ShowOnFocus="true">
-        <MudImage tabindex="0" Src=@Song.ImagePath.ToString() Height=@(Height ?? (Small?22:35)) Alt=@($"{Song.Name} - {Song.Artist}") ObjectFit="ObjectFit.ScaleDown"></MudImage>
+{
+    @* MudTooltip renders a popover, which throws in static SSR (no provider in the static
+       tree). The tooltip is a hover affordance, so a static render drops it and keeps the
+       image; in a circuit it comes back. *@
+    @if (RendererInfo.IsInteractive)
+    {
+        <MudTooltip Text=@($"{Song.Name} - {Song.Artist}") ShowOnFocus="true">
+            @Image
         </MudTooltip>
+    }
+    else
+    {
+        @Image
+    }
 }
 @code {
+    private RenderFragment Image => @<MudImage tabindex="0" Src=@Song!.ImagePath.ToString() Height=@(Height ?? (Small ? 22 : 35)) Alt=@($"{Song.Name} - {Song.Artist}") ObjectFit="ObjectFit.ScaleDown"></MudImage>;
+
     [Parameter]
     [Required]
     public Song? Song { get; set; }

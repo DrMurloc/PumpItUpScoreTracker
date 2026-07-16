@@ -98,7 +98,7 @@
 
     private bool _playing;
 
-    private string Href => $"/Chart/{Chart.Id}";
+    private string Href => Chart.CanonicalPath();
 
     /// <summary>
     ///     The jacket gets its own wrapper so "fill the 16:9 box" can be said about it

@@ -216,6 +216,7 @@ builder.Services.AddBlazorApplicationInsights()
     .AddHttpContextAccessor()
     .AddHttpClient()
     .AddHostedService<BotHostedService>()
+    .AddHostedService<ChartPageCacheWarmer>()
     .AddMediatR(o =>
     {
         o.RegisterServicesFromAssemblies(

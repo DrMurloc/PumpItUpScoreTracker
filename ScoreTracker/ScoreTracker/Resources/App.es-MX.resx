@@ -4328,4 +4328,10 @@
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>Los puntajes importados aparecerán aquí a medida que lleguen.</value>
   </data>
+  <data name="Page not found" xml:space="preserve">
+    <value>Página no encontrada</value>
+  </data>
+  <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
+    <value>No hay nada en esta dirección — quizá se movió con una versión, o nunca existió. La búsqueda conoce todos los charts.</value>
+  </data>
 </root>

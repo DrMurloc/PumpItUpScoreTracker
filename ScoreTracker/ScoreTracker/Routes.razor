@@ -4,9 +4,9 @@
 @* The router renders statically: each page declares its own circuit
    (@rendermode RenderModes.Interactive), so interactivity is per page and a page converts
    to static SSR by deleting its line. The layout renders statically around every page.
-   Unmatched routes are the framework's: a real 404 with an empty body — a branded
-   not-found page is NotFoundPage polish, recorded in the SSR ladder docs. *@
-<Router AppAssembly="@typeof(App).Assembly">
+   Unmatched routes re-execute into the branded not-found page — still a true HTTP 404,
+   but with the MISS screen in the body instead of emptiness. *@
+<Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
     </Found>

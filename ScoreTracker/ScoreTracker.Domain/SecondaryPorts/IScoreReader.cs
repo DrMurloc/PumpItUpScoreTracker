@@ -22,6 +22,13 @@ public interface IScoreReader
     Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> GetScores(MixEnum mix, ChartType chartType,
         DifficultyLevel level, CancellationToken cancellationToken);
 
+    /// <summary>
+    ///     Every player's best attempt on ONE chart — an indexed per-chart read, so a caller
+    ///     that only wants a single chart's population doesn't scan the whole folder for it.
+    /// </summary>
+    Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> GetChartScores(MixEnum mix, Guid chartId,
+        CancellationToken cancellationToken);
+
     /// <summary>Best attempts for a set of players within a level range in a mix.</summary>
     Task<IEnumerable<RecordedPhoenixScore>> GetScores(MixEnum mix, IEnumerable<Guid> userIds, ChartType chartType,
         DifficultyLevel minimumLevel, DifficultyLevel maximumLevel, CancellationToken cancellationToken);

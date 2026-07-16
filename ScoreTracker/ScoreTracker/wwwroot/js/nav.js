@@ -49,9 +49,10 @@
     // top, because the keyboard takes the bottom half the moment its input focuses.
     // Both are static shell HTML; the search sheet's autocomplete is an island INSIDE it,
     // which is why the chrome opens from here and not from a circuit.
+    var SEARCH_SHEET = { sheet: '[data-search-sheet]', button: '[data-search-btn]', focus: 'input' };
     var SHEETS = [
         { sheet: '[data-more-sheet]', button: '[data-more-btn]' },
-        { sheet: '[data-search-sheet]', button: '[data-search-btn]', focus: 'input' }
+        SEARCH_SHEET
     ];
 
     function sheetNode(spec) {
@@ -185,9 +186,37 @@
         if (openMenu) positionMenu(openMenu);
     }
 
-    // ===== Public surface (MainLayout and ShellImportPulse call these) =====
+    // ===== Public surface (MainLayout, ShellImportPulse and static pages call these) =====
 
     window.shell = {
+        // The two search bars are viewport-exclusive: phones get the sheet (which focuses
+        // its own input), desktop's search already sits in the app bar so opening it just
+        // means focusing it. Must run in the caller's click stack for the iOS keyboard.
+        openSearch: function () {
+            // Geometry, not computed display: the bottom nav hides by display:none on the
+            // WRAPPER, which leaves the button's own computed display untouched — but a
+            // hidden ancestor zeroes the rect. Opening the sheet on desktop shows only its
+            // scrim (the sheet itself is mobile-only): a dark screen and nothing else.
+            var button = document.querySelector(SEARCH_SHEET.button);
+            if (button && button.getBoundingClientRect().width > 0) {
+                closeSheets();
+                setSheet(SEARCH_SHEET, true);
+                return;
+            }
+            var field = document.querySelector('.shell-appbar .appbar-search input');
+            if (!field) return;
+            field.focus();
+            // Focus alone is easy to miss up in the app bar — flash the field once.
+            var wrap = field.closest('.appbar-search');
+            if (!wrap) return;
+            wrap.classList.remove('search-flash');
+            void wrap.offsetWidth; // restart the animation on a second click
+            wrap.classList.add('search-flash');
+            wrap.addEventListener('animationend', function done() {
+                wrap.classList.remove('search-flash');
+                wrap.removeEventListener('animationend', done);
+            });
+        },
         // Dock and focus classes live on <html> because the shell that reacts to them is
         // outside the Blazor root that knows about them.
         setDockState: function (hasDock, focusMode) {
