@@ -74,9 +74,9 @@ internal sealed class ChartVerdictHandler : IRequestHandler<GetChartVerdictQuery
         var letterPercentiles = letters?.Percentiles
             .ToDictionary(kv => kv.Key, kv => kv.Value / 100.0);
 
-        var records = (await _scores.GetScores(mix, chart.Type, chart.Level, cancellationToken))
-            .Where(s => s.Record.ChartId == chartId)
-            .ToArray();
+        // Just this chart's population — an indexed per-chart read, not a whole-folder scan
+        // that kept one chart's rows and threw the rest away.
+        var records = (await _scores.GetChartScores(mix, chartId, cancellationToken)).ToArray();
         var scored = records.Where(r => r.Record.Score != null).ToArray();
         var clears = scored.Where(r => !r.Record.IsBroken).ToArray();
 
