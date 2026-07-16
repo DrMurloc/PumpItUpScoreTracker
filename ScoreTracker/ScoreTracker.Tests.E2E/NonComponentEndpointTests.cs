@@ -94,15 +94,19 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
     }
 
     /// <summary>
-    ///     Unmatched routes used to answer 200 with an empty app shell — a soft-404 to
-    ///     every crawler. Under the static router the framework answers a real 404.
+    ///     Unmatched routes fall to the catch-all page, whose NotFound() renders the branded
+    ///     not-found page in the same response: a true HTTP 404 for crawlers, the MISS screen
+    ///     inside the shell for a human.
     /// </summary>
     [Fact]
-    public async Task UnknownRoutesAnswer404()
+    public async Task UnknownRoutesAnswer404WithTheMissPage()
     {
         var response = await _client.GetAsync("/this-route-does-not-exist");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("nf-miss", body);
+        Assert.Contains("shell-appbar", body);
     }
 
     /// <summary>Crawlers discover the sitemap through robots.txt, not Search Console alone.</summary>

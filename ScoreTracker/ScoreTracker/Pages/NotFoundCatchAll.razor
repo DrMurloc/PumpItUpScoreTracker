@@ -1,0 +1,28 @@
+@page "/{*NotFoundPath}"
+@inject NavigationManager Nav
+
+@* Unmatched URLs land here — a catch-all carries the lowest route precedence, so every
+   real page, controller, and file wins first. Calling NotFound() makes the renderer
+   answer a true HTTP 404 and swap the Router's NotFoundPage (the branded MISS screen)
+   into this same response; setting the status by hand instead would make the renderer
+   skip the body entirely. api/* and dev/* answer bots, so they keep bare-status 404s. *@
+
+@code {
+    [Parameter] public string? NotFoundPath { get; set; }
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    protected override void OnInitialized()
+    {
+        var path = HttpContext?.Request.Path ?? default;
+        if (path.StartsWithSegments("/api") || path.StartsWithSegments("/dev"))
+        {
+            if (HttpContext is { Response.HasStarted: false })
+                HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        Nav.NotFound();
+    }
+}

@@ -4322,4 +4322,13 @@
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>As pontuações importadas aparecerão aqui conforme chegarem.</value>
   </data>
+  <data name="Page not found" xml:space="preserve">
+    <value>Página não encontrada</value>
+  </data>
+  <data name="Looks like your path was a" xml:space="preserve">
+    <value>Parece que seu caminho foi um</value>
+  </data>
+  <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
+    <value>Não há nada neste endereço — pode ter se movido com uma versão, ou nunca existiu. A busca conhece todos os charts.</value>
+  </data>
 </root>

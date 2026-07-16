@@ -22,7 +22,11 @@ public sealed class RenderModeDeclarationTests
     {
         // The chart page: real HTML for crawlers, its circuit-needing sections islanded
         // (docs/design/chart-details-overhaul.md).
-        "ChartDetails.razor"
+        "ChartDetails.razor",
+        // The branded 404: pure links and a static image — nothing needs a circuit.
+        "NotFound.razor",
+        // The unmatched-route catch-all: renders nothing itself, it routes into NotFound.
+        "NotFoundCatchAll.razor"
     };
 
     [Fact]

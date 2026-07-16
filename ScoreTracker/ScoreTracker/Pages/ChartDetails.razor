@@ -163,6 +163,7 @@
 @inject ICurrentUserAccessor CurrentUser
 @inject IUiSettingsAccessor UiSettings
 @inject ChartUrlResolver UrlResolver
+@inject NavigationManager Nav
 @code {
     // The canonical vanity route. The GUID permalink and legacy /Record live in
     // ChartPermalinkController, which 301s them here; historical (mix, song, level) triples
@@ -172,8 +173,9 @@
     [Parameter] public string DifficultySlug { get; set; } = "";
 
     // Static SSR runs inside the live request, so the page issues its own 301 to canonical
-    // (a static component's NavigateTo is a 302, which doesn't consolidate signals) and a
-    // real 404 for an unknown chart.
+    // (a static component's NavigateTo is a 302, which doesn't consolidate signals). An
+    // unknown chart goes through NotFound(): the renderer answers 404 and swaps in the
+    // Router's NotFoundPage — setting the status by hand would skip the body instead.
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
 
@@ -214,7 +216,7 @@
         if (resolution == null)
         {
             _chart = null;
-            SetStatus(404);
+            Nav.NotFound();
             return;
         }
 
@@ -240,7 +242,7 @@
         if (chart == null)
         {
             _chart = null;
-            SetStatus(404);
+            Nav.NotFound();
             return;
         }
 
@@ -257,10 +259,5 @@
             ? chips
             : Array.Empty<ChartSkillChipRecord>();
         _analysis = await Mediator.Send(new GetChartStepAnalysisQuery(chart.Id));
-    }
-
-    private void SetStatus(int code)
-    {
-        if (HttpContext is { Response.HasStarted: false }) HttpContext.Response.StatusCode = code;
     }
 }

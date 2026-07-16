@@ -49,9 +49,10 @@
     // top, because the keyboard takes the bottom half the moment its input focuses.
     // Both are static shell HTML; the search sheet's autocomplete is an island INSIDE it,
     // which is why the chrome opens from here and not from a circuit.
+    var SEARCH_SHEET = { sheet: '[data-search-sheet]', button: '[data-search-btn]', focus: 'input' };
     var SHEETS = [
         { sheet: '[data-more-sheet]', button: '[data-more-btn]' },
-        { sheet: '[data-search-sheet]', button: '[data-search-btn]', focus: 'input' }
+        SEARCH_SHEET
     ];
 
     function sheetNode(spec) {
@@ -183,9 +184,22 @@
         if (openMenu) positionMenu(openMenu);
     }
 
-    // ===== Public surface (MainLayout and ShellImportPulse call these) =====
+    // ===== Public surface (MainLayout, ShellImportPulse and static pages call these) =====
 
     window.shell = {
+        // The two search bars are viewport-exclusive: phones get the sheet (which focuses
+        // its own input), desktop's search already sits in the app bar so opening it just
+        // means focusing it. Must run in the caller's click stack for the iOS keyboard.
+        openSearch: function () {
+            var button = document.querySelector(SEARCH_SHEET.button);
+            if (button && getComputedStyle(button).display !== 'none') {
+                closeSheets();
+                setSheet(SEARCH_SHEET, true);
+                return;
+            }
+            var field = document.querySelector('.shell-appbar .appbar-search input');
+            if (field) field.focus();
+        },
         // Dock and focus classes live on <html> because the shell that reacts to them is
         // outside the Blazor root that knows about them.
         setDockState: function (hasDock, focusMode) {
