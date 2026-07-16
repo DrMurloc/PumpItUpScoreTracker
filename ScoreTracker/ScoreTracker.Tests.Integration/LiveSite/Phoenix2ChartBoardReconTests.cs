@@ -42,11 +42,13 @@ public sealed class Phoenix2ChartBoardReconTests : IClassFixture<PiuGameSessionF
         // Raw-fetch the 20+ list so the recon still reports when the strict parser's
         // markup assumptions have drifted; board ids come from the link pattern alone.
         string[] boardIds = Array.Empty<string>();
+        // The unfiltered list leads with the top levels, whose fresh boards are sparse —
+        // the level-20 filter is where the crowded boards (and the depth answer) live.
         foreach (var listUrl in new[]
                  {
                      "https://piugame.com/leaderboard/over_ranking.php?lv=&search=&&page=1",
                      "https://piugame.com/leaderboard/over_ranking.php",
-                     "https://piugame.com/leaderboard/over_ranking.php?lv=24"
+                     "https://piugame.com/leaderboard/over_ranking.php?lv=20"
                  })
         {
             var listResponse = await client.GetAsync(listUrl, ct);
@@ -60,16 +62,22 @@ public sealed class Phoenix2ChartBoardReconTests : IClassFixture<PiuGameSessionF
                 ?.Count ?? 0;
             var ids = System.Text.RegularExpressions.Regex
                 .Matches(listHtml, @"over_ranking_view\.php\?no=([a-zA-Z0-9+/=%]+)")
-                .Select(m => m.Groups[1].Value).Distinct().Take(3).ToArray();
+                .Select(m => m.Groups[1].Value).Distinct().Take(8).ToArray();
             _output.WriteLine(
                 $"list {listUrl}: HTTP {(int)listResponse.StatusCode}, {listHtml.Length} chars, " +
                 $"strict-parse rows={listRows}, regex ids={ids.Length}, " +
                 $"errorPage={listHtml.Contains("오류안내")} → {fileName}");
-            if (ids.Length > 0 && boardIds.Length == 0) boardIds = ids;
+            // The last list that yields ids wins, so the level-filtered (crowded) boards
+            // are the ones probed.
+            if (ids.Length > 0) boardIds = ids;
         }
 
         Assert.NotEmpty(boardIds);
 
+        // Probe every collected board; the deepest one answers whether a full board
+        // serves its whole roster (up to the site's 300 cap) on a single page.
+        var deepestRows = 0;
+        string? deepestHtml = null;
         foreach (var boardId in boardIds)
         {
             var page1 = await FetchBoardHtml(client, boardId, page: null, ct);
@@ -82,11 +90,18 @@ public sealed class Phoenix2ChartBoardReconTests : IClassFixture<PiuGameSessionF
                 $"board {boardId}: page1 rows={rows1} " +
                 $"nextIcon={HasIcon(page1, "next")} lastIcon={HasIcon(page1, "last")} first='{firstRow1}' | " +
                 $"page2 rows={rows2} first='{firstRow2}' samePage={firstRow1 == firstRow2}");
-            await File.WriteAllTextAsync(Path.Combine(dumpDir, $"board_{boardId.Replace("/", "_").Replace("=", "")}_p1.html"), page1, ct);
-            await File.WriteAllTextAsync(Path.Combine(dumpDir, $"board_{boardId.Replace("/", "_").Replace("=", "")}_p2.html"), page2, ct);
+            if (rows1 > deepestRows)
+            {
+                deepestRows = rows1;
+                deepestHtml = page1;
+            }
 
             Assert.True(rows1 > 0, $"Board {boardId} parsed zero rows — over_ranking_view markup drifted.");
         }
+
+        _output.WriteLine($"deepest board this run: {deepestRows} rows on page 1");
+        if (deepestHtml != null)
+            await File.WriteAllTextAsync(Path.Combine(dumpDir, "deepest_board_p1.html"), deepestHtml, ct);
     }
 
     private async Task<string> FetchBoardHtml(HttpClient client, string songId, int? page, CancellationToken ct)
