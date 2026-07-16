@@ -89,7 +89,8 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
 
         var urls = document.Descendants(ns + "loc").Select(loc => loc.Value).ToArray();
         Assert.Contains("https://piuscores.arroweclip.se/Welcome", urls);
-        Assert.Contains(urls, url => url.StartsWith("https://piuscores.arroweclip.se/Chart/"));
+        // Canonical vanity URLs, never GUIDs — the seeded Conflict S20 sits at its slug path.
+        Assert.Contains("https://piuscores.arroweclip.se/Charts/phoenix/conflict/s20", urls);
     }
 
     /// <summary>

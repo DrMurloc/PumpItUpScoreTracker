@@ -20,6 +20,13 @@ public sealed record ChartUrlResolution(Guid ChartId, string CanonicalPath);
 /// </summary>
 public sealed class ChartUrlResolver
 {
+    /// <summary>
+    ///     The site's anonymous default mix — the one the canonical namespace lives in.
+    ///     Canonical paths resolve against this regardless of the viewer's selected mix, so
+    ///     a chart has exactly one canonical URL. Flips per mix era (mass 301 migration).
+    /// </summary>
+    public const MixEnum DefaultMix = MixEnum.Phoenix;
+
     private static readonly IReadOnlyDictionary<string, MixEnum> MixesBySlug =
         Enum.GetValues<MixEnum>().ToDictionary(ChartSlugs.MixSlug, m => m);
 

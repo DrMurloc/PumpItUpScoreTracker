@@ -1,6 +1,4 @@
-@page "/Record"
-@page "/Chart"
-@page "/Chart/{ChartId:guid}"
+@page "/Charts/{MixSlug}/{SongSlug}/{DifficultySlug}"
 @using MediatR
 @using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
@@ -60,7 +58,7 @@
                         }
                         else
                         {
-                            <a href="@($"/Chart/{sibling.Id}")"><DifficultyBubble Chart="sibling" Small="true"></DifficultyBubble></a>
+                            <a href="@sibling.CanonicalPath()"><DifficultyBubble Chart="sibling" Small="true"></DifficultyBubble></a>
                         }
                     }
                 </div>
@@ -164,12 +162,18 @@
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject IUiSettingsAccessor UiSettings
+@inject ChartUrlResolver UrlResolver
 @code {
-    [Parameter]
-    public Guid? ChartId { get; set; }
+    // The canonical vanity route. The GUID permalink and legacy /Record live in
+    // ChartPermalinkController, which 301s them here; historical (mix, song, level) triples
+    // resolve to the same chart and 301 to its canonical below.
+    [Parameter] public string MixSlug { get; set; } = "";
+    [Parameter] public string SongSlug { get; set; } = "";
+    [Parameter] public string DifficultySlug { get; set; } = "";
 
-    // Static SSR runs inside the live request, so an unknown chart can answer a real 404
-    // instead of a 200 empty state a crawler would index.
+    // Static SSR runs inside the live request, so the page issues its own 301 to canonical
+    // (a static component's NavigateTo is a 302, which doesn't consolidate signals) and a
+    // real 404 for an unknown chart.
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
 
@@ -203,20 +207,40 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        // One load per chart id — the old page's init/params double-fetch is dead.
-        if (ChartId == null)
+        // Resolve the URL triple against its own mix's catalog (the mix segment timestamps
+        // the level), yielding the chart and its canonical path.
+        var resolution = await UrlResolver.ResolveHistorical(MixSlug, SongSlug, DifficultySlug,
+            ChartUrlResolver.DefaultMix, HttpContext?.RequestAborted ?? default);
+        if (resolution == null)
         {
+            _chart = null;
+            SetStatus(404);
+            return;
+        }
+
+        // A historical, stale, or mixed-case slug 301s to canonical — a real redirect, so the
+        // signals consolidate onto one lowercase URL. Case-sensitive on purpose: the canonical
+        // is always lowercase, so a lowercase request matches and renders while any other
+        // casing normalizes with a single hop.
+        var requestPath = HttpContext?.Request.Path.Value;
+        if (requestPath != null && !requestPath.Equals(resolution.CanonicalPath, StringComparison.Ordinal)
+                                && HttpContext is { Response.HasStarted: false })
+        {
+            HttpContext.Response.StatusCode = 301;
+            HttpContext.Response.Headers.Location = resolution.CanonicalPath;
             _chart = null;
             return;
         }
 
-        if (_chart?.Id == ChartId) return;
-        var chart = (await Mediator.Send(new GetChartsQuery(_mix, ChartIds: new[] { ChartId.Value })))
+        if (_chart?.Id == resolution.ChartId) return;
+        // The URL names the chart; it renders in the viewer's own mix (scores, verdict and
+        // leaderboard are per-mix). A chart absent from that mix falls to the empty state.
+        var chart = (await Mediator.Send(new GetChartsQuery(_mix, ChartIds: new[] { resolution.ChartId })))
             .FirstOrDefault();
         if (chart == null)
         {
             _chart = null;
-            if (HttpContext is { Response.HasStarted: false }) HttpContext.Response.StatusCode = 404;
+            SetStatus(404);
             return;
         }
 
@@ -233,5 +257,10 @@
             ? chips
             : Array.Empty<ChartSkillChipRecord>();
         _analysis = await Mediator.Send(new GetChartStepAnalysisQuery(chart.Id));
+    }
+
+    private void SetStatus(int code)
+    {
+        if (HttpContext is { Response.HasStarted: false }) HttpContext.Response.StatusCode = code;
     }
 }

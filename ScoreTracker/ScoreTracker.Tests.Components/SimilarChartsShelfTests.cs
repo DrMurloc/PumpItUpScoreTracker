@@ -563,7 +563,9 @@ public sealed class SimilarChartsShelfTests : TestContext
         var cut = RenderCard(badges: Badge("bracket", 0.5));
 
         var link = cut.Find(".chart-card-title a.chart-card-golink");
-        Assert.StartsWith("/Chart/", link.GetAttribute("href"));
+        // The canonical vanity URL — /Charts/{mix}/{song}/{difficulty} — is what crawlers
+        // index and in-app links build directly (the GUID permalink 301s to it).
+        Assert.StartsWith("/Charts/", link.GetAttribute("href"));
     }
 
     [Fact]
