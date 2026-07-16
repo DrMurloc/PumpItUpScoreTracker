@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.OfficialMirror.Infrastructure.Entities;
 
 namespace ScoreTracker.Tests.E2E.Support;
 
@@ -178,6 +179,76 @@ public sealed class E2ESeedData
     ///     lists the /TierLists page loads ("Pass Count", "Scores", "Official Scores",
     ///     "Popularity"); category is a TierListCategory enum name.
     /// </summary>
+    /// <summary>
+    ///     One sealed official-leaderboard snapshot with a chart board, two players, their
+    ///     placements, one PG world-first highlight, and a popularity row — the smallest
+    ///     dataset that lights up every hub view. Returns the top player's username.
+    /// </summary>
+    public async Task<string> SeedOfficialSnapshotAsync(Guid chartId, string chartBoardName,
+        DateTimeOffset sealedAt, CancellationToken cancellationToken = default)
+    {
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        var snapshot = new OfficialLeaderboardSnapshotEntity
+        {
+            MixId = PhoenixMixId,
+            StartedAt = sealedAt.AddMinutes(-40),
+            CompletedAt = sealedAt,
+            Stage = "Sealed",
+            BoardsExpected = 1,
+            BoardsWritten = 1
+        };
+        context.Set<OfficialLeaderboardSnapshotEntity>().Add(snapshot);
+        var board = new OfficialLeaderboardEntity
+        {
+            MixId = PhoenixMixId,
+            LeaderboardType = "Chart",
+            Name = chartBoardName,
+            ChartId = chartId,
+            ChartType = "Double",
+            Level = 26
+        };
+        context.Set<OfficialLeaderboardEntity>().Add(board);
+        var champion = new OfficialPlayerEntity
+            { MixId = PhoenixMixId, Username = "E2ECHAMP", LastSeenAt = sealedAt };
+        var runnerUp = new OfficialPlayerEntity
+            { MixId = PhoenixMixId, Username = "E2ERUNNER", LastSeenAt = sealedAt };
+        context.Set<OfficialPlayerEntity>().AddRange(champion, runnerUp);
+        await context.SaveChangesAsync(cancellationToken);
+
+        context.Set<OfficialLeaderboardPlacementEntity>().AddRange(
+            new OfficialLeaderboardPlacementEntity
+            {
+                SnapshotId = snapshot.Id, LeaderboardId = board.Id, PlayerId = champion.Id, Place = 1,
+                Score = 1_000_000
+            },
+            new OfficialLeaderboardPlacementEntity
+            {
+                SnapshotId = snapshot.Id, LeaderboardId = board.Id, PlayerId = runnerUp.Id, Place = 2,
+                Score = 995_000
+            });
+        context.Set<OfficialWeeklyHighlightEntity>().Add(new OfficialWeeklyHighlightEntity
+        {
+            SnapshotId = snapshot.Id,
+            MixId = PhoenixMixId,
+            Kind = "ChartGradeFirst",
+            SortOrder = 1,
+            PlayerId = champion.Id,
+            LeaderboardId = board.Id,
+            ChartId = chartId,
+            ChartType = "Double",
+            Level = 26,
+            GradeBand = "PG",
+            Score = 1_000_000,
+            PrevValue = 998_000
+        });
+        context.Set<OfficialChartPopularityEntity>().Add(new OfficialChartPopularityEntity
+        {
+            SnapshotId = snapshot.Id, ChartId = chartId, Place = 1
+        });
+        await context.SaveChangesAsync(cancellationToken);
+        return champion.Username;
+    }
+
     public async Task SeedTierListEntryAsync(string tierListName, Guid chartId, string category, int order,
         CancellationToken cancellationToken = default)
     {
