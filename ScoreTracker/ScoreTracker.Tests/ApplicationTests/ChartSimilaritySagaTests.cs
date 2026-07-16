@@ -307,15 +307,16 @@ public sealed class ChartSimilaritySagaTests
     }
 
     [Fact]
-    public async Task TheOppositeChartIsTheWorstMatchInReachRatherThanTheBest()
+    public async Task TheLeastSimilarChartsAreWorstFirstRatherThanBest()
     {
-        // The graph banks the twenty nearest, so the furthest is the one thing ranking
-        // never keeps — it has to be computed. Anchor is all brackets; the joke is the
-        // chart that shares none of them.
+        // The graph banks the twenty nearest, so the furthest are what ranking never keeps
+        // — they have to be computed. Anchor is all brackets; the joke leads with the chart
+        // that shares none of them.
         var anchor = new ChartBuilder().WithSongName("Anchor").WithType(ChartType.Double).WithLevel(21).Build();
         var alike = new ChartBuilder().WithSongName("Alike").WithType(ChartType.Double).WithLevel(21).Build();
+        var middling = new ChartBuilder().WithSongName("Middling").WithType(ChartType.Double).WithLevel(21).Build();
         var opposite = new ChartBuilder().WithSongName("Opposite").WithType(ChartType.Double).WithLevel(21).Build();
-        var all = new[] { anchor, alike, opposite };
+        var all = new[] { anchor, alike, middling, opposite };
         SetupScoringLevels();
         _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(all);
@@ -323,14 +324,39 @@ public sealed class ChartSimilaritySagaTests
         {
             [anchor.Id] = new Dictionary<string, double> { ["bracket"] = 1.0 },
             [alike.Id] = new Dictionary<string, double> { ["bracket"] = 0.9 },
+            [middling.Id] = new Dictionary<string, double> { ["bracket"] = 0.4, ["twist_90"] = 0.6 },
             [opposite.Id] = new Dictionary<string, double> { ["twist_90"] = 1.0 }
         });
         SetupStepAnalyses(all.ToDictionary(c => c.Id, _ => Analysis(10)));
 
-        var result = await BuildSaga().Handle(new GetOppositeChartQuery(anchor.Id), CancellationToken.None);
+        var result = await BuildSaga().Handle(new GetLeastSimilarChartsQuery(anchor.Id), CancellationToken.None);
 
-        Assert.NotNull(result);
-        Assert.Equal(opposite.Id, result!.ChartId);
+        // Worst first — the shelf always opens with the most of whatever it is showing.
+        Assert.Equal(new[] { opposite.Id, middling.Id, alike.Id }, result.Select(r => r.ChartId));
+    }
+
+    [Fact]
+    public async Task TheLeastSimilarChartsStopAtTheCountAsked()
+    {
+        var (anchor, _) = SetupLivePool();
+
+        var result = await BuildSaga().Handle(new GetLeastSimilarChartsQuery(anchor.Id, Count: 1),
+            CancellationToken.None);
+
+        Assert.Single(result);
+    }
+
+    [Fact]
+    public async Task TheLeastSimilarChartsAreEmptyForAChartTheCrawlNeverCovered()
+    {
+        var missing = new ChartBuilder().WithSongName("Ghost").WithType(ChartType.Double).WithLevel(21).Build();
+        SetupScoringLevels();
+        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+        SetupBadges(new Dictionary<Guid, IReadOnlyDictionary<string, double>>());
+        SetupStepAnalyses(new Dictionary<Guid, ChartStepAnalysisRecord>());
+
+        Assert.Empty(await BuildSaga().Handle(new GetLeastSimilarChartsQuery(missing.Id), CancellationToken.None));
     }
 
     [Fact]

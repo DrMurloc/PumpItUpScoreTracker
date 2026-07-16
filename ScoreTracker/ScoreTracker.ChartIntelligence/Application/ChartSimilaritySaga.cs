@@ -36,7 +36,7 @@ namespace ScoreTracker.ChartIntelligence.Application;
 internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarityCommand>,
     IRequestHandler<GetSimilarChartsQuery, IReadOnlyList<ChartSimilarityRecord>>,
     IRequestHandler<GetFilteredSimilarChartsQuery, FilteredSimilarChartsRecord>,
-    IRequestHandler<GetOppositeChartQuery, ChartSimilarityRecord?>
+    IRequestHandler<GetLeastSimilarChartsQuery, IReadOnlyList<ChartSimilarityRecord>>
 {
     private static readonly ChartType[] SimilarityChartTypes = { ChartType.Single, ChartType.Double };
 
@@ -158,11 +158,11 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
                && (request.MaxNps == null || nps <= request.MaxNps);
     }
 
-    public async Task<ChartSimilarityRecord?> Handle(GetOppositeChartQuery request,
+    public async Task<IReadOnlyList<ChartSimilarityRecord>> Handle(GetLeastSimilarChartsQuery request,
         CancellationToken cancellationToken)
     {
         var pool = await BuildPoolFor(request.Mix, request.ChartId, cancellationToken);
-        if (pool == null) return null;
+        if (pool == null) return Array.Empty<ChartSimilarityRecord>();
         var (anchor, anchorChart, features, charts) = pool.Value;
 
         var window = ChartSimilarityCalculator.LevelWindow;
@@ -172,9 +172,10 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
             .Select(c => features[c.Id])
             .ToArray();
 
-        // BuildEdgesFor ranks best-first; the joke is at the other end.
+        // BuildEdgesFor ranks best-first; the joke is at the other end, and the worst of
+        // them leads — the shelf always opens with the most of whatever it is showing.
         return ChartSimilarityCalculator.BuildEdgesFor(anchor, targets, features.Values.ToArray())
-            .Select(ToRecord).LastOrDefault();
+            .Reverse().Take(request.Count).Select(ToRecord).ToArray();
     }
 
     /// <summary>

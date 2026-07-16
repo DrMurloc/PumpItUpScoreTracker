@@ -4323,14 +4323,14 @@
   <data name="This chart has no {0} on record" xml:space="preserve">
     <value>Mrgl dis chart got no {0} on recordrgl</value>
   </data>
-  <data name="Show the least matching chart instead" xml:space="preserve">
-    <value>Mrgl show da least matching chartrgl instead</value>
+  <data name="Show the least matching charts instead" xml:space="preserve">
+    <value>Mrgl show da least matching chartzrgl instead</value>
   </data>
-  <data name="One chart, chosen for being nothing like this one." xml:space="preserve">
-    <value>One chartrgl, picked for bein nothin like dis one.</value>
+  <data name="{0} charts, chosen for being nothing like this one." xml:space="preserve">
+    <value>{0} chartzrgl, picked for bein nothin like dis one.</value>
   </data>
-  <data name="Of everything within reach, this is the least like it." xml:space="preserve">
-    <value>Of everythin within reachrgl, dis is da least like it.</value>
+  <data name="Of everything within reach, these are the least like it." xml:space="preserve">
+    <value>Of everythin within reachrgl, dese is da least like it.</value>
   </data>
   <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
     <value>Da opposite gets picked from everythin in reachrgl, so rangesrgl don't apply to it</value>

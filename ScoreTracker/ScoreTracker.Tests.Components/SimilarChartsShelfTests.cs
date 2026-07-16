@@ -343,18 +343,19 @@ public sealed class SimilarChartsShelfTests : TestContext
         var anchor = Guid.NewGuid();
         var good = Edge(0.9, Badge("bracket", 0.5));
         var worst = Edge(0.02, Badge("bracket", 0.01));
-        SetupEdges(anchor, new[] { good, worst }, levels: null);
-        _mediator.Setup(m => m.Send(It.IsAny<GetOppositeChartQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(worst);
+        var alsoBad = Edge(0.05, Badge("bracket", 0.02));
+        SetupEdges(anchor, new[] { good, worst, alsoBad }, levels: null);
+        _mediator.Setup(m => m.Send(It.IsAny<GetLeastSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { worst, alsoBad });
         var cut = OpenPanel(RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor)));
 
         cut.Find(".chart-shelf-fopposite input").Change(true);
         cut.Find(".chart-shelf-fgo").Click();
 
-        // One card, and it is the terrible one — not the two the graph would have shown, and
-        // not tucked under the near-miss disclosure where a 0.02 would normally land.
+        // The two terrible ones — not the good one the graph would have led with, and not
+        // tucked under the near-miss disclosure where a 0.02 would normally land.
         Assert.Contains("the least like it", cut.Markup);
-        Assert.Single(cut.FindAll(".chart-shelf .chart-card-title h3"));
+        Assert.Equal(2, cut.FindAll(".chart-shelf .chart-card-title h3").Count);
         Assert.Empty(cut.FindAll(".chart-shelf-nearmiss"));
     }
 
@@ -381,8 +382,8 @@ public sealed class SimilarChartsShelfTests : TestContext
         var good = Edge(0.9, Badge("bracket", 0.5));
         var worst = Edge(0.02, Badge("bracket", 0.01));
         SetupEdges(anchor, new[] { good, worst }, levels: null);
-        _mediator.Setup(m => m.Send(It.IsAny<GetOppositeChartQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(worst);
+        _mediator.Setup(m => m.Send(It.IsAny<GetLeastSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { worst });
         var cut = OpenPanel(RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor)));
         cut.Find(".chart-shelf-fopposite input").Change(true);
         cut.Find(".chart-shelf-fgo").Click();

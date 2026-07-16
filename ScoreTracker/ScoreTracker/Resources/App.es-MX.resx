@@ -4280,14 +4280,14 @@
   <data name="This chart has no {0} on record" xml:space="preserve">
     <value>No hay {0} registrado para este chart</value>
   </data>
-  <data name="Show the least matching chart instead" xml:space="preserve">
-    <value>Mostrar el chart menos parecido</value>
+  <data name="Show the least matching charts instead" xml:space="preserve">
+    <value>Mostrar los charts menos parecidos</value>
   </data>
-  <data name="One chart, chosen for being nothing like this one." xml:space="preserve">
-    <value>Un chart, elegido por no parecerse en nada a este.</value>
+  <data name="{0} charts, chosen for being nothing like this one." xml:space="preserve">
+    <value>{0} charts, elegidos por no parecerse en nada a este.</value>
   </data>
-  <data name="Of everything within reach, this is the least like it." xml:space="preserve">
-    <value>De todo lo que está al alcance, esto es lo menos parecido.</value>
+  <data name="Of everything within reach, these are the least like it." xml:space="preserve">
+    <value>De todo lo que está al alcance, estos son los menos parecidos.</value>
   </data>
   <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
     <value>El opuesto se elige entre todo lo que está al alcance, así que los rangos no se le aplican</value>

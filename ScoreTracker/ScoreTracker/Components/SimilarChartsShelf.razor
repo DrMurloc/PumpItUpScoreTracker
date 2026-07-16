@@ -95,14 +95,6 @@
                     </label>
                 }
             </div>
-            @* Not a filter and it knows it: it asks the opposite question rather than narrowing
-               this one, and it is picked from everything in reach — so it cannot honour the
-               ranges, and they go quiet rather than lying about applying. Down here because
-               it is a joke, and a joke does not get to be top-level furniture. *@
-            <label class="chart-shelf-fopposite">
-                <input type="checkbox" checked="@_opposite" disabled="@Busy" @onchange="ToggleOpposite"/>
-                <span>@L["Show the least matching chart instead"]</span>
-            </label>
             @foreach (var dimension in Dimensions.Where(d => _filters[d.Key].On && !_opposite))
             {
                 var state = _filters[dimension.Key];
@@ -113,6 +105,14 @@
                                   ValueMinChanged="v => SetRange(key, v, null)"
                                   ValueMaxChanged="v => SetRange(key, null, v)"/>
             }
+            @* Not a filter and it knows it: it asks the opposite question rather than narrowing
+               this one, and it is picked from everything in reach — so it cannot honour the
+               ranges, and they go quiet rather than lying about applying. Last, under a rule,
+               because it is a joke, and a joke does not get to be top-level furniture. *@
+            <label class="chart-shelf-fopposite">
+                <input type="checkbox" checked="@_opposite" disabled="@Busy" @onchange="ToggleOpposite"/>
+                <span>@L["Show the least matching charts instead"]</span>
+            </label>
             @* The count is the honest half of Apply: it is computed from the same numbers the
                server filters on, so what it promises is what comes back — and it says so
                before the click rather than after. *@
@@ -124,7 +124,7 @@
                     }
                     else if (_opposite)
                     {
-                        @L["One chart, chosen for being nothing like this one."]
+                        @L["{0} charts, chosen for being nothing like this one.", OppositeCount]
                     }
                     else
                     {
@@ -156,11 +156,14 @@
     @* The opposite skips the floor by construction — it is the furthest chart in reach, so it
        scores below any bar worth having and the near-miss machinery would file the joke under
        "didn't quite make the cut". It is not competing; it is the punchline. *@
-    @if (_oppositeEntry != null)
+    @if (_oppositeEntries.Count > 0)
     {
-        <p class="chart-shelf-reach">@L["Of everything within reach, this is the least like it."]</p>
+        <p class="chart-shelf-reach">@L["Of everything within reach, these are the least like it."]</p>
         <div class="chart-shelf">
-            @Card(_oppositeEntry)
+            @foreach (var entry in _oppositeEntries)
+            {
+                @Card(entry)
+            }
         </div>
     }
     else if (_matches.Count == 0 && _nearMisses.Count == 0)
@@ -318,7 +321,8 @@
         _facts = Array.Empty<Facts>();
         _filtersOpen = false;
         _opposite = false;
-        _oppositeEntry = null;
+        _oppositeApplied = false;
+        _oppositeEntries = Array.Empty<Entry>();
         _compared = null;
         _sort = ShelfSort.PassDifficulty;
         _personalized = false;
@@ -357,10 +361,21 @@
     /// <summary>
     ///     The graph hands over its whole tail; where the bar falls is ours, and so is the
     ///     order — similarity is never re-scored here.
+    ///     The opposites get ordered like anything else — a lens reorders away from match
+    ///     order, and "least similar first" is just another match order — but they skip the
+    ///     floor: they are the furthest charts in reach, so every one is under any bar worth
+    ///     having and the split would file the whole joke under "didn't quite make the cut".
     /// </summary>
     private async Task Split()
     {
         var ordered = await Ordered(_all);
+        if (_oppositeApplied)
+        {
+            _oppositeEntries = ordered;
+            _matches = _nearMisses = Array.Empty<Entry>();
+            return;
+        }
+
         _matches = ordered.Where(e => e.Record.Score >= ScoreFloor).ToArray();
         _nearMisses = ordered.Where(e => e.Record.Score < ScoreFloor).Take(NearMissCount).ToArray();
     }
@@ -531,15 +546,23 @@
     private bool _filtersOpen;
     private bool _loadingFacts;
 
+    /// <summary>How many opposites are funny before the joke becomes a list.</summary>
+    internal const int OppositeCount = 6;
+
     /// <summary>
-    ///     The joke mode (docs/design/chart-similarity.md): show the chart in reach that is
-    ///     *least* like this one. Held apart from <see cref="_matches" /> because it is not
-    ///     competing on the same scale — it is the furthest thing away, so it scores under
-    ///     any floor and the near-miss list would swallow it.
+    ///     The joke mode (docs/design/chart-similarity.md §5.1): show the charts in reach
+    ///     that are *least* like this one. Held apart from <see cref="_matches" /> because
+    ///     they are not competing on the same scale — they are the furthest things away, so
+    ///     they score under any floor and the near-miss list would swallow them.
+    ///     Two flags rather than one: this is what the panel has *selected*, and
+    ///     <see cref="_oppositeApplied" /> is what the shelf is *showing*. Splitting them is
+    ///     what stops a sort click, made after ticking the box but before pressing Apply,
+    ///     from re-filing the real matches as opposites.
     /// </summary>
     private bool _opposite;
 
-    private Entry? _oppositeEntry;
+    private bool _oppositeApplied;
+    private IReadOnlyList<Entry> _oppositeEntries = Array.Empty<Entry>();
     private IReadOnlyList<Facts> _facts = Array.Empty<Facts>();
     private readonly Dictionary<FilterDimension, FilterState> _filters =
         Dimensions.ToDictionary(d => d.Key, _ => new FilterState());
@@ -735,6 +758,9 @@
             var result = await Mediator.Send(query);
             _applied = applied;
             _compared = result.ChartsCompared;
+            // Applying ranges after the joke goes back to real matches; Split reads this.
+            _oppositeApplied = false;
+            _oppositeEntries = Array.Empty<Entry>();
             await Load(result.Matches);
         }
         finally
@@ -744,27 +770,21 @@
     }
 
     /// <summary>
-    ///     One card, and it is allowed to be terrible — that is the joke. Computed live
-    ///     because the graph banks the twenty *nearest*, and the furthest is by construction
-    ///     the one thing that ranking never keeps.
+    ///     Six cards, and they are allowed to be terrible — that is the joke. Computed live
+    ///     because the graph banks the twenty *nearest*, and the furthest are by
+    ///     construction the ones that ranking never keeps.
     /// </summary>
     private async Task ApplyOpposite()
     {
         _sorting = true;
         try
         {
-            var record = await Mediator.Send(new GetOppositeChartQuery(ChartId, Mix));
+            var records = await Mediator.Send(new GetLeastSimilarChartsQuery(ChartId, Mix, OppositeCount));
             _applied = Array.Empty<ActiveFilter>();
             _compared = null;
-            if (record == null)
-            {
-                _oppositeEntry = null;
-                return;
-            }
-
-            await Load(new[] { record });
-            _oppositeEntry = _all.FirstOrDefault();
-            _matches = _nearMisses = Array.Empty<Entry>();
+            _oppositeApplied = true;
+            _oppositeEntries = Array.Empty<Entry>();
+            if (records.Count > 0) await Load(records);
         }
         finally
         {
@@ -774,10 +794,11 @@
 
     private async Task ClearFilter()
     {
-        var wasNarrowed = _applied.Count > 0 || _oppositeEntry != null;
+        var wasNarrowed = _applied.Count > 0 || _oppositeApplied;
         foreach (var state in _filters.Values) state.On = false;
         _opposite = false;
-        _oppositeEntry = null;
+        _oppositeApplied = false;
+        _oppositeEntries = Array.Empty<Entry>();
         _applied = Array.Empty<ActiveFilter>();
         _compared = null;
         // Clearing a filter that never ran has nothing to put back, and re-reading the graph
