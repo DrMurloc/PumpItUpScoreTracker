@@ -18,6 +18,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="~/" />
     <title>@L["PIU Scores"]</title>
+    @* One page, three routes ("/Welcome", "/Login", and anonymous "/" redirecting in):
+       the canonical is what tells a crawler they are the same result. The description is
+       the hero's own pitch line — one string, already in every locale. No og:image yet;
+       the site has no share-card asset. *@
+    <link rel="canonical" href="https://piuscores.arroweclip.se/Welcome" />
+    <meta name="description" content="@L["PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play."]" />
+    <meta property="og:title" content="@L["PIU Scores"]" />
+    <meta property="og:description" content="@L["PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play."]" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://piuscores.arroweclip.se/Welcome" />
     @* The shipped theme tokens — same single source as the Blazor shell (MixThemes),
        so this page can never drift from the site palette. Anonymous visitors resolve
        to Phoenix by the same rule the layout uses. *@

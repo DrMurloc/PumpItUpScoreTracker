@@ -1,20 +1,35 @@
-﻿using System.Net.Mime;
+using System.Text;
 using System.Xml.Linq;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
-using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Web.Controllers
 {
     [Route("")]
     public sealed class SitemapController : Controller
     {
+        // Children never inherit an XML namespace: every element must carry it explicitly,
+        // or it serializes as <url xmlns=""> and validators reject the whole file.
+        private static readonly XNamespace Ns = "http://www.sitemaps.org/schemas/sitemap/0.9";
+
+        private readonly IMediator _mediator;
+
+        public SitemapController(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
+
         [ApiExplorerSettings(IgnoreApi = true)]
         [Route("sitemap.xml")]
-        public async Task<IActionResult> GetSitemap([FromServices] IChartRepository _charts)
+        public async Task<IActionResult> GetSitemap(CancellationToken cancellationToken)
         {
-            var charts = (await _charts.GetCharts(MixEnum.Phoenix)).ToArray();
-            var pages = charts.Select(chart => $"https://piuscores.arroweclip.se/Chart/{chart.Id}").ToList();
+            var charts = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken)).ToArray();
+            // The front door: anonymous "/" and "/Login" both resolve to the same page,
+            // which canonicalizes itself to /Welcome — only the canonical is listed.
+            var pages = new List<string> { "https://piuscores.arroweclip.se/Welcome" };
+            pages.AddRange(charts.Select(chart => $"https://piuscores.arroweclip.se/Chart/{chart.Id}"));
             pages.Add("https://piuscores.arroweclip.se/TierLists");
             // Tier-lists overhaul C3: one canonical URL per Singles/Doubles folder that
             // actually has charts — each is an indexable community tier list.
@@ -29,15 +44,31 @@ namespace ScoreTracker.Web.Controllers
             pages.Add("https://piuscores.arroweclip.se/LifeCalculator");
             pages.Add("https://piuscores.arroweclip.se/PhoenixToXXCalculator");
 
+            var urlset = new XElement(Ns + "urlset",
+                pages.Select(page => new XElement(Ns + "url", new XElement(Ns + "loc", page))));
+            var document = new XDocument(new XDeclaration("1.0", "utf-8", null), urlset);
 
-            var ns = "{http://www.sitemaps.org/schemas/sitemap/0.9}";
-            var urlset = new XElement(ns + "urlset");
+            // ToString() drops the XML declaration; Save through a writer is what emits it.
+            var xml = new StringBuilder();
+            using (var writer = new Utf8StringWriter(xml))
+            {
+                document.Save(writer);
+            }
 
-            foreach (var t in pages)
-                urlset.Add(new XElement("url",
-                    new XElement("loc", t)
-                ));
-            return Content(urlset.ToString(), MediaTypeNames.Application.Xml);
+            return Content(xml.ToString(), "application/xml; charset=utf-8");
+        }
+
+        /// <summary>
+        ///     StringWriter reports UTF-16, and XDocument.Save writes the writer's encoding
+        ///     into the declaration — this pins it to the UTF-8 the response actually ships.
+        /// </summary>
+        private sealed class Utf8StringWriter : StringWriter
+        {
+            public Utf8StringWriter(StringBuilder builder) : base(builder)
+            {
+            }
+
+            public override Encoding Encoding => Encoding.UTF8;
         }
     }
 }
