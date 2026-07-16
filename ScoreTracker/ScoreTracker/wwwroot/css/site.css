@@ -4848,3 +4848,12 @@ button.chart-card-art {
         grid-template-columns: 1fr;
     }
 }
+
+/* /UploadPhoenixScores - the manual-import expander's numbered steps. */
+.import-manual-steps {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}

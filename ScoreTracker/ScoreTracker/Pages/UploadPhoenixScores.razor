@@ -14,8 +14,6 @@
 @using CsvHelper
 @using System.Globalization
 @using System.Security.Authentication
-@using MassTransit
-@using Microsoft.OpenApi;
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.SharedKernel.Enums
@@ -28,349 +26,275 @@
 @using ScoreTracker.Web.Services.UiNotifications
 @using ScoreTracker.Web.Shared
 @implements IDisposable
-<PageTitle>@L["Import Phoenix Scores"]</PageTitle>
+<PageTitle>@L["Import Scores"]</PageTitle>
 
-<MudCard >
-    <MudCardHeader><h2>@L["Import Phoenix Scores"]</h2></MudCardHeader>
+@* The form is the page (design doc D1/D2): credentials, options and Import sit above the fold;
+   the script/CSV flow lives in the manual-import expander below. *@
+<MudCard>
+    <MudCardHeader><h2>@L["Import Scores"]</h2></MudCardHeader>
     <MudCardContent>
-        @switch (_currentStep)
+        <MudText Typo="Typo.body2" Class="mb-4">@L["Import Lede"]</MudText>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6">
+                @if (_hasStoredCredential)
+                {
+                    @* Saved credential replaces the username/password fields — the rest of the
+                       import (options, game card) proceeds normally against it. *@
+                    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Lock" Dense="true">
+                        <div class="d-flex align-center flex-wrap" style="gap:.5rem">
+                            <span>@L["Saved on this device"]</span>
+                            <MudButton Size="Size.Small" Disabled="_isImporting"
+                                       OnClick="ForgetSavedCredentials">@L["Forget here"]</MudButton>
+                        </div>
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudTextField Label="@L["PIUGame.com Username"]" Disabled="_isImporting" @bind-Value="_username"></MudTextField>
+                    <MudTextField InputType="InputType.Password" Disabled="_isImporting" Label="@L["PIUGame.com Password"]"
+                                  HelperText="@L["Import Password Helper"]" @bind-Value="_password"></MudTextField>
+                }
+                @if (_cards.Any())
+                {
+                    <MudSelect T="string" Value="_selectedId" ValueChanged="SelectId" Label="@L["Game Card"]">
+                        @foreach (var gameCard in _cards)
+                        {
+                            <MudSelectItem T="string" Value="@gameCard.Id">@gameCard.GameTag</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                else if (!string.IsNullOrWhiteSpace(_selectedId))
+                {
+                    <MudTooltip Text="@_selectedGameTag">
+                        <MudText Typo="Typo.body2" Class="mt-2">
+                            @L["Game Card"]: @_selectedGameTag
+                        </MudText>
+                    </MudTooltip>
+                }
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudCheckBox T="bool" Label="@L["Include Broken Scores"]" @bind-Value="_includeBroken" Disabled="_isImporting"></MudCheckBox>
+                <MudText Typo="Typo.caption" Class="ml-10 d-block">@L["Import Broken Helper"]</MudText>
+                <MudCheckBox T="bool" Value="_rememberPassword" ValueChanged="OnRememberChanged" Disabled="_isImporting"
+                             Label="@L["Remember my password on this device"]"></MudCheckBox>
+                <MudCheckBox T="bool" Label="@L["Also send scores to piutracker.app"]" Disabled="_isImporting"
+                             Value="_alsoImportPiuTracker" ValueChanged="d=>SetPiuTrackerImport(d)"></MudCheckBox>
+                @if (_alsoImportPiuTracker && !_isPublic)
+                {
+                    <MudText Typo="Typo.caption" Class="ml-10 d-block" Color="Color.Warning">@L["PIU Tracker is fully public — scores you send there are public even if your profile isn't."]</MudText>
+                }
+            </MudItem>
+            @if (_mergeInviteUserId != null)
+            {
+                <MudItem xs="12">
+                    <MudAlert Severity="Severity.Info">
+                        @L["An account with game tag {0} already exists, is that you?", _mergeInviteTag]
+                        <MudButton Class="ml-2" Variant="Variant.Filled" Color="Color.Info" Size="Size.Small"
+                                   Href="@($"/Account/Merge?with={_mergeInviteUserId}&returnUrl={System.Web.HttpUtility.UrlEncode("/UploadPhoenixScores")}")">@L["Review and merge"]</MudButton>
+                    </MudAlert>
+                </MudItem>
+            }
+            @if (_isImporting)
+            {
+                <MudItem xs="12">
+                    @if (!_scores.Any())
+                    {
+                        <MudText>@_importStatus</MudText>
+                    }
+                    <MudText Typo="Typo.caption">@L["You can leave this page."]</MudText>
+                </MudItem>
+            }
+            @if (_importCompleted && CurrentUser.User.IsPublic)
+            {
+                <MudItem xs="12">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Timeline"
+                               Href="@($"/Player/{CurrentUser.User.Id}/Sessions")"
+                               data-testid="view-session-link">
+                        @L["View your session"]
+                    </MudButton>
+                </MudItem>
+            }
+            @if (_errors.Any())
+            {
+                <MudItem xs="12">
+                    @foreach (var error in _errors)
+                    {
+                        <MudText Color="Color.Error">@error</MudText>
+                    }
+                </MudItem>
+            }
+            @if (_isImporting && !_scores.Any())
+            {
+                @* The incoming results, shaped before they arrive (UX rule 9). *@
+                <MudItem xs="12">
+                    @for (var i = 0; i < 3; i++)
+                    {
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="48px" Class="mb-2 rounded"></MudSkeleton>
+                    }
+                </MudItem>
+            }
+            @if (_scores.Any())
+            {
+                <MudItem xs="12">
+                    <MudTable T="RecordedPhoenixScore" Items="_scores">
+                        <ToolBarContent>
+                            <MudText>@_importStatus</MudText>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh>@L["Song"]</MudTh>
+                            <MudTh>@L["Difficulty"]</MudTh>
+                            <MudTh>@L["Score"]</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                <SongImage Song="_charts[context.ChartId].Song"></SongImage>
+                            </MudTd>
+                            <MudTd>
+                                <DifficultyBubble Chart="_charts[context.ChartId]"></DifficultyBubble>
+                            </MudTd>
+                            <MudTd>
+                                <ScoreBreakdown Score="context.Score" Plate="context.Plate" ShowScore="true" OneLine="true"
+                                                Ranking="_rankings.TryGetValue(context.ChartId, out var r) ? r : null"></ScoreBreakdown>
+                            </MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager></MudTablePager>
+                        </PagerContent>
+                    </MudTable>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudCardContent>
+    <MudCardActions>
+        <MudSpacer></MudSpacer>
+        @* Card switching needs the typed password (a saved credential stays sealed), so it's
+           only offered on the typed path. *@
+        @if (!_cards.Any() && !string.IsNullOrWhiteSpace(_selectedId) && !_hasStoredCredential)
         {
-            case Step.Information when IsImportGated:
-                @* Phoenix 2: the copy-paste script scrapes the Phoenix 1 site, so it is gated with
-                   the rest of the official import. Manual spreadsheet upload below stays available. *@
-                <ComingSoon Message="@L["Coming soon — score import for Phoenix 2 will open after hardware verification."].Value"></ComingSoon>
+            <MudButton Variant="Variant.Outlined"
+                       Disabled="_isImporting || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.ChangeCircle"
+                       OnClick="LoadCards">@L["Change Card"]</MudButton>
+        }
+        @* The phone-width Import lives in the page dock; this is its desktop seat. *@
+        <MudButton Variant="Variant.Filled"
+                   Class="shell-desktop-only"
+                   Disabled="@ImportDisabled"
+                   Color="Color.Primary"
+                   StartIcon="@(_isImporting ? null : Icons.Material.Filled.ImportExport)"
+                   OnClick="ImportScores">
+            @if (_isImporting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+            }
+            @L["Import"]
+        </MudButton>
+    </MudCardActions>
+</MudCard>
+
+@* The technical fallback (design doc D3): everything the script/CSV flow could do, collapsed. *@
+<MudExpansionPanels Class="mt-4">
+    <MudExpansionPanel Text="@L["Manual import — console script + CSV"]">
+        <MudText Typo="Typo.caption" Class="d-block mb-3">@L["For re-importing older scores"]</MudText>
+        @switch (_csvStep)
+        {
+            case CsvStep.Idle:
+                <ol class="import-manual-steps">
+                    <li>
+                        <MudText Typo="Typo.body2">@L["Import Manual Step 1"]</MudText>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Class="mt-1"
+                                   StartIcon="@Icons.Material.Filled.ContentCopy"
+                                   OnClick="CopyPIUGameScript">@L["Copy Script"]</MudButton>
+                    </li>
+                    <li>
+                        <MudText Typo="Typo.body2">@L["Import Manual Step 2"]</MudText>
+                        <MudGrid Spacing="2" Class="mt-0">
+                            <MudItem xs="6" sm="3">
+                                <MudNumericField T="int" Min="1" Label="@L["From page"]" @bind-Value="_startPage"></MudNumericField>
+                            </MudItem>
+                            <MudItem xs="6" sm="3">
+                                <MudNumericField T="int?" Min="1" Label="@L["To page"]" @bind-Value="_endPage" Clearable="true"></MudNumericField>
+                            </MudItem>
+                        </MudGrid>
+                    </li>
+                    <li>
+                        <MudText Typo="Typo.body2">@L["Import Manual Step 3"]</MudText>
+                        <MudButton HtmlTag="label"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   Class="mt-1"
+                                   StartIcon="@Icons.Material.Filled.UploadFile"
+                                   for="uploadInput">@L["Upload CSV"]</MudButton>
+                    </li>
+                </ol>
                 break;
-            case Step.Information:
-                <p>
-                    @L["Phoenix Import Info 1"]
-                    <br/><br/>
-
-                    @L["Phoenix Import Info 2"]
-                    <br/><br/>
-
-                    @L["Phoenix Import Info 3"]
-                    <br/><br/>
-
-                    @L["Phoenix Import Info 4"]
-                    </p>
-                <MudGrid>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField T="int" Min="1" Label=@L["Starting Page"] @bind-Value="_startPage"></MudNumericField>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField T="int?" Min="1" Label=@L["Ending Page"] @bind-Value="_endPage" Clearable="true"></MudNumericField>
-                    </MudItem>
-                </MudGrid>
+            case CsvStep.Uploading:
+                <MudText Typo="Typo.body2" Class="mb-2">@L["Phoenix Import Uploading"]</MudText>
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary" Size="Size.Large"></MudProgressLinear>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Class="mt-2"
+                           StartIcon="@Icons.Material.Filled.Cancel" OnClick="Cancel">@L["Cancel"]</MudButton>
                 break;
-            case Step.UsePassword when IsImportGated:
-                <ComingSoon Message="@L["Coming soon — score import for Phoenix 2 will open after hardware verification."].Value"></ComingSoon>
-                break;
-            case Step.UsePassword:
-                <MudGrid>
-                    <MudItem xs="12">
-                        <MudText>
-                            @L["Use Password 1"]
-                            
-                        </MudText>
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudText>@L["Use Password 2"]</MudText>
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudText>@L["Use Password 3"]</MudText>
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudText>@L["Use Password 4"]</MudText>
-                    </MudItem>
-                    @if (_hasStoredCredential)
-                    {
-                        @* Saved credential replaces the username/password fields — the rest of the
-                           import (options, game card) proceeds normally against it. *@
-                        <MudItem xs="12" sm="8">
-                            <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.Lock" Dense="true">
-                                <div class="d-flex align-center flex-wrap" style="gap:.5rem">
-                                    <span>@L["Saved on this device"]</span>
-                                    <MudButton Size="Size.Small" Disabled="_isImporting"
-                                               OnClick="ForgetSavedCredentials">@L["Forget here"]</MudButton>
-                                </div>
-                            </MudAlert>
-                        </MudItem>
-                    }
-                    else
-                    {
-                        <MudItem xs="12" sm="4">
-                            <MudTextField Label="PIUGame.com Username" Disabled="_isImporting" @bind-Value="_username"></MudTextField>
-                        </MudItem>
-                        <MudItem xs="12" sm="4">
-                            <MudTextField InputType="InputType.Password" Disabled="_isImporting" Label="PIUGame.com Password" @bind-Value="_password"></MudTextField>
-                        </MudItem>
-                    }
-                    <MudItem xs="12" sm="4">
-                        @if (_cards.Any())
-                        {
-                            <MudSelect T="string" Value="_selectedId" ValueChanged="SelectId" Label=@L["Game Card"]>
-                                @foreach (var gameCard in _cards)
-                                {
-                                    <MudSelectItem T="string" Value="@gameCard.Id">@gameCard.GameTag</MudSelectItem>
-                                }
-                            </MudSelect>
-                        } else if (!string.IsNullOrWhiteSpace(_selectedId))
-                        {
-                            <MudTooltip Text="@_selectedGameTag">
-                                <MudText>
-                                    @L["Game Card"]: @_selectedGameTag
-                                </MudText>
-                            </MudTooltip>
-                            
-                        }
-                    </MudItem>
-                    @if (_mergeInviteUserId != null)
-                    {
-                        <MudItem xs="12">
-                            <MudAlert Severity="Severity.Info">
-                                @L["An account with game tag {0} already exists, is that you?", _mergeInviteTag]
-                                <MudButton Class="ml-2" Variant="Variant.Filled" Color="Color.Info" Size="Size.Small"
-                                           Href="@($"/Account/Merge?with={_mergeInviteUserId}&returnUrl={System.Web.HttpUtility.UrlEncode("/UploadPhoenixScores")}")">@L["Review and merge"]</MudButton>
-                            </MudAlert>
-                        </MudItem>
-                    }
-
-                    <MudItem xs="12" sm="6">
-                        <MudTooltip Text="Will pull in broken scores from your recent plays, passing scores overwrite broken scores">
-                            
-                            <MudCheckBox T="bool" Label=@L["Include Broken Scores"] @bind-Value="_includeBroken" Disabled="_isImporting"></MudCheckBox>
-                        </MudTooltip>
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudCheckBox T="bool" Value="_rememberPassword" ValueChanged="OnRememberChanged" Disabled="_isImporting"
-                                     Label=@L["Remember my password on this device"]></MudCheckBox>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudCheckBox T="bool" Label=@L["Also Sync for PIU Tracker"] Disabled="_isImporting" Value="_alsoImportPiuTracker" ValueChanged="d=>SetPiuTrackerImport(d)"></MudCheckBox>
-                        <MudText Typo="Typo.subtitle2">
-                            Another community built score/progress tracking tool:
-                            <MudLink Target="_blank" Href="https://piutracker.app/">https://piutracker.app/</MudLink>
-                        </MudText>
-                        @if (_alsoImportPiuTracker && !_isPublic)
-                        {
-                            <MudText Typo="Typo.subtitle2" Color=Color.Warning>Your account is set to private, but PIU Tracker is 100% public. Continuing will make your scores public on PIU Tracker.</MudText>
-                        }
-                    </MudItem>
-                    @if (_isImporting)
-                    {
-                        <MudItem xs="12">
-                            @if (!_scores.Any())
-                            {
-                                <MudText>@_passwordImportStatus</MudText>
-                            }
-                            <MudText Typo="Typo.caption">@L["You can leave this page."]</MudText>
-                        </MudItem>
-                    }
-                    @if (_importCompleted && CurrentUser.User.IsPublic)
-                    {
-                        <MudItem xs="12">
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.Timeline"
-                                       Href="@($"/Player/{CurrentUser.User.Id}/Sessions")"
-                                       data-testid="view-session-link">
-                                @L["View your session"]
-                            </MudButton>
-                        </MudItem>
-                    }
-                    @if (_errors.Any())
-                    {
-                        <MudItem xs="12">
-                            @foreach (var error in _errors)
-                            {
-                                <MudText Color="Color.Error">@error</MudText>
-                            }
-                        </MudItem>
-                    }
-                    @if (_scores.Any())
-                    {
-                        <MudItem xs="12">
-                            <MudTable T="RecordedPhoenixScore" Items="_scores">
-                                <ToolBarContent>
-                                    <MudText>@_passwordImportStatus</MudText>
-                                </ToolBarContent>
-                                <HeaderContent>
-                                    <MudTh>Song</MudTh>
-                                    <MudTh>Difficulty</MudTh>
-                                    <MudTh>Score</MudTh>
-                                    @if (_rankings.Any())
-                                    {
-                                        <MudTh>Ranking %</MudTh>
-                                    }
-                                </HeaderContent>
-                                <RowTemplate>
-                                    <MudTd>
-                                        <MudTooltip Text="@_charts[context.ChartId].Song.Name">
-
-                                            <MudImage Src="@_charts[context.ChartId].Song.ImagePath.ToString()" Height="35" Alt="@_charts[context.ChartId].Song.Name" Elevation="25" ObjectFit="ObjectFit.ScaleDown" />
-                                        </MudTooltip>
-                                    </MudTd>
-                                    <MudTd>
-                                        <DifficultyBubble Chart="_charts[context.ChartId]"></DifficultyBubble>
-
-                                    </MudTd>
-                                    <MudTd>
-                                        <ScoreBreakdown Score="context.Score" Plate="context.Plate" ShowScore="true" OneLine="true" Ranking="_rankings.TryGetValue(context.ChartId, out var r)?r:null"></ScoreBreakdown>
-                                    </MudTd>
-                                    @if (_rankings.Any())
-                                    {
-                                        <MudTd>
-                                            @if (_rankings.TryGetValue(context.ChartId, out var ranking))
-                                            {
-                                                <MudText>@((100.0 * ranking.Ranking).ToString("N1")) of @ranking.PlayerCount Similar Players</MudText>
-                                            }
-                                        </MudTd>
-                                    }
-                                </RowTemplate>
-                                <PagerContent>
-                                    <MudTablePager></MudTablePager>
-                                </PagerContent>
-                            </MudTable>
-                        </MudItem>
-                    }
-                </MudGrid>
-                break;
-            case Step.Uploading:
-                <p>
-                    @L["Phoenix Import Uploading"]
-                </p>
-                <MudProgressLinear Indeterminate="true" Color="@Color.Primary" Size="@Size.Large"></MudProgressLinear>
-                break;
-            case Step.Confirming:
-                <p>
+            case CsvStep.Confirming:
+                <MudText Typo="Typo.body2">
                     <b>@L["Scores Parsed"]:</b> @_spreadSheetScores.Count
                     <br/>
                     <b>@L["Parse Failures"]:</b> @_failedUploads.Count
-                    <br/><br/>
-                    @L["Phoenix Import Confirming"]
-                
-                    </p>
+                </MudText>
+                <MudText Typo="Typo.body2" Class="mt-2 mb-2">@L["Import Confirming"]</MudText>
+                <div class="d-flex flex-wrap" style="gap:.5rem">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Save" OnClick="SaveScores">@L["Save Scores"]</MudButton>
+                    @if (_failedUploads.Any())
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.FileDownload" OnClick="DownloadFailures">@L["Download Failures"]</MudButton>
+                    }
+                    <MudButton Variant="Variant.Text" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Cancel" OnClick="Cancel">@L["Cancel"]</MudButton>
+                </div>
                 break;
-            case Step.Saving:
-                <p>
-                    @L["Phoenix Import Saving"]
-                </p>
-                <br/>
+            case CsvStep.Saving:
+                <MudText Typo="Typo.body2" Class="mb-2">@L["Import Saving"]</MudText>
                 <span>
-                    @L["Phoenix Import Saving Progress",_currentSaved,_maxSaving,_remainingTime.ToString(@"m\:ss"), _failedUploads.Count]
+                    @L["Phoenix Import Saving Progress", _currentSaved, _maxSaving, RemainingTimeString, _failedUploads.Count]
                 </span>
-                <MudProgressLinear Color="@Color.Primary" Size="@Size.Large" Value="@_currentSaved" Min="1" Max="@_maxSaving"/>
+                <MudProgressLinear Color="Color.Primary" Size="Size.Large" Value="_currentSaved" Min="1" Max="_maxSaving"/>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Class="mt-2"
+                           StartIcon="@Icons.Material.Filled.Cancel" OnClick="Cancel">@L["Cancel"]</MudButton>
                 break;
-            case Step.Finished when _failedUploads.Any():
-                <p>
-                  @L["Phoenix Import Saving Failures"]
-                    </p>
+            case CsvStep.Finished:
+                <MudText Typo="Typo.body2" Class="mb-2">
+                    @(_failedUploads.Any() ? L["Import Failures"] : L["Phoenix Import Saving Success"])
+                </MudText>
+                <div class="d-flex flex-wrap" style="gap:.5rem">
+                    @if (_failedUploads.Any())
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.FileDownload" OnClick="DownloadFailures">@L["Download Failures"]</MudButton>
+                    }
+                    <MudButton Variant="Variant.Text" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.RestartAlt" OnClick="@(_ => _csvStep = CsvStep.Idle)">@L["Restart"]</MudButton>
+                </div>
                 break;
-            case Step.Finished when !_failedUploads.Any():
-                <p>
-                    @L["Phoenix Import Saving Success"]
-                </p>
-                break;
-            default:
-                <p>
-                    You somehow ended up in a state between realities. Refresh the page to try again.
-                </p>
-                break;
         }
-    </MudCardContent>
-    <MudCardActions>
-        @if (_currentStep == Step.UsePassword)
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+<PageDock>
+    <MudButton Class="dock-cta"
+               Disabled="@ImportDisabled"
+               StartIcon="@(_isImporting ? null : Icons.Material.Filled.ImportExport)"
+               OnClick="ImportScores">
+        @if (_isImporting)
         {
-            
-            <MudButton Variant="Variant.Outlined"
-                       Color="@Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Code"
-                       OnClick="()=>_currentStep=Step.Information">
-                @L["Use Script"]
-            </MudButton>
+            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
         }
-        else
-        {
-            <MudButton Variant="Variant.Outlined"
-                       Color="@Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Password"
-                       OnClick="() => _currentStep = Step.UsePassword">
-                @L["Use Password"]
-            </MudButton>
-        }
-        <MudSpacer></MudSpacer>
-        @if (_currentStep is Step.Uploading or Step.Confirming or Step.Saving)
-        {
-            <MudButton Variant="@Variant.Text"
-                       Color="@Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Cancel"
-                       OnClick="@Cancel">@L["Cancel"]</MudButton>
-        }
-        @if (_currentStep == Step.Information)
-        {
-            @if (!IsImportGated)
-            {
-                <MudButton Variant="Variant.Outlined"
-                           Color="@Color.Primary"
-                           StartIcon="@Icons.Material.Filled.ContentCopy"
-                           OnClick="CopyPIUGameScript">
-                    @L["Copy Script"]
-                </MudButton>
-            }
-            <MudButton HtmlTag="label"
-                       Variant="@Variant.Filled"
-                       Color="@Color.Primary"
-                       StartIcon="@Icons.Material.Filled.UploadFile"
-                       for="uploadInput">
-                @L["Upload Scores"]
-            </MudButton>
-        }
-        @if (_currentStep == Step.Confirming)
-        {
-            <MudButton Variant="@Variant.Filled"
-                       Color="@Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Save"
-                       OnClick="@SaveScores">@L["Save Scores"]</MudButton>
-        }
-        @if (_failedUploads.Any() && _currentStep is Step.Confirming or Step.Finished)
-        {
-            <MudButton OnClick="@DownloadFailures"
-                       Variant="@Variant.Outlined"
-                       Color="@Color.Primary"
-                       StartIcon="@Icons.Material.Filled.FileDownload">@L["Download Failures"]</MudButton>
-        }
-        @if (_currentStep == Step.UsePassword && !IsImportGated)
-        {
-            <MudButton Variant="@Variant.Filled"
-                       Disabled="@(_isImporting || (!_hasStoredCredential && (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password))))"
-                       Color="Color.Primary"
-                       StartIcon="@(_isImporting ? null : Icons.Material.Filled.ImportExport)"
-                       OnClick="ImportScores">
-                @if (_isImporting)
-                {
-                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
-                }
-                Import
-            </MudButton>
-            @* Card switching needs the typed password (a saved credential stays sealed), so it's
-               only offered on the typed path. *@
-            @if (!_cards.Any() && !string.IsNullOrWhiteSpace(_selectedId) && !_hasStoredCredential)
-            {
-                <MudButton Variant="Variant.Filled"
-                           Disabled="_isImporting || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.ChangeCircle"
-                           OnClick="LoadCards">@L["Change Card"]</MudButton>
-            }
-        }
-        @if (_currentStep == Step.Finished)
-        {
-            <MudButton OnClick="@(_ => _currentStep = Step.Information)"
-                       Variant="@Variant.Text"
-                       Color="@Color.Primary"
-                       StartIcon="@Icons.Material.Filled.RestartAlt">@L["Restart"]</MudButton>
-        }
-    </MudCardActions>
-</MudCard>
+        @L["Import"]
+    </MudButton>
+</PageDock>
 <InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".csv,.xlsx"/>
 
 @inject NavigationManager NavManager
@@ -381,32 +305,23 @@
 @inject IPhoenixScoreFileExtractor Extractor;
 @inject IJSRuntime JSRuntime;
 @inject ILogger<UploadPhoenixScores> Logger;
-@inject IBus Bus;
 @inject IImportCredentialClientStore ClientStore;
 @inject IDialogService DialogService;
 @inject IUiNotificationHub UiHub;
 @code
 {
-    private enum Step
+    // The spreadsheet pipeline's own states — the password form is not a step, it is the page.
+    private enum CsvStep
     {
-        Information,
+        Idle,
         Uploading,
         Confirming,
         Saving,
-        UsePassword,
         Finished
     }
 
-    private sealed record SongMapping(string From, string To)
-    {
-
-    }
-
-    private bool _isScoreTableShowing = false;
-    private Step _currentStep = Step.UsePassword;
+    private CsvStep _csvStep = CsvStep.Idle;
     private MixEnum _currentMix = MixEnum.Phoenix;
-    // Official-site import is available for every supported mix.
-    private bool IsImportGated => false;
     private int _maxSaving = 0;
     private int _currentSaved = 0;
     private int _startPage = 1;
@@ -418,6 +333,9 @@
     private bool _hasStoredCredential = false;
     private const string RememberConsentKey = "RememberPasswordConsent";
     private const string RememberConsentVersion = "1";
+
+    private bool ImportDisabled =>
+        _isImporting || (!_hasStoredCredential && (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)));
 
     // Import using the credential saved on this device — the Import button routes here when one is
     // stored. Reuses the background path (StoredCredentialSource), so the password is never re-typed
@@ -436,7 +354,7 @@
         _errors.Clear();
         _scores.Clear();
         _importCompleted = false;
-        _passwordImportStatus = "Starting Import...";
+        _importStatus = L["Starting Import..."].Value;
         var result = await Mediator.Send(new StartOfficialImportCommand(
             new StoredCredentialSource(blob.KeyId, blob.Ciphertext), _currentMix, _selectedId, _selectedGameTag,
             _includeBroken, _alsoImportPiuTracker));
@@ -448,13 +366,13 @@
             case ImportStartOutcome.CredentialUnlockFailed:
                 _hasStoredCredential = false;
                 _isImporting = false;
-                _passwordImportStatus = "Couldn't unlock your saved password";
+                _importStatus = L["Invalid Username/Password"].Value;
                 Snackbar.Add(L["Couldn't unlock your saved password. Enter it to import."].Value, Severity.Warning);
                 break;
             case ImportStartOutcome.InvalidCredentials:
                 _isImporting = false;
-                _passwordImportStatus = "Invalid Username/Password";
-                Snackbar.Add("Your saved password appears to be incorrect, could not log into https://phoenix.piugame.com", Severity.Error);
+                _importStatus = L["Invalid Username/Password"].Value;
+                Snackbar.Add(L["Saved Password Incorrect"].Value, Severity.Error);
                 break;
             case ImportStartOutcome.AlreadyRunning:
                 _isImporting = false;
@@ -539,14 +457,14 @@
         }
         catch (InvalidCredentialException)
         {
-            _passwordImportStatus = "Invalid Username/Password";
-            Snackbar.Add("Your password appears to be incorrect, could not log into https://phoenix.piugame.com", Severity.Error);
+            _importStatus = L["Invalid Username/Password"].Value;
+            Snackbar.Add(L["Password Incorrect"].Value, Severity.Error);
         }
         catch (Exception e)
         {
-            _passwordImportStatus = "Import Experienced an Error";
-            Logger.LogError(e, $"There was an error while importing scores");
-            Snackbar.Add("There was an error while trying to import your scores. Try again later. If this persists notify DrMurloc", Severity.Error);
+            _importStatus = L["The import ran into an error."].Value;
+            Logger.LogError(e, "There was an error while importing scores");
+            Snackbar.Add(L["Import Error Notify"].Value, Severity.Error);
         }
         _isImporting = false;
     }
@@ -568,31 +486,28 @@
 
         try
         {
-        if (string.IsNullOrWhiteSpace(_selectedId))
-        {
-            
-            _cards = (await Mediator.Send(new GetGameCardsQuery(_username, _password))).ToArray();
-            if (_cards.Count() > 1)
+            if (string.IsNullOrWhiteSpace(_selectedId))
             {
-                _selectedId = _cards.First(c => c.IsActive).Id;
-                _selectedGameTag = _cards.First(c => c.IsActive).GameTag;
+                _cards = (await Mediator.Send(new GetGameCardsQuery(_username, _password))).ToArray();
+                if (_cards.Count() > 1)
+                {
+                    _selectedId = _cards.First(c => c.IsActive).Id;
+                    _selectedGameTag = _cards.First(c => c.IsActive).GameTag;
+                    await CheckMergeInvite();
+                    Snackbar.Add(L["Choose a game card, then press Import again."].Value, Severity.Info);
+                    _isImporting = false;
+                    return;
+                }
+                _selectedId = _cards.First().Id;
+                _selectedGameTag = _cards.First().GameTag;
                 await CheckMergeInvite();
-                Snackbar.Add($"Select a Game ID to Import", Severity.Info);
-                _isImporting = false;
-                return;
-
             }
-            _selectedId = _cards.First().Id;
-            _selectedGameTag = _cards.First().GameTag;
-            await CheckMergeInvite();
+            await UiSettings.SetSetting($"PhoenixScoreUpload__LastGameId", _selectedId);
+            await UiSettings.SetSetting($"PhoenixScoreUpload__LastGameTag", _selectedGameTag);
 
-        }
-        await UiSettings.SetSetting($"PhoenixScoreUpload__LastGameId", _selectedId);
-        await UiSettings.SetSetting($"PhoenixScoreUpload__LastGameTag", _selectedGameTag);
-
-        _scores.Clear();
-        _importCompleted = false;
-        _passwordImportStatus = "Starting Import...";
+            _scores.Clear();
+            _importCompleted = false;
+            _importStatus = L["Starting Import..."].Value;
             // Hand the scrape to the background job: SignIn runs now (a bad password is caught
             // immediately), then status + completion arrive over the hub while the page stays
             // usable — the user can leave. Terminal state is flipped by StatusUpdate/ImportError.
@@ -622,8 +537,8 @@
                 case ImportStartOutcome.InvalidCredentials:
                 case ImportStartOutcome.CredentialUnlockFailed:
                     _isImporting = false;
-                    _passwordImportStatus = "Invalid Username/Password";
-                    Snackbar.Add("Your password appears to be incorrect, could not log into https://phoenix.piugame.com", Severity.Error);
+                    _importStatus = L["Invalid Username/Password"].Value;
+                    Snackbar.Add(L["Password Incorrect"].Value, Severity.Error);
                     break;
                 case ImportStartOutcome.AlreadyRunning:
                     _isImporting = false;
@@ -634,27 +549,29 @@
         catch (InvalidCredentialException)
         {
             _isImporting = false;
-            _passwordImportStatus = "Invalid Username/Password";
-            Snackbar.Add("Your password appears to be incorrect, could not log into https://phoenix.piugame.com", Severity.Error);
+            _importStatus = L["Invalid Username/Password"].Value;
+            Snackbar.Add(L["Password Incorrect"].Value, Severity.Error);
         }
         catch (Exception e)
         {
             _isImporting = false;
-            _passwordImportStatus = "Import Experienced an Error";
-            Logger.LogError(e, $"There was an error while importing scores");
-            Snackbar.Add("There was an error while trying to import your scores. Try again later. If this persists notify DrMurloc",Severity.Error);
+            _importStatus = L["The import ran into an error."].Value;
+            Logger.LogError(e, "There was an error while importing scores");
+            Snackbar.Add(L["Import Error Notify"].Value, Severity.Error);
         }
     }
     private bool _isImporting = false;
     private bool _importCompleted = false;
     private int? _endPage = null;
-    private TimeSpan _remainingTime = TimeSpan.MinValue;
+    private TimeSpan _remainingTime = TimeSpan.Zero;
+    // No estimate until at least one save has landed.
+    private string RemainingTimeString => _currentSaved > 0 ? _remainingTime.ToString(@"m\:ss") : "-:--";
     private IDictionary<Guid,Chart> _charts = new Dictionary<Guid, Chart>();
     private readonly ICollection<RecordedPhoenixScore>_scores = new List<RecordedPhoenixScore>();
     private List<SpreadsheetScoreErrorDto> _failedUploads = new List<SpreadsheetScoreErrorDto>();
     private List<RecordedPhoenixScore> _spreadSheetScores = new List<RecordedPhoenixScore>();
     private CancellationTokenSource _currentCancellation = new CancellationTokenSource();
-    private string _passwordImportStatus = string.Empty;
+    private string _importStatus = string.Empty;
     private Guid _userId;
     private readonly List<IDisposable> _subscriptions = new();
     protected override async Task OnInitializedAsync()
@@ -702,7 +619,7 @@
             {
                 _scores.Add(score);
             }
-            _passwordImportStatus = e.Mix != MixEnum.Phoenix ? $"[{e.Mix.GetName()}] {e.Status}" : e.Status;
+            _importStatus = e.Mix != MixEnum.Phoenix ? $"[{e.Mix.GetName()}] {e.Status}" : e.Status;
             // Terminal status for a background (saved-credential) import — the synchronous typed
             // path already flips these itself, so setting them again is harmless.
             if (e.Status == "Charts finished saving")
@@ -714,7 +631,7 @@
         });
     }
 
-    private IDictionary<Guid, ScoreRankingRecord> _rankings;
+    private IDictionary<Guid, ScoreRankingRecord> _rankings = new Dictionary<Guid, ScoreRankingRecord>();
     private async Task GetRatings()
     {
         _rankings = await Mediator.Send(new GetChartScoreRankingsQuery(_scores.Select(s => s.ChartId), _currentMix));
@@ -722,7 +639,7 @@
     }
     private void Cancel()
     {
-        _currentStep = Step.Information;
+        _csvStep = CsvStep.Idle;
         _currentCancellation?.Cancel();
     }
 
@@ -748,7 +665,7 @@
 
     private async Task SaveScores()
     {
-        _currentStep = Step.Saving;
+        _csvStep = CsvStep.Saving;
         _currentCancellation = new CancellationTokenSource();
         var cancellationToken = _currentCancellation.Token;
         _currentSaved = 0;
@@ -787,17 +704,17 @@
                 return;
             }
         }
-        _currentStep = Step.Finished;
+        _csvStep = CsvStep.Finished;
     }
     private async Task UploadFile(InputFileChangeEventArgs e)
     {
         var file = e.File;
         if (file.Size > XXScoreFile.MaxByteCount)
         {
-            Snackbar.Add("File cannot be larger than 10 MB", Severity.Error);
+            Snackbar.Add(L["File cannot be larger than 10 MB"].Value, Severity.Error);
             return;
         }
-        _currentStep = Step.Uploading;
+        _csvStep = CsvStep.Uploading;
         _currentCancellation = new CancellationTokenSource();
 
         try
@@ -805,12 +722,12 @@
             var result = await Extractor.GetScores(file, _currentMix, _currentCancellation.Token);
             _spreadSheetScores = result.Scores.ToList();
             _failedUploads = result.Errors.ToList();
-            _currentStep = Step.Confirming;
+            _csvStep = CsvStep.Confirming;
         }
         catch (ScoreFileParseException ex)
         {
             Snackbar.Add(ex.Message, Severity.Error);
-            _currentStep = Step.Information;
+            _csvStep = CsvStep.Idle;
             return;
         }
         catch (OperationCanceledException)
@@ -819,15 +736,15 @@
         }
         catch (Exception)
         {
-            Snackbar.Add("There was an unknown error while parsing the file", Severity.Error);
-            _currentStep = Step.Information;
+            Snackbar.Add(L["There was an unknown error while parsing the file"].Value, Severity.Error);
+            _csvStep = CsvStep.Idle;
             return;
         }
     }
     private async Task CopyPIUGameScript()
     {
         await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _piuGameScript());
-        Snackbar.Add("Copied to clipboard!", Severity.Success);
+        Snackbar.Add(L["Copied to clipboard!"].Value, Severity.Success);
     }
 
     private string _pageLimitString() => _endPage == null ? "" : $"pageIndex>{_endPage}||";
