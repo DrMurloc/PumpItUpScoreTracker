@@ -731,6 +731,7 @@ else
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
 @inject NavigationManager NavManager;
+@inject IJSRuntime JSRuntime;
 @inject IUiSettingsAccessor UiSettings;
 @code {
 
@@ -965,14 +966,14 @@ else
 
         _chartType = folder.Type;
         _level = folder.Level;
-        SetQueryString();
+        await SetQueryString();
         await LoadFolder();
     }
 
     private async Task ChangeLens(string lens)
     {
         _lens = lens;
-        SetQueryString();
+        await SetQueryString();
         ResetMoverViewState();
         // Only the blend depends on the lens — charts, scores, chips, and rankings
         // are folder-scoped and stay.
@@ -983,11 +984,15 @@ else
         StateHasChanged();
     }
 
-    private void SetQueryString()
+    // Pushed straight into history rather than navigated to — under the static router,
+    // NavigateTo re-fetches and re-initializes the whole page, and both callers already
+    // reload exactly the slice that changed.
+    private async Task SetQueryString()
     {
-        NavManager.NavigateTo(NavManager.GetUriWithQueryParameters(
+        var url = NavManager.GetUriWithQueryParameters(
             $"/TierLists/{_chartType}/{_level}/Breakdown",
-            new Dictionary<string, object?> { { "Lens", _lens } }));
+            new Dictionary<string, object?> { { "Lens", _lens } });
+        await JSRuntime.InvokeVoidAsync("history.pushState", null, "", url);
     }
 
     // --- Load ----------------------------------------------------------------------------

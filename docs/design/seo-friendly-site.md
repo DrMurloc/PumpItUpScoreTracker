@@ -310,11 +310,17 @@ QA on its own branch, exactly like Stage 1's.
 - **Verification**: the fast suites stay green through every render-mode violation (§5). E2E
   full pass + the owner FT matrix are the actual gate.
 
-**Shipped 2026-07-16, with three reality corrections found by building:**
+**Shipped 2026-07-16, with four reality corrections found by building:**
 - **The navigation model changes — this is the flip's one user-visible cost.** The §2 mechanics
   above were right; the "zero behavior change" banner was not: killing the interactive router
   ends SPA navigation, and every in-app click is a full document load now (accepted; enhanced
   nav is the chase).
+- **"Every navigation" meant link clicks.** `data-enhance-nav="false"` does not reach
+  programmatic `NavigateTo` from an interactive island, which performs an enhanced page load
+  (fetch + DOM patch, same document) — so a page that called `NavigateTo` to sync its own URL
+  re-fetched and re-initialized itself (render-modes.md §7.1 has the measurements). The
+  tier-list pages now write the URL bar through `history.pushState`/`replaceState` instead;
+  `NavigateTo` means leaving the page.
 - **Real 404s came free**: the static router answers unmatched routes itself — real 404, empty
   body — and the Router's `NotFound` fragment never renders under it. The planned status-setting
   component was dead on arrival and deleted; a branded not-found page is `NotFoundPage` polish,
