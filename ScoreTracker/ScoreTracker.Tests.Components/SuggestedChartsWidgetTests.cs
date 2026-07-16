@@ -124,13 +124,14 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
             SeedChartId: _seed.Id, SeedPeerRanking: ranking, SeedIsFallback: fallback);
 
     [Fact]
-    public void GroupedModeCaptionsTheSeedWithThePeersBarEvenForASingleSection()
+    public void GroupedModeCaptionsTheSeedEvenForASingleSectionWithThePeersBarInTheTooltip()
     {
         SetUpRecommendations(HotStreakRec(_easyMatch.Id));
 
         var cut = Render();
 
-        Assert.Contains("More like District 1 S20 · you beat 94% of Peers", cut.Markup);
+        Assert.Contains("Like District 1 S20", cut.Markup);
+        Assert.Contains("You beat 94% of Peers on this.", cut.Markup);
     }
 
     [Fact]
@@ -156,7 +157,7 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
         var cut = Render(new SuggestedChartsConfig { Goal = SuggestedGoal.HotStreak, GroupBySeed = false });
 
         Assert.Contains("≈ District 1 S20", cut.Markup);
-        Assert.DoesNotContain("More like", cut.Markup);
+        Assert.DoesNotContain("Like District 1", cut.Markup);
     }
 
     [Fact]
@@ -180,7 +181,7 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
     }
 
     [Fact]
-    public void FallbackSeedsRaiseTheHeaderPillAndSayYourBest()
+    public void FallbackSeedsRaiseTheHeaderGlyphAndTheTooltipSaysAllTimeBest()
     {
         SetUpRecommendations(HotStreakRec(_easyMatch.Id, fallback: true));
         var slot = new WidgetHeaderSlot(() => { });
@@ -188,12 +189,13 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
         var cut = Render(headerSlot: slot);
 
         Assert.NotNull(slot.Content);
-        Assert.Contains("Your best: District 1 S20 · you beat 94% of Peers", cut.Markup);
-        Assert.DoesNotContain("More like", cut.Markup);
+        // The caption stays short; the fallback story rides its tooltip.
+        Assert.Contains("Like District 1 S20", cut.Markup);
+        Assert.Contains("One of your all-time best — you beat 94% of Peers.", cut.Markup);
     }
 
     [Fact]
-    public void FlagSeededLoadLeavesTheHeaderPillEmpty()
+    public void FlagSeededLoadLeavesTheHeaderGlyphEmpty()
     {
         SetUpRecommendations(HotStreakRec(_easyMatch.Id));
         var slot = new WidgetHeaderSlot(() => { });
@@ -201,7 +203,7 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
         var cut = Render(headerSlot: slot);
 
         Assert.Null(slot.Content);
-        Assert.Contains("More like District 1 S20", cut.Markup);
+        Assert.Contains("Like District 1 S20", cut.Markup);
     }
 
     [Fact]

@@ -4422,12 +4422,6 @@
   <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
     <value>D'autres charts comme ceux que vous avez écrasés récemment face à vos pairs.</value>
   </data>
-  <data name="More like {0} · you beat {1}% of Peers" xml:space="preserve">
-    <value>Comme {0} · vous avez battu {1}% de vos pairs</value>
-  </data>
-  <data name="More like {0}" xml:space="preserve">
-    <value>Comme {0}</value>
-  </data>
   <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
     <value>Aucun exploit correspondant pour l'instant, dépassez-vous pour recevoir des suggestions !</value>
   </data>
@@ -4464,16 +4458,19 @@
   <data name="Group by seed chart" xml:space="preserve">
     <value>Grouper par chart d'origine</value>
   </data>
-  <data name="Your best: {0} · you beat {1}% of Peers" xml:space="preserve">
-    <value>Votre meilleur : {0} · vous avez battu {1}% de vos pairs</value>
+  <data name="Like {0}" xml:space="preserve">
+    <value>Comme {0}</value>
   </data>
-  <data name="Your best: {0}" xml:space="preserve">
-    <value>Votre meilleur : {0}</value>
+  <data name="You beat {0}% of Peers on this." xml:space="preserve">
+    <value>Vous avez battu {0}% de vos pairs sur ce chart.</value>
   </data>
-  <data name="All-time best" xml:space="preserve">
-    <value>Meilleurs historiques</value>
+  <data name="One of your all-time best — you beat {0}% of Peers." xml:space="preserve">
+    <value>L'un de vos meilleurs historiques — vous avez battu {0}% de vos pairs.</value>
   </data>
-  <data name="No recent standouts — suggesting charts like your all-time best instead." xml:space="preserve">
-    <value>Aucun exploit récent — suggestions basées sur vos meilleurs charts historiques.</value>
+  <data name="One of your all-time best." xml:space="preserve">
+    <value>L'un de vos meilleurs historiques.</value>
+  </data>
+  <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
+    <value>Aucun exploit récent correspondant — suggestions basées sur vos meilleurs charts historiques.</value>
   </data>
 </root>

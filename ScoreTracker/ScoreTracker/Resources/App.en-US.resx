@@ -4424,12 +4424,6 @@
   <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
     <value>More charts like the recent plays you crushed against your Peers.</value>
   </data>
-  <data name="More like {0} · you beat {1}% of Peers" xml:space="preserve">
-    <value>More like {0} · you beat {1}% of Peers</value>
-  </data>
-  <data name="More like {0}" xml:space="preserve">
-    <value>More like {0}</value>
-  </data>
   <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
     <value>No matching standouts yet, go push yourself to start getting suggestions!</value>
   </data>
@@ -4466,16 +4460,19 @@
   <data name="Group by seed chart" xml:space="preserve">
     <value>Group by seed chart</value>
   </data>
-  <data name="Your best: {0} · you beat {1}% of Peers" xml:space="preserve">
-    <value>Your best: {0} · you beat {1}% of Peers</value>
+  <data name="Like {0}" xml:space="preserve">
+    <value>Like {0}</value>
   </data>
-  <data name="Your best: {0}" xml:space="preserve">
-    <value>Your best: {0}</value>
+  <data name="You beat {0}% of Peers on this." xml:space="preserve">
+    <value>You beat {0}% of Peers on this.</value>
   </data>
-  <data name="All-time best" xml:space="preserve">
-    <value>All-time best</value>
+  <data name="One of your all-time best — you beat {0}% of Peers." xml:space="preserve">
+    <value>One of your all-time best — you beat {0}% of Peers.</value>
   </data>
-  <data name="No recent standouts — suggesting charts like your all-time best instead." xml:space="preserve">
-    <value>No recent standouts — suggesting charts like your all-time best instead.</value>
+  <data name="One of your all-time best." xml:space="preserve">
+    <value>One of your all-time best.</value>
+  </data>
+  <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
+    <value>You don't have any matching recent highlights — suggesting charts similar to your all-time best instead.</value>
   </data>
 </root>

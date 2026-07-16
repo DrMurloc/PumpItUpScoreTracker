@@ -4305,12 +4305,6 @@
   <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
     <value>최근 동급 플레이어를 압도한 플레이와 비슷한 채보.</value>
   </data>
-  <data name="More like {0} · you beat {1}% of Peers" xml:space="preserve">
-    <value>{0} 같은 채보 · 동급 플레이어의 {1}%를 이겼습니다</value>
-  </data>
-  <data name="More like {0}" xml:space="preserve">
-    <value>{0} 같은 채보</value>
-  </data>
   <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
     <value>아직 조건에 맞는 활약이 없습니다. 한계를 밀어붙여 추천을 받아보세요!</value>
   </data>
@@ -4347,16 +4341,19 @@
   <data name="Group by seed chart" xml:space="preserve">
     <value>기준 채보별로 묶기</value>
   </data>
-  <data name="Your best: {0} · you beat {1}% of Peers" xml:space="preserve">
-    <value>내 최고 기록: {0} · 동급 플레이어의 {1}%를 이겼습니다</value>
+  <data name="Like {0}" xml:space="preserve">
+    <value>{0} 같은 채보</value>
   </data>
-  <data name="Your best: {0}" xml:space="preserve">
-    <value>내 최고 기록: {0}</value>
+  <data name="You beat {0}% of Peers on this." xml:space="preserve">
+    <value>이 채보에서 동급 플레이어의 {0}%를 이겼습니다.</value>
   </data>
-  <data name="All-time best" xml:space="preserve">
-    <value>역대 최고 기준</value>
+  <data name="One of your all-time best — you beat {0}% of Peers." xml:space="preserve">
+    <value>역대 최고 기록 중 하나 — 동급 플레이어의 {0}%를 이겼습니다.</value>
   </data>
-  <data name="No recent standouts — suggesting charts like your all-time best instead." xml:space="preserve">
-    <value>최근 활약이 없어 역대 최고 기록과 비슷한 채보를 추천합니다.</value>
+  <data name="One of your all-time best." xml:space="preserve">
+    <value>역대 최고 기록 중 하나입니다.</value>
+  </data>
+  <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
+    <value>조건에 맞는 최근 활약이 없어 역대 최고 기록과 비슷한 채보를 추천합니다.</value>
   </data>
 </root>

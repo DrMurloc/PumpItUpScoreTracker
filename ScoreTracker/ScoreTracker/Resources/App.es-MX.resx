@@ -4304,12 +4304,6 @@
   <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
     <value>Más charts como los que arrasaste hace poco frente a tus pares.</value>
   </data>
-  <data name="More like {0} · you beat {1}% of Peers" xml:space="preserve">
-    <value>Más como {0} · venciste al {1}% de tus pares</value>
-  </data>
-  <data name="More like {0}" xml:space="preserve">
-    <value>Más como {0}</value>
-  </data>
   <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
     <value>Aún no hay actuaciones destacadas que cuenten, ¡échale ganas para empezar a recibir sugerencias!</value>
   </data>
@@ -4346,16 +4340,19 @@
   <data name="Group by seed chart" xml:space="preserve">
     <value>Agrupar por chart de origen</value>
   </data>
-  <data name="Your best: {0} · you beat {1}% of Peers" xml:space="preserve">
-    <value>Tu mejor: {0} · venciste al {1}% de tus pares</value>
+  <data name="Like {0}" xml:space="preserve">
+    <value>Como {0}</value>
   </data>
-  <data name="Your best: {0}" xml:space="preserve">
-    <value>Tu mejor: {0}</value>
+  <data name="You beat {0}% of Peers on this." xml:space="preserve">
+    <value>Venciste al {0}% de tus pares en este chart.</value>
   </data>
-  <data name="All-time best" xml:space="preserve">
-    <value>Mejores históricos</value>
+  <data name="One of your all-time best — you beat {0}% of Peers." xml:space="preserve">
+    <value>Uno de tus mejores históricos: venciste al {0}% de tus pares.</value>
   </data>
-  <data name="No recent standouts — suggesting charts like your all-time best instead." xml:space="preserve">
-    <value>Sin actuaciones recientes: sugerimos charts parecidos a tus mejores históricos.</value>
+  <data name="One of your all-time best." xml:space="preserve">
+    <value>Uno de tus mejores históricos.</value>
+  </data>
+  <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
+    <value>No tienes actuaciones recientes que cuenten: sugerimos charts parecidos a tus mejores históricos.</value>
   </data>
 </root>

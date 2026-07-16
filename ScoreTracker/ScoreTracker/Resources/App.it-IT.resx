@@ -4424,12 +4424,6 @@
   <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
     <value>Altri chart come quelli che hai stracciato di recente rispetto ai tuoi pari.</value>
   </data>
-  <data name="More like {0} · you beat {1}% of Peers" xml:space="preserve">
-    <value>Simili a {0} · hai battuto il {1}% dei tuoi pari</value>
-  </data>
-  <data name="More like {0}" xml:space="preserve">
-    <value>Simili a {0}</value>
-  </data>
   <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
     <value>Ancora nessuna prestazione degna di nota: datti una spinta per ricevere suggerimenti!</value>
   </data>
@@ -4466,16 +4460,19 @@
   <data name="Group by seed chart" xml:space="preserve">
     <value>Raggruppa per chart di origine</value>
   </data>
-  <data name="Your best: {0} · you beat {1}% of Peers" xml:space="preserve">
-    <value>Il tuo migliore: {0} · hai battuto il {1}% dei tuoi pari</value>
+  <data name="Like {0}" xml:space="preserve">
+    <value>Simili a {0}</value>
   </data>
-  <data name="Your best: {0}" xml:space="preserve">
-    <value>Il tuo migliore: {0}</value>
+  <data name="You beat {0}% of Peers on this." xml:space="preserve">
+    <value>Hai battuto il {0}% dei tuoi pari su questo chart.</value>
   </data>
-  <data name="All-time best" xml:space="preserve">
-    <value>Migliori di sempre</value>
+  <data name="One of your all-time best — you beat {0}% of Peers." xml:space="preserve">
+    <value>Uno dei tuoi migliori di sempre — hai battuto il {0}% dei tuoi pari.</value>
   </data>
-  <data name="No recent standouts — suggesting charts like your all-time best instead." xml:space="preserve">
-    <value>Nessuna prestazione recente: suggeriamo chart simili ai tuoi migliori di sempre.</value>
+  <data name="One of your all-time best." xml:space="preserve">
+    <value>Uno dei tuoi migliori di sempre.</value>
+  </data>
+  <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
+    <value>Nessuna prestazione recente corrispondente: suggeriamo chart simili ai tuoi migliori di sempre.</value>
   </data>
 </root>

@@ -4425,12 +4425,6 @@
   <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
     <value>最近同レベル帯を圧倒したプレイに似た譜面。</value>
   </data>
-  <data name="More like {0} · you beat {1}% of Peers" xml:space="preserve">
-    <value>{0} に似た譜面 · 同レベル帯の{1}%に勝利</value>
-  </data>
-  <data name="More like {0}" xml:space="preserve">
-    <value>{0} に似た譜面</value>
-  </data>
   <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
     <value>まだ該当する好プレイがありません。自分を追い込んで、おすすめをもらいましょう！</value>
   </data>
@@ -4467,16 +4461,19 @@
   <data name="Group by seed chart" xml:space="preserve">
     <value>元譜面ごとにまとめる</value>
   </data>
-  <data name="Your best: {0} · you beat {1}% of Peers" xml:space="preserve">
-    <value>自己ベスト: {0} · 同レベル帯の{1}%に勝利</value>
+  <data name="Like {0}" xml:space="preserve">
+    <value>{0} に似た譜面</value>
   </data>
-  <data name="Your best: {0}" xml:space="preserve">
-    <value>自己ベスト: {0}</value>
+  <data name="You beat {0}% of Peers on this." xml:space="preserve">
+    <value>この譜面で同レベル帯の{0}%に勝っています。</value>
   </data>
-  <data name="All-time best" xml:space="preserve">
-    <value>自己ベスト基準</value>
+  <data name="One of your all-time best — you beat {0}% of Peers." xml:space="preserve">
+    <value>自己ベストの一つ — 同レベル帯の{0}%に勝っています。</value>
   </data>
-  <data name="No recent standouts — suggesting charts like your all-time best instead." xml:space="preserve">
-    <value>最近の好プレイがないため、自己ベストに似た譜面を提案しています。</value>
+  <data name="One of your all-time best." xml:space="preserve">
+    <value>自己ベストの一つです。</value>
+  </data>
+  <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
+    <value>条件に合う最近の好プレイがないため、自己ベストに似た譜面を提案しています。</value>
   </data>
 </root>

@@ -54,7 +54,8 @@ else
             {
                 @if (ShowCaptions)
                 {
-                    <MudText Typo="Typo.caption" Class="dash-muted dash-target-caption">@section.Caption</MudText>
+                    <MudText Typo="Typo.caption" Class="dash-muted dash-target-caption"
+                             title="@section.CaptionDetail">@section.Caption</MudText>
                 }
                 @foreach (var row in section.Rows)
                 {
@@ -122,7 +123,8 @@ else
                         var sect = section;
                         @if (ShowCaptions)
                         {
-                            <div class="dash-strip-divider" title="@section.Caption">@section.Caption</div>
+                            <div class="dash-strip-divider"
+                                 title="@(section.CaptionDetail ?? section.Caption)">@section.Caption</div>
                         }
                         @foreach (var row in section.Rows)
                         {
@@ -201,7 +203,10 @@ else
 
     // CategoryKey is the engine's raw category name — the feedback store's key (the
     // pushing-title section's key is the title's own name, matching WSIP's behavior).
-    private sealed record SuggestionSection(string CategoryKey, string Caption, List<SuggestionRow> Rows);
+    // CaptionDetail rides as the caption's tooltip — the Peers-bar brag lives there
+    // so the visible caption stays short (owner, field test 1).
+    private sealed record SuggestionSection(string CategoryKey, string Caption, List<SuggestionRow> Rows,
+        string? CaptionDetail = null);
 
     private bool _loaded;
     private string? _loadedFor;
@@ -339,9 +344,11 @@ else
                         seedLabel: null))
                     .OrderBy(r => r.Tier ?? TierListCategory.Unrecorded)
                     .ToList();
+                var label = SeedLabel(group.Key, charts);
                 _sections.Add(new SuggestionSection(RecommendationCategories.HotStreak,
-                    HotStreakCaption(group.Key, group.First().SeedPeerRanking,
-                        group.First().SeedIsFallback, charts), rows));
+                    label != null ? L["Like {0}", label].Value : L[RecommendationCategories.HotStreak].Value,
+                    rows,
+                    HotStreakCaptionDetail(group.First().SeedPeerRanking, group.First().SeedIsFallback)));
             }
         }
         else
@@ -355,20 +362,17 @@ else
         }
     }
 
-    // Fallback seeds are the standing best pool, not a recent play — "your best",
-    // not "more like what just worked", so the caption doesn't overclaim recency.
-    private string HotStreakCaption(Guid? seedChartId, double? peerRanking, bool isFallback,
-        IReadOnlyDictionary<Guid, Chart> charts)
+    // The visible caption is just "Like {seed}" (owner, field test 1 — the long form
+    // read as clutter); the Peers-bar brag and the fallback distinction ride the
+    // caption's tooltip instead.
+    private string? HotStreakCaptionDetail(double? peerRanking, bool isFallback)
     {
-        var label = SeedLabel(seedChartId, charts);
-        if (label == null) return L[RecommendationCategories.HotStreak].Value;
+        var pct = peerRanking != null ? (int)Math.Round(peerRanking.Value * 100) : (int?)null;
         if (isFallback)
-            return peerRanking != null
-                ? L["Your best: {0} · you beat {1}% of Peers", label, (int)Math.Round(peerRanking.Value * 100)].Value
-                : L["Your best: {0}", label].Value;
-        return peerRanking != null
-            ? L["More like {0} · you beat {1}% of Peers", label, (int)Math.Round(peerRanking.Value * 100)].Value
-            : L["More like {0}", label].Value;
+            return pct != null
+                ? L["One of your all-time best — you beat {0}% of Peers.", pct].Value
+                : L["One of your all-time best."].Value;
+        return pct != null ? L["You beat {0}% of Peers on this.", pct].Value : null;
     }
 
     private bool _fallbackPillShown;
@@ -380,10 +384,12 @@ else
         HeaderSlot.Set(show ? FallbackPill() : null);
     }
 
+    // A quiet warning glyph, not a text pill (owner, field test 1): the title bar has
+    // no room for words, and the full story fits in the tooltip.
     private RenderFragment FallbackPill() =>
-        @<span class="dash-head-pill"
-               title="@L["No recent standouts — suggesting charts like your all-time best instead."]">
-            @L["All-time best"]
+        @<span class="dash-head-flag"
+               title="@L["You don't have any matching recent highlights — suggesting charts similar to your all-time best instead."]">
+            <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small"/>
         </span>;
 
     private static string? SeedLabel(Guid? seedChartId, IReadOnlyDictionary<Guid, Chart> charts)
