@@ -80,13 +80,41 @@ surface and the destination worthy of the dialog's vocabulary.
 | Within-mix rebalance collision | current holder of the level owns the URL; former holder reachable via GUID |
 
 - Slugs: lowercase, hyphens, strip URL-hostile punctuation, **preserve unicode** (Korean titles
-  stay Korean). Song names are unique today; if that breaks, suffix with artist.
+  stay Korean). Two hard rules from the catalog audit (below): the **difficulty slug is
+  slot-aware** (`crazy-6` when a `LegacySlot` exists, `s6` otherwise — `DifficultyDisplay`'s
+  own logic), and **`SlugifySong` carries an unslugifiable-name fallback** (`"!"` →
+  `"exclamation"`). Name twins that never share a mix (`STEP`/`Step`) collide on nothing; the
+  suffix-with-artist contingency stays shelved until two same-slug songs coexist in one mix.
 - When the site default mix flips (~per mix era), the canonical namespace 301s wholesale and the
   sitemap regenerates — accepted (mass 301 migrations transfer signals).
 - Sitemap lists **canonical vanity URLs only** (replacing GUIDs), and ships **in the same PR** as
   the prerendered page — pretty URLs pointing at empty shells would invite a wasted recrawl.
 - Rejected: origin-mix-as-canonical (stale search intent; content mismatch). The stable-identity
   job belongs to the GUID permalink.
+
+### The slug audit — full catalog, measured (2026-07-16)
+
+Every `(mix, song-slug, difficulty-slug)` triple was computed over the populated dev catalog
+(30,259 chart-mix rows, 1,040 distinct song names) with the shipped `ChartSlugs` logic.
+**The canonical namespace — Phoenix, Phoenix 2, XX — is collision-free.** Every break lives in
+legacy-mix historical URLs, and each settles a rule:
+
+| Break | Count | Rule it settles |
+|---|---|---|
+| Slot-era ambiguity — same song + level, different `LegacySlot`: `/nxa/moonlight/s19` is two charts (the Hard-6/Crazy-6 problem `Chart.DifficultyDisplay` exists for) | 91 paths | The slot-aware difficulty slug (above). Canonical URLs untouched — modern mixes carry no slots. |
+| Duplicate chart rows — same song + type + level + slot, two GUIDs (`Final Audition Ep. 2-2` D18 twice in NX, NX2 *and* NXA) | 47 paths | No URL scheme splits identical rows. Historical resolution picks **deterministically** (stable order, never `FirstOrDefault` luck); the loser stays reachable by GUID forever — the rebalance-collision philosophy. Flagged separately as legacy-import data quality: these double-render in legacy folder lists too. |
+| Duplicate `Song` rows — `PICK ME` (Arcade) exists as two songs → `/prime-2/pick-me/d16` is ambiguous | 1 path | Same deterministic tiebreak; the duplicate row is a data-cleanup candidate. |
+| Empty slug — `!` (Infinity only) slugifies to nothing → `/infinity//s17` is malformed | 1 song | The `SlugifySong` fallback (above), plus a fixture. |
+
+Latent, no action: `STEP` (Phoenix/XX era) and `Step` (Fiesta 2/Prime era) share a slug but
+have never shared a mix, so no path collides today. Renamed songs cannot alias — the catalog
+keeps one `Name` per song, so an old community name is simply a slug that doesn't resolve; the
+GUID permalink is the durable address.
+
+**Open: where the lattice mounts** — bare root `/{mix}/{song}/{difficulty}` (this doc's
+original shape) vs `/Charts/{mix}/{song}/{difficulty}`. Bare root makes the vanity route the
+site's three-segment catch-all (component routes take no custom constraints); the `/Charts`
+prefix contains it completely. Decision ④ in seo-friendly-site.md §7.
 
 ## Page anatomy (mock R2, approved 2026-07-14)
 

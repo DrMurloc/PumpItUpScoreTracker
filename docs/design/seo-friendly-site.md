@@ -331,7 +331,13 @@ work is caching and the lattice.
     `/Chart`, `/Record` leave it. ⚠ Component routes take no custom constraints, so the vanity
     route is the site's **three-segment catch-all**: every existing 3-segment route out-ranks it
     on literal segments (verified across the route table), and **any future 3-segment route must
-    too** — recorded hazard.
+    too** — recorded hazard. (Dissolves entirely if decision ④ mounts the lattice under
+    `/Charts/…`.)
+  - **Slug rules from the 2026-07-16 full-catalog audit** (chart-details-overhaul.md, "The slug
+    audit"): the canonical namespace measured collision-free; `DifficultySlug` goes slot-aware
+    (`crazy-6` when `LegacySlot` exists), `SlugifySong` gains the unslugifiable-name fallback
+    (the song `!`), and historical resolution picks **deterministically** among the 48
+    legacy duplicate-row paths (losers stay reachable by GUID forever).
   - ⚠ **Historical triples share the canonical shape**, so they cannot live in an MVC
     controller — the same pattern registered twice is an `AmbiguousMatchException`. The **page
     itself** compares the requested triple to the resolved chart's canonical and issues the 301
@@ -374,3 +380,4 @@ work is caching and the lattice.
 | ① | Front-door canonical: `/Login` or `/Welcome` | PR-1 | **decided 2026-07-16: `/Welcome`** |
 | ② | `ChartRecordPanel`: whole-panel island vs static-your-best split | PR-4 | whole-panel island |
 | ③ | Vanity sitemap: wait for PR-4 (ONE unit) vs advertise after PR-2 | PR-4 timing | wait for PR-4 |
+| ④ | Canonical mount: bare `/{mix}/{song}/{diff}` vs `/Charts/{mix}/{song}/{diff}` | PR-4 | lean `/Charts/…` (contains the three-segment catch-all; matches the owner's own recall of the plan) |
