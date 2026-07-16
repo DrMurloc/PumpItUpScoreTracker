@@ -4,6 +4,7 @@
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Theming
 @inject ShellModelFactory ShellFactory
+@inject StaticHeadResolver HeadResolver
 @inject IWebHostEnvironment Env
 
 @* The document root, rendered statically: the shell paints as real HTML and the app boots into
@@ -21,9 +22,22 @@
     @* The active palette's --mix-* tokens. Server-side: the shell paints before any circuit, and
        MudThemeProvider's own vars only arrive with one. *@
     <style>@((MarkupString)MixThemes.CssVariablesFor(_shell.ThemeMix))</style>
-    @* A real title for readers that run no JS. Blazor removes it on boot and HeadOutlet takes
-       over, so <PageTitle> keeps working unchanged. *@
-    <title>@L["PIU Scores"]</title>
+    @* A real head for readers that run no JS, resolved from the route (StaticHeadResolver):
+       chart routes get their name, description and jacket; unmatched routes get the bare site
+       title and no meta. Blazor removes the title on boot and HeadOutlet takes over, so
+       <PageTitle> keeps working unchanged. *@
+    <title>@(_head?.Title ?? L["PIU Scores"].Value)</title>
+    @if (_head != null)
+    {
+        <meta name="description" content="@_head.Description" />
+        <meta property="og:title" content="@_head.Title" />
+        <meta property="og:description" content="@_head.Description" />
+        <meta property="og:type" content="website" />
+        @if (_head.OgImage != null)
+        {
+            <meta property="og:image" content="@_head.OgImage" />
+        }
+    }
     @* Interactive, and not prerendered — matching every <PageTitle> in the app. Static, it would
        only ever see static components and every page's title would read "PIU Scores". *@
     <HeadOutlet @rendermode="Interactive" />
@@ -111,6 +125,7 @@
     [CascadingParameter] private HttpContext HttpContext { get; set; } = null!;
 
     private ShellViewModel _shell = null!;
+    private StaticHeadModel? _head;
 
     // Resolved here rather than in OnInitializedAsync: an async init renders once at its first
     // await, before it has assigned anything. A page can show a spinner through that render —
@@ -125,6 +140,8 @@
     private async Task Resolve()
     {
         _shell = await ShellFactory.BuildAsync(HttpContext);
+        _head = await HeadResolver.Resolve(HttpContext.Request.Path, _shell.CurrentMix,
+            HttpContext.RequestAborted);
         // Only when it is missing or stale: an unconditional Set-Cookie makes every response
         // uncacheable, and explicit changes already go through /Culture/Set.
         var resolved = CookieRequestCultureProvider.MakeCookieValue(
