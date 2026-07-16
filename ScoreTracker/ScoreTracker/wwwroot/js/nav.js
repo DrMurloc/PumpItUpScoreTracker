@@ -111,17 +111,19 @@
         }
     }
 
-    // Blazor navigates through pushState/replaceState, which fire no event of their own.
-    function wrapHistory(name) {
+    // Blazor and the pages navigate through pushState/replaceState, which fire no event of
+    // their own. A push is a step to somewhere else, so it closes any open sheet — a sheet is
+    // chrome over the page it was opened from, and the click handler cannot catch the search
+    // autocomplete, which navigates from a circuit without a link. A replace is the page
+    // rewriting its own URL in place (the tier list canonicalizing /TierLists into its folder
+    // route), so the sheet stays up.
+    function wrapHistory(name, leavesPage) {
         var original = history[name];
         if (typeof original !== 'function') return;
         history[name] = function () {
             var result = original.apply(this, arguments);
             refreshActiveNav();
-            // A sheet is chrome over the page it was opened from, so leaving that page
-            // closes it. The click handler catches links; it cannot catch the search
-            // autocomplete, which navigates from a circuit without one.
-            closeSheets();
+            if (leavesPage) closeSheets();
             return result;
         };
     }
@@ -205,8 +207,8 @@
         document.addEventListener('keydown', onKeyDown);
         window.addEventListener('resize', onResize);
         window.addEventListener('popstate', refreshActiveNav);
-        wrapHistory('pushState');
-        wrapHistory('replaceState');
+        wrapHistory('pushState', true);
+        wrapHistory('replaceState', false);
         // The dock's scroll watcher needs no circuit, so it starts with the page.
         if (window.pageDock) window.pageDock.watch();
         refreshActiveNav();
