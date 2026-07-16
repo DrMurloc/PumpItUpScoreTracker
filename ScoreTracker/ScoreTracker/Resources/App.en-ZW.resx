@@ -4389,4 +4389,16 @@
   <data name="Group by seed chart" xml:space="preserve">
     <value>Group by mrgl seed chart</value>
   </data>
+  <data name="Your best: {0} · you beat {1}% of Peers" xml:space="preserve">
+    <value>Your best: {0} · you beat {1}% of mrgl Peers</value>
+  </data>
+  <data name="Your best: {0}" xml:space="preserve">
+    <value>Your mrgl best: {0}</value>
+  </data>
+  <data name="All-time best" xml:space="preserve">
+    <value>All-time mrgl best</value>
+  </data>
+  <data name="No recent standouts — suggesting charts like your all-time best instead." xml:space="preserve">
+    <value>No recent standouts — suggesting charts like your all-time mrgl best instead, mrglglgl.</value>
+  </data>
 </root>

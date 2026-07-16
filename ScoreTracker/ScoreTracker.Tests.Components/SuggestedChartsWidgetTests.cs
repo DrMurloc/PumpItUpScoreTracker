@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using Bunit;
 using MediatR;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
@@ -87,12 +88,13 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
                 tiers.Select(t => new SongTierListEntry("Pass", t.ChartId, t.Tier, 0)).ToArray(), false));
     }
 
-    private IRenderedComponent<SuggestedChartsWidget> Render(SuggestedChartsConfig? config = null)
+    private IRenderedComponent<SuggestedChartsWidget> Render(SuggestedChartsConfig? config = null,
+        WidgetHeaderSlot? headerSlot = null)
     {
         config ??= new SuggestedChartsConfig { Goal = SuggestedGoal.HotStreak };
         var widget = new HomePageWidgetRecord(Guid.NewGuid(), "suggested-charts", null, 0, "1x2",
             WidgetConfigJson.Write(config), 1);
-        return base.Render(builder =>
+        RenderFragment inner = builder =>
         {
             builder.OpenComponent<MudPopoverProvider>(0);
             builder.CloseComponent();
@@ -100,12 +102,26 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
             builder.AddAttribute(2, nameof(SuggestedChartsWidget.Widget), widget);
             builder.AddAttribute(3, nameof(SuggestedChartsWidget.EffectiveMix), MixEnum.Phoenix);
             builder.CloseComponent();
+        };
+        return base.Render(builder =>
+        {
+            if (headerSlot != null)
+            {
+                builder.OpenComponent<CascadingValue<WidgetHeaderSlot>>(0);
+                builder.AddAttribute(1, "Value", headerSlot);
+                builder.AddAttribute(2, "ChildContent", inner);
+                builder.CloseComponent();
+            }
+            else
+            {
+                inner(builder);
+            }
         }).FindComponent<SuggestedChartsWidget>();
     }
 
-    private ChartRecommendation HotStreakRec(Guid chartId, double? ranking = 0.94) =>
+    private ChartRecommendation HotStreakRec(Guid chartId, double? ranking = 0.94, bool fallback = false) =>
         new(RecommendationCategories.HotStreak, chartId, "More charts like your recent standout plays",
-            SeedChartId: _seed.Id, SeedPeerRanking: ranking);
+            SeedChartId: _seed.Id, SeedPeerRanking: ranking, SeedIsFallback: fallback);
 
     [Fact]
     public void GroupedModeCaptionsTheSeedWithThePeersBarEvenForASingleSection()
@@ -161,6 +177,31 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
 
         Assert.Contains("871,204", cut.Markup);
         Assert.Contains("400 days old", cut.Markup);
+    }
+
+    [Fact]
+    public void FallbackSeedsRaiseTheHeaderPillAndSayYourBest()
+    {
+        SetUpRecommendations(HotStreakRec(_easyMatch.Id, fallback: true));
+        var slot = new WidgetHeaderSlot(() => { });
+
+        var cut = Render(headerSlot: slot);
+
+        Assert.NotNull(slot.Content);
+        Assert.Contains("Your best: District 1 S20 · you beat 94% of Peers", cut.Markup);
+        Assert.DoesNotContain("More like", cut.Markup);
+    }
+
+    [Fact]
+    public void FlagSeededLoadLeavesTheHeaderPillEmpty()
+    {
+        SetUpRecommendations(HotStreakRec(_easyMatch.Id));
+        var slot = new WidgetHeaderSlot(() => { });
+
+        var cut = Render(headerSlot: slot);
+
+        Assert.Null(slot.Content);
+        Assert.Contains("More like District 1 S20", cut.Markup);
     }
 
     [Fact]

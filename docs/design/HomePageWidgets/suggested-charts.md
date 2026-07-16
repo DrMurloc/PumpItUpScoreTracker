@@ -78,7 +78,8 @@ says "competitive matches"; renaming it is deferred, deliberately out of this sc
 | Right column | **Personalized Pass-lens blended tier** (targets are unpassed); old-score targets show their stale score + age | Owner: "super good." Pass difficulty is the honest read for unpassed charts. |
 | Old-scores toggle | "Treat very old scores as unplayed" — outdated = `AgeOutlierWeights` weight < 1.0 | Already exactly the owner's category (30-day grace floor + own-record age outlier). Composes with the push floor: the S9 passed three years ago fails the floor regardless. |
 | Level config | **None** | The similarity graph gates at folder ±1 ∩ scoring ±1.25, so expansion inherits "near what you just played" — like Title Hunt, this goal pins its own levels. |
-| Empty state | "No matching standouts yet, go push yourself to start getting suggestions!" | Flags only exist for sessions that raised a competitive level — a coasting month legitimately runs dry, and the copy says what to do about it. |
+| Fallback seeds (owner, field test 1) | **When zero flag seeds survive, the standing per-type competitive top-50 seeds instead** — newest score first, Peers bar still applies, look-back deliberately ignored, recommendations marked `SeedIsFallback` | The flags are write-time-only and born 2026-07-06; an established player whose plays predate the pipeline (the owner, on his own field test) has none at ANY window. The pool charts are by definition the plays that made their level. Captions become "Your best: {seed}…" and the widget pushes an "All-time best" pill into the title bar via the §2.3 header slot so the mode is visible. Seeds pre-claim themselves so a stale-scored seed never appears as another seed's target. |
+| Empty state | "No matching standouts yet, go push yourself to start getting suggestions!" | With the fallback in place this now only appears for accounts with no rating pools at all (or a bar nothing clears). |
 | Veto/feedback | Category key `"Hot Streak"`, one key across both layouts | Captions are display-only; the feedback store must not fragment per seed. |
 
 Defaults taken without a decision round (flip any at field test): seeds from CL-improver flags only
@@ -89,7 +90,8 @@ happens widget-side by the tier it fetches for display anyway.
 ### The pipeline
 
 1. **Seeds** — newest-first CompetitiveImprover highlights in the window (capped read), deduped
-   per chart, filtered to the config chart type.
+   per chart, filtered to the config chart type. **Zero survivors → fallback**: the per-type
+   competitive top-50, newest score first, no window.
 2. **Peers bar** — `GetChartScoreRankingsQuery` over the seed charts; keep `Ranking ≥ bar`.
    Skipped when the bar is 0. Tiny cohorts auto-pass (the rankings handler returns 1.0 with no
    cohort scores) — the improver flag already vouches for the seed. Note the semantics: the query

@@ -188,6 +188,10 @@ else
     /// <summary>Bumped by the host's header shuffle — the engine re-rolls its picks.</summary>
     [Parameter] public int RefreshToken { get; set; }
 
+    /// <summary>Title-bar slot (§2.3): carries the Hot Streak fallback stamp when the
+    /// suggestions came from the standing best pool rather than recent standouts.</summary>
+    [CascadingParameter] private WidgetHeaderSlot? HeaderSlot { get; set; }
+
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
     // Fill rows never show a score (they're unpassed by definition, owner round 3) —
@@ -245,6 +249,8 @@ else
             _loaded = true;
             return;
         }
+
+        UpdateFallbackPill(false);
 
         // Fill Gaps lens (owner, round 3): tier-list difficulty per fill chart — the
         // blended list covers unplayed charts, and Personalized bends it with the
@@ -311,6 +317,8 @@ else
     {
         _groupBySeedMode = groupBySeed;
         var known = recommendations.Where(r => charts.ContainsKey(r.ChartId)).ToArray();
+        // All of one load's recommendations share a seed source; any row tells us.
+        UpdateFallbackPill(known.Any(r => r.SeedIsFallback));
 
         _lensTiers.Clear();
         foreach (var folder in known.Select(r => charts[r.ChartId]).GroupBy(c => (c.Type, c.Level)))
@@ -332,7 +340,8 @@ else
                     .OrderBy(r => r.Tier ?? TierListCategory.Unrecorded)
                     .ToList();
                 _sections.Add(new SuggestionSection(RecommendationCategories.HotStreak,
-                    HotStreakCaption(group.Key, group.First().SeedPeerRanking, charts), rows));
+                    HotStreakCaption(group.Key, group.First().SeedPeerRanking,
+                        group.First().SeedIsFallback, charts), rows));
             }
         }
         else
@@ -346,15 +355,36 @@ else
         }
     }
 
-    private string HotStreakCaption(Guid? seedChartId, double? peerRanking,
+    // Fallback seeds are the standing best pool, not a recent play — "your best",
+    // not "more like what just worked", so the caption doesn't overclaim recency.
+    private string HotStreakCaption(Guid? seedChartId, double? peerRanking, bool isFallback,
         IReadOnlyDictionary<Guid, Chart> charts)
     {
         var label = SeedLabel(seedChartId, charts);
         if (label == null) return L[RecommendationCategories.HotStreak].Value;
+        if (isFallback)
+            return peerRanking != null
+                ? L["Your best: {0} · you beat {1}% of Peers", label, (int)Math.Round(peerRanking.Value * 100)].Value
+                : L["Your best: {0}", label].Value;
         return peerRanking != null
             ? L["More like {0} · you beat {1}% of Peers", label, (int)Math.Round(peerRanking.Value * 100)].Value
             : L["More like {0}", label].Value;
     }
+
+    private bool _fallbackPillShown;
+
+    private void UpdateFallbackPill(bool show)
+    {
+        if (HeaderSlot == null || show == _fallbackPillShown) return;
+        _fallbackPillShown = show;
+        HeaderSlot.Set(show ? FallbackPill() : null);
+    }
+
+    private RenderFragment FallbackPill() =>
+        @<span class="dash-head-pill"
+               title="@L["No recent standouts — suggesting charts like your all-time best instead."]">
+            @L["All-time best"]
+        </span>;
 
     private static string? SeedLabel(Guid? seedChartId, IReadOnlyDictionary<Guid, Chart> charts)
     {

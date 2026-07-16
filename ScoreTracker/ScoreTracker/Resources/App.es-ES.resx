@@ -4344,4 +4344,16 @@
   <data name="Group by seed chart" xml:space="preserve">
     <value>Agrupar por chart de origen</value>
   </data>
+  <data name="Your best: {0} · you beat {1}% of Peers" xml:space="preserve">
+    <value>Tu mejor: {0} · superaste al {1}% de tus pares</value>
+  </data>
+  <data name="Your best: {0}" xml:space="preserve">
+    <value>Tu mejor: {0}</value>
+  </data>
+  <data name="All-time best" xml:space="preserve">
+    <value>Mejores históricos</value>
+  </data>
+  <data name="No recent standouts — suggesting charts like your all-time best instead." xml:space="preserve">
+    <value>Sin actuaciones recientes: sugerimos charts parecidos a tus mejores históricos.</value>
+  </data>
 </root>

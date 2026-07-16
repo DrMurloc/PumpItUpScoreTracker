@@ -2473,6 +2473,19 @@ html.sheet-open .more-sheet-scrim {
     border-radius: 4px;
 }
 
+/* Small accent pill for header-slot status stamps (e.g. Hot Streak's fallback note). */
+.dash-head-pill {
+    font-size: .58rem;
+    font-weight: 800;
+    letter-spacing: .03em;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--mix-primary) 16%, transparent);
+    color: var(--mix-primary);
+    border: 1px solid color-mix(in srgb, var(--mix-primary) 40%, transparent);
+    white-space: nowrap;
+}
+
 .dash-drawer-body {
     padding: 16px;
 }

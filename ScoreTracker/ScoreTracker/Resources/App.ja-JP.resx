@@ -4467,4 +4467,16 @@
   <data name="Group by seed chart" xml:space="preserve">
     <value>元譜面ごとにまとめる</value>
   </data>
+  <data name="Your best: {0} · you beat {1}% of Peers" xml:space="preserve">
+    <value>自己ベスト: {0} · 同レベル帯の{1}%に勝利</value>
+  </data>
+  <data name="Your best: {0}" xml:space="preserve">
+    <value>自己ベスト: {0}</value>
+  </data>
+  <data name="All-time best" xml:space="preserve">
+    <value>自己ベスト基準</value>
+  </data>
+  <data name="No recent standouts — suggesting charts like your all-time best instead." xml:space="preserve">
+    <value>最近の好プレイがないため、自己ベストに似た譜面を提案しています。</value>
+  </data>
 </root>
