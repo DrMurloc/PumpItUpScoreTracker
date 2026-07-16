@@ -8,8 +8,8 @@ The bulk batch made structural decisions for the entries it added; those decisio
 
 ## Style conventions
 
-- **Address the user with formal `usted`.** The existing prose voice leans `usted` (`Use el importador dev-tools si quiere reimportar`, `no salga de esta página`, `de lo contrario sus puntajes no serán guardadas`), with one mixed string that drops into informal `tú` mid-sentence (`tendrá que introducirlos siempre que uses esa opción` — see Known issues). Mexico web UIs use both `tú` and `usted`; this file already chose `usted`. Match that for new entries — `usted` / `su` / `sus`, imperative `Use`, `Salga`, `Importe`, etc. Don't introduce `tú` / `tu` / `tus` outside the existing inconsistencies.
-- **Sentence case in values, even when the English key is Title Case.** Example: `"Difficulty Level"` → `"Nivel de dificultad"`, `"Phoenix Score Calculator"` → `"Calculadora de puntajes de Phoenix"`, `"Full Privacy Policy"` → `"Política de privacidad completa"`. The existing file mixes sentence case with English-influenced Title Case in several entries (`Conteo de Pasados`, `Tipo de Charts`, `Siguiente Letra`, `Subir Puntajes`, `Agregar a Favoritos`); standard Spanish orthography uses sentence case, so favor that for new entries and leave the older Title Case entries for a separate cleanup sweep — see Known issues.
+- **Address the user with formal `usted`.** The original prose voice chose `usted` (`Use el importador dev-tools si quiere reimportar`, `no salga de esta página`, `de lo contrario sus puntajes no serán guardadas`), and the 2026-04-26 bulk batch applied it sweepingly. **However**, the feature batches from mid-2026 (front door, home-page widgets, import widget, tier-list breakdown) landed in informal `tú` — the file is now register-forked (~96 tú-marked keys vs ~56 usted-marked). See Known issues: the fork needs an owner/native decision on direction before any sweep. Until that decision, match the register of the strings *around* the feature you're translating rather than adding to the imbalance.
+- **Sentence case in values, even when the English key is Title Case.** Example: `"Difficulty Level"` → `"Nivel de dificultad"`, `"Phoenix Score Calculator"` → `"Calculadora de puntajes de Phoenix"`, `"Full Privacy Policy"` → `"Política de privacidad completa"`. The older Title Case stragglers (`Conteo de Pasados`, `Tipo de Charts`, `Siguiente Letra`, `Subir Puntajes`, `Agregar a Favoritos`, `1+ Nivel más fácil/difícil`) were swept to sentence case in the 2026-07 QC pass; the file is uniform now.
 - **Brand and proper-noun casing is preserved verbatim.** `Score Tracker`, `Phoenix`, `XX`, `PIU`, `PIUScores`, `Discord`, `https://piugame.com` — keep their original casing inside Spanish sentences.
 - **Preserve positional placeholders verbatim.** `{0}`, `{1}`, `{2}` go into the value untouched, in whatever order Spanish grammar wants. Examples: `"Log In With"` (English value `"Log In With {0}"`) → `"Entrar con {0}"`; `"Vote Count"` → `"{0} Conteo de votos"`. (The latter is awkward — see Known issues.)
 - **Skip prose with inline markup.** Per CLAUDE.md, `<MudText>` bodies with embedded `<MudLink>`/other elements stay hardcoded English. Don't extract them, don't translate them.
@@ -20,7 +20,7 @@ The bulk batch made structural decisions for the entries it added; those decisio
   - `descargar` for download (established, `Descargar puntajes`).
   - `subir` for upload (established, `Subir Puntajes`).
   - `borrar` for delete (established, `Borrar de la lista de Cosas que hacer`); `eliminar` is also acceptable.
-  - `iniciar sesión` / `cerrar sesión` for login/logout (existing `Entrar sesión` / `Salir sesión` is awkward — see Known issues; new entries should use the standard forms when extending the login family).
+  - `iniciar sesión` / `cerrar sesión` for login/logout (the awkward `Entrar sesión` / `Salir sesión` forms were swept in the 2026-07 QC pass; the whole login family now uses the standard forms).
 
 ## Established term mappings
 
@@ -35,10 +35,10 @@ These have at least one existing translation in `App.es-MX.resx`. New translatio
 | Account | Cuenta | |
 | Account Creation? | ¿Crear cuenta? | Opening `¿` per Spanish punctuation. |
 | Actions | Acciones | |
-| Add to Favorites | Agregar a Favoritos | Title Case on `Favoritos` — older entry. New "Add to X" should use sentence case (`Agregar a favoritos`). Mexico uses `Agregar` over Spain's `Añadir`. |
+| Add to Favorites | Agregar a favoritos | Mexico uses `Agregar` over Spain's `Añadir`. |
 | Add to ToDo | Agregar a Cosas que hacer | "ToDo" rendered as `Cosas que hacer` (see To Do). |
 | Average | Promedio | |
-| Broken | Rota | Past participle, feminine default — likely modifying an implicit `chart` (treated as feminine here, see Charts gender note in Known issues). |
+| Broken | Roto | Past participle, masculine — agrees with `[el chart]` per the committed Charts-masculine decision. |
 | Cancel | Cancelar | |
 | Close | Cerrar | |
 | Completed | Completado | Masculine default. |
@@ -50,14 +50,14 @@ These have at least one existing translation in `App.es-MX.resx`. New translatio
 | Favorites | Favoritos | |
 | Full Privacy Policy | Política de privacidad completa | Sentence case. |
 | Hardest Player | Jugador más difícil | |
-| Hide Completed Charts | Esconder charts completos | `Esconder` rather than the more standard `Ocultar`; both are valid in Mexico — `Esconder` reads slightly more colloquial. Lean toward `Ocultar` for new "Hide" entries to match what other locales do consistently. |
+| Hide Completed Charts | Ocultar charts completos | The lone `Esconder` outlier was swept to `Ocultar` — every `Hide X` is `Ocultar X` now. |
 | Language | (untranslated stub) | Existing entry is the English string `Language`. Translate as `Idioma` when next touched. |
-| Log In With | Entrar con {0} | Verb form; placeholder takes the provider name (Discord, Google, Facebook). `Entrar` reads natural in Mexico, though `Iniciar sesión con {0}` is the more standard form — see Known issues for the login-family inconsistency. |
-| Login | Entrar sesión | **Awkward** — should be `Iniciar sesión` (standard) or `Inicio de sesión` (noun). See Known issues. |
-| Logout | Salir sesión | **Awkward** — should be `Cerrar sesión`. See Known issues. |
+| Log In With | Iniciar sesión con {0} | Verb form; placeholder takes the provider name (Discord, Google, Facebook). |
+| Login | Iniciar sesión | |
+| Logout | Cerrar sesión | |
 | Make Public / Private | Hacerla pública / Hacerla privada | Feminine `la` — implicit antecedent is `[la cuenta]`. Verb construction. |
 | Medium | Medio | Masculine default. |
-| Next Letter | Siguiente Letra | Title Case on `Letra` — older entry. Sentence case (`Siguiente letra`) for new entries. |
+| Next Letter | Siguiente letra | |
 | Not Graded Count | No clasificado | `Count` left implicit. |
 | Open Video | Abrir video | |
 | Place (rank) | (untranslated stub) | Existing entry is the English string `Place`. Translate as `Posición` (matches pt-BR; more idiomatic than literal `Lugar` for a leaderboard column). |
@@ -74,22 +74,22 @@ These have at least one existing translation in `App.es-MX.resx`. New translatio
 | Total Count | Total | `Count` left implicit. |
 | Tournaments | Torneos | |
 | Upload Image | (untranslated stub) | Existing entry is the English string `Upload Image`. Translate as `Subir imagen` when next touched. |
-| Upload Scores | Subir Puntajes | Title Case on `Puntajes` — older entry. Sentence case (`Subir puntajes`) for new uploads. |
-| Upload XX Scores | Subir puntajes de XX | Sentence case here (inconsistent with Upload Scores above). |
+| Upload Scores | Subir puntajes | |
+| Upload XX Scores | Subir puntajes de XX | |
 | Used Primarily for debugging | Se usa principalmente para debugging | `debugging` left as English loanword. |
 | Username | Usuario | |
 | Very Easy / Very Hard | Muy fácil / Muy difícil | |
 | Video | Video | Identical to English. (Spain uses `Vídeo` with accent; Mexico uses `Video`.) |
-| Vote Count | {0} Conteo de votos | **Awkward placeholder + label compound.** Should be `{0} votos` or `Conteo de votos: {0}`. See Known issues. |
-| 1+ Level Easier / Harder | 1+ Nivel más fácil / 1+ Nivel más difícil | Title Case on `Nivel` — older entries. Sentence case (`1+ nivel más fácil/difícil`) for new entries if possible. |
+| Vote Count | {0} votos | Matches the fr-FR `{0} votes` form. |
+| 1+ Level Easier / Harder | 1+ nivel más fácil / 1+ nivel más difícil | |
 
 ### PIU domain
 
 | English | es-MX | Notes |
 |---|---|---|
-| Chart(s) | Charts | **Untranslated**, kept English (matches pt-BR `chart` policy). Used compositionally with Spanish articles: `Aleatorizador de charts`, `Tipo de Charts`, `Esconder charts completos`. Capitalization is inconsistent (`Charts` vs `charts` mid-sentence — see Known issues). |
+| Chart(s) | Charts | **Untranslated**, kept English (matches pt-BR `chart` policy). Used compositionally with Spanish articles: `Aleatorizador de charts`, `Tipo de charts`, `Ocultar charts completos`. Lowercase `charts` mid-sentence; capitalized only standalone. |
 | Chart Randomizer | Aleatorizador de charts | `Aleatorizador` is technically correct but unusual; pt-BR uses `Sorteador`. Either is acceptable. |
-| Chart Type | Tipo de Charts | Title Case on `Charts`. Plural form here even though the English key is singular `Chart Type`. |
+| Chart Type | Tipo de charts | Plural form here even though the English key is singular `Chart Type`. |
 | CoOp | CoOp | Untranslated. |
 | Singles / Doubles | Simples / Dobles | **Translated** — `Simples` for Singles, `Dobles` for Doubles. Distinct from pt-BR / fr-FR / ja-JP / ko-KR which all keep these English (or use loanwords). Mexican PIU community usage may vary; the choice is in force, but worth confirming with native players if a sweep happens. |
 | Difficulty Level | Nivel de dificultad | Sentence case. |
@@ -97,15 +97,15 @@ These have at least one existing translation in `App.es-MX.resx`. New translatio
 | Mix | Versión | Translated, matches pt-BR `Versão`. (Compare ja-JP `バージョン`/`ベーション`, ko-KR `시리즈`, fr-FR `Mix` untranslated.) |
 | Phoenix / XX | Phoenix / XX | Game versions, untranslated proper nouns. "Phoenix Score Calculator" → `Calculadora de puntajes de Phoenix`; "Upload XX Scores" → `Subir puntajes de XX`; "Import Phoenix Scores" → `Importar puntajes de Phoenix`. |
 | Plate | Placa | **Translated** — same choice as fr-FR (`Plaque`). (Compare ja-JP `プレート` loanword, pt-BR `Plate` untranslated, ko-KR `플레이트` loanword.) |
-| Pass / Passed / Not Passed | Pasados / No Pasados | "Passed Count" → `Conteo de Pasados`; "Not Passed Count" → `Conteo de No Pasados`. Title Case on the past participles — older entries. Sentence case (`Conteo de pasados` / `Conteo de no pasados`) for new entries. Note: this codebase translates `Pass` (unlike pt-BR / fr-FR which keep English `pass`). |
+| Pass / Passed / Not Passed | Pasados / No pasados | "Passed Count" → `Conteo de pasados`; "Not Passed Count" → `Conteo de no pasados`. Note: this codebase translates `Pass` (unlike pt-BR / fr-FR which keep English `pass`). |
 | Score (singular) | Puntaje | "Score" → `Puntaje`. Mexican/LatAm form (Spain uses `Puntuación`). |
 | Scores (plural / collection) | Puntajes | "Save Scores" → `Guardar puntajes`; "Download Scores" → `Descargar puntajes`. |
-| score / scores (lowercase, mid-sentence loanword) | scores | One legacy entry mixes English `scores` mid-sentence (`importe sus scores`). Don't propagate — translate to `puntajes` for new entries. See Known issues. |
+| score / scores (lowercase, mid-sentence loanword) | ~~scores~~ | The legacy `importe sus scores` outlier was swept to `puntajes`. **Do not** use English `score(s)` mid-sentence in es-MX — that's the es-ES convention, and es-ES strings must never be copied here (see Known issues). |
 | Phoenix Score Calculator | Calculadora de puntajes de Phoenix | Sentence case. |
-| Saved Charts | Guardar Charts | **Wrong** — translates the past participle `Saved` as the infinitive verb `Guardar` ("to save"). Should be `Charts guardados`. See Known issues. |
+| Saved Charts | Charts guardados | Masculine plural agreement. |
 | Song | (untranslated stub) | Existing entry is the English string `Song`. Translate as `Canción` (matches the Song-compound translations below). |
 | Song Name | Nombre de canción | |
-| Song Image | Imágen de canción | **Typo** — should be `Imagen de canción` (no accent on `i`). See Known issues. |
+| Song Image | Imagen de canción | |
 | Song Duration | Duración de canción | |
 | Song Type | Tipo de canción | |
 | Song Artist | (untranslated stub) | Existing entry is the English string `Song Artist`. Translate as `Artista de la canción` (matches the Song-compound family). |
@@ -120,7 +120,7 @@ These have at least one existing translation in `App.es-MX.resx`. New translatio
 
 | English | es-MX | Notes |
 |---|---|---|
-| Broken | Rota | Past participle, feminine — implicit antecedent treated as feminine (`[la chart] rota`). |
+| Broken | Roto | Past participle, masculine — agrees with `[el chart]`. |
 | debugging | debugging | Untranslated loanword. (`Se usa principalmente para debugging`.) |
 | dev-tools | dev-tools | Untranslated loanword. (`Use el importador dev-tools`.) |
 
@@ -134,65 +134,23 @@ These have at least one existing translation in `App.es-MX.resx`. New translatio
 
 ## Known issues / native review needed
 
-These were carried over from the existing translations and should be reviewed by a native speaker. Keep structural and quality changes separate diffs.
+The mechanical items originally tracked here were fixed in the 2026-07 QC pass: the login family swept to the standard forms (`Iniciar sesión` / `Cerrar sesión` / `Iniciar sesión con {0}`), `Saved Charts` corrected to `Charts guardados`, `Vote Count` to `{0} votos`, the `Imágen` accent typo, the `antiguas`→`antiguos` gender disagreement in Use Password 3, `importe sus scores`→`puntajes` in Use Password 1, the seven Title Case stragglers swept to sentence case, `Rota`→`Roto` (Charts gender committed masculine), and the lone `Esconder`→`Ocultar` outlier. (The old `Use Password 2` register-mix string was replaced wholesale by the 2026-07 remember-password feature — its replacement is part of the register fork below.)
 
-### Critical / awkward translations
+### es-ES cross-contamination + register fork (NEEDS OWNER DECISION)
 
-- **`Login` → `Entrar sesión` / `Logout` → `Salir sesión`.** Both are non-idiomatic — Spanish requires a preposition (`Entrar a sesión` is also wrong because `entrar a` doesn't take `sesión`). Standard renderings:
-  - `Login` (noun) → `Inicio de sesión` or `Iniciar sesión`.
-  - `Logout` (verb / noun) → `Cerrar sesión`.
-  - The verb-form `Log In With` should likewise be `Iniciar sesión con {0}` rather than `Entrar con {0}`.
-  - **Fix as a single login-family sweep**, not piecemeal.
-- **`Saved Charts` → `Guardar Charts`.** Wrong — translates the past participle `Saved` as the infinitive verb `Guardar` ("to save"). Should be `Charts guardados` (masculine plural agreeing with `Charts` as masculine — see gender note below).
-- **`Vote Count` → `{0} Conteo de votos`.** The placeholder is unintegrated; reads as "{N} count of votes" rather than the intended "{N} votes" or "Vote count: {N}". Recommend `{0} votos` (matches the fr-FR `{0} votes` form) or `Conteo de votos: {0}`.
+The feature batches from mid-2026 (front door, home-page widgets, import widget / remember-password, tier-list breakdown, community highlights) landed es-MX values that read as **es-ES**, violating both this glossary and the es-ES glossary's "do not copy strings between the two Spanish files" rule. Measured 2026-07-16:
 
-### Spelling typos
+- **~248 non-trivial keys have values byte-identical to `App.es-ES.resx`** (some legitimately coincide — shared-Spanish labels with no register/vocabulary markers — but the overlap includes long prose that should diverge).
+- **54 keys use Spain-form `puntuación/puntuaciones`** where es-MX's established term is `puntaje(s)`; scattered strings also use `notas` for grades (es-ES's term — es-MX uses `Grado de letra`) and English `plates` (es-MX translates `Placa`).
+- **Register census: ~96 keys carry informal `tú` markers vs ~56 formal `usted`** — the file's established register is `usted`, so the majority of second-person strings now contradict the convention.
 
-- **`Imágen` → `Imagen`.** In `Song Image` → `Imágen de canción`. The acute accent on `í` is wrong — `imagen` is a paroxytone ending in `n` preceded by a vowel, but it doesn't take a written accent in the singular. Plural `imágenes` does.
-- **`puntajes más antiguas` → `puntajes más antiguos`.** In `Use Password 3`. Gender disagreement — `puntajes` is masculine, so the adjective must be `antiguos`, not `antiguas`.
-
-### Register inconsistency
-
-- **Mixed `usted` / `tú` in the same string.** `Use Password 2`: `No almacenamos un registro de tu usuario o contraseña, tendrá que introducirlos siempre que uses esa opción.` mixes informal `tu` (possessive) and `uses` (subjunctive) with formal `tendrá` (future). Pick one register and sweep:
-  - **Recommended:** all `usted` — `No almacenamos un registro de su usuario o contraseña, tendrá que introducirlos siempre que use esa opción.`
-  - Or all `tú` — `No almacenamos un registro de tu usuario o contraseña, tendrás que introducirlos siempre que uses esa opción.`
-  - The other Use Password strings use `usted`, so the `usted` sweep is the lower-churn fix.
-- **`importe sus scores`** (Use Password 1) — uses formal `Importe` and possessive `sus`, but mid-sentence English `scores` instead of `puntajes`. Convert to `puntajes` for consistency with the rest of the file.
-
-### Capitalization inconsistencies
-
-- **Mixed sentence case vs Title Case in values.** The file freely mixes sentence case (`Nivel de dificultad`, `Política de privacidad completa`, `Calculadora de puntajes de Phoenix`) with English-influenced Title Case (`Conteo de Pasados`, `Conteo de No Pasados`, `Tipo de Charts`, `Siguiente Letra`, `Subir Puntajes`, `Agregar a Favoritos`, `1+ Nivel más fácil`). Standard Spanish is **sentence case**. Recommend a one-shot sweep to lowercase non-initial, non-proper-noun words. Examples to fix:
-  - `Conteo de Pasados` → `Conteo de pasados`
-  - `Conteo de No Pasados` → `Conteo de no pasados`
-  - `Tipo de Charts` → `Tipo de charts` (keep `Charts` capitalized only if treated as proper noun; otherwise lowercase mid-sentence)
-  - `Siguiente Letra` → `Siguiente letra`
-  - `Subir Puntajes` → `Subir puntajes` (matches the sibling `Subir puntajes de XX`)
-  - `Agregar a Favoritos` → `Agregar a favoritos`
-  - `1+ Nivel más fácil` → `1+ nivel más fácil`
-
-### Charts capitalization and gender
-
-The English loanword `Charts` is treated inconsistently:
-
-- **Capitalized:** `Charts` (bare), `Tipo de Charts`, `Saved Charts → Guardar Charts`.
-- **Lowercase:** `Aleatorizador de charts`, `Esconder charts completos`.
-
-Gender: the past-participle adjectives in the file imply mixed gender:
-- **Masculine plural** (implicit): `charts completos` ("hidden completed charts").
-- **Feminine singular** (implicit): `Rota` for `Broken` (assumes `[la chart] rota`).
-- **Should-be:** `Charts guardados` (masculine plural) for the wrongly-translated `Saved Charts`.
-
-Pick one gender. Brazilian PIU community treats `chart` as **masculine** (per pt-BR glossary); recommend the same for es-MX since most of the existing implicit-agreement entries are already masculine (`completos`). Sweep `Rota` → `Roto` if `Broken` modifies a chart. Or if the implicit antecedent is `[la canción]` (feminine), the gender becomes feminine — disambiguate by context.
-
-For lowercase vs capitalized: recommend **lowercase `charts`** mid-sentence (matches pt-BR), capitalized only when standalone.
+Fix direction is an owner/native call, because the two consistent end-states pull opposite ways: (a) re-localize the contaminated batch into `usted` + `puntaje` es-MX (honors this glossary, ~100+ strings to rewrite), or (b) flip the register convention to `tú` (modern Mexican web UI is drifting that way) and still fix the vocabulary (`puntuación`→`puntaje` etc.), sweeping the older `usted` core instead. Either way the vocabulary fixes are mandatory; only the register direction is a choice. **Do it as one dedicated sweep, not piecemeal.**
 
 ### Questionable word choices
 
-- **`Esconder` vs `Ocultar` for "Hide".** `Hide Completed Charts` → `Esconder charts completos`. `Esconder` reads more colloquial / "hide a physical object"; `Ocultar` is the more standard UI verb. Mexican usage accepts both, but `Ocultar` is cleaner for UI labels.
 - **`Cosas que hacer` for "To Do".** Literal but verbose. `Pendientes` (matches pt-BR) is shorter and more idiomatic for a task-list label. Compounds would shrink: `Agregar a pendientes`, `Borrar de pendientes`. Consider switching in a future cleanup.
 - **`Aleatorizador de charts` for "Chart Randomizer".** Technically correct but `Aleatorizador` is uncommon as a noun. Alternatives: `Sorteador de charts` (matches pt-BR `Sorteador de charts`), or `Generador aleatorio de charts`. Either reads more naturally.
 - **`Grado de letra` for "Letter Grade".** Literal translation. Mexican PIU community usage isn't established; the term works but `Letra de calificación` or `Calificación` (just "grade") might fit better depending on context.
-- **`Place` left untranslated as English.** Should be `Posición` (matches pt-BR `Posição`). `Lugar` is the literal translation but reads less naturally for a leaderboard column.
 
 ## Open decisions (terms upcoming batches will need)
 
@@ -258,12 +216,12 @@ The conventions below were committed by this batch. Future entries should reuse 
 
 ### Conventions committed by the bulk batch
 
-- **Sentence case throughout for new entries.** All ~500 new entries use sentence case (`Nivel competitivo`, `Distribución de puntajes`, `Calculadora de vida de PIU`, `Detalles del chart`). The older Title Case entries (`Conteo de Pasados`, `Tipo de Charts`, `Siguiente Letra`, `Subir Puntajes`, `Agregar a Favoritos`, `1+ Nivel más fácil`) are not retrofitted in this batch — fix in a separate sweep.
-- **Formal `usted` register, sweepingly applied.** Every prose entry uses `usted` voice — `Su cuenta`, `sus puntajes`, `Use el botón`, `Asegúrese de`, `Tenga en cuenta`, `Vuelva a revisar`, `Si abandona esta página`. No `tú` / `tus` introduced. The pre-existing `Use Password 2` register-mix (`tu` + `tendrá` + `uses`) remains a known issue to sweep.
-- **`Charts` lowercase mid-sentence.** New entries treat `charts` as a lowercase common-noun loanword in prose (`Lista de charts`, `Comparación de charts`, `Mostrar solo charts sugeridos`, `Tener {0} charts`). Capitalized `Charts` reserved for standalone labels and proper-noun-feeling positions (`Charts semanales`, `Top 50 {0} Charts` style). The older `Tipo de Charts` Title-Case form is left for the separate sweep.
-- **`Charts` is masculine.** New agreement-bearing entries use masculine plural (`charts repetidos`, `charts sugeridos`, `charts completos`, `Chart guardado`, `Chart sugerido`, `Chart seleccionado`). The older feminine `Rota` (for `Broken`) remains a known issue — should become `Roto` if antecedent is `[el chart]`. Sweep alongside the Charts gender pass.
+- **Sentence case throughout for new entries.** All ~500 new entries use sentence case (`Nivel competitivo`, `Distribución de puntajes`, `Calculadora de vida de PIU`, `Detalles del chart`). The older Title Case entries were retrofitted in the 2026-07 QC pass — the file is uniform.
+- **Formal `usted` register, sweepingly applied.** Every prose entry in this batch uses `usted` voice — `Su cuenta`, `sus puntajes`, `Use el botón`, `Asegúrese de`, `Tenga en cuenta`, `Vuelva a revisar`, `Si abandona esta página`. No `tú` / `tus` introduced. (The mid-2026 feature batches later broke this — see the register-fork known issue.)
+- **`Charts` lowercase mid-sentence.** New entries treat `charts` as a lowercase common-noun loanword in prose (`Lista de charts`, `Comparación de charts`, `Mostrar solo charts sugeridos`, `Tener {0} charts`). Capitalized `Charts` reserved for standalone labels and proper-noun-feeling positions (`Charts semanales`, `Top 50 {0} Charts` style).
+- **`Charts` is masculine.** Agreement-bearing entries use masculine (`charts repetidos`, `charts sugeridos`, `charts completos`, `Chart guardado`, `Chart sugerido`, `Chart seleccionado`, `Roto` for `Broken`).
 - **`Show` → `Mostrar` consistently.** All `Show X` entries use `Mostrar X` (matches pt-BR `Mostrar` and fr-FR `Montrer` patterns). No `Enseñar` / `Ver` variants introduced.
-- **`Hide` → `Ocultar` consistently for new entries.** The older `Esconder charts completos` (using `Esconder`) remains as the lone pre-batch outlier; sweep when convenient. New `Hide X` entries are `Ocultar X` (`Ocultar chart para esta categoría`, `Ocultar charts sin record`, `Ocultar charts con cero de puntaje`).
+- **`Hide` → `Ocultar` consistently.** All `Hide X` entries are `Ocultar X` (`Ocultar chart para esta categoría`, `Ocultar charts sin record`, `Ocultar charts con cero de puntaje`, `Ocultar charts completos`).
 - **PIU jargon stays English mid-sentence.** Confirmed for: `Pass`, `Pase`, `Step Artist`, `Spreadsheet`, `Stage Break`, `lifebar`, `Lifebar` (capitalized at start of label), `bad`, `miss`, `perfect`, `great`, `good`, `combo`, `run`, `play(s)`, `Rainbow Life`, `Stage Break`, `Stamina`, `Bounty`/`Bounties`, `Seed`, `folder`, `JSON`, `CSV`, `Spreadsheet`, `Phoenix`, `XX`, `PIU`, `PIUGame`, `dev tools`, `debugging`, `hacky`, `data-mine`, `JSON`, `TLDR`, `TRUE`/`FALSE`, judgment plurals (`bads`, `misses`, `perfects`, `greats`, `goods`). Lowercase when used as a generic noun in prose; capitalized when standalone label or proper-noun-feeling.
 - **`Combo X / X Break` compound headers.** "Perfect Combo, Miss Break" → `Combo Perfect, Miss Break` (Spanish word order, English judgment + break terms verbatim).
 - **`lifebar` lowercase loanword.** `lifebar` mid-prose (`la lifebar`, `su lifebar`, `desborde de la lifebar`); `Lifebar` capitalized only at start of a label (`Lifebar por nivel`, `Calculadora de lifebar`, `Descripción de la lifebar`, `Estadísticas de lifebar`).
@@ -598,6 +556,6 @@ Short labels (column headers, button text) are likely fine.
 2. List its English keys (`grep -oP '(?<=L\[")[^"]+' ScoreTracker/ScoreTracker/Pages/<Folder>/**/*.razor` or similar).
 3. Cross-reference against `App.es-MX.resx` to find which are missing.
 4. Translate using this glossary. **If a new term needs a decision, add a row to "Established term mappings" before translating.**
-5. For inconsistency fixes (login family, sentence-case sweep on the older Title-Case entries, `Imágen` → `Imagen`, `Esconder` → `Ocultar` for the one outlier, `Cosas que hacer` → `Pendientes`, `Rota` → `Roto` for the Charts gender sweep, register normalization in `Use Password 2`, the `Simples`/`Dobles` vs `Singles`/`Doubles` split-treatment), do **one batch per category** so the diff is reviewable.
+5. For the remaining inconsistency fixes (the es-ES contamination / register-fork sweep once the owner picks a direction, `Cosas que hacer` → `Pendientes` if adopted, the `Simples`/`Dobles` vs `Singles`/`Doubles` split-treatment), do **one batch per category** so the diff is reviewable.
 6. `dotnet build ScoreTracker/ScoreTracker.sln -c Release` to confirm resx well-formedness.
 7. PR titled like `Translate <Folder> to es-MX` or `Fix es-MX <inconsistency>`.
