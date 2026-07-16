@@ -29,8 +29,11 @@ internal static class ChartVerdictService
     ///     A healthy bucket in the range that matters runs 15–90 passers, so ten is a low
     ///     bar that still demands a population. The knee only ever moves later, never
     ///     earlier — this cannot invent a knee, only decline to believe one.
+    ///     The number is published (<see cref="ChartEvidenceThresholds" />) because the graph
+    ///     this sentence captions is drawn on the far side of the vertical boundary and has
+    ///     to hold the same bar; it did not, and the two contradicted each other on the page.
     /// </summary>
-    internal const int YieldKneeMinimumPassesPerLevel = 10;
+    internal const int YieldKneeMinimumPassesPerLevel = ChartEvidenceThresholds.MinimumPerCompetitiveLevel;
 
     /// <summary>An adjacent percentile jump this big is a letter wall.</summary>
     internal const double LetterWallMinimumJump = 0.25;

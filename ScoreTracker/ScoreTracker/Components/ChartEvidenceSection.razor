@@ -21,8 +21,10 @@
 {
     <div class="chart-evidence">
         @* Passes and scores by competitive level lead: they are the two that answer "can I
-           do this, and what will I get". Letters and plates are supporting detail. *@
-        @if (_hasScores)
+           do this, and what will I get". Letters and plates are supporting detail.
+           Each card asks for its OWN data rather than for "any scores at all": a chart can
+           have plenty of scores and still no rung worth drawing, once the unrated are out. *@
+        @if (_passes.Any())
         {
             <div class="chart-evidence-card">
                 <span class="chart-overline">@L["Passes by competitive level"]</span>
@@ -47,6 +49,13 @@
                     </ApexChart>
                 </div>
             </div>
+        }
+        @* No rung with a real population means no envelope worth drawing — three flat lines
+           through one player each is not a distribution, and an empty box is worse than an
+           absent one. The passes histogram above still stands: it needs no population to be
+           honest, it IS the population. *@
+        @if (_averages.Any())
+        {
             <div class="chart-evidence-card">
                 <span class="chart-overline">@L["Scores by competitive level"]</span>
                 <p class="chart-evidence-caption">
@@ -260,18 +269,36 @@
             _plateOptions.PlotOptions = new PlotOptions { Bar = new PlotOptionsBar { Distributed = true } };
             _plateOptions.Legend = new Legend { Show = false };
 
+            // The unrated never make it into a bucket: at or below the floor a competitive
+            // level means "not enough data", not "beginner", so there is no rung to put them
+            // on. Left in, ~900 accounts land on rung 1 and the left tail turns into a claim
+            // that level-1 players clear D23s.
             var buckets = (await Mediator.Send(new GetPlayersStatsQuery(scores.Select(s => s.UserId).Distinct(), Mix)))
-                .ToDictionary(s => s.UserId, s => (int)Math.Round(Chart.Type == ChartType.Single
+                .Select(s => (s.UserId, Level: Chart.Type == ChartType.Single
                     ? s.SinglesCompetitiveLevel
-                    : s.DoublesCompetitiveLevel));
+                    : s.DoublesCompetitiveLevel))
+                .Where(s => s.Level > ChartEvidenceThresholds.UnratedCompetitiveLevel)
+                .ToDictionary(s => s.UserId, s => (int)Math.Round(s.Level));
             var byLevel = scores.Where(s => buckets.ContainsKey(s.UserId))
                 .GroupBy(s => buckets[s.UserId])
                 .OrderBy(g => g.Key)
                 .ToArray();
-            _minimums = byLevel.Select(g => new LevelPoint(g.Key, g.Min(s => (int)s.Score))).ToArray();
-            _averages = byLevel.Select(g => new LevelPoint(g.Key, (int)g.Average(s => (int)s.Score))).ToArray();
-            _maximums = byLevel.Select(g => new LevelPoint(g.Key, g.Max(s => (int)s.Score))).ToArray();
+
+            // The passes histogram keeps every rung — its left tail is the question it
+            // answers ("who is the lowest level that can clear this"), and gating a
+            // population chart on population would erase exactly that.
             _passes = byLevel.Select(g => new LevelPoint(g.Key, g.Count(s => !s.IsBroken))).ToArray();
+
+            // The score envelope cannot: at a population of one, the minimum, the average
+            // and the maximum are the same number wearing three hats, and the min/max lines
+            // swing on whoever happened to show up. Same bar the knee sentence above it
+            // holds — they are drawn from the same evidence and used to disagree out loud.
+            var populated = byLevel
+                .Where(g => g.Count() >= ChartEvidenceThresholds.MinimumPerCompetitiveLevel)
+                .ToArray();
+            _minimums = populated.Select(g => new LevelPoint(g.Key, g.Min(s => (int)s.Score))).ToArray();
+            _averages = populated.Select(g => new LevelPoint(g.Key, (int)g.Average(s => (int)s.Score))).ToArray();
+            _maximums = populated.Select(g => new LevelPoint(g.Key, g.Max(s => (int)s.Score))).ToArray();
 
             _myPoint = null;
             if (CurrentUser.IsLoggedIn)
