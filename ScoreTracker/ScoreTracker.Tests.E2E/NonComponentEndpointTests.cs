@@ -92,6 +92,18 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
         Assert.Contains(urls, url => url.StartsWith("https://piuscores.arroweclip.se/Chart/"));
     }
 
+    /// <summary>
+    ///     Unmatched routes used to answer 200 with an empty app shell — a soft-404 to
+    ///     every crawler. Under the static router the framework answers a real 404.
+    /// </summary>
+    [Fact]
+    public async Task UnknownRoutesAnswer404()
+    {
+        var response = await _client.GetAsync("/this-route-does-not-exist");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
     /// <summary>Crawlers discover the sitemap through robots.txt, not Search Console alone.</summary>
     [Fact]
     public async Task RobotsTxtPointsCrawlersAtTheSitemap()

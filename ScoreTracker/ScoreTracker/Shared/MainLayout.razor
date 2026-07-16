@@ -2,21 +2,20 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
-@using Microsoft.AspNetCore.Components.Routing
 @inherits LayoutComponentBase
-@implements IDisposable
 @inject IUiSettingsAccessor UiSettings
 @inject NavigationManager NavManager
 
-@* Shell chrome — nav, mix pill, bottom nav, More sheet — is server-rendered by App.razor
-   (docs/design/static-shell.md). What stays here is the legacy-mix gate, the dock slot's
-   host, and the recap pointer. The drawer host went with the drawers: the three pages
-   that open one wrap it in their own MudLayout.
+@* The layout renders statically around every page (the page itself is the island). Shell
+   chrome — nav, mix pill, bottom nav, More sheet — is server-rendered by App.razor
+   (docs/design/static-shell.md). What stays here is the legacy-mix gate, evaluated per
+   request, and the two islands: the dock slot's host and the recap pointer. The drawer
+   host went with the drawers: the three pages that open one wrap it in their own
+   MudLayout.
 
-   The Mud providers are NOT here. They mount ahead of the shell as their own root, because
-   this layout is the last root to initialise and an island in the app bar would ask for a
-   popover before it existed. *@
-<PageDockHost></PageDockHost>
+   The Mud providers are NOT here. They mount ahead of the shell as their own root, and an
+   island in the app bar would ask for a popover before a provider this late existed. *@
+<PageDockHost @rendermode="RenderModes.Interactive"></PageDockHost>
 
 <MudContainer>
     @if (LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath))
@@ -35,42 +34,22 @@
     }
 </MudContainer>
 
-<RecapPointer></RecapPointer>
+<RecapPointer @rendermode="RenderModes.Interactive"></RecapPointer>
 
 @code
 {
     // Resolved from the request by the shell, so the gate can evaluate on the first render.
     private MixEnum _currentMix = MixEnum.Phoenix;
 
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        RedirectIfGated();
-        InvokeAsync(StateHasChanged);
-    }
-
-    /// <summary>
-    ///     Gated routes soft-redirect to the tier lists page (the one destination every
-    ///     mix can render) instead of loading — pages that predate legacy mixes throw
-    ///     on them, so they must never begin initializing (docs/design/legacy-mixes.md).
-    /// </summary>
-    private bool RedirectIfGated()
-    {
-        if (!LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath)) return false;
-        NavManager.NavigateTo("/TierLists");
-        return true;
-    }
-
-    public void Dispose()
-    {
-        // Defensive: a circuit torn down mid-render (hard refresh) can dispose the layout
-        // before injection finished — observed once in the field as an NRE here.
-        if (NavManager is not null) NavManager.LocationChanged -= OnLocationChanged;
-    }
-
     protected override async Task OnInitializedAsync()
     {
-        NavManager.LocationChanged += OnLocationChanged;
         _currentMix = await UiSettings.GetSelectedMix();
-        RedirectIfGated();
+        // Gated routes redirect to the tier lists (the one destination every mix can
+        // render) instead of loading — pages that predate legacy mixes throw on them, so
+        // they must never begin initializing (docs/design/legacy-mixes.md). Under static
+        // SSR this NavigateTo is a real HTTP redirect, issued before anything paints;
+        // every navigation is a full request, so it runs per page view.
+        if (LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath))
+            NavManager.NavigateTo("/TierLists");
     }
 }
