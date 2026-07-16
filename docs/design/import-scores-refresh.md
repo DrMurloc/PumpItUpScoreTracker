@@ -63,9 +63,11 @@ the copy deck below is the mock's copy verbatim.
 | PIU Tracker privacy warning | PIU Tracker is fully public — scores sent there are visible to everyone. |
 | Manual expander label | Manual import — console script + CSV |
 | Manual footnote | For re-importing older scores |
-| Step 1 | Copy the script. |
-| Step 2 | While logged in on phoenix.piugame.com, paste it into the browser console (F12) — it downloads a CSV of your scores. Ad blockers can break it. |
-| Step 3 | Upload the CSV here — also takes a hand-kept spreadsheet with the same columns. |
+| Step 1 | Choose which pages of your best scores to pull. Leave To page empty for all of them. |
+| Step 2 | Copy the script. |
+| Step 3 | While logged in on phoenix.piugame.com, paste it into the browser console (F12) — it downloads a CSV of your scores. Ad blockers can break it. |
+| Step 4 | Upload the CSV here — also takes a hand-kept spreadsheet with the same columns. |
+| Skeleton caption | Imported scores will appear here as they come in. |
 | Confirming | Only new or improved scores will be saved. Saving can't be undone — stopping midway keeps what's already saved. |
 | Saving | Leaving or cancelling stops the upload; scores already saved stay. |
 | Failures | Some rows couldn't be imported. Download the failures, fix them, and re-upload. |
@@ -82,6 +84,14 @@ Voice: second person, "PIU Scores" (with the space), no first-person "I", no apo
   user-facing title becomes "Import Scores", matching the nav and the widget.
 - The CSV wire shape (`Song,Difficulty,Score,LetterGrade,Plate`) and
   `PhoenixScoreFileExtractor` are untouched.
+
+## Field-test rounds
+
+- **R1 (2026-07-16)**: top spacing on the card; the results skeleton gets a naming caption
+  (an unlabeled shimmer read as broken); the Remember checkbox renders only while there is a
+  typed password to remember (the saved alert + Forget already carry the stored state); the
+  manual steps reorder to page range → copy → console → upload, because the copied script
+  embeds the page range.
 
 ## Test strategy
 

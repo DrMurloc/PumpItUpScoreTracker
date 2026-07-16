@@ -4381,13 +4381,13 @@
     <value>Pour réimporter d'anciens scores</value>
   </data>
   <data name="Import Manual Step 1" xml:space="preserve">
-    <value>Copiez le script.</value>
+    <value>Choisissez les pages de vos meilleurs scores à récupérer. Laissez À la page vide pour tout prendre.</value>
   </data>
   <data name="Import Manual Step 2" xml:space="preserve">
-    <value>Connecté sur phoenix.piugame.com, collez-le dans la console du navigateur (F12) — il télécharge un CSV de vos scores. Les bloqueurs de publicité peuvent le casser.</value>
+    <value>Copiez le script.</value>
   </data>
   <data name="Import Manual Step 3" xml:space="preserve">
-    <value>Uploadez le CSV ici — accepte aussi un tableur tenu à la main avec les mêmes colonnes.</value>
+    <value>Connecté sur phoenix.piugame.com, collez-le dans la console du navigateur (F12) — il télécharge un CSV de vos scores. Les bloqueurs de publicité peuvent le casser.</value>
   </data>
   <data name="From page" xml:space="preserve">
     <value>De la page</value>
@@ -4439,5 +4439,11 @@
   </data>
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>Part des sections du chart présentant chaque compétence</value>
+  </data>
+  <data name="Import Manual Step 4" xml:space="preserve">
+    <value>Uploadez le CSV ici — accepte aussi un tableur tenu à la main avec les mêmes colonnes.</value>
+  </data>
+  <data name="Imported scores will appear here as they come in." xml:space="preserve">
+    <value>Les scores importés apparaîtront ici au fur et à mesure.</value>
   </data>
 </root>

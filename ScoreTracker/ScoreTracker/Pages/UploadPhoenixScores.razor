@@ -30,7 +30,7 @@
 
 @* The form is the page (design doc D1/D2): credentials, options and Import sit above the fold;
    the script/CSV flow lives in the manual-import expander below. *@
-<MudCard>
+<MudCard Class="mt-4">
     <MudCardHeader><h2>@L["Import Scores"]</h2></MudCardHeader>
     <MudCardContent>
         <MudText Typo="Typo.body2" Class="mb-4">@L["Import Lede"]</MudText>
@@ -75,8 +75,13 @@
             <MudItem xs="12" sm="6">
                 <MudCheckBox T="bool" Label="@L["Include Broken Scores"]" @bind-Value="_includeBroken" Disabled="_isImporting"></MudCheckBox>
                 <MudText Typo="Typo.caption" Class="ml-10 d-block">@L["Import Broken Helper"]</MudText>
-                <MudCheckBox T="bool" Value="_rememberPassword" ValueChanged="OnRememberChanged" Disabled="_isImporting"
-                             Label="@L["Remember my password on this device"]"></MudCheckBox>
+                @* A saved credential already says so in the alert — the checkbox only offers
+                   the choice while there is a typed password to remember. *@
+                @if (!_hasStoredCredential)
+                {
+                    <MudCheckBox T="bool" Value="_rememberPassword" ValueChanged="OnRememberChanged" Disabled="_isImporting"
+                                 Label="@L["Remember my password on this device"]"></MudCheckBox>
+                }
                 <MudCheckBox T="bool" Label="@L["Also send scores to piutracker.app"]" Disabled="_isImporting"
                              Value="_alsoImportPiuTracker" ValueChanged="d=>SetPiuTrackerImport(d)"></MudCheckBox>
                 @if (_alsoImportPiuTracker && !_isPublic)
@@ -126,8 +131,10 @@
             }
             @if (_isImporting && !_scores.Any())
             {
-                @* The incoming results, shaped before they arrive (UX rule 9). *@
+                @* The incoming results, shaped before they arrive (UX rule 9) — named, so the
+                   empty shimmer reads as "results pending", not a broken render. *@
                 <MudItem xs="12">
+                    <MudText Typo="Typo.caption" Class="d-block mb-1">@L["Imported scores will appear here as they come in."]</MudText>
                     @for (var i = 0; i < 3; i++)
                     {
                         <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="48px" Class="mb-2 rounded"></MudSkeleton>
@@ -201,15 +208,11 @@
         @switch (_csvStep)
         {
             case CsvStep.Idle:
+                @* Page range comes first — the copied script embeds it, so copying before
+                   picking pages would hand out a stale script. *@
                 <ol class="import-manual-steps">
                     <li>
                         <MudText Typo="Typo.body2">@L["Import Manual Step 1"]</MudText>
-                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Class="mt-1"
-                                   StartIcon="@Icons.Material.Filled.ContentCopy"
-                                   OnClick="CopyPIUGameScript">@L["Copy Script"]</MudButton>
-                    </li>
-                    <li>
-                        <MudText Typo="Typo.body2">@L["Import Manual Step 2"]</MudText>
                         <MudGrid Spacing="2" Class="mt-0">
                             <MudItem xs="6" sm="3">
                                 <MudNumericField T="int" Min="1" Label="@L["From page"]" @bind-Value="_startPage"></MudNumericField>
@@ -220,7 +223,16 @@
                         </MudGrid>
                     </li>
                     <li>
+                        <MudText Typo="Typo.body2">@L["Import Manual Step 2"]</MudText>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Class="mt-1"
+                                   StartIcon="@Icons.Material.Filled.ContentCopy"
+                                   OnClick="CopyPIUGameScript">@L["Copy Script"]</MudButton>
+                    </li>
+                    <li>
                         <MudText Typo="Typo.body2">@L["Import Manual Step 3"]</MudText>
+                    </li>
+                    <li>
+                        <MudText Typo="Typo.body2">@L["Import Manual Step 4"]</MudText>
                         <MudButton HtmlTag="label"
                                    Variant="Variant.Filled"
                                    Color="Color.Primary"

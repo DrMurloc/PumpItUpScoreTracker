@@ -4306,13 +4306,13 @@
     <value>For re-importing older glublrgl</value>
   </data>
   <data name="Import Manual Step 1" xml:space="preserve">
-    <value>Mrrr the script.</value>
+    <value>Choose which pages of your best glublrgl to pull. Leave To page empty for all of them.</value>
   </data>
   <data name="Import Manual Step 2" xml:space="preserve">
-    <value>While logged in on phoenix.piugame.com, paste it into the browser console (F12) — it downloads a CSV of your scores. Ad blockers can mrgl it up.</value>
+    <value>Mrrr the script.</value>
   </data>
   <data name="Import Manual Step 3" xml:space="preserve">
-    <value>Upload the CSV here — also takes a hand-kept spreadsheet with the same columns.</value>
+    <value>While logged in on phoenix.piugame.com, paste it into the browser console (F12) — it downloads a CSV of your scores. Ad blockers can mrgl it up.</value>
   </data>
   <data name="From page" xml:space="preserve">
     <value>From page</value>
@@ -4364,5 +4364,11 @@
   </data>
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>Shrgre of chart sectrgns featrgring each skrgll</value>
+  </data>
+  <data name="Import Manual Step 4" xml:space="preserve">
+    <value>Upload the CSV here — also takes a hand-kept spreadsheet with the same columns.</value>
+  </data>
+  <data name="Imported scores will appear here as they come in." xml:space="preserve">
+    <value>Mrglported glublrgl will appear here as they come in.</value>
   </data>
 </root>

@@ -4383,13 +4383,13 @@
     <value>古いスコアの再インポート用</value>
   </data>
   <data name="Import Manual Step 1" xml:space="preserve">
-    <value>スクリプトをコピーします。</value>
+    <value>取得するベストスコアのページ範囲を選びます。終了ページを空にするとすべて取得します。</value>
   </data>
   <data name="Import Manual Step 2" xml:space="preserve">
-    <value>phoenix.piugame.com にログインした状態で、ブラウザのコンソール（F12）に貼り付けると、スコアの CSV がダウンロードされます。広告ブロッカーが動作を妨げることがあります。</value>
+    <value>スクリプトをコピーします。</value>
   </data>
   <data name="Import Manual Step 3" xml:space="preserve">
-    <value>その CSV をここにアップロードします。同じ列構成の自作スプレッドシートも使えます。</value>
+    <value>phoenix.piugame.com にログインした状態で、ブラウザのコンソール（F12）に貼り付けると、スコアの CSV がダウンロードされます。広告ブロッカーが動作を妨げることがあります。</value>
   </data>
   <data name="From page" xml:space="preserve">
     <value>開始ページ</value>
@@ -4441,5 +4441,11 @@
   </data>
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>各スキルが登場するチャートセクションの割合</value>
+  </data>
+  <data name="Import Manual Step 4" xml:space="preserve">
+    <value>その CSV をここにアップロードします。同じ列構成の自作スプレッドシートも使えます。</value>
+  </data>
+  <data name="Imported scores will appear here as they come in." xml:space="preserve">
+    <value>インポートされたスコアは、届き次第ここに表示されます。</value>
   </data>
 </root>

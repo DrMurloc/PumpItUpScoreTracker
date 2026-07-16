@@ -4263,13 +4263,13 @@
     <value>Para reimportar puntajes antiguos</value>
   </data>
   <data name="Import Manual Step 1" xml:space="preserve">
-    <value>Copia el script.</value>
+    <value>Elige qué páginas de tus mejores puntajes extraer. Deja Hasta la página vacío para todas.</value>
   </data>
   <data name="Import Manual Step 2" xml:space="preserve">
-    <value>Con la sesión iniciada en phoenix.piugame.com, pégalo en la consola del navegador (F12): descargará un CSV con tus puntajes. Los bloqueadores de anuncios pueden romperlo.</value>
+    <value>Copia el script.</value>
   </data>
   <data name="Import Manual Step 3" xml:space="preserve">
-    <value>Sube aquí el CSV — también acepta una hoja de cálculo propia con las mismas columnas.</value>
+    <value>Con la sesión iniciada en phoenix.piugame.com, pégalo en la consola del navegador (F12): descargará un CSV con tus puntajes. Los bloqueadores de anuncios pueden romperlo.</value>
   </data>
   <data name="From page" xml:space="preserve">
     <value>Desde la página</value>
@@ -4321,5 +4321,11 @@
   </data>
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>Proporción de secciones del chart con cada habilidad</value>
+  </data>
+  <data name="Import Manual Step 4" xml:space="preserve">
+    <value>Sube aquí el CSV — también acepta una hoja de cálculo propia con las mismas columnas.</value>
+  </data>
+  <data name="Imported scores will appear here as they come in." xml:space="preserve">
+    <value>Los puntajes importados aparecerán aquí a medida que lleguen.</value>
   </data>
 </root>

@@ -118,8 +118,10 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
         cut.WaitForAssertion(() =>
         {
             Assert.Contains("Saved on this device", cut.Markup);
-            // The credential fields disappear; the options and Import stay.
+            // The credential fields disappear — and so does the Remember checkbox, since the
+            // saved alert already says it; the other options and Import stay.
             Assert.DoesNotContain(cut.FindAll("input"), i => i.GetAttribute("type") == "password");
+            Assert.DoesNotContain("Remember my password on this device", cut.Markup);
             Assert.Contains("Include Broken Scores", cut.Markup);
             Assert.All(ImportButtons(cut), b => Assert.False(b.HasAttribute("disabled")));
         });

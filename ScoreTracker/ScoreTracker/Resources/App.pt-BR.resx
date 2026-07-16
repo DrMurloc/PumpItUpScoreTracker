@@ -4326,13 +4326,13 @@
     <value>Para reimportar pontuações antigas</value>
   </data>
   <data name="Import Manual Step 1" xml:space="preserve">
-    <value>Copie o script.</value>
+    <value>Escolha quais páginas das suas melhores pontuações puxar. Deixe Até a página vazio para todas.</value>
   </data>
   <data name="Import Manual Step 2" xml:space="preserve">
-    <value>Conectado no phoenix.piugame.com, cole-o no console do navegador (F12) — ele baixa um CSV das suas pontuações. Bloqueadores de anúncio podem quebrá-lo.</value>
+    <value>Copie o script.</value>
   </data>
   <data name="Import Manual Step 3" xml:space="preserve">
-    <value>Envie o CSV aqui — também aceita uma planilha própria com as mesmas colunas.</value>
+    <value>Conectado no phoenix.piugame.com, cole-o no console do navegador (F12) — ele baixa um CSV das suas pontuações. Bloqueadores de anúncio podem quebrá-lo.</value>
   </data>
   <data name="From page" xml:space="preserve">
     <value>Da página</value>
@@ -4375,5 +4375,11 @@
   </data>
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>Proporção de seções do chart com cada habilidade</value>
+  </data>
+  <data name="Import Manual Step 4" xml:space="preserve">
+    <value>Envie o CSV aqui — também aceita uma planilha própria com as mesmas colunas.</value>
+  </data>
+  <data name="Imported scores will appear here as they come in." xml:space="preserve">
+    <value>As pontuações importadas aparecerão aqui conforme chegarem.</value>
   </data>
 </root>
