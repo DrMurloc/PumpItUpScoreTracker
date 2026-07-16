@@ -4445,9 +4445,6 @@
   <data name="Page not found" xml:space="preserve">
     <value>Page introuvable</value>
   </data>
-  <data name="Looks like your path was a" xml:space="preserve">
-    <value>On dirait que votre chemin était un</value>
-  </data>
   <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
     <value>Il n'y a rien à cette adresse — elle a peut-être changé avec un Mix, ou n'a jamais existé. La recherche connaît tous les charts.</value>
   </data>

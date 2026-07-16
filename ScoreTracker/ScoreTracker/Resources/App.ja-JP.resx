@@ -4451,9 +4451,6 @@
   <data name="Page not found" xml:space="preserve">
     <value>ページが見つかりません</value>
   </data>
-  <data name="Looks like your path was a" xml:space="preserve">
-    <value>このパスの判定は</value>
-  </data>
   <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
     <value>このアドレスには何もありません — バージョンとともに移動したか、最初から存在しなかったのかもしれません。検索はすべての譜面を知っています。</value>
   </data>
