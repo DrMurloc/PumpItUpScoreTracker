@@ -7,6 +7,7 @@ using MediatR;
 using Moq;
 using ScoreTracker.Catalog.Contracts.Commands;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Commands;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Application.Queries;
@@ -341,6 +342,195 @@ public sealed class RecommendedChartsSagaTests
         Assert.DoesNotContain(result, r => r.ChartId == zeroGain.Id);
     }
 
+    private static readonly HashSet<RecommendationCategory> HotStreakOnly = new() { RecommendationCategory.HotStreak };
+
+    private static ScoreHighlightRecord Improver(Guid chartId, double daysAgo) =>
+        new(chartId, Guid.NewGuid(), Now.AddDays(-daysAgo), HighlightFlags.CompetitiveImprover, 20, null);
+
+    private static ChartSimilarityRecord Edge(Guid chartId, double score) =>
+        new(chartId, score, score, score, Array.Empty<ChartSharedBadgeRecord>());
+
+    [Fact]
+    public async Task HotStreakExpandsSeedsThroughSimilarityWithSeedProvenance()
+    {
+        var seed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var match = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var nearMiss = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(seed, match, nearMiss)
+            .WithHighlights(Improver(seed.Id, daysAgo: 2))
+            .WithRankings((seed.Id, 0.94))
+            .WithSimilar(seed.Id, Edge(match.Id, 0.8), Edge(nearMiss.Id, 0.4));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: HotStreakOnly, HotStreak: new HotStreakOptions()),
+            CancellationToken.None)).ToArray();
+
+        var rec = Assert.Single(result);
+        Assert.Equal(RecommendationCategories.HotStreak, (string)rec.Category);
+        Assert.Equal(match.Id, rec.ChartId);
+        Assert.Equal(seed.Id, rec.SeedChartId);
+        Assert.Equal(0.94, rec.SeedPeerRanking);
+    }
+
+    [Fact]
+    public async Task HotStreakSeedsBelowThePeersBarAreDropped()
+    {
+        var seed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var match = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(seed, match)
+            .WithHighlights(Improver(seed.Id, daysAgo: 2))
+            .WithRankings((seed.Id, 0.5))
+            .WithSimilar(seed.Id, Edge(match.Id, 0.8));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: HotStreakOnly, HotStreak: new HotStreakOptions(PeerPercentile: 80)),
+            CancellationToken.None)).ToArray();
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task HotStreakZeroBarSkipsCohortReadsAndCarriesNoRanking()
+    {
+        var seed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var match = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(seed, match)
+            .WithHighlights(Improver(seed.Id, daysAgo: 2))
+            .WithSimilar(seed.Id, Edge(match.Id, 0.8));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: HotStreakOnly, HotStreak: new HotStreakOptions(PeerPercentile: 0)),
+            CancellationToken.None)).ToArray();
+
+        var rec = Assert.Single(result);
+        Assert.Null(rec.SeedPeerRanking);
+        ctx.Mediator.Verify(m => m.Send(It.IsAny<GetChartScoreRankingsQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HotStreakPushFloorDropsTargetsBelowThePoolsTwentyFifthPercentile()
+    {
+        // Competitive pool folders 20/20/21/22 → nearest-rank 25th percentile = 20.
+        var seed = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var atFloor = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var belowFloor = new ChartBuilder().WithType(ChartType.Single).WithLevel(19).Build();
+        var pool = new[]
+        {
+            new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build(),
+            new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build(),
+            new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build(),
+            new ChartBuilder().WithType(ChartType.Single).WithLevel(22).Build()
+        };
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(pool.Concat(new[] { seed, atFloor, belowFloor }).ToArray())
+            .WithHighlights(Improver(seed.Id, daysAgo: 2))
+            .WithCompetitivePool(pool.Select(p => Score(p.Id, 980000)).ToArray())
+            .WithSimilar(seed.Id, Edge(belowFloor.Id, 0.9), Edge(atFloor.Id, 0.8));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: HotStreakOnly, HotStreak: new HotStreakOptions(PeerPercentile: 0)),
+            CancellationToken.None)).ToArray();
+
+        Assert.Equal(atFloor.Id, Assert.Single(result).ChartId);
+    }
+
+    [Fact]
+    public async Task HotStreakPassedTargetsOnlyReturnWhenTheOutdatedToggleAdmitsThem()
+    {
+        var seed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var oldScore = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var freshScore = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        // Eight day-old scores make the 900-day score an age outlier; the fresh one is not.
+        var padding = Enumerable.Range(0, 8)
+            .Select(_ => new RecordedPhoenixScore(Guid.NewGuid(), 950000, PhoenixPlate.SuperbGame, false,
+                Now.AddDays(-1)))
+            .ToArray();
+        var scores = padding.Concat(new[]
+        {
+            new RecordedPhoenixScore(oldScore.Id, 900000, PhoenixPlate.SuperbGame, false, Now.AddDays(-900)),
+            new RecordedPhoenixScore(freshScore.Id, 900000, PhoenixPlate.SuperbGame, false, Now.AddDays(-1))
+        }).ToArray();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(seed, oldScore, freshScore)
+            .WithScores(scores)
+            .WithHighlights(Improver(seed.Id, daysAgo: 2))
+            .WithSimilar(seed.Id, Edge(oldScore.Id, 0.9), Edge(freshScore.Id, 0.8));
+
+        var withToggle = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: HotStreakOnly,
+                HotStreak: new HotStreakOptions(PeerPercentile: 0, IncludeOutdatedScores: true)),
+            CancellationToken.None)).ToArray();
+        var withoutToggle = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: HotStreakOnly,
+                HotStreak: new HotStreakOptions(PeerPercentile: 0, IncludeOutdatedScores: false)),
+            CancellationToken.None)).ToArray();
+
+        Assert.Equal(oldScore.Id, Assert.Single(withToggle).ChartId);
+        Assert.Empty(withoutToggle);
+    }
+
+    [Fact]
+    public async Task HotStreakAttributesASharedTargetToTheNewestSeedOnly()
+    {
+        var newerSeed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var olderSeed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var shared = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(newerSeed, olderSeed, shared)
+            .WithHighlights(Improver(newerSeed.Id, daysAgo: 1), Improver(olderSeed.Id, daysAgo: 5))
+            .WithSimilar(newerSeed.Id, Edge(shared.Id, 0.7))
+            .WithSimilar(olderSeed.Id, Edge(shared.Id, 0.9));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: HotStreakOnly, HotStreak: new HotStreakOptions(PeerPercentile: 0)),
+            CancellationToken.None)).ToArray();
+
+        var rec = Assert.Single(result);
+        Assert.Equal(shared.Id, rec.ChartId);
+        Assert.Equal(newerSeed.Id, rec.SeedChartId);
+    }
+
+    [Fact]
+    public async Task HotStreakHonorsItsVetoCategoryAndPassesTheWindowThrough()
+    {
+        var seed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var vetoed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(seed, vetoed)
+            .WithHighlights(Improver(seed.Id, daysAgo: 2))
+            .WithSimilar(seed.Id, Edge(vetoed.Id, 0.9))
+            .WithFeedback(new SuggestionFeedbackRecord(Name.From(RecommendationCategories.HotStreak),
+                Name.From("NotInterested"), Notes: "", ShouldHide: true, IsPositive: false, ChartId: vetoed.Id));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: HotStreakOnly,
+                HotStreak: new HotStreakOptions(PeerPercentile: 0, LookbackDays: null)),
+            CancellationToken.None)).ToArray();
+
+        Assert.Empty(result);
+        // All time = a null since bound on the capped read.
+        ctx.Highlights.Verify(h => h.GetNewestHighlights(MixEnum.Phoenix, It.IsAny<Guid>(),
+            HighlightFlags.CompetitiveImprover, null, It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HotStreakNeverRunsForNullCategoriesCallers()
+    {
+        var ctx = new RecommendedChartsContext();
+
+        await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0),
+            CancellationToken.None);
+
+        ctx.Highlights.Verify(h => h.GetNewestHighlights(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+                It.IsAny<HighlightFlags>(), It.IsAny<DateTimeOffset?>(), It.IsAny<int>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
     private sealed class RecommendedChartsContext
     {
         public Mock<IMediator> Mediator { get; } = new();
@@ -351,6 +541,7 @@ public sealed class RecommendedChartsSagaTests
         public Mock<IWeeklyTournamentRepository> Weekly { get; } = new();
         public Mock<IChartListRepository> ChartList { get; } = new();
         public Mock<IRandomNumberGenerator> Random { get; } = new();
+        public Mock<IScoreHighlightRepository> Highlights { get; } = new();
         public RecommendedChartsSaga Saga { get; }
 
         public RecommendedChartsContext(Guid? currentUserId = null)
@@ -379,10 +570,20 @@ public sealed class RecommendedChartsSagaTests
                 .ReturnsAsync(Array.Empty<SuggestionFeedbackRecord>());
             Weekly.Setup(w => w.GetWeeklyCharts(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<WeeklyTournamentChart>());
+            Highlights.Setup(h => h.GetNewestHighlights(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+                    It.IsAny<HighlightFlags>(), It.IsAny<DateTimeOffset?>(), It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<ScoreHighlightRecord>());
+            Mediator.Setup(m => m.Send(It.IsAny<GetTop50ForPlayerQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+            Mediator.Setup(m => m.Send(It.IsAny<GetSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<ChartSimilarityRecord>());
+            Mediator.Setup(m => m.Send(It.IsAny<GetChartScoreRankingsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Dictionary<Guid, ScoreRankingRecord>());
 
             Saga = new RecommendedChartsSaga(Mediator.Object, CurrentUser.Object, Users.Object, Stats.Object,
                 Scores.Object, Weekly.Object, ChartList.Object,
-                FakeDateTime.At(Now).Object, Random.Object);
+                FakeDateTime.At(Now).Object, Random.Object, Highlights.Object);
         }
 
         public RecommendedChartsContext WithCharts(params Chart[] charts)
@@ -415,6 +616,38 @@ public sealed class RecommendedChartsSagaTests
                     new Dictionary<(ChartType, DifficultyLevel), int>(),
                     new Dictionary<Guid, TierListCategory>(),
                     new Dictionary<Guid, IReadOnlyList<SkillAdjustmentRecord>>()));
+            return this;
+        }
+
+        public RecommendedChartsContext WithHighlights(params ScoreHighlightRecord[] rows)
+        {
+            Highlights.Setup(h => h.GetNewestHighlights(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+                    It.IsAny<HighlightFlags>(), It.IsAny<DateTimeOffset?>(), It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(rows);
+            return this;
+        }
+
+        public RecommendedChartsContext WithSimilar(Guid anchorChartId, params ChartSimilarityRecord[] edges)
+        {
+            Mediator.Setup(m => m.Send(It.Is<GetSimilarChartsQuery>(q => q.ChartId == anchorChartId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(edges);
+            return this;
+        }
+
+        public RecommendedChartsContext WithRankings(params (Guid ChartId, double Ranking)[] rankings)
+        {
+            Mediator.Setup(m => m.Send(It.IsAny<GetChartScoreRankingsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(rankings.ToDictionary(r => r.ChartId,
+                    r => new ScoreRankingRecord(r.Ranking, 25)));
+            return this;
+        }
+
+        public RecommendedChartsContext WithCompetitivePool(params RecordedPhoenixScore[] pool)
+        {
+            Mediator.Setup(m => m.Send(It.IsAny<GetTop50CompetitiveQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(pool);
             return this;
         }
 
@@ -464,7 +697,8 @@ public sealed class RecommendedChartsSagaTests
         Mock<IWeeklyTournamentRepository>? weeklyTournament = null,
         Mock<IChartListRepository>? chartList = null,
         Mock<IDateTimeOffsetAccessor>? dateTime = null,
-        Mock<IRandomNumberGenerator>? random = null)
+        Mock<IRandomNumberGenerator>? random = null,
+        Mock<IScoreHighlightRepository>? highlights = null)
     {
         currentUser ??= new Mock<ICurrentUserAccessor>();
         var id = currentUserId ?? Guid.NewGuid();
@@ -477,8 +711,9 @@ public sealed class RecommendedChartsSagaTests
         chartList ??= new Mock<IChartListRepository>();
         dateTime ??= FakeDateTime.At(Now);
         random ??= new Mock<IRandomNumberGenerator>();
+        highlights ??= new Mock<IScoreHighlightRepository>();
         return new RecommendedChartsSaga(mediator.Object, currentUser.Object, users.Object, stats.Object,
             scores.Object, weeklyTournament.Object, chartList.Object, dateTime.Object,
-            random.Object);
+            random.Object, highlights.Object);
     }
 }
