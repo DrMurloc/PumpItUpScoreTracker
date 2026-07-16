@@ -71,7 +71,10 @@ public sealed class StaticShellTests : IAsyncLifetime
 
         await _page.GotoAsync("/TierLists");
 
-        var search = _page.Locator(".appbar-search input");
+        // Scoped to the header: the same island is mounted twice now — app bar on desktop,
+        // search sheet on mobile — so ".appbar-search" alone names two inputs. This one is
+        // the desktop's; the sheet's is the phone's only door to a chart page.
+        var search = _page.Locator("header .appbar-search input");
         await Expect(search).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
 
         // Typed, not filled: MudAutocomplete opens off the keystrokes.

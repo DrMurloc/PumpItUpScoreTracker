@@ -4290,4 +4290,7 @@
   <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
     <value>정반대 채보는 비교 범위 전체에서 뽑히므로 범위 설정이 적용되지 않습니다</value>
   </data>
+  <data name="Search" xml:space="preserve">
+    <value>검색</value>
+  </data>
 </root>

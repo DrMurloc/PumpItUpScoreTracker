@@ -4332,4 +4332,7 @@
   <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
     <value>Da opposite gets picked from everythin in reachrgl, so rangesrgl don't apply to it</value>
   </data>
+  <data name="Search" xml:space="preserve">
+    <value>Srgl</value>
+  </data>
 </root>

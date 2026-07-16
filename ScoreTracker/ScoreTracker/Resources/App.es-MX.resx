@@ -4289,4 +4289,7 @@
   <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
     <value>El opuesto se elige entre todo lo que está al alcance, así que los rangos no se le aplican</value>
   </data>
+  <data name="Search" xml:space="preserve">
+    <value>Buscar</value>
+  </data>
 </root>

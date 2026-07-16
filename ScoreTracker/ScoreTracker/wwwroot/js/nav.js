@@ -42,21 +42,44 @@
         positionMenu(menu);
     }
 
-    // ===== More sheet =====
+    // ===== Sheets (More, Search) =====
 
-    function sheetIsOpen() {
-        var sheet = document.querySelector('[data-more-sheet]');
-        return !!sheet && sheet.classList.contains('open');
+    // Scrim-backed panels, at most one open at a time — they share the scrim, so two at once
+    // would fight over it. More rises from the bottom for thumb reach; Search drops from the
+    // top, because the keyboard takes the bottom half the moment its input focuses.
+    // Both are static shell HTML; the search sheet's autocomplete is an island INSIDE it,
+    // which is why the chrome opens from here and not from a circuit.
+    var SHEETS = [
+        { sheet: '[data-more-sheet]', button: '[data-more-btn]' },
+        { sheet: '[data-search-sheet]', button: '[data-search-btn]' }
+    ];
+
+    function sheetNode(spec) {
+        return document.querySelector(spec.sheet);
     }
 
-    function setSheet(open) {
-        var sheet = document.querySelector('[data-more-sheet]');
-        if (!sheet) return;
-        sheet.classList.toggle('open', open);
-        sheet.setAttribute('aria-hidden', String(!open));
-        var button = document.querySelector('[data-more-btn]');
+    function openSheet() {
+        for (var i = 0; i < SHEETS.length; i++) {
+            var node = sheetNode(SHEETS[i]);
+            if (node && node.classList.contains('open')) return SHEETS[i];
+        }
+        return null;
+    }
+
+    function setSheet(spec, open) {
+        var node = sheetNode(spec);
+        if (!node) return;
+        node.classList.toggle('open', open);
+        node.setAttribute('aria-hidden', String(!open));
+        var button = document.querySelector(spec.button);
         if (button) button.setAttribute('aria-expanded', String(open));
-        document.documentElement.classList.toggle('sheet-open', open);
+        // Read back rather than trust `open`: the flag means "some sheet is up".
+        document.documentElement.classList.toggle('sheet-open', !!openSheet());
+    }
+
+    function closeSheets() {
+        var spec = openSheet();
+        if (spec) setSheet(spec, false);
     }
 
     // ===== Bottom nav active slot =====
@@ -83,6 +106,10 @@
         history[name] = function () {
             var result = original.apply(this, arguments);
             refreshActiveNav();
+            // A sheet is chrome over the page it was opened from, so leaving that page
+            // closes it. The click handler catches links; it cannot catch the search
+            // autocomplete, which navigates from a circuit without one.
+            closeSheets();
             return result;
         };
     }
@@ -101,9 +128,13 @@
             return;
         }
 
-        if (el(target, '[data-more-btn]')) {
+        for (var i = 0; i < SHEETS.length; i++) {
+            if (!el(target, SHEETS[i].button)) continue;
             e.preventDefault();
-            setSheet(!sheetIsOpen());
+            var node = sheetNode(SHEETS[i]);
+            var wasOpen = !!node && node.classList.contains('open');
+            closeSheets();
+            if (!wasOpen) setSheet(SHEETS[i], true);
             return;
         }
 
@@ -112,8 +143,9 @@
 
         if (openMenu && !isSummary && (!el(target, '[data-menu]') || el(target, 'a'))) closeMenu();
 
-        if (sheetIsOpen() && !isSummary) {
-            if (el(target, '[data-sheet-scrim]') || el(target, 'a')) setSheet(false);
+        var open = openSheet();
+        if (open && !isSummary) {
+            if (el(target, '[data-sheet-scrim]') || el(target, 'a')) setSheet(open, false);
         }
     }
 
@@ -123,9 +155,14 @@
             var activator = openMenu.querySelector('[data-menu-activator]');
             closeMenu();
             if (activator) activator.focus();
-        } else if (sheetIsOpen()) {
-            setSheet(false);
-            var button = document.querySelector('[data-more-btn]');
+            return;
+        }
+
+        var spec = openSheet();
+        if (spec) {
+            setSheet(spec, false);
+            // Focus goes back to whichever button opened it, not always More.
+            var button = document.querySelector(spec.button);
             if (button) button.focus();
         }
     }
