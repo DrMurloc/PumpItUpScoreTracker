@@ -12,8 +12,8 @@ namespace ScoreTracker.ChartIntelligence.Domain;
 /// </summary>
 internal static class ChartVerdictService
 {
-    /// <summary>Passes needed before the first-pass band means anything.</summary>
-    internal const int FirstPassBandMinimumPasses = 20;
+    /// <summary>Passes needed before the pass band means anything.</summary>
+    internal const int PassBandMinimumPasses = 20;
 
     /// <summary>The yield knee: where the population's average crosses SS+ (975k).</summary>
     internal const int YieldKneeScore = 975_000;
@@ -56,7 +56,7 @@ internal static class ChartVerdictService
         if (LetterWall(inputs) is { } wall) facets.Add(wall);
         if (YieldKnee(inputs) is { } knee) facets.Add(knee);
         if (StyleFingerprint(inputs) is { } style) facets.Add(style);
-        if (FirstPassBand(inputs) is { } band) facets.Add(band);
+        if (PassBand(inputs) is { } band) facets.Add(band);
         if (PlateResidual(inputs) is { } plates) facets.Add(plates);
         if (History(inputs) is { } history) facets.Add(history);
         facets.Add(new PopulationVerdict(inputs.ScoresTracked,
@@ -129,17 +129,17 @@ internal static class ChartVerdictService
             inputs.TensionFraction is { } tension && tension >= SustainedTensionFraction);
     }
 
-    private static FirstPassBandVerdict? FirstPassBand(ChartVerdictInputs inputs)
+    private static PassBandVerdict? PassBand(ChartVerdictInputs inputs)
     {
         var totalPasses = inputs.PassCountByLevel.Sum(l => l.Passes);
-        if (totalPasses < FirstPassBandMinimumPasses) return null;
+        if (totalPasses < PassBandMinimumPasses) return null;
         var passerLevels = inputs.PassCountByLevel
             .OrderBy(l => l.Level)
             .SelectMany(l => Enumerable.Repeat(l.Level, l.Passes))
             .ToArray();
         var lower = passerLevels[(passerLevels.Length - 1) / 4];
         var upper = passerLevels[(passerLevels.Length - 1) * 3 / 4];
-        return new FirstPassBandVerdict(lower, upper);
+        return new PassBandVerdict(lower, upper);
     }
 
     private static PlateResidualVerdict? PlateResidual(ChartVerdictInputs inputs)

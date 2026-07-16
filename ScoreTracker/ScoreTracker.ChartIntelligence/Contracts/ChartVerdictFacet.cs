@@ -19,7 +19,7 @@ public sealed record PassVsScoreVerdict(TierListCategory PassTier, TierListCateg
 
 /// <summary>The interquartile competitive-level band of the players who pass it.</summary>
 [ExcludeFromCodeCoverage]
-public sealed record FirstPassBandVerdict(int LowerLevel, int UpperLevel) : ChartVerdictFacet;
+public sealed record PassBandVerdict(int LowerLevel, int UpperLevel) : ChartVerdictFacet;
 
 /// <summary>The competitive level where the population's average score crosses SS+ (975k).</summary>
 [ExcludeFromCodeCoverage]

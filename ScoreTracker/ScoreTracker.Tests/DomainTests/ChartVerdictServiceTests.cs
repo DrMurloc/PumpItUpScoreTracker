@@ -165,7 +165,7 @@ public sealed class ChartVerdictServiceTests
     }
 
     [Fact]
-    public void FirstPassBandReportsTheInterquartileLevels()
+    public void PassBandReportsTheInterquartileLevels()
     {
         var facets = ChartVerdictService.ComputeFacets(Inputs(passes: new[]
         {
@@ -174,17 +174,17 @@ public sealed class ChartVerdictServiceTests
             new LevelPasses(22, 5)
         }));
 
-        var band = facets.OfType<FirstPassBandVerdict>().Single();
+        var band = facets.OfType<PassBandVerdict>().Single();
         Assert.Equal(20, band.LowerLevel);
         Assert.Equal(21, band.UpperLevel);
     }
 
     [Fact]
-    public void FirstPassBandStaysSilentUnderTwentyPasses()
+    public void PassBandStaysSilentUnderTwentyPasses()
     {
         var facets = ChartVerdictService.ComputeFacets(Inputs(passes: new[] { new LevelPasses(20, 19) }));
 
-        Assert.Empty(facets.OfType<FirstPassBandVerdict>());
+        Assert.Empty(facets.OfType<PassBandVerdict>());
     }
 
     [Fact]
@@ -290,7 +290,7 @@ public sealed class ChartVerdictServiceTests
         Assert.Equal(new[]
         {
             typeof(PassVsScoreVerdict), typeof(LetterWallVerdict), typeof(YieldKneeVerdict),
-            typeof(StyleFingerprintVerdict), typeof(FirstPassBandVerdict), typeof(PlateResidualVerdict),
+            typeof(StyleFingerprintVerdict), typeof(PassBandVerdict), typeof(PlateResidualVerdict),
             typeof(HistoryVerdict), typeof(PopulationVerdict)
         }, facets.Select(f => f.GetType()).ToArray());
     }

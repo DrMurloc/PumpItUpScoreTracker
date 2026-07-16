@@ -25,7 +25,7 @@ page's **meta description and JSON-LD description**: unique, data-derived, quota
 | Facet | Source | Fires when | Example rendering |
 |---|---|---|---|
 | **PassVsScore** | Pass tier category × Scores tier category (`GetTierListWithFallbackQuery`) | either ≠ Medium | "Hard to pass for its level — generous to score once passed." |
-| **FirstPassBand** | pass counts by competitive level | ≥ 20 passes | "First passes cluster around level 21." |
+| **PassBand** | pass counts by competitive level | ≥ 20 passes | "Passes cluster between competitive levels 19 and 21." (the interquartile band of everyone who passed — nothing about *first* passes; the name said so and the copy repeated it into nine locales) |
 | **YieldKnee** | avg-score-by-level curve | avg crosses SS+ (975k) inside the observed range | "Opens up around level 22; below 21, expect low 900s." |
 | **LetterWall** | letter-grade percentile curve | max adjacent percentile drop ≥ 25 pts | "SS is routine here — SSS is top-decile." |
 | **PlateResidual** | median plate vs `ScoringConfiguration.ExpectedPlateForScore(median score)`, within a (level, song-type) cohort | ≥ 50 scores AND \|residual\| ≥ 1 plate step | "Plates run worse than scores predict — a kill-spot signature." / "…better than predicted — smooth attrition." |
