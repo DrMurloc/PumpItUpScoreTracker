@@ -1,4 +1,5 @@
 using ScoreTracker.OfficialMirror.Domain;
+using System.Runtime.CompilerServices;
 using System.Security.Authentication;
 using ScoreTracker.Domain.Exceptions;
 using System.Text.RegularExpressions;
@@ -77,8 +78,8 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         return client;
     }
 
-    public async Task<IEnumerable<OfficialChartLeaderboardEntry>> GetAllOfficialChartScores(MixEnum mix,
-        CancellationToken cancellationToken)
+    public async IAsyncEnumerable<OfficialChartBoardResult> GetOfficialChartBoards(MixEnum mix,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         // The whole Phoenix 2 leaderboard area is login-gated; Phoenix stays anonymous.
         var listClient = mix == MixEnum.Phoenix2 ? await GetServiceClient(mix, cancellationToken) : null;
@@ -94,51 +95,140 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             await SweepDelay(cancellationToken);
         }
 
-        var current = 1;
-        var max = songs.Count;
-        var result = new List<OfficialChartLeaderboardEntry>();
-        var misMatched = new List<string>();
         // One blob-existence check per unique avatar per sweep — boards repeat the same
         // player art hundreds of times, and at 300-deep boards the per-row check was the
         // sweep's hidden cost.
         var avatarCache = new Dictionary<string, Uri?>();
+        var total = songs.Count;
+        var index = 0;
         foreach (var song in songs)
         {
+            index++;
+            if (!DifficultyLevel.IsValid(song.Difficulty))
+            {
+                yield return new OfficialChartBoardResult(index, total, null,
+                    $"unparsable level: {song.Name} {song.Type} {song.Difficulty}",
+                    Array.Empty<OfficialChartLeaderboardEntry>());
+                continue;
+            }
+
             var chartType = Enum.Parse<ChartType>(song.Type);
-            if (!DifficultyLevel.IsValid(song.Difficulty)) continue;
             var chart = (await _charts.GetChartsForSong(mix, song.Name, cancellationToken))
                 .FirstOrDefault(c => c.Type == chartType && c.Level == song.Difficulty);
             if (chart == null)
             {
-                misMatched.Add(song.Name + " " + song.Type + " " + song.Difficulty);
+                yield return new OfficialChartBoardResult(index, total, null,
+                    $"no catalog chart: {song.Name} {song.Type} {song.Difficulty}",
+                    Array.Empty<OfficialChartLeaderboardEntry>());
                 continue;
             }
 
-            _logger.LogInformation($"Song {current++} out of {max}");
+            _logger.LogInformation("Board {Index}/{Total}: {Song}", index, total, song.Name);
             // Boards deeper than one page (Phoenix 2's top 300) walk the same next/last-icon
             // protocol as the PUMBILITY board; a page that adds nothing new also stops the
             // walk since the site clamps out-of-range pages to the last one.
-            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            for (var boardPage = 1;; boardPage++)
+            var entries = new List<OfficialChartLeaderboardEntry>();
+            string? failure = null;
+            try
             {
-                var scores = await _piuGame.GetSongLeaderboard(mix, song.Id, boardPage, cancellationToken,
-                    listClient);
-                var added = 0;
-                foreach (var score in scores.Results)
+                var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                for (var boardPage = 1;; boardPage++)
                 {
-                    if (!seen.Add(score.ProfileName)) continue;
+                    var scores = await _piuGame.GetSongLeaderboard(mix, song.Id, boardPage, cancellationToken,
+                        listClient);
+                    var added = 0;
+                    foreach (var score in scores.Results)
+                    {
+                        if (!seen.Add(score.ProfileName)) continue;
 
-                    result.Add(new OfficialChartLeaderboardEntry(score.ProfileName, chart, score.Score,
-                        await MirrorAvatar(score.AvatarUrl, avatarCache, cancellationToken) ?? DefaultAvatar));
+                        entries.Add(new OfficialChartLeaderboardEntry(score.ProfileName, chart, score.Score,
+                            await MirrorAvatar(score.AvatarUrl, avatarCache, cancellationToken) ?? DefaultAvatar));
+                        added++;
+                    }
+
+                    if (scores.IsEnd || added == 0) break;
+
+                    await SweepDelay(cancellationToken);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                // One unreachable board is a skipped board, never a dead sweep.
+                _logger.LogWarning(e, "Board fetch failed for {Song} {Type} {Level}", song.Name, song.Type,
+                    song.Difficulty);
+                failure = $"fetch failed: {e.Message}";
+            }
+
+            yield return failure == null
+                ? new OfficialChartBoardResult(index, total, chart, null, entries)
+                : new OfficialChartBoardResult(index, total, chart, failure,
+                    Array.Empty<OfficialChartLeaderboardEntry>());
+
+            await SweepDelay(cancellationToken);
+        }
+    }
+
+    public async Task<IEnumerable<RatingBoardEntry>> GetRatingBoards(MixEnum mix,
+        CancellationToken cancellationToken)
+    {
+        if (mix == MixEnum.Phoenix2) return await GetPumbilityRatingBoards(mix, cancellationToken);
+
+        var leaderboardList = await _piuGame.GetLeaderboards(mix, cancellationToken);
+        var result = new List<RatingBoardEntry>();
+        foreach (var leaderboard in leaderboardList.Entries)
+        {
+            var entries = await _piuGame.GetLeaderboard(mix, leaderboard.Id, cancellationToken);
+            result.AddRange(entries.Entries.Select(e =>
+                new RatingBoardEntry(leaderboard.Name, e.ProfileName, e.Rating)));
+            await SweepDelay(cancellationToken);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    ///     Phoenix 2 replaced the per-level rating boards with one daily PUMBILITY board —
+    ///     its All/Single/Double tabs ARE the mix's rating boards. The site clamps
+    ///     out-of-range pages to the last one, so paging stops on the end markers or the
+    ///     first page that adds nothing new. Values keep their decimal cents.
+    /// </summary>
+    private async Task<IEnumerable<RatingBoardEntry>> GetPumbilityRatingBoards(MixEnum mix,
+        CancellationToken cancellationToken)
+    {
+        var client = await GetServiceClient(mix, cancellationToken);
+        var result = new List<RatingBoardEntry>();
+        foreach (var (chartType, boardName) in new (ChartType?, string)[]
+                 {
+                     (null, "PUMBILITY"),
+                     (ChartType.Single, "PUMBILITY Singles"),
+                     (ChartType.Double, "PUMBILITY Doubles")
+                 })
+        {
+            var seen = new HashSet<string>();
+            var count = 0;
+            for (var page = 1;; page++)
+            {
+                var board = await _piuGame.GetPumbilityRankings(mix, chartType, page, client, cancellationToken);
+                var added = 0;
+                foreach (var entry in board.Entries)
+                {
+                    if (!seen.Add(entry.ProfileName)) continue;
+
+                    result.Add(new RatingBoardEntry(boardName, entry.ProfileName, (decimal)entry.Pumbility));
                     added++;
+                    count++;
                 }
 
-                if (scores.IsEnd || added == 0) break;
+                if (board.IsEnd || added == 0) break;
 
                 await SweepDelay(cancellationToken);
             }
 
-            await SweepDelay(cancellationToken);
+            _logger.LogInformation("{Board}: {Count} ranked players", boardName, count);
         }
 
         return result;
@@ -160,70 +250,6 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         return _configuration.SweepRequestDelayMilliseconds <= 0
             ? Task.CompletedTask
             : Task.Delay(_configuration.SweepRequestDelayMilliseconds, cancellationToken);
-    }
-
-    public async Task<IEnumerable<UserOfficialLeaderboard>> GetLeaderboardEntries(MixEnum mix,
-        CancellationToken cancellationToken)
-    {
-        if (mix == MixEnum.Phoenix2) return await GetPumbilityLeaderboardEntries(mix, cancellationToken);
-
-        var leaderboardList = await _piuGame.GetLeaderboards(mix, cancellationToken);
-        var result = new List<UserOfficialLeaderboard>();
-        foreach (var leaderboard in leaderboardList.Entries)
-        {
-            var entries = await _piuGame.GetLeaderboard(mix, leaderboard.Id, cancellationToken);
-            var place = 1;
-            foreach (var entry in entries.Entries.OrderByDescending(e => e.Rating))
-            {
-                result.Add(new UserOfficialLeaderboard(entry.ProfileName, place, "Rating", leaderboard.Name,
-                    entry.Rating));
-                place++;
-            }
-        }
-
-        return result;
-    }
-
-    /// <summary>
-    ///     Phoenix 2 replaced the per-level rating boards with one daily PUMBILITY board —
-    ///     its All/Single/Double tabs ARE the mix's "Rating" leaderboards. The site clamps
-    ///     out-of-range pages to the last one, so paging stops on the end markers or the
-    ///     first page that adds nothing new.
-    /// </summary>
-    private async Task<IEnumerable<UserOfficialLeaderboard>> GetPumbilityLeaderboardEntries(MixEnum mix,
-        CancellationToken cancellationToken)
-    {
-        var client = await GetServiceClient(mix, cancellationToken);
-        var result = new List<UserOfficialLeaderboard>();
-        foreach (var (chartType, boardName) in new (ChartType?, string)[]
-                 {
-                     (null, "PUMBILITY"),
-                     (ChartType.Single, "PUMBILITY Singles"),
-                     (ChartType.Double, "PUMBILITY Doubles")
-                 })
-        {
-            var seen = new HashSet<string>();
-            var place = 1;
-            for (var page = 1;; page++)
-            {
-                var board = await _piuGame.GetPumbilityRankings(mix, chartType, page, client, cancellationToken);
-                var added = 0;
-                foreach (var entry in board.Entries)
-                {
-                    if (!seen.Add(entry.ProfileName)) continue;
-
-                    result.Add(new UserOfficialLeaderboard(entry.ProfileName, place++, "Rating", boardName,
-                        (int)entry.Pumbility));
-                    added++;
-                }
-
-                if (board.IsEnd || added == 0) break;
-            }
-
-            _logger.LogInformation("{Board}: {Count} ranked players", boardName, place - 1);
-        }
-
-        return result;
     }
 
     private static readonly Uri DefaultAvatar =

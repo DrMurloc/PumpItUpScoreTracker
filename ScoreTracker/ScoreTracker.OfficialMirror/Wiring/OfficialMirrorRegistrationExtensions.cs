@@ -49,7 +49,7 @@ public static class OfficialMirrorRegistrationExtensions
     /// </summary>
     public static void AddOfficialMirrorConsumers(this IRegistrationConfigurator configurator)
     {
-        configurator.AddConsumer<OfficialLeaderboardSaga>();
+        configurator.AddConsumer<LeaderboardSweepSaga>();
         configurator.AddConsumer<RunOfficialImportConsumer>();
     }
 }

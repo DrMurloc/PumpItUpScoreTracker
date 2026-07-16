@@ -93,10 +93,10 @@ public sealed class OfficialSiteClientTests
     }
 
     [Fact]
-    public async Task Phoenix2LeaderboardEntriesComeFromTheThreePumbilityTabs()
+    public async Task Phoenix2RatingBoardsComeFromTheThreePumbilityTabsWithCentsIntact()
     {
         // The P2 site's daily PUMBILITY board (All/Single/Double tabs) IS its rating
-        // leaderboard set — one service login, three boards, values floored to ints.
+        // board set — one service login, three boards, decimal values preserved.
         var piuGame = new Mock<IPiuGameApi>();
         piuGame.Setup(p => p.GetSessionId(MixEnum.Phoenix2, "svc", "hunter2", It.IsAny<CancellationToken>()))
             .ReturnsAsync((new HttpClient(), "sid123"));
@@ -116,21 +116,18 @@ public sealed class OfficialSiteClientTests
                 });
         var client = BuildClient(piuGame, serviceUsername: "svc", servicePassword: "hunter2");
 
-        var entries = (await client.GetLeaderboardEntries(MixEnum.Phoenix2, CancellationToken.None)).ToArray();
+        var entries = (await client.GetRatingBoards(MixEnum.Phoenix2, CancellationToken.None)).ToArray();
 
         Assert.Equal(6, entries.Length);
-        Assert.All(entries, e => Assert.Equal("Rating", e.OfficialLeaderboardType));
         Assert.Equal(new[] { "PUMBILITY", "PUMBILITY Singles", "PUMBILITY Doubles" },
-            entries.Select(e => e.LeaderboardName).Distinct().ToArray());
-        var top = entries.First(e => e.LeaderboardName == "PUMBILITY");
-        Assert.Equal(1, top.Place);
-        Assert.Equal(17418, top.Score);
+            entries.Select(e => e.BoardName).Distinct().ToArray());
+        Assert.Equal(17418.45m, entries.First(e => e.BoardName == "PUMBILITY").Value);
         piuGame.Verify(p => p.GetSessionId(MixEnum.Phoenix2, "svc", "hunter2", It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     [Fact]
-    public async Task Phoenix2LeaderboardEntriesWithoutServiceCredentialsFailLoudly()
+    public async Task Phoenix2RatingBoardsWithoutServiceCredentialsFailLoudly()
     {
         // The P2 boards serve no anonymous traffic — a misconfigured import must say
         // exactly which settings are missing, not silently mirror nothing.
@@ -138,7 +135,7 @@ public sealed class OfficialSiteClientTests
         var client = BuildClient(piuGame);
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            client.GetLeaderboardEntries(MixEnum.Phoenix2, CancellationToken.None));
+            client.GetRatingBoards(MixEnum.Phoenix2, CancellationToken.None));
 
         Assert.Contains("PiuGame:ServiceUsername", exception.Message);
         piuGame.Verify(p => p.GetSessionId(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
@@ -146,7 +143,7 @@ public sealed class OfficialSiteClientTests
     }
 
     [Fact]
-    public async Task PhoenixLeaderboardEntriesStayAnonymous()
+    public async Task PhoenixRatingBoardsStayAnonymous()
     {
         // The Phoenix mirror never logs in — byte-identical to before the P2 arm existed.
         var piuGame = new Mock<IPiuGameApi>();
@@ -163,10 +160,11 @@ public sealed class OfficialSiteClientTests
             });
         var client = BuildClient(piuGame);
 
-        var entries = (await client.GetLeaderboardEntries(MixEnum.Phoenix, CancellationToken.None)).ToArray();
+        var entries = (await client.GetRatingBoards(MixEnum.Phoenix, CancellationToken.None)).ToArray();
 
         Assert.Single(entries);
-        Assert.Equal("S20", entries[0].LeaderboardName);
+        Assert.Equal("S20", entries[0].BoardName);
+        Assert.Equal(12345m, entries[0].Value);
         piuGame.Verify(p => p.GetSessionId(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
