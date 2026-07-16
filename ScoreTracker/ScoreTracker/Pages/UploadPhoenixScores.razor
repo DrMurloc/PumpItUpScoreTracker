@@ -748,37 +748,58 @@
     }
 
     private string _pageLimitString() => _endPage == null ? "" : $"pageIndex>{_endPage}||";
+    // The paste-into-console scraper. Downloads a Blob through a temporary <a download> —
+    // top-frame data: navigation has been blocked by browsers for years, and popup blockers
+    // ate window.open. The BOM keeps Excel from garbling CJK song names; song names travel
+    // verbatim (the old #→Num mangling existed only to survive a data: URI).
     private string _piuGameScript() => $@"
-var csvString=""data:text/csv;charset=utf-8,"";
-    csvString+=""Song,Difficulty,Score,LetterGrade,Plate\r\n"";
-    var pageIndex={_startPage};
-    while(true) {{
-
-        var nextPageString = await $.get(""https://phoenix.piugame.com/my_page/my_best_score.php?&&page=""+pageIndex)
-        var page=$(nextPageString);
-        var foundScores=$(""ul.my_best_scoreList>li>div.in"",page);
-        foundScores.each(function(){{
-            var songName = $('.song_name',this)[0].children[0].innerText.replaceAll('""','""""').replaceAll('#','Num');
-            var typeMatch = $($('.stepBall_img_wrap .imG img',this)[0]).attr(""src"").match(/\/full\/([a-z]+)_num_/i);
-            var chartType = typeMatch ? typeMatch[1] : ""?"";
-            var difficultyLevel = $('.stepBall_img_wrap .imG img',this).map((index,i)=>{{var m=$(i).attr(""src"").match(/_num_([0-9])\.png/);return m?m[1]:"""";}}).get().join("""");
-            var scoreList = $("".etc_con>ul"",this)[0];
-            var letterMatch = $(scoreList.children[1].children[0].children[0].children[0]).attr('src').match(/\/grade\/([a-z_]+)\.png/i);
-            var letter = (letterMatch?letterMatch[1]:""?"").replace(""_p"",""+"");
-            var score = $(scoreList.children[0].children[0].children[0].children[0])[0].innerText.replaceAll("","","""");
-            var plateMatch = $(scoreList.children[2].children[0].children[0].children[0]).attr(""src"").match(/\/plate\/([a-z]+)\.png/i);
-            var plate = plateMatch?plateMatch[1]:""?"";
-            csvString+='""'+songName+'"",'+chartType+difficultyLevel+"",""+score+"",""+letter+"",""+plate+""\r\n"";
-        }});
-        pageIndex++;
-        console.log(""Page ""+pageIndex);
-        if({_pageLimitString()}$("".xi.last"",page).length==0){{
-            break;
-        }}
+var rows=""Song,Difficulty,Score,LetterGrade,Plate\r\n"";
+var pageIndex={_startPage};
+var pageCount=0, scoreCount=0, failedRows=0;
+while(true) {{
+    var pageHtml = await $.get(""https://phoenix.piugame.com/my_page/my_best_score.php?page=""+pageIndex);
+    var page=$(pageHtml);
+    var found=$(""ul.my_best_scoreList>li>div.in"",page);
+    if(found.length==0 && pageCount==0) {{
+        alert(""No scores found - sign in on https://phoenix.piugame.com first, then run this again."");
+        break;
     }}
-    console.log(csvString);
-    var encodedUri = encodeURI(csvString);
-    window.open(encodedUri);";
+    found.each(function(){{
+        try {{
+            var songName = $("".song_name p"",this).first().text().replaceAll('""','""""');
+            var typeMatch = ($("".stepBall_img_wrap .imG img"",this).first().attr(""src"")||"""").match(/\/full\/([a-z]+)_num_/i);
+            var chartType = typeMatch ? typeMatch[1] : ""?"";
+            var level = $("".stepBall_img_wrap .imG img"",this).map(function(i,el){{var m=$(el).attr(""src"").match(/_num_([0-9])\.png/);return m?m[1]:"""";}}).get().join("""");
+            var score = $("".etc_con span.num"",this).first().text().replaceAll("","","""");
+            var letterMatch = ($("".etc_con img[src*='/grade/']"",this).attr(""src"")||"""").match(/\/grade\/([a-z_]+)\.png/i);
+            var letter = (letterMatch?letterMatch[1]:""?"").replace(""_p"",""+"");
+            var plateMatch = ($("".etc_con img[src*='/plate/']"",this).attr(""src"")||"""").match(/\/plate\/([a-z]+)\.png/i);
+            var plate = plateMatch?plateMatch[1]:""?"";
+            rows+='""'+songName+'"",'+chartType+level+"",""+score+"",""+letter+"",""+plate+""\r\n"";
+            scoreCount++;
+        }} catch(e) {{
+            failedRows++;
+            console.error(""Skipped a row on page ""+pageIndex, e);
+        }}
+    }});
+    console.log(""Page ""+pageIndex+"" done"");
+    pageCount++;
+    pageIndex++;
+    if({_pageLimitString()}$("".xi.last"",page).length==0){{
+        break;
+    }}
+}}
+if(scoreCount>0) {{
+    var blobUrl = URL.createObjectURL(new Blob([""\uFEFF""+rows], {{type:""text/csv;charset=utf-8""}}));
+    var link = document.createElement(""a"");
+    link.href = blobUrl;
+    link.download = ""piu-scores.csv"";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(blobUrl);
+    console.log(""Done - ""+scoreCount+"" scores across ""+pageCount+"" pages""+(failedRows>0?"", ""+failedRows+"" rows skipped (see errors above)"":"""")+"". Saved as piu-scores.csv"");
+}}";
 
     public void Dispose()
     {
