@@ -73,7 +73,7 @@ surface and the destination worthy of the dialog's vocabulary.
 
 | URL | Behavior |
 |---|---|
-| `/{default-mix}/{song-slug}/{difficulty}` e.g. `/phoenix/baroque-virus-full-song/d20` | **Canonical** — the site's anonymous default mix; self-canonical; sitemapped |
+| `/Charts/{default-mix}/{song-slug}/{difficulty}` e.g. `/Charts/phoenix/baroque-virus-full-song/d20` | **Canonical** — mounted under `/Charts` (decided 2026-07-16: contains the namespace under a literal, no root catch-all); the site's anonymous default mix; self-canonical; sitemapped |
 | `/Chart/{guid}` (and legacy `/Record`) | Permanent identity — 301 → canonical, forever |
 | Historical (mix, song, level) triple, e.g. `/xx/…/d19` | Resolved against **that mix's** catalog (the mix segment timestamps the level, so cross-mix renumbering is never ambiguous) → 301 → the chart's canonical |
 | Stale/mangled slug | 301 → canonical |
@@ -111,10 +111,10 @@ have never shared a mix, so no path collides today. Renamed songs cannot alias �
 keeps one `Name` per song, so an old community name is simply a slug that doesn't resolve; the
 GUID permalink is the durable address.
 
-**Open: where the lattice mounts** — bare root `/{mix}/{song}/{difficulty}` (this doc's
-original shape) vs `/Charts/{mix}/{song}/{difficulty}`. Bare root makes the vanity route the
-site's three-segment catch-all (component routes take no custom constraints); the `/Charts`
-prefix contains it completely. Decision ④ in seo-friendly-site.md §7.
+**Where the lattice mounts — decided 2026-07-16: `/Charts/{mix}/{song}/{difficulty}`.** Bare
+root would have made the vanity route the site's three-segment catch-all (component routes
+take no custom constraints); the `/Charts` prefix contains the namespace completely and pairs
+with the chart list page above it.
 
 ## Page anatomy (mock R2, approved 2026-07-14)
 

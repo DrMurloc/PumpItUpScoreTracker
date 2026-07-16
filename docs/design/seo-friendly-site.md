@@ -399,6 +399,6 @@ work is caching and the lattice.
 | # | Decision | Blocks | Default/lean |
 |---|---|---|---|
 | ① | Front-door canonical: `/Login` or `/Welcome` | PR-1 | **decided 2026-07-16: `/Welcome`** |
-| ② | `ChartRecordPanel`: whole-panel island vs static-your-best split | PR-4 | whole-panel island |
+| ② | `ChartRecordPanel`: whole-panel island vs static-your-best split | PR-4 | **decided 2026-07-16: whole-panel island** (static-your-best split stays a recorded follow-up) |
 | ③ | Vanity sitemap: wait for PR-4 (ONE unit) vs advertise after PR-2 | PR-4 timing | wait for PR-4 |
-| ④ | Canonical mount: bare `/{mix}/{song}/{diff}` vs `/Charts/{mix}/{song}/{diff}` | PR-4 | lean `/Charts/…` (contains the three-segment catch-all; matches the owner's own recall of the plan) |
+| ④ | Canonical mount: bare `/{mix}/{song}/{diff}` vs `/Charts/{mix}/{song}/{diff}` | PR-4 | **decided 2026-07-16: `/Charts/{mix}/{song}/{diff}`** — contains the namespace under a literal, no catch-all |
