@@ -4566,4 +4566,10 @@
   <data name="World firsts" xml:space="preserve">
     <value>Wrgld frsts!</value>
   </data>
+  <data name="Page not found" xml:space="preserve">
+    <value>Page not found</value>
+  </data>
+  <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
+    <value>There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart.</value>
+  </data>
 </root>

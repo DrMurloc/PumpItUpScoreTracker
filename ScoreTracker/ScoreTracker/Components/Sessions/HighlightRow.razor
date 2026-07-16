@@ -3,6 +3,7 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services
 @namespace ScoreTracker.Web.Components
 <div class="d-flex align-center gap-2 px-3 py-1" data-testid="highlight-row">
     @if (Chart != null)
@@ -12,7 +13,7 @@
         <div class="flex-grow-1">
             <div class="d-flex align-center gap-1">
                 <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
-                <MudLink Href="@($"/Chart/{Chart.Id}")">@Chart.Song.Name</MudLink>
+                <MudLink Href="@Chart.CanonicalPath()">@Chart.Song.Name</MudLink>
                 @foreach (var badge in Badges)
                 {
                     <MudTooltip Text="@badge.Tooltip">

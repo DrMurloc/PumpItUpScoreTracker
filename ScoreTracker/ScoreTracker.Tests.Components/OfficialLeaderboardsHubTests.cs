@@ -34,6 +34,9 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double>());
         Services.AddSingleton(_mediator.Object);
+        // Last: it reads the renderer, locking the service collection. The hub views run in
+        // an interactive circuit; SongImage/DifficultyBubble gate tooltips on RendererInfo.
+        this.RenderInteractive();
     }
 
     private static Chart MakeChart(string name = "District 1", ChartType type = ChartType.Double,

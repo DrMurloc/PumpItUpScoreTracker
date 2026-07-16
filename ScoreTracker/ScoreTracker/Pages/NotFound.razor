@@ -1,0 +1,39 @@
+@page "/not-found"
+@using ScoreTracker.Web.Services
+
+@* The branded 404: unmatched routes re-execute here through the Router's NotFoundPage,
+   keeping the true HTTP 404 while humans get the game's own vocabulary — the
+   "Why Don't You Get Up and Dance, Man?" title screen and a MISS judgment — instead of an
+   empty body. Static SSR: renders inside the shell, no circuit, every action a plain link.
+   MISS and the credit counter stay untranslated, like all game vocabulary. *@
+
+<p class="nf-eyebrow">404 — @L["Page not found"]</p>
+
+<div class="nf-stage">
+    <img class="nf-frame" src="/img/404-dance-man.jpg"
+         alt="Why Don't You Get Up and Dance, Man? — title screen"/>
+    <div class="nf-judgment">
+        <span class="nf-miss">MISS</span>
+    </div>
+</div>
+
+<p class="nf-explain">@L["There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart."]</p>
+
+<div class="nf-actions">
+    @* Static page, so the click is a raw onclick on a plain wrapper — MudButton's own
+       @onclick directive clobbers a splatted onclick attribute, and a directive renders as
+       nothing without a circuit. Opens whichever search bar this viewport has: the mobile
+       sheet or the desktop app-bar field. *@
+    <span onclick="shell.openSearch()">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Search">@L["Find a chart"]</MudButton>
+    </span>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/">@L["Home"]</MudButton>
+    <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/TierLists">@L["Tier Lists"]</MudButton>
+</div>
+
+<p class="nf-credit">CREDIT(S) 404 [4/0]</p>
+
+@* No status-setting here: a 404 stamped DURING a static render is the framework's signal
+   to skip the body entirely. NotFoundCatchAll's NavigationManager.NotFound() carries the
+   404 in and this page just renders the human half. *@

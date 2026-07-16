@@ -11,12 +11,13 @@ namespace ScoreTracker.Tests.Components;
 public sealed class ChartSlugsTests
 {
     internal static Chart BuildChart(Guid? id = null, string song = "Baroque Virus - FULL SONG",
-        MixEnum mix = MixEnum.Phoenix, int level = 20, ChartType type = ChartType.Double)
+        MixEnum mix = MixEnum.Phoenix, int level = 20, ChartType type = ChartType.Double,
+        LegacySlot? slot = null)
     {
         return new Chart(id ?? Guid.NewGuid(), MixEnum.XX,
             new Song(Name.From(song), SongType.FullSong, new Uri("https://example.invalid/x.png"),
                 TimeSpan.FromMinutes(2), Name.From("msgoon"), null),
-            type, level, mix, null, null, new HashSet<Skill>());
+            type, level, mix, null, null, new HashSet<Skill>(), slot);
     }
 
     [Theory]
@@ -48,8 +49,26 @@ public sealed class ChartSlugsTests
     }
 
     [Fact]
-    public void CanonicalPathComposesMixSongAndDifficulty()
+    public void SlottedChartsSlugTheirSlotBecauseTheShorthandIsAmbiguous()
     {
-        Assert.Equal("/phoenix/baroque-virus-full-song/d20", ChartSlugs.CanonicalPath(BuildChart()));
+        // Pre-Exceed, the same song carries Hard 6 AND Crazy 6 — "s6" names two charts.
+        Assert.Equal("crazy-6",
+            ChartSlugs.DifficultySlug(BuildChart(type: ChartType.Single, level: 6, slot: LegacySlot.Crazy)));
+        Assert.Equal("another-hard-9",
+            ChartSlugs.DifficultySlug(BuildChart(type: ChartType.Single, level: 9, slot: LegacySlot.AnotherHard)));
+    }
+
+    [Fact]
+    public void UnslugifiableNamesFallBackToStableSlugs()
+    {
+        // "!" (Infinity) is all punctuation — Slugify drops every character.
+        Assert.Equal("exclamation", ChartSlugs.SlugifySong(Name.From("!")));
+        Assert.Equal("untitled", ChartSlugs.SlugifySong(Name.From("?!")));
+    }
+
+    [Fact]
+    public void CanonicalPathMountsUnderChartsAndComposesMixSongAndDifficulty()
+    {
+        Assert.Equal("/Charts/phoenix/baroque-virus-full-song/d20", BuildChart().CanonicalPath());
     }
 }

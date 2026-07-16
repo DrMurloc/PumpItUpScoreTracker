@@ -57,6 +57,9 @@ public sealed class ChartDetailsDialogTests : TestContext
         localizer.Setup(l => l[It.IsAny<string>(), It.IsAny<object[]>()])
             .Returns((string key, object[] args) => new LocalizedString(key, string.Format(key, args)));
         Services.AddSingleton(localizer.Object);
+        // Last: it reads the renderer, locking the service collection. The dialog renders on
+        // its interactive path (RendererInfo gates the nested bubble's tooltip).
+        this.RenderInteractive();
     }
 
     private Chart SetupChart(string? videoUrl)

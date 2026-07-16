@@ -4521,4 +4521,10 @@
   <data name="World firsts" xml:space="preserve">
     <value>Primicias mundiales</value>
   </data>
+  <data name="Page not found" xml:space="preserve">
+    <value>Página no encontrada</value>
+  </data>
+  <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
+    <value>No hay nada en esta dirección — puede que se haya movido con una versión, o que nunca haya existido. La búsqueda conoce todos los charts.</value>
+  </data>
 </root>

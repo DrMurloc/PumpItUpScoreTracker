@@ -46,13 +46,9 @@ public sealed class ChartVerdictHandlerTests
             .WithType(ChartType.Double).WithLevel(19).WithMix(MixEnum.XX).WithOriginalMix(MixEnum.XX).Build();
         _charts.Setup(c => c.GetChart(MixEnum.Phoenix, chartId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(phoenixChart);
-        // The history sweep asks every mix; only two catalogs carry this chart.
-        _charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), null, null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<ScoreTracker.SharedKernel.Models.Chart>());
-        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { phoenixChart });
-        _charts.Setup(c => c.GetCharts(MixEnum.XX, null, null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { xxChart });
+        // History reads the flat mix-level map: this chart was D19 in XX, D20 in Phoenix.
+        _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { (chartId, MixEnum.XX, 19), (chartId, MixEnum.Phoenix, 20) });
         _charts.Setup(c => c.GetChartLetterGradeDifficulties(It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ChartLetterGradeDifficulty>());
@@ -62,18 +58,16 @@ public sealed class ChartVerdictHandlerTests
         _tierLists.Setup(t => t.GetAllEntries(MixEnum.Phoenix, It.Is<Name>(n => n.ToString() == "Scores"),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { new SongTierListEntry("Scores", chartId, TierListCategory.Easy, 1) });
-        // Three scorers on this chart (one broken), plus a same-folder record for another
-        // chart that must not leak into this chart's population.
+        // Three scorers on this chart, one broken — the per-chart read returns only this
+        // chart's population (the SQL WHERE does the filtering the handler used to do).
         var scorers = Enumerable.Range(1, 3)
             .Select(i => new Guid(i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)).ToArray();
-        _scores.Setup(s => s.GetScores(MixEnum.Phoenix, ChartType.Double, It.IsAny<DifficultyLevel>(),
-                It.IsAny<CancellationToken>()))
+        _scores.Setup(s => s.GetChartScores(MixEnum.Phoenix, chartId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new (Guid, RecordedPhoenixScore)[]
             {
                 (scorers[0], new RecordedPhoenixScore(chartId, PhoenixScore.From(986_120), null, false, Now)),
                 (scorers[1], new RecordedPhoenixScore(chartId, PhoenixScore.From(920_000), null, false, Now)),
-                (scorers[2], new RecordedPhoenixScore(chartId, PhoenixScore.From(880_000), null, true, Now)),
-                (scorers[0], new RecordedPhoenixScore(Guid.NewGuid(), PhoenixScore.From(999_000), null, false, Now))
+                (scorers[2], new RecordedPhoenixScore(chartId, PhoenixScore.From(880_000), null, true, Now))
             });
         _playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<CancellationToken>()))
@@ -106,7 +100,7 @@ public sealed class ChartVerdictHandlerTests
         var fingerprint = facets.OfType<StyleFingerprintVerdict>().Single();
         Assert.Equal(Skill.Stamina, fingerprint.TopSkills.Single().Skill);
 
-        // Three records on this chart (the fourth belongs to another chart), two clears.
+        // Three records on this chart, two clears.
         var population = facets.OfType<PopulationVerdict>().Single();
         Assert.Equal(3, population.ScoresTracked);
         Assert.Equal(2 / 3.0, population.PassRate, 1e-9);

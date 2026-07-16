@@ -37,6 +37,11 @@
         {
             <meta property="og:image" content="@_head.OgImage" />
         }
+        @if (_head.Canonical != null)
+        {
+            <link rel="canonical" href="@_head.Canonical" />
+            <script type="application/ld+json">@((MarkupString)JsonLd(_head))</script>
+        }
     }
     @* Interactive, and not prerendered — matching every <PageTitle> in the app. Static, it would
        only ever see static components and every page's title would read "PIU Scores". *@
@@ -115,7 +120,7 @@
 <script src="_framework/blazor.web.js"></script>
 <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 <script src="/js/page-dock.js"></script>
-<script src="/js/nav.js"></script>
+<script src="/js/nav.js?v=3"></script>
 <script src="/js/dashboard-grid.js"></script>
 <script src="/js/credential-storage.js"></script>
 </body>
@@ -126,6 +131,21 @@
 
     private ShellViewModel _shell = null!;
     private StaticHeadModel? _head;
+
+    // MusicRecording JSON-LD for chart pages — enough for a rich result to name the song and
+    // link its image. System.Text.Json escapes the values, so a song title can't break out.
+    private static string JsonLd(StaticHeadModel head)
+    {
+        return System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object?>
+        {
+            ["@context"] = "https://schema.org",
+            ["@type"] = "MusicRecording",
+            ["name"] = head.Title,
+            ["description"] = head.Description,
+            ["url"] = head.Canonical,
+            ["image"] = head.OgImage
+        });
+    }
 
     // Resolved here rather than in OnInitializedAsync: an async init renders once at its first
     // await, before it has assigned anything. A page can show a spinner through that render —

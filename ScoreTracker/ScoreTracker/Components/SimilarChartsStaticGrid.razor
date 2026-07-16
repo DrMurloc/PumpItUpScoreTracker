@@ -1,0 +1,65 @@
+@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+
+@* The crawlable half of the similar-charts shelf: the match-order cards as real <a href>s,
+   rendered server-side so the internal link mesh exists before any circuit. SimilarChartsShelf
+   is the interactive twin — when it connects it renders data-island-ready and the wrapper hides
+   this copy (site.css). No sorting, filtering or personalization here: those need a circuit, and
+   the stored match order is the same first view the shelf opens on. *@
+@if (_matches.Count > 0)
+{
+    <div class="chart-shelf">
+        @foreach (var entry in _matches)
+        {
+            <SimilarChartCard Chart="entry.Chart" Record="entry.Record" Intensity="entry.Intensity"
+                              AnchorIntensity="_anchorIntensity" VideoUrl="@entry.VideoUrl"
+                              @key="entry.Chart.Id"></SimilarChartCard>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public Guid ChartId { get; set; }
+
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    private sealed record Entry(ChartSimilarityRecord Record, Chart Chart, ChartIntensityFacts? Intensity,
+        string? VideoUrl);
+
+    private ChartIntensityFacts? _anchorIntensity;
+    private IReadOnlyList<Entry> _matches = Array.Empty<Entry>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var edges = await Mediator.Send(new GetSimilarChartsQuery(ChartId, Mix));
+        if (edges.Count == 0)
+        {
+            _matches = Array.Empty<Entry>();
+            return;
+        }
+
+        var chartIds = edges.Select(e => e.ChartId).Append(ChartId).ToArray();
+        var charts = (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: chartIds))).ToDictionary(c => c.Id);
+        var analyses = await Mediator.Send(new GetChartStepAnalysesQuery(chartIds));
+        var videos = (await Mediator.Send(new GetChartVideosQuery(edges.Select(e => e.ChartId))))
+            .ToDictionary(v => v.ChartId, v => v.VideoUrl.ToString());
+        var anchor = charts.GetValueOrDefault(ChartId);
+        _anchorIntensity = anchor == null ? null
+            : ChartIntensityFacts.For(anchor, analyses.GetValueOrDefault(ChartId));
+
+        // Match order, floor-split exactly as the shelf's default view — the near-misses and
+        // the reach line are interactive affordances the island owns.
+        _matches = edges
+            .Where(e => charts.ContainsKey(e.ChartId) && e.Score >= SimilarChartsShelf.ScoreFloor)
+            .Select(e => new Entry(e, charts[e.ChartId],
+                ChartIntensityFacts.For(charts[e.ChartId], analyses.GetValueOrDefault(e.ChartId)),
+                videos.GetValueOrDefault(e.ChartId)))
+            .ToArray();
+    }
+}

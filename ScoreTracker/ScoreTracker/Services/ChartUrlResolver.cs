@@ -20,6 +20,13 @@ public sealed record ChartUrlResolution(Guid ChartId, string CanonicalPath);
 /// </summary>
 public sealed class ChartUrlResolver
 {
+    /// <summary>
+    ///     The site's anonymous default mix — the one the canonical namespace lives in.
+    ///     Canonical paths resolve against this regardless of the viewer's selected mix, so
+    ///     a chart has exactly one canonical URL. Flips per mix era (mass 301 migration).
+    /// </summary>
+    public const MixEnum DefaultMix = MixEnum.Phoenix;
+
     private static readonly IReadOnlyDictionary<string, MixEnum> MixesBySlug =
         Enum.GetValues<MixEnum>().ToDictionary(ChartSlugs.MixSlug, m => m);
 
@@ -74,8 +81,13 @@ public sealed class ChartUrlResolver
         if (!MixesBySlug.TryGetValue(mixSlug.ToLowerInvariant(), out var mix)) return null;
         var song = songSlug.ToLowerInvariant();
         var difficulty = difficultySlug.ToLowerInvariant();
-        var match = (await Charts(mix, cancellationToken)).FirstOrDefault(c =>
-            ChartSlugs.DifficultySlug(c) == difficulty && ChartSlugs.SlugifySong(c.Song.Name) == song);
+        var match = (await Charts(mix, cancellationToken))
+            .Where(c => ChartSlugs.DifficultySlug(c) == difficulty &&
+                        ChartSlugs.SlugifySong(c.Song.Name) == song)
+            // Duplicate catalog rows (the legacy-import twins) resolve deterministically:
+            // the lowest chart id owns the URL; the rest stay reachable by GUID permalink.
+            .OrderBy(c => c.Id)
+            .FirstOrDefault();
         if (match == null) return null;
 
         var canonical = await CanonicalPathFor(match.Id, defaultMix, cancellationToken);

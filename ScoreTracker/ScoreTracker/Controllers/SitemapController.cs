@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Web.Services;
 
 namespace ScoreTracker.Web.Controllers
 {
@@ -29,7 +30,9 @@ namespace ScoreTracker.Web.Controllers
             // The front door: anonymous "/" and "/Login" both resolve to the same page,
             // which canonicalizes itself to /Welcome — only the canonical is listed.
             var pages = new List<string> { "https://piuscores.arroweclip.se/Welcome" };
-            pages.AddRange(charts.Select(chart => $"https://piuscores.arroweclip.se/Chart/{chart.Id}"));
+            // Canonical vanity URLs, never GUIDs: the pretty URL is the one to index, and it
+            // is what the GUID permalink 301s to (ChartPermalinkController).
+            pages.AddRange(charts.Select(chart => $"https://piuscores.arroweclip.se{chart.CanonicalPath()}"));
             pages.Add("https://piuscores.arroweclip.se/TierLists");
             // Tier-lists overhaul C3: one canonical URL per Singles/Doubles folder that
             // actually has charts — each is an indexable community tier list.
