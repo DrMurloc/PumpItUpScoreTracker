@@ -4206,9 +4206,6 @@
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>似ている譜面を挙げるにはまだデータ不足です——グラフは毎晩再計算されます。</value>
   </data>
-  <data name="Watch chart video" xml:space="preserve">
-    <value>譜面動画を見る</value>
-  </data>
   <data name="Your best" xml:space="preserve">
     <value>自己ベスト</value>
   </data>

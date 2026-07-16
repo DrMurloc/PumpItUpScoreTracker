@@ -6,23 +6,34 @@
 
 @* The hero jacket with a click-to-load video (mock R2): the jacket is the LCP and the
    og:image; the iframe only exists after a click, so the page never pays YouTube's
-   weight up front. Becomes an island at Stage 3 (the click needs a circuit). *@
+   weight up front. Becomes an island at Stage 3 (the click needs a circuit).
+   Same gesture as the shelf's cards (SimilarChartCard): the jacket IS the play button, it
+   autoplays, and it closes back to the art. Two ways to watch a video on one page is one
+   too many — and the shelf's is the one that survived field testing. *@
 <div class="chart-jacket">
     @if (_playing && _videoUrl != null)
     {
-        <iframe class="chart-jacket-video" src="@_videoUrl" allow="encrypted-media" allowfullscreen title="@Chart?.Song.Name"></iframe>
+        <iframe class="chart-jacket-video" src="@($"{_videoUrl}?autoplay=1")" allow="autoplay; encrypted-media"
+                allowfullscreen title="@Chart?.Song.Name"></iframe>
+        <button type="button" class="chart-jacket-close" @onclick="() => _playing = false"
+                aria-label="@L["Close video"]">✕</button>
     }
     else if (Chart != null)
     {
         @* The jacket gets its own wrapper so "fill the frame" can be said about it alone.
            Said about the whole jacket box instead, it also lands on the bubble's image and
            stretches it to the frame's full width. *@
-        <span class="chart-jacket-art"><SongImage Song="Chart.Song" Height="280"></SongImage></span>
         @if (_videoUrl != null)
         {
-            <button type="button" class="chart-jacket-play" @onclick="() => _playing = true">
-                <i></i>@L["Watch chart video"]
+            <button type="button" class="chart-jacket-playable" @onclick="() => _playing = true"
+                    aria-label="@L["Watch {0}", Chart.Song.Name]">
+                <span class="chart-jacket-art"><SongImage Song="Chart.Song" Height="280"></SongImage></span>
+                <span class="chart-jacket-play" aria-hidden="true"></span>
             </button>
+        }
+        else
+        {
+            <span class="chart-jacket-art"><SongImage Song="Chart.Song" Height="280"></SongImage></span>
         }
         <span class="chart-jacket-bubble"><DifficultyBubble Chart="Chart"></DifficultyBubble></span>
     }

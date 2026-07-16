@@ -4086,9 +4086,6 @@
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>비슷한 채보를 꼽기엔 아직 데이터가 부족합니다 — 그래프는 매일 밤 다시 계산됩니다.</value>
   </data>
-  <data name="Watch chart video" xml:space="preserve">
-    <value>채보 영상 보기</value>
-  </data>
   <data name="Your best" xml:space="preserve">
     <value>내 최고 기록</value>
   </data>

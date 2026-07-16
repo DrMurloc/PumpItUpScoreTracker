@@ -3757,31 +3757,78 @@ html.sheet-open .more-sheet-scrim {
     display: block;
 }
 
+/* The jacket is the button, same as the shelf's cards — two ways to start a video on one
+   page is one too many. The bubble stays outside it: it labels the art, it does not play. */
+.chart-jacket-playable {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    position: relative;
+}
+
+/* Centred circle, revealed on hover — .chart-card-play's treatment at the hero's scale.
+   pointer-events: none so the button underneath owns every pixel of the art. */
 .chart-jacket-play {
     position: absolute;
     left: 50%;
-    bottom: 14px;
-    transform: translateX(-50%);
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    padding: 8px 16px;
+    top: 50%;
+    translate: -50% -50%;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 62px;
+    height: 62px;
+    padding-left: 4px;
     border-radius: 99px;
-    border: 1px solid rgba(255, 255, 255, .25);
-    background: color-mix(in srgb, var(--mix-bg) 82%, transparent);
-    color: var(--mix-ink);
-    font-size: .8rem;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
+    pointer-events: none;
+    background: rgba(0, 0, 0, .8);
+    border: 1px solid rgba(255, 255, 255, .2);
+    color: #fff;
+    opacity: .85;
+    transform: scale(.94);
+    transition: opacity .12s, transform .12s, background .12s, border-color .12s;
 }
 
-.chart-jacket-play i {
-    width: 0;
-    height: 0;
-    border-left: 9px solid var(--mix-accent);
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
+.chart-jacket-play::before {
+    content: "";
+    border-style: solid;
+    border-width: 10px 0 10px 16px;
+    border-color: transparent transparent transparent currentColor;
+}
+
+.chart-jacket-playable:hover .chart-jacket-play,
+.chart-jacket-playable:focus-visible .chart-jacket-play {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.chart-jacket-playable:hover .chart-jacket-play {
+    background: rgba(0, 0, 0, .93);
+    border-color: var(--mix-primary);
+}
+
+.chart-jacket-close {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    z-index: 4;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: .68rem;
+    color: #fff;
+    background: rgba(0, 0, 0, .8);
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 99px;
+    width: 24px;
+    height: 24px;
+    line-height: 1;
+}
+
+.chart-jacket-close:hover {
+    border-color: var(--mix-primary);
 }
 
 .chart-jacket-bubble {
