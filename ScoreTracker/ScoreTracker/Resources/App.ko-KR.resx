@@ -4329,4 +4329,199 @@
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>가져온 점수는 도착하는 대로 여기에 표시됩니다.</value>
   </data>
+  <data name="Accept - merge history" xml:space="preserve">
+    <value>승인 - 기록 병합</value>
+  </data>
+  <data name="avatar match" xml:space="preserve">
+    <value>아바타 일치</value>
+  </data>
+  <data name="Baseline" xml:space="preserve">
+    <value>기준점</value>
+  </data>
+  <data name="Baseline seed queued - it refuses to run once sealed snapshots exist" xml:space="preserve">
+    <value>기준점 시드가 대기열에 등록되었습니다 - 확정된 스냅샷이 있으면 실행되지 않습니다</value>
+  </data>
+  <data name="Best place" xml:space="preserve">
+    <value>최고 순위</value>
+  </data>
+  <data name="Board #1s" xml:space="preserve">
+    <value>보드 1위</value>
+  </data>
+  <data name="Board placements" xml:space="preserve">
+    <value>보드 순위</value>
+  </data>
+  <data name="Board rank - lower is better" xml:space="preserve">
+    <value>보드 랭킹 - 낮을수록 좋음</value>
+  </data>
+  <data name="boards" xml:space="preserve">
+    <value>보드</value>
+  </data>
+  <data name="Boards" xml:space="preserve">
+    <value>보드</value>
+  </data>
+  <data name="dethroned" xml:space="preserve">
+    <value>이전 1위:</value>
+  </data>
+  <data name="Every record held this week." xml:space="preserve">
+    <value>이번 주에는 모든 기록이 유지되었습니다.</value>
+  </data>
+  <data name="Find a player" xml:space="preserve">
+    <value>플레이어 찾기</value>
+  </data>
+  <data name="First in the folder" xml:space="preserve">
+    <value>폴더 최초</value>
+  </data>
+  <data name="Highlight rebuild queued" xml:space="preserve">
+    <value>하이라이트 재계산이 대기열에 등록되었습니다</value>
+  </data>
+  <data name="Import OK" xml:space="preserve">
+    <value>가져오기 정상</value>
+  </data>
+  <data name="Import queued - watch the runs table" xml:space="preserve">
+    <value>가져오기가 대기열에 등록되었습니다 - 실행 기록 표를 확인하세요</value>
+  </data>
+  <data name="Import runs" xml:space="preserve">
+    <value>가져오기 실행 기록</value>
+  </data>
+  <data name="in the top ten" xml:space="preserve">
+    <value>개 보드 10위 이내</value>
+  </data>
+  <data name="Last import failed" xml:space="preserve">
+    <value>마지막 가져오기 실패</value>
+  </data>
+  <data name="level 24+, first ever, SS and up" xml:space="preserve">
+    <value>레벨 24 이상, 사상 최초, SS 이상</value>
+  </data>
+  <data name="level 24+, must beat the standing record" xml:space="preserve">
+    <value>레벨 24 이상, 기존 기록을 넘어야 함</value>
+  </data>
+  <data name="Linked to a site account" xml:space="preserve">
+    <value>사이트 계정과 연결됨</value>
+  </data>
+  <data name="Most boards climbed" xml:space="preserve">
+    <value>보드 상승 최다</value>
+  </data>
+  <data name="Movers of the week" xml:space="preserve">
+    <value>이번 주의 무버</value>
+  </data>
+  <data name="net" xml:space="preserve">
+    <value>합계</value>
+  </data>
+  <data name="New #1s" xml:space="preserve">
+    <value>새로운 1위</value>
+  </data>
+  <data name="New this week" xml:space="preserve">
+    <value>이번 주 신규</value>
+  </data>
+  <data name="No board history for that tag." xml:space="preserve">
+    <value>해당 태그의 보드 기록이 없습니다.</value>
+  </data>
+  <data name="No new grade firsts this week." xml:space="preserve">
+    <value>이번 주에는 새로운 등급 최초 기록이 없습니다.</value>
+  </data>
+  <data name="No pending rename proposals." xml:space="preserve">
+    <value>대기 중인 이름 변경 제안이 없습니다.</value>
+  </data>
+  <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
+    <value>아직 인기 순위 스냅샷이 없습니다 - 주간 가져오기와 함께 생성됩니다.</value>
+  </data>
+  <data name="No PUMBILITY board on this mix - movers live on Phoenix 2." xml:space="preserve">
+    <value>이 시리즈에는 PUMBILITY 보드가 없습니다 - 무버는 Phoenix 2에서 확인할 수 있습니다.</value>
+  </data>
+  <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
+    <value>아직 랭킹이 없습니다 - 첫 주간 가져오기 후에 표시됩니다.</value>
+  </data>
+  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
+    <value>이번 주에는 상승 기준을 넘은 플레이어가 없습니다.</value>
+  </data>
+  <data name="Official Leaderboards Admin" xml:space="preserve">
+    <value>공식 리더보드 관리</value>
+  </data>
+  <data name="Official play ranking - trend deepens weekly as snapshots accumulate." xml:space="preserve">
+    <value>공식 플레이 랭킹 - 스냅샷이 쌓일수록 추세가 깊어집니다.</value>
+  </data>
+  <data name="Pick a player to see their boards, history, and PUMBILITY over time - departed tags stay searchable." xml:space="preserve">
+    <value>플레이어를 선택하면 보드, 기록, PUMBILITY 추이를 볼 수 있습니다 - 떠난 태그도 계속 검색됩니다.</value>
+  </data>
+  <data name="places" xml:space="preserve">
+    <value>계단 상승</value>
+  </data>
+  <data name="PUMBILITY over time" xml:space="preserve">
+    <value>PUMBILITY 추이</value>
+  </data>
+  <data name="rank" xml:space="preserve">
+    <value>랭킹</value>
+  </data>
+  <data name="Rank" xml:space="preserve">
+    <value>랭킹</value>
+  </data>
+  <data name="Ranked by computed rating over the mirrored chart boards - this mix has no official PUMBILITY board." xml:space="preserve">
+    <value>미러링된 채보 보드 기반 계산 레이팅 순위입니다 - 이 시리즈에는 공식 PUMBILITY 보드가 없습니다.</value>
+  </data>
+  <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
+    <value>매주 미러링되는 공식 PUMBILITY 보드 기준 순위입니다.</value>
+  </data>
+  <data name="Rebuild weekly highlights" xml:space="preserve">
+    <value>주간 하이라이트 재계산</value>
+  </data>
+  <data name="Rename proposals" xml:space="preserve">
+    <value>이름 변경 제안</value>
+  </data>
+  <data name="Run import now" xml:space="preserve">
+    <value>지금 가져오기 실행</value>
+  </data>
+  <data name="Running" xml:space="preserve">
+    <value>실행 중</value>
+  </data>
+  <data name="Search any board player" xml:space="preserve">
+    <value>보드 플레이어 검색</value>
+  </data>
+  <data name="Seed baseline from legacy tables" xml:space="preserve">
+    <value>기존 테이블에서 기준점 시드 생성</value>
+  </data>
+  <data name="skipped" xml:space="preserve">
+    <value>건너뜀</value>
+  </data>
+  <data name="Songs" xml:space="preserve">
+    <value>곡</value>
+  </data>
+  <data name="Stage" xml:space="preserve">
+    <value>단계</value>
+  </data>
+  <data name="Started" xml:space="preserve">
+    <value>시작</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>상태</value>
+  </data>
+  <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
+    <value>첫 주간 스냅샷이 아직 없습니다 - 다음 일요일 가져오기 후 하이라이트가 표시됩니다.</value>
+  </data>
+  <data name="This Week" xml:space="preserve">
+    <value>이번 주</value>
+  </data>
+  <data name="This week's snapshot is the baseline - week-over-week highlights begin next import." xml:space="preserve">
+    <value>이번 주 스냅샷은 기준점입니다 - 주간 하이라이트는 다음 가져오기부터 시작됩니다.</value>
+  </data>
+  <data name="Top 50" xml:space="preserve">
+    <value>상위 50</value>
+  </data>
+  <data name="Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade." xml:space="preserve">
+    <value>계산 레이팅 기준 상위 채보 - 보드 합계는 공식 값이며, 채보별 기여도는 점수와 등급으로 계산됩니다.</value>
+  </data>
+  <data name="top-50 overlap" xml:space="preserve">
+    <value>상위 50 일치</value>
+  </data>
+  <data name="vs" xml:space="preserve">
+    <value>vs</value>
+  </data>
+  <data name="weeks" xml:space="preserve">
+    <value>주</value>
+  </data>
+  <data name="Week of" xml:space="preserve">
+    <value>주간:</value>
+  </data>
+  <data name="World firsts" xml:space="preserve">
+    <value>세계 최초 기록</value>
+  </data>
 </root>

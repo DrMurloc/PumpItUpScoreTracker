@@ -4442,4 +4442,199 @@
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>Imported scores will appear here as they come in.</value>
   </data>
+  <data name="Accept - merge history" xml:space="preserve">
+    <value>Accept - merge history</value>
+  </data>
+  <data name="avatar match" xml:space="preserve">
+    <value>avatar match</value>
+  </data>
+  <data name="Baseline" xml:space="preserve">
+    <value>Baseline</value>
+  </data>
+  <data name="Baseline seed queued - it refuses to run once sealed snapshots exist" xml:space="preserve">
+    <value>Baseline seed queued - it refuses to run once sealed snapshots exist</value>
+  </data>
+  <data name="Best place" xml:space="preserve">
+    <value>Best place</value>
+  </data>
+  <data name="Board #1s" xml:space="preserve">
+    <value>Board #1s</value>
+  </data>
+  <data name="Board placements" xml:space="preserve">
+    <value>Board placements</value>
+  </data>
+  <data name="Board rank - lower is better" xml:space="preserve">
+    <value>Board rank - lower is better</value>
+  </data>
+  <data name="boards" xml:space="preserve">
+    <value>boards</value>
+  </data>
+  <data name="Boards" xml:space="preserve">
+    <value>Boards</value>
+  </data>
+  <data name="dethroned" xml:space="preserve">
+    <value>dethroned</value>
+  </data>
+  <data name="Every record held this week." xml:space="preserve">
+    <value>Every record held this week.</value>
+  </data>
+  <data name="Find a player" xml:space="preserve">
+    <value>Find a player</value>
+  </data>
+  <data name="First in the folder" xml:space="preserve">
+    <value>First in the folder</value>
+  </data>
+  <data name="Highlight rebuild queued" xml:space="preserve">
+    <value>Highlight rebuild queued</value>
+  </data>
+  <data name="Import OK" xml:space="preserve">
+    <value>Import OK</value>
+  </data>
+  <data name="Import queued - watch the runs table" xml:space="preserve">
+    <value>Import queued - watch the runs table</value>
+  </data>
+  <data name="Import runs" xml:space="preserve">
+    <value>Import runs</value>
+  </data>
+  <data name="in the top ten" xml:space="preserve">
+    <value>in the top ten</value>
+  </data>
+  <data name="Last import failed" xml:space="preserve">
+    <value>Last import failed</value>
+  </data>
+  <data name="level 24+, first ever, SS and up" xml:space="preserve">
+    <value>level 24+, first ever, SS and up</value>
+  </data>
+  <data name="level 24+, must beat the standing record" xml:space="preserve">
+    <value>level 24+, must beat the standing record</value>
+  </data>
+  <data name="Linked to a site account" xml:space="preserve">
+    <value>Linked to a site account</value>
+  </data>
+  <data name="Most boards climbed" xml:space="preserve">
+    <value>Most boards climbed</value>
+  </data>
+  <data name="Movers of the week" xml:space="preserve">
+    <value>Movers of the week</value>
+  </data>
+  <data name="net" xml:space="preserve">
+    <value>net</value>
+  </data>
+  <data name="New #1s" xml:space="preserve">
+    <value>New #1s</value>
+  </data>
+  <data name="New this week" xml:space="preserve">
+    <value>New this week</value>
+  </data>
+  <data name="No board history for that tag." xml:space="preserve">
+    <value>No board history for that tag.</value>
+  </data>
+  <data name="No new grade firsts this week." xml:space="preserve">
+    <value>No new grade firsts this week.</value>
+  </data>
+  <data name="No pending rename proposals." xml:space="preserve">
+    <value>No pending rename proposals.</value>
+  </data>
+  <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
+    <value>No popularity snapshot yet - it lands with the weekly import.</value>
+  </data>
+  <data name="No PUMBILITY board on this mix - movers live on Phoenix 2." xml:space="preserve">
+    <value>No PUMBILITY board on this mix - movers live on Phoenix 2.</value>
+  </data>
+  <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
+    <value>No rankings yet - they appear after the first weekly import.</value>
+  </data>
+  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
+    <value>Nobody cleared the climb threshold this week.</value>
+  </data>
+  <data name="Official Leaderboards Admin" xml:space="preserve">
+    <value>Official Leaderboards Admin</value>
+  </data>
+  <data name="Official play ranking - trend deepens weekly as snapshots accumulate." xml:space="preserve">
+    <value>Official play ranking - trend deepens weekly as snapshots accumulate.</value>
+  </data>
+  <data name="Pick a player to see their boards, history, and PUMBILITY over time - departed tags stay searchable." xml:space="preserve">
+    <value>Pick a player to see their boards, history, and PUMBILITY over time - departed tags stay searchable.</value>
+  </data>
+  <data name="places" xml:space="preserve">
+    <value>places</value>
+  </data>
+  <data name="PUMBILITY over time" xml:space="preserve">
+    <value>PUMBILITY over time</value>
+  </data>
+  <data name="rank" xml:space="preserve">
+    <value>rank</value>
+  </data>
+  <data name="Rank" xml:space="preserve">
+    <value>Rank</value>
+  </data>
+  <data name="Ranked by computed rating over the mirrored chart boards - this mix has no official PUMBILITY board." xml:space="preserve">
+    <value>Ranked by computed rating over the mirrored chart boards - this mix has no official PUMBILITY board.</value>
+  </data>
+  <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
+    <value>Ranked by the official PUMBILITY board, mirrored weekly.</value>
+  </data>
+  <data name="Rebuild weekly highlights" xml:space="preserve">
+    <value>Rebuild weekly highlights</value>
+  </data>
+  <data name="Rename proposals" xml:space="preserve">
+    <value>Rename proposals</value>
+  </data>
+  <data name="Run import now" xml:space="preserve">
+    <value>Run import now</value>
+  </data>
+  <data name="Running" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="Search any board player" xml:space="preserve">
+    <value>Search any board player</value>
+  </data>
+  <data name="Seed baseline from legacy tables" xml:space="preserve">
+    <value>Seed baseline from legacy tables</value>
+  </data>
+  <data name="skipped" xml:space="preserve">
+    <value>skipped</value>
+  </data>
+  <data name="Songs" xml:space="preserve">
+    <value>Songs</value>
+  </data>
+  <data name="Stage" xml:space="preserve">
+    <value>Stage</value>
+  </data>
+  <data name="Started" xml:space="preserve">
+    <value>Started</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
+    <value>The first weekly snapshot has not landed yet - highlights light up after the next Sunday import.</value>
+  </data>
+  <data name="This Week" xml:space="preserve">
+    <value>This Week</value>
+  </data>
+  <data name="This week's snapshot is the baseline - week-over-week highlights begin next import." xml:space="preserve">
+    <value>This week's snapshot is the baseline - week-over-week highlights begin next import.</value>
+  </data>
+  <data name="Top 50" xml:space="preserve">
+    <value>Top 50</value>
+  </data>
+  <data name="Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade." xml:space="preserve">
+    <value>Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade.</value>
+  </data>
+  <data name="top-50 overlap" xml:space="preserve">
+    <value>top-50 overlap</value>
+  </data>
+  <data name="vs" xml:space="preserve">
+    <value>vs</value>
+  </data>
+  <data name="weeks" xml:space="preserve">
+    <value>weeks</value>
+  </data>
+  <data name="Week of" xml:space="preserve">
+    <value>Week of</value>
+  </data>
+  <data name="World firsts" xml:space="preserve">
+    <value>World firsts</value>
+  </data>
 </root>

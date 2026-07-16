@@ -4328,4 +4328,199 @@
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>Los puntajes importados aparecerán aquí a medida que lleguen.</value>
   </data>
+  <data name="Accept - merge history" xml:space="preserve">
+    <value>Aceptar - fusionar historial</value>
+  </data>
+  <data name="avatar match" xml:space="preserve">
+    <value>avatar coincide</value>
+  </data>
+  <data name="Baseline" xml:space="preserve">
+    <value>Base inicial</value>
+  </data>
+  <data name="Baseline seed queued - it refuses to run once sealed snapshots exist" xml:space="preserve">
+    <value>Base inicial en cola - no se ejecuta si ya existen capturas selladas</value>
+  </data>
+  <data name="Best place" xml:space="preserve">
+    <value>Mejor lugar</value>
+  </data>
+  <data name="Board #1s" xml:space="preserve">
+    <value>Primeros lugares</value>
+  </data>
+  <data name="Board placements" xml:space="preserve">
+    <value>Posiciones en tableros</value>
+  </data>
+  <data name="Board rank - lower is better" xml:space="preserve">
+    <value>Lugar en el tablero - menor es mejor</value>
+  </data>
+  <data name="boards" xml:space="preserve">
+    <value>tableros</value>
+  </data>
+  <data name="Boards" xml:space="preserve">
+    <value>Tableros</value>
+  </data>
+  <data name="dethroned" xml:space="preserve">
+    <value>destronó a</value>
+  </data>
+  <data name="Every record held this week." xml:space="preserve">
+    <value>Todos los récords se mantuvieron esta semana.</value>
+  </data>
+  <data name="Find a player" xml:space="preserve">
+    <value>Buscar jugador</value>
+  </data>
+  <data name="First in the folder" xml:space="preserve">
+    <value>Primero de la carpeta</value>
+  </data>
+  <data name="Highlight rebuild queued" xml:space="preserve">
+    <value>Recálculo de destacados en cola</value>
+  </data>
+  <data name="Import OK" xml:space="preserve">
+    <value>Importación correcta</value>
+  </data>
+  <data name="Import queued - watch the runs table" xml:space="preserve">
+    <value>Importación en cola - revisa la tabla de ejecuciones</value>
+  </data>
+  <data name="Import runs" xml:space="preserve">
+    <value>Ejecuciones de importación</value>
+  </data>
+  <data name="in the top ten" xml:space="preserve">
+    <value>en el top 10</value>
+  </data>
+  <data name="Last import failed" xml:space="preserve">
+    <value>La última importación falló</value>
+  </data>
+  <data name="level 24+, first ever, SS and up" xml:space="preserve">
+    <value>nivel 24+, primera vez en la historia, SS o más</value>
+  </data>
+  <data name="level 24+, must beat the standing record" xml:space="preserve">
+    <value>nivel 24+, debe superar el récord vigente</value>
+  </data>
+  <data name="Linked to a site account" xml:space="preserve">
+    <value>Vinculado a una cuenta del sitio</value>
+  </data>
+  <data name="Most boards climbed" xml:space="preserve">
+    <value>Más tableros escalados</value>
+  </data>
+  <data name="Movers of the week" xml:space="preserve">
+    <value>Ascensos de la semana</value>
+  </data>
+  <data name="net" xml:space="preserve">
+    <value>neto</value>
+  </data>
+  <data name="New #1s" xml:space="preserve">
+    <value>Nuevos primeros lugares</value>
+  </data>
+  <data name="New this week" xml:space="preserve">
+    <value>Nuevo esta semana</value>
+  </data>
+  <data name="No board history for that tag." xml:space="preserve">
+    <value>No hay historial de tableros para ese tag.</value>
+  </data>
+  <data name="No new grade firsts this week." xml:space="preserve">
+    <value>No hubo nuevas primeras calificaciones esta semana.</value>
+  </data>
+  <data name="No pending rename proposals." xml:space="preserve">
+    <value>No hay propuestas de renombre pendientes.</value>
+  </data>
+  <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
+    <value>Aún no hay captura de popularidad - llega con la importación semanal.</value>
+  </data>
+  <data name="No PUMBILITY board on this mix - movers live on Phoenix 2." xml:space="preserve">
+    <value>Esta versión no tiene tablero PUMBILITY - los ascensos viven en Phoenix 2.</value>
+  </data>
+  <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
+    <value>Aún no hay clasificaciones - aparecen después de la primera importación semanal.</value>
+  </data>
+  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
+    <value>Nadie superó el umbral de ascensos esta semana.</value>
+  </data>
+  <data name="Official Leaderboards Admin" xml:space="preserve">
+    <value>Administración de clasificaciones oficiales</value>
+  </data>
+  <data name="Official play ranking - trend deepens weekly as snapshots accumulate." xml:space="preserve">
+    <value>Clasificación oficial de jugadas - la tendencia crece cada semana con más capturas.</value>
+  </data>
+  <data name="Pick a player to see their boards, history, and PUMBILITY over time - departed tags stay searchable." xml:space="preserve">
+    <value>Elige un jugador para ver sus tableros, historial y PUMBILITY en el tiempo - los tags retirados siguen apareciendo en la búsqueda.</value>
+  </data>
+  <data name="places" xml:space="preserve">
+    <value>lugares</value>
+  </data>
+  <data name="PUMBILITY over time" xml:space="preserve">
+    <value>PUMBILITY en el tiempo</value>
+  </data>
+  <data name="rank" xml:space="preserve">
+    <value>lugar</value>
+  </data>
+  <data name="Rank" xml:space="preserve">
+    <value>Lugar</value>
+  </data>
+  <data name="Ranked by computed rating over the mirrored chart boards - this mix has no official PUMBILITY board." xml:space="preserve">
+    <value>Clasificación por rating calculado sobre los tableros espejados - esta versión no tiene tablero PUMBILITY oficial.</value>
+  </data>
+  <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
+    <value>Clasificación según el tablero PUMBILITY oficial, espejado cada semana.</value>
+  </data>
+  <data name="Rebuild weekly highlights" xml:space="preserve">
+    <value>Recalcular destacados semanales</value>
+  </data>
+  <data name="Rename proposals" xml:space="preserve">
+    <value>Propuestas de renombre</value>
+  </data>
+  <data name="Run import now" xml:space="preserve">
+    <value>Ejecutar importación ahora</value>
+  </data>
+  <data name="Running" xml:space="preserve">
+    <value>En ejecución</value>
+  </data>
+  <data name="Search any board player" xml:space="preserve">
+    <value>Busca cualquier jugador de los tableros</value>
+  </data>
+  <data name="Seed baseline from legacy tables" xml:space="preserve">
+    <value>Crear base inicial desde las tablas anteriores</value>
+  </data>
+  <data name="skipped" xml:space="preserve">
+    <value>omitidos</value>
+  </data>
+  <data name="Songs" xml:space="preserve">
+    <value>Canciones</value>
+  </data>
+  <data name="Stage" xml:space="preserve">
+    <value>Etapa</value>
+  </data>
+  <data name="Started" xml:space="preserve">
+    <value>Inicio</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Estado</value>
+  </data>
+  <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
+    <value>La primera captura semanal aún no llega - los destacados se encienden después de la importación del próximo domingo.</value>
+  </data>
+  <data name="This Week" xml:space="preserve">
+    <value>Esta semana</value>
+  </data>
+  <data name="This week's snapshot is the baseline - week-over-week highlights begin next import." xml:space="preserve">
+    <value>La captura de esta semana es la base inicial - los destacados semana a semana comienzan con la próxima importación.</value>
+  </data>
+  <data name="Top 50" xml:space="preserve">
+    <value>Top 50</value>
+  </data>
+  <data name="Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade." xml:space="preserve">
+    <value>Mejores charts por rating calculado - los totales del tablero son oficiales; la contribución por chart se calcula con puntaje y calificación.</value>
+  </data>
+  <data name="top-50 overlap" xml:space="preserve">
+    <value>coincidencia en top 50</value>
+  </data>
+  <data name="vs" xml:space="preserve">
+    <value>vs</value>
+  </data>
+  <data name="weeks" xml:space="preserve">
+    <value>semanas</value>
+  </data>
+  <data name="Week of" xml:space="preserve">
+    <value>Semana del</value>
+  </data>
+  <data name="World firsts" xml:space="preserve">
+    <value>Primicias mundiales</value>
+  </data>
 </root>
