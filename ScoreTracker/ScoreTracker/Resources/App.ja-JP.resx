@@ -4413,4 +4413,7 @@
   <data name="Search" xml:space="preserve">
     <value>検索</value>
   </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>各スキルが登場するチャートセクションの割合</value>
+  </data>
 </root>

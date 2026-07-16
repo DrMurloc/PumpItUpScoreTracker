@@ -4412,4 +4412,7 @@
   <data name="Search" xml:space="preserve">
     <value>Cerca</value>
   </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>Quota di sezioni del chart con ogni abilità</value>
+  </data>
 </root>

@@ -4293,4 +4293,7 @@
   <data name="Search" xml:space="preserve">
     <value>검색</value>
   </data>
+  <data name="Share of chart sections featuring each skill" xml:space="preserve">
+    <value>각 스킬이 나오는 채보 구간 비율</value>
+  </data>
 </root>
