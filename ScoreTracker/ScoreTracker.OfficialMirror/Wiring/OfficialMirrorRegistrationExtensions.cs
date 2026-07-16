@@ -32,6 +32,9 @@ public static class OfficialMirrorRegistrationExtensions
         services.AddTransient<IOfficialSiteClient, OfficialSiteClient>();
         services.AddTransient<IPiuTrackerClient, PiuTrackerClient>();
         services.AddTransient<IOfficialLeaderboardRepository, EFOfficialLeaderboardRepository>();
+        services.AddTransient<IOfficialSnapshotRepository, EFOfficialSnapshotRepository>();
+        services.AddTransient<IOfficialRecordRepository, EFOfficialRecordRepository>();
+        services.AddTransient<IOfficialPlayerIdentityRepository, EFOfficialPlayerIdentityRepository>();
         services.AddTransient<IWorldRankingService, WorldRankingService>();
         // Singleton: the in-flight-import set is shared across every request and the bus consumer.
         services.AddSingleton<IImportConcurrencyGuard, ImportConcurrencyGuard>();
