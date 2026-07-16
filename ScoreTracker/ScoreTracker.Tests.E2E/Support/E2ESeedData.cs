@@ -16,6 +16,9 @@ public sealed class E2ESeedData
     // queries resolve to this exact ID.
     public static readonly Guid PhoenixMixId = Guid.Parse("1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B");
 
+    // Mirrors ScoreTracker.Data.Persistence.MixIds.XX.
+    public static readonly Guid XXMixId = Guid.Parse("20F8CCF8-94B1-418D-B923-C375B042BDA8");
+
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
     public E2ESeedData(IDbContextFactory<ChartAttemptDbContext> factory)
@@ -53,16 +56,35 @@ public sealed class E2ESeedData
 
     public async Task EnsurePhoenixMixAsync(CancellationToken cancellationToken = default)
     {
+        await EnsureMixAsync(PhoenixMixId, "Phoenix", cancellationToken);
+    }
+
+    private async Task EnsureMixAsync(Guid mixId, string name, CancellationToken cancellationToken)
+    {
         await using var context = await _factory.CreateDbContextAsync(cancellationToken);
-        if (await context.Mix.AnyAsync(m => m.Id == PhoenixMixId, cancellationToken)) return;
-        context.Mix.Add(new MixEntity { Id = PhoenixMixId, Name = "Phoenix" });
+        if (await context.Mix.AnyAsync(m => m.Id == mixId, cancellationToken)) return;
+        context.Mix.Add(new MixEntity { Id = mixId, Name = name });
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>An XX-only chart — for facts that pin which mix's catalog a page renders.</summary>
+    public async Task<Guid> SeedXXChartAsync(string songName, int level, string type,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureMixAsync(XXMixId, "XX", cancellationToken);
+        return await SeedChartAsync(XXMixId, songName, level, type, cancellationToken);
     }
 
     public async Task<Guid> SeedPhoenixChartAsync(string songName, int level, string type,
         CancellationToken cancellationToken = default)
     {
         await EnsurePhoenixMixAsync(cancellationToken);
+        return await SeedChartAsync(PhoenixMixId, songName, level, type, cancellationToken);
+    }
+
+    private async Task<Guid> SeedChartAsync(Guid mixId, string songName, int level, string type,
+        CancellationToken cancellationToken = default)
+    {
         var chartId = Guid.NewGuid();
         var songId = Guid.NewGuid();
         await using var context = await _factory.CreateDbContextAsync(cancellationToken);
@@ -77,7 +99,7 @@ public sealed class E2ESeedData
         {
             Id = chartId,
             SongId = songId,
-            OriginalMixId = PhoenixMixId,
+            OriginalMixId = mixId,
             Level = level,
             Type = type
         });
@@ -85,7 +107,7 @@ public sealed class E2ESeedData
         {
             Id = Guid.NewGuid(),
             ChartId = chartId,
-            MixId = PhoenixMixId,
+            MixId = mixId,
             Level = level
         });
         await context.SaveChangesAsync(cancellationToken);

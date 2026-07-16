@@ -1,4 +1,5 @@
 @page "/WeeklyCharts"
+@rendermode RenderModes.Interactive
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.SharedKernel.Models
@@ -101,7 +102,7 @@
                     {
                         <MudIconButton Icon="@Icons.Material.Filled.UploadFile" OnClick=@(() => OpenSubmitDialog(entry.ChartId))></MudIconButton>
                     }
-                    <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
+                    <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowChartDetails(chart))"></MudIconButton>
 
                 </MudCardActions>
             </MudCard>
@@ -368,13 +369,14 @@ else if(_monthlyWeeks.Any())
     <br/>
     <MudButton OnClick="Start" Color="Color.Warning" Variant="Variant.Filled">Process Weekly Charts</MudButton>
 }
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"></ChartDetailsDialog>
+
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
 
 @inject IUserRepository Users;
 @inject IUiSettingsAccessor UiSettings;
 @inject NavigationManager NavManager;
-@inject ChartVideoDisplayer VideoDisplayer;
 @inject IBus Bus;
 @inject ISnackbar Snackbar;
 @inject IFileUploadClient FileUpload;
@@ -382,6 +384,14 @@ else if(_monthlyWeeks.Any())
 @code
 {
     private bool _isAdmin = false;
+    private Chart? _detailsChart;
+    private bool _detailsOpen;
+
+    private void ShowChartDetails(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
     private bool _showOnlyCompetitive = true;
     private int _score;
     private IEnumerable<WeeklyTournamentChart> ShowingCharts => _showOnlyCompetitive ? _competitiveCharts : _allCharts;

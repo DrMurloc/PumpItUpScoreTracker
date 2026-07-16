@@ -1,10 +1,10 @@
 # it-IT localization glossary
 
-Working reference for translating `App.en-US.resx` into `App.it-IT.resx`. Unlike the other locale glossaries — which captured conventions inferred from existing translations — this one is **prescriptive**: there are no Italian entries in the resx yet, so this file establishes the conventions ahead of the first translation batch. Decisions here become "established" the moment they're applied to the resx.
+Working reference for translating `App.en-US.resx` into `App.it-IT.resx`. This glossary was written **prescriptively** before any Italian entries existed; the first full-coverage batch has since landed following it, so its mappings are now established conventions, not proposals.
 
 For the localization mechanism itself (resx layout, `L["..."]` usage, key conventions), see [ARCHITECTURE.md](ARCHITECTURE.md). For PIU domain terms in English, see [DOMAIN.md](DOMAIN.md). For the parallel ja-JP, ko-KR, pt-BR, fr-FR, and es-MX conventions, see [LOCALIZATION-ja-JP.md](LOCALIZATION-ja-JP.md), [LOCALIZATION-ko-KR.md](LOCALIZATION-ko-KR.md), [LOCALIZATION-pt-BR.md](LOCALIZATION-pt-BR.md), [LOCALIZATION-fr-FR.md](LOCALIZATION-fr-FR.md), and [LOCALIZATION-es-MX.md](LOCALIZATION-es-MX.md).
 
-> **Status (2026-04-26):** Glossary only. No `App.it-IT.resx` exists yet, and `it-IT` is not yet listed in the supported-cultures array in [Program.cs](../ScoreTracker/ScoreTracker/Program.cs). Both will be wired up when the first translation batch lands.
+> **Status (2026-07-16):** Live. `App.it-IT.resx` exists at full key parity with en-US, and `it-IT` is listed in the supported-cultures array in [Program.cs](../ScoreTracker/ScoreTracker/Program.cs). The 2026-07 QC pass verified the file against this glossary (Mix/Plate/Singles/Doubles untranslated, `Classifica`, invariable loanword plurals — all conforming).
 
 ## Style conventions
 
@@ -18,9 +18,9 @@ For the localization mechanism itself (resx layout, `L["..."]` usage, key conven
 - **Decimal separator: comma.** Italian uses `0,5` not `0.5` in prose. Half-width Arabic numerals throughout (matches fr-FR / es-MX / pt-BR conventions).
 - **Apostrophe contractions.** Italian elides the article before vowel-initial nouns: `l'utente`, `l'immagine`, `un'opzione` (feminine `un'`), `un account` (masculine, no apostrophe — be careful with the gender rule), `dell'utente`, `nell'app`, `all'account`. Always use a straight ASCII apostrophe `'`, never a curly `'`.
 
-## Recommended term mappings
+## Established term mappings
 
-These are the prescriptive defaults for the first translation batch. Once an entry is in `App.it-IT.resx`, this section becomes "Established term mappings" and future batches must reuse the form. **If a term needs a different rendering in a particular context, document the divergence here before translating.**
+Prescribed ahead of the first batch and applied by it — these are now in force in `App.it-IT.resx`, and future batches must reuse the forms. **If a term needs a different rendering in a particular context, document the divergence here before translating.**
 
 ### App / generic UI
 
@@ -366,7 +366,7 @@ These are the prescriptive defaults for the first translation batch. Once an ent
 
 ## Open decisions (terms upcoming batches will need)
 
-These are terms the en-US source contains that don't yet have an obvious recommendation above. Decide once per term, then add the row to **Recommended term mappings** and use it consistently.
+These are terms the en-US source contains that don't yet have an obvious recommendation above. Decide once per term, then add the row to **Established term mappings** and use it consistently.
 
 - **`Korean Name`** → `Nome coreano` (matches the pattern of other locales).
 - **`Channel Name`** → `Nome del canale`.
@@ -388,23 +388,14 @@ These are terms the en-US source contains that don't yet have an obvious recomme
 - **`Original Concept (excel score tracking) Constructed by KyleTT`** → `Concetto originale (tracciamento punteggi su Excel) realizzato da KyleTT`.
 - **`Updated X Y` snackbar** → `{0} {1} aggiornato` (masculine default for the chart-save case).
 
-## Process for the first batch
+## Process for future batches
 
-The first batch is structurally different from the per-locale ongoing batches because the resx and the supported-cultures wiring don't exist yet:
-
-1. **Wire up the supported culture.** In [Program.cs](../ScoreTracker/ScoreTracker/Program.cs), add `"it-IT"` to the supported-cultures array used by `AddRequestLocalization`. (Search for the existing `"fr-FR"` registration as the template.) Update the `Cross-cutting concerns` section in [ARCHITECTURE.md](ARCHITECTURE.md) to list `it-IT` alongside the others.
-2. **Create `App.it-IT.resx`** as a copy of `App.en-US.resx` with values cleared (or with English fallback values that this glossary will overwrite). Don't delete keys — the file must mirror the en-US key set exactly. Italian-localized values fill in over time; missing keys fall back to the English source per CLAUDE.md.
-3. **Pick a feature folder** (Tournaments, Tier Lists, Progress, Admin, Tools, etc.) for the first content batch.
-4. **Translate using this glossary.** If a new term needs a decision, add a row to `Recommended term mappings` **before translating** so the convention is captured.
-5. `dotnet build ScoreTracker/ScoreTracker.sln -c Release` to confirm resx well-formedness.
-6. PR titled `Add it-IT localization scaffold + first batch (<Folder>)` for the first PR; subsequent PRs `Translate <Folder> to it-IT`.
-
-## Process for ongoing batches (after the scaffold lands)
+(The scaffold — resx creation and Program.cs culture wiring — landed with the first full-coverage batch; new keys now land in it-IT in the same pass as every other locale.)
 
 1. Pick a feature folder or a category from the recommendations.
 2. List its English keys (`grep -oP '(?<=L\[")[^"]+' ScoreTracker/ScoreTracker/Pages/<Folder>/**/*.razor` or similar).
 3. Cross-reference against `App.it-IT.resx` to find which are missing.
-4. Translate using this glossary. **If a new term needs a decision, add a row to "Recommended term mappings" (or rename it to "Established term mappings" once the first content batch lands) before translating.**
+4. Translate using this glossary. **If a new term needs a decision, add a row to "Established term mappings" before translating.**
 5. `dotnet build ScoreTracker/ScoreTracker.sln -c Release` to confirm resx well-formedness.
 6. PR titled like `Translate <Folder> to it-IT`.
 

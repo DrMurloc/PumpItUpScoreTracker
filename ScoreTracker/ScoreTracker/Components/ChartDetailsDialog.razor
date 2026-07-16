@@ -17,6 +17,7 @@
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject ISnackbar Snackbar
+@inject IAdminNotificationClient Notifications
 
 @* The one shared chart-details surface (design doc §4): leads with the video like
    today's video dialog, then meta, the cross-mix score journey (ScoreEventJournal),
@@ -29,6 +30,12 @@
             @if (!string.IsNullOrWhiteSpace(_videoUrl))
             {
                 <iframe class="chart-details-video" src="@_videoUrl" allow="encrypted-media" allowfullscreen></iframe>
+                <div class="chart-details-video-report">
+                    <MudTooltip Text=@L["Report Video Tooltip"]>
+                        <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Report"
+                                   OnClick="ReportVideo">@L["Report Video"]</MudButton>
+                    </MudTooltip>
+                </div>
             }
             <div class="chart-details-title">
                 <DifficultyBubble Chart="Chart"></DifficultyBubble>
@@ -175,6 +182,12 @@
         width: 100%;
         aspect-ratio: 16 / 9;
         border: 0;
+    }
+
+    .chart-details-video-report {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 2px;
     }
 
     .chart-details-title {
@@ -428,6 +441,16 @@
         }
 
         _isSaving = false;
+    }
+
+    /// <summary>Names the chart to an admin — wrong videos get caught by whoever is watching.</summary>
+    private async Task ReportVideo()
+    {
+        if (Chart == null) return;
+        await Notifications.NotifyAdmin(
+            $"The video for {Chart.Song.Name} {Chart.DifficultyString} was reported by {(CurrentUser.IsLoggedIn ? CurrentUser.User.Name : "Unknown")}",
+            CancellationToken.None);
+        Snackbar.Add("Notification was sent", Severity.Success);
     }
 
     private bool _feedbackSent;

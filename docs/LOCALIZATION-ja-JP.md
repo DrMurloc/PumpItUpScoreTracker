@@ -8,7 +8,7 @@ For the localization mechanism itself (resx layout, `L["..."]` usage, key conven
 
 - **Polite register (です／ます).** ~60 entries use `〜ます／〜ません／〜です／〜ください`; only a handful of older nabulator strings drop into plain form (`変更できる`, `ロールバック出来ません` — see Known issues). New translations should be polite throughout. Avoid keigo (尊敬語/謙譲語) except in the few stock phrases that already use it (`ご連絡ください`).
 - **Sentence case is not a thing in Japanese.** Ignore the en-US Title Case in keys; values just use natural Japanese without capitalization rules. (English brand names embedded mid-sentence — `Phoenix`, `PIU`, `Score Tracker`, `XX`, `Discord` — keep their original casing.)
-- **Punctuation is full-width.** Established split: `（）` not `()`, `：` not `:`, `。` not `.` for sentence-final periods, `、` not `,` for in-sentence commas. Counts in the current resx: 31 full-width parens vs 3 half-width; 22 full-width `：` vs 2 half-width. Stay consistent.
+- **Punctuation is full-width.** Established split: `（）` not `()`, `：` not `:`, `。` not `.` for sentence-final periods, `、` not `,` for in-sentence commas. Full-width dominates the current resx. Stay consistent.
 - **Numerals are half-width** except in three legacy nabulator strings (`１レベル`, `１－４ポイント`). New translations use `1`, `2`, `10`, etc. Don't introduce more full-width numerals.
 - **Preserve positional placeholders verbatim.** `{0}`, `{1}` go into the value untouched, in whatever order Japanese grammar wants. Example: key `Welcome to Score Tracker, X!` → value `Score Trackerへようこそ、{0}さん！`. The `さん` honorific suffix is appended after `{0}` because the placeholder is a name.
 - **Skip prose with inline markup.** Per CLAUDE.md, `<MudText>` bodies with embedded `<MudLink>`/other elements stay hardcoded English. Don't extract them, don't translate them.
@@ -33,7 +33,7 @@ These have at least one existing translation in `App.ja-JP.resx`. New translatio
 | Confirm | 確認 | Also used for "Verification". |
 | Completed | 完了 | Used for "Done" too. |
 | Copy | コピー | "Copy Script" / "Copy to Clipboard" both → コピー. |
-| Country | Country | **Untranslated** in nabulator's seed. See Known issues. |
+| Country | 国 | |
 | Create | 作成 | |
 | Default | デフォルト | |
 | Delete | 削除 | |
@@ -57,7 +57,7 @@ These have at least one existing translation in `App.ja-JP.resx`. New translatio
 | Medium | 中 | |
 | Name | 名前 | |
 | Next | 次の | "Next Letter" → 次のランク. |
-| Open | Open | **Untranslated** in nabulator's seed. See Known issues. |
+| Open | 開く | Verb sense — the season-recap popup button. |
 | Page | ページ | "Starting Page" → 再開のページ, "Ending Page" → 最後のページ. |
 | Pending | 未決定 | |
 | Permissions | 権限 | |
@@ -65,11 +65,11 @@ These have at least one existing translation in `App.ja-JP.resx`. New translatio
 | Public / Private | 公開 / 非公開 | |
 | Reason | 理由 | |
 | Recorded Date | 記録日 | |
-| Recorded On X | {0}にき記録した | nabulator. Note "き" appears to be a typo before 記録した. |
+| Recorded On X | {0}に記録した | |
 | Restart | 再起動 | |
 | Rules | 規則 | |
 | Save | 保存 | |
-| Search | 捜索 / 検索 | nabulator uses 捜索 ("Official Leaderboard Search" → 公開ランキング捜索); newer entries use 検索 ("Search User" → ユーザー検索). Pick one going forward — 検索 is the more common UI word. |
+| Search | 検索 | Converged on 検索 ("Official Leaderboard Search" → 公開ランキング検索, "Search User" → ユーザー検索). |
 | Settings | 設定 | "Admin Settings" → 管理設定, "Extra Settings" → 追加設定. |
 | Show | 表示 | "Show Age" → 歳表示, "Show Difficulty" → 難度表示. Suffix pattern. |
 | Source | 出典 | |
@@ -79,15 +79,15 @@ These have at least one existing translation in `App.ja-JP.resx`. New translatio
 | Submit | 登録 | Also used for "Submission". |
 | Tag(s) | タグ | |
 | Title (in-game title award) | タイトル | "Title Progress" → タイトル進捗, "Titles" → タイトル. |
-| To Do | やりこと | **Typo** of やること. See Known issues. |
-| Tools | ツルー | **Typo** of ツール. See Known issues. |
+| To Do | やること | Compounds use やることリスト. |
+| Tools | ツール | Also "this tool" mid-prose: このツール. |
 | Total | 総計 | |
 | Type | 種類 | "Chart Type" → 譜面タイプ (Type rendered as タイプ here, but as 種類 elsewhere — context-dependent). |
 | Ungraded / Not Graded | 未ランク / 未ランク数 | |
 | Unknown | 不明 | |
 | Update | 更新 | "Upload Scores" → スコア更新 (so 更新 doubles for "upload" in some contexts — see Upload below). |
 | Upload | アップロード or 更新 | Inconsistent. "Upload Image" → 画像アップロード; "Upload Scores" → スコア更新; "アップロード" appears in disclaimers. Lean on context, prefer アップロード for new entries. |
-| Username | ユーザ名 / ユーザー名 | nabulator uses ユーザ (no 長音); newer entries use ユーザー (with 長音). Inconsistent — see Known issues. |
+| Username | ユーザー名 | Converged on the 長音 form ユーザー (ユーザーロック, 新ユーザー名, etc.). |
 | Validation | 確認 | |
 | Very Easy / Very Hard | とても簡単 / とても難しい | |
 | Video | ビデオ | "Video URL" → ビデオURL, "Open Video" → ビデオリンク開く. |
@@ -98,19 +98,19 @@ These have at least one existing translation in `App.ja-JP.resx`. New translatio
 | English | ja-JP | Notes |
 |---|---|---|
 | Chart(s) | 譜面 | nabulator's choice — translated, not loanword. Used compositionally: 譜面リスト, 譜面タイプ, 譜面作者, 譜面くじ引き, 譜面残り, 譜面比較. **Don't switch to チャート mid-file.** |
-| CoOp | CoOp | Untranslated. "CoOp Aggregation" → CoOp集合 (see Known issues — 集合 is "set", not "aggregate"). |
+| CoOp | CoOp | Untranslated. "CoOp Aggregation" → CoOp集計. |
 | Co-Op | Co-Op | Distinct from "CoOp" — used as a select-item label on /WeeklyCharts. Both spellings appear in source verbatim. |
 | Singles / Doubles | Singles / Doubles | Untranslated. "Singles Level" → Singlesレベル, "Doubles Level" → Doublesレベル. |
 | Difficulty Level | 難しさレベル | |
 | Letter Grade | ランク | Loanword, katakana. "Min/Max Letter Grade" → 最低/最高ランク. "Next Letter" → 次のランク. |
 | Letter Difficulty | ランク難度 | |
-| Mix | ベーション | **Typo** of バージョン. See Known issues. |
+| Mix | バージョン | Matches the CLAUDE.md glossary line. |
 | Phoenix / XX | Phoenix / XX | Game versions, untranslated proper nouns. "Phoenix Score Calculator" → Phoenixスコア計算; "Upload XX Scores" → XXスコア更新. |
 | Plate | プレート | Loanword, katakana. (Compare pt-BR which keeps it English.) |
 | Pass (verb / noun for clearing a chart) | クリア | Semantic translation. "Hide Completed Charts" → 完了譜面隠す (uses 完了 for "completed"); "Passed Count" → クリア数; "Not Passed" → 未クリア数; "Stage Pass" → Stageクリア (Stage left English mid-word). |
 | Score (singular) | スコア | "Score" → スコア, "Score State" → スコア状態, "My Score" → 自己スコア. |
 | Scores (plural / collection) | スコア | Same word — Japanese doesn't grammatically distinguish. |
-| Score (Data Backed) | スコア(データあり) | Half-width parens here are nabulator's choice — note inconsistency with the full-width-parens convention. |
+| Score (Data Backed) | スコア（データあり） | Full-width parens per the punctuation convention. |
 | Note Count | ノーツ数 | "Min/Max Note Count" → 最低/最高ノーツ数. "Notes" → ノーツ. |
 | Step Artist | 譜面作者 | "Step Artist: X" → 譜面作者：{0}. |
 | BPM | BPM | Untranslated. "Min/Max BPM" → 最低/最高BPM. |
@@ -157,34 +157,13 @@ These have at least one existing translation in `App.ja-JP.resx`. New translatio
 
 ## Known issues / native review needed
 
-These were carried over from nabulator's seed translations (PR #44) and intentionally **not** corrected during the machine-translation sweep, to keep structural and quality changes separate. A native-speaker pass should fold these in.
+The mechanical items originally tracked here (nabulator-seed typos and inconsistencies) were fixed in the 2026-07 QC pass: `ベーション`→`バージョン`, `ツルー`→`ツール` (×3 entries), `やりこと`→`やること` (all six ToDo strings, plus the `レベレ`→`レベル` typo in Unpassed ToDos), the stray `き` in Recorded On, `失敗しまいました`→`失敗しました` (+ `失敗な`→`失敗した`, both entries), `まえ`→`以前` (Make Public Disclaimer 2), `Country`→`国`, `Open`→`開く`, `CoOp集合`→`CoOp集計`, `シェアー`→`シェア`, `捜索`→`検索`, the `ユーザ`→`ユーザー` sweep, full-width parens in `スコア（データあり）`, and typo repairs inside Use Password 1/3 (`すます`→`します`, `なめに`→`ために`, `どけ`→`だけ`, plus a stray mid-sentence line break). What remains is judgment territory for a native-speaker pass:
 
-### Typos
-
-- **`Mix` → `ベーション`** (line ≈ resx). Should be `バージョン` or — more accurately for this game — `ミックス` since "Mix" in PIU refers to game versions/iterations rather than a generic version number.
-- **`Filters` → `フィアルた`**. Should be `フィルター`. The reordered characters are clearly a typo.
-- **`Tools` → `ツルー`**. Should be `ツール`.
-- **`To Do` → `やりこと`** (and downstream `やりことリスト`). Should be `やること` (and `やることリスト`). The typo propagates through "Add to ToDo", "Remove from To Do List", "Show Only ToDo Charts", "Toggle ToDo".
-- **`Recorded On X` → `{0}にき記録した`**. Stray `き` — should be `{0}に記録した` or `{0}に記録されました` (polite-passive).
-- **`一部のスコアダウンロードが失敗しまいました`** (Phoenix Import Saving Failures). `失敗しまいました` is non-standard — should be `失敗してしまいました` or just `失敗しました`.
-- **`まえ` (Make Public Disclaimer 2)** — should be `前` (kanji) or `以前` for register consistency.
-
-### Untranslated where translation is expected
-
-- **`Country` → `Country`**. Should be `国`. nabulator left the dropdown label English; everywhere else the file uses Japanese for similar labels.
-- **`Open` → `Open`**. Should be `オープン` or context-appropriate.
-- **`Broken` → `Break Off`**. Left as English (and a different English phrase from the source). Should likely be `失敗` to match the rest of the break/fail vocabulary, or `Stage Break` to match the original PIU term.
-
-### Questionable word choices
-
-- **`CoOp Aggregation` → `CoOp集合`**. `集合` means "set/gathering", not "aggregation". Should be `集計` (which is what the new translation pass uses for similar concepts).
-- **`Communities` → `地域ランキング`** ("regional rankings"). Loses the social-community connotation; the feature is about player groups, not just regions. Reasonable candidate: `コミュニティ`.
+- **`Broken` → `Break Off`**. Left as English (and a different English phrase from the source). Candidates: `失敗` to match the break/fail vocabulary, or keep `Break Off` — ko-KR deliberately uses the equivalent loanword 브레이크 오프, so the current value is defensible.
+- **`Communities` → `地域ランキング`** ("regional rankings"). Loses the social-community connotation; the feature is about player groups, not just regions. Reasonable candidate: `コミュニティ` (which is what ko-KR does with 커뮤니티).
 - **`Players` → `プレーヤー達`**. The `達` plural marker is grammatically valid but unusual in game UI, where bare `プレーヤー` is the norm. Compounds drop it correctly (`プレーヤー数`, `プレーヤーレベル`).
 - **`Player Stats` → `進捗中の譜面`** ("in-progress charts"). nabulator interpreted "Stats" as the in-progress chart list this label is associated with on the page; not a literal translation. May or may not be the right call — depends on how the label reads in context.
-- **`スコア(データあり)`** uses half-width parens, breaking the full-width convention. nabulator's choice; consistency-wise should be `スコア（データあり）`.
-- **`シェアー`** (Chart List Share Description) — `シェアー` is non-standard katakana; standard would be `シェア`.
-- **`捜索` vs `検索`** for "Search". Two forms in use; pick one (recommend `検索`).
-- **`ユーザ` vs `ユーザー` / `プレーヤー`** — long-vowel mark inconsistency. nabulator uses `ユーザ`; the new batch uses `ユーザー`. Pick one and sweep.
+- **Rough nabulator prose that survives the typo fixes**: `残してる` (plain form + questionable transitivity) in Unpassed ToDos, `サービスを上げます` ("raise a service") in Use Password 3, `公開ランキング` ("public rankings") where the English says "Official". Grammatical now, but a native pass should rephrase.
 
 ### Machine-translation review priority
 

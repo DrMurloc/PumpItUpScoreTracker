@@ -215,9 +215,6 @@
   <data name="Easy" xml:space="preserve">
     <value>Facile</value>
   </data>
-  <data name="Ending Page" xml:space="preserve">
-    <value>Pagina finale</value>
-  </data>
   <data name="Favorites" xml:space="preserve">
     <value>Preferiti</value>
   </data>
@@ -305,27 +302,6 @@
   </data>
   <data name="Passed Count" xml:space="preserve">
     <value>Passed</value>
-  </data>
-  <data name="Phoenix Import Confirming" xml:space="preserve">
-    <value>Procedendo, inizierà il salvataggio dei punteggi caricati sui tuoi record esistenti. Non potrai annullare questa operazione. Potrai interrompere il processo di salvataggio, ma non verranno annullati i caricamenti già effettuati.</value>
-  </data>
-  <data name="Phoenix Import Info 1" xml:space="preserve">
-    <value>Usa il pulsante Copia lo script qui sotto</value>
-  </data>
-  <data name="Phoenix Import Info 2" xml:space="preserve">
-    <value>Usa quello script nei dev-tools mentre sei loggato su https://phoenix.piugame.com per scaricare un CSV dei tuoi punteggi. (Assicurati di non essere su phoenix.piugame.com)</value>
-  </data>
-  <data name="Phoenix Import Info 3" xml:space="preserve">
-    <value>Puoi poi caricare quel CSV qui per far apparire i tuoi punteggi.</value>
-  </data>
-  <data name="Phoenix Import Info 4" xml:space="preserve">
-    <value>Nota: questo strumento è piuttosto hacky e potrebbe richiedere un po' di debugging da parte tua per funzionare. Assicurati di disattivare i blocchi pubblicità.</value>
-  </data>
-  <data name="Phoenix Import Saving" xml:space="preserve">
-    <value>Se lasci questa pagina o annulli, il caricamento si fermerà ma non perderai i punteggi già registrati dal tuo upload.</value>
-  </data>
-  <data name="Phoenix Import Saving Failures" xml:space="preserve">
-    <value>Alcuni chart non sono stati scaricati. Puoi scaricare un CSV degli errori per fare aggiustamenti e riprovare.</value>
   </data>
   <data name="Phoenix Import Saving Progress" xml:space="preserve">
     <value>{0}/{1} caricati. {2} rimanenti. {3} non registrati</value>
@@ -438,9 +414,6 @@
     <value>Tipo di canzone</value>
     <comment>Song Types = Arcade, Full Song, etc.</comment>
   </data>
-  <data name="Starting Page" xml:space="preserve">
-    <value>Pagina iniziale</value>
-  </data>
   <data name="Tier Lists" xml:space="preserve">
     <value>Tier Lists</value>
   </data>
@@ -471,18 +444,6 @@
   </data>
   <data name="Upload XX Scores" xml:space="preserve">
     <value>Carica i punteggi XX</value>
-  </data>
-  <data name="Use Password 1" xml:space="preserve">
-    <value>Questo farà accedere PIUScores al tuo account e importare i punteggi per te.</value>
-  </data>
-  <data name="Use Password 2" xml:space="preserve">
-    <value>Per impostazione predefinita non memorizzo il tuo nome utente o la password: li digiti ogni volta. Oppure usa l'opzione ricorda password qui sotto per salvarla, cifrata e solo su questo dispositivo.</value>
-  </data>
-  <data name="Use Password 3" xml:space="preserve">
-    <value>Per ridurre al minimo le chiamate a https://phoenix.piugame.com importerò solo punteggi nuovi o migliorati. Ogni utente riceve solo un'importazione completa tramite Username/Password. Usa l'importatore dev-tools se vuoi reimportare punteggi precedenti.</value>
-  </data>
-  <data name="Use Password 4" xml:space="preserve">
-    <value>Una volta avviato, puoi lasciare questa pagina: l'importazione si completa in background.</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Usato principalmente per il debugging</value>
@@ -581,9 +542,6 @@
   </data>
   <data name="Upload Image" xml:space="preserve">
     <value>Carica immagine</value>
-  </data>
-  <data name="Use Script" xml:space="preserve">
-    <value>Usa  script</value>
   </data>
   <data name="World Rankings" xml:space="preserve">
     <value>Classifiche mondiali</value>
@@ -2186,9 +2144,6 @@
   </data>
   <data name="Phoenix 2 recommendations are coming soon. Check back after launch!" xml:space="preserve">
     <value>I consigli per Phoenix 2 sono in arrivo. Torna dopo il lancio!</value>
-  </data>
-  <data name="Coming soon — score import for Phoenix 2 will open after hardware verification." xml:space="preserve">
-    <value>In arrivo — l'importazione dei punteggi di Phoenix 2 si aprirà dopo la verifica dell'hardware.</value>
   </data>
   <data name="Phoenix 2 official leaderboards are coming soon." xml:space="preserve">
     <value>Le classifiche ufficiali di Phoenix 2 sono in arrivo.</value>
@@ -4121,9 +4076,6 @@
   <data name="An import is already running" xml:space="preserve">
     <value>Un'importazione è già in corso</value>
   </data>
-  <data name="Also Sync for PIU Tracker" xml:space="preserve">
-    <value>Sincronizza anche con PIU Tracker</value>
-  </data>
   <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
     <value>Invia anche i punteggi importati a PIU Tracker, un sito di punteggi della community.</value>
   </data>
@@ -4412,8 +4364,89 @@
   <data name="Search" xml:space="preserve">
     <value>Cerca</value>
   </data>
+  <data name="Import Lede" xml:space="preserve">
+    <value>PIU Scores accede al tuo account piugame.com e importa i tuoi punteggi nuovi e migliorati. Una volta avviata, puoi uscire: finisce in background.</value>
+  </data>
+  <data name="Import Password Helper" xml:space="preserve">
+    <value>Usata solo per l'accesso, mai salvata — a meno che non attivi Ricorda qui sotto.</value>
+  </data>
+  <data name="Import Broken Helper" xml:space="preserve">
+    <value>Importa anche i punteggi rotti delle partite recenti; quando superi il chart vengono sostituiti.</value>
+  </data>
+  <data name="Also send scores to piutracker.app" xml:space="preserve">
+    <value>Invia i punteggi anche a piutracker.app</value>
+  </data>
+  <data name="Manual import — console script + CSV" xml:space="preserve">
+    <value>Importazione manuale — script da console + CSV</value>
+  </data>
+  <data name="For re-importing older scores" xml:space="preserve">
+    <value>Per reimportare punteggi più vecchi</value>
+  </data>
+  <data name="Import Manual Step 1" xml:space="preserve">
+    <value>Scegli quali pagine dei tuoi punteggi migliori estrarre. Lascia vuoto Alla pagina per prenderle tutte.</value>
+  </data>
+  <data name="Import Manual Step 2" xml:space="preserve">
+    <value>Copia lo script.</value>
+  </data>
+  <data name="Import Manual Step 3" xml:space="preserve">
+    <value>Con l'accesso attivo su phoenix.piugame.com, incollalo nella console del browser (F12): scarica un CSV dei tuoi punteggi. Gli ad blocker possono romperlo.</value>
+  </data>
+  <data name="From page" xml:space="preserve">
+    <value>Dalla pagina</value>
+  </data>
+  <data name="To page" xml:space="preserve">
+    <value>Alla pagina</value>
+  </data>
+  <data name="Upload CSV" xml:space="preserve">
+    <value>Carica CSV</value>
+  </data>
+  <data name="Game Card" xml:space="preserve">
+    <value>Carta di gioco</value>
+  </data>
+  <data name="Include Broken Scores" xml:space="preserve">
+    <value>Includi punteggi rotti</value>
+  </data>
+  <data name="Change Card" xml:space="preserve">
+    <value>Cambia carta</value>
+  </data>
+  <data name="Starting Import..." xml:space="preserve">
+    <value>Avvio dell'importazione...</value>
+  </data>
+  <data name="Invalid Username/Password" xml:space="preserve">
+    <value>Nome utente o password non validi</value>
+  </data>
+  <data name="The import ran into an error." xml:space="preserve">
+    <value>L'importazione ha riscontrato un errore.</value>
+  </data>
+  <data name="Password Incorrect" xml:space="preserve">
+    <value>La tua password sembra errata: impossibile accedere a phoenix.piugame.com.</value>
+  </data>
+  <data name="Saved Password Incorrect" xml:space="preserve">
+    <value>La tua password salvata sembra errata: impossibile accedere a phoenix.piugame.com.</value>
+  </data>
+  <data name="Import Error Notify" xml:space="preserve">
+    <value>Si è verificato un errore durante l'importazione dei punteggi. Riprova più tardi. Se persiste, avvisa DrMurloc.</value>
+  </data>
+  <data name="Choose a game card, then press Import again." xml:space="preserve">
+    <value>Scegli una carta di gioco, poi premi di nuovo Importa.</value>
+  </data>
+  <data name="Import Confirming" xml:space="preserve">
+    <value>Verranno salvati solo i punteggi nuovi o migliorati. Il salvataggio non si può annullare: fermarlo a metà conserva quanto già salvato.</value>
+  </data>
+  <data name="Import Saving" xml:space="preserve">
+    <value>Uscire o annullare ferma il caricamento; i punteggi già salvati restano.</value>
+  </data>
+  <data name="Import Failures" xml:space="preserve">
+    <value>Alcune righe non sono state importate. Scarica gli errori, correggili e ricaricali.</value>
+  </data>
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>Quota di sezioni del chart con ogni abilità</value>
+  </data>
+  <data name="Import Manual Step 4" xml:space="preserve">
+    <value>Carica qui il CSV — accetta anche un foglio di calcolo tenuto a mano con le stesse colonne.</value>
+  </data>
+  <data name="Imported scores will appear here as they come in." xml:space="preserve">
+    <value>I punteggi importati appariranno qui man mano che arrivano.</value>
   </data>
   <data name="Hot Streak" xml:space="preserve">
     <value>Striscia vincente</value>
