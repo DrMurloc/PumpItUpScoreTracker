@@ -206,9 +206,13 @@ public sealed class PiuGameApiTests
             var stubbedClient = HttpClientReturning(html);
             var api = BuildApi(html);
 
-            var result = await api.GetSongLeaderboard(MixEnum.Phoenix, songId: "any", CancellationToken.None);
+            var result = await api.GetSongLeaderboard(MixEnum.Phoenix, songId: "any", page: 1,
+                CancellationToken.None);
 
             Assert.Equal(2, result.Results.Length);
+            // No next/last paging icon in the fixture — the whole board is one page.
+            Assert.True(result.IsEnd);
+            Assert.Equal(0, result.FailedRows);
 
             // ProfileName is the concatenation of every `profile_name` div in the entry — for PIU
             // that's the gamer tag followed by the #ID suffix.
@@ -485,7 +489,8 @@ public sealed class PiuGameApiTests
             Path.Combine(FixtureRoot, "GetSongLeaderboard_Phoenix2Host.html"));
         var api = BuildApi(html);
 
-        var result = await api.GetSongLeaderboard(MixEnum.Phoenix2, songId: "any", CancellationToken.None);
+        var result = await api.GetSongLeaderboard(MixEnum.Phoenix2, songId: "any", page: 1,
+            CancellationToken.None);
 
         Assert.Equal(2, result.Results.Length);
         Assert.Equal("SUNNY#5412", result.Results[0].ProfileName);

@@ -80,7 +80,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     public async Task<IEnumerable<OfficialChartLeaderboardEntry>> GetAllOfficialChartScores(MixEnum mix,
         CancellationToken cancellationToken)
     {
-        // The Phoenix 2 chart LIST is login-gated (the individual boards are public).
+        // The whole Phoenix 2 leaderboard area is login-gated; Phoenix stays anonymous.
         var listClient = mix == MixEnum.Phoenix2 ? await GetServiceClient(mix, cancellationToken) : null;
         var songs = new List<PiuGameGetSongsResult.SongDto>();
         var page = 1;
@@ -91,12 +91,17 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             if (nextPage.IsEnd) break;
 
             page++;
+            await SweepDelay(cancellationToken);
         }
 
         var current = 1;
         var max = songs.Count;
         var result = new List<OfficialChartLeaderboardEntry>();
         var misMatched = new List<string>();
+        // One blob-existence check per unique avatar per sweep — boards repeat the same
+        // player art hundreds of times, and at 300-deep boards the per-row check was the
+        // sweep's hidden cost.
+        var avatarCache = new Dictionary<string, Uri?>();
         foreach (var song in songs)
         {
             var chartType = Enum.Parse<ChartType>(song.Type);
@@ -110,14 +115,51 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             }
 
             _logger.LogInformation($"Song {current++} out of {max}");
-            var scores = await _piuGame.GetSongLeaderboard(mix, song.Id, cancellationToken);
-            foreach (var score in scores.Results)
-                result.Add(new OfficialChartLeaderboardEntry(score.ProfileName, chart, score.Score,
-                    await ConvertPiuGameAvatarToPiuScoresAvatar(score.AvatarUrl, cancellationToken)
-                    ?? DefaultAvatar));
+            // Boards deeper than one page (Phoenix 2's top 300) walk the same next/last-icon
+            // protocol as the PUMBILITY board; a page that adds nothing new also stops the
+            // walk since the site clamps out-of-range pages to the last one.
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            for (var boardPage = 1;; boardPage++)
+            {
+                var scores = await _piuGame.GetSongLeaderboard(mix, song.Id, boardPage, cancellationToken,
+                    listClient);
+                var added = 0;
+                foreach (var score in scores.Results)
+                {
+                    if (!seen.Add(score.ProfileName)) continue;
+
+                    result.Add(new OfficialChartLeaderboardEntry(score.ProfileName, chart, score.Score,
+                        await MirrorAvatar(score.AvatarUrl, avatarCache, cancellationToken) ?? DefaultAvatar));
+                    added++;
+                }
+
+                if (scores.IsEnd || added == 0) break;
+
+                await SweepDelay(cancellationToken);
+            }
+
+            await SweepDelay(cancellationToken);
         }
 
         return result;
+    }
+
+    private async Task<Uri?> MirrorAvatar(Uri avatar, IDictionary<string, Uri?> cache,
+        CancellationToken cancellationToken)
+    {
+        var key = avatar.ToString();
+        if (cache.TryGetValue(key, out var mirrored)) return mirrored;
+
+        mirrored = await ConvertPiuGameAvatarToPiuScoresAvatar(avatar, cancellationToken);
+        cache[key] = mirrored;
+        return mirrored;
+    }
+
+    private Task SweepDelay(CancellationToken cancellationToken)
+    {
+        return _configuration.SweepRequestDelayMilliseconds <= 0
+            ? Task.CompletedTask
+            : Task.Delay(_configuration.SweepRequestDelayMilliseconds, cancellationToken);
     }
 
     public async Task<IEnumerable<UserOfficialLeaderboard>> GetLeaderboardEntries(MixEnum mix,
@@ -475,11 +517,13 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         while (true)
         {
             _logger.LogInformation($"Pulling page {page}");
-            var nextResult = await _piuGame.GetChartPopularityLeaderboard(mix, page, cancellationToken);
+            var nextResult = await _piuGame.GetChartPopularityLeaderboard(mix, page, _dateTime.Now,
+                cancellationToken);
             apiResults.AddRange(nextResult.Entries);
             if (nextResult.Entries.Length < 50) break;
 
             page += 50;
+            await SweepDelay(cancellationToken);
         }
 
         var result = new List<ChartPopularityLeaderboardEntry>();
