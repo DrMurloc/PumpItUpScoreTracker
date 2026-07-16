@@ -398,7 +398,9 @@ else
     </div>
 }
 
-@* Settings drawer: panel + live-count footer. Bottom-anchored (thumb reach). *@
+@* Settings drawer: panel + live-count footer. Bottom-anchored (thumb reach).
+   MudLayout is the drawer's container, not chrome — each drawer brings its own. *@
+<MudLayout>
 <MudDrawer @bind-Open="_showSettings" Anchor="Anchor.Bottom" Variant="@DrawerVariant.Temporary"
            Height="86vh" Elevation="4" Class="rand-drawer">
     <div class="rand-drawer-body">
@@ -469,6 +471,7 @@ else
         </div>
     </div>
 </MudDrawer>
+</MudLayout>
 
 @* Manage-tournament drawer (round 8): the tournament's control room. Match rename/
    delete/redraw for organizers (redraw for every staff role — assistants included),
@@ -476,6 +479,7 @@ else
    frame as the settings drawer, so "Edit settings" reads as switching drawers. *@
 @if (_contextTournamentId != null)
 {
+    <MudLayout>
     <MudDrawer @bind-Open="_showManage" Anchor="Anchor.Bottom" Variant="@DrawerVariant.Temporary"
                Height="86vh" Elevation="4" Class="rand-drawer">
         <div class="rand-drawer-body">
@@ -597,6 +601,7 @@ else
             </div>
         </div>
     </MudDrawer>
+    </MudLayout>
 }
 
 @* The tier lists' chart details surface — one concept, one component. *@

@@ -224,6 +224,8 @@ else
         <div class="tier-desktop-only">
             <BorderLegend></BorderLegend>
         </div>
+        @* Each drawer brings its own MudLayout container — the layout stopped hosting one. *@
+        <MudLayout>
         <MudDrawer @bind-Open="_statsOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="320px">
             <div class="tier-filter-drawer">
                 <div class="tier-drawer-head">
@@ -243,6 +245,7 @@ else
                 }
             </div>
         </MudDrawer>
+        </MudLayout>
     }
     else
     {
@@ -580,6 +583,7 @@ else
             }
         </text>;
     }
+    <MudLayout>
     <MudDrawer @bind-Open="_filtersOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="320px">
         <div class="tier-filter-drawer">
             <div class="tier-drawer-head">
@@ -591,10 +595,12 @@ else
             @filterPanel
         </div>
     </MudDrawer>
+    </MudLayout>
     @* Round 9: the compact Advanced drawer replaces the bottom action bar (which
        stacked awkwardly on the shell's bottom nav). Owner-specced order: Ranked-by →
        Grouped-by → Personalized → Download. Filtering deliberately is NOT here —
        the Filters icon + drawer are the same at every width. *@
+    <MudLayout>
     <MudDrawer @bind-Open="_advancedOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="320px">
         <div class="tier-filter-drawer">
             <div class="tier-drawer-head">
@@ -629,6 +635,7 @@ else
             </MudButton>
         </div>
     </MudDrawer>
+    </MudLayout>
     <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"
                         Score="_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsScore) ? detailsScore : null"
                         Ranking="_detailsChart != null && _scoreRankings.TryGetValue(_detailsChart.Id, out var detailsRank) ? detailsRank : null"
