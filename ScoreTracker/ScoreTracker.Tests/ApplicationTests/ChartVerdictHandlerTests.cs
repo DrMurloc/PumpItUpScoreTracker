@@ -46,13 +46,9 @@ public sealed class ChartVerdictHandlerTests
             .WithType(ChartType.Double).WithLevel(19).WithMix(MixEnum.XX).WithOriginalMix(MixEnum.XX).Build();
         _charts.Setup(c => c.GetChart(MixEnum.Phoenix, chartId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(phoenixChart);
-        // The history sweep asks every mix; only two catalogs carry this chart.
-        _charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), null, null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<ScoreTracker.SharedKernel.Models.Chart>());
-        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { phoenixChart });
-        _charts.Setup(c => c.GetCharts(MixEnum.XX, null, null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { xxChart });
+        // History reads the flat mix-level map: this chart was D19 in XX, D20 in Phoenix.
+        _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { (chartId, MixEnum.XX, 19), (chartId, MixEnum.Phoenix, 20) });
         _charts.Setup(c => c.GetChartLetterGradeDifficulties(It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ChartLetterGradeDifficulty>());

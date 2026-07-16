@@ -141,14 +141,16 @@ internal sealed class ChartVerdictHandler : IRequestHandler<GetChartVerdictQuery
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24);
             var map = new Dictionary<Guid, List<MixLevel>>();
-            foreach (var mix in Enum.GetValues<MixEnum>().OrderBy(m => m.DisplayOrder()))
-            foreach (var chart in await _charts.GetCharts(mix, cancellationToken: cancellationToken))
+            // One flat ChartMix read, not a sweep of all ~30 full catalogs — the History
+            // facet only needs (chart, mix, level), and the catalog sweep took 9-15 seconds.
+            foreach (var (chartId, mix, level) in await _charts.GetChartMixLevels(cancellationToken))
             {
-                if (!map.TryGetValue(chart.Id, out var levels)) map[chart.Id] = levels = new List<MixLevel>();
-                levels.Add(new MixLevel(mix, chart.Level));
+                if (!map.TryGetValue(chartId, out var levels)) map[chartId] = levels = new List<MixLevel>();
+                levels.Add(new MixLevel(mix, level));
             }
 
-            return map.ToDictionary(kv => kv.Key, kv => (IReadOnlyList<MixLevel>)kv.Value.ToArray());
+            return map.ToDictionary(kv => kv.Key,
+                kv => (IReadOnlyList<MixLevel>)kv.Value.OrderBy(l => l.Mix.DisplayOrder()).ToArray());
         }))!;
     }
 }

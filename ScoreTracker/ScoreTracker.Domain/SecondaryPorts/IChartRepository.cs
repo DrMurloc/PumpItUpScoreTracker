@@ -14,6 +14,14 @@ public interface IChartRepository
 
     Task<IEnumerable<Name>> GetSongNames(MixEnum mix, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Every chart's level in every mix that carries it, as one flat ChartMix read — no
+    ///     song or skill joins. This is what the cross-mix History needs; deriving it by
+    ///     loading all ~30 full catalogs is orders of magnitude slower.
+    /// </summary>
+    Task<IReadOnlyList<(Guid ChartId, MixEnum Mix, int Level)>> GetChartMixLevels(
+        CancellationToken cancellationToken = default);
+
     Task<Chart> GetChart(MixEnum mix, Guid chartId, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<Chart>> GetChartsForSong(MixEnum mix, Name songName,
