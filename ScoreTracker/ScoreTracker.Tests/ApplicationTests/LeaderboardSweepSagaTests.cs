@@ -13,6 +13,8 @@ using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Tests.TestData;
@@ -31,7 +33,11 @@ public sealed class LeaderboardSweepSagaTests
         Mock<IOfficialSnapshotRepository> Snapshots,
         Mock<IOfficialRecordRepository> Records,
         Mock<ITierListRepository> TierLists,
-        LeaderboardSweepSaga Saga);
+        LeaderboardSweepSaga Saga)
+    {
+        public Mock<IOfficialLeaderboardRepository> Legacy { get; init; } = null!;
+        public Mock<IChartRepository> Charts { get; init; } = null!;
+    }
 
     private static Fixture Arrange(
         IEnumerable<RatingBoardEntry>? ratingBoards = null,
@@ -94,10 +100,18 @@ public sealed class LeaderboardSweepSagaTests
         records.Setup(r => r.GetFolderRecords(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<FolderRecordRow>());
         var identity = new Mock<IOfficialPlayerIdentityRepository>();
+        var legacy = new Mock<IOfficialLeaderboardRepository>();
+        legacy.Setup(l => l.GetAllEntries(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<UserOfficialLeaderboard>());
+        var charts = new Mock<IChartRepository>();
+        charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(),
+                It.IsAny<ChartType?>(), It.IsAny<IEnumerable<Guid>?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
         var tierLists = new Mock<ITierListRepository>();
         var saga = new LeaderboardSweepSaga(site.Object, snapshots.Object, records.Object, identity.Object,
-            tierLists.Object, FakeDateTime.At(Now).Object, NullLogger<LeaderboardSweepSaga>.Instance);
-        return new Fixture(site, snapshots, records, tierLists, saga);
+            legacy.Object, charts.Object, tierLists.Object, FakeDateTime.At(Now).Object,
+            NullLogger<LeaderboardSweepSaga>.Instance);
+        return new Fixture(site, snapshots, records, tierLists, saga) { Legacy = legacy, Charts = charts };
     }
 
     private static async IAsyncEnumerable<OfficialChartBoardResult> ToAsync(
@@ -295,6 +309,57 @@ public sealed class LeaderboardSweepSagaTests
             CancellationToken.None);
 
         Assert.Equal(Now.AddDays(-7).AddMinutes(40), result);
+    }
+
+    private static ConsumeContext<SeedBaselineSnapshotCommand> SeedContext(MixEnum mix = MixEnum.Phoenix2)
+    {
+        var ctx = new Mock<ConsumeContext<SeedBaselineSnapshotCommand>>();
+        ctx.SetupGet(c => c.Message).Returns(new SeedBaselineSnapshotCommand(mix));
+        ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+        return ctx.Object;
+    }
+
+    [Fact]
+    public async Task SeedBuildsASealedBaselineFromLegacyRowsWithChartAssociation()
+    {
+        var chart = new ChartBuilder().WithLevel(26).WithType(ChartType.Double).Build();
+        var boardName = chart.Song.Name + " " + chart.DifficultyString;
+        var f = Arrange(hasSealed: false);
+        f.Legacy.Setup(l => l.GetAllEntries(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new UserOfficialLeaderboard("alice", 1, "Chart", boardName, 997000),
+                new UserOfficialLeaderboard("bob", 2, "Chart", boardName, 990000),
+                new UserOfficialLeaderboard("alice", 4, "Rating", "PUMBILITY", 17418)
+            });
+        f.Charts.Setup(c => c.GetCharts(MixEnum.Phoenix2, It.IsAny<DifficultyLevel?>(),
+                It.IsAny<ChartType?>(), It.IsAny<IEnumerable<Guid>?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { chart });
+
+        await f.Saga.Consume(SeedContext());
+
+        f.Snapshots.Verify(s => s.CreateRun(MixEnum.Phoenix2, true, Now, It.IsAny<CancellationToken>()),
+            Times.Once);
+        f.Snapshots.Verify(s => s.EnsureBoard(MixEnum.Phoenix2, "Chart", boardName, chart.Id,
+            chart.Type.ToString(), (int)chart.Level, It.IsAny<CancellationToken>()), Times.Once);
+        f.Snapshots.Verify(s => s.EnsureBoard(MixEnum.Phoenix2, "Rating", "PUMBILITY", null, null, null,
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.Snapshots.Verify(s => s.WritePlacements(SnapshotId,
+            It.Is<IReadOnlyCollection<PlacementRow>>(rows =>
+                rows.Count == 2 && rows.Any(r => r.Place == 1 && r.Score == 997000)),
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.Snapshots.Verify(s => s.Seal(SnapshotId, Now, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SeedRefusesOnceASealedSnapshotExists()
+    {
+        var f = Arrange(hasSealed: true);
+
+        await f.Saga.Consume(SeedContext());
+
+        f.Snapshots.Verify(s => s.CreateRun(It.IsAny<MixEnum>(), It.IsAny<bool>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

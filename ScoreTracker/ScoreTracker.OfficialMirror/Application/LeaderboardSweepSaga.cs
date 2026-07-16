@@ -23,6 +23,7 @@ namespace ScoreTracker.OfficialMirror.Application;
 /// </summary>
 internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCommand>,
     IConsumer<RebuildWeeklyHighlightsCommand>,
+    IConsumer<SeedBaselineSnapshotCommand>,
     IRequestHandler<GetLastLeaderboardImportTimestampQuery, DateTimeOffset?>
 {
     private static readonly TimeSpan UnsealedPurgeAge = TimeSpan.FromDays(7);
@@ -32,12 +33,15 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     private readonly IOfficialSnapshotRepository _snapshots;
     private readonly IOfficialRecordRepository _records;
     private readonly IOfficialPlayerIdentityRepository _identity;
+    private readonly IOfficialLeaderboardRepository _legacy;
+    private readonly IChartRepository _charts;
     private readonly ITierListRepository _tierLists;
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly ILogger _logger;
 
     public LeaderboardSweepSaga(IOfficialSiteClient officialSite, IOfficialSnapshotRepository snapshots,
         IOfficialRecordRepository records, IOfficialPlayerIdentityRepository identity,
+        IOfficialLeaderboardRepository legacy, IChartRepository charts,
         ITierListRepository tierLists, IDateTimeOffsetAccessor dateTime,
         ILogger<LeaderboardSweepSaga> logger)
     {
@@ -45,6 +49,8 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         _snapshots = snapshots;
         _records = records;
         _identity = identity;
+        _legacy = legacy;
+        _charts = charts;
         _tierLists = tierLists;
         _dateTime = dateTime;
         _logger = logger;
@@ -131,6 +137,69 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
             if (proposals.Count > 0)
                 _logger.LogInformation("{Mix} snapshot {SnapshotId}: {Count} rename proposals", mix, snapshotId,
                     proposals.Count);
+        }
+    }
+
+    /// <summary>
+    ///     The cutover press: turns the legacy clear-and-rewrite table into a sealed
+    ///     baseline snapshot — dims created (chart boards matched to the catalog by their
+    ///     display name), placements copied verbatim, record books primed, zero highlights.
+    ///     Refuses to run once any sealed snapshot exists: seeding after real sweeps would
+    ///     fabricate a newest week out of stale data.
+    /// </summary>
+    public async Task Consume(ConsumeContext<SeedBaselineSnapshotCommand> context)
+    {
+        var mix = context.Message.Mix;
+        var ct = context.CancellationToken;
+        if (await _snapshots.AnySealed(mix, ct))
+        {
+            _logger.LogWarning("{Mix} already has sealed snapshots; baseline seed skipped", mix);
+            return;
+        }
+
+        var legacy = (await _legacy.GetAllEntries(mix, ct)).ToArray();
+        if (legacy.Length == 0)
+        {
+            _logger.LogWarning("{Mix} has no legacy leaderboard rows; nothing to seed", mix);
+            return;
+        }
+
+        var snapshotId = await _snapshots.CreateRun(mix, true, _dateTime.Now, ct);
+        try
+        {
+            var chartsByBoardName = (await _charts.GetCharts(mix, cancellationToken: ct))
+                .GroupBy(c => c.Song.Name + " " + c.DifficultyString, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+            var players = new SweepPlayerCache(_snapshots, mix, _dateTime.Now);
+            var written = 0;
+            foreach (var boardGroup in legacy.GroupBy(e => (e.OfficialLeaderboardType, e.LeaderboardName)))
+            {
+                var chart = boardGroup.Key.OfficialLeaderboardType == LeaderboardTypes.Chart &&
+                            chartsByBoardName.TryGetValue(boardGroup.Key.LeaderboardName, out var match)
+                    ? match
+                    : null;
+                var board = await _snapshots.EnsureBoard(mix, boardGroup.Key.OfficialLeaderboardType,
+                    boardGroup.Key.LeaderboardName, chart?.Id, chart?.Type.ToString(),
+                    chart == null ? null : (int)chart.Level, ct);
+                var entries = boardGroup.GroupBy(e => e.Username).Select(g => g.First()).ToArray();
+                var ids = await players.Resolve(entries.Select(e => (e.Username, (Uri?)null)).ToArray(), ct);
+                await _snapshots.WritePlacements(snapshotId,
+                    entries.Select(e => new PlacementRow(board.Id, ids[e.Username], e.Place, e.Score))
+                        .ToArray(), ct);
+                written++;
+                await _snapshots.UpdateProgress(snapshotId, "BaselineSeed", 0, written, 0, ct);
+            }
+
+            await ComputeHighlights(snapshotId, mix, true, ct);
+            await _snapshots.Seal(snapshotId, _dateTime.Now, ct);
+            _logger.LogInformation("{Mix} baseline snapshot {SnapshotId} seeded from {Rows} legacy rows", mix,
+                snapshotId, legacy.Length);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "{Mix} baseline seed failed; snapshot {SnapshotId} stays unsealed", mix,
+                snapshotId);
+            await _snapshots.MarkFailed(snapshotId, e.ToString(), CancellationToken.None);
         }
     }
 
