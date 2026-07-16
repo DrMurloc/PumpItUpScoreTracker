@@ -87,22 +87,9 @@
             @if (_skillChips.Any())
             {
                 <MudText Typo="Typo.overline">@L["Skills"]</MudText>
-                <div class="chart-details-skill-bars">
-                    @foreach (var chip in _skillChips.Take(6))
-                    {
-                        @* Null coverage = a whole-chart quality (piucenter's sustained/
-                           bursty classify the chart, not its sections): full bar, no number. *@
-                        var percent = chip.SegmentFraction == null
-                            ? (int?)null
-                            : (int)Math.Round(chip.SegmentFraction.Value * 100);
-                        <div class="chart-details-skill-bar skillcat-@(chip.Skill.GetPrimaryCategory().ToString().ToLowerInvariant())">
-                            <span class="chart-details-skill-bar-label">@chip.Skill.GetName()</span>
-                            <span class="chart-details-skill-bar-track"><span class="chart-details-skill-bar-fill" style="width:@(percent ?? 100)%"></span></span>
-                            <span class="chart-details-skill-bar-value">@(percent == null ? "" : $"{percent}%")</span>
-                        </div>
-                    }
-                </div>
-                <MudText Typo="Typo.caption" Class="chart-details-skill-note">@L["Share of chart sections featuring each skill"]</MudText>
+                @* Bars extracted to SkillCoverageBars (chart-page overhaul): one concept,
+                   one component — the page renders the same bars at section scale. *@
+                <SkillCoverageBars Chips="_skillChips"></SkillCoverageBars>
             }
             else if (Chart.Skills.Any())
             {
@@ -232,12 +219,6 @@
         margin-top: 12px;
     }
 
-    .chart-details-skill-note {
-        display: block;
-        color: var(--mud-palette-text-secondary);
-        margin-top: 2px;
-    }
-
     .chart-details-journey-row {
         display: flex;
         align-items: center;
@@ -268,48 +249,6 @@
        16:9 video outgrew laptop viewports — cap under MudBlazor's Small. */
     .mud-dialog.chart-details-dialog {
         max-width: 520px;
-    }
-
-    .chart-details-skill-bars {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-        gap: 4px 16px;
-        margin: 2px 0 8px;
-    }
-
-    .chart-details-skill-bar {
-        display: grid;
-        grid-template-columns: 92px 1fr 38px;
-        align-items: center;
-        gap: 8px;
-        font-size: .75rem;
-    }
-
-    .chart-details-skill-bar-label {
-        color: color-mix(in srgb, var(--skill-chip) 60%, var(--mix-ink));
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .chart-details-skill-bar-track {
-        height: 5px;
-        border-radius: 3px;
-        background: color-mix(in srgb, var(--skill-chip) 14%, transparent);
-        overflow: hidden;
-    }
-
-    .chart-details-skill-bar-fill {
-        display: block;
-        height: 100%;
-        border-radius: 3px;
-        background: var(--skill-chip);
-    }
-
-    .chart-details-skill-bar-value {
-        text-align: right;
-        color: var(--mix-ink-muted);
-        font-variant-numeric: tabular-nums;
     }
 
     .chart-details-piucenter {

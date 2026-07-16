@@ -1,0 +1,67 @@
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@* The hero's centerpiece (mock R2): the top verdict sentence, a supporting line, and the
+   tier chips. The graphs below are evidence for these sentences, never the other way
+   around. Facets arrive salience-ordered from GetChartVerdictQuery. *@
+@if (Facets != null && Facets.Count > 0)
+{
+    <div class="chart-verdict">
+        @if (Headlines.Count > 0)
+        {
+            <div class="chart-verdict-head"><VerdictSentence Facet="Headlines[0]"></VerdictSentence></div>
+        }
+        @if (Headlines.Count > 1)
+        {
+            <div class="chart-verdict-sub"><VerdictSentence Facet="Headlines[1]"></VerdictSentence></div>
+        }
+        <div class="chart-verdict-chips">
+            @if (PassVsScore != null)
+            {
+                <span class="chart-verdict-chip" style="color:@ThemeScales.DifficultyColor(PassVsScore.PassTier);border-color:@ThemeScales.DifficultyColor(PassVsScore.PassTier)">
+                    @L["Pass Difficulty"] · @L[TierName(PassVsScore.PassTier)]
+                </span>
+                <span class="chart-verdict-chip" style="color:@ThemeScales.DifficultyColor(PassVsScore.ScoreTier);border-color:@ThemeScales.DifficultyColor(PassVsScore.ScoreTier)">
+                    @L["Score Difficulty"] · @L[TierName(PassVsScore.ScoreTier)]
+                </span>
+            }
+            @if (PlateResidual != null)
+            {
+                <span class="chart-verdict-chip chart-verdict-chip-muted">
+                    @(PlateResidual.StepsVsExpected < 0 ? L["Plates · spiky"] : L["Plates · smooth"])
+                </span>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<ChartVerdictFacet>? Facets { get; set; }
+
+    private IReadOnlyList<ChartVerdictFacet> Headlines => (Facets ?? Array.Empty<ChartVerdictFacet>())
+        .Where(f => f is PassVsScoreVerdict or LetterWallVerdict or YieldKneeVerdict or StyleFingerprintVerdict)
+        .Take(2)
+        .ToArray();
+
+    private PassVsScoreVerdict? PassVsScore => Facets?.OfType<PassVsScoreVerdict>().FirstOrDefault();
+    private PlateResidualVerdict? PlateResidual => Facets?.OfType<PlateResidualVerdict>().FirstOrDefault();
+
+    // The tier vocabulary the dialog's placement chips established — same keys.
+    private static string TierName(TierListCategory category)
+    {
+        return category switch
+        {
+            TierListCategory.Overrated => "1+ Level Easier",
+            TierListCategory.VeryEasy => "Very Easy",
+            TierListCategory.Easy => "Easy",
+            TierListCategory.Medium => "Medium",
+            TierListCategory.Hard => "Hard",
+            TierListCategory.VeryHard => "Very Hard",
+            TierListCategory.Underrated => "1+ Level Harder",
+            _ => "Not Rated"
+        };
+    }
+}

@@ -1,0 +1,49 @@
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* The chart's life across mixes (mock R2 history band) — levels derived from the mix
+   catalogs' shared chart GUIDs. Static content forever: no circuit needed at Stage 3. *@
+@if (History != null && History.Levels.Count > 0)
+{
+    <div class="chart-timeline">
+        @for (var i = 0; i < History.Levels.Count; i++)
+        {
+            var entry = History.Levels[i];
+            var previous = i == 0 ? (int?)null : History.Levels[i - 1].Level;
+            var delta = previous == null ? 0 : entry.Level - previous.Value;
+            <div class="chart-timeline-node @(i == History.Levels.Count - 1 ? "" : "chart-timeline-dim")">
+                <div class="chart-timeline-mix">@entry.Mix.GetName()</div>
+                <div class="chart-timeline-level">
+                    @if (i == 0)
+                    {
+                        @L["debuted at {0}", Label(entry.Level)]
+                    }
+                    else if (delta != 0)
+                    {
+                        @L["rerated {0}", Label(entry.Level)]
+                        <span class="chart-timeline-delta">@(delta > 0 ? "▲" : "▼") @(delta > 0 ? "+" : "")@delta</span>
+                    }
+                    else
+                    {
+                        @L["unchanged · {0}", Label(entry.Level)]
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public HistoryVerdict? History { get; set; }
+
+    [Parameter]
+    public ChartType Type { get; set; } = ChartType.Single;
+
+    private string Label(int level)
+    {
+        return $"{Type.GetShortHand()}{level}";
+    }
+}

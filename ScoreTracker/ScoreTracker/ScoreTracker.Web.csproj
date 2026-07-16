@@ -13,6 +13,11 @@
 		<DartSassOutputStyle>compressed</DartSassOutputStyle>
 	</PropertyGroup>
   <ItemGroup>
+    <!-- The bUnit suite drives component operations that have no business being public API.
+         Same arrangement the verticals already use for their own tests. -->
+    <InternalsVisibleTo Include="ScoreTracker.Tests.Components" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="AspNet.Security.OAuth.Discord" Version="10.0.0" />
     <PackageReference Include="Blazor-ApexCharts" Version="6.1.0" />
     <PackageReference Include="BlazorApplicationInsights" Version="3.3.0" />

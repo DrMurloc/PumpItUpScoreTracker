@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -2807,17 +2807,8 @@
   <data name="Notes per Second" xml:space="preserve">
     <value>Notas por segundo</value>
   </data>
-  <data name="Sustain Time" xml:space="preserve">
-    <value>Tiempo sostenido</value>
-  </data>
-  <data name="Time Under Tension" xml:space="preserve">
-    <value>Tiempo bajo tensión</value>
-  </data>
   <data name="Step analysis data from PIU Center" xml:space="preserve">
     <value>Datos de análisis de pasos de PIU Center</value>
-  </data>
-  <data name="Share of chart sections featuring each skill" xml:space="preserve">
-    <value>Proporción de secciones del chart con cada habilidad</value>
   </data>
   <data name="Show Skill Metric" xml:space="preserve">
     <value>Mostrar métrica de habilidad</value>
@@ -4018,5 +4009,284 @@
   </data>
   <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
     <value>PIU Tracker es totalmente público: las puntuaciones que envíes allí serán públicas aunque tu perfil no lo sea.</value>
+  </data>
+  <data name="{0} — {1}." xml:space="preserve">
+    <value>{0}: {1}.</value>
+  </data>
+  <data name="Most clears stall below {0} — the steepest step on this board." xml:space="preserve">
+    <value>La mayoría de los clears se estancan bajo {0} — el escalón más empinado de este tablero.</value>
+  </data>
+  <data name="Scores open up around competitive level {0}." xml:space="preserve">
+    <value>Las puntuaciones despegan alrededor del nivel competitivo {0}.</value>
+  </data>
+  <data name="Dominated by {0} and {1}." xml:space="preserve">
+    <value>Dominado por {0} y {1}.</value>
+  </data>
+  <data name="Dominated by {0}." xml:space="preserve">
+    <value>Dominado por {0}.</value>
+  </data>
+  <data name="Sustained — it holds you under tension for most of its runtime." xml:space="preserve">
+    <value>Sostenido — te mantiene bajo tensión durante casi todo el tema.</value>
+  </data>
+  <data name="First passes cluster between competitive levels {0} and {1}." xml:space="preserve">
+    <value>Los primeros passes se concentran entre los niveles competitivos {0} y {1}.</value>
+  </data>
+  <data name="Debuted in {0}." xml:space="preserve">
+    <value>Debutó en {0}.</value>
+  </data>
+  <data name="{0} scores tracked · {1}% pass rate" xml:space="preserve">
+    <value>{0} puntuaciones registradas · {1}% de passes</value>
+  </data>
+  <data name="Plays a level easier than its label" xml:space="preserve">
+    <value>Se siente un nivel más fácil que su etiqueta</value>
+  </data>
+  <data name="Very easy to pass for its level" xml:space="preserve">
+    <value>Muy fácil de pasar para su nivel</value>
+  </data>
+  <data name="Easy to pass for its level" xml:space="preserve">
+    <value>Fácil de pasar para su nivel</value>
+  </data>
+  <data name="Fairly rated to pass" xml:space="preserve">
+    <value>Dificultad de pase acorde a su nivel</value>
+  </data>
+  <data name="Hard to pass for its level" xml:space="preserve">
+    <value>Difícil de pasar para su nivel</value>
+  </data>
+  <data name="Very hard to pass for its level" xml:space="preserve">
+    <value>Muy difícil de pasar para su nivel</value>
+  </data>
+  <data name="Plays a level harder than its label" xml:space="preserve">
+    <value>Se siente un nivel más difícil que su etiqueta</value>
+  </data>
+  <data name="generous to score once you're through" xml:space="preserve">
+    <value>generoso al puntuar una vez que lo pasas</value>
+  </data>
+  <data name="stingy to score even when passed" xml:space="preserve">
+    <value>tacaño al puntuar incluso pasado</value>
+  </data>
+  <data name="scores about as expected" xml:space="preserve">
+    <value>puntúa más o menos como se espera</value>
+  </data>
+  <data name="Plates · spiky" xml:space="preserve">
+    <value>Plates · con picos</value>
+  </data>
+  <data name="Plates · smooth" xml:space="preserve">
+    <value>Plates · parejos</value>
+  </data>
+  <data name="debuted at {0}" xml:space="preserve">
+    <value>debutó en {0}</value>
+  </data>
+  <data name="rerated {0}" xml:space="preserve">
+    <value>reevaluado a {0}</value>
+  </data>
+  <data name="unchanged · {0}" xml:space="preserve">
+    <value>sin cambios · {0}</value>
+  </data>
+  <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
+    <value>Aún no hay datos suficientes para nombrar charts similares — el grafo se recalcula cada noche.</value>
+  </data>
+  <data name="Your best" xml:space="preserve">
+    <value>Tu mejor marca</value>
+  </data>
+  <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
+    <value>Aún sin puntuación — registra tu primer intento y esto se enciende.</value>
+  </data>
+  <data name="Score recorded for {0}" xml:space="preserve">
+    <value>Puntuación registrada para {0}</value>
+  </data>
+  <data name="Letter grades on this board" xml:space="preserve">
+    <value>Letras en este tablero</value>
+  </data>
+  <data name="How this board's letter grades distribute." xml:space="preserve">
+    <value>Cómo se distribuyen las letras de este tablero.</value>
+  </data>
+  <data name="Plates earned" xml:space="preserve">
+    <value>Plates obtenidos</value>
+  </data>
+  <data name="Plates earned by this board's clears." xml:space="preserve">
+    <value>Plates obtenidos por los clears de este tablero.</value>
+  </data>
+  <data name="Scores by competitive level" xml:space="preserve">
+    <value>Puntuaciones por nivel competitivo</value>
+  </data>
+  <data name="Minimum, average, and maximum score at each competitive level." xml:space="preserve">
+    <value>Puntuación mínima, media y máxima en cada nivel competitivo.</value>
+  </data>
+  <data name="Passes by competitive level" xml:space="preserve">
+    <value>Passes por nivel competitivo</value>
+  </data>
+  <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
+    <value>Dónde se sitúan los passes de este chart, por nivel competitivo.</value>
+  </data>
+  <data name="No scores recorded yet — import yours to light this up." xml:space="preserve">
+    <value>Aún no hay puntuaciones — importa las tuyas para encender esto.</value>
+  </data>
+  <data name="No scores recorded yet — be the first." xml:space="preserve">
+    <value>Aún no hay puntuaciones — sé la primera persona.</value>
+  </data>
+  <data name="your communities" xml:space="preserve">
+    <value>tus comunidades</value>
+  </data>
+  <data name="you" xml:space="preserve">
+    <value>tú</value>
+  </data>
+  <data name="Show more of {0} scores" xml:space="preserve">
+    <value>Ver más de {0} puntuaciones</value>
+  </data>
+  <data name="Search by song name — every chart has its own page." xml:space="preserve">
+    <value>Busca por nombre de canción — cada chart tiene su propia página.</value>
+  </data>
+  <data name="song by {0}" xml:space="preserve">
+    <value>canción de {0}</value>
+  </data>
+  <data name="steps by {0}" xml:space="preserve">
+    <value>steps de {0}</value>
+  </data>
+  <data name="Debuted in" xml:space="preserve">
+    <value>Debut en</value>
+  </data>
+  <data name="Pass rate" xml:space="preserve">
+    <value>Tasa de passes</value>
+  </data>
+  <data name="The evidence" xml:space="preserve">
+    <value>La evidencia</value>
+  </data>
+  <data name="Skill fingerprint" xml:space="preserve">
+    <value>Huella de skills</value>
+  </data>
+  <data name="History" xml:space="preserve">
+    <value>Historial</value>
+  </data>
+  <data name="Level changes across mixes, from the catalog record." xml:space="preserve">
+    <value>Cambios de nivel entre versiones, según el catálogo.</value>
+  </data>
+  <data name="Charts like this" xml:space="preserve">
+    <value>Charts como este</value>
+  </data>
+  <data name="From the similarity graph — evidence-weighted, rebuilt nightly." xml:space="preserve">
+    <value>Del grafo de similitud — ponderado por evidencia, recalculado cada noche.</value>
+  </data>
+  <data name="Close video" xml:space="preserve">
+    <value>Cerrar video</value>
+  </data>
+  <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
+    <value>{0} charts comparados ({1}): ninguno superó el listón.</value>
+  </data>
+  <data name="Compared {0} charts ({1}) — {2} matches." xml:space="preserve">
+    <value>{0} charts comparados ({1}): {2} coincidencias.</value>
+  </data>
+  <data name="Didn't quite make the cut ({0})" xml:space="preserve">
+    <value>No llegaron por poco ({0})</value>
+  </data>
+  <data name="Matched on" xml:space="preserve">
+    <value>Coincide en</value>
+  </data>
+  <data name="NPS" xml:space="preserve">
+    <value>NPS</value>
+  </data>
+  <data name="No significant matches — here's the closest we could find." xml:space="preserve">
+    <value>Sin coincidencias significativas: estos son los más parecidos.</value>
+  </data>
+  <data name="Order by" xml:space="preserve">
+    <value>Ordenar por</value>
+  </data>
+  <data name="Watch {0}" xml:space="preserve">
+    <value>Ver {0}</value>
+  </data>
+  <data name="within 1 level" xml:space="preserve">
+    <value>a ±1 nivel</value>
+  </data>
+  <data name="{0} BPM" xml:space="preserve">
+    <value>{0} BPM</value>
+  </data>
+  <data name="{0} NPS" xml:space="preserve">
+    <value>{0} NPS</value>
+  </data>
+  <data name="No sorting" xml:space="preserve">
+    <value>Sin ordenar</value>
+  </data>
+  <data name="Sign in to order by your own tier lists" xml:space="preserve">
+    <value>Inicia sesión para ordenar según tus propias tier lists</value>
+  </data>
+  <data name="Strongest match first — no difficulty applied" xml:space="preserve">
+    <value>Mejor coincidencia primero: sin aplicar dificultad</value>
+  </data>
+  <data name="Easiest to clear first, from your Pass tier list" xml:space="preserve">
+    <value>Del más fácil de pasar: según tu tier list de Pase</value>
+  </data>
+  <data name="Easiest to clear first, from the community Pass tier list" xml:space="preserve">
+    <value>Del más fácil de pasar: según la tier list de Pase de la comunidad</value>
+  </data>
+  <data name="Easiest to score first, from your Score tier list" xml:space="preserve">
+    <value>Del más fácil de puntuar: según tu tier list de Puntaje</value>
+  </data>
+  <data name="Easiest to score first, by scoring level" xml:space="preserve">
+    <value>Del más fácil de puntuar: según el scoring level</value>
+  </data>
+  <data name="Chart Stats" xml:space="preserve">
+    <value>Estadísticas del chart</value>
+  </data>
+  <data name="Chart analysis made possible by" xml:space="preserve">
+    <value>Análisis de charts posible gracias a</value>
+  </data>
+  <data name="Reordering…" xml:space="preserve">
+    <value>Ordenando…</value>
+  </data>
+  <data name="Sustain" xml:space="preserve">
+    <value>Sostenido</value>
+  </data>
+  <data name="Bursts" xml:space="preserve">
+    <value>Ráfagas</value>
+  </data>
+  <data name="Grind" xml:space="preserve">
+    <value>Sostenido</value>
+  </data>
+  <data name="Spikes" xml:space="preserve">
+    <value>Ráfagas</value>
+  </data>
+  <data name="Share of the chart each pattern and demand covers" xml:space="preserve">
+    <value>Parte del chart que cubre cada patrón y cada exigencia</value>
+  </data>
+  <data name="Open chart details" xml:space="preserve">
+    <value>Abrir detalles del chart</value>
+  </data>
+  <data name="Open {0}" xml:space="preserve">
+    <value>Abrir {0}</value>
+  </data>
+  <data name="Show all {0} scores" xml:space="preserve">
+    <value>Ver los {0} puntajes</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filtrar</value>
+  </data>
+  <data name="Folder" xml:space="preserve">
+    <value>Carpeta</value>
+  </data>
+  <data name="Comparing {0} charts" xml:space="preserve">
+    <value>Comparando {0} charts</value>
+  </data>
+  <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
+    <value>Activa un filtro para acotar con qué se compara este chart.</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Aplicar</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Borrar</value>
+  </data>
+  <data name="This chart has no {0} on record" xml:space="preserve">
+    <value>No hay {0} registrado para este chart</value>
+  </data>
+  <data name="Show the least matching charts instead" xml:space="preserve">
+    <value>Mostrar los charts menos parecidos</value>
+  </data>
+  <data name="{0} charts, chosen for being nothing like this one." xml:space="preserve">
+    <value>{0} charts, elegidos por no parecerse en nada a este.</value>
+  </data>
+  <data name="Of everything within reach, these are the least like it." xml:space="preserve">
+    <value>De todo lo que está al alcance, estos son los menos parecidos.</value>
+  </data>
+  <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
+    <value>El opuesto se elige entre todo lo que está al alcance, así que los rangos no se le aplican</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -14,6 +14,7 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
     internal sealed class EFPlayerStatsRepository : IPlayerStatsRepository,
         IPlayerStatsReader,
         IRequestHandler<GetPlayerStatsQuery, PlayerStatsRecord>,
+        IRequestHandler<GetPlayersStatsQuery, IEnumerable<PlayerStatsRecord>>,
         IRequestHandler<GetCompetitiveNeighborsQuery, IReadOnlyList<CompetitiveNeighborRecord>>
     {
         private readonly IMemoryCache _cache;
@@ -160,6 +161,12 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
         public async Task<PlayerStatsRecord> Handle(GetPlayerStatsQuery request, CancellationToken cancellationToken)
         {
             return await GetStats(request.Mix, request.UserId, cancellationToken);
+        }
+
+        public async Task<IEnumerable<PlayerStatsRecord>> Handle(GetPlayersStatsQuery request,
+            CancellationToken cancellationToken)
+        {
+            return await GetStats(request.Mix, request.UserIds, cancellationToken);
         }
 
         public async Task<IReadOnlyList<CompetitiveNeighborRecord>> Handle(GetCompetitiveNeighborsQuery request,

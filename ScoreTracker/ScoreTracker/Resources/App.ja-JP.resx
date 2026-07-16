@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -2928,17 +2928,8 @@
   <data name="Notes per Second" xml:space="preserve">
     <value>秒間ノーツ数</value>
   </data>
-  <data name="Sustain Time" xml:space="preserve">
-    <value>サステイン時間</value>
-  </data>
-  <data name="Time Under Tension" xml:space="preserve">
-    <value>負荷継続時間</value>
-  </data>
   <data name="Step analysis data from PIU Center" xml:space="preserve">
     <value>ステップ分析データ提供：PIU Center</value>
-  </data>
-  <data name="Share of chart sections featuring each skill" xml:space="preserve">
-    <value>各スキルが登場するチャートセクションの割合</value>
   </data>
   <data name="Show Skill Metric" xml:space="preserve">
     <value>スキル指標を表示</value>
@@ -4139,5 +4130,284 @@
   </data>
   <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
     <value>PIU Tracker は完全に公開されています。プロフィールが非公開でも、送信したスコアは公開されます。</value>
+  </data>
+  <data name="{0} — {1}." xml:space="preserve">
+    <value>{0}——{1}。</value>
+  </data>
+  <data name="Most clears stall below {0} — the steepest step on this board." xml:space="preserve">
+    <value>ほとんどのクリアは{0}の手前で止まります——このボードで最も急な壁です。</value>
+  </data>
+  <data name="Scores open up around competitive level {0}." xml:space="preserve">
+    <value>スコアは競技レベル{0}あたりから伸び始めます。</value>
+  </data>
+  <data name="Dominated by {0} and {1}." xml:space="preserve">
+    <value>{0}と{1}が支配的です。</value>
+  </data>
+  <data name="Dominated by {0}." xml:space="preserve">
+    <value>{0}が支配的です。</value>
+  </data>
+  <data name="Sustained — it holds you under tension for most of its runtime." xml:space="preserve">
+    <value>サステイン型——曲のほとんどの間、緊張が続きます。</value>
+  </data>
+  <data name="First passes cluster between competitive levels {0} and {1}." xml:space="preserve">
+    <value>初クリアは競技レベル{0}〜{1}に集中しています。</value>
+  </data>
+  <data name="Debuted in {0}." xml:space="preserve">
+    <value>{0}で初登場。</value>
+  </data>
+  <data name="{0} scores tracked · {1}% pass rate" xml:space="preserve">
+    <value>記録スコア{0}件・クリア率{1}%</value>
+  </data>
+  <data name="Plays a level easier than its label" xml:space="preserve">
+    <value>表記より1レベル易しい</value>
+  </data>
+  <data name="Very easy to pass for its level" xml:space="preserve">
+    <value>レベルの割にクリアがとても簡単</value>
+  </data>
+  <data name="Easy to pass for its level" xml:space="preserve">
+    <value>レベルの割にクリアが簡単</value>
+  </data>
+  <data name="Fairly rated to pass" xml:space="preserve">
+    <value>クリア難度は表記どおり</value>
+  </data>
+  <data name="Hard to pass for its level" xml:space="preserve">
+    <value>レベルの割にクリアが難しい</value>
+  </data>
+  <data name="Very hard to pass for its level" xml:space="preserve">
+    <value>レベルの割にクリアがとても難しい</value>
+  </data>
+  <data name="Plays a level harder than its label" xml:space="preserve">
+    <value>表記より1レベル難しい</value>
+  </data>
+  <data name="generous to score once you're through" xml:space="preserve">
+    <value>クリアさえすればスコアは伸びやすい</value>
+  </data>
+  <data name="stingy to score even when passed" xml:space="preserve">
+    <value>クリアしてもスコアは渋い</value>
+  </data>
+  <data name="scores about as expected" xml:space="preserve">
+    <value>スコアは想定どおり</value>
+  </data>
+  <data name="Plates · spiky" xml:space="preserve">
+    <value>プレート・スパイク型</value>
+  </data>
+  <data name="Plates · smooth" xml:space="preserve">
+    <value>プレート・スムーズ型</value>
+  </data>
+  <data name="debuted at {0}" xml:space="preserve">
+    <value>{0}で初登場</value>
+  </data>
+  <data name="rerated {0}" xml:space="preserve">
+    <value>{0}に改定</value>
+  </data>
+  <data name="unchanged · {0}" xml:space="preserve">
+    <value>変更なし・{0}</value>
+  </data>
+  <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
+    <value>似ている譜面を挙げるにはまだデータ不足です——グラフは毎晩再計算されます。</value>
+  </data>
+  <data name="Your best" xml:space="preserve">
+    <value>自己ベスト</value>
+  </data>
+  <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
+    <value>まだ記録がありません——最初の挑戦を記録するとここが灯ります。</value>
+  </data>
+  <data name="Score recorded for {0}" xml:space="preserve">
+    <value>{0}のスコアを記録しました</value>
+  </data>
+  <data name="Letter grades on this board" xml:space="preserve">
+    <value>このボードのレターグレード</value>
+  </data>
+  <data name="How this board's letter grades distribute." xml:space="preserve">
+    <value>このボードのレターグレード分布です。</value>
+  </data>
+  <data name="Plates earned" xml:space="preserve">
+    <value>獲得プレート</value>
+  </data>
+  <data name="Plates earned by this board's clears." xml:space="preserve">
+    <value>このボードのクリアが獲得したプレートです。</value>
+  </data>
+  <data name="Scores by competitive level" xml:space="preserve">
+    <value>競技レベル別スコア</value>
+  </data>
+  <data name="Minimum, average, and maximum score at each competitive level." xml:space="preserve">
+    <value>競技レベルごとの最小・平均・最大スコアです。</value>
+  </data>
+  <data name="Passes by competitive level" xml:space="preserve">
+    <value>競技レベル別クリア</value>
+  </data>
+  <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
+    <value>この譜面のクリアがどの競技レベルにあるかを示します。</value>
+  </data>
+  <data name="No scores recorded yet — import yours to light this up." xml:space="preserve">
+    <value>まだスコアがありません——インポートするとここが灯ります。</value>
+  </data>
+  <data name="No scores recorded yet — be the first." xml:space="preserve">
+    <value>まだスコアがありません——最初の1人になりましょう。</value>
+  </data>
+  <data name="your communities" xml:space="preserve">
+    <value>自分のコミュニティ</value>
+  </data>
+  <data name="you" xml:space="preserve">
+    <value>自分</value>
+  </data>
+  <data name="Show more of {0} scores" xml:space="preserve">
+    <value>全{0}件のスコアをもっと見る</value>
+  </data>
+  <data name="Search by song name — every chart has its own page." xml:space="preserve">
+    <value>曲名で検索——すべての譜面に専用ページがあります。</value>
+  </data>
+  <data name="song by {0}" xml:space="preserve">
+    <value>曲：{0}</value>
+  </data>
+  <data name="steps by {0}" xml:space="preserve">
+    <value>ステップ：{0}</value>
+  </data>
+  <data name="Debuted in" xml:space="preserve">
+    <value>初登場バージョン</value>
+  </data>
+  <data name="Pass rate" xml:space="preserve">
+    <value>クリア率</value>
+  </data>
+  <data name="The evidence" xml:space="preserve">
+    <value>根拠データ</value>
+  </data>
+  <data name="Skill fingerprint" xml:space="preserve">
+    <value>スキルの指紋</value>
+  </data>
+  <data name="History" xml:space="preserve">
+    <value>履歴</value>
+  </data>
+  <data name="Level changes across mixes, from the catalog record." xml:space="preserve">
+    <value>バージョンごとのレベル変遷——カタログ記録より。</value>
+  </data>
+  <data name="Charts like this" xml:space="preserve">
+    <value>この譜面に似ている譜面</value>
+  </data>
+  <data name="From the similarity graph — evidence-weighted, rebuilt nightly." xml:space="preserve">
+    <value>類似度グラフより——根拠で重み付けし、毎晩再計算。</value>
+  </data>
+  <data name="Close video" xml:space="preserve">
+    <value>動画を閉じる</value>
+  </data>
+  <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
+    <value>譜面{0}件を比較（{1}）— 基準を超えた譜面はありません。</value>
+  </data>
+  <data name="Compared {0} charts ({1}) — {2} matches." xml:space="preserve">
+    <value>譜面{0}件を比較（{1}）— {2}件一致。</value>
+  </data>
+  <data name="Didn't quite make the cut ({0})" xml:space="preserve">
+    <value>あと一歩だった譜面（{0}）</value>
+  </data>
+  <data name="Matched on" xml:space="preserve">
+    <value>一致した要素</value>
+  </data>
+  <data name="NPS" xml:space="preserve">
+    <value>NPS</value>
+  </data>
+  <data name="No significant matches — here's the closest we could find." xml:space="preserve">
+    <value>明確な一致はありません — 最も近い譜面です。</value>
+  </data>
+  <data name="Order by" xml:space="preserve">
+    <value>並び替え</value>
+  </data>
+  <data name="Watch {0}" xml:space="preserve">
+    <value>{0} の動画を見る</value>
+  </data>
+  <data name="within 1 level" xml:space="preserve">
+    <value>レベル±1以内</value>
+  </data>
+  <data name="{0} BPM" xml:space="preserve">
+    <value>{0} BPM</value>
+  </data>
+  <data name="{0} NPS" xml:space="preserve">
+    <value>{0} NPS</value>
+  </data>
+  <data name="No sorting" xml:space="preserve">
+    <value>並び替えなし</value>
+  </data>
+  <data name="Sign in to order by your own tier lists" xml:space="preserve">
+    <value>自分のティアリストで並び替えるにはログインしてください</value>
+  </data>
+  <data name="Strongest match first — no difficulty applied" xml:space="preserve">
+    <value>一致度順 — 難易度は考慮しません</value>
+  </data>
+  <data name="Easiest to clear first, from your Pass tier list" xml:space="preserve">
+    <value>クリアしやすい順 — 自分のクリアティアリスト基準</value>
+  </data>
+  <data name="Easiest to clear first, from the community Pass tier list" xml:space="preserve">
+    <value>クリアしやすい順 — コミュニティのクリアティアリスト基準</value>
+  </data>
+  <data name="Easiest to score first, from your Score tier list" xml:space="preserve">
+    <value>スコアを出しやすい順 — 自分のスコアティアリスト基準</value>
+  </data>
+  <data name="Easiest to score first, by scoring level" xml:space="preserve">
+    <value>スコアを出しやすい順 — スコアレベル基準</value>
+  </data>
+  <data name="Chart Stats" xml:space="preserve">
+    <value>譜面統計</value>
+  </data>
+  <data name="Chart analysis made possible by" xml:space="preserve">
+    <value>譜面分析の提供</value>
+  </data>
+  <data name="Reordering…" xml:space="preserve">
+    <value>並び替え中…</value>
+  </data>
+  <data name="Sustain" xml:space="preserve">
+    <value>持続</value>
+  </data>
+  <data name="Bursts" xml:space="preserve">
+    <value>連打</value>
+  </data>
+  <data name="Grind" xml:space="preserve">
+    <value>持続区間</value>
+  </data>
+  <data name="Spikes" xml:space="preserve">
+    <value>連打区間</value>
+  </data>
+  <data name="Share of the chart each pattern and demand covers" xml:space="preserve">
+    <value>各パターンと負荷が譜面に占める割合</value>
+  </data>
+  <data name="Open chart details" xml:space="preserve">
+    <value>譜面の詳細を開く</value>
+  </data>
+  <data name="Open {0}" xml:space="preserve">
+    <value>{0} を開く</value>
+  </data>
+  <data name="Show all {0} scores" xml:space="preserve">
+    <value>{0}件の記録をすべて表示</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>フィルター</value>
+  </data>
+  <data name="Folder" xml:space="preserve">
+    <value>フォルダ</value>
+  </data>
+  <data name="Comparing {0} charts" xml:space="preserve">
+    <value>譜面{0}件と比較</value>
+  </data>
+  <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
+    <value>フィルターをオンにすると、この譜面の比較対象を絞り込めます。</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>適用</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>クリア</value>
+  </data>
+  <data name="This chart has no {0} on record" xml:space="preserve">
+    <value>この譜面には{0}のデータがありません</value>
+  </data>
+  <data name="Show the least matching charts instead" xml:space="preserve">
+    <value>最も似ていない譜面を表示</value>
+  </data>
+  <data name="{0} charts, chosen for being nothing like this one." xml:space="preserve">
+    <value>この譜面とまったく似ていない、という理由で選ばれた{0}譜面。</value>
+  </data>
+  <data name="Of everything within reach, these are the least like it." xml:space="preserve">
+    <value>対象範囲の中で、これらが最も似ていない譜面です。</value>
+  </data>
+  <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
+    <value>対極は対象範囲全体から選ばれるため、範囲指定は適用されません</value>
   </data>
 </root>

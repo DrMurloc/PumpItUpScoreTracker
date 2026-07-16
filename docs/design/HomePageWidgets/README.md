@@ -259,7 +259,7 @@ Readiness: ✅ published contract already serves it · 🔨 needs new data/query
 
 | Vertical | Widget | Ready | Note |
 |---|---|---|---|
-| PlayerProgress | Suggested Charts | ✅ | **SHIPPED — catalog-walk pick 1** (spec [suggested-charts.md](suggested-charts.md)) |
+| PlayerProgress | Suggested Charts | ✅ | **SHIPPED — catalog-walk pick 1** (spec [suggested-charts.md](suggested-charts.md)). Proposed goal *"Based on recent sessions"* (2026-07-15) is scoped-but-blocked in that doc: it needs the same over/under-performance primitive the **HELD** skill-gaps goal needs, so settle that once and both unblock |
 | PlayerProgress | Title Progress | ✅ | pushing title + remaining-charts math from WSIP |
 | PlayerProgress | Stats snapshot | ✅ | competitive levels block (Pumbility has its own widget) |
 | PlayerProgress | Recent Highlights | ✅ | `GetScoreHighlightsQuery` — the Discord-card engine, on the home page |

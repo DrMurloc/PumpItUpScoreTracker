@@ -63,6 +63,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.ChartScoreStats` | Population score variance per chart, refreshed by the daily scores tier-list rebuild (tier-lists overhaul C1) |
 | `scores.FolderCohortStats` | Folder pass-count histograms per competitive-level bucket, refreshed by the daily scores tier-list rebuild — powers the "Folder Passes vs Similar Players" bar (tier-lists overhaul C16) |
 | `scores.ChartScoringLevel` | Calculated scoring-difficulty level per chart+mix |
+| `scores.ChartSimilarity` | Similarity-graph edges: the top-20 nearest charts per chart+mix, stored **floor-free** so the shelf can move its own bar and render near-misses without a rebuild. `SignalsJson` carries the skill/intensity breakdown plus the shared badges the shelf names each match from. Rebuilt wholesale by the nightly similarity job ([design](design/chart-similarity.md)) |
 | `scores.ChartLetterDifficulty` | Letter-grade (AA–PG) difficulty percentiles per chart |
 | `scores.ChartDifficultyRating` | Aggregated community difficulty ratings (count + std dev) |
 | `scores.UserChartDifficultyRating` | An individual user's difficulty vote |

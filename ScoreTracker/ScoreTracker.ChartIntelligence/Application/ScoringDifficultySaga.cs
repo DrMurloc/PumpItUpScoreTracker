@@ -14,12 +14,40 @@ namespace ScoreTracker.ChartIntelligence.Application
 {
     internal sealed class ScoringDifficultySaga : IConsumer<RecalculateScoringDifficultyCommand>,
         IConsumer<RecalculateChartLetterDifficultiesCommand>,
-        IRequestHandler<GetChartScoringLevelsQuery, IDictionary<Guid, double>>
+        IRequestHandler<GetChartScoringLevelsQuery, IDictionary<Guid, double>>,
+        IRequestHandler<GetChartLetterDifficultiesQuery,
+            IReadOnlyDictionary<Guid, IReadOnlyDictionary<ParagonLevel, double>>>
     {
-        public Task<IDictionary<Guid, double>> Handle(GetChartScoringLevelsQuery request,
+        /// <summary>
+        ///     Every chart gets a scoring level; an unmeasured one reads as its listed level
+        ///     (owner, 2026-07-15). The listed level is what the chart claims about itself, so
+        ///     it is the honest prior until scores say otherwise — and a null forced every
+        ///     caller to invent its own answer, which is how "what scoring level is this" ended
+        ///     up meaning four different things across the app.
+        ///     ~13% of charts in the competitive range have no measured level. The interpolation
+        ///     that produces the real ones lands near the folder anyway (mean offset +0.21), so
+        ///     the fallback is not a wild guess — but it IS a guess, and callers that draw a
+        ///     distinction between "measured" and "assumed" must read the repository directly.
+        /// </summary>
+        public async Task<IDictionary<Guid, double>> Handle(GetChartScoringLevelsQuery request,
             CancellationToken cancellationToken)
         {
-            return _scoringLevels.GetScoringLevels(request.Mix, cancellationToken);
+            var measured = await _scoringLevels.GetScoringLevels(request.Mix, cancellationToken);
+            var charts = await _chartRepository.GetCharts(request.Mix, cancellationToken: cancellationToken);
+            foreach (var chart in charts)
+                if (!measured.ContainsKey(chart.Id))
+                    measured[chart.Id] = chart.Level;
+
+            return measured;
+        }
+
+        public async Task<IReadOnlyDictionary<Guid, IReadOnlyDictionary<ParagonLevel, double>>> Handle(
+            GetChartLetterDifficultiesQuery request, CancellationToken cancellationToken)
+        {
+            return (await _chartRepository.GetChartLetterGradeDifficulties(request.ChartIds, cancellationToken))
+                .ToDictionary(d => d.ChartId,
+                    d => (IReadOnlyDictionary<ParagonLevel, double>)d.Percentiles
+                        .ToDictionary(kv => kv.Key, kv => kv.Value));
         }
 
         private const int LevelDiff = 3;

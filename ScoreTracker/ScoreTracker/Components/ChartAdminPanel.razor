@@ -1,0 +1,114 @@
+@using System.Text.RegularExpressions
+@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IChartRepository Charts
+@inject ISnackbar Snackbar
+
+@* The old page's mid-page admin form, exiled behind an admin-only affordance (chart
+   overhaul sin list). Still writes through IChartRepository directly — existing debt
+   relocated verbatim, not new; commands are the eventual fix. *@
+@if (CurrentUser.IsLoggedInAsAdmin && Chart != null)
+{
+    <div class="chart-admin">
+        <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Edit"
+                   OnClick="Toggle">Admin</MudButton>
+        @if (_open)
+        {
+            <MudGrid Class="mt-2">
+                <MudItem xs="6" sm="3">
+                    <MudNumericField T="decimal" Label="Min BPM" ValueChanged="SetMin" Value="_minBpm"></MudNumericField>
+                </MudItem>
+                <MudItem xs="6" sm="3">
+                    <MudNumericField T="decimal" Label="Max BPM" @bind-Value="_maxBpm"></MudNumericField>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudAutocomplete T="string"
+                                     Label="Step Artist"
+                                     @bind-Value="_artist"
+                                     CoerceValue="true"
+                                     SearchFunc="(s, c) => Task.FromResult(_artists.Where(a => a.Contains(s, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Immediate="true" Label="Video" Value="_video" ValueChanged="SetVideo"></MudTextField>
+                </MudItem>
+                <MudItem xs="12" Class="d-flex align-center" Style="gap:12px">
+                    <MudButton Color="Color.Warning" Variant="Variant.Filled" Disabled="_isSaving" OnClick="Save">Save</MudButton>
+                    <MudText Typo="Typo.caption">@Chart.Id</MudText>
+                </MudItem>
+            </MudGrid>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Chart? Chart { get; set; }
+
+    [Parameter]
+    public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    private static readonly Regex VideoRegex = new(@"https\:\/\/www\.youtube\.com\/watch\?v\=(.*)", RegexOptions.Compiled);
+    private static readonly Regex VideoRegex2 = new(@"https\:\/\/youtu\.be\/([^?]+)", RegexOptions.Compiled);
+
+    private bool _open;
+    private bool _isSaving;
+    private decimal _minBpm;
+    private decimal _maxBpm;
+    private string _artist = string.Empty;
+    private string _video = string.Empty;
+    private IEnumerable<string> _artists = Array.Empty<string>();
+    private Guid _loadedFor;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!CurrentUser.IsLoggedInAsAdmin || Chart == null || Chart.Id == _loadedFor) return;
+        _loadedFor = Chart.Id;
+        _minBpm = Chart.Song.Bpm?.Min ?? 0;
+        _maxBpm = Chart.Song.Bpm?.Max ?? 0;
+        _artist = Chart.StepArtist?.ToString() ?? "";
+        _video = (await Mediator.Send(new GetChartVideosQuery(new[] { Chart.Id })))
+            .FirstOrDefault()?.VideoUrl.ToString() ?? "";
+    }
+
+    private async Task Toggle()
+    {
+        _open = !_open;
+        if (_open && !_artists.Any())
+            _artists = (await Mediator.Send(new GetChartsQuery(Mix)))
+                .Where(c => c.StepArtist != null)
+                .Select(c => c.StepArtist!.Value.ToString())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+    }
+
+    private void SetMin(decimal newMin)
+    {
+        _minBpm = newMin;
+        _maxBpm = newMin;
+    }
+
+    private void SetVideo(string video)
+    {
+        var match = VideoRegex.Match(video);
+        if (!match.Success) match = VideoRegex2.Match(video);
+        _video = match.Success ? $"https://www.youtube.com/embed/{match.Groups[1].Value}" : video;
+    }
+
+    private async Task Save()
+    {
+        if (Chart == null) return;
+        _isSaving = true;
+        await Charts.UpdateChart(Chart.Id, _artist);
+        await Charts.UpdateSong(Chart.Song.Name, Bpm.From(_minBpm, _maxBpm));
+        if (!string.IsNullOrWhiteSpace(_video)) await Charts.SetChartVideo(Chart.Id, new Uri(_video), "NOT KNOWN");
+        Snackbar.Add("Updated Chart", Severity.Success);
+        _isSaving = false;
+    }
+}
