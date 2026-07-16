@@ -1,0 +1,225 @@
+@using ApexCharts
+@using MediatR
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Theming
+@inject IMediator Mediator
+
+<MudAutocomplete T="string" Value="_selected" ValueChanged="SelectPlayer" Clearable="true"
+                 Label="@L["Search any board player"]" AdornmentIcon="@Icons.Material.Filled.Search"
+                 ResetValueOnEmptyText="true" CoerceText="true" Class="mb-3" MaxItems="15"
+                 SearchFunc="(s, c) => Task.FromResult(_names.Where(n => n.Contains(s ?? string.Empty, StringComparison.OrdinalIgnoreCase)))"/>
+
+@if (_loadingProfile)
+{
+    <MudSkeleton Height="300px" SkeletonType="SkeletonType.Rectangle"/>
+}
+else if (_profile == null && !string.IsNullOrWhiteSpace(_selected))
+{
+    <MudAlert Severity="Severity.Info">@L["No board history for that tag."]</MudAlert>
+}
+else if (_profile == null)
+{
+    <MudText Typo="Typo.body2">@L["Pick a player to see their boards, history, and PUMBILITY over time - departed tags stay searchable."]</MudText>
+}
+else
+{
+    <MudPaper Class="pa-3">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+            <HubPlayerChip Player="_profile.Player"/>
+            @if (_profile.PlayerType != null)
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">
+                    @L[HubRankings.PlayerTypeName(_profile.PlayerType.Value)]
+                </MudChip>
+            }
+        </MudStack>
+
+        <MudGrid Class="mt-1">
+            <MudItem xs="6" sm="3">
+                <MudPaper Class="pa-2" Outlined="true">
+                    <MudText Typo="Typo.overline">PUMBILITY</MudText>
+                    <MudText Typo="Typo.h5" Color="Color.Primary">
+                        <b>@(_profile.Pumbility?.ToString("N2") ?? "—")</b>
+                    </MudText>
+                    @if (_profile.PumbilityRank != null)
+                    {
+                        <MudText Typo="Typo.caption">
+                            @L["rank"] #@_profile.PumbilityRank
+                            @if (_profile.PumbilityRankDelta is > 0)
+                            {
+                                <span class="olb-delta-up"> ▲@_profile.PumbilityRankDelta</span>
+                            }
+                            else if (_profile.PumbilityRankDelta is < 0)
+                            {
+                                <span class="olb-delta-down"> ▼@Math.Abs(_profile.PumbilityRankDelta.Value)</span>
+                            }
+                        </MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudPaper Class="pa-2" Outlined="true">
+                    <MudText Typo="Typo.overline">@L["Boards"]</MudText>
+                    <MudText Typo="Typo.h5"><b>@_profile.BoardsInTop</b></MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudPaper Class="pa-2" Outlined="true">
+                    <MudText Typo="Typo.overline">@L["Board #1s"]</MudText>
+                    <MudText Typo="Typo.h5"><b>@_profile.NumberOnes</b></MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudPaper Class="pa-2" Outlined="true">
+                    <MudText Typo="Typo.overline">@L["Best place"]</MudText>
+                    <MudText Typo="Typo.h5"><b>@(_profile.BoardsInTop == 0 ? "—" : $"#{_profile.BestPlace}")</b></MudText>
+                    <MudText Typo="Typo.caption">@_profile.TopTens @L["in the top ten"]</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        @if (_pumbilityHistory.Length > 1)
+        {
+            <MudGrid Class="mt-1">
+                <MudItem xs="12" md="7">
+                    <MudText Typo="Typo.overline">@L["PUMBILITY over time"]</MudText>
+                    <ApexChart TItem="HistoryPoint" Options="_lineOptions" Height="220">
+                        <ApexPointSeries TItem="HistoryPoint"
+                                         Items="_pumbilityHistory"
+                                         Name="PUMBILITY"
+                                         Color="@MixThemes.PaletteFor(Mix).Primary"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="@(p => p.Label)"
+                                         YValue="@(p => p.Value)"/>
+                    </ApexChart>
+                </MudItem>
+                <MudItem xs="12" md="5">
+                    <MudText Typo="Typo.overline">@L["Board rank - lower is better"]</MudText>
+                    <ApexChart TItem="HistoryPoint" Options="_rankOptions" Height="220">
+                        <ApexPointSeries TItem="HistoryPoint"
+                                         Items="_rankHistory"
+                                         Name="@L["Rank"]"
+                                         Color="@MixThemes.PaletteFor(Mix).Secondary"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="@(p => p.Label)"
+                                         YValue="@(p => p.Value)"/>
+                    </ApexChart>
+                </MudItem>
+            </MudGrid>
+        }
+
+        <MudText Typo="Typo.overline" Class="mt-3 d-block">
+            @L["Board placements"] · @_profile.BoardsInTop
+        </MudText>
+        <MudTable T="OfficialPlayerChartRecord" Items="_profile.Placements" Dense="true"
+                  Breakpoint="Breakpoint.None" RowsPerPage="25">
+            <HeaderContent>
+                <MudTh>@L["Chart"]</MudTh>
+                <MudTh Style="text-align:right">@L["Score"]</MudTh>
+                <MudTh></MudTh>
+                <MudTh Style="text-align:right">@L["Place"]</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    @if (Charts.TryGetValue(context.ChartId, out var chart))
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <SongImage Song="chart.Song" Small="true"/>
+                            <DifficultyBubble Chart="chart" Small="true"/>
+                            <MudText Typo="Typo.body2">@chart.Song.Name</MudText>
+                        </MudStack>
+                    }
+                </MudTd>
+                <MudTd Style="text-align:right"><b>@context.Score.ToString("N0")</b></MudTd>
+                <MudTd><LetterGradeIcon Grade="PhoenixScore.From(context.Score).LetterGrade"/></MudTd>
+                <MudTd Style="text-align:right"><b>#@context.Place</b></MudTd>
+                <MudTd>
+                    @if (context.PlaceDelta is > 0)
+                    {
+                        <span class="olb-delta-up">▲@context.PlaceDelta</span>
+                    }
+                    else if (context.PlaceDelta is < 0)
+                    {
+                        <span class="olb-delta-down">▼@Math.Abs(context.PlaceDelta.Value)</span>
+                    }
+                    else if (context.PlaceDelta != null)
+                    {
+                        <span class="olb-delta-flat">—</span>
+                    }
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager/>
+            </PagerContent>
+        </MudTable>
+    </MudPaper>
+}
+
+@code {
+    [Parameter] public MixEnum Mix { get; set; }
+    [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+
+    private string _selected = string.Empty;
+    private string[] _names = Array.Empty<string>();
+    private bool _loadingProfile;
+    private OfficialPlayerProfileRecord? _profile;
+    private HistoryPoint[] _pumbilityHistory = Array.Empty<HistoryPoint>();
+    private HistoryPoint[] _rankHistory = Array.Empty<HistoryPoint>();
+
+    private readonly ApexChartOptions<HistoryPoint> _lineOptions = new()
+    {
+        Chart = new ApexCharts.Chart { Toolbar = new Toolbar { Show = false }, Background = "transparent" },
+        Theme = new Theme { Mode = Mode.Dark },
+        Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 }
+    };
+
+    private readonly ApexChartOptions<HistoryPoint> _rankOptions = new()
+    {
+        Chart = new ApexCharts.Chart { Toolbar = new Toolbar { Show = false }, Background = "transparent" },
+        Theme = new Theme { Mode = Mode.Dark },
+        Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 },
+        Yaxis = new List<YAxis> { new() { Reversed = true, DecimalsInFloat = 0 } }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _names = (await Mediator.Send(new GetOfficialPlayerNamesQuery(Mix))).ToArray();
+    }
+
+    internal async Task SelectPlayer(string username)
+    {
+        _selected = username;
+        _profile = null;
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            _pumbilityHistory = Array.Empty<HistoryPoint>();
+            _rankHistory = Array.Empty<HistoryPoint>();
+            return;
+        }
+
+        _loadingProfile = true;
+        _profile = await Mediator.Send(new GetOfficialPlayerProfileQuery(Mix, username));
+        _pumbilityHistory = _profile?.History
+                                .Where(h => h.Pumbility != null)
+                                .Select(h => new HistoryPoint(h.At.ToLocalTime().ToString("MMM d"),
+                                    h.Pumbility!.Value))
+                                .ToArray()
+                            ?? Array.Empty<HistoryPoint>();
+        _rankHistory = _profile?.History
+                           .Where(h => h.PumbilityRank != null)
+                           .Select(h => new HistoryPoint(h.At.ToLocalTime().ToString("MMM d"),
+                               h.PumbilityRank!.Value))
+                           .ToArray()
+                       ?? Array.Empty<HistoryPoint>();
+        _loadingProfile = false;
+        StateHasChanged();
+    }
+
+    private sealed record HistoryPoint(string Label, decimal Value);
+}

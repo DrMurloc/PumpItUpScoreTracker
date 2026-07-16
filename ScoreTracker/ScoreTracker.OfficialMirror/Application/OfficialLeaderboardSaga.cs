@@ -28,12 +28,6 @@ namespace ScoreTracker.OfficialMirror.Application
         IRequestHandler<ExecuteImportCommand>,
         IRequestHandler<UpdateSongImagesCommand>,
         IRequestHandler<GetGameCardsQuery, IEnumerable<GameCardRecord>>,
-        IRequestHandler<GetWorldRankingTop50Query, IEnumerable<RecordedPhoenixScore>>,
-        IRequestHandler<GetWorldRankingScoresQuery, IEnumerable<RecordedPhoenixScore>>,
-        IRequestHandler<GetUserAvatarsQuery, IEnumerable<(string Username, Uri AvatarPath)>>,
-        IRequestHandler<GetAllWorldRankingsQuery, IEnumerable<WorldRankingRecord>>,
-        IRequestHandler<GetOfficialLeaderboardUsernamesQuery, IEnumerable<string>>,
-        IRequestHandler<GetOfficialLeaderboardStatusesQuery, IEnumerable<UserOfficialLeaderboard>>,
         IRequestHandler<GetOfficialUcsEntryQuery, PiuGameUcsEntry?>,
         IRequestHandler<GetOfficialAccountDataQuery, PiuGameAccountDataImport>,
         IRequestHandler<GetPiuGameAccountIdentityQuery, Contracts.PiuGameAccountIdentity>,
@@ -41,10 +35,8 @@ namespace ScoreTracker.OfficialMirror.Application
             IEnumerable<string> nonMapped)>
     {
         private readonly IOfficialSiteClient _officialSite;
-        private readonly IOfficialLeaderboardRepository _leaderboards;
         private readonly IOfficialPlayerIdentityRepository _identity;
         private readonly ICurrentUserAccessor _currentUser;
-        private readonly IWorldRankingService _worldRankings;
         private readonly IMediator _mediator;
         private readonly IBus _bus;
         private readonly IFileUploadClient _files;
@@ -54,8 +46,6 @@ namespace ScoreTracker.OfficialMirror.Application
         private readonly IDateTimeOffsetAccessor _dateTime;
 
         public OfficialLeaderboardSaga(IOfficialSiteClient officialSite,
-            IWorldRankingService worldRankings,
-            IOfficialLeaderboardRepository leaderboards,
             IOfficialPlayerIdentityRepository identity,
             ICurrentUserAccessor currentUser,
             IMediator mediator,
@@ -66,7 +56,6 @@ namespace ScoreTracker.OfficialMirror.Application
         {
             _piuTracker = piuTracker;
             _officialSite = officialSite;
-            _leaderboards = leaderboards;
             _identity = identity;
             _currentUser = currentUser;
             _mediator = mediator;
@@ -74,47 +63,7 @@ namespace ScoreTracker.OfficialMirror.Application
             _bus = bus;
             _files = files;
             _charts = charts;
-            _worldRankings = worldRankings;
             _dateTime = dateTime;
-        }
-
-        // Read-side pass-throughs for the OfficialLeaderboards/Competition pages (rearch C39):
-        // pages dispatch via IMediator so these ports can go Mirror-internal at the extraction.
-        public async Task<IEnumerable<RecordedPhoenixScore>> Handle(GetWorldRankingTop50Query request,
-            CancellationToken cancellationToken)
-        {
-            return await _worldRankings.GetTop50(request.Mix, request.Username, request.Type, cancellationToken);
-        }
-
-        public async Task<IEnumerable<RecordedPhoenixScore>> Handle(GetWorldRankingScoresQuery request,
-            CancellationToken cancellationToken)
-        {
-            return await _worldRankings.GetAll(request.Mix, request.Username, cancellationToken);
-        }
-
-        public async Task<IEnumerable<(string Username, Uri AvatarPath)>> Handle(GetUserAvatarsQuery request,
-            CancellationToken cancellationToken)
-        {
-            return await _leaderboards.GetUserAvatars(cancellationToken);
-        }
-
-        public async Task<IEnumerable<WorldRankingRecord>> Handle(GetAllWorldRankingsQuery request,
-            CancellationToken cancellationToken)
-        {
-            return await _leaderboards.GetAllWorldRankings(request.Mix, cancellationToken);
-        }
-
-        public async Task<IEnumerable<string>> Handle(GetOfficialLeaderboardUsernamesQuery request,
-            CancellationToken cancellationToken)
-        {
-            return await _leaderboards.GetOfficialLeaderboardUsernames(request.Mix, cancellationToken);
-        }
-
-        public async Task<IEnumerable<UserOfficialLeaderboard>> Handle(GetOfficialLeaderboardStatusesQuery request,
-            CancellationToken cancellationToken)
-        {
-            return await _leaderboards.GetOfficialLeaderboardStatuses(request.Mix, request.Username,
-                cancellationToken);
         }
 
         public async Task<PiuGameUcsEntry?> Handle(GetOfficialUcsEntryQuery request,

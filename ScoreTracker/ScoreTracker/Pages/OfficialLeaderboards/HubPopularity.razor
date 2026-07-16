@@ -1,0 +1,106 @@
+@using MediatR
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@inject IMediator Mediator
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2 flex-wrap">
+    <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small">
+        <MudButton Color="@(_songsView ? Color.Default : Color.Primary)" OnClick="() => _songsView = false">
+            @L["Charts"]
+        </MudButton>
+        <MudButton Color="@(_songsView ? Color.Primary : Color.Default)" OnClick="() => _songsView = true">
+            @L["Songs"]
+        </MudButton>
+    </MudButtonGroup>
+    <MudText Typo="Typo.body2">@L["Official play ranking - trend deepens weekly as snapshots accumulate."]</MudText>
+</MudStack>
+
+@if (_loading)
+{
+    <MudSkeleton Height="400px" SkeletonType="SkeletonType.Rectangle"/>
+}
+else if (!_popularity.Any())
+{
+    <MudAlert Severity="Severity.Info">@L["No popularity snapshot yet - it lands with the weekly import."]</MudAlert>
+}
+else if (_songsView)
+{
+    <MudPaper Class="pa-2">
+        @foreach (var (song, place, previous, index) in SongRows())
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="pa-2 olb-poprow">
+                <MudText Typo="Typo.h6" Style="min-width:36px;text-align:right">@(index + 1)</MudText>
+                <SongImage Song="song" Small="true"/>
+                <MudText Typo="Typo.body1"><b>@song.Name</b></MudText>
+                <MudSpacer/>
+                <TrendArrow Current="place" Previous="previous"/>
+            </MudStack>
+        }
+    </MudPaper>
+}
+else
+{
+    <MudPaper Class="pa-2">
+        @foreach (var (record, index) in _popularity.Select((r, i) => (r, i)).Take(100))
+        {
+            var chart = Charts.TryGetValue(record.ChartId, out var c) ? c : null;
+            if (chart == null) continue;
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="pa-2 olb-poprow">
+                <MudText Typo="Typo.h6" Style="min-width:36px;text-align:right">@record.Place</MudText>
+                <SongImage Song="chart.Song" Small="true"/>
+                <DifficultyBubble Chart="chart" Small="true"/>
+                <MudText Typo="Typo.body1"><b>@chart.Song.Name</b></MudText>
+                <MudSpacer/>
+                @if (record.RecentPlaces.Count > 1)
+                {
+                    <svg class="olb-spark" width="72" height="20" viewBox="0 0 72 20">
+                        <polyline points="@SparkPoints(record.RecentPlaces)"/>
+                    </svg>
+                }
+                <TrendArrow Current="record.Place" Previous="record.PreviousPlace"/>
+            </MudStack>
+        }
+    </MudPaper>
+}
+
+@code {
+    [Parameter] public MixEnum Mix { get; set; }
+    [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+
+    private bool _loading = true;
+    private bool _songsView;
+    private IReadOnlyList<OfficialPopularityRecord> _popularity = Array.Empty<OfficialPopularityRecord>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _popularity = await Mediator.Send(new GetOfficialPopularityQuery(Mix));
+        _loading = false;
+    }
+
+    // A song ranks by its best chart's place, both this week and last.
+    private IEnumerable<(Song Song, int Place, int? Previous, int Index)> SongRows()
+    {
+        return _popularity
+            .Where(r => Charts.ContainsKey(r.ChartId))
+            .GroupBy(r => Charts[r.ChartId].Song.Name)
+            .Select(g => (Charts[g.First().ChartId].Song,
+                Place: g.Min(r => r.Place),
+                Previous: g.Any(r => r.PreviousPlace != null) ? g.Min(r => r.PreviousPlace ?? int.MaxValue) : (int?)null))
+            .OrderBy(s => s.Place)
+            .Take(100)
+            .Select((s, i) => (s.Song, s.Place, s.Previous, i));
+    }
+
+    // Places plot inverted (lower place = higher point) across a fixed 72x20 box.
+    private static string SparkPoints(IReadOnlyList<int> places)
+    {
+        var min = places.Min();
+        var max = Math.Max(places.Max(), min + 1);
+        var step = places.Count > 1 ? 64.0 / (places.Count - 1) : 0;
+        return string.Join(" ", places.Select((p, i) =>
+            $"{4 + i * step:0.#},{4 + (p - min) * 12.0 / (max - min):0.#}"));
+    }
+}

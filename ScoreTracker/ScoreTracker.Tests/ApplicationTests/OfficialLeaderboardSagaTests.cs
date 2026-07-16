@@ -442,8 +442,6 @@ public sealed class OfficialLeaderboardSagaTests
 
     private static OfficialLeaderboardSaga BuildSaga(
         Mock<IOfficialSiteClient>? officialSite = null,
-        Mock<IWorldRankingService>? worldRankings = null,
-        Mock<IOfficialLeaderboardRepository>? leaderboards = null,
         Mock<IOfficialPlayerIdentityRepository>? identity = null,
         Mock<ICurrentUserAccessor>? currentUser = null,
         Mock<IMediator>? mediator = null,
@@ -454,8 +452,6 @@ public sealed class OfficialLeaderboardSagaTests
         Mock<IDateTimeOffsetAccessor>? dateTime = null)
     {
         officialSite ??= new Mock<IOfficialSiteClient>();
-        worldRankings ??= new Mock<IWorldRankingService>();
-        leaderboards ??= new Mock<IOfficialLeaderboardRepository>();
         identity ??= new Mock<IOfficialPlayerIdentityRepository>();
         currentUser ??= new Mock<ICurrentUserAccessor>();
         mediator ??= new Mock<IMediator>();
@@ -464,8 +460,8 @@ public sealed class OfficialLeaderboardSagaTests
         files ??= new Mock<IFileUploadClient>();
         charts ??= new Mock<IChartRepository>();
         dateTime ??= FakeDateTime.At(Now);
-        return new OfficialLeaderboardSaga(officialSite.Object, worldRankings.Object,
-            leaderboards.Object, identity.Object, currentUser.Object, mediator.Object, piuTracker.Object,
+        return new OfficialLeaderboardSaga(officialSite.Object,
+            identity.Object, currentUser.Object, mediator.Object, piuTracker.Object,
             NullLogger<OfficialLeaderboardSaga>.Instance, bus.Object, files.Object, charts.Object,
             dateTime.Object);
     }

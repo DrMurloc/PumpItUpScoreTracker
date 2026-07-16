@@ -1,0 +1,127 @@
+@page "/OfficialLeaderboards"
+@page "/PlayerRankings"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services.Contracts
+@inject IMediator Mediator
+@inject IUiSettingsAccessor UiSettings
+@inject IJSRuntime Js
+@inject NavigationManager Navigation
+
+<PageTitle>@L["Official Leaderboards"]</PageTitle>
+
+<style>
+    .olb-health {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--mix-surface-muted);
+        color: var(--mix-ink-muted);
+    }
+
+    .olb-health.ok { color: var(--mix-primary); border-color: var(--mix-primary); }
+
+    .olb-health.failed { color: var(--mix-accent); border-color: var(--mix-accent); }
+
+    .olb-folder-first {
+        border: 1px solid var(--plate-pg);
+        border-radius: 10px;
+        box-shadow: 0 0 14px var(--mix-glow);
+    }
+
+    .olb-delta-up { color: var(--mix-primary); font-weight: 700; }
+
+    .olb-delta-down { color: var(--mix-accent); font-weight: 700; }
+
+    .olb-delta-flat { color: var(--mix-ink-muted); }
+
+    .olb-spark polyline {
+        fill: none;
+        stroke: var(--mix-secondary);
+        stroke-width: 1.6;
+    }
+
+    .olb-spark circle { fill: var(--mix-secondary); }
+
+    .olb-mover-lead { background: color-mix(in srgb, var(--mix-primary) 8%, transparent); border-radius: 9px; }
+</style>
+
+<MudText Typo="Typo.h4">@L["Official Leaderboards"]</MudText>
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1 flex-wrap">
+    @if (_latestRun != null && _latestRun.CompletedAt == null && _latestRun.Error != null)
+    {
+        <MudTooltip Text="@_latestRun.Error">
+            <span class="olb-health failed">⚠ @L["Last import failed"] · @_latestRun.Stage</span>
+        </MudTooltip>
+    }
+    else if (_lastImported != null)
+    {
+        <span class="olb-health ok">● @L["Import OK"]</span>
+    }
+    <MudText Typo="Typo.body2">
+        @L["Last Updated"] · @(_lastImported?.ToLocalTime().ToString("g") ?? "—")
+    </MudText>
+</MudStack>
+
+<MudTabs ActivePanelIndex="_activeTab" ActivePanelIndexChanged="OnTabChanged" Class="mt-2"
+         ApplyEffectsToContainer="true" PanelClass="pt-4">
+    <MudTabPanel Text="@L["This Week"]">
+        <HubThisWeek Mix="_mix" Charts="_charts"/>
+    </MudTabPanel>
+    <MudTabPanel Text="@L["Rankings"]">
+        <HubRankings Mix="_mix" Charts="_charts"/>
+    </MudTabPanel>
+    <MudTabPanel Text="@L["Players"]">
+        <HubPlayers Mix="_mix" Charts="_charts"/>
+    </MudTabPanel>
+    <MudTabPanel Text="@L["Popularity"]">
+        <HubPopularity Mix="_mix" Charts="_charts"/>
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    private static readonly string[] ViewKeys = { "week", "rankings", "players", "popularity" };
+
+    private MixEnum _mix = MixEnum.Phoenix2;
+    private int _activeTab;
+    private DateTimeOffset? _lastImported;
+    private ImportRunRecord? _latestRun;
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+
+    [SupplyParameterFromQuery(Name = "view")]
+    public string? View { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _mix = await UiSettings.GetSelectedMix();
+        if (_mix == MixEnum.XX) _mix = MixEnum.Phoenix;
+
+        // The retired /PlayerRankings page maps onto the Rankings view.
+        if (Navigation.Uri.Contains("/PlayerRankings", StringComparison.OrdinalIgnoreCase))
+            _activeTab = 1;
+        else if (View != null)
+            _activeTab = Math.Max(0, Array.IndexOf(ViewKeys, View.ToLowerInvariant()));
+
+        _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery(_mix));
+        _latestRun = (await Mediator.Send(new GetImportRunsQuery(_mix, 1))).FirstOrDefault();
+        _charts = (await Mediator.Send(new ScoreTracker.Catalog.Contracts.Queries.GetChartsQuery(_mix)))
+            .ToDictionary(c => c.Id);
+    }
+
+    private async Task OnTabChanged(int index)
+    {
+        _activeTab = index;
+        // replaceState keeps the view sharable without a Blazor navigation — a programmatic
+        // NavigateTo would be a full enhanced reload post-flip.
+        await Js.InvokeVoidAsync("history.replaceState", null, "",
+            Navigation.GetUriWithQueryParameter("view", ViewKeys[index]));
+    }
+}
