@@ -38,6 +38,14 @@ internal sealed class EFOfficialPlayerIdentityRepository : IOfficialPlayerIdenti
         await database.SaveChangesAsync(ct);
     }
 
+    public async Task RelinkUser(Guid fromUserId, Guid toUserId, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        await database.Set<OfficialPlayerEntity>()
+            .Where(p => p.UserId == fromUserId)
+            .ExecuteUpdateAsync(u => u.SetProperty(p => p.UserId, toUserId), ct);
+    }
+
     public async Task WriteProposals(MixEnum mix, IReadOnlyCollection<RenameProposal> proposals,
         CancellationToken ct)
     {

@@ -16,6 +16,9 @@ internal interface IOfficialPlayerIdentityRepository
     /// </summary>
     Task LinkPlayer(MixEnum mix, string username, Guid userId, DateTimeOffset seenAt, CancellationToken ct);
 
+    /// <summary>Re-points every mirror player linked to one account onto another (account merges).</summary>
+    Task RelinkUser(Guid fromUserId, Guid toUserId, CancellationToken ct);
+
     Task WriteProposals(MixEnum mix, IReadOnlyCollection<RenameProposal> proposals, CancellationToken ct);
     Task<IReadOnlyList<RenameProposal>> GetProposals(MixEnum mix, string status, CancellationToken ct);
     Task<RenameProposal?> GetProposal(int id, CancellationToken ct);

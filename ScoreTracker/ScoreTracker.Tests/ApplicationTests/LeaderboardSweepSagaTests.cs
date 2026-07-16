@@ -85,14 +85,18 @@ public sealed class LeaderboardSweepSagaTests
         snapshots.Setup(s => s.GetSealedBefore(It.IsAny<MixEnum>(), It.IsAny<int>(),
             It.IsAny<CancellationToken>())).ReturnsAsync((SnapshotRun?)null);
 
+        snapshots.Setup(s => s.GetPlayers(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<PlayerDimension>());
+
         var records = new Mock<IOfficialRecordRepository>();
         records.Setup(r => r.GetBoardRecords(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<BoardRecordRow>());
         records.Setup(r => r.GetFolderRecords(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<FolderRecordRow>());
+        var identity = new Mock<IOfficialPlayerIdentityRepository>();
         var tierLists = new Mock<ITierListRepository>();
-        var saga = new LeaderboardSweepSaga(site.Object, snapshots.Object, records.Object, tierLists.Object,
-            FakeDateTime.At(Now).Object, NullLogger<LeaderboardSweepSaga>.Instance);
+        var saga = new LeaderboardSweepSaga(site.Object, snapshots.Object, records.Object, identity.Object,
+            tierLists.Object, FakeDateTime.At(Now).Object, NullLogger<LeaderboardSweepSaga>.Instance);
         return new Fixture(site, snapshots, records, tierLists, saga);
     }
 

@@ -42,6 +42,7 @@ namespace ScoreTracker.OfficialMirror.Application
     {
         private readonly IOfficialSiteClient _officialSite;
         private readonly IOfficialLeaderboardRepository _leaderboards;
+        private readonly IOfficialPlayerIdentityRepository _identity;
         private readonly ICurrentUserAccessor _currentUser;
         private readonly IWorldRankingService _worldRankings;
         private readonly IMediator _mediator;
@@ -54,7 +55,9 @@ namespace ScoreTracker.OfficialMirror.Application
 
         public OfficialLeaderboardSaga(IOfficialSiteClient officialSite,
             IWorldRankingService worldRankings,
-            IOfficialLeaderboardRepository leaderboards, ICurrentUserAccessor currentUser,
+            IOfficialLeaderboardRepository leaderboards,
+            IOfficialPlayerIdentityRepository identity,
+            ICurrentUserAccessor currentUser,
             IMediator mediator,
             IPiuTrackerClient piuTracker,
             ILogger<OfficialLeaderboardSaga> logger,
@@ -64,6 +67,7 @@ namespace ScoreTracker.OfficialMirror.Application
             _piuTracker = piuTracker;
             _officialSite = officialSite;
             _leaderboards = leaderboards;
+            _identity = identity;
             _currentUser = currentUser;
             _mediator = mediator;
             _logger = logger;
@@ -181,6 +185,11 @@ namespace ScoreTracker.OfficialMirror.Application
                     cancellationToken);
                 return;
             }
+
+            // The import learns the account's game tag authoritatively — the strongest
+            // possible tag-to-account signal, so it always wins (most recent import takes a
+            // contested tag, per the same-tag policy).
+            await _identity.LinkPlayer(mix, accountData.AccountName, userId, _dateTime.Now, cancellationToken);
 
             if (mix == MixEnum.Phoenix2)
                 await BackfillCardAliases(userId, mix, sid, cancellationToken);

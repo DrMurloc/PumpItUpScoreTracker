@@ -224,6 +224,36 @@ public sealed class OfficialLeaderboardSagaTests
     }
 
     [Fact]
+    public async Task ImportLinksTheGameTagToTheImportingAccount()
+    {
+        // The import knows the tag authoritatively — it upserts the mirror-player link,
+        // and the most recent import wins a contested tag (the repository overwrites).
+        var f = ArrangeImport(mix: MixEnum.Phoenix2);
+        var identity = new Mock<IOfficialPlayerIdentityRepository>();
+        var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
+            piuTracker: f.PiuTracker, bus: f.Bus, identity: identity);
+
+        await saga.Handle(ImportCommand(mix: MixEnum.Phoenix2), CancellationToken.None);
+
+        identity.Verify(i => i.LinkPlayer(MixEnum.Phoenix2, "NEWTAG", ImportUserId,
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFailedLoginNeverLinksATag()
+    {
+        var f = ArrangeImport(accountName: "INVALID");
+        var identity = new Mock<IOfficialPlayerIdentityRepository>();
+        var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
+            piuTracker: f.PiuTracker, bus: f.Bus, identity: identity);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        identity.Verify(i => i.LinkPlayer(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<Guid>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task ImportUpdatesGameTagAndAvatarPreservingOtherProfileFields()
     {
         var f = ArrangeImport();
@@ -414,6 +444,7 @@ public sealed class OfficialLeaderboardSagaTests
         Mock<IOfficialSiteClient>? officialSite = null,
         Mock<IWorldRankingService>? worldRankings = null,
         Mock<IOfficialLeaderboardRepository>? leaderboards = null,
+        Mock<IOfficialPlayerIdentityRepository>? identity = null,
         Mock<ICurrentUserAccessor>? currentUser = null,
         Mock<IMediator>? mediator = null,
         Mock<IPiuTrackerClient>? piuTracker = null,
@@ -425,6 +456,7 @@ public sealed class OfficialLeaderboardSagaTests
         officialSite ??= new Mock<IOfficialSiteClient>();
         worldRankings ??= new Mock<IWorldRankingService>();
         leaderboards ??= new Mock<IOfficialLeaderboardRepository>();
+        identity ??= new Mock<IOfficialPlayerIdentityRepository>();
         currentUser ??= new Mock<ICurrentUserAccessor>();
         mediator ??= new Mock<IMediator>();
         piuTracker ??= new Mock<IPiuTrackerClient>();
@@ -433,7 +465,7 @@ public sealed class OfficialLeaderboardSagaTests
         charts ??= new Mock<IChartRepository>();
         dateTime ??= FakeDateTime.At(Now);
         return new OfficialLeaderboardSaga(officialSite.Object, worldRankings.Object,
-            leaderboards.Object, currentUser.Object, mediator.Object, piuTracker.Object,
+            leaderboards.Object, identity.Object, currentUser.Object, mediator.Object, piuTracker.Object,
             NullLogger<OfficialLeaderboardSaga>.Instance, bus.Object, files.Object, charts.Object,
             dateTime.Object);
     }

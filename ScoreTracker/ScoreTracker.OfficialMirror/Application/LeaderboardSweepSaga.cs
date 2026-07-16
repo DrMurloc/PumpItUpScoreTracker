@@ -31,17 +31,20 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     private readonly IOfficialSiteClient _officialSite;
     private readonly IOfficialSnapshotRepository _snapshots;
     private readonly IOfficialRecordRepository _records;
+    private readonly IOfficialPlayerIdentityRepository _identity;
     private readonly ITierListRepository _tierLists;
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly ILogger _logger;
 
     public LeaderboardSweepSaga(IOfficialSiteClient officialSite, IOfficialSnapshotRepository snapshots,
-        IOfficialRecordRepository records, ITierListRepository tierLists, IDateTimeOffsetAccessor dateTime,
+        IOfficialRecordRepository records, IOfficialPlayerIdentityRepository identity,
+        ITierListRepository tierLists, IDateTimeOffsetAccessor dateTime,
         ILogger<LeaderboardSweepSaga> logger)
     {
         _officialSite = officialSite;
         _snapshots = snapshots;
         _records = records;
+        _identity = identity;
         _tierLists = tierLists;
         _dateTime = dateTime;
         _logger = logger;
@@ -119,6 +122,16 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         await _records.UpsertFolderRecords(mix, result.UpdatedFolderRecords, ct);
         _logger.LogInformation("{Mix} snapshot {SnapshotId}: {Count} highlights", mix, snapshotId,
             result.Highlights.Count);
+
+        if (!input.IsBaseline && input.Previous != null)
+        {
+            var proposals = RenameProposalDetector.Detect(snapshotId,
+                await _snapshots.GetPlayers(mix, ct), input.Boards, input.Current, input.Previous);
+            await _identity.WriteProposals(mix, proposals, ct);
+            if (proposals.Count > 0)
+                _logger.LogInformation("{Mix} snapshot {SnapshotId}: {Count} rename proposals", mix, snapshotId,
+                    proposals.Count);
+        }
     }
 
     /// <summary>
