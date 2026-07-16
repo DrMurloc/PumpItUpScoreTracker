@@ -24,6 +24,14 @@ internal sealed record HighlightRow(string Kind, int SortOrder, int PlayerId, in
 internal sealed record RenameProposal(int Id, int OldPlayerId, int NewPlayerId, string OldUsername,
     string NewUsername, bool AvatarMatched, int Top50Overlap, string Status, int CreatedSnapshotId);
 
+/// <summary>A placement joined with its board's dimension — the hub read shape.</summary>
+internal sealed record PlacementDetail(int PlayerId, int LeaderboardId, string LeaderboardType, string BoardName,
+    Guid? ChartId, string? ChartType, int? Level, int Place, decimal Score);
+
+/// <summary>One row of a player's life across snapshots, sealed runs only.</summary>
+internal sealed record PlayerTimelineRow(int SnapshotId, DateTimeOffset CompletedAt, string LeaderboardType,
+    string BoardName, Guid? ChartId, int Place, decimal Score);
+
 internal static class LeaderboardTypes
 {
     public const string Rating = "Rating";

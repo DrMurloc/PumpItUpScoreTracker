@@ -45,4 +45,21 @@ internal interface IOfficialSnapshotRepository
     Task<IReadOnlyList<PlacementRow>> GetPlacements(int snapshotId, CancellationToken ct);
     Task WritePopularity(int snapshotId, IReadOnlyCollection<(Guid ChartId, int Place)> rows, CancellationToken ct);
     Task<IReadOnlyList<(Guid ChartId, int Place)>> GetPopularity(int snapshotId, CancellationToken ct);
+
+    Task<IReadOnlyList<PlayerDimension>> GetPlayersByIds(IReadOnlyCollection<int> playerIds, CancellationToken ct);
+    Task<PlayerDimension?> GetPlayerByUsername(MixEnum mix, string username, CancellationToken ct);
+    Task<IReadOnlyList<string>> GetPlayerNames(MixEnum mix, CancellationToken ct);
+
+    /// <summary>One board's rows within one snapshot, in display order.</summary>
+    Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId, int leaderboardId, CancellationToken ct);
+
+    /// <summary>Every placement in a snapshot joined with its board dimension.</summary>
+    Task<IReadOnlyList<PlacementDetail>> GetPlacementDetails(int snapshotId, CancellationToken ct);
+
+    /// <summary>A player's rows across every sealed snapshot, oldest first.</summary>
+    Task<IReadOnlyList<PlayerTimelineRow>> GetPlayerTimeline(int playerId, CancellationToken ct);
+
+    /// <summary>Popularity rows for the newest sealed snapshots, newest snapshot first.</summary>
+    Task<IReadOnlyList<(int SnapshotId, Guid ChartId, int Place)>> GetPopularityHistory(MixEnum mix,
+        int snapshots, CancellationToken ct);
 }

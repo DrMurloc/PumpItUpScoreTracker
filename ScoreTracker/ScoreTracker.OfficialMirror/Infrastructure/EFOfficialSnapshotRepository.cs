@@ -298,6 +298,102 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .Select(p => (p.ChartId, p.Place)).ToArray();
     }
 
+    public async Task<IReadOnlyList<PlayerDimension>> GetPlayersByIds(IReadOnlyCollection<int> playerIds,
+        CancellationToken ct)
+    {
+        if (playerIds.Count == 0) return Array.Empty<PlayerDimension>();
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var results = new List<PlayerDimension>(playerIds.Count);
+        foreach (var chunk in playerIds.Chunk(1000))
+        {
+            var ids = chunk;
+            results.AddRange((await database.Set<OfficialPlayerEntity>()
+                    .Where(p => ids.Contains(p.Id))
+                    .ToArrayAsync(ct))
+                .Select(ToPlayer));
+        }
+
+        return results;
+    }
+
+    public async Task<PlayerDimension?> GetPlayerByUsername(MixEnum mix, string username, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        var entity = await database.Set<OfficialPlayerEntity>()
+            .FirstOrDefaultAsync(p => p.MixId == mixId && p.Username == username, ct);
+        return entity == null ? null : ToPlayer(entity);
+    }
+
+    public async Task<IReadOnlyList<string>> GetPlayerNames(MixEnum mix, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        return await database.Set<OfficialPlayerEntity>()
+            .Where(p => p.MixId == mixId)
+            .OrderBy(p => p.Username)
+            .Select(p => p.Username)
+            .ToArrayAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId, int leaderboardId,
+        CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        return await database.Set<OfficialLeaderboardPlacementEntity>()
+            .Where(p => p.SnapshotId == snapshotId && p.LeaderboardId == leaderboardId)
+            .OrderBy(p => p.Place)
+            .Select(p => new PlacementRow(p.LeaderboardId, p.PlayerId, p.Place, p.Score))
+            .ToArrayAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<PlacementDetail>> GetPlacementDetails(int snapshotId, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        return await database.Set<OfficialLeaderboardPlacementEntity>()
+            .Where(p => p.SnapshotId == snapshotId)
+            .Join(database.Set<OfficialLeaderboardEntity>(), p => p.LeaderboardId, b => b.Id,
+                (p, b) => new PlacementDetail(p.PlayerId, p.LeaderboardId, b.LeaderboardType, b.Name, b.ChartId,
+                    b.ChartType, b.Level, p.Place, p.Score))
+            .ToArrayAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<PlayerTimelineRow>> GetPlayerTimeline(int playerId, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        return await database.Set<OfficialLeaderboardPlacementEntity>()
+            .Where(p => p.PlayerId == playerId)
+            .Join(database.Set<OfficialLeaderboardSnapshotEntity>().Where(s => s.CompletedAt != null),
+                p => p.SnapshotId, s => s.Id, (p, s) => new { p, s })
+            .Join(database.Set<OfficialLeaderboardEntity>(), ps => ps.p.LeaderboardId, b => b.Id,
+                (ps, b) => new PlayerTimelineRow(ps.p.SnapshotId, ps.s.CompletedAt!.Value, b.LeaderboardType,
+                    b.Name, b.ChartId, ps.p.Place, ps.p.Score))
+            .OrderBy(r => r.CompletedAt)
+            .ToArrayAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<(int SnapshotId, Guid ChartId, int Place)>> GetPopularityHistory(MixEnum mix,
+        int snapshots, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        var snapshotIds = await database.Set<OfficialLeaderboardSnapshotEntity>()
+            .Where(s => s.MixId == mixId && s.CompletedAt != null)
+            .OrderByDescending(s => s.CompletedAt)
+            .Take(snapshots)
+            .Select(s => s.Id)
+            .ToArrayAsync(ct);
+        var ordering = snapshotIds.Select((id, index) => (id, index))
+            .ToDictionary(x => x.id, x => x.index);
+        return (await database.Set<OfficialChartPopularityEntity>()
+                .Where(p => snapshotIds.Contains(p.SnapshotId))
+                .Select(p => new { p.SnapshotId, p.ChartId, p.Place })
+                .ToArrayAsync(ct))
+            .OrderBy(p => ordering[p.SnapshotId])
+            .Select(p => (p.SnapshotId, p.ChartId, p.Place))
+            .ToArray();
+    }
+
     private static SnapshotRun ToRun(OfficialLeaderboardSnapshotEntity entity)
     {
         return new SnapshotRun(entity.Id, entity.StartedAt, entity.CompletedAt, entity.IsBaseline, entity.Stage,
