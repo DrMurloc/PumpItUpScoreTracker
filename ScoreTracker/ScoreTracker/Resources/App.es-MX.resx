@@ -121,10 +121,10 @@
     <value>(Opcional) Borrar también los datos históricos</value>
   </data>
   <data name="1+ Level Easier" xml:space="preserve">
-    <value>1+ Nivel más fácil</value>
+    <value>1+ nivel más fácil</value>
   </data>
   <data name="1+ Level Harder" xml:space="preserve">
-    <value>1+ Nivel más difícil</value>
+    <value>1+ nivel más difícil</value>
   </data>
   <data name="100% (or everyone with a PG)" xml:space="preserve">
     <value>100% (o todos con un PG)</value>
@@ -163,7 +163,7 @@
     <value>Agregar jugador</value>
   </data>
   <data name="Add to Favorites" xml:space="preserve">
-    <value>Agregar a Favoritos</value>
+    <value>Agregar a favoritos</value>
   </data>
   <data name="Add to ToDo" xml:space="preserve">
     <value>Agregar a Cosas que hacer</value>
@@ -271,7 +271,7 @@
     <value>BPM</value>
   </data>
   <data name="Broken" xml:space="preserve">
-    <value>Rota</value>
+    <value>Roto</value>
   </data>
   <data name="Broken scores get a multiplier of X" xml:space="preserve">
     <value>Los puntajes rotos reciben un multiplicador de {0}</value>
@@ -343,7 +343,7 @@
     <value>Estadísticas del chart</value>
   </data>
   <data name="Chart Type" xml:space="preserve">
-    <value>Tipo de Charts</value>
+    <value>Tipo de charts</value>
   </data>
   <data name="Chart Update" xml:space="preserve">
     <value>Actualización de chart</value>
@@ -631,7 +631,7 @@
     <value>Ocultar chart para esta categoría</value>
   </data>
   <data name="Hide Completed Charts" xml:space="preserve">
-    <value>Esconder charts completos</value>
+    <value>Ocultar charts completos</value>
   </data>
   <data name="Hide Record-less Charts" xml:space="preserve">
     <value>Ocultar charts sin record</value>
@@ -772,13 +772,13 @@
     <value>Bloquear establecerá el nombre de usuario de este usuario en su GameTag.</value>
   </data>
   <data name="Log In With" xml:space="preserve">
-    <value>Entrar con {0}</value>
+    <value>Iniciar sesión con {0}</value>
   </data>
   <data name="Login" xml:space="preserve">
-    <value>Entrar sesión</value>
+    <value>Iniciar sesión</value>
   </data>
   <data name="Logout" xml:space="preserve">
-    <value>Salir sesión</value>
+    <value>Cerrar sesión</value>
   </data>
   <data name="Machine Name" xml:space="preserve">
     <value>Nombre de la máquina</value>
@@ -898,7 +898,7 @@
     <value>Nuevo nombre de usuario</value>
   </data>
   <data name="Next Letter" xml:space="preserve">
-    <value>Siguiente Letra</value>
+    <value>Siguiente letra</value>
   </data>
   <data name="No one has passed this CoOp yet so no level is assigned." xml:space="preserve">
     <value>Nadie ha pasado este CoOp aún, así que no se le asigna nivel.</value>
@@ -913,7 +913,7 @@
     <value>No clasificado</value>
   </data>
   <data name="Not Passed Count" xml:space="preserve">
-    <value>Conteo de No Pasados</value>
+    <value>Conteo de no pasados</value>
   </data>
   <data name="Not Relevant to Category" xml:space="preserve">
     <value>No relevante para la categoría</value>
@@ -988,7 +988,7 @@
     <value>Pasado</value>
   </data>
   <data name="Passed Count" xml:space="preserve">
-    <value>Conteo de Pasados</value>
+    <value>Conteo de pasados</value>
   </data>
   <data name="Passes" xml:space="preserve">
     <value>Pases</value>
@@ -1240,7 +1240,7 @@
     <value>Guardar puntajes</value>
   </data>
   <data name="Saved Charts" xml:space="preserve">
-    <value>Guardar Charts</value>
+    <value>Charts guardados</value>
   </data>
   <data name="Saved!" xml:space="preserve">
     <value>¡Guardado!</value>
@@ -1417,7 +1417,7 @@
     <value>Duración de canción</value>
   </data>
   <data name="Song Image" xml:space="preserve">
-    <value>Imágen de canción</value>
+    <value>Imagen de canción</value>
   </data>
   <data name="Song Name" xml:space="preserve">
     <value>Nombre de canción</value>
@@ -1714,7 +1714,7 @@
     <value>Subir imagen</value>
   </data>
   <data name="Upload Scores" xml:space="preserve">
-    <value>Subir Puntajes</value>
+    <value>Subir puntajes</value>
   </data>
   <data name="Upload XX Scores" xml:space="preserve">
     <value>Subir puntajes de XX</value>
@@ -1762,7 +1762,7 @@
     <value>Vida visible</value>
   </data>
   <data name="Vote Count" xml:space="preserve">
-    <value>{0} Conteo de votos</value>
+    <value>{0} votos</value>
   </data>
   <data name="Website" xml:space="preserve">
     <value>Sitio web</value>

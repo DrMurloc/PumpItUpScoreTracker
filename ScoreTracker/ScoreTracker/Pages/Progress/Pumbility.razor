@@ -62,7 +62,7 @@
                     </MudCardContent>
                     <MudCardActions>
                         <MudSpacer></MudSpacer>
-                        <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
+                        <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowChartDetails(chart))"></MudIconButton>
                     </MudCardActions>
                 </MudCard>
             </MudItem>
@@ -165,7 +165,7 @@
                 </MudCardContent>
                 <MudCardActions>
                     <MudSpacer></MudSpacer>
-                    <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => VideoDisplayer.ShowVideo(chart.Id))"></MudIconButton>
+                    <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowChartDetails(chart))"></MudIconButton>
                 </MudCardActions>
             </MudCard>
         </MudItem>
@@ -173,16 +173,25 @@
 </MudGrid>
 
 
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"></ChartDetailsDialog>
+
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
-@inject ChartVideoDisplayer VideoDisplayer;
 @inject IUiSettingsAccessor UiSettings;
 @code {
 
     // PUMBILITY is a Phoenix-lineage stat — XX viewers keep seeing Phoenix, as before.
     private MixEnum _currentMix = MixEnum.Phoenix;
+
+    private void ShowChartDetails(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private Chart? _detailsChart;
+    private bool _detailsOpen;
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, int> _ratings = new Dictionary<Guid, int>();
     private IDictionary<TierListCategory, IEnumerable<Guid>> _tierList = new Dictionary<TierListCategory, IEnumerable<Guid>>();

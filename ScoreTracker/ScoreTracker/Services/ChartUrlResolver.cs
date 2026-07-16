@@ -36,20 +36,31 @@ public sealed class ChartUrlResolver
     }
 
     /// <summary>
+    ///     The chart a GUID names: the preferred mix's copy when it exists there, else the
+    ///     newest mix carrying it — the same order the canonical path resolves in.
+    /// </summary>
+    public async Task<Chart?> FindChart(Guid chartId, MixEnum preferredMix,
+        CancellationToken cancellationToken)
+    {
+        var chart = await FindInMix(preferredMix, chartId, cancellationToken);
+        if (chart == null)
+            foreach (var mix in NewestFirst)
+            {
+                if (mix == preferredMix) continue;
+                chart = await FindInMix(mix, chartId, cancellationToken);
+                if (chart != null) break;
+            }
+
+        return chart;
+    }
+
+    /// <summary>
     ///     The canonical path the GUID permalink 301s to. Null only for unknown charts.
     /// </summary>
     public async Task<string?> CanonicalPathFor(Guid chartId, MixEnum defaultMix,
         CancellationToken cancellationToken)
     {
-        var chart = await FindChart(defaultMix, chartId, cancellationToken);
-        if (chart == null)
-            foreach (var mix in NewestFirst)
-            {
-                if (mix == defaultMix) continue;
-                chart = await FindChart(mix, chartId, cancellationToken);
-                if (chart != null) break;
-            }
-
+        var chart = await FindChart(chartId, defaultMix, cancellationToken);
         return chart == null ? null : ChartSlugs.CanonicalPath(chart);
     }
 
@@ -71,7 +82,7 @@ public sealed class ChartUrlResolver
         return canonical == null ? null : new ChartUrlResolution(match.Id, canonical);
     }
 
-    private async Task<Chart?> FindChart(MixEnum mix, Guid chartId, CancellationToken cancellationToken)
+    private async Task<Chart?> FindInMix(MixEnum mix, Guid chartId, CancellationToken cancellationToken)
     {
         return (await Charts(mix, cancellationToken)).FirstOrDefault(c => c.Id == chartId);
     }

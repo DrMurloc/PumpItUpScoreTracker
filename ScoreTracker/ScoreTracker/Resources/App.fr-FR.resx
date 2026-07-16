@@ -189,7 +189,7 @@
     <value>CoOp</value>
   </data>
   <data name="CoOp Aggregation" xml:space="preserve">
-    <value>Aggregation des CoOps</value>
+    <value>Agrégation des CoOp</value>
   </data>
   <data name="Copy Script" xml:space="preserve">
     <value>Copier le Script</value>
@@ -204,7 +204,7 @@
     <value>Doubles</value>
   </data>
   <data name="Download Failures" xml:space="preserve">
-    <value>Echecs de téléchargement</value>
+    <value>Échecs de téléchargement</value>
   </data>
   <data name="Download Scores" xml:space="preserve">
     <value>Télécharger les scores</value>
@@ -219,7 +219,7 @@
     <value>Favoris</value>
   </data>
   <data name="Full Privacy Policy" xml:space="preserve">
-    <value>Politique de Confidentialité Complète</value>
+    <value>Politique de confidentialité complète</value>
   </data>
   <data name="Hard" xml:space="preserve">
     <value>Difficile</value>
@@ -265,10 +265,10 @@
     <value>Rendre public</value>
   </data>
   <data name="Make Public Disclaimer 1" xml:space="preserve">
-    <value>Rendre votre compte public rendra vos scores et progression accessibles au public. Vous serez également ajouté de la communauté Monde.</value>
+    <value>Rendre votre compte public rendra vos scores et progression accessibles au public. Vous serez également ajouté à la communauté Monde.</value>
   </data>
   <data name="Make Public Disclaimer 2" xml:space="preserve">
-    <value>Si votre compte était prédcédemment public et que vous l'avez passé en privé, le passer à nouveau en public permettra à nouveau à vos followers de consulter votre progression.</value>
+    <value>Si votre compte était précédemment public et que vous l'avez passé en privé, le passer à nouveau en public permettra à nouveau à vos followers de consulter votre progression.</value>
   </data>
   <data name="Medium" xml:space="preserve">
     <value>Moyen</value>
@@ -277,10 +277,10 @@
     <value>Mix</value>
   </data>
   <data name="My Score" xml:space="preserve">
-    <value>Mon Score</value>
+    <value>Mon score</value>
   </data>
   <data name="Next Letter" xml:space="preserve">
-    <value>Prochaine Lettre</value>
+    <value>Prochaine lettre</value>
   </data>
   <data name="Not Graded Count" xml:space="preserve">
     <value>Non Gradé</value>
@@ -298,7 +298,7 @@
     <value>Ouvrir Vidéo</value>
   </data>
   <data name="Parse Failures" xml:space="preserve">
-    <value>Echecs d'analyse des données</value>
+    <value>Échecs d'analyse des données</value>
   </data>
   <data name="Passed Count" xml:space="preserve">
     <value>Passed</value>
@@ -340,16 +340,16 @@
     <value>Date d'enregistrement</value>
   </data>
   <data name="Recorded On" xml:space="preserve">
-    <value>Enregistré Le {0}</value>
-    <comment>par exemple, Enregistré Le 12/6/2023 (pas de support de format locaux pour le moment)</comment>
+    <value>Enregistré le {0}</value>
+    <comment>par exemple, Enregistré le 12/6/2023 (pas de support de format locaux pour le moment)</comment>
   </data>
   <data name="Remaining Charts" xml:space="preserve">
-    <value>{0} (SSS+) - {1} (AA) Charts Restants</value>
-    <comment>par exemple : 6 (SSS+) - 10 (AA) Charts Restants</comment>
+    <value>{0} (SSS+) - {1} (AA) Charts Restantes</value>
+    <comment>par exemple : 6 (SSS+) - 10 (AA) Charts Restantes</comment>
   </data>
   <data name="Remaining Charts For You" xml:space="preserve">
-    <value>{0} Charts Restants pour Vous</value>
-    <comment>par exemple : 8 Charts Restants pour Vousu</comment>
+    <value>{0} Charts Restantes pour Vous</value>
+    <comment>par exemple : 8 Charts Restantes pour Vous</comment>
   </data>
   <data name="Remove from ToDo" xml:space="preserve">
     <value>Enlever de la ToDo List</value>
@@ -367,7 +367,7 @@
     <value>Sauvegarder les Scores</value>
   </data>
   <data name="Saved Charts" xml:space="preserve">
-    <value>Charts Sauvegardées</value>
+    <value>Charts sauvegardées</value>
   </data>
   <data name="Score" xml:space="preserve">
     <value>Score</value>
@@ -380,23 +380,23 @@
     <comment>par exemple : Perte de Score liée aux Goods</comment>
   </data>
   <data name="Score Loss Note" xml:space="preserve">
-    <value>NB : la perte de scopre peut être incorrecte de 1 à 4 points à cause de l'arrondi</value>
+    <value>NB : la perte de score peut être incorrecte de 1 à 4 points à cause de l'arrondi</value>
   </data>
   <data name="Score Range Shoutout" xml:space="preserve">
     <value>Shout out à daryen pour la collecte de données et la finalisation des intervalles de scores pour les lettres de Rang !</value>
   </data>
   <data name="Score State" xml:space="preserve">
-    <value>Statut du Score</value>
+    <value>Statut du score</value>
     <comment>Statuts du Score = Passed, Unpassed, Unscored</comment>
   </data>
   <data name="Scores Parsed" xml:space="preserve">
     <value>Scores Analysés</value>
   </data>
   <data name="Show Only ToDo Charts" xml:space="preserve">
-    <value>Afficher Seulement les Charts ToDo</value>
+    <value>Montrer seulement les Charts ToDo</value>
   </data>
   <data name="Show Score Distribution" xml:space="preserve">
-    <value>Afficher la Distribution des Scores</value>
+    <value>Montrer la distribution des scores</value>
   </data>
   <data name="Singles" xml:space="preserve">
     <value>Singles</value>
@@ -411,7 +411,7 @@
     <value>Nom de la chanson</value>
   </data>
   <data name="Song Type" xml:space="preserve">
-    <value>Type de Chanson</value>
+    <value>Type de chanson</value>
     <comment>Types de Chanson = Arcade, Full Song, etc.</comment>
   </data>
   <data name="Tier Lists" xml:space="preserve">
@@ -440,10 +440,10 @@
     <comment>par exemple, voius avez 19 charts de niveau 24 dans votre ToDo list que vous n'avez pas Pass</comment>
   </data>
   <data name="Upload Scores" xml:space="preserve">
-    <value>Télécharger Scores</value>
+    <value>Téléverser les scores</value>
   </data>
   <data name="Upload XX Scores" xml:space="preserve">
-    <value>Télécharger Scores XX</value>
+    <value>Téléverser les scores XX</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Utilisé principalement pour déboguer</value>
@@ -468,8 +468,8 @@
     <comment>Photos</comment>
   </data>
   <data name="Qualifiers Leaderboard" xml:space="preserve">
-    <value>{0} Leaderboard de Qualification</value>
-    <comment>Leaderboard de Qualification</comment>
+    <value>{0} Leaderboard de qualifications</value>
+    <comment>Leaderboard de qualifications</comment>
   </data>
   <data name="Place" xml:space="preserve">
     <value>Place</value>
@@ -511,10 +511,10 @@
     <value>Rating Max</value>
   </data>
   <data name="Qualifier Submit Phrase 1" xml:space="preserve">
-    <value>Vous n'avez pas besoin d'être identifié pour utilsier cet outil. Entrez un nom d'utilisateur pour commencer à envoyer</value>
+    <value>Vous n'avez pas besoin d'être identifié pour utiliser cet outil. Entrez un nom d'utilisateur pour commencer à envoyer</value>
   </data>
   <data name="Qualifier Submit Phrase 2" xml:space="preserve">
-    <value>C'est votre premier envoi !  Assurez vous que votre nom d'utilisateur est identifiable depuis Discord ou Start.GG</value>
+    <value>C'est votre premier envoi ! Assurez-vous que votre nom d'utilisateur est identifiable depuis Discord ou Start.GG</value>
   </data>
   <data name="Qualifiers Submission" xml:space="preserve">
     <value>{0} envois pour qualifications</value>
@@ -526,7 +526,7 @@
     <value>Chanson</value>
   </data>
   <data name="Song Artist" xml:space="preserve">
-    <value>Song Artist</value>
+    <value>Artiste de la chanson</value>
   </data>
   <data name="Submission Page" xml:space="preserve">
     <value>Page d'envoi</value>
@@ -621,10 +621,6 @@
 	  <value>Nombre de Notes</value>
 	  <comment>Nombre de Notes</comment>
   </data>
-  <data name="Pass (Avec Données)" xml:space="preserve">
-	  <value>Pass (Avec Données)</value>
-	  <comment>Pass (Avec Données)</comment>
-  </data>
   <data name="Score (Data Backed)" xml:space="preserve">
 	  <value>Score (Avec Données)</value>
 	  <comment>Score (Avec Données)</comment>
@@ -638,8 +634,8 @@
 	  <comment>Nombre de Joueurs</comment>
   </data>
   <data name="Difficulty Categorization" xml:space="preserve">
-	  <value>Catégorisation par Difficulté</value>
-	  <comment>Catégorisation par Difficulté</comment>
+	  <value>Catégorisation par difficulté</value>
+	  <comment>Catégorisation par difficulté</comment>
   </data>
   <data name="Scoring Level" xml:space="preserve">
 	  <value>Niveau de Score</value>
@@ -1473,7 +1469,7 @@
     <comment>Titre de page sur /Tournament/{id}/Admin. {0} = nom du tournoi.</comment>
   </data>
   <data name="Sync Qualifier Leaderboard" xml:space="preserve">
-    <value>Synchroniser le Leaderboard de qualification</value>
+    <value>Synchroniser le Leaderboard de qualifications</value>
   </data>
   <data name="New Player Name" xml:space="preserve">
     <value>Nom du nouveau joueur</value>

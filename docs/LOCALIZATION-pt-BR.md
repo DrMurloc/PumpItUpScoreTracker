@@ -54,7 +54,6 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Very Easy / Very Hard | Muito fácil / Muito difícil | |
 | Video | Vídeo | |
 | Age | Idade | |
-| Days Old | dias de idade | lowercase — used as suffix to a number ("42 dias de idade"). |
 | Filters | Filtros | |
 | Settings | Configurações | |
 | All | Todos | Plural masculine. (When the underlying noun is feminine, use `Todas`; pick per key context.) |
@@ -84,7 +83,7 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | CoOp | CoOp | Untranslated. "CoOp Aggregation" → "Agregação de CoOp". |
 | Singles / Doubles | Singles / Doubles | Untranslated. |
 | Difficulty Level | Nível de dificuldade | |
-| Letter Grade | Letras de nota | Min/Max forms use singular: "Min Letter Grade" → "Letra de nota mín.", "Max Letter Grade" → "Letra de nota máx." Old/New variants: "Old Letter Grade" → "Letra de nota antiga", "New Letter Grade" → "Letra de nota nova". |
+| Letter Grade | Letras de nota | Min/Max forms use singular: "Min Letter Grade" → "Letra de nota mín.", "Max Letter Grade" → "Letra de nota máx." Old/New pairs gender-agree: `antiga` / `nova` with `Letra`. |
 | Letter-grade tier names (As, Ss, SSs, SSSs) | As, Ss, SSs, SSSs | **Untranslated**. Column-header labels for letter-grade counts ("how many A grades, how many S grades, …"). PIU jargon. |
 | Mix | Versão | "Mix" → "Versão". XX, Phoenix proper names stay untranslated. |
 | Phoenix | Phoenix | Game version proper name. Untranslated. |
@@ -141,7 +140,7 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Plates (plural) | Plates | **Untranslated**, plural form. "Plate Breakdown" → "Detalhamento de plates"; "Plate Distribution" → "Distribuição de plates". |
 | Welcome (greeting) | Bem-vindo | Masculine default for the bare greeting. |
 | Tournament / Campeonato (singular) | Campeonato | "Active Tournaments" → "Campeonatos ativos"; "Previous/Upcoming Tournaments" → "Campeonatos anteriores/próximos". |
-| Qualifiers | qualifiers | **Untranslated**, lowercase. Brazilian tournament community uses both `qualifiers` and `qualificatórias`; we keep the loanword. E.g. "Qualifiers Leaderboard" → "Classificação dos qualifiers". |
+| Qualifiers | qualifiers | **Untranslated**, lowercase. Brazilian tournament community uses both `qualifiers` and `qualificatórias`; we keep the loanword. E.g. "{0} Qualifiers Leaderboard" → "Classificação dos qualifiers de {0}" (`{0}` = tournament name — don't drop the placeholder). |
 | Brackets (tournament) | Chaves | **Translated**. Standard pt-BR for tournament brackets. "{0} Brackets" → "{0} Chaves". |
 | Seed (tournament seeding) | Seed | **Untranslated**. Tournament jargon, common loanword. |
 | Stamina | stamina | **Untranslated**. Brazilian PIU community usage. E.g. "Stamina Session Builder" → "Construtor de sessão de stamina". |

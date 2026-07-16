@@ -20,6 +20,7 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
 {
     private readonly E2EAppFixture _fixture;
     private HttpClient _client = null!;
+    private Guid _chartId;
 
     public NonComponentEndpointTests(E2EAppFixture fixture)
     {
@@ -29,7 +30,7 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _fixture.ResetDatabaseAsync();
-        await _fixture.Seed.SeedPhoenixChartAsync("Conflict", 20, "Single");
+        _chartId = await _fixture.Seed.SeedPhoenixChartAsync("Conflict", 20, "Single");
         _client = new HttpClient { BaseAddress = new Uri(_fixture.BaseUrl) };
     }
 
@@ -100,6 +101,38 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadAsStringAsync();
         Assert.Contains("Sitemap: https://piuscores.arroweclip.se/sitemap.xml", body);
+    }
+
+    /// <summary>
+    ///     The chart head is the SEO payoff: a crawler runs no circuit, so the chart's name,
+    ///     description and jacket must be in the raw HTML the server returns — this reads the
+    ///     document exactly as a crawler does, no browser.
+    /// </summary>
+    [Fact]
+    public async Task TheChartPageServesItsHeadWithoutACircuit()
+    {
+        var response = await _client.GetAsync($"/Chart/{_chartId}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("<title>Conflict S20</title>", body);
+        Assert.Contains("name=\"description\"", body);
+        Assert.Contains("property=\"og:image\"", body);
+    }
+
+    /// <summary>
+    ///     Routes the head resolver doesn't know keep the bare site title and gain no meta —
+    ///     a shared description on every URL would read as sitewide duplicate content.
+    /// </summary>
+    [Fact]
+    public async Task UnmatchedRoutesFallBackToTheSiteTitle()
+    {
+        var response = await _client.GetAsync("/TierLists");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("<title>PIU Scores</title>", body);
+        Assert.DoesNotContain("property=\"og:image\"", body);
     }
 
     /// <summary>

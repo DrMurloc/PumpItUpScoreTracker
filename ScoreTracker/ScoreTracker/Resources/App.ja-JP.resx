@@ -149,7 +149,7 @@
     <value>お気に入りを追加</value>
   </data>
   <data name="Add to ToDo" xml:space="preserve">
-    <value>やりことリストを追加</value>
+    <value>やることリストを追加</value>
   </data>
   <data name="Average" xml:space="preserve">
     <value>平均</value>
@@ -161,7 +161,7 @@
     <value>キャンセル</value>
   </data>
   <data name="Chart List Share Description" xml:space="preserve">
-    <value>この譜面リストをシェアー</value>
+    <value>この譜面リストをシェア</value>
   </data>
   <data name="Chart Randomizer" xml:space="preserve">
     <value>譜面くじ引き（抽選機）</value>
@@ -189,7 +189,7 @@
     <value>CoOp</value>
   </data>
   <data name="CoOp Aggregation" xml:space="preserve">
-    <value>CoOp集合</value>
+    <value>CoOp集計</value>
   </data>
   <data name="Copy Script" xml:space="preserve">
     <value>コピー</value>
@@ -268,13 +268,13 @@
     <value>公開すれば自分のスコアと進化が誰度も見えるようになります。世界ランキングを追加されます。</value>
   </data>
   <data name="Make Public Disclaimer 2" xml:space="preserve">
-    <value>公開すれば、まえのフォローしてる友達も見えるようになります。</value>
+    <value>公開すれば、以前のフォローしてる友達も見えるようになります。</value>
   </data>
   <data name="Medium" xml:space="preserve">
     <value>中</value>
   </data>
   <data name="Mix" xml:space="preserve">
-    <value>ベーション</value>
+    <value>バージョン</value>
   </data>
   <data name="My Score" xml:space="preserve">
     <value>自己スコア</value>
@@ -289,7 +289,7 @@
     <value>未クリア数</value>
   </data>
   <data name="Official Leaderboard Search" xml:space="preserve">
-    <value>公開ランキング捜索</value>
+    <value>公開ランキング検索</value>
   </data>
   <data name="Official Scores" xml:space="preserve">
     <value>公開スコア</value>
@@ -340,7 +340,7 @@
     <value>記録日</value>
   </data>
   <data name="Recorded On" xml:space="preserve">
-    <value>{0}にき記録した</value>
+    <value>{0}に記録した</value>
     
   <comment>例：12/6/2023に記録した。日本の日付の局在化は未完成です。🙇</comment></data>
   <data name="Remaining Charts" xml:space="preserve">
@@ -352,7 +352,7 @@
     
   <comment>例：８譜面残り（推測）</comment></data>
   <data name="Remove from ToDo" xml:space="preserve">
-    <value>やりことリストから解除</value>
+    <value>やることリストから解除</value>
   </data>
   <data name="Report Video" xml:space="preserve">
     <value>ビデオを報告</value>
@@ -424,10 +424,10 @@
     <value>タイトル</value>
   </data>
   <data name="To Do" xml:space="preserve">
-    <value>やりこと</value>
+    <value>やること</value>
   </data>
   <data name="Tools" xml:space="preserve">
-    <value>ツルー</value>
+    <value>ツール</value>
   </data>
   <data name="Total Count" xml:space="preserve">
     <value>総計</value>
@@ -436,9 +436,9 @@
     <value>大会</value>
   </data>
   <data name="Unpassed ToDos" xml:space="preserve">
-    <value>やりことリストの中のレベレ{1}で譜面まだ{0}曲が残してる（クリアしてない）</value>
+    <value>やることリストの中のレベル{1}で譜面まだ{0}曲が残してる（クリアしてない）</value>
     
-  <comment>例：レベレ２４の中でまだ９譜面が残してる</comment></data>
+  <comment>例：レベル２４の中でまだ９譜面が残してる</comment></data>
   <data name="Upload Scores" xml:space="preserve">
     <value>スコア更新</value>
   </data>
@@ -449,7 +449,7 @@
     <value>デバッグ用</value>
   </data>
   <data name="Username" xml:space="preserve">
-    <value>ユーザ名</value>
+    <value>ユーザー名</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
     <value>とても簡単</value>
@@ -511,10 +511,10 @@
     <value>最高評定</value>
   </data>
   <data name="Qualifier Submit Phrase 1" xml:space="preserve">
-    <value>このツルーはログイン必要ありません。登録前、ユーザ名を入力お願いします。</value>
+    <value>このツールはログイン必要ありません。登録前、ユーザー名を入力お願いします。</value>
   </data>
   <data name="Qualifier Submit Phrase 2" xml:space="preserve">
-    <value>初めての登録！ユーザ名はdiscordとかstart.ggで同じく確認してください</value>
+    <value>初めての登録！ユーザー名はdiscordとかstart.ggで同じく確認してください</value>
   </data>
   <data name="Qualifiers Submission" xml:space="preserve">
     <value>{0}資格の登録</value>
@@ -554,11 +554,11 @@
     
   <comment>文字示す</comment></data>
   <data name="Open" xml:space="preserve">
-	  <value>Open</value>
+	  <value>開く</value>
 	  
   <comment>開く</comment></data>
   <data name="Country" xml:space="preserve">
-	  <value>Country</value>
+	  <value>国</value>
 	  
   <comment>国</comment></data>
   <data name="Avatar" xml:space="preserve">
@@ -626,7 +626,7 @@
 	  
   <comment>Pass (Data Backed)</comment></data>
   <data name="Score (Data Backed)" xml:space="preserve">
-	  <value>スコア(データあり)</value>
+	  <value>スコア（データあり）</value>
 	  
   <comment>Score (Data Backed)</comment></data>
   <data name="Popularity (PIU Game Leaderboard)" xml:space="preserve">
@@ -1003,7 +1003,7 @@
 	  
   </data>
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
-	  <value>一部のスコアダウンロードが失敗しまいました。失敗なCSVファイルはダウンロードして編集しても一回アップロード可能です。</value>
+	  <value>一部のスコアダウンロードが失敗しました。失敗したCSVファイルはダウンロードして編集して、もう一回アップロード可能です。</value>
   </data>
   <data name="All charts you uploaded were successfully updated!" xml:space="preserve">
 	  <value>アップロードした譜面全部更新出来ました！</value>
@@ -1850,10 +1850,10 @@
 	  <value>このカテゴリーで譜面を隠す</value>
   </data>
   <data name="Added to ToDo List!" xml:space="preserve">
-	  <value>やりことリストに追加しました！</value>
+	  <value>やることリストに追加しました！</value>
   </data>
   <data name="Removed from ToDo List!" xml:space="preserve">
-	  <value>やりことリストから削除しました！</value>
+	  <value>やることリストから削除しました！</value>
   </data>
   <data name="Chart Details" xml:space="preserve">
 	  <value>譜面詳細</value>
@@ -1897,7 +1897,7 @@
 	  <value>ユーザー検索（名前またはユーザーID）</value>
   </data>
   <data name="Current Username" xml:space="preserve">
-	  <value>現在のユーザ名</value>
+	  <value>現在のユーザー名</value>
   </data>
   <data name="Lock Status" xml:space="preserve">
 	  <value>ロック状態</value>
@@ -1909,10 +1909,10 @@
 	  <value>ロック解除済</value>
   </data>
   <data name="Lock User" xml:space="preserve">
-	  <value>ユーザロック</value>
+	  <value>ユーザーロック</value>
   </data>
   <data name="Unlock User" xml:space="preserve">
-	  <value>ユーザロック解除</value>
+	  <value>ユーザーロック解除</value>
   </data>
   <data name="User locked" xml:space="preserve">
 	  <value>ユーザーをロックしました</value>
@@ -1927,7 +1927,7 @@
 	  <value>このユーザーにはGameTagがありません。ロック前にユーザー名を割り当ててください。</value>
   </data>
   <data name="New Username" xml:space="preserve">
-	  <value>新ユーザ名</value>
+	  <value>新ユーザー名</value>
   </data>
   <data name="Your account is content-locked. Message an admin if you have questions." xml:space="preserve">
 	  <value>アカウントはコンテンツロック中です。質問があれば管理者へご連絡ください。</value>

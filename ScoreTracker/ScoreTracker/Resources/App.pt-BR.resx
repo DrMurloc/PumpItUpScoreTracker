@@ -465,9 +465,6 @@
   <data name="BPM" xml:space="preserve">
     <value>BPM</value>
   </data>
-  <data name="Days Old" xml:space="preserve">
-    <value>dias de idade</value>
-  </data>
   <data name="Difficulty Categorization" xml:space="preserve">
     <value>Categorização de dificuldade</value>
   </data>
@@ -621,12 +618,6 @@
   <data name="My Relative Difficulty" xml:space="preserve">
     <value>Minha dificuldade relativa</value>
   </data>
-  <data name="New Letter Grade" xml:space="preserve">
-    <value>Letra de nota nova</value>
-  </data>
-  <data name="Old Letter Grade" xml:space="preserve">
-    <value>Letra de nota antiga</value>
-  </data>
   <data name="Overall Letters" xml:space="preserve">
     <value>Letras gerais</value>
   </data>
@@ -750,17 +741,8 @@
   <data name="Last Updated" xml:space="preserve">
     <value>Última atualização</value>
   </data>
-  <data name="Leaderboard Name" xml:space="preserve">
-    <value>Nome da classificação</value>
-  </data>
   <data name="Level/Players" xml:space="preserve">
     <value>Nível/Jogadores</value>
-  </data>
-  <data name="Maximum Level" xml:space="preserve">
-    <value>Nível máximo</value>
-  </data>
-  <data name="Minimum Level" xml:space="preserve">
-    <value>Nível mínimo</value>
   </data>
   <data name="Minutes" xml:space="preserve">
     <value>Minutos</value>
@@ -783,9 +765,6 @@
   <data name="Seconds" xml:space="preserve">
     <value>Segundos</value>
   </data>
-  <data name="Show Regional Guests" xml:space="preserve">
-    <value>Mostrar convidados regionais</value>
-  </data>
   <data name="Update Chart" xml:space="preserve">
     <value>Atualizar chart</value>
   </data>
@@ -806,9 +785,6 @@
   </data>
   <data name="Added" xml:space="preserve">
     <value>Adicionado</value>
-  </data>
-  <data name="Arrows Pressed" xml:space="preserve">
-    <value>Setas pressionadas</value>
   </data>
   <data name="Bads vs Misses Observations" xml:space="preserve">
     <value>Observações: Bads vs Misses</value>
@@ -884,12 +860,6 @@
   </data>
   <data name="Removed" xml:space="preserve">
     <value>Removido</value>
-  </data>
-  <data name="Saved Settings" xml:space="preserve">
-    <value>Configurações salvas</value>
-  </data>
-  <data name="Settings Name" xml:space="preserve">
-    <value>Nome das configurações</value>
   </data>
   <data name="Source" xml:space="preserve">
     <value>Fonte</value>
@@ -1173,9 +1143,6 @@
   <data name="Bad Suggestion" xml:space="preserve">
     <value>Sugestão ruim</value>
   </data>
-  <data name="Change Card" xml:space="preserve">
-    <value>Trocar cartão</value>
-  </data>
   <data name="Chart Details" xml:space="preserve">
     <value>Detalhes do chart</value>
   </data>
@@ -1212,9 +1179,6 @@
   <data name="From" xml:space="preserve">
     <value>De</value>
   </data>
-  <data name="Game Card" xml:space="preserve">
-    <value>Cartão do jogo</value>
-  </data>
   <data name="Good Suggestion" xml:space="preserve">
     <value>Boa sugestão</value>
   </data>
@@ -1229,9 +1193,6 @@
   </data>
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
     <value>Só quero ocultar este chart</value>
-  </data>
-  <data name="Include Broken Scores" xml:space="preserve">
-    <value>Incluir pontuações quebradas</value>
   </data>
   <data name="IsBroken" xml:space="preserve">
     <value>Quebrada</value>
@@ -1395,9 +1356,6 @@
   <data name="Add Player" xml:space="preserve">
     <value>Adicionar jogador</value>
   </data>
-  <data name="Add Scores" xml:space="preserve">
-    <value>Adicionar pontuações</value>
-  </data>
   <data name="Always" xml:space="preserve">
     <value>Sempre</value>
   </data>
@@ -1412,12 +1370,6 @@
   </data>
   <data name="Broken scores get a multiplier of X" xml:space="preserve">
     <value>Pontuações quebradas recebem um multiplicador de {0}</value>
-  </data>
-  <data name="Chart Types" xml:space="preserve">
-    <value>Tipos de chart</value>
-  </data>
-  <data name="Check Your Best Pumbility Charts" xml:space="preserve">
-    <value>Verifique seus melhores charts de Pumbility</value>
   </data>
   <data name="Discord Id" xml:space="preserve">
     <value>ID do Discord</value>
@@ -1440,9 +1392,6 @@
   <data name="Is Warmup" xml:space="preserve">
     <value>Aquecimento</value>
   </data>
-  <data name="Letter Grades" xml:space="preserve">
-    <value>Letras de nota</value>
-  </data>
   <data name="Link" xml:space="preserve">
     <value>Link</value>
   </data>
@@ -1463,9 +1412,6 @@
   </data>
   <data name="Notes" xml:space="preserve">
     <value>Notas</value>
-  </data>
-  <data name="Password" xml:space="preserve">
-    <value>Senha</value>
   </data>
   <data name="Pending" xml:space="preserve">
     <value>Pendente</value>
@@ -1510,10 +1456,10 @@
     <value>Este é seu primeiro envio! Certifique-se de que seu nome de usuário seja identificável via Discord ou Start.GG.</value>
   </data>
   <data name="Qualifiers Leaderboard" xml:space="preserve">
-    <value>Classificação dos qualifiers</value>
+    <value>Classificação dos qualifiers de {0}</value>
   </data>
   <data name="Qualifiers Submission" xml:space="preserve">
-    <value>Envio dos qualifiers</value>
+    <value>Envio dos qualifiers de {0}</value>
   </data>
   <data name="Repeated charts X allowed." xml:space="preserve">
     <value>Charts repetidos {0} permitidos.</value>
@@ -1523,9 +1469,6 @@
   </data>
   <data name="Seed" xml:space="preserve">
     <value>Seed</value>
-  </data>
-  <data name="Song Types" xml:space="preserve">
-    <value>Tipos de música</value>
   </data>
   <data name="Songs will have score adjusted based on song length (treating 2 minutes as baseline)" xml:space="preserve">
     <value>As músicas terão a pontuação ajustada com base na duração da música (considerando 2 minutos como base)</value>
@@ -1580,9 +1523,6 @@
   </data>
   <data name="Average PPS" xml:space="preserve">
     <value>PPS médio</value>
-  </data>
-  <data name="Average Score" xml:space="preserve">
-    <value>Pontuação média</value>
   </data>
   <data name="Best Score" xml:space="preserve">
     <value>Melhor pontuação</value>
