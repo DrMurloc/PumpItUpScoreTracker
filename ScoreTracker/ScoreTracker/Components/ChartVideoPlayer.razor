@@ -1,5 +1,6 @@
 @using MediatR
 @using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @namespace ScoreTracker.Web.Components
 @inject IMediator Mediator
@@ -40,19 +41,28 @@
 </div>
 
 @code {
+    // Serializable parameters only: a Chart record can't cross into an island (it faults the
+    // circuit), so the island takes the id and loads its own chart — the design's self-loading
+    // island contract (docs/design/chart-details-overhaul.md).
     [Parameter]
-    public Chart? Chart { get; set; }
+    public Guid ChartId { get; set; }
 
+    [Parameter]
+    public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    private Chart? Chart { get; set; }
     private string? _videoUrl;
     private bool _playing;
     private Guid _loadedFor;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Chart == null || Chart.Id == _loadedFor) return;
-        _loadedFor = Chart.Id;
+        if (ChartId == _loadedFor) return;
+        _loadedFor = ChartId;
+        Chart = (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: new[] { ChartId }))).FirstOrDefault();
+        if (Chart == null) return;
         _playing = false;
-        _videoUrl = (await Mediator.Send(new GetChartVideosQuery(new[] { Chart.Id })))
+        _videoUrl = (await Mediator.Send(new GetChartVideosQuery(new[] { ChartId })))
             .FirstOrDefault()?.VideoUrl.ToString();
     }
 }

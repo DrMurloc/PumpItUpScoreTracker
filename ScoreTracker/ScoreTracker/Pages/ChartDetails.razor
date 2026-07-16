@@ -34,8 +34,8 @@
            key values only, so two keyed siblings sharing a chart id collide even when
            they are different component types. *@
         <div class="chart-hero-jacket-col">
-            <ChartVideoPlayer @rendermode="RenderModes.Interactive" Chart="_chart" @key="(_chart.Id, nameof(ChartVideoPlayer))"></ChartVideoPlayer>
-            <ChartRecordPanel @rendermode="RenderModes.Interactive" Chart="_chart" Mix="_mix" @key="(_chart.Id, nameof(ChartRecordPanel))"></ChartRecordPanel>
+            <ChartVideoPlayer @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_mix" @key="(_chart.Id, nameof(ChartVideoPlayer))"></ChartVideoPlayer>
+            <ChartRecordPanel @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_mix" @key="(_chart.Id, nameof(ChartRecordPanel))"></ChartRecordPanel>
         </div>
         <div class="chart-hero-id">
             <h1 class="chart-hero-title">@_chart.Song.Name</h1>
@@ -94,7 +94,7 @@
         <div class="chart-section-head">
             <MudText Typo="Typo.h5">@L["Chart Stats"]</MudText>
         </div>
-        <ChartEvidenceSection @rendermode="RenderModes.Interactive" Chart="_chart" Mix="_mix" Facets="_facets" @key="_chart.Id"></ChartEvidenceSection>
+        <ChartEvidenceSection @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_mix" @key="_chart.Id"></ChartEvidenceSection>
     </section>
 
     @if (_skillChips.Any() || _analysis != null)
@@ -135,7 +135,7 @@
         <div class="chart-section-head">
             <MudText Typo="Typo.h5">@L["Leaderboard"]</MudText>
         </div>
-        <ChartLeaderboardSection @rendermode="RenderModes.Interactive" Chart="_chart" Mix="_mix" @key="_chart.Id"></ChartLeaderboardSection>
+        <ChartLeaderboardSection @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_mix" @key="_chart.Id"></ChartLeaderboardSection>
     </section>
 
     <section class="chart-section">
