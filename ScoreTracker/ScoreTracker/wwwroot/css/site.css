@@ -4909,7 +4909,8 @@ button.chart-card-art {
 
 .nf-judgment {
     position: relative;
-    margin-top: clamp(-64px, -7.5vw, -34px); /* slams over the frame's lower edge */
+    /* Only the MISS's top ~20% rides over the frame — any deeper covers the title text. */
+    margin-top: clamp(-26px, -3vw, -12px);
     text-align: center;
     pointer-events: none;
 }
