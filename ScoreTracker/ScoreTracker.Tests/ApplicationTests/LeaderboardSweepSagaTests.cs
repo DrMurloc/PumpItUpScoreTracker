@@ -78,7 +78,18 @@ public sealed class LeaderboardSweepSagaTests
                     .Select(p => knownPlayers[p.Username]).ToArray();
             });
 
+        snapshots.Setup(s => s.GetBoards(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<BoardDimension>());
+        snapshots.Setup(s => s.GetPlacements(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<PlacementRow>());
+        snapshots.Setup(s => s.GetSealedBefore(It.IsAny<MixEnum>(), It.IsAny<int>(),
+            It.IsAny<CancellationToken>())).ReturnsAsync((SnapshotRun?)null);
+
         var records = new Mock<IOfficialRecordRepository>();
+        records.Setup(r => r.GetBoardRecords(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<BoardRecordRow>());
+        records.Setup(r => r.GetFolderRecords(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<FolderRecordRow>());
         var tierLists = new Mock<ITierListRepository>();
         var saga = new LeaderboardSweepSaga(site.Object, snapshots.Object, records.Object, tierLists.Object,
             FakeDateTime.At(Now).Object, NullLogger<LeaderboardSweepSaga>.Instance);

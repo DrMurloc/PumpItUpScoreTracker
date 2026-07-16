@@ -22,6 +22,7 @@ namespace ScoreTracker.OfficialMirror.Application;
 ///     carrying the stage and error while the site keeps serving the last sealed snapshot.
 /// </summary>
 internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCommand>,
+    IConsumer<RebuildWeeklyHighlightsCommand>,
     IRequestHandler<GetLastLeaderboardImportTimestampQuery, DateTimeOffset?>
 {
     private static readonly TimeSpan UnsealedPurgeAge = TimeSpan.FromDays(7);
@@ -71,7 +72,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         var snapshotId = await _snapshots.CreateRun(mix, isBaseline, now, ct);
         try
         {
-            await RunSweep(snapshotId, mix, ct);
+            await RunSweep(snapshotId, mix, isBaseline, ct);
         }
         catch (Exception e)
         {
@@ -81,7 +82,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         }
     }
 
-    private async Task RunSweep(int snapshotId, MixEnum mix, CancellationToken ct)
+    private async Task RunSweep(int snapshotId, MixEnum mix, bool isBaseline, CancellationToken ct)
     {
         var players = new SweepPlayerCache(_snapshots, mix, _dateTime.Now);
 
@@ -96,12 +97,60 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         await _snapshots.UpdateProgress(snapshotId, "TierLists", 0, 0, 0, ct);
         await PopulateOfficialScoresTierList(mix, chartScores, ct);
 
-        // Highlights (movers, firsts, record books) land in the next stage slot — the
-        // stage marker exists so a run that dies here reads unambiguously.
         await _snapshots.UpdateProgress(snapshotId, "Highlights", 0, 0, 0, ct);
+        await ComputeHighlights(snapshotId, mix, isBaseline, ct);
 
         await _snapshots.Seal(snapshotId, _dateTime.Now, ct);
         _logger.LogInformation("{Mix} snapshot {SnapshotId} sealed", mix, snapshotId);
+    }
+
+    private async Task ComputeHighlights(int snapshotId, MixEnum mix, bool isBaseline, CancellationToken ct)
+    {
+        var previous = await _snapshots.GetSealedBefore(mix, snapshotId, ct);
+        var input = new HighlightsInput(snapshotId, isBaseline,
+            await _snapshots.GetBoards(mix, ct),
+            await _snapshots.GetPlacements(snapshotId, ct),
+            previous == null ? null : await _snapshots.GetPlacements(previous.Id, ct),
+            await _records.GetBoardRecords(mix, ct),
+            await _records.GetFolderRecords(mix, ct));
+        var result = HighlightsCalculator.Calculate(input);
+        await _records.WriteHighlights(snapshotId, mix, result.Highlights, ct);
+        await _records.UpsertBoardRecords(result.UpdatedBoardRecords, ct);
+        await _records.UpsertFolderRecords(mix, result.UpdatedFolderRecords, ct);
+        _logger.LogInformation("{Mix} snapshot {SnapshotId}: {Count} highlights", mix, snapshotId,
+            result.Highlights.Count);
+    }
+
+    /// <summary>
+    ///     Replays every sealed snapshot in order against reset record books — the admin
+    ///     press for a highlight-rule change. The first replayed snapshot always runs
+    ///     baseline-silent (there is nothing to diff against), matching the live path.
+    /// </summary>
+    public async Task Consume(ConsumeContext<RebuildWeeklyHighlightsCommand> context)
+    {
+        var mix = context.Message.Mix;
+        var ct = context.CancellationToken;
+        await _records.DeleteHighlights(mix, ct);
+        await _records.ResetRecords(mix, ct);
+
+        var runs = await _snapshots.GetSealedAscending(mix, ct);
+        var boards = await _snapshots.GetBoards(mix, ct);
+        IReadOnlyList<PlacementRow>? previous = null;
+        var isFirst = true;
+        foreach (var run in runs)
+        {
+            var current = await _snapshots.GetPlacements(run.Id, ct);
+            var input = new HighlightsInput(run.Id, isFirst || run.IsBaseline, boards, current, previous,
+                await _records.GetBoardRecords(mix, ct), await _records.GetFolderRecords(mix, ct));
+            var result = HighlightsCalculator.Calculate(input);
+            await _records.WriteHighlights(run.Id, mix, result.Highlights, ct);
+            await _records.UpsertBoardRecords(result.UpdatedBoardRecords, ct);
+            await _records.UpsertFolderRecords(mix, result.UpdatedFolderRecords, ct);
+            previous = current;
+            isFirst = false;
+        }
+
+        _logger.LogInformation("{Mix} weekly highlights rebuilt across {Count} snapshots", mix, runs.Count);
     }
 
     private async Task SweepRatingBoards(int snapshotId, MixEnum mix, SweepPlayerCache players,
