@@ -4410,4 +4410,7 @@
   <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
     <value>対極は対象範囲全体から選ばれるため、範囲指定は適用されません</value>
   </data>
+  <data name="Search" xml:space="preserve">
+    <value>検索</value>
+  </data>
 </root>

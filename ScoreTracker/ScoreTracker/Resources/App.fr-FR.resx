@@ -4407,4 +4407,7 @@
   <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
     <value>L'opposé est choisi parmi tout ce qui est à portée, les plages ne s'y appliquent donc pas</value>
   </data>
+  <data name="Search" xml:space="preserve">
+    <value>Chercher</value>
+  </data>
 </root>
