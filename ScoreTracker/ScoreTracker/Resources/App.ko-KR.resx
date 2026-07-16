@@ -4296,4 +4296,55 @@
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>각 스킬이 나오는 채보 구간 비율</value>
   </data>
+  <data name="Hot Streak" xml:space="preserve">
+    <value>핫 스트릭</value>
+  </data>
+  <data name="Suggested · Hot Streak" xml:space="preserve">
+    <value>추천 · 핫 스트릭</value>
+  </data>
+  <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
+    <value>최근 동급 플레이어를 압도한 플레이와 비슷한 채보.</value>
+  </data>
+  <data name="More like {0} · you beat {1}% of Peers" xml:space="preserve">
+    <value>{0} 같은 채보 · 동급 플레이어의 {1}%를 이겼습니다</value>
+  </data>
+  <data name="More like {0}" xml:space="preserve">
+    <value>{0} 같은 채보</value>
+  </data>
+  <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
+    <value>아직 조건에 맞는 활약이 없습니다. 한계를 밀어붙여 추천을 받아보세요!</value>
+  </data>
+  <data name="Standout bar" xml:space="preserve">
+    <value>스탠드아웃 기준</value>
+  </data>
+  <data name="Count a chart when you beat this % of Peers on it." xml:space="preserve">
+    <value>동급 플레이어 중 이 비율(%)을 이긴 채보만 집계합니다.</value>
+  </data>
+  <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
+    <value>기준 해제 — 경쟁 레벨을 올린 모든 플레이가 집계됩니다.</value>
+  </data>
+  <data name="Look back" xml:space="preserve">
+    <value>조회 기간</value>
+  </data>
+  <data name="Last 30 days" xml:space="preserve">
+    <value>최근 30일</value>
+  </data>
+  <data name="Last 90 days" xml:space="preserve">
+    <value>최근 90일</value>
+  </data>
+  <data name="Last year" xml:space="preserve">
+    <value>최근 1년</value>
+  </data>
+  <data name="All time" xml:space="preserve">
+    <value>전체 기간</value>
+  </data>
+  <data name="Treat very old scores as unplayed" xml:space="preserve">
+    <value>아주 오래된 기록은 미플레이로 간주</value>
+  </data>
+  <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
+    <value>몇 년 전에 클리어한 뒤 다시 하지 않은 채보는 새로운 영역으로 취급합니다.</value>
+  </data>
+  <data name="Group by seed chart" xml:space="preserve">
+    <value>기준 채보별로 묶기</value>
+  </data>
 </root>

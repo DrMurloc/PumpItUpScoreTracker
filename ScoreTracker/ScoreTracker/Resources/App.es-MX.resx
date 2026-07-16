@@ -4295,4 +4295,55 @@
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>Proporción de secciones del chart con cada habilidad</value>
   </data>
+  <data name="Hot Streak" xml:space="preserve">
+    <value>En racha</value>
+  </data>
+  <data name="Suggested · Hot Streak" xml:space="preserve">
+    <value>Sugeridos · En racha</value>
+  </data>
+  <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
+    <value>Más charts como los que arrasaste hace poco frente a tus pares.</value>
+  </data>
+  <data name="More like {0} · you beat {1}% of Peers" xml:space="preserve">
+    <value>Más como {0} · venciste al {1}% de tus pares</value>
+  </data>
+  <data name="More like {0}" xml:space="preserve">
+    <value>Más como {0}</value>
+  </data>
+  <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
+    <value>Aún no hay actuaciones destacadas que cuenten, ¡échale ganas para empezar a recibir sugerencias!</value>
+  </data>
+  <data name="Standout bar" xml:space="preserve">
+    <value>Umbral de destaque</value>
+  </data>
+  <data name="Count a chart when you beat this % of Peers on it." xml:space="preserve">
+    <value>Cuenta un chart cuando vences a este % de tus pares en él.</value>
+  </data>
+  <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
+    <value>Sin umbral: cuenta cualquier partida que haya subido tu nivel competitivo.</value>
+  </data>
+  <data name="Look back" xml:space="preserve">
+    <value>Periodo</value>
+  </data>
+  <data name="Last 30 days" xml:space="preserve">
+    <value>Últimos 30 días</value>
+  </data>
+  <data name="Last 90 days" xml:space="preserve">
+    <value>Últimos 90 días</value>
+  </data>
+  <data name="Last year" xml:space="preserve">
+    <value>Último año</value>
+  </data>
+  <data name="All time" xml:space="preserve">
+    <value>Todo el historial</value>
+  </data>
+  <data name="Treat very old scores as unplayed" xml:space="preserve">
+    <value>Tratar puntuaciones muy viejas como no jugadas</value>
+  </data>
+  <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
+    <value>Un chart que pasaste hace años y nunca volviste a tocar cuenta como territorio nuevo.</value>
+  </data>
+  <data name="Group by seed chart" xml:space="preserve">
+    <value>Agrupar por chart de origen</value>
+  </data>
 </root>

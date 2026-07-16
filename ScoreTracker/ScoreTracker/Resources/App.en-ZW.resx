@@ -4338,4 +4338,55 @@
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>Shrgre of chart sectrgns featrgring each skrgll</value>
   </data>
+  <data name="Hot Streak" xml:space="preserve">
+    <value>Hot Mrgl Streak</value>
+  </data>
+  <data name="Suggested · Hot Streak" xml:space="preserve">
+    <value>Suggested · Hot Mrgl Streak</value>
+  </data>
+  <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
+    <value>More charts like the recent plays you mrgl'd hardest, mrglglgl.</value>
+  </data>
+  <data name="More like {0} · you beat {1}% of Peers" xml:space="preserve">
+    <value>More like {0} · you beat {1}% of mrgl Peers</value>
+  </data>
+  <data name="More like {0}" xml:space="preserve">
+    <value>More mrgl like {0}</value>
+  </data>
+  <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
+    <value>No matching mrgl standouts yet, go push yourself, mrglglgl!</value>
+  </data>
+  <data name="Standout bar" xml:space="preserve">
+    <value>Standout mrgl bar</value>
+  </data>
+  <data name="Count a chart when you beat this % of Peers on it." xml:space="preserve">
+    <value>Count a chart when you beat this % of mrgl Peers on it.</value>
+  </data>
+  <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
+    <value>Bar off — any play that raised your mrgl competitive level counts.</value>
+  </data>
+  <data name="Look back" xml:space="preserve">
+    <value>Look mrgl back</value>
+  </data>
+  <data name="Last 30 days" xml:space="preserve">
+    <value>Last 30 mrgl days</value>
+  </data>
+  <data name="Last 90 days" xml:space="preserve">
+    <value>Last 90 mrgl days</value>
+  </data>
+  <data name="Last year" xml:space="preserve">
+    <value>Last mrgl year</value>
+  </data>
+  <data name="All time" xml:space="preserve">
+    <value>All mrgl time</value>
+  </data>
+  <data name="Treat very old scores as unplayed" xml:space="preserve">
+    <value>Treat very old mrgl scores as unplayed</value>
+  </data>
+  <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
+    <value>A chart you passed years ago and never mrgl'd again counts as new territory.</value>
+  </data>
+  <data name="Group by seed chart" xml:space="preserve">
+    <value>Group by mrgl seed chart</value>
+  </data>
 </root>

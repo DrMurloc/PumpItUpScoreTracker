@@ -4416,4 +4416,55 @@
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>各スキルが登場するチャートセクションの割合</value>
   </data>
+  <data name="Hot Streak" xml:space="preserve">
+    <value>絶好調</value>
+  </data>
+  <data name="Suggested · Hot Streak" xml:space="preserve">
+    <value>おすすめ · 絶好調</value>
+  </data>
+  <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
+    <value>最近同レベル帯を圧倒したプレイに似た譜面。</value>
+  </data>
+  <data name="More like {0} · you beat {1}% of Peers" xml:space="preserve">
+    <value>{0} に似た譜面 · 同レベル帯の{1}%に勝利</value>
+  </data>
+  <data name="More like {0}" xml:space="preserve">
+    <value>{0} に似た譜面</value>
+  </data>
+  <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
+    <value>まだ該当する好プレイがありません。自分を追い込んで、おすすめをもらいましょう！</value>
+  </data>
+  <data name="Standout bar" xml:space="preserve">
+    <value>基準ライン</value>
+  </data>
+  <data name="Count a chart when you beat this % of Peers on it." xml:space="preserve">
+    <value>同レベル帯のこの割合（%）に勝った譜面だけを数えます。</value>
+  </data>
+  <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
+    <value>基準オフ — コンペティティブレベルを上げたプレイはすべて対象です。</value>
+  </data>
+  <data name="Look back" xml:space="preserve">
+    <value>対象期間</value>
+  </data>
+  <data name="Last 30 days" xml:space="preserve">
+    <value>過去30日</value>
+  </data>
+  <data name="Last 90 days" xml:space="preserve">
+    <value>過去90日</value>
+  </data>
+  <data name="Last year" xml:space="preserve">
+    <value>過去1年</value>
+  </data>
+  <data name="All time" xml:space="preserve">
+    <value>全期間</value>
+  </data>
+  <data name="Treat very old scores as unplayed" xml:space="preserve">
+    <value>非常に古いスコアは未プレイ扱いにする</value>
+  </data>
+  <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
+    <value>何年も前にクリアしたきり触れていない譜面は、新しい挑戦として扱います。</value>
+  </data>
+  <data name="Group by seed chart" xml:space="preserve">
+    <value>元譜面ごとにまとめる</value>
+  </data>
 </root>
