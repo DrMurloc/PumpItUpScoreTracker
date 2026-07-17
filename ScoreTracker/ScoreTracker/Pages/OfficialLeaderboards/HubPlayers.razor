@@ -177,6 +177,11 @@ else
     [Parameter] public MixEnum Mix { get; set; }
     [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
 
+    // Two-way selection: the hub preselects (Boards links, ?player= deep links) and hears
+    // every change back, so the choice survives the tab being disposed and re-created.
+    [Parameter] public string? Selected { get; set; }
+    [Parameter] public EventCallback<string> SelectedChanged { get; set; }
+
     private string _selected = string.Empty;
     private string[] _names = Array.Empty<string>();
     private bool _loadingProfile;
@@ -204,10 +209,17 @@ else
         _names = (await Mediator.Send(new GetOfficialPlayerNamesQuery(Mix))).ToArray();
     }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(Selected) && Selected != _selected)
+            await SelectPlayer(Selected);
+    }
+
     internal async Task SelectPlayer(string username)
     {
         _selected = username;
         _profile = null;
+        await SelectedChanged.InvokeAsync(username);
         if (string.IsNullOrWhiteSpace(username))
         {
             _pumbilityHistory = Array.Empty<HistoryPoint>();

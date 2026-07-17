@@ -161,7 +161,7 @@ internal sealed class LeaderboardHubSaga :
         var playerStats = stats.ByPlayer.TryGetValue(playerId, out var s) ? s : null;
         return new OfficialRankingRecord(rank, previousRank,
             new OfficialPlayerRecord(playerId, string.Empty, null, null), rating,
-            playerStats?.BoardsFor(type) ?? 0, playerStats?.NumberOnes ?? 0, playerStats?.PlayerType);
+            playerStats?.BoardsFor(type) ?? 0, playerStats?.PlayerType);
     }
 
     private static Dictionary<int, int> ComputedRanks(SnapshotStats stats, string type)
@@ -418,7 +418,7 @@ internal sealed class LeaderboardHubSaga :
 
     // ── snapshot-scoped stats ────────────────────────────────────────────────
 
-    private sealed record PlayerSnapshotStats(int PlayerId, int BoardsInTop, int NumberOnes, int RatingAll,
+    private sealed record PlayerSnapshotStats(int PlayerId, int BoardsInTop, int RatingAll,
         int RatingSingles, int RatingDoubles, int RatingCoOp, int BoardsCoOp, RecapPlayerType? PlayerType,
         IReadOnlyDictionary<Guid, int> ChartRatings)
     {
@@ -502,7 +502,6 @@ internal sealed class LeaderboardHubSaga :
             // co-op estimate scale never competes with real PUMBILITY contributions.
             byPlayer[playerId] = new PlayerSnapshotStats(playerId,
                 contributions.Length,
-                contributions.Count(x => x.Detail.Place == 1),
                 top50.Sum(x => x.Rating), singles, doubles,
                 coop.OrderByDescending(x => x.Rating).Take(50).Sum(x => x.Rating),
                 coop.Length,

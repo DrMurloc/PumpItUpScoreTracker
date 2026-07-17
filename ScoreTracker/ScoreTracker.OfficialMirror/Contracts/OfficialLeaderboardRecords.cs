@@ -38,7 +38,7 @@ public sealed record OfficialRankingsRecord(DateTimeOffset? SnapshotAt, bool Rat
 
 [ExcludeFromCodeCoverage]
 public sealed record OfficialRankingRecord(int Rank, int? PreviousRank, OfficialPlayerRecord Player,
-    decimal Rating, int BoardsInTop, int NumberOnes, RecapPlayerType? PlayerType);
+    decimal Rating, int BoardsInTop, RecapPlayerType? PlayerType);
 
 [ExcludeFromCodeCoverage]
 public sealed record OfficialPlayerProfileRecord(

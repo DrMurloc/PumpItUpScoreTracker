@@ -121,9 +121,9 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         _mediator.Setup(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new OfficialRankingsRecord(Week2, true, new[]
             {
-                new OfficialRankingRecord(1, 2, Player(1, "STARFORGE", linked: true), 19412.88m, 241, 38,
+                new OfficialRankingRecord(1, 2, Player(1, "STARFORGE", linked: true), 19412.88m, 241,
                     RecapPlayerType.Perfectionist),
-                new OfficialRankingRecord(2, 1, Player(2, "MIRAGE"), 19205.13m, 228, 31,
+                new OfficialRankingRecord(2, 1, Player(2, "MIRAGE"), 19205.13m, 228,
                     RecapPlayerType.Competitive)
             }));
 
@@ -142,13 +142,32 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         _mediator.Setup(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new OfficialRankingsRecord(Week2, false, new[]
             {
-                new OfficialRankingRecord(1, null, Player(), 123456m, 100, 5, null)
+                new OfficialRankingRecord(1, null, Player(), 123456m, 100, null)
             }));
 
         var cut = RenderComponent<HubRankings>(p => p.Add(x => x.Mix, MixEnum.Phoenix));
 
         Assert.Contains("computed rating", cut.Markup);
         Assert.Contains("123,456", cut.Markup);
+    }
+
+    [Fact]
+    public void RankingsBoardsCountLinksIntoThePlayersView()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialRankingsRecord(Week2, true, new[]
+            {
+                new OfficialRankingRecord(1, null, Player(1, "STARFORGE"), 19412.88m, 241,
+                    null)
+            }));
+        var shown = string.Empty;
+        var cut = RenderComponent<HubRankings>(p => p
+            .Add(x => x.Mix, MixEnum.Phoenix2)
+            .Add(x => x.OnShowPlayer, (string username) => shown = username));
+
+        cut.FindAll("a").First(a => a.TextContent.Trim() == "241").Click();
+
+        Assert.Equal("STARFORGE", shown);
     }
 
     // ── Popularity ───────────────────────────────────────────────────────────
@@ -200,6 +219,33 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
 
         // One row for the song, ranked by its best chart (the D21 at place 2).
         Assert.Single(cut.FindAll(".olb-poprow"));
+    }
+
+    [Fact]
+    public void PopularityFolderFilterNarrowsTheBoardAndClearsBack()
+    {
+        var s20 = MakeChart("Papasito", ChartType.Single, 20);
+        var d24 = MakeChart("Witch Doctor", ChartType.Double, 24);
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialPopularityQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new OfficialPopularityRecord(s20.Id, 1, 1, new[] { 1 }),
+                new OfficialPopularityRecord(d24.Id, 2, 2, new[] { 2 })
+            });
+        var cut = RenderComponent<HubPopularity>(p => p
+            .Add(x => x.Mix, MixEnum.Phoenix2)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [s20.Id] = s20, [d24.Id] = d24 }));
+        Assert.Equal(2, cut.FindAll(".olb-poprow").Count);
+
+        cut.InvokeAsync(() => cut.Instance.SetFolder((ChartType.Single, 20)));
+
+        Assert.Single(cut.FindAll(".olb-poprow"));
+        Assert.Contains("Papasito", cut.Markup);
+        Assert.DoesNotContain("Witch Doctor", cut.Markup);
+
+        cut.InvokeAsync(() => cut.Instance.ClearFolder());
+
+        Assert.Equal(2, cut.FindAll(".olb-poprow").Count);
     }
 
     // ── Players ──────────────────────────────────────────────────────────────

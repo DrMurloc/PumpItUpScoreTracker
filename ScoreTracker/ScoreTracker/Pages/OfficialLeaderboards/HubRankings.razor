@@ -56,7 +56,6 @@ else
             <MudTh>@L["Player"]</MudTh>
             <MudTh Style="text-align:right">@(_rankings.RatingIsOfficial ? "PUMBILITY" : L["Rating"])</MudTh>
             <MudTh Style="text-align:right">@L["Boards"]</MudTh>
-            <MudTh Style="text-align:right">#1s</MudTh>
             <MudTh>@L["Type"]</MudTh>
             <MudTh></MudTh>
         </HeaderContent>
@@ -79,8 +78,12 @@ else
             </MudTd>
             <MudTd><HubPlayerChip Player="context.Player" Dense="true"/></MudTd>
             <MudTd Style="text-align:right"><b>@context.Rating.ToString(_rankings.RatingIsOfficial ? "N2" : "N0")</b></MudTd>
-            <MudTd Style="text-align:right">@context.BoardsInTop</MudTd>
-            <MudTd Style="text-align:right">@context.NumberOnes</MudTd>
+            <MudTd Style="text-align:right">
+                <MudLink title="@L["See their boards"]" Style="cursor:pointer"
+                         OnClick="() => OnShowPlayer.InvokeAsync(context.Player.Username)">
+                    @context.BoardsInTop
+                </MudLink>
+            </MudTd>
             <MudTd>
                 @if (context.PlayerType != null)
                 {
@@ -99,7 +102,7 @@ else
         <ChildRowContent>
             @if (_expanded == context.Player.Username)
             {
-                <td colspan="7">
+                <td colspan="6">
                     @if (_expandedProfile == null)
                     {
                         <MudSkeleton Height="120px" SkeletonType="SkeletonType.Rectangle"/>
@@ -150,6 +153,10 @@ else
 @code {
     [Parameter] public MixEnum Mix { get; set; }
     [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+
+    // Raised by the Boards link — the hub answers by switching to the Players view
+    // with that player selected.
+    [Parameter] public EventCallback<string> OnShowPlayer { get; set; }
 
     private bool _loading = true;
     private string _type = "All";

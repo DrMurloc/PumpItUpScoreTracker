@@ -158,7 +158,6 @@ public sealed class LeaderboardHubSagaTests
         Assert.Equal("PLAYER11", top.Player.Username);
         Assert.Equal(19412.88m, top.Rating);
         Assert.Equal(2, top.BoardsInTop);
-        Assert.Equal(1, top.NumberOnes);
     }
 
     [Fact]
