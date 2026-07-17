@@ -465,6 +465,13 @@ Google's first indexed chart page exposed how a result actually *reads* ("263Sco
   `og:site_name` on `/` / `/Welcome` / `/Login`: the documented signal for showing
   "PIU Scores" instead of the bare domain above results. Site names for subdomains are
   supported but slow to take — after this markup, the lever is patience, not more markup.
+- **Front-door title + snippet hygiene** — the title (and og:title) gained the searchable
+  descriptor: `PIU Scores — Pump It Up score tracker & tier lists`, one localized key ×9
+  (each locale reuses its own established phrasing from the hero keys; the `WebSite`
+  JSON-LD `name` stays the bare brand — that's the site-name signal). `data-nosnippet`
+  covers the sign-in column and the showcase cards' illustrative numbers (fused spans like
+  "Moonlight998,404" were snippet-eligible), leaving the hero pitch, card blurbs, and the
+  live stat band as what a result quotes.
 
 ### Open owner decisions
 

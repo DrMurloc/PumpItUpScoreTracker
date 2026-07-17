@@ -154,7 +154,8 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
     /// <summary>
     ///     The front door carries the site-name signals: WebSite JSON-LD plus og:site_name
     ///     on the root is what lets a search result say "PIU Scores" instead of the bare
-    ///     domain.
+    ///     domain. Its title carries the searchable descriptor, and data-nosnippet keeps
+    ///     the sign-in buttons and mocked-up card numbers out of search snippets.
     /// </summary>
     [Fact]
     public async Task TheFrontDoorNamesTheSiteForSearchEngines()
@@ -163,9 +164,14 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadAsStringAsync();
+        // Two-part pin: the em-dash separator serves as a numeric entity (the HTML encoder
+        // escapes non-ASCII), so the assert brackets it rather than spelling it.
+        Assert.Contains("<title>PIU Scores ", body);
+        Assert.Contains("Pump It Up score tracker &amp; tier lists</title>", body);
         Assert.Contains("\"@type\":\"WebSite\"", body);
         Assert.Contains("\"name\":\"PIU Scores\"", body);
         Assert.Contains("property=\"og:site_name\"", body);
+        Assert.Contains("data-nosnippet", body);
     }
 
     /// <summary>
