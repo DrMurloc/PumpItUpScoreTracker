@@ -152,3 +152,13 @@ Each commit builds green with fast suites passing; integration/E2E land with the
 - **Density modes** — v1 ships the preference on the two list views only; expand if field-testing wants it.
 - **Discord weekly card / home-page widget** — deliberately later; highlight rows are already the right feed shape.
 - **PlayerCompare successor** — owner wants to revisit; nothing in this model blocks it (compare is two player-seeks).
+
+## 12. Post-ship rounds (field-test evolution on the PR)
+
+- **F1 — Missing-charts inbox**: unmapped board/popularity scrapes upsert `OfficialMissingChart` rows (per-identity dedupe, `LastIdentified` refresh); the admin page resolves them one by one.
+- **F2 — piuscores supplementation**: a linked player with under 50 board rows rounds out their chart list from their own ledger bests, flagged `Supplemented` (corner badge on the cards; board rows stay the source for every stat tile).
+- **F3 — What It Takes**: fifth hub view — grade-anchored cutlines off the PUMBILITY boards (`CutlineCalculator`, SG plates assumed, All/Singles/Doubles), tier ladder, two stepline charts, landmark table.
+- **G1 — Popularity highlights (mock round)**: biggest movers + hottest/coldest per folder proposed above the popularity board; the build follows owner sign-off on the mock.
+- **G2 — The co-op board**: fourth Rankings option computed from the mirrored co-op boards. `CoOpBoardCalculator` prices placements with the mix's pumbility formula on the engine's flat co-op base — the flat base means the base value scales the display but never the order — with plates inferred from score (SG below 995,000, UG to 999,999, PG at the perfect). A disclaimer names it a best guess; the top-50 expando filters by chart type so the estimate scale never mixes into real PUMBILITY views.
+- **G3 — Folder filter on popularity**: the tier-list `FolderPicker` (grown an additive nullable "All Folders" state) narrows the board and the songs rollup before the top-100 cut; places stay global.
+- **G4 — Rankings columns**: the number-ones column removed contract-deep (the Players profile tile keeps its own count); the Boards number links into the Players view with that player selected, and `?view=players&player=TAG` deep-links via replaceState.
