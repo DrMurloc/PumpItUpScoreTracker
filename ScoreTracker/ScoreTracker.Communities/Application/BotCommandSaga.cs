@@ -1,5 +1,8 @@
 using MediatR;
+using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Commands;
 using ScoreTracker.Communities.Contracts.Queries;
@@ -408,6 +411,15 @@ namespace ScoreTracker.Communities.Application
             if (string.IsNullOrWhiteSpace(query)) return new BotReply(Text: "Give a song name.");
 
             var all = (await _mediator.Send(new GetChartsQuery(mix), cancellationToken)).ToList();
+
+            // Picked from autocomplete → a specific chart → the detailed card. Free text →
+            // the song's difficulty list, which lets the user then pick one.
+            if (Guid.TryParse(query, out var chartId))
+            {
+                var chart = all.FirstOrDefault(c => c.Id == chartId);
+                if (chart != null) return await ChartDetailCard(chart, mix, all, cancellationToken);
+            }
+
             var songName = all.Select(c => (string)c.Song.Name)
                                  .FirstOrDefault(name => string.Equals(name, query, StringComparison.OrdinalIgnoreCase))
                              ?? all.Select(c => (string)c.Song.Name).Distinct()
@@ -427,12 +439,81 @@ namespace ScoreTracker.Communities.Application
 
             var card = new RichBotMessage(
                 new RichBotSection($"### {songName}\n-# {subtitle}", song.ImagePath),
-                new IRichBotBlock[] { new RichBotDivider(), new RichBotText(rows) },
+                new IRichBotBlock[]
+                {
+                    new RichBotDivider(),
+                    new RichBotText(rows),
+                    new RichBotText("-# Pick a difficulty from the list for its breakdown and similar charts.")
+                },
                 $"#MIX|{mix}# {mix.GetName()} · PIU Scores",
                 mix.GetAccentColor(),
                 Array.Empty<RichBotLink>());
             return new BotReply(Card: card);
         }
+
+        // The chart-details card: what the /Charts page shows, sized for Discord — the
+        // difficulty breakdown (scoring level + pass tier), the skill fingerprint, and
+        // similar charts by skill. Each section drops out when its data is absent (the
+        // similarity graph is empty until recalculate-chart-similarity runs).
+        private async Task<BotReply> ChartDetailCard(Chart chart, MixEnum mix, IReadOnlyList<Chart> all,
+            CancellationToken cancellationToken)
+        {
+            var song = chart.Song;
+            var subtitle = song.Bpm != null
+                ? $"{(string)song.Artist} · {song.Bpm} BPM · {mix.GetName()}"
+                : $"{(string)song.Artist} · {mix.GetName()}";
+            var blocks = new List<IRichBotBlock>
+            {
+                new RichBotDivider()
+            };
+
+            var scoringLevels = await _mediator.Send(new GetChartScoringLevelsQuery(mix), cancellationToken);
+            var passTier = (await _mediator.Send(new GetTierListQuery(Name.From("Pass Count"), mix), cancellationToken))
+                .Where(e => e.ChartId == chart.Id).Select(e => (TierListCategory?)e.Category).FirstOrDefault();
+            var difficulty = new List<string>();
+            if (scoringLevels.TryGetValue(chart.Id, out var scoringLevel))
+                difficulty.Add($"Scoring level **{scoringLevel:0.0}** (listed {(int)chart.Level})");
+            if (passTier != null && passTier != TierListCategory.Unrecorded)
+                difficulty.Add($"Pass **{PassTierName(passTier.Value)}**");
+            if (difficulty.Count > 0)
+                blocks.Add(new RichBotText("📊 " + string.Join(" · ", difficulty)));
+
+            var skills = (await _mediator.Send(new GetChartSkillChipsQuery(new[] { chart.Id }), cancellationToken))
+                .TryGetValue(chart.Id, out var chips)
+                ? chips.Take(4).Select(c => c.Skill.GetName()).ToList()
+                : new List<string>();
+            if (skills.Count > 0)
+                blocks.Add(new RichBotText("🎯 " + string.Join(" · ", skills)));
+
+            var byId = all.ToDictionary(c => c.Id);
+            var similar = (await _mediator.Send(new GetSimilarChartsQuery(chart.Id, mix), cancellationToken))
+                .Where(r => byId.ContainsKey(r.ChartId))
+                .Take(5)
+                .ToList();
+            if (similar.Count > 0)
+            {
+                blocks.Add(new RichBotDivider());
+                blocks.Add(new RichBotText("**Similar charts**\n" + string.Join("\n", similar.Select(r =>
+                {
+                    var neighbor = byId[r.ChartId];
+                    return $"#DIFFICULTY|{neighbor.DifficultyString}# [{(string)neighbor.Song.Name}]({SiteBase}/Chart/{neighbor.Id}) — {(int)Math.Round(r.Score * 100)}%";
+                }))));
+            }
+
+            return new BotReply(Card: new RichBotMessage(
+                new RichBotSection($"### {(string)song.Name} — {chart.DifficultyDisplay}\n-# {subtitle}", song.ImagePath),
+                blocks,
+                $"#MIX|{mix}# {mix.GetName()} · PIU Scores",
+                mix.GetAccentColor(),
+                new[] { new RichBotLink("Open chart page", new Uri($"{SiteBase}/Chart/{chart.Id}")) }));
+        }
+
+        private static string PassTierName(TierListCategory category) => category switch
+        {
+            TierListCategory.VeryEasy => "Very Easy",
+            TierListCategory.VeryHard => "Very Hard",
+            _ => category.ToString()
+        };
 
         private async Task<IReadOnlyList<BotOptionChoice>> SongNameChoices(BotAutocompleteRequest request,
             CancellationToken cancellationToken)
@@ -442,12 +523,15 @@ namespace ScoreTracker.Communities.Application
                 : MixEnum.Phoenix2;
             var partial = request.PartialValue?.Trim() ?? string.Empty;
             var all = await _mediator.Send(new GetChartsQuery(mix), cancellationToken);
-            return all.Select(c => (string)c.Song.Name)
-                .Distinct()
-                .Where(name => partial.Length == 0 || name.Contains(partial, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(name => name)
+            // One entry per chart ("Ugly Dee S20"), value = the chart id, so a pick lands on a
+            // specific chart for the detailed card; matching mirrors the site's ChartSelector.
+            return all
+                .Where(c => partial.Length == 0 ||
+                            $"{(string)c.Song.Name} {c.DifficultyDisplay}".Contains(partial,
+                                StringComparison.OrdinalIgnoreCase))
+                .OrderBy(c => (string)c.Song.Name).ThenBy(c => c.Type).ThenBy(c => (int)c.Level)
                 .Take(25)
-                .Select(name => new BotOptionChoice(name, name))
+                .Select(c => new BotOptionChoice($"{(string)c.Song.Name} {c.DifficultyDisplay}", c.Id.ToString()))
                 .ToArray();
         }
 

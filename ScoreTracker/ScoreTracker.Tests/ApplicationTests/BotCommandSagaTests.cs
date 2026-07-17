@@ -5,7 +5,10 @@ using System.Threading.Tasks;
 using System.Linq;
 using MediatR;
 using Moq;
+using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Communities.Application;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Commands;
@@ -198,7 +201,7 @@ public sealed class BotCommandSagaTests
 
         Assert.NotNull(reply.Card);
         Assert.Contains("Ugly Dee", reply.Card!.Header!.Markdown);
-        var rows = reply.Card.Blocks.OfType<RichBotText>().Single().Markdown;
+        var rows = reply.Card.Blocks.OfType<RichBotText>().First().Markdown;
         Assert.Contains("#DIFFICULTY|S20#", rows);
         Assert.Contains("#DIFFICULTY|D21#", rows);
         Assert.Contains("/Chart/", rows);
@@ -218,18 +221,73 @@ public sealed class BotCommandSagaTests
         Assert.Contains("No chart found", reply.Text);
     }
 
+    private static string CardText(RichBotMessage card) =>
+        string.Join("\n", new[] { card.Header?.Markdown, card.Footer }
+            .Concat(card.Blocks.Select(b => b switch
+            {
+                RichBotText t => t.Markdown,
+                RichBotSection s => s.Markdown,
+                _ => string.Empty
+            }))
+            .Where(x => x != null));
+
     [Fact]
-    public async Task SongAutocompleteReturnsDistinctMatchingNames()
+    public async Task SongAutocompleteReturnsOneEntryPerMatchingChartKeyedByChartId()
     {
+        var charts = SampleCharts();
         _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(SampleCharts());
+            .ReturnsAsync(charts);
 
         var choices = await Saga().Handle(new GetBotAutocompleteQuery(
             new BotAutocompleteRequest(new[] { "chart" }, "song", "ug",
                 new Dictionary<string, string>(), UserId: 1, ChannelId: 2, GuildId: 3)), CancellationToken.None);
 
-        Assert.Single(choices);
-        Assert.Equal("Ugly Dee", choices[0].Value);
+        Assert.Equal(2, choices.Count); // Ugly Dee S20 + Ugly Dee D21, not Bad Apple
+        Assert.All(choices, c => Assert.Contains("Ugly Dee", c.Name));
+        Assert.Contains(choices, c => c.Value == charts[0].Id.ToString());
+    }
+
+    [Fact]
+    public async Task ChartDetailCardShowsTheBreakdownSkillsAndSimilarCharts()
+    {
+        var target = new ChartBuilder().WithId(new Guid("00000000-0000-0000-0000-0000000000d1"))
+            .WithSongName("District 1").WithArtist("SHK").WithType(ChartType.Single).WithLevel(21)
+            .WithMix(MixEnum.Phoenix2).Build();
+        var neighbor = new ChartBuilder().WithId(new Guid("00000000-0000-0000-0000-0000000000d2"))
+            .WithSongName("Vacuum").WithType(ChartType.Double).WithLevel(19).WithMix(MixEnum.Phoenix2).Build();
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { target, neighbor });
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, double> { [target.Id] = 21.4 });
+        _mediator.Setup(m => m.Send(It.IsAny<GetTierListQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ScoreTracker.Domain.Records.SongTierListEntry(Name.From("Pass Count"), target.Id,
+                    TierListCategory.Medium, 0)
+            }.AsEnumerable());
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartSkillChipsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>
+            {
+                [target.Id] = new[] { new ChartSkillChipRecord(Skill.Fast, true, 0.5m) }
+            });
+        _mediator.Setup(m => m.Send(It.IsAny<GetSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ChartSimilarityRecord(neighbor.Id, 0.82, 0.9, 0.6, Array.Empty<ChartSharedBadgeRecord>())
+            });
+
+        var reply = await Saga().Handle(Invoke(new[] { "chart" },
+            new Dictionary<string, string> { ["song"] = target.Id.ToString(), ["mix"] = "Phoenix2" }),
+            CancellationToken.None);
+
+        Assert.NotNull(reply.Card);
+        var text = CardText(reply.Card!);
+        Assert.Contains("District 1", text);
+        Assert.Contains("Scoring level", text);
+        Assert.Contains("Pass **Medium**", text);
+        Assert.Contains("Fast", text);
+        Assert.Contains("Similar charts", text);
+        Assert.Contains("Vacuum", text);
     }
 
     [Fact]

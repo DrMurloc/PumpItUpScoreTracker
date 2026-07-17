@@ -6,6 +6,15 @@ digest). Mocks: claude.ai artifact `d4fa5bed-e2c6-4aa6-bcbf-a5b0cb4ceb04` (round
 toggle). Companion history: [discord-rich-score-notifications.md](discord-rich-score-notifications.md)
 (the session-snapshot card — **untouched by this work**).
 
+**Iteration (C12, owner feedback):** `/piu chart` autocomplete now offers one entry per
+difficulty (`Ugly Dee S20`, value = chart id); picking one renders a **chart-details card**
+mirroring the `/Charts` page — the difficulty breakdown (scoring level + pass tier via
+`GetChartScoringLevelsQuery` + `GetTierListQuery("Pass Count")`), the skill fingerprint
+(`GetChartSkillChipsQuery`), and **similar charts by skill** (`GetSimilarChartsQuery`, the
+primary ask). Each section drops when its data is absent; a bare song name still falls back to
+the difficulty-list card. **Similar charts are empty until `recalculate-chart-similarity` runs
+once in `/hangfire`** — same trigger the chart-details page needs.
+
 **As-built deviation (C10):** the official-leaderboards digest lives in **OfficialMirror**, not
 Communities. Communities cannot reference OfficialMirror — the vertical graph would cycle
 (`OfficialMirror → ScoreLedger → Communities`). So OfficialMirror hosts `OfficialDigestFeedSaga`

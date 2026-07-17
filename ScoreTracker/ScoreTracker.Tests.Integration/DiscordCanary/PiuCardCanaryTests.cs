@@ -119,20 +119,24 @@ public sealed class PiuCardCanaryTests
             MixEnum.Phoenix2.GetAccentColor(),
             new[] { new RichBotLink("Daily Step board", new Uri("https://piuscores.arroweclip.se")) });
 
-    // /piu chart — song art header, one difficulty-bubble row per chart, each a masked link.
+    // /piu chart — the chart-details card: the difficulty breakdown (scoring level + pass
+    // tier), the skill fingerprint, and similar charts by skill, all linked.
     private static RichBotMessage ChartCard(string marker) =>
-        new(new RichBotSection("### Witch Doctor\n-# BanYa · 175 BPM · Phoenix 2", SongArt),
+        new(new RichBotSection("### Witch Doctor — S18\n-# BanYa · 175 BPM · Phoenix 2", SongArt),
             new IRichBotBlock[]
             {
                 new RichBotDivider(),
-                new RichBotText(
-                    $"#DIFFICULTY|S18# [S18]({ChartBase}/00000000-0000-0000-0000-000000000001)\n" +
-                    $"#DIFFICULTY|D19# [D19]({ChartBase}/00000000-0000-0000-0000-000000000002)\n" +
-                    $"#DIFFICULTY|S22# [S22]({ChartBase}/00000000-0000-0000-0000-000000000003)")
+                new RichBotText("📊 Scoring level **18.6** (listed 18) · Pass **Medium**"),
+                new RichBotText("🎯 Twist · Bracket · Run"),
+                new RichBotDivider(),
+                new RichBotText("**Similar charts**\n" +
+                    $"#DIFFICULTY|D19# [Vacuum]({ChartBase}/00000000-0000-0000-0000-000000000002) — 84%\n" +
+                    $"#DIFFICULTY|S18# [1949]({ChartBase}/00000000-0000-0000-0000-000000000003) — 79%\n" +
+                    $"#DIFFICULTY|S19# [Bee]({ChartBase}/00000000-0000-0000-0000-000000000004) — 72%")
             },
             $"#MIX|Phoenix2# Phoenix 2 · PIU Scores · {marker}",
             MixEnum.Phoenix2.GetAccentColor(),
-            Array.Empty<RichBotLink>());
+            new[] { new RichBotLink("Open chart page", new Uri($"{ChartBase}/00000000-0000-0000-0000-000000000001")) });
 
     // /piu random — a titled draw, one art row per chart, each a masked link.
     private static RichBotMessage RandomCard(string marker) =>
