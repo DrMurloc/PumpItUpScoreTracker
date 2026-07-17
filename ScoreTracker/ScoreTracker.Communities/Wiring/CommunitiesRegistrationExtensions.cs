@@ -39,6 +39,7 @@ public static class CommunitiesRegistrationExtensions
     public static void AddCommunitiesConsumers(this IRegistrationConfigurator configurator)
     {
         configurator.AddConsumer<CommunitySaga>();
+        configurator.AddConsumer<DiscordFeedSaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();
         configurator.AddConsumer<CommunityHighlightSaga>();
         configurator.AddConsumer<CommunityHighlightPurgeConsumer>();

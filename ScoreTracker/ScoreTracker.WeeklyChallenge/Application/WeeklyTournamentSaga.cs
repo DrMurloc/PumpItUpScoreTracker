@@ -1,5 +1,6 @@
 using ScoreTracker.Domain.Services;
 using ScoreTracker.WeeklyChallenge.Contracts;
+using ScoreTracker.WeeklyChallenge.Contracts.Events;
 using ScoreTracker.WeeklyChallenge.Contracts.Queries;
 using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.WeeklyChallenge.Contracts.Commands;
@@ -18,8 +19,7 @@ namespace ScoreTracker.WeeklyChallenge.Application
 {
     internal sealed class WeeklyTournamentSaga
     (IChartRepository charts, IWeeklyTournamentRepository weeklyTournies, IPlayerStatsReader playerStats,
-        IBotClient bot,
-        ILogger<WeeklyTournamentSaga> logger, IUserReader users, IBus bus,
+        ILogger<WeeklyTournamentSaga> logger, IBus bus,
         IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random) :
         IConsumer<RotateWeeklyChartsCommand>,
         IConsumer<ScoreImportCompletedEvent>,
@@ -164,6 +164,10 @@ namespace ScoreTracker.WeeklyChallenge.Application
             }
 
             await weeklyTournies.WriteAlreadyPlayedCharts(mix, newCharts, context.CancellationToken);
+
+            // A real rotation happened (both early-exits above returned) — let the Discord
+            // feed post the finished week and the new lineup.
+            await bus.Publish(new WeeklyChartsRotatedEvent(mix), context.CancellationToken);
         }
 
         // A mix's catalog may lack a merged bucket entirely (Phoenix 2 launches without some
@@ -248,31 +252,12 @@ namespace ScoreTracker.WeeklyChallenge.Application
 
             var newPlace = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(existingEntries.Where(u => u.UserId != request.Entry.UserId)
                 .Append(existingEntry)).First(e => e.Item2.UserId == request.Entry.UserId).Item1;
+            // Placement changes drive PlayerProgress's weekly-placement milestones; the
+            // per-progression Discord post retired with the hardcoded channel.
             if (existingPlace == null || existingPlace != newPlace)
-            {
-                var user = await users.GetUser(request.Entry.UserId, cancellationToken);
-                try
-                {
-                    await bot.SendMessage(
-                        MixPrefix(mix) +
-                        $"{user.Name} Progressed to {newPlace} on {chart.Song.Name} #DIFFICULTY|{chart.DifficultyString}# - {existingEntry.Score} #LETTERGRADE|{existingEntry.Score.LetterGrade}|{existingEntry.IsBroken}# #PLATE|{existingEntry.Plate}#",
-                        1254418262406725773, cancellationToken);
-                    await bus.Publish(new UserWeeklyChartsProgressedEvent(user.Id, chart.Id, existingEntry.Score,
-                            existingEntry.Plate.ToString(), existingEntry.IsBroken, newPlace, mix),
-                        cancellationToken);
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e, "Couldn't post weekly charts update to discord");
-                }
-            }
-        }
-
-        // Discord announcements carry a "[Phoenix 2]" style prefix while multiple mixes are
-        // active (locked decision) — mirrors CommunitySaga's message builders.
-        private static string MixPrefix(MixEnum mix)
-        {
-            return mix == MixEnum.Phoenix ? string.Empty : "[" + mix.GetName() + "] ";
+                await bus.Publish(new UserWeeklyChartsProgressedEvent(request.Entry.UserId, chart.Id,
+                    existingEntry.Score, existingEntry.Plate.ToString(), existingEntry.IsBroken, newPlace, mix),
+                    cancellationToken);
         }
     }
 }

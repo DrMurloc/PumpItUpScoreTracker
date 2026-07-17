@@ -177,6 +177,10 @@ public sealed class VerticalBoundaryTests
 
         Assert.Contains(services,
             d => d.ServiceType == typeof(ScoreTracker.Communities.Application.CommunitySaga));
+        // DiscordFeedSaga consumes the weekly/daily rotation events for the broadcast feeds —
+        // if the hook stops covering it, those feeds silently go quiet.
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.Communities.Application.DiscordFeedSaga));
     }
 
     [Fact]

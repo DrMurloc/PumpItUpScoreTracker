@@ -31,6 +31,69 @@ public sealed class PiuCardCanaryTests
     [DiscordCanaryFact]
     public Task PostsTheSuggestCard() => PostAndVerify(SuggestCard);
 
+    [DiscordCanaryFact]
+    public Task PostsTheWeeklyFeedCards() => PostAndVerify(WeeklyResultCard, WeeklyLineupCard);
+
+    [DiscordCanaryFact]
+    public Task PostsTheDailyFeedCard() => PostAndVerify(DailyFeedCard);
+
+    // Weekly feed — one result card per most-played chart (green rows = community members).
+    private static RichBotMessage WeeklyResultCard(string marker) =>
+        new(new RichBotSection(
+                "### Weekly Charts — final board\n-# [Phoenix 2] District 1 #DIFFICULTY|D24# · 18 players · week of Jul 7",
+                SongArt),
+            new IRichBotBlock[]
+            {
+                new RichBotDivider(),
+                new RichBotText(
+                    "` 1` **JEWEL** — 997,821 #LETTERGRADE|SSSPlus|False##PLATE|UltimateGame#\n" +
+                    "` 2` 🟢 **ESI** — 993,204 #LETTERGRADE|SSS|False##PLATE|ExtremeGame#\n" +
+                    "` 3` **PUMPKING** — 988,917 #LETTERGRADE|SSPlus|False##PLATE|ExtremeGame#\n" +
+                    "` 4` 🟢 **WABBIT** — 983,660 #LETTERGRADE|SS|False##PLATE|SuperbGame#\n" +
+                    "` 5` **NIMGO** — 982,105 #LETTERGRADE|SS|False##PLATE|SuperbGame#")
+            },
+            $"#MIX|Phoenix2# Card 1 of 5 · 12 more charts had entries · {marker}",
+            MixEnum.Phoenix2.GetAccentColor(),
+            Array.Empty<RichBotLink>());
+
+    private static RichBotMessage WeeklyLineupCard(string marker) =>
+        new(new RichBotSection("### This week's charts\n-# [Phoenix 2] one per level bucket", null),
+            new IRichBotBlock[]
+            {
+                new RichBotDivider(),
+                new RichBotText(
+                    $"#DIFFICULTY|S16# [Trashy Innocence]({ChartBase}/00000000-0000-0000-0000-0000000000b1) · " +
+                    $"#DIFFICULTY|S20# [1949]({ChartBase}/00000000-0000-0000-0000-0000000000b2) · " +
+                    $"#DIFFICULTY|D23# [Sarabande]({ChartBase}/00000000-0000-0000-0000-0000000000b3)")
+            },
+            $"#MIX|Phoenix2# Phoenix 2 · resets Monday midnight ET · {marker}",
+            MixEnum.Phoenix2.GetAccentColor(),
+            new[]
+            {
+                new RichBotLink("Full results", new Uri("https://piuscores.arroweclip.se/WeeklyCharts")),
+                new RichBotLink("Weekly Charts", new Uri("https://piuscores.arroweclip.se/WeeklyCharts"))
+            });
+
+    // Daily feed — yesterday's board (Limbo mocked) + today's chart in one card.
+    private static RichBotMessage DailyFeedCard(string marker) =>
+        new(new RichBotSection("### Daily Step\n-# [Phoenix 2] yesterday's board settled", null),
+            new IRichBotBlock[]
+            {
+                new RichBotDivider(),
+                new RichBotText("**Yesterday — Trashy Innocence #DIFFICULTY|S19#**"),
+                new RichBotText(
+                    "` 1` **ESI** — 996,410 #LETTERGRADE|SSSPlus|False##PLATE|UltimateGame#\n" +
+                    "` 2` 🟢 **MELON** — 991,077 #LETTERGRADE|SSS|False##PLATE|ExtremeGame#\n" +
+                    "` 3` **TUSA** — 987,215 #LETTERGRADE|SSPlus|False##PLATE|SuperbGame#"),
+                new RichBotDivider(),
+                new RichBotSection(
+                    $"**Today — [Bee]({ChartBase}/00000000-0000-0000-0000-0000000000c1) #DIFFICULTY|S7#**\n" +
+                    "-# 🕯 **Limbo Day** — lowest passing score wins. No breaking.", SongArt)
+            },
+            $"#MIX|Phoenix2# Phoenix 2 · resets midnight ET · {marker}",
+            MixEnum.Phoenix2.GetAccentColor(),
+            new[] { new RichBotLink("Daily Step board", new Uri("https://piuscores.arroweclip.se")) });
+
     // /piu chart — song art header, one difficulty-bubble row per chart, each a masked link.
     private static RichBotMessage ChartCard(string marker) =>
         new(new RichBotSection("### Witch Doctor\n-# BanYa · 175 BPM · Phoenix 2", SongArt),
