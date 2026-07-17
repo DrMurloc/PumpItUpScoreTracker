@@ -115,6 +115,29 @@ public sealed class EFChartRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task CreateChartStoresThePlayerCountForCoOpCharts()
+    {
+        // Co-ops store the player count in Level, and readers treat the persisted
+        // PlayerCount column as authoritative (the domain fallback never fires for
+        // DB-loaded charts) — a co-op left at the column default of 1 renders
+        // "CoOp x1" and buckets under the wrong player count.
+        await _seed.EnsurePhoenixMixAsync();
+        var writer = BuildRepository();
+        var songId = await writer.CreateSong("Team Up", "팀 업",
+            new Uri("https://piuimages.arroweclip.se/songs/TeamUp.png"), SongType.Arcade,
+            TimeSpan.FromSeconds(100), "Doin", Bpm.From(150, 150));
+        var coOpId = await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.CoOp, 2,
+            "PUMP IT UP Official", new Uri("https://www.youtube.com/embed/aaaaaaaaaaa"), "SUNNY");
+        var singleId = await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Single, 22,
+            "PUMP IT UP Official", new Uri("https://www.youtube.com/embed/bbbbbbbbbbb"), "SUNNY");
+
+        var charts = (await BuildRepository().GetCharts(MixEnum.Phoenix)).ToDictionary(c => c.Id);
+
+        Assert.Equal(2, charts[coOpId].PlayerCount);
+        Assert.Equal(1, charts[singleId].PlayerCount);
+    }
+
+    [Fact]
     public async Task SetSongCultureNameThenGetEnglishLookupResolvesKoreanToEnglish()
     {
         var writer = BuildRepository();
