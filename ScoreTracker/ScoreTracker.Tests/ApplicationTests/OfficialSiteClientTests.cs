@@ -143,6 +143,50 @@ public sealed class OfficialSiteClientTests
     }
 
     [Fact]
+    public async Task Phoenix2PopularityRidesTheServiceSession()
+    {
+        // top_steps.php is login-gated on Phoenix 2 like every other ranking page — an
+        // anonymous POST gets the error page, which parses as zero entries and silently
+        // skips the popularity stage.
+        var piuGame = new Mock<IPiuGameApi>();
+        var session = new HttpClient();
+        piuGame.Setup(p => p.GetSessionId(MixEnum.Phoenix2, "svc", "hunter2", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((session, "sid123"));
+        piuGame.Setup(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix2, It.IsAny<int>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()))
+            .ReturnsAsync(new PiuGameGetChartPopularityLeaderboardResult
+            {
+                Entries = Array.Empty<PiuGameGetChartPopularityLeaderboardResult.Entry>()
+            });
+        var client = BuildClient(piuGame, serviceUsername: "svc", servicePassword: "hunter2");
+
+        await client.GetOfficialChartLeaderboardEntries(MixEnum.Phoenix2, CancellationToken.None);
+
+        piuGame.Verify(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix2, It.IsAny<int>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), session), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task PhoenixPopularityStaysAnonymous()
+    {
+        var piuGame = new Mock<IPiuGameApi>();
+        piuGame.Setup(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, It.IsAny<int>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()))
+            .ReturnsAsync(new PiuGameGetChartPopularityLeaderboardResult
+            {
+                Entries = Array.Empty<PiuGameGetChartPopularityLeaderboardResult.Entry>()
+            });
+        var client = BuildClient(piuGame);
+
+        await client.GetOfficialChartLeaderboardEntries(MixEnum.Phoenix, CancellationToken.None);
+
+        piuGame.Verify(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, It.IsAny<int>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), null), Times.AtLeastOnce);
+        piuGame.Verify(p => p.GetSessionId(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task PhoenixRatingBoardsStayAnonymous()
     {
         // The Phoenix mirror never logs in — byte-identical to before the P2 arm existed.

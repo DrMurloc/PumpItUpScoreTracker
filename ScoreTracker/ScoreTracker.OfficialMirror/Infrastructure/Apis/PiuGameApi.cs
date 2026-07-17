@@ -289,7 +289,7 @@ internal sealed class PiuGameApi : IPiuGameApi
     }
 
     public async Task<PiuGameGetChartPopularityLeaderboardResult> GetChartPopularityLeaderboard(MixEnum mix, int page,
-        DateTimeOffset asOf, CancellationToken cancellationToken)
+        DateTimeOffset asOf, CancellationToken cancellationToken, HttpClient? client = null)
     {
         var target = asOf - TimeSpan.FromDays(1);
         var response = await PostWithRetries($"{_urls.BaseUrlFor(mix)}/ajax/top_steps.php",
@@ -300,7 +300,7 @@ internal sealed class PiuGameApi : IPiuGameApi
                 // script pointing at "202607" and no data.
                 { "date", $"{target.Year}{target.Month:00}" },
                 { "mode", "full" }
-            }, cancellationToken);
+            }, cancellationToken, client);
         var results = new List<PiuGameGetChartPopularityLeaderboardResult.Entry>();
         var document = new HtmlDocument();
         document.LoadHtml(response);
@@ -481,13 +481,14 @@ internal sealed class PiuGameApi : IPiuGameApi
     }
 
     private async Task<string> PostWithRetries(string url, IDictionary<string, string> form,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, HttpClient? client = null)
     {
         var retry = 0;
         while (true)
             try
             {
-                var response = await _client.PostAsync(url, new FormUrlEncodedContent(form), cancellationToken);
+                var response = await (client ?? _client).PostAsync(url, new FormUrlEncodedContent(form),
+                    cancellationToken);
                 ThrowIfSsoBounced(response);
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsStringAsync(cancellationToken);

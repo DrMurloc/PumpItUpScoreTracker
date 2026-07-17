@@ -363,15 +363,28 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
     public async Task<IReadOnlyList<PlayerTimelineRow>> GetPlayerTimeline(int playerId, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
-        return await database.Set<OfficialLeaderboardPlacementEntity>()
-            .Where(p => p.PlayerId == playerId)
-            .Join(database.Set<OfficialLeaderboardSnapshotEntity>().Where(s => s.CompletedAt != null),
-                p => p.SnapshotId, s => s.Id, (p, s) => new { p, s })
-            .Join(database.Set<OfficialLeaderboardEntity>(), ps => ps.p.LeaderboardId, b => b.Id,
-                (ps, b) => new PlayerTimelineRow(ps.p.SnapshotId, ps.s.CompletedAt!.Value, b.LeaderboardType,
-                    b.Name, b.ChartId, ps.p.Place, ps.p.Score))
-            .OrderBy(r => r.CompletedAt)
-            .ToArrayAsync(ct);
+        // Ordering must happen over the anonymous projection — EF cannot translate an
+        // OrderBy that reaches into a constructed record's member.
+        return (await database.Set<OfficialLeaderboardPlacementEntity>()
+                .Where(p => p.PlayerId == playerId)
+                .Join(database.Set<OfficialLeaderboardSnapshotEntity>().Where(s => s.CompletedAt != null),
+                    p => p.SnapshotId, s => s.Id, (p, s) => new { p, s })
+                .Join(database.Set<OfficialLeaderboardEntity>(), ps => ps.p.LeaderboardId, b => b.Id,
+                    (ps, b) => new
+                    {
+                        ps.p.SnapshotId,
+                        CompletedAt = ps.s.CompletedAt!.Value,
+                        b.LeaderboardType,
+                        b.Name,
+                        b.ChartId,
+                        ps.p.Place,
+                        ps.p.Score
+                    })
+                .OrderBy(r => r.CompletedAt)
+                .ToArrayAsync(ct))
+            .Select(r => new PlayerTimelineRow(r.SnapshotId, r.CompletedAt, r.LeaderboardType, r.Name, r.ChartId,
+                r.Place, r.Score))
+            .ToArray();
     }
 
     public async Task<IReadOnlyList<(int SnapshotId, Guid ChartId, int Place)>> GetPopularityHistory(MixEnum mix,

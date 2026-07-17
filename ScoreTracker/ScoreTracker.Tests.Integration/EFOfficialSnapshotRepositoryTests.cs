@@ -278,6 +278,30 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task PlayerTimelineSpansSealedSnapshotsInOrderAndSkipsUnsealed()
+    {
+        var snapshots = Snapshots();
+        var week1 = await SeedSealedSnapshot(Week1);
+        var week2 = await SeedSealedSnapshot(Week2);
+        // An unsealed run's rows must never appear in a timeline.
+        var unsealedId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week2.AddDays(1),
+            CancellationToken.None);
+        await snapshots.WritePlacements(unsealedId, new[]
+        {
+            new PlacementRow(week2.board.Id, week2.alice.Id, 1, 999000)
+        }, CancellationToken.None);
+
+        var timeline = await snapshots.GetPlayerTimeline(week2.alice.Id, CancellationToken.None);
+
+        Assert.Equal(2, timeline.Count);
+        Assert.Equal(week1.snapshotId, timeline[0].SnapshotId);
+        Assert.Equal(week2.snapshotId, timeline[1].SnapshotId);
+        Assert.True(timeline[0].CompletedAt < timeline[1].CompletedAt);
+        Assert.Equal(LeaderboardTypes.Chart, timeline[0].LeaderboardType);
+        Assert.Equal(week2.board.ChartId, timeline[1].ChartId);
+    }
+
+    [Fact]
     public async Task PopularityRoundTripsPerSnapshot()
     {
         var snapshots = Snapshots();

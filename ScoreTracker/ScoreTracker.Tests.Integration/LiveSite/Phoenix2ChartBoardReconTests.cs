@@ -39,6 +39,12 @@ public sealed class Phoenix2ChartBoardReconTests : IClassFixture<PiuGameSessionF
         var pumbility = await _fixture.Api.GetPumbilityRankings(MixEnum.Phoenix2, null, 1, client, ct);
         _output.WriteLine($"pumbility sanity: {pumbility.Entries.Length} rows, IsEnd={pumbility.IsEnd}");
 
+        // The play ranking rides the same session (top_steps.php is gated like the rest).
+        var popularity = await _fixture.Api.GetChartPopularityLeaderboard(MixEnum.Phoenix2, 0,
+            DateTimeOffset.UtcNow, ct, client);
+        _output.WriteLine($"popularity page 0: {popularity.Entries.Length} entries");
+        Assert.NotEmpty(popularity.Entries);
+
         // Raw-fetch the 20+ list so the recon still reports when the strict parser's
         // markup assumptions have drifted; board ids come from the link pattern alone.
         string[] boardIds = Array.Empty<string>();

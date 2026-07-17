@@ -37,9 +37,13 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Apis.Contracts
         Task<PiuGameGetLeaderboardResult> GetLeaderboard(MixEnum mix, string leaderboardId,
             CancellationToken cancellationToken);
 
-        /// <summary>The official play ranking for the month containing <paramref name="asOf" />.</summary>
+        /// <summary>
+        ///     The official play ranking for the month containing <paramref name="asOf" />.
+        ///     Login-gated on Phoenix 2 like the rest of its ranking pages — pass the
+        ///     authenticated client there; Phoenix stays anonymous (null).
+        /// </summary>
         Task<PiuGameGetChartPopularityLeaderboardResult> GetChartPopularityLeaderboard(MixEnum mix, int page,
-            DateTimeOffset asOf, CancellationToken cancellationToken);
+            DateTimeOffset asOf, CancellationToken cancellationToken, HttpClient? client = null);
 
         Task<IEnumerable<PiuGameGetRecentScoresResult>> GetRecentScores(MixEnum mix, HttpClient client,
             CancellationToken cancellationToken);

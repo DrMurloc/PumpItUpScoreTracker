@@ -537,6 +537,9 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     public async Task<IEnumerable<ChartPopularityLeaderboardEntry>> GetOfficialChartLeaderboardEntries(MixEnum mix,
         CancellationToken cancellationToken)
     {
+        // The whole Phoenix 2 leaderboard area is login-gated, the play ranking included;
+        // Phoenix stays anonymous.
+        var client = mix == MixEnum.Phoenix2 ? await GetServiceClient(mix, cancellationToken) : null;
         var missingCharts = new List<PiuGameGetChartPopularityLeaderboardResult.Entry>();
         var page = 0;
         var apiResults = new List<PiuGameGetChartPopularityLeaderboardResult.Entry>();
@@ -544,7 +547,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         {
             _logger.LogInformation($"Pulling page {page}");
             var nextResult = await _piuGame.GetChartPopularityLeaderboard(mix, page, _dateTime.Now,
-                cancellationToken);
+                cancellationToken, client);
             apiResults.AddRange(nextResult.Entries);
             if (nextResult.Entries.Length < 50) break;
 
@@ -571,10 +574,11 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 new Uri(apiResult.SongImage, UriKind.Absolute)));
         }
 
-        var existing = result.Select(r => r.Chart.Id).Distinct().ToHashSet();
-        var chartIds =
-            (await _charts.GetCharts(mix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
-        var doesntExist = chartIds.Values.Where(c => !existing.Contains(c.Id)).ToArray();
+        // The counts tell a field test what actually happened: zero scraped means the
+        // page served nothing (auth, date, or markup drift), while a large unmapped tally
+        // means the catalog is missing content.
+        _logger.LogInformation("Popularity {Mix}: {Mapped} charts ranked, {Unmapped} unmapped",
+            mix, result.Count, missingCharts.Count);
         return result;
     }
 
