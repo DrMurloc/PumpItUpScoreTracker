@@ -69,7 +69,19 @@
                     }
                     <ShellMenuItem Href="/Completion" Icon="@Icons.Material.Filled.Done">@L["Completion Leaderboards"]</ShellMenuItem>
                     <ShellMenuItem Href="/UcsLeaderboards" Icon="@Icons.Material.Filled.EditNote">@L["UCS Leaderboards"]</ShellMenuItem>
-                    <ShellMenuItem Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Leaderboard">@L["Official Leaderboards"]</ShellMenuItem>
+                </div>
+            </details>
+            <details class="shell-disclosure">
+                <summary class="shell-menu-item">
+                    <MudIcon Icon="@Icons.Material.Filled.Leaderboard" Size="Size.Small"></MudIcon>
+                    <span>@L["Official Leaderboards"]</span>
+                </summary>
+                <div class="shell-disclosure-body">
+                    <ShellMenuItem Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Whatshot">@L["This Week"]</ShellMenuItem>
+                    <ShellMenuItem Href="/OfficialLeaderboards/Rankings" Icon="@Icons.Material.Filled.Leaderboard">@L["Rankings"]</ShellMenuItem>
+                    <ShellMenuItem Href="/OfficialLeaderboards/Players" Icon="@Icons.Material.Filled.PersonSearch">@L["Players"]</ShellMenuItem>
+                    <ShellMenuItem Href="/OfficialLeaderboards/Popularity" Icon="@Icons.Material.Filled.TrendingUp">@L["Popularity"]</ShellMenuItem>
+                    <ShellMenuItem Href="/OfficialLeaderboards/WhatItTakes" Icon="@Icons.Material.Filled.Stairs">@L["What It Takes"]</ShellMenuItem>
                 </div>
             </details>
 

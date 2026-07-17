@@ -63,9 +63,6 @@
     <Content Update="Pages\Experiments\ChartLetterDifficulties.razor">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>
-    <Content Update="Pages\OfficialLeaderboards\LeaderboardSearch.razor">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-    </Content>
   </ItemGroup>
 
   <ItemGroup>

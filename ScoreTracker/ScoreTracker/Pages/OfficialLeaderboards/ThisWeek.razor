@@ -1,0 +1,35 @@
+@page "/OfficialLeaderboards"
+@rendermode RenderModes.Interactive
+@inject NavigationManager Navigation
+
+<OfficialSectionFrame Active="week">
+    <Body Context="ctx">
+        <HubThisWeek Mix="ctx.Mix" Charts="ctx.Charts"/>
+    </Body>
+</OfficialSectionFrame>
+
+@code {
+    [SupplyParameterFromQuery(Name = "view")]
+    public string? View { get; set; }
+
+    [SupplyParameterFromQuery(Name = "player")]
+    public string? PlayerParam { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Tab-era links used ?view= (and ?player=) on this route — map them onto the
+        // section's real pages so shared links keep landing.
+        var target = View?.ToLowerInvariant() switch
+        {
+            "rankings" => "/OfficialLeaderboards/Rankings",
+            "players" => "/OfficialLeaderboards/Players",
+            "popularity" => "/OfficialLeaderboards/Popularity",
+            "takes" => "/OfficialLeaderboards/WhatItTakes",
+            _ => PlayerParam != null ? "/OfficialLeaderboards/Players" : null
+        };
+        if (target == null) return;
+        if (PlayerParam != null && target == "/OfficialLeaderboards/Players")
+            target = $"{target}?player={Uri.EscapeDataString(PlayerParam)}";
+        Navigation.NavigateTo(target, replace: true);
+    }
+}

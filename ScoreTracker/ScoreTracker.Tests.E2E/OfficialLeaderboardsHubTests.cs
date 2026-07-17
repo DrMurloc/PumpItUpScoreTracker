@@ -5,10 +5,10 @@ using static Microsoft.Playwright.Assertions;
 namespace ScoreTracker.Tests.E2E;
 
 /// <summary>
-///     The Official Leaderboards hub end to end: a sealed snapshot in real SQL renders
-///     through the real Kestrel app — the weekly world-first on This Week, and the
-///     computed rankings behind the ?view= deep link. The sweep that produces snapshots
-///     is pinned by unit and integration tests; this covers the page's whole stack.
+///     The Official Leaderboards section end to end: a sealed snapshot in real SQL renders
+///     through the real Kestrel app — the weekly world-first on the This Week front page,
+///     and the computed rankings on their own routed page. The sweep that produces
+///     snapshots is pinned by unit and integration tests; this covers the whole stack.
 /// </summary>
 [Collection("E2E")]
 public sealed class OfficialLeaderboardsHubTests : IAsyncLifetime
@@ -50,12 +50,16 @@ public sealed class OfficialLeaderboardsHubTests : IAsyncLifetime
             .ToBeVisibleAsync();
         // The header chip reads the sealed run, not a stored timestamp.
         await Expect(_page.GetByText("Import OK")).ToBeVisibleAsync();
+        // The section nav links every page in the group. Scoped to the page's nav —
+        // the shell mega-menu also carries these labels, hidden until hover.
+        await Expect(_page.Locator(".olb-section-nav").GetByText("What It Takes"))
+            .ToBeVisibleAsync();
     }
 
     [Fact]
     public async Task RankingsDeepLinkOpensTheComputedBoardWithTheSeededPlayers()
     {
-        await _page.GotoAsync("/OfficialLeaderboards?view=rankings");
+        await _page.GotoAsync("/OfficialLeaderboards/Rankings");
 
         var timeout = new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 };
         // Phoenix has no PUMBILITY board — the caption says computed, and both seeded
