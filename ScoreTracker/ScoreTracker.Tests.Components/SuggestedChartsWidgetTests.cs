@@ -67,6 +67,11 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
         var clock = new Mock<IDateTimeOffsetAccessor>();
         clock.SetupGet(c => c.Now).Returns(Now);
         Services.AddSingleton(clock.Object);
+
+        // Last — it touches the renderer, which freezes service registration.
+        // DifficultyBubble/SongImage gate their tooltips on RendererInfo.IsInteractive;
+        // the widget always lives inside a circuit, so these facts render as one.
+        this.RenderInteractive();
     }
 
     private static Chart MakeChart(string name, ChartType type, int level) =>
