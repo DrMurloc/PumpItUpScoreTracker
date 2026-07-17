@@ -4656,4 +4656,19 @@
   <data name="See their boards" xml:space="preserve">
     <value>See their mrglboards</value>
   </data>
+  <data name="Hottest Charts" xml:space="preserve">
+    <value>Hottest Mrglcharts</value>
+  </data>
+  <data name="Coldest Charts" xml:space="preserve">
+    <value>Coldest Mrglcharts</value>
+  </data>
+  <data name="Biggest Movers" xml:space="preserve">
+    <value>Biggest Mrglmovers</value>
+  </data>
+  <data name="{0} charts ranked" xml:space="preserve">
+    <value>{0} charts ranked, mrgl</value>
+  </data>
+  <data name="Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter" xml:space="preserve">
+    <value>Folder heat - the median mrglchart's standing per folder (red = Singles, green = Doubles); higher is hotter</value>
+  </data>
 </root>

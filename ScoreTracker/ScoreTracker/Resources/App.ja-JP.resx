@@ -4733,4 +4733,19 @@
   <data name="See their boards" xml:space="preserve">
     <value>このプレイヤーのボードを見る</value>
   </data>
+  <data name="Hottest Charts" xml:space="preserve">
+    <value>人気トップ譜面</value>
+  </data>
+  <data name="Coldest Charts" xml:space="preserve">
+    <value>人気ワースト譜面</value>
+  </data>
+  <data name="Biggest Movers" xml:space="preserve">
+    <value>順位変動トップ</value>
+  </data>
+  <data name="{0} charts ranked" xml:space="preserve">
+    <value>{0}譜面がランクイン</value>
+  </data>
+  <data name="Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter" xml:space="preserve">
+    <value>フォルダー人気度 - 各フォルダーの中央値譜面のボード順位（赤 = シングル、緑 = ダブル）。上ほど人気</value>
+  </data>
 </root>

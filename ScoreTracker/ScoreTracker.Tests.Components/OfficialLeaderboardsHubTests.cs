@@ -222,6 +222,78 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
     }
 
     [Fact]
+    public void PopularityHighlightsShowExtremesMoversAndTheRankedCount()
+    {
+        // One folder keeps the heat graph unrendered (a single point per series) — chart
+        // internals are a JS concern; these facts pin the sections around it.
+        var charts = new[] { "Alpha", "Bravo", "Charlie", "Delta", "Echo" }
+            .Select(name => MakeChart(name, ChartType.Single, 20)).ToArray();
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialPopularityQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new OfficialPopularityRecord(charts[0].Id, 1, 3, new[] { 3, 1 }),
+                new OfficialPopularityRecord(charts[1].Id, 2, 2, new[] { 2, 2 }),
+                new OfficialPopularityRecord(charts[2].Id, 3, null, new[] { 3 }),
+                new OfficialPopularityRecord(charts[3].Id, 4, 1, new[] { 1, 4 }),
+                new OfficialPopularityRecord(charts[4].Id, 5, 5, new[] { 5, 5 })
+            });
+
+        var cut = RenderComponent<HubPopularity>(p => p
+            .Add(x => x.Mix, MixEnum.Phoenix2)
+            .Add(x => x.Charts, charts.ToDictionary(c => c.Id)));
+
+        Assert.Contains("Hottest Charts", cut.Markup);
+        Assert.Contains("Coldest Charts", cut.Markup);
+        Assert.Contains("Biggest Movers", cut.Markup);
+        Assert.Contains("5 charts ranked", cut.Markup);
+        // The coldest trio prints its place over the board size.
+        Assert.Contains("/ 5", cut.Markup);
+        // Delta's 1 → 4 fall is the biggest move; Charlie debuts with the star marker.
+        Assert.Contains("▼3", cut.Markup);
+        Assert.Contains("＊ #3", cut.Markup);
+    }
+
+    [Fact]
+    public void PopularityHighlightsOnlyRenderOnTheUnfilteredChartsView()
+    {
+        var s20 = MakeChart("Papasito", ChartType.Single, 20);
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialPopularityQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new OfficialPopularityRecord(s20.Id, 1, 1, new[] { 1, 1 }) });
+        var cut = RenderComponent<HubPopularity>(p => p
+            .Add(x => x.Mix, MixEnum.Phoenix2)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [s20.Id] = s20 }));
+        Assert.Contains("Hottest Charts", cut.Markup);
+
+        cut.InvokeAsync(() => cut.Instance.SetFolder((ChartType.Single, 20)));
+        Assert.DoesNotContain("Hottest Charts", cut.Markup);
+
+        cut.InvokeAsync(() => cut.Instance.ClearFolder());
+        cut.FindAll("button").First(b => b.TextContent.Contains("Songs")).Click();
+        Assert.DoesNotContain("Hottest Charts", cut.Markup);
+    }
+
+    [Fact]
+    public void FolderHeatIsTheMedianBoardPercentilePerLevelAndType()
+    {
+        var ranked = new[]
+        {
+            (MakeChart("A", ChartType.Single, 20), 10),
+            (MakeChart("B", ChartType.Single, 20), 20),
+            (MakeChart("C", ChartType.Single, 20), 400),
+            (MakeChart("D", ChartType.Single, 22), 100),
+            (MakeChart("E", ChartType.Single, 22), 200),
+            (MakeChart("F", ChartType.Double, 20), 500)
+        };
+
+        var singles = HubPopularity.FolderHeat(ranked, ChartType.Single, 1000);
+        var doubles = HubPopularity.FolderHeat(ranked, ChartType.Double, 1000);
+
+        Assert.Equal(new[] { (20, 2.0m), (22, 15.0m) }, singles);
+        var d = Assert.Single(doubles);
+        Assert.Equal((20, 50.0m), d);
+    }
+
+    [Fact]
     public void PopularityFolderFilterNarrowsTheBoardAndClearsBack()
     {
         var s20 = MakeChart("Papasito", ChartType.Single, 20);

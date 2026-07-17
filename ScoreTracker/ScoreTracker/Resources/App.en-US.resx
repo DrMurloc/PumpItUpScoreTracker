@@ -4727,4 +4727,19 @@
   <data name="See their boards" xml:space="preserve">
     <value>See their boards</value>
   </data>
+  <data name="Hottest Charts" xml:space="preserve">
+    <value>Hottest Charts</value>
+  </data>
+  <data name="Coldest Charts" xml:space="preserve">
+    <value>Coldest Charts</value>
+  </data>
+  <data name="Biggest Movers" xml:space="preserve">
+    <value>Biggest Movers</value>
+  </data>
+  <data name="{0} charts ranked" xml:space="preserve">
+    <value>{0} charts ranked</value>
+  </data>
+  <data name="Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter" xml:space="preserve">
+    <value>Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter</value>
+  </data>
 </root>

@@ -4604,4 +4604,19 @@
   <data name="See their boards" xml:space="preserve">
     <value>Ver os quadros do jogador</value>
   </data>
+  <data name="Hottest Charts" xml:space="preserve">
+    <value>Charts mais populares</value>
+  </data>
+  <data name="Coldest Charts" xml:space="preserve">
+    <value>Charts menos populares</value>
+  </data>
+  <data name="Biggest Movers" xml:space="preserve">
+    <value>Maiores movimentos</value>
+  </data>
+  <data name="{0} charts ranked" xml:space="preserve">
+    <value>{0} charts no ranking</value>
+  </data>
+  <data name="Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter" xml:space="preserve">
+    <value>Calor por pasta - posição do chart mediano de cada pasta (vermelho = Singles, verde = Doubles); mais alto = mais popular</value>
+  </data>
 </root>

@@ -4614,4 +4614,19 @@
   <data name="See their boards" xml:space="preserve">
     <value>이 플레이어의 보드 보기</value>
   </data>
+  <data name="Hottest Charts" xml:space="preserve">
+    <value>최고 인기 채보</value>
+  </data>
+  <data name="Coldest Charts" xml:space="preserve">
+    <value>최저 인기 채보</value>
+  </data>
+  <data name="Biggest Movers" xml:space="preserve">
+    <value>최다 순위 변동</value>
+  </data>
+  <data name="{0} charts ranked" xml:space="preserve">
+    <value>랭킹에 오른 채보 {0}개</value>
+  </data>
+  <data name="Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter" xml:space="preserve">
+    <value>폴더 인기도 - 폴더별 중간 채보의 보드 순위 (빨강 = 싱글, 초록 = 더블), 높을수록 인기</value>
+  </data>
 </root>
