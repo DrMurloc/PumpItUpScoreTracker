@@ -16,6 +16,8 @@
 <PageTitle>@L[ActiveLabel] · @L["Official Leaderboards"]</PageTitle>
 
 <style>
+    .olb-subtitle { color: var(--mix-ink-muted); }
+
     .olb-health {
         display: inline-flex;
         align-items: center;
@@ -27,8 +29,6 @@
         border: 1px solid var(--mix-surface-muted);
         color: var(--mix-ink-muted);
     }
-
-    .olb-health.ok { color: var(--mix-primary); border-color: var(--mix-primary); }
 
     .olb-health.failed { color: var(--mix-accent); border-color: var(--mix-accent); }
 
@@ -79,19 +79,15 @@
 
 <MudText Typo="Typo.h4">@L["Official Leaderboards"]</MudText>
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1 flex-wrap">
+    <MudText Typo="Typo.body2" Class="olb-subtitle">
+        @L["Last Updated"] · @(_lastImported?.ToLocalTime().ToString("g") ?? "—")
+    </MudText>
     @if (_latestRun != null && _latestRun.CompletedAt == null && _latestRun.Error != null)
     {
         <MudTooltip Text="@_latestRun.Error">
             <span class="olb-health failed">⚠ @L["Last import failed"] · @_latestRun.Stage</span>
         </MudTooltip>
     }
-    else if (_lastImported != null)
-    {
-        <span class="olb-health ok">● @L["Import OK"]</span>
-    }
-    <MudText Typo="Typo.body2">
-        @L["Last Updated"] · @(_lastImported?.ToLocalTime().ToString("g") ?? "—")
-    </MudText>
 </MudStack>
 
 <nav class="olb-section-nav" aria-label="@L["Official Leaderboards"]">

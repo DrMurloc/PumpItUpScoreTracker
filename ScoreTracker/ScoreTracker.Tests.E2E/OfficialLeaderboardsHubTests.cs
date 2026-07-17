@@ -48,8 +48,8 @@ public sealed class OfficialLeaderboardsHubTests : IAsyncLifetime
         await Expect(_page.GetByText("Wire Inferno").First).ToBeVisibleAsync();
         await Expect(_page.Locator(".mud-chip", new PageLocatorOptions { HasTextString = "PG" }).First)
             .ToBeVisibleAsync();
-        // The header chip reads the sealed run, not a stored timestamp.
-        await Expect(_page.GetByText("Import OK")).ToBeVisibleAsync();
+        // The subtitle reads the sealed run's timestamp, not a stored value.
+        await Expect(_page.GetByText("Last Updated")).ToBeVisibleAsync();
         // The section nav links every page in the group. Scoped to the page's nav —
         // the shell mega-menu also carries these labels, hidden until hover.
         await Expect(_page.Locator(".olb-section-nav").GetByText("What It Takes"))

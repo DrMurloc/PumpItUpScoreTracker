@@ -76,14 +76,14 @@ else
                     }
                 </MudStack>
             </MudTd>
-            <MudTd><HubPlayerChip Player="context.Player" Dense="true"/></MudTd>
-            <MudTd Style="text-align:right"><b>@context.Rating.ToString(_rankings.RatingIsOfficial ? "N2" : "N0")</b></MudTd>
-            <MudTd Style="text-align:right">
-                <MudLink title="@L["See their boards"]" Style="cursor:pointer"
+            <MudTd>
+                <MudLink title="@L["See their boards"]" Style="cursor:pointer" Underline="Underline.None"
                          OnClick="() => OnShowPlayer.InvokeAsync(context.Player.Username)">
-                    @context.BoardsInTop
+                    <HubPlayerChip Player="context.Player" Dense="true"/>
                 </MudLink>
             </MudTd>
+            <MudTd Style="text-align:right"><b>@context.Rating.ToString(_rankings.RatingIsOfficial ? "N2" : "N0")</b></MudTd>
+            <MudTd Style="text-align:right">@context.BoardsInTop</MudTd>
             <MudTd>
                 @if (context.PlayerType != null)
                 {

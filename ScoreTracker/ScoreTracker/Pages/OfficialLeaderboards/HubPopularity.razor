@@ -112,14 +112,17 @@
                            aria-label="@L["All Folders"]"></MudIconButton>
         }
     }
-    <MudText Typo="Typo.body2">
-        @if (_popularity.Any())
-        {
-            <b class="num">@L["{0} charts ranked", _popularity.Count.ToString("N0")]</b>
-            <span> · </span>
-        }
-        @L["Official play ranking - trend deepens weekly as snapshots accumulate."]
-    </MudText>
+    @if (!_songsView)
+    {
+        <MudText Typo="Typo.body2">
+            @if (_popularity.Any())
+            {
+                <b class="num">@L["{0} charts ranked", _popularity.Count.ToString("N0")]</b>
+                <span> · </span>
+            }
+            @L["Official play ranking - trend deepens weekly as snapshots accumulate."]
+        </MudText>
+    }
 </MudStack>
 
 @if (_loading)
@@ -384,7 +387,7 @@ else
                 (Label: L["Doubles"].Value, Type: ChartType.Double)
             }
             .Select(s => new HeatSeries(s.Label, MixThemes.ChartTypeHex(s.Type),
-                FolderHeat(_known.Select(k => (k.Chart, k.Rec.Place)), s.Type, total)
+                FolderHeat(_known.Select(k => (k.Chart, k.Rec.Place)), s.Type, total, MinFolderSample)
                     .Select(p => new HeatPoint(p.Level, p.Median, p.P25, p.P75)).ToArray()))
             .Where(s => s.Points.Count > 0)
             .ToList();
@@ -408,16 +411,22 @@ else
         _heatOptions.Tooltip = new Tooltip { Shared = true, Custom = HeatTooltip };
     }
 
+    // A folder's stats only mean something with a few charts behind them — a one-chart
+    // folder (D29) plots wherever its lone chart sits and reads as a folder trend.
+    private const int MinFolderSample = 5;
+
     /// <summary>
     ///     Median, P25, and P75 board percentiles per level for one chart type, levels
     ///     ascending — the quartiles ride the same interpolation the By-Level widget uses.
+    ///     Folders with fewer than <paramref name="minCharts" /> ranked charts drop out.
     /// </summary>
     internal static IReadOnlyList<(int Level, decimal Median, decimal P25, decimal P75)> FolderHeat(
-        IEnumerable<(Chart Chart, int Place)> ranked, ChartType type, int total)
+        IEnumerable<(Chart Chart, int Place)> ranked, ChartType type, int total, int minCharts = 1)
     {
         if (total == 0) return Array.Empty<(int, decimal, decimal, decimal)>();
         return ranked.Where(r => r.Chart.Type == type)
             .GroupBy(r => (int)r.Chart.Level)
+            .Where(g => g.Count() >= minCharts)
             .Select(g =>
             {
                 var sorted = g.Select(r => (double)r.Place).OrderBy(p => p).ToArray();

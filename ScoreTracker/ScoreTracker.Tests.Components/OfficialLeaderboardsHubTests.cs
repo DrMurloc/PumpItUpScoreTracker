@@ -155,7 +155,7 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
     }
 
     [Fact]
-    public void RankingsBoardsCountLinksIntoThePlayersView()
+    public void RankingsPlayerNameLinksIntoThePlayersView()
     {
         _mediator.Setup(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new OfficialRankingsRecord(Week2, true, new[]
@@ -168,7 +168,7 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
             .Add(x => x.Mix, MixEnum.Phoenix2)
             .Add(x => x.OnShowPlayer, (string username) => shown = username));
 
-        cut.FindAll("a").First(a => a.TextContent.Trim() == "241").Click();
+        cut.FindAll("a").First(a => a.TextContent.Contains("STARFORGE")).Click();
 
         Assert.Equal("STARFORGE", shown);
     }
@@ -273,6 +273,25 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         cut.InvokeAsync(() => cut.Instance.ClearFolder());
         cut.FindAll("button").First(b => b.TextContent.Contains("Songs")).Click();
         Assert.DoesNotContain("Hottest Charts", cut.Markup);
+        // The ranked-count caption is a charts-view concept too.
+        Assert.DoesNotContain("charts ranked", cut.Markup);
+    }
+
+    [Fact]
+    public void FolderHeatDropsFoldersUnderTheSampleFloor()
+    {
+        var ranked = new[]
+        {
+            (MakeChart("A", ChartType.Single, 20), 10),
+            (MakeChart("B", ChartType.Single, 20), 20),
+            // D29's lone chart plots wherever it sits — no folder trend to read.
+            (MakeChart("Lone", ChartType.Single, 29), 500)
+        };
+
+        var floored = HubPopularity.FolderHeat(ranked, ChartType.Single, 1000, minCharts: 2);
+
+        var only = Assert.Single(floored);
+        Assert.Equal(20, only.Level);
     }
 
     [Fact]
