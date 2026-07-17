@@ -613,10 +613,10 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             { "Kasou Shinja仮装信者", "Kasou Shinja" },
             { "Re：End of a Dream", "Re:End of a Dream" },
             { "CROSS RAY (feat. 月下Lia)", "Cross Ray" },
-            { "ヨロピク ピクヨロ！", "Yoropiku Pikuyoro!" },
+            { "ヨロピク ピクヨロ！", "Yoropiku Pikuyoro !" },
             { "甘い誘惑デインジャラス", "Amai Yuuwaku Dangerous" },
             { "甘い誘惑デインジャラス\nAmai Yuuwaku Dangerous", "Amai Yuuwaku Dangerous" },
-            { "ヨロピク ピクヨロ！\nYoropiku Pikuyoro !", "Yoropiku Pikuyoro!" }
+            { "ヨロピク ピクヨロ！\nYoropiku Pikuyoro !", "Yoropiku Pikuyoro !" }
         };
 
     public async Task<(IReadOnlyList<ChartPopularityLeaderboardEntry> Entries,
