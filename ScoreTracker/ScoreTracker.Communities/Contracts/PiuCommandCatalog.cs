@@ -15,7 +15,7 @@ namespace ScoreTracker.Communities.Contracts
         public static IReadOnlyList<BotCommandDefinition> Commands { get; } = new[]
         {
             new BotCommandDefinition(RootName, "PIU Scores tools",
-                new[] { Calc, Chart, Unregister, Feeds },
+                new[] { Calc, Chart, Random, Unregister, Feeds },
                 new[] { Register })
         };
 
@@ -24,6 +24,30 @@ namespace ScoreTracker.Communities.Contracts
             new BotOptionChoice("Phoenix", "Phoenix"),
             new BotOptionChoice("Phoenix 2", "Phoenix2")
         };
+
+        private static readonly IReadOnlyList<BotOptionChoice> TypeChoices = new[]
+        {
+            new BotOptionChoice("Singles", "Single"),
+            new BotOptionChoice("Doubles", "Double"),
+            new BotOptionChoice("Co-op", "CoOp")
+        };
+
+        private static BotSubCommand Random =>
+            new("random", "Draw a random set of charts",
+                new[]
+                {
+                    new BotCommandOption("count", "How many (1–10, default 3)", BotCommandOptionType.Integer,
+                        MinValue: 1, MaxValue: 10),
+                    new BotCommandOption("type", "Chart type (default Singles)", BotCommandOptionType.String,
+                        Choices: TypeChoices),
+                    new BotCommandOption("min-level", "Lowest level", BotCommandOptionType.Integer,
+                        MinValue: 1, MaxValue: 29),
+                    new BotCommandOption("max-level", "Highest level", BotCommandOptionType.Integer,
+                        MinValue: 1, MaxValue: 29),
+                    OptionalMix,
+                    new BotCommandOption("preset", "One of your saved randomizer presets", BotCommandOptionType.String,
+                        Autocomplete: true)
+                });
 
         private static BotCommandOption RequiredMix =>
             new("mix", "Which mix", BotCommandOptionType.String, Required: true, Choices: MixChoices);

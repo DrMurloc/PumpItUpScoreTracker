@@ -24,10 +24,12 @@ public sealed class BotCommandSagaTests
 {
     private readonly Mock<IBotClient> _bot = new();
     private readonly Mock<ICommunityRepository> _communities = new();
+    private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IDiscordFeedSubscriptionRepository> _feeds = new();
     private readonly Mock<IMediator> _mediator = new();
 
-    private BotCommandSaga Saga() => new(_bot.Object, _communities.Object, _feeds.Object, _mediator.Object);
+    private BotCommandSaga Saga() =>
+        new(_bot.Object, _communities.Object, _feeds.Object, _mediator.Object, _currentUser.Object);
 
     private static HandleBotInteractionCommand Invoke(string[] path, Dictionary<string, string> options,
         bool canManage = false) =>
@@ -224,5 +226,34 @@ public sealed class BotCommandSagaTests
 
         Assert.Single(choices);
         Assert.Equal("Ugly Dee", choices[0].Value);
+    }
+
+    [Fact]
+    public async Task RandomDrawRendersACardOfTheDrawnCharts()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<ScoreTracker.Randomizer.Contracts.Queries.DrawRandomChartsQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SampleCharts().Take(2).ToArray());
+
+        var reply = await Saga().Handle(Invoke(new[] { "random" },
+            new Dictionary<string, string> { ["count"] = "2", ["type"] = "Single", ["mix"] = "Phoenix2" }),
+            CancellationToken.None);
+
+        Assert.NotNull(reply.Card);
+        Assert.Contains("Drew 2", reply.Card!.Header!.Markdown);
+    }
+
+    [Fact]
+    public async Task RandomPresetNudgesAnUnlinkedUserToConnectDiscord()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<ScoreTracker.Identity.Contracts.Queries.GetUserByExternalLoginQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ScoreTracker.Domain.Models.User?)null);
+
+        var reply = await Saga().Handle(Invoke(new[] { "random" },
+            new Dictionary<string, string> { ["preset"] = "Bracket Warmup" }), CancellationToken.None);
+
+        Assert.Null(reply.Card);
+        Assert.Contains("Link your Discord account", reply.Text);
     }
 }

@@ -5,9 +5,13 @@ using ScoreTracker.Communities.Contracts.Commands;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Communities.Domain;
 using ScoreTracker.Domain.Exceptions;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Identity.Contracts.Queries;
+using ScoreTracker.Randomizer.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Communities.Application
@@ -26,16 +30,18 @@ namespace ScoreTracker.Communities.Application
 
         private readonly IBotClient _bot;
         private readonly ICommunityRepository _communities;
+        private readonly ICurrentUserAccessor _currentUser;
         private readonly IDiscordFeedSubscriptionRepository _feeds;
         private readonly IMediator _mediator;
 
         public BotCommandSaga(IBotClient bot, ICommunityRepository communities,
-            IDiscordFeedSubscriptionRepository feeds, IMediator mediator)
+            IDiscordFeedSubscriptionRepository feeds, IMediator mediator, ICurrentUserAccessor currentUser)
         {
             _bot = bot;
             _communities = communities;
             _feeds = feeds;
             _mediator = mediator;
+            _currentUser = currentUser;
         }
 
         public Task<BotReply> Handle(HandleBotInteractionCommand request, CancellationToken cancellationToken)
@@ -46,6 +52,7 @@ namespace ScoreTracker.Communities.Application
             {
                 "calc" => Task.FromResult(Calc(interaction)),
                 "chart" => ChartLookup(interaction, cancellationToken),
+                "random" => RandomDraw(interaction, cancellationToken),
                 "register" => Register(interaction, cancellationToken),
                 "unregister" => Unregister(interaction, cancellationToken),
                 "feeds" => Feeds(interaction, cancellationToken),
@@ -60,6 +67,7 @@ namespace ScoreTracker.Communities.Application
             return focused switch
             {
                 "song" => await SongNameChoices(request.Request, cancellationToken),
+                "preset" => await PresetChoices(request.Request, cancellationToken),
                 "name" => await CommunityNameChoices(request.Request, cancellationToken),
                 "feed" => await FeedChoices(request.Request, cancellationToken),
                 _ => Array.Empty<BotOptionChoice>()
@@ -194,6 +202,136 @@ namespace ScoreTracker.Communities.Application
             foreach (var name in await _communities.GetChannelCommunityNames(request.ChannelId, cancellationToken))
                 choices.Add(new BotOptionChoice($"Community — {(string)name}", $"community:{(string)name}"));
             return choices.Take(25).ToArray();
+        }
+
+        private async Task<BotReply> RandomDraw(BotInteraction interaction, CancellationToken cancellationToken)
+        {
+            if (interaction.Options.TryGetValue("preset", out var presetName) && !string.IsNullOrWhiteSpace(presetName))
+                return await RandomFromPreset(interaction, presetName.Trim(), cancellationToken);
+
+            var mix = ReadMix(interaction);
+            var count = interaction.Options.TryGetValue("count", out var cs) && int.TryParse(cs, out var c)
+                ? Math.Clamp(c, 1, 10)
+                : 3;
+            var type = ReadType(interaction);
+            var min = interaction.Options.TryGetValue("min-level", out var mn) && int.TryParse(mn, out var mnv)
+                ? mnv
+                : 1;
+            var max = interaction.Options.TryGetValue("max-level", out var mx) && int.TryParse(mx, out var mxv)
+                ? mxv
+                : 29;
+            if (min > max) (min, max) = (max, min);
+
+            var drawn = (await _mediator.Send(new DrawRandomChartsQuery(BuildSettings(count, type, min, max), mix),
+                cancellationToken)).ToList();
+            if (drawn.Count == 0) return new BotReply(Text: "No charts matched those settings.");
+            return DrawCard(drawn, mix, $"Drew {drawn.Count} {(drawn.Count == 1 ? "chart" : "charts")}",
+                DrawSubtitle(type, min, max, mix));
+        }
+
+        private async Task<BotReply> RandomFromPreset(BotInteraction interaction, string presetName,
+            CancellationToken cancellationToken)
+        {
+            var user = await ResolveUser(interaction.UserId, cancellationToken);
+            if (user == null) return LinkNudge();
+            _currentUser.SetScopedUser(user);
+
+            var saved = (await _mediator.Send(new GetRandomSettingsQuery(), cancellationToken))
+                .FirstOrDefault(s => string.Equals((string)s.SettingsName, presetName, StringComparison.OrdinalIgnoreCase));
+            if (saved == null) return new BotReply(Text: $"You don't have a saved preset called \"{presetName}\".");
+
+            var drawn = (await _mediator.Send(new DrawRandomChartsQuery(saved.Settings, saved.Mix), cancellationToken))
+                .ToList();
+            if (drawn.Count == 0) return new BotReply(Text: $"\"{presetName}\" didn't match any charts right now.");
+            return DrawCard(drawn, saved.Mix, $"Drew {drawn.Count} — {(string)saved.SettingsName}",
+                "Your saved randomizer settings");
+        }
+
+        private BotReply DrawCard(IReadOnlyList<Chart> charts, MixEnum mix, string title, string subtitle)
+        {
+            var blocks = new List<IRichBotBlock> { new RichBotDivider() };
+            foreach (var chart in charts.Take(10))
+                blocks.Add(new RichBotSection(
+                    $"#DIFFICULTY|{chart.DifficultyString}# [{(string)chart.Song.Name}]({SiteBase}/Chart/{chart.Id})",
+                    chart.Song.ImagePath));
+
+            return new BotReply(Card: new RichBotMessage(
+                new RichBotSection($"### {title}\n-# {subtitle}", null),
+                blocks,
+                $"#MIX|{mix}# {mix.GetName()} · PIU Scores",
+                mix.GetAccentColor(),
+                Array.Empty<RichBotLink>()));
+        }
+
+        private static RandomSettings BuildSettings(int count, ChartType type, int minLevel, int maxLevel)
+        {
+            var settings = new RandomSettings { Count = count, AllowRepeats = false };
+            // Both a level weight and a song-type weight must be non-zero for a chart to be
+            // eligible, so open every song category and weight the requested level band.
+            settings.SongTypeWeights = settings.SongTypeWeights.ToDictionary(kv => kv.Key, kv => 1);
+            switch (type)
+            {
+                case ChartType.Double:
+                    SetLevelBand(settings.DoubleLevelWeights, minLevel, maxLevel);
+                    break;
+                case ChartType.CoOp:
+                    settings.PlayerCountWeights = settings.PlayerCountWeights.ToDictionary(kv => kv.Key, kv => 1);
+                    break;
+                default:
+                    SetLevelBand(settings.LevelWeights, minLevel, maxLevel);
+                    break;
+            }
+
+            return settings;
+        }
+
+        private static void SetLevelBand(IDictionary<int, int> weights, int minLevel, int maxLevel)
+        {
+            foreach (var key in weights.Keys.ToList())
+                weights[key] = key >= minLevel && key <= maxLevel ? 1 : 0;
+        }
+
+        private static string DrawSubtitle(ChartType type, int minLevel, int maxLevel, MixEnum mix)
+        {
+            var typeName = type switch
+            {
+                ChartType.Double => "Doubles",
+                ChartType.CoOp => "Co-op",
+                _ => "Singles"
+            };
+            return type == ChartType.CoOp
+                ? $"{typeName} · {mix.GetName()}"
+                : $"{typeName} · levels {minLevel}–{maxLevel} · {mix.GetName()}";
+        }
+
+        private static ChartType ReadType(BotInteraction interaction) =>
+            interaction.Options.TryGetValue("type", out var value) && Enum.TryParse<ChartType>(value, out var type)
+                ? type
+                : ChartType.Single;
+
+        private async Task<User?> ResolveUser(ulong discordUserId, CancellationToken cancellationToken) =>
+            await _mediator.Send(new GetUserByExternalLoginQuery(discordUserId.ToString(), "Discord"),
+                cancellationToken);
+
+        private static BotReply LinkNudge() =>
+            new(Text: "Link your Discord account first — sign in at https://piuscores.arroweclip.se and connect " +
+                      "Discord on your Account page, then try again.");
+
+        private async Task<IReadOnlyList<BotOptionChoice>> PresetChoices(BotAutocompleteRequest request,
+            CancellationToken cancellationToken)
+        {
+            var user = await ResolveUser(request.UserId, cancellationToken);
+            if (user == null) return Array.Empty<BotOptionChoice>();
+            _currentUser.SetScopedUser(user);
+
+            var partial = request.PartialValue?.Trim() ?? string.Empty;
+            var saved = await _mediator.Send(new GetRandomSettingsQuery(), cancellationToken);
+            return saved.Select(s => (string)s.SettingsName)
+                .Where(name => partial.Length == 0 || name.Contains(partial, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(name => name)
+                .Take(25)
+                .Select(name => new BotOptionChoice(name, name))
+                .ToArray();
         }
 
         private async Task<BotReply> ChartLookup(BotInteraction interaction, CancellationToken cancellationToken)

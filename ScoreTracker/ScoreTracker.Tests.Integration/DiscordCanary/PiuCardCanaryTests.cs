@@ -25,6 +25,9 @@ public sealed class PiuCardCanaryTests
     [DiscordCanaryFact]
     public Task PostsTheChartLookupCard() => PostAndVerify(ChartCard);
 
+    [DiscordCanaryFact]
+    public Task PostsTheRandomDrawCard() => PostAndVerify(RandomCard);
+
     // /piu chart — song art header, one difficulty-bubble row per chart, each a masked link.
     private static RichBotMessage ChartCard(string marker) =>
         new(new RichBotSection("### Witch Doctor\n-# BanYa · 175 BPM · Phoenix 2", SongArt),
@@ -35,6 +38,23 @@ public sealed class PiuCardCanaryTests
                     $"#DIFFICULTY|S18# [S18]({ChartBase}/00000000-0000-0000-0000-000000000001)\n" +
                     $"#DIFFICULTY|D19# [D19]({ChartBase}/00000000-0000-0000-0000-000000000002)\n" +
                     $"#DIFFICULTY|S22# [S22]({ChartBase}/00000000-0000-0000-0000-000000000003)")
+            },
+            $"#MIX|Phoenix2# Phoenix 2 · PIU Scores · {marker}",
+            MixEnum.Phoenix2.GetAccentColor(),
+            Array.Empty<RichBotLink>());
+
+    // /piu random — a titled draw, one art row per chart, each a masked link.
+    private static RichBotMessage RandomCard(string marker) =>
+        new(new RichBotSection("### Drew 3 charts\n-# Doubles · levels 20–23 · Phoenix 2", null),
+            new IRichBotBlock[]
+            {
+                new RichBotDivider(),
+                new RichBotSection($"#DIFFICULTY|D22# [Sarabande]({ChartBase}/00000000-0000-0000-0000-000000000021)",
+                    SongArt),
+                new RichBotSection($"#DIFFICULTY|D20# [Moonlight]({ChartBase}/00000000-0000-0000-0000-000000000022)",
+                    SongArt),
+                new RichBotSection($"#DIFFICULTY|D23# [Gargoyle FS]({ChartBase}/00000000-0000-0000-0000-000000000023)",
+                    SongArt)
             },
             $"#MIX|Phoenix2# Phoenix 2 · PIU Scores · {marker}",
             MixEnum.Phoenix2.GetAccentColor(),
