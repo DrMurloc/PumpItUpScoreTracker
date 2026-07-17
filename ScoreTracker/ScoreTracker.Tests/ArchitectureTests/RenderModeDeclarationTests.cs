@@ -20,6 +20,13 @@ public sealed class RenderModeDeclarationTests
     /// <summary>Pages that render static SSR by design (the SSR ladder's PR-4 onward).</summary>
     private static readonly HashSet<string> StaticPages = new(StringComparer.Ordinal)
     {
+        // The chart page: real HTML for crawlers, its circuit-needing sections islanded
+        // (docs/design/chart-details-overhaul.md).
+        "ChartDetails.razor",
+        // The branded 404: pure links and a static image — nothing needs a circuit.
+        "NotFound.razor",
+        // The unmatched-route catch-all: renders nothing itself, it routes into NotFound.
+        "NotFoundCatchAll.razor"
     };
 
     [Fact]

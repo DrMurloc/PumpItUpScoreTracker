@@ -29,9 +29,12 @@ So P3 is unblocked in the sense that the machinery is here, and **still blocked*
 that one site-wide flip has to precede it — see "What P3 actually costs" under the build plan,
 which also records the head problem that has no answer yet.
 
-Remaining: **P3** (301 lattice live, sitemap vanity swap, static head/JSON-LD, output caching —
-ships as ONE unit, never split: pretty URLs must never point at empty shells) and **P4** (E2E
-facts + doc sync). **R6's island packaging folds into P3-1** for the same reason.
+**P3 + P4 SHIPPED 2026-07-16** (SSR ladder PR-4, branch `claude/chart-page-static-url-cutover`):
+the page is static SSR, the 301 lattice is live, the head carries canonical + JSON-LD, and the
+sitemap lists vanity URLs — all as one unit. **Output caching was split out** (the K4 finding in
+seo-friendly-site.md §7: the anonymous component-endpoint GET carries an antiforgery `Set-Cookie`
++ `no-store`, and caching it safely is a separable, security-sensitive spike that needs owner
+field-verification). It changes no URL and breaks no crawler, so the ONE-unit rule is intact.
 Owner-only steps: UX field-test rounds, and the **floor calibration run** (trigger
 `recalculate-chart-similarity` in /hangfire, then set the floor from the score distribution — it
 is a render constant now, so that is a redeploy rather than a job run). **The 2026-07-15 run
@@ -73,7 +76,7 @@ surface and the destination worthy of the dialog's vocabulary.
 
 | URL | Behavior |
 |---|---|
-| `/{default-mix}/{song-slug}/{difficulty}` e.g. `/phoenix/baroque-virus-full-song/d20` | **Canonical** — the site's anonymous default mix; self-canonical; sitemapped |
+| `/Charts/{default-mix}/{song-slug}/{difficulty}` e.g. `/Charts/phoenix/baroque-virus-full-song/d20` | **Canonical** — mounted under `/Charts` (decided 2026-07-16: contains the namespace under a literal, no root catch-all); the site's anonymous default mix; self-canonical; sitemapped |
 | `/Chart/{guid}` (and legacy `/Record`) | Permanent identity — 301 → canonical, forever |
 | Historical (mix, song, level) triple, e.g. `/xx/…/d19` | Resolved against **that mix's** catalog (the mix segment timestamps the level, so cross-mix renumbering is never ambiguous) → 301 → the chart's canonical |
 | Stale/mangled slug | 301 → canonical |
@@ -111,10 +114,10 @@ have never shared a mix, so no path collides today. Renamed songs cannot alias �
 keeps one `Name` per song, so an old community name is simply a slug that doesn't resolve; the
 GUID permalink is the durable address.
 
-**Open: where the lattice mounts** — bare root `/{mix}/{song}/{difficulty}` (this doc's
-original shape) vs `/Charts/{mix}/{song}/{difficulty}`. Bare root makes the vanity route the
-site's three-segment catch-all (component routes take no custom constraints); the `/Charts`
-prefix contains it completely. Decision ④ in seo-friendly-site.md §7.
+**Where the lattice mounts — decided 2026-07-16: `/Charts/{mix}/{song}/{difficulty}`.** Bare
+root would have made the vanity route the site's three-segment catch-all (component routes
+take no custom constraints); the `/Charts` prefix contains the namespace completely and pairs
+with the chart list page above it.
 
 ## Page anatomy (mock R2, approved 2026-07-14)
 
@@ -291,8 +294,8 @@ and deleted.
 
 | # | Commit | Contents |
 |---|---|---|
-| P3 | SEO cutover + caching | static head/JSON-LD live (old dead-channel `HeadContent` retired), sitemap swaps to vanity, 301 lattice goes public, in-app links switch to vanity URLs, output-cache policy + CDN header spec ship (first meaningfully cacheable page — verify cached anon HTML actually contains content) — **FT: view-source is real HTML; Discord unfurl shows the jacket** |
-| P4 | Tests + docs | E2E facts (anon chart page serves content pre-circuit; GUID 301s; glow only when signed in), bUnit island coverage, ARCHITECTURE/UX-GUIDELINES/API/DATABASE-SCHEMA sync |
+| P3 ✅ | SEO cutover (SSR ladder PR-4, **shipped 2026-07-16** as K1–K3) | Static head + `MusicRecording` JSON-LD + self-canonical `<link>` live (dead-channel `HeadContent` retired); sitemap swapped to vanity `/Charts/{mix}/{song}/{difficulty}`; the 301 lattice public — `ChartPermalinkController` 301s the GUID permalink + `/Record`, and the **page itself** 301s historical/stale/mixed-case slugs from static SSR (proven a static page emits a real 301, not a 302); in-app links build `chart.CanonicalPath()`. **Output caching split out** — see the K4 finding in seo-friendly-site.md §7 (the anon component-endpoint GET carries an antiforgery `Set-Cookie` + `no-store`; caching it safely is a separable, security-sensitive spike needing owner field-test). ⚠ P3's static conversion caught the **MudTooltip-throws-in-static-SSR** trap (`DifficultyBubble`/`SongImage`, now `RendererInfo.IsInteractive`-gated). |
+| P4 ✅ | Tests + docs (**shipped 2026-07-16** as K5) | `ChartUrlCutoverTests` (auto-redirect off: GUID 301, alias 301s, casing 301, vanity 200 with real HTML, unknown 404) + the sibling static-render probe; bUnit island/gate coverage; ARCHITECTURE + this doc synced. |
 
 ### What P3 actually costs — scoped 2026-07-15, against shipped source
 

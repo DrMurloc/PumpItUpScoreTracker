@@ -49,9 +49,10 @@
     // top, because the keyboard takes the bottom half the moment its input focuses.
     // Both are static shell HTML; the search sheet's autocomplete is an island INSIDE it,
     // which is why the chrome opens from here and not from a circuit.
+    var SEARCH_SHEET = { sheet: '[data-search-sheet]', button: '[data-search-btn]', focus: 'input' };
     var SHEETS = [
         { sheet: '[data-more-sheet]', button: '[data-more-btn]' },
-        { sheet: '[data-search-sheet]', button: '[data-search-btn]', focus: 'input' }
+        SEARCH_SHEET
     ];
 
     function sheetNode(spec) {
@@ -111,17 +112,19 @@
         }
     }
 
-    // Blazor navigates through pushState/replaceState, which fire no event of their own.
-    function wrapHistory(name) {
+    // Blazor and the pages navigate through pushState/replaceState, which fire no event of
+    // their own. A push is a step to somewhere else, so it closes any open sheet — a sheet is
+    // chrome over the page it was opened from, and the click handler cannot catch the search
+    // autocomplete, which navigates from a circuit without a link. A replace is the page
+    // rewriting its own URL in place (the tier list canonicalizing /TierLists into its folder
+    // route), so the sheet stays up.
+    function wrapHistory(name, leavesPage) {
         var original = history[name];
         if (typeof original !== 'function') return;
         history[name] = function () {
             var result = original.apply(this, arguments);
             refreshActiveNav();
-            // A sheet is chrome over the page it was opened from, so leaving that page
-            // closes it. The click handler catches links; it cannot catch the search
-            // autocomplete, which navigates from a circuit without one.
-            closeSheets();
+            if (leavesPage) closeSheets();
             return result;
         };
     }
@@ -183,9 +186,37 @@
         if (openMenu) positionMenu(openMenu);
     }
 
-    // ===== Public surface (MainLayout and ShellImportPulse call these) =====
+    // ===== Public surface (MainLayout, ShellImportPulse and static pages call these) =====
 
     window.shell = {
+        // The two search bars are viewport-exclusive: phones get the sheet (which focuses
+        // its own input), desktop's search already sits in the app bar so opening it just
+        // means focusing it. Must run in the caller's click stack for the iOS keyboard.
+        openSearch: function () {
+            // Geometry, not computed display: the bottom nav hides by display:none on the
+            // WRAPPER, which leaves the button's own computed display untouched — but a
+            // hidden ancestor zeroes the rect. Opening the sheet on desktop shows only its
+            // scrim (the sheet itself is mobile-only): a dark screen and nothing else.
+            var button = document.querySelector(SEARCH_SHEET.button);
+            if (button && button.getBoundingClientRect().width > 0) {
+                closeSheets();
+                setSheet(SEARCH_SHEET, true);
+                return;
+            }
+            var field = document.querySelector('.shell-appbar .appbar-search input');
+            if (!field) return;
+            field.focus();
+            // Focus alone is easy to miss up in the app bar — flash the field once.
+            var wrap = field.closest('.appbar-search');
+            if (!wrap) return;
+            wrap.classList.remove('search-flash');
+            void wrap.offsetWidth; // restart the animation on a second click
+            wrap.classList.add('search-flash');
+            wrap.addEventListener('animationend', function done() {
+                wrap.classList.remove('search-flash');
+                wrap.removeEventListener('animationend', done);
+            });
+        },
         // Dock and focus classes live on <html> because the shell that reacts to them is
         // outside the Blazor root that knows about them.
         setDockState: function (hasDock, focusMode) {
@@ -205,8 +236,8 @@
         document.addEventListener('keydown', onKeyDown);
         window.addEventListener('resize', onResize);
         window.addEventListener('popstate', refreshActiveNav);
-        wrapHistory('pushState');
-        wrapHistory('replaceState');
+        wrapHistory('pushState', true);
+        wrapHistory('replaceState', false);
         // The dock's scroll watcher needs no circuit, so it starts with the page.
         if (window.pageDock) window.pageDock.watch();
         refreshActiveNav();

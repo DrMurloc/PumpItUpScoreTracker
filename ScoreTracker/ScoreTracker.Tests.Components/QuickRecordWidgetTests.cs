@@ -58,6 +58,9 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
         Services.AddSingleton(_mediator.Object);
         Services.AddScoped<ChartCatalogCache>();
         CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        // Last: reading the renderer locks the service collection. The widget's bubble gates
+        // its tooltip on RendererInfo; render it interactive.
+        this.RenderInteractive();
     }
 
     private static Chart MakeChart() =>

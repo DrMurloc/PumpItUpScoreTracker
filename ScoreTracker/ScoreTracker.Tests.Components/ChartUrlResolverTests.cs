@@ -50,7 +50,37 @@ public sealed class ChartUrlResolverTests
 
         Assert.NotNull(resolution);
         Assert.Equal(chartId, resolution!.ChartId);
-        Assert.Equal("/phoenix/baroque-virus-full-song/d20", resolution.CanonicalPath);
+        Assert.Equal("/Charts/phoenix/baroque-virus-full-song/d20", resolution.CanonicalPath);
+    }
+
+    [Fact]
+    public async Task SlottedTriplesResolveTheirOwnChartAndDuplicateRowsResolveDeterministically()
+    {
+        // Hard 6 and Crazy 6 share a song and a level — the slot-aware slug splits them.
+        var hard = ChartSlugsTests.BuildChart(mix: MixEnum.Nx, type: ChartType.Single, level: 6,
+            slot: LegacySlot.Hard);
+        var crazy = ChartSlugsTests.BuildChart(mix: MixEnum.Nx, type: ChartType.Single, level: 6,
+            slot: LegacySlot.Crazy);
+        // Legacy-import twins: identical in every URL-visible way. Lowest id owns the URL.
+        var twinA = ChartSlugsTests.BuildChart(Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            song: "Twin", mix: MixEnum.Nx, type: ChartType.Single, level: 20);
+        var twinB = ChartSlugsTests.BuildChart(Guid.Parse("00000000-0000-0000-0000-000000000002"),
+            song: "Twin", mix: MixEnum.Nx, type: ChartType.Single, level: 20);
+        SetupEmptyCatalogs();
+        SetupMix(MixEnum.Nx, crazy, twinB, hard, twinA);
+        SetupMix(MixEnum.Phoenix, ChartSlugsTests.BuildChart(hard.Id, level: 8),
+            ChartSlugsTests.BuildChart(crazy.Id, level: 12),
+            ChartSlugsTests.BuildChart(twinA.Id, song: "Twin", level: 21));
+        var resolver = BuildResolver();
+
+        var nxSlug = ChartSlugs.MixSlug(MixEnum.Nx);
+        var crazyHit = await resolver.ResolveHistorical(nxSlug, "baroque-virus-full-song", "crazy-6",
+            MixEnum.Phoenix, CancellationToken.None);
+        var twinHit = await resolver.ResolveHistorical(nxSlug, "twin", "s20",
+            MixEnum.Phoenix, CancellationToken.None);
+
+        Assert.Equal(crazy.Id, crazyHit!.ChartId);
+        Assert.Equal(twinA.Id, twinHit!.ChartId);
     }
 
     [Fact]
@@ -79,7 +109,7 @@ public sealed class ChartUrlResolverTests
         var canonical = await BuildResolver()
             .CanonicalPathFor(chartId, MixEnum.Phoenix, CancellationToken.None);
 
-        Assert.Equal("/xx/baroque-virus-full-song/d19", canonical);
+        Assert.Equal("/Charts/xx/baroque-virus-full-song/d19", canonical);
     }
 
     [Fact]

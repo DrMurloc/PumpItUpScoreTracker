@@ -4448,6 +4448,12 @@
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>インポートされたスコアは、届き次第ここに表示されます。</value>
   </data>
+  <data name="Page not found" xml:space="preserve">
+    <value>ページが見つかりません</value>
+  </data>
+  <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
+    <value>このアドレスには何もありません — バージョンとともに移動したか、最初から存在しなかったのかもしれません。検索はすべての譜面を知っています。</value>
+  </data>
   <data name="Hot Streak" xml:space="preserve">
     <value>絶好調</value>
   </data>

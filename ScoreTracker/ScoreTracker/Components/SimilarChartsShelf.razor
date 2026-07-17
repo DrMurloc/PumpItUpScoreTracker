@@ -21,11 +21,13 @@
    read time; METADATA is the filters, which reduce the target list and recompute live
    (filtering the stored top-20 would return nothing — those twenty are the nearest charts
    overall, so any filter worth applying excludes all of them).
-   The static-list/island split rides with P3: prerendering is off permanently and there is
-   no render-mode infrastructure on this branch yet, so today the whole page is one
-   circuit and the cards are already real <a href>s. *@
+   The crawlable card grid renders statically in SimilarChartsStaticGrid; this is its
+   interactive twin. data-island-ready on the root tells the wrapper to hide the static copy
+   (site.css) the moment this connects — the cards are real <a href>s on both sides, so the
+   handoff moves no pixels. *@
 @if (_loaded)
 {
+    <div class="chart-shelf-island" data-island-ready>
     <div class="chart-shelf-controls">
         <div class="chart-shelf-sort" role="group" aria-label="@L["Order by"]">
             @foreach (var option in SortOptions)
@@ -207,6 +209,7 @@
             </details>
         }
     }
+    </div>
 }
 
 @code {

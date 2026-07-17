@@ -89,19 +89,24 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
 
         var urls = document.Descendants(ns + "loc").Select(loc => loc.Value).ToArray();
         Assert.Contains("https://piuscores.arroweclip.se/Welcome", urls);
-        Assert.Contains(urls, url => url.StartsWith("https://piuscores.arroweclip.se/Chart/"));
+        // Canonical vanity URLs, never GUIDs — the seeded Conflict S20 sits at its slug path.
+        Assert.Contains("https://piuscores.arroweclip.se/Charts/phoenix/conflict/s20", urls);
     }
 
     /// <summary>
-    ///     Unmatched routes used to answer 200 with an empty app shell — a soft-404 to
-    ///     every crawler. Under the static router the framework answers a real 404.
+    ///     Unmatched routes fall to the catch-all page, whose NotFound() renders the branded
+    ///     not-found page in the same response: a true HTTP 404 for crawlers, the MISS screen
+    ///     inside the shell for a human.
     /// </summary>
     [Fact]
-    public async Task UnknownRoutesAnswer404()
+    public async Task UnknownRoutesAnswer404WithTheMissPage()
     {
         var response = await _client.GetAsync("/this-route-does-not-exist");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("nf-miss", body);
+        Assert.Contains("shell-appbar", body);
     }
 
     /// <summary>Crawlers discover the sitemap through robots.txt, not Search Console alone.</summary>
@@ -130,6 +135,26 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
         Assert.Contains("<title>Conflict S20</title>", body);
         Assert.Contains("name=\"description\"", body);
         Assert.Contains("property=\"og:image\"", body);
+    }
+
+    /// <summary>
+    ///     A chart with siblings renders their DifficultyBubbles statically — and those wrap a
+    ///     MudTooltip, which must survive static SSR. The lone-chart head fact above never
+    ///     exercises this path (one difficulty, no sibling row), so a chart that has siblings
+    ///     is what proves the hero's static section doesn't throw on a popover component.
+    /// </summary>
+    [Fact]
+    public async Task AChartWithSiblingsRendersStaticallyWithoutThrowing()
+    {
+        await _fixture.Seed.SeedPhoenixChartAsync("Conflict", 24, "Double");
+
+        var response = await _client.GetAsync($"/Chart/{_chartId}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        // Both siblings' bubbles are in the raw HTML — the static hero rendered its
+        // MudTooltip-wrapped bubbles, pre-circuit.
+        Assert.Contains("chart-hero-siblings", body);
     }
 
     /// <summary>

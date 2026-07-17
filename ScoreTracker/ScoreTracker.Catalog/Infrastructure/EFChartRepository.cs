@@ -398,6 +398,22 @@ internal sealed class EFChartRepository : IChartRepository
         return result;
     }
 
+    public async Task<IReadOnlyList<(Guid ChartId, MixEnum Mix, int Level)>> GetChartMixLevels(
+        CancellationToken cancellationToken = default)
+    {
+        return (await _cache.GetOrCreateAsync($"{nameof(EFChartRepository)}__ChartMixLevels", async entry =>
+        {
+            entry.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(14);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var rows = await database.ChartMix
+                .Select(cm => new { cm.ChartId, cm.MixId, cm.Level })
+                .ToArrayAsync(cancellationToken);
+            return (IReadOnlyList<(Guid, MixEnum, int)>)rows
+                .Select(r => (r.ChartId, MixIds.ToEnum(r.MixId), r.Level))
+                .ToArray();
+        }))!;
+    }
+
     private static string ChartCacheKey(Guid mixId)
     {
         return $"{nameof(EFChartRepository)}_{nameof(GetAllCharts)}_Mix:{mixId}";

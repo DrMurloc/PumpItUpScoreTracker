@@ -45,11 +45,17 @@ public sealed class ChartVideoPlayerTests : TestContext
         localizer.Setup(l => l[It.IsAny<string>(), It.IsAny<object[]>()])
             .Returns((string key, object[] args) => new LocalizedString(key, string.Format(key, args)));
         Services.AddSingleton(localizer.Object);
+        // Last: it reads the renderer, locking the service collection. The jacket and its
+        // bubble render on their interactive path (RendererInfo gates the bubble's tooltip).
+        this.RenderInteractive();
     }
 
     private Chart SetupChart(string? videoUrl)
     {
         var chart = ChartSlugsTests.BuildChart(song: "Anchor");
+        // The island self-loads its chart by id (islands take only serializable params).
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IEnumerable<Chart>)new[] { chart });
         _mediator.Setup(m => m.Send(It.IsAny<GetChartVideosQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IEnumerable<ChartVideoInformation>)(videoUrl == null
                 ? Array.Empty<ChartVideoInformation>()
@@ -58,7 +64,7 @@ public sealed class ChartVideoPlayerTests : TestContext
     }
 
     private IRenderedComponent<ChartVideoPlayer> Render(Chart chart) =>
-        RenderComponent<ChartVideoPlayer>(p => p.Add(c => c.Chart, chart));
+        RenderComponent<ChartVideoPlayer>(p => p.Add(c => c.ChartId, chart.Id));
 
     [Fact]
     public void TheJacketItselfIsThePlayButton()

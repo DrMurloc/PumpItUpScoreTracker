@@ -318,6 +318,19 @@ body {
     display: none;
 }
 
+/* One pulse when something opens the search programmatically (shell.openSearch) —
+   settles into the same ring the focused field already wears. */
+@media (prefers-reduced-motion: no-preference) {
+    .appbar-search.search-flash .mud-input.mud-input-outlined {
+        animation: search-flash .9s ease-out;
+    }
+
+    @keyframes search-flash {
+        0% { box-shadow: 0 0 0 5px var(--mix-primary), 0 0 26px var(--mix-glow); }
+        100% { box-shadow: 0 0 0 1px var(--mix-primary); }
+    }
+}
+
 /* ===== Atmosphere: per-mix page-ground light, derived from each game's attract screen.
    Ground only — cards and surfaces stay flat so contrast is untouched. Trial feature:
    deleting a theme's block (or all three) fully removes it. ===== */
@@ -4300,6 +4313,13 @@ html.sheet-open .more-sheet-scrim {
     gap: 12px;
 }
 
+/* The static card grid is the crawlable mesh; the interactive shelf renders the same cards
+   plus its controls and marks its root data-island-ready the moment it connects, which
+   hides the static copy. Both render real <a href> cards, so nothing reflows on handoff. */
+.chart-shelf-wrap:has([data-island-ready]) .chart-shelf-static {
+    display: none;
+}
+
 .chart-shelf-controls {
     display: flex;
     gap: 14px;
@@ -4863,4 +4883,96 @@ button.chart-card-art {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+}
+
+/* ============================================================
+   The 404 page - "your path was a MISS" (Pages/NotFound.razor).
+   The title-screen image is the hero; the judgment slams over
+   its lower edge like the in-game MISS flash. Judgment red is
+   semantic (a judgment, not the mix accent); the credit counter
+   mirrors the arcade credit line in the source frame.
+   ============================================================ */
+.nf-eyebrow {
+    text-align: center;
+    font-size: .68rem;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    margin: 28px 0 14px;
+}
+
+.nf-stage {
+    position: relative;
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+.nf-frame {
+    display: block;
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 30px 80px -20px rgba(196, 15, 61, .45);
+}
+
+.nf-judgment {
+    position: relative;
+    /* Only the MISS's top ~20% rides over the frame — any deeper covers the title text. */
+    margin-top: clamp(-26px, -3vw, -12px);
+    text-align: center;
+    pointer-events: none;
+}
+
+.nf-miss {
+    display: block;
+    font-family: Impact, "Arial Black", sans-serif;
+    font-style: italic;
+    font-size: clamp(4.2rem, 15vw, 8.5rem);
+    line-height: .92;
+    letter-spacing: .04em;
+    transform: skewX(-8deg) rotate(-2deg);
+    background: linear-gradient(180deg, #ff8f9f 4%, #ff2f4e 42%, #a30822 96%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 22px rgba(255, 47, 78, .55)) drop-shadow(0 6px 0 rgba(20, 2, 8, .9));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .nf-miss {
+        animation: nf-slam .34s cubic-bezier(.2, 1.6, .35, 1) .18s both;
+    }
+
+    @keyframes nf-slam {
+        0% { opacity: 0; transform: skewX(-8deg) rotate(-2deg) scale(1.9); }
+        70% { opacity: 1; transform: skewX(-8deg) rotate(-2deg) scale(.96); }
+        100% { opacity: 1; transform: skewX(-8deg) rotate(-2deg) scale(1); }
+    }
+}
+
+.nf-explain {
+    max-width: 46ch;
+    margin: 18px auto 0;
+    text-align: center;
+    color: var(--mix-ink-muted);
+    font-size: .95rem;
+    line-height: 1.55;
+    text-wrap: balance;
+}
+
+.nf-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 26px;
+}
+
+.nf-credit {
+    margin: clamp(36px, 7vh, 64px) 0 24px;
+    text-align: center;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: .8rem;
+    letter-spacing: .3em;
+    color: #ffd94d;
+    text-shadow: 0 0 12px rgba(255, 217, 77, .35);
 }

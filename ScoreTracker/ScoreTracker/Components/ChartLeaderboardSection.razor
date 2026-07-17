@@ -68,11 +68,17 @@
 }
 
 @code {
+    // Islands receive only serializable parameters — a Chart record can't cross the
+    // render-mode boundary (its polymorphic/value-type members fault the circuit), so the
+    // island takes the id and loads its own chart. Self-loading keyed by chart id is the
+    // design's island contract (docs/design/chart-details-overhaul.md).
     [Parameter]
-    public Chart? Chart { get; set; }
+    public Guid ChartId { get; set; }
 
     [Parameter]
     public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    private Chart? Chart { get; set; }
 
     private const int InitialPlaces = 10;
     private const int PageSize = 25;
@@ -116,8 +122,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Chart == null || Chart.Id == _loadedFor) return;
-        _loadedFor = Chart.Id;
+        if (ChartId == _loadedFor) return;
+        _loadedFor = ChartId;
+        Chart = (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: new[] { ChartId }))).FirstOrDefault();
+        if (Chart == null) return;
         _visible = InitialPlaces;
         _scores = (await Mediator.Send(new GetPhoenixScoresForChartQuery(Chart.Id, Mix)))
             .OrderByDescending(s => (int)s.Score)

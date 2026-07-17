@@ -35,6 +35,20 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return await GetAllPlayerScores(mix, chartType, level, cancellationToken);
     }
 
+    async Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> IScoreReader.GetChartScores(
+        MixEnum mix, Guid chartId, CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        // One chart, straight off the ChartId index — no folder scan, no joins.
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.Set<PhoenixRecordEntity>()
+                .Where(pr => pr.ChartId == chartId && pr.MixId == mixId)
+                .ToArrayAsync(cancellationToken))
+            .Select(pb => (pb.UserId,
+                new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),
+                    pb.IsBroken, pb.RecordedDate)));
+    }
+
     Task<IEnumerable<RecordedPhoenixScore>> IScoreReader.GetScores(MixEnum mix, IEnumerable<Guid> userIds,
         ChartType chartType, DifficultyLevel minimumLevel, DifficultyLevel maximumLevel,
         CancellationToken cancellationToken)
