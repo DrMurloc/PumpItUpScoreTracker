@@ -1,0 +1,168 @@
+@using MediatR
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Theming
+@using Chart = ScoreTracker.SharedKernel.Models.Chart
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@inject IMediator Mediator
+
+@if (_loading)
+{
+    <MudGrid>
+        <MudItem xs="12" md="6"><MudSkeleton Height="220px" SkeletonType="SkeletonType.Rectangle"/></MudItem>
+        <MudItem xs="12" md="6"><MudSkeleton Height="220px" SkeletonType="SkeletonType.Rectangle"/></MudItem>
+        <MudItem xs="12"><MudSkeleton Height="160px" SkeletonType="SkeletonType.Rectangle"/></MudItem>
+    </MudGrid>
+}
+else if (_highlights == null)
+{
+    <MudAlert Severity="Severity.Info">@L["The first weekly snapshot has not landed yet - highlights light up after the next Sunday import."]</MudAlert>
+}
+else if (!_highlights.Movers.Any() && !_highlights.WorldFirsts.Any() && !_highlights.NewNumberOnes.Any() && !_highlights.BoardsClimbed.Any())
+{
+    <MudAlert Severity="Severity.Info">@L["This week's snapshot is the baseline - week-over-week highlights begin next import."]</MudAlert>
+}
+else
+{
+    <MudText Typo="Typo.body2" Class="mb-3">
+        @L["Week of"] @_highlights.SnapshotAt.ToLocalTime().ToString("d")
+        @if (_highlights.PreviousSnapshotAt != null)
+        {
+            var gap = (int)Math.Round((_highlights.SnapshotAt - _highlights.PreviousSnapshotAt.Value).TotalDays / 7.0);
+            <span> · @L["vs"] @_highlights.PreviousSnapshotAt.Value.ToLocalTime().ToString("d")@(gap > 1 ? $" ({gap} {L["weeks"]})" : "")</span>
+        }
+    </MudText>
+
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-3">
+                <MudText Typo="Typo.overline">@L["Movers of the week"]</MudText>
+                @if (!_highlights.Movers.Any())
+                {
+                    <MudText Typo="Typo.body2">@L["No PUMBILITY board on this mix - movers live on Phoenix 2."]</MudText>
+                }
+                @foreach (var (mover, index) in _highlights.Movers.Select((m, i) => (m, i)))
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2"
+                              Class="@(index == 0 ? "olb-mover-lead pa-2" : "pa-2")">
+                        <MudText Typo="@(index == 0 ? Typo.h6 : Typo.body1)" Class="olb-delta-up">
+                            ▲@(mover.PreviousRank - mover.NewRank)
+                        </MudText>
+                        <HubPlayerChip Player="mover.Player"/>
+                        <MudSpacer/>
+                        <MudText Typo="Typo.body2">#@mover.PreviousRank → <b>#@mover.NewRank</b></MudText>
+                        <MudText Typo="Typo.body1"><b>@mover.Pumbility.ToString("N2")</b></MudText>
+                    </MudStack>
+                }
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-3">
+                <MudText Typo="Typo.overline">@L["Most boards climbed"]</MudText>
+                @if (!_highlights.BoardsClimbed.Any())
+                {
+                    <MudText Typo="Typo.body2">@L["Nobody cleared the climb threshold this week."]</MudText>
+                }
+                @foreach (var entry in _highlights.BoardsClimbed)
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="pa-2">
+                        <HubPlayerChip Player="entry.Player"/>
+                        <MudSpacer/>
+                        <MudText Typo="Typo.body1"><b>+@entry.BoardsClimbed @L["boards"]</b></MudText>
+                        <MudText Typo="Typo.body2">@L["net"] +@entry.NetPlacesGained @L["places"]</MudText>
+                    </MudStack>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudText Typo="Typo.overline" Class="mt-4 d-block">@L["World firsts"] · @L["level 24+, first ever, SS and up"]</MudText>
+    <MudPaper Class="pa-3">
+        @if (!_highlights.WorldFirsts.Any())
+        {
+            <MudText Typo="Typo.body2">@L["No new grade firsts this week."]</MudText>
+        }
+        @foreach (var first in _highlights.WorldFirsts)
+        {
+            var chart = first.ChartId != null && Charts.TryGetValue(first.ChartId.Value, out var c) ? c : null;
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2"
+                      Class="@(first.IsFolderFirst ? "olb-folder-first pa-2 mb-2" : "pa-2")">
+                <MudChip T="string" Size="Size.Small"
+                         Style="@($"background:{BandColor(first.GradeBand)};color:var(--mix-primary-contrast);font-weight:800")">
+                    @first.GradeBand
+                </MudChip>
+                @if (chart != null)
+                {
+                    <SongImage Song="chart.Song" Small="true"/>
+                    <DifficultyBubble Chart="chart" Small="true"/>
+                    <MudText Typo="Typo.body1"><b>@chart.Song.Name</b></MudText>
+                }
+                @if (first.IsFolderFirst && first.ChartType != null && first.Level != null)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                        @L["First in the folder"] · @(first.ChartType == ChartType.Double.ToString() ? "D" : "S")@first.Level
+                    </MudChip>
+                }
+                <MudSpacer/>
+                <HubPlayerChip Player="first.Player"/>
+                <MudText Typo="Typo.body1"><b>@first.Score.ToString("N0")</b></MudText>
+            </MudStack>
+        }
+    </MudPaper>
+
+    <MudText Typo="Typo.overline" Class="mt-4 d-block">@L["New #1s"] · @L["level 24+, must beat the standing record"]</MudText>
+    <MudGrid>
+        @if (!_highlights.NewNumberOnes.Any())
+        {
+            <MudItem xs="12"><MudText Typo="Typo.body2" Class="pa-2">@L["Every record held this week."]</MudText></MudItem>
+        }
+        @foreach (var one in _highlights.NewNumberOnes)
+        {
+            var chart = Charts.TryGetValue(one.ChartId, out var c) ? c : null;
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Class="pa-3">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        @if (chart != null)
+                        {
+                            <SongImage Song="chart.Song"/>
+                            <DifficultyBubble Chart="chart" Small="true"/>
+                        }
+                        <MudStack Spacing="0" Class="min-width-0">
+                            <MudText Typo="Typo.body1"><b>@(chart?.Song.Name.ToString() ?? "?")</b></MudText>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <HubPlayerChip Player="one.Player" Dense="true"/>
+                                <MudText Typo="Typo.body2"><b>@one.Score.ToString("N0")</b></MudText>
+                            </MudStack>
+                            @if (one.Dethroned != null)
+                            {
+                                <MudText Typo="Typo.caption">@L["dethroned"] @one.Dethroned.Username</MudText>
+                            }
+                        </MudStack>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@code {
+    [Parameter] public MixEnum Mix { get; set; }
+    [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+
+    private bool _loading = true;
+    private WeeklyHighlightsRecord? _highlights;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _highlights = await Mediator.Send(new GetWeeklyHighlightsQuery(Mix));
+        _loading = false;
+    }
+
+    private static string BandColor(string band)
+    {
+        return band == "PG" ? MixThemes.PlateHex("PG") : MixThemes.GradeHex(band);
+    }
+}

@@ -1,0 +1,256 @@
+@using ApexCharts
+@using MediatR
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.Theming
+@inject IMediator Mediator
+
+<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2 flex-wrap">
+    <MudSelect T="string" Value="_type" ValueChanged="SetType" Label="@L["Board"]" Dense="true"
+               Style="max-width:180px">
+        <MudSelectItem T="string" Value="@("All")">@L["All"]</MudSelectItem>
+        <MudSelectItem T="string" Value="@("Singles")">@L["Singles"]</MudSelectItem>
+        <MudSelectItem T="string" Value="@("Doubles")">@L["Doubles"]</MudSelectItem>
+    </MudSelect>
+    @if (_data != null && _data.Boards.Any())
+    {
+        <MudText Typo="Typo.body2" Class="num">
+            @L["entry cutlines"] ·
+            @foreach (var board in _data.Boards)
+            {
+                <span class="mr-2">
+                    <b>@L[board.Type]</b>
+                    @(board.EntryValue?.ToString("N2") ?? L["not full"].Value)
+                    @if (board.WeekDelta is > 0)
+                    {
+                        <span class="olb-delta-up">▲@board.WeekDelta.Value.ToString("N0")</span>
+                    }
+                </span>
+            }
+        </MudText>
+    }
+</MudStack>
+
+@if (_loading)
+{
+    <MudSkeleton Height="400px" SkeletonType="SkeletonType.Rectangle"/>
+}
+else if (_data == null || _data.SnapshotAt == null)
+{
+    <MudAlert Severity="Severity.Info">@L["No snapshot yet - thresholds appear after the first weekly import."]</MudAlert>
+}
+else
+{
+    <MudPaper Class="pa-3 mb-3">
+        @if (_data.Entry != null)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="flex-wrap">
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.overline">@L["To get on the board"] · #@CutlineRank</MudText>
+                    <MudText Typo="Typo.h4" Color="Color.Primary" Class="num">
+                        <b>@_data.Entry.Value.ToString("N2")</b>
+                        @if (_data.Entry.WeekDelta is > 0)
+                        {
+                            <span class="olb-delta-up" style="font-size:15px"> ▲@_data.Entry.WeekDelta.Value.ToString("N2")</span>
+                        }
+                    </MudText>
+                    <MudText Typo="Typo.caption">@L["50 charts at, SG plates assumed"]</MudText>
+                </MudStack>
+                @foreach (var (label, level) in GradePairs(_data.Entry))
+                {
+                    <MudPaper Outlined="true" Class="pa-2 px-3">
+                        <MudStack Row="true" AlignItems="AlignItems.Baseline" Spacing="1">
+                            <MudText Typo="Typo.h5" Class="num"><b>@LevelLabel(level)</b></MudText>
+                            <MudChip T="string" Size="Size.Small"
+                                     Style="@($"background:{MixThemes.GradeHex(label)};color:var(--mix-primary-contrast);font-weight:800")">
+                                @label
+                            </MudChip>
+                        </MudStack>
+                    </MudPaper>
+                }
+            </MudStack>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Success">
+                @L["The board isn't full - any top 50 gets you on it."] (@_data.BoardCount / 1000)
+            </MudAlert>
+        }
+    </MudPaper>
+
+    @if (_wallSeries.Any(s => s.Points.Count > 1))
+    {
+        <MudPaper Class="pa-3 mb-3">
+            <MudText Typo="Typo.overline">@L["Level required, by ranking tier"]</MudText>
+            <ApexChart TItem="LevelPoint" Options="_wallOptions" Height="260">
+                @foreach (var series in _wallSeries)
+                {
+                    <ApexPointSeries TItem="LevelPoint"
+                                     Items="series.Points"
+                                     Name="@series.Label"
+                                     Color="@MixThemes.GradeHex(series.Label)"
+                                     SeriesType="SeriesType.Line"
+                                     XValue="@(p => p.Label)"
+                                     YValue="@(p => p.Level)"/>
+                }
+            </ApexChart>
+        </MudPaper>
+    }
+
+    @if (_historySeries.Any(s => s.Points.Count > 1))
+    {
+        <MudPaper Class="pa-3 mb-3">
+            <MudText Typo="Typo.overline">@L["The entry bar over time"]</MudText>
+            <ApexChart TItem="LevelPoint" Options="_historyOptions" Height="240">
+                @foreach (var series in _historySeries)
+                {
+                    <ApexPointSeries TItem="LevelPoint"
+                                     Items="series.Points"
+                                     Name="@series.Label"
+                                     Color="@MixThemes.GradeHex(series.Label)"
+                                     SeriesType="SeriesType.Line"
+                                     XValue="@(p => p.Label)"
+                                     YValue="@(p => p.Level)"/>
+                }
+            </ApexChart>
+        </MudPaper>
+    }
+
+    <MudPaper Class="pa-3">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudText Typo="Typo.overline">@L["The exact numbers"]</MudText>
+            <MudSpacer/>
+            <MudSwitch T="bool" @bind-Value="_showFullLadder" Color="Color.Primary" Size="Size.Small"
+                       Label="@L["Full ladder"]"/>
+        </MudStack>
+        <MudTable T="CutlineTierRecord" Items="VisibleTiers" Dense="true" Breakpoint="Breakpoint.None">
+            <HeaderContent>
+                <MudTh>@L["Tier"]</MudTh>
+                <MudTh Style="text-align:right">PUMBILITY</MudTh>
+                <MudTh Style="text-align:right">Δ</MudTh>
+                <MudTh>50× AAA</MudTh>
+                <MudTh>50× S</MudTh>
+                <MudTh>50× SS</MudTh>
+                <MudTh>50× SSS</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd><b>#@context.Rank</b></MudTd>
+                <MudTd Style="text-align:right"><b>@context.Value.ToString("N2")</b></MudTd>
+                <MudTd Style="text-align:right">
+                    @if (context.WeekDelta is > 0)
+                    {
+                        <span class="olb-delta-up">▲@context.WeekDelta.Value.ToString("N0")</span>
+                    }
+                </MudTd>
+                <MudTd><b class="num">@LevelLabel(context.LevelForAAA)</b></MudTd>
+                <MudTd><b class="num">@LevelLabel(context.LevelForS)</b></MudTd>
+                <MudTd><b class="num">@LevelLabel(context.LevelForSS)</b></MudTd>
+                <MudTd><b class="num">@LevelLabel(context.LevelForSSS)</b></MudTd>
+            </RowTemplate>
+        </MudTable>
+        <MudText Typo="Typo.caption" Class="d-block mt-2">
+            @L["All equivalents assume SG plates on all 50 - a dash means no single level clears it at that grade."]
+        </MudText>
+    </MudPaper>
+}
+
+@code {
+    private static readonly int[] LandmarkRanks = { 1000, 500, 100, 10, 1 };
+
+    [Parameter] public MixEnum Mix { get; set; }
+
+    private const int CutlineRank = 1000;
+    private bool _loading = true;
+    private bool _showFullLadder;
+    private string _type = "All";
+    private WhatItTakesRecord? _data;
+    private List<GradeSeries> _wallSeries = new();
+    private List<GradeSeries> _historySeries = new();
+
+    private readonly ApexChartOptions<LevelPoint> _wallOptions = new()
+    {
+        Chart = new ApexCharts.Chart { Toolbar = new Toolbar { Show = false }, Background = "transparent" },
+        Theme = new Theme { Mode = Mode.Dark },
+        Stroke = new Stroke { Curve = Curve.Stepline, Width = 2 },
+        Yaxis = new List<YAxis> { new() { DecimalsInFloat = 0 } }
+    };
+
+    private readonly ApexChartOptions<LevelPoint> _historyOptions = new()
+    {
+        Chart = new ApexCharts.Chart { Toolbar = new Toolbar { Show = false }, Background = "transparent" },
+        Theme = new Theme { Mode = Mode.Dark },
+        Stroke = new Stroke { Curve = Curve.Stepline, Width = 2 },
+        Yaxis = new List<YAxis> { new() { DecimalsInFloat = 0 } }
+    };
+
+    private IEnumerable<CutlineTierRecord> VisibleTiers =>
+        _data == null
+            ? Array.Empty<CutlineTierRecord>()
+            : _showFullLadder
+                ? _data.Tiers
+                : _data.Tiers.Where(t => LandmarkRanks.Contains(t.Rank));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task SetType(string type)
+    {
+        _type = type;
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        _loading = true;
+        _data = await Mediator.Send(new GetWhatItTakesQuery(Mix, _type));
+        _wallSeries = BuildSeries(_data.Tiers.Select(t => ($"#{t.Rank}", t)).ToArray());
+        _historySeries = BuildSeries(_data.History
+            .Select(h => (h.At.ToLocalTime().ToString("MMM d"),
+                new CutlineTierRecord(0, h.Value, null, h.LevelForAAA, h.LevelForS, h.LevelForSS,
+                    h.LevelForSSS)))
+            .ToArray());
+        _loading = false;
+    }
+
+    private static List<GradeSeries> BuildSeries(IReadOnlyList<(string Label, CutlineTierRecord Tier)> rows)
+    {
+        return new List<GradeSeries>
+        {
+            new("AAA", rows.Where(r => r.Tier.LevelForAAA != null)
+                .Select(r => new LevelPoint(r.Label, r.Tier.LevelForAAA!.Value)).ToList()),
+            new("S", rows.Where(r => r.Tier.LevelForS != null)
+                .Select(r => new LevelPoint(r.Label, r.Tier.LevelForS!.Value)).ToList()),
+            new("SS", rows.Where(r => r.Tier.LevelForSS != null)
+                .Select(r => new LevelPoint(r.Label, r.Tier.LevelForSS!.Value)).ToList()),
+            new("SSS", rows.Where(r => r.Tier.LevelForSSS != null)
+                .Select(r => new LevelPoint(r.Label, r.Tier.LevelForSSS!.Value)).ToList())
+        };
+    }
+
+    private string LevelLabel(int? level)
+    {
+        if (level == null) return "—";
+        var prefix = _type switch
+        {
+            "Singles" => "S",
+            "Doubles" => "D",
+            _ => ""
+        };
+        return $"{prefix}{level}";
+    }
+
+    private static IEnumerable<(string Label, int? Level)> GradePairs(CutlineTierRecord tier)
+    {
+        yield return ("AAA", tier.LevelForAAA);
+        yield return ("S", tier.LevelForS);
+        yield return ("SS", tier.LevelForSS);
+        yield return ("SSS", tier.LevelForSSS);
+    }
+
+    private sealed record GradeSeries(string Label, List<LevelPoint> Points);
+
+    private sealed record LevelPoint(string Label, int Level);
+}

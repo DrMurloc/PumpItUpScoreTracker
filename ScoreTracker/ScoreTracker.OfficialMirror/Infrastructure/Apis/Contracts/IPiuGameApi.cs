@@ -23,16 +23,27 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Apis.Contracts
         Task<PiuGameGetPumbilityRankingResult> GetPumbilityRankings(MixEnum mix, ChartType? chartType, int page,
             HttpClient client, CancellationToken cancellationToken);
 
-        Task<PiuGameGetSongLeaderboardResult> GetSongLeaderboard(MixEnum mix, string songId,
-            CancellationToken cancellationToken);
+        /// <summary>
+        ///     One page of a chart board. Phoenix serves the whole board on page 1 (no paging
+        ///     icons → IsEnd); Phoenix 2's deeper boards page with the same next/last-icon
+        ///     protocol as the PUMBILITY board. The gated Phoenix 2 boards need the
+        ///     authenticated client; Phoenix stays anonymous (null).
+        /// </summary>
+        Task<PiuGameGetSongLeaderboardResult> GetSongLeaderboard(MixEnum mix, string songId, int page,
+            CancellationToken cancellationToken, HttpClient? client = null);
 
         Task<PiuGameGetLeaderboardListResult> GetLeaderboards(MixEnum mix, CancellationToken cancellationToken);
 
         Task<PiuGameGetLeaderboardResult> GetLeaderboard(MixEnum mix, string leaderboardId,
             CancellationToken cancellationToken);
 
+        /// <summary>
+        ///     The official play ranking for the month containing <paramref name="asOf" />.
+        ///     Login-gated on Phoenix 2 like the rest of its ranking pages — pass the
+        ///     authenticated client there; Phoenix stays anonymous (null).
+        /// </summary>
         Task<PiuGameGetChartPopularityLeaderboardResult> GetChartPopularityLeaderboard(MixEnum mix, int page,
-            CancellationToken cancellationToken);
+            DateTimeOffset asOf, CancellationToken cancellationToken, HttpClient? client = null);
 
         Task<IEnumerable<PiuGameGetRecentScoresResult>> GetRecentScores(MixEnum mix, HttpClient client,
             CancellationToken cancellationToken);

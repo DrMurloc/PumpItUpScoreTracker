@@ -1,0 +1,195 @@
+@namespace ScoreTracker.Web.Pages.OfficialLeaderboards
+@using MediatR
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services.Contracts
+@inject IMediator Mediator
+@inject IUiSettingsAccessor UiSettings
+
+@* The Official Leaderboards section chrome, shared by every page in the section:
+   title, import-health strip, the page nav, and the mix/chart context the views
+   consume. Each page is its own route and circuit — the nav links are real
+   document loads, which is the site's post-flip navigation model anyway. *@
+
+<PageTitle>@L[ActiveLabel] · @L["Official Leaderboards"]</PageTitle>
+
+<style>
+    .olb-subtitle { color: var(--mix-ink-muted); }
+
+    .olb-health {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--mix-surface-muted);
+        color: var(--mix-ink-muted);
+    }
+
+    .olb-health.failed { color: var(--mix-accent); border-color: var(--mix-accent); }
+
+    .olb-section-nav {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+
+    .olb-folder-first {
+        border: 1px solid var(--plate-pg);
+        border-radius: 10px;
+        box-shadow: 0 0 14px var(--mix-glow);
+    }
+
+    .olb-delta-up { color: var(--mix-primary); font-weight: 700; }
+
+    .olb-delta-down { color: var(--mix-accent); font-weight: 700; }
+
+    .olb-delta-flat { color: var(--mix-ink-muted); }
+
+    .olb-spark polyline {
+        fill: none;
+        stroke: var(--mix-secondary);
+        stroke-width: 1.6;
+    }
+
+    .olb-spark circle { fill: var(--mix-secondary); }
+
+    .olb-mover-lead { background: color-mix(in srgb, var(--mix-primary) 8%, transparent); border-radius: 9px; }
+
+    /* Mobile: identifier columns pin while the rest of the row side-scrolls, low-value
+       columns step aside, and the pager sheds enough width to fit a phone. */
+    @@media (max-width: 760px) {
+        .olb-hide-mobile { display: none !important; }
+
+        .olb-sticky-first td:first-child, .olb-sticky-first th:first-child,
+        .olb-sticky-second td:first-child, .olb-sticky-second th:first-child,
+        .olb-sticky-second td:nth-child(2), .olb-sticky-second th:nth-child(2) {
+            position: sticky;
+            z-index: 2;
+            background: var(--mix-surface);
+        }
+
+        .olb-sticky-first td:first-child, .olb-sticky-first th:first-child,
+        .olb-sticky-second td:first-child, .olb-sticky-second th:first-child { left: 0; }
+
+        .olb-sticky-second td:first-child, .olb-sticky-second th:first-child {
+            min-width: 44px;
+            max-width: 44px;
+        }
+
+        .olb-sticky-second td:nth-child(2), .olb-sticky-second th:nth-child(2) {
+            left: 44px;
+            max-width: 180px;
+            overflow: hidden;
+        }
+
+        .olb-sticky-first td:first-child, .olb-sticky-first th:first-child { max-width: 200px; overflow: hidden; }
+
+        .olb-sticky-first td:first-child .mud-typography,
+        .olb-sticky-second td:nth-child(2) .mud-typography {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .olb-pager-tight .mud-table-pagination { padding-inline: 2px; }
+
+        .olb-pager-tight .mud-table-pagination-caption { font-size: 11px; margin: 0 4px; }
+    }
+
+    /* The tier card's border language is owner-locked (dashed = To-Do / other-mix), so
+       supplemented rows mark with a corner badge instead of touching the border. */
+    .olb-supplemented-card { position: relative; }
+
+    .olb-supplemented-card .olb-supplemented-badge {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        z-index: 1;
+        color: var(--mix-secondary);
+        background: var(--mix-nav);
+        border-radius: 50%;
+        padding: 2px;
+    }
+</style>
+
+<MudText Typo="Typo.h4">@L["Official Leaderboards"]</MudText>
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1 flex-wrap">
+    <MudText Typo="Typo.body2" Class="olb-subtitle">
+        @L["Last Updated"] · @(_lastImported?.ToLocalTime().ToString("g") ?? "—")
+    </MudText>
+    @if (_latestRun != null && _latestRun.CompletedAt == null && _latestRun.Error != null)
+    {
+        <MudTooltip Text="@_latestRun.Error">
+            <span class="olb-health failed">⚠ @L["Last import failed"] · @_latestRun.Stage</span>
+        </MudTooltip>
+    }
+</MudStack>
+
+<nav class="olb-section-nav" aria-label="@L["Official Leaderboards"]">
+    @foreach (var (key, href, label) in Links)
+    {
+        <MudButton Href="@href" Size="Size.Small" Color="Color.Primary"
+                   Variant="@(key == Active ? Variant.Filled : Variant.Outlined)">
+            @L[label]
+        </MudButton>
+    }
+</nav>
+
+<div class="pt-4">
+    @if (_loaded)
+    {
+        @Body(new SectionContext(_mix, _charts))
+    }
+    else
+    {
+        <MudSkeleton Height="400px" SkeletonType="SkeletonType.Rectangle"/>
+    }
+</div>
+
+@code {
+    public sealed record SectionContext(MixEnum Mix, IDictionary<Guid, Chart> Charts);
+
+    private static readonly (string Key, string Href, string Label)[] Links =
+    {
+        ("week", "/OfficialLeaderboards", "This Week"),
+        ("rankings", "/OfficialLeaderboards/Rankings", "Rankings"),
+        ("players", "/OfficialLeaderboards/Players", "Players"),
+        ("popularity", "/OfficialLeaderboards/Popularity", "Popularity"),
+        ("takes", "/OfficialLeaderboards/WhatItTakes", "What It Takes")
+    };
+
+    [Parameter] [EditorRequired] public string Active { get; set; } = "week";
+
+    [Parameter] [EditorRequired] public RenderFragment<SectionContext> Body { get; set; } = null!;
+
+    // The What It Takes view reads only rating boards — skipping the chart pull there
+    // keeps that page's circuit start light.
+    [Parameter] public bool RequiresCharts { get; set; } = true;
+
+    private bool _loaded;
+    private MixEnum _mix = MixEnum.Phoenix2;
+    private DateTimeOffset? _lastImported;
+    private ImportRunRecord? _latestRun;
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+
+    private string ActiveLabel => Links.First(l => l.Key == Active).Label;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _mix = await UiSettings.GetSelectedMix();
+        if (_mix == MixEnum.XX) _mix = MixEnum.Phoenix;
+
+        _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery(_mix));
+        _latestRun = (await Mediator.Send(new GetImportRunsQuery(_mix, 1))).FirstOrDefault();
+        if (RequiresCharts)
+            _charts = (await Mediator.Send(new ScoreTracker.Catalog.Contracts.Queries.GetChartsQuery(_mix)))
+                .ToDictionary(c => c.Id);
+        _loaded = true;
+    }
+}

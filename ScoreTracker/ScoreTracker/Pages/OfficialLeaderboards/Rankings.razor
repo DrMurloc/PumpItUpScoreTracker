@@ -1,0 +1,17 @@
+@page "/OfficialLeaderboards/Rankings"
+@page "/PlayerRankings"
+@rendermode RenderModes.Interactive
+@inject NavigationManager Navigation
+
+<OfficialSectionFrame Active="rankings">
+    <Body Context="ctx">
+        <HubRankings Mix="ctx.Mix" Charts="ctx.Charts" OnShowPlayer="ShowPlayer"/>
+    </Body>
+</OfficialSectionFrame>
+
+@code {
+    private void ShowPlayer(string username)
+    {
+        Navigation.NavigateTo($"/OfficialLeaderboards/Players?player={Uri.EscapeDataString(username)}");
+    }
+}

@@ -1,6 +1,6 @@
 using System.Linq;
-using ScoreTracker.PlayerProgress.Contracts.Recap;
-using ScoreTracker.PlayerProgress.Domain.Recap;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit;
 

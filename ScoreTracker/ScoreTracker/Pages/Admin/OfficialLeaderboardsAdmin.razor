@@ -1,0 +1,230 @@
+@page "/Admin/OfficialLeaderboards"
+@rendermode RenderModes.Interactive
+@using MassTransit
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Commands
+@using ScoreTracker.OfficialMirror.Contracts.Messages
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@inject IMediator Mediator
+@inject IBus Bus
+@inject ICurrentUserAccessor CurrentUser
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+
+<PageTitle>@L["Official Leaderboards Admin"]</PageTitle>
+<MudText Typo="Typo.h4">@L["Official Leaderboards Admin"]</MudText>
+
+<MudSelect T="MixEnum" Value="_mix" ValueChanged="SetMix" Label="@L["Mix"]" Dense="true"
+           Style="max-width:200px" Class="my-2">
+    <MudSelectItem T="MixEnum" Value="MixEnum.Phoenix2">Phoenix 2</MudSelectItem>
+    <MudSelectItem T="MixEnum" Value="MixEnum.Phoenix">Phoenix</MudSelectItem>
+</MudSelect>
+
+<MudStack Row="true" Spacing="2" Class="mb-4 flex-wrap">
+    <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_importQueued"
+               OnClick="RunImport">
+        @L["Run import now"]
+    </MudButton>
+    <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_rebuildQueued"
+               OnClick="RebuildHighlights">
+        @L["Rebuild weekly highlights"]
+    </MudButton>
+    <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_seedQueued"
+               OnClick="SeedBaseline">
+        @L["Seed baseline from legacy tables"]
+    </MudButton>
+    <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_popularityQueued"
+               OnClick="RefreshPopularity">
+        @L["Refresh popularity"]
+    </MudButton>
+</MudStack>
+
+<MudText Typo="Typo.h6">@L["Rename proposals"]</MudText>
+@if (!_proposals.Any())
+{
+    <MudText Typo="Typo.body2" Class="mb-4">@L["No pending rename proposals."]</MudText>
+}
+@foreach (var proposal in _proposals)
+{
+    <MudPaper Class="pa-3 mb-2">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+            <MudText Typo="Typo.body1">
+                <b>@proposal.OldUsername</b> → <b>@proposal.NewUsername</b>
+            </MudText>
+            <MudText Typo="Typo.body2">
+                @(proposal.AvatarMatched ? L["avatar match"] : "") · @proposal.Top50Overlap/50 @L["top-50 overlap"]
+            </MudText>
+            <MudSpacer/>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small"
+                       OnClick="() => Accept(proposal)">
+                @L["Accept - merge history"]
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => Dismiss(proposal)">
+                @L["Dismiss"]
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+}
+
+<MudText Typo="Typo.h6" Class="mt-4">@L["Missing charts"] @(_missingCharts.Any() ? $"({_missingCharts.Count})" : "")</MudText>
+@if (!_missingCharts.Any())
+{
+    <MudText Typo="Typo.body2" Class="mb-4">@L["No missing charts - every scraped board mapped to the catalog."]</MudText>
+}
+else
+{
+    <MudText Typo="Typo.body2" Class="mb-2">@L["The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep."]</MudText>
+    <MudTable T="MissingChartRecord" Items="_missingCharts" Dense="true" Breakpoint="Breakpoint.None"
+              Class="mb-4">
+        <HeaderContent>
+            <MudTh>@L["Song"]</MudTh>
+            <MudTh>@L["Chart"]</MudTh>
+            <MudTh>@L["First seen"]</MudTh>
+            <MudTh>@L["Last seen"]</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd><b>@context.SongName</b></MudTd>
+            <MudTd>@context.ChartType @(context.Level?.ToString() ?? "?")</MudTd>
+            <MudTd>@context.FirstIdentified.ToLocalTime().ToString("d")</MudTd>
+            <MudTd>@context.LastIdentified.ToLocalTime().ToString("g")</MudTd>
+            <MudTd>
+                <MudButton Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
+                           OnClick="() => Resolve(context)">
+                    @L["Resolve"]
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+<MudText Typo="Typo.h6" Class="mt-4">@L["Import runs"]</MudText>
+<MudTable T="ImportRunRecord" Items="_runs" Dense="true" Breakpoint="Breakpoint.None">
+    <HeaderContent>
+        <MudTh>@L["Started"]</MudTh>
+        <MudTh>@L["Status"]</MudTh>
+        <MudTh>@L["Stage"]</MudTh>
+        <MudTh Style="text-align:right">@L["Boards"]</MudTh>
+        <MudTh Style="text-align:right">@L["Duration"]</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.StartedAt.ToLocalTime().ToString("g")</MudTd>
+        <MudTd>
+            @if (context.CompletedAt != null)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Primary">
+                    @(context.IsBaseline ? L["Baseline"] : L["Completed"])
+                </MudChip>
+            }
+            else if (context.Error != null)
+            {
+                <MudTooltip Text="@context.Error">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Error">@L["Failed"]</MudChip>
+                </MudTooltip>
+            }
+            else
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Default">@L["Running"]</MudChip>
+            }
+        </MudTd>
+        <MudTd>@context.Stage</MudTd>
+        <MudTd Style="text-align:right">
+            @context.BoardsWritten@(context.BoardsExpected > 0 ? $"/{context.BoardsExpected}" : "")
+            @(context.BoardsSkipped > 0 ? $" (+{context.BoardsSkipped} {L["skipped"]})" : "")
+        </MudTd>
+        <MudTd Style="text-align:right">
+            @(context.CompletedAt != null
+                ? $"{(context.CompletedAt.Value - context.StartedAt).TotalMinutes:0}m"
+                : "—")
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private MixEnum _mix = MixEnum.Phoenix2;
+    private bool _importQueued;
+    private bool _rebuildQueued;
+    private bool _seedQueued;
+    private bool _popularityQueued;
+    private IReadOnlyList<ImportRunRecord> _runs = Array.Empty<ImportRunRecord>();
+    private IReadOnlyList<RenameProposalRecord> _proposals = Array.Empty<RenameProposalRecord>();
+    private IReadOnlyList<MissingChartRecord> _missingCharts = Array.Empty<MissingChartRecord>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.User.IsAdmin)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        _runs = await Mediator.Send(new GetImportRunsQuery(_mix));
+        _proposals = await Mediator.Send(new GetRenameProposalsQuery(_mix));
+        _missingCharts = await Mediator.Send(new GetMissingChartsQuery(_mix));
+    }
+
+    private async Task Resolve(MissingChartRecord missing)
+    {
+        await Mediator.Send(new ResolveMissingChartCommand(missing.Id));
+        Snackbar.Add($"{missing.SongName} {missing.ChartType} {missing.Level}", Severity.Success);
+        await Load();
+    }
+
+    private async Task SetMix(MixEnum mix)
+    {
+        _mix = mix;
+        _importQueued = _rebuildQueued = _seedQueued = _popularityQueued = false;
+        await Load();
+    }
+
+    private async Task RefreshPopularity()
+    {
+        _popularityQueued = true;
+        await Bus.Publish(new RefreshPopularityCommand(_mix));
+        Snackbar.Add(L["Popularity refresh queued - re-attaches to the latest snapshot"].Value,
+            Severity.Success);
+    }
+
+    private async Task RunImport()
+    {
+        _importQueued = true;
+        await Bus.Publish(new StartLeaderboardImportCommand(_mix));
+        Snackbar.Add(L["Import queued - watch the runs table"].Value, Severity.Success);
+    }
+
+    private async Task RebuildHighlights()
+    {
+        _rebuildQueued = true;
+        await Bus.Publish(new RebuildWeeklyHighlightsCommand(_mix));
+        Snackbar.Add(L["Highlight rebuild queued"].Value, Severity.Success);
+    }
+
+    private async Task SeedBaseline()
+    {
+        _seedQueued = true;
+        await Bus.Publish(new SeedBaselineSnapshotCommand(_mix));
+        Snackbar.Add(L["Baseline seed queued - it refuses to run once sealed snapshots exist"].Value,
+            Severity.Success);
+    }
+
+    private async Task Accept(RenameProposalRecord proposal)
+    {
+        await Mediator.Send(new AcceptRenameProposalCommand(proposal.Id));
+        Snackbar.Add($"{proposal.OldUsername} → {proposal.NewUsername}", Severity.Success);
+        await Load();
+    }
+
+    private async Task Dismiss(RenameProposalRecord proposal)
+    {
+        await Mediator.Send(new DismissRenameProposalCommand(proposal.Id));
+        await Load();
+    }
+}

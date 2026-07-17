@@ -206,9 +206,13 @@ public sealed class PiuGameApiTests
             var stubbedClient = HttpClientReturning(html);
             var api = BuildApi(html);
 
-            var result = await api.GetSongLeaderboard(MixEnum.Phoenix, songId: "any", CancellationToken.None);
+            var result = await api.GetSongLeaderboard(MixEnum.Phoenix, songId: "any", page: 1,
+                CancellationToken.None);
 
             Assert.Equal(2, result.Results.Length);
+            // No next/last paging icon in the fixture — the whole board is one page.
+            Assert.True(result.IsEnd);
+            Assert.Equal(0, result.FailedRows);
 
             // ProfileName is the concatenation of every `profile_name` div in the entry — for PIU
             // that's the gamer tag followed by the #ID suffix.
@@ -485,7 +489,8 @@ public sealed class PiuGameApiTests
             Path.Combine(FixtureRoot, "GetSongLeaderboard_Phoenix2Host.html"));
         var api = BuildApi(html);
 
-        var result = await api.GetSongLeaderboard(MixEnum.Phoenix2, songId: "any", CancellationToken.None);
+        var result = await api.GetSongLeaderboard(MixEnum.Phoenix2, songId: "any", page: 1,
+            CancellationToken.None);
 
         Assert.Equal(2, result.Results.Length);
         Assert.Equal("SUNNY#5412", result.Results[0].ProfileName);
@@ -515,6 +520,28 @@ public sealed class PiuGameApiTests
             result.ImageUrl);
         Assert.Contains(result.TitleEntries, t => t.Name == "BEGINNER" && t.Have && t.ColClass == "col0");
         Assert.Contains(result.TitleEntries, t => t.Name == "EXC FOLLOWER" && !t.Have && t.ColClass == "col1");
+    }
+
+    [Fact]
+    public async Task GetChartPopularityReportsRawTilesSeparatelyFromParsedEntries()
+    {
+        // Three tiles: one clean, one with no song-name node, one whose stepball art moved
+        // off the official hosts (the 2026-07-03 drift shape). Skipped tiles must not
+        // vanish from the raw count — pagination decisions ride RawRowCount.
+        var html = await File.ReadAllTextAsync(
+            Path.Combine(FixtureRoot, "GetChartPopularity_MixedParseability.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetChartPopularityLeaderboard(MixEnum.Phoenix2, 0,
+            DateTimeOffset.UtcNow, CancellationToken.None, HttpClientReturning(html));
+
+        Assert.Equal(3, result.RawRowCount);
+        var entry = Assert.Single(result.Entries);
+        Assert.Equal("District 1", (string)entry.SongName);
+        Assert.Equal(ChartType.Double, entry.ChartType);
+        Assert.Equal(26, (int)entry.ChartLevel);
+        Assert.Equal(4, entry.Place);
+        Assert.Equal("https://phoenix.piugame.com/data/song_img/district1.png?v=1", entry.SongImage);
     }
 
     private static PiuGameApi BuildApi(string responseHtml)

@@ -1,0 +1,24 @@
+@page "/OfficialLeaderboards/Players"
+@rendermode RenderModes.Interactive
+@inject IJSRuntime Js
+@inject NavigationManager Navigation
+
+<OfficialSectionFrame Active="players">
+    <Body Context="ctx">
+        <HubPlayers Mix="ctx.Mix" Charts="ctx.Charts" Selected="@PlayerParam"
+                    SelectedChanged="OnPlayerSelected"/>
+    </Body>
+</OfficialSectionFrame>
+
+@code {
+    [SupplyParameterFromQuery(Name = "player")]
+    public string? PlayerParam { get; set; }
+
+    private async Task OnPlayerSelected(string username)
+    {
+        PlayerParam = string.IsNullOrWhiteSpace(username) ? null : username;
+        // replaceState keeps the selection sharable without a full document reload.
+        await Js.InvokeVoidAsync("history.replaceState", null, "",
+            Navigation.GetUriWithQueryParameter("player", PlayerParam));
+    }
+}
