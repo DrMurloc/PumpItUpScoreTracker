@@ -4647,4 +4647,13 @@
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>Top co-op charts by estimated rating - plates guessed off the score.</value>
   </data>
+  <data name="All Folders" xml:space="preserve">
+    <value>All the Mrglfolders</value>
+  </data>
+  <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
+    <value>Nothing from this mrglfolder made the popularity board.</value>
+  </data>
+  <data name="See their boards" xml:space="preserve">
+    <value>See their mrglboards</value>
+  </data>
 </root>

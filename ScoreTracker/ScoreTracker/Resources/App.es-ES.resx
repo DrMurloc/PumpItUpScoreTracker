@@ -4602,4 +4602,13 @@
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>Mejores charts de CO-OP por rating estimado: placas inferidas de la puntuación.</value>
   </data>
+  <data name="All Folders" xml:space="preserve">
+    <value>Todos los folders</value>
+  </data>
+  <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
+    <value>Nada de este folder está en la tabla de popularidad.</value>
+  </data>
+  <data name="See their boards" xml:space="preserve">
+    <value>Ver sus tablas</value>
+  </data>
 </root>

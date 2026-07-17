@@ -4605,4 +4605,13 @@
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>추정 레이팅 기준 상위 CO-OP 채보 - 플레이트는 점수로 추정합니다.</value>
   </data>
+  <data name="All Folders" xml:space="preserve">
+    <value>전체 폴더</value>
+  </data>
+  <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
+    <value>이 폴더의 채보는 인기 보드에 없습니다.</value>
+  </data>
+  <data name="See their boards" xml:space="preserve">
+    <value>이 플레이어의 보드 보기</value>
+  </data>
 </root>

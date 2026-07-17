@@ -4,6 +4,7 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2 flex-wrap">
@@ -15,6 +16,12 @@
             @L["Songs"]
         </MudButton>
     </MudButtonGroup>
+    <FolderPicker Type="_folderType" Level="_folderLevel" FolderChanged="SetFolder"></FolderPicker>
+    @if (_folderLevel != null)
+    {
+        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="ClearFolder"
+                       aria-label="@L["All Folders"]"></MudIconButton>
+    }
     <MudText Typo="Typo.body2">@L["Official play ranking - trend deepens weekly as snapshots accumulate."]</MudText>
 </MudStack>
 
@@ -25,6 +32,10 @@
 else if (!_popularity.Any())
 {
     <MudAlert Severity="Severity.Info">@L["No popularity snapshot yet - it lands with the weekly import."]</MudAlert>
+}
+else if (!Visible.Any())
+{
+    <MudAlert Severity="Severity.Info">@L["Nothing from this folder is on the popularity board."]</MudAlert>
 }
 else if (_songsView)
 {
@@ -44,7 +55,7 @@ else if (_songsView)
 else
 {
     <MudPaper Class="pa-2">
-        @foreach (var (record, index) in _popularity.Select((r, i) => (r, i)).Take(100))
+        @foreach (var (record, index) in Visible.Select((r, i) => (r, i)).Take(100))
         {
             var chart = Charts.TryGetValue(record.ChartId, out var c) ? c : null;
             if (chart == null) continue;
@@ -72,7 +83,16 @@ else
 
     private bool _loading = true;
     private bool _songsView;
+    private ChartType _folderType = ChartType.Single;
+    private int? _folderLevel;
     private IReadOnlyList<OfficialPopularityRecord> _popularity = Array.Empty<OfficialPopularityRecord>();
+
+    // The folder narrows the full board before the top-100 cut — places stay global.
+    private IEnumerable<OfficialPopularityRecord> Visible =>
+        _folderLevel == null
+            ? _popularity
+            : _popularity.Where(r => Charts.TryGetValue(r.ChartId, out var c) &&
+                                     c.Type == _folderType && (int)c.Level == _folderLevel.Value);
 
     protected override async Task OnInitializedAsync()
     {
@@ -80,10 +100,23 @@ else
         _loading = false;
     }
 
+    internal void SetFolder((ChartType Type, int Level) folder)
+    {
+        _folderType = folder.Type;
+        _folderLevel = folder.Level;
+        StateHasChanged();
+    }
+
+    internal void ClearFolder()
+    {
+        _folderLevel = null;
+        StateHasChanged();
+    }
+
     // A song ranks by its best chart's place, both this week and last.
     private IEnumerable<(Song Song, int Place, int? Previous, int Index)> SongRows()
     {
-        return _popularity
+        return Visible
             .Where(r => Charts.ContainsKey(r.ChartId))
             .GroupBy(r => Charts[r.ChartId].Song.Name)
             .Select(g => (Charts[g.First().ChartId].Song,

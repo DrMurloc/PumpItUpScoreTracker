@@ -4724,4 +4724,13 @@
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>推定レーティング順のCO-OP譜面トップ - プレートはスコアから推定します。</value>
   </data>
+  <data name="All Folders" xml:space="preserve">
+    <value>全フォルダー</value>
+  </data>
+  <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
+    <value>このフォルダーの譜面は人気ボードに入っていません。</value>
+  </data>
+  <data name="See their boards" xml:space="preserve">
+    <value>このプレイヤーのボードを見る</value>
+  </data>
 </root>

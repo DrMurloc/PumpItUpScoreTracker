@@ -36,15 +36,20 @@
 
     [Parameter] public ChartType Type { get; set; } = ChartType.Double;
 
-    [Parameter] public int Level { get; set; } = 18;
+    // A null level is the unfiltered state ("All Folders") — only pages that filter
+    // optionally pass it; the tier list always has a folder. Clearing back to null is
+    // the caller's control, not this picker's.
+    [Parameter] public int? Level { get; set; } = 18;
 
     [Parameter] public bool Disabled { get; set; }
 
     [Parameter] public EventCallback<(ChartType Type, int Level)> FolderChanged { get; set; }
 
-    private string FolderLabel => Type == ChartType.CoOp
-        ? $"{L["CoOp"]} ×{Level}"
-        : $"{Type.GetShortHand()}{Level}";
+    private string FolderLabel => Level == null
+        ? L["All Folders"]
+        : Type == ChartType.CoOp
+            ? $"{L["CoOp"]} ×{Level}"
+            : $"{Type.GetShortHand()}{Level}";
 
     private void ToggleOpen()
     {
@@ -58,15 +63,16 @@
 
     private bool CanStep(int direction)
     {
+        if (Level == null) return false;
         var (min, max) = Bounds(Type);
-        var target = Level + direction;
+        var target = Level.Value + direction;
         return target >= min && target <= max;
     }
 
     private async Task Step(int direction)
     {
         if (!CanStep(direction)) return;
-        await FolderChanged.InvokeAsync((Type, Level + direction));
+        await FolderChanged.InvokeAsync((Type, Level!.Value + direction));
     }
 
     private async Task Pick((ChartType Type, int Level) folder)
