@@ -128,13 +128,44 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
     [Fact]
     public async Task TheChartPageServesItsHeadWithoutACircuit()
     {
+        // One clean score makes the description verdict-flavored — the population stats
+        // are what give every chart page its own snippet text.
+        var user = await _fixture.Seed.SeedUserAsync("HeadFact");
+        await _fixture.Seed.SeedPhoenixScoreAsync(user, _chartId, 985_000);
+
         var response = await _client.GetAsync($"/Chart/{_chartId}");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadAsStringAsync();
-        Assert.Contains("<title>Conflict S20</title>", body);
+        Assert.Contains("<title>Conflict S20 | PIU Scores</title>", body);
         Assert.Contains("name=\"description\"", body);
+        Assert.Contains("1 score tracked, 100% pass rate.", body);
         Assert.Contains("property=\"og:image\"", body);
+        Assert.Contains("property=\"og:site_name\"", body);
+        // The appearance layer rides the same static head: the JSON-LD graph (song +
+        // breadcrumb trail, shown in place of raw URL slugs) and the stat tiles'
+        // data-nosnippet, which keeps label soup out of search snippets so the
+        // description is what a result quotes.
+        Assert.Contains("application/ld+json", body);
+        Assert.Contains("BreadcrumbList", body);
+        Assert.Contains("data-nosnippet", body);
+    }
+
+    /// <summary>
+    ///     The front door carries the site-name signals: WebSite JSON-LD plus og:site_name
+    ///     on the root is what lets a search result say "PIU Scores" instead of the bare
+    ///     domain.
+    /// </summary>
+    [Fact]
+    public async Task TheFrontDoorNamesTheSiteForSearchEngines()
+    {
+        var response = await _client.GetAsync("/Welcome");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("\"@type\":\"WebSite\"", body);
+        Assert.Contains("\"name\":\"PIU Scores\"", body);
+        Assert.Contains("property=\"og:site_name\"", body);
     }
 
     /// <summary>

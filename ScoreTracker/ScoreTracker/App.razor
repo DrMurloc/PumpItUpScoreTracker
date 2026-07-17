@@ -25,11 +25,13 @@
     @* A real head for readers that run no JS, resolved from the route (StaticHeadResolver):
        chart routes get their name, description and jacket; unmatched routes get the bare site
        title and no meta. Blazor removes the title on boot and HeadOutlet takes over, so
-       <PageTitle> keeps working unchanged. *@
-    <title>@(_head?.Title ?? L["PIU Scores"].Value)</title>
+       <PageTitle> keeps working unchanged. The brand suffix rides the document title only —
+       og:title stays the bare page name because og:site_name already carries the brand. *@
+    <title>@(_head != null ? $"{_head.Title} | PIU Scores" : L["PIU Scores"].Value)</title>
     @if (_head != null)
     {
         <meta name="description" content="@_head.Description" />
+        <meta property="og:site_name" content="PIU Scores" />
         <meta property="og:title" content="@_head.Title" />
         <meta property="og:description" content="@_head.Description" />
         <meta property="og:type" content="website" />
@@ -40,7 +42,11 @@
         @if (_head.Canonical != null)
         {
             <link rel="canonical" href="@_head.Canonical" />
-            <script type="application/ld+json">@((MarkupString)JsonLd(_head))</script>
+            @* The whole element rides one MarkupString: the static renderer silently drops
+               a <script> element whose content is a component expression, and a raw markup
+               frame is what actually reaches the document. JSON string values escape "<",
+               so a song title can't close the script early. *@
+            @((MarkupString)$"<script type=\"application/ld+json\">{JsonLd(_head)}</script>")
         }
     }
     @* Interactive, and not prerendered — matching every <PageTitle> in the app. Static, it would
@@ -132,18 +138,53 @@
     private ShellViewModel _shell = null!;
     private StaticHeadModel? _head;
 
-    // MusicRecording JSON-LD for chart pages — enough for a rich result to name the song and
-    // link its image. System.Text.Json escapes the values, so a song title can't break out.
+    // Chart-page structured data: MusicRecording names the song, its artist and jacket for
+    // rich results; BreadcrumbList is what a search result shows as its trail in place of
+    // raw URL slugs. System.Text.Json escapes the values, so a song title can't break out.
     private static string JsonLd(StaticHeadModel head)
     {
-        return System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object?>
+        var recording = new Dictionary<string, object?>
         {
-            ["@context"] = "https://schema.org",
             ["@type"] = "MusicRecording",
-            ["name"] = head.Title,
+            ["name"] = head.SongName ?? head.Title,
             ["description"] = head.Description,
             ["url"] = head.Canonical,
             ["image"] = head.OgImage
+        };
+        if (head.Artist != null)
+            recording["byArtist"] = new Dictionary<string, object?>
+            {
+                ["@type"] = "MusicGroup",
+                ["name"] = head.Artist
+            };
+        return System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object?>
+        {
+            ["@context"] = "https://schema.org",
+            ["@graph"] = new object[]
+            {
+                recording,
+                new Dictionary<string, object?>
+                {
+                    ["@type"] = "BreadcrumbList",
+                    ["itemListElement"] = new object[]
+                    {
+                        new Dictionary<string, object?>
+                        {
+                            ["@type"] = "ListItem",
+                            ["position"] = 1,
+                            ["name"] = "Charts",
+                            ["item"] = "https://piuscores.arroweclip.se/Charts"
+                        },
+                        new Dictionary<string, object?>
+                        {
+                            ["@type"] = "ListItem",
+                            ["position"] = 2,
+                            ["name"] = head.Title,
+                            ["item"] = head.Canonical
+                        }
+                    }
+                }
+            }
         });
     }
 

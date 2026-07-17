@@ -28,6 +28,10 @@
     <meta property="og:description" content="@L["PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play."]" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://piuscores.arroweclip.se/Welcome" />
+    <meta property="og:site_name" content="PIU Scores" />
+    @* WebSite structured data on the site root names the site in search results — without
+       it a result is labelled with the bare domain. The brand is never localized. *@
+    <script type="application/ld+json">@Html.Raw(SiteJsonLd)</script>
     @* The shipped theme tokens — same single source as the Blazor shell (MixThemes),
        so this page can never drift from the site palette. Anonymous visitors resolve
        to Phoenix by the same rule the layout uses. *@
@@ -44,6 +48,9 @@
 <body class="front-door">
 
 @functions {
+    private const string SiteJsonLd =
+        """{"@context":"https://schema.org","@type":"WebSite","name":"PIU Scores","url":"https://piuscores.arroweclip.se/"}""";
+
     private static string BandKey(TierListCategory category) => category switch
     {
         TierListCategory.Easy => "Easy",

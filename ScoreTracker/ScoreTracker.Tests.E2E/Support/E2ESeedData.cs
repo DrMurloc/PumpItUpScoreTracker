@@ -133,6 +133,16 @@ public sealed class E2ESeedData
         return userId;
     }
 
+    /// <summary>A Phoenix best-score row (ScoreLedger-internal entity) — seeded with SQL.</summary>
+    public async Task SeedPhoenixScoreAsync(Guid userId, Guid chartId, int score, bool isBroken = false,
+        CancellationToken cancellationToken = default)
+    {
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO [scores].[PhoenixRecord] ([Id], [UserId], [ChartId], [MixId], [RecordedDate], [Score], [IsBroken]) VALUES ({Guid.NewGuid()}, {userId}, {chartId}, {PhoenixMixId}, {new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)}, {score}, {isBroken})",
+            cancellationToken);
+    }
+
     /// <summary>Journal, highlight, and milestone rows belong to vertical-internal entities — seeded with SQL.</summary>
     public async Task SeedJournalRowAsync(Guid userId, Guid chartId, DateTimeOffset occurredAt, int? score,
         string? plate, bool isBroken, Guid? sessionId, string source = "manual",

@@ -63,24 +63,46 @@
                     }
                 </div>
             }
-            <div class="chart-hero-facts">
+            @* data-nosnippet: to a text extractor the tiles are label soup ("263Scores
+               tracked"), so search snippets quote the meta description — which carries the
+               same stats as prose — instead. Value and label also sit on separate source
+               lines: extractors word-break on whitespace, not on span boundaries. *@
+            <div class="chart-hero-facts" data-nosnippet>
                 @if (_chart.Song.Bpm != null)
                 {
-                    <div><span class="chart-fact-value">@BpmDisplay</span><span class="chart-fact-label">@L["BPM"]</span></div>
+                    <div>
+                        <span class="chart-fact-value">@BpmDisplay</span>
+                        <span class="chart-fact-label">@L["BPM"]</span>
+                    </div>
                 }
                 @if (_chart.NoteCount > 0)
                 {
-                    <div><span class="chart-fact-value">@($"{_chart.NoteCount:N0}")</span><span class="chart-fact-label">@L["Notes"]</span></div>
+                    <div>
+                        <span class="chart-fact-value">@($"{_chart.NoteCount:N0}")</span>
+                        <span class="chart-fact-label">@L["Notes"]</span>
+                    </div>
                 }
                 @if (_analysis?.Nps != null)
                 {
-                    <div><span class="chart-fact-value">@_analysis.Nps.Value.ToString("0.#")</span><span class="chart-fact-label">@L["Notes per Second"]</span></div>
+                    <div>
+                        <span class="chart-fact-value">@_analysis.Nps.Value.ToString("0.#")</span>
+                        <span class="chart-fact-label">@L["Notes per Second"]</span>
+                    </div>
                 }
-                <div><span class="chart-fact-value">@_chart.OriginalMix.GetName()</span><span class="chart-fact-label">@L["Debuted in"]</span></div>
+                <div>
+                    <span class="chart-fact-value">@_chart.OriginalMix.GetName()</span>
+                    <span class="chart-fact-label">@L["Debuted in"]</span>
+                </div>
                 @if (Population != null)
                 {
-                    <div><span class="chart-fact-value">@($"{Population.ScoresTracked:N0}")</span><span class="chart-fact-label">@L["Scores tracked"]</span></div>
-                    <div><span class="chart-fact-value">@((int)Math.Round(Population.PassRate * 100))%</span><span class="chart-fact-label">@L["Pass rate"]</span></div>
+                    <div>
+                        <span class="chart-fact-value">@($"{Population.ScoresTracked:N0}")</span>
+                        <span class="chart-fact-label">@L["Scores tracked"]</span>
+                    </div>
+                    <div>
+                        <span class="chart-fact-value">@((int)Math.Round(Population.PassRate * 100))%</span>
+                        <span class="chart-fact-label">@L["Pass rate"]</span>
+                    </div>
                 }
             </div>
             <ChartVerdictCard Facets="_facets"></ChartVerdictCard>

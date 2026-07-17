@@ -434,6 +434,38 @@ still validate), and the ARR-affinity owner item (static-shell.md D18).
 - Docs: ARCHITECTURE / UX-GUIDELINES / API / DATABASE-SCHEMA sync; chart-details-overhaul.md P3
   + P4 rows close; this doc's ladder gets its shipped-marks.
 
+### SERP appearance pass (2026-07-17)
+
+Google's first indexed chart page exposed how a result actually *reads* ("263Scores tracked
+92%Pass rate…" — value/label spans fused, description too thin to be quoted alone, site named
+"arroweclip.se"). The appearance layer, landed as one pass:
+
+- **Verdict-flavored description** — the PR-2 option, now real: `StaticHeadResolver` folds the
+  daily-cached `GetChartVerdictQuery` population into the description ("263 scores tracked, 92%
+  pass rate"), making each chart's description unique and substantial enough that engines quote
+  it instead of stitching page text. The page dispatches the same query later in the same
+  request, so the head *warms* the verdict cache rather than doubling the work; the daily cache
+  is also what keeps descriptions stable between analytics rebuilds.
+- **`data-nosnippet` on the hero fact tiles** — value/label tiles are label soup to a text
+  extractor; the attribute keeps them out of search snippets (the description now carries those
+  stats as prose), and value/label sit on separate source lines so any other extractor
+  word-breaks cleanly. Verdict sentences stay snippetable on purpose — they read well.
+- **Branded document title** — `{Song} {Diff} | PIU Scores`, suffix applied in App.razor only:
+  the head model's Title stays the page's own text, so a future circuit `PageTitle` swap can't
+  flash the brand away. og:title stays bare; `og:site_name` carries the brand for unfurlers.
+- **JSON-LD grew to a graph** — `MusicRecording` (song name + `byArtist`, no longer the chart
+  title) + `BreadcrumbList` (Charts › {Song} {Diff}), which replaces raw URL slugs
+  ("Charts › phoenix › d23") as the result's displayed trail. **Landing it exposed a latent
+  K3 bug**: the static renderer silently drops a `<script>` element whose content is a
+  component expression, so the PR-4 MusicRecording script never actually reached a crawler
+  (live-site confirmed — canonical `<link>` from the same `@if` served, script absent). Fix:
+  the whole element rides one `MarkupString`; the new E2E fact pins `ld+json` in the raw body
+  so it can't regress silently again.
+- **Site name** — the front door serves `WebSite` JSON-LD (`name: "PIU Scores"`) +
+  `og:site_name` on `/` / `/Welcome` / `/Login`: the documented signal for showing
+  "PIU Scores" instead of the bare domain above results. Site names for subdomains are
+  supported but slow to take — after this markup, the lever is patience, not more markup.
+
 ### Open owner decisions
 
 | # | Decision | Blocks | Default/lean |
