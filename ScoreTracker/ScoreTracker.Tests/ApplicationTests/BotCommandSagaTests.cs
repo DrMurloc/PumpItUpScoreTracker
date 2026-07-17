@@ -11,10 +11,14 @@ using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Commands;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Communities.Domain;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Identity.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using Xunit;
 
@@ -246,14 +250,47 @@ public sealed class BotCommandSagaTests
     [Fact]
     public async Task RandomPresetNudgesAnUnlinkedUserToConnectDiscord()
     {
-        _mediator.Setup(m => m.Send(It.IsAny<ScoreTracker.Identity.Contracts.Queries.GetUserByExternalLoginQuery>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ScoreTracker.Domain.Models.User?)null);
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserByExternalLoginQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
 
         var reply = await Saga().Handle(Invoke(new[] { "random" },
             new Dictionary<string, string> { ["preset"] = "Bracket Warmup" }), CancellationToken.None);
 
         Assert.Null(reply.Card);
         Assert.Contains("Link your Discord account", reply.Text);
+    }
+
+    [Fact]
+    public async Task SuggestNudgesAnUnlinkedUser()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserByExternalLoginQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        var reply = await Saga().Handle(Invoke(new[] { "suggest" },
+            new Dictionary<string, string> { ["goal"] = "TitleHunt" }), CancellationToken.None);
+
+        Assert.Null(reply.Card);
+        Assert.Contains("Link your Discord account", reply.Text);
+    }
+
+    [Fact]
+    public async Task SuggestRendersACardOfRecommendationsForALinkedUser()
+    {
+        var chartId = new Guid("00000000-0000-0000-0000-0000000000aa");
+        var chart = new ChartBuilder().WithId(chartId).WithSongName("District 1").WithArtist("SHK")
+            .WithType(ChartType.Single).WithLevel(21).WithMix(MixEnum.Phoenix2).Build();
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserByExternalLoginQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserBuilder().Build());
+        _mediator.Setup(m => m.Send(It.IsAny<GetRecommendedChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new ChartRecommendation(Name.From("Skill Title Charts"), chartId, "A strong pick") });
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { chart });
+
+        var reply = await Saga().Handle(Invoke(new[] { "suggest" },
+            new Dictionary<string, string> { ["goal"] = "TitleHunt", ["mix"] = "Phoenix2" }), CancellationToken.None);
+
+        Assert.NotNull(reply.Card);
+        Assert.Contains("Suggested for you", reply.Card!.Header!.Markdown);
+        Assert.Contains("District 1", reply.Card.Blocks.OfType<RichBotSection>().Single().Markdown);
     }
 }

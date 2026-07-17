@@ -9,6 +9,8 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Contracts;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Randomizer.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -53,6 +55,7 @@ namespace ScoreTracker.Communities.Application
                 "calc" => Task.FromResult(Calc(interaction)),
                 "chart" => ChartLookup(interaction, cancellationToken),
                 "random" => RandomDraw(interaction, cancellationToken),
+                "suggest" => Suggest(interaction, cancellationToken),
                 "register" => Register(interaction, cancellationToken),
                 "unregister" => Unregister(interaction, cancellationToken),
                 "feeds" => Feeds(interaction, cancellationToken),
@@ -203,6 +206,70 @@ namespace ScoreTracker.Communities.Application
                 choices.Add(new BotOptionChoice($"Community — {(string)name}", $"community:{(string)name}"));
             return choices.Take(25).ToArray();
         }
+
+        private async Task<BotReply> Suggest(BotInteraction interaction, CancellationToken cancellationToken)
+        {
+            var user = await ResolveUser(interaction.UserId, cancellationToken);
+            if (user == null) return LinkNudge();
+            _currentUser.SetScopedUser(user);
+
+            var mix = ReadMix(interaction);
+            var type = interaction.Options.TryGetValue("type", out var t) && Enum.TryParse<ChartType>(t, out var parsed)
+                ? (ChartType?)parsed
+                : null;
+            var goal = interaction.Options.TryGetValue("goal", out var g) ? g : "TitleHunt";
+
+            var recommendations = (await _mediator.Send(
+                    new GetRecommendedChartsQuery(type, 0, mix, CategoriesForGoal(goal)), cancellationToken))
+                .Take(6).ToList();
+            if (recommendations.Count == 0)
+                return new BotReply(Text:
+                    "No suggestions right now — try a different goal, or import more scores first.");
+
+            var charts = (await _mediator.Send(new GetChartsQuery(mix), cancellationToken)).ToDictionary(c => c.Id);
+            var blocks = new List<IRichBotBlock> { new RichBotDivider() };
+            foreach (var recommendation in recommendations)
+            {
+                if (!charts.TryGetValue(recommendation.ChartId, out var chart)) continue;
+                var caption = string.IsNullOrWhiteSpace(recommendation.Explanation)
+                    ? (string)recommendation.Category
+                    : recommendation.Explanation;
+                blocks.Add(new RichBotSection(
+                    $"#DIFFICULTY|{chart.DifficultyString}# [{(string)chart.Song.Name}]({SiteBase}/Chart/{chart.Id})\n-# {caption}",
+                    chart.Song.ImagePath));
+            }
+
+            return new BotReply(Card: new RichBotMessage(
+                new RichBotSection($"### Suggested for you — {GoalName(goal)}\n-# {mix.GetName()} · based on your scores",
+                    null),
+                blocks,
+                $"#MIX|{mix}# {mix.GetName()} · PIU Scores",
+                mix.GetAccentColor(),
+                new[] { new RichBotLink("Open Suggested Charts", new Uri(SiteBase)) }));
+        }
+
+        private static IReadOnlySet<RecommendationCategory> CategoriesForGoal(string goal) => goal switch
+        {
+            "ScorePush" => new HashSet<RecommendationCategory>
+            {
+                RecommendationCategory.PushPGs, RecommendationCategory.ImproveTop50,
+                RecommendationCategory.RevisitOldScores
+            },
+            "FillGaps" => new HashSet<RecommendationCategory> { RecommendationCategory.FillScores },
+            "PumbilityPush" => new HashSet<RecommendationCategory> { RecommendationCategory.PushPumbility },
+            _ => new HashSet<RecommendationCategory>
+            {
+                RecommendationCategory.PushLevel, RecommendationCategory.SkillTitles
+            }
+        };
+
+        private static string GoalName(string goal) => goal switch
+        {
+            "ScorePush" => "Score Push",
+            "FillGaps" => "Fill Gaps",
+            "PumbilityPush" => "Pumbility Push",
+            _ => "Title Hunt"
+        };
 
         private async Task<BotReply> RandomDraw(BotInteraction interaction, CancellationToken cancellationToken)
         {

@@ -15,9 +15,34 @@ namespace ScoreTracker.Communities.Contracts
         public static IReadOnlyList<BotCommandDefinition> Commands { get; } = new[]
         {
             new BotCommandDefinition(RootName, "PIU Scores tools",
-                new[] { Calc, Chart, Random, Unregister, Feeds },
+                new[] { Calc, Chart, Random, Suggest, Unregister, Feeds },
                 new[] { Register })
         };
+
+        private static readonly IReadOnlyList<BotOptionChoice> GoalChoices = new[]
+        {
+            new BotOptionChoice("Title Hunt", "TitleHunt"),
+            new BotOptionChoice("Score Push", "ScorePush"),
+            new BotOptionChoice("Fill Gaps", "FillGaps"),
+            new BotOptionChoice("Pumbility Push", "PumbilityPush")
+        };
+
+        private static readonly IReadOnlyList<BotOptionChoice> SinglesDoublesChoices = new[]
+        {
+            new BotOptionChoice("Singles", "Single"),
+            new BotOptionChoice("Doubles", "Double")
+        };
+
+        private static BotSubCommand Suggest =>
+            new("suggest", "Personalized chart suggestions (private)",
+                new[]
+                {
+                    new BotCommandOption("goal", "What to work on (default Title Hunt)", BotCommandOptionType.String,
+                        Choices: GoalChoices),
+                    new BotCommandOption("type", "Singles or Doubles", BotCommandOptionType.String,
+                        Choices: SinglesDoublesChoices),
+                    OptionalMix
+                }, Ephemeral: true);
 
         private static readonly IReadOnlyList<BotOptionChoice> MixChoices = new[]
         {

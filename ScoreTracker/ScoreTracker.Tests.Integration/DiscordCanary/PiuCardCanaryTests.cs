@@ -28,6 +28,9 @@ public sealed class PiuCardCanaryTests
     [DiscordCanaryFact]
     public Task PostsTheRandomDrawCard() => PostAndVerify(RandomCard);
 
+    [DiscordCanaryFact]
+    public Task PostsTheSuggestCard() => PostAndVerify(SuggestCard);
+
     // /piu chart — song art header, one difficulty-bubble row per chart, each a masked link.
     private static RichBotMessage ChartCard(string marker) =>
         new(new RichBotSection("### Witch Doctor\n-# BanYa · 175 BPM · Phoenix 2", SongArt),
@@ -59,6 +62,26 @@ public sealed class PiuCardCanaryTests
             $"#MIX|Phoenix2# Phoenix 2 · PIU Scores · {marker}",
             MixEnum.Phoenix2.GetAccentColor(),
             Array.Empty<RichBotLink>());
+
+    // /piu suggest — ephemeral in practice; each row carries the engine's explanation.
+    private static RichBotMessage SuggestCard(string marker) =>
+        new(new RichBotSection("### Suggested for you — Title Hunt\n-# Phoenix 2 · based on your scores", null),
+            new IRichBotBlock[]
+            {
+                new RichBotDivider(),
+                new RichBotSection(
+                    $"#DIFFICULTY|S21# [District 1]({ChartBase}/00000000-0000-0000-0000-0000000000a1)\n" +
+                    "-# [Expert Lv.7] — needs 985,000+, you're at 981,220", SongArt),
+                new RichBotSection(
+                    $"#DIFFICULTY|D19# [Vacuum]({ChartBase}/00000000-0000-0000-0000-0000000000a2)\n" +
+                    "-# [VACUUM Lv.3] — skill title progress, 942k/990k", SongArt),
+                new RichBotSection(
+                    $"#DIFFICULTY|S20# [1949]({ChartBase}/00000000-0000-0000-0000-0000000000a3)\n" +
+                    "-# unplayed in this folder", SongArt)
+            },
+            $"#MIX|Phoenix2# Phoenix 2 · PIU Scores · {marker}",
+            MixEnum.Phoenix2.GetAccentColor(),
+            new[] { new RichBotLink("Open Suggested Charts", new Uri("https://piuscores.arroweclip.se")) });
 
     // Starts the real bot, posts the marked card(s), and asserts each landed with V2
     // components attached (independent REST readback, not just "the send didn't throw").
