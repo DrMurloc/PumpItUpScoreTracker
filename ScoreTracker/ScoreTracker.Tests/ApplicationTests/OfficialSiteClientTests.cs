@@ -187,6 +187,37 @@ public sealed class OfficialSiteClientTests
     }
 
     [Fact]
+    public async Task PopularityWalkContinuesPastUnparseableTilesAndStopsOnAShortPage()
+    {
+        // A full page whose tiles all failed parsing must keep the walk alive — the site
+        // said 50, so deeper pages exist. Only a short RAW page ends the ranking.
+        var piuGame = new Mock<IPiuGameApi>();
+        piuGame.Setup(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, 0,
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()))
+            .ReturnsAsync(new PiuGameGetChartPopularityLeaderboardResult
+            {
+                Entries = Array.Empty<PiuGameGetChartPopularityLeaderboardResult.Entry>(),
+                RawRowCount = 50
+            });
+        piuGame.Setup(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, 50,
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()))
+            .ReturnsAsync(new PiuGameGetChartPopularityLeaderboardResult
+            {
+                Entries = Array.Empty<PiuGameGetChartPopularityLeaderboardResult.Entry>(),
+                RawRowCount = 30
+            });
+        var client = BuildClient(piuGame);
+
+        await client.GetOfficialChartLeaderboardEntries(MixEnum.Phoenix, CancellationToken.None);
+
+        piuGame.Verify(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, 50,
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()), Times.Once);
+        piuGame.Verify(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, It.IsAny<int>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()),
+            Times.Exactly(2));
+    }
+
+    [Fact]
     public async Task PhoenixRatingBoardsStayAnonymous()
     {
         // The Phoenix mirror never logs in — byte-identical to before the P2 arm existed.

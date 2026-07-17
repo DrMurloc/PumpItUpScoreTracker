@@ -522,6 +522,28 @@ public sealed class PiuGameApiTests
         Assert.Contains(result.TitleEntries, t => t.Name == "EXC FOLLOWER" && !t.Have && t.ColClass == "col1");
     }
 
+    [Fact]
+    public async Task GetChartPopularityReportsRawTilesSeparatelyFromParsedEntries()
+    {
+        // Three tiles: one clean, one with no song-name node, one whose stepball art moved
+        // off the official hosts (the 2026-07-03 drift shape). Skipped tiles must not
+        // vanish from the raw count — pagination decisions ride RawRowCount.
+        var html = await File.ReadAllTextAsync(
+            Path.Combine(FixtureRoot, "GetChartPopularity_MixedParseability.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetChartPopularityLeaderboard(MixEnum.Phoenix2, 0,
+            DateTimeOffset.UtcNow, CancellationToken.None, HttpClientReturning(html));
+
+        Assert.Equal(3, result.RawRowCount);
+        var entry = Assert.Single(result.Entries);
+        Assert.Equal("District 1", (string)entry.SongName);
+        Assert.Equal(ChartType.Double, entry.ChartType);
+        Assert.Equal(26, (int)entry.ChartLevel);
+        Assert.Equal(4, entry.Place);
+        Assert.Equal("https://phoenix.piugame.com/data/song_img/district1.png?v=1", entry.SongImage);
+    }
+
     private static PiuGameApi BuildApi(string responseHtml)
     {
         return new PiuGameApi(

@@ -545,6 +545,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         var client = mix == MixEnum.Phoenix2 ? await GetServiceClient(mix, cancellationToken) : null;
         var missingCharts = new List<PiuGameGetChartPopularityLeaderboardResult.Entry>();
         var page = 0;
+        var rawRows = 0;
         var apiResults = new List<PiuGameGetChartPopularityLeaderboardResult.Entry>();
         while (true)
         {
@@ -552,11 +553,18 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             var nextResult = await _piuGame.GetChartPopularityLeaderboard(mix, page, _dateTime.Now,
                 cancellationToken, client);
             apiResults.AddRange(nextResult.Entries);
-            if (nextResult.Entries.Length < 50) break;
+            rawRows += nextResult.RawRowCount;
+            // The walk ends when the SITE serves a short page — parsed counts can dip
+            // under 50 on a full page (skipped tiles) without meaning the ranking ended.
+            if (nextResult.RawRowCount < 50) break;
 
             page += 50;
             await SweepDelay(cancellationToken);
         }
+
+        _logger.LogInformation(
+            "Popularity walk {Mix}: {Pages} pages, {Raw} raw tiles, {Parsed} parsed",
+            mix, page / 50 + 1, rawRows, apiResults.Count);
 
         var result = new List<ChartPopularityLeaderboardEntry>();
         foreach (var apiResult in apiResults)

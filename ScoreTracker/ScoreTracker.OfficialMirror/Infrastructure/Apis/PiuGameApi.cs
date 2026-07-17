@@ -308,7 +308,8 @@ internal sealed class PiuGameApi : IPiuGameApi
         if (lis == null)
             return new PiuGameGetChartPopularityLeaderboardResult
             {
-                Entries = results.ToArray()
+                Entries = results.ToArray(),
+                RawRowCount = 0
             };
 
         foreach (var li in lis)
@@ -387,7 +388,8 @@ internal sealed class PiuGameApi : IPiuGameApi
 
         return new PiuGameGetChartPopularityLeaderboardResult
         {
-            Entries = results.ToArray()
+            Entries = results.ToArray(),
+            RawRowCount = lis.Count
         };
     }
 
