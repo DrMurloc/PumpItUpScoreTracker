@@ -465,6 +465,15 @@ Google's first indexed chart page exposed how a result actually *reads* ("263Sco
   `og:site_name` on `/` / `/Welcome` / `/Login`: the documented signal for showing
   "PIU Scores" instead of the bare domain above results. Site names for subdomains are
   supported but slow to take — after this markup, the lever is patience, not more markup.
+- **og:image was already there — its MIME was not.** Chart pages have served the jacket
+  banner as og:image since PR-2 (700×393 piugame art, a near-ideal large-card aspect). What
+  was broken: `AzureBlobFileUploadClient` never set a content type, so every app-uploaded
+  blob — song jackets, the tier-list folder cards — serves `application/octet-stream`, which
+  some unfurlers and crawlers refuse to render as an image. The uploader now stamps the type
+  from the extension (no-overwrite semantics preserved via `IfNoneMatch`); **existing blobs
+  need a one-time owner-side content-type stamp** (az loop; remember a CDN purge after —
+  cached octet-stream responses outlive the stamp). Head grew `og:url`, `og:image:alt`, and
+  `twitter:card = summary_large_image`.
 - **Front-door title + snippet hygiene** — the title (and og:title) gained the searchable
   descriptor: `PIU Scores — Pump It Up score tracker & tier lists`, one localized key ×9
   (each locale reuses its own established phrasing from the hero keys; the `WebSite`

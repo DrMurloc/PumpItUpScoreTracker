@@ -38,10 +38,14 @@
         @if (_head.OgImage != null)
         {
             <meta property="og:image" content="@_head.OgImage" />
+            <meta property="og:image:alt" content="@($"{_head.SongName ?? _head.Title} jacket art")" />
+            @* The jacket banner is landscape (~16:9), which is what the large-card format wants. *@
+            <meta name="twitter:card" content="summary_large_image" />
         }
         @if (_head.Canonical != null)
         {
             <link rel="canonical" href="@_head.Canonical" />
+            <meta property="og:url" content="@_head.Canonical" />
             @* The whole element rides one MarkupString: the static renderer silently drops
                a <script> element whose content is a component expression, and a raw markup
                frame is what actually reaches the document. JSON string values escape "<",

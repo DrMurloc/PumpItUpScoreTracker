@@ -142,6 +142,7 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
         Assert.Contains("1 score tracked, 100% pass rate.", body);
         Assert.Contains("property=\"og:image\"", body);
         Assert.Contains("property=\"og:site_name\"", body);
+        Assert.Contains("name=\"twitter:card\"", body);
         // The appearance layer rides the same static head: the JSON-LD graph (song +
         // breadcrumb trail, shown in place of raw URL slugs) and the stat tiles'
         // data-nosnippet, which keeps label soup out of search snippets so the
