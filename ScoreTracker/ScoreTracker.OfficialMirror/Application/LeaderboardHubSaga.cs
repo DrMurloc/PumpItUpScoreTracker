@@ -22,7 +22,8 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetOfficialPlayerProfileQuery, OfficialPlayerProfileRecord?>,
     IRequestHandler<GetOfficialPlayerNamesQuery, IReadOnlyList<string>>,
     IRequestHandler<GetOfficialPopularityQuery, IReadOnlyList<OfficialPopularityRecord>>,
-    IRequestHandler<GetImportRunsQuery, IReadOnlyList<ImportRunRecord>>
+    IRequestHandler<GetImportRunsQuery, IReadOnlyList<ImportRunRecord>>,
+    IRequestHandler<GetWhatItTakesQuery, WhatItTakesRecord>
 {
     private const string PumbilityAll = "PUMBILITY";
     private const string PumbilitySingles = "PUMBILITY Singles";
@@ -312,6 +313,97 @@ internal sealed class LeaderboardHubSaga :
             .Select(r => new ImportRunRecord(r.Id, r.StartedAt, r.CompletedAt, r.IsBaseline, r.Stage,
                 r.BoardsExpected, r.BoardsWritten, r.BoardsSkipped, r.Error))
             .ToArray();
+    }
+
+    public async Task<WhatItTakesRecord> Handle(GetWhatItTakesQuery request, CancellationToken cancellationToken)
+    {
+        var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
+        if (latest?.CompletedAt == null)
+            return new WhatItTakesRecord(null, false, 0, null, Array.Empty<CutlineTierRecord>(),
+                Array.Empty<BoardCutlineRecord>(), Array.Empty<CutlineHistoryPointRecord>());
+
+        return (await _cache.GetOrCreateAsync(
+            $"OfficialWhatItTakes__{request.Mix}__{request.Type}__{latest.Id}", async entry =>
+            {
+                entry.SlidingExpiration = TimeSpan.FromHours(12);
+                return await BuildWhatItTakes(request.Mix, request.Type, latest, cancellationToken);
+            }))!;
+    }
+
+    private async Task<WhatItTakesRecord> BuildWhatItTakes(MixEnum mix, string type, SnapshotRun latest,
+        CancellationToken ct)
+    {
+        var boardName = type switch
+        {
+            "Singles" => PumbilitySingles,
+            "Doubles" => PumbilityDoubles,
+            _ => PumbilityAll
+        };
+        var chartType = type == "Doubles" ? ChartType.Double : ChartType.Single;
+        var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
+        var stats = await GetSnapshotStats(mix, latest.Id, ct);
+        var board = stats.RatingBoards.TryGetValue(boardName, out var rows)
+            ? rows
+            : Array.Empty<PlacementRow>();
+
+        var previous = await _snapshots.GetSealedBefore(mix, latest.Id, ct);
+        var previousBoard = previous == null
+            ? Array.Empty<PlacementRow>()
+            : (await GetSnapshotStats(mix, previous.Id, ct)).RatingBoards.TryGetValue(boardName, out var prev)
+                ? prev
+                : Array.Empty<PlacementRow>();
+
+        CutlineTierRecord Tier(int rank, decimal value)
+        {
+            var previousValue = CutlineCalculator.ValueAtRank(previousBoard, rank);
+            return new CutlineTierRecord(rank, value, value - previousValue,
+                CutlineCalculator.LevelFor(scoring, chartType, PhoenixLetterGrade.AAA, value),
+                CutlineCalculator.LevelFor(scoring, chartType, PhoenixLetterGrade.S, value),
+                CutlineCalculator.LevelFor(scoring, chartType, PhoenixLetterGrade.SS, value),
+                CutlineCalculator.LevelFor(scoring, chartType, PhoenixLetterGrade.SSS, value));
+        }
+
+        var tiers = CutlineCalculator.TierLadder
+            .Select(rank => (Rank: rank, Value: CutlineCalculator.ValueAtRank(board, rank)))
+            .Where(t => t.Value != null)
+            .Select(t => Tier(t.Rank, t.Value!.Value))
+            .ToArray();
+        var boardFull = board.Count >= CutlineCalculator.BoardCapacity;
+        var entry = boardFull ? tiers.FirstOrDefault(t => t.Rank == CutlineCalculator.BoardCapacity) : null;
+
+        var comparisons = new List<BoardCutlineRecord>();
+        foreach (var (name, label) in new[]
+                 {
+                     (PumbilityAll, "All"), (PumbilitySingles, "Singles"), (PumbilityDoubles, "Doubles")
+                 })
+        {
+            var compareBoard = stats.RatingBoards.TryGetValue(name, out var b)
+                ? b
+                : Array.Empty<PlacementRow>();
+            var compareFull = compareBoard.Count >= CutlineCalculator.BoardCapacity;
+            var value = compareFull
+                ? CutlineCalculator.ValueAtRank(compareBoard, CutlineCalculator.BoardCapacity)
+                : null;
+            var previousValue = CutlineCalculator.ValueAtRank(previous == null
+                    ? Array.Empty<PlacementRow>()
+                    : (await GetSnapshotStats(mix, previous.Id, ct)).RatingBoards.TryGetValue(name, out var pb)
+                        ? pb
+                        : Array.Empty<PlacementRow>(),
+                CutlineCalculator.BoardCapacity);
+            comparisons.Add(new BoardCutlineRecord(label, value, value - previousValue, compareFull));
+        }
+
+        var history = (await _snapshots.GetBoardFloorHistory(mix, boardName, ct))
+            .Where(h => h.Count >= CutlineCalculator.BoardCapacity)
+            .Select(h => new CutlineHistoryPointRecord(h.CompletedAt, h.MinScore,
+                CutlineCalculator.LevelFor(scoring, chartType, PhoenixLetterGrade.AAA, h.MinScore),
+                CutlineCalculator.LevelFor(scoring, chartType, PhoenixLetterGrade.S, h.MinScore),
+                CutlineCalculator.LevelFor(scoring, chartType, PhoenixLetterGrade.SS, h.MinScore),
+                CutlineCalculator.LevelFor(scoring, chartType, PhoenixLetterGrade.SSS, h.MinScore)))
+            .ToArray();
+
+        return new WhatItTakesRecord(latest.CompletedAt, boardFull, board.Count, entry, tiers, comparisons,
+            history);
     }
 
     private static OfficialPlayerRecord ToRecord(PlayerDimension player)

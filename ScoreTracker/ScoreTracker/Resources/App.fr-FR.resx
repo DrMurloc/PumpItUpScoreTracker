@@ -4670,6 +4670,45 @@
   <data name="piuscores" xml:space="preserve">
     <value>piuscores</value>
   </data>
+  <data name="What It Takes" xml:space="preserve">
+    <value>Ce qu'il faut</value>
+  </data>
+  <data name="entry cutlines" xml:space="preserve">
+    <value>seuils d'entrée</value>
+  </data>
+  <data name="not full" xml:space="preserve">
+    <value>pas plein</value>
+  </data>
+  <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
+    <value>Pas encore d'instantané - les seuils apparaissent après le premier import hebdomadaire.</value>
+  </data>
+  <data name="To get on the board" xml:space="preserve">
+    <value>Pour entrer au classement</value>
+  </data>
+  <data name="50 charts at, SG plates assumed" xml:space="preserve">
+    <value>50 charts à, plaques SG supposées</value>
+  </data>
+  <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
+    <value>Le classement n'est pas plein - n'importe quel top 50 vous y place.</value>
+  </data>
+  <data name="Level required, by ranking tier" xml:space="preserve">
+    <value>Niveau requis, par palier de classement</value>
+  </data>
+  <data name="The entry bar over time" xml:space="preserve">
+    <value>Le seuil d'entrée au fil du temps</value>
+  </data>
+  <data name="The exact numbers" xml:space="preserve">
+    <value>Les chiffres exacts</value>
+  </data>
+  <data name="Full ladder" xml:space="preserve">
+    <value>Échelle complète</value>
+  </data>
+  <data name="Tier" xml:space="preserve">
+    <value>Palier</value>
+  </data>
+  <data name="All equivalents assume SG plates on all 50 - a dash means no single level clears it at that grade." xml:space="preserve">
+    <value>Toutes les équivalences supposent des plaques SG sur les 50 - un tiret signifie qu'aucun niveau n'y parvient à ce grade.</value>
+  </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>Actualisation de la popularité en file d'attente - se rattache au dernier instantané</value>
   </data>

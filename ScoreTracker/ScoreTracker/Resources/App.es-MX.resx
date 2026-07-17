@@ -4556,6 +4556,45 @@
   <data name="piuscores" xml:space="preserve">
     <value>piuscores</value>
   </data>
+  <data name="What It Takes" xml:space="preserve">
+    <value>Lo que se necesita</value>
+  </data>
+  <data name="entry cutlines" xml:space="preserve">
+    <value>líneas de corte de entrada</value>
+  </data>
+  <data name="not full" xml:space="preserve">
+    <value>no lleno</value>
+  </data>
+  <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
+    <value>Aún no hay instantánea: los umbrales aparecen después de la primera importación semanal.</value>
+  </data>
+  <data name="To get on the board" xml:space="preserve">
+    <value>Para entrar al tablero</value>
+  </data>
+  <data name="50 charts at, SG plates assumed" xml:space="preserve">
+    <value>50 charts a, asumiendo placas SG</value>
+  </data>
+  <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
+    <value>El tablero no está lleno: cualquier top 50 te mete.</value>
+  </data>
+  <data name="Level required, by ranking tier" xml:space="preserve">
+    <value>Nivel requerido, por rango del ranking</value>
+  </data>
+  <data name="The entry bar over time" xml:space="preserve">
+    <value>La barra de entrada a lo largo del tiempo</value>
+  </data>
+  <data name="The exact numbers" xml:space="preserve">
+    <value>Los números exactos</value>
+  </data>
+  <data name="Full ladder" xml:space="preserve">
+    <value>Escalera completa</value>
+  </data>
+  <data name="Tier" xml:space="preserve">
+    <value>Rango</value>
+  </data>
+  <data name="All equivalents assume SG plates on all 50 - a dash means no single level clears it at that grade." xml:space="preserve">
+    <value>Todas las equivalencias asumen placas SG en los 50: un guion significa que ningún nivel lo alcanza con esa calificación.</value>
+  </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>Actualización de popularidad en cola: se vuelve a vincular a la instantánea más reciente</value>
   </data>

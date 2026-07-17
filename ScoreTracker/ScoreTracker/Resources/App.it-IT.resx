@@ -4676,6 +4676,45 @@
   <data name="piuscores" xml:space="preserve">
     <value>piuscores</value>
   </data>
+  <data name="What It Takes" xml:space="preserve">
+    <value>Cosa serve</value>
+  </data>
+  <data name="entry cutlines" xml:space="preserve">
+    <value>soglie d'ingresso</value>
+  </data>
+  <data name="not full" xml:space="preserve">
+    <value>non pieno</value>
+  </data>
+  <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
+    <value>Nessuno snapshot ancora - le soglie compaiono dopo la prima importazione settimanale.</value>
+  </data>
+  <data name="To get on the board" xml:space="preserve">
+    <value>Per entrare in classifica</value>
+  </data>
+  <data name="50 charts at, SG plates assumed" xml:space="preserve">
+    <value>50 chart a, piastre SG presunte</value>
+  </data>
+  <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
+    <value>La classifica non è piena - qualsiasi top 50 ti fa entrare.</value>
+  </data>
+  <data name="Level required, by ranking tier" xml:space="preserve">
+    <value>Livello richiesto, per fascia di classifica</value>
+  </data>
+  <data name="The entry bar over time" xml:space="preserve">
+    <value>La soglia d'ingresso nel tempo</value>
+  </data>
+  <data name="The exact numbers" xml:space="preserve">
+    <value>I numeri esatti</value>
+  </data>
+  <data name="Full ladder" xml:space="preserve">
+    <value>Scala completa</value>
+  </data>
+  <data name="Tier" xml:space="preserve">
+    <value>Fascia</value>
+  </data>
+  <data name="All equivalents assume SG plates on all 50 - a dash means no single level clears it at that grade." xml:space="preserve">
+    <value>Tutte le equivalenze presumono piastre SG su tutti i 50 - un trattino significa che nessun livello ci arriva con quel grado.</value>
+  </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>Aggiornamento della popolarità in coda - si riaggancia all'ultimo snapshot</value>
   </data>

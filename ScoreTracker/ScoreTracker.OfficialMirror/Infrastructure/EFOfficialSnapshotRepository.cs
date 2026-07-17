@@ -417,6 +417,32 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .ToArray();
     }
 
+    public async Task<IReadOnlyList<(int SnapshotId, DateTimeOffset CompletedAt, decimal MinScore, int Count)>>
+        GetBoardFloorHistory(MixEnum mix, string boardName, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        return (await database.Set<OfficialLeaderboardPlacementEntity>()
+                .Join(database.Set<OfficialLeaderboardEntity>()
+                        .Where(b => b.MixId == mixId && b.LeaderboardType == LeaderboardTypes.Rating &&
+                                    b.Name == boardName),
+                    p => p.LeaderboardId, b => b.Id, (p, _) => p)
+                .Join(database.Set<OfficialLeaderboardSnapshotEntity>().Where(s => s.CompletedAt != null),
+                    p => p.SnapshotId, s => s.Id, (p, s) => new { p, CompletedAt = s.CompletedAt!.Value })
+                .GroupBy(ps => new { ps.p.SnapshotId, ps.CompletedAt })
+                .Select(g => new
+                {
+                    g.Key.SnapshotId,
+                    g.Key.CompletedAt,
+                    MinScore = g.Min(ps => ps.p.Score),
+                    Count = g.Count()
+                })
+                .OrderBy(g => g.CompletedAt)
+                .ToArrayAsync(ct))
+            .Select(g => (g.SnapshotId, g.CompletedAt, g.MinScore, g.Count))
+            .ToArray();
+    }
+
     public async Task UpsertMissingCharts(MixEnum mix, IReadOnlyCollection<MissingChartSighting> sightings,
         DateTimeOffset seenAt, CancellationToken ct)
     {

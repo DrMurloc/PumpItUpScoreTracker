@@ -85,10 +85,13 @@
     <MudTabPanel Text="@L["Popularity"]">
         <HubPopularity Mix="_mix" Charts="_charts"/>
     </MudTabPanel>
+    <MudTabPanel Text="@L["What It Takes"]">
+        <HubWhatItTakes Mix="_mix"/>
+    </MudTabPanel>
 </MudTabs>
 
 @code {
-    private static readonly string[] ViewKeys = { "week", "rankings", "players", "popularity" };
+    private static readonly string[] ViewKeys = { "week", "rankings", "players", "popularity", "takes" };
 
     private MixEnum _mix = MixEnum.Phoenix2;
     private int _activeTab;

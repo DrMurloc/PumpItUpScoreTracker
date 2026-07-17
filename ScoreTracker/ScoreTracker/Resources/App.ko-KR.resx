@@ -4557,6 +4557,45 @@
   <data name="piuscores" xml:space="preserve">
     <value>piuscores</value>
   </data>
+  <data name="What It Takes" xml:space="preserve">
+    <value>필요한 것</value>
+  </data>
+  <data name="entry cutlines" xml:space="preserve">
+    <value>진입 커트라인</value>
+  </data>
+  <data name="not full" xml:space="preserve">
+    <value>미달</value>
+  </data>
+  <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
+    <value>아직 스냅샷이 없습니다 - 첫 주간 가져오기 후 기준선이 표시됩니다.</value>
+  </data>
+  <data name="To get on the board" xml:space="preserve">
+    <value>보드에 오르려면</value>
+  </data>
+  <data name="50 charts at, SG plates assumed" xml:space="preserve">
+    <value>50개 채보 기준, SG 플레이트 가정</value>
+  </data>
+  <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
+    <value>보드가 아직 가득 차지 않았습니다 - 상위 50개만 있으면 오를 수 있습니다.</value>
+  </data>
+  <data name="Level required, by ranking tier" xml:space="preserve">
+    <value>랭킹 구간별 필요 레벨</value>
+  </data>
+  <data name="The entry bar over time" xml:space="preserve">
+    <value>시간에 따른 진입 기준</value>
+  </data>
+  <data name="The exact numbers" xml:space="preserve">
+    <value>정확한 수치</value>
+  </data>
+  <data name="Full ladder" xml:space="preserve">
+    <value>전체 구간</value>
+  </data>
+  <data name="Tier" xml:space="preserve">
+    <value>구간</value>
+  </data>
+  <data name="All equivalents assume SG plates on all 50 - a dash means no single level clears it at that grade." xml:space="preserve">
+    <value>모든 환산은 50개 전부 SG 플레이트를 가정합니다 - 대시는 해당 등급으로는 어느 레벨로도 도달할 수 없음을 뜻합니다.</value>
+  </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>인기도 새로고침이 대기열에 추가되었습니다 - 최신 스냅샷에 다시 연결됩니다</value>
   </data>

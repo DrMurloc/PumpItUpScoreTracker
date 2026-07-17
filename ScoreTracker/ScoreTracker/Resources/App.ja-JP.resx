@@ -4676,6 +4676,45 @@
   <data name="piuscores" xml:space="preserve">
     <value>piuscores</value>
   </data>
+  <data name="What It Takes" xml:space="preserve">
+    <value>必要なもの</value>
+  </data>
+  <data name="entry cutlines" xml:space="preserve">
+    <value>エントリーライン</value>
+  </data>
+  <data name="not full" xml:space="preserve">
+    <value>未満員</value>
+  </data>
+  <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
+    <value>まだスナップショットがありません - 最初の週間インポート後にしきい値が表示されます。</value>
+  </data>
+  <data name="To get on the board" xml:space="preserve">
+    <value>ボードに載るには</value>
+  </data>
+  <data name="50 charts at, SG plates assumed" xml:space="preserve">
+    <value>譜面50枚基準・SGプレート想定</value>
+  </data>
+  <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
+    <value>ボードはまだ満員ではありません - トップ50があれば載れます。</value>
+  </data>
+  <data name="Level required, by ranking tier" xml:space="preserve">
+    <value>ランキング帯別の必要レベル</value>
+  </data>
+  <data name="The entry bar over time" xml:space="preserve">
+    <value>エントリーラインの推移</value>
+  </data>
+  <data name="The exact numbers" xml:space="preserve">
+    <value>正確な数値</value>
+  </data>
+  <data name="Full ladder" xml:space="preserve">
+    <value>全段階</value>
+  </data>
+  <data name="Tier" xml:space="preserve">
+    <value>帯</value>
+  </data>
+  <data name="All equivalents assume SG plates on all 50 - a dash means no single level clears it at that grade." xml:space="preserve">
+    <value>すべての換算は50枚全部SGプレート想定です - ダッシュはそのグレードではどのレベルでも届かないことを意味します。</value>
+  </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>人気度の更新をキューに追加しました - 最新のスナップショットに再適用されます</value>
   </data>

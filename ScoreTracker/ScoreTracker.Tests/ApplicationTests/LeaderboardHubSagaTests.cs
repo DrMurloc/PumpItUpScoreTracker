@@ -296,6 +296,66 @@ public sealed class LeaderboardHubSagaTests
     }
 
     [Fact]
+    public async Task WhatItTakesBuildsTheLadderFromAFullBoard()
+    {
+        var f = Arrange(Run(2, Week2), Run(1, Week1));
+        var fullBoard = Enumerable.Range(1, 1000)
+            .Select(rank => Pumbility(rank, rank, 21000m - rank * 8))
+            .ToArray();
+        var previousBoard = Enumerable.Range(1, 1000)
+            .Select(rank => Pumbility(rank, rank, 20900m - rank * 8))
+            .ToArray();
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(fullBoard);
+        f.Snapshots.Setup(s => s.GetPlacementDetails(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(previousBoard);
+        f.Snapshots.Setup(s => s.GetBoardFloorHistory(MixEnum.Phoenix2, "PUMBILITY",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { (1, Week1, 12900m, 1000), (2, Week2, 13000m, 1000) });
+
+        var result = await f.Saga.Handle(new GetWhatItTakesQuery(MixEnum.Phoenix2), CancellationToken.None);
+
+        Assert.True(result.BoardFull);
+        Assert.Equal(1000, result.BoardCount);
+        Assert.NotNull(result.Entry);
+        Assert.Equal(13000m, result.Entry!.Value);
+        Assert.Equal(100m, result.Entry.WeekDelta);
+        Assert.NotNull(result.Entry.LevelForAAA);
+        // Higher grades buy in at lower levels.
+        Assert.True(result.Entry.LevelForSSS <= result.Entry.LevelForAAA);
+        Assert.Equal(28, result.Tiers.Count);
+        Assert.Equal(2, result.History.Count);
+        Assert.Equal(3, result.Boards.Count);
+        Assert.Equal(13000m, result.Boards.Single(b => b.Type == "All").EntryValue);
+        Assert.False(result.Boards.Single(b => b.Type == "Singles").BoardFull);
+    }
+
+    [Fact]
+    public async Task WhatItTakesOnAnUnfullBoardHasNoEntryButStillLaddersWhatExists()
+    {
+        var f = Arrange(Run(2, Week2));
+        var partialBoard = Enumerable.Range(1, 250)
+            .Select(rank => Pumbility(rank, rank, 18000m - rank * 10))
+            .ToArray();
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(partialBoard);
+        f.Snapshots.Setup(s => s.GetBoardFloorHistory(MixEnum.Phoenix2, "PUMBILITY",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { (2, Week2, 15500m, 250) });
+
+        var result = await f.Saga.Handle(new GetWhatItTakesQuery(MixEnum.Phoenix2), CancellationToken.None);
+
+        Assert.False(result.BoardFull);
+        Assert.Equal(250, result.BoardCount);
+        Assert.Null(result.Entry);
+        // Ranks the board reaches (200, 100, the tens, the seats) ladder; deeper rungs don't.
+        Assert.Contains(result.Tiers, t => t.Rank == 200);
+        Assert.DoesNotContain(result.Tiers, t => t.Rank == 300);
+        // Never-full boards contribute no inflation history.
+        Assert.Empty(result.History);
+    }
+
+    [Fact]
     public async Task ImportRunsProjectTheRunState()
     {
         var f = Arrange(Run(2, Week2));

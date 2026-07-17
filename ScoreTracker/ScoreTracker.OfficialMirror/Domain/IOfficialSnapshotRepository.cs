@@ -70,6 +70,14 @@ internal interface IOfficialSnapshotRepository
     Task<IReadOnlyList<(int SnapshotId, Guid ChartId, int Place)>> GetPopularityHistory(MixEnum mix,
         int snapshots, CancellationToken ct);
 
+    /// <summary>
+    ///     A rating board's floor across every sealed snapshot, oldest first: the minimum
+    ///     score on the board and how many rows it held (a full board's floor is its
+    ///     entry bar).
+    /// </summary>
+    Task<IReadOnlyList<(int SnapshotId, DateTimeOffset CompletedAt, decimal MinScore, int Count)>>
+        GetBoardFloorHistory(MixEnum mix, string boardName, CancellationToken ct);
+
     /// <summary>One row per distinct unmapped chart; re-sightings refresh LastIdentified.</summary>
     Task UpsertMissingCharts(MixEnum mix, IReadOnlyCollection<MissingChartSighting> sightings,
         DateTimeOffset seenAt, CancellationToken ct);

@@ -4547,6 +4547,45 @@
   <data name="piuscores" xml:space="preserve">
     <value>piuscores</value>
   </data>
+  <data name="What It Takes" xml:space="preserve">
+    <value>O que é preciso</value>
+  </data>
+  <data name="entry cutlines" xml:space="preserve">
+    <value>linhas de corte de entrada</value>
+  </data>
+  <data name="not full" xml:space="preserve">
+    <value>não cheio</value>
+  </data>
+  <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
+    <value>Ainda sem instantâneo: os limites aparecem após a primeira importação semanal.</value>
+  </data>
+  <data name="To get on the board" xml:space="preserve">
+    <value>Para entrar no ranking</value>
+  </data>
+  <data name="50 charts at, SG plates assumed" xml:space="preserve">
+    <value>50 charts em, assumindo placas SG</value>
+  </data>
+  <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
+    <value>O ranking não está cheio: qualquer top 50 já te coloca nele.</value>
+  </data>
+  <data name="Level required, by ranking tier" xml:space="preserve">
+    <value>Nível necessário, por faixa do ranking</value>
+  </data>
+  <data name="The entry bar over time" xml:space="preserve">
+    <value>A barra de entrada ao longo do tempo</value>
+  </data>
+  <data name="The exact numbers" xml:space="preserve">
+    <value>Os números exatos</value>
+  </data>
+  <data name="Full ladder" xml:space="preserve">
+    <value>Escada completa</value>
+  </data>
+  <data name="Tier" xml:space="preserve">
+    <value>Faixa</value>
+  </data>
+  <data name="All equivalents assume SG plates on all 50 - a dash means no single level clears it at that grade." xml:space="preserve">
+    <value>Todas as equivalências assumem placas SG nos 50: um traço significa que nenhum nível alcança com essa nota.</value>
+  </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>Atualização de popularidade na fila - reanexa ao instantâneo mais recente</value>
   </data>

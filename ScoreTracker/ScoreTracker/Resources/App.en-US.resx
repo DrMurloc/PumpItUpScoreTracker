@@ -4670,6 +4670,45 @@
   <data name="piuscores" xml:space="preserve">
     <value>piuscores</value>
   </data>
+  <data name="What It Takes" xml:space="preserve">
+    <value>What It Takes</value>
+  </data>
+  <data name="entry cutlines" xml:space="preserve">
+    <value>entry cutlines</value>
+  </data>
+  <data name="not full" xml:space="preserve">
+    <value>not full</value>
+  </data>
+  <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
+    <value>No snapshot yet - thresholds appear after the first weekly import.</value>
+  </data>
+  <data name="To get on the board" xml:space="preserve">
+    <value>To get on the board</value>
+  </data>
+  <data name="50 charts at, SG plates assumed" xml:space="preserve">
+    <value>50 charts at, SG plates assumed</value>
+  </data>
+  <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
+    <value>The board isn't full - any top 50 gets you on it.</value>
+  </data>
+  <data name="Level required, by ranking tier" xml:space="preserve">
+    <value>Level required, by ranking tier</value>
+  </data>
+  <data name="The entry bar over time" xml:space="preserve">
+    <value>The entry bar over time</value>
+  </data>
+  <data name="The exact numbers" xml:space="preserve">
+    <value>The exact numbers</value>
+  </data>
+  <data name="Full ladder" xml:space="preserve">
+    <value>Full ladder</value>
+  </data>
+  <data name="Tier" xml:space="preserve">
+    <value>Tier</value>
+  </data>
+  <data name="All equivalents assume SG plates on all 50 - a dash means no single level clears it at that grade." xml:space="preserve">
+    <value>All equivalents assume SG plates on all 50 - a dash means no single level clears it at that grade.</value>
+  </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>Popularity refresh queued - re-attaches to the latest snapshot</value>
   </data>
