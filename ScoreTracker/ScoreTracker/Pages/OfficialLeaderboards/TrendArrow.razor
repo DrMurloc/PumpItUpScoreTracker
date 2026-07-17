@@ -1,0 +1,23 @@
+@if (Previous == null)
+{
+    <MudTooltip Text="@L["New this week"]">
+        <span class="olb-delta-up">＊</span>
+    </MudTooltip>
+}
+else if (Previous > Current)
+{
+    <span class="olb-delta-up">▲@(Previous - Current)</span>
+}
+else if (Previous < Current)
+{
+    <span class="olb-delta-down">▼@(Current - Previous)</span>
+}
+else
+{
+    <span class="olb-delta-flat">—</span>
+}
+
+@code {
+    [Parameter] public int Current { get; set; }
+    [Parameter] public int? Previous { get; set; }
+}

@@ -36,6 +36,12 @@ public sealed class PiuGameConfiguration
     public string? ServicePassword { get; set; }
 
     /// <summary>
+    ///     Pause between consecutive requests inside the weekly board sweep — hundreds of
+    ///     board fetches against a login-gated site deserve pacing. Zero disables (tests).
+    /// </summary>
+    public int SweepRequestDelayMilliseconds { get; set; } = 250;
+
+    /// <summary>
     ///     The official-site host for a mix. XX has no scrapeable site; anything unknown
     ///     throws loudly rather than silently scraping the wrong mix's boards.
     /// </summary>

@@ -14,8 +14,11 @@
                    OnClick="() => _pendingType = ChartType.Single">@L["Singles"]</MudButton>
         <MudButton Variant="@TypeVariant(ChartType.Double)" Color="Color.Primary" Size="Size.Small"
                    OnClick="() => _pendingType = ChartType.Double">@L["Doubles"]</MudButton>
-        <MudButton Variant="@TypeVariant(ChartType.CoOp)" Color="Color.Primary" Size="Size.Small"
-                   OnClick="() => _pendingType = ChartType.CoOp">@L["CoOp"]</MudButton>
+        @if (ShowCoOp)
+        {
+            <MudButton Variant="@TypeVariant(ChartType.CoOp)" Color="Color.Primary" Size="Size.Small"
+                       OnClick="() => _pendingType = ChartType.CoOp">@L["CoOp"]</MudButton>
+        }
     </MudButtonGroup>
     <div class="folder-picker-levels">
         @foreach (var level in LevelsFor(_pendingType))
@@ -33,6 +36,9 @@
 
     /// <summary>The tab shown on first render (and after a host re-anchor).</summary>
     [Parameter] public ChartType InitialType { get; set; } = ChartType.Single;
+
+    /// <summary>Hosts without co-op data (e.g. the popularity board) hide the CoOp tab.</summary>
+    [Parameter] public bool ShowCoOp { get; set; } = true;
 
     /// <summary>Which (type, level) cells render highlighted.</summary>
     [Parameter] public Func<ChartType, int, bool> IsSelected { get; set; } = (_, _) => false;

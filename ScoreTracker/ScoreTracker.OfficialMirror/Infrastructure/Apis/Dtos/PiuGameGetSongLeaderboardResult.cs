@@ -4,6 +4,11 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Apis.Dtos
     {
         public EntryResultDto[] Results { get; set; } = Array.Empty<EntryResultDto>();
 
+        /// <summary>No next/last paging icon on the page — this is the board's final page.</summary>
+        public bool IsEnd { get; set; } = true;
+
+        public int FailedRows { get; set; }
+
         public sealed class EntryResultDto
         {
             public Uri AvatarUrl { get; set; } =

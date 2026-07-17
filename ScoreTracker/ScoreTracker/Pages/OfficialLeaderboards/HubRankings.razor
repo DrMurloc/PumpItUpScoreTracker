@@ -1,0 +1,236 @@
+@using MediatR
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using Chart = ScoreTracker.SharedKernel.Models.Chart
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@inject IMediator Mediator
+
+@if (_type == "CoOp")
+{
+    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">
+        @L["PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)."]
+    </MudAlert>
+}
+else if (_rankings != null && _rankings.RatingIsOfficial)
+{
+    <MudText Typo="Typo.body2" Class="mb-2">@L["Ranked by the official PUMBILITY board, mirrored weekly."]</MudText>
+}
+else if (_rankings != null)
+{
+    <MudText Typo="Typo.body2" Class="mb-2">@L["Ranked by computed rating over the mirrored chart boards - this mix has no official PUMBILITY board."]</MudText>
+}
+
+<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2 flex-wrap">
+    <MudSelect T="string" Value="_type" ValueChanged="SetType" Label="@L["Board"]" Dense="true"
+               Style="max-width:180px">
+        <MudSelectItem T="string" Value="@("All")">@L["All"]</MudSelectItem>
+        <MudSelectItem T="string" Value="@("Singles")">@L["Singles"]</MudSelectItem>
+        <MudSelectItem T="string" Value="@("Doubles")">@L["Doubles"]</MudSelectItem>
+        <MudSelectItem T="string" Value="@("CoOp")">@L["CoOp"]</MudSelectItem>
+    </MudSelect>
+    <MudSpacer/>
+    <MudTextField T="string" @bind-Value="_filter" Label="@L["Find a player"]" Immediate="true"
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true"
+                  Style="max-width:280px"/>
+</MudStack>
+
+@if (_loading)
+{
+    <MudSkeleton Height="400px" SkeletonType="SkeletonType.Rectangle"/>
+}
+else if (_rankings == null || !_rankings.Rankings.Any())
+{
+    <MudAlert Severity="Severity.Info">@L["No rankings yet - they appear after the first weekly import."]</MudAlert>
+}
+else
+{
+    <MudTable T="OfficialRankingRecord" Items="Filtered" Breakpoint="Breakpoint.None" Dense="true"
+              RowsPerPage="50" Class="olb-sticky-second olb-pager-tight">
+        <HeaderContent>
+            <MudTh>@L["Rank"]</MudTh>
+            <MudTh>@L["Player"]</MudTh>
+            <MudTh Style="text-align:right">@(_rankings.RatingIsOfficial ? "PUMBILITY" : L["Rating"])</MudTh>
+            <MudTh Style="text-align:right">@L["Boards"]</MudTh>
+            <MudTh Class="olb-hide-mobile">@L["Type"]</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <b>@context.Rank</b>
+                    @if (context.PreviousRank != null && context.PreviousRank != context.Rank)
+                    {
+                        var delta = context.PreviousRank.Value - context.Rank;
+                        <span class="@(delta > 0 ? "olb-delta-up" : "olb-delta-down")">
+                            @(delta > 0 ? "▲" : "▼")@Math.Abs(delta)
+                        </span>
+                    }
+                    else if (context.PreviousRank != null)
+                    {
+                        <span class="olb-delta-flat">—</span>
+                    }
+                </MudStack>
+            </MudTd>
+            <MudTd>
+                <MudLink title="@L["See their boards"]" Style="cursor:pointer" Underline="Underline.None"
+                         OnClick="() => OnShowPlayer.InvokeAsync(context.Player.Username)">
+                    <HubPlayerChip Player="context.Player" Dense="true"/>
+                </MudLink>
+            </MudTd>
+            <MudTd Style="text-align:right"><b>@context.Rating.ToString(_rankings.RatingIsOfficial ? "N2" : "N0")</b></MudTd>
+            <MudTd Style="text-align:right">@context.BoardsInTop</MudTd>
+            <MudTd Class="olb-hide-mobile">
+                @if (context.PlayerType != null)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">
+                        @L[PlayerTypeName(context.PlayerType.Value)]
+                    </MudChip>
+                }
+            </MudTd>
+            <MudTd>
+                <MudButton Size="Size.Small" Variant="Variant.Outlined"
+                           OnClick="() => ToggleExpand(context.Player.Username)">
+                    @L["Top 50"] @(_expanded == context.Player.Username ? "▴" : "▾")
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+        <ChildRowContent>
+            @if (_expanded == context.Player.Username)
+            {
+                <td colspan="6">
+                    @if (_expandedProfile == null)
+                    {
+                        <MudSkeleton Height="120px" SkeletonType="SkeletonType.Rectangle"/>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Class="d-block pa-2">
+                            @L[_type == "CoOp"
+                                ? "Top co-op charts by estimated rating - plates inferred from score."
+                                : "Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade."]
+                        </MudText>
+                        <div class="tier-card-grid pa-2">
+                            @foreach (var placement in _expandedProfile.Placements
+                                          .Where(p => Charts.TryGetValue(p.ChartId, out var pc) &&
+                                                      (pc.Type == ChartType.CoOp) == (_type == "CoOp"))
+                                          .OrderByDescending(p => p.ComputedRating).Take(50))
+                            {
+                                var chart = Charts.TryGetValue(placement.ChartId, out var c) ? c : null;
+                                if (chart == null) continue;
+                                @if (placement.Supplemented)
+                                {
+                                    <div class="olb-supplemented-card">
+                                        <MudTooltip Text="@L["From their linked piuscores account - not on an official board yet"]">
+                                            <MudIcon Icon="@Icons.Material.Filled.CloudSync" Size="Size.Small"
+                                                     Class="olb-supplemented-badge"/>
+                                        </MudTooltip>
+                                        <TierListChartCard Chart="chart" Score="MirrorScore(placement)"
+                                                           ShowToDo="false" OnOpen="OpenChart"/>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <TierListChartCard Chart="chart" Score="MirrorScore(placement)"
+                                                       ShowToDo="false" OnOpen="OpenChart"/>
+                                }
+                            }
+                        </div>
+                    }
+                </td>
+            }
+        </ChildRowContent>
+        <PagerContent>
+            <MudTablePager HideRowsPerPage="true"/>
+        </PagerContent>
+    </MudTable>
+}
+
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="Mix"></ChartDetailsDialog>
+
+@code {
+    [Parameter] public MixEnum Mix { get; set; }
+    [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+
+    // Raised by the Boards link — the hub answers by switching to the Players view
+    // with that player selected.
+    [Parameter] public EventCallback<string> OnShowPlayer { get; set; }
+
+    private bool _loading = true;
+    private string _type = "All";
+    private string _filter = string.Empty;
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+    private string? _expanded;
+    private OfficialPlayerProfileRecord? _expandedProfile;
+    private OfficialRankingsRecord? _rankings;
+
+    private IEnumerable<OfficialRankingRecord> Filtered =>
+        _rankings?.Rankings.Where(r => string.IsNullOrWhiteSpace(_filter) ||
+                                       r.Player.Username.Contains(_filter,
+                                           StringComparison.OrdinalIgnoreCase))
+        ?? Array.Empty<OfficialRankingRecord>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        _loading = true;
+        _rankings = await Mediator.Send(new GetOfficialRankingsQuery(Mix, _type));
+        _loading = false;
+    }
+
+    private async Task SetType(string type)
+    {
+        _type = type;
+        _expanded = null;
+        _expandedProfile = null;
+        await Load();
+    }
+
+    private static RecordedPhoenixScore MirrorScore(OfficialPlayerChartRecord placement)
+    {
+        // Mirrored boards expose score only — no plate, never broken.
+        return new RecordedPhoenixScore(placement.ChartId, placement.Score, null, false, default);
+    }
+
+    private void OpenChart(Guid chartId)
+    {
+        if (!Charts.TryGetValue(chartId, out var chart)) return;
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
+
+    private async Task ToggleExpand(string username)
+    {
+        if (_expanded == username)
+        {
+            _expanded = null;
+            _expandedProfile = null;
+            return;
+        }
+
+        _expanded = username;
+        _expandedProfile = null;
+        _expandedProfile = await Mediator.Send(new GetOfficialPlayerProfileQuery(Mix, username));
+    }
+
+    internal static string PlayerTypeName(RecapPlayerType type)
+    {
+        return type switch
+        {
+            RecapPlayerType.PassPusher => "Pass Pusher",
+            RecapPlayerType.PassRefiner => "Pass Refiner",
+            RecapPlayerType.BalancedPlayer => "Balanced Player",
+            RecapPlayerType.Competitive => "Competitive",
+            _ => "Perfectionist"
+        };
+    }
+}

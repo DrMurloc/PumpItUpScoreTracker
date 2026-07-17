@@ -98,10 +98,10 @@ public sealed class OfficialSiteClientTests
     }
 
     [Fact]
-    public async Task Phoenix2LeaderboardEntriesComeFromTheThreePumbilityTabs()
+    public async Task Phoenix2RatingBoardsComeFromTheThreePumbilityTabsWithCentsIntact()
     {
         // The P2 site's daily PUMBILITY board (All/Single/Double tabs) IS its rating
-        // leaderboard set — one service login, three boards, values floored to ints.
+        // board set — one service login, three boards, decimal values preserved.
         var piuGame = new Mock<IPiuGameApi>();
         piuGame.Setup(p => p.GetSessionId(MixEnum.Phoenix2, "svc", "hunter2", It.IsAny<CancellationToken>()))
             .ReturnsAsync((new HttpClient(), "sid123"));
@@ -121,21 +121,18 @@ public sealed class OfficialSiteClientTests
                 });
         var client = BuildClient(piuGame, serviceUsername: "svc", servicePassword: "hunter2");
 
-        var entries = (await client.GetLeaderboardEntries(MixEnum.Phoenix2, CancellationToken.None)).ToArray();
+        var entries = (await client.GetRatingBoards(MixEnum.Phoenix2, CancellationToken.None)).ToArray();
 
         Assert.Equal(6, entries.Length);
-        Assert.All(entries, e => Assert.Equal("Rating", e.OfficialLeaderboardType));
         Assert.Equal(new[] { "PUMBILITY", "PUMBILITY Singles", "PUMBILITY Doubles" },
-            entries.Select(e => e.LeaderboardName).Distinct().ToArray());
-        var top = entries.First(e => e.LeaderboardName == "PUMBILITY");
-        Assert.Equal(1, top.Place);
-        Assert.Equal(17418, top.Score);
+            entries.Select(e => e.BoardName).Distinct().ToArray());
+        Assert.Equal(17418.45m, entries.First(e => e.BoardName == "PUMBILITY").Value);
         piuGame.Verify(p => p.GetSessionId(MixEnum.Phoenix2, "svc", "hunter2", It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     [Fact]
-    public async Task Phoenix2LeaderboardEntriesWithoutServiceCredentialsFailLoudly()
+    public async Task Phoenix2RatingBoardsWithoutServiceCredentialsFailLoudly()
     {
         // The P2 boards serve no anonymous traffic — a misconfigured import must say
         // exactly which settings are missing, not silently mirror nothing.
@@ -143,7 +140,7 @@ public sealed class OfficialSiteClientTests
         var client = BuildClient(piuGame);
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            client.GetLeaderboardEntries(MixEnum.Phoenix2, CancellationToken.None));
+            client.GetRatingBoards(MixEnum.Phoenix2, CancellationToken.None));
 
         Assert.Contains("PiuGame:ServiceUsername", exception.Message);
         piuGame.Verify(p => p.GetSessionId(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
@@ -151,7 +148,82 @@ public sealed class OfficialSiteClientTests
     }
 
     [Fact]
-    public async Task PhoenixLeaderboardEntriesStayAnonymous()
+    public async Task Phoenix2PopularityRidesTheServiceSession()
+    {
+        // top_steps.php is login-gated on Phoenix 2 like every other ranking page — an
+        // anonymous POST gets the error page, which parses as zero entries and silently
+        // skips the popularity stage.
+        var piuGame = new Mock<IPiuGameApi>();
+        var session = new HttpClient();
+        piuGame.Setup(p => p.GetSessionId(MixEnum.Phoenix2, "svc", "hunter2", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((session, "sid123"));
+        piuGame.Setup(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix2, It.IsAny<int>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()))
+            .ReturnsAsync(new PiuGameGetChartPopularityLeaderboardResult
+            {
+                Entries = Array.Empty<PiuGameGetChartPopularityLeaderboardResult.Entry>()
+            });
+        var client = BuildClient(piuGame, serviceUsername: "svc", servicePassword: "hunter2");
+
+        await client.GetOfficialChartLeaderboardEntries(MixEnum.Phoenix2, CancellationToken.None);
+
+        piuGame.Verify(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix2, It.IsAny<int>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), session), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task PhoenixPopularityStaysAnonymous()
+    {
+        var piuGame = new Mock<IPiuGameApi>();
+        piuGame.Setup(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, It.IsAny<int>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()))
+            .ReturnsAsync(new PiuGameGetChartPopularityLeaderboardResult
+            {
+                Entries = Array.Empty<PiuGameGetChartPopularityLeaderboardResult.Entry>()
+            });
+        var client = BuildClient(piuGame);
+
+        await client.GetOfficialChartLeaderboardEntries(MixEnum.Phoenix, CancellationToken.None);
+
+        piuGame.Verify(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, It.IsAny<int>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), null), Times.AtLeastOnce);
+        piuGame.Verify(p => p.GetSessionId(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task PopularityWalkContinuesPastUnparseableTilesAndStopsOnAShortPage()
+    {
+        // A full page whose tiles all failed parsing must keep the walk alive — the site
+        // said 50, so deeper pages exist. Only a short RAW page ends the ranking.
+        var piuGame = new Mock<IPiuGameApi>();
+        piuGame.Setup(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, 0,
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()))
+            .ReturnsAsync(new PiuGameGetChartPopularityLeaderboardResult
+            {
+                Entries = Array.Empty<PiuGameGetChartPopularityLeaderboardResult.Entry>(),
+                RawRowCount = 50
+            });
+        piuGame.Setup(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, 50,
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()))
+            .ReturnsAsync(new PiuGameGetChartPopularityLeaderboardResult
+            {
+                Entries = Array.Empty<PiuGameGetChartPopularityLeaderboardResult.Entry>(),
+                RawRowCount = 30
+            });
+        var client = BuildClient(piuGame);
+
+        await client.GetOfficialChartLeaderboardEntries(MixEnum.Phoenix, CancellationToken.None);
+
+        piuGame.Verify(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, 50,
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()), Times.Once);
+        piuGame.Verify(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, It.IsAny<int>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()),
+            Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task PhoenixRatingBoardsStayAnonymous()
     {
         // The Phoenix mirror never logs in — byte-identical to before the P2 arm existed.
         var piuGame = new Mock<IPiuGameApi>();
@@ -168,10 +240,11 @@ public sealed class OfficialSiteClientTests
             });
         var client = BuildClient(piuGame);
 
-        var entries = (await client.GetLeaderboardEntries(MixEnum.Phoenix, CancellationToken.None)).ToArray();
+        var entries = (await client.GetRatingBoards(MixEnum.Phoenix, CancellationToken.None)).ToArray();
 
         Assert.Single(entries);
-        Assert.Equal("S20", entries[0].LeaderboardName);
+        Assert.Equal("S20", entries[0].BoardName);
+        Assert.Equal(12345m, entries[0].Value);
         piuGame.Verify(p => p.GetSessionId(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }

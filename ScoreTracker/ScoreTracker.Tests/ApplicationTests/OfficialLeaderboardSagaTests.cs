@@ -39,48 +39,6 @@ public sealed class OfficialLeaderboardSagaTests
     private static readonly DateTimeOffset Now = new(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public async Task StartLeaderboardImportFansOutToPopularityLeaderboardsAndWorldRankings()
-    {
-        var mediator = new Mock<IMediator>();
-        var worldRankings = new Mock<IWorldRankingService>();
-        var leaderboards = new Mock<IOfficialLeaderboardRepository>();
-        var saga = BuildSaga(mediator: mediator, worldRankings: worldRankings, leaderboards: leaderboards);
-
-        await saga.Consume(BuildContext(new StartLeaderboardImportCommand()));
-
-        // The default trigger stays Phoenix — RecurringJobRunner/Program.cs keep Phoenix 2
-        // deliberately unscheduled pending the mirror-semantics work.
-        mediator.Verify(m => m.Send(It.Is<ProcessChartPopularityCommand>(c => c.Mix == MixEnum.Phoenix),
-            It.IsAny<CancellationToken>()), Times.Once);
-        mediator.Verify(m => m.Send(It.Is<ProcessOfficialLeaderboardsCommand>(c => c.Mix == MixEnum.Phoenix),
-            It.IsAny<CancellationToken>()), Times.Once);
-        worldRankings.Verify(w => w.CalculateWorldRankings(MixEnum.Phoenix, It.IsAny<CancellationToken>()),
-            Times.Once);
-        leaderboards.Verify(l => l.SetLastImportTimestamp(MixEnum.Phoenix, It.IsAny<DateTimeOffset>(),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task StartLeaderboardImportForPhoenix2ThreadsTheMixThroughTheFanOut()
-    {
-        var mediator = new Mock<IMediator>();
-        var worldRankings = new Mock<IWorldRankingService>();
-        var leaderboards = new Mock<IOfficialLeaderboardRepository>();
-        var saga = BuildSaga(mediator: mediator, worldRankings: worldRankings, leaderboards: leaderboards);
-
-        await saga.Consume(BuildContext(new StartLeaderboardImportCommand(MixEnum.Phoenix2)));
-
-        mediator.Verify(m => m.Send(It.Is<ProcessChartPopularityCommand>(c => c.Mix == MixEnum.Phoenix2),
-            It.IsAny<CancellationToken>()), Times.Once);
-        mediator.Verify(m => m.Send(It.Is<ProcessOfficialLeaderboardsCommand>(c => c.Mix == MixEnum.Phoenix2),
-            It.IsAny<CancellationToken>()), Times.Once);
-        worldRankings.Verify(w => w.CalculateWorldRankings(MixEnum.Phoenix2, It.IsAny<CancellationToken>()),
-            Times.Once);
-        leaderboards.Verify(l => l.SetLastImportTimestamp(MixEnum.Phoenix2, It.IsAny<DateTimeOffset>(),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
     public async Task GetGameCardsQueryReturnsCardsFromOfficialSiteClient()
     {
         var officialSite = new Mock<IOfficialSiteClient>();
@@ -94,139 +52,6 @@ public sealed class OfficialLeaderboardSagaTests
         var result = await saga.Handle(new GetGameCardsQuery("user", "pass"), CancellationToken.None);
 
         Assert.Same(expected, result);
-    }
-
-    [Fact]
-    public async Task ProcessOfficialLeaderboardsClearsEachLeaderboardBeforeWritingEntries()
-    {
-        var officialSite = new Mock<IOfficialSiteClient>();
-        officialSite.Setup(s => s.GetLeaderboardEntries(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new UserOfficialLeaderboard("alice", Place: 0, "Rating", "Top Singles", Score: 100),
-                new UserOfficialLeaderboard("bob", Place: 0, "Rating", "Top Singles", Score: 90)
-            });
-        officialSite.Setup(s => s.GetAllOfficialChartScores(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<OfficialChartLeaderboardEntry>());
-        var leaderboards = new Mock<IOfficialLeaderboardRepository>();
-        var operations = new List<string>();
-        leaderboards.Setup(l => l.ClearLeaderboard(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .Callback<MixEnum, string, string, CancellationToken>((_, _, name, _) => operations.Add($"clear:{name}"))
-            .Returns(Task.CompletedTask);
-        leaderboards.Setup(l => l.WriteEntries(It.IsAny<MixEnum>(),
-                It.IsAny<IEnumerable<UserOfficialLeaderboard>>(),
-                It.IsAny<CancellationToken>()))
-            .Callback<MixEnum, IEnumerable<UserOfficialLeaderboard>, CancellationToken>((_, batch, _) =>
-                operations.Add($"write:{batch.First().LeaderboardName}"))
-            .Returns(Task.CompletedTask);
-        var saga = BuildSaga(officialSite: officialSite, leaderboards: leaderboards);
-
-        await saga.Handle(new ProcessOfficialLeaderboardsCommand(), CancellationToken.None);
-
-        Assert.Equal(new[] { "clear:Top Singles", "write:Top Singles" },
-            operations.Where(o => o.EndsWith("Top Singles")).ToArray());
-    }
-
-    [Fact]
-    public async Task ProcessOfficialLeaderboardsAssignsTiedScoresTheSamePlaceWithOlympicGap()
-    {
-        var officialSite = new Mock<IOfficialSiteClient>();
-        // Two players tied at 100, one at 50 → tied players share place 1, next is place 3 (skipping 2).
-        officialSite.Setup(s => s.GetLeaderboardEntries(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new UserOfficialLeaderboard("alice", 0, "Rating", "Top", 100),
-                new UserOfficialLeaderboard("bob", 0, "Rating", "Top", 100),
-                new UserOfficialLeaderboard("carol", 0, "Rating", "Top", 50)
-            });
-        officialSite.Setup(s => s.GetAllOfficialChartScores(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<OfficialChartLeaderboardEntry>());
-        var leaderboards = new Mock<IOfficialLeaderboardRepository>();
-        IEnumerable<UserOfficialLeaderboard>? captured = null;
-        leaderboards.Setup(l => l.WriteEntries(It.IsAny<MixEnum>(),
-                It.IsAny<IEnumerable<UserOfficialLeaderboard>>(),
-                It.IsAny<CancellationToken>()))
-            .Callback<MixEnum, IEnumerable<UserOfficialLeaderboard>, CancellationToken>((_, batch, _) =>
-                captured = batch.ToArray());
-        var saga = BuildSaga(officialSite: officialSite, leaderboards: leaderboards);
-
-        await saga.Handle(new ProcessOfficialLeaderboardsCommand(), CancellationToken.None);
-
-        Assert.NotNull(captured);
-        var byUser = captured!.ToDictionary(e => e.Username);
-        Assert.Equal(1, byUser["alice"].Place);
-        Assert.Equal(1, byUser["bob"].Place);
-        Assert.Equal(3, byUser["carol"].Place);
-    }
-
-    [Fact]
-    public async Task ProcessOfficialLeaderboardsSavesAvatarOncePerUniqueUsername()
-    {
-        var aliceAvatar = new Uri("https://example.invalid/alice.png");
-        var bobAvatar = new Uri("https://example.invalid/bob.png");
-        var chart1 = new ChartBuilder().Build();
-        var chart2 = new ChartBuilder().Build();
-        var officialSite = new Mock<IOfficialSiteClient>();
-        officialSite.Setup(s => s.GetLeaderboardEntries(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<UserOfficialLeaderboard>());
-        // Alice appears on two charts; Bob appears on one.
-        officialSite.Setup(s => s.GetAllOfficialChartScores(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new OfficialChartLeaderboardEntry("alice", chart1, 950000, aliceAvatar),
-                new OfficialChartLeaderboardEntry("alice", chart2, 920000, aliceAvatar),
-                new OfficialChartLeaderboardEntry("bob", chart1, 900000, bobAvatar)
-            });
-        var leaderboards = new Mock<IOfficialLeaderboardRepository>();
-        var saga = BuildSaga(officialSite: officialSite, leaderboards: leaderboards);
-
-        await saga.Handle(new ProcessOfficialLeaderboardsCommand(), CancellationToken.None);
-
-        leaderboards.Verify(l => l.SaveAvatar("alice", aliceAvatar, It.IsAny<CancellationToken>()), Times.Once);
-        leaderboards.Verify(l => l.SaveAvatar("bob", bobAvatar, It.IsAny<CancellationToken>()), Times.Once);
-        leaderboards.Verify(l => l.SaveAvatar(It.IsAny<string>(), It.IsAny<Uri>(),
-            It.IsAny<CancellationToken>()), Times.Exactly(2));
-    }
-
-    [Fact]
-    public async Task ProcessChartPopularitySavesEntriesUnderPopularityTierList()
-    {
-        var chart = new ChartBuilder().WithLevel(15).WithType(ChartType.Single).Build();
-        var officialSite = new Mock<IOfficialSiteClient>();
-        officialSite.Setup(s => s.GetOfficialChartLeaderboardEntries(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new ChartPopularityLeaderboardEntry(chart, Place: 100, new Uri("https://example.invalid/img.png"))
-            });
-        var tierLists = new Mock<ITierListRepository>();
-        var saga = BuildSaga(officialSite: officialSite, tierLists: tierLists);
-
-        await saga.Handle(new ProcessChartPopularityCommand(), CancellationToken.None);
-
-        tierLists.Verify(t => t.SaveEntry(MixEnum.Phoenix,
-            It.Is<SongTierListEntry>(e => (string)e.TierListName == "Popularity" && e.ChartId == chart.Id),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task ProcessChartPopularityClassifiesPlaceMinusOneAsUnrecorded()
-    {
-        var chart = new ChartBuilder().WithLevel(15).WithType(ChartType.Single).Build();
-        var officialSite = new Mock<IOfficialSiteClient>();
-        officialSite.Setup(s => s.GetOfficialChartLeaderboardEntries(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new ChartPopularityLeaderboardEntry(chart, Place: -1, new Uri("https://example.invalid/img.png"))
-            });
-        var tierLists = new Mock<ITierListRepository>();
-        var saga = BuildSaga(officialSite: officialSite, tierLists: tierLists);
-
-        await saga.Handle(new ProcessChartPopularityCommand(), CancellationToken.None);
-
-        tierLists.Verify(t => t.SaveEntry(MixEnum.Phoenix,
-            It.Is<SongTierListEntry>(e => e.Category == TierListCategory.Unrecorded && e.ChartId == chart.Id),
-            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // ───────────────────────────────────────────────────────────────────────────
@@ -396,6 +221,36 @@ public sealed class OfficialLeaderboardSagaTests
 
         Assert.NotNull(titleSession);
         Assert.Equal(scoreSession, titleSession);
+    }
+
+    [Fact]
+    public async Task ImportLinksTheGameTagToTheImportingAccount()
+    {
+        // The import knows the tag authoritatively — it upserts the mirror-player link,
+        // and the most recent import wins a contested tag (the repository overwrites).
+        var f = ArrangeImport(mix: MixEnum.Phoenix2);
+        var identity = new Mock<IOfficialPlayerIdentityRepository>();
+        var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
+            piuTracker: f.PiuTracker, bus: f.Bus, identity: identity);
+
+        await saga.Handle(ImportCommand(mix: MixEnum.Phoenix2), CancellationToken.None);
+
+        identity.Verify(i => i.LinkPlayer(MixEnum.Phoenix2, "NEWTAG", ImportUserId,
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFailedLoginNeverLinksATag()
+    {
+        var f = ArrangeImport(accountName: "INVALID");
+        var identity = new Mock<IOfficialPlayerIdentityRepository>();
+        var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
+            piuTracker: f.PiuTracker, bus: f.Bus, identity: identity);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        identity.Verify(i => i.LinkPlayer(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<Guid>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -602,9 +457,7 @@ public sealed class OfficialLeaderboardSagaTests
 
     private static OfficialLeaderboardSaga BuildSaga(
         Mock<IOfficialSiteClient>? officialSite = null,
-        Mock<ITierListRepository>? tierLists = null,
-        Mock<IWorldRankingService>? worldRankings = null,
-        Mock<IOfficialLeaderboardRepository>? leaderboards = null,
+        Mock<IOfficialPlayerIdentityRepository>? identity = null,
         Mock<ICurrentUserAccessor>? currentUser = null,
         Mock<IMediator>? mediator = null,
         Mock<IPiuTrackerClient>? piuTracker = null,
@@ -614,9 +467,7 @@ public sealed class OfficialLeaderboardSagaTests
         Mock<IDateTimeOffsetAccessor>? dateTime = null)
     {
         officialSite ??= new Mock<IOfficialSiteClient>();
-        tierLists ??= new Mock<ITierListRepository>();
-        worldRankings ??= new Mock<IWorldRankingService>();
-        leaderboards ??= new Mock<IOfficialLeaderboardRepository>();
+        identity ??= new Mock<IOfficialPlayerIdentityRepository>();
         currentUser ??= new Mock<ICurrentUserAccessor>();
         mediator ??= new Mock<IMediator>();
         piuTracker ??= new Mock<IPiuTrackerClient>();
@@ -624,17 +475,9 @@ public sealed class OfficialLeaderboardSagaTests
         files ??= new Mock<IFileUploadClient>();
         charts ??= new Mock<IChartRepository>();
         dateTime ??= FakeDateTime.At(Now);
-        return new OfficialLeaderboardSaga(officialSite.Object, tierLists.Object, worldRankings.Object,
-            leaderboards.Object, currentUser.Object, mediator.Object, piuTracker.Object,
+        return new OfficialLeaderboardSaga(officialSite.Object,
+            identity.Object, currentUser.Object, mediator.Object, piuTracker.Object,
             NullLogger<OfficialLeaderboardSaga>.Instance, bus.Object, files.Object, charts.Object,
             dateTime.Object);
-    }
-
-    private static ConsumeContext<T> BuildContext<T>(T message) where T : class
-    {
-        var ctx = new Mock<ConsumeContext<T>>();
-        ctx.SetupGet(c => c.Message).Returns(message);
-        ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
-        return ctx.Object;
     }
 }

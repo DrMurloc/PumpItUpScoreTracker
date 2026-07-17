@@ -36,5 +36,8 @@ internal interface IOfficialLeaderboardRepository
     Task SaveAvatar(string username, Uri avatarPath, CancellationToken cancellationToken);
 
     Task<DateTimeOffset?> GetLastImportTimestamp(MixEnum mix, CancellationToken cancellationToken);
+
+    /// <summary>Every legacy placement row for the mix — the baseline seed's source.</summary>
+    Task<IEnumerable<UserOfficialLeaderboard>> GetAllEntries(MixEnum mix, CancellationToken cancellationToken);
     Task SetLastImportTimestamp(MixEnum mix, DateTimeOffset timestamp, CancellationToken cancellationToken);
 }

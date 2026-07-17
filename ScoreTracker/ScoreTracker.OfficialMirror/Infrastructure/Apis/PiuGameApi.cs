@@ -120,15 +120,16 @@ internal sealed class PiuGameApi : IPiuGameApi
     }
 
 
-    public async Task<PiuGameGetSongLeaderboardResult> GetSongLeaderboard(MixEnum mix, string songId,
-        CancellationToken cancellationToken)
+    public async Task<PiuGameGetSongLeaderboardResult> GetSongLeaderboard(MixEnum mix, string songId, int page,
+        CancellationToken cancellationToken, HttpClient? client = null)
     {
         var response =
-            await GetWithRetries($"{_urls.BaseUrlFor(mix)}/leaderboard/over_ranking_view.php?no={songId}",
-                cancellationToken);
+            await GetWithRetries($"{_urls.BaseUrlFor(mix)}/leaderboard/over_ranking_view.php?no={songId}&page={page}",
+                cancellationToken, client);
         var document = new HtmlDocument();
         document.LoadHtml(response);
         var results = new List<PiuGameGetSongLeaderboardResult.EntryResultDto>();
+        var failedRows = 0;
         var lis = document.DocumentNode.SelectNodes("//div[contains(@class,'rangking_list_w')]//li");
         if (lis != null)
             foreach (var li in lis)
@@ -147,15 +148,26 @@ internal sealed class PiuGameApi : IPiuGameApi
                         AvatarUrl = new Uri(ImageRegex.Match(avatarNode.GetAttributeValue("style", "")).Groups[1].Value)
                     });
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    //
+                    failedRows++;
                 }
             }
 
+        // A row that fails to parse is a dropped player, not noise — count it so board
+        // skips and site drift are visible in the run log instead of silently shrinking
+        // boards.
+        if (failedRows > 0)
+            _logger.LogWarning("Board {SongId} page {Page}: {Failed} of {Total} rows failed to parse", songId,
+                page, failedRows, lis?.Count ?? 0);
+
+        var nextIcon = document.DocumentNode.SelectNodes("//i[contains(@class,'next')]");
+        var lastIcon = document.DocumentNode.SelectNodes("//i[contains(@class,'last')]");
         return new PiuGameGetSongLeaderboardResult
         {
-            Results = results.ToArray()
+            Results = results.ToArray(),
+            FailedRows = failedRows,
+            IsEnd = (nextIcon == null || !nextIcon.Any()) && (lastIcon == null || !lastIcon.Any())
         };
     }
 
@@ -277,18 +289,18 @@ internal sealed class PiuGameApi : IPiuGameApi
     }
 
     public async Task<PiuGameGetChartPopularityLeaderboardResult> GetChartPopularityLeaderboard(MixEnum mix, int page,
-        CancellationToken cancellationToken)
+        DateTimeOffset asOf, CancellationToken cancellationToken, HttpClient? client = null)
     {
-        var today = DateTimeOffset.Now - TimeSpan.FromDays(1);
+        var target = asOf - TimeSpan.FromDays(1);
         var response = await PostWithRetries($"{_urls.BaseUrlFor(mix)}/ajax/top_steps.php",
             new Dictionary<string, string>
             {
                 { "page", page.ToString() },
                 // Zero-padded month is mandatory: the endpoint answers "20267" with a redirect
                 // script pointing at "202607" and no data.
-                { "date", $"{today.Year}{today.Month:00}" },
+                { "date", $"{target.Year}{target.Month:00}" },
                 { "mode", "full" }
-            }, cancellationToken);
+            }, cancellationToken, client);
         var results = new List<PiuGameGetChartPopularityLeaderboardResult.Entry>();
         var document = new HtmlDocument();
         document.LoadHtml(response);
@@ -296,7 +308,8 @@ internal sealed class PiuGameApi : IPiuGameApi
         if (lis == null)
             return new PiuGameGetChartPopularityLeaderboardResult
             {
-                Entries = results.ToArray()
+                Entries = results.ToArray(),
+                RawRowCount = 0
             };
 
         foreach (var li in lis)
@@ -375,7 +388,8 @@ internal sealed class PiuGameApi : IPiuGameApi
 
         return new PiuGameGetChartPopularityLeaderboardResult
         {
-            Entries = results.ToArray()
+            Entries = results.ToArray(),
+            RawRowCount = lis.Count
         };
     }
 
@@ -475,13 +489,14 @@ internal sealed class PiuGameApi : IPiuGameApi
     }
 
     private async Task<string> PostWithRetries(string url, IDictionary<string, string> form,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, HttpClient? client = null)
     {
         var retry = 0;
         while (true)
             try
             {
-                var response = await _client.PostAsync(url, new FormUrlEncodedContent(form), cancellationToken);
+                var response = await (client ?? _client).PostAsync(url, new FormUrlEncodedContent(form),
+                    cancellationToken);
                 ThrowIfSsoBounced(response);
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsStringAsync(cancellationToken);
@@ -530,6 +545,8 @@ internal sealed class PiuGameApi : IPiuGameApi
                 var request = new HttpRequestMessage(HttpMethod.Get, url);
                 var response = await (client ?? _client).SendAsync(request, cancellationToken);
                 ThrowIfSsoBounced(response);
+                // An error page must fail the fetch, not parse as an empty board.
+                response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsStringAsync(cancellationToken);
                 break;
             }
