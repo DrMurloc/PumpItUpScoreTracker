@@ -4748,4 +4748,13 @@
   <data name="Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter" xml:space="preserve">
     <value>フォルダー人気度 - 各フォルダーの中央値譜面のボード順位（赤 = シングル、緑 = ダブル）。上ほど人気</value>
   </data>
+  <data name="Weighted Sum Popularity" xml:space="preserve">
+    <value>加重合計人気度</value>
+  </data>
+  <data name="Biased towards smaller folders" xml:space="preserve">
+    <value>小さいフォルダーに有利</value>
+  </data>
+  <data name="Biased towards larger folders" xml:space="preserve">
+    <value>大きいフォルダーに有利</value>
+  </data>
 </root>

@@ -278,6 +278,26 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
     }
 
     [Fact]
+    public void FolderWeightSumsBoardSizeMinusPlacePerFolder()
+    {
+        var ranked = new[]
+        {
+            (MakeChart("A", ChartType.Single, 20), 10),
+            (MakeChart("B", ChartType.Single, 20), 20),
+            (MakeChart("C", ChartType.Single, 29), 50),
+            (MakeChart("D", ChartType.Double, 20), 30)
+        };
+
+        var singles = HubPopularity.FolderWeight(ranked, ChartType.Single, 100);
+        var doubles = HubPopularity.FolderWeight(ranked, ChartType.Double, 100);
+
+        // (100−10)+(100−20)=170 for S20; the lone S29 sums small on its own — no floor.
+        Assert.Equal(new[] { (20, 170L), (29, 50L) }, singles);
+        var d = Assert.Single(doubles);
+        Assert.Equal((20, 70L), d);
+    }
+
+    [Fact]
     public void FolderHeatDropsFoldersUnderTheSampleFloor()
     {
         var ranked = new[]

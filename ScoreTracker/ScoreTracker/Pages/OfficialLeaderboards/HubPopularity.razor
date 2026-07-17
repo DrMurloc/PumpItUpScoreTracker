@@ -59,6 +59,19 @@
 
     .olb-pop-of { font-size: 11px; color: var(--mix-ink-muted); }
 
+    .olb-pop-graphs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    @@media (max-width: 960px) {
+        .olb-pop-graphs { grid-template-columns: 1fr; }
+    }
+
+    .olb-pop-bias { color: var(--mix-ink-muted); display: block; margin-top: 2px; }
+
     .olb-pop-movers { display: flex; flex-wrap: wrap; gap: 8px; }
 
     .olb-pop-mover {
@@ -208,35 +221,62 @@ else
             </MudPaper>
         }
 
-        @if (_heatSeries.Any(s => s.Points.Count > 1))
+        @if (_heatSeries.Any(s => s.Points.Count > 1) || _weightSeries.Any(s => s.Points.Count > 1))
         {
-            <MudPaper Class="pa-3 mb-3">
-                <MudText Typo="Typo.overline">@L["Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter"]</MudText>
-                <div class="@ApexChartTheming.WrapperClass">
-                    <ApexChart TItem="HeatPoint" Options="_heatOptions" Height="240">
-                        @foreach (var series in _heatSeries)
-                        {
-                            <ApexRangeAreaSeries TItem="HeatPoint"
-                                                 Items="series.Points"
-                                                 Name="@series.Label"
-                                                 Color="@series.Color"
-                                                 XValue="@(p => p.Level)"
-                                                 Top="@(p => p.P75)"
-                                                 Bottom="@(p => p.P25)"/>
-                        }
-                        @foreach (var series in _heatSeries)
-                        {
-                            <ApexPointSeries TItem="HeatPoint"
-                                             Items="series.Points"
-                                             Name="@series.Label"
-                                             Color="@series.Color"
-                                             SeriesType="SeriesType.Line"
-                                             XValue="@(p => p.Level)"
-                                             YValue="@(p => p.Median)"/>
-                        }
-                    </ApexChart>
-                </div>
-            </MudPaper>
+            <div class="olb-pop-graphs">
+                @if (_heatSeries.Any(s => s.Points.Count > 1))
+                {
+                    <MudPaper Class="pa-3">
+                        <MudText Typo="Typo.overline">@L["Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter"]</MudText>
+                        <div class="@ApexChartTheming.WrapperClass">
+                            <ApexChart TItem="HeatPoint" Options="_heatOptions" Height="240">
+                                @foreach (var series in _heatSeries)
+                                {
+                                    <ApexRangeAreaSeries TItem="HeatPoint"
+                                                         Items="series.Points"
+                                                         Name="@series.Label"
+                                                         Color="@series.Color"
+                                                         XValue="@(p => p.Level)"
+                                                         Top="@(p => p.P75)"
+                                                         Bottom="@(p => p.P25)"/>
+                                }
+                                @foreach (var series in _heatSeries)
+                                {
+                                    <ApexPointSeries TItem="HeatPoint"
+                                                     Items="series.Points"
+                                                     Name="@series.Label"
+                                                     Color="@series.Color"
+                                                     SeriesType="SeriesType.Line"
+                                                     XValue="@(p => p.Level)"
+                                                     YValue="@(p => p.Median)"/>
+                                }
+                            </ApexChart>
+                        </div>
+                        <MudText Typo="Typo.caption" Class="olb-pop-bias">@L["Biased towards smaller folders"]</MudText>
+                    </MudPaper>
+                }
+                @if (_weightSeries.Any(s => s.Points.Count > 1))
+                {
+                    <MudPaper Class="pa-3">
+                        <MudText Typo="Typo.overline">@L["Weighted Sum Popularity"]</MudText>
+                        <div class="@ApexChartTheming.WrapperClass">
+                            <ApexChart TItem="WeightPoint" Options="_weightOptions" Height="240">
+                                @foreach (var series in _weightSeries)
+                                {
+                                    <ApexPointSeries TItem="WeightPoint"
+                                                     Items="series.Points"
+                                                     Name="@series.Label"
+                                                     Color="@series.Color"
+                                                     SeriesType="SeriesType.Line"
+                                                     XValue="@(p => p.Level)"
+                                                     YValue="@(p => p.Weight)"/>
+                                }
+                            </ApexChart>
+                        </div>
+                        <MudText Typo="Typo.caption" Class="olb-pop-bias">@L["Biased towards larger folders"]</MudText>
+                    </MudPaper>
+                }
+            </div>
         }
     }
 
@@ -335,13 +375,19 @@ else
     private (OfficialPopularityRecord Rec, Chart Chart)[] _movers =
         Array.Empty<(OfficialPopularityRecord, Chart)>();
     private List<HeatSeries> _heatSeries = new();
+    private List<WeightSeries> _weightSeries = new();
     private ApexChartOptions<HeatPoint> _heatOptions = new();
+    private ApexChartOptions<WeightPoint> _weightOptions = new();
 
     // The tooltip is hand-built: a chart mixing range-area bands with line series otherwise
     // renders every line value as "undefined – undefined" (same collision the By-Level
     // widget owns). Band series are skipped; line values print as board percentiles.
     private const string HeatTooltip =
         @"function(o){var w=o.w,hi=o.dataPointIndex,hs=o.seriesIndex,hx=null;if(w.globals.seriesX[hs]&&w.globals.seriesX[hs][hi]!=null)hx=w.globals.seriesX[hs][hi];var rows='';for(var s=0;s<w.config.series.length;s++){if(w.config.series[s].type==='rangeArea')continue;var v=null;if(hx!=null&&w.globals.seriesX[s]){var j=w.globals.seriesX[s].indexOf(hx);if(j>=0)v=w.globals.series[s][j];}else v=w.globals.series[s][hi];if(v==null||isNaN(v))continue;var c=w.globals.colors[s],n=w.config.series[s].name;rows+=`<div style='display:flex;align-items:center;gap:6px;padding:1px 0'><span style='width:9px;height:9px;border-radius:50%;background:${c};flex:none'></span><span style='opacity:.75'>${n}</span><b style='margin-left:auto;padding-left:14px'>${Math.round(v)}%</b></div>`;}if(!rows)return '';return `<div style='padding:6px 9px;font-size:12px;line-height:1.5'>${hx!=null?`<div style='font-weight:700;margin-bottom:3px'>${hx}</div>`:''}${rows}</div>`;}";
+
+    // Same shared readout for the weighted-sum chart, values as plain thousands.
+    private const string WeightTooltip =
+        @"function(o){var w=o.w,hi=o.dataPointIndex,hs=o.seriesIndex,hx=null;if(w.globals.seriesX[hs]&&w.globals.seriesX[hs][hi]!=null)hx=w.globals.seriesX[hs][hi];var rows='';for(var s=0;s<w.config.series.length;s++){var v=null;if(hx!=null&&w.globals.seriesX[s]){var j=w.globals.seriesX[s].indexOf(hx);if(j>=0)v=w.globals.series[s][j];}else v=w.globals.series[s][hi];if(v==null||isNaN(v))continue;var c=w.globals.colors[s],n=w.config.series[s].name;rows+=`<div style='display:flex;align-items:center;gap:6px;padding:1px 0'><span style='width:9px;height:9px;border-radius:50%;background:${c};flex:none'></span><span style='opacity:.75'>${n}</span><b style='margin-left:auto;padding-left:14px'>${Math.round(v).toLocaleString()}</b></div>`;}if(!rows)return '';return `<div style='padding:6px 9px;font-size:12px;line-height:1.5'>${hx!=null?`<div style='font-weight:700;margin-bottom:3px'>${hx}</div>`:''}${rows}</div>`;}";
 
     // The folder narrows the full board before pagination — places stay global.
     private IEnumerable<OfficialPopularityRecord> Visible =>
@@ -409,6 +455,32 @@ else
         _heatOptions.Yaxis = new List<YAxis> { new() { Reversed = true, DecimalsInFloat = 0 } };
         _heatOptions.Legend = new Legend { Show = false };
         _heatOptions.Tooltip = new Tooltip { Shared = true, Custom = HeatTooltip };
+
+        // The weighted companion: every chart is worth (board size − its place), summed
+        // per folder — no sample floor, a lone chart's sum is naturally tiny.
+        _weightSeries = new[]
+            {
+                (Label: L["Singles"].Value, Type: ChartType.Single),
+                (Label: L["Doubles"].Value, Type: ChartType.Double)
+            }
+            .Select(s => new WeightSeries(s.Label, MixThemes.ChartTypeHex(s.Type),
+                FolderWeight(_known.Select(k => (k.Chart, k.Rec.Place)), s.Type, total)
+                    .Select(p => new WeightPoint(p.Level, p.Weight)).ToArray()))
+            .Where(s => s.Points.Count > 0)
+            .ToList();
+        _weightOptions = ApexChartTheming.BaseOptions<WeightPoint>(palette);
+        _weightOptions.Markers = new Markers { Size = 0 };
+        _weightOptions.Stroke = new Stroke { Curve = Curve.Smooth, Width = 2.5 };
+        var weightLevels = _weightSeries.SelectMany(s => s.Points.Select(p => p.Level)).ToArray();
+        _weightOptions.Xaxis = new XAxis
+        {
+            Type = XAxisType.Numeric,
+            DecimalsInFloat = 0,
+            TickAmount = weightLevels.Length == 0 ? 1 : Math.Max(1, weightLevels.Max() - weightLevels.Min())
+        };
+        _weightOptions.Yaxis = new List<YAxis> { new() { DecimalsInFloat = 0 } };
+        _weightOptions.Legend = new Legend { Show = false };
+        _weightOptions.Tooltip = new Tooltip { Shared = true, Custom = WeightTooltip };
     }
 
     // A folder's stats only mean something with a few charts behind them — a one-chart
@@ -434,6 +506,21 @@ else
                     Math.Round(100m * (decimal)(ByLevelAggregator.Percentile(sorted, p) ?? 0) / total, 1);
                 return (Level: g.Key, Median: Pct(50), P25: Pct(25), P75: Pct(75));
             })
+            .OrderBy(p => p.Level)
+            .ToArray();
+    }
+
+    /// <summary>
+    ///     Weighted folder popularity: each chart is worth (board size − its place), summed
+    ///     per level for one chart type, levels ascending. Deliberately unfloored — the sum
+    ///     itself scales with folder size, which is this graph's stated bias.
+    /// </summary>
+    internal static IReadOnlyList<(int Level, long Weight)> FolderWeight(
+        IEnumerable<(Chart Chart, int Place)> ranked, ChartType type, int total)
+    {
+        return ranked.Where(r => r.Chart.Type == type)
+            .GroupBy(r => (int)r.Chart.Level)
+            .Select(g => (Level: g.Key, Weight: g.Sum(r => (long)(total - r.Place))))
             .OrderBy(p => p.Level)
             .ToArray();
     }
@@ -485,6 +572,10 @@ else
     private sealed record HeatSeries(string Label, string Color, IReadOnlyList<HeatPoint> Points);
 
     internal sealed record HeatPoint(int Level, decimal Median, decimal P25, decimal P75);
+
+    private sealed record WeightSeries(string Label, string Color, IReadOnlyList<WeightPoint> Points);
+
+    internal sealed record WeightPoint(int Level, long Weight);
 
     internal sealed record Row(OfficialPopularityRecord Rec, Chart Chart);
 }

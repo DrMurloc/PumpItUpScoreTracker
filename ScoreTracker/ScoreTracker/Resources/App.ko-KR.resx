@@ -4629,4 +4629,13 @@
   <data name="Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter" xml:space="preserve">
     <value>폴더 인기도 - 폴더별 중간 채보의 보드 순위 (빨강 = 싱글, 초록 = 더블), 높을수록 인기</value>
   </data>
+  <data name="Weighted Sum Popularity" xml:space="preserve">
+    <value>가중치 합계 인기도</value>
+  </data>
+  <data name="Biased towards smaller folders" xml:space="preserve">
+    <value>작은 폴더에 유리합니다</value>
+  </data>
+  <data name="Biased towards larger folders" xml:space="preserve">
+    <value>큰 폴더에 유리합니다</value>
+  </data>
 </root>

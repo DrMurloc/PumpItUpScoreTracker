@@ -33,6 +33,7 @@ else if (_rankings != null)
         <MudSelectItem T="string" Value="@("Doubles")">@L["Doubles"]</MudSelectItem>
         <MudSelectItem T="string" Value="@("CoOp")">@L["CoOp"]</MudSelectItem>
     </MudSelect>
+    <MudSpacer/>
     <MudTextField T="string" @bind-Value="_filter" Label="@L["Find a player"]" Immediate="true"
                   Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true"
                   Style="max-width:280px"/>

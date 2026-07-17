@@ -4626,4 +4626,13 @@
   <data name="Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter" xml:space="preserve">
     <value>Calor por folder: posición del chart mediano de cada folder (rojo = Singles, verde = Doubles); más arriba, más popular</value>
   </data>
+  <data name="Weighted Sum Popularity" xml:space="preserve">
+    <value>Popularidad por suma ponderada</value>
+  </data>
+  <data name="Biased towards smaller folders" xml:space="preserve">
+    <value>Sesgado hacia folders pequeños</value>
+  </data>
+  <data name="Biased towards larger folders" xml:space="preserve">
+    <value>Sesgado hacia folders grandes</value>
+  </data>
 </root>

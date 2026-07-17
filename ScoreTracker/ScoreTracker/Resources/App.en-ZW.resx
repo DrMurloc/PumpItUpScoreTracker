@@ -4671,4 +4671,13 @@
   <data name="Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter" xml:space="preserve">
     <value>Folder heat - the median mrglchart's standing per folder (red = Singles, green = Doubles); higher is hotter</value>
   </data>
+  <data name="Weighted Sum Popularity" xml:space="preserve">
+    <value>Weighted Sum Popularity</value>
+  </data>
+  <data name="Biased towards smaller folders" xml:space="preserve">
+    <value>Biased towards smaller mrglfolders</value>
+  </data>
+  <data name="Biased towards larger folders" xml:space="preserve">
+    <value>Biased towards larger mrglfolders</value>
+  </data>
 </root>
