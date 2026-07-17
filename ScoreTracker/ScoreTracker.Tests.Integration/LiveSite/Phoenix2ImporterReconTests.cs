@@ -5,17 +5,13 @@ using Xunit.Abstractions;
 namespace ScoreTracker.Tests.Integration.LiveSite;
 
 /// <summary>
-///     Phoenix 2 importer recon: drives every my_page read the score import depends on against
-///     the REAL piugame.com using the test account (the first account with live Phoenix 2 score
-///     data), validates the production parsers over that session, and snapshots the raw pages —
-///     plus the Phoenix 1 equivalents — for offline shape diffing (saved dates, judgement
-///     tables, ordering controls).
-///     <para>
-///         Dumps land in %TEMP%\p2-importer-recon (override with PIU_RECON_DUMP_DIR). Parser
-///         failures are recorded in the summary rather than failing fast, so one broken parser
-///         never costs the rest of the recon; the test only fails when a page cannot be
-///         fetched at all.
-///     </para>
+///     Phoenix 2 import-path canaries plus the page-snapshot instrument. The canaries mirror
+///     <see cref="PiuGameLiveSiteTests" /> for the piugame.com host and the redesigned
+///     my_page shapes (dated best cards, judgement tables); they go red the day the Phoenix 2
+///     site drifts. The snapshot instrument dumps the raw pages — Phoenix 1 equivalents
+///     included — to %TEMP%\p2-importer-recon (override with PIU_RECON_DUMP_DIR) for offline
+///     shape diffing whenever the canaries do go red.
+///     <para>All facts share one Phoenix 2 login through the fixture.</para>
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed class Phoenix2ImporterReconTests : IClassFixture<PiuGameSessionFixture>
@@ -34,18 +30,78 @@ public sealed class Phoenix2ImporterReconTests : IClassFixture<PiuGameSessionFix
     }
 
     [LiveSiteFact]
-    public async Task Full_import_path_recon_with_page_snapshots()
+    public async Task Phoenix2_account_data_parses_with_titles()
+    {
+        var client = await _fixture.GetAuthenticatedPhoenix2Client(CancellationToken.None);
+
+        var account = await _fixture.Api.GetAccountData(MixEnum.Phoenix2, client, CancellationToken.None);
+
+        Assert.NotEqual("INVALID", account.AccountName.ToString());
+        Assert.True(account.ImageUrl.IsAbsoluteUri, "Profile image url did not parse.");
+        Assert.NotEmpty(account.TitleEntries);
+    }
+
+    [LiveSiteFact]
+    public async Task Phoenix2_game_cards_parse_with_exactly_one_active()
+    {
+        var client = await _fixture.GetAuthenticatedPhoenix2Client(CancellationToken.None);
+
+        var cards = (await _fixture.Api.GetCards(MixEnum.Phoenix2, client, CancellationToken.None)).ToList();
+
+        Assert.NotEmpty(cards);
+        Assert.Equal(1, cards.Count(c => c.IsActive));
+    }
+
+    [LiveSiteFact]
+    public async Task Phoenix2_best_scores_parse_dated_and_newest_first()
+    {
+        // The redesigned my_best_score page: every card carries a saved datetime and the
+        // list sorts newest-first — the incremental import's cutoff depends on both.
+        var client = await _fixture.GetAuthenticatedPhoenix2Client(CancellationToken.None);
+
+        var result = await _fixture.Api.GetBestScores(MixEnum.Phoenix2, client, 1, CancellationToken.None);
+
+        Assert.NotEmpty(result.Scores);
+        Assert.All(result.Scores, s =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(s.SongName.ToString()), "Song name did not parse.");
+            Assert.NotNull(s.RecordedAt);
+        });
+        Assert.Equal(result.Scores.Select(s => s.RecordedAt!.Value).OrderByDescending(d => d),
+            result.Scores.Select(s => s.RecordedAt!.Value));
+        // A page of all-SinglePerformance is the chart-type regex silently failing.
+        Assert.Contains(result.Scores, s => s.ChartType != ChartType.SinglePerformance);
+        Assert.All(result.Scores.Where(s => !s.IsBroken), s => Assert.NotNull(s.Plate));
+        Assert.All(result.Scores.Where(s => s.IsBroken), s => Assert.Null(s.Plate));
+    }
+
+    [LiveSiteFact]
+    public async Task Phoenix2_recent_scores_parse_with_judgements_and_dates()
+    {
+        // Requires at least one recent (non-stage-break) play on the account — the parser
+        // drops unparseable cards silently, so empty-when-you-played-recently means breakage.
+        var client = await _fixture.GetAuthenticatedPhoenix2Client(CancellationToken.None);
+
+        var recents = (await _fixture.Api.GetRecentScores(MixEnum.Phoenix2, client, CancellationToken.None))
+            .ToList();
+
+        Assert.NotEmpty(recents);
+        Assert.All(recents, r =>
+        {
+            Assert.True(r.NoteCount > 0, "Judgement counts did not parse.");
+            Assert.NotNull(r.RecordedAt);
+        });
+    }
+
+    [LiveSiteFact]
+    public async Task Page_snapshot_instrument_dumps_both_sites_my_pages()
     {
         Directory.CreateDirectory(DumpDir);
         var summary = new StringBuilder();
         var failedFetches = new List<string>();
         var ct = CancellationToken.None;
 
-        // ---- Phoenix 2: dedicated login (the shared fixture session is Phoenix 1) ----
-        var (p2, _) = await _fixture.Api.GetSessionId(MixEnum.Phoenix2, PiuGameSessionFixture.Username!,
-            PiuGameSessionFixture.Password!, ct);
-        summary.AppendLine("Phoenix 2 login: OK");
-
+        var p2 = await _fixture.GetAuthenticatedPhoenix2Client(ct);
         const string p2Base = "https://piugame.com";
         await Dump(p2, $"{p2Base}/my_page/title.php", "p2-title.html", summary, failedFetches, ct);
         await Dump(p2, $"{p2Base}/my_page/game_id_information.php", "p2-game-cards.html", summary, failedFetches, ct);
@@ -59,36 +115,6 @@ public sealed class Phoenix2ImporterReconTests : IClassFixture<PiuGameSessionFix
         await Dump(p2, $"{p2Base}/my_page/my_best_score.php?lv=17", "p2-best-scores-lv17.html", summary, failedFetches,
             ct);
 
-        // ---- Production parsers over the same Phoenix 2 session ----
-        await Record(summary, "P2 GetAccountData", async () =>
-        {
-            var account = await _fixture.Api.GetAccountData(MixEnum.Phoenix2, p2, ct);
-            return $"AccountName={account.AccountName}, RequiresLogin={account.RequiresLogin}, " +
-                   $"Titles={account.TitleEntries?.Length ?? 0}";
-        });
-        await Record(summary, "P2 GetCards", async () =>
-        {
-            var cards = (await _fixture.Api.GetCards(MixEnum.Phoenix2, p2, ct)).ToArray();
-            return $"{cards.Length} card(s), active={cards.Count(c => c.IsActive)}";
-        });
-        await Record(summary, "P2 GetBestScores(page 1)", async () =>
-        {
-            var best = await _fixture.Api.GetBestScores(MixEnum.Phoenix2, p2, 1, ct);
-            var types = string.Join(",", best.Scores.Select(s => s.ChartType).Distinct());
-            var sample = string.Join(" | ",
-                best.Scores.Take(5).Select(s => $"{s.SongName} {s.ChartType} {s.Level} {s.Score} {s.Plate}"));
-            return $"MaxPage={best.MaxPage}, Count={best.Scores.Length}, Types=[{types}]\n    Sample: {sample}";
-        });
-        await Record(summary, "P2 GetRecentScores", async () =>
-        {
-            var recent = (await _fixture.Api.GetRecentScores(MixEnum.Phoenix2, p2, ct)).ToArray();
-            var sample = string.Join(" | ",
-                recent.Take(5).Select(r =>
-                    $"{r.SongName} {r.ChartType} {r.Level} {r.Score} {r.Plate} broken={r.IsBroken} notes={r.NoteCount}"));
-            return $"Count={recent.Length}, Broken={recent.Count(r => r.IsBroken)}\n    Sample: {sample}";
-        });
-
-        // ---- Phoenix 1 equivalents for shape comparison (shared fixture session) ----
         var p1 = await _fixture.GetAuthenticatedClient(ct);
         const string p1Base = "https://phoenix.piugame.com";
         await Dump(p1, $"{p1Base}/my_page/my_best_score.php?page=1", "p1-best-scores-page1.html", summary,
@@ -116,18 +142,6 @@ public sealed class Phoenix2ImporterReconTests : IClassFixture<PiuGameSessionFix
         {
             summary.AppendLine($"FETCH FAILED {fileName} ({url}): {e.Message}");
             failedFetches.Add(fileName);
-        }
-    }
-
-    private static async Task Record(StringBuilder summary, string label, Func<Task<string>> probe)
-    {
-        try
-        {
-            summary.AppendLine($"{label}: {await probe()}");
-        }
-        catch (Exception e)
-        {
-            summary.AppendLine($"{label}: THREW {e.GetType().Name}: {e.Message}");
         }
     }
 }

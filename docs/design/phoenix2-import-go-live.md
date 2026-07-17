@@ -1,7 +1,8 @@
 # Phoenix 2 Import Go-Live
 
-Status: **awaiting owner sign-off** — no implementation starts until the commit plan below is approved.
-Branch: `claude/phoenix-2-importer-validation-7c3eb1`. Recon instrument:
+Status: **implemented** (C0–C7 on `claude/phoenix-2-importer-validation-7c3eb1`, owner-approved
+plan) — awaiting field test and the §8 runbook. The recon instrument and the Phoenix 2 LiveSite
+canaries live in
 [Phoenix2ImporterReconTests.cs](../../ScoreTracker/ScoreTracker.Tests.Integration/LiveSite/Phoenix2ImporterReconTests.cs)
 (dumps to `%TEMP%\p2-importer-recon`, overridable via `PIU_RECON_DUMP_DIR`).
 
