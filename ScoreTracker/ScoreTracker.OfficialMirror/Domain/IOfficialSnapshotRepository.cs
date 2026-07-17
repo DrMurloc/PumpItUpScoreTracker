@@ -69,4 +69,11 @@ internal interface IOfficialSnapshotRepository
     /// <summary>Popularity rows for the newest sealed snapshots, newest snapshot first.</summary>
     Task<IReadOnlyList<(int SnapshotId, Guid ChartId, int Place)>> GetPopularityHistory(MixEnum mix,
         int snapshots, CancellationToken ct);
+
+    /// <summary>One row per distinct unmapped chart; re-sightings refresh LastIdentified.</summary>
+    Task UpsertMissingCharts(MixEnum mix, IReadOnlyCollection<MissingChartSighting> sightings,
+        DateTimeOffset seenAt, CancellationToken ct);
+
+    Task<IReadOnlyList<MissingChartRow>> GetMissingCharts(MixEnum mix, CancellationToken ct);
+    Task DeleteMissingChart(int id, CancellationToken ct);
 }

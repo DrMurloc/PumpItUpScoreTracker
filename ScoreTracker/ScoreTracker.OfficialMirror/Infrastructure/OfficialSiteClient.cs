@@ -108,7 +108,8 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             {
                 yield return new OfficialChartBoardResult(index, total, null,
                     $"unparsable level: {song.Name} {song.Type} {song.Difficulty}",
-                    Array.Empty<OfficialChartLeaderboardEntry>());
+                    Array.Empty<OfficialChartLeaderboardEntry>(),
+                    new MissingChartSighting(song.Name, song.Type, song.Difficulty));
                 continue;
             }
 
@@ -119,7 +120,8 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             {
                 yield return new OfficialChartBoardResult(index, total, null,
                     $"no catalog chart: {song.Name} {song.Type} {song.Difficulty}",
-                    Array.Empty<OfficialChartLeaderboardEntry>());
+                    Array.Empty<OfficialChartLeaderboardEntry>(),
+                    new MissingChartSighting(song.Name, song.Type, song.Difficulty));
                 continue;
             }
 
@@ -534,7 +536,8 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             { "ヨロピク ピクヨロ！\nYoropiku Pikuyoro !", "Yoropiku Pikuyoro !" }
         };
 
-    public async Task<IEnumerable<ChartPopularityLeaderboardEntry>> GetOfficialChartLeaderboardEntries(MixEnum mix,
+    public async Task<(IReadOnlyList<ChartPopularityLeaderboardEntry> Entries,
+        IReadOnlyList<MissingChartSighting> Missing)> GetOfficialChartLeaderboardEntries(MixEnum mix,
         CancellationToken cancellationToken)
     {
         // The whole Phoenix 2 leaderboard area is login-gated, the play ranking included;
@@ -579,7 +582,10 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         // means the catalog is missing content.
         _logger.LogInformation("Popularity {Mix}: {Mapped} charts ranked, {Unmapped} unmapped",
             mix, result.Count, missingCharts.Count);
-        return result;
+        return (result, missingCharts
+            .Select(m => new MissingChartSighting(m.SongName.ToString(), m.ChartType.ToString(),
+                (int)m.ChartLevel))
+            .ToArray());
     }
 
     public async Task<PiuGameUcsEntry?> GetUcs(int id, CancellationToken cancellationToken)

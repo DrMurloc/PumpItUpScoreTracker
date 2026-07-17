@@ -9,6 +9,7 @@ using MassTransit;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ScoreTracker.OfficialMirror.Application;
+using ScoreTracker.OfficialMirror.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Domain;
@@ -52,7 +53,9 @@ public sealed class LeaderboardSweepSagaTests
         site.Setup(s => s.GetOfficialChartBoards(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .Returns(ToAsync(chartBoards ?? Array.Empty<OfficialChartBoardResult>()));
         site.Setup(s => s.GetOfficialChartLeaderboardEntries(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(popularity ?? Array.Empty<ChartPopularityLeaderboardEntry>());
+            .ReturnsAsync(((IReadOnlyList<ChartPopularityLeaderboardEntry>)(popularity ??
+                    Array.Empty<ChartPopularityLeaderboardEntry>()).ToArray(),
+                (IReadOnlyList<MissingChartSighting>)Array.Empty<MissingChartSighting>()));
 
         var snapshots = new Mock<IOfficialSnapshotRepository>();
         snapshots.Setup(s => s.AnySealed(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
@@ -364,6 +367,48 @@ public sealed class LeaderboardSweepSagaTests
 
         f.Snapshots.Verify(s => s.CreateRun(It.IsAny<MixEnum>(), It.IsAny<bool>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UnmappedChartsLandInTheMissingChartsInbox()
+    {
+        var chart = new ChartBuilder().WithLevel(24).WithType(ChartType.Single).Build();
+        var f = Arrange(chartBoards: new[]
+        {
+            new OfficialChartBoardResult(1, 2, null, "no catalog chart: Mystery Song Double 27",
+                Array.Empty<OfficialChartLeaderboardEntry>(),
+                new MissingChartSighting("Mystery Song", "Double", 27)),
+            new OfficialChartBoardResult(2, 2, chart, null, new[]
+            {
+                new OfficialChartLeaderboardEntry("alice", chart, 950000,
+                    new Uri("https://example.invalid/alice.png"))
+            })
+        });
+
+        await f.Saga.Consume(Context());
+
+        f.Snapshots.Verify(s => s.UpsertMissingCharts(MixEnum.Phoenix2,
+            It.Is<IReadOnlyCollection<MissingChartSighting>>(m =>
+                m.Count == 1 && m.First().SongName == "Mystery Song" && m.First().Level == 27),
+            Now, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task MissingChartsResolveByDeletingTheRow()
+    {
+        var f = Arrange();
+        f.Snapshots.Setup(s => s.GetMissingCharts(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new MissingChartRow(7, "Mystery Song", "Double", 27, Now.AddDays(-7), Now)
+            });
+
+        var inbox = await f.Saga.Handle(new GetMissingChartsQuery(MixEnum.Phoenix2), CancellationToken.None);
+        await f.Saga.Handle(new ResolveMissingChartCommand(inbox.Single().Id), CancellationToken.None);
+
+        Assert.Equal("Mystery Song", inbox.Single().SongName);
+        Assert.Equal(27, inbox.Single().Level);
+        f.Snapshots.Verify(s => s.DeleteMissingChart(7, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

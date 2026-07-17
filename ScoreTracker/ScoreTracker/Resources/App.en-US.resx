@@ -4646,6 +4646,24 @@
   <data name="Refresh popularity" xml:space="preserve">
     <value>Refresh popularity</value>
   </data>
+  <data name="Missing charts" xml:space="preserve">
+    <value>Missing charts</value>
+  </data>
+  <data name="No missing charts - every scraped board mapped to the catalog." xml:space="preserve">
+    <value>No missing charts - every scraped board mapped to the catalog.</value>
+  </data>
+  <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
+    <value>The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep.</value>
+  </data>
+  <data name="First seen" xml:space="preserve">
+    <value>First seen</value>
+  </data>
+  <data name="Last seen" xml:space="preserve">
+    <value>Last seen</value>
+  </data>
+  <data name="Resolve" xml:space="preserve">
+    <value>Resolve</value>
+  </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>Popularity refresh queued - re-attaches to the latest snapshot</value>
   </data>

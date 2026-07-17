@@ -417,6 +417,59 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .ToArray();
     }
 
+    public async Task UpsertMissingCharts(MixEnum mix, IReadOnlyCollection<MissingChartSighting> sightings,
+        DateTimeOffset seenAt, CancellationToken ct)
+    {
+        if (sightings.Count == 0) return;
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        var existing = await database.Set<OfficialMissingChartEntity>()
+            .Where(m => m.MixId == mixId)
+            .ToArrayAsync(ct);
+        var known = existing.ToDictionary(
+            m => (m.SongName, m.ChartType, m.Level),
+            m => m);
+        foreach (var sighting in sightings
+                     .GroupBy(s => (s.SongName, s.ChartType, s.Level))
+                     .Select(g => g.First()))
+            if (known.TryGetValue((sighting.SongName, sighting.ChartType, sighting.Level), out var entity))
+            {
+                entity.LastIdentified = seenAt;
+            }
+            else
+            {
+                await database.Set<OfficialMissingChartEntity>().AddAsync(new OfficialMissingChartEntity
+                {
+                    MixId = mixId,
+                    SongName = sighting.SongName,
+                    ChartType = sighting.ChartType,
+                    Level = sighting.Level,
+                    FirstIdentified = seenAt,
+                    LastIdentified = seenAt
+                }, ct);
+            }
+
+        await database.SaveChangesAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<MissingChartRow>> GetMissingCharts(MixEnum mix, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        return await database.Set<OfficialMissingChartEntity>()
+            .Where(m => m.MixId == mixId)
+            .OrderByDescending(m => m.LastIdentified).ThenBy(m => m.SongName)
+            .Select(m => new MissingChartRow(m.Id, m.SongName, m.ChartType, m.Level, m.FirstIdentified,
+                m.LastIdentified))
+            .ToArrayAsync(ct);
+    }
+
+    public async Task DeleteMissingChart(int id, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        await database.Set<OfficialMissingChartEntity>().Where(m => m.Id == id).ExecuteDeleteAsync(ct);
+    }
+
     private static SnapshotRun ToRun(OfficialLeaderboardSnapshotEntity entity)
     {
         return new SnapshotRun(entity.Id, entity.StartedAt, entity.CompletedAt, entity.IsBaseline, entity.Stage,

@@ -53,5 +53,8 @@ public sealed class OfficialMirrorModelContribution : IDbModelContribution
 
         modelBuilder.Entity<OfficialPlayerRenameProposalEntity>().ToTable("OfficialPlayerRenameProposal")
             .HasIndex(e => new { e.MixId, e.Status });
+
+        // The unique index rides the entity attribute; table name pinned here like the rest.
+        modelBuilder.Entity<OfficialMissingChartEntity>().ToTable("OfficialMissingChart");
     }
 }

@@ -4652,6 +4652,24 @@
   <data name="Refresh popularity" xml:space="preserve">
     <value>人気度を更新</value>
   </data>
+  <data name="Missing charts" xml:space="preserve">
+    <value>未登録の譜面</value>
+  </data>
+  <data name="No missing charts - every scraped board mapped to the catalog." xml:space="preserve">
+    <value>未登録の譜面はありません - 取得したすべてのボードがカタログと一致しました。</value>
+  </data>
+  <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
+    <value>公式サイトで確認されたもののカタログに譜面が見つかりませんでした。譜面を追加してから解決を押してください - 未解決のままの譜面は次回の取得時に再表示されます。</value>
+  </data>
+  <data name="First seen" xml:space="preserve">
+    <value>初回確認</value>
+  </data>
+  <data name="Last seen" xml:space="preserve">
+    <value>最終確認</value>
+  </data>
+  <data name="Resolve" xml:space="preserve">
+    <value>解決</value>
+  </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>人気度の更新をキューに追加しました - 最新のスナップショットに再適用されます</value>
   </data>

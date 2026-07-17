@@ -47,8 +47,8 @@ internal interface IOfficialSiteClient
     Task<Contracts.PiuGameAccountIdentity> GetAccountIdentity(MixEnum mix, string username, string password,
         CancellationToken cancellationToken);
 
-    Task<IEnumerable<ChartPopularityLeaderboardEntry>> GetOfficialChartLeaderboardEntries(MixEnum mix,
-        CancellationToken cancellationToken);
+    Task<(IReadOnlyList<ChartPopularityLeaderboardEntry> Entries, IReadOnlyList<MissingChartSighting> Missing)>
+        GetOfficialChartLeaderboardEntries(MixEnum mix, CancellationToken cancellationToken);
 
     Task<PiuGameUcsEntry?> GetUcs(int id, CancellationToken cancellationToken);
 

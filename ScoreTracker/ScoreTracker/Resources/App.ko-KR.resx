@@ -4533,6 +4533,24 @@
   <data name="Refresh popularity" xml:space="preserve">
     <value>인기도 새로고침</value>
   </data>
+  <data name="Missing charts" xml:space="preserve">
+    <value>누락된 채보</value>
+  </data>
+  <data name="No missing charts - every scraped board mapped to the catalog." xml:space="preserve">
+    <value>누락된 채보 없음 - 수집된 모든 보드가 카탈로그와 일치했습니다.</value>
+  </data>
+  <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
+    <value>공식 사이트에서 발견했지만 카탈로그에 없는 채보입니다. 채보를 추가한 뒤 해결을 누르세요 - 여전히 누락된 채보는 다음 수집 때 다시 표시됩니다.</value>
+  </data>
+  <data name="First seen" xml:space="preserve">
+    <value>처음 발견</value>
+  </data>
+  <data name="Last seen" xml:space="preserve">
+    <value>마지막 발견</value>
+  </data>
+  <data name="Resolve" xml:space="preserve">
+    <value>해결</value>
+  </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>인기도 새로고침이 대기열에 추가되었습니다 - 최신 스냅샷에 다시 연결됩니다</value>
   </data>

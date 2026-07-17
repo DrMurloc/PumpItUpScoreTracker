@@ -277,7 +277,7 @@ namespace ScoreTracker.OfficialMirror.Application
         {
             // Song images are shared per song, not per mix — sourced from the Phoenix 1 site
             // until the Phoenix 2 new-content admin workflow lands (post-release track).
-            var entries =
+            var (entries, _) =
                 await _officialSite.GetOfficialChartLeaderboardEntries(MixEnum.Phoenix, cancellationToken);
             foreach (var songGroup in entries.GroupBy(e => e.Chart.Song.Name))
             {

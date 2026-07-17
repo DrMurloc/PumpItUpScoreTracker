@@ -4523,6 +4523,24 @@
   <data name="Refresh popularity" xml:space="preserve">
     <value>Atualizar popularidade</value>
   </data>
+  <data name="Missing charts" xml:space="preserve">
+    <value>Charts faltando</value>
+  </data>
+  <data name="No missing charts - every scraped board mapped to the catalog." xml:space="preserve">
+    <value>Nenhum chart faltando: todos os rankings coletados corresponderam ao catálogo.</value>
+  </data>
+  <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
+    <value>A coleta os viu no site oficial, mas não encontrou o chart no catálogo. Adicione o chart e depois resolva: um chart que continuar faltando volta a aparecer na próxima coleta.</value>
+  </data>
+  <data name="First seen" xml:space="preserve">
+    <value>Visto pela primeira vez</value>
+  </data>
+  <data name="Last seen" xml:space="preserve">
+    <value>Visto pela última vez</value>
+  </data>
+  <data name="Resolve" xml:space="preserve">
+    <value>Resolver</value>
+  </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>Atualização de popularidade na fila - reanexa ao instantâneo mais recente</value>
   </data>

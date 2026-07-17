@@ -69,6 +69,38 @@
     </MudPaper>
 }
 
+<MudText Typo="Typo.h6" Class="mt-4">@L["Missing charts"] @(_missingCharts.Any() ? $"({_missingCharts.Count})" : "")</MudText>
+@if (!_missingCharts.Any())
+{
+    <MudText Typo="Typo.body2" Class="mb-4">@L["No missing charts - every scraped board mapped to the catalog."]</MudText>
+}
+else
+{
+    <MudText Typo="Typo.body2" Class="mb-2">@L["The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep."]</MudText>
+    <MudTable T="MissingChartRecord" Items="_missingCharts" Dense="true" Breakpoint="Breakpoint.None"
+              Class="mb-4">
+        <HeaderContent>
+            <MudTh>@L["Song"]</MudTh>
+            <MudTh>@L["Chart"]</MudTh>
+            <MudTh>@L["First seen"]</MudTh>
+            <MudTh>@L["Last seen"]</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd><b>@context.SongName</b></MudTd>
+            <MudTd>@context.ChartType @(context.Level?.ToString() ?? "?")</MudTd>
+            <MudTd>@context.FirstIdentified.ToLocalTime().ToString("d")</MudTd>
+            <MudTd>@context.LastIdentified.ToLocalTime().ToString("g")</MudTd>
+            <MudTd>
+                <MudButton Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
+                           OnClick="() => Resolve(context)">
+                    @L["Resolve"]
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
 <MudText Typo="Typo.h6" Class="mt-4">@L["Import runs"]</MudText>
 <MudTable T="ImportRunRecord" Items="_runs" Dense="true" Breakpoint="Breakpoint.None">
     <HeaderContent>
@@ -119,6 +151,7 @@
     private bool _popularityQueued;
     private IReadOnlyList<ImportRunRecord> _runs = Array.Empty<ImportRunRecord>();
     private IReadOnlyList<RenameProposalRecord> _proposals = Array.Empty<RenameProposalRecord>();
+    private IReadOnlyList<MissingChartRecord> _missingCharts = Array.Empty<MissingChartRecord>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -135,6 +168,14 @@
     {
         _runs = await Mediator.Send(new GetImportRunsQuery(_mix));
         _proposals = await Mediator.Send(new GetRenameProposalsQuery(_mix));
+        _missingCharts = await Mediator.Send(new GetMissingChartsQuery(_mix));
+    }
+
+    private async Task Resolve(MissingChartRecord missing)
+    {
+        await Mediator.Send(new ResolveMissingChartCommand(missing.Id));
+        Snackbar.Add($"{missing.SongName} {missing.ChartType} {missing.Level}", Severity.Success);
+        await Load();
     }
 
     private async Task SetMix(MixEnum mix)

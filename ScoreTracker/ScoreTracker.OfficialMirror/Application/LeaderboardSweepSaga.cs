@@ -6,6 +6,8 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
+using ScoreTracker.OfficialMirror.Contracts;
+using ScoreTracker.OfficialMirror.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Domain;
@@ -25,7 +27,9 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     IConsumer<RebuildWeeklyHighlightsCommand>,
     IConsumer<RefreshPopularityCommand>,
     IConsumer<SeedBaselineSnapshotCommand>,
-    IRequestHandler<GetLastLeaderboardImportTimestampQuery, DateTimeOffset?>
+    IRequestHandler<GetLastLeaderboardImportTimestampQuery, DateTimeOffset?>,
+    IRequestHandler<GetMissingChartsQuery, IReadOnlyList<MissingChartRecord>>,
+    IRequestHandler<ResolveMissingChartCommand>
 {
     private static readonly TimeSpan UnsealedPurgeAge = TimeSpan.FromDays(7);
     // The sweep checkpoints at least once per board, so a live run heartbeats every few
@@ -64,6 +68,20 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         CancellationToken cancellationToken)
     {
         return (await _snapshots.GetLatestSealed(request.Mix, cancellationToken))?.CompletedAt;
+    }
+
+    public async Task<IReadOnlyList<MissingChartRecord>> Handle(GetMissingChartsQuery request,
+        CancellationToken cancellationToken)
+    {
+        return (await _snapshots.GetMissingCharts(request.Mix, cancellationToken))
+            .Select(m => new MissingChartRecord(m.Id, m.SongName, m.ChartType, m.Level, m.FirstIdentified,
+                m.LastIdentified))
+            .ToArray();
+    }
+
+    public Task Handle(ResolveMissingChartCommand request, CancellationToken cancellationToken)
+    {
+        return _snapshots.DeleteMissingChart(request.Id, cancellationToken);
     }
 
     public async Task Consume(ConsumeContext<StartLeaderboardImportCommand> context)
@@ -281,6 +299,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         MixEnum mix, SweepPlayerCache players, CancellationToken ct)
     {
         var chartScores = new List<(Chart Chart, string Username, PhoenixScore Score)>();
+        var misses = new List<MissingChartSighting>();
         var written = 0;
         var skipped = 0;
         await foreach (var board in _officialSite.GetOfficialChartBoards(mix, ct))
@@ -288,6 +307,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
             if (board.Chart == null || board.SkipReason != null)
             {
                 skipped++;
+                if (board.Missing != null) misses.Add(board.Missing);
                 _logger.LogWarning("Skipping board {Index}/{Total}: {Reason}", board.BoardIndex,
                     board.BoardsTotal, board.SkipReason);
                 await _snapshots.UpdateProgress(snapshotId, "ChartBoards", board.BoardsTotal, written, skipped,
@@ -312,12 +332,15 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
                 _dateTime.Now, ct);
         }
 
+        await _snapshots.UpsertMissingCharts(mix, misses, _dateTime.Now, ct);
         return chartScores;
     }
 
     private async Task SweepPopularity(int snapshotId, MixEnum mix, CancellationToken ct)
     {
-        var entries = (await _officialSite.GetOfficialChartLeaderboardEntries(mix, ct)).ToArray();
+        var (popularity, missing) = await _officialSite.GetOfficialChartLeaderboardEntries(mix, ct);
+        var entries = popularity.ToArray();
+        await _snapshots.UpsertMissingCharts(mix, missing, _dateTime.Now, ct);
         // Place -1 is the site's "not on the ranking" sentinel — categorized below but
         // never stored as a popularity placement.
         await _snapshots.WritePopularity(snapshotId,

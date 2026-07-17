@@ -302,6 +302,29 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task MissingChartsUpsertOncePerIdentityAndRefreshLastIdentified()
+    {
+        var snapshots = Snapshots();
+        var sighting = new MissingChartSighting("Mystery Song", "Double", 27);
+        await snapshots.UpsertMissingCharts(MixEnum.Phoenix2, new[] { sighting, sighting }, Week1,
+            CancellationToken.None);
+        await snapshots.UpsertMissingCharts(MixEnum.Phoenix2,
+            new[] { sighting, new MissingChartSighting("Other Song", "Single", 24) }, Week2,
+            CancellationToken.None);
+
+        var inbox = await snapshots.GetMissingCharts(MixEnum.Phoenix2, CancellationToken.None);
+
+        Assert.Equal(2, inbox.Count);
+        var mystery = inbox.Single(m => m.SongName == "Mystery Song");
+        Assert.Equal(Week1, mystery.FirstIdentified);
+        Assert.Equal(Week2, mystery.LastIdentified);
+        Assert.Empty(await snapshots.GetMissingCharts(MixEnum.Phoenix, CancellationToken.None));
+
+        await snapshots.DeleteMissingChart(mystery.Id, CancellationToken.None);
+        Assert.Single(await snapshots.GetMissingCharts(MixEnum.Phoenix2, CancellationToken.None));
+    }
+
+    [Fact]
     public async Task PopularityRoundTripsPerSnapshot()
     {
         var snapshots = Snapshots();
