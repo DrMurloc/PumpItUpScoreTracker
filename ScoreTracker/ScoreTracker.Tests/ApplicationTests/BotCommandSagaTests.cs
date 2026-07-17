@@ -19,6 +19,8 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.Randomizer.Contracts;
+using ScoreTracker.Randomizer.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -168,6 +170,86 @@ public sealed class BotCommandSagaTests
             CancellationToken.None);
 
         Assert.NotNull(reply.Card);
+    }
+
+    [Fact]
+    public async Task UnregisteringACommunityDispatchesTheRemoveCommand()
+    {
+        var reply = await Saga().Handle(Invoke(new[] { "unregister" },
+            new Dictionary<string, string> { ["feed"] = "community:SoCal Pump" }, canManage: true),
+            CancellationToken.None);
+
+        Assert.Contains("Removed", reply.Text);
+        _mediator.Verify(m => m.Send(It.Is<RemoveDiscordChannelFromCommunityCommand>(
+            c => (string)c.CommunityName == "SoCal Pump" && c.ChannelId == 100), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task CommunityNameAutocompleteFiltersPublicCommunities()
+    {
+        _communities.Setup(c => c.GetPublicCommunities(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityOverviewRecord(Name.From("SoCal Pump"), CommunityPrivacyType.Public, 5, false),
+                new CommunityOverviewRecord(Name.From("NorCal"), CommunityPrivacyType.Public, 3, false)
+            });
+
+        var choices = await Saga().Handle(new GetBotAutocompleteQuery(
+            new BotAutocompleteRequest(new[] { "register", "community" }, "name", "so",
+                new Dictionary<string, string>(), UserId: 1, ChannelId: 2, GuildId: 3)), CancellationToken.None);
+
+        Assert.Single(choices);
+        Assert.Equal("SoCal Pump", choices[0].Value);
+    }
+
+    [Fact]
+    public async Task FeedAutocompleteListsThisChannelsRegistrations()
+    {
+        _feeds.Setup(f => f.GetForChannel(100, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new DiscordFeedSubscriptionRecord(100, DiscordFeedKind.WeeklyCharts, MixEnum.Phoenix2) });
+        _communities.Setup(c => c.GetChannelCommunityNames(100, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Name.From("SoCal Pump") });
+
+        var choices = await Saga().Handle(new GetBotAutocompleteQuery(
+            new BotAutocompleteRequest(new[] { "unregister" }, "feed", "",
+                new Dictionary<string, string>(), UserId: 1, ChannelId: 100, GuildId: 3)), CancellationToken.None);
+
+        Assert.Equal(2, choices.Count);
+        Assert.Contains(choices, c => c.Value == "feed:WeeklyCharts:Phoenix2");
+        Assert.Contains(choices, c => c.Value == "community:SoCal Pump");
+    }
+
+    [Fact]
+    public async Task PresetAutocompleteListsSavedSettingsForALinkedUser()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserByExternalLoginQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserBuilder().Build());
+        _mediator.Setup(m => m.Send(It.IsAny<GetRandomSettingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new SavedRandomizerSettings(Name.From("Bracket Warmup"), new RandomSettings(), MixEnum.Phoenix2)
+            }.AsEnumerable());
+
+        var choices = await Saga().Handle(new GetBotAutocompleteQuery(
+            new BotAutocompleteRequest(new[] { "random" }, "preset", "brac",
+                new Dictionary<string, string>(), UserId: 1, ChannelId: 2, GuildId: 3)), CancellationToken.None);
+
+        Assert.Single(choices);
+        Assert.Equal("Bracket Warmup", choices[0].Value);
+    }
+
+    [Fact]
+    public async Task PresetAutocompleteReturnsNothingForAnUnlinkedUser()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserByExternalLoginQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        var choices = await Saga().Handle(new GetBotAutocompleteQuery(
+            new BotAutocompleteRequest(new[] { "random" }, "preset", "b",
+                new Dictionary<string, string>(), UserId: 1, ChannelId: 2, GuildId: 3)), CancellationToken.None);
+
+        Assert.Empty(choices);
     }
 
     [Fact]

@@ -100,18 +100,17 @@ namespace ScoreTracker.Communities.Application
 
         private async Task<BotReply> RegisterCommunity(BotInteraction interaction, CancellationToken cancellationToken)
         {
-            Name? name = interaction.Options.TryGetValue("name", out var n) && !string.IsNullOrWhiteSpace(n)
-                ? Name.From(n)
-                : null;
-            Guid? code = interaction.Options.TryGetValue("invite-code", out var c) && Guid.TryParse(c, out var parsed)
-                ? parsed
-                : null;
-            if (name == null && code == null)
+            var hasName = interaction.Options.TryGetValue("name", out var n) && !string.IsNullOrWhiteSpace(n);
+            Guid? code = null;
+            if (interaction.Options.TryGetValue("invite-code", out var c) && Guid.TryParse(c, out var parsed))
+                code = parsed;
+            if (!hasName && code == null)
                 return new BotReply(Text: "Give a community name or an invite code.");
 
             try
             {
-                await _mediator.Send(new AddDiscordChannelToCommunityCommand(name, code, interaction.ChannelId),
+                await _mediator.Send(new AddDiscordChannelToCommunityCommand(
+                        hasName ? Name.From(n) : null, code, interaction.ChannelId),
                     cancellationToken);
                 return new BotReply(Text: "Done — this channel is registered for that community.");
             }
