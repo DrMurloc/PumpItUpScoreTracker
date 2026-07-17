@@ -5,6 +5,7 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.HomeDashboard
 @using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
@@ -20,6 +21,8 @@
 
     @@media (max-width: 760px) {
         .olb-pop-extremes { grid-template-columns: 1fr; }
+
+        .olb-pop-artist { display: none; }
     }
 
     .olb-pop-trio { display: flex; gap: 8px; }
@@ -77,22 +80,37 @@
     }
 
     .olb-pop-new { color: var(--diff-hard, var(--mix-accent)); font-weight: 800; }
+
+    .olb-pop-artist-text {
+        font-size: 12px;
+        color: var(--mix-ink-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 160px;
+    }
 </style>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2 flex-wrap">
-    <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small">
-        <MudButton Color="@(_songsView ? Color.Default : Color.Primary)" OnClick="() => _songsView = false">
+    <MudButtonGroup OverrideStyles="false">
+        <MudButton Variant="@(_songsView ? Variant.Outlined : Variant.Filled)" Color="Color.Primary"
+                   Size="Size.Small" OnClick="() => _songsView = false">
             @L["Charts"]
         </MudButton>
-        <MudButton Color="@(_songsView ? Color.Primary : Color.Default)" OnClick="() => _songsView = true">
+        <MudButton Variant="@(_songsView ? Variant.Filled : Variant.Outlined)" Color="Color.Primary"
+                   Size="Size.Small" OnClick="() => _songsView = true">
             @L["Songs"]
         </MudButton>
     </MudButtonGroup>
-    <FolderPicker Type="_folderType" Level="_folderLevel" FolderChanged="SetFolder"></FolderPicker>
-    @if (_folderLevel != null)
+    @if (!_songsView)
     {
-        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="ClearFolder"
-                       aria-label="@L["All Folders"]"></MudIconButton>
+        <FolderPicker Type="_folderType" Level="_folderLevel" ShowCoOp="false"
+                      FolderChanged="SetFolder"></FolderPicker>
+        @if (_folderLevel != null)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="ClearFolder"
+                           aria-label="@L["All Folders"]"></MudIconButton>
+        }
     }
     <MudText Typo="Typo.body2">
         @if (_popularity.Any())
@@ -195,13 +213,23 @@ else
                     <ApexChart TItem="HeatPoint" Options="_heatOptions" Height="240">
                         @foreach (var series in _heatSeries)
                         {
+                            <ApexRangeAreaSeries TItem="HeatPoint"
+                                                 Items="series.Points"
+                                                 Name="@series.Label"
+                                                 Color="@series.Color"
+                                                 XValue="@(p => p.Level)"
+                                                 Top="@(p => p.P75)"
+                                                 Bottom="@(p => p.P25)"/>
+                        }
+                        @foreach (var series in _heatSeries)
+                        {
                             <ApexPointSeries TItem="HeatPoint"
                                              Items="series.Points"
                                              Name="@series.Label"
                                              Color="@series.Color"
                                              SeriesType="SeriesType.Line"
                                              XValue="@(p => p.Level)"
-                                             YValue="@(p => p.TopPercent)"/>
+                                             YValue="@(p => p.Median)"/>
                         }
                     </ApexChart>
                 </div>
@@ -209,11 +237,7 @@ else
         }
     }
 
-    @if (!Visible.Any())
-    {
-        <MudAlert Severity="Severity.Info">@L["Nothing from this folder is on the popularity board."]</MudAlert>
-    }
-    else if (_songsView)
+    @if (_songsView)
     {
         <MudPaper Class="pa-2">
             @foreach (var (song, place, previous, index) in SongRows())
@@ -228,31 +252,69 @@ else
             }
         </MudPaper>
     }
+    else if (!Visible.Any())
+    {
+        <MudAlert Severity="Severity.Info">@L["Nothing from this folder is on the popularity board."]</MudAlert>
+    }
     else
     {
         <MudPaper Class="pa-2">
-            @foreach (var (record, index) in Visible.Select((r, i) => (r, i)).Take(100))
-            {
-                var chart = Charts.TryGetValue(record.ChartId, out var c) ? c : null;
-                if (chart == null) continue;
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="pa-2 olb-poprow">
-                    <MudText Typo="Typo.h6" Style="min-width:36px;text-align:right">@record.Place</MudText>
-                    <SongImage Song="chart.Song" Small="true"/>
-                    <DifficultyBubble Chart="chart" Small="true"/>
-                    <MudText Typo="Typo.body1"><b>@chart.Song.Name</b></MudText>
-                    <MudSpacer/>
-                    @if (record.RecentPlaces.Count > 1)
-                    {
-                        <svg class="olb-spark" width="72" height="20" viewBox="0 0 72 20">
-                            <polyline points="@SparkPoints(record.RecentPlaces)"/>
-                        </svg>
-                    }
-                    <TrendArrow Current="record.Place" Previous="record.PreviousPlace"/>
-                </MudStack>
-            }
+            <MudText Typo="Typo.overline" Class="d-block px-2 pt-1">@L["Leaderboard"]</MudText>
+            <MudTable T="Row" Items="VisibleRows" Dense="true" Breakpoint="Breakpoint.None"
+                      RowsPerPage="50" RowClass="olb-poprow">
+                <HeaderContent>
+                    <MudTh Style="text-align:right">@L["Place"]</MudTh>
+                    <MudTh>@L["Chart"]</MudTh>
+                    <MudTh Class="olb-pop-artist">@L["Song Artist"]</MudTh>
+                    <MudTh Class="olb-pop-artist">@L["Step Artist"]</MudTh>
+                    <MudTh></MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd Style="text-align:right">
+                        <MudText Typo="Typo.h6">@context.Rec.Place</MudText>
+                    </MudTd>
+                    <MudTd>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <SongImage Song="context.Chart.Song" Small="true"/>
+                            <DifficultyBubble Chart="context.Chart" Small="true"/>
+                            <MudText Typo="Typo.body1"><b>@context.Chart.Song.Name</b></MudText>
+                        </MudStack>
+                    </MudTd>
+                    <MudTd Class="olb-pop-artist">
+                        <div class="olb-pop-artist-text">@context.Chart.Song.Artist</div>
+                    </MudTd>
+                    <MudTd Class="olb-pop-artist">
+                        <div class="olb-pop-artist-text">@(context.Chart.StepArtist?.ToString() ?? "—")</div>
+                    </MudTd>
+                    <MudTd Style="text-align:right">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Justify="Justify.FlexEnd">
+                            @if (context.Rec.RecentPlaces.Count > 1)
+                            {
+                                <svg class="olb-spark" width="72" height="20" viewBox="0 0 72 20">
+                                    <polyline points="@SparkPoints(context.Rec.RecentPlaces)"/>
+                                </svg>
+                            }
+                            <TrendArrow Current="context.Rec.Place" Previous="context.Rec.PreviousPlace"/>
+                        </MudStack>
+                    </MudTd>
+                    <MudTd>
+                        <MudTooltip Text="@L["Chart Details"]">
+                            <MudIconButton Icon="@Icons.Material.Filled.Info" Size="Size.Small"
+                                           aria-label="@L["Chart Details"]"
+                                           OnClick="() => OpenDetails(context.Chart)"/>
+                        </MudTooltip>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager/>
+                </PagerContent>
+            </MudTable>
         </MudPaper>
     }
 }
+
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="Mix"></ChartDetailsDialog>
 
 @code {
     [Parameter] public MixEnum Mix { get; set; }
@@ -262,6 +324,8 @@ else
     private bool _songsView;
     private ChartType _folderType = ChartType.Single;
     private int? _folderLevel;
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
     private IReadOnlyList<OfficialPopularityRecord> _popularity = Array.Empty<OfficialPopularityRecord>();
     private (OfficialPopularityRecord Rec, Chart Chart)[] _known =
         Array.Empty<(OfficialPopularityRecord, Chart)>();
@@ -270,12 +334,21 @@ else
     private List<HeatSeries> _heatSeries = new();
     private ApexChartOptions<HeatPoint> _heatOptions = new();
 
-    // The folder narrows the full board before the top-100 cut — places stay global.
+    // The tooltip is hand-built: a chart mixing range-area bands with line series otherwise
+    // renders every line value as "undefined – undefined" (same collision the By-Level
+    // widget owns). Band series are skipped; line values print as board percentiles.
+    private const string HeatTooltip =
+        @"function(o){var w=o.w,hi=o.dataPointIndex,hs=o.seriesIndex,hx=null;if(w.globals.seriesX[hs]&&w.globals.seriesX[hs][hi]!=null)hx=w.globals.seriesX[hs][hi];var rows='';for(var s=0;s<w.config.series.length;s++){if(w.config.series[s].type==='rangeArea')continue;var v=null;if(hx!=null&&w.globals.seriesX[s]){var j=w.globals.seriesX[s].indexOf(hx);if(j>=0)v=w.globals.series[s][j];}else v=w.globals.series[s][hi];if(v==null||isNaN(v))continue;var c=w.globals.colors[s],n=w.config.series[s].name;rows+=`<div style='display:flex;align-items:center;gap:6px;padding:1px 0'><span style='width:9px;height:9px;border-radius:50%;background:${c};flex:none'></span><span style='opacity:.75'>${n}</span><b style='margin-left:auto;padding-left:14px'>${Math.round(v)}%</b></div>`;}if(!rows)return '';return `<div style='padding:6px 9px;font-size:12px;line-height:1.5'>${hx!=null?`<div style='font-weight:700;margin-bottom:3px'>${hx}</div>`:''}${rows}</div>`;}";
+
+    // The folder narrows the full board before pagination — places stay global.
     private IEnumerable<OfficialPopularityRecord> Visible =>
         _folderLevel == null
             ? _popularity
             : _popularity.Where(r => Charts.TryGetValue(r.ChartId, out var c) &&
                                      c.Type == _folderType && (int)c.Level == _folderLevel.Value);
+
+    private IEnumerable<Row> VisibleRows =>
+        Visible.Where(r => Charts.ContainsKey(r.ChartId)).Select(r => new Row(r, Charts[r.ChartId]));
 
     protected override async Task OnInitializedAsync()
     {
@@ -287,8 +360,8 @@ else
     /// <summary>
     ///     Everything above the board computes once from the full ranking: the two extreme
     ///     trios read straight off the ends, movers rank by absolute movement with fresh
-    ///     debuts riding along, and folder heat is the median chart's board percentile per
-    ///     level, one line per side (the home-page Singles-vs-Doubles vocabulary).
+    ///     debuts riding along, and folder heat is each folder's P25–P75 band around its
+    ///     median chart's board percentile, one region per side (Singles vs Doubles).
     /// </summary>
     private void BuildHighlights()
     {
@@ -312,14 +385,15 @@ else
             }
             .Select(s => new HeatSeries(s.Label, MixThemes.ChartTypeHex(s.Type),
                 FolderHeat(_known.Select(k => (k.Chart, k.Rec.Place)), s.Type, total)
-                    .Select(p => new HeatPoint(p.Level, p.TopPercent)).ToArray()))
+                    .Select(p => new HeatPoint(p.Level, p.Median, p.P25, p.P75)).ToArray()))
             .Where(s => s.Points.Count > 0)
             .ToList();
 
         var palette = MixThemes.PaletteFor(Mix);
         _heatOptions = ApexChartTheming.BaseOptions<HeatPoint>(palette);
         _heatOptions.Markers = new Markers { Size = 0 };
-        _heatOptions.Stroke = new Stroke { Curve = Curve.Straight, Width = 2.5 };
+        _heatOptions.Stroke = new Stroke { Curve = Curve.Smooth, Width = 2.5 };
+        _heatOptions.Fill = new Fill { Opacity = 0.16 };
         var levels = _heatSeries.SelectMany(s => s.Points.Select(p => p.Level)).ToArray();
         _heatOptions.Xaxis = new XAxis
         {
@@ -331,26 +405,34 @@ else
         // printed value keeps meaning "the median chart sits in the top N%".
         _heatOptions.Yaxis = new List<YAxis> { new() { Reversed = true, DecimalsInFloat = 0 } };
         _heatOptions.Legend = new Legend { Show = false };
-        _heatOptions.Tooltip = new Tooltip { Shared = true };
+        _heatOptions.Tooltip = new Tooltip { Shared = true, Custom = HeatTooltip };
     }
 
-    /// <summary>Median board percentile per level for one chart type, levels ascending.</summary>
-    internal static IReadOnlyList<(int Level, decimal TopPercent)> FolderHeat(
+    /// <summary>
+    ///     Median, P25, and P75 board percentiles per level for one chart type, levels
+    ///     ascending — the quartiles ride the same interpolation the By-Level widget uses.
+    /// </summary>
+    internal static IReadOnlyList<(int Level, decimal Median, decimal P25, decimal P75)> FolderHeat(
         IEnumerable<(Chart Chart, int Place)> ranked, ChartType type, int total)
     {
-        if (total == 0) return Array.Empty<(int, decimal)>();
+        if (total == 0) return Array.Empty<(int, decimal, decimal, decimal)>();
         return ranked.Where(r => r.Chart.Type == type)
             .GroupBy(r => (int)r.Chart.Level)
             .Select(g =>
             {
-                var places = g.Select(r => r.Place).OrderBy(p => p).ToArray();
-                var median = places.Length % 2 == 1
-                    ? places[places.Length / 2]
-                    : (places[places.Length / 2 - 1] + places[places.Length / 2]) / 2m;
-                return (Level: g.Key, TopPercent: Math.Round(100m * median / total, 1));
+                var sorted = g.Select(r => (double)r.Place).OrderBy(p => p).ToArray();
+                decimal Pct(double p) =>
+                    Math.Round(100m * (decimal)(ByLevelAggregator.Percentile(sorted, p) ?? 0) / total, 1);
+                return (Level: g.Key, Median: Pct(50), P25: Pct(25), P75: Pct(75));
             })
             .OrderBy(p => p.Level)
             .ToArray();
+    }
+
+    private void OpenDetails(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsOpen = true;
     }
 
     internal void SetFolder((ChartType Type, int Level) folder)
@@ -366,10 +448,11 @@ else
         StateHasChanged();
     }
 
-    // A song ranks by its best chart's place, both this week and last.
+    // A song ranks by its best chart's place, both this week and last — always over the
+    // whole board (the folder filter is a charts-view concept).
     private IEnumerable<(Song Song, int Place, int? Previous, int Index)> SongRows()
     {
-        return Visible
+        return _popularity
             .Where(r => Charts.ContainsKey(r.ChartId))
             .GroupBy(r => Charts[r.ChartId].Song.Name)
             .Select(g => (Charts[g.First().ChartId].Song,
@@ -392,5 +475,7 @@ else
 
     private sealed record HeatSeries(string Label, string Color, IReadOnlyList<HeatPoint> Points);
 
-    internal sealed record HeatPoint(int Level, decimal TopPercent);
+    internal sealed record HeatPoint(int Level, decimal Median, decimal P25, decimal P75);
+
+    internal sealed record Row(OfficialPopularityRecord Rec, Chart Chart);
 }

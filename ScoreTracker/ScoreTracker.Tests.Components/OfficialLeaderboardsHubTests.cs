@@ -7,6 +7,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -34,6 +35,8 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double>());
         Services.AddSingleton(_mediator.Object);
+        // The popularity view mounts ChartDetailsDialog (closed) — it injects this.
+        Services.AddSingleton(Mock.Of<IAdminNotificationClient>());
         // Last: it reads the renderer, locking the service collection. The hub views run in
         // an interactive circuit; SongImage/DifficultyBubble gate tooltips on RendererInfo.
         this.RenderInteractive();
@@ -288,9 +291,11 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         var singles = HubPopularity.FolderHeat(ranked, ChartType.Single, 1000);
         var doubles = HubPopularity.FolderHeat(ranked, ChartType.Double, 1000);
 
-        Assert.Equal(new[] { (20, 2.0m), (22, 15.0m) }, singles);
+        // Linear-interpolated quartiles over places [10,20,400] and [100,200], as board
+        // percentiles of 1,000.
+        Assert.Equal(new[] { (20, 2.0m, 1.5m, 21.0m), (22, 15.0m, 12.5m, 17.5m) }, singles);
         var d = Assert.Single(doubles);
-        Assert.Equal((20, 50.0m), d);
+        Assert.Equal((20, 50.0m, 50.0m, 50.0m), d);
     }
 
     [Fact]

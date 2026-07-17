@@ -19,7 +19,8 @@
                 @* Re-created per open so the grid re-anchors on the current folder. *@
                 @if (_open)
                 {
-                    <FolderGrid InitialType="Type" IsSelected="(t, l) => t == Type && l == Level"
+                    <FolderGrid InitialType="Type" ShowCoOp="ShowCoOp"
+                                IsSelected="(t, l) => t == Type && l == Level"
                                 LevelPicked="Pick"></FolderGrid>
                 }
             </div>
@@ -42,6 +43,9 @@
     [Parameter] public int? Level { get; set; } = 18;
 
     [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Passed through to the grid — hosts without co-op data hide that tab.</summary>
+    [Parameter] public bool ShowCoOp { get; set; } = true;
 
     [Parameter] public EventCallback<(ChartType Type, int Level)> FolderChanged { get; set; }
 
