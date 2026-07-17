@@ -20,9 +20,15 @@ internal interface IOfficialSiteClient
 
     Task<int> GetScorePageCount(MixEnum mix, string sid, CancellationToken cancellationToken);
 
+    /// <summary>
+    ///     <paramref name="maxPages" /> drives the classic (undated) page walk;
+    ///     <paramref name="since" /> is the saved-date watermark that cuts the dated walk
+    ///     short. Each strategy ignores the other's parameter.
+    /// </summary>
     Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(MixEnum mix, Guid userId, string sid, string id,
         bool includeBroken,
         int? maxPages,
+        DateTimeOffset? since,
         CancellationToken cancellationToken);
 
 
