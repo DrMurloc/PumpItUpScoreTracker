@@ -1,6 +1,7 @@
 using ScoreTracker.Domain.Records;
 using ScoreTracker.ScoreLedger.Infrastructure;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.Integration.Fixtures;
 using ScoreTracker.Tests.Integration.TestData;
@@ -60,6 +61,24 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
         Assert.Null(legacy.SessionId);
         Assert.NotNull(legacy.Day);
         Assert.Single(legacy.Rows);
+    }
+
+    [Fact]
+    public async Task AppendRoundTripsTheJudgementBreakdown()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        var judgements = new JudgementCounts(939, 6, 2, 2, 1);
+        await repo.Append(Entry(userId, chartId, Now.AddMinutes(-1), 900000), CancellationToken.None);
+        await repo.Append(Entry(userId, chartId, Now, 991725) with { Judgements = judgements },
+            CancellationToken.None);
+
+        var history = await repo.GetChartHistories(userId, new[] { chartId }, CancellationToken.None);
+
+        Assert.Equal(2, history.Count);
+        Assert.Null(history[0].Judgements);
+        Assert.Equal(judgements, history[1].Judgements);
     }
 
     [Fact]

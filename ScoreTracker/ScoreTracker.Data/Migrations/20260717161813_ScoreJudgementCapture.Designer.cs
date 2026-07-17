@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ScoreTracker.Data.Persistence;
 
@@ -11,9 +12,11 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    partial class ChartAttemptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260717161813_ScoreJudgementCapture")]
+    partial class ScoreJudgementCapture
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1628,102 +1631,6 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserImportCredentialKey", "scores");
                 });
 
-            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialBoardRecordEntity", b =>
-                {
-                    b.Property<int>("LeaderboardId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AchievedSnapshotId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("HighScore")
-                        .HasColumnType("int");
-
-                    b.HasKey("LeaderboardId");
-
-                    b.ToTable("OfficialBoardRecord", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialChartPopularityEntity", b =>
-                {
-                    b.Property<int>("SnapshotId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Place")
-                        .HasColumnType("int");
-
-                    b.HasKey("SnapshotId", "ChartId");
-
-                    b.ToTable("OfficialChartPopularity", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialFolderRecordEntity", b =>
-                {
-                    b.Property<Guid>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ChartType")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AchievedSnapshotId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("HighScore")
-                        .HasColumnType("int");
-
-                    b.HasKey("MixId", "ChartType", "Level");
-
-                    b.ToTable("OfficialFolderRecord", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialLeaderboardEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid?>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ChartType")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("LeaderboardType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int?>("Level")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChartId");
-
-                    b.HasIndex("MixId", "LeaderboardType", "Name")
-                        .IsUnique();
-
-                    b.ToTable("OfficialLeaderboard", "scores");
-                });
-
             modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialLeaderboardImportStateEntity", b =>
                 {
                     b.Property<Guid>("MixId")
@@ -1735,209 +1642,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasKey("MixId");
 
                     b.ToTable("OfficialLeaderboardImportState", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialLeaderboardPlacementEntity", b =>
-                {
-                    b.Property<int>("SnapshotId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("LeaderboardId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Place")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PlayerId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Score")
-                        .HasPrecision(9, 2)
-                        .HasColumnType("decimal(9,2)");
-
-                    b.HasKey("SnapshotId", "LeaderboardId", "Place", "PlayerId");
-
-                    b.HasIndex("PlayerId", "SnapshotId");
-
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("PlayerId", "SnapshotId"), new[] { "LeaderboardId", "Place", "Score" });
-
-                    b.ToTable("OfficialLeaderboardPlacement", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialLeaderboardSnapshotEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BoardsExpected")
-                        .HasColumnType("int");
-
-                    b.Property<int>("BoardsSkipped")
-                        .HasColumnType("int");
-
-                    b.Property<int>("BoardsWritten")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Error")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<bool>("IsBaseline")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset>("LastProgressAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Stage")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<DateTimeOffset>("StartedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MixId", "CompletedAt");
-
-                    b.ToTable("OfficialLeaderboardSnapshot", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialMissingChartEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ChartType")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<DateTimeOffset>("FirstIdentified")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateTimeOffset>("LastIdentified")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int?>("Level")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("SongName")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MixId", "SongName", "ChartType", "Level")
-                        .IsUnique()
-                        .HasFilter("[Level] IS NOT NULL");
-
-                    b.ToTable("OfficialMissingChart", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialPlayerEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AvatarUrl")
-                        .HasMaxLength(400)
-                        .HasColumnType("nvarchar(400)");
-
-                    b.Property<DateTimeOffset>("LastSeenAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("UserIdSource")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("MixId", "Username")
-                        .IsUnique();
-
-                    b.ToTable("OfficialPlayer", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialPlayerRenameProposalEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("AvatarMatched")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("CreatedSnapshotId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("NewPlayerId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("NewUsername")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("OldPlayerId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("OldUsername")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int>("Top50Overlap")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MixId", "Status");
-
-                    b.ToTable("OfficialPlayerRenameProposal", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialUserAvatarEntity", b =>
@@ -1960,70 +1664,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("UserName");
 
                     b.ToTable("OfficialUserAvatar", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialWeeklyHighlightEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid?>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ChartType")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int?>("DethronedPlayerId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("GradeBand")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("Kind")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<int?>("LeaderboardId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Level")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal?>("NewValue")
-                        .HasPrecision(9, 2)
-                        .HasColumnType("decimal(9,2)");
-
-                    b.Property<int>("PlayerId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal?>("PrevValue")
-                        .HasPrecision(9, 2)
-                        .HasColumnType("decimal(9,2)");
-
-                    b.Property<decimal?>("Score")
-                        .HasPrecision(9, 2)
-                        .HasColumnType("decimal(9,2)");
-
-                    b.Property<int>("SnapshotId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SnapshotId");
-
-                    b.ToTable("OfficialWeeklyHighlight", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.UserOfficialLeaderboardEntity", b =>

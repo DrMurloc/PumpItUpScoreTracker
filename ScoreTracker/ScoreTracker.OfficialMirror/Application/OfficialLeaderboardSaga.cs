@@ -4,6 +4,7 @@ using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Domain;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using MassTransit;
 using MediatR;
@@ -182,22 +183,31 @@ namespace ScoreTracker.OfficialMirror.Application
                 new UpdateUserGameProfileCommand(accountData.AccountName, accountData.AvatarUrl),
                 cancellationToken);
 
-            var maxPages =
-                await _officialSite.GetScorePageCount(mix, sid, cancellationToken);
-            // Page-count memory is per mix — the parallel sites paginate independently, so a
-            // Phoenix 2 import must not shrink (or inflate) the next Phoenix 1 delta read.
-            // Phoenix keeps the legacy key so existing users' next import stays incremental.
-            var pageCountSetting = mix == MixEnum.Phoenix
-                ? "PreviousPageCount"
-                : $"PreviousPageCount__{mix}";
-            var limit = (await _mediator.Send(new GetUserUiSettingsQuery(userId), cancellationToken)).TryGetValue(
-                pageCountSetting,
-                out var result)
-                ? int.TryParse(result, out var previous) ? (int?)maxPages - previous + 1 : null
+            var settings = await _mediator.Send(new GetUserUiSettingsQuery(userId), cancellationToken);
+            // Two incremental strategies: the classic (undated) best page imports by
+            // page-count delta — Phoenix keeps its legacy key so existing users' next import
+            // stays incremental — while dated pages import by saved-date watermark, keyed per
+            // card because two cards on one account have independent score histories.
+            int? maxPages = null;
+            int? limit = null;
+            const string pageCountSetting = "PreviousPageCount";
+            if (mix == MixEnum.Phoenix)
+            {
+                maxPages = await _officialSite.GetScorePageCount(mix, sid, cancellationToken);
+                limit = settings.TryGetValue(pageCountSetting, out var result)
+                    ? int.TryParse(result, out var previous) ? maxPages - previous + 1 : null
+                    : null;
+            }
+
+            var watermarkSetting = $"BestScoreWatermark__{mix}__{cardId}";
+            DateTimeOffset? since = settings.TryGetValue(watermarkSetting, out var storedWatermark) &&
+                                    DateTimeOffset.TryParse(storedWatermark, CultureInfo.InvariantCulture,
+                                        DateTimeStyles.RoundtripKind, out var parsedWatermark)
+                ? parsedWatermark
                 : null;
 
             var scores =
-                (await _officialSite.GetRecordedScores(mix, userId, sid, cardId, includeBroken, limit,
+                (await _officialSite.GetRecordedScores(mix, userId, sid, cardId, includeBroken, limit, since,
                     cancellationToken))
                 .ToArray();
             var count = 0;
@@ -216,11 +226,13 @@ namespace ScoreTracker.OfficialMirror.Application
                 await _mediator.Send(
                     new UpdatePhoenixBestAttemptCommand(score.Chart.Id, score.IsBroken, score.Score, score.Plate,
                         Source: ScoreJournalEntry.OfficialImportSource, Mix: mix,
-                        SessionId: importSessionId),
+                        SessionId: importSessionId,
+                        RecordedAt: score.RecordedAt,
+                        Judgements: score.Judgements),
                     cancellationToken);
                 count++;
                 batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken,
-                    _dateTime.Now));
+                    score.RecordedAt ?? _dateTime.Now));
 
                 if (count % 10 != 0) continue;
 
@@ -246,8 +258,17 @@ namespace ScoreTracker.OfficialMirror.Application
                     mix, toSave.Length > 0 ? importSessionId : null),
                 cancellationToken);
 
-            await _mediator.Send(new SaveUserUiSettingCommand(pageCountSetting, maxPages.ToString()),
-                cancellationToken);
+            if (maxPages != null)
+                await _mediator.Send(new SaveUserUiSettingCommand(pageCountSetting, maxPages.Value.ToString()),
+                    cancellationToken);
+
+            // The next dated import stops paging at already-imported territory: remember the
+            // newest saved date this run observed for this card.
+            var newestSeen = scores.Where(s => s.RecordedAt != null).Select(s => s.RecordedAt!.Value)
+                .DefaultIfEmpty().Max();
+            if (newestSeen != default)
+                await _mediator.Send(new SaveUserUiSettingCommand(watermarkSetting,
+                    newestSeen.ToString("O", CultureInfo.InvariantCulture)), cancellationToken);
         }
 
         /// <summary>

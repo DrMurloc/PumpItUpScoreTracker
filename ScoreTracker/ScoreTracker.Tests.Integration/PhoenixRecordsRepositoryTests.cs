@@ -63,6 +63,52 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetPlayerScoresExcludesBrokenRowsFromCohortReads()
+    {
+        // Both GetPlayerScores overloads feed percentile machinery (cohort distributions,
+        // score quality, competitive neighbors) — a walkoff in the distribution makes
+        // everyone else's percentile look better than it is.
+        var passer = await _seed.SeedUserAsync();
+        var breaker = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedPhoenixChartAsync(level: 20, type: "Double");
+        var writer = BuildRepository();
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, passer, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(950000), PhoenixPlate.SuperbGame, false, RecordedAt));
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, breaker, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(400000), null, true, RecordedAt));
+
+        var byChartIds = (await BuildRepository().GetPlayerScores(MixEnum.Phoenix, new[] { passer, breaker },
+            new[] { chartId })).ToArray();
+        var byLevel = (await BuildRepository().GetPlayerScores(MixEnum.Phoenix, new[] { passer, breaker },
+            ChartType.Double, DifficultyLevel.From(20))).ToArray();
+
+        Assert.Equal(passer, Assert.Single(byChartIds).UserId);
+        Assert.Equal(passer, Assert.Single(byLevel).userId);
+    }
+
+    [Fact]
+    public async Task UpdateBestAttemptRoundTripsTheJudgementBreakdown()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedChartAsync();
+        var judgements = new JudgementCounts(1100, 14, 1, 1, 14);
+
+        await BuildRepository().UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(978147), PhoenixPlate.FairGame, false, RecordedAt, Judgements: judgements));
+
+        var retrieved = await BuildRepository().GetRecordedScore(MixEnum.Phoenix, userId, chartId);
+        Assert.NotNull(retrieved);
+        Assert.Equal(judgements, retrieved!.Judgements);
+
+        // A judgement-less write clears the stored breakdown — stale counts must never
+        // describe a different score.
+        await BuildRepository().UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(990000), PhoenixPlate.SuperbGame, false, RecordedAt));
+        var cleared = await BuildRepository().GetRecordedScore(MixEnum.Phoenix, userId, chartId);
+        Assert.Null(cleared!.Judgements);
+    }
+
+    [Fact]
     public async Task UpdateBestAttemptOverwritesAnExistingRecordWithoutGuardingAgainstLowerScores()
     {
         // The repo intentionally has no best-attempt protection — it just upserts. The guard against

@@ -290,9 +290,8 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     public async Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(MixEnum mix, Guid userId,
         string sid, string id,
         bool includeBroken,
-        int? maxPages, CancellationToken cancellationToken)
+        int? maxPages, DateTimeOffset? since, CancellationToken cancellationToken)
     {
-        var currentPage = 1;
         await _mediator.Publish(
             new ImportStatusUpdatedEvent(userId, "Logging In",
                 Array.Empty<RecordedPhoenixScore>(), mix), cancellationToken);
@@ -304,50 +303,13 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
 
         var accountInfo = await _piuGame.GetAccountData(mix, sessionId, cancellationToken);
 
-        var finalPage = (await _piuGame.GetBestScores(mix, sessionId, 1, cancellationToken)).MaxPage;
-        var responses = new List<PiuGameGetBestScoresResult.ScoreDto>();
-        maxPages ??= finalPage;
-        while (currentPage <= maxPages.Value)
-        {
-            await _mediator.Publish(
-                new ImportStatusUpdatedEvent(userId, $"Reading page {currentPage} of {maxPages} (New Passes)",
-                    Array.Empty<RecordedPhoenixScore>(), mix),
-                cancellationToken);
-            var nextPage = await _piuGame.GetBestScores(mix, sessionId, currentPage, cancellationToken);
-            responses.AddRange(nextPage.Scores);
-            currentPage++;
-            _logger.LogInformation($"Page {currentPage}");
-        }
-
-        var pagesWithNoUpscore = 0;
-        var bestScores =
-            (await _phoenixRecords.GetBestScores(mix, userId, cancellationToken))
-            .ToDictionary(r =>
-                r.ChartId);
-        while (pagesWithNoUpscore <= 3 && currentPage <= finalPage)
-        {
-            pagesWithNoUpscore++;
-            var nextPage = await _piuGame.GetBestScores(mix, sessionId, currentPage, cancellationToken);
-            await _mediator.Publish(
-                new ImportStatusUpdatedEvent(userId, $"Reading page {currentPage} (Up-scores)",
-                    Array.Empty<RecordedPhoenixScore>(), mix),
-                cancellationToken);
-
-            foreach (var score in nextPage.Scores)
-            {
-                var song = await GetMappedName(score.SongName, cancellationToken);
-
-                var chart = (await _charts.GetChartsForSong(mix, song, cancellationToken))
-                    .FirstOrDefault(c => c.Type == score.ChartType && c.Level == score.Level);
-                if (chart == null) continue;
-                if (bestScores.ContainsKey(chart.Id) && score.Score <= (bestScores[chart.Id].Score ?? 0)) continue;
-
-                responses.Add(score);
-                pagesWithNoUpscore = 0;
-            }
-
-            currentPage++;
-        }
+        var firstPage = await _piuGame.GetBestScores(mix, sessionId, 1, cancellationToken);
+        // The redesigned best list dates every card and sorts newest-first, which carries the
+        // incremental cutoff; the classic list has no dates and keeps the page-count delta +
+        // up-score-window walk. Strategy follows the page shape, never the mix.
+        var responses = firstPage.Scores.Any(s => s.RecordedAt != null)
+            ? await WalkDatedBestScores(mix, userId, sessionId, firstPage, since, cancellationToken)
+            : await WalkClassicBestScores(mix, userId, sessionId, firstPage, maxPages, cancellationToken);
 
         var results = new Dictionary<Guid, OfficialRecordedScore>();
         foreach (var response in responses)
@@ -361,7 +323,17 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 .FirstOrDefault(c => c.Type == chartType && c.Level == response.Level);
             if (chart == null) continue;
 
-            results[chart.Id] = new OfficialRecordedScore(chart, response.Score, response.Plate);
+            // The redesigned best list includes stage-failed bests (no plate, real partial
+            // score) — they honor the same opt-in as recent-play breaks.
+            if (response.IsBroken && !includeBroken) continue;
+
+            // A chart surfacing twice in one walk (its score changed mid-walk) keeps the
+            // newest-dated card; undated cards keep the classic last-wins overwrite.
+            if (results.TryGetValue(chart.Id, out var alreadyMapped) &&
+                alreadyMapped.RecordedAt >= response.RecordedAt) continue;
+
+            results[chart.Id] = new OfficialRecordedScore(chart, response.Score, response.Plate,
+                response.IsBroken, response.RecordedAt);
         }
 
         var recent = (await _piuGame.GetRecentScores(mix, sessionId, cancellationToken)).ToArray();
@@ -402,9 +374,26 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                         lowestPass?.Plate.ToString()), cancellationToken);
                 }
 
-                if (!includeBroken || results.ContainsKey(chart.Id)) continue;
+                if (includeBroken && !results.ContainsKey(chart.Id))
+                    results[chart.Id] = new OfficialRecordedScore(chart, bestScore, bestPlate, isBroken);
 
-                results[chart.Id] = new OfficialRecordedScore(chart, bestScore, bestPlate, isBroken);
+                // A recent play whose chart, score, and broken-ness match the best being saved
+                // is the play that produced it: its judgement breakdown — and its timestamp,
+                // when the best list carried none — ride onto the record.
+                if (results.TryGetValue(chart.Id, out var saved))
+                {
+                    var producing = chartGroup
+                        .Where(s => s.Score == saved.Score && s.IsBroken == saved.IsBroken)
+                        .OrderByDescending(s => s.RecordedAt ?? DateTimeOffset.MinValue)
+                        .FirstOrDefault();
+                    if (producing != null)
+                        results[chart.Id] = saved with
+                        {
+                            Judgements = new JudgementCounts(producing.Perfects, producing.Greats,
+                                producing.Goods, producing.Bads, producing.Misses),
+                            RecordedAt = saved.RecordedAt ?? producing.RecordedAt
+                        };
+                }
             }
         }
 
@@ -412,6 +401,100 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 ScoreImportCompletedEvent.OfficialImportSource, userId, mix, entries.ToArray()),
             cancellationToken);
         return results.Values;
+    }
+
+    /// <summary>
+    ///     Walks the redesigned (dated, newest-first) best list. Stops after the page that
+    ///     crosses the watermark — that page still processes whole, so equal-timestamp saves
+    ///     re-import harmlessly — or when a page adds nothing new. The site clamps
+    ///     out-of-range page numbers to the last page, so repetition is the reliable end
+    ///     signal and the pager markup is never trusted.
+    /// </summary>
+    private async Task<List<PiuGameGetBestScoresResult.ScoreDto>> WalkDatedBestScores(MixEnum mix, Guid userId,
+        HttpClient sessionId, PiuGameGetBestScoresResult firstPage, DateTimeOffset? since,
+        CancellationToken cancellationToken)
+    {
+        var responses = new List<PiuGameGetBestScoresResult.ScoreDto>();
+        var seen = new HashSet<(string, ChartType, int, int, DateTimeOffset?)>();
+        var page = firstPage;
+        for (var pageNumber = 1; pageNumber <= 1000; pageNumber++)
+        {
+            await _mediator.Publish(
+                new ImportStatusUpdatedEvent(userId, $"Reading page {pageNumber} (Best Scores)",
+                    Array.Empty<RecordedPhoenixScore>(), mix),
+                cancellationToken);
+            var added = 0;
+            foreach (var score in page.Scores)
+            {
+                if (!seen.Add((score.SongName.ToString(), score.ChartType, (int)score.Level, (int)score.Score,
+                        score.RecordedAt))) continue;
+
+                responses.Add(score);
+                added++;
+            }
+
+            var crossedWatermark = since != null &&
+                                   page.Scores.Any(s => s.RecordedAt != null && s.RecordedAt < since);
+            if (crossedWatermark || added == 0 || page.Scores.Length == 0) break;
+
+            page = await _piuGame.GetBestScores(mix, sessionId, pageNumber + 1, cancellationToken);
+        }
+
+        return responses;
+    }
+
+    private async Task<List<PiuGameGetBestScoresResult.ScoreDto>> WalkClassicBestScores(MixEnum mix, Guid userId,
+        HttpClient sessionId, PiuGameGetBestScoresResult firstPage, int? maxPages,
+        CancellationToken cancellationToken)
+    {
+        var finalPage = firstPage.MaxPage;
+        maxPages ??= finalPage;
+        var responses = new List<PiuGameGetBestScoresResult.ScoreDto>();
+        var currentPage = 1;
+        var page = firstPage;
+        while (currentPage <= maxPages.Value)
+        {
+            await _mediator.Publish(
+                new ImportStatusUpdatedEvent(userId, $"Reading page {currentPage} of {maxPages} (New Passes)",
+                    Array.Empty<RecordedPhoenixScore>(), mix),
+                cancellationToken);
+            if (currentPage > 1) page = await _piuGame.GetBestScores(mix, sessionId, currentPage, cancellationToken);
+            responses.AddRange(page.Scores);
+            currentPage++;
+            _logger.LogInformation($"Page {currentPage}");
+        }
+
+        var pagesWithNoUpscore = 0;
+        var bestScores =
+            (await _phoenixRecords.GetBestScores(mix, userId, cancellationToken))
+            .ToDictionary(r =>
+                r.ChartId);
+        while (pagesWithNoUpscore <= 3 && currentPage <= finalPage)
+        {
+            pagesWithNoUpscore++;
+            var nextPage = await _piuGame.GetBestScores(mix, sessionId, currentPage, cancellationToken);
+            await _mediator.Publish(
+                new ImportStatusUpdatedEvent(userId, $"Reading page {currentPage} (Up-scores)",
+                    Array.Empty<RecordedPhoenixScore>(), mix),
+                cancellationToken);
+
+            foreach (var score in nextPage.Scores)
+            {
+                var song = await GetMappedName(score.SongName, cancellationToken);
+
+                var chart = (await _charts.GetChartsForSong(mix, song, cancellationToken))
+                    .FirstOrDefault(c => c.Type == score.ChartType && c.Level == score.Level);
+                if (chart == null) continue;
+                if (bestScores.ContainsKey(chart.Id) && score.Score <= (bestScores[chart.Id].Score ?? 0)) continue;
+
+                responses.Add(score);
+                pagesWithNoUpscore = 0;
+            }
+
+            currentPage++;
+        }
+
+        return responses;
     }
 
     public async Task<(IEnumerable<OfficialRecordedScore> results, IEnumerable<string> nonMapped)> GetRecentScores(

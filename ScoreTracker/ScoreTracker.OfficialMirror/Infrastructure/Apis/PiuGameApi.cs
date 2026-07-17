@@ -468,7 +468,13 @@ internal sealed class PiuGameApi : IPiuGameApi
                     Plate = plate,
                     SongName = songName,
                     IsBroken = isBroken,
-                    Score = score
+                    Score = score,
+                    Perfects = perfects,
+                    Greats = greats,
+                    Goods = goods,
+                    Bads = bads,
+                    Misses = misses,
+                    RecordedAt = ParseRecordedAt(card)
                 });
             }
             catch (Exception e)
@@ -636,20 +642,128 @@ internal sealed class PiuGameApi : IPiuGameApi
 
         var document = new HtmlDocument();
         document.LoadHtml(response);
+
+        // Two page generations share this URL: the classic my_best_scoreList layout, and the
+        // Phoenix 2 redesign that reuses the recently-played card layout with a saved date on
+        // every best. Sniff the markup instead of keying on mix, so the redesign reaching the
+        // other host changes nothing here.
+        return document.DocumentNode.SelectSingleNode(".//ul[contains(@class,'my_best_scoreList')]") != null
+            ? ParseClassicBestScores(document, page)
+            : ParseRedesignedBestScores(document, page);
+    }
+
+    private static int ParseBestScoresMaxPage(HtmlDocument document, int page)
+    {
         var lastI = document.DocumentNode.SelectNodes(".//i[contains(@class,'last')]")?.First();
         var maxPageStrings = lastI?.ParentNode
             .GetAttributeValue("onclick", "")
             .Split("=") ?? Array.Empty<string>();
-        var maxPage =
-            maxPageStrings.Length > 0 ? int.Parse(maxPageStrings[^1].TrimEnd('\'') ?? "") : page;
+        return maxPageStrings.Length > 0 ? int.Parse(maxPageStrings[^1].TrimEnd('\'') ?? "") : page;
+    }
+
+    // "2026-07-17 23:16:30 (GMT+9)" — my_page timestamps carry their UTC offset inline.
+    private static readonly Regex RecordedAtRegex =
+        new(@"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s*\(GMT([+-]\d{1,2})\)", RegexOptions.Compiled);
+
+    private static DateTimeOffset? ParseRecordedAt(HtmlNode card)
+    {
+        var text = card.SelectSingleNode(".//p[contains(@class,'recently_date_tt')]")?.InnerText;
+        if (text == null) return null;
+
+        var match = RecordedAtRegex.Match(text);
+        if (!match.Success) return null;
+
+        var local = DateTime.ParseExact(match.Groups[1].Value, "yyyy-MM-dd HH:mm:ss",
+            CultureInfo.InvariantCulture, DateTimeStyles.None);
+        return new DateTimeOffset(local,
+            TimeSpan.FromHours(int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture)));
+    }
+
+    private PiuGameGetBestScoresResult ParseRedesignedBestScores(HtmlDocument document, int page)
+    {
+        var result = new PiuGameGetBestScoresResult
+        {
+            MaxPage = ParseBestScoresMaxPage(document, page)
+        };
+        var cards = document.DocumentNode.SelectNodes(".//ul[contains(@class,'recently_playeList')]/li");
+        if (cards == null) return result;
+
+        var scores = new List<PiuGameGetBestScoresResult.ScoreDto>();
+        foreach (var card in cards)
+            try
+            {
+                var typeUrl = card
+                    .SelectNodes(".//div[contains(@class,'stepBall_img_wrap')]//div[contains(@class,'tw')]//img")
+                    .First().GetAttributeValue("src", "");
+                if (typeUrl.Contains("u_text", StringComparison.OrdinalIgnoreCase))
+                    //UCS
+                    continue;
+
+                var chartType = GetChartTypeFromUrl(typeUrl);
+                if (chartType == null) continue;
+
+                var level = 0;
+                foreach (var url in card
+                             .SelectNodes(
+                                 ".//div[contains(@class,'stepBall_img_wrap')]//div[contains(@class,'numw')]//img")
+                             .Select(i => i.GetAttributeValue("src", "Unknown")))
+                {
+                    level *= 10;
+                    var match = LevelRegex.Match(url);
+                    if (!match.Success || !int.TryParse(match.Groups[1].Value, out var parsedLevel)) continue;
+
+                    level += parsedLevel;
+                }
+
+                if (level == 0) level = 29;
+
+                var score = int.Parse(
+                    card.SelectSingleNode(
+                            ".//div[contains(@class,'li_in') and contains(@class,'ac')]/i[contains(@class,'tx')]")
+                        .InnerText.Replace(",", ""),
+                    NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
+
+                // The plate renders in its own li_in beside the score's (which holds the grade
+                // image); no plate image anywhere on the card means a broken (stage-failed)
+                // best — the redesign lists those too, usually with a real partial score.
+                var plateMatch = card
+                    .SelectNodes(".//div[contains(@class,'li_in')]/img")
+                    ?.Select(i => PlateRegex.Match(i.GetAttributeValue("src", "")))
+                    .FirstOrDefault(m => m.Success);
+
+                scores.Add(new PiuGameGetBestScoresResult.ScoreDto
+                {
+                    SongName = HttpUtility.HtmlDecode(
+                        card.SelectSingleNode(".//div[contains(@class,'song_name')]/p").InnerText),
+                    ChartType = chartType.Value,
+                    Level = level,
+                    Score = score,
+                    Plate = plateMatch == null
+                        ? null
+                        : PhoenixPlateHelperMethods.ParseShorthand(plateMatch.Groups[1].Value),
+                    IsBroken = plateMatch == null,
+                    RecordedAt = ParseRecordedAt(card)
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error parsing a redesigned best-score card");
+            }
+
+        result.Scores = scores.ToArray();
+        return result;
+    }
+
+    private PiuGameGetBestScoresResult ParseClassicBestScores(HtmlDocument document, int page)
+    {
+        var result = new PiuGameGetBestScoresResult
+        {
+            MaxPage = ParseBestScoresMaxPage(document, page)
+        };
 
         var foundScores =
             document.DocumentNode.SelectNodes(
                 ".//ul[contains(@class,'my_best_scoreList')]/li/div[contains(@class,'in')]");
-        var result = new PiuGameGetBestScoresResult
-        {
-            MaxPage = maxPage
-        };
         if (foundScores == null) return result;
         var scores = new List<PiuGameGetBestScoresResult.ScoreDto>();
         foreach (var scoreCard in foundScores)
