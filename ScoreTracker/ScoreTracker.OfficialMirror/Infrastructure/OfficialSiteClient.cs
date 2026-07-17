@@ -291,7 +291,12 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 .FirstOrDefault(c => c.Type == chartType && c.Level == response.Level);
             if (chart == null) continue;
 
-            results[chart.Id] = new OfficialRecordedScore(chart, response.Score, response.Plate);
+            // The redesigned best list includes stage-failed bests (no plate, real partial
+            // score) — they honor the same opt-in as recent-play breaks.
+            if (response.IsBroken && !includeBroken) continue;
+
+            results[chart.Id] = new OfficialRecordedScore(chart, response.Score, response.Plate,
+                response.IsBroken, response.RecordedAt);
         }
 
         var recent = (await _piuGame.GetRecentScores(mix, sessionId, cancellationToken)).ToArray();
