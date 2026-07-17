@@ -4670,6 +4670,12 @@
   <data name="Resolve" xml:space="preserve">
     <value>解決</value>
   </data>
+  <data name="From their linked piuscores account - not on an official board yet" xml:space="preserve">
+    <value>連携された piuscores アカウントから取得 - まだ公式ボードには載っていません</value>
+  </data>
+  <data name="piuscores" xml:space="preserve">
+    <value>piuscores</value>
+  </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>人気度の更新をキューに追加しました - 最新のスナップショットに再適用されます</value>
   </data>

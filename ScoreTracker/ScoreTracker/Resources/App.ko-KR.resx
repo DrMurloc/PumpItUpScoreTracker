@@ -4551,6 +4551,12 @@
   <data name="Resolve" xml:space="preserve">
     <value>해결</value>
   </data>
+  <data name="From their linked piuscores account - not on an official board yet" xml:space="preserve">
+    <value>연동된 piuscores 계정에서 가져옴 - 아직 공식 보드에는 없습니다</value>
+  </data>
+  <data name="piuscores" xml:space="preserve">
+    <value>piuscores</value>
+  </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>인기도 새로고침이 대기열에 추가되었습니다 - 최신 스냅샷에 다시 연결됩니다</value>
   </data>

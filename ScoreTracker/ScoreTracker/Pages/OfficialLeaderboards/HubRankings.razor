@@ -106,10 +106,18 @@ else
                                 var chart = Charts.TryGetValue(placement.ChartId, out var c) ? c : null;
                                 if (chart == null) continue;
                                 <MudItem xs="6" sm="4" md="2">
-                                    <MudPaper Class="pa-2">
+                                    <MudPaper Class="pa-2"
+                                              Style="@(placement.Supplemented ? "border:1px dashed var(--mix-secondary)" : null)">
                                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                                             <SongImage Song="chart.Song" Small="true"/>
                                             <DifficultyBubble Chart="chart" Small="true"/>
+                                            @if (placement.Supplemented)
+                                            {
+                                                <MudTooltip Text="@L["From their linked piuscores account - not on an official board yet"]">
+                                                    <MudIcon Icon="@Icons.Material.Filled.CloudSync" Size="Size.Small"
+                                                             Color="Color.Secondary"/>
+                                                </MudTooltip>
+                                            }
                                         </MudStack>
                                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1"
                                                   Justify="Justify.SpaceBetween">

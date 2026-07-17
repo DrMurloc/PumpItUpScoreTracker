@@ -5,10 +5,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Application;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Tests.TestData;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -26,7 +30,8 @@ public sealed class LeaderboardHubSagaTests
     }
 
     private sealed record Fixture(Mock<IOfficialSnapshotRepository> Snapshots,
-        Mock<IOfficialRecordRepository> Records, LeaderboardHubSaga Saga);
+        Mock<IOfficialRecordRepository> Records, Mock<IScoreReader> Scores, Mock<IChartRepository> Charts,
+        LeaderboardHubSaga Saga);
 
     private static Fixture Arrange(SnapshotRun? latest, SnapshotRun? previous = null)
     {
@@ -45,9 +50,16 @@ public sealed class LeaderboardHubSagaTests
         var records = new Mock<IOfficialRecordRepository>();
         records.Setup(r => r.GetHighlights(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<HighlightRow>());
-        var saga = new LeaderboardHubSaga(snapshots.Object, records.Object,
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+        var charts = new Mock<IChartRepository>();
+        charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(),
+                It.IsAny<ChartType?>(), It.IsAny<IEnumerable<Guid>?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ScoreTracker.SharedKernel.Models.Chart>());
+        var saga = new LeaderboardHubSaga(snapshots.Object, records.Object, scores.Object, charts.Object,
             new MemoryCache(new MemoryCacheOptions()));
-        return new Fixture(snapshots, records, saga);
+        return new Fixture(snapshots, records, scores, charts, saga);
     }
 
     private static PlacementDetail Chart(int playerId, Guid chartId, int place, decimal score, int level = 24,
@@ -195,6 +207,70 @@ public sealed class LeaderboardHubSagaTests
         var placement = Assert.Single(profile.Placements);
         Assert.Equal(2, placement.PlaceDelta); // 3 → 1
         Assert.True(placement.ComputedRating > 0);
+    }
+
+    [Fact]
+    public async Task LinkedPlayersWithSparseBoardsGetSupplementedCharts()
+    {
+        var f = Arrange(Run(2, Week2));
+        var linkedUser = Guid.NewGuid();
+        var boardChart = new ChartBuilder().WithLevel(24).WithType(ChartType.Single).Build();
+        var ledgerChart = new ChartBuilder().WithLevel(22).WithType(ChartType.Double).Build();
+        var brokenChart = new ChartBuilder().WithLevel(23).WithType(ChartType.Single).Build();
+        f.Snapshots.Setup(s => s.GetPlayerByUsername(MixEnum.Phoenix2, "NIMBUS9", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PlayerDimension(11, "NIMBUS9", null, linkedUser));
+        f.Snapshots.Setup(s => s.GetPlayerTimeline(11, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
+        {
+            new PlayerTimelineRow(2, Week2, LeaderboardTypes.Chart, "Board", boardChart.Id, 3, 991000)
+        });
+        f.Charts.Setup(c => c.GetCharts(MixEnum.Phoenix2, It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
+                It.IsAny<IEnumerable<Guid>?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { boardChart, ledgerChart, brokenChart });
+        f.Scores.Setup(s => s.GetBestScores(MixEnum.Phoenix2, linkedUser, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                // Already on a board — never duplicated from the ledger.
+                new RecordedPhoenixScore(boardChart.Id, 991000, PhoenixPlate.SuperbGame, false, Week2),
+                new RecordedPhoenixScore(ledgerChart.Id, 954321, PhoenixPlate.TalentedGame, false, Week2),
+                new RecordedPhoenixScore(brokenChart.Id, 812000, PhoenixPlate.RoughGame, true, Week2)
+            });
+
+        var profile = await f.Saga.Handle(new GetOfficialPlayerProfileQuery(MixEnum.Phoenix2, "NIMBUS9"),
+            CancellationToken.None);
+
+        Assert.NotNull(profile);
+        Assert.Equal(2, profile!.Placements.Count);
+        var board = profile.Placements.Single(p => p.ChartId == boardChart.Id);
+        Assert.False(board.Supplemented);
+        Assert.Equal(3, board.Place);
+        var supplemented = profile.Placements.Single(p => p.ChartId == ledgerChart.Id);
+        Assert.True(supplemented.Supplemented);
+        Assert.Null(supplemented.Place);
+        Assert.Equal(954321, supplemented.Score);
+        Assert.True(supplemented.ComputedRating > 0);
+        // The broken play never supplements, and the stat tiles stay board-only.
+        Assert.DoesNotContain(profile.Placements, p => p.ChartId == brokenChart.Id);
+        Assert.Equal(1, profile.BoardsInTop);
+    }
+
+    [Fact]
+    public async Task UnlinkedPlayersNeverSupplement()
+    {
+        var f = Arrange(Run(2, Week2));
+        var boardChart = new ChartBuilder().WithLevel(24).WithType(ChartType.Single).Build();
+        f.Snapshots.Setup(s => s.GetPlayerByUsername(MixEnum.Phoenix2, "GHOST", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PlayerDimension(12, "GHOST", null, null));
+        f.Snapshots.Setup(s => s.GetPlayerTimeline(12, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
+        {
+            new PlayerTimelineRow(2, Week2, LeaderboardTypes.Chart, "Board", boardChart.Id, 5, 960000)
+        });
+
+        var profile = await f.Saga.Handle(new GetOfficialPlayerProfileQuery(MixEnum.Phoenix2, "GHOST"),
+            CancellationToken.None);
+
+        Assert.Single(profile!.Placements);
+        f.Scores.Verify(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

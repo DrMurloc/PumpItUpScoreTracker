@@ -138,7 +138,19 @@ else
                 </MudTd>
                 <MudTd Style="text-align:right"><b>@context.Score.ToString("N0")</b></MudTd>
                 <MudTd><LetterGradeIcon Grade="PhoenixScore.From(context.Score).LetterGrade"/></MudTd>
-                <MudTd Style="text-align:right"><b>#@context.Place</b></MudTd>
+                <MudTd Style="text-align:right">
+                    @if (context.Supplemented)
+                    {
+                        <MudTooltip Text="@L["From their linked piuscores account - not on an official board yet"]">
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                                     Color="Color.Secondary">@L["piuscores"]</MudChip>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <b>#@context.Place</b>
+                    }
+                </MudTd>
                 <MudTd>
                     @if (context.PlaceDelta is > 0)
                     {

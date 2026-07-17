@@ -4541,6 +4541,12 @@
   <data name="Resolve" xml:space="preserve">
     <value>Resolver</value>
   </data>
+  <data name="From their linked piuscores account - not on an official board yet" xml:space="preserve">
+    <value>Da conta piuscores vinculada: ainda não está em um ranking oficial</value>
+  </data>
+  <data name="piuscores" xml:space="preserve">
+    <value>piuscores</value>
+  </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>Atualização de popularidade na fila - reanexa ao instantâneo mais recente</value>
   </data>
