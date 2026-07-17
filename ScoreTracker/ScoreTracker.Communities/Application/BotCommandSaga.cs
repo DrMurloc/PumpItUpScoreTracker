@@ -1,4 +1,5 @@
 using MediatR;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Commands;
 using ScoreTracker.Communities.Contracts.Queries;
@@ -21,6 +22,8 @@ namespace ScoreTracker.Communities.Application
         IRequestHandler<HandleBotInteractionCommand, BotReply>,
         IRequestHandler<GetBotAutocompleteQuery, IReadOnlyList<BotOptionChoice>>
     {
+        private const string SiteBase = "https://piuscores.arroweclip.se";
+
         private readonly IBotClient _bot;
         private readonly ICommunityRepository _communities;
         private readonly IDiscordFeedSubscriptionRepository _feeds;
@@ -42,6 +45,7 @@ namespace ScoreTracker.Communities.Application
             return command switch
             {
                 "calc" => Task.FromResult(Calc(interaction)),
+                "chart" => ChartLookup(interaction, cancellationToken),
                 "register" => Register(interaction, cancellationToken),
                 "unregister" => Unregister(interaction, cancellationToken),
                 "feeds" => Feeds(interaction, cancellationToken),
@@ -55,6 +59,7 @@ namespace ScoreTracker.Communities.Application
             var focused = request.Request.FocusedOptionName;
             return focused switch
             {
+                "song" => await SongNameChoices(request.Request, cancellationToken),
                 "name" => await CommunityNameChoices(request.Request, cancellationToken),
                 "feed" => await FeedChoices(request.Request, cancellationToken),
                 _ => Array.Empty<BotOptionChoice>()
@@ -190,6 +195,61 @@ namespace ScoreTracker.Communities.Application
                 choices.Add(new BotOptionChoice($"Community — {(string)name}", $"community:{(string)name}"));
             return choices.Take(25).ToArray();
         }
+
+        private async Task<BotReply> ChartLookup(BotInteraction interaction, CancellationToken cancellationToken)
+        {
+            var mix = ReadMix(interaction);
+            var query = interaction.Options.TryGetValue("song", out var s) ? s.Trim() : string.Empty;
+            if (string.IsNullOrWhiteSpace(query)) return new BotReply(Text: "Give a song name.");
+
+            var all = (await _mediator.Send(new GetChartsQuery(mix), cancellationToken)).ToList();
+            var songName = all.Select(c => (string)c.Song.Name)
+                                 .FirstOrDefault(name => string.Equals(name, query, StringComparison.OrdinalIgnoreCase))
+                             ?? all.Select(c => (string)c.Song.Name).Distinct()
+                                 .Where(name => name.Contains(query, StringComparison.OrdinalIgnoreCase))
+                                 .OrderBy(name => name.Length).FirstOrDefault();
+            if (songName == null)
+                return new BotReply(Text: $"No chart found for \"{query}\" on {mix.GetName()}.");
+
+            var charts = all.Where(c => (string)c.Song.Name == songName)
+                .OrderBy(c => c.Type).ThenBy(c => (int)c.Level).ToList();
+            var song = charts[0].Song;
+            var subtitle = song.Bpm != null
+                ? $"{(string)song.Artist} · {song.Bpm} BPM · {mix.GetName()}"
+                : $"{(string)song.Artist} · {mix.GetName()}";
+            var rows = string.Join("\n", charts.Select(c =>
+                $"#DIFFICULTY|{c.DifficultyString}# [{c.DifficultyDisplay}]({SiteBase}/Chart/{c.Id})"));
+
+            var card = new RichBotMessage(
+                new RichBotSection($"### {songName}\n-# {subtitle}", song.ImagePath),
+                new IRichBotBlock[] { new RichBotDivider(), new RichBotText(rows) },
+                $"#MIX|{mix}# {mix.GetName()} · PIU Scores",
+                mix.GetAccentColor(),
+                Array.Empty<RichBotLink>());
+            return new BotReply(Card: card);
+        }
+
+        private async Task<IReadOnlyList<BotOptionChoice>> SongNameChoices(BotAutocompleteRequest request,
+            CancellationToken cancellationToken)
+        {
+            var mix = request.Options.TryGetValue("mix", out var m) && Enum.TryParse<MixEnum>(m, out var parsed)
+                ? parsed
+                : MixEnum.Phoenix2;
+            var partial = request.PartialValue?.Trim() ?? string.Empty;
+            var all = await _mediator.Send(new GetChartsQuery(mix), cancellationToken);
+            return all.Select(c => (string)c.Song.Name)
+                .Distinct()
+                .Where(name => partial.Length == 0 || name.Contains(partial, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(name => name)
+                .Take(25)
+                .Select(name => new BotOptionChoice(name, name))
+                .ToArray();
+        }
+
+        private static MixEnum ReadMix(BotInteraction interaction) =>
+            interaction.Options.TryGetValue("mix", out var value) && Enum.TryParse<MixEnum>(value, out var mix)
+                ? mix
+                : MixEnum.Phoenix2;
 
         private static BotReply Calc(BotInteraction interaction)
         {

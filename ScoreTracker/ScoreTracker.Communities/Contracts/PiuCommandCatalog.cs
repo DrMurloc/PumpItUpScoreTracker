@@ -15,7 +15,7 @@ namespace ScoreTracker.Communities.Contracts
         public static IReadOnlyList<BotCommandDefinition> Commands { get; } = new[]
         {
             new BotCommandDefinition(RootName, "PIU Scores tools",
-                new[] { Calc, Unregister, Feeds },
+                new[] { Calc, Chart, Unregister, Feeds },
                 new[] { Register })
         };
 
@@ -27,6 +27,18 @@ namespace ScoreTracker.Communities.Contracts
 
         private static BotCommandOption RequiredMix =>
             new("mix", "Which mix", BotCommandOptionType.String, Required: true, Choices: MixChoices);
+
+        private static BotCommandOption OptionalMix =>
+            new("mix", "Which mix (defaults to Phoenix 2)", BotCommandOptionType.String, Choices: MixChoices);
+
+        private static BotSubCommand Chart =>
+            new("chart", "Find a chart and its pages",
+                new[]
+                {
+                    new BotCommandOption("song", "Song name", BotCommandOptionType.String, Required: true,
+                        Autocomplete: true),
+                    OptionalMix
+                });
 
         private static BotSubCommandGroup Register =>
             new("register", "Register this channel for a feed",

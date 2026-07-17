@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 using MediatR;
 using Moq;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Communities.Application;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Commands;
@@ -12,6 +14,8 @@ using ScoreTracker.Communities.Domain;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.Tests.TestData;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -165,5 +169,60 @@ public sealed class BotCommandSagaTests
                 new Dictionary<string, string>(), UserId: 1, ChannelId: 2, GuildId: 3)), CancellationToken.None);
 
         Assert.Empty(choices);
+    }
+
+    private static Chart[] SampleCharts() => new Chart[]
+    {
+        new ChartBuilder().WithSongName("Ugly Dee").WithArtist("Banya").WithType(ChartType.Single)
+            .WithLevel(20).WithMix(MixEnum.Phoenix2),
+        new ChartBuilder().WithSongName("Ugly Dee").WithArtist("Banya").WithType(ChartType.Double)
+            .WithLevel(21).WithMix(MixEnum.Phoenix2),
+        new ChartBuilder().WithSongName("Bad Apple").WithArtist("Masayoshi").WithType(ChartType.Single)
+            .WithLevel(17).WithMix(MixEnum.Phoenix2)
+    };
+
+    [Fact]
+    public async Task ChartLookupRendersACardWithEveryDifficultyOfTheMatchedSong()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SampleCharts());
+
+        var reply = await Saga().Handle(Invoke(new[] { "chart" },
+            new Dictionary<string, string> { ["song"] = "Ugly Dee", ["mix"] = "Phoenix2" }), CancellationToken.None);
+
+        Assert.NotNull(reply.Card);
+        Assert.Contains("Ugly Dee", reply.Card!.Header!.Markdown);
+        var rows = reply.Card.Blocks.OfType<RichBotText>().Single().Markdown;
+        Assert.Contains("#DIFFICULTY|S20#", rows);
+        Assert.Contains("#DIFFICULTY|D21#", rows);
+        Assert.Contains("/Chart/", rows);
+        Assert.DoesNotContain("Bad Apple", rows);
+    }
+
+    [Fact]
+    public async Task ChartLookupRepliesNotFoundWhenNoSongMatches()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SampleCharts());
+
+        var reply = await Saga().Handle(Invoke(new[] { "chart" },
+            new Dictionary<string, string> { ["song"] = "Nonexistent" }), CancellationToken.None);
+
+        Assert.Null(reply.Card);
+        Assert.Contains("No chart found", reply.Text);
+    }
+
+    [Fact]
+    public async Task SongAutocompleteReturnsDistinctMatchingNames()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SampleCharts());
+
+        var choices = await Saga().Handle(new GetBotAutocompleteQuery(
+            new BotAutocompleteRequest(new[] { "chart" }, "song", "ug",
+                new Dictionary<string, string>(), UserId: 1, ChannelId: 2, GuildId: 3)), CancellationToken.None);
+
+        Assert.Single(choices);
+        Assert.Equal("Ugly Dee", choices[0].Value);
     }
 }
