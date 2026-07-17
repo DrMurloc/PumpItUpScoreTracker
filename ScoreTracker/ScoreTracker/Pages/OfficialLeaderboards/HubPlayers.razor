@@ -117,7 +117,7 @@ else
             @L["Board placements"] · @_profile.BoardsInTop
         </MudText>
         <MudTable T="OfficialPlayerChartRecord" Items="_profile.Placements" Dense="true"
-                  Breakpoint="Breakpoint.None" RowsPerPage="25">
+                  Breakpoint="Breakpoint.None" RowsPerPage="25" Class="olb-sticky-first olb-pager-tight">
             <HeaderContent>
                 <MudTh>@L["Chart"]</MudTh>
                 <MudTh Style="text-align:right">@L["Score"]</MudTh>
@@ -167,7 +167,7 @@ else
                 </MudTd>
             </RowTemplate>
             <PagerContent>
-                <MudTablePager/>
+                <MudTablePager HideRowsPerPage="true"/>
             </PagerContent>
         </MudTable>
     </MudPaper>

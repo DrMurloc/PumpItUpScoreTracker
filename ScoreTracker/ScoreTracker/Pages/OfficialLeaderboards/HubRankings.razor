@@ -9,7 +9,6 @@
 @using Chart = ScoreTracker.SharedKernel.Models.Chart
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
-@inject NavigationManager Navigation
 
 @if (_type == "CoOp")
 {
@@ -50,13 +49,13 @@ else if (_rankings == null || !_rankings.Rankings.Any())
 else
 {
     <MudTable T="OfficialRankingRecord" Items="Filtered" Breakpoint="Breakpoint.None" Dense="true"
-              RowsPerPage="50">
+              RowsPerPage="50" Class="olb-sticky-second olb-pager-tight">
         <HeaderContent>
             <MudTh>@L["Rank"]</MudTh>
             <MudTh>@L["Player"]</MudTh>
             <MudTh Style="text-align:right">@(_rankings.RatingIsOfficial ? "PUMBILITY" : L["Rating"])</MudTh>
             <MudTh Style="text-align:right">@L["Boards"]</MudTh>
-            <MudTh>@L["Type"]</MudTh>
+            <MudTh Class="olb-hide-mobile">@L["Type"]</MudTh>
             <MudTh></MudTh>
         </HeaderContent>
         <RowTemplate>
@@ -84,7 +83,7 @@ else
             </MudTd>
             <MudTd Style="text-align:right"><b>@context.Rating.ToString(_rankings.RatingIsOfficial ? "N2" : "N0")</b></MudTd>
             <MudTd Style="text-align:right">@context.BoardsInTop</MudTd>
-            <MudTd>
+            <MudTd Class="olb-hide-mobile">
                 @if (context.PlayerType != null)
                 {
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">
@@ -145,10 +144,12 @@ else
             }
         </ChildRowContent>
         <PagerContent>
-            <MudTablePager/>
+            <MudTablePager HideRowsPerPage="true"/>
         </PagerContent>
     </MudTable>
 }
+
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="Mix"></ChartDetailsDialog>
 
 @code {
     [Parameter] public MixEnum Mix { get; set; }
@@ -161,6 +162,8 @@ else
     private bool _loading = true;
     private string _type = "All";
     private string _filter = string.Empty;
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
     private string? _expanded;
     private OfficialPlayerProfileRecord? _expandedProfile;
     private OfficialRankingsRecord? _rankings;
@@ -199,7 +202,9 @@ else
 
     private void OpenChart(Guid chartId)
     {
-        Navigation.NavigateTo($"/Chart/{chartId}");
+        if (!Charts.TryGetValue(chartId, out var chart)) return;
+        _detailsChart = chart;
+        _detailsOpen = true;
     }
 
     private async Task ToggleExpand(string username)

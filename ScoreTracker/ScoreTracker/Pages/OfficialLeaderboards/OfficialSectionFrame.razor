@@ -61,6 +61,47 @@
 
     .olb-mover-lead { background: color-mix(in srgb, var(--mix-primary) 8%, transparent); border-radius: 9px; }
 
+    /* Mobile: identifier columns pin while the rest of the row side-scrolls, low-value
+       columns step aside, and the pager sheds enough width to fit a phone. */
+    @@media (max-width: 760px) {
+        .olb-hide-mobile { display: none !important; }
+
+        .olb-sticky-first td:first-child, .olb-sticky-first th:first-child,
+        .olb-sticky-second td:first-child, .olb-sticky-second th:first-child,
+        .olb-sticky-second td:nth-child(2), .olb-sticky-second th:nth-child(2) {
+            position: sticky;
+            z-index: 2;
+            background: var(--mix-surface);
+        }
+
+        .olb-sticky-first td:first-child, .olb-sticky-first th:first-child,
+        .olb-sticky-second td:first-child, .olb-sticky-second th:first-child { left: 0; }
+
+        .olb-sticky-second td:first-child, .olb-sticky-second th:first-child {
+            min-width: 44px;
+            max-width: 44px;
+        }
+
+        .olb-sticky-second td:nth-child(2), .olb-sticky-second th:nth-child(2) {
+            left: 44px;
+            max-width: 180px;
+            overflow: hidden;
+        }
+
+        .olb-sticky-first td:first-child, .olb-sticky-first th:first-child { max-width: 200px; overflow: hidden; }
+
+        .olb-sticky-first td:first-child .mud-typography,
+        .olb-sticky-second td:nth-child(2) .mud-typography {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .olb-pager-tight .mud-table-pagination { padding-inline: 2px; }
+
+        .olb-pager-tight .mud-table-pagination-caption { font-size: 11px; margin: 0 4px; }
+    }
+
     /* The tier card's border language is owner-locked (dashed = To-Do / other-mix), so
        supplemented rows mark with a corner badge instead of touching the border. */
     .olb-supplemented-card { position: relative; }

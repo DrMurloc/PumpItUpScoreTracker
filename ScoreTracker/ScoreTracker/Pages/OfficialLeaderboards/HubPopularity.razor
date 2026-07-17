@@ -264,7 +264,7 @@ else
         <MudPaper Class="pa-2">
             <MudText Typo="Typo.overline" Class="d-block px-2 pt-1">@L["Leaderboard"]</MudText>
             <MudTable T="Row" Items="VisibleRows" Dense="true" Breakpoint="Breakpoint.None"
-                      RowsPerPage="50" RowClass="olb-poprow">
+                      RowsPerPage="50" RowClass="olb-poprow" Class="olb-sticky-second olb-pager-tight">
                 <HeaderContent>
                     <MudTh Style="text-align:right">@L["Place"]</MudTh>
                     <MudTh>@L["Chart"]</MudTh>
@@ -294,7 +294,7 @@ else
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Justify="Justify.FlexEnd">
                             @if (context.Rec.RecentPlaces.Count > 1)
                             {
-                                <svg class="olb-spark" width="72" height="20" viewBox="0 0 72 20">
+                                <svg class="olb-spark olb-hide-mobile" width="72" height="20" viewBox="0 0 72 20">
                                     <polyline points="@SparkPoints(context.Rec.RecentPlaces)"/>
                                 </svg>
                             }
@@ -310,7 +310,7 @@ else
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
-                    <MudTablePager/>
+                    <MudTablePager HideRowsPerPage="true"/>
                 </PagerContent>
             </MudTable>
         </MudPaper>
