@@ -42,13 +42,6 @@ namespace ScoreTracker.Domain.SecondaryPorts
             Func<BotInteraction, Task<BotReply>> onInteraction,
             Func<BotAutocompleteRequest, Task<IReadOnlyList<BotOptionChoice>>> onAutocomplete);
 
-        // Legacy string-based slash registration — the only remaining caller is the
-        // pre-/piu bot host, which moves onto RegisterCommands next. Removed once nothing
-        // calls it.
-        public Task RegisterSlashCommand(string name, string description, string response,
-            Func<ulong, ulong, IDictionary<string, string>, Task> execution,
-            IEnumerable<(string name, string description, bool isRequired)> options, bool requireChannelAdmin = false);
-
         public void WhenReady(Func<Task> execution);
     }
 }

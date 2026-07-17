@@ -1,9 +1,19 @@
 # Discord overhaul — /piu commands and leaderboard feeds
 
-Status: **scoped (2026-07-17), owner decisions locked; ready to execute.** Mocks:
-claude.ai artifact `d4fa5bed-e2c6-4aa6-bcbf-a5b0cb4ceb04` (round-1, workshop-notes toggle).
-Companion history: [discord-rich-score-notifications.md](discord-rich-score-notifications.md)
+Status: **implemented (2026-07-17), PR #169** — C1–C11 landed, fast suites green, the lab-channel
+canary posted every card shape (chart, random, suggest, weekly result + lineup, daily, official
+digest). Mocks: claude.ai artifact `d4fa5bed-e2c6-4aa6-bcbf-a5b0cb4ceb04` (round-1, workshop-notes
+toggle). Companion history: [discord-rich-score-notifications.md](discord-rich-score-notifications.md)
 (the session-snapshot card — **untouched by this work**).
+
+**As-built deviation (C10):** the official-leaderboards digest lives in **OfficialMirror**, not
+Communities. Communities cannot reference OfficialMirror — the vertical graph would cycle
+(`OfficialMirror → ScoreLedger → Communities`). So OfficialMirror hosts `OfficialDigestFeedSaga`
+and reads the subscribed channels through a new published port,
+`IDiscordFeedReader` (`Domain.SecondaryPorts`, implemented by Communities'
+`EFDiscordFeedSubscriptionRepository`, keyed by the `DiscordFeedKinds` string constants). The
+weekly/daily feeds stayed in Communities' `DiscordFeedSaga` as planned. Everything else matches
+the design below.
 
 The Discord bot grows from three flat commands into a `/piu` command family (in-channel
 registration, chart lookup, random draws, personal suggestions) plus three opt-in broadcast
