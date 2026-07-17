@@ -63,6 +63,30 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetPlayerScoresExcludesBrokenRowsFromCohortReads()
+    {
+        // Both GetPlayerScores overloads feed percentile machinery (cohort distributions,
+        // score quality, competitive neighbors) — a walkoff in the distribution makes
+        // everyone else's percentile look better than it is.
+        var passer = await _seed.SeedUserAsync();
+        var breaker = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedPhoenixChartAsync(level: 20, type: "Double");
+        var writer = BuildRepository();
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, passer, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(950000), PhoenixPlate.SuperbGame, false, RecordedAt));
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, breaker, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(400000), null, true, RecordedAt));
+
+        var byChartIds = (await BuildRepository().GetPlayerScores(MixEnum.Phoenix, new[] { passer, breaker },
+            new[] { chartId })).ToArray();
+        var byLevel = (await BuildRepository().GetPlayerScores(MixEnum.Phoenix, new[] { passer, breaker },
+            ChartType.Double, DifficultyLevel.From(20))).ToArray();
+
+        Assert.Equal(passer, Assert.Single(byChartIds).UserId);
+        Assert.Equal(passer, Assert.Single(byLevel).userId);
+    }
+
+    [Fact]
     public async Task UpdateBestAttemptRoundTripsTheJudgementBreakdown()
     {
         var userId = await _seed.SeedUserAsync();

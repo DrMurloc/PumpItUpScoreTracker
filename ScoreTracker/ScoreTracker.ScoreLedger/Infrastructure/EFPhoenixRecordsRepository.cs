@@ -336,9 +336,12 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         var chartIdArray = chartIds.Distinct().ToArray();
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Cohort percentile machinery only — a walkoff in the distribution makes everyone
+        // else's percentile look better than it is, so broken rows never enter.
         return await (from pba in database.Set<PhoenixRecordEntity>()
                 join u in database.User on pba.UserId equals u.Id
                 where chartIdArray.Contains(pba.ChartId) && pba.MixId == mixId && pba.Score != null &&
+                      !pba.IsBroken &&
                       userIdArray.Contains(pba.UserId)
                 select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
                     pba.Score!.Value,
@@ -355,11 +358,13 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         var intLevel = (int)difficulty;
         var chartTypeString = chartType.ToString();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Same cohort-only contract as the chart-id overload above: percentile
+        // distributions and competitive-neighbor reads never see broken rows.
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
                 join pba in database.Set<PhoenixRecordEntity>() on c.Id equals pba.ChartId
                 where
-                    userIdArray.Contains(pba.UserId) &&
+                    userIdArray.Contains(pba.UserId) && !pba.IsBroken &&
                     cm.MixId == mixId && pba.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
                 select pba).ToArrayAsync(cancellationToken))
             .Select(pb => (pb.UserId,
