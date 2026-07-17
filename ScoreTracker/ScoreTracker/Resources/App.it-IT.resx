@@ -3245,6 +3245,9 @@
   <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
     <value>PIU Scores conserva tutta la tua cronologia di Pump It Up, importata direttamente dal tuo account PIUGAME, e la trasforma in tier list, classifiche e consigli su misura per come giochi davvero.</value>
   </data>
+  <data name="PIU Scores — Pump It Up score tracker &amp; tier lists" xml:space="preserve">
+    <value>PIU Scores — tracciamento punteggi e tier list per Pump It Up</value>
+  </data>
   <data name="Free, and built by a player." xml:space="preserve">
     <value>Gratuito, e creato da un giocatore.</value>
   </data>

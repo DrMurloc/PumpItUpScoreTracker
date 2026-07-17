@@ -3126,6 +3126,9 @@
   <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
     <value>PIU Scores는 PIUGAME 계정에서 바로 가져온 펌프 잇 업 전체 기록을 보관하고, 티어리스트, 랭킹, 실제 플레이 스타일에 맞춘 추천으로 바꿔 드립니다.</value>
   </data>
+  <data name="PIU Scores — Pump It Up score tracker &amp; tier lists" xml:space="preserve">
+    <value>PIU Scores — 펌프 잇 업 스코어 트래킹 &amp; 티어리스트</value>
+  </data>
   <data name="Free, and built by a player." xml:space="preserve">
     <value>무료이며, 플레이어가 직접 만들었습니다.</value>
   </data>
