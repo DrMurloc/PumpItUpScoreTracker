@@ -63,6 +63,28 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task UpdateBestAttemptRoundTripsTheJudgementBreakdown()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedChartAsync();
+        var judgements = new JudgementCounts(1100, 14, 1, 1, 14);
+
+        await BuildRepository().UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(978147), PhoenixPlate.FairGame, false, RecordedAt, Judgements: judgements));
+
+        var retrieved = await BuildRepository().GetRecordedScore(MixEnum.Phoenix, userId, chartId);
+        Assert.NotNull(retrieved);
+        Assert.Equal(judgements, retrieved!.Judgements);
+
+        // A judgement-less write clears the stored breakdown — stale counts must never
+        // describe a different score.
+        await BuildRepository().UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(990000), PhoenixPlate.SuperbGame, false, RecordedAt));
+        var cleared = await BuildRepository().GetRecordedScore(MixEnum.Phoenix, userId, chartId);
+        Assert.Null(cleared!.Judgements);
+    }
+
+    [Fact]
     public async Task UpdateBestAttemptOverwritesAnExistingRecordWithoutGuardingAgainstLowerScores()
     {
         // The repo intentionally has no best-attempt protection — it just upserts. The guard against

@@ -50,13 +50,24 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
                             isBroken != existing.IsBroken;
         if (!recordChanged) return;
 
+        // Judgements decompose one specific play's score, so they follow whichever play
+        // supplied the resulting score: the incoming one when its score stands, the existing
+        // record's when KeepBestStats kept the old score. A score change with no observed
+        // breakdown clears them rather than mislabeling the previous play's counts.
+        var judgements = score == request.Score
+            ? request.Judgements ?? (score == existing?.Score ? existing?.Judgements : null)
+            : existing?.Judgements;
+        // The site's saved timestamp, when it supplied one, is the truthful record/journal
+        // time; the clock only stamps submissions the site never dated.
+        var recordedAt = request.RecordedAt ?? dateTimeOffset.Now;
+
         await records.UpdateBestAttempt(request.Mix, user.User.Id,
             new RecordedPhoenixScore(request.ChartId, score, plate, isBroken,
-                dateTimeOffset.Now, request.Source), cancellationToken);
+                recordedAt, request.Source, judgements), cancellationToken);
         // The journal is the record's history: it gets the resulting best-attempt state,
         // exactly and only when that state changes.
-        await journal.Append(new ScoreJournalEntry(dateTimeOffset.Now, request.Source, user.User.Id,
-            request.ChartId, score, plate, isBroken, request.Mix, sessionId), cancellationToken);
+        await journal.Append(new ScoreJournalEntry(recordedAt, request.Source, user.User.Id,
+            request.ChartId, score, plate, isBroken, request.Mix, sessionId, judgements), cancellationToken);
         var isNewScore = (existing?.IsBroken ?? true) && !isBroken;
         var isUpscore = existing?.Score != null && score != null && existing.Score < score;
         if (!isNewScore && !isUpscore) return;

@@ -114,6 +114,67 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
+    public async Task SiteSuppliedRecordedAtAndJudgementsFlowToRecordAndJournal()
+    {
+        var ctx = new HandlerContext();
+        var playedAt = new DateTimeOffset(2026, 7, 17, 23, 15, 58, TimeSpan.FromHours(9));
+        var judgements = new JudgementCounts(1100, 14, 1, 1, 14);
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 978147,
+                Plate: PhoenixPlate.FairGame, RecordedAt: playedAt, Judgements: judgements),
+            CancellationToken.None);
+
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
+            It.Is<RecordedPhoenixScore>(s => s.RecordedDate == playedAt && Equals(s.Judgements, judgements)),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Journal.Verify(j => j.Append(
+            It.Is<ScoreJournalEntry>(e => e.OccurredAt == playedAt && Equals(e.Judgements, judgements)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task KeepBestStatsKeepsTheKeptScoresJudgements()
+    {
+        // Judgements decompose one play's score — when the old score stands, the incoming
+        // play's breakdown must not be attached to it.
+        var ctx = new HandlerContext();
+        var existingJudgements = new JudgementCounts(1000, 10, 0, 0, 2);
+        ctx.GivenExistingScore(score: 950000, plate: PhoenixPlate.FairGame, isBroken: false,
+            judgements: existingJudgements);
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 900000,
+                Plate: PhoenixPlate.SuperbGame, KeepBestStats: true,
+                Judgements: new JudgementCounts(900, 50, 20, 10, 30)),
+            CancellationToken.None);
+
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
+            It.Is<RecordedPhoenixScore>(s => s.Score == (PhoenixScore)950000
+                                             && Equals(s.Judgements, existingJudgements)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ScoreChangeWithoutObservedJudgementsClearsTheOldOnes()
+    {
+        // A manual up-score has no breakdown; keeping the previous play's counts would
+        // mislabel them as the new score's.
+        var ctx = new HandlerContext();
+        ctx.GivenExistingScore(score: 900000, plate: PhoenixPlate.FairGame, isBroken: false,
+            judgements: new JudgementCounts(1000, 10, 0, 0, 2));
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
+                Plate: PhoenixPlate.FairGame),
+            CancellationToken.None);
+
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
+            It.Is<RecordedPhoenixScore>(s => s.Score == (PhoenixScore)950000 && s.Judgements == null),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task WithoutKeepBestStatsOverwritesWithRequestValues()
     {
         // Manual input is authoritative: a deliberate downward correction rewrites the
@@ -730,11 +791,12 @@ public sealed class UpdatePhoenixRecordHandlerTests
                 Bus.Object, Scheduler.Object, Batches.Object, Journal.Object);
         }
 
-        public void GivenExistingScore(PhoenixScore score, PhoenixPlate plate, bool isBroken)
+        public void GivenExistingScore(PhoenixScore score, PhoenixPlate plate, bool isBroken,
+            JudgementCounts? judgements = null)
         {
             Records.Setup(r => r.GetRecordedScore(MixEnum.Phoenix, UserId, ChartId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new RecordedPhoenixScore(ChartId, score, plate, isBroken,
-                    Now - TimeSpan.FromDays(1)));
+                    Now - TimeSpan.FromDays(1), Judgements: judgements));
         }
     }
 
