@@ -4680,4 +4680,13 @@
   <data name="Biased towards larger folders" xml:space="preserve">
     <value>Biased towards larger mrglfolders</value>
   </data>
+  <data name="Add the PIU Scores bot to your Discord server" xml:space="preserve">
+    <value>Add the PIU Scores bot to your Discord server</value>
+  </data>
+  <data name="Invite the bot, then run /piu register in any channel to start its feeds and commands." xml:space="preserve">
+    <value>Invite the bot, then run /piu register in any channel to start its feeds and commands.</value>
+  </data>
+  <data name="Add the bot" xml:space="preserve">
+    <value>Add the bot</value>
+  </data>
 </root>

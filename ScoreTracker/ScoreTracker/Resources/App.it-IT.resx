@@ -4757,4 +4757,13 @@
   <data name="Biased towards larger folders" xml:space="preserve">
     <value>Sbilanciato verso le cartelle grandi</value>
   </data>
+  <data name="Add the PIU Scores bot to your Discord server" xml:space="preserve">
+    <value>Aggiungi il bot di PIU Scores al tuo server Discord</value>
+  </data>
+  <data name="Invite the bot, then run /piu register in any channel to start its feeds and commands." xml:space="preserve">
+    <value>Invita il bot, poi esegui /piu register in un canale per attivare i suoi feed e comandi.</value>
+  </data>
+  <data name="Add the bot" xml:space="preserve">
+    <value>Aggiungi il bot</value>
+  </data>
 </root>

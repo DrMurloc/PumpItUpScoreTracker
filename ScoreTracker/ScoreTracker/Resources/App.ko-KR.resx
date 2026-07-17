@@ -4638,4 +4638,13 @@
   <data name="Biased towards larger folders" xml:space="preserve">
     <value>큰 폴더에 유리합니다</value>
   </data>
+  <data name="Add the PIU Scores bot to your Discord server" xml:space="preserve">
+    <value>PIU Scores 봇을 Discord 서버에 추가하세요</value>
+  </data>
+  <data name="Invite the bot, then run /piu register in any channel to start its feeds and commands." xml:space="preserve">
+    <value>봇을 초대한 다음 아무 채널에서나 /piu register 를 실행하면 피드와 명령어가 활성화됩니다.</value>
+  </data>
+  <data name="Add the bot" xml:space="preserve">
+    <value>봇 추가</value>
+  </data>
 </root>
