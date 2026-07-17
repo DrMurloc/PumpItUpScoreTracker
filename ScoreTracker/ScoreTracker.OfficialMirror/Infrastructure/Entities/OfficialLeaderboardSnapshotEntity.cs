@@ -14,6 +14,14 @@ internal sealed class OfficialLeaderboardSnapshotEntity
     [Key] public int Id { get; set; }
     public Guid MixId { get; set; }
     public DateTimeOffset StartedAt { get; set; }
+
+    /// <summary>
+    ///     Stamped by every progress checkpoint. The overlap guard trusts only runs whose
+    ///     heartbeat is fresh — a process killed mid-sweep stops beating and releases the
+    ///     lock within minutes instead of holding it until the janitor.
+    /// </summary>
+    public DateTimeOffset LastProgressAt { get; set; }
+
     public DateTimeOffset? CompletedAt { get; set; }
     public bool IsBaseline { get; set; }
     [MaxLength(40)] public string Stage { get; set; } = string.Empty;

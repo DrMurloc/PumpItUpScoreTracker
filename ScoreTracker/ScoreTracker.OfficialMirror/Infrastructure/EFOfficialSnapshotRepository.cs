@@ -22,6 +22,7 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
         {
             MixId = MixIds.For(mix),
             StartedAt = startedAt,
+            LastProgressAt = startedAt,
             IsBaseline = isBaseline,
             Stage = "Created"
         };
@@ -31,7 +32,7 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
     }
 
     public async Task UpdateProgress(int snapshotId, string stage, int boardsExpected, int boardsWritten,
-        int boardsSkipped, CancellationToken ct)
+        int boardsSkipped, DateTimeOffset at, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
         await database.Set<OfficialLeaderboardSnapshotEntity>()
@@ -40,7 +41,8 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
                 .SetProperty(s => s.Stage, stage)
                 .SetProperty(s => s.BoardsExpected, boardsExpected)
                 .SetProperty(s => s.BoardsWritten, boardsWritten)
-                .SetProperty(s => s.BoardsSkipped, boardsSkipped), ct);
+                .SetProperty(s => s.BoardsSkipped, boardsSkipped)
+                .SetProperty(s => s.LastProgressAt, at), ct);
     }
 
     public async Task MarkFailed(int snapshotId, string error, CancellationToken ct)
@@ -83,12 +85,12 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .Where(s => staleIds.Contains(s.Id)).ExecuteDeleteAsync(ct);
     }
 
-    public async Task<bool> HasUnsealedRunSince(MixEnum mix, DateTimeOffset since, CancellationToken ct)
+    public async Task<bool> HasLiveRun(MixEnum mix, DateTimeOffset heartbeatCutoff, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
         return await database.Set<OfficialLeaderboardSnapshotEntity>()
-            .AnyAsync(s => s.MixId == mixId && s.CompletedAt == null && s.StartedAt >= since, ct);
+            .AnyAsync(s => s.MixId == mixId && s.CompletedAt == null && s.LastProgressAt >= heartbeatCutoff, ct);
     }
 
     public async Task<SnapshotRun?> GetLatestSealed(MixEnum mix, CancellationToken ct)

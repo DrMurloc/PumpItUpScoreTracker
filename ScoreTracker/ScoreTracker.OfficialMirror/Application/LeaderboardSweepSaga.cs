@@ -27,7 +27,10 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     IRequestHandler<GetLastLeaderboardImportTimestampQuery, DateTimeOffset?>
 {
     private static readonly TimeSpan UnsealedPurgeAge = TimeSpan.FromDays(7);
-    private static readonly TimeSpan OverlapGuardWindow = TimeSpan.FromHours(6);
+    // The sweep checkpoints at least once per board, so a live run heartbeats every few
+    // seconds; a run that has been silent this long is dead (killed process, deploy) and
+    // must not hold the overlap lock.
+    private static readonly TimeSpan HeartbeatWindow = TimeSpan.FromMinutes(15);
 
     private readonly IOfficialSiteClient _officialSite;
     private readonly IOfficialSnapshotRepository _snapshots;
@@ -69,9 +72,11 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         var now = _dateTime.Now;
 
         await _snapshots.PurgeUnsealed(mix, now - UnsealedPurgeAge, ct);
-        if (await _snapshots.HasUnsealedRunSince(mix, now - OverlapGuardWindow, ct))
+        if (await _snapshots.HasLiveRun(mix, now - HeartbeatWindow, ct))
         {
-            _logger.LogWarning("A {Mix} leaderboard sweep is already in flight; skipping this trigger", mix);
+            _logger.LogWarning(
+                "A {Mix} leaderboard sweep is already in flight (heartbeat within {Window}); skipping this trigger",
+                mix, HeartbeatWindow);
             return;
         }
 
@@ -95,18 +100,18 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     {
         var players = new SweepPlayerCache(_snapshots, mix, _dateTime.Now);
 
-        await _snapshots.UpdateProgress(snapshotId, "RatingBoards", 0, 0, 0, ct);
+        await _snapshots.UpdateProgress(snapshotId, "RatingBoards", 0, 0, 0, _dateTime.Now, ct);
         await SweepRatingBoards(snapshotId, mix, players, ct);
 
         var chartScores = await SweepChartBoards(snapshotId, mix, players, ct);
 
-        await _snapshots.UpdateProgress(snapshotId, "Popularity", 0, 0, 0, ct);
+        await _snapshots.UpdateProgress(snapshotId, "Popularity", 0, 0, 0, _dateTime.Now, ct);
         await SweepPopularity(snapshotId, mix, ct);
 
-        await _snapshots.UpdateProgress(snapshotId, "TierLists", 0, 0, 0, ct);
+        await _snapshots.UpdateProgress(snapshotId, "TierLists", 0, 0, 0, _dateTime.Now, ct);
         await PopulateOfficialScoresTierList(mix, chartScores, ct);
 
-        await _snapshots.UpdateProgress(snapshotId, "Highlights", 0, 0, 0, ct);
+        await _snapshots.UpdateProgress(snapshotId, "Highlights", 0, 0, 0, _dateTime.Now, ct);
         await ComputeHighlights(snapshotId, mix, isBaseline, ct);
 
         await _snapshots.Seal(snapshotId, _dateTime.Now, ct);
@@ -187,7 +192,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
                     entries.Select(e => new PlacementRow(board.Id, ids[e.Username], e.Place, e.Score))
                         .ToArray(), ct);
                 written++;
-                await _snapshots.UpdateProgress(snapshotId, "BaselineSeed", 0, written, 0, ct);
+                await _snapshots.UpdateProgress(snapshotId, "BaselineSeed", 0, written, 0, _dateTime.Now, ct);
             }
 
             await ComputeHighlights(snapshotId, mix, true, ct);
@@ -265,7 +270,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
                 _logger.LogWarning("Skipping board {Index}/{Total}: {Reason}", board.BoardIndex,
                     board.BoardsTotal, board.SkipReason);
                 await _snapshots.UpdateProgress(snapshotId, "ChartBoards", board.BoardsTotal, written, skipped,
-                    ct);
+                    _dateTime.Now, ct);
                 continue;
             }
 
@@ -282,7 +287,8 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
             chartScores.AddRange(board.Entries.Select(e => (chart, e.Username, e.Score)));
 
             written++;
-            await _snapshots.UpdateProgress(snapshotId, "ChartBoards", board.BoardsTotal, written, skipped, ct);
+            await _snapshots.UpdateProgress(snapshotId, "ChartBoards", board.BoardsTotal, written, skipped,
+                _dateTime.Now, ct);
         }
 
         return chartScores;

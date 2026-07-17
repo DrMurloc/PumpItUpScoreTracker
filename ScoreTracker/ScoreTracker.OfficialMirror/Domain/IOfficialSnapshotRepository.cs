@@ -10,15 +10,21 @@ namespace ScoreTracker.OfficialMirror.Domain;
 internal interface IOfficialSnapshotRepository
 {
     Task<int> CreateRun(MixEnum mix, bool isBaseline, DateTimeOffset startedAt, CancellationToken ct);
+    /// <summary>Checkpoints stage/counts and stamps the run's heartbeat.</summary>
     Task UpdateProgress(int snapshotId, string stage, int boardsExpected, int boardsWritten, int boardsSkipped,
-        CancellationToken ct);
+        DateTimeOffset at, CancellationToken ct);
     Task MarkFailed(int snapshotId, string error, CancellationToken ct);
     Task Seal(int snapshotId, DateTimeOffset completedAt, CancellationToken ct);
 
     /// <summary>Deletes unsealed runs older than the cutoff, including their placement/popularity/highlight rows.</summary>
     Task PurgeUnsealed(MixEnum mix, DateTimeOffset olderThan, CancellationToken ct);
 
-    Task<bool> HasUnsealedRunSince(MixEnum mix, DateTimeOffset since, CancellationToken ct);
+    /// <summary>
+    ///     True when an unsealed run has heartbeated since the cutoff — the only kind of
+    ///     run the overlap guard respects. A run whose process died stops beating and no
+    ///     longer counts, however recently it started.
+    /// </summary>
+    Task<bool> HasLiveRun(MixEnum mix, DateTimeOffset heartbeatCutoff, CancellationToken ct);
     Task<SnapshotRun?> GetLatestSealed(MixEnum mix, CancellationToken ct);
 
     /// <summary>The sealed snapshot immediately preceding the given one — the diff baseline.</summary>

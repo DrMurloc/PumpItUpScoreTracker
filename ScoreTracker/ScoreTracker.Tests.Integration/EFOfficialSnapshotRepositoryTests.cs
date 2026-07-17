@@ -104,6 +104,27 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task OnlyAFreshHeartbeatCountsAsALiveRun()
+    {
+        var snapshots = Snapshots();
+        var snapshotId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week1, CancellationToken.None);
+
+        // Created just now → live for any cutoff at or before creation.
+        Assert.True(await snapshots.HasLiveRun(MixEnum.Phoenix2, Week1, CancellationToken.None));
+        // A run whose last heartbeat predates the cutoff is dead — it must not hold the lock.
+        Assert.False(await snapshots.HasLiveRun(MixEnum.Phoenix2, Week1.AddMinutes(15), CancellationToken.None));
+
+        // A checkpoint revives it past the cutoff.
+        await snapshots.UpdateProgress(snapshotId, "ChartBoards", 600, 10, 0, Week1.AddMinutes(20),
+            CancellationToken.None);
+        Assert.True(await snapshots.HasLiveRun(MixEnum.Phoenix2, Week1.AddMinutes(15), CancellationToken.None));
+
+        // Sealed runs never count, however fresh the heartbeat.
+        await snapshots.Seal(snapshotId, Week1.AddMinutes(41), CancellationToken.None);
+        Assert.False(await snapshots.HasLiveRun(MixEnum.Phoenix2, Week1.AddMinutes(15), CancellationToken.None));
+    }
+
+    [Fact]
     public async Task EnsureBoardIsIdempotentAndRefreshesChartAssociation()
     {
         var snapshots = Snapshots();

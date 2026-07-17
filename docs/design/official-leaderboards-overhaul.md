@@ -43,7 +43,7 @@ Facts:
 
 | Table | Shape | Keys/notes |
 |---|---|---|
-| `OfficialLeaderboardSnapshot` | Id int identity, MixId, StartedAt, CompletedAt?, IsBaseline bit, Stage, BoardsExpected int, BoardsWritten int, Error? | Index (MixId, CompletedAt). Header = run state + seal. Unsealed = invisible to every read; deleted by the janitor after 7 days. |
+| `OfficialLeaderboardSnapshot` | Id int identity, MixId, StartedAt, LastProgressAt, CompletedAt?, IsBaseline bit, Stage, BoardsExpected int, BoardsWritten int, Error? | Index (MixId, CompletedAt). Header = run state + seal. Unsealed = invisible to every read; deleted by the janitor after 7 days. LastProgressAt is the run's heartbeat (stamped by every checkpoint): the overlap guard only respects an unsealed run whose heartbeat is under 15 minutes old, so a killed run releases the lock in minutes instead of blocking re-triggers. |
 | `OfficialLeaderboardPlacement` | SnapshotId, LeaderboardId, PlayerId, Place int, Score decimal(9,2) | Clustered PK (SnapshotId, LeaderboardId, Place, PlayerId) — append-only writes, board reads in display order. NC (PlayerId, SnapshotId) INCLUDE (LeaderboardId, Place, Score) — player timelines/search. decimal keeps official pumbility cents (today's model truncates to int). |
 | `OfficialChartPopularity` | SnapshotId, ChartId, Place | Popularity is chart-ranked, not player-ranked — its own skinny table. |
 | `OfficialBoardRecord` | LeaderboardId PK, HighScore, AchievedSnapshotId | The record book. A band is claimed iff HighScore ≥ its floor, so one number encodes every claimed band. Rebuildable from history. |
@@ -59,7 +59,7 @@ Legacy tables (`UserOfficialLeaderboard`, `UserWorldRanking`, `OfficialUserAvata
 
 One staged run per mix, checkpointing `Stage`/`BoardsWritten` on the header as it goes:
 
-1. **Open** — purge unsealed snapshots older than 7 days (janitor), create header. First-ever run for a mix (no prior sealed snapshot) auto-marks `IsBaseline`.
+1. **Open** — purge unsealed snapshots older than 7 days (janitor), skip if another run is heartbeat-live, create header. First-ever run for a mix (no prior sealed snapshot) auto-marks `IsBaseline`.
 2. **Rating boards** — P2: PUMBILITY All/Singles/Doubles, paged until end (existing scraper). P1: the per-level rating list. Upsert dims, append placements. Olympic tie places computed exactly as today.
 3. **Chart boards** — enumerate the 20+ song list, then per board: fetch (**paged** — see §9 recon), parse, upsert leaderboard dim *with ChartId* (the scraper already holds the `Chart`; it stops flattening it away), upsert players, append that board's placements, checkpoint. Politeness delay between fetches. Boards that fail to fetch/parse are *skipped and counted* (header carries skip count) — a skipped board simply has no rows in this snapshot, which reads as "no data this week", never as stale data.
 4. **Popularity** — `top_steps.php` scrape → `OfficialChartPopularity` rows + the existing "Popularity" tier-list categorization (unchanged output).

@@ -57,7 +57,7 @@ public sealed class LeaderboardSweepSagaTests
         var snapshots = new Mock<IOfficialSnapshotRepository>();
         snapshots.Setup(s => s.AnySealed(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(hasSealed);
-        snapshots.Setup(s => s.HasUnsealedRunSince(It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>(),
+        snapshots.Setup(s => s.HasLiveRun(It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>())).ReturnsAsync(unsealedInFlight);
         snapshots.Setup(s => s.CreateRun(It.IsAny<MixEnum>(), It.IsAny<bool>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>())).ReturnsAsync(SnapshotId);
@@ -169,6 +169,10 @@ public sealed class LeaderboardSweepSagaTests
 
         f.Snapshots.Verify(s => s.CreateRun(It.IsAny<MixEnum>(), It.IsAny<bool>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>()), Times.Never);
+        // The guard only respects runs with a fresh heartbeat — a killed run stops beating
+        // and releases the lock in minutes, so an interrupted sweep can be re-triggered.
+        f.Snapshots.Verify(s => s.HasLiveRun(MixEnum.Phoenix2, Now - TimeSpan.FromMinutes(15),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -249,7 +253,7 @@ public sealed class LeaderboardSweepSagaTests
         await f.Saga.Consume(Context());
 
         f.Snapshots.Verify(s => s.UpdateProgress(SnapshotId, "ChartBoards", 2, 1, 1,
-            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
         f.Snapshots.Verify(s => s.Seal(SnapshotId, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
