@@ -20,6 +20,7 @@ public static class CommunitiesRegistrationExtensions
     {
         services.AddTransient<ICommunityRepository, EFCommunitiesRepository>();
         services.AddTransient<ICommunityReader, EFCommunitiesRepository>();
+        services.AddTransient<IDiscordFeedSubscriptionRepository, EFDiscordFeedSubscriptionRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddTransient<ICommunityHighlightRepository, EFCommunityHighlightRepository>();
         services.AddTransient<ICommunityHighlightCapturer, CommunityHighlightCapturer>();

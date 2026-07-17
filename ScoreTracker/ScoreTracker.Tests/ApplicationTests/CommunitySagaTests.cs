@@ -1105,8 +1105,7 @@ public sealed class CommunitySagaTests
                     new[] { userId },
                     new[]
                     {
-                        new Community.ChannelConfiguration(channelId, SendNewScores: true,
-                            SendTitles: true, SendNewMembers: true)
+                        new Community.ChannelConfiguration(channelId)
                     },
                     new Dictionary<Guid, DateOnly?>(), false));
         }

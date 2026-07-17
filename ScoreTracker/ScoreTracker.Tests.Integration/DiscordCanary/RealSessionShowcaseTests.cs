@@ -227,8 +227,7 @@ public sealed class RealSessionShowcaseTests
             WHERE c.Name = 'World' AND m.UserId = @UserId
             """, ("UserId", userId)) > 0, TimeSpan.FromSeconds(15), "World membership");
 
-        await mediator.Send(new AddDiscordChannelToCommunityCommand(Name.From("World"), null, ChannelId!.Value,
-            SendScores: true, SendTitles: true, SendNewMembers: true));
+        await mediator.Send(new AddDiscordChannelToCommunityCommand(Name.From("World"), null, ChannelId!.Value));
     }
 
     /// <summary>

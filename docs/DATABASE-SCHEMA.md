@@ -154,8 +154,9 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.Community` | Communities with privacy type and regional flag |
 | `scores.CommunityMembership` | Community membership |
 | `scores.CommunityInviteCode` | Invite codes, optionally expiring |
-| `scores.CommunityChannel` | Discord channels wired to a community's event feed |
+| `scores.CommunityChannel` | Discord channels wired to a community's event feed. Every registered channel receives every community notification — the old per-type opt-in columns (`SendNewScores`/`SendTitles`/`SendNewMembers`) were never honored and were dropped |
 | `scores.CommunityHighlight` | Community big-wins feed: one summary row per (score-event × community the winner belongs to), `Payload` a JSON list of `SignificantWin`, `EventId` dedupes across shared communities. Written by the highlight saga off `ScoreHighlightsCapturedEvent`, purged weekly after 30 days ([home-page-widgets §7](design/home-page-widgets.md)) |
+| `scores.DiscordFeedSubscription` | A channel's subscription to a broadcast feed, independent of any community: `ChannelId`, `FeedKind` (WeeklyCharts/DailyStep/OfficialLeaderboards), `Mix` (per-mix), `RegisteredByDiscordUserId`. Unique on (ChannelId, FeedKind, Mix); registered via `/piu register` ([discord-overhaul](design/discord-overhaul.md)) |
 
 ## Match subsystem (shared; deprecated, deletion gated on an owner announcement)
 

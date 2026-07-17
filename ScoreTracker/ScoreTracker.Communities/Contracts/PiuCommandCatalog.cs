@@ -15,9 +15,49 @@ namespace ScoreTracker.Communities.Contracts
         public static IReadOnlyList<BotCommandDefinition> Commands { get; } = new[]
         {
             new BotCommandDefinition(RootName, "PIU Scores tools",
-                new[] { Calc },
-                Array.Empty<BotSubCommandGroup>())
+                new[] { Calc, Unregister, Feeds },
+                new[] { Register })
         };
+
+        private static readonly IReadOnlyList<BotOptionChoice> MixChoices = new[]
+        {
+            new BotOptionChoice("Phoenix", "Phoenix"),
+            new BotOptionChoice("Phoenix 2", "Phoenix2")
+        };
+
+        private static BotCommandOption RequiredMix =>
+            new("mix", "Which mix", BotCommandOptionType.String, Required: true, Choices: MixChoices);
+
+        private static BotSubCommandGroup Register =>
+            new("register", "Register this channel for a feed",
+                new[]
+                {
+                    new BotSubCommand("community", "Community score and title notifications",
+                        new[]
+                        {
+                            new BotCommandOption("name", "Community name", BotCommandOptionType.String,
+                                Autocomplete: true),
+                            new BotCommandOption("invite-code", "Invite code (private communities only)")
+                        }, Ephemeral: true),
+                    new BotSubCommand("weekly", "Weekly Charts — results and the new lineup",
+                        new[] { RequiredMix }, Ephemeral: true),
+                    new BotSubCommand("daily", "Daily Step — yesterday's board and today's chart",
+                        new[] { RequiredMix }, Ephemeral: true),
+                    new BotSubCommand("official", "Official leaderboards — the weekly digest",
+                        new[] { RequiredMix }, Ephemeral: true)
+                });
+
+        private static BotSubCommand Unregister =>
+            new("unregister", "Stop one of this channel's feeds",
+                new[]
+                {
+                    new BotCommandOption("feed", "Which registration to remove", BotCommandOptionType.String,
+                        Required: true, Autocomplete: true)
+                }, Ephemeral: true);
+
+        private static BotSubCommand Feeds =>
+            new("feeds", "Show what this channel is registered for",
+                Array.Empty<BotCommandOption>(), Ephemeral: true);
 
         private static BotSubCommand Calc =>
             new("calc", "Calculate a Phoenix score from a result screen",

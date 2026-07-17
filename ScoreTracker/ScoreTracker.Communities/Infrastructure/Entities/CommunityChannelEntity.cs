@@ -10,7 +10,4 @@ internal sealed class CommunityChannelEntity
     public Guid CommunityId { get; set; }
 
     public ulong ChannelId { get; set; }
-    public bool SendNewScores { get; set; }
-    public bool SendTitles { get; set; }
-    public bool SendNewMembers { get; set; }
 }

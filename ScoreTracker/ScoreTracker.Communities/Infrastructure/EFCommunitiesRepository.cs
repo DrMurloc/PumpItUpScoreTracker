@@ -109,28 +109,16 @@ namespace ScoreTracker.Communities.Infrastructure
             var channelEntities = await database.Set<CommunityChannelEntity>().Where(cc => cc.CommunityId == communityId.Value)
                 .ToArrayAsync(cancellationToken);
             var channelIdSet = channelEntities.Select(e => e.ChannelId).ToHashSet();
-            var newStats = community.Channels.ToDictionary(c => c.ChannelId);
+            var newChannelIds = community.Channels.Select(c => c.ChannelId).ToHashSet();
             foreach (var channelEntity in channelEntities)
-            {
-                if (!newStats.ContainsKey(channelEntity.ChannelId))
-                {
+                if (!newChannelIds.Contains(channelEntity.ChannelId))
                     database.Set<CommunityChannelEntity>().Remove(channelEntity);
-                    continue;
-                }
 
-                channelEntity.SendNewMembers = newStats[channelEntity.ChannelId].SendNewMembers;
-                channelEntity.SendNewScores = newStats[channelEntity.ChannelId].SendNewScores;
-                channelEntity.SendTitles = newStats[channelEntity.ChannelId].SendTitles;
-            }
-
-            var toCreateChannels = newStats.Values.Where(s => !channelIdSet.Contains(s.ChannelId))
+            var toCreateChannels = community.Channels.Where(s => !channelIdSet.Contains(s.ChannelId))
                 .Select(s => new CommunityChannelEntity
                 {
                     Id = Guid.NewGuid(),
                     ChannelId = s.ChannelId,
-                    SendNewMembers = s.SendNewMembers,
-                    SendNewScores = s.SendNewScores,
-                    SendTitles = s.SendTitles,
                     CommunityId = communityId.Value
                 }).ToArray();
 
@@ -139,6 +127,17 @@ namespace ScoreTracker.Communities.Infrastructure
 
             //Save
             await database.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<Name>> GetChannelCommunityNames(ulong channelId,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var names = await (from cc in database.Set<CommunityChannelEntity>()
+                where cc.ChannelId == channelId
+                join c in database.Set<CommunityEntity>() on cc.CommunityId equals c.Id
+                select c.Name).ToArrayAsync(cancellationToken);
+            return names.Select(Name.From).ToArray();
         }
 
         public async Task<IEnumerable<CommunityOverviewRecord>> GetCommunities(Guid userId,
@@ -253,8 +252,7 @@ namespace ScoreTracker.Communities.Infrastructure
 
             return new Community(entity.Name, entity.OwningUserId, Enum.Parse<CommunityPrivacyType>(entity.PrivacyType),
                 members.Select(c => c.UserId),
-                channels.Select(c =>
-                    new Community.ChannelConfiguration(c.ChannelId, c.SendNewScores, c.SendTitles, c.SendNewMembers)),
+                channels.Select(c => new Community.ChannelConfiguration(c.ChannelId)),
                 invites.ToDictionary(i => i.InviteCode,
                     i => i.ExpirationDate == null
                         ? null

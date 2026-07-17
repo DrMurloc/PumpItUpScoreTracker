@@ -740,8 +740,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         foreach (var existingChannel in community.Channels.Where(c => c.ChannelId == request.ChannelId).ToArray())
             community.Channels.Remove(existingChannel);
 
-        community.Channels.Add(new Community.ChannelConfiguration(request.ChannelId, request.SendScores,
-            request.SendTitles, request.SendNewMembers));
+        community.Channels.Add(new Community.ChannelConfiguration(request.ChannelId));
         await _communities.SaveCommunity(community, cancellationToken);
 
         await _bot.SendMessage(
