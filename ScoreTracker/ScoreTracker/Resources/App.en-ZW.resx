@@ -4566,10 +4566,16 @@
   <data name="World firsts" xml:space="preserve">
     <value>Wrgld frsts!</value>
   </data>
-  <data name="Page not found" xml:space="preserve">
-    <value>Page not found</value>
+  <data name="Page not found" xml:space="preserve">
+    <value>Page not found</value>
   </data>
-  <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
-    <value>There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart.</value>
+  <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
+    <value>There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart.</value>
+  </data>
+  <data name="Refresh popularity" xml:space="preserve">
+    <value>Refresh popularity</value>
+  </data>
+  <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
+    <value>Popularity refresh queued - re-attaches to the latest snapshot</value>
   </data>
 </root>

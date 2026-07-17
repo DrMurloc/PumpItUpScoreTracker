@@ -50,6 +50,7 @@ internal interface IOfficialSnapshotRepository
     Task WritePlacements(int snapshotId, IReadOnlyCollection<PlacementRow> rows, CancellationToken ct);
     Task<IReadOnlyList<PlacementRow>> GetPlacements(int snapshotId, CancellationToken ct);
     Task WritePopularity(int snapshotId, IReadOnlyCollection<(Guid ChartId, int Place)> rows, CancellationToken ct);
+    Task DeletePopularity(int snapshotId, CancellationToken ct);
     Task<IReadOnlyList<(Guid ChartId, int Place)>> GetPopularity(int snapshotId, CancellationToken ct);
 
     Task<IReadOnlyList<PlayerDimension>> GetPlayersByIds(IReadOnlyCollection<int> playerIds, CancellationToken ct);

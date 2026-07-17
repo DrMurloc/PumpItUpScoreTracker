@@ -4643,10 +4643,16 @@
   <data name="World firsts" xml:space="preserve">
     <value>Primati mondiali</value>
   </data>
-  <data name="Page not found" xml:space="preserve">
-    <value>Pagina non trovata</value>
+  <data name="Page not found" xml:space="preserve">
+    <value>Pagina non trovata</value>
   </data>
-  <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
-    <value>Non c'è nulla a questo indirizzo — forse è cambiato con un Mix, o non è mai esistito. La ricerca conosce tutti i chart.</value>
+  <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
+    <value>Non c'è nulla a questo indirizzo — forse è cambiato con un Mix, o non è mai esistito. La ricerca conosce tutti i chart.</value>
+  </data>
+  <data name="Refresh popularity" xml:space="preserve">
+    <value>Aggiorna popolarità</value>
+  </data>
+  <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
+    <value>Aggiornamento della popolarità in coda - si riaggancia all'ultimo snapshot</value>
   </data>
 </root>

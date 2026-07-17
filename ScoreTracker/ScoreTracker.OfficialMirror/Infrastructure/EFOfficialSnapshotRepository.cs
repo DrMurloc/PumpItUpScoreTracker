@@ -290,6 +290,14 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
         await database.SaveChangesAsync(ct);
     }
 
+    public async Task DeletePopularity(int snapshotId, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        await database.Set<OfficialChartPopularityEntity>()
+            .Where(p => p.SnapshotId == snapshotId)
+            .ExecuteDeleteAsync(ct);
+    }
+
     public async Task<IReadOnlyList<(Guid ChartId, int Place)>> GetPopularity(int snapshotId, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);

@@ -4643,10 +4643,16 @@
   <data name="World firsts" xml:space="preserve">
     <value>世界初達成</value>
   </data>
-  <data name="Page not found" xml:space="preserve">
-    <value>ページが見つかりません</value>
+  <data name="Page not found" xml:space="preserve">
+    <value>ページが見つかりません</value>
   </data>
-  <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
-    <value>このアドレスには何もありません — バージョンとともに移動したか、最初から存在しなかったのかもしれません。検索はすべての譜面を知っています。</value>
+  <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
+    <value>このアドレスには何もありません — バージョンとともに移動したか、最初から存在しなかったのかもしれません。検索はすべての譜面を知っています。</value>
+  </data>
+  <data name="Refresh popularity" xml:space="preserve">
+    <value>人気度を更新</value>
+  </data>
+  <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
+    <value>人気度の更新をキューに追加しました - 最新のスナップショットに再適用されます</value>
   </data>
 </root>

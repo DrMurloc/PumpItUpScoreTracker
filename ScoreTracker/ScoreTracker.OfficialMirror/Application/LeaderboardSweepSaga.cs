@@ -23,6 +23,7 @@ namespace ScoreTracker.OfficialMirror.Application;
 /// </summary>
 internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCommand>,
     IConsumer<RebuildWeeklyHighlightsCommand>,
+    IConsumer<RefreshPopularityCommand>,
     IConsumer<SeedBaselineSnapshotCommand>,
     IRequestHandler<GetLastLeaderboardImportTimestampQuery, DateTimeOffset?>
 {
@@ -206,6 +207,26 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
                 snapshotId);
             await _snapshots.MarkFailed(snapshotId, e.ToString(), CancellationToken.None);
         }
+    }
+
+    /// <summary>
+    ///     Re-scrapes the play ranking alone and re-attaches it to the latest sealed
+    ///     snapshot — the cheap repair/refresh when a full board sweep isn't warranted.
+    /// </summary>
+    public async Task Consume(ConsumeContext<RefreshPopularityCommand> context)
+    {
+        var mix = context.Message.Mix;
+        var ct = context.CancellationToken;
+        var latest = await _snapshots.GetLatestSealed(mix, ct);
+        if (latest == null)
+        {
+            _logger.LogWarning("No sealed {Mix} snapshot to attach popularity to; run an import first", mix);
+            return;
+        }
+
+        await _snapshots.DeletePopularity(latest.Id, ct);
+        await SweepPopularity(latest.Id, mix, ct);
+        _logger.LogInformation("{Mix} popularity refreshed onto snapshot {SnapshotId}", mix, latest.Id);
     }
 
     /// <summary>

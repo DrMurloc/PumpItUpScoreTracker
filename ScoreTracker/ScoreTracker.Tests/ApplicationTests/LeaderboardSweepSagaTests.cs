@@ -367,6 +367,57 @@ public sealed class LeaderboardSweepSagaTests
     }
 
     [Fact]
+    public async Task PopularityRefreshReattachesToTheLatestSealedSnapshot()
+    {
+        var ranked = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var f = Arrange(popularity: new[]
+        {
+            new ChartPopularityLeaderboardEntry(ranked, 3, new Uri("https://example.invalid/a.png"))
+        });
+        f.Snapshots.Setup(s => s.GetLatestSealed(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SnapshotRun(41, Now.AddMinutes(-90), Now.AddMinutes(-50), false, "Sealed",
+                600, 600, 0, null));
+        var refresh = new Mock<ConsumeContext<RefreshPopularityCommand>>();
+        refresh.SetupGet(c => c.Message).Returns(new RefreshPopularityCommand(MixEnum.Phoenix2));
+        refresh.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+
+        await f.Saga.Consume(refresh.Object);
+
+        // Old rows clear first so a repeat press cannot collide on the placement key.
+        f.Snapshots.Verify(s => s.DeletePopularity(41, It.IsAny<CancellationToken>()), Times.Once);
+        f.Snapshots.Verify(s => s.WritePopularity(41,
+            It.Is<IReadOnlyCollection<(Guid ChartId, int Place)>>(rows =>
+                rows.Count == 1 && rows.First().ChartId == ranked.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.TierLists.Verify(t => t.SaveEntry(MixEnum.Phoenix2,
+            It.Is<SongTierListEntry>(e => (string)e.TierListName == "Popularity"),
+            It.IsAny<CancellationToken>()), Times.Once);
+        // No new run is created and nothing re-seals — the snapshot is only enriched.
+        f.Snapshots.Verify(s => s.CreateRun(It.IsAny<MixEnum>(), It.IsAny<bool>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        f.Snapshots.Verify(s => s.Seal(It.IsAny<int>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task PopularityRefreshWithoutASealedSnapshotDoesNothing()
+    {
+        var f = Arrange();
+        f.Snapshots.Setup(s => s.GetLatestSealed(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((SnapshotRun?)null);
+        var refresh = new Mock<ConsumeContext<RefreshPopularityCommand>>();
+        refresh.SetupGet(c => c.Message).Returns(new RefreshPopularityCommand(MixEnum.Phoenix2));
+        refresh.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+
+        await f.Saga.Consume(refresh.Object);
+
+        f.Snapshots.Verify(s => s.DeletePopularity(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        f.Snapshots.Verify(s => s.WritePopularity(It.IsAny<int>(),
+            It.IsAny<IReadOnlyCollection<(Guid ChartId, int Place)>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task StaleUnsealedRunsPurgeBeforeANewRunStarts()
     {
         var f = Arrange();

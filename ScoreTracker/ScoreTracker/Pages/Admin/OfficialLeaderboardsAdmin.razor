@@ -36,6 +36,10 @@
                OnClick="SeedBaseline">
         @L["Seed baseline from legacy tables"]
     </MudButton>
+    <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_popularityQueued"
+               OnClick="RefreshPopularity">
+        @L["Refresh popularity"]
+    </MudButton>
 </MudStack>
 
 <MudText Typo="Typo.h6">@L["Rename proposals"]</MudText>
@@ -112,6 +116,7 @@
     private bool _importQueued;
     private bool _rebuildQueued;
     private bool _seedQueued;
+    private bool _popularityQueued;
     private IReadOnlyList<ImportRunRecord> _runs = Array.Empty<ImportRunRecord>();
     private IReadOnlyList<RenameProposalRecord> _proposals = Array.Empty<RenameProposalRecord>();
 
@@ -135,8 +140,16 @@
     private async Task SetMix(MixEnum mix)
     {
         _mix = mix;
-        _importQueued = _rebuildQueued = _seedQueued = false;
+        _importQueued = _rebuildQueued = _seedQueued = _popularityQueued = false;
         await Load();
+    }
+
+    private async Task RefreshPopularity()
+    {
+        _popularityQueued = true;
+        await Bus.Publish(new RefreshPopularityCommand(_mix));
+        Snackbar.Add(L["Popularity refresh queued - re-attaches to the latest snapshot"].Value,
+            Severity.Success);
     }
 
     private async Task RunImport()
