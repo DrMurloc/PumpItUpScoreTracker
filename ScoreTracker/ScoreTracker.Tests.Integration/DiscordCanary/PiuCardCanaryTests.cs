@@ -37,6 +37,31 @@ public sealed class PiuCardCanaryTests
     [DiscordCanaryFact]
     public Task PostsTheDailyFeedCard() => PostAndVerify(DailyFeedCard);
 
+    [DiscordCanaryFact]
+    public Task PostsTheOfficialDigestCard() => PostAndVerify(OfficialDigestCard);
+
+    // Official leaderboards digest — movers, boards climbed, world firsts/#1s, top-1000 cutlines.
+    private static RichBotMessage OfficialDigestCard(string marker) =>
+        new(new RichBotSection("### This week on the official boards\n-# [Phoenix 2] vs Jul 6 · swept Sunday", null),
+            new IRichBotBlock[]
+            {
+                new RichBotText("📈 **PUMBILITY movers**\n" +
+                                "**HYSTERIA** #58 → **#41** · 9,120.45\n**KUMA** #112 → **#97** · 8,644.02"),
+                new RichBotText("🧗 **Boards climbed**\n**PUMPKING** climbed 23 boards (+118)"),
+                new RichBotText("🌍 **World firsts & new #1s**\n" +
+                                "First **SSS+** on Paradoxx #DIFFICULTY|S26# — **ESI** · 995,120\n" +
+                                "👑 New #1 on Gargoyle FS #DIFFICULTY|D25# — **NIMGO** · 998,110 (dethroned SPHAM)"),
+                new RichBotText("🎟 **What it takes — top-1000 cutlines**\n" +
+                                "All **7,842.10** ▲ +34.55 · Singles **7,214.90** ▲ +28.10 · Doubles **6,988.35** ▲ +41.72")
+            },
+            $"#MIX|Phoenix2# Phoenix 2 · PIU Scores official mirror · {marker}",
+            MixEnum.Phoenix2.GetAccentColor(),
+            new[]
+            {
+                new RichBotLink("This week", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards")),
+                new RichBotLink("What it takes", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards/WhatItTakes"))
+            });
+
     // Weekly feed — one result card per most-played chart (green rows = community members).
     private static RichBotMessage WeeklyResultCard(string marker) =>
         new(new RichBotSection(

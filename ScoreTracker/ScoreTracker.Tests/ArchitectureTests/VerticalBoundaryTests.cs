@@ -81,6 +81,10 @@ public sealed class VerticalBoundaryTests
 
         Assert.Contains(services,
             d => d.ServiceType == typeof(ScoreTracker.OfficialMirror.Application.LeaderboardSweepSaga));
+        // OfficialDigestFeedSaga consumes the seal event and posts the weekly digest — if the
+        // hook stops covering it, the official-leaderboards feed silently goes quiet.
+        Assert.Contains(services,
+            d => d.ServiceType == typeof(ScoreTracker.OfficialMirror.Application.OfficialDigestFeedSaga));
     }
 
     [Fact]

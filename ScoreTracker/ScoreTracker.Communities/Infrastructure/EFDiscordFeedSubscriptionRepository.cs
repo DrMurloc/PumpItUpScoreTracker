@@ -3,11 +3,12 @@ using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Domain;
 using ScoreTracker.Communities.Infrastructure.Entities;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Communities.Infrastructure
 {
-    internal sealed class EFDiscordFeedSubscriptionRepository : IDiscordFeedSubscriptionRepository
+    internal sealed class EFDiscordFeedSubscriptionRepository : IDiscordFeedSubscriptionRepository, IDiscordFeedReader
     {
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
@@ -67,13 +68,19 @@ namespace ScoreTracker.Communities.Infrastructure
         }
 
         public async Task<IReadOnlyList<ulong>> GetSubscribedChannels(DiscordFeedKind kind, MixEnum mix,
+            CancellationToken cancellationToken) =>
+            await GetSubscribedChannels(kind.ToString(), mix, cancellationToken);
+
+        // IDiscordFeedReader (published): the feed-kind string is the DiscordFeedKind enum name,
+        // which is exactly how it is stored, so producing verticals can read subscriptions
+        // without referencing Communities.
+        public async Task<IReadOnlyList<ulong>> GetSubscribedChannels(string feedKind, MixEnum mix,
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var kindName = kind.ToString();
             var mixValue = (int)mix;
             return await database.Set<DiscordFeedSubscriptionEntity>()
-                .Where(s => s.FeedKind == kindName && s.Mix == mixValue)
+                .Where(s => s.FeedKind == feedKind && s.Mix == mixValue)
                 .Select(s => s.ChannelId)
                 .ToArrayAsync(cancellationToken);
         }
