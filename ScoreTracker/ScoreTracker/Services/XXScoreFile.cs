@@ -265,7 +265,7 @@ public sealed class XXScoreFile
         { "X-tream", "X Treme" },
         { "X-Tree", "XTree" },
         { "Yog Sothoth", "Yog-Sothoth" },
-        { "Yoropiku Pikuyoro", "Yoropiku Pikuyoro!" },
+        { "Yoropiku Pikuyoro", "Yoropiku Pikuyoro !" },
         { "What Are You Doin Remix", "What Are You Doin? Remix" },
         { "Repeatorment Remix Remix", "Repeatorment Remix" },
         { "Meteo5cience (Gadget Mix) Remix", "Meteo5cience Remix" },

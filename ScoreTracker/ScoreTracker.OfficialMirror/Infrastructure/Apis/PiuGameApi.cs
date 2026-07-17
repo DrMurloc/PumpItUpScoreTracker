@@ -100,7 +100,7 @@ internal sealed class PiuGameApi : IPiuGameApi
             else if (songName.Contains("Kasou Shinja") &&
                      !songName.Contains("SHORT", StringComparison.OrdinalIgnoreCase))
                 songName = "Kasou Shinja";
-            else if (songName.Contains("Yoropiku Pikuyoro")) songName = "Yoropiku Pikuyoro!";
+            else if (songName.Contains("Yoropiku Pikuyoro")) songName = "Yoropiku Pikuyoro !";
             result.Add(new PiuGameGetSongsResult.SongDto
             {
                 Difficulty = level,
