@@ -28,6 +28,10 @@ internal sealed class LeaderboardHubSaga :
     private const string PumbilityAll = "PUMBILITY";
     private const string PumbilitySingles = "PUMBILITY Singles";
     private const string PumbilityDoubles = "PUMBILITY Doubles";
+    private const string CoOpType = "CoOp";
+
+    // Never a scraped board name — routing the co-op view here forces the computed path.
+    private const string CoOpBoardName = "CO-OP (computed)";
 
     private readonly IOfficialSnapshotRepository _snapshots;
     private readonly IOfficialRecordRepository _records;
@@ -104,6 +108,7 @@ internal sealed class LeaderboardHubSaga :
         {
             "Singles" => PumbilitySingles,
             "Doubles" => PumbilityDoubles,
+            CoOpType => CoOpBoardName,
             _ => PumbilityAll
         };
         var pumbilityBoard = stats.RatingBoards.TryGetValue(boardName, out var board) ? board : null;
@@ -122,7 +127,7 @@ internal sealed class LeaderboardHubSaga :
                 .OrderBy(p => p.Place)
                 .Select(p => BuildRanking(p.Place,
                     previousPlaces.TryGetValue(p.PlayerId, out var prev) ? prev : (int?)null,
-                    p.PlayerId, p.Score, stats))
+                    p.PlayerId, p.Score, stats, request.Type))
                 .ToArray();
         }
         else
@@ -136,7 +141,7 @@ internal sealed class LeaderboardHubSaga :
                 .OrderBy(kv => kv.Value)
                 .Select(kv => BuildRanking(kv.Value,
                     previousRanks.TryGetValue(kv.Key, out var prev) ? prev : (int?)null,
-                    kv.Key, stats.ByPlayer[kv.Key].RatingFor(request.Type), stats))
+                    kv.Key, stats.ByPlayer[kv.Key].RatingFor(request.Type), stats, request.Type))
                 .ToArray();
         }
 
@@ -151,12 +156,12 @@ internal sealed class LeaderboardHubSaga :
     }
 
     private static OfficialRankingRecord BuildRanking(int rank, int? previousRank, int playerId, decimal rating,
-        SnapshotStats stats)
+        SnapshotStats stats, string type)
     {
         var playerStats = stats.ByPlayer.TryGetValue(playerId, out var s) ? s : null;
         return new OfficialRankingRecord(rank, previousRank,
             new OfficialPlayerRecord(playerId, string.Empty, null, null), rating,
-            playerStats?.BoardsInTop ?? 0, playerStats?.NumberOnes ?? 0, playerStats?.PlayerType);
+            playerStats?.BoardsFor(type) ?? 0, playerStats?.NumberOnes ?? 0, playerStats?.PlayerType);
     }
 
     private static Dictionary<int, int> ComputedRanks(SnapshotStats stats, string type)
@@ -414,7 +419,7 @@ internal sealed class LeaderboardHubSaga :
     // ── snapshot-scoped stats ────────────────────────────────────────────────
 
     private sealed record PlayerSnapshotStats(int PlayerId, int BoardsInTop, int NumberOnes, int RatingAll,
-        int RatingSingles, int RatingDoubles, RecapPlayerType? PlayerType,
+        int RatingSingles, int RatingDoubles, int RatingCoOp, int BoardsCoOp, RecapPlayerType? PlayerType,
         IReadOnlyDictionary<Guid, int> ChartRatings)
     {
         public decimal RatingFor(string type)
@@ -423,8 +428,14 @@ internal sealed class LeaderboardHubSaga :
             {
                 "Singles" => RatingSingles,
                 "Doubles" => RatingDoubles,
+                CoOpType => RatingCoOp,
                 _ => RatingAll
             };
+        }
+
+        public int BoardsFor(string type)
+        {
+            return type == CoOpType ? BoardsCoOp : BoardsInTop;
         }
     }
 
@@ -445,6 +456,7 @@ internal sealed class LeaderboardHubSaga :
     private static SnapshotStats ComputeStats(MixEnum mix, IReadOnlyList<PlacementDetail> details)
     {
         var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
+        var coopScoring = CoOpBoardCalculator.EstimateScoring(mix);
         var ratingBoards = details
             .Where(d => d.LeaderboardType == LeaderboardTypes.Rating)
             .GroupBy(d => d.BoardName)
@@ -453,31 +465,51 @@ internal sealed class LeaderboardHubSaga :
                     .Select(d => new PlacementRow(d.LeaderboardId, d.PlayerId, d.Place, d.Score))
                     .OrderBy(p => p.Place).ToArray());
 
-        var byPlayer = new Dictionary<int, PlayerSnapshotStats>();
-        foreach (var group in details
-                     .Where(d => d.LeaderboardType == LeaderboardTypes.Chart &&
-                                 d.ChartType != ChartType.CoOp.ToString() && d.Level != null)
-                     .GroupBy(d => d.PlayerId))
-        {
-            var contributions = group
+        var chartDetails = details.Where(d => d.LeaderboardType == LeaderboardTypes.Chart).ToArray();
+        var standardByPlayer = chartDetails
+            .Where(d => d.ChartType != ChartType.CoOp.ToString() && d.Level != null)
+            .GroupBy(d => d.PlayerId)
+            .ToDictionary(g => g.Key, g => g
                 .Select(d => (Detail: d,
                     Rating: (int)scoring.GetScore(DifficultyLevel.From(d.Level!.Value),
                         PhoenixScore.From((int)d.Score))))
-                .ToArray();
-            var top50 = contributions.OrderByDescending(c => c.Rating).Take(50).ToArray();
-            var singles = contributions.Where(c => c.Detail.ChartType == ChartType.Single.ToString())
-                .OrderByDescending(c => c.Rating).Take(50).Sum(c => c.Rating);
-            var doubles = contributions.Where(c => c.Detail.ChartType == ChartType.Double.ToString())
-                .OrderByDescending(c => c.Rating).Take(50).Sum(c => c.Rating);
+                .ToArray());
+        var coopByPlayer = chartDetails
+            .Where(d => d.ChartType == ChartType.CoOp.ToString())
+            .GroupBy(d => d.PlayerId)
+            .ToDictionary(g => g.Key, g => g
+                .Select(d => (Detail: d,
+                    Rating: CoOpBoardCalculator.Rating(coopScoring, PhoenixScore.From((int)d.Score))))
+                .ToArray());
+
+        var byPlayer = new Dictionary<int, PlayerSnapshotStats>();
+        foreach (var playerId in standardByPlayer.Keys.Union(coopByPlayer.Keys))
+        {
+            var contributions = standardByPlayer.TryGetValue(playerId, out var standard)
+                ? standard
+                : Array.Empty<(PlacementDetail Detail, int Rating)>();
+            var coop = coopByPlayer.TryGetValue(playerId, out var c)
+                ? c
+                : Array.Empty<(PlacementDetail Detail, int Rating)>();
+            var top50 = contributions.OrderByDescending(x => x.Rating).Take(50).ToArray();
+            var singles = contributions.Where(x => x.Detail.ChartType == ChartType.Single.ToString())
+                .OrderByDescending(x => x.Rating).Take(50).Sum(x => x.Rating);
+            var doubles = contributions.Where(x => x.Detail.ChartType == ChartType.Double.ToString())
+                .OrderByDescending(x => x.Rating).Take(50).Sum(x => x.Rating);
             var playerType = RecapPlayerTypeCalculator.Calculate(
-                top50.Select(c => PhoenixScore.From((int)c.Detail.Score)).ToArray());
-            byPlayer[group.Key] = new PlayerSnapshotStats(group.Key,
+                top50.Select(x => PhoenixScore.From((int)x.Detail.Score)).ToArray());
+            // Chart ratings merge both pools — consumers filter by chart type, so the
+            // co-op estimate scale never competes with real PUMBILITY contributions.
+            byPlayer[playerId] = new PlayerSnapshotStats(playerId,
                 contributions.Length,
-                contributions.Count(c => c.Detail.Place == 1),
-                top50.Sum(c => c.Rating), singles, doubles, playerType,
-                contributions.Where(c => c.Detail.ChartId != null)
-                    .GroupBy(c => c.Detail.ChartId!.Value)
-                    .ToDictionary(g => g.Key, g => g.Max(c => c.Rating)));
+                contributions.Count(x => x.Detail.Place == 1),
+                top50.Sum(x => x.Rating), singles, doubles,
+                coop.OrderByDescending(x => x.Rating).Take(50).Sum(x => x.Rating),
+                coop.Length,
+                playerType,
+                contributions.Concat(coop).Where(x => x.Detail.ChartId != null)
+                    .GroupBy(x => x.Detail.ChartId!.Value)
+                    .ToDictionary(g => g.Key, g => g.Max(x => x.Rating)));
         }
 
         return new SnapshotStats(byPlayer, ratingBoards);

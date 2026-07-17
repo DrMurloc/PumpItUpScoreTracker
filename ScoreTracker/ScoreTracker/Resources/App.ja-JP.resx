@@ -4718,4 +4718,10 @@
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>人気度の更新をキューに追加しました - 最新のスナップショットに再適用されます</value>
   </data>
+  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
+    <value>PIUGAMEはCO-OPランキングを公開していません - このボードはミラーリングしたCO-OPリーダーボードから独自に算出した推定で、プレートはスコアから推定します（SG、995,000からUG、1,000,000でPG）。</value>
+  </data>
+  <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
+    <value>推定レーティング順のCO-OP譜面トップ - プレートはスコアから推定します。</value>
+  </data>
 </root>

@@ -4712,4 +4712,10 @@
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>Popularity refresh queued - re-attaches to the latest snapshot</value>
   </data>
+  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
+    <value>PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000).</value>
+  </data>
+  <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
+    <value>Top co-op charts by estimated rating - plates inferred from score.</value>
+  </data>
 </root>

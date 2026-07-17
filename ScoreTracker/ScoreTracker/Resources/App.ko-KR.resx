@@ -4599,4 +4599,10 @@
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>인기도 새로고침이 대기열에 추가되었습니다 - 최신 스냅샷에 다시 연결됩니다</value>
   </data>
+  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
+    <value>PIUGAME는 CO-OP 랭킹을 제공하지 않습니다 - 이 보드는 미러링된 CO-OP 리더보드로 자체 계산한 최선의 추정치이며, 플레이트는 점수로 추정합니다 (SG, 995,000부터 UG, 1,000,000은 PG).</value>
+  </data>
+  <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
+    <value>추정 레이팅 기준 상위 CO-OP 채보 - 플레이트는 점수로 추정합니다.</value>
+  </data>
 </root>

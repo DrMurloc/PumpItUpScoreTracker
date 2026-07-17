@@ -75,6 +75,13 @@ public sealed class LeaderboardHubSagaTests
             null, place, value);
     }
 
+    // Co-op boards carry no difficulty level — the dimension's Level is genuinely null.
+    private static PlacementDetail CoOpChart(int playerId, Guid chartId, int place, decimal score)
+    {
+        return new PlacementDetail(playerId, chartId.GetHashCode() & 0xFFFF, LeaderboardTypes.Chart,
+            $"Board {chartId}", chartId, "CoOp", null, place, score);
+    }
+
     [Fact]
     public async Task HighlightsAreNullBeforeTheFirstSeal()
     {
@@ -172,6 +179,54 @@ public sealed class LeaderboardHubSagaTests
         Assert.Equal("PLAYER11", result.Rankings[0].Player.Username);
         Assert.True(result.Rankings[0].Rating > result.Rankings[1].Rating);
         Assert.Null(result.Rankings[0].PreviousRank);
+    }
+
+    [Fact]
+    public async Task CoOpRankingsComputeFromCoOpBoardsWithInferredPlates()
+    {
+        var f = Arrange(Run(2, Week2));
+        var coopA = Guid.NewGuid();
+        var coopB = Guid.NewGuid();
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
+        {
+            CoOpChart(11, coopA, 1, 1_000_000),
+            CoOpChart(11, coopB, 2, 995_000),
+            CoOpChart(12, coopA, 2, 994_999),
+            // A standard board must not leak into the co-op totals or board counts.
+            Chart(12, ChartA, 1, 999_000, level: 26, boardId: 500)
+        });
+
+        var result = await f.Saga.Handle(new GetOfficialRankingsQuery(MixEnum.Phoenix2, "CoOp"),
+            CancellationToken.None);
+
+        Assert.False(result.RatingIsOfficial);
+        Assert.Equal(2, result.Rankings.Count);
+        var top = result.Rankings[0];
+        Assert.Equal("PLAYER11", top.Player.Username);
+        // 2000 × (1.50 + .020) at the perfect + 2000 × (1.50 + .016) at 995k.
+        Assert.Equal(3040 + 3032, top.Rating);
+        Assert.Equal(2, top.BoardsInTop);
+        var second = result.Rankings[1];
+        Assert.Equal(2996, second.Rating); // SSS with an inferred SG — the standard chart stays out.
+        Assert.Equal(1, second.BoardsInTop);
+    }
+
+    [Fact]
+    public async Task StandardRankingsNeverCountCoOpBoards()
+    {
+        var f = Arrange(Run(2, Week2));
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
+        {
+            Chart(11, ChartA, 1, 995_000, level: 24, boardId: 500),
+            // Player 12 lives only on co-op boards — invisible to the standard views.
+            CoOpChart(12, Guid.NewGuid(), 1, 1_000_000)
+        });
+
+        var result = await f.Saga.Handle(new GetOfficialRankingsQuery(MixEnum.Phoenix),
+            CancellationToken.None);
+
+        var only = Assert.Single(result.Rankings);
+        Assert.Equal("PLAYER11", only.Player.Username);
     }
 
     [Fact]

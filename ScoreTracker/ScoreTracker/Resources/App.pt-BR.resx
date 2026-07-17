@@ -4589,4 +4589,10 @@
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>Atualização de popularidade na fila - reanexa ao instantâneo mais recente</value>
   </data>
+  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
+    <value>A PIUGAME não publica um ranking de CO-OP - este ranking é a nossa melhor estimativa, calculado a partir dos leaderboards de CO-OP espelhados, com placas inferidas pela pontuação (SG, UG a partir de 995.000, PG em 1.000.000).</value>
+  </data>
+  <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
+    <value>Melhores charts de CO-OP por rating estimado - placas inferidas pela pontuação.</value>
+  </data>
 </root>

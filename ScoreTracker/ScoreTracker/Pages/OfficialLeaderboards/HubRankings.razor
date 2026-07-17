@@ -7,10 +7,17 @@
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
 @using Chart = ScoreTracker.SharedKernel.Models.Chart
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
 @inject NavigationManager Navigation
 
-@if (_rankings != null && _rankings.RatingIsOfficial)
+@if (_type == "CoOp")
+{
+    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">
+        @L["PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)."]
+    </MudAlert>
+}
+else if (_rankings != null && _rankings.RatingIsOfficial)
 {
     <MudText Typo="Typo.body2" Class="mb-2">@L["Ranked by the official PUMBILITY board, mirrored weekly."]</MudText>
 }
@@ -25,6 +32,7 @@ else if (_rankings != null)
         <MudSelectItem T="string" Value="@("All")">@L["All"]</MudSelectItem>
         <MudSelectItem T="string" Value="@("Singles")">@L["Singles"]</MudSelectItem>
         <MudSelectItem T="string" Value="@("Doubles")">@L["Doubles"]</MudSelectItem>
+        <MudSelectItem T="string" Value="@("CoOp")">@L["CoOp"]</MudSelectItem>
     </MudSelect>
     <MudTextField T="string" @bind-Value="_filter" Label="@L["Find a player"]" Immediate="true"
                   Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true"
@@ -99,10 +107,14 @@ else
                     else
                     {
                         <MudText Typo="Typo.caption" Class="d-block pa-2">
-                            @L["Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade."]
+                            @L[_type == "CoOp"
+                                ? "Top co-op charts by estimated rating - plates inferred from score."
+                                : "Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade."]
                         </MudText>
                         <div class="tier-card-grid pa-2">
                             @foreach (var placement in _expandedProfile.Placements
+                                          .Where(p => Charts.TryGetValue(p.ChartId, out var pc) &&
+                                                      (pc.Type == ChartType.CoOp) == (_type == "CoOp"))
                                           .OrderByDescending(p => p.ComputedRating).Take(50))
                             {
                                 var chart = Charts.TryGetValue(placement.ChartId, out var c) ? c : null;
