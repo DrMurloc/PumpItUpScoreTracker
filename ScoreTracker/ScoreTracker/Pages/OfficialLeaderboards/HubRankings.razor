@@ -1,4 +1,5 @@
 @using MediatR
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
@@ -7,6 +8,7 @@
 @using ScoreTracker.Web.Components
 @using Chart = ScoreTracker.SharedKernel.Models.Chart
 @inject IMediator Mediator
+@inject NavigationManager Navigation
 
 @if (_rankings != null && _rankings.RatingIsOfficial)
 {
@@ -99,35 +101,30 @@ else
                         <MudText Typo="Typo.caption" Class="d-block pa-2">
                             @L["Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade."]
                         </MudText>
-                        <MudGrid Class="pa-2">
+                        <div class="tier-card-grid pa-2">
                             @foreach (var placement in _expandedProfile.Placements
                                           .OrderByDescending(p => p.ComputedRating).Take(50))
                             {
                                 var chart = Charts.TryGetValue(placement.ChartId, out var c) ? c : null;
                                 if (chart == null) continue;
-                                <MudItem xs="6" sm="4" md="2">
-                                    <MudPaper Class="pa-2"
-                                              Style="@(placement.Supplemented ? "border:1px dashed var(--mix-secondary)" : null)">
-                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                            <SongImage Song="chart.Song" Small="true"/>
-                                            <DifficultyBubble Chart="chart" Small="true"/>
-                                            @if (placement.Supplemented)
-                                            {
-                                                <MudTooltip Text="@L["From their linked piuscores account - not on an official board yet"]">
-                                                    <MudIcon Icon="@Icons.Material.Filled.CloudSync" Size="Size.Small"
-                                                             Color="Color.Secondary"/>
-                                                </MudTooltip>
-                                            }
-                                        </MudStack>
-                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1"
-                                                  Justify="Justify.SpaceBetween">
-                                            <MudText Typo="Typo.body2"><b>@placement.Score.ToString("N0")</b></MudText>
-                                            <LetterGradeIcon Grade="PhoenixScore.From(placement.Score).LetterGrade"/>
-                                        </MudStack>
-                                    </MudPaper>
-                                </MudItem>
+                                @if (placement.Supplemented)
+                                {
+                                    <div class="olb-supplemented-card">
+                                        <MudTooltip Text="@L["From their linked piuscores account - not on an official board yet"]">
+                                            <MudIcon Icon="@Icons.Material.Filled.CloudSync" Size="Size.Small"
+                                                     Class="olb-supplemented-badge"/>
+                                        </MudTooltip>
+                                        <TierListChartCard Chart="chart" Score="MirrorScore(placement)"
+                                                           ShowToDo="false" OnOpen="OpenChart"/>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <TierListChartCard Chart="chart" Score="MirrorScore(placement)"
+                                                       ShowToDo="false" OnOpen="OpenChart"/>
+                                }
                             }
-                        </MudGrid>
+                        </div>
                     }
                 </td>
             }
@@ -173,6 +170,17 @@ else
         _expanded = null;
         _expandedProfile = null;
         await Load();
+    }
+
+    private static RecordedPhoenixScore MirrorScore(OfficialPlayerChartRecord placement)
+    {
+        // Mirrored boards expose score only — no plate, never broken.
+        return new RecordedPhoenixScore(placement.ChartId, placement.Score, null, false, default);
+    }
+
+    private void OpenChart(Guid chartId)
+    {
+        Navigation.NavigateTo($"/Chart/{chartId}");
     }
 
     private async Task ToggleExpand(string username)
