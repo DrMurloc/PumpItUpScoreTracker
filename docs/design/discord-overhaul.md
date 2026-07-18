@@ -112,9 +112,10 @@ read the invoker exactly as they read a signed-in circuit.
 `/Chart/{id}` permalinks, which 301 to the canonical `/Charts/{mix}/{song}/{difficulty}`
 pages — same pattern as the session card. No slug logic leaves Web.
 
-**Localization stance**: bot messages remain English (matching every existing Discord
-surface; channels have no locale). The one new *web* string set (the invite-link blurb,
-§4 Presentation) lands in all nine locales.
+**Localization stance (superseded 2026-07-18, owner iteration — see §9)**: originally bot
+messages stayed English. Now every registration carries an optional **language**, channel
+notifications compose per-channel-culture, `/piu` replies follow the invoker's linked
+account language, and the command tree ships Discord-native description localizations.
 
 ## 3. The feeds
 
@@ -333,3 +334,63 @@ app for lab testing (no production impact either way).
 5. `"Discord"` present in AppHost `forwardedSections` (local lab testing only).
 6. Discord.Net 3.18 builder/API spellings for bulk overwrite, V2 follow-ups, and
    autocomplete responses (the design doesn't depend on them).
+
+## 9. Localization iteration (owner, 2026-07-18) — the L-series
+
+Reverses §2's original English-only stance. Two owner requirements: (a) registrations
+specify a culture for channel notifications — community cards included; (b) `/piu` replies
+use the invoker's linked account language, English default. Plus one locked flex:
+Discord-native `description_localizations` on the command tree (client-locale-driven help
+text). All nine locales (`en-US`, `es-MX`, `es-ES`, `pt-BR`, `ko-KR`, `ja-JP`, `fr-FR`,
+`it-IT`, `en-ZW`); new resx keys land in every locale in the same commit as their strings.
+
+**Culture sources, fixed per surface:**
+
+| Surface | Culture |
+|---|---|
+| Feed cards (weekly / daily / official) | The subscription's stored language |
+| Community cards (session snapshot, titles, UCS) | The community channel's stored language |
+| `/piu` replies incl. ephemeral acks + errors | Invoker's linked account `Culture` UiSetting; English unlinked/unset |
+| Public registration confirmations | The channel's just-registered language |
+| Command-tree descriptions | The viewer's Discord client locale (`description_localizations`) |
+
+**Architecture:** the resx stay Web-owned (`Resources/App.<code>.resx`, keys = English text
+verbatim). Verticals compose through a new published port, **`ILocalizedTextAccessor`**
+(`Domain.SecondaryPorts`, `Get(culture, key, args)`), implemented by
+`Web/Accessors/ResxLocalizedTextAccessor` over `IStringLocalizerFactory` — the accessor
+swaps `CurrentUICulture`/`CurrentCulture` for the lookup's duration so catalogue selection
+AND numeric/date argument formatting follow the target locale, restoring both after. Null,
+unknown, and unsupported cultures resolve to English; missing keys fall back to the key
+itself. The nine locales live in ONE canonical `SupportedCultures` list
+(`Domain/Records`, code + native name) consumed by Program.cs request-localization, the
+culture endpoint, the account language picker, and the Discord language choices — it was
+previously triplicated. Fan-out changes from compose-once to **group channels by culture,
+compose per culture** (data reads still happen once; only rendering repeats).
+Chart/song/player/title/skill names stay verbatim, matching the site.
+
+**Storage:** `Culture nvarchar` nullable (null = English) on `CommunityChannel` and
+`DiscordFeedSubscription`; re-registering updates it. `IDiscordFeedReader` returns
+`(ChannelId, Culture)` records. `Community.ChannelConfiguration` and
+`AddDiscordChannelToCommunityCommand` gain the culture.
+
+**Commit plan:**
+
+- **L1 — Culture plumbing.** `SupportedCultures` + `ILocalizedTextAccessor` +
+  `ResxLocalizedTextAccessor` + DI; the three duplicated culture lists collapse onto the
+  canonical one; resx-wiring facts in Tests.Components (incl. a resx-set ↔ list parity
+  ratchet); this doc section.
+- **L2 — Culture storage + register option.** Migration (two `Culture` columns);
+  `language` option on `/piu register` ×4 (nine native-name choices); `/piu feeds` lists
+  the language; localized public confirmations; DATABASE-SCHEMA rows.
+- **L3 — Replies follow the invoker.** Router-entry account resolution → `Culture`
+  UiSetting; every `BotCommandSaga` reply string through the accessor; keys ×9.
+- **L4 — Command-tree descriptions.** `DescriptionLocalizations` on the bot definition
+  records, decorated in Web from the accessor; translator maps culture codes → Discord
+  locales (`es-MX`→`es-419`, `ko-KR`→`ko`, `en-ZW` skipped — Discord has no Murloc);
+  keys ×9.
+- **L5 — Weekly/daily feed cards.** `DiscordFeedSaga` per-culture grouping + strings ×9.
+- **L6 — Official digest.** `OfficialDigestFeedSaga` per-culture + strings ×9,
+  culture-aware dates.
+- **L7 — Session/title/UCS cards.** `CommunitySaga` data/render split, per-culture
+  community fan-out, the full card vocabulary ×9 (largest key batch).
+- **L8 — Canary + docs.** Korean sample card set to the lab channel; doc/status sweep.

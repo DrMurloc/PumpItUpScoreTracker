@@ -14,6 +14,7 @@ using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
@@ -252,6 +253,7 @@ builder.Services.AddBlazorApplicationInsights()
         builder.Configuration.GetSection("Sendgrid").Get<SendGridConfiguration>())
     .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>()
     .AddTransient<IRandomNumberGenerator, RandomNumberGenerator>()
+    .AddTransient<ILocalizedTextAccessor, ResxLocalizedTextAccessor>()
     .AddControllers();
 builder.Services.Configure<KeyVaultConfiguration>(builder.Configuration.GetSection("KeyVault"));
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
@@ -290,9 +292,9 @@ await app.Services.ApplyOrReportMigrationsAsync(builder.Configuration["AutoMigra
 
 
 app.UseRequestLocalization(new RequestLocalizationOptions()
-    .AddSupportedCultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "es-ES", "fr-FR", "ja-JP", "it-IT")
-    .AddSupportedUICultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "es-ES", "fr-FR", "ja-JP", "it-IT")
-    .SetDefaultCulture("en-US"));
+    .AddSupportedCultures(SupportedCultures.Codes())
+    .AddSupportedUICultures(SupportedCultures.Codes())
+    .SetDefaultCulture(SupportedCultures.Default));
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
