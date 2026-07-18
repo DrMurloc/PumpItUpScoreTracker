@@ -47,16 +47,22 @@ else
                     </span>
                     <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
                     <span class="dash-target-name">@chart.Song.Name</span>
-                    @if (row.Place != null && row.Total > 0)
+                    @if (row.Total == 0)
+                    {
+                        @* Nobody on this board yet — a bare dash, no denominator to promise. *@
+                        <span class="dash-weekly-place dash-muted">—</span>
+                    }
+                    else if (row.Place != null)
                     {
                         <span class="dash-weekly-place"
                               style="@ThemeScales.RarityStyle(1.0 - (double)row.Place.Value / row.Total)">
-                            #@row.Place / @row.Total
+                            @row.Place/@row.Total
                         </span>
                     }
                     else
                     {
-                        <span class="dash-weekly-place dash-muted">—</span>
+                        @* The board is alive but you're not on it — the count still shows it. *@
+                        <span class="dash-weekly-place dash-muted">-/@row.Total</span>
                     }
                     @if (!EditMode)
                     {

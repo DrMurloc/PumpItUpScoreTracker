@@ -2593,14 +2593,14 @@ html.sheet-open .more-sheet-scrim {
     font-family: var(--font-display);
     letter-spacing: .04em;
     color: var(--mix-ink-muted);
-    /* Hidden until the row is wide enough to earn it — the container query on
-       .dash-suggested shows it, so full-width single-column cells fill the gap the
-       right-aligned score leaves, and narrow cells still favour the score. */
-    display: none;
 }
 
-@container dash-suggested (min-width: 210px) {
-    .dash-target-name { display: block; }
+/* Suggested Charts only: a full-width single column shows the name to fill the gap the
+   right-aligned score would leave, but a cramped narrow cell hands that width back to
+   the score. Scoped to .dash-suggested's container so the always-named Weekly and Daily
+   Step rows (which share this class but sit in no such container) keep their names. */
+@container dash-suggested (max-width: 209.98px) {
+    .dash-target-name { display: none; }
 }
 
 .dash-skillchip {
@@ -2659,6 +2659,7 @@ html.sheet-open .more-sheet-scrim {
     font-weight: 600;
     font-size: .75rem;
     flex: none;
+    font-variant-numeric: tabular-nums;
 }
 
 /* Community Highlights feed (docs/design/home-page-widgets.md §7). */
