@@ -470,10 +470,18 @@ Google's first indexed chart page exposed how a result actually *reads* ("263Sco
   was broken: `AzureBlobFileUploadClient` never set a content type, so every app-uploaded
   blob — song jackets, the tier-list folder cards — serves `application/octet-stream`, which
   some unfurlers and crawlers refuse to render as an image. The uploader now stamps the type
-  from the extension (no-overwrite semantics preserved via `IfNoneMatch`); **existing blobs
-  need a one-time owner-side content-type stamp** (az loop; remember a CDN purge after —
-  cached octet-stream responses outlive the stamp). Head grew `og:url`, `og:image:alt`, and
-  `twitter:card = summary_large_image`.
+  from the extension; **existing blobs need a one-time owner-side content-type stamp**
+  (`Downloads\stamp-piuimages-content-types.ps1`; remember a CDN purge after — cached
+  octet-stream responses outlive the stamp). Head grew `og:url`, `og:image:alt`, and
+  `twitter:card = summary_large_image`. **Second latent bug found in the same client**: the
+  plain `UploadAsync(Stream)` overload throws `BlobAlreadyExists`, so the daily
+  `refresh-folder-share-cards` job faulted on its first folder every run after its first —
+  all 52 tier-list og:image cards were created 2026-07-12 and never refreshed (blob
+  creation == modification for every card; unfurls still show that date). `UploadFile` now
+  overwrites — save-semantics, which is what every caller wants (the card refresh, UCS
+  photo re-submission; photo paths are fresh GUIDs and the avatar mirror guards itself
+  with `DoesFileExist`). Every upload path was audited: all blob writes ride
+  `IFileUploadClient` — the fixed client is the only `BlobContainerClient` in the repo.
 - **Front-door title + snippet hygiene** — the title (and og:title) gained the searchable
   descriptor: `PIU Scores — Pump It Up score tracker & tier lists`, one localized key ×9
   (each locale reuses its own established phrasing from the hero keys; the `WebSite`
