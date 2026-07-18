@@ -101,4 +101,47 @@ public sealed class WeeklyChartsTests : IAsyncLifetime
             .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
         await Expect(_page.Locator(".challenge-card-line.mine").First).ToContainTextAsync("987,654");
     }
+
+    /// <summary>
+    ///     Relevant players end to end (M20): a CL-25 score tops the S22 board from out of the
+    ///     band; the switch hides it instantly, the renumbered place shows, the choice survives
+    ///     a reload through /Preferences/Set and the page's server-side read.
+    /// </summary>
+    [Fact]
+    public async Task RelevantPlayersSwitchHidesSandbaggersRenumbersAndPersists()
+    {
+        var sandbagger = await _fixture.Seed.SeedUserAsync("SANDBAG");
+        await _fixture.Seed.SeedWeeklyEntryAsync(sandbagger, _chartId, 995_000, competitiveLevel: 25.0);
+        var inBand = await _fixture.Seed.SeedUserAsync("INBAND");
+        await _fixture.Seed.SeedWeeklyEntryAsync(inBand, _chartId, 970_000, competitiveLevel: 22.0);
+
+        await _page.GotoAsync("/Login");
+        await _page.EvaluateAsync(
+            "id => fetch('/Login/Dev', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'userId=' + id })",
+            _userId.ToString());
+        await _page.GotoAsync("/WeeklyCharts");
+
+        // Both worlds shipped: the sandbagger tops the overall board.
+        var sandbagRow = _page.Locator(".challenge-card-line[data-inrange=\"false\"]").First;
+        await Expect(sandbagRow).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
+        await Expect(sandbagRow).ToContainTextAsync("995,000");
+
+        // Flip the switch (its input is visually hidden; the label is the control): the
+        // out-of-band row hides with no round trip, while the preference posts in the
+        // background — hold the reload until that lands or it races the write.
+        await _page.RunAndWaitForResponseAsync(
+            () => _page.Locator(".challenge-switch").First.ClickAsync(),
+            r => r.Url.Contains("/Preferences/Set"));
+        await Expect(sandbagRow).Not.ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 10_000 });
+        var inBandRow = _page.Locator(".challenge-card-line[data-inrange=\"true\"]:visible").First;
+        await Expect(inBandRow).ToContainTextAsync("970,000");
+        await Expect(inBandRow.Locator(".challenge-lb-place.cr")).ToHaveTextAsync("1");
+
+        // The preference persisted: a fresh document load renders the filtered world.
+        await _page.ReloadAsync();
+        await Expect(_page.Locator(".challenge-grid.relevant-on"))
+            .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
+        await Expect(_page.Locator(".challenge-card-line[data-inrange=\"false\"]").First)
+            .Not.ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 10_000 });
+    }
 }
