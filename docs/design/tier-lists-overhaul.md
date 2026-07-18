@@ -195,7 +195,7 @@ The design-doc commits already on this branch are the prelude (C0); implementati
 6. **C6 — details dialog**: video-first `ChartDetailsDialog` — meta, cross-mix journey, placements, To-Do, quiet recording, PIU Center link-out, comments slot.
 7. **C7 — By-Skill view**: weakest-first skill sections with per-skill stats; the four ApexCharts radar panels removed.
 8. **C8 — share renderer**: `IShareCardRenderer` port + SkiaSharp client in Data; Download swap with the Community/Personalized stamp.
-9. **C9 — og:image**: `refresh-folder-share-cards` Hangfire job + blob wiring + per-folder meta tags; SCHEDULED-JOBS.md row.
+9. **C9 — og:image**: `refresh-folder-share-cards` Hangfire job + blob wiring + per-folder meta tags; SCHEDULED-JOBS.md row. **RETIRED 2026-07-18** (owner call): the meta lived in circuit-only `HeadContent`, so no unfurler ever saw the cards, and a multi-MB PNG is the wrong og:image payload anyway — the job, saga, message, theme record, and meta are gone. The **Download image button is unaffected** (same renderer, different pipeline: `GetTierListShareCardQuery`).
 10. **C10 — cleanup**: localization sweep (all eight locales, universal-terms glossary note), `UiColorTokenTests` ChartSkills 7 → 0, UX-GUIDELINES rule-5 reword + CLAUDE.md density line, final E2E pass.
 
 **Round-6 addendum** — the series continues on the same PR: **C11** field-test bug fixes (jacket URLs, legend CSS order, folder-picker popover) · **C12** field-test UX (toolbar data/presentation split, lens in every view, Title Levels collapse, table jacket column, Applied Filters label) · **C13** `/TierLists/Old` + `TierListSection` removal (26 color-literal allowlist entries burn down; the URL survives as a 301) · **C14** Playwright rewrite against the new markup. Outside this PR: the piucenter crawler + alias table (§8a — greenlit, its own PR), Folder Level (own doc).
@@ -254,6 +254,6 @@ No changed tables: `scores.TierListEntry` stays untouched (stats are a sibling);
 
 - **Event-driven, no schedule**: `UserTierListMaterializer` (idempotent per in-memory-transport rules).
 - **Extended existing**: `TierListSaga` + `ScoringDifficultySaga` also persist `ChartScoreStats` during their daily rebuilds.
-- **New Hangfire rows** (each = `RecurringJobRunner` method + `Program.cs` line + SCHEDULED-JOBS.md row): `refresh-folder-share-cards` (daily ~10:30 UTC, after tier-list rebuilds — regenerates per-folder og:images to blob); `crawl-piucenter` (weekly, gap-driven; crawler project).
+- **New Hangfire rows** (each = `RecurringJobRunner` method + `Program.cs` line + SCHEDULED-JOBS.md row): `refresh-folder-share-cards` (daily ~10:30 UTC — **retired 2026-07-18**, see the C9 note); `crawl-piucenter` (weekly, gap-driven; crawler project).
 - **One-time**: `UserTierListEntry` backfill, admin-triggered.
 - **Not happening**: no new hosted services/timers, no second scheduler, no second DbContext.

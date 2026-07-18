@@ -33,13 +33,6 @@
     <meta name="description" content="PIU Charts organized by difficulty with optional personalization based on individual skill."/>
     <meta property="og:title" content="PIU Tier List">
     <meta property="og:description" content="PIU Charts organized by difficulty with optional personalization based on individual skill." >
-    @if (!_currentMix.UsesLegacyScoring())
-    {
-        @* C9: the unfurl of a folder link IS the community tier list — the image is
-           regenerated daily by the refresh-folder-share-cards job. *@
-        <meta property="og:url" content="@($"https://piuscores.arroweclip.se/TierLists/{_chartType}/{_level}")">
-        <meta property="og:image" content="@($"https://piuimages.arroweclip.se/tier-lists/{_currentMix}/{_chartType.GetShortHand().ToLower()}{_level}.png")">
-    }
 </HeadContent>
 @if (_currentMix.UsesLegacyScoring() && !_hasCommunityData)
 {
