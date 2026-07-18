@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Security.Authentication;
 using System.Threading;
@@ -11,12 +12,16 @@ using Microsoft.Extensions.Options;
 using Moq;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.Domain.Exceptions;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.OfficialMirror.Infrastructure;
 using ScoreTracker.OfficialMirror.Infrastructure.Apis.Contracts;
 using ScoreTracker.OfficialMirror.Infrastructure.Apis.Dtos;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Tests.TestData;
 using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
@@ -93,10 +98,10 @@ public sealed class OfficialSiteClientTests
     }
 
     [Fact]
-    public async Task Phoenix2LeaderboardEntriesComeFromTheThreePumbilityTabs()
+    public async Task Phoenix2RatingBoardsComeFromTheThreePumbilityTabsWithCentsIntact()
     {
         // The P2 site's daily PUMBILITY board (All/Single/Double tabs) IS its rating
-        // leaderboard set — one service login, three boards, values floored to ints.
+        // board set — one service login, three boards, decimal values preserved.
         var piuGame = new Mock<IPiuGameApi>();
         piuGame.Setup(p => p.GetSessionId(MixEnum.Phoenix2, "svc", "hunter2", It.IsAny<CancellationToken>()))
             .ReturnsAsync((new HttpClient(), "sid123"));
@@ -116,21 +121,18 @@ public sealed class OfficialSiteClientTests
                 });
         var client = BuildClient(piuGame, serviceUsername: "svc", servicePassword: "hunter2");
 
-        var entries = (await client.GetLeaderboardEntries(MixEnum.Phoenix2, CancellationToken.None)).ToArray();
+        var entries = (await client.GetRatingBoards(MixEnum.Phoenix2, CancellationToken.None)).ToArray();
 
         Assert.Equal(6, entries.Length);
-        Assert.All(entries, e => Assert.Equal("Rating", e.OfficialLeaderboardType));
         Assert.Equal(new[] { "PUMBILITY", "PUMBILITY Singles", "PUMBILITY Doubles" },
-            entries.Select(e => e.LeaderboardName).Distinct().ToArray());
-        var top = entries.First(e => e.LeaderboardName == "PUMBILITY");
-        Assert.Equal(1, top.Place);
-        Assert.Equal(17418, top.Score);
+            entries.Select(e => e.BoardName).Distinct().ToArray());
+        Assert.Equal(17418.45m, entries.First(e => e.BoardName == "PUMBILITY").Value);
         piuGame.Verify(p => p.GetSessionId(MixEnum.Phoenix2, "svc", "hunter2", It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     [Fact]
-    public async Task Phoenix2LeaderboardEntriesWithoutServiceCredentialsFailLoudly()
+    public async Task Phoenix2RatingBoardsWithoutServiceCredentialsFailLoudly()
     {
         // The P2 boards serve no anonymous traffic — a misconfigured import must say
         // exactly which settings are missing, not silently mirror nothing.
@@ -138,7 +140,7 @@ public sealed class OfficialSiteClientTests
         var client = BuildClient(piuGame);
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            client.GetLeaderboardEntries(MixEnum.Phoenix2, CancellationToken.None));
+            client.GetRatingBoards(MixEnum.Phoenix2, CancellationToken.None));
 
         Assert.Contains("PiuGame:ServiceUsername", exception.Message);
         piuGame.Verify(p => p.GetSessionId(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
@@ -146,7 +148,82 @@ public sealed class OfficialSiteClientTests
     }
 
     [Fact]
-    public async Task PhoenixLeaderboardEntriesStayAnonymous()
+    public async Task Phoenix2PopularityRidesTheServiceSession()
+    {
+        // top_steps.php is login-gated on Phoenix 2 like every other ranking page — an
+        // anonymous POST gets the error page, which parses as zero entries and silently
+        // skips the popularity stage.
+        var piuGame = new Mock<IPiuGameApi>();
+        var session = new HttpClient();
+        piuGame.Setup(p => p.GetSessionId(MixEnum.Phoenix2, "svc", "hunter2", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((session, "sid123"));
+        piuGame.Setup(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix2, It.IsAny<int>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()))
+            .ReturnsAsync(new PiuGameGetChartPopularityLeaderboardResult
+            {
+                Entries = Array.Empty<PiuGameGetChartPopularityLeaderboardResult.Entry>()
+            });
+        var client = BuildClient(piuGame, serviceUsername: "svc", servicePassword: "hunter2");
+
+        await client.GetOfficialChartLeaderboardEntries(MixEnum.Phoenix2, CancellationToken.None);
+
+        piuGame.Verify(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix2, It.IsAny<int>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), session), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task PhoenixPopularityStaysAnonymous()
+    {
+        var piuGame = new Mock<IPiuGameApi>();
+        piuGame.Setup(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, It.IsAny<int>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()))
+            .ReturnsAsync(new PiuGameGetChartPopularityLeaderboardResult
+            {
+                Entries = Array.Empty<PiuGameGetChartPopularityLeaderboardResult.Entry>()
+            });
+        var client = BuildClient(piuGame);
+
+        await client.GetOfficialChartLeaderboardEntries(MixEnum.Phoenix, CancellationToken.None);
+
+        piuGame.Verify(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, It.IsAny<int>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), null), Times.AtLeastOnce);
+        piuGame.Verify(p => p.GetSessionId(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task PopularityWalkContinuesPastUnparseableTilesAndStopsOnAShortPage()
+    {
+        // A full page whose tiles all failed parsing must keep the walk alive — the site
+        // said 50, so deeper pages exist. Only a short RAW page ends the ranking.
+        var piuGame = new Mock<IPiuGameApi>();
+        piuGame.Setup(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, 0,
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()))
+            .ReturnsAsync(new PiuGameGetChartPopularityLeaderboardResult
+            {
+                Entries = Array.Empty<PiuGameGetChartPopularityLeaderboardResult.Entry>(),
+                RawRowCount = 50
+            });
+        piuGame.Setup(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, 50,
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()))
+            .ReturnsAsync(new PiuGameGetChartPopularityLeaderboardResult
+            {
+                Entries = Array.Empty<PiuGameGetChartPopularityLeaderboardResult.Entry>(),
+                RawRowCount = 30
+            });
+        var client = BuildClient(piuGame);
+
+        await client.GetOfficialChartLeaderboardEntries(MixEnum.Phoenix, CancellationToken.None);
+
+        piuGame.Verify(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, 50,
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()), Times.Once);
+        piuGame.Verify(p => p.GetChartPopularityLeaderboard(MixEnum.Phoenix, It.IsAny<int>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>(), It.IsAny<HttpClient?>()),
+            Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task PhoenixRatingBoardsStayAnonymous()
     {
         // The Phoenix mirror never logs in — byte-identical to before the P2 arm existed.
         var piuGame = new Mock<IPiuGameApi>();
@@ -163,10 +240,11 @@ public sealed class OfficialSiteClientTests
             });
         var client = BuildClient(piuGame);
 
-        var entries = (await client.GetLeaderboardEntries(MixEnum.Phoenix, CancellationToken.None)).ToArray();
+        var entries = (await client.GetRatingBoards(MixEnum.Phoenix, CancellationToken.None)).ToArray();
 
         Assert.Single(entries);
-        Assert.Equal("S20", entries[0].LeaderboardName);
+        Assert.Equal("S20", entries[0].BoardName);
+        Assert.Equal(12345m, entries[0].Value);
         piuGame.Verify(p => p.GetSessionId(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -183,5 +261,222 @@ public sealed class OfficialSiteClientTests
                 ServiceUsername = serviceUsername,
                 ServicePassword = servicePassword
             }));
+    }
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // The import walk over the best-scores pages: the dated (redesigned) list stops
+    // on the saved-date watermark or on page repetition — never trusting the pager —
+    // and recent plays attribute their judgement breakdowns onto the bests they
+    // produced.
+
+    private static readonly Guid ImportUserId = Guid.NewGuid();
+    private static readonly DateTimeOffset T0 = new(2026, 7, 17, 23, 0, 0, TimeSpan.FromHours(9));
+
+    [Fact]
+    public async Task DatedWalkStopsAfterThePageThatCrossesTheWatermark()
+    {
+        var h = new ImportHarness();
+        var newest = h.GivenChart(new ChartBuilder().WithSongName("Newest").WithNoteCount(100).Build());
+        var newer = h.GivenChart(new ChartBuilder().WithSongName("Newer").WithNoteCount(100).Build());
+        var older = h.GivenChart(new ChartBuilder().WithSongName("Older").WithNoteCount(100).Build());
+        var watermark = T0.AddHours(-12);
+        h.GivenBestScorePage(1, Card(newest, 950000, T0), Card(newer, 940000, T0.AddMinutes(-5)));
+        // Page 2 crosses the watermark: it is still processed whole, but no page 3 is read.
+        h.GivenBestScorePage(2, Card(older, 930000, watermark.AddHours(-1)));
+
+        var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: false, maxPages: null, since: watermark, CancellationToken.None)).ToArray();
+
+        Assert.Equal(3, results.Length);
+        Assert.Contains(results, r => r.Chart.Id == older.Id);
+        h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 2, It.IsAny<CancellationToken>()),
+            Times.Once);
+        h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 3, It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task DatedWalkStopsWhenTheSiteClampsToTheSamePage()
+    {
+        // Out-of-range page numbers serve the last page again — repetition is the end
+        // signal on a first (no-watermark) import.
+        var h = new ImportHarness();
+        var chart = h.GivenChart(new ChartBuilder().WithSongName("Only").WithNoteCount(100).Build());
+        var card = Card(chart, 950000, T0);
+        h.GivenBestScorePage(1, card);
+        h.GivenBestScorePage(2, card);
+
+        var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: false, maxPages: null, since: null, CancellationToken.None)).ToArray();
+
+        Assert.Single(results);
+        h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 3, It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task BrokenBestsHonorTheIncludeBrokenOptIn()
+    {
+        var h = new ImportHarness();
+        var chart = h.GivenChart(new ChartBuilder().WithSongName("Chimera").WithType(ChartType.Double)
+            .WithLevel(26).WithNoteCount(51).Build());
+        var brokenCard = Card(chart, 0, T0, plate: null, isBroken: true);
+        h.GivenBestScorePage(1, brokenCard);
+        h.GivenBestScorePage(2, brokenCard); // the clamp: out-of-range pages repeat the last page
+
+        var without = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: false, maxPages: null, since: null, CancellationToken.None)).ToArray();
+        var withBroken = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: true, maxPages: null, since: null, CancellationToken.None)).ToArray();
+
+        Assert.Empty(without);
+        var saved = Assert.Single(withBroken);
+        Assert.True(saved.IsBroken);
+        Assert.Null(saved.Plate);
+        Assert.Equal(0, (int)saved.Score);
+        Assert.Equal(T0, saved.RecordedAt);
+    }
+
+    [Fact]
+    public async Task RecentPlayMatchingTheSavedBestAttributesItsJudgements()
+    {
+        var h = new ImportHarness();
+        var chart = h.GivenChart(new ChartBuilder().WithSongName("ALiVE").WithType(ChartType.Double)
+            .WithLevel(21).WithNoteCount(1130).Build());
+        var bestCard = Card(chart, 978147, T0);
+        h.GivenBestScorePage(1, bestCard);
+        h.GivenBestScorePage(2, bestCard); // the clamp: out-of-range pages repeat the last page
+        h.GivenRecentScores(
+            Play(chart, 978147, T0, perfects: 1100, greats: 14, goods: 1, bads: 1, misses: 14),
+            // An earlier, lower play of the same chart must not win the attribution.
+            Play(chart, 960000, T0.AddMinutes(-10), perfects: 1000, greats: 60, goods: 30, bads: 20, misses: 20));
+
+        var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: false, maxPages: null, since: null, CancellationToken.None)).ToArray();
+
+        var saved = Assert.Single(results);
+        Assert.Equal(new JudgementCounts(1100, 14, 1, 1, 14), saved.Judgements);
+        Assert.Equal(T0, saved.RecordedAt);
+    }
+
+    [Fact]
+    public async Task ClassicWalkReadsLimitPagesThenHuntsUpscoresReusingTheFirstFetch()
+    {
+        var h = new ImportHarness();
+        var chartA = h.GivenChart(new ChartBuilder().WithSongName("Classic A").WithNoteCount(100).Build());
+        var chartB = h.GivenChart(new ChartBuilder().WithSongName("Classic B").WithNoteCount(100).Build());
+        h.GivenBestScorePage(1, maxPage: 4, Card(chartA, 950000, recordedAt: null));
+        h.GivenBestScorePage(2, maxPage: 4, Card(chartB, 940000, recordedAt: null));
+        h.GivenBestScorePage(3, maxPage: 4);
+        h.GivenBestScorePage(4, maxPage: 4);
+
+        var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix, ImportUserId, "sid", "card1",
+            includeBroken: false, maxPages: 2, since: null, CancellationToken.None)).ToArray();
+
+        Assert.Equal(2, results.Length);
+        Assert.All(results, r => Assert.Null(r.RecordedAt));
+        // Page 1 is fetched exactly once — the pre-walk shape read is reused by the walk.
+        h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix, It.IsAny<HttpClient>(), 1, It.IsAny<CancellationToken>()),
+            Times.Once);
+        // The up-score hunt continues past the limit to the final page.
+        h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix, It.IsAny<HttpClient>(), 4, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    private static PiuGameGetBestScoresResult.ScoreDto Card(Chart chart, int score,
+        DateTimeOffset? recordedAt, PhoenixPlate? plate = PhoenixPlate.FairGame, bool isBroken = false)
+    {
+        return new PiuGameGetBestScoresResult.ScoreDto
+        {
+            SongName = chart.Song.Name,
+            ChartType = chart.Type,
+            Level = chart.Level,
+            Score = score,
+            Plate = plate,
+            IsBroken = isBroken,
+            RecordedAt = recordedAt
+        };
+    }
+
+    private static PiuGameGetRecentScoresResult Play(Chart chart, int score,
+        DateTimeOffset? recordedAt, int perfects, int greats, int goods, int bads, int misses)
+    {
+        return new PiuGameGetRecentScoresResult
+        {
+            SongName = chart.Song.Name,
+            ChartType = chart.Type,
+            Level = chart.Level,
+            Score = score,
+            Plate = PhoenixPlate.FairGame,
+            NoteCount = perfects + greats + goods + bads + misses,
+            IsBroken = false,
+            Perfects = perfects,
+            Greats = greats,
+            Goods = goods,
+            Bads = bads,
+            Misses = misses,
+            RecordedAt = recordedAt
+        };
+    }
+
+    private sealed class ImportHarness
+    {
+        private readonly List<Chart> _charts = new();
+
+        public Mock<IPiuGameApi> Api { get; } = new();
+        public Mock<IChartRepository> Charts { get; } = new();
+        public HttpClient Session { get; } = new();
+        public OfficialSiteClient Client { get; }
+
+        public ImportHarness()
+        {
+            Api.Setup(a => a.ClientForSid(It.IsAny<MixEnum>(), It.IsAny<string>())).Returns(Session);
+            Api.Setup(a => a.GetCards(It.IsAny<MixEnum>(), Session, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new[] { new GameCardRecord("TAG", "card1", true) });
+            Api.Setup(a => a.GetAccountData(It.IsAny<MixEnum>(), Session, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PiuGameGetAccountDataResult
+                {
+                    AccountName = "TAG",
+                    ImageUrl = new Uri("https://example.invalid/avatar.png")
+                });
+            Api.Setup(a => a.GetRecentScores(It.IsAny<MixEnum>(), Session, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<PiuGameGetRecentScoresResult>());
+            Charts.Setup(c => c.GetEnglishLookup("ko-KR", It.IsAny<CancellationToken>()))
+                .ReturnsAsync((IDictionary<Name, Name>)new Dictionary<Name, Name>());
+            Charts.Setup(c => c.GetChartsForSong(It.IsAny<MixEnum>(), It.IsAny<Name>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((MixEnum _, Name name, CancellationToken _) =>
+                    _charts.Where(c => c.Song.Name == name).ToArray());
+            var scores = new Mock<IScoreReader>();
+            scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<ScoreTracker.Domain.Models.RecordedPhoenixScore>());
+            Client = new OfficialSiteClient(Api.Object, Charts.Object, NullLogger<OfficialSiteClient>.Instance,
+                Mock.Of<IMediator>(), Mock.Of<ICurrentUserAccessor>(), scores.Object, Mock.Of<IFileUploadClient>(),
+                Mock.Of<IOfficialLeaderboardRepository>(), Mock.Of<IBus>(), FakeDateTime.At(T0).Object,
+                Mock.Of<IDailyStepReader>(), Options.Create(new PiuGameConfiguration()));
+        }
+
+        public Chart GivenChart(Chart chart)
+        {
+            _charts.Add(chart);
+            return chart;
+        }
+
+        public void GivenBestScorePage(int page, params PiuGameGetBestScoresResult.ScoreDto[] cards)
+        {
+            GivenBestScorePage(page, maxPage: 1, cards);
+        }
+
+        public void GivenBestScorePage(int page, int maxPage, params PiuGameGetBestScoresResult.ScoreDto[] cards)
+        {
+            Api.Setup(a => a.GetBestScores(It.IsAny<MixEnum>(), Session, page, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PiuGameGetBestScoresResult { MaxPage = maxPage, Scores = cards });
+        }
+
+        public void GivenRecentScores(params PiuGameGetRecentScoresResult[] plays)
+        {
+            Api.Setup(a => a.GetRecentScores(It.IsAny<MixEnum>(), Session, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(plays);
+        }
     }
 }

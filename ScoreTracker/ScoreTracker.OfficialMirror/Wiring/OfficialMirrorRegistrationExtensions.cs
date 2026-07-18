@@ -32,7 +32,9 @@ public static class OfficialMirrorRegistrationExtensions
         services.AddTransient<IOfficialSiteClient, OfficialSiteClient>();
         services.AddTransient<IPiuTrackerClient, PiuTrackerClient>();
         services.AddTransient<IOfficialLeaderboardRepository, EFOfficialLeaderboardRepository>();
-        services.AddTransient<IWorldRankingService, WorldRankingService>();
+        services.AddTransient<IOfficialSnapshotRepository, EFOfficialSnapshotRepository>();
+        services.AddTransient<IOfficialRecordRepository, EFOfficialRecordRepository>();
+        services.AddTransient<IOfficialPlayerIdentityRepository, EFOfficialPlayerIdentityRepository>();
         // Singleton: the in-flight-import set is shared across every request and the bus consumer.
         services.AddSingleton<IImportConcurrencyGuard, ImportConcurrencyGuard>();
         services.AddSingleton<IDbModelContribution, OfficialMirrorModelContribution>();
@@ -46,7 +48,8 @@ public static class OfficialMirrorRegistrationExtensions
     /// </summary>
     public static void AddOfficialMirrorConsumers(this IRegistrationConfigurator configurator)
     {
-        configurator.AddConsumer<OfficialLeaderboardSaga>();
+        configurator.AddConsumer<LeaderboardSweepSaga>();
+        configurator.AddConsumer<PlayerIdentitySaga>();
         configurator.AddConsumer<RunOfficialImportConsumer>();
     }
 }

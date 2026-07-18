@@ -127,6 +127,24 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
         });
     }
 
+    [Theory]
+    [InlineData(MixEnum.Phoenix, false)]
+    [InlineData(MixEnum.Phoenix2, true)]
+    public void IncludeBrokenDefaultsOnOnlyForPhoenix2(MixEnum mix, bool expectedChecked)
+    {
+        // Phoenix 2's best-scores list carries broken attempts with real partial scores, so
+        // including them is that mix's default; Phoenix keeps the opt-in. The box stays
+        // user-overridable either way.
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(mix);
+
+        var cut = RenderComponent<UploadPhoenixScores>();
+
+        var label = cut.FindAll("label").First(l => l.TextContent.Contains("Include Broken Scores"));
+        var input = label.QuerySelector("input");
+        Assert.NotNull(input);
+        Assert.Equal(expectedChecked, input!.HasAttribute("checked"));
+    }
+
     [Fact]
     public void ManualImportIsCollapsedByDefault()
     {

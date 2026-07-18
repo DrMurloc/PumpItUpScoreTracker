@@ -38,4 +38,15 @@ internal sealed class ScoreEventJournalEntity
     ///     session capture; never backfilled.
     /// </summary>
     public Guid? SessionId { get; set; }
+
+    /// <summary>
+    ///     Judgement breakdown of the play behind this journal state. All five are set
+    ///     together or not at all; NULL = not observed for this event.
+    /// </summary>
+    public int? Perfects { get; set; }
+
+    public int? Greats { get; set; }
+    public int? Goods { get; set; }
+    public int? Bads { get; set; }
+    public int? Misses { get; set; }
 }

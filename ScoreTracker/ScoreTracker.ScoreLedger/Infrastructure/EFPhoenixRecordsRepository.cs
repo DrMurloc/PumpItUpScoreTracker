@@ -46,7 +46,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 .ToArrayAsync(cancellationToken))
             .Select(pb => (pb.UserId,
                 new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),
-                    pb.IsBroken, pb.RecordedDate)));
+                    pb.IsBroken, pb.RecordedDate, Judgements: JudgementsOf(pb))));
     }
 
     Task<IEnumerable<RecordedPhoenixScore>> IScoreReader.GetScores(MixEnum mix, IEnumerable<Guid> userIds,
@@ -98,7 +98,8 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 .OrderBy(e => e.OccurredAt)
                 .ToArrayAsync(cancellationToken))
             .Select(e => new ScoreJournalEntry(e.OccurredAt, e.Source, e.UserId, e.ChartId,
-                e.Score, PhoenixPlateHelperMethods.TryParse(e.Plate), e.IsBroken, MixIds.ToEnum(e.MixId)));
+                e.Score, PhoenixPlateHelperMethods.TryParse(e.Plate), e.IsBroken, MixIds.ToEnum(e.MixId),
+                Judgements: EFScoreJournalRepository.JudgementsOf(e)));
     }
 
     async Task<IReadOnlySet<Guid>> IScoreReader.GetActiveUserIds(MixEnum mix, DateTimeOffset since,
@@ -166,6 +167,14 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         _playerStats = playerStats;
     }
 
+    internal static JudgementCounts? JudgementsOf(PhoenixRecordEntity pba)
+    {
+        return pba.Perfects == null
+            ? null
+            : new JudgementCounts(pba.Perfects.Value, pba.Greats!.Value, pba.Goods!.Value, pba.Bads!.Value,
+                pba.Misses!.Value);
+    }
+
     public async Task UpdateBestAttempt(MixEnum mix, Guid userId, RecordedPhoenixScore score,
         CancellationToken cancellationToken = default)
     {
@@ -188,7 +197,12 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 LetterGrade = score.Score?.LetterGrade.GetName(),
                 Plate = score.Plate?.GetName(),
                 RecordedDate = score.RecordedDate,
-                Source = score.Source
+                Source = score.Source,
+                Perfects = score.Judgements?.Perfects,
+                Greats = score.Judgements?.Greats,
+                Goods = score.Judgements?.Goods,
+                Bads = score.Judgements?.Bads,
+                Misses = score.Judgements?.Misses
             }, cancellationToken);
         }
         else
@@ -199,6 +213,11 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             existing.IsBroken = score.IsBroken;
             existing.RecordedDate = score.RecordedDate;
             existing.Source = score.Source;
+            existing.Perfects = score.Judgements?.Perfects;
+            existing.Greats = score.Judgements?.Greats;
+            existing.Goods = score.Judgements?.Goods;
+            existing.Bads = score.Judgements?.Bads;
+            existing.Misses = score.Judgements?.Misses;
         }
 
         await database.SaveChangesAsync(cancellationToken);
@@ -218,7 +237,8 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             var rows = await database.Set<PhoenixRecordEntity>()
                 .Where(pba => pba.UserId == userId && pba.MixId == mixId)
                 .Select(pba => new RecordedPhoenixScore(pba.ChartId, pba.Score,
-                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, pba.RecordedDate, pba.Source))
+                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, pba.RecordedDate, pba.Source,
+                    JudgementsOf(pba)))
                 .ToArrayAsync(cancellationToken);
 
             return new ConcurrentDictionary<Guid, RecordedPhoenixScore>(
@@ -269,7 +289,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 select pba).ToArrayAsync(cancellationToken))
             .Select(pb =>
                 new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),
-                    pb.IsBroken, pb.RecordedDate));
+                    pb.IsBroken, pb.RecordedDate, Judgements: JudgementsOf(pb)));
     }
 
     public async Task<RecordedPhoenixScore?> GetRecordedScore(MixEnum mix, Guid userId, Guid chartId,
@@ -316,9 +336,12 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         var chartIdArray = chartIds.Distinct().ToArray();
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Cohort percentile machinery only — a walkoff in the distribution makes everyone
+        // else's percentile look better than it is, so broken rows never enter.
         return await (from pba in database.Set<PhoenixRecordEntity>()
                 join u in database.User on pba.UserId equals u.Id
                 where chartIdArray.Contains(pba.ChartId) && pba.MixId == mixId && pba.Score != null &&
+                      !pba.IsBroken &&
                       userIdArray.Contains(pba.UserId)
                 select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
                     pba.Score!.Value,
@@ -335,16 +358,18 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         var intLevel = (int)difficulty;
         var chartTypeString = chartType.ToString();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Same cohort-only contract as the chart-id overload above: percentile
+        // distributions and competitive-neighbor reads never see broken rows.
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
                 join pba in database.Set<PhoenixRecordEntity>() on c.Id equals pba.ChartId
                 where
-                    userIdArray.Contains(pba.UserId) &&
+                    userIdArray.Contains(pba.UserId) && !pba.IsBroken &&
                     cm.MixId == mixId && pba.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
                 select pba).ToArrayAsync(cancellationToken))
             .Select(pb => (pb.UserId,
                 new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),
-                    pb.IsBroken, pb.RecordedDate)));
+                    pb.IsBroken, pb.RecordedDate, Judgements: JudgementsOf(pb))));
     }
 
 
@@ -363,7 +388,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 select pba).ToArrayAsync(cancellationToken))
             .Select(pb => (pb.UserId,
                 new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),
-                    pb.IsBroken, pb.RecordedDate)));
+                    pb.IsBroken, pb.RecordedDate, Judgements: JudgementsOf(pb))));
     }
 
     public async Task<IEnumerable<ChartScoreAggregate>> GetMeaningfulScoresCount(MixEnum mix, ChartType chartType,

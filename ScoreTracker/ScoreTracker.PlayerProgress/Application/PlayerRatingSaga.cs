@@ -202,7 +202,10 @@ internal sealed class PlayerRatingSaga :
             .Where(s => s.Score != null)
             .Select(s => new ChartRating(s.ChartId, charts[s.ChartId].Type, Rate(s), s.Score!.Value, s.IsBroken))
             .ToArray();
-        var competitiveScores = recorded.Where(s => s.Score != null)
+        // Broken attempts never rate: a walkoff's partial score deflates small accounts'
+        // competitive averages, and a deep partial on an overrated chart would farm
+        // competitive level without ever passing it.
+        var competitiveScores = recorded.Where(s => s.Score != null && !s.IsBroken)
             .Select(s => new ChartCompetitive(s.ChartId, charts[s.ChartId].Type,
                 ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score!.Value,
                     charts[s.ChartId].Type),
@@ -221,7 +224,7 @@ internal sealed class PlayerRatingSaga :
             .OrderByDescending(s => s.Rating)
             .Take(50).ToArray();
 
-        var coOps = scores.Where(s => s.Type == ChartType.CoOp)
+        var coOps = scores.Where(s => !s.IsBroken && s.Type == ChartType.CoOp)
             .ToArray();
         var competitive =
             AvgOr0(competitiveScores.OrderByDescending(e => e.CompetitiveLevel).Take(100)
@@ -240,7 +243,8 @@ internal sealed class PlayerRatingSaga :
         var skillPool = top50;
         var skillRating = (int)top50.Sum(s => s.Rating);
 
-        var newStats = new PlayerStatsRecord(request.UserId, (int)scores.Sum(s => s.Rating),
+        var newStats = new PlayerStatsRecord(request.UserId,
+            (int)scores.Where(s => !s.IsBroken).Sum(s => s.Rating),
             recorded.Any(r => !r.IsBroken) ? recorded.Where(r => !r.IsBroken).Max(r => charts[r.ChartId].Level) : 1,
             recorded.Count(r => !r.IsBroken),
             (int)coOps.Sum(s => s.Rating),

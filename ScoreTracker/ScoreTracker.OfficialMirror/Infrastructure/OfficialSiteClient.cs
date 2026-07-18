@@ -1,4 +1,5 @@
 using ScoreTracker.OfficialMirror.Domain;
+using System.Runtime.CompilerServices;
 using System.Security.Authentication;
 using ScoreTracker.Domain.Exceptions;
 using System.Text.RegularExpressions;
@@ -77,10 +78,10 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         return client;
     }
 
-    public async Task<IEnumerable<OfficialChartLeaderboardEntry>> GetAllOfficialChartScores(MixEnum mix,
-        CancellationToken cancellationToken)
+    public async IAsyncEnumerable<OfficialChartBoardResult> GetOfficialChartBoards(MixEnum mix,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        // The Phoenix 2 chart LIST is login-gated (the individual boards are public).
+        // The whole Phoenix 2 leaderboard area is login-gated; Phoenix stays anonymous.
         var listClient = mix == MixEnum.Phoenix2 ? await GetServiceClient(mix, cancellationToken) : null;
         var songs = new List<PiuGameGetSongsResult.SongDto>();
         var page = 1;
@@ -91,52 +92,101 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             if (nextPage.IsEnd) break;
 
             page++;
+            await SweepDelay(cancellationToken);
         }
 
-        var current = 1;
-        var max = songs.Count;
-        var result = new List<OfficialChartLeaderboardEntry>();
-        var misMatched = new List<string>();
+        // One blob-existence check per unique avatar per sweep — boards repeat the same
+        // player art hundreds of times, and at 300-deep boards the per-row check was the
+        // sweep's hidden cost.
+        var avatarCache = new Dictionary<string, Uri?>();
+        var total = songs.Count;
+        var index = 0;
         foreach (var song in songs)
         {
+            index++;
+            if (!DifficultyLevel.IsValid(song.Difficulty))
+            {
+                yield return new OfficialChartBoardResult(index, total, null,
+                    $"unparsable level: {song.Name} {song.Type} {song.Difficulty}",
+                    Array.Empty<OfficialChartLeaderboardEntry>(),
+                    new MissingChartSighting(song.Name, song.Type, song.Difficulty));
+                continue;
+            }
+
             var chartType = Enum.Parse<ChartType>(song.Type);
-            if (!DifficultyLevel.IsValid(song.Difficulty)) continue;
             var chart = (await _charts.GetChartsForSong(mix, song.Name, cancellationToken))
                 .FirstOrDefault(c => c.Type == chartType && c.Level == song.Difficulty);
             if (chart == null)
             {
-                misMatched.Add(song.Name + " " + song.Type + " " + song.Difficulty);
+                yield return new OfficialChartBoardResult(index, total, null,
+                    $"no catalog chart: {song.Name} {song.Type} {song.Difficulty}",
+                    Array.Empty<OfficialChartLeaderboardEntry>(),
+                    new MissingChartSighting(song.Name, song.Type, song.Difficulty));
                 continue;
             }
 
-            _logger.LogInformation($"Song {current++} out of {max}");
-            var scores = await _piuGame.GetSongLeaderboard(mix, song.Id, cancellationToken);
-            foreach (var score in scores.Results)
-                result.Add(new OfficialChartLeaderboardEntry(score.ProfileName, chart, score.Score,
-                    await ConvertPiuGameAvatarToPiuScoresAvatar(score.AvatarUrl, cancellationToken)
-                    ?? DefaultAvatar));
-        }
+            _logger.LogInformation("Board {Index}/{Total}: {Song}", index, total, song.Name);
+            // Boards deeper than one page (Phoenix 2's top 300) walk the same next/last-icon
+            // protocol as the PUMBILITY board; a page that adds nothing new also stops the
+            // walk since the site clamps out-of-range pages to the last one.
+            var entries = new List<OfficialChartLeaderboardEntry>();
+            string? failure = null;
+            try
+            {
+                var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                for (var boardPage = 1;; boardPage++)
+                {
+                    var scores = await _piuGame.GetSongLeaderboard(mix, song.Id, boardPage, cancellationToken,
+                        listClient);
+                    var added = 0;
+                    foreach (var score in scores.Results)
+                    {
+                        if (!seen.Add(score.ProfileName)) continue;
 
-        return result;
+                        entries.Add(new OfficialChartLeaderboardEntry(score.ProfileName, chart, score.Score,
+                            await MirrorAvatar(score.AvatarUrl, avatarCache, cancellationToken) ?? DefaultAvatar));
+                        added++;
+                    }
+
+                    if (scores.IsEnd || added == 0) break;
+
+                    await SweepDelay(cancellationToken);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                // One unreachable board is a skipped board, never a dead sweep.
+                _logger.LogWarning(e, "Board fetch failed for {Song} {Type} {Level}", song.Name, song.Type,
+                    song.Difficulty);
+                failure = $"fetch failed: {e.Message}";
+            }
+
+            yield return failure == null
+                ? new OfficialChartBoardResult(index, total, chart, null, entries)
+                : new OfficialChartBoardResult(index, total, chart, failure,
+                    Array.Empty<OfficialChartLeaderboardEntry>());
+
+            await SweepDelay(cancellationToken);
+        }
     }
 
-    public async Task<IEnumerable<UserOfficialLeaderboard>> GetLeaderboardEntries(MixEnum mix,
+    public async Task<IEnumerable<RatingBoardEntry>> GetRatingBoards(MixEnum mix,
         CancellationToken cancellationToken)
     {
-        if (mix == MixEnum.Phoenix2) return await GetPumbilityLeaderboardEntries(mix, cancellationToken);
+        if (mix == MixEnum.Phoenix2) return await GetPumbilityRatingBoards(mix, cancellationToken);
 
         var leaderboardList = await _piuGame.GetLeaderboards(mix, cancellationToken);
-        var result = new List<UserOfficialLeaderboard>();
+        var result = new List<RatingBoardEntry>();
         foreach (var leaderboard in leaderboardList.Entries)
         {
             var entries = await _piuGame.GetLeaderboard(mix, leaderboard.Id, cancellationToken);
-            var place = 1;
-            foreach (var entry in entries.Entries.OrderByDescending(e => e.Rating))
-            {
-                result.Add(new UserOfficialLeaderboard(entry.ProfileName, place, "Rating", leaderboard.Name,
-                    entry.Rating));
-                place++;
-            }
+            result.AddRange(entries.Entries.Select(e =>
+                new RatingBoardEntry(leaderboard.Name, e.ProfileName, e.Rating)));
+            await SweepDelay(cancellationToken);
         }
 
         return result;
@@ -144,15 +194,15 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
 
     /// <summary>
     ///     Phoenix 2 replaced the per-level rating boards with one daily PUMBILITY board —
-    ///     its All/Single/Double tabs ARE the mix's "Rating" leaderboards. The site clamps
+    ///     its All/Single/Double tabs ARE the mix's rating boards. The site clamps
     ///     out-of-range pages to the last one, so paging stops on the end markers or the
-    ///     first page that adds nothing new.
+    ///     first page that adds nothing new. Values keep their decimal cents.
     /// </summary>
-    private async Task<IEnumerable<UserOfficialLeaderboard>> GetPumbilityLeaderboardEntries(MixEnum mix,
+    private async Task<IEnumerable<RatingBoardEntry>> GetPumbilityRatingBoards(MixEnum mix,
         CancellationToken cancellationToken)
     {
         var client = await GetServiceClient(mix, cancellationToken);
-        var result = new List<UserOfficialLeaderboard>();
+        var result = new List<RatingBoardEntry>();
         foreach (var (chartType, boardName) in new (ChartType?, string)[]
                  {
                      (null, "PUMBILITY"),
@@ -161,7 +211,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                  })
         {
             var seen = new HashSet<string>();
-            var place = 1;
+            var count = 0;
             for (var page = 1;; page++)
             {
                 var board = await _piuGame.GetPumbilityRankings(mix, chartType, page, client, cancellationToken);
@@ -170,18 +220,38 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 {
                     if (!seen.Add(entry.ProfileName)) continue;
 
-                    result.Add(new UserOfficialLeaderboard(entry.ProfileName, place++, "Rating", boardName,
-                        (int)entry.Pumbility));
+                    result.Add(new RatingBoardEntry(boardName, entry.ProfileName, (decimal)entry.Pumbility));
                     added++;
+                    count++;
                 }
 
                 if (board.IsEnd || added == 0) break;
+
+                await SweepDelay(cancellationToken);
             }
 
-            _logger.LogInformation("{Board}: {Count} ranked players", boardName, place - 1);
+            _logger.LogInformation("{Board}: {Count} ranked players", boardName, count);
         }
 
         return result;
+    }
+
+    private async Task<Uri?> MirrorAvatar(Uri avatar, IDictionary<string, Uri?> cache,
+        CancellationToken cancellationToken)
+    {
+        var key = avatar.ToString();
+        if (cache.TryGetValue(key, out var mirrored)) return mirrored;
+
+        mirrored = await ConvertPiuGameAvatarToPiuScoresAvatar(avatar, cancellationToken);
+        cache[key] = mirrored;
+        return mirrored;
+    }
+
+    private Task SweepDelay(CancellationToken cancellationToken)
+    {
+        return _configuration.SweepRequestDelayMilliseconds <= 0
+            ? Task.CompletedTask
+            : Task.Delay(_configuration.SweepRequestDelayMilliseconds, cancellationToken);
     }
 
     private static readonly Uri DefaultAvatar =
@@ -220,9 +290,8 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     public async Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(MixEnum mix, Guid userId,
         string sid, string id,
         bool includeBroken,
-        int? maxPages, CancellationToken cancellationToken)
+        int? maxPages, DateTimeOffset? since, CancellationToken cancellationToken)
     {
-        var currentPage = 1;
         await _mediator.Publish(
             new ImportStatusUpdatedEvent(userId, "Logging In",
                 Array.Empty<RecordedPhoenixScore>(), mix), cancellationToken);
@@ -234,50 +303,13 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
 
         var accountInfo = await _piuGame.GetAccountData(mix, sessionId, cancellationToken);
 
-        var finalPage = (await _piuGame.GetBestScores(mix, sessionId, 1, cancellationToken)).MaxPage;
-        var responses = new List<PiuGameGetBestScoresResult.ScoreDto>();
-        maxPages ??= finalPage;
-        while (currentPage <= maxPages.Value)
-        {
-            await _mediator.Publish(
-                new ImportStatusUpdatedEvent(userId, $"Reading page {currentPage} of {maxPages} (New Passes)",
-                    Array.Empty<RecordedPhoenixScore>(), mix),
-                cancellationToken);
-            var nextPage = await _piuGame.GetBestScores(mix, sessionId, currentPage, cancellationToken);
-            responses.AddRange(nextPage.Scores);
-            currentPage++;
-            _logger.LogInformation($"Page {currentPage}");
-        }
-
-        var pagesWithNoUpscore = 0;
-        var bestScores =
-            (await _phoenixRecords.GetBestScores(mix, userId, cancellationToken))
-            .ToDictionary(r =>
-                r.ChartId);
-        while (pagesWithNoUpscore <= 3 && currentPage <= finalPage)
-        {
-            pagesWithNoUpscore++;
-            var nextPage = await _piuGame.GetBestScores(mix, sessionId, currentPage, cancellationToken);
-            await _mediator.Publish(
-                new ImportStatusUpdatedEvent(userId, $"Reading page {currentPage} (Up-scores)",
-                    Array.Empty<RecordedPhoenixScore>(), mix),
-                cancellationToken);
-
-            foreach (var score in nextPage.Scores)
-            {
-                var song = await GetMappedName(score.SongName, cancellationToken);
-
-                var chart = (await _charts.GetChartsForSong(mix, song, cancellationToken))
-                    .FirstOrDefault(c => c.Type == score.ChartType && c.Level == score.Level);
-                if (chart == null) continue;
-                if (bestScores.ContainsKey(chart.Id) && score.Score <= (bestScores[chart.Id].Score ?? 0)) continue;
-
-                responses.Add(score);
-                pagesWithNoUpscore = 0;
-            }
-
-            currentPage++;
-        }
+        var firstPage = await _piuGame.GetBestScores(mix, sessionId, 1, cancellationToken);
+        // The redesigned best list dates every card and sorts newest-first, which carries the
+        // incremental cutoff; the classic list has no dates and keeps the page-count delta +
+        // up-score-window walk. Strategy follows the page shape, never the mix.
+        var responses = firstPage.Scores.Any(s => s.RecordedAt != null)
+            ? await WalkDatedBestScores(mix, userId, sessionId, firstPage, since, cancellationToken)
+            : await WalkClassicBestScores(mix, userId, sessionId, firstPage, maxPages, cancellationToken);
 
         var results = new Dictionary<Guid, OfficialRecordedScore>();
         foreach (var response in responses)
@@ -291,7 +323,17 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 .FirstOrDefault(c => c.Type == chartType && c.Level == response.Level);
             if (chart == null) continue;
 
-            results[chart.Id] = new OfficialRecordedScore(chart, response.Score, response.Plate);
+            // The redesigned best list includes stage-failed bests (no plate, real partial
+            // score) — they honor the same opt-in as recent-play breaks.
+            if (response.IsBroken && !includeBroken) continue;
+
+            // A chart surfacing twice in one walk (its score changed mid-walk) keeps the
+            // newest-dated card; undated cards keep the classic last-wins overwrite.
+            if (results.TryGetValue(chart.Id, out var alreadyMapped) &&
+                alreadyMapped.RecordedAt >= response.RecordedAt) continue;
+
+            results[chart.Id] = new OfficialRecordedScore(chart, response.Score, response.Plate,
+                response.IsBroken, response.RecordedAt);
         }
 
         var recent = (await _piuGame.GetRecentScores(mix, sessionId, cancellationToken)).ToArray();
@@ -332,9 +374,26 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                         lowestPass?.Plate.ToString()), cancellationToken);
                 }
 
-                if (!includeBroken || results.ContainsKey(chart.Id)) continue;
+                if (includeBroken && !results.ContainsKey(chart.Id))
+                    results[chart.Id] = new OfficialRecordedScore(chart, bestScore, bestPlate, isBroken);
 
-                results[chart.Id] = new OfficialRecordedScore(chart, bestScore, bestPlate, isBroken);
+                // A recent play whose chart, score, and broken-ness match the best being saved
+                // is the play that produced it: its judgement breakdown — and its timestamp,
+                // when the best list carried none — ride onto the record.
+                if (results.TryGetValue(chart.Id, out var saved))
+                {
+                    var producing = chartGroup
+                        .Where(s => s.Score == saved.Score && s.IsBroken == saved.IsBroken)
+                        .OrderByDescending(s => s.RecordedAt ?? DateTimeOffset.MinValue)
+                        .FirstOrDefault();
+                    if (producing != null)
+                        results[chart.Id] = saved with
+                        {
+                            Judgements = new JudgementCounts(producing.Perfects, producing.Greats,
+                                producing.Goods, producing.Bads, producing.Misses),
+                            RecordedAt = saved.RecordedAt ?? producing.RecordedAt
+                        };
+                }
             }
         }
 
@@ -342,6 +401,100 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 ScoreImportCompletedEvent.OfficialImportSource, userId, mix, entries.ToArray()),
             cancellationToken);
         return results.Values;
+    }
+
+    /// <summary>
+    ///     Walks the redesigned (dated, newest-first) best list. Stops after the page that
+    ///     crosses the watermark — that page still processes whole, so equal-timestamp saves
+    ///     re-import harmlessly — or when a page adds nothing new. The site clamps
+    ///     out-of-range page numbers to the last page, so repetition is the reliable end
+    ///     signal and the pager markup is never trusted.
+    /// </summary>
+    private async Task<List<PiuGameGetBestScoresResult.ScoreDto>> WalkDatedBestScores(MixEnum mix, Guid userId,
+        HttpClient sessionId, PiuGameGetBestScoresResult firstPage, DateTimeOffset? since,
+        CancellationToken cancellationToken)
+    {
+        var responses = new List<PiuGameGetBestScoresResult.ScoreDto>();
+        var seen = new HashSet<(string, ChartType, int, int, DateTimeOffset?)>();
+        var page = firstPage;
+        for (var pageNumber = 1; pageNumber <= 1000; pageNumber++)
+        {
+            await _mediator.Publish(
+                new ImportStatusUpdatedEvent(userId, $"Reading page {pageNumber} (Best Scores)",
+                    Array.Empty<RecordedPhoenixScore>(), mix),
+                cancellationToken);
+            var added = 0;
+            foreach (var score in page.Scores)
+            {
+                if (!seen.Add((score.SongName.ToString(), score.ChartType, (int)score.Level, (int)score.Score,
+                        score.RecordedAt))) continue;
+
+                responses.Add(score);
+                added++;
+            }
+
+            var crossedWatermark = since != null &&
+                                   page.Scores.Any(s => s.RecordedAt != null && s.RecordedAt < since);
+            if (crossedWatermark || added == 0 || page.Scores.Length == 0) break;
+
+            page = await _piuGame.GetBestScores(mix, sessionId, pageNumber + 1, cancellationToken);
+        }
+
+        return responses;
+    }
+
+    private async Task<List<PiuGameGetBestScoresResult.ScoreDto>> WalkClassicBestScores(MixEnum mix, Guid userId,
+        HttpClient sessionId, PiuGameGetBestScoresResult firstPage, int? maxPages,
+        CancellationToken cancellationToken)
+    {
+        var finalPage = firstPage.MaxPage;
+        maxPages ??= finalPage;
+        var responses = new List<PiuGameGetBestScoresResult.ScoreDto>();
+        var currentPage = 1;
+        var page = firstPage;
+        while (currentPage <= maxPages.Value)
+        {
+            await _mediator.Publish(
+                new ImportStatusUpdatedEvent(userId, $"Reading page {currentPage} of {maxPages} (New Passes)",
+                    Array.Empty<RecordedPhoenixScore>(), mix),
+                cancellationToken);
+            if (currentPage > 1) page = await _piuGame.GetBestScores(mix, sessionId, currentPage, cancellationToken);
+            responses.AddRange(page.Scores);
+            currentPage++;
+            _logger.LogInformation($"Page {currentPage}");
+        }
+
+        var pagesWithNoUpscore = 0;
+        var bestScores =
+            (await _phoenixRecords.GetBestScores(mix, userId, cancellationToken))
+            .ToDictionary(r =>
+                r.ChartId);
+        while (pagesWithNoUpscore <= 3 && currentPage <= finalPage)
+        {
+            pagesWithNoUpscore++;
+            var nextPage = await _piuGame.GetBestScores(mix, sessionId, currentPage, cancellationToken);
+            await _mediator.Publish(
+                new ImportStatusUpdatedEvent(userId, $"Reading page {currentPage} (Up-scores)",
+                    Array.Empty<RecordedPhoenixScore>(), mix),
+                cancellationToken);
+
+            foreach (var score in nextPage.Scores)
+            {
+                var song = await GetMappedName(score.SongName, cancellationToken);
+
+                var chart = (await _charts.GetChartsForSong(mix, song, cancellationToken))
+                    .FirstOrDefault(c => c.Type == score.ChartType && c.Level == score.Level);
+                if (chart == null) continue;
+                if (bestScores.ContainsKey(chart.Id) && score.Score <= (bestScores[chart.Id].Score ?? 0)) continue;
+
+                responses.Add(score);
+                pagesWithNoUpscore = 0;
+            }
+
+            currentPage++;
+        }
+
+        return responses;
     }
 
     public async Task<(IEnumerable<OfficialRecordedScore> results, IEnumerable<string> nonMapped)> GetRecentScores(
@@ -466,21 +619,35 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             { "ヨロピク ピクヨロ！\nYoropiku Pikuyoro !", "Yoropiku Pikuyoro !" }
         };
 
-    public async Task<IEnumerable<ChartPopularityLeaderboardEntry>> GetOfficialChartLeaderboardEntries(MixEnum mix,
+    public async Task<(IReadOnlyList<ChartPopularityLeaderboardEntry> Entries,
+        IReadOnlyList<MissingChartSighting> Missing)> GetOfficialChartLeaderboardEntries(MixEnum mix,
         CancellationToken cancellationToken)
     {
+        // The whole Phoenix 2 leaderboard area is login-gated, the play ranking included;
+        // Phoenix stays anonymous.
+        var client = mix == MixEnum.Phoenix2 ? await GetServiceClient(mix, cancellationToken) : null;
         var missingCharts = new List<PiuGameGetChartPopularityLeaderboardResult.Entry>();
         var page = 0;
+        var rawRows = 0;
         var apiResults = new List<PiuGameGetChartPopularityLeaderboardResult.Entry>();
         while (true)
         {
             _logger.LogInformation($"Pulling page {page}");
-            var nextResult = await _piuGame.GetChartPopularityLeaderboard(mix, page, cancellationToken);
+            var nextResult = await _piuGame.GetChartPopularityLeaderboard(mix, page, _dateTime.Now,
+                cancellationToken, client);
             apiResults.AddRange(nextResult.Entries);
-            if (nextResult.Entries.Length < 50) break;
+            rawRows += nextResult.RawRowCount;
+            // The walk ends when the SITE serves a short page — parsed counts can dip
+            // under 50 on a full page (skipped tiles) without meaning the ranking ended.
+            if (nextResult.RawRowCount < 50) break;
 
             page += 50;
+            await SweepDelay(cancellationToken);
         }
+
+        _logger.LogInformation(
+            "Popularity walk {Mix}: {Pages} pages, {Raw} raw tiles, {Parsed} parsed",
+            mix, page / 50 + 1, rawRows, apiResults.Count);
 
         var result = new List<ChartPopularityLeaderboardEntry>();
         foreach (var apiResult in apiResults)
@@ -501,11 +668,15 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 new Uri(apiResult.SongImage, UriKind.Absolute)));
         }
 
-        var existing = result.Select(r => r.Chart.Id).Distinct().ToHashSet();
-        var chartIds =
-            (await _charts.GetCharts(mix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
-        var doesntExist = chartIds.Values.Where(c => !existing.Contains(c.Id)).ToArray();
-        return result;
+        // The counts tell a field test what actually happened: zero scraped means the
+        // page served nothing (auth, date, or markup drift), while a large unmapped tally
+        // means the catalog is missing content.
+        _logger.LogInformation("Popularity {Mix}: {Mapped} charts ranked, {Unmapped} unmapped",
+            mix, result.Count, missingCharts.Count);
+        return (result, missingCharts
+            .Select(m => new MissingChartSighting(m.SongName.ToString(), m.ChartType.ToString(),
+                (int)m.ChartLevel))
+            .ToArray());
     }
 
     public async Task<PiuGameUcsEntry?> GetUcs(int id, CancellationToken cancellationToken)

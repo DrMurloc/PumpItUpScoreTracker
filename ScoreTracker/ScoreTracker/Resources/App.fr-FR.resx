@@ -3239,6 +3239,9 @@
   <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
     <value>PIU Scores conserve tout votre historique Pump It Up, importé directement depuis votre compte PIUGAME, et le transforme en tier lists, classements et recommandations adaptés à votre façon de jouer.</value>
   </data>
+  <data name="PIU Scores — Pump It Up score tracker &amp; tier lists" xml:space="preserve">
+    <value>PIU Scores — suivi de scores et tier lists Pump It Up</value>
+  </data>
   <data name="Free, and built by a player." xml:space="preserve">
     <value>Gratuit, et créé par un joueur.</value>
   </data>
@@ -4442,11 +4445,314 @@
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>Les scores importés apparaîtront ici au fur et à mesure.</value>
   </data>
+  <data name="Accept - merge history" xml:space="preserve">
+    <value>Accepter - fusionner l'historique</value>
+  </data>
+  <data name="avatar match" xml:space="preserve">
+    <value>avatar identique</value>
+  </data>
+  <data name="Baseline" xml:space="preserve">
+    <value>Référence initiale</value>
+  </data>
+  <data name="Baseline seed queued - it refuses to run once sealed snapshots exist" xml:space="preserve">
+    <value>Référence initiale en file d'attente - elle refuse de s'exécuter si des instantanés scellés existent déjà</value>
+  </data>
+  <data name="Best place" xml:space="preserve">
+    <value>Meilleure place</value>
+  </data>
+  <data name="Board #1s" xml:space="preserve">
+    <value>Premières places</value>
+  </data>
+  <data name="Board placements" xml:space="preserve">
+    <value>Places sur les leaderboards</value>
+  </data>
+  <data name="Board rank - lower is better" xml:space="preserve">
+    <value>Rang du leaderboard - plus bas, c'est mieux</value>
+  </data>
+  <data name="boards" xml:space="preserve">
+    <value>leaderboards</value>
+  </data>
+  <data name="Boards" xml:space="preserve">
+    <value>Leaderboards</value>
+  </data>
+  <data name="dethroned" xml:space="preserve">
+    <value>a détrôné</value>
+  </data>
+  <data name="Every record held this week." xml:space="preserve">
+    <value>Tous les records ont tenu cette semaine.</value>
+  </data>
+  <data name="Find a player" xml:space="preserve">
+    <value>Trouver un joueur</value>
+  </data>
+  <data name="First in the folder" xml:space="preserve">
+    <value>Premier du dossier</value>
+  </data>
+  <data name="Highlight rebuild queued" xml:space="preserve">
+    <value>Recalcul des temps forts en file d'attente</value>
+  </data>
+  <data name="Import OK" xml:space="preserve">
+    <value>Import OK</value>
+  </data>
+  <data name="Import queued - watch the runs table" xml:space="preserve">
+    <value>Import en file d'attente - surveillez le tableau des exécutions</value>
+  </data>
+  <data name="Import runs" xml:space="preserve">
+    <value>Exécutions d'import</value>
+  </data>
+  <data name="in the top ten" xml:space="preserve">
+    <value>dans le top 10</value>
+  </data>
+  <data name="Last import failed" xml:space="preserve">
+    <value>Le dernier import a échoué</value>
+  </data>
+  <data name="level 24+, first ever, SS and up" xml:space="preserve">
+    <value>niveau 24+, première historique, SS et plus</value>
+  </data>
+  <data name="level 24+, must beat the standing record" xml:space="preserve">
+    <value>niveau 24+, il faut battre le record en place</value>
+  </data>
+  <data name="Linked to a site account" xml:space="preserve">
+    <value>Lié à un compte du site</value>
+  </data>
+  <data name="Most boards climbed" xml:space="preserve">
+    <value>Le plus de leaderboards gravis</value>
+  </data>
+  <data name="Movers of the week" xml:space="preserve">
+    <value>Grimpeurs de la semaine</value>
+  </data>
+  <data name="net" xml:space="preserve">
+    <value>net</value>
+  </data>
+  <data name="New #1s" xml:space="preserve">
+    <value>Nouveaux n°1</value>
+  </data>
+  <data name="New this week" xml:space="preserve">
+    <value>Nouveau cette semaine</value>
+  </data>
+  <data name="No board history for that tag." xml:space="preserve">
+    <value>Aucun historique de leaderboard pour ce tag.</value>
+  </data>
+  <data name="No new grade firsts this week." xml:space="preserve">
+    <value>Aucune première de grade cette semaine.</value>
+  </data>
+  <data name="No pending rename proposals." xml:space="preserve">
+    <value>Aucune proposition de renommage en attente.</value>
+  </data>
+  <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
+    <value>Pas encore d'instantané de popularité - il arrive avec l'import hebdomadaire.</value>
+  </data>
+  <data name="No PUMBILITY board on this mix - movers live on Phoenix 2." xml:space="preserve">
+    <value>Pas de leaderboard PUMBILITY sur ce Mix - les grimpeurs vivent sur Phoenix 2.</value>
+  </data>
+  <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
+    <value>Pas encore de classement - il apparaît après le premier import hebdomadaire.</value>
+  </data>
+  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
+    <value>Personne n'a franchi le seuil de grimpe cette semaine.</value>
+  </data>
+  <data name="Official Leaderboards Admin" xml:space="preserve">
+    <value>Administration des leaderboards officiels</value>
+  </data>
+  <data name="Official play ranking - trend deepens weekly as snapshots accumulate." xml:space="preserve">
+    <value>Classement officiel des parties - la tendance s'étoffe chaque semaine au fil des instantanés.</value>
+  </data>
+  <data name="Pick a player to see their boards, history, and PUMBILITY over time - departed tags stay searchable." xml:space="preserve">
+    <value>Choisissez un joueur pour voir ses leaderboards, son historique et son PUMBILITY dans le temps - les tags partis restent trouvables.</value>
+  </data>
+  <data name="places" xml:space="preserve">
+    <value>places</value>
+  </data>
+  <data name="PUMBILITY over time" xml:space="preserve">
+    <value>PUMBILITY dans le temps</value>
+  </data>
+  <data name="rank" xml:space="preserve">
+    <value>rang</value>
+  </data>
+  <data name="Rank" xml:space="preserve">
+    <value>Rang</value>
+  </data>
+  <data name="Ranked by computed rating over the mirrored chart boards - this mix has no official PUMBILITY board." xml:space="preserve">
+    <value>Classé par rating calculé sur les leaderboards répliqués - ce Mix n'a pas de leaderboard PUMBILITY officiel.</value>
+  </data>
+  <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
+    <value>Classé selon le leaderboard PUMBILITY officiel, répliqué chaque semaine.</value>
+  </data>
+  <data name="Rebuild weekly highlights" xml:space="preserve">
+    <value>Recalculer les temps forts hebdomadaires</value>
+  </data>
+  <data name="Rename proposals" xml:space="preserve">
+    <value>Propositions de renommage</value>
+  </data>
+  <data name="Run import now" xml:space="preserve">
+    <value>Lancer l'import maintenant</value>
+  </data>
+  <data name="Running" xml:space="preserve">
+    <value>En cours</value>
+  </data>
+  <data name="Search any board player" xml:space="preserve">
+    <value>Recherchez n'importe quel joueur des leaderboards</value>
+  </data>
+  <data name="Seed baseline from legacy tables" xml:space="preserve">
+    <value>Créer la référence initiale depuis les anciennes tables</value>
+  </data>
+  <data name="skipped" xml:space="preserve">
+    <value>ignorés</value>
+  </data>
+  <data name="Songs" xml:space="preserve">
+    <value>Chansons</value>
+  </data>
+  <data name="Stage" xml:space="preserve">
+    <value>Étape</value>
+  </data>
+  <data name="Started" xml:space="preserve">
+    <value>Début</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Statut</value>
+  </data>
+  <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
+    <value>Le premier instantané hebdomadaire n'est pas encore arrivé - les temps forts s'allument après l'import de dimanche prochain.</value>
+  </data>
+  <data name="This Week" xml:space="preserve">
+    <value>Cette semaine</value>
+  </data>
+  <data name="This week's snapshot is the baseline - week-over-week highlights begin next import." xml:space="preserve">
+    <value>L'instantané de cette semaine est la référence initiale - les temps forts hebdomadaires commencent au prochain import.</value>
+  </data>
+  <data name="Top 50" xml:space="preserve">
+    <value>Top 50</value>
+  </data>
+  <data name="Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade." xml:space="preserve">
+    <value>Meilleurs charts par rating calculé - les totaux du leaderboard sont officiels ; la contribution par chart est calculée depuis le score et le grade.</value>
+  </data>
+  <data name="top-50 overlap" xml:space="preserve">
+    <value>recouvrement du top 50</value>
+  </data>
+  <data name="vs" xml:space="preserve">
+    <value>vs</value>
+  </data>
+  <data name="weeks" xml:space="preserve">
+    <value>semaines</value>
+  </data>
+  <data name="Week of" xml:space="preserve">
+    <value>Semaine du</value>
+  </data>
+  <data name="World firsts" xml:space="preserve">
+    <value>Premières mondiales</value>
+  </data>
   <data name="Page not found" xml:space="preserve">
     <value>Page introuvable</value>
   </data>
   <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
     <value>Il n'y a rien à cette adresse — elle a peut-être changé avec un Mix, ou n'a jamais existé. La recherche connaît tous les charts.</value>
+  </data>
+  <data name="Refresh popularity" xml:space="preserve">
+    <value>Actualiser la popularité</value>
+  </data>
+  <data name="Missing charts" xml:space="preserve">
+    <value>Charts manquants</value>
+  </data>
+  <data name="No missing charts - every scraped board mapped to the catalog." xml:space="preserve">
+    <value>Aucun chart manquant : tous les classements collectés correspondent au catalogue.</value>
+  </data>
+  <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
+    <value>La collecte les a vus sur le site officiel mais aucun chart du catalogue ne correspond. Ajoutez le chart puis résolvez : un chart toujours manquant réapparaîtra à la prochaine collecte.</value>
+  </data>
+  <data name="First seen" xml:space="preserve">
+    <value>Première apparition</value>
+  </data>
+  <data name="Last seen" xml:space="preserve">
+    <value>Dernière apparition</value>
+  </data>
+  <data name="Resolve" xml:space="preserve">
+    <value>Résoudre</value>
+  </data>
+  <data name="From their linked piuscores account - not on an official board yet" xml:space="preserve">
+    <value>Depuis leur compte piuscores lié - pas encore sur un classement officiel</value>
+  </data>
+  <data name="piuscores" xml:space="preserve">
+    <value>piuscores</value>
+  </data>
+  <data name="What It Takes" xml:space="preserve">
+    <value>Ce qu'il faut</value>
+  </data>
+  <data name="entry cutlines" xml:space="preserve">
+    <value>seuils d'entrée</value>
+  </data>
+  <data name="not full" xml:space="preserve">
+    <value>pas plein</value>
+  </data>
+  <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
+    <value>Pas encore d'instantané - les seuils apparaissent après le premier import hebdomadaire.</value>
+  </data>
+  <data name="To get on the board" xml:space="preserve">
+    <value>Pour entrer au classement</value>
+  </data>
+  <data name="50 charts at, SG plates assumed" xml:space="preserve">
+    <value>50 charts à, plaques SG supposées</value>
+  </data>
+  <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
+    <value>Le classement n'est pas plein - n'importe quel top 50 vous y place.</value>
+  </data>
+  <data name="Level required, by ranking tier" xml:space="preserve">
+    <value>Niveau requis, par palier de classement</value>
+  </data>
+  <data name="The entry bar over time" xml:space="preserve">
+    <value>Le seuil d'entrée au fil du temps</value>
+  </data>
+  <data name="The exact numbers" xml:space="preserve">
+    <value>Les chiffres exacts</value>
+  </data>
+  <data name="Full ladder" xml:space="preserve">
+    <value>Échelle complète</value>
+  </data>
+  <data name="Tier" xml:space="preserve">
+    <value>Palier</value>
+  </data>
+  <data name="All equivalents assume SG plates on all 50 - a dash means no single level clears it at that grade." xml:space="preserve">
+    <value>Toutes les équivalences supposent des plaques SG sur les 50 - un tiret signifie qu'aucun niveau n'y parvient à ce grade.</value>
+  </data>
+  <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
+    <value>Actualisation de la popularité en file d'attente - se rattache au dernier instantané</value>
+  </data>
+  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
+    <value>PIUGAME ne publie aucun classement CO-OP - ce classement est notre meilleure estimation, calculé à partir des classements CO-OP miroirs, avec des plaques déduites du score (SG, UG à partir de 995 000, PG à 1 000 000).</value>
+  </data>
+  <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
+    <value>Meilleurs charts CO-OP par rating estimé - plaques déduites du score.</value>
+  </data>
+  <data name="All Folders" xml:space="preserve">
+    <value>Tous les dossiers</value>
+  </data>
+  <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
+    <value>Rien de ce dossier ne figure au classement de popularité.</value>
+  </data>
+  <data name="See their boards" xml:space="preserve">
+    <value>Voir ses classements</value>
+  </data>
+  <data name="Hottest Charts" xml:space="preserve">
+    <value>Charts les plus populaires</value>
+  </data>
+  <data name="Coldest Charts" xml:space="preserve">
+    <value>Charts les moins populaires</value>
+  </data>
+  <data name="Biggest Movers" xml:space="preserve">
+    <value>Plus grands mouvements</value>
+  </data>
+  <data name="{0} charts ranked" xml:space="preserve">
+    <value>{0} charts au classement</value>
+  </data>
+  <data name="Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter" xml:space="preserve">
+    <value>Chaleur par dossier - position du chart médian de chaque dossier (rouge = Singles, vert = Doubles) ; plus haut = plus populaire</value>
+  </data>
+  <data name="Weighted Sum Popularity" xml:space="preserve">
+    <value>Popularité par somme pondérée</value>
+  </data>
+  <data name="Biased towards smaller folders" xml:space="preserve">
+    <value>Biaisé vers les petits dossiers</value>
+  </data>
+  <data name="Biased towards larger folders" xml:space="preserve">
+    <value>Biaisé vers les grands dossiers</value>
   </data>
   <data name="Hot Streak" xml:space="preserve">
     <value>Série gagnante</value>

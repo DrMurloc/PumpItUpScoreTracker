@@ -2,6 +2,8 @@ using BlazorApplicationInsights;
 using Hangfire;
 using Hangfire.SqlServer;
 using MassTransit;
+using MediatR;
+using MediatR.Pipeline;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Localization;
 using Microsoft.OpenApi;
@@ -17,6 +19,7 @@ using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.EventCompetition.Wiring;
+using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.Identity.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
@@ -219,6 +222,11 @@ builder.Services.AddBlazorApplicationInsights()
     .AddHostedService<ChartPageCacheWarmer>()
     .AddMediatR(o =>
     {
+        // Post-processors only run when wired through this configuration (a bare DI
+        // registration is never invoked): the shell-settings cache eviction makes a
+        // settings save visible on the very next request.
+        o.AddRequestPostProcessor<IRequestPostProcessor<SaveUserUiSettingCommand, Unit>,
+            UiSettingSavedCacheEviction>();
         o.RegisterServicesFromAssemblies(
             // Data no longer holds MediatR handlers — its last two (player stats/history)
             // moved into the PlayerProgress vertical at C50.

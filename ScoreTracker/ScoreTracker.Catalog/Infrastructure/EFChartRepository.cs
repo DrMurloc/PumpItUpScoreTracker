@@ -348,7 +348,11 @@ internal sealed class EFChartRepository : IChartRepository
             Level = level,
             SongId = songId,
             Type = type.ToString(),
-            StepArtist = stepArtist
+            StepArtist = stepArtist,
+            // Co-ops store the player count in Level, and readers treat the persisted
+            // PlayerCount column as authoritative — it must be materialized here or the
+            // chart reports a 1-player co-op.
+            PlayerCount = type == ChartType.CoOp ? (int)level : 1
         };
         var newChartMix = new ChartMixEntity
         {

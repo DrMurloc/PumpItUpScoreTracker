@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.ScoreLedger.Infrastructure.Entities;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.ScoreLedger.Domain;
 
@@ -32,7 +33,12 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             Score = entry.Score,
             Plate = entry.Plate?.GetName(),
             IsBroken = entry.IsBroken,
-            SessionId = entry.SessionId
+            SessionId = entry.SessionId,
+            Perfects = entry.Judgements?.Perfects,
+            Greats = entry.Judgements?.Greats,
+            Goods = entry.Judgements?.Goods,
+            Bads = entry.Judgements?.Bads,
+            Misses = entry.Judgements?.Misses
         }, cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
     }
@@ -103,6 +109,14 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
     private static ScoreJournalEntry Map(ScoreEventJournalEntity e)
     {
         return new ScoreJournalEntry(e.OccurredAt, e.Source, e.UserId, e.ChartId, e.Score,
-            PhoenixPlateHelperMethods.TryParse(e.Plate), e.IsBroken, MixIds.ToEnum(e.MixId), e.SessionId);
+            PhoenixPlateHelperMethods.TryParse(e.Plate), e.IsBroken, MixIds.ToEnum(e.MixId), e.SessionId,
+            JudgementsOf(e));
+    }
+
+    internal static JudgementCounts? JudgementsOf(ScoreEventJournalEntity e)
+    {
+        return e.Perfects == null
+            ? null
+            : new JudgementCounts(e.Perfects.Value, e.Greats!.Value, e.Goods!.Value, e.Bads!.Value, e.Misses!.Value);
     }
 }

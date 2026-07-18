@@ -3168,6 +3168,9 @@
   <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
     <value>PIU Scores mrglrps mrgl whrgl Pump It Up hrglstrgl, mrglprtd strglght frgl mrgl PIUGAME accrglnt, mrgl trglns mrgl mrgl Brglurgbrgl Rglgurggurgrgl, rrglnkngs, mrgl rrglcmmndrgltns trglnd mrgl hrgl mrgl mrglly plrgly.</value>
   </data>
+  <data name="PIU Scores — Pump It Up score tracker &amp; tier lists" xml:space="preserve">
+    <value>PIU Scores — Pump It Up scrgl trglckr &amp; Brglurgbrgl Rglgurggurgrgl</value>
+  </data>
   <data name="Free, and built by a player." xml:space="preserve">
     <value>Frgle, mrgl bmrglt brgl mrgl plrglyr.</value>
   </data>
@@ -4371,11 +4374,314 @@
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>Mrglported glublrgl will appear here as they come in.</value>
   </data>
+  <data name="Accept - merge history" xml:space="preserve">
+    <value>Mrglccept - mrglsmoosh hrglstory</value>
+  </data>
+  <data name="avatar match" xml:space="preserve">
+    <value>mrglface same-same</value>
+  </data>
+  <data name="Baseline" xml:space="preserve">
+    <value>Mrglbaseline</value>
+  </data>
+  <data name="Baseline seed queued - it refuses to run once sealed snapshots exist" xml:space="preserve">
+    <value>Mrglbaseline glrglqueued - no mrglrun if sealed snapmrgls exist! Mrgl!</value>
+  </data>
+  <data name="Best place" xml:space="preserve">
+    <value>Bestest mrglplace</value>
+  </data>
+  <data name="Board #1s" xml:space="preserve">
+    <value>Mrgl #1s</value>
+  </data>
+  <data name="Board placements" xml:space="preserve">
+    <value>Mrglboard placemrgls</value>
+  </data>
+  <data name="Board rank - lower is better" xml:space="preserve">
+    <value>Mrglrank - smol number gud</value>
+  </data>
+  <data name="boards" xml:space="preserve">
+    <value>mrglboards</value>
+  </data>
+  <data name="Boards" xml:space="preserve">
+    <value>Mrglboards</value>
+  </data>
+  <data name="dethroned" xml:space="preserve">
+    <value>mrgldethroned</value>
+  </data>
+  <data name="Every record held this week." xml:space="preserve">
+    <value>All mrglrecords held. Mrglgl.</value>
+  </data>
+  <data name="Find a player" xml:space="preserve">
+    <value>Mrglfind mrglplayer</value>
+  </data>
+  <data name="First in the folder" xml:space="preserve">
+    <value>Frst in mrglfolder!</value>
+  </data>
+  <data name="Highlight rebuild queued" xml:space="preserve">
+    <value>Highmrglights rebrglding</value>
+  </data>
+  <data name="Import OK" xml:space="preserve">
+    <value>Mrglport OK</value>
+  </data>
+  <data name="Import queued - watch the runs table" xml:space="preserve">
+    <value>Mrglport glrglqueued - mrglwatch runs mrgltable</value>
+  </data>
+  <data name="Import runs" xml:space="preserve">
+    <value>Mrglport runs</value>
+  </data>
+  <data name="in the top ten" xml:space="preserve">
+    <value>in mrgltop ten</value>
+  </data>
+  <data name="Last import failed" xml:space="preserve">
+    <value>Last mrglport went blrgl</value>
+  </data>
+  <data name="level 24+, first ever, SS and up" xml:space="preserve">
+    <value>lvl 24+, frst evrgl, SS n up</value>
+  </data>
+  <data name="level 24+, must beat the standing record" xml:space="preserve">
+    <value>lvl 24+, must mrglbeat standing record</value>
+  </data>
+  <data name="Linked to a site account" xml:space="preserve">
+    <value>Mrgllinked to site accmrglnt</value>
+  </data>
+  <data name="Most boards climbed" xml:space="preserve">
+    <value>Most mrglboards clrgled</value>
+  </data>
+  <data name="Movers of the week" xml:space="preserve">
+    <value>Mrglmovers of da wk</value>
+  </data>
+  <data name="net" xml:space="preserve">
+    <value>mrglnet</value>
+  </data>
+  <data name="New #1s" xml:space="preserve">
+    <value>New mrgl#1s</value>
+  </data>
+  <data name="New this week" xml:space="preserve">
+    <value>New dis wk!</value>
+  </data>
+  <data name="No board history for that tag." xml:space="preserve">
+    <value>No mrglstory for dat tag. Blrgl.</value>
+  </data>
+  <data name="No new grade firsts this week." xml:space="preserve">
+    <value>No new grade frsts dis wk. Mrgl.</value>
+  </data>
+  <data name="No pending rename proposals." xml:space="preserve">
+    <value>No pending renamrgls.</value>
+  </data>
+  <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
+    <value>No populrglity snapmrgl yet - comes wif wkly mrglport.</value>
+  </data>
+  <data name="No PUMBILITY board on this mix - movers live on Phoenix 2." xml:space="preserve">
+    <value>No PUMBILITY mrglboard here - mrglmovers live on Phoenix 2.</value>
+  </data>
+  <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
+    <value>No rankmrgls yet - appear aftrgl frst wkly mrglport.</value>
+  </data>
+  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
+    <value>Nomrgl clrgled da climb threshold dis wk.</value>
+  </data>
+  <data name="Official Leaderboards Admin" xml:space="preserve">
+    <value>Arglmrgl Admrgln</value>
+  </data>
+  <data name="Official play ranking - trend deepens weekly as snapshots accumulate." xml:space="preserve">
+    <value>Officiargl play rankmrgl - trend gets deeprgl each wk.</value>
+  </data>
+  <data name="Pick a player to see their boards, history, and PUMBILITY over time - departed tags stay searchable." xml:space="preserve">
+    <value>Mrglpick a player - see mrglboards, hrglstory, PUMBILITY ovrgl time. Gone tags still findable! Mrgl!</value>
+  </data>
+  <data name="places" xml:space="preserve">
+    <value>mrglplaces</value>
+  </data>
+  <data name="PUMBILITY over time" xml:space="preserve">
+    <value>PUMBILITY ovrgl time</value>
+  </data>
+  <data name="rank" xml:space="preserve">
+    <value>mrglrank</value>
+  </data>
+  <data name="Rank" xml:space="preserve">
+    <value>Mrglrank</value>
+  </data>
+  <data name="Ranked by computed rating over the mirrored chart boards - this mix has no official PUMBILITY board." xml:space="preserve">
+    <value>Rankmrgld by computed ratmrgl - dis mix has no officiargl PUMBILITY board. Blrgl.</value>
+  </data>
+  <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
+    <value>Rankmrgld by da officiargl PUMBILITY board, mrglrrored wkly.</value>
+  </data>
+  <data name="Rebuild weekly highlights" xml:space="preserve">
+    <value>Rebrgld wkly highmrglights</value>
+  </data>
+  <data name="Rename proposals" xml:space="preserve">
+    <value>Renamrgl proposrgls</value>
+  </data>
+  <data name="Run import now" xml:space="preserve">
+    <value>Mrglport NOW</value>
+  </data>
+  <data name="Running" xml:space="preserve">
+    <value>Mrglning</value>
+  </data>
+  <data name="Search any board player" xml:space="preserve">
+    <value>Mrglsearch any board mrglplayer</value>
+  </data>
+  <data name="Seed baseline from legacy tables" xml:space="preserve">
+    <value>Mrglseed baseline from old mrgltables</value>
+  </data>
+  <data name="skipped" xml:space="preserve">
+    <value>skiprgld</value>
+  </data>
+  <data name="Songs" xml:space="preserve">
+    <value>Mrglsongs</value>
+  </data>
+  <data name="Stage" xml:space="preserve">
+    <value>Mrglstage</value>
+  </data>
+  <data name="Started" xml:space="preserve">
+    <value>Strgled</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Mrglstatus</value>
+  </data>
+  <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
+    <value>Frst wkly snapmrgl not here yet - highmrglights light up aftrgl next Sunmrglday mrglport.</value>
+  </data>
+  <data name="This Week" xml:space="preserve">
+    <value>Dis Wk</value>
+  </data>
+  <data name="This week's snapshot is the baseline - week-over-week highlights begin next import." xml:space="preserve">
+    <value>Dis wk snapmrgl is da baseline - wk-ovrgl-wk highmrglights start next mrglport.</value>
+  </data>
+  <data name="Top 50" xml:space="preserve">
+    <value>Mrgltop 50</value>
+  </data>
+  <data name="Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade." xml:space="preserve">
+    <value>Mrgltop charts by computed ratmrgl - board totrgls officiargl; per-chart bit computed from scrgl n grade.</value>
+  </data>
+  <data name="top-50 overlap" xml:space="preserve">
+    <value>mrgltop-50 ovrglap</value>
+  </data>
+  <data name="vs" xml:space="preserve">
+    <value>vs</value>
+  </data>
+  <data name="weeks" xml:space="preserve">
+    <value>wks</value>
+  </data>
+  <data name="Week of" xml:space="preserve">
+    <value>Wk of</value>
+  </data>
+  <data name="World firsts" xml:space="preserve">
+    <value>Wrgld frsts!</value>
+  </data>
   <data name="Page not found" xml:space="preserve">
     <value>Page not found</value>
   </data>
   <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
     <value>There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart.</value>
+  </data>
+  <data name="Refresh popularity" xml:space="preserve">
+    <value>Refresh popularity</value>
+  </data>
+  <data name="Missing charts" xml:space="preserve">
+    <value>Missing charts</value>
+  </data>
+  <data name="No missing charts - every scraped board mapped to the catalog." xml:space="preserve">
+    <value>No missing charts - every scraped board mapped to the catalog.</value>
+  </data>
+  <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
+    <value>The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep.</value>
+  </data>
+  <data name="First seen" xml:space="preserve">
+    <value>First seen</value>
+  </data>
+  <data name="Last seen" xml:space="preserve">
+    <value>Last seen</value>
+  </data>
+  <data name="Resolve" xml:space="preserve">
+    <value>Resolve</value>
+  </data>
+  <data name="From their linked piuscores account - not on an official board yet" xml:space="preserve">
+    <value>From their linked piuscores account - not on an official board yet</value>
+  </data>
+  <data name="piuscores" xml:space="preserve">
+    <value>piuscores</value>
+  </data>
+  <data name="What It Takes" xml:space="preserve">
+    <value>What It Takes</value>
+  </data>
+  <data name="entry cutlines" xml:space="preserve">
+    <value>entry cutlines</value>
+  </data>
+  <data name="not full" xml:space="preserve">
+    <value>not full</value>
+  </data>
+  <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
+    <value>No snapshot yet - thresholds appear after the first weekly import.</value>
+  </data>
+  <data name="To get on the board" xml:space="preserve">
+    <value>To get on the board</value>
+  </data>
+  <data name="50 charts at, SG plates assumed" xml:space="preserve">
+    <value>50 charts at, SG plates assumed</value>
+  </data>
+  <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
+    <value>The board isn't full - any top 50 gets you on it.</value>
+  </data>
+  <data name="Level required, by ranking tier" xml:space="preserve">
+    <value>Level required, by ranking tier</value>
+  </data>
+  <data name="The entry bar over time" xml:space="preserve">
+    <value>The entry bar over time</value>
+  </data>
+  <data name="The exact numbers" xml:space="preserve">
+    <value>The exact numbers</value>
+  </data>
+  <data name="Full ladder" xml:space="preserve">
+    <value>Full ladder</value>
+  </data>
+  <data name="Tier" xml:space="preserve">
+    <value>Tier</value>
+  </data>
+  <data name="All equivalents assume SG plates on all 50 - a dash means no single level clears it at that grade." xml:space="preserve">
+    <value>All equivalents assume SG plates on all 50 - a dash means no single level clears it at that grade.</value>
+  </data>
+  <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
+    <value>Popularity refresh queued - re-attaches to the latest snapshot</value>
+  </data>
+  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
+    <value>PIUGAME doesn't publish a CO-OP ranking - this board is our best guess, cooked up from the mirrored co-op leaderboards with plates guessed off the score (SG, UG from 995,000, PG at 1,000,000).</value>
+  </data>
+  <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
+    <value>Top co-op charts by estimated rating - plates guessed off the score.</value>
+  </data>
+  <data name="All Folders" xml:space="preserve">
+    <value>All the Mrglfolders</value>
+  </data>
+  <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
+    <value>Nothing from this mrglfolder made the popularity board.</value>
+  </data>
+  <data name="See their boards" xml:space="preserve">
+    <value>See their mrglboards</value>
+  </data>
+  <data name="Hottest Charts" xml:space="preserve">
+    <value>Hottest Mrglcharts</value>
+  </data>
+  <data name="Coldest Charts" xml:space="preserve">
+    <value>Coldest Mrglcharts</value>
+  </data>
+  <data name="Biggest Movers" xml:space="preserve">
+    <value>Biggest Mrglmovers</value>
+  </data>
+  <data name="{0} charts ranked" xml:space="preserve">
+    <value>{0} charts ranked, mrgl</value>
+  </data>
+  <data name="Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter" xml:space="preserve">
+    <value>Folder heat - the median mrglchart's standing per folder (red = Singles, green = Doubles); higher is hotter</value>
+  </data>
+  <data name="Weighted Sum Popularity" xml:space="preserve">
+    <value>Weighted Sum Popularity</value>
+  </data>
+  <data name="Biased towards smaller folders" xml:space="preserve">
+    <value>Biased towards smaller mrglfolders</value>
+  </data>
+  <data name="Biased towards larger folders" xml:space="preserve">
+    <value>Biased towards larger mrglfolders</value>
   </data>
   <data name="Hot Streak" xml:space="preserve">
     <value>Hot Mrgl Streak</value>

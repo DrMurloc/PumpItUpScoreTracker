@@ -107,9 +107,13 @@ public sealed class PiuGameLiveSiteTests : IClassFixture<PiuGameSessionFixture>
         });
 
         var leaderboard =
-            await _fixture.Api.GetSongLeaderboard(MixEnum.Phoenix, songs.Results.First().Id, CancellationToken.None);
+            await _fixture.Api.GetSongLeaderboard(MixEnum.Phoenix, songs.Results.First().Id, page: 1,
+                CancellationToken.None);
 
         Assert.NotEmpty(leaderboard.Results);
+        // Phoenix boards serve whole in one page — paging icons appearing here would mean
+        // the site changed shape and the sweep's walk assumptions need a fresh look.
+        Assert.True(leaderboard.IsEnd, "Phoenix board unexpectedly paginates now.");
         Assert.All(leaderboard.Results, e =>
         {
             Assert.False(string.IsNullOrWhiteSpace(e.ProfileName), "Profile name did not parse.");
@@ -139,7 +143,8 @@ public sealed class PiuGameLiveSiteTests : IClassFixture<PiuGameSessionFixture>
     [LiveSiteFact]
     public async Task Chart_popularity_leaderboard_parses()
     {
-        var result = await _fixture.Api.GetChartPopularityLeaderboard(MixEnum.Phoenix, 1, CancellationToken.None);
+        var result = await _fixture.Api.GetChartPopularityLeaderboard(MixEnum.Phoenix, 1, DateTimeOffset.UtcNow,
+            CancellationToken.None);
 
         Assert.NotEmpty(result.Entries);
         Assert.All(result.Entries, e =>

@@ -46,7 +46,9 @@ var web = builder.AddProject<Projects.ScoreTracker_Web>("web")
 // it out unless that's what you want; OAuth ClientId/ClientSecret are harmless.
 // KeyVault flows through so remembered-credential storage works locally: set
 // KeyVault:LocalKey (base64 32-byte AES key) to exercise it without a real vault.
-string[] forwardedSections = ["Discord", "Google", "Facebook", "AzureBlob", "Sendgrid", "KeyVault"];
+// PiuGame flows through for the login-gated Phoenix 2 leaderboard sweep: set
+// PiuGame:ServiceUsername / PiuGame:ServicePassword to run it from /Admin locally.
+string[] forwardedSections = ["Discord", "Google", "Facebook", "AzureBlob", "Sendgrid", "KeyVault", "PiuGame"];
 foreach (var sectionName in forwardedSections)
 foreach (var entry in builder.Configuration.GetSection(sectionName).AsEnumerable())
     if (entry.Value is not null)

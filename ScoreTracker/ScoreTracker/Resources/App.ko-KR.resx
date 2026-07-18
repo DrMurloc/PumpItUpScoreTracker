@@ -3126,6 +3126,9 @@
   <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
     <value>PIU Scores는 PIUGAME 계정에서 바로 가져온 펌프 잇 업 전체 기록을 보관하고, 티어리스트, 랭킹, 실제 플레이 스타일에 맞춘 추천으로 바꿔 드립니다.</value>
   </data>
+  <data name="PIU Scores — Pump It Up score tracker &amp; tier lists" xml:space="preserve">
+    <value>PIU Scores — 펌프 잇 업 스코어 트래킹 &amp; 티어리스트</value>
+  </data>
   <data name="Free, and built by a player." xml:space="preserve">
     <value>무료이며, 플레이어가 직접 만들었습니다.</value>
   </data>
@@ -4329,11 +4332,314 @@
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>가져온 점수는 도착하는 대로 여기에 표시됩니다.</value>
   </data>
+  <data name="Accept - merge history" xml:space="preserve">
+    <value>승인 - 기록 병합</value>
+  </data>
+  <data name="avatar match" xml:space="preserve">
+    <value>아바타 일치</value>
+  </data>
+  <data name="Baseline" xml:space="preserve">
+    <value>기준점</value>
+  </data>
+  <data name="Baseline seed queued - it refuses to run once sealed snapshots exist" xml:space="preserve">
+    <value>기준점 시드가 대기열에 등록되었습니다 - 확정된 스냅샷이 있으면 실행되지 않습니다</value>
+  </data>
+  <data name="Best place" xml:space="preserve">
+    <value>최고 순위</value>
+  </data>
+  <data name="Board #1s" xml:space="preserve">
+    <value>보드 1위</value>
+  </data>
+  <data name="Board placements" xml:space="preserve">
+    <value>보드 순위</value>
+  </data>
+  <data name="Board rank - lower is better" xml:space="preserve">
+    <value>보드 랭킹 - 낮을수록 좋음</value>
+  </data>
+  <data name="boards" xml:space="preserve">
+    <value>보드</value>
+  </data>
+  <data name="Boards" xml:space="preserve">
+    <value>보드</value>
+  </data>
+  <data name="dethroned" xml:space="preserve">
+    <value>이전 1위:</value>
+  </data>
+  <data name="Every record held this week." xml:space="preserve">
+    <value>이번 주에는 모든 기록이 유지되었습니다.</value>
+  </data>
+  <data name="Find a player" xml:space="preserve">
+    <value>플레이어 찾기</value>
+  </data>
+  <data name="First in the folder" xml:space="preserve">
+    <value>폴더 최초</value>
+  </data>
+  <data name="Highlight rebuild queued" xml:space="preserve">
+    <value>하이라이트 재계산이 대기열에 등록되었습니다</value>
+  </data>
+  <data name="Import OK" xml:space="preserve">
+    <value>가져오기 정상</value>
+  </data>
+  <data name="Import queued - watch the runs table" xml:space="preserve">
+    <value>가져오기가 대기열에 등록되었습니다 - 실행 기록 표를 확인하세요</value>
+  </data>
+  <data name="Import runs" xml:space="preserve">
+    <value>가져오기 실행 기록</value>
+  </data>
+  <data name="in the top ten" xml:space="preserve">
+    <value>개 보드 10위 이내</value>
+  </data>
+  <data name="Last import failed" xml:space="preserve">
+    <value>마지막 가져오기 실패</value>
+  </data>
+  <data name="level 24+, first ever, SS and up" xml:space="preserve">
+    <value>레벨 24 이상, 사상 최초, SS 이상</value>
+  </data>
+  <data name="level 24+, must beat the standing record" xml:space="preserve">
+    <value>레벨 24 이상, 기존 기록을 넘어야 함</value>
+  </data>
+  <data name="Linked to a site account" xml:space="preserve">
+    <value>사이트 계정과 연결됨</value>
+  </data>
+  <data name="Most boards climbed" xml:space="preserve">
+    <value>보드 상승 최다</value>
+  </data>
+  <data name="Movers of the week" xml:space="preserve">
+    <value>이번 주의 무버</value>
+  </data>
+  <data name="net" xml:space="preserve">
+    <value>합계</value>
+  </data>
+  <data name="New #1s" xml:space="preserve">
+    <value>새로운 1위</value>
+  </data>
+  <data name="New this week" xml:space="preserve">
+    <value>이번 주 신규</value>
+  </data>
+  <data name="No board history for that tag." xml:space="preserve">
+    <value>해당 태그의 보드 기록이 없습니다.</value>
+  </data>
+  <data name="No new grade firsts this week." xml:space="preserve">
+    <value>이번 주에는 새로운 등급 최초 기록이 없습니다.</value>
+  </data>
+  <data name="No pending rename proposals." xml:space="preserve">
+    <value>대기 중인 이름 변경 제안이 없습니다.</value>
+  </data>
+  <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
+    <value>아직 인기 순위 스냅샷이 없습니다 - 주간 가져오기와 함께 생성됩니다.</value>
+  </data>
+  <data name="No PUMBILITY board on this mix - movers live on Phoenix 2." xml:space="preserve">
+    <value>이 시리즈에는 PUMBILITY 보드가 없습니다 - 무버는 Phoenix 2에서 확인할 수 있습니다.</value>
+  </data>
+  <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
+    <value>아직 랭킹이 없습니다 - 첫 주간 가져오기 후에 표시됩니다.</value>
+  </data>
+  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
+    <value>이번 주에는 상승 기준을 넘은 플레이어가 없습니다.</value>
+  </data>
+  <data name="Official Leaderboards Admin" xml:space="preserve">
+    <value>공식 리더보드 관리</value>
+  </data>
+  <data name="Official play ranking - trend deepens weekly as snapshots accumulate." xml:space="preserve">
+    <value>공식 플레이 랭킹 - 스냅샷이 쌓일수록 추세가 깊어집니다.</value>
+  </data>
+  <data name="Pick a player to see their boards, history, and PUMBILITY over time - departed tags stay searchable." xml:space="preserve">
+    <value>플레이어를 선택하면 보드, 기록, PUMBILITY 추이를 볼 수 있습니다 - 떠난 태그도 계속 검색됩니다.</value>
+  </data>
+  <data name="places" xml:space="preserve">
+    <value>계단 상승</value>
+  </data>
+  <data name="PUMBILITY over time" xml:space="preserve">
+    <value>PUMBILITY 추이</value>
+  </data>
+  <data name="rank" xml:space="preserve">
+    <value>랭킹</value>
+  </data>
+  <data name="Rank" xml:space="preserve">
+    <value>랭킹</value>
+  </data>
+  <data name="Ranked by computed rating over the mirrored chart boards - this mix has no official PUMBILITY board." xml:space="preserve">
+    <value>미러링된 채보 보드 기반 계산 레이팅 순위입니다 - 이 시리즈에는 공식 PUMBILITY 보드가 없습니다.</value>
+  </data>
+  <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
+    <value>매주 미러링되는 공식 PUMBILITY 보드 기준 순위입니다.</value>
+  </data>
+  <data name="Rebuild weekly highlights" xml:space="preserve">
+    <value>주간 하이라이트 재계산</value>
+  </data>
+  <data name="Rename proposals" xml:space="preserve">
+    <value>이름 변경 제안</value>
+  </data>
+  <data name="Run import now" xml:space="preserve">
+    <value>지금 가져오기 실행</value>
+  </data>
+  <data name="Running" xml:space="preserve">
+    <value>실행 중</value>
+  </data>
+  <data name="Search any board player" xml:space="preserve">
+    <value>보드 플레이어 검색</value>
+  </data>
+  <data name="Seed baseline from legacy tables" xml:space="preserve">
+    <value>기존 테이블에서 기준점 시드 생성</value>
+  </data>
+  <data name="skipped" xml:space="preserve">
+    <value>건너뜀</value>
+  </data>
+  <data name="Songs" xml:space="preserve">
+    <value>곡</value>
+  </data>
+  <data name="Stage" xml:space="preserve">
+    <value>단계</value>
+  </data>
+  <data name="Started" xml:space="preserve">
+    <value>시작</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>상태</value>
+  </data>
+  <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
+    <value>첫 주간 스냅샷이 아직 없습니다 - 다음 일요일 가져오기 후 하이라이트가 표시됩니다.</value>
+  </data>
+  <data name="This Week" xml:space="preserve">
+    <value>이번 주</value>
+  </data>
+  <data name="This week's snapshot is the baseline - week-over-week highlights begin next import." xml:space="preserve">
+    <value>이번 주 스냅샷은 기준점입니다 - 주간 하이라이트는 다음 가져오기부터 시작됩니다.</value>
+  </data>
+  <data name="Top 50" xml:space="preserve">
+    <value>상위 50</value>
+  </data>
+  <data name="Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade." xml:space="preserve">
+    <value>계산 레이팅 기준 상위 채보 - 보드 합계는 공식 값이며, 채보별 기여도는 점수와 등급으로 계산됩니다.</value>
+  </data>
+  <data name="top-50 overlap" xml:space="preserve">
+    <value>상위 50 일치</value>
+  </data>
+  <data name="vs" xml:space="preserve">
+    <value>vs</value>
+  </data>
+  <data name="weeks" xml:space="preserve">
+    <value>주</value>
+  </data>
+  <data name="Week of" xml:space="preserve">
+    <value>주간:</value>
+  </data>
+  <data name="World firsts" xml:space="preserve">
+    <value>세계 최초 기록</value>
+  </data>
   <data name="Page not found" xml:space="preserve">
     <value>페이지를 찾을 수 없습니다</value>
   </data>
   <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
     <value>이 주소에는 아무것도 없습니다 — 시리즈와 함께 이동했거나, 처음부터 존재하지 않았을 수 있습니다. 검색은 모든 채보를 알고 있습니다.</value>
+  </data>
+  <data name="Refresh popularity" xml:space="preserve">
+    <value>인기도 새로고침</value>
+  </data>
+  <data name="Missing charts" xml:space="preserve">
+    <value>누락된 채보</value>
+  </data>
+  <data name="No missing charts - every scraped board mapped to the catalog." xml:space="preserve">
+    <value>누락된 채보 없음 - 수집된 모든 보드가 카탈로그와 일치했습니다.</value>
+  </data>
+  <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
+    <value>공식 사이트에서 발견했지만 카탈로그에 없는 채보입니다. 채보를 추가한 뒤 해결을 누르세요 - 여전히 누락된 채보는 다음 수집 때 다시 표시됩니다.</value>
+  </data>
+  <data name="First seen" xml:space="preserve">
+    <value>처음 발견</value>
+  </data>
+  <data name="Last seen" xml:space="preserve">
+    <value>마지막 발견</value>
+  </data>
+  <data name="Resolve" xml:space="preserve">
+    <value>해결</value>
+  </data>
+  <data name="From their linked piuscores account - not on an official board yet" xml:space="preserve">
+    <value>연동된 piuscores 계정에서 가져옴 - 아직 공식 보드에는 없습니다</value>
+  </data>
+  <data name="piuscores" xml:space="preserve">
+    <value>piuscores</value>
+  </data>
+  <data name="What It Takes" xml:space="preserve">
+    <value>필요한 것</value>
+  </data>
+  <data name="entry cutlines" xml:space="preserve">
+    <value>진입 커트라인</value>
+  </data>
+  <data name="not full" xml:space="preserve">
+    <value>미달</value>
+  </data>
+  <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
+    <value>아직 스냅샷이 없습니다 - 첫 주간 가져오기 후 기준선이 표시됩니다.</value>
+  </data>
+  <data name="To get on the board" xml:space="preserve">
+    <value>보드에 오르려면</value>
+  </data>
+  <data name="50 charts at, SG plates assumed" xml:space="preserve">
+    <value>50개 채보 기준, SG 플레이트 가정</value>
+  </data>
+  <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
+    <value>보드가 아직 가득 차지 않았습니다 - 상위 50개만 있으면 오를 수 있습니다.</value>
+  </data>
+  <data name="Level required, by ranking tier" xml:space="preserve">
+    <value>랭킹 구간별 필요 레벨</value>
+  </data>
+  <data name="The entry bar over time" xml:space="preserve">
+    <value>시간에 따른 진입 기준</value>
+  </data>
+  <data name="The exact numbers" xml:space="preserve">
+    <value>정확한 수치</value>
+  </data>
+  <data name="Full ladder" xml:space="preserve">
+    <value>전체 구간</value>
+  </data>
+  <data name="Tier" xml:space="preserve">
+    <value>구간</value>
+  </data>
+  <data name="All equivalents assume SG plates on all 50 - a dash means no single level clears it at that grade." xml:space="preserve">
+    <value>모든 환산은 50개 전부 SG 플레이트를 가정합니다 - 대시는 해당 등급으로는 어느 레벨로도 도달할 수 없음을 뜻합니다.</value>
+  </data>
+  <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
+    <value>인기도 새로고침이 대기열에 추가되었습니다 - 최신 스냅샷에 다시 연결됩니다</value>
+  </data>
+  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
+    <value>PIUGAME는 CO-OP 랭킹을 제공하지 않습니다 - 이 보드는 미러링된 CO-OP 리더보드로 자체 계산한 최선의 추정치이며, 플레이트는 점수로 추정합니다 (SG, 995,000부터 UG, 1,000,000은 PG).</value>
+  </data>
+  <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
+    <value>추정 레이팅 기준 상위 CO-OP 채보 - 플레이트는 점수로 추정합니다.</value>
+  </data>
+  <data name="All Folders" xml:space="preserve">
+    <value>전체 폴더</value>
+  </data>
+  <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
+    <value>이 폴더의 채보는 인기 보드에 없습니다.</value>
+  </data>
+  <data name="See their boards" xml:space="preserve">
+    <value>이 플레이어의 보드 보기</value>
+  </data>
+  <data name="Hottest Charts" xml:space="preserve">
+    <value>최고 인기 채보</value>
+  </data>
+  <data name="Coldest Charts" xml:space="preserve">
+    <value>최저 인기 채보</value>
+  </data>
+  <data name="Biggest Movers" xml:space="preserve">
+    <value>최다 순위 변동</value>
+  </data>
+  <data name="{0} charts ranked" xml:space="preserve">
+    <value>랭킹에 오른 채보 {0}개</value>
+  </data>
+  <data name="Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter" xml:space="preserve">
+    <value>폴더 인기도 - 폴더별 중간 채보의 보드 순위 (빨강 = 싱글, 초록 = 더블), 높을수록 인기</value>
+  </data>
+  <data name="Weighted Sum Popularity" xml:space="preserve">
+    <value>가중치 합계 인기도</value>
+  </data>
+  <data name="Biased towards smaller folders" xml:space="preserve">
+    <value>작은 폴더에 유리합니다</value>
+  </data>
+  <data name="Biased towards larger folders" xml:space="preserve">
+    <value>큰 폴더에 유리합니다</value>
   </data>
   <data name="Hot Streak" xml:space="preserve">
     <value>핫 스트릭</value>

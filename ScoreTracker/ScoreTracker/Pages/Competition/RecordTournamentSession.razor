@@ -283,7 +283,7 @@
                         @score.Chart.Song.Name @score.Chart.Type.GetShortHand()@score.Chart.Level
                     </MudItem>
                     <MudItem xs="5">
-                        @score.Score @score.Plate.GetShorthand()
+                        @score.Score @(score.Plate?.GetShorthand())
                     </MudItem>
                 }
             </MudGrid>
@@ -354,7 +354,7 @@
         for (var i = start; i <= end; i++)
         {
             var record = _importedScores[i];
-            _session?.Add(record.Chart, record.Score, record.Plate, record.IsBroken);
+            _session?.Add(record.Chart, record.Score, record.Plate ?? PhoenixPlate.RoughGame, record.IsBroken);
         }
         _showImportDialog = false;
         Snackbar.Add("Session Imported Successfully!");
@@ -365,7 +365,7 @@
         try
         {
             var results = await Mediator.Send(new GetOfficialRecentScoresQuery(_username, _password));
-            _importedScores = results.results.Where(s=>_configuration.Scoring.GetScore(s.Chart,s.Score,s.Plate,s.IsBroken)>0).ToArray();
+            _importedScores = results.results.Where(s=>_configuration.Scoring.GetScore(s.Chart,s.Score,s.Plate ?? PhoenixPlate.RoughGame,s.IsBroken)>0).ToArray();
             _notMapped = results.nonMapped.ToArray();
             _checked = _importedScores.Select(r => false).ToArray();
             _showImportDialog = true;

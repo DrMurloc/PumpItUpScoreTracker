@@ -6,8 +6,8 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.Domain.Records
 {
     [ExcludeFromCodeCoverage]
-    public sealed record OfficialRecordedScore(Chart Chart, PhoenixScore Score, PhoenixPlate Plate,
-        bool IsBroken = false)
+    public sealed record OfficialRecordedScore(Chart Chart, PhoenixScore Score, PhoenixPlate? Plate,
+        bool IsBroken = false, DateTimeOffset? RecordedAt = null, JudgementCounts? Judgements = null)
     {
     }
 }

@@ -29,10 +29,10 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.PhoenixRecord` | Best-known Phoenix-scoring attempt per user+chart+mix: score, plate, broken flag, and the `Source` of the current best (verified ⇔ `officialImport`; NULL predates capture). Unique on UserId+ChartId+MixId; pre-Phoenix-2 rows backfilled as Phoenix — as are all MixId columns below |
+| `scores.PhoenixRecord` | Best-known Phoenix-scoring attempt per user+chart+mix: score, plate, broken flag, and the `Source` of the current best (verified ⇔ `officialImport`; NULL predates capture). `Perfects/Greats/Goods/Bads/Misses` hold the producing play's judgement breakdown (all five set together; NULL = never observed). Unique on UserId+ChartId+MixId; pre-Phoenix-2 rows backfilled as Phoenix — as are all MixId columns below |
 | `scores.BestAttempt` | Legacy-model best attempts (letter grade + broken + optional era-scale score) per user+chart+mix; `MixId` defaults to XX — the table's original implicit scope — and every pre-Phoenix mix records here ([legacy-mixes design](design/legacy-mixes.md)) |
 | `scores.PhoenixRecordStats` | Per-score Pumbility stats per user+chart+mix, written by PlayerProgress through a Ledger port |
-| `scores.ScoreEventJournal` | **Append-only** journal of best-attempt *changes* (progress only since 2026-07: first entries incl. broken, unbreaks, score/plate improvements, manual corrections — no-ops are never written; rows from before the guard include them). Rows are never updated or deleted. `SessionId` groups rows into play sessions / import runs (NULL predates capture). Seeded 2026-06 from `PhoenixRecord` (`Source='backfill'`, dated at the record's last update); the foundation of score-progression history |
+| `scores.ScoreEventJournal` | **Append-only** journal of best-attempt *changes* (progress only since 2026-07: first entries incl. broken, unbreaks, score/plate improvements, manual corrections — no-ops are never written; rows from before the guard include them). Rows are never updated or deleted. `SessionId` groups rows into play sessions / import runs (NULL predates capture). `Perfects/Greats/Goods/Bads/Misses` hold the event's judgement breakdown when observed (all five together; NULL otherwise); `OccurredAt` carries the official site's saved timestamp when the import had one, clock time otherwise. Seeded 2026-06 from `PhoenixRecord` (`Source='backfill'`, dated at the record's last update); the foundation of score-progression history |
 
 ## Home Page (vertical: `ScoreTracker.HomePage`)
 
@@ -97,10 +97,19 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.UserOfficialLeaderboard` | Mirrored official leaderboard placements, per mix |
-| `scores.UserWorldRanking` | Calculated world-ranking stats per mix (singles/doubles competitive, average level) |
-| `scores.OfficialUserAvatar` | Cached official avatar URLs |
-| `scores.OfficialLeaderboardImportState` | Timestamp of the last official leaderboard import, one row per mix (PK MixId) |
+| `scores.OfficialLeaderboard` | Board dimension: one row per mirrored board (Rating or Chart), chart boards keyed to their catalog ChartId |
+| `scores.OfficialPlayer` | Player dimension: one row per board-visible tag per mix, avatar + optional import-confirmed UserId link |
+| `scores.OfficialLeaderboardSnapshot` | One sweep run per row — run state (stage/counts/error) while executing, snapshot anchor once `CompletedAt` seals it; unsealed rows are invisible to reads |
+| `scores.OfficialLeaderboardPlacement` | One player-place-on-board per snapshot (weekly history); clustered by (Snapshot, Leaderboard, Place, Player) |
+| `scores.OfficialChartPopularity` | Official play-ranking place per chart per snapshot (popularity history) |
+| `scores.OfficialBoardRecord` | Record book per chart board: all-time high score (encodes every claimed grade band) |
+| `scores.OfficialFolderRecord` | Record book per folder (mix + type + level): all-time high score across the folder's boards |
+| `scores.OfficialWeeklyHighlight` | Editorial weekly highlights computed at import (movers, boards climbed, new #1s, grade firsts); rebuildable from snapshots |
+| `scores.OfficialPlayerRenameProposal` | Detected likely renames awaiting admin accept/dismiss; survives merges as the audit trail |
+| `scores.UserOfficialLeaderboard` | Legacy placements (pre-snapshot model) — dropped in a follow-up PR once the prod baseline seed is verified |
+| `scores.UserWorldRanking` | Legacy calculated world rankings — same retirement path |
+| `scores.OfficialUserAvatar` | Legacy avatar cache (absorbed by `OfficialPlayer`) — same retirement path |
+| `scores.OfficialLeaderboardImportState` | Legacy last-import timestamp (absorbed by snapshot seal) — same retirement path |
 
 ## Weekly Challenge (vertical: `ScoreTracker.WeeklyChallenge`)
 
