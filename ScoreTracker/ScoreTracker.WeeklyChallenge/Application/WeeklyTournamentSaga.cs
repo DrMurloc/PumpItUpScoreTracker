@@ -5,6 +5,7 @@ using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.WeeklyChallenge.Contracts.Commands;
 using MassTransit;
 using MediatR;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Application.Commands;
 using ScoreTracker.SharedKernel.Enums;
@@ -20,7 +21,7 @@ namespace ScoreTracker.WeeklyChallenge.Application
     (IChartRepository charts, IWeeklyTournamentRepository weeklyTournies, IPlayerStatsReader playerStats,
         IBotClient bot,
         ILogger<WeeklyTournamentSaga> logger, IUserReader users, IBus bus,
-        IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random) :
+        IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random, IMemoryCache cache) :
         IConsumer<RotateWeeklyChartsCommand>,
         IConsumer<ScoreImportCompletedEvent>,
         IRequestHandler<RegisterWeeklyChartScoreCommand>,
@@ -45,10 +46,18 @@ namespace ScoreTracker.WeeklyChallenge.Application
             var entries = withSources.Select(e => e.Entry).ToArray();
             var sources = withSources.ToDictionary(e => e.Entry.UserId, e => e.Source);
             var ranked = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(entries).ToArray();
+            var chart = (await charts.GetCharts(request.Mix, chartIds: new[] { request.ChartId },
+                cancellationToken: cancellationToken)).FirstOrDefault();
+            var inRangePlaces = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(chart == null
+                    ? entries
+                    : entries.Where(e => WeeklyChartSuggestionPolicy.IsWithinRange(chart, e.CompetitiveLevel)))
+                .ToDictionary(r => r.Item2.UserId, r => r.Item1);
             var userDict = (await users.GetUsers(ranked.Select(r => r.Item2.UserId).Distinct().ToArray(),
                 cancellationToken)).ToDictionary(u => u.Id);
             return ranked.Select(r => new WeeklyBoardRow(r.Item1, userDict.GetValueOrDefault(r.Item2.UserId),
-                r.Item2, sources.TryGetValue(r.Item2.UserId, out var s) ? s : null)).ToList();
+                r.Item2, sources.TryGetValue(r.Item2.UserId, out var s) ? s : null,
+                chart == null || WeeklyChartSuggestionPolicy.IsWithinRange(chart, r.Item2.CompetitiveLevel),
+                inRangePlaces.TryGetValue(r.Item2.UserId, out var inRangePlace) ? inRangePlace : null)).ToList();
         }
 
         // The challenges page's board read: ranked heads + the caller's standing per chart,
@@ -92,6 +101,24 @@ namespace ScoreTracker.WeeklyChallenge.Application
                         ? chartEntries
                         : Array.Empty<WeeklyTournamentEntry>()).ToArray());
 
+            // The relevant-players ladder (M20): the same boards with out-of-band entries
+            // removed and places renumbered. A chart the catalog can't resolve filters nothing.
+            var chartDict = (await charts.GetCharts(request.Mix,
+                    chartIds: boardCharts.Select(c => c.ChartId).ToArray(),
+                    cancellationToken: cancellationToken))
+                .ToDictionary(c => c.Id);
+            var inRangeRanked = boardCharts.ToDictionary(c => c.ChartId, c =>
+            {
+                var chart = chartDict.GetValueOrDefault(c.ChartId);
+                var chartEntries = byChart.TryGetValue(c.ChartId, out var es)
+                    ? es
+                    : Array.Empty<WeeklyTournamentEntry>();
+                return WeeklyChartSuggestionPolicy.ProcessIntoPlaces(chart == null
+                    ? chartEntries
+                    : chartEntries.Where(e =>
+                        WeeklyChartSuggestionPolicy.IsWithinRange(chart, e.CompetitiveLevel))).ToArray();
+            });
+
             // Suggestion flags only mean something on the live board, and only for a caller with
             // calibrated competitive levels.
             var suggested = new HashSet<Guid>();
@@ -101,20 +128,14 @@ namespace ScoreTracker.WeeklyChallenge.Application
                 var stats = await playerStats.GetStats(request.Mix, request.UserId.Value, cancellationToken);
                 suggestionsAvailable = stats is { DoublesCompetitiveLevel: >= 10, SinglesCompetitiveLevel: >= 10 };
                 if (suggestionsAvailable)
-                {
-                    var chartDict = (await charts.GetCharts(request.Mix,
-                            chartIds: boardCharts.Select(c => c.ChartId).ToArray(),
-                            cancellationToken: cancellationToken))
-                        .ToDictionary(c => c.Id);
                     suggested = WeeklyChartSuggestionPolicy.GetSuggestedCharts(
                             boardCharts.Where(c => chartDict.ContainsKey(c.ChartId))
                                 .Select(c => chartDict[c.ChartId]),
                             stats.DoublesCompetitiveLevel, stats.SinglesCompetitiveLevel)
                         .Select(c => c.Id).ToHashSet();
-                }
             }
 
-            var visibleUserIds = ranked.Values
+            var visibleUserIds = ranked.Values.Concat(inRangeRanked.Values)
                 .SelectMany(r => r.Take(3).Select(row => row.Item2.UserId))
                 .Concat(request.UserId is { } caller ? new[] { caller } : Array.Empty<Guid>())
                 .Distinct().ToArray();
@@ -123,19 +144,26 @@ namespace ScoreTracker.WeeklyChallenge.Application
             var summaries = boardCharts.Select(chart =>
             {
                 var chartRanked = ranked[chart.ChartId];
+                var chartInRange = inRangeRanked[chart.ChartId];
+                var inRangePlaces = chartInRange.ToDictionary(r => r.Item2.UserId, r => r.Item1);
+                var catalogChart = chartDict.GetValueOrDefault(chart.ChartId);
                 WeeklyBoardRow ToRow((int, WeeklyTournamentEntry) r) => new(r.Item1,
                     userDict.GetValueOrDefault(r.Item2.UserId), r.Item2,
                     sources.TryGetValue((r.Item2.UserId, r.Item2.ChartId), out var source)
                         ? source
-                        : null);
+                        : null,
+                    catalogChart == null || WeeklyChartSuggestionPolicy.IsWithinRange(catalogChart,
+                        r.Item2.CompetitiveLevel),
+                    inRangePlaces.TryGetValue(r.Item2.UserId, out var inRangePlace) ? inRangePlace : null);
                 var top = chartRanked.Take(3).Select(ToRow).ToArray();
+                var inRangeTop = chartInRange.Take(3).Select(ToRow).ToArray();
                 var mine = request.UserId == null
                     ? null
                     : chartRanked.Where(r => r.Item2.UserId == request.UserId)
                         .Select(ToRow)
                         .FirstOrDefault();
                 return new WeeklyBoardChartSummary(chart.ChartId, chart.ExpirationDate, chartRanked.Length, top,
-                    mine, suggested.Contains(chart.ChartId));
+                    mine, suggested.Contains(chart.ChartId), inRangeTop, chartInRange.Length);
             }).ToArray();
 
             return new WeeklyBoardView(summaries, isLive, suggestionsAvailable);
@@ -146,6 +174,23 @@ namespace ScoreTracker.WeeklyChallenge.Application
         // at zero per the game; Combined excludes co-op (Phoenix 2's own rule); the Co-Op view
         // ranks raw score — the only currency co-op charts share across a month.
         public async Task<MonthlyLeaderboardView> Handle(GetMonthlyLeaderboardQuery request,
+            CancellationToken cancellationToken)
+        {
+            // The page ships all four type boards statically (§12.5), so every anonymous view
+            // costs four dispatches — the unscoped live-window shape caches briefly to keep
+            // that flat. Community-scoped and past-window reads stay uncached.
+            if (request.OnlyUserIds == null && request.AnchorWeek == null)
+                return (await cache.GetOrCreateAsync(
+                    $"{nameof(WeeklyTournamentSaga)}:monthly:{request.Mix}:{request.Type}",
+                    async e =>
+                    {
+                        e.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60);
+                        return await ComputeMonthlyLeaderboard(request, cancellationToken);
+                    }))!;
+            return await ComputeMonthlyLeaderboard(request, cancellationToken);
+        }
+
+        private async Task<MonthlyLeaderboardView> ComputeMonthlyLeaderboard(GetMonthlyLeaderboardQuery request,
             CancellationToken cancellationToken)
         {
             var now = dateTime.Now;
@@ -209,7 +254,8 @@ namespace ScoreTracker.WeeklyChallenge.Application
                         .Take(countedPerPlayer).ToArray();
                     return (UserId: g.Key, Counted: counted,
                         Total: counted.Sum(m => m.Points),
-                        RawSum: counted.Sum(m => (int)m.Score));
+                        RawSum: counted.Sum(m => (int)m.Score),
+                        CompetitiveLevel: g.Max(e => e.CompetitiveLevel));
                 })
                 // Stepped grade multipliers tie more often than the old continuous scale;
                 // raw-score sum breaks them (§6).
@@ -220,7 +266,7 @@ namespace ScoreTracker.WeeklyChallenge.Application
                 .ToDictionary(u => u.Id);
             var rows = totals.Select((r, i) => new MonthlyLeaderboardRow(i + 1,
                     userDict.GetValueOrDefault(r.UserId), r.Total,
-                    r.Counted.Take(4).ToArray(), r.Counted))
+                    r.Counted.Take(4).ToArray(), r.Counted, r.CompetitiveLevel))
                 .ToArray();
 
             return new MonthlyLeaderboardView(rows, weekInMonth, countedPerPlayer, windowStart, windowEnd);

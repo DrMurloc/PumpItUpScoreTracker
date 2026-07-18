@@ -83,7 +83,7 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
         var top = new WeeklyBoardRow(1, MakeUser(), Entry(chart.Id, Guid.NewGuid(), 990_000),
             ChallengeEntrySource.Official);
         return new WeeklyBoardChartSummary(chart.Id, DateTimeOffset.UtcNow.AddDays(3), 12,
-            new[] { top }, mine, suggested);
+            new[] { top }, mine, suggested, new[] { top }, 12);
     }
 
     [Fact]

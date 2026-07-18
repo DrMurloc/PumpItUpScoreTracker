@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.WeeklyChallenge.Contracts;
 using ScoreTracker.WeeklyChallenge.Contracts.Queries;
 using ScoreTracker.WeeklyChallenge.Contracts.Messages;
@@ -541,6 +542,46 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
+    public async Task WeeklyBoardShipsBothLaddersSoTheRelevantSwitchRenumbers()
+    {
+        // A CL-24 player tops an S20 board (out of the [19, 22] band); two in-band players
+        // trail. The overall ladder ranks all three; the in-range ladder drops the
+        // sandbagger and renumbers, and every row says which world it belongs to.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var sandbagger = Guid.NewGuid();
+        var second = Guid.NewGuid();
+        var third = Guid.NewGuid();
+        var weeklyTournies = new Mock<IWeeklyTournamentRepository>();
+        weeklyTournies.Setup(w => w.GetWeeklyCharts(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new WeeklyTournamentChart(chart.Id, Now.AddDays(3)) });
+        WithLiveEntries(weeklyTournies, new[]
+        {
+            new WeeklyTournamentEntry(sandbagger, chart.Id, 995_000, PhoenixPlate.PerfectGame, false, null, 24.0),
+            new WeeklyTournamentEntry(second, chart.Id, 970_000, PhoenixPlate.SuperbGame, false, null, 20.0),
+            new WeeklyTournamentEntry(third, chart.Id, 960_000, PhoenixPlate.SuperbGame, false, null, 19.4)
+        });
+        var saga = BuildSaga(weeklyTournies: weeklyTournies, charts: ChartsReturning(new[] { chart }),
+            users: UsersEcho());
+
+        var view = await saga.Handle(new GetWeeklyBoardQuery(MixEnum.Phoenix), CancellationToken.None);
+
+        var summary = Assert.Single(view.Charts);
+        Assert.Equal(3, summary.EntryCount);
+        Assert.Equal(2, summary.InRangeEntryCount);
+
+        var topSandbagger = summary.TopPlaces.Single(r => r.Entry.UserId == sandbagger);
+        Assert.False(topSandbagger.WasWithinRange);
+        Assert.Null(topSandbagger.InRangePlace);
+        var topSecond = summary.TopPlaces.Single(r => r.Entry.UserId == second);
+        Assert.True(topSecond.WasWithinRange);
+        Assert.Equal(2, topSecond.Place);
+        Assert.Equal(1, topSecond.InRangePlace);
+
+        Assert.Equal(new[] { second, third }, summary.InRangeTopPlaces.Select(r => r.Entry.UserId).ToArray());
+        Assert.Equal(new[] { 1, 2 }, summary.InRangeTopPlaces.Select(r => r.Place).ToArray());
+    }
+
+    [Fact]
     public async Task WeeklyBoardFlagsSuggestedChartsOnlyForCalibratedPlayers()
     {
         var inBand = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).WithSongName("in").Build();
@@ -1021,7 +1062,16 @@ public sealed class WeeklyTournamentSagaTests
         Mock<IDateTimeOffsetAccessor>? dateTime = null,
         Mock<IRandomNumberGenerator>? random = null)
     {
-        charts ??= new Mock<IChartRepository>();
+        if (charts == null)
+        {
+            // The board read fetches the catalog unconditionally now (the in-range ladder);
+            // a bare context answers with an empty catalog, which filters nothing.
+            charts = new Mock<IChartRepository>();
+            charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(),
+                    It.IsAny<ChartType?>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<Chart>());
+        }
+
         weeklyTournies ??= new Mock<IWeeklyTournamentRepository>();
         playerStats ??= new Mock<IPlayerStatsReader>();
         bot ??= new Mock<IBotClient>();
@@ -1031,7 +1081,7 @@ public sealed class WeeklyTournamentSagaTests
         random ??= new Mock<IRandomNumberGenerator>();
         return new WeeklyTournamentSaga(charts.Object, weeklyTournies.Object, playerStats.Object,
             bot.Object, NullLogger<WeeklyTournamentSaga>.Instance, users.Object, bus.Object,
-            dateTime.Object, random.Object);
+            dateTime.Object, random.Object, new MemoryCache(new MemoryCacheOptions()));
     }
 
     private static WeeklyTournamentEntry Entry(Guid chartId, int score, Guid? userId = null,

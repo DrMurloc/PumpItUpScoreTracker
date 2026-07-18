@@ -29,7 +29,10 @@ public sealed record MonthlyLeaderboardRow(
     User? Player,
     double Total,
     IReadOnlyList<MonthlyEntry> TopFour,
-    IReadOnlyList<MonthlyEntry> AllCounted);
+    IReadOnlyList<MonthlyEntry> AllCounted,
+    // The player's competitive level for the CL chip (M16): the highest stored on their
+    // counted entries, so no cross-vertical stats read is needed.
+    double CompetitiveLevel = 0);
 
 /// <summary>
 ///     A counted score with its PUMBILITY price (raw score when the view is Co-Op — see
