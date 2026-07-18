@@ -184,7 +184,7 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
 
         var cut = RenderComponent<WeeklyBoardGrid>(p => p
             .Add(x => x.Summaries, view).Add(x => x.Charts, new Dictionary<Guid, Chart> { [chart.Id] = chart })
-            .Add(x => x.Density, UiDensity.Table).Add(x => x.IsLoggedIn, false).Add(x => x.TotalCount, 1));
+            .Add(x => x.Density, UiDensity.Table).Add(x => x.IsLoggedIn, false));
 
         Assert.Equal("Table", cut.Find(".challenge-grid").GetAttribute("data-density"));
         Assert.Contains("on", cut.Find("[data-den=\"Table\"]").GetAttribute("class"));
@@ -198,11 +198,48 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
 
         var cut = RenderComponent<WeeklyBoardGrid>(p => p
             .Add(x => x.Summaries, view).Add(x => x.Charts, new Dictionary<Guid, Chart> { [chart.Id] = chart })
-            .Add(x => x.Density, UiDensity.Comfortable).Add(x => x.IsLoggedIn, true).Add(x => x.TotalCount, 1));
+            .Add(x => x.Density, UiDensity.Comfortable).Add(x => x.IsLoggedIn, true));
 
         Assert.Equal("true", cut.Find(".challenge-card").GetAttribute("data-suggested"));
         var unplayed = cut.Find(".challenge-card-line.unplayed");
         Assert.Equal("—", unplayed.TextContent.Trim());
+    }
+
+    [Fact]
+    public void WeeklyCardShipsBothWorldsOnItsRows()
+    {
+        // Overall top-3: sandbagger (out of band, no in-range place), then two in-band rows
+        // whose renumbered places trail by one. Every row carries both worlds (M20) so the
+        // relevant-players switch is pure CSS.
+        var chart = MakeChart();
+        var sandbagger = new WeeklyBoardRow(1, MakeUser("SBAG"), Entry(chart.Id, Guid.NewGuid(), 995_000),
+            ChallengeEntrySource.Official, WasWithinRange: false, InRangePlace: null);
+        var second = new WeeklyBoardRow(2, MakeUser("REAL"), Entry(chart.Id, Guid.NewGuid(), 970_000),
+            ChallengeEntrySource.Official, WasWithinRange: true, InRangePlace: 1);
+        var third = new WeeklyBoardRow(3, MakeUser("ALSO"), Entry(chart.Id, Guid.NewGuid(), 960_000),
+            ChallengeEntrySource.Official, WasWithinRange: true, InRangePlace: 2);
+        var summary = new WeeklyBoardChartSummary(chart.Id, DateTimeOffset.UtcNow.AddDays(3), 3,
+            new[] { sandbagger, second, third }, null, false, new[] { second, third }, 2);
+
+        var cut = RenderComponent<WeeklyBoardGrid>(p => p
+            .Add(x => x.Summaries, new[] { summary })
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [chart.Id] = chart })
+            .Add(x => x.IsLoggedIn, false));
+
+        var lines = cut.FindAll(".challenge-card-line");
+        Assert.Equal(3, lines.Count);
+        var sand = lines.Single(l => l.GetAttribute("data-inrange") == "false");
+        Assert.DoesNotContain("w-r", sand.GetAttribute("class"));
+        Assert.Contains("—", sand.QuerySelector(".challenge-lb-place.cr")!.TextContent);
+        var real = lines.First(l => l.TextContent.Contains("REAL"));
+        Assert.Contains("w-o", real.GetAttribute("class"));
+        Assert.Contains("w-r", real.GetAttribute("class"));
+        Assert.Equal("2", real.QuerySelector(".challenge-lb-place.co")!.TextContent.Trim());
+        Assert.Equal("1", real.QuerySelector(".challenge-lb-place.cr")!.TextContent.Trim());
+        // Rows carry avatars now (M16 vocabulary on the cards too).
+        Assert.Equal(3, cut.FindAll(".challenge-card-line img.challenge-avatar").Count);
+        // The footer wears the widget icon pair (M15) — board trophy for the anonymous view.
+        Assert.Single(cut.FindAll(".challenge-card-foot .challenge-iconbtn.tro[data-challenge-board]"));
     }
 
     [Fact]

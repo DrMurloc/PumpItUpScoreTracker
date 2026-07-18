@@ -96,29 +96,24 @@ else
         </div>
     </div>
 
-    @* ── Daily Step (live view only) ── *@
-    @if (_board.IsLive)
-    {
-        <section id="daily" class="challenge-section" style="margin-top:10px">
-            <DailyStepStrip View="_daily" Chart="_dailyChart" ResetsIn="_dailyResetsIn"
-                            IsLoggedIn="_isLoggedIn"></DailyStepStrip>
+    @* ── The rail layout (§12.1): boards left, the week's grid right; the collapse ladder
+       is pure CSS (M22). The rail's Daily card always shows today's board — past-week views
+       change the grid and the monthly window, not the day. ── *@
+    <div class="challenge-layout">
+        <div class="challenge-rail">
+            <DailyStepRailCard View="_daily" Chart="_dailyChart" ResetsIn="_dailyResetsIn"
+                               IsLoggedIn="_isLoggedIn" UserId="_userId"></DailyStepRailCard>
+            <MonthlyRailCard Boards="_monthlyBoards" ActiveType="_type" UserId="_userId"></MonthlyRailCard>
+        </div>
+        <section id="weekly" class="challenge-main">
+            <WeeklyBoardGrid Summaries="_board.Charts" Charts="_charts" Density="_density"
+                             IsLoggedIn="_isLoggedIn" UserId="_userId"
+                             ShowingSuggestedOnly="_showingSuggestedOnly"
+                             SuggestionsAvailable="_board.SuggestionsAvailable"
+                             RelevantOnly="_relevantOnly" PoolHref="/WeeklyCharts?pool=1"
+                             Rotation="@_rotationText"></WeeklyBoardGrid>
         </section>
-    }
-
-    @* ── This week's board ── *@
-    <section id="weekly" class="challenge-section" style="margin-top:14px">
-        <WeeklyBoardGrid Summaries="_shownSummaries" Charts="_charts" Density="_density"
-                         IsLoggedIn="_isLoggedIn" ShowingSuggestedOnly="_showingSuggestedOnly"
-                         SuggestionsAvailable="_board.SuggestionsAvailable" TotalCount="_board.Charts.Count"
-                         ToggleHref="@_suggestedToggleHref" PoolHref="/WeeklyCharts?pool=1"
-                         Rotation="@_rotationText"></WeeklyBoardGrid>
-    </section>
-
-    @* ── Monthly leaderboard ── *@
-    <section id="monthly" class="challenge-section">
-        <MonthlyLeaderboard View="_monthly" Charts="_charts" Type="_type" UserId="_userId"
-                            Subtitle="@_monthlySubtitle" BasePath="@_monthlyBasePath"></MonthlyLeaderboard>
-    </section>
+    </div>
 
     @* ── Your Daily Step history ── *@
     @if (_board.IsLive)
@@ -189,6 +184,7 @@ else
     [SupplyParameterFromQuery(Name = "communities")] public string[]? Communities { get; set; }
 
     private const string DensityKey = "Density__WeeklyCharts";
+    private const string RelevantKey = "WeeklyCharts__RelevantPlayers";
 
     private bool _isLoggedIn;
     private bool _isAdmin;
@@ -205,6 +201,7 @@ else
     private HashSet<string> _selectedCommunities = new();
 
     private WeeklyBoardView _board = new(Array.Empty<WeeklyBoardChartSummary>(), true, false);
+    private IReadOnlyList<MonthlyRailBoard> _monthlyBoards = Array.Empty<MonthlyRailBoard>();
     private MonthlyLeaderboardView _monthly = new(Array.Empty<MonthlyLeaderboardRow>(), 0, 0, null, null);
     private DailyStepBoardView? _daily;
     private Chart? _dailyChart;
@@ -213,16 +210,13 @@ else
 
     private UiDensity _density = UiDensity.Comfortable;
     private bool _showingSuggestedOnly;
-    private IReadOnlyList<WeeklyBoardChartSummary> _shownSummaries = Array.Empty<WeeklyBoardChartSummary>();
+    private bool _relevantOnly;
 
     private int _playedCount;
     private int _suggestedLeft;
     private int? _monthlyPlace;
     private string? _dailyResetsIn;
     private string _rotationText = string.Empty;
-    private string _monthlySubtitle = string.Empty;
-    private string _monthlyBasePath = "/WeeklyCharts";
-    private string _suggestedToggleHref = "/WeeklyCharts";
 
     private string? _jsonLd;
 
@@ -286,22 +280,30 @@ else
         }
 
         _board = await Mediator.Send(new GetWeeklyBoardQuery(_mix, _weekStart, _userId, onlyUserIds));
-        _monthly = await Mediator.Send(new GetMonthlyLeaderboardQuery(_mix, _weekStart, _type, onlyUserIds));
+        if (_isLoggedIn)
+            _relevantOnly = await UiSettings.GetSetting(RelevantKey) == "true";
 
-        if (_board.IsLive)
+        // The rail ships all four monthly boards; the segment row swaps them client-side (M13).
+        var monthlyTypes = new ChartType?[] { null, ChartType.Single, ChartType.Double, ChartType.CoOp };
+        var monthlyViews = new List<MonthlyRailBoard>();
+        foreach (var type in monthlyTypes)
+            monthlyViews.Add(new MonthlyRailBoard(type,
+                await Mediator.Send(new GetMonthlyLeaderboardQuery(_mix, _weekStart, type, onlyUserIds))));
+        _monthlyBoards = monthlyViews;
+        _monthly = monthlyViews.First(b => b.Type == _type).View;
+
+        // The rail's Daily card always shows today's board, whichever week the grid views.
+        _daily = await Mediator.Send(new GetDailyStepBoardQuery(_mix, _userId));
+        if (_daily != null)
         {
-            _daily = await Mediator.Send(new GetDailyStepBoardQuery(_mix, _userId));
-            if (_daily != null)
-            {
-                _dailyChart = _charts.GetValueOrDefault(_daily.Board.ChartId);
-                _dailyResetsIn = ResetsIn(_daily.Board.ExpirationDate);
-            }
+            _dailyChart = _charts.GetValueOrDefault(_daily.Board.ChartId);
+            _dailyResetsIn = ResetsIn(_daily.Board.ExpirationDate);
+        }
 
-            if (_userId != null)
-            {
-                _history = (await Mediator.Send(new GetUserDailyStepHistoryQuery(_userId.Value, _mix, 14)))
-                    .ToArray();
-            }
+        if (_board.IsLive && _userId != null)
+        {
+            _history = (await Mediator.Send(new GetUserDailyStepHistoryQuery(_userId.Value, _mix, 14)))
+                .ToArray();
         }
 
         BuildDerived();
@@ -309,13 +311,10 @@ else
 
     private void BuildDerived()
     {
-        // Suggested-only is the default for calibrated players; the escape is ?suggested=all.
+        // Suggested-only is the default for calibrated players. All cards ship regardless —
+        // the grid starts in whichever state ?suggested= names, and the toggle swaps in place.
         var showAll = Suggested == "all" || !_board.SuggestionsAvailable || !_isLoggedIn;
         _showingSuggestedOnly = !showAll;
-        _shownSummaries = showAll
-            ? _board.Charts
-            : _board.Charts.Where(c => c.IsSuggested).ToList();
-        _suggestedToggleHref = BuildHref(suggestedAll: _showingSuggestedOnly);
 
         _playedCount = _board.Charts.Count(c => c.MyRow != null);
         _suggestedLeft = _board.Charts.Count(c => c.IsSuggested && c.MyRow == null);
@@ -324,11 +323,6 @@ else
         _rotationText = _board.IsLive
             ? L["{0} charts · rotates Monday midnight ET", _board.Charts.Count]
             : L["week of {0}", WeekLabel(_weekStart!.Value)];
-
-        _monthlyBasePath = _weekStart == null ? "/WeeklyCharts" : $"/WeeklyCharts?week={Week}";
-        _monthlySubtitle = _monthly.Rows.Any()
-            ? L["Week {0} — best {1} count · PUMBILITY", _monthly.WeekInMonth, _monthly.CountedPerPlayer]
-            : "PUMBILITY";
 
         BuildJsonLd();
     }
@@ -363,16 +357,6 @@ else
                 ["itemListElement"] = items
             });
         }
-    }
-
-    // Rebuilds the current URL toggling the suggested filter, preserving week + type.
-    private string BuildHref(bool suggestedAll)
-    {
-        var q = new List<string>();
-        if (_weekStart != null) q.Add($"week={Week}");
-        if (_type != null) q.Add($"type={_type}");
-        if (suggestedAll) q.Add("suggested=all");
-        return "/WeeklyCharts" + (q.Any() ? "?" + string.Join("&", q) : "");
     }
 
     private string WeekLabel(DateTimeOffset rotationDate) =>

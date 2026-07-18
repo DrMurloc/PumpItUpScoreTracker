@@ -6,24 +6,36 @@
 @using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services.Theming
 
-@* This week's board (weekly-charts-overhaul.md §4.3): the density-managed grid. Each card leads
-   with its jacket (opens chart details), the score to beat, and your standing — a dim "—" when
-   you haven't played it. Suggested charts wear the gold border only; the filter note above says
-   what's showing. Compact drops to a sticker whose corner count-chip opens the board. Every
-   density is a server-rendered variant of these same cards (CSS keys on data-density). *@
+@* This week's board (weekly-charts-overhaul.md §12): the density-managed grid, rebuilt to the
+   round-12 anatomy. Comfortable cards carry the top three and your row (M17); the banner is the
+   card's identity with the bubble overlaid — Table pulls the bubble beside the name instead
+   (M19). Every card ships BOTH ranking worlds (M20): rows are stamped with the overall and the
+   renumbered in-range place, and out-of-band rows carry data-inrange="false" — the
+   relevant-players switch swaps worlds in CSS, no round trip (M13). All charts render;
+   suggested-only is a class on the grid. Static markup; the island wires every control. *@
 
 <div class="challenge-gridbar">
     <h2>@L["This Week"]</h2>
     <span class="sub">@Rotation</span>
-    @if (IsLoggedIn && ShowingSuggestedOnly)
+    @if (IsLoggedIn && SuggestionsAvailable)
     {
-        <span class="challenge-filter-note">
-            @L["showing suggested"] — <a href="@ToggleHref">@L["show all {0}", TotalCount]</a>
+        <span class="challenge-filter-note" data-total="@Summaries.Count">
+            @if (ShowingSuggestedOnly)
+            {
+                @L["showing suggested"] <a data-challenge-showall="">@L["show all {0}", Summaries.Count]</a>
+            }
+            else
+            {
+                <a data-challenge-showall="">@L["show suggested only"]</a>
+            }
         </span>
     }
-    else if (IsLoggedIn && SuggestionsAvailable && TotalCount > Summaries.Count)
+    <span class="spacer"></span>
+    @if (IsLoggedIn)
     {
-        <span class="challenge-filter-note"><a href="@ToggleHref">@L["show suggested only"]</a></span>
+        <label class="challenge-switch" title="@L["Hide players whose level sat outside this chart's range"]">
+            <input type="checkbox" data-challenge-relevant="" checked="@RelevantOnly"/><i></i>@L["Relevant players"]
+        </label>
     }
     <span class="challenge-den-group" role="group" aria-label="@L["Density"]">
         <button class="challenge-den-btn @(Density == UiDensity.Comfortable ? "on" : "")"
@@ -47,54 +59,54 @@
 }
 else
 {
-    <div class="challenge-grid" data-density="@Density">
+    <div class="challenge-grid @(ShowingSuggestedOnly ? "suggested-only" : "") @(RelevantOnly ? "relevant-on" : "")"
+         data-density="@Density">
         @foreach (var summary in Summaries)
         {
             var chart = Charts.GetValueOrDefault(summary.ChartId);
             if (chart == null) continue;
-            var top = summary.TopPlaces.FirstOrDefault();
             <div class="challenge-card" data-suggested="@summary.IsSuggested.ToString().ToLowerInvariant()">
                 <a class="challenge-card-jacket" href="@chart.CanonicalPath()" data-challenge-chart="@chart.Id"
-                   style="background-image:url('@chart.Song.ImagePath')" aria-label="@chart.Song.Name">
-                    <span class="challenge-card-bubble"><DifficultyBubble Chart="chart" Small="true"></DifficultyBubble></span>
-                </a>
-                <button class="challenge-count-chip" data-challenge-board="@chart.Id"
-                        title="@L["Leaderboard"]">@summary.EntryCount</button>
+                   style="background-image:url('@chart.Song.ImagePath')" aria-label="@chart.Song.Name"></a>
+                <span class="challenge-card-bubble"><DifficultyBubble Chart="chart" Small="true"></DifficultyBubble></span>
+                <button class="challenge-count-chip" data-challenge-board="@chart.Id" title="@L["Leaderboard"]">
+                    <span class="co">@summary.EntryCount</span><span class="cr">@summary.InRangeEntryCount</span>
+                </button>
                 <div class="challenge-card-body">
                     <a class="challenge-card-name" href="@chart.CanonicalPath()" data-challenge-chart="@chart.Id">@chart.Song.Name</a>
-                    @if (top != null)
+                    @foreach (var row in MergedTop(summary))
                     {
-                        <div class="challenge-card-line">
-                            <span class="challenge-lb-place" style="@ThemeScales.RarityStyle(Fraction(summary, top.Place))">@top.Place</span>
-                            <span class="who">@(top.Player?.Name.ToString())</span>
-                            <span class="score"><ScoreBreakdown Score="top.Entry.Score" Plate="top.Entry.Plate"
-                                                                IsBroken="top.Entry.IsBroken" OneLine="true" ShowScore="true" Height="15"></ScoreBreakdown></span>
+                        <div class="challenge-card-line @WorldClasses(row) @(IsMine(row) ? "mine" : "")"
+                             data-inrange="@row.WasWithinRange.ToString().ToLowerInvariant()">
+                            <span class="challenge-lb-place co"
+                                  style="@ThemeScales.RarityStyle(Fraction(summary.EntryCount, row.Place))">@row.Place</span>
+                            <span class="challenge-lb-place cr"
+                                  style="@ThemeScales.RarityStyle(Fraction(summary.InRangeEntryCount, row.InRangePlace ?? 0))">@(row.InRangePlace?.ToString() ?? "—")</span>
+                            <ChallengeAvatar Player="row.Player"></ChallengeAvatar>
+                            <span class="who">@(IsMine(row) ? L["you"] : row.Player?.Name.ToString() ?? "—")</span>
+                            <span class="score"><ScoreBreakdown Score="row.Entry.Score" Plate="row.Entry.Plate"
+                                                                IsBroken="row.Entry.IsBroken" OneLine="true" ShowScore="true" Height="15"></ScoreBreakdown></span>
                         </div>
                     }
-                    @if (IsLoggedIn)
+                    @if (IsLoggedIn && summary.MyRow == null)
                     {
-                        @if (summary.MyRow != null)
-                        {
-                            <div class="challenge-card-line mine">
-                                <span class="challenge-lb-place">#@summary.MyRow.Place</span>
-                                <span class="who">@L["you"]</span>
-                                <span class="score"><ScoreBreakdown Score="summary.MyRow.Entry.Score" Plate="summary.MyRow.Entry.Plate"
-                                                                    IsBroken="summary.MyRow.Entry.IsBroken" OneLine="true" ShowScore="true" Height="15"></ScoreBreakdown></span>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="challenge-card-line unplayed" title="@L["Not played yet"]">—</div>
-                        }
+                        <div class="challenge-card-line unplayed w-o w-r" title="@L["Not played yet"]">—</div>
                     }
                 </div>
                 <div class="challenge-card-foot">
-                    <span class="count">@summary.EntryCount</span>
+                    <span class="count"><span class="co">@summary.EntryCount</span><span class="cr">@summary.InRangeEntryCount</span></span>
+                    <span class="spacer"></span>
                     @if (IsLoggedIn)
                     {
-                        <button class="challenge-iconbtn" data-challenge-record="@chart.Id" title="@L["Record"]">▲</button>
+                        <button class="challenge-iconbtn rec" data-challenge-record="@chart.Id" title="@L["Record"]"
+                                aria-label="@L["Record"]">
+                            <MudIcon Icon="@Icons.Material.Filled.AddCircleOutline" Size="Size.Small"></MudIcon>
+                        </button>
                     }
-                    <button class="challenge-iconbtn" data-challenge-board="@chart.Id" title="@L["Leaderboard"]">☰</button>
+                    <button class="challenge-iconbtn tro" data-challenge-board="@chart.Id" title="@L["Leaderboard"]"
+                            aria-label="@L["Leaderboard"]">
+                        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small"></MudIcon>
+                    </button>
                 </div>
             </div>
         }
@@ -108,18 +120,16 @@ else
     [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
     [Parameter] public UiDensity Density { get; set; } = UiDensity.Comfortable;
     [Parameter] public bool IsLoggedIn { get; set; }
+    [Parameter] public Guid? UserId { get; set; }
 
-    /// <summary>True when the grid is currently filtered to the caller's suggested charts.</summary>
+    /// <summary>True when the grid starts filtered to the caller's suggested charts.</summary>
     [Parameter] public bool ShowingSuggestedOnly { get; set; }
 
     /// <summary>Whether the caller has calibrated stats at all — gates the suggested affordance.</summary>
     [Parameter] public bool SuggestionsAvailable { get; set; }
 
-    /// <summary>Count across the whole week, for the "show all N" note.</summary>
-    [Parameter] public int TotalCount { get; set; }
-
-    /// <summary>URL that flips the suggested filter (?suggested=all / clean).</summary>
-    [Parameter] public string ToggleHref { get; set; } = "/WeeklyCharts";
+    /// <summary>The persisted relevant-players state (M20) — the world the grid starts in.</summary>
+    [Parameter] public bool RelevantOnly { get; set; }
 
     /// <summary>URL of the not-yet-featured pool (?pool=1).</summary>
     [Parameter] public string PoolHref { get; set; } = "/WeeklyCharts?pool=1";
@@ -127,6 +137,33 @@ else
     /// <summary>Localized "N charts · rotates …" subtitle, built by the page.</summary>
     [Parameter] public string Rotation { get; set; } = string.Empty;
 
-    private static double Fraction(WeeklyBoardChartSummary s, int place) =>
-        s.EntryCount <= 0 ? 0 : 1.0 - (double)place / s.EntryCount;
+    private const int TopCount = 3;
+
+    private bool IsMine(WeeklyBoardRow row) => UserId != null && row.Entry.UserId == UserId;
+
+    private static double Fraction(int total, int place) =>
+        total <= 0 || place <= 0 ? 0 : 1.0 - (double)place / total;
+
+    /// <summary>
+    ///     The union both worlds need: the overall top three, the in-range top three, and your
+    ///     row wherever it sits — each stamped with which head(s) it belongs to so the switch
+    ///     is pure CSS. Ordered by overall place so the list never visibly reshuffles.
+    /// </summary>
+    private IEnumerable<WeeklyBoardRow> MergedTop(WeeklyBoardChartSummary summary)
+    {
+        var overallTop = summary.TopPlaces.Take(TopCount).ToArray();
+        var inRangeTop = summary.InRangeTopPlaces.Take(TopCount).ToArray();
+        var rows = overallTop.Concat(inRangeTop).ToList();
+        if (summary.MyRow != null) rows.Add(summary.MyRow);
+        return rows.GroupBy(r => r.Entry.UserId).Select(g => g.First())
+            .OrderBy(r => r.Place);
+    }
+
+    private string WorldClasses(WeeklyBoardRow row)
+    {
+        var inOverall = row.Place <= TopCount;
+        var inRelevant = row.InRangePlace is { } p && p <= TopCount;
+        var mine = IsMine(row);
+        return (inOverall || mine ? "w-o " : "") + (inRelevant || mine ? "w-r" : "");
+    }
 }
