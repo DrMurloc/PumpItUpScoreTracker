@@ -477,11 +477,20 @@ Google's first indexed chart page exposed how a result actually *reads* ("263Sco
   plain `UploadAsync(Stream)` overload throws `BlobAlreadyExists`, so the daily
   `refresh-folder-share-cards` job faulted on its first folder every run after its first —
   all 52 tier-list og:image cards were created 2026-07-12 and never refreshed (blob
-  creation == modification for every card; unfurls still show that date). `UploadFile` now
-  overwrites — save-semantics, which is what every caller wants (the card refresh, UCS
-  photo re-submission; photo paths are fresh GUIDs and the avatar mirror guards itself
-  with `DoesFileExist`). Every upload path was audited: all blob writes ride
-  `IFileUploadClient` — the fixed client is the only `BlobContainerClient` in the repo.
+  creation == modification for every card). `UploadFile` now overwrites — save-semantics,
+  which is what every caller wants (UCS photo re-submission; photo paths are fresh GUIDs
+  and the avatar mirror guards itself with `DoesFileExist`). Every upload path was audited:
+  all blob writes ride `IFileUploadClient` — the fixed client is the only
+  `BlobContainerClient` in the repo.
+- **The tier-list og:image ecosystem is retired outright (owner call, 2026-07-18)** rather
+  than healed: the per-folder cards were never crawler-visible (their meta lived in
+  circuit-only `HeadContent` — the §4 problem), og:image contributes nothing to SEO proper,
+  and a ~3 MB PNG is the wrong unfurl payload regardless. Gone: the
+  `refresh-folder-share-cards` job (+ a `RemoveIfExists` so Hangfire storage drops the
+  orphan), `FolderShareCardSaga`, its trigger message and theme record, and the page's
+  `og:image`/`og:url` meta. The Download image button keeps the renderer
+  (`GetTierListShareCardQuery`). A tier-list static head (title/description, no image)
+  remains an open follow-on if folder titles in search results are ever wanted.
 - **Front-door title + snippet hygiene** — the title (and og:title) gained the searchable
   descriptor: `PIU Scores — Pump It Up score tracker & tier lists`, one localized key ×9
   (each locale reuses its own established phrasing from the hero keys; the `WebSite`
