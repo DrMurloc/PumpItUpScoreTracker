@@ -136,6 +136,9 @@ public sealed class RealSessionShowcaseTests
         });
         services.AddSingleton<ICurrentUserAccessor>(new NoCurrentUser());
         services.AddSingleton<IDateTimeOffsetAccessor>(new SystemClock());
+        // The resx catalogues live in the Web assembly, which this pipeline deliberately
+        // excludes — the showcase posts in English, so a passthrough localizer suffices.
+        services.AddSingleton<ILocalizedTextAccessor>(new EnglishPassthroughLocalizer());
         services.AddMediatR(o => o.RegisterServicesFromAssemblies(
             typeof(CommunitiesRegistrationExtensions).Assembly,
             typeof(PlayerProgressRegistrationExtensions).Assembly,
@@ -508,5 +511,11 @@ public sealed class RealSessionShowcaseTests
     private sealed class SystemClock : IDateTimeOffsetAccessor
     {
         public DateTimeOffset Now => DateTimeOffset.Now;
+    }
+
+    private sealed class EnglishPassthroughLocalizer : ILocalizedTextAccessor
+    {
+        public string Get(string? culture, string key) => key;
+        public string Get(string? culture, string key, params object[] args) => string.Format(key, args);
     }
 }

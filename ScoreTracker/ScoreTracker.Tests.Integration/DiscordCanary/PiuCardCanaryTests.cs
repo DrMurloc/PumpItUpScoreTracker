@@ -44,6 +44,77 @@ public sealed class PiuCardCanaryTests
     [DiscordCanaryFact]
     public Task PostsTheSessionSnapshotReclearCard() => PostAndVerify(SessionSnapshotCard);
 
+    [DiscordCanaryFact]
+    public Task PostsTheKoreanSampleCards() =>
+        PostAndVerify(KoreanSessionSnapshotCard, KoreanWeeklyLineupCard, KoreanOfficialDigestCard);
+
+    // The L-series localization, sampled in Korean: the session snapshot, the weekly
+    // lineup, and the official digest exactly as a ko-KR-registered channel receives them
+    // (strings verbatim from App.ko-KR.resx).
+    private static RichBotMessage KoreanSessionSnapshotCard(string marker) =>
+        new(new RichBotSection("### [Phoenix 2] **alice** — 패스 3 · 점수 갱신 1\n-# S18–S21", SongArt),
+            new IRichBotBlock[]
+            {
+                new RichBotDivider(),
+                new RichBotText("📈 **PUMBILITY** 21,480 → **21,530** (+50)"),
+                new RichBotDivider(),
+                new RichBotText("🏆 주간 District 1 #DIFFICULTY|S21# **#2**"),
+                new RichBotDivider(),
+                new RichBotSection(
+                    $"#DIFFICULTY|S21# **[Conflict]({ChartBase}/00000000-0000-0000-0000-0000000000d1)**\\*\n" +
+                    "**991,204** #LETTERGRADE|SSS|False##PLATE|ExtremeGame#\n" +
+                    "-# 👑 내 PUMBILITY #4 · 📊 동급 47명 중 #3", SongArt),
+                new RichBotText(
+                    "-# 그 외 점수\n" +
+                    "#DIFFICULTY|S19# Trashy Innocence\\* — **984,120** #LETTERGRADE|SS|False##PLATE|SuperbGame#\n" +
+                    "#DIFFICULTY|S18# Bee — **977,860** #LETTERGRADE|SS|False##PLATE|SuperbGame#"),
+                new RichBotDivider(),
+                new RichBotText("#DIFFICULTY|S21# 3/42 · #DIFFICULTY|S18# 12/58")
+            },
+            $"#MIX|Phoenix2# Phoenix 2 · PIU Scores · \\* = 재클리어 · {marker}",
+            MixEnum.Phoenix2.GetAccentColor(),
+            new[]
+            {
+                new RichBotLink("더 보기",
+                    new Uri($"{PlayerBase}/00000000-0000-0000-0000-0000000000d0/Sessions"))
+            });
+
+    private static RichBotMessage KoreanWeeklyLineupCard(string marker) =>
+        new(new RichBotSection("### 이번 주 채보\n-# [Phoenix 2] 레벨 구간별 1개", null),
+            new IRichBotBlock[]
+            {
+                new RichBotDivider(),
+                new RichBotText(
+                    $"#DIFFICULTY|coop2# [District 1]({ChartBase}/00000000-0000-0000-0000-0000000000b0) - [동영상]({Vid})\n" +
+                    $"#DIFFICULTY|S16# [Trashy Innocence]({ChartBase}/00000000-0000-0000-0000-0000000000b2) - [동영상]({Vid})\n" +
+                    $"#DIFFICULTY|D16# [Moonlight]({ChartBase}/00000000-0000-0000-0000-0000000000b3) - [동영상]({Vid})\n" +
+                    $"#DIFFICULTY|S18# [Bee]({ChartBase}/00000000-0000-0000-0000-0000000000b4) - [동영상]({Vid})")
+            },
+            $"#MIX|Phoenix2# Phoenix 2 · 매주 월요일 자정(ET) 초기화 · {marker}",
+            MixEnum.Phoenix2.GetAccentColor(),
+            new[] { new RichBotLink("주간 채보", new Uri("https://piuscores.arroweclip.se/WeeklyCharts")) });
+
+    private static RichBotMessage KoreanOfficialDigestCard(string marker) =>
+        new(new RichBotSection("### 이번 주 공식 리더보드\n-# [Phoenix 2] 7월 6일 대비 · 일요일 집계", null),
+            new IRichBotBlock[]
+            {
+                new RichBotText("🏆 **PUMBILITY 톱 10**\n" +
+                                "` 1` **JEWEL** — 9,981 ↑2\n` 2` **ESI** — 9,940 –\n" +
+                                "` 3` **NIMGO** — 9,902 ↓1"),
+                new RichBotDivider(),
+                new RichBotText("🌍 **세계 최초 & 새로운 #1**\n" +
+                                "최초 **SSS+** — **ESI** (Paradoxx S26) · 995,120"),
+                new RichBotDivider(),
+                new RichBotText("🎟 **톱 1000 진입 조건**\n**Lv.20 AAA 50개** · **Lv.17 SSS 50개**")
+            },
+            $"#MIX|Phoenix2# Phoenix 2 · PIU Scores 공식 미러 · {marker}",
+            MixEnum.Phoenix2.GetAccentColor(),
+            new[]
+            {
+                new RichBotLink("이번 주", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards")),
+                new RichBotLink("필요 조건", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards/WhatItTakes"))
+            });
+
     // Official digest — opens with the top 10 + rank movement, then movers/firsts, and
     // "what it takes" framed as the two difficulty levels.
     private static RichBotMessage OfficialDigestCard(string marker) =>

@@ -394,3 +394,23 @@ Chart/song/player/title/skill names stay verbatim, matching the site.
 - **L7 — Session/title/UCS cards.** `CommunitySaga` data/render split, per-culture
   community fan-out, the full card vocabulary ×9 (largest key batch).
 - **L8 — Canary + docs.** Korean sample card set to the lab channel; doc/status sweep.
+
+**As-built (all eight landed, ~160 new keys ×9):**
+
+- **Discord.Net rejects `es-419`** (its locale validation chokes on the digit segment even
+  though Discord's API accepts the locale), so es-MX carries no command-tree entry — LatAm
+  Spanish clients see the English help text; their *replies and feeds* still localize via
+  the account/channel culture. Revisit if a Discord.Net upgrade fixes the validator.
+- **The L4 catalog test exposed a live defect**: `PiuCommandCatalog.Commands` was an eager
+  static initializer running before the choice fields declared below it (static members
+  initialize in textual order), so every `/piu` option had registered on Discord with NO
+  choice dropdown — mix, goal, type, and language were all free-text. `Commands` is now
+  computed on access and a fast-suite fact pins every choice list's entries.
+- The env-gated `RealSessionShowcaseTests` pipeline registers an English passthrough
+  `ILocalizedTextAccessor` (its container deliberately excludes the Web assembly that owns
+  the resx).
+- Sampled in Korean on the lab-channel canary: session snapshot, weekly lineup, official
+  digest (`PostsTheKoreanSampleCards`).
+- Number/date formatting follows the target culture everywhere a value renders inside a
+  localized template (the accessor swaps `CurrentCulture` for the lookup) or via the
+  culture's month-day pattern for week tags.
