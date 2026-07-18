@@ -455,7 +455,7 @@ public sealed class PlayerRatingSagaTests
         var s1 = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build(); // 995k SSS+ -> 230x1.508
         var s2 = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build(); // 970k S    -> 235x1.458
         var d1 = new ChartBuilder().WithType(ChartType.Double).WithLevel(24).Build(); // 950k AAA  -> 250x1.418
-        var d2 = new ChartBuilder().WithType(ChartType.Double).WithLevel(23).Build(); // 925k AA+  -> 245x1.398
+        var d2 = new ChartBuilder().WithType(ChartType.Double).WithLevel(23).Build(); // 940k AA+  -> 245x1.398 (P2 AA+ floor)
         var stats = new Mock<IPlayerStatsRepository>();
         stats.Setup(s => s.GetStats(MixEnum.Phoenix2, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ZeroStats(userId));
@@ -464,7 +464,7 @@ public sealed class PlayerRatingSagaTests
             scores: ScoresMockReturning(userId, new[]
             {
                 Score(s1.Id, 995000), Score(s2.Id, 970000),
-                Score(d1.Id, 950000), Score(d2.Id, 925000)
+                Score(d1.Id, 950000), Score(d2.Id, 940000)
             }, MixEnum.Phoenix2),
             stats: stats);
 
@@ -527,7 +527,7 @@ public sealed class PlayerRatingSagaTests
     public async Task Phoenix2BrokenPlaysNeverEnterThePools()
     {
         // A broken 995k would top the singles pool if counted; Phoenix 2 excludes it, so
-        // the pool is only the clean 900k AA (230 x 1.378 = 316.94 -> 316).
+        // the pool is only the clean 920k AA (P2 AA floor; 230 x 1.378 = 316.94 -> 316).
         var userId = Guid.NewGuid();
         var broken = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var clean = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
@@ -539,7 +539,7 @@ public sealed class PlayerRatingSagaTests
             scores: ScoresMockReturning(userId, new[]
             {
                 Score(broken.Id, 995000, isBroken: true),
-                Score(clean.Id, 900000)
+                Score(clean.Id, 920000)
             }, MixEnum.Phoenix2),
             stats: stats);
 
