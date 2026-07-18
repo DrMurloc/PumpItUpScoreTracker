@@ -23,7 +23,10 @@ public sealed class Phoenix2PumbilityScoringTests
 
     private static double Contribution(ChartType type, int level, PhoenixLetterGrade grade, PhoenixPlate plate)
     {
-        return Scoring().GetScore(type, DifficultyLevel.From(level), grade.GetMinimumScore(), plate);
+        // Build the score from the Phoenix 2 floor for the grade — a "AA" row must be a real P2 AA
+        // (≥920k), not the P1 AA floor of 900k, which P2 now grades A+.
+        return Scoring().GetScore(type, DifficultyLevel.From(level),
+            grade.GetMinimumScoreFor(MixEnum.Phoenix2), plate);
     }
 
     [Theory]

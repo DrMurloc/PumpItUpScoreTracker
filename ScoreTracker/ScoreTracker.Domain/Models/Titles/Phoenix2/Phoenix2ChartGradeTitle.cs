@@ -34,7 +34,7 @@ public sealed class Phoenix2ChartGradeTitle : PhoenixTitle, ISpecificChartTitle
     public override double CompletionProgress(Chart chart, RecordedPhoenixScore attempt)
     {
         return AppliesToChart(chart) && !attempt.IsBroken && attempt.Score != null &&
-               attempt.Score.Value.LetterGrade >= _minimumGrade
+               attempt.Score.Value.LetterGradeFor(MixEnum.Phoenix2) >= _minimumGrade
             ? 1
             : 0;
     }

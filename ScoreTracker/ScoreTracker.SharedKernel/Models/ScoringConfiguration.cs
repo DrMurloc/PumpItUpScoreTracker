@@ -36,6 +36,11 @@ namespace ScoreTracker.SharedKernel.Models
             .ToDictionary(p => p, p => 1.0);
 
         public double PgLetterGradeModifier { get; set; } = PhoenixLetterGrade.SSSPlus.GetModifier();
+
+        // The mix whose grade cutoffs price score→grade in this config. Phoenix 2 shifted the
+        // sub-AAA thresholds, so a P2 config must grade against the P2 table; everything else
+        // keeps the original Phoenix table (the default).
+        public MixEnum Mix { get; set; } = MixEnum.Phoenix;
         public int MinimumScore { get; set; } = 0;
         public IDictionary<Guid, double> ChartModifiers { get; set; } = new Dictionary<Guid, double>();
         public double StageBreakModifier { get; set; } = 1.0;
@@ -103,7 +108,7 @@ namespace ScoreTracker.SharedKernel.Models
             TimeSpan duration, bool isBroken, PhoenixScore score, PhoenixPlate plate, bool includeLevelOverride)
         {
             if (score < MinimumScore) return 0;
-            var letterGrade = score.LetterGrade;
+            var letterGrade = score.LetterGradeFor(Mix);
             var letterGradeModifier = LetterGradeModifiers[letterGrade];
             if (ContinuousLetterGradeScale && score != 1000000)
             {
@@ -113,7 +118,7 @@ namespace ScoreTracker.SharedKernel.Models
                 {
                     var nextGrade = letterGrade + 1;
                     nextModifier = LetterGradeModifiers[nextGrade];
-                    nextThreshold = nextGrade.GetMinimumScore();
+                    nextThreshold = nextGrade.GetMinimumScoreFor(Mix);
                 }
                 else
                 {
@@ -121,7 +126,7 @@ namespace ScoreTracker.SharedKernel.Models
                     nextThreshold = 1000000;
                 }
 
-                var threshold = letterGrade.GetMinimumScore();
+                var threshold = letterGrade.GetMinimumScoreFor(Mix);
                 var modifier = LetterGradeModifiers[letterGrade];
                 letterGradeModifier =
                     modifier + (nextModifier - modifier) * (score - threshold) / (nextThreshold - threshold);
@@ -305,6 +310,7 @@ namespace ScoreTracker.SharedKernel.Models
         {
             var config = new ScoringConfiguration
             {
+                Mix = MixEnum.Phoenix2,
                 Formula = CalculationType.GradePlusPlate,
                 AdjustToTime = false,
                 StageBreakModifier = 0.0,
