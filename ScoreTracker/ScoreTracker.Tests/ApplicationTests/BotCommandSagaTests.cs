@@ -372,11 +372,17 @@ public sealed class BotCommandSagaTests
     }
 
     [Fact]
-    public async Task RandomDrawRendersACardOfTheDrawnCharts()
+    public async Task RandomDrawRendersACardWithVideoLinksForTheDrawnCharts()
     {
+        var charts = SampleCharts();
         _mediator.Setup(m => m.Send(It.IsAny<ScoreTracker.Randomizer.Contracts.Queries.DrawRandomChartsQuery>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(SampleCharts().Take(2).ToArray());
+            .ReturnsAsync(charts.Take(2).ToArray());
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartVideosQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ChartVideoInformation(charts[0].Id, new Uri("https://youtu.be/abc"), Name.From("A Channel"))
+            }.AsEnumerable());
 
         var reply = await Saga().Handle(Invoke(new[] { "random" },
             new Dictionary<string, string> { ["count"] = "2", ["type"] = "Single", ["mix"] = "Phoenix2" }),
@@ -384,6 +390,7 @@ public sealed class BotCommandSagaTests
 
         Assert.NotNull(reply.Card);
         Assert.Contains("Drew 2", reply.Card!.Header!.Markdown);
+        Assert.Contains("[Video]", CardText(reply.Card));
     }
 
     [Fact]

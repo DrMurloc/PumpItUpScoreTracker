@@ -87,6 +87,11 @@ public sealed class DiscordFeedSagaTests
             .ReturnsAsync(new[] { chart }.AsEnumerable());
         _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { new WeeklyTournamentChart(chart.Id, DateTimeOffset.UnixEpoch) }.AsEnumerable());
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartVideosQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ChartVideoInformation(chart.Id, new Uri("https://youtu.be/xyz"), Name.From("A Channel"))
+            }.AsEnumerable());
         _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<User>());
 
@@ -95,6 +100,7 @@ public sealed class DiscordFeedSagaTests
         Assert.Equal(2, _sent.Count); // one result card + the lineup card
         Assert.Contains("final board", AllText(_sent[0]));
         Assert.Contains("This week's charts", AllText(_sent[1]));
+        Assert.Contains("[Video]", AllText(_sent[1])); // lineup carries the video link
     }
 
     [Fact]
