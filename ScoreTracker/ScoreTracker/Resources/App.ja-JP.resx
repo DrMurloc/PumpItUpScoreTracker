@@ -5123,4 +5123,127 @@
   <data name="a chart" xml:space="preserve">
     <value>譜面</value>
   </data>
+  <data name="**{0}** completed" xml:space="preserve">
+    <value>**{0}** 達成</value>
+  </data>
+  <data name="**{0}** paragon → {1}" xml:space="preserve">
+    <value>**{0}** パラゴン → {1}</value>
+  </data>
+  <data name="1 title" xml:space="preserve">
+    <value>タイトル 1 件</value>
+  </data>
+  <data name="{0} titles" xml:space="preserve">
+    <value>タイトル {0} 件</value>
+  </data>
+  <data name="1 paragon" xml:space="preserve">
+    <value>パラゴン 1 件</value>
+  </data>
+  <data name="{0} paragons" xml:space="preserve">
+    <value>パラゴン {0} 件</value>
+  </data>
+  <data name="See more" xml:space="preserve">
+    <value>もっと見る</value>
+  </data>
+  <data name="passed {0:N0} · upscored {1:N0}" xml:space="preserve">
+    <value>パス {0:N0}・スコア更新 {1:N0}</value>
+  </data>
+  <data name="passed 1 chart" xml:space="preserve">
+    <value>1 譜面をパス</value>
+  </data>
+  <data name="passed {0:N0} charts" xml:space="preserve">
+    <value>{0:N0} 譜面をパス</value>
+  </data>
+  <data name="upscored 1 chart" xml:space="preserve">
+    <value>1 譜面でスコア更新</value>
+  </data>
+  <data name="upscored {0:N0} charts" xml:space="preserve">
+    <value>{0:N0} 譜面でスコア更新</value>
+  </data>
+  <data name="updated 1 chart" xml:space="preserve">
+    <value>1 譜面を更新</value>
+  </data>
+  <data name="updated {0:N0} charts" xml:space="preserve">
+    <value>{0:N0} 譜面を更新</value>
+  </data>
+  <data name="**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY** {0:N0} → **{1:N0}**（+{2:N0}）</value>
+  </data>
+  <data name="**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (S)** {0:N0} → **{1:N0}**（+{2:N0}）</value>
+  </data>
+  <data name="**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (D)** {0:N0} → **{1:N0}**（+{2:N0}）</value>
+  </data>
+  <data name="**Singles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**シングル競技レベル** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**Doubles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**ダブル競技レベル** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**All passed!**" xml:space="preserve">
+    <value>**全譜面パス！**</value>
+  </data>
+  <data name="**All {0} or better**" xml:space="preserve">
+    <value>**すべて {0} 以上**</value>
+  </data>
+  <data name="**#{0}** on {1} {2} weekly" xml:space="preserve">
+    <value>週間 {1} {2} で **#{0}**</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
+    <value>デイリーステップ {1} {2} で **#{0}**</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step (Limbo)" xml:space="preserve">
+    <value>デイリーステップ（リンボー）{1} {2} で **#{0}**</value>
+  </data>
+  <data name="{0} {1}% → **{2}%**" xml:space="preserve">
+    <value>{0} {1}% → **{2}%**</value>
+  </data>
+  <data name="More scores" xml:space="preserve">
+    <value>その他のスコア</value>
+  </data>
+  <data name="+{0} more: {1}" xml:space="preserve">
+    <value>他 {0} 件：{1}</value>
+  </data>
+  <data name="\* = reclears" xml:space="preserve">
+    <value>\* = 再クリア</value>
+  </data>
+  <data name="#{0} in your PUMBILITY" xml:space="preserve">
+    <value>あなたの PUMBILITY 第 {0} 位</value>
+  </data>
+  <data name="PUMBILITY top 50" xml:space="preserve">
+    <value>PUMBILITY トップ 50</value>
+  </data>
+  <data name="Top scores among peers" xml:space="preserve">
+    <value>同レベル帯で上位スコア</value>
+  </data>
+  <data name="PG · {0} of {1} peers have it" xml:space="preserve">
+    <value>PG・同レベル帯 {1} 人中 {0} 人が達成</value>
+  </data>
+  <data name="#{0} of {1} peers" xml:space="preserve">
+    <value>同レベル帯 {1} 人中 {0} 位</value>
+  </data>
+  <data name="Folder debut" xml:space="preserve">
+    <value>フォルダ初挑戦</value>
+  </data>
+  <data name="Raised competitive level" xml:space="preserve">
+    <value>競技レベル上昇</value>
+  </data>
+  <data name="Biggest gain of the session" xml:space="preserve">
+    <value>セッション最大の伸び</value>
+  </data>
+  <data name="Title progress" xml:space="preserve">
+    <value>タイトル進捗</value>
+  </data>
+  <data name="First" xml:space="preserve">
+    <value>初</value>
+  </data>
+  <data name="Second" xml:space="preserve">
+    <value>2 枚目</value>
+  </data>
+  <data name="Third" xml:space="preserve">
+    <value>3 枚目</value>
+  </data>
+  <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
+    <value>{0} が {3} の UCS {4} {5} で {1} {2} を記録</value>
+  </data>
 </root>

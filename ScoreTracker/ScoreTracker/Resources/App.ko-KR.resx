@@ -5004,4 +5004,127 @@
   <data name="a chart" xml:space="preserve">
     <value>채보</value>
   </data>
+  <data name="**{0}** completed" xml:space="preserve">
+    <value>**{0}** 완료</value>
+  </data>
+  <data name="**{0}** paragon → {1}" xml:space="preserve">
+    <value>**{0}** 파라곤 → {1}</value>
+  </data>
+  <data name="1 title" xml:space="preserve">
+    <value>타이틀 1개</value>
+  </data>
+  <data name="{0} titles" xml:space="preserve">
+    <value>타이틀 {0}개</value>
+  </data>
+  <data name="1 paragon" xml:space="preserve">
+    <value>파라곤 1개</value>
+  </data>
+  <data name="{0} paragons" xml:space="preserve">
+    <value>파라곤 {0}개</value>
+  </data>
+  <data name="See more" xml:space="preserve">
+    <value>더 보기</value>
+  </data>
+  <data name="passed {0:N0} · upscored {1:N0}" xml:space="preserve">
+    <value>패스 {0:N0} · 점수 갱신 {1:N0}</value>
+  </data>
+  <data name="passed 1 chart" xml:space="preserve">
+    <value>1개 채보 패스</value>
+  </data>
+  <data name="passed {0:N0} charts" xml:space="preserve">
+    <value>{0:N0}개 채보 패스</value>
+  </data>
+  <data name="upscored 1 chart" xml:space="preserve">
+    <value>1개 채보 점수 갱신</value>
+  </data>
+  <data name="upscored {0:N0} charts" xml:space="preserve">
+    <value>{0:N0}개 채보 점수 갱신</value>
+  </data>
+  <data name="updated 1 chart" xml:space="preserve">
+    <value>1개 채보 업데이트</value>
+  </data>
+  <data name="updated {0:N0} charts" xml:space="preserve">
+    <value>{0:N0}개 채보 업데이트</value>
+  </data>
+  <data name="**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**Singles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**싱글 경쟁 레벨** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**Doubles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**더블 경쟁 레벨** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**All passed!**" xml:space="preserve">
+    <value>**전부 패스!**</value>
+  </data>
+  <data name="**All {0} or better**" xml:space="preserve">
+    <value>**전부 {0} 이상**</value>
+  </data>
+  <data name="**#{0}** on {1} {2} weekly" xml:space="preserve">
+    <value>주간 {1} {2} **#{0}**</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
+    <value>데일리 스텝 {1} {2} **#{0}**</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step (Limbo)" xml:space="preserve">
+    <value>데일리 스텝(림보) {1} {2} **#{0}**</value>
+  </data>
+  <data name="{0} {1}% → **{2}%**" xml:space="preserve">
+    <value>{0} {1}% → **{2}%**</value>
+  </data>
+  <data name="More scores" xml:space="preserve">
+    <value>그 외 점수</value>
+  </data>
+  <data name="+{0} more: {1}" xml:space="preserve">
+    <value>그 외 {0}개: {1}</value>
+  </data>
+  <data name="\* = reclears" xml:space="preserve">
+    <value>\* = 재클리어</value>
+  </data>
+  <data name="#{0} in your PUMBILITY" xml:space="preserve">
+    <value>내 PUMBILITY #{0}</value>
+  </data>
+  <data name="PUMBILITY top 50" xml:space="preserve">
+    <value>PUMBILITY 톱 50</value>
+  </data>
+  <data name="Top scores among peers" xml:space="preserve">
+    <value>동급 유저 중 상위 점수</value>
+  </data>
+  <data name="PG · {0} of {1} peers have it" xml:space="preserve">
+    <value>PG · 동급 {1}명 중 {0}명 보유</value>
+  </data>
+  <data name="#{0} of {1} peers" xml:space="preserve">
+    <value>동급 {1}명 중 #{0}</value>
+  </data>
+  <data name="Folder debut" xml:space="preserve">
+    <value>폴더 데뷔</value>
+  </data>
+  <data name="Raised competitive level" xml:space="preserve">
+    <value>경쟁 레벨 상승</value>
+  </data>
+  <data name="Biggest gain of the session" xml:space="preserve">
+    <value>세션 최대 상승</value>
+  </data>
+  <data name="Title progress" xml:space="preserve">
+    <value>타이틀 진행도</value>
+  </data>
+  <data name="First" xml:space="preserve">
+    <value>첫</value>
+  </data>
+  <data name="Second" xml:space="preserve">
+    <value>두 번째</value>
+  </data>
+  <data name="Third" xml:space="preserve">
+    <value>세 번째</value>
+  </data>
+  <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
+    <value>{0}님이 {3}의 UCS {4} {5}에서 {1} {2} 기록</value>
+  </data>
 </root>

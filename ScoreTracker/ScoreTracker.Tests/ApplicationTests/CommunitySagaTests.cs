@@ -202,6 +202,46 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task SessionCardsRenderOncePerChannelLanguage()
+    {
+        // Two communities, two channel languages: the card data is gathered once, the card
+        // renders per culture, and each channel gets its own language's send.
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.Communities.Setup(c => c.GetCommunities(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityOverviewRecord(Name.From("Seoul"), CommunityPrivacyType.Public, 1, false),
+                new CommunityOverviewRecord(Name.From("Acme"), CommunityPrivacyType.Public, 1, false)
+            });
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.Is<Name>(n => (string)n == "Seoul"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Community(Name.From("Seoul"), Guid.NewGuid(), CommunityPrivacyType.Public,
+                new[] { userId }, new[] { new Community.ChannelConfiguration(111, "ko-KR") },
+                new Dictionary<Guid, DateOnly?>(), false));
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.Is<Name>(n => (string)n == "Acme"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public,
+                new[] { userId }, new[] { new Community.ChannelConfiguration(222) },
+                new Dictionary<Guid, DateOnly?>(), false));
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, chart, score: 950000);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
+            (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(),
+            It.Is<IEnumerable<ulong>>(ids => ids.Count() == 1 && ids.First() == 111),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Bot.Verify(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(),
+            It.Is<IEnumerable<ulong>>(ids => ids.Count() == 1 && ids.First() == 222),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Localizer.Verify(l => l.Get("ko-KR", "passed 1 chart"), Times.Once);
+        ctx.Localizer.Verify(l => l.Get(null, "passed 1 chart"), Times.Once);
+    }
+
+    [Fact]
     public async Task AddingADiscordChannelStoresItsCultureAndConfirmsInThatLanguage()
     {
         var ctx = new HandlerContext();

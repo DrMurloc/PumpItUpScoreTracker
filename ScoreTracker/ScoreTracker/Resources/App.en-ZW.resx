@@ -5049,4 +5049,127 @@
   <data name="a chart" xml:space="preserve">
     <value>rgl chrglrt</value>
   </data>
+  <data name="**{0}** completed" xml:space="preserve">
+    <value>**{0}** cmrglplrglted</value>
+  </data>
+  <data name="**{0}** paragon → {1}" xml:space="preserve">
+    <value>**{0}** prglrglgon → {1}</value>
+  </data>
+  <data name="1 title" xml:space="preserve">
+    <value>1 trgltle</value>
+  </data>
+  <data name="{0} titles" xml:space="preserve">
+    <value>{0} trgltles</value>
+  </data>
+  <data name="1 paragon" xml:space="preserve">
+    <value>1 prglrglgon</value>
+  </data>
+  <data name="{0} paragons" xml:space="preserve">
+    <value>{0} prglrglgons</value>
+  </data>
+  <data name="See more" xml:space="preserve">
+    <value>Srgle mrglr</value>
+  </data>
+  <data name="passed {0:N0} · upscored {1:N0}" xml:space="preserve">
+    <value>prglssed {0:N0} · rglpscored {1:N0}</value>
+  </data>
+  <data name="passed 1 chart" xml:space="preserve">
+    <value>prglssed 1 chrglrt</value>
+  </data>
+  <data name="passed {0:N0} charts" xml:space="preserve">
+    <value>prglssed {0:N0} chrglrts</value>
+  </data>
+  <data name="upscored 1 chart" xml:space="preserve">
+    <value>rglpscored 1 chrglrt</value>
+  </data>
+  <data name="upscored {0:N0} charts" xml:space="preserve">
+    <value>rglpscored {0:N0} chrglrts</value>
+  </data>
+  <data name="updated 1 chart" xml:space="preserve">
+    <value>rglpdated 1 chrglrt</value>
+  </data>
+  <data name="updated {0:N0} charts" xml:space="preserve">
+    <value>rglpdated {0:N0} chrglrts</value>
+  </data>
+  <data name="**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**Singles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**Srglngles cmrglprgltrgltive** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**Doubles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**Drglbles cmrglprgltrgltive** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**All passed!**" xml:space="preserve">
+    <value>**Rglll prglssed! Mrgl!**</value>
+  </data>
+  <data name="**All {0} or better**" xml:space="preserve">
+    <value>**Rglll {0} rglr brglttrgl**</value>
+  </data>
+  <data name="**#{0}** on {1} {2} weekly" xml:space="preserve">
+    <value>**#{0}** rgln {1} {2} mrglrgly</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
+    <value>**#{0}** rgln {1} {2} Drglrgly Strglp</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step (Limbo)" xml:space="preserve">
+    <value>**#{0}** rgln {1} {2} Drglrgly Strglp (Lrglmbo)</value>
+  </data>
+  <data name="{0} {1}% → **{2}%**" xml:space="preserve">
+    <value>{0} {1}% → **{2}%**</value>
+  </data>
+  <data name="More scores" xml:space="preserve">
+    <value>Mrglr scrglres</value>
+  </data>
+  <data name="+{0} more: {1}" xml:space="preserve">
+    <value>+{0} mrglr: {1}</value>
+  </data>
+  <data name="\* = reclears" xml:space="preserve">
+    <value>\* = rrglclears</value>
+  </data>
+  <data name="#{0} in your PUMBILITY" xml:space="preserve">
+    <value>#{0} rgln yrglr PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY top 50" xml:space="preserve">
+    <value>PUMBILITY trglp 50</value>
+  </data>
+  <data name="Top scores among peers" xml:space="preserve">
+    <value>Trglp scrglres rglmong prglrs</value>
+  </data>
+  <data name="PG · {0} of {1} peers have it" xml:space="preserve">
+    <value>PG · {0} rglf {1} prglrs hrglve rglt</value>
+  </data>
+  <data name="#{0} of {1} peers" xml:space="preserve">
+    <value>#{0} rglf {1} prglrs</value>
+  </data>
+  <data name="Folder debut" xml:space="preserve">
+    <value>Frglder drglbrglt</value>
+  </data>
+  <data name="Raised competitive level" xml:space="preserve">
+    <value>Rrglsed cmrglprgltrgltive lrglvrgl</value>
+  </data>
+  <data name="Biggest gain of the session" xml:space="preserve">
+    <value>Brglggest grgln rglf thrgl srglssion</value>
+  </data>
+  <data name="Title progress" xml:space="preserve">
+    <value>Trgltle prrglgress</value>
+  </data>
+  <data name="First" xml:space="preserve">
+    <value>Frglrst</value>
+  </data>
+  <data name="Second" xml:space="preserve">
+    <value>Srglcond</value>
+  </data>
+  <data name="Third" xml:space="preserve">
+    <value>Thrglrd</value>
+  </data>
+  <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
+    <value>{0} scrglred {1} {2} rgln {3}'s {4} {5} UCS. Mrgl!</value>
+  </data>
 </root>

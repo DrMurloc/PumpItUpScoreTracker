@@ -5117,4 +5117,127 @@
   <data name="a chart" xml:space="preserve">
     <value>a chart</value>
   </data>
+  <data name="**{0}** completed" xml:space="preserve">
+    <value>**{0}** completed</value>
+  </data>
+  <data name="**{0}** paragon → {1}" xml:space="preserve">
+    <value>**{0}** paragon → {1}</value>
+  </data>
+  <data name="1 title" xml:space="preserve">
+    <value>1 title</value>
+  </data>
+  <data name="{0} titles" xml:space="preserve">
+    <value>{0} titles</value>
+  </data>
+  <data name="1 paragon" xml:space="preserve">
+    <value>1 paragon</value>
+  </data>
+  <data name="{0} paragons" xml:space="preserve">
+    <value>{0} paragons</value>
+  </data>
+  <data name="See more" xml:space="preserve">
+    <value>See more</value>
+  </data>
+  <data name="passed {0:N0} · upscored {1:N0}" xml:space="preserve">
+    <value>passed {0:N0} · upscored {1:N0}</value>
+  </data>
+  <data name="passed 1 chart" xml:space="preserve">
+    <value>passed 1 chart</value>
+  </data>
+  <data name="passed {0:N0} charts" xml:space="preserve">
+    <value>passed {0:N0} charts</value>
+  </data>
+  <data name="upscored 1 chart" xml:space="preserve">
+    <value>upscored 1 chart</value>
+  </data>
+  <data name="upscored {0:N0} charts" xml:space="preserve">
+    <value>upscored {0:N0} charts</value>
+  </data>
+  <data name="updated 1 chart" xml:space="preserve">
+    <value>updated 1 chart</value>
+  </data>
+  <data name="updated {0:N0} charts" xml:space="preserve">
+    <value>updated {0:N0} charts</value>
+  </data>
+  <data name="**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**Singles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**Singles competitive** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**Doubles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**Doubles competitive** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**All passed!**" xml:space="preserve">
+    <value>**All passed!**</value>
+  </data>
+  <data name="**All {0} or better**" xml:space="preserve">
+    <value>**All {0} or better**</value>
+  </data>
+  <data name="**#{0}** on {1} {2} weekly" xml:space="preserve">
+    <value>**#{0}** on {1} {2} weekly</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
+    <value>**#{0}** on {1} {2} Daily Step</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step (Limbo)" xml:space="preserve">
+    <value>**#{0}** on {1} {2} Daily Step (Limbo)</value>
+  </data>
+  <data name="{0} {1}% → **{2}%**" xml:space="preserve">
+    <value>{0} {1}% → **{2}%**</value>
+  </data>
+  <data name="More scores" xml:space="preserve">
+    <value>More scores</value>
+  </data>
+  <data name="+{0} more: {1}" xml:space="preserve">
+    <value>+{0} more: {1}</value>
+  </data>
+  <data name="\* = reclears" xml:space="preserve">
+    <value>\* = reclears</value>
+  </data>
+  <data name="#{0} in your PUMBILITY" xml:space="preserve">
+    <value>#{0} in your PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY top 50" xml:space="preserve">
+    <value>PUMBILITY top 50</value>
+  </data>
+  <data name="Top scores among peers" xml:space="preserve">
+    <value>Top scores among peers</value>
+  </data>
+  <data name="PG · {0} of {1} peers have it" xml:space="preserve">
+    <value>PG · {0} of {1} peers have it</value>
+  </data>
+  <data name="#{0} of {1} peers" xml:space="preserve">
+    <value>#{0} of {1} peers</value>
+  </data>
+  <data name="Folder debut" xml:space="preserve">
+    <value>Folder debut</value>
+  </data>
+  <data name="Raised competitive level" xml:space="preserve">
+    <value>Raised competitive level</value>
+  </data>
+  <data name="Biggest gain of the session" xml:space="preserve">
+    <value>Biggest gain of the session</value>
+  </data>
+  <data name="Title progress" xml:space="preserve">
+    <value>Title progress</value>
+  </data>
+  <data name="First" xml:space="preserve">
+    <value>First</value>
+  </data>
+  <data name="Second" xml:space="preserve">
+    <value>Second</value>
+  </data>
+  <data name="Third" xml:space="preserve">
+    <value>Third</value>
+  </data>
+  <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
+    <value>{0} scored {1} {2} on {3}'s {4} {5} UCS</value>
+  </data>
 </root>

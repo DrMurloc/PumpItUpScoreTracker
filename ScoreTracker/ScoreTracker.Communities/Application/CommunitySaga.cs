@@ -78,22 +78,30 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var e = context.Message;
         var user = await _users.GetUser(e.UserId, context.CancellationToken);
         if (user == null) return;
-        var cards = BuildTitlesCards(user, e.Mix, e.NewTitles.ToArray(), e.ParagonUpgrades);
-        await SendRichToCommunityDiscords(user.Id, cards, context.CancellationToken);
+        var titles = e.NewTitles.ToArray();
+        await SendRichToCommunityDiscords(user.Id,
+            culture => BuildTitlesCards(user, e.Mix, titles, e.ParagonUpgrades, culture),
+            context.CancellationToken);
     }
 
     private IReadOnlyList<RichBotMessage> BuildTitlesCards(User user, MixEnum mix,
-        IReadOnlyList<string> newTitles, IDictionary<string, string> paragonUpgrades)
+        IReadOnlyList<string> newTitles, IDictionary<string, string> paragonUpgrades, string? culture)
     {
         var lines = new List<string>();
-        lines.AddRange(newTitles.OrderBy(t => t).Select(t => $"🏅 **{Bracket(t)}** completed"));
+        lines.AddRange(newTitles.OrderBy(t => t)
+            .Select(t => "🏅 " + _localizer.Get(culture, "**{0}** completed", Bracket(t))));
         lines.AddRange(paragonUpgrades.OrderBy(p => p.Key)
-            .Select(p => $"🏅 **{Bracket(p.Key)}** paragon → {ParagonEmoji(p.Value)}"));
+            .Select(p => "🏅 " + _localizer.Get(culture, "**{0}** paragon → {1}",
+                Bracket(p.Key), ParagonEmoji(p.Value))));
         if (lines.Count == 0) return Array.Empty<RichBotMessage>();
 
-        var earned = TitlesEarnedText(newTitles.Count, paragonUpgrades.Count);
+        var earned = TitlesEarnedText(newTitles.Count, paragonUpgrades.Count, culture);
         var links = user.IsPublic
-            ? new[] { new RichBotLink("See more", new Uri($"{SiteBase}/Player/{user.Id}/Sessions")) }
+            ? new[]
+            {
+                new RichBotLink(_localizer.Get(culture, "See more"),
+                    new Uri($"{SiteBase}/Player/{user.Id}/Sessions"))
+            }
             : Array.Empty<RichBotLink>();
 
         return lines.Chunk(TitleCardLineCap)
@@ -105,11 +113,17 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             .ToArray();
     }
 
-    private static string TitlesEarnedText(int titles, int paragons)
+    private string TitlesEarnedText(int titles, int paragons, string? culture)
     {
         var parts = new List<string>();
-        if (titles > 0) parts.Add($"{titles} {(titles == 1 ? "title" : "titles")}");
-        if (paragons > 0) parts.Add($"{paragons} paragon{(paragons == 1 ? string.Empty : "s")}");
+        if (titles > 0)
+            parts.Add(titles == 1
+                ? _localizer.Get(culture, "1 title")
+                : _localizer.Get(culture, "{0} titles", titles));
+        if (paragons > 0)
+            parts.Add(paragons == 1
+                ? _localizer.Get(culture, "1 paragon")
+                : _localizer.Get(culture, "{0} paragons", paragons));
         return string.Join(" · ", parts);
     }
 
@@ -256,10 +270,19 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 
         var reclears = await CrossMixReclears(e, known, context.CancellationToken);
 
+        // The folder breakdown's reads happen once here — its line is language-neutral, so
+        // the per-culture renders below share it.
+        var passCharts = known
+            .Where(c => c.IsNewPass && !c.IsBroken)
+            .Select(c => charts[c.ChartId])
+            .Where(c => c.Type is ChartType.Single or ChartType.Double);
+        var folderStats = await FolderProgress(e.Mix, e.UserId, passCharts, FolderLineCap,
+            context.CancellationToken);
+
         var inputs = new SnapshotInputs(e, user, known, notable, moreScores, coOpScores, charts, bests, weekly,
             daily, dailyChartId, reclears);
-        var message = await BuildSnapshotCard(inputs, context.CancellationToken);
-        await SendRichToCommunityDiscords(user.Id, new[] { message }, context.CancellationToken);
+        await SendRichToCommunityDiscords(user.Id,
+            culture => new[] { BuildSnapshotCard(inputs, folderStats, culture) }, context.CancellationToken);
     }
 
     // A new pass on a chart the player already cleared (non-broken) in another mix is a
@@ -305,23 +328,16 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         Guid DailyChartId,
         IReadOnlySet<Guid> Reclears);
 
-    private async Task<RichBotMessage> BuildSnapshotCard(SnapshotInputs inputs,
-        CancellationToken cancellationToken)
+    private RichBotMessage BuildSnapshotCard(SnapshotInputs inputs, string folderStats, string? culture)
     {
-        var header = HeaderSection(inputs);
-        var statLines = StatLines(inputs.E.Milestones);
+        var header = HeaderSection(inputs, culture);
+        var statLines = StatLines(inputs.E.Milestones, culture);
         var achievementLines = AchievementLines(inputs.E, inputs.Weekly, inputs.Charts, inputs.Daily,
-            inputs.DailyChartId);
+            inputs.DailyChartId, culture);
 
-        // The folder breakdown is computed and reserved up front (owner call): scores yield
-        // to it, never the reverse, so a title-heavy or score-heavy card still ends with it.
-        var passCharts = inputs.Known
-            .Where(c => c.IsNewPass && !c.IsBroken)
-            .Select(c => inputs.Charts[c.ChartId])
-            .Where(c => c.Type is ChartType.Single or ChartType.Double);
-        var folderStats = await FolderProgress(inputs.E.Mix, inputs.E.UserId, passCharts, FolderLineCap,
-            cancellationToken);
-
+        // The folder breakdown was computed by the consumer and is reserved up front (owner
+        // call): scores yield to it, never the reverse, so a title-heavy or score-heavy card
+        // still ends with it.
         var remaining = CardCharBudget - FooterReserve
             - Estimate(header.Markdown)
             - EstimateLines(statLines)
@@ -338,10 +354,12 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         // ③ Notable scores lead, then the compact buckets — each filling only what the
         // reserved sections leave. Whatever doesn't fit (or overruns a cap) is a count line.
         var shown = new HashSet<Guid>();
-        AddNotableRows(blocks, inputs, ref remaining, shown);
-        AddCompactBucket(blocks, inputs.MoreScores, inputs, "More scores", ref remaining, shown);
-        AddCompactBucket(blocks, inputs.CoOpScores, inputs, "Co-op", ref remaining, shown);
-        AddOverflowLine(blocks, inputs, shown);
+        AddNotableRows(blocks, inputs, culture, ref remaining, shown);
+        AddCompactBucket(blocks, inputs.MoreScores, inputs, _localizer.Get(culture, "More scores"),
+            ref remaining, shown);
+        AddCompactBucket(blocks, inputs.CoOpScores, inputs, _localizer.Get(culture, "Co-op"),
+            ref remaining, shown);
+        AddOverflowLine(blocks, inputs, culture, shown);
 
         if (!string.IsNullOrWhiteSpace(folderStats))
         {
@@ -351,10 +369,12 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 
         // Footnote the reclear asterisk only when a marked row actually rendered — reclears
         // that fell to the compressed overflow count carry no visible mark to explain.
-        var reclearNote = shown.Overlaps(inputs.Reclears) ? " · \\* = reclears" : string.Empty;
+        var reclearNote = shown.Overlaps(inputs.Reclears)
+            ? " · " + _localizer.Get(culture, "\\* = reclears")
+            : string.Empty;
         return new RichBotMessage(header, blocks,
             $"#MIX|{inputs.E.Mix}# {inputs.E.Mix.GetName()} · PIU Scores{reclearNote}",
-            inputs.E.Mix.GetAccentColor(), Links(inputs));
+            inputs.E.Mix.GetAccentColor(), Links(inputs, culture));
     }
 
     // Estimated rendered width of a block once emoji tokens expand — literal length plus a
@@ -388,15 +408,15 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         blocks.Add(new RichBotDivider());
     }
 
-    private static void AddNotableRows(List<IRichBotBlock> blocks, SnapshotInputs inputs, ref int remaining,
-        HashSet<Guid> shown)
+    private void AddNotableRows(List<IRichBotBlock> blocks, SnapshotInputs inputs, string? culture,
+        ref int remaining, HashSet<Guid> shown)
     {
         var artLeft = ArtRowCap;
         foreach (var change in inputs.Notable)
         {
             var chart = inputs.Charts[change.ChartId];
             var text = RowText(change, chart, inputs.Bests[change.ChartId], IsBigGain(change, inputs.Known),
-                ReclearMark(inputs, change.ChartId));
+                ReclearMark(inputs, change.ChartId), culture);
             var cost = Estimate(text);
             // Notable rows are the priciest; when one won't fit, the rest fall to overflow
             // (the cheaper compact buckets still get their turn at the leftover budget).
@@ -438,7 +458,8 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
                $"#LETTERGRADE|{best.Score!.Value.LetterGrade}|{best.IsBroken}##PLATE|{best.Plate}#";
     }
 
-    private static void AddOverflowLine(List<IRichBotBlock> blocks, SnapshotInputs inputs, HashSet<Guid> shown)
+    private void AddOverflowLine(List<IRichBotBlock> blocks, SnapshotInputs inputs, string? culture,
+        HashSet<Guid> shown)
     {
         // `shown` is what actually rendered (budget-trimmed), so the count reflects the real
         // remainder — not just what the row caps would have dropped.
@@ -453,40 +474,52 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             .ToList();
         var restCoOps = rest.Count(c => inputs.Charts[c.ChartId].Type == ChartType.CoOp);
         if (restCoOps > 0) parts.Add($"CO-OP ×{restCoOps}");
-        blocks.Add(new RichBotText($"+{rest.Length} more: {string.Join(", ", parts)}"));
+        blocks.Add(new RichBotText(_localizer.Get(culture, "+{0} more: {1}", rest.Length,
+            string.Join(", ", parts))));
     }
 
-    private static RichBotSection HeaderSection(SnapshotInputs inputs)
+    private RichBotSection HeaderSection(SnapshotInputs inputs, string? culture)
     {
         var span = LevelSpan(inputs.Known
             .Where(c => inputs.Charts[c.ChartId].Type != ChartType.CoOp)
             .Select(c => inputs.Charts[c.ChartId]).ToArray());
         if (inputs.Known.Any(c => inputs.Charts[c.ChartId].Type == ChartType.CoOp))
             span = span.Length > 0 ? $"{span} · CO-OP" : "CO-OP";
-        var header = $"### {MixPrefix(inputs.E.Mix)}**{inputs.User.Name}** — {CountsText(inputs.Known)}" +
-                     (span.Length > 0 ? $"\n-# {span}" : string.Empty);
+        var header =
+            $"### {MixPrefix(inputs.E.Mix)}**{inputs.User.Name}** — {CountsText(inputs.Known, culture)}" +
+            (span.Length > 0 ? $"\n-# {span}" : string.Empty);
         return new RichBotSection(header, inputs.User.ProfileImage);
     }
 
-    private static string CountsText(ScoreHighlightsCapturedEvent.HighlightedChange[] known)
+    private string CountsText(ScoreHighlightsCapturedEvent.HighlightedChange[] known, string? culture)
     {
         var passes = known.Count(c => c.IsNewPass && !c.IsBroken);
         var upscores = known.Count(c => !c.IsNewPass && !c.IsBroken);
-        if (passes > 0 && upscores > 0) return $"passed {passes:N0} · upscored {upscores:N0}";
-        if (passes > 0) return $"passed {passes:N0} {Charts(passes)}";
-        if (upscores > 0) return $"upscored {upscores:N0} {Charts(upscores)}";
-        return $"updated {known.Length:N0} {Charts(known.Length)}";
+        if (passes > 0 && upscores > 0)
+            return _localizer.Get(culture, "passed {0:N0} · upscored {1:N0}", passes, upscores);
+        if (passes > 0)
+            return passes == 1
+                ? _localizer.Get(culture, "passed 1 chart")
+                : _localizer.Get(culture, "passed {0:N0} charts", passes);
+        if (upscores > 0)
+            return upscores == 1
+                ? _localizer.Get(culture, "upscored 1 chart")
+                : _localizer.Get(culture, "upscored {0:N0} charts", upscores);
+        return known.Length == 1
+            ? _localizer.Get(culture, "updated 1 chart")
+            : _localizer.Get(culture, "updated {0:N0} charts", known.Length);
     }
 
     // The deep link only renders for public players — the Sessions page redirects
     // everyone else home anyway.
-    private static RichBotLink[] Links(SnapshotInputs inputs)
+    private RichBotLink[] Links(SnapshotInputs inputs, string? culture)
     {
         if (!inputs.User.IsPublic) return Array.Empty<RichBotLink>();
         var session = inputs.E.SessionId == null ? string.Empty : $"?session={inputs.E.SessionId}";
         return new[]
         {
-            new RichBotLink("See more", new Uri($"{SiteBase}/Player/{inputs.User.Id}/Sessions{session}"))
+            new RichBotLink(_localizer.Get(culture, "See more"),
+                new Uri($"{SiteBase}/Player/{inputs.User.Id}/Sessions{session}"))
         };
     }
 
@@ -510,78 +543,85 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         return inputs.Reclears.Contains(chartId) ? "\\*" : string.Empty;
     }
 
-    private static string RowText(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
-        RecordedPhoenixScore best, bool bigGain, string reclearMark)
+    private string RowText(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
+        RecordedPhoenixScore best, bool bigGain, string reclearMark, string? culture)
     {
         return change.IsNewPass
-            ? PassRow(change, chart, best, bigGain, reclearMark)
-            : UpscoreRow(change, chart, best, bigGain);
+            ? PassRow(change, chart, best, bigGain, reclearMark, culture)
+            : UpscoreRow(change, chart, best, bigGain, culture);
     }
 
-    private static List<string> StatLines(IReadOnlyList<PlayerMilestoneRecord> milestones)
+    private List<string> StatLines(IReadOnlyList<PlayerMilestoneRecord> milestones, string? culture)
     {
         var lines = new List<string>();
         foreach (var m in milestones)
             switch (m.Kind)
             {
                 case MilestoneKind.PumbilityGain:
-                    lines.Add($"📈 **PUMBILITY** {m.OldValue:N0} → **{m.NewValue:N0}** " +
-                              $"(+{m.NewValue - m.OldValue:N0})");
+                    lines.Add("📈 " + _localizer.Get(culture, "**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})",
+                        m.OldValue, m.NewValue, m.NewValue - m.OldValue));
                     break;
                 case MilestoneKind.SinglesPumbilityGain:
-                    lines.Add($"📈 **PUMBILITY (S)** {m.OldValue:N0} → **{m.NewValue:N0}** " +
-                              $"(+{m.NewValue - m.OldValue:N0})");
+                    lines.Add("📈 " + _localizer.Get(culture, "**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})",
+                        m.OldValue, m.NewValue, m.NewValue - m.OldValue));
                     break;
                 case MilestoneKind.DoublesPumbilityGain:
-                    lines.Add($"📈 **PUMBILITY (D)** {m.OldValue:N0} → **{m.NewValue:N0}** " +
-                              $"(+{m.NewValue - m.OldValue:N0})");
+                    lines.Add("📈 " + _localizer.Get(culture, "**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})",
+                        m.OldValue, m.NewValue, m.NewValue - m.OldValue));
                     break;
                 case MilestoneKind.SinglesCompetitiveGain:
-                    lines.Add($"📈 **Singles competitive** {m.OldValue:0.00} → **{m.NewValue:0.00}**");
+                    lines.Add("📈 " + _localizer.Get(culture, "**Singles competitive** {0:0.00} → **{1:0.00}**",
+                        m.OldValue, m.NewValue));
                     break;
                 case MilestoneKind.DoublesCompetitiveGain:
-                    lines.Add($"📈 **Doubles competitive** {m.OldValue:0.00} → **{m.NewValue:0.00}**");
+                    lines.Add("📈 " + _localizer.Get(culture, "**Doubles competitive** {0:0.00} → **{1:0.00}**",
+                        m.OldValue, m.NewValue));
                     break;
             }
 
         return lines;
     }
 
-    private static List<string> AchievementLines(ScoreHighlightsCapturedEvent e,
+    private List<string> AchievementLines(ScoreHighlightsCapturedEvent e,
         WeeklyPlacementRecord[] weekly, Dictionary<Guid, Chart> charts,
-        DailyStepPlacement? daily, Guid dailyChartId)
+        DailyStepPlacement? daily, Guid dailyChartId, string? culture)
     {
         var lines = new List<string>();
         var titles = e.Milestones.Where(m => m.Kind == MilestoneKind.TitleCompleted).ToArray();
         // Every completion is listed — titles are the card's top priority (owner call), and
         // the 4000-char budget (not a name cap) is the only backstop.
-        lines.AddRange(titles.Select(t => $"🏅 **{Bracket(t.Title)}** completed"));
+        lines.AddRange(titles.Select(t =>
+            "🏅 " + _localizer.Get(culture, "**{0}** completed", Bracket(t.Title))));
 
         // Paragon gains are never counted or aggregated — the new grade IS the content
         // (owner call), so every gain is its own grade-named line.
         var paragons = e.Milestones.Where(m => m.Kind == MilestoneKind.ParagonLevelGain).ToArray();
-        lines.AddRange(paragons.Select(p => $"🏅 **{Bracket(p.Title)}** paragon → {ParagonEmoji(p.Detail)}"));
+        lines.AddRange(paragons.Select(p => "🏅 " + _localizer.Get(culture, "**{0}** paragon → {1}",
+            Bracket(p.Title), ParagonEmoji(p.Detail))));
 
         foreach (var lamp in e.Milestones.Where(m => m.Kind is MilestoneKind.FolderPassLamp
                      or MilestoneKind.FolderGradeLamp or MilestoneKind.FolderPlateLamp))
-            lines.Add(LampLine(lamp));
+            lines.Add(LampLine(lamp, culture));
 
         lines.AddRange(weekly.Select(w =>
-            $"🏆 **#{w.Place}** on {charts[w.ChartId].Song.Name} " +
-            $"#DIFFICULTY|{charts[w.ChartId].DifficultyString}# weekly"));
+            "🏆 " + _localizer.Get(culture, "**#{0}** on {1} {2} weekly",
+                w.Place, charts[w.ChartId].Song.Name,
+                $"#DIFFICULTY|{charts[w.ChartId].DifficultyString}#")));
 
         // Daily Step standing (no competitive gate — the shared daily is a communal event, and a
         // Limbo-day placement on an easy chart is the whole point).
         if (daily != null && charts.ContainsKey(dailyChartId))
-            lines.Add($"🏆 **#{daily.Place}** on {charts[dailyChartId].Song.Name} " +
-                      $"#DIFFICULTY|{charts[dailyChartId].DifficultyString}# " +
-                      (daily.IsLimbo ? "Daily Step (Limbo)" : "Daily Step"));
+            lines.Add("🏆 " + _localizer.Get(culture,
+                daily.IsLimbo ? "**#{0}** on {1} {2} Daily Step (Limbo)" : "**#{0}** on {1} {2} Daily Step",
+                daily.Place, charts[dailyChartId].Song.Name,
+                $"#DIFFICULTY|{charts[dailyChartId].DifficultyString}#"));
 
         // Generic title progress (difficulty/co-op) always rides the top section, nearest to
         // complete first (owner call) — completed titles show only their completion line, and
         // chart-specific skill progress rides the per-row caption instead.
         lines.AddRange(e.TitleProgress.Take(ProgressDeltaCap).Select(d =>
-            $"🏅 {Bracket(d.Title)} {(int)(d.OldPercent * 100)}% → **{(int)(d.NewPercent * 100)}%**"));
+            "🏅 " + _localizer.Get(culture, "{0} {1}% → **{2}%**",
+                Bracket(d.Title), (int)(d.OldPercent * 100), (int)(d.NewPercent * 100))));
 
         return lines;
     }
@@ -596,16 +636,17 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         };
     }
 
-    private static string LampLine(PlayerMilestoneRecord m)
+    private string LampLine(PlayerMilestoneRecord m, string? culture)
     {
         var detail = (m.Detail ?? string.Empty).Split('|');
         return m.Kind switch
         {
-            MilestoneKind.FolderPassLamp => $"🎉 #DIFFICULTY|{detail[0]}# **All passed!**",
+            MilestoneKind.FolderPassLamp =>
+                $"🎉 #DIFFICULTY|{detail[0]}# {_localizer.Get(culture, "**All passed!**")}",
             MilestoneKind.FolderGradeLamp when detail.Length == 2 =>
-                $"🏆 #DIFFICULTY|{detail[0]}# **All {detail[1]} or better**",
+                $"🏆 #DIFFICULTY|{detail[0]}# {_localizer.Get(culture, "**All {0} or better**", detail[1])}",
             MilestoneKind.FolderPlateLamp when detail.Length == 2 =>
-                $"🏆 #DIFFICULTY|{detail[0]}# **All #PLATE|{detail[1]}# or better**",
+                $"🏆 #DIFFICULTY|{detail[0]}# {_localizer.Get(culture, "**All {0} or better**", $"#PLATE|{detail[1]}#")}",
             _ => $"🏆 {m.Detail}"
         };
     }
@@ -647,16 +688,16 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         return string.Join(" · ", parts);
     }
 
-    private static string PassRow(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
-        RecordedPhoenixScore best, bool bigGain, string reclearMark)
+    private string PassRow(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
+        RecordedPhoenixScore best, bool bigGain, string reclearMark, string? culture)
     {
         return $"#DIFFICULTY|{chart.DifficultyString}# {SongLink(change, chart, bigGain)}{reclearMark}\n" +
                $"**{(int)best.Score!.Value:N0}** #LETTERGRADE|{best.Score!.Value.LetterGrade}|{best.IsBroken}##PLATE|{best.Plate}#" +
-               FlagCaption(change, chart, best, bigGain);
+               FlagCaption(change, chart, best, bigGain, culture);
     }
 
-    private static string UpscoreRow(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
-        RecordedPhoenixScore best, bool bigGain)
+    private string UpscoreRow(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
+        RecordedPhoenixScore best, bool bigGain, string? culture)
     {
         var row = $"#DIFFICULTY|{chart.DifficultyString}# {SongLink(change, chart, bigGain)} " +
                   $"**{(int)best.Score!.Value:N0}**";
@@ -669,7 +710,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         }
 
         return row + $" #LETTERGRADE|{best.Score!.Value.LetterGrade}|{best.IsBroken}##PLATE|{best.Plate}#" +
-               FlagCaption(change, chart, best, bigGain);
+               FlagCaption(change, chart, best, bigGain, culture);
     }
 
     private static string SongLink(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
@@ -683,39 +724,43 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     // renders its captured detail — the pumbility rank, the peer standing (or PG ratio), the
     // skill title's score/threshold, the folder-debut ordinal. Vocabulary mirrors the
     // Sessions page badges.
-    private static string FlagCaption(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
-        RecordedPhoenixScore best, bool bigGain)
+    private string FlagCaption(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
+        RecordedPhoenixScore best, bool bigGain, string? culture)
     {
         var flags = change.Flags;
         if (flags == HighlightFlags.None && !bigGain) return string.Empty;
         var d = change.Detail;
         var parts = new List<string>();
         if (flags.HasFlag(HighlightFlags.PumbilityTop50))
-            parts.Add(d?.PumbilityRank != null ? $"👑 #{d.PumbilityRank} in your PUMBILITY" : "👑 PUMBILITY top 50");
-        if (flags.HasFlag(HighlightFlags.ScoreQuality90)) parts.Add(PeerCaption(d, best));
-        if (flags.HasFlag(HighlightFlags.TitleProgress)) parts.Add(SkillCaption(d));
+            parts.Add("👑 " + (d?.PumbilityRank != null
+                ? _localizer.Get(culture, "#{0} in your PUMBILITY", d.PumbilityRank)
+                : _localizer.Get(culture, "PUMBILITY top 50")));
+        if (flags.HasFlag(HighlightFlags.ScoreQuality90)) parts.Add(PeerCaption(d, best, culture));
+        if (flags.HasFlag(HighlightFlags.TitleProgress)) parts.Add(SkillCaption(d, culture));
         if (flags.HasFlag(HighlightFlags.FolderDebut))
-            parts.Add(d?.FolderDebutOrdinal != null
-                ? $"🆕 {Ordinal(d.FolderDebutOrdinal.Value)} {chart.Type.GetShortHand()}{(int)chart.Level}"
-                : "🆕 Folder debut");
-        if (flags.HasFlag(HighlightFlags.FolderCompletion90)) parts.Add("📁 Nearly complete folder");
-        if (flags.HasFlag(HighlightFlags.CompetitiveImprover)) parts.Add("⬆ Raised competitive level");
-        if (bigGain) parts.Add("💥 Biggest gain of the session");
+            parts.Add("🆕 " + (d?.FolderDebutOrdinal != null
+                ? $"{Ordinal(d.FolderDebutOrdinal.Value, culture)} {chart.Type.GetShortHand()}{(int)chart.Level}"
+                : _localizer.Get(culture, "Folder debut")));
+        if (flags.HasFlag(HighlightFlags.FolderCompletion90))
+            parts.Add("📁 " + _localizer.Get(culture, "Nearly complete folder"));
+        if (flags.HasFlag(HighlightFlags.CompetitiveImprover))
+            parts.Add("⬆ " + _localizer.Get(culture, "Raised competitive level"));
+        if (bigGain) parts.Add("💥 " + _localizer.Get(culture, "Biggest gain of the session"));
         return "\n-# " + string.Join(" · ", parts);
     }
 
-    private static string PeerCaption(HighlightDetail? d, RecordedPhoenixScore best)
+    private string PeerCaption(HighlightDetail? d, RecordedPhoenixScore best, string? culture)
     {
-        if (d?.PeerCount is null or 0) return "📊 Top scores among peers";
+        if (d?.PeerCount is null or 0) return "📊 " + _localizer.Get(culture, "Top scores among peers");
         var isPg = best.Score != null && (int)best.Score.Value == 1_000_000;
         if (isPg && d.PeerPgCount != null)
-            return $"📊 PG · {d.PeerPgCount} of {d.PeerCount} peers have it";
-        return $"📊 #{(d.PeerBetterCount ?? 0) + 1} of {d.PeerCount} peers";
+            return "📊 " + _localizer.Get(culture, "PG · {0} of {1} peers have it", d.PeerPgCount, d.PeerCount);
+        return "📊 " + _localizer.Get(culture, "#{0} of {1} peers", (d.PeerBetterCount ?? 0) + 1, d.PeerCount);
     }
 
-    private static string SkillCaption(HighlightDetail? d)
+    private string SkillCaption(HighlightDetail? d, string? culture)
     {
-        if (d?.SkillTitleName == null) return "🏅 Title progress";
+        if (d?.SkillTitleName == null) return "🏅 " + _localizer.Get(culture, "Title progress");
         return d.SkillTitleScore != null && d.SkillTitleThreshold != null
             ? $"🏅 {Bracket(d.SkillTitleName)} ({Abbrev(d.SkillTitleScore.Value)}/{Abbrev(d.SkillTitleThreshold.Value)})"
             : $"🏅 {Bracket(d.SkillTitleName)}";
@@ -729,20 +774,21 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         return title.StartsWith('[') ? title : $"[{title}]";
     }
 
-    private static string Ordinal(int n)
+    private string Ordinal(int n, string? culture)
     {
-        return n switch { 1 => "First", 2 => "Second", 3 => "Third", _ => $"#{n}" };
+        return n switch
+        {
+            1 => _localizer.Get(culture, "First"),
+            2 => _localizer.Get(culture, "Second"),
+            3 => _localizer.Get(culture, "Third"),
+            _ => $"#{n}"
+        };
     }
 
     // Floored to thousands so a near-threshold score never rounds up to a false complete.
     private static string Abbrev(int score)
     {
         return $"{score / 1000}k";
-    }
-
-    private static string Charts(int count)
-    {
-        return count == 1 ? "chart" : "charts";
     }
 
     // The competitive level for a chart's type; co-op (and anything without a competitive
@@ -983,41 +1029,47 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         return mix == MixEnum.Phoenix ? string.Empty : "[" + mix.GetName() + "] ";
     }
 
-    private async Task SendToCommunityDiscords(Guid userId, string messages, CancellationToken cancellationToken)
-    {
-        await SendToCommunityDiscords(userId, new[] { messages }, cancellationToken);
-    }
-
-    private async Task SendToCommunityDiscords(Guid userId, string[] messages, CancellationToken cancellationToken)
-    {
-        var channelIds = await GetCommunityChannels(userId, cancellationToken);
-        foreach (var message in messages)
-            await _bot.SendMessages(new[] { message }, channelIds, cancellationToken);
-    }
-
-    private async Task SendRichToCommunityDiscords(Guid userId, IReadOnlyList<RichBotMessage> messages,
+    // Every community fan-out renders once per registered channel language: channels group
+    // by culture, the render callback composes for each group, and the data behind the
+    // callback was gathered once by the caller.
+    private async Task SendToCommunityDiscords(Guid userId, Func<string?, string> render,
         CancellationToken cancellationToken)
     {
-        if (!messages.Any()) return;
-        var channelIds = await GetCommunityChannels(userId, cancellationToken);
-        if (!channelIds.Any()) return;
-        await _bot.SendRichMessages(messages, channelIds, cancellationToken);
+        foreach (var group in (await GetCommunityChannels(userId, cancellationToken)).GroupBy(c => c.Culture))
+            await _bot.SendMessages(new[] { render(group.Key) }, group.Select(c => c.ChannelId).ToArray(),
+                cancellationToken);
     }
 
-    private async Task<IReadOnlyList<ulong>> GetCommunityChannels(Guid userId, CancellationToken cancellationToken)
+    private async Task SendRichToCommunityDiscords(Guid userId,
+        Func<string?, IReadOnlyList<RichBotMessage>> render, CancellationToken cancellationToken)
+    {
+        var channels = await GetCommunityChannels(userId, cancellationToken);
+        if (!channels.Any()) return;
+        foreach (var group in channels.GroupBy(c => c.Culture))
+        {
+            var messages = render(group.Key);
+            if (!messages.Any()) continue;
+            await _bot.SendRichMessages(messages, group.Select(c => c.ChannelId).ToArray(), cancellationToken);
+        }
+    }
+
+    private async Task<IReadOnlyList<DiscordFeedChannel>> GetCommunityChannels(Guid userId,
+        CancellationToken cancellationToken)
     {
         var communities =
             await _communities.GetCommunities(userId, cancellationToken);
-        var channelIds = new List<ulong>();
+        var channels = new List<DiscordFeedChannel>();
         foreach (var communityName in communities.Select(c => c.CommunityName))
         {
             var community = await _communities.GetCommunityByName(communityName, cancellationToken);
             if (community == null) continue;
 
-            channelIds.AddRange(community.Channels.Select(c => c.ChannelId));
+            channels.AddRange(community.Channels.Select(c => new DiscordFeedChannel(c.ChannelId, c.Culture)));
         }
 
-        return channelIds.Distinct().ToList();
+        // A channel reachable through two communities posts once; the first registration's
+        // language wins.
+        return channels.GroupBy(c => c.ChannelId).Select(g => g.First()).ToList();
     }
 
     public async Task Consume(ConsumeContext<UcsLeaderboardPlacedEvent> context)
@@ -1025,8 +1077,11 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var user = await _users.GetUser(context.Message.UserId);
         if (user == null) return;
         var placed = context.Message;
-        var message =
-            $"{user.Name} scored {placed.Score} #LETTERGRADE|{PhoenixScore.From(placed.Score).LetterGrade}|{placed.IsBroken}# on {placed.Artist}'s {placed.SongName} #DIFFICULTY|{placed.Difficulty}# UCS";
-        await SendToCommunityDiscords(context.Message.UserId, message, context.CancellationToken);
+        await SendToCommunityDiscords(context.Message.UserId, culture => _localizer.Get(culture,
+                "{0} scored {1} {2} on {3}'s {4} {5} UCS",
+                user.Name, placed.Score,
+                $"#LETTERGRADE|{PhoenixScore.From(placed.Score).LetterGrade}|{placed.IsBroken}#",
+                placed.Artist, placed.SongName, $"#DIFFICULTY|{placed.Difficulty}#"),
+            context.CancellationToken);
     }
 }
