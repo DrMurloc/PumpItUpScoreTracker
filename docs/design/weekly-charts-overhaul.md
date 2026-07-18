@@ -1,15 +1,15 @@
 # Weekly Charts overhaul — the challenges hub, and a static page
 
-**Status**: **as-built 2026-07-15** — all ten commits landed on `claude/weekly-charts-ux-overhaul-003e40`
-(§9 has the SHAs). **Reconciled to the static router 2026-07-16** after the app-wide flip
-(seo-friendly-site.md §7 PR-3) merged: §3.1 records what replaced the branch's own mechanism. Designed the same day; visual mock approved at round 9 (artifact `1d0c26e7`,
-labels `round-1` … `round-9-compact-chip`). ⚠ **The E2E suite has not run in the build
-environment** (Testcontainers can't open the local Docker pipe); the static page's runtime render
-is validated by CI's Linux Docker run and manual QA, not yet locally — §10/§11. Builds on the
-Stage-2 hosting flip (this branch descends from `claude/render-modes-scope`). The chart-details
-overhaul (branch `claude/chart-details-overhaul`) pilots the same static-SSR-with-islands shape on
-`/Chart/{id}`; **the two pages are independent** (owner call) and share exactly one commit's worth
-of mechanism (§3.1) — whichever merges second rebases that commit away.
+**Status**: **rail rewrite in progress** — the 2026-07-18 field test rejected round 9's
+interaction model and layout, and rounds 10–12 (same artifact, labels `round-10-rail` …
+`round-12-locked`) locked a redesign: leaderboards move to a left rail, every view swap is
+instant, and per-chart boards gain a persisted relevant-players filter. §12 is the rewrite —
+its calls, its data, and its commit plan. Sections 1–11 remain the round-9 as-built record;
+where §12 supersedes one, it says so. The round-9 build (all ten commits, §9) shipped to the
+branch 2026-07-15 and was reconciled to the static router 2026-07-16 after the app-wide flip
+(seo-friendly-site.md §7 PR-3) merged — §3.1 records what replaced the branch's own mechanism.
+The E2E suite now runs locally (the Docker blocker was environmental) and is green as of the
+third main-merge (`f5c8e91e`).
 
 **The page**: `/WeeklyCharts` becomes the challenges hub — Weekly Charts and Daily Step
 ([daily-step.md](daily-step.md)) on one page, statically rendered so crawlers finally see the
@@ -46,6 +46,21 @@ Mock-round calls (R1–R9, all locked):
 | M10 | R8 | **Density switcher is on-page UI** — the Tier Lists treatment (three small icon buttons, active = primary), right-aligned above the weekly grid. |
 | M11 | R9 | **No "Suggested" chips on cards** — the gold border is the only on-card signal; the filter note above the grid does the explaining. |
 | M12 | R9 | **Compact keeps one action**: a bottom-right **entry-count chip** (tier-list corner-chip vocabulary) opens the leaderboard. Record has no Compact affordance by design — Compact is a scanning mode. |
+
+Rail-rewrite calls (R10–R12, 2026-07-18, all locked — the field-test verdict on round 9):
+
+| # | Round | Call |
+|---|---|---|
+| M13 | R10 | **"Static really should mean static on load, not requiring a page load to change anything on the screen."** The whole page ships in the first response; after that, every view swap is an instant client-side toggle. URL state survives for sharing/crawlers via `history.replaceState`, never as the mechanism. |
+| M14 | R10 | **The rail layout**: Daily Step (top 5 + pinned you) and the Monthly Leaderboard (top 20) as homepage-widget-chrome cards in a 330px left rail; the week's grid takes the rest. Trophy on each rail card opens the full board dialog. |
+| M15 | R10 | **Real icons, ubiquitous**: Record = `AddCircleOutline`, boards = `EmojiEvents` — the homepage Daily Step widget's pair — on weekly cards **and** the Daily card. The `▲`/`☰` glyphs die. |
+| M16 | R10 | **Monthly rows carry the player's avatar and competitive level** (N2), in the rail and the dialog. |
+| M17 | R11 | **Top-3 in Comfortable** (your row folds in when you rank ≤3); Table stays top-1 + you; Compact unchanged. |
+| M18 | R11 | **Type switching is the tier-list segment row** (FolderGrid's `MudButtonGroup` vocabulary: joined buttons, active = filled primary) — not pills, not a select. |
+| M19 | R11 | **Table density renders jacket + bubble side by side** (the tier-table pattern), never the overlay. |
+| M20 | R12 | **"Relevant players"**: a quiet persisted switch hiding out-of-band players on **weekly per-chart boards only** — monthly is exempt ("it highlights people pushing their highest, not dominating low boards"), daily is exempt. Ranks renumber after the filter. Default off. Page-level beside density, mirrored in the weekly board dialog. |
+| M21 | R12 | **The monthly counted-scores expansion goes compact**: the official-leaderboards pattern (TierListChartCard Compact stickers — jacket + bubble + grade/score + points), **no song names**; names live in the tooltip. |
+| M22 | R11 | **The collapse ladder**: ≥~1080px rail-left; ~640–1080px (tablet portrait, 1:1 windows) the rail cards go 2-up above the grid; <~640px single column **Daily → This Week → Monthly**. Two media queries, no JS. |
 
 ## 2. Sins this pays down
 
@@ -290,3 +305,95 @@ load. Noted in §11.
 - **Dock countdown is static** (server value at load), not ticking — dropped to avoid duplicating
   the localized reset string in JS. Revisit if a live countdown is wanted (needs a format the
   client can localize).
+
+---
+
+## 12. The rail rewrite (rounds 10–12)
+
+The field test rejected two things about round 9: URL-state view switching (every toggle was a
+document load — M13) and the layout (boards buried below the grid, squished cards, glyph
+buttons). The round-12 deck is the acceptance spec; M13–M22 are the calls. What follows is the
+technical delta.
+
+### 12.1 Layout
+
+`WeeklyCharts.razor` renders header row → a CSS grid `330px 1fr`: the **rail** (Daily Step
+card, Monthly card) and the **week's grid**. The collapse ladder (M22) is two media queries.
+The static core now ships **everything**: all 36 cards (non-suggested present but hidden), all
+four monthly boards (top 20 each, inactive hidden), daily top-5 + pinned you. Below-fold
+sections (history, legend, pool, admin) are unchanged.
+
+### 12.2 The rail cards
+
+- **`DailyStepRailCard`** (replaces `DailyStepStrip`): widget chrome (`dash-widget`
+  vocabulary), kicker + ⊕/🏆 icon buttons in the head, jacket + bubble + name + "resets in",
+  top-5 rows (place colored by the rarity ramp, avatar, name, grade+score), pinned "your
+  standing" when you sit past 5, Limbo = secondary edge + chip on the card.
+- **`MonthlyRailCard`** (replaces the on-page `MonthlyLeaderboard` section): segment row
+  (M18), window subline, top-20 rows — place · avatar · name · CL chip · PUMBILITY total —
+  you-glow, pinned-below-20, "Full board" trophy. All four type boards render; the segment
+  row swaps them client-side.
+
+### 12.3 Relevant players (M20) — the data
+
+The band is the suggestion band: `floor(competitive level) ∈ [level−1, level+2]`, co-op always
+in — extracted to `WeeklyChartSuggestionPolicy.IsWithinRange` so the two consumers
+(suggestions, this filter) can never fork.
+
+**Found during planning: the `WasWithinRange` write path has been dead since the vertical
+extraction** — `EFWeeklyTourneyRepository.SaveEntry` never sets the column, so current-era
+entries store `false`, which also degrades the recap's in-range pooling
+(`WeeklyRecapCalculator`). Because of that:
+
+- **Boards derive in-range at read time** from the entry's stored `CompetitiveLevel` via the
+  policy — correct for all history, immune to the dead column.
+- **The write path is fixed anyway** (`SaveEntry` gains the flag; both writers stamp it) so
+  rotation snapshots and the recap heal going forward.
+- An **owner-optional backfill SQL** (Downloads) repairs `WeeklyUserEntry` +
+  `UserWeeklyPlacing` history from stored CL × chart level.
+
+`WeeklyTournamentEntry` is pinned by the `api/weeklyCharts` goldens and does not change. The
+flag surfaces on `WeeklyBoardRow` (the `Source` precedent) as `WasWithinRange` +
+`InRangePlace`; summaries carry `InRangeTopPlaces` + `InRangeEntryCount` beside the overall
+head, so the static page ships both states and the switch just swaps which renders — ranks
+renumber because both ladders are server-computed. The dialog query gets the same shape.
+Persistence: `WeeklyCharts__RelevantPlayers` through `POST /Preferences/Set` (allowlist gains
+the `WeeklyCharts__` prefix); the page reads it at render, the dialogs read it live.
+
+### 12.4 The monthly dialog
+
+`MonthlyBoardDialog` is a **new** island-hosted component — the monthly table (players ×
+top-4 × counted × total) is not the per-chart board shape, so it does not contort
+`LeaderboardDialog`. Segment row inside; rows carry avatar + CL; `TopFour` renders as
+compact stickers; the counted expansion is the official-leaderboards pattern (M21):
+`tier-card-grid-compact`-sized stickers, jacket + bubble + grade/score strip + points badge,
+no song names. `MonthlyLeaderboardRow` gains `CompetitiveLevel` (derived from the counted
+entries' stored CL — no cross-vertical read).
+
+### 12.5 Instant behaviors
+
+`challenge-board.js` grows three delegated handlers beside density: the monthly segment swap,
+show-all/show-suggested, and the relevant-players toggle — each flips pre-rendered DOM and
+calls `history.replaceState` so the URL grammar (`?type=`, `?suggested=all`) still names the
+state for sharing and crawlers. Past weeks stay real links (different data, honest
+navigation). The circuit remains exactly one island: Record (weekly + daily), the per-chart
+`LeaderboardDialog` (now honoring the relevant setting), `MonthlyBoardDialog`,
+`ChartDetailsDialog`, admin rotate.
+
+### 12.6 Commit order
+
+l10n keys ×9 within each commit; fast suites green per commit; API goldens re-run in any
+commit that touches Contracts.
+
+| # | Content |
+|---|---|
+| C0 | Design doc v3 (this section; status + M13–M22) |
+| C1 | `IsWithinRange` + `GetSuggestedCharts` refactor + domain facts |
+| C2 | `SaveEntry` stamps the flag (port + EF + both writers) + handler facts; backfill SQL → Downloads |
+| C3 | Read model: `WeeklyBoardRow` flag + dual places, summary in-range head/count, monthly CL, ×4-type dispatch + handler cache; **goldens in-commit** |
+| C4 | `DailyStepRailCard` + `MonthlyRailCard` + bUnit facts |
+| C5 | Page restructure: rail + ladder + all-36/all-4 rendering + card anatomy v2 (top-3, icons, Table side-by-side) + site.css rework |
+| C6 | challenge-board.js instant handlers + `replaceState`; Preferences prefix + server-side read |
+| C7 | `MonthlyBoardDialog` + sticker expansion + `OpenMonthly`; relevant filter in `LeaderboardDialog` |
+| C8 | E2E adaptation + relevant-players round-trip; full suites locally |
+| C9 | Sweep: delete superseded components, l10n audit, as-built stamp |
