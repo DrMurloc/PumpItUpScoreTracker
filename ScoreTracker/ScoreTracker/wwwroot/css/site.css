@@ -2421,15 +2421,11 @@ html.sheet-open .more-sheet-scrim {
     .dash-cols-4, .dash-cols-3, .dash-cols-2 { grid-column: span 2; }
 }
 
-/* Mobile experiment (owner, 2-column trial): hold two columns down to ~400px so a
-   Pixel 7 (412px) isn't one stretched column of half-empty widgets. Rows grow to fit
-   rather than clipping in the narrower cells. Flip to one column only below ~400px. */
 @media (max-width: 599.98px) {
-    .dash-grid { grid-auto-rows: minmax(168px, auto); }
-}
-
-@media (max-width: 399.98px) {
-    .dash-grid { grid-template-columns: 1fr; }
+    .dash-grid {
+        grid-template-columns: 1fr;
+        grid-auto-rows: minmax(168px, auto);
+    }
 
     .dash-cols-2, .dash-cols-3, .dash-cols-4 { grid-column: span 1; }
 
