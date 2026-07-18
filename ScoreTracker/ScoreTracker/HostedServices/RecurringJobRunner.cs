@@ -26,8 +26,13 @@ public sealed class RecurringJobRunner
     public Task PublishCalculateScoringDifficulty() =>
         _bus.Publish(new RecalculateScoringDifficultyCommand());
 
+    // Weekly boards are parallel per mix (like Daily Step below). A daily cadence can't rely on the
+    // manual per-mix trigger the Weekly page uses, so the job fans out to each supported mix; a mix
+    // without a chart catalog yet no-ops in the consumer.
     public Task PublishUpdateWeeklyCharts() =>
-        _bus.Publish(new RotateWeeklyChartsCommand());
+        Task.WhenAll(
+            _bus.Publish(new RotateWeeklyChartsCommand(MixEnum.Phoenix)),
+            _bus.Publish(new RotateWeeklyChartsCommand(MixEnum.Phoenix2)));
 
     // Daily Step runs parallel per-mix boards (owner); the daily cadence can't rely on the manual
     // per-mix trigger the Weekly page uses, so the job fans out to each supported mix. A mix without

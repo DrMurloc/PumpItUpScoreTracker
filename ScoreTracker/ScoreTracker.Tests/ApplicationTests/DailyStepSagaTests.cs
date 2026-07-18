@@ -331,7 +331,8 @@ public sealed class DailyStepSagaTests
         var random = new Mock<IRandomNumberGenerator>();
         random.Setup(r => r.Next(It.IsAny<int>())).Returns(0);
         return new DailyStepSaga(daily.Object, charts.Object, playerStats.Object, currentUser.Object,
-            FakeDateTime.At(now ?? NormalDay).Object, random.Object, NullLogger<DailyStepSaga>.Instance);
+            FakeDateTime.At(now ?? NormalDay).Object, random.Object, new Mock<IBus>().Object,
+            NullLogger<DailyStepSaga>.Instance);
     }
 
     private static Mock<ICurrentUserAccessor> CurrentUserReturning(User user)

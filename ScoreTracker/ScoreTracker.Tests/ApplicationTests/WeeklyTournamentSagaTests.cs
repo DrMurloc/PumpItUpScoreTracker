@@ -436,7 +436,7 @@ public sealed class WeeklyTournamentSagaTests
                 .ReturnsAsync(new[] { chart });
 
             Saga = BuildSaga(charts: Charts, weeklyTournies: WeeklyTournies, playerStats: PlayerStats,
-                bot: Bot, users: Users, bus: Bus);
+                bus: Bus);
         }
 
         public void GivenStats(double singlesCompetitive, double doublesCompetitive)
@@ -504,7 +504,7 @@ public sealed class WeeklyTournamentSagaTests
             Charts = BuildRequiredChartFixture();
             Random.Setup(r => r.Next(It.IsAny<int>())).Returns(0);
             Saga = BuildSaga(charts: Charts_, weeklyTournies: WeeklyTournies, playerStats: PlayerStats,
-                bot: Bot, users: Users, bus: Bus, random: Random);
+                bus: Bus, random: Random);
         }
 
         public void GivenChartList(IEnumerable<Chart> charts)
@@ -536,8 +536,6 @@ public sealed class WeeklyTournamentSagaTests
         Mock<IChartRepository>? charts = null,
         Mock<IWeeklyTournamentRepository>? weeklyTournies = null,
         Mock<IPlayerStatsReader>? playerStats = null,
-        Mock<IBotClient>? bot = null,
-        Mock<IUserReader>? users = null,
         Mock<IBus>? bus = null,
         Mock<IDateTimeOffsetAccessor>? dateTime = null,
         Mock<IRandomNumberGenerator>? random = null)
@@ -545,13 +543,11 @@ public sealed class WeeklyTournamentSagaTests
         charts ??= new Mock<IChartRepository>();
         weeklyTournies ??= new Mock<IWeeklyTournamentRepository>();
         playerStats ??= new Mock<IPlayerStatsReader>();
-        bot ??= new Mock<IBotClient>();
-        users ??= new Mock<IUserReader>();
         bus ??= new Mock<IBus>();
         dateTime ??= FakeDateTime.At(Now);
         random ??= new Mock<IRandomNumberGenerator>();
         return new WeeklyTournamentSaga(charts.Object, weeklyTournies.Object, playerStats.Object,
-            bot.Object, NullLogger<WeeklyTournamentSaga>.Instance, users.Object, bus.Object,
+            NullLogger<WeeklyTournamentSaga>.Instance, bus.Object,
             dateTime.Object, random.Object);
     }
 

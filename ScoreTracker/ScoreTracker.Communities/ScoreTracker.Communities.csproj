@@ -36,6 +36,7 @@
     <!-- Scoring levels drive the universal noteworthy ordering on the score cards. -->
     <ProjectReference Include="..\ScoreTracker.ChartIntelligence\ScoreTracker.ChartIntelligence.csproj" />
     <ProjectReference Include="..\ScoreTracker.PlayerProgress\ScoreTracker.PlayerProgress.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Randomizer\ScoreTracker.Randomizer.csproj" />
     <ProjectReference Include="..\ScoreTracker.Ucs\ScoreTracker.Ucs.csproj" />
     <!-- The snapshot card reads current weekly-board placements at render time. -->
     <ProjectReference Include="..\ScoreTracker.WeeklyChallenge\ScoreTracker.WeeklyChallenge.csproj" />

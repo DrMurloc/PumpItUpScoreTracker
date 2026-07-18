@@ -1,5 +1,6 @@
 using ScoreTracker.WeeklyChallenge.Contracts;
 using ScoreTracker.WeeklyChallenge.Contracts.Commands;
+using ScoreTracker.WeeklyChallenge.Contracts.Events;
 using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.WeeklyChallenge.Contracts.Queries;
 using ScoreTracker.WeeklyChallenge.Domain;
@@ -26,6 +27,7 @@ internal sealed class DailyStepSaga(
     ICurrentUserAccessor currentUser,
     IDateTimeOffsetAccessor dateTime,
     IRandomNumberGenerator random,
+    IBus bus,
     ILogger<DailyStepSaga> logger) :
     IConsumer<RotateDailyStepCommand>,
     IConsumer<DailyStepScoreObservedEvent>,
@@ -59,7 +61,8 @@ internal sealed class DailyStepSaga(
             return;
         }
 
-        if (current != null) await SnapshotFinishingBoard(mix, current, ct);
+        IReadOnlyList<DailyStepResult> finishedPlacements = Array.Empty<DailyStepResult>();
+        if (current != null) finishedPlacements = await SnapshotFinishingBoard(mix, current, ct);
         await dailySteps.ClearBoard(mix, ct);
 
         var isLimbo = DailyStepLimboPolicy.IsLimboDay(now);
@@ -82,21 +85,30 @@ internal sealed class DailyStepSaga(
         var chosen = candidates[random.Next(candidates.Length)];
         await dailySteps.RegisterDailyChart(mix,
             new DailyStepBoard(chosen.Id, now, isLimbo, NextResetAfter(now)), ct);
+
+        // The feed reads today's chart from GetDailyStepQuery; the just-finished board's
+        // placements ride the event since nothing else reads the placement history.
+        await bus.Publish(new DailyStepRotatedEvent(mix, current?.ChartId ?? Guid.Empty,
+            current?.ForDate ?? now, current?.IsLimbo ?? false, finishedPlacements), ct);
     }
 
-    private async Task SnapshotFinishingBoard(MixEnum mix, DailyStepBoard finishing, CancellationToken ct)
+    private async Task<IReadOnlyList<DailyStepResult>> SnapshotFinishingBoard(MixEnum mix, DailyStepBoard finishing,
+        CancellationToken ct)
     {
         var entries = (await dailySteps.GetEntries(mix, finishing.ChartId, ct)).Select(ToRanked).ToArray();
-        if (entries.Length == 0) return;
-        var ranked = finishing.IsLimbo
+        if (entries.Length == 0) return Array.Empty<DailyStepResult>();
+        var ranked = (finishing.IsLimbo
             ? WeeklyChartSuggestionPolicy.ProcessIntoPlacesAscending(entries)
-            : WeeklyChartSuggestionPolicy.ProcessIntoPlaces(entries);
+            : WeeklyChartSuggestionPolicy.ProcessIntoPlaces(entries)).ToArray();
         var placings = ranked
             .Select(r => new DailyStepPlacing(r.Item2.UserId, r.Item2.ChartId, finishing.ForDate,
                 finishing.IsLimbo, r.Item1, r.Item2.Score, r.Item2.Plate, r.Item2.IsBroken,
                 r.Item2.CompetitiveLevel))
             .ToArray();
-        if (placings.Length > 0) await dailySteps.WriteHistories(mix, placings, ct);
+        await dailySteps.WriteHistories(mix, placings, ct);
+        return ranked
+            .Select(r => new DailyStepResult(r.Item1, r.Item2.UserId, r.Item2.Score, r.Item2.Plate, r.Item2.IsBroken))
+            .ToArray();
     }
 
     public async Task Consume(ConsumeContext<DailyStepScoreObservedEvent> context)

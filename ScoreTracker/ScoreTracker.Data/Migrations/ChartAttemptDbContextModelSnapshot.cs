@@ -519,14 +519,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<Guid>("CommunityId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("SendNewMembers")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("SendNewScores")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("SendTitles")
-                        .HasColumnType("bit");
+                    b.Property<string>("Culture")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
 
                     b.HasKey("Id");
 
@@ -638,6 +633,38 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("CommunityId", "UserId");
 
                     b.ToTable("CommunityMembership", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.DiscordFeedSubscriptionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("ChannelId")
+                        .HasColumnType("decimal(20,0)");
+
+                    b.Property<string>("Culture")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<string>("FeedKind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<int>("Mix")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("RegisteredByDiscordUserId")
+                        .HasColumnType("decimal(20,0)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChannelId", "FeedKind", "Mix")
+                        .IsUnique();
+
+                    b.ToTable("DiscordFeedSubscription", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartEntity", b =>

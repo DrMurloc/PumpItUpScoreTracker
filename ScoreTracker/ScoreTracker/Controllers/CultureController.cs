@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using ScoreTracker.Domain.Records;
 
 namespace ScoreTracker.Web.Controllers;
 
@@ -7,15 +8,11 @@ namespace ScoreTracker.Web.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 public class CultureController : Controller
 {
-    private static readonly ISet<string> SupportedCultures =
-        new[] { "en-US", "pt-BR", "ko-KR", "es-MX", "es-ES", "en-ZW", "fr-FR", "ja-JP", "it-IT" }.ToHashSet(
-            StringComparer.OrdinalIgnoreCase);
-
     [HttpGet("Set")]
     public IActionResult Set([FromQuery(Name = "culture")] string culture,
         [FromQuery(Name = "redirectUrl")] string redirectUri)
     {
-        if (SupportedCultures.Contains(culture))
+        if (SupportedCultures.IsSupported(culture))
             HttpContext.Response.Cookies.Append(
                 CookieRequestCultureProvider.DefaultCookieName,
                 CookieRequestCultureProvider.MakeCookieValue(
