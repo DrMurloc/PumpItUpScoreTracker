@@ -5063,4 +5063,64 @@
   <data name="Daily Step board" xml:space="preserve">
     <value>デイリーステップボード</value>
   </data>
+  <data name="This week on the official boards" xml:space="preserve">
+    <value>今週の公開ランキング</value>
+  </data>
+  <data name="vs {0}" xml:space="preserve">
+    <value>前回比 {0}</value>
+  </data>
+  <data name="first week" xml:space="preserve">
+    <value>初週</value>
+  </data>
+  <data name="swept Sunday" xml:space="preserve">
+    <value>日曜集計</value>
+  </data>
+  <data name="PUMBILITY top 10" xml:space="preserve">
+    <value>PUMBILITY トップ 10</value>
+  </data>
+  <data name="PUMBILITY movers" xml:space="preserve">
+    <value>PUMBILITY 変動</value>
+  </data>
+  <data name="Boards climbed" xml:space="preserve">
+    <value>ボードを駆け上がり</value>
+  </data>
+  <data name="**{0}** climbed {1} boards (+{2})" xml:space="preserve">
+    <value>**{0}** が {1} ボードで順位上昇（+{2}）</value>
+  </data>
+  <data name="World firsts &amp; new #1s" xml:space="preserve">
+    <value>世界初 &amp; 新 #1</value>
+  </data>
+  <data name="First **{0}** — **{1}** in the {2} folder · {3:N0}" xml:space="preserve">
+    <value>初の **{0}** — **{1}**（{2} フォルダ）· {3:N0}</value>
+  </data>
+  <data name="First **{0}** — **{1}** on {2} · {3:N0}" xml:space="preserve">
+    <value>初の **{0}** — **{1}**（{2}）· {3:N0}</value>
+  </data>
+  <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
+    <value>新 #1 — **{0}**（{1}）· {2:N0}</value>
+  </data>
+  <data name=", dethroning {0}" xml:space="preserve">
+    <value>（{0} を王座から陥落）</value>
+  </data>
+  <data name="To make the top 1000" xml:space="preserve">
+    <value>トップ 1000 入りの条件</value>
+  </data>
+  <data name="**50× AAA at Lv.{0}**" xml:space="preserve">
+    <value>**Lv.{0} で AAA ×50**</value>
+  </data>
+  <data name="**50× SSS at Lv.{0}**" xml:space="preserve">
+    <value>**Lv.{0} で SSS ×50**</value>
+  </data>
+  <data name="PIU Scores official mirror" xml:space="preserve">
+    <value>PIU Scores 公式ミラー</value>
+  </data>
+  <data name="This week" xml:space="preserve">
+    <value>今週</value>
+  </data>
+  <data name="What it takes" xml:space="preserve">
+    <value>必要条件</value>
+  </data>
+  <data name="a chart" xml:space="preserve">
+    <value>譜面</value>
+  </data>
 </root>

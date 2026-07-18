@@ -4944,4 +4944,64 @@
   <data name="Daily Step board" xml:space="preserve">
     <value>데일리 스텝 보드</value>
   </data>
+  <data name="This week on the official boards" xml:space="preserve">
+    <value>이번 주 공식 리더보드</value>
+  </data>
+  <data name="vs {0}" xml:space="preserve">
+    <value>{0} 대비</value>
+  </data>
+  <data name="first week" xml:space="preserve">
+    <value>첫 주</value>
+  </data>
+  <data name="swept Sunday" xml:space="preserve">
+    <value>일요일 집계</value>
+  </data>
+  <data name="PUMBILITY top 10" xml:space="preserve">
+    <value>PUMBILITY 톱 10</value>
+  </data>
+  <data name="PUMBILITY movers" xml:space="preserve">
+    <value>PUMBILITY 순위 변동</value>
+  </data>
+  <data name="Boards climbed" xml:space="preserve">
+    <value>보드 상승</value>
+  </data>
+  <data name="**{0}** climbed {1} boards (+{2})" xml:space="preserve">
+    <value>**{0}** {1}개 보드 상승 (+{2})</value>
+  </data>
+  <data name="World firsts &amp; new #1s" xml:space="preserve">
+    <value>세계 최초 &amp; 새로운 #1</value>
+  </data>
+  <data name="First **{0}** — **{1}** in the {2} folder · {3:N0}" xml:space="preserve">
+    <value>최초 **{0}** — **{1}** ({2} 폴더) · {3:N0}</value>
+  </data>
+  <data name="First **{0}** — **{1}** on {2} · {3:N0}" xml:space="preserve">
+    <value>최초 **{0}** — **{1}** ({2}) · {3:N0}</value>
+  </data>
+  <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
+    <value>새로운 #1 — **{0}** ({1}) · {2:N0}</value>
+  </data>
+  <data name=", dethroning {0}" xml:space="preserve">
+    <value> ({0} 왕좌 탈환)</value>
+  </data>
+  <data name="To make the top 1000" xml:space="preserve">
+    <value>톱 1000 진입 조건</value>
+  </data>
+  <data name="**50× AAA at Lv.{0}**" xml:space="preserve">
+    <value>**Lv.{0} AAA 50개**</value>
+  </data>
+  <data name="**50× SSS at Lv.{0}**" xml:space="preserve">
+    <value>**Lv.{0} SSS 50개**</value>
+  </data>
+  <data name="PIU Scores official mirror" xml:space="preserve">
+    <value>PIU Scores 공식 미러</value>
+  </data>
+  <data name="This week" xml:space="preserve">
+    <value>이번 주</value>
+  </data>
+  <data name="What it takes" xml:space="preserve">
+    <value>필요 조건</value>
+  </data>
+  <data name="a chart" xml:space="preserve">
+    <value>채보</value>
+  </data>
 </root>

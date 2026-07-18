@@ -24,6 +24,7 @@ public sealed class OfficialDigestFeedSagaTests
     private readonly Mock<IBotClient> _bot = new();
     private readonly Mock<IChartRepository> _charts = new();
     private readonly Mock<IDiscordFeedReader> _feeds = new();
+    private readonly Mock<ILocalizedTextAccessor> _localizer = new();
     private readonly Mock<IMediator> _mediator = new();
     private List<RichBotMessage> _sent = new();
 
@@ -36,10 +37,16 @@ public sealed class OfficialDigestFeedSagaTests
             .Returns(Task.CompletedTask);
         _charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
+        // Identity localizer: English keys back regardless of culture, so text assertions
+        // stay culture-independent.
+        _localizer.Setup(l => l.Get(It.IsAny<string?>(), It.IsAny<string>()))
+            .Returns((string? _, string key) => key);
+        _localizer.Setup(l => l.Get(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<object[]>()))
+            .Returns((string? _, string key, object[] args) => string.Format(key, args));
     }
 
     private OfficialDigestFeedSaga Saga() =>
-        new(_bot.Object, _charts.Object, _feeds.Object, _mediator.Object);
+        new(_bot.Object, _charts.Object, _feeds.Object, _mediator.Object, _localizer.Object);
 
     private static ConsumeContext<OfficialSnapshotSealedEvent> Context(OfficialSnapshotSealedEvent message)
     {
@@ -71,6 +78,41 @@ public sealed class OfficialDigestFeedSagaTests
 
         Assert.Empty(_sent);
         _mediator.Verify(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ChannelsGroupByLanguageAndEachGroupGetsItsOwnComposition()
+    {
+        // Two Korean channels share one composed card and one send; the English channel
+        // gets its own.
+        _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKinds.OfficialLeaderboards, MixEnum.Phoenix2,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new DiscordFeedChannel(1, "ko-KR"), new DiscordFeedChannel(2, "ko-KR"),
+                new DiscordFeedChannel(3, null)
+            });
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WeeklyHighlightsRecord(DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch.AddDays(-7),
+                new[] { new OfficialMoverRecord(Player("HYSTERIA"), 58, 41, 9120.45m) },
+                Array.Empty<OfficialBoardsClimbedRecord>(),
+                Array.Empty<OfficialGradeFirstRecord>(),
+                Array.Empty<OfficialNewNumberOneRecord>()));
+        _mediator.Setup(m => m.Send(It.IsAny<GetWhatItTakesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((WhatItTakesRecord?)null);
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((OfficialRankingsRecord?)null);
+
+        await Saga().Consume(Context(new OfficialSnapshotSealedEvent(MixEnum.Phoenix2, false)));
+
+        _bot.Verify(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(),
+            It.Is<IEnumerable<ulong>>(ids => ids.OrderBy(i => i).SequenceEqual(new ulong[] { 1, 2 })),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _bot.Verify(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(),
+            It.Is<IEnumerable<ulong>>(ids => ids.Count() == 1 && ids.First() == 3),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _localizer.Verify(l => l.Get("ko-KR", "PUMBILITY movers"), Times.Once);
+        _localizer.Verify(l => l.Get(null, "PUMBILITY movers"), Times.Once);
     }
 
     [Fact]

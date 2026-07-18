@@ -5057,4 +5057,64 @@
   <data name="Daily Step board" xml:space="preserve">
     <value>Leaderboard du Pas du Jour</value>
   </data>
+  <data name="This week on the official boards" xml:space="preserve">
+    <value>Cette semaine sur les leaderboards officiels</value>
+  </data>
+  <data name="vs {0}" xml:space="preserve">
+    <value>vs {0}</value>
+  </data>
+  <data name="first week" xml:space="preserve">
+    <value>première semaine</value>
+  </data>
+  <data name="swept Sunday" xml:space="preserve">
+    <value>balayage du dimanche</value>
+  </data>
+  <data name="PUMBILITY top 10" xml:space="preserve">
+    <value>Top 10 PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY movers" xml:space="preserve">
+    <value>Mouvements PUMBILITY</value>
+  </data>
+  <data name="Boards climbed" xml:space="preserve">
+    <value>Leaderboards gravis</value>
+  </data>
+  <data name="**{0}** climbed {1} boards (+{2})" xml:space="preserve">
+    <value>**{0}** a gravi {1} leaderboards (+{2})</value>
+  </data>
+  <data name="World firsts &amp; new #1s" xml:space="preserve">
+    <value>Premières mondiales et nouveaux #1</value>
+  </data>
+  <data name="First **{0}** — **{1}** in the {2} folder · {3:N0}" xml:space="preserve">
+    <value>Premier **{0}** — **{1}** dans le dossier {2} · {3:N0}</value>
+  </data>
+  <data name="First **{0}** — **{1}** on {2} · {3:N0}" xml:space="preserve">
+    <value>Premier **{0}** — **{1}** sur {2} · {3:N0}</value>
+  </data>
+  <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
+    <value>Nouveau #1 — **{0}** sur {1} · {2:N0}</value>
+  </data>
+  <data name=", dethroning {0}" xml:space="preserve">
+    <value>, détrônant {0}</value>
+  </data>
+  <data name="To make the top 1000" xml:space="preserve">
+    <value>Pour entrer dans le top 1000</value>
+  </data>
+  <data name="**50× AAA at Lv.{0}**" xml:space="preserve">
+    <value>**50× AAA au Nv.{0}**</value>
+  </data>
+  <data name="**50× SSS at Lv.{0}**" xml:space="preserve">
+    <value>**50× SSS au Nv.{0}**</value>
+  </data>
+  <data name="PIU Scores official mirror" xml:space="preserve">
+    <value>miroir officiel PIU Scores</value>
+  </data>
+  <data name="This week" xml:space="preserve">
+    <value>Cette semaine</value>
+  </data>
+  <data name="What it takes" xml:space="preserve">
+    <value>Ce qu'il faut</value>
+  </data>
+  <data name="a chart" xml:space="preserve">
+    <value>un chart</value>
+  </data>
 </root>

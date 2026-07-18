@@ -4989,4 +4989,64 @@
   <data name="Daily Step board" xml:space="preserve">
     <value>Drglrgly Strglp brglrd</value>
   </data>
+  <data name="This week on the official boards" xml:space="preserve">
+    <value>Thrgls wrglk rgln thrgl Prglrglblublurg Glorgmurgmurgls</value>
+  </data>
+  <data name="vs {0}" xml:space="preserve">
+    <value>vrgls {0}</value>
+  </data>
+  <data name="first week" xml:space="preserve">
+    <value>frglrst wrglk</value>
+  </data>
+  <data name="swept Sunday" xml:space="preserve">
+    <value>swrglpt Srglndrgly</value>
+  </data>
+  <data name="PUMBILITY top 10" xml:space="preserve">
+    <value>PUMBILITY trglp 10</value>
+  </data>
+  <data name="PUMBILITY movers" xml:space="preserve">
+    <value>PUMBILITY mrglvers</value>
+  </data>
+  <data name="Boards climbed" xml:space="preserve">
+    <value>Brglrds clrglmbed</value>
+  </data>
+  <data name="**{0}** climbed {1} boards (+{2})" xml:space="preserve">
+    <value>**{0}** clrglmbed {1} brglrds (+{2})</value>
+  </data>
+  <data name="World firsts &amp; new #1s" xml:space="preserve">
+    <value>Wrglrld frglrsts &amp; nrglw #1s</value>
+  </data>
+  <data name="First **{0}** — **{1}** in the {2} folder · {3:N0}" xml:space="preserve">
+    <value>Frglrst **{0}** — **{1}** rgln {2} frglder · {3:N0}</value>
+  </data>
+  <data name="First **{0}** — **{1}** on {2} · {3:N0}" xml:space="preserve">
+    <value>Frglrst **{0}** — **{1}** rgln {2} · {3:N0}</value>
+  </data>
+  <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
+    <value>Nrglw #1 — **{0}** rgln {1} · {2:N0}</value>
+  </data>
+  <data name=", dethroning {0}" xml:space="preserve">
+    <value>, drglthrrglning {0}</value>
+  </data>
+  <data name="To make the top 1000" xml:space="preserve">
+    <value>Trgl mrglke thrgl trglp 1000</value>
+  </data>
+  <data name="**50× AAA at Lv.{0}**" xml:space="preserve">
+    <value>**50× AAA rglt Lv.{0}**</value>
+  </data>
+  <data name="**50× SSS at Lv.{0}**" xml:space="preserve">
+    <value>**50× SSS rglt Lv.{0}**</value>
+  </data>
+  <data name="PIU Scores official mirror" xml:space="preserve">
+    <value>PIU Scores rglffrglcial mrglrror</value>
+  </data>
+  <data name="This week" xml:space="preserve">
+    <value>Thrgls wrglk</value>
+  </data>
+  <data name="What it takes" xml:space="preserve">
+    <value>Whrglt rglt trglkes</value>
+  </data>
+  <data name="a chart" xml:space="preserve">
+    <value>rgl chrglrt</value>
+  </data>
 </root>

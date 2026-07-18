@@ -1,3 +1,4 @@
+using System.Globalization;
 using MassTransit;
 using MediatR;
 using ScoreTracker.Domain.Records;
@@ -15,7 +16,7 @@ namespace ScoreTracker.OfficialMirror.Application
     ///     when a sweep seals. Lives in OfficialMirror (which owns the highlights and cutlines)
     ///     because Communities can't reference it — the vertical graph would cycle — so it
     ///     reads the channel subscriptions through the published <see cref="IDiscordFeedReader" />
-    ///     and composes the card here.
+    ///     and composes the card here, once per registered language.
     /// </summary>
     internal sealed class OfficialDigestFeedSaga : IConsumer<OfficialSnapshotSealedEvent>
     {
@@ -24,15 +25,17 @@ namespace ScoreTracker.OfficialMirror.Application
         private readonly IBotClient _bot;
         private readonly IChartRepository _charts;
         private readonly IDiscordFeedReader _feeds;
+        private readonly ILocalizedTextAccessor _localizer;
         private readonly IMediator _mediator;
 
         public OfficialDigestFeedSaga(IBotClient bot, IChartRepository charts, IDiscordFeedReader feeds,
-            IMediator mediator)
+            IMediator mediator, ILocalizedTextAccessor localizer)
         {
             _bot = bot;
             _charts = charts;
             _feeds = feeds;
             _mediator = mediator;
+            _localizer = localizer;
         }
 
         public async Task Consume(ConsumeContext<OfficialSnapshotSealedEvent> context)
@@ -50,13 +53,18 @@ namespace ScoreTracker.OfficialMirror.Application
             var rankings = await _mediator.Send(new GetOfficialRankingsQuery(msg.Mix), ct);
             var charts = (await _charts.GetCharts(msg.Mix, cancellationToken: ct)).ToDictionary(c => c.Id);
 
-            var card = DigestCard(msg.Mix, highlights, cutlines, rankings, charts);
-            if (card == null) return; // a quiet week (no movers, firsts, #1s, or full boards)
-            await _bot.SendRichMessages(new[] { card }, channels.Select(c => c.ChannelId).ToArray(), ct);
+            // One composition per registered language, fanned out to that language's channels.
+            foreach (var group in channels.GroupBy(c => c.Culture))
+            {
+                var card = DigestCard(msg.Mix, highlights, cutlines, rankings, charts, group.Key);
+                if (card == null) return; // a quiet week (no movers, firsts, #1s, or full boards)
+                await _bot.SendRichMessages(new[] { card }, group.Select(c => c.ChannelId).ToArray(), ct);
+            }
         }
 
-        private static RichBotMessage? DigestCard(MixEnum mix, WeeklyHighlightsRecord highlights,
-            WhatItTakesRecord? cutlines, OfficialRankingsRecord? rankings, IReadOnlyDictionary<Guid, Chart> charts)
+        private RichBotMessage? DigestCard(MixEnum mix, WeeklyHighlightsRecord highlights,
+            WhatItTakesRecord? cutlines, OfficialRankingsRecord? rankings, IReadOnlyDictionary<Guid, Chart> charts,
+            string? culture)
         {
             var blocks = new List<IRichBotBlock>();
 
@@ -70,27 +78,34 @@ namespace ScoreTracker.OfficialMirror.Application
 
             // Open with the current top 10 and each player's week-over-week rank move.
             if (rankings != null && rankings.Rankings.Count > 0)
-                AddSection("🏆 **PUMBILITY top 10**", rankings.Rankings.Take(10).Select(r =>
-                    $"`{r.Rank,2}` **{r.Player.Username}** — {r.Rating:N0} {RankMove(r.Rank, r.PreviousRank)}"));
+                AddSection($"🏆 **{_localizer.Get(culture, "PUMBILITY top 10")}**", rankings.Rankings.Take(10)
+                    .Select(r => $"`{r.Rank,2}` **{r.Player.Username}** — {r.Rating:N0} {RankMove(r.Rank, r.PreviousRank)}"));
 
             if (highlights.Movers.Count > 0)
-                AddSection("📈 **PUMBILITY movers**", highlights.Movers.Take(5).Select(m =>
+                AddSection($"📈 **{_localizer.Get(culture, "PUMBILITY movers")}**", highlights.Movers.Take(5).Select(m =>
                     $"**{m.Player.Username}** #{m.PreviousRank} → **#{m.NewRank}** · {m.Pumbility:N2}"));
 
             if (highlights.BoardsClimbed.Count > 0)
-                AddSection("🧗 **Boards climbed**", highlights.BoardsClimbed.Take(5).Select(b =>
-                    $"**{b.Player.Username}** climbed {b.BoardsClimbed} boards (+{b.NetPlacesGained})"));
+                AddSection($"🧗 **{_localizer.Get(culture, "Boards climbed")}**", highlights.BoardsClimbed.Take(5)
+                    .Select(b => _localizer.Get(culture, "**{0}** climbed {1} boards (+{2})",
+                        b.Player.Username, b.BoardsClimbed, b.NetPlacesGained)));
 
             if (highlights.WorldFirsts.Count > 0 || highlights.NewNumberOnes.Count > 0)
             {
                 // Difficulties render as plain text here (not bubble emojis) so the highlight
                 // lines don't stack emoji on emoji.
-                var lines = highlights.WorldFirsts.Take(6).Select(f =>
-                        $"First **{f.GradeBand}** — **{f.Player.Username}** {(f.IsFolderFirst ? $"in the {f.ChartType}{f.Level} folder" : $"on {ChartName(charts, f.ChartId)}")} · {f.Score:N0}")
+                var lines = highlights.WorldFirsts.Take(6).Select(f => f.IsFolderFirst
+                        ? _localizer.Get(culture, "First **{0}** — **{1}** in the {2} folder · {3:N0}",
+                            f.GradeBand, f.Player.Username, $"{f.ChartType}{f.Level}", f.Score)
+                        : _localizer.Get(culture, "First **{0}** — **{1}** on {2} · {3:N0}",
+                            f.GradeBand, f.Player.Username, ChartName(charts, f.ChartId, culture), f.Score))
                     .Concat(highlights.NewNumberOnes.Take(4).Select(n =>
-                        $"New #1 — **{n.Player.Username}** on {ChartName(charts, n.ChartId)} · {n.Score:N0}" +
-                        (n.Dethroned != null ? $", dethroning {n.Dethroned.Username}" : "")));
-                AddSection("🌍 **World firsts & new #1s**", lines);
+                        _localizer.Get(culture, "New #1 — **{0}** on {1} · {2:N0}",
+                            n.Player.Username, ChartName(charts, n.ChartId, culture), n.Score) +
+                        (n.Dethroned != null
+                            ? _localizer.Get(culture, ", dethroning {0}", n.Dethroned.Username)
+                            : "")));
+                AddSection($"🌍 **{_localizer.Get(culture, "World firsts & new #1s")}**", lines);
             }
 
             // What it takes, in difficulties: the uniform level where AAA/SSS on fifty charts
@@ -99,28 +114,35 @@ namespace ScoreTracker.OfficialMirror.Application
             {
                 var takes = new List<string>();
                 if (cutlines.Entry.LevelForAAA != null)
-                    takes.Add($"**50× AAA at Lv.{cutlines.Entry.LevelForAAA}**");
+                    takes.Add(_localizer.Get(culture, "**50× AAA at Lv.{0}**", cutlines.Entry.LevelForAAA));
                 if (cutlines.Entry.LevelForSSS != null)
-                    takes.Add($"**50× SSS at Lv.{cutlines.Entry.LevelForSSS}**");
+                    takes.Add(_localizer.Get(culture, "**50× SSS at Lv.{0}**", cutlines.Entry.LevelForSSS));
                 if (takes.Count > 0)
-                    AddSection("🎟 **To make the top 1000**", new[] { string.Join(" · ", takes) });
+                    AddSection($"🎟 **{_localizer.Get(culture, "To make the top 1000")}**",
+                        new[] { string.Join(" · ", takes) });
             }
 
             if (blocks.Count == 0) return null;
 
+            // "m" is the culture's month-day pattern, so the week tag reads naturally.
             var week = highlights.PreviousSnapshotAt != null
-                ? $"vs {highlights.PreviousSnapshotAt:MMM d}"
-                : "first week";
+                ? _localizer.Get(culture, "vs {0}",
+                    highlights.PreviousSnapshotAt.Value.ToString("m", FormatCulture(culture)))
+                : _localizer.Get(culture, "first week");
             var mixTag = mix == MixEnum.Phoenix ? "" : $"[{mix.GetName()}] ";
             return new RichBotMessage(
-                new RichBotSection($"### This week on the official boards\n-# {mixTag}{week} · swept Sunday", null),
+                new RichBotSection(
+                    $"### {_localizer.Get(culture, "This week on the official boards")}\n-# {mixTag}{week} · {_localizer.Get(culture, "swept Sunday")}",
+                    null),
                 blocks,
-                $"#MIX|{mix}# {mix.GetName()} · PIU Scores official mirror",
+                $"#MIX|{mix}# {mix.GetName()} · {_localizer.Get(culture, "PIU Scores official mirror")}",
                 mix.GetAccentColor(),
                 new[]
                 {
-                    new RichBotLink("This week", new Uri($"{SiteBase}/OfficialLeaderboards")),
-                    new RichBotLink("What it takes", new Uri($"{SiteBase}/OfficialLeaderboards/WhatItTakes"))
+                    new RichBotLink(_localizer.Get(culture, "This week"),
+                        new Uri($"{SiteBase}/OfficialLeaderboards")),
+                    new RichBotLink(_localizer.Get(culture, "What it takes"),
+                        new Uri($"{SiteBase}/OfficialLeaderboards/WhatItTakes"))
                 });
         }
 
@@ -136,9 +158,13 @@ namespace ScoreTracker.OfficialMirror.Application
 
         // Plain-text difficulty (e.g. "Paradoxx S26"), not a bubble emoji — the digest lines
         // already carry enough symbols.
-        private static string ChartName(IReadOnlyDictionary<Guid, Chart> charts, Guid? chartId) =>
+        private string ChartName(IReadOnlyDictionary<Guid, Chart> charts, Guid? chartId, string? culture) =>
             chartId != null && charts.TryGetValue(chartId.Value, out var chart)
                 ? $"{(string)chart.Song.Name} {chart.DifficultyString}"
-                : "a chart";
+                : _localizer.Get(culture, "a chart");
+
+        // The formatting culture for dates composed outside a localizer template.
+        private static CultureInfo FormatCulture(string? culture) =>
+            CultureInfo.GetCultureInfo(SupportedCultures.Normalize(culture));
     }
 }
