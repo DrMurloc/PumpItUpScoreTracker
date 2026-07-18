@@ -4806,4 +4806,13 @@
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>이번 주 Pump It Up 챌린지 채보 {0}개, 실시간 순위가 있는 데일리 채보, 그리고 월간 PUMBILITY 보드.</value>
   </data>
+  <data name="Full board" xml:space="preserve">
+    <value>전체 리더보드</value>
+  </data>
+  <data name="top {0} of {1}" xml:space="preserve">
+    <value>상위 {0} / 전체 {1}</value>
+  </data>
+  <data name="Week {0} — best {1} count · raw score" xml:space="preserve">
+    <value>{0}주차 — 상위 {1}개 반영 · 원점수</value>
+  </data>
 </root>

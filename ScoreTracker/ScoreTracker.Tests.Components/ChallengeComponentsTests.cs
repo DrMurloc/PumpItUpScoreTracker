@@ -76,6 +76,96 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
         Assert.Contains("lowest pass wins", cut.Markup);
     }
 
+    // ---- DailyStepRailCard --------------------------------------------------
+
+    private static DailyStepBoardRow DailyRow(int place, Guid chartId, int score, User? player = null) =>
+        new(place, player ?? MakeUser(), new DailyStepEntry((player ?? MakeUser()).Id, chartId, score,
+            PhoenixPlate.SuperbGame, false, 18, ChallengeEntrySource.Official));
+
+    [Fact]
+    public void DailyRailCardShowsTopFiveAndPinsYourStandingPastThem()
+    {
+        var chart = MakeChart();
+        var me = MakeUser("ME");
+        var board = new DailyStepBoard(chart.Id, DateTimeOffset.UtcNow, false, DateTimeOffset.UtcNow.AddHours(6));
+        var rows = Enumerable.Range(1, 7).Select(p => DailyRow(p, chart.Id, 999_000 - p * 1000)).ToArray();
+        var mine = new DailyStepBoardRow(7, me, rows[6].Entry);
+        var view = new DailyStepBoardView(board, rows, mine);
+
+        var cut = RenderComponent<DailyStepRailCard>(p => p
+            .Add(x => x.View, view).Add(x => x.Chart, chart)
+            .Add(x => x.IsLoggedIn, true).Add(x => x.UserId, me.Id));
+
+        // Five ranked rows, then the pinned standing under its divider.
+        Assert.Equal(6, cut.FindAll(".challenge-lb-row").Count);
+        Assert.Contains("Your standing", cut.Markup);
+        Assert.Single(cut.FindAll(".challenge-lb-row.mine"));
+    }
+
+    [Fact]
+    public void DailyRailCardWearsTheWidgetIconPair()
+    {
+        var chart = MakeChart();
+        var board = new DailyStepBoard(chart.Id, DateTimeOffset.UtcNow, false, DateTimeOffset.UtcNow.AddHours(6));
+        var view = new DailyStepBoardView(board, new[] { DailyRow(1, chart.Id, 990_000) }, null);
+
+        var cut = RenderComponent<DailyStepRailCard>(p => p
+            .Add(x => x.View, view).Add(x => x.Chart, chart).Add(x => x.IsLoggedIn, true));
+
+        // Record ⊕ and the trophy (M15) as inert data-challenge controls, plus rows with avatars.
+        Assert.Single(cut.FindAll("button.challenge-iconbtn.rec[data-challenge-record]"));
+        Assert.Single(cut.FindAll("button.challenge-iconbtn.tro[data-challenge-board]"));
+        Assert.Single(cut.FindAll(".challenge-lb-row img.challenge-avatar"));
+    }
+
+    // ---- MonthlyRailCard ----------------------------------------------------
+
+    private static MonthlyLeaderboardRow MonthlyRow(int place, User player, double total,
+        double competitiveLevel = 21.4) =>
+        new(place, player, total, Array.Empty<MonthlyEntry>(), Array.Empty<MonthlyEntry>(), competitiveLevel);
+
+    [Fact]
+    public void MonthlyRailCardRendersAllFourBoardsWithOnlyTheActiveVisible()
+    {
+        var view = new MonthlyLeaderboardView(new[] { MonthlyRow(1, MakeUser(), 3137) }, 1, 4, null, null);
+        var boards = new[]
+        {
+            new MonthlyRailBoard(null, view),
+            new MonthlyRailBoard(ChartType.Single, view),
+            new MonthlyRailBoard(ChartType.Double, view),
+            new MonthlyRailBoard(ChartType.CoOp, view)
+        };
+
+        var cut = RenderComponent<MonthlyRailCard>(p => p
+            .Add(x => x.Boards, boards).Add(x => x.ActiveType, ChartType.Single));
+
+        Assert.Equal(4, cut.FindAll(".challenge-mboard").Count);
+        Assert.Single(cut.FindAll(".challenge-mboard:not([hidden])"));
+        Assert.Equal(4, cut.FindAll(".challenge-seg-btn").Count);
+        var active = Assert.Single(cut.FindAll(".challenge-seg-btn.on"));
+        Assert.Equal("Single", active.GetAttribute("data-mtype"));
+    }
+
+    [Fact]
+    public void MonthlyRailRowsCarryAvatarCompetitiveLevelAndTotal()
+    {
+        var me = MakeUser("ME");
+        var view = new MonthlyLeaderboardView(new[]
+        {
+            MonthlyRow(1, MakeUser(), 3137, 21.86),
+            MonthlyRow(2, me, 2489, 20.61)
+        }, 1, 4, null, null);
+
+        var cut = RenderComponent<MonthlyRailCard>(p => p
+            .Add(x => x.Boards, new[] { new MonthlyRailBoard(null, view) })
+            .Add(x => x.UserId, me.Id));
+
+        Assert.Equal(2, cut.FindAll(".challenge-lb-row img.challenge-avatar").Count);
+        Assert.Contains("21.86", cut.Markup);
+        Assert.Contains("3,137", cut.Markup);
+        Assert.Single(cut.FindAll(".challenge-lb-row.mine"));
+    }
+
     // ---- WeeklyBoardGrid ----------------------------------------------------
 
     private static WeeklyBoardChartSummary Summary(Chart chart, bool suggested, WeeklyBoardRow? mine)

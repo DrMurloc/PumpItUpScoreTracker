@@ -4805,4 +4805,13 @@
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>{0} charts de desafío de Pump It Up esta semana, un chart diario con posiciones en vivo y el tablero mensual PUMBILITY.</value>
   </data>
+  <data name="Full board" xml:space="preserve">
+    <value>Clasificación completa</value>
+  </data>
+  <data name="top {0} of {1}" xml:space="preserve">
+    <value>top {0} de {1}</value>
+  </data>
+  <data name="Week {0} — best {1} count · raw score" xml:space="preserve">
+    <value>Semana {0} — cuentan las {1} mejores · puntuación bruta</value>
+  </data>
 </root>
