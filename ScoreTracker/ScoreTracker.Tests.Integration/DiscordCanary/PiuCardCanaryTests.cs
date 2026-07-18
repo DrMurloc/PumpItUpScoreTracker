@@ -41,6 +41,9 @@ public sealed class PiuCardCanaryTests
     [DiscordCanaryFact]
     public Task PostsTheOfficialDigestCard() => PostAndVerify(OfficialDigestCard);
 
+    [DiscordCanaryFact]
+    public Task PostsTheSessionSnapshotReclearCard() => PostAndVerify(SessionSnapshotCard);
+
     // Official digest — opens with the top 10 + rank movement, then movers/firsts, and
     // "what it takes" framed as the two difficulty levels.
     private static RichBotMessage OfficialDigestCard(string marker) =>
@@ -72,6 +75,40 @@ public sealed class PiuCardCanaryTests
             {
                 new RichBotLink("This week", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards")),
                 new RichBotLink("What it takes", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards/WhatItTakes"))
+            });
+
+    // Session snapshot — the score-batch card, here carrying cross-mix reclears (F7): a new
+    // pass the player already cleared in another mix trails an asterisk, and the footer
+    // footnotes it. The flagged art row shows the mark on a bold link; a plain "More scores"
+    // row shows it too. Everything else mirrors the existing card unchanged.
+    private const string PlayerBase = "https://piuscores.arroweclip.se/Player";
+
+    private static RichBotMessage SessionSnapshotCard(string marker) =>
+        new(new RichBotSection("### [Phoenix 2] **alice** — passed 3 · upscored 1\n-# S18–S21", SongArt),
+            new IRichBotBlock[]
+            {
+                new RichBotDivider(),
+                new RichBotText("📈 **PUMBILITY** 21,480 → **21,530** (+50)"),
+                new RichBotDivider(),
+                new RichBotText("🏆 **#2** on District 1 #DIFFICULTY|S21# weekly"),
+                new RichBotDivider(),
+                new RichBotSection(
+                    $"#DIFFICULTY|S21# **[Conflict]({ChartBase}/00000000-0000-0000-0000-0000000000d1)**\\*\n" +
+                    "**991,204** #LETTERGRADE|SSS|False##PLATE|ExtremeGame#\n" +
+                    "-# 👑 #4 in your PUMBILITY · 📊 #3 of 47 peers", SongArt),
+                new RichBotText(
+                    "-# More scores\n" +
+                    "#DIFFICULTY|S19# Trashy Innocence\\* — **984,120** #LETTERGRADE|SS|False##PLATE|SuperbGame#\n" +
+                    "#DIFFICULTY|S18# Bee — **977,860** #LETTERGRADE|SS|False##PLATE|SuperbGame#"),
+                new RichBotDivider(),
+                new RichBotText("#DIFFICULTY|S21# 3/42 · #DIFFICULTY|S18# 12/58")
+            },
+            $"#MIX|Phoenix2# Phoenix 2 · PIU Scores · \\* = reclears · {marker}",
+            MixEnum.Phoenix2.GetAccentColor(),
+            new[]
+            {
+                new RichBotLink("See more",
+                    new Uri($"{PlayerBase}/00000000-0000-0000-0000-0000000000d0/Sessions"))
             });
 
     // Weekly feed — one result card per most-played chart (green rows = community members).

@@ -823,6 +823,114 @@ public sealed class CommunitySagaTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task ACrossMixReclearGetsAnAsteriskAndAFootnote()
+    {
+        // A new pass on a chart the player already cleared in another mix is a reclear: its
+        // compact row gets a trailing asterisk and the footer explains it. A genuine
+        // first-clear in the same batch stays unmarked.
+        var userId = Guid.NewGuid();
+        var reclaimed = new ChartBuilder().WithSongName("Reclaimed").WithType(ChartType.Single).WithLevel(18)
+            .WithMix(MixEnum.Phoenix2).Build();
+        var fresh = new ChartBuilder().WithSongName("Fresh").WithType(ChartType.Single).WithLevel(17)
+            .WithMix(MixEnum.Phoenix2).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, new[] { reclaimed, fresh }, score: 960000);
+        ctx.GivenCrossMixPasses(MixEnum.Phoenix, userId, reclaimed);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, null,
+            (reclaimed.Id, true, HighlightFlags.None),
+            (fresh.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
+                    t.Markdown.Contains("Reclaimed\\*")
+                    && t.Markdown.Contains("Fresh")
+                    && !t.Markdown.Contains("Fresh\\*"))
+                && msgs.Single().Footer!.Contains("\\* = reclears")),
+            It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ABrokenClearInAnotherMixDoesNotCountAsAReclear()
+    {
+        // The cross-mix clear must be a genuine pass — a broken (failed) attempt in the other
+        // mix leaves the new pass unmarked, and with nothing marked the footnote stays off.
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithSongName("Bricked").WithType(ChartType.Single).WithLevel(18)
+            .WithMix(MixEnum.Phoenix2).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 960000);
+        ctx.Scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new RecordedPhoenixScore(chart.Id, 700000, PhoenixPlate.SuperbGame, true, Now) });
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, null,
+            (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => !msgs.Single().Footer!.Contains("reclears")
+                && msgs.Single().Blocks.OfType<RichBotText>().All(t => !t.Markdown.Contains("Bricked\\*"))),
+            It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AReclearFromLegacyXxIsMarkedToo()
+    {
+        // "Any other mix" includes legacy XX: a non-broken XX clear of the same chart marks the
+        // new Phoenix 2 pass as a reclear, matching the tier list's cross-mix pass semantics.
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithSongName("Throwback").WithType(ChartType.Single).WithLevel(18)
+            .WithMix(MixEnum.Phoenix2).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 960000);
+        ctx.Scores.Setup(s => s.GetBestXXAttempts(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new BestXXChartAttempt(chart, new XXChartAttempt(XXLetterGrade.A, false, null, Now))
+            });
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, null,
+            (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Footer!.Contains("\\* = reclears")
+                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("Throwback\\*"))),
+            It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFlaggedReclearKeepsItsBoldLinkThenTrailsTheAsterisk()
+    {
+        // A reclear that is also flagged leads as an art row with a bold song link; the escaped
+        // asterisk trails the closed bold instead of merging into it.
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithSongName("Encore").WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, chart, score: 985000);
+        ctx.GivenCrossMixPasses(MixEnum.Phoenix2, userId, chart);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
+            (chart.Id, true, HighlightFlags.PumbilityTop50))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotSection>().Any(s =>
+                    s.Thumbnail != null && s.Markdown.Contains($"**[{chart.Song.Name}]") && s.Markdown.Contains(")**\\*"))
+                && msgs.Single().Footer!.Contains("\\* = reclears")),
+            It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static ScoreHighlightsCapturedEvent CapturedEvent(Guid userId, MixEnum mix, Guid? sessionId,
         params (Guid ChartId, bool IsNewPass, HighlightFlags Flags)[] changes)
     {
@@ -999,6 +1107,13 @@ public sealed class CommunitySagaTests
             CurrentUser.SetupGet(u => u.IsLoggedIn).Returns(isLoggedIn);
             Communities.Setup(c => c.GetCommunities(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+            // Cross-mix reclear reads default to empty — no other-mix passes unless a test says
+            // so. The event mix's own best scores are set later by GivenScoreAnnouncementLookups,
+            // whose exact-mix setup wins over this one.
+            Scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>())).ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+            Scores.Setup(s => s.GetBestXXAttempts(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<BestXXChartAttempt>());
             // Default competitive levels of 0 leave the weekly gate wide open (threshold −5);
             // tests exercising the gate raise them with GivenCompetitive.
             PlayerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
@@ -1088,6 +1203,15 @@ public sealed class CommunitySagaTests
         {
             Mediator.Setup(m => m.Send(It.IsAny<GetUserWeeklyPlacementsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(placements);
+        }
+
+        // Non-broken best scores the player holds in another (Phoenix-family) mix — the seam a
+        // cross-mix reclear is detected through.
+        public void GivenCrossMixPasses(MixEnum mix, Guid userId, params Chart[] charts)
+        {
+            Scores.Setup(s => s.GetBestScores(mix, userId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(charts.Select(c =>
+                    new RecordedPhoenixScore(c.Id, 950000, PhoenixPlate.SuperbGame, false, Now)).ToArray());
         }
 
         public void GivenUserCommunitiesWithChannel(Guid userId, string communityName, ulong channelId)

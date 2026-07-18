@@ -4,7 +4,7 @@ Status: **implemented (2026-07-17), PR #169** — C1–C11 landed, fast suites g
 canary posted every card shape (chart, random, suggest, weekly result + lineup, daily, official
 digest). Mocks: claude.ai artifact `d4fa5bed-e2c6-4aa6-bcbf-a5b0cb4ceb04` (round-1, workshop-notes
 toggle). Companion history: [discord-rich-score-notifications.md](discord-rich-score-notifications.md)
-(the session-snapshot card — **untouched by this work**).
+(the session-snapshot card — its one change here is the F7 cross-mix reclear marker below).
 
 **Iteration (C12, owner feedback):** `/piu chart` autocomplete now offers one entry per
 difficulty (`Ugly Dee S20`, value = chart id); picking one renders a **chart-details card**
@@ -14,6 +14,16 @@ mirroring the `/Charts` page — the difficulty breakdown (scoring level + pass 
 primary ask). Each section drops when its data is absent; a bare song name still falls back to
 the difficulty-list card. **Similar charts are empty until `recalculate-chart-similarity` runs
 once in `/hangfire`** — same trigger the chart-details page needs.
+
+**Iteration (F7, owner feedback):** the session-snapshot card now marks **cross-mix reclears**.
+A new pass on a chart the player already cleared (non-broken) in another mix trails an escaped
+`*` on its row, and the footer footnotes `* = reclears` when at least one marked row actually
+rendered (reclears folded into the compressed "+N more" count carry no visible mark, so they
+don't trigger the note). `CommunitySaga` computes the set from the already-injected
+`IScoreReader` — the other Phoenix-family mix's non-broken passes (`GetBestScores`) plus legacy
+XX (`GetBestXXAttempts`), intersected by canonical chart id — the same "passed in another mix"
+semantics the tier list draws, with no new project reference and no privacy gate. Upscore-only
+or first-clear batches short-circuit before any cross-mix read.
 
 **As-built deviation (C10):** the official-leaderboards digest lives in **OfficialMirror**, not
 Communities. Communities cannot reference OfficialMirror — the vertical graph would cycle
@@ -27,8 +37,9 @@ the design below.
 The Discord bot grows from three flat commands into a `/piu` command family (in-channel
 registration, chart lookup, random draws, personal suggestions) plus three opt-in broadcast
 feeds (Weekly Charts, Daily Step, Official Leaderboards), all riding the Components V2 card
-model that shipped with the session card. The session-snapshot pipeline, its card, and the
-community score/title/UCS notifications keep working exactly as they do today.
+model that shipped with the session card. The session-snapshot pipeline and the community
+score/title/UCS notifications keep working exactly as they do today; the card itself gains
+only the F7 cross-mix reclear marker.
 
 ---
 

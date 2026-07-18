@@ -252,10 +252,40 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             // ditto — the daily standing is a flex.
         }
 
+        var reclears = await CrossMixReclears(e, known, context.CancellationToken);
+
         var inputs = new SnapshotInputs(e, user, known, notable, moreScores, coOpScores, charts, bests, weekly,
-            daily, dailyChartId);
+            daily, dailyChartId, reclears);
         var message = await BuildSnapshotCard(inputs, context.CancellationToken);
         await SendRichToCommunityDiscords(user.Id, new[] { message }, context.CancellationToken);
+    }
+
+    // A new pass on a chart the player already cleared (non-broken) in another mix is a
+    // cross-mix reclear — the same canonical chart id reappears in that mix's best scores.
+    // Only new passes qualify; upscores and broken plays never do. Reads the other
+    // Phoenix-family mix plus legacy XX, matching the tier list's "passed in another mix"
+    // mark. Returns just the batch chart ids that are reclears, so an upscore-only or
+    // first-clear batch skips the cross-mix reads entirely.
+    private async Task<IReadOnlySet<Guid>> CrossMixReclears(ScoreHighlightsCapturedEvent e,
+        IReadOnlyList<ScoreHighlightsCapturedEvent.HighlightedChange> known, CancellationToken cancellationToken)
+    {
+        var candidates = known.Where(c => c.IsNewPass && !c.IsBroken).Select(c => c.ChartId).ToHashSet();
+        if (candidates.Count == 0) return candidates;
+
+        var clearedElsewhere = new HashSet<Guid>();
+        foreach (var otherMix in Enum.GetValues<MixEnum>())
+        {
+            if (otherMix == e.Mix || otherMix.UsesLegacyScoring()) continue;
+            foreach (var score in await _scores.GetBestScores(otherMix, e.UserId, cancellationToken))
+                if (!score.IsBroken) clearedElsewhere.Add(score.ChartId);
+        }
+
+        if (e.Mix != MixEnum.XX)
+            foreach (var attempt in await _scores.GetBestXXAttempts(e.UserId, cancellationToken))
+                if (attempt.BestAttempt is { IsBroken: false }) clearedElsewhere.Add(attempt.Chart.Id);
+
+        candidates.IntersectWith(clearedElsewhere);
+        return candidates;
     }
 
     /// <summary>Everything the snapshot card renders from, shaped by the consumer.</summary>
@@ -270,7 +300,8 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         Dictionary<Guid, RecordedPhoenixScore> Bests,
         WeeklyPlacementRecord[] Weekly,
         DailyStepPlacement? Daily,
-        Guid DailyChartId);
+        Guid DailyChartId,
+        IReadOnlySet<Guid> Reclears);
 
     private async Task<RichBotMessage> BuildSnapshotCard(SnapshotInputs inputs,
         CancellationToken cancellationToken)
@@ -316,8 +347,11 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             blocks.Add(new RichBotText(folderStats));
         }
 
+        // Footnote the reclear asterisk only when a marked row actually rendered — reclears
+        // that fell to the compressed overflow count carry no visible mark to explain.
+        var reclearNote = shown.Overlaps(inputs.Reclears) ? " · \\* = reclears" : string.Empty;
         return new RichBotMessage(header, blocks,
-            $"#MIX|{inputs.E.Mix}# {inputs.E.Mix.GetName()} · PIU Scores",
+            $"#MIX|{inputs.E.Mix}# {inputs.E.Mix.GetName()} · PIU Scores{reclearNote}",
             inputs.E.Mix.GetAccentColor(), Links(inputs));
     }
 
@@ -359,7 +393,8 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         foreach (var change in inputs.Notable)
         {
             var chart = inputs.Charts[change.ChartId];
-            var text = RowText(change, chart, inputs.Bests[change.ChartId], IsBigGain(change, inputs.Known));
+            var text = RowText(change, chart, inputs.Bests[change.ChartId], IsBigGain(change, inputs.Known),
+                ReclearMark(inputs, change.ChartId));
             var cost = Estimate(text);
             // Notable rows are the priciest; when one won't fit, the rest fall to overflow
             // (the cheaper compact buckets still get their turn at the leftover budget).
@@ -382,7 +417,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var lines = new List<string>();
         foreach (var c in rows)
         {
-            var row = CompactRow(inputs.Charts[c.ChartId], inputs.Bests[c.ChartId]);
+            var row = CompactRow(inputs.Charts[c.ChartId], inputs.Bests[c.ChartId], ReclearMark(inputs, c.ChartId));
             var cost = Estimate(row) + 1; // + newline
             if (used + cost > remaining) break;
             used += cost;
@@ -395,9 +430,9 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         blocks.Add(new RichBotText($"-# {label}\n" + string.Join("\n", lines)));
     }
 
-    private static string CompactRow(Chart chart, RecordedPhoenixScore best)
+    private static string CompactRow(Chart chart, RecordedPhoenixScore best, string reclearMark)
     {
-        return $"#DIFFICULTY|{chart.DifficultyString}# {chart.Song.Name} — **{(int)best.Score!.Value:N0}** " +
+        return $"#DIFFICULTY|{chart.DifficultyString}# {chart.Song.Name}{reclearMark} — **{(int)best.Score!.Value:N0}** " +
                $"#LETTERGRADE|{best.Score!.Value.LetterGrade}|{best.IsBroken}##PLATE|{best.Plate}#";
     }
 
@@ -465,10 +500,20 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             .Max(c => c.NewScore!.Value - c.OldScore!.Value);
     }
 
-    private static string RowText(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
-        RecordedPhoenixScore best, bool bigGain)
+    // A cross-mix reclear gets a trailing asterisk on its row, escaped so Discord renders it
+    // literally rather than reading it as emphasis against an adjacent bold song link. The set
+    // holds only new-pass reclears, so membership alone qualifies the mark.
+    private static string ReclearMark(SnapshotInputs inputs, Guid chartId)
     {
-        return change.IsNewPass ? PassRow(change, chart, best, bigGain) : UpscoreRow(change, chart, best, bigGain);
+        return inputs.Reclears.Contains(chartId) ? "\\*" : string.Empty;
+    }
+
+    private static string RowText(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
+        RecordedPhoenixScore best, bool bigGain, string reclearMark)
+    {
+        return change.IsNewPass
+            ? PassRow(change, chart, best, bigGain, reclearMark)
+            : UpscoreRow(change, chart, best, bigGain);
     }
 
     private static List<string> StatLines(IReadOnlyList<PlayerMilestoneRecord> milestones)
@@ -601,9 +646,9 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     }
 
     private static string PassRow(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
-        RecordedPhoenixScore best, bool bigGain)
+        RecordedPhoenixScore best, bool bigGain, string reclearMark)
     {
-        return $"#DIFFICULTY|{chart.DifficultyString}# {SongLink(change, chart, bigGain)}\n" +
+        return $"#DIFFICULTY|{chart.DifficultyString}# {SongLink(change, chart, bigGain)}{reclearMark}\n" +
                $"**{(int)best.Score!.Value:N0}** #LETTERGRADE|{best.Score!.Value.LetterGrade}|{best.IsBroken}##PLATE|{best.Plate}#" +
                FlagCaption(change, chart, best, bigGain);
     }
