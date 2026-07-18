@@ -14,6 +14,7 @@ using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.Tests.TestData;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -77,11 +78,15 @@ public sealed class OfficialDigestFeedSagaTests
     {
         _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKinds.OfficialLeaderboards, MixEnum.Phoenix2,
             It.IsAny<CancellationToken>())).ReturnsAsync(new ulong[] { 123 });
+        var paradoxx = new ChartBuilder().WithSongName("Paradoxx").WithType(ChartType.Single).WithLevel(26)
+            .WithMix(MixEnum.Phoenix2).Build();
+        _charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { paradoxx });
         _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new WeeklyHighlightsRecord(DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch.AddDays(-7),
                 new[] { new OfficialMoverRecord(Player("HYSTERIA"), 58, 41, 9120.45m) },
                 Array.Empty<OfficialBoardsClimbedRecord>(),
-                Array.Empty<OfficialGradeFirstRecord>(),
+                new[] { new OfficialGradeFirstRecord(Player("ESI"), paradoxx.Id, "S", 26, "SSS+", 995120, false) },
                 Array.Empty<OfficialNewNumberOneRecord>()));
         _mediator.Setup(m => m.Send(It.IsAny<GetWhatItTakesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new WhatItTakesRecord(DateTimeOffset.UnixEpoch, true, 1000,
@@ -103,5 +108,7 @@ public sealed class OfficialDigestFeedSagaTests
         Assert.Contains("50× AAA at Lv.20", text);
         Assert.Contains("50× SSS at Lv.16", text);
         Assert.Contains(_sent[0].Blocks, b => b is RichBotDivider); // sections are fenced for readability
+        Assert.Contains("First **SSS+** — **ESI** on Paradoxx S26", text); // plain difficulty, no bubble token
+        Assert.DoesNotContain("#DIFFICULTY|", text);
     }
 }
