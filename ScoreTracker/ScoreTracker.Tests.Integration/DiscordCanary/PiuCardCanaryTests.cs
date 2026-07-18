@@ -21,7 +21,7 @@ public sealed class PiuCardCanaryTests
 {
     private static readonly Uri SongArt = new("https://piuimages.arroweclip.se/songs/WitchDoctor.png");
     private const string ChartBase = "https://piuscores.arroweclip.se/Chart";
-    private const string Vid = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+    private const string Vid = "https://youtu.be/piu-sample-video";
 
     [DiscordCanaryFact]
     public Task PostsTheChartLookupCard() => PostAndVerify(ChartCard);
@@ -48,17 +48,21 @@ public sealed class PiuCardCanaryTests
             new IRichBotBlock[]
             {
                 new RichBotText("🏆 **PUMBILITY top 10**\n" +
-                                "` 1` **JEWEL** — 9,981 ↑2\n" +
-                                "` 2` **ESI** — 9,940 –\n" +
-                                "` 3` **NIMGO** — 9,902 ↓1\n" +
-                                "` 4` **HYSTERIA** — 9,846 ↑5\n" +
-                                "` 5` **PUMPKING** — 9,811 🆕"),
+                                "` 1` **JEWEL** — 9,981 ↑2\n` 2` **ESI** — 9,940 –\n" +
+                                "` 3` **NIMGO** — 9,902 ↓1\n` 4` **HYSTERIA** — 9,846 ↑5\n" +
+                                "` 5` **PUMPKING** — 9,811 🆕\n` 6` **WABBIT** — 9,780 ↓2\n" +
+                                "` 7` **KUMA** — 9,742 ↑1\n` 8` **DION** — 9,701 –\n" +
+                                "` 9` **MELON** — 9,655 ↑3\n`10` **SPHAM** — 9,610 ↓4"),
+                new RichBotDivider(),
                 new RichBotText("📈 **PUMBILITY movers**\n" +
                                 "**HYSTERIA** #58 → **#41** · 9,120.45\n**KUMA** #112 → **#97** · 8,644.02"),
+                new RichBotDivider(),
                 new RichBotText("🧗 **Boards climbed**\n**PUMPKING** climbed 23 boards (+118)"),
+                new RichBotDivider(),
                 new RichBotText("🌍 **World firsts & new #1s**\n" +
-                                "First **SSS+** on Paradoxx #DIFFICULTY|S26# — **ESI** · 995,120\n" +
-                                "👑 New #1 on Gargoyle FS #DIFFICULTY|D25# — **NIMGO** · 998,110 (dethroned SPHAM)"),
+                                "First **SSS+** — **ESI** on Paradoxx S26 · 995,120\n" +
+                                "New #1 — **NIMGO** on Gargoyle FS D25 · 998,110, dethroning SPHAM"),
+                new RichBotDivider(),
                 new RichBotText("🎟 **To make the top 1000**\n" +
                                 "**50× AAA at Lv.20** · **50× SSS at Lv.17**")
             },
@@ -97,9 +101,13 @@ public sealed class PiuCardCanaryTests
                 new RichBotDivider(),
                 new RichBotText(
                     $"#DIFFICULTY|coop2# [District 1]({ChartBase}/00000000-0000-0000-0000-0000000000b0) - [Video]({Vid})\n" +
-                    $"#DIFFICULTY|S16# [Trashy Innocence]({ChartBase}/00000000-0000-0000-0000-0000000000b1) - [Video]({Vid})\n" +
-                    $"#DIFFICULTY|S20# [1949]({ChartBase}/00000000-0000-0000-0000-0000000000b2) - [Video]({Vid})\n" +
-                    $"#DIFFICULTY|D23# [Sarabande]({ChartBase}/00000000-0000-0000-0000-0000000000b3) - [Video]({Vid})")
+                    $"#DIFFICULTY|coop3# [Bad Apple]({ChartBase}/00000000-0000-0000-0000-0000000000b1) - [Video]({Vid})\n" +
+                    $"#DIFFICULTY|S16# [Trashy Innocence]({ChartBase}/00000000-0000-0000-0000-0000000000b2) - [Video]({Vid})\n" +
+                    $"#DIFFICULTY|D16# [Moonlight]({ChartBase}/00000000-0000-0000-0000-0000000000b3) - [Video]({Vid})\n" +
+                    $"#DIFFICULTY|S18# [Bee]({ChartBase}/00000000-0000-0000-0000-0000000000b4) - [Video]({Vid})\n" +
+                    $"#DIFFICULTY|D19# [Vacuum]({ChartBase}/00000000-0000-0000-0000-0000000000b5) - [Video]({Vid})\n" +
+                    $"#DIFFICULTY|S20# [1949]({ChartBase}/00000000-0000-0000-0000-0000000000b6) - [Video]({Vid})\n" +
+                    $"#DIFFICULTY|D21# [Uglier Dee]({ChartBase}/00000000-0000-0000-0000-0000000000b7) - [Video]({Vid})")
             },
             $"#MIX|Phoenix2# Phoenix 2 · resets Monday midnight ET · {marker}",
             MixEnum.Phoenix2.GetAccentColor(),

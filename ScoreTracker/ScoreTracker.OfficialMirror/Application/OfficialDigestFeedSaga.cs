@@ -60,27 +60,37 @@ namespace ScoreTracker.OfficialMirror.Application
         {
             var blocks = new List<IRichBotBlock>();
 
+            // A separator fences each section so the card reads as grouped blocks rather than
+            // one dense emoji wall.
+            void AddSection(string heading, IEnumerable<string> lines)
+            {
+                if (blocks.Count > 0) blocks.Add(new RichBotDivider());
+                blocks.Add(Section(heading, lines));
+            }
+
             // Open with the current top 10 and each player's week-over-week rank move.
             if (rankings != null && rankings.Rankings.Count > 0)
-                blocks.Add(Section("🏆 **PUMBILITY top 10**", rankings.Rankings.Take(10).Select(r =>
-                    $"`{r.Rank,2}` **{r.Player.Username}** — {r.Rating:N0} {RankMove(r.Rank, r.PreviousRank)}")));
+                AddSection("🏆 **PUMBILITY top 10**", rankings.Rankings.Take(10).Select(r =>
+                    $"`{r.Rank,2}` **{r.Player.Username}** — {r.Rating:N0} {RankMove(r.Rank, r.PreviousRank)}"));
 
             if (highlights.Movers.Count > 0)
-                blocks.Add(Section("📈 **PUMBILITY movers**", highlights.Movers.Take(5).Select(m =>
-                    $"**{m.Player.Username}** #{m.PreviousRank} → **#{m.NewRank}** · {m.Pumbility:N2}")));
+                AddSection("📈 **PUMBILITY movers**", highlights.Movers.Take(5).Select(m =>
+                    $"**{m.Player.Username}** #{m.PreviousRank} → **#{m.NewRank}** · {m.Pumbility:N2}"));
 
             if (highlights.BoardsClimbed.Count > 0)
-                blocks.Add(Section("🧗 **Boards climbed**", highlights.BoardsClimbed.Take(5).Select(b =>
-                    $"**{b.Player.Username}** climbed {b.BoardsClimbed} boards (+{b.NetPlacesGained})")));
+                AddSection("🧗 **Boards climbed**", highlights.BoardsClimbed.Take(5).Select(b =>
+                    $"**{b.Player.Username}** climbed {b.BoardsClimbed} boards (+{b.NetPlacesGained})"));
 
             if (highlights.WorldFirsts.Count > 0 || highlights.NewNumberOnes.Count > 0)
             {
+                // Difficulties render as plain text here (not bubble emojis) so the highlight
+                // lines don't stack emoji on emoji.
                 var lines = highlights.WorldFirsts.Take(6).Select(f =>
-                        $"First **{f.GradeBand}** {(f.IsFolderFirst ? $"in the {f.ChartType}{f.Level} folder" : $"on {ChartName(charts, f.ChartId)}")} — **{f.Player.Username}** · {f.Score:N0}")
+                        $"First **{f.GradeBand}** — **{f.Player.Username}** {(f.IsFolderFirst ? $"in the {f.ChartType}{f.Level} folder" : $"on {ChartName(charts, f.ChartId)}")} · {f.Score:N0}")
                     .Concat(highlights.NewNumberOnes.Take(4).Select(n =>
-                        $"👑 New #1 on {ChartName(charts, n.ChartId)} — **{n.Player.Username}** · {n.Score:N0}" +
-                        (n.Dethroned != null ? $" (dethroned {n.Dethroned.Username})" : "")));
-                blocks.Add(Section("🌍 **World firsts & new #1s**", lines));
+                        $"New #1 — **{n.Player.Username}** on {ChartName(charts, n.ChartId)} · {n.Score:N0}" +
+                        (n.Dethroned != null ? $", dethroning {n.Dethroned.Username}" : "")));
+                AddSection("🌍 **World firsts & new #1s**", lines);
             }
 
             // What it takes, in difficulties: the uniform level where AAA/SSS on fifty charts
@@ -93,7 +103,7 @@ namespace ScoreTracker.OfficialMirror.Application
                 if (cutlines.Entry.LevelForSSS != null)
                     takes.Add($"**50× SSS at Lv.{cutlines.Entry.LevelForSSS}**");
                 if (takes.Count > 0)
-                    blocks.Add(Section("🎟 **To make the top 1000**", new[] { string.Join(" · ", takes) }));
+                    AddSection("🎟 **To make the top 1000**", new[] { string.Join(" · ", takes) });
             }
 
             if (blocks.Count == 0) return null;
@@ -124,9 +134,11 @@ namespace ScoreTracker.OfficialMirror.Application
             return delta > 0 ? $"↑{delta}" : delta < 0 ? $"↓{-delta}" : "–";
         }
 
+        // Plain-text difficulty (e.g. "Paradoxx S26"), not a bubble emoji — the digest lines
+        // already carry enough symbols.
         private static string ChartName(IReadOnlyDictionary<Guid, Chart> charts, Guid? chartId) =>
             chartId != null && charts.TryGetValue(chartId.Value, out var chart)
-                ? $"{(string)chart.Song.Name} #DIFFICULTY|{chart.DifficultyString}#"
+                ? $"{(string)chart.Song.Name} {chart.DifficultyString}"
                 : "a chart";
     }
 }

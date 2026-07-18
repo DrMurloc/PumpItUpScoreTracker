@@ -102,5 +102,6 @@ public sealed class OfficialDigestFeedSagaTests
         Assert.Contains("↑2", text); // moved from rank 3 to rank 1
         Assert.Contains("50× AAA at Lv.20", text);
         Assert.Contains("50× SSS at Lv.16", text);
+        Assert.Contains(_sent[0].Blocks, b => b is RichBotDivider); // sections are fenced for readability
     }
 }
