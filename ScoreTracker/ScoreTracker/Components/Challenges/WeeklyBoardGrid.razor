@@ -19,15 +19,10 @@
     <span class="sub">@Rotation</span>
     @if (IsLoggedIn && SuggestionsAvailable)
     {
-        <span class="challenge-filter-note" data-total="@Summaries.Count">
-            @if (ShowingSuggestedOnly)
-            {
-                @L["showing suggested"] <a data-challenge-showall="">@L["show all {0}", Summaries.Count]</a>
-            }
-            else
-            {
-                <a data-challenge-showall="">@L["show suggested only"]</a>
-            }
+        @* Both states ship; :has() on the grid's class decides which shows (M13). *@
+        <span class="challenge-filter-note">
+            <span class="when-filtered">@L["showing suggested"] <a data-challenge-showall="">@L["show all {0}", Summaries.Count]</a></span>
+            <span class="when-all"><a data-challenge-showall="">@L["show suggested only"]</a></span>
         </span>
     }
     <span class="spacer"></span>

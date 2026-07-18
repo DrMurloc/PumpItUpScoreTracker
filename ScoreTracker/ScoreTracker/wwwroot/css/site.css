@@ -5262,6 +5262,12 @@ button.chart-card-art {
     display: none;
 }
 
+/* The filter note follows the grid's state — both texts ship, :has() picks one. */
+.challenge-main:has(.challenge-grid.suggested-only) .challenge-filter-note .when-all,
+.challenge-main:not(:has(.challenge-grid.suggested-only)) .challenge-filter-note .when-filtered {
+    display: none;
+}
+
 .challenge-card {
     background: var(--mix-surface);
     border: 1px solid rgba(255, 255, 255, .06);

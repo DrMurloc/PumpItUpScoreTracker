@@ -17,7 +17,7 @@ namespace ScoreTracker.Web.Controllers;
 public sealed class PreferencesController : Controller
 {
     // Only presentation keys — nothing that gates access or carries data meaning.
-    private static readonly string[] AllowedPrefixes = { "Density__" };
+    private static readonly string[] AllowedPrefixes = { "Density__", "WeeklyCharts__" };
 
     private readonly IUiSettingsAccessor _settings;
 
