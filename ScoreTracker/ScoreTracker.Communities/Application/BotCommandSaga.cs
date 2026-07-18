@@ -1,3 +1,4 @@
+using System.Globalization;
 using MediatR;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -52,21 +53,37 @@ namespace ScoreTracker.Communities.Application
             _localizer = localizer;
         }
 
-        public Task<BotReply> Handle(HandleBotInteractionCommand request, CancellationToken cancellationToken)
+        public async Task<BotReply> Handle(HandleBotInteractionCommand request, CancellationToken cancellationToken)
         {
             var interaction = request.Interaction;
             var command = interaction.CommandPath.Count > 0 ? interaction.CommandPath[0] : string.Empty;
+            var (user, culture) = await ResolveInvoker(interaction.UserId, cancellationToken);
             return command switch
             {
-                "calc" => Task.FromResult(Calc(interaction)),
-                "chart" => ChartLookup(interaction, cancellationToken),
-                "random" => RandomDraw(interaction, cancellationToken),
-                "suggest" => Suggest(interaction, cancellationToken),
-                "register" => Register(interaction, cancellationToken),
-                "unregister" => Unregister(interaction, cancellationToken),
-                "feeds" => Feeds(interaction, cancellationToken),
-                _ => Task.FromResult(new BotReply(Text: "That command isn't available yet."))
+                "calc" => Calc(interaction, culture),
+                "chart" => await ChartLookup(interaction, culture, cancellationToken),
+                "random" => await RandomDraw(interaction, user, culture, cancellationToken),
+                "suggest" => await Suggest(interaction, user, culture, cancellationToken),
+                "register" => await Register(interaction, culture, cancellationToken),
+                "unregister" => await Unregister(interaction, culture, cancellationToken),
+                "feeds" => await Feeds(interaction, culture, cancellationToken),
+                _ => new BotReply(Text: _localizer.Get(culture, "That command isn't available yet."))
             };
+        }
+
+        // Every reply composes in the invoker's site language: their linked account's
+        // Culture setting, English when unlinked or unset. Resolving here also scopes the
+        // user once for the engine paths (suggest, presets).
+        private async Task<(User? User, string? Culture)> ResolveInvoker(ulong discordUserId,
+            CancellationToken cancellationToken)
+        {
+            var user = await ResolveUser(discordUserId, cancellationToken);
+            if (user == null) return (null, null);
+            _currentUser.SetScopedUser(user);
+            var settings = await _mediator.Send(new GetUserUiSettingsQuery(user.Id), cancellationToken);
+            return (user, settings.TryGetValue("Culture", out var culture)
+                ? SupportedCultures.NormalizeOrNull(culture)
+                : null);
         }
 
         public async Task<IReadOnlyList<BotOptionChoice>> Handle(GetBotAutocompleteQuery request,
@@ -83,48 +100,57 @@ namespace ScoreTracker.Communities.Application
             };
         }
 
-        private async Task<BotReply> Register(BotInteraction interaction, CancellationToken cancellationToken)
+        private async Task<BotReply> Register(BotInteraction interaction, string? invokerCulture,
+            CancellationToken cancellationToken)
         {
-            if (!interaction.InvokerCanManageChannels) return Deny();
-            if (!await _bot.CanPostToChannel(interaction.ChannelId, cancellationToken)) return CannotPost();
+            if (!interaction.InvokerCanManageChannels) return Deny(invokerCulture);
+            if (!await _bot.CanPostToChannel(interaction.ChannelId, cancellationToken))
+                return CannotPost(invokerCulture);
 
             var sub = interaction.CommandPath.Count > 1 ? interaction.CommandPath[1] : string.Empty;
-            if (sub == "community") return await RegisterCommunity(interaction, cancellationToken);
+            if (sub == "community") return await RegisterCommunity(interaction, invokerCulture, cancellationToken);
 
-            if (!TryFeedKind(sub, out var kind)) return new BotReply(Text: "Unknown feed.");
-            if (!TryMix(interaction, out var mix)) return new BotReply(Text: "Pick a mix.");
+            if (!TryFeedKind(sub, out var kind))
+                return new BotReply(Text: _localizer.Get(invokerCulture, "Unknown feed."));
+            if (!TryMix(interaction, out var mix))
+                return new BotReply(Text: _localizer.Get(invokerCulture, "Pick a mix."));
 
             var culture = ReadLanguage(interaction);
             await _feeds.Register(interaction.ChannelId, kind, mix, interaction.UserId, culture, cancellationToken);
             // The public confirmation doubles as the can-post probe and previews the
-            // channel's chosen language.
+            // channel's chosen language; the ephemeral ack speaks the invoker's.
             await _bot.SendMessage(
                 FeedEmoji(kind) + " " + _localizer.Get(culture, "This channel now receives **{0} — {1}**. {2}",
                     _localizer.Get(culture, FeedName(kind)), mix.GetName(),
                     _localizer.Get(culture, FeedBlurb(kind))),
                 interaction.ChannelId, cancellationToken);
-            return new BotReply(Text: $"Done — this channel now receives {FeedName(kind)} for {mix.GetName()}.");
+            return new BotReply(Text: _localizer.Get(invokerCulture,
+                "Done — this channel now receives {0} for {1}.",
+                _localizer.Get(invokerCulture, FeedName(kind)), mix.GetName()));
         }
 
-        private async Task<BotReply> RegisterCommunity(BotInteraction interaction, CancellationToken cancellationToken)
+        private async Task<BotReply> RegisterCommunity(BotInteraction interaction, string? invokerCulture,
+            CancellationToken cancellationToken)
         {
             var hasName = interaction.Options.TryGetValue("name", out var n) && !string.IsNullOrWhiteSpace(n);
             Guid? code = null;
             if (interaction.Options.TryGetValue("invite-code", out var c) && Guid.TryParse(c, out var parsed))
                 code = parsed;
             if (!hasName && code == null)
-                return new BotReply(Text: "Give a community name or an invite code.");
+                return new BotReply(Text: _localizer.Get(invokerCulture, "Give a community name or an invite code."));
 
             try
             {
                 await _mediator.Send(new AddDiscordChannelToCommunityCommand(
                         hasName ? Name.From(n) : null, code, interaction.ChannelId, ReadLanguage(interaction)),
                     cancellationToken);
-                return new BotReply(Text: "Done — this channel is registered for that community.");
+                return new BotReply(Text: _localizer.Get(invokerCulture,
+                    "Done — this channel is registered for that community."));
             }
             catch (CommunityNotFoundException)
             {
-                return new BotReply(Text: "That community wasn't found, or the invite code is wrong.");
+                return new BotReply(Text: _localizer.Get(invokerCulture,
+                    "That community wasn't found, or the invite code is wrong."));
             }
             catch (InvalidOperationException e)
             {
@@ -132,9 +158,10 @@ namespace ScoreTracker.Communities.Application
             }
         }
 
-        private async Task<BotReply> Unregister(BotInteraction interaction, CancellationToken cancellationToken)
+        private async Task<BotReply> Unregister(BotInteraction interaction, string? invokerCulture,
+            CancellationToken cancellationToken)
         {
-            if (!interaction.InvokerCanManageChannels) return Deny();
+            if (!interaction.InvokerCanManageChannels) return Deny(invokerCulture);
 
             var value = interaction.Options.TryGetValue("feed", out var v) ? v : string.Empty;
             if (value.StartsWith("feed:", StringComparison.Ordinal))
@@ -145,8 +172,9 @@ namespace ScoreTracker.Communities.Application
                 {
                     var removed = await _feeds.Unregister(interaction.ChannelId, kind, mix, cancellationToken);
                     return new BotReply(Text: removed
-                        ? $"Removed {FeedName(kind)} for {mix.GetName()} from this channel."
-                        : "That feed wasn't registered here.");
+                        ? _localizer.Get(invokerCulture, "Removed {0} for {1} from this channel.",
+                            _localizer.Get(invokerCulture, FeedName(kind)), mix.GetName())
+                        : _localizer.Get(invokerCulture, "That feed wasn't registered here."));
                 }
             }
             else if (value.StartsWith("community:", StringComparison.Ordinal))
@@ -157,35 +185,40 @@ namespace ScoreTracker.Communities.Application
                     await _mediator.Send(
                         new RemoveDiscordChannelFromCommunityCommand(Name.From(name), interaction.ChannelId),
                         cancellationToken);
-                    return new BotReply(Text: $"Removed the {name} community feed from this channel.");
+                    return new BotReply(Text: _localizer.Get(invokerCulture,
+                        "Removed the {0} community feed from this channel.", name));
                 }
                 catch (CommunityNotFoundException)
                 {
-                    return new BotReply(Text: "That community registration wasn't found.");
+                    return new BotReply(Text: _localizer.Get(invokerCulture,
+                        "That community registration wasn't found."));
                 }
             }
 
-            return new BotReply(Text: "Pick a registration to remove from the list.");
+            return new BotReply(Text: _localizer.Get(invokerCulture, "Pick a registration to remove from the list."));
         }
 
-        private async Task<BotReply> Feeds(BotInteraction interaction, CancellationToken cancellationToken)
+        private async Task<BotReply> Feeds(BotInteraction interaction, string? invokerCulture,
+            CancellationToken cancellationToken)
         {
             var feeds = await _feeds.GetForChannel(interaction.ChannelId, cancellationToken);
             var communities = await _communities.GetChannelCommunities(interaction.ChannelId, cancellationToken);
             if (feeds.Count == 0 && communities.Count == 0)
-                return new BotReply(Text:
-                    "This channel isn't registered for anything yet. Use /piu register to add a feed.");
+                return new BotReply(Text: _localizer.Get(invokerCulture,
+                    "This channel isn't registered for anything yet. Use /piu register to add a feed."));
 
             var lines = feeds
                 .OrderBy(f => f.Kind).ThenBy(f => f.Mix)
-                .Select(f => $"{FeedEmoji(f.Kind)} {FeedName(f.Kind)} — **{f.Mix.GetName()}**{LanguageTag(f.Culture)}")
-                .Concat(communities.Select(c => $"👥 Community — **{(string)c.Name}**{LanguageTag(c.Culture)}"))
+                .Select(f =>
+                    $"{FeedEmoji(f.Kind)} {_localizer.Get(invokerCulture, FeedName(f.Kind))} — **{f.Mix.GetName()}**{LanguageTag(f.Culture)}")
+                .Concat(communities.Select(c =>
+                    $"👥 {_localizer.Get(invokerCulture, "Community")} — **{(string)c.Name}**{LanguageTag(c.Culture)}"))
                 .ToList();
 
             var card = new RichBotMessage(
-                new RichBotSection("### This channel receives", null),
+                new RichBotSection($"### {_localizer.Get(invokerCulture, "This channel receives")}", null),
                 new IRichBotBlock[] { new RichBotDivider(), new RichBotText(string.Join("\n", lines)) },
-                "Remove one with /piu unregister",
+                _localizer.Get(invokerCulture, "Remove one with /piu unregister"),
                 null,
                 Array.Empty<RichBotLink>());
             return new BotReply(Card: card);
@@ -218,11 +251,10 @@ namespace ScoreTracker.Communities.Application
             return choices.Take(25).ToArray();
         }
 
-        private async Task<BotReply> Suggest(BotInteraction interaction, CancellationToken cancellationToken)
+        private async Task<BotReply> Suggest(BotInteraction interaction, User? user, string? culture,
+            CancellationToken cancellationToken)
         {
-            var user = await ResolveUser(interaction.UserId, cancellationToken);
             if (user == null) return LinkNudge();
-            _currentUser.SetScopedUser(user);
 
             var mix = ReadMix(interaction);
             var type = interaction.Options.TryGetValue("type", out var t) && Enum.TryParse<ChartType>(t, out var parsed)
@@ -234,8 +266,8 @@ namespace ScoreTracker.Communities.Application
                     new GetRecommendedChartsQuery(type, 0, mix, CategoriesForGoal(goal)), cancellationToken))
                 .Take(6).ToList();
             if (recommendations.Count == 0)
-                return new BotReply(Text:
-                    "No suggestions right now — try a different goal, or import more scores first.");
+                return new BotReply(Text: _localizer.Get(culture,
+                    "No suggestions right now — try a different goal, or import more scores first."));
 
             var charts = (await _mediator.Send(new GetChartsQuery(mix), cancellationToken)).ToDictionary(c => c.Id);
             var videos = await VideoLinks(recommendations.Select(r => r.ChartId), cancellationToken);
@@ -243,22 +275,27 @@ namespace ScoreTracker.Communities.Application
             foreach (var recommendation in recommendations)
             {
                 if (!charts.TryGetValue(recommendation.ChartId, out var chart)) continue;
-                var caption = string.IsNullOrWhiteSpace(recommendation.Explanation)
+                // Caption-as-key: engine explanations that have a catalogue entry localize,
+                // anything else falls back to its own English text.
+                var caption = _localizer.Get(culture, string.IsNullOrWhiteSpace(recommendation.Explanation)
                     ? (string)recommendation.Category
-                    : recommendation.Explanation;
-                var video = videos.TryGetValue(chart.Id, out var url) ? $" · [Video]({url})" : string.Empty;
+                    : recommendation.Explanation);
+                var video = videos.TryGetValue(chart.Id, out var url)
+                    ? $" · [{_localizer.Get(culture, "Video")}]({url})"
+                    : string.Empty;
                 blocks.Add(new RichBotSection(
                     $"#DIFFICULTY|{chart.DifficultyString}# [{(string)chart.Song.Name}]({SiteBase}/Chart/{chart.Id}){video}\n-# {caption}",
                     chart.Song.ImagePath));
             }
 
             return new BotReply(Card: new RichBotMessage(
-                new RichBotSection($"### Suggested for you — {GoalName(goal)}\n-# {mix.GetName()} · based on your scores",
+                new RichBotSection(
+                    $"### {_localizer.Get(culture, "Suggested for you — {0}", _localizer.Get(culture, GoalName(goal)))}\n-# {mix.GetName()} · {_localizer.Get(culture, "based on your scores")}",
                     null),
                 blocks,
                 $"#MIX|{mix}# {mix.GetName()} · PIU Scores",
                 mix.GetAccentColor(),
-                new[] { new RichBotLink("Open Suggested Charts", new Uri(SiteBase)) }));
+                new[] { new RichBotLink(_localizer.Get(culture, "Open Suggested Charts"), new Uri(SiteBase)) }));
         }
 
         private static IReadOnlySet<RecommendationCategory> CategoriesForGoal(string goal) => goal switch
@@ -284,10 +321,11 @@ namespace ScoreTracker.Communities.Application
             _ => "Title Hunt"
         };
 
-        private async Task<BotReply> RandomDraw(BotInteraction interaction, CancellationToken cancellationToken)
+        private async Task<BotReply> RandomDraw(BotInteraction interaction, User? user, string? culture,
+            CancellationToken cancellationToken)
         {
             if (interaction.Options.TryGetValue("preset", out var presetName) && !string.IsNullOrWhiteSpace(presetName))
-                return await RandomFromPreset(interaction, presetName.Trim(), cancellationToken);
+                return await RandomFromPreset(user, culture, presetName.Trim(), cancellationToken);
 
             var mix = ReadMix(interaction);
             var count = interaction.Options.TryGetValue("count", out var cs) && int.TryParse(cs, out var c)
@@ -304,38 +342,47 @@ namespace ScoreTracker.Communities.Application
 
             var drawn = (await _mediator.Send(new DrawRandomChartsQuery(BuildSettings(count, type, min, max), mix),
                 cancellationToken)).ToList();
-            if (drawn.Count == 0) return new BotReply(Text: "No charts matched those settings.");
-            return await DrawCard(drawn, mix, $"Drew {drawn.Count} {(drawn.Count == 1 ? "chart" : "charts")}",
-                DrawSubtitle(type, min, max, mix), cancellationToken);
+            if (drawn.Count == 0)
+                return new BotReply(Text: _localizer.Get(culture, "No charts matched those settings."));
+            var title = drawn.Count == 1
+                ? _localizer.Get(culture, "Drew 1 chart")
+                : _localizer.Get(culture, "Drew {0} charts", drawn.Count);
+            return await DrawCard(drawn, mix, title, DrawSubtitle(type, min, max, mix, culture), culture,
+                cancellationToken);
         }
 
-        private async Task<BotReply> RandomFromPreset(BotInteraction interaction, string presetName,
+        private async Task<BotReply> RandomFromPreset(User? user, string? culture, string presetName,
             CancellationToken cancellationToken)
         {
-            var user = await ResolveUser(interaction.UserId, cancellationToken);
             if (user == null) return LinkNudge();
-            _currentUser.SetScopedUser(user);
 
             var saved = (await _mediator.Send(new GetRandomSettingsQuery(), cancellationToken))
                 .FirstOrDefault(s => string.Equals((string)s.SettingsName, presetName, StringComparison.OrdinalIgnoreCase));
-            if (saved == null) return new BotReply(Text: $"You don't have a saved preset called \"{presetName}\".");
+            if (saved == null)
+                return new BotReply(Text: _localizer.Get(culture,
+                    "You don't have a saved preset called \"{0}\".", presetName));
 
             var drawn = (await _mediator.Send(new DrawRandomChartsQuery(saved.Settings, saved.Mix), cancellationToken))
                 .ToList();
-            if (drawn.Count == 0) return new BotReply(Text: $"\"{presetName}\" didn't match any charts right now.");
-            return await DrawCard(drawn, saved.Mix, $"Drew {drawn.Count} — {(string)saved.SettingsName}",
-                "Your saved randomizer settings", cancellationToken);
+            if (drawn.Count == 0)
+                return new BotReply(Text: _localizer.Get(culture,
+                    "\"{0}\" didn't match any charts right now.", presetName));
+            return await DrawCard(drawn, saved.Mix,
+                _localizer.Get(culture, "Drew {0} — {1}", drawn.Count, (string)saved.SettingsName),
+                _localizer.Get(culture, "Your saved randomizer settings"), culture, cancellationToken);
         }
 
         private async Task<BotReply> DrawCard(IReadOnlyList<Chart> charts, MixEnum mix, string title, string subtitle,
-            CancellationToken cancellationToken)
+            string? culture, CancellationToken cancellationToken)
         {
             var drawn = charts.Take(10).ToList();
             var videos = await VideoLinks(drawn.Select(c => c.Id), cancellationToken);
             var blocks = new List<IRichBotBlock> { new RichBotDivider() };
             foreach (var chart in drawn)
             {
-                var video = videos.TryGetValue(chart.Id, out var url) ? $" · [Video]({url})" : string.Empty;
+                var video = videos.TryGetValue(chart.Id, out var url)
+                    ? $" · [{_localizer.Get(culture, "Video")}]({url})"
+                    : string.Empty;
                 blocks.Add(new RichBotSection(
                     $"#DIFFICULTY|{chart.DifficultyString}# [{(string)chart.Song.Name}]({SiteBase}/Chart/{chart.Id}){video}",
                     chart.Song.ImagePath));
@@ -377,17 +424,17 @@ namespace ScoreTracker.Communities.Application
                 weights[key] = key >= minLevel && key <= maxLevel ? 1 : 0;
         }
 
-        private static string DrawSubtitle(ChartType type, int minLevel, int maxLevel, MixEnum mix)
+        private string DrawSubtitle(ChartType type, int minLevel, int maxLevel, MixEnum mix, string? culture)
         {
-            var typeName = type switch
+            var typeName = _localizer.Get(culture, type switch
             {
                 ChartType.Double => "Doubles",
                 ChartType.CoOp => "Co-op",
                 _ => "Singles"
-            };
+            });
             return type == ChartType.CoOp
                 ? $"{typeName} · {mix.GetName()}"
-                : $"{typeName} · levels {minLevel}–{maxLevel} · {mix.GetName()}";
+                : _localizer.Get(culture, "{0} · levels {1}–{2} · {3}", typeName, minLevel, maxLevel, mix.GetName());
         }
 
         private static ChartType ReadType(BotInteraction interaction) =>
@@ -420,11 +467,13 @@ namespace ScoreTracker.Communities.Application
                 .ToArray();
         }
 
-        private async Task<BotReply> ChartLookup(BotInteraction interaction, CancellationToken cancellationToken)
+        private async Task<BotReply> ChartLookup(BotInteraction interaction, string? culture,
+            CancellationToken cancellationToken)
         {
             var mix = ReadMix(interaction);
             var query = interaction.Options.TryGetValue("song", out var s) ? s.Trim() : string.Empty;
-            if (string.IsNullOrWhiteSpace(query)) return new BotReply(Text: "Give a song name.");
+            if (string.IsNullOrWhiteSpace(query))
+                return new BotReply(Text: _localizer.Get(culture, "Give a song name."));
 
             var all = (await _mediator.Send(new GetChartsQuery(mix), cancellationToken)).ToList();
 
@@ -433,7 +482,7 @@ namespace ScoreTracker.Communities.Application
             if (Guid.TryParse(query, out var chartId))
             {
                 var chart = all.FirstOrDefault(c => c.Id == chartId);
-                if (chart != null) return await ChartDetailCard(chart, mix, all, cancellationToken);
+                if (chart != null) return await ChartDetailCard(chart, mix, all, culture, cancellationToken);
             }
 
             var songName = all.Select(c => (string)c.Song.Name)
@@ -442,7 +491,8 @@ namespace ScoreTracker.Communities.Application
                                  .Where(name => name.Contains(query, StringComparison.OrdinalIgnoreCase))
                                  .OrderBy(name => name.Length).FirstOrDefault();
             if (songName == null)
-                return new BotReply(Text: $"No chart found for \"{query}\" on {mix.GetName()}.");
+                return new BotReply(Text: _localizer.Get(culture,
+                    "No chart found for \"{0}\" on {1}.", query, mix.GetName()));
 
             var charts = all.Where(c => (string)c.Song.Name == songName)
                 .OrderBy(c => c.Type).ThenBy(c => (int)c.Level).ToList();
@@ -459,7 +509,8 @@ namespace ScoreTracker.Communities.Application
                 {
                     new RichBotDivider(),
                     new RichBotText(rows),
-                    new RichBotText("-# Pick a difficulty from the list for its breakdown and similar charts.")
+                    new RichBotText("-# " + _localizer.Get(culture,
+                        "Pick a difficulty from the list for its breakdown and similar charts."))
                 },
                 $"#MIX|{mix}# {mix.GetName()} · PIU Scores",
                 mix.GetAccentColor(),
@@ -472,7 +523,7 @@ namespace ScoreTracker.Communities.Application
         // similar charts by skill. Each section drops out when its data is absent (the
         // similarity graph is empty until recalculate-chart-similarity runs).
         private async Task<BotReply> ChartDetailCard(Chart chart, MixEnum mix, IReadOnlyList<Chart> all,
-            CancellationToken cancellationToken)
+            string? culture, CancellationToken cancellationToken)
         {
             var song = chart.Song;
             var subtitle = song.Bpm != null
@@ -488,14 +539,17 @@ namespace ScoreTracker.Communities.Application
                 .Where(e => e.ChartId == chart.Id).Select(e => (TierListCategory?)e.Category).FirstOrDefault();
             var difficulty = new List<string>();
             if (scoringLevels.TryGetValue(chart.Id, out var scoringLevel))
-                difficulty.Add($"Scoring level **{scoringLevel:0.0}** (listed {(int)chart.Level})");
+                difficulty.Add(_localizer.Get(culture, "Scoring level **{0:0.0}** (listed {1})",
+                    scoringLevel, (int)chart.Level));
             if (passTier != null && passTier != TierListCategory.Unrecorded)
-                difficulty.Add($"Pass **{PassTierName(passTier.Value)}**");
+                difficulty.Add(_localizer.Get(culture, "Pass **{0}**",
+                    _localizer.Get(culture, PassTierName(passTier.Value))));
             if (difficulty.Count > 0)
                 blocks.Add(new RichBotText("📊 " + string.Join(" · ", difficulty)));
 
             // The real piucenter step-analysis skills (raw vocabulary), not the derived Skill
-            // enum — that generic mapping is being recalibrated.
+            // enum — that generic mapping is being recalibrated. The names stay verbatim,
+            // matching the site.
             var analysis = await _mediator.Send(new GetChartStepAnalysisQuery(chart.Id), cancellationToken);
             if (analysis != null && analysis.TopSkills.Count > 0)
                 blocks.Add(new RichBotText("🎯 " + string.Join(" · ", analysis.TopSkills.Take(5).Select(PrettySkill))));
@@ -508,7 +562,8 @@ namespace ScoreTracker.Communities.Application
             if (similar.Count > 0)
             {
                 blocks.Add(new RichBotDivider());
-                blocks.Add(new RichBotText("**Similar charts**\n" + string.Join("\n", similar.Select(r =>
+                blocks.Add(new RichBotText($"**{_localizer.Get(culture, "Similar charts")}**\n" +
+                                           string.Join("\n", similar.Select(r =>
                 {
                     var neighbor = byId[r.ChartId];
                     return $"#DIFFICULTY|{neighbor.DifficultyString}# [{(string)neighbor.Song.Name}]({SiteBase}/Chart/{neighbor.Id}) — {(int)Math.Round(r.Score * 100)}%";
@@ -520,7 +575,11 @@ namespace ScoreTracker.Communities.Application
                 blocks,
                 $"#MIX|{mix}# {mix.GetName()} · PIU Scores",
                 mix.GetAccentColor(),
-                new[] { new RichBotLink("Open chart page", new Uri($"{SiteBase}/Chart/{chart.Id}")) }));
+                new[]
+                {
+                    new RichBotLink(_localizer.Get(culture, "Open chart page"),
+                        new Uri($"{SiteBase}/Chart/{chart.Id}"))
+                }));
         }
 
         private static string PassTierName(TierListCategory category) => category switch
@@ -579,7 +638,7 @@ namespace ScoreTracker.Communities.Application
         private static string LanguageTag(string? culture) =>
             culture == null ? string.Empty : $" · {SupportedCultures.NativeNameFor(culture)}";
 
-        private static BotReply Calc(BotInteraction interaction)
+        private BotReply Calc(BotInteraction interaction, string? culture)
         {
             var perfects = ReadInt(interaction, "perfects");
             var greats = ReadInt(interaction, "greats");
@@ -594,29 +653,45 @@ namespace ScoreTracker.Communities.Application
 
             var screen = new ScoreScreen(perfects, greats, goods, bads, misses, combo, calories);
             if (!screen.IsValid)
-                return new BotReply(Text: "That scoring configuration is invalid.");
+                return new BotReply(Text: _localizer.Get(culture, "That scoring configuration is invalid."));
 
             var loss = (double)(1000000 - screen.CalculatePhoenixScore);
-            var message = $@"{perfects:N0} Perfects, {greats:N0} Greats, {goods:N0} Goods, {bads:N0} Bads, {misses:N0} Misses, {combo:N0} Max Combo
-**{(int)screen.CalculatePhoenixScore:N0} (#LETTERGRADE|{screen.LetterGrade}##PLATE|{screen.PlateText}#)**
-{screen.NextLetterGrade()}
-- {screen.GreatLoss:N0} Lost to Greats ({SafePercent(screen.GreatLoss, loss)}%)
-- {screen.GoodLoss:N0} Lost to Goods ({SafePercent(screen.GoodLoss, loss)}%)
-- {screen.BadLoss:N0} Lost to Bads ({SafePercent(screen.BadLoss, loss)}%)
-- {screen.MissLoss:N0} Lost to Misses ({SafePercent(screen.MissLoss, loss)}%)
-- {screen.ComboLoss:N0} Lost to Combo ({SafePercent(screen.ComboLoss, loss)}%)";
+            var lines = new List<string>
+            {
+                _localizer.Get(culture,
+                    "{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} Max Combo",
+                    perfects, greats, goods, bads, misses, combo),
+                $"**{((int)screen.CalculatePhoenixScore).ToString("N0", FormatCulture(culture))} (#LETTERGRADE|{screen.LetterGrade}##PLATE|{screen.PlateText}#)**",
+                // The next-grade line composes inside the Domain record and stays English —
+                // the site shows it raw behind a localized label the same way.
+                screen.NextLetterGrade(),
+                "- " + _localizer.Get(culture, "{0:N0} Lost to Greats ({1}%)", screen.GreatLoss,
+                    SafePercent(screen.GreatLoss, loss)),
+                "- " + _localizer.Get(culture, "{0:N0} Lost to Goods ({1}%)", screen.GoodLoss,
+                    SafePercent(screen.GoodLoss, loss)),
+                "- " + _localizer.Get(culture, "{0:N0} Lost to Bads ({1}%)", screen.BadLoss,
+                    SafePercent(screen.BadLoss, loss)),
+                "- " + _localizer.Get(culture, "{0:N0} Lost to Misses ({1}%)", screen.MissLoss,
+                    SafePercent(screen.MissLoss, loss)),
+                "- " + _localizer.Get(culture, "{0:N0} Lost to Combo ({1}%)", screen.ComboLoss,
+                    SafePercent(screen.ComboLoss, loss))
+            };
             if (screen.EstimatedSteps != null)
-                message += $"{Environment.NewLine}- {screen.EstimatedSteps:N0} Estimated Arrow Presses";
+                lines.Add("- " + _localizer.Get(culture, "{0:N0} Estimated Arrow Presses", screen.EstimatedSteps));
 
-            return new BotReply(Text: message);
+            return new BotReply(Text: string.Join(Environment.NewLine, lines));
         }
 
-        private static BotReply Deny() =>
-            new(Text: "You need the Manage Channels permission in this server to do that.");
+        // The formatting culture for numbers composed outside a localizer template.
+        private static CultureInfo FormatCulture(string? culture) =>
+            CultureInfo.GetCultureInfo(SupportedCultures.Normalize(culture));
 
-        private static BotReply CannotPost() =>
-            new(Text: "I can't post in this channel yet — give me the View Channel and Send Messages " +
-                      "permissions here, then run the command again.");
+        private BotReply Deny(string? culture) =>
+            new(Text: _localizer.Get(culture, "You need the Manage Channels permission in this server to do that."));
+
+        private BotReply CannotPost(string? culture) =>
+            new(Text: _localizer.Get(culture,
+                "I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again."));
 
         private static bool TryFeedKind(string sub, out DiscordFeedKind kind)
         {

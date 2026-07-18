@@ -4710,4 +4710,139 @@
   <data name="Official Leaderboards" xml:space="preserve">
     <value>Prglrglblublurg Glorgmurgmurgls</value>
   </data>
+  <data name="That command isn't available yet." xml:space="preserve">
+    <value>Thrglt crglmmrglnd nrglt rrglrdy yrglt. Mrgl.</value>
+  </data>
+  <data name="{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} Max Combo" xml:space="preserve">
+    <value>{0:N0} Mrglubrgls, {1:N0} Grglts, {2:N0} Grgds, {3:N0} Brglds, {4:N0} Mrglsses, {5:N0} Mrglx Crglmbo</value>
+  </data>
+  <data name="{0:N0} Lost to Greats ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lrglst mrgl Grglts ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Goods ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lrglst mrgl Grgds ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Bads ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lrglst mrgl Brglds ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Misses ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lrglst mrgl Mrglsses ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Combo ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lrglst mrgl Crglmbo ({1}%)</value>
+  </data>
+  <data name="{0:N0} Estimated Arrow Presses" xml:space="preserve">
+    <value>{0:N0} Mrglstrglmrglted Rglrrow Prglsses</value>
+  </data>
+  <data name="That scoring configuration is invalid." xml:space="preserve">
+    <value>Thrglt scrglrng crglnfrglg mrgls brglkn. Mrgl!</value>
+  </data>
+  <data name="Give a song name." xml:space="preserve">
+    <value>Grglve srglng nrglme. Mrgl.</value>
+  </data>
+  <data name="No chart found for &quot;{0}&quot; on {1}." xml:space="preserve">
+    <value>Nrgl chrglrt frglnd frglr &quot;{0}&quot; rgln {1}. Mrglll...</value>
+  </data>
+  <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
+    <value>Prglck drglffrglclty frglm lrglst frglr brglkdrglwn mrgl srglmrgllr chrglrts.</value>
+  </data>
+  <data name="Scoring level **{0:0.0}** (listed {1})" xml:space="preserve">
+    <value>Scrglrng lrglvrgl **{0:0.0}** (lrglsted {1})</value>
+  </data>
+  <data name="Pass **{0}**" xml:space="preserve">
+    <value>Prglss **{0}**</value>
+  </data>
+  <data name="Similar charts" xml:space="preserve">
+    <value>Srglmrgllr chrglrts</value>
+  </data>
+  <data name="Open chart page" xml:space="preserve">
+    <value>Rglpen chrglrt prglge</value>
+  </data>
+  <data name="No charts matched those settings." xml:space="preserve">
+    <value>Nrgl chrglrts mrglched thrglse srglttrglngs.</value>
+  </data>
+  <data name="Drew 1 chart" xml:space="preserve">
+    <value>Drrglw 1 chrglrt</value>
+  </data>
+  <data name="Drew {0} charts" xml:space="preserve">
+    <value>Drrglw {0} chrglrts</value>
+  </data>
+  <data name="Drew {0} — {1}" xml:space="preserve">
+    <value>Drrglw {0} — {1}</value>
+  </data>
+  <data name="Your saved randomizer settings" xml:space="preserve">
+    <value>Yrglr srglved rrglndrglmrglzer srglttrglngs</value>
+  </data>
+  <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
+    <value>{0} · lrglvrgls {1}–{2} · {3}</value>
+  </data>
+  <data name="Co-op" xml:space="preserve">
+    <value>Crgl-rglp</value>
+  </data>
+  <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
+    <value>Yrgl drglnt hrglve prrglsrglt &quot;{0}&quot;. Mrgl.</value>
+  </data>
+  <data name="&quot;{0}&quot; didn't match any charts right now." xml:space="preserve">
+    <value>&quot;{0}&quot; mrglched nrgl chrglrts. Mrglll...</value>
+  </data>
+  <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
+    <value>Nrgl srglggrglstions. Trrgly drglffrglrent grglal mrgl mrglport mrglr scrglres. Mrgl!</value>
+  </data>
+  <data name="Suggested for you — {0}" xml:space="preserve">
+    <value>Srglggrglsted frglr yrgl — {0}</value>
+  </data>
+  <data name="based on your scores" xml:space="preserve">
+    <value>brglsed rgln yrglr scrglres</value>
+  </data>
+  <data name="Open Suggested Charts" xml:space="preserve">
+    <value>Rglpen Srglggrglsted Chrglrts</value>
+  </data>
+  <data name="Done — this channel now receives {0} for {1}." xml:space="preserve">
+    <value>Drglne — drgls chrglnnrgl nrglw grglts {0} frglr {1}. Mrgl!</value>
+  </data>
+  <data name="Unknown feed." xml:space="preserve">
+    <value>Rglnknrglwn frgld. Mrgl?</value>
+  </data>
+  <data name="Pick a mix." xml:space="preserve">
+    <value>Prglck mrglx. Mrgl.</value>
+  </data>
+  <data name="Give a community name or an invite code." xml:space="preserve">
+    <value>Grglve cmrglmrglnrglty nrglme mrgl mrglnvrglte crglde.</value>
+  </data>
+  <data name="Done — this channel is registered for that community." xml:space="preserve">
+    <value>Drglne — chrglnnrgl rrglgrglstered frglr cmrglmrglnrglty. Mrgl!</value>
+  </data>
+  <data name="That community wasn't found, or the invite code is wrong." xml:space="preserve">
+    <value>Cmrglmrglnrglty nrglt frglnd, mrgl crglde rgls wrrglng. Mrglll...</value>
+  </data>
+  <data name="You need the Manage Channels permission in this server to do that." xml:space="preserve">
+    <value>Yrgl nrgld Mrglnage Chrglnnels prglrmission. Mrgl!</value>
+  </data>
+  <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
+    <value>Crglnt prglst hrglre yrglt — grglve Vrglew Chrglnnel mrgl Srglnd Mrglssages prglrms, thrgln trrgly rglgain. Mrgl!</value>
+  </data>
+  <data name="Removed {0} for {1} from this channel." xml:space="preserve">
+    <value>Rrglmrglved {0} frglr {1}. Mrgl.</value>
+  </data>
+  <data name="That feed wasn't registered here." xml:space="preserve">
+    <value>Thrglt frgld wrglsnt hrglre. Mrgl?</value>
+  </data>
+  <data name="Removed the {0} community feed from this channel." xml:space="preserve">
+    <value>Rrglmrglved {0} cmrglmrglnrglty frgld. Mrgl.</value>
+  </data>
+  <data name="That community registration wasn't found." xml:space="preserve">
+    <value>Thrglt rrglgrglstrrgltion nrglt frglnd. Mrglll...</value>
+  </data>
+  <data name="Pick a registration to remove from the list." xml:space="preserve">
+    <value>Prglck rrglgrglstrrgltion frglm lrglst. Mrgl.</value>
+  </data>
+  <data name="This channel isn't registered for anything yet. Use /piu register to add a feed." xml:space="preserve">
+    <value>Chrglnnrgl rrglgrglstered frglr nrglthing. Mrgl /piu register!</value>
+  </data>
+  <data name="This channel receives" xml:space="preserve">
+    <value>Drgls chrglnnrgl grglts</value>
+  </data>
+  <data name="Remove one with /piu unregister" xml:space="preserve">
+    <value>Rrglmrglve wrglth /piu unregister. Mrgl.</value>
+  </data>
 </root>

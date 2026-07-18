@@ -4655,4 +4655,139 @@
   <data name="This channel no longer receives notifications for the {0} community in PIU Scores" xml:space="preserve">
     <value>Este canal não recebe mais notificações da comunidade {0} no PIU Scores</value>
   </data>
+  <data name="That command isn't available yet." xml:space="preserve">
+    <value>Esse comando ainda não está disponível.</value>
+  </data>
+  <data name="{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} Max Combo" xml:space="preserve">
+    <value>{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} de combo máximo</value>
+  </data>
+  <data name="{0:N0} Lost to Greats ({1}%)" xml:space="preserve">
+    <value>{0:N0} perdidos para Greats ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Goods ({1}%)" xml:space="preserve">
+    <value>{0:N0} perdidos para Goods ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Bads ({1}%)" xml:space="preserve">
+    <value>{0:N0} perdidos para Bads ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Misses ({1}%)" xml:space="preserve">
+    <value>{0:N0} perdidos para Misses ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Combo ({1}%)" xml:space="preserve">
+    <value>{0:N0} perdidos para o combo ({1}%)</value>
+  </data>
+  <data name="{0:N0} Estimated Arrow Presses" xml:space="preserve">
+    <value>{0:N0} setas estimadas</value>
+  </data>
+  <data name="That scoring configuration is invalid." xml:space="preserve">
+    <value>Essa configuração de pontuação é inválida.</value>
+  </data>
+  <data name="Give a song name." xml:space="preserve">
+    <value>Informe o nome de uma música.</value>
+  </data>
+  <data name="No chart found for &quot;{0}&quot; on {1}." xml:space="preserve">
+    <value>Nenhum chart encontrado para &quot;{0}&quot; em {1}.</value>
+  </data>
+  <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
+    <value>Escolha uma dificuldade da lista para ver os detalhes e charts semelhantes.</value>
+  </data>
+  <data name="Scoring level **{0:0.0}** (listed {1})" xml:space="preserve">
+    <value>Nível de pontuação **{0:0.0}** (listado {1})</value>
+  </data>
+  <data name="Pass **{0}**" xml:space="preserve">
+    <value>Pass **{0}**</value>
+  </data>
+  <data name="Similar charts" xml:space="preserve">
+    <value>Charts semelhantes</value>
+  </data>
+  <data name="Open chart page" xml:space="preserve">
+    <value>Abrir página do chart</value>
+  </data>
+  <data name="No charts matched those settings." xml:space="preserve">
+    <value>Nenhum chart correspondeu a essas configurações.</value>
+  </data>
+  <data name="Drew 1 chart" xml:space="preserve">
+    <value>1 chart sorteado</value>
+  </data>
+  <data name="Drew {0} charts" xml:space="preserve">
+    <value>{0} charts sorteados</value>
+  </data>
+  <data name="Drew {0} — {1}" xml:space="preserve">
+    <value>{0} sorteados — {1}</value>
+  </data>
+  <data name="Your saved randomizer settings" xml:space="preserve">
+    <value>Suas configurações salvas do randomizador</value>
+  </data>
+  <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
+    <value>{0} · níveis {1}–{2} · {3}</value>
+  </data>
+  <data name="Co-op" xml:space="preserve">
+    <value>Co-op</value>
+  </data>
+  <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
+    <value>Você não tem um preset salvo chamado &quot;{0}&quot;.</value>
+  </data>
+  <data name="&quot;{0}&quot; didn't match any charts right now." xml:space="preserve">
+    <value>&quot;{0}&quot; não correspondeu a nenhum chart no momento.</value>
+  </data>
+  <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
+    <value>Sem sugestões no momento — tente outra meta ou importe mais pontuações primeiro.</value>
+  </data>
+  <data name="Suggested for you — {0}" xml:space="preserve">
+    <value>Sugerido para você — {0}</value>
+  </data>
+  <data name="based on your scores" xml:space="preserve">
+    <value>com base nas suas pontuações</value>
+  </data>
+  <data name="Open Suggested Charts" xml:space="preserve">
+    <value>Abrir charts sugeridos</value>
+  </data>
+  <data name="Done — this channel now receives {0} for {1}." xml:space="preserve">
+    <value>Pronto — este canal agora recebe {0} para {1}.</value>
+  </data>
+  <data name="Unknown feed." xml:space="preserve">
+    <value>Feed desconhecido.</value>
+  </data>
+  <data name="Pick a mix." xml:space="preserve">
+    <value>Escolha uma versão.</value>
+  </data>
+  <data name="Give a community name or an invite code." xml:space="preserve">
+    <value>Informe o nome de uma comunidade ou um código de convite.</value>
+  </data>
+  <data name="Done — this channel is registered for that community." xml:space="preserve">
+    <value>Pronto — este canal está registrado para essa comunidade.</value>
+  </data>
+  <data name="That community wasn't found, or the invite code is wrong." xml:space="preserve">
+    <value>Essa comunidade não foi encontrada ou o código de convite está errado.</value>
+  </data>
+  <data name="You need the Manage Channels permission in this server to do that." xml:space="preserve">
+    <value>Você precisa da permissão Gerenciar canais neste servidor para fazer isso.</value>
+  </data>
+  <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
+    <value>Ainda não consigo publicar neste canal — conceda as permissões Ver canal e Enviar mensagens aqui e execute o comando novamente.</value>
+  </data>
+  <data name="Removed {0} for {1} from this channel." xml:space="preserve">
+    <value>{0} para {1} removido deste canal.</value>
+  </data>
+  <data name="That feed wasn't registered here." xml:space="preserve">
+    <value>Esse feed não estava registrado aqui.</value>
+  </data>
+  <data name="Removed the {0} community feed from this channel." xml:space="preserve">
+    <value>Feed da comunidade {0} removido deste canal.</value>
+  </data>
+  <data name="That community registration wasn't found." xml:space="preserve">
+    <value>Esse registro de comunidade não foi encontrado.</value>
+  </data>
+  <data name="Pick a registration to remove from the list." xml:space="preserve">
+    <value>Escolha na lista um registro para remover.</value>
+  </data>
+  <data name="This channel isn't registered for anything yet. Use /piu register to add a feed." xml:space="preserve">
+    <value>Este canal ainda não está registrado para nada. Use /piu register para adicionar um feed.</value>
+  </data>
+  <data name="This channel receives" xml:space="preserve">
+    <value>Este canal recebe</value>
+  </data>
+  <data name="Remove one with /piu unregister" xml:space="preserve">
+    <value>Remova um com /piu unregister</value>
+  </data>
 </root>

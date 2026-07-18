@@ -4665,4 +4665,139 @@
   <data name="This channel no longer receives notifications for the {0} community in PIU Scores" xml:space="preserve">
     <value>이 채널은 더 이상 PIU Scores의 {0} 커뮤니티 알림을 받지 않습니다</value>
   </data>
+  <data name="That command isn't available yet." xml:space="preserve">
+    <value>아직 사용할 수 없는 명령어입니다.</value>
+  </data>
+  <data name="{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} Max Combo" xml:space="preserve">
+    <value>퍼펙트 {0:N0}, 그레이트 {1:N0}, 굿 {2:N0}, 배드 {3:N0}, 미스 {4:N0}, 최대 콤보 {5:N0}</value>
+  </data>
+  <data name="{0:N0} Lost to Greats ({1}%)" xml:space="preserve">
+    <value>그레이트로 잃은 점수 {0:N0} ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Goods ({1}%)" xml:space="preserve">
+    <value>굿으로 잃은 점수 {0:N0} ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Bads ({1}%)" xml:space="preserve">
+    <value>배드로 잃은 점수 {0:N0} ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Misses ({1}%)" xml:space="preserve">
+    <value>미스로 잃은 점수 {0:N0} ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Combo ({1}%)" xml:space="preserve">
+    <value>콤보로 잃은 점수 {0:N0} ({1}%)</value>
+  </data>
+  <data name="{0:N0} Estimated Arrow Presses" xml:space="preserve">
+    <value>예상 화살표 수 {0:N0}</value>
+  </data>
+  <data name="That scoring configuration is invalid." xml:space="preserve">
+    <value>유효하지 않은 점수 구성입니다.</value>
+  </data>
+  <data name="Give a song name." xml:space="preserve">
+    <value>곡 이름을 입력해주세요.</value>
+  </data>
+  <data name="No chart found for &quot;{0}&quot; on {1}." xml:space="preserve">
+    <value>{1}에서 &quot;{0}&quot; 채보를 찾을 수 없습니다.</value>
+  </data>
+  <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
+    <value>목록에서 난이도를 선택하면 상세 정보와 유사 채보를 볼 수 있습니다.</value>
+  </data>
+  <data name="Scoring level **{0:0.0}** (listed {1})" xml:space="preserve">
+    <value>스코어링 레벨 **{0:0.0}** (표기 {1})</value>
+  </data>
+  <data name="Pass **{0}**" xml:space="preserve">
+    <value>패스 난이도 **{0}**</value>
+  </data>
+  <data name="Similar charts" xml:space="preserve">
+    <value>유사 채보</value>
+  </data>
+  <data name="Open chart page" xml:space="preserve">
+    <value>채보 페이지 열기</value>
+  </data>
+  <data name="No charts matched those settings." xml:space="preserve">
+    <value>조건에 맞는 채보가 없습니다.</value>
+  </data>
+  <data name="Drew 1 chart" xml:space="preserve">
+    <value>1개 채보를 뽑았습니다</value>
+  </data>
+  <data name="Drew {0} charts" xml:space="preserve">
+    <value>{0}개 채보를 뽑았습니다</value>
+  </data>
+  <data name="Drew {0} — {1}" xml:space="preserve">
+    <value>{0}개 뽑음 — {1}</value>
+  </data>
+  <data name="Your saved randomizer settings" xml:space="preserve">
+    <value>저장된 랜덤 설정</value>
+  </data>
+  <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
+    <value>{0} · 레벨 {1}–{2} · {3}</value>
+  </data>
+  <data name="Co-op" xml:space="preserve">
+    <value>코옵</value>
+  </data>
+  <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
+    <value>&quot;{0}&quot;(이)라는 저장된 프리셋이 없습니다.</value>
+  </data>
+  <data name="&quot;{0}&quot; didn't match any charts right now." xml:space="preserve">
+    <value>&quot;{0}&quot;에 맞는 채보가 지금은 없습니다.</value>
+  </data>
+  <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
+    <value>지금은 추천할 채보가 없습니다. 다른 목표를 선택하거나 먼저 점수를 가져와주세요.</value>
+  </data>
+  <data name="Suggested for you — {0}" xml:space="preserve">
+    <value>추천 채보 — {0}</value>
+  </data>
+  <data name="based on your scores" xml:space="preserve">
+    <value>내 점수 기반</value>
+  </data>
+  <data name="Open Suggested Charts" xml:space="preserve">
+    <value>추천 채보 열기</value>
+  </data>
+  <data name="Done — this channel now receives {0} for {1}." xml:space="preserve">
+    <value>완료 — 이 채널은 이제 {1}의 {0} 알림을 받습니다.</value>
+  </data>
+  <data name="Unknown feed." xml:space="preserve">
+    <value>알 수 없는 피드입니다.</value>
+  </data>
+  <data name="Pick a mix." xml:space="preserve">
+    <value>시리즈를 선택해주세요.</value>
+  </data>
+  <data name="Give a community name or an invite code." xml:space="preserve">
+    <value>커뮤니티 이름이나 초대 코드를 입력해주세요.</value>
+  </data>
+  <data name="Done — this channel is registered for that community." xml:space="preserve">
+    <value>완료 — 이 채널이 해당 커뮤니티에 등록되었습니다.</value>
+  </data>
+  <data name="That community wasn't found, or the invite code is wrong." xml:space="preserve">
+    <value>커뮤니티를 찾을 수 없거나 초대 코드가 잘못되었습니다.</value>
+  </data>
+  <data name="You need the Manage Channels permission in this server to do that." xml:space="preserve">
+    <value>이 작업에는 서버의 채널 관리 권한이 필요합니다.</value>
+  </data>
+  <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
+    <value>아직 이 채널에 게시할 수 없습니다. 채널 보기와 메시지 보내기 권한을 부여한 뒤 명령어를 다시 실행해주세요.</value>
+  </data>
+  <data name="Removed {0} for {1} from this channel." xml:space="preserve">
+    <value>이 채널에서 {1}의 {0} 알림을 해제했습니다.</value>
+  </data>
+  <data name="That feed wasn't registered here." xml:space="preserve">
+    <value>해당 피드는 여기에 등록되어 있지 않습니다.</value>
+  </data>
+  <data name="Removed the {0} community feed from this channel." xml:space="preserve">
+    <value>이 채널에서 {0} 커뮤니티 피드를 해제했습니다.</value>
+  </data>
+  <data name="That community registration wasn't found." xml:space="preserve">
+    <value>해당 커뮤니티 등록을 찾을 수 없습니다.</value>
+  </data>
+  <data name="Pick a registration to remove from the list." xml:space="preserve">
+    <value>목록에서 해제할 등록을 선택해주세요.</value>
+  </data>
+  <data name="This channel isn't registered for anything yet. Use /piu register to add a feed." xml:space="preserve">
+    <value>이 채널은 아직 등록된 것이 없습니다. /piu register로 피드를 추가해주세요.</value>
+  </data>
+  <data name="This channel receives" xml:space="preserve">
+    <value>이 채널이 받는 알림</value>
+  </data>
+  <data name="Remove one with /piu unregister" xml:space="preserve">
+    <value>/piu unregister로 해제할 수 있습니다</value>
+  </data>
 </root>

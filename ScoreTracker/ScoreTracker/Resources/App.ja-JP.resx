@@ -4784,4 +4784,139 @@
   <data name="This channel no longer receives notifications for the {0} community in PIU Scores" xml:space="preserve">
     <value>このチャンネルは PIU Scores の {0} コミュニティの通知を受け取らなくなりました</value>
   </data>
+  <data name="That command isn't available yet." xml:space="preserve">
+    <value>このコマンドはまだ利用できません。</value>
+  </data>
+  <data name="{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} Max Combo" xml:space="preserve">
+    <value>Perfect {0:N0}、Great {1:N0}、Good {2:N0}、Bad {3:N0}、Miss {4:N0}、最大コンボ {5:N0}</value>
+  </data>
+  <data name="{0:N0} Lost to Greats ({1}%)" xml:space="preserve">
+    <value>Great による損失 {0:N0}（{1}%）</value>
+  </data>
+  <data name="{0:N0} Lost to Goods ({1}%)" xml:space="preserve">
+    <value>Good による損失 {0:N0}（{1}%）</value>
+  </data>
+  <data name="{0:N0} Lost to Bads ({1}%)" xml:space="preserve">
+    <value>Bad による損失 {0:N0}（{1}%）</value>
+  </data>
+  <data name="{0:N0} Lost to Misses ({1}%)" xml:space="preserve">
+    <value>Miss による損失 {0:N0}（{1}%）</value>
+  </data>
+  <data name="{0:N0} Lost to Combo ({1}%)" xml:space="preserve">
+    <value>コンボによる損失 {0:N0}（{1}%）</value>
+  </data>
+  <data name="{0:N0} Estimated Arrow Presses" xml:space="preserve">
+    <value>推定アロー数 {0:N0}</value>
+  </data>
+  <data name="That scoring configuration is invalid." xml:space="preserve">
+    <value>このスコア構成は無効です。</value>
+  </data>
+  <data name="Give a song name." xml:space="preserve">
+    <value>曲名を入力してください。</value>
+  </data>
+  <data name="No chart found for &quot;{0}&quot; on {1}." xml:space="preserve">
+    <value>{1} で「{0}」の譜面が見つかりませんでした。</value>
+  </data>
+  <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
+    <value>リストから難度を選ぶと、詳細と類似譜面が表示されます。</value>
+  </data>
+  <data name="Scoring level **{0:0.0}** (listed {1})" xml:space="preserve">
+    <value>スコアリングレベル **{0:0.0}**（表記 {1}）</value>
+  </data>
+  <data name="Pass **{0}**" xml:space="preserve">
+    <value>パス難度 **{0}**</value>
+  </data>
+  <data name="Similar charts" xml:space="preserve">
+    <value>類似譜面</value>
+  </data>
+  <data name="Open chart page" xml:space="preserve">
+    <value>譜面ページを開く</value>
+  </data>
+  <data name="No charts matched those settings." xml:space="preserve">
+    <value>条件に一致する譜面がありませんでした。</value>
+  </data>
+  <data name="Drew 1 chart" xml:space="preserve">
+    <value>1 譜面を抽選しました</value>
+  </data>
+  <data name="Drew {0} charts" xml:space="preserve">
+    <value>{0} 譜面を抽選しました</value>
+  </data>
+  <data name="Drew {0} — {1}" xml:space="preserve">
+    <value>{0} 譜面を抽選 — {1}</value>
+  </data>
+  <data name="Your saved randomizer settings" xml:space="preserve">
+    <value>保存済みのランダマイザー設定</value>
+  </data>
+  <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
+    <value>{0}・レベル {1}–{2}・{3}</value>
+  </data>
+  <data name="Co-op" xml:space="preserve">
+    <value>Co-op</value>
+  </data>
+  <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
+    <value>「{0}」という保存済みプリセットはありません。</value>
+  </data>
+  <data name="&quot;{0}&quot; didn't match any charts right now." xml:space="preserve">
+    <value>「{0}」に一致する譜面は現在ありません。</value>
+  </data>
+  <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
+    <value>現在提案はありません。別の目標を試すか、先にスコアをインポートしてください。</value>
+  </data>
+  <data name="Suggested for you — {0}" xml:space="preserve">
+    <value>あなたへの提案 — {0}</value>
+  </data>
+  <data name="based on your scores" xml:space="preserve">
+    <value>あなたのスコアに基づく</value>
+  </data>
+  <data name="Open Suggested Charts" xml:space="preserve">
+    <value>おすすめ譜面を開く</value>
+  </data>
+  <data name="Done — this channel now receives {0} for {1}." xml:space="preserve">
+    <value>完了 — このチャンネルは {1} の {0} を受信します。</value>
+  </data>
+  <data name="Unknown feed." xml:space="preserve">
+    <value>不明なフィードです。</value>
+  </data>
+  <data name="Pick a mix." xml:space="preserve">
+    <value>バージョンを選んでください。</value>
+  </data>
+  <data name="Give a community name or an invite code." xml:space="preserve">
+    <value>コミュニティ名か招待コードを入力してください。</value>
+  </data>
+  <data name="Done — this channel is registered for that community." xml:space="preserve">
+    <value>完了 — このチャンネルはそのコミュニティに登録されました。</value>
+  </data>
+  <data name="That community wasn't found, or the invite code is wrong." xml:space="preserve">
+    <value>コミュニティが見つからないか、招待コードが間違っています。</value>
+  </data>
+  <data name="You need the Manage Channels permission in this server to do that." xml:space="preserve">
+    <value>この操作にはサーバーの「チャンネルの管理」権限が必要です。</value>
+  </data>
+  <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
+    <value>まだこのチャンネルに投稿できません。「チャンネルを見る」と「メッセージを送信」の権限を付与してから、もう一度コマンドを実行してください。</value>
+  </data>
+  <data name="Removed {0} for {1} from this channel." xml:space="preserve">
+    <value>このチャンネルから {1} の {0} を解除しました。</value>
+  </data>
+  <data name="That feed wasn't registered here." xml:space="preserve">
+    <value>そのフィードはここに登録されていません。</value>
+  </data>
+  <data name="Removed the {0} community feed from this channel." xml:space="preserve">
+    <value>このチャンネルから {0} コミュニティのフィードを解除しました。</value>
+  </data>
+  <data name="That community registration wasn't found." xml:space="preserve">
+    <value>そのコミュニティ登録は見つかりませんでした。</value>
+  </data>
+  <data name="Pick a registration to remove from the list." xml:space="preserve">
+    <value>リストから解除する登録を選んでください。</value>
+  </data>
+  <data name="This channel isn't registered for anything yet. Use /piu register to add a feed." xml:space="preserve">
+    <value>このチャンネルはまだ何も登録されていません。/piu register でフィードを追加してください。</value>
+  </data>
+  <data name="This channel receives" xml:space="preserve">
+    <value>このチャンネルの受信内容</value>
+  </data>
+  <data name="Remove one with /piu unregister" xml:space="preserve">
+    <value>/piu unregister で解除できます</value>
+  </data>
 </root>

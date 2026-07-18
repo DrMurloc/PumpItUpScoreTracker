@@ -46,6 +46,9 @@ public sealed class BotCommandSagaTests
             .Returns((string? _, string key) => key);
         _localizer.Setup(l => l.Get(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<object[]>()))
             .Returns((string? _, string key, object[] args) => string.Format(key, args));
+        // Linked invokers get their settings read at router entry; no Culture key = English.
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, string>());
     }
 
     private BotCommandSaga Saga() =>
@@ -82,6 +85,33 @@ public sealed class BotCommandSagaTests
         }), CancellationToken.None);
 
         Assert.Contains("invalid", reply.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task RepliesComposeInTheLinkedAccountsSiteLanguage()
+    {
+        // The invoker's stored Culture setting drives every reply; the scoped-user seam is
+        // set once at router entry for the engine paths.
+        var user = new UserBuilder().WithName("alice").Build();
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserByExternalLoginQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, string> { ["Culture"] = "ko-KR" });
+
+        await Saga().Handle(Invoke(new[] { "chart" }, new Dictionary<string, string>()), CancellationToken.None);
+
+        _localizer.Verify(l => l.Get("ko-KR", "Give a song name."), Times.Once);
+        _currentUser.Verify(u => u.SetScopedUser(user), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnUnlinkedInvokerGetsEnglishReplies()
+    {
+        await Saga().Handle(Invoke(new[] { "chart" }, new Dictionary<string, string>()), CancellationToken.None);
+
+        _localizer.Verify(l => l.Get(null, "Give a song name."), Times.Once);
+        _mediator.Verify(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
