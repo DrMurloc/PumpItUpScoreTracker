@@ -41,12 +41,20 @@ public static class WeeklyChartSuggestionPolicy
     public static IEnumerable<Chart> GetSuggestedCharts(IEnumerable<Chart> chart, double doublesCompetitive,
         double singlesCompetitive)
     {
-        var baseDoubles = (int)Math.Floor(doublesCompetitive);
-        var baseSingles = (int)Math.Floor(singlesCompetitive);
-        return chart.Where(c => c.Type == ChartType.CoOp ||
-                                ((c.Type == ChartType.Double ? baseDoubles :
-                                     c.Type == ChartType.Single ? baseSingles : baseDoubles) >= c.Level - 1 &&
-                                 (c.Type == ChartType.Double ? baseDoubles :
-                                     c.Type == ChartType.Single ? baseSingles : baseDoubles) <= c.Level + 2));
+        return chart.Where(c => IsWithinRange(c,
+            c.Type == ChartType.Single ? singlesCompetitive : doublesCompetitive));
+    }
+
+    /// <summary>
+    ///     Whether a competitive level sits in a chart's "worth attempting" band:
+    ///     floor(level) within [chart level − 1, chart level + 2]; co-op charts are always in.
+    ///     One definition for suggestions and the relevant-players board filter — the two
+    ///     must never disagree on what "in range" means.
+    /// </summary>
+    public static bool IsWithinRange(Chart chart, double competitiveLevel)
+    {
+        if (chart.Type == ChartType.CoOp) return true;
+        var floor = (int)Math.Floor(competitiveLevel);
+        return floor >= chart.Level - 1 && floor <= chart.Level + 2;
     }
 }
