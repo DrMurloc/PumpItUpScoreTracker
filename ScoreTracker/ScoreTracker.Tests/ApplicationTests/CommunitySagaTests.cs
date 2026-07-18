@@ -202,6 +202,59 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task AddingADiscordChannelStoresItsCultureAndConfirmsInThatLanguage()
+    {
+        var ctx = new HandlerContext();
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public, false);
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        await ctx.Saga.Handle(new AddDiscordChannelToCommunityCommand(Name.From("Acme"), null, 555, "ko-KR"),
+            CancellationToken.None);
+
+        ctx.Communities.Verify(c => c.SaveCommunity(
+            It.Is<Community>(comm => comm.Channels.Any(ch => ch.ChannelId == 555 && ch.Culture == "ko-KR")),
+            It.IsAny<CancellationToken>()), Times.Once);
+        // The public confirmation renders in the channel's just-registered language.
+        ctx.Localizer.Verify(l => l.Get("ko-KR", It.IsAny<string>(), It.IsAny<object[]>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnUnsupportedChannelCultureIsStoredAsTheEnglishDefault()
+    {
+        var ctx = new HandlerContext();
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public, false);
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        await ctx.Saga.Handle(new AddDiscordChannelToCommunityCommand(Name.From("Acme"), null, 555, "xx-YY"),
+            CancellationToken.None);
+
+        ctx.Communities.Verify(c => c.SaveCommunity(
+            It.Is<Community>(comm => comm.Channels.Any(ch => ch.ChannelId == 555 && ch.Culture == null)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RemovingADiscordChannelSaysGoodbyeInItsRegisteredLanguage()
+    {
+        var ctx = new HandlerContext();
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public,
+            Array.Empty<Guid>(), new[] { new Community.ChannelConfiguration(555, "ja-JP") },
+            new Dictionary<Guid, DateOnly?>(), false);
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        await ctx.Saga.Handle(new RemoveDiscordChannelFromCommunityCommand(Name.From("Acme"), 555),
+            CancellationToken.None);
+
+        ctx.Communities.Verify(c => c.SaveCommunity(
+            It.Is<Community>(comm => !comm.Channels.Any()),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Localizer.Verify(l => l.Get("ja-JP", It.IsAny<string>(), It.IsAny<object[]>()), Times.Once);
+    }
+
+    [Fact]
     public async Task NewTitlesWithNoSessionRenderAsARichTitlesCard()
     {
         // Zero-score imports (and admin recomputes) still surface title completions — now as
@@ -1098,6 +1151,7 @@ public sealed class CommunitySagaTests
         public Mock<IPlayerStatsReader> PlayerStats { get; } = new();
         public Mock<IMediator> Mediator { get; } = new();
         public Mock<IDateTimeOffsetAccessor> DateTime { get; } = FakeDateTime.At(Now);
+        public Mock<ILocalizedTextAccessor> Localizer { get; } = new();
         public CommunitySaga Saga { get; }
 
         public HandlerContext(Guid? currentUserId = null, bool isLoggedIn = true)
@@ -1105,6 +1159,12 @@ public sealed class CommunitySagaTests
             var id = currentUserId ?? Guid.NewGuid();
             CurrentUser.SetupGet(u => u.User).Returns(new UserBuilder().WithId(id).Build());
             CurrentUser.SetupGet(u => u.IsLoggedIn).Returns(isLoggedIn);
+            // Identity localizer: English key back regardless of culture, so text
+            // assertions stay culture-independent.
+            Localizer.Setup(l => l.Get(It.IsAny<string?>(), It.IsAny<string>()))
+                .Returns((string? _, string key) => key);
+            Localizer.Setup(l => l.Get(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<object[]>()))
+                .Returns((string? _, string key, object[] args) => string.Format(key, args));
             Communities.Setup(c => c.GetCommunities(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
             // Cross-mix reclear reads default to empty — no other-mix passes unless a test says
@@ -1119,7 +1179,8 @@ public sealed class CommunitySagaTests
             PlayerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
                 It.IsAny<CancellationToken>())).ReturnsAsync(Stats(0, 0));
             Saga = new CommunitySaga(CurrentUser.Object, Communities.Object, Bot.Object, Users.Object,
-                Charts.Object, Scores.Object, Mediator.Object, PlayerStats.Object, DateTime.Object);
+                Charts.Object, Scores.Object, Mediator.Object, PlayerStats.Object, DateTime.Object,
+                Localizer.Object);
         }
 
         private static PlayerStatsRecord Stats(double singlesCompetitive, double doublesCompetitive)

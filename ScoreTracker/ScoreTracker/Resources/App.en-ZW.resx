@@ -4689,4 +4689,25 @@
   <data name="Add the bot" xml:space="preserve">
     <value>Add the bot</value>
   </data>
+  <data name="This channel now receives **{0} — {1}**. {2}" xml:space="preserve">
+    <value>Mrgl! Drgls chrglnnrgl nrglw rrglcrglves **{0} — {1}**. {2}</value>
+  </data>
+  <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
+    <value>Rrglsrglts mrgl nrglw lrglnrglp prglst whrgln brglrd sprglns rglch Mrglndrgly.</value>
+  </data>
+  <data name="Yesterday's board and today's chart post each day." xml:space="preserve">
+    <value>Yrglstrglrdrgly's brglrd mrgl trglrdrgly's chrglrt prglst rglch drgly.</value>
+  </data>
+  <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
+    <value>Drglgrglst prglsts rglftrgl wrglkly Srglndrgly swrglp. Mrglglgl.</value>
+  </data>
+  <data name="This channel was updated to receive notifications for the {0} community in PIU Scores!" xml:space="preserve">
+    <value>Mrgl! Drgls chrglnnrgl grglts {0} cmrglmrglnrglty nrglws mrgln PIU Scores!</value>
+  </data>
+  <data name="This channel no longer receives notifications for the {0} community in PIU Scores" xml:space="preserve">
+    <value>Drgls chrglnnrgl nrgl mrglr grglts {0} cmrglmrglnrglty nrglws mrgln PIU Scores. Mrglll...</value>
+  </data>
+  <data name="Official Leaderboards" xml:space="preserve">
+    <value>Prglrglblublurg Glorgmurgmurgls</value>
+  </data>
 </root>

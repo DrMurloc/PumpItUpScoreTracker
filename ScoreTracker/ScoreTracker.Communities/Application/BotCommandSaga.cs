@@ -37,16 +37,19 @@ namespace ScoreTracker.Communities.Application
         private readonly ICommunityRepository _communities;
         private readonly ICurrentUserAccessor _currentUser;
         private readonly IDiscordFeedSubscriptionRepository _feeds;
+        private readonly ILocalizedTextAccessor _localizer;
         private readonly IMediator _mediator;
 
         public BotCommandSaga(IBotClient bot, ICommunityRepository communities,
-            IDiscordFeedSubscriptionRepository feeds, IMediator mediator, ICurrentUserAccessor currentUser)
+            IDiscordFeedSubscriptionRepository feeds, IMediator mediator, ICurrentUserAccessor currentUser,
+            ILocalizedTextAccessor localizer)
         {
             _bot = bot;
             _communities = communities;
             _feeds = feeds;
             _mediator = mediator;
             _currentUser = currentUser;
+            _localizer = localizer;
         }
 
         public Task<BotReply> Handle(HandleBotInteractionCommand request, CancellationToken cancellationToken)
@@ -91,9 +94,14 @@ namespace ScoreTracker.Communities.Application
             if (!TryFeedKind(sub, out var kind)) return new BotReply(Text: "Unknown feed.");
             if (!TryMix(interaction, out var mix)) return new BotReply(Text: "Pick a mix.");
 
-            await _feeds.Register(interaction.ChannelId, kind, mix, interaction.UserId, cancellationToken);
+            var culture = ReadLanguage(interaction);
+            await _feeds.Register(interaction.ChannelId, kind, mix, interaction.UserId, culture, cancellationToken);
+            // The public confirmation doubles as the can-post probe and previews the
+            // channel's chosen language.
             await _bot.SendMessage(
-                $"{FeedEmoji(kind)} This channel now receives **{FeedName(kind)} — {mix.GetName()}**. {FeedBlurb(kind)}",
+                FeedEmoji(kind) + " " + _localizer.Get(culture, "This channel now receives **{0} — {1}**. {2}",
+                    _localizer.Get(culture, FeedName(kind)), mix.GetName(),
+                    _localizer.Get(culture, FeedBlurb(kind))),
                 interaction.ChannelId, cancellationToken);
             return new BotReply(Text: $"Done — this channel now receives {FeedName(kind)} for {mix.GetName()}.");
         }
@@ -110,7 +118,7 @@ namespace ScoreTracker.Communities.Application
             try
             {
                 await _mediator.Send(new AddDiscordChannelToCommunityCommand(
-                        hasName ? Name.From(n) : null, code, interaction.ChannelId),
+                        hasName ? Name.From(n) : null, code, interaction.ChannelId, ReadLanguage(interaction)),
                     cancellationToken);
                 return new BotReply(Text: "Done — this channel is registered for that community.");
             }
@@ -170,8 +178,8 @@ namespace ScoreTracker.Communities.Application
 
             var lines = feeds
                 .OrderBy(f => f.Kind).ThenBy(f => f.Mix)
-                .Select(f => $"{FeedEmoji(f.Kind)} {FeedName(f.Kind)} — **{f.Mix.GetName()}**")
-                .Concat(communities.Select(c => $"👥 Community — **{(string)c.Name}**"))
+                .Select(f => $"{FeedEmoji(f.Kind)} {FeedName(f.Kind)} — **{f.Mix.GetName()}**{LanguageTag(f.Culture)}")
+                .Concat(communities.Select(c => $"👥 Community — **{(string)c.Name}**{LanguageTag(c.Culture)}"))
                 .ToList();
 
             var card = new RichBotMessage(
@@ -561,6 +569,15 @@ namespace ScoreTracker.Communities.Application
             interaction.Options.TryGetValue("mix", out var value) && Enum.TryParse<MixEnum>(value, out var mix)
                 ? mix
                 : MixEnum.Phoenix2;
+
+        // The registration's chosen post language; absent or unrecognized = null = English.
+        private static string? ReadLanguage(BotInteraction interaction) =>
+            SupportedCultures.NormalizeOrNull(
+                interaction.Options.TryGetValue("language", out var value) ? value : null);
+
+        // Feed-list suffix showing a registration's non-default language by its native name.
+        private static string LanguageTag(string? culture) =>
+            culture == null ? string.Empty : $" · {SupportedCultures.NativeNameFor(culture)}";
 
         private static BotReply Calc(BotInteraction interaction)
         {

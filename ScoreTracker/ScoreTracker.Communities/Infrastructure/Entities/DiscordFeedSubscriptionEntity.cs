@@ -12,4 +12,7 @@ internal sealed class DiscordFeedSubscriptionEntity
     [MaxLength(32)] public string FeedKind { get; set; } = string.Empty;
     public int Mix { get; set; }
     public ulong? RegisteredByDiscordUserId { get; set; }
+
+    // The language this subscription's posts render in; null = English.
+    [MaxLength(16)] public string? Culture { get; set; }
 }

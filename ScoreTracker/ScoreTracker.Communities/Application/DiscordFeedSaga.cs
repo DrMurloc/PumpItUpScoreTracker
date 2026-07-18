@@ -76,13 +76,13 @@ namespace ScoreTracker.Communities.Application
 
             foreach (var channel in channels)
             {
-                var labels = await CommunityLabelsFor(channel, ct);
+                var labels = await CommunityLabelsFor(channel.ChannelId, ct);
                 var cards = new List<RichBotMessage>();
                 for (var i = 0; i < top.Count; i++)
                     cards.Add(WeeklyResultCard(mix, top[i], charts, names, labels, i + 1, top.Count,
                         ranked.Count - top.Count, latest));
                 cards.Add(LineupCard(mix, lineup, charts, lineupVideos));
-                await _bot.SendRichMessages(cards, new[] { channel }, ct);
+                await _bot.SendRichMessages(cards, new[] { channel.ChannelId }, ct);
             }
         }
 
@@ -100,9 +100,10 @@ namespace ScoreTracker.Communities.Application
 
             foreach (var channel in channels)
             {
-                var labels = await CommunityLabelsFor(channel, ct);
+                var labels = await CommunityLabelsFor(channel.ChannelId, ct);
                 await _bot.SendRichMessages(
-                    new[] { DailyCard(msg, finished, today, charts, names, labels) }, new[] { channel }, ct);
+                    new[] { DailyCard(msg, finished, today, charts, names, labels) },
+                    new[] { channel.ChannelId }, ct);
             }
         }
 

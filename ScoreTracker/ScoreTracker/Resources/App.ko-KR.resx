@@ -4647,4 +4647,22 @@
   <data name="Add the bot" xml:space="preserve">
     <value>봇 추가</value>
   </data>
+  <data name="This channel now receives **{0} — {1}**. {2}" xml:space="preserve">
+    <value>이 채널은 이제 **{0} — {1}** 알림을 받습니다. {2}</value>
+  </data>
+  <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
+    <value>매주 월요일 보드가 갱신되면 결과와 새로운 라인업이 게시됩니다.</value>
+  </data>
+  <data name="Yesterday's board and today's chart post each day." xml:space="preserve">
+    <value>어제의 보드와 오늘의 채보가 매일 게시됩니다.</value>
+  </data>
+  <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
+    <value>매주 일요일 집계 후 다이제스트가 게시됩니다.</value>
+  </data>
+  <data name="This channel was updated to receive notifications for the {0} community in PIU Scores!" xml:space="preserve">
+    <value>이 채널은 이제 PIU Scores의 {0} 커뮤니티 알림을 받습니다!</value>
+  </data>
+  <data name="This channel no longer receives notifications for the {0} community in PIU Scores" xml:space="preserve">
+    <value>이 채널은 더 이상 PIU Scores의 {0} 커뮤니티 알림을 받지 않습니다</value>
+  </data>
 </root>

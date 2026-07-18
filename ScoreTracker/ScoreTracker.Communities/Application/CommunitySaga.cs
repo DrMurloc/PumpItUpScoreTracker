@@ -51,10 +51,11 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     private readonly IUserReader _users;
     private readonly IPlayerStatsReader _playerStats;
     private readonly IDateTimeOffsetAccessor _dateTime;
+    private readonly ILocalizedTextAccessor _localizer;
 
     public CommunitySaga(ICurrentUserAccessor currentUser, ICommunityRepository communities, IBotClient bot,
         IUserReader users, IChartRepository charts, IScoreReader scores, IMediator mediator,
-        IPlayerStatsReader playerStats, IDateTimeOffsetAccessor dateTime)
+        IPlayerStatsReader playerStats, IDateTimeOffsetAccessor dateTime, ILocalizedTextAccessor localizer)
     {
         _currentUser = currentUser;
         _communities = communities;
@@ -65,6 +66,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         _mediator = mediator;
         _playerStats = playerStats;
         _dateTime = dateTime;
+        _localizer = localizer;
     }
 
     // Titles with no session — a zero-score import that still detected new badges, or an admin
@@ -785,11 +787,14 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         foreach (var existingChannel in community.Channels.Where(c => c.ChannelId == request.ChannelId).ToArray())
             community.Channels.Remove(existingChannel);
 
-        community.Channels.Add(new Community.ChannelConfiguration(request.ChannelId));
+        var culture = SupportedCultures.NormalizeOrNull(request.Culture);
+        community.Channels.Add(new Community.ChannelConfiguration(request.ChannelId, culture));
         await _communities.SaveCommunity(community, cancellationToken);
 
         await _bot.SendMessage(
-            $"This channel was updated to receive notifications for the {community.Name} community in PIU Scores!",
+            _localizer.Get(culture,
+                "This channel was updated to receive notifications for the {0} community in PIU Scores!",
+                (string)community.Name),
             request.ChannelId, cancellationToken);
     }
 
@@ -929,13 +934,18 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var community = await _communities.GetCommunityByName(request.CommunityName, cancellationToken) ??
                         throw new CommunityNotFoundException();
 
+        // The goodbye posts in the language the channel had registered.
+        var culture = community.Channels
+            .FirstOrDefault(c => c.ChannelId == request.ChannelId)?.Culture;
         foreach (var existingChannel in community.Channels.Where(c => c.ChannelId == request.ChannelId).ToArray())
             community.Channels.Remove(existingChannel);
 
         await _communities.SaveCommunity(community, cancellationToken);
 
         await _bot.SendMessage(
-            $"This channel was **removed** to receive notifications for the {community.Name} community in PIU Scores",
+            _localizer.Get(culture,
+                "This channel no longer receives notifications for the {0} community in PIU Scores",
+                (string)community.Name),
             request.ChannelId, cancellationToken);
     }
 

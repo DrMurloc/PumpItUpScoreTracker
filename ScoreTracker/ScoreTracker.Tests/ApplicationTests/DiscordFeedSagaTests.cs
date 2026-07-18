@@ -74,7 +74,7 @@ public sealed class DiscordFeedSagaTests
         var chart = new ChartBuilder().WithSongName("District 1").WithType(ChartType.Double).WithLevel(24)
             .WithMix(MixEnum.Phoenix2).Build();
         _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKind.WeeklyCharts, MixEnum.Phoenix2,
-            It.IsAny<CancellationToken>())).ReturnsAsync(new ulong[] { 123 });
+            It.IsAny<CancellationToken>())).ReturnsAsync(new[] { new DiscordFeedChannel(123, null) });
         _mediator.Setup(m => m.Send(It.IsAny<GetPastWeeklyDatesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { DateTimeOffset.UnixEpoch }.AsEnumerable());
         _mediator.Setup(m => m.Send(It.IsAny<GetPastWeeklyEntriesQuery>(), It.IsAny<CancellationToken>()))
@@ -107,7 +107,7 @@ public sealed class DiscordFeedSagaTests
     public async Task WeeklyFeedSkipsEntirelyWhenNoChannelSubscribes()
     {
         _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKind.WeeklyCharts, It.IsAny<MixEnum>(),
-            It.IsAny<CancellationToken>())).ReturnsAsync(Array.Empty<ulong>());
+            It.IsAny<CancellationToken>())).ReturnsAsync(Array.Empty<DiscordFeedChannel>());
 
         await Saga().Consume(Context(new WeeklyChartsRotatedEvent(MixEnum.Phoenix2)));
 
@@ -123,7 +123,7 @@ public sealed class DiscordFeedSagaTests
         var today = new ChartBuilder().WithSongName("Bee").WithType(ChartType.Single).WithLevel(7)
             .WithMix(MixEnum.Phoenix2).Build();
         _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKind.DailyStep, MixEnum.Phoenix2,
-            It.IsAny<CancellationToken>())).ReturnsAsync(new ulong[] { 123 });
+            It.IsAny<CancellationToken>())).ReturnsAsync(new[] { new DiscordFeedChannel(123, null) });
         _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { yesterday, today }.AsEnumerable());
         _mediator.Setup(m => m.Send(It.IsAny<GetDailyStepQuery>(), It.IsAny<CancellationToken>()))
@@ -145,7 +145,7 @@ public sealed class DiscordFeedSagaTests
     private void SetupDailyGlowScenario(Guid memberId, Chart today, bool isRegional)
     {
         _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKind.DailyStep, MixEnum.Phoenix2,
-            It.IsAny<CancellationToken>())).ReturnsAsync(new ulong[] { 123 });
+            It.IsAny<CancellationToken>())).ReturnsAsync(new[] { new DiscordFeedChannel(123, null) });
         _communities.Setup(c => c.GetChannelCommunities(123, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { new ChannelCommunityInfo(Name.From("Arrow Eclipse"), isRegional) });
         _mediator.Setup(m => m.Send(It.IsAny<GetCommunityMembersQuery>(), It.IsAny<CancellationToken>()))

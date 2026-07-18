@@ -18,14 +18,21 @@ namespace ScoreTracker.Communities.Infrastructure
         }
 
         public async Task Register(ulong channelId, DiscordFeedKind kind, MixEnum mix,
-            ulong? registeredByDiscordUserId, CancellationToken cancellationToken)
+            ulong? registeredByDiscordUserId, string? culture, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var kindName = kind.ToString();
             var mixValue = (int)mix;
-            var exists = await database.Set<DiscordFeedSubscriptionEntity>().AnyAsync(
+            var existing = await database.Set<DiscordFeedSubscriptionEntity>().FirstOrDefaultAsync(
                 s => s.ChannelId == channelId && s.FeedKind == kindName && s.Mix == mixValue, cancellationToken);
-            if (exists) return;
+            if (existing != null)
+            {
+                // Re-registering the same feed updates the language it posts in.
+                if (existing.Culture == culture) return;
+                existing.Culture = culture;
+                await database.SaveChangesAsync(cancellationToken);
+                return;
+            }
 
             await database.Set<DiscordFeedSubscriptionEntity>().AddAsync(new DiscordFeedSubscriptionEntity
             {
@@ -33,7 +40,8 @@ namespace ScoreTracker.Communities.Infrastructure
                 ChannelId = channelId,
                 FeedKind = kindName,
                 Mix = mixValue,
-                RegisteredByDiscordUserId = registeredByDiscordUserId
+                RegisteredByDiscordUserId = registeredByDiscordUserId,
+                Culture = culture
             }, cancellationToken);
             await database.SaveChangesAsync(cancellationToken);
         }
@@ -63,25 +71,25 @@ namespace ScoreTracker.Communities.Infrastructure
                 .ToArrayAsync(cancellationToken);
             return rows
                 .Select(s => new DiscordFeedSubscriptionRecord(s.ChannelId,
-                    Enum.Parse<DiscordFeedKind>(s.FeedKind), (MixEnum)s.Mix))
+                    Enum.Parse<DiscordFeedKind>(s.FeedKind), (MixEnum)s.Mix, s.Culture))
                 .ToArray();
         }
 
-        public async Task<IReadOnlyList<ulong>> GetSubscribedChannels(DiscordFeedKind kind, MixEnum mix,
+        public async Task<IReadOnlyList<DiscordFeedChannel>> GetSubscribedChannels(DiscordFeedKind kind, MixEnum mix,
             CancellationToken cancellationToken) =>
             await GetSubscribedChannels(kind.ToString(), mix, cancellationToken);
 
         // IDiscordFeedReader (published): the feed-kind string is the DiscordFeedKind enum name,
         // which is exactly how it is stored, so producing verticals can read subscriptions
         // without referencing Communities.
-        public async Task<IReadOnlyList<ulong>> GetSubscribedChannels(string feedKind, MixEnum mix,
+        public async Task<IReadOnlyList<DiscordFeedChannel>> GetSubscribedChannels(string feedKind, MixEnum mix,
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var mixValue = (int)mix;
             return await database.Set<DiscordFeedSubscriptionEntity>()
                 .Where(s => s.FeedKind == feedKind && s.Mix == mixValue)
-                .Select(s => s.ChannelId)
+                .Select(s => new DiscordFeedChannel(s.ChannelId, s.Culture))
                 .ToArrayAsync(cancellationToken);
         }
     }

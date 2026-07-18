@@ -10,9 +10,13 @@ namespace ScoreTracker.Domain.SecondaryPorts
     /// </summary>
     public interface IDiscordFeedReader
     {
-        Task<IReadOnlyList<ulong>> GetSubscribedChannels(string feedKind, MixEnum mix,
+        Task<IReadOnlyList<DiscordFeedChannel>> GetSubscribedChannels(string feedKind, MixEnum mix,
             CancellationToken cancellationToken);
     }
+
+    /// <summary>A subscribed channel and the language its feed posts render in (null = English).</summary>
+    [ExcludeFromCodeCoverage]
+    public sealed record DiscordFeedChannel(ulong ChannelId, string? Culture);
 
     public static class DiscordFeedKinds
     {

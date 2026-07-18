@@ -110,17 +110,21 @@ namespace ScoreTracker.Communities.Infrastructure
             var channelEntities = await database.Set<CommunityChannelEntity>().Where(cc => cc.CommunityId == communityId.Value)
                 .ToArrayAsync(cancellationToken);
             var channelIdSet = channelEntities.Select(e => e.ChannelId).ToHashSet();
-            var newChannelIds = community.Channels.Select(c => c.ChannelId).ToHashSet();
+            var newChannels = community.Channels.ToDictionary(c => c.ChannelId);
             foreach (var channelEntity in channelEntities)
-                if (!newChannelIds.Contains(channelEntity.ChannelId))
+                if (!newChannels.ContainsKey(channelEntity.ChannelId))
                     database.Set<CommunityChannelEntity>().Remove(channelEntity);
+                else
+                    // A surviving channel keeps its row; re-registering may have changed its language.
+                    channelEntity.Culture = newChannels[channelEntity.ChannelId].Culture;
 
             var toCreateChannels = community.Channels.Where(s => !channelIdSet.Contains(s.ChannelId))
                 .Select(s => new CommunityChannelEntity
                 {
                     Id = Guid.NewGuid(),
                     ChannelId = s.ChannelId,
-                    CommunityId = communityId.Value
+                    CommunityId = communityId.Value,
+                    Culture = s.Culture
                 }).ToArray();
 
             await database.Set<CommunityChannelEntity>().AddRangeAsync(toCreateChannels, cancellationToken);
@@ -137,8 +141,8 @@ namespace ScoreTracker.Communities.Infrastructure
             var rows = await (from cc in database.Set<CommunityChannelEntity>()
                 where cc.ChannelId == channelId
                 join c in database.Set<CommunityEntity>() on cc.CommunityId equals c.Id
-                select new { c.Name, c.IsRegional }).ToArrayAsync(cancellationToken);
-            return rows.Select(r => new ChannelCommunityInfo(Name.From(r.Name), r.IsRegional)).ToArray();
+                select new { c.Name, c.IsRegional, cc.Culture }).ToArrayAsync(cancellationToken);
+            return rows.Select(r => new ChannelCommunityInfo(Name.From(r.Name), r.IsRegional, r.Culture)).ToArray();
         }
 
         public async Task<IEnumerable<CommunityOverviewRecord>> GetCommunities(Guid userId,
@@ -253,7 +257,7 @@ namespace ScoreTracker.Communities.Infrastructure
 
             return new Community(entity.Name, entity.OwningUserId, Enum.Parse<CommunityPrivacyType>(entity.PrivacyType),
                 members.Select(c => c.UserId),
-                channels.Select(c => new Community.ChannelConfiguration(c.ChannelId)),
+                channels.Select(c => new Community.ChannelConfiguration(c.ChannelId, c.Culture)),
                 invites.ToDictionary(i => i.InviteCode,
                     i => i.ExpirationDate == null
                         ? null

@@ -89,6 +89,15 @@ namespace ScoreTracker.Communities.Contracts
                     OptionalMix
                 });
 
+        // Native names, universal in every viewer's client; the value is the stored culture code.
+        private static readonly IReadOnlyList<BotOptionChoice> LanguageChoices = SupportedCultures.All
+            .Select(c => new BotOptionChoice(c.NativeName, c.Code))
+            .ToArray();
+
+        private static BotCommandOption Language =>
+            new("language", "Language for this channel's posts (default English)", BotCommandOptionType.String,
+                Choices: LanguageChoices);
+
         private static BotSubCommandGroup Register =>
             new("register", "Register this channel for a feed",
                 new[]
@@ -98,14 +107,15 @@ namespace ScoreTracker.Communities.Contracts
                         {
                             new BotCommandOption("name", "Community name", BotCommandOptionType.String,
                                 Autocomplete: true),
-                            new BotCommandOption("invite-code", "Invite code (private communities only)")
+                            new BotCommandOption("invite-code", "Invite code (private communities only)"),
+                            Language
                         }, Ephemeral: true),
                     new BotSubCommand("weekly", "Weekly Charts — results and the new lineup",
-                        new[] { RequiredMix }, Ephemeral: true),
+                        new[] { RequiredMix, Language }, Ephemeral: true),
                     new BotSubCommand("daily", "Daily Step — yesterday's board and today's chart",
-                        new[] { RequiredMix }, Ephemeral: true),
+                        new[] { RequiredMix, Language }, Ephemeral: true),
                     new BotSubCommand("official", "Official leaderboards — the weekly digest",
-                        new[] { RequiredMix }, Ephemeral: true)
+                        new[] { RequiredMix, Language }, Ephemeral: true)
                 });
 
         private static BotSubCommand Unregister =>

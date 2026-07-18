@@ -65,7 +65,7 @@ public sealed class OfficialDigestFeedSagaTests
     public async Task SkipsWhenNoChannelSubscribes()
     {
         _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKinds.OfficialLeaderboards, MixEnum.Phoenix2,
-            It.IsAny<CancellationToken>())).ReturnsAsync(Array.Empty<ulong>());
+            It.IsAny<CancellationToken>())).ReturnsAsync(Array.Empty<DiscordFeedChannel>());
 
         await Saga().Consume(Context(new OfficialSnapshotSealedEvent(MixEnum.Phoenix2, false)));
 
@@ -77,7 +77,7 @@ public sealed class OfficialDigestFeedSagaTests
     public async Task PostsADigestWithTopTenMoversAndDifficultyCutlines()
     {
         _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKinds.OfficialLeaderboards, MixEnum.Phoenix2,
-            It.IsAny<CancellationToken>())).ReturnsAsync(new ulong[] { 123 });
+            It.IsAny<CancellationToken>())).ReturnsAsync(new[] { new DiscordFeedChannel(123, null) });
         var paradoxx = new ChartBuilder().WithSongName("Paradoxx").WithType(ChartType.Single).WithLevel(26)
             .WithMix(MixEnum.Phoenix2).Build();
         _charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), null, null, null, It.IsAny<CancellationToken>()))

@@ -52,7 +52,7 @@ namespace ScoreTracker.OfficialMirror.Application
 
             var card = DigestCard(msg.Mix, highlights, cutlines, rankings, charts);
             if (card == null) return; // a quiet week (no movers, firsts, #1s, or full boards)
-            await _bot.SendRichMessages(new[] { card }, channels, ct);
+            await _bot.SendRichMessages(new[] { card }, channels.Select(c => c.ChannelId).ToArray(), ct);
         }
 
         private static RichBotMessage? DigestCard(MixEnum mix, WeeklyHighlightsRecord highlights,

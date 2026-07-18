@@ -35,10 +35,22 @@ public sealed class BotCommandSagaTests
     private readonly Mock<ICommunityRepository> _communities = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IDiscordFeedSubscriptionRepository> _feeds = new();
+    private readonly Mock<ILocalizedTextAccessor> _localizer = new();
     private readonly Mock<IMediator> _mediator = new();
 
+    public BotCommandSagaTests()
+    {
+        // Identity localizer: the English key (with its format args applied) comes back
+        // regardless of culture, so text assertions stay culture-independent.
+        _localizer.Setup(l => l.Get(It.IsAny<string?>(), It.IsAny<string>()))
+            .Returns((string? _, string key) => key);
+        _localizer.Setup(l => l.Get(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<object[]>()))
+            .Returns((string? _, string key, object[] args) => string.Format(key, args));
+    }
+
     private BotCommandSaga Saga() =>
-        new(_bot.Object, _communities.Object, _feeds.Object, _mediator.Object, _currentUser.Object);
+        new(_bot.Object, _communities.Object, _feeds.Object, _mediator.Object, _currentUser.Object,
+            _localizer.Object);
 
     private static HandleBotInteractionCommand Invoke(string[] path, Dictionary<string, string> options,
         bool canManage = false) =>
@@ -80,7 +92,7 @@ public sealed class BotCommandSagaTests
 
         Assert.Contains("Manage Channels", reply.Text);
         _feeds.Verify(f => f.Register(It.IsAny<ulong>(), It.IsAny<DiscordFeedKind>(), It.IsAny<MixEnum>(),
-            It.IsAny<ulong?>(), It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<ulong?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -93,7 +105,7 @@ public sealed class BotCommandSagaTests
 
         Assert.Contains("permission", reply.Text, StringComparison.OrdinalIgnoreCase);
         _feeds.Verify(f => f.Register(It.IsAny<ulong>(), It.IsAny<DiscordFeedKind>(), It.IsAny<MixEnum>(),
-            It.IsAny<ulong?>(), It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<ulong?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -106,7 +118,36 @@ public sealed class BotCommandSagaTests
 
         Assert.Contains("Weekly Charts", reply.Text);
         Assert.Contains("Phoenix 2", reply.Text);
-        _feeds.Verify(f => f.Register(100, DiscordFeedKind.WeeklyCharts, MixEnum.Phoenix2, 300,
+        _feeds.Verify(f => f.Register(100, DiscordFeedKind.WeeklyCharts, MixEnum.Phoenix2, 300, null,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RegisteringAFeedWithALanguageStoresItAndConfirmsInThatLanguage()
+    {
+        _bot.Setup(b => b.CanPostToChannel(It.IsAny<ulong>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await Saga().Handle(Invoke(new[] { "register", "weekly" },
+                new Dictionary<string, string> { ["mix"] = "Phoenix2", ["language"] = "ko-KR" }, canManage: true),
+            CancellationToken.None);
+
+        _feeds.Verify(f => f.Register(100, DiscordFeedKind.WeeklyCharts, MixEnum.Phoenix2, 300, "ko-KR",
+            It.IsAny<CancellationToken>()), Times.Once);
+        // The public confirmation composes through the channel's chosen culture — the
+        // language preview is the point of the message.
+        _localizer.Verify(l => l.Get("ko-KR", It.IsAny<string>(), It.IsAny<object[]>()), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task AnUnknownLanguageChoiceFallsBackToTheEnglishDefault()
+    {
+        _bot.Setup(b => b.CanPostToChannel(It.IsAny<ulong>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await Saga().Handle(Invoke(new[] { "register", "daily" },
+                new Dictionary<string, string> { ["mix"] = "Phoenix", ["language"] = "xx-YY" }, canManage: true),
+            CancellationToken.None);
+
+        _feeds.Verify(f => f.Register(100, DiscordFeedKind.DailyStep, MixEnum.Phoenix, 300, null,
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -116,11 +157,13 @@ public sealed class BotCommandSagaTests
         _bot.Setup(b => b.CanPostToChannel(It.IsAny<ulong>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var reply = await Saga().Handle(Invoke(new[] { "register", "community" },
-            new Dictionary<string, string> { ["name"] = "SoCal Pump" }, canManage: true), CancellationToken.None);
+            new Dictionary<string, string> { ["name"] = "SoCal Pump", ["language"] = "ja-JP" }, canManage: true),
+            CancellationToken.None);
 
         Assert.Contains("registered", reply.Text, StringComparison.OrdinalIgnoreCase);
         _mediator.Verify(m => m.Send(It.Is<AddDiscordChannelToCommunityCommand>(
-            c => c.ChannelId == 100 && (string)c.CommunityName! == "SoCal Pump"), It.IsAny<CancellationToken>()),
+            c => c.ChannelId == 100 && (string)c.CommunityName! == "SoCal Pump" && c.Culture == "ja-JP"),
+            It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

@@ -4766,4 +4766,22 @@
   <data name="Add the bot" xml:space="preserve">
     <value>ボットを追加</value>
   </data>
+  <data name="This channel now receives **{0} — {1}**. {2}" xml:space="preserve">
+    <value>このチャンネルは今後 **{0} — {1}** を受信します。{2}</value>
+  </data>
+  <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
+    <value>毎週月曜のボード更新時に、結果と新しいラインナップが投稿されます。</value>
+  </data>
+  <data name="Yesterday's board and today's chart post each day." xml:space="preserve">
+    <value>昨日のボードと今日の譜面が毎日投稿されます。</value>
+  </data>
+  <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
+    <value>毎週日曜の集計後にダイジェストが投稿されます。</value>
+  </data>
+  <data name="This channel was updated to receive notifications for the {0} community in PIU Scores!" xml:space="preserve">
+    <value>このチャンネルは PIU Scores の {0} コミュニティの通知を受け取るようになりました！</value>
+  </data>
+  <data name="This channel no longer receives notifications for the {0} community in PIU Scores" xml:space="preserve">
+    <value>このチャンネルは PIU Scores の {0} コミュニティの通知を受け取らなくなりました</value>
+  </data>
 </root>

@@ -4760,4 +4760,22 @@
   <data name="Add the bot" xml:space="preserve">
     <value>Add the bot</value>
   </data>
+  <data name="This channel now receives **{0} — {1}**. {2}" xml:space="preserve">
+    <value>This channel now receives **{0} — {1}**. {2}</value>
+  </data>
+  <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
+    <value>Results and the new lineup post when the board rotates each Monday.</value>
+  </data>
+  <data name="Yesterday's board and today's chart post each day." xml:space="preserve">
+    <value>Yesterday's board and today's chart post each day.</value>
+  </data>
+  <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
+    <value>The digest posts after the weekly Sunday sweep.</value>
+  </data>
+  <data name="This channel was updated to receive notifications for the {0} community in PIU Scores!" xml:space="preserve">
+    <value>This channel was updated to receive notifications for the {0} community in PIU Scores!</value>
+  </data>
+  <data name="This channel no longer receives notifications for the {0} community in PIU Scores" xml:space="preserve">
+    <value>This channel no longer receives notifications for the {0} community in PIU Scores</value>
+  </data>
 </root>

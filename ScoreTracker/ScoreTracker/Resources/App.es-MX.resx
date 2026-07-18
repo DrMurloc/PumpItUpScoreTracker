@@ -4646,4 +4646,22 @@
   <data name="Add the bot" xml:space="preserve">
     <value>Agregar el bot</value>
   </data>
+  <data name="This channel now receives **{0} — {1}**. {2}" xml:space="preserve">
+    <value>Este canal ahora recibe **{0} — {1}**. {2}</value>
+  </data>
+  <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
+    <value>Los resultados y los nuevos charts se publican cuando la clasificación rota cada lunes.</value>
+  </data>
+  <data name="Yesterday's board and today's chart post each day." xml:space="preserve">
+    <value>El tablero de ayer y el chart de hoy se publican cada día.</value>
+  </data>
+  <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
+    <value>El resumen se publica después del barrido semanal del domingo.</value>
+  </data>
+  <data name="This channel was updated to receive notifications for the {0} community in PIU Scores!" xml:space="preserve">
+    <value>¡Este canal fue actualizado para recibir notificaciones de la comunidad {0} en PIU Scores!</value>
+  </data>
+  <data name="This channel no longer receives notifications for the {0} community in PIU Scores" xml:space="preserve">
+    <value>Este canal ya no recibe notificaciones de la comunidad {0} en PIU Scores</value>
+  </data>
 </root>

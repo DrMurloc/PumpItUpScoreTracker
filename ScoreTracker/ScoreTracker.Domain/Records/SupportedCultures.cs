@@ -45,4 +45,20 @@ public static class SupportedCultures
         return All.FirstOrDefault(c => string.Equals(c.Code, code, StringComparison.OrdinalIgnoreCase))?.Code
                ?? Default;
     }
+
+    /// <summary>
+    ///     The optional stored form: canonical casing for a supported code, null (meaning
+    ///     "English default") for anything absent or unsupported.
+    /// </summary>
+    public static string? NormalizeOrNull(string? code)
+    {
+        return All.FirstOrDefault(c => string.Equals(c.Code, code, StringComparison.OrdinalIgnoreCase))?.Code;
+    }
+
+    /// <summary>The language's own name for itself, for a stored code (null/unknown → English).</summary>
+    public static string NativeNameFor(string? code)
+    {
+        return All.FirstOrDefault(c => string.Equals(c.Code, code, StringComparison.OrdinalIgnoreCase))
+            ?.NativeName ?? All[0].NativeName;
+    }
 }
