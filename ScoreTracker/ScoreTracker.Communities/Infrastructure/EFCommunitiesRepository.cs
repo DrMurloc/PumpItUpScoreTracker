@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Communities.Infrastructure.Entities;
 using ScoreTracker.SharedKernel.Enums;
@@ -129,15 +130,15 @@ namespace ScoreTracker.Communities.Infrastructure
             await database.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<IReadOnlyList<Name>> GetChannelCommunityNames(ulong channelId,
+        public async Task<IReadOnlyList<ChannelCommunityInfo>> GetChannelCommunities(ulong channelId,
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var names = await (from cc in database.Set<CommunityChannelEntity>()
+            var rows = await (from cc in database.Set<CommunityChannelEntity>()
                 where cc.ChannelId == channelId
                 join c in database.Set<CommunityEntity>() on cc.CommunityId equals c.Id
-                select c.Name).ToArrayAsync(cancellationToken);
-            return names.Select(Name.From).ToArray();
+                select new { c.Name, c.IsRegional }).ToArrayAsync(cancellationToken);
+            return rows.Select(r => new ChannelCommunityInfo(Name.From(r.Name), r.IsRegional)).ToArray();
         }
 
         public async Task<IEnumerable<CommunityOverviewRecord>> GetCommunities(Guid userId,

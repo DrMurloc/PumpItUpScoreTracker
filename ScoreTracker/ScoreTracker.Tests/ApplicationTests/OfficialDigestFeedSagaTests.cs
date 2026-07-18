@@ -73,7 +73,7 @@ public sealed class OfficialDigestFeedSagaTests
     }
 
     [Fact]
-    public async Task PostsADigestWithMoversAndCutlines()
+    public async Task PostsADigestWithTopTenMoversAndDifficultyCutlines()
     {
         _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKinds.OfficialLeaderboards, MixEnum.Phoenix2,
             It.IsAny<CancellationToken>())).ReturnsAsync(new ulong[] { 123 });
@@ -84,17 +84,23 @@ public sealed class OfficialDigestFeedSagaTests
                 Array.Empty<OfficialGradeFirstRecord>(),
                 Array.Empty<OfficialNewNumberOneRecord>()));
         _mediator.Setup(m => m.Send(It.IsAny<GetWhatItTakesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new WhatItTakesRecord(DateTimeOffset.UnixEpoch, true, 1000, null,
+            .ReturnsAsync(new WhatItTakesRecord(DateTimeOffset.UnixEpoch, true, 1000,
+                new CutlineTierRecord(1000, 7842.10m, 34.55m, 20, 18, 17, 16),
                 Array.Empty<CutlineTierRecord>(),
-                new[] { new BoardCutlineRecord("All", 7842.10m, 34.55m, true) },
+                Array.Empty<BoardCutlineRecord>(),
                 Array.Empty<CutlineHistoryPointRecord>()));
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialRankingsRecord(DateTimeOffset.UnixEpoch, true,
+                new[] { new OfficialRankingRecord(1, 3, Player("JEWEL"), 9999m, 50, null) }));
 
         await Saga().Consume(Context(new OfficialSnapshotSealedEvent(MixEnum.Phoenix2, false)));
 
         Assert.Single(_sent);
         var text = string.Join("\n", _sent[0].Blocks.OfType<RichBotText>().Select(t => t.Markdown));
-        Assert.Contains("HYSTERIA", text);
-        Assert.Contains("What it takes", text);
-        Assert.Contains("▲", text);
+        Assert.Contains("PUMBILITY top 10", text);
+        Assert.Contains("JEWEL", text);
+        Assert.Contains("↑2", text); // moved from rank 3 to rank 1
+        Assert.Contains("50× AAA at Lv.20", text);
+        Assert.Contains("50× SSS at Lv.16", text);
     }
 }

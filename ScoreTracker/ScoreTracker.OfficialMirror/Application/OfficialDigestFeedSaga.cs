@@ -47,17 +47,23 @@ namespace ScoreTracker.OfficialMirror.Application
             var highlights = await _mediator.Send(new GetWeeklyHighlightsQuery(msg.Mix), ct);
             if (highlights == null) return;
             var cutlines = await _mediator.Send(new GetWhatItTakesQuery(msg.Mix), ct);
+            var rankings = await _mediator.Send(new GetOfficialRankingsQuery(msg.Mix), ct);
             var charts = (await _charts.GetCharts(msg.Mix, cancellationToken: ct)).ToDictionary(c => c.Id);
 
-            var card = DigestCard(msg.Mix, highlights, cutlines, charts);
+            var card = DigestCard(msg.Mix, highlights, cutlines, rankings, charts);
             if (card == null) return; // a quiet week (no movers, firsts, #1s, or full boards)
             await _bot.SendRichMessages(new[] { card }, channels, ct);
         }
 
         private static RichBotMessage? DigestCard(MixEnum mix, WeeklyHighlightsRecord highlights,
-            WhatItTakesRecord? cutlines, IReadOnlyDictionary<Guid, Chart> charts)
+            WhatItTakesRecord? cutlines, OfficialRankingsRecord? rankings, IReadOnlyDictionary<Guid, Chart> charts)
         {
             var blocks = new List<IRichBotBlock>();
+
+            // Open with the current top 10 and each player's week-over-week rank move.
+            if (rankings != null && rankings.Rankings.Count > 0)
+                blocks.Add(Section("🏆 **PUMBILITY top 10**", rankings.Rankings.Take(10).Select(r =>
+                    $"`{r.Rank,2}` **{r.Player.Username}** — {r.Rating:N0} {RankMove(r.Rank, r.PreviousRank)}")));
 
             if (highlights.Movers.Count > 0)
                 blocks.Add(Section("📈 **PUMBILITY movers**", highlights.Movers.Take(5).Select(m =>
@@ -77,12 +83,18 @@ namespace ScoreTracker.OfficialMirror.Application
                 blocks.Add(Section("🌍 **World firsts & new #1s**", lines));
             }
 
-            if (cutlines != null && cutlines.Boards.Any(b => b.EntryValue != null))
-                blocks.Add(Section("🎟 **What it takes — top-1000 cutlines**", new[]
-                {
-                    string.Join(" · ", cutlines.Boards.Where(b => b.EntryValue != null)
-                        .Select(b => $"{b.Type} **{b.EntryValue:N2}**{DeltaText(b.WeekDelta)}"))
-                }));
+            // What it takes, in difficulties: the uniform level where AAA/SSS on fifty charts
+            // clears the rank-1000 cutline (null until the board is full at 1000).
+            if (cutlines?.Entry != null)
+            {
+                var takes = new List<string>();
+                if (cutlines.Entry.LevelForAAA != null)
+                    takes.Add($"**50× AAA at Lv.{cutlines.Entry.LevelForAAA}**");
+                if (cutlines.Entry.LevelForSSS != null)
+                    takes.Add($"**50× SSS at Lv.{cutlines.Entry.LevelForSSS}**");
+                if (takes.Count > 0)
+                    blocks.Add(Section("🎟 **To make the top 1000**", new[] { string.Join(" · ", takes) }));
+            }
 
             if (blocks.Count == 0) return null;
 
@@ -105,8 +117,12 @@ namespace ScoreTracker.OfficialMirror.Application
         private static RichBotText Section(string heading, IEnumerable<string> lines) =>
             new($"{heading}\n{string.Join("\n", lines)}");
 
-        private static string DeltaText(decimal? delta) =>
-            delta == null ? "" : delta.Value >= 0 ? $" ▲ +{delta:N2}" : $" ▼ {delta:N2}";
+        private static string RankMove(int rank, int? previousRank)
+        {
+            if (previousRank == null) return "🆕";
+            var delta = previousRank.Value - rank; // positive = moved up the board
+            return delta > 0 ? $"↑{delta}" : delta < 0 ? $"↓{-delta}" : "–";
+        }
 
         private static string ChartName(IReadOnlyDictionary<Guid, Chart> charts, Guid? chartId) =>
             chartId != null && charts.TryGetValue(chartId.Value, out var chart)

@@ -144,8 +144,8 @@ public sealed class BotCommandSagaTests
     {
         _feeds.Setup(f => f.GetForChannel(It.IsAny<ulong>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<DiscordFeedSubscriptionRecord>());
-        _communities.Setup(c => c.GetChannelCommunityNames(It.IsAny<ulong>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<ScoreTracker.SharedKernel.ValueTypes.Name>());
+        _communities.Setup(c => c.GetChannelCommunities(It.IsAny<ulong>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChannelCommunityInfo>());
 
         var reply = await Saga().Handle(Invoke(new[] { "feeds" }, new Dictionary<string, string>()),
             CancellationToken.None);
@@ -163,8 +163,8 @@ public sealed class BotCommandSagaTests
                 new DiscordFeedSubscriptionRecord(100, DiscordFeedKind.WeeklyCharts, MixEnum.Phoenix2),
                 new DiscordFeedSubscriptionRecord(100, DiscordFeedKind.DailyStep, MixEnum.Phoenix2)
             });
-        _communities.Setup(c => c.GetChannelCommunityNames(It.IsAny<ulong>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { ScoreTracker.SharedKernel.ValueTypes.Name.From("SoCal Pump") });
+        _communities.Setup(c => c.GetChannelCommunities(It.IsAny<ulong>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new ChannelCommunityInfo(Name.From("SoCal Pump"), false) });
 
         var reply = await Saga().Handle(Invoke(new[] { "feeds" }, new Dictionary<string, string>()),
             CancellationToken.None);
@@ -208,8 +208,8 @@ public sealed class BotCommandSagaTests
     {
         _feeds.Setup(f => f.GetForChannel(100, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { new DiscordFeedSubscriptionRecord(100, DiscordFeedKind.WeeklyCharts, MixEnum.Phoenix2) });
-        _communities.Setup(c => c.GetChannelCommunityNames(100, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { Name.From("SoCal Pump") });
+        _communities.Setup(c => c.GetChannelCommunities(100, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new ChannelCommunityInfo(Name.From("SoCal Pump"), false) });
 
         var choices = await Saga().Handle(new GetBotAutocompleteQuery(
             new BotAutocompleteRequest(new[] { "unregister" }, "feed", "",
@@ -347,11 +347,9 @@ public sealed class BotCommandSagaTests
                 new ScoreTracker.Domain.Records.SongTierListEntry(Name.From("Pass Count"), target.Id,
                     TierListCategory.Medium, 0)
             }.AsEnumerable());
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartSkillChipsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>
-            {
-                [target.Id] = new[] { new ChartSkillChipRecord(Skill.Fast, true, 0.5m) }
-            });
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartStepAnalysisQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChartStepAnalysisRecord(new[] { "run", "twist_90" },
+                new Dictionary<string, decimal>(), null, null, null, null, null));
         _mediator.Setup(m => m.Send(It.IsAny<GetSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
@@ -367,7 +365,8 @@ public sealed class BotCommandSagaTests
         Assert.Contains("District 1", text);
         Assert.Contains("Scoring level", text);
         Assert.Contains("Pass **Medium**", text);
-        Assert.Contains("Fast", text);
+        Assert.Contains("Run", text); // prettified from the raw "run" step-analysis skill
+        Assert.Contains("Twist 90", text); // "twist_90" → "Twist 90"
         Assert.Contains("Similar charts", text);
         Assert.Contains("Vacuum", text);
     }

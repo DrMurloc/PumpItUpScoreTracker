@@ -72,15 +72,16 @@ namespace ScoreTracker.Communities.Application
             var top = ranked.Take(TopCharts).ToList();
             var names = await ResolveNames(top.SelectMany(r => r.Placements.Select(p => p.Item2.UserId)), ct);
             var lineup = (await _mediator.Send(new GetWeeklyChartsQuery(mix), ct)).ToList();
+            var lineupVideos = await VideoLinks(lineup.Select(w => w.ChartId), ct);
 
             foreach (var channel in channels)
             {
-                var members = await MembersFor(channel, ct);
+                var labels = await CommunityLabelsFor(channel, ct);
                 var cards = new List<RichBotMessage>();
                 for (var i = 0; i < top.Count; i++)
-                    cards.Add(WeeklyResultCard(mix, top[i], charts, names, members, i + 1, top.Count,
+                    cards.Add(WeeklyResultCard(mix, top[i], charts, names, labels, i + 1, top.Count,
                         ranked.Count - top.Count, latest));
-                cards.Add(LineupCard(mix, lineup, charts));
+                cards.Add(LineupCard(mix, lineup, charts, lineupVideos));
                 await _bot.SendRichMessages(cards, new[] { channel }, ct);
             }
         }
@@ -99,20 +100,21 @@ namespace ScoreTracker.Communities.Application
 
             foreach (var channel in channels)
             {
-                var members = await MembersFor(channel, ct);
+                var labels = await CommunityLabelsFor(channel, ct);
                 await _bot.SendRichMessages(
-                    new[] { DailyCard(msg, finished, today, charts, names, members) }, new[] { channel }, ct);
+                    new[] { DailyCard(msg, finished, today, charts, names, labels) }, new[] { channel }, ct);
             }
         }
 
         private RichBotMessage WeeklyResultCard(MixEnum mix, RankedBoard board,
-            IReadOnlyDictionary<Guid, Chart> charts, IReadOnlyDictionary<Guid, string> names, ISet<Guid> members,
+            IReadOnlyDictionary<Guid, Chart> charts, IReadOnlyDictionary<Guid, string> names,
+            IReadOnlyDictionary<Guid, string> labels,
             int cardIndex, int cardCount, int moreCharts, DateTimeOffset week)
         {
             var chart = charts[board.ChartId];
             var rows = string.Join("\n", board.Placements.Select(p =>
-                LeaderRow(p.Item1, Name(names, p.Item2.UserId, members), p.Item2.Score, p.Item2.Plate,
-                    p.Item2.IsBroken)));
+                LeaderRow(p.Item1, PlayerName(names, p.Item2.UserId), p.Item2.Score, p.Item2.Plate,
+                    p.Item2.IsBroken, Label(labels, p.Item2.UserId))));
             var footer = moreCharts > 0 && cardIndex == cardCount
                 ? $"#MIX|{mix}# Card {cardIndex} of {cardCount} · {moreCharts} more charts had entries"
                 : $"#MIX|{mix}# Card {cardIndex} of {cardCount} · {mix.GetName()} · PIU Scores";
@@ -128,12 +130,19 @@ namespace ScoreTracker.Communities.Application
         }
 
         private RichBotMessage LineupCard(MixEnum mix, IReadOnlyList<WeeklyTournamentChart> lineup,
-            IReadOnlyDictionary<Guid, Chart> charts)
+            IReadOnlyDictionary<Guid, Chart> charts, IReadOnlyDictionary<Guid, Uri> videos)
         {
-            var resolved = lineup.Where(w => charts.ContainsKey(w.ChartId)).Select(w => charts[w.ChartId]).ToList();
-            var lines = string.Join(" · ", resolved
-                .OrderBy(c => c.Type).ThenBy(c => (int)c.Level)
-                .Select(c => $"#DIFFICULTY|{c.DifficultyString}# [{(string)c.Song.Name}]({SiteBase}/Chart/{c.Id})"));
+            // Co-ops first; then by level low to high, singles before doubles at a tie.
+            var resolved = lineup.Where(w => charts.ContainsKey(w.ChartId)).Select(w => charts[w.ChartId])
+                .OrderBy(c => c.Type == ChartType.CoOp ? 0 : 1)
+                .ThenBy(c => (int)c.Level)
+                .ThenBy(c => c.Type == ChartType.Double ? 1 : 0)
+                .ToList();
+            var lines = string.Join("\n", resolved.Select(c =>
+            {
+                var video = videos.TryGetValue(c.Id, out var url) ? $" - [Video]({url})" : string.Empty;
+                return $"#DIFFICULTY|{c.DifficultyString}# [{(string)c.Song.Name}]({SiteBase}/Chart/{c.Id}){video}";
+            }));
 
             return new RichBotMessage(
                 new RichBotSection($"### This week's charts\n-# {MixTag(mix)}one per level bucket", null),
@@ -144,16 +153,12 @@ namespace ScoreTracker.Communities.Application
                 },
                 $"#MIX|{mix}# {mix.GetName()} · resets Monday midnight ET",
                 mix.GetAccentColor(),
-                new[]
-                {
-                    new RichBotLink("Full results", new Uri($"{SiteBase}/WeeklyCharts")),
-                    new RichBotLink("Weekly Charts", new Uri($"{SiteBase}/WeeklyCharts"))
-                });
+                new[] { new RichBotLink("Weekly Charts", new Uri($"{SiteBase}/WeeklyCharts")) });
         }
 
         private RichBotMessage DailyCard(DailyStepRotatedEvent msg, IReadOnlyList<DailyStepResult> finished,
             DailyStepBoard? today, IReadOnlyDictionary<Guid, Chart> charts,
-            IReadOnlyDictionary<Guid, string> names, ISet<Guid> members)
+            IReadOnlyDictionary<Guid, string> names, IReadOnlyDictionary<Guid, string> labels)
         {
             var blocks = new List<IRichBotBlock> { new RichBotDivider() };
 
@@ -163,7 +168,8 @@ namespace ScoreTracker.Communities.Application
                     $"**Yesterday — {(string)finishedChart.Song.Name} #DIFFICULTY|{finishedChart.DifficultyString}#**" +
                     (msg.FinishedIsLimbo ? " · 🕯 Limbo (lowest passing won)" : "")));
                 blocks.Add(new RichBotText(string.Join("\n", finished.Select(p =>
-                    LeaderRow(p.Place, Name(names, p.UserId, members), p.Score, p.Plate, p.IsBroken)))));
+                    LeaderRow(p.Place, PlayerName(names, p.UserId), p.Score, p.Plate, p.IsBroken,
+                        Label(labels, p.UserId))))));
                 blocks.Add(new RichBotDivider());
             }
 
@@ -185,11 +191,26 @@ namespace ScoreTracker.Communities.Application
                 new[] { new RichBotLink("Daily Step board", new Uri(SiteBase)) });
         }
 
-        private static string LeaderRow(int place, string name, PhoenixScore score, PhoenixPlate plate, bool isBroken) =>
-            $"`{place,2}` **{name}** — {(int)score:N0} #LETTERGRADE|{score.LetterGrade}|{isBroken}##PLATE|{plate}#";
+        // The community name (when the row's player is in one of the channel's non-regional
+        // communities) trails the row, e.g. "…SSS SG (Arrow Eclipse)".
+        private static string LeaderRow(int place, string name, PhoenixScore score, PhoenixPlate plate, bool isBroken,
+            string? community) =>
+            $"`{place,2}` **{name}** — {(int)score:N0} #LETTERGRADE|{score.LetterGrade}|{isBroken}##PLATE|{plate}#"
+            + (community != null ? $" ({community})" : string.Empty);
 
-        private static string Name(IReadOnlyDictionary<Guid, string> names, Guid userId, ISet<Guid> members) =>
-            (members.Contains(userId) ? "🟢 " : "") + (names.TryGetValue(userId, out var n) ? n : "Player");
+        private static string PlayerName(IReadOnlyDictionary<Guid, string> names, Guid userId) =>
+            names.TryGetValue(userId, out var n) ? n : "Player";
+
+        private static string? Label(IReadOnlyDictionary<Guid, string> labels, Guid userId) =>
+            labels.TryGetValue(userId, out var label) ? label : null;
+
+        private async Task<IReadOnlyDictionary<Guid, Uri>> VideoLinks(IEnumerable<Guid> chartIds, CancellationToken ct)
+        {
+            var ids = chartIds.Distinct().ToArray();
+            if (ids.Length == 0) return new Dictionary<Guid, Uri>();
+            var videos = await _mediator.Send(new GetChartVideosQuery(ids), ct);
+            return videos.GroupBy(v => v.ChartId).ToDictionary(g => g.Key, g => g.First().VideoUrl);
+        }
 
         // Phoenix is the default context and stays unprefixed; the tag marks the other mix.
         private static string MixTag(MixEnum mix) => mix == MixEnum.Phoenix ? "" : $"[{mix.GetName()}] ";
@@ -203,14 +224,16 @@ namespace ScoreTracker.Communities.Application
             return users.ToDictionary(u => u.Id, u => (string)u.Name);
         }
 
-        private async Task<ISet<Guid>> MembersFor(ulong channelId, CancellationToken ct)
+        // Maps a member to the community name shown beside their row. Regional (country)
+        // communities are excluded — everyone shares those, so they'd label every row.
+        private async Task<IReadOnlyDictionary<Guid, string>> CommunityLabelsFor(ulong channelId, CancellationToken ct)
         {
-            var communityNames = await _communities.GetChannelCommunityNames(channelId, ct);
-            if (communityNames.Count == 0) return new HashSet<Guid>();
-            var members = new HashSet<Guid>();
-            foreach (var name in communityNames)
-                members.UnionWith(await _mediator.Send(new GetCommunityMembersQuery(name), ct));
-            return members;
+            var communities = await _communities.GetChannelCommunities(channelId, ct);
+            var labels = new Dictionary<Guid, string>();
+            foreach (var community in communities.Where(c => !c.IsRegional))
+            foreach (var userId in await _mediator.Send(new GetCommunityMembersQuery(community.Name), ct))
+                labels.TryAdd(userId, (string)community.Name);
+            return labels;
         }
 
         private sealed record RankedBoard(Guid ChartId, int PlayerCount,

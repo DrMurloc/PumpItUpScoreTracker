@@ -163,7 +163,7 @@ namespace ScoreTracker.Communities.Application
         private async Task<BotReply> Feeds(BotInteraction interaction, CancellationToken cancellationToken)
         {
             var feeds = await _feeds.GetForChannel(interaction.ChannelId, cancellationToken);
-            var communities = await _communities.GetChannelCommunityNames(interaction.ChannelId, cancellationToken);
+            var communities = await _communities.GetChannelCommunities(interaction.ChannelId, cancellationToken);
             if (feeds.Count == 0 && communities.Count == 0)
                 return new BotReply(Text:
                     "This channel isn't registered for anything yet. Use /piu register to add a feed.");
@@ -171,7 +171,7 @@ namespace ScoreTracker.Communities.Application
             var lines = feeds
                 .OrderBy(f => f.Kind).ThenBy(f => f.Mix)
                 .Select(f => $"{FeedEmoji(f.Kind)} {FeedName(f.Kind)} — **{f.Mix.GetName()}**")
-                .Concat(communities.Select(name => $"👥 Community — **{(string)name}**"))
+                .Concat(communities.Select(c => $"👥 Community — **{(string)c.Name}**"))
                 .ToList();
 
             var card = new RichBotMessage(
@@ -204,8 +204,9 @@ namespace ScoreTracker.Communities.Application
             foreach (var f in await _feeds.GetForChannel(request.ChannelId, cancellationToken))
                 choices.Add(new BotOptionChoice($"{FeedName(f.Kind)} — {f.Mix.GetName()}",
                     $"feed:{f.Kind}:{f.Mix}"));
-            foreach (var name in await _communities.GetChannelCommunityNames(request.ChannelId, cancellationToken))
-                choices.Add(new BotOptionChoice($"Community — {(string)name}", $"community:{(string)name}"));
+            foreach (var community in await _communities.GetChannelCommunities(request.ChannelId, cancellationToken))
+                choices.Add(new BotOptionChoice($"Community — {(string)community.Name}",
+                    $"community:{(string)community.Name}"));
             return choices.Take(25).ToArray();
         }
 
@@ -229,6 +230,7 @@ namespace ScoreTracker.Communities.Application
                     "No suggestions right now — try a different goal, or import more scores first.");
 
             var charts = (await _mediator.Send(new GetChartsQuery(mix), cancellationToken)).ToDictionary(c => c.Id);
+            var videos = await VideoLinks(recommendations.Select(r => r.ChartId), cancellationToken);
             var blocks = new List<IRichBotBlock> { new RichBotDivider() };
             foreach (var recommendation in recommendations)
             {
@@ -236,8 +238,9 @@ namespace ScoreTracker.Communities.Application
                 var caption = string.IsNullOrWhiteSpace(recommendation.Explanation)
                     ? (string)recommendation.Category
                     : recommendation.Explanation;
+                var video = videos.TryGetValue(chart.Id, out var url) ? $" · [Video]({url})" : string.Empty;
                 blocks.Add(new RichBotSection(
-                    $"#DIFFICULTY|{chart.DifficultyString}# [{(string)chart.Song.Name}]({SiteBase}/Chart/{chart.Id})\n-# {caption}",
+                    $"#DIFFICULTY|{chart.DifficultyString}# [{(string)chart.Song.Name}]({SiteBase}/Chart/{chart.Id}){video}\n-# {caption}",
                     chart.Song.ImagePath));
             }
 
@@ -294,8 +297,8 @@ namespace ScoreTracker.Communities.Application
             var drawn = (await _mediator.Send(new DrawRandomChartsQuery(BuildSettings(count, type, min, max), mix),
                 cancellationToken)).ToList();
             if (drawn.Count == 0) return new BotReply(Text: "No charts matched those settings.");
-            return DrawCard(drawn, mix, $"Drew {drawn.Count} {(drawn.Count == 1 ? "chart" : "charts")}",
-                DrawSubtitle(type, min, max, mix));
+            return await DrawCard(drawn, mix, $"Drew {drawn.Count} {(drawn.Count == 1 ? "chart" : "charts")}",
+                DrawSubtitle(type, min, max, mix), cancellationToken);
         }
 
         private async Task<BotReply> RandomFromPreset(BotInteraction interaction, string presetName,
@@ -312,17 +315,23 @@ namespace ScoreTracker.Communities.Application
             var drawn = (await _mediator.Send(new DrawRandomChartsQuery(saved.Settings, saved.Mix), cancellationToken))
                 .ToList();
             if (drawn.Count == 0) return new BotReply(Text: $"\"{presetName}\" didn't match any charts right now.");
-            return DrawCard(drawn, saved.Mix, $"Drew {drawn.Count} — {(string)saved.SettingsName}",
-                "Your saved randomizer settings");
+            return await DrawCard(drawn, saved.Mix, $"Drew {drawn.Count} — {(string)saved.SettingsName}",
+                "Your saved randomizer settings", cancellationToken);
         }
 
-        private BotReply DrawCard(IReadOnlyList<Chart> charts, MixEnum mix, string title, string subtitle)
+        private async Task<BotReply> DrawCard(IReadOnlyList<Chart> charts, MixEnum mix, string title, string subtitle,
+            CancellationToken cancellationToken)
         {
+            var drawn = charts.Take(10).ToList();
+            var videos = await VideoLinks(drawn.Select(c => c.Id), cancellationToken);
             var blocks = new List<IRichBotBlock> { new RichBotDivider() };
-            foreach (var chart in charts.Take(10))
+            foreach (var chart in drawn)
+            {
+                var video = videos.TryGetValue(chart.Id, out var url) ? $" · [Video]({url})" : string.Empty;
                 blocks.Add(new RichBotSection(
-                    $"#DIFFICULTY|{chart.DifficultyString}# [{(string)chart.Song.Name}]({SiteBase}/Chart/{chart.Id})",
+                    $"#DIFFICULTY|{chart.DifficultyString}# [{(string)chart.Song.Name}]({SiteBase}/Chart/{chart.Id}){video}",
                     chart.Song.ImagePath));
+            }
 
             return new BotReply(Card: new RichBotMessage(
                 new RichBotSection($"### {title}\n-# {subtitle}", null),
@@ -477,12 +486,11 @@ namespace ScoreTracker.Communities.Application
             if (difficulty.Count > 0)
                 blocks.Add(new RichBotText("📊 " + string.Join(" · ", difficulty)));
 
-            var skills = (await _mediator.Send(new GetChartSkillChipsQuery(new[] { chart.Id }), cancellationToken))
-                .TryGetValue(chart.Id, out var chips)
-                ? chips.Take(4).Select(c => c.Skill.GetName()).ToList()
-                : new List<string>();
-            if (skills.Count > 0)
-                blocks.Add(new RichBotText("🎯 " + string.Join(" · ", skills)));
+            // The real piucenter step-analysis skills (raw vocabulary), not the derived Skill
+            // enum — that generic mapping is being recalibrated.
+            var analysis = await _mediator.Send(new GetChartStepAnalysisQuery(chart.Id), cancellationToken);
+            if (analysis != null && analysis.TopSkills.Count > 0)
+                blocks.Add(new RichBotText("🎯 " + string.Join(" · ", analysis.TopSkills.Take(5).Select(PrettySkill))));
 
             var byId = all.ToDictionary(c => c.Id);
             var similar = (await _mediator.Send(new GetSimilarChartsQuery(chart.Id, mix), cancellationToken))
@@ -513,6 +521,21 @@ namespace ScoreTracker.Communities.Application
             TierListCategory.VeryHard => "Very Hard",
             _ => category.ToString()
         };
+
+        // piucenter badges are raw underscore-separated names; make them human without
+        // pretending they're the display Skill vocabulary.
+        private static string PrettySkill(string raw) =>
+            string.Join(" ", raw.Split('_', StringSplitOptions.RemoveEmptyEntries)
+                .Select(w => w.Length == 0 ? w : char.ToUpperInvariant(w[0]) + w[1..]));
+
+        private async Task<IReadOnlyDictionary<Guid, Uri>> VideoLinks(IEnumerable<Guid> chartIds,
+            CancellationToken cancellationToken)
+        {
+            var ids = chartIds.Distinct().ToArray();
+            if (ids.Length == 0) return new Dictionary<Guid, Uri>();
+            var videos = await _mediator.Send(new GetChartVideosQuery(ids), cancellationToken);
+            return videos.GroupBy(v => v.ChartId).ToDictionary(g => g.Key, g => g.First().VideoUrl);
+        }
 
         private async Task<IReadOnlyList<BotOptionChoice>> SongNameChoices(BotAutocompleteRequest request,
             CancellationToken cancellationToken)

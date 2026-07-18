@@ -43,8 +43,8 @@ public sealed class DiscordFeedSagaTests
             .Callback<IEnumerable<RichBotMessage>, IEnumerable<ulong>, CancellationToken>((m, _, _) =>
                 _sent = m.ToList())
             .Returns(Task.CompletedTask);
-        _communities.Setup(c => c.GetChannelCommunityNames(It.IsAny<ulong>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<Name>());
+        _communities.Setup(c => c.GetChannelCommunities(It.IsAny<ulong>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChannelCommunityInfo>());
     }
 
     private DiscordFeedSaga Saga() =>
@@ -136,16 +136,12 @@ public sealed class DiscordFeedSagaTests
         Assert.Contains("Limbo Day", text);
     }
 
-    [Fact]
-    public async Task DailyFeedGlowsCommunityMembers()
+    private void SetupDailyGlowScenario(Guid memberId, Chart today, bool isRegional)
     {
-        var memberId = Guid.NewGuid();
-        var today = new ChartBuilder().WithSongName("Bee").WithType(ChartType.Single).WithLevel(16)
-            .WithMix(MixEnum.Phoenix2).Build();
         _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKind.DailyStep, MixEnum.Phoenix2,
             It.IsAny<CancellationToken>())).ReturnsAsync(new ulong[] { 123 });
-        _communities.Setup(c => c.GetChannelCommunityNames(123, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { Name.From("SoCal Pump") });
+        _communities.Setup(c => c.GetChannelCommunities(123, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new ChannelCommunityInfo(Name.From("Arrow Eclipse"), isRegional) });
         _mediator.Setup(m => m.Send(It.IsAny<GetCommunityMembersQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { memberId }.AsEnumerable());
         _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
@@ -154,11 +150,35 @@ public sealed class DiscordFeedSagaTests
             .ReturnsAsync(new DailyStepBoard(today.Id, DateTimeOffset.UnixEpoch, false, DateTimeOffset.UnixEpoch));
         _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { new UserBuilder().WithId(memberId).WithName("MELON").Build() }.AsEnumerable());
+    }
 
-        var evt = new DailyStepRotatedEvent(MixEnum.Phoenix2, today.Id, DateTimeOffset.UnixEpoch, false,
-            new[] { new DailyStepResult(1, memberId, 990000, PhoenixPlate.ExtremeGame, false) });
-        await Saga().Consume(Context(evt));
+    [Fact]
+    public async Task DailyFeedLabelsCommunityMembersWithTheirCommunityName()
+    {
+        var memberId = Guid.NewGuid();
+        var today = new ChartBuilder().WithSongName("Bee").WithType(ChartType.Single).WithLevel(16)
+            .WithMix(MixEnum.Phoenix2).Build();
+        SetupDailyGlowScenario(memberId, today, isRegional: false);
 
-        Assert.Contains("🟢", AllText(_sent[0]));
+        await Saga().Consume(Context(new DailyStepRotatedEvent(MixEnum.Phoenix2, today.Id, DateTimeOffset.UnixEpoch,
+            false, new[] { new DailyStepResult(1, memberId, 990000, PhoenixPlate.ExtremeGame, false) })));
+
+        var text = AllText(_sent[0]);
+        Assert.Contains("(Arrow Eclipse)", text);
+        Assert.DoesNotContain("🟢", text);
+    }
+
+    [Fact]
+    public async Task DailyFeedDoesNotLabelRegionalCommunityMembers()
+    {
+        var memberId = Guid.NewGuid();
+        var today = new ChartBuilder().WithSongName("Bee").WithType(ChartType.Single).WithLevel(16)
+            .WithMix(MixEnum.Phoenix2).Build();
+        SetupDailyGlowScenario(memberId, today, isRegional: true);
+
+        await Saga().Consume(Context(new DailyStepRotatedEvent(MixEnum.Phoenix2, today.Id, DateTimeOffset.UnixEpoch,
+            false, new[] { new DailyStepResult(1, memberId, 990000, PhoenixPlate.ExtremeGame, false) })));
+
+        Assert.DoesNotContain("(Arrow Eclipse)", AllText(_sent[0]));
     }
 }
