@@ -308,7 +308,14 @@ load. Noted in §11.
 
 ---
 
-## 12. The rail rewrite (rounds 10–12)
+## 12. The rail rewrite (rounds 10–12) — as-built 2026-07-18
+
+All ten commits (C0–C9, §12.6) landed on the branch the day the plan was cut; suites green
+throughout, the three weekly E2E facts — including the relevant-players loop end to end — run
+locally. Two finds along the way: the `WasWithinRange` write path had been dead since the
+vertical extraction (§12.3, fixed; owner-optional backfill in Downloads), and round 9's
+Compact/Table density selectors never matched (ancestor form against the grid's own
+attribute — fixed in the C5 rework).
 
 The field test rejected two things about round 9: URL-state view switching (every toggle was a
 document load — M13) and the layout (boards buried below the grid, squished cards, glyph

@@ -5059,58 +5059,6 @@ button.chart-card-art {
 }
 
 /* ---- daily step strip ----------------------------------------------------- */
-.challenge-daily-strip {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px 14px;
-    background: var(--mix-surface);
-    border: 1px solid rgba(255, 255, 255, .12);
-    border-left: 4px solid var(--mix-accent);
-    border-radius: 10px;
-    padding: 8px 12px;
-}
-
-.challenge-daily-strip.limbo {
-    border-left-color: var(--mix-secondary);
-}
-
-.challenge-daily-jacket {
-    position: relative;
-    width: 54px;
-    height: 54px;
-    flex: none;
-    border-radius: 6px;
-    background-size: cover;
-    background-position: center;
-    display: block;
-    box-shadow: 0 0 12px var(--mix-glow);
-}
-
-.challenge-daily-id {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-}
-
-.challenge-daily-kicker {
-    text-transform: uppercase;
-    font-size: 12px;
-    letter-spacing: .1em;
-    color: var(--mix-ink-muted);
-    display: block;
-}
-
-.challenge-daily-name {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--mix-ink);
-    text-decoration: none;
-    line-height: 1.05;
-    white-space: nowrap;
-}
-
 .challenge-limbo-chip {
     background: var(--mix-secondary);
     color: var(--mix-bg);
@@ -5119,47 +5067,6 @@ button.chart-card-art {
     padding: 0 7px;
     font-size: 11.5px;
     text-transform: uppercase;
-    white-space: nowrap;
-}
-
-.challenge-daily-top3 {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    align-items: center;
-    font-size: 12.8px;
-}
-
-.challenge-mini {
-    display: inline-flex;
-    gap: 5px;
-    align-items: center;
-    white-space: nowrap;
-}
-
-.challenge-you-chip {
-    display: inline-flex;
-    gap: 6px;
-    align-items: center;
-    border: 1px solid var(--mix-primary);
-    background: color-mix(in srgb, var(--daily-you) 12%, transparent);
-    border-radius: 12px;
-    padding: 1px 9px;
-    font-size: 12.5px;
-    white-space: nowrap;
-}
-
-.challenge-daily-right {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.challenge-daily-right .resets {
-    color: var(--mix-ink-muted);
-    font-size: 12px;
     white-space: nowrap;
 }
 
@@ -5927,36 +5834,6 @@ button.chart-card-art {
 }
 
 /* ---- monthly board -------------------------------------------------------- */
-.challenge-typelinks {
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
-}
-
-.challenge-pill {
-    border: 1px solid rgba(255, 255, 255, .12);
-    color: var(--mix-ink);
-    border-radius: 13px;
-    background: transparent;
-    padding: 2px 12px;
-    font-size: 12.5px;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.challenge-pill.on {
-    background: var(--mix-primary);
-    color: var(--mix-primary-contrast);
-    border-color: transparent;
-    font-weight: 600;
-}
-
-.challenge-tablewrap {
-    overflow-x: auto;
-    border: 1px solid rgba(255, 255, 255, .12);
-    border-radius: 9px;
-}
-
 .challenge-monthly {
     width: 100%;
     border-collapse: collapse;
@@ -5992,19 +5869,6 @@ button.chart-card-art {
 .challenge-mono-place {
     font-weight: 700;
     font-size: 15px;
-}
-
-.challenge-chips {
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
-}
-
-.challenge-minichart {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
 }
 
 .challenge-total {

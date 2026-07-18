@@ -45,39 +45,32 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
     private static WeeklyTournamentEntry Entry(Guid chartId, Guid userId, int score) =>
         new(userId, chartId, score, PhoenixPlate.SuperbGame, false, null, 18.0);
 
-    // ---- DailyStepStrip -----------------------------------------------------
+    // ---- DailyStepRailCard --------------------------------------------------
 
     [Fact]
-    public void DailyStripShowsTheMidnightEmptyStateWithoutABoard()
+    public void DailyRailCardShowsTheMidnightEmptyStateWithoutABoard()
     {
-        var cut = RenderComponent<DailyStepStrip>(p => p
+        var cut = RenderComponent<DailyStepRailCard>(p => p
             .Add(x => x.View, null)
             .Add(x => x.Chart, null));
 
         Assert.Contains("posts at midnight", cut.Markup);
-        Assert.Empty(cut.FindAll(".challenge-daily-strip"));
+        Assert.Empty(cut.FindAll(".challenge-lb-row"));
     }
 
     [Fact]
-    public void DailyStripWearsTheLimboTreatmentOnLimboDays()
+    public void DailyRailCardWearsTheLimboTreatmentOnLimboDays()
     {
         var chart = MakeChart("Butterfly", ChartType.Single, 3);
         var board = new DailyStepBoard(chart.Id, DateTimeOffset.UtcNow, IsLimbo: true, DateTimeOffset.UtcNow.AddHours(6));
-        var rows = new[]
-        {
-            new DailyStepBoardRow(1, MakeUser(), new DailyStepEntry(Guid.NewGuid(), chart.Id, 610_000,
-                PhoenixPlate.RoughGame, false, 18, ChallengeEntrySource.Official))
-        };
-        var view = new DailyStepBoardView(board, rows, null);
+        var view = new DailyStepBoardView(board, new[] { DailyRow(1, chart.Id, 610_000) }, null);
 
-        var cut = RenderComponent<DailyStepStrip>(p => p
+        var cut = RenderComponent<DailyStepRailCard>(p => p
             .Add(x => x.View, view).Add(x => x.Chart, chart).Add(x => x.IsLoggedIn, false));
 
-        Assert.Single(cut.FindAll(".challenge-daily-strip.limbo"));
+        Assert.Single(cut.FindAll(".challenge-railcard.limbo"));
         Assert.Contains("lowest pass wins", cut.Markup);
     }
-
-    // ---- DailyStepRailCard --------------------------------------------------
 
     private static DailyStepBoardRow DailyRow(int place, Guid chartId, int score, User? player = null) =>
         new(place, player ?? MakeUser(), new DailyStepEntry((player ?? MakeUser()).Id, chartId, score,
@@ -292,18 +285,22 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
         Assert.Contains("post Monday at midnight", cut.Markup);
     }
 
-    // ---- MonthlyLeaderboard -------------------------------------------------
+    // ---- MonthlyRailCard: empty state ---------------------------------------
 
     [Fact]
     public void MonthlyEmptyStateShowsWhenNoRows()
     {
         var view = new MonthlyLeaderboardView(Array.Empty<MonthlyLeaderboardRow>(), 1, 4, null, null);
 
-        var cut = RenderComponent<MonthlyLeaderboard>(p => p
-            .Add(x => x.View, view).Add(x => x.Charts, new Dictionary<Guid, Chart>()).Add(x => x.Type, null));
+        var cut = RenderComponent<MonthlyRailCard>(p => p
+            .Add(x => x.Boards, new[]
+            {
+                new MonthlyRailBoard(null, view), new MonthlyRailBoard(ChartType.Single, view),
+                new MonthlyRailBoard(ChartType.Double, view), new MonthlyRailBoard(ChartType.CoOp, view)
+            }));
 
         Assert.Contains("Scores land here", cut.Markup);
-        // The Co-Op type pill is always present as a navigation link.
+        // The Co-Op segment is always present.
         Assert.Contains("Co-Op", cut.Markup);
     }
 
