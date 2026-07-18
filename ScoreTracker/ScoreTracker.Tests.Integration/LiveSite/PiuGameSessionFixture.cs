@@ -20,6 +20,7 @@ public sealed class PiuGameSessionFixture : IDisposable
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly HttpClient _publicClient;
     private HttpClient? _authenticatedClient;
+    private HttpClient? _authenticatedPhoenix2Client;
 
     public PiuGameSessionFixture()
     {
@@ -56,6 +57,7 @@ public sealed class PiuGameSessionFixture : IDisposable
     {
         _publicClient.Dispose();
         _authenticatedClient?.Dispose();
+        _authenticatedPhoenix2Client?.Dispose();
         _gate.Dispose();
     }
 
@@ -71,6 +73,29 @@ public sealed class PiuGameSessionFixture : IDisposable
                 "Login against the live site produced no session id — the PIU login flow has changed shape.");
             SessionId = sid;
             _authenticatedClient = client;
+            return client;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <summary>
+    ///     The Phoenix 2 counterpart — its own session against piugame.com, minted at most
+    ///     once per run so the P2 canaries share one extra login.
+    /// </summary>
+    internal async Task<HttpClient> GetAuthenticatedPhoenix2Client(CancellationToken cancellationToken)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            if (_authenticatedPhoenix2Client is not null) return _authenticatedPhoenix2Client;
+
+            var (client, sid) = await Api.GetSessionId(MixEnum.Phoenix2, Username!, Password!, cancellationToken);
+            Assert.False(string.IsNullOrWhiteSpace(sid),
+                "Login against the Phoenix 2 site produced no session id — the PIU login flow has changed shape.");
+            _authenticatedPhoenix2Client = client;
             return client;
         }
         finally

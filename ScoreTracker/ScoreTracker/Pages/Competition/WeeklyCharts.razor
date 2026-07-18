@@ -25,9 +25,12 @@
 
 @if (_jsonLd != null)
 {
-    @* The JSON-LD ItemList of the week's charts. Structured data is valid anywhere in the
-       document, and the body is the one place a static page can render markup. *@
-    <script type="application/ld+json">@((MarkupString)_jsonLd)</script>
+    @* The JSON-LD ItemList of the week's charts, in the body (the one place a static page can
+       render markup; structured data is valid anywhere). The whole element rides one
+       MarkupString: the static renderer silently drops a <script> whose content is an
+       expression (seo-friendly-site.md). System.Text.Json escapes "<", so a song name can't
+       close the script early. *@
+    @((MarkupString)$"<script type=\"application/ld+json\">{_jsonLd}</script>")
 }
 
 @if (_pool != null)
@@ -345,7 +348,7 @@ else
             {
                 ["@type"] = "ListItem",
                 ["position"] = pos++,
-                ["url"] = NavManager.ToAbsoluteUri($"/Chart/{chart.Id}").ToString(),
+                ["url"] = NavManager.ToAbsoluteUri(chart.CanonicalPath()).ToString(),
                 ["name"] = chart.Song.Name.ToString()
             });
         }

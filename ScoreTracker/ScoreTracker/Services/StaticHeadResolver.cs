@@ -1,17 +1,22 @@
 using MediatR;
 using Microsoft.Extensions.Localization;
+using ScoreTracker.ChartIntelligence.Contracts;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.WeeklyChallenge.Contracts.Queries;
 
 namespace ScoreTracker.Web.Services;
 
 /// <summary>
-///     The head a route serves as static HTML. OgImage is absent when the route has no art.
-///     Canonical is the clean path query variants of the route fold into; absent when the
-///     route has no variants worth folding.
+///     The head a route serves as static HTML. Title is the page's own text — App.razor
+///     appends the brand to the document title, so a circuit's PageTitle can still take over
+///     without the suffix flashing away. OgImage/Canonical are absent for routes the
+///     resolver doesn't recognise; SongName/Artist feed the chart page's JSON-LD. For the
+///     weekly hub Canonical is the clean path its filter/week variants fold into.
 /// </summary>
-public sealed record StaticHeadModel(string Title, string Description, string? OgImage,
-    string? Canonical = null);
+public sealed record StaticHeadModel(string Title, string Description, string? OgImage, string? Canonical,
+    string? SongName = null, string? Artist = null);
 
 /// <summary>
 ///     Resolves the document head from the request path
@@ -43,18 +48,49 @@ public sealed class StaticHeadResolver
         if (path.Equals("/WeeklyCharts", StringComparison.OrdinalIgnoreCase))
             return await ResolveWeeklyCharts(currentMix, cancellationToken);
 
-        if (!path.StartsWithSegments("/Chart", out var rest)) return null;
-        if (!Guid.TryParse(rest.Value?.Trim('/'), out var chartId)) return null;
+        // /Charts/{mix}/{song}/{difficulty} — the canonical chart page. Historical triples
+        // 301 to canonical before rendering, so a rendered page is always self-canonical.
+        if (!path.StartsWithSegments("/Charts", out var rest)) return null;
+        var segments = rest.Value?.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments is not { Length: 3 }) return null;
 
-        var chart = await _charts.FindChart(chartId, currentMix, cancellationToken);
+        var resolution = await _charts.ResolveHistorical(segments[0], segments[1], segments[2],
+            ChartUrlResolver.DefaultMix, cancellationToken);
+        if (resolution == null) return null;
+        var chart = await _charts.FindChart(resolution.ChartId, currentMix, cancellationToken);
         if (chart == null) return null;
 
-        // The title is the chart page's own PageTitle text; the description is its
-        // (previously circuit-only) meta description, now served where a crawler reads it.
         return new StaticHeadModel(
             $"{chart.Song.Name} {chart.DifficultyString}",
-            $"Statistics and leaderboards for {chart.Song.Name} {chart.DifficultyString} by {chart.Song.Artist}.",
-            chart.Song.ImagePath.ToString());
+            await Description(chart, cancellationToken),
+            chart.Song.ImagePath.ToString(),
+            $"https://piuscores.arroweclip.se{resolution.CanonicalPath}",
+            chart.Song.Name.ToString(),
+            chart.Song.Artist.ToString());
+    }
+
+    /// <summary>
+    ///     The search snippet. The population stats make each chart's description its own,
+    ///     and substantial enough that engines quote it instead of stitching page text
+    ///     together. The verdict caches daily per (chart, mix) — which also holds the
+    ///     description stable between analytics rebuilds — and the page dispatches the same
+    ///     query later in the same request, so this warms that cache rather than doubling
+    ///     the work.
+    /// </summary>
+    private async Task<string> Description(Chart chart, CancellationToken cancellationToken)
+    {
+        var identity =
+            $"Statistics and leaderboards for {chart.Song.Name} {chart.DifficultyString} by {chart.Song.Artist}.";
+        const string tail = "Difficulty verdict, skill breakdown, and the full leaderboard on PIU Scores.";
+        // The chart's own mix, not the viewer's: FindChart can fall back to another mix's
+        // copy, and the population only exists where the chart does.
+        var population = (await _mediator.Send(new GetChartVerdictQuery(chart.Id, chart.Mix), cancellationToken))
+            .OfType<PopulationVerdict>().FirstOrDefault();
+        if (population is not { ScoresTracked: > 0 }) return $"{identity} {tail}";
+
+        var scores = population.ScoresTracked == 1 ? "score" : "scores";
+        var passRate = (int)Math.Round(population.PassRate * 100);
+        return $"{identity} {population.ScoresTracked:N0} {scores} tracked, {passRate}% pass rate. {tail}";
     }
 
     /// <summary>
@@ -82,6 +118,6 @@ public sealed class StaticHeadResolver
                 "{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board.",
                 board.Charts.Count],
             jacket,
-            "/WeeklyCharts");
+            "https://piuscores.arroweclip.se/WeeklyCharts");
     }
 }

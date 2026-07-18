@@ -1,0 +1,22 @@
+@using ScoreTracker.OfficialMirror.Contracts
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="min-width-0">
+    <MudAvatar Size="@(Dense ? Size.Small : Size.Medium)">
+        <MudImage Src="@AvatarUrl" ObjectFit="ObjectFit.Cover"/>
+    </MudAvatar>
+    <MudText Typo="@(Dense ? Typo.body2 : Typo.body1)" Style="font-weight:700">@Player.Username</MudText>
+    @if (Player.UserId != null)
+    {
+        <MudTooltip Text="@L["Linked to a site account"]">
+            <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small" Color="Color.Primary"/>
+        </MudTooltip>
+    }
+</MudStack>
+
+@code {
+    private const string DefaultAvatar = "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
+
+    [Parameter] public OfficialPlayerRecord Player { get; set; } = null!;
+    [Parameter] public bool Dense { get; set; }
+
+    private string AvatarUrl => Player.AvatarUrl?.ToString() ?? DefaultAvatar;
+}

@@ -1,7 +1,4 @@
-@page "/Record"
-@page "/Chart"
-@page "/Chart/{ChartId:guid}"
-@rendermode RenderModes.Interactive
+@page "/Charts/{MixSlug}/{SongSlug}/{DifficultySlug}"
 @using MediatR
 @using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
@@ -16,30 +13,17 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
 @* The chart drill-down (docs/design/chart-details-overhaul.md, mock R2): answer →
-   evidence → record → onward. Rebuilt in place for the Stage-3 conversion — every
-   circuit-needing section is its own child component, so islanding them is a render-mode
-   line each rather than a rewrite.
-   This page has no render mode of its own: it inherits the circuit from
-   App.razor's `<Routes @@rendermode="Interactive">`, and a child cannot opt back out of
-   one. Going static therefore waits on that attribute leaving Routes and every page
-   opting in individually — see "What P3 actually costs" in the design doc. The /Record
-   and bare /Chart aliases die at P3 when the 301 lattice goes live. *@
-<PageTitle>@(_chart == null ? L["Chart Details"].Value : $"{_chart.Song.Name} {_chart.DifficultyString}")</PageTitle>
-<HeadContent>
-    @* Dead channel until Stage 3 (HeadOutlet renders in the circuit; crawlers never see
-       this) — P3 moves title/meta/OG/JSON-LD into the static head for real. *@
-    <meta name="description" content="@MetaDescription"/>
-    <meta property="og:title" content="@(_chart == null ? "Chart Details" : $"{_chart.Song.Name} {_chart.DifficultyString}")">
-    <meta property="og:image" content="@(_chart?.Song.ImagePath.ToString() ?? "")">
-    <meta property="og:description" content="@MetaDescription">
-</HeadContent>
+   evidence → record → onward. Static SSR — the page and its presentational sections render
+   as real HTML a crawler reads. Each circuit-needing section is a child island
+   (@rendermode below): video, record, the Apex evidence, the leaderboard, and the shelf's
+   interactive controls. The head (title/description/OG) is served by StaticHeadResolver in
+   App.razor, keyed off the route — this page emits none. *@
 
 @if (_initialized && _chart == null)
 {
     <div class="chart-empty">
         <MudText Typo="Typo.h5">@L["Find a chart"]</MudText>
-        <MudText Typo="Typo.body2" Class="chart-empty-sub">@L["Search by song name — every chart has its own page."]</MudText>
-        <ChartSelector ChartIdSelected="GoToChart" Mix="_mix"></ChartSelector>
+        <MudText Typo="Typo.body2" Class="chart-empty-sub">@L["Search by song name in the bar above — every chart has its own page."]</MudText>
     </div>
 }
 @if (_chart != null)
@@ -50,8 +34,8 @@
            key values only, so two keyed siblings sharing a chart id collide even when
            they are different component types. *@
         <div class="chart-hero-jacket-col">
-            <ChartVideoPlayer Chart="_chart" @key="(_chart.Id, nameof(ChartVideoPlayer))"></ChartVideoPlayer>
-            <ChartRecordPanel Chart="_chart" Mix="_mix" @key="(_chart.Id, nameof(ChartRecordPanel))"></ChartRecordPanel>
+            <ChartVideoPlayer @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_mix" @key="(_chart.Id, nameof(ChartVideoPlayer))"></ChartVideoPlayer>
+            <ChartRecordPanel @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_mix" @key="(_chart.Id, nameof(ChartRecordPanel))"></ChartRecordPanel>
         </div>
         <div class="chart-hero-id">
             <h1 class="chart-hero-title">@_chart.Song.Name</h1>
@@ -74,29 +58,51 @@
                         }
                         else
                         {
-                            <a href="@($"/Chart/{sibling.Id}")"><DifficultyBubble Chart="sibling" Small="true"></DifficultyBubble></a>
+                            <a href="@sibling.CanonicalPath()"><DifficultyBubble Chart="sibling" Small="true"></DifficultyBubble></a>
                         }
                     }
                 </div>
             }
-            <div class="chart-hero-facts">
+            @* data-nosnippet: to a text extractor the tiles are label soup ("263Scores
+               tracked"), so search snippets quote the meta description — which carries the
+               same stats as prose — instead. Value and label also sit on separate source
+               lines: extractors word-break on whitespace, not on span boundaries. *@
+            <div class="chart-hero-facts" data-nosnippet>
                 @if (_chart.Song.Bpm != null)
                 {
-                    <div><span class="chart-fact-value">@BpmDisplay</span><span class="chart-fact-label">@L["BPM"]</span></div>
+                    <div>
+                        <span class="chart-fact-value">@BpmDisplay</span>
+                        <span class="chart-fact-label">@L["BPM"]</span>
+                    </div>
                 }
                 @if (_chart.NoteCount > 0)
                 {
-                    <div><span class="chart-fact-value">@($"{_chart.NoteCount:N0}")</span><span class="chart-fact-label">@L["Notes"]</span></div>
+                    <div>
+                        <span class="chart-fact-value">@($"{_chart.NoteCount:N0}")</span>
+                        <span class="chart-fact-label">@L["Notes"]</span>
+                    </div>
                 }
                 @if (_analysis?.Nps != null)
                 {
-                    <div><span class="chart-fact-value">@_analysis.Nps.Value.ToString("0.#")</span><span class="chart-fact-label">@L["Notes per Second"]</span></div>
+                    <div>
+                        <span class="chart-fact-value">@_analysis.Nps.Value.ToString("0.#")</span>
+                        <span class="chart-fact-label">@L["Notes per Second"]</span>
+                    </div>
                 }
-                <div><span class="chart-fact-value">@_chart.OriginalMix.GetName()</span><span class="chart-fact-label">@L["Debuted in"]</span></div>
+                <div>
+                    <span class="chart-fact-value">@_chart.OriginalMix.GetName()</span>
+                    <span class="chart-fact-label">@L["Debuted in"]</span>
+                </div>
                 @if (Population != null)
                 {
-                    <div><span class="chart-fact-value">@($"{Population.ScoresTracked:N0}")</span><span class="chart-fact-label">@L["Scores tracked"]</span></div>
-                    <div><span class="chart-fact-value">@((int)Math.Round(Population.PassRate * 100))%</span><span class="chart-fact-label">@L["Pass rate"]</span></div>
+                    <div>
+                        <span class="chart-fact-value">@($"{Population.ScoresTracked:N0}")</span>
+                        <span class="chart-fact-label">@L["Scores tracked"]</span>
+                    </div>
+                    <div>
+                        <span class="chart-fact-value">@((int)Math.Round(Population.PassRate * 100))%</span>
+                        <span class="chart-fact-label">@L["Pass rate"]</span>
+                    </div>
                 }
             </div>
             <ChartVerdictCard Facets="_facets"></ChartVerdictCard>
@@ -110,7 +116,7 @@
         <div class="chart-section-head">
             <MudText Typo="Typo.h5">@L["Chart Stats"]</MudText>
         </div>
-        <ChartEvidenceSection Chart="_chart" Mix="_mix" Facets="_facets" @key="_chart.Id"></ChartEvidenceSection>
+        <ChartEvidenceSection @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_mix" @key="_chart.Id"></ChartEvidenceSection>
     </section>
 
     @if (_skillChips.Any() || _analysis != null)
@@ -151,7 +157,7 @@
         <div class="chart-section-head">
             <MudText Typo="Typo.h5">@L["Leaderboard"]</MudText>
         </div>
-        <ChartLeaderboardSection Chart="_chart" Mix="_mix" @key="_chart.Id"></ChartLeaderboardSection>
+        <ChartLeaderboardSection @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_mix" @key="_chart.Id"></ChartLeaderboardSection>
     </section>
 
     <section class="chart-section">
@@ -159,7 +165,14 @@
             <MudText Typo="Typo.h5">@L["Charts like this"]</MudText>
             <MudText Typo="Typo.caption" Class="chart-section-sub">@L["From the similarity graph — evidence-weighted, rebuilt nightly."]</MudText>
         </div>
-        <SimilarChartsShelf ChartId="_chart.Id" Mix="_mix" @key="_chart.Id"></SimilarChartsShelf>
+        @* The card grid renders statically (crawlable link mesh); the interactive shelf is
+           the island, and its data-island-ready hides this copy on connect. *@
+        <div class="chart-shelf-wrap">
+            <div class="chart-shelf-static">
+                <SimilarChartsStaticGrid ChartId="_chart.Id" Mix="_mix" @key="_chart.Id"></SimilarChartsStaticGrid>
+            </div>
+            <SimilarChartsShelf @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_mix" @key="_chart.Id"></SimilarChartsShelf>
+        </div>
         <p class="chart-section-credit">
             @L["Chart analysis made possible by"]
             <MudLink Href="https://piucenter.com" Target="_blank" Typo="Typo.caption">PIU Center</MudLink>
@@ -169,12 +182,24 @@
 }
 
 @inject IMediator Mediator
-@inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser
 @inject IUiSettingsAccessor UiSettings
+@inject ChartUrlResolver UrlResolver
+@inject NavigationManager Nav
 @code {
-    [Parameter]
-    public Guid? ChartId { get; set; }
+    // The canonical vanity route. The GUID permalink and legacy /Record live in
+    // ChartPermalinkController, which 301s them here; historical (mix, song, level) triples
+    // resolve to the same chart and 301 to its canonical below.
+    [Parameter] public string MixSlug { get; set; } = "";
+    [Parameter] public string SongSlug { get; set; } = "";
+    [Parameter] public string DifficultySlug { get; set; } = "";
+
+    // Static SSR runs inside the live request, so the page issues its own 301 to canonical
+    // (a static component's NavigateTo is a 302, which doesn't consolidate signals). An
+    // unknown chart goes through NotFound(): the renderer answers 404 and swaps in the
+    // Router's NotFoundPage — setting the status by hand would skip the body instead.
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
 
     private MixEnum _mix = MixEnum.Phoenix;
     private bool _initialized;
@@ -194,10 +219,6 @@
     private string BpmDisplay => _chart?.Song.Bpm is not { } bpm ? "" :
         bpm.Min == bpm.Max ? bpm.Min.ToString("0.##") : $"{bpm.Min:0.##}–{bpm.Max:0.##}";
 
-    private string MetaDescription => _chart == null
-        ? "Look up statistics and leaderboards on specific PIU charts!"
-        : $"Statistics and leaderboards for {_chart.Song.Name} {_chart.DifficultyString} by {_chart.Song.Artist}.";
-
     private string PiuCenterUrl => _analysis?.ExternalKey == null
         ? "https://www.piucenter.com"
         : $"https://www.piucenter.com/chart/{Uri.EscapeDataString(_analysis.ExternalKey)}";
@@ -210,19 +231,40 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        // One load per chart id — the old page's init/params double-fetch is dead.
-        if (ChartId == null)
+        // Resolve the URL triple against its own mix's catalog (the mix segment timestamps
+        // the level), yielding the chart and its canonical path.
+        var resolution = await UrlResolver.ResolveHistorical(MixSlug, SongSlug, DifficultySlug,
+            ChartUrlResolver.DefaultMix, HttpContext?.RequestAborted ?? default);
+        if (resolution == null)
         {
+            _chart = null;
+            Nav.NotFound();
+            return;
+        }
+
+        // A historical, stale, or mixed-case slug 301s to canonical — a real redirect, so the
+        // signals consolidate onto one lowercase URL. Case-sensitive on purpose: the canonical
+        // is always lowercase, so a lowercase request matches and renders while any other
+        // casing normalizes with a single hop.
+        var requestPath = HttpContext?.Request.Path.Value;
+        if (requestPath != null && !requestPath.Equals(resolution.CanonicalPath, StringComparison.Ordinal)
+                                && HttpContext is { Response.HasStarted: false })
+        {
+            HttpContext.Response.StatusCode = 301;
+            HttpContext.Response.Headers.Location = resolution.CanonicalPath;
             _chart = null;
             return;
         }
 
-        if (_chart?.Id == ChartId) return;
-        var chart = (await Mediator.Send(new GetChartsQuery(_mix, ChartIds: new[] { ChartId.Value })))
+        if (_chart?.Id == resolution.ChartId) return;
+        // The URL names the chart; it renders in the viewer's own mix (scores, verdict and
+        // leaderboard are per-mix). A chart absent from that mix falls to the empty state.
+        var chart = (await Mediator.Send(new GetChartsQuery(_mix, ChartIds: new[] { resolution.ChartId })))
             .FirstOrDefault();
         if (chart == null)
         {
             _chart = null;
+            Nav.NotFound();
             return;
         }
 
@@ -239,11 +281,5 @@
             ? chips
             : Array.Empty<ChartSkillChipRecord>();
         _analysis = await Mediator.Send(new GetChartStepAnalysisQuery(chart.Id));
-    }
-
-    private Task GoToChart(Chart chart)
-    {
-        NavManager.NavigateTo($"/Chart/{chart.Id}");
-        return Task.CompletedTask;
     }
 }

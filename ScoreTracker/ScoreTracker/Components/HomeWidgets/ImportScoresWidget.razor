@@ -273,8 +273,10 @@ else
         var cardId = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameId") ?? "";
         var gameTag = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameTag") ?? "";
 
+        // Phoenix 2's best-scores list carries broken attempts — the widget mirrors the
+        // import page's default of including them there.
         var result = await Mediator.Send(new StartOfficialImportCommand(source, _mix!.Value, cardId, gameTag,
-            false, _syncPiuTracker));
+            _mix!.Value == MixEnum.Phoenix2, _syncPiuTracker));
 
         switch (result.Outcome)
         {

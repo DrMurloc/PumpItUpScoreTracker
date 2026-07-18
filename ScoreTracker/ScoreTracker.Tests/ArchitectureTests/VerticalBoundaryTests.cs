@@ -69,7 +69,7 @@ public sealed class VerticalBoundaryTests
     [Fact]
     public void MassTransitDiscoversTheOfficialMirrorsInternalConsumers()
     {
-        // OfficialLeaderboardSaga consumes StartLeaderboardImportCommand. Same rationale
+        // LeaderboardSweepSaga consumes StartLeaderboardImportCommand. Same rationale
         // as the ScoreLedger tripwire below: assembly scanning skips internal consumers,
         // so the AddOfficialMirrorConsumers hook is the registration path.
         var services = new ServiceCollection();
@@ -80,7 +80,7 @@ public sealed class VerticalBoundaryTests
         });
 
         Assert.Contains(services,
-            d => d.ServiceType == typeof(ScoreTracker.OfficialMirror.Application.OfficialLeaderboardSaga));
+            d => d.ServiceType == typeof(ScoreTracker.OfficialMirror.Application.LeaderboardSweepSaga));
     }
 
     [Fact]

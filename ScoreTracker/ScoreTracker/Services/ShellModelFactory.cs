@@ -104,9 +104,19 @@ public sealed class ShellModelFactory
         return MixEnum.Phoenix;
     }
 
+    /// <summary>
+    ///     Cache key for a user's shell settings. <see cref="UiSettingSavedCacheEviction" />
+    ///     evicts it whenever a UI setting is saved, so a mix switch (or theme/game-tag
+    ///     change) is visible on the very next request instead of after the TTL.
+    /// </summary>
+    public static string SettingsCacheKey(Guid userId)
+    {
+        return $"{nameof(ShellModelFactory)}__Settings__{userId}";
+    }
+
     private Task<IDictionary<string, string>> GetSettings(Guid userId, CancellationToken cancellationToken)
     {
-        return _cache.GetOrCreateAsync($"{nameof(ShellModelFactory)}__Settings__{userId}", entry =>
+        return _cache.GetOrCreateAsync(SettingsCacheKey(userId), entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = SettingsTtl;
             return _mediator.Send(new GetUserUiSettingsQuery(userId), cancellationToken);

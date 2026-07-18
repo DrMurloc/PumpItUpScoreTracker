@@ -1436,14 +1436,14 @@ else
         {
             _tierListType = "Pass";
         }
-        SetQueryString();
+        await SetQueryString();
         await Recalculate();
     }
 
     private async Task ChangeLens(string lens)
     {
         _tierListType = lens;
-        SetQueryString();
+        await SetQueryString();
         await Recalculate();
     }
 
@@ -1471,12 +1471,17 @@ else
         StateHasChanged();
     }
 
-    private void SetQueryString()
+    // C3: the canonical folder URL is path-based; the lens rides as a query param. Written
+    // straight into history rather than navigated to — under the static router, NavigateTo
+    // re-fetches and re-initializes the whole page, and this component already updates itself
+    // in place. Push for a user step (Back walks folders); replace for init canonicalizing
+    // the entry URL (Back leaves the page).
+    private async Task SetQueryString(bool replace = false)
     {
-        // C3: the canonical folder URL is path-based; the lens rides as a query param.
-        NavManager.NavigateTo(NavManager.GetUriWithQueryParameters(
+        var url = NavManager.GetUriWithQueryParameters(
             $"/TierLists/{_chartType}/{_level}",
-            new Dictionary<string, object?> { { "TierListType", _tierListType } }));
+            new Dictionary<string, object?> { { "TierListType", _tierListType } });
+        await JSRuntime.InvokeVoidAsync(replace ? "history.replaceState" : "history.pushState", null, "", url);
     }
 
     private async Task ToggleTitles()
@@ -2078,7 +2083,7 @@ else
             _groupBy = "Difficulty";
         }
 
-        SetQueryString();
+        await SetQueryString(replace: true);
         await Recalculate();
     }
 }

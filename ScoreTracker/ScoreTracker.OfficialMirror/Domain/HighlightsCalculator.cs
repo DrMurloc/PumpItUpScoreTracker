@@ -1,0 +1,269 @@
+using ScoreTracker.SharedKernel.Enums;
+
+namespace ScoreTracker.OfficialMirror.Domain;
+
+internal sealed record HighlightsInput(
+    int SnapshotId,
+    bool IsBaseline,
+    IReadOnlyList<BoardDimension> Boards,
+    IReadOnlyList<PlacementRow> Current,
+    IReadOnlyList<PlacementRow>? Previous,
+    IReadOnlyList<BoardRecordRow> BoardRecords,
+    IReadOnlyList<FolderRecordRow> FolderRecords);
+
+internal sealed record HighlightsResult(
+    IReadOnlyList<HighlightRow> Highlights,
+    IReadOnlyList<BoardRecordRow> UpdatedBoardRecords,
+    IReadOnlyList<FolderRecordRow> UpdatedFolderRecords);
+
+/// <summary>
+///     Computes one snapshot's editorial highlights and record-book updates from the diff
+///     against the previous sealed snapshot. Pure: every rule that makes the weekly board
+///     lives here.
+///     - Movers rank by PUMBILITY-board rank improvement (a mix without that board, i.e.
+///       Phoenix, gets none).
+///     - Boards-climbed counts chart boards where a player improved or newly entered.
+///     - A new #1 must BEAT the all-time record; matching a standing score credits
+///       nothing, while players sharing the record score in the same week co-credit.
+///     - Grade firsts (SS and up, PG included, level 24+) fire once per chart per band and
+///       once per folder per band; a multi-band jump claims only the highest band; a
+///       folder first absorbs its chart first, and any grade first absorbs its new-#1.
+///     - A baseline snapshot emits no highlights but still primes both record books.
+/// </summary>
+internal static class HighlightsCalculator
+{
+    public const int MoversTaken = 8;
+    public const int BoardsClimbedTaken = 8;
+    public const int BoardsClimbedMinimum = 5;
+    public const int HighlightMinimumLevel = 24;
+    public const string PumbilityBoardName = "PUMBILITY";
+
+    private static readonly (string Band, int Floor)[] GradeBands =
+    {
+        ("PG", 1_000_000),
+        ("SSS+", (int)PhoenixLetterGrade.SSSPlus.GetMinimumScore()),
+        ("SSS", (int)PhoenixLetterGrade.SSS.GetMinimumScore()),
+        ("SS+", (int)PhoenixLetterGrade.SSPlus.GetMinimumScore()),
+        ("SS", (int)PhoenixLetterGrade.SS.GetMinimumScore())
+    };
+
+    public static HighlightsResult Calculate(HighlightsInput input)
+    {
+        var chartBoards = input.Boards
+            .Where(b => b.LeaderboardType == LeaderboardTypes.Chart && b.ChartType != ChartType.CoOp.ToString())
+            .ToDictionary(b => b.Id);
+        var currentByBoard = input.Current.GroupBy(p => p.LeaderboardId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<PlacementRow>)g.ToArray());
+        var previousByBoard = (input.Previous ?? Array.Empty<PlacementRow>()).GroupBy(p => p.LeaderboardId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<PlacementRow>)g.ToArray());
+
+        var (updatedBoardRecords, updatedFolderRecords, beatenBoards) =
+            UpdateRecords(input, chartBoards, currentByBoard);
+        if (input.IsBaseline)
+            return new HighlightsResult(Array.Empty<HighlightRow>(), updatedBoardRecords, updatedFolderRecords);
+
+        var highlights = new List<HighlightRow>();
+        highlights.AddRange(Movers(input.Boards, currentByBoard, previousByBoard));
+        highlights.AddRange(BoardsClimbed(chartBoards, currentByBoard, previousByBoard, input.Previous != null));
+        highlights.AddRange(RecordHighlights(input, chartBoards, previousByBoard, beatenBoards));
+
+        return new HighlightsResult(highlights, updatedBoardRecords, updatedFolderRecords);
+    }
+
+    private static (IReadOnlyList<BoardRecordRow> Boards, IReadOnlyList<FolderRecordRow> Folders,
+        List<BeatenBoard> Beaten) UpdateRecords(HighlightsInput input,
+            IReadOnlyDictionary<int, BoardDimension> chartBoards,
+            IReadOnlyDictionary<int, IReadOnlyList<PlacementRow>> currentByBoard)
+    {
+        var boardRecords = input.BoardRecords.ToDictionary(r => r.LeaderboardId);
+        var folderRecords = input.FolderRecords.ToDictionary(r => (r.ChartType, r.Level));
+        var updatedBoards = new List<BoardRecordRow>();
+        var beaten = new List<BeatenBoard>();
+        var folderTouched = new HashSet<(string, int)>();
+
+        foreach (var (boardId, placements) in currentByBoard)
+        {
+            if (!chartBoards.TryGetValue(boardId, out var board) || board.Level == null) continue;
+
+            var top = (int)placements.Max(p => p.Score);
+            var hadRecord = boardRecords.TryGetValue(boardId, out var record);
+            var previousHigh = hadRecord ? record!.HighScore : (int?)null;
+            if (previousHigh == null || top > previousHigh)
+            {
+                var updated = new BoardRecordRow(boardId, top, input.SnapshotId);
+                boardRecords[boardId] = updated;
+                updatedBoards.Add(updated);
+                if (previousHigh != null)
+                    beaten.Add(new BeatenBoard(board, previousHigh.Value, top));
+            }
+
+            var folderKey = (board.ChartType!, board.Level.Value);
+            var folderHigh = folderRecords.TryGetValue(folderKey, out var folder) ? folder.HighScore : (int?)null;
+            if (folderHigh == null || top > folderHigh)
+            {
+                folderRecords[folderKey] = new FolderRecordRow(folderKey.Item1, folderKey.Item2, top,
+                    input.SnapshotId);
+                folderTouched.Add(folderKey);
+            }
+        }
+
+        var updatedFolders = folderTouched.Select(key => folderRecords[key]).ToArray();
+        return (updatedBoards, updatedFolders, beaten);
+    }
+
+    private static IEnumerable<HighlightRow> Movers(IReadOnlyList<BoardDimension> boards,
+        IReadOnlyDictionary<int, IReadOnlyList<PlacementRow>> currentByBoard,
+        IReadOnlyDictionary<int, IReadOnlyList<PlacementRow>> previousByBoard)
+    {
+        var pumbility = boards.FirstOrDefault(b =>
+            b.LeaderboardType == LeaderboardTypes.Rating && b.Name == PumbilityBoardName);
+        if (pumbility == null) yield break;
+        if (!currentByBoard.TryGetValue(pumbility.Id, out var current) ||
+            !previousByBoard.TryGetValue(pumbility.Id, out var previous)) yield break;
+
+        var previousPlaces = previous.ToDictionary(p => p.PlayerId, p => p.Place);
+        var movers = current
+            .Where(p => previousPlaces.ContainsKey(p.PlayerId))
+            .Select(p => (Placement: p, Delta: previousPlaces[p.PlayerId] - p.Place))
+            .Where(m => m.Delta > 0)
+            .OrderByDescending(m => m.Delta).ThenBy(m => m.Placement.Place)
+            .Take(MoversTaken)
+            .ToArray();
+        for (var i = 0; i < movers.Length; i++)
+        {
+            var (placement, _) = movers[i];
+            yield return new HighlightRow(HighlightKinds.PumbilityMover, i + 1, placement.PlayerId, null,
+                pumbility.Id, null, null, null, null, placement.Score,
+                previousPlaces[placement.PlayerId], placement.Place);
+        }
+    }
+
+    private static IEnumerable<HighlightRow> BoardsClimbed(
+        IReadOnlyDictionary<int, BoardDimension> chartBoards,
+        IReadOnlyDictionary<int, IReadOnlyList<PlacementRow>> currentByBoard,
+        IReadOnlyDictionary<int, IReadOnlyList<PlacementRow>> previousByBoard,
+        bool hasPrevious)
+    {
+        if (!hasPrevious) yield break;
+
+        var climbs = new Dictionary<int, (int Boards, int NetPlaces)>();
+        foreach (var (boardId, placements) in currentByBoard)
+        {
+            if (!chartBoards.ContainsKey(boardId)) continue;
+
+            var previousPlaces = previousByBoard.TryGetValue(boardId, out var previous)
+                ? previous.ToDictionary(p => p.PlayerId, p => p.Place)
+                : new Dictionary<int, int>();
+            foreach (var placement in placements)
+            {
+                var hadPlace = previousPlaces.TryGetValue(placement.PlayerId, out var previousPlace);
+                if (hadPlace && previousPlace <= placement.Place) continue;
+
+                var (boardCount, netPlaces) = climbs.TryGetValue(placement.PlayerId, out var tally)
+                    ? tally
+                    : (0, 0);
+                climbs[placement.PlayerId] =
+                    (boardCount + 1, netPlaces + (hadPlace ? previousPlace - placement.Place : 0));
+            }
+        }
+
+        var ranked = climbs
+            .Where(kv => kv.Value.Boards >= BoardsClimbedMinimum)
+            .OrderByDescending(kv => kv.Value.Boards).ThenByDescending(kv => kv.Value.NetPlaces)
+            .Take(BoardsClimbedTaken)
+            .ToArray();
+        for (var i = 0; i < ranked.Length; i++)
+            yield return new HighlightRow(HighlightKinds.BoardsClimbed, i + 1, ranked[i].Key, null, null, null,
+                null, null, null, null, ranked[i].Value.NetPlaces, ranked[i].Value.Boards);
+    }
+
+    private static IEnumerable<HighlightRow> RecordHighlights(HighlightsInput input,
+        IReadOnlyDictionary<int, BoardDimension> chartBoards,
+        IReadOnlyDictionary<int, IReadOnlyList<PlacementRow>> previousByBoard,
+        List<BeatenBoard> beatenBoards)
+    {
+        // Folder firsts resolve before chart firsts so a folder banner can absorb the
+        // chart-level row for the same achievement.
+        var eligible = beatenBoards
+            .Where(b => b.Board.Level >= HighlightMinimumLevel)
+            .ToArray();
+        var priorFolderHighs = input.FolderRecords.ToDictionary(r => (r.ChartType, r.Level), r => r.HighScore);
+
+        var folderFirstBoards = new HashSet<int>();
+        var folderRows = new List<HighlightRow>();
+        foreach (var folderGroup in eligible.GroupBy(b => (b.Board.ChartType!, b.Board.Level!.Value)))
+        {
+            var priorHigh = priorFolderHighs.TryGetValue(folderGroup.Key, out var high) ? high : (int?)null;
+            if (priorHigh == null) continue;
+
+            var folderTop = folderGroup.Max(b => b.NewHigh);
+            var newBand = BandFor(folderTop);
+            // A board record can fall while the folder high stands above it — the folder
+            // first only fires when the folder's own band moved UP.
+            if (newBand == null || BandRank(newBand) <= BandRank(BandFor(priorHigh.Value))) continue;
+
+            foreach (var beaten in folderGroup.Where(b => b.NewHigh == folderTop))
+            {
+                folderFirstBoards.Add(beaten.Board.Id);
+                folderRows.AddRange(ClaimantRows(input, beaten, HighlightKinds.FolderGradeFirst, newBand,
+                    previousByBoard));
+            }
+        }
+
+        var chartRows = new List<HighlightRow>();
+        var numberOneRows = new List<HighlightRow>();
+        foreach (var beaten in eligible.Where(b => !folderFirstBoards.Contains(b.Board.Id)))
+        {
+            var newBand = BandFor(beaten.NewHigh);
+            var crossed = newBand != null && newBand != BandFor(beaten.PreviousHigh);
+            if (crossed)
+                chartRows.AddRange(ClaimantRows(input, beaten, HighlightKinds.ChartGradeFirst, newBand!,
+                    previousByBoard));
+            else
+                numberOneRows.AddRange(ClaimantRows(input, beaten, HighlightKinds.NewNumberOne, null,
+                    previousByBoard));
+        }
+
+        return Order(folderRows).Concat(Order(chartRows)).Concat(Order(numberOneRows));
+
+        static IEnumerable<HighlightRow> Order(List<HighlightRow> rows)
+        {
+            return rows.OrderByDescending(r => BandRank(r.GradeBand)).ThenByDescending(r => r.Score)
+                .Select((r, i) => r with { SortOrder = i + 1 });
+        }
+    }
+
+    private static IEnumerable<HighlightRow> ClaimantRows(HighlightsInput input, BeatenBoard beaten, string kind,
+        string? band, IReadOnlyDictionary<int, IReadOnlyList<PlacementRow>> previousByBoard)
+    {
+        var current = input.Current.Where(p => p.LeaderboardId == beaten.Board.Id).ToArray();
+        var dethroned = previousByBoard.TryGetValue(beaten.Board.Id, out var previous)
+            ? previous.Where(p => p.Place == 1).OrderBy(p => p.PlayerId).Select(p => (int?)p.PlayerId)
+                .FirstOrDefault()
+            : null;
+        // Same-week rule: everyone sharing the new record score co-credits; later ties
+        // never re-fire because the record book already holds the score.
+        return current.Where(p => (int)p.Score == beaten.NewHigh)
+            .Select(p => new HighlightRow(kind, 0, p.PlayerId,
+                dethroned == p.PlayerId ? null : dethroned, beaten.Board.Id, beaten.Board.ChartId,
+                beaten.Board.ChartType, beaten.Board.Level, band, beaten.NewHigh, beaten.PreviousHigh, null));
+    }
+
+    private static string? BandFor(int score)
+    {
+        foreach (var (band, floor) in GradeBands)
+            if (score >= floor)
+                return band;
+        return null;
+    }
+
+    private static int BandRank(string? band)
+    {
+        for (var i = 0; i < GradeBands.Length; i++)
+            if (GradeBands[i].Band == band)
+                return GradeBands.Length - i;
+        return 0;
+    }
+
+    private sealed record BeatenBoard(BoardDimension Board, int PreviousHigh, int NewHigh);
+}

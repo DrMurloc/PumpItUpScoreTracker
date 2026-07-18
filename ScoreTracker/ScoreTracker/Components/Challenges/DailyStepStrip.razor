@@ -17,12 +17,12 @@
 else
 {
     <div class="challenge-daily-strip @(View.Board.IsLimbo ? "limbo" : "")">
-        <a class="challenge-daily-jacket" href="/Chart/@Chart.Id" data-challenge-chart="@Chart.Id"
+        <a class="challenge-daily-jacket" href="@Chart.CanonicalPath()" data-challenge-chart="@Chart.Id"
            style="background-image:url('@Chart.Song.ImagePath')" aria-label="@Chart.Song.Name"></a>
         <span class="challenge-daily-id">
             <span>
                 <span class="challenge-daily-kicker">@L["Daily Step"]</span>
-                <a class="challenge-daily-name" href="/Chart/@Chart.Id" data-challenge-chart="@Chart.Id">@Chart.Song.Name</a>
+                <a class="challenge-daily-name" href="@Chart.CanonicalPath()" data-challenge-chart="@Chart.Id">@Chart.Song.Name</a>
             </span>
             <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
             @if (View.Board.IsLimbo)

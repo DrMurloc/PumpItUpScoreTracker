@@ -54,14 +54,14 @@ else
             if (chart == null) continue;
             var top = summary.TopPlaces.FirstOrDefault();
             <div class="challenge-card" data-suggested="@summary.IsSuggested.ToString().ToLowerInvariant()">
-                <a class="challenge-card-jacket" href="/Chart/@chart.Id" data-challenge-chart="@chart.Id"
+                <a class="challenge-card-jacket" href="@chart.CanonicalPath()" data-challenge-chart="@chart.Id"
                    style="background-image:url('@chart.Song.ImagePath')" aria-label="@chart.Song.Name">
                     <span class="challenge-card-bubble"><DifficultyBubble Chart="chart" Small="true"></DifficultyBubble></span>
                 </a>
                 <button class="challenge-count-chip" data-challenge-board="@chart.Id"
                         title="@L["Leaderboard"]">@summary.EntryCount</button>
                 <div class="challenge-card-body">
-                    <a class="challenge-card-name" href="/Chart/@chart.Id" data-challenge-chart="@chart.Id">@chart.Song.Name</a>
+                    <a class="challenge-card-name" href="@chart.CanonicalPath()" data-challenge-chart="@chart.Id">@chart.Song.Name</a>
                     @if (top != null)
                     {
                         <div class="challenge-card-line">

@@ -275,6 +275,17 @@ Facts established during Stage 1 scoping that Stage 2 inherits. Re-check before 
    A narrower lever exists if we later want enhanced nav without DOM patching:
    `Blazor.start({ ssr: { disableDomPreservation: true } })`.
 
+   ⚠ **Scope correction, measured on the shipped flip (2026-07-16)**: the attribute governs
+   **link interception only**. A programmatic `NavigateTo` from an interactive island still
+   performs an *enhanced page load* — fetch + DOM patch on the same document — regardless of
+   `data-enhance-nav`. A component that calls it at the end of `OnInitializedAsync` therefore
+   re-creates itself and re-runs init (bare `/TierLists` triple-initialized and stacked two
+   history entries before the URL converged), and the patch resets any static shell chrome the
+   user had open (the mobile search sheet — the CI race behind the
+   `TheMobileSearchSheetOpensFocusedOnItsField` flake). Pages that only need the URL bar to
+   change write `history.pushState`/`replaceState` directly (the tier-list pages do);
+   `NavigateTo` is for actually leaving.
+
    ⚠ Still open when we do opt in: whether enhanced nav adds a second interception path
    alongside static-shell.md D8's `target="_top"` rule.
 2. **`HeadOutlet`'s render mode.** If static, it only collects head content from static

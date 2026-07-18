@@ -640,6 +640,51 @@ public sealed class PlayerRatingSagaTests
         return m;
     }
 
+    [Fact]
+    public async Task RecalculateStatsIgnoresBrokenScoresEverywhere()
+    {
+        // A walkoff must not move any stat: competitive level (partial scores deflate small
+        // accounts and deep partials on overrated charts would farm it), co-op rating (the
+        // plate-blind Phoenix formula would happily rate a broken co-op), or total rating.
+        // The stats computed with and without broken rows must be identical.
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        var hardSingle = new ChartBuilder().WithType(ChartType.Single).WithLevel(24).Build();
+        var coOp = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(3).Build();
+        var chartsMock = ChartsMockReturning(new[] { single, hardSingle, coOp });
+        var userId = Guid.NewGuid();
+        var passesOnly = new[] { Score(single.Id, 950000) };
+        var withBroken = new[]
+        {
+            Score(single.Id, 950000),
+            Score(hardSingle.Id, 900000, isBroken: true),
+            Score(coOp.Id, 990000, isBroken: true)
+        };
+        PlayerStatsRecord? cleanStats = null;
+        PlayerStatsRecord? dirtyStats = null;
+
+        await BuildSaga(charts: chartsMock, scores: ScoresMockReturning(userId, passesOnly),
+                stats: CapturingStats(userId, r => cleanStats = r))
+            .Handle(new RecalculateStatsCommand(userId), CancellationToken.None);
+        await BuildSaga(charts: chartsMock, scores: ScoresMockReturning(userId, withBroken),
+                stats: CapturingStats(userId, r => dirtyStats = r))
+            .Handle(new RecalculateStatsCommand(userId), CancellationToken.None);
+
+        Assert.NotNull(cleanStats);
+        Assert.Equal(cleanStats, dirtyStats);
+    }
+
+    private static Mock<IPlayerStatsRepository> CapturingStats(Guid userId, Action<PlayerStatsRecord> capture)
+    {
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(It.IsAny<MixEnum>(), userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        stats.Setup(s => s.SaveStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<PlayerStatsRecord>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<MixEnum, Guid, PlayerStatsRecord, CancellationToken>((_, _, record, _) => capture(record))
+            .Returns(Task.CompletedTask);
+        return stats;
+    }
+
     private static Mock<IScoreReader> ScoresMockReturning(Guid userId,
         IEnumerable<RecordedPhoenixScore> result, MixEnum mix = MixEnum.Phoenix)
     {

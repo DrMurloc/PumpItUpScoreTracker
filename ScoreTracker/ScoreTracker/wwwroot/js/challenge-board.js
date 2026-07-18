@@ -9,6 +9,9 @@
     window.challengeBoard = {
         register: function (dotNetRef) {
             ref = dotNetRef;
+            // The controls are inert until this fires; mark the document so a test (or any
+            // watcher) can tell the island's circuit has connected before driving it.
+            document.documentElement.setAttribute('data-challenge-ready', '1');
         }
     };
 

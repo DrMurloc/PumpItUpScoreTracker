@@ -12,4 +12,12 @@ internal sealed class PiuGameGetRecentScoresResult
     public PhoenixPlate Plate { get; set; }
     public int NoteCount { get; set; }
     public bool IsBroken { get; set; }
+    public int Perfects { get; set; }
+    public int Greats { get; set; }
+    public int Goods { get; set; }
+    public int Bads { get; set; }
+    public int Misses { get; set; }
+
+    /// <summary>When the play was saved. Both sites stamp it on recently-played cards.</summary>
+    public DateTimeOffset? RecordedAt { get; set; }
 }

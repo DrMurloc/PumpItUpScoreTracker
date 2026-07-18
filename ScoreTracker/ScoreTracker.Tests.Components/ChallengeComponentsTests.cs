@@ -23,6 +23,15 @@ namespace ScoreTracker.Tests.Components;
 /// </summary>
 public sealed class ChallengeComponentsTests : ComponentTestBase
 {
+    public ChallengeComponentsTests()
+    {
+        Services.AddSingleton(Mock.Of<IUserRepository>());
+        // These sections nest DifficultyBubble/ScoreBreakdown/UserLabel, which gate their
+        // MudTooltip on RendererInfo; declare the render world so bUnit can supply it.
+        // (SetRendererInfo builds the service provider, so every registration lands first.)
+        this.RenderInteractive();
+    }
+
     private static Chart MakeChart(string name = "District 1", ChartType type = ChartType.Single, int level = 20) =>
         new(Guid.NewGuid(), MixEnum.Phoenix,
             new Song(name, SongType.Arcade, new Uri("https://piu.test/art.png"),
@@ -34,9 +43,6 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
 
     private static WeeklyTournamentEntry Entry(Guid chartId, Guid userId, int score) =>
         new(userId, chartId, score, PhoenixPlate.SuperbGame, false, null, 18.0);
-
-    private void RegisterUsers() =>
-        Services.AddSingleton(Mock.Of<IUserRepository>());
 
     // ---- DailyStepStrip -----------------------------------------------------
 
@@ -124,7 +130,6 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
     [Fact]
     public void MonthlyEmptyStateShowsWhenNoRows()
     {
-        RegisterUsers();
         var view = new MonthlyLeaderboardView(Array.Empty<MonthlyLeaderboardRow>(), 1, 4, null, null);
 
         var cut = RenderComponent<MonthlyLeaderboard>(p => p

@@ -3245,6 +3245,9 @@
   <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
     <value>PIU Scores は PIUGAME アカウントから直接インポートした Pump It Up の全履歴を保存し、ティアリスト、ランキング、あなたのプレイスタイルに合わせたおすすめに変えます。</value>
   </data>
+  <data name="PIU Scores — Pump It Up score tracker &amp; tier lists" xml:space="preserve">
+    <value>PIU Scores — Pump It Up のスコアトラッキング＆ティアリスト</value>
+  </data>
   <data name="Free, and built by a player." xml:space="preserve">
     <value>無料、プレイヤーの手作りです。</value>
   </data>
@@ -4448,6 +4451,315 @@
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>インポートされたスコアは、届き次第ここに表示されます。</value>
   </data>
+  <data name="Accept - merge history" xml:space="preserve">
+    <value>承認 - 履歴を統合</value>
+  </data>
+  <data name="avatar match" xml:space="preserve">
+    <value>アバター一致</value>
+  </data>
+  <data name="Baseline" xml:space="preserve">
+    <value>ベースライン</value>
+  </data>
+  <data name="Baseline seed queued - it refuses to run once sealed snapshots exist" xml:space="preserve">
+    <value>ベースライン作成をキューに追加しました - 確定済みスナップショットがある場合は実行されません</value>
+  </data>
+  <data name="Best place" xml:space="preserve">
+    <value>最高順位</value>
+  </data>
+  <data name="Board #1s" xml:space="preserve">
+    <value>ボード1位</value>
+  </data>
+  <data name="Board placements" xml:space="preserve">
+    <value>ボード順位</value>
+  </data>
+  <data name="Board rank - lower is better" xml:space="preserve">
+    <value>ボードランキング - 低いほど上位</value>
+  </data>
+  <data name="boards" xml:space="preserve">
+    <value>ボード</value>
+  </data>
+  <data name="Boards" xml:space="preserve">
+    <value>ボード</value>
+  </data>
+  <data name="dethroned" xml:space="preserve">
+    <value>前王者:</value>
+  </data>
+  <data name="Every record held this week." xml:space="preserve">
+    <value>今週はすべての記録が守られました。</value>
+  </data>
+  <data name="Find a player" xml:space="preserve">
+    <value>プレイヤーを探す</value>
+  </data>
+  <data name="First in the folder" xml:space="preserve">
+    <value>フォルダ初</value>
+  </data>
+  <data name="Highlight rebuild queued" xml:space="preserve">
+    <value>ハイライト再計算をキューに追加しました</value>
+  </data>
+  <data name="Import OK" xml:space="preserve">
+    <value>インポート正常</value>
+  </data>
+  <data name="Import queued - watch the runs table" xml:space="preserve">
+    <value>インポートをキューに追加しました - 実行履歴テーブルを確認してください</value>
+  </data>
+  <data name="Import runs" xml:space="preserve">
+    <value>インポート実行履歴</value>
+  </data>
+  <data name="in the top ten" xml:space="preserve">
+    <value>件がトップ10以内</value>
+  </data>
+  <data name="Last import failed" xml:space="preserve">
+    <value>前回のインポートが失敗しました</value>
+  </data>
+  <data name="level 24+, first ever, SS and up" xml:space="preserve">
+    <value>レベル24以上、史上初、SS以上</value>
+  </data>
+  <data name="level 24+, must beat the standing record" xml:space="preserve">
+    <value>レベル24以上、既存記録の更新が必要</value>
+  </data>
+  <data name="Linked to a site account" xml:space="preserve">
+    <value>サイトアカウントと連携済み</value>
+  </data>
+  <data name="Most boards climbed" xml:space="preserve">
+    <value>ボード上昇数トップ</value>
+  </data>
+  <data name="Movers of the week" xml:space="preserve">
+    <value>今週のムーバー</value>
+  </data>
+  <data name="net" xml:space="preserve">
+    <value>合計</value>
+  </data>
+  <data name="New #1s" xml:space="preserve">
+    <value>新しい1位</value>
+  </data>
+  <data name="New this week" xml:space="preserve">
+    <value>今週初登場</value>
+  </data>
+  <data name="No board history for that tag." xml:space="preserve">
+    <value>そのタグのボード履歴はありません。</value>
+  </data>
+  <data name="No new grade firsts this week." xml:space="preserve">
+    <value>今週は新しいグレード初達成はありません。</value>
+  </data>
+  <data name="No pending rename proposals." xml:space="preserve">
+    <value>保留中の改名提案はありません。</value>
+  </data>
+  <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
+    <value>人気ランキングのスナップショットはまだありません - 週次インポートで作成されます。</value>
+  </data>
+  <data name="No PUMBILITY board on this mix - movers live on Phoenix 2." xml:space="preserve">
+    <value>このバージョンにはPUMBILITYボードがありません - ムーバーはPhoenix 2でご覧いただけます。</value>
+  </data>
+  <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
+    <value>ランキングはまだありません - 最初の週次インポート後に表示されます。</value>
+  </data>
+  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
+    <value>今週は上昇基準を超えたプレイヤーはいません。</value>
+  </data>
+  <data name="Official Leaderboards Admin" xml:space="preserve">
+    <value>公開ランキング管理</value>
+  </data>
+  <data name="Official play ranking - trend deepens weekly as snapshots accumulate." xml:space="preserve">
+    <value>公式プレイランキング - スナップショットが増えるほどトレンドが充実します。</value>
+  </data>
+  <data name="Pick a player to see their boards, history, and PUMBILITY over time - departed tags stay searchable." xml:space="preserve">
+    <value>プレイヤーを選ぶとボード、履歴、PUMBILITYの推移を確認できます - 引退したタグも検索できます。</value>
+  </data>
+  <data name="places" xml:space="preserve">
+    <value>順位上昇</value>
+  </data>
+  <data name="PUMBILITY over time" xml:space="preserve">
+    <value>PUMBILITYの推移</value>
+  </data>
+  <data name="rank" xml:space="preserve">
+    <value>ランキング</value>
+  </data>
+  <data name="Rank" xml:space="preserve">
+    <value>ランキング</value>
+  </data>
+  <data name="Ranked by computed rating over the mirrored chart boards - this mix has no official PUMBILITY board." xml:space="preserve">
+    <value>ミラーリングした譜面ボードから算出したレーティング順です - このバージョンには公式PUMBILITYボードがありません。</value>
+  </data>
+  <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
+    <value>毎週ミラーリングされる公式PUMBILITYボードに基づく順位です。</value>
+  </data>
+  <data name="Rebuild weekly highlights" xml:space="preserve">
+    <value>週間ハイライトを再計算</value>
+  </data>
+  <data name="Rename proposals" xml:space="preserve">
+    <value>改名提案</value>
+  </data>
+  <data name="Run import now" xml:space="preserve">
+    <value>今すぐインポートを実行</value>
+  </data>
+  <data name="Running" xml:space="preserve">
+    <value>実行中</value>
+  </data>
+  <data name="Search any board player" xml:space="preserve">
+    <value>ボードのプレイヤーを検索</value>
+  </data>
+  <data name="Seed baseline from legacy tables" xml:space="preserve">
+    <value>旧テーブルからベースラインを作成</value>
+  </data>
+  <data name="skipped" xml:space="preserve">
+    <value>スキップ</value>
+  </data>
+  <data name="Songs" xml:space="preserve">
+    <value>曲</value>
+  </data>
+  <data name="Stage" xml:space="preserve">
+    <value>ステージ</value>
+  </data>
+  <data name="Started" xml:space="preserve">
+    <value>開始</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>状態</value>
+  </data>
+  <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
+    <value>最初の週次スナップショットはまだありません - 次の日曜のインポート後にハイライトが表示されます。</value>
+  </data>
+  <data name="This Week" xml:space="preserve">
+    <value>今週</value>
+  </data>
+  <data name="This week's snapshot is the baseline - week-over-week highlights begin next import." xml:space="preserve">
+    <value>今週のスナップショットはベースラインです - 週間ハイライトは次回のインポートから始まります。</value>
+  </data>
+  <data name="Top 50" xml:space="preserve">
+    <value>トップ50</value>
+  </data>
+  <data name="Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade." xml:space="preserve">
+    <value>算出レーティング順の上位譜面 - ボード合計は公式値、譜面ごとの貢献はスコアとグレードから算出しています。</value>
+  </data>
+  <data name="top-50 overlap" xml:space="preserve">
+    <value>トップ50一致</value>
+  </data>
+  <data name="vs" xml:space="preserve">
+    <value>vs</value>
+  </data>
+  <data name="weeks" xml:space="preserve">
+    <value>週間</value>
+  </data>
+  <data name="Week of" xml:space="preserve">
+    <value>週:</value>
+  </data>
+  <data name="World firsts" xml:space="preserve">
+    <value>世界初達成</value>
+  </data>
+  <data name="Page not found" xml:space="preserve">
+    <value>ページが見つかりません</value>
+  </data>
+  <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
+    <value>このアドレスには何もありません — バージョンとともに移動したか、最初から存在しなかったのかもしれません。検索はすべての譜面を知っています。</value>
+  </data>
+  <data name="Refresh popularity" xml:space="preserve">
+    <value>人気度を更新</value>
+  </data>
+  <data name="Missing charts" xml:space="preserve">
+    <value>未登録の譜面</value>
+  </data>
+  <data name="No missing charts - every scraped board mapped to the catalog." xml:space="preserve">
+    <value>未登録の譜面はありません - 取得したすべてのボードがカタログと一致しました。</value>
+  </data>
+  <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
+    <value>公式サイトで確認されたもののカタログに譜面が見つかりませんでした。譜面を追加してから解決を押してください - 未解決のままの譜面は次回の取得時に再表示されます。</value>
+  </data>
+  <data name="First seen" xml:space="preserve">
+    <value>初回確認</value>
+  </data>
+  <data name="Last seen" xml:space="preserve">
+    <value>最終確認</value>
+  </data>
+  <data name="Resolve" xml:space="preserve">
+    <value>解決</value>
+  </data>
+  <data name="From their linked piuscores account - not on an official board yet" xml:space="preserve">
+    <value>連携された piuscores アカウントから取得 - まだ公式ボードには載っていません</value>
+  </data>
+  <data name="piuscores" xml:space="preserve">
+    <value>piuscores</value>
+  </data>
+  <data name="What It Takes" xml:space="preserve">
+    <value>必要なもの</value>
+  </data>
+  <data name="entry cutlines" xml:space="preserve">
+    <value>エントリーライン</value>
+  </data>
+  <data name="not full" xml:space="preserve">
+    <value>未満員</value>
+  </data>
+  <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
+    <value>まだスナップショットがありません - 最初の週間インポート後にしきい値が表示されます。</value>
+  </data>
+  <data name="To get on the board" xml:space="preserve">
+    <value>ボードに載るには</value>
+  </data>
+  <data name="50 charts at, SG plates assumed" xml:space="preserve">
+    <value>譜面50枚基準・SGプレート想定</value>
+  </data>
+  <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
+    <value>ボードはまだ満員ではありません - トップ50があれば載れます。</value>
+  </data>
+  <data name="Level required, by ranking tier" xml:space="preserve">
+    <value>ランキング帯別の必要レベル</value>
+  </data>
+  <data name="The entry bar over time" xml:space="preserve">
+    <value>エントリーラインの推移</value>
+  </data>
+  <data name="The exact numbers" xml:space="preserve">
+    <value>正確な数値</value>
+  </data>
+  <data name="Full ladder" xml:space="preserve">
+    <value>全段階</value>
+  </data>
+  <data name="Tier" xml:space="preserve">
+    <value>帯</value>
+  </data>
+  <data name="All equivalents assume SG plates on all 50 - a dash means no single level clears it at that grade." xml:space="preserve">
+    <value>すべての換算は50枚全部SGプレート想定です - ダッシュはそのグレードではどのレベルでも届かないことを意味します。</value>
+  </data>
+  <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
+    <value>人気度の更新をキューに追加しました - 最新のスナップショットに再適用されます</value>
+  </data>
+  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
+    <value>PIUGAMEはCO-OPランキングを公開していません - このボードはミラーリングしたCO-OPリーダーボードから独自に算出した推定で、プレートはスコアから推定します（SG、995,000からUG、1,000,000でPG）。</value>
+  </data>
+  <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
+    <value>推定レーティング順のCO-OP譜面トップ - プレートはスコアから推定します。</value>
+  </data>
+  <data name="All Folders" xml:space="preserve">
+    <value>全フォルダー</value>
+  </data>
+  <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
+    <value>このフォルダーの譜面は人気ボードに入っていません。</value>
+  </data>
+  <data name="See their boards" xml:space="preserve">
+    <value>このプレイヤーのボードを見る</value>
+  </data>
+  <data name="Hottest Charts" xml:space="preserve">
+    <value>人気トップ譜面</value>
+  </data>
+  <data name="Coldest Charts" xml:space="preserve">
+    <value>人気ワースト譜面</value>
+  </data>
+  <data name="Biggest Movers" xml:space="preserve">
+    <value>順位変動トップ</value>
+  </data>
+  <data name="{0} charts ranked" xml:space="preserve">
+    <value>{0}譜面がランクイン</value>
+  </data>
+  <data name="Folder heat - the median chart's standing per folder (red = Singles, green = Doubles); higher is hotter" xml:space="preserve">
+    <value>フォルダー人気度 - 各フォルダーの中央値譜面のボード順位（赤 = シングル、緑 = ダブル）。上ほど人気</value>
+  </data>
+  <data name="Weighted Sum Popularity" xml:space="preserve">
+    <value>加重合計人気度</value>
+  </data>
+  <data name="Biased towards smaller folders" xml:space="preserve">
+    <value>小さいフォルダーに有利</value>
+  </data>
+  <data name="Biased towards larger folders" xml:space="preserve">
+    <value>大きいフォルダーに有利</value>
+  </data>
   <data name="Imported" xml:space="preserve">
     <value>インポート済み</value>
   </data>
@@ -4522,9 +4834,6 @@
   </data>
   <data name="The rules" xml:space="preserve">
     <value>ルール</value>
-  </data>
-  <data name="This Week" xml:space="preserve">
-    <value>今週</value>
   </data>
   <data name="This week's charts post Monday at midnight ET." xml:space="preserve">
     <value>今週の譜面は月曜0時(ET)に公開されます。</value>

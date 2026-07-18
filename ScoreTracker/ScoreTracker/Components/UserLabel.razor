@@ -7,17 +7,34 @@
 @using Align = MudBlazor.Align
 @namespace ScoreTracker.Web.Components
 
+@* MudTooltip renders a popover, which throws in static SSR (no provider in the static tree).
+   The tooltips carry hover text only, so a static render drops them and keeps the flag and
+   name; in a circuit they come back. *@
 @if (User != null)
 {
     @if (!string.IsNullOrWhiteSpace(_countryImage))
     {
-        <MudTooltip Text="@User.Country!.Value">
+        @if (RendererInfo.IsInteractive)
+        {
+            <MudTooltip Text="@User.Country!.Value">
+                <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@_countryImage"></MudImage>
+            </MudTooltip>
+        }
+        else
+        {
             <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@_countryImage"></MudImage>
+        }
+    }
+    @if (RendererInfo.IsInteractive)
+    {
+        <MudTooltip Text="@Tooltip">
+            @User.Name
         </MudTooltip>
     }
-    <MudTooltip Text="@Tooltip">
+    else
+    {
         @User.Name
-    </MudTooltip>
+    }
 }
 @inject IUserRepository Users
 @code {

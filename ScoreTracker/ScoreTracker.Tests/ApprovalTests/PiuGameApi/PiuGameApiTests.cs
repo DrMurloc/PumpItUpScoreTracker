@@ -97,6 +97,97 @@ public sealed class PiuGameApiTests
         Assert.Equal(PhoenixPlate.TalentedGame, second.Plate);
     }
 
+    [Fact]
+    public async Task GetBestScoresParsesTheRedesignedPhoenix2PageWithDatesAndBrokenBests()
+    {
+        // Phoenix 2 redesigned my_best_score.php (captured 2026-07-17): the my_best_scoreList
+        // grammar is gone; bests render as recently-played-style cards, newest first, each
+        // carrying a saved datetime — and stage-failed bests appear with no plate image and a
+        // real (not necessarily 0) partial score. The parser sniffs the shape, so the classic
+        // fixtures above must keep parsing unchanged through the same entry point.
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetBestScores_Phoenix2Redesign.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetBestScores(MixEnum.Phoenix2, HttpClientReturning(html), page: 1,
+            CancellationToken.None);
+
+        // No pager on the fixture — MaxPage falls back to the requested page.
+        Assert.Equal(1, result.MaxPage);
+        Assert.Equal(5, result.Scores.Length);
+
+        // Card 1: a stage-failed best — empty plate slot, still scored and dated.
+        var broken = result.Scores[0];
+        Assert.Equal("Chimera", (string)broken.SongName);
+        Assert.Equal(ChartType.Double, broken.ChartType);
+        Assert.Equal(26, (int)broken.Level);
+        Assert.Equal(0, (int)broken.Score);
+        Assert.True(broken.IsBroken);
+        Assert.Null(broken.Plate);
+        Assert.Equal(new DateTimeOffset(2026, 7, 17, 23, 16, 30, TimeSpan.FromHours(9)), broken.RecordedAt);
+
+        // Card 2: a passing best — plate parsed from its image, grade imagery ignored.
+        var pass = result.Scores[1];
+        Assert.Equal("ALiVE", (string)pass.SongName);
+        Assert.Equal(ChartType.Double, pass.ChartType);
+        Assert.Equal(21, (int)pass.Level);
+        Assert.Equal(978147, (int)pass.Score);
+        Assert.False(pass.IsBroken);
+        Assert.Equal(PhoenixPlate.FairGame, pass.Plate);
+        Assert.Equal(new DateTimeOffset(2026, 7, 17, 23, 15, 58, TimeSpan.FromHours(9)), pass.RecordedAt);
+
+        // Strictly newest-first — the incremental import's date cutoff depends on this ordering.
+        Assert.Equal(result.Scores.Select(s => s.RecordedAt!.Value).OrderByDescending(d => d),
+            result.Scores.Select(s => s.RecordedAt!.Value));
+    }
+
+    [Fact]
+    public async Task GetRecentScoresParsesJudgementCountsAndSavedDates()
+    {
+        // Both sites now stamp recently-played cards with a saved datetime; the judgement
+        // counts were always on the card and now ride the result instead of being discarded
+        // after the plate computation.
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetRecentScores_Phoenix2Dated.html"));
+        var api = BuildApi(html);
+
+        var result = (await api.GetRecentScores(MixEnum.Phoenix2, HttpClientReturning(html), CancellationToken.None))
+            .ToList();
+
+        // 5 cards; the STAGE BREAK card is skipped as always (broken data arrives via the
+        // best list on the redesigned site).
+        Assert.Equal(4, result.Count);
+
+        var first = result[0];
+        Assert.Equal("ALiVE", (string)first.SongName);
+        Assert.Equal(978147, (int)first.Score);
+        Assert.Equal(1100, first.Perfects);
+        Assert.Equal(14, first.Greats);
+        Assert.Equal(1, first.Goods);
+        Assert.Equal(1, first.Bads);
+        Assert.Equal(14, first.Misses);
+        Assert.Equal(1130, first.NoteCount);
+        Assert.Equal(PhoenixPlate.FairGame, first.Plate);
+        Assert.Equal(new DateTimeOffset(2026, 7, 17, 23, 15, 58, TimeSpan.FromHours(9)), first.RecordedAt);
+    }
+
+    [Fact]
+    public async Task GetRecentScoresParsesSavedDatesAndJudgementsOnTheClassicCapture()
+    {
+        // The Phoenix 1 site has stamped recently-played cards with recently_date_tt since at
+        // least this 2026-05 capture — the classic shape carries dates and judgements too,
+        // so capture works identically on both hosts.
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetRecentScores_HappyPath.html"));
+        var api = BuildApi(html);
+
+        var result = (await api.GetRecentScores(MixEnum.Phoenix, HttpClientReturning(html), CancellationToken.None))
+            .ToList();
+
+        Assert.NotEmpty(result);
+        Assert.All(result, r => Assert.NotNull(r.RecordedAt));
+        Assert.Equal(new DateTimeOffset(2026, 5, 6, 5, 3, 46, TimeSpan.FromHours(9)), result[0].RecordedAt);
+        Assert.Equal(974, result[0].Perfects);
+        Assert.Equal(55, result[0].Misses);
+    }
+
     [Theory]
     [InlineData("en-US")]
     [InlineData("pt-BR")]
@@ -206,9 +297,13 @@ public sealed class PiuGameApiTests
             var stubbedClient = HttpClientReturning(html);
             var api = BuildApi(html);
 
-            var result = await api.GetSongLeaderboard(MixEnum.Phoenix, songId: "any", CancellationToken.None);
+            var result = await api.GetSongLeaderboard(MixEnum.Phoenix, songId: "any", page: 1,
+                CancellationToken.None);
 
             Assert.Equal(2, result.Results.Length);
+            // No next/last paging icon in the fixture — the whole board is one page.
+            Assert.True(result.IsEnd);
+            Assert.Equal(0, result.FailedRows);
 
             // ProfileName is the concatenation of every `profile_name` div in the entry — for PIU
             // that's the gamer tag followed by the #ID suffix.
@@ -485,7 +580,8 @@ public sealed class PiuGameApiTests
             Path.Combine(FixtureRoot, "GetSongLeaderboard_Phoenix2Host.html"));
         var api = BuildApi(html);
 
-        var result = await api.GetSongLeaderboard(MixEnum.Phoenix2, songId: "any", CancellationToken.None);
+        var result = await api.GetSongLeaderboard(MixEnum.Phoenix2, songId: "any", page: 1,
+            CancellationToken.None);
 
         Assert.Equal(2, result.Results.Length);
         Assert.Equal("SUNNY#5412", result.Results[0].ProfileName);
@@ -515,6 +611,28 @@ public sealed class PiuGameApiTests
             result.ImageUrl);
         Assert.Contains(result.TitleEntries, t => t.Name == "BEGINNER" && t.Have && t.ColClass == "col0");
         Assert.Contains(result.TitleEntries, t => t.Name == "EXC FOLLOWER" && !t.Have && t.ColClass == "col1");
+    }
+
+    [Fact]
+    public async Task GetChartPopularityReportsRawTilesSeparatelyFromParsedEntries()
+    {
+        // Three tiles: one clean, one with no song-name node, one whose stepball art moved
+        // off the official hosts (the 2026-07-03 drift shape). Skipped tiles must not
+        // vanish from the raw count — pagination decisions ride RawRowCount.
+        var html = await File.ReadAllTextAsync(
+            Path.Combine(FixtureRoot, "GetChartPopularity_MixedParseability.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetChartPopularityLeaderboard(MixEnum.Phoenix2, 0,
+            DateTimeOffset.UtcNow, CancellationToken.None, HttpClientReturning(html));
+
+        Assert.Equal(3, result.RawRowCount);
+        var entry = Assert.Single(result.Entries);
+        Assert.Equal("District 1", (string)entry.SongName);
+        Assert.Equal(ChartType.Double, entry.ChartType);
+        Assert.Equal(26, (int)entry.ChartLevel);
+        Assert.Equal(4, entry.Place);
+        Assert.Equal("https://phoenix.piugame.com/data/song_img/district1.png?v=1", entry.SongImage);
     }
 
     private static PiuGameApi BuildApi(string responseHtml)

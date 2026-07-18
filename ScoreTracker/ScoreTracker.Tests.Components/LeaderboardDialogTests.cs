@@ -35,6 +35,9 @@ public sealed class LeaderboardDialogTests : ComponentTestBase
                     new Uri("https://piu.test/avatar.png"), null)).ToArray());
         Services.AddSingleton(users.Object);
         CurrentUser.Setup(c => c.IsLoggedIn).Returns(false);
+        // The dialog is an island; its rows render UserLabel/ScoreBreakdown on the live
+        // (tooltip) path, which reads RendererInfo.
+        this.RenderInteractive();
     }
 
     private IRenderedFragment RenderDialog(WeeklyTournamentEntry[] entries,

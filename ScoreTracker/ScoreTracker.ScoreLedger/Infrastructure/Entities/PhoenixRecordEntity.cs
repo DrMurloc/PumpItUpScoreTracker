@@ -26,4 +26,16 @@ internal sealed class PhoenixRecordEntity
     /// </summary>
     [MaxLength(32)]
     public string? Source { get; set; }
+
+    /// <summary>
+    ///     Judgement breakdown of the play that produced the current best score. All five
+    ///     are set together or not at all; NULL = the producing play's breakdown was never
+    ///     observed (manual entry, or an import before judgement capture).
+    /// </summary>
+    public int? Perfects { get; set; }
+
+    public int? Greats { get; set; }
+    public int? Goods { get; set; }
+    public int? Bads { get; set; }
+    public int? Misses { get; set; }
 }

@@ -1,5 +1,6 @@
 @namespace ScoreTracker.Web.Components
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
 @inject NavigationManager NavManager
 
 @* The chart search. An island: the shell around it is static HTML, but an autocomplete needs
@@ -23,7 +24,7 @@
     {
         // nav.js closes the mobile sheet off the history push this causes — the sheet is
         // chrome over the page you left, and no link click happens here to catch.
-        NavManager.NavigateTo($"/Chart/{chart.Id}");
+        NavManager.NavigateTo(chart.CanonicalPath());
         return Task.CompletedTask;
     }
 }

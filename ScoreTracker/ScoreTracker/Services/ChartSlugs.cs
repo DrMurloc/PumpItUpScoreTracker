@@ -16,9 +16,20 @@ namespace ScoreTracker.Web.Services;
 /// </summary>
 public static class ChartSlugs
 {
+    // Names made entirely of URL-hostile punctuation slugify to nothing — they get a
+    // hand-picked stable slug instead ("!" is the only one in the catalog).
+    private static readonly IReadOnlyDictionary<string, string> UnslugifiableNames =
+        new Dictionary<string, string>
+        {
+            ["!"] = "exclamation"
+        };
+
     public static string SlugifySong(Name songName)
     {
-        return Slugify(songName.ToString());
+        var raw = songName.ToString();
+        var slug = Slugify(raw);
+        if (slug.Length > 0) return slug;
+        return UnslugifiableNames.TryGetValue(raw, out var named) ? named : "untitled";
     }
 
     public static string MixSlug(MixEnum mix)
@@ -26,15 +37,20 @@ public static class ChartSlugs
         return Slugify(mix.GetName());
     }
 
+    /// <summary>
+    ///     Slot-aware: pre-Exceed slots are identity (the same song can carry Hard 6 AND
+    ///     Crazy 6, and "s6" alone is ambiguous there), so slotted charts slug from
+    ///     DifficultyDisplay ("crazy-6") while slotless ones keep the shorthand ("d20").
+    /// </summary>
     public static string DifficultySlug(Chart chart)
     {
-        return Slugify(chart.DifficultyString);
+        return Slugify(chart.Slot != null ? chart.DifficultyDisplay : chart.DifficultyString);
     }
 
-    /// <summary>/{mix}/{song}/{difficulty} — the shape the sitemap and in-app links emit.</summary>
-    public static string CanonicalPath(Chart chart)
+    /// <summary>/Charts/{mix}/{song}/{difficulty} — the shape the sitemap and in-app links emit.</summary>
+    public static string CanonicalPath(this Chart chart)
     {
-        return $"/{MixSlug(chart.Mix)}/{SlugifySong(chart.Song.Name)}/{DifficultySlug(chart)}";
+        return $"/Charts/{MixSlug(chart.Mix)}/{SlugifySong(chart.Song.Name)}/{DifficultySlug(chart)}";
     }
 
     private static string Slugify(string value)

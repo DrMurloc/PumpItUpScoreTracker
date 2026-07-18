@@ -1,4 +1,5 @@
-﻿using Azure.Storage.Blobs;
+﻿using Azure;
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Data.Configuration;
@@ -24,8 +25,34 @@ public sealed class AzureBlobFileUploadClient : IFileUploadClient
         path = path.TrimStart('/');
         var blobClient = _blob.GetBlobClient(path);
 
-        await blobClient.UploadAsync(fileStream, cancellationToken);
+        // IfNoneMatch keeps the no-overwrite behavior of the plain Stream overload this
+        // replaced; the headers carry the content type, which the options overload would
+        // otherwise leave as application/octet-stream.
+        await blobClient.UploadAsync(fileStream, new BlobUploadOptions
+        {
+            HttpHeaders = HeadersFor(path),
+            Conditions = new BlobRequestConditions { IfNoneMatch = ETag.All }
+        }, cancellationToken);
         return new Uri($"https://piuimages.arroweclip.se/{path}");
+    }
+
+    // Blobs serve as application/octet-stream unless the type rides the upload — and some
+    // unfurlers and crawlers refuse to render an og:image served that way.
+    private static BlobHttpHeaders HeadersFor(string path)
+    {
+        return new BlobHttpHeaders
+        {
+            ContentType = Path.GetExtension(path).ToLowerInvariant() switch
+            {
+                ".png" => "image/png",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                ".svg" => "image/svg+xml",
+                ".ico" => "image/x-icon",
+                _ => "application/octet-stream"
+            }
+        };
     }
 
     public Task<bool> DoesFileExist(string path, out Uri fullPath,
@@ -57,7 +84,9 @@ public sealed class AzureBlobFileUploadClient : IFileUploadClient
         var blobClient = _blob.GetBlobClient(newPath);
 
         var stream = await _client.GetStreamAsync(oldPath, cancellationToken);
-        await blobClient.UploadAsync(stream, true, cancellationToken);
+        // No conditions: this path always overwrote (the bool overload it replaced).
+        await blobClient.UploadAsync(stream, new BlobUploadOptions { HttpHeaders = HeadersFor(newPath) },
+            cancellationToken);
         return new Uri($"https://piuimages.arroweclip.se/{newPath}");
     }
 

@@ -90,6 +90,51 @@ public sealed class TierListTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task BareTierListsCanonicalizesInPlaceWithoutReloading()
+    {
+        // The bare route resolves a folder at the end of its init and rewrites the URL bar
+        // via history.replaceState. Navigating there instead would re-fetch and re-initialize
+        // the page it just rendered, stack junk history entries, and knock down any shell
+        // sheet the user had opened while init was still running — so the pins are on all
+        // three: one load total, an open sheet that survives the rewrite, and Back leaving
+        // the page rather than bouncing forward.
+        var tierListLoads = new List<string>();
+        _page.Request += (_, r) =>
+        {
+            if (r.Url.Contains("/TierLists", StringComparison.OrdinalIgnoreCase)
+                && r.ResourceType is "document" or "fetch")
+                lock (tierListLoads) tierListLoads.Add($"{r.ResourceType} {r.Url}");
+        };
+
+        // Below the shell's 960px breakpoint so the bottom nav (and its Search slot) exists.
+        await _page.SetViewportSizeAsync(390, 844);
+        await _page.GotoAsync("/LifeCalculator");
+        await _page.GotoAsync("/TierLists");
+
+        // Opened straight off the load: the sheet is static chrome, so this lands before the
+        // page's init resolves a folder — the tap the CI race caught being swallowed.
+        await _page.Locator("[data-search-btn]").ClickAsync();
+        await Expect(_page.Locator("[data-search-sheet]")).ToHaveClassAsync(new Regex(@"\bopen\b"));
+
+        await Expect(_page).ToHaveURLAsync(new Regex(@"/TierLists/\w+/\d+\?TierListType="),
+            new PageAssertionsToHaveURLOptions { Timeout = 60_000 });
+
+        // The rewrite lands at the end of init, so by now any re-fetch it triggered would be
+        // in flight; a beat of settle catches it before the count is pinned.
+        await _page.WaitForTimeoutAsync(1000);
+        lock (tierListLoads)
+        {
+            Assert.True(tierListLoads.Count == 1,
+                $"Expected the single document load, saw: {string.Join(", ", tierListLoads)}");
+        }
+        await Expect(_page.Locator("[data-search-sheet]")).ToHaveClassAsync(new Regex(@"\bopen\b"));
+
+        await _page.GoBackAsync();
+        await Expect(_page).ToHaveURLAsync(new Regex("/LifeCalculator"),
+            new PageAssertionsToHaveURLOptions { Timeout = 60_000 });
+    }
+
+    [Fact]
     public async Task FolderPickerSwitchesTypeAndLevelInOneGesture()
     {
         // The headline perf fix of the overhaul: D20 → S18 is one popover interaction,

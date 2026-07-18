@@ -25,22 +25,37 @@
     @* A real head for readers that run no JS, resolved from the route (StaticHeadResolver):
        chart routes get their name, description and jacket; unmatched routes get the bare site
        title and no meta. Blazor removes the title on boot and HeadOutlet takes over, so
-       <PageTitle> keeps working unchanged. *@
-    <title>@(_head?.Title ?? L["PIU Scores"].Value)</title>
+       <PageTitle> keeps working unchanged. The brand suffix rides the document title only —
+       og:title stays the bare page name because og:site_name already carries the brand. *@
+    <title>@(_head != null ? $"{_head.Title} | PIU Scores" : L["PIU Scores"].Value)</title>
     @if (_head != null)
     {
         <meta name="description" content="@_head.Description" />
+        <meta property="og:site_name" content="PIU Scores" />
         <meta property="og:title" content="@_head.Title" />
         <meta property="og:description" content="@_head.Description" />
         <meta property="og:type" content="website" />
         @if (_head.OgImage != null)
         {
             <meta property="og:image" content="@_head.OgImage" />
+            <meta property="og:image:alt" content="@($"{_head.SongName ?? _head.Title} jacket art")" />
+            @* The jacket banner is landscape (~16:9), which is what the large-card format wants. *@
+            <meta name="twitter:card" content="summary_large_image" />
         }
         @if (_head.Canonical != null)
         {
-            @* Folds query variants (filters, past weeks) into the clean URL. *@
-            <link rel="canonical" href="@($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{_head.Canonical}")" />
+            @* Charts self-canonicalize; the weekly hub folds its ?week/?type variants here. *@
+            <link rel="canonical" href="@_head.Canonical" />
+            <meta property="og:url" content="@_head.Canonical" />
+        }
+        @if (_head.SongName != null)
+        {
+            @* Chart-page structured data (a MusicRecording needs a song). The whole element
+               rides one MarkupString: the static renderer silently drops a <script> element
+               whose content is a component expression, and a raw markup frame is what actually
+               reaches the document. JSON string values escape "<", so a song title can't close
+               the script early. The weekly hub emits its own ItemList in the page body. *@
+            @((MarkupString)$"<script type=\"application/ld+json\">{JsonLd(_head)}</script>")
         }
     }
     @* Interactive, and not prerendered — matching every <PageTitle> in the app. Static, it would
@@ -120,7 +135,7 @@
 <script src="_framework/blazor.web.js"></script>
 <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 <script src="/js/page-dock.js"></script>
-<script src="/js/nav.js"></script>
+<script src="/js/nav.js?v=3"></script>
 <script src="/js/dashboard-grid.js"></script>
 <script src="/js/credential-storage.js"></script>
 <script src="/js/challenge-board.js"></script>
@@ -132,6 +147,56 @@
 
     private ShellViewModel _shell = null!;
     private StaticHeadModel? _head;
+
+    // Chart-page structured data: MusicRecording names the song, its artist and jacket for
+    // rich results; BreadcrumbList is what a search result shows as its trail in place of
+    // raw URL slugs. System.Text.Json escapes the values, so a song title can't break out.
+    private static string JsonLd(StaticHeadModel head)
+    {
+        var recording = new Dictionary<string, object?>
+        {
+            ["@type"] = "MusicRecording",
+            ["name"] = head.SongName ?? head.Title,
+            ["description"] = head.Description,
+            ["url"] = head.Canonical,
+            ["image"] = head.OgImage
+        };
+        if (head.Artist != null)
+            recording["byArtist"] = new Dictionary<string, object?>
+            {
+                ["@type"] = "MusicGroup",
+                ["name"] = head.Artist
+            };
+        return System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object?>
+        {
+            ["@context"] = "https://schema.org",
+            ["@graph"] = new object[]
+            {
+                recording,
+                new Dictionary<string, object?>
+                {
+                    ["@type"] = "BreadcrumbList",
+                    ["itemListElement"] = new object[]
+                    {
+                        new Dictionary<string, object?>
+                        {
+                            ["@type"] = "ListItem",
+                            ["position"] = 1,
+                            ["name"] = "Charts",
+                            ["item"] = "https://piuscores.arroweclip.se/Charts"
+                        },
+                        new Dictionary<string, object?>
+                        {
+                            ["@type"] = "ListItem",
+                            ["position"] = 2,
+                            ["name"] = head.Title,
+                            ["item"] = head.Canonical
+                        }
+                    }
+                }
+            }
+        });
+    }
 
     // Resolved here rather than in OnInitializedAsync: an async init renders once at its first
     // await, before it has assigned anything. A page can show a spinner through that render —

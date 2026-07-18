@@ -226,6 +226,19 @@ namespace ScoreTracker.OfficialMirror.Infrastructure
             await database.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task<IEnumerable<UserOfficialLeaderboard>> GetAllEntries(MixEnum mix,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            return await database.Set<UserOfficialLeaderboardEntity>()
+                .Where(e => e.MixId == mixId)
+                .Select(e =>
+                    new UserOfficialLeaderboard(e.Username, e.Place, e.LeaderboardType, e.LeaderboardName,
+                        e.Score))
+                .ToArrayAsync(cancellationToken);
+        }
+
         public async Task<DateTimeOffset?> GetLastImportTimestamp(MixEnum mix, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);

@@ -310,11 +310,17 @@ QA on its own branch, exactly like Stage 1's.
 - **Verification**: the fast suites stay green through every render-mode violation (§5). E2E
   full pass + the owner FT matrix are the actual gate.
 
-**Shipped 2026-07-16, with three reality corrections found by building:**
+**Shipped 2026-07-16, with four reality corrections found by building:**
 - **The navigation model changes — this is the flip's one user-visible cost.** The §2 mechanics
   above were right; the "zero behavior change" banner was not: killing the interactive router
   ends SPA navigation, and every in-app click is a full document load now (accepted; enhanced
   nav is the chase).
+- **"Every navigation" meant link clicks.** `data-enhance-nav="false"` does not reach
+  programmatic `NavigateTo` from an interactive island, which performs an enhanced page load
+  (fetch + DOM patch, same document) — so a page that called `NavigateTo` to sync its own URL
+  re-fetched and re-initialized itself (render-modes.md §7.1 has the measurements). The
+  tier-list pages now write the URL bar through `history.pushState`/`replaceState` instead;
+  `NavigateTo` means leaving the page.
 - **Real 404s came free**: the static router answers unmatched routes itself — real 404, empty
   body — and the Router's `NotFound` fragment never renders under it. The planned status-setting
   component was dead on arrival and deleted; a branded not-found page is `NotFoundPage` polish,
@@ -372,19 +378,53 @@ work is caching and the lattice.
     that is the "mix-specific link" case, and the mix segment makes it resolve correctly.
   - **Sitemap swap** to vanity (one line, post-PR-1 shape) + the PR-2 head resolver gains the
     vanity route, self-canonical `<link>`, and JSON-LD.
-- **Output caching — this page ships it**: anonymous GETs only; vary by path + resolved culture
-  + mix cookie; bypass on auth cookie; TTL from config. Spike ①: does
-  `@attribute [OutputCache(...)]` on a component page flow into endpoint metadata (fallback:
-  path-keyed policy/middleware). Spike ②: find the live `Cache-Control: no-cache, no-store`
-  writer — prime suspect is antiforgery on the component endpoints (`UseAntiforgery`,
-  `Program.cs:340`) — and neutralize it for cacheable anonymous GETs. Owner/Azure item
-  (static-shell.md D18): ARR affinity cookies make first-hit responses edge-uncacheable — if the
-  plan runs a single instance, disable ARR affinity.
-- **Corrections to carry into chart-details-overhaul.md when syncing**: `ChartOverview` is NOT
-  dead — `Charts.razor:426` still opens it; its retirement belongs to `/Charts`' own conversion.
+- **Output caching — investigated, then split out (see K4 finding below).**
 - **FT**: view-source is real HTML; Discord unfurl shows the jacket; a GUID URL 301s.
 - **Owner decision ③:** hold the vanity sitemap swap for this PR (default, the ONE-unit rule) or
   advertise correct-head-over-empty-body earlier once PR-2 lands.
+
+**Shipped 2026-07-16 as K1–K3 + K5 (branch `claude/chart-page-static-url-cutover`); K4 caching
+split out.** The ONE-unit rule is satisfied — vanity URLs, real HTML, and the 301 lattice ship
+together, so a pretty URL never points at an empty body. What landed:
+- **K1** slug rules — `/Charts/{mix}/{song}/{difficulty}` (decision ④), `chart.CanonicalPath()`
+  extension, slot-aware `DifficultySlug`, `!`→`exclamation` fallback, deterministic dup-row
+  tiebreak (lowest chart id owns the URL).
+- **K2** the page goes static, five islands, the shelf splits into a crawlable
+  `SimilarChartsStaticGrid` + the interactive island (`data-island-ready` swap). **⚠ Trap caught
+  by building**: `MudTooltip` renders a popover that **throws in static SSR**, and
+  `DifficultyBubble`/`SongImage` wrapped one unconditionally — a lone-chart page dodged it
+  (no siblings, empty graph) but a chart *with* siblings 500'd. Fix: gate the tooltip on
+  `RendererInfo.IsInteractive` (tooltip in a circuit, bare image/bubble static). Same fix the
+  weekly-charts branch needs on the same shared components — coordinate the merge. bUnit needs
+  `RendererInfo` set (`BunitInteractive.RenderInteractive()`, called *last* — reading the
+  renderer locks the service collection).
+- **K3** the cutover — page-issued 301 for historical/stale/**mixed-case** slugs (case-sensitive
+  canonical compare normalizes casing in one hop; **proven that a static SSR page CAN emit a
+  real 301**, not just a 302), `ChartPermalinkController` for GUID/`/Record`, in-app links via
+  `chart.CanonicalPath()` (4 live sites — `GoToChart` died with the finder in K2), sitemap
+  swapped to vanity, `<link rel="canonical">` + `MusicRecording` JSON-LD in the static head.
+- **K5** E2E (`ChartUrlCutoverTests`, auto-redirect off — every 301 asserted directly) + this
+  sync. Suites: Tests 1347 / Api 60 / Components 173 / E2E 37.
+
+**K4 — output caching, FINDING + DEFERRED to its own verified follow-up.** Baseline captured
+2026-07-16 (E2E header dump of the live canonical page): the anonymous chart GET returns
+`Cache-Control: no-store, no-cache, max-age=0` **and** `Set-Cookie: .AspNetCore.Antiforgery.*`
+(the component endpoint's antiforgery token) plus the first-hit culture cookie. Two blockers,
+both framework-level: (1) `OutputCache` refuses to store any response carrying a `Set-Cookie`,
+so the antiforgery cookie alone defeats caching; (2) the `no-store` is emitted by the razor
+component endpoint, not app code. Neutralizing the antiforgery cookie safely — without weakening
+antiforgery on the many pages that *do* post forms — is a real spike, and getting the cache-vary
+or auth-bypass wrong risks serving one user's personalized chart page to another. **Split out
+because**: caching changes no URL and breaks no crawler (fully separable from the SEO cutover);
+it carries a correctness/security dimension that warrants its own review; and it needs owner
+field-verification (it's the fix for the first-load latency noticed after PR-3). The follow-up
+owns: the anon-GET output-cache policy (vary by path + culture + mix cookie, bypass on the
+`DefaultAuthentication` cookie, TTL config `OutputCache:ChartPageSeconds` ≈ 600), a targeted
+antiforgery-cookie/no-store suppression scoped to anonymous 3-segment `/Charts/*` GETs, an E2E
+matrix (warm anon GET cacheable + no `Set-Cookie` / signed-in bypasses / form posts elsewhere
+still validate), and the ARR-affinity owner item (static-shell.md D18).
+- **Correction carried into chart-details-overhaul.md**: `ChartOverview` is NOT dead —
+  `Charts.razor` still opens it; its retirement belongs to `/Charts`' own conversion.
 
 ### PR-5 — E2E facts + doc sync [S–M]
 
@@ -394,11 +434,59 @@ work is caching and the lattice.
 - Docs: ARCHITECTURE / UX-GUIDELINES / API / DATABASE-SCHEMA sync; chart-details-overhaul.md P3
   + P4 rows close; this doc's ladder gets its shipped-marks.
 
+### SERP appearance pass (2026-07-17)
+
+Google's first indexed chart page exposed how a result actually *reads* ("263Scores tracked
+92%Pass rate…" — value/label spans fused, description too thin to be quoted alone, site named
+"arroweclip.se"). The appearance layer, landed as one pass:
+
+- **Verdict-flavored description** — the PR-2 option, now real: `StaticHeadResolver` folds the
+  daily-cached `GetChartVerdictQuery` population into the description ("263 scores tracked, 92%
+  pass rate"), making each chart's description unique and substantial enough that engines quote
+  it instead of stitching page text. The page dispatches the same query later in the same
+  request, so the head *warms* the verdict cache rather than doubling the work; the daily cache
+  is also what keeps descriptions stable between analytics rebuilds.
+- **`data-nosnippet` on the hero fact tiles** — value/label tiles are label soup to a text
+  extractor; the attribute keeps them out of search snippets (the description now carries those
+  stats as prose), and value/label sit on separate source lines so any other extractor
+  word-breaks cleanly. Verdict sentences stay snippetable on purpose — they read well.
+- **Branded document title** — `{Song} {Diff} | PIU Scores`, suffix applied in App.razor only:
+  the head model's Title stays the page's own text, so a future circuit `PageTitle` swap can't
+  flash the brand away. og:title stays bare; `og:site_name` carries the brand for unfurlers.
+- **JSON-LD grew to a graph** — `MusicRecording` (song name + `byArtist`, no longer the chart
+  title) + `BreadcrumbList` (Charts › {Song} {Diff}), which replaces raw URL slugs
+  ("Charts › phoenix › d23") as the result's displayed trail. **Landing it exposed a latent
+  K3 bug**: the static renderer silently drops a `<script>` element whose content is a
+  component expression, so the PR-4 MusicRecording script never actually reached a crawler
+  (live-site confirmed — canonical `<link>` from the same `@if` served, script absent). Fix:
+  the whole element rides one `MarkupString`; the new E2E fact pins `ld+json` in the raw body
+  so it can't regress silently again.
+- **Site name** — the front door serves `WebSite` JSON-LD (`name: "PIU Scores"`) +
+  `og:site_name` on `/` / `/Welcome` / `/Login`: the documented signal for showing
+  "PIU Scores" instead of the bare domain above results. Site names for subdomains are
+  supported but slow to take — after this markup, the lever is patience, not more markup.
+- **og:image was already there — its MIME was not.** Chart pages have served the jacket
+  banner as og:image since PR-2 (700×393 piugame art, a near-ideal large-card aspect). What
+  was broken: `AzureBlobFileUploadClient` never set a content type, so every app-uploaded
+  blob — song jackets, the tier-list folder cards — serves `application/octet-stream`, which
+  some unfurlers and crawlers refuse to render as an image. The uploader now stamps the type
+  from the extension (no-overwrite semantics preserved via `IfNoneMatch`); **existing blobs
+  need a one-time owner-side content-type stamp** (az loop; remember a CDN purge after —
+  cached octet-stream responses outlive the stamp). Head grew `og:url`, `og:image:alt`, and
+  `twitter:card = summary_large_image`.
+- **Front-door title + snippet hygiene** — the title (and og:title) gained the searchable
+  descriptor: `PIU Scores — Pump It Up score tracker & tier lists`, one localized key ×9
+  (each locale reuses its own established phrasing from the hero keys; the `WebSite`
+  JSON-LD `name` stays the bare brand — that's the site-name signal). `data-nosnippet`
+  covers the sign-in column and the showcase cards' illustrative numbers (fused spans like
+  "Moonlight998,404" were snippet-eligible), leaving the hero pitch, card blurbs, and the
+  live stat band as what a result quotes.
+
 ### Open owner decisions
 
 | # | Decision | Blocks | Default/lean |
 |---|---|---|---|
 | ① | Front-door canonical: `/Login` or `/Welcome` | PR-1 | **decided 2026-07-16: `/Welcome`** |
-| ② | `ChartRecordPanel`: whole-panel island vs static-your-best split | PR-4 | whole-panel island |
+| ② | `ChartRecordPanel`: whole-panel island vs static-your-best split | PR-4 | **decided 2026-07-16: whole-panel island** (static-your-best split stays a recorded follow-up) |
 | ③ | Vanity sitemap: wait for PR-4 (ONE unit) vs advertise after PR-2 | PR-4 timing | wait for PR-4 |
-| ④ | Canonical mount: bare `/{mix}/{song}/{diff}` vs `/Charts/{mix}/{song}/{diff}` | PR-4 | lean `/Charts/…` (contains the three-segment catch-all; matches the owner's own recall of the plan) |
+| ④ | Canonical mount: bare `/{mix}/{song}/{diff}` vs `/Charts/{mix}/{song}/{diff}` | PR-4 | **decided 2026-07-16: `/Charts/{mix}/{song}/{diff}`** — contains the namespace under a literal, no catch-all |

@@ -96,7 +96,7 @@ else
         @if (chart != null)
         {
             <span class="challenge-minichart">
-                <a href="/Chart/@chart.Id" data-challenge-chart="@chart.Id"><SongImage Song="chart.Song" Small="true"></SongImage></a>
+                <a href="@chart.CanonicalPath()" data-challenge-chart="@chart.Id"><SongImage Song="chart.Song" Small="true"></SongImage></a>
                 <DifficultyBubble Chart="chart" Small="true" Height="14"></DifficultyBubble>
             </span>
         }

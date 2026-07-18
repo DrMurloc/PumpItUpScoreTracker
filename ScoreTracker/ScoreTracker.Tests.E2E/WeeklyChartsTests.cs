@@ -82,8 +82,12 @@ public sealed class WeeklyChartsTests : IAsyncLifetime
 
         // The Record control is static HTML; clicking it must open the island's dialog — which
         // only happens once the circuit has connected and registered with challenge-board.js.
+        // The button is visible before that, so wait for the island's own ready signal (else the
+        // click races registration and is silently inert).
         var record = _page.Locator("[data-challenge-record]").First;
         await Expect(record).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
+        await _page.WaitForFunctionAsync("() => document.documentElement.hasAttribute('data-challenge-ready')",
+            null, new PageWaitForFunctionOptions { Timeout = 60_000 });
         await record.ClickAsync();
 
         var dialog = _page.Locator(".mud-dialog");
