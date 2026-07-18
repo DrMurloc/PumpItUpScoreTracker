@@ -8,7 +8,8 @@ namespace ScoreTracker.PlayerProgress.Contracts.Queries
     public sealed record GetRecommendedChartsQuery
         (ChartType? ChartType, int LevelOffset, MixEnum Mix = MixEnum.Phoenix,
             IReadOnlySet<RecommendationCategory>? Categories = null,
-            RecommendationLevelWindow? LevelWindow = null)
+            RecommendationLevelWindow? LevelWindow = null,
+            HotStreakOptions? HotStreak = null)
         : IQuery<IEnumerable<ChartRecommendation>>
     {
     }

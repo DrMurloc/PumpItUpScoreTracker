@@ -3126,6 +3126,9 @@
   <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
     <value>PIU Scores는 PIUGAME 계정에서 바로 가져온 펌프 잇 업 전체 기록을 보관하고, 티어리스트, 랭킹, 실제 플레이 스타일에 맞춘 추천으로 바꿔 드립니다.</value>
   </data>
+  <data name="PIU Scores — Pump It Up score tracker &amp; tier lists" xml:space="preserve">
+    <value>PIU Scores — 펌프 잇 업 스코어 트래킹 &amp; 티어리스트</value>
+  </data>
   <data name="Free, and built by a player." xml:space="preserve">
     <value>무료이며, 플레이어가 직접 만들었습니다.</value>
   </data>
@@ -5126,5 +5129,65 @@
   </data>
   <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
     <value>{0}님이 {3}의 UCS {4} {5}에서 {1} {2} 기록</value>
+  </data>
+  <data name="Hot Streak" xml:space="preserve">
+    <value>핫 스트릭</value>
+  </data>
+  <data name="Suggested · Hot Streak" xml:space="preserve">
+    <value>추천 · 핫 스트릭</value>
+  </data>
+  <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
+    <value>최근 동급 플레이어를 압도한 플레이와 비슷한 채보.</value>
+  </data>
+  <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
+    <value>아직 조건에 맞는 활약이 없습니다. 한계를 밀어붙여 추천을 받아보세요!</value>
+  </data>
+  <data name="Standout bar" xml:space="preserve">
+    <value>스탠드아웃 기준</value>
+  </data>
+  <data name="Count a chart when you beat this % of Peers on it." xml:space="preserve">
+    <value>동급 플레이어 중 이 비율(%)을 이긴 채보만 집계합니다.</value>
+  </data>
+  <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
+    <value>기준 해제 — 경쟁 레벨을 올린 모든 플레이가 집계됩니다.</value>
+  </data>
+  <data name="Look back" xml:space="preserve">
+    <value>조회 기간</value>
+  </data>
+  <data name="Last 30 days" xml:space="preserve">
+    <value>최근 30일</value>
+  </data>
+  <data name="Last 90 days" xml:space="preserve">
+    <value>최근 90일</value>
+  </data>
+  <data name="Last year" xml:space="preserve">
+    <value>최근 1년</value>
+  </data>
+  <data name="All time" xml:space="preserve">
+    <value>전체 기간</value>
+  </data>
+  <data name="Treat very old scores as unplayed" xml:space="preserve">
+    <value>아주 오래된 기록은 미플레이로 간주</value>
+  </data>
+  <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
+    <value>몇 년 전에 클리어한 뒤 다시 하지 않은 채보는 새로운 영역으로 취급합니다.</value>
+  </data>
+  <data name="Group by seed chart" xml:space="preserve">
+    <value>기준 채보별로 묶기</value>
+  </data>
+  <data name="Like {0}" xml:space="preserve">
+    <value>{0} 같은 채보</value>
+  </data>
+  <data name="You beat {0}% of Peers on this." xml:space="preserve">
+    <value>이 채보에서 동급 플레이어의 {0}%를 이겼습니다.</value>
+  </data>
+  <data name="One of your all-time best — you beat {0}% of Peers." xml:space="preserve">
+    <value>역대 최고 기록 중 하나 — 동급 플레이어의 {0}%를 이겼습니다.</value>
+  </data>
+  <data name="One of your all-time best." xml:space="preserve">
+    <value>역대 최고 기록 중 하나입니다.</value>
+  </data>
+  <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
+    <value>조건에 맞는 최근 활약이 없어 역대 최고 기록과 비슷한 채보를 추천합니다.</value>
   </data>
 </root>

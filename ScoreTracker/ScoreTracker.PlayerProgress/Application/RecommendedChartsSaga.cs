@@ -3,6 +3,7 @@ using MediatR;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Commands;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -31,11 +32,12 @@ namespace ScoreTracker.PlayerProgress.Application
         private readonly IChartListRepository _chartList;
         private readonly IDateTimeOffsetAccessor _dateTime;
         private readonly IRandomNumberGenerator _random;
+        private readonly IScoreHighlightRepository _highlights;
 
         public RecommendedChartsSaga(IMediator mediator, ICurrentUserAccessor currentUser, IFeedbackRepository feedback,
             IPlayerStatsReader stats, IScoreReader scores,
             IWeeklyTournamentRepository weeklyTournament, IChartListRepository chartList,
-            IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random)
+            IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random, IScoreHighlightRepository highlights)
         {
             _mediator = mediator;
             _currentUser = currentUser;
@@ -46,6 +48,7 @@ namespace ScoreTracker.PlayerProgress.Application
             _chartList = chartList;
             _dateTime = dateTime;
             _random = random;
+            _highlights = highlights;
         }
 
         public async Task<IEnumerable<ChartRecommendation>> Handle(GetRecommendedChartsQuery request,
@@ -109,7 +112,181 @@ namespace ScoreTracker.PlayerProgress.Application
             if (Include(RecommendationCategory.PushPumbility))
                 result = result.Concat(
                     await GetPumbilityPushes(mix, feedback, request.ChartType, cancellationToken, charts, window));
+            // Hot Streak runs only when explicitly requested: null Categories means the
+            // every-category callers that predate the goal, and they must not start
+            // paying for highlight and cohort reads.
+            if (request.Categories?.Contains(RecommendationCategory.HotStreak) == true)
+                result = result.Concat(await GetHotStreakCharts(mix, feedback, request.ChartType, charts,
+                    request.HotStreak ?? new HotStreakOptions(), scores, cancellationToken));
             return result.ToArray();
+        }
+
+        /// <summary>
+        ///     "That felt great — here's more of it": seeds are the newest plays flagged
+        ///     CompetitiveImprover (optionally also clearing the Peers percentile bar),
+        ///     each expanded through the similarity graph into charts the player hasn't
+        ///     passed — or whose score is an age outlier, when the toggle says outdated
+        ///     counts as unplayed. When no flagged seed survives, the player's standing
+        ///     competitive top-50 seeds instead (marked SeedIsFallback, window ignored).
+        ///     Targets below the per-type push floor are dropped: folders that cannot
+        ///     move the rating pools are not a push. Each target is attributed to its
+        ///     newest seed and carries the seed + cleared bar as provenance.
+        /// </summary>
+        private async Task<IEnumerable<ChartRecommendation>> GetHotStreakCharts(MixEnum mix,
+            IDictionary<string, ISet<Guid>> ignoredChartIds, ChartType? chartType,
+            IDictionary<Guid, Chart> charts, HotStreakOptions options, RecordedPhoenixScore[] scores,
+            CancellationToken cancellationToken)
+        {
+            var skipped = ignoredChartIds.TryGetValue(RecommendationCategories.HotStreak, out var s)
+                ? s
+                : new HashSet<Guid>();
+
+            // Bar at 0 = off: no cohort reads at all, the seed source alone qualifies.
+            async Task<(Guid ChartId, DateTimeOffset OccurredAt, double? Ranking)[]> ApplyBar(
+                IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt)> candidates)
+            {
+                if (!candidates.Any())
+                    return Array.Empty<(Guid, DateTimeOffset, double?)>();
+                var rankings = options.PeerPercentile > 0
+                    ? await _mediator.Send(new GetChartScoreRankingsQuery(
+                        candidates.Select(c => c.ChartId).ToArray(), mix), cancellationToken)
+                    : null;
+                var bar = options.PeerPercentile / 100.0;
+                return candidates
+                    .Select(c => (c.ChartId, c.OccurredAt,
+                        Ranking: rankings != null && rankings.TryGetValue(c.ChartId, out var r)
+                            ? r.Ranking
+                            : (double?)null))
+                    .Where(t => rankings == null || (t.Ranking != null && t.Ranking >= bar))
+                    .OrderByDescending(t => t.OccurredAt)
+                    .ThenByDescending(t => t.Ranking ?? 0)
+                    .ToArray();
+            }
+
+            var since = options.LookbackDays == null
+                ? (DateTimeOffset?)null
+                : _dateTime.Now.AddDays(-options.LookbackDays.Value);
+            var flagged = await _highlights.GetNewestHighlights(mix, _currentUser.User.Id,
+                HighlightFlags.CompetitiveImprover, since, HotStreakPolicy.SeedScanCap, cancellationToken);
+
+            // Rows arrive newest-first; a chart flagged in several sessions seeds once,
+            // from its newest.
+            var seeds = await ApplyBar(flagged
+                .Where(h => charts.TryGetValue(h.ChartId, out var chart)
+                            && (chartType == null || chart.Type == chartType))
+                .GroupBy(h => h.ChartId)
+                .Select(g => (g.First().ChartId, g.First().OccurredAt))
+                .ToArray());
+
+            // Fallback: improver flags are write-time-only and never backfilled, so a
+            // player whose plays predate the pipeline — or whose rating simply hasn't
+            // moved lately — has none at ANY window. Their standing best pool seeds
+            // instead: those charts are, by definition, the plays that made their level.
+            // The look-back deliberately does not apply here — this path exists exactly
+            // because recency had nothing to offer.
+            var usedFallback = false;
+            if (!seeds.Any())
+            {
+                usedFallback = true;
+                var pool = new List<RecordedPhoenixScore>();
+                foreach (var type in new[] { ChartType.Single, ChartType.Double })
+                {
+                    if (chartType != null && chartType != type) continue;
+                    pool.AddRange((await _mediator.Send(
+                            new GetTop50CompetitiveQuery(_currentUser.User.Id, type, mix), cancellationToken))
+                        .Where(p => charts.ContainsKey(p.ChartId)));
+                }
+
+                seeds = await ApplyBar(pool
+                    .GroupBy(p => p.ChartId)
+                    .Select(g => g.First())
+                    .OrderByDescending(p => p.RecordedDate)
+                    .Take(HotStreakPolicy.SeedScanCap)
+                    .Select(p => (p.ChartId, p.RecordedDate))
+                    .ToArray());
+            }
+
+            if (!seeds.Any()) return Array.Empty<ChartRecommendation>();
+
+            var floors = await GetPushFloors(mix, chartType, charts, cancellationToken);
+
+            var outdated = options.IncludeOutdatedScores
+                ? ScoreAgePolicy.AgeOutlierWeights(
+                        scores.Where(r => r is { Score: not null, IsBroken: false })
+                            .Select(r => (r.ChartId, r.RecordedDate)), _dateTime.Now)
+                    .Where(kv => kv.Value < 1.0).Select(kv => kv.Key).ToHashSet()
+                : new HashSet<Guid>();
+            var myScores = scores.ToDictionary(r => r.ChartId);
+
+            bool Unexplored(Guid id)
+            {
+                return !myScores.TryGetValue(id, out var score) || score.Score == null || score.IsBroken ||
+                       outdated.Contains(id);
+            }
+
+            // Seeds pre-claim themselves: a fallback seed with an outdated score would
+            // otherwise qualify as another seed's target and suggest what it seeded from.
+            var claimed = new HashSet<Guid>(seeds.Select(s => s.ChartId));
+            var result = new List<ChartRecommendation>();
+            var seedsUsed = 0;
+            foreach (var seed in seeds)
+            {
+                if (seedsUsed >= HotStreakPolicy.MaxSeeds) break;
+                var similar = await _mediator.Send(new GetSimilarChartsQuery(seed.ChartId, mix), cancellationToken);
+                var targets = similar
+                    .Where(e => e.Score >= ChartSimilarityRecord.MatchFloor)
+                    .Where(e => charts.TryGetValue(e.ChartId, out var chart)
+                                && (chartType == null || chart.Type == chartType)
+                                && floors.TryGetValue(chart.Type, out var floor) && (int)chart.Level >= floor)
+                    .Where(e => !skipped.Contains(e.ChartId) && !claimed.Contains(e.ChartId) &&
+                                Unexplored(e.ChartId))
+                    .Take(HotStreakPolicy.TargetsPerSeed)
+                    .ToArray();
+                if (!targets.Any()) continue;
+                seedsUsed++;
+                foreach (var target in targets)
+                {
+                    claimed.Add(target.ChartId);
+                    result.Add(new ChartRecommendation(RecommendationCategories.HotStreak, target.ChartId,
+                        "More charts like your recent standout plays",
+                        SeedChartId: seed.ChartId, SeedPeerRanking: seed.Ranking,
+                        SeedIsFallback: usedFallback));
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        ///     The per-type push floors: the 25th-percentile folder level of that type's
+        ///     competitive top 50 unioned with that type's members of the Pumbility top
+        ///     50. Per type on purpose — a singles-heavy player's combined floor would
+        ///     wall off every doubles chart that could still raise their doubles level.
+        /// </summary>
+        private async Task<IReadOnlyDictionary<ChartType, int>> GetPushFloors(MixEnum mix, ChartType? chartType,
+            IDictionary<Guid, Chart> charts, CancellationToken cancellationToken)
+        {
+            var pumbilityPool = (await _mediator.Send(
+                    new GetTop50ForPlayerQuery(_currentUser.User.Id, null, 50, mix), cancellationToken))
+                .Where(p => charts.ContainsKey(p.ChartId))
+                .ToArray();
+
+            var floors = new Dictionary<ChartType, int>();
+            foreach (var type in new[] { ChartType.Single, ChartType.Double })
+            {
+                if (chartType != null && chartType != type) continue;
+                var competitive = (await _mediator.Send(
+                        new GetTop50CompetitiveQuery(_currentUser.User.Id, type, mix), cancellationToken))
+                    .Where(p => charts.ContainsKey(p.ChartId));
+                var poolLevels = competitive
+                    .Concat(pumbilityPool.Where(p => charts[p.ChartId].Type == type))
+                    .Select(p => p.ChartId).Distinct()
+                    .Select(id => (int)charts[id].Level)
+                    .ToArray();
+                floors[type] = HotStreakPolicy.PushFloor(poolLevels);
+            }
+
+            return floors;
         }
 
         /// <summary>

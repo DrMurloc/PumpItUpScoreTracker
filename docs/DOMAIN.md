@@ -25,6 +25,7 @@ For solution layout and patterns, see [ARCHITECTURE.md](ARCHITECTURE.md). For pr
   - **Phoenix**: one mixed top-50 pool; per chart `BaseRating(level) × gradeModifier`, plate-blind.
   - **Phoenix 2** (reverse-engineered from the live site and validated against real per-chart data, 2026-07): **one merged top-50 pool across Singles+Doubles** for the overall value (plus separate per-type top-50 pools behind the Singles/Doubles boards); per chart `Base(level) × (gradeMultiplier + plateBonus)` (additive), where `Base = 130 + 5·L + 5·max(0, L−24)`. CO-OP, UCS, half-double and broken plays never contribute. The site exposes all three values (Total = merged top-50, Singles/Doubles = per-type pools); the title ladder's [S]/[D] tiers gate on the per-type pools and the Total tier on the merged pool. Overall PUMBILITY is NOT Singles + Doubles (corrected 2026-07-13).
 - **Competitive Level progress** — a tier/level system tracking a player's competitive standing, driven primarily by Weekly Charts performance. UI at `Pages/Progress/CompetitiveLevel.razor`.
+- **Peers** — the settled UI term for *players near your competitive level*: the cohort the bucket-cached machinery (`CohortScoreProvider`, half-level buckets ±0.5) ranks a player's scores against. "You beat 80% of Peers" means your best on that chart beats 80% of that cohort's bests. First shipped in the Hot Streak widget goal; older copy ("competitive matches" on Account Stats) predates the term.
 
 ## Community-tracked systems
 

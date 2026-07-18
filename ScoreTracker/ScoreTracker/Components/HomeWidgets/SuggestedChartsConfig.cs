@@ -21,7 +21,19 @@ public enum SuggestedGoal
     FillGaps,
 
     /// <summary>The projected-Pumbility targets, ranked by the rating each chart would add.</summary>
-    PumbilityPush
+    PumbilityPush,
+
+    /// <summary>Unpassed charts similar to recent plays that raised your competitive level.</summary>
+    HotStreak
+}
+
+/// <summary>How far back Hot Streak draws its seeds from.</summary>
+public enum SuggestedLookback
+{
+    Days30,
+    Days90,
+    Year1,
+    AllTime
 }
 
 public enum SuggestedLevelMode
@@ -82,6 +94,18 @@ public sealed record SuggestedChartsConfig
 
     /// <summary>Bend the lens with the player's personalized blend (tier-list machinery).</summary>
     public bool PersonalizedLens { get; set; }
+
+    /// <summary>Hot Streak: a seed must beat this percent of Peers (0 = the flag alone qualifies).</summary>
+    public int HotStreakPeerPercentile { get; set; } = 80;
+
+    /// <summary>Hot Streak: how far back seeds are drawn from.</summary>
+    public SuggestedLookback HotStreakLookback { get; set; } = SuggestedLookback.Days30;
+
+    /// <summary>Hot Streak: age-outlier scores count as unplayed targets.</summary>
+    public bool HotStreakIncludeOldScores { get; set; }
+
+    /// <summary>Hot Streak: one section per seed (off = one flat list with "≈ seed" details).</summary>
+    public bool GroupBySeed { get; set; } = true;
 }
 
 public static class SuggestedGoals
@@ -98,6 +122,7 @@ public static class SuggestedGoals
             },
             SuggestedGoal.FillGaps => new[] { RecommendationCategory.FillScores },
             SuggestedGoal.PumbilityPush => new[] { RecommendationCategory.PushPumbility },
+            SuggestedGoal.HotStreak => new[] { RecommendationCategory.HotStreak },
             _ => new[] { RecommendationCategory.PushLevel, RecommendationCategory.SkillTitles }
         };
     }
@@ -115,6 +140,9 @@ public static class SuggestedGoals
 
     public static RecommendationLevelWindow? BuildWindow(SuggestedChartsConfig config)
     {
+        // Hot Streak pins its own levels: the similarity graph's reach gate keeps
+        // targets near the seeds, so a level window never applies.
+        if (config.Goal == SuggestedGoal.HotStreak) return null;
         return config.LevelMode switch
         {
             SuggestedLevelMode.Dynamic => RecommendationLevelWindow.Dynamic(
@@ -123,5 +151,20 @@ public static class SuggestedGoals
                 config.MinLevel ?? 1, config.MaxLevel ?? DifficultyLevel.Max, config.LevelBasis),
             _ => null
         };
+    }
+
+    public static HotStreakOptions? BuildHotStreakOptions(SuggestedChartsConfig config)
+    {
+        if (config.Goal != SuggestedGoal.HotStreak) return null;
+        return new HotStreakOptions(
+            Math.Clamp(config.HotStreakPeerPercentile, 0, 99),
+            config.HotStreakLookback switch
+            {
+                SuggestedLookback.Days90 => 90,
+                SuggestedLookback.Year1 => 365,
+                SuggestedLookback.AllTime => null,
+                _ => 30
+            },
+            config.HotStreakIncludeOldScores);
     }
 }

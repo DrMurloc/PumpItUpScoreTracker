@@ -3239,6 +3239,9 @@
   <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
     <value>PIU Scores conserve tout votre historique Pump It Up, importé directement depuis votre compte PIUGAME, et le transforme en tier lists, classements et recommandations adaptés à votre façon de jouer.</value>
   </data>
+  <data name="PIU Scores — Pump It Up score tracker &amp; tier lists" xml:space="preserve">
+    <value>PIU Scores — suivi de scores et tier lists Pump It Up</value>
+  </data>
   <data name="Free, and built by a player." xml:space="preserve">
     <value>Gratuit, et créé par un joueur.</value>
   </data>
@@ -5239,5 +5242,65 @@
   </data>
   <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
     <value>{0} a obtenu {1} {2} sur l'UCS {4} {5} de {3}</value>
+  </data>
+  <data name="Hot Streak" xml:space="preserve">
+    <value>Série gagnante</value>
+  </data>
+  <data name="Suggested · Hot Streak" xml:space="preserve">
+    <value>Suggérés · Série gagnante</value>
+  </data>
+  <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
+    <value>D'autres charts comme ceux que vous avez écrasés récemment face à vos pairs.</value>
+  </data>
+  <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
+    <value>Aucun exploit correspondant pour l'instant, dépassez-vous pour recevoir des suggestions !</value>
+  </data>
+  <data name="Standout bar" xml:space="preserve">
+    <value>Seuil d'exploit</value>
+  </data>
+  <data name="Count a chart when you beat this % of Peers on it." xml:space="preserve">
+    <value>Un chart compte lorsque vous battez ce % de vos pairs dessus.</value>
+  </data>
+  <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
+    <value>Seuil désactivé — toute partie ayant fait monter votre niveau compétitif compte.</value>
+  </data>
+  <data name="Look back" xml:space="preserve">
+    <value>Période</value>
+  </data>
+  <data name="Last 30 days" xml:space="preserve">
+    <value>30 derniers jours</value>
+  </data>
+  <data name="Last 90 days" xml:space="preserve">
+    <value>90 derniers jours</value>
+  </data>
+  <data name="Last year" xml:space="preserve">
+    <value>Dernière année</value>
+  </data>
+  <data name="All time" xml:space="preserve">
+    <value>Tout l'historique</value>
+  </data>
+  <data name="Treat very old scores as unplayed" xml:space="preserve">
+    <value>Considérer les très anciens scores comme non joués</value>
+  </data>
+  <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
+    <value>Un chart passé il y a des années et jamais rejoué compte comme un nouveau territoire.</value>
+  </data>
+  <data name="Group by seed chart" xml:space="preserve">
+    <value>Grouper par chart d'origine</value>
+  </data>
+  <data name="Like {0}" xml:space="preserve">
+    <value>Comme {0}</value>
+  </data>
+  <data name="You beat {0}% of Peers on this." xml:space="preserve">
+    <value>Vous avez battu {0}% de vos pairs sur ce chart.</value>
+  </data>
+  <data name="One of your all-time best — you beat {0}% of Peers." xml:space="preserve">
+    <value>L'un de vos meilleurs historiques — vous avez battu {0}% de vos pairs.</value>
+  </data>
+  <data name="One of your all-time best." xml:space="preserve">
+    <value>L'un de vos meilleurs historiques.</value>
+  </data>
+  <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
+    <value>Aucun exploit récent correspondant — suggestions basées sur vos meilleurs charts historiques.</value>
   </data>
 </root>

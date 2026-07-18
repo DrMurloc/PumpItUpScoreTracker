@@ -434,6 +434,71 @@ still validate), and the ARR-affinity owner item (static-shell.md D18).
 - Docs: ARCHITECTURE / UX-GUIDELINES / API / DATABASE-SCHEMA sync; chart-details-overhaul.md P3
   + P4 rows close; this doc's ladder gets its shipped-marks.
 
+### SERP appearance pass (2026-07-17)
+
+Google's first indexed chart page exposed how a result actually *reads* ("263Scores tracked
+92%Pass rate…" — value/label spans fused, description too thin to be quoted alone, site named
+"arroweclip.se"). The appearance layer, landed as one pass:
+
+- **Verdict-flavored description** — the PR-2 option, now real: `StaticHeadResolver` folds the
+  daily-cached `GetChartVerdictQuery` population into the description ("263 scores tracked, 92%
+  pass rate"), making each chart's description unique and substantial enough that engines quote
+  it instead of stitching page text. The page dispatches the same query later in the same
+  request, so the head *warms* the verdict cache rather than doubling the work; the daily cache
+  is also what keeps descriptions stable between analytics rebuilds.
+- **`data-nosnippet` on the hero fact tiles** — value/label tiles are label soup to a text
+  extractor; the attribute keeps them out of search snippets (the description now carries those
+  stats as prose), and value/label sit on separate source lines so any other extractor
+  word-breaks cleanly. Verdict sentences stay snippetable on purpose — they read well.
+- **Branded document title** — `{Song} {Diff} | PIU Scores`, suffix applied in App.razor only:
+  the head model's Title stays the page's own text, so a future circuit `PageTitle` swap can't
+  flash the brand away. og:title stays bare; `og:site_name` carries the brand for unfurlers.
+- **JSON-LD grew to a graph** — `MusicRecording` (song name + `byArtist`, no longer the chart
+  title) + `BreadcrumbList` (Charts › {Song} {Diff}), which replaces raw URL slugs
+  ("Charts › phoenix › d23") as the result's displayed trail. **Landing it exposed a latent
+  K3 bug**: the static renderer silently drops a `<script>` element whose content is a
+  component expression, so the PR-4 MusicRecording script never actually reached a crawler
+  (live-site confirmed — canonical `<link>` from the same `@if` served, script absent). Fix:
+  the whole element rides one `MarkupString`; the new E2E fact pins `ld+json` in the raw body
+  so it can't regress silently again.
+- **Site name** — the front door serves `WebSite` JSON-LD (`name: "PIU Scores"`) +
+  `og:site_name` on `/` / `/Welcome` / `/Login`: the documented signal for showing
+  "PIU Scores" instead of the bare domain above results. Site names for subdomains are
+  supported but slow to take — after this markup, the lever is patience, not more markup.
+- **og:image was already there — its MIME was not.** Chart pages have served the jacket
+  banner as og:image since PR-2 (700×393 piugame art, a near-ideal large-card aspect). What
+  was broken: `AzureBlobFileUploadClient` never set a content type, so every app-uploaded
+  blob — song jackets, the tier-list folder cards — serves `application/octet-stream`, which
+  some unfurlers and crawlers refuse to render as an image. The uploader now stamps the type
+  from the extension; **existing blobs need a one-time owner-side content-type stamp**
+  (`Downloads\stamp-piuimages-content-types.ps1`; remember a CDN purge after — cached
+  octet-stream responses outlive the stamp). Head grew `og:url`, `og:image:alt`, and
+  `twitter:card = summary_large_image`. **Second latent bug found in the same client**: the
+  plain `UploadAsync(Stream)` overload throws `BlobAlreadyExists`, so the daily
+  `refresh-folder-share-cards` job faulted on its first folder every run after its first —
+  all 52 tier-list og:image cards were created 2026-07-12 and never refreshed (blob
+  creation == modification for every card). `UploadFile` now overwrites — save-semantics,
+  which is what every caller wants (UCS photo re-submission; photo paths are fresh GUIDs
+  and the avatar mirror guards itself with `DoesFileExist`). Every upload path was audited:
+  all blob writes ride `IFileUploadClient` — the fixed client is the only
+  `BlobContainerClient` in the repo.
+- **The tier-list og:image ecosystem is retired outright (owner call, 2026-07-18)** rather
+  than healed: the per-folder cards were never crawler-visible (their meta lived in
+  circuit-only `HeadContent` — the §4 problem), og:image contributes nothing to SEO proper,
+  and a ~3 MB PNG is the wrong unfurl payload regardless. Gone: the
+  `refresh-folder-share-cards` job (+ a `RemoveIfExists` so Hangfire storage drops the
+  orphan), `FolderShareCardSaga`, its trigger message and theme record, and the page's
+  `og:image`/`og:url` meta. The Download image button keeps the renderer
+  (`GetTierListShareCardQuery`). A tier-list static head (title/description, no image)
+  remains an open follow-on if folder titles in search results are ever wanted.
+- **Front-door title + snippet hygiene** — the title (and og:title) gained the searchable
+  descriptor: `PIU Scores — Pump It Up score tracker & tier lists`, one localized key ×9
+  (each locale reuses its own established phrasing from the hero keys; the `WebSite`
+  JSON-LD `name` stays the bare brand — that's the site-name signal). `data-nosnippet`
+  covers the sign-in column and the showcase cards' illustrative numbers (fused spans like
+  "Moonlight998,404" were snippet-eligible), leaving the hero pitch, card blurbs, and the
+  live stat band as what a result quotes.
+
 ### Open owner decisions
 
 | # | Decision | Blocks | Default/lean |
