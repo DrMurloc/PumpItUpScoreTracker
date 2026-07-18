@@ -4944,4 +4944,49 @@
   <data name="Which registration to remove" xml:space="preserve">
     <value>Whrglch rrglgrglstrrgltion trgl rrglmrglve</value>
   </data>
+  <data name="Weekly Charts — final board" xml:space="preserve">
+    <value>Mrglrgly chrglrts — frglnal brglrd</value>
+  </data>
+  <data name="{0} players · week of {1}" xml:space="preserve">
+    <value>{0} plrglrs · wrglk rglf {1}</value>
+  </data>
+  <data name="Card {0} of {1}" xml:space="preserve">
+    <value>Crglrd {0} rglf {1}</value>
+  </data>
+  <data name="{0} more charts had entries" xml:space="preserve">
+    <value>{0} mrglr chrglrts hrgld rglntrgls</value>
+  </data>
+  <data name="one per level bucket" xml:space="preserve">
+    <value>rglne prgl lrglvrgl brglcket</value>
+  </data>
+  <data name="The new board is being drawn." xml:space="preserve">
+    <value>Nrglw brglrd brglng drrglwn. Mrgl...</value>
+  </data>
+  <data name="resets Monday midnight ET" xml:space="preserve">
+    <value>rrglsets Mrglndrgly mrgldnrglght ET</value>
+  </data>
+  <data name="Yesterday" xml:space="preserve">
+    <value>Yrglstrglrdrgly</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Trglday</value>
+  </data>
+  <data name="Limbo (lowest passing won)" xml:space="preserve">
+    <value>Lrglmbo (lrglwest prglss wrgln)</value>
+  </data>
+  <data name="**Limbo Day** — lowest passing score wins. No breaking." xml:space="preserve">
+    <value>**Lrglmbo Drgly** — lrglwest prglss scrglre wrglns. Nrgl brrglking. Mrgl!</value>
+  </data>
+  <data name="Highest score wins." xml:space="preserve">
+    <value>Hrglghest scrglre wrglns.</value>
+  </data>
+  <data name="yesterday's board settled" xml:space="preserve">
+    <value>yrglstrglrday brglrd srglttled</value>
+  </data>
+  <data name="resets midnight ET" xml:space="preserve">
+    <value>rrglsets mrgldnrglght ET</value>
+  </data>
+  <data name="Daily Step board" xml:space="preserve">
+    <value>Drglrgly Strglp brglrd</value>
+  </data>
 </root>

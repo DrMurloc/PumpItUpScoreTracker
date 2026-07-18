@@ -1,3 +1,4 @@
+using System.Globalization;
 using MassTransit;
 using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -33,17 +34,20 @@ namespace ScoreTracker.Communities.Application
         private readonly IBotClient _bot;
         private readonly ICommunityRepository _communities;
         private readonly IDiscordFeedSubscriptionRepository _feeds;
+        private readonly ILocalizedTextAccessor _localizer;
         private readonly IMediator _mediator;
         private readonly IUserReader _users;
 
         public DiscordFeedSaga(IBotClient bot, IMediator mediator, IUserReader users,
-            IDiscordFeedSubscriptionRepository feeds, ICommunityRepository communities)
+            IDiscordFeedSubscriptionRepository feeds, ICommunityRepository communities,
+            ILocalizedTextAccessor localizer)
         {
             _bot = bot;
             _mediator = mediator;
             _users = users;
             _feeds = feeds;
             _communities = communities;
+            _localizer = localizer;
         }
 
         public async Task Consume(ConsumeContext<WeeklyChartsRotatedEvent> context)
@@ -74,14 +78,16 @@ namespace ScoreTracker.Communities.Application
             var lineup = (await _mediator.Send(new GetWeeklyChartsQuery(mix), ct)).ToList();
             var lineupVideos = await VideoLinks(lineup.Select(w => w.ChartId), ct);
 
+            // Data is gathered once; only the rendering repeats per channel, in each
+            // channel's registered language.
             foreach (var channel in channels)
             {
                 var labels = await CommunityLabelsFor(channel.ChannelId, ct);
                 var cards = new List<RichBotMessage>();
                 for (var i = 0; i < top.Count; i++)
                     cards.Add(WeeklyResultCard(mix, top[i], charts, names, labels, i + 1, top.Count,
-                        ranked.Count - top.Count, latest));
-                cards.Add(LineupCard(mix, lineup, charts, lineupVideos));
+                        ranked.Count - top.Count, latest, channel.Culture));
+                cards.Add(LineupCard(mix, lineup, charts, lineupVideos, channel.Culture));
                 await _bot.SendRichMessages(cards, new[] { channel.ChannelId }, ct);
             }
         }
@@ -102,7 +108,7 @@ namespace ScoreTracker.Communities.Application
             {
                 var labels = await CommunityLabelsFor(channel.ChannelId, ct);
                 await _bot.SendRichMessages(
-                    new[] { DailyCard(msg, finished, today, charts, names, labels) },
+                    new[] { DailyCard(msg, finished, today, charts, names, labels, channel.Culture) },
                     new[] { channel.ChannelId }, ct);
             }
         }
@@ -110,19 +116,23 @@ namespace ScoreTracker.Communities.Application
         private RichBotMessage WeeklyResultCard(MixEnum mix, RankedBoard board,
             IReadOnlyDictionary<Guid, Chart> charts, IReadOnlyDictionary<Guid, string> names,
             IReadOnlyDictionary<Guid, string> labels,
-            int cardIndex, int cardCount, int moreCharts, DateTimeOffset week)
+            int cardIndex, int cardCount, int moreCharts, DateTimeOffset week, string? culture)
         {
             var chart = charts[board.ChartId];
             var rows = string.Join("\n", board.Placements.Select(p =>
                 LeaderRow(p.Item1, PlayerName(names, p.Item2.UserId), p.Item2.Score, p.Item2.Plate,
                     p.Item2.IsBroken, Label(labels, p.Item2.UserId))));
+            var cardTag = _localizer.Get(culture, "Card {0} of {1}", cardIndex, cardCount);
             var footer = moreCharts > 0 && cardIndex == cardCount
-                ? $"#MIX|{mix}# Card {cardIndex} of {cardCount} · {moreCharts} more charts had entries"
-                : $"#MIX|{mix}# Card {cardIndex} of {cardCount} · {mix.GetName()} · PIU Scores";
+                ? $"#MIX|{mix}# {cardTag} · {_localizer.Get(culture, "{0} more charts had entries", moreCharts)}"
+                : $"#MIX|{mix}# {cardTag} · {mix.GetName()} · PIU Scores";
 
+            // "m" is the culture's month-day pattern, so the week label reads naturally
+            // in each language ("July 7", "7 juillet", "7月7日").
+            var weekLabel = week.ToString("m", FormatCulture(culture));
             return new RichBotMessage(
                 new RichBotSection(
-                    $"### Weekly Charts — final board\n-# {MixTag(mix)}{(string)chart.Song.Name} #DIFFICULTY|{chart.DifficultyString}# · {board.PlayerCount} players · week of {week:MMM d}",
+                    $"### {_localizer.Get(culture, "Weekly Charts — final board")}\n-# {MixTag(mix)}{(string)chart.Song.Name} #DIFFICULTY|{chart.DifficultyString}# · {_localizer.Get(culture, "{0} players · week of {1}", board.PlayerCount, weekLabel)}",
                     chart.Song.ImagePath),
                 new IRichBotBlock[] { new RichBotDivider(), new RichBotText(rows) },
                 footer,
@@ -131,7 +141,7 @@ namespace ScoreTracker.Communities.Application
         }
 
         private RichBotMessage LineupCard(MixEnum mix, IReadOnlyList<WeeklyTournamentChart> lineup,
-            IReadOnlyDictionary<Guid, Chart> charts, IReadOnlyDictionary<Guid, Uri> videos)
+            IReadOnlyDictionary<Guid, Chart> charts, IReadOnlyDictionary<Guid, Uri> videos, string? culture)
         {
             // Co-ops first; then by level low to high, singles before doubles at a tie.
             var resolved = lineup.Where(w => charts.ContainsKey(w.ChartId)).Select(w => charts[w.ChartId])
@@ -141,33 +151,43 @@ namespace ScoreTracker.Communities.Application
                 .ToList();
             var lines = string.Join("\n", resolved.Select(c =>
             {
-                var video = videos.TryGetValue(c.Id, out var url) ? $" - [Video]({url})" : string.Empty;
+                var video = videos.TryGetValue(c.Id, out var url)
+                    ? $" - [{_localizer.Get(culture, "Video")}]({url})"
+                    : string.Empty;
                 return $"#DIFFICULTY|{c.DifficultyString}# [{(string)c.Song.Name}]({SiteBase}/Chart/{c.Id}){video}";
             }));
 
             return new RichBotMessage(
-                new RichBotSection($"### This week's charts\n-# {MixTag(mix)}one per level bucket", null),
+                new RichBotSection(
+                    $"### {_localizer.Get(culture, "This week's charts")}\n-# {MixTag(mix)}{_localizer.Get(culture, "one per level bucket")}",
+                    null),
                 new IRichBotBlock[]
                 {
                     new RichBotDivider(),
-                    new RichBotText(string.IsNullOrEmpty(lines) ? "The new board is being drawn." : lines)
+                    new RichBotText(string.IsNullOrEmpty(lines)
+                        ? _localizer.Get(culture, "The new board is being drawn.")
+                        : lines)
                 },
-                $"#MIX|{mix}# {mix.GetName()} · resets Monday midnight ET",
+                $"#MIX|{mix}# {mix.GetName()} · {_localizer.Get(culture, "resets Monday midnight ET")}",
                 mix.GetAccentColor(),
-                new[] { new RichBotLink("Weekly Charts", new Uri($"{SiteBase}/WeeklyCharts")) });
+                new[]
+                {
+                    new RichBotLink(_localizer.Get(culture, "Weekly Charts"),
+                        new Uri($"{SiteBase}/WeeklyCharts"))
+                });
         }
 
         private RichBotMessage DailyCard(DailyStepRotatedEvent msg, IReadOnlyList<DailyStepResult> finished,
             DailyStepBoard? today, IReadOnlyDictionary<Guid, Chart> charts,
-            IReadOnlyDictionary<Guid, string> names, IReadOnlyDictionary<Guid, string> labels)
+            IReadOnlyDictionary<Guid, string> names, IReadOnlyDictionary<Guid, string> labels, string? culture)
         {
             var blocks = new List<IRichBotBlock> { new RichBotDivider() };
 
             if (finished.Count > 0 && charts.TryGetValue(msg.FinishedChartId, out var finishedChart))
             {
                 blocks.Add(new RichBotText(
-                    $"**Yesterday — {(string)finishedChart.Song.Name} #DIFFICULTY|{finishedChart.DifficultyString}#**" +
-                    (msg.FinishedIsLimbo ? " · 🕯 Limbo (lowest passing won)" : "")));
+                    $"**{_localizer.Get(culture, "Yesterday")} — {(string)finishedChart.Song.Name} #DIFFICULTY|{finishedChart.DifficultyString}#**" +
+                    (msg.FinishedIsLimbo ? " · 🕯 " + _localizer.Get(culture, "Limbo (lowest passing won)") : "")));
                 blocks.Add(new RichBotText(string.Join("\n", finished.Select(p =>
                     LeaderRow(p.Place, PlayerName(names, p.UserId), p.Score, p.Plate, p.IsBroken,
                         Label(labels, p.UserId))))));
@@ -177,20 +197,26 @@ namespace ScoreTracker.Communities.Application
             if (today != null && charts.TryGetValue(today.ChartId, out var todayChart))
             {
                 var banner = today.IsLimbo
-                    ? "🕯 **Limbo Day** — lowest passing score wins. No breaking."
-                    : "Highest score wins.";
+                    ? "🕯 " + _localizer.Get(culture, "**Limbo Day** — lowest passing score wins. No breaking.")
+                    : _localizer.Get(culture, "Highest score wins.");
                 blocks.Add(new RichBotSection(
-                    $"**Today — [{(string)todayChart.Song.Name}]({SiteBase}/Chart/{todayChart.Id}) #DIFFICULTY|{todayChart.DifficultyString}#**\n-# {banner}",
+                    $"**{_localizer.Get(culture, "Today")} — [{(string)todayChart.Song.Name}]({SiteBase}/Chart/{todayChart.Id}) #DIFFICULTY|{todayChart.DifficultyString}#**\n-# {banner}",
                     todayChart.Song.ImagePath));
             }
 
             return new RichBotMessage(
-                new RichBotSection($"### Daily Step\n-# {MixTag(msg.Mix)}yesterday's board settled", null),
+                new RichBotSection(
+                    $"### {_localizer.Get(culture, "Daily Step")}\n-# {MixTag(msg.Mix)}{_localizer.Get(culture, "yesterday's board settled")}",
+                    null),
                 blocks,
-                $"#MIX|{msg.Mix}# {msg.Mix.GetName()} · resets midnight ET",
+                $"#MIX|{msg.Mix}# {msg.Mix.GetName()} · {_localizer.Get(culture, "resets midnight ET")}",
                 msg.Mix.GetAccentColor(),
-                new[] { new RichBotLink("Daily Step board", new Uri(SiteBase)) });
+                new[] { new RichBotLink(_localizer.Get(culture, "Daily Step board"), new Uri(SiteBase)) });
         }
+
+        // The formatting culture for dates composed outside a localizer template.
+        private static CultureInfo FormatCulture(string? culture) =>
+            CultureInfo.GetCultureInfo(SupportedCultures.Normalize(culture));
 
         // The community name (when the row's player is in one of the channel's non-regional
         // communities) trails the row, e.g. "…SSS SG (Arrow Eclipse)".

@@ -5018,4 +5018,49 @@
   <data name="Which registration to remove" xml:space="preserve">
     <value>解除する登録</value>
   </data>
+  <data name="Weekly Charts — final board" xml:space="preserve">
+    <value>週間譜面 — 最終ボード</value>
+  </data>
+  <data name="{0} players · week of {1}" xml:space="preserve">
+    <value>プレーヤー {0} 人・{1} の週</value>
+  </data>
+  <data name="Card {0} of {1}" xml:space="preserve">
+    <value>カード {0}/{1}</value>
+  </data>
+  <data name="{0} more charts had entries" xml:space="preserve">
+    <value>他 {0} 譜面にも記録あり</value>
+  </data>
+  <data name="one per level bucket" xml:space="preserve">
+    <value>レベル帯ごとに 1 譜面</value>
+  </data>
+  <data name="The new board is being drawn." xml:space="preserve">
+    <value>新しいボードを抽選中です。</value>
+  </data>
+  <data name="resets Monday midnight ET" xml:space="preserve">
+    <value>毎週月曜 0 時（ET）にリセット</value>
+  </data>
+  <data name="Yesterday" xml:space="preserve">
+    <value>昨日</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>今日</value>
+  </data>
+  <data name="Limbo (lowest passing won)" xml:space="preserve">
+    <value>リンボー（最低パススコアが勝利）</value>
+  </data>
+  <data name="**Limbo Day** — lowest passing score wins. No breaking." xml:space="preserve">
+    <value>**リンボーデー** — 最低パススコアが勝ち。ブレイク禁止。</value>
+  </data>
+  <data name="Highest score wins." xml:space="preserve">
+    <value>最高スコアが勝ちです。</value>
+  </data>
+  <data name="yesterday's board settled" xml:space="preserve">
+    <value>昨日のボードが確定</value>
+  </data>
+  <data name="resets midnight ET" xml:space="preserve">
+    <value>毎日 0 時（ET）にリセット</value>
+  </data>
+  <data name="Daily Step board" xml:space="preserve">
+    <value>デイリーステップボード</value>
+  </data>
 </root>

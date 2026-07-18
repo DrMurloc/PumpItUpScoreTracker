@@ -30,6 +30,7 @@ public sealed class DiscordFeedSagaTests
     private readonly Mock<IBotClient> _bot = new();
     private readonly Mock<ICommunityRepository> _communities = new();
     private readonly Mock<IDiscordFeedSubscriptionRepository> _feeds = new();
+    private readonly Mock<ILocalizedTextAccessor> _localizer = new();
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IUserReader> _users = new();
     private List<RichBotMessage> _sent = new();
@@ -45,10 +46,17 @@ public sealed class DiscordFeedSagaTests
             .Returns(Task.CompletedTask);
         _communities.Setup(c => c.GetChannelCommunities(It.IsAny<ulong>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ChannelCommunityInfo>());
+        // Identity localizer: English keys back regardless of culture, so text assertions
+        // stay culture-independent.
+        _localizer.Setup(l => l.Get(It.IsAny<string?>(), It.IsAny<string>()))
+            .Returns((string? _, string key) => key);
+        _localizer.Setup(l => l.Get(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<object[]>()))
+            .Returns((string? _, string key, object[] args) => string.Format(key, args));
     }
 
     private DiscordFeedSaga Saga() =>
-        new(_bot.Object, _mediator.Object, _users.Object, _feeds.Object, _communities.Object);
+        new(_bot.Object, _mediator.Object, _users.Object, _feeds.Object, _communities.Object,
+            _localizer.Object);
 
     private static ConsumeContext<T> Context<T>(T message) where T : class
     {
@@ -101,6 +109,45 @@ public sealed class DiscordFeedSagaTests
         Assert.Contains("final board", AllText(_sent[0]));
         Assert.Contains("This week's charts", AllText(_sent[1]));
         Assert.Contains("[Video]", AllText(_sent[1])); // lineup carries the video link
+    }
+
+    [Fact]
+    public async Task EachChannelsCardsComposeInItsRegisteredLanguage()
+    {
+        // Two subscriptions, two languages: data is read once, rendering repeats per
+        // channel through its own culture.
+        var chart = new ChartBuilder().WithSongName("District 1").WithType(ChartType.Double).WithLevel(24)
+            .WithMix(MixEnum.Phoenix2).Build();
+        _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKind.WeeklyCharts, MixEnum.Phoenix2,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new DiscordFeedChannel(123, "ko-KR"), new DiscordFeedChannel(456, null) });
+        _mediator.Setup(m => m.Send(It.IsAny<GetPastWeeklyDatesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { DateTimeOffset.UnixEpoch }.AsEnumerable());
+        _mediator.Setup(m => m.Send(It.IsAny<GetPastWeeklyEntriesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new WeeklyTournamentEntry(Guid.NewGuid(), chart.Id, 990000, PhoenixPlate.UltimateGame, false, null, 24)
+            }.AsEnumerable());
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { chart }.AsEnumerable());
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<WeeklyTournamentChart>().AsEnumerable());
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartVideosQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartVideoInformation>().AsEnumerable());
+        _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<User>());
+
+        await Saga().Consume(Context(new WeeklyChartsRotatedEvent(MixEnum.Phoenix2)));
+
+        _bot.Verify(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(),
+            It.Is<IEnumerable<ulong>>(ids => ids.Single() == 123), It.IsAny<CancellationToken>()), Times.Once);
+        _bot.Verify(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(),
+            It.Is<IEnumerable<ulong>>(ids => ids.Single() == 456), It.IsAny<CancellationToken>()), Times.Once);
+        _localizer.Verify(l => l.Get("ko-KR", "This week's charts"), Times.Once);
+        _localizer.Verify(l => l.Get(null, "This week's charts"), Times.Once);
+        // The board data itself was read once, not per channel.
+        _mediator.Verify(m => m.Send(It.IsAny<GetPastWeeklyEntriesQuery>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

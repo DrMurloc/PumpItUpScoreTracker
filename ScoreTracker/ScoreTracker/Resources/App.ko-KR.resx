@@ -4899,4 +4899,49 @@
   <data name="Which registration to remove" xml:space="preserve">
     <value>해제할 등록</value>
   </data>
+  <data name="Weekly Charts — final board" xml:space="preserve">
+    <value>주간 채보 — 최종 보드</value>
+  </data>
+  <data name="{0} players · week of {1}" xml:space="preserve">
+    <value>플레이어 {0}명 · {1} 주</value>
+  </data>
+  <data name="Card {0} of {1}" xml:space="preserve">
+    <value>카드 {0}/{1}</value>
+  </data>
+  <data name="{0} more charts had entries" xml:space="preserve">
+    <value>그 외 {0}개 채보에도 기록 있음</value>
+  </data>
+  <data name="one per level bucket" xml:space="preserve">
+    <value>레벨 구간별 1개</value>
+  </data>
+  <data name="The new board is being drawn." xml:space="preserve">
+    <value>새 보드를 뽑는 중입니다.</value>
+  </data>
+  <data name="resets Monday midnight ET" xml:space="preserve">
+    <value>매주 월요일 자정(ET) 초기화</value>
+  </data>
+  <data name="Yesterday" xml:space="preserve">
+    <value>어제</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>오늘</value>
+  </data>
+  <data name="Limbo (lowest passing won)" xml:space="preserve">
+    <value>림보 (최저 패스 점수 승리)</value>
+  </data>
+  <data name="**Limbo Day** — lowest passing score wins. No breaking." xml:space="preserve">
+    <value>**림보 데이** — 가장 낮은 패스 점수가 승리. 브레이크 금지.</value>
+  </data>
+  <data name="Highest score wins." xml:space="preserve">
+    <value>최고 점수가 승리합니다.</value>
+  </data>
+  <data name="yesterday's board settled" xml:space="preserve">
+    <value>어제의 보드 확정</value>
+  </data>
+  <data name="resets midnight ET" xml:space="preserve">
+    <value>매일 자정(ET) 초기화</value>
+  </data>
+  <data name="Daily Step board" xml:space="preserve">
+    <value>데일리 스텝 보드</value>
+  </data>
 </root>

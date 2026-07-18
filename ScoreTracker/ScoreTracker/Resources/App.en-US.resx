@@ -5012,4 +5012,49 @@
   <data name="Which registration to remove" xml:space="preserve">
     <value>Which registration to remove</value>
   </data>
+  <data name="Weekly Charts — final board" xml:space="preserve">
+    <value>Weekly Charts — final board</value>
+  </data>
+  <data name="{0} players · week of {1}" xml:space="preserve">
+    <value>{0} players · week of {1}</value>
+  </data>
+  <data name="Card {0} of {1}" xml:space="preserve">
+    <value>Card {0} of {1}</value>
+  </data>
+  <data name="{0} more charts had entries" xml:space="preserve">
+    <value>{0} more charts had entries</value>
+  </data>
+  <data name="one per level bucket" xml:space="preserve">
+    <value>one per level bucket</value>
+  </data>
+  <data name="The new board is being drawn." xml:space="preserve">
+    <value>The new board is being drawn.</value>
+  </data>
+  <data name="resets Monday midnight ET" xml:space="preserve">
+    <value>resets Monday midnight ET</value>
+  </data>
+  <data name="Yesterday" xml:space="preserve">
+    <value>Yesterday</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="Limbo (lowest passing won)" xml:space="preserve">
+    <value>Limbo (lowest passing won)</value>
+  </data>
+  <data name="**Limbo Day** — lowest passing score wins. No breaking." xml:space="preserve">
+    <value>**Limbo Day** — lowest passing score wins. No breaking.</value>
+  </data>
+  <data name="Highest score wins." xml:space="preserve">
+    <value>Highest score wins.</value>
+  </data>
+  <data name="yesterday's board settled" xml:space="preserve">
+    <value>yesterday's board settled</value>
+  </data>
+  <data name="resets midnight ET" xml:space="preserve">
+    <value>resets midnight ET</value>
+  </data>
+  <data name="Daily Step board" xml:space="preserve">
+    <value>Daily Step board</value>
+  </data>
 </root>

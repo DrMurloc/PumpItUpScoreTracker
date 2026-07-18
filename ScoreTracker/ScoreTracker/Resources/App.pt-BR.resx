@@ -4889,4 +4889,49 @@
   <data name="Which registration to remove" xml:space="preserve">
     <value>Qual registro remover</value>
   </data>
+  <data name="Weekly Charts — final board" xml:space="preserve">
+    <value>Charts Semanais — classificação final</value>
+  </data>
+  <data name="{0} players · week of {1}" xml:space="preserve">
+    <value>{0} jogadores · semana de {1}</value>
+  </data>
+  <data name="Card {0} of {1}" xml:space="preserve">
+    <value>Cartão {0} de {1}</value>
+  </data>
+  <data name="{0} more charts had entries" xml:space="preserve">
+    <value>mais {0} charts tiveram registros</value>
+  </data>
+  <data name="one per level bucket" xml:space="preserve">
+    <value>um por faixa de nível</value>
+  </data>
+  <data name="The new board is being drawn." xml:space="preserve">
+    <value>A nova classificação está sendo sorteada.</value>
+  </data>
+  <data name="resets Monday midnight ET" xml:space="preserve">
+    <value>reinicia segunda-feira à meia-noite ET</value>
+  </data>
+  <data name="Yesterday" xml:space="preserve">
+    <value>Ontem</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Hoje</value>
+  </data>
+  <data name="Limbo (lowest passing won)" xml:space="preserve">
+    <value>Limbo (venceu a menor pontuação de pass)</value>
+  </data>
+  <data name="**Limbo Day** — lowest passing score wins. No breaking." xml:space="preserve">
+    <value>**Dia de Limbo** — vence a menor pontuação de pass. Sem quebrar.</value>
+  </data>
+  <data name="Highest score wins." xml:space="preserve">
+    <value>Vence a maior pontuação.</value>
+  </data>
+  <data name="yesterday's board settled" xml:space="preserve">
+    <value>a classificação de ontem foi encerrada</value>
+  </data>
+  <data name="resets midnight ET" xml:space="preserve">
+    <value>reinicia à meia-noite ET</value>
+  </data>
+  <data name="Daily Step board" xml:space="preserve">
+    <value>Classificação do Passo Diário</value>
+  </data>
 </root>
