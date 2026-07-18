@@ -16,7 +16,17 @@ public sealed record ChartSimilarityRecord(
     double Score,
     double SkillScore,
     double IntensityScore,
-    IReadOnlyList<ChartSharedBadgeRecord> SharedBadges);
+    IReadOnlyList<ChartSharedBadgeRecord> SharedBadges)
+{
+    /// <summary>
+    ///     What counts as a real match. A read-time constant by design: the graph stores
+    ///     its top 20 floor-free, so moving this bar is a redeploy rather than a rebuild,
+    ///     and the rows below it are near-misses rather than rows that never existed.
+    ///     Shared by every consumer that draws the line — the similar-charts shelf and the
+    ///     Hot Streak expansion — so "a match" means the same thing everywhere.
+    /// </summary>
+    public const double MatchFloor = 0.55;
+}
 
 /// <summary>
 ///     A badge both charts carry, at the coverage they share, keyed by piucenter's raw

@@ -98,6 +98,23 @@ internal sealed class EFScoreHighlightRepository : IScoreHighlightRepository
             .Select(ToRecord);
     }
 
+    public async Task<IReadOnlyList<ScoreHighlightRecord>> GetNewestHighlights(MixEnum mix, Guid userId,
+        HighlightFlags flags, DateTimeOffset? since, int count, CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        var mask = (int)flags;
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var query = database.Set<ScoreHighlightEntity>()
+            .Where(e => e.UserId == userId && e.MixId == mixId && (e.Flags & mask) != 0);
+        if (since != null) query = query.Where(e => e.OccurredAt >= since);
+        return (await query
+                .OrderByDescending(e => e.OccurredAt)
+                .Take(count)
+                .ToArrayAsync(cancellationToken))
+            .Select(ToRecord)
+            .ToArray();
+    }
+
     public async Task<IEnumerable<ScoreHighlightRecord>> GetHighlightsBySessions(Guid userId,
         IEnumerable<Guid> sessionIds, CancellationToken cancellationToken)
     {
