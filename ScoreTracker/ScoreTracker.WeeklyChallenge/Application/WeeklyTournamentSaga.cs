@@ -311,11 +311,16 @@ namespace ScoreTracker.WeeklyChallenge.Application
             var scores = await weeklyTournies.GetEntries(mix, null, context.CancellationToken);
             foreach (var chartGroup in scores.GroupBy(s => s.ChartId))
             {
-                var inRangeLeaderboard = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(chartGroup).ToArray();
+                // The snapshot stamps each row's band verdict from the entry's stored
+                // competitive level — the same value SaveEntry judged, so the two never drift.
+                var chart = chartDict.GetValueOrDefault(chartGroup.Key);
+                var leaderboard = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(chartGroup).ToArray();
                 await weeklyTournies.WriteHistories(mix,
-                    inRangeLeaderboard.Select(e => new UserTourneyHistory(e.Item2.UserId, e.Item2.ChartId, now, e.Item1,
+                    leaderboard.Select(e => new UserTourneyHistory(e.Item2.UserId, e.Item2.ChartId, now, e.Item1,
                         e.Item2.CompetitiveLevel,
-                        e.Item2.Score, e.Item2.Plate, e.Item2.IsBroken)), context.CancellationToken);
+                        e.Item2.Score, e.Item2.Plate, e.Item2.IsBroken,
+                        chart != null && WeeklyChartSuggestionPolicy.IsWithinRange(chart,
+                            e.Item2.CompetitiveLevel))), context.CancellationToken);
             }
 
             await weeklyTournies.ClearTheBoard(mix, context.CancellationToken);
@@ -411,6 +416,7 @@ namespace ScoreTracker.WeeklyChallenge.Application
             var stats = await playerStats.GetStats(mix, request.Entry.UserId, cancellationToken);
             var competitiveLevel = chart.Type == ChartType.Single ? stats.SinglesCompetitiveLevel :
                 chart.Type == ChartType.Double ? stats.DoublesCompetitiveLevel : stats.CompetitiveLevel;
+            var wasWithinRange = WeeklyChartSuggestionPolicy.IsWithinRange(chart, competitiveLevel);
 
             var existingWithSources =
                 (await weeklyTournies.GetEntriesWithSources(mix, request.Entry.ChartId, cancellationToken))
@@ -442,12 +448,12 @@ namespace ScoreTracker.WeeklyChallenge.Application
                 existingEntry = existingEntry with { CompetitiveLevel = competitiveLevel };
                 // Photos are optional proof (M3): a photo-less submit must not wipe one already attached.
                 existingEntry = existingEntry with { PhotoUrl = request.Entry.PhotoUrl ?? existingEntry.PhotoUrl };
-                await weeklyTournies.SaveEntry(mix, existingEntry, entrySource, cancellationToken);
+                await weeklyTournies.SaveEntry(mix, existingEntry, entrySource, wasWithinRange, cancellationToken);
             }
             else
             {
                 existingEntry = request.Entry with { CompetitiveLevel = competitiveLevel };
-                await weeklyTournies.SaveEntry(mix, existingEntry, request.Source, cancellationToken);
+                await weeklyTournies.SaveEntry(mix, existingEntry, request.Source, wasWithinRange, cancellationToken);
             }
 
             var newPlace = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(existingEntries.Where(u => u.UserId != request.Entry.UserId)

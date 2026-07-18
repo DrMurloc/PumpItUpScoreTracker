@@ -27,8 +27,13 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task<IEnumerable<(WeeklyTournamentEntry Entry, ChallengeEntrySource Source)>> GetEntriesWithSources(
             MixEnum mix, Guid? chartId, CancellationToken cancellationToken);
 
+        /// <summary>
+        ///     <paramref name="wasWithinRange" /> is the suggestion band's verdict
+        ///     (WeeklyChartSuggestionPolicy.IsWithinRange) at save time — rotation snapshots
+        ///     copy it into the placings history the recap pools on.
+        /// </summary>
         Task SaveEntry(MixEnum mix, WeeklyTournamentEntry entry, ChallengeEntrySource source,
-            CancellationToken cancellationToken);
+            bool wasWithinRange, CancellationToken cancellationToken);
         Task<IEnumerable<DateTimeOffset>> GetPastDates(MixEnum mix, CancellationToken cancellationToken);
 
         Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(MixEnum mix, DateTimeOffset date,

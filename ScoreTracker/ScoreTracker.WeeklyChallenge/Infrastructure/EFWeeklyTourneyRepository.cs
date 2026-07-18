@@ -77,7 +77,8 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                     Place = h.Place,
                     Score = h.Score,
                     UserId = h.UserId,
-                    CompetitiveLevel = h.CompetitiveLevel
+                    CompetitiveLevel = h.CompetitiveLevel,
+                    WasWithinRange = h.WasWithinRange
                 }), cancellationToken);
             await database.SaveChangesAsync(cancellationToken);
         }
@@ -150,7 +151,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
         }
 
         public async Task SaveEntry(MixEnum mix, WeeklyTournamentEntry entry, ChallengeEntrySource source,
-            CancellationToken cancellationToken)
+            bool wasWithinRange, CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
             var mixId = MixIds.For(mix);
@@ -170,7 +171,8 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                     UserId = entry.UserId,
                     Photo = entry.PhotoUrl?.ToString(),
                     CompetitiveLevel = entry.CompetitiveLevel,
-                    Source = source
+                    Source = source,
+                    WasWithinRange = wasWithinRange
                 }, cancellationToken);
             }
             else
@@ -181,6 +183,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                 entity.IsBroken = entry.IsBroken;
                 entity.Photo = entry.PhotoUrl?.ToString();
                 entity.Source = source;
+                entity.WasWithinRange = wasWithinRange;
             }
 
             await database.SaveChangesAsync(cancellationToken);
