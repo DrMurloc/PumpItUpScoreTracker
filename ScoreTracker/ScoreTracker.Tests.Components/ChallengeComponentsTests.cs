@@ -1,6 +1,7 @@
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using MudBlazor;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -164,6 +165,45 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
         Assert.Contains("21.86", cut.Markup);
         Assert.Contains("3,137", cut.Markup);
         Assert.Single(cut.FindAll(".challenge-lb-row.mine"));
+    }
+
+    // ---- MonthlyBoardDialog -------------------------------------------------
+
+    [Fact]
+    public void MonthlyDialogStickersCarryNoSongNamesOnlyTooltips()
+    {
+        // The counted expansion is the official-leaderboards compact pattern (M21): jacket +
+        // bubble + grade/score + points; the song's name lives in the tooltip alone.
+        var chart = MakeChart("Secret Song");
+        var player = new User(Guid.NewGuid(), Name.From("Archi"), true, null,
+            new Uri("https://piu.test/a.png"), null);
+        var entry = new MonthlyEntry(chart.Id, 992_410, PhoenixPlate.SuperbGame, false, 824);
+        var view = new MonthlyLeaderboardView(new[]
+        {
+            new MonthlyLeaderboardRow(1, player, 3137, new[] { entry }, new[] { entry }, 21.86)
+        }, 1, 4, null, null);
+
+        var cut = Render(builder =>
+        {
+            builder.OpenComponent<MudDialogProvider>(0);
+            builder.CloseComponent();
+            builder.OpenComponent<MonthlyBoardDialog>(1);
+            builder.AddComponentParameter(2, nameof(MonthlyBoardDialog.Visible), true);
+            builder.AddComponentParameter(3, nameof(MonthlyBoardDialog.View), view);
+            builder.AddComponentParameter(4, nameof(MonthlyBoardDialog.Charts),
+                (IReadOnlyDictionary<Guid, Chart>)new Dictionary<Guid, Chart> { [chart.Id] = chart });
+            builder.CloseComponent();
+        });
+
+        cut.WaitForAssertion(() =>
+        {
+            var sticker = cut.Find(".challenge-stik");
+            Assert.Contains("Secret Song", sticker.GetAttribute("title"));
+            Assert.DoesNotContain("Secret Song", sticker.QuerySelector(".challenge-stik-line")!.TextContent);
+            Assert.Contains("824", sticker.TextContent);
+            Assert.Contains("21.86", cut.Markup);
+            Assert.Equal(4, cut.FindAll(".challenge-seg-btn").Count);
+        });
     }
 
     // ---- WeeklyBoardGrid ----------------------------------------------------

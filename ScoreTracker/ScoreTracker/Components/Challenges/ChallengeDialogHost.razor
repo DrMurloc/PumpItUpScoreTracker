@@ -14,6 +14,7 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.HomeDashboard
 @using MassTransit
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @implements IDisposable
 
 @* The challenges page's one island (weekly-charts-overhaul.md §3.3): a single interactive root
@@ -105,10 +106,16 @@
     </DialogActions>
 </MudDialog>
 
-@* ---- Full board (the shared dialog: full list, trust ladder) ---- *@
+@* ---- Full board (the shared dialog: full list, trust ladder, relevant filter) ---- *@
 <LeaderboardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Entries="_boardEntries"
                    Ascending="_boardAscending" OfficialUserIds="_boardOfficialIds"
-                   CommunityUserIds="_communityIds"/>
+                   CommunityUserIds="_communityIds" InRangeUserIds="_boardInRangeIds"/>
+
+@* ---- The monthly full board (§12.4) ---- *@
+<MonthlyBoardDialog @bind-Visible="_monthlyOpen" View="_monthlyView" Charts="_monthlyCharts"
+                    ActiveType="_monthlyType" UserId="@(CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null)"
+                    Loading="_monthlyLoading" Subtitle="@_monthlySubtitle"
+                    TypeChanged="LoadMonthly"/>
 
 @* ---- Chart details (the shared dialog, video and all) ---- *@
 <ChartDetailsDialog @bind-Visible="_chartOpen" Chart="_detailsChart" Mix="Mix"/>
@@ -168,7 +175,16 @@
     private Chart? _boardChart;
     private WeeklyTournamentEntry[] _boardEntries = Array.Empty<WeeklyTournamentEntry>();
     private IReadOnlySet<Guid> _boardOfficialIds = new HashSet<Guid>();
+    private IReadOnlySet<Guid>? _boardInRangeIds;
     private bool _boardAscending;
+
+    // Monthly dialog
+    private bool _monthlyOpen;
+    private bool _monthlyLoading;
+    private ChartType? _monthlyType;
+    private MonthlyLeaderboardView? _monthlyView;
+    private IReadOnlyDictionary<Guid, Chart> _monthlyCharts = new Dictionary<Guid, Chart>();
+    private string _monthlySubtitle = string.Empty;
 
     // Chart-details dialog
     private bool _chartOpen;
@@ -235,6 +251,8 @@
                 ? new HashSet<Guid>()
                 : board.Rows.Where(r => r.Entry.Source == ChallengeEntrySource.Official)
                     .Select(r => r.Entry.UserId).ToHashSet();
+            // No band stamp on daily entries — the relevant switch stays weekly-only (M20).
+            _boardInRangeIds = null;
         }
         else
         {
@@ -243,9 +261,38 @@
             _boardEntries = rows.Select(r => r.Entry).ToArray();
             _boardOfficialIds = rows.Where(r => r.Source == ChallengeEntrySource.Official)
                 .Select(r => r.Entry.UserId).ToHashSet();
+            _boardInRangeIds = rows.Where(r => r.WasWithinRange).Select(r => r.Entry.UserId).ToHashSet();
         }
 
         _boardOpen = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public async Task OpenMonthly(string typeKey)
+    {
+        _monthlyType = typeKey switch
+        {
+            "Single" => ChartType.Single,
+            "Double" => ChartType.Double,
+            "CoOp" => ChartType.CoOp,
+            _ => null
+        };
+        _monthlyOpen = true;
+        await LoadMonthly(_monthlyType);
+    }
+
+    private async Task LoadMonthly(ChartType? type)
+    {
+        _monthlyType = type;
+        _monthlyLoading = true;
+        await InvokeAsync(StateHasChanged);
+        _monthlyCharts = await ChartCatalog.GetCharts(Mix);
+        _monthlyView = await Mediator.Send(new GetMonthlyLeaderboardQuery(Mix, null, type, null));
+        _monthlySubtitle = type == ChartType.CoOp
+            ? L["Week {0} — best {1} count · raw score", _monthlyView.WeekInMonth, _monthlyView.CountedPerPlayer]
+            : L["Week {0} — best {1} count · PUMBILITY", _monthlyView.WeekInMonth, _monthlyView.CountedPerPlayer];
+        _monthlyLoading = false;
         await InvokeAsync(StateHasChanged);
     }
 

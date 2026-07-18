@@ -2,6 +2,7 @@ using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
+using ScoreTracker.Web.Services.Contracts;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -34,6 +35,7 @@ public sealed class LeaderboardDialogTests : ComponentTestBase
                 new User(id, Name.From("P" + id.ToString("N")[..6]), true, null,
                     new Uri("https://piu.test/avatar.png"), null)).ToArray());
         Services.AddSingleton(users.Object);
+        Services.AddSingleton(Mock.Of<IUiSettingsAccessor>());
         CurrentUser.Setup(c => c.IsLoggedIn).Returns(false);
         // The dialog is an island; its rows render UserLabel/ScoreBreakdown on the live
         // (tooltip) path, which reads RendererInfo.
@@ -41,7 +43,7 @@ public sealed class LeaderboardDialogTests : ComponentTestBase
     }
 
     private IRenderedFragment RenderDialog(WeeklyTournamentEntry[] entries,
-        IReadOnlySet<Guid>? officialIds = null, bool ascending = false)
+        IReadOnlySet<Guid>? officialIds = null, bool ascending = false, IReadOnlySet<Guid>? inRangeIds = null)
     {
         return Render(builder =>
         {
@@ -53,6 +55,7 @@ public sealed class LeaderboardDialogTests : ComponentTestBase
             builder.AddComponentParameter(4, nameof(LeaderboardDialog.Entries), entries);
             builder.AddComponentParameter(5, nameof(LeaderboardDialog.OfficialUserIds), officialIds);
             builder.AddComponentParameter(6, nameof(LeaderboardDialog.Ascending), ascending);
+            builder.AddComponentParameter(7, nameof(LeaderboardDialog.InRangeUserIds), inRangeIds);
             builder.CloseComponent();
         });
     }
@@ -135,5 +138,37 @@ public sealed class LeaderboardDialogTests : ComponentTestBase
             Assert.Contains("#1", rows[0].TextContent);
             Assert.Contains("650,000", rows[0].TextContent);
         });
+    }
+
+    [Fact]
+    public void RelevantSwitchFiltersOutOfBandRowsAndRenumbers()
+    {
+        // Top score from out of band; two in-band rows behind it. The switch drops the
+        // sandbagger and the survivors renumber from #1 (M20).
+        var sandbagger = Entry(995_000);
+        var second = Entry(970_000);
+        var third = Entry(960_000);
+        var inRange = new HashSet<Guid> { second.UserId, third.UserId };
+
+        var cut = RenderDialog(new[] { sandbagger, second, third }, inRangeIds: inRange);
+
+        cut.WaitForAssertion(() => Assert.Equal(3, cut.FindAll(".weekly-lb-row").Count));
+        cut.Find(".challenge-switch input").Change(true);
+        cut.WaitForAssertion(() =>
+        {
+            var rows = cut.FindAll(".weekly-lb-row");
+            Assert.Equal(2, rows.Count);
+            Assert.Contains("#1", rows[0].TextContent);
+            Assert.Contains("970,000", rows[0].TextContent);
+        });
+    }
+
+    [Fact]
+    public void RelevantSwitchOnlyAppearsWhenTheBoardTracksTheBand()
+    {
+        var cut = RenderDialog(new[] { Entry(990_000) });
+
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".weekly-lb-row")));
+        Assert.Empty(cut.FindAll(".challenge-switch"));
     }
 }

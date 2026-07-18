@@ -5846,6 +5846,82 @@ button.chart-card-art {
     border-color: var(--mix-accent);
 }
 
+/* ── The monthly dialog's counted-score stickers (M21): the official-leaderboards compact
+   pattern, board-sized — jacket, bubble, grade/score strip, points badge. No song names. ── */
+.challenge-mrow-who {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.challenge-stik-row {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.challenge-stik-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 6px;
+    background: var(--mix-surface-muted);
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 6px;
+}
+
+.challenge-stik {
+    position: relative;
+    display: block;
+    width: 96px;
+    aspect-ratio: 1 / 1;
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+.challenge-stik-row .challenge-stik {
+    width: 44px;
+    aspect-ratio: 1 / 1;
+}
+
+.challenge-stik-row .challenge-stik .challenge-stik-line {
+    display: none;
+}
+
+.challenge-stik-j {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+}
+
+.challenge-stik-bubble {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    z-index: 2;
+}
+
+.challenge-stik-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: color-mix(in srgb, var(--mix-bg) 85%, transparent);
+    padding: 2px 5px;
+    font-size: .64rem;
+    z-index: 2;
+}
+
+.challenge-stik-line b {
+    margin-left: auto;
+    color: var(--mix-accent);
+    font-variant-numeric: tabular-nums;
+}
+
 .challenge-poollink a {
     color: var(--mix-accent);
 }

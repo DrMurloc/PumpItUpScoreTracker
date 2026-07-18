@@ -19,6 +19,16 @@
             <div class="weekly-lb-title">
                 <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
                 <MudText Typo="Typo.h6">@Chart.Song.Name</MudText>
+                @if (InRangeUserIds != null)
+                {
+                    <MudSpacer/>
+                    @* The relevant-players filter (M20) — quiet, weekly boards only. Ranks
+                       renumber because the dialog re-ranks whatever it shows. *@
+                    <label class="challenge-switch">
+                        <input type="checkbox" checked="@_relevantOnly"
+                               @onchange="e => ToggleRelevant((bool)e.Value!)"/><i></i>@L["Relevant players"]
+                    </label>
+                }
             </div>
         }
     </TitleContent>
@@ -78,6 +88,7 @@
 
 @inject ICurrentUserAccessor CurrentUser
 @inject IUserRepository Users
+@inject ScoreTracker.Web.Services.Contracts.IUiSettingsAccessor UiSettings
 
 @code {
 
@@ -99,13 +110,24 @@
     /// <summary>Optional: user ids in a community you share — their rows glow green.</summary>
     [Parameter] public IReadOnlySet<Guid>? CommunityUserIds { get; set; }
 
+    /// <summary>
+    ///     User ids whose entry sat inside the chart's band (M20). Non-null enables the
+    ///     relevant-players switch; null (daily, UCS, widgets) hides it.
+    /// </summary>
+    [Parameter] public IReadOnlySet<Guid>? InRangeUserIds { get; set; }
+
     private static readonly DialogOptions DialogSizing = new()
         { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseOnEscapeKey = true };
 
     private sealed record LeaderboardRow(int Place, double Percentile, WeeklyTournamentEntry Entry, bool IsMe);
 
+    private const string RelevantKey = "WeeklyCharts__RelevantPlayers";
+
     private bool _loaded;
     private string? _loadedFor;
+    private bool _relevantOnly;
+    private bool _relevantLoaded;
+    private WeeklyTournamentEntry[] _ordered = Array.Empty<WeeklyTournamentEntry>();
     private List<LeaderboardRow> _rows = new();
     private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
 
@@ -117,21 +139,41 @@
         _loadedFor = signature;
         _loaded = false;
 
+        if (InRangeUserIds != null && !_relevantLoaded)
+        {
+            _relevantLoaded = true;
+            _relevantOnly = await UiSettings.GetSetting(RelevantKey) == "true";
+        }
+
         var forChart = Entries.Where(e => e.ChartId == Chart.Id);
-        var ordered = (Ascending
+        _ordered = (Ascending
                 ? forChart.Where(e => !e.IsBroken).OrderBy(e => (int)e.Score)
                 : forChart.OrderBy(e => e.IsBroken).ThenByDescending(e => (int)e.Score))
             .ToArray();
+        BuildRows();
 
-        var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
-        _rows = ordered
-            .Select((e, i) => new LeaderboardRow(i + 1, ordered.Length <= 0 ? 0 : 1.0 - (double)(i + 1) / ordered.Length, e,
-                e.UserId == me))
-            .ToList();
-
-        var users = await Users.GetUsers(_rows.Select(r => r.Entry.UserId).Distinct().ToArray());
+        var users = await Users.GetUsers(_ordered.Select(e => e.UserId).Distinct().ToArray());
         _users = users.ToDictionary(u => u.Id);
         _loaded = true;
     }
 
+    // Ranks come from position in whatever the dialog shows, so filtering renumbers by itself.
+    private void BuildRows()
+    {
+        var shown = InRangeUserIds != null && _relevantOnly
+            ? _ordered.Where(e => InRangeUserIds.Contains(e.UserId)).ToArray()
+            : _ordered;
+        var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
+        _rows = shown
+            .Select((e, i) => new LeaderboardRow(i + 1, shown.Length <= 0 ? 0 : 1.0 - (double)(i + 1) / shown.Length, e,
+                e.UserId == me))
+            .ToList();
+    }
+
+    private async Task ToggleRelevant(bool value)
+    {
+        _relevantOnly = value;
+        BuildRows();
+        if (CurrentUser.IsLoggedIn) await UiSettings.SetSetting(RelevantKey, value ? "true" : "false");
+    }
 }
