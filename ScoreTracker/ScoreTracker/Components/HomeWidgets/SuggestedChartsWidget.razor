@@ -62,18 +62,18 @@ else
                     var chart = row.Chart;
                     var sect = section;
                     var r = row;
-                    @* Names only at 2 columns wide (rounds 3–4) — narrow rows give the
-                       width to the score; the art tooltip and details dialog carry it. *@
+                    @* The name is always here; CSS (a container query on .dash-suggested)
+                       shows it only when the row is physically wide enough — so a
+                       full-width single-column widget fills the gap the score's
+                       margin-left:auto would otherwise leave, and a cramped narrow cell
+                       still hands the width to the score. *@
                     <div class="dash-target-row @(EditMode ? "" : "dash-clickable")"
                          @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart, sect.CategoryKey))">
                         <span class="dash-mini-art">
                             <SongImage Song="chart.Song" Small="true"></SongImage>
                         </span>
                         <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
-                        @if (_showNames)
-                        {
-                            <span class="dash-target-name">@chart.Song.Name</span>
-                        }
+                        <span class="dash-target-name">@chart.Song.Name</span>
                         <span class="dash-target-score">
                             @if (row.Tier != null)
                             {
@@ -212,7 +212,6 @@ else
     private string? _loadedFor;
     private MixEnum _mix = MixEnum.Phoenix;
     private bool _useStrips;
-    private bool _showNames;
     private List<SuggestionSection> _sections = new();
 
     protected override async Task OnParametersSetAsync()
@@ -230,7 +229,6 @@ else
         // when the widget is two columns wide (owner, rounds 2-4).
         var size = SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.OneByTwo;
         _useStrips = size is { Columns: > 1, Rows: 1 };
-        _showNames = size.Columns > 1 && !_useStrips;
         var config = WidgetConfigJson.Read<SuggestedChartsConfig>(Widget.ConfigJson);
         _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
             : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;

@@ -140,6 +140,19 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
     }
 
     [Fact]
+    public void TargetRowsAlwaysEmitTheSongNameSoWideCellsCanFillTheGap()
+    {
+        // The name span is always in the DOM now (a container query hides it only when
+        // the cell is too narrow) — a full-width single-column widget stops leaving the
+        // empty gap the right-aligned score used to open.
+        SetUpRecommendations(HotStreakRec(_easyMatch.Id));
+
+        var cut = Render();
+
+        Assert.Contains(cut.FindAll(".dash-target-name"), n => n.TextContent.Contains("Achluoias"));
+    }
+
+    [Fact]
     public void GroupedRowsOrderEasiestTierFirstAndColorTheTierColumn()
     {
         SetUpRecommendations(HotStreakRec(_hardMatch.Id), HotStreakRec(_easyMatch.Id));

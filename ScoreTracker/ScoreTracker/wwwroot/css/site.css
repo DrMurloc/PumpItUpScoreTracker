@@ -2593,6 +2593,14 @@ html.sheet-open .more-sheet-scrim {
     font-family: var(--font-display);
     letter-spacing: .04em;
     color: var(--mix-ink-muted);
+    /* Hidden until the row is wide enough to earn it — the container query on
+       .dash-suggested shows it, so full-width single-column cells fill the gap the
+       right-aligned score leaves, and narrow cells still favour the score. */
+    display: none;
+}
+
+@container dash-suggested (min-width: 210px) {
+    .dash-target-name { display: block; }
 }
 
 .dash-skillchip {
@@ -2900,6 +2908,8 @@ html.sheet-open .more-sheet-scrim {
     min-height: 0;
     display: flex;
     flex-direction: column;
+    /* Its own inline size decides whether target rows show the song name. */
+    container: dash-suggested / inline-size;
 }
 
 .dash-target-caption {
