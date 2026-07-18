@@ -4800,4 +4800,103 @@
   <data name="Remove one with /piu unregister" xml:space="preserve">
     <value>/piu unregister로 해제할 수 있습니다</value>
   </data>
+  <data name="PIU Scores tools" xml:space="preserve">
+    <value>PIU Scores 도구</value>
+  </data>
+  <data name="Calculate a Phoenix score from a result screen" xml:space="preserve">
+    <value>결과 화면으로 Phoenix 점수 계산</value>
+  </data>
+  <data name="Find a chart and its pages" xml:space="preserve">
+    <value>채보와 관련 페이지 찾기</value>
+  </data>
+  <data name="Draw a random set of charts" xml:space="preserve">
+    <value>무작위 채보 뽑기</value>
+  </data>
+  <data name="Personalized chart suggestions (private)" xml:space="preserve">
+    <value>맞춤 채보 추천 (비공개)</value>
+  </data>
+  <data name="Register this channel for a feed" xml:space="preserve">
+    <value>이 채널을 피드에 등록</value>
+  </data>
+  <data name="Community score and title notifications" xml:space="preserve">
+    <value>커뮤니티 점수·타이틀 알림</value>
+  </data>
+  <data name="Weekly Charts — results and the new lineup" xml:space="preserve">
+    <value>주간 채보 — 결과와 새 라인업</value>
+  </data>
+  <data name="Daily Step — yesterday's board and today's chart" xml:space="preserve">
+    <value>데일리 스텝 — 어제의 보드와 오늘의 채보</value>
+  </data>
+  <data name="Official leaderboards — the weekly digest" xml:space="preserve">
+    <value>공식 리더보드 — 주간 다이제스트</value>
+  </data>
+  <data name="Stop one of this channel's feeds" xml:space="preserve">
+    <value>이 채널의 피드 중단</value>
+  </data>
+  <data name="Show what this channel is registered for" xml:space="preserve">
+    <value>이 채널의 등록 내역 보기</value>
+  </data>
+  <data name="Song name" xml:space="preserve">
+    <value>곡 이름</value>
+  </data>
+  <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
+    <value>시리즈 (기본값 Phoenix 2)</value>
+  </data>
+  <data name="Which mix" xml:space="preserve">
+    <value>시리즈</value>
+  </data>
+  <data name="How many (1–10, default 3)" xml:space="preserve">
+    <value>몇 개 (1–10, 기본 3)</value>
+  </data>
+  <data name="Chart type (default Singles)" xml:space="preserve">
+    <value>채보 종류 (기본 싱글)</value>
+  </data>
+  <data name="Singles or Doubles" xml:space="preserve">
+    <value>싱글 또는 더블</value>
+  </data>
+  <data name="Lowest level" xml:space="preserve">
+    <value>최저 레벨</value>
+  </data>
+  <data name="Highest level" xml:space="preserve">
+    <value>최고 레벨</value>
+  </data>
+  <data name="One of your saved randomizer presets" xml:space="preserve">
+    <value>저장된 랜덤 프리셋 중 하나</value>
+  </data>
+  <data name="What to work on (default Title Hunt)" xml:space="preserve">
+    <value>목표 (기본 칭호 사냥)</value>
+  </data>
+  <data name="Community name" xml:space="preserve">
+    <value>커뮤니티 이름</value>
+  </data>
+  <data name="Invite code (private communities only)" xml:space="preserve">
+    <value>초대 코드 (비공개 커뮤니티 전용)</value>
+  </data>
+  <data name="Language for this channel's posts (default English)" xml:space="preserve">
+    <value>이 채널 게시물의 언어 (기본 영어)</value>
+  </data>
+  <data name="Perfect count" xml:space="preserve">
+    <value>퍼펙트 수</value>
+  </data>
+  <data name="Great count" xml:space="preserve">
+    <value>그레이트 수</value>
+  </data>
+  <data name="Good count" xml:space="preserve">
+    <value>굿 수</value>
+  </data>
+  <data name="Bad count" xml:space="preserve">
+    <value>배드 수</value>
+  </data>
+  <data name="Miss count" xml:space="preserve">
+    <value>미스 수</value>
+  </data>
+  <data name="Max combo" xml:space="preserve">
+    <value>최대 콤보</value>
+  </data>
+  <data name="Calories burned (optional — estimates step count)" xml:space="preserve">
+    <value>소모 칼로리 (선택 — 화살표 수 추정)</value>
+  </data>
+  <data name="Which registration to remove" xml:space="preserve">
+    <value>해제할 등록</value>
+  </data>
 </root>

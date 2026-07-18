@@ -4845,4 +4845,103 @@
   <data name="Remove one with /piu unregister" xml:space="preserve">
     <value>Rrglmrglve wrglth /piu unregister. Mrgl.</value>
   </data>
+  <data name="PIU Scores tools" xml:space="preserve">
+    <value>PIU Scores trglls</value>
+  </data>
+  <data name="Calculate a Phoenix score from a result screen" xml:space="preserve">
+    <value>Crglcrgllate Phoenix scrglre frglm rrglsrglt scrgleen</value>
+  </data>
+  <data name="Find a chart and its pages" xml:space="preserve">
+    <value>Frglnd chrglrt mrgl prglges</value>
+  </data>
+  <data name="Draw a random set of charts" xml:space="preserve">
+    <value>Drrglw rrglndom chrglrts</value>
+  </data>
+  <data name="Personalized chart suggestions (private)" xml:space="preserve">
+    <value>Prglrsonal chrglrt srglggrglstions (prrglvate)</value>
+  </data>
+  <data name="Register this channel for a feed" xml:space="preserve">
+    <value>Rrglgrglster chrglnnrgl frglr frgld</value>
+  </data>
+  <data name="Community score and title notifications" xml:space="preserve">
+    <value>Cmrglmrglnrglty scrglre mrgl trgltle nrglws</value>
+  </data>
+  <data name="Weekly Charts — results and the new lineup" xml:space="preserve">
+    <value>Mrglrgly chrglrts — rrglsrglts mrgl nrglw lrglnrglp</value>
+  </data>
+  <data name="Daily Step — yesterday's board and today's chart" xml:space="preserve">
+    <value>Drglrgly Strglp — yrglstrglrday brglrd mrgl trglday chrglrt</value>
+  </data>
+  <data name="Official leaderboards — the weekly digest" xml:space="preserve">
+    <value>Prglrglblublurg Glorgmurgmurgls — wrglkly drglgrglst</value>
+  </data>
+  <data name="Stop one of this channel's feeds" xml:space="preserve">
+    <value>Strglp chrglnnrgl frgld</value>
+  </data>
+  <data name="Show what this channel is registered for" xml:space="preserve">
+    <value>Shrglw chrglnnrgl rrglgrglstrrgltions</value>
+  </data>
+  <data name="Song name" xml:space="preserve">
+    <value>Srglng nrglme</value>
+  </data>
+  <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
+    <value>Whrglch mrglx (drglfrglt Phoenix 2)</value>
+  </data>
+  <data name="Which mix" xml:space="preserve">
+    <value>Whrglch mrglx</value>
+  </data>
+  <data name="How many (1–10, default 3)" xml:space="preserve">
+    <value>Hrglw mrglny (1–10, drglfrglt 3)</value>
+  </data>
+  <data name="Chart type (default Singles)" xml:space="preserve">
+    <value>Chrglrt trglpe (drglfrglt Srglngles)</value>
+  </data>
+  <data name="Singles or Doubles" xml:space="preserve">
+    <value>Srglngles mrgl Drglbles</value>
+  </data>
+  <data name="Lowest level" xml:space="preserve">
+    <value>Lrglwest lrglvrgl</value>
+  </data>
+  <data name="Highest level" xml:space="preserve">
+    <value>Hrglghest lrglvrgl</value>
+  </data>
+  <data name="One of your saved randomizer presets" xml:space="preserve">
+    <value>Yrglr srglved rrglndrglmrglzer prrglsrglt</value>
+  </data>
+  <data name="What to work on (default Title Hunt)" xml:space="preserve">
+    <value>Whrglt trgl wrglrk rgln (drglfrglt Trgltle Hrglnt)</value>
+  </data>
+  <data name="Community name" xml:space="preserve">
+    <value>Cmrglmrglnrglty nrglme</value>
+  </data>
+  <data name="Invite code (private communities only)" xml:space="preserve">
+    <value>Mrglnvrglte crglde (prrglvate rglnly)</value>
+  </data>
+  <data name="Language for this channel's posts (default English)" xml:space="preserve">
+    <value>Lrglngrglge frglr chrglnnrgl prglsts (drglfrglt Mrglglsh)</value>
+  </data>
+  <data name="Perfect count" xml:space="preserve">
+    <value>Mrglubrgl crglnt</value>
+  </data>
+  <data name="Great count" xml:space="preserve">
+    <value>Grglt crglnt</value>
+  </data>
+  <data name="Good count" xml:space="preserve">
+    <value>Grgd crglnt</value>
+  </data>
+  <data name="Bad count" xml:space="preserve">
+    <value>Brgld crglnt</value>
+  </data>
+  <data name="Miss count" xml:space="preserve">
+    <value>Mrglss crglnt</value>
+  </data>
+  <data name="Max combo" xml:space="preserve">
+    <value>Mrglx crglmbo</value>
+  </data>
+  <data name="Calories burned (optional — estimates step count)" xml:space="preserve">
+    <value>Crgllrglrgles brglrned (rglptional)</value>
+  </data>
+  <data name="Which registration to remove" xml:space="preserve">
+    <value>Whrglch rrglgrglstrrgltion trgl rrglmrglve</value>
+  </data>
 </root>

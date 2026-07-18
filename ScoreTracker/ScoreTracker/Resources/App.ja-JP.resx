@@ -4919,4 +4919,103 @@
   <data name="Remove one with /piu unregister" xml:space="preserve">
     <value>/piu unregister で解除できます</value>
   </data>
+  <data name="PIU Scores tools" xml:space="preserve">
+    <value>PIU Scores ツール</value>
+  </data>
+  <data name="Calculate a Phoenix score from a result screen" xml:space="preserve">
+    <value>リザルト画面から Phoenix スコアを計算</value>
+  </data>
+  <data name="Find a chart and its pages" xml:space="preserve">
+    <value>譜面とそのページを検索</value>
+  </data>
+  <data name="Draw a random set of charts" xml:space="preserve">
+    <value>ランダムに譜面を抽選</value>
+  </data>
+  <data name="Personalized chart suggestions (private)" xml:space="preserve">
+    <value>あなた向けの譜面提案（非公開）</value>
+  </data>
+  <data name="Register this channel for a feed" xml:space="preserve">
+    <value>このチャンネルをフィードに登録</value>
+  </data>
+  <data name="Community score and title notifications" xml:space="preserve">
+    <value>コミュニティのスコア・タイトル通知</value>
+  </data>
+  <data name="Weekly Charts — results and the new lineup" xml:space="preserve">
+    <value>週間譜面 — 結果と新ラインナップ</value>
+  </data>
+  <data name="Daily Step — yesterday's board and today's chart" xml:space="preserve">
+    <value>デイリーステップ — 昨日のボードと今日の譜面</value>
+  </data>
+  <data name="Official leaderboards — the weekly digest" xml:space="preserve">
+    <value>公開ランキング — 週間ダイジェスト</value>
+  </data>
+  <data name="Stop one of this channel's feeds" xml:space="preserve">
+    <value>このチャンネルのフィードを停止</value>
+  </data>
+  <data name="Show what this channel is registered for" xml:space="preserve">
+    <value>このチャンネルの登録内容を表示</value>
+  </data>
+  <data name="Song name" xml:space="preserve">
+    <value>曲名</value>
+  </data>
+  <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
+    <value>バージョン（既定は Phoenix 2）</value>
+  </data>
+  <data name="Which mix" xml:space="preserve">
+    <value>バージョン</value>
+  </data>
+  <data name="How many (1–10, default 3)" xml:space="preserve">
+    <value>何枚（1–10、既定 3）</value>
+  </data>
+  <data name="Chart type (default Singles)" xml:space="preserve">
+    <value>譜面タイプ（既定は Singles）</value>
+  </data>
+  <data name="Singles or Doubles" xml:space="preserve">
+    <value>Singles か Doubles</value>
+  </data>
+  <data name="Lowest level" xml:space="preserve">
+    <value>最低レベル</value>
+  </data>
+  <data name="Highest level" xml:space="preserve">
+    <value>最高レベル</value>
+  </data>
+  <data name="One of your saved randomizer presets" xml:space="preserve">
+    <value>保存済みランダマイザープリセット</value>
+  </data>
+  <data name="What to work on (default Title Hunt)" xml:space="preserve">
+    <value>取り組む目標（既定は称号ハント）</value>
+  </data>
+  <data name="Community name" xml:space="preserve">
+    <value>コミュニティ名</value>
+  </data>
+  <data name="Invite code (private communities only)" xml:space="preserve">
+    <value>招待コード（非公開コミュニティのみ）</value>
+  </data>
+  <data name="Language for this channel's posts (default English)" xml:space="preserve">
+    <value>このチャンネルの投稿言語（既定は英語）</value>
+  </data>
+  <data name="Perfect count" xml:space="preserve">
+    <value>Perfect 数</value>
+  </data>
+  <data name="Great count" xml:space="preserve">
+    <value>Great 数</value>
+  </data>
+  <data name="Good count" xml:space="preserve">
+    <value>Good 数</value>
+  </data>
+  <data name="Bad count" xml:space="preserve">
+    <value>Bad 数</value>
+  </data>
+  <data name="Miss count" xml:space="preserve">
+    <value>Miss 数</value>
+  </data>
+  <data name="Max combo" xml:space="preserve">
+    <value>最大コンボ</value>
+  </data>
+  <data name="Calories burned (optional — estimates step count)" xml:space="preserve">
+    <value>消費カロリー（任意 — アロー数を推定）</value>
+  </data>
+  <data name="Which registration to remove" xml:space="preserve">
+    <value>解除する登録</value>
+  </data>
 </root>

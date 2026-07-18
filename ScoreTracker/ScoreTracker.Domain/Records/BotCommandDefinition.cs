@@ -8,14 +8,21 @@ public enum BotCommandOptionType
     Boolean
 }
 
-/// <summary>A fixed choice offered for an option (the value is always carried as a string).</summary>
+/// <summary>
+///     A fixed choice offered for an option (the value is always carried as a string).
+///     <paramref name="NameLocalizations" /> maps supported culture codes to the display
+///     name each viewer's client shows; the adapter converts codes to provider locales.
+/// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record BotOptionChoice(string Name, string Value);
+public sealed record BotOptionChoice(string Name, string Value,
+    IReadOnlyDictionary<string, string>? NameLocalizations = null);
 
 /// <summary>
 ///     One option on a subcommand. <paramref name="Autocomplete" /> and fixed
 ///     <paramref name="Choices" /> are mutually exclusive at the Discord layer — a choice
 ///     list is a closed set, autocomplete is an open live lookup.
+///     <paramref name="DescriptionLocalizations" /> maps supported culture codes to
+///     per-client help text.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record BotCommandOption(
@@ -26,7 +33,8 @@ public sealed record BotCommandOption(
     bool Autocomplete = false,
     IReadOnlyList<BotOptionChoice>? Choices = null,
     long? MinValue = null,
-    long? MaxValue = null);
+    long? MaxValue = null,
+    IReadOnlyDictionary<string, string>? DescriptionLocalizations = null);
 
 /// <summary>
 ///     A leaf command the user actually invokes. <paramref name="Ephemeral" /> is fixed at
@@ -38,14 +46,16 @@ public sealed record BotSubCommand(
     string Name,
     string Description,
     IReadOnlyList<BotCommandOption> Options,
-    bool Ephemeral = false);
+    bool Ephemeral = false,
+    IReadOnlyDictionary<string, string>? DescriptionLocalizations = null);
 
 /// <summary>A group of related subcommands (e.g. <c>register</c> → community/weekly/daily/official).</summary>
 [ExcludeFromCodeCoverage]
 public sealed record BotSubCommandGroup(
     string Name,
     string Description,
-    IReadOnlyList<BotSubCommand> SubCommands);
+    IReadOnlyList<BotSubCommand> SubCommands,
+    IReadOnlyDictionary<string, string>? DescriptionLocalizations = null);
 
 /// <summary>
 ///     A top-level bot command tree. Directly-invokable subcommands and grouped
@@ -57,4 +67,5 @@ public sealed record BotCommandDefinition(
     string Name,
     string Description,
     IReadOnlyList<BotSubCommand> SubCommands,
-    IReadOnlyList<BotSubCommandGroup> SubCommandGroups);
+    IReadOnlyList<BotSubCommandGroup> SubCommandGroups,
+    IReadOnlyDictionary<string, string>? DescriptionLocalizations = null);

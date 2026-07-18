@@ -4913,4 +4913,103 @@
   <data name="Remove one with /piu unregister" xml:space="preserve">
     <value>Remove one with /piu unregister</value>
   </data>
+  <data name="PIU Scores tools" xml:space="preserve">
+    <value>PIU Scores tools</value>
+  </data>
+  <data name="Calculate a Phoenix score from a result screen" xml:space="preserve">
+    <value>Calculate a Phoenix score from a result screen</value>
+  </data>
+  <data name="Find a chart and its pages" xml:space="preserve">
+    <value>Find a chart and its pages</value>
+  </data>
+  <data name="Draw a random set of charts" xml:space="preserve">
+    <value>Draw a random set of charts</value>
+  </data>
+  <data name="Personalized chart suggestions (private)" xml:space="preserve">
+    <value>Personalized chart suggestions (private)</value>
+  </data>
+  <data name="Register this channel for a feed" xml:space="preserve">
+    <value>Register this channel for a feed</value>
+  </data>
+  <data name="Community score and title notifications" xml:space="preserve">
+    <value>Community score and title notifications</value>
+  </data>
+  <data name="Weekly Charts — results and the new lineup" xml:space="preserve">
+    <value>Weekly Charts — results and the new lineup</value>
+  </data>
+  <data name="Daily Step — yesterday's board and today's chart" xml:space="preserve">
+    <value>Daily Step — yesterday's board and today's chart</value>
+  </data>
+  <data name="Official leaderboards — the weekly digest" xml:space="preserve">
+    <value>Official leaderboards — the weekly digest</value>
+  </data>
+  <data name="Stop one of this channel's feeds" xml:space="preserve">
+    <value>Stop one of this channel's feeds</value>
+  </data>
+  <data name="Show what this channel is registered for" xml:space="preserve">
+    <value>Show what this channel is registered for</value>
+  </data>
+  <data name="Song name" xml:space="preserve">
+    <value>Song name</value>
+  </data>
+  <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
+    <value>Which mix (defaults to Phoenix 2)</value>
+  </data>
+  <data name="Which mix" xml:space="preserve">
+    <value>Which mix</value>
+  </data>
+  <data name="How many (1–10, default 3)" xml:space="preserve">
+    <value>How many (1–10, default 3)</value>
+  </data>
+  <data name="Chart type (default Singles)" xml:space="preserve">
+    <value>Chart type (default Singles)</value>
+  </data>
+  <data name="Singles or Doubles" xml:space="preserve">
+    <value>Singles or Doubles</value>
+  </data>
+  <data name="Lowest level" xml:space="preserve">
+    <value>Lowest level</value>
+  </data>
+  <data name="Highest level" xml:space="preserve">
+    <value>Highest level</value>
+  </data>
+  <data name="One of your saved randomizer presets" xml:space="preserve">
+    <value>One of your saved randomizer presets</value>
+  </data>
+  <data name="What to work on (default Title Hunt)" xml:space="preserve">
+    <value>What to work on (default Title Hunt)</value>
+  </data>
+  <data name="Community name" xml:space="preserve">
+    <value>Community name</value>
+  </data>
+  <data name="Invite code (private communities only)" xml:space="preserve">
+    <value>Invite code (private communities only)</value>
+  </data>
+  <data name="Language for this channel's posts (default English)" xml:space="preserve">
+    <value>Language for this channel's posts (default English)</value>
+  </data>
+  <data name="Perfect count" xml:space="preserve">
+    <value>Perfect count</value>
+  </data>
+  <data name="Great count" xml:space="preserve">
+    <value>Great count</value>
+  </data>
+  <data name="Good count" xml:space="preserve">
+    <value>Good count</value>
+  </data>
+  <data name="Bad count" xml:space="preserve">
+    <value>Bad count</value>
+  </data>
+  <data name="Miss count" xml:space="preserve">
+    <value>Miss count</value>
+  </data>
+  <data name="Max combo" xml:space="preserve">
+    <value>Max combo</value>
+  </data>
+  <data name="Calories burned (optional — estimates step count)" xml:space="preserve">
+    <value>Calories burned (optional — estimates step count)</value>
+  </data>
+  <data name="Which registration to remove" xml:space="preserve">
+    <value>Which registration to remove</value>
+  </data>
 </root>

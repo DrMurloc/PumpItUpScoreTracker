@@ -13,6 +13,7 @@ namespace ScoreTracker.Web.HostedServices
     {
         private readonly IBotClient _botClient;
         private readonly IOptions<DiscordConfiguration> _discordConfig;
+        private readonly ILocalizedTextAccessor _localizer;
         private readonly ILogger<BotHostedService> _logger;
         private readonly IServiceProvider _serviceProvider;
         private bool _started;
@@ -20,12 +21,14 @@ namespace ScoreTracker.Web.HostedServices
         public BotHostedService(IBotClient botClient,
             ILogger<BotHostedService> logger,
             IServiceProvider serviceProvider,
-            IOptions<DiscordConfiguration> discordConfig)
+            IOptions<DiscordConfiguration> discordConfig,
+            ILocalizedTextAccessor localizer)
         {
             _botClient = botClient;
             _logger = logger;
             _serviceProvider = serviceProvider;
             _discordConfig = discordConfig;
+            _localizer = localizer;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -41,8 +44,11 @@ namespace ScoreTracker.Web.HostedServices
             _started = true;
             await _botClient.Start(cancellationToken);
 
+            // The registered tree carries description_localizations, so each viewer's
+            // Discord client shows the help text in its own language.
             _botClient.WhenReady(async () =>
-                await _botClient.RegisterCommands(PiuCommandCatalog.Commands, OnInteraction, OnAutocomplete));
+                await _botClient.RegisterCommands(PiuCommandCatalog.Localized(_localizer), OnInteraction,
+                    OnAutocomplete));
 
             _logger.LogInformation("Started bot client");
         }

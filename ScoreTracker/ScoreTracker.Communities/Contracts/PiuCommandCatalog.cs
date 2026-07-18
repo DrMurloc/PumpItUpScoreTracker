@@ -1,4 +1,5 @@
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Communities.Contracts
 {
@@ -12,12 +13,67 @@ namespace ScoreTracker.Communities.Contracts
     {
         public const string RootName = "piu";
 
-        public static IReadOnlyList<BotCommandDefinition> Commands { get; } = new[]
+        // Computed on access, never in a static initializer: static members initialize in
+        // textual order, so an eager initializer here would capture the choice fields
+        // declared below it while they are still null — options with no dropdowns on Discord.
+        public static IReadOnlyList<BotCommandDefinition> Commands =>
+            new[]
+            {
+                new BotCommandDefinition(RootName, "PIU Scores tools",
+                    new[] { Calc, Chart, Random, Suggest, Unregister, Feeds },
+                    new[] { Register })
+            };
+
+        /// <summary>
+        ///     The command tree with description (and translatable choice-name)
+        ///     localizations attached from the resx catalogues — supported-culture codes as
+        ///     keys, which the provider adapter maps to its own locales. English and
+        ///     untranslated texts are omitted, so brand names and native language names
+        ///     carry no localization entries.
+        /// </summary>
+        public static IReadOnlyList<BotCommandDefinition> Localized(ILocalizedTextAccessor localizer)
         {
-            new BotCommandDefinition(RootName, "PIU Scores tools",
-                new[] { Calc, Chart, Random, Suggest, Unregister, Feeds },
-                new[] { Register })
-        };
+            return Commands.Select(c => c with
+            {
+                DescriptionLocalizations = Localizations(localizer, c.Description),
+                SubCommands = c.SubCommands.Select(s => LocalizeSub(localizer, s)).ToArray(),
+                SubCommandGroups = c.SubCommandGroups.Select(g => g with
+                {
+                    DescriptionLocalizations = Localizations(localizer, g.Description),
+                    SubCommands = g.SubCommands.Select(s => LocalizeSub(localizer, s)).ToArray()
+                }).ToArray()
+            }).ToArray();
+        }
+
+        private static BotSubCommand LocalizeSub(ILocalizedTextAccessor localizer, BotSubCommand sub)
+        {
+            return sub with
+            {
+                DescriptionLocalizations = Localizations(localizer, sub.Description),
+                Options = sub.Options.Select(o => o with
+                {
+                    DescriptionLocalizations = Localizations(localizer, o.Description),
+                    Choices = o.Choices?.Select(ch => ch with
+                    {
+                        NameLocalizations = Localizations(localizer, ch.Name)
+                    }).ToArray()
+                }).ToArray()
+            };
+        }
+
+        private static IReadOnlyDictionary<string, string>? Localizations(ILocalizedTextAccessor localizer,
+            string text)
+        {
+            var map = new Dictionary<string, string>();
+            foreach (var culture in SupportedCultures.All)
+            {
+                if (culture.Code == SupportedCultures.Default) continue;
+                var localized = localizer.Get(culture.Code, text);
+                if (localized != text) map[culture.Code] = localized;
+            }
+
+            return map.Count == 0 ? null : map;
+        }
 
         private static readonly IReadOnlyList<BotOptionChoice> GoalChoices = new[]
         {

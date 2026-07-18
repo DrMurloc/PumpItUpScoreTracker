@@ -91,6 +91,58 @@ public sealed class DiscordCommandTranslatorTests
     }
 
     [Fact]
+    public void DescriptionLocalizationsMapCultureCodesToDiscordLocales()
+    {
+        // ko-KR flattens to Discord's "ko"; en-ZW and es-MX have no carryable Discord
+        // locale (es-419 fails Discord.Net's validation) and drop out.
+        var tree = new BotCommandDefinition("piu", "PIU Scores tools",
+            new[]
+            {
+                new BotSubCommand("chart", "Find a chart", new BotCommandOption[0],
+                    DescriptionLocalizations: new Dictionary<string, string>
+                    {
+                        ["ko-KR"] = "채보 찾기",
+                        ["es-MX"] = "Encuentra un chart",
+                        ["en-ZW"] = "Frglnd chrglrt"
+                    })
+            },
+            new BotSubCommandGroup[0],
+            DescriptionLocalizations: new Dictionary<string, string> { ["es-ES"] = "Herramientas de PIU Scores" });
+
+        var props = DiscordCommandTranslator.ToProperties(tree);
+
+        Assert.Equal("Herramientas de PIU Scores", props.DescriptionLocalizations["es-ES"]);
+        var chart = props.Options.Value.Single(o => o.Name == "chart");
+        Assert.Equal("채보 찾기", chart.DescriptionLocalizations["ko"]);
+        Assert.DoesNotContain(chart.DescriptionLocalizations, kv => kv.Value.Contains("Frglnd"));
+        Assert.DoesNotContain(chart.DescriptionLocalizations, kv => kv.Value.Contains("Encuentra"));
+    }
+
+    [Fact]
+    public void ChoiceNameLocalizationsRideIntoTheBuiltChoices()
+    {
+        var tree = new BotCommandDefinition("piu", "PIU Scores tools",
+            new[]
+            {
+                new BotSubCommand("suggest", "Personal picks",
+                    new[]
+                    {
+                        new BotCommandOption("goal", "What to work on", Choices: new[]
+                        {
+                            new BotOptionChoice("Title Hunt", "TitleHunt",
+                                new Dictionary<string, string> { ["ja-JP"] = "タイトル狙い" })
+                        })
+                    })
+            },
+            new BotSubCommandGroup[0]);
+
+        var props = DiscordCommandTranslator.ToProperties(tree);
+        var goal = props.Options.Value.Single(o => o.Name == "suggest").Options.Single(o => o.Name == "goal");
+
+        Assert.Equal("タイトル狙い", goal.Choices.Single().NameLocalizations["ja"]);
+    }
+
+    [Fact]
     public void IsEphemeralReadsTheSubcommandFlagByPath()
     {
         var tree = SampleTree();

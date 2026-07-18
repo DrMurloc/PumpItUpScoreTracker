@@ -4919,4 +4919,103 @@
   <data name="Remove one with /piu unregister" xml:space="preserve">
     <value>Rimuovine una con /piu unregister</value>
   </data>
+  <data name="PIU Scores tools" xml:space="preserve">
+    <value>Strumenti PIU Scores</value>
+  </data>
+  <data name="Calculate a Phoenix score from a result screen" xml:space="preserve">
+    <value>Calcola un punteggio Phoenix da una schermata dei risultati</value>
+  </data>
+  <data name="Find a chart and its pages" xml:space="preserve">
+    <value>Trova un chart e le sue pagine</value>
+  </data>
+  <data name="Draw a random set of charts" xml:space="preserve">
+    <value>Estrai un set casuale di chart</value>
+  </data>
+  <data name="Personalized chart suggestions (private)" xml:space="preserve">
+    <value>Suggerimenti di chart personalizzati (privato)</value>
+  </data>
+  <data name="Register this channel for a feed" xml:space="preserve">
+    <value>Registra questo canale per un feed</value>
+  </data>
+  <data name="Community score and title notifications" xml:space="preserve">
+    <value>Notifiche di punteggi e titoli della community</value>
+  </data>
+  <data name="Weekly Charts — results and the new lineup" xml:space="preserve">
+    <value>Chart settimanali — risultati e nuova selezione</value>
+  </data>
+  <data name="Daily Step — yesterday's board and today's chart" xml:space="preserve">
+    <value>Passo Giornaliero — la classifica di ieri e il chart di oggi</value>
+  </data>
+  <data name="Official leaderboards — the weekly digest" xml:space="preserve">
+    <value>Classifiche ufficiali — il riepilogo settimanale</value>
+  </data>
+  <data name="Stop one of this channel's feeds" xml:space="preserve">
+    <value>Interrompi uno dei feed di questo canale</value>
+  </data>
+  <data name="Show what this channel is registered for" xml:space="preserve">
+    <value>Mostra a cosa è registrato questo canale</value>
+  </data>
+  <data name="Song name" xml:space="preserve">
+    <value>Nome della canzone</value>
+  </data>
+  <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
+    <value>Quale Mix (predefinito Phoenix 2)</value>
+  </data>
+  <data name="Which mix" xml:space="preserve">
+    <value>Quale Mix</value>
+  </data>
+  <data name="How many (1–10, default 3)" xml:space="preserve">
+    <value>Quanti (1–10, predefinito 3)</value>
+  </data>
+  <data name="Chart type (default Singles)" xml:space="preserve">
+    <value>Tipo di chart (predefinito Singles)</value>
+  </data>
+  <data name="Singles or Doubles" xml:space="preserve">
+    <value>Singles o Doubles</value>
+  </data>
+  <data name="Lowest level" xml:space="preserve">
+    <value>Livello minimo</value>
+  </data>
+  <data name="Highest level" xml:space="preserve">
+    <value>Livello massimo</value>
+  </data>
+  <data name="One of your saved randomizer presets" xml:space="preserve">
+    <value>Uno dei tuoi preset salvati del randomizer</value>
+  </data>
+  <data name="What to work on (default Title Hunt)" xml:space="preserve">
+    <value>Su cosa lavorare (predefinito Title Hunt)</value>
+  </data>
+  <data name="Community name" xml:space="preserve">
+    <value>Nome della community</value>
+  </data>
+  <data name="Invite code (private communities only)" xml:space="preserve">
+    <value>Codice di invito (solo community private)</value>
+  </data>
+  <data name="Language for this channel's posts (default English)" xml:space="preserve">
+    <value>Lingua dei post di questo canale (predefinito inglese)</value>
+  </data>
+  <data name="Perfect count" xml:space="preserve">
+    <value>Numero di Perfects</value>
+  </data>
+  <data name="Great count" xml:space="preserve">
+    <value>Numero di Greats</value>
+  </data>
+  <data name="Good count" xml:space="preserve">
+    <value>Numero di Goods</value>
+  </data>
+  <data name="Bad count" xml:space="preserve">
+    <value>Numero di Bads</value>
+  </data>
+  <data name="Miss count" xml:space="preserve">
+    <value>Numero di Misses</value>
+  </data>
+  <data name="Max combo" xml:space="preserve">
+    <value>Combo massima</value>
+  </data>
+  <data name="Calories burned (optional — estimates step count)" xml:space="preserve">
+    <value>Calorie bruciate (facoltativo — stima il numero di passi)</value>
+  </data>
+  <data name="Which registration to remove" xml:space="preserve">
+    <value>Quale registrazione rimuovere</value>
+  </data>
 </root>
