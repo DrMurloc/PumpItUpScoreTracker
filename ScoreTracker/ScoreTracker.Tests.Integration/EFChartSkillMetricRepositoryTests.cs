@@ -140,4 +140,28 @@ public sealed class EFChartSkillMetricRepositoryTests : IAsyncLifetime
 
         Assert.Empty(await BuildRepository().GetMetrics(new[] { chart }, Source, CancellationToken.None));
     }
+
+    [Fact]
+    public async Task GetMetricsByChartReturnsTheWholeSourceKeyedByChart()
+    {
+        // The SRP search reads every chart's badges and NPS in one go — the whole-source
+        // dictionary, source-scoped, so another crawler's rows never bleed into the facet.
+        var first = await _seed.SeedChartAsync();
+        var second = await _seed.SeedChartAsync();
+        var foreign = await _seed.SeedChartAsync();
+        var repository = BuildRepository();
+        await repository.ReplaceChartMetrics(first, Source,
+            new[] { Metric(first, "top3:drill", 1m), Metric(first, "nps", 11.2m) }, CancellationToken.None);
+        await repository.ReplaceChartMetrics(second, Source,
+            new[] { Metric(second, "top3:twist_over90", 1m) }, CancellationToken.None);
+        await repository.ReplaceChartMetrics(foreign, OtherSource,
+            new[] { Metric(foreign, "nps", 9.9m) }, CancellationToken.None);
+
+        var byChart = await repository.GetMetricsByChart(Source, CancellationToken.None);
+
+        Assert.Equal(2, byChart.Count);
+        Assert.Equal(11.2m, byChart[first].Single(m => m.MetricName == "nps").Value);
+        Assert.Equal("top3:twist_over90", Assert.Single(byChart[second]).MetricName);
+        Assert.DoesNotContain(foreign, byChart.Keys);
+    }
 }
