@@ -1,0 +1,325 @@
+@page "/Community/Members"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Communities.Contracts
+@using ScoreTracker.Communities.Contracts.Commands
+@using ScoreTracker.Communities.Contracts.Queries
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+
+<PageTitle>@L["Members"]</PageTitle>
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Small"/>
+}
+else if (_community == null)
+{
+    <MudText Typo="Typo.h5">@L["Community was not found."]</MudText>
+}
+else
+{
+    <MudText Typo="Typo.h4">@((string)_community.Name) — @L["Members"]</MudText>
+    <MudText Typo="Typo.body2" Class="mb-4">@L["The roster is visible to everyone; management controls appear based on your role."]</MudText>
+
+    @if (_myRole?.Role == CommunityRole.Creator)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-4">
+            @L["You are the Creator. Only you can transfer the community, delete it, change its privacy, set default admin permissions, and set the notification language."]
+        </MudAlert>
+    }
+
+    <MudTable T="CommunityMemberRecord" Items="_roster" Hover="true" Class="mb-6">
+        <HeaderContent>
+            <MudTh>@L["Member"]</MudTh>
+            <MudTh>@L["Role"]</MudTh>
+            <MudTh>@L["Permissions"]</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <MudAvatar Size="Size.Small"><MudImage Src="@context.ProfileImage.ToString()"/></MudAvatar>
+                    <span>@((string)context.Name)</span>
+                </div>
+            </MudTd>
+            <MudTd><MudChip T="string" Size="Size.Small" Color="@RoleColor(context.Role)">@RoleLabel(context.Role)</MudChip></MudTd>
+            <MudTd>
+                @if (context.Role == CommunityRole.Admin)
+                {
+                    <MudText Typo="Typo.caption">@PermissionSummary(context.Permissions)</MudText>
+                }
+                else if (context.Role == CommunityRole.Creator)
+                {
+                    <MudText Typo="Typo.caption">@L["all permissions"]</MudText>
+                }
+            </MudTd>
+            <MudTd>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+                    @if (CanPromote && context.Role == CommunityRole.Member)
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="_isSaving"
+                                   OnClick="() => Promote(context)">@L["Promote to Admin"]</MudButton>
+                    }
+                    @if (CanPromote && context.Role == CommunityRole.Admin)
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="_isSaving"
+                                   OnClick="() => OpenEditPermissions(context)">@L["Edit Permissions"]</MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Text" Disabled="_isSaving"
+                                   OnClick="() => Demote(context)">@L["Demote"]</MudButton>
+                    }
+                    @if (_myRole?.Role == CommunityRole.Creator && context.Role is CommunityRole.Member or CommunityRole.Admin)
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" Disabled="_isSaving"
+                                   OnClick="() => Transfer(context)">@L["Make Creator"]</MudButton>
+                    }
+                    @if (CanManageUsers && context.Role is CommunityRole.Member or CommunityRole.Admin)
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error" Disabled="_isSaving"
+                                   OnClick="() => Ban(context)">@L["Ban"]</MudButton>
+                    }
+                    @if (CanManageUsers && context.Role == CommunityRole.Banned)
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="_isSaving"
+                                   OnClick="() => Unban(context)">@L["Unban"]</MudButton>
+                    }
+                </div>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    @if (_myRole?.Role == CommunityRole.Creator)
+    {
+        <MudText Typo="Typo.h5" Class="mb-2">@L["Default Admin Permissions"]</MudText>
+        <MudText Typo="Typo.caption">@L["Applied when a member is promoted; each admin's set can be tuned individually."]</MudText>
+        <div class="mb-4">
+            @foreach (var permission in ManageablePermissions)
+            {
+                <MudSwitch T="bool" Color="Color.Primary"
+                           Value="@_defaultAdminPermissions.HasFlag(permission)"
+                           ValueChanged="@(value => ToggleDefaultPermission(permission, value))">@PermissionLabel(permission)</MudSwitch>
+            }
+        </div>
+
+        <MudText Typo="Typo.h5" Class="mb-2">@L["Community Settings"]</MudText>
+        <MudRadioGroup T="CommunityPrivacyType" Value="_privacy" ValueChanged="OnPrivacyChanged">
+            <MudRadio Value="@CommunityPrivacyType.Public" Color="Color.Primary">@L["Public"]</MudRadio>
+            <MudRadio Value="@CommunityPrivacyType.PublicWithCode" Color="Color.Primary">@L["Invite Required"]</MudRadio>
+            <MudRadio Value="@CommunityPrivacyType.Private" Color="Color.Primary">@L["Private"]</MudRadio>
+        </MudRadioGroup>
+        <MudTextField T="string" Label="@L["Default notification language (culture code)"]" @bind-Value="_language"
+                      Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Save"
+                      OnAdornmentClick="SaveLanguage" Class="mt-2" Style="max-width:360px"/>
+
+        <div class="mt-6">
+            <MudButton Color="Color.Error" Variant="Variant.Outlined" Disabled="_isSaving"
+                       StartIcon="@Icons.Material.Filled.DeleteForever" OnClick="() => _showDelete = true">
+                @L["Delete Community"]
+            </MudButton>
+        </div>
+    }
+}
+
+<MudDialog @bind-Visible="_showEditPermissions">
+    <DialogContent>
+        @if (_editTarget != null)
+        {
+            <MudText Typo="Typo.h6" Class="mb-2">@((string)_editTarget.Name)</MudText>
+            @foreach (var permission in ManageablePermissions)
+            {
+                <MudSwitch T="bool" Color="Color.Primary" Value="@_editPermissions.HasFlag(permission)"
+                           ValueChanged="@(value => ToggleEditPermission(permission, value))">@PermissionLabel(permission)</MudSwitch>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showEditPermissions = false">@L["Close"]</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_isSaving" OnClick="SavePermissions">@L["Save"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-Visible="_showDelete">
+    <DialogContent>
+        <MudText>@L["Delete this community and everything in it? This cannot be undone."]</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showDelete = false">@L["Close"]</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" Disabled="_isSaving" OnClick="Delete">@L["Delete Community"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager NavManager
+
+@code {
+    [Parameter, SupplyParameterFromQuery] public string? CommunityName { get; set; }
+
+    private bool _loading = true;
+    private bool _isSaving;
+    private Community? _community;
+    private CommunityRoleRecord? _myRole;
+    private CommunityMemberRecord[] _roster = Array.Empty<CommunityMemberRecord>();
+
+    private CommunityPermission _defaultAdminPermissions;
+    private CommunityPrivacyType _privacy;
+    private string _language = string.Empty;
+
+    private bool _showEditPermissions;
+    private CommunityMemberRecord? _editTarget;
+    private CommunityPermission _editPermissions;
+
+    private bool _showDelete;
+
+    private static readonly CommunityPermission[] ManageablePermissions =
+    {
+        CommunityPermission.ManageInviteLinks, CommunityPermission.PromoteAdmins,
+        CommunityPermission.ManageUsers, CommunityPermission.ManageChannelSubscriptions
+    };
+
+    private bool CanPromote => _myRole != null && _myRole.Permissions.HasFlag(CommunityPermission.PromoteAdmins);
+    private bool CanManageUsers => _myRole != null && _myRole.Permissions.HasFlag(CommunityPermission.ManageUsers);
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task Load()
+    {
+        _loading = true;
+        if (string.IsNullOrWhiteSpace(CommunityName))
+        {
+            _loading = false;
+            return;
+        }
+
+        try
+        {
+            _community = await Mediator.Send(new GetCommunityQuery(CommunityName));
+            _myRole = await Mediator.Send(new GetMyCommunityRoleQuery(CommunityName));
+            _roster = (await Mediator.Send(new GetCommunityRosterQuery(CommunityName)))
+                .OrderByDescending(m => m.Role).ThenBy(m => (string)m.Name).ToArray();
+            _defaultAdminPermissions = _community.DefaultAdminPermissions;
+            _privacy = _community.PrivacyType;
+            _language = _community.DefaultLanguage ?? string.Empty;
+        }
+        catch (CommunityNotFoundException)
+        {
+            _community = null;
+        }
+
+        _loading = false;
+    }
+
+    private async Task Dispatch(IRequest command, string errorMessage)
+    {
+        _isSaving = true;
+        try
+        {
+            await Mediator.Send(command);
+            await Load();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add(L[errorMessage].Value, Severity.Error);
+        }
+        _isSaving = false;
+    }
+
+    private Task Promote(CommunityMemberRecord member) =>
+        Dispatch(new PromoteMemberCommand(_community!.Name, member.UserId, _defaultAdminPermissions),
+            "Could not promote this member.");
+
+    private Task Demote(CommunityMemberRecord member) =>
+        Dispatch(new DemoteMemberCommand(_community!.Name, member.UserId), "Could not demote this admin.");
+
+    private Task Ban(CommunityMemberRecord member) =>
+        Dispatch(new BanMemberCommand(_community!.Name, member.UserId), "Could not ban this member.");
+
+    private Task Unban(CommunityMemberRecord member) =>
+        Dispatch(new UnbanMemberCommand(_community!.Name, member.UserId), "Could not unban this member.");
+
+    private Task Transfer(CommunityMemberRecord member) =>
+        Dispatch(new TransferCommunityOwnershipCommand(_community!.Name, member.UserId),
+            "Could not transfer the community.");
+
+    private void OpenEditPermissions(CommunityMemberRecord member)
+    {
+        _editTarget = member;
+        _editPermissions = member.Permissions;
+        _showEditPermissions = true;
+    }
+
+    private void ToggleEditPermission(CommunityPermission permission, bool on) =>
+        _editPermissions = on ? _editPermissions | permission : _editPermissions & ~permission;
+
+    private async Task SavePermissions()
+    {
+        if (_editTarget == null) return;
+        _showEditPermissions = false;
+        await Dispatch(new SetMemberPermissionsCommand(_community!.Name, _editTarget.UserId, _editPermissions),
+            "Could not update permissions.");
+    }
+
+    private async Task ToggleDefaultPermission(CommunityPermission permission, bool on)
+    {
+        _defaultAdminPermissions = on ? _defaultAdminPermissions | permission : _defaultAdminPermissions & ~permission;
+        await Dispatch(new SetDefaultAdminPermissionsCommand(_community!.Name, _defaultAdminPermissions),
+            "Could not update default permissions.");
+    }
+
+    private Task OnPrivacyChanged(CommunityPrivacyType privacy)
+    {
+        _privacy = privacy;
+        return Dispatch(new SetCommunityPrivacyCommand(_community!.Name, privacy), "Could not change privacy.");
+    }
+
+    private Task SaveLanguage() =>
+        Dispatch(new SetCommunityLanguageCommand(_community!.Name,
+            string.IsNullOrWhiteSpace(_language) ? null : _language.Trim()), "Could not set the language.");
+
+    private async Task Delete()
+    {
+        _showDelete = false;
+        _isSaving = true;
+        try
+        {
+            await Mediator.Send(new DeleteCommunityCommand(_community!.Name));
+            NavManager.NavigateTo("/Communities");
+        }
+        catch (Exception)
+        {
+            Snackbar.Add(L["Could not delete the community."].Value, Severity.Error);
+            _isSaving = false;
+        }
+    }
+
+    private Color RoleColor(CommunityRole role) => role switch
+    {
+        CommunityRole.Creator => Color.Warning,
+        CommunityRole.Admin => Color.Info,
+        CommunityRole.Banned => Color.Error,
+        _ => Color.Default
+    };
+
+    private string RoleLabel(CommunityRole role) => role switch
+    {
+        CommunityRole.Creator => L["Creator"].Value,
+        CommunityRole.Admin => L["Admin"].Value,
+        CommunityRole.Banned => L["Banned"].Value,
+        _ => L["Member"].Value
+    };
+
+    private string PermissionLabel(CommunityPermission permission) => permission switch
+    {
+        CommunityPermission.ManageInviteLinks => L["Manage invite links"].Value,
+        CommunityPermission.PromoteAdmins => L["Promote other admins"].Value,
+        CommunityPermission.ManageUsers => L["Manage users (ban/unban)"].Value,
+        CommunityPermission.ManageChannelSubscriptions => L["Manage channel subscriptions"].Value,
+        _ => permission.ToString()
+    };
+
+    private string PermissionSummary(CommunityPermission permissions) =>
+        string.Join(" · ", ManageablePermissions.Where(p => permissions.HasFlag(p)).Select(PermissionLabel));
+}
