@@ -37,7 +37,9 @@ flips the model:
 | Re-clear gap | *Passed in an in-scope mix, no pass in the target mix* — promoted to prominent placement while the Phoenix 2 transition is hot; demotes to the drawer later. |
 | Popularity | Site score counts drive the sort (all mixes); official mirror rank renders as a badge when present (display-only, never a filter). |
 | Default sort | **Level descending**, community-difficulty tiebreak within a level. |
-| Sorts | Level · community difficulty · popularity · pass rate · newest content (debut era) · level change · name · BPM · NPS · duration · my grade · my recent. |
+| Sorts | Level · community difficulty · popularity · pass rate · newest content (debut era) · name · BPM · NPS · duration · my grade · my recent. **Level Change left the sort menu** (owner call — rarely useful live); it survives as an export column and the Rerated Up/Down drawer filters stay. |
+| Card display | Fixed core card + a small curated **Display switch set** in Comfortable (the tier-lists idiom: step artist, duration, note count). **The active sort key always auto-surfaces on the card/table and cannot be hidden** — sorting by an invisible value is impossible by construction; the sort menu never greys out. Table shows the full fact set with the sort column highlighted. No column pickers anywhere on the page. |
+| Export | Toolbar **⤓ Export** button → dialog: column picker over the full inventory (this is where column freedom lives), **Group by chart vs one row per chart + mix** shape toggle (the flat spreadsheet shape's home; identical in single-mix scope), downloads a CSV of the **entire filtered set** via an endpoint reusing the page's query-string contract. Column picks persist as a UiSetting; My columns signed-in only; stable English headers (convenience surface, outside the versioned `api/*` contract); Excel formula-injection hygiene on values. |
 | Dropped | Has-video, recently-added (needs version/date backfill the owner defers), letter-grade percentiles, single-select level (→ range), the `/{userId}/Charts` share view, UCS (separate rethink). |
 | Nulls | Facets with gappy coverage (NPS, badges, BPM on legacy) silently exclude unmatched charts. |
 | Rendering | Interactive circuit page. Load state from the query string, filter live without reloads, write state back via the history interop (the PR #164 pattern — no programmatic `NavigateTo` for filter state). SSR/SEO facets are explicitly not v1. |
@@ -71,6 +73,11 @@ pre-Exceed mixes.
   interop. The old page's param names (`Difficulty`, `ChartType`, `SongName`, `SongType`,
   `SongArtist`, `ScoreState`, `SavedCharts`) are honored as read-time aliases so shared
   links keep working; the page emits only the new names.
+- **Export**: the dialog (shape toggle + grouped column picker + filename preview) and a
+  UI-support controller endpoint (house pattern: culture/sitemap — not under `api/*`)
+  that accepts the page's query-string filters plus `columns` and `shape`, dispatches the
+  unpaged search, and streams the CSV. Anonymous callers get content/community columns;
+  My columns require the signed-in user.
 - **Quick record**: extract the record body of
   `Components/HomeWidgets/QuickRecordWidget.razor` into a shared `RecordScoreForm`
   component consumed by both the widget (behavior unchanged) and the SRP's ✎ dialog.
@@ -107,7 +114,8 @@ references.**
      pass rate, PG).
   3. User facets when signed in: `IScoreReader` best-scores per family; saved-lists arrive
      from the page as `RestrictToChartIds` (Catalog stays agnostic of list storage).
-  4. Sort, tiebreak, page slice.
+  4. Sort, tiebreak, page slice. An unpaged path serves the CSV export — bounded by
+     catalog size (~25k identity rows worst case), so no streaming gymnastics needed.
 - **Caching**: community-wide dictionaries (per mix: aggregates, tier entries, scoring
   levels, badge index) in `IMemoryCache`, expiring after the nightly analytics chain like
   `ChartVerdictHandler` (13:00 UTC). User reads are per-request, never cached cross-user.
@@ -156,11 +164,12 @@ Each commit leaves all fast suites green; integration/E2E green at their touchpo
 | C6 | Page skeleton: rebuilt `/Charts`, core bar, Comfortable cards, paging, URL contract with old-name aliases; old page internals deleted + bUnit | Presentation |
 | C7 | All Mixes: scope toggle, grouped identity cards (span/rerate/re-clear/cut), linked-mix VDP resolution + bUnit | Presentation |
 | C8 | Drawer + sort menu + applied chips + enum facet counts + bUnit | Presentation |
-| C9 | Densities: Compact + Table + `Density__Charts` persistence + bUnit | Presentation |
-| C10 | Quick record: `RecordScoreForm` extraction (widget pinned unchanged), ✎ dialog, in-place overlay update + bUnit both consumers | Presentation |
-| C11 | Official-rank badges (page-side), desktop nav promotion | Presentation |
-| C12 | Localization ×9 for all new keys incl. badge display names | Presentation |
-| C13 | E2E fact (URL round-trip + card → VDP) + docs sweep (ARCHITECTURE page table; UX-GUIDELINES if reviewers judge the card a new shared pattern) | tests/docs |
+| C9 | Export: CSV endpoint reusing the query-string contract + dialog (column picker, shape toggle, UiSetting persistence, hygiene) + bUnit | Presentation |
+| C10 | Densities: Compact + Table + `Density__Charts` persistence + bUnit | Presentation |
+| C11 | Quick record: `RecordScoreForm` extraction (widget pinned unchanged), ✎ dialog, in-place overlay update + bUnit both consumers | Presentation |
+| C12 | Official-rank badges (page-side), desktop nav promotion | Presentation |
+| C13 | Localization ×9 for all new keys incl. badge display names | Presentation |
+| C14 | E2E fact (URL round-trip + card → VDP) + docs sweep (ARCHITECTURE page table; UX-GUIDELINES if reviewers judge the card a new shared pattern) | tests/docs |
 
 No new scheduled jobs, no migrations expected, no post-deploy owner presses.
 
@@ -172,6 +181,9 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
   facets get no counts (that's where count cost hides).
 - **Old-URL aliases**: read-time only; if a legacy param combination has no new-model
   equivalent it is dropped silently.
+- **Export headers**: stable English by design (community tools will parse them), but the
+  endpoint is a convenience surface — explicitly outside the `Tests.Api` wire contract.
+  Values are formula-injection escaped (`=`, `+`, `-`, `@` starts).
 - **`/TierLists` XX divergence**: the SRP will show XX tiers vote-sourced while the tier
   page still runs XX through score-derived lenses. Owner decides separately whether to
   align the page.
