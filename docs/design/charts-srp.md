@@ -62,6 +62,31 @@ pre-Exceed mixes.
 | **Pass Rate** | Raw percentage of recorded scores that are passes. Not relative to anything. | `PassCount ÷ Count` from score aggregates |
 | **Scoring Level** | Score-derived decimal difficulty estimate; the modern-scope difficulty sort and the default-sort tiebreak. | `IChartScoringLevelRepository` |
 
+### The page stack (locked, toolbar rounds 3–5)
+
+Top to bottom, nothing else between the stack and the results:
+
+1. **Page header** — the page title plus the **Current Mix / All Mixes** segmented control.
+   Scope is page furniture, never among the filters; it is still a query-string key so
+   links carry it, and flipping it never touches the chip row, the theme, or the global
+   mix pill.
+2. **The query (chip row)** — one chip language: every applied filter renders as a small
+   clearable chip, and a **non-default sort joins them** as an accent-bordered `⇅` chip.
+   Clearing the sort chip returns to Level ↓; the default sort shows no chip. Clear-all
+   appears from two chips.
+3. **The answer (count line)** — result count on the left; controls on the right in fixed
+   order **Export → Comfortable/Compact/Table → Sort → Filters** (funnel icon whose badge
+   counts applied filters, sort excluded).
+4. Results.
+
+**There is no search input on the page.** "Search charts" was only ever a song-name
+string match, so it becomes the **Song name contains** filter in the drawer (contains, not
+the old exact match) and appears as an ordinary chip; the app-bar chart search remains the
+jump-to-a-specific-chart path. Consequently the drawer is the sole home of every filter —
+there are no promoted always-visible facet controls. In Table density the sort chip
+retires: the highlighted sorted column header carries the sort and clicking headers
+re-sorts; the `⇅` menu stays available.
+
 ## 3. Layer scope
 
 ### Presentation (`ScoreTracker.Web`)
@@ -71,18 +96,24 @@ pre-Exceed mixes.
   `ChartDetailsDialog` usage on this page, inline edit cells, the column/filter toggle
   UiSettings, and the dead vote plumbing (`GetChartRatingsQuery` full-table load,
   uncalled `UpdateDifficultyRating`) are deleted with it.
-- **Components** (one concept, one component): a search card (Comfortable), the compact
-  **jacket sticker tile** (the tier-list idiom verbatim: art tile + bubble + tier dot +
-  grade overlay, identity in the tooltip, the owner-locked state-border language — solid
-  green passed / dashed blue To-Do / dashed green other-mix), and a table renderer over
-  the same result model; the All-Mixes span line
-  (debut → latest · n mixes · level change) and re-clear/cut markers; the applied-chip row;
-  the filter drawer; the sort menu. Reuses `SongImage`, `DifficultyBubble` (modern image
-  bubbles; legacy CSS chips), `LetterGradeIcon`.
-- **URL contract**: every facet is a query-string key; init parses, changes push via history
-  interop. The old page's param names (`Difficulty`, `ChartType`, `SongName`, `SongType`,
-  `SongArtist`, `ScoreState`, `SavedCharts`) are honored as read-time aliases so shared
-  links keep working; the page emits only the new names.
+- **Components** (one concept, one component): the page header (title + scope segmented);
+  the **query chip** (one shared component rendering filter chips and the sort chip — the
+  page-stack rules above); the count line (count + the four icon controls, funnel badge);
+  the filter drawer (the sole home of every filter: grouped per the inventory,
+  contextually activated — Community Vote and Legacy Difficulty with legacy scope, co-op
+  player count with CoOp type — plus the Display switches); the sort menu; a search card
+  (Comfortable), the compact **jacket sticker tile** (the tier-list idiom verbatim: art
+  tile + bubble + tier dot + grade overlay, identity in the tooltip, the owner-locked
+  state-border language — solid green passed / dashed blue To-Do / dashed green
+  other-mix), and a table renderer (fixed columns, sorted-column highlight, header-click
+  sorting) over the same result model; the All-Mixes span line (debut → latest · n mixes ·
+  level change) and re-clear/cut markers. Reuses `SongImage`, `DifficultyBubble` (modern
+  image bubbles; legacy CSS chips), `LetterGradeIcon`.
+- **URL contract**: every facet, the sort, and the scope are query-string keys; init
+  parses, changes push via history interop. The old page's param names (`Difficulty`,
+  `ChartType`, `SongName`, `SongType`, `SongArtist`, `ScoreState`, `SavedCharts`) are
+  honored as read-time aliases so shared links keep working (`SongName`'s exact match maps
+  onto the contains filter); the page emits only the new names.
 - **Export**: the dialog (shape toggle + grouped column picker + filename preview) and a
   UI-support controller endpoint (house pattern: culture/sitemap — not under `api/*`)
   that accepts the page's query-string filters plus `columns` and `shape`, dispatches the
@@ -172,11 +203,11 @@ Each commit leaves all fast suites green; integration/E2E green at their touchpo
 | C3 | Catalog infrastructure: identity-grouped reads, badge/nps reads + integration tests | Infrastructure |
 | C4 | Search handler v1: content facets, mix scope, paging, sorts, cached community dictionaries (tier source fork incl. votes-for-legacy) + component tests | Application |
 | C5 | User facets: per-family score facets, re-clear gap, `RestrictToChartIds` + component tests | Application |
-| C6 | Page skeleton: rebuilt `/Charts`, core bar, Comfortable cards, paging, URL contract with old-name aliases; old page internals deleted + bUnit | Presentation |
-| C7 | All Mixes: scope toggle, grouped identity cards (span/rerate/re-clear/cut), linked-mix VDP resolution + bUnit | Presentation |
-| C8 | Drawer + sort menu + applied chips + enum facet counts + bUnit | Presentation |
+| C6 | Page skeleton: rebuilt `/Charts` on the locked stack (header + scope, query chips, count line + icon controls), Comfortable cards, paging, sort menu, minimal drawer (level range, type, score state, song-name-contains), URL contract with old-name aliases; old page internals deleted + bUnit | Presentation |
+| C7 | All Mixes: page-level scope wired, grouped identity cards (span/rerate/re-clear/cut), linked-mix VDP resolution + bUnit | Presentation |
+| C8 | Full drawer: complete facet inventory, contextual activation, enum facet counts, Display switches + bUnit | Presentation |
 | C9 | Export: CSV endpoint reusing the query-string contract + dialog (column picker, shape toggle, UiSetting persistence, hygiene) + bUnit | Presentation |
-| C10 | Densities: Compact + Table + `Density__Charts` persistence + bUnit | Presentation |
+| C10 | Densities: Compact sticker sheet + Table (header-click sorting, sorted-column highlight, sort-chip suppression) + `Density__Charts` persistence + bUnit | Presentation |
 | C11 | Quick record: `RecordScoreForm` extraction (widget pinned unchanged), ✎ dialog, in-place overlay update + bUnit both consumers | Presentation |
 | C12 | Official-rank badges (page-side), desktop nav promotion | Presentation |
 | C13 | Localization ×9 for all new keys incl. badge display names | Presentation |
@@ -198,5 +229,8 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
 - **`/TierLists` XX divergence**: the SRP will show XX tiers vote-sourced while the tier
   page still runs XX through score-derived lenses. Owner decides separately whether to
   align the page.
+- **Funnel-only filtering** (no promoted facet controls) trades a click of discoverability
+  for the clean stack — an accepted owner call. If analytics later show filter usage
+  cratering, the first lever is default-open drawer on first visit, not new chrome.
 - **`GetChartsQuery` consumers elsewhere** (randomizer, upload pages, admin) are untouched —
   the SRP query is additive; the old page's four full-table loads die with the page.
