@@ -5802,4 +5802,13 @@
   <data name="Tie" xml:space="preserve">
     <value>mrgl-mrgl</value>
   </data>
+  <data name="Everything it can do in your server" xml:space="preserve">
+    <value>Mrgl mrgl mrgl-grl!</value>
+  </data>
+  <data name="Per-channel language" xml:space="preserve">
+    <value>Grl-mrgl</value>
+  </data>
+  <data name="Speaks your language." xml:space="preserve">
+    <value>MRGL mrgl mrgl!</value>
+  </data>
 </root>

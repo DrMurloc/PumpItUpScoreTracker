@@ -5747,4 +5747,13 @@
   <data name="Tie" xml:space="preserve">
     <value>Empate</value>
   </data>
+  <data name="Everything it can do in your server" xml:space="preserve">
+    <value>Tudo o que ele faz no seu servidor</value>
+  </data>
+  <data name="Per-channel language" xml:space="preserve">
+    <value>Idioma por canal</value>
+  </data>
+  <data name="Speaks your language." xml:space="preserve">
+    <value>Fala o seu idioma.</value>
+  </data>
 </root>

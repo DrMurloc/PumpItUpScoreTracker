@@ -5876,4 +5876,13 @@
   <data name="Tie" xml:space="preserve">
     <value>引き分け</value>
   </data>
+  <data name="Everything it can do in your server" xml:space="preserve">
+    <value>サーバーでできるすべてのこと</value>
+  </data>
+  <data name="Per-channel language" xml:space="preserve">
+    <value>チャンネルごとの言語</value>
+  </data>
+  <data name="Speaks your language." xml:space="preserve">
+    <value>あなたの言語で話します。</value>
+  </data>
 </root>

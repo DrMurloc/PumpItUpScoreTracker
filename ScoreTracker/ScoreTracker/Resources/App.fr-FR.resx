@@ -5870,4 +5870,13 @@
   <data name="Tie" xml:space="preserve">
     <value>Égalité</value>
   </data>
+  <data name="Everything it can do in your server" xml:space="preserve">
+    <value>Tout ce qu'il sait faire sur votre serveur</value>
+  </data>
+  <data name="Per-channel language" xml:space="preserve">
+    <value>Langue par salon</value>
+  </data>
+  <data name="Speaks your language." xml:space="preserve">
+    <value>Il parle votre langue.</value>
+  </data>
 </root>

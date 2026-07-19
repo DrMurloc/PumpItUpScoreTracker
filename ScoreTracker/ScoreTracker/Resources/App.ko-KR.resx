@@ -5757,4 +5757,13 @@
   <data name="Tie" xml:space="preserve">
     <value>무승부</value>
   </data>
+  <data name="Everything it can do in your server" xml:space="preserve">
+    <value>서버에서 할 수 있는 모든 것</value>
+  </data>
+  <data name="Per-channel language" xml:space="preserve">
+    <value>채널별 언어</value>
+  </data>
+  <data name="Speaks your language." xml:space="preserve">
+    <value>여러분의 언어로 말합니다.</value>
+  </data>
 </root>

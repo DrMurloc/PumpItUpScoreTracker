@@ -104,6 +104,74 @@
 
     .communities-region-row:last-child { border-bottom: none; }
 
+    /* The bot-features dialog: monospace command names in the site accent, one icon square
+       per row, and the language callout — the mock's vocabulary, token-for-token. */
+    .bot-dialog-head { display: flex; align-items: center; gap: 12px; }
+
+    .bot-dialog-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: var(--brand-discord);
+        display: grid;
+        place-items: center;
+        color: var(--mix-ink);
+    }
+
+    .bot-dialog-section {
+        font-size: .74rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .1em;
+        color: var(--mix-ink-muted);
+        margin: 14px 0 8px;
+    }
+
+    .bot-dialog-row { display: flex; gap: 12px; padding: 8px 10px; border-radius: 10px; align-items: flex-start; }
+
+    .bot-dialog-row:hover { background: var(--mix-surface-muted); }
+
+    .bot-dialog-ico {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: var(--mix-surface-muted);
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        color: var(--mix-ink-muted);
+    }
+
+    .bot-dialog-cmd { font-family: ui-monospace, monospace; font-size: .82rem; font-weight: 700; color: var(--mix-primary); }
+
+    .bot-dialog-desc { color: var(--mix-ink-muted); font-size: .8rem; }
+
+    .bot-dialog-chip {
+        display: inline-block;
+        font-size: .62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        border-radius: 5px;
+        padding: 1px 6px;
+        background: color-mix(in srgb, var(--brand-discord) 18%, transparent);
+        color: var(--brand-discord);
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+
+    .bot-dialog-lang {
+        display: flex;
+        align-items: flex-start;
+        margin-top: 14px;
+        padding: 11px 13px;
+        border-radius: 10px;
+        background: var(--mix-surface-muted);
+        font-size: .8rem;
+        color: var(--mix-ink-muted);
+    }
+
+    .bot-dialog-lang b { color: var(--mix-ink); }
+
     .communities-range {
         font-size: 11.5px;
         color: var(--mix-ink-muted);
@@ -136,45 +204,87 @@
 
 <MudDialog @bind-Visible="_showBotFeatures" Options="new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }">
     <TitleContent>
-        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.SmartToy" Class="mr-2"/>@L["The PIU Scores bot"]</MudText>
+        <div class="bot-dialog-head">
+            <div class="bot-dialog-avatar"><MudIcon Icon="@Icons.Material.Filled.SmartToy"/></div>
+            <div>
+                <MudText Typo="Typo.h6" Style="line-height:1.1">@L["The PIU Scores bot"]</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["Everything it can do in your server"]</MudText>
+            </div>
+        </div>
     </TitleContent>
     <DialogContent>
-        <MudText Typo="Typo.subtitle2" Class="mb-1">@L["Feeds — register a channel once, the bot keeps it fed"]</MudText>
-        <MudList T="string" Dense="true" ReadOnly="true">
-            <MudListItem T="string" Icon="@Icons.Material.Filled.Groups">
-                <b>/piu register community</b> — @L["score session cards, new titles, and member announcements for your community"]
-            </MudListItem>
-            <MudListItem T="string" Icon="@Icons.Material.Filled.CalendarMonth">
-                <b>/piu register weekly</b> — @L["Weekly Charts results and each new lineup"]
-            </MudListItem>
-            <MudListItem T="string" Icon="@Icons.Material.Filled.Today">
-                <b>/piu register daily</b> — @L["Daily Step — yesterday's board and today's chart"]
-            </MudListItem>
-            <MudListItem T="string" Icon="@Icons.Material.Filled.Public">
-                <b>/piu register official</b> — @L["the official leaderboards' weekly digest"]
-            </MudListItem>
-        </MudList>
-        <MudText Typo="Typo.subtitle2" Class="mb-1 mt-3">@L["Commands — anyone in the server can use these"]</MudText>
-        <MudList T="string" Dense="true" ReadOnly="true">
-            <MudListItem T="string" Icon="@Icons.Material.Filled.Calculate">
-                <b>/piu calc</b> — @L["calculate a Phoenix score from a result screen"]
-            </MudListItem>
-            <MudListItem T="string" Icon="@Icons.Material.Filled.Search">
-                <b>/piu chart</b> — @L["find a chart and jump to its pages"]
-            </MudListItem>
-            <MudListItem T="string" Icon="@Icons.Material.Filled.Casino">
-                <b>/piu random</b> — @L["draw a random set of charts, presets included"]
-            </MudListItem>
-            <MudListItem T="string" Icon="@Icons.Material.Filled.TipsAndUpdates">
-                <b>/piu suggest</b> — @L["personalized chart suggestions, sent privately"]
-            </MudListItem>
-            <MudListItem T="string" Icon="@Icons.Material.Filled.Checklist">
-                <b>/piu feeds</b> — @L["see and manage what this channel is registered for"]
-            </MudListItem>
-        </MudList>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2 d-block">
-            @L["Every feed can post in its own language — pick one when registering; replies to commands follow each player's account language."]
-        </MudText>
+        <div class="bot-dialog-section">@L["Feeds — register a channel once, the bot keeps it fed"]</div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Groups" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu register community</span>
+                <span class="bot-dialog-chip">@L["Per-channel language"]</span>
+                <div class="bot-dialog-desc">@L["score session cards, new titles, and member announcements for your community"]</div>
+            </div>
+        </div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu register weekly</span>
+                <div class="bot-dialog-desc">@L["Weekly Charts results and each new lineup"]</div>
+            </div>
+        </div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Today" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu register daily</span>
+                <div class="bot-dialog-desc">@L["Daily Step — yesterday's board and today's chart"]</div>
+            </div>
+        </div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Public" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu register official</span>
+                <div class="bot-dialog-desc">@L["the official leaderboards' weekly digest"]</div>
+            </div>
+        </div>
+
+        <div class="bot-dialog-section">@L["Commands — anyone in the server can use these"]</div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Calculate" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu calc</span>
+                <div class="bot-dialog-desc">@L["calculate a Phoenix score from a result screen"]</div>
+            </div>
+        </div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu chart</span>
+                <div class="bot-dialog-desc">@L["find a chart and jump to its pages"]</div>
+            </div>
+        </div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Casino" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu random</span>
+                <div class="bot-dialog-desc">@L["draw a random set of charts, presets included"]</div>
+            </div>
+        </div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.TipsAndUpdates" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu suggest</span>
+                <div class="bot-dialog-desc">@L["personalized chart suggestions, sent privately"]</div>
+            </div>
+        </div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Checklist" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu feeds</span>
+                <div class="bot-dialog-desc">@L["see and manage what this channel is registered for"]</div>
+            </div>
+        </div>
+
+        <div class="bot-dialog-lang">
+            <MudIcon Icon="@Icons.Material.Filled.Translate" Size="Size.Small" Class="mr-2"/>
+            <span><b>@L["Speaks your language."]</b> @L["Every feed can post in its own language — pick one when registering; replies to commands follow each player's account language."]</span>
+        </div>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => _showBotFeatures = false">@L["Close"]</MudButton>
