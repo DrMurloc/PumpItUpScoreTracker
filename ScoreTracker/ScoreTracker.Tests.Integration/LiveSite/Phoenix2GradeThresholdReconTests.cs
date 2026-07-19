@@ -12,7 +12,7 @@ namespace ScoreTracker.Tests.Integration.LiveSite;
 ///     grade image (<c>/l_img/grade/{stem}.png</c>) next to each raw score, so pairing the two
 ///     across a busy board (which spans ~700k–1,000,000 in a single page) pins every grade
 ///     boundary the site is actually using. For each observed (score, site-grade) pair this
-///     also computes our own code's grade via <see cref="PhoenixScore.LetterGrade" /> and reports
+///     also computes our own code's grade via <see cref="PhoenixLetterGradeHelperMethods.LetterGradeFor" /> and reports
 ///     the min/max site score per grade plus every disagreement — that mismatch list is the
 ///     answer to "did the thresholds move, and to what". Read-only, login-gated, manual-run.
 /// </summary>
