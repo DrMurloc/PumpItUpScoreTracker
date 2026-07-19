@@ -4701,4 +4701,286 @@
   <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
     <value>조건에 맞는 최근 활약이 없어 역대 최고 기록과 비슷한 채보를 추천합니다.</value>
   </data>
+  <data name="A community with this name already exists." xml:space="preserve">
+    <value>이미 같은 이름의 커뮤니티가 있습니다.</value>
+  </data>
+  <data name="Accept invite &amp; join" xml:space="preserve">
+    <value>초대 수락 후 가입</value>
+  </data>
+  <data name="Applied when a member is promoted; each admin's set can be tuned individually." xml:space="preserve">
+    <value>멤버가 관리자로 승급될 때 적용됩니다. 각 관리자의 권한은 개별적으로 조정할 수 있습니다.</value>
+  </data>
+  <data name="Back to community" xml:space="preserve">
+    <value>커뮤니티로 돌아가기</value>
+  </data>
+  <data name="Ban" xml:space="preserve">
+    <value>차단</value>
+  </data>
+  <data name="Banned" xml:space="preserve">
+    <value>차단됨</value>
+  </data>
+  <data name="Browse Communities" xml:space="preserve">
+    <value>커뮤니티 둘러보기</value>
+  </data>
+  <data name="Browse regions" xml:space="preserve">
+    <value>지역 둘러보기</value>
+  </data>
+  <data name="By Chart" xml:space="preserve">
+    <value>채보별</value>
+  </data>
+  <data name="Charts you lose" xml:space="preserve">
+    <value>지고 있는 채보</value>
+  </data>
+  <data name="Charts you win" xml:space="preserve">
+    <value>이기고 있는 채보</value>
+  </data>
+  <data name="Clear Count" xml:space="preserve">
+    <value>클리어 수</value>
+  </data>
+  <data name="Community Name" xml:space="preserve">
+    <value>커뮤니티 이름</value>
+  </data>
+  <data name="Community Settings" xml:space="preserve">
+    <value>커뮤니티 설정</value>
+  </data>
+  <data name="Community was not found." xml:space="preserve">
+    <value>커뮤니티를 찾을 수 없습니다.</value>
+  </data>
+  <data name="Comp Lv" xml:space="preserve">
+    <value>경쟁 Lv</value>
+  </data>
+  <data name="Compare in folder" xml:space="preserve">
+    <value>폴더 내 비교</value>
+  </data>
+  <data name="Completion (you / them)" xml:space="preserve">
+    <value>완료율 (나 / 상대)</value>
+  </data>
+  <data name="Copy Invite Link" xml:space="preserve">
+    <value>초대 링크 복사</value>
+  </data>
+  <data name="Could not delete the community." xml:space="preserve">
+    <value>커뮤니티를 삭제할 수 없습니다.</value>
+  </data>
+  <data name="Create Community" xml:space="preserve">
+    <value>커뮤니티 만들기</value>
+  </data>
+  <data name="Create Invite Code" xml:space="preserve">
+    <value>초대 코드 생성</value>
+  </data>
+  <data name="Creator" xml:space="preserve">
+    <value>개설자</value>
+  </data>
+  <data name="Default Admin Permissions" xml:space="preserve">
+    <value>기본 관리자 권한</value>
+  </data>
+  <data name="Default notification language (culture code)" xml:space="preserve">
+    <value>기본 알림 언어 (문화권 코드)</value>
+  </data>
+  <data name="Delete Community" xml:space="preserve">
+    <value>커뮤니티 삭제</value>
+  </data>
+  <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
+    <value>이 커뮤니티와 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.</value>
+  </data>
+  <data name="Demote" xml:space="preserve">
+    <value>강등</value>
+  </data>
+  <data name="Difference" xml:space="preserve">
+    <value>차이</value>
+  </data>
+  <data name="Edit Permissions" xml:space="preserve">
+    <value>권한 수정</value>
+  </data>
+  <data name="Everyone who has gone public" xml:space="preserve">
+    <value>프로필을 공개한 모든 유저</value>
+  </data>
+  <data name="Explore" xml:space="preserve">
+    <value>둘러보기</value>
+  </data>
+  <data name="Folder Completion" xml:space="preserve">
+    <value>폴더 완료율</value>
+  </data>
+  <data name="Go Private" xml:space="preserve">
+    <value>비공개하기</value>
+  </data>
+  <data name="Go Public" xml:space="preserve">
+    <value>공개하기</value>
+  </data>
+  <data name="Highest Clear" xml:space="preserve">
+    <value>최고 클리어</value>
+  </data>
+  <data name="Highest Level" xml:space="preserve">
+    <value>최고 레벨</value>
+  </data>
+  <data name="I understand — join" xml:space="preserve">
+    <value>이해했습니다 — 가입</value>
+  </data>
+  <data name="Invite" xml:space="preserve">
+    <value>초대</value>
+  </data>
+  <data name="Invite Required" xml:space="preserve">
+    <value>초대 필요</value>
+  </data>
+  <data name="Join" xml:space="preserve">
+    <value>가입</value>
+  </data>
+  <data name="Leave" xml:space="preserve">
+    <value>탈퇴</value>
+  </data>
+  <data name="Lv {0}" xml:space="preserve">
+    <value>Lv {0}</value>
+  </data>
+  <data name="Make Creator" xml:space="preserve">
+    <value>개설자로 지정</value>
+  </data>
+  <data name="Manage" xml:space="preserve">
+    <value>관리</value>
+  </data>
+  <data name="Manage channel subscriptions" xml:space="preserve">
+    <value>채널 알림 관리</value>
+  </data>
+  <data name="Manage invite links" xml:space="preserve">
+    <value>초대 링크 관리</value>
+  </data>
+  <data name="Manage users (ban/unban)" xml:space="preserve">
+    <value>유저 관리 (차단/차단 해제)</value>
+  </data>
+  <data name="Member" xml:space="preserve">
+    <value>멤버</value>
+  </data>
+  <data name="Members" xml:space="preserve">
+    <value>멤버</value>
+  </data>
+  <data name="Must give the community a name." xml:space="preserve">
+    <value>커뮤니티 이름을 입력해주세요.</value>
+  </data>
+  <data name="No scores for the chart recorded in this community." xml:space="preserve">
+    <value>이 커뮤니티에는 해당 채보의 점수가 없습니다.</value>
+  </data>
+  <data name="No thanks" xml:space="preserve">
+    <value>괜찮습니다</value>
+  </data>
+  <data name="Official #{0}" xml:space="preserve">
+    <value>공식 {0}위</value>
+  </data>
+  <data name="Open Community" xml:space="preserve">
+    <value>커뮤니티 열기</value>
+  </data>
+  <data name="Open world board" xml:space="preserve">
+    <value>월드 리더보드 열기</value>
+  </data>
+  <data name="Pick a folder to compare your scores." xml:space="preserve">
+    <value>폴더를 선택하면 점수를 비교할 수 있습니다.</value>
+  </data>
+  <data name="Player was not found in this community." xml:space="preserve">
+    <value>이 커뮤니티에서 유저를 찾을 수 없습니다.</value>
+  </data>
+  <data name="Private" xml:space="preserve">
+    <value>비공개</value>
+  </data>
+  <data name="Promote other admins" xml:space="preserve">
+    <value>다른 관리자 승급</value>
+  </data>
+  <data name="Promote to Admin" xml:space="preserve">
+    <value>관리자로 승급</value>
+  </data>
+  <data name="Role" xml:space="preserve">
+    <value>역할</value>
+  </data>
+  <data name="Score average (you / them)" xml:space="preserve">
+    <value>평균 점수 (나 / 상대)</value>
+  </data>
+  <data name="Select a chart to see this community's leaderboard!" xml:space="preserve">
+    <value>채보를 선택하면 커뮤니티 리더보드를 볼 수 있습니다!</value>
+  </data>
+  <data name="Set your country on your account page to join a region." xml:space="preserve">
+    <value>계정 페이지에서 국가를 설정하면 지역에 가입됩니다.</value>
+  </data>
+  <data name="Show Regional Guests" xml:space="preserve">
+    <value>지역 게스트 표시</value>
+  </data>
+  <data name="Sign In" xml:space="preserve">
+    <value>로그인</value>
+  </data>
+  <data name="Sign in to accept this invite." xml:space="preserve">
+    <value>초대를 수락하려면 로그인해주세요.</value>
+  </data>
+  <data name="Tap a rating to expand the player's top charts." xml:space="preserve">
+    <value>레이팅을 누르면 유저의 상위 채보가 표시됩니다.</value>
+  </data>
+  <data name="The code may have been revoked, or the community no longer exists." xml:space="preserve">
+    <value>코드가 취소되었거나 커뮤니티가 더 이상 존재하지 않습니다.</value>
+  </data>
+  <data name="The roster is visible to everyone; management controls appear based on your role." xml:space="preserve">
+    <value>멤버 목록은 모두에게 표시됩니다. 관리 기능은 역할에 따라 표시됩니다.</value>
+  </data>
+  <data name="There was an error while joining the community" xml:space="preserve">
+    <value>커뮤니티 가입 중 오류가 발생했습니다</value>
+  </data>
+  <data name="There was an error while leaving the community" xml:space="preserve">
+    <value>커뮤니티 탈퇴 중 오류가 발생했습니다</value>
+  </data>
+  <data name="This invite code has expired. Ask a member for a new link." xml:space="preserve">
+    <value>초대 코드가 만료되었습니다. 멤버에게 새 링크를 요청해주세요.</value>
+  </data>
+  <data name="This invite link isn't valid." xml:space="preserve">
+    <value>유효하지 않은 초대 링크입니다.</value>
+  </data>
+  <data name="Unban" xml:space="preserve">
+    <value>차단 해제</value>
+  </data>
+  <data name="World" xml:space="preserve">
+    <value>World</value>
+  </data>
+  <data name="World and regions follow your account's country and public setting — no invites, no roles." xml:space="preserve">
+    <value>World와 지역은 계정의 국가 및 공개 설정을 따릅니다 — 초대나 역할이 없습니다.</value>
+  </data>
+  <data name="You are the Creator. Only you can transfer the community, delete it, change its privacy, set default admin permissions, and set the notification language." xml:space="preserve">
+    <value>당신은 개설자입니다. 커뮤니티 양도, 삭제, 공개 설정 변경, 기본 관리자 권한 및 알림 언어 설정은 개설자만 할 수 있습니다.</value>
+  </data>
+  <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
+    <value>아직 가입한 커뮤니티가 없습니다 — 아래에서 찾거나 직접 만들어보세요.</value>
+  </data>
+  <data name="You're already a member of this community." xml:space="preserve">
+    <value>이미 이 커뮤니티의 멤버입니다.</value>
+  </data>
+  <data name="You've been banned from this community and can't rejoin." xml:space="preserve">
+    <value>이 커뮤니티에서 차단되어 다시 가입할 수 없습니다.</value>
+  </data>
+  <data name="You've been invited to join this community." xml:space="preserve">
+    <value>이 커뮤니티에 초대되었습니다.</value>
+  </data>
+  <data name="Your Communities" xml:space="preserve">
+    <value>내 커뮤니티</value>
+  </data>
+  <data name="Your PUMBILITY" xml:space="preserve">
+    <value>내 PUMBILITY</value>
+  </data>
+  <data name="Your Region" xml:space="preserve">
+    <value>내 지역</value>
+  </data>
+  <data name="Your groups, your region, and the world." xml:space="preserve">
+    <value>나의 그룹, 나의 지역, 그리고 전 세계까지.</value>
+  </data>
+  <data name="Your profile is private. Joining this community makes your scores visible to everyone in it — on its leaderboards, player pages, and comparisons. You'll stay hidden everywhere else." xml:space="preserve">
+    <value>프로필이 비공개입니다. 이 커뮤니티에 가입하면 리더보드, 유저 페이지, 비교 화면에서 커뮤니티의 모든 멤버에게 점수가 공개됩니다. 다른 곳에서는 계속 비공개로 유지됩니다.</value>
+  </data>
+  <data name="Your scores will be visible" xml:space="preserve">
+    <value>점수가 공개됩니다</value>
+  </data>
+  <data name="all permissions" xml:space="preserve">
+    <value>모든 권한</value>
+  </data>
+  <data name="no pass" xml:space="preserve">
+    <value>미클리어</value>
+  </data>
+  <data name="{0} members" xml:space="preserve">
+    <value>멤버 {0}명</value>
+  </data>
+  <data name="{0} top-board charts" xml:space="preserve">
+    <value>랭킹 진입 채보 {0}개</value>
+  </data>
+  <data name="{0}y old" xml:space="preserve">
+    <value>{0}년 전</value>
+  </data>
 </root>
