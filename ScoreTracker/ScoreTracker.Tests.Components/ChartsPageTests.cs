@@ -52,6 +52,12 @@ public sealed class ChartsPageTests : ComponentTestBase
                 new[] { MakeResult("District 1", 21), MakeResult("Bee", 23) }, 2));
         _mediator.Setup(m => m.Send(It.IsAny<GetSavedChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<SavedChartRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetSearchBadgesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartBadge>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetSearchArtistsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<string>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetSearchStepArtistsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<string>());
         Services.AddSingleton(_mediator.Object);
         Services.AddScoped<ChartScoringLevels>();
         Services.AddLogging();
@@ -179,6 +185,81 @@ public sealed class ChartsPageTests : ComponentTestBase
             Assert.NotNull(_lastQuery?.UserId);
             Assert.NotEmpty(cut.FindAll(".srp-card-my"));
         });
+    }
+
+    [Fact]
+    public void TheBadgeCloudTogglesGranularBadgesWithResultCounts()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetSearchBadgesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ChartBadge("staggered_bracket", "Staggered Brackets", SkillCategory.Bracket)
+            });
+        _mediator.Setup(m => m.Send(It.IsAny<GetSearchArtistsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<string>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetSearchStepArtistsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<string>());
+        _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<ChartSearchResultPage>, CancellationToken>((q, _) => _lastQuery = (SearchChartsQuery)q)
+            .ReturnsAsync(() => new ChartSearchResultPage(new[] { MakeResult("District 1", 21) }, 1,
+                new ChartSearchFacetCounts(
+                    new Dictionary<ChartType, int>(),
+                    new Dictionary<SongType, int>(),
+                    new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["staggered_bracket"] = 7 },
+                    new Dictionary<TierListCategory, int>(),
+                    new Dictionary<TierListCategory, int>(),
+                    new Dictionary<TierListCategory, int>())));
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-card")));
+
+        cut.Find("button[aria-label=Filters]").Click();
+        cut.WaitForAssertion(() => Assert.Contains("Staggered Brackets (7)", cut.Markup));
+
+        cut.Find(".srp-badge-opt").Click();
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(new[] { "staggered_bracket" }, _lastQuery!.Badges);
+            Assert.Contains("Staggered Brackets", cut.Find(".srp-chip-row").TextContent);
+        });
+    }
+
+    [Fact]
+    public void CommunityVoteAndMixScopeGroupsOnlyActivateWhenLegacyIsInScope()
+    {
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Filters]").Click();
+
+        // Pure Phoenix scope: no vote facet, no mix-scope group.
+        Assert.DoesNotContain("Community Vote", cut.Markup);
+        Assert.DoesNotContain("Rerated up", cut.Markup);
+
+        cut.FindAll("button").Single(b => b.TextContent.Trim() == "All Mixes").Click();
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Contains("Community Vote", cut.Markup);
+            Assert.Contains("Rerated up", cut.Markup);
+        });
+    }
+
+    [Fact]
+    public void DisplaySwitchesPersistWithoutRefiltering()
+    {
+        SignIn();
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        var sendsBefore = _mediator.Invocations.Count(i =>
+            i.Arguments.FirstOrDefault() is SearchChartsQuery);
+
+        cut.Find("button[aria-label=Filters]").Click();
+        var stepArtistSwitch = cut.FindAll("input[type=checkbox]")
+            .First(i => i.Closest("label")!.TextContent.Contains("Step Artist"));
+        stepArtistSwitch.Change(true);
+
+        cut.WaitForAssertion(() => _uiSettings.Verify(u =>
+            u.SetSetting("Charts__Display__StepArtist", true.ToString(), It.IsAny<CancellationToken>()), Times.Once));
+        Assert.Equal(sendsBefore, _mediator.Invocations.Count(i =>
+            i.Arguments.FirstOrDefault() is SearchChartsQuery));
     }
 
     [Fact]

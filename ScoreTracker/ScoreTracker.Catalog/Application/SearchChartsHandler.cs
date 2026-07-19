@@ -76,7 +76,30 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
             ? sorted
             : sorted.Skip((Math.Max(1, request.Page.Value) - 1) * request.PageSize).Take(request.PageSize).ToList();
 
-        return new ChartSearchResultPage(page, total);
+        return new ChartSearchResultPage(page, total,
+            request.IncludeFacetCounts ? CountFacets(rows) : null);
+    }
+
+    /// <summary>How the current filtered set distributes per enum facet value (drawer annotations).</summary>
+    private static ChartSearchFacetCounts CountFacets(IReadOnlyList<ChartSearchResult> rows)
+    {
+        return new ChartSearchFacetCounts(
+            rows.GroupBy(r => r.Chart.Type).ToDictionary(g => g.Key, g => g.Count()),
+            rows.GroupBy(r => r.Chart.Song.Type).ToDictionary(g => g.Key, g => g.Count()),
+            rows.SelectMany(r => r.Badges.Select(b => b.Key))
+                .GroupBy(k => k, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase),
+            CountCategories(rows, r => r.PassDifficulty),
+            CountCategories(rows, r => r.ScoreDifficulty),
+            CountCategories(rows, r => r.CommunityVote));
+    }
+
+    private static IReadOnlyDictionary<TierListCategory, int> CountCategories(
+        IEnumerable<ChartSearchResult> rows, Func<ChartSearchResult, TierListCategory?> category)
+    {
+        return rows.Where(r => category(r) != null)
+            .GroupBy(r => category(r)!.Value)
+            .ToDictionary(g => g.Key, g => g.Count());
     }
 
     private async Task<IReadOnlyList<MixEnum>> ResolveScope(SearchChartsQuery request,

@@ -534,6 +534,48 @@ public sealed class SearchChartsHandlerTests
     }
 
     [Fact]
+    public async Task FacetCountsDescribeTheFilteredSetForEnumFacets()
+    {
+        var single = Guid.NewGuid();
+        var doubles = Guid.NewGuid();
+        var excluded = Guid.NewGuid();
+        SeedMix(MixEnum.Phoenix,
+            MakeChart(single, MixEnum.Phoenix, "S Chart", 20, ChartType.Single),
+            MakeChart(doubles, MixEnum.Phoenix, "D Chart", 20),
+            MakeChart(excluded, MixEnum.Phoenix, "Low", 12));
+        _metrics.Setup(m => m.GetMetricsByChart("PiuCenter", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>
+            {
+                [single] = new[] { new ChartSkillMetric(single, "top3:drill", 1m, null) }
+            });
+
+        var result = await BuildHandler().Handle(new SearchChartsQuery
+        {
+            Mix = MixEnum.Phoenix,
+            LevelMin = 20,
+            IncludeFacetCounts = true
+        }, CancellationToken.None);
+
+        Assert.NotNull(result.FacetCounts);
+        Assert.Equal(1, result.FacetCounts!.Types[ChartType.Single]);
+        Assert.Equal(1, result.FacetCounts.Types[ChartType.Double]);
+        Assert.Equal(1, result.FacetCounts.Badges["drill"]);
+        // The level-12 chart is filtered out, so it never counts.
+        Assert.Equal(2, result.FacetCounts.SongTypes[SongType.Arcade]);
+    }
+
+    [Fact]
+    public async Task FacetCountsAreSkippedUnlessAskedFor()
+    {
+        SeedMix(MixEnum.Phoenix, MakeChart(Guid.NewGuid(), MixEnum.Phoenix, "Any", 20));
+
+        var result = await BuildHandler().Handle(new SearchChartsQuery { Mix = MixEnum.Phoenix },
+            CancellationToken.None);
+
+        Assert.Null(result.FacetCounts);
+    }
+
+    [Fact]
     public async Task CommunityBundlesAreCachedBetweenSearches()
     {
         SeedMix(MixEnum.Phoenix, MakeChart(Guid.NewGuid(), MixEnum.Phoenix, "Cached", 20));

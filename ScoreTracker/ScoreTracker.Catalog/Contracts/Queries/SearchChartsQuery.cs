@@ -81,4 +81,7 @@ public sealed record SearchChartsQuery : IQuery<ChartSearchResultPage>
     public int? Page { get; init; } = 1;
 
     public int PageSize { get; init; } = 24;
+
+    /// <summary>Fill <see cref="ChartSearchResultPage.FacetCounts" /> (the drawer asks; the export never does).</summary>
+    public bool IncludeFacetCounts { get; init; }
 }

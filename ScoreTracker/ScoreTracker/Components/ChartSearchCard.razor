@@ -30,7 +30,13 @@
                 <span class="srp-card-songtype">@L["Short Cut"]</span>
             }
         </div>
-        <div class="srp-card-artist">@Result.Chart.Song.Artist</div>
+        <div class="srp-card-artist">
+            @Result.Chart.Song.Artist
+            @if (ShowStepArtist && Result.Chart.StepArtist != null)
+            {
+                <span class="srp-card-stepartist"> · @Result.Chart.StepArtist</span>
+            }
+        </div>
         @if (Result.Appearances.Count > 1)
         {
             @* The identity span: debut → latest, mix count, and the Exceed-onward rerate
@@ -95,6 +101,10 @@
             {
                 <span>@L["{0} scores", Result.ScoreCount]</span>
             }
+            @if (ShowNoteCount && Result.Chart.NoteCount != null)
+            {
+                <span>@L["{0} notes", Result.Chart.NoteCount.Value.ToString("N0")]</span>
+            }
         </div>
     </div>
     @if (ShowMyState)
@@ -158,6 +168,10 @@
 
     [Parameter] public bool ShowMyState { get; set; }
     [Parameter] public bool ShowActions { get; set; }
+
+    // The drawer's curated Display switches (the tier-lists idiom — never a column picker).
+    [Parameter] public bool ShowStepArtist { get; set; }
+    [Parameter] public bool ShowNoteCount { get; set; }
     [Parameter] public bool IsFavorite { get; set; }
     [Parameter] public bool IsToDo { get; set; }
     [Parameter] public EventCallback<Guid> OnToggleFavorite { get; set; }

@@ -5,7 +5,22 @@ using ScoreTracker.SharedKernel.Models;
 namespace ScoreTracker.Catalog.Contracts;
 
 [ExcludeFromCodeCoverage]
-public sealed record ChartSearchResultPage(IReadOnlyList<ChartSearchResult> Results, int TotalCount);
+public sealed record ChartSearchResultPage(IReadOnlyList<ChartSearchResult> Results, int TotalCount,
+    ChartSearchFacetCounts? FacetCounts = null);
+
+/// <summary>
+///     Result-set distributions for the enum facets (the drawer's count annotations):
+///     how the CURRENT filtered set breaks down per value. Free-text facets never get
+///     counts — that is where count cost hides.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ChartSearchFacetCounts(
+    IReadOnlyDictionary<ChartType, int> Types,
+    IReadOnlyDictionary<SongType, int> SongTypes,
+    IReadOnlyDictionary<string, int> Badges,
+    IReadOnlyDictionary<TierListCategory, int> PassDifficulty,
+    IReadOnlyDictionary<TierListCategory, int> ScoreDifficulty,
+    IReadOnlyDictionary<TierListCategory, int> CommunityVote);
 
 /// <summary>
 ///     ScoringLevel is the difficulty-signal sort: score-derived scoring level for

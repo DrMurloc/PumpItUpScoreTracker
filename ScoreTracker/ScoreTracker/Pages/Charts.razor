@@ -10,6 +10,7 @@
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 <PageTitle>@L["Charts"]</PageTitle>
 
@@ -65,7 +66,7 @@
     <MudTooltip Text="@L["Filters"]">
         <MudBadge Content="ActiveFilterCount" Visible="ActiveFilterCount > 0" Color="Color.Primary" Overlap="true">
             <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Variant="Variant.Outlined"
-                           OnClick="() => _filtersOpen = true" aria-label="@L["Filters"]"></MudIconButton>
+                           OnClick="OpenFilters" aria-label="@L["Filters"]"></MudIconButton>
         </MudBadge>
     </MudTooltip>
 </div>
@@ -85,6 +86,8 @@ else
             <ChartSearchCard Result="result" LeadFact="@LeadFact(result)"
                              ShowMyState="CurrentUser.IsLoggedIn"
                              ShowActions="CurrentUser.IsLoggedIn"
+                             ShowStepArtist="_showStepArtist"
+                             ShowNoteCount="_showNoteCount"
                              IsFavorite="_favoriteCharts.Contains(result.Chart.Id)"
                              IsToDo="_todoCharts.Contains(result.Chart.Id)"
                              OnToggleFavorite="ToggleFavorite"
@@ -101,7 +104,7 @@ else
 }
 
 <MudLayout>
-    <MudDrawer @bind-Open="_filtersOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="340px">
+    <MudDrawer @bind-Open="_filtersOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="360px">
         <div class="srp-drawer">
             <div class="srp-drawer-head">
                 <MudText Typo="Typo.h6">@L["Filters"]</MudText>
@@ -109,6 +112,8 @@ else
                 <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="() => _filtersOpen = false"
                                aria-label="@L["Close"]"></MudIconButton>
             </div>
+
+            <MudText Typo="Typo.overline">@L["Content"]</MudText>
             <MudTextField T="string" Value="_songNameContains" ValueChanged="SetSongNameContains"
                           Label="@L["Song name contains"]" Clearable="true"
                           Variant="Variant.Outlined" Margin="Margin.Dense"></MudTextField>
@@ -125,11 +130,139 @@ else
                        Margin="Margin.Dense" Clearable="true">
                 @foreach (var type in Enum.GetValues<ChartType>())
                 {
-                    <MudSelectItem T="string" Value="@type.ToString()">@type.GetShortHand()</MudSelectItem>
+                    <MudSelectItem T="string" Value="@type.ToString()">@type.GetShortHand()@CountSuffix(_facetCounts?.Types, type)</MudSelectItem>
                 }
             </MudSelect>
+            <MudSelect T="string" MultiSelection="true" SelectedValues="_songTypes.Select(t => t.ToString())"
+                       SelectedValuesChanged="SetSongTypes" Label="@L["Song Type"]" Variant="Variant.Outlined"
+                       Margin="Margin.Dense" Clearable="true">
+                @foreach (var type in Enum.GetValues<SongType>())
+                {
+                    <MudSelectItem T="string" Value="@type.ToString()">@type.ToString()@CountSuffix(_facetCounts?.SongTypes, type)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudAutocomplete T="string" Value="@null" ValueChanged="AddArtist" Label="@L["Song Artist"]"
+                             SearchFunc="SearchArtists" Clearable="true" CoerceText="false" CoerceValue="false"
+                             Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true"></MudAutocomplete>
+            <MudAutocomplete T="string" Value="@null" ValueChanged="AddStepArtist" Label="@L["Step Artist"]"
+                             SearchFunc="SearchStepArtists" Clearable="true" CoerceText="false" CoerceValue="false"
+                             Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true"></MudAutocomplete>
+            <div class="srp-drawer-range">
+                <MudNumericField T="decimal?" Value="_bpmMin" ValueChanged="SetBpmMin" Label="@L["BPM from"]"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
+                <MudNumericField T="decimal?" Value="_bpmMax" ValueChanged="SetBpmMax" Label="@L["BPM to"]"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
+            </div>
+            <div class="srp-drawer-range">
+                <MudNumericField T="decimal?" Value="_npsMin" ValueChanged="SetNpsMin" Label="@L["NPS from"]"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
+                <MudNumericField T="decimal?" Value="_npsMax" ValueChanged="SetNpsMax" Label="@L["NPS to"]"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
+            </div>
+            <div class="srp-drawer-range">
+                <MudNumericField T="int?" Value="_noteMin" ValueChanged="SetNoteMin" Label="@L["Notes from"]"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
+                <MudNumericField T="int?" Value="_noteMax" ValueChanged="SetNoteMax" Label="@L["Notes to"]"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
+            </div>
+
+            <MudText Typo="Typo.overline">@L["Skills"] <span class="srp-drawer-sub">@L["highlighted only"]</span></MudText>
+            <div class="srp-badge-cloud">
+                @foreach (var badge in _badgeVocabulary)
+                {
+                    var selected = _badges.Contains(badge.Key, StringComparer.OrdinalIgnoreCase);
+                    <span class="srp-badge-opt tier-chart-card-skill @(badge.Category == null ? "" : $"skillcat-{badge.Category.Value.ToString().ToLowerInvariant()}") @(selected ? "srp-badge-opt-sel" : "")"
+                          role="button" tabindex="0" @onclick="() => ToggleBadge(badge.Key)">
+                        @L[badge.DisplayName]@BadgeCount(badge.Key)
+                    </span>
+                }
+            </div>
+
+            @if (_allMixes)
+            {
+                <MudText Typo="Typo.overline">@L["Mix scope"]</MudText>
+                <MudSelect T="string" MultiSelection="true" SelectedValues="_debutMixes.Select(m => m.ToString())"
+                           SelectedValuesChanged="SetDebutMixes" Label="@L["Debut mix"]" Variant="Variant.Outlined"
+                           Margin="Margin.Dense" Clearable="true">
+                    @foreach (var mix in AllKnownMixes)
+                    {
+                        <MudSelectItem T="string" Value="@mix.ToString()">@mix.GetName()</MudSelectItem>
+                    }
+                </MudSelect>
+                <div class="srp-drawer-range">
+                    <MudSelect T="MixEnum?" Value="_availableIn" ValueChanged="SetAvailableIn" Label="@L["Available in"]"
+                               Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                        @foreach (var mix in AllKnownMixes)
+                        {
+                            <MudSelectItem T="MixEnum?" Value="@((MixEnum?)mix)">@mix.GetName()</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect T="MixEnum?" Value="_notAvailableIn" ValueChanged="SetNotAvailableIn" Label="@L["Not available in"]"
+                               Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                        @foreach (var mix in AllKnownMixes)
+                        {
+                            <MudSelectItem T="MixEnum?" Value="@((MixEnum?)mix)">@mix.GetName()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+                <div class="srp-drawer-switches">
+                    <MudSwitch T="bool" Value="_reratedUp" ValueChanged="SetReratedUp" Color="Color.Primary"
+                               Label="@L["Rerated up"]"></MudSwitch>
+                    <MudSwitch T="bool" Value="_reratedDown" ValueChanged="SetReratedDown" Color="Color.Primary"
+                               Label="@L["Rerated down"]"></MudSwitch>
+                </div>
+                <MudSelect T="string" MultiSelection="true" SelectedValues="_legacySlots.Select(s => s.ToString())"
+                           SelectedValuesChanged="SetLegacySlots" Label="@L["Legacy Difficulty"]" Variant="Variant.Outlined"
+                           Margin="Margin.Dense" Clearable="true">
+                    @foreach (var slot in Enum.GetValues<LegacySlot>())
+                    {
+                        <MudSelectItem T="string" Value="@slot.ToString()">@slot.GetName()</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+
+            <MudText Typo="Typo.overline">@L["Community intelligence"]</MudText>
+            <MudSelect T="string" MultiSelection="true" SelectedValues="_passDifficulty.Select(c => c.ToString())"
+                       SelectedValuesChanged="SetPassDifficulty" Label="@L["Pass Difficulty"]" Variant="Variant.Outlined"
+                       Margin="Margin.Dense" Clearable="true">
+                @foreach (var category in RankedCategories)
+                {
+                    <MudSelectItem T="string" Value="@category.ToString()">@L[ChartSearchCard.CategoryName(category)]@CountSuffix(_facetCounts?.PassDifficulty, category)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="string" MultiSelection="true" SelectedValues="_scoreDifficulty.Select(c => c.ToString())"
+                       SelectedValuesChanged="SetScoreDifficulty" Label="@L["Score Difficulty"]" Variant="Variant.Outlined"
+                       Margin="Margin.Dense" Clearable="true">
+                @foreach (var category in RankedCategories)
+                {
+                    <MudSelectItem T="string" Value="@category.ToString()">@L[ChartSearchCard.CategoryName(category)]@CountSuffix(_facetCounts?.ScoreDifficulty, category)</MudSelectItem>
+                }
+            </MudSelect>
+            @if (LegacyInScope)
+            {
+                <MudSelect T="string" MultiSelection="true" SelectedValues="_communityVote.Select(c => c.ToString())"
+                           SelectedValuesChanged="SetCommunityVote" Label="@L["Community Vote"]" Variant="Variant.Outlined"
+                           Margin="Margin.Dense" Clearable="true">
+                    @foreach (var category in RankedCategories)
+                    {
+                        <MudSelectItem T="string" Value="@category.ToString()">@L[ChartSearchCard.CategoryName(category)]@CountSuffix(_facetCounts?.CommunityVote, category)</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            <div class="srp-drawer-range">
+                <MudNumericField T="int?" Value="_passRateMin" ValueChanged="SetPassRateMin" Label="@L["Pass rate at least (%)"]"
+                                 Min="0" Max="100" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
+            </div>
+            <div class="srp-drawer-range">
+                <MudNumericField T="double?" Value="_scoringLevelMin" ValueChanged="SetScoringLevelMin" Label="@L["Scoring level from"]"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
+                <MudNumericField T="double?" Value="_scoringLevelMax" ValueChanged="SetScoringLevelMax" Label="@L["Scoring level to"]"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
+            </div>
+
             @if (CurrentUser.IsLoggedIn)
             {
+                <MudText Typo="Typo.overline">@L["My data"]</MudText>
                 <MudSelect T="ChartScoreStateFilter?" Value="_scoreState" ValueChanged="SetScoreState"
                            Label="@L["Score State"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
                     <MudSelectItem T="ChartScoreStateFilter?" Value="ChartScoreStateFilter.Unplayed">@L["Unplayed"]</MudSelectItem>
@@ -137,7 +270,67 @@ else
                     <MudSelectItem T="ChartScoreStateFilter?" Value="ChartScoreStateFilter.Passed">@L["Passed"]</MudSelectItem>
                     <MudSelectItem T="ChartScoreStateFilter?" Value="ChartScoreStateFilter.Failed">@L["Failed"]</MudSelectItem>
                 </MudSelect>
+                @if (ModernInScope)
+                {
+                    <div class="srp-drawer-range">
+                        <MudSelect T="PhoenixLetterGrade?" Value="_phoenixGradeMin" ValueChanged="SetPhoenixGradeMin"
+                                   Label="@L["Phoenix grade at least"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                            @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>().Reverse())
+                            {
+                                <MudSelectItem T="PhoenixLetterGrade?" Value="@((PhoenixLetterGrade?)grade)">@grade.GetName()</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect T="PhoenixPlate?" Value="_phoenixPlateMin" ValueChanged="SetPhoenixPlateMin"
+                                   Label="@L["Phoenix plate at least"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                            @foreach (var plate in Enum.GetValues<PhoenixPlate>().Reverse())
+                            {
+                                <MudSelectItem T="PhoenixPlate?" Value="@((PhoenixPlate?)plate)">@plate.GetShorthand()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </div>
+                    <div class="srp-drawer-range">
+                        <MudNumericField T="int?" Value="_phoenixScoreMin" ValueChanged="SetPhoenixScoreMin" Label="@L["Phoenix score from"]"
+                                         Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
+                        <MudNumericField T="int?" Value="_phoenixScoreMax" ValueChanged="SetPhoenixScoreMax" Label="@L["Phoenix score to"]"
+                                         Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
+                    </div>
+                }
+                @if (LegacyInScope)
+                {
+                    <MudSelect T="XXLetterGrade?" Value="_legacyGradeMin" ValueChanged="SetLegacyGradeMin"
+                               Label="@L["Legacy grade at least"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                        @foreach (var grade in Enum.GetValues<XXLetterGrade>().Reverse())
+                        {
+                            <MudSelectItem T="XXLetterGrade?" Value="@((XXLetterGrade?)grade)">@grade.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                <div class="srp-drawer-range">
+                    <MudDatePicker Date="_recordedFrom" DateChanged="SetRecordedFrom" Label="@L["Recorded from"]"
+                                   Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudDatePicker>
+                    <MudDatePicker Date="_recordedTo" DateChanged="SetRecordedTo" Label="@L["Recorded to"]"
+                                   Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudDatePicker>
+                </div>
+                <div class="srp-drawer-switches">
+                    <MudSwitch T="bool" Value="_onlyFavorites" ValueChanged="SetOnlyFavorites" Color="Color.Secondary"
+                               Label="@L["Favorites"]"></MudSwitch>
+                    <MudSwitch T="bool" Value="_onlyToDo" ValueChanged="SetOnlyToDo" Color="Color.Info"
+                               Label="@L["To Do"]"></MudSwitch>
+                </div>
+                @if (_allMixes)
+                {
+                    <MudSwitch T="bool" Value="_reclearGap" ValueChanged="SetReclearGap" Color="Color.Primary"
+                               Label="@L["Not yet re-cleared in {0}", NewestMix.GetName()]"></MudSwitch>
+                }
             }
+
+            <MudText Typo="Typo.overline">@L["Display"]</MudText>
+            <div class="srp-drawer-switches">
+                <MudSwitch T="bool" Value="_showStepArtist" ValueChanged="SetShowStepArtist" Color="Color.Primary"
+                           Label="@L["Step Artist"]"></MudSwitch>
+                <MudSwitch T="bool" Value="_showNoteCount" ValueChanged="SetShowNoteCount" Color="Color.Primary"
+                           Label="@L["Note count"]"></MudSwitch>
+            </div>
         </div>
     </MudDrawer>
 </MudLayout>
@@ -154,7 +347,6 @@ else
     private bool _allMixes;
     private bool _filtersOpen;
     private bool _isLoading = true;
-    private bool _initialized;
 
     private string? _songNameContains;
     private int? _levelMin;
@@ -162,18 +354,73 @@ else
     private List<ChartType> _types = new();
     private List<SongType> _songTypes = new();
     private List<string> _artists = new();
+    private List<string> _stepArtists = new();
+    private decimal? _bpmMin;
+    private decimal? _bpmMax;
+    private decimal? _npsMin;
+    private decimal? _npsMax;
+    private int? _noteMin;
+    private int? _noteMax;
+    private List<string> _badges = new();
+    private List<MixEnum> _debutMixes = new();
+    private MixEnum? _availableIn;
+    private MixEnum? _notAvailableIn;
+    private bool _reratedUp;
+    private bool _reratedDown;
+    private List<LegacySlot> _legacySlots = new();
+    private List<TierListCategory> _passDifficulty = new();
+    private List<TierListCategory> _scoreDifficulty = new();
+    private List<TierListCategory> _communityVote = new();
+    private int? _passRateMin;
+    private double? _scoringLevelMin;
+    private double? _scoringLevelMax;
     private ChartScoreStateFilter? _scoreState;
+    private PhoenixLetterGrade? _phoenixGradeMin;
+    private PhoenixPlate? _phoenixPlateMin;
+    private int? _phoenixScoreMin;
+    private int? _phoenixScoreMax;
+    private XXLetterGrade? _legacyGradeMin;
+    private DateTime? _recordedFrom;
+    private DateTime? _recordedTo;
+    private bool _onlyFavorites;
+    private bool _onlyToDo;
+    private bool _reclearGap;
     private ChartSearchSort _sort = ChartSearchSort.Level;
     private bool _sortDescending = true;
     private int _pageNumber = 1;
     private const int PageSize = 24;
 
+    private bool _showStepArtist;
+    private bool _showNoteCount;
+    private const string StepArtistDisplayKey = "Charts__Display__StepArtist";
+    private const string NoteCountDisplayKey = "Charts__Display__NoteCount";
+
     private IReadOnlyList<ChartSearchResult> _results = Array.Empty<ChartSearchResult>();
     private int _totalCount;
+    private ChartSearchFacetCounts? _facetCounts;
     private ISet<Guid> _favoriteCharts = new HashSet<Guid>();
     private ISet<Guid> _todoCharts = new HashSet<Guid>();
 
+    private IReadOnlyList<ChartBadge> _badgeVocabulary = Array.Empty<ChartBadge>();
+    private IReadOnlyList<string> _artistVocabulary = Array.Empty<string>();
+    private IReadOnlyList<string> _stepArtistVocabulary = Array.Empty<string>();
+    private bool _vocabularyLoaded;
+
     private int PageCount => (int)Math.Ceiling(_totalCount / (double)PageSize);
+
+    private bool LegacyInScope => _allMixes || _mix.UsesLegacyScoring();
+    private bool ModernInScope => _allMixes || !_mix.UsesLegacyScoring();
+
+    private static readonly MixEnum NewestMix = MixThemes.ThemedMixes.OrderBy(m => m.DisplayOrder()).Last();
+
+    private static readonly MixEnum[] AllKnownMixes =
+        Enum.GetValues<MixEnum>().OrderBy(m => m.DisplayOrder()).ToArray();
+
+    private static readonly TierListCategory[] RankedCategories =
+    {
+        TierListCategory.Overrated, TierListCategory.VeryEasy, TierListCategory.Easy, TierListCategory.Medium,
+        TierListCategory.Hard, TierListCategory.VeryHard, TierListCategory.Underrated
+    };
 
     private static readonly ChartSearchSort[] SortOrder =
     {
@@ -194,6 +441,35 @@ else
     [Parameter] [SupplyParameterFromQuery(Name = "Type")] public string? TypeParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "SongType")] public string? SongTypeParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Artist")] public string? ArtistParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "StepArtist")] public string? StepArtistParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "BpmMin")] public decimal? BpmMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "BpmMax")] public decimal? BpmMaxParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "NpsMin")] public decimal? NpsMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "NpsMax")] public decimal? NpsMaxParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "NoteMin")] public int? NoteMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "NoteMax")] public int? NoteMaxParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Badges")] public string? BadgesParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "DebutMix")] public string? DebutMixParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "In")] public string? AvailableInParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "NotIn")] public string? NotAvailableInParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "RUp")] public bool RUpParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "RDown")] public bool RDownParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Slots")] public string? SlotsParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "PassDiff")] public string? PassDiffParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "ScoreDiff")] public string? ScoreDiffParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Vote")] public string? VoteParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "PassRateMin")] public int? PassRateMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "SlMin")] public double? SlMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "SlMax")] public double? SlMaxParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "PhxGrade")] public string? PhxGradeParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "PhxPlate")] public string? PhxPlateParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "PhxMin")] public int? PhxMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "PhxMax")] public int? PhxMaxParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "LegGrade")] public string? LegGradeParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "RecFrom")] public string? RecFromParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "RecTo")] public string? RecToParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Saved")] public string? SavedParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Reclear")] public bool ReclearParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "State")] public string? StateParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Sort")] public string? SortParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Dir")] public string? DirParam { get; set; }
@@ -215,8 +491,38 @@ else
         _levelMax = LevelMaxParam ?? LegacyDifficultyParam;
         _types = ParseCsvEnum<ChartType>(TypeParam ?? LegacyChartTypeParam);
         _songTypes = ParseCsvEnum<SongType>(SongTypeParam);
-        _artists = (ArtistParam ?? LegacySongArtistParam)?
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList() ?? new List<string>();
+        _artists = ParseCsv(ArtistParam ?? LegacySongArtistParam);
+        _stepArtists = ParseCsv(StepArtistParam);
+        _bpmMin = BpmMinParam;
+        _bpmMax = BpmMaxParam;
+        _npsMin = NpsMinParam;
+        _npsMax = NpsMaxParam;
+        _noteMin = NoteMinParam;
+        _noteMax = NoteMaxParam;
+        _badges = ParseCsv(BadgesParam);
+        _debutMixes = ParseCsvEnum<MixEnum>(DebutMixParam);
+        _availableIn = Enum.TryParse<MixEnum>(AvailableInParam, true, out var aIn) ? aIn : null;
+        _notAvailableIn = Enum.TryParse<MixEnum>(NotAvailableInParam, true, out var nIn) ? nIn : null;
+        _reratedUp = RUpParam;
+        _reratedDown = RDownParam;
+        _legacySlots = ParseCsvEnum<LegacySlot>(SlotsParam);
+        _passDifficulty = ParseCsvEnum<TierListCategory>(PassDiffParam);
+        _scoreDifficulty = ParseCsvEnum<TierListCategory>(ScoreDiffParam);
+        _communityVote = ParseCsvEnum<TierListCategory>(VoteParam);
+        _passRateMin = PassRateMinParam;
+        _scoringLevelMin = SlMinParam;
+        _scoringLevelMax = SlMaxParam;
+        _phoenixGradeMin = Enum.TryParse<PhoenixLetterGrade>(PhxGradeParam, true, out var pg) ? pg : null;
+        _phoenixPlateMin = Enum.TryParse<PhoenixPlate>(PhxPlateParam, true, out var pp) ? pp : null;
+        _phoenixScoreMin = PhxMinParam;
+        _phoenixScoreMax = PhxMaxParam;
+        _legacyGradeMin = Enum.TryParse<XXLetterGrade>(LegGradeParam, true, out var lg) ? lg : null;
+        _recordedFrom = DateTime.TryParse(RecFromParam, out var from) ? from : null;
+        _recordedTo = DateTime.TryParse(RecToParam, out var to) ? to : null;
+        var saved = ParseCsv(SavedParam);
+        _onlyFavorites = saved.Contains("Favorites", StringComparer.OrdinalIgnoreCase);
+        _onlyToDo = saved.Contains("ToDo", StringComparer.OrdinalIgnoreCase);
+        _reclearGap = ReclearParam;
         _scoreState = Enum.TryParse<ChartScoreStateFilter>(StateParam, true, out var state)
             ? state
             : LegacyScoreStateParam?.ToLowerInvariant() switch
@@ -233,6 +539,12 @@ else
         _pageNumber = Math.Max(1, PageParam ?? 1);
     }
 
+    private static List<string> ParseCsv(string? csv)
+    {
+        return csv?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+               ?? new List<string>();
+    }
+
     private static List<T> ParseCsvEnum<T>(string? csv) where T : struct, Enum
     {
         return csv?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -243,16 +555,45 @@ else
             .ToList() ?? new List<T>();
     }
 
-    private async Task PushUrl(bool replace = false)
+    private async Task PushUrl()
     {
         var url = NavManager.GetUriWithQueryParameters("/Charts", new Dictionary<string, object?>
         {
             ["Song"] = string.IsNullOrWhiteSpace(_songNameContains) ? null : _songNameContains,
             ["LevelMin"] = _levelMin,
             ["LevelMax"] = _levelMax,
-            ["Type"] = _types.Count == 0 ? null : string.Join(',', _types),
-            ["SongType"] = _songTypes.Count == 0 ? null : string.Join(',', _songTypes),
+            ["Type"] = Csv(_types),
+            ["SongType"] = Csv(_songTypes),
             ["Artist"] = _artists.Count == 0 ? null : string.Join(',', _artists),
+            ["StepArtist"] = _stepArtists.Count == 0 ? null : string.Join(',', _stepArtists),
+            ["BpmMin"] = _bpmMin,
+            ["BpmMax"] = _bpmMax,
+            ["NpsMin"] = _npsMin,
+            ["NpsMax"] = _npsMax,
+            ["NoteMin"] = _noteMin,
+            ["NoteMax"] = _noteMax,
+            ["Badges"] = _badges.Count == 0 ? null : string.Join(',', _badges),
+            ["DebutMix"] = Csv(_debutMixes),
+            ["In"] = _availableIn?.ToString(),
+            ["NotIn"] = _notAvailableIn?.ToString(),
+            ["RUp"] = _reratedUp ? true : null,
+            ["RDown"] = _reratedDown ? true : null,
+            ["Slots"] = Csv(_legacySlots),
+            ["PassDiff"] = Csv(_passDifficulty),
+            ["ScoreDiff"] = Csv(_scoreDifficulty),
+            ["Vote"] = Csv(_communityVote),
+            ["PassRateMin"] = _passRateMin,
+            ["SlMin"] = _scoringLevelMin,
+            ["SlMax"] = _scoringLevelMax,
+            ["PhxGrade"] = _phoenixGradeMin?.ToString(),
+            ["PhxPlate"] = _phoenixPlateMin?.ToString(),
+            ["PhxMin"] = _phoenixScoreMin,
+            ["PhxMax"] = _phoenixScoreMax,
+            ["LegGrade"] = _legacyGradeMin?.ToString(),
+            ["RecFrom"] = _recordedFrom?.ToString("yyyy-MM-dd"),
+            ["RecTo"] = _recordedTo?.ToString("yyyy-MM-dd"),
+            ["Saved"] = SavedCsv,
+            ["Reclear"] = _reclearGap ? true : null,
             ["State"] = _scoreState?.ToString(),
             ["Sort"] = IsDefaultSort ? null : _sort.ToString(),
             ["Dir"] = IsDefaultSort || _sortDescending == DefaultDescending(_sort)
@@ -261,8 +602,17 @@ else
             ["Scope"] = _allMixes ? "all" : null,
             ["Page"] = _pageNumber <= 1 ? null : _pageNumber
         });
-        await Javascript.InvokeVoidAsync(replace ? "history.replaceState" : "history.pushState", null, "", url);
+        await Javascript.InvokeVoidAsync("history.pushState", null, "", url);
     }
+
+    private static string? Csv<T>(IReadOnlyCollection<T> values)
+    {
+        return values.Count == 0 ? null : string.Join(',', values);
+    }
+
+    private string? SavedCsv => _onlyFavorites || _onlyToDo
+        ? string.Join(',', new[] { _onlyFavorites ? "Favorites" : null, _onlyToDo ? "ToDo" : null }.Where(v => v != null))
+        : null;
 
     // ---- loading --------------------------------------------------------------------
 
@@ -277,12 +627,20 @@ else
             _todoCharts = saves.Where(s => s.ListType == ChartListType.ToDo).Select(s => s.ChartId).ToHashSet();
         }
 
+        _showStepArtist = await UiSettings.GetSetting(StepArtistDisplayKey) == true.ToString();
+        _showNoteCount = await UiSettings.GetSetting(NoteCountDisplayKey) == true.ToString();
+
         await LoadPage();
-        _initialized = true;
     }
 
     private SearchChartsQuery BuildQuery()
     {
+        var restrictTo = _onlyFavorites || _onlyToDo
+            ? (_onlyFavorites ? _favoriteCharts : Enumerable.Empty<Guid>())
+            .Concat(_onlyToDo ? _todoCharts : Enumerable.Empty<Guid>())
+            .Distinct().ToArray()
+            : null;
+
         return new SearchChartsQuery
         {
             Mix = _mix,
@@ -294,11 +652,41 @@ else
             Types = _types.Count == 0 ? null : _types,
             SongTypes = _songTypes.Count == 0 ? null : _songTypes,
             Artists = _artists.Count == 0 ? null : _artists,
+            StepArtists = _stepArtists.Count == 0 ? null : _stepArtists,
+            BpmMin = _bpmMin,
+            BpmMax = _bpmMax,
+            NpsMin = _npsMin,
+            NpsMax = _npsMax,
+            NoteCountMin = _noteMin,
+            NoteCountMax = _noteMax,
+            Badges = _badges.Count == 0 ? null : _badges,
+            DebutMixes = _debutMixes.Count == 0 ? null : _debutMixes,
+            AvailableIn = _allMixes ? _availableIn : null,
+            NotAvailableIn = _allMixes ? _notAvailableIn : null,
+            ReratedUp = _allMixes && _reratedUp,
+            ReratedDown = _allMixes && _reratedDown,
+            LegacySlots = _legacySlots.Count == 0 ? null : _legacySlots,
+            PassDifficulty = _passDifficulty.Count == 0 ? null : _passDifficulty,
+            ScoreDifficulty = _scoreDifficulty.Count == 0 ? null : _scoreDifficulty,
+            CommunityVote = _communityVote.Count == 0 ? null : _communityVote,
+            PassRateMin = _passRateMin == null ? null : _passRateMin.Value / 100.0,
+            ScoringLevelMin = _scoringLevelMin,
+            ScoringLevelMax = _scoringLevelMax,
             ScoreState = CurrentUser.IsLoggedIn ? _scoreState : null,
+            PhoenixGradeMin = _phoenixGradeMin,
+            PhoenixPlateMin = _phoenixPlateMin,
+            PhoenixScoreMin = _phoenixScoreMin,
+            PhoenixScoreMax = _phoenixScoreMax,
+            LegacyGradeMin = _legacyGradeMin,
+            RecordedFrom = _recordedFrom == null ? null : new DateTimeOffset(_recordedFrom.Value, TimeSpan.Zero),
+            RecordedTo = _recordedTo == null ? null : new DateTimeOffset(_recordedTo.Value.AddDays(1).AddTicks(-1), TimeSpan.Zero),
+            NotReclearedIn = _allMixes && _reclearGap && CurrentUser.IsLoggedIn ? NewestMix : null,
+            RestrictToChartIds = restrictTo,
             Sort = _sort,
             SortDescending = _sortDescending,
             Page = _pageNumber,
-            PageSize = PageSize
+            PageSize = PageSize,
+            IncludeFacetCounts = true
         };
     }
 
@@ -308,6 +696,7 @@ else
         var page = await Mediator.Send(BuildQuery());
         _results = page.Results;
         _totalCount = page.TotalCount;
+        _facetCounts = page.FacetCounts;
         // Landing past the tail (a stale shared link) snaps back to the last real page.
         if (_pageNumber > 1 && _results.Count == 0 && _totalCount > 0)
         {
@@ -315,6 +704,7 @@ else
             page = await Mediator.Send(BuildQuery());
             _results = page.Results;
             _totalCount = page.TotalCount;
+            _facetCounts = page.FacetCounts;
         }
 
         _isLoading = false;
@@ -325,6 +715,16 @@ else
         if (resetPage) _pageNumber = 1;
         await PushUrl();
         await LoadPage();
+    }
+
+    private async Task OpenFilters()
+    {
+        _filtersOpen = true;
+        if (_vocabularyLoaded) return;
+        _vocabularyLoaded = true;
+        _badgeVocabulary = await Mediator.Send(new GetSearchBadgesQuery());
+        _artistVocabulary = await Mediator.Send(new GetSearchArtistsQuery(_mix, _allMixes));
+        _stepArtistVocabulary = await Mediator.Send(new GetSearchStepArtistsQuery(_mix, _allMixes));
     }
 
     // ---- chips ----------------------------------------------------------------------
@@ -349,40 +749,131 @@ else
                     _levelMax = null;
                     await ApplyChange();
                 }));
-            foreach (var type in _types)
-            {
-                var captured = type;
-                chips.Add(new QueryChip(captured.GetShortHand(), false, async () =>
+            AddListChips(chips, _types, t => t.GetShortHand());
+            AddListChips(chips, _songTypes, t => t.ToString());
+            AddListChips(chips, _artists, a => a);
+            AddListChips(chips, _stepArtists, a => $"{L["Step Artist"]}: {a}");
+            if (_bpmMin != null || _bpmMax != null)
+                chips.Add(RangeChip("BPM", _bpmMin?.ToString("0"), _bpmMax?.ToString("0"), async () =>
                 {
-                    _types.Remove(captured);
+                    _bpmMin = null;
+                    _bpmMax = null;
                     await ApplyChange();
                 }));
-            }
-
-            foreach (var songType in _songTypes)
-            {
-                var captured = songType;
-                chips.Add(new QueryChip(captured.ToString(), false, async () =>
+            if (_npsMin != null || _npsMax != null)
+                chips.Add(RangeChip("NPS", _npsMin?.ToString("0.#"), _npsMax?.ToString("0.#"), async () =>
                 {
-                    _songTypes.Remove(captured);
+                    _npsMin = null;
+                    _npsMax = null;
                     await ApplyChange();
                 }));
-            }
-
-            foreach (var artist in _artists)
-            {
-                var captured = artist;
-                chips.Add(new QueryChip(captured, false, async () =>
+            if (_noteMin != null || _noteMax != null)
+                chips.Add(RangeChip(L["Notes"], _noteMin?.ToString(), _noteMax?.ToString(), async () =>
                 {
-                    _artists.Remove(captured);
+                    _noteMin = null;
+                    _noteMax = null;
                     await ApplyChange();
                 }));
+            AddListChips(chips, _badges, b => BadgeDisplay(b));
+            AddListChips(chips, _debutMixes, m => $"{L["Debut"]}: {m.GetName()}");
+            if (_availableIn != null)
+                chips.Add(new QueryChip($"{L["In"]}: {_availableIn.Value.GetName()}", false, () => SetAvailableIn(null)));
+            if (_notAvailableIn != null)
+                chips.Add(new QueryChip($"{L["Not in"]}: {_notAvailableIn.Value.GetName()}", false,
+                    () => SetNotAvailableIn(null)));
+            if (_reratedUp)
+                chips.Add(new QueryChip(L["Rerated up"], false, () => SetReratedUp(false)));
+            if (_reratedDown)
+                chips.Add(new QueryChip(L["Rerated down"], false, () => SetReratedDown(false)));
+            AddListChips(chips, _legacySlots, s => s.GetName());
+            AddListChips(chips, _passDifficulty, c => $"{L["Pass"]}: {L[ChartSearchCard.CategoryName(c)]}");
+            AddListChips(chips, _scoreDifficulty, c => $"{L["Score"]}: {L[ChartSearchCard.CategoryName(c)]}");
+            AddListChips(chips, _communityVote, c => $"{L["Community Vote"]}: {L[ChartSearchCard.CategoryName(c)]}");
+            if (_passRateMin != null)
+                chips.Add(new QueryChip($"{L["Pass rate"]} ≥ {_passRateMin}%", false, () => SetPassRateMin(null)));
+            if (_scoringLevelMin != null || _scoringLevelMax != null)
+                chips.Add(RangeChip(L["Scoring level"], _scoringLevelMin?.ToString("0.#"),
+                    _scoringLevelMax?.ToString("0.#"), async () =>
+                    {
+                        _scoringLevelMin = null;
+                        _scoringLevelMax = null;
+                        await ApplyChange();
+                    }));
+            if (CurrentUser.IsLoggedIn)
+            {
+                if (_scoreState != null)
+                    chips.Add(new QueryChip(L[ScoreStateName(_scoreState.Value)], false, () => SetScoreState(null)));
+                if (_phoenixGradeMin != null)
+                    chips.Add(new QueryChip($"{L["Grade"]} ≥ {_phoenixGradeMin.Value.GetName()}", false,
+                        () => SetPhoenixGradeMin(null)));
+                if (_phoenixPlateMin != null)
+                    chips.Add(new QueryChip($"{L["Plate"]} ≥ {_phoenixPlateMin.Value.GetShorthand()}", false,
+                        () => SetPhoenixPlateMin(null)));
+                if (_phoenixScoreMin != null || _phoenixScoreMax != null)
+                    chips.Add(RangeChip(L["Score"], _phoenixScoreMin?.ToString("N0"), _phoenixScoreMax?.ToString("N0"),
+                        async () =>
+                        {
+                            _phoenixScoreMin = null;
+                            _phoenixScoreMax = null;
+                            await ApplyChange();
+                        }));
+                if (_legacyGradeMin != null)
+                    chips.Add(new QueryChip($"{L["Legacy grade"]} ≥ {_legacyGradeMin}", false,
+                        () => SetLegacyGradeMin(null)));
+                if (_recordedFrom != null || _recordedTo != null)
+                    chips.Add(RangeChip(L["Recorded"], _recordedFrom?.ToString("yyyy-MM-dd"),
+                        _recordedTo?.ToString("yyyy-MM-dd"), async () =>
+                        {
+                            _recordedFrom = null;
+                            _recordedTo = null;
+                            await ApplyChange();
+                        }));
+                if (_onlyFavorites)
+                    chips.Add(new QueryChip(L["Favorites"], false, () => SetOnlyFavorites(false)));
+                if (_onlyToDo)
+                    chips.Add(new QueryChip(L["To Do"], false, () => SetOnlyToDo(false)));
+                if (_reclearGap && _allMixes)
+                    chips.Add(new QueryChip(L["Not yet re-cleared in {0}", NewestMix.GetName()], false,
+                        () => SetReclearGap(false)));
             }
 
-            if (_scoreState != null && CurrentUser.IsLoggedIn)
-                chips.Add(new QueryChip(L[ScoreStateName(_scoreState.Value)], false, () => SetScoreState(null)));
             return chips;
         }
+    }
+
+    private void AddListChips<T>(List<QueryChip> chips, List<T> list, Func<T, string> label)
+    {
+        foreach (var item in list)
+        {
+            var captured = item;
+            chips.Add(new QueryChip(label(captured), false, async () =>
+            {
+                list.Remove(captured);
+                await ApplyChange();
+            }));
+        }
+    }
+
+    private static QueryChip RangeChip(string label, string? from, string? to, Func<Task> remove)
+    {
+        var range = from != null && to != null ? $"{from}–{to}" : from != null ? $"≥ {from}" : $"≤ {to}";
+        return new QueryChip($"{label} {range}", false, remove);
+    }
+
+    private string BadgeDisplay(string key)
+    {
+        return _badgeVocabulary.FirstOrDefault(b =>
+            string.Equals(b.Key, key, StringComparison.OrdinalIgnoreCase))?.DisplayName ?? key;
+    }
+
+    private string BadgeCount(string key)
+    {
+        return _facetCounts?.Badges.TryGetValue(key, out var count) == true ? $" ({count})" : string.Empty;
+    }
+
+    private static string CountSuffix<TKey>(IReadOnlyDictionary<TKey, int>? counts, TKey key) where TKey : notnull
+    {
+        return counts != null && counts.TryGetValue(key, out var count) ? $" ({count})" : string.Empty;
     }
 
     private string LevelChipLabel => _levelMin == _levelMax
@@ -399,7 +890,37 @@ else
         _types.Clear();
         _songTypes.Clear();
         _artists.Clear();
+        _stepArtists.Clear();
+        _bpmMin = null;
+        _bpmMax = null;
+        _npsMin = null;
+        _npsMax = null;
+        _noteMin = null;
+        _noteMax = null;
+        _badges.Clear();
+        _debutMixes.Clear();
+        _availableIn = null;
+        _notAvailableIn = null;
+        _reratedUp = false;
+        _reratedDown = false;
+        _legacySlots.Clear();
+        _passDifficulty.Clear();
+        _scoreDifficulty.Clear();
+        _communityVote.Clear();
+        _passRateMin = null;
+        _scoringLevelMin = null;
+        _scoringLevelMax = null;
         _scoreState = null;
+        _phoenixGradeMin = null;
+        _phoenixPlateMin = null;
+        _phoenixScoreMin = null;
+        _phoenixScoreMax = null;
+        _legacyGradeMin = null;
+        _recordedFrom = null;
+        _recordedTo = null;
+        _onlyFavorites = false;
+        _onlyToDo = false;
+        _reclearGap = false;
         _sort = ChartSearchSort.Level;
         _sortDescending = true;
         await ApplyChange();
@@ -411,6 +932,14 @@ else
     {
         if (_allMixes == allMixes) return;
         _allMixes = allMixes;
+        _vocabularyLoaded = false;
+        if (_filtersOpen)
+        {
+            _vocabularyLoaded = true;
+            _artistVocabulary = await Mediator.Send(new GetSearchArtistsQuery(_mix, _allMixes));
+            _stepArtistVocabulary = await Mediator.Send(new GetSearchStepArtistsQuery(_mix, _allMixes));
+        }
+
         await ApplyChange();
     }
 
@@ -438,10 +967,237 @@ else
         await ApplyChange();
     }
 
+    private async Task SetSongTypes(IEnumerable<string>? values)
+    {
+        _songTypes = ParseCsvEnum<SongType>(values == null ? null : string.Join(',', values));
+        await ApplyChange();
+    }
+
+    private async Task AddArtist(string? artist)
+    {
+        if (string.IsNullOrWhiteSpace(artist) ||
+            _artists.Contains(artist, StringComparer.OrdinalIgnoreCase)) return;
+        _artists.Add(artist);
+        await ApplyChange();
+    }
+
+    private async Task AddStepArtist(string? artist)
+    {
+        if (string.IsNullOrWhiteSpace(artist) ||
+            _stepArtists.Contains(artist, StringComparer.OrdinalIgnoreCase)) return;
+        _stepArtists.Add(artist);
+        await ApplyChange();
+    }
+
+    private Task<IEnumerable<string>> SearchArtists(string? value, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(FilterVocabulary(_artistVocabulary, value));
+    }
+
+    private Task<IEnumerable<string>> SearchStepArtists(string? value, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(FilterVocabulary(_stepArtistVocabulary, value));
+    }
+
+    private static IEnumerable<string> FilterVocabulary(IReadOnlyList<string> vocabulary, string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? vocabulary
+            : vocabulary.Where(v => v.Contains(value, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task SetBpmMin(decimal? value)
+    {
+        _bpmMin = value;
+        await ApplyChange();
+    }
+
+    private async Task SetBpmMax(decimal? value)
+    {
+        _bpmMax = value;
+        await ApplyChange();
+    }
+
+    private async Task SetNpsMin(decimal? value)
+    {
+        _npsMin = value;
+        await ApplyChange();
+    }
+
+    private async Task SetNpsMax(decimal? value)
+    {
+        _npsMax = value;
+        await ApplyChange();
+    }
+
+    private async Task SetNoteMin(int? value)
+    {
+        _noteMin = value;
+        await ApplyChange();
+    }
+
+    private async Task SetNoteMax(int? value)
+    {
+        _noteMax = value;
+        await ApplyChange();
+    }
+
+    private async Task ToggleBadge(string key)
+    {
+        var existing = _badges.FirstOrDefault(b => string.Equals(b, key, StringComparison.OrdinalIgnoreCase));
+        if (existing != null) _badges.Remove(existing);
+        else _badges.Add(key);
+        await ApplyChange();
+    }
+
+    private async Task SetDebutMixes(IEnumerable<string>? values)
+    {
+        _debutMixes = ParseCsvEnum<MixEnum>(values == null ? null : string.Join(',', values));
+        await ApplyChange();
+    }
+
+    private async Task SetAvailableIn(MixEnum? value)
+    {
+        _availableIn = value;
+        await ApplyChange();
+    }
+
+    private async Task SetNotAvailableIn(MixEnum? value)
+    {
+        _notAvailableIn = value;
+        await ApplyChange();
+    }
+
+    private async Task SetReratedUp(bool value)
+    {
+        _reratedUp = value;
+        await ApplyChange();
+    }
+
+    private async Task SetReratedDown(bool value)
+    {
+        _reratedDown = value;
+        await ApplyChange();
+    }
+
+    private async Task SetLegacySlots(IEnumerable<string>? values)
+    {
+        _legacySlots = ParseCsvEnum<LegacySlot>(values == null ? null : string.Join(',', values));
+        await ApplyChange();
+    }
+
+    private async Task SetPassDifficulty(IEnumerable<string>? values)
+    {
+        _passDifficulty = ParseCsvEnum<TierListCategory>(values == null ? null : string.Join(',', values));
+        await ApplyChange();
+    }
+
+    private async Task SetScoreDifficulty(IEnumerable<string>? values)
+    {
+        _scoreDifficulty = ParseCsvEnum<TierListCategory>(values == null ? null : string.Join(',', values));
+        await ApplyChange();
+    }
+
+    private async Task SetCommunityVote(IEnumerable<string>? values)
+    {
+        _communityVote = ParseCsvEnum<TierListCategory>(values == null ? null : string.Join(',', values));
+        await ApplyChange();
+    }
+
+    private async Task SetPassRateMin(int? value)
+    {
+        _passRateMin = value;
+        await ApplyChange();
+    }
+
+    private async Task SetScoringLevelMin(double? value)
+    {
+        _scoringLevelMin = value;
+        await ApplyChange();
+    }
+
+    private async Task SetScoringLevelMax(double? value)
+    {
+        _scoringLevelMax = value;
+        await ApplyChange();
+    }
+
     private async Task SetScoreState(ChartScoreStateFilter? value)
     {
         _scoreState = value;
         await ApplyChange();
+    }
+
+    private async Task SetPhoenixGradeMin(PhoenixLetterGrade? value)
+    {
+        _phoenixGradeMin = value;
+        await ApplyChange();
+    }
+
+    private async Task SetPhoenixPlateMin(PhoenixPlate? value)
+    {
+        _phoenixPlateMin = value;
+        await ApplyChange();
+    }
+
+    private async Task SetPhoenixScoreMin(int? value)
+    {
+        _phoenixScoreMin = value;
+        await ApplyChange();
+    }
+
+    private async Task SetPhoenixScoreMax(int? value)
+    {
+        _phoenixScoreMax = value;
+        await ApplyChange();
+    }
+
+    private async Task SetLegacyGradeMin(XXLetterGrade? value)
+    {
+        _legacyGradeMin = value;
+        await ApplyChange();
+    }
+
+    private async Task SetRecordedFrom(DateTime? value)
+    {
+        _recordedFrom = value;
+        await ApplyChange();
+    }
+
+    private async Task SetRecordedTo(DateTime? value)
+    {
+        _recordedTo = value;
+        await ApplyChange();
+    }
+
+    private async Task SetOnlyFavorites(bool value)
+    {
+        _onlyFavorites = value;
+        await ApplyChange();
+    }
+
+    private async Task SetOnlyToDo(bool value)
+    {
+        _onlyToDo = value;
+        await ApplyChange();
+    }
+
+    private async Task SetReclearGap(bool value)
+    {
+        _reclearGap = value;
+        await ApplyChange();
+    }
+
+    private async Task SetShowStepArtist(bool value)
+    {
+        _showStepArtist = value;
+        await UiSettings.SetSetting(StepArtistDisplayKey, value.ToString());
+    }
+
+    private async Task SetShowNoteCount(bool value)
+    {
+        _showNoteCount = value;
+        await UiSettings.SetSetting(NoteCountDisplayKey, value.ToString());
     }
 
     private async Task SelectSort(ChartSearchSort sort, bool forceDefaultDirection = false)

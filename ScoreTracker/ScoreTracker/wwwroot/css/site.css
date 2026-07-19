@@ -5237,3 +5237,42 @@ button.chart-card-art {
     border-style: dashed;
     border-color: var(--mud-palette-success);
 }
+
+/* SRP drawer: badge cloud + switch rows */
+.srp-drawer-sub {
+    font-size: .65rem;
+    color: var(--mix-ink-muted);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.srp-badge-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.srp-badge-opt {
+    cursor: pointer;
+    opacity: .75;
+}
+
+.srp-badge-opt:hover,
+.srp-badge-opt:focus-visible {
+    opacity: 1;
+}
+
+.srp-badge-opt-sel {
+    opacity: 1;
+    outline: 1px solid var(--mix-primary);
+}
+
+.srp-drawer-switches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+}
+
+.srp-card-stepartist {
+    color: var(--mix-ink-muted);
+}
