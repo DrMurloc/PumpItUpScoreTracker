@@ -41,6 +41,11 @@ using Swashbuckle.AspNetCore.Filters;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+// Process-wide default regex match timeout (S6444 backstop): covers every Regex constructed
+// without an explicit timeout — chiefly OfficialMirror's parsing of scraped piugame HTML.
+// Must run before any Regex is constructed, so it stays the first statement.
+AppDomain.CurrentDomain.SetData("REGEX_DEFAULT_MATCH_TIMEOUT", TimeSpan.FromSeconds(5));
+
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.Services.Configure<JsonSerializerOptions>(o =>

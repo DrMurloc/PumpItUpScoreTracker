@@ -8,6 +8,7 @@ using ScoreTracker.Web.Services;
 
 namespace ScoreTracker.Web.Controllers
 {
+    [ApiController]
     [Route("")]
     public sealed class SitemapController : Controller
     {

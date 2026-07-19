@@ -15,6 +15,7 @@ using ScoreTracker.Web.Security;
 namespace ScoreTracker.Web.Controllers.Api
 {
     [ApiToken]
+    [ApiController]
     [Route("api/tierlist")]
     [EnableCors("API")]
     public class TierListsController : Controller
