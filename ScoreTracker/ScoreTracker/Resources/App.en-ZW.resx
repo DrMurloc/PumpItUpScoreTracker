@@ -4683,4 +4683,361 @@
   <data name="Biased towards larger folders" xml:space="preserve">
     <value>Biased towards larger mrglfolders</value>
   </data>
+  <data name="All Mixes" xml:space="preserve">
+    <value>Mrgl Mrglxes</value>
+  </data>
+  <data name="Applied filters" xml:space="preserve">
+    <value>Mrglplied Frglters</value>
+  </data>
+  <data name="Available in" xml:space="preserve">
+    <value>Avrglable Mrgl</value>
+  </data>
+  <data name="BPM from" xml:space="preserve">
+    <value>BPM Frglm</value>
+  </data>
+  <data name="BPM to" xml:space="preserve">
+    <value>BPM Trgl</value>
+  </data>
+  <data name="Community Vote" xml:space="preserve">
+    <value>Cormrglity Vrglte</value>
+  </data>
+  <data name="Community intelligence" xml:space="preserve">
+    <value>Cormrglity Brrglns</value>
+  </data>
+  <data name="Content" xml:space="preserve">
+    <value>Crgltent</value>
+  </data>
+  <data name="Debut" xml:space="preserve">
+    <value>Debrglt</value>
+  </data>
+  <data name="Debut mix" xml:space="preserve">
+    <value>Debrglt Mrglx</value>
+  </data>
+  <data name="Download CSV" xml:space="preserve">
+    <value>Dowrglload CSV</value>
+  </data>
+  <data name="Export charts" xml:space="preserve">
+    <value>Exprglt Mrrglrgrls</value>
+  </data>
+  <data name="Full Song" xml:space="preserve">
+    <value>Frgll Blgrl</value>
+  </data>
+  <data name="Grade" xml:space="preserve">
+    <value>Grrglde</value>
+  </data>
+  <data name="Group by chart" xml:space="preserve">
+    <value>Grrglup by Mrrglrgrl</value>
+  </data>
+  <data name="Grouped: one row per chart, level history collapsed. Per-mix: every appearance is its own row. Identical while scope is a single mix." xml:space="preserve">
+    <value>Grrgluped: mrgl row per mrrglrgrl, lurg hrglstory currgled. Per-mrglx: evrgly apprglance rgl own row. Idrgltical wrgl single mrglx. Mrglglglgl!</value>
+  </data>
+  <data name="In" xml:space="preserve">
+    <value>Mrgl</value>
+  </data>
+  <data name="Legacy Difficulty" xml:space="preserve">
+    <value>Lergglcy Prglmrrglprgl</value>
+  </data>
+  <data name="Legacy grade" xml:space="preserve">
+    <value>Lergglcy Grrglde</value>
+  </data>
+  <data name="Legacy grade at least" xml:space="preserve">
+    <value>Lergglcy Grrglde at Lrglst</value>
+  </data>
+  <data name="Level change" xml:space="preserve">
+    <value>Lurg Chrglnge</value>
+  </data>
+  <data name="Level from" xml:space="preserve">
+    <value>Lurg Frglm</value>
+  </data>
+  <data name="Level to" xml:space="preserve">
+    <value>Lurg Trgl</value>
+  </data>
+  <data name="Mix scope" xml:space="preserve">
+    <value>Mrglx Scrglpe</value>
+  </data>
+  <data name="Mixes" xml:space="preserve">
+    <value>Mrglxes</value>
+  </data>
+  <data name="My data" xml:space="preserve">
+    <value>Mrgl Drglta</value>
+  </data>
+  <data name="My score" xml:space="preserve">
+    <value>Mrgl Prgl</value>
+  </data>
+  <data name="NPS from" xml:space="preserve">
+    <value>NPS Frglm</value>
+  </data>
+  <data name="NPS to" xml:space="preserve">
+    <value>NPS Trgl</value>
+  </data>
+  <data name="No charts match these filters" xml:space="preserve">
+    <value>No mrrglrgrls mrgltch these frglters. Mrgllllgl.</value>
+  </data>
+  <data name="Not available in" xml:space="preserve">
+    <value>Nrglt Avrglable Mrgl</value>
+  </data>
+  <data name="Not in" xml:space="preserve">
+    <value>Nrglt Mrgl</value>
+  </data>
+  <data name="Not yet re-cleared in {0}" xml:space="preserve">
+    <value>Nrglt yet re-brglurged mrgl {0}</value>
+  </data>
+  <data name="Note count" xml:space="preserve">
+    <value>Nrglte Crglunt</value>
+  </data>
+  <data name="Notes from" xml:space="preserve">
+    <value>Nrgltes Frglm</value>
+  </data>
+  <data name="Notes to" xml:space="preserve">
+    <value>Nrgltes Trgl</value>
+  </data>
+  <data name="One row per chart and mix" xml:space="preserve">
+    <value>Mrgl Row per Mrrglrgrl and Mrglx</value>
+  </data>
+  <data name="Pass rate at least (%)" xml:space="preserve">
+    <value>Passrglrate at Lrglst (%)</value>
+  </data>
+  <data name="Phoenix grade at least" xml:space="preserve">
+    <value>Phoenix Grrglde at Lrglst</value>
+  </data>
+  <data name="Phoenix plate at least" xml:space="preserve">
+    <value>Phoenix Prglate at Lrglst</value>
+  </data>
+  <data name="Phoenix score from" xml:space="preserve">
+    <value>Phoenix Prgl Frglm</value>
+  </data>
+  <data name="Phoenix score to" xml:space="preserve">
+    <value>Phoenix Prgl Trgl</value>
+  </data>
+  <data name="Quick record" xml:space="preserve">
+    <value>Qrglck Rrglcord</value>
+  </data>
+  <data name="Recorded from" xml:space="preserve">
+    <value>Rrglcorded Frglm</value>
+  </data>
+  <data name="Recorded to" xml:space="preserve">
+    <value>Rrglcorded Trgl</value>
+  </data>
+  <data name="Recorded {0}" xml:space="preserve">
+    <value>Rrglcorded {0}! Mrglglgl!</value>
+  </data>
+  <data name="Remix" xml:space="preserve">
+    <value>Rermrglx</value>
+  </data>
+  <data name="Rerated down" xml:space="preserve">
+    <value>Rerglted Drglwn</value>
+  </data>
+  <data name="Rerated up" xml:space="preserve">
+    <value>Rerglted Urgl</value>
+  </data>
+  <data name="Scoring level from" xml:space="preserve">
+    <value>Scorgling Lurg Frglm</value>
+  </data>
+  <data name="Scoring level to" xml:space="preserve">
+    <value>Scorgling Lurg Trgl</value>
+  </data>
+  <data name="Shape" xml:space="preserve">
+    <value>Shrglpe</value>
+  </data>
+  <data name="Short Cut" xml:space="preserve">
+    <value>Shrglt Crglt</value>
+  </data>
+  <data name="Song name" xml:space="preserve">
+    <value>Blgrl Rglgrgl</value>
+  </data>
+  <data name="Song name contains" xml:space="preserve">
+    <value>Blgrl Rglgrgl Crgltains</value>
+  </data>
+  <data name="Sort by" xml:space="preserve">
+    <value>Srglt By</value>
+  </data>
+  <data name="Unplayed" xml:space="preserve">
+    <value>Unprglayed</value>
+  </data>
+  <data name="highlighted only" xml:space="preserve">
+    <value>hrglighted mrglnly</value>
+  </data>
+  <data name="official" xml:space="preserve">
+    <value>offrglcial</value>
+  </data>
+  <data name="{0} charts · current filters" xml:space="preserve">
+    <value>{0} mrrglrgrls · currglnt frglters</value>
+  </data>
+  <data name="{0} columns" xml:space="preserve">
+    <value>{0} crglumns</value>
+  </data>
+  <data name="{0} mixes" xml:space="preserve">
+    <value>{0} mrglxes</value>
+  </data>
+  <data name="{0} notes" xml:space="preserve">
+    <value>{0} nrgltes</value>
+  </data>
+  <data name="{0} scores" xml:space="preserve">
+    <value>{0} prgls</value>
+  </data>
+  <data name="Newest content" xml:space="preserve">
+    <value>Newrglst Crgltent</value>
+  </data>
+  <data name="My grade" xml:space="preserve">
+    <value>Mrgl Grrglde</value>
+  </data>
+  <data name="My recent" xml:space="preserve">
+    <value>Mrgl Rrglcent</value>
+  </data>
+  <data name="Overrated" xml:space="preserve">
+    <value>Ovrglrated</value>
+  </data>
+  <data name="Unranked" xml:space="preserve">
+    <value>Unrrglnked</value>
+  </data>
+  <data name="Chart columns" xml:space="preserve">
+    <value>Mrrglrgrl Crglumns</value>
+  </data>
+  <data name="Community columns" xml:space="preserve">
+    <value>Cormrglity Crglumns</value>
+  </data>
+  <data name="My columns" xml:space="preserve">
+    <value>Mrgl Crglumns</value>
+  </data>
+  <data name="Artist" xml:space="preserve">
+    <value>Arglrtist</value>
+  </data>
+  <data name="Latest mix" xml:space="preserve">
+    <value>Lrgltest Mrglx</value>
+  </data>
+  <data name="Duration (seconds)" xml:space="preserve">
+    <value>Murgllrgl (Srglconds)</value>
+  </data>
+  <data name="Badges" xml:space="preserve">
+    <value>Brglges</value>
+  </data>
+  <data name="Community Vote rating" xml:space="preserve">
+    <value>Cormrglity Vrglte Rrglting</value>
+  </data>
+  <data name="Score count" xml:space="preserve">
+    <value>Prgl Crglunt</value>
+  </data>
+  <data name="PG count" xml:space="preserve">
+    <value>PG Crglunt</value>
+  </data>
+  <data name="My Phoenix score" xml:space="preserve">
+    <value>Mrgl Phoenix Prgl</value>
+  </data>
+  <data name="My Phoenix grade" xml:space="preserve">
+    <value>Mrgl Phoenix Grrglde</value>
+  </data>
+  <data name="My Phoenix plate" xml:space="preserve">
+    <value>Mrgl Phoenix Prglate</value>
+  </data>
+  <data name="My legacy grade" xml:space="preserve">
+    <value>Mrgl Lergglcy Grrglde</value>
+  </data>
+  <data name="My legacy score" xml:space="preserve">
+    <value>Mrgl Lergglcy Prgl</value>
+  </data>
+  <data name="My broken flag" xml:space="preserve">
+    <value>Mrgl Brglken Frglag</value>
+  </data>
+  <data name="My recorded date" xml:space="preserve">
+    <value>Mrgl Rrglcorded Mrogl</value>
+  </data>
+  <data name="Runs" xml:space="preserve">
+    <value>Rrglns</value>
+  </data>
+  <data name="Anchor Runs" xml:space="preserve">
+    <value>Anchrgl Rrglns</value>
+  </data>
+  <data name="Runs Without Twists" xml:space="preserve">
+    <value>Rrglns Wrglthout Twrglsts</value>
+  </data>
+  <data name="Drills" xml:space="preserve">
+    <value>Drrglls</value>
+  </data>
+  <data name="Jumps" xml:space="preserve">
+    <value>Jrglmps</value>
+  </data>
+  <data name="Jacks" xml:space="preserve">
+    <value>Jrglcks</value>
+  </data>
+  <data name="Brackets" xml:space="preserve">
+    <value>Brrglckets</value>
+  </data>
+  <data name="Staggered Brackets" xml:space="preserve">
+    <value>Strglggered Brrglckets</value>
+  </data>
+  <data name="Bracket Runs" xml:space="preserve">
+    <value>Brrglcket Rrglns</value>
+  </data>
+  <data name="Bracket Drills" xml:space="preserve">
+    <value>Brrglcket Drrglls</value>
+  </data>
+  <data name="Bracket Jumps" xml:space="preserve">
+    <value>Brrglcket Jrglmps</value>
+  </data>
+  <data name="Bracket Twists" xml:space="preserve">
+    <value>Brrglcket Twrglsts</value>
+  </data>
+  <data name="Twists" xml:space="preserve">
+    <value>Twrglsts</value>
+  </data>
+  <data name="Twist 90" xml:space="preserve">
+    <value>Twrglst 90</value>
+  </data>
+  <data name="Over-90 Twists" xml:space="preserve">
+    <value>Ovrgl-90 Twrglsts</value>
+  </data>
+  <data name="Close Twists" xml:space="preserve">
+    <value>Crglose Twrglsts</value>
+  </data>
+  <data name="Far Twists" xml:space="preserve">
+    <value>Frgl Twrglsts</value>
+  </data>
+  <data name="Mid-6 Doubles" xml:space="preserve">
+    <value>Mrgld-6 Drglubles</value>
+  </data>
+  <data name="Mid-4 Doubles" xml:space="preserve">
+    <value>Mrgld-4 Drglubles</value>
+  </data>
+  <data name="Sustained" xml:space="preserve">
+    <value>Srglstained</value>
+  </data>
+  <data name="Bursty" xml:space="preserve">
+    <value>Brglsty</value>
+  </data>
+  <data name="Footswitches" xml:space="preserve">
+    <value>Frglotswitches</value>
+  </data>
+  <data name="Hold Footswitches" xml:space="preserve">
+    <value>Hrglold Frglotswitches</value>
+  </data>
+  <data name="Hold Footslides" xml:space="preserve">
+    <value>Hrglold Frglotslides</value>
+  </data>
+  <data name="5-Stairs" xml:space="preserve">
+    <value>5-Strglairs</value>
+  </data>
+  <data name="10-Stairs" xml:space="preserve">
+    <value>10-Strglairs</value>
+  </data>
+  <data name="Yog Walks" xml:space="preserve">
+    <value>Yrglog Wrglalks</value>
+  </data>
+  <data name="Cross-pad Transitions" xml:space="preserve">
+    <value>Crgloss-pad Trrglnsitions</value>
+  </data>
+  <data name="Co-op Pad Transitions" xml:space="preserve">
+    <value>Crglo-op Prgld Trrglnsitions</value>
+  </data>
+  <data name="Splits" xml:space="preserve">
+    <value>Sprglits</value>
+  </data>
+  <data name="Hands" xml:space="preserve">
+    <value>Hrglnds</value>
+  </data>
+  <data name="Doublesteps" xml:space="preserve">
+    <value>Drglublesteps</value>
+  </data>
+  <data name="Side-3 Singles" xml:space="preserve">
+    <value>Srglde-3 Srglngles</value>
+  </data>
 </root>

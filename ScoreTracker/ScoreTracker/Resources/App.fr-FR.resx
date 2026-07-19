@@ -4754,4 +4754,361 @@
   <data name="Biased towards larger folders" xml:space="preserve">
     <value>Biaisé vers les grands dossiers</value>
   </data>
+  <data name="All Mixes" xml:space="preserve">
+    <value>Tous les Mix</value>
+  </data>
+  <data name="Applied filters" xml:space="preserve">
+    <value>Filtres appliqués</value>
+  </data>
+  <data name="Available in" xml:space="preserve">
+    <value>Disponible dans</value>
+  </data>
+  <data name="BPM from" xml:space="preserve">
+    <value>BPM min</value>
+  </data>
+  <data name="BPM to" xml:space="preserve">
+    <value>BPM max</value>
+  </data>
+  <data name="Community Vote" xml:space="preserve">
+    <value>Vote de la communauté</value>
+  </data>
+  <data name="Community intelligence" xml:space="preserve">
+    <value>Données de la communauté</value>
+  </data>
+  <data name="Content" xml:space="preserve">
+    <value>Contenu</value>
+  </data>
+  <data name="Debut" xml:space="preserve">
+    <value>Origine</value>
+  </data>
+  <data name="Debut mix" xml:space="preserve">
+    <value>Mix d'origine</value>
+  </data>
+  <data name="Download CSV" xml:space="preserve">
+    <value>Télécharger le CSV</value>
+  </data>
+  <data name="Export charts" xml:space="preserve">
+    <value>Exporter les charts</value>
+  </data>
+  <data name="Full Song" xml:space="preserve">
+    <value>Full Song</value>
+  </data>
+  <data name="Grade" xml:space="preserve">
+    <value>Grade</value>
+  </data>
+  <data name="Group by chart" xml:space="preserve">
+    <value>Regrouper par chart</value>
+  </data>
+  <data name="Grouped: one row per chart, level history collapsed. Per-mix: every appearance is its own row. Identical while scope is a single mix." xml:space="preserve">
+    <value>Regroupé : une ligne par chart avec l'historique des niveaux. Par Mix : une ligne par apparition. Identique avec un seul Mix.</value>
+  </data>
+  <data name="In" xml:space="preserve">
+    <value>Dans</value>
+  </data>
+  <data name="Legacy Difficulty" xml:space="preserve">
+    <value>Difficulté legacy</value>
+  </data>
+  <data name="Legacy grade" xml:space="preserve">
+    <value>Grade legacy</value>
+  </data>
+  <data name="Legacy grade at least" xml:space="preserve">
+    <value>Grade legacy minimum</value>
+  </data>
+  <data name="Level change" xml:space="preserve">
+    <value>Changement de niveau</value>
+  </data>
+  <data name="Level from" xml:space="preserve">
+    <value>Niveau min</value>
+  </data>
+  <data name="Level to" xml:space="preserve">
+    <value>Niveau max</value>
+  </data>
+  <data name="Mix scope" xml:space="preserve">
+    <value>Portée des Mix</value>
+  </data>
+  <data name="Mixes" xml:space="preserve">
+    <value>Mix</value>
+  </data>
+  <data name="My data" xml:space="preserve">
+    <value>Mes données</value>
+  </data>
+  <data name="My score" xml:space="preserve">
+    <value>Mon score</value>
+  </data>
+  <data name="NPS from" xml:space="preserve">
+    <value>NPS min</value>
+  </data>
+  <data name="NPS to" xml:space="preserve">
+    <value>NPS max</value>
+  </data>
+  <data name="No charts match these filters" xml:space="preserve">
+    <value>Aucun chart ne correspond à ces filtres</value>
+  </data>
+  <data name="Not available in" xml:space="preserve">
+    <value>Absent de</value>
+  </data>
+  <data name="Not in" xml:space="preserve">
+    <value>Pas dans</value>
+  </data>
+  <data name="Not yet re-cleared in {0}" xml:space="preserve">
+    <value>Pas encore re-clear sur {0}</value>
+  </data>
+  <data name="Note count" xml:space="preserve">
+    <value>Nombre de notes</value>
+  </data>
+  <data name="Notes from" xml:space="preserve">
+    <value>Notes min</value>
+  </data>
+  <data name="Notes to" xml:space="preserve">
+    <value>Notes max</value>
+  </data>
+  <data name="One row per chart and mix" xml:space="preserve">
+    <value>Une ligne par chart et par Mix</value>
+  </data>
+  <data name="Pass rate at least (%)" xml:space="preserve">
+    <value>Taux de réussite minimum (%)</value>
+  </data>
+  <data name="Phoenix grade at least" xml:space="preserve">
+    <value>Grade Phoenix minimum</value>
+  </data>
+  <data name="Phoenix plate at least" xml:space="preserve">
+    <value>Plate Phoenix minimum</value>
+  </data>
+  <data name="Phoenix score from" xml:space="preserve">
+    <value>Score Phoenix min</value>
+  </data>
+  <data name="Phoenix score to" xml:space="preserve">
+    <value>Score Phoenix max</value>
+  </data>
+  <data name="Quick record" xml:space="preserve">
+    <value>Enregistrement rapide</value>
+  </data>
+  <data name="Recorded from" xml:space="preserve">
+    <value>Enregistré depuis</value>
+  </data>
+  <data name="Recorded to" xml:space="preserve">
+    <value>Enregistré jusqu'au</value>
+  </data>
+  <data name="Recorded {0}" xml:space="preserve">
+    <value>{0} enregistré</value>
+  </data>
+  <data name="Remix" xml:space="preserve">
+    <value>Remix</value>
+  </data>
+  <data name="Rerated down" xml:space="preserve">
+    <value>Niveau baissé</value>
+  </data>
+  <data name="Rerated up" xml:space="preserve">
+    <value>Niveau augmenté</value>
+  </data>
+  <data name="Scoring level from" xml:space="preserve">
+    <value>Niveau de scoring min</value>
+  </data>
+  <data name="Scoring level to" xml:space="preserve">
+    <value>Niveau de scoring max</value>
+  </data>
+  <data name="Shape" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="Short Cut" xml:space="preserve">
+    <value>Short Cut</value>
+  </data>
+  <data name="Song name" xml:space="preserve">
+    <value>Nom de la chanson</value>
+  </data>
+  <data name="Song name contains" xml:space="preserve">
+    <value>Le nom contient</value>
+  </data>
+  <data name="Sort by" xml:space="preserve">
+    <value>Trier par</value>
+  </data>
+  <data name="Unplayed" xml:space="preserve">
+    <value>Non joué</value>
+  </data>
+  <data name="highlighted only" xml:space="preserve">
+    <value>dominantes uniquement</value>
+  </data>
+  <data name="official" xml:space="preserve">
+    <value>officiel</value>
+  </data>
+  <data name="{0} charts · current filters" xml:space="preserve">
+    <value>{0} charts · filtres actuels</value>
+  </data>
+  <data name="{0} columns" xml:space="preserve">
+    <value>{0} colonnes</value>
+  </data>
+  <data name="{0} mixes" xml:space="preserve">
+    <value>{0} mix</value>
+  </data>
+  <data name="{0} notes" xml:space="preserve">
+    <value>{0} notes</value>
+  </data>
+  <data name="{0} scores" xml:space="preserve">
+    <value>{0} scores</value>
+  </data>
+  <data name="Newest content" xml:space="preserve">
+    <value>Contenu le plus récent</value>
+  </data>
+  <data name="My grade" xml:space="preserve">
+    <value>Mon grade</value>
+  </data>
+  <data name="My recent" xml:space="preserve">
+    <value>Mes récents</value>
+  </data>
+  <data name="Overrated" xml:space="preserve">
+    <value>Surévalué</value>
+  </data>
+  <data name="Unranked" xml:space="preserve">
+    <value>Non classé</value>
+  </data>
+  <data name="Chart columns" xml:space="preserve">
+    <value>Colonnes de chart</value>
+  </data>
+  <data name="Community columns" xml:space="preserve">
+    <value>Colonnes communauté</value>
+  </data>
+  <data name="My columns" xml:space="preserve">
+    <value>Mes colonnes</value>
+  </data>
+  <data name="Artist" xml:space="preserve">
+    <value>Artiste</value>
+  </data>
+  <data name="Latest mix" xml:space="preserve">
+    <value>Dernier Mix</value>
+  </data>
+  <data name="Duration (seconds)" xml:space="preserve">
+    <value>Durée (secondes)</value>
+  </data>
+  <data name="Badges" xml:space="preserve">
+    <value>Badges</value>
+  </data>
+  <data name="Community Vote rating" xml:space="preserve">
+    <value>Note du vote communautaire</value>
+  </data>
+  <data name="Score count" xml:space="preserve">
+    <value>Nombre de scores</value>
+  </data>
+  <data name="PG count" xml:space="preserve">
+    <value>Nombre de PG</value>
+  </data>
+  <data name="My Phoenix score" xml:space="preserve">
+    <value>Mon score Phoenix</value>
+  </data>
+  <data name="My Phoenix grade" xml:space="preserve">
+    <value>Mon grade Phoenix</value>
+  </data>
+  <data name="My Phoenix plate" xml:space="preserve">
+    <value>Mon plate Phoenix</value>
+  </data>
+  <data name="My legacy grade" xml:space="preserve">
+    <value>Mon grade legacy</value>
+  </data>
+  <data name="My legacy score" xml:space="preserve">
+    <value>Mon score legacy</value>
+  </data>
+  <data name="My broken flag" xml:space="preserve">
+    <value>Broken (oui/non)</value>
+  </data>
+  <data name="My recorded date" xml:space="preserve">
+    <value>Ma date d'enregistrement</value>
+  </data>
+  <data name="Runs" xml:space="preserve">
+    <value>Runs</value>
+  </data>
+  <data name="Anchor Runs" xml:space="preserve">
+    <value>Anchor runs</value>
+  </data>
+  <data name="Runs Without Twists" xml:space="preserve">
+    <value>Runs sans twists</value>
+  </data>
+  <data name="Drills" xml:space="preserve">
+    <value>Drills</value>
+  </data>
+  <data name="Jumps" xml:space="preserve">
+    <value>Jumps</value>
+  </data>
+  <data name="Jacks" xml:space="preserve">
+    <value>Jacks</value>
+  </data>
+  <data name="Brackets" xml:space="preserve">
+    <value>Brackets</value>
+  </data>
+  <data name="Staggered Brackets" xml:space="preserve">
+    <value>Brackets décalés</value>
+  </data>
+  <data name="Bracket Runs" xml:space="preserve">
+    <value>Bracket runs</value>
+  </data>
+  <data name="Bracket Drills" xml:space="preserve">
+    <value>Bracket drills</value>
+  </data>
+  <data name="Bracket Jumps" xml:space="preserve">
+    <value>Bracket jumps</value>
+  </data>
+  <data name="Bracket Twists" xml:space="preserve">
+    <value>Bracket twists</value>
+  </data>
+  <data name="Twists" xml:space="preserve">
+    <value>Twists</value>
+  </data>
+  <data name="Twist 90" xml:space="preserve">
+    <value>Twists 90°</value>
+  </data>
+  <data name="Over-90 Twists" xml:space="preserve">
+    <value>Twists à plus de 90°</value>
+  </data>
+  <data name="Close Twists" xml:space="preserve">
+    <value>Twists serrés</value>
+  </data>
+  <data name="Far Twists" xml:space="preserve">
+    <value>Twists écartés</value>
+  </data>
+  <data name="Mid-6 Doubles" xml:space="preserve">
+    <value>Doubles centraux (6 flèches)</value>
+  </data>
+  <data name="Mid-4 Doubles" xml:space="preserve">
+    <value>Doubles centraux (4 flèches)</value>
+  </data>
+  <data name="Sustained" xml:space="preserve">
+    <value>Soutenu</value>
+  </data>
+  <data name="Bursty" xml:space="preserve">
+    <value>En rafales</value>
+  </data>
+  <data name="Footswitches" xml:space="preserve">
+    <value>Footswitches</value>
+  </data>
+  <data name="Hold Footswitches" xml:space="preserve">
+    <value>Footswitches sur hold</value>
+  </data>
+  <data name="Hold Footslides" xml:space="preserve">
+    <value>Footslides sur hold</value>
+  </data>
+  <data name="5-Stairs" xml:space="preserve">
+    <value>Escaliers de 5</value>
+  </data>
+  <data name="10-Stairs" xml:space="preserve">
+    <value>Escaliers de 10</value>
+  </data>
+  <data name="Yog Walks" xml:space="preserve">
+    <value>Yog walks</value>
+  </data>
+  <data name="Cross-pad Transitions" xml:space="preserve">
+    <value>Transitions entre pads</value>
+  </data>
+  <data name="Co-op Pad Transitions" xml:space="preserve">
+    <value>Transitions de pad en co-op</value>
+  </data>
+  <data name="Splits" xml:space="preserve">
+    <value>Splits</value>
+  </data>
+  <data name="Hands" xml:space="preserve">
+    <value>Mains</value>
+  </data>
+  <data name="Doublesteps" xml:space="preserve">
+    <value>Doublesteps</value>
+  </data>
+  <data name="Side-3 Singles" xml:space="preserve">
+    <value>Singles latéraux (3 flèches)</value>
+  </data>
 </root>

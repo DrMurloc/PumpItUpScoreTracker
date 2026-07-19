@@ -4760,4 +4760,361 @@
   <data name="Biased towards larger folders" xml:space="preserve">
     <value>大きいフォルダーに有利</value>
   </data>
+  <data name="All Mixes" xml:space="preserve">
+    <value>全バージョン</value>
+  </data>
+  <data name="Applied filters" xml:space="preserve">
+    <value>適用中のフィルター</value>
+  </data>
+  <data name="Available in" xml:space="preserve">
+    <value>収録バージョン</value>
+  </data>
+  <data name="BPM from" xml:space="preserve">
+    <value>最低BPM</value>
+  </data>
+  <data name="BPM to" xml:space="preserve">
+    <value>最高BPM</value>
+  </data>
+  <data name="Community Vote" xml:space="preserve">
+    <value>コミュニティ投票</value>
+  </data>
+  <data name="Community intelligence" xml:space="preserve">
+    <value>コミュニティデータ</value>
+  </data>
+  <data name="Content" xml:space="preserve">
+    <value>コンテンツ</value>
+  </data>
+  <data name="Debut" xml:space="preserve">
+    <value>初出</value>
+  </data>
+  <data name="Debut mix" xml:space="preserve">
+    <value>初出バージョン</value>
+  </data>
+  <data name="Download CSV" xml:space="preserve">
+    <value>CSVダウンロード</value>
+  </data>
+  <data name="Export charts" xml:space="preserve">
+    <value>譜面をエクスポート</value>
+  </data>
+  <data name="Full Song" xml:space="preserve">
+    <value>フルソング</value>
+  </data>
+  <data name="Grade" xml:space="preserve">
+    <value>ランク</value>
+  </data>
+  <data name="Group by chart" xml:space="preserve">
+    <value>譜面ごとにまとめる</value>
+  </data>
+  <data name="Grouped: one row per chart, level history collapsed. Per-mix: every appearance is its own row. Identical while scope is a single mix." xml:space="preserve">
+    <value>まとめる：譜面ごとに1行、レベル履歴をまとめて表示します。バージョン別：収録ごとに1行です。単一バージョンでは同じ結果になります。</value>
+  </data>
+  <data name="In" xml:space="preserve">
+    <value>収録</value>
+  </data>
+  <data name="Legacy Difficulty" xml:space="preserve">
+    <value>レガシー難度</value>
+  </data>
+  <data name="Legacy grade" xml:space="preserve">
+    <value>レガシーランク</value>
+  </data>
+  <data name="Legacy grade at least" xml:space="preserve">
+    <value>レガシーランク以上</value>
+  </data>
+  <data name="Level change" xml:space="preserve">
+    <value>レベル変動</value>
+  </data>
+  <data name="Level from" xml:space="preserve">
+    <value>最低レベル</value>
+  </data>
+  <data name="Level to" xml:space="preserve">
+    <value>最高レベル</value>
+  </data>
+  <data name="Mix scope" xml:space="preserve">
+    <value>バージョン範囲</value>
+  </data>
+  <data name="Mixes" xml:space="preserve">
+    <value>バージョン</value>
+  </data>
+  <data name="My data" xml:space="preserve">
+    <value>自分の記録</value>
+  </data>
+  <data name="My score" xml:space="preserve">
+    <value>自分のスコア</value>
+  </data>
+  <data name="NPS from" xml:space="preserve">
+    <value>最低NPS</value>
+  </data>
+  <data name="NPS to" xml:space="preserve">
+    <value>最高NPS</value>
+  </data>
+  <data name="No charts match these filters" xml:space="preserve">
+    <value>このフィルターに一致する譜面はありません</value>
+  </data>
+  <data name="Not available in" xml:space="preserve">
+    <value>未収録バージョン</value>
+  </data>
+  <data name="Not in" xml:space="preserve">
+    <value>未収録</value>
+  </data>
+  <data name="Not yet re-cleared in {0}" xml:space="preserve">
+    <value>{0}ではまだ再クリアしていません</value>
+  </data>
+  <data name="Note count" xml:space="preserve">
+    <value>ノーツ数</value>
+  </data>
+  <data name="Notes from" xml:space="preserve">
+    <value>最低ノーツ数</value>
+  </data>
+  <data name="Notes to" xml:space="preserve">
+    <value>最高ノーツ数</value>
+  </data>
+  <data name="One row per chart and mix" xml:space="preserve">
+    <value>譜面×バージョンごとに1行</value>
+  </data>
+  <data name="Pass rate at least (%)" xml:space="preserve">
+    <value>最低クリア率（%）</value>
+  </data>
+  <data name="Phoenix grade at least" xml:space="preserve">
+    <value>Phoenixランク以上</value>
+  </data>
+  <data name="Phoenix plate at least" xml:space="preserve">
+    <value>Phoenixプレート以上</value>
+  </data>
+  <data name="Phoenix score from" xml:space="preserve">
+    <value>Phoenix最低スコア</value>
+  </data>
+  <data name="Phoenix score to" xml:space="preserve">
+    <value>Phoenix最高スコア</value>
+  </data>
+  <data name="Quick record" xml:space="preserve">
+    <value>クイック記録</value>
+  </data>
+  <data name="Recorded from" xml:space="preserve">
+    <value>記録日（から）</value>
+  </data>
+  <data name="Recorded to" xml:space="preserve">
+    <value>記録日（まで）</value>
+  </data>
+  <data name="Recorded {0}" xml:space="preserve">
+    <value>{0}を記録しました</value>
+  </data>
+  <data name="Remix" xml:space="preserve">
+    <value>リミックス</value>
+  </data>
+  <data name="Rerated down" xml:space="preserve">
+    <value>レベル下方修正</value>
+  </data>
+  <data name="Rerated up" xml:space="preserve">
+    <value>レベル上方修正</value>
+  </data>
+  <data name="Scoring level from" xml:space="preserve">
+    <value>最低スコアリングレベル</value>
+  </data>
+  <data name="Scoring level to" xml:space="preserve">
+    <value>最高スコアリングレベル</value>
+  </data>
+  <data name="Shape" xml:space="preserve">
+    <value>形式</value>
+  </data>
+  <data name="Short Cut" xml:space="preserve">
+    <value>ショートカット</value>
+  </data>
+  <data name="Song name" xml:space="preserve">
+    <value>曲名</value>
+  </data>
+  <data name="Song name contains" xml:space="preserve">
+    <value>曲名に含む</value>
+  </data>
+  <data name="Sort by" xml:space="preserve">
+    <value>並び替え</value>
+  </data>
+  <data name="Unplayed" xml:space="preserve">
+    <value>未プレイ</value>
+  </data>
+  <data name="highlighted only" xml:space="preserve">
+    <value>代表スキルのみ</value>
+  </data>
+  <data name="official" xml:space="preserve">
+    <value>公式</value>
+  </data>
+  <data name="{0} charts · current filters" xml:space="preserve">
+    <value>{0}譜面・現在のフィルター</value>
+  </data>
+  <data name="{0} columns" xml:space="preserve">
+    <value>{0}列</value>
+  </data>
+  <data name="{0} mixes" xml:space="preserve">
+    <value>{0}バージョン</value>
+  </data>
+  <data name="{0} notes" xml:space="preserve">
+    <value>{0}ノーツ</value>
+  </data>
+  <data name="{0} scores" xml:space="preserve">
+    <value>{0}スコア</value>
+  </data>
+  <data name="Newest content" xml:space="preserve">
+    <value>最新収録</value>
+  </data>
+  <data name="My grade" xml:space="preserve">
+    <value>自分のランク</value>
+  </data>
+  <data name="My recent" xml:space="preserve">
+    <value>自分の最近の記録</value>
+  </data>
+  <data name="Overrated" xml:space="preserve">
+    <value>過大評価</value>
+  </data>
+  <data name="Unranked" xml:space="preserve">
+    <value>未分類</value>
+  </data>
+  <data name="Chart columns" xml:space="preserve">
+    <value>譜面の列</value>
+  </data>
+  <data name="Community columns" xml:space="preserve">
+    <value>コミュニティの列</value>
+  </data>
+  <data name="My columns" xml:space="preserve">
+    <value>自分の列</value>
+  </data>
+  <data name="Artist" xml:space="preserve">
+    <value>アーティスト</value>
+  </data>
+  <data name="Latest mix" xml:space="preserve">
+    <value>最新バージョン</value>
+  </data>
+  <data name="Duration (seconds)" xml:space="preserve">
+    <value>時間（秒）</value>
+  </data>
+  <data name="Badges" xml:space="preserve">
+    <value>バッジ</value>
+  </data>
+  <data name="Community Vote rating" xml:space="preserve">
+    <value>コミュニティ投票値</value>
+  </data>
+  <data name="Score count" xml:space="preserve">
+    <value>スコア数</value>
+  </data>
+  <data name="PG count" xml:space="preserve">
+    <value>PG数</value>
+  </data>
+  <data name="My Phoenix score" xml:space="preserve">
+    <value>自分のPhoenixスコア</value>
+  </data>
+  <data name="My Phoenix grade" xml:space="preserve">
+    <value>自分のPhoenixランク</value>
+  </data>
+  <data name="My Phoenix plate" xml:space="preserve">
+    <value>自分のPhoenixプレート</value>
+  </data>
+  <data name="My legacy grade" xml:space="preserve">
+    <value>自分のレガシーランク</value>
+  </data>
+  <data name="My legacy score" xml:space="preserve">
+    <value>自分のレガシースコア</value>
+  </data>
+  <data name="My broken flag" xml:space="preserve">
+    <value>ブレイク状態</value>
+  </data>
+  <data name="My recorded date" xml:space="preserve">
+    <value>自分の記録日</value>
+  </data>
+  <data name="Runs" xml:space="preserve">
+    <value>ラン</value>
+  </data>
+  <data name="Anchor Runs" xml:space="preserve">
+    <value>アンカーラン</value>
+  </data>
+  <data name="Runs Without Twists" xml:space="preserve">
+    <value>捻りなしラン</value>
+  </data>
+  <data name="Drills" xml:space="preserve">
+    <value>ドリル</value>
+  </data>
+  <data name="Jumps" xml:space="preserve">
+    <value>ジャンプ</value>
+  </data>
+  <data name="Jacks" xml:space="preserve">
+    <value>ジャック</value>
+  </data>
+  <data name="Brackets" xml:space="preserve">
+    <value>ブラケット</value>
+  </data>
+  <data name="Staggered Brackets" xml:space="preserve">
+    <value>段違いブラケット</value>
+  </data>
+  <data name="Bracket Runs" xml:space="preserve">
+    <value>ブラケットラン</value>
+  </data>
+  <data name="Bracket Drills" xml:space="preserve">
+    <value>ブラケットドリル</value>
+  </data>
+  <data name="Bracket Jumps" xml:space="preserve">
+    <value>ブラケットジャンプ</value>
+  </data>
+  <data name="Bracket Twists" xml:space="preserve">
+    <value>ブラケット捻り</value>
+  </data>
+  <data name="Twists" xml:space="preserve">
+    <value>捻り</value>
+  </data>
+  <data name="Twist 90" xml:space="preserve">
+    <value>90度捻り</value>
+  </data>
+  <data name="Over-90 Twists" xml:space="preserve">
+    <value>90度以上の捻り</value>
+  </data>
+  <data name="Close Twists" xml:space="preserve">
+    <value>近距離捻り</value>
+  </data>
+  <data name="Far Twists" xml:space="preserve">
+    <value>遠距離捻り</value>
+  </data>
+  <data name="Mid-6 Doubles" xml:space="preserve">
+    <value>中央6パネル</value>
+  </data>
+  <data name="Mid-4 Doubles" xml:space="preserve">
+    <value>中央4パネル</value>
+  </data>
+  <data name="Sustained" xml:space="preserve">
+    <value>持久型</value>
+  </data>
+  <data name="Bursty" xml:space="preserve">
+    <value>瞬間密度型</value>
+  </data>
+  <data name="Footswitches" xml:space="preserve">
+    <value>フットスイッチ</value>
+  </data>
+  <data name="Hold Footswitches" xml:space="preserve">
+    <value>ホールドフットスイッチ</value>
+  </data>
+  <data name="Hold Footslides" xml:space="preserve">
+    <value>ホールドスライド</value>
+  </data>
+  <data name="5-Stairs" xml:space="preserve">
+    <value>5段階段</value>
+  </data>
+  <data name="10-Stairs" xml:space="preserve">
+    <value>10段階段</value>
+  </data>
+  <data name="Yog Walks" xml:space="preserve">
+    <value>ヨグウォーク</value>
+  </data>
+  <data name="Cross-pad Transitions" xml:space="preserve">
+    <value>パッド間移動</value>
+  </data>
+  <data name="Co-op Pad Transitions" xml:space="preserve">
+    <value>コーオプパッド移動</value>
+  </data>
+  <data name="Splits" xml:space="preserve">
+    <value>スプリット</value>
+  </data>
+  <data name="Hands" xml:space="preserve">
+    <value>ハンド</value>
+  </data>
+  <data name="Doublesteps" xml:space="preserve">
+    <value>ダブルステップ</value>
+  </data>
+  <data name="Side-3 Singles" xml:space="preserve">
+    <value>サイド3パネル</value>
+  </data>
 </root>

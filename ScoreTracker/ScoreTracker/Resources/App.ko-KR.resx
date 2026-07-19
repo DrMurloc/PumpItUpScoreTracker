@@ -4641,4 +4641,361 @@
   <data name="Biased towards larger folders" xml:space="preserve">
     <value>큰 폴더에 유리합니다</value>
   </data>
+  <data name="All Mixes" xml:space="preserve">
+    <value>모든 시리즈</value>
+  </data>
+  <data name="Applied filters" xml:space="preserve">
+    <value>적용된 필터</value>
+  </data>
+  <data name="Available in" xml:space="preserve">
+    <value>수록된 시리즈</value>
+  </data>
+  <data name="BPM from" xml:space="preserve">
+    <value>최소 BPM</value>
+  </data>
+  <data name="BPM to" xml:space="preserve">
+    <value>최대 BPM</value>
+  </data>
+  <data name="Community Vote" xml:space="preserve">
+    <value>커뮤니티 투표</value>
+  </data>
+  <data name="Community intelligence" xml:space="preserve">
+    <value>커뮤니티 데이터</value>
+  </data>
+  <data name="Content" xml:space="preserve">
+    <value>콘텐츠</value>
+  </data>
+  <data name="Debut" xml:space="preserve">
+    <value>데뷔</value>
+  </data>
+  <data name="Debut mix" xml:space="preserve">
+    <value>데뷔 시리즈</value>
+  </data>
+  <data name="Download CSV" xml:space="preserve">
+    <value>CSV 다운로드</value>
+  </data>
+  <data name="Export charts" xml:space="preserve">
+    <value>채보 내보내기</value>
+  </data>
+  <data name="Full Song" xml:space="preserve">
+    <value>풀 송</value>
+  </data>
+  <data name="Grade" xml:space="preserve">
+    <value>등급</value>
+  </data>
+  <data name="Group by chart" xml:space="preserve">
+    <value>채보별로 묶기</value>
+  </data>
+  <data name="Grouped: one row per chart, level history collapsed. Per-mix: every appearance is its own row. Identical while scope is a single mix." xml:space="preserve">
+    <value>묶기: 채보당 한 줄로 레벨 변화를 함께 표시합니다. 시리즈별: 수록마다 한 줄입니다. 단일 시리즈 범위에서는 동일합니다.</value>
+  </data>
+  <data name="In" xml:space="preserve">
+    <value>수록</value>
+  </data>
+  <data name="Legacy Difficulty" xml:space="preserve">
+    <value>레거시 난이도</value>
+  </data>
+  <data name="Legacy grade" xml:space="preserve">
+    <value>레거시 등급</value>
+  </data>
+  <data name="Legacy grade at least" xml:space="preserve">
+    <value>레거시 등급 이상</value>
+  </data>
+  <data name="Level change" xml:space="preserve">
+    <value>레벨 변화</value>
+  </data>
+  <data name="Level from" xml:space="preserve">
+    <value>최소 레벨</value>
+  </data>
+  <data name="Level to" xml:space="preserve">
+    <value>최대 레벨</value>
+  </data>
+  <data name="Mix scope" xml:space="preserve">
+    <value>시리즈 범위</value>
+  </data>
+  <data name="Mixes" xml:space="preserve">
+    <value>시리즈</value>
+  </data>
+  <data name="My data" xml:space="preserve">
+    <value>내 기록</value>
+  </data>
+  <data name="My score" xml:space="preserve">
+    <value>내 점수</value>
+  </data>
+  <data name="NPS from" xml:space="preserve">
+    <value>최소 NPS</value>
+  </data>
+  <data name="NPS to" xml:space="preserve">
+    <value>최대 NPS</value>
+  </data>
+  <data name="No charts match these filters" xml:space="preserve">
+    <value>필터에 맞는 채보가 없습니다</value>
+  </data>
+  <data name="Not available in" xml:space="preserve">
+    <value>미수록 시리즈</value>
+  </data>
+  <data name="Not in" xml:space="preserve">
+    <value>미수록</value>
+  </data>
+  <data name="Not yet re-cleared in {0}" xml:space="preserve">
+    <value>{0}에서 아직 재클리어하지 않음</value>
+  </data>
+  <data name="Note count" xml:space="preserve">
+    <value>노트 수</value>
+  </data>
+  <data name="Notes from" xml:space="preserve">
+    <value>최소 노트 수</value>
+  </data>
+  <data name="Notes to" xml:space="preserve">
+    <value>최대 노트 수</value>
+  </data>
+  <data name="One row per chart and mix" xml:space="preserve">
+    <value>채보·시리즈별 한 줄</value>
+  </data>
+  <data name="Pass rate at least (%)" xml:space="preserve">
+    <value>최소 클리어율 (%)</value>
+  </data>
+  <data name="Phoenix grade at least" xml:space="preserve">
+    <value>Phoenix 등급 이상</value>
+  </data>
+  <data name="Phoenix plate at least" xml:space="preserve">
+    <value>Phoenix 플레이트 이상</value>
+  </data>
+  <data name="Phoenix score from" xml:space="preserve">
+    <value>Phoenix 최저 점수</value>
+  </data>
+  <data name="Phoenix score to" xml:space="preserve">
+    <value>Phoenix 최고 점수</value>
+  </data>
+  <data name="Quick record" xml:space="preserve">
+    <value>빠른 기록</value>
+  </data>
+  <data name="Recorded from" xml:space="preserve">
+    <value>기록일 시작</value>
+  </data>
+  <data name="Recorded to" xml:space="preserve">
+    <value>기록일 끝</value>
+  </data>
+  <data name="Recorded {0}" xml:space="preserve">
+    <value>{0} 기록 완료</value>
+  </data>
+  <data name="Remix" xml:space="preserve">
+    <value>리믹스</value>
+  </data>
+  <data name="Rerated down" xml:space="preserve">
+    <value>레벨 하향</value>
+  </data>
+  <data name="Rerated up" xml:space="preserve">
+    <value>레벨 상향</value>
+  </data>
+  <data name="Scoring level from" xml:space="preserve">
+    <value>최소 스코어링 레벨</value>
+  </data>
+  <data name="Scoring level to" xml:space="preserve">
+    <value>최대 스코어링 레벨</value>
+  </data>
+  <data name="Shape" xml:space="preserve">
+    <value>형식</value>
+  </data>
+  <data name="Short Cut" xml:space="preserve">
+    <value>숏컷</value>
+  </data>
+  <data name="Song name" xml:space="preserve">
+    <value>노래 이름</value>
+  </data>
+  <data name="Song name contains" xml:space="preserve">
+    <value>노래 이름 포함</value>
+  </data>
+  <data name="Sort by" xml:space="preserve">
+    <value>정렬</value>
+  </data>
+  <data name="Unplayed" xml:space="preserve">
+    <value>미플레이</value>
+  </data>
+  <data name="highlighted only" xml:space="preserve">
+    <value>대표 스킬만</value>
+  </data>
+  <data name="official" xml:space="preserve">
+    <value>공식</value>
+  </data>
+  <data name="{0} charts · current filters" xml:space="preserve">
+    <value>채보 {0}개 · 현재 필터</value>
+  </data>
+  <data name="{0} columns" xml:space="preserve">
+    <value>열 {0}개</value>
+  </data>
+  <data name="{0} mixes" xml:space="preserve">
+    <value>시리즈 {0}개</value>
+  </data>
+  <data name="{0} notes" xml:space="preserve">
+    <value>노트 {0}개</value>
+  </data>
+  <data name="{0} scores" xml:space="preserve">
+    <value>스코어 {0}개</value>
+  </data>
+  <data name="Newest content" xml:space="preserve">
+    <value>최신 수록곡</value>
+  </data>
+  <data name="My grade" xml:space="preserve">
+    <value>내 등급</value>
+  </data>
+  <data name="My recent" xml:space="preserve">
+    <value>내 최근 기록</value>
+  </data>
+  <data name="Overrated" xml:space="preserve">
+    <value>과대평가</value>
+  </data>
+  <data name="Unranked" xml:space="preserve">
+    <value>미분류</value>
+  </data>
+  <data name="Chart columns" xml:space="preserve">
+    <value>채보 열</value>
+  </data>
+  <data name="Community columns" xml:space="preserve">
+    <value>커뮤니티 열</value>
+  </data>
+  <data name="My columns" xml:space="preserve">
+    <value>내 기록 열</value>
+  </data>
+  <data name="Artist" xml:space="preserve">
+    <value>아티스트</value>
+  </data>
+  <data name="Latest mix" xml:space="preserve">
+    <value>최신 시리즈</value>
+  </data>
+  <data name="Duration (seconds)" xml:space="preserve">
+    <value>시간 (초)</value>
+  </data>
+  <data name="Badges" xml:space="preserve">
+    <value>배지</value>
+  </data>
+  <data name="Community Vote rating" xml:space="preserve">
+    <value>커뮤니티 투표 점수</value>
+  </data>
+  <data name="Score count" xml:space="preserve">
+    <value>스코어 수</value>
+  </data>
+  <data name="PG count" xml:space="preserve">
+    <value>PG 수</value>
+  </data>
+  <data name="My Phoenix score" xml:space="preserve">
+    <value>내 Phoenix 점수</value>
+  </data>
+  <data name="My Phoenix grade" xml:space="preserve">
+    <value>내 Phoenix 등급</value>
+  </data>
+  <data name="My Phoenix plate" xml:space="preserve">
+    <value>내 Phoenix 플레이트</value>
+  </data>
+  <data name="My legacy grade" xml:space="preserve">
+    <value>내 레거시 등급</value>
+  </data>
+  <data name="My legacy score" xml:space="preserve">
+    <value>내 레거시 점수</value>
+  </data>
+  <data name="My broken flag" xml:space="preserve">
+    <value>브레이크 여부</value>
+  </data>
+  <data name="My recorded date" xml:space="preserve">
+    <value>내 기록 날짜</value>
+  </data>
+  <data name="Runs" xml:space="preserve">
+    <value>폭타</value>
+  </data>
+  <data name="Anchor Runs" xml:space="preserve">
+    <value>앵커 폭타</value>
+  </data>
+  <data name="Runs Without Twists" xml:space="preserve">
+    <value>틀기 없는 폭타</value>
+  </data>
+  <data name="Drills" xml:space="preserve">
+    <value>드릴</value>
+  </data>
+  <data name="Jumps" xml:space="preserve">
+    <value>점프</value>
+  </data>
+  <data name="Jacks" xml:space="preserve">
+    <value>잭</value>
+  </data>
+  <data name="Brackets" xml:space="preserve">
+    <value>브라켓</value>
+  </data>
+  <data name="Staggered Brackets" xml:space="preserve">
+    <value>엇갈린 브라켓</value>
+  </data>
+  <data name="Bracket Runs" xml:space="preserve">
+    <value>브라켓 폭타</value>
+  </data>
+  <data name="Bracket Drills" xml:space="preserve">
+    <value>브라켓 드릴</value>
+  </data>
+  <data name="Bracket Jumps" xml:space="preserve">
+    <value>브라켓 점프</value>
+  </data>
+  <data name="Bracket Twists" xml:space="preserve">
+    <value>브라켓 틀기</value>
+  </data>
+  <data name="Twists" xml:space="preserve">
+    <value>틀기</value>
+  </data>
+  <data name="Twist 90" xml:space="preserve">
+    <value>90도 틀기</value>
+  </data>
+  <data name="Over-90 Twists" xml:space="preserve">
+    <value>90도 이상 틀기</value>
+  </data>
+  <data name="Close Twists" xml:space="preserve">
+    <value>좁은 틀기</value>
+  </data>
+  <data name="Far Twists" xml:space="preserve">
+    <value>넓은 틀기</value>
+  </data>
+  <data name="Mid-6 Doubles" xml:space="preserve">
+    <value>중앙 6패널</value>
+  </data>
+  <data name="Mid-4 Doubles" xml:space="preserve">
+    <value>중앙 4패널</value>
+  </data>
+  <data name="Sustained" xml:space="preserve">
+    <value>지속형</value>
+  </data>
+  <data name="Bursty" xml:space="preserve">
+    <value>순간 폭타</value>
+  </data>
+  <data name="Footswitches" xml:space="preserve">
+    <value>풋스위치</value>
+  </data>
+  <data name="Hold Footswitches" xml:space="preserve">
+    <value>홀드 풋스위치</value>
+  </data>
+  <data name="Hold Footslides" xml:space="preserve">
+    <value>홀드 슬라이드</value>
+  </data>
+  <data name="5-Stairs" xml:space="preserve">
+    <value>5계단</value>
+  </data>
+  <data name="10-Stairs" xml:space="preserve">
+    <value>10계단</value>
+  </data>
+  <data name="Yog Walks" xml:space="preserve">
+    <value>요그 워크</value>
+  </data>
+  <data name="Cross-pad Transitions" xml:space="preserve">
+    <value>패드 이동</value>
+  </data>
+  <data name="Co-op Pad Transitions" xml:space="preserve">
+    <value>코옵 패드 이동</value>
+  </data>
+  <data name="Splits" xml:space="preserve">
+    <value>스플릿</value>
+  </data>
+  <data name="Hands" xml:space="preserve">
+    <value>손</value>
+  </data>
+  <data name="Doublesteps" xml:space="preserve">
+    <value>더블스텝</value>
+  </data>
+  <data name="Side-3 Singles" xml:space="preserve">
+    <value>사이드 3패널</value>
+  </data>
 </root>
