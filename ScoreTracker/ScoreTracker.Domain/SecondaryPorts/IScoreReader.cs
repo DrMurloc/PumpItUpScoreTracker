@@ -80,4 +80,8 @@ public interface IScoreReader
     /// <summary>A player's best XX (legacy mix) attempt per chart. XX records are Ledger-owned too.</summary>
     Task<IEnumerable<BestXXChartAttempt>> GetBestXXAttempts(Guid userId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>A player's best legacy-scoring attempt per chart in a specific XX-or-older mix.</summary>
+    Task<IEnumerable<BestXXChartAttempt>> GetBestXXAttempts(MixEnum mix, Guid userId,
+        CancellationToken cancellationToken = default);
 }

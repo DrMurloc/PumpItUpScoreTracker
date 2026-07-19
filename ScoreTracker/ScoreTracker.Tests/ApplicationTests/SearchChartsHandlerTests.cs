@@ -8,6 +8,7 @@ using Moq;
 using ScoreTracker.Catalog.Application;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
@@ -45,6 +46,10 @@ public sealed class SearchChartsHandlerTests
             .ReturnsAsync(Array.Empty<ChartDifficultyRatingRecord>());
         _scores.Setup(s => s.GetChartScoreAggregates(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ChartScoreAggregate>());
+        _scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+        _scores.Setup(s => s.GetBestXXAttempts(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<BestXXChartAttempt>());
     }
 
     private SearchChartsHandler BuildHandler()
@@ -369,6 +374,163 @@ public sealed class SearchChartsHandlerTests
         }, CancellationToken.None);
 
         Assert.Equal("District 1", Assert.Single(result.Results).Chart.Song.Name.ToString());
+    }
+
+    private static readonly Guid User = Guid.NewGuid();
+
+    private void SeedPhoenixRecords(MixEnum mix, params RecordedPhoenixScore[] records)
+    {
+        _scores.Setup(s => s.GetBestScores(mix, User, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(records);
+    }
+
+    private void SeedLegacyRecords(MixEnum mix, params BestXXChartAttempt[] attempts)
+    {
+        _scores.Setup(s => s.GetBestXXAttempts(mix, User, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(attempts);
+    }
+
+    [Fact]
+    public async Task MyStateShowsTheLinkedBestAndTheCrossMixPassMarker()
+    {
+        var id = Guid.NewGuid();
+        SeedMix(MixEnum.Phoenix, MakeChart(id, MixEnum.Phoenix, "Bee", 19));
+        SeedMix(MixEnum.Phoenix2, MakeChart(id, MixEnum.Phoenix2, "Bee", 19));
+        SeedPhoenixRecords(MixEnum.Phoenix,
+            new RecordedPhoenixScore(id, PhoenixScore.From(977210), PhoenixPlate.SuperbGame, false,
+                new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero)));
+        SeedPhoenixRecords(MixEnum.Phoenix2);
+
+        var result = await BuildHandler().Handle(new SearchChartsQuery
+        {
+            Mix = MixEnum.Phoenix2,
+            Mixes = new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            UserId = User
+        }, CancellationToken.None);
+
+        var my = Assert.Single(result.Results).My;
+        Assert.NotNull(my);
+        Assert.Null(my!.PhoenixScore);
+        Assert.False(my.PassedInLinkedMix);
+        Assert.True(my.PassedInAnotherScopeMix);
+    }
+
+    [Fact]
+    public async Task ScoreStateFiltersJudgeTheLinkedAppearance()
+    {
+        var played = Guid.NewGuid();
+        var untouched = Guid.NewGuid();
+        SeedMix(MixEnum.Phoenix,
+            MakeChart(played, MixEnum.Phoenix, "Played", 19),
+            MakeChart(untouched, MixEnum.Phoenix, "Untouched", 19));
+        SeedPhoenixRecords(MixEnum.Phoenix,
+            new RecordedPhoenixScore(played, PhoenixScore.From(912000), null, true,
+                new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero)));
+        var handler = BuildHandler();
+        var query = new SearchChartsQuery { Mix = MixEnum.Phoenix, UserId = User };
+
+        var unplayed = await handler.Handle(query with { ScoreState = ChartScoreStateFilter.Unplayed },
+            CancellationToken.None);
+        var failed = await handler.Handle(query with { ScoreState = ChartScoreStateFilter.Failed },
+            CancellationToken.None);
+        var passed = await handler.Handle(query with { ScoreState = ChartScoreStateFilter.Passed },
+            CancellationToken.None);
+
+        Assert.Equal(untouched, Assert.Single(unplayed.Results).Chart.Id);
+        Assert.Equal(played, Assert.Single(failed.Results).Chart.Id);
+        Assert.Empty(passed.Results);
+    }
+
+    [Fact]
+    public async Task ReclearGapFindsPassesThatHaveNotLandedInTheTargetMix()
+    {
+        var gap = Guid.NewGuid();
+        var recleared = Guid.NewGuid();
+        var neverPassed = Guid.NewGuid();
+        SeedMix(MixEnum.Phoenix,
+            MakeChart(gap, MixEnum.Phoenix, "Gap", 19),
+            MakeChart(recleared, MixEnum.Phoenix, "Recleared", 19),
+            MakeChart(neverPassed, MixEnum.Phoenix, "Never", 19));
+        SeedMix(MixEnum.Phoenix2,
+            MakeChart(gap, MixEnum.Phoenix2, "Gap", 19),
+            MakeChart(recleared, MixEnum.Phoenix2, "Recleared", 19),
+            MakeChart(neverPassed, MixEnum.Phoenix2, "Never", 19));
+        var may = new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero);
+        SeedPhoenixRecords(MixEnum.Phoenix,
+            new RecordedPhoenixScore(gap, PhoenixScore.From(960000), null, false, may),
+            new RecordedPhoenixScore(recleared, PhoenixScore.From(950000), null, false, may));
+        SeedPhoenixRecords(MixEnum.Phoenix2,
+            new RecordedPhoenixScore(recleared, PhoenixScore.From(940000), null, false, may));
+
+        var result = await BuildHandler().Handle(new SearchChartsQuery
+        {
+            Mix = MixEnum.Phoenix2,
+            Mixes = new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            UserId = User,
+            NotReclearedIn = MixEnum.Phoenix2
+        }, CancellationToken.None);
+
+        Assert.Equal(gap, Assert.Single(result.Results).Chart.Id);
+    }
+
+    [Fact]
+    public async Task FamilyScoreFiltersJudgeEachRowByItsOwnFamilyOnly()
+    {
+        var modern = Guid.NewGuid();
+        var legacy = Guid.NewGuid();
+        SeedMix(MixEnum.Phoenix, MakeChart(modern, MixEnum.Phoenix, "Modern", 19));
+        SeedMix(MixEnum.XX, MakeChart(legacy, MixEnum.XX, "Old", 19));
+        var may = new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero);
+        SeedPhoenixRecords(MixEnum.Phoenix,
+            new RecordedPhoenixScore(modern, PhoenixScore.From(996000), null, false, may));
+        SeedLegacyRecords(MixEnum.XX,
+            new BestXXChartAttempt(MakeChart(legacy, MixEnum.XX, "Old", 19),
+                new XXChartAttempt(XXLetterGrade.S, false, 92410, may)));
+        var handler = BuildHandler();
+        var query = new SearchChartsQuery
+        {
+            Mix = MixEnum.Phoenix,
+            Mixes = new[] { MixEnum.XX, MixEnum.Phoenix },
+            UserId = User
+        };
+
+        var phoenixOnly = await handler.Handle(query with { PhoenixGradeMin = PhoenixLetterGrade.SSS },
+            CancellationToken.None);
+        var bothFamilies = await handler.Handle(query with
+        {
+            PhoenixGradeMin = PhoenixLetterGrade.SSS,
+            LegacyGradeMin = XXLetterGrade.S
+        }, CancellationToken.None);
+        var legacyTooHigh = await handler.Handle(query with { LegacyGradeMin = XXLetterGrade.SSS },
+            CancellationToken.None);
+
+        Assert.Equal(modern, Assert.Single(phoenixOnly.Results).Chart.Id);
+        Assert.Equal(2, bothFamilies.Results.Count);
+        Assert.Empty(legacyTooHigh.Results);
+    }
+
+    [Fact]
+    public async Task RecordedDateRangeReadsTheLinkedRecord()
+    {
+        var recent = Guid.NewGuid();
+        var stale = Guid.NewGuid();
+        SeedMix(MixEnum.Phoenix,
+            MakeChart(recent, MixEnum.Phoenix, "Recent", 19),
+            MakeChart(stale, MixEnum.Phoenix, "Stale", 19));
+        SeedPhoenixRecords(MixEnum.Phoenix,
+            new RecordedPhoenixScore(recent, PhoenixScore.From(950000), null, false,
+                new DateTimeOffset(2026, 7, 10, 0, 0, 0, TimeSpan.Zero)),
+            new RecordedPhoenixScore(stale, PhoenixScore.From(950000), null, false,
+                new DateTimeOffset(2026, 1, 10, 0, 0, 0, TimeSpan.Zero)));
+
+        var result = await BuildHandler().Handle(new SearchChartsQuery
+        {
+            Mix = MixEnum.Phoenix,
+            UserId = User,
+            RecordedFrom = new DateTimeOffset(2026, 7, 1, 0, 0, 0, TimeSpan.Zero)
+        }, CancellationToken.None);
+
+        Assert.Equal(recent, Assert.Single(result.Results).Chart.Id);
     }
 
     [Fact]

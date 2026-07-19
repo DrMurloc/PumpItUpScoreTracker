@@ -61,6 +61,15 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
             .Where(r => MatchesContent(r, request) && MatchesCommunity(r, request))
             .ToList();
 
+        if (request.UserId != null)
+        {
+            var myRecords = await LoadMyRecords(request.UserId.Value, scope, cancellationToken);
+            rows = rows
+                .Select(r => r with { My = BuildMyState(r, myRecords) })
+                .Where(r => MatchesUser(r, request, myRecords))
+                .ToList();
+        }
+
         var sorted = Sort(rows, request).ToList();
         var total = sorted.Count;
         var page = request.Page == null
@@ -315,6 +324,111 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
         return row.ScoreCount >= MinScoresForPassRate ? row.PassCount / (double)row.ScoreCount : null;
     }
 
+    private sealed record MyRecord(bool Passed, bool IsBroken, int? PhoenixScore, PhoenixLetterGrade? PhoenixGrade,
+        PhoenixPlate? PhoenixPlate, XXLetterGrade? LegacyGrade, int? LegacyScore, DateTimeOffset? RecordedOn);
+
+    /// <summary>The visitor's best per (mix, chart) across the scope, family-shaped per mix.</summary>
+    private async Task<IReadOnlyDictionary<(MixEnum Mix, Guid ChartId), MyRecord>> LoadMyRecords(Guid userId,
+        IReadOnlyList<MixEnum> scope, CancellationToken cancellationToken)
+    {
+        var records = new Dictionary<(MixEnum, Guid), MyRecord>();
+        foreach (var mix in scope)
+            if (mix.UsesLegacyScoring())
+                foreach (var attempt in await _scores.GetBestXXAttempts(mix, userId, cancellationToken))
+                {
+                    var best = attempt.BestAttempt;
+                    if (best == null) continue;
+                    records[(mix, attempt.Chart.Id)] = new MyRecord(!best.IsBroken, best.IsBroken, null, null, null,
+                        best.LetterGrade, best.Score, best.RecordedOn);
+                }
+            else
+                foreach (var record in await _scores.GetBestScores(mix, userId, cancellationToken))
+                    records[(mix, record.ChartId)] = new MyRecord(!record.IsBroken, record.IsBroken,
+                        record.Score == null ? null : (int)record.Score.Value, record.Score?.LetterGrade,
+                        record.Plate, null, null, record.RecordedDate);
+
+        return records;
+    }
+
+    private static ChartSearchMyState? BuildMyState(ChartSearchResult row,
+        IReadOnlyDictionary<(MixEnum, Guid), MyRecord> records)
+    {
+        var id = row.Chart.Id;
+        records.TryGetValue((row.Chart.Mix, id), out var linked);
+        var passedElsewhere = row.Appearances.Any(a =>
+            a.Mix != row.Chart.Mix && records.TryGetValue((a.Mix, id), out var other) && other.Passed);
+
+        if (linked == null && !passedElsewhere) return null;
+
+        return new ChartSearchMyState(linked?.PhoenixScore, linked?.PhoenixGrade, linked?.PhoenixPlate,
+            linked?.LegacyGrade, linked?.LegacyScore, linked?.IsBroken ?? false, linked?.RecordedOn,
+            linked?.Passed ?? false, passedElsewhere);
+    }
+
+    private static bool MatchesUser(ChartSearchResult row, SearchChartsQuery q,
+        IReadOnlyDictionary<(MixEnum, Guid), MyRecord> records)
+    {
+        var hasLinkedRecord = records.TryGetValue((row.Chart.Mix, row.Chart.Id), out var linked);
+
+        if (q.ScoreState != null)
+        {
+            var matches = q.ScoreState.Value switch
+            {
+                ChartScoreStateFilter.Unplayed => !hasLinkedRecord,
+                ChartScoreStateFilter.Played => hasLinkedRecord,
+                ChartScoreStateFilter.Passed => linked is { Passed: true },
+                ChartScoreStateFilter.Failed => linked is { Passed: false },
+                _ => true
+            };
+            if (!matches) return false;
+        }
+
+        if (q.RecordedFrom != null && (row.My?.RecordedOn == null || row.My.RecordedOn < q.RecordedFrom))
+            return false;
+        if (q.RecordedTo != null && (row.My?.RecordedOn == null || row.My.RecordedOn > q.RecordedTo))
+            return false;
+
+        // Family facets judge a row by its own family only — Phoenix filters can never
+        // exclude a legacy row on Phoenix terms, and vice versa. When only the other
+        // family's filters are set, the row has no way to satisfy the expressed intent.
+        var phoenixSet = q.PhoenixGradeMin != null || q.PhoenixPlateMin != null ||
+                         q.PhoenixScoreMin != null || q.PhoenixScoreMax != null;
+        var legacySet = q.LegacyGradeMin != null;
+        if (phoenixSet || legacySet)
+        {
+            if (row.Chart.Mix.UsesLegacyScoring())
+            {
+                if (!legacySet) return false;
+                if (row.My?.LegacyGrade == null || row.My.LegacyGrade < q.LegacyGradeMin) return false;
+            }
+            else
+            {
+                if (!phoenixSet) return false;
+                if (q.PhoenixGradeMin != null &&
+                    (row.My?.PhoenixGrade == null || row.My.PhoenixGrade < q.PhoenixGradeMin)) return false;
+                if (q.PhoenixPlateMin != null &&
+                    (row.My?.PhoenixPlate == null || row.My.PhoenixPlate < q.PhoenixPlateMin)) return false;
+                if (q.PhoenixScoreMin != null &&
+                    (row.My?.PhoenixScore == null || row.My.PhoenixScore < q.PhoenixScoreMin)) return false;
+                if (q.PhoenixScoreMax != null &&
+                    (row.My?.PhoenixScore == null || row.My.PhoenixScore > q.PhoenixScoreMax)) return false;
+            }
+        }
+
+        if (q.NotReclearedIn != null)
+        {
+            var target = q.NotReclearedIn.Value;
+            var id = row.Chart.Id;
+            if (row.Appearances.All(a => a.Mix != target)) return false;
+            if (records.TryGetValue((target, id), out var inTarget) && inTarget.Passed) return false;
+            var passedElsewhere = row.Appearances.Any(a => a.Mix != target &&
+                records.TryGetValue((a.Mix, id), out var other) && other.Passed);
+            if (!passedElsewhere) return false;
+        }
+
+        return true;
+    }
+
     /// <summary>
     ///     The family-safe difficulty decimal: scoring level for Phoenix-family results,
     ///     Community Vote average for XX-and-older. Falls back to the printed level.
@@ -356,7 +470,15 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
             ChartSearchSort.Bpm => NullsLast(r => r.Chart.Song.Bpm == null ? null : (double)r.Chart.Song.Bpm.Value.Max),
             ChartSearchSort.Nps => NullsLast(r => r.Nps == null ? null : (double)r.Nps.Value),
             ChartSearchSort.Duration => By(r => r.Chart.Song.Duration),
-            ChartSearchSort.MyGrade => NullsLast(r => (double?)(r.My?.PhoenixScore ?? r.My?.LegacyScore)),
+            // Families never compare: unscored rows tail, then Phoenix scores order the
+            // Phoenix-family rows and legacy scores the rest — grouping falls out of the keys.
+            ChartSearchSort.MyGrade => desc
+                ? rows.OrderBy(r => r.My?.PhoenixScore == null && r.My?.LegacyScore == null ? 1 : 0)
+                    .ThenByDescending(r => r.My?.PhoenixScore ?? int.MinValue)
+                    .ThenByDescending(r => r.My?.LegacyScore ?? int.MinValue)
+                : rows.OrderBy(r => r.My?.PhoenixScore == null && r.My?.LegacyScore == null ? 1 : 0)
+                    .ThenBy(r => r.My?.PhoenixScore ?? int.MaxValue)
+                    .ThenBy(r => r.My?.LegacyScore ?? int.MaxValue),
             ChartSearchSort.MyRecent => NullsLast(r => (double?)r.My?.RecordedOn?.UtcTicks),
             _ => By(r => (int)r.Chart.Level)
         };

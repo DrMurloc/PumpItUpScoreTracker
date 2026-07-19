@@ -140,6 +140,12 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return _xxAttempts.GetBestAttempts(userId, MixEnum.XX, cancellationToken);
     }
 
+    Task<IEnumerable<BestXXChartAttempt>> IScoreReader.GetBestXXAttempts(MixEnum mix, Guid userId,
+        CancellationToken cancellationToken)
+    {
+        return _xxAttempts.GetBestAttempts(userId, mix, cancellationToken);
+    }
+
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
     private readonly IChartRepository _charts;
