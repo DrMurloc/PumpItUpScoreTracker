@@ -90,6 +90,24 @@ dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integ
 dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integration.csproj --filter "FullyQualifiedName~RealSessionShowcaseTests"
 ```
 
+### Exploration tests — never in CI, run by hand
+
+`ScoreTracker.Tests.Exploration/` is the sandbox assembly for **interactive, snapshot-grabbing
+iteration** against real local inputs — currently the score-image extractor loop
+(`ScoreImageExtraction/`), which runs Tesseract OCR over result-screen photos on the local disk
+and scores every field against the hand-verified fixtures shared with `ScoreTracker.Tests`.
+Nothing here is a regression gate: CI invokes each suite by explicit csproj and never runs this
+one, tests **skip gracefully when their local inputs are absent**, and external access is
+read-only unless a mutative exploration is explicitly agreed. Iteration snapshots live in
+`ScoreImageExtraction/Snapshots/` so runs can be diffed.
+
+```sh
+dotnet test ScoreTracker/ScoreTracker.Tests.Exploration/ScoreTracker.Tests.Exploration.csproj
+```
+
+Local inputs (override via `PIU_SCORE_IMAGES` / `PIU_TESSDATA`): photos in
+`C:\Users\<you>\piu-ocr-poc\phoenix\`, `eng.traineddata` in `C:\Users\<you>\piu-ocr-poc\tessdata\`.
+
 ### What CI runs
 
 Every PR and every merge to `main` runs all five suites on [Azure Pipelines](https://dev.azure.com/joneccker/ScoreTracker) — the fast suites (unit/component, API approval, bUnit components) on a Windows agent, the integration and E2E suites on parallel Linux agents with Docker. **The live-site smoke tests run in CI too**: the integration job pulls a PIU test account from Azure Key Vault, so scraper breakage fails the build — and since the deploy stage only runs after a green Build stage, a broken importer can't reach production. Merges to `main` additionally build the deployable artifact and wait at a manual approval gate before deploying.

@@ -53,6 +53,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.Tests.Componen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.HomePage", "ScoreTracker.HomePage\ScoreTracker.HomePage.csproj", "{66386860-C7DE-47AD-8B7E-987BEA2D4500}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.Tests.Exploration", "ScoreTracker.Tests.Exploration\ScoreTracker.Tests.Exploration.csproj", "{DF3F8780-6A74-4F72-9FB7-C9BEBE8A0D19}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -315,6 +317,18 @@ Global
 		{66386860-C7DE-47AD-8B7E-987BEA2D4500}.Release|x64.Build.0 = Release|Any CPU
 		{66386860-C7DE-47AD-8B7E-987BEA2D4500}.Release|x86.ActiveCfg = Release|Any CPU
 		{66386860-C7DE-47AD-8B7E-987BEA2D4500}.Release|x86.Build.0 = Release|Any CPU
+		{DF3F8780-6A74-4F72-9FB7-C9BEBE8A0D19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF3F8780-6A74-4F72-9FB7-C9BEBE8A0D19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF3F8780-6A74-4F72-9FB7-C9BEBE8A0D19}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DF3F8780-6A74-4F72-9FB7-C9BEBE8A0D19}.Debug|x64.Build.0 = Debug|Any CPU
+		{DF3F8780-6A74-4F72-9FB7-C9BEBE8A0D19}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DF3F8780-6A74-4F72-9FB7-C9BEBE8A0D19}.Debug|x86.Build.0 = Debug|Any CPU
+		{DF3F8780-6A74-4F72-9FB7-C9BEBE8A0D19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF3F8780-6A74-4F72-9FB7-C9BEBE8A0D19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF3F8780-6A74-4F72-9FB7-C9BEBE8A0D19}.Release|x64.ActiveCfg = Release|Any CPU
+		{DF3F8780-6A74-4F72-9FB7-C9BEBE8A0D19}.Release|x64.Build.0 = Release|Any CPU
+		{DF3F8780-6A74-4F72-9FB7-C9BEBE8A0D19}.Release|x86.ActiveCfg = Release|Any CPU
+		{DF3F8780-6A74-4F72-9FB7-C9BEBE8A0D19}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

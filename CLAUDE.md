@@ -70,6 +70,7 @@ SharedKernel ◄── Domain ◄── Application ◄── Data ◄── ver
 | `ScoreTracker.Tests.Components` | + `xunit`, `Moq`, `bunit` | The second sanctioned `ScoreTracker.Web`-referencing test project — bUnit renders Blazor components with mocked data (owner directive: lowest test granularity possible; component behavior belongs here, not in Playwright). Fast suite, no Docker. |
 | `ScoreTracker.Tests.Integration` | + `xunit`, `Moq`, `Testcontainers.MsSql`, `Respawn` | Mocking the port whose implementation is the subject of the test (e.g., do not mock `IPhoenixRecordRepository` when testing `EFPhoenixRecordsRepository`). Mocking incidental collaborator ports for setup — or `IPiuGameApi`-style external clients in slice tests — is fine. |
 | `ScoreTracker.Tests.E2E` | + `xunit`, `Microsoft.AspNetCore.Mvc.Testing`, `Microsoft.Playwright`, `WireMock.Net`, `Testcontainers.MsSql`, `Respawn` | The third sanctioned `ScoreTracker.Web`-referencing test project — it hosts the real app on Kestrel. No Moq: external boundaries are stubbed at the wire (WireMock for the PIU site) or with a hand-rolled DI fake (`FakeFileUploadClient` for Azure blob, the one boundary a wire stub can't cover). Seed data goes in via raw DbContext/SQL, never through repositories. |
+| `ScoreTracker.Tests.Exploration` | + `xunit`, `Tesseract` (OCR — sanctioned here only) | The interactive sandbox assembly — snapshot-grabbing iteration against real local inputs (score-image extraction, vendor-schema checks). **Never wired into CI** (the pipeline invokes suites by explicit csproj); tests skip gracefully when local inputs are absent; read-only against external systems unless a mutative exploration is explicitly agreed. Not a regression gate — no other project may reference it. |
 
 Adding a package outside its allowed layer is a violation. Adding a project reference that isn't in the graph above is a violation.
 
@@ -145,6 +146,7 @@ See [docs/HOW-TO-TEST.md](docs/HOW-TO-TEST.md) for the philosophy; these are the
 | `ScoreTracker.Tests.Components/` | Component (Blazor rendering/behavior, bUnit) | Small | Test doubles (mocked services + data) |
 | `ScoreTracker.Tests.Integration/` | Integration | Medium | Ephemeral infra (SQL Server via Testcontainers). `LiveSite/` + `DiscordCanary/` subfolders are env-gated smoke tests that skip when unconfigured; the Discord canary is manual-run only |
 | `ScoreTracker.Tests.E2E/` | E2E (critical workflows) | Large | Ephemeral infra (SQL Server, Kestrel-hosted app, WireMock PIU stub, headless Chromium) |
+| `ScoreTracker.Tests.Exploration/` | Exploration (interactive iteration, snapshots) | — (never in CI) | Machine-local inputs (photos, tessdata, real vendor endpoints read-only); skips when unconfigured |
 
 PR gate: the fast suites (`ScoreTracker.Tests`, `ScoreTracker.Tests.Api`, `ScoreTracker.Tests.Components`) run without Docker; the integration and E2E suites need Docker. CI runs all five on every PR.
 
