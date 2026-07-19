@@ -200,11 +200,19 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
     {
         if (players.Count == 0) return Array.Empty<PlayerDimension>();
 
+        // Tags normalize at the storage seam so both scrape shapes ("TAG#1" and "TAG #1")
+        // land on one player row; duplicates collapse to the entry that carries an avatar.
+        var normalized = players
+            .Select(p => (Username: OfficialPlayerTag.Normalize(p.Username), p.Avatar))
+            .GroupBy(p => p.Username, StringComparer.OrdinalIgnoreCase)
+            .Select(g => g.OrderByDescending(p => p.Avatar != null).First())
+            .ToArray();
+
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
-        var result = new List<PlayerDimension>(players.Count);
+        var result = new List<PlayerDimension>(normalized.Length);
 
-        foreach (var chunk in players.Chunk(500))
+        foreach (var chunk in normalized.Chunk(500))
         {
             var names = chunk.Select(p => p.Username).ToArray();
             var existing = await database.Set<OfficialPlayerEntity>()
@@ -328,10 +336,12 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
 
     public async Task<PlayerDimension?> GetPlayerByUsername(MixEnum mix, string username, CancellationToken ct)
     {
+        // Lookups accept either scrape shape — storage holds the normalized tag.
+        var tag = OfficialPlayerTag.Normalize(username);
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
         var entity = await database.Set<OfficialPlayerEntity>()
-            .FirstOrDefaultAsync(p => p.MixId == mixId && p.Username == username, ct);
+            .FirstOrDefaultAsync(p => p.MixId == mixId && p.Username == tag, ct);
         return entity == null ? null : ToPlayer(entity);
     }
 
