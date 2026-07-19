@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using ScoreTracker.Domain.Records;
 
 namespace ScoreTracker.WeeklyChallenge.Infrastructure.Entities
 {
@@ -20,5 +21,9 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure.Entities
         public bool WasWithinRange { get; set; }
         public double CompetitiveLevel { get; set; }
         [MaxLength(256)] public string? Photo { get; set; }
+
+        // The trust ladder's source tier (weekly-charts-overhaul.md §7). Existing rows default
+        // to Official: historically imports dominated, and the manual path required a photo.
+        public ChallengeEntrySource Source { get; set; } = ChallengeEntrySource.Official;
     }
 }

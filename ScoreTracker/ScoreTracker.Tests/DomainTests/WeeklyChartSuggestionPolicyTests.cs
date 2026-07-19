@@ -3,6 +3,7 @@ using System.Linq;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Tests.TestData;
 using Xunit;
 
 namespace ScoreTracker.Tests.DomainTests;
@@ -66,5 +67,42 @@ public sealed class WeeklyChartSuggestionPolicyTests
             new[] { Entry(500_000, isBroken: true), Entry(700_000, isBroken: true) });
 
         Assert.Empty(result);
+    }
+
+    [Theory]
+    [InlineData(19.0, true)] // floor 19 = level − 1: the band's bottom edge
+    [InlineData(18.99, false)] // floor 18, one below the bottom edge
+    [InlineData(22.9, true)] // floor 22 = level + 2: the band's top edge
+    [InlineData(23.0, false)] // floor 23, one above the top edge
+    [InlineData(20.0, true)] // dead center
+    public void WithinRangeBandIsFloorOfLevelMinusOneToPlusTwo(double competitiveLevel, bool expected)
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+
+        Assert.Equal(expected, WeeklyChartSuggestionPolicy.IsWithinRange(chart, competitiveLevel));
+    }
+
+    [Fact]
+    public void CoOpChartsAreAlwaysWithinRange()
+    {
+        var coOp = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(2).Build();
+
+        Assert.True(WeeklyChartSuggestionPolicy.IsWithinRange(coOp, 5.0));
+    }
+
+    [Fact]
+    public void SuggestedChartsUseTheSameBandPerChartType()
+    {
+        var single18 = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
+        var double18 = new ChartBuilder().WithType(ChartType.Double).WithLevel(18).Build();
+        var single24 = new ChartBuilder().WithType(ChartType.Single).WithLevel(24).Build();
+
+        // Singles CL 19 covers a S18; doubles CL 16 leaves a D18 out of reach.
+        var suggested = WeeklyChartSuggestionPolicy.GetSuggestedCharts(
+            new[] { single18, double18, single24 }, doublesCompetitive: 16.0, singlesCompetitive: 19.0).ToArray();
+
+        Assert.Contains(single18, suggested);
+        Assert.DoesNotContain(double18, suggested);
+        Assert.DoesNotContain(single24, suggested);
     }
 }

@@ -5309,4 +5309,187 @@
   <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
     <value>条件に合う最近の好プレイがないため、自己ベストに似た譜面を提案しています。</value>
   </data>
+  <data name="Imported" xml:space="preserve">
+    <value>インポート済み</value>
+  </data>
+  <data name="Photo proof" xml:space="preserve">
+    <value>写真による証明</value>
+  </data>
+  <data name="#{0} / {1}" xml:space="preserve">
+    <value>#{0} / {1}</value>
+  </data>
+  <data name="Back to Weekly Charts" xml:space="preserve">
+    <value>Weekly Charts に戻る</value>
+  </data>
+  <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
+    <value>ブロークンは0点です — クリアして初めて加算されます。</value>
+  </data>
+  <data name="Charts Not Yet Featured" xml:space="preserve">
+    <value>まだ出題されていない譜面</value>
+  </data>
+  <data name="Charts not yet featured" xml:space="preserve">
+    <value>まだ出題されていない譜面</value>
+  </data>
+  <data name="Co-op earns no PUMBILITY; the Co-Op view ranks raw score." xml:space="preserve">
+    <value>CO-OPはPUMBILITYになりません。Co-Op表示は素点で順位付けします。</value>
+  </data>
+  <data name="Counted" xml:space="preserve">
+    <value>対象</value>
+  </data>
+  <data name="Daily" xml:space="preserve">
+    <value>デイリー</value>
+  </data>
+  <data name="Density" xml:space="preserve">
+    <value>表示密度</value>
+  </data>
+  <data name="Every eligible chart has been featured." xml:space="preserve">
+    <value>出題可能なすべての譜面が使用済みです。</value>
+  </data>
+  <data name="Grade multipliers" xml:space="preserve">
+    <value>グレード倍率</value>
+  </data>
+  <data name="How Scoring Works" xml:space="preserve">
+    <value>スコアの仕組み</value>
+  </data>
+  <data name="Level {0}" xml:space="preserve">
+    <value>レベル {0}</value>
+  </data>
+  <data name="Limbo" xml:space="preserve">
+    <value>Limbo</value>
+  </data>
+  <data name="Limbo — lowest pass wins" xml:space="preserve">
+    <value>Limbo — 最低クリアスコアが勝利</value>
+  </data>
+  <data name="Monthly" xml:space="preserve">
+    <value>月間</value>
+  </data>
+  <data name="Not played yet" xml:space="preserve">
+    <value>未プレイ</value>
+  </data>
+  <data name="Plate bonuses" xml:space="preserve">
+    <value>プレート加算</value>
+  </data>
+  <data name="Play today's Step to start your streak." xml:space="preserve">
+    <value>今日の Daily Step をプレイして連続記録を始めましょう。</value>
+  </data>
+  <data name="Process Weekly Charts" xml:space="preserve">
+    <value>週間チャートを処理</value>
+  </data>
+  <data name="Scores land here as boards close." xml:space="preserve">
+    <value>ボードが締まるとスコアがここに表示されます。</value>
+  </data>
+  <data name="Sign in to record scores, track your standings and keep your Daily Step history." xml:space="preserve">
+    <value>ログインするとスコアの記録、順位の確認、Daily Step 履歴の保存ができます。</value>
+  </data>
+  <data name="The rules" xml:space="preserve">
+    <value>ルール</value>
+  </data>
+  <data name="This week's charts post Monday at midnight ET." xml:space="preserve">
+    <value>今週の譜面は月曜0時(ET)に公開されます。</value>
+  </data>
+  <data name="Ties break by total raw score." xml:space="preserve">
+    <value>同点は素点の合計で決まります。</value>
+  </data>
+  <data name="Top scores" xml:space="preserve">
+    <value>トップスコア</value>
+  </data>
+  <data name="Week" xml:space="preserve">
+    <value>週</value>
+  </data>
+  <data name="Week {0} — best {1} count · PUMBILITY" xml:space="preserve">
+    <value>第{0}週 — 上位{1}件が対象 · PUMBILITY</value>
+  </data>
+  <data name="Your Daily Step History" xml:space="preserve">
+    <value>あなたの Daily Step 履歴</value>
+  </data>
+  <data name="Your best 4 scores per week of the month count." xml:space="preserve">
+    <value>月内の各週で上位4件のスコアが対象です。</value>
+  </data>
+  <data name="current" xml:space="preserve">
+    <value>今週</value>
+  </data>
+  <data name="last 14 days" xml:space="preserve">
+    <value>過去14日</value>
+  </data>
+  <data name="resets in {0}" xml:space="preserve">
+    <value>{0}後にリセット</value>
+  </data>
+  <data name="show all {0}" xml:space="preserve">
+    <value>すべて{0}件を表示</value>
+  </data>
+  <data name="show suggested only" xml:space="preserve">
+    <value>おすすめのみ表示</value>
+  </data>
+  <data name="showing suggested" xml:space="preserve">
+    <value>おすすめを表示中</value>
+  </data>
+  <data name="suggested left" xml:space="preserve">
+    <value>おすすめ残り</value>
+  </data>
+  <data name="{0} charts · rotates Monday midnight ET" xml:space="preserve">
+    <value>{0}譜面 · 月曜0時(ET)に更新</value>
+  </data>
+  <data name="{0} on board" xml:space="preserve">
+    <value>ボードに{0}人</value>
+  </data>
+  <data name="{0}d {1}h" xml:space="preserve">
+    <value>{0}d {1}h</value>
+  </data>
+  <data name="{0}h {1}m" xml:space="preserve">
+    <value>{0}h {1}m</value>
+  </data>
+  <data name="{0}m" xml:space="preserve">
+    <value>{0}m</value>
+  </data>
+  <data name="Add photo" xml:space="preserve">
+    <value>写真を追加</value>
+  </data>
+  <data name="Importing with your PIUGAME login records scores automatically — manual entry is the fallback." xml:space="preserve">
+    <value>PIUGAMEログインでインポートするとスコアは自動記録されます — 手動入力は代替手段です。</value>
+  </data>
+  <data name="Optional — a photo is your proof if a score's legitimacy is ever disputed." xml:space="preserve">
+    <value>任意 — スコアの正当性が問われた場合、写真が証明になります。</value>
+  </data>
+  <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
+    <value>今週のボードを今すぐ更新しますか？現在の週が締められ、次のセットが抽選されます。</value>
+  </data>
+  <data name="Rotation started." xml:space="preserve">
+    <value>更新を開始しました。</value>
+  </data>
+  <data name="Suspected cheaters will be required to attach photos for future competition entries." xml:space="preserve">
+    <value>不正が疑われるユーザーは、今後の大会エントリーで写真の添付が必須になります。</value>
+  </data>
+  <data name="There was an error while recording the score." xml:space="preserve">
+    <value>スコアの記録中にエラーが発生しました。</value>
+  </data>
+  <data name="There was an error while uploading your image, please try again." xml:space="preserve">
+    <value>画像のアップロード中にエラーが発生しました。もう一度お試しください。</value>
+  </data>
+  <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
+    <value>ファイルが10MBを超えています。サイズを小さくして再試行してください。</value>
+  </data>
+  <data name="Weekly Charts — Pump It Up" xml:space="preserve">
+    <value>Weekly Charts — Pump It Up</value>
+  </data>
+  <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
+    <value>今週の Pump It Up チャレンジ譜面{0}件、ライブ順位付きのデイリー譜面、そして月間 PUMBILITY ボード。</value>
+  </data>
+  <data name="Full board" xml:space="preserve">
+    <value>ランキング全体</value>
+  </data>
+  <data name="top {0} of {1}" xml:space="preserve">
+    <value>上位{0}件 / 全{1}件</value>
+  </data>
+  <data name="Week {0} — best {1} count · raw score" xml:space="preserve">
+    <value>第{0}週 — 上位{1}件が対象 · 素点</value>
+  </data>
+  <data name="Leave empty if broken." xml:space="preserve">
+    <value>Break Off の場合は空欄のままにしてください。</value>
+  </data>
+  <data name="1 Player" xml:space="preserve">
+    <value>1人</value>
+  </data>
+  <data name="{0} Players" xml:space="preserve">
+    <value>{0}人</value>
+  </data>
 </root>

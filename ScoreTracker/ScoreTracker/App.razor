@@ -44,12 +44,17 @@
         }
         @if (_head.Canonical != null)
         {
+            @* Charts self-canonicalize; the weekly hub folds its ?week/?type variants here. *@
             <link rel="canonical" href="@_head.Canonical" />
             <meta property="og:url" content="@_head.Canonical" />
-            @* The whole element rides one MarkupString: the static renderer silently drops
-               a <script> element whose content is a component expression, and a raw markup
-               frame is what actually reaches the document. JSON string values escape "<",
-               so a song title can't close the script early. *@
+        }
+        @if (_head.SongName != null)
+        {
+            @* Chart-page structured data (a MusicRecording needs a song). The whole element
+               rides one MarkupString: the static renderer silently drops a <script> element
+               whose content is a component expression, and a raw markup frame is what actually
+               reaches the document. JSON string values escape "<", so a song title can't close
+               the script early. The weekly hub emits its own ItemList in the page body. *@
             @((MarkupString)$"<script type=\"application/ld+json\">{JsonLd(_head)}</script>")
         }
     }
@@ -133,6 +138,7 @@
 <script src="/js/nav.js?v=3"></script>
 <script src="/js/dashboard-grid.js"></script>
 <script src="/js/credential-storage.js"></script>
+<script src="/js/challenge-board.js"></script>
 </body>
 </html>
 

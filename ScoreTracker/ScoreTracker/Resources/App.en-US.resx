@@ -5303,4 +5303,187 @@
   <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
     <value>You don't have any matching recent highlights — suggesting charts similar to your all-time best instead.</value>
   </data>
+  <data name="Imported" xml:space="preserve">
+    <value>Imported</value>
+  </data>
+  <data name="Photo proof" xml:space="preserve">
+    <value>Photo proof</value>
+  </data>
+  <data name="#{0} / {1}" xml:space="preserve">
+    <value>#{0} / {1}</value>
+  </data>
+  <data name="Back to Weekly Charts" xml:space="preserve">
+    <value>Back to Weekly Charts</value>
+  </data>
+  <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
+    <value>Broken plays score 0 — pass it to score it.</value>
+  </data>
+  <data name="Charts Not Yet Featured" xml:space="preserve">
+    <value>Charts Not Yet Featured</value>
+  </data>
+  <data name="Charts not yet featured" xml:space="preserve">
+    <value>Charts not yet featured</value>
+  </data>
+  <data name="Co-op earns no PUMBILITY; the Co-Op view ranks raw score." xml:space="preserve">
+    <value>Co-op earns no PUMBILITY; the Co-Op view ranks raw score.</value>
+  </data>
+  <data name="Counted" xml:space="preserve">
+    <value>Counted</value>
+  </data>
+  <data name="Daily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="Density" xml:space="preserve">
+    <value>Density</value>
+  </data>
+  <data name="Every eligible chart has been featured." xml:space="preserve">
+    <value>Every eligible chart has been featured.</value>
+  </data>
+  <data name="Grade multipliers" xml:space="preserve">
+    <value>Grade multipliers</value>
+  </data>
+  <data name="How Scoring Works" xml:space="preserve">
+    <value>How Scoring Works</value>
+  </data>
+  <data name="Level {0}" xml:space="preserve">
+    <value>Level {0}</value>
+  </data>
+  <data name="Limbo" xml:space="preserve">
+    <value>Limbo</value>
+  </data>
+  <data name="Limbo — lowest pass wins" xml:space="preserve">
+    <value>Limbo — lowest pass wins</value>
+  </data>
+  <data name="Monthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="Not played yet" xml:space="preserve">
+    <value>Not played yet</value>
+  </data>
+  <data name="Plate bonuses" xml:space="preserve">
+    <value>Plate bonuses</value>
+  </data>
+  <data name="Play today's Step to start your streak." xml:space="preserve">
+    <value>Play today's Step to start your streak.</value>
+  </data>
+  <data name="Process Weekly Charts" xml:space="preserve">
+    <value>Process Weekly Charts</value>
+  </data>
+  <data name="Scores land here as boards close." xml:space="preserve">
+    <value>Scores land here as boards close.</value>
+  </data>
+  <data name="Sign in to record scores, track your standings and keep your Daily Step history." xml:space="preserve">
+    <value>Sign in to record scores, track your standings and keep your Daily Step history.</value>
+  </data>
+  <data name="The rules" xml:space="preserve">
+    <value>The rules</value>
+  </data>
+  <data name="This week's charts post Monday at midnight ET." xml:space="preserve">
+    <value>This week's charts post Monday at midnight ET.</value>
+  </data>
+  <data name="Ties break by total raw score." xml:space="preserve">
+    <value>Ties break by total raw score.</value>
+  </data>
+  <data name="Top scores" xml:space="preserve">
+    <value>Top scores</value>
+  </data>
+  <data name="Week" xml:space="preserve">
+    <value>Week</value>
+  </data>
+  <data name="Week {0} — best {1} count · PUMBILITY" xml:space="preserve">
+    <value>Week {0} — best {1} count · PUMBILITY</value>
+  </data>
+  <data name="Your Daily Step History" xml:space="preserve">
+    <value>Your Daily Step History</value>
+  </data>
+  <data name="Your best 4 scores per week of the month count." xml:space="preserve">
+    <value>Your best 4 scores per week of the month count.</value>
+  </data>
+  <data name="current" xml:space="preserve">
+    <value>current</value>
+  </data>
+  <data name="last 14 days" xml:space="preserve">
+    <value>last 14 days</value>
+  </data>
+  <data name="resets in {0}" xml:space="preserve">
+    <value>resets in {0}</value>
+  </data>
+  <data name="show all {0}" xml:space="preserve">
+    <value>show all {0}</value>
+  </data>
+  <data name="show suggested only" xml:space="preserve">
+    <value>show suggested only</value>
+  </data>
+  <data name="showing suggested" xml:space="preserve">
+    <value>showing suggested</value>
+  </data>
+  <data name="suggested left" xml:space="preserve">
+    <value>suggested left</value>
+  </data>
+  <data name="{0} charts · rotates Monday midnight ET" xml:space="preserve">
+    <value>{0} charts · rotates Monday midnight ET</value>
+  </data>
+  <data name="{0} on board" xml:space="preserve">
+    <value>{0} on board</value>
+  </data>
+  <data name="{0}d {1}h" xml:space="preserve">
+    <value>{0}d {1}h</value>
+  </data>
+  <data name="{0}h {1}m" xml:space="preserve">
+    <value>{0}h {1}m</value>
+  </data>
+  <data name="{0}m" xml:space="preserve">
+    <value>{0}m</value>
+  </data>
+  <data name="Add photo" xml:space="preserve">
+    <value>Add photo</value>
+  </data>
+  <data name="Importing with your PIUGAME login records scores automatically — manual entry is the fallback." xml:space="preserve">
+    <value>Importing with your PIUGAME login records scores automatically — manual entry is the fallback.</value>
+  </data>
+  <data name="Optional — a photo is your proof if a score's legitimacy is ever disputed." xml:space="preserve">
+    <value>Optional — a photo is your proof if a score's legitimacy is ever disputed.</value>
+  </data>
+  <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
+    <value>Rotate this week's board now? This closes the current week and draws the next set.</value>
+  </data>
+  <data name="Rotation started." xml:space="preserve">
+    <value>Rotation started.</value>
+  </data>
+  <data name="Suspected cheaters will be required to attach photos for future competition entries." xml:space="preserve">
+    <value>Suspected cheaters will be required to attach photos for future competition entries.</value>
+  </data>
+  <data name="There was an error while recording the score." xml:space="preserve">
+    <value>There was an error while recording the score.</value>
+  </data>
+  <data name="There was an error while uploading your image, please try again." xml:space="preserve">
+    <value>There was an error while uploading your image, please try again.</value>
+  </data>
+  <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
+    <value>Your file was larger than 10MB, please reduce it and try again.</value>
+  </data>
+  <data name="Weekly Charts — Pump It Up" xml:space="preserve">
+    <value>Weekly Charts — Pump It Up</value>
+  </data>
+  <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
+    <value>{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board.</value>
+  </data>
+  <data name="Full board" xml:space="preserve">
+    <value>Full board</value>
+  </data>
+  <data name="top {0} of {1}" xml:space="preserve">
+    <value>top {0} of {1}</value>
+  </data>
+  <data name="Week {0} — best {1} count · raw score" xml:space="preserve">
+    <value>Week {0} — best {1} count · raw score</value>
+  </data>
+  <data name="Leave empty if broken." xml:space="preserve">
+    <value>Leave empty if broken.</value>
+  </data>
+  <data name="1 Player" xml:space="preserve">
+    <value>1 Player</value>
+  </data>
+  <data name="{0} Players" xml:space="preserve">
+    <value>{0} Players</value>
+  </data>
 </root>

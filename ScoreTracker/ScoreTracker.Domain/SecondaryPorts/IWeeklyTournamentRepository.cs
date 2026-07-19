@@ -19,10 +19,28 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task<IEnumerable<WeeklyTournamentEntry>> GetEntries(MixEnum mix, Guid? chartId,
             CancellationToken cancellationToken);
 
-        Task SaveEntry(MixEnum mix, WeeklyTournamentEntry entry, CancellationToken cancellationToken);
+        /// <summary>
+        ///     Live entries with their trust source (weekly-charts-overhaul.md M5). The shared
+        ///     <see cref="WeeklyTournamentEntry" /> deliberately does not carry the source — the
+        ///     api/weeklyCharts wire shape is pinned — so source-aware reads use this.
+        /// </summary>
+        Task<IEnumerable<(WeeklyTournamentEntry Entry, ChallengeEntrySource Source)>> GetEntriesWithSources(
+            MixEnum mix, Guid? chartId, CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     <paramref name="wasWithinRange" /> is the suggestion band's verdict
+        ///     (WeeklyChartSuggestionPolicy.IsWithinRange) at save time — rotation snapshots
+        ///     copy it into the placings history the recap pools on.
+        /// </summary>
+        Task SaveEntry(MixEnum mix, WeeklyTournamentEntry entry, ChallengeEntrySource source,
+            bool wasWithinRange, CancellationToken cancellationToken);
         Task<IEnumerable<DateTimeOffset>> GetPastDates(MixEnum mix, CancellationToken cancellationToken);
 
         Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(MixEnum mix, DateTimeOffset date,
             CancellationToken cancellationToken);
+
+        /// <summary>All entries across a set of finished weeks in one read (the monthly window).</summary>
+        Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(MixEnum mix,
+            IReadOnlyCollection<DateTimeOffset> dates, CancellationToken cancellationToken);
     }
 }

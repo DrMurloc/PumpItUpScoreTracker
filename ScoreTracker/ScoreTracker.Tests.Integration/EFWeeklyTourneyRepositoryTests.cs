@@ -2,6 +2,7 @@ using ScoreTracker.WeeklyChallenge.Infrastructure.Entities;
 using ScoreTracker.WeeklyChallenge.Infrastructure;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Repositories;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -55,7 +56,7 @@ public sealed class EFWeeklyTourneyRepositoryTests : IAsyncLifetime
             IsBroken: false, PhotoUrl: new Uri("https://example.invalid/photo.png"),
             CompetitiveLevel: 18.5);
 
-        await BuildRepository().SaveEntry(MixEnum.Phoenix, entry, CancellationToken.None);
+        await BuildRepository().SaveEntry(MixEnum.Phoenix, entry, ChallengeEntrySource.Official, wasWithinRange: true, CancellationToken.None);
 
         var entries = (await BuildRepository().GetEntries(MixEnum.Phoenix, chartId: null, CancellationToken.None)).ToList();
 
@@ -70,15 +71,35 @@ public sealed class EFWeeklyTourneyRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task SaveEntryRoundTripsTheTrustSource()
+    {
+        var manual = new WeeklyTournamentEntry(Guid.NewGuid(), Guid.NewGuid(), 900000,
+            PhoenixPlate.MarvelousGame, false, null, 17.0);
+        var official = new WeeklyTournamentEntry(Guid.NewGuid(), Guid.NewGuid(), 950000,
+            PhoenixPlate.SuperbGame, false, null, 18.0);
+        var writer = BuildRepository();
+        await writer.SaveEntry(MixEnum.Phoenix, manual, ChallengeEntrySource.Manual, wasWithinRange: true, CancellationToken.None);
+        await writer.SaveEntry(MixEnum.Phoenix, official, ChallengeEntrySource.Official, wasWithinRange: true, CancellationToken.None);
+
+        var withSources = (await BuildRepository().GetEntriesWithSources(MixEnum.Phoenix, null,
+            CancellationToken.None)).ToList();
+
+        Assert.Equal(ChallengeEntrySource.Manual,
+            withSources.Single(e => e.Entry.UserId == manual.UserId).Source);
+        Assert.Equal(ChallengeEntrySource.Official,
+            withSources.Single(e => e.Entry.UserId == official.UserId).Source);
+    }
+
+    [Fact]
     public async Task SaveEntryUpdatesExistingForSameUserAndChart()
     {
         var userId = Guid.NewGuid();
         var chartId = Guid.NewGuid();
         var writer = BuildRepository();
         await writer.SaveEntry(MixEnum.Phoenix, new WeeklyTournamentEntry(userId, chartId, 900000,
-            PhoenixPlate.MarvelousGame, false, null, 17.0), CancellationToken.None);
+            PhoenixPlate.MarvelousGame, false, null, 17.0), ChallengeEntrySource.Official, wasWithinRange: true, CancellationToken.None);
         await writer.SaveEntry(MixEnum.Phoenix, new WeeklyTournamentEntry(userId, chartId, 970000,
-            PhoenixPlate.SuperbGame, false, null, 18.0), CancellationToken.None);
+            PhoenixPlate.SuperbGame, false, null, 18.0), ChallengeEntrySource.Manual, wasWithinRange: true, CancellationToken.None);
 
         var entries = (await BuildRepository().GetEntries(MixEnum.Phoenix, chartId, CancellationToken.None)).ToList();
 
@@ -96,9 +117,9 @@ public sealed class EFWeeklyTourneyRepositoryTests : IAsyncLifetime
         var chartB = Guid.NewGuid();
         var writer = BuildRepository();
         await writer.SaveEntry(MixEnum.Phoenix, new WeeklyTournamentEntry(userId, chartA, 900000,
-            PhoenixPlate.MarvelousGame, false, null, 17.0), CancellationToken.None);
+            PhoenixPlate.MarvelousGame, false, null, 17.0), ChallengeEntrySource.Official, wasWithinRange: true, CancellationToken.None);
         await writer.SaveEntry(MixEnum.Phoenix, new WeeklyTournamentEntry(userId, chartB, 950000,
-            PhoenixPlate.SuperbGame, false, null, 18.0), CancellationToken.None);
+            PhoenixPlate.SuperbGame, false, null, 18.0), ChallengeEntrySource.Manual, wasWithinRange: true, CancellationToken.None);
 
         var onChartA = (await BuildRepository().GetEntries(MixEnum.Phoenix, chartA, CancellationToken.None)).ToList();
 
@@ -114,7 +135,7 @@ public sealed class EFWeeklyTourneyRepositoryTests : IAsyncLifetime
         var writer = BuildRepository();
         await writer.RegisterWeeklyChart(MixEnum.Phoenix, new WeeklyTournamentChart(chartId, Expiration), CancellationToken.None);
         await writer.SaveEntry(MixEnum.Phoenix, new WeeklyTournamentEntry(userId, chartId, 900000,
-            PhoenixPlate.MarvelousGame, false, null, 17.0), CancellationToken.None);
+            PhoenixPlate.MarvelousGame, false, null, 17.0), ChallengeEntrySource.Official, wasWithinRange: true, CancellationToken.None);
 
         await writer.ClearTheBoard(MixEnum.Phoenix, CancellationToken.None);
 
@@ -155,9 +176,9 @@ public sealed class EFWeeklyTourneyRepositoryTests : IAsyncLifetime
         await writer.RegisterWeeklyChart(MixEnum.Phoenix2, new WeeklyTournamentChart(phoenix2Chart, Expiration),
             CancellationToken.None);
         await writer.SaveEntry(MixEnum.Phoenix, new WeeklyTournamentEntry(userId, phoenixChart, 900000,
-            PhoenixPlate.MarvelousGame, false, null, 17.0), CancellationToken.None);
+            PhoenixPlate.MarvelousGame, false, null, 17.0), ChallengeEntrySource.Official, wasWithinRange: true, CancellationToken.None);
         await writer.SaveEntry(MixEnum.Phoenix2, new WeeklyTournamentEntry(userId, phoenix2Chart, 950000,
-            PhoenixPlate.SuperbGame, false, null, 18.0), CancellationToken.None);
+            PhoenixPlate.SuperbGame, false, null, 18.0), ChallengeEntrySource.Manual, wasWithinRange: true, CancellationToken.None);
 
         await writer.ClearTheBoard(MixEnum.Phoenix, CancellationToken.None);
 
@@ -182,7 +203,7 @@ public sealed class EFWeeklyTourneyRepositoryTests : IAsyncLifetime
         var chartId = Guid.NewGuid();
         var history = new UserTourneyHistory(userId, chartId, ReceivedOn: date, Place: 1,
             CompetitiveLevel: 18.5, Score: PhoenixScore.From(970000),
-            Plate: PhoenixPlate.SuperbGame, IsBroken: false);
+            Plate: PhoenixPlate.SuperbGame, IsBroken: false, WasWithinRange: true);
 
         await BuildRepository().WriteHistories(MixEnum.Phoenix, new[] { history }, CancellationToken.None);
 
@@ -194,5 +215,43 @@ public sealed class EFWeeklyTourneyRepositoryTests : IAsyncLifetime
         Assert.Equal(970000, (int)pastEntries[0].Score);
         Assert.Equal(PhoenixPlate.SuperbGame, pastEntries[0].Plate);
         Assert.Equal(18.5, pastEntries[0].CompetitiveLevel);
+    }
+
+    [Fact]
+    public async Task SaveEntryStampsTheRangeVerdictAndResaveMovesIt()
+    {
+        var userId = Guid.NewGuid();
+        var chartId = Guid.NewGuid();
+        var writer = BuildRepository();
+        await writer.SaveEntry(MixEnum.Phoenix, new WeeklyTournamentEntry(userId, chartId, 900000,
+                PhoenixPlate.MarvelousGame, false, null, 17.0), ChallengeEntrySource.Manual,
+            wasWithinRange: false, CancellationToken.None);
+        await writer.SaveEntry(MixEnum.Phoenix, new WeeklyTournamentEntry(userId, chartId, 950000,
+                PhoenixPlate.SuperbGame, false, null, 19.0), ChallengeEntrySource.Manual,
+            wasWithinRange: true, CancellationToken.None);
+
+        await using var context = await _fixture.DbContextFactory.CreateDbContextAsync();
+        var entity = context.Set<WeeklyUserEntry>().Single(e => e.UserId == userId && e.ChartId == chartId);
+        Assert.True(entity.WasWithinRange);
+    }
+
+    [Fact]
+    public async Task WriteHistoriesCarriesTheRangeVerdictIntoPlacings()
+    {
+        var date = new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero);
+        var inRange = new UserTourneyHistory(Guid.NewGuid(), Guid.NewGuid(), date, Place: 1,
+            CompetitiveLevel: 20.0, Score: PhoenixScore.From(980000),
+            Plate: PhoenixPlate.SuperbGame, IsBroken: false, WasWithinRange: true);
+        var sandbagged = new UserTourneyHistory(Guid.NewGuid(), Guid.NewGuid(), date, Place: 1,
+            CompetitiveLevel: 25.0, Score: PhoenixScore.From(999000),
+            Plate: PhoenixPlate.PerfectGame, IsBroken: false, WasWithinRange: false);
+
+        await BuildRepository().WriteHistories(MixEnum.Phoenix, new[] { inRange, sandbagged },
+            CancellationToken.None);
+
+        var placings = (await ((IWeeklyPlacingReader)BuildRepository()).GetAllPlacings(MixEnum.Phoenix,
+            CancellationToken.None)).ToList();
+        Assert.True(placings.Single(p => p.UserId == inRange.UserId).WasWithinRange);
+        Assert.False(placings.Single(p => p.UserId == sandbagged.UserId).WasWithinRange);
     }
 }

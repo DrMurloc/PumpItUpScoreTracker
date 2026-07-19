@@ -6,10 +6,12 @@
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Services.Theming
 
-@* Compact leaderboard for one chart: the top ten plus your own row when you sit outside it.
-   Shared by the Weekly Charts and Daily Step widgets — the caller passes the entries and a sort
-   direction (Daily Step's Limbo Day ranks the LOWEST passing score first). Name lookup mirrors the
-   WeeklyCharts page's established read path. *@
+@* Leaderboard for one chart: EVERY entry, your row highlighted in place — the MaxPlaces cap
+   died with the challenges-hub overhaul (weekly-charts-overhaul.md M6); the dialog scrolls
+   instead, and pagination stays a future lever. Shared by the Weekly/Daily widgets and the
+   challenges page — the caller passes the entries and a sort direction (Limbo Day ranks the
+   LOWEST passing score first). Trust ladder (M5): ✔ imported · 📷 photo proof (opens the
+   image) · blank for a bare self-report. *@
 <MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="DialogSizing" Class="weekly-lb-dialog">
     <TitleContent>
         @if (Chart != null)
@@ -17,6 +19,16 @@
             <div class="weekly-lb-title">
                 <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
                 <MudText Typo="Typo.h6">@Chart.Song.Name</MudText>
+                @if (InRangeUserIds != null)
+                {
+                    <MudSpacer/>
+                    @* The relevant-players filter (M20) — quiet, weekly boards only. Ranks
+                       renumber because the dialog re-ranks whatever it shows. *@
+                    <label class="challenge-switch">
+                        <input type="checkbox" checked="@_relevantOnly"
+                               @onchange="e => ToggleRelevant((bool)e.Value!)"/><i></i>@L["Relevant players"]
+                    </label>
+                }
             </div>
         }
     </TitleContent>
@@ -47,9 +59,13 @@
                             <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small"
                                      Class="weekly-lb-verified" title="@L["Verified from official import"]"/>
                         }
-                        else if (ManualUserIds?.Contains(row.Entry.UserId) == true)
+                        else if (row.Entry.PhotoUrl != null)
                         {
-                            <span class="weekly-lb-manual">@L["manual"]</span>
+                            @* The optional-photo trust tier: self-reported, proof attached — the
+                               icon opens the image (M3: photos exist for disputed legitimacy). *@
+                            <MudIconButton Icon="@Icons.Material.Filled.PhotoCamera" Size="Size.Small"
+                                           Class="weekly-lb-photo" Href="@row.Entry.PhotoUrl.ToString()"
+                                           Target="_blank" title="@L["Photo proof"]"/>
                         }
                     </span>
                     <ScoreBreakdown Score="row.Entry.Score" Plate="row.Entry.Plate"
@@ -57,16 +73,21 @@
                     </ScoreBreakdown>
                 </div>
             }
-            <MudLink Href="/WeeklyCharts" Typo="Typo.caption">@L["See Leaderboards"]</MudLink>
         }
     </DialogContent>
     <DialogActions>
+        @if (OfficialUserIds != null)
+        {
+            <MudText Typo="Typo.caption" Class="weekly-lb-legend">✔ @L["Imported"] · 📷 @L["Photo proof"]</MudText>
+        }
+        <MudSpacer/>
         <MudButton OnClick="() => VisibleChanged.InvokeAsync(false)">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
 
 @inject ICurrentUserAccessor CurrentUser
 @inject IUserRepository Users
+@inject ScoreTracker.Web.Services.Contracts.IUiSettingsAccessor UiSettings
 
 @code {
 
@@ -79,27 +100,33 @@
     [Parameter] public bool Ascending { get; set; }
 
     /// <summary>
-    ///     Optional (Daily Step): user ids whose entry came from an official import — rendered with a
-    ///     verified badge so self-reported manual submissions are distinguishable. Weekly omits it.
+    ///     User ids whose ranked score came from an official import — the ✔ tier. Null hides the
+    ///     trust ladder entirely (boards that don't track provenance); a self-reported row with a
+    ///     photo renders the 📷 tier from its <c>PhotoUrl</c>, and a bare one renders nothing.
     /// </summary>
     [Parameter] public IReadOnlySet<Guid>? OfficialUserIds { get; set; }
 
-    /// <summary>Optional (Daily Step): user ids whose entry was submitted by hand — tagged "manual".</summary>
-    [Parameter] public IReadOnlySet<Guid>? ManualUserIds { get; set; }
-
-    /// <summary>How deep the board shows before it's just you (Weekly: 10; Daily Step: 50).</summary>
-    [Parameter] public int MaxPlaces { get; set; } = 10;
-
-    /// <summary>Optional (Daily Step): user ids in a community you share — their rows glow green.</summary>
+    /// <summary>Optional: user ids in a community you share — their rows glow green.</summary>
     [Parameter] public IReadOnlySet<Guid>? CommunityUserIds { get; set; }
+
+    /// <summary>
+    ///     User ids whose entry sat inside the chart's band (M20). Non-null enables the
+    ///     relevant-players switch; null (daily, UCS, widgets) hides it.
+    /// </summary>
+    [Parameter] public IReadOnlySet<Guid>? InRangeUserIds { get; set; }
 
     private static readonly DialogOptions DialogSizing = new()
         { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseOnEscapeKey = true };
 
     private sealed record LeaderboardRow(int Place, double Percentile, WeeklyTournamentEntry Entry, bool IsMe);
 
+    private const string RelevantKey = "WeeklyCharts__RelevantPlayers";
+
     private bool _loaded;
     private string? _loadedFor;
+    private bool _relevantOnly;
+    private bool _relevantLoaded;
+    private WeeklyTournamentEntry[] _ordered = Array.Empty<WeeklyTournamentEntry>();
     private List<LeaderboardRow> _rows = new();
     private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
 
@@ -111,22 +138,41 @@
         _loadedFor = signature;
         _loaded = false;
 
+        if (InRangeUserIds != null && !_relevantLoaded)
+        {
+            _relevantLoaded = true;
+            _relevantOnly = await UiSettings.GetSetting(RelevantKey) == "true";
+        }
+
         var forChart = Entries.Where(e => e.ChartId == Chart.Id);
-        var ordered = (Ascending
+        _ordered = (Ascending
                 ? forChart.Where(e => !e.IsBroken).OrderBy(e => (int)e.Score)
                 : forChart.OrderBy(e => e.IsBroken).ThenByDescending(e => (int)e.Score))
             .ToArray();
+        BuildRows();
 
-        var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
-        _rows = ordered
-            .Select((e, i) => new LeaderboardRow(i + 1, ordered.Length <= 0 ? 0 : 1.0 - (double)(i + 1) / ordered.Length, e,
-                e.UserId == me))
-            .Where(r => r.Place <= MaxPlaces || r.IsMe)
-            .ToList();
-
-        var users = await Users.GetUsers(_rows.Select(r => r.Entry.UserId).Distinct().ToArray());
+        var users = await Users.GetUsers(_ordered.Select(e => e.UserId).Distinct().ToArray());
         _users = users.ToDictionary(u => u.Id);
         _loaded = true;
     }
 
+    // Ranks come from position in whatever the dialog shows, so filtering renumbers by itself.
+    private void BuildRows()
+    {
+        var shown = InRangeUserIds != null && _relevantOnly
+            ? _ordered.Where(e => InRangeUserIds.Contains(e.UserId)).ToArray()
+            : _ordered;
+        var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
+        _rows = shown
+            .Select((e, i) => new LeaderboardRow(i + 1, shown.Length <= 0 ? 0 : 1.0 - (double)(i + 1) / shown.Length, e,
+                e.UserId == me))
+            .ToList();
+    }
+
+    private async Task ToggleRelevant(bool value)
+    {
+        _relevantOnly = value;
+        BuildRows();
+        if (CurrentUser.IsLoggedIn) await UiSettings.SetSetting(RelevantKey, value ? "true" : "false");
+    }
 }

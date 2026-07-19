@@ -5189,4 +5189,187 @@
   <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
     <value>No tienes actuaciones recientes que cuenten: sugerimos charts parecidos a tus mejores históricos.</value>
   </data>
+  <data name="Imported" xml:space="preserve">
+    <value>Importado</value>
+  </data>
+  <data name="Photo proof" xml:space="preserve">
+    <value>Prueba fotográfica</value>
+  </data>
+  <data name="#{0} / {1}" xml:space="preserve">
+    <value>#{0} / {1}</value>
+  </data>
+  <data name="Back to Weekly Charts" xml:space="preserve">
+    <value>Volver a Weekly Charts</value>
+  </data>
+  <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
+    <value>Los intentos rotos valen 0 — pásalo para puntuar.</value>
+  </data>
+  <data name="Charts Not Yet Featured" xml:space="preserve">
+    <value>Charts aún no destacados</value>
+  </data>
+  <data name="Charts not yet featured" xml:space="preserve">
+    <value>Charts aún no destacados</value>
+  </data>
+  <data name="Co-op earns no PUMBILITY; the Co-Op view ranks raw score." xml:space="preserve">
+    <value>El co-op no da PUMBILITY; la vista Co-Op ordena por puntuación bruta.</value>
+  </data>
+  <data name="Counted" xml:space="preserve">
+    <value>Contadas</value>
+  </data>
+  <data name="Daily" xml:space="preserve">
+    <value>Diario</value>
+  </data>
+  <data name="Density" xml:space="preserve">
+    <value>Densidad</value>
+  </data>
+  <data name="Every eligible chart has been featured." xml:space="preserve">
+    <value>Ya se han destacado todos los charts elegibles.</value>
+  </data>
+  <data name="Grade multipliers" xml:space="preserve">
+    <value>Multiplicadores de grado</value>
+  </data>
+  <data name="How Scoring Works" xml:space="preserve">
+    <value>Cómo se puntúa</value>
+  </data>
+  <data name="Level {0}" xml:space="preserve">
+    <value>Nivel {0}</value>
+  </data>
+  <data name="Limbo" xml:space="preserve">
+    <value>Limbo</value>
+  </data>
+  <data name="Limbo — lowest pass wins" xml:space="preserve">
+    <value>Limbo — gana la menor puntuación aprobada</value>
+  </data>
+  <data name="Monthly" xml:space="preserve">
+    <value>Mensual</value>
+  </data>
+  <data name="Not played yet" xml:space="preserve">
+    <value>Aún sin jugar</value>
+  </data>
+  <data name="Plate bonuses" xml:space="preserve">
+    <value>Bonos de plato</value>
+  </data>
+  <data name="Play today's Step to start your streak." xml:space="preserve">
+    <value>Juega el Daily Step de hoy para iniciar tu racha.</value>
+  </data>
+  <data name="Process Weekly Charts" xml:space="preserve">
+    <value>Procesar Weekly Charts</value>
+  </data>
+  <data name="Scores land here as boards close." xml:space="preserve">
+    <value>Las puntuaciones aparecen aquí cuando cierran los tableros.</value>
+  </data>
+  <data name="Sign in to record scores, track your standings and keep your Daily Step history." xml:space="preserve">
+    <value>Inicia sesión para registrar puntuaciones, seguir tu posición y guardar tu historial de Daily Step.</value>
+  </data>
+  <data name="The rules" xml:space="preserve">
+    <value>Las reglas</value>
+  </data>
+  <data name="This week's charts post Monday at midnight ET." xml:space="preserve">
+    <value>Los charts de esta semana salen el lunes a medianoche (ET).</value>
+  </data>
+  <data name="Ties break by total raw score." xml:space="preserve">
+    <value>Los empates se rompen por la puntuación bruta total.</value>
+  </data>
+  <data name="Top scores" xml:space="preserve">
+    <value>Mejores puntuaciones</value>
+  </data>
+  <data name="Week" xml:space="preserve">
+    <value>Semana</value>
+  </data>
+  <data name="Week {0} — best {1} count · PUMBILITY" xml:space="preserve">
+    <value>Semana {0} — cuentan las {1} mejores · PUMBILITY</value>
+  </data>
+  <data name="Your Daily Step History" xml:space="preserve">
+    <value>Tu historial de Daily Step</value>
+  </data>
+  <data name="Your best 4 scores per week of the month count." xml:space="preserve">
+    <value>Cuentan tus 4 mejores puntuaciones por semana del mes.</value>
+  </data>
+  <data name="current" xml:space="preserve">
+    <value>actual</value>
+  </data>
+  <data name="last 14 days" xml:space="preserve">
+    <value>últimos 14 días</value>
+  </data>
+  <data name="resets in {0}" xml:space="preserve">
+    <value>se reinicia en {0}</value>
+  </data>
+  <data name="show all {0}" xml:space="preserve">
+    <value>ver los {0}</value>
+  </data>
+  <data name="show suggested only" xml:space="preserve">
+    <value>ver solo sugeridos</value>
+  </data>
+  <data name="showing suggested" xml:space="preserve">
+    <value>mostrando sugeridos</value>
+  </data>
+  <data name="suggested left" xml:space="preserve">
+    <value>sugeridos restantes</value>
+  </data>
+  <data name="{0} charts · rotates Monday midnight ET" xml:space="preserve">
+    <value>{0} charts · rota el lunes a medianoche (ET)</value>
+  </data>
+  <data name="{0} on board" xml:space="preserve">
+    <value>{0} en el tablero</value>
+  </data>
+  <data name="{0}d {1}h" xml:space="preserve">
+    <value>{0}d {1}h</value>
+  </data>
+  <data name="{0}h {1}m" xml:space="preserve">
+    <value>{0}h {1}m</value>
+  </data>
+  <data name="{0}m" xml:space="preserve">
+    <value>{0}m</value>
+  </data>
+  <data name="Add photo" xml:space="preserve">
+    <value>Agregar foto</value>
+  </data>
+  <data name="Importing with your PIUGAME login records scores automatically — manual entry is the fallback." xml:space="preserve">
+    <value>Al importar con tu login de PIUGAME las puntuaciones se registran solas — la entrada manual es el respaldo.</value>
+  </data>
+  <data name="Optional — a photo is your proof if a score's legitimacy is ever disputed." xml:space="preserve">
+    <value>Opcional — una foto es tu prueba si se cuestiona la legitimidad de una puntuación.</value>
+  </data>
+  <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
+    <value>¿Rotar el tablero de esta semana ahora? Cierra la semana actual y sortea el siguiente set.</value>
+  </data>
+  <data name="Rotation started." xml:space="preserve">
+    <value>Rotación iniciada.</value>
+  </data>
+  <data name="Suspected cheaters will be required to attach photos for future competition entries." xml:space="preserve">
+    <value>A los sospechosos de trampa se les exigirá adjuntar fotos en futuras participaciones.</value>
+  </data>
+  <data name="There was an error while recording the score." xml:space="preserve">
+    <value>Ocurrió un error al registrar la puntuación.</value>
+  </data>
+  <data name="There was an error while uploading your image, please try again." xml:space="preserve">
+    <value>Ocurrió un error al subir tu imagen, inténtalo de nuevo.</value>
+  </data>
+  <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
+    <value>Tu archivo superaba los 10MB, redúcelo e inténtalo de nuevo.</value>
+  </data>
+  <data name="Weekly Charts — Pump It Up" xml:space="preserve">
+    <value>Weekly Charts — Pump It Up</value>
+  </data>
+  <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
+    <value>{0} charts de desafío de Pump It Up esta semana, un chart diario con posiciones en vivo y el tablero mensual PUMBILITY.</value>
+  </data>
+  <data name="Full board" xml:space="preserve">
+    <value>Clasificación completa</value>
+  </data>
+  <data name="top {0} of {1}" xml:space="preserve">
+    <value>top {0} de {1}</value>
+  </data>
+  <data name="Week {0} — best {1} count · raw score" xml:space="preserve">
+    <value>Semana {0} — cuentan las {1} mejores · puntuación bruta</value>
+  </data>
+  <data name="Leave empty if broken." xml:space="preserve">
+    <value>Déjalo vacío si fue broken.</value>
+  </data>
+  <data name="1 Player" xml:space="preserve">
+    <value>1 jugador</value>
+  </data>
+  <data name="{0} Players" xml:space="preserve">
+    <value>{0} jugadores</value>
+  </data>
 </root>

@@ -7,17 +7,34 @@
 @using Align = MudBlazor.Align
 @namespace ScoreTracker.Web.Components
 
+@* MudTooltip renders a popover, which throws in static SSR (no provider in the static tree).
+   The tooltips carry hover text only, so a static render drops them and keeps the flag and
+   name; in a circuit they come back. *@
 @if (User != null)
 {
-    @if (!string.IsNullOrWhiteSpace(_countryImage))
+    @if (!string.IsNullOrWhiteSpace(_countryImage) && User.Country != null)
     {
-        <MudTooltip Text="@User.Country!.Value">
+        @if (RendererInfo.IsInteractive)
+        {
+            <MudTooltip Text="@User.Country.Value.ToString()">
+                <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@_countryImage"></MudImage>
+            </MudTooltip>
+        }
+        else
+        {
             <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@_countryImage"></MudImage>
+        }
+    }
+    @if (RendererInfo.IsInteractive)
+    {
+        <MudTooltip Text="@Tooltip">
+            @User.Name
         </MudTooltip>
     }
-    <MudTooltip Text="@Tooltip">
+    else
+    {
         @User.Name
-    </MudTooltip>
+    }
 }
 @inject IUserRepository Users
 @code {
@@ -26,16 +43,22 @@
     public User? User { get; set; }
 
     private string _countryImage = string.Empty;
+    private Name? _loadedCountry;
 
     private string Tooltip => User == null ? "" :
         User.GameTag == null ? "" :
             User.Name=="CLEARALL18SORQUIT" ? L["Wouldn't You Like To Know"].Value : User.GameTag.Value;
-    protected override async Task OnInitializedAsync()
-    {
-        if (User?.Country != null)
-        {
-            _countryImage = (await Users.GetCountryImage(User.Country.Value)).ToString();
-        }
-    }
 
+    // Rendered in reused positions (board dialogs swap their row sets in place), so the flag
+    // follows the CURRENT user: reload when the country changes, clear when it goes away.
+    protected override async Task OnParametersSetAsync()
+    {
+        var country = User?.Country;
+        if (Nullable.Equals(country, _loadedCountry)) return;
+        _loadedCountry = country;
+        // The port is nullable — a country without a flag image just renders no flag.
+        _countryImage = country == null
+            ? string.Empty
+            : (await Users.GetCountryImage(country.Value))?.ToString() ?? string.Empty;
+    }
 }

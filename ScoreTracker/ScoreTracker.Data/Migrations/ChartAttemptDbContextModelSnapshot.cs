@@ -3155,6 +3155,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<int>("Score")
                         .HasColumnType("int");
 
+                    b.Property<int>("Source")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 

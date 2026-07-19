@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.WeeklyChallenge.Contracts;
 
 namespace ScoreTracker.WeeklyChallenge.Infrastructure.Entities
@@ -22,7 +23,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure.Entities
         [MaxLength(32)] public string Plate { get; set; } = string.Empty;
         public bool IsBroken { get; set; }
         public double CompetitiveLevel { get; set; }
-        public DailyStepSource Source { get; set; }
+        public ChallengeEntrySource Source { get; set; }
         [MaxLength(256)] public string? Photo { get; set; }
     }
 }

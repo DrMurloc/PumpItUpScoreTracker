@@ -1,0 +1,150 @@
+@namespace ScoreTracker.Web.Components.Challenges
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.WeeklyChallenge.Contracts
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* The monthly full board (weekly-charts-overhaul.md §12.4): the depth that left the rail —
+   every row, avatar + CL, the top-4 stickers, and the counted-scores expansion in the
+   official-leaderboards compact pattern (M21): jacket + bubble + grade/score + points,
+   song names in the tooltip only. Lives in the island; the segment row here re-queries. *@
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="DialogSizing" Class="challenge-monthly-dialog">
+    <TitleContent>
+        <div class="weekly-lb-title">
+            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small"></MudIcon>
+            <MudText Typo="Typo.h6">@L["Monthly Leaderboard"]</MudText>
+            <MudText Typo="Typo.caption" Class="challenge-muted">@Subtitle</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="challenge-seg" role="tablist">
+            @foreach (var type in Types)
+            {
+                <button class="challenge-seg-btn @(type == ActiveType ? "on" : "")" role="tab"
+                        aria-selected="@(type == ActiveType ? "true" : "false")"
+                        @onclick="() => TypeChanged.InvokeAsync(type)">@TypeLabel(type)</button>
+            }
+        </div>
+        @if (Loading)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+        }
+        else if (View == null || !View.Rows.Any())
+        {
+            <MudText Typo="Typo.body2">@L["Scores land here as boards close."]</MudText>
+        }
+        else
+        {
+            <table class="challenge-monthly">
+                <thead>
+                <tr>
+                    <th style="width:40px">#</th>
+                    <th>@L["Player"]</th>
+                    <th style="width:64px">CL</th>
+                    <th>@L["Top scores"]</th>
+                    <th style="width:70px">@L["Counted"]</th>
+                    <th style="width:100px">@(ActiveType == ChartType.CoOp ? L["Score"] : "PUMBILITY")</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var row in View.Rows)
+                {
+                    <tr class="@(row.Player?.Id == UserId ? "mine" : CommunityUserIds?.Contains(row.Player?.Id ?? Guid.Empty) == true ? "community" : "")">
+                        <td class="challenge-mono-place" style="@ThemeScales.RarityStyle(Fraction(row.Place))">@row.Place</td>
+                        <td>
+                            <span class="challenge-mrow-who">
+                                <ChallengeAvatar Player="row.Player"></ChallengeAvatar>
+                                <UserLabel User="row.Player"></UserLabel>
+                            </span>
+                        </td>
+                        <td>
+                            @if (row.CompetitiveLevel > 0)
+                            {
+                                <span class="challenge-cl">@row.CompetitiveLevel.ToString("N2")</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="challenge-stik-row">
+                                @foreach (var entry in row.TopFour)
+                                {
+                                    @Sticker(entry)
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <details class="challenge-expand">
+                                <summary>@row.AllCounted.Count</summary>
+                                <div class="challenge-stik-grid">
+                                    @foreach (var entry in row.AllCounted)
+                                    {
+                                        @Sticker(entry)
+                                    }
+                                </div>
+                            </details>
+                        </td>
+                        <td class="challenge-total">@row.Total.ToString("N0")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudText Typo="Typo.caption" Class="challenge-muted">@L["Ties break by total raw score."]</MudText>
+        <MudSpacer/>
+        <MudButton OnClick="() => VisibleChanged.InvokeAsync(false)">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private static readonly ChartType?[] Types = { null, ChartType.Single, ChartType.Double, ChartType.CoOp };
+
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public MonthlyLeaderboardView? View { get; set; }
+    [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+    [Parameter] public ChartType? ActiveType { get; set; }
+    [Parameter] public Guid? UserId { get; set; }
+
+    /// <summary>User ids in a community you share — their rows glow green.</summary>
+    [Parameter] public IReadOnlySet<Guid>? CommunityUserIds { get; set; }
+
+    [Parameter] public bool Loading { get; set; }
+    [Parameter] public string Subtitle { get; set; } = string.Empty;
+
+    /// <summary>Segment taps re-query through the host — the dialog stays data-dumb.</summary>
+    [Parameter] public EventCallback<ChartType?> TypeChanged { get; set; }
+
+    private static readonly DialogOptions DialogSizing = new()
+        { FullWidth = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
+
+    private double Fraction(int place) =>
+        View == null || View.Rows.Count <= 0 ? 0 : 1.0 - (double)place / View.Rows.Count;
+
+    private string TypeLabel(ChartType? type) => type switch
+    {
+        ChartType.Single => L["Singles"],
+        ChartType.Double => L["Doubles"],
+        ChartType.CoOp => L["Co-Op"],
+        _ => L["Combined"]
+    };
+
+    // The official-leaderboards compact card, board-sized (M21): jacket, bubble, grade + score
+    // strip, points badge — the song name lives in the tooltip.
+    private RenderFragment Sticker(MonthlyEntry entry) =>@<text>
+        @{ var chart = Charts.GetValueOrDefault(entry.ChartId); }
+        @if (chart != null)
+        {
+            <span class="challenge-stik" title="@($"{chart.Song.Name} {chart.DifficultyString}")">
+                <span class="challenge-stik-j" style="background-image:url('@chart.Song.ImagePath')"></span>
+                <span class="challenge-stik-bubble"><DifficultyBubble Chart="chart" Small="true" Height="14"></DifficultyBubble></span>
+                <span class="challenge-stik-line">
+                    <ScoreBreakdown Score="entry.Score" IsBroken="entry.IsBroken" OneLine="true" ShowScore="true" Height="12"></ScoreBreakdown>
+                    <b>@entry.Points.ToString("N0")</b>
+                </span>
+            </span>
+        }
+    </text>;
+}

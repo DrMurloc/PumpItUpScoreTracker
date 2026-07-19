@@ -52,6 +52,9 @@ public sealed class AccountStatsWidgetTests : ComponentTestBase
         Services.AddSingleton(_mediator.Object);
         Services.AddSingleton(_users.Object);
         Services.AddScoped<CommunityGlowReader>();
+        // The widget nests UserLabel/ScoreBreakdown, which gate their MudTooltip on
+        // RendererInfo; declare the render world so bUnit can supply it.
+        this.RenderInteractive();
     }
 
     private IRenderedComponent<PumbilityWidget> Render(string size, string configJson = "{}")

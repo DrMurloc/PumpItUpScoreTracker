@@ -21,7 +21,7 @@ From D12 (home-page-widgets.md) plus the owner scoping pass 2026-07-12:
 | L3 | Normal day: chart **level 16–24**, **singles/doubles only** (no co-op), highest score wins. |
 | L4 | **Limbo Day**: once a week on a pseudo-random day, chart **level 1–15** (1–9s allowed), **lowest passing (non-broken) score wins**. |
 | L5 | Resets at **midnight ET** (both Daily Step *and* the existing Weekly board — see §6, a regression the Hangfire extraction introduced). |
-| L6 | **No chart-history / dedup table** — repeats across days are fine. **Keep per-user score history** (`UserDailyStepPlacing`) for a future view on the Weekly-charts rebuild. |
+| L6 | **No chart-history / dedup table** — repeats across days are fine. **Keep per-user score history** (`UserDailyStepPlacing`) for a future view on the Weekly-charts rebuild. ✅ **Shipped** — that view is the "Your Daily Step History" section of the rebuilt `/WeeklyCharts` (weekly-charts-overhaul.md §4.5), reading `UserDailyStepPlacing` through `GetUserDailyStepHistoryQuery`. |
 | L7 | **No standalone daily Discord post.** Instead, add a **Daily Step line to the community session-snapshot card** (CommunitySaga), mirroring its existing weekly-placement lines. *(Superseded 2026-07-17 by the Discord overhaul's opt-in Daily Step feed — see [discord-overhaul.md](discord-overhaul.md). That feed is a channel's explicit `/piu register daily` subscription, a different surface from the session card's per-player line, which still ships as specified here.)* |
 | L8 | Limbo scoring is fed by the **recent-scores import hook** (§3), not by rebuilding the import to carry all attempts for every chart. |
 | L9 | Distinct from the **per-player daily challenge** (a separate future session — do not conflate). |

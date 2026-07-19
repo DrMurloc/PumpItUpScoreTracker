@@ -119,6 +119,29 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
             await database.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task<IEnumerable<DailyStepHistoryRecord>> GetUserHistory(MixEnum mix, Guid userId, int take,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            var mine = await database.Set<UserDailyStepPlacingEntity>()
+                .Where(e => e.MixId == mixId && e.UserId == userId)
+                .OrderByDescending(e => e.ForDate)
+                .Take(take)
+                .ToArrayAsync(cancellationToken);
+            if (mine.Length == 0) return Array.Empty<DailyStepHistoryRecord>();
+
+            var dates = mine.Select(e => e.ForDate).Distinct().ToArray();
+            var totals = await database.Set<UserDailyStepPlacingEntity>()
+                .Where(e => e.MixId == mixId && dates.Contains(e.ForDate))
+                .GroupBy(e => e.ForDate)
+                .Select(g => new { ForDate = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(g => g.ForDate, g => g.Count, cancellationToken);
+
+            return mine.Select(e => new DailyStepHistoryRecord(e.ForDate, e.ChartId, e.IsLimbo, e.Place,
+                totals.GetValueOrDefault(e.ForDate, 1), e.Score, Enum.Parse<PhoenixPlate>(e.Plate), e.IsBroken));
+        }
+
         public async Task WriteHistories(MixEnum mix, IEnumerable<DailyStepPlacing> placings,
             CancellationToken cancellationToken)
         {
