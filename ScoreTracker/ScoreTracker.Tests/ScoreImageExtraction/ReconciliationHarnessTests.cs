@@ -43,23 +43,24 @@ public sealed class ReconciliationHarnessTests
         var report = new StringBuilder();
         report.AppendLine();
         report.AppendLine(
-            "image      src      song                     diff  printed   recomputed  delta  round    grade  status");
-        report.AppendLine(new string('-', 104));
+            "image      src      tag       pl brk  song                  diff  printed   recomp  delta  status");
+        report.AppendLine(new string('-', 110));
         foreach (var r in results)
             report.AppendLine(string.Format(CultureInfo.InvariantCulture,
-                "{0,-10} {1,-8} {2,-24} {3,-5} {4,7} {5,11}  {6,5}  {7,-7}  {8,-5}  {9}{10}",
+                "{0,-10} {1,-8} {2,-9} {3,-2} {4,-3}  {5,-21} {6,-5} {7,7} {8,8}  {9,5}  {10}{11}",
                 r.Image,
                 r.Source,
-                Truncate(r.Song, 24),
+                Truncate(r.Gametag, 9),
+                r.Player,
+                r.Broken ? "BRK" : "",
+                Truncate(r.Song, 21),
                 r.Difficulty,
                 r.PrintedScore,
                 r.FloorScore,
                 r.Delta,
-                r.RoundingMatch,
-                r.DerivedGrade,
                 r.Status,
                 r.Status == ReconciliationStatus.Flagged ? "  <== confirm" : ""));
-        report.AppendLine(new string('-', 104));
+        report.AppendLine(new string('-', 110));
 
         // Official screens are the accuracy target. Sims (StepP2 etc.) are kept for reference but
         // are NOT trained around and NOT rejected — reported separately so they never distort the
@@ -73,10 +74,16 @@ public sealed class ReconciliationHarnessTests
         var officialFloor = official.Count(r => r.RoundingMatch == "floor");
         var officialCeil = official.Count(r => r.RoundingMatch == "ceil");
 
+        var passes = official.Count(r => !r.Broken);
+        var breaks = official.Count(r => r.Broken);
+        var breaksReconciled = official.Count(r => r.Broken && r.Status != ReconciliationStatus.Flagged);
         report.AppendLine(
             $"OFFICIAL ({official.Count}):  {officialExact} exact, {officialClose} close (<=2pts), " +
             $"{officialFlagged} flagged   |   rounding: {officialFloor} FLOOR, {officialCeil} CEIL " +
             "(shipped ScoreScreen ceils — real screens floor)");
+        report.AppendLine(
+            $"  pass vs break: {passes} passes, {breaks} breaks — {breaksReconciled}/{breaks} broken plays " +
+            "reconcile too (broken is orthogonal to the score; read from missing plate, never derived)");
         report.AppendLine(
             $"SIMS ({sims.Count}, informational, not a target):  " +
             string.Join(", ", sims.Select(s => $"{s.Song}={s.Status}")));

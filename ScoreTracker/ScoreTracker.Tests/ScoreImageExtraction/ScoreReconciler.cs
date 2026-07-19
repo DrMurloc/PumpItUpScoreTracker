@@ -55,7 +55,9 @@ public static class ScoreReconciler
             : "neither";
 
         var derivedGrade = ((PhoenixScore)Clamp(printed)).LetterGrade.GetName();
-        var derivedPlate = screen.PlateText.GetName();
+        // PlateText derives the plate a PASS would earn from the judgements. On a broken play the
+        // game shows no plate at all, so the derived value is meaningless — surface the break instead.
+        var derivedPlate = read.Broken ? "(broken — no plate)" : screen.PlateText.GetName();
 
         var confidence = status switch
         {
@@ -65,7 +67,8 @@ public static class ScoreReconciler
         };
 
         return new ReconciliationResult(
-            read.Image, read.Source, read.Song, read.Difficulty,
+            read.Image, read.Source, read.Gametag, read.Player, read.Broken,
+            read.Song, read.Difficulty,
             printed, floorScore, ceilScore, delta,
             roundingMatch, status,
             derivedGrade, read.Grade,
@@ -105,6 +108,9 @@ public enum ReconciliationStatus
 public sealed record ReconciliationResult(
     string Image,
     string Source,
+    string Gametag,
+    string Player,
+    bool Broken,
     string Song,
     string Difficulty,
     int PrintedScore,

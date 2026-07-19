@@ -1,6 +1,8 @@
 {
   "image": "img05.jpg",
   "camera": "cab-D",
+  "gametag": "PUMPITUP",
+  "broken": true,
   "song": "MEGAHEARTZ",
   "difficulty": "D25",
   "printedScore": "0890219",

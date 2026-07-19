@@ -14,6 +14,20 @@ public sealed record RawScoreRead
     public string Image { get; init; } = "";
     public string Camera { get; init; } = "";
 
+    /// <summary>Player nameplate — the attribution key, matched to an account downstream.</summary>
+    public string Gametag { get; init; } = "";
+
+    /// <summary>Which side the panel sits on ("1P"/"2P"), or "" for a lone single-player panel.</summary>
+    public string Player { get; init; } = "";
+
+    /// <summary>
+    ///     Whether the stage was broken (failed). MUST be read, never derived — a play can end with
+    ///     clean judgements yet have broken mid-song. The on-screen tell is the ABSENCE of a plate
+    ///     word (Marvelous/Superb/.../Rough Game): passes always show one, breaks never do. Grade
+    ///     colour is an unreliable proxy because AA/AA+ are naturally silver like a broken grade.
+    /// </summary>
+    public bool Broken { get; init; }
+
     /// <summary>
     ///     Where the screen came from: "official" (a real cabinet or PIUGAME) or the name of an
     ///     unofficial simulator (e.g. "stepp2"). Sims are kept for reference but are NOT part of
