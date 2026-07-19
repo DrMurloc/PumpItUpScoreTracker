@@ -5709,4 +5709,52 @@
   <data name="Could not create the invite link." xml:space="preserve">
     <value>초대 링크를 생성할 수 없습니다.</value>
   </data>
+  <data name="What can it do?" xml:space="preserve">
+    <value>어떤 기능이 있나요?</value>
+  </data>
+  <data name="The PIU Scores bot" xml:space="preserve">
+    <value>PIU Scores 봇</value>
+  </data>
+  <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
+    <value>피드 — 채널을 한 번 등록하면 봇이 계속 소식을 전합니다</value>
+  </data>
+  <data name="score session cards, new titles, and member announcements for your community" xml:space="preserve">
+    <value>커뮤니티의 점수 세션 카드, 새 칭호, 멤버 알림</value>
+  </data>
+  <data name="Weekly Charts results and each new lineup" xml:space="preserve">
+    <value>Weekly Charts 결과와 새 라인업</value>
+  </data>
+  <data name="the official leaderboards' weekly digest" xml:space="preserve">
+    <value>공식 리더보드 주간 요약</value>
+  </data>
+  <data name="Commands — anyone in the server can use these" xml:space="preserve">
+    <value>명령어 — 서버의 누구나 사용할 수 있습니다</value>
+  </data>
+  <data name="calculate a Phoenix score from a result screen" xml:space="preserve">
+    <value>결과 화면으로 Phoenix 점수를 계산합니다</value>
+  </data>
+  <data name="find a chart and jump to its pages" xml:space="preserve">
+    <value>채보를 찾아 페이지로 이동합니다</value>
+  </data>
+  <data name="draw a random set of charts, presets included" xml:space="preserve">
+    <value>무작위 채보 세트를 뽑습니다 (프리셋 지원)</value>
+  </data>
+  <data name="personalized chart suggestions, sent privately" xml:space="preserve">
+    <value>개인 맞춤 추천 채보 (비공개 전송)</value>
+  </data>
+  <data name="see and manage what this channel is registered for" xml:space="preserve">
+    <value>이 채널의 등록 상태를 확인하고 관리합니다</value>
+  </data>
+  <data name="Every feed can post in its own language — pick one when registering; replies to commands follow each player's account language." xml:space="preserve">
+    <value>각 피드는 저마다의 언어로 게시할 수 있습니다 — 등록할 때 선택해주세요. 명령어 응답은 각 유저의 계정 언어를 따릅니다.</value>
+  </data>
+  <data name="View top charts" xml:space="preserve">
+    <value>상위 채보 보기</value>
+  </data>
+  <data name="Winner" xml:space="preserve">
+    <value>승자</value>
+  </data>
+  <data name="Tie" xml:space="preserve">
+    <value>무승부</value>
+  </data>
 </root>

@@ -52,13 +52,6 @@
             <MudButton Variant="@(_currentType == LeaderboardType.CoOp ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small"
                        OnClick="@(() => SetType(LeaderboardType.CoOp))">@L["CoOp"]</MudButton>
         </MudButtonGroup>
-        <MudSpacer/>
-        @if (_currentType != LeaderboardType.CoOp)
-        {
-            <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                @L["Tap a rating to expand the player's top charts."]
-            </MudText>
-        }
     </MudStack>
 
     <MudTable T="LeaderboardEntry" Items="_entries" Breakpoint="Breakpoint.None" Dense="true"
@@ -99,15 +92,15 @@
                 </div>
             </MudTd>
             <MudTd Style="text-align:right">
-                @if (_currentType == LeaderboardType.CoOp)
-                {
+                <span style="display:inline-flex;align-items:center;gap:2px;justify-content:flex-end">
                     <b style="color:@context.Color">@context.Rating</b>
-                }
-                else
-                {
-                    <MudLink Style=@($"color:{context.Color};cursor:pointer") Underline="Underline.None"
-                             OnClick="() => ToggleExpand(context.UserId, ExpandTypeFor(_currentType), false)"><b>@context.Rating</b></MudLink>
-                }
+                    @if (_currentType != LeaderboardType.CoOp)
+                    {
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Visibility"
+                                       aria-label="@L["View top charts"]"
+                                       OnClick="() => ToggleExpand(context.UserId, ExpandTypeFor(_currentType), false)"/>
+                    }
+                </span>
             </MudTd>
             @if (_currentType == LeaderboardType.CoOp)
             {
@@ -120,8 +113,12 @@
             else
             {
                 <MudTd Style="text-align:right">
-                    <MudLink Style="cursor:pointer" Underline="Underline.None"
-                             OnClick="() => ToggleExpand(context.UserId, ExpandTypeFor(_currentType), true)">@context.CompetitiveLevel.ToString("0.00")</MudLink>
+                    <span style="display:inline-flex;align-items:center;gap:2px;justify-content:flex-end">
+                        <span>@context.CompetitiveLevel.ToString("0.00")</span>
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Visibility"
+                                       aria-label="@L["View top charts"]"
+                                       OnClick="() => ToggleExpand(context.UserId, ExpandTypeFor(_currentType), true)"/>
+                    </span>
                 </MudTd>
             }
             <MudTd Style="text-align:right">@(_playCounts.TryGetValue(context.UserId, out var plays) ? plays.ToString("N0") : "—")</MudTd>

@@ -5822,4 +5822,52 @@
   <data name="Could not create the invite link." xml:space="preserve">
     <value>Could not create the invite link.</value>
   </data>
+  <data name="What can it do?" xml:space="preserve">
+    <value>What can it do?</value>
+  </data>
+  <data name="The PIU Scores bot" xml:space="preserve">
+    <value>The PIU Scores bot</value>
+  </data>
+  <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
+    <value>Feeds — register a channel once, the bot keeps it fed</value>
+  </data>
+  <data name="score session cards, new titles, and member announcements for your community" xml:space="preserve">
+    <value>score session cards, new titles, and member announcements for your community</value>
+  </data>
+  <data name="Weekly Charts results and each new lineup" xml:space="preserve">
+    <value>Weekly Charts results and each new lineup</value>
+  </data>
+  <data name="the official leaderboards' weekly digest" xml:space="preserve">
+    <value>the official leaderboards' weekly digest</value>
+  </data>
+  <data name="Commands — anyone in the server can use these" xml:space="preserve">
+    <value>Commands — anyone in the server can use these</value>
+  </data>
+  <data name="calculate a Phoenix score from a result screen" xml:space="preserve">
+    <value>calculate a Phoenix score from a result screen</value>
+  </data>
+  <data name="find a chart and jump to its pages" xml:space="preserve">
+    <value>find a chart and jump to its pages</value>
+  </data>
+  <data name="draw a random set of charts, presets included" xml:space="preserve">
+    <value>draw a random set of charts, presets included</value>
+  </data>
+  <data name="personalized chart suggestions, sent privately" xml:space="preserve">
+    <value>personalized chart suggestions, sent privately</value>
+  </data>
+  <data name="see and manage what this channel is registered for" xml:space="preserve">
+    <value>see and manage what this channel is registered for</value>
+  </data>
+  <data name="Every feed can post in its own language — pick one when registering; replies to commands follow each player's account language." xml:space="preserve">
+    <value>Every feed can post in its own language — pick one when registering; replies to commands follow each player's account language.</value>
+  </data>
+  <data name="View top charts" xml:space="preserve">
+    <value>View top charts</value>
+  </data>
+  <data name="Winner" xml:space="preserve">
+    <value>Winner</value>
+  </data>
+  <data name="Tie" xml:space="preserve">
+    <value>Tie</value>
+  </data>
 </root>

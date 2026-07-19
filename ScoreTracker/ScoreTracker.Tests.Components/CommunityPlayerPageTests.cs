@@ -36,7 +36,7 @@ public sealed class CommunityPlayerPageTests : ComponentTestBase
             .ReturnsAsync(new CommunityPlayerProfileRecord(TargetId, Name.From("Reno"),
                 new Uri("https://piu.test/avatar.png"), Name.From("United States"), true,
                 942, 14208, 951, 928, 23.4, 23.8, 22.9, 26, 812,
-                new[] { new CommunityFolderCompletionRecord(20, 49, 50) }));
+                new[] { new CommunityFolderCompletionRecord(20, 25, 24, 50) }));
         _mediator.Setup(m => m.Send(It.IsAny<GetOfficialPlayerStandingQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((OfficialPlayerStandingRecord?)null);
         _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))

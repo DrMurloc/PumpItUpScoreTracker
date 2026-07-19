@@ -41,7 +41,7 @@ else
                 <MudText Typo="Typo.h5">@L["Invite Links"]</MudText>
                 <div class="d-flex align-center flex-wrap" style="gap:8px">
                     <MudDatePicker @bind-Date="_newCodeExpiry" Label="@L["Expires (optional)"]" Clearable="true"
-                                   Margin="Margin.Dense" Style="max-width:190px"/>
+                                   PickerVariant="PickerVariant.Dialog" Margin="Margin.Dense" Style="max-width:190px"/>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                                Disabled="_isSaving" OnClick="CreateCode">@L["New invite link"]</MudButton>
                 </div>
@@ -61,8 +61,10 @@ else
                                 @(link.Value == null ? L["Never expires"] : L["Expires {0}", link.Value.Value.ToString("d")])
                             </MudText>
                         </div>
-                        <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ContentCopy"
-                                   OnClick="() => CopyCode(link.Key)">@L["Copy link"]</MudButton>
+                        <MudTooltip Text="@L["Copy link"]">
+                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ContentCopy"
+                                           aria-label="@L["Copy link"]" OnClick="() => CopyCode(link.Key)"/>
+                        </MudTooltip>
                     </MudPaper>
                 }
             </div>
@@ -83,7 +85,7 @@ else
                     <span>@((string)context.Name)</span>
                 </div>
             </MudTd>
-            <MudTd><MudChip T="string" Size="Size.Small" Color="@RoleColor(context.Role)">@RoleLabel(context.Role)</MudChip></MudTd>
+            <MudTd><MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@RoleColor(context.Role)">@RoleLabel(context.Role)</MudChip></MudTd>
             <MudTd>
                 @if (context.Role == CommunityRole.Admin)
                 {

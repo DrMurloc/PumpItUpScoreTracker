@@ -25,6 +25,12 @@ public sealed record CommunityPlayerProfileRecord(
     int ClearCount,
     IReadOnlyList<CommunityFolderCompletionRecord> FolderCompletion);
 
-/// <summary>One level folder: charts passed over charts total (singles+doubles; co-op excluded).</summary>
+/// <summary>
+///     One level folder: singles and doubles passes separately over the folder's chart total
+///     (co-op excluded), so the graph can stack the two types inside the folder's true size.
+/// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record CommunityFolderCompletionRecord(int Level, int Passed, int Total);
+public sealed record CommunityFolderCompletionRecord(int Level, int SinglesPassed, int DoublesPassed, int Total)
+{
+    public int Passed => SinglesPassed + DoublesPassed;
+}

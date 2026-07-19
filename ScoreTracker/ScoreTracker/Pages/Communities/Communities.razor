@@ -106,13 +106,17 @@
 
     .communities-range {
         font-size: 11.5px;
+        color: var(--mix-ink-muted);
         display: inline-flex;
         gap: 6px;
         flex-wrap: wrap;
     }
 
-    .communities-range-singles { color: var(--chart-singles); white-space: nowrap; }
-    .communities-range-doubles { color: var(--chart-doubles); white-space: nowrap; }
+    .communities-range span { white-space: nowrap; }
+
+    /* The letter carries the series color; the numbers stay muted. */
+    .communities-range-singles { color: var(--chart-singles); font-weight: 700; }
+    .communities-range-doubles { color: var(--chart-doubles); font-weight: 700; }
 </style>
 
 <div class="communities-page">
@@ -121,10 +125,63 @@
     <MudPaper Class="pa-4 mb-4" Outlined="true">
         <MudText Typo="Typo.h6">@L["Add the PIU Scores bot to your Discord server"]</MudText>
         <MudText Typo="Typo.body2" Class="mb-3">@L["Invite the bot, then run /piu register in any channel to start its feeds and commands."]</MudText>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SmartToy"
-                   Href="@BotInviteUrl" Target="_blank">@L["Add the bot"]</MudButton>
+        <div class="d-flex flex-wrap" style="gap:8px">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SmartToy"
+                       Href="@BotInviteUrl" Target="_blank">@L["Add the bot"]</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome"
+                       OnClick="() => _showBotFeatures = true">@L["What can it do?"]</MudButton>
+        </div>
     </MudPaper>
 }
+
+<MudDialog @bind-Visible="_showBotFeatures" Options="new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }">
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.SmartToy" Class="mr-2"/>@L["The PIU Scores bot"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.subtitle2" Class="mb-1">@L["Feeds — register a channel once, the bot keeps it fed"]</MudText>
+        <MudList T="string" Dense="true" ReadOnly="true">
+            <MudListItem T="string" Icon="@Icons.Material.Filled.Groups">
+                <b>/piu register community</b> — @L["score session cards, new titles, and member announcements for your community"]
+            </MudListItem>
+            <MudListItem T="string" Icon="@Icons.Material.Filled.CalendarMonth">
+                <b>/piu register weekly</b> — @L["Weekly Charts results and each new lineup"]
+            </MudListItem>
+            <MudListItem T="string" Icon="@Icons.Material.Filled.Today">
+                <b>/piu register daily</b> — @L["Daily Step — yesterday's board and today's chart"]
+            </MudListItem>
+            <MudListItem T="string" Icon="@Icons.Material.Filled.Public">
+                <b>/piu register official</b> — @L["the official leaderboards' weekly digest"]
+            </MudListItem>
+        </MudList>
+        <MudText Typo="Typo.subtitle2" Class="mb-1 mt-3">@L["Commands — anyone in the server can use these"]</MudText>
+        <MudList T="string" Dense="true" ReadOnly="true">
+            <MudListItem T="string" Icon="@Icons.Material.Filled.Calculate">
+                <b>/piu calc</b> — @L["calculate a Phoenix score from a result screen"]
+            </MudListItem>
+            <MudListItem T="string" Icon="@Icons.Material.Filled.Search">
+                <b>/piu chart</b> — @L["find a chart and jump to its pages"]
+            </MudListItem>
+            <MudListItem T="string" Icon="@Icons.Material.Filled.Casino">
+                <b>/piu random</b> — @L["draw a random set of charts, presets included"]
+            </MudListItem>
+            <MudListItem T="string" Icon="@Icons.Material.Filled.TipsAndUpdates">
+                <b>/piu suggest</b> — @L["personalized chart suggestions, sent privately"]
+            </MudListItem>
+            <MudListItem T="string" Icon="@Icons.Material.Filled.Checklist">
+                <b>/piu feeds</b> — @L["see and manage what this channel is registered for"]
+            </MudListItem>
+        </MudList>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2 d-block">
+            @L["Every feed can post in its own language — pick one when registering; replies to commands follow each player's account language."]
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showBotFeatures = false">@L["Close"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SmartToy"
+                   Href="@BotInviteUrl" Target="_blank">@L["Add the bot"]</MudButton>
+    </DialogActions>
+</MudDialog>
 
 <div class="d-flex align-end justify-space-between flex-wrap mb-4" style="gap:12px">
     <div>
@@ -211,7 +268,7 @@
                         @((string)region.CommunityName)
                     </MudLink>
                     <div style="text-align:right">
-                        <span class="mud-text-secondary">@region.MemberCount</span>
+                        <span class="mud-text-secondary">@L["{0} members", region.MemberCount]</span>
                         <div>@RangeChip(region.CommunityName)</div>
                     </div>
                 </div>
@@ -240,7 +297,7 @@
                         <MudChip T="string" Size="Size.Small">@PrivacyLabel(community.PrivacyType)</MudChip>
                         @if (RoleOf(community.CommunityName) is { } role && role != CommunityRole.Member)
                         {
-                            <MudChip T="string" Size="Size.Small" Color="@(role == CommunityRole.Creator ? Color.Warning : Color.Info)">
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@(role == CommunityRole.Creator ? Color.Warning : Color.Info)">
                                 @(role == CommunityRole.Creator ? L["Creator"] : L["Admin"])
                             </MudChip>
                         }
@@ -299,7 +356,10 @@
     <DialogContent>
         <MudGrid>
             <MudItem xs="12">
-                <MudTextField @bind-Value="_name" MaxLength="50" Label="@L["Community Name"]"></MudTextField>
+                <MudTextField T="string" Value="_name" ValueChanged="OnNameChanged" MaxLength="50"
+                              Label="@L["Community Name"]" Immediate="true" DebounceInterval="400"
+                              Error="_nameTaken"
+                              ErrorText="@L["A community with this name already exists."]"></MudTextField>
             </MudItem>
             <MudItem xs="12">
                 <MudRadioGroup T="CommunityPrivacyType" @bind-Value="_privacyType">
@@ -313,7 +373,7 @@
     <DialogActions>
         <MudSpacer></MudSpacer>
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showCreateDialog = false">@L["Close"]</MudButton>
-        <MudButton Variant="Variant.Filled" Disabled="_isSaving" Color="Color.Primary" OnClick="CreateCommunity">@L["Create"]</MudButton>
+        <MudButton Variant="Variant.Filled" Disabled="_isSaving || _nameTaken" Color="Color.Primary" OnClick="CreateCommunity">@L["Create"]</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -336,8 +396,10 @@
     private IDictionary<Name, CommunityCompetitiveRangeRecord> _ranges = new Dictionary<Name, CommunityCompetitiveRangeRecord>();
     private User? _currentUser;
     private bool _showCreateDialog = false;
+    private bool _showBotFeatures = false;
     private bool _isSaving = false;
     private string _name = string.Empty;
+    private bool _nameTaken = false;
     private IDictionary<Name, Uri> _countryImages = new Dictionary<Name, Uri>();
     private CommunityPrivacyType _privacyType = CommunityPrivacyType.PublicWithCode;
     private int? _myPumbility;
@@ -366,11 +428,11 @@
         return @<span class="communities-range">
                    @if (range.SinglesMin != null)
                    {
-                       <span class="communities-range-singles">S @range.SinglesMin.Value.ToString("0.0") - @range.SinglesMax!.Value.ToString("0.0")</span>
+                       <span><span class="communities-range-singles">S</span> @range.SinglesMin.Value.ToString("0.0") - @range.SinglesMax!.Value.ToString("0.0")</span>
                    }
                    @if (range.DoublesMin != null)
                    {
-                       <span class="communities-range-doubles">D @range.DoublesMin.Value.ToString("0.0") - @range.DoublesMax!.Value.ToString("0.0")</span>
+                       <span><span class="communities-range-doubles">D</span> @range.DoublesMin.Value.ToString("0.0") - @range.DoublesMax!.Value.ToString("0.0")</span>
                    }
                </span>;
     }
@@ -381,6 +443,15 @@
         CommunityPrivacyType.PublicWithCode => L["Invite Required"].Value,
         _ => L["Public"].Value
     };
+
+    // Debounced by the field: the availability answer arrives while typing, not on save.
+    private async Task OnNameChanged(string name)
+    {
+        _name = name;
+        _nameTaken = !string.IsNullOrWhiteSpace(name) &&
+                     Name.TryParse(name, out var parsed) &&
+                     await Mediator.Send(new DoesCommunityExistQuery(parsed));
+    }
 
     private async Task CreateCommunity()
     {

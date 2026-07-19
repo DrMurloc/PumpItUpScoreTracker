@@ -54,7 +54,9 @@
 
     .cmp-tile-num { font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; margin-top: 3px; }
 
-    /* Home-page-style folder completion: completed fills over a muted track, minimal labels. */
+    /* Folder completion keeps the real folder slope: each track's height follows the
+       folder's chart count (no per-folder normalization), with singles and doubles passes
+       stacked in the game's ball colors inside the uncompleted remainder. */
     .cmp-folders { display: flex; align-items: flex-end; gap: 10px; height: 150px; padding-top: 4px; }
 
     .cmp-folder-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; justify-content: flex-end; height: 100%; }
@@ -63,17 +65,20 @@
        percentage width here collapses the bar to nothing. */
     .cmp-folder-track {
         width: 34px;
-        height: 118px;
         background: var(--mix-surface-muted);
-        border-radius: 5px;
+        border-radius: 5px 5px 0 0;
         display: flex;
         flex-direction: column-reverse;
         overflow: hidden;
     }
 
-    .cmp-folder-fill { background: var(--rarity-emerald); border-radius: 0 0 5px 5px; }
+    .cmp-folder-singles { background: var(--type-singles); }
+
+    .cmp-folder-doubles { background: var(--type-doubles); }
 
     .cmp-folder-label { font-size: .72rem; font-weight: 700; color: var(--mix-ink-muted); }
+
+    .cmp-stale { color: var(--mix-ink-muted); font-size: .68rem; white-space: nowrap; }
 
     .cmp-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
 
@@ -170,13 +175,20 @@ else
     <MudPaper Class="pa-4 mb-4">
         <MudText Typo="Typo.h6" Class="mb-1">@L["Folder Completion"]</MudText>
         <div class="cmp-folders">
-            @foreach (var folder in _profile.FolderCompletion.Where(f => f.Total > 0 && f.Level >= MinFolderLevel))
+            @{
+                var folders = _profile.FolderCompletion.Where(f => f.Total > 0 && f.Level >= MinFolderLevel).ToArray();
+                var maxTotal = folders.Length == 0 ? 1 : folders.Max(f => f.Total);
+            }
+            @foreach (var folder in folders)
             {
-                var percent = 100.0 * folder.Passed / folder.Total;
+                var trackHeight = Math.Max(6, (int)(118.0 * folder.Total / maxTotal));
+                var singlesPercent = 100.0 * folder.SinglesPassed / folder.Total;
+                var doublesPercent = 100.0 * folder.DoublesPassed / folder.Total;
                 <div class="cmp-folder-col">
-                    <MudTooltip Text="@($"{folder.Passed}/{folder.Total}")">
-                        <div class="cmp-folder-track">
-                            <div class="cmp-folder-fill" style="height:@(percent.ToString("0"))%"></div>
+                    <MudTooltip Text="@($"S {folder.SinglesPassed} · D {folder.DoublesPassed} / {folder.Total}")">
+                        <div class="cmp-folder-track" style="height:@(trackHeight)px">
+                            <div class="cmp-folder-singles" style="height:@(singlesPercent.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                            <div class="cmp-folder-doubles" style="height:@(doublesPercent.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></div>
                         </div>
                     </MudTooltip>
                     <span class="cmp-folder-label">@folder.Level</span>
@@ -211,33 +223,33 @@ else
                     <div class="cmp-tile"><div class="cmp-tile-label">@L["Completion (you / them)"]</div><div class="cmp-tile-num">@CompletionLabel</div></div>
                 </div>
 
-                <MudTable T="CommunityChartComparisonRecord" Items="ComparedCharts" Breakpoint="Breakpoint.None" Dense="true">
+                <MudTable T="CompareRow" Items="ComparedCharts" Breakpoint="Breakpoint.None" Dense="true">
                     <HeaderContent>
-                        <MudTh>@L["Chart"]</MudTh>
-                        <MudTh Style="text-align:right">@L["You"]</MudTh>
-                        <MudTh Style="text-align:right">@((string)_profile.PlayerName)</MudTh>
-                        <MudTh Style="text-align:right">@L["Difference"]</MudTh>
+                        <MudTh><MudTableSortLabel T="CompareRow" SortBy="@(r => r.Chart.Song.Name.ToString())">@L["Chart"]</MudTableSortLabel></MudTh>
+                        <MudTh Style="text-align:right"><MudTableSortLabel T="CompareRow" SortBy="@(r => r.Data.MyScore ?? -1)">@L["You"]</MudTableSortLabel></MudTh>
+                        <MudTh Style="text-align:right"><MudTableSortLabel T="CompareRow" SortBy="@(r => r.Data.TheirScore ?? -1)">@((string)_profile.PlayerName)</MudTableSortLabel></MudTh>
+                        <MudTh Style="text-align:right"><MudTableSortLabel T="CompareRow" SortBy="@(r => r.Difference ?? int.MinValue)">@L["Difference"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel T="CompareRow" SortBy="@(r => r.Winner)">@L["Winner"]</MudTableSortLabel></MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd>
-                            @if (_charts.TryGetValue(context.ChartId, out var chart))
-                            {
-                                <div style="display:flex;align-items:center;gap:8px">
-                                    <MudTooltip Text="@chart.Song.Name">
-                                        <MudImage Src="@chart.Song.ImagePath.ToString()" Height="30" ObjectFit="ObjectFit.ScaleDown"/>
-                                    </MudTooltip>
-                                    <DifficultyBubble Chart="chart"></DifficultyBubble>
-                                </div>
-                            }
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <DifficultyBubble Chart="context.Chart"></DifficultyBubble>
+                                <span class="olb-hide-mobile">@context.Chart.Song.Name</span>
+                            </div>
                         </MudTd>
                         <MudTd Style="text-align:right">
-                            @if (context.MyScore != null)
+                            @if (context.Data.MyScore != null)
                             {
-                                <span>@context.MyScore.Value.ToString("N0")</span>
-                                @if (IsStale(context.MyRecordedOn))
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Class="ml-1">@AgeLabel(context.MyRecordedOn)</MudChip>
-                                }
+                                <span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end">
+                                    <LetterGradeIcon Grade="((PhoenixScore)context.Data.MyScore.Value).LetterGradeFor(_currentMix)"
+                                                     IsBroken="context.Data.MyIsBroken" Height="16"/>
+                                    <span>@context.Data.MyScore.Value.ToString("N0")</span>
+                                    @if (IsStale(context.Data.MyRecordedOn))
+                                    {
+                                        <span class="cmp-stale">@AgeLabel(context.Data.MyRecordedOn)</span>
+                                    }
+                                </span>
                             }
                             else
                             {
@@ -245,13 +257,17 @@ else
                             }
                         </MudTd>
                         <MudTd Style="text-align:right">
-                            @if (context.TheirScore != null)
+                            @if (context.Data.TheirScore != null)
                             {
-                                <span>@context.TheirScore.Value.ToString("N0")</span>
-                                @if (IsStale(context.TheirRecordedOn))
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Class="ml-1">@AgeLabel(context.TheirRecordedOn)</MudChip>
-                                }
+                                <span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end">
+                                    <LetterGradeIcon Grade="((PhoenixScore)context.Data.TheirScore.Value).LetterGradeFor(_currentMix)"
+                                                     IsBroken="context.Data.TheirIsBroken" Height="16"/>
+                                    <span>@context.Data.TheirScore.Value.ToString("N0")</span>
+                                    @if (IsStale(context.Data.TheirRecordedOn))
+                                    {
+                                        <span class="cmp-stale">@AgeLabel(context.Data.TheirRecordedOn)</span>
+                                    }
+                                </span>
                             }
                             else
                             {
@@ -259,16 +275,25 @@ else
                             }
                         </MudTd>
                         <MudTd Style="text-align:right">
-                            @if (context.MyScore != null && context.TheirScore != null)
+                            @if (context.Difference is { } diff)
                             {
-                                var diff = context.MyScore.Value - context.TheirScore.Value;
                                 <b style="color:@(diff >= 0 ? "var(--rarity-emerald)" : "var(--mix-secondary)")">
                                     @(diff >= 0 ? "+" : "−")@Math.Abs(diff).ToString("N0")
                                 </b>
                             }
-                            else if (context.TheirScore != null)
+                        </MudTd>
+                        <MudTd>
+                            @if (context.Winner < 0)
                             {
-                                <span class="mud-text-secondary">@L["no pass"]</span>
+                                <span style="color:var(--rarity-emerald);font-weight:600">@L["You"]</span>
+                            }
+                            else if (context.Winner > 0)
+                            {
+                                <span class="mud-text-secondary">@((string)_profile.PlayerName)</span>
+                            }
+                            else
+                            {
+                                <span class="mud-text-secondary">@L["Tie"]</span>
                             }
                         </MudTd>
                     </RowTemplate>
@@ -309,9 +334,20 @@ else
     // Low folders exist but tell little at a glance — the graph starts where content does.
     private const int MinFolderLevel = 6;
 
-    private IEnumerable<CommunityChartComparisonRecord> ComparedCharts =>
-        _comparison.Where(c => c.MyScore != null || c.TheirScore != null)
-            .OrderByDescending(c => (c.TheirScore ?? 0) - (c.MyScore ?? 0));
+    // Winner: 1 = them, -1 = you, 0 = tie. The default order leads with the charts you're
+    // losing, widest gap first — the work list.
+    private sealed record CompareRow(Chart Chart, CommunityChartComparisonRecord Data, int? Difference, int Winner);
+
+    private IEnumerable<CompareRow> ComparedCharts =>
+        _comparison.Where(c => (c.MyScore != null || c.TheirScore != null) && _charts.ContainsKey(c.ChartId))
+            .Select(c => new CompareRow(_charts[c.ChartId], c,
+                c.MyScore != null && c.TheirScore != null ? c.MyScore.Value - c.TheirScore.Value : null,
+                Winner: c.MyScore == c.TheirScore ? 0
+                    : (c.MyScore ?? -1) > (c.TheirScore ?? -1) ? -1 : 1))
+            .OrderByDescending(r => r.Winner)
+            .ThenByDescending(r => r.Winner > 0
+                ? (r.Data.TheirScore ?? 0) - (r.Data.MyScore ?? 0)
+                : r.Difference ?? 0);
 
     private int Wins => _comparison.Count(c =>
         c.MyScore != null && (c.TheirScore == null || c.MyScore > c.TheirScore));

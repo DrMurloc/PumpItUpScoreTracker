@@ -5699,4 +5699,52 @@
   <data name="Could not create the invite link." xml:space="preserve">
     <value>Não foi possível criar o link de convite.</value>
   </data>
+  <data name="What can it do?" xml:space="preserve">
+    <value>O que ele faz?</value>
+  </data>
+  <data name="The PIU Scores bot" xml:space="preserve">
+    <value>O bot do PIU Scores</value>
+  </data>
+  <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
+    <value>Feeds — registre um canal uma vez e o bot cuida do resto</value>
+  </data>
+  <data name="score session cards, new titles, and member announcements for your community" xml:space="preserve">
+    <value>cards de sessões de pontuação, novos títulos e anúncios de membros da sua comunidade</value>
+  </data>
+  <data name="Weekly Charts results and each new lineup" xml:space="preserve">
+    <value>resultados dos Charts Semanais e cada nova seleção</value>
+  </data>
+  <data name="the official leaderboards' weekly digest" xml:space="preserve">
+    <value>o resumo semanal das classificações oficiais</value>
+  </data>
+  <data name="Commands — anyone in the server can use these" xml:space="preserve">
+    <value>Comandos — qualquer pessoa no servidor pode usá-los</value>
+  </data>
+  <data name="calculate a Phoenix score from a result screen" xml:space="preserve">
+    <value>calcule uma pontuação Phoenix a partir de uma tela de resultado</value>
+  </data>
+  <data name="find a chart and jump to its pages" xml:space="preserve">
+    <value>encontre um chart e vá para as páginas dele</value>
+  </data>
+  <data name="draw a random set of charts, presets included" xml:space="preserve">
+    <value>sorteie um conjunto aleatório de charts, com presets</value>
+  </data>
+  <data name="personalized chart suggestions, sent privately" xml:space="preserve">
+    <value>sugestões de charts personalizadas, enviadas em particular</value>
+  </data>
+  <data name="see and manage what this channel is registered for" xml:space="preserve">
+    <value>veja e gerencie os registros deste canal</value>
+  </data>
+  <data name="Every feed can post in its own language — pick one when registering; replies to commands follow each player's account language." xml:space="preserve">
+    <value>Cada feed pode postar no próprio idioma — escolha ao registrar; as respostas aos comandos seguem o idioma da conta de cada jogador.</value>
+  </data>
+  <data name="View top charts" xml:space="preserve">
+    <value>Ver os melhores charts</value>
+  </data>
+  <data name="Winner" xml:space="preserve">
+    <value>Vencedor</value>
+  </data>
+  <data name="Tie" xml:space="preserve">
+    <value>Empate</value>
+  </data>
 </root>

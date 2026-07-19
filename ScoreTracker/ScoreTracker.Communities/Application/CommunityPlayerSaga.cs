@@ -57,14 +57,18 @@ internal sealed class CommunityPlayerSaga :
         var charts = await _charts.GetCharts(request.Mix, null, null, null, cancellationToken);
 
         // Folder completion over singles+doubles level folders; co-op "levels" are player
-        // counts, not difficulty, so they stay out of the graph.
+        // counts, not difficulty, so they stay out of the graph. Passes split by type so the
+        // graph can stack singles and doubles inside each folder's true size.
         var completion = charts
             .Where(c => c.Type is ChartType.Single or ChartType.Double or ChartType.SinglePerformance
                 or ChartType.DoublePerformance)
             .GroupBy(c => (int)c.Level)
             .OrderBy(g => g.Key)
             .Select(g => new CommunityFolderCompletionRecord(g.Key,
-                g.Count(c => bestScores.TryGetValue(c.Id, out var s) && s.Score != null && !s.IsBroken),
+                g.Count(c => c.Type is ChartType.Single or ChartType.SinglePerformance &&
+                             bestScores.TryGetValue(c.Id, out var s) && s.Score != null && !s.IsBroken),
+                g.Count(c => c.Type is ChartType.Double or ChartType.DoublePerformance &&
+                             bestScores.TryGetValue(c.Id, out var s) && s.Score != null && !s.IsBroken),
                 g.Count()))
             .ToArray();
 

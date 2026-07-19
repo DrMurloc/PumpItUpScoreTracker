@@ -32,6 +32,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     IRequestHandler<GetMyCommunitiesQuery, IEnumerable<CommunityOverviewRecord>>,
     IRequestHandler<GetPublicCommunitiesQuery, IEnumerable<CommunityOverviewRecord>>,
     IRequestHandler<GetCommunityCountQuery, int>,
+    IRequestHandler<DoesCommunityExistQuery, bool>,
     IRequestHandler<GetCommunityQuery, Community>,
     IRequestHandler<JoinCommunityByInviteCodeCommand>,
     IRequestHandler<GetCommunityInvitePreviewQuery, Contracts.CommunityInvitePreviewRecord?>,
@@ -929,6 +930,11 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     public async Task<int> Handle(GetCommunityCountQuery request, CancellationToken cancellationToken)
     {
         return await _communities.CountNonRegionalCommunities(cancellationToken);
+    }
+
+    public async Task<bool> Handle(DoesCommunityExistQuery request, CancellationToken cancellationToken)
+    {
+        return await _communities.GetCommunityByName(request.CommunityName, cancellationToken) != null;
     }
 
     public async Task<IEnumerable<Guid>> Handle(GetCommunityMembersQuery request,
