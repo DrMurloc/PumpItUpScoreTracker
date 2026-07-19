@@ -5305,3 +5305,45 @@ button.chart-card-art {
     border-top: 1px solid var(--mix-surface-muted);
     padding-top: 8px;
 }
+
+/* SRP densities: sticker sheet + table */
+.srp-sticker-sheet {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.srp-sticker-legacy-grade {
+    font-weight: 700;
+    font-size: .7rem;
+    color: var(--mix-ink);
+    text-shadow: 0 1px 3px rgb(0 0 0 / 80%);
+}
+
+.srp-table .srp-th-sortable {
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.srp-table .srp-th-sorted {
+    color: var(--mix-ink);
+    border-bottom: 2px solid var(--mix-accent);
+}
+
+.srp-table-link {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.srp-table-link:hover {
+    color: var(--mix-primary);
+}
+
+.srp-table-muted {
+    color: var(--mix-ink-muted);
+}
+
+.srp-table-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}

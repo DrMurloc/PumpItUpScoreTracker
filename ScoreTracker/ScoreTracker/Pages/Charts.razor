@@ -9,6 +9,8 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
@@ -58,6 +60,23 @@
         <MudIconButton Icon="@Icons.Material.Filled.Download" OnClick="() => _exportOpen = true"
                        aria-label="@L["Export CSV"]"></MudIconButton>
     </MudTooltip>
+    <MudButtonGroup OverrideStyles="false">
+        <MudTooltip Text="@L["Comfortable"]">
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
+                           Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
+                           OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
+        </MudTooltip>
+        <MudTooltip Text="@L["Compact"]">
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView"
+                           Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
+                           OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
+        </MudTooltip>
+        <MudTooltip Text="@L["Table"]">
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows"
+                           Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
+                           OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
+        </MudTooltip>
+    </MudButtonGroup>
     <MudTooltip Text="@L["Sort by"]">
         <MudMenu Icon="@Icons.Material.Filled.SwapVert" Dense="true" AriaLabel="@L["Sort by"]">
             @foreach (var sort in AvailableSorts)
@@ -84,20 +103,129 @@
 }
 else
 {
-    <div class="srp-grid">
-        @foreach (var result in _results)
-        {
-            <ChartSearchCard Result="result" LeadFact="@LeadFact(result)"
-                             ShowMyState="CurrentUser.IsLoggedIn"
-                             ShowActions="CurrentUser.IsLoggedIn"
-                             ShowStepArtist="_showStepArtist"
-                             ShowNoteCount="_showNoteCount"
-                             IsFavorite="_favoriteCharts.Contains(result.Chart.Id)"
-                             IsToDo="_todoCharts.Contains(result.Chart.Id)"
-                             OnToggleFavorite="ToggleFavorite"
-                             OnToggleToDo="ToggleToDo"></ChartSearchCard>
-        }
-    </div>
+    @if (_density == UiDensity.Compact)
+    {
+        <div class="srp-sticker-sheet">
+            @foreach (var result in _results)
+            {
+                <ChartSearchSticker Result="result" LeadFact="@LeadFact(result)"
+                                    IsToDo="_todoCharts.Contains(result.Chart.Id)"></ChartSearchSticker>
+            }
+        </div>
+    }
+    else if (_density == UiDensity.Table)
+    {
+        <div class="tier-table-wrap">
+            <table class="tier-table srp-table">
+                <thead>
+                <tr>
+                    <th class="@SortableHeaderClass(ChartSearchSort.Level)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.Level)">@L["Level"]@SortMark(ChartSearchSort.Level)</th>
+                    <th class="@SortableHeaderClass(ChartSearchSort.Name)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.Name)">@L["Chart"]@SortMark(ChartSearchSort.Name)</th>
+                    <th>@L["Song Artist"]</th>
+                    <th>@L["Skills"]</th>
+                    <th>@L["Tier"]</th>
+                    <th class="@SortableHeaderClass(ChartSearchSort.ScoringLevel)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.ScoringLevel)">@L["Scoring level"]@SortMark(ChartSearchSort.ScoringLevel)</th>
+                    <th class="@SortableHeaderClass(ChartSearchSort.Nps)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.Nps)">@L["NPS"]@SortMark(ChartSearchSort.Nps)</th>
+                    <th class="@SortableHeaderClass(ChartSearchSort.Bpm)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.Bpm)">@L["BPM"]@SortMark(ChartSearchSort.Bpm)</th>
+                    <th class="@SortableHeaderClass(ChartSearchSort.PassRate)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.PassRate)">@L["Pass rate"]@SortMark(ChartSearchSort.PassRate)</th>
+                    <th class="@SortableHeaderClass(ChartSearchSort.Popularity)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.Popularity)">@L["Scores"]@SortMark(ChartSearchSort.Popularity)</th>
+                    @if (_allMixes)
+                    {
+                        <th>@L["Mixes"]</th>
+                        <th>@L["Level change"]</th>
+                    }
+                    @if (CurrentUser.IsLoggedIn)
+                    {
+                        <th class="@SortableHeaderClass(ChartSearchSort.MyGrade)" role="button" tabindex="0"
+                            @onclick="() => SelectSort(ChartSearchSort.MyGrade)">@L["My score"]@SortMark(ChartSearchSort.MyGrade)</th>
+                        <th>@L["Letter Grade"]</th>
+                        <th>@L["Plate"]</th>
+                    }
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var result in _results)
+                {
+                    <tr>
+                        <td>
+                            <DifficultyBubble Chart="result.Chart" Small="true"></DifficultyBubble>
+                        </td>
+                        <td>
+                            <a class="srp-table-link" href="@ChartSlugs.CanonicalPath(result.Chart)">@result.Chart.Song.Name</a>
+                        </td>
+                        <td class="srp-table-muted">@result.Chart.Song.Artist</td>
+                        <td class="srp-table-muted">@string.Join(", ", result.Badges.Select(b => L[b.DisplayName].ToString()))</td>
+                        <td>
+                            @if ((result.CommunityVote ?? result.PassDifficulty) is { } tier)
+                            {
+                                <span style="color:@ThemeScales.DifficultyColor(tier)">@L[ChartSearchCard.CategoryName(tier)]</span>
+                            }
+                        </td>
+                        <td class="srp-table-num">@((result.Chart.Mix.UsesLegacyScoring() ? result.CommunityVoteRating : result.ScoringLevel)?.ToString("0.0"))</td>
+                        <td class="srp-table-num">@result.Nps?.ToString("0.0")</td>
+                        <td class="srp-table-num">@result.Chart.Song.Bpm?.ToString()</td>
+                        <td class="srp-table-num">
+                            @if (result.ScoreCount >= 10)
+                            {
+                                @((result.PassCount * 100 / result.ScoreCount))@:%
+                            }
+                        </td>
+                        <td class="srp-table-num">@result.ScoreCount</td>
+                        @if (_allMixes)
+                        {
+                            <td class="srp-table-num">@result.Appearances.Count</td>
+                            <td class="srp-table-num">
+                                @if (result.LevelChange is not null and not 0)
+                                {
+                                    <span class="@(result.LevelChange > 0 ? "srp-rerate-up" : "srp-rerate-down")">@(result.LevelChange > 0 ? "+" : "")@result.LevelChange</span>
+                                }
+                            </td>
+                        }
+                        @if (CurrentUser.IsLoggedIn)
+                        {
+                            <td class="srp-table-num">@((result.My?.PhoenixScore ?? result.My?.LegacyScore)?.ToString("N0"))</td>
+                            <td>
+                                @if (result.My?.PhoenixGrade != null)
+                                {
+                                    <LetterGradeIcon Grade="result.My.PhoenixGrade" IsBroken="result.My.IsBroken" Height="16"></LetterGradeIcon>
+                                }
+                                else if (result.My?.LegacyGrade != null)
+                                {
+                                    @result.My.LegacyGrade@(result.My.IsBroken ? " ⨯" : "")
+                                }
+                            </td>
+                            <td>@result.My?.PhoenixPlate?.GetShorthand()</td>
+                        }
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="srp-grid">
+            @foreach (var result in _results)
+            {
+                <ChartSearchCard Result="result" LeadFact="@LeadFact(result)"
+                                 ShowMyState="CurrentUser.IsLoggedIn"
+                                 ShowActions="CurrentUser.IsLoggedIn"
+                                 ShowStepArtist="_showStepArtist"
+                                 ShowNoteCount="_showNoteCount"
+                                 IsFavorite="_favoriteCharts.Contains(result.Chart.Id)"
+                                 IsToDo="_todoCharts.Contains(result.Chart.Id)"
+                                 OnToggleFavorite="ToggleFavorite"
+                                 OnToggleToDo="ToggleToDo"></ChartSearchCard>
+            }
+        </div>
+    }
     @if (PageCount > 1)
     {
         <div class="srp-pager">
@@ -403,6 +531,9 @@ else
     private const string StepArtistDisplayKey = "Charts__Display__StepArtist";
     private const string NoteCountDisplayKey = "Charts__Display__NoteCount";
 
+    private UiDensity _density = UiDensity.Comfortable;
+    private const string DensitySettingKey = "Density__Charts";
+
     private IReadOnlyList<ChartSearchResult> _results = Array.Empty<ChartSearchResult>();
     private int _totalCount;
     private ChartSearchFacetCounts? _facetCounts;
@@ -643,8 +774,26 @@ else
 
         _showStepArtist = await UiSettings.GetSetting(StepArtistDisplayKey) == true.ToString();
         _showNoteCount = await UiSettings.GetSetting(NoteCountDisplayKey) == true.ToString();
+        if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensitySettingKey), out var density))
+            _density = density;
 
         await LoadPage();
+    }
+
+    private async Task SetDensity(UiDensity density)
+    {
+        _density = density;
+        await UiSettings.SetSetting(DensitySettingKey, density.ToString());
+    }
+
+    private string SortableHeaderClass(ChartSearchSort sort)
+    {
+        return _sort == sort ? "srp-th-sortable srp-th-sorted" : "srp-th-sortable";
+    }
+
+    private string SortMark(ChartSearchSort sort)
+    {
+        return _sort == sort ? _sortDescending ? " ↓" : " ↑" : string.Empty;
     }
 
     private SearchChartsQuery BuildQuery()
@@ -750,7 +899,8 @@ else
         get
         {
             var chips = new List<QueryChip>();
-            if (!IsDefaultSort)
+            // In Table density the sorted column header carries the sort — the chip retires.
+            if (!IsDefaultSort && _density != UiDensity.Table)
                 chips.Add(new QueryChip($"⇅ {L[SortName(_sort)]} {(_sortDescending ? "↓" : "↑")}", true,
                     () => SelectSort(ChartSearchSort.Level, true)));
             if (!string.IsNullOrWhiteSpace(_songNameContains))

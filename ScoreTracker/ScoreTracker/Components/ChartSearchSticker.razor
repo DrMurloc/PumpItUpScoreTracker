@@ -1,0 +1,68 @@
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@* The SRP's Compact density: the tier lists' jacket sticker sheet verbatim — same CSS
+   classes, same owner-locked border language — except the sticker is a real link to the
+   chart page. Identity rides the tooltip (no truncation without a tooltip); the active
+   sort's value joins it so Compact never sorts by an invisible value. *@
+<MudTooltip Text="@Tooltip" ShowOnFocus="true">
+    <a class="tier-chart-card tier-chart-card-compact @StateClass" href="@ChartSlugs.CanonicalPath(Result.Chart)"
+       aria-label="@Tooltip">
+        <div class="tier-chart-card-jacket tier-chart-card-compact-jacket"
+             style="background-image:url('@Result.Chart.Song.ImagePath')">
+            <div class="tier-chart-card-bubble">
+                <DifficultyBubble Chart="Result.Chart" Height="18"></DifficultyBubble>
+            </div>
+            @if (TierCategory != null)
+            {
+                <span class="tier-chart-card-lens-dot" style="background:@ThemeScales.DifficultyColor(TierCategory.Value)"></span>
+            }
+            @if (Result.My?.PhoenixGrade != null)
+            {
+                <div class="tier-chart-card-compact-grade">
+                    <LetterGradeIcon Grade="Result.My.PhoenixGrade" IsBroken="Result.My.IsBroken" Height="16"></LetterGradeIcon>
+                </div>
+            }
+            else if (Result.My?.LegacyGrade != null)
+            {
+                <div class="tier-chart-card-compact-grade srp-sticker-legacy-grade">
+                    @Result.My.LegacyGrade@(Result.My.IsBroken ? "⨯" : string.Empty)
+                </div>
+            }
+        </div>
+    </a>
+</MudTooltip>
+
+@code {
+    [Parameter] public ChartSearchResult Result { get; set; } = null!;
+    [Parameter] public bool IsToDo { get; set; }
+
+    /// <summary>The active sort's printed value — the tooltip carries it at this density.</summary>
+    [Parameter]
+    public string? LeadFact { get; set; }
+
+    private TierListCategory? TierCategory => Result.CommunityVote ?? Result.PassDifficulty;
+
+    private string StateClass => Result.My is { PassedInLinkedMix: true } ? "tier-chart-card-pass" :
+        IsToDo ? "tier-chart-card-todo" :
+        Result.My is { PassedInAnotherScopeMix: true } ? "tier-chart-card-other-mix" : string.Empty;
+
+    private string Tooltip
+    {
+        get
+        {
+            var parts = new List<string>
+                { $"{Result.Chart.Song.Name} {Result.Chart.DifficultyDisplay}" };
+            if (Result.My is { PassedInLinkedMix: true }) parts.Add(L["Passed"]);
+            else if (IsToDo) parts.Add(L["To Do"]);
+            else if (Result.My is { PassedInAnotherScopeMix: true }) parts.Add(L["Passed in another mix"]);
+            if (TierCategory != null)
+                parts.Add(L[ChartSearchCard.CategoryName(TierCategory.Value)]);
+            if (LeadFact != null) parts.Add(LeadFact);
+            return string.Join(" — ", parts);
+        }
+    }
+}

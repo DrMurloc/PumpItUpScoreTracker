@@ -263,6 +263,49 @@ public sealed class ChartsPageTests : ComponentTestBase
     }
 
     [Fact]
+    public void DensityCyclesCardsStickersAndTableAndPersists()
+    {
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+
+        cut.Find("button[aria-label=Compact]").Click();
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(2, cut.FindAll(".tier-chart-card-compact").Count);
+            Assert.Empty(cut.FindAll(".srp-card"));
+        });
+        _uiSettings.Verify(u => u.SetSetting("Density__Charts", "Compact", It.IsAny<CancellationToken>()),
+            Times.Once);
+        // Stickers are links too — the tooltip carries identity, the href carries the page.
+        Assert.All(cut.FindAll("a.tier-chart-card"),
+            a => Assert.StartsWith("/Charts/phoenix/", a.GetAttribute("href")));
+
+        cut.Find("button[aria-label=Table]").Click();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-table")));
+    }
+
+    [Fact]
+    public void TableHeadersCarryTheSortAndTheSortChipRetires()
+    {
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Table]").Click();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-table")));
+
+        var npsHeader = cut.FindAll("th").Single(h => h.TextContent.Trim().StartsWith("NPS"));
+        npsHeader.Click();
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(ChartSearchSort.Nps, _lastQuery!.Sort);
+            var sorted = cut.Find(".srp-th-sorted");
+            Assert.StartsWith("NPS", sorted.TextContent.Trim());
+        });
+        // The header shows the sort; no ⇅ chip joins the query row in Table density.
+        Assert.DoesNotContain("⇅", cut.Find(".srp-chip-row").TextContent);
+    }
+
+    [Fact]
     public void TheScopeToggleWidensToAllMixesWithoutBecomingAChip()
     {
         var cut = RenderComponent<Charts>();
