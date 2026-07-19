@@ -30,14 +30,14 @@ flips the model:
 | VDP link target | Selected mix when the chart appears there, else its latest mix. My-score overlay shows the linked mix's best + cross-mix marker (dashed-green family). |
 | Skills facet | **Granular piucenter badge vocabulary** (`top3:` metrics: `staggered_bracket`, `twist_over90`, `anchor_run`, `yog_walk`, `hands`, …). NOT the rollup `Skill` enum (the high-level generic tags — slated to retire), NOT `SkillCategory` buckets. **Highlighted-only matching** = badge present in the chart's top-3 dominance summary; contains-level badges neither render nor match. |
 | NPS | The banked piucenter `nps` metric ONLY — never `NoteCount / Duration` (holds inflate perfects). Unmatched charts silently drop from NPS filter/sort. |
-| Tier facet source | Splits by scoring family: **Phoenix / Phoenix 2 = score-derived** (`Pass Count` / `Scores` tier lists); **XX and older = community votes** (`Difficulty` tier list entries). There is deliberately no single "legacy" flag — each feature keeps its own boundary (scoring family here, Exceed for rerates, slot era for chips). Known divergence: today's `/TierLists` serves XX through the score-derived lens set; aligning it is out of scope here. |
+| Tier facet source | Splits by scoring family: **Phoenix / Phoenix 2 = Pass Difficulty / Score Difficulty** (score-derived); **XX and older = Community Vote** (the voted list — always called exactly that, everywhere). There is deliberately no single "legacy" flag — each feature keeps its own boundary (scoring family here, Exceed for rerates, slot era for chips). Community Vote also ships as an export column, populated for XX-and-older rows. Known divergence: today's `/TierLists` serves XX through the score-derived lens set; aligning it is out of scope here. |
 | Rerates | `Rerated Up` / `Rerated Down` filters + signed **Level Change** sortable. Computed over **Exceed-onward** appearances only — pre-Exceed levels live on per-era scales. |
 | My Score | **Phoenix Score and Legacy Score are separate facet groups**, never compared or blended. XX letter grades behave as clear-quality (plate-like). Each group filters only its own family's appearances. |
 | Score state | Unplayed / Played / Passed / Failed, plus per-family grade ≥ / plate ≥ / score range / recorded date. |
 | Re-clear gap | *Passed in an in-scope mix, no pass in the target mix* — promoted to prominent placement while the Phoenix 2 transition is hot; demotes to the drawer later. |
 | Popularity | Site score counts drive the sort (all mixes); official mirror rank renders as a badge when present (display-only, never a filter). |
-| Default sort | **Level descending**, community-difficulty tiebreak within a level. |
-| Sorts | Level · community difficulty · popularity · pass rate · newest content (debut era) · name · BPM · NPS · duration · my grade · my recent. **Level Change left the sort menu** (owner call — rarely useful live); it survives as an export column and the Rerated Up/Down drawer filters stay. |
+| Default sort | **Level descending**; within-level tiebreak = **Scoring Level** (score-derived) in modern scope, Community Vote average in XX-and-older scope. Vote data never orders modern-scope results, tiebreaks included. |
+| Sorts | Level · scoring level · popularity · pass rate · newest content (debut era) · name · BPM · NPS · duration · my grade · my recent (Community Vote replaces scoring level as the difficulty sort in XX-and-older scope). **Level Change left the sort menu** (owner call — rarely useful live); it survives as an export column and the Rerated Up/Down drawer filters stay. |
 | Card display | Fixed core card + a small curated **Display switch set** in Comfortable (the tier-lists idiom: step artist, duration, note count). **The active sort key always auto-surfaces on the card/table and cannot be hidden** — sorting by an invisible value is impossible by construction; the sort menu never greys out. Table shows the full fact set with the sort column highlighted. No column pickers anywhere on the page. |
 | Export | Toolbar **⤓ Export** button → dialog: column picker over the full inventory (this is where column freedom lives), **Group by chart vs one row per chart + mix** shape toggle (the flat spreadsheet shape's home; identical in single-mix scope), downloads a CSV of the **entire filtered set** via an endpoint reusing the page's query-string contract. Column picks persist as a UiSetting; My columns signed-in only; stable English headers (convenience surface, outside the versioned `api/*` contract); Excel formula-injection hygiene on values. |
 | Dropped | Has-video, recently-added (needs version/date backfill the owner defers), letter-grade percentiles, single-select level (→ range), the `/{userId}/Charts` share view, UCS (separate rethink). |
@@ -51,6 +51,16 @@ flips the model:
 "Legacy Difficulty" is the user-facing name for the pre-Exceed slot filter (matches the
 `--slot-*` chip vocabulary in UX-GUIDELINES); it activates only when scope includes
 pre-Exceed mixes.
+
+### Vocabulary (pinned — UI copy, l10n keys, and this doc use these names exactly)
+
+| Name | What it is | Internal source |
+|---|---|---|
+| **Community Vote** | The voted difficulty list — the only difficulty signal for XX and older. Never abbreviated, never "Community" alone, never "Difficulty". | Tier-list rows named `Difficulty` (storage name stays; display name never uses it) |
+| **Pass Difficulty** | Tier bucket (Overrated → Underrated): how hard the chart is to *pass* relative to its level, from weighted recorded passes. Modern mixes. | `Pass Count` tier list |
+| **Score Difficulty** | Tier bucket: how hard it is to *score well* on, relative to its level. Modern mixes. | `Scores` tier list |
+| **Pass Rate** | Raw percentage of recorded scores that are passes. Not relative to anything. | `PassCount ÷ Count` from score aggregates |
+| **Scoring Level** | Score-derived decimal difficulty estimate; the modern-scope difficulty sort and the default-sort tiebreak. | `IChartScoringLevelRepository` |
 
 ## 3. Layer scope
 
@@ -109,7 +119,8 @@ references.**
   1. Content facets + mix scope against Catalog-owned data (charts, `ChartMix`, songs,
      `top3:`/`nps` metrics).
   2. Community facets via Domain ports: `ITierListRepository` — `Pass Count`/`Scores`
-     entries for Phoenix-family mixes, `Difficulty` entries (votes) for XX-and-older;
+     entries (Pass/Score Difficulty) for Phoenix-family mixes, `Difficulty` entries
+     (**Community Vote**) for XX-and-older;
      `IChartScoringLevelRepository`; `IScoreReader.GetChartScoreAggregates` (popularity,
      pass rate, PG).
   3. User facets when signed in: `IScoreReader` best-scores per family; saved-lists arrive
