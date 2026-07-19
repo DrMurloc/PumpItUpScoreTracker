@@ -271,8 +271,9 @@ internal static class HighlightsCalculator
     {
         if (!hasPrevious) yield break;
 
-        // First-time entries count toward the board tally but not the net — the row keeps
-        // the entered count (Level) so the display can say which kind of week it was.
+        // A fresh entry is a climb from off the board: landing #1 on a 50-player board
+        // credits 50 places, landing last credits 1. The row keeps the entered count
+        // (Level) so the display can say which kind of week it was.
         var climbs = new Dictionary<int, (int Boards, int NetPlaces, int Entered)>();
         foreach (var (boardId, placements) in currentByBoard)
         {
@@ -286,12 +287,14 @@ internal static class HighlightsCalculator
                 var hadPlace = previousPlaces.TryGetValue(placement.PlayerId, out var previousPlace);
                 if (hadPlace && previousPlace <= placement.Place) continue;
 
+                var gained = hadPlace
+                    ? previousPlace - placement.Place
+                    : Math.Max(1, placements.Count - placement.Place + 1);
                 var (boardCount, netPlaces, entered) = climbs.TryGetValue(placement.PlayerId, out var tally)
                     ? tally
                     : (0, 0, 0);
                 climbs[placement.PlayerId] =
-                    (boardCount + 1, netPlaces + (hadPlace ? previousPlace - placement.Place : 0),
-                        entered + (hadPlace ? 0 : 1));
+                    (boardCount + 1, netPlaces + gained, entered + (hadPlace ? 0 : 1));
             }
         }
 

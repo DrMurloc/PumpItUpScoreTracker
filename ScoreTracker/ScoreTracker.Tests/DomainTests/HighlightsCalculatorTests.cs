@@ -306,8 +306,52 @@ public sealed class HighlightsCalculatorTests
         var playerOne = Assert.Single(climbed);
         Assert.Equal(1, playerOne.PlayerId);
         Assert.Equal(5, playerOne.NewValue); // four climbs + one new entry
-        Assert.Equal(40, playerOne.PrevValue); // net places from the four climbed boards only
+        // Four boards climbed 15 -> 5 (+40) plus the fresh entry's climb from off the
+        // board (its one-row board floors the credit at 1).
+        Assert.Equal(41, playerOne.PrevValue);
         Assert.Equal(1, playerOne.Level); // the split remembers which were first-time entries
+    }
+
+    [Fact]
+    public void EnteringABoardCreditsTheClimbFromOffTheBoard()
+    {
+        // Fifty players hold the board; the newcomer lands #1 and is credited all fifty.
+        var board = ChartBoard();
+        var current = Enumerable.Range(2, 49)
+            .Select(place => new PlacementRow(board.Id, place + 100, place, 990000 - place * 100))
+            .Append(new PlacementRow(board.Id, 7, 1, 991000))
+            .ToArray();
+        var previous = Enumerable.Range(2, 49)
+            .Select(place => new PlacementRow(board.Id, place + 100, place - 1, 990000 - place * 100))
+            .ToArray();
+        var result = HighlightsCalculator.Calculate(Input(
+            boards: new[] { board },
+            current: current,
+            previous: previous,
+            boardRecords: new[] { new BoardRecordRow(board.Id, 999000, 1) }));
+
+        var entry = result.Highlights.FirstOrDefault(h =>
+            h.Kind == HighlightKinds.BoardsClimbed && h.PlayerId == 7);
+        // Below the five-board minimum no row lists — assert through a multi-board setup instead.
+        Assert.Null(entry);
+
+        var boards = Enumerable.Range(300, 5).Select(id => ChartBoard(id, name: $"Board {id}")).ToArray();
+        var wide = HighlightsCalculator.Calculate(Input(
+            boards: boards,
+            current: boards.SelectMany(b => Enumerable.Range(2, 49)
+                    .Select(place => new PlacementRow(b.Id, place + 100, place, 990000 - place * 100))
+                    .Append(new PlacementRow(b.Id, 7, 1, 991000)))
+                .ToArray(),
+            previous: boards.SelectMany(b => Enumerable.Range(2, 49)
+                    .Select(place => new PlacementRow(b.Id, place + 100, place - 1, 990000 - place * 100)))
+                .ToArray(),
+            boardRecords: boards.Select(b => new BoardRecordRow(b.Id, 999000, 1)).ToArray()));
+
+        var row = Assert.Single(wide.Highlights, h =>
+            h.Kind == HighlightKinds.BoardsClimbed && h.PlayerId == 7);
+        Assert.Equal(5, row.NewValue); // five boards entered
+        Assert.Equal(250, row.PrevValue); // #1 over fifty players, five times
+        Assert.Equal(5, row.Level);
     }
 
     [Fact]
