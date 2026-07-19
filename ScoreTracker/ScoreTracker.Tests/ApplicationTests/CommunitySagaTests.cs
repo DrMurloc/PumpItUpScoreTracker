@@ -130,6 +130,66 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task InvitePreviewReturnsNullForAnUnknownCode()
+    {
+        var ctx = new HandlerContext();
+        ctx.Communities.Setup(c => c.GetCommunityByInviteCode(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Name?)null);
+
+        var preview = await ctx.Saga.Handle(new GetCommunityInvitePreviewQuery(Guid.NewGuid()),
+            CancellationToken.None);
+
+        Assert.Null(preview);
+    }
+
+    [Fact]
+    public async Task InvitePreviewReturnsCommunityShapeAndCallerStanding()
+    {
+        var userId = Guid.NewGuid();
+        var code = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: userId);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.PublicWithCode,
+            new[] { Guid.NewGuid(), Guid.NewGuid() }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?> { [code] = null }, false);
+        ctx.Communities.Setup(c => c.GetCommunityByInviteCode(code, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Name.From("Acme"));
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        var preview = await ctx.Saga.Handle(new GetCommunityInvitePreviewQuery(code), CancellationToken.None);
+
+        Assert.NotNull(preview);
+        Assert.Equal("Acme", (string)preview!.CommunityName);
+        Assert.Equal(2, preview.MemberCount);
+        Assert.False(preview.IsExpired);
+        Assert.False(preview.IsBanned);
+        Assert.False(preview.IsAlreadyMember);
+    }
+
+    [Fact]
+    public async Task InvitePreviewFlagsAnExpiredCodeAndABannedCaller()
+    {
+        var userId = Guid.NewGuid();
+        var code = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: userId);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Private,
+            new[] { new CommunityMember(userId, CommunityRole.Banned, CommunityPermission.None, null, null) },
+            Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?> { [code] = new DateOnly(2020, 1, 1) }, false,
+            Community.DefaultAdminPermissionsSeed, null);
+        ctx.Communities.Setup(c => c.GetCommunityByInviteCode(code, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Name.From("Acme"));
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        var preview = await ctx.Saga.Handle(new GetCommunityInvitePreviewQuery(code), CancellationToken.None);
+
+        Assert.NotNull(preview);
+        Assert.True(preview!.IsExpired);
+        Assert.True(preview.IsBanned);
+    }
+
+    [Fact]
     public async Task LeaveCommunityRemovesMemberFromTheSet()
     {
         var userId = Guid.NewGuid();
