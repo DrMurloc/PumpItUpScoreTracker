@@ -28,14 +28,73 @@ public sealed class HighlightsCalculatorTests
         IEnumerable<PlacementRow>? previous = null,
         IEnumerable<BoardRecordRow>? boardRecords = null,
         IEnumerable<FolderRecordRow>? folderRecords = null,
-        bool isBaseline = false)
+        bool isBaseline = false,
+        CrossMixRecordHighs? crossMix = null)
     {
         return new HighlightsInput(SnapshotId, isBaseline,
             (boards ?? new[] { Pumbility }).ToArray(),
             (current ?? Array.Empty<PlacementRow>()).ToArray(),
             previous?.ToArray(),
             (boardRecords ?? Array.Empty<BoardRecordRow>()).ToArray(),
-            (folderRecords ?? Array.Empty<FolderRecordRow>()).ToArray());
+            (folderRecords ?? Array.Empty<FolderRecordRow>()).ToArray(),
+            crossMix);
+    }
+
+    [Fact]
+    public void BandAlreadyClaimedInAnotherMixDowngradesTheFirstToANewNumberOne()
+    {
+        // The chart carried an SS on another mix's boards, so this mix's first SS is a
+        // reclear: it still beat the standing record here, so it lands as a new #1.
+        var board = ChartBoard(level: 26);
+        var result = HighlightsCalculator.Calculate(Input(
+            boards: new[] { board },
+            current: new[] { new PlacementRow(board.Id, 7, 1, 981500) },
+            previous: new[] { new PlacementRow(board.Id, 9, 1, 962000) },
+            boardRecords: new[] { new BoardRecordRow(board.Id, 962000, 1) },
+            crossMix: new CrossMixRecordHighs(
+                new Dictionary<Guid, int> { [board.ChartId!.Value] = 983000 },
+                new Dictionary<(string, int), int>())));
+
+        Assert.DoesNotContain(result.Highlights, h => h.Kind == HighlightKinds.ChartGradeFirst);
+        var numberOne = Assert.Single(result.Highlights, h => h.Kind == HighlightKinds.NewNumberOne);
+        Assert.Equal(7, numberOne.PlayerId);
+    }
+
+    [Fact]
+    public void ABandAboveTheCrossMixHighStillFiresAsAWorldFirst()
+    {
+        var board = ChartBoard(level: 26);
+        var result = HighlightsCalculator.Calculate(Input(
+            boards: new[] { board },
+            current: new[] { new PlacementRow(board.Id, 7, 1, 991000) },
+            previous: new[] { new PlacementRow(board.Id, 9, 1, 962000) },
+            boardRecords: new[] { new BoardRecordRow(board.Id, 962000, 1) },
+            crossMix: new CrossMixRecordHighs(
+                new Dictionary<Guid, int> { [board.ChartId!.Value] = 983000 },
+                new Dictionary<(string, int), int>())));
+
+        var first = Assert.Single(result.Highlights, h => h.Kind == HighlightKinds.ChartGradeFirst);
+        Assert.Equal("SSS", first.GradeBand);
+    }
+
+    [Fact]
+    public void FolderFirstsRespectTheOtherMixesFolderRecordAndFallThroughToTheChart()
+    {
+        // Another mix's D26 folder already held an SS, so no folder banner — but THIS chart
+        // never had one anywhere, so the chart-level world first still fires.
+        var board = ChartBoard(level: 26);
+        var result = HighlightsCalculator.Calculate(Input(
+            boards: new[] { board },
+            current: new[] { new PlacementRow(board.Id, 7, 1, 981500) },
+            previous: new[] { new PlacementRow(board.Id, 9, 1, 962000) },
+            boardRecords: new[] { new BoardRecordRow(board.Id, 962000, 1) },
+            folderRecords: new[] { new FolderRecordRow("Double", 26, 962000, 1) },
+            crossMix: new CrossMixRecordHighs(
+                new Dictionary<Guid, int>(),
+                new Dictionary<(string, int), int> { [("Double", 26)] = 984000 })));
+
+        Assert.DoesNotContain(result.Highlights, h => h.Kind == HighlightKinds.FolderGradeFirst);
+        Assert.Single(result.Highlights, h => h.Kind == HighlightKinds.ChartGradeFirst);
     }
 
     [Fact]

@@ -12,6 +12,12 @@ internal interface IOfficialRecordRepository
     Task<IReadOnlyList<BoardRecordRow>> GetBoardRecords(MixEnum mix, CancellationToken ct);
     Task UpsertBoardRecords(IReadOnlyCollection<BoardRecordRow> records, CancellationToken ct);
     Task<IReadOnlyList<FolderRecordRow>> GetFolderRecords(MixEnum mix, CancellationToken ct);
+
+    /// <summary>
+    ///     Best-ever chart and folder highs from every mix EXCEPT the given one — the
+    ///     cross-mix reference for world-first suppression.
+    /// </summary>
+    Task<CrossMixRecordHighs> GetCrossMixHighs(MixEnum mix, CancellationToken ct);
     Task UpsertFolderRecords(MixEnum mix, IReadOnlyCollection<FolderRecordRow> records, CancellationToken ct);
     Task ResetRecords(MixEnum mix, CancellationToken ct);
 

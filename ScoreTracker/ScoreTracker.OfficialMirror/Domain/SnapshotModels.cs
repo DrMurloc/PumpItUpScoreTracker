@@ -15,6 +15,20 @@ internal sealed record PlacementRow(int LeaderboardId, int PlayerId, int Place, 
 
 internal sealed record BoardRecordRow(int LeaderboardId, int HighScore, int AchievedSnapshotId);
 
+/// <summary>
+///     Best-ever highs from every OTHER mix's record books — charts keyed by the
+///     mix-agnostic ChartId, folders by their nominal (type, level). The cross-mix
+///     reference that keeps a re-clear of a Phoenix-era achievement from reading as a
+///     Phoenix 2 world first.
+/// </summary>
+internal sealed record CrossMixRecordHighs(
+    IReadOnlyDictionary<Guid, int> ChartHighs,
+    IReadOnlyDictionary<(string ChartType, int Level), int> FolderHighs)
+{
+    public static readonly CrossMixRecordHighs Empty = new(
+        new Dictionary<Guid, int>(), new Dictionary<(string, int), int>());
+}
+
 internal sealed record FolderRecordRow(string ChartType, int Level, int HighScore, int AchievedSnapshotId);
 
 internal sealed record HighlightRow(string Kind, int SortOrder, int PlayerId, int? DethronedPlayerId,

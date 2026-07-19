@@ -9,7 +9,8 @@ internal sealed record HighlightsInput(
     IReadOnlyList<PlacementRow> Current,
     IReadOnlyList<PlacementRow>? Previous,
     IReadOnlyList<BoardRecordRow> BoardRecords,
-    IReadOnlyList<FolderRecordRow> FolderRecords);
+    IReadOnlyList<FolderRecordRow> FolderRecords,
+    CrossMixRecordHighs? CrossMix = null);
 
 internal sealed record HighlightsResult(
     IReadOnlyList<HighlightRow> Highlights,
@@ -38,13 +39,18 @@ internal static class HighlightsCalculator
     public const int HighlightMinimumLevel = 24;
     public const string PumbilityBoardName = "PUMBILITY";
 
+    // Highlight bands are score-anchored policy, deliberately not derived from a grade
+    // table: SS and up share these floors in every Phoenix-family mix (Phoenix 2 re-cut
+    // only the sub-AAA grades), and comparing them across mixes must stay apples-to-apples.
+    // If a future mix moves an SS+ floor, widening or splitting these bands is a policy
+    // decision made here, never a silent follow.
     private static readonly (string Band, int Floor)[] GradeBands =
     {
         ("PG", 1_000_000),
-        ("SSS+", (int)PhoenixLetterGrade.SSSPlus.GetMinimumScore()),
-        ("SSS", (int)PhoenixLetterGrade.SSS.GetMinimumScore()),
-        ("SS+", (int)PhoenixLetterGrade.SSPlus.GetMinimumScore()),
-        ("SS", (int)PhoenixLetterGrade.SS.GetMinimumScore())
+        ("SSS+", 995_000),
+        ("SSS", 990_000),
+        ("SS+", 985_000),
+        ("SS", 980_000)
     };
 
     public static HighlightsResult Calculate(HighlightsInput input)
@@ -188,12 +194,18 @@ internal static class HighlightsCalculator
             .Where(b => b.Board.Level >= HighlightMinimumLevel)
             .ToArray();
         var priorFolderHighs = input.FolderRecords.ToDictionary(r => (r.ChartType, r.Level), r => r.HighScore);
+        var crossMix = input.CrossMix ?? CrossMixRecordHighs.Empty;
 
         var folderFirstBoards = new HashSet<int>();
         var folderRows = new List<HighlightRow>();
         foreach (var folderGroup in eligible.GroupBy(b => (b.Board.ChartType!, b.Board.Level!.Value)))
         {
+            // "First ever" spans every mix: the folder's prior high is the best of this
+            // mix's record book and the other mixes' — a Phoenix-era SS makes a Phoenix 2
+            // re-clear a reclear, not a first.
             var priorHigh = priorFolderHighs.TryGetValue(folderGroup.Key, out var high) ? high : (int?)null;
+            if (crossMix.FolderHighs.TryGetValue(folderGroup.Key, out var crossFolderHigh))
+                priorHigh = Math.Max(priorHigh ?? 0, crossFolderHigh);
             if (priorHigh == null) continue;
 
             var folderTop = folderGroup.Max(b => b.NewHigh);
@@ -214,8 +226,15 @@ internal static class HighlightsCalculator
         var numberOneRows = new List<HighlightRow>();
         foreach (var beaten in eligible.Where(b => !folderFirstBoards.Contains(b.Board.Id)))
         {
+            // Same cross-mix rule per chart: a band already claimed on this chart in any
+            // mix cannot be a world first again — but beating this mix's standing record
+            // still counts below as a new #1.
+            var priorHigh = beaten.Board.ChartId is { } chartId &&
+                            crossMix.ChartHighs.TryGetValue(chartId, out var crossChartHigh)
+                ? Math.Max(beaten.PreviousHigh, crossChartHigh)
+                : beaten.PreviousHigh;
             var newBand = BandFor(beaten.NewHigh);
-            var crossed = newBand != null && newBand != BandFor(beaten.PreviousHigh);
+            var crossed = newBand != null && BandRank(newBand) > BandRank(BandFor(priorHigh));
             if (crossed)
                 chartRows.AddRange(ClaimantRows(input, beaten, HighlightKinds.ChartGradeFirst, newBand!,
                     previousByBoard));
