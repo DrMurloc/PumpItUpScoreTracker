@@ -4523,8 +4523,8 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>サイトアカウントと連携済み</value>
   </data>
-  <data name="Most chart boards climbed" xml:space="preserve">
-    <value>譜面ボード上昇数トップ</value>
+  <data name="Biggest board climbers" xml:space="preserve">
+    <value>譜面ボード上昇ランキング</value>
   </data>
   <data name="Movers of the week" xml:space="preserve">
     <value>今週のムーバー</value>
@@ -5087,9 +5087,6 @@
   <data name="PUMBILITY movers" xml:space="preserve">
     <value>PUMBILITY 変動</value>
   </data>
-  <data name="Chart boards climbed" xml:space="preserve">
-    <value>譜面ボードを駆け上がり</value>
-  </data>
   <data name="**{0}** climbed {1} chart boards (+{2})" xml:space="preserve">
     <value>**{0}** が {1} 譜面ボードで順位上昇（+{2}）</value>
   </data>
@@ -5525,8 +5522,11 @@
   <data name="Highest world first" xml:space="preserve">
     <value>最高レベルの世界初</value>
   </data>
-  <data name="Most chart board activity" xml:space="preserve">
-    <value>譜面ボード活動トップ</value>
+  <data name="Biggest board climber" xml:space="preserve">
+    <value>譜面ボード上昇トップ</value>
+  </data>
+  <data name="{0} new" xml:space="preserve">
+    <value>新規 {0}</value>
   </data>
   <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
     <value>Top 100 · Top 1000 ボーダー — 50× SS</value>

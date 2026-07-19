@@ -298,9 +298,11 @@ internal static class HighlightsCalculator
             }
         }
 
+        // Net places leads: with entries credited as climbs from off the board, the one
+        // number carries breadth and depth together. Board count only breaks ties.
         var ranked = climbs
             .Where(kv => kv.Value.Boards >= BoardsClimbedMinimum)
-            .OrderByDescending(kv => kv.Value.Boards).ThenByDescending(kv => kv.Value.NetPlaces)
+            .OrderByDescending(kv => kv.Value.NetPlaces).ThenByDescending(kv => kv.Value.Boards)
             .Take(BoardsClimbedTaken)
             .ToArray();
         for (var i = 0; i < ranked.Length; i++)

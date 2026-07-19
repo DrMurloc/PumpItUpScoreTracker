@@ -313,6 +313,29 @@ public sealed class HighlightsCalculatorTests
     }
 
     [Fact]
+    public void ClimbersRankByNetPlacesNotBoardCount()
+    {
+        // Player 1 tiptoes up six boards (+1 each); player 2 climbs five boards hard
+        // (+20 each). Net leads, so depth beats breadth.
+        var boards = Enumerable.Range(200, 6).Select(id => ChartBoard(id, name: $"Board {id}")).ToArray();
+        var current = boards.Select(b => new PlacementRow(b.Id, 1, 9, 900000))
+            .Concat(boards.Take(5).Select(b => new PlacementRow(b.Id, 2, 30, 890000)))
+            .ToArray();
+        var previous = boards.Select(b => new PlacementRow(b.Id, 1, 10, 899000))
+            .Concat(boards.Take(5).Select(b => new PlacementRow(b.Id, 2, 50, 880000)))
+            .ToArray();
+        var result = HighlightsCalculator.Calculate(Input(
+            boards: boards, current: current, previous: previous,
+            boardRecords: boards.Select(b => new BoardRecordRow(b.Id, 999000, 1)).ToArray()));
+
+        var climbed = result.Highlights.Where(h => h.Kind == HighlightKinds.BoardsClimbed)
+            .OrderBy(h => h.SortOrder).ToArray();
+        Assert.Equal(new int?[] { 2, 1 }, climbed.Select(c => c.PlayerId).ToArray());
+        Assert.Equal(100, climbed[0].PrevValue);
+        Assert.Equal(6, climbed[1].PrevValue);
+    }
+
+    [Fact]
     public void EnteringABoardCreditsTheClimbFromOffTheBoard()
     {
         // Fifty players hold the board; the newcomer lands #1 and is credited all fifty.

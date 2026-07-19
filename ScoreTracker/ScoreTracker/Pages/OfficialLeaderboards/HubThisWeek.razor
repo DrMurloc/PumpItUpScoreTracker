@@ -258,17 +258,12 @@ else
                 @if (activity != null)
                 {
                     <div class="olb-hero-card">
-                        <div class="olb-hero-label">@L["Most chart board activity"]</div>
+                        <div class="olb-hero-label">@L["Biggest board climber"]</div>
                         <HubPlayerChip Player="activity.Player"/>
-                        <div class="olb-hero-gain">@activity.BoardsClimbed.ToString("N0")</div>
-                        @if (activity.NewBoards is { } freshBoards)
-                        {
-                            <div class="olb-hero-ctx">@L["chart boards"] · @L["{0} new · net +{1} places", freshBoards.ToString("N0"), activity.NetPlacesGained.ToString("N0")]</div>
-                        }
-                        else
-                        {
-                            <div class="olb-hero-ctx">@L["chart boards"] · @L["net"] <b>+@activity.NetPlacesGained.ToString("N0")</b> @L["places"]</div>
-                        }
+                        <div class="olb-hero-gain">+@activity.NetPlacesGained.ToString("N0")</div>
+                        <div class="olb-hero-ctx">
+                            @L["places"] · <b>@activity.BoardsClimbed.ToString("N0")</b> @L["chart boards"]@(activity.NewBoards is { } freshBoards ? $" · {L["{0} new", freshBoards.ToString("N0")]}" : "")
+                        </div>
                     </div>
                 }
                 @if (floors.Any())
@@ -380,7 +375,7 @@ else
         </MudItem>
         <MudItem xs="12" md="6">
             <MudPaper Class="pa-3">
-                <MudText Typo="Typo.overline">@L["Most chart boards climbed"]</MudText>
+                <MudText Typo="Typo.overline">@L["Biggest board climbers"]</MudText>
                 @if (!_highlights.BoardsClimbed.Any())
                 {
                     <MudText Typo="Typo.body2">@L["Nobody cleared the climb threshold this week."]</MudText>
@@ -390,15 +385,10 @@ else
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="pa-2">
                         <HubPlayerChip Player="entry.Player"/>
                         <MudSpacer/>
-                        <MudText Typo="Typo.body1"><b>+@entry.BoardsClimbed @L["chart boards"]</b></MudText>
-                        @if (entry.NewBoards is { } fresh)
-                        {
-                            <MudText Typo="Typo.body2">@L["{0} new · net +{1} places", fresh.ToString("N0"), entry.NetPlacesGained.ToString("N0")]</MudText>
-                        }
-                        else
-                        {
-                            <MudText Typo="Typo.body2">@L["net"] +@entry.NetPlacesGained @L["places"]</MudText>
-                        }
+                        <MudText Typo="Typo.body1"><b>+@entry.NetPlacesGained.ToString("N0") @L["places"]</b></MudText>
+                        <MudText Typo="Typo.body2">
+                            @entry.BoardsClimbed.ToString("N0") @L["chart boards"]@(entry.NewBoards is { } fresh ? $" · {L["{0} new", fresh.ToString("N0")]}" : "")
+                        </MudText>
                     </MudStack>
                 }
             </MudPaper>

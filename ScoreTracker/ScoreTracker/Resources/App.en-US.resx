@@ -4517,8 +4517,8 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>Linked to a site account</value>
   </data>
-  <data name="Most chart boards climbed" xml:space="preserve">
-    <value>Most chart boards climbed</value>
+  <data name="Biggest board climbers" xml:space="preserve">
+    <value>Biggest board climbers</value>
   </data>
   <data name="Movers of the week" xml:space="preserve">
     <value>Movers of the week</value>
@@ -5081,9 +5081,6 @@
   <data name="PUMBILITY movers" xml:space="preserve">
     <value>PUMBILITY movers</value>
   </data>
-  <data name="Chart boards climbed" xml:space="preserve">
-    <value>Chart boards climbed</value>
-  </data>
   <data name="**{0}** climbed {1} chart boards (+{2})" xml:space="preserve">
     <value>**{0}** climbed {1} chart boards (+{2})</value>
   </data>
@@ -5519,8 +5516,11 @@
   <data name="Highest world first" xml:space="preserve">
     <value>Highest world first</value>
   </data>
-  <data name="Most chart board activity" xml:space="preserve">
-    <value>Most chart board activity</value>
+  <data name="Biggest board climber" xml:space="preserve">
+    <value>Biggest board climber</value>
+  </data>
+  <data name="{0} new" xml:space="preserve">
+    <value>{0} new</value>
   </data>
   <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
     <value>Top 100 · Top 1000 floors — 50× SS</value>

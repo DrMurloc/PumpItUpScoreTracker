@@ -95,7 +95,9 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
 
         Assert.Contains("▲14", cut.Markup); // 31 → 17
         Assert.Contains("VOLTEDGE", cut.Markup);
-        Assert.Contains("+21 chart boards", cut.Markup.Replace("<b>", "").Replace("</b>", ""));
+        // Net places leads the climber row; the board count is its context.
+        Assert.Contains("+388 places", cut.Markup.Replace("<b>", "").Replace("</b>", ""));
+        Assert.Contains("21 chart boards", cut.Markup);
         Assert.Contains("PG", cut.Markup);
         Assert.Contains("First in the folder", cut.Markup);
         Assert.Contains("dethroned MIRAGE", cut.Markup);
