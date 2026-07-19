@@ -316,6 +316,20 @@ public static class MixThemes
     public static string GradeHex(string gradeName) =>
         GradeColors.TryGetValue(gradeName, out var hex) ? hex : UnpassedGradeHex;
 
+    /// <summary>
+    ///     Playstyle archetype color — the archetypes are letter-grade bands over a player's
+    ///     top-Pumbility average, so each wears its band's grade color: sub-A green for Pass
+    ///     Pusher, AAA silver for Pass Refiner, S gold for Balanced, then the SSS/SSS+ ice-blues.
+    /// </summary>
+    public static string PlayerTypeHex(RecapPlayerType type) => type switch
+    {
+        RecapPlayerType.PassPusher => SubAGradeHex,
+        RecapPlayerType.PassRefiner => TgHex,
+        RecapPlayerType.BalancedPlayer => SgHex,
+        RecapPlayerType.Competitive => UgHex,
+        _ => PgHex
+    };
+
     /// <summary>Raw hex for a plate (shorthand, e.g. "PG"), for ApexCharts plate bars.</summary>
     public static string PlateHex(string plateShorthand) =>
         PlateColors[PhoenixPlateHelperMethods.ParseShorthand(plateShorthand)];

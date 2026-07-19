@@ -65,9 +65,16 @@ public sealed class CommunityLeaderboardPageTests : ComponentTestBase
             .ReturnsAsync(new Dictionary<Guid, int> { [PlayerId] = 42 });
         _mediator.Setup(m => m.Send(It.IsAny<GetCommunityCoOpCompletionQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double> { [PlayerId] = 0.5 });
-        _mediator.Setup(m => m.Send(It.IsAny<OfficialMirror.Contracts.Queries.GetOfficialPlayerTypesQuery>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, RecapPlayerType> { [PlayerId] = RecapPlayerType.Competitive });
+        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityRosterQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new Communities.Contracts.CommunityMemberRecord(PlayerId, Name.From("Tester"),
+                    new Uri("https://piu.test/avatar.png"), CommunityRole.Member, CommunityPermission.None, true),
+                new Communities.Contracts.CommunityMemberRecord(Guid.NewGuid(), Name.From("Newcomer"),
+                    new Uri("https://piu.test/avatar.png"), CommunityRole.Member, CommunityPermission.None, true),
+                new Communities.Contracts.CommunityMemberRecord(Guid.NewGuid(), Name.From("Exiled"),
+                    new Uri("https://piu.test/avatar.png"), CommunityRole.Banned, CommunityPermission.None, true)
+            });
         _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
@@ -142,5 +149,26 @@ public sealed class CommunityLeaderboardPageTests : ComponentTestBase
         var cut = Render();
         Assert.DoesNotContain("By Chart", cut.Markup);
         Assert.DoesNotContain("Shared PGs", cut.Markup);
+    }
+
+    [Fact]
+    public void PlaystyleBandsTheStoredTopFiftyAverageAndWearsItsGradeColor()
+    {
+        // SkillScore 950,000 sits on the AAA floor — the Pass Refiner band — and the chip
+        // carries that band's grade color, computed from site stats (no official-mirror data).
+        var cut = Render();
+        Assert.Contains("Pass Refiner", cut.Markup);
+        Assert.Contains(CommunityLeaderboard.PlayerTypeStyle(RecapPlayerType.PassRefiner), cut.Markup);
+    }
+
+    [Fact]
+    public void MembersWithoutScoresRollCallBelowTheTableWithoutBans()
+    {
+        var cut = Render();
+        Assert.Contains("No scores in this mix yet", cut.Markup);
+        Assert.Contains("Newcomer", cut.Markup);
+        Assert.DoesNotContain("Exiled", cut.Markup);
+        // The roster (bans excluded) is the member count, not just the scored rows.
+        Assert.Contains("2 members", cut.Markup);
     }
 }

@@ -74,7 +74,8 @@ else
             <MudTd Class="olb-hide-mobile">
                 @if (context.PlayerType != null)
                 {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                             Style="@Communities.CommunityLeaderboard.PlayerTypeStyle(context.PlayerType.Value)">
                         @L[PlayerTypeName(context.PlayerType.Value)]
                     </MudChip>
                 }

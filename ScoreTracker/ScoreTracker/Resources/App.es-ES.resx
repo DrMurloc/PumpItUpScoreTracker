@@ -5730,8 +5730,11 @@
   <data name="calculate a Phoenix score from a result screen" xml:space="preserve">
     <value>calcula un score Phoenix desde una pantalla de resultados</value>
   </data>
-  <data name="find a chart and jump to its pages" xml:space="preserve">
-    <value>busca un chart y salta a sus páginas</value>
+  <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
+    <value>consulta las estadísticas de un chart y sus charts similares, con enlaces a sus páginas</value>
+  </data>
+  <data name="No scores in this mix yet" xml:space="preserve">
+    <value>Aún no hay scores en esta versión</value>
   </data>
   <data name="draw a random set of charts, presets included" xml:space="preserve">
     <value>sortea un set de charts aleatorio, con presets incluidos</value>

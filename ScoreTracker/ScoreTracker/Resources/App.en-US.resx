@@ -5846,8 +5846,11 @@
   <data name="calculate a Phoenix score from a result screen" xml:space="preserve">
     <value>calculate a Phoenix score from a result screen</value>
   </data>
-  <data name="find a chart and jump to its pages" xml:space="preserve">
-    <value>find a chart and jump to its pages</value>
+  <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
+    <value>pull up a chart's stats and similar charts, with links to its pages</value>
+  </data>
+  <data name="No scores in this mix yet" xml:space="preserve">
+    <value>No scores in this mix yet</value>
   </data>
   <data name="draw a random set of charts, presets included" xml:space="preserve">
     <value>draw a random set of charts, presets included</value>

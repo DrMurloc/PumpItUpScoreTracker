@@ -5852,8 +5852,11 @@
   <data name="calculate a Phoenix score from a result screen" xml:space="preserve">
     <value>リザルト画面からPhoenixスコアを計算</value>
   </data>
-  <data name="find a chart and jump to its pages" xml:space="preserve">
-    <value>譜面を探してページへ移動</value>
+  <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
+    <value>譜面のステータスと類似譜面を表示、ページへのリンク付き</value>
+  </data>
+  <data name="No scores in this mix yet" xml:space="preserve">
+    <value>このバージョンのスコアはまだありません</value>
   </data>
   <data name="draw a random set of charts, presets included" xml:space="preserve">
     <value>ランダムな譜面セットを抽選（プリセット対応）</value>

@@ -26,7 +26,7 @@
     <div class="d-flex align-end justify-space-between flex-wrap mb-2" style="gap:12px">
         <div>
             <MudText Typo="Typo.h4">@((string)_community.Name)</MudText>
-            <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["{0} members", _leaderboard.Count()]</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["{0} members", _memberCount]</MudText>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             @if (_community.IsRegional)
@@ -125,7 +125,8 @@
             <MudTd Class="olb-hide-mobile">
                 @if (_playerTypes.TryGetValue(context.UserId, out var playerType))
                 {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                             Style="@PlayerTypeStyle(playerType)">
                         @L[OfficialLeaderboards.HubRankings.PlayerTypeName(playerType)]
                     </MudChip>
                 }
@@ -158,6 +159,17 @@
             <MudTablePager HideRowsPerPage="true"/>
         </PagerContent>
     </MudTable>
+
+    @if (_noScores.Any())
+    {
+        <MudText Typo="Typo.overline" Class="mud-text-secondary mt-4 d-block">@L["No scores in this mix yet"]</MudText>
+        <div class="d-flex flex-wrap" style="gap:6px">
+            @foreach (var name in _noScores)
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">@((string)name)</MudChip>
+            }
+        </div>
+    }
     </div>
 }
 
@@ -179,6 +191,9 @@
     private IReadOnlyDictionary<Guid, int> _playCounts = new Dictionary<Guid, int>();
     private IReadOnlyDictionary<Guid, double> _coOpCompletion = new Dictionary<Guid, double>();
     private IReadOnlyDictionary<Guid, RecapPlayerType> _playerTypes = new Dictionary<Guid, RecapPlayerType>();
+    private IReadOnlyList<Name> _noScores = Array.Empty<Name>();
+    private ISet<Guid> _noScoreUserIds = new HashSet<Guid>();
+    private int _memberCount;
     private bool _coOpCompletionLoaded;
     private ISet<Name> _myCommunities = new HashSet<Name>();
     private bool _showGuests = false;
@@ -235,8 +250,34 @@
         _leaderboard = (await Mediator.Send(new GetCommunityLeaderboardQuery(communityName, _currentMix))).ToArray();
         _users = (await Users.GetUsers(_leaderboard.Select(l => l.UserId).Distinct())).ToDictionary(u => u.Id);
         _playCounts = await Mediator.Send(new GetCommunityPlayCountsQuery(communityName, _currentMix));
-        _playerTypes = await Mediator.Send(new OfficialMirror.Contracts.Queries.GetOfficialPlayerTypesQuery(
-            _currentMix, _leaderboard.Select(l => l.UserId).Distinct().ToArray()));
+
+        // Playstyle is the recap's letter-grade banding over the player's top-Pumbility
+        // average — SkillScore IS that average, so every member with enough clears gets a
+        // type from their own site scores (the official mirror only knows board-charting players).
+        _playerTypes = _leaderboard
+            .Where(l => l.ClearCount >= RecapPlayerTypeCalculator.MinimumScores && (int)l.SkillRating > 0)
+            .ToDictionary(l => l.UserId, l => RecapPlayerTypeCalculator.FromAverage((int)l.SkillScore));
+
+        // Player communities list every member; the ones without scores in this mix drop out
+        // of the ranked rows and land in the roll call below the table. Regions and World are
+        // population-scale — no roster pull, the board already tells the story.
+        if (!community.IsRegional)
+        {
+            var roster = (await Mediator.Send(new GetCommunityRosterQuery(communityName)))
+                .Where(m => m.Role != CommunityRole.Banned).ToArray();
+            var scored = _leaderboard
+                .Where(l => l.ClearCount > 0 || (int)l.SkillRating > 0 || (int)l.TotalRating > 0)
+                .Select(l => l.UserId).ToHashSet();
+            var noScores = roster.Where(m => !scored.Contains(m.UserId)).ToArray();
+            _noScoreUserIds = noScores.Select(m => m.UserId).ToHashSet();
+            _noScores = noScores.Select(m => m.Name)
+                .OrderBy(n => (string)n, StringComparer.OrdinalIgnoreCase).ToArray();
+            _memberCount = roster.Length;
+        }
+        else
+        {
+            _memberCount = _leaderboard.Count();
+        }
         _skillScale = ThemeScales.ScaleFrom(_leaderboard.Select(l => (int)l.SkillRating));
         _singlesScale = ThemeScales.ScaleFrom(_leaderboard.Select(l => (int)l.SinglesRating));
         _doublesScale = ThemeScales.ScaleFrom(_leaderboard.Select(l => (int)l.DoublesRating));
@@ -256,7 +297,9 @@
             _coOpCompletionLoaded = true;
         }
 
-        var entries = _leaderboard.Where(l => !_community.IsRegional || _showGuests || _users[l.UserId].Country == CommunityName);
+        var entries = _leaderboard
+            .Where(l => !_noScoreUserIds.Contains(l.UserId))
+            .Where(l => !_community.IsRegional || _showGuests || _users[l.UserId].Country == CommunityName);
         _entries = type switch
         {
             LeaderboardType.Singles => entries.OrderByDescending(l => l.SinglesRating).Select((l, i) =>
@@ -304,6 +347,12 @@
                 (int)scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false),
                 ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level, s.Score ?? 0, _charts[s.ChartId].Type)))
             .ToArray();
+    }
+
+    internal static string PlayerTypeStyle(RecapPlayerType type)
+    {
+        var hex = MixThemes.PlayerTypeHex(type);
+        return $"color:{hex};border-color:{hex}";
     }
 
     private void GoToMembers()

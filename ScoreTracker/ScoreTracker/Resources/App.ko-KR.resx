@@ -5733,8 +5733,11 @@
   <data name="calculate a Phoenix score from a result screen" xml:space="preserve">
     <value>결과 화면으로 Phoenix 점수를 계산합니다</value>
   </data>
-  <data name="find a chart and jump to its pages" xml:space="preserve">
-    <value>채보를 찾아 페이지로 이동합니다</value>
+  <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
+    <value>채보의 통계와 유사 채보를 보여주고 페이지 링크도 안내합니다</value>
+  </data>
+  <data name="No scores in this mix yet" xml:space="preserve">
+    <value>이 시리즈에는 아직 점수가 없습니다</value>
   </data>
   <data name="draw a random set of charts, presets included" xml:space="preserve">
     <value>무작위 채보 세트를 뽑습니다 (프리셋 지원)</value>

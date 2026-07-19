@@ -5778,8 +5778,11 @@
   <data name="calculate a Phoenix score from a result screen" xml:space="preserve">
     <value>mrgl grl Mrgl-mrgl mrgl</value>
   </data>
-  <data name="find a chart and jump to its pages" xml:space="preserve">
-    <value>grl mrgl, MRGL grl!</value>
+  <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
+    <value>grl mrgl, MRGL grl! Mrgl mrglgl grl-grl!</value>
+  </data>
+  <data name="No scores in this mix yet" xml:space="preserve">
+    <value>Mrgl... grlgl mrgl mrgl</value>
   </data>
   <data name="draw a random set of charts, presets included" xml:space="preserve">
     <value>mrgl-grl mrgl! grl mrgl!</value>

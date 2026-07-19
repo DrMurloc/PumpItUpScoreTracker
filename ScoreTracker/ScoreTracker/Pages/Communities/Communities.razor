@@ -104,6 +104,24 @@
 
     .communities-region-row:last-child { border-bottom: none; }
 
+    /* Long region names truncate instead of wrapping under the member/range block. */
+    .communities-region-name {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .communities-region-name .communities-region-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+    }
+
+    .communities-region-stats {
+        flex: 0 0 auto;
+        text-align: right;
+    }
+
     /* The bot-features dialog: monospace command names in the site accent, one icon square
        per row, and the language callout — the mock's vocabulary, token-for-token. */
     .bot-dialog-head { display: flex; align-items: center; gap: 12px; }
@@ -256,7 +274,7 @@
             <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small"/></div>
             <div>
                 <span class="bot-dialog-cmd">/piu chart</span>
-                <div class="bot-dialog-desc">@L["find a chart and jump to its pages"]</div>
+                <div class="bot-dialog-desc">@L["pull up a chart's stats and similar charts, with links to its pages"]</div>
             </div>
         </div>
         <div class="bot-dialog-row">
@@ -370,14 +388,15 @@
             @foreach (var region in _otherRegions)
             {
                 <div class="communities-region-row">
-                    <MudLink OnClick="@(() => GoToLeaderboard(region.CommunityName))" Style="display:flex;align-items:center;gap:8px">
+                    <MudLink OnClick="@(() => GoToLeaderboard(region.CommunityName))" Class="communities-region-name"
+                             Style="display:flex;align-items:center;gap:8px">
                         @if (_countryImages.TryGetValue(region.CommunityName, out var flag))
                         {
                             <MudImage Height="14" ObjectFit="ObjectFit.ScaleDown" Src="@flag.ToString()"></MudImage>
                         }
-                        @((string)region.CommunityName)
+                        <span class="communities-region-label">@((string)region.CommunityName)</span>
                     </MudLink>
-                    <div style="text-align:right">
+                    <div class="communities-region-stats">
                         <span class="mud-text-secondary">@L["{0} members", region.MemberCount]</span>
                         <div>@RangeChip(region.CommunityName)</div>
                     </div>

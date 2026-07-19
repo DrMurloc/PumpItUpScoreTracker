@@ -33,7 +33,8 @@ else
             <HubPlayerChip Player="_profile.Player"/>
             @if (_profile.PlayerType != null)
             {
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                         Style="@Communities.CommunityLeaderboard.PlayerTypeStyle(_profile.PlayerType.Value)">
                     @L[HubRankings.PlayerTypeName(_profile.PlayerType.Value)]
                 </MudChip>
             }
