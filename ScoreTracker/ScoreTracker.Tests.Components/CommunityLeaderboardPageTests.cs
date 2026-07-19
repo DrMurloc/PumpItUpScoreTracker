@@ -59,11 +59,12 @@ public sealed class CommunityLeaderboardPageTests : ComponentTestBase
                     12000, 22, 500, 300, 900000, 867, 950000, 20.5, 871, 960000, 20.9, 852, 940000, 20.1,
                     20.6, 20.8, 20.2)
             });
-        // The embedded Members tab issues these on render.
         _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunityRoleQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Communities.Contracts.CommunityRoleRecord(CommunityRole.Member, CommunityPermission.None));
-        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityRosterQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<Communities.Contracts.CommunityMemberRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityPlayCountsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, int> { [PlayerId] = 42 });
+        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityCoOpCompletionQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, double> { [PlayerId] = 0.5 });
         _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
@@ -85,30 +86,58 @@ public sealed class CommunityLeaderboardPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void PumbilityBoardCarriesSinglesDoublesAndCompetitiveColumns()
+    public void CombinedBoardShowsPumbilityCompetitiveAndPlayCountColumns()
     {
         var cut = Render();
         var headers = cut.FindAll("th").Select(h => h.TextContent.Trim()).ToArray();
         Assert.Contains("PUMBILITY", headers);
-        Assert.Contains("Singles", headers);
-        Assert.Contains("Doubles", headers);
         Assert.Contains("Comp Lv", headers);
+        Assert.Contains("Charts Played", headers);
         Assert.DoesNotContain("Highest Level", headers);
+        // The board types ride the tier-list-style toggle, not table columns.
+        var toggles = cut.FindAll("button").Select(b => b.TextContent.Trim()).ToArray();
+        Assert.Contains("Combined", toggles);
+        Assert.Contains("Singles", toggles);
+        Assert.Contains("Doubles", toggles);
+        Assert.Contains("CoOp", toggles);
     }
 
     [Fact]
-    public void RankingsRenderThePlayerRow()
+    public void RankingsRenderThePlayerRowWithPlayCount()
     {
         var cut = Render();
         Assert.Contains("Tester", cut.Markup);
         Assert.Contains("867", cut.Markup);
+        Assert.Contains("42", cut.Markup);
     }
 
     [Fact]
-    public void HeadToHeadComparisonToolIsGone()
+    public void CoOpBoardSwapsCompetitiveForCompletion()
     {
         var cut = Render();
+        cut.FindAll("button").First(b => b.TextContent.Trim() == "CoOp").Click();
+        var headers = cut.FindAll("th").Select(h => h.TextContent.Trim()).ToArray();
+        Assert.Contains("CoOp Completion", headers);
+        Assert.DoesNotContain("Comp Lv", headers);
+        Assert.Contains("50", cut.Markup);
+    }
+
+    [Fact]
+    public void RecapFlameOnlyRendersOnPhoenix()
+    {
+        var cut = Render();
+        Assert.Contains("/PhoenixRecap", cut.Markup);
+
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(MixEnum.Phoenix2);
+        var phoenix2 = Render();
+        Assert.DoesNotContain("/PhoenixRecap", phoenix2.Markup);
+    }
+
+    [Fact]
+    public void ByChartAndMembersTabsAreGone()
+    {
+        var cut = Render();
+        Assert.DoesNotContain("By Chart", cut.Markup);
         Assert.DoesNotContain("Shared PGs", cut.Markup);
-        Assert.DoesNotContain("Score Difference", cut.Markup);
     }
 }

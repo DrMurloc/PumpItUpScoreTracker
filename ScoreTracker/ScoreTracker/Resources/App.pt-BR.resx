@@ -5645,4 +5645,22 @@
   <data name="{0} Players" xml:space="preserve">
     <value>{0} jogadores</value>
   </data>
+  <data name="Charts Played" xml:space="preserve">
+    <value>Charts jogados</value>
+  </data>
+  <data name="CoOp Completion" xml:space="preserve">
+    <value>Conclusão CoOp</value>
+  </data>
+  <data name="Join by going public" xml:space="preserve">
+    <value>Entre tornando-se público</value>
+  </data>
+  <data name="Default notification language" xml:space="preserve">
+    <value>Idioma padrão das notificações</value>
+  </data>
+  <data name="Singles {0}-{1}" xml:space="preserve">
+    <value>Singles {0}-{1}</value>
+  </data>
+  <data name="Doubles {0}-{1}" xml:space="preserve">
+    <value>Doubles {0}-{1}</value>
+  </data>
 </root>

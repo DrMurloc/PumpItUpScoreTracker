@@ -5700,4 +5700,22 @@
   <data name="{0} Players" xml:space="preserve">
     <value>{0} Playrgls</value>
   </data>
+  <data name="Charts Played" xml:space="preserve">
+    <value>Mrgl grl!</value>
+  </data>
+  <data name="CoOp Completion" xml:space="preserve">
+    <value>Mrgl-grl %</value>
+  </data>
+  <data name="Join by going public" xml:space="preserve">
+    <value>MRGLRGL grl mrgl!</value>
+  </data>
+  <data name="Default notification language" xml:space="preserve">
+    <value>Mrgl grlgrl mrgl</value>
+  </data>
+  <data name="Singles {0}-{1}" xml:space="preserve">
+    <value>Mrgl {0}-{1}</value>
+  </data>
+  <data name="Doubles {0}-{1}" xml:space="preserve">
+    <value>Grl {0}-{1}</value>
+  </data>
 </root>

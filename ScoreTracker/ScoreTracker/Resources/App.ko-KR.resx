@@ -5655,4 +5655,22 @@
   <data name="{0} Players" xml:space="preserve">
     <value>{0}명</value>
   </data>
+  <data name="Charts Played" xml:space="preserve">
+    <value>플레이한 채보</value>
+  </data>
+  <data name="CoOp Completion" xml:space="preserve">
+    <value>코옵 완료율</value>
+  </data>
+  <data name="Join by going public" xml:space="preserve">
+    <value>공개로 전환하고 가입</value>
+  </data>
+  <data name="Default notification language" xml:space="preserve">
+    <value>기본 알림 언어</value>
+  </data>
+  <data name="Singles {0}-{1}" xml:space="preserve">
+    <value>싱글 {0}-{1}</value>
+  </data>
+  <data name="Doubles {0}-{1}" xml:space="preserve">
+    <value>더블 {0}-{1}</value>
+  </data>
 </root>

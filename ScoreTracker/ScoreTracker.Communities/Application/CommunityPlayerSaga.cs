@@ -20,7 +20,9 @@ namespace ScoreTracker.Communities.Application;
 /// </summary>
 internal sealed class CommunityPlayerSaga :
     IRequestHandler<GetCommunityPlayerProfileQuery, CommunityPlayerProfileRecord?>,
-    IRequestHandler<GetCommunityFolderComparisonQuery, IEnumerable<CommunityChartComparisonRecord>>
+    IRequestHandler<GetCommunityFolderComparisonQuery, IEnumerable<CommunityChartComparisonRecord>>,
+    IRequestHandler<GetCommunityPlayCountsQuery, IReadOnlyDictionary<Guid, int>>,
+    IRequestHandler<GetCommunityCoOpCompletionQuery, IReadOnlyDictionary<Guid, double>>
 {
     private readonly IChartRepository _charts;
     private readonly ICommunityRepository _communities;
@@ -43,10 +45,11 @@ internal sealed class CommunityPlayerSaga :
     public async Task<CommunityPlayerProfileRecord?> Handle(GetCommunityPlayerProfileQuery request,
         CancellationToken cancellationToken)
     {
-        await GuardVisibility(request.CommunityName, request.UserId, cancellationToken);
+        var community = await GuardVisibility(request.CommunityName, request.UserId, cancellationToken);
 
         var user = await _users.GetUser(request.UserId, cancellationToken);
         if (user == null) return null;
+        GuardPrivateProfile(user, community);
 
         var stats = await _playerStats.GetStats(request.Mix, request.UserId, cancellationToken);
         var bestScores = (await _scores.GetBestScores(request.Mix, request.UserId, cancellationToken))
@@ -74,7 +77,9 @@ internal sealed class CommunityPlayerSaga :
         GetCommunityFolderComparisonQuery request, CancellationToken cancellationToken)
     {
         if (!_currentUser.IsLoggedIn) throw new UserNotLoggedInException();
-        await GuardVisibility(request.CommunityName, request.UserId, cancellationToken);
+        var community = await GuardVisibility(request.CommunityName, request.UserId, cancellationToken);
+        var target = await _users.GetUser(request.UserId, cancellationToken);
+        if (target != null) GuardPrivateProfile(target, community);
 
         var folder = (await _charts.GetCharts(request.Mix, request.Level, request.ChartType, null,
             cancellationToken)).ToArray();
@@ -94,16 +99,61 @@ internal sealed class CommunityPlayerSaga :
         }).ToArray();
     }
 
+    public async Task<IReadOnlyDictionary<Guid, int>> Handle(GetCommunityPlayCountsQuery request,
+        CancellationToken cancellationToken)
+    {
+        var community = await GuardCommunity(request.CommunityName, cancellationToken);
+        return await _scores.GetJournaledChartCounts(request.Mix, community.MemberIds, cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, double>> Handle(GetCommunityCoOpCompletionQuery request,
+        CancellationToken cancellationToken)
+    {
+        var community = await GuardCommunity(request.CommunityName, cancellationToken);
+        var coOpCharts = (await _charts.GetCharts(request.Mix, null, ChartType.CoOp, null, cancellationToken))
+            .Count();
+        if (coOpCharts == 0) return new Dictionary<Guid, double>();
+
+        var members = community.MemberIds.ToArray();
+        var passed = new Dictionary<Guid, int>();
+        // Co-op "levels" are player counts ×2–×5 — pool every folder into one completion figure.
+        for (var players = 2; players <= 5; players++)
+        foreach (var (userId, record) in await _scores.GetPlayerScores(request.Mix, members, ChartType.CoOp,
+                     players, cancellationToken))
+            if (record.Score != null && !record.IsBroken)
+                passed[userId] = passed.GetValueOrDefault(userId) + 1;
+
+        return passed.ToDictionary(kv => kv.Key, kv => (double)kv.Value / coOpCharts);
+    }
+
     // The same gate the community's boards use: private communities are members-only, and the
     // subject must be a member for their scores to be community-visible at all.
-    private async Task GuardVisibility(Name communityName, Guid subjectId, CancellationToken cancellationToken)
+    private async Task<Community> GuardVisibility(Name communityName, Guid subjectId,
+        CancellationToken cancellationToken)
+    {
+        var community = await GuardCommunity(communityName, cancellationToken);
+        if (!community.MemberIds.Contains(subjectId))
+            throw new DeniedFromCommunityException("That player is not a member of this community");
+        return community;
+    }
+
+    private async Task<Community> GuardCommunity(Name communityName, CancellationToken cancellationToken)
     {
         var community = await _communities.GetCommunityByName(communityName, cancellationToken)
                         ?? throw new CommunityNotFoundException();
         if (community.PrivacyType == CommunityPrivacyType.Private &&
             !(_currentUser.IsLoggedIn && community.MemberIds.Contains(_currentUser.User.Id)))
             throw new DeniedFromCommunityException("This community is private and you must be a member to view it");
-        if (!community.MemberIds.Contains(subjectId))
-            throw new DeniedFromCommunityException("That player is not a member of this community");
+        return community;
     }
+
+    // Membership is the score-visibility consent: a private-profile member is only a member to
+    // people inside the community; an outside viewer must not see them at all.
+    private void GuardPrivateProfile(User subject, Community community)
+    {
+        if (subject.IsPublic) return;
+        if (_currentUser.IsLoggedIn && community.MemberIds.Contains(_currentUser.User.Id)) return;
+        throw new DeniedFromCommunityException("That player is not visible outside this community");
+    }
+
 }

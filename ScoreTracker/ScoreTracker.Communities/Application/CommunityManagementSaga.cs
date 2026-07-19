@@ -106,8 +106,15 @@ internal sealed class CommunityManagementSaga :
             : Array.Empty<MyCommunityRoleRecord>();
 
     public async Task<IEnumerable<CommunityMemberRecord>> Handle(GetCommunityRosterQuery request,
-        CancellationToken cancellationToken) =>
-        await _communities.GetRoster(request.CommunityName, cancellationToken);
+        CancellationToken cancellationToken)
+    {
+        var roster = await _communities.GetRoster(request.CommunityName, cancellationToken);
+
+        // Membership is the score-visibility consent: outside viewers don't see private-profile
+        // members at all. Anyone with a membership row (bans included) sees the full roster.
+        if (_currentUser.IsLoggedIn && roster.Any(m => m.UserId == _currentUser.User.Id)) return roster;
+        return roster.Where(m => m.IsPublic).ToArray();
+    }
 
     private async Task Mutate(Name communityName, Action<Community> action, CancellationToken cancellationToken)
     {

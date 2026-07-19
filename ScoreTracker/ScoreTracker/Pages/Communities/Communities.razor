@@ -17,17 +17,10 @@
 @using ScoreTracker.Data.Configuration
 @inject IOptions<DiscordConfiguration> DiscordConfig
 <PageTitle>@L["Communities"]</PageTitle>
-@if (!string.IsNullOrWhiteSpace(DiscordConfig.Value.ClientId))
-{
-    <MudPaper Class="pa-4 mb-4" Outlined="true">
-        <MudText Typo="Typo.h6">@L["Add the PIU Scores bot to your Discord server"]</MudText>
-        <MudText Typo="Typo.body2" Class="mb-3">@L["Invite the bot, then run /piu register in any channel to start its feeds and commands."]</MudText>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SmartToy"
-                   Href="@BotInviteUrl" Target="_blank">@L["Add the bot"]</MudButton>
-    </MudPaper>
-}
 
 <style>
+    .communities-page { padding-top: 16px; }
+
     .communities-dir {
         display: grid;
         grid-template-columns: 290px 1fr;
@@ -104,7 +97,24 @@
     }
 
     .communities-region-row:last-child { border-bottom: none; }
+
+    .communities-range {
+        color: var(--mix-ink-muted);
+        font-size: 11.5px;
+        white-space: nowrap;
+    }
 </style>
+
+<div class="communities-page">
+@if (!string.IsNullOrWhiteSpace(DiscordConfig.Value.ClientId))
+{
+    <MudPaper Class="pa-4 mb-4" Outlined="true">
+        <MudText Typo="Typo.h6">@L["Add the PIU Scores bot to your Discord server"]</MudText>
+        <MudText Typo="Typo.body2" Class="mb-3">@L["Invite the bot, then run /piu register in any channel to start its feeds and commands."]</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SmartToy"
+                   Href="@BotInviteUrl" Target="_blank">@L["Add the bot"]</MudButton>
+    </MudPaper>
+}
 
 <div class="d-flex align-end justify-space-between flex-wrap mb-4" style="gap:12px">
     <div>
@@ -134,17 +144,30 @@
                         <span class="mud-text-secondary">@L["Your PUMBILITY"]</span><b>@_myPumbility</b>
                     </div>
                 }
+                @if (_world != null && RangeLabel(_world.CommunityName) is { } worldRange)
+                {
+                    <div class="communities-stat-row"><span class="communities-range">@worldRange</span></div>
+                }
             </div>
             @if (_world != null)
             {
                 <MudButton Variant="Variant.Outlined" Size="Size.Small" Class="mt-3" FullWidth="true"
-                           OnClick="@(() => GoToLeaderboard(_world.CommunityName))">@L["Open world board"]</MudButton>
+                           OnClick="@(() => GoToLeaderboard(_world.CommunityName))">@L["Rankings"]</MudButton>
             }
             @if (_currentUser != null)
             {
-                <MudButton Variant="Variant.Text" Size="Size.Small" Class="mt-1" FullWidth="true" Href="/Account">
-                    @(_world != null && _myCommunities.Contains(_world.CommunityName) ? L["Go Private"] : L["Go Public"])
-                </MudButton>
+                @if (_world != null && _myCommunities.Contains(_world.CommunityName))
+                {
+                    <MudButton Variant="Variant.Text" Size="Size.Small" Class="mt-1" FullWidth="true" Href="/Account">
+                        @L["Go Private"]
+                    </MudButton>
+                }
+                else if (!_currentUser.IsPublic)
+                {
+                    <MudButton Variant="Variant.Text" Size="Size.Small" Class="mt-1" FullWidth="true" Href="/Account">
+                        @L["Join by going public"]
+                    </MudButton>
+                }
             }
         </MudPaper>
     </div>
@@ -161,10 +184,16 @@
                     }
                     <div class="communities-card-main">
                         <b>@((string)_myRegion.CommunityName)</b>
-                        <div class="communities-card-meta"><span>@L["{0} members", _myRegion.MemberCount]</span></div>
+                        <div class="communities-card-meta">
+                            <span>@L["{0} members", _myRegion.MemberCount]</span>
+                            @if (RangeLabel(_myRegion.CommunityName) is { } regionRange)
+                            {
+                                <span class="communities-range">@regionRange</span>
+                            }
+                        </div>
                     </div>
                     <MudButton Variant="Variant.Outlined" Size="Size.Small"
-                               OnClick="@(() => GoToLeaderboard(_myRegion.CommunityName))">@L["Open"]</MudButton>
+                               OnClick="@(() => GoToLeaderboard(_myRegion.CommunityName))">@L["Rankings"]</MudButton>
                 </div>
             }
             else
@@ -182,7 +211,13 @@
                         }
                         @((string)region.CommunityName)
                     </MudLink>
-                    <span class="mud-text-secondary">@region.MemberCount</span>
+                    <div style="text-align:right">
+                        <span class="mud-text-secondary">@region.MemberCount</span>
+                        @if (RangeLabel(region.CommunityName) is { } range)
+                        {
+                            <div class="communities-range">@range</div>
+                        }
+                    </div>
                 </div>
             }
         </MudPaper>
@@ -212,21 +247,17 @@
                             </MudChip>
                         }
                     </div>
-                    <div class="communities-card-meta"><span>@L["{0} members", community.MemberCount]</span></div>
+                    <div class="communities-card-meta">
+                        <span>@L["{0} members", community.MemberCount]</span>
+                        @if (RangeLabel(community.CommunityName) is { } range)
+                        {
+                            <span class="communities-range">@range</span>
+                        }
+                    </div>
                 </div>
                 <div class="communities-card-actions">
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                               OnClick="@(() => GoToLeaderboard(community.CommunityName))">@L["Open"]</MudButton>
-                    @if (RoleOf(community.CommunityName) is CommunityRole.Creator or CommunityRole.Admin)
-                    {
-                        <MudButton Variant="Variant.Outlined" Size="Size.Small"
-                                   OnClick="@(() => GoToMembers(community.CommunityName))">@L["Manage"]</MudButton>
-                    }
-                    @if (CanInvite(community))
-                    {
-                        <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Link"
-                                   OnClick="@(() => OpenCommunity(community.CommunityName))">@L["Invite"]</MudButton>
-                    }
+                               OnClick="@(() => GoToLeaderboard(community.CommunityName))">@L["Rankings"]</MudButton>
                     @if (RoleOf(community.CommunityName) != CommunityRole.Creator)
                     {
                         <MudButton Variant="Variant.Text" Color="Color.Warning" Size="Size.Small" Disabled="_isSaving"
@@ -248,11 +279,17 @@
                         <b>@((string)community.CommunityName)</b>
                         <MudChip T="string" Size="Size.Small">@PrivacyLabel(community.PrivacyType)</MudChip>
                     </div>
-                    <div class="communities-card-meta"><span>@L["{0} members", community.MemberCount]</span></div>
+                    <div class="communities-card-meta">
+                        <span>@L["{0} members", community.MemberCount]</span>
+                        @if (RangeLabel(community.CommunityName) is { } range)
+                        {
+                            <span class="communities-range">@range</span>
+                        }
+                    </div>
                 </div>
                 <div class="communities-card-actions">
                     <MudButton Variant="Variant.Outlined" Size="Size.Small"
-                               OnClick="@(() => GoToLeaderboard(community.CommunityName))">@L["Open"]</MudButton>
+                               OnClick="@(() => GoToLeaderboard(community.CommunityName))">@L["Rankings"]</MudButton>
                     @if (_currentUser != null && community.PrivacyType == CommunityPrivacyType.Public)
                     {
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="_isSaving"
@@ -262,6 +299,7 @@
             </div>
         }
     </div>
+</div>
 </div>
 
 <MudDialog @bind-Visible="_showCreateDialog">
@@ -286,35 +324,9 @@
     </DialogActions>
 </MudDialog>
 
-<MudDialog @bind-Visible="_showManageDialog">
-    <DialogContent>
-        @if (_community != null)
-        {
-            <MudGrid>
-                @foreach (var link in _community.InviteCodes)
-                {
-                    <MudItem xs="8">
-                        <MudText>@link.Key</MudText>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudButton StartIcon="@Icons.Material.Filled.ContentCopy" Variant="Variant.Outlined" OnClick="() => CopyCode(link.Key)">@L["Copy Invite Link"]</MudButton>
-                    </MudItem>
-                }
-                <MudItem xs="12">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateCode">@L["Create Invite Code"]</MudButton>
-                </MudItem>
-            </MudGrid>
-        }
-    </DialogContent>
-    <DialogActions>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showManageDialog = false">@L["Close"]</MudButton>
-    </DialogActions>
-</MudDialog>
-
 @inject IMediator Mediator;
 @inject ICurrentUserAccessor CurrentUser;
 @inject ISnackbar Snackbar;
-@inject IJSRuntime JSRuntime;
 @inject NavigationManager NavManager
 @inject IUserRepository Users;
 @inject IUiSettingsAccessor UiSettings;
@@ -328,11 +340,11 @@
     private IEnumerable<CommunityOverviewRecord> _communities = Array.Empty<CommunityOverviewRecord>();
     private ISet<Name> _myCommunities = new HashSet<Name>();
     private IDictionary<Name, MyCommunityRoleRecord> _roles = new Dictionary<Name, MyCommunityRoleRecord>();
+    private IDictionary<Name, CommunityCompetitiveRangeRecord> _ranges = new Dictionary<Name, CommunityCompetitiveRangeRecord>();
     private User? _currentUser;
     private bool _showCreateDialog = false;
     private bool _isSaving = false;
     private string _name = string.Empty;
-    private bool _showManageDialog = false;
     private IDictionary<Name, Uri> _countryImages = new Dictionary<Name, Uri>();
     private CommunityPrivacyType _privacyType = CommunityPrivacyType.PublicWithCode;
     private int? _myPumbility;
@@ -352,10 +364,18 @@
     private CommunityRole? RoleOf(Name communityName) =>
         _roles.TryGetValue(communityName, out var role) ? role.Role : null;
 
-    private bool CanInvite(CommunityOverviewRecord community) =>
-        community.PrivacyType != CommunityPrivacyType.Public &&
-        _roles.TryGetValue(community.CommunityName, out var role) &&
-        (role.Role == CommunityRole.Creator || role.Permissions.HasFlag(CommunityPermission.ManageInviteLinks));
+    private string? RangeLabel(Name communityName)
+    {
+        if (!_ranges.TryGetValue(communityName, out var range)) return null;
+        var parts = new List<string>();
+        if (range.SinglesMin != null)
+            parts.Add(L["Singles {0}-{1}", range.SinglesMin.Value.ToString("0.0"),
+                range.SinglesMax!.Value.ToString("0.0")].Value);
+        if (range.DoublesMin != null)
+            parts.Add(L["Doubles {0}-{1}", range.DoublesMin.Value.ToString("0.0"),
+                range.DoublesMax!.Value.ToString("0.0")].Value);
+        return parts.Count == 0 ? null : string.Join(" | ", parts);
+    }
 
     private string PrivacyLabel(CommunityPrivacyType privacy) => privacy switch
     {
@@ -393,23 +413,6 @@
         NavManager.NavigateTo($"/Community/Leaderboard?CommunityName={HttpUtility.UrlEncode(communityName)}");
     }
 
-    private void GoToMembers(Name communityName)
-    {
-        NavManager.NavigateTo($"/Community/Members?CommunityName={HttpUtility.UrlEncode(communityName)}");
-    }
-
-    private async Task CreateCode()
-    {
-        if (_community == null)
-        {
-            return;
-        }
-        _isSaving = true;
-        var code = await Mediator.Send(new CreateInviteLinkCommand(_community.Name, null));
-        _community.InviteCodes[code] = null;
-        _isSaving = false;
-    }
-
     private async Task Join(Name communityName)
     {
         _isSaving = true;
@@ -444,26 +447,16 @@
         _isSaving = false;
     }
 
-    private Community? _community = null;
-
-    private async Task OpenCommunity(Name name)
-    {
-        _isSaving = true;
-        _community = await Mediator.Send(new GetCommunityQuery(name));
-        _showManageDialog = true;
-        _isSaving = false;
-    }
-
-    private async Task CopyCode(Guid code)
-    {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", $"https://piuscores.arroweclip.se/Communities/Invite/{code}");
-        Snackbar.Add(L["Copied to clipboard!"].Value, Severity.Success);
-    }
-
     // Regional communities feed the rail; player communities split into yours vs. explore.
+    // Legacy rows can predate the IsRegional flag, so World and country-named communities
+    // classify by name too.
+    private bool IsRegionalCommunity(CommunityOverviewRecord community) =>
+        community.IsRegional || (string)community.CommunityName == "World" ||
+        _countryImages.ContainsKey(community.CommunityName);
+
     private void Split()
     {
-        var regional = _communities.Where(c => c.IsRegional).ToArray();
+        var regional = _communities.Where(IsRegionalCommunity).ToArray();
         _world = regional.FirstOrDefault(c => (string)c.CommunityName == "World");
         _myRegion = _currentUser?.Country is { } country
             ? regional.FirstOrDefault(c => c.CommunityName == country)
@@ -472,7 +465,7 @@
             .Where(c => (string)c.CommunityName != "World" && c.CommunityName != _myRegion?.CommunityName)
             .OrderByDescending(c => c.MemberCount).ToArray();
 
-        var player = _communities.Where(c => !c.IsRegional).ToArray();
+        var player = _communities.Where(c => !IsRegionalCommunity(c)).ToArray();
         _yourCommunities = player.Where(c => _myCommunities.Contains(c.CommunityName))
             .OrderByDescending(c => c.MemberCount).ToArray();
         _exploreCommunities = player.Where(c => !_myCommunities.Contains(c.CommunityName))
@@ -484,6 +477,10 @@
         _currentUser = CurrentUser.IsLoggedIn ? CurrentUser.User : null;
         _communities = (await Mediator.Send(new GetPublicCommunitiesQuery())).ToArray();
         _countryImages = (await Users.GetCountries()).ToDictionary(c => c.Name, c => c.ImagePath);
+        var mix = await UiSettings.GetSelectedMix();
+        var dataMix = mix == MixEnum.XX ? MixEnum.Phoenix : mix;
+        _ranges = (await Mediator.Send(new GetCommunityCompetitiveRangesQuery(dataMix)))
+            .ToDictionary(r => r.CommunityName);
         if (CurrentUser.IsLoggedIn)
         {
             var myCommunities = (await Mediator.Send(new GetMyCommunitiesQuery())).ToArray();
@@ -493,9 +490,7 @@
                 .Where(r => r.Role != CommunityRole.Banned)
                 .ToDictionary(r => r.CommunityName);
 
-            var mix = await UiSettings.GetSelectedMix();
-            var stats = await Mediator.Send(new GetPlayerStatsQuery(_currentUser!.Id,
-                mix == MixEnum.XX ? MixEnum.Phoenix : mix));
+            var stats = await Mediator.Send(new GetPlayerStatsQuery(_currentUser!.Id, dataMix));
             _myPumbility = stats.SkillRating > 0 ? stats.SkillRating : null;
         }
 

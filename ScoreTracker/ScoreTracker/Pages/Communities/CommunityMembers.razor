@@ -6,6 +6,7 @@
 @using ScoreTracker.Communities.Contracts.Queries
 @using ScoreTracker.Domain.Exceptions
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
@@ -22,6 +23,7 @@ else if (_community == null)
 }
 else
 {
+    <MudBreadcrumbs Items="_crumbs" Class="pa-0 mb-2"></MudBreadcrumbs>
     <MudText Typo="Typo.h4">@((string)_community.Name) — @L["Members"]</MudText>
     <MudText Typo="Typo.body2" Class="mb-4">@L["The roster is visible to everyone; management controls appear based on your role."]</MudText>
 
@@ -110,9 +112,13 @@ else
             <MudRadio Value="@CommunityPrivacyType.PublicWithCode" Color="Color.Primary">@L["Invite Required"]</MudRadio>
             <MudRadio Value="@CommunityPrivacyType.Private" Color="Color.Primary">@L["Private"]</MudRadio>
         </MudRadioGroup>
-        <MudTextField T="string" Label="@L["Default notification language (culture code)"]" @bind-Value="_language"
-                      Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Save"
-                      OnAdornmentClick="SaveLanguage" Class="mt-2" Style="max-width:360px"/>
+        <MudSelect T="string" Label="@L["Default notification language"]" Value="_language"
+                   ValueChanged="SaveLanguage" Clearable="true" Class="mt-2" Style="max-width:360px">
+            @foreach (var culture in SupportedCultures.All)
+            {
+                <MudSelectItem T="string" Value="@culture.Code">@culture.NativeName</MudSelectItem>
+            }
+        </MudSelect>
 
         <div class="mt-6">
             <MudButton Color="Color.Error" Variant="Variant.Outlined" Disabled="_isSaving"
@@ -168,6 +174,7 @@ else
     private CommunityPrivacyType _privacy;
     private string _language = string.Empty;
 
+    private List<BreadcrumbItem> _crumbs = new();
     private bool _showEditPermissions;
     private CommunityMemberRecord? _editTarget;
     private CommunityPermission _editPermissions;
@@ -203,6 +210,13 @@ else
             _defaultAdminPermissions = _community.DefaultAdminPermissions;
             _privacy = _community.PrivacyType;
             _language = _community.DefaultLanguage ?? string.Empty;
+            _crumbs = new List<BreadcrumbItem>
+            {
+                new(L["Communities"].Value, "/Communities"),
+                new((string)_community.Name,
+                    $"/Community/Leaderboard?CommunityName={Uri.EscapeDataString((string)_community.Name)}"),
+                new(L["Members"].Value, null, true)
+            };
         }
         catch (CommunityNotFoundException)
         {
@@ -275,9 +289,12 @@ else
         return Dispatch(new SetCommunityPrivacyCommand(_community!.Name, privacy), "Could not change privacy.");
     }
 
-    private Task SaveLanguage() =>
-        Dispatch(new SetCommunityLanguageCommand(_community!.Name,
-            string.IsNullOrWhiteSpace(_language) ? null : _language.Trim()), "Could not set the language.");
+    private Task SaveLanguage(string? culture)
+    {
+        _language = culture ?? string.Empty;
+        return Dispatch(new SetCommunityLanguageCommand(_community!.Name,
+            string.IsNullOrWhiteSpace(culture) ? null : culture), "Could not set the language.");
+    }
 
     private async Task Delete()
     {

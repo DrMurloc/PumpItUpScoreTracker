@@ -314,6 +314,47 @@ namespace ScoreTracker.Communities.Infrastructure
             _cache.Remove(CommunityCountCacheKey);
         }
 
+        public async Task<IEnumerable<CommunityCompetitiveRangeRecord>> GetCompetitiveRanges(MixEnum mix,
+            CancellationToken cancellationToken)
+        {
+            return (await _cache.GetOrCreateAsync($"{nameof(EFCommunitiesRepository)}_CompRanges_{mix}",
+                async cache =>
+                {
+                    // Directory metadata over every community incl. regional/World; day-stale is
+                    // acceptable (owner call), and the stats reader is chunked so World-sized
+                    // member sets never overrun the SQL parameter ceiling.
+                    cache.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24);
+                    await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+                    var memberships = await (from cm in database.Set<CommunityMembershipEntity>()
+                        where cm.Role != nameof(CommunityRole.Banned)
+                        join c in database.Set<CommunityEntity>() on cm.CommunityId equals c.Id
+                        select new { c.Name, cm.UserId }).ToArrayAsync(cancellationToken);
+
+                    var stats = new Dictionary<Guid, PlayerStatsRecord>();
+                    foreach (var chunk in memberships.Select(m => m.UserId).Distinct().Chunk(1000))
+                    foreach (var stat in await _playerStats.GetStats(mix, chunk, cancellationToken))
+                        stats[stat.UserId] = stat;
+
+                    return memberships.GroupBy(m => m.Name)
+                        .Select(g =>
+                        {
+                            var singles = g.Select(m => stats.GetValueOrDefault(m.UserId))
+                                .Where(s => s is { SinglesCompetitiveLevel: >= 5 })
+                                .Select(s => s!.SinglesCompetitiveLevel).ToArray();
+                            var doubles = g.Select(m => stats.GetValueOrDefault(m.UserId))
+                                .Where(s => s is { DoublesCompetitiveLevel: >= 5 })
+                                .Select(s => s!.DoublesCompetitiveLevel).ToArray();
+                            return new CommunityCompetitiveRangeRecord(g.Key,
+                                singles.Length > 0 ? singles.Min() : null,
+                                singles.Length > 0 ? singles.Max() : null,
+                                doubles.Length > 0 ? doubles.Min() : null,
+                                doubles.Length > 0 ? doubles.Max() : null);
+                        })
+                        .Where(r => r.SinglesMin != null || r.DoublesMin != null)
+                        .ToArray();
+                }))!;
+        }
+
         public async Task<IEnumerable<MyCommunityRoleRecord>> GetUserRoles(Guid userId,
             CancellationToken cancellationToken)
         {
@@ -338,13 +379,13 @@ namespace ScoreTracker.Communities.Infrastructure
                     where c.Name == nameString
                     join cm in database.Set<CommunityMembershipEntity>() on c.Id equals cm.CommunityId
                     join u in database.User on cm.UserId equals u.Id
-                    select new { cm.UserId, u.Name, u.ProfileImage, cm.Role, cm.Permissions })
+                    select new { cm.UserId, u.Name, u.ProfileImage, cm.Role, cm.Permissions, u.IsPublic })
                 .ToArrayAsync(cancellationToken);
 
             return rows.Select(r => new CommunityMemberRecord(r.UserId, r.Name,
                 new Uri(r.ProfileImage, UriKind.Absolute),
                 Enum.TryParse<CommunityRole>(r.Role, out var role) ? role : CommunityRole.Member,
-                (CommunityPermission)r.Permissions)).ToArray();
+                (CommunityPermission)r.Permissions, r.IsPublic)).ToArray();
         }
     }
 }

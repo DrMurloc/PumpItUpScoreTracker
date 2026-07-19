@@ -5774,4 +5774,22 @@
   <data name="{0} Players" xml:space="preserve">
     <value>{0}人</value>
   </data>
+  <data name="Charts Played" xml:space="preserve">
+    <value>プレイした譜面</value>
+  </data>
+  <data name="CoOp Completion" xml:space="preserve">
+    <value>CoOpクリア率</value>
+  </data>
+  <data name="Join by going public" xml:space="preserve">
+    <value>公開にして参加</value>
+  </data>
+  <data name="Default notification language" xml:space="preserve">
+    <value>デフォルト通知言語</value>
+  </data>
+  <data name="Singles {0}-{1}" xml:space="preserve">
+    <value>Singles {0}-{1}</value>
+  </data>
+  <data name="Doubles {0}-{1}" xml:space="preserve">
+    <value>Doubles {0}-{1}</value>
+  </data>
 </root>

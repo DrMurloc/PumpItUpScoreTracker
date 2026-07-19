@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Moq;
 using ScoreTracker.Communities.Application;
+using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Commands;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Communities.Domain;
@@ -128,6 +129,27 @@ public sealed class CommunityManagementSagaTests
             Build(member).Handle(new DeleteCommunityCommand(Name.From("Acme")), CancellationToken.None));
         _communities.Verify(c => c.DeleteCommunity(It.IsAny<Name>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task RosterHidesPrivateProfilesFromViewersOutsideTheCommunity()
+    {
+        var member = Guid.NewGuid();
+        var outsideViewer = Guid.NewGuid();
+        _communities.Setup(c => c.GetRoster(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityMemberRecord(member, Name.From("Hidden"), new Uri("https://piu.test/a.png"),
+                    CommunityRole.Member, CommunityPermission.None, IsPublic: false)
+            });
+
+        var outside = await Build(outsideViewer).Handle(new GetCommunityRosterQuery(Name.From("Acme")),
+            CancellationToken.None);
+        Assert.Empty(outside);
+
+        var inside = await Build(member).Handle(new GetCommunityRosterQuery(Name.From("Acme")),
+            CancellationToken.None);
+        Assert.Single(inside);
     }
 
     [Fact]

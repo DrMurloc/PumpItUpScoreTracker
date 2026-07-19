@@ -10,4 +10,5 @@ public sealed record CommunityMemberRecord(
     Name Name,
     Uri ProfileImage,
     CommunityRole Role,
-    CommunityPermission Permissions);
+    CommunityPermission Permissions,
+    bool IsPublic);

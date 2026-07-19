@@ -58,7 +58,7 @@ public sealed class CommunityMembersPageTests : ComponentTestBase
 
     private static CommunityMemberRecord Row(Guid id, string name, CommunityRole role,
         CommunityPermission permissions) =>
-        new(id, Name.From(name), new Uri("https://piu.test/avatar.png"), role, permissions);
+        new(id, Name.From(name), new Uri("https://piu.test/avatar.png"), role, permissions, IsPublic: true);
 
     private void GivenMyRole(CommunityRole? role, CommunityPermission permissions)
     {

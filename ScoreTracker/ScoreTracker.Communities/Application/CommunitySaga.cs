@@ -27,6 +27,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     IRequestHandler<LeaveCommunityCommand>,
     IRequestHandler<GetCommunityMembersQuery, IEnumerable<Guid>>,
     IRequestHandler<GetCommunityLeaderboardQuery, IEnumerable<CommunityLeaderboardRecord>>,
+    IRequestHandler<GetCommunityCompetitiveRangesQuery, IEnumerable<Contracts.CommunityCompetitiveRangeRecord>>,
     IRequestHandler<CreateInviteLinkCommand, Guid>,
     IRequestHandler<GetMyCommunitiesQuery, IEnumerable<CommunityOverviewRecord>>,
     IRequestHandler<GetPublicCommunitiesQuery, IEnumerable<CommunityOverviewRecord>>,
@@ -878,7 +879,18 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
                                                                            .User.Id)))
             throw new DeniedFromCommunityException("This community is private and you must be a member to view it");
 
-        return await _communities.GetLeaderboard(request.Mix, request.Community, cancellationToken);
+        var leaderboard = await _communities.GetLeaderboard(request.Mix, request.Community, cancellationToken);
+
+        // Membership is the score-visibility consent: private-profile members exist only for
+        // people inside the community. Outside viewers get the public members alone.
+        var viewerIsMember = _currentUser.IsLoggedIn && community.MemberIds.Contains(_currentUser.User.Id);
+        return viewerIsMember ? leaderboard : leaderboard.Where(l => l.IsPublic).ToArray();
+    }
+
+    public async Task<IEnumerable<Contracts.CommunityCompetitiveRangeRecord>> Handle(
+        GetCommunityCompetitiveRangesQuery request, CancellationToken cancellationToken)
+    {
+        return await _communities.GetCompetitiveRanges(request.Mix, cancellationToken);
     }
 
     public async Task<Community> Handle(GetCommunityQuery request, CancellationToken cancellationToken)

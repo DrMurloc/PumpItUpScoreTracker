@@ -130,6 +130,45 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task LeaderboardHidesPrivateProfilesFromViewersOutsideTheCommunity()
+    {
+        var member = Guid.NewGuid();
+        var viewer = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: viewer);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public,
+            new[] { member }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false);
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+        ctx.Communities.Setup(c => c.GetLeaderboard(It.IsAny<MixEnum>(), It.IsAny<Name>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityLeaderboardRecord(Name.From("Hidden"), false,
+                    new Uri("https://piu.test/a.png"), member, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+            });
+
+        // An outside viewer sees no private-profile rows; the member themselves sees the row.
+        var outside = await ctx.Saga.Handle(new GetCommunityLeaderboardQuery(Name.From("Acme"), MixEnum.Phoenix),
+            CancellationToken.None);
+        Assert.Empty(outside);
+
+        var insideCtx = new HandlerContext(currentUserId: member);
+        insideCtx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+        insideCtx.Communities.Setup(c => c.GetLeaderboard(It.IsAny<MixEnum>(), It.IsAny<Name>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityLeaderboardRecord(Name.From("Hidden"), false,
+                    new Uri("https://piu.test/a.png"), member, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+            });
+        var inside = await insideCtx.Saga.Handle(
+            new GetCommunityLeaderboardQuery(Name.From("Acme"), MixEnum.Phoenix), CancellationToken.None);
+        Assert.Single(inside);
+    }
+
+    [Fact]
     public async Task InvitePreviewReturnsNullForAnUnknownCode()
     {
         var ctx = new HandlerContext();

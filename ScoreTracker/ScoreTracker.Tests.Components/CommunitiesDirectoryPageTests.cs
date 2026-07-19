@@ -43,6 +43,8 @@ public sealed class CommunitiesDirectoryPageTests : ComponentTestBase
             .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
         _mediator.Setup(m => m.Send(It.IsAny<GetPublicCommunitiesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityCompetitiveRangesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CommunityCompetitiveRangeRecord>());
         Services.AddSingleton(_mediator.Object);
         Services.AddSingleton(_users.Object);
         Services.AddSingleton(_uiSettings.Object);
@@ -85,7 +87,7 @@ public sealed class CommunitiesDirectoryPageTests : ComponentTestBase
 
         // World renders as the rail card, Korea in the browse list, Spain as "your region";
         // none of them get Join/Leave player-card affordances.
-        Assert.Contains("Open world board", cut.Markup);
+        Assert.Contains("Everyone who has gone public", cut.Markup);
         Assert.Contains("Korea", cut.Markup);
         var yourSection = cut.Find(".communities-your");
         Assert.DoesNotContain("World", yourSection.TextContent);
@@ -109,21 +111,52 @@ public sealed class CommunitiesDirectoryPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void ManageShowsOnlyForCreatorOrAdmin()
+    public void ManageAndInviteLiveOnTheCommunityPageNotTheDirectory()
     {
         GivenLoggedIn();
-        GivenPublicCommunities(Overview("Led"), Overview("Joined"));
-        GivenMyCommunities(Overview("Led"), Overview("Joined"));
-        GivenRoles(
-            new MyCommunityRoleRecord(Name.From("Led"), CommunityRole.Creator, CommunityPermission.All),
-            new MyCommunityRoleRecord(Name.From("Joined"), CommunityRole.Member, CommunityPermission.None));
+        GivenPublicCommunities(Overview("Led", privacy: CommunityPrivacyType.PublicWithCode));
+        GivenMyCommunities(Overview("Led", privacy: CommunityPrivacyType.PublicWithCode));
+        GivenRoles(new MyCommunityRoleRecord(Name.From("Led"), CommunityRole.Creator, CommunityPermission.All));
         var cut = Render();
 
-        var cards = cut.FindAll(".communities-your .communities-card");
-        var ledCard = cards.First(c => c.TextContent.Contains("Led"));
-        var joinedCard = cards.First(c => c.TextContent.Contains("Joined"));
-        Assert.Contains("Manage", ledCard.TextContent);
-        Assert.DoesNotContain("Manage", joinedCard.TextContent);
+        var buttons = cut.FindAll(".communities-card button").Select(b => b.TextContent.Trim()).ToArray();
+        Assert.DoesNotContain("Manage", buttons);
+        Assert.DoesNotContain("Invite", buttons);
+        Assert.Contains("Rankings", buttons);
+    }
+
+    [Fact]
+    public void LegacyWorldWithoutTheRegionalFlagStillLandsInTheRail()
+    {
+        // System communities created before the IsRegional migration carry a false flag;
+        // the directory classifies World (and country names) by name as the fallback.
+        GivenLoggedIn();
+        GivenPublicCommunities(Overview("World", regional: false, members: 18392),
+            Overview("Spain", regional: false, members: 610),
+            Overview("Storm Crew"));
+        var cut = Render();
+
+        Assert.DoesNotContain("World", cut.Find(".communities-your").TextContent);
+        Assert.DoesNotContain("World", cut.Find(".communities-explore").TextContent);
+        Assert.Contains("Storm Crew", cut.Find(".communities-explore").TextContent);
+        Assert.Contains("18392", cut.Find(".communities-world").TextContent.Replace(",", "").Replace(".", ""));
+    }
+
+    [Fact]
+    public void CompetitiveRangesRenderOnCards()
+    {
+        GivenLoggedIn();
+        GivenPublicCommunities(Overview("Storm Crew"));
+        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityCompetitiveRangesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityCompetitiveRangeRecord(Name.From("Storm Crew"), 5.2, 22.4, 9.1, 18.4)
+            });
+        var cut = Render();
+
+        var card = cut.Find(".communities-explore").TextContent;
+        Assert.Contains("Singles 5.2-22.4", card);
+        Assert.Contains("Doubles 9.1-18.4", card);
     }
 
     [Fact]
@@ -142,27 +175,4 @@ public sealed class CommunitiesDirectoryPageTests : ComponentTestBase
         Assert.Contains("Leave", cards.First(c => c.TextContent.Contains("Joined")).TextContent);
     }
 
-    [Fact]
-    public void InviteShowsOnlyWithTheInvitePermissionOnCodeCommunities()
-    {
-        GivenLoggedIn();
-        GivenPublicCommunities(
-            Overview("CodeLed", privacy: CommunityPrivacyType.PublicWithCode),
-            Overview("CodeJoined", privacy: CommunityPrivacyType.PublicWithCode));
-        GivenMyCommunities(
-            Overview("CodeLed", privacy: CommunityPrivacyType.PublicWithCode),
-            Overview("CodeJoined", privacy: CommunityPrivacyType.PublicWithCode));
-        GivenRoles(
-            new MyCommunityRoleRecord(Name.From("CodeLed"), CommunityRole.Admin,
-                CommunityPermission.ManageInviteLinks),
-            new MyCommunityRoleRecord(Name.From("CodeJoined"), CommunityRole.Member, CommunityPermission.None));
-        var cut = Render();
-
-        var cards = cut.FindAll(".communities-your .communities-card");
-        // The privacy chip says "Invite Required" on both cards, so assert on the buttons.
-        Assert.Contains(cards.First(c => c.TextContent.Contains("CodeLed")).QuerySelectorAll("button"),
-            b => b.TextContent.Trim() == "Invite");
-        Assert.DoesNotContain(cards.First(c => c.TextContent.Contains("CodeJoined")).QuerySelectorAll("button"),
-            b => b.TextContent.Trim() == "Invite");
-    }
 }
