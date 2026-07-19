@@ -105,6 +105,10 @@
             {
                 <span>@L["{0} notes", Result.Chart.NoteCount.Value.ToString("N0")]</span>
             }
+            @if (OfficialPlace != null)
+            {
+                <span class="srp-card-official">#@OfficialPlace.Value.ToString("N0") @L["official"]</span>
+            }
         </div>
     </div>
     @if (ShowMyState)
@@ -180,6 +184,10 @@
     [Parameter] public EventCallback<Guid> OnToggleFavorite { get; set; }
     [Parameter] public EventCallback<Guid> OnToggleToDo { get; set; }
     [Parameter] public EventCallback<ChartSearchResult> OnQuickRecord { get; set; }
+
+    /// <summary>The official mirror's popularity place — decoration, never a filter.</summary>
+    [Parameter]
+    public int? OfficialPlace { get; set; }
 
     // The owner-locked state-border language (tier lists §4): solid success = passed,
     // dashed info = To-Do, dashed success = passed in another mix; passed > To-Do > other.

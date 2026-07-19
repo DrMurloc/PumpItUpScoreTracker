@@ -5347,3 +5347,7 @@ button.chart-card-art {
     text-align: right;
     font-variant-numeric: tabular-nums;
 }
+
+.srp-card-official {
+    color: var(--mix-accent);
+}

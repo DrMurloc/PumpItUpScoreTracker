@@ -59,6 +59,9 @@ public sealed class ChartsPageTests : ComponentTestBase
             .ReturnsAsync(Array.Empty<string>());
         _mediator.Setup(m => m.Send(It.IsAny<GetSearchStepArtistsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<string>());
+        _mediator.Setup(m => m.Send(It.IsAny<ScoreTracker.OfficialMirror.Contracts.Queries.GetOfficialPopularityQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ScoreTracker.OfficialMirror.Contracts.OfficialPopularityRecord>());
         Services.AddSingleton(_mediator.Object);
         Services.AddScoped<ChartScoringLevels>();
         Services.AddSingleton(Mock.Of<IDateTimeOffsetAccessor>());
@@ -262,6 +265,28 @@ public sealed class ChartsPageTests : ComponentTestBase
             u.SetSetting("Charts__Display__StepArtist", true.ToString(), It.IsAny<CancellationToken>()), Times.Once));
         Assert.Equal(sendsBefore, _mediator.Invocations.Count(i =>
             i.Arguments.FirstOrDefault() is SearchChartsQuery));
+    }
+
+    [Fact]
+    public void OfficialPlacesDecorateCardsWithoutTouchingLegacyMixes()
+    {
+        var modern = MakeResult("District 1", 21);
+        var legacy = MakeResult("Turkey March", 6, MixEnum.Prex3);
+        _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChartSearchResultPage(new[] { modern, legacy }, 2));
+        _mediator.Setup(m => m.Send(It.Is<ScoreTracker.OfficialMirror.Contracts.Queries.GetOfficialPopularityQuery>(
+                    q => q.Mix == MixEnum.Phoenix), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ScoreTracker.OfficialMirror.Contracts.OfficialPopularityRecord(modern.Chart.Id, 213, null,
+                    Array.Empty<int>())
+            });
+
+        var cut = RenderComponent<Charts>();
+
+        cut.WaitForAssertion(() => Assert.Contains("#213 official", cut.Markup));
+        _mediator.Verify(m => m.Send(It.Is<ScoreTracker.OfficialMirror.Contracts.Queries.GetOfficialPopularityQuery>(
+            q => q.Mix == MixEnum.Prex3), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

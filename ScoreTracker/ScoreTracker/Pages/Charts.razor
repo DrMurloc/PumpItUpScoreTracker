@@ -6,6 +6,7 @@
 @using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
@@ -223,7 +224,8 @@ else
                                  IsToDo="_todoCharts.Contains(result.Chart.Id)"
                                  OnToggleFavorite="ToggleFavorite"
                                  OnToggleToDo="ToggleToDo"
-                                 OnQuickRecord="OpenQuickRecord"></ChartSearchCard>
+                                 OnQuickRecord="OpenQuickRecord"
+                                 OfficialPlace="OfficialPlace(result)"></ChartSearchCard>
             }
         </div>
     }
@@ -876,6 +878,29 @@ else
         }
 
         _isLoading = false;
+        await LoadOfficialPlaces();
+    }
+
+    // The official mirror's popularity places — display-only badges, fetched per modern
+    // mix once per circuit and never a filter (docs/design/charts-srp.md §2 Popularity).
+    private readonly Dictionary<MixEnum, IReadOnlyDictionary<Guid, int>> _officialPlaces = new();
+
+    private async Task LoadOfficialPlaces()
+    {
+        foreach (var mix in _results.Select(r => r.Chart.Mix).Distinct().Where(m => !m.UsesLegacyScoring()))
+        {
+            if (_officialPlaces.ContainsKey(mix)) continue;
+            _officialPlaces[mix] = (await Mediator.Send(new GetOfficialPopularityQuery(mix)))
+                .ToDictionary(p => p.ChartId, p => p.Place);
+        }
+    }
+
+    private int? OfficialPlace(ChartSearchResult result)
+    {
+        return _officialPlaces.TryGetValue(result.Chart.Mix, out var places) &&
+               places.TryGetValue(result.Chart.Id, out var place)
+            ? place
+            : null;
     }
 
     private async Task ApplyChange(bool resetPage = true)
