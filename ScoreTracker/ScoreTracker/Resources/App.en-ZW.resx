@@ -5412,4 +5412,10 @@
   <data name="Leave empty if broken." xml:space="preserve">
     <value>Leave emptrgl if brokrgn.</value>
   </data>
+  <data name="1 Player" xml:space="preserve">
+    <value>1 Playrgl</value>
+  </data>
+  <data name="{0} Players" xml:space="preserve">
+    <value>{0} Playrgls</value>
+  </data>
 </root>

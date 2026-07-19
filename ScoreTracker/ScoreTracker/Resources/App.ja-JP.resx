@@ -5486,4 +5486,10 @@
   <data name="Leave empty if broken." xml:space="preserve">
     <value>Break Off の場合は空欄のままにしてください。</value>
   </data>
+  <data name="1 Player" xml:space="preserve">
+    <value>1人</value>
+  </data>
+  <data name="{0} Players" xml:space="preserve">
+    <value>{0}人</value>
+  </data>
 </root>

@@ -65,7 +65,7 @@ else
                    style="background-image:url('@chart.Song.ImagePath')" aria-label="@chart.Song.Name"></a>
                 <span class="challenge-card-bubble"><DifficultyBubble Chart="chart" Small="true"></DifficultyBubble></span>
                 <button class="challenge-count-chip" data-challenge-board="@chart.Id" title="@L["Leaderboard"]">
-                    <span class="co">@summary.EntryCount</span><span class="cr">@summary.InRangeEntryCount</span>
+                    <span class="co">@PlayerCount(summary.EntryCount)</span><span class="cr">@PlayerCount(summary.InRangeEntryCount)</span>
                 </button>
                 <div class="challenge-card-body">
                     <a class="challenge-card-name" href="@chart.CanonicalPath()" data-challenge-chart="@chart.Id">@chart.Song.Name</a>
@@ -100,7 +100,7 @@ else
                     }
                 </div>
                 <div class="challenge-card-foot">
-                    <span class="count"><span class="co">@summary.EntryCount</span><span class="cr">@summary.InRangeEntryCount</span></span>
+                    <span class="count"><span class="co">@PlayerCount(summary.EntryCount)</span><span class="cr">@PlayerCount(summary.InRangeEntryCount)</span></span>
                     <span class="spacer"></span>
                     @if (IsLoggedIn)
                     {
@@ -152,6 +152,9 @@ else
 
     private bool IsCommunity(WeeklyBoardRow row) =>
         !IsMine(row) && CommunityUserIds?.Contains(row.Entry.UserId) == true;
+
+    // A bare number reads as noise; the count always names what it counts.
+    private string PlayerCount(int count) => count == 1 ? L["1 Player"] : L["{0} Players", count];
 
     /// <summary>
     ///     The union both worlds need: the overall top three, the in-range top three, and your

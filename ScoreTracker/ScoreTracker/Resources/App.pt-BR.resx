@@ -5357,4 +5357,10 @@
   <data name="Leave empty if broken." xml:space="preserve">
     <value>Deixe vazio se foi quebrada.</value>
   </data>
+  <data name="1 Player" xml:space="preserve">
+    <value>1 jogador</value>
+  </data>
+  <data name="{0} Players" xml:space="preserve">
+    <value>{0} jogadores</value>
+  </data>
 </root>
