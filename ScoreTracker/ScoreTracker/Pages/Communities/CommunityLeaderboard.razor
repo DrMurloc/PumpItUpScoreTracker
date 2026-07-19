@@ -68,8 +68,11 @@
                     </MudTd>
                     <MudTd>
                         <div style="display:flex;align-items:center;gap:8px">
-                            <MudImage Src="@context.ProfileImage.ToString()" Height="28" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-                            <UserLabel User="_users[context.UserId]"></UserLabel>
+                            <MudLink Style="cursor:pointer;display:flex;align-items:center;gap:8px" Underline="Underline.None"
+                                     Href="@($"/Community/Player?CommunityName={HttpUtility.UrlEncode(CommunityName)}&UserId={context.UserId}")">
+                                <MudImage Src="@context.ProfileImage.ToString()" Height="28" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                                <UserLabel User="_users[context.UserId]"></UserLabel>
+                            </MudLink>
                             @if (context.IsPublic)
                             {
                                 <MudTooltip Text="@L["Phoenix Recap"]">

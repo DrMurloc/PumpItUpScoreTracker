@@ -335,6 +335,15 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
         return entity == null ? null : ToPlayer(entity);
     }
 
+    public async Task<PlayerDimension?> GetPlayerByUserId(MixEnum mix, Guid userId, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        var entity = await database.Set<OfficialPlayerEntity>()
+            .FirstOrDefaultAsync(p => p.MixId == mixId && p.UserId == userId, ct);
+        return entity == null ? null : ToPlayer(entity);
+    }
+
     public async Task<IReadOnlyList<string>> GetPlayerNames(MixEnum mix, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);

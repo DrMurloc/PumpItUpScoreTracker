@@ -20,6 +20,7 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetWeeklyHighlightsQuery, WeeklyHighlightsRecord?>,
     IRequestHandler<GetOfficialRankingsQuery, OfficialRankingsRecord>,
     IRequestHandler<GetOfficialPlayerProfileQuery, OfficialPlayerProfileRecord?>,
+    IRequestHandler<GetOfficialPlayerStandingQuery, OfficialPlayerStandingRecord?>,
     IRequestHandler<GetOfficialPlayerNamesQuery, IReadOnlyList<string>>,
     IRequestHandler<GetOfficialPopularityQuery, IReadOnlyList<OfficialPopularityRecord>>,
     IRequestHandler<GetImportRunsQuery, IReadOnlyList<ImportRunRecord>>,
@@ -173,6 +174,18 @@ internal sealed class LeaderboardHubSaga :
         var ranks = new Dictionary<int, int>(ranked.Length);
         for (var i = 0; i < ranked.Length; i++) ranks[ranked[i].PlayerId] = i + 1;
         return ranks;
+    }
+
+    public async Task<OfficialPlayerStandingRecord?> Handle(GetOfficialPlayerStandingQuery request,
+        CancellationToken cancellationToken)
+    {
+        var player = await _snapshots.GetPlayerByUserId(request.Mix, request.UserId, cancellationToken);
+        if (player == null) return null;
+        var profile = await Handle(new GetOfficialPlayerProfileQuery(request.Mix, player.Username),
+            cancellationToken);
+        return profile == null
+            ? null
+            : new OfficialPlayerStandingRecord(player.Username, profile.PumbilityRank, profile.BoardsInTop);
     }
 
     public async Task<OfficialPlayerProfileRecord?> Handle(GetOfficialPlayerProfileQuery request,
