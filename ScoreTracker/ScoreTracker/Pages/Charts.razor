@@ -54,6 +54,10 @@
         }
     </MudText>
     <MudSpacer></MudSpacer>
+    <MudTooltip Text="@L["Export CSV"]">
+        <MudIconButton Icon="@Icons.Material.Filled.Download" OnClick="() => _exportOpen = true"
+                       aria-label="@L["Export CSV"]"></MudIconButton>
+    </MudTooltip>
     <MudTooltip Text="@L["Sort by"]">
         <MudMenu Icon="@Icons.Material.Filled.SwapVert" Dense="true" AriaLabel="@L["Sort by"]">
             @foreach (var sort in AvailableSorts)
@@ -102,6 +106,9 @@ else
         </div>
     }
 }
+
+<ChartsExportDialog @bind-Visible="_exportOpen" FilterParameters="QueryParameters()" TotalCount="_totalCount"
+                    Mix="_mix" AllMixes="_allMixes" SignedIn="CurrentUser.IsLoggedIn"></ChartsExportDialog>
 
 <MudLayout>
     <MudDrawer @bind-Open="_filtersOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="360px">
@@ -346,6 +353,7 @@ else
     private MixEnum _mix = MixEnum.Phoenix;
     private bool _allMixes;
     private bool _filtersOpen;
+    private bool _exportOpen;
     private bool _isLoading = true;
 
     private string? _songNameContains;
@@ -557,7 +565,14 @@ else
 
     private async Task PushUrl()
     {
-        var url = NavManager.GetUriWithQueryParameters("/Charts", new Dictionary<string, object?>
+        var url = NavManager.GetUriWithQueryParameters("/Charts", QueryParameters());
+        await Javascript.InvokeVoidAsync("history.pushState", null, "", url);
+    }
+
+    /// <summary>The page's query-string contract — also handed to the export dialog verbatim.</summary>
+    private Dictionary<string, object?> QueryParameters()
+    {
+        return new Dictionary<string, object?>
         {
             ["Song"] = string.IsNullOrWhiteSpace(_songNameContains) ? null : _songNameContains,
             ["LevelMin"] = _levelMin,
@@ -601,8 +616,7 @@ else
                 : _sortDescending ? "desc" : "asc",
             ["Scope"] = _allMixes ? "all" : null,
             ["Page"] = _pageNumber <= 1 ? null : _pageNumber
-        });
-        await Javascript.InvokeVoidAsync("history.pushState", null, "", url);
+        };
     }
 
     private static string? Csv<T>(IReadOnlyCollection<T> values)

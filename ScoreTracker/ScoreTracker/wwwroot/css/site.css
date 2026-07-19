@@ -5276,3 +5276,32 @@ button.chart-card-art {
 .srp-card-stepartist {
     color: var(--mix-ink-muted);
 }
+
+/* SRP export dialog */
+.srp-export {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.srp-export-count {
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-export-columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.srp-export-hint {
+    color: var(--mix-ink-muted);
+}
+
+.srp-export-file {
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    border-top: 1px solid var(--mix-surface-muted);
+    padding-top: 8px;
+}

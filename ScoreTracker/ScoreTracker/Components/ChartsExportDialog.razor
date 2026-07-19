@@ -1,0 +1,163 @@
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@namespace ScoreTracker.Web.Components
+@inject IUiSettingsAccessor UiSettings
+@inject NavigationManager NavManager
+
+@* The export dialog (docs/design/charts-srp.md §2 Export): full column freedom lives
+   HERE, not on the page. Downloads the entire filtered set via the CSV endpoint, which
+   reuses the page's own query-string contract. *@
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Export charts"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <div class="srp-export">
+            <MudText Typo="Typo.body2" Class="srp-export-count">@L["{0} charts · current filters", TotalCount.ToString("N0")]</MudText>
+            <MudText Typo="Typo.overline">@L["Shape"]</MudText>
+            <MudButtonGroup OverrideStyles="false">
+                <MudButton Variant="@(_shape == ChartExportShape.Grouped ? Variant.Filled : Variant.Outlined)"
+                           Color="@(_shape == ChartExportShape.Grouped ? Color.Primary : Color.Default)"
+                           OnClick="() => SetShape(ChartExportShape.Grouped)">@L["Group by chart"]</MudButton>
+                <MudButton Variant="@(_shape == ChartExportShape.PerMix ? Variant.Filled : Variant.Outlined)"
+                           Color="@(_shape == ChartExportShape.PerMix ? Color.Primary : Color.Default)"
+                           OnClick="() => SetShape(ChartExportShape.PerMix)">@L["One row per chart and mix"]</MudButton>
+            </MudButtonGroup>
+            <MudText Typo="Typo.caption" Class="srp-export-hint">@L["Grouped: one row per chart, level history collapsed. Per-mix: every appearance is its own row. Identical while scope is a single mix."]</MudText>
+
+            @foreach (var (group, keys) in Groups)
+            {
+                if (group == "My columns" && !SignedIn) continue;
+                <MudText Typo="Typo.overline">@L[group]</MudText>
+                <div class="srp-export-columns">
+                    @foreach (var key in keys)
+                    {
+                        var captured = key;
+                        var selected = _columns.Contains(captured);
+                        <span class="srp-badge-opt tier-chart-card-skill @(selected ? "srp-badge-opt-sel" : "")"
+                              role="button" tabindex="0" @onclick="() => ToggleColumn(captured)">
+                            @(selected ? "✓ " : string.Empty)@L[ColumnLabel(captured)]
+                        </span>
+                    }
+                </div>
+            }
+            <MudText Typo="Typo.caption" Class="srp-export-file">@FileName · @L["{0} columns", _columns.Count]</MudText>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="() => VisibleChanged.InvokeAsync(false)">@L["Close"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
+                   Href="@ExportUrl" Target="_top" Disabled="_columns.Count == 0">@L["Download CSV"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private const string ColumnsSettingKey = "Charts__Export__Columns";
+    private const string ShapeSettingKey = "Charts__Export__Shape";
+
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public IReadOnlyDictionary<string, object?> FilterParameters { get; set; } = new Dictionary<string, object?>();
+    [Parameter] public int TotalCount { get; set; }
+    [Parameter] public MixEnum Mix { get; set; }
+    [Parameter] public bool AllMixes { get; set; }
+    [Parameter] public bool SignedIn { get; set; }
+
+    private ChartExportShape _shape = ChartExportShape.Grouped;
+    private HashSet<string> _columns = new(ChartExport.DefaultColumns, StringComparer.OrdinalIgnoreCase);
+
+    private static readonly (string Group, string[] Keys)[] Groups =
+    {
+        ("Chart columns", new[]
+        {
+            "Song", "Artist", "StepArtist", "Type", "Level", "Mix", "Mixes", "DebutMix", "LatestMix",
+            "LevelChange", "LegacyDifficulty", "SongType", "BPM", "DurationSeconds", "NoteCount", "NPS", "Badges"
+        }),
+        ("Community columns", new[]
+        {
+            "PassDifficulty", "ScoreDifficulty", "CommunityVote", "ScoringLevel", "CommunityVoteRating",
+            "PassRatePercent", "ScoreCount", "PgCount"
+        }),
+        ("My columns", new[]
+        {
+            "MyPhoenixScore", "MyPhoenixGrade", "MyPhoenixPlate", "MyLegacyGrade", "MyLegacyScore",
+            "MyBroken", "MyRecordedOn"
+        })
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var savedColumns = await UiSettings.GetSetting(ColumnsSettingKey);
+        if (!string.IsNullOrWhiteSpace(savedColumns))
+            _columns = savedColumns.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (Enum.TryParse<ChartExportShape>(await UiSettings.GetSetting(ShapeSettingKey), out var shape))
+            _shape = shape;
+    }
+
+    private async Task ToggleColumn(string key)
+    {
+        if (!_columns.Remove(key)) _columns.Add(key);
+        await UiSettings.SetSetting(ColumnsSettingKey, string.Join(',', _columns));
+    }
+
+    private async Task SetShape(ChartExportShape shape)
+    {
+        _shape = shape;
+        await UiSettings.SetSetting(ShapeSettingKey, shape.ToString());
+    }
+
+    private string FileName => $"charts_{(AllMixes ? "all-mixes" : ChartSlugs.MixSlug(Mix))}.csv";
+
+    private string ExportUrl
+    {
+        get
+        {
+            var parameters = new Dictionary<string, object?>(FilterParameters)
+            {
+                ["Mix"] = Mix.ToString(),
+                ["Columns"] = string.Join(',', OrderedColumns),
+                ["Shape"] = _shape.ToString(),
+                ["Page"] = null
+            };
+            return NavManager.GetUriWithQueryParameters(NavManager.ToAbsoluteUri("/Charts/Export.csv").ToString(),
+                parameters);
+        }
+    }
+
+    /// <summary>Registry order, so the file's column order is stable regardless of click order.</summary>
+    private IEnumerable<string> OrderedColumns =>
+        ChartExport.Columns.Where(c => _columns.Contains(c.Key)).Select(c => c.Key);
+
+    internal static string ColumnLabel(string key)
+    {
+        return key switch
+        {
+            "StepArtist" => "Step Artist",
+            "DebutMix" => "Debut mix",
+            "LatestMix" => "Latest mix",
+            "LevelChange" => "Level change",
+            "LegacyDifficulty" => "Legacy Difficulty",
+            "SongType" => "Song Type",
+            "DurationSeconds" => "Duration (seconds)",
+            "NoteCount" => "Note count",
+            "PassDifficulty" => "Pass Difficulty",
+            "ScoreDifficulty" => "Score Difficulty",
+            "CommunityVote" => "Community Vote",
+            "ScoringLevel" => "Scoring level",
+            "CommunityVoteRating" => "Community Vote rating",
+            "PassRatePercent" => "Pass rate",
+            "ScoreCount" => "Score count",
+            "PgCount" => "PG count",
+            "MyPhoenixScore" => "My Phoenix score",
+            "MyPhoenixGrade" => "My Phoenix grade",
+            "MyPhoenixPlate" => "My Phoenix plate",
+            "MyLegacyGrade" => "My legacy grade",
+            "MyLegacyScore" => "My legacy score",
+            "MyBroken" => "My broken flag",
+            "MyRecordedOn" => "My recorded date",
+            _ => key
+        };
+    }
+}
