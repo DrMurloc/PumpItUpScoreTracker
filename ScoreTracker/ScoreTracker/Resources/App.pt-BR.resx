@@ -5354,4 +5354,7 @@
   <data name="Week {0} — best {1} count · raw score" xml:space="preserve">
     <value>Semana {0} — contam as {1} melhores · pontuação bruta</value>
   </data>
+  <data name="Leave empty if broken." xml:space="preserve">
+    <value>Deixe vazio se foi quebrada.</value>
+  </data>
 </root>

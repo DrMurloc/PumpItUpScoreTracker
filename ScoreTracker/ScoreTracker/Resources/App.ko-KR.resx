@@ -5364,4 +5364,7 @@
   <data name="Week {0} — best {1} count · raw score" xml:space="preserve">
     <value>{0}주차 — 상위 {1}개 반영 · 원점수</value>
   </data>
+  <data name="Leave empty if broken." xml:space="preserve">
+    <value>브레이크 오프면 비워 두세요.</value>
+  </data>
 </root>

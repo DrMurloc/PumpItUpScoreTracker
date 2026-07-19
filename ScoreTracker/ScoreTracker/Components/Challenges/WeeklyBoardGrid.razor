@@ -71,14 +71,25 @@ else
                     <a class="challenge-card-name" href="@chart.CanonicalPath()" data-challenge-chart="@chart.Id">@chart.Song.Name</a>
                     @foreach (var row in MergedTop(summary))
                     {
-                        <div class="challenge-card-line @WorldClasses(row) @(IsMine(row) ? "mine" : "")"
+                        <div class="challenge-card-line @WorldClasses(row) @(IsMine(row) ? "mine" : "") @(IsCommunity(row) ? "community" : "")"
                              data-inrange="@row.WasWithinRange.ToString().ToLowerInvariant()">
-                            <span class="challenge-lb-place co"
-                                  style="@ThemeScales.RarityStyle(Fraction(summary.EntryCount, row.Place))">@row.Place</span>
-                            <span class="challenge-lb-place cr"
-                                  style="@ThemeScales.RarityStyle(Fraction(summary.InRangeEntryCount, row.InRangePlace ?? 0))">@(row.InRangePlace?.ToString() ?? "—")</span>
+                            <span class="challenge-lb-place co">#@row.Place</span>
+                            <span class="challenge-lb-place cr">@(row.InRangePlace is { } p ? $"#{p}" : "—")</span>
                             <ChallengeAvatar Player="row.Player"></ChallengeAvatar>
-                            <span class="who">@(IsMine(row) ? L["you"] : row.Player?.Name.ToString() ?? "—")</span>
+                            <span class="who">
+                                @if (IsMine(row))
+                                {
+                                    @L["you"]
+                                }
+                                else if (row.Player != null)
+                                {
+                                    <UserLabel User="row.Player"></UserLabel>
+                                }
+                                else
+                                {
+                                    @("—")
+                                }
+                            </span>
                             <span class="score"><ScoreBreakdown Score="row.Entry.Score" Plate="row.Entry.Plate"
                                                                 IsBroken="row.Entry.IsBroken" OneLine="true" ShowScore="true" Height="15"></ScoreBreakdown></span>
                         </div>
@@ -132,12 +143,15 @@ else
     /// <summary>Localized "N charts · rotates …" subtitle, built by the page.</summary>
     [Parameter] public string Rotation { get; set; } = string.Empty;
 
+    /// <summary>User ids in a community you share — their rows glow green.</summary>
+    [Parameter] public IReadOnlySet<Guid>? CommunityUserIds { get; set; }
+
     private const int TopCount = 3;
 
     private bool IsMine(WeeklyBoardRow row) => UserId != null && row.Entry.UserId == UserId;
 
-    private static double Fraction(int total, int place) =>
-        total <= 0 || place <= 0 ? 0 : 1.0 - (double)place / total;
+    private bool IsCommunity(WeeklyBoardRow row) =>
+        !IsMine(row) && CommunityUserIds?.Contains(row.Entry.UserId) == true;
 
     /// <summary>
     ///     The union both worlds need: the overall top three, the in-range top three, and your

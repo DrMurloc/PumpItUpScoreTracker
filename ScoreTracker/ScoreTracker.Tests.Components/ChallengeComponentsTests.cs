@@ -267,8 +267,8 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
         var real = lines.First(l => l.TextContent.Contains("REAL"));
         Assert.Contains("w-o", real.GetAttribute("class"));
         Assert.Contains("w-r", real.GetAttribute("class"));
-        Assert.Equal("2", real.QuerySelector(".challenge-lb-place.co")!.TextContent.Trim());
-        Assert.Equal("1", real.QuerySelector(".challenge-lb-place.cr")!.TextContent.Trim());
+        Assert.Equal("#2", real.QuerySelector(".challenge-lb-place.co")!.TextContent.Trim());
+        Assert.Equal("#1", real.QuerySelector(".challenge-lb-place.cr")!.TextContent.Trim());
         // Rows carry avatars now (M16 vocabulary on the cards too).
         Assert.Equal(3, cut.FindAll(".challenge-card-line img.challenge-avatar").Count);
         // The footer wears the widget icon pair (M15) — board trophy for the anonymous view.

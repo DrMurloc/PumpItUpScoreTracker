@@ -5409,4 +5409,7 @@
   <data name="Week {0} — best {1} count · raw score" xml:space="preserve">
     <value>Week {0} — best {1} count · raw scrgl</value>
   </data>
+  <data name="Leave empty if broken." xml:space="preserve">
+    <value>Leave emptrgl if brokrgn.</value>
+  </data>
 </root>

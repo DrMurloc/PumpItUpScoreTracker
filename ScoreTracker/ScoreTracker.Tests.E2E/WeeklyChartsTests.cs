@@ -135,7 +135,7 @@ public sealed class WeeklyChartsTests : IAsyncLifetime
         await Expect(sandbagRow).Not.ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 10_000 });
         var inBandRow = _page.Locator(".challenge-card-line[data-inrange=\"true\"]:visible").First;
         await Expect(inBandRow).ToContainTextAsync("970,000");
-        await Expect(inBandRow.Locator(".challenge-lb-place.cr")).ToHaveTextAsync("1");
+        await Expect(inBandRow.Locator(".challenge-lb-place.cr")).ToHaveTextAsync("#1");
 
         // The preference persisted: a fresh document load renders the filtered world.
         await _page.ReloadAsync();

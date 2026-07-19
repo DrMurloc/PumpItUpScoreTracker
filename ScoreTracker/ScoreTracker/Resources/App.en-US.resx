@@ -5477,4 +5477,7 @@
   <data name="Week {0} — best {1} count · raw score" xml:space="preserve">
     <value>Week {0} — best {1} count · raw score</value>
   </data>
+  <data name="Leave empty if broken." xml:space="preserve">
+    <value>Leave empty if broken.</value>
+  </data>
 </root>

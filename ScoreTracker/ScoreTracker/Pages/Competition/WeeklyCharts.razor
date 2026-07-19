@@ -45,18 +45,10 @@ else
 {
     <div class="challenge-head">
         <h1>@L["Weekly Charts"]</h1>
-        @if (_isLoggedIn && _board.IsLive)
+        @if (_isLoggedIn && _board.IsLive && _monthlyPlace != null)
         {
             <div class="challenge-yourweek">
-                <span class="challenge-chip">@L["Played"] <b>@_playedCount</b>/@_board.Charts.Count</span>
-                @if (_suggestedLeft > 0)
-                {
-                    <span class="challenge-chip"><b>@_suggestedLeft</b> @L["suggested left"]</span>
-                }
-                @if (_monthlyPlace != null)
-                {
-                    <span class="challenge-chip">@L["Monthly"] <b>#@_monthlyPlace</b></span>
-                }
+                <span class="challenge-chip">@L["Monthly"] <b>#@_monthlyPlace</b></span>
             </div>
         }
         <div class="challenge-controls">
@@ -71,28 +63,6 @@ else
                     }
                 </div>
             </details>
-            @if (_isLoggedIn && _myCommunities.Any())
-            {
-                <details class="challenge-picker">
-                    <summary>@L["Communities"]@(_selectedCommunities.Any() ? $": {_selectedCommunities.Count}" : "")</summary>
-                    <div class="challenge-picker-menu">
-                        <form method="get" action="/WeeklyCharts">
-                            @if (_weekStart != null)
-                            {
-                                <input type="hidden" name="week" value="@Week"/>
-                            }
-                            @foreach (var name in _myCommunities)
-                            {
-                                <label>
-                                    <input type="checkbox" name="communities" value="@name"
-                                           checked="@_selectedCommunities.Contains(name)"/> @name
-                                </label>
-                            }
-                            <button type="submit" class="challenge-picker-apply">@L["Apply"]</button>
-                        </form>
-                    </div>
-                </details>
-            }
         </div>
     </div>
 
@@ -101,13 +71,16 @@ else
        change the grid and the monthly window, not the day. ── *@
     <div class="challenge-layout">
         <div class="challenge-rail">
-            <DailyStepRailCard View="_daily" Chart="_dailyChart" ResetsIn="_dailyResetsIn"
-                               IsLoggedIn="_isLoggedIn" UserId="_userId"></DailyStepRailCard>
-            <MonthlyRailCard Boards="_monthlyBoards" ActiveType="_type" UserId="_userId"></MonthlyRailCard>
+            <DailyStepRailCard View="_daily" Chart="_dailyChart" ResetsIn="@_dailyResetsIn"
+                               IsLoggedIn="_isLoggedIn" UserId="_userId"
+                               CommunityUserIds="_communityIds"></DailyStepRailCard>
+            <MonthlyRailCard Boards="_monthlyBoards" ActiveType="_type" UserId="_userId"
+                             CommunityUserIds="_communityIds"></MonthlyRailCard>
         </div>
         <section id="weekly" class="challenge-main">
             <WeeklyBoardGrid Summaries="_board.Charts" Charts="_charts" Density="_density"
                              IsLoggedIn="_isLoggedIn" UserId="_userId"
+                             CommunityUserIds="_communityIds"
                              ShowingSuggestedOnly="_showingSuggestedOnly"
                              SuggestionsAvailable="_board.SuggestionsAvailable"
                              RelevantOnly="_relevantOnly" PoolHref="/WeeklyCharts?pool=1"
@@ -137,13 +110,17 @@ else
         </section>
     }
 
-    @* ── Scoring legend ── *@
-    <section id="legend" class="challenge-section">
-        <div class="challenge-sect-head">
-            <h2>@L["How Scoring Works"]</h2>
-        </div>
-        <ChallengeScoringLegend Mix="_mix"></ChallengeScoringLegend>
-    </section>
+    @* ── Scoring legend — Phoenix only: its boards price with a back-ported PUMBILITY that
+       needs explaining; Phoenix 2 uses the game's own formula, nothing to footnote. ── *@
+    @if (_mix == MixEnum.Phoenix)
+    {
+        <section id="legend" class="challenge-section">
+            <div class="challenge-sect-head">
+                <h2>@L["How Scoring Works"]</h2>
+            </div>
+            <ChallengeScoringLegend Mix="_mix"></ChallengeScoringLegend>
+        </section>
+    }
 
     @if (_isAdmin && _board.IsLive)
     {
@@ -174,6 +151,7 @@ else
 @inject IUiSettingsAccessor UiSettings
 @inject IDateTimeOffsetAccessor Clock
 @inject ChartCatalogCache ChartCatalog
+@inject CommunityGlowReader CommunityGlow
 @inject NavigationManager NavManager
 
 @code {
@@ -181,7 +159,6 @@ else
     [SupplyParameterFromQuery] public string? Type { get; set; }
     [SupplyParameterFromQuery] public string? Suggested { get; set; }
     [SupplyParameterFromQuery] public string? Pool { get; set; }
-    [SupplyParameterFromQuery(Name = "communities")] public string[]? Communities { get; set; }
 
     private const string DensityKey = "Density__WeeklyCharts";
     private const string RelevantKey = "WeeklyCharts__RelevantPlayers";
@@ -197,8 +174,7 @@ else
     private DateTimeOffset? _weekStart;
     private ChartType? _type;
 
-    private string[] _myCommunities = Array.Empty<string>();
-    private HashSet<string> _selectedCommunities = new();
+    private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
 
     private WeeklyBoardView _board = new(Array.Empty<WeeklyBoardChartSummary>(), true, false);
     private IReadOnlyList<MonthlyRailBoard> _monthlyBoards = Array.Empty<MonthlyRailBoard>();
@@ -212,8 +188,6 @@ else
     private bool _showingSuggestedOnly;
     private bool _relevantOnly;
 
-    private int _playedCount;
-    private int _suggestedLeft;
     private int? _monthlyPlace;
     private string? _dailyResetsIn;
     private string _rotationText = string.Empty;
@@ -245,25 +219,11 @@ else
             _type = t;
         }
 
-        List<Guid>? onlyUserIds = null;
         if (_isLoggedIn)
         {
-            _myCommunities = (await Mediator.Send(new GetMyCommunitiesQuery()))
-                .Select(c => c.CommunityName.ToString())
-                .Where(n => n != "World")
-                .OrderBy(n => n)
-                .ToArray();
-            if (Communities is { Length: > 0 })
-            {
-                _selectedCommunities = Communities.Where(_myCommunities.Contains).ToHashSet();
-                if (_selectedCommunities.Any())
-                {
-                    var ids = new HashSet<Guid>();
-                    foreach (var name in _selectedCommunities)
-                        ids.UnionWith((await Mediator.Send(new GetCommunityQuery(Name.From(name)))).MemberIds);
-                    onlyUserIds = ids.ToList();
-                }
-            }
+            // The community filter died at field-test round 1 — shared-community rows glow
+            // green in place instead (the homepage widgets' treatment).
+            _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
 
             var density = await UiSettings.GetSetting(DensityKey);
             if (Enum.TryParse<UiDensity>(density, out var d)) _density = d;
@@ -279,7 +239,7 @@ else
             return;
         }
 
-        _board = await Mediator.Send(new GetWeeklyBoardQuery(_mix, _weekStart, _userId, onlyUserIds));
+        _board = await Mediator.Send(new GetWeeklyBoardQuery(_mix, _weekStart, _userId));
         if (_isLoggedIn)
             _relevantOnly = await UiSettings.GetSetting(RelevantKey) == "true";
 
@@ -288,7 +248,7 @@ else
         var monthlyViews = new List<MonthlyRailBoard>();
         foreach (var type in monthlyTypes)
             monthlyViews.Add(new MonthlyRailBoard(type,
-                await Mediator.Send(new GetMonthlyLeaderboardQuery(_mix, _weekStart, type, onlyUserIds))));
+                await Mediator.Send(new GetMonthlyLeaderboardQuery(_mix, _weekStart, type))));
         _monthlyBoards = monthlyViews;
         _monthly = monthlyViews.First(b => b.Type == _type).View;
 
@@ -316,8 +276,6 @@ else
         var showAll = Suggested == "all" || !_board.SuggestionsAvailable || !_isLoggedIn;
         _showingSuggestedOnly = !showAll;
 
-        _playedCount = _board.Charts.Count(c => c.MyRow != null);
-        _suggestedLeft = _board.Charts.Count(c => c.IsSuggested && c.MyRow == null);
         _monthlyPlace = _monthly.Rows.FirstOrDefault(r => r.Player?.Id == _userId)?.Place;
 
         _rotationText = _board.IsLive

@@ -51,7 +51,7 @@
                 <tbody>
                 @foreach (var row in View.Rows)
                 {
-                    <tr class="@(row.Player?.Id == UserId ? "mine" : "")">
+                    <tr class="@(row.Player?.Id == UserId ? "mine" : CommunityUserIds?.Contains(row.Player?.Id ?? Guid.Empty) == true ? "community" : "")">
                         <td class="challenge-mono-place" style="@ThemeScales.RarityStyle(Fraction(row.Place))">@row.Place</td>
                         <td>
                             <span class="challenge-mrow-who">
@@ -107,6 +107,10 @@
     [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
     [Parameter] public ChartType? ActiveType { get; set; }
     [Parameter] public Guid? UserId { get; set; }
+
+    /// <summary>User ids in a community you share — their rows glow green.</summary>
+    [Parameter] public IReadOnlySet<Guid>? CommunityUserIds { get; set; }
+
     [Parameter] public bool Loading { get; set; }
     [Parameter] public string Subtitle { get; set; } = string.Empty;
 

@@ -13,4 +13,4 @@ namespace ScoreTracker.WeeklyChallenge.Contracts.Commands;
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record RecordDailyStepScoreCommand(PhoenixScore Score, PhoenixPlate Plate,
-    MixEnum Mix = MixEnum.Phoenix) : IRequest;
+    MixEnum Mix = MixEnum.Phoenix, bool IsBroken = false) : IRequest;

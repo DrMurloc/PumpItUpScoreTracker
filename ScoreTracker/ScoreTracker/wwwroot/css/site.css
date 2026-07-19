@@ -5245,7 +5245,7 @@ button.chart-card-art {
 
 .challenge-card-line {
     display: grid;
-    grid-template-columns: 18px 20px minmax(0, 1fr) auto;
+    grid-template-columns: 26px 20px minmax(0, 1fr) auto;
     gap: 7px;
     align-items: center;
     font-size: 12.2px;
@@ -5759,6 +5759,69 @@ button.chart-card-art {
 .challenge-switch input:focus-visible + i {
     outline: 2px solid var(--mix-primary);
     outline-offset: 1px;
+}
+
+/* ── Field-test round 1 ── */
+
+/* The show-all/show-suggested toggles are actions, not text. */
+.challenge-filter-note a {
+    cursor: pointer;
+}
+
+/* Grade art and the score numeral center on one line and never wrap mid-row. */
+.challenge-card-line .score,
+.challenge-lb-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+    justify-self: end;
+}
+
+.challenge-card-line .score .mud-typography,
+.challenge-lb-score .mud-typography {
+    vertical-align: baseline !important;
+}
+
+/* Card mini-boards rank with a literal #N — one quiet color, no rarity ramp (the colored
+   1s read as meaning; the ramp stays on the big boards where percentile is real). */
+.challenge-card-line .challenge-lb-place {
+    color: var(--mix-ink-muted);
+    font-size: 11px;
+    text-align: right;
+}
+
+.challenge-card-line.mine .challenge-lb-place {
+    color: var(--mix-ink);
+}
+
+/* Shared-community rows glow green (the homepage widgets' treatment), you glow blue. */
+.challenge-lb-row.community,
+.challenge-card-line.community {
+    background: color-mix(in srgb, var(--rarity-emerald) 13%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rarity-emerald) 60%, transparent);
+}
+
+.challenge-monthly tr.community td {
+    background: color-mix(in srgb, var(--rarity-emerald) 10%, transparent);
+}
+
+/* UserLabel inside board rows: flag + name on one truncating line. */
+.challenge-lb-name,
+.challenge-card-line .who {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Record dialog: score, live grade, and plate share a row; stacked again on narrow phones. */
+.challenge-record-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
 }
 
 .challenge-iconbtn.rec:hover {

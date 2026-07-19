@@ -51,7 +51,8 @@
     {
         if (User?.Country != null)
         {
-            _countryImage = (await Users.GetCountryImage(User.Country.Value)).ToString();
+            // The port is nullable — a country without a flag image just renders no flag.
+            _countryImage = (await Users.GetCountryImage(User.Country.Value))?.ToString() ?? string.Empty;
         }
     }
 

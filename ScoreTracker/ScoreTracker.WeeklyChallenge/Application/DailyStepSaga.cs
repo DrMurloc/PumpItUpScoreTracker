@@ -145,14 +145,14 @@ internal sealed class DailyStepSaga(
     }
 
     // A manual submission from the widget's Record popover: daily-board-only (never the ledger, so a
-    // deliberate Limbo low never pollutes a PB), stamped Manual. The caller is resolved server-side
-    // and the score always counts as a pass — a selected plate implies completion.
+    // deliberate Limbo low never pollutes a PB), stamped Manual. The caller is resolved
+    // server-side; an empty plate in the dialog records the run as broken.
     public async Task Handle(RecordDailyStepScoreCommand request, CancellationToken cancellationToken)
     {
         var board = await dailySteps.GetCurrentChart(request.Mix, cancellationToken);
         if (board == null) return;
-        await UpsertEntry(request.Mix, board, currentUser.User.Id, request.Score, request.Plate, false,
-            ChallengeEntrySource.Manual, cancellationToken);
+        await UpsertEntry(request.Mix, board, currentUser.User.Id, request.Score, request.Plate,
+            request.IsBroken, ChallengeEntrySource.Manual, cancellationToken);
     }
 
     // The single intake seam for both sources: keep the board-appropriate extreme — lowest passing on

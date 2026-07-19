@@ -5483,4 +5483,7 @@
   <data name="Week {0} — best {1} count · raw score" xml:space="preserve">
     <value>第{0}週 — 上位{1}件が対象 · 素点</value>
   </data>
+  <data name="Leave empty if broken." xml:space="preserve">
+    <value>Break Off の場合は空欄のままにしてください。</value>
+  </data>
 </root>

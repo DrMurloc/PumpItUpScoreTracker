@@ -1,6 +1,7 @@
 @namespace ScoreTracker.Web.Components.Challenges
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.WeeklyChallenge.Contracts
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
@@ -75,6 +76,9 @@
 
     [Parameter] public Guid? UserId { get; set; }
 
+    /// <summary>User ids in a community you share — their rows glow green.</summary>
+    [Parameter] public IReadOnlySet<Guid>? CommunityUserIds { get; set; }
+
     private static bool TypesEqual(ChartType? a, ChartType? b) => a == b;
 
     internal static string TypeKey(ChartType? type) => type?.ToString() ?? "Combined";
@@ -93,10 +97,22 @@
 
     private static double Fraction(int place, int total) => total <= 0 ? 0 : 1.0 - (double)place / total;
 
-    private RenderFragment LbRow(MonthlyLeaderboardRow row, int total) =>@<div class="challenge-lb-row @(UserId != null && row.Player?.Id == UserId ? "mine" : "")">
+    private string RowClass(MonthlyLeaderboardRow row) => UserId != null && row.Player?.Id == UserId ? "mine"
+        : CommunityUserIds?.Contains(row.Player?.Id ?? Guid.Empty) == true ? "community" : "";
+
+    private RenderFragment LbRow(MonthlyLeaderboardRow row, int total) =>@<div class="challenge-lb-row @RowClass(row)">
         <span class="challenge-lb-place" style="@ThemeScales.RarityStyle(Fraction(row.Place, total))">@row.Place</span>
         <ChallengeAvatar Player="row.Player"></ChallengeAvatar>
-        <span class="challenge-lb-name">@(row.Player?.Name.ToString() ?? "—")</span>
+        <span class="challenge-lb-name">
+            @if (row.Player != null)
+            {
+                <UserLabel User="row.Player"></UserLabel>
+            }
+            else
+            {
+                @("—")
+            }
+        </span>
         @if (row.CompetitiveLevel > 0)
         {
             <span class="challenge-cl">@row.CompetitiveLevel.ToString("N2")</span>
