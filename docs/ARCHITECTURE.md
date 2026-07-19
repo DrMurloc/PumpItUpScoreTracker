@@ -47,7 +47,7 @@ Every external boundary is crossed through a **port defined in the domain** (`I*
 ### DDD, pragmatically
 
 - **Value types validate at construction**: immutable structs/records with `static From(...)` factories that throw domain exceptions on invalid input. There is no such thing as an invalid `PhoenixScore` in flight.
-- **Rich models where invariants demand it** (e.g. `TournamentSession` enforces its approval workflow); **lean property-bag records** where they don't (`User`, `Song`, `Chart`). Rigor is spent where rules are dense.
+- **Rich models where invariants demand it** (`TournamentSession` enforces its approval workflow; `Community` enforces its role/permission rules — promotion delegation, single-seat creator transfer, ban retention — so community authorization lives in the aggregate, not in handlers); **lean property-bag records** where they don't (`User`, `Song`, `Chart`). Rigor is spent where rules are dense.
 - **Message taxonomy is explicit**: *queries* (`IQuery<T>`, read-only, never on the bus), *commands* (imperative requests — MediatR for in-process, plain records on the bus for triggers), *events* (past-tense facts on the bus). Folder + name + interface tell you which is which, and architecture tests enforce it.
 - **A "Saga" here is a feature-grouped handler class** (one bus consumer plus related request handlers sharing dependencies) — not a state machine.
 
@@ -132,7 +132,7 @@ Every vertical's model contribution must be listed in [`VerticalModelContributio
 | `TierLists/` | `/TierLists` (+ `/TierLists/{type}/{level}`, the consolidated tier-list page — the site's most-used feature) and `/TierLists/{type}/{level}/Breakdown` (the Personalized Breakdown: what goes into your personalized blend and which charts it moves — see [docs/design/personalized-breakdown.md](design/personalized-breakdown.md)) |
 | `Progress/` | `/Progress`, `/Phoenix/Progress`, `/Pumbility`, `/Titles`, `/CompetitiveLevel`, `/Player/{id}/Sessions` (public session roundups + score journal — the Discord score card's link target), `/Player/{id}/PhoenixRecap` (the season-recap slide deck, admin-computed — see [docs/design/phoenix-season-recap.md](design/phoenix-season-recap.md)) |
 | `Competition/` | `/Tournaments`, stamina + match tournament flows, qualifiers submission, `/WeeklyCharts`, `/UcsLeaderboards`, `/ScoreRankings`, `/Completion` |
-| `Communities/` | `/Communities`, invite links, community leaderboards |
+| `Communities/` | `/Communities` (directory: World card + Regions rail + player-community field), `/Community/Leaderboard` (Rankings · By Chart · Members tabs), `/Community/Members` (roles/permissions management), `/Community/Player` (member summary + folder compare), `/Communities/Invite/{code}` (landing + private-profile consent) — [communities-overhaul.md](design/communities-overhaul.md) |
 | `OfficialLeaderboards/` | the Official Leaderboards section — five routed pages sharing the `OfficialSectionFrame` chrome: `/OfficialLeaderboards` (This Week highlights), `/OfficialLeaderboards/Rankings` (PUMBILITY/computed boards incl. the CO-OP estimate; `/PlayerRankings` aliases here), `/Players` (`?player=` deep links), `/Popularity`, `/WhatItTakes` — [official-leaderboards-overhaul.md](design/official-leaderboards-overhaul.md) |
 | `Tools/` | calculators (`/LifeCalculator`, `/PhoenixCalculator`, rating/conversion), `/ChartRandomizer`, `/ChartCompare`, `/StepArtists` |
 | `Experiments/` | stats playground: `/GameStats`, score distributions, letter-difficulty data |

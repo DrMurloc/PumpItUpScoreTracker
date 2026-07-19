@@ -1,6 +1,7 @@
 # Communities Overhaul
 
-Status: **design / workshop** (mock at iteration 1, approved for build planning). No PR yet.
+Status: **built** (commits 1–8 landed on the feature branch; localization sweep rides the same
+branch). Build deviations from the original plan are listed in §9.
 
 Makeover of the Communities feature: declutter the directory, formalize **roles &
 permissions** for user communities, give **regional/World** communities their own visual
@@ -309,3 +310,27 @@ once 3 is in.
 `docs/DATABASE-SCHEMA.md` (membership/community columns), `docs/ARCHITECTURE.md` (Communities
 aggregate + new ports, if structural), this file, and — only if deferred work lands —
 `docs/SCHEDULED-JOBS.md`.
+
+## 9. As built — deviations from the plan
+
+- **Commit 9 (Discord language fallback) deferred to the Discord-overhaul branch.** This branch
+  has no localization machinery in the Discord card path — `CommunitySaga` formats raw strings.
+  Per-channel language and localized cards live on the open Discord-integration PR; wiring
+  `Community.DefaultLanguage` into that PR's resolution chain (channel language → community
+  default → English) is a one-line change **there**. Storage + the creator setting shipped here.
+- **No new E2E for the invite flow.** The UI granularity ladder wins over §7's original "one
+  E2E": every branch (preview states, both consent paths, banned) is pinned at bUnit level and
+  the preview/join logic at application level.
+- **Invite-link creation is now permission-gated** (`ManageInviteLinks` or creator), replacing
+  the old any-member rule — implied by the roles design, made explicit here because it's a
+  behavior change for existing communities (plain members lose the Invite button; the migration's
+  `DefaultAdminPermissions` seed includes the flag, so newly promoted admins keep it).
+- **Ranked-table sharing landed as atoms, not a wrapper.** The two tables share the rank cell
+  (`Components/RankDelta.razor`), the `olb-*` styling, and the expandable `tier-card-grid` +
+  `TierListChartCard` pattern; a generic templated table wrapper would have been speculative
+  generality — the tables agree on look, not shape.
+- **The directory's World card shows member count + your PUMBILITY, not your world rank** —
+  computing a live rank means sorting the whole World membership on a directory load; deferred
+  with the rank-delta snapshot work.
+- **Players tab dropped entirely** (owner call): ranking rows deep-link straight to
+  `/Community/Player`.
