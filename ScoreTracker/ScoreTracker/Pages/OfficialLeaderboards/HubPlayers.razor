@@ -64,13 +64,13 @@ else
             </MudItem>
             <MudItem xs="6" sm="3">
                 <MudPaper Class="pa-2" Outlined="true">
-                    <MudText Typo="Typo.overline">@L["Boards"]</MudText>
+                    <MudText Typo="Typo.overline">@L["Chart Boards"]</MudText>
                     <MudText Typo="Typo.h5"><b>@_profile.BoardsInTop</b></MudText>
                 </MudPaper>
             </MudItem>
             <MudItem xs="6" sm="3">
                 <MudPaper Class="pa-2" Outlined="true">
-                    <MudText Typo="Typo.overline">@L["Board #1s"]</MudText>
+                    <MudText Typo="Typo.overline">@L["Chart Board #1s"]</MudText>
                     <MudText Typo="Typo.h5"><b>@_profile.NumberOnes</b></MudText>
                 </MudPaper>
             </MudItem>
@@ -88,33 +88,37 @@ else
             <MudGrid Class="mt-1">
                 <MudItem xs="12" md="7">
                     <MudText Typo="Typo.overline">@L["PUMBILITY over time"]</MudText>
-                    <ApexChart TItem="HistoryPoint" Options="_lineOptions" Height="220">
-                        <ApexPointSeries TItem="HistoryPoint"
-                                         Items="_pumbilityHistory"
-                                         Name="PUMBILITY"
-                                         Color="@MixThemes.PaletteFor(Mix).Primary"
-                                         SeriesType="SeriesType.Line"
-                                         XValue="@(p => p.Label)"
-                                         YValue="@(p => p.Value)"/>
-                    </ApexChart>
+                    <div class="@ApexChartTheming.WrapperClass">
+                        <ApexChart TItem="HistoryPoint" Options="_lineOptions" Height="220">
+                            <ApexPointSeries TItem="HistoryPoint"
+                                             Items="_pumbilityHistory"
+                                             Name="PUMBILITY"
+                                             Color="@MixThemes.PaletteFor(Mix).Primary"
+                                             SeriesType="SeriesType.Line"
+                                             XValue="@(p => p.Label)"
+                                             YValue="@(p => p.Value)"/>
+                        </ApexChart>
+                    </div>
                 </MudItem>
                 <MudItem xs="12" md="5">
-                    <MudText Typo="Typo.overline">@L["Board rank - lower is better"]</MudText>
-                    <ApexChart TItem="HistoryPoint" Options="_rankOptions" Height="220">
-                        <ApexPointSeries TItem="HistoryPoint"
-                                         Items="_rankHistory"
-                                         Name="@L["Rank"]"
-                                         Color="@MixThemes.PaletteFor(Mix).Secondary"
-                                         SeriesType="SeriesType.Line"
-                                         XValue="@(p => p.Label)"
-                                         YValue="@(p => p.Value)"/>
-                    </ApexChart>
+                    <MudText Typo="Typo.overline">@L["PUMBILITY rank - lower is better"]</MudText>
+                    <div class="@ApexChartTheming.WrapperClass">
+                        <ApexChart TItem="HistoryPoint" Options="_rankOptions" Height="220">
+                            <ApexPointSeries TItem="HistoryPoint"
+                                             Items="_rankHistory"
+                                             Name="@L["Rank"]"
+                                             Color="@MixThemes.PaletteFor(Mix).Secondary"
+                                             SeriesType="SeriesType.Line"
+                                             XValue="@(p => p.Label)"
+                                             YValue="@(p => p.Value)"/>
+                        </ApexChart>
+                    </div>
                 </MudItem>
             </MudGrid>
         }
 
         <MudText Typo="Typo.overline" Class="mt-3 d-block">
-            @L["Board placements"] · @_profile.BoardsInTop
+            @L["Chart board placements"] · @_profile.BoardsInTop
         </MudText>
         <MudTable T="OfficialPlayerChartRecord" Items="_profile.Placements" Dense="true"
                   Breakpoint="Breakpoint.None" RowsPerPage="25" Class="olb-sticky-first olb-pager-tight">
@@ -137,7 +141,7 @@ else
                     }
                 </MudTd>
                 <MudTd Style="text-align:right"><b>@context.Score.ToString("N0")</b></MudTd>
-                <MudTd><LetterGradeIcon Grade="PhoenixScore.From(context.Score).LetterGrade"/></MudTd>
+                <MudTd><LetterGradeIcon Grade="PhoenixScore.From(context.Score).LetterGradeFor(Mix)"/></MudTd>
                 <MudTd Style="text-align:right">
                     @if (context.Supplemented)
                     {
@@ -189,23 +193,29 @@ else
     private HistoryPoint[] _pumbilityHistory = Array.Empty<HistoryPoint>();
     private HistoryPoint[] _rankHistory = Array.Empty<HistoryPoint>();
 
-    private readonly ApexChartOptions<HistoryPoint> _lineOptions = new()
-    {
-        Chart = new ApexCharts.Chart { Toolbar = new Toolbar { Show = false }, Background = "transparent" },
-        Theme = new Theme { Mode = Mode.Dark },
-        Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 }
-    };
+    private ApexChartOptions<HistoryPoint> _lineOptions = new();
+    private ApexChartOptions<HistoryPoint> _rankOptions = new();
 
-    private readonly ApexChartOptions<HistoryPoint> _rankOptions = new()
+    // Frozen, whisper-grid canvases in the popularity-page vocabulary: no zoom or drag
+    // capture, no vertical gridlines, no crosshair — these charts are glances.
+    private ApexChartOptions<HistoryPoint> GlanceOptions()
     {
-        Chart = new ApexCharts.Chart { Toolbar = new Toolbar { Show = false }, Background = "transparent" },
-        Theme = new Theme { Mode = Mode.Dark },
-        Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 },
-        Yaxis = new List<YAxis> { new() { Reversed = true, DecimalsInFloat = 0 } }
-    };
+        var options = ApexChartTheming.BaseOptions<HistoryPoint>(MixThemes.PaletteFor(Mix));
+        options.Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 };
+        options.Grid.Xaxis = new GridXAxis { Lines = new Lines { Show = false } };
+        options.Xaxis = new XAxis
+        {
+            AxisTicks = new AxisTicks { Show = false },
+            Crosshairs = new AxisCrosshairs { Show = false }
+        };
+        return options;
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        _lineOptions = GlanceOptions();
+        _rankOptions = GlanceOptions();
+        _rankOptions.Yaxis = new List<YAxis> { new() { Reversed = true, DecimalsInFloat = 0 } };
         _names = (await Mediator.Send(new GetOfficialPlayerNamesQuery(Mix))).ToArray();
     }
 

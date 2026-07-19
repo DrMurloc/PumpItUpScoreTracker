@@ -231,7 +231,7 @@
 
         <TemplateColumn T="ChartSessionEffectiveness" Title=@L["Your Score"] Sortable="true" SortBy="x => x.Score??0">
             <CellTemplate>
-                <ScoreBreakdown Score="context.Item.Score" OneLine="true"></ScoreBreakdown>
+                <ScoreBreakdown Score="context.Item.Score" Mix="_sessionMix" OneLine="true"></ScoreBreakdown>
             </CellTemplate>
         </TemplateColumn>
         <PropertyColumn Property="x => x.Seconds" Title=@L["Seconds"] Sortable="true" />

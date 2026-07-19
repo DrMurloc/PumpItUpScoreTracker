@@ -35,13 +35,13 @@
         <MudTextField T="double?" InputMode="InputMode.numeric" InputType="InputType.Number" Label="Calories" Value="_calories" ValueChanged="n=>SetScore(_perfects,_greats,_goods,_bads,_misses,_maxCombo,n)"></MudTextField>
     </MudItem>
     <MudItem xs="12">
-        <ScoreBreakdown Score="@Score.CalculatePhoenixScore" Plate="Score.PlateText" ShowScore="true"></ScoreBreakdown>
+        <ScoreBreakdown Score="@Score.CalculatePhoenixScore" Plate="Score.PlateText" Mix="_currentMix" ShowScore="true"></ScoreBreakdown>
 
 
         @if (Score.IsValid)
         {
             <MudText>
-                <b>@L["Next Letter"]:</b> @Score.NextLetterGrade()
+                <b>@L["Next Letter"]:</b> @Score.NextLetterGrade(_currentMix)
             </MudText>
 
             <MudText><b>@L["Score Loss", "Greats"]:</b> @Score.GreatLoss</MudText>
@@ -103,9 +103,9 @@
 <MudText>
     @L["Score Range Shoutout"]
     <br/><br/>
-    @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>().OrderByDescending(g => (int)g.GetMinimumScore()))
+    @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>().OrderByDescending(g => (int)g.GetMinimumScoreFor(_currentMix)))
     {
-        <span>@grade.GetName(): @grade.GetMinimumScore() ~ @grade.GetMaximumScore() points</span><br/>
+        <span>@grade.GetName(): @grade.GetMinimumScoreFor(_currentMix) ~ @grade.GetMaximumScoreFor(_currentMix) points</span><br/>
     }
     Perfect Game: 100% Perfect<br/>
     Ultimate Game: 100% Perfect + Great<br/>
@@ -116,11 +116,21 @@
     Fair Game: &lt;= 20 misses<br/>
     Rough Game: > 20 misses
 </MudText>
+@using ScoreTracker.Web.Services.Contracts
 @inject ISnackbar Snackbar;
 @inject ILogger<PhoenixCalculator> Logger;
+@inject IUiSettingsAccessor UiSettings;
 @code
 {
     private ApexChart<ScoreDistributionDto> _distributionChart;
+
+    // Grades follow the selected mix's cutoff table (Phoenix 2 re-cut sub-AAA).
+    private MixEnum _currentMix = MixEnum.Phoenix;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currentMix = await UiSettings.GetSelectedMix();
+    }
 
     private sealed record JudgementAllocation(string Type, int Count)
     {

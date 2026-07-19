@@ -703,7 +703,7 @@
                 ImagePath = c.Song.ImagePath.ToString(),
                 DifficultyShorthand = DifficultyLevel.ToShorthand(c.Type, c.Level),
                 Score = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].Score : null,
-                PhoenixLetterGrade = bestAttempts.ContainsKey(c.Id)?bestAttempts[c.Id].Score?.LetterGrade:null,
+                PhoenixLetterGrade = bestAttempts.ContainsKey(c.Id)?bestAttempts[c.Id].Score?.LetterGradeFor(_currentMix):null,
                 PhoenixPlate = bestAttempts.ContainsKey(c.Id)? bestAttempts[c.Id].Plate:null,
                 RecordedOn = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].RecordedDate : null
             }).ToArray();
@@ -805,7 +805,7 @@
             var parsedScore = newScore == null ? null : PhoenixScore.TryParse(newScore.Value, out var score) ? (PhoenixScore?)score : null;
 
             dto.Score = parsedScore;
-            dto.PhoenixLetterGrade = parsedScore?.LetterGrade;
+            dto.PhoenixLetterGrade = parsedScore?.LetterGradeFor(_currentMix);
             await UpdateBest(dto);
         }
     }

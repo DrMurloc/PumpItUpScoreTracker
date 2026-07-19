@@ -58,10 +58,10 @@ public sealed class CutlineCalculatorTests
             Assert.NotNull(level);
             var perChart = (double)tierValue / CutlineCalculator.ChartsCounted;
             Assert.True(Scoring.GetScore(ChartType.Single, DifficultyLevel.From(level!.Value),
-                grade.GetMinimumScore(), PhoenixPlate.SuperbGame) >= perChart);
+                grade.GetMinimumScoreFor(Scoring.Mix), PhoenixPlate.SuperbGame) >= perChart);
             if (level.Value > (int)DifficultyLevel.All.Min(l => (int)l))
                 Assert.True(Scoring.GetScore(ChartType.Single, DifficultyLevel.From(level.Value - 1),
-                    grade.GetMinimumScore(), PhoenixPlate.SuperbGame) < perChart);
+                    grade.GetMinimumScoreFor(Scoring.Mix), PhoenixPlate.SuperbGame) < perChart);
         }
     }
 

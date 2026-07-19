@@ -61,19 +61,19 @@
                     <MudTd>
                         @if (context.MinScore != null)
                         {
-                            <MudText>@context.MinScore (@context.MinScore.Value.LetterGrade.GetName())</MudText>
+                            <MudText>@context.MinScore (@context.MinScore.Value.LetterGradeFor(_currentMix).GetName())</MudText>
                         }
                     </MudTd>
                     <MudTd>
                         @if (context.AverageScore != null)
                         {
-                            <MudText>@context.AverageScore (@context.AverageScore.Value.LetterGrade.GetName())</MudText>
+                            <MudText>@context.AverageScore (@context.AverageScore.Value.LetterGradeFor(_currentMix).GetName())</MudText>
                         }
                     </MudTd>
                     <MudTd>
                         @if (context.MaxScore != null)
                         {
-                            <MudText>@context.MaxScore (@context.MaxScore.Value.LetterGrade.GetName())</MudText>
+                            <MudText>@context.MaxScore (@context.MaxScore.Value.LetterGradeFor(_currentMix).GetName())</MudText>
                         }
                     </MudTd>
                     <MudTd>
@@ -246,6 +246,7 @@
 
     private IEnumerable<RecordedPhoenixScore> _filteredScores = Array.Empty<RecordedPhoenixScore>();
     private IEnumerable<RecordedPhoenixScore> _scores = Array.Empty<RecordedPhoenixScore>();
+    private MixEnum _currentMix = MixEnum.Phoenix;
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private DifficultyLevel _minLevel = DifficultyLevel.Min;
     private DifficultyLevel _maxLevel = DifficultyLevel.Max;
@@ -289,18 +290,18 @@
             }
             RequestedUserId = CurrentUser.User.Id;
         }
-        var currentMix = await UiSettings.GetSelectedMix();
-        if (currentMix == MixEnum.XX)
+        _currentMix = await UiSettings.GetSelectedMix();
+        if (_currentMix == MixEnum.XX)
         {
             NavManager.NavigateTo("/Progress");
         }
-        _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(RequestedUserId.Value, currentMix))).ToArray();
+        _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(RequestedUserId.Value, _currentMix))).ToArray();
         var chartScores = _scores.ToDictionary(s => s.ChartId);
-        var charts = await Mediator.Send(new GetChartsQuery(currentMix));
+        var charts = await Mediator.Send(new GetChartsQuery(_currentMix));
         var coOpCharts = charts.Where(c => c.Type == ChartType.CoOp).ToArray();
         var levelCharts = charts.Where(c => c.Type != ChartType.CoOp).GroupBy(c => c.Level).ToDictionary(g => g.Key, g => g.ToArray());
 
-        _stats = await Mediator.Send(new GetPlayerStatsQuery(RequestedUserId.Value, currentMix));
+        _stats = await Mediator.Send(new GetPlayerStatsQuery(RequestedUserId.Value, _currentMix));
 
         _charts = charts.ToDictionary(c => c.Id);
         var entries = new List<DifficultyEntry>();
@@ -313,7 +314,7 @@
             }
             var passed = levelCharts[level].Where(c=>!(chartScores.TryGetValue(c.Id,out var score)?score!.IsBroken:true)).Count();
             var remaining = levelCharts[level].Where(c => (chartScores.TryGetValue(c.Id, out var score) ? score!.IsBroken : true)).Count();
-            var totalRating = levelCharts[level].Sum(c => chartScores.TryGetValue(c.Id, out var score) ? (score!.Score?.LetterGrade.GetModifier() ?? 0) * level.BaseRating : 0);
+            var totalRating = levelCharts[level].Sum(c => chartScores.TryGetValue(c.Id, out var score) ? (score!.Score?.LetterGradeFor(_currentMix).GetModifier() ?? 0) * level.BaseRating : 0);
             var ratingRemainnig = levelCharts[level].Count() * (PhoenixLetterGrade.SSSPlus.GetModifier() * level.BaseRating) - totalRating;
             var scores = levelCharts[level].Where(c => chartScores.TryGetValue(c.Id, out var score) && score.Score != null).Select(c => (int)chartScores[c.Id].Score!)
             .ToArray();
@@ -329,7 +330,7 @@
         }
         var coOpPassed = coOpCharts.Where(c => !(chartScores.TryGetValue(c.Id, out var score) ? score!.IsBroken : true)).Count();
         var coOpRemaining = coOpCharts.Where(c => (chartScores.TryGetValue(c.Id, out var score) ? score!.IsBroken : true)).Count();
-        var coOpTotalRating = coOpCharts.Sum(c => chartScores.TryGetValue(c.Id, out var score) ? (score!.Score?.LetterGrade.GetModifier() ?? 0) * 2000 : 0);
+        var coOpTotalRating = coOpCharts.Sum(c => chartScores.TryGetValue(c.Id, out var score) ? (score!.Score?.LetterGradeFor(_currentMix).GetModifier() ?? 0) * 2000 : 0);
         var coOpRatingRemainnig = coOpCharts.Count() * (PhoenixLetterGrade.SSSPlus.GetModifier() * 2000) - coOpTotalRating;
         var coOpScores = coOpCharts.Where(c => chartScores.TryGetValue(c.Id, out var score) && score.Score != null).Select(c => (int)chartScores[c.Id].Score!)
         .ToArray();

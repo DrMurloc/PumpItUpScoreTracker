@@ -58,7 +58,7 @@ public sealed class PhoenixTitleProgress : TitleProgress
         CompletionCount += progress;
         if (RequiredAaCount <= 0 || !(progress > 0) || attempt.Score == null) return;
 
-        for (var i = ParagonLevel.F; i <= attempt.Score!.Value.GetParagonLevel(); i++) _paragonProgress[i]++;
+        for (var i = ParagonLevel.F; i <= attempt.Score!.Value.GetParagonLevel(chart.Mix); i++) _paragonProgress[i]++;
     }
 
     /// <summary>

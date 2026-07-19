@@ -104,7 +104,7 @@ else
                                             }
                                             else
                                             {
-                                                <LetterGradeIcon Grade="PhoenixScore.From(score).LetterGrade" Height="16"/>
+                                                <LetterGradeIcon Grade="PhoenixScore.From(score).LetterGradeFor(_mix)" Height="16"/>
                                             }
                                             <span class="dash-ch-score">@score.ToString("N0")</span>
                                         </span>
@@ -289,7 +289,7 @@ else
                                 }
                                 else
                                 {
-                                    <LetterGradeIcon Grade="PhoenixScore.From(sc).LetterGrade" Height="14"/>
+                                    <LetterGradeIcon Grade="PhoenixScore.From(sc).LetterGradeFor(_mix)" Height="14"/>
                                 }
                                 <span>@sc.ToString("N0")</span>
                             }

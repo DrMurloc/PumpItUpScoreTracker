@@ -20,6 +20,6 @@ public sealed class PhoenixDifficultyTitle : PhoenixTitle
     public override double CompletionProgress(Chart chart, RecordedPhoenixScore attempt)
     {
         if (chart.Level != Level || attempt.IsBroken || attempt.Score == null) return 0;
-        return chart.Level.BaseRating * attempt.Score.Value.LetterGrade.GetModifier();
+        return chart.Level.BaseRating * attempt.Score.Value.LetterGradeFor(chart.Mix).GetModifier();
     }
 }

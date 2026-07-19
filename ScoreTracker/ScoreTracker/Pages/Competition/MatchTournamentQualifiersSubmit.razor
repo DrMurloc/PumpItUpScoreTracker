@@ -121,7 +121,7 @@
                     @if (_currentQualifiers.Submissions.TryGetValue(chart.Id, out var submission))
                     {
                         <MudCardContent>
-                            <ScoreBreakdown ShowScore="true" Score="submission.Score" OneLine="true"></ScoreBreakdown>
+                            <ScoreBreakdown ShowScore="true" Score="submission.Score" Mix="MixEnum.Phoenix" OneLine="true"></ScoreBreakdown>
                             @if (_configuration.ScoringType != "Score")
                             {
                                 <br/>
@@ -199,7 +199,7 @@
                 <MudNumericField T="int" Label=@L["Score"] Value="_testScore" ValueChanged="s=>_testScore=s" Min="0" Max="1000000" HideSpinButtons="true" Clearable="false"></MudNumericField>
             </MudItem>
             <MudItem xs="6" sm="4" md="3">
-                <MudSelect T="PhoenixLetterGrade" Label=@L["Letter Grade"] Value="_testScore.LetterGrade" ValueChanged="SetLetterGrade">
+                <MudSelect T="PhoenixLetterGrade" Label=@L["Letter Grade"] Value="_testScore.LetterGradeFor(MixEnum.Phoenix)" ValueChanged="SetLetterGrade">
                     @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>())
                     {
                         <MudSelectItem T="PhoenixLetterGrade" Value="grade">@grade.GetName()</MudSelectItem>
@@ -365,7 +365,7 @@
     private PhoenixScore _testScore = 950000;
     private void SetLetterGrade(PhoenixLetterGrade grade)
     {
-        _testScore = grade.GetMinimumScore();
+        _testScore = grade.GetMinimumScoreFor(MixEnum.Phoenix);
     }
     private MixEnum _addingMix = MixEnum.Phoenix;
     private StepCount _perfects = 0;
@@ -529,7 +529,7 @@
         @if (!_configuration.AllCharts)
         {
             
-            foreach (var chart in _currentQualifiers.Submissions.Where(kv => kv.Value.Score >= PhoenixLetterGrade.SSS.GetMinimumScore()))
+            foreach (var chart in _currentQualifiers.Submissions.Where(kv => kv.Value.Score >= PhoenixLetterGrade.SSS.GetMinimumScoreFor(MixEnum.Phoenix)))
             {
                 var nextChart = GetNextLevel(chart.Key);
                 if (nextChart == null || _suggestedCharts.Contains(nextChart.Value))
@@ -550,7 +550,7 @@
             var foundScores = _configuration.Charts.ToDictionary(c => c.Id, c => myScores.TryGetValue(c.Id, out var score) ? (score.Score==null?  levelAverages.TryGetValue((c.Level,c.Type), out var avg2) ? avg2 : 0:(int)score.Score!.Value) :
                 levelAverages.TryGetValue((c.Level,c.Type), out var avg) ? avg : 0);
 
-            foreach (var chart in _configuration.Charts.Where(s=>foundScores[s.Id]>PhoenixLetterGrade.AA.GetMinimumScore()).OrderByDescending(s =>
+            foreach (var chart in _configuration.Charts.Where(s=>foundScores[s.Id]>PhoenixLetterGrade.AA.GetMinimumScoreFor(MixEnum.Phoenix)).OrderByDescending(s =>
                 _currentQualifiers.Rating(s.Level,foundScores[s.Id])).Take(_configuration.PlayCount))
             {
                 if (!_suggestedCharts.Contains(chart.Id))

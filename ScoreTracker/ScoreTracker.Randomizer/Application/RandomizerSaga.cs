@@ -103,7 +103,7 @@ namespace ScoreTracker.Randomizer.Application
 
                 if (settings.LetterGrades.Any())
                     if (!userScores.TryGetValue(chart.Id, out var score) || score.Score == null ||
-                        !settings.LetterGrades.Contains(score.Score.Value.LetterGrade))
+                        !settings.LetterGrades.Contains(score.Score.Value.LetterGradeFor(chart.Mix)))
                     {
                         calculatedWeights[chart.Id] = 0;
                         continue;

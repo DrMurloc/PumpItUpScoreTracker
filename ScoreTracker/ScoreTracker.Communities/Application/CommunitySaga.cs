@@ -455,7 +455,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     private static string CompactRow(Chart chart, RecordedPhoenixScore best, string reclearMark)
     {
         return $"#DIFFICULTY|{chart.DifficultyString}# {chart.Song.Name}{reclearMark} — **{(int)best.Score!.Value:N0}** " +
-               $"#LETTERGRADE|{best.Score!.Value.LetterGrade}|{best.IsBroken}##PLATE|{best.Plate}#";
+               $"#LETTERGRADE|{best.Score!.Value.LetterGradeFor(chart.Mix)}|{best.IsBroken}##PLATE|{best.Plate}#";
     }
 
     private void AddOverflowLine(List<IRichBotBlock> blocks, SnapshotInputs inputs, string? culture,
@@ -692,7 +692,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         RecordedPhoenixScore best, bool bigGain, string reclearMark, string? culture)
     {
         return $"#DIFFICULTY|{chart.DifficultyString}# {SongLink(change, chart, bigGain)}{reclearMark}\n" +
-               $"**{(int)best.Score!.Value:N0}** #LETTERGRADE|{best.Score!.Value.LetterGrade}|{best.IsBroken}##PLATE|{best.Plate}#" +
+               $"**{(int)best.Score!.Value:N0}** #LETTERGRADE|{best.Score!.Value.LetterGradeFor(chart.Mix)}|{best.IsBroken}##PLATE|{best.Plate}#" +
                FlagCaption(change, chart, best, bigGain, culture);
     }
 
@@ -704,12 +704,12 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         if (change.OldScore != null)
         {
             row += $" (+{(int)best.Score!.Value - change.OldScore.Value:N0})";
-            var oldLetter = PhoenixScore.From(change.OldScore.Value).LetterGrade;
-            if (oldLetter != best.Score!.Value.LetterGrade)
+            var oldLetter = PhoenixScore.From(change.OldScore.Value).LetterGradeFor(chart.Mix);
+            if (oldLetter != best.Score!.Value.LetterGradeFor(chart.Mix))
                 row += $" #LETTERGRADE|{oldLetter}|False# →";
         }
 
-        return row + $" #LETTERGRADE|{best.Score!.Value.LetterGrade}|{best.IsBroken}##PLATE|{best.Plate}#" +
+        return row + $" #LETTERGRADE|{best.Score!.Value.LetterGradeFor(chart.Mix)}|{best.IsBroken}##PLATE|{best.Plate}#" +
                FlagCaption(change, chart, best, bigGain, culture);
     }
 
@@ -1077,10 +1077,11 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var user = await _users.GetUser(context.Message.UserId);
         if (user == null) return;
         var placed = context.Message;
+        // UCS boards live on the current game's site, so scores grade on the Phoenix 2 table.
         await SendToCommunityDiscords(context.Message.UserId, culture => _localizer.Get(culture,
                 "{0} scored {1} {2} on {3}'s {4} {5} UCS",
                 user.Name, placed.Score,
-                $"#LETTERGRADE|{PhoenixScore.From(placed.Score).LetterGrade}|{placed.IsBroken}#",
+                $"#LETTERGRADE|{PhoenixScore.From(placed.Score).LetterGradeFor(MixEnum.Phoenix2)}|{placed.IsBroken}#",
                 placed.Artist, placed.SongName, $"#DIFFICULTY|{placed.Difficulty}#"),
             context.CancellationToken);
     }

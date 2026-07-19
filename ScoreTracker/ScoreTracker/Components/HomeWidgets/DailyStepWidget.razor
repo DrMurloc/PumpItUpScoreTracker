@@ -192,14 +192,14 @@ else
             }
         </span>
         <span class="dash-lb-score">
-            <LetterGradeIcon Grade="row.Entry.Score.LetterGrade" IsBroken="row.Entry.IsBroken" Height="16"></LetterGradeIcon>
+            <LetterGradeIcon Grade="row.Entry.Score.LetterGradeFor(_mix)" IsBroken="row.Entry.IsBroken" Height="16"></LetterGradeIcon>
             <span class="dash-lb-pts">@(((int)row.Entry.Score).ToString("N0"))</span>
         </span>
     </div>;
 
     // Grade at a glance — "PG" for a Perfect Game, otherwise the letter grade ("SSS+", "SS", …).
-    private static string GradeText(DailyStepEntry e) =>
-        e.Plate == PhoenixPlate.PerfectGame ? "PG" : e.Score.LetterGrade.GetName();
+    private string GradeText(DailyStepEntry e) =>
+        e.Plate == PhoenixPlate.PerfectGame ? "PG" : e.Score.LetterGradeFor(_mix).GetName();
 
     private RenderFragment HeaderControls =>@<text>
         <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.AddCircleOutline"

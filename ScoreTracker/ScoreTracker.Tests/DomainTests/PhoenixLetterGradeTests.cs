@@ -40,12 +40,12 @@ public sealed class PhoenixLetterGradeTests
     }
 
     [Fact]
-    public void ParameterlessLetterGradeStaysThePhoenixTable()
+    public void TheSubAaaRecutSplitsNineHundredThousandByMix()
     {
-        // The default property is Phoenix — a 900k is AA there, A+ only when asked for Phoenix 2.
-        Assert.Equal(PhoenixLetterGrade.AA, PhoenixScore.From(900000).LetterGrade);
-        Assert.Equal(PhoenixScore.From(900000).LetterGrade,
-            PhoenixScore.From(900000).LetterGradeFor(MixEnum.Phoenix));
+        // 900k is AA on the Phoenix table and A+ on Phoenix 2 — there is no mix-less
+        // resolution anymore, so every caller states which table it means.
+        Assert.Equal(PhoenixLetterGrade.AA, PhoenixScore.From(900000).LetterGradeFor(MixEnum.Phoenix));
+        Assert.Equal(PhoenixLetterGrade.APlus, PhoenixScore.From(900000).LetterGradeFor(MixEnum.Phoenix2));
     }
 
     [Fact]

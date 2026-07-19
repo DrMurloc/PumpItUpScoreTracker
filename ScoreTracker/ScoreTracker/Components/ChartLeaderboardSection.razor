@@ -114,7 +114,7 @@
             </td>
             <td class="chart-lb-level">@(_levels.TryGetValue(score.UserId, out var level) ? level.ToString("N1") : "")</td>
             <td class="chart-lb-score-col">
-                <ScoreBreakdown Score="score.Score" Plate="score.Plate" IsBroken="score.IsBroken" ShowScore="true"
+                <ScoreBreakdown Score="score.Score" Plate="score.Plate" IsBroken="score.IsBroken" Mix="Mix" ShowScore="true"
                                 OneLine="true"></ScoreBreakdown>
             </td>
         </tr>

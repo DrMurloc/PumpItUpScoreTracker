@@ -59,7 +59,7 @@
             {
                 <MudTd>@TwoDecimalPlaces(context.AverageDifficulty)</MudTd>
                 <MudTd>
-                    <ScoreBreakdown Score="@context.AverageScore" Plate="@context.AveragePlate"></ScoreBreakdown>
+                    <ScoreBreakdown Score="@context.AverageScore" Plate="@context.AveragePlate" Mix="MixEnum.Phoenix"></ScoreBreakdown>
                 </MudTd>
                 <MudTd>
                     @context.TotalBonusScore
@@ -130,7 +130,7 @@
                                             <DifficultyBubble Chart="entry.Chart"></DifficultyBubble>
                                         </MudCardHeader>
                                         <MudCardContent>
-                                            <ScoreBreakdown Text=@(entry.SessionScore.ToString("N0")+", "+TwoDecimalPlaces(entry.SessionScore / (double)entry.Chart.Song.Duration.TotalSeconds) +" PPS"+(entry.BonusPoints==0?"":" ("+entry.BonusPoints+" Chart Bonus)")) Score="entry.Score" Plate="entry.Plate"></ScoreBreakdown>
+                                            <ScoreBreakdown Text=@(entry.SessionScore.ToString("N0")+", "+TwoDecimalPlaces(entry.SessionScore / (double)entry.Chart.Song.Duration.TotalSeconds) +" PPS"+(entry.BonusPoints==0?"":" ("+entry.BonusPoints+" Chart Bonus)")) Score="entry.Score" Plate="entry.Plate" Mix="entry.Chart.Mix"></ScoreBreakdown>
                                         </MudCardContent>
                                     </MudCard>
                                 </MudItem>

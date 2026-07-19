@@ -448,7 +448,7 @@ else
                                         <td>
                                             @if (score?.Score != null)
                                             {
-                                                <ScoreBreakdown Score="score.Score.Value" IsBroken="score.IsBroken" OneLine="true" ShowScore="true" Plate="score.Plate"></ScoreBreakdown>
+                                                <ScoreBreakdown Score="score.Score.Value" IsBroken="score.IsBroken" Mix="_currentMix" OneLine="true" ShowScore="true" Plate="score.Plate"></ScoreBreakdown>
                                             }
                                         </td>
                                         <td>
@@ -1265,7 +1265,7 @@ else
                         return new TierListShareCard.Tile(
                             chart.Song.ImagePath.ToString(),
                             score?.Score != null
-                                ? LetterGradeImage(score.Score.Value.LetterGrade, score.IsBroken)
+                                ? LetterGradeImage(score.Score.Value.LetterGradeFor(_currentMix), score.IsBroken)
                                 : null,
                             score?.Plate != null ? PlateImage(score.Plate.Value) : null,
                             score is { IsBroken: false } ? MixPalette.Success :
@@ -1314,11 +1314,11 @@ else
     private bool ShouldChartShow(SongTierListEntry entry)
     {
         var score = _scores.TryGetValue(entry.ChartId, out var scr) ? scr : null;
-        if (_settings.MinLetterGrade != null && (score?.Score == null || score.Score.Value.LetterGrade < _settings.MinLetterGrade))
+        if (_settings.MinLetterGrade != null && (score?.Score == null || score.Score.Value.LetterGradeFor(_currentMix) < _settings.MinLetterGrade))
         {
             return false;
         }
-        if (_settings.MaxLetterGrade != null && (score?.Score == null || score.Score.Value.LetterGrade > _settings.MaxLetterGrade))
+        if (_settings.MaxLetterGrade != null && (score?.Score == null || score.Score.Value.LetterGradeFor(_currentMix) > _settings.MaxLetterGrade))
         {
             return false;
         }
@@ -1639,7 +1639,7 @@ else
             baseRating = 2000;
         }
         _averageRating = _folderScores.Any(kv => !kv.Value.IsBroken && kv.Value.Score > 0)
-            ? (int)_folderScores.Where(kv => !kv.Value.IsBroken && kv.Value.Score > 0).Average(s => s.Value.Score!.Value.LetterGrade.GetModifier() * baseRating)
+            ? (int)_folderScores.Where(kv => !kv.Value.IsBroken && kv.Value.Score > 0).Average(s => s.Value.Score!.Value.LetterGradeFor(_currentMix).GetModifier() * baseRating)
             : baseRating;
 
         BuildLamps();
@@ -1656,7 +1656,7 @@ else
         {
             var lampGrade = grade;
             lamps.Add(new LampStrip.Lamp(lampGrade.GetName(),
-                _charts.Count(kv => _scores.TryGetValue(kv.Key, out var s) && s.Score?.LetterGrade >= lampGrade)));
+                _charts.Count(kv => _scores.TryGetValue(kv.Key, out var s) && s.Score?.LetterGradeFor(_currentMix) >= lampGrade)));
         }
         lamps.Add(new LampStrip.Lamp("PG", _charts.Count(kv => _scores.TryGetValue(kv.Key, out var s) && s.Score == PhoenixScore.Max)));
         _lamps = lamps;

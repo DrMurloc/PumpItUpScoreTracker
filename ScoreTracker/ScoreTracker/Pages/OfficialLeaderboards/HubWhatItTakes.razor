@@ -83,6 +83,7 @@ else
     {
         <MudPaper Class="pa-3 mb-3">
             <MudText Typo="Typo.overline">@L["Level required, by ranking tier"]</MudText>
+            <div class="@ApexChartTheming.WrapperClass">
             <ApexChart TItem="LevelPoint" Options="_wallOptions" Height="260">
                 @foreach (var series in _wallSeries)
                 {
@@ -95,6 +96,7 @@ else
                                      YValue="@(p => p.Level)"/>
                 }
             </ApexChart>
+            </div>
         </MudPaper>
     }
 
@@ -102,6 +104,7 @@ else
     {
         <MudPaper Class="pa-3 mb-3">
             <MudText Typo="Typo.overline">@L["The entry bar over time"]</MudText>
+            <div class="@ApexChartTheming.WrapperClass">
             <ApexChart TItem="LevelPoint" Options="_historyOptions" Height="240">
                 @foreach (var series in _historySeries)
                 {
@@ -114,6 +117,7 @@ else
                                      YValue="@(p => p.Level)"/>
                 }
             </ApexChart>
+            </div>
         </MudPaper>
     }
 
@@ -168,21 +172,24 @@ else
     private List<GradeSeries> _wallSeries = new();
     private List<GradeSeries> _historySeries = new();
 
-    private readonly ApexChartOptions<LevelPoint> _wallOptions = new()
-    {
-        Chart = new ApexCharts.Chart { Toolbar = new Toolbar { Show = false }, Background = "transparent" },
-        Theme = new Theme { Mode = Mode.Dark },
-        Stroke = new Stroke { Curve = Curve.Stepline, Width = 2 },
-        Yaxis = new List<YAxis> { new() { DecimalsInFloat = 0 } }
-    };
+    private ApexChartOptions<LevelPoint> _wallOptions = new();
+    private ApexChartOptions<LevelPoint> _historyOptions = new();
 
-    private readonly ApexChartOptions<LevelPoint> _historyOptions = new()
+    // Frozen, whisper-grid steplines in the popularity-page vocabulary: no zoom or drag
+    // capture, no vertical gridlines, no crosshair — these charts are glances.
+    private ApexChartOptions<LevelPoint> GlanceOptions()
     {
-        Chart = new ApexCharts.Chart { Toolbar = new Toolbar { Show = false }, Background = "transparent" },
-        Theme = new Theme { Mode = Mode.Dark },
-        Stroke = new Stroke { Curve = Curve.Stepline, Width = 2 },
-        Yaxis = new List<YAxis> { new() { DecimalsInFloat = 0 } }
-    };
+        var options = ApexChartTheming.BaseOptions<LevelPoint>(MixThemes.PaletteFor(Mix));
+        options.Stroke = new Stroke { Curve = Curve.Stepline, Width = 2 };
+        options.Yaxis = new List<YAxis> { new() { DecimalsInFloat = 0 } };
+        options.Grid.Xaxis = new GridXAxis { Lines = new Lines { Show = false } };
+        options.Xaxis = new XAxis
+        {
+            AxisTicks = new AxisTicks { Show = false },
+            Crosshairs = new AxisCrosshairs { Show = false }
+        };
+        return options;
+    }
 
     private IEnumerable<CutlineTierRecord> VisibleTiers =>
         _data == null
@@ -193,6 +200,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        _wallOptions = GlanceOptions();
+        _historyOptions = GlanceOptions();
         await Load();
     }
 

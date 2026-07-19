@@ -65,7 +65,7 @@ else
                                     @if (context.Item.CompletionCount > 0)
                                     {
                                         <MudText Typo="Typo.subtitle1">
-                                            @(PhoenixScore.From(context.Item.CompletionCount).LetterGrade.GetName())
+                                            @(PhoenixScore.From(context.Item.CompletionCount).LetterGradeFor(_currentMix).GetName())
                                         </MudText>
                                     }
                                 }

@@ -796,7 +796,7 @@ public sealed class WeeklyTournamentSagaTests
     {
         // Same grade band → identical PUMBILITY points; the higher raw score must rank first.
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
-        var bandFloor = (int)PhoenixLetterGrade.AA.GetMinimumScore();
+        var bandFloor = (int)PhoenixLetterGrade.AA.GetMinimumScoreFor(MixEnum.Phoenix);
         var higherRaw = Guid.NewGuid();
         var lowerRaw = Guid.NewGuid();
         var weeklyTournies = MonthlyRepo(pastDates: Array.Empty<DateTimeOffset>(),
