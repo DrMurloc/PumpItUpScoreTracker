@@ -21,6 +21,7 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetOfficialRankingsQuery, OfficialRankingsRecord>,
     IRequestHandler<GetOfficialPlayerProfileQuery, OfficialPlayerProfileRecord?>,
     IRequestHandler<GetOfficialPlayerStandingQuery, OfficialPlayerStandingRecord?>,
+    IRequestHandler<GetOfficialPlayerTypesQuery, IReadOnlyDictionary<Guid, RecapPlayerType>>,
     IRequestHandler<GetOfficialPlayerNamesQuery, IReadOnlyList<string>>,
     IRequestHandler<GetOfficialPopularityQuery, IReadOnlyList<OfficialPopularityRecord>>,
     IRequestHandler<GetImportRunsQuery, IReadOnlyList<ImportRunRecord>>,
@@ -183,9 +184,36 @@ internal sealed class LeaderboardHubSaga :
         if (player == null) return null;
         var profile = await Handle(new GetOfficialPlayerProfileQuery(request.Mix, player.Username),
             cancellationToken);
-        return profile == null
-            ? null
-            : new OfficialPlayerStandingRecord(player.Username, profile.PumbilityRank, profile.BoardsInTop);
+        if (profile == null) return null;
+
+        // Per-board placements read the same snapshot-cached stats the rankings view uses.
+        async Task<int?> RankOn(string type)
+        {
+            var rankings = await Handle(new GetOfficialRankingsQuery(request.Mix, type), cancellationToken);
+            return rankings.Rankings.FirstOrDefault(r => r.Player.PlayerId == player.Id)?.Rank;
+        }
+
+        var bestPlace = profile.Placements.Any(p => p.Place != null) ? profile.BestPlace : (int?)null;
+        return new OfficialPlayerStandingRecord(player.Username, profile.PumbilityRank, profile.BoardsInTop,
+            profile.NumberOnes, bestPlace,
+            await RankOn("Singles"), await RankOn("Doubles"), await RankOn(CoOpType));
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, RecapPlayerType>> Handle(GetOfficialPlayerTypesQuery request,
+        CancellationToken cancellationToken)
+    {
+        var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
+        if (latest?.CompletedAt == null) return new Dictionary<Guid, RecapPlayerType>();
+
+        var wanted = request.UserIds.ToHashSet();
+        var stats = await GetSnapshotStats(request.Mix, latest.Id, cancellationToken);
+        var result = new Dictionary<Guid, RecapPlayerType>();
+        foreach (var player in await _snapshots.GetPlayers(request.Mix, cancellationToken))
+            if (player.UserId is { } userId && wanted.Contains(userId) &&
+                stats.ByPlayer.TryGetValue(player.Id, out var playerStats) &&
+                playerStats.PlayerType is { } playerType)
+                result[userId] = playerType;
+        return result;
     }
 
     public async Task<OfficialPlayerProfileRecord?> Handle(GetOfficialPlayerProfileQuery request,

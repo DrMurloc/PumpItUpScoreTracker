@@ -5786,4 +5786,40 @@
   <data name="Doubles {0}-{1}" xml:space="preserve">
     <value>Doubles {0}-{1}</value>
   </data>
+  <data name="Playstyle" xml:space="preserve">
+    <value>Playstyle</value>
+  </data>
+  <data name="Official Boards" xml:space="preserve">
+    <value>Official Boards</value>
+  </data>
+  <data name="Chart #1s" xml:space="preserve">
+    <value>Chart #1s</value>
+  </data>
+  <data name="Best chart placement" xml:space="preserve">
+    <value>Best chart placement</value>
+  </data>
+  <data name="Invite Links" xml:space="preserve">
+    <value>Invite Links</value>
+  </data>
+  <data name="Expires (optional)" xml:space="preserve">
+    <value>Expires (optional)</value>
+  </data>
+  <data name="New invite link" xml:space="preserve">
+    <value>New invite link</value>
+  </data>
+  <data name="No invite links yet — create one to bring people in." xml:space="preserve">
+    <value>No invite links yet — create one to bring people in.</value>
+  </data>
+  <data name="Never expires" xml:space="preserve">
+    <value>Never expires</value>
+  </data>
+  <data name="Expires {0}" xml:space="preserve">
+    <value>Expires {0}</value>
+  </data>
+  <data name="Copy link" xml:space="preserve">
+    <value>Copy link</value>
+  </data>
+  <data name="Could not create the invite link." xml:space="preserve">
+    <value>Could not create the invite link.</value>
+  </data>
 </root>

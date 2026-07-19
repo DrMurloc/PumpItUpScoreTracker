@@ -33,11 +33,6 @@
             {
                 <MudSwitch T="bool" Label="@L["Show Regional Guests"]" Value="_showGuests" ValueChanged="SetShowGuests" Color="Color.Primary"></MudSwitch>
             }
-            @if (CanInvite)
-            {
-                <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Link"
-                           OnClick="() => _showInviteDialog = true">@L["Invite"]</MudButton>
-            }
             @if (_myRole?.Role is CommunityRole.Creator or CommunityRole.Admin)
             {
                 <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.ManageAccounts"
@@ -81,6 +76,7 @@
                 <MudTh Style="text-align:right">@L["Comp Lv"]</MudTh>
             }
             <MudTh Style="text-align:right">@L["Charts Played"]</MudTh>
+            <MudTh Class="olb-hide-mobile">@L["Playstyle"]</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>
@@ -129,11 +125,19 @@
                 </MudTd>
             }
             <MudTd Style="text-align:right">@(_playCounts.TryGetValue(context.UserId, out var plays) ? plays.ToString("N0") : "—")</MudTd>
+            <MudTd Class="olb-hide-mobile">
+                @if (_playerTypes.TryGetValue(context.UserId, out var playerType))
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">
+                        @L[OfficialLeaderboards.HubRankings.PlayerTypeName(playerType)]
+                    </MudChip>
+                }
+            </MudTd>
         </RowTemplate>
         <ChildRowContent>
             @if (_expandedUserId == context.UserId)
             {
-                <td colspan="5">
+                <td colspan="6">
                     @if (_scores == null)
                     {
                         <MudSkeleton Height="120px" SkeletonType="SkeletonType.Rectangle"/>
@@ -160,37 +164,10 @@
     </div>
 }
 
-<MudDialog @bind-Visible="_showInviteDialog">
-    <DialogContent>
-        @if (_community != null)
-        {
-            <MudGrid>
-                @foreach (var link in _community.InviteCodes)
-                {
-                    <MudItem xs="8">
-                        <MudText>@link.Key</MudText>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudButton StartIcon="@Icons.Material.Filled.ContentCopy" Variant="Variant.Outlined" OnClick="() => CopyCode(link.Key)">@L["Copy Invite Link"]</MudButton>
-                    </MudItem>
-                }
-                <MudItem xs="12">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving" OnClick="CreateCode">@L["Create Invite Code"]</MudButton>
-                </MudItem>
-            </MudGrid>
-        }
-    </DialogContent>
-    <DialogActions>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showInviteDialog = false">@L["Close"]</MudButton>
-    </DialogActions>
-</MudDialog>
-
 @inject IMediator Mediator;
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager;
 @inject IUserRepository Users;
-@inject IJSRuntime JSRuntime;
-@inject ISnackbar Snackbar;
 @inject ScoreTracker.Web.Services.Contracts.IUiSettingsAccessor UiSettings;
 @code {
     // Community stats are Phoenix-lineage — XX viewers keep seeing Phoenix, as before.
@@ -204,11 +181,10 @@
     private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
     private IReadOnlyDictionary<Guid, int> _playCounts = new Dictionary<Guid, int>();
     private IReadOnlyDictionary<Guid, double> _coOpCompletion = new Dictionary<Guid, double>();
+    private IReadOnlyDictionary<Guid, RecapPlayerType> _playerTypes = new Dictionary<Guid, RecapPlayerType>();
     private bool _coOpCompletionLoaded;
     private ISet<Name> _myCommunities = new HashSet<Name>();
     private bool _showGuests = false;
-    private bool _showInviteDialog;
-    private bool _isSaving;
     private List<BreadcrumbItem> _crumbs = new();
 
     // One percentile scale per rating column: a player's color reflects where they sit in
@@ -227,10 +203,6 @@
 
     [Parameter]
     [SupplyParameterFromQuery] public string CommunityName { get; set; } = string.Empty;
-
-    private bool CanInvite => _community is { RequiresCode: true } && _myRole != null &&
-                              (_myRole.Role == CommunityRole.Creator ||
-                               _myRole.Permissions.HasFlag(CommunityPermission.ManageInviteLinks));
 
     private static ChartType? ExpandTypeFor(LeaderboardType type) => type switch
     {
@@ -266,6 +238,8 @@
         _leaderboard = (await Mediator.Send(new GetCommunityLeaderboardQuery(communityName, _currentMix))).ToArray();
         _users = (await Users.GetUsers(_leaderboard.Select(l => l.UserId).Distinct())).ToDictionary(u => u.Id);
         _playCounts = await Mediator.Send(new GetCommunityPlayCountsQuery(communityName, _currentMix));
+        _playerTypes = await Mediator.Send(new OfficialMirror.Contracts.Queries.GetOfficialPlayerTypesQuery(
+            _currentMix, _leaderboard.Select(l => l.UserId).Distinct().ToArray()));
         _skillScale = ThemeScales.ScaleFrom(_leaderboard.Select(l => (int)l.SkillRating));
         _singlesScale = ThemeScales.ScaleFrom(_leaderboard.Select(l => (int)l.SinglesRating));
         _doublesScale = ThemeScales.ScaleFrom(_leaderboard.Select(l => (int)l.DoublesRating));
@@ -338,21 +312,6 @@
     private void GoToMembers()
     {
         NavManager.NavigateTo($"/Community/Members?CommunityName={HttpUtility.UrlEncode(CommunityName)}");
-    }
-
-    private async Task CreateCode()
-    {
-        if (_community == null) return;
-        _isSaving = true;
-        var code = await Mediator.Send(new CreateInviteLinkCommand(_community.Name, null));
-        _community.InviteCodes[code] = null;
-        _isSaving = false;
-    }
-
-    private async Task CopyCode(Guid code)
-    {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", $"https://piuscores.arroweclip.se/Communities/Invite/{code}");
-        Snackbar.Add(L["Copied to clipboard!"].Value, Severity.Success);
     }
 
     private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, PhoenixPlate? Plate, bool IsBroken, int Rating, double CompetitiveLevel);

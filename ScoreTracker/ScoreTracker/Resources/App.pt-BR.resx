@@ -5663,4 +5663,40 @@
   <data name="Doubles {0}-{1}" xml:space="preserve">
     <value>Doubles {0}-{1}</value>
   </data>
+  <data name="Playstyle" xml:space="preserve">
+    <value>Estilo de jogo</value>
+  </data>
+  <data name="Official Boards" xml:space="preserve">
+    <value>Classificações oficiais</value>
+  </data>
+  <data name="Chart #1s" xml:space="preserve">
+    <value>Charts em nº 1</value>
+  </data>
+  <data name="Best chart placement" xml:space="preserve">
+    <value>Melhor colocação em chart</value>
+  </data>
+  <data name="Invite Links" xml:space="preserve">
+    <value>Links de convite</value>
+  </data>
+  <data name="Expires (optional)" xml:space="preserve">
+    <value>Expira (opcional)</value>
+  </data>
+  <data name="New invite link" xml:space="preserve">
+    <value>Novo link de convite</value>
+  </data>
+  <data name="No invite links yet — create one to bring people in." xml:space="preserve">
+    <value>Ainda não há links de convite — crie um para trazer as pessoas.</value>
+  </data>
+  <data name="Never expires" xml:space="preserve">
+    <value>Nunca expira</value>
+  </data>
+  <data name="Expires {0}" xml:space="preserve">
+    <value>Expira em {0}</value>
+  </data>
+  <data name="Copy link" xml:space="preserve">
+    <value>Copiar link</value>
+  </data>
+  <data name="Could not create the invite link." xml:space="preserve">
+    <value>Não foi possível criar o link de convite.</value>
+  </data>
 </root>

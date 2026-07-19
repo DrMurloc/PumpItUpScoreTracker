@@ -5672,4 +5672,40 @@
   <data name="Doubles {0}-{1}" xml:space="preserve">
     <value>Dobles {0}-{1}</value>
   </data>
+  <data name="Playstyle" xml:space="preserve">
+    <value>Estilo de juego</value>
+  </data>
+  <data name="Official Boards" xml:space="preserve">
+    <value>Clasificaciones oficiales</value>
+  </data>
+  <data name="Chart #1s" xml:space="preserve">
+    <value>Charts en n.º 1</value>
+  </data>
+  <data name="Best chart placement" xml:space="preserve">
+    <value>Mejor posición en chart</value>
+  </data>
+  <data name="Invite Links" xml:space="preserve">
+    <value>Enlaces de invitación</value>
+  </data>
+  <data name="Expires (optional)" xml:space="preserve">
+    <value>Expira (opcional)</value>
+  </data>
+  <data name="New invite link" xml:space="preserve">
+    <value>Nuevo enlace de invitación</value>
+  </data>
+  <data name="No invite links yet — create one to bring people in." xml:space="preserve">
+    <value>Aún no hay enlaces de invitación — cree uno para invitar gente.</value>
+  </data>
+  <data name="Never expires" xml:space="preserve">
+    <value>No expira</value>
+  </data>
+  <data name="Expires {0}" xml:space="preserve">
+    <value>Expira {0}</value>
+  </data>
+  <data name="Copy link" xml:space="preserve">
+    <value>Copiar enlace</value>
+  </data>
+  <data name="Could not create the invite link." xml:space="preserve">
+    <value>No se pudo crear el enlace de invitación.</value>
+  </data>
 </root>

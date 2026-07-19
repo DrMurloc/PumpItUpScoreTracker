@@ -70,7 +70,8 @@ internal sealed class CommunityPlayerSaga :
 
         return new CommunityPlayerProfileRecord(user.Id, user.Name, user.ProfileImage, user.Country,
             user.IsPublic, stats.SkillRating, stats.TotalRating, stats.SinglesRating, stats.DoublesRating,
-            stats.CompetitiveLevel, stats.HighestLevel, stats.ClearCount, completion);
+            stats.CompetitiveLevel, stats.SinglesCompetitiveLevel, stats.DoublesCompetitiveLevel,
+            stats.HighestLevel, stats.ClearCount, completion);
     }
 
     public async Task<IEnumerable<CommunityChartComparisonRecord>> Handle(

@@ -9,6 +9,7 @@
 @using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
 @using System.Web
 @using Chart = ScoreTracker.SharedKernel.Models.Chart
@@ -58,9 +59,10 @@
 
     .cmp-folder-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; justify-content: flex-end; height: 100%; }
 
+    /* Fixed width: the MudTooltip wrapper is an auto-width inline-block, so a
+       percentage width here collapses the bar to nothing. */
     .cmp-folder-track {
-        width: 100%;
-        max-width: 36px;
+        width: 34px;
         height: 118px;
         background: var(--mix-surface-muted);
         border-radius: 5px;
@@ -113,12 +115,6 @@ else
                         @if (_standing != null)
                         {
                             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
-                                @if (_standing.PumbilityRank != null)
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Info">
-                                        @L["Official #{0}", _standing.PumbilityRank]
-                                    </MudChip>
-                                }
                                 <MudLink Href="@($"/OfficialLeaderboards/Players?player={Uri.EscapeDataString(_standing.Username)}")">
                                     <MudChip T="string" Size="Size.Small" Color="Color.Primary">
                                         @L["{0} top-board charts", _standing.BoardsInTop] →
@@ -137,6 +133,39 @@ else
             </div>
         </div>
     </MudPaper>
+
+    @if (_standing != null)
+    {
+        <MudPaper Class="pa-4 mb-4">
+            <MudText Typo="Typo.h6" Class="mb-1">@L["Official Boards"]</MudText>
+            <div class="cmp-tiles" style="margin-top:8px">
+                @if (_standing.PumbilityRank != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">PUMBILITY</div><div class="cmp-tile-num">#@_standing.PumbilityRank</div></div>
+                }
+                @if (_standing.SinglesRank != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Singles"]</div><div class="cmp-tile-num" style="color:var(--chart-singles)">#@_standing.SinglesRank</div></div>
+                }
+                @if (_standing.DoublesRank != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Doubles"]</div><div class="cmp-tile-num" style="color:var(--chart-doubles)">#@_standing.DoublesRank</div></div>
+                }
+                @if (_standing.CoOpRank != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["CoOp"]</div><div class="cmp-tile-num">#@_standing.CoOpRank</div></div>
+                }
+                @if (_standing.NumberOnes > 0)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Chart #1s"]</div><div class="cmp-tile-num">@_standing.NumberOnes</div></div>
+                }
+                @if (_standing.BestPlace != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Best chart placement"]</div><div class="cmp-tile-num">#@_standing.BestPlace</div></div>
+                }
+            </div>
+        </MudPaper>
+    }
 
     <MudPaper Class="pa-4 mb-4">
         <MudText Typo="Typo.h6" Class="mb-1">@L["Folder Completion"]</MudText>
@@ -260,6 +289,7 @@ else
 @inject ICurrentUserAccessor CurrentUser
 @inject IDateTimeOffsetAccessor DateTimeOffset
 @inject NavigationManager NavManager
+@inject ScoreTracker.Web.Services.Contracts.IUiSettingsAccessor UiSettings
 @code {
     [Parameter, SupplyParameterFromQuery] public string CommunityName { get; set; } = string.Empty;
     [Parameter, SupplyParameterFromQuery] public Guid UserId { get; set; }
@@ -322,6 +352,10 @@ else
             return;
         }
 
+        // Community stats are Phoenix-lineage — XX viewers keep seeing Phoenix, as before.
+        var selectedMix = await UiSettings.GetSelectedMix();
+        _currentMix = selectedMix == MixEnum.XX ? MixEnum.Phoenix : selectedMix;
+
         try
         {
             _profile = await Mediator.Send(new GetCommunityPlayerProfileQuery(communityName, UserId, _currentMix));
@@ -347,6 +381,21 @@ else
         }
 
         _loading = false;
+
+        // The comparison opens on the pairing that means the most: the chart type where the
+        // two competitive levels sit closest, at the folder between them.
+        if (_profile != null && CurrentUser.IsLoggedIn && CurrentUser.User.Id != _profile.UserId)
+        {
+            var mine = await Mediator.Send(new PlayerProgress.Contracts.Queries.GetPlayerStatsQuery(
+                CurrentUser.User.Id, _currentMix));
+            var singlesGap = Math.Abs(mine.SinglesCompetitiveLevel - _profile.SinglesCompetitiveLevel);
+            var doublesGap = Math.Abs(mine.DoublesCompetitiveLevel - _profile.DoublesCompetitiveLevel);
+            var (type, myLevel, theirLevel) = singlesGap <= doublesGap
+                ? (ChartType.Single, mine.SinglesCompetitiveLevel, _profile.SinglesCompetitiveLevel)
+                : (ChartType.Double, mine.DoublesCompetitiveLevel, _profile.DoublesCompetitiveLevel);
+            var level = Math.Clamp((int)Math.Round((myLevel + theirLevel) / 2), 1, (int)DifficultyLevel.Max);
+            await OnFolderChanged((type, level));
+        }
     }
 
     private async Task OnFolderChanged((ChartType Type, int Level) folder)

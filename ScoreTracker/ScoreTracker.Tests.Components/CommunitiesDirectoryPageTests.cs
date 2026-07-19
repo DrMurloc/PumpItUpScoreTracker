@@ -155,8 +155,8 @@ public sealed class CommunitiesDirectoryPageTests : ComponentTestBase
         var cut = Render();
 
         var card = cut.Find(".communities-explore").TextContent;
-        Assert.Contains("Singles 5.2-22.4", card);
-        Assert.Contains("Doubles 9.1-18.4", card);
+        Assert.Contains("S 5.2 - 22.4", card);
+        Assert.Contains("D 9.1 - 18.4", card);
     }
 
     [Fact]

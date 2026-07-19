@@ -5718,4 +5718,40 @@
   <data name="Doubles {0}-{1}" xml:space="preserve">
     <value>Grl {0}-{1}</value>
   </data>
+  <data name="Playstyle" xml:space="preserve">
+    <value>Mrgl-grl</value>
+  </data>
+  <data name="Official Boards" xml:space="preserve">
+    <value>Mrgl Grlgrls</value>
+  </data>
+  <data name="Chart #1s" xml:space="preserve">
+    <value>#1 mrgls!</value>
+  </data>
+  <data name="Best chart placement" xml:space="preserve">
+    <value>MRGL grl mrgl</value>
+  </data>
+  <data name="Invite Links" xml:space="preserve">
+    <value>Mrgl-grls</value>
+  </data>
+  <data name="Expires (optional)" xml:space="preserve">
+    <value>Mrgl... (grl)</value>
+  </data>
+  <data name="New invite link" xml:space="preserve">
+    <value>Mrgl mrgl-grl!</value>
+  </data>
+  <data name="No invite links yet — create one to bring people in." xml:space="preserve">
+    <value>Mrgl mrgl... MRGL grl mrgl!</value>
+  </data>
+  <data name="Never expires" xml:space="preserve">
+    <value>Mrgl mrgl mrgl</value>
+  </data>
+  <data name="Expires {0}" xml:space="preserve">
+    <value>Mrgl... {0}</value>
+  </data>
+  <data name="Copy link" xml:space="preserve">
+    <value>Mrgl grl</value>
+  </data>
+  <data name="Could not create the invite link." xml:space="preserve">
+    <value>Mrgl... mrgl-grl mrgl.</value>
+  </data>
 </root>

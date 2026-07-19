@@ -5673,4 +5673,40 @@
   <data name="Doubles {0}-{1}" xml:space="preserve">
     <value>더블 {0}-{1}</value>
   </data>
+  <data name="Playstyle" xml:space="preserve">
+    <value>플레이 스타일</value>
+  </data>
+  <data name="Official Boards" xml:space="preserve">
+    <value>공식 보드</value>
+  </data>
+  <data name="Chart #1s" xml:space="preserve">
+    <value>1위 채보</value>
+  </data>
+  <data name="Best chart placement" xml:space="preserve">
+    <value>최고 채보 순위</value>
+  </data>
+  <data name="Invite Links" xml:space="preserve">
+    <value>초대 링크</value>
+  </data>
+  <data name="Expires (optional)" xml:space="preserve">
+    <value>만료일 (선택)</value>
+  </data>
+  <data name="New invite link" xml:space="preserve">
+    <value>새 초대 링크</value>
+  </data>
+  <data name="No invite links yet — create one to bring people in." xml:space="preserve">
+    <value>아직 초대 링크가 없습니다 — 링크를 만들어 멤버를 초대해보세요.</value>
+  </data>
+  <data name="Never expires" xml:space="preserve">
+    <value>만료 없음</value>
+  </data>
+  <data name="Expires {0}" xml:space="preserve">
+    <value>{0} 만료</value>
+  </data>
+  <data name="Copy link" xml:space="preserve">
+    <value>링크 복사</value>
+  </data>
+  <data name="Could not create the invite link." xml:space="preserve">
+    <value>초대 링크를 생성할 수 없습니다.</value>
+  </data>
 </root>

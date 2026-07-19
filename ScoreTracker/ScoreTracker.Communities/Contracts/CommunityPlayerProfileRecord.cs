@@ -19,6 +19,8 @@ public sealed record CommunityPlayerProfileRecord(
     int SinglesRating,
     int DoublesRating,
     double CompetitiveLevel,
+    double SinglesCompetitiveLevel,
+    double DoublesCompetitiveLevel,
     int HighestLevel,
     int ClearCount,
     IReadOnlyList<CommunityFolderCompletionRecord> FolderCompletion);

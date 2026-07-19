@@ -5786,4 +5786,40 @@
   <data name="Doubles {0}-{1}" xml:space="preserve">
     <value>Doubles {0}-{1}</value>
   </data>
+  <data name="Playstyle" xml:space="preserve">
+    <value>Style de jeu</value>
+  </data>
+  <data name="Official Boards" xml:space="preserve">
+    <value>Boards officiels</value>
+  </data>
+  <data name="Chart #1s" xml:space="preserve">
+    <value>Charts en n°1</value>
+  </data>
+  <data name="Best chart placement" xml:space="preserve">
+    <value>Meilleure place sur un Chart</value>
+  </data>
+  <data name="Invite Links" xml:space="preserve">
+    <value>Liens d'invitation</value>
+  </data>
+  <data name="Expires (optional)" xml:space="preserve">
+    <value>Expire (optionnel)</value>
+  </data>
+  <data name="New invite link" xml:space="preserve">
+    <value>Nouveau lien d'invitation</value>
+  </data>
+  <data name="No invite links yet — create one to bring people in." xml:space="preserve">
+    <value>Pas encore de lien d'invitation — créez-en un pour faire venir du monde.</value>
+  </data>
+  <data name="Never expires" xml:space="preserve">
+    <value>N'expire jamais</value>
+  </data>
+  <data name="Expires {0}" xml:space="preserve">
+    <value>Expire le {0}</value>
+  </data>
+  <data name="Copy link" xml:space="preserve">
+    <value>Copier le lien</value>
+  </data>
+  <data name="Could not create the invite link." xml:space="preserve">
+    <value>Impossible de créer le lien d'invitation.</value>
+  </data>
 </root>

@@ -65,6 +65,9 @@ public sealed class CommunityLeaderboardPageTests : ComponentTestBase
             .ReturnsAsync(new Dictionary<Guid, int> { [PlayerId] = 42 });
         _mediator.Setup(m => m.Send(It.IsAny<GetCommunityCoOpCompletionQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double> { [PlayerId] = 0.5 });
+        _mediator.Setup(m => m.Send(It.IsAny<OfficialMirror.Contracts.Queries.GetOfficialPlayerTypesQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, RecapPlayerType> { [PlayerId] = RecapPlayerType.Competitive });
         _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {

@@ -1,5 +1,17 @@
 namespace ScoreTracker.OfficialMirror.Contracts;
 
-/// <summary>Username (the official-profile link target), PUMBILITY rank, and top-board count.</summary>
+/// <summary>
+///     A linked account's official standing: the profile-link username, top-board count, chart
+///     firsts, best single-chart placement, and where they sit on each PUMBILITY board
+///     (Combined/Singles/Doubles + the computed CO-OP board). Null ranks mean not on that board.
+/// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record OfficialPlayerStandingRecord(string Username, int? PumbilityRank, int BoardsInTop);
+public sealed record OfficialPlayerStandingRecord(
+    string Username,
+    int? PumbilityRank,
+    int BoardsInTop,
+    int NumberOnes,
+    int? BestPlace,
+    int? SinglesRank,
+    int? DoublesRank,
+    int? CoOpRank);

@@ -34,6 +34,41 @@ else
         </MudAlert>
     }
 
+    @if (CanManageInvites)
+    {
+        <MudPaper Class="pa-4 mb-4" Outlined="true">
+            <div class="d-flex align-center justify-space-between flex-wrap mb-3" style="gap:10px">
+                <MudText Typo="Typo.h5">@L["Invite Links"]</MudText>
+                <div class="d-flex align-center flex-wrap" style="gap:8px">
+                    <MudDatePicker @bind-Date="_newCodeExpiry" Label="@L["Expires (optional)"]" Clearable="true"
+                                   Margin="Margin.Dense" Style="max-width:190px"/>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                               Disabled="_isSaving" OnClick="CreateCode">@L["New invite link"]</MudButton>
+                </div>
+            </div>
+            @if (!_community.InviteCodes.Any())
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["No invite links yet — create one to bring people in."]</MudText>
+            }
+            <div class="d-flex flex-wrap" style="gap:10px">
+                @foreach (var link in _community.InviteCodes.OrderBy(l => l.Value ?? DateOnly.MaxValue))
+                {
+                    <MudPaper Class="pa-3 d-flex align-center" Style="gap:12px" Outlined="true">
+                        <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" Color="Color.Primary"/>
+                        <div>
+                            <MudText Typo="Typo.body2" Style="font-family:monospace">@(link.Key.ToString()[..8])…</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @(link.Value == null ? L["Never expires"] : L["Expires {0}", link.Value.Value.ToString("d")])
+                            </MudText>
+                        </div>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ContentCopy"
+                                   OnClick="() => CopyCode(link.Key)">@L["Copy link"]</MudButton>
+                    </MudPaper>
+                }
+            </div>
+        </MudPaper>
+    }
+
     <MudTable T="CommunityMemberRecord" Items="_roster" Hover="true" Class="mb-6">
         <HeaderContent>
             <MudTh>@L["Member"]</MudTh>
@@ -160,6 +195,7 @@ else
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject NavigationManager NavManager
+@inject IJSRuntime JSRuntime
 
 @code {
     [Parameter, SupplyParameterFromQuery] public string? CommunityName { get; set; }
@@ -189,6 +225,36 @@ else
 
     private bool CanPromote => _myRole != null && _myRole.Permissions.HasFlag(CommunityPermission.PromoteAdmins);
     private bool CanManageUsers => _myRole != null && _myRole.Permissions.HasFlag(CommunityPermission.ManageUsers);
+
+    private bool CanManageInvites => _community is { RequiresCode: true } && _myRole != null &&
+                                     (_myRole.Role == CommunityRole.Creator ||
+                                      _myRole.Permissions.HasFlag(CommunityPermission.ManageInviteLinks));
+
+    private DateTime? _newCodeExpiry;
+
+    private async Task CreateCode()
+    {
+        if (_community == null) return;
+        _isSaving = true;
+        try
+        {
+            var expiration = _newCodeExpiry == null ? (DateOnly?)null : DateOnly.FromDateTime(_newCodeExpiry.Value);
+            var code = await Mediator.Send(new CreateInviteLinkCommand(_community.Name, expiration));
+            _community.InviteCodes[code] = expiration;
+        }
+        catch (Exception)
+        {
+            Snackbar.Add(L["Could not create the invite link."].Value, Severity.Error);
+        }
+        _isSaving = false;
+    }
+
+    private async Task CopyCode(Guid code)
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText",
+            $"https://piuscores.arroweclip.se/Communities/Invite/{code}");
+        Snackbar.Add(L["Copied to clipboard!"].Value, Severity.Success);
+    }
 
     protected override async Task OnInitializedAsync() => await Load();
 

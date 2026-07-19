@@ -21,21 +21,27 @@
 <style>
     .communities-page { padding-top: 16px; }
 
+    /* Two independent columns: the rail (World + Regions) and the main field (Yours +
+       Explore) each flow at their own height, so a long region list never pushes Explore
+       down. On mobile the wrappers dissolve (display: contents) and the four blocks
+       reorder as flex items: World, Yours, Explore, Regions. */
     .communities-dir {
         display: grid;
         grid-template-columns: 290px 1fr;
-        grid-template-areas: "world your" "regions your" "regions explore";
         gap: 20px;
         align-items: start;
     }
 
-    .communities-world { grid-area: world; }
-    .communities-regions { grid-area: regions; }
-    .communities-your { grid-area: your; }
-    .communities-explore { grid-area: explore; }
+    .communities-rail, .communities-main {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        min-width: 0;
+    }
 
     @@media (max-width: 820px) {
         .communities-dir { display: flex; flex-direction: column; }
+        .communities-rail, .communities-main { display: contents; }
         .communities-world { order: 1; }
         .communities-your { order: 2; }
         .communities-explore { order: 3; }
@@ -99,10 +105,14 @@
     .communities-region-row:last-child { border-bottom: none; }
 
     .communities-range {
-        color: var(--mix-ink-muted);
         font-size: 11.5px;
-        white-space: nowrap;
+        display: inline-flex;
+        gap: 6px;
+        flex-wrap: wrap;
     }
+
+    .communities-range-singles { color: var(--chart-singles); white-space: nowrap; }
+    .communities-range-doubles { color: var(--chart-doubles); white-space: nowrap; }
 </style>
 
 <div class="communities-page">
@@ -130,6 +140,7 @@
 </div>
 
 <div class="communities-dir">
+    <div class="communities-rail">
     <div class="communities-world">
         <MudPaper Class="pa-4">
             <MudText Typo="Typo.h6">@L["World"]</MudText>
@@ -144,9 +155,9 @@
                         <span class="mud-text-secondary">@L["Your PUMBILITY"]</span><b>@_myPumbility</b>
                     </div>
                 }
-                @if (_world != null && RangeLabel(_world.CommunityName) is { } worldRange)
+                @if (_world != null && RangeChip(_world.CommunityName) is { } worldRange)
                 {
-                    <div class="communities-stat-row"><span class="communities-range">@worldRange</span></div>
+                    <div class="communities-stat-row">@worldRange</div>
                 }
             </div>
             @if (_world != null)
@@ -154,20 +165,11 @@
                 <MudButton Variant="Variant.Outlined" Size="Size.Small" Class="mt-3" FullWidth="true"
                            OnClick="@(() => GoToLeaderboard(_world.CommunityName))">@L["Rankings"]</MudButton>
             }
-            @if (_currentUser != null)
+            @if (_currentUser is { IsPublic: false })
             {
-                @if (_world != null && _myCommunities.Contains(_world.CommunityName))
-                {
-                    <MudButton Variant="Variant.Text" Size="Size.Small" Class="mt-1" FullWidth="true" Href="/Account">
-                        @L["Go Private"]
-                    </MudButton>
-                }
-                else if (!_currentUser.IsPublic)
-                {
-                    <MudButton Variant="Variant.Text" Size="Size.Small" Class="mt-1" FullWidth="true" Href="/Account">
-                        @L["Join by going public"]
-                    </MudButton>
-                }
+                <MudButton Variant="Variant.Text" Size="Size.Small" Class="mt-1" FullWidth="true" Href="/Account">
+                    @L["Join by going public"]
+                </MudButton>
             }
         </MudPaper>
     </div>
@@ -186,10 +188,7 @@
                         <b>@((string)_myRegion.CommunityName)</b>
                         <div class="communities-card-meta">
                             <span>@L["{0} members", _myRegion.MemberCount]</span>
-                            @if (RangeLabel(_myRegion.CommunityName) is { } regionRange)
-                            {
-                                <span class="communities-range">@regionRange</span>
-                            }
+                            @RangeChip(_myRegion.CommunityName)
                         </div>
                     </div>
                     <MudButton Variant="Variant.Outlined" Size="Size.Small"
@@ -213,10 +212,7 @@
                     </MudLink>
                     <div style="text-align:right">
                         <span class="mud-text-secondary">@region.MemberCount</span>
-                        @if (RangeLabel(region.CommunityName) is { } range)
-                        {
-                            <div class="communities-range">@range</div>
-                        }
+                        <div>@RangeChip(region.CommunityName)</div>
                     </div>
                 </div>
             }
@@ -225,7 +221,9 @@
             @L["World and regions follow your account's country and public setting — no invites, no roles."]
         </MudText>
     </div>
+    </div>
 
+    <div class="communities-main">
     <div class="communities-your">
         <MudText Typo="Typo.h6" Class="mb-2">@L["Your Communities"]</MudText>
         @if (!_yourCommunities.Any())
@@ -249,10 +247,7 @@
                     </div>
                     <div class="communities-card-meta">
                         <span>@L["{0} members", community.MemberCount]</span>
-                        @if (RangeLabel(community.CommunityName) is { } range)
-                        {
-                            <span class="communities-range">@range</span>
-                        }
+                        @RangeChip(community.CommunityName)
                     </div>
                 </div>
                 <div class="communities-card-actions">
@@ -281,10 +276,7 @@
                     </div>
                     <div class="communities-card-meta">
                         <span>@L["{0} members", community.MemberCount]</span>
-                        @if (RangeLabel(community.CommunityName) is { } range)
-                        {
-                            <span class="communities-range">@range</span>
-                        }
+                        @RangeChip(community.CommunityName)
                     </div>
                 </div>
                 <div class="communities-card-actions">
@@ -298,6 +290,7 @@
                 </div>
             </div>
         }
+    </div>
     </div>
 </div>
 </div>
@@ -364,17 +357,22 @@
     private CommunityRole? RoleOf(Name communityName) =>
         _roles.TryGetValue(communityName, out var role) ? role.Role : null;
 
-    private string? RangeLabel(Name communityName)
+    // Competitive spread in the S/D shorthand the FolderPicker taught, wearing the singles /
+    // doubles series colors the home-page stats widget established.
+    private RenderFragment? RangeChip(Name communityName)
     {
         if (!_ranges.TryGetValue(communityName, out var range)) return null;
-        var parts = new List<string>();
-        if (range.SinglesMin != null)
-            parts.Add(L["Singles {0}-{1}", range.SinglesMin.Value.ToString("0.0"),
-                range.SinglesMax!.Value.ToString("0.0")].Value);
-        if (range.DoublesMin != null)
-            parts.Add(L["Doubles {0}-{1}", range.DoublesMin.Value.ToString("0.0"),
-                range.DoublesMax!.Value.ToString("0.0")].Value);
-        return parts.Count == 0 ? null : string.Join(" | ", parts);
+        if (range.SinglesMin == null && range.DoublesMin == null) return null;
+        return @<span class="communities-range">
+                   @if (range.SinglesMin != null)
+                   {
+                       <span class="communities-range-singles">S @range.SinglesMin.Value.ToString("0.0") - @range.SinglesMax!.Value.ToString("0.0")</span>
+                   }
+                   @if (range.DoublesMin != null)
+                   {
+                       <span class="communities-range-doubles">D @range.DoublesMin.Value.ToString("0.0") - @range.DoublesMax!.Value.ToString("0.0")</span>
+                   }
+               </span>;
     }
 
     private string PrivacyLabel(CommunityPrivacyType privacy) => privacy switch
