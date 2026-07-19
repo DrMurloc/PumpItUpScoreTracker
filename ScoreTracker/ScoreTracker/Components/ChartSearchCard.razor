@@ -142,6 +142,9 @@
     @if (ShowActions)
     {
         <div class="srp-card-actions">
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit"
+                           OnClick="() => OnQuickRecord.InvokeAsync(Result)"
+                           aria-label="@L["Quick record"]"></MudIconButton>
             <MudIconButton Size="Size.Small"
                            Icon="@(IsFavorite ? Icons.Material.Filled.Favorite : Icons.Material.Outlined.FavoriteBorder)"
                            Color="@(IsFavorite ? Color.Secondary : Color.Default)"
@@ -176,6 +179,7 @@
     [Parameter] public bool IsToDo { get; set; }
     [Parameter] public EventCallback<Guid> OnToggleFavorite { get; set; }
     [Parameter] public EventCallback<Guid> OnToggleToDo { get; set; }
+    [Parameter] public EventCallback<ChartSearchResult> OnQuickRecord { get; set; }
 
     // The owner-locked state-border language (tier lists §4): solid success = passed,
     // dashed info = To-Do, dashed success = passed in another mix; passed > To-Do > other.

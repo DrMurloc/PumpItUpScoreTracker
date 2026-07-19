@@ -222,7 +222,8 @@ else
                                  IsFavorite="_favoriteCharts.Contains(result.Chart.Id)"
                                  IsToDo="_todoCharts.Contains(result.Chart.Id)"
                                  OnToggleFavorite="ToggleFavorite"
-                                 OnToggleToDo="ToggleToDo"></ChartSearchCard>
+                                 OnToggleToDo="ToggleToDo"
+                                 OnQuickRecord="OpenQuickRecord"></ChartSearchCard>
             }
         </div>
     }
@@ -237,6 +238,9 @@ else
 
 <ChartsExportDialog @bind-Visible="_exportOpen" FilterParameters="QueryParameters()" TotalCount="_totalCount"
                     Mix="_mix" AllMixes="_allMixes" SignedIn="CurrentUser.IsLoggedIn"></ChartsExportDialog>
+
+<ChartQuickRecordDialog @bind-Visible="_quickRecordOpen" Target="_quickRecordTarget"
+                        OnSaved="OnQuickRecordSaved"></ChartQuickRecordDialog>
 
 <MudLayout>
     <MudDrawer @bind-Open="_filtersOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="360px">
@@ -476,6 +480,7 @@ else
 @inject IUiSettingsAccessor UiSettings
 @inject ISnackbar Snackbar
 @inject IJSRuntime Javascript
+@inject IDateTimeOffsetAccessor Clock
 @code {
 
     private MixEnum _mix = MixEnum.Phoenix;
@@ -1463,6 +1468,35 @@ else
             _favoriteCharts.Add(chartId);
             Snackbar.Add(L["Chart added to Favorites"].Value, Severity.Success);
         }
+    }
+
+    // ---- quick record ---------------------------------------------------------------
+
+    private bool _quickRecordOpen;
+    private ChartSearchResult? _quickRecordTarget;
+
+    private void OpenQuickRecord(ChartSearchResult target)
+    {
+        _quickRecordTarget = target;
+        _quickRecordOpen = true;
+    }
+
+    private void OnQuickRecordSaved(RecordScoreForm.Result result)
+    {
+        var target = _quickRecordTarget;
+        if (target == null) return;
+
+        // The card's overlay updates in place — no refetch; the search projection catches
+        // up on the next load.
+        var my = new ChartSearchMyState(
+            result.PhoenixScore == null ? null : (int)result.PhoenixScore.Value,
+            result.PhoenixGrade, result.Plate, result.LegacyGrade, result.LegacyScore, result.IsBroken,
+            Clock.Now, !result.IsBroken, target.My?.PassedInAnotherScopeMix ?? false);
+        _results = _results
+            .Select(r => r.Chart.Id == target.Chart.Id ? r with { My = my } : r)
+            .ToList();
+        Snackbar.Add(L["Recorded {0}", $"{target.Chart.Song.Name} {target.Chart.DifficultyDisplay}"].Value,
+            Severity.Success);
     }
 
     private async Task ToggleToDo(Guid chartId)

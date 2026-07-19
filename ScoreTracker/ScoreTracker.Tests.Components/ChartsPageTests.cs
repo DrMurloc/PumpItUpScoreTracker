@@ -12,6 +12,7 @@ using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -60,6 +61,7 @@ public sealed class ChartsPageTests : ComponentTestBase
             .ReturnsAsync(Array.Empty<string>());
         Services.AddSingleton(_mediator.Object);
         Services.AddScoped<ChartScoringLevels>();
+        Services.AddSingleton(Mock.Of<IDateTimeOffsetAccessor>());
         Services.AddLogging();
 
         // DifficultyBubble branches on RendererInfo (the MudTooltip static-SSR gate).

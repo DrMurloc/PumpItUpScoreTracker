@@ -1,0 +1,43 @@
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@namespace ScoreTracker.Web.Components
+
+@* The SRP's ✎ dialog: the Quick Record widget's record body with the chart pre-filled —
+   the selector step is skipped because the card already chose. Saving hands the result
+   back to the page, which updates the card's overlay in place. *@
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged"
+           Options="new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true }">
+    <TitleContent>
+        @if (Target != null)
+        {
+            <div class="qr-selected">
+                <span class="qr-mixchip" title="@Target.Chart.Mix.GetName()">@Target.Chart.Mix.GetName()</span>
+                <span class="qr-mini-art"><SongImage Song="Target.Chart.Song" Small="true"></SongImage></span>
+                <DifficultyBubble Chart="Target.Chart" Small="true"></DifficultyBubble>
+                <span class="qr-selected-name" title="@Target.Chart.Song.Name">@Target.Chart.Song.Name</span>
+            </div>
+        }
+    </TitleContent>
+    <DialogContent>
+        @if (Target != null)
+        {
+            <RecordScoreForm Chart="Target.Chart" Mix="Target.Chart.Mix" OnSaved="HandleSaved"></RecordScoreForm>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="() => VisibleChanged.InvokeAsync(false)">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public ChartSearchResult? Target { get; set; }
+    [Parameter] public EventCallback<RecordScoreForm.Result> OnSaved { get; set; }
+
+    private async Task HandleSaved(RecordScoreForm.Result result)
+    {
+        await OnSaved.InvokeAsync(result);
+        await VisibleChanged.InvokeAsync(false);
+    }
+}

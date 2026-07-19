@@ -91,90 +91,13 @@ else
                     <DifficultyBubble Chart="_chart" Small="true"></DifficultyBubble>
                     <span class="qr-selected-name" title="@_chart.Song.Name">@_chart.Song.Name</span>
                     <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
-                                   title="@L["Change chart"]" Disabled="EditMode || _isSaving"
+                                   title="@L["Change chart"]" Disabled="EditMode"
                                    OnClick="ClearChart"/>
                 </div>
             }
-            @if (_isLegacy)
-            {
-                @* Legacy (XX and older): the letter grade is the primary datum — scores are
-                   rarely recorded (owner, 2026-07-13), so the grade strip LEADS and Score drops
-                   to the second line (optional). Tap a grade to pick it (passing); tap the
-                   selected one again to mark it broken. Grade + broken in one control, no checkbox. *@
-                <div class="qr-graderow @(EditMode || _isSaving ? "qr-graderow-disabled" : "")">
-                    @foreach (var grade in LegacyPrimaryGrades)
-                    {
-                        var g = grade;
-                        var isSel = _letterGrade == g;
-                        <img class="qr-grade-opt @(isSel ? "qr-grade-opt-sel" : "")"
-                             src="@LegacyGradeImage(g, isSel && _broken)" alt="@g.ToString()" title="@g.ToString()"
-                             @onclick="() => PickLegacyGrade(g)"/>
-                    }
-                    @{ var lower = _letterGrade is { } lg && LegacyMoreGrades.Contains(lg) ? (XXLetterGrade?)lg : null; }
-                    <MudMenu Dense="true" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft">
-                        <ActivatorContent>
-                            @if (lower is { } low)
-                            {
-                                <img class="qr-grade-opt qr-grade-opt-sel" src="@LegacyGradeImage(low, _broken)"
-                                     alt="@low.ToString()" title="@low.ToString()"/>
-                            }
-                            else
-                            {
-                                <span class="qr-grade-more" title="@L["More"]">&hellip;</span>
-                            }
-                        </ActivatorContent>
-                        <ChildContent>
-                            @foreach (var grade in LegacyMoreGrades)
-                            {
-                                var g = grade;
-                                <MudMenuItem OnClick="() => PickLegacyGrade(g)">
-                                    <img class="qr-grade-menu-img" src="@LegacyGradeImage(g, false)"
-                                         alt="@g.ToString()"/>
-                                </MudMenuItem>
-                            }
-                        </ChildContent>
-                    </MudMenu>
-                </div>
-                <div class="qr-actionrow qr-actionrow-save">
-                    <MudNumericField T="int?" @bind-Value="_score" Immediate="true" Label="@L["Score"]"
-                                     Min="0" Max="XXScore.Max" HideSpinButtons="true" Clearable="true"
-                                     Disabled="EditMode || _isSaving" Variant="Variant.Outlined"
-                                     Margin="Margin.Dense" Class="qr-score-field"/>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="qr-save-btn"
-                               Disabled="EditMode || _isSaving || !CanSave" OnClick="Save">@L["Save"]</MudButton>
-                </div>
-            }
-            else
-            {
-                @* Phoenix / Phoenix 2: score → derived grade + a compact plate dropdown
-                   (shorthand) that carries a Broken shortcut. Clicking the grade icon toggles
-                   broken WITHOUT clearing the plate — the subtle path to a plated broken grade. *@
-                <div class="qr-scorerow">
-                    <MudNumericField T="int?" @bind-Value="_score" Immediate="true" Label="@L["Score"]"
-                                     Min="0" Max="1000000" HideSpinButtons="true" Clearable="true"
-                                     Disabled="EditMode || _isSaving" Variant="Variant.Outlined"
-                                     Margin="Margin.Dense" Class="qr-score-field"/>
-                    @if (_derivedGrade != null)
-                    {
-                        <span class="qr-grade-toggle" title="@L["Broken"]" @onclick="ToggleBroken">
-                            <LetterGradeIcon Grade="_derivedGrade" IsBroken="_broken" Height="26"/>
-                        </span>
-                    }
-                </div>
-                <div class="qr-actionrow qr-actionrow-save">
-                    <MudSelect T="string" Value="_resultValue" ValueChanged="OnResultChanged" Label="@L["Plate"]"
-                               Clearable="true" Dense="true" Margin="Margin.Dense" Disabled="EditMode || _isSaving"
-                               Class="qr-plate-field">
-                        <MudSelectItem T="string" Value="@BrokenResult">@L["Broken"]</MudSelectItem>
-                        @foreach (var plate in Enum.GetValues<PhoenixPlate>())
-                        {
-                            <MudSelectItem T="string" Value="@plate.GetShorthand()">@plate.GetShorthand()</MudSelectItem>
-                        }
-                    </MudSelect>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="qr-save-btn"
-                               Disabled="EditMode || _isSaving || !CanSave" OnClick="Save">@L["Save"]</MudButton>
-                </div>
-            }
+            @* The record inputs live in the shared RecordScoreForm — the SRP's ✎ dialog
+               hosts the same component, so the two record paths cannot drift. *@
+            <RecordScoreForm Chart="_chart" Mix="_mix!.Value" Disabled="EditMode" OnSaved="OnRecordSaved"></RecordScoreForm>
         }
     </div>
 }
@@ -214,85 +137,12 @@ else
     private IReadOnlyList<Chart> _chartList = Array.Empty<Chart>();
 
     private Chart? _chart;
-    private int? _score;
-    private PhoenixPlate? _plate;
-    private XXLetterGrade? _letterGrade;
-    private bool _broken;
-    private bool _isSaving;
     private SavedFlash? _savedFlash;
     private CancellationTokenSource? _flashCts;
 
     private string LastMixKey => $"QuickRecordLastMix__{Widget.Id}";
 
     private bool _isLegacy => _mix is { } m && m.UsesLegacyScoring();
-
-    // Phoenix needs a score; legacy needs a letter grade (its primary datum).
-    private bool CanSave => _isLegacy ? _letterGrade != null : _score != null;
-
-    // Live letter grade off the typed score (Phoenix only) — display only; the domain
-    // derives the grade from the score on save, we never send it.
-    private PhoenixLetterGrade? _derivedGrade =>
-        !_isLegacy && _score is { } v && PhoenixScore.TryParse(v, out var s) ? s.LetterGrade : null;
-
-    // The plate dropdown doubles as the result picker: a plate shorthand, "Broken", or empty.
-    // Selecting a plate is a pass; "Broken" is the clean fail (no plate). The grade-icon
-    // toggle is the only thing that sets broken WITHOUT clearing the plate (plated broken).
-    private const string BrokenResult = "Broken";
-
-    private string _resultValue =>
-        _plate is { } p ? p.GetShorthand() : _broken ? BrokenResult : string.Empty;
-
-    private void OnResultChanged(string? value)
-    {
-        if (value == BrokenResult)
-        {
-            _broken = true;
-            _plate = null;
-        }
-        else if (string.IsNullOrEmpty(value))
-        {
-            _plate = null;
-            _broken = false;
-        }
-        else
-        {
-            _plate = PhoenixPlateHelperMethods.ParseShorthand(value);
-            _broken = false;
-        }
-    }
-
-    private void ToggleBroken()
-    {
-        if (EditMode || _isSaving) return;
-        _broken = !_broken;
-    }
-
-    // Legacy grade strip (owner, 2026-07-13): tap to pick (passing), tap the selected one
-    // again to mark it broken (its image goes cracked). Replaces the grade select AND the
-    // Broken checkbox. Only the common grades ride the strip; B and lower (a rare record)
-    // live behind a "more" menu so the strip + Save fit one row.
-    private static readonly XXLetterGrade[] LegacyPrimaryGrades =
-        { XXLetterGrade.SSS, XXLetterGrade.SS, XXLetterGrade.S, XXLetterGrade.A };
-
-    private static readonly XXLetterGrade[] LegacyMoreGrades =
-        { XXLetterGrade.B, XXLetterGrade.C, XXLetterGrade.D, XXLetterGrade.F };
-
-    private static string LegacyGradeImage(XXLetterGrade grade, bool broken) =>
-        $"https://piuimages.arroweclip.se/letters/{grade.ToString().ToLower()}{(broken ? "_broken" : "")}.png";
-
-    private void PickLegacyGrade(XXLetterGrade grade)
-    {
-        if (EditMode || _isSaving) return;
-        if (_letterGrade == grade)
-        {
-            _broken = !_broken; // tap the selected grade again → toggle broken
-        }
-        else
-        {
-            _letterGrade = grade;
-            _broken = false;
-        }
-    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -376,56 +226,23 @@ else
         UpdateHeaderSlot();
     }
 
-    private async Task OnChartPicked(Chart chart)
+    private Task OnChartPicked(Chart chart)
     {
-        if (_mix == null) return;
+        if (_mix == null) return Task.CompletedTask;
         _chart = chart;
 
-        // Prefill the current best so it's an edit, not a blank — per scoring model.
-        if (_isLegacy)
-        {
-            var best = await Mediator.Send(new GetXXBestChartAttemptQuery(chart.Id, _mix.Value));
-            if (best.BestAttempt != null)
-            {
-                _letterGrade = best.BestAttempt.LetterGrade;
-                _broken = best.BestAttempt.IsBroken;
-                _score = best.BestAttempt.Score is { } xs ? (int?)xs : null;
-            }
-            else
-            {
-                _letterGrade = null;
-                _broken = false;
-                _score = null;
-            }
-        }
-        else
-        {
-            var best = await Mediator.Send(new GetPhoenixRecordQuery(chart.Id, _mix.Value));
-            if (best is { Score: not null })
-            {
-                _score = (int)best.Score.Value;
-                _plate = best.Plate;
-                _broken = best.IsBroken;
-            }
-            else
-            {
-                _score = null;
-                _plate = null;
-                _broken = false;
-            }
-        }
-
         // ChartSelector's callback is a plain delegate (no EventCallback auto-render), and
-        // it fires from the selector's render scope — poke the widget to show the record row.
+        // it fires from the selector's render scope — poke the widget to show the record
+        // row. RecordScoreForm prefills the current best itself.
         StateHasChanged();
         UpdateHeaderSlot();
+        return Task.CompletedTask;
     }
 
     // The header ✕ clears one step back: drop the chart (keep the mix, rapid-fire the same
     // board); with just a mix, drop the mix (back to the picker, All-mixes only).
     private void HeaderClear()
     {
-        if (_isSaving) return;
         if (_chart != null) ClearChart();
         else if (_allMixes) ClearMix();
     }
@@ -447,49 +264,23 @@ else
     private void ResetEntry()
     {
         _chart = null;
-        _score = null;
-        _plate = null;
-        _letterGrade = null;
-        _broken = false;
     }
 
-    private async Task Save()
+    private void OnRecordSaved(RecordScoreForm.Result result)
     {
-        if (_chart == null || _mix == null || !CanSave) return;
-        _isSaving = true;
-        try
-        {
-            if (_isLegacy)
-            {
-                XXScore? score = _score is { } v ? (XXScore?)v : null;
-                await Mediator.Send(new UpdateXXBestAttemptCommand(_chart.Id, _letterGrade, _broken, score,
-                    Mix: _mix.Value));
-                _savedFlash = new SavedFlash(_chart.Song.Name, null, _letterGrade?.ToString(), _broken,
-                    _score is { } s ? s.ToString("N0") : "");
-            }
-            else
-            {
-                var parsed = PhoenixScore.TryParse(_score!.Value, out var s) ? (PhoenixScore?)s : null;
-                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(_chart.Id, _broken, parsed, _plate,
-                    Mix: _mix.Value));
-                _savedFlash = new SavedFlash(_chart.Song.Name, parsed?.LetterGrade, null, _broken,
-                    parsed?.ToString() ?? "");
-            }
+        if (_chart == null) return;
+        // In-widget flash instead of the command's snackbar (avoids a double confirm).
+        _savedFlash = _isLegacy
+            ? new SavedFlash(_chart.Song.Name, null, result.LegacyGrade?.ToString(), result.IsBroken,
+                result.LegacyScore is { } s ? s.ToString("N0") : "")
+            : new SavedFlash(_chart.Song.Name, result.PhoenixGrade, null, result.IsBroken,
+                result.PhoenixScore?.ToString() ?? "");
+        ResetEntry();
+        UpdateHeaderSlot();
 
-            // In-widget flash instead of the command's snackbar (avoids a double confirm).
-            ResetEntry();
-            UpdateHeaderSlot();
-            _isSaving = false;
-
-            _flashCts?.Cancel();
-            _flashCts = new CancellationTokenSource();
-            _ = FlashThenReset(_flashCts.Token);
-        }
-        catch (Exception)
-        {
-            Snackbar.Add(L["There was an error while recording the score"].Value, Severity.Error);
-            _isSaving = false;
-        }
+        _flashCts?.Cancel();
+        _flashCts = new CancellationTokenSource();
+        _ = FlashThenReset(_flashCts.Token);
     }
 
     private async Task FlashThenReset(CancellationToken token)
@@ -523,7 +314,7 @@ else
             {
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
                                title="@(_chart != null ? L["Change chart"] : L["Change mix"])"
-                               Disabled="_isSaving" OnClick="HeaderClear"/>
+                               OnClick="HeaderClear"/>
             }
         }
     </text>;

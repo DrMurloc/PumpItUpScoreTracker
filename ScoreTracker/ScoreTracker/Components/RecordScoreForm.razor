@@ -1,0 +1,236 @@
+@using MediatR
+@using ScoreTracker.ScoreLedger.Contracts.Commands
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+
+@* The record inputs, extracted from the Quick Record widget so the SRP's ✎ dialog and the
+   widget share one behavior: the row adapts by scoring model — Phoenix/Phoenix 2 keep
+   score + plate + derived grade; XX and older lead with the letter-grade strip (tap to
+   pick, tap the selected one again to mark broken) and Score drops to optional. Prefills
+   the current best so a save is an edit, not a blank. *@
+@if (_isLegacy)
+{
+    <div class="qr-graderow @(Disabled || _isSaving ? "qr-graderow-disabled" : "")">
+        @foreach (var grade in LegacyPrimaryGrades)
+        {
+            var g = grade;
+            var isSel = _letterGrade == g;
+            <img class="qr-grade-opt @(isSel ? "qr-grade-opt-sel" : "")"
+                 src="@LegacyGradeImage(g, isSel && _broken)" alt="@g.ToString()" title="@g.ToString()"
+                 @onclick="() => PickLegacyGrade(g)"/>
+        }
+        @{ var lower = _letterGrade is { } lg && LegacyMoreGrades.Contains(lg) ? (XXLetterGrade?)lg : null; }
+        <MudMenu Dense="true" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft">
+            <ActivatorContent>
+                @if (lower is { } low)
+                {
+                    <img class="qr-grade-opt qr-grade-opt-sel" src="@LegacyGradeImage(low, _broken)"
+                         alt="@low.ToString()" title="@low.ToString()"/>
+                }
+                else
+                {
+                    <span class="qr-grade-more" title="@L["More"]">&hellip;</span>
+                }
+            </ActivatorContent>
+            <ChildContent>
+                @foreach (var grade in LegacyMoreGrades)
+                {
+                    var g = grade;
+                    <MudMenuItem OnClick="() => PickLegacyGrade(g)">
+                        <img class="qr-grade-menu-img" src="@LegacyGradeImage(g, false)"
+                             alt="@g.ToString()"/>
+                    </MudMenuItem>
+                }
+            </ChildContent>
+        </MudMenu>
+    </div>
+    <div class="qr-actionrow qr-actionrow-save">
+        <MudNumericField T="int?" @bind-Value="_score" Immediate="true" Label="@L["Score"]"
+                         Min="0" Max="XXScore.Max" HideSpinButtons="true" Clearable="true"
+                         Disabled="Disabled || _isSaving" Variant="Variant.Outlined"
+                         Margin="Margin.Dense" Class="qr-score-field"/>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="qr-save-btn"
+                   Disabled="Disabled || _isSaving || !CanSave" OnClick="Save">@L["Save"]</MudButton>
+    </div>
+}
+else
+{
+    @* Phoenix / Phoenix 2: score → derived grade + a compact plate dropdown (shorthand)
+       that carries a Broken shortcut. Clicking the grade icon toggles broken WITHOUT
+       clearing the plate — the subtle path to a plated broken grade. *@
+    <div class="qr-scorerow">
+        <MudNumericField T="int?" @bind-Value="_score" Immediate="true" Label="@L["Score"]"
+                         Min="0" Max="1000000" HideSpinButtons="true" Clearable="true"
+                         Disabled="Disabled || _isSaving" Variant="Variant.Outlined"
+                         Margin="Margin.Dense" Class="qr-score-field"/>
+        @if (_derivedGrade != null)
+        {
+            <span class="qr-grade-toggle" title="@L["Broken"]" @onclick="ToggleBroken">
+                <LetterGradeIcon Grade="_derivedGrade" IsBroken="_broken" Height="26"/>
+            </span>
+        }
+    </div>
+    <div class="qr-actionrow qr-actionrow-save">
+        <MudSelect T="string" Value="_resultValue" ValueChanged="OnResultChanged" Label="@L["Plate"]"
+                   Clearable="true" Dense="true" Margin="Margin.Dense" Disabled="Disabled || _isSaving"
+                   Class="qr-plate-field">
+            <MudSelectItem T="string" Value="@BrokenResult">@L["Broken"]</MudSelectItem>
+            @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+            {
+                <MudSelectItem T="string" Value="@plate.GetShorthand()">@plate.GetShorthand()</MudSelectItem>
+            }
+        </MudSelect>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="qr-save-btn"
+                   Disabled="Disabled || _isSaving || !CanSave" OnClick="Save">@L["Save"]</MudButton>
+    </div>
+}
+
+@code {
+
+    /// <summary>What a save recorded, family-shaped — the host renders its own confirmation.</summary>
+    public sealed record Result(PhoenixScore? PhoenixScore, PhoenixLetterGrade? PhoenixGrade, PhoenixPlate? Plate,
+        XXLetterGrade? LegacyGrade, int? LegacyScore, bool IsBroken);
+
+    [Parameter] public Chart Chart { get; set; } = null!;
+    [Parameter] public MixEnum Mix { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback<Result> OnSaved { get; set; }
+
+    private string? _loadedFor;
+    private int? _score;
+    private PhoenixPlate? _plate;
+    private XXLetterGrade? _letterGrade;
+    private bool _broken;
+    private bool _isSaving;
+
+    private bool _isLegacy => Mix.UsesLegacyScoring();
+
+    // Phoenix needs a score; legacy needs a letter grade (its primary datum).
+    private bool CanSave => _isLegacy ? _letterGrade != null : _score != null;
+
+    // Live letter grade off the typed score (Phoenix only) — display only; the domain
+    // derives the grade from the score on save, we never send it.
+    private PhoenixLetterGrade? _derivedGrade =>
+        !_isLegacy && _score is { } v && PhoenixScore.TryParse(v, out var s) ? s.LetterGrade : null;
+
+    // The plate dropdown doubles as the result picker: a plate shorthand, "Broken", or empty.
+    // Selecting a plate is a pass; "Broken" is the clean fail (no plate). The grade-icon
+    // toggle is the only thing that sets broken WITHOUT clearing the plate (plated broken).
+    private const string BrokenResult = "Broken";
+
+    private string _resultValue =>
+        _plate is { } p ? p.GetShorthand() : _broken ? BrokenResult : string.Empty;
+
+    private void OnResultChanged(string? value)
+    {
+        if (value == BrokenResult)
+        {
+            _broken = true;
+            _plate = null;
+        }
+        else if (string.IsNullOrEmpty(value))
+        {
+            _plate = null;
+            _broken = false;
+        }
+        else
+        {
+            _plate = PhoenixPlateHelperMethods.ParseShorthand(value);
+            _broken = false;
+        }
+    }
+
+    private void ToggleBroken()
+    {
+        if (Disabled || _isSaving) return;
+        _broken = !_broken;
+    }
+
+    // Legacy grade strip (owner, 2026-07-13): tap to pick (passing), tap the selected one
+    // again to mark it broken (its image goes cracked). Only the common grades ride the
+    // strip; B and lower live behind the "more" menu so the strip + Save fit one row.
+    private static readonly XXLetterGrade[] LegacyPrimaryGrades =
+        { XXLetterGrade.SSS, XXLetterGrade.SS, XXLetterGrade.S, XXLetterGrade.A };
+
+    private static readonly XXLetterGrade[] LegacyMoreGrades =
+        { XXLetterGrade.B, XXLetterGrade.C, XXLetterGrade.D, XXLetterGrade.F };
+
+    private static string LegacyGradeImage(XXLetterGrade grade, bool broken) =>
+        $"https://piuimages.arroweclip.se/letters/{grade.ToString().ToLower()}{(broken ? "_broken" : "")}.png";
+
+    private void PickLegacyGrade(XXLetterGrade grade)
+    {
+        if (Disabled || _isSaving) return;
+        if (_letterGrade == grade)
+        {
+            _broken = !_broken; // tap the selected grade again → toggle broken
+        }
+        else
+        {
+            _letterGrade = grade;
+            _broken = false;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var signature = $"{Chart.Id}|{Mix}";
+        if (signature == _loadedFor) return;
+        _loadedFor = signature;
+
+        // Prefill the current best so it's an edit, not a blank — per scoring model.
+        if (_isLegacy)
+        {
+            var best = await Mediator.Send(new GetXXBestChartAttemptQuery(Chart.Id, Mix));
+            _letterGrade = best.BestAttempt?.LetterGrade;
+            _broken = best.BestAttempt?.IsBroken ?? false;
+            _score = best.BestAttempt?.Score is { } xs ? (int?)xs : null;
+            _plate = null;
+        }
+        else
+        {
+            var best = await Mediator.Send(new GetPhoenixRecordQuery(Chart.Id, Mix));
+            _score = best is { Score: not null } ? (int)best.Score.Value : null;
+            _plate = best?.Plate;
+            _broken = best?.IsBroken ?? false;
+            _letterGrade = null;
+        }
+    }
+
+    private async Task Save()
+    {
+        if (!CanSave || _isSaving) return;
+        _isSaving = true;
+        try
+        {
+            Result result;
+            if (_isLegacy)
+            {
+                XXScore? score = _score is { } v ? (XXScore?)v : null;
+                await Mediator.Send(new UpdateXXBestAttemptCommand(Chart.Id, _letterGrade, _broken, score,
+                    Mix: Mix));
+                result = new Result(null, null, null, _letterGrade, _score, _broken);
+            }
+            else
+            {
+                var parsed = PhoenixScore.TryParse(_score!.Value, out var s) ? (PhoenixScore?)s : null;
+                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(Chart.Id, _broken, parsed, _plate,
+                    Mix: Mix));
+                result = new Result(parsed, parsed?.LetterGrade, _plate, null, null, _broken);
+            }
+
+            _isSaving = false;
+            await OnSaved.InvokeAsync(result);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add(L["There was an error while recording the score"].Value, Severity.Error);
+            _isSaving = false;
+        }
+    }
+}
