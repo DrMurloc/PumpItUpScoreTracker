@@ -41,7 +41,7 @@ flips the model:
 | Dropped | Has-video, recently-added (needs version/date backfill the owner defers), letter-grade percentiles, single-select level (→ range), the `/{userId}/Charts` share view, UCS (separate rethink). |
 | Nulls | Facets with gappy coverage (NPS, badges, BPM on legacy) silently exclude unmatched charts. |
 | Rendering | Interactive circuit page. Load state from the query string, filter live without reloads, write state back via the history interop (the PR #164 pattern — no programmatic `NavigateTo` for filter state). SSR/SEO facets are explicitly not v1. |
-| Density | Comfortable / Compact / Table via `Density__Charts`. Table = view-only; the column toggles do not return. |
+| Density | Comfortable / Compact / Table via `Density__Charts`. **Compact = the jacket sticker sheet** (tier-list idiom — mini art tiles, intentionally low information, never rows). Table = view-only; the column toggles do not return. |
 | Quick record | Reuse the Quick Record widget's record body (chart pre-filled, family fork preserved). Entry point = the card's ✎ only; unships cleanly if it reads as bloat. |
 | Nav | Desktop top-nav promotion. Mobile stays in More — tier lists own mobile discovery. |
 | Default landing | Unfiltered = the catalog, Level ↓. |
@@ -59,8 +59,11 @@ pre-Exceed mixes.
   `ChartDetailsDialog` usage on this page, inline edit cells, the column/filter toggle
   UiSettings, and the dead vote plumbing (`GetChartRatingsQuery` full-table load,
   uncalled `UpdateDifficultyRating`) are deleted with it.
-- **Components** (one concept, one component): a search card (Comfortable), a compact row,
-  and a table renderer over the same result model; the All-Mixes span line
+- **Components** (one concept, one component): a search card (Comfortable), the compact
+  **jacket sticker tile** (the tier-list idiom verbatim: art tile + bubble + tier dot +
+  grade overlay, identity in the tooltip, the owner-locked state-border language — solid
+  green passed / dashed blue To-Do / dashed green other-mix), and a table renderer over
+  the same result model; the All-Mixes span line
   (debut → latest · n mixes · level change) and re-clear/cut markers; the applied-chip row;
   the filter drawer; the sort menu. Reuses `SongImage`, `DifficultyBubble` (modern image
   bubbles; legacy CSS chips), `LetterGradeIcon`.
