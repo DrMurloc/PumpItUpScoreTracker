@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Communities.Infrastructure.Entities;
 using ScoreTracker.SharedKernel.Enums;
@@ -285,6 +286,48 @@ namespace ScoreTracker.Communities.Infrastructure
                         : (DateOnly?)new DateOnly(i.ExpirationDate.Value.Year, i.ExpirationDate.Value.Month,
                             i.ExpirationDate.Value.Day)), entity.IsRegional,
                 (CommunityPermission)entity.DefaultAdminPermissions, entity.DefaultLanguage);
+        }
+
+        public async Task DeleteCommunity(Name communityName, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var nameString = communityName.ToString();
+            var entity = await database.Set<CommunityEntity>()
+                .FirstOrDefaultAsync(c => c.Name == nameString, cancellationToken);
+            if (entity == null) return;
+            var id = entity.Id;
+
+            await database.Set<CommunityMembershipEntity>().Where(m => m.CommunityId == id)
+                .ExecuteDeleteAsync(cancellationToken);
+            await database.Set<CommunityInviteCodeEntity>().Where(m => m.CommunityId == id)
+                .ExecuteDeleteAsync(cancellationToken);
+            await database.Set<CommunityChannelEntity>().Where(m => m.CommunityId == id)
+                .ExecuteDeleteAsync(cancellationToken);
+            await database.Set<CommunityHighlightEntity>().Where(m => m.CommunityId == id)
+                .ExecuteDeleteAsync(cancellationToken);
+            await database.Set<CommunityEntity>().Where(c => c.Id == id)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // The non-regional count is a cached front-door stat — evict so it reflects the deletion.
+            _cache.Remove(CommunityCountCacheKey);
+        }
+
+        public async Task<IEnumerable<CommunityMemberRecord>> GetRoster(Name communityName,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var nameString = communityName.ToString();
+            var rows = await (from c in database.Set<CommunityEntity>()
+                    where c.Name == nameString
+                    join cm in database.Set<CommunityMembershipEntity>() on c.Id equals cm.CommunityId
+                    join u in database.User on cm.UserId equals u.Id
+                    select new { cm.UserId, u.Name, u.ProfileImage, cm.Role, cm.Permissions })
+                .ToArrayAsync(cancellationToken);
+
+            return rows.Select(r => new CommunityMemberRecord(r.UserId, r.Name,
+                new Uri(r.ProfileImage, UriKind.Absolute),
+                Enum.TryParse<CommunityRole>(r.Role, out var role) ? role : CommunityRole.Member,
+                (CommunityPermission)r.Permissions)).ToArray();
         }
     }
 }

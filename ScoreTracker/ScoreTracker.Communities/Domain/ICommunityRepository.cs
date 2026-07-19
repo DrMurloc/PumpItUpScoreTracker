@@ -1,4 +1,5 @@
-﻿using ScoreTracker.Domain.Models;
+﻿using ScoreTracker.Communities.Contracts;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
@@ -10,6 +11,13 @@ namespace ScoreTracker.Communities.Domain
     {
         Task<Name?> GetCommunityByInviteCode(Guid inviteCode, CancellationToken cancellationToken);
         Task SaveCommunity(Community community, CancellationToken cancellationToken);
+
+        /// <summary>Delete a community and all of its member/invite/channel/highlight rows.</summary>
+        Task DeleteCommunity(Name communityName, CancellationToken cancellationToken);
+
+        /// <summary>The member roster (including retained bans) joined to user display identity + role.</summary>
+        Task<IEnumerable<CommunityMemberRecord>> GetRoster(Name communityName, CancellationToken cancellationToken);
+
         Task<IEnumerable<CommunityOverviewRecord>> GetCommunities(Guid userId, CancellationToken cancellationToken);
         Task<IEnumerable<CommunityOverviewRecord>> GetPublicCommunities(CancellationToken cancellationToken);
 

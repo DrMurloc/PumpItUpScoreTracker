@@ -114,6 +114,22 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task JoinCommunityRejectsABannedUser()
+    {
+        var userId = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: userId);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public,
+            new[] { new CommunityMember(userId, CommunityRole.Banned, CommunityPermission.None, null, null) },
+            Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(), false,
+            Community.DefaultAdminPermissionsSeed, null);
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        await Assert.ThrowsAsync<DeniedFromCommunityException>(() =>
+            ctx.Saga.Handle(new JoinCommunityCommand(Name.From("Acme"), null), CancellationToken.None));
+    }
+
+    [Fact]
     public async Task LeaveCommunityRemovesMemberFromTheSet()
     {
         var userId = Guid.NewGuid();

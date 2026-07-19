@@ -842,6 +842,10 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var userId = request.UserId ?? _currentUser.User.Id;
         var community = await GetCommunity(request.CommunityName, cancellationToken);
 
+        // A retained ban row blocks both public join and invite-code join.
+        if (community.IsBanned(userId))
+            throw new DeniedFromCommunityException("You have been banned from this community");
+
         if (community.MemberIds.Contains(userId)) return;
 
         switch (community.PrivacyType)
