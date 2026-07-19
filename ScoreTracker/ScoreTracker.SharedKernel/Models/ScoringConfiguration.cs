@@ -339,18 +339,25 @@ namespace ScoreTracker.SharedKernel.Models
             config.LetterGradeModifiers[PhoenixLetterGrade.AAAPlus] = 1.43;
             config.LetterGradeModifiers[PhoenixLetterGrade.AAA] = 1.41;
             config.LetterGradeModifiers[PhoenixLetterGrade.AAPlus] = 1.39;
-            config.LetterGradeModifiers[PhoenixLetterGrade.AA] = 1.37;
-            config.LetterGradeModifiers[PhoenixLetterGrade.APlus] = 1.35;
+            // AA and A+ solved 2026-07-19 from the mirrored boards: reconstructing 19
+            // singles-tab players' pools from their chart-board rows (Base(L+1), known
+            // multipliers) bounds A+ to [1.32, 1.34] and AA to [1.35, 1.37] — the launch-era
+            // pre-rebalance values (1.35/1.37) produce impossible NEGATIVE plate residuals
+            // for stable players (KONA/WONDANG/HNGEAR/HORRORCOMEDY reconstruct with clean
+            // FG/TG-sized residuals at 1.33/1.36). The pre-launch xlsx AA row (D24 AA RG
+            // 342.50 = 250 × 1.37) was location-test tuning, superseded like the singles +1.
+            config.LetterGradeModifiers[PhoenixLetterGrade.AA] = 1.36;
+            config.LetterGradeModifiers[PhoenixLetterGrade.APlus] = 1.33;
             // A verified live 2026-07-19 (my_page/pumbility.php per-chart read: an S14 A TG at
-            // 263.22 = Base(15) × 1.284): the A+→A step is −0.07, not the −0.02 the ladder
-            // above uses.
+            // 263.22 = Base(15) × 1.284). Descending steps land at −0.01 (S tier), −0.02
+            // (AAA tier), −0.03 (AA/A+), −0.05 (A+→A).
             config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.28;
-            // TODO(P2-pumbility): B and below are UNVERIFIED — extended at the observed −0.07
-            // step pending a live sub-800k sample.
-            config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.21;
-            config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.14;
-            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.07;
-            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 1.00;
+            // TODO(P2-pumbility): B and below are UNVERIFIED — extended at the last observed
+            // −0.05 step pending a live sub-800k sample on a counting chart.
+            config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.23;
+            config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.18;
+            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.13;
+            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 1.08;
 
             // Plate bonuses (ADDITIVE terms, not multipliers).
             // TODO(P2-pumbility): community data suggested singles-specific UG/EG/RG values

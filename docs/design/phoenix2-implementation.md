@@ -48,11 +48,15 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   per-chart off the official breakdown page `my_page/pumbility.php` and reproduced to the
   cent by `LiveSite/PumbilityOfficialReconciliationTests`): singles price one level UP the
   base curve (an S17 is worth `Base(18)`; the pre-launch xlsx singles rows priced at
-  `Base(level)` are superseded), charts below level 10 price at ZERO, and A = 1.28 — the
-  A+→A step is −0.07, not the −0.02 the upper ladder uses.** Grades 1.35 (A+) → 1.50 (SSS+); plates RG 0.000 → PG +0.020
+  `Base(level)` are superseded), charts below level 10 price at ZERO, and the sub-AAA ladder
+  re-tuned: A = 1.28 (live per-chart read), A+ = 1.33 and AA = 1.36 (solved the same day by
+  reconstructing 19 mirrored singles-tab players' pools from their chart-board rows in SQL —
+  the pre-launch 1.35/1.37 produce impossible negative plate residuals for stable players).
+  Descending steps: −0.01 (S tier), −0.02 (AAA tier), −0.03 (AA/A+), −0.05 (A+→A).** Ladder
+  now 1.28 (A) → 1.50 (SSS+); plates RG 0.000 → PG +0.020
   (doubles-verified table applied to both types — the community's singles-specific UG/EG/RG values
   treated as data error, owner call 2026-07-09; TODO in `ScoringConfiguration`). Grades below A
-  extended at the observed −0.07 step, unverified. Broken plays never count (owner-confirmed,
+  extended at the last observed −0.05 step, unverified. Broken plays never count (owner-confirmed,
   and the breakdown page prices them 0.00). Everything dispatches
   through `ScoringConfiguration.PumbilityScoring(mix, …)`; Phoenix arm byte-identical.
   `SkillRating` on P2 rows is the merged top-50, so it no longer equals

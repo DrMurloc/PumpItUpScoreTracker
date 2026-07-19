@@ -529,7 +529,7 @@ public sealed class PlayerRatingSagaTests
     {
         // A broken 995k would top the singles pool if counted; Phoenix 2 excludes it, so
         // the pool is only the clean 920k AA (P2 AA floor; singles price one level up:
-        // 235 x 1.378 = 323.83 -> 323).
+        // 235 x (1.36 + 0.008) = 321.48 -> 321).
         var userId = Guid.NewGuid();
         var broken = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var clean = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
@@ -548,7 +548,7 @@ public sealed class PlayerRatingSagaTests
         await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix2), CancellationToken.None);
 
         stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, userId,
-            It.Is<PlayerStatsRecord>(p => p.SinglesRating == 323 && p.SkillRating == 323
+            It.Is<PlayerStatsRecord>(p => p.SinglesRating == 321 && p.SkillRating == 321
                                           && p.DoublesRating == 0),
             It.IsAny<CancellationToken>()), Times.Once);
     }
