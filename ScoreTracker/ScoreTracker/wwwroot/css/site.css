@@ -4969,3 +4969,221 @@ button.chart-card-art {
     color: #ffd94d;
     text-shadow: 0 0 12px rgba(255, 217, 77, .35);
 }
+
+/* ===== Charts SRP (docs/design/charts-srp.md) ================================
+   The page stack: header (title + scope) → query chips → answer line → results.
+   Tokens only — the two ramps and --mix-* carry every color. */
+.srp-head {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.srp-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    min-height: 34px;
+}
+
+.srp-chip-sort {
+    border-color: var(--mix-accent) !important;
+}
+
+.srp-answer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0 12px;
+}
+
+.srp-count {
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 12px;
+}
+
+.srp-pager {
+    display: flex;
+    justify-content: center;
+    margin: 18px 0 8px;
+}
+
+.srp-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 48px 0;
+    color: var(--mix-ink-muted);
+}
+
+.srp-card {
+    position: relative;
+    display: flex;
+    gap: 12px;
+    background: var(--mix-surface);
+    border: 1px solid var(--mix-surface-muted);
+    border-radius: 10px;
+    padding: 12px;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.srp-card:hover,
+.srp-card:focus-within {
+    border-color: var(--mix-primary);
+    box-shadow: 0 0 14px var(--mix-glow);
+}
+
+.srp-card-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: 10px;
+}
+
+.srp-card-art {
+    flex: 0 0 auto;
+}
+
+.srp-card-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.srp-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.srp-card-song {
+    font-weight: 600;
+    font-size: 1.05rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.srp-card-songtype {
+    font-size: .7rem;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
+.srp-card-artist {
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+}
+
+.srp-card-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 6px;
+    align-items: center;
+}
+
+.srp-card-tier {
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+    border: 1px solid;
+    border-radius: 5px;
+    padding: 1px 7px;
+    white-space: nowrap;
+}
+
+.srp-card-facts {
+    margin-top: 7px;
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 10px;
+}
+
+.srp-card-fact-lead {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.srp-card-my {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    min-width: 70px;
+    text-align: right;
+}
+
+.srp-card-unplayed {
+    font-size: .7rem;
+    color: var(--mix-ink-muted);
+    border: 1px dashed var(--mix-surface-muted);
+    border-radius: 4px;
+    padding: 2px 7px;
+}
+
+.srp-card-legacy-grade {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.srp-card-plate {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+}
+
+.srp-card-score {
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-card-actions {
+    position: absolute;
+    right: 8px;
+    bottom: 6px;
+    z-index: 2;
+    display: flex;
+    gap: 2px;
+}
+
+.srp-drawer {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.srp-drawer-head {
+    display: flex;
+    align-items: center;
+}
+
+.srp-drawer-range {
+    display: flex;
+    gap: 10px;
+}
+
+@media (max-width: 600px) {
+    .srp-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .srp-head {
+        gap: 12px;
+    }
+}

@@ -1,0 +1,163 @@
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@* The SRP result card (docs/design/charts-srp.md): the whole card is one link to the
+   linked appearance's chart page — actions float above the stretched link. The lead fact
+   is the active sort's value, so sorting by an invisible value cannot happen. *@
+<div class="srp-card">
+    <a class="srp-card-link" href="@ChartSlugs.CanonicalPath(Result.Chart)"
+       aria-label="@($"{Result.Chart.Song.Name} {Result.Chart.DifficultyDisplay}")"></a>
+    <div class="srp-card-art">
+        <SongImage Song="Result.Chart.Song" Small="true"></SongImage>
+    </div>
+    <div class="srp-card-main">
+        <div class="srp-card-title">
+            <DifficultyBubble Chart="Result.Chart" Small="true"></DifficultyBubble>
+            <span class="srp-card-song">@Result.Chart.Song.Name</span>
+            @if (Result.Chart.Song.Type == SongType.FullSong)
+            {
+                <span class="srp-card-songtype">@L["Full Song"]</span>
+            }
+            else if (Result.Chart.Song.Type == SongType.Remix)
+            {
+                <span class="srp-card-songtype">@L["Remix"]</span>
+            }
+            else if (Result.Chart.Song.Type == SongType.ShortCut)
+            {
+                <span class="srp-card-songtype">@L["Short Cut"]</span>
+            }
+        </div>
+        <div class="srp-card-artist">@Result.Chart.Song.Artist</div>
+        <div class="srp-card-chips">
+            @foreach (var badge in Result.Badges)
+            {
+                <span class="tier-chart-card-skill @CategoryClass(badge)">@L[badge.DisplayName]</span>
+            }
+            @if (Result.CommunityVote != null)
+            {
+                <span class="srp-card-tier"
+                      style="color:@ThemeScales.DifficultyColor(Result.CommunityVote.Value);border-color:@ThemeScales.DifficultyColor(Result.CommunityVote.Value)">
+                    @L["Community Vote"] · @L[CategoryName(Result.CommunityVote.Value)]
+                </span>
+            }
+            else if (Result.PassDifficulty != null)
+            {
+                <span class="srp-card-tier"
+                      style="color:@ThemeScales.DifficultyColor(Result.PassDifficulty.Value);border-color:@ThemeScales.DifficultyColor(Result.PassDifficulty.Value)">
+                    @L["Pass"] · @L[CategoryName(Result.PassDifficulty.Value)]
+                </span>
+            }
+        </div>
+        <div class="srp-card-facts">
+            @if (LeadFact != null)
+            {
+                <span class="srp-card-fact-lead">@LeadFact</span>
+            }
+            @if (Result.Nps != null)
+            {
+                <span>@L["NPS"] @Result.Nps.Value.ToString("0.0")</span>
+            }
+            @if (Result.Chart.Song.Bpm != null)
+            {
+                <span>@L["BPM"] @Result.Chart.Song.Bpm.Value.ToString()</span>
+            }
+            <span>@Result.Chart.Song.Duration.ToString(@"m\:ss")</span>
+            @if (Result.ScoreCount >= PassRateSampleFloor)
+            {
+                <span>@L["Pass rate"] @((Result.PassCount * 100 / Result.ScoreCount))%</span>
+            }
+            @if (Result.ScoreCount > 0)
+            {
+                <span>@L["{0} scores", Result.ScoreCount]</span>
+            }
+        </div>
+    </div>
+    @if (ShowMyState)
+    {
+        <div class="srp-card-my">
+            @if (Result.My == null)
+            {
+                <span class="srp-card-unplayed">@L["Unplayed"]</span>
+            }
+            else
+            {
+                @if (Result.My.PhoenixGrade != null)
+                {
+                    <LetterGradeIcon Grade="Result.My.PhoenixGrade" IsBroken="Result.My.IsBroken" Height="20"></LetterGradeIcon>
+                }
+                else if (Result.My.LegacyGrade != null)
+                {
+                    <span class="srp-card-legacy-grade">@Result.My.LegacyGrade@(Result.My.IsBroken ? " ⨯" : "")</span>
+                }
+                @if (Result.My.PhoenixPlate != null)
+                {
+                    <span class="srp-card-plate" style="color:@ThemeScales.PlateColor(Result.My.PhoenixPlate.Value)">@Result.My.PhoenixPlate.Value.GetShorthand()</span>
+                }
+                @if (Result.My.PhoenixScore != null)
+                {
+                    <span class="srp-card-score">@Result.My.PhoenixScore.Value.ToString("N0")</span>
+                }
+                else if (Result.My.LegacyScore != null)
+                {
+                    <span class="srp-card-score">@Result.My.LegacyScore.Value.ToString("N0")</span>
+                }
+            }
+        </div>
+    }
+    @if (ShowActions)
+    {
+        <div class="srp-card-actions">
+            <MudIconButton Size="Size.Small"
+                           Icon="@(IsFavorite ? Icons.Material.Filled.Favorite : Icons.Material.Outlined.FavoriteBorder)"
+                           Color="@(IsFavorite ? Color.Secondary : Color.Default)"
+                           OnClick="() => OnToggleFavorite.InvokeAsync(Result.Chart.Id)"
+                           aria-label="@L["Favorites"]"></MudIconButton>
+            <MudIconButton Size="Size.Small"
+                           Icon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
+                           Color="@(IsToDo ? Color.Info : Color.Default)"
+                           OnClick="() => OnToggleToDo.InvokeAsync(Result.Chart.Id)"
+                           aria-label="@L["To Do"]"></MudIconButton>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>Mirror of the handler's minimum-sample floor for rate display.</summary>
+    private const int PassRateSampleFloor = 10;
+
+    [Parameter] public ChartSearchResult Result { get; set; } = null!;
+
+    /// <summary>The active sort's printed value — always visible, per the page-stack rules.</summary>
+    [Parameter]
+    public string? LeadFact { get; set; }
+
+    [Parameter] public bool ShowMyState { get; set; }
+    [Parameter] public bool ShowActions { get; set; }
+    [Parameter] public bool IsFavorite { get; set; }
+    [Parameter] public bool IsToDo { get; set; }
+    [Parameter] public EventCallback<Guid> OnToggleFavorite { get; set; }
+    [Parameter] public EventCallback<Guid> OnToggleToDo { get; set; }
+
+    private static string CategoryClass(ChartBadge badge)
+    {
+        return badge.Category == null ? string.Empty : $"skillcat-{badge.Category.Value.ToString().ToLowerInvariant()}";
+    }
+
+    internal static string CategoryName(TierListCategory category)
+    {
+        return category switch
+        {
+            TierListCategory.Overrated => "Overrated",
+            TierListCategory.VeryEasy => "Very Easy",
+            TierListCategory.Easy => "Easy",
+            TierListCategory.Medium => "Medium",
+            TierListCategory.Hard => "Hard",
+            TierListCategory.VeryHard => "Very Hard",
+            TierListCategory.Underrated => "Underrated",
+            _ => "Unranked"
+        };
+    }
+}
