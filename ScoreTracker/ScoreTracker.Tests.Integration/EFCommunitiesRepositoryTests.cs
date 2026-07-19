@@ -28,7 +28,40 @@ public sealed class EFCommunitiesRepositoryTests : IAsyncLifetime
     // leaking between tests (Respawn resets the DB, not the process).
     private EFCommunitiesRepository BuildRepository() =>
         new(_fixture.DbContextFactory, Mock.Of<IPlayerStatsReader>(),
-            new MemoryCache(new MemoryCacheOptions()));
+            new MemoryCache(new MemoryCacheOptions()),
+            Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == DateTimeOffset.UtcNow));
+
+    [Fact]
+    public async Task SaveCommunityPersistsRolesPermissionsAndBans()
+    {
+        var owner = Guid.NewGuid();
+        var admin = Guid.NewGuid();
+        var member = Guid.NewGuid();
+        var banned = Guid.NewGuid();
+
+        var community = new Community("Roled", owner, CommunityPrivacyType.Private,
+            new[] { owner, admin, member, banned }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false);
+        community.PromoteToAdmin(owner, admin,
+            CommunityPermission.ManageInviteLinks | CommunityPermission.ManageUsers);
+        community.Ban(owner, banned);
+        community.SetDefaultAdminPermissions(owner, CommunityPermission.ManageInviteLinks);
+        community.SetDefaultLanguage(owner, "ko");
+
+        await BuildRepository().SaveCommunity(community, CancellationToken.None);
+        var retrieved = await BuildRepository().GetCommunityByName("Roled", CancellationToken.None);
+
+        Assert.NotNull(retrieved);
+        Assert.Equal(CommunityRole.Creator, retrieved!.RoleOf(owner));
+        Assert.Equal(CommunityRole.Admin, retrieved.RoleOf(admin));
+        Assert.Equal(CommunityPermission.ManageInviteLinks | CommunityPermission.ManageUsers,
+            retrieved.PermissionsOf(admin));
+        Assert.Equal(CommunityRole.Member, retrieved.RoleOf(member));
+        Assert.True(retrieved.IsBanned(banned));
+        Assert.DoesNotContain(banned, retrieved.MemberIds);
+        Assert.Equal(CommunityPermission.ManageInviteLinks, retrieved.DefaultAdminPermissions);
+        Assert.Equal("ko", retrieved.DefaultLanguage);
+    }
 
     [Fact]
     public async Task SaveCommunityAndGetCommunityByNameRoundTripPreservesMembersAndInvites()

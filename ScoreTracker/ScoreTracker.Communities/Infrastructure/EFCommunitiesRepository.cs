@@ -19,13 +19,15 @@ namespace ScoreTracker.Communities.Infrastructure
         private readonly IMemoryCache _cache;
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
         private readonly IPlayerStatsReader _playerStats;
+        private readonly IDateTimeOffsetAccessor _dateTime;
 
         public EFCommunitiesRepository(IDbContextFactory<ChartAttemptDbContext> factory,
-            IPlayerStatsReader playerStats, IMemoryCache cache)
+            IPlayerStatsReader playerStats, IMemoryCache cache, IDateTimeOffsetAccessor dateTime)
         {
             _factory = factory;
             _playerStats = playerStats;
             _cache = cache;
+            _dateTime = dateTime;
         }
 
         public async Task<int> CountNonRegionalCommunities(CancellationToken cancellationToken)
@@ -65,7 +67,9 @@ namespace ScoreTracker.Communities.Infrastructure
                     Name = communityString,
                     OwningUserId = community.OwnerId,
                     IsRegional = community.IsRegional,
-                    PrivacyType = community.PrivacyType.ToString()
+                    PrivacyType = community.PrivacyType.ToString(),
+                    DefaultAdminPermissions = (int)community.DefaultAdminPermissions,
+                    DefaultLanguage = community.DefaultLanguage
                 }, cancellationToken);
             }
             else
@@ -73,19 +77,37 @@ namespace ScoreTracker.Communities.Infrastructure
                 entity.PrivacyType = community.PrivacyType.ToString();
                 entity.OwningUserId = community.OwnerId;
                 entity.IsRegional = community.IsRegional;
+                entity.DefaultAdminPermissions = (int)community.DefaultAdminPermissions;
+                entity.DefaultLanguage = community.DefaultLanguage;
             }
 
-            //Members
+            //Members — persist the full projection (creator, admins, members, and retained bans)
+            // so a Banned row survives even though the user is out of MemberIds. A row absent from
+            // the projection entirely (a member who left) is deleted.
+            var desiredMembers = community.Members.ToDictionary(m => m.UserId);
             var memberEntities = await database.Set<CommunityMembershipEntity>().Where(cm => cm.CommunityId == communityId.Value)
                 .ToArrayAsync(cancellationToken);
             var existingSet = memberEntities.Select(m => m.UserId).Distinct().ToHashSet();
-            var toDelete = memberEntities.Where(e => !community.MemberIds.Contains(e.UserId)).ToArray();
-            var toCreate = community.MemberIds.Where(m => !existingSet.Contains(m)).Select(m =>
+            var toDelete = memberEntities.Where(e => !desiredMembers.ContainsKey(e.UserId)).ToArray();
+            foreach (var existing in memberEntities)
+            {
+                if (!desiredMembers.TryGetValue(existing.UserId, out var member)) continue;
+                existing.Role = member.Role.ToString();
+                existing.Permissions = (int)member.Permissions;
+                existing.GrantedByUserId = member.GrantedBy;
+                existing.JoinedAt ??= member.JoinedAt ?? _dateTime.Now;
+            }
+
+            var toCreate = desiredMembers.Values.Where(m => !existingSet.Contains(m.UserId)).Select(m =>
                 new CommunityMembershipEntity
                 {
                     Id = Guid.NewGuid(),
                     CommunityId = communityId.Value,
-                    UserId = m
+                    UserId = m.UserId,
+                    Role = m.Role.ToString(),
+                    Permissions = (int)m.Permissions,
+                    GrantedByUserId = m.GrantedBy,
+                    JoinedAt = m.JoinedAt ?? _dateTime.Now
                 }).ToArray();
             database.Set<CommunityMembershipEntity>().RemoveRange(toDelete);
             await database.Set<CommunityMembershipEntity>().AddRangeAsync(toCreate, cancellationToken);
@@ -252,14 +274,17 @@ namespace ScoreTracker.Communities.Infrastructure
                 .ToArrayAsync(cancellationToken);
 
             return new Community(entity.Name, entity.OwningUserId, Enum.Parse<CommunityPrivacyType>(entity.PrivacyType),
-                members.Select(c => c.UserId),
+                members.Select(c => new CommunityMember(c.UserId,
+                    Enum.TryParse<CommunityRole>(c.Role, out var role) ? role : CommunityRole.Member,
+                    (CommunityPermission)c.Permissions, c.GrantedByUserId, c.JoinedAt)),
                 channels.Select(c =>
                     new Community.ChannelConfiguration(c.ChannelId, c.SendNewScores, c.SendTitles, c.SendNewMembers)),
                 invites.ToDictionary(i => i.InviteCode,
                     i => i.ExpirationDate == null
                         ? null
                         : (DateOnly?)new DateOnly(i.ExpirationDate.Value.Year, i.ExpirationDate.Value.Month,
-                            i.ExpirationDate.Value.Day)), entity.IsRegional);
+                            i.ExpirationDate.Value.Day)), entity.IsRegional,
+                (CommunityPermission)entity.DefaultAdminPermissions, entity.DefaultLanguage);
         }
     }
 }
