@@ -7,7 +7,7 @@
 @* The SRP result card (docs/design/charts-srp.md): the whole card is one link to the
    linked appearance's chart page — actions float above the stretched link. The lead fact
    is the active sort's value, so sorting by an invisible value cannot happen. *@
-<div class="srp-card">
+<div class="srp-card @StateClass" title="@StateTitle">
     <a class="srp-card-link" href="@ChartSlugs.CanonicalPath(Result.Chart)"
        aria-label="@($"{Result.Chart.Song.Name} {Result.Chart.DifficultyDisplay}")"></a>
     <div class="srp-card-art">
@@ -31,6 +31,24 @@
             }
         </div>
         <div class="srp-card-artist">@Result.Chart.Song.Artist</div>
+        @if (Result.Appearances.Count > 1)
+        {
+            @* The identity span: debut → latest, mix count, and the Exceed-onward rerate
+               (docs/design/charts-srp.md §2 — grouped chart identity). *@
+            <div class="srp-card-span">
+                <span class="srp-card-span-range">@Result.DebutMix.GetName() → @Result.LatestMix.GetName()</span>
+                <span>· @L["{0} mixes", Result.Appearances.Count]</span>
+                @if (Result.LevelChange is not null and not 0)
+                {
+                    @* The delta is Exceed-onward; the last slot-free appearance is always on
+                       that scale, so the endpoints reconstruct exactly. *@
+                    var last = Result.Appearances.Last(a => a.Slot == null).Level;
+                    <span class="@(Result.LevelChange > 0 ? "srp-rerate-up" : "srp-rerate-down")">
+                        @(last - Result.LevelChange.Value) → @last @(Result.LevelChange > 0 ? "↑" : "↓")
+                    </span>
+                }
+            </div>
+        }
         <div class="srp-card-chips">
             @foreach (var badge in Result.Badges)
             {
@@ -49,6 +67,10 @@
                       style="color:@ThemeScales.DifficultyColor(Result.PassDifficulty.Value);border-color:@ThemeScales.DifficultyColor(Result.PassDifficulty.Value)">
                     @L["Pass"] · @L[CategoryName(Result.PassDifficulty.Value)]
                 </span>
+            }
+            @if (Result.My is { PassedInLinkedMix: false, PassedInAnotherScopeMix: true })
+            {
+                <span class="srp-card-reclear">✓ @L["Passed in another mix"]</span>
             }
         </div>
         <div class="srp-card-facts">
@@ -140,6 +162,16 @@
     [Parameter] public bool IsToDo { get; set; }
     [Parameter] public EventCallback<Guid> OnToggleFavorite { get; set; }
     [Parameter] public EventCallback<Guid> OnToggleToDo { get; set; }
+
+    // The owner-locked state-border language (tier lists §4): solid success = passed,
+    // dashed info = To-Do, dashed success = passed in another mix; passed > To-Do > other.
+    private string StateClass => Result.My is { PassedInLinkedMix: true } ? "srp-card-pass" :
+        IsToDo ? "srp-card-todo" :
+        Result.My is { PassedInAnotherScopeMix: true } ? "srp-card-other-mix" : string.Empty;
+
+    private string? StateTitle => Result.My is { PassedInLinkedMix: true } ? L["Passed"] :
+        IsToDo ? L["To Do"] :
+        Result.My is { PassedInAnotherScopeMix: true } ? L["Passed in another mix"] : null;
 
     private static string CategoryClass(ChartBadge badge)
     {

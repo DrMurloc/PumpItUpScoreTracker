@@ -5187,3 +5187,53 @@ button.chart-card-art {
         gap: 12px;
     }
 }
+
+/* SRP All-Mixes identity span + the owner-locked state borders */
+.srp-card-span {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    align-items: baseline;
+    margin-top: 4px;
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-card-span-range {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.srp-rerate-up {
+    color: var(--mud-palette-success);
+    font-weight: 700;
+}
+
+.srp-rerate-down {
+    color: var(--mud-palette-info);
+    font-weight: 700;
+}
+
+.srp-card-reclear {
+    font-size: .68rem;
+    color: var(--mud-palette-success);
+    border: 1px dashed var(--mud-palette-success);
+    border-radius: 5px;
+    padding: 1px 7px;
+    white-space: nowrap;
+}
+
+.srp-card-pass {
+    border-color: var(--mud-palette-success);
+}
+
+.srp-card-todo {
+    border-style: dashed;
+    border-color: var(--mud-palette-info);
+}
+
+.srp-card-other-mix {
+    border-style: dashed;
+    border-color: var(--mud-palette-success);
+}
