@@ -3,48 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PIU Score Extractor — live PoC</title>
+<title>PIU Score Extractor — anchored PoC</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
-  body {
-    margin: 0; font: 15px/1.5 system-ui, sans-serif; background: #0e1116; color: #e6edf3;
-    padding: 16px; max-width: 900px; margin: 0 auto;
-  }
+  body { margin: 0; font: 15px/1.5 system-ui, sans-serif; background: #0e1116; color: #e6edf3; padding: 16px; max-width: 920px; margin: 0 auto; }
   h1 { font-size: 19px; margin: 0 0 4px; }
   .sub { color: #9aa7b4; font-size: 13px; margin: 0 0 16px; }
-  #drop {
-    border: 2px dashed #3d4756; border-radius: 12px; padding: 26px 16px; text-align: center;
-    background: #151b23; cursor: pointer; transition: border-color .15s, background .15s;
-  }
+  #drop { border: 2px dashed #3d4756; border-radius: 12px; padding: 22px 16px; text-align: center; background: #151b23; cursor: pointer; }
   #drop.hot { border-color: #4a90d9; background: #172230; }
   #drop input { display: none; }
-  canvas { max-width: 100%; border-radius: 10px; margin-top: 12px; display: none; background: #000; }
+  canvas.preview { max-width: 100%; border-radius: 10px; margin-top: 12px; display: none; background: #000; }
   .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  button {
-    background: #21303f; color: #e6edf3; border: 1px solid #34435400; border-radius: 8px;
-    padding: 8px 14px; font-size: 14px; cursor: pointer;
-  }
+  button { background: #21303f; color: #e6edf3; border: 0; border-radius: 8px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
   button:hover { background: #2b3f52; }
   button.primary { background: #2f6fb0; }
   button.primary:disabled { background: #33414f; color: #8593a1; cursor: default; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
-  @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+  @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
   .card { background: #151b23; border: 1px solid #232c37; border-radius: 12px; padding: 14px; }
   .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: #9aa7b4; margin: 0 0 10px; }
   .field { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
-  .field label { flex: 0 0 96px; color: #9aa7b4; font-size: 13px; }
-  .field input {
-    flex: 1; background: #0e1116; border: 1px solid #2b3744; color: #e6edf3; border-radius: 6px;
-    padding: 6px 8px; font-size: 15px; font-variant-numeric: tabular-nums;
-  }
+  .field label { flex: 0 0 92px; color: #9aa7b4; font-size: 13px; }
+  .field input { flex: 1; background: #0e1116; border: 1px solid #2b3744; color: #e6edf3; border-radius: 6px; padding: 6px 8px; font-size: 15px; font-variant-numeric: tabular-nums; }
   .field input.guessed { border-color: #7a5b1e; }
-  pre#raw {
-    white-space: pre-wrap; word-break: break-word; font-size: 12px; color: #b9c4cf;
-    background: #0e1116; border: 1px solid #232c37; border-radius: 8px; padding: 10px;
-    max-height: 240px; overflow: auto; margin: 0;
-  }
+  .cropline { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #1c242e; }
+  .cropline .name { flex: 0 0 74px; font-size: 12px; color: #9aa7b4; }
+  .cropline canvas { height: 30px; border-radius: 4px; background: #000; image-rendering: pixelated; }
+  .cropline .read { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .cropline .miss { color: #d98a8a; }
+  pre#raw { white-space: pre-wrap; word-break: break-word; font-size: 12px; color: #b9c4cf; background: #0e1116; border: 1px solid #232c37; border-radius: 8px; padding: 10px; max-height: 180px; overflow: auto; margin: 8px 0 0; }
+  details { margin-top: 12px; } summary { cursor: pointer; color: #9aa7b4; font-size: 13px; }
   .verdict { border-radius: 12px; padding: 16px; margin-top: 18px; text-align: center; }
   .verdict .big { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
   .verdict .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; opacity: .8; }
@@ -52,29 +42,28 @@
   .verdict.warn { background: #3a2a10; border: 1px solid #7a5b1e; }
   .verdict.bad { background: #3a1717; border: 1px solid #7a2a2a; }
   .compare { display: flex; justify-content: center; gap: 28px; margin-top: 10px; flex-wrap: wrap; }
-  .compare div { text-align: center; }
   .compare .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
   .note { color: #9aa7b4; font-size: 12px; margin-top: 8px; }
   #status { font-size: 13px; color: #9aa7b4; margin-top: 10px; min-height: 18px; }
 </style>
 </head>
 <body>
-  <h1>PIU Score Extractor — live PoC</h1>
-  <p class="sub">Drop a Phoenix result-screen photo. OCR runs entirely in your browser (Tesseract.js / WASM) —
-    no server, no API, no cost. Then the score is <b>reconstructed from the judgements</b> and cross-checked
-    against what OCR read. Edit any field to watch the check react.</p>
+  <h1>PIU Score Extractor — anchored PoC</h1>
+  <p class="sub">Two-pass, all in your browser (Tesseract.js / WASM, no server/API/cost). Pass 1 finds the <b>labels</b>
+    (which OCR reads reliably). Pass 2 crops the digit next to each label and reads just that strip, digits-only. Then
+    the score is reconstructed from the judgements and cross-checked. Watch the per-field crops to see localization working.</p>
 
   <label id="drop">
     <input type="file" accept="image/*" id="file">
     <div><b>Tap to choose a photo</b> or drop one here</div>
-    <div class="note">Tip: if the shot is sideways, use the rotate button after loading.</div>
-    <canvas id="cv"></canvas>
+    <div class="note">If it's sideways, rotate after loading. Phoenix 1 screens only.</div>
+    <canvas id="cv" class="preview"></canvas>
   </label>
 
   <div class="controls">
     <button id="rotate">Rotate 90°</button>
     <button id="gray">Toggle grayscale</button>
-    <button id="run" class="primary" disabled>Run OCR</button>
+    <button id="run" class="primary" disabled>Run anchored OCR</button>
   </div>
   <div id="status"></div>
 
@@ -82,7 +71,7 @@
     <div class="lbl">Reconstructed score (from judgements)</div>
     <div class="big" id="reScore">—</div>
     <div class="compare">
-      <div><div class="lbl">OCR read the score as</div><div class="v" id="ocrScore">—</div></div>
+      <div><div class="lbl">OCR read score</div><div class="v" id="ocrScore">—</div></div>
       <div><div class="lbl">Match</div><div class="v" id="matchBadge">—</div></div>
     </div>
     <div class="note" id="verdictNote"></div>
@@ -98,11 +87,12 @@
       <div class="field"><label>Bad</label><input id="f_bad" inputmode="numeric"></div>
       <div class="field"><label>Miss</label><input id="f_miss" inputmode="numeric"></div>
       <div class="field"><label>Max Combo</label><input id="f_combo" inputmode="numeric"></div>
-      <div class="note">Yellow border = OCR guessed it (verify). White = you edited it.</div>
+      <div class="note">Yellow = OCR guess (verify). White = you edited it.</div>
     </div>
     <div class="card">
-      <h2>Raw OCR text (what the pixels became)</h2>
-      <pre id="raw">—</pre>
+      <h2>What each field cropped to</h2>
+      <div id="crops"></div>
+      <details><summary>Raw pass-1 text</summary><pre id="raw">—</pre></details>
     </div>
   </div>
 
@@ -123,25 +113,17 @@ function draw() {
   ctx.restore();
   if (grayscale) {
     const d = ctx.getImageData(0, 0, cv.width, cv.height), p = d.data;
-    for (let i = 0; i < p.length; i += 4) {
-      let v = 0.3 * p[i] + 0.59 * p[i + 1] + 0.11 * p[i + 2];
-      v = v > 150 ? 255 : v < 90 ? 0 : v;           // gentle contrast stretch
-      p[i] = p[i + 1] = p[i + 2] = v;
-    }
+    for (let i = 0; i < p.length; i += 4) { const v = 0.3 * p[i] + 0.59 * p[i + 1] + 0.11 * p[i + 2]; p[i] = p[i + 1] = p[i + 2] = v; }
     ctx.putImageData(d, 0, 0);
   }
   cv.style.display = 'block';
 }
-
 function loadFile(file) {
   if (!file) return;
-  const url = URL.createObjectURL(file);
   img = new Image();
-  img.onload = () => { rotation = 0; grayscale = false; draw(); document.getElementById('run').disabled = false;
-    setStatus('Loaded. Rotate if sideways, then Run OCR.'); };
-  img.src = url;
+  img.onload = () => { rotation = 0; grayscale = false; draw(); document.getElementById('run').disabled = false; setStatus('Loaded. Rotate if sideways, then run.'); };
+  img.src = URL.createObjectURL(file);
 }
-
 const drop = document.getElementById('drop');
 document.getElementById('file').addEventListener('change', e => loadFile(e.target.files[0]));
 ['dragover', 'dragenter'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('hot'); }));
@@ -150,63 +132,111 @@ drop.addEventListener('drop', e => loadFile(e.dataTransfer.files[0]));
 window.addEventListener('paste', e => { const it = [...e.clipboardData.items].find(i => i.type.startsWith('image')); if (it) loadFile(it.getAsFile()); });
 document.getElementById('rotate').onclick = () => { rotation = (rotation + 90) % 360; draw(); };
 document.getElementById('gray').onclick = () => { grayscale = !grayscale; draw(); };
-
 function setStatus(s) { document.getElementById('status').textContent = s; }
 
-// ---- OCR ---------------------------------------------------------------------------
-document.getElementById('run').onclick = async () => {
-  const btn = document.getElementById('run');
-  btn.disabled = true; setStatus('Loading OCR engine…');
-  const worker = await Tesseract.createWorker('eng', 1, {
-    logger: m => { if (m.status === 'recognizing text') setStatus('Reading pixels… ' + Math.round(m.progress * 100) + '%'); }
-  });
-  const { data } = await worker.recognize(cv);
-  await worker.terminate();
-  setStatus('Done. Edit any field to re-check.');
-  document.getElementById('raw').textContent = data.text.trim() || '(nothing read)';
-  document.getElementById('panels').style.display = 'grid';
-  document.getElementById('verdict').style.display = 'block';
-  autoFill(data.text);
-  recompute();
-  btn.disabled = false;
-};
-
-// ---- parse OCR text into fields (best effort) --------------------------------------
-function numsAfter(text, label) {
-  // find the label, return the first 1-4 digit group appearing near it (same or next line)
-  const lines = text.split(/\n/);
-  for (let i = 0; i < lines.length; i++) {
-    if (new RegExp(label, 'i').test(lines[i])) {
-      for (const l of [lines[i], lines[i + 1] || '', lines[i - 1] || '']) {
-        const m = l.match(/(\d{1,4})/);
-        if (m) return m[1];
+// ---- anchored two-pass OCR ---------------------------------------------------------
+const FIELDS = [
+  { key: 'perfect', labels: ['PERFECT'] },
+  { key: 'great', labels: ['GREAT'] },
+  { key: 'good', labels: ['GOOD'] },
+  { key: 'bad', labels: ['BAD'] },
+  { key: 'miss', labels: ['MISS', 'MSS'] },
+  { key: 'combo', labels: ['COMBO'] },
+];
+const clean = s => (s || '').toUpperCase().replace(/[^A-Z]/g, '');
+function findAnchor(words, targets) {
+  // best word whose cleaned text matches a target (either contains the other, len>=3)
+  let best = null;
+  for (const w of words) {
+    const t = clean(w.text);
+    if (t.length < 3) continue;
+    for (const tgt of targets) {
+      if (t === tgt || t.includes(tgt) || tgt.includes(t)) {
+        if (!best || w.confidence > best.confidence) best = w;
       }
     }
   }
-  return '';
+  return best;
 }
-function set(id, val, guessed) {
-  const el = document.getElementById(id);
-  el.value = val; el.classList.toggle('guessed', guessed && val !== '');
+// crop a horizontal strip at a label's row, upscaled + grayscale, return {value, canvas, conf}
+async function readRow(worker, box, scale = 3) {
+  const padY = (box.y1 - box.y0) * 0.35;
+  const y = Math.max(0, box.y0 - padY);
+  const h = Math.min(cv.height - y, (box.y1 - box.y0) + padY * 2);
+  const x = 0, w = cv.width;                       // full row — the only number on a judgement row is its count
+  const c = document.createElement('canvas');
+  c.width = Math.round(w * scale); c.height = Math.round(h * scale);
+  const cx = c.getContext('2d');
+  cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
+  cx.drawImage(cv, x, y, w, h, 0, 0, c.width, c.height);
+  const d = cx.getImageData(0, 0, c.width, c.height), p = d.data;
+  for (let i = 0; i < p.length; i += 4) { const v = 0.3 * p[i] + 0.59 * p[i + 1] + 0.11 * p[i + 2]; p[i] = p[i + 1] = p[i + 2] = v; }
+  cx.putImageData(d, 0, 0);
+  const { data } = await worker.recognize(c);
+  // the count is the longest digit run on the row
+  const runs = (data.text.match(/\d+/g) || []).sort((a, b) => b.length - a.length);
+  return { value: runs[0] || '', canvas: c, conf: data.confidence };
 }
-function autoFill(text) {
-  const big = (text.match(/\d[\d,]{5,}/g) || []).map(s => s.replace(/[^\d]/g, ''))
-    .filter(s => +s <= 1000000).sort((a, b) => b.length - a.length)[0] || '';
-  set('f_score', big, true);
-  set('f_perfect', numsAfter(text, 'perfect'), true);
-  set('f_great', numsAfter(text, 'great'), true);
-  set('f_good', numsAfter(text, 'good'), true);
-  set('f_bad', numsAfter(text, 'bad'), true);
-  set('f_miss', numsAfter(text, 'miss'), true);
-  set('f_combo', numsAfter(text, 'combo'), true);
+function showCrop(name, res) {
+  const row = document.createElement('div'); row.className = 'cropline';
+  const nm = document.createElement('div'); nm.className = 'name'; nm.textContent = name;
+  res.canvas.style.width = Math.min(220, res.canvas.width / 3) + 'px';
+  const rd = document.createElement('div'); rd.className = 'read' + (res.value ? '' : ' miss');
+  rd.textContent = res.value || '(none)';
+  row.append(nm, res.canvas, rd);
+  document.getElementById('crops').appendChild(row);
 }
+
+document.getElementById('run').onclick = async () => {
+  const btn = document.getElementById('run'); btn.disabled = true;
+  document.getElementById('crops').innerHTML = '';
+  setStatus('Loading OCR engine…');
+  const worker = await Tesseract.createWorker('eng', 1, {
+    logger: m => { if (m.status === 'recognizing text') setStatus('Reading… ' + Math.round(m.progress * 100) + '%'); }
+  });
+
+  // pass 1: whole image, default segmentation, to locate label word-boxes
+  setStatus('Pass 1 — locating labels…');
+  await worker.setParameters({ tessedit_pageseg_mode: '3', tessedit_char_whitelist: '' });
+  const pass1 = (await worker.recognize(cv)).data;
+  document.getElementById('raw').textContent = (pass1.text || '').trim() || '(nothing)';
+  const words = pass1.words || [];
+
+  // pass 2: digit-only, single line, per anchored row
+  await worker.setParameters({ tessedit_pageseg_mode: '7', tessedit_char_whitelist: '0123456789' });
+  let found = 0;
+  for (const f of FIELDS) {
+    const anchor = findAnchor(words, f.labels);
+    if (!anchor) { set('f_' + f.key, '', true); showCrop(f.key, { value: '', canvas: blankCrop() }); continue; }
+    setStatus('Pass 2 — reading ' + f.key + '…');
+    const res = await readRow(worker, anchor.bbox);
+    set('f_' + f.key, res.value, true); showCrop(f.key, res); if (res.value) found++;
+  }
+
+  // score: try the SCORE label row; reconstruction is the source of truth anyway
+  const scoreAnchor = findAnchor(words, ['SCORE']);
+  if (scoreAnchor) {
+    const res = await readRow(worker, scoreAnchor.bbox);
+    // score is up to 7 digits; take the longest run <= 1,000,000
+    const cand = (res.value && +res.value <= 1000000) ? res.value : '';
+    set('f_score', cand, true); showCrop('score', res);
+  } else { set('f_score', '', true); }
+
+  await worker.terminate();
+  setStatus('Done — found ' + found + '/6 judgement rows. Edit any field to re-check.');
+  document.getElementById('panels').style.display = 'grid';
+  document.getElementById('verdict').style.display = 'block';
+  recompute();
+  btn.disabled = false;
+};
+function blankCrop() { const c = document.createElement('canvas'); c.width = 60; c.height = 20; return c; }
+function set(id, val, guessed) { const el = document.getElementById(id); el.value = val; el.classList.toggle('guessed', guessed && val !== ''); }
 
 // ---- reconciliation (ported from the C# ScoreReconciler / ScoreScreen) -------------
 function reconcile(p, g, gd, b, m, combo) {
   const total = p + g + gd + b + m;
   if (total <= 0) return null;
-  const exact = (0.995 * (p + 0.6 * g + 0.2 * gd + 0.1 * b) + 0.005 * combo) / total * 1e6;
-  return Math.floor(exact);
+  return Math.floor((0.995 * (p + 0.6 * g + 0.2 * gd + 0.1 * b) + 0.005 * combo) / total * 1e6);
 }
 function plate(g, gd, b, m) {
   if (g === 0 && gd === 0 && b === 0 && m === 0) return 'Perfect Game';
@@ -219,7 +249,6 @@ function plate(g, gd, b, m) {
   return 'Rough Game';
 }
 const val = id => parseInt((document.getElementById(id).value || '').replace(/[^\d]/g, ''), 10) || 0;
-
 function recompute() {
   const p = val('f_perfect'), g = val('f_great'), gd = val('f_good'), b = val('f_bad'), m = val('f_miss'), combo = val('f_combo');
   const ocrScore = val('f_score');
@@ -228,27 +257,11 @@ function recompute() {
   document.getElementById('ocrScore').textContent = ocrScore ? ocrScore.toLocaleString() : '—';
   if (re === null) { document.getElementById('reScore').textContent = '—'; box.className = 'verdict'; return; }
   document.getElementById('reScore').textContent = re.toLocaleString();
-  const delta = ocrScore - re;
-  const badge = document.getElementById('matchBadge');
-  if (ocrScore === 0) {
-    box.className = 'verdict warn'; badge.textContent = 'no OCR score';
-    document.getElementById('verdictNote').textContent =
-      'OCR did not read the (stylised) score font — but we reconstructed it from the judgements. ' +
-      'Plate: ' + plate(g, gd, b, m) + '. Notes: ' + (p + g + gd + b + m) + '.';
-  } else if (delta === 0) {
-    box.className = 'verdict ok'; badge.textContent = '✓ exact';
-    document.getElementById('verdictNote').textContent =
-      'Reconstructed score equals what OCR read. High confidence. Plate: ' + plate(g, gd, b, m) + '.';
-  } else if (Math.abs(delta) <= 2) {
-    box.className = 'verdict warn'; badge.textContent = 'Δ ' + delta;
-    document.getElementById('verdictNote').textContent =
-      'Within 1–2 points — usually a max-combo misread. Plate: ' + plate(g, gd, b, m) + '.';
-  } else {
-    box.className = 'verdict bad'; badge.textContent = 'Δ ' + delta;
-    document.getElementById('verdictNote').textContent =
-      'Mismatch of ' + delta + '. A judgement or the combo was misread (or it is not an official Phoenix score). ' +
-      'Fix a field and watch this update.';
-  }
+  const delta = ocrScore - re, badge = document.getElementById('matchBadge'), note = document.getElementById('verdictNote');
+  if (ocrScore === 0) { box.className = 'verdict warn'; badge.textContent = 'no OCR score'; note.textContent = 'OCR did not read the stylised score font — reconstructed from judgements instead. Plate: ' + plate(g, gd, b, m) + ', notes: ' + (p + g + gd + b + m) + '.'; }
+  else if (delta === 0) { box.className = 'verdict ok'; badge.textContent = '✓ exact'; note.textContent = 'Reconstructed score matches OCR. High confidence. Plate: ' + plate(g, gd, b, m) + '.'; }
+  else if (Math.abs(delta) <= 2) { box.className = 'verdict warn'; badge.textContent = 'Δ ' + delta; note.textContent = 'Within 1–2 pts — usually a max-combo misread. Plate: ' + plate(g, gd, b, m) + '.'; }
+  else { box.className = 'verdict bad'; badge.textContent = 'Δ ' + delta; note.textContent = 'Mismatch of ' + delta + ' — a judgement or the combo was misread. Fix a field and watch this update.'; }
 }
 ['f_score', 'f_perfect', 'f_great', 'f_good', 'f_bad', 'f_miss', 'f_combo'].forEach(id => {
   const el = document.getElementById(id);
