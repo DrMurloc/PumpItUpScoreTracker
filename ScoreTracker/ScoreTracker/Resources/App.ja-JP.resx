@@ -4466,17 +4466,20 @@
   <data name="Best place" xml:space="preserve">
     <value>最高順位</value>
   </data>
-  <data name="Board #1s" xml:space="preserve">
-    <value>ボード1位</value>
+  <data name="Chart Board #1s" xml:space="preserve">
+    <value>譜面ボード1位</value>
   </data>
-  <data name="Board placements" xml:space="preserve">
-    <value>ボード順位</value>
+  <data name="Chart Boards" xml:space="preserve">
+    <value>譜面ボード</value>
   </data>
-  <data name="Board rank - lower is better" xml:space="preserve">
-    <value>ボードランキング - 低いほど上位</value>
+  <data name="Chart board placements" xml:space="preserve">
+    <value>譜面ボード順位</value>
   </data>
-  <data name="boards" xml:space="preserve">
-    <value>ボード</value>
+  <data name="PUMBILITY rank - lower is better" xml:space="preserve">
+    <value>PUMBILITYランキング - 低いほど上位</value>
+  </data>
+  <data name="chart boards" xml:space="preserve">
+    <value>譜面ボード</value>
   </data>
   <data name="Boards" xml:space="preserve">
     <value>ボード</value>
@@ -4520,8 +4523,8 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>サイトアカウントと連携済み</value>
   </data>
-  <data name="Most boards climbed" xml:space="preserve">
-    <value>ボード上昇数トップ</value>
+  <data name="Most chart boards climbed" xml:space="preserve">
+    <value>譜面ボード上昇数トップ</value>
   </data>
   <data name="Movers of the week" xml:space="preserve">
     <value>今週のムーバー</value>
@@ -5084,20 +5087,20 @@
   <data name="PUMBILITY movers" xml:space="preserve">
     <value>PUMBILITY 変動</value>
   </data>
-  <data name="Boards climbed" xml:space="preserve">
-    <value>ボードを駆け上がり</value>
+  <data name="Chart boards climbed" xml:space="preserve">
+    <value>譜面ボードを駆け上がり</value>
   </data>
-  <data name="**{0}** climbed {1} boards (+{2})" xml:space="preserve">
-    <value>**{0}** が {1} ボードで順位上昇（+{2}）</value>
+  <data name="**{0}** climbed {1} chart boards (+{2})" xml:space="preserve">
+    <value>**{0}** が {1} 譜面ボードで順位上昇（+{2}）</value>
   </data>
   <data name="World firsts &amp; new #1s" xml:space="preserve">
     <value>世界初 &amp; 新 #1</value>
   </data>
-  <data name="First **{0}** — **{1}** in the {2} folder · {3:N0}" xml:space="preserve">
-    <value>初の **{0}** — **{1}**（{2} フォルダ）· {3:N0}</value>
+  <data name="World First" xml:space="preserve">
+    <value>世界初</value>
   </data>
-  <data name="First **{0}** — **{1}** on {2} · {3:N0}" xml:space="preserve">
-    <value>初の **{0}** — **{1}**（{2}）· {3:N0}</value>
+  <data name="{0} folder first" xml:space="preserve">
+    <value>{0}フォルダ初</value>
   </data>
   <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
     <value>新 #1 — **{0}**（{1}）· {2:N0}</value>

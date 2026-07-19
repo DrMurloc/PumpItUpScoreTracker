@@ -4347,17 +4347,20 @@
   <data name="Best place" xml:space="preserve">
     <value>최고 순위</value>
   </data>
-  <data name="Board #1s" xml:space="preserve">
-    <value>보드 1위</value>
+  <data name="Chart Board #1s" xml:space="preserve">
+    <value>채보 보드 1위</value>
   </data>
-  <data name="Board placements" xml:space="preserve">
-    <value>보드 순위</value>
+  <data name="Chart Boards" xml:space="preserve">
+    <value>채보 보드</value>
   </data>
-  <data name="Board rank - lower is better" xml:space="preserve">
-    <value>보드 랭킹 - 낮을수록 좋음</value>
+  <data name="Chart board placements" xml:space="preserve">
+    <value>채보 보드 순위</value>
   </data>
-  <data name="boards" xml:space="preserve">
-    <value>보드</value>
+  <data name="PUMBILITY rank - lower is better" xml:space="preserve">
+    <value>PUMBILITY 랭킹 - 낮을수록 좋음</value>
+  </data>
+  <data name="chart boards" xml:space="preserve">
+    <value>채보 보드</value>
   </data>
   <data name="Boards" xml:space="preserve">
     <value>보드</value>
@@ -4401,8 +4404,8 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>사이트 계정과 연결됨</value>
   </data>
-  <data name="Most boards climbed" xml:space="preserve">
-    <value>보드 상승 최다</value>
+  <data name="Most chart boards climbed" xml:space="preserve">
+    <value>채보 보드 상승 최다</value>
   </data>
   <data name="Movers of the week" xml:space="preserve">
     <value>이번 주의 무버</value>
@@ -4965,20 +4968,20 @@
   <data name="PUMBILITY movers" xml:space="preserve">
     <value>PUMBILITY 순위 변동</value>
   </data>
-  <data name="Boards climbed" xml:space="preserve">
-    <value>보드 상승</value>
+  <data name="Chart boards climbed" xml:space="preserve">
+    <value>채보 보드 상승</value>
   </data>
-  <data name="**{0}** climbed {1} boards (+{2})" xml:space="preserve">
-    <value>**{0}** {1}개 보드 상승 (+{2})</value>
+  <data name="**{0}** climbed {1} chart boards (+{2})" xml:space="preserve">
+    <value>**{0}** {1}개 채보 보드 상승 (+{2})</value>
   </data>
   <data name="World firsts &amp; new #1s" xml:space="preserve">
     <value>세계 최초 &amp; 새로운 #1</value>
   </data>
-  <data name="First **{0}** — **{1}** in the {2} folder · {3:N0}" xml:space="preserve">
-    <value>최초 **{0}** — **{1}** ({2} 폴더) · {3:N0}</value>
+  <data name="World First" xml:space="preserve">
+    <value>세계 최초</value>
   </data>
-  <data name="First **{0}** — **{1}** on {2} · {3:N0}" xml:space="preserve">
-    <value>최초 **{0}** — **{1}** ({2}) · {3:N0}</value>
+  <data name="{0} folder first" xml:space="preserve">
+    <value>{0} 폴더 최초</value>
   </data>
   <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
     <value>새로운 #1 — **{0}** ({1}) · {2:N0}</value>

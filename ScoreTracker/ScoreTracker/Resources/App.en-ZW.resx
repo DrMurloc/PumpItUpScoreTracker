@@ -4389,17 +4389,20 @@
   <data name="Best place" xml:space="preserve">
     <value>Bestest mrglplace</value>
   </data>
-  <data name="Board #1s" xml:space="preserve">
-    <value>Mrgl #1s</value>
+  <data name="Chart Board #1s" xml:space="preserve">
+    <value>Chart Mrgl #1s</value>
   </data>
-  <data name="Board placements" xml:space="preserve">
-    <value>Mrglboard placemrgls</value>
+  <data name="Chart Boards" xml:space="preserve">
+    <value>Chart Mrglboards</value>
   </data>
-  <data name="Board rank - lower is better" xml:space="preserve">
-    <value>Mrglrank - smol number gud</value>
+  <data name="Chart board placements" xml:space="preserve">
+    <value>Chart mrglboard placemrgls</value>
   </data>
-  <data name="boards" xml:space="preserve">
-    <value>mrglboards</value>
+  <data name="PUMBILITY rank - lower is better" xml:space="preserve">
+    <value>PUMBILITY mrglrank - smol number gud</value>
+  </data>
+  <data name="chart boards" xml:space="preserve">
+    <value>chart mrglboards</value>
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Mrglboards</value>
@@ -4443,8 +4446,8 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>Mrgllinked to site accmrglnt</value>
   </data>
-  <data name="Most boards climbed" xml:space="preserve">
-    <value>Most mrglboards clrgled</value>
+  <data name="Most chart boards climbed" xml:space="preserve">
+    <value>Most chart mrglboards clrgled</value>
   </data>
   <data name="Movers of the week" xml:space="preserve">
     <value>Mrglmovers of da wk</value>
@@ -5010,20 +5013,20 @@
   <data name="PUMBILITY movers" xml:space="preserve">
     <value>PUMBILITY mrglvers</value>
   </data>
-  <data name="Boards climbed" xml:space="preserve">
-    <value>Brglrds clrglmbed</value>
+  <data name="Chart boards climbed" xml:space="preserve">
+    <value>Chart brglrds clrglmbed</value>
   </data>
-  <data name="**{0}** climbed {1} boards (+{2})" xml:space="preserve">
-    <value>**{0}** clrglmbed {1} brglrds (+{2})</value>
+  <data name="**{0}** climbed {1} chart boards (+{2})" xml:space="preserve">
+    <value>**{0}** clrglmbed {1} chart brglrds (+{2})</value>
   </data>
   <data name="World firsts &amp; new #1s" xml:space="preserve">
     <value>Wrglrld frglrsts &amp; nrglw #1s</value>
   </data>
-  <data name="First **{0}** — **{1}** in the {2} folder · {3:N0}" xml:space="preserve">
-    <value>Frglrst **{0}** — **{1}** rgln {2} frglder · {3:N0}</value>
+  <data name="World First" xml:space="preserve">
+    <value>Wrgld Frglst</value>
   </data>
-  <data name="First **{0}** — **{1}** on {2} · {3:N0}" xml:space="preserve">
-    <value>Frglrst **{0}** — **{1}** rgln {2} · {3:N0}</value>
+  <data name="{0} folder first" xml:space="preserve">
+    <value>{0} frglder frst</value>
   </data>
   <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
     <value>Nrglw #1 — **{0}** rgln {1} · {2:N0}</value>

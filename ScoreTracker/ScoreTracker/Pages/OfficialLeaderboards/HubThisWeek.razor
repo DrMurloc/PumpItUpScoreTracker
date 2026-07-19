@@ -61,7 +61,7 @@ else
         </MudItem>
         <MudItem xs="12" md="6">
             <MudPaper Class="pa-3">
-                <MudText Typo="Typo.overline">@L["Most boards climbed"]</MudText>
+                <MudText Typo="Typo.overline">@L["Most chart boards climbed"]</MudText>
                 @if (!_highlights.BoardsClimbed.Any())
                 {
                     <MudText Typo="Typo.body2">@L["Nobody cleared the climb threshold this week."]</MudText>
@@ -71,7 +71,7 @@ else
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="pa-2">
                         <HubPlayerChip Player="entry.Player"/>
                         <MudSpacer/>
-                        <MudText Typo="Typo.body1"><b>+@entry.BoardsClimbed @L["boards"]</b></MudText>
+                        <MudText Typo="Typo.body1"><b>+@entry.BoardsClimbed @L["chart boards"]</b></MudText>
                         <MudText Typo="Typo.body2">@L["net"] +@entry.NetPlacesGained @L["places"]</MudText>
                     </MudStack>
                 }
