@@ -61,20 +61,7 @@ else
         </HeaderContent>
         <RowTemplate>
             <MudTd>
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                    <b>@context.Rank</b>
-                    @if (context.PreviousRank != null && context.PreviousRank != context.Rank)
-                    {
-                        var delta = context.PreviousRank.Value - context.Rank;
-                        <span class="@(delta > 0 ? "olb-delta-up" : "olb-delta-down")">
-                            @(delta > 0 ? "▲" : "▼")@Math.Abs(delta)
-                        </span>
-                    }
-                    else if (context.PreviousRank != null)
-                    {
-                        <span class="olb-delta-flat">—</span>
-                    }
-                </MudStack>
+                <RankDelta Rank="context.Rank" PreviousRank="context.PreviousRank"/>
             </MudTd>
             <MudTd>
                 <MudLink title="@L["See their boards"]" Style="cursor:pointer" Underline="Underline.None"

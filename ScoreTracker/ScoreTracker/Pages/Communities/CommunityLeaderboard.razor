@@ -1,353 +1,199 @@
-﻿@page "/Community/Leaderboard"
+@page "/Community/Leaderboard"
 @rendermode RenderModes.Interactive
-@using ScoreTracker.ScoreLedger.Contracts.Queries
-@using ScoreTracker.PlayerProgress.Contracts.Queries
-@using ScoreTracker.PlayerProgress.Contracts.Commands
-@using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.Domain.Records
 @using MediatR
-@using Microsoft.EntityFrameworkCore.Metadata.Internal
-@using ScoreTracker.Application.Commands
 @using ScoreTracker.Communities.Contracts.Queries
-@using ScoreTracker.Communities.Contracts.Commands
-@using ScoreTracker.Application.Queries
-@using ScoreTracker.Domain.Exceptions
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
-@using ScoreTracker.PlayerProgress.Contracts.Queries
-@using ScoreTracker.PlayerProgress.Contracts.Queries
-@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
-@using System.Web
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Theming
-<PageTitle>Communities</PageTitle>
+@using System.Web
+@using Chart = ScoreTracker.SharedKernel.Models.Chart
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+<PageTitle>@L["Communities"]</PageTitle>
 
 @if (_community != null)
 {
-    
-    <MudGrid>
-        <MudItem xs="12" sm="4">
-        
-            <MudSelect T="LeaderboardType" Value="_currentType" ValueChanged="SetType" Label="Leaderboard Type">
-                <MudSelectItem T="LeaderboardType" Value="LeaderboardType.Total">Total Rating</MudSelectItem>
-                <MudSelectItem T="LeaderboardType" Value="LeaderboardType.Combined">PUMBILITY</MudSelectItem>
-                <MudSelectItem T="LeaderboardType" Value="LeaderboardType.Singles">Singles PUMBILITY</MudSelectItem>
-                <MudSelectItem T="LeaderboardType" Value="LeaderboardType.Doubles">Doubles PUMBILITY</MudSelectItem>
-                <MudSelectItem T="LeaderboardType" Value="LeaderboardType.CoOp">Total CoOp Rating</MudSelectItem>
-            </MudSelect>
-        </MudItem>
+    <div class="d-flex align-end justify-space-between flex-wrap mb-2" style="gap:12px">
+        <div>
+            <MudText Typo="Typo.h4">@((string)_community.Name)</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["{0} members", _leaderboard.Count()]</MudText>
+        </div>
         @if (_community.IsRegional)
         {
-            
-            <MudItem xs="12" sm="4">
-                <MudSwitch T="bool" Label=@L["Show Regional Guests"] Value="_showGuests" ValueChanged="SetShowGuests" Color="Color.Primary"></MudSwitch>
-            </MudItem>
+            <MudSwitch T="bool" Label="@L["Show Regional Guests"]" Value="_showGuests" ValueChanged="SetShowGuests" Color="Color.Primary"></MudSwitch>
         }
-    </MudGrid>
-    <br />
-    <MudTable T="LeaderboardEntry" Items="_entries" Breakpoint="Breakpoint.None">
-        <ToolBarContent>
-            <MudText Typo="Typo.h4">@HttpUtility.UrlDecode(CommunityName)</MudText>
-        </ToolBarContent>
-        <HeaderContent>
-            <MudTh>
+    </div>
 
-                <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => e.place)">Place</MudTableSortLabel>
-            </MudTh>
-            <MudTh><MudTableSortLabel T="LeaderboardEntry" SortBy="@(e=>e.ProfileImage.ToString())">Avatar</MudTableSortLabel></MudTh>
-            <MudTh>
-                <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => e.PlayerName.ToString())">Name</MudTableSortLabel>
-            </MudTh>
+    <MudTabs Elevation="0" ApplyEffectsToContainer="true" Class="mb-4">
+        <MudTabPanel Text="@L["Rankings"]">
+            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2 mt-3 flex-wrap">
+                <MudSelect T="LeaderboardType" Value="_currentType" ValueChanged="SetType" Label="@L["Board"]"
+                           Dense="true" Style="max-width:200px">
+                    <MudSelectItem T="LeaderboardType" Value="LeaderboardType.Combined">PUMBILITY</MudSelectItem>
+                    <MudSelectItem T="LeaderboardType" Value="LeaderboardType.Total">@L["Total Rating"]</MudSelectItem>
+                    <MudSelectItem T="LeaderboardType" Value="LeaderboardType.CoOp">@L["CoOp"]</MudSelectItem>
+                </MudSelect>
+                <MudSpacer/>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    @L["Tap a rating to expand the player's top charts."]
+                </MudText>
+            </MudStack>
 
-            <MudTh>
-                <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => e.Rating)">@(_currentType is LeaderboardType.CoOp or LeaderboardType.Total ? "Total Rating" : "PUMBILITY")</MudTableSortLabel>
-            </MudTh>
-            @if (_currentType != LeaderboardType.Total)
-            {
-                @if (_currentType != LeaderboardType.CoOp)
-                {
-                    <MudTh>
-                        <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => e.AverageLevel)">Average Level</MudTableSortLabel>
-                    </MudTh>
-                    <MudTh>
-                        <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e=>e.CompetitiveLevel)">Competitive Level</MudTableSortLabel>
-                    </MudTh>
-                }
-                <MudTh>
-                    <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => (int)e.Score)">Average Score</MudTableSortLabel>
-                </MudTh>
-            }
-            @if (_currentType == LeaderboardType.Total)
-            {
-
-                <MudTh>
-                    <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => (int)e.HighestLevel)">Highest Level</MudTableSortLabel>
-                </MudTh>
-                <MudTh>
-                    <MudTableSortLabel T="LeaderboardEntry" SortBy="@(e => (int)e.ClearCount)">Clear Count</MudTableSortLabel>
-                </MudTh>
-            }
-            <MudTh>
-                Compare
-            </MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>
-                @context.place
-            </MudTd>
-            <MudTd>
-                <MudImage Src="@context.ProfileImage.ToString()" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-            </MudTd>
-            <MudTd>
-                <UserLabel User="_users[context.UserId]"></UserLabel>
-                @if (context.IsPublic)
-                {
-                    <MudTooltip Text="@L["Phoenix Recap"]">
-                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.LocalFireDepartment"
-                                       Href=@($"/Player/{context.UserId}/PhoenixRecap")></MudIconButton>
-                    </MudTooltip>
-                }
-            </MudTd>
-            <MudTd>
-                @if (_currentType != LeaderboardType.Total && _currentType != LeaderboardType.CoOp)
-                {
-                    <MudButton Variant="Variant.Text" Style=@($"color:{context.Color}") StartIcon="@Icons.Material.Filled.Visibility" OnClick="()=>ShowUserData(context.UserId, _currentType == LeaderboardType.Singles ? ChartType.Single : _currentType == LeaderboardType.Doubles ? ChartType.Double : null)">
-                        @context.Rating
-                    </MudButton>
-                }
-                else
-                {
-
-                    <MudText Style=@($"color:{context.Color}")>
-                        @context.Rating
-                    </MudText>
-                }
-
-            </MudTd>
-            @if (_currentType != LeaderboardType.Total)
-            {
-                @if (_currentType != LeaderboardType.CoOp)
-                {
-                    <MudTd>
-                        @context.AverageLevel.ToString("0.000")
-                    </MudTd>
-                    <MudTd>
-                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Visibility" OnClick="()=>ShowUserCompetitiveData(context.UserId, _currentType == LeaderboardType.Singles ? ChartType.Single : _currentType == LeaderboardType.Doubles ? ChartType.Double : null)">
-
-                            @context.CompetitiveLevel.ToString("0.000")
-                        </MudButton>
-                    </MudTd>
-                }
-                <MudTd>
-                    <ScoreBreakdown Score="context.Score"></ScoreBreakdown>
-                </MudTd>
-            }
-            @if (_currentType == LeaderboardType.Total)
-            {
-
-                <MudTd>
-                    @context.HighestLevel
-                </MudTd>
-                <MudTd>
-                    @context.ClearCount
-                </MudTd>
-            }
-            <MudTd>
-                @if (context.IsPublic)
-                {
-
-                    <MudCheckBox T="bool" Value="_playerScores.ContainsKey(context.UserId)" ValueChanged="() => SelectUser(context.UserId)"></MudCheckBox>
-                }
-                else
-                {
-                    <MudTooltip Text="This User's Profile is Private">
-
-                        <MudIcon Icon="@Icons.Material.Filled.Remove"></MudIcon>
-                    </MudTooltip>
-                }
-            </MudTd>
-        </RowTemplate>
-        <ChildRowContent>
-            @if (_showingUserId == context.UserId)
-            {
-                <td colspan="@Colspan">
-                    <MudGrid>
-                        @foreach (var entry in _scores)
-                        {
-
-                            <MudItem xs="4" sm="3" md="2">
-                                <MudCard>
-                                    <MudCardMedia Height="150" Image="@entry.Chart.Song.ImagePath.ToString()" />
-                                    <MudCardContent>
-                                        <DifficultyBubble Chart="entry.Chart"></DifficultyBubble>
-                                        <ScoreBreakdown Score="entry.Score" Plate="entry.Plate" IsBroken="entry.IsBroken" Text=@(_showingType=="Rating"?entry.Rating.ToString("N0"):entry.CompetitiveLevel.ToString("0.00")) Height="17"></ScoreBreakdown>
-
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                        }
-                    </MudGrid>
-                </td>
-            }
-        </ChildRowContent>
-        <PagerContent>
-            <MudTablePager></MudTablePager>
-        </PagerContent>
-    </MudTable>
-}
-
-<br/>
-<MudText Style="color:#0000FF">Top Player</MudText>
-<br />
-<MudText Style="color:#00FF00">Top 33%</MudText>
-<br />
-<MudText Style="color:#FF0000">Top 66%</MudText>
-<br />
-<MudText Style="color:#FFFFFF">Bottom 33%</MudText>
-<br />
-@if (_playerScores.Any())
-{
-    <MudGrid>
-        <MudItem xs="6" md="4">
-            <MudNumericField T="int" Value="_minLevel" ValueChanged="l=>SetLevel(l,_maxLevel)" Min="1" Max="_maxLevel" Label=@L["Minimum Level"] HideSpinButtons="true"></MudNumericField>
-        </MudItem>
-        <MudItem xs="6" md="4">
-            <MudNumericField T="int" Value="_maxLevel" ValueChanged="l=>SetLevel(_minLevel,l)" Min="_minLevel" Max="DifficultyLevel.Max" Label=@L["Maximum Level"] HideSpinButtons="true"></MudNumericField>
-        </MudItem>
-    </MudGrid>
-    @foreach (var player in _playerScores.Keys)
-    {
-        <MudButton Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.Delete" OnClick="() => SelectUser(player)">@_userNames[player]</MudButton>
-        @if (_playerScores.Count() > 1)
-        {
-            @if (_contestedCharts > 0)
-            {
-                <MudText>@_winners.Values.Count(w => w==player) Wins (@((100.0 * _winners.Values.Count(w => w==player) / (double)_contestedCharts).ToString("0.00"))%)</MudText>
-                @if (_winLevelAverage[player] > 0)
-                {
-                    <MudText>Averages Difficulty Level @_winLevelAverage[player].ToString("0.00") on wins</MudText>
-                }
-                <MudText>@_typeWins[player][ChartType.Single] Singles</MudText>
-                <MudText>@_typeWins[player][ChartType.Double] Doubles</MudText>
-            }
-            <MudText>@_leaderboardCharts.Count(c => _playerScores[player].ContainsKey(c.Id) && !_playerScores.Where(kv => !kv.Key.Equals(player)).Any(kv => kv.Value.ContainsKey(c.Id))) charts scored that no other selected player has scored</MudText>
-
-        }
-        <br />
-    }
-    <MudText>@_scoreDiffs.Values.Count(s =>s == -1).ToString("N0") Shared PGs</MudText>
-    @foreach (var scoreDiff in new[] { 1000, 5000, 10000, 20000 })
-    {
-        <MudText>@_scoreDiffs.Count(kv=>kv.Value>-1&&kv.Value>scoreDiff).ToString("N0") matchups within @scoreDiff.ToString("N0") score</MudText>
-    }
-    <br/>
-    <MudGrid>
-        <MudItem xs="12" md="6">
-            <MudTextField @bind-Value="_searchText" Label="Song Filter" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true"></MudTextField>
-        </MudItem>
-        <MudItem xs="12" md="6">
-            <MudSelect T="Guid?" Label="Winner" @bind-Value="_filteredWinner" Clearable="true">
-                @foreach (var key in _playerScores.Keys)
-                {
-                    <MudSelectItem T="Guid?" Value="key">@_userNames[key]</MudSelectItem>
-                }
-            </MudSelect>
-
-        </MudItem>
-    </MudGrid>
-    <br/>
-    <MudTable T="Chart" Items="FilteredCharts">
-        <HeaderContent>
-            <MudTh><MudTableSortLabel T="Chart" SortBy="c=>c.Song.Name.ToString()">Song</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel T="Chart" SortBy="c=>(int)c.Level">Chart</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel T="Chart" SortBy=@(c=>_winners[c.Id]==null?_playerScores.All(kv=>kv.Value.ContainsKey(c.Id))?"ZZZZZZTie":"ZZZZZZZTInconclusive":_userNames[_winners[c.Id].Value].ToString())>Winner</MudTableSortLabel></MudTh>
-            @foreach (var key in _playerScores.Keys)
-            {
-                <MudTh>
-                    <MudTableSortLabel T="Chart" SortBy="c=>_playerScores[key].TryGetValue(c.Id,out var score)?(int)score:0">@_userNames[key]</MudTableSortLabel>
-                </MudTh>
-            }
-            <MudTh>
-                <MudTableSortLabel T="Chart" SortBy="c=>_scoreDiffs[c.Id]??1000000">Score Difference</MudTableSortLabel>
-            </MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>
-                <MudTooltip Text="@context.Song.Name">
-                    
-                    <MudImage Src="@context.Song.ImagePath.ToString()" Height="35" Alt="@context.Song.Name" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
-                </MudTooltip>
-            </MudTd>
-            <MudTd>
-                <DifficultyBubble Chart="context"></DifficultyBubble>
-            </MudTd>
-            <MudTd>
-                @(_winners[context.Id] == null ? _playerScores.Any(kv => !kv.Value.ContainsKey(context.Id)) ? "Inconclusive" : "Tie" : _userNames[_winners[context.Id]!.Value])
-            </MudTd>
-            @foreach (var key in _playerScores.Keys)
-            {
-                <MudTd>
-                    @(_playerScores[key].TryGetValue(context.Id, out var score) ? $"{score} ({score.LetterGrade.GetName()})" : "")
-                </MudTd>
-            }
-            <MudTd>@(_scoreDiffs[context.Id]==-1?"PG":_scoreDiffs[context.Id]?.ToString("N0"))</MudTd>
-        </RowTemplate>
-        
-        <PagerContent>
-            <MudTablePager></MudTablePager>
-        </PagerContent>
-    </MudTable>
-}
-<br/>
-<MudText Typo="Typo.h5">Chart Leaderboards</MudText>
-<br/>
-
-<MudGrid>
-    <MudItem xs="12" sm="6" md="4">
-        <ChartSelector ChartIdSelected="SelectChart" Disabled="_selectingChart"></ChartSelector>
-    </MudItem>
-    <MudItem xs="12">
-        @if (!_communityChartScores.Any())
-        {
-            if (_hasSelectedChart)
-            {
-                <MudText>No scores for the chart recorded in this community.</MudText>
-            }
-            else
-            {
-                <MudText>Select a chart to see this community's leaderboard!</MudText>
-            }
-        }
-    </MudItem>
-    @if (_communityChartScores.Any())
-    {
-        
-        <MudTable T="(int,UserPhoenixScore)" Items="_communityChartScores.OrderByDescending(s => s.Score).Select((s, i) => (i + 1,s))" Breakpoint="Breakpoint.None" Dense="true">
-            <HeaderContent>
-                <MudTh>Place</MudTh>
-                <MudTh>Avatar</MudTh>
-                <MudTh>Name</MudTh>
-                <MudTh>Score</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd>@context.Item1</MudTd>
-                <MudTd>
-                    @if (_nameAvatars.TryGetValue(context.Item2.UserId, out var avatarUrl))
+            <MudTable T="LeaderboardEntry" Items="_entries" Breakpoint="Breakpoint.None" Dense="true"
+                      RowsPerPage="50" Class="olb-sticky-second olb-pager-tight">
+                <HeaderContent>
+                    <MudTh>@L["Rank"]</MudTh>
+                    <MudTh>@L["Player"]</MudTh>
+                    <MudTh Style="text-align:right">@(_currentType == LeaderboardType.Combined ? "PUMBILITY" : _currentType == LeaderboardType.Total ? L["Total Rating"] : L["CoOp"])</MudTh>
+                    @if (_currentType == LeaderboardType.Combined)
                     {
-                        
-                        <MudImage Src="@avatarUrl" Height="35" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                        <MudTh Style="text-align:right" Class="olb-hide-mobile">@L["Singles"]</MudTh>
+                        <MudTh Style="text-align:right" Class="olb-hide-mobile">@L["Doubles"]</MudTh>
+                        <MudTh Style="text-align:right">@L["Comp Lv"]</MudTh>
                     }
-                </MudTd>
-                <MudTd>@context.Item2.UserName</MudTd>
-                <MudTd><ScoreBreakdown Score="context.Item2.Score" Plate="context.Item2.Plate" IsBroken="context.Item2.IsBroken" ShowScore="true"></ScoreBreakdown></MudTd>
-            </RowTemplate>
-        </MudTable>
-    }
+                    @if (_currentType == LeaderboardType.Total)
+                    {
+                        <MudTh Style="text-align:right">@L["Highest Level"]</MudTh>
+                        <MudTh Style="text-align:right">@L["Clear Count"]</MudTh>
+                    }
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>
+                        <RankDelta Rank="context.Place"/>
+                    </MudTd>
+                    <MudTd>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <MudImage Src="@context.ProfileImage.ToString()" Height="28" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                            <UserLabel User="_users[context.UserId]"></UserLabel>
+                            @if (context.IsPublic)
+                            {
+                                <MudTooltip Text="@L["Phoenix Recap"]">
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.LocalFireDepartment"
+                                                   Href=@($"/Player/{context.UserId}/PhoenixRecap")></MudIconButton>
+                                </MudTooltip>
+                            }
+                        </div>
+                    </MudTd>
+                    <MudTd Style="text-align:right">
+                        @if (_currentType == LeaderboardType.Combined)
+                        {
+                            <MudLink Style=@($"color:{context.Color};cursor:pointer") Underline="Underline.None"
+                                     OnClick="() => ToggleExpand(context.UserId, null, false)"><b>@context.Rating</b></MudLink>
+                        }
+                        else
+                        {
+                            <b style="color:@context.Color">@context.Rating</b>
+                        }
+                    </MudTd>
+                    @if (_currentType == LeaderboardType.Combined)
+                    {
+                        <MudTd Style="text-align:right" Class="olb-hide-mobile">
+                            <MudLink Style=@($"color:{_singlesScale.GetColor(context.SinglesRating)};cursor:pointer") Underline="Underline.None"
+                                     OnClick="() => ToggleExpand(context.UserId, ChartType.Single, false)">@context.SinglesRating</MudLink>
+                        </MudTd>
+                        <MudTd Style="text-align:right" Class="olb-hide-mobile">
+                            <MudLink Style=@($"color:{_doublesScale.GetColor(context.DoublesRating)};cursor:pointer") Underline="Underline.None"
+                                     OnClick="() => ToggleExpand(context.UserId, ChartType.Double, false)">@context.DoublesRating</MudLink>
+                        </MudTd>
+                        <MudTd Style="text-align:right">
+                            <MudLink Style="cursor:pointer" Underline="Underline.None"
+                                     OnClick="() => ToggleExpand(context.UserId, null, true)">@context.CompetitiveLevel.ToString("0.00")</MudLink>
+                        </MudTd>
+                    }
+                    @if (_currentType == LeaderboardType.Total)
+                    {
+                        <MudTd Style="text-align:right">@context.HighestLevel</MudTd>
+                        <MudTd Style="text-align:right">@context.ClearCount</MudTd>
+                    }
+                </RowTemplate>
+                <ChildRowContent>
+                    @if (_expandedUserId == context.UserId)
+                    {
+                        <td colspan="@Colspan">
+                            @if (_scores == null)
+                            {
+                                <MudSkeleton Height="120px" SkeletonType="SkeletonType.Rectangle"/>
+                            }
+                            else
+                            {
+                                <div class="tier-card-grid pa-2">
+                                    @foreach (var entry in _scores)
+                                    {
+                                        <TierListChartCard Chart="entry.Chart"
+                                                           Score="new RecordedPhoenixScore(entry.Chart.Id, entry.Score, entry.Plate, entry.IsBroken, default)"
+                                                           TierLabel="@(_expandedCompetitive ? entry.CompetitiveLevel.ToString("0.00") : entry.Rating.ToString("N0"))"
+                                                           ShowToDo="false"/>
+                                    }
+                                </div>
+                            }
+                        </td>
+                    }
+                </ChildRowContent>
+                <PagerContent>
+                    <MudTablePager HideRowsPerPage="true"/>
+                </PagerContent>
+            </MudTable>
+        </MudTabPanel>
 
-</MudGrid>
-<br/><br/>
+        <MudTabPanel Text="@L["By Chart"]">
+            <MudGrid Class="mt-3">
+                <MudItem xs="12" sm="6" md="4">
+                    <ChartSelector ChartIdSelected="SelectChart" Disabled="_selectingChart"></ChartSelector>
+                </MudItem>
+                <MudItem xs="12">
+                    @if (!_communityChartScores.Any())
+                    {
+                        if (_hasSelectedChart)
+                        {
+                            <MudText>@L["No scores for the chart recorded in this community."]</MudText>
+                        }
+                        else
+                        {
+                            <MudText>@L["Select a chart to see this community's leaderboard!"]</MudText>
+                        }
+                    }
+                </MudItem>
+                @if (_communityChartScores.Any())
+                {
+                    <MudTable T="(int, UserPhoenixScore)" Items="_communityChartScores.OrderByDescending(s => s.Score).Select((s, i) => (i + 1, s))" Breakpoint="Breakpoint.None" Dense="true">
+                        <HeaderContent>
+                            <MudTh>@L["Rank"]</MudTh>
+                            <MudTh>@L["Player"]</MudTh>
+                            <MudTh>@L["Score"]</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                <RankDelta Rank="context.Item1"/>
+                            </MudTd>
+                            <MudTd>
+                                <div style="display:flex;align-items:center;gap:8px">
+                                    @if (_nameAvatars.TryGetValue(context.Item2.UserId, out var avatarUrl))
+                                    {
+                                        <MudImage Src="@avatarUrl" Height="28" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                                    }
+                                    @context.Item2.UserName
+                                </div>
+                            </MudTd>
+                            <MudTd><ScoreBreakdown Score="context.Item2.Score" Plate="context.Item2.Plate" IsBroken="context.Item2.IsBroken" ShowScore="true"></ScoreBreakdown></MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudGrid>
+        </MudTabPanel>
+
+        <MudTabPanel Text="@L["Members"]">
+            <div class="mt-3">
+                <CommunityMembers/>
+            </div>
+        </MudTabPanel>
+    </MudTabs>
+}
+
 @inject IMediator Mediator;
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager;
@@ -356,84 +202,16 @@
 @code {
     // Community stats are Phoenix-lineage — XX viewers keep seeing Phoenix, as before.
     private MixEnum _currentMix = MixEnum.Phoenix;
-    private Guid _showingUserId = Guid.Empty;
-    private ChartType? _chartType = null;
-    private string _showingType = "CompetitiveLevel";
-    private int Colspan => _currentType == LeaderboardType.CoOp ? 4 : _currentType == LeaderboardType.Total ? 5 : 6;
-    private string _searchText;
-    private Guid? _filteredWinner = null;
-    
-    private IEnumerable<Chart> FilteredCharts => _leaderboardCharts.Where(c => string.IsNullOrWhiteSpace(_searchText) || c.Song.Name.ToString().Contains(_searchText, StringComparison.OrdinalIgnoreCase))
-        .Where(c=>_filteredWinner==null || _winners[c.Id]==_filteredWinner)
-        .OrderBy(s => string.IsNullOrWhiteSpace(_searchText) || s.Song.Name == _searchText ? 0 : 1);
-    private async Task ShowUserCompetitiveData(Guid userId, ChartType? chartType)
-    {
-        _showingType = "CompetitiveLevel";
-        if (_showingUserId == userId && _chartType == chartType)
-        {
-            _showingUserId = Guid.Empty;
-            _chartType = null;
-            return;
-        }
-        var scoringConfig = ScoringConfiguration.PumbilityScoring(_currentMix, true);
 
-        _scores = (await Mediator.Send(new GetTop50CompetitiveQuery(userId, chartType, Mix: _currentMix)))
-            .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, s.Plate, s.IsBroken,(int)scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false), ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level, s.Score ?? 0, _charts[s.ChartId].Type)))
-            .ToArray();
-        _showingUserId = userId;
-        _chartType = chartType;
-
-    }
-
-    private IEnumerable<UserPhoenixScore> _communityChartScores = Array.Empty<UserPhoenixScore>();
-    private bool _hasSelectedChart = false;
-    private bool _selectingChart = false;
     private Community? _community;
-    private Chart? _selectedChart;
-    private async Task SelectChart(Chart chart)
-    {
-        _selectingChart = true;
-        _hasSelectedChart = true;
-        _selectedChart = chart;
-        _communityChartScores = await Mediator.Send(new GetPhoenixRecordsForCommunityQuery(CommunityName, chart.Id, _currentMix));
-        if (!_showGuests)
-        {
-            _communityChartScores = _communityChartScores.Where(c => _users[c.UserId].Country == CommunityName).ToArray();
-        }
-        _selectingChart = false;
-        StateHasChanged();
-    }
-
-    private async Task SetShowGuests(bool newValue)
-    {
-        _showGuests = newValue;
-        SetType(_currentType);
-        if (_selectedChart != null)
-        {
-            await SelectChart(_selectedChart);
-        }
-    }
-    private async Task ShowUserData(Guid userId, ChartType? chartType)
-    {
-        _showingType = "Rating";
-        if (_showingUserId == userId && _chartType==chartType)
-        {
-            _showingUserId = Guid.Empty;
-            _chartType = null;
-            return;
-        }
-        var scoringConfig = ScoringConfiguration.PumbilityScoring(_currentMix, true);
-
-        _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(userId, chartType, Mix: _currentMix)))
-            .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, s.Plate, s.IsBroken,(int)scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false),ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level,s.Score??0)))
-            .ToArray();
-        _showingUserId = userId;
-        _chartType = chartType;
-
-    }
     private IEnumerable<CommunityLeaderboardRecord> _leaderboard = Array.Empty<CommunityLeaderboardRecord>();
-    private IEnumerable<ScoreEntry> _scores = Array.Empty<ScoreEntry>();
+    private IEnumerable<LeaderboardEntry> _entries = Array.Empty<LeaderboardEntry>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
+    private IDictionary<Guid, string> _nameAvatars = new Dictionary<Guid, string>();
+    private ISet<Name> _myCommunities = new HashSet<Name>();
+    private bool _showGuests = false;
+
     // One percentile scale per rating column: a player's color reflects where they sit in
     // THIS community's distribution, on the sitewide rarity ramp.
     private ThemeScales.PopulationScale _totalScale = ThemeScales.ScaleFrom(Array.Empty<int>());
@@ -441,10 +219,23 @@
     private ThemeScales.PopulationScale _singlesScale = ThemeScales.ScaleFrom(Array.Empty<int>());
     private ThemeScales.PopulationScale _doublesScale = ThemeScales.ScaleFrom(Array.Empty<int>());
     private ThemeScales.PopulationScale _coOpScale = ThemeScales.ScaleFrom(Array.Empty<int>());
-    private ISet<Name> _myCommunities = new HashSet<Name>();
-    private IDictionary<Guid, int?> _scoreDiffs = new Dictionary<Guid, int?>();
+
+    private LeaderboardType _currentType = LeaderboardType.Combined;
+    private int Colspan => _currentType == LeaderboardType.Combined ? 6 : _currentType == LeaderboardType.Total ? 5 : 3;
+
+    private Guid _expandedUserId = Guid.Empty;
+    private ChartType? _expandedChartType;
+    private bool _expandedCompetitive;
+    private ScoreEntry[]? _scores;
+
+    private IEnumerable<UserPhoenixScore> _communityChartScores = Array.Empty<UserPhoenixScore>();
+    private bool _hasSelectedChart = false;
+    private bool _selectingChart = false;
+    private Chart? _selectedChart;
+
     [Parameter]
-    [SupplyParameterFromQuery]public string CommunityName { get; set; }
+    [SupplyParameterFromQuery] public string CommunityName { get; set; } = string.Empty;
+
     protected override async Task OnInitializedAsync()
     {
         var communityName = HttpUtility.UrlDecode(CommunityName);
@@ -453,27 +244,19 @@
         var community = await Mediator.Send(new GetCommunityQuery(communityName));
         _community = community;
         _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
-        _myCommunities = (await Mediator.Send(new GetMyCommunitiesQuery())).Select(c=>c.CommunityName).ToHashSet();
+        _myCommunities = (await Mediator.Send(new GetMyCommunitiesQuery())).Select(c => c.CommunityName).ToHashSet();
         if (community.PrivacyType == CommunityPrivacyType.Private)
         {
-            if (!CurrentUser.IsLoggedIn)
+            if (!CurrentUser.IsLoggedIn || !_myCommunities.Contains(communityName))
             {
-                NavManager.NavigateTo("/Communities");
-                return;
-            }
-            if (!_myCommunities.Contains(communityName))
-            {
-
                 NavManager.NavigateTo("/Communities");
                 return;
             }
         }
-        _leaderboard = (await Mediator.Send(new GetCommunityLeaderboardQuery(communityName, _currentMix))).ToArray();
-        _nameAvatars = _leaderboard.Where(l=>l.IsPublic).ToDictionary(l => l.UserId, l => l.ProfileImage.ToString());
-        _users = (await Users.GetUsers(_leaderboard.Select(l => l.UserId).Distinct()))
-            .ToDictionary(u => u.Id);
 
-        _userNames = _leaderboard.ToDictionary(l => l.UserId, l => l.PlayerName);
+        _leaderboard = (await Mediator.Send(new GetCommunityLeaderboardQuery(communityName, _currentMix))).ToArray();
+        _nameAvatars = _leaderboard.Where(l => l.IsPublic).ToDictionary(l => l.UserId, l => l.ProfileImage.ToString());
+        _users = (await Users.GetUsers(_leaderboard.Select(l => l.UserId).Distinct())).ToDictionary(u => u.Id);
         _totalScale = ThemeScales.ScaleFrom(_leaderboard.Select(l => (int)l.TotalRating));
         _skillScale = ThemeScales.ScaleFrom(_leaderboard.Select(l => (int)l.SkillRating));
         _singlesScale = ThemeScales.ScaleFrom(_leaderboard.Select(l => (int)l.SinglesRating));
@@ -481,141 +264,89 @@
         _coOpScale = ThemeScales.ScaleFrom(_leaderboard.Select(l => (int)l.CoOpRating));
         SetType(LeaderboardType.Combined);
     }
-    private bool _isLoading = false;
-    private readonly IDictionary<Guid, IDictionary<Guid, PhoenixScore>> _playerScores = new Dictionary<Guid, IDictionary<Guid, PhoenixScore>>();
-    private IEnumerable<Chart> _leaderboardCharts = Array.Empty<Chart>();
 
-    private int _contestedCharts = 0;
-    private int _totalCharts = 0;
-    private IDictionary<Guid, Name> _userNames = new Dictionary<Guid, Name>();
-    private IDictionary<Guid, User> _users = new Dictionary<Guid, User>();
-    private IDictionary<Guid, Guid?> _winners = new Dictionary<Guid, Guid?>();
-    private IDictionary<Guid, double> _winLevelAverage = new Dictionary<Guid, double>();
-    private IDictionary<Guid, IDictionary<ChartType, int>> _typeWins = new Dictionary<Guid, IDictionary<ChartType, int>>();
-    private int _minLevel = 1;
-    private int _maxLevel = DifficultyLevel.Max;
-    private bool _showGuests = false;
-    private IDictionary<Guid, string> _nameAvatars = new Dictionary<Guid, string>();
-    private void Recalculate()
-    {
-
-        _leaderboardCharts = _charts.Where(c => _playerScores.Values.Any(p => p.ContainsKey(c.Key))).Select(c => c.Value).ToArray();
-
-        _winners = _leaderboardCharts.ToDictionary(c => c.Id, c =>
-            _playerScores.Count(kv => kv.Value.ContainsKey(c.Id)) < 2 ? null
-                : _playerScores.GroupBy(p => p.Value.TryGetValue(c.Id, out var score) ? (int)score : 0).OrderByDescending(g => g.Key).First().Count() > 1 ? (Guid?)null
-                    : (Guid?)_playerScores.MaxBy(kv => kv.Value.TryGetValue(c.Id, out var score) ? (int)score : 0).Key);
-
-        _winLevelAverage = _playerScores.Keys.ToDictionary(player => player, player => _winners.Any(kv => kv.Value == player) ? _winners.Where(kv => kv.Value == player)
-            .Average(kv => _charts[kv.Key].Level) : 0);
-
-
-        _typeWins = _playerScores.ToDictionary(kv => kv.Key, kv => (IDictionary<ChartType, int>)_winners.Where(w => w.Value == kv.Key).GroupBy(w => _charts[w.Key].Type).ToDictionary(g => g.Key, g => g.Count()));
-        foreach (var userId in _typeWins.Keys)
-        {
-            if (!_typeWins[userId].ContainsKey(ChartType.Single))
-            {
-                _typeWins[userId][ChartType.Single] = 0;
-            }
-            if (!_typeWins[userId].ContainsKey(ChartType.Double))
-            {
-                _typeWins[userId][ChartType.Double] = 0;
-            }
-        }
-        _totalCharts = _leaderboardCharts.Count();
-        _contestedCharts = _leaderboardCharts.Count(c => _winners[c.Id] != null);
-    }
-
-    private async Task SetLevel(int minLevel, int maxLevel)
-    {
-        _minLevel = minLevel;
-        _maxLevel = maxLevel;
-        _isLoading = true;
-        foreach (var userId in _playerScores.Keys)
-        {
-            _playerScores[userId] = (await Mediator.Send(new GetPhoenixRecordsQuery(userId, _currentMix))).Where(r => r.Score != null && _charts.ContainsKey(r.ChartId) && _charts[r.ChartId].Level >= _minLevel && _charts[r.ChartId].Level <= _maxLevel)
-                .ToDictionary(r => r.ChartId, r => r.Score!.Value);
-
-        }
-        CalculateScoreDiffs();
-        _isLoading = false;
-        Recalculate();
-    }
-
-    private void CalculateScoreDiffs()
-    {
-        _scoreDiffs = _playerScores.Values.SelectMany(g => g)
-            .GroupBy(kv => kv.Key)
-            .ToDictionary(g => g.Key, g => g.Select(kv => kv.Value).ToArray())
-            .ToDictionary(g => g.Key, g => g.Value.Count() >= 2 ?
-                g.Value.All(s=>s==PhoenixScore.Max)?-1:
-                    (int?) (g.Value.Max() - g.Value.Min()) : null);
-    }
-    private async Task SelectUser(Guid userId)
-    {
-        if (_playerScores.ContainsKey(userId))
-        {
-            _playerScores.Remove(userId);
-        }
-        else
-        {
-            _isLoading = true;
-            _playerScores[userId] = (await Mediator.Send(new GetPhoenixRecordsQuery(userId, _currentMix))).Where(r => r.Score != null && _charts.ContainsKey(r.ChartId) && _charts[r.ChartId].Level >= _minLevel && _charts[r.ChartId].Level <= _maxLevel)
-                .ToDictionary(r => r.ChartId, r => r.Score!.Value);
-CalculateScoreDiffs();
-            _isLoading = false;
-
-        }
-        Recalculate();
-
-
-
-    }
-    private IEnumerable<LeaderboardEntry> _entries = Array.Empty<LeaderboardEntry>();
-    private LeaderboardType _currentType = LeaderboardType.Combined;
     private void SetType(LeaderboardType type)
     {
-        if (_community == null)
+        if (_community == null) return;
+        _expandedUserId = Guid.Empty;
+        _scores = null;
+        var entries = _leaderboard.Where(l => !_community.IsRegional || _showGuests || _users[l.UserId].Country == CommunityName);
+        _entries = type switch
         {
-            return;
-        }
-        var entries = _leaderboard.Where(l =>!_community.IsRegional|| _showGuests || _users[l.UserId].Country == CommunityName);
-        switch (type)
-        {
-            case LeaderboardType.Total:
-                _entries = entries.OrderByDescending(l=>l.TotalRating).Select((l,i) => new LeaderboardEntry(i+1, l.ProfileImage,l.PlayerName,l.IsPublic, l.UserId, l.TotalRating, 0, 0,0, _totalScale.GetColor((int)l.TotalRating),l.HighestLevel,l.ClearCount));
-                break;
-                
-            case LeaderboardType.Combined:
-                _entries = entries.OrderByDescending(l => l.SkillRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName,l.IsPublic, l.UserId, l.SkillRating, l.SkillScore, l.SkillLevel, l.CompetitiveLevel,_skillScale.GetColor((int)l.SkillRating), l.HighestLevel, l.ClearCount));
-                break;
-            case LeaderboardType.Singles:
-                _entries = entries.OrderByDescending(l => l.SinglesRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName, l.IsPublic, l.UserId, l.SinglesRating, l.SinglesScore, l.SinglesLevel, l.SinglesCompetitiveLevel, _singlesScale.GetColor((int)l.SinglesRating), l.HighestLevel, l.ClearCount));
-                break;
-                    
-            case LeaderboardType.Doubles:
-                _entries = entries.OrderByDescending(l => l.DoublesRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName,l.IsPublic, l.UserId, l.DoublesRating, l.DoublesScore, l.DoublesLevel,l.DoublesCompetitiveLevel, _doublesScale.GetColor((int)l.DoublesRating), l.HighestLevel, l.ClearCount));
-                break;
-            case LeaderboardType.CoOp:
-                _entries = entries.OrderByDescending(l => l.CoOpRating).Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName, l.IsPublic, l.UserId, l.CoOpRating, l.CoOpScore, 0, 0, _coOpScale.GetColor((int)l.CoOpRating), l.HighestLevel, l.ClearCount));
-                break;
-
-        }
+            LeaderboardType.Total => entries.OrderByDescending(l => l.TotalRating).Select((l, i) =>
+                Entry(l, i, l.TotalRating, _totalScale.GetColor((int)l.TotalRating))),
+            LeaderboardType.CoOp => entries.OrderByDescending(l => l.CoOpRating).Select((l, i) =>
+                Entry(l, i, l.CoOpRating, _coOpScale.GetColor((int)l.CoOpRating))),
+            _ => entries.OrderByDescending(l => l.SkillRating).Select((l, i) =>
+                Entry(l, i, l.SkillRating, _skillScale.GetColor((int)l.SkillRating)))
+        };
         _currentType = type;
     }
+
+    private LeaderboardEntry Entry(CommunityLeaderboardRecord record, int index, int rating, string color) =>
+        new(index + 1, record.ProfileImage, record.PlayerName, record.IsPublic, record.UserId, rating,
+            record.SinglesRating, record.DoublesRating, record.CompetitiveLevel, color, record.HighestLevel,
+            record.ClearCount);
+
+    private void SetShowGuests(bool newValue)
+    {
+        _showGuests = newValue;
+        SetType(_currentType);
+        if (_selectedChart != null)
+        {
+            _ = SelectChart(_selectedChart);
+        }
+    }
+
+    private async Task ToggleExpand(Guid userId, ChartType? chartType, bool competitive)
+    {
+        if (_expandedUserId == userId && _expandedChartType == chartType && _expandedCompetitive == competitive)
+        {
+            _expandedUserId = Guid.Empty;
+            _scores = null;
+            return;
+        }
+
+        _expandedUserId = userId;
+        _expandedChartType = chartType;
+        _expandedCompetitive = competitive;
+        _scores = null;
+        var scoringConfig = ScoringConfiguration.PumbilityScoring(_currentMix, true);
+        var top50 = competitive
+            ? await Mediator.Send(new GetTop50CompetitiveQuery(userId, chartType, Mix: _currentMix))
+            : await Mediator.Send(new GetTop50ForPlayerQuery(userId, chartType, Mix: _currentMix));
+        _scores = top50.Where(s => _charts.ContainsKey(s.ChartId))
+            .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, s.Plate, s.IsBroken,
+                (int)scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false),
+                ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level, s.Score ?? 0, _charts[s.ChartId].Type)))
+            .ToArray();
+    }
+
+    private async Task SelectChart(Chart chart)
+    {
+        _selectingChart = true;
+        _hasSelectedChart = true;
+        _selectedChart = chart;
+        _communityChartScores = await Mediator.Send(new GetPhoenixRecordsForCommunityQuery(CommunityName, chart.Id, _currentMix));
+        if (_community is { IsRegional: true } && !_showGuests)
+        {
+            _communityChartScores = _communityChartScores
+                .Where(c => _users.TryGetValue(c.UserId, out var user) && user.Country == CommunityName).ToArray();
+        }
+        _selectingChart = false;
+        StateHasChanged();
+    }
+
     private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, PhoenixPlate? Plate, bool IsBroken, int Rating, double CompetitiveLevel);
 
-    private sealed record LeaderboardEntry(int place,Uri ProfileImage, Name PlayerName, bool IsPublic, Guid UserId, int Rating, PhoenixScore Score, double AverageLevel, double CompetitiveLevel, string Color, int HighestLevel, int ClearCount)
-    {
+    private sealed record LeaderboardEntry(int Place, Uri ProfileImage, Name PlayerName, bool IsPublic, Guid UserId,
+        int Rating, int SinglesRating, int DoublesRating, double CompetitiveLevel, string Color, int HighestLevel,
+        int ClearCount);
 
-    }
     private enum LeaderboardType
     {
-        
         Total,
         Combined,
-        Singles,
-        Doubles,
         CoOp
     }
 }
