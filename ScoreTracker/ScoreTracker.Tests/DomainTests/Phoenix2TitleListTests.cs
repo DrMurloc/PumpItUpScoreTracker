@@ -34,8 +34,9 @@ public sealed class Phoenix2TitleListTests
     [Fact]
     public void SinglesLadderProgressIsTheSinglesPoolValue()
     {
-        // Two L24 SSS+ SG singles: 250 x 1.508 = 377 each -> singles pool 754. The doubles
-        // chart must not leak into the singles ladder.
+        // Two L24 SSS+ SG singles, priced one level up: Base(25)=260 x 1.508 = 392.08 each ->
+        // singles pool 784. The doubles chart (250 x 1.508 = 377) must not leak into the
+        // singles ladder.
         var s1 = new ChartBuilder().WithType(ChartType.Single).WithLevel(24).Build();
         var s2 = new ChartBuilder().WithType(ChartType.Single).WithLevel(24).Build();
         var d1 = new ChartBuilder().WithType(ChartType.Double).WithLevel(24).Build();
@@ -49,16 +50,17 @@ public sealed class Phoenix2TitleListTests
         var singlesLv1 = progress.Single(p => p.Title.Name == "[S] INTERMEDIATE LV.1");
         var doublesLv1 = progress.Single(p => p.Title.Name == "[D] INTERMEDIATE LV.1");
         var totalTier = progress.Single(p => p.Title.Name == "[P.B] BRONZE");
-        Assert.Equal(754, singlesLv1.CompletionCount);
+        Assert.Equal(784, singlesLv1.CompletionCount);
         Assert.Equal(377, doublesLv1.CompletionCount);
-        Assert.Equal(754 + 377, totalTier.CompletionCount);
+        Assert.Equal(784 + 377, totalTier.CompletionCount);
         Assert.False(singlesLv1.IsComplete);
     }
 
     [Fact]
     public void SinglesLadderCompletesAtItsThreshold()
     {
-        // Fifteen L24 SSS+ SG singles = 15 x 377 = 5655 >= the LV.1 threshold of 5000.
+        // Fifteen L24 SSS+ SG singles = 15 x 392.08 = 5881 >= the LV.1 threshold of 5000
+        // (and still short of LV.2's 6000).
         var charts = Enumerable.Range(0, 15)
             .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(24).Build())
             .ToDictionary(c => c.Id);
@@ -73,7 +75,7 @@ public sealed class Phoenix2TitleListTests
     [Fact]
     public void PoolsCapAtTheirTopFifty()
     {
-        // 55 identical singles: only 50 count -> 50 x 377 = 18850, not 55 x 377.
+        // 55 identical singles: only 50 count -> 50 x 392.08 = 19604, not 55 x 392.08.
         var charts = Enumerable.Range(0, 55)
             .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(24).Build())
             .ToDictionary(c => c.Id);
@@ -81,7 +83,7 @@ public sealed class Phoenix2TitleListTests
         var progress = Phoenix2TitleList.BuildProgress(charts,
             charts.Keys.Select(id => Attempt(id, 995000)).ToArray(), new HashSet<Name>());
 
-        Assert.Equal(18850, progress.Single(p => p.Title.Name == "[S] INTERMEDIATE LV.1").CompletionCount);
+        Assert.Equal(19604, progress.Single(p => p.Title.Name == "[S] INTERMEDIATE LV.1").CompletionCount);
     }
 
     [Theory]
