@@ -1,5 +1,4 @@
-﻿using Azure;
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Data.Configuration;
@@ -25,13 +24,14 @@ public sealed class AzureBlobFileUploadClient : IFileUploadClient
         path = path.TrimStart('/');
         var blobClient = _blob.GetBlobClient(path);
 
-        // IfNoneMatch keeps the no-overwrite behavior of the plain Stream overload this
-        // replaced; the headers carry the content type, which the options overload would
-        // otherwise leave as application/octet-stream.
+        // Overwrites: every caller treats upload as save-semantics. The plain Stream
+        // overload this replaced threw BlobAlreadyExists instead — which silently killed
+        // the daily share-card refresh on every run after its first, and a UCS photo
+        // re-submission the same way. The headers carry the content type, which uploads
+        // otherwise serve as application/octet-stream.
         await blobClient.UploadAsync(fileStream, new BlobUploadOptions
         {
-            HttpHeaders = HeadersFor(path),
-            Conditions = new BlobRequestConditions { IfNoneMatch = ETag.All }
+            HttpHeaders = HeadersFor(path)
         }, cancellationToken);
         return new Uri($"https://piuimages.arroweclip.se/{path}");
     }

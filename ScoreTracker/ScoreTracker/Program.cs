@@ -14,6 +14,7 @@ using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
@@ -252,6 +253,7 @@ builder.Services.AddBlazorApplicationInsights()
         builder.Configuration.GetSection("Sendgrid").Get<SendGridConfiguration>())
     .AddTransient<IDateTimeOffsetAccessor, DateTimeOffsetAccessor>()
     .AddTransient<IRandomNumberGenerator, RandomNumberGenerator>()
+    .AddTransient<ILocalizedTextAccessor, ResxLocalizedTextAccessor>()
     .AddControllers();
 builder.Services.Configure<KeyVaultConfiguration>(builder.Configuration.GetSection("KeyVault"));
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
@@ -290,9 +292,9 @@ await app.Services.ApplyOrReportMigrationsAsync(builder.Configuration["AutoMigra
 
 
 app.UseRequestLocalization(new RequestLocalizationOptions()
-    .AddSupportedCultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "es-ES", "fr-FR", "ja-JP", "it-IT")
-    .AddSupportedUICultures("en-US", "pt-BR", "ko-KR", "en-ZW", "es-MX", "es-ES", "fr-FR", "ja-JP", "it-IT")
-    .SetDefaultCulture("en-US"));
+    .AddSupportedCultures(SupportedCultures.Codes())
+    .AddSupportedUICultures(SupportedCultures.Codes())
+    .SetDefaultCulture(SupportedCultures.Default));
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -390,7 +392,6 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("try-schedule-mom",                 r => r.PublishTryScheduleMoM(),                  "0 11 * * *"), // 06:00 ET
     ("flush-overdue-score-batches",      r => r.PublishFlushOverdueScoreBatches(),        "*/5 * * * *"), // every 5 min — safety net for stuck batches
     ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *"), // 06:30 ET — merged-account grace-window purges
-    ("refresh-folder-share-cards",       r => r.PublishRefreshFolderShareCards(),         "30 10 * * *"), // 05:30 ET — og:images, right after the tier-list rebuilds
     ("crawl-piucenter",                  r => r.PublishCrawlPiuCenter(),                  "0 6 * * 1"),  // Mondays 01:00 ET — gap-driven, near no-op unless piucenter shipped a new data release
     ("purge-community-highlights",       r => r.PublishPurgeCommunityHighlights(),        "0 9 * * 0")   // Sundays 09:00 UTC — 30-day community-highlights retention
 };
@@ -409,6 +410,10 @@ else
     foreach (var (id, job, cron) in recurringJobs)
         RecurringJob.AddOrUpdate(id, job, cron);
 }
+
+// Retired jobs come out of Hangfire's SQL storage too — an orphaned row would fail on
+// every fire once its runner method is gone.
+RecurringJob.RemoveIfExists("refresh-folder-share-cards");
 
 app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 

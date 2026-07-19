@@ -2486,6 +2486,13 @@ html.sheet-open .more-sheet-scrim {
     border-radius: 4px;
 }
 
+/* Header-slot status glyph (e.g. Hot Streak's fallback note) — icon + tooltip only. */
+.dash-head-flag {
+    display: inline-flex;
+    align-items: center;
+    cursor: help;
+}
+
 .dash-drawer-body {
     padding: 16px;
 }
@@ -2588,6 +2595,14 @@ html.sheet-open .more-sheet-scrim {
     color: var(--mix-ink-muted);
 }
 
+/* Suggested Charts only: a full-width single column shows the name to fill the gap the
+   right-aligned score would leave, but a cramped narrow cell hands that width back to
+   the score. Scoped to .dash-suggested's container so the always-named Weekly and Daily
+   Step rows (which share this class but sit in no such container) keep their names. */
+@container dash-suggested (max-width: 209.98px) {
+    .dash-target-name { display: none; }
+}
+
 .dash-skillchip {
     font-size: .68rem;
     white-space: nowrap;
@@ -2644,6 +2659,7 @@ html.sheet-open .more-sheet-scrim {
     font-weight: 600;
     font-size: .75rem;
     flex: none;
+    font-variant-numeric: tabular-nums;
 }
 
 /* Community Highlights feed (docs/design/home-page-widgets.md §7). */
@@ -2893,6 +2909,8 @@ html.sheet-open .more-sheet-scrim {
     min-height: 0;
     display: flex;
     flex-direction: column;
+    /* Its own inline size decides whether target rows show the song name. */
+    container: dash-suggested / inline-size;
 }
 
 .dash-target-caption {

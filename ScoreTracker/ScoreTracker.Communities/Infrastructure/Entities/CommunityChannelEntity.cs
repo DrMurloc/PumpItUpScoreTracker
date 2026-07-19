@@ -10,7 +10,7 @@ internal sealed class CommunityChannelEntity
     public Guid CommunityId { get; set; }
 
     public ulong ChannelId { get; set; }
-    public bool SendNewScores { get; set; }
-    public bool SendTitles { get; set; }
-    public bool SendNewMembers { get; set; }
+
+    // The language this channel's community cards render in; null = English.
+    [MaxLength(16)] public string? Culture { get; set; }
 }

@@ -43,7 +43,6 @@ public static class ChartIntelligenceRegistrationExtensions
         configurator.AddConsumer<ScoringDifficultySaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();
         configurator.AddConsumer<UserTierListSaga>();
-        configurator.AddConsumer<FolderShareCardSaga>();
         configurator.AddConsumer<ChartSimilaritySaga>();
     }
 }

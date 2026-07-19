@@ -470,10 +470,27 @@ Google's first indexed chart page exposed how a result actually *reads* ("263Sco
   was broken: `AzureBlobFileUploadClient` never set a content type, so every app-uploaded
   blob — song jackets, the tier-list folder cards — serves `application/octet-stream`, which
   some unfurlers and crawlers refuse to render as an image. The uploader now stamps the type
-  from the extension (no-overwrite semantics preserved via `IfNoneMatch`); **existing blobs
-  need a one-time owner-side content-type stamp** (az loop; remember a CDN purge after —
-  cached octet-stream responses outlive the stamp). Head grew `og:url`, `og:image:alt`, and
-  `twitter:card = summary_large_image`.
+  from the extension; **existing blobs need a one-time owner-side content-type stamp**
+  (`Downloads\stamp-piuimages-content-types.ps1`; remember a CDN purge after — cached
+  octet-stream responses outlive the stamp). Head grew `og:url`, `og:image:alt`, and
+  `twitter:card = summary_large_image`. **Second latent bug found in the same client**: the
+  plain `UploadAsync(Stream)` overload throws `BlobAlreadyExists`, so the daily
+  `refresh-folder-share-cards` job faulted on its first folder every run after its first —
+  all 52 tier-list og:image cards were created 2026-07-12 and never refreshed (blob
+  creation == modification for every card). `UploadFile` now overwrites — save-semantics,
+  which is what every caller wants (UCS photo re-submission; photo paths are fresh GUIDs
+  and the avatar mirror guards itself with `DoesFileExist`). Every upload path was audited:
+  all blob writes ride `IFileUploadClient` — the fixed client is the only
+  `BlobContainerClient` in the repo.
+- **The tier-list og:image ecosystem is retired outright (owner call, 2026-07-18)** rather
+  than healed: the per-folder cards were never crawler-visible (their meta lived in
+  circuit-only `HeadContent` — the §4 problem), og:image contributes nothing to SEO proper,
+  and a ~3 MB PNG is the wrong unfurl payload regardless. Gone: the
+  `refresh-folder-share-cards` job (+ a `RemoveIfExists` so Hangfire storage drops the
+  orphan), `FolderShareCardSaga`, its trigger message and theme record, and the page's
+  `og:image`/`og:url` meta. The Download image button keeps the renderer
+  (`GetTierListShareCardQuery`). A tier-list static head (title/description, no image)
+  remains an open follow-on if folder titles in search results are ever wanted.
 - **Front-door title + snippet hygiene** — the title (and og:title) gained the searchable
   descriptor: `PIU Scores — Pump It Up score tracker & tier lists`, one localized key ×9
   (each locale reuses its own established phrasing from the hero keys; the `WebSite`

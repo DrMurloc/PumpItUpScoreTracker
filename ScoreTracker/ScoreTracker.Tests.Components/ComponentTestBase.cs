@@ -9,6 +9,7 @@ using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Services;
+using ScoreTracker.Web.Services.Contracts;
 
 namespace ScoreTracker.Tests.Components;
 
@@ -35,6 +36,10 @@ public abstract class ComponentTestBase : TestContext
             .ReturnsAsync(new Dictionary<Guid, double>());
         Services.AddSingleton(mediator.Object);
         Services.AddScoped<ChartScoringLevels>();
+
+        // The shared LeaderboardDialog reads the relevant-players setting; a loose stub keeps
+        // every consumer renderable (tests that assert on the setting register their own).
+        Services.AddSingleton(Mock.Of<IUiSettingsAccessor>());
 
         var localizer = new Mock<IStringLocalizer<App>>();
         localizer.Setup(l => l[It.IsAny<string>()])

@@ -87,6 +87,43 @@ public static class PhoenixLetterGradeHelperMethods
             g => typeof(PhoenixLetterGrade).GetField(g.ToString())?.GetCustomAttribute<ScoreRangeAttribute>() ??
                  throw new Exception($"Score Range not set up for {g}"));
 
+    // Phoenix 2 rebalanced the sub-AAA grade cutoffs upward — verified from live piugame.com
+    // boards 2026-07-18 (see ScoreTracker.Tests.Integration/LiveSite/Phoenix2GradeThresholdReconTests):
+    // A 800k, A+ 900k, AA 920k, AA+ 940k; AAA (950k) and everything above are identical to Phoenix.
+    // A-tier through AAA are crawl-verified; B and below are a best-guess extrapolation (C ≤690,647
+    // confirmed from one owner-supplied board row) — the low grades don't materially affect scoring
+    // and real data is being collected. Only the score→grade cutoffs differ per mix; grade identity,
+    // modifiers and names are shared, so only the floors table is overridden here.
+    private static readonly IReadOnlyDictionary<PhoenixLetterGrade, int> Phoenix2Floors =
+        new Dictionary<PhoenixLetterGrade, int>
+        {
+            [PhoenixLetterGrade.F] = 0,
+            [PhoenixLetterGrade.D] = 500000,
+            [PhoenixLetterGrade.C] = 600000,
+            [PhoenixLetterGrade.B] = 700000,
+            [PhoenixLetterGrade.A] = 800000,
+            [PhoenixLetterGrade.APlus] = 900000,
+            [PhoenixLetterGrade.AA] = 920000,
+            [PhoenixLetterGrade.AAPlus] = 940000,
+            [PhoenixLetterGrade.AAA] = 950000,
+            [PhoenixLetterGrade.AAAPlus] = 960000,
+            [PhoenixLetterGrade.S] = 970000,
+            [PhoenixLetterGrade.SPlus] = 975000,
+            [PhoenixLetterGrade.SS] = 980000,
+            [PhoenixLetterGrade.SSPlus] = 985000,
+            [PhoenixLetterGrade.SSS] = 990000,
+            [PhoenixLetterGrade.SSSPlus] = 995000
+        };
+
+    // Grades highest-floor-first, per mix, so a score resolves to the first grade it clears.
+    private static readonly IReadOnlyList<(PhoenixLetterGrade Grade, int Floor)> Phoenix1FloorsDescending =
+        Enum.GetValues<PhoenixLetterGrade>()
+            .Select(g => (g, (int)CachedRanges[g].MinimumScore))
+            .OrderByDescending(x => x.Item2).ToArray();
+
+    private static readonly IReadOnlyList<(PhoenixLetterGrade Grade, int Floor)> Phoenix2FloorsDescending =
+        Phoenix2Floors.Select(kv => (kv.Key, kv.Value)).OrderByDescending(x => x.Item2).ToArray();
+
     private static readonly IDictionary<string, PhoenixLetterGrade> Parser =
         Enum.GetValues<PhoenixLetterGrade>().ToDictionary(e => e.GetName());
 
@@ -98,6 +135,28 @@ public static class PhoenixLetterGradeHelperMethods
     public static PhoenixScore GetMaximumScore(this PhoenixLetterGrade letterGrade)
     {
         return CachedRanges[letterGrade].MaximumScore;
+    }
+
+    /// <summary>
+    ///     The minimum score that earns <paramref name="letterGrade" /> in the given mix. Phoenix 2
+    ///     shifted the sub-AAA cutoffs (see <see cref="Phoenix2Floors" />); every other mix uses the
+    ///     original Phoenix table.
+    /// </summary>
+    public static PhoenixScore GetMinimumScoreFor(this PhoenixLetterGrade letterGrade, MixEnum mix)
+    {
+        return mix == MixEnum.Phoenix2 ? Phoenix2Floors[letterGrade] : CachedRanges[letterGrade].MinimumScore;
+    }
+
+    /// <summary>
+    ///     The letter grade a raw score earns in the given mix — the single mix-aware entry point
+    ///     for score→grade resolution. Callers that know which mix a record belongs to must use this
+    ///     rather than the parameterless <see cref="PhoenixScore.LetterGrade" /> (which is the Phoenix
+    ///     default), or a Phoenix 2 score in the 800k–950k band grades one rung too high.
+    /// </summary>
+    public static PhoenixLetterGrade LetterGradeFor(this PhoenixScore score, MixEnum mix)
+    {
+        var floors = mix == MixEnum.Phoenix2 ? Phoenix2FloorsDescending : Phoenix1FloorsDescending;
+        return floors.First(f => (int)score >= f.Floor).Grade;
     }
 
     public static double GetModifier(this PhoenixLetterGrade enumValue)

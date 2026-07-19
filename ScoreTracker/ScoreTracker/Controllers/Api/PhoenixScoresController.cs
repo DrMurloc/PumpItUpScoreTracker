@@ -176,7 +176,7 @@ public sealed class PhoenixScoresController : Controller
         if (maxLevel != null) rows = rows.Where(x => (int)x.Chart.Level <= maxLevel.Value);
         if (typeFilter != null) rows = rows.Where(x => x.Chart.Type == typeFilter.Value);
         if (minGrade != null)
-            rows = rows.Where(x => x.Record.Score != null && x.Record.Score.Value.LetterGrade >= minGrade.Value);
+            rows = rows.Where(x => x.Record.Score != null && x.Record.Score.Value.LetterGradeFor(mix) >= minGrade.Value);
         if (minPlateFilter != null)
             rows = rows.Where(x => x.Record.Plate != null && x.Record.Plate.Value >= minPlateFilter.Value);
         if (isBroken != null) rows = rows.Where(x => x.Record.IsBroken == isBroken.Value);
@@ -188,7 +188,7 @@ public sealed class PhoenixScoresController : Controller
             return sortKey switch
             {
                 "Score" => x.Record.Score == null ? null : (int)x.Record.Score.Value,
-                "LetterGrade" => x.Record.Score == null ? null : (int)x.Record.Score.Value.LetterGrade,
+                "LetterGrade" => x.Record.Score == null ? null : (int)x.Record.Score.Value.LetterGradeFor(mix),
                 "Plate" => x.Record.Plate == null ? null : (int)x.Record.Plate.Value,
                 "Level" => (int)x.Chart.Level,
                 "Pumbility" => x.Pumbility,
@@ -214,7 +214,7 @@ public sealed class PhoenixScoresController : Controller
             Results = next.Select(x => new PhoenixRecordDto
             {
                 IsBroken = x.Record.IsBroken,
-                LetterGrade = x.Record.Score?.LetterGrade.GetName(),
+                LetterGrade = x.Record.Score?.LetterGradeFor(mix).GetName(),
                 Plate = x.Record.Plate?.GetName(),
                 RecordedDate = x.Record.RecordedDate,
                 Score = x.Record.Score,

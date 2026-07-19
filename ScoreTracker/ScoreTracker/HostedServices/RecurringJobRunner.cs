@@ -1,7 +1,6 @@
 using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.Catalog.Contracts.Messages;
 using ScoreTracker.Communities.Contracts.Messages;
-using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using MassTransit;
 using ScoreTracker.EventCompetition.Contracts.Messages;
@@ -9,7 +8,6 @@ using ScoreTracker.Identity.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
 using ScoreTracker.SharedKernel.Enums;
-using ScoreTracker.Web.Services.Theming;
 
 namespace ScoreTracker.Web.HostedServices;
 
@@ -28,8 +26,13 @@ public sealed class RecurringJobRunner
     public Task PublishCalculateScoringDifficulty() =>
         _bus.Publish(new RecalculateScoringDifficultyCommand());
 
+    // Weekly boards are parallel per mix (like Daily Step below). A daily cadence can't rely on the
+    // manual per-mix trigger the Weekly page uses, so the job fans out to each supported mix; a mix
+    // without a chart catalog yet no-ops in the consumer.
     public Task PublishUpdateWeeklyCharts() =>
-        _bus.Publish(new RotateWeeklyChartsCommand());
+        Task.WhenAll(
+            _bus.Publish(new RotateWeeklyChartsCommand(MixEnum.Phoenix)),
+            _bus.Publish(new RotateWeeklyChartsCommand(MixEnum.Phoenix2)));
 
     // Daily Step runs parallel per-mix boards (owner); the daily cadence can't rely on the manual
     // per-mix trigger the Weekly page uses, so the job fans out to each supported mix. A mix without
@@ -63,21 +66,9 @@ public sealed class RecurringJobRunner
     public Task PublishProcessAccountPurges() =>
         _bus.Publish(new ProcessAccountPurgesCommand());
 
-    public Task PublishRefreshFolderShareCards() =>
-        _bus.Publish(new RefreshFolderShareCardsCommand(ShareTheme(MixEnum.Phoenix)));
-
     public Task PublishCrawlPiuCenter() =>
         _bus.Publish(new CrawlPiuCenterCommand());
 
     public Task PublishPurgeCommunityHighlights() =>
         _bus.Publish(new PurgeCommunityHighlightsCommand());
-
-    // The Web layer resolves presentation (MixThemes is the single palette source);
-    // the vertical's share-card saga stays palette-blind.
-    private static FolderShareCardTheme ShareTheme(MixEnum mix)
-    {
-        var palette = MixThemes.PaletteFor(mix);
-        return new FolderShareCardTheme(palette.Background, palette.Surface, palette.Ink, palette.InkMuted,
-            palette.Primary, Enum.GetValues<TierListCategory>().ToDictionary(c => c, MixThemes.DifficultyHex));
-    }
 }

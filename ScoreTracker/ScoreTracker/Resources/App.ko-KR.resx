@@ -4641,6 +4641,555 @@
   <data name="Biased towards larger folders" xml:space="preserve">
     <value>큰 폴더에 유리합니다</value>
   </data>
+  <data name="Add the PIU Scores bot to your Discord server" xml:space="preserve">
+    <value>PIU Scores 봇을 Discord 서버에 추가하세요</value>
+  </data>
+  <data name="Invite the bot, then run /piu register in any channel to start its feeds and commands." xml:space="preserve">
+    <value>봇을 초대한 다음 아무 채널에서나 /piu register 를 실행하면 피드와 명령어가 활성화됩니다.</value>
+  </data>
+  <data name="Add the bot" xml:space="preserve">
+    <value>봇 추가</value>
+  </data>
+  <data name="This channel now receives **{0} — {1}**. {2}" xml:space="preserve">
+    <value>이 채널은 이제 **{0} — {1}** 알림을 받습니다. {2}</value>
+  </data>
+  <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
+    <value>매주 월요일 보드가 갱신되면 결과와 새로운 라인업이 게시됩니다.</value>
+  </data>
+  <data name="Yesterday's board and today's chart post each day." xml:space="preserve">
+    <value>어제의 보드와 오늘의 채보가 매일 게시됩니다.</value>
+  </data>
+  <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
+    <value>매주 일요일 집계 후 다이제스트가 게시됩니다.</value>
+  </data>
+  <data name="This channel was updated to receive notifications for the {0} community in PIU Scores!" xml:space="preserve">
+    <value>이 채널은 이제 PIU Scores의 {0} 커뮤니티 알림을 받습니다!</value>
+  </data>
+  <data name="This channel no longer receives notifications for the {0} community in PIU Scores" xml:space="preserve">
+    <value>이 채널은 더 이상 PIU Scores의 {0} 커뮤니티 알림을 받지 않습니다</value>
+  </data>
+  <data name="That command isn't available yet." xml:space="preserve">
+    <value>아직 사용할 수 없는 명령어입니다.</value>
+  </data>
+  <data name="{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} Max Combo" xml:space="preserve">
+    <value>퍼펙트 {0:N0}, 그레이트 {1:N0}, 굿 {2:N0}, 배드 {3:N0}, 미스 {4:N0}, 최대 콤보 {5:N0}</value>
+  </data>
+  <data name="{0:N0} Lost to Greats ({1}%)" xml:space="preserve">
+    <value>그레이트로 잃은 점수 {0:N0} ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Goods ({1}%)" xml:space="preserve">
+    <value>굿으로 잃은 점수 {0:N0} ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Bads ({1}%)" xml:space="preserve">
+    <value>배드로 잃은 점수 {0:N0} ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Misses ({1}%)" xml:space="preserve">
+    <value>미스로 잃은 점수 {0:N0} ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Combo ({1}%)" xml:space="preserve">
+    <value>콤보로 잃은 점수 {0:N0} ({1}%)</value>
+  </data>
+  <data name="{0:N0} Estimated Arrow Presses" xml:space="preserve">
+    <value>예상 화살표 수 {0:N0}</value>
+  </data>
+  <data name="That scoring configuration is invalid." xml:space="preserve">
+    <value>유효하지 않은 점수 구성입니다.</value>
+  </data>
+  <data name="Give a song name." xml:space="preserve">
+    <value>곡 이름을 입력해주세요.</value>
+  </data>
+  <data name="No chart found for &quot;{0}&quot; on {1}." xml:space="preserve">
+    <value>{1}에서 &quot;{0}&quot; 채보를 찾을 수 없습니다.</value>
+  </data>
+  <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
+    <value>목록에서 난이도를 선택하면 상세 정보와 유사 채보를 볼 수 있습니다.</value>
+  </data>
+  <data name="Scoring level **{0:0.0}** (listed {1})" xml:space="preserve">
+    <value>스코어링 레벨 **{0:0.0}** (표기 {1})</value>
+  </data>
+  <data name="Pass **{0}**" xml:space="preserve">
+    <value>패스 난이도 **{0}**</value>
+  </data>
+  <data name="Similar charts" xml:space="preserve">
+    <value>유사 채보</value>
+  </data>
+  <data name="Open chart page" xml:space="preserve">
+    <value>채보 페이지 열기</value>
+  </data>
+  <data name="No charts matched those settings." xml:space="preserve">
+    <value>조건에 맞는 채보가 없습니다.</value>
+  </data>
+  <data name="Drew 1 chart" xml:space="preserve">
+    <value>1개 채보를 뽑았습니다</value>
+  </data>
+  <data name="Drew {0} charts" xml:space="preserve">
+    <value>{0}개 채보를 뽑았습니다</value>
+  </data>
+  <data name="Drew {0} — {1}" xml:space="preserve">
+    <value>{0}개 뽑음 — {1}</value>
+  </data>
+  <data name="Your saved randomizer settings" xml:space="preserve">
+    <value>저장된 랜덤 설정</value>
+  </data>
+  <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
+    <value>{0} · 레벨 {1}–{2} · {3}</value>
+  </data>
+  <data name="Co-op" xml:space="preserve">
+    <value>코옵</value>
+  </data>
+  <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
+    <value>&quot;{0}&quot;(이)라는 저장된 프리셋이 없습니다.</value>
+  </data>
+  <data name="&quot;{0}&quot; didn't match any charts right now." xml:space="preserve">
+    <value>&quot;{0}&quot;에 맞는 채보가 지금은 없습니다.</value>
+  </data>
+  <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
+    <value>지금은 추천할 채보가 없습니다. 다른 목표를 선택하거나 먼저 점수를 가져와주세요.</value>
+  </data>
+  <data name="Suggested for you — {0}" xml:space="preserve">
+    <value>추천 채보 — {0}</value>
+  </data>
+  <data name="based on your scores" xml:space="preserve">
+    <value>내 점수 기반</value>
+  </data>
+  <data name="Open Suggested Charts" xml:space="preserve">
+    <value>추천 채보 열기</value>
+  </data>
+  <data name="Done — this channel now receives {0} for {1}." xml:space="preserve">
+    <value>완료 — 이 채널은 이제 {1}의 {0} 알림을 받습니다.</value>
+  </data>
+  <data name="Unknown feed." xml:space="preserve">
+    <value>알 수 없는 피드입니다.</value>
+  </data>
+  <data name="Pick a mix." xml:space="preserve">
+    <value>시리즈를 선택해주세요.</value>
+  </data>
+  <data name="Give a community name or an invite code." xml:space="preserve">
+    <value>커뮤니티 이름이나 초대 코드를 입력해주세요.</value>
+  </data>
+  <data name="Done — this channel is registered for that community." xml:space="preserve">
+    <value>완료 — 이 채널이 해당 커뮤니티에 등록되었습니다.</value>
+  </data>
+  <data name="That community wasn't found, or the invite code is wrong." xml:space="preserve">
+    <value>커뮤니티를 찾을 수 없거나 초대 코드가 잘못되었습니다.</value>
+  </data>
+  <data name="You need the Manage Channels permission in this server to do that." xml:space="preserve">
+    <value>이 작업에는 서버의 채널 관리 권한이 필요합니다.</value>
+  </data>
+  <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
+    <value>아직 이 채널에 게시할 수 없습니다. 채널 보기와 메시지 보내기 권한을 부여한 뒤 명령어를 다시 실행해주세요.</value>
+  </data>
+  <data name="Removed {0} for {1} from this channel." xml:space="preserve">
+    <value>이 채널에서 {1}의 {0} 알림을 해제했습니다.</value>
+  </data>
+  <data name="That feed wasn't registered here." xml:space="preserve">
+    <value>해당 피드는 여기에 등록되어 있지 않습니다.</value>
+  </data>
+  <data name="Removed the {0} community feed from this channel." xml:space="preserve">
+    <value>이 채널에서 {0} 커뮤니티 피드를 해제했습니다.</value>
+  </data>
+  <data name="That community registration wasn't found." xml:space="preserve">
+    <value>해당 커뮤니티 등록을 찾을 수 없습니다.</value>
+  </data>
+  <data name="Pick a registration to remove from the list." xml:space="preserve">
+    <value>목록에서 해제할 등록을 선택해주세요.</value>
+  </data>
+  <data name="This channel isn't registered for anything yet. Use /piu register to add a feed." xml:space="preserve">
+    <value>이 채널은 아직 등록된 것이 없습니다. /piu register로 피드를 추가해주세요.</value>
+  </data>
+  <data name="This channel receives" xml:space="preserve">
+    <value>이 채널이 받는 알림</value>
+  </data>
+  <data name="Remove one with /piu unregister" xml:space="preserve">
+    <value>/piu unregister로 해제할 수 있습니다</value>
+  </data>
+  <data name="PIU Scores tools" xml:space="preserve">
+    <value>PIU Scores 도구</value>
+  </data>
+  <data name="Calculate a Phoenix score from a result screen" xml:space="preserve">
+    <value>결과 화면으로 Phoenix 점수 계산</value>
+  </data>
+  <data name="Find a chart and its pages" xml:space="preserve">
+    <value>채보와 관련 페이지 찾기</value>
+  </data>
+  <data name="Draw a random set of charts" xml:space="preserve">
+    <value>무작위 채보 뽑기</value>
+  </data>
+  <data name="Personalized chart suggestions (private)" xml:space="preserve">
+    <value>맞춤 채보 추천 (비공개)</value>
+  </data>
+  <data name="Register this channel for a feed" xml:space="preserve">
+    <value>이 채널을 피드에 등록</value>
+  </data>
+  <data name="Community score and title notifications" xml:space="preserve">
+    <value>커뮤니티 점수·타이틀 알림</value>
+  </data>
+  <data name="Weekly Charts — results and the new lineup" xml:space="preserve">
+    <value>주간 채보 — 결과와 새 라인업</value>
+  </data>
+  <data name="Daily Step — yesterday's board and today's chart" xml:space="preserve">
+    <value>데일리 스텝 — 어제의 보드와 오늘의 채보</value>
+  </data>
+  <data name="Official leaderboards — the weekly digest" xml:space="preserve">
+    <value>공식 리더보드 — 주간 다이제스트</value>
+  </data>
+  <data name="Stop one of this channel's feeds" xml:space="preserve">
+    <value>이 채널의 피드 중단</value>
+  </data>
+  <data name="Show what this channel is registered for" xml:space="preserve">
+    <value>이 채널의 등록 내역 보기</value>
+  </data>
+  <data name="Song name" xml:space="preserve">
+    <value>곡 이름</value>
+  </data>
+  <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
+    <value>시리즈 (기본값 Phoenix 2)</value>
+  </data>
+  <data name="Which mix" xml:space="preserve">
+    <value>시리즈</value>
+  </data>
+  <data name="How many (1–10, default 3)" xml:space="preserve">
+    <value>몇 개 (1–10, 기본 3)</value>
+  </data>
+  <data name="Chart type (default Singles)" xml:space="preserve">
+    <value>채보 종류 (기본 싱글)</value>
+  </data>
+  <data name="Singles or Doubles" xml:space="preserve">
+    <value>싱글 또는 더블</value>
+  </data>
+  <data name="Lowest level" xml:space="preserve">
+    <value>최저 레벨</value>
+  </data>
+  <data name="Highest level" xml:space="preserve">
+    <value>최고 레벨</value>
+  </data>
+  <data name="One of your saved randomizer presets" xml:space="preserve">
+    <value>저장된 랜덤 프리셋 중 하나</value>
+  </data>
+  <data name="What to work on (default Title Hunt)" xml:space="preserve">
+    <value>목표 (기본 칭호 사냥)</value>
+  </data>
+  <data name="Community name" xml:space="preserve">
+    <value>커뮤니티 이름</value>
+  </data>
+  <data name="Invite code (private communities only)" xml:space="preserve">
+    <value>초대 코드 (비공개 커뮤니티 전용)</value>
+  </data>
+  <data name="Language for this channel's posts (default English)" xml:space="preserve">
+    <value>이 채널 게시물의 언어 (기본 영어)</value>
+  </data>
+  <data name="Perfect count" xml:space="preserve">
+    <value>퍼펙트 수</value>
+  </data>
+  <data name="Great count" xml:space="preserve">
+    <value>그레이트 수</value>
+  </data>
+  <data name="Good count" xml:space="preserve">
+    <value>굿 수</value>
+  </data>
+  <data name="Bad count" xml:space="preserve">
+    <value>배드 수</value>
+  </data>
+  <data name="Miss count" xml:space="preserve">
+    <value>미스 수</value>
+  </data>
+  <data name="Max combo" xml:space="preserve">
+    <value>최대 콤보</value>
+  </data>
+  <data name="Calories burned (optional — estimates step count)" xml:space="preserve">
+    <value>소모 칼로리 (선택 — 화살표 수 추정)</value>
+  </data>
+  <data name="Which registration to remove" xml:space="preserve">
+    <value>해제할 등록</value>
+  </data>
+  <data name="Weekly Charts — final board" xml:space="preserve">
+    <value>주간 채보 — 최종 보드</value>
+  </data>
+  <data name="{0} players · week of {1}" xml:space="preserve">
+    <value>플레이어 {0}명 · {1} 주</value>
+  </data>
+  <data name="Card {0} of {1}" xml:space="preserve">
+    <value>카드 {0}/{1}</value>
+  </data>
+  <data name="{0} more charts had entries" xml:space="preserve">
+    <value>그 외 {0}개 채보에도 기록 있음</value>
+  </data>
+  <data name="one per level bucket" xml:space="preserve">
+    <value>레벨 구간별 1개</value>
+  </data>
+  <data name="The new board is being drawn." xml:space="preserve">
+    <value>새 보드를 뽑는 중입니다.</value>
+  </data>
+  <data name="resets Monday midnight ET" xml:space="preserve">
+    <value>매주 월요일 자정(ET) 초기화</value>
+  </data>
+  <data name="Yesterday" xml:space="preserve">
+    <value>어제</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>오늘</value>
+  </data>
+  <data name="Limbo (lowest passing won)" xml:space="preserve">
+    <value>림보 (최저 패스 점수 승리)</value>
+  </data>
+  <data name="**Limbo Day** — lowest passing score wins. No breaking." xml:space="preserve">
+    <value>**림보 데이** — 가장 낮은 패스 점수가 승리. 브레이크 금지.</value>
+  </data>
+  <data name="Highest score wins." xml:space="preserve">
+    <value>최고 점수가 승리합니다.</value>
+  </data>
+  <data name="yesterday's board settled" xml:space="preserve">
+    <value>어제의 보드 확정</value>
+  </data>
+  <data name="resets midnight ET" xml:space="preserve">
+    <value>매일 자정(ET) 초기화</value>
+  </data>
+  <data name="Daily Step board" xml:space="preserve">
+    <value>데일리 스텝 보드</value>
+  </data>
+  <data name="This week on the official boards" xml:space="preserve">
+    <value>이번 주 공식 리더보드</value>
+  </data>
+  <data name="vs {0}" xml:space="preserve">
+    <value>{0} 대비</value>
+  </data>
+  <data name="first week" xml:space="preserve">
+    <value>첫 주</value>
+  </data>
+  <data name="swept Sunday" xml:space="preserve">
+    <value>일요일 집계</value>
+  </data>
+  <data name="PUMBILITY top 10" xml:space="preserve">
+    <value>PUMBILITY 톱 10</value>
+  </data>
+  <data name="PUMBILITY movers" xml:space="preserve">
+    <value>PUMBILITY 순위 변동</value>
+  </data>
+  <data name="Boards climbed" xml:space="preserve">
+    <value>보드 상승</value>
+  </data>
+  <data name="**{0}** climbed {1} boards (+{2})" xml:space="preserve">
+    <value>**{0}** {1}개 보드 상승 (+{2})</value>
+  </data>
+  <data name="World firsts &amp; new #1s" xml:space="preserve">
+    <value>세계 최초 &amp; 새로운 #1</value>
+  </data>
+  <data name="First **{0}** — **{1}** in the {2} folder · {3:N0}" xml:space="preserve">
+    <value>최초 **{0}** — **{1}** ({2} 폴더) · {3:N0}</value>
+  </data>
+  <data name="First **{0}** — **{1}** on {2} · {3:N0}" xml:space="preserve">
+    <value>최초 **{0}** — **{1}** ({2}) · {3:N0}</value>
+  </data>
+  <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
+    <value>새로운 #1 — **{0}** ({1}) · {2:N0}</value>
+  </data>
+  <data name=", dethroning {0}" xml:space="preserve">
+    <value> ({0} 왕좌 탈환)</value>
+  </data>
+  <data name="To make the top 1000" xml:space="preserve">
+    <value>톱 1000 진입 조건</value>
+  </data>
+  <data name="**50× AAA at Lv.{0}**" xml:space="preserve">
+    <value>**Lv.{0} AAA 50개**</value>
+  </data>
+  <data name="**50× SSS at Lv.{0}**" xml:space="preserve">
+    <value>**Lv.{0} SSS 50개**</value>
+  </data>
+  <data name="PIU Scores official mirror" xml:space="preserve">
+    <value>PIU Scores 공식 미러</value>
+  </data>
+  <data name="This week" xml:space="preserve">
+    <value>이번 주</value>
+  </data>
+  <data name="What it takes" xml:space="preserve">
+    <value>필요 조건</value>
+  </data>
+  <data name="a chart" xml:space="preserve">
+    <value>채보</value>
+  </data>
+  <data name="**{0}** completed" xml:space="preserve">
+    <value>**{0}** 완료</value>
+  </data>
+  <data name="**{0}** paragon → {1}" xml:space="preserve">
+    <value>**{0}** 파라곤 → {1}</value>
+  </data>
+  <data name="1 title" xml:space="preserve">
+    <value>타이틀 1개</value>
+  </data>
+  <data name="{0} titles" xml:space="preserve">
+    <value>타이틀 {0}개</value>
+  </data>
+  <data name="1 paragon" xml:space="preserve">
+    <value>파라곤 1개</value>
+  </data>
+  <data name="{0} paragons" xml:space="preserve">
+    <value>파라곤 {0}개</value>
+  </data>
+  <data name="See more" xml:space="preserve">
+    <value>더 보기</value>
+  </data>
+  <data name="passed {0:N0} · upscored {1:N0}" xml:space="preserve">
+    <value>패스 {0:N0} · 점수 갱신 {1:N0}</value>
+  </data>
+  <data name="passed 1 chart" xml:space="preserve">
+    <value>1개 채보 패스</value>
+  </data>
+  <data name="passed {0:N0} charts" xml:space="preserve">
+    <value>{0:N0}개 채보 패스</value>
+  </data>
+  <data name="upscored 1 chart" xml:space="preserve">
+    <value>1개 채보 점수 갱신</value>
+  </data>
+  <data name="upscored {0:N0} charts" xml:space="preserve">
+    <value>{0:N0}개 채보 점수 갱신</value>
+  </data>
+  <data name="updated 1 chart" xml:space="preserve">
+    <value>1개 채보 업데이트</value>
+  </data>
+  <data name="updated {0:N0} charts" xml:space="preserve">
+    <value>{0:N0}개 채보 업데이트</value>
+  </data>
+  <data name="**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**Singles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**싱글 경쟁 레벨** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**Doubles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**더블 경쟁 레벨** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**All passed!**" xml:space="preserve">
+    <value>**전부 패스!**</value>
+  </data>
+  <data name="**All {0} or better**" xml:space="preserve">
+    <value>**전부 {0} 이상**</value>
+  </data>
+  <data name="**#{0}** on {1} {2} weekly" xml:space="preserve">
+    <value>주간 {1} {2} **#{0}**</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
+    <value>데일리 스텝 {1} {2} **#{0}**</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step (Limbo)" xml:space="preserve">
+    <value>데일리 스텝(림보) {1} {2} **#{0}**</value>
+  </data>
+  <data name="{0} {1}% → **{2}%**" xml:space="preserve">
+    <value>{0} {1}% → **{2}%**</value>
+  </data>
+  <data name="More scores" xml:space="preserve">
+    <value>그 외 점수</value>
+  </data>
+  <data name="+{0} more: {1}" xml:space="preserve">
+    <value>그 외 {0}개: {1}</value>
+  </data>
+  <data name="\* = reclears" xml:space="preserve">
+    <value>\* = 재클리어</value>
+  </data>
+  <data name="#{0} in your PUMBILITY" xml:space="preserve">
+    <value>내 PUMBILITY #{0}</value>
+  </data>
+  <data name="PUMBILITY top 50" xml:space="preserve">
+    <value>PUMBILITY 톱 50</value>
+  </data>
+  <data name="Top scores among peers" xml:space="preserve">
+    <value>동급 유저 중 상위 점수</value>
+  </data>
+  <data name="PG · {0} of {1} peers have it" xml:space="preserve">
+    <value>PG · 동급 {1}명 중 {0}명 보유</value>
+  </data>
+  <data name="#{0} of {1} peers" xml:space="preserve">
+    <value>동급 {1}명 중 #{0}</value>
+  </data>
+  <data name="Folder debut" xml:space="preserve">
+    <value>폴더 데뷔</value>
+  </data>
+  <data name="Raised competitive level" xml:space="preserve">
+    <value>경쟁 레벨 상승</value>
+  </data>
+  <data name="Biggest gain of the session" xml:space="preserve">
+    <value>세션 최대 상승</value>
+  </data>
+  <data name="Title progress" xml:space="preserve">
+    <value>타이틀 진행도</value>
+  </data>
+  <data name="First" xml:space="preserve">
+    <value>첫</value>
+  </data>
+  <data name="Second" xml:space="preserve">
+    <value>두 번째</value>
+  </data>
+  <data name="Third" xml:space="preserve">
+    <value>세 번째</value>
+  </data>
+  <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
+    <value>{0}님이 {3}의 UCS {4} {5}에서 {1} {2} 기록</value>
+  </data>
+  <data name="Hot Streak" xml:space="preserve">
+    <value>핫 스트릭</value>
+  </data>
+  <data name="Suggested · Hot Streak" xml:space="preserve">
+    <value>추천 · 핫 스트릭</value>
+  </data>
+  <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
+    <value>최근 동급 플레이어를 압도한 플레이와 비슷한 채보.</value>
+  </data>
+  <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
+    <value>아직 조건에 맞는 활약이 없습니다. 한계를 밀어붙여 추천을 받아보세요!</value>
+  </data>
+  <data name="Standout bar" xml:space="preserve">
+    <value>스탠드아웃 기준</value>
+  </data>
+  <data name="Count a chart when you beat this % of Peers on it." xml:space="preserve">
+    <value>동급 플레이어 중 이 비율(%)을 이긴 채보만 집계합니다.</value>
+  </data>
+  <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
+    <value>기준 해제 — 경쟁 레벨을 올린 모든 플레이가 집계됩니다.</value>
+  </data>
+  <data name="Look back" xml:space="preserve">
+    <value>조회 기간</value>
+  </data>
+  <data name="Last 30 days" xml:space="preserve">
+    <value>최근 30일</value>
+  </data>
+  <data name="Last 90 days" xml:space="preserve">
+    <value>최근 90일</value>
+  </data>
+  <data name="Last year" xml:space="preserve">
+    <value>최근 1년</value>
+  </data>
+  <data name="All time" xml:space="preserve">
+    <value>전체 기간</value>
+  </data>
+  <data name="Treat very old scores as unplayed" xml:space="preserve">
+    <value>아주 오래된 기록은 미플레이로 간주</value>
+  </data>
+  <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
+    <value>몇 년 전에 클리어한 뒤 다시 하지 않은 채보는 새로운 영역으로 취급합니다.</value>
+  </data>
+  <data name="Group by seed chart" xml:space="preserve">
+    <value>기준 채보별로 묶기</value>
+  </data>
+  <data name="Like {0}" xml:space="preserve">
+    <value>{0} 같은 채보</value>
+  </data>
+  <data name="You beat {0}% of Peers on this." xml:space="preserve">
+    <value>이 채보에서 동급 플레이어의 {0}%를 이겼습니다.</value>
+  </data>
+  <data name="One of your all-time best — you beat {0}% of Peers." xml:space="preserve">
+    <value>역대 최고 기록 중 하나 — 동급 플레이어의 {0}%를 이겼습니다.</value>
+  </data>
+  <data name="One of your all-time best." xml:space="preserve">
+    <value>역대 최고 기록 중 하나입니다.</value>
+  </data>
+  <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
+    <value>조건에 맞는 최근 활약이 없어 역대 최고 기록과 비슷한 채보를 추천합니다.</value>
+  </data>
   <data name="Imported" xml:space="preserve">
     <value>공식 가져오기</value>
   </data>

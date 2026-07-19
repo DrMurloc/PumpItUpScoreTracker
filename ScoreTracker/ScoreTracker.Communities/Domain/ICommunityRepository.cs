@@ -1,4 +1,5 @@
-﻿using ScoreTracker.Domain.Models;
+﻿using ScoreTracker.Communities.Contracts;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
@@ -17,6 +18,10 @@ namespace ScoreTracker.Communities.Domain
             CancellationToken cancellationToken);
 
         Task<Community?> GetCommunityByName(Name communityName, CancellationToken cancellationToken);
+
+        /// <summary>Every community this Discord channel is registered to, with its regional flag (may be empty).</summary>
+        Task<IReadOnlyList<ChannelCommunityInfo>> GetChannelCommunities(ulong channelId,
+            CancellationToken cancellationToken);
 
         /// <summary>
         ///     Player-made community count: regional (country) communities excluded, all
