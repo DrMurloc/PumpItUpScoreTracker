@@ -169,8 +169,10 @@
     private bool _savedFlash;
     private MudNumericField<int?>? _scoreField;
 
+    // Mix-aware: Phoenix 2 moved the A+/AA/AA+ floors, so the live grade must match the
+    // board's mix, not Phoenix 1's table.
     private PhoenixLetterGrade? _derivedGrade =>
-        _recordScore is { } v && PhoenixScore.TryParse(v, out var s) ? s.LetterGrade : null;
+        _recordScore is { } v && PhoenixScore.TryParse(v, out var s) ? s.LetterGradeFor(Mix) : null;
 
     // Board dialog
     private bool _boardOpen;
