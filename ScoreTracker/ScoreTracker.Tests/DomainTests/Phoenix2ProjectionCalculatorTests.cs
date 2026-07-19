@@ -50,7 +50,9 @@ public sealed class Phoenix2ProjectionCalculatorTests
 
         Assert.Equal((int)P2Rating(single, 975_000), projection!.SinglesPumbility);
         Assert.Equal((int)P2Rating(dbl, 960_000), projection.DoublesPumbility);
-        Assert.Equal(projection.SinglesPumbility + projection.DoublesPumbility, projection.TotalPumbility);
+        // The merged total floors the EXACT sum — the per-pool ints can land one below it
+        // when the two fractional parts add past 1.
+        Assert.Equal((int)(P2Rating(single, 975_000) + P2Rating(dbl, 960_000)), projection.TotalPumbility);
     }
 
     [Fact]

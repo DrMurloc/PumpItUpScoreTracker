@@ -281,7 +281,8 @@ public sealed class PhoenixScoresApiShapeTests
         var result = await controller.Get(page: 1, count: 50, mixString: "Phoenix2");
 
         // Phoenix2-mix pumbility uses the official Phoenix 2 formula (additive
-        // Base x (grade + plate)): S20 SS+ EG = 230 x (1.48 + 0.012) = 343.16.
+        // Base x (grade + plate), singles priced one level up): S20 SS+ EG = Base(21)=235 x
+        // (1.48 + 0.012) = 350.62.
         // Same wire shape as Phoenix; only this mix's formula differs.
         JsonApproval.AssertWireShape("""
             {
@@ -293,7 +294,7 @@ public sealed class PhoenixScoresApiShapeTests
                   "plate": "Extreme Game",
                   "letterGrade": "SS\u002B",
                   "score": 985000,
-                  "pumbility": 343.16,
+                  "pumbility": 350.62,
                   "pumbilityPlus": 897,
                   "isBroken": false,
                   "recordedDate": "2026-02-20T00:00:00+00:00",

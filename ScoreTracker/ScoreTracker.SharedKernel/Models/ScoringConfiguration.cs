@@ -159,11 +159,16 @@ namespace ScoreTracker.SharedKernel.Models
                 }
                 case CalculationType.GradePlusPlate:
                 {
-                    // Phoenix 2 PUMBILITY: the grade multiplier and the plate bonus combine
-                    // ADDITIVELY before multiplying the base (validated against real per-chart
-                    // pumbility samples; a multiplicative plate overshoots every sample).
+                    // Phoenix 2 PUMBILITY (per-chart values read off my_page/pumbility.php,
+                    // 2026-07-19): charts below level 10 price at ZERO, singles price one level
+                    // UP the shared base curve (an S17 is worth Base(18) — the kink at 24 rides
+                    // along), and the grade multiplier and plate bonus combine ADDITIVELY
+                    // before multiplying the base.
+                    if (Mix == MixEnum.Phoenix2 && (int)level < 10) return 0;
                     var result = GetScorelessScore(chartId, level, chartType, songType, duration,
                         includeLevelOverride);
+                    if (Mix == MixEnum.Phoenix2 && chartType == ChartType.Single && result > 0)
+                        result += (int)level + 1 > 24 ? 10 : 5;
                     result *= letterGradeModifier + PlateModifiers[plate];
                     if (isBroken) result *= StageBreakModifier;
 
@@ -301,10 +306,12 @@ namespace ScoreTracker.SharedKernel.Models
         /// <summary>
         ///     Phoenix 2's PUMBILITY per-chart formula: contribution =
         ///     Base(level) × (gradeMultiplier + plateBonus), grade and plate combining
-        ///     ADDITIVELY. CO-OP, U.C.S. and half-double (performance) charts never
-        ///     contribute, and broken plays never contribute. This config prices a single
-        ///     chart; the caller aggregates — Singles and Doubles each into their own top-50
-        ///     pool, and the overall total from the top 50 across both types.
+        ///     ADDITIVELY — where SINGLES price one level up the base curve (an S17 is worth
+        ///     Base(18)) and charts below level 10 price at zero (both verified per-chart from
+        ///     my_page/pumbility.php, 2026-07-19). CO-OP, U.C.S. and half-double (performance)
+        ///     charts never contribute, and broken plays never contribute. This config prices
+        ///     a single chart; the caller aggregates — Singles and Doubles each into their own
+        ///     top-50 pool, and the overall total from the top 50 across both types.
         /// </summary>
         private static ScoringConfiguration Phoenix2PumbilityScoring()
         {
@@ -334,13 +341,16 @@ namespace ScoreTracker.SharedKernel.Models
             config.LetterGradeModifiers[PhoenixLetterGrade.AAPlus] = 1.39;
             config.LetterGradeModifiers[PhoenixLetterGrade.AA] = 1.37;
             config.LetterGradeModifiers[PhoenixLetterGrade.APlus] = 1.35;
-            // TODO(P2-pumbility): grades below A+ are UNVERIFIED — no live sample exists yet.
-            // Pattern-extended at −0.02 per step pending real data.
-            config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.33;
-            config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.31;
-            config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.29;
-            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.27;
-            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 1.25;
+            // A verified live 2026-07-19 (my_page/pumbility.php per-chart read: an S14 A TG at
+            // 263.22 = Base(15) × 1.284): the A+→A step is −0.07, not the −0.02 the ladder
+            // above uses.
+            config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.28;
+            // TODO(P2-pumbility): B and below are UNVERIFIED — extended at the observed −0.07
+            // step pending a live sub-800k sample.
+            config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.21;
+            config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.14;
+            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.07;
+            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 1.00;
 
             // Plate bonuses (ADDITIVE terms, not multipliers).
             // TODO(P2-pumbility): community data suggested singles-specific UG/EG/RG values

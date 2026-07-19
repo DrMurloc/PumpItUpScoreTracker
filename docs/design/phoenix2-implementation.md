@@ -41,13 +41,19 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
 
 - **Phoenix 2 PUMBILITY confirmed different and implemented.** Reverse-engineered from the live
   pumbility rankings + per-chart boards, validated against owner-collected real per-chart values
-  (48 pinned as golden unit tests). Per chart: `Base(level) × (gradeMultiplier + plateBonus)` —
+  (48 pinned as golden unit tests). Per chart: `Base(pricedLevel) × (gradeMultiplier + plateBonus)` —
   ADDITIVE grade+plate, `Base = 130 + 5·L + 5·max(0, L−24)`; the per-type Singles and
   Doubles totals are each a top-50 pool, but overall PUMBILITY is ONE merged top-50 across
-  both types (corrected 2026-07-13, see below). Grades 1.35 (A+) → 1.50 (SSS+); plates RG 0.000 → PG +0.020
+  both types (corrected 2026-07-13, see below). **Launch-era corrections (2026-07-19, read
+  per-chart off the official breakdown page `my_page/pumbility.php` and reproduced to the
+  cent by `LiveSite/PumbilityOfficialReconciliationTests`): singles price one level UP the
+  base curve (an S17 is worth `Base(18)`; the pre-launch xlsx singles rows priced at
+  `Base(level)` are superseded), charts below level 10 price at ZERO, and A = 1.28 — the
+  A+→A step is −0.07, not the −0.02 the upper ladder uses.** Grades 1.35 (A+) → 1.50 (SSS+); plates RG 0.000 → PG +0.020
   (doubles-verified table applied to both types — the community's singles-specific UG/EG/RG values
-  treated as data error, owner call 2026-07-09; TODO in `ScoringConfiguration`). Below-A+ grades
-  pattern-extended, unverified. Broken plays never count (owner-confirmed). Everything dispatches
+  treated as data error, owner call 2026-07-09; TODO in `ScoringConfiguration`). Grades below A
+  extended at the observed −0.07 step, unverified. Broken plays never count (owner-confirmed,
+  and the breakdown page prices them 0.00). Everything dispatches
   through `ScoringConfiguration.PumbilityScoring(mix, …)`; Phoenix arm byte-identical.
   `SkillRating` on P2 rows is the merged top-50, so it no longer equals
   `SinglesRating + DoublesRating`; S/D pool gains mint their own

@@ -30,10 +30,16 @@ namespace ScoreTracker.Tests.Integration.LiveSite;
 ///     <para>
 ///         Board quirks learned on the first run (2026-07-19): Phoenix 1's board ignores the
 ///         ?t= tab parameter (no per-type officials exist there) and displays integers; the
-///         Phoenix 2 board credits an account via a daily batch (its own explainer says
-///         "updated daily at xx:yy (GMT+09)" — verbatim, Andamiro left the placeholder), so a
-///         freshly-played account reads rank '-' / 0.00 until the batch runs → INCONCLUSIVE,
-///         not a formula verdict.
+///         Phoenix 2 board credits an account via a daily batch (01:00 GMT+9), and left this
+///         account at rank '-' / 0.00 across several batches while the my_page surfaces
+///         tracked live → the board is the weakest officials source here.
+///     </para>
+///     <para>
+///         Round 2 the same day cracked the formula: my_page/pumbility.php IS the official
+///         per-chart breakdown, and it showed singles price one level UP the base curve,
+///         sub-10 charts price at zero, and A = 1.28. The production formula carries all
+///         three now, and this fact reconciles per chart against that page — the strongest
+///         layer this instrument has.
 ///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
@@ -111,6 +117,9 @@ public sealed class PumbilityOfficialReconciliationTests : IClassFixture<PiuGame
 
     private sealed record Officials(double? All, double? Singles, double? Doubles, string Rank, string CreditedAt,
         bool SpecTextPresent, string Notes);
+
+    private sealed record BreakdownRow(string Song, ChartType Type, int Level, PhoenixLetterGrade? Grade,
+        PhoenixPlate? Plate, double Official);
 
     [LiveSiteFact]
     public async Task Phoenix2_official_pumbility_reconciles_with_our_formula_for_this_account()
@@ -193,6 +202,47 @@ public sealed class PumbilityOfficialReconciliationTests : IClassFixture<PiuGame
             }
 
         PrintFindings(cards, officials, cfg, rows, Phoenix2Tolerance);
+
+        // The strongest layer: my_page/pumbility.php lists every chart in the pools WITH its
+        // official per-chart value — each row is a direct equation against our formula.
+        var breakdown = await ReadPerChartBreakdown(client, ct);
+        if (breakdown is { Count: > 0 })
+        {
+            _output.WriteLine("");
+            _output.WriteLine("=== Per-chart reconciliation (my_page/pumbility.php) ===");
+            var unmatched = new List<BreakdownRow>();
+            var mismatches = 0;
+            foreach (var row in breakdown.OrderByDescending(r => r.Official))
+            {
+                var card = cards.FirstOrDefault(c =>
+                    c.Type == row.Type && c.Level == row.Level &&
+                    (row.Song.StartsWith(c.Song, StringComparison.Ordinal) ||
+                     c.Song.StartsWith(row.Song, StringComparison.Ordinal)));
+                if (card == null)
+                {
+                    unmatched.Add(row);
+                    continue;
+                }
+
+                var ours = Production2(card);
+                var delta = ours - row.Official;
+                if (Math.Abs(delta) > 0.011) mismatches++;
+                _output.WriteLine($"  {Truncate(row.Song, 44),-44} {TypeTag(row.Type)}{row.Level,-3} " +
+                                  $"official {row.Official,8:N2}  ours {ours,8:N2}  " +
+                                  (Math.Abs(delta) <= 0.011 ? "OK" : $"MISMATCH {delta:+0.00;-0.00}"));
+            }
+
+            foreach (var row in unmatched)
+                _output.WriteLine($"  UNMATCHED breakdown row: {row.Song} {TypeTag(row.Type)}{row.Level} " +
+                                  $"official {row.Official:N2}");
+            _output.WriteLine($"  breakdown sum {breakdown.Sum(r => r.Official):N2}  " +
+                              $"(title-page total {Fmt(ladder.Total)})");
+            Assert.True(mismatches == 0 && unmatched.Count == 0,
+                $"Per-chart reconciliation against my_page/pumbility.php failed: {mismatches} value mismatches, " +
+                $"{unmatched.Count} unmatched rows — the table above shows exactly which chart broke which " +
+                $"assumption. Dumps in {DumpDir}.");
+            _output.WriteLine("  PER-CHART: every official value reproduced exactly");
+        }
 
         // A brand-new account sits at rank '-' / 0.00 until the site's PUMBILITY batch first
         // credits it (the my_page explainer: "The Pumbility Ranking changes every day at 01:00
@@ -311,8 +361,8 @@ public sealed class PumbilityOfficialReconciliationTests : IClassFixture<PiuGame
         var client = await _fixture.GetAuthenticatedPhoenix2Client(ct);
         foreach (var path in new[]
                  {
-                     "my_page", "my_page/play_data.php", "my_page/rival.php", "my_page/rank.php",
-                     "my_page/title.php"
+                     "my_page/pumbility.php", "my_page", "my_page/play_data.php", "my_page/rival.php",
+                     "my_page/rank.php", "my_page/title.php"
                  })
         {
             await Task.Delay(Politeness, ct);
@@ -542,8 +592,9 @@ public sealed class PumbilityOfficialReconciliationTests : IClassFixture<PiuGame
         var separation = Math.Abs(noFloor.All - floored.All);
         if (separation < 0.005)
         {
-            _output.WriteLine($"[sub-10] {sub10.Count} sub-10 clears exist but none land in the top-50 — " +
-                              "inclusion cannot move the official total; question stays open on this account");
+            _output.WriteLine($"[sub-10] {sub10.Count} sub-10 clears present and the floor arms agree — " +
+                              "on Phoenix 2 that is the formula pricing them at ZERO (per-chart verified on " +
+                              "my_page/pumbility.php 2026-07-19); on Phoenix 1 it means none land in the top-50");
             return;
         }
 
@@ -796,6 +847,86 @@ public sealed class PumbilityOfficialReconciliationTests : IClassFixture<PiuGame
     }
 
     /// <summary>
+    ///     The official per-chart breakdown off my_page/pumbility.php: one li per chart in the
+    ///     pools, each carrying song/stepball/grade/plate art and the chart's official
+    ///     PUMBILITY value ("354<span>.24</span>"). Zero-valued rows are meaningful — that is
+    ///     how the page prices sub-10 and broken charts. Plate art here uses an "s_" filename
+    ///     prefix (s_mg.png) unlike the best-score page's bare stems.
+    /// </summary>
+    private async Task<IReadOnlyList<BreakdownRow>?> ReadPerChartBreakdown(HttpClient client, CancellationToken ct)
+    {
+        await Task.Delay(Politeness, ct);
+        string html;
+        try
+        {
+            html = await Fetch(client, "https://piugame.com/my_page/pumbility.php", ct);
+        }
+        catch (Exception e)
+        {
+            _output.WriteLine($"per-chart breakdown fetch failed ({e.Message}) — layer skipped");
+            return null;
+        }
+
+        await File.WriteAllTextAsync(Path.Combine(DumpDir, "p2_perchart_breakdown.html"), html, ct);
+        var document = new HtmlDocument();
+        document.LoadHtml(html);
+        var lis = document.DocumentNode.SelectNodes("//li[div[contains(@class,'top-wrap')]]");
+        var rows = new List<BreakdownRow>();
+        if (lis == null) return rows;
+        foreach (var li in lis)
+            try
+            {
+                var inner = li.InnerHtml;
+                var typeMatch = Regex.Match(inner, @"stepball/full/(\w+)_bg\.png");
+                if (!typeMatch.Success) continue;
+                ChartType? type = typeMatch.Groups[1].Value.ToLowerInvariant() switch
+                {
+                    "s" => ChartType.Single,
+                    "d" => ChartType.Double,
+                    "c" => ChartType.CoOp,
+                    _ => null
+                };
+                if (type == null) continue;
+                var digits = string.Join("",
+                    Regex.Matches(inner, @"_num_(\d)\.png").Select(m => m.Groups[1].Value));
+                var level = digits.Length == 0 ? 29 : int.Parse(digits, CultureInfo.InvariantCulture);
+                var song = HttpUtility.HtmlDecode(
+                    li.SelectSingleNode(".//div[contains(@class,'mid-wrap')]")?.InnerText.Trim() ?? "?");
+                var gradeMatch = GradeStemRegex.Match(inner);
+                PhoenixLetterGrade? grade =
+                    gradeMatch.Success &&
+                    GradeByStem.TryGetValue(gradeMatch.Groups[1].Value.ToLowerInvariant(), out var g)
+                        ? g
+                        : null;
+                PhoenixPlate? plate = null;
+                var plateMatch = Regex.Match(inner, @"/plate/(?:s_)?([a-zA-Z]+)\.png");
+                if (plateMatch.Success)
+                    try
+                    {
+                        plate = PhoenixPlateHelperMethods.ParseShorthand(plateMatch.Groups[1].Value);
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        _output.WriteLine($"unknown breakdown plate stem '{plateMatch.Groups[1].Value}' on {song}");
+                    }
+
+                var valueMatch = Regex.Match(inner,
+                    @"(?s)class=""in score"".*?>\s*([0-9,]+)<span class=""pumbility-point-sub"">\.(\d{2})</span>");
+                if (!valueMatch.Success) continue;
+                var official = double.Parse(
+                    valueMatch.Groups[1].Value.Replace(",", "") + "." + valueMatch.Groups[2].Value,
+                    CultureInfo.InvariantCulture);
+                rows.Add(new BreakdownRow(song, type.Value, level, grade, plate, official));
+            }
+            catch (Exception e)
+            {
+                _output.WriteLine($"breakdown row parse error: {e.Message}");
+            }
+
+        return rows;
+    }
+
+    /// <summary>
     ///     The live pool values off my_page/title.php: every pumbility-ladder title renders
     ///     "[ current / target ]", where current is the pool the ladder gates on — [S]/[D]
     ///     prefixes for the per-type pools, the masked "???" tier for the overall total.
@@ -853,6 +984,11 @@ public sealed class PumbilityOfficialReconciliationTests : IClassFixture<PiuGame
     private static string Fmt(double? value)
     {
         return value?.ToString("N2", CultureInfo.InvariantCulture) ?? "(not found)";
+    }
+
+    private static string Truncate(string value, int max)
+    {
+        return value.Length <= max ? value : value[..max];
     }
 
     private static string TypeTag(ChartType type)
