@@ -1090,7 +1090,10 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             var community = await _communities.GetCommunityByName(communityName, cancellationToken);
             if (community == null) continue;
 
-            channels.AddRange(community.Channels.Select(c => new DiscordFeedChannel(c.ChannelId, c.Culture)));
+            // A channel's own registered language wins; the community's creator-set default
+            // fills in when the channel registered without one; null falls through to English.
+            channels.AddRange(community.Channels.Select(c =>
+                new DiscordFeedChannel(c.ChannelId, c.Culture ?? community.DefaultLanguage)));
         }
 
         // A channel reachable through two communities posts once; the first registration's

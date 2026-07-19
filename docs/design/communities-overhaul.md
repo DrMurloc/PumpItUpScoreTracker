@@ -313,11 +313,12 @@ aggregate + new ports, if structural), this file, and — only if deferred work 
 
 ## 9. As built — deviations from the plan
 
-- **Commit 9 (Discord language fallback) deferred to the Discord-overhaul branch.** This branch
-  has no localization machinery in the Discord card path — `CommunitySaga` formats raw strings.
-  Per-channel language and localized cards live on the open Discord-integration PR; wiring
-  `Community.DefaultLanguage` into that PR's resolution chain (channel language → community
-  default → English) is a one-line change **there**. Storage + the creator setting shipped here.
+- **The Discord language fallback landed after the main merge, not as its own commit slot.**
+  Pre-merge this branch had no localization machinery in the Discord card path, so the wiring
+  waited; once the Discord-overhaul merge (#169) arrived via main, `Community.DefaultLanguage`
+  slotted into the fan-out's culture resolution as designed — channel language → community
+  default → English (`CommunitySaga.GetCommunityChannels`), with the creator's input normalized
+  through `SupportedCultures` on save.
 - **No new E2E for the invite flow.** The UI granularity ladder wins over §7's original "one
   E2E": every branch (preview states, both consent paths, banned) is pinned at bUnit level and
   the preview/join logic at application level.

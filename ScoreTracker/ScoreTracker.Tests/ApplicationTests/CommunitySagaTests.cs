@@ -334,6 +334,39 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task ACommunityDefaultLanguageBacksChannelsThatRegisteredWithoutOne()
+    {
+        // The channel registered with no language, but the creator set a community default:
+        // the card renders in the community's language instead of English.
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.Communities.Setup(c => c.GetCommunities(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityOverviewRecord(Name.From("Tokyo"), CommunityPrivacyType.Public, 1, false)
+            });
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.Is<Name>(n => (string)n == "Tokyo"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Community(Name.From("Tokyo"), Guid.NewGuid(), CommunityPrivacyType.Public,
+                new[] { new CommunityMember(userId, CommunityRole.Member, CommunityPermission.None, null, null) },
+                new[] { new Community.ChannelConfiguration(333) },
+                new Dictionary<Guid, DateOnly?>(), false,
+                Community.DefaultAdminPermissionsSeed, "ja-JP"));
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, chart, score: 950000);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
+            (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(),
+            It.Is<IEnumerable<ulong>>(ids => ids.Count() == 1 && ids.First() == 333),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Localizer.Verify(l => l.Get("ja-JP", "passed 1 chart"), Times.Once);
+        ctx.Localizer.Verify(l => l.Get(null, "passed 1 chart"), Times.Never);
+    }
+
+    [Fact]
     public async Task AddingADiscordChannelStoresItsCultureAndConfirmsInThatLanguage()
     {
         var ctx = new HandlerContext();

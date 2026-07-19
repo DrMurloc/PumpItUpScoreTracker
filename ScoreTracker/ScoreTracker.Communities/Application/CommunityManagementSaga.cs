@@ -5,6 +5,7 @@ using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Communities.Domain;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -76,7 +77,8 @@ internal sealed class CommunityManagementSaga :
 
     public Task Handle(SetCommunityLanguageCommand request, CancellationToken cancellationToken) =>
         Mutate(request.CommunityName, community =>
-            community.SetDefaultLanguage(_currentUser.User.Id, request.Culture), cancellationToken);
+            community.SetDefaultLanguage(_currentUser.User.Id,
+                SupportedCultures.NormalizeOrNull(request.Culture)), cancellationToken);
 
     public async Task Handle(DeleteCommunityCommand request, CancellationToken cancellationToken)
     {
