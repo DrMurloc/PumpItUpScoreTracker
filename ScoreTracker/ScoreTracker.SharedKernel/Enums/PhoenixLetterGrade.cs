@@ -94,9 +94,12 @@ public static class PhoenixLetterGradeHelperMethods
     // (2026-07-19, the sub800k probe fact in the same recon class reading grade art off the only
     // eight sub-800k rows on any board): 799,815 = B vs 804,414 = A pins the A floor to 800k
     // within a 4.6k window, and 690,647 = C vs 707,042 = B pins the B floor to 700k within a
-    // 17k window. C/D/F floors stay guesses — nothing below 690,647 exists on any board, so
-    // they are unobservable from crawling. Only the score→grade cutoffs differ per mix; grade
-    // identity, modifiers and names are shared, so only the floors table is overridden here.
+    // 17k window. C and D floors are owner-ratified working values (2026-07-19: hold
+    // B 700k / C 600k / D 500k until proven wrong) — nothing below 690,647 exists on any
+    // board, so they are unobservable from crawling. F stays 0 as the lookup's catch-all:
+    // with D at 500k there is no band boundary below it for an F floor to express. Only the
+    // score→grade cutoffs differ per mix; grade identity, modifiers and names are shared, so
+    // only the floors table is overridden here.
     private static readonly IReadOnlyDictionary<PhoenixLetterGrade, int> Phoenix2Floors =
         new Dictionary<PhoenixLetterGrade, int>
         {
