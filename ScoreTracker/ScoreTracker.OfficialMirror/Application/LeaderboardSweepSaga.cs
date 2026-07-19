@@ -152,7 +152,9 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
             previous == null ? null : await _snapshots.GetPlacements(previous.Id, ct),
             await _records.GetBoardRecords(mix, ct),
             await _records.GetFolderRecords(mix, ct),
-            await _records.GetCrossMixHighs(mix, ct));
+            await _records.GetCrossMixHighs(mix, ct),
+            await _snapshots.GetSeenPlayerIds(mix, snapshotId, ct),
+            ScoringConfiguration.PumbilityScoring(mix, false));
         var result = HighlightsCalculator.Calculate(input);
         await _records.WriteHighlights(snapshotId, mix, result.Highlights, ct);
         await _records.UpsertBoardRecords(result.UpdatedBoardRecords, ct);
@@ -271,17 +273,23 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         // The other mixes' books are read once, as of now, not per replayed week: they only
         // ever grow, and Phoenix's freezes at sunset, so the drift window is a transient edge.
         var crossMix = await _records.GetCrossMixHighs(mix, ct);
+        var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
+        // The seen-set accumulates as the replay walks forward — each week's debuts are
+        // judged against exactly the history that existed then.
+        var seen = new HashSet<int>();
         IReadOnlyList<PlacementRow>? previous = null;
         var isFirst = true;
         foreach (var run in runs)
         {
             var current = await _snapshots.GetPlacements(run.Id, ct);
             var input = new HighlightsInput(run.Id, isFirst || run.IsBaseline, boards, current, previous,
-                await _records.GetBoardRecords(mix, ct), await _records.GetFolderRecords(mix, ct), crossMix);
+                await _records.GetBoardRecords(mix, ct), await _records.GetFolderRecords(mix, ct), crossMix,
+                seen, scoring);
             var result = HighlightsCalculator.Calculate(input);
             await _records.WriteHighlights(run.Id, mix, result.Highlights, ct);
             await _records.UpsertBoardRecords(result.UpdatedBoardRecords, ct);
             await _records.UpsertFolderRecords(mix, result.UpdatedFolderRecords, ct);
+            foreach (var placement in current) seen.Add(placement.PlayerId);
             previous = current;
             isFirst = false;
         }

@@ -13,7 +13,29 @@ public sealed record WeeklyHighlightsRecord(
     IReadOnlyList<OfficialMoverRecord> Movers,
     IReadOnlyList<OfficialBoardsClimbedRecord> BoardsClimbed,
     IReadOnlyList<OfficialGradeFirstRecord> WorldFirsts,
-    IReadOnlyList<OfficialNewNumberOneRecord> NewNumberOnes);
+    IReadOnlyList<OfficialNewNumberOneRecord> NewNumberOnes,
+    WeeklyPulseRecord? Pulse = null,
+    IReadOnlyList<OfficialGainerRecord>? Gainers = null,
+    IReadOnlyList<OfficialDebutRecord>? Debuts = null,
+    IReadOnlyList<OfficialFloorMarkRecord>? Floors = null);
+
+/// <summary>The week's activity roll-up: new/upscored chart-board entries, the distinct
+/// players behind them, and how many players debuted (the Debuts list is a sample).</summary>
+[ExcludeFromCodeCoverage]
+public sealed record WeeklyPulseRecord(int NewEntries, int UpscoredEntries, int PlayersActive, int DebutCount);
+
+[ExcludeFromCodeCoverage]
+public sealed record OfficialGainerRecord(OfficialPlayerRecord Player, decimal PreviousPumbility,
+    decimal NewPumbility, int PreviousRank, int NewRank);
+
+[ExcludeFromCodeCoverage]
+public sealed record OfficialDebutRecord(OfficialPlayerRecord Player, int BestPlace);
+
+/// <summary>A landmark PUMBILITY floor: the value at the rank and the uniform level where
+/// 50× SS clears it (SG plates assumed), with last week's pair for the delta.</summary>
+[ExcludeFromCodeCoverage]
+public sealed record OfficialFloorMarkRecord(int Rank, decimal Value, decimal? PreviousValue,
+    int? LevelForSS, int? PreviousLevelForSS);
 
 [ExcludeFromCodeCoverage]
 public sealed record OfficialMoverRecord(OfficialPlayerRecord Player, int PreviousRank, int NewRank,

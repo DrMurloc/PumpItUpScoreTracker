@@ -5375,4 +5375,55 @@
   <data name="{0} Players" xml:space="preserve">
     <value>{0} jugadores</value>
   </data>
+  <data name="This week on the boards" xml:space="preserve">
+    <value>Esta semana en los tableros</value>
+  </data>
+  <data name="{0} players left their mark on the chart boards." xml:space="preserve">
+    <value>{0} jugadores dejaron su huella en los tableros de charts.</value>
+  </data>
+  <data name="{0} players left their mark — and {1} fell to its first {2}." xml:space="preserve">
+    <value>{0} jugadores dejaron su huella — y {1} cayó ante su primer {2}.</value>
+  </data>
+  <data name="Chart board entries" xml:space="preserve">
+    <value>Entradas en tableros de charts</value>
+  </data>
+  <data name="{0} new · {1} upscored" xml:space="preserve">
+    <value>{0} nuevas · {1} mejoradas</value>
+  </data>
+  <data name="Players active" xml:space="preserve">
+    <value>Jugadores activos</value>
+  </data>
+  <data name="on any chart board" xml:space="preserve">
+    <value>en algún tablero de charts</value>
+  </data>
+  <data name="first ever, SS and up" xml:space="preserve">
+    <value>primeros de la historia, SS o más</value>
+  </data>
+  <data name="Biggest PUMBILITY gainer" xml:space="preserve">
+    <value>Mayor subida de PUMBILITY</value>
+  </data>
+  <data name="Highest world first" xml:space="preserve">
+    <value>World First de mayor nivel</value>
+  </data>
+  <data name="Most chart board activity" xml:space="preserve">
+    <value>Más actividad en tableros de charts</value>
+  </data>
+  <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
+    <value>Cortes del Top 100 · Top 1000 — 50× SS</value>
+  </data>
+  <data name="held" xml:space="preserve">
+    <value>se mantiene</value>
+  </data>
+  <data name="what it takes to hold each rung of the PUMBILITY board" xml:space="preserve">
+    <value>lo que se necesita para mantener cada peldaño del tablero PUMBILITY</value>
+  </data>
+  <data name="Debuted this week" xml:space="preserve">
+    <value>Debutaron esta semana</value>
+  </data>
+  <data name="+{0} more" xml:space="preserve">
+    <value>+{0} más</value>
+  </data>
+  <data name="first-ever appearance on any chart board" xml:space="preserve">
+    <value>primera aparición en un tablero de charts</value>
+  </data>
 </root>

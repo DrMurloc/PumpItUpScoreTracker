@@ -58,7 +58,8 @@ internal sealed class LeaderboardHubSaga :
         var previous = await _snapshots.GetSealedBefore(request.Mix, latest.Id, cancellationToken);
         var highlights = await _records.GetHighlights(latest.Id, cancellationToken);
         var players = (await _snapshots.GetPlayersByIds(
-                highlights.SelectMany(h => new[] { h.PlayerId, h.DethronedPlayerId ?? h.PlayerId })
+                highlights.SelectMany(h => new[] { h.PlayerId, h.DethronedPlayerId })
+                    .Where(id => id != null).Select(id => id!.Value)
                     .Distinct().ToArray(), cancellationToken))
             .ToDictionary(p => p.Id);
 
@@ -92,8 +93,28 @@ internal sealed class LeaderboardHubSaga :
                 Resolve(h.DethronedPlayerId)))
             .ToArray();
 
+        var pulseRow = highlights.FirstOrDefault(h => h.Kind == HighlightKinds.WeeklyPulse);
+        var pulse = pulseRow == null
+            ? null
+            : new WeeklyPulseRecord((int)(pulseRow.PrevValue ?? 0), (int)(pulseRow.NewValue ?? 0),
+                (int)(pulseRow.Score ?? 0), pulseRow.Level ?? 0);
+        var gainers = highlights.Where(h => h.Kind == HighlightKinds.PumbilityGainer)
+            .OrderBy(h => h.SortOrder)
+            .Select(h => new OfficialGainerRecord(Resolve(h.PlayerId)!, h.PrevValue ?? 0, h.Score ?? 0,
+                h.Level ?? 0, (int)(h.NewValue ?? 0)))
+            .ToArray();
+        var debuts = highlights.Where(h => h.Kind == HighlightKinds.Debut)
+            .OrderBy(h => h.SortOrder)
+            .Select(h => new OfficialDebutRecord(Resolve(h.PlayerId)!, (int)(h.Score ?? 0)))
+            .ToArray();
+        var floors = highlights.Where(h => h.Kind == HighlightKinds.FloorMark)
+            .OrderBy(h => h.SortOrder)
+            .Select(h => new OfficialFloorMarkRecord(h.SortOrder, h.Score ?? 0, h.PrevValue,
+                h.Level, (int?)h.NewValue))
+            .ToArray();
+
         return new WeeklyHighlightsRecord(latest.CompletedAt.Value, previous?.CompletedAt, movers, climbed,
-            firsts, numberOnes);
+            firsts, numberOnes, pulse, gainers, debuts, floors);
     }
 
     public async Task<OfficialRankingsRecord> Handle(GetOfficialRankingsQuery request,

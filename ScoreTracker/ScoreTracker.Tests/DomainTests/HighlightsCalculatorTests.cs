@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScoreTracker.OfficialMirror.Domain;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using Xunit;
 
 namespace ScoreTracker.Tests.DomainTests;
@@ -29,7 +31,9 @@ public sealed class HighlightsCalculatorTests
         IEnumerable<BoardRecordRow>? boardRecords = null,
         IEnumerable<FolderRecordRow>? folderRecords = null,
         bool isBaseline = false,
-        CrossMixRecordHighs? crossMix = null)
+        CrossMixRecordHighs? crossMix = null,
+        IReadOnlySet<int>? seen = null,
+        ScoringConfiguration? scoring = null)
     {
         return new HighlightsInput(SnapshotId, isBaseline,
             (boards ?? new[] { Pumbility }).ToArray(),
@@ -37,7 +41,130 @@ public sealed class HighlightsCalculatorTests
             previous?.ToArray(),
             (boardRecords ?? Array.Empty<BoardRecordRow>()).ToArray(),
             (folderRecords ?? Array.Empty<FolderRecordRow>()).ToArray(),
-            crossMix);
+            crossMix, seen, scoring);
+    }
+
+    [Fact]
+    public void TheWeeklyPulseCountsCausedMovementOnly()
+    {
+        // Player 1 is new to the board, 2 upscored, 3 merely got pushed down a place,
+        // and 4 dropped off — only 1 and 2 caused movement.
+        var board = ChartBoard();
+        var result = HighlightsCalculator.Calculate(Input(
+            boards: new[] { board },
+            current: new[]
+            {
+                new PlacementRow(board.Id, 1, 1, 970000),
+                new PlacementRow(board.Id, 2, 2, 965000),
+                new PlacementRow(board.Id, 3, 3, 960000)
+            },
+            previous: new[]
+            {
+                new PlacementRow(board.Id, 2, 1, 950000),
+                new PlacementRow(board.Id, 3, 2, 960000),
+                new PlacementRow(board.Id, 4, 3, 940000)
+            },
+            crossMix: CrossMixRecordHighs.Empty,
+            seen: new HashSet<int> { 1, 2, 3, 4 }));
+
+        var pulse = Assert.Single(result.Highlights, h => h.Kind == HighlightKinds.WeeklyPulse);
+        Assert.Null(pulse.PlayerId);
+        Assert.Equal(1, pulse.PrevValue);
+        Assert.Equal(1, pulse.NewValue);
+        Assert.Equal(2, pulse.Score);
+        Assert.Equal(0, pulse.Level);
+    }
+
+    [Fact]
+    public void DebutsAreFirstEverChartBoardAppearancesOrderedByBestPlace()
+    {
+        // Players 7 and 9 have never been on any board; 9's best place is better so they
+        // lead. Player 5 is new to the PUMBILITY board only — a rating row is no debut.
+        var board = ChartBoard();
+        var result = HighlightsCalculator.Calculate(Input(
+            boards: new[] { Pumbility, board },
+            current: new[]
+            {
+                new PlacementRow(board.Id, 1, 1, 970000),
+                new PlacementRow(board.Id, 9, 2, 965000),
+                new PlacementRow(board.Id, 7, 5, 950000),
+                new PlacementRow(PumbilityBoardId, 5, 40, 8000m)
+            },
+            previous: new[] { new PlacementRow(board.Id, 1, 1, 969000) },
+            crossMix: CrossMixRecordHighs.Empty,
+            seen: new HashSet<int> { 1 }));
+
+        var debuts = result.Highlights.Where(h => h.Kind == HighlightKinds.Debut).ToArray();
+        Assert.Equal(new int?[] { 9, 7 }, debuts.Select(d => d.PlayerId).ToArray());
+        Assert.Equal(new[] { 1, 2 }, debuts.Select(d => d.SortOrder).ToArray());
+        Assert.Equal(2, Assert.Single(result.Highlights, h => h.Kind == HighlightKinds.WeeklyPulse).Level);
+    }
+
+    [Fact]
+    public void GainersRankByPumbilityValueGained()
+    {
+        var result = HighlightsCalculator.Calculate(Input(
+            current: new[]
+            {
+                new PlacementRow(PumbilityBoardId, 1, 1, 18100.00m),
+                new PlacementRow(PumbilityBoardId, 2, 2, 18050.50m),
+                new PlacementRow(PumbilityBoardId, 3, 3, 17000.00m)
+            },
+            previous: new[]
+            {
+                new PlacementRow(PumbilityBoardId, 1, 2, 18000.00m),
+                new PlacementRow(PumbilityBoardId, 2, 1, 17800.25m),
+                new PlacementRow(PumbilityBoardId, 3, 3, 17005.00m)
+            }));
+
+        var gainers = result.Highlights.Where(h => h.Kind == HighlightKinds.PumbilityGainer).ToArray();
+        Assert.Equal(new int?[] { 2, 1 }, gainers.Select(g => g.PlayerId).ToArray());
+        Assert.Equal(18050.50m, gainers[0].Score);
+        Assert.Equal(17800.25m, gainers[0].PrevValue);
+        Assert.Equal(2, gainers[0].NewValue);
+        Assert.Equal(1, gainers[0].Level);
+    }
+
+    [Fact]
+    public void FloorMarksCarryBothWeeksValuesAndFiftySsLevels()
+    {
+        // A 1,200-deep board: each landmark rank stores its floor, last week's floor, and
+        // the 50x SS level equivalents on both sides.
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var current = Enumerable.Range(1, 1200)
+            .Select(place => new PlacementRow(PumbilityBoardId, place + 10000, place, 12000m - place * 5))
+            .ToArray();
+        var previous = Enumerable.Range(1, 1200)
+            .Select(place => new PlacementRow(PumbilityBoardId, place + 10000, place, 11500m - place * 5))
+            .ToArray();
+        var result = HighlightsCalculator.Calculate(Input(
+            current: current,
+            previous: previous,
+            scoring: scoring));
+
+        var floors = result.Highlights.Where(h => h.Kind == HighlightKinds.FloorMark)
+            .OrderBy(h => h.SortOrder).ToArray();
+        Assert.Equal(new[] { 100, 1000 }, floors.Select(f => f.SortOrder).ToArray());
+        Assert.Equal(11500m, floors[0].Score);
+        Assert.Equal(11000m, floors[0].PrevValue);
+        Assert.Equal(7000m, floors[1].Score);
+        // Levels mirror the What It Takes cutline: uniform 50x SS, Singles, SG plates.
+        Assert.Equal(CutlineCalculator.LevelFor(scoring, ChartType.Single, PhoenixLetterGrade.SS, 11500m),
+            floors[0].Level);
+        Assert.Equal(CutlineCalculator.LevelFor(scoring, ChartType.Single, PhoenixLetterGrade.SS, 7000m),
+            floors[1].Level);
+    }
+
+    [Fact]
+    public void BaselineEmitsNoHeroRows()
+    {
+        var result = HighlightsCalculator.Calculate(Input(
+            current: new[] { new PlacementRow(PumbilityBoardId, 1, 1, 18000m) },
+            isBaseline: true,
+            seen: new HashSet<int>(),
+            scoring: ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false)));
+
+        Assert.Empty(result.Highlights);
     }
 
     [Fact]
@@ -121,7 +248,7 @@ public sealed class HighlightsCalculatorTests
         Assert.Equal(31, movers[0].PrevValue);
         Assert.Equal(17, movers[0].NewValue);
         Assert.Equal(18204.51m, movers[0].Score);
-        Assert.Equal(new[] { 1, 2, 3 }, movers.Select(m => m.PlayerId).ToArray());
+        Assert.Equal(new int?[] { 1, 2, 3 }, movers.Select(m => m.PlayerId).ToArray());
     }
 
     [Fact]
@@ -227,7 +354,7 @@ public sealed class HighlightsCalculatorTests
         var firsts = result.Highlights.Where(h => h.Kind == HighlightKinds.ChartGradeFirst).ToArray();
         Assert.Equal(2, firsts.Length);
         Assert.All(firsts, f => Assert.Equal("PG", f.GradeBand));
-        Assert.Equal(new[] { 21, 22 }, firsts.Select(f => f.PlayerId).OrderBy(p => p).ToArray());
+        Assert.Equal(new int?[] { 21, 22 }, firsts.Select(f => f.PlayerId).OrderBy(p => p).ToArray());
     }
 
     [Fact]
@@ -340,7 +467,11 @@ public sealed class HighlightsCalculatorTests
             current: new[] { new PlacementRow(board.Id, 7, 1, 1_000_000) },
             previous: Array.Empty<PlacementRow>()));
 
-        Assert.Empty(result.Highlights);
+        // Only the pulse row remains, and the co-op entry never counted toward it.
+        var pulse = Assert.Single(result.Highlights);
+        Assert.Equal(HighlightKinds.WeeklyPulse, pulse.Kind);
+        Assert.Equal(0, pulse.PrevValue);
+        Assert.Equal(0, pulse.NewValue);
         Assert.Empty(result.UpdatedBoardRecords);
     }
 
@@ -374,7 +505,8 @@ public sealed class HighlightsCalculatorTests
             current: new[] { new PlacementRow(board.Id, 7, 1, 991000) },
             previous: Array.Empty<PlacementRow>()));
 
-        Assert.Empty(result.Highlights);
+        // The entry still counts in the pulse, but nothing celebrates it.
+        Assert.All(result.Highlights, h => Assert.Equal(HighlightKinds.WeeklyPulse, h.Kind));
         Assert.Equal(991000, result.UpdatedBoardRecords.Single().HighScore);
     }
 
@@ -391,6 +523,6 @@ public sealed class HighlightsCalculatorTests
 
         Assert.Empty(result.UpdatedBoardRecords);
         Assert.Empty(result.UpdatedFolderRecords);
-        Assert.Empty(result.Highlights);
+        Assert.All(result.Highlights, h => Assert.Equal(HighlightKinds.WeeklyPulse, h.Kind));
     }
 }

@@ -248,6 +248,21 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
         return result;
     }
 
+    public async Task<IReadOnlySet<int>> GetSeenPlayerIds(MixEnum mix, int beforeSnapshotId, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        // Unsealed leftovers count as "seen" — the conservative direction for a debut.
+        return (await database.Set<OfficialLeaderboardPlacementEntity>()
+                .Where(p => p.SnapshotId < beforeSnapshotId &&
+                            database.Set<OfficialLeaderboardSnapshotEntity>()
+                                .Any(s => s.Id == p.SnapshotId && s.MixId == mixId))
+                .Select(p => p.PlayerId)
+                .Distinct()
+                .ToArrayAsync(ct))
+            .ToHashSet();
+    }
+
     public async Task<IReadOnlyList<PlayerDimension>> GetPlayers(MixEnum mix, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);

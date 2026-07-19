@@ -31,7 +31,7 @@ internal sealed record CrossMixRecordHighs(
 
 internal sealed record FolderRecordRow(string ChartType, int Level, int HighScore, int AchievedSnapshotId);
 
-internal sealed record HighlightRow(string Kind, int SortOrder, int PlayerId, int? DethronedPlayerId,
+internal sealed record HighlightRow(string Kind, int SortOrder, int? PlayerId, int? DethronedPlayerId,
     int? LeaderboardId, Guid? ChartId, string? ChartType, int? Level, string? GradeBand,
     decimal? Score, decimal? PrevValue, decimal? NewValue);
 
@@ -59,6 +59,33 @@ internal static class HighlightKinds
     public const string NewNumberOne = "NewNumberOne";
     public const string ChartGradeFirst = "ChartGradeFirst";
     public const string FolderGradeFirst = "FolderGradeFirst";
+
+    /// <summary>
+    ///     One playerless row per snapshot: PrevValue = chart-board entries that are new,
+    ///     NewValue = entries that upscored, Score = distinct players behind them,
+    ///     Level = total debut count (the stored Debut rows are a capped sample).
+    /// </summary>
+    public const string WeeklyPulse = "WeeklyPulse";
+
+    /// <summary>
+    ///     Top PUMBILITY value gainers: Score = new pumbility, PrevValue = previous
+    ///     pumbility, NewValue = new rank, Level = previous rank.
+    /// </summary>
+    public const string PumbilityGainer = "PumbilityGainer";
+
+    /// <summary>
+    ///     A player's first-ever appearance on a chart board (never seen on any board in
+    ///     any earlier snapshot). Score = their best chart-board place this week; ordered
+    ///     by it, capped — the pulse row carries the uncapped total.
+    /// </summary>
+    public const string Debut = "Debut";
+
+    /// <summary>
+    ///     A landmark PUMBILITY floor, playerless: SortOrder = the rank (100/1000),
+    ///     Score = the floor value, PrevValue = last week's, Level = the uniform level
+    ///     where 50× SS clears it (SG plates assumed), NewValue = last week's level.
+    /// </summary>
+    public const string FloorMark = "FloorMark";
 }
 
 internal static class ProposalStatuses

@@ -5495,4 +5495,55 @@
   <data name="{0} Players" xml:space="preserve">
     <value>{0}人</value>
   </data>
+  <data name="This week on the boards" xml:space="preserve">
+    <value>今週のボード</value>
+  </data>
+  <data name="{0} players left their mark on the chart boards." xml:space="preserve">
+    <value>{0}人のプレイヤーが譜面ボードに記録を残しました。</value>
+  </data>
+  <data name="{0} players left their mark — and {1} fell to its first {2}." xml:space="preserve">
+    <value>{0}人が記録を残し、{1}に初の{2}が誕生しました。</value>
+  </data>
+  <data name="Chart board entries" xml:space="preserve">
+    <value>譜面ボードエントリー</value>
+  </data>
+  <data name="{0} new · {1} upscored" xml:space="preserve">
+    <value>新規 {0} · 更新 {1}</value>
+  </data>
+  <data name="Players active" xml:space="preserve">
+    <value>アクティブプレイヤー</value>
+  </data>
+  <data name="on any chart board" xml:space="preserve">
+    <value>譜面ボード基準</value>
+  </data>
+  <data name="first ever, SS and up" xml:space="preserve">
+    <value>史上初、SS以上</value>
+  </data>
+  <data name="Biggest PUMBILITY gainer" xml:space="preserve">
+    <value>PUMBILITY最大上昇</value>
+  </data>
+  <data name="Highest world first" xml:space="preserve">
+    <value>最高レベルの世界初</value>
+  </data>
+  <data name="Most chart board activity" xml:space="preserve">
+    <value>譜面ボード活動トップ</value>
+  </data>
+  <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
+    <value>Top 100 · Top 1000 ボーダー — 50× SS</value>
+  </data>
+  <data name="held" xml:space="preserve">
+    <value>維持</value>
+  </data>
+  <data name="what it takes to hold each rung of the PUMBILITY board" xml:space="preserve">
+    <value>PUMBILITYボードの各順位を守るために必要な水準</value>
+  </data>
+  <data name="Debuted this week" xml:space="preserve">
+    <value>今週デビュー</value>
+  </data>
+  <data name="+{0} more" xml:space="preserve">
+    <value>+{0}人</value>
+  </data>
+  <data name="first-ever appearance on any chart board" xml:space="preserve">
+    <value>譜面ボード初登場</value>
+  </data>
 </root>

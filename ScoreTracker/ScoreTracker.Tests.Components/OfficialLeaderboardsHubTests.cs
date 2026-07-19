@@ -102,6 +102,51 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
     }
 
     [Fact]
+    public void ThisWeekRendersTheHypeHeroWhenThePulseIsStored()
+    {
+        var chart = MakeChart();
+        var record = new WeeklyHighlightsRecord(Week2, Week1,
+            new[] { new OfficialMoverRecord(Player(), 31, 17, 18204.51m) },
+            new[] { new OfficialBoardsClimbedRecord(Player(3, "HALCYON"), 21, 388) },
+            new[]
+            {
+                new OfficialGradeFirstRecord(Player(2, "PUMPJACK"), chart.Id, "Double", 26, "SSS", 991_000,
+                    false)
+            },
+            Array.Empty<OfficialNewNumberOneRecord>(),
+            new WeeklyPulseRecord(612, 1235, 428, 41),
+            new[] { new OfficialGainerRecord(Player(5, "NIMGO"), 8102.10m, 8614.54m, 41, 23) },
+            new[]
+            {
+                new OfficialDebutRecord(Player(6, "NEWSTEP"), 3),
+                new OfficialDebutRecord(Player(7, "PUMPFRESH"), 9)
+            },
+            new[]
+            {
+                new OfficialFloorMarkRecord(100, 7851.20m, 7636.80m, 22, 21),
+                new OfficialFloorMarkRecord(1000, 4982.75m, 4831.65m, 17, 17)
+            });
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(record);
+
+        var cut = RenderComponent<HubThisWeek>(p => p
+            .Add(x => x.Mix, MixEnum.Phoenix2)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [chart.Id] = chart }));
+
+        var flat = cut.Markup.Replace("<b>", "").Replace("</b>", "");
+        Assert.Contains("1,847", flat); // 612 new + 1,235 upscored
+        Assert.Contains("+512.44", flat); // the gainer leads with value, not rank
+        Assert.Contains("#41 → #23", flat);
+        Assert.Contains("NEWSTEP", flat);
+        Assert.Contains("+39 more", flat); // 41 debuts, two chips shown
+        Assert.Contains("Lv.21", flat); // #100 floor jumped a level...
+        Assert.Contains("Lv.22", flat);
+        Assert.Contains("held", flat); // ...while #1000 held
+        Assert.Contains("fell to its first SSS", flat); // the hype sentence tail
+        Assert.Contains("/OfficialLeaderboards/Players?player=NEWSTEP", cut.Markup);
+    }
+
+    [Fact]
     public void ThisWeekLabelsAGapWiderThanOneWeek()
     {
         _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))

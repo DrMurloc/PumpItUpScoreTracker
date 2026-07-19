@@ -1,4 +1,5 @@
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.OfficialMirror.Domain;
 
@@ -10,7 +11,9 @@ internal sealed record HighlightsInput(
     IReadOnlyList<PlacementRow>? Previous,
     IReadOnlyList<BoardRecordRow> BoardRecords,
     IReadOnlyList<FolderRecordRow> FolderRecords,
-    CrossMixRecordHighs? CrossMix = null);
+    CrossMixRecordHighs? CrossMix = null,
+    IReadOnlySet<int>? PreviouslySeenPlayerIds = null,
+    ScoringConfiguration? Scoring = null);
 
 internal sealed record HighlightsResult(
     IReadOnlyList<HighlightRow> Highlights,
@@ -37,7 +40,10 @@ internal static class HighlightsCalculator
     public const int BoardsClimbedTaken = 8;
     public const int BoardsClimbedMinimum = 5;
     public const int HighlightMinimumLevel = 24;
+    public const int GainersTaken = 3;
+    public const int DebutsTaken = 24;
     public const string PumbilityBoardName = "PUMBILITY";
+    public static readonly int[] FloorRanks = { 100, 1000 };
 
     // Highlight bands are score-anchored policy, deliberately not derived from a grade
     // table: SS and up share these floors in every Phoenix-family mix (Phoenix 2 re-cut
@@ -72,8 +78,121 @@ internal static class HighlightsCalculator
         highlights.AddRange(Movers(input.Boards, currentByBoard, previousByBoard));
         highlights.AddRange(BoardsClimbed(chartBoards, currentByBoard, previousByBoard, input.Previous != null));
         highlights.AddRange(RecordHighlights(input, chartBoards, previousByBoard, beatenBoards));
+        highlights.AddRange(HeroSummary(input, chartBoards, currentByBoard, previousByBoard));
 
         return new HighlightsResult(highlights, updatedBoardRecords, updatedFolderRecords);
+    }
+
+    /// <summary>
+    ///     The This Week hero's summary rows — the weekly pulse (entry and player counts),
+    ///     first-ever board debuts, the top PUMBILITY value gainers, and the #100/#1000
+    ///     floor marks. Diff-derived editorial like everything else: a rebuild replays them.
+    /// </summary>
+    private static IEnumerable<HighlightRow> HeroSummary(HighlightsInput input,
+        IReadOnlyDictionary<int, BoardDimension> chartBoards,
+        IReadOnlyDictionary<int, IReadOnlyList<PlacementRow>> currentByBoard,
+        IReadOnlyDictionary<int, IReadOnlyList<PlacementRow>> previousByBoard)
+    {
+        // Debuts: on a chart board now, never on ANY board in any earlier snapshot. The
+        // stored rows are a most-notable-first sample; the pulse row keeps the true total.
+        var debuts = Array.Empty<(int PlayerId, int BestPlace)>();
+        var debutTotal = 0;
+        if (input.PreviouslySeenPlayerIds is { } seen)
+        {
+            var byPlayer = currentByBoard
+                .Where(kv => chartBoards.ContainsKey(kv.Key))
+                .SelectMany(kv => kv.Value)
+                .Where(p => !seen.Contains(p.PlayerId))
+                .GroupBy(p => p.PlayerId)
+                .Select(g => (PlayerId: g.Key, BestPlace: g.Min(p => p.Place)))
+                .OrderBy(d => d.BestPlace).ThenBy(d => d.PlayerId)
+                .ToArray();
+            debutTotal = byPlayer.Length;
+            debuts = byPlayer.Take(DebutsTaken).ToArray();
+        }
+
+        for (var i = 0; i < debuts.Length; i++)
+            yield return new HighlightRow(HighlightKinds.Debut, i + 1, debuts[i].PlayerId, null, null, null,
+                null, null, null, debuts[i].BestPlace, null, null);
+
+        // The pulse: new and upscored chart-board entries plus the distinct players who
+        // caused them. Place-only shifts (pushed around by others) are not movement.
+        if (input.Previous != null)
+        {
+            var newEntries = 0;
+            var upscored = 0;
+            var active = new HashSet<int>();
+            foreach (var (boardId, placements) in currentByBoard)
+            {
+                if (!chartBoards.ContainsKey(boardId)) continue;
+                var previousScores = previousByBoard.TryGetValue(boardId, out var prev)
+                    ? prev.ToDictionary(p => p.PlayerId, p => p.Score)
+                    : new Dictionary<int, decimal>();
+                foreach (var placement in placements)
+                    if (!previousScores.TryGetValue(placement.PlayerId, out var was))
+                    {
+                        newEntries++;
+                        active.Add(placement.PlayerId);
+                    }
+                    else if (placement.Score > was)
+                    {
+                        upscored++;
+                        active.Add(placement.PlayerId);
+                    }
+            }
+
+            yield return new HighlightRow(HighlightKinds.WeeklyPulse, 1, null, null, null, null, null,
+                debutTotal, null, active.Count, newEntries, upscored);
+        }
+
+        var pumbility = input.Boards.FirstOrDefault(b =>
+            b.LeaderboardType == LeaderboardTypes.Rating && b.Name == PumbilityBoardName);
+        if (pumbility == null || !currentByBoard.TryGetValue(pumbility.Id, out var currentBoard)) yield break;
+
+        // Gainers: the biggest raw PUMBILITY climbs — the movers card ranks by rank-jump,
+        // the hero leads with value gained.
+        if (input.Previous != null && previousByBoard.TryGetValue(pumbility.Id, out var previousBoard))
+        {
+            var previousByPlayer = previousBoard
+                .GroupBy(p => p.PlayerId)
+                .ToDictionary(g => g.Key, g => g.First());
+            var gainers = currentBoard
+                .Where(p => previousByPlayer.TryGetValue(p.PlayerId, out var was) && p.Score > was.Score)
+                .OrderByDescending(p => p.Score - previousByPlayer[p.PlayerId].Score)
+                .ThenBy(p => p.Place)
+                .Take(GainersTaken)
+                .ToArray();
+            for (var i = 0; i < gainers.Length; i++)
+            {
+                var was = previousByPlayer[gainers[i].PlayerId];
+                yield return new HighlightRow(HighlightKinds.PumbilityGainer, i + 1, gainers[i].PlayerId,
+                    null, pumbility.Id, null, null, was.Place, null, gainers[i].Score, was.Score,
+                    gainers[i].Place);
+            }
+        }
+
+        // Floor marks: the value holding each landmark rank and its 50x SS level
+        // equivalent, both sides of the week so a held level still shows its rising floor.
+        if (input.Scoring == null) yield break;
+        var ordered = currentBoard.OrderBy(p => p.Place).ToArray();
+        var orderedPrevious = (previousByBoard.TryGetValue(pumbility.Id, out var prevBoard)
+                ? prevBoard
+                : Array.Empty<PlacementRow>())
+            .OrderBy(p => p.Place).ToArray();
+        foreach (var rank in FloorRanks)
+        {
+            var value = CutlineCalculator.ValueAtRank(ordered, rank);
+            if (value == null) continue;
+            var prevValue = CutlineCalculator.ValueAtRank(orderedPrevious, rank);
+            var level = CutlineCalculator.LevelFor(input.Scoring, ChartType.Single,
+                PhoenixLetterGrade.SS, value.Value);
+            var prevLevel = prevValue == null
+                ? null
+                : CutlineCalculator.LevelFor(input.Scoring, ChartType.Single,
+                    PhoenixLetterGrade.SS, prevValue.Value);
+            yield return new HighlightRow(HighlightKinds.FloorMark, rank, null, null,
+                pumbility.Id, null, null, level, null, value, prevValue, prevLevel);
+        }
     }
 
     private static (IReadOnlyList<BoardRecordRow> Boards, IReadOnlyList<FolderRecordRow> Folders,
