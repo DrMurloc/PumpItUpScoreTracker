@@ -29,6 +29,7 @@ internal sealed class CommunityManagementSaga :
     IRequestHandler<SetCommunityLanguageCommand>,
     IRequestHandler<DeleteCommunityCommand>,
     IRequestHandler<GetMyCommunityRoleQuery, CommunityRoleRecord>,
+    IRequestHandler<GetMyCommunityRolesQuery, IEnumerable<MyCommunityRoleRecord>>,
     IRequestHandler<GetCommunityRosterQuery, IEnumerable<CommunityMemberRecord>>
 {
     private readonly ICommunityRepository _communities;
@@ -95,6 +96,12 @@ internal sealed class CommunityManagementSaga :
         var userId = _currentUser.User.Id;
         return new CommunityRoleRecord(community.RoleOf(userId), community.PermissionsOf(userId));
     }
+
+    public async Task<IEnumerable<MyCommunityRoleRecord>> Handle(GetMyCommunityRolesQuery request,
+        CancellationToken cancellationToken) =>
+        _currentUser.IsLoggedIn
+            ? await _communities.GetUserRoles(_currentUser.User.Id, cancellationToken)
+            : Array.Empty<MyCommunityRoleRecord>();
 
     public async Task<IEnumerable<CommunityMemberRecord>> Handle(GetCommunityRosterQuery request,
         CancellationToken cancellationToken) =>

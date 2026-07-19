@@ -312,6 +312,21 @@ namespace ScoreTracker.Communities.Infrastructure
             _cache.Remove(CommunityCountCacheKey);
         }
 
+        public async Task<IEnumerable<MyCommunityRoleRecord>> GetUserRoles(Guid userId,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var rows = await (from cm in database.Set<CommunityMembershipEntity>()
+                    where cm.UserId == userId
+                    join c in database.Set<CommunityEntity>() on cm.CommunityId equals c.Id
+                    select new { c.Name, cm.Role, cm.Permissions })
+                .ToArrayAsync(cancellationToken);
+
+            return rows.Select(r => new MyCommunityRoleRecord(r.Name,
+                Enum.TryParse<CommunityRole>(r.Role, out var role) ? role : CommunityRole.Member,
+                (CommunityPermission)r.Permissions)).ToArray();
+        }
+
         public async Task<IEnumerable<CommunityMemberRecord>> GetRoster(Name communityName,
             CancellationToken cancellationToken)
         {

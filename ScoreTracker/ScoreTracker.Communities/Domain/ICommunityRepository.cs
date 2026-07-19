@@ -18,6 +18,9 @@ namespace ScoreTracker.Communities.Domain
         /// <summary>The member roster (including retained bans) joined to user display identity + role.</summary>
         Task<IEnumerable<CommunityMemberRecord>> GetRoster(Name communityName, CancellationToken cancellationToken);
 
+        /// <summary>One row per community the user holds a membership row in (bans included).</summary>
+        Task<IEnumerable<MyCommunityRoleRecord>> GetUserRoles(Guid userId, CancellationToken cancellationToken);
+
         Task<IEnumerable<CommunityOverviewRecord>> GetCommunities(Guid userId, CancellationToken cancellationToken);
         Task<IEnumerable<CommunityOverviewRecord>> GetPublicCommunities(CancellationToken cancellationToken);
 

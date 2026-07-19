@@ -222,12 +222,12 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task CreateInviteLinkPersistsTheCodeAndReturnsIt()
+    public async Task CreateInviteLinkPersistsTheCodeForAHolderOfTheInvitePermission()
     {
-        var memberId = Guid.NewGuid();
-        var ctx = new HandlerContext(currentUserId: memberId);
-        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public,
-            new[] { memberId }, Array.Empty<Community.ChannelConfiguration>(),
+        var ownerId = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: ownerId);
+        var community = new Community(Name.From("Acme"), ownerId, CommunityPrivacyType.Public,
+            new[] { ownerId }, Array.Empty<Community.ChannelConfiguration>(),
             new Dictionary<Guid, DateOnly?>(), false);
         ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(community);
@@ -239,6 +239,22 @@ public sealed class CommunitySagaTests
         ctx.Communities.Verify(c => c.SaveCommunity(
             It.Is<Community>(comm => comm.InviteCodes.ContainsKey(code)),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateInviteLinkThrowsForAPlainMemberWithoutThePermission()
+    {
+        var memberId = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: memberId);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public,
+            new[] { memberId }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false);
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        await Assert.ThrowsAsync<DeniedFromCommunityException>(() =>
+            ctx.Saga.Handle(new CreateInviteLinkCommand(Name.From("Acme"), ExpirationDate: null),
+                CancellationToken.None));
     }
 
     [Theory]

@@ -764,9 +764,9 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     public async Task<Guid> Handle(CreateInviteLinkCommand request, CancellationToken cancellationToken)
     {
         var community = await GetCommunity(request.CommunityName, cancellationToken);
-        if (!community.MemberIds.Contains(_currentUser.User.Id))
+        if (!community.HasPermission(_currentUser.User.Id, CommunityPermission.ManageInviteLinks))
             throw new DeniedFromCommunityException(
-                "You must be a member of a community to create invite links for it");
+                "You must have the invite-links permission to create invite links for this community");
 
         var newCode = Guid.NewGuid();
         community.InviteCodes[newCode] = request.ExpirationDate;
