@@ -113,7 +113,7 @@ public sealed class LeaderboardSweepSagaTests
         var tierLists = new Mock<ITierListRepository>();
         var saga = new LeaderboardSweepSaga(site.Object, snapshots.Object, records.Object, identity.Object,
             legacy.Object, charts.Object, tierLists.Object, FakeDateTime.At(Now).Object,
-            NullLogger<LeaderboardSweepSaga>.Instance);
+            new Mock<IBus>().Object, NullLogger<LeaderboardSweepSaga>.Instance);
         return new Fixture(site, snapshots, records, tierLists, saga) { Legacy = legacy, Charts = charts };
     }
 

@@ -4683,6 +4683,498 @@
   <data name="Biased towards larger folders" xml:space="preserve">
     <value>Biased towards larger mrglfolders</value>
   </data>
+  <data name="Add the PIU Scores bot to your Discord server" xml:space="preserve">
+    <value>Add the PIU Scores bot to your Discord server</value>
+  </data>
+  <data name="Invite the bot, then run /piu register in any channel to start its feeds and commands." xml:space="preserve">
+    <value>Invite the bot, then run /piu register in any channel to start its feeds and commands.</value>
+  </data>
+  <data name="Add the bot" xml:space="preserve">
+    <value>Add the bot</value>
+  </data>
+  <data name="This channel now receives **{0} — {1}**. {2}" xml:space="preserve">
+    <value>Mrgl! Drgls chrglnnrgl nrglw rrglcrglves **{0} — {1}**. {2}</value>
+  </data>
+  <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
+    <value>Rrglsrglts mrgl nrglw lrglnrglp prglst whrgln brglrd sprglns rglch Mrglndrgly.</value>
+  </data>
+  <data name="Yesterday's board and today's chart post each day." xml:space="preserve">
+    <value>Yrglstrglrdrgly's brglrd mrgl trglrdrgly's chrglrt prglst rglch drgly.</value>
+  </data>
+  <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
+    <value>Drglgrglst prglsts rglftrgl wrglkly Srglndrgly swrglp. Mrglglgl.</value>
+  </data>
+  <data name="This channel was updated to receive notifications for the {0} community in PIU Scores!" xml:space="preserve">
+    <value>Mrgl! Drgls chrglnnrgl grglts {0} cmrglmrglnrglty nrglws mrgln PIU Scores!</value>
+  </data>
+  <data name="This channel no longer receives notifications for the {0} community in PIU Scores" xml:space="preserve">
+    <value>Drgls chrglnnrgl nrgl mrglr grglts {0} cmrglmrglnrglty nrglws mrgln PIU Scores. Mrglll...</value>
+  </data>
+  <data name="Official Leaderboards" xml:space="preserve">
+    <value>Prglrglblublurg Glorgmurgmurgls</value>
+  </data>
+  <data name="That command isn't available yet." xml:space="preserve">
+    <value>Thrglt crglmmrglnd nrglt rrglrdy yrglt. Mrgl.</value>
+  </data>
+  <data name="{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} Max Combo" xml:space="preserve">
+    <value>{0:N0} Mrglubrgls, {1:N0} Grglts, {2:N0} Grgds, {3:N0} Brglds, {4:N0} Mrglsses, {5:N0} Mrglx Crglmbo</value>
+  </data>
+  <data name="{0:N0} Lost to Greats ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lrglst mrgl Grglts ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Goods ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lrglst mrgl Grgds ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Bads ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lrglst mrgl Brglds ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Misses ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lrglst mrgl Mrglsses ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Combo ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lrglst mrgl Crglmbo ({1}%)</value>
+  </data>
+  <data name="{0:N0} Estimated Arrow Presses" xml:space="preserve">
+    <value>{0:N0} Mrglstrglmrglted Rglrrow Prglsses</value>
+  </data>
+  <data name="That scoring configuration is invalid." xml:space="preserve">
+    <value>Thrglt scrglrng crglnfrglg mrgls brglkn. Mrgl!</value>
+  </data>
+  <data name="Give a song name." xml:space="preserve">
+    <value>Grglve srglng nrglme. Mrgl.</value>
+  </data>
+  <data name="No chart found for &quot;{0}&quot; on {1}." xml:space="preserve">
+    <value>Nrgl chrglrt frglnd frglr &quot;{0}&quot; rgln {1}. Mrglll...</value>
+  </data>
+  <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
+    <value>Prglck drglffrglclty frglm lrglst frglr brglkdrglwn mrgl srglmrgllr chrglrts.</value>
+  </data>
+  <data name="Scoring level **{0:0.0}** (listed {1})" xml:space="preserve">
+    <value>Scrglrng lrglvrgl **{0:0.0}** (lrglsted {1})</value>
+  </data>
+  <data name="Pass **{0}**" xml:space="preserve">
+    <value>Prglss **{0}**</value>
+  </data>
+  <data name="Similar charts" xml:space="preserve">
+    <value>Srglmrgllr chrglrts</value>
+  </data>
+  <data name="Open chart page" xml:space="preserve">
+    <value>Rglpen chrglrt prglge</value>
+  </data>
+  <data name="No charts matched those settings." xml:space="preserve">
+    <value>Nrgl chrglrts mrglched thrglse srglttrglngs.</value>
+  </data>
+  <data name="Drew 1 chart" xml:space="preserve">
+    <value>Drrglw 1 chrglrt</value>
+  </data>
+  <data name="Drew {0} charts" xml:space="preserve">
+    <value>Drrglw {0} chrglrts</value>
+  </data>
+  <data name="Drew {0} — {1}" xml:space="preserve">
+    <value>Drrglw {0} — {1}</value>
+  </data>
+  <data name="Your saved randomizer settings" xml:space="preserve">
+    <value>Yrglr srglved rrglndrglmrglzer srglttrglngs</value>
+  </data>
+  <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
+    <value>{0} · lrglvrgls {1}–{2} · {3}</value>
+  </data>
+  <data name="Co-op" xml:space="preserve">
+    <value>Crgl-rglp</value>
+  </data>
+  <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
+    <value>Yrgl drglnt hrglve prrglsrglt &quot;{0}&quot;. Mrgl.</value>
+  </data>
+  <data name="&quot;{0}&quot; didn't match any charts right now." xml:space="preserve">
+    <value>&quot;{0}&quot; mrglched nrgl chrglrts. Mrglll...</value>
+  </data>
+  <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
+    <value>Nrgl srglggrglstions. Trrgly drglffrglrent grglal mrgl mrglport mrglr scrglres. Mrgl!</value>
+  </data>
+  <data name="Suggested for you — {0}" xml:space="preserve">
+    <value>Srglggrglsted frglr yrgl — {0}</value>
+  </data>
+  <data name="based on your scores" xml:space="preserve">
+    <value>brglsed rgln yrglr scrglres</value>
+  </data>
+  <data name="Open Suggested Charts" xml:space="preserve">
+    <value>Rglpen Srglggrglsted Chrglrts</value>
+  </data>
+  <data name="Done — this channel now receives {0} for {1}." xml:space="preserve">
+    <value>Drglne — drgls chrglnnrgl nrglw grglts {0} frglr {1}. Mrgl!</value>
+  </data>
+  <data name="Unknown feed." xml:space="preserve">
+    <value>Rglnknrglwn frgld. Mrgl?</value>
+  </data>
+  <data name="Pick a mix." xml:space="preserve">
+    <value>Prglck mrglx. Mrgl.</value>
+  </data>
+  <data name="Give a community name or an invite code." xml:space="preserve">
+    <value>Grglve cmrglmrglnrglty nrglme mrgl mrglnvrglte crglde.</value>
+  </data>
+  <data name="Done — this channel is registered for that community." xml:space="preserve">
+    <value>Drglne — chrglnnrgl rrglgrglstered frglr cmrglmrglnrglty. Mrgl!</value>
+  </data>
+  <data name="That community wasn't found, or the invite code is wrong." xml:space="preserve">
+    <value>Cmrglmrglnrglty nrglt frglnd, mrgl crglde rgls wrrglng. Mrglll...</value>
+  </data>
+  <data name="You need the Manage Channels permission in this server to do that." xml:space="preserve">
+    <value>Yrgl nrgld Mrglnage Chrglnnels prglrmission. Mrgl!</value>
+  </data>
+  <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
+    <value>Crglnt prglst hrglre yrglt — grglve Vrglew Chrglnnel mrgl Srglnd Mrglssages prglrms, thrgln trrgly rglgain. Mrgl!</value>
+  </data>
+  <data name="Removed {0} for {1} from this channel." xml:space="preserve">
+    <value>Rrglmrglved {0} frglr {1}. Mrgl.</value>
+  </data>
+  <data name="That feed wasn't registered here." xml:space="preserve">
+    <value>Thrglt frgld wrglsnt hrglre. Mrgl?</value>
+  </data>
+  <data name="Removed the {0} community feed from this channel." xml:space="preserve">
+    <value>Rrglmrglved {0} cmrglmrglnrglty frgld. Mrgl.</value>
+  </data>
+  <data name="That community registration wasn't found." xml:space="preserve">
+    <value>Thrglt rrglgrglstrrgltion nrglt frglnd. Mrglll...</value>
+  </data>
+  <data name="Pick a registration to remove from the list." xml:space="preserve">
+    <value>Prglck rrglgrglstrrgltion frglm lrglst. Mrgl.</value>
+  </data>
+  <data name="This channel isn't registered for anything yet. Use /piu register to add a feed." xml:space="preserve">
+    <value>Chrglnnrgl rrglgrglstered frglr nrglthing. Mrgl /piu register!</value>
+  </data>
+  <data name="This channel receives" xml:space="preserve">
+    <value>Drgls chrglnnrgl grglts</value>
+  </data>
+  <data name="Remove one with /piu unregister" xml:space="preserve">
+    <value>Rrglmrglve wrglth /piu unregister. Mrgl.</value>
+  </data>
+  <data name="PIU Scores tools" xml:space="preserve">
+    <value>PIU Scores trglls</value>
+  </data>
+  <data name="Calculate a Phoenix score from a result screen" xml:space="preserve">
+    <value>Crglcrgllate Phoenix scrglre frglm rrglsrglt scrgleen</value>
+  </data>
+  <data name="Find a chart and its pages" xml:space="preserve">
+    <value>Frglnd chrglrt mrgl prglges</value>
+  </data>
+  <data name="Draw a random set of charts" xml:space="preserve">
+    <value>Drrglw rrglndom chrglrts</value>
+  </data>
+  <data name="Personalized chart suggestions (private)" xml:space="preserve">
+    <value>Prglrsonal chrglrt srglggrglstions (prrglvate)</value>
+  </data>
+  <data name="Register this channel for a feed" xml:space="preserve">
+    <value>Rrglgrglster chrglnnrgl frglr frgld</value>
+  </data>
+  <data name="Community score and title notifications" xml:space="preserve">
+    <value>Cmrglmrglnrglty scrglre mrgl trgltle nrglws</value>
+  </data>
+  <data name="Weekly Charts — results and the new lineup" xml:space="preserve">
+    <value>Mrglrgly chrglrts — rrglsrglts mrgl nrglw lrglnrglp</value>
+  </data>
+  <data name="Daily Step — yesterday's board and today's chart" xml:space="preserve">
+    <value>Drglrgly Strglp — yrglstrglrday brglrd mrgl trglday chrglrt</value>
+  </data>
+  <data name="Official leaderboards — the weekly digest" xml:space="preserve">
+    <value>Prglrglblublurg Glorgmurgmurgls — wrglkly drglgrglst</value>
+  </data>
+  <data name="Stop one of this channel's feeds" xml:space="preserve">
+    <value>Strglp chrglnnrgl frgld</value>
+  </data>
+  <data name="Show what this channel is registered for" xml:space="preserve">
+    <value>Shrglw chrglnnrgl rrglgrglstrrgltions</value>
+  </data>
+  <data name="Song name" xml:space="preserve">
+    <value>Srglng nrglme</value>
+  </data>
+  <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
+    <value>Whrglch mrglx (drglfrglt Phoenix 2)</value>
+  </data>
+  <data name="Which mix" xml:space="preserve">
+    <value>Whrglch mrglx</value>
+  </data>
+  <data name="How many (1–10, default 3)" xml:space="preserve">
+    <value>Hrglw mrglny (1–10, drglfrglt 3)</value>
+  </data>
+  <data name="Chart type (default Singles)" xml:space="preserve">
+    <value>Chrglrt trglpe (drglfrglt Srglngles)</value>
+  </data>
+  <data name="Singles or Doubles" xml:space="preserve">
+    <value>Srglngles mrgl Drglbles</value>
+  </data>
+  <data name="Lowest level" xml:space="preserve">
+    <value>Lrglwest lrglvrgl</value>
+  </data>
+  <data name="Highest level" xml:space="preserve">
+    <value>Hrglghest lrglvrgl</value>
+  </data>
+  <data name="One of your saved randomizer presets" xml:space="preserve">
+    <value>Yrglr srglved rrglndrglmrglzer prrglsrglt</value>
+  </data>
+  <data name="What to work on (default Title Hunt)" xml:space="preserve">
+    <value>Whrglt trgl wrglrk rgln (drglfrglt Trgltle Hrglnt)</value>
+  </data>
+  <data name="Community name" xml:space="preserve">
+    <value>Cmrglmrglnrglty nrglme</value>
+  </data>
+  <data name="Invite code (private communities only)" xml:space="preserve">
+    <value>Mrglnvrglte crglde (prrglvate rglnly)</value>
+  </data>
+  <data name="Language for this channel's posts (default English)" xml:space="preserve">
+    <value>Lrglngrglge frglr chrglnnrgl prglsts (drglfrglt Mrglglsh)</value>
+  </data>
+  <data name="Perfect count" xml:space="preserve">
+    <value>Mrglubrgl crglnt</value>
+  </data>
+  <data name="Great count" xml:space="preserve">
+    <value>Grglt crglnt</value>
+  </data>
+  <data name="Good count" xml:space="preserve">
+    <value>Grgd crglnt</value>
+  </data>
+  <data name="Bad count" xml:space="preserve">
+    <value>Brgld crglnt</value>
+  </data>
+  <data name="Miss count" xml:space="preserve">
+    <value>Mrglss crglnt</value>
+  </data>
+  <data name="Max combo" xml:space="preserve">
+    <value>Mrglx crglmbo</value>
+  </data>
+  <data name="Calories burned (optional — estimates step count)" xml:space="preserve">
+    <value>Crgllrglrgles brglrned (rglptional)</value>
+  </data>
+  <data name="Which registration to remove" xml:space="preserve">
+    <value>Whrglch rrglgrglstrrgltion trgl rrglmrglve</value>
+  </data>
+  <data name="Weekly Charts — final board" xml:space="preserve">
+    <value>Mrglrgly chrglrts — frglnal brglrd</value>
+  </data>
+  <data name="{0} players · week of {1}" xml:space="preserve">
+    <value>{0} plrglrs · wrglk rglf {1}</value>
+  </data>
+  <data name="Card {0} of {1}" xml:space="preserve">
+    <value>Crglrd {0} rglf {1}</value>
+  </data>
+  <data name="{0} more charts had entries" xml:space="preserve">
+    <value>{0} mrglr chrglrts hrgld rglntrgls</value>
+  </data>
+  <data name="one per level bucket" xml:space="preserve">
+    <value>rglne prgl lrglvrgl brglcket</value>
+  </data>
+  <data name="The new board is being drawn." xml:space="preserve">
+    <value>Nrglw brglrd brglng drrglwn. Mrgl...</value>
+  </data>
+  <data name="resets Monday midnight ET" xml:space="preserve">
+    <value>rrglsets Mrglndrgly mrgldnrglght ET</value>
+  </data>
+  <data name="Yesterday" xml:space="preserve">
+    <value>Yrglstrglrdrgly</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Trglday</value>
+  </data>
+  <data name="Limbo (lowest passing won)" xml:space="preserve">
+    <value>Lrglmbo (lrglwest prglss wrgln)</value>
+  </data>
+  <data name="**Limbo Day** — lowest passing score wins. No breaking." xml:space="preserve">
+    <value>**Lrglmbo Drgly** — lrglwest prglss scrglre wrglns. Nrgl brrglking. Mrgl!</value>
+  </data>
+  <data name="Highest score wins." xml:space="preserve">
+    <value>Hrglghest scrglre wrglns.</value>
+  </data>
+  <data name="yesterday's board settled" xml:space="preserve">
+    <value>yrglstrglrday brglrd srglttled</value>
+  </data>
+  <data name="resets midnight ET" xml:space="preserve">
+    <value>rrglsets mrgldnrglght ET</value>
+  </data>
+  <data name="Daily Step board" xml:space="preserve">
+    <value>Drglrgly Strglp brglrd</value>
+  </data>
+  <data name="This week on the official boards" xml:space="preserve">
+    <value>Thrgls wrglk rgln thrgl Prglrglblublurg Glorgmurgmurgls</value>
+  </data>
+  <data name="vs {0}" xml:space="preserve">
+    <value>vrgls {0}</value>
+  </data>
+  <data name="first week" xml:space="preserve">
+    <value>frglrst wrglk</value>
+  </data>
+  <data name="swept Sunday" xml:space="preserve">
+    <value>swrglpt Srglndrgly</value>
+  </data>
+  <data name="PUMBILITY top 10" xml:space="preserve">
+    <value>PUMBILITY trglp 10</value>
+  </data>
+  <data name="PUMBILITY movers" xml:space="preserve">
+    <value>PUMBILITY mrglvers</value>
+  </data>
+  <data name="Boards climbed" xml:space="preserve">
+    <value>Brglrds clrglmbed</value>
+  </data>
+  <data name="**{0}** climbed {1} boards (+{2})" xml:space="preserve">
+    <value>**{0}** clrglmbed {1} brglrds (+{2})</value>
+  </data>
+  <data name="World firsts &amp; new #1s" xml:space="preserve">
+    <value>Wrglrld frglrsts &amp; nrglw #1s</value>
+  </data>
+  <data name="First **{0}** — **{1}** in the {2} folder · {3:N0}" xml:space="preserve">
+    <value>Frglrst **{0}** — **{1}** rgln {2} frglder · {3:N0}</value>
+  </data>
+  <data name="First **{0}** — **{1}** on {2} · {3:N0}" xml:space="preserve">
+    <value>Frglrst **{0}** — **{1}** rgln {2} · {3:N0}</value>
+  </data>
+  <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
+    <value>Nrglw #1 — **{0}** rgln {1} · {2:N0}</value>
+  </data>
+  <data name=", dethroning {0}" xml:space="preserve">
+    <value>, drglthrrglning {0}</value>
+  </data>
+  <data name="To make the top 1000" xml:space="preserve">
+    <value>Trgl mrglke thrgl trglp 1000</value>
+  </data>
+  <data name="**50× AAA at Lv.{0}**" xml:space="preserve">
+    <value>**50× AAA rglt Lv.{0}**</value>
+  </data>
+  <data name="**50× SSS at Lv.{0}**" xml:space="preserve">
+    <value>**50× SSS rglt Lv.{0}**</value>
+  </data>
+  <data name="PIU Scores official mirror" xml:space="preserve">
+    <value>PIU Scores rglffrglcial mrglrror</value>
+  </data>
+  <data name="This week" xml:space="preserve">
+    <value>Thrgls wrglk</value>
+  </data>
+  <data name="What it takes" xml:space="preserve">
+    <value>Whrglt rglt trglkes</value>
+  </data>
+  <data name="a chart" xml:space="preserve">
+    <value>rgl chrglrt</value>
+  </data>
+  <data name="**{0}** completed" xml:space="preserve">
+    <value>**{0}** cmrglplrglted</value>
+  </data>
+  <data name="**{0}** paragon → {1}" xml:space="preserve">
+    <value>**{0}** prglrglgon → {1}</value>
+  </data>
+  <data name="1 title" xml:space="preserve">
+    <value>1 trgltle</value>
+  </data>
+  <data name="{0} titles" xml:space="preserve">
+    <value>{0} trgltles</value>
+  </data>
+  <data name="1 paragon" xml:space="preserve">
+    <value>1 prglrglgon</value>
+  </data>
+  <data name="{0} paragons" xml:space="preserve">
+    <value>{0} prglrglgons</value>
+  </data>
+  <data name="See more" xml:space="preserve">
+    <value>Srgle mrglr</value>
+  </data>
+  <data name="passed {0:N0} · upscored {1:N0}" xml:space="preserve">
+    <value>prglssed {0:N0} · rglpscored {1:N0}</value>
+  </data>
+  <data name="passed 1 chart" xml:space="preserve">
+    <value>prglssed 1 chrglrt</value>
+  </data>
+  <data name="passed {0:N0} charts" xml:space="preserve">
+    <value>prglssed {0:N0} chrglrts</value>
+  </data>
+  <data name="upscored 1 chart" xml:space="preserve">
+    <value>rglpscored 1 chrglrt</value>
+  </data>
+  <data name="upscored {0:N0} charts" xml:space="preserve">
+    <value>rglpscored {0:N0} chrglrts</value>
+  </data>
+  <data name="updated 1 chart" xml:space="preserve">
+    <value>rglpdated 1 chrglrt</value>
+  </data>
+  <data name="updated {0:N0} charts" xml:space="preserve">
+    <value>rglpdated {0:N0} chrglrts</value>
+  </data>
+  <data name="**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**Singles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**Srglngles cmrglprgltrgltive** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**Doubles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**Drglbles cmrglprgltrgltive** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**All passed!**" xml:space="preserve">
+    <value>**Rglll prglssed! Mrgl!**</value>
+  </data>
+  <data name="**All {0} or better**" xml:space="preserve">
+    <value>**Rglll {0} rglr brglttrgl**</value>
+  </data>
+  <data name="**#{0}** on {1} {2} weekly" xml:space="preserve">
+    <value>**#{0}** rgln {1} {2} mrglrgly</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
+    <value>**#{0}** rgln {1} {2} Drglrgly Strglp</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step (Limbo)" xml:space="preserve">
+    <value>**#{0}** rgln {1} {2} Drglrgly Strglp (Lrglmbo)</value>
+  </data>
+  <data name="{0} {1}% → **{2}%**" xml:space="preserve">
+    <value>{0} {1}% → **{2}%**</value>
+  </data>
+  <data name="More scores" xml:space="preserve">
+    <value>Mrglr scrglres</value>
+  </data>
+  <data name="+{0} more: {1}" xml:space="preserve">
+    <value>+{0} mrglr: {1}</value>
+  </data>
+  <data name="\* = reclears" xml:space="preserve">
+    <value>\* = rrglclears</value>
+  </data>
+  <data name="#{0} in your PUMBILITY" xml:space="preserve">
+    <value>#{0} rgln yrglr PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY top 50" xml:space="preserve">
+    <value>PUMBILITY trglp 50</value>
+  </data>
+  <data name="Top scores among peers" xml:space="preserve">
+    <value>Trglp scrglres rglmong prglrs</value>
+  </data>
+  <data name="PG · {0} of {1} peers have it" xml:space="preserve">
+    <value>PG · {0} rglf {1} prglrs hrglve rglt</value>
+  </data>
+  <data name="#{0} of {1} peers" xml:space="preserve">
+    <value>#{0} rglf {1} prglrs</value>
+  </data>
+  <data name="Folder debut" xml:space="preserve">
+    <value>Frglder drglbrglt</value>
+  </data>
+  <data name="Raised competitive level" xml:space="preserve">
+    <value>Rrglsed cmrglprgltrgltive lrglvrgl</value>
+  </data>
+  <data name="Biggest gain of the session" xml:space="preserve">
+    <value>Brglggest grgln rglf thrgl srglssion</value>
+  </data>
+  <data name="Title progress" xml:space="preserve">
+    <value>Trgltle prrglgress</value>
+  </data>
+  <data name="First" xml:space="preserve">
+    <value>Frglrst</value>
+  </data>
+  <data name="Second" xml:space="preserve">
+    <value>Srglcond</value>
+  </data>
+  <data name="Third" xml:space="preserve">
+    <value>Thrglrd</value>
+  </data>
+  <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
+    <value>{0} scrglred {1} {2} rgln {3}'s {4} {5} UCS. Mrgl!</value>
+  </data>
   <data name="Hot Streak" xml:space="preserve">
     <value>Hot Mrgl Streak</value>
   </data>
@@ -5024,5 +5516,188 @@
   </data>
   <data name="{0}y old" xml:space="preserve">
     <value>{0} mrgl?</value>
+  </data>
+  <data name="Imported" xml:space="preserve">
+    <value>Imported</value>
+  </data>
+  <data name="Photo proof" xml:space="preserve">
+    <value>Photo proof</value>
+  </data>
+  <data name="#{0} / {1}" xml:space="preserve">
+    <value>#{0} / {1}</value>
+  </data>
+  <data name="Back to Weekly Charts" xml:space="preserve">
+    <value>Back to Weekly Charts</value>
+  </data>
+  <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
+    <value>Broken plays score 0 — pass it to score it.</value>
+  </data>
+  <data name="Charts Not Yet Featured" xml:space="preserve">
+    <value>Charts Not Yet Featured</value>
+  </data>
+  <data name="Charts not yet featured" xml:space="preserve">
+    <value>Charts not yet featured</value>
+  </data>
+  <data name="Co-op earns no PUMBILITY; the Co-Op view ranks raw score." xml:space="preserve">
+    <value>Co-op earns no PUMBILITY; the Co-Op view ranks raw score.</value>
+  </data>
+  <data name="Counted" xml:space="preserve">
+    <value>Counted</value>
+  </data>
+  <data name="Daily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="Density" xml:space="preserve">
+    <value>Density</value>
+  </data>
+  <data name="Every eligible chart has been featured." xml:space="preserve">
+    <value>Every eligible chart has been featured.</value>
+  </data>
+  <data name="Grade multipliers" xml:space="preserve">
+    <value>Grade multipliers</value>
+  </data>
+  <data name="How Scoring Works" xml:space="preserve">
+    <value>How Scoring Works</value>
+  </data>
+  <data name="Level {0}" xml:space="preserve">
+    <value>Level {0}</value>
+  </data>
+  <data name="Limbo" xml:space="preserve">
+    <value>Limbo</value>
+  </data>
+  <data name="Limbo — lowest pass wins" xml:space="preserve">
+    <value>Limbo — lowest pass wins</value>
+  </data>
+  <data name="Monthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="Not played yet" xml:space="preserve">
+    <value>Not played yet</value>
+  </data>
+  <data name="Plate bonuses" xml:space="preserve">
+    <value>Plate bonuses</value>
+  </data>
+  <data name="Play today's Step to start your streak." xml:space="preserve">
+    <value>Play today's Step to start your streak.</value>
+  </data>
+  <data name="Process Weekly Charts" xml:space="preserve">
+    <value>Process Weekly Charts</value>
+  </data>
+  <data name="Scores land here as boards close." xml:space="preserve">
+    <value>Scores land here as boards close.</value>
+  </data>
+  <data name="Sign in to record scores, track your standings and keep your Daily Step history." xml:space="preserve">
+    <value>Sign in to record scores, track your standings and keep your Daily Step history.</value>
+  </data>
+  <data name="The rules" xml:space="preserve">
+    <value>The rules</value>
+  </data>
+  <data name="This week's charts post Monday at midnight ET." xml:space="preserve">
+    <value>This week's charts post Monday at midnight ET.</value>
+  </data>
+  <data name="Ties break by total raw score." xml:space="preserve">
+    <value>Ties break by total raw score.</value>
+  </data>
+  <data name="Top scores" xml:space="preserve">
+    <value>Top scores</value>
+  </data>
+  <data name="Week" xml:space="preserve">
+    <value>Week</value>
+  </data>
+  <data name="Week {0} — best {1} count · PUMBILITY" xml:space="preserve">
+    <value>Week {0} — best {1} count · PUMBILITY</value>
+  </data>
+  <data name="Your Daily Step History" xml:space="preserve">
+    <value>Your Daily Step History</value>
+  </data>
+  <data name="Your best 4 scores per week of the month count." xml:space="preserve">
+    <value>Your best 4 scores per week of the month count.</value>
+  </data>
+  <data name="current" xml:space="preserve">
+    <value>current</value>
+  </data>
+  <data name="last 14 days" xml:space="preserve">
+    <value>last 14 days</value>
+  </data>
+  <data name="resets in {0}" xml:space="preserve">
+    <value>resets in {0}</value>
+  </data>
+  <data name="show all {0}" xml:space="preserve">
+    <value>show all {0}</value>
+  </data>
+  <data name="show suggested only" xml:space="preserve">
+    <value>show suggested only</value>
+  </data>
+  <data name="showing suggested" xml:space="preserve">
+    <value>showing suggested</value>
+  </data>
+  <data name="suggested left" xml:space="preserve">
+    <value>suggested left</value>
+  </data>
+  <data name="{0} charts · rotates Monday midnight ET" xml:space="preserve">
+    <value>{0} charts · rotates Monday midnight ET</value>
+  </data>
+  <data name="{0} on board" xml:space="preserve">
+    <value>{0} on board</value>
+  </data>
+  <data name="{0}d {1}h" xml:space="preserve">
+    <value>{0}d {1}h</value>
+  </data>
+  <data name="{0}h {1}m" xml:space="preserve">
+    <value>{0}h {1}m</value>
+  </data>
+  <data name="{0}m" xml:space="preserve">
+    <value>{0}m</value>
+  </data>
+  <data name="Add photo" xml:space="preserve">
+    <value>Add photo</value>
+  </data>
+  <data name="Importing with your PIUGAME login records scores automatically — manual entry is the fallback." xml:space="preserve">
+    <value>Importing with your PIUGAME login records scores automatically — manual entry is the fallback.</value>
+  </data>
+  <data name="Optional — a photo is your proof if a score's legitimacy is ever disputed." xml:space="preserve">
+    <value>Optional — a photo is your proof if a score's legitimacy is ever disputed.</value>
+  </data>
+  <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
+    <value>Rotate this week's board now? This closes the current week and draws the next set.</value>
+  </data>
+  <data name="Rotation started." xml:space="preserve">
+    <value>Rotation started.</value>
+  </data>
+  <data name="Suspected cheaters will be required to attach photos for future competition entries." xml:space="preserve">
+    <value>Suspected cheaters will be required to attach photos for future competition entries.</value>
+  </data>
+  <data name="There was an error while recording the score." xml:space="preserve">
+    <value>There was an error while recording the score.</value>
+  </data>
+  <data name="There was an error while uploading your image, please try again." xml:space="preserve">
+    <value>There was an error while uploading your image, please try again.</value>
+  </data>
+  <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
+    <value>Your file was larger than 10MB, please reduce it and try again.</value>
+  </data>
+  <data name="Weekly Charts — Pump It Up" xml:space="preserve">
+    <value>Weekly Charts — Pump It Up</value>
+  </data>
+  <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
+    <value>{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board.</value>
+  </data>
+  <data name="Full board" xml:space="preserve">
+    <value>Whole arglmrgl</value>
+  </data>
+  <data name="top {0} of {1}" xml:space="preserve">
+    <value>trgp {0} of {1}</value>
+  </data>
+  <data name="Week {0} — best {1} count · raw score" xml:space="preserve">
+    <value>Week {0} — best {1} count · raw scrgl</value>
+  </data>
+  <data name="Leave empty if broken." xml:space="preserve">
+    <value>Leave emptrgl if brokrgn.</value>
+  </data>
+  <data name="1 Player" xml:space="preserve">
+    <value>1 Playrgl</value>
+  </data>
+  <data name="{0} Players" xml:space="preserve">
+    <value>{0} Playrgls</value>
   </data>
 </root>

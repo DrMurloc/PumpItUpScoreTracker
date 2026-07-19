@@ -1,37 +1,47 @@
-﻿@using System.ComponentModel.DataAnnotations
+@using System.ComponentModel.DataAnnotations
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services.Theming
 @using Align = MudBlazor.Align
 @namespace ScoreTracker.Web.Components
-<MudTooltip Text=@(ShowTextAsTooltip?Text:ShowScore && string.IsNullOrWhiteSpace(Text)?RankingString:ScoreString) ShowOnFocus="true">
-        
-    @if (Score != null)
-    {
-        <MudImage tabindex="0" Src="@LetterGradeImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-
-    }
-    @if (Plate != null)
-    {
-        <MudImage tabindex="0" Src="@PlateImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-
-    }
-    @if (ShowScore && Score!=null && string.IsNullOrWhiteSpace(Text))
-    {
-        <MudText tabindex="0" Align="Align.Center" Style=@(OneLine?$"{RankingColor}display:inline;padding-left:5px;vertical-align:top;":$"{RankingColor}vertical-align:top;")>
-            @ScoreString
-        </MudText>
-    }
-    @if (!string.IsNullOrWhiteSpace(Text) && !ShowTextAsTooltip)
-    {
-        <MudText tabindex="0" Align="Align.Center" Style=@(OneLine?$"{RankingColor}display:inline;padding-left:5px;vertical-align:top;":$"{RankingColor}vertical-align:top;")>
-            @Text
-        </MudText>
-    }
-    
-</MudTooltip>
+@* MudTooltip renders a popover, which throws in static SSR (no provider in the static tree).
+   The tooltip only carries hover text, so a static render drops it and keeps the grade, plate
+   and score; in a circuit it comes back. *@
+@if (RendererInfo.IsInteractive)
+{
+    <MudTooltip Text=@(ShowTextAsTooltip?Text:ShowScore && string.IsNullOrWhiteSpace(Text)?RankingString:ScoreString) ShowOnFocus="true">
+        @Body
+    </MudTooltip>
+}
+else
+{
+    @Body
+}
 @code {
+    private RenderFragment Body => @<text>
+        @if (Score != null)
+        {
+            <MudImage tabindex="0" Src="@LetterGradeImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        }
+        @if (Plate != null)
+        {
+            <MudImage tabindex="0" Src="@PlateImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+        }
+        @if (ShowScore && Score != null && string.IsNullOrWhiteSpace(Text))
+        {
+            <MudText tabindex="0" Align="Align.Center" Style=@(OneLine?$"{RankingColor}display:inline;padding-left:5px;vertical-align:top;":$"{RankingColor}vertical-align:top;")>
+                @ScoreString
+            </MudText>
+        }
+        @if (!string.IsNullOrWhiteSpace(Text) && !ShowTextAsTooltip)
+        {
+            <MudText tabindex="0" Align="Align.Center" Style=@(OneLine?$"{RankingColor}display:inline;padding-left:5px;vertical-align:top;":$"{RankingColor}vertical-align:top;")>
+                @Text
+            </MudText>
+        }
+    </text>;
+
     [Parameter]
     public PhoenixScore? Score { get; set; }
 
@@ -62,7 +72,7 @@
     private string RankingString => Ranking == null ? "" : L["X% of Y Comparable Players", (Ranking.Ranking * 100.0).ToString("N1"), Ranking.PlayerCount].Value;
     private string ScoreString => (Score == null ? "" : ((int)Score).ToString("N0"));
     private string BrokenPiece => IsBroken ? "_broken" : "";
-    private string LetterGradeImage => 
+    private string LetterGradeImage =>
         $"https://piuimages.arroweclip.se/letters/{Score?.LetterGrade.ToString().ToLower()}{BrokenPiece}.png";
 
     private string PlateImage => $"https://piuimages.arroweclip.se/plates/{Plate?.GetShorthand().ToLower()}.png";

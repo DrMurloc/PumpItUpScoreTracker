@@ -116,7 +116,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | Table | Purpose |
 |---|---|
 | `scores.WeeklyTournamentChart` | The active weekly chart set per mix, with expiration |
-| `scores.WeeklyUserEntry` | Player entries per mix: score, plate, verification |
+| `scores.WeeklyUserEntry` | Player entries per mix: score, plate, optional photo proof, trust source (official import vs manual self-report) |
 | `scores.UserWeeklyPlacing` | Historical placements from finished weeks, per mix |
 | `scores.PastTourneyCharts` | Archive of previously used weekly charts per mix (avoids repeats; PK ChartId+MixId) |
 | `scores.DailyStepChart` | The one live Daily Step chart per mix (0–1 rows): ChartId, ForDate, IsLimbo, ExpirationDate. Redrawn each midnight-ET rotation |
@@ -154,8 +154,9 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.Community` | Communities with privacy type and regional flag; `DefaultAdminPermissions` (CommunityPermission flags applied to newly promoted admins) and `DefaultLanguage` (Discord-notification fallback culture) |
 | `scores.CommunityMembership` | Community membership + role overlay: `Role` (CommunityRole — Creator/Admin/Member/Banned; a Banned row is retained to block rejoin), `Permissions` (CommunityPermission flags, admins only), `GrantedByUserId`, `JoinedAt` |
 | `scores.CommunityInviteCode` | Invite codes, optionally expiring |
-| `scores.CommunityChannel` | Discord channels wired to a community's event feed |
+| `scores.CommunityChannel` | Discord channels wired to a community's event feed. Every registered channel receives every community notification — the old per-type opt-in columns (`SendNewScores`/`SendTitles`/`SendNewMembers`) were never honored and were dropped. `Culture` (nullable, null = English) is the language the channel's cards render in |
 | `scores.CommunityHighlight` | Community big-wins feed: one summary row per (score-event × community the winner belongs to), `Payload` a JSON list of `SignificantWin`, `EventId` dedupes across shared communities. Written by the highlight saga off `ScoreHighlightsCapturedEvent`, purged weekly after 30 days ([home-page-widgets §7](design/home-page-widgets.md)) |
+| `scores.DiscordFeedSubscription` | A channel's subscription to a broadcast feed, independent of any community: `ChannelId`, `FeedKind` (WeeklyCharts/DailyStep/OfficialLeaderboards), `Mix` (per-mix), `RegisteredByDiscordUserId`, `Culture` (nullable, null = English — the language its posts render in; re-registering updates it). Unique on (ChannelId, FeedKind, Mix); registered via `/piu register` ([discord-overhaul](design/discord-overhaul.md)) |
 
 ## Match subsystem (shared; deprecated, deletion gated on an owner announcement)
 

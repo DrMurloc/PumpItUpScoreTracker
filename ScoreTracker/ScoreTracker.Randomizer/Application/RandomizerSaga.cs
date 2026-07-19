@@ -13,6 +13,7 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.Randomizer.Application
 {
     internal sealed class RandomizerSaga : IRequestHandler<GetRandomChartsQuery, IEnumerable<Chart>>,
+        IRequestHandler<DrawRandomChartsQuery, IEnumerable<Chart>>,
         IRequestHandler<GetIncludedRandomChartsQuery, IEnumerable<Chart>>,
         IRequestHandler<SaveUserRandomSettingsCommand>,
         IRequestHandler<DeleteRandomSettingsCommand>
@@ -137,6 +138,11 @@ namespace ScoreTracker.Randomizer.Application
 
             return calculatedWeights.Where(kv => kv.Value > 0);
         }
+
+        // Published mirror for cross-vertical callers — same draw, no Application reference
+        // leaks out of this vertical.
+        public Task<IEnumerable<Chart>> Handle(DrawRandomChartsQuery request, CancellationToken cancellationToken) =>
+            Handle(new GetRandomChartsQuery(request.Settings, request.Mix), cancellationToken);
 
         public async Task<IEnumerable<Chart>> Handle(GetRandomChartsQuery request, CancellationToken cancellationToken)
         {

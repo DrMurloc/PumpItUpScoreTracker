@@ -1,0 +1,56 @@
+@namespace ScoreTracker.Web.Components.Challenges
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+
+@* How scoring works (weekly-charts-overhaul.md §4.6): rendered straight from the active mix's
+   ScoringConfiguration so the page can never drift from the engine. Phoenix 2 prices grade and
+   plate additively, so it also shows the plate ladder; Phoenix has none. *@
+
+<div class="challenge-legend">
+    <div>
+        <h3>@L["Grade multipliers"]</h3>
+        <div class="challenge-ladder">
+            @foreach (var kv in _scoring.LetterGradeModifiers.OrderByDescending(kv => (int)kv.Key))
+            {
+                <span><LetterGradeIcon Grade="kv.Key" Height="18"></LetterGradeIcon></span>
+                <span>× @kv.Value.ToString("0.00")</span>
+            }
+        </div>
+    </div>
+    @if (_isAdditive)
+    {
+        <div>
+            <h3>@L["Plate bonuses"]</h3>
+            <div class="challenge-ladder">
+                @foreach (var kv in _scoring.PlateModifiers.OrderByDescending(kv => kv.Value))
+                {
+                    <span>@kv.Key.GetShorthand()</span>
+                    <span>+ @kv.Value.ToString("0.000")</span>
+                }
+            </div>
+        </div>
+    }
+    <div>
+        <h3>@L["The rules"]</h3>
+        <ul class="challenge-rules">
+            <li>@L["Your best 4 scores per week of the month count."]</li>
+            <li>@L["Broken plays score 0 — pass it to score it."]</li>
+            <li>@L["Co-op earns no PUMBILITY; the Co-Op view ranks raw score."]</li>
+            <li>@L["Ties break by total raw score."]</li>
+        </ul>
+    </div>
+</div>
+
+@code {
+    [Parameter] public MixEnum Mix { get; set; }
+
+    private ScoringConfiguration _scoring = null!;
+    private bool _isAdditive;
+
+    protected override void OnParametersSet()
+    {
+        _scoring = ScoringConfiguration.PumbilityScoring(Mix, includeCoOp: false);
+        _isAdditive = _scoring.Formula == ScoringConfiguration.CalculationType.GradePlusPlate;
+    }
+}

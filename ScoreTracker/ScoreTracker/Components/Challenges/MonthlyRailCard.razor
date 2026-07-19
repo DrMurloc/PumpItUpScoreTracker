@@ -1,0 +1,122 @@
+@namespace ScoreTracker.Web.Components.Challenges
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.WeeklyChallenge.Contracts
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* The monthly leaderboard as a rail card (weekly-charts-overhaul.md §12.2): all four type
+   boards render — top 20 each, inactive ones hidden — and the tier-list segment row (M18)
+   swaps them client-side with no round trip (M13). Rows carry the player's avatar and CL chip
+   (M16); depth (top-4 chips, counted expansion) lives in the full-board dialog behind the
+   trophy (M14/M21). Static markup; challenge-board.js wires the segment and the trophy. *@
+
+<div class="challenge-railcard" id="monthly">
+    <div class="challenge-railhead">
+        <span class="challenge-kicker">@L["Monthly Leaderboard"]</span>
+        <span class="spacer"></span>
+        <button class="challenge-iconbtn tro" data-challenge-monthly="" title="@L["Full board"]"
+                aria-label="@L["Full board"]">
+            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small"></MudIcon>
+        </button>
+    </div>
+
+    <div class="challenge-seg" role="tablist">
+        @foreach (var slot in Boards)
+        {
+            <button class="challenge-seg-btn @(TypesEqual(slot.Type, ActiveType) ? "on" : "")"
+                    data-mtype="@TypeKey(slot.Type)" role="tab"
+                    aria-selected="@(TypesEqual(slot.Type, ActiveType) ? "true" : "false")">@TypeLabel(slot.Type)</button>
+        }
+    </div>
+
+    @foreach (var slot in Boards)
+    {
+        <div class="challenge-mboard" data-mboard="@TypeKey(slot.Type)"
+             hidden="@(!TypesEqual(slot.Type, ActiveType))">
+            <div class="challenge-railsub">@Subline(slot)</div>
+            @if (!slot.View.Rows.Any())
+            {
+                <div class="challenge-empty">@L["Scores land here as boards close."]</div>
+            }
+            else
+            {
+                <div class="challenge-lb">
+                    @foreach (var row in slot.View.Rows.Take(TopCount))
+                    {
+                        @LbRow(row, slot.View.Rows.Count)
+                    }
+                </div>
+                var mine = slot.View.Rows.FirstOrDefault(r => UserId != null && r.Player?.Id == UserId);
+                @if (mine != null && mine.Place > TopCount)
+                {
+                    <div class="challenge-lb-divider">@L["Your standing"]</div>
+                    <div class="challenge-lb">@LbRow(mine, slot.View.Rows.Count)</div>
+                }
+                <div class="challenge-railfoot">
+                    <span>@L["top {0} of {1}", Math.Min(TopCount, slot.View.Rows.Count), slot.View.Rows.Count]</span>
+                    <span class="spacer"></span>
+                    <button class="challenge-ghostbtn" data-challenge-monthly="">
+                        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small"></MudIcon>@L["Full board"]
+                    </button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private const int TopCount = 20;
+
+    /// <summary>One pre-rendered board per type, in segment order (Combined, S, D, Co-Op).</summary>
+    [Parameter] public IReadOnlyList<MonthlyRailBoard> Boards { get; set; } = Array.Empty<MonthlyRailBoard>();
+
+    /// <summary>The board visible on load (from ?type=); the segment row swaps client-side after.</summary>
+    [Parameter] public ChartType? ActiveType { get; set; }
+
+    [Parameter] public Guid? UserId { get; set; }
+
+    /// <summary>User ids in a community you share — their rows glow green.</summary>
+    [Parameter] public IReadOnlySet<Guid>? CommunityUserIds { get; set; }
+
+    private static bool TypesEqual(ChartType? a, ChartType? b) => a == b;
+
+    internal static string TypeKey(ChartType? type) => type?.ToString() ?? "Combined";
+
+    private string TypeLabel(ChartType? type) => type switch
+    {
+        ChartType.Single => L["Singles"],
+        ChartType.Double => L["Doubles"],
+        ChartType.CoOp => L["Co-Op"],
+        _ => L["Combined"]
+    };
+
+    private string Subline(MonthlyRailBoard slot) => slot.Type == ChartType.CoOp
+        ? L["Week {0} — best {1} count · raw score", slot.View.WeekInMonth, slot.View.CountedPerPlayer]
+        : L["Week {0} — best {1} count · PUMBILITY", slot.View.WeekInMonth, slot.View.CountedPerPlayer];
+
+    private static double Fraction(int place, int total) => total <= 0 ? 0 : 1.0 - (double)place / total;
+
+    private string RowClass(MonthlyLeaderboardRow row) => UserId != null && row.Player?.Id == UserId ? "mine"
+        : CommunityUserIds?.Contains(row.Player?.Id ?? Guid.Empty) == true ? "community" : "";
+
+    private RenderFragment LbRow(MonthlyLeaderboardRow row, int total) =>@<div class="challenge-lb-row @RowClass(row)">
+        <span class="challenge-lb-place" style="@ThemeScales.RarityStyle(Fraction(row.Place, total))">@row.Place</span>
+        <ChallengeAvatar Player="row.Player"></ChallengeAvatar>
+        <span class="challenge-lb-name">
+            @if (row.Player != null)
+            {
+                <UserLabel User="row.Player"></UserLabel>
+            }
+            else
+            {
+                @("—")
+            }
+        </span>
+        @if (row.CompetitiveLevel > 0)
+        {
+            <span class="challenge-cl">@row.CompetitiveLevel.ToString("N2")</span>
+        }
+        <span class="challenge-lb-total">@row.Total.ToString("N0")</span>
+    </div>;
+}

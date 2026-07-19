@@ -13,7 +13,19 @@
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services.Contracts
 @using System.Web
+@using Microsoft.Extensions.Options
+@using ScoreTracker.Data.Configuration
+@inject IOptions<DiscordConfiguration> DiscordConfig
 <PageTitle>@L["Communities"]</PageTitle>
+@if (!string.IsNullOrWhiteSpace(DiscordConfig.Value.ClientId))
+{
+    <MudPaper Class="pa-4 mb-4" Outlined="true">
+        <MudText Typo="Typo.h6">@L["Add the PIU Scores bot to your Discord server"]</MudText>
+        <MudText Typo="Typo.body2" Class="mb-3">@L["Invite the bot, then run /piu register in any channel to start its feeds and commands."]</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SmartToy"
+                   Href="@BotInviteUrl" Target="_blank">@L["Add the bot"]</MudButton>
+    </MudPaper>
+}
 
 <style>
     .communities-dir {
@@ -307,6 +319,11 @@
 @inject IUserRepository Users;
 @inject IUiSettingsAccessor UiSettings;
 @code {
+
+    // Requested scopes: bot + application commands; permissions cover view channel, send
+    // messages, read history, embed links, and use external emoji (the grade/plate bubbles).
+    private string BotInviteUrl =>
+        $"https://discord.com/oauth2/authorize?client_id={DiscordConfig.Value.ClientId}&scope=bot+applications.commands&permissions=347136";
 
     private IEnumerable<CommunityOverviewRecord> _communities = Array.Empty<CommunityOverviewRecord>();
     private ISet<Name> _myCommunities = new HashSet<Name>();

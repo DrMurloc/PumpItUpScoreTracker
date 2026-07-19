@@ -29,6 +29,10 @@ namespace ScoreTracker.Communities.Domain
 
         Task<Community?> GetCommunityByName(Name communityName, CancellationToken cancellationToken);
 
+        /// <summary>Every community this Discord channel is registered to, with its regional flag (may be empty).</summary>
+        Task<IReadOnlyList<ChannelCommunityInfo>> GetChannelCommunities(ulong channelId,
+            CancellationToken cancellationToken);
+
         /// <summary>
         ///     Player-made community count: regional (country) communities excluded, all
         ///     privacy types included. Front-door stat — the implementation caches.

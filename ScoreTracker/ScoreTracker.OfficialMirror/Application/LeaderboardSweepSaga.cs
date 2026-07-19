@@ -8,6 +8,7 @@ using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
+using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Domain;
@@ -45,13 +46,14 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     private readonly IChartRepository _charts;
     private readonly ITierListRepository _tierLists;
     private readonly IDateTimeOffsetAccessor _dateTime;
+    private readonly IBus _bus;
     private readonly ILogger _logger;
 
     public LeaderboardSweepSaga(IOfficialSiteClient officialSite, IOfficialSnapshotRepository snapshots,
         IOfficialRecordRepository records, IOfficialPlayerIdentityRepository identity,
         IOfficialLeaderboardRepository legacy, IChartRepository charts,
         ITierListRepository tierLists, IDateTimeOffsetAccessor dateTime,
-        ILogger<LeaderboardSweepSaga> logger)
+        IBus bus, ILogger<LeaderboardSweepSaga> logger)
     {
         _officialSite = officialSite;
         _snapshots = snapshots;
@@ -61,6 +63,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         _charts = charts;
         _tierLists = tierLists;
         _dateTime = dateTime;
+        _bus = bus;
         _logger = logger;
     }
 
@@ -135,6 +138,9 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
 
         await _snapshots.Seal(snapshotId, _dateTime.Now, ct);
         _logger.LogInformation("{Mix} snapshot {SnapshotId} sealed", mix, snapshotId);
+
+        // The digest feed reads the sealed week's highlights + cutlines; it skips baseline seals.
+        await _bus.Publish(new OfficialSnapshotSealedEvent(mix, isBaseline), ct);
     }
 
     private async Task ComputeHighlights(int snapshotId, MixEnum mix, bool isBaseline, CancellationToken ct)

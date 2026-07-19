@@ -18,5 +18,6 @@ public sealed class CommunitiesModelContribution : IDbModelContribution
         modelBuilder.Entity<CommunityInviteCodeEntity>().ToTable("CommunityInviteCode");
         modelBuilder.Entity<CommunityMembershipEntity>().ToTable("CommunityMembership");
         modelBuilder.Entity<CommunityHighlightEntity>().ToTable("CommunityHighlight");
+        modelBuilder.Entity<DiscordFeedSubscriptionEntity>().ToTable("DiscordFeedSubscription");
     }
 }

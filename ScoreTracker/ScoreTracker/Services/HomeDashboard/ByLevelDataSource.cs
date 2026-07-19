@@ -49,12 +49,13 @@ public sealed class ByLevelDataSource
             ? BuildLegacy(charts,
                 await _mediator.Send(new GetXXBestChartAttemptsQuery(userId, mix), cancellationToken), now)
             : BuildPhoenix(charts,
-                await _mediator.Send(new GetPhoenixRecordsQuery(userId, mix), cancellationToken), now);
+                await _mediator.Send(new GetPhoenixRecordsQuery(userId, mix), cancellationToken), now, mix);
         return (records, ScalesFor(mix));
     }
 
     private static IReadOnlyList<BreakdownRecord> BuildPhoenix(
-        IReadOnlyDictionary<Guid, Chart> charts, IEnumerable<RecordedPhoenixScore> scores, DateTimeOffset now)
+        IReadOnlyDictionary<Guid, Chart> charts, IEnumerable<RecordedPhoenixScore> scores, DateTimeOffset now,
+        MixEnum mix)
     {
         var byChart = scores.GroupBy(s => s.ChartId).ToDictionary(g => g.Key, g => g.First());
         var records = new List<BreakdownRecord>(charts.Count);
@@ -69,7 +70,7 @@ public sealed class ByLevelDataSource
             // Metric values are clear-achievements: a fail contributes only its played flag.
             var passed = !score.IsBroken;
             int? scoreValue = passed && score.Score != null ? (int)score.Score.Value : null;
-            int? gradeRank = passed && score.Score != null ? (int)score.Score.Value.LetterGrade : null;
+            int? gradeRank = passed && score.Score != null ? (int)score.Score.Value.LetterGradeFor(mix) : null;
             int? plateRank = passed && score.Plate != null ? (int)score.Plate.Value : null;
             var age = Math.Max(0, (int)(now - score.RecordedDate).TotalDays);
             records.Add(new BreakdownRecord(Normalize(chart.Type), Bucket(chart), true, passed,

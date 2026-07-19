@@ -1,0 +1,397 @@
+@namespace ScoreTracker.Web.Components.Challenges
+@using MediatR
+@using Microsoft.AspNetCore.Components.Forms
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.WeeklyChallenge.Contracts
+@using ScoreTracker.WeeklyChallenge.Contracts.Commands
+@using ScoreTracker.WeeklyChallenge.Contracts.Messages
+@using ScoreTracker.WeeklyChallenge.Contracts.Queries
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.HomeDashboard
+@using MassTransit
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@implements IDisposable
+
+@* The challenges page's one island (weekly-charts-overhaul.md §3.3): a single interactive root
+   hosting the Record dialog, the shared board + chart-details dialogs, and the admin rotate
+   confirm. The static page's data-challenge-* buttons and chart links reach it through
+   challenge-board.js, which forwards clicks to the JSInvokable openers below. Everything
+   self-loads by chart id — nothing rich crosses the static→interactive boundary. *@
+
+@* ---- Record (Quick Record vocabulary: live grade, plate, prefill, optional weekly photo) ---- *@
+<MudDialog @bind-Visible="_recordOpen" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Record"]@(_recordChart == null ? "" : " — " + _recordChart.Song.Name)</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_savedFlash)
+        {
+            <div class="challenge-empty" style="border:none">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large"/>
+                <MudText Typo="Typo.h6">@L["Recorded"]</MudText>
+            </div>
+        }
+        else if (_recordChart != null)
+        {
+            @if (!_recordIsDaily)
+            {
+                <MudText Typo="Typo.body2" Class="challenge-muted mb-2">
+                    @L["Importing with your PIUGAME login records scores automatically — manual entry is the fallback."]
+                </MudText>
+            }
+            @* Score and plate share a row; the row wraps back to stacked on narrow phones. *@
+            <div class="challenge-record-row">
+                <MudNumericField @ref="_scoreField" T="int?" @bind-Value="_recordScore" Label="@L["Score"]"
+                                 Min="0" Max="1000000" Immediate="true" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                 HideSpinButtons="true" Style="max-width:170px"/>
+                @if (_derivedGrade != null)
+                {
+                    <LetterGradeIcon Grade="_derivedGrade" Height="26"></LetterGradeIcon>
+                }
+                <MudSelect T="PhoenixPlate?" @bind-Value="_recordPlate" Label="@L["Plate"]" Dense="true"
+                           Margin="Margin.Dense" Clearable="true" Style="max-width:170px"
+                           HelperText="@L["Leave empty if broken."]">
+                    @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                    {
+                        <MudSelectItem T="PhoenixPlate?" Value="@((PhoenixPlate?)plate)">@plate.GetShorthand()</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+            @if (!_recordIsDaily)
+            {
+                <div class="mt-3">
+                    @if (_recordPhoto == null)
+                    {
+                        <MudFileUpload T="IBrowserFile" Accept=".png,.gif,.jpg,.jpeg" MaximumFileCount="1"
+                                       FilesChanged="UploadPhoto" Disabled="_uploading">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.PhotoCamera" Disabled="_uploading">
+                                    @L["Add photo"]
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                        <MudText Typo="Typo.caption" Class="challenge-muted d-block mt-1">
+                            @L["Optional — a photo is your proof if a score's legitimacy is ever disputed."]
+                        </MudText>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-center gap-2">
+                            <MudImage Src="@_recordPhoto.ToString()" Height="42" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                            <MudButton Size="Size.Small" OnClick="() => _recordPhoto = null">@L["Remove"]</MudButton>
+                        </div>
+                    }
+                    @if (_uploading)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary" Class="mt-1"/>
+                    }
+                    <MudText Typo="Typo.caption" Class="challenge-muted d-block mt-2" Style="font-style:italic">
+                        @L["Suspected cheaters will be required to attach photos for future competition entries."]
+                    </MudText>
+                </div>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        @if (!_savedFlash)
+        {
+            <MudButton OnClick="() => _recordOpen = false">@L["Cancel"]</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_submitting || _recordScore == null"
+                       OnClick="SubmitRecord">@L["Submit"]</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@* ---- Full board (the shared dialog: full list, trust ladder, relevant filter) ---- *@
+<LeaderboardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Entries="_boardEntries"
+                   Ascending="_boardAscending" OfficialUserIds="_boardOfficialIds"
+                   CommunityUserIds="_communityIds" InRangeUserIds="_boardInRangeIds"/>
+
+@* ---- The monthly full board (§12.4) ---- *@
+<MonthlyBoardDialog @bind-Visible="_monthlyOpen" View="_monthlyView" Charts="_monthlyCharts"
+                    ActiveType="_monthlyType" UserId="@(CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null)"
+                    Loading="_monthlyLoading" Subtitle="@_monthlySubtitle"
+                    CommunityUserIds="_communityIds" TypeChanged="LoadMonthly"/>
+
+@* ---- Chart details (the shared dialog, video and all) ---- *@
+<ChartDetailsDialog @bind-Visible="_chartOpen" Chart="_detailsChart" Mix="Mix"/>
+
+@* ---- Admin: rotate the week ---- *@
+<MudDialog @bind-Visible="_rotateOpen" Options="_dialogOptions">
+    <TitleContent><MudText Typo="Typo.h6">@L["Process Weekly Charts"]</MudText></TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2">@L["Rotate this week's board now? This closes the current week and draws the next set."]</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _rotateOpen = false">@L["Cancel"]</MudButton>
+        <MudButton Color="Color.Warning" Variant="Variant.Filled" Disabled="_submitting"
+                   OnClick="Rotate">@L["Process Weekly Charts"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ChartCatalogCache ChartCatalog
+@inject CommunityGlowReader CommunityGlow
+@inject IFileUploadClient FileUpload
+@inject IBus Bus
+@inject ISnackbar Snackbar
+@inject ILogger<ChallengeDialogHost> Logger
+@inject NavigationManager NavManager
+@inject IJSRuntime JS
+
+@code {
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    private static readonly DialogOptions _dialogOptions = new()
+        { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseOnEscapeKey = true };
+
+    private const long MaxFileSize = 10_000_000;
+
+    private DotNetObjectReference<ChallengeDialogHost>? _selfRef;
+    private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
+
+    // Record dialog
+    private bool _recordOpen;
+    private bool _recordIsDaily;
+    private Chart? _recordChart;
+    private int? _recordScore;
+    private PhoenixPlate? _recordPlate = PhoenixPlate.SuperbGame;
+    private Uri? _recordPhoto;
+    private bool _uploading;
+    private bool _submitting;
+    private bool _savedFlash;
+    private MudNumericField<int?>? _scoreField;
+
+    // Mix-aware: Phoenix 2 moved the A+/AA/AA+ floors, so the live grade must match the
+    // board's mix, not Phoenix 1's table.
+    private PhoenixLetterGrade? _derivedGrade =>
+        _recordScore is { } v && PhoenixScore.TryParse(v, out var s) ? s.LetterGradeFor(Mix) : null;
+
+    // Board dialog
+    private bool _boardOpen;
+    private Chart? _boardChart;
+    private WeeklyTournamentEntry[] _boardEntries = Array.Empty<WeeklyTournamentEntry>();
+    private IReadOnlySet<Guid> _boardOfficialIds = new HashSet<Guid>();
+    private IReadOnlySet<Guid>? _boardInRangeIds;
+    private bool _boardAscending;
+
+    // Monthly dialog
+    private bool _monthlyOpen;
+    private bool _monthlyLoading;
+    private ChartType? _monthlyType;
+    private MonthlyLeaderboardView? _monthlyView;
+    private IReadOnlyDictionary<Guid, Chart> _monthlyCharts = new Dictionary<Guid, Chart>();
+    private string _monthlySubtitle = string.Empty;
+
+    // Chart-details dialog
+    private bool _chartOpen;
+    private Chart? _detailsChart;
+
+    private bool _rotateOpen;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _selfRef = DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("challengeBoard.register", _selfRef);
+        if (CurrentUser.IsLoggedIn) _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
+    }
+
+    [JSInvokable]
+    public async Task OpenRecord(string chartId, bool isDaily)
+    {
+        if (!CurrentUser.IsLoggedIn || !Guid.TryParse(chartId, out var id)) return;
+        var charts = await ChartCatalog.GetCharts(Mix);
+        _recordChart = charts.GetValueOrDefault(id);
+        if (_recordChart == null) return;
+        _recordIsDaily = isDaily;
+        _savedFlash = false;
+        _recordPhoto = null;
+        (_recordScore, _recordPlate) = await CurrentEntry(id, isDaily);
+        _recordOpen = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // Prefill from the caller's current entry — an edit, not a blank. A broken entry
+    // prefills the empty plate, matching how it would be re-entered.
+    private async Task<(int?, PhoenixPlate?)> CurrentEntry(Guid chartId, bool isDaily)
+    {
+        var me = CurrentUser.User.Id;
+        if (isDaily)
+        {
+            var board = await Mediator.Send(new GetDailyStepBoardQuery(Mix, me));
+            var mine = board?.MyRow;
+            return mine == null ? (null, PhoenixPlate.SuperbGame)
+                : ((int)mine.Entry.Score, mine.Entry.IsBroken ? null : mine.Entry.Plate);
+        }
+
+        var mineWeekly = (await Mediator.Send(new GetWeeklyChartEntriesQuery(chartId, Mix)))
+            .FirstOrDefault(e => e.UserId == me);
+        return mineWeekly == null ? (null, PhoenixPlate.SuperbGame)
+            : ((int)mineWeekly.Score, mineWeekly.IsBroken ? null : mineWeekly.Plate);
+    }
+
+    [JSInvokable]
+    public async Task OpenBoard(string chartId, bool isDaily)
+    {
+        if (!Guid.TryParse(chartId, out var id)) return;
+        var charts = await ChartCatalog.GetCharts(Mix);
+        _boardChart = charts.GetValueOrDefault(id);
+        if (_boardChart == null) return;
+
+        if (isDaily)
+        {
+            var board = await Mediator.Send(new GetDailyStepBoardQuery(Mix, CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null));
+            _boardAscending = board?.Board.IsLimbo ?? false;
+            _boardEntries = board == null
+                ? Array.Empty<WeeklyTournamentEntry>()
+                : board.Rows.Select(r => new WeeklyTournamentEntry(r.Entry.UserId, r.Entry.ChartId, r.Entry.Score,
+                    r.Entry.Plate, r.Entry.IsBroken, null, r.Entry.CompetitiveLevel)).ToArray();
+            _boardOfficialIds = board == null
+                ? new HashSet<Guid>()
+                : board.Rows.Where(r => r.Entry.Source == ChallengeEntrySource.Official)
+                    .Select(r => r.Entry.UserId).ToHashSet();
+            // No band stamp on daily entries — the relevant switch stays weekly-only (M20).
+            _boardInRangeIds = null;
+        }
+        else
+        {
+            var rows = await Mediator.Send(new GetWeeklyChartBoardQuery(id, Mix));
+            _boardAscending = false;
+            _boardEntries = rows.Select(r => r.Entry).ToArray();
+            _boardOfficialIds = rows.Where(r => r.Source == ChallengeEntrySource.Official)
+                .Select(r => r.Entry.UserId).ToHashSet();
+            _boardInRangeIds = rows.Where(r => r.WasWithinRange).Select(r => r.Entry.UserId).ToHashSet();
+        }
+
+        _boardOpen = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public async Task OpenMonthly(string typeKey)
+    {
+        _monthlyType = typeKey switch
+        {
+            "Single" => ChartType.Single,
+            "Double" => ChartType.Double,
+            "CoOp" => ChartType.CoOp,
+            _ => null
+        };
+        _monthlyOpen = true;
+        await LoadMonthly(_monthlyType);
+    }
+
+    private async Task LoadMonthly(ChartType? type)
+    {
+        _monthlyType = type;
+        _monthlyLoading = true;
+        await InvokeAsync(StateHasChanged);
+        _monthlyCharts = await ChartCatalog.GetCharts(Mix);
+        _monthlyView = await Mediator.Send(new GetMonthlyLeaderboardQuery(Mix, null, type, null));
+        _monthlySubtitle = type == ChartType.CoOp
+            ? L["Week {0} — best {1} count · raw score", _monthlyView.WeekInMonth, _monthlyView.CountedPerPlayer]
+            : L["Week {0} — best {1} count · PUMBILITY", _monthlyView.WeekInMonth, _monthlyView.CountedPerPlayer];
+        _monthlyLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public async Task OpenChart(string chartId)
+    {
+        if (!Guid.TryParse(chartId, out var id)) return;
+        var charts = await ChartCatalog.GetCharts(Mix);
+        _detailsChart = charts.GetValueOrDefault(id);
+        if (_detailsChart == null) return;
+        _chartOpen = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public async Task OpenRotate()
+    {
+        if (!CurrentUser.IsLoggedInAsAdmin) return;
+        _rotateOpen = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UploadPhoto(IBrowserFile file)
+    {
+        if (file.Size > MaxFileSize)
+        {
+            Snackbar.Add(L["Your file was larger than 10MB, please reduce it and try again."].Value, Severity.Error);
+            return;
+        }
+
+        _uploading = true;
+        try
+        {
+            var ext = file.Name.Split('.')[^1];
+            var path = $"weeklyCharts/User{CurrentUser.User.Id}/Chart{_recordChart!.Id}/{Guid.NewGuid()}.{ext}";
+            _recordPhoto = await FileUpload.UploadFile(path, file.OpenReadStream(MaxFileSize));
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(L["There was an error while uploading your image, please try again."].Value, Severity.Error);
+            Logger.LogError(e, "Weekly charts photo upload failed: {Message}", e.Message);
+        }
+
+        _uploading = false;
+    }
+
+    private async Task SubmitRecord()
+    {
+        if (_recordScore == null || _recordChart == null) return;
+        _submitting = true;
+        try
+        {
+            // No plate = the run broke (M4 revised at field-test): the score still competes,
+            // ranked by the boards' existing broken policies.
+            var isBroken = _recordPlate == null;
+            var plate = _recordPlate ?? PhoenixPlate.RoughGame;
+            if (_recordIsDaily)
+            {
+                await Mediator.Send(new RecordDailyStepScoreCommand(_recordScore.Value, plate, Mix, isBroken));
+            }
+            else
+            {
+                var entry = new WeeklyTournamentEntry(CurrentUser.User.Id, _recordChart.Id, _recordScore.Value,
+                    plate, isBroken, _recordPhoto, 10.0);
+                await Mediator.Send(new RegisterWeeklyChartScoreCommand(entry, Mix, ChallengeEntrySource.Manual));
+            }
+
+            _savedFlash = true;
+            await InvokeAsync(StateHasChanged);
+            await Task.Delay(900);
+            // Reload the static page so the new score shows on the board and your standing.
+            NavManager.Refresh(forceReload: true);
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(L["There was an error while recording the score."].Value, Severity.Error);
+            Logger.LogError(e, "Challenge record failed: {Message}", e.Message);
+            _submitting = false;
+        }
+    }
+
+    private async Task Rotate()
+    {
+        _submitting = true;
+        await Bus.Publish(new RotateWeeklyChartsCommand(Mix));
+        _rotateOpen = false;
+        _submitting = false;
+        Snackbar.Add(L["Rotation started."].Value, Severity.Success);
+    }
+
+    public void Dispose()
+    {
+        _selfRef?.Dispose();
+    }
+}

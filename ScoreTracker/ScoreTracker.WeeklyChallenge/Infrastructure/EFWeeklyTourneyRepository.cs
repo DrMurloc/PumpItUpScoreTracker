@@ -77,7 +77,8 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                     Place = h.Place,
                     Score = h.Score,
                     UserId = h.UserId,
-                    CompetitiveLevel = h.CompetitiveLevel
+                    CompetitiveLevel = h.CompetitiveLevel,
+                    WasWithinRange = h.WasWithinRange
                 }), cancellationToken);
             await database.SaveChangesAsync(cancellationToken);
         }
@@ -131,17 +132,26 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
         public async Task<IEnumerable<WeeklyTournamentEntry>> GetEntries(MixEnum mix, Guid? chartId,
             CancellationToken cancellationToken)
         {
+            return (await GetEntriesWithSources(mix, chartId, cancellationToken)).Select(e => e.Entry);
+        }
+
+        public async Task<IEnumerable<(WeeklyTournamentEntry Entry, ChallengeEntrySource Source)>>
+            GetEntriesWithSources(MixEnum mix, Guid? chartId, CancellationToken cancellationToken)
+        {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
             var mixId = MixIds.For(mix);
             var query = database.Set<WeeklyUserEntry>().Where(w => w.MixId == mixId);
             if (chartId != null) query = query.Where(w => w.ChartId == chartId);
 
-            return (await query.ToArrayAsync(cancellationToken)).Select(q => new WeeklyTournamentEntry(q.UserId,
-                q.ChartId, q.Score, Enum.Parse<PhoenixPlate>(q.Plate), q.IsBroken,
-                q.Photo == null ? null : new Uri(q.Photo, UriKind.Absolute), q.CompetitiveLevel));
+            return (await query.ToArrayAsync(cancellationToken)).Select(q => (
+                new WeeklyTournamentEntry(q.UserId, q.ChartId, q.Score, Enum.Parse<PhoenixPlate>(q.Plate),
+                    q.IsBroken, q.Photo == null ? null : new Uri(q.Photo, UriKind.Absolute),
+                    q.CompetitiveLevel),
+                q.Source));
         }
 
-        public async Task SaveEntry(MixEnum mix, WeeklyTournamentEntry entry, CancellationToken cancellationToken)
+        public async Task SaveEntry(MixEnum mix, WeeklyTournamentEntry entry, ChallengeEntrySource source,
+            bool wasWithinRange, CancellationToken cancellationToken)
         {
             await using var database = await factory.CreateDbContextAsync(cancellationToken);
             var mixId = MixIds.For(mix);
@@ -160,7 +170,9 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                     Score = entry.Score,
                     UserId = entry.UserId,
                     Photo = entry.PhotoUrl?.ToString(),
-                    CompetitiveLevel = entry.CompetitiveLevel
+                    CompetitiveLevel = entry.CompetitiveLevel,
+                    Source = source,
+                    WasWithinRange = wasWithinRange
                 }, cancellationToken);
             }
             else
@@ -170,6 +182,8 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                 entity.CompetitiveLevel = entry.CompetitiveLevel;
                 entity.IsBroken = entry.IsBroken;
                 entity.Photo = entry.PhotoUrl?.ToString();
+                entity.Source = source;
+                entity.WasWithinRange = wasWithinRange;
             }
 
             await database.SaveChangesAsync(cancellationToken);
@@ -193,6 +207,19 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                 .Where(e => e.ObtainedDate == date && e.MixId == mixId).ToArrayAsync(cancellationToken)).Select(u =>
                 new WeeklyTournamentEntry(u.UserId, u.ChartId, u.Score, Enum.Parse<PhoenixPlate>(u.Plate), u.IsBroken,
                     null, u.CompetitiveLevel));
+        }
+
+        public async Task<IEnumerable<WeeklyTournamentEntry>> GetPastEntries(MixEnum mix,
+            IReadOnlyCollection<DateTimeOffset> dates, CancellationToken cancellationToken)
+        {
+            if (dates.Count == 0) return Array.Empty<WeeklyTournamentEntry>();
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            return (await database.Set<UserWeeklyPlacingEntity>()
+                    .Where(e => dates.Contains(e.ObtainedDate) && e.MixId == mixId)
+                    .ToArrayAsync(cancellationToken))
+                .Select(u => new WeeklyTournamentEntry(u.UserId, u.ChartId, u.Score,
+                    Enum.Parse<PhoenixPlate>(u.Plate), u.IsBroken, null, u.CompetitiveLevel));
         }
     }
 }

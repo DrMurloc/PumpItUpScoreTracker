@@ -285,8 +285,11 @@ public sealed class Community : UserGroup
 
     private DateTimeOffset? JoinedAtOf(Guid id) => _joinedAt.TryGetValue(id, out var joinedAt) ? joinedAt : null;
 
-    public sealed record ChannelConfiguration(ulong ChannelId, bool SendNewScores, bool SendTitles,
-        bool SendNewMembers)
+    // Every registered channel receives every community notification; the old per-type
+    // opt-in flags were never honored by the fan-out and have been removed. Culture is
+    // the language the channel's cards render in (null = English; the community's
+    // DefaultLanguage is the fallback between the two).
+    public sealed record ChannelConfiguration(ulong ChannelId, string? Culture = null)
     {
     }
 }

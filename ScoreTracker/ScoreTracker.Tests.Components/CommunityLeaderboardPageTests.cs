@@ -77,6 +77,8 @@ public sealed class CommunityLeaderboardPageTests : ComponentTestBase
 
     private IRenderedComponent<CommunityLeaderboard> Render()
     {
+        // UserLabel gates its tooltip on RendererInfo — declare the interactive world.
+        this.RenderInteractive();
         Services.GetRequiredService<FakeNavigationManager>()
             .NavigateTo("/Community/Leaderboard?CommunityName=Acme");
         return RenderComponent<CommunityLeaderboard>();
