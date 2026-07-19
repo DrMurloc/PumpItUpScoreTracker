@@ -24,8 +24,8 @@ CREATE TABLE #TagTwins (WinnerId INT NOT NULL, LoserId INT NOT NULL);
 WITH Normalized AS (
     SELECT p.Id, p.MixId,
            REPLACE(REPLACE(REPLACE(p.Username, N' ', N''), NCHAR(9), N''), NCHAR(160), N'') AS Tag,
-           (SELECT COUNT(*) FROM OfficialLeaderboardPlacement pl WHERE pl.PlayerId = p.Id) AS Placements
-    FROM OfficialPlayer p
+           (SELECT COUNT(*) FROM scores.OfficialLeaderboardPlacement pl WHERE pl.PlayerId = p.Id) AS Placements
+    FROM scores.OfficialPlayer p
 ),
 Ranked AS (
     SELECT Id, MixId, Tag,
@@ -41,25 +41,25 @@ WHERE w.rn = 1;
 -- Transition-week collisions: both twins on the same board in the same snapshot — the
 -- winner's row is the truth, so the loser's drops instead of colliding on re-point.
 DELETE lp
-FROM OfficialLeaderboardPlacement lp
+FROM scores.OfficialLeaderboardPlacement lp
 JOIN #TagTwins t ON lp.PlayerId = t.LoserId
-WHERE EXISTS (SELECT 1 FROM OfficialLeaderboardPlacement w
+WHERE EXISTS (SELECT 1 FROM scores.OfficialLeaderboardPlacement w
               WHERE w.PlayerId = t.WinnerId AND w.SnapshotId = lp.SnapshotId
                 AND w.LeaderboardId = lp.LeaderboardId);
 
 UPDATE lp SET PlayerId = t.WinnerId
-FROM OfficialLeaderboardPlacement lp JOIN #TagTwins t ON lp.PlayerId = t.LoserId;
+FROM scores.OfficialLeaderboardPlacement lp JOIN #TagTwins t ON lp.PlayerId = t.LoserId;
 
 UPDATE h SET PlayerId = t.WinnerId
-FROM OfficialWeeklyHighlight h JOIN #TagTwins t ON h.PlayerId = t.LoserId;
+FROM scores.OfficialWeeklyHighlight h JOIN #TagTwins t ON h.PlayerId = t.LoserId;
 UPDATE h SET DethronedPlayerId = t.WinnerId
-FROM OfficialWeeklyHighlight h JOIN #TagTwins t ON h.DethronedPlayerId = t.LoserId;
+FROM scores.OfficialWeeklyHighlight h JOIN #TagTwins t ON h.DethronedPlayerId = t.LoserId;
 
 UPDATE p SET OldPlayerId = t.WinnerId
-FROM OfficialPlayerRenameProposal p JOIN #TagTwins t ON p.OldPlayerId = t.LoserId;
+FROM scores.OfficialPlayerRenameProposal p JOIN #TagTwins t ON p.OldPlayerId = t.LoserId;
 UPDATE p SET NewPlayerId = t.WinnerId
-FROM OfficialPlayerRenameProposal p JOIN #TagTwins t ON p.NewPlayerId = t.LoserId;
-DELETE FROM OfficialPlayerRenameProposal WHERE OldPlayerId = NewPlayerId;
+FROM scores.OfficialPlayerRenameProposal p JOIN #TagTwins t ON p.NewPlayerId = t.LoserId;
+DELETE FROM scores.OfficialPlayerRenameProposal WHERE OldPlayerId = NewPlayerId;
 
 -- The winner keeps any account link or avatar a merged twin carried; last seen = the later.
 UPDATE w SET
@@ -68,13 +68,13 @@ UPDATE w SET
                         THEN l.UserIdSource ELSE w.UserIdSource END,
     AvatarUrl = COALESCE(w.AvatarUrl, l.AvatarUrl),
     LastSeenAt = CASE WHEN l.LastSeenAt > w.LastSeenAt THEN l.LastSeenAt ELSE w.LastSeenAt END
-FROM OfficialPlayer w
+FROM scores.OfficialPlayer w
 JOIN #TagTwins t ON w.Id = t.WinnerId
-JOIN OfficialPlayer l ON l.Id = t.LoserId;
+JOIN scores.OfficialPlayer l ON l.Id = t.LoserId;
 
-DELETE p FROM OfficialPlayer p JOIN #TagTwins t ON p.Id = t.LoserId;
+DELETE p FROM scores.OfficialPlayer p JOIN #TagTwins t ON p.Id = t.LoserId;
 
-UPDATE OfficialPlayer
+UPDATE scores.OfficialPlayer
 SET Username = REPLACE(REPLACE(REPLACE(Username, N' ', N''), NCHAR(9), N''), NCHAR(160), N'')
 WHERE Username <> REPLACE(REPLACE(REPLACE(Username, N' ', N''), NCHAR(9), N''), NCHAR(160), N'');
 
@@ -84,7 +84,7 @@ DROP TABLE #TagTwins;
             migrationBuilder.Sql(@"
 -- Phoenix 2 rows below AAA re-grade on the Phoenix 2 floor table (AAA and up is identical
 -- across mixes, so those strings already stand).
-UPDATE PhoenixRecord
+UPDATE scores.PhoenixRecord
 SET LetterGrade = CASE
     WHEN Score >= 940000 THEN N'AA+'
     WHEN Score >= 920000 THEN N'AA'
