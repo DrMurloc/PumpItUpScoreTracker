@@ -283,6 +283,166 @@ public sealed class Phoenix2GradeThresholdReconTests : IClassFixture<PiuGameSess
         _output.WriteLine($"Raw page dumps: {DumpDir}");
     }
 
+    private sealed record LowRowTarget(string Player, string Song, string TypeStem, int Level, int MirrorScore,
+        int MirrorPlace);
+
+    // The complete set of sub-800k rows in the mirrored 2026-07-19 P2 snapshot (7 B-band, 1
+    // C-band across all 1,434 boards' top-300) — the only live rows that can pin the B and C
+    // floors, and 799,815 brackets the A floor from below.
+    private static readonly LowRowTarget[] LowRowTargets =
+    {
+        new("SCARFACE#5159", "Gargoyle", "s", 21, 690647, 83),
+        new("HAIRDA100#4445", "Gargoyle", "d", 20, 707042, 38),
+        new("BKRYU#8351", "Dead End", "s", 25, 781105, 5),
+        new("HAIRDA100#4445", "Hyperion", "d", 20, 786427, 7),
+        new("SUBAGAZE#2845", "Loki", "d", 20, 790956, 12),
+        new("SILVERRABBIT#5827", "Freedom Dive", "s", 25, 793653, 31),
+        new("KAIO#4193", "Big Daddy", "s", 21, 796609, 80),
+        new("HAIRDA100#4445", "Gargoyle", "s", 22, 799815, 11)
+    };
+
+    private static readonly Regex ListTypeStemRegex =
+        new(@"\/stepball\/full\/([a-zA-Z]+)_text\.png", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex ListLevelDigitRegex =
+        new(@"_num_([0-9])\.png", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    /// <summary>
+    ///     Reads the site-displayed grade art for the eight known sub-800k board rows (found by
+    ///     SQL over the mirror, which stores score+place but no grade). Each row is a direct
+    ///     (score, official-grade) sample in the range where our floors are still guesses:
+    ///     707,042 sits right on the guessed 700k B floor, and 799,815 brackets the 800k A
+    ///     floor from below. Boards are found via the list's search parameter, and rows are
+    ///     matched by profile name so an improved score still yields a (new) sample.
+    /// </summary>
+    [LiveSiteFact]
+    public async Task Phoenix2_sub800k_board_rows_pin_the_low_grade_floors()
+    {
+        var ct = CancellationToken.None;
+        var client = await _fixture.GetAuthenticatedPhoenix2Client(ct);
+        Directory.CreateDirectory(DumpDir);
+
+        var lowGradeSamples = new List<(string Who, string Chart, int Score, PhoenixLetterGrade Site)>();
+        var found = 0;
+        foreach (var target in LowRowTargets)
+        {
+            await Task.Delay(300, ct);
+            var listHtml = await Fetch(client,
+                $"https://piugame.com/leaderboard/over_ranking.php?lv=&search={Uri.EscapeDataString(target.Song)}",
+                ct);
+            var boardId = FindBoardId(listHtml, target);
+            if (boardId == null)
+            {
+                _output.WriteLine($"[{target.Player}] {target.Song} {target.TypeStem.ToUpper()}{target.Level}: " +
+                                  "board NOT FOUND via list search");
+                continue;
+            }
+
+            // Learn rows-per-page from page 1, then jump to the mirror place's page (+/-1 —
+            // live places drift as new scores land).
+            await Task.Delay(300, ct);
+            var page1 = await Fetch(client,
+                $"https://piugame.com/leaderboard/over_ranking_view.php?no={boardId}&page=1", ct);
+            var perPage = Math.Max(1, CountBoardRows(page1));
+            var expectedPage = (target.MirrorPlace - 1) / perPage + 1;
+            var hit = FindPlayerRow(page1, target.Player);
+            foreach (var page in new[] { expectedPage, expectedPage + 1, expectedPage - 1, expectedPage + 2 })
+            {
+                if (hit != null || page <= 1 || page > 40) continue;
+                await Task.Delay(300, ct);
+                var html = await Fetch(client,
+                    $"https://piugame.com/leaderboard/over_ranking_view.php?no={boardId}&page={page}", ct);
+                hit = FindPlayerRow(html, target.Player);
+            }
+
+            var chartLabel = $"{target.Song} {target.TypeStem.ToUpper()}{target.Level}";
+            if (hit == null)
+            {
+                _output.WriteLine($"[{target.Player}] {chartLabel}: row not found near place {target.MirrorPlace} " +
+                                  $"(perPage {perPage}) — player may have climbed");
+                continue;
+            }
+
+            found++;
+            var (score, grade) = hit.Value;
+            var ours = PhoenixScore.From(score).LetterGradeFor(MixEnum.Phoenix2);
+            var drift = score == target.MirrorScore ? "" : $" (mirror had {target.MirrorScore:N0})";
+            var verdict = grade == null ? "NO GRADE ART" : grade == ours ? "matches our floors" : "FLOOR MISMATCH";
+            _output.WriteLine($"[{target.Player}] {chartLabel}: score {score:N0}{drift} site-grade " +
+                              $"{grade?.GetName() ?? "?"} ours {ours.GetName()} -> {verdict}");
+            if (grade != null && score < 840000) lowGradeSamples.Add((target.Player, chartLabel, score, grade.Value));
+        }
+
+        _output.WriteLine("");
+        _output.WriteLine("=== Confirmed low-band (score, site-grade) samples ===");
+        foreach (var s in lowGradeSamples.OrderBy(s => s.Score))
+            _output.WriteLine($"  {s.Score,9:N0}  {s.Site.GetName(),-3}  {s.Who}  {s.Chart}");
+        Assert.True(found >= 5,
+            $"Only {found} of {LowRowTargets.Length} targeted sub-800k rows were located — the boards may have " +
+            "shifted too much since the mirror snapshot; re-derive targets from a fresh import.");
+    }
+
+    private static string? FindBoardId(string listHtml, LowRowTarget target)
+    {
+        var doc = new HtmlDocument();
+        doc.LoadHtml(listHtml);
+        var candidates = doc.DocumentNode.SelectNodes("//li[.//a or @onclick]") ?? new HtmlNodeCollection(null);
+        foreach (var li in candidates)
+        {
+            var inner = li.InnerHtml;
+            var idMatch = Regex.Match(inner, @"over_ranking_view\.php\?no=([a-zA-Z0-9+/=%]+)");
+            if (!idMatch.Success) continue;
+            var typeMatch = ListTypeStemRegex.Match(inner);
+            if (!typeMatch.Success ||
+                !typeMatch.Groups[1].Value.Equals(target.TypeStem, StringComparison.OrdinalIgnoreCase)) continue;
+            var digits = string.Join("",
+                ListLevelDigitRegex.Matches(inner).Select(m => m.Groups[1].Value));
+            if (digits.Length == 0 || int.Parse(digits) != target.Level) continue;
+            return idMatch.Groups[1].Value;
+        }
+
+        return null;
+    }
+
+    private static int CountBoardRows(string boardHtml)
+    {
+        var doc = new HtmlDocument();
+        doc.LoadHtml(boardHtml);
+        return doc.DocumentNode.SelectNodes("//div[contains(@class,'rangking_list_w')]//li")?.Count ?? 0;
+    }
+
+    private static (int Score, PhoenixLetterGrade? Grade)? FindPlayerRow(string boardHtml, string player)
+    {
+        var doc = new HtmlDocument();
+        doc.LoadHtml(boardHtml);
+        var rows = doc.DocumentNode.SelectNodes("//div[contains(@class,'rangking_list_w')]//li");
+        if (rows == null) return null;
+        var wanted = Regex.Replace(player, @"\s+", "");
+        foreach (var row in rows)
+        {
+            var nameNodes = row.SelectNodes(".//div[contains(@class,'profile_name')]");
+            if (nameNodes == null) continue;
+            var name = Regex.Replace(string.Join("", nameNodes.Select(n => n.InnerText)), @"\s+", "");
+            if (!string.Equals(name, wanted, StringComparison.OrdinalIgnoreCase)) continue;
+
+            var text = HtmlEntity.DeEntitize(row.InnerText ?? "");
+            var best = 0;
+            foreach (Match m in ScoreDigitsRegex.Matches(text))
+                if (int.TryParse(m.Value.Replace(",", ""), out var n) && n is > 0 and <= 1_000_000 && n > best)
+                    best = n;
+            if (best == 0) return null;
+
+            var gradeMatch = GradeStemRegex.Match(row.InnerHtml);
+            PhoenixLetterGrade? grade =
+                gradeMatch.Success && GradeByStem.TryGetValue(gradeMatch.Groups[1].Value.ToLowerInvariant(), out var g)
+                    ? g
+                    : null;
+            return (best, grade);
+        }
+
+        return null;
+    }
+
     private static IReadOnlyList<Observation> ExtractRows(string html, string rowXPath, string source)
     {
         var doc = new HtmlDocument();
