@@ -41,9 +41,11 @@ public sealed record OfficialFloorMarkRecord(int Rank, decimal Value, decimal? P
 public sealed record OfficialMoverRecord(OfficialPlayerRecord Player, int PreviousRank, int NewRank,
     decimal Pumbility);
 
+/// <summary>NewBoards splits the tally: how many of the boards were first-time entries
+/// (null on rows stored before the split existed).</summary>
 [ExcludeFromCodeCoverage]
 public sealed record OfficialBoardsClimbedRecord(OfficialPlayerRecord Player, int BoardsClimbed,
-    int NetPlacesGained);
+    int NetPlacesGained, int? NewBoards = null);
 
 /// <summary>A first-ever grade band on a board; folder firsts carry the folder identity too.</summary>
 [ExcludeFromCodeCoverage]

@@ -78,7 +78,7 @@ internal sealed class LeaderboardHubSaga :
         var climbed = highlights.Where(h => h.Kind == HighlightKinds.BoardsClimbed)
             .OrderBy(h => h.SortOrder)
             .Select(h => new OfficialBoardsClimbedRecord(Resolve(h.PlayerId)!, (int)h.NewValue!,
-                (int)h.PrevValue!))
+                (int)h.PrevValue!, h.Level))
             .ToArray();
         var firsts = highlights
             .Where(h => h.Kind is HighlightKinds.FolderGradeFirst or HighlightKinds.ChartGradeFirst)

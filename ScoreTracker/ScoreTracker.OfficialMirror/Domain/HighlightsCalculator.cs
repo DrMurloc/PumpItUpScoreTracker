@@ -271,7 +271,9 @@ internal static class HighlightsCalculator
     {
         if (!hasPrevious) yield break;
 
-        var climbs = new Dictionary<int, (int Boards, int NetPlaces)>();
+        // First-time entries count toward the board tally but not the net — the row keeps
+        // the entered count (Level) so the display can say which kind of week it was.
+        var climbs = new Dictionary<int, (int Boards, int NetPlaces, int Entered)>();
         foreach (var (boardId, placements) in currentByBoard)
         {
             if (!chartBoards.ContainsKey(boardId)) continue;
@@ -284,11 +286,12 @@ internal static class HighlightsCalculator
                 var hadPlace = previousPlaces.TryGetValue(placement.PlayerId, out var previousPlace);
                 if (hadPlace && previousPlace <= placement.Place) continue;
 
-                var (boardCount, netPlaces) = climbs.TryGetValue(placement.PlayerId, out var tally)
+                var (boardCount, netPlaces, entered) = climbs.TryGetValue(placement.PlayerId, out var tally)
                     ? tally
-                    : (0, 0);
+                    : (0, 0, 0);
                 climbs[placement.PlayerId] =
-                    (boardCount + 1, netPlaces + (hadPlace ? previousPlace - placement.Place : 0));
+                    (boardCount + 1, netPlaces + (hadPlace ? previousPlace - placement.Place : 0),
+                        entered + (hadPlace ? 0 : 1));
             }
         }
 
@@ -299,7 +302,7 @@ internal static class HighlightsCalculator
             .ToArray();
         for (var i = 0; i < ranked.Length; i++)
             yield return new HighlightRow(HighlightKinds.BoardsClimbed, i + 1, ranked[i].Key, null, null, null,
-                null, null, null, null, ranked[i].Value.NetPlaces, ranked[i].Value.Boards);
+                null, ranked[i].Value.Entered, null, null, ranked[i].Value.NetPlaces, ranked[i].Value.Boards);
     }
 
     private static IEnumerable<HighlightRow> RecordHighlights(HighlightsInput input,
@@ -357,7 +360,9 @@ internal static class HighlightsCalculator
             if (crossed)
                 chartRows.AddRange(ClaimantRows(input, beaten, HighlightKinds.ChartGradeFirst, newBand!,
                     previousByBoard));
-            else
+            // A perfect that isn't a first (the chart's PG lives on another mix) tells no
+            // dethroning story either — tying the ceiling never lists as a new #1.
+            else if (beaten.NewHigh < 1_000_000)
                 numberOneRows.AddRange(ClaimantRows(input, beaten, HighlightKinds.NewNumberOne, null,
                     previousByBoard));
         }

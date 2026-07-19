@@ -87,8 +87,11 @@ namespace ScoreTracker.OfficialMirror.Application
 
             if (highlights.BoardsClimbed.Count > 0)
                 AddSection($"🧗 **{_localizer.Get(culture, "Chart boards climbed")}**", highlights.BoardsClimbed.Take(5)
-                    .Select(b => _localizer.Get(culture, "**{0}** climbed {1} chart boards (+{2})",
-                        b.Player.Username, b.BoardsClimbed, b.NetPlacesGained)));
+                    .Select(b => b.NewBoards is { } fresh
+                        ? _localizer.Get(culture, "**{0}** — {1} chart boards ({2} new, net +{3})",
+                            b.Player.Username, b.BoardsClimbed, fresh, b.NetPlacesGained)
+                        : _localizer.Get(culture, "**{0}** climbed {1} chart boards (+{2})",
+                            b.Player.Username, b.BoardsClimbed, b.NetPlacesGained)));
 
             if (highlights.WorldFirsts.Count > 0 || highlights.NewNumberOnes.Count > 0)
             {

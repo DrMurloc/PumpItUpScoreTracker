@@ -147,6 +147,38 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
     }
 
     [Fact]
+    public void ThisWeekDebutStripPlopsOutTheRestOnClick()
+    {
+        var record = new WeeklyHighlightsRecord(Week2, Week1,
+            new[] { new OfficialMoverRecord(Player(), 31, 17, 18204.51m) },
+            Array.Empty<OfficialBoardsClimbedRecord>(),
+            Array.Empty<OfficialGradeFirstRecord>(),
+            Array.Empty<OfficialNewNumberOneRecord>(),
+            new WeeklyPulseRecord(100, 50, 80, 41),
+            Array.Empty<OfficialGainerRecord>(),
+            Enumerable.Range(1, 8)
+                .Select(i => new OfficialDebutRecord(Player(10 + i, $"FRESH{i}"), i))
+                .ToArray(),
+            Array.Empty<OfficialFloorMarkRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(record);
+
+        var cut = RenderComponent<HubThisWeek>(p => p.Add(x => x.Mix, MixEnum.Phoenix2));
+
+        // Collapsed: six chips and a button counting everything past them.
+        Assert.Contains("FRESH6", cut.Markup);
+        Assert.DoesNotContain("FRESH7", cut.Markup);
+        Assert.Contains("+35 more", cut.Markup);
+
+        cut.Find("button.olb-debut-chip").Click();
+
+        // Expanded: every stored chip, with the unstored tail still counted.
+        Assert.Contains("FRESH7", cut.Markup);
+        Assert.Contains("FRESH8", cut.Markup);
+        Assert.Contains("+33 more", cut.Markup);
+    }
+
+    [Fact]
     public void ThisWeekLabelsAGapWiderThanOneWeek()
     {
         _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))

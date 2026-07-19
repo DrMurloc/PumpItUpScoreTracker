@@ -5427,4 +5427,10 @@
   <data name="first-ever appearance on any chart board" xml:space="preserve">
     <value>채보 보드 첫 등장</value>
   </data>
+  <data name="{0} new · net +{1} places" xml:space="preserve">
+    <value>신규 {0} · 순상승 +{1}</value>
+  </data>
+  <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
+    <value>**{0}** — 채보 보드 {1}개 ({2} 신규, 순 +{3})</value>
+  </data>
 </root>

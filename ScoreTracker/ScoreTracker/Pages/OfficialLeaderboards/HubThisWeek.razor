@@ -168,6 +168,7 @@ else
 
         .olb-debut-chip .mini img { width: 100%; height: 100%; object-fit: cover; }
         .olb-debut-chip.more { padding: 3px 11px; color: var(--mix-ink-muted); }
+        button.olb-debut-chip { font: inherit; font-weight: 600; cursor: pointer; }
         .olb-debut-note { font-size: 11.5px; color: var(--mix-ink-muted); margin-top: 6px; }
 
         @@media (max-width: 700px) {
@@ -260,7 +261,14 @@ else
                         <div class="olb-hero-label">@L["Most chart board activity"]</div>
                         <HubPlayerChip Player="activity.Player"/>
                         <div class="olb-hero-gain">@activity.BoardsClimbed.ToString("N0")</div>
-                        <div class="olb-hero-ctx">@L["chart boards"] · @L["net"] <b>+@activity.NetPlacesGained.ToString("N0")</b> @L["places"]</div>
+                        @if (activity.NewBoards is { } freshBoards)
+                        {
+                            <div class="olb-hero-ctx">@L["chart boards"] · @L["{0} new · net +{1} places", freshBoards.ToString("N0"), activity.NetPlacesGained.ToString("N0")]</div>
+                        }
+                        else
+                        {
+                            <div class="olb-hero-ctx">@L["chart boards"] · @L["net"] <b>+@activity.NetPlacesGained.ToString("N0")</b> @L["places"]</div>
+                        }
                     </div>
                 }
                 @if (floors.Any())
@@ -308,11 +316,11 @@ else
 
             @if (debuts.Any())
             {
-                var debutsShown = Math.Min(6, debuts.Count);
+                var debutsShown = _debutsExpanded ? debuts.Count : Math.Min(6, debuts.Count);
                 <div class="olb-hero-debuts">
                     <div class="olb-hero-label">@L["Debuted this week"] <b>@pulse.DebutCount.ToString("N0")</b></div>
                     <div class="olb-debut-chips">
-                        @foreach (var debut in debuts.Take(6))
+                        @foreach (var debut in debuts.Take(debutsShown))
                         {
                             <a class="olb-debut-chip" href="@PlayerHref(debut.Player.Username)">
                                 <span class="mini">
@@ -328,11 +336,17 @@ else
                                 @debut.Player.Username
                             </a>
                         }
-                        @if (pulse.DebutCount > debutsShown)
+                        @if (!_debutsExpanded && debuts.Count > debutsShown)
                         {
-                            <a class="olb-debut-chip more" href="/OfficialLeaderboards/Players">
+                            <button type="button" class="olb-debut-chip more" @onclick="() => _debutsExpanded = true">
                                 @L["+{0} more", (pulse.DebutCount - debutsShown).ToString("N0")]
-                            </a>
+                            </button>
+                        }
+                        else if (pulse.DebutCount > debutsShown)
+                        {
+                            <span class="olb-debut-chip more">
+                                @L["+{0} more", (pulse.DebutCount - debutsShown).ToString("N0")]
+                            </span>
                         }
                     </div>
                     <div class="olb-debut-note">@L["first-ever appearance on any chart board"]</div>
@@ -377,7 +391,14 @@ else
                         <HubPlayerChip Player="entry.Player"/>
                         <MudSpacer/>
                         <MudText Typo="Typo.body1"><b>+@entry.BoardsClimbed @L["chart boards"]</b></MudText>
-                        <MudText Typo="Typo.body2">@L["net"] +@entry.NetPlacesGained @L["places"]</MudText>
+                        @if (entry.NewBoards is { } fresh)
+                        {
+                            <MudText Typo="Typo.body2">@L["{0} new · net +{1} places", fresh.ToString("N0"), entry.NetPlacesGained.ToString("N0")]</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">@L["net"] +@entry.NetPlacesGained @L["places"]</MudText>
+                        }
                     </MudStack>
                 }
             </MudPaper>
@@ -458,6 +479,7 @@ else
     [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
 
     private bool _loading = true;
+    private bool _debutsExpanded;
     private WeeklyHighlightsRecord? _highlights;
 
     protected override async Task OnInitializedAsync()

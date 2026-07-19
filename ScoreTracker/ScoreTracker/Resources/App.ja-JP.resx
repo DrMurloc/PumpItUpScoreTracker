@@ -5546,4 +5546,10 @@
   <data name="first-ever appearance on any chart board" xml:space="preserve">
     <value>譜面ボード初登場</value>
   </data>
+  <data name="{0} new · net +{1} places" xml:space="preserve">
+    <value>新規 {0} · 純増 +{1}</value>
+  </data>
+  <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
+    <value>**{0}** — 譜面ボード{1}面（新規{2}・純増+{3}）</value>
+  </data>
 </root>

@@ -33,7 +33,8 @@ else
             <HubPlayerChip Player="_profile.Player"/>
             @if (_profile.PlayerType != null)
             {
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">
+                <MudChip T="string" Size="Size.Small"
+                         Style="@($"background:{HubRankings.PlayerTypeHex(_profile.PlayerType.Value)};color:var(--mix-primary-contrast);font-weight:700")">
                     @L[HubRankings.PlayerTypeName(_profile.PlayerType.Value)]
                 </MudChip>
             }
@@ -123,19 +124,29 @@ else
         <MudTable T="OfficialPlayerChartRecord" Items="_profile.Placements" Dense="true"
                   Breakpoint="Breakpoint.None" RowsPerPage="25" Class="olb-sticky-first olb-pager-tight">
             <HeaderContent>
-                <MudTh>@L["Chart"]</MudTh>
-                <MudTh Style="text-align:right">@L["Score"]</MudTh>
-                <MudTh></MudTh>
-                <MudTh Style="text-align:right">@L["Place"]</MudTh>
-                <MudTh></MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => SongName(e)">@L["Chart"]</MudTableSortLabel>
+                </MudTh>
+                <MudTh Style="text-align:right">
+                    <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => (object)e.Score">@L["Score"]</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => (object)e.Score">@L["Letter Grade"]</MudTableSortLabel>
+                </MudTh>
+                <MudTh Style="text-align:right">
+                    <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => (object)(e.Place ?? int.MaxValue)">@L["Place"]</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => (object)(e.PlaceDelta ?? int.MinValue)">Δ</MudTableSortLabel>
+                </MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd>
                     @if (Charts.TryGetValue(context.ChartId, out var chart))
                     {
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                            <SongImage Song="chart.Song" Small="true"/>
                             <DifficultyBubble Chart="chart" Small="true"/>
+                            <SongImage Song="chart.Song" Small="true"/>
                             <MudText Typo="Typo.body2">@chart.Song.Name</MudText>
                         </MudStack>
                     }
@@ -253,6 +264,11 @@ else
                        ?? Array.Empty<HistoryPoint>();
         _loadingProfile = false;
         StateHasChanged();
+    }
+
+    private string SongName(OfficialPlayerChartRecord record)
+    {
+        return Charts.TryGetValue(record.ChartId, out var chart) ? (string)chart.Song.Name : string.Empty;
     }
 
     private sealed record HistoryPoint(string Label, decimal Value);

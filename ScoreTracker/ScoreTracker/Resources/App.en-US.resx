@@ -5540,4 +5540,10 @@
   <data name="first-ever appearance on any chart board" xml:space="preserve">
     <value>first-ever appearance on any chart board</value>
   </data>
+  <data name="{0} new · net +{1} places" xml:space="preserve">
+    <value>{0} new · net +{1} places</value>
+  </data>
+  <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
+    <value>**{0}** — {1} chart boards ({2} new, net +{3})</value>
+  </data>
 </root>

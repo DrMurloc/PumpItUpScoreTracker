@@ -6,6 +6,7 @@
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Theming
 @using Chart = ScoreTracker.SharedKernel.Models.Chart
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
@@ -87,7 +88,8 @@ else
             <MudTd Class="olb-hide-mobile">
                 @if (context.PlayerType != null)
                 {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">
+                    <MudChip T="string" Size="Size.Small"
+                             Style="@($"background:{PlayerTypeHex(context.PlayerType.Value)};color:var(--mix-primary-contrast);font-weight:700")">
                         @L[PlayerTypeName(context.PlayerType.Value)]
                     </MudChip>
                 }
@@ -231,6 +233,21 @@ else
             RecapPlayerType.BalancedPlayer => "Balanced Player",
             RecapPlayerType.Competitive => "Competitive",
             _ => "Perfectionist"
+        };
+    }
+
+    // Archetype chips wear the grade ladder their score bands are anchored to: the
+    // in-game sub-AAA green for Pass Pusher, then each band's top grade climbing the
+    // metal ladder - AAA+ silver, S+ gold, SSS ice, SSS+ ice.
+    internal static string PlayerTypeHex(RecapPlayerType type)
+    {
+        return type switch
+        {
+            RecapPlayerType.PassPusher => MixThemes.GradeHex("B"),
+            RecapPlayerType.PassRefiner => MixThemes.GradeHex("AAA+"),
+            RecapPlayerType.BalancedPlayer => MixThemes.GradeHex("S+"),
+            RecapPlayerType.Competitive => MixThemes.GradeHex("SSS"),
+            _ => MixThemes.GradeHex("SSS+")
         };
     }
 }

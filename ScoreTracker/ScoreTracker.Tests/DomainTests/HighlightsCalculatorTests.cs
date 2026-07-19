@@ -307,6 +307,28 @@ public sealed class HighlightsCalculatorTests
         Assert.Equal(1, playerOne.PlayerId);
         Assert.Equal(5, playerOne.NewValue); // four climbs + one new entry
         Assert.Equal(40, playerOne.PrevValue); // net places from the four climbed boards only
+        Assert.Equal(1, playerOne.Level); // the split remembers which were first-time entries
+    }
+
+    [Fact]
+    public void TyingThePerfectCeilingNeverListsAsANewNumberOne()
+    {
+        // The chart's PG lives on the other mix, so this week's PG is no world first — and
+        // matching a perfect dethrones nobody, so it is no new #1 either.
+        var board = ChartBoard(level: 26);
+        var result = HighlightsCalculator.Calculate(Input(
+            boards: new[] { board },
+            current: new[] { new PlacementRow(board.Id, 7, 1, 1_000_000) },
+            previous: new[] { new PlacementRow(board.Id, 9, 1, 998_000) },
+            boardRecords: new[] { new BoardRecordRow(board.Id, 998_000, 1) },
+            crossMix: new CrossMixRecordHighs(
+                new Dictionary<Guid, int> { [board.ChartId!.Value] = 1_000_000 },
+                new Dictionary<(string, int), int>())));
+
+        Assert.DoesNotContain(result.Highlights, h => h.Kind == HighlightKinds.ChartGradeFirst);
+        Assert.DoesNotContain(result.Highlights, h => h.Kind == HighlightKinds.NewNumberOne);
+        // The record book still advances to the perfect.
+        Assert.Equal(1_000_000, result.UpdatedBoardRecords.Single().HighScore);
     }
 
     [Fact]
