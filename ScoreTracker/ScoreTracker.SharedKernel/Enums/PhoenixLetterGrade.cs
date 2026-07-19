@@ -90,10 +90,13 @@ public static class PhoenixLetterGradeHelperMethods
     // Phoenix 2 rebalanced the sub-AAA grade cutoffs upward — verified from live piugame.com
     // boards 2026-07-18 (see ScoreTracker.Tests.Integration/LiveSite/Phoenix2GradeThresholdReconTests):
     // A 800k, A+ 900k, AA 920k, AA+ 940k; AAA (950k) and everything above are identical to Phoenix.
-    // A-tier through AAA are crawl-verified; B and below are a best-guess extrapolation (C ≤690,647
-    // confirmed from one owner-supplied board row) — the low grades don't materially affect scoring
-    // and real data is being collected. Only the score→grade cutoffs differ per mix; grade identity,
-    // modifiers and names are shared, so only the floors table is overridden here.
+    // A-tier through AAA are crawl-verified. The A and B floors are BRACKETED by live board rows
+    // (2026-07-19, the sub800k probe fact in the same recon class reading grade art off the only
+    // eight sub-800k rows on any board): 799,815 = B vs 804,414 = A pins the A floor to 800k
+    // within a 4.6k window, and 690,647 = C vs 707,042 = B pins the B floor to 700k within a
+    // 17k window. C/D/F floors stay guesses — nothing below 690,647 exists on any board, so
+    // they are unobservable from crawling. Only the score→grade cutoffs differ per mix; grade
+    // identity, modifiers and names are shared, so only the floors table is overridden here.
     private static readonly IReadOnlyDictionary<PhoenixLetterGrade, int> Phoenix2Floors =
         new Dictionary<PhoenixLetterGrade, int>
         {
