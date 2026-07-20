@@ -1,5 +1,6 @@
 @namespace ScoreTracker.Web.Components.Challenges
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.WeeklyChallenge.Contracts
 @using ScoreTracker.Web.Components
@@ -34,6 +35,7 @@ else
                 <span class="challenge-hist-place">@L["#{0} / {1}", record.Place, record.TotalPlayers]</span>
                 <span class="challenge-hist-score">
                     <ScoreBreakdown Score="record.Score" Plate="record.Plate" IsBroken="record.IsBroken"
+                                    Mix="chart?.Mix ?? MixEnum.Phoenix"
                                     OneLine="true" ShowScore="true" Height="16"></ScoreBreakdown>
                 </span>
             </div>

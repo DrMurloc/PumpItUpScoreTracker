@@ -1,5 +1,6 @@
 @namespace ScoreTracker.Web.Components.Challenges
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.WeeklyChallenge.Contracts
 @using ScoreTracker.Web.Components
@@ -91,7 +92,8 @@ else
                                 }
                             </span>
                             <span class="score"><ScoreBreakdown Score="row.Entry.Score" Plate="row.Entry.Plate"
-                                                                IsBroken="row.Entry.IsBroken" OneLine="true" ShowScore="true" Height="15"></ScoreBreakdown></span>
+                                                                IsBroken="row.Entry.IsBroken" Mix="chart?.Mix ?? MixEnum.Phoenix"
+                                                                OneLine="true" ShowScore="true" Height="15"></ScoreBreakdown></span>
                         </div>
                     }
                     @if (IsLoggedIn && summary.MyRow == null)

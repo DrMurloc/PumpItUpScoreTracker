@@ -18,6 +18,9 @@ internal sealed class EFOfficialPlayerIdentityRepository : IOfficialPlayerIdenti
     public async Task LinkPlayer(MixEnum mix, string username, Guid userId, DateTimeOffset seenAt,
         CancellationToken ct)
     {
+        // The account page renders the tag with a space ("TAG #1234"); boards render it
+        // without. Normalizing here keeps the import link on the same row the sweep writes.
+        username = OfficialPlayerTag.Normalize(username);
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
         var entity = await database.Set<OfficialPlayerEntity>()

@@ -120,7 +120,7 @@ namespace ScoreTracker.Communities.Application
         {
             var chart = charts[board.ChartId];
             var rows = string.Join("\n", board.Placements.Select(p =>
-                LeaderRow(p.Item1, PlayerName(names, p.Item2.UserId), p.Item2.Score, p.Item2.Plate,
+                LeaderRow(mix, p.Item1, PlayerName(names, p.Item2.UserId), p.Item2.Score, p.Item2.Plate,
                     p.Item2.IsBroken, Label(labels, p.Item2.UserId))));
             var cardTag = _localizer.Get(culture, "Card {0} of {1}", cardIndex, cardCount);
             var footer = moreCharts > 0 && cardIndex == cardCount
@@ -189,7 +189,7 @@ namespace ScoreTracker.Communities.Application
                     $"**{_localizer.Get(culture, "Yesterday")} — {(string)finishedChart.Song.Name} #DIFFICULTY|{finishedChart.DifficultyString}#**" +
                     (msg.FinishedIsLimbo ? " · 🕯 " + _localizer.Get(culture, "Limbo (lowest passing won)") : "")));
                 blocks.Add(new RichBotText(string.Join("\n", finished.Select(p =>
-                    LeaderRow(p.Place, PlayerName(names, p.UserId), p.Score, p.Plate, p.IsBroken,
+                    LeaderRow(msg.Mix, p.Place, PlayerName(names, p.UserId), p.Score, p.Plate, p.IsBroken,
                         Label(labels, p.UserId))))));
                 blocks.Add(new RichBotDivider());
             }
@@ -220,9 +220,9 @@ namespace ScoreTracker.Communities.Application
 
         // The community name (when the row's player is in one of the channel's non-regional
         // communities) trails the row, e.g. "…SSS SG (Arrow Eclipse)".
-        private static string LeaderRow(int place, string name, PhoenixScore score, PhoenixPlate plate, bool isBroken,
-            string? community) =>
-            $"`{place,2}` **{name}** — {(int)score:N0} #LETTERGRADE|{score.LetterGrade}|{isBroken}##PLATE|{plate}#"
+        private static string LeaderRow(MixEnum mix, int place, string name, PhoenixScore score, PhoenixPlate plate,
+            bool isBroken, string? community) =>
+            $"`{place,2}` **{name}** — {(int)score:N0} #LETTERGRADE|{score.LetterGradeFor(mix)}|{isBroken}##PLATE|{plate}#"
             + (community != null ? $" ({community})" : string.Empty);
 
         private static string PlayerName(IReadOnlyDictionary<Guid, string> names, Guid userId) =>

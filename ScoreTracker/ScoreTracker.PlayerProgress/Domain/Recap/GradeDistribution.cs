@@ -10,11 +10,11 @@ namespace ScoreTracker.PlayerProgress.Domain.Recap;
 /// </summary>
 internal static class GradeDistribution
 {
-    public static IReadOnlyList<RecapGradeCount> Calculate(IEnumerable<RecordedPhoenixScore> passes)
+    public static IReadOnlyList<RecapGradeCount> Calculate(IEnumerable<RecordedPhoenixScore> passes, MixEnum mix)
     {
         return passes
             .Where(p => p is { IsBroken: false, Score: not null })
-            .GroupBy(p => Collapse(p.Score!.Value.LetterGrade))
+            .GroupBy(p => Collapse(p.Score!.Value.LetterGradeFor(mix)))
             .OrderByDescending(g => g.Key)
             .Select(g => new RecapGradeCount(g.Key, g.Count()))
             .ToArray();

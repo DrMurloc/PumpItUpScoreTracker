@@ -150,7 +150,10 @@ public sealed class OfficialDigestFeedSagaTests
         Assert.Contains("50× AAA at Lv.20", text);
         Assert.Contains("50× SSS at Lv.16", text);
         Assert.Contains(_sent[0].Blocks, b => b is RichBotDivider); // sections are fenced for readability
-        Assert.Contains("First **SSS+** — **ESI** on Paradoxx S26", text); // plain difficulty, no bubble token
-        Assert.DoesNotContain("#DIFFICULTY|", text);
+        // World-first lines: bubble token, song, "World First", the grade as its emoji, the
+        // player linked to their board profile — no raw score on the line.
+        Assert.Contains("#DIFFICULTY|S26# **Paradoxx** — World First #LETTERGRADE|SSSPlus# — " +
+                        "[ESI](https://piuscores.arroweclip.se/OfficialLeaderboards/Players?player=ESI)", text);
+        Assert.DoesNotContain("995,120", text);
     }
 }

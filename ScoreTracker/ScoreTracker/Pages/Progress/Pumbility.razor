@@ -59,7 +59,7 @@
                         <DifficultyBubble Chart="chart"></DifficultyBubble>
                     </MudCardHeader>
                     <MudCardContent>
-                        <ScoreBreakdown Score="_scores[chart.Id].Score!.Value" IsBroken="_scores[chart.Id].IsBroken" Plate="_scores[chart.Id].Plate" Text=@(_ratings[chart.Id].ToString("N0")+" - "+(DateTimeOffset.Now-_scores[chart.Id].RecordedDate).TotalDays.ToString("N0")+" "+@L["Days Old"])></ScoreBreakdown>
+                        <ScoreBreakdown Score="_scores[chart.Id].Score!.Value" IsBroken="_scores[chart.Id].IsBroken" Plate="_scores[chart.Id].Plate" Mix="_currentMix" Text=@(_ratings[chart.Id].ToString("N0")+" - "+(DateTimeOffset.Now-_scores[chart.Id].RecordedDate).TotalDays.ToString("N0")+" "+@L["Days Old"])></ScoreBreakdown>
                     </MudCardContent>
                     <MudCardActions>
                         <MudSpacer></MudSpacer>
@@ -141,13 +141,13 @@
                             @((DateTimeOffset.Now - record.RecordedDate).TotalDays.ToString("N0") + " " + @L["Days Old"])
                         </MudText>
                         <MudTooltip Text="@record.Score!.Value.ToString()">
-                            <LetterGradeIcon Grade="record.Score!.Value.LetterGrade" IsBroken="record.IsBroken"></LetterGradeIcon>
+                            <LetterGradeIcon Grade="record.Score!.Value.LetterGradeFor(_currentMix)" IsBroken="record.IsBroken"></LetterGradeIcon>
                         </MudTooltip>
                         <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"></MudIcon>
                         
                     }
                     <MudTooltip Text="@_expectedScore[chart.Id].ToString()">
-                        <LetterGradeIcon Grade="_expectedScore[chart.Id].LetterGrade"></LetterGradeIcon>
+                        <LetterGradeIcon Grade="_expectedScore[chart.Id].LetterGradeFor(_currentMix)"></LetterGradeIcon>
                     </MudTooltip>
                     @if (_chartDifficulty.TryGetValue(chart.Id, out var difficulty)&&(!_allScores.TryGetValue(chart.Id, out var record2) || record2.IsBroken || record2.Score == null))
                     {
@@ -236,13 +236,13 @@
         var oldRating = lowestScore;
         if (_oldPassLetterGrade != null)
         {
-            oldRating = (int)ScoringConfiguration.PumbilityScoring(_currentMix, false).GetScore(_newPassLevel, _oldPassLetterGrade.Value.GetMinimumScore());
+            oldRating = (int)ScoringConfiguration.PumbilityScoring(_currentMix, false).GetScore(_newPassLevel, _oldPassLetterGrade.Value.GetMinimumScoreFor(_currentMix));
             if (oldRating < lowestScore)
             {
                 oldRating = lowestScore;
             }
         }
-        var rating = (int)ScoringConfiguration.PumbilityScoring(_currentMix, false).GetScore(_newPassLevel, newLetterGrade.GetMinimumScore());
+        var rating = (int)ScoringConfiguration.PumbilityScoring(_currentMix, false).GetScore(_newPassLevel, newLetterGrade.GetMinimumScoreFor(_currentMix));
         _projectedNewPassRating = rating - oldRating;
         if (_projectedNewPassRating <= 0)
         {

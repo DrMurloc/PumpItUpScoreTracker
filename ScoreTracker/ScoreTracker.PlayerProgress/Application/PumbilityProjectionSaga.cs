@@ -118,7 +118,8 @@ namespace ScoreTracker.PlayerProgress.Application
 
                     if (myScores.Count() < (int)Math.Floor(.2 * chartAverages.Count()))
                     {
-                        var diff = scoring.GetScore(chartType, levelGroup.Key, PhoenixLetterGrade.AA.GetMinimumScore())
+                        var diff = scoring.GetScore(chartType, levelGroup.Key,
+                                       PhoenixLetterGrade.AA.GetMinimumScoreFor(scoring.Mix))
                                    - pools[chartType].Baseline;
                         if (myScores.Any() && diff > 0)
                             insufficientData[(chartType, levelGroup.Key)] = (int)diff;

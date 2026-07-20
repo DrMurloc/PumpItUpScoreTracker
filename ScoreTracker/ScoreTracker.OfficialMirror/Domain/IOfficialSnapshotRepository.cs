@@ -58,7 +58,14 @@ internal interface IOfficialSnapshotRepository
 
     /// <summary>The import-linked mirror player for a site account, if the link exists.</summary>
     Task<PlayerDimension?> GetPlayerByUserId(MixEnum mix, Guid userId, CancellationToken ct);
+
     Task<IReadOnlyList<string>> GetPlayerNames(MixEnum mix, CancellationToken ct);
+
+    /// <summary>
+    ///     Every player id with a placement in any of this mix's snapshots before the given
+    ///     one — the all-history "seen" set that makes a debut a debut.
+    /// </summary>
+    Task<IReadOnlySet<int>> GetSeenPlayerIds(MixEnum mix, int beforeSnapshotId, CancellationToken ct);
 
     /// <summary>One board's rows within one snapshot, in display order.</summary>
     Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId, int leaderboardId, CancellationToken ct);

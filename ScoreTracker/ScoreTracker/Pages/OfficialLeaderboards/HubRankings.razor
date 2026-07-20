@@ -5,10 +5,15 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.Theming
 @using Chart = ScoreTracker.SharedKernel.Models.Chart
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject CommunityGlowReader CommunityGlow
 
 @if (_type == "CoOp")
 {
@@ -49,93 +54,55 @@ else if (_rankings == null || !_rankings.Rankings.Any())
 }
 else
 {
-    <MudTable T="OfficialRankingRecord" Items="Filtered" Breakpoint="Breakpoint.None" Dense="true"
-              RowsPerPage="50" Class="olb-sticky-second olb-pager-tight">
-        <HeaderContent>
-            <MudTh>@L["Rank"]</MudTh>
-            <MudTh>@L["Player"]</MudTh>
-            <MudTh Style="text-align:right">@(_rankings.RatingIsOfficial ? "PUMBILITY" : L["Rating"])</MudTh>
-            <MudTh Style="text-align:right">@L["Boards"]</MudTh>
-            <MudTh Class="olb-hide-mobile">@L["Type"]</MudTh>
-            <MudTh></MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>
-                <RankDelta Rank="context.Rank" PreviousRank="context.PreviousRank"/>
-            </MudTd>
-            <MudTd>
+    var pageCount = PageCount;
+    var page = Math.Min(_page, pageCount);
+    <div class="olb-rank-cards">
+        @foreach (var row in Filtered.Skip((page - 1) * PageSize).Take(PageSize))
+        {
+            <div class="olb-rank-card @GlowClass(row.Player)">
+                <span class="olb-rank-rankbox">
+                    <b>@row.Rank</b>
+                    @if (row.PreviousRank != null && row.PreviousRank != row.Rank)
+                    {
+                        var delta = row.PreviousRank.Value - row.Rank;
+                        <span class="@(delta > 0 ? "olb-delta-up" : "olb-delta-down")">
+                            @(delta > 0 ? "▲" : "▼")@Math.Abs(delta)
+                        </span>
+                    }
+                </span>
                 <MudLink title="@L["See their boards"]" Style="cursor:pointer" Underline="Underline.None"
-                         OnClick="() => OnShowPlayer.InvokeAsync(context.Player.Username)">
-                    <HubPlayerChip Player="context.Player" Dense="true"/>
+                         OnClick="() => OnShowPlayer.InvokeAsync(row.Player.Username)">
+                    <HubPlayerChip Player="row.Player" Dense="true"/>
                 </MudLink>
-            </MudTd>
-            <MudTd Style="text-align:right"><b>@context.Rating.ToString(_rankings.RatingIsOfficial ? "N2" : "N0")</b></MudTd>
-            <MudTd Style="text-align:right">@context.BoardsInTop</MudTd>
-            <MudTd Class="olb-hide-mobile">
-                @if (context.PlayerType != null)
-                {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
-                             Style="@Communities.CommunityLeaderboard.PlayerTypeStyle(context.PlayerType.Value)">
-                        @L[PlayerTypeName(context.PlayerType.Value)]
-                    </MudChip>
-                }
-            </MudTd>
-            <MudTd>
-                <MudButton Size="Size.Small" Variant="Variant.Outlined"
-                           OnClick="() => ToggleExpand(context.Player.Username)">
-                    @L["Top 50"] @(_expanded == context.Player.Username ? "▴" : "▾")
-                </MudButton>
-            </MudTd>
-        </RowTemplate>
-        <ChildRowContent>
-            @if (_expanded == context.Player.Username)
+                <span class="olb-rank-tail">
+                    @if (row.PlayerType != null)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                                 Style="@PlayerTypeChipStyle(row.PlayerType.Value)">
+                            @L[PlayerTypeName(row.PlayerType.Value)]
+                        </MudChip>
+                    }
+                    <MudText Typo="Typo.body2"><b>@row.Rating.ToString(_rankings.RatingIsOfficial ? "N2" : "N0")</b></MudText>
+                </span>
+                <MudIconButton Size="Size.Small" aria-label="@L["Top 50"]" title="@L["Top 50"]"
+                               Icon="@(_expanded == row.Player.Username ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                               OnClick="() => ToggleExpand(row.Player.Username)"/>
+            </div>
+            @if (_expanded == row.Player.Username)
             {
-                <td colspan="6">
-                    @if (_expandedProfile == null)
-                    {
-                        <MudSkeleton Height="120px" SkeletonType="SkeletonType.Rectangle"/>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.caption" Class="d-block pa-2">
-                            @L[_type == "CoOp"
-                                ? "Top co-op charts by estimated rating - plates inferred from score."
-                                : "Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade."]
-                        </MudText>
-                        <div class="tier-card-grid pa-2">
-                            @foreach (var placement in _expandedProfile.Placements
-                                          .Where(p => Charts.TryGetValue(p.ChartId, out var pc) &&
-                                                      (pc.Type == ChartType.CoOp) == (_type == "CoOp"))
-                                          .OrderByDescending(p => p.ComputedRating).Take(50))
-                            {
-                                var chart = Charts.TryGetValue(placement.ChartId, out var c) ? c : null;
-                                if (chart == null) continue;
-                                @if (placement.Supplemented)
-                                {
-                                    <div class="olb-supplemented-card">
-                                        <MudTooltip Text="@L["From their linked piuscores account - not on an official board yet"]">
-                                            <MudIcon Icon="@Icons.Material.Filled.CloudSync" Size="Size.Small"
-                                                     Class="olb-supplemented-badge"/>
-                                        </MudTooltip>
-                                        <TierListChartCard Chart="chart" Score="MirrorScore(placement)"
-                                                           ShowToDo="false" OnOpen="OpenChart"/>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <TierListChartCard Chart="chart" Score="MirrorScore(placement)"
-                                                       ShowToDo="false" OnOpen="OpenChart"/>
-                                }
-                            }
-                        </div>
-                    }
-                </td>
+                <div class="olb-rank-expand">
+                    <HubRankingsTopCharts Profile="_expandedProfile" TypeFilter="@_type" Charts="Charts"
+                                          OnOpen="OpenChart"/>
+                </div>
             }
-        </ChildRowContent>
-        <PagerContent>
-            <MudTablePager HideRowsPerPage="true"/>
-        </PagerContent>
-    </MudTable>
+        }
+    </div>
+    @if (pageCount > 1)
+    {
+        <div class="d-flex justify-center mt-2">
+            <MudPagination Count="pageCount" Selected="page" SelectedChanged="p => _page = p"/>
+        </div>
+    }
 }
 
 <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="Mix"></ChartDetailsDialog>
@@ -148,6 +115,8 @@ else
     // with that player selected.
     [Parameter] public EventCallback<string> OnShowPlayer { get; set; }
 
+    private const int PageSize = 50;
+
     private bool _loading = true;
     private string _type = "All";
     private string _filter = string.Empty;
@@ -156,6 +125,10 @@ else
     private string? _expanded;
     private OfficialPlayerProfileRecord? _expandedProfile;
     private OfficialRankingsRecord? _rankings;
+    private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
+    private int _page = 1;
+
+    private int PageCount => Math.Max(1, (int)Math.Ceiling(Filtered.Count() / (double)PageSize));
 
     private IEnumerable<OfficialRankingRecord> Filtered =>
         _rankings?.Rankings.Where(r => string.IsNullOrWhiteSpace(_filter) ||
@@ -165,7 +138,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
         await Load();
+    }
+
+    private string GlowClass(OfficialPlayerRecord player)
+    {
+        if (player.UserId == null) return string.Empty;
+        if (CurrentUser.IsLoggedIn && player.UserId == CurrentUser.User.Id) return "olb-row-me";
+        return _communityIds.Contains(player.UserId.Value) ? "olb-row-community" : string.Empty;
     }
 
     private async Task Load()
@@ -180,13 +161,8 @@ else
         _type = type;
         _expanded = null;
         _expandedProfile = null;
+        _page = 1;
         await Load();
-    }
-
-    private static RecordedPhoenixScore MirrorScore(OfficialPlayerChartRecord placement)
-    {
-        // Mirrored boards expose score only — no plate, never broken.
-        return new RecordedPhoenixScore(placement.ChartId, placement.Score, null, false, default);
     }
 
     private void OpenChart(Guid chartId)
@@ -220,5 +196,21 @@ else
             RecapPlayerType.Competitive => "Competitive",
             _ => "Perfectionist"
         };
+    }
+
+    // Archetype chips wear the grade-metal ladder, outlined: AA bronze for Pass Pusher,
+    // then AAA+ silver, S+ gold, SSS ice — and the summit type glows.
+    internal static string PlayerTypeChipStyle(RecapPlayerType type)
+    {
+        var hex = type switch
+        {
+            RecapPlayerType.PassPusher => MixThemes.GradeHex("AA"),
+            RecapPlayerType.PassRefiner => MixThemes.GradeHex("AAA+"),
+            RecapPlayerType.BalancedPlayer => MixThemes.GradeHex("S+"),
+            RecapPlayerType.Competitive => MixThemes.GradeHex("SSS"),
+            _ => MixThemes.GradeHex("SSS+")
+        };
+        var style = $"border-color:{hex};color:{hex};font-weight:700";
+        return type == RecapPlayerType.Perfectionist ? $"{style};box-shadow:0 0 9px {hex}99" : style;
     }
 }

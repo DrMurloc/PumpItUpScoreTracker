@@ -301,11 +301,11 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
                 banYaPassed, null));
 
         if (shared.UhHeungSingles22 is { } uhHeung &&
-            RecapBadges.EarnsBigFeet(bests.FirstOrDefault(b => b.ChartId == uhHeung)))
+            RecapBadges.EarnsBigFeet(bests.FirstOrDefault(b => b.ChartId == uhHeung), mix))
             badges.Add(new RecapEarnedBadge(RecapBadge.BigFeetOrInjuredBack, null, null, "Uh-Heung S22"));
 
         var s24Records = bests.Where(b => shared.Singles24PlusChartIds.Contains(b.ChartId)).ToArray();
-        if (RecapBadges.EarnsGrandMashter(s24Records, shared.Singles24PlusChartIds.Count))
+        if (RecapBadges.EarnsGrandMashter(s24Records, shared.Singles24PlusChartIds.Count, mix))
             badges.Add(new RecapEarnedBadge(RecapBadge.GrandMashter, null, null, null));
 
         var passedDoublesLevels = passes
@@ -627,7 +627,7 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             highest != null && shared.TitleHolders.TryGetValue(highest.Name, out var holders)
                 ? holders
                 : null,
-            GradeDistribution.Calculate(passes),
+            GradeDistribution.Calculate(passes, mix),
             passedCharts.Count(c => c!.Type == ChartType.Single),
             passedCharts.Count(c => c!.Type == ChartType.Double));
     }

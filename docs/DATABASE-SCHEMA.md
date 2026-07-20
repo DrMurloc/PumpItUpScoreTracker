@@ -104,7 +104,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.OfficialChartPopularity` | Official play-ranking place per chart per snapshot (popularity history) |
 | `scores.OfficialBoardRecord` | Record book per chart board: all-time high score (encodes every claimed grade band) |
 | `scores.OfficialFolderRecord` | Record book per folder (mix + type + level): all-time high score across the folder's boards |
-| `scores.OfficialWeeklyHighlight` | Editorial weekly highlights computed at import (movers, boards climbed, new #1s, grade firsts); rebuildable from snapshots |
+| `scores.OfficialWeeklyHighlight` | Editorial weekly highlights computed at import (movers, boards climbed, new #1s, grade firsts, plus the This Week hero's playerless summary rows: pulse, gainers, debuts, floor marks); rebuildable from snapshots |
 | `scores.OfficialPlayerRenameProposal` | Detected likely renames awaiting admin accept/dismiss; survives merges as the audit trail |
 | `scores.UserOfficialLeaderboard` | Legacy placements (pre-snapshot model) — dropped in a follow-up PR once the prod baseline seed is verified |
 | `scores.UserWorldRanking` | Legacy calculated world rankings — same retirement path |

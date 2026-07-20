@@ -98,13 +98,13 @@ namespace ScoreTracker.PlayerProgress.Application
                     request.ChartType, request.LevelOffset, charts, window));
             if (Include(RecommendationCategory.SkillTitles))
                 result = result.Concat(
-                    await GetSkillTitleCharts(feedback, cancellationToken, titles, request.ChartType, charts));
+                    await GetSkillTitleCharts(mix, feedback, cancellationToken, titles, request.ChartType, charts));
             if (Include(RecommendationCategory.RevisitOldScores))
                 result = result.Concat(await GetOldScores(mix, cancellationToken, competitiveLevel, scores, feedback,
                     request.ChartType, request.LevelOffset, charts, window));
             if (Include(RecommendationCategory.PushPGs))
                 result = result.Concat(
-                    await GetPGPushes(feedback, cancellationToken, scores, request.ChartType, charts, window));
+                    await GetPGPushes(mix, feedback, cancellationToken, scores, request.ChartType, charts, window));
             if (Include(RecommendationCategory.ImproveTop50))
                 result = result.Concat(
                     await GetRandomFromTop50Charts(mix, feedback, request.ChartType, cancellationToken, charts,
@@ -475,7 +475,7 @@ namespace ScoreTracker.PlayerProgress.Application
                     "The biggest Pumbility gains available to you right now", "+" + kv.Value.ToString("N0")));
         }
 
-        private async Task<IEnumerable<ChartRecommendation>> GetSkillTitleCharts(
+        private async Task<IEnumerable<ChartRecommendation>> GetSkillTitleCharts(MixEnum mix,
             IDictionary<string, ISet<Guid>> ignoredChartIds, CancellationToken cancellationToken,
             TitleProgress[] allTitles, ChartType? chartType, IDictionary<Guid, Chart> charts)
         {
@@ -483,7 +483,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 ? c
                 : new HashSet<Guid>();
             return allTitles.Where(t =>
-                    t.Title is PhoenixSkillTitle && t.CompletionCount >= PhoenixLetterGrade.S.GetMinimumScore() &&
+                    t.Title is PhoenixSkillTitle && t.CompletionCount >= (int)PhoenixLetterGrade.S.GetMinimumScoreFor(mix) &&
                     t.CompletionCount < t.Title.CompletionRequired)
                 .Select(t => new ChartRecommendation(RecommendationCategories.SkillTitles,
                     charts.Values.First(c => (t.Title as PhoenixSkillTitle)!.AppliesToChart(c)).Id,
@@ -491,7 +491,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 .Where(s => !skipped.Contains(s.ChartId) && (chartType == null || charts[s.ChartId].Type == chartType));
         }
 
-        private async Task<IEnumerable<ChartRecommendation>> GetPGPushes(
+        private async Task<IEnumerable<ChartRecommendation>> GetPGPushes(MixEnum mix,
             IDictionary<string, ISet<Guid>> ignoredChartIds, CancellationToken cancellationToken,
             RecordedPhoenixScore[] scores, ChartType? chartType, IDictionary<Guid, Chart> charts,
             Func<Chart, bool>? window)
@@ -501,7 +501,8 @@ namespace ScoreTracker.PlayerProgress.Application
                 : new HashSet<Guid>();
 
             return scores.Where(s =>
-                    s.Score != null && s.Score != 1000000 && s.Score.Value.LetterGrade == PhoenixLetterGrade.SSSPlus &&
+                    s.Score != null && s.Score != 1000000 &&
+                    s.Score.Value.LetterGradeFor(mix) == PhoenixLetterGrade.SSSPlus &&
                     (chartType == null || charts[s.ChartId].Type == chartType))
                 .Where(s => !skipped.Contains(s.ChartId))
                 .Where(s => window == null || (charts.TryGetValue(s.ChartId, out var chart) && window(chart)))

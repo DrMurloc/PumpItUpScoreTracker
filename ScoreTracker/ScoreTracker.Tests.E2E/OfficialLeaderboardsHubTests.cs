@@ -68,7 +68,10 @@ public sealed class OfficialLeaderboardsHubTests : IAsyncLifetime
             .ToBeVisibleAsync(timeout);
         await Expect(_page.GetByText("E2ECHAMP").First).ToBeVisibleAsync();
         await Expect(_page.GetByText("E2ERUNNER").First).ToBeVisibleAsync();
-        var rows = _page.Locator("tr", new PageLocatorOptions { HasTextString = "E2E" });
-        Assert.True(await rows.CountAsync() >= 2, "Expected both seeded players in the rankings table.");
+        // The board is compact rows, not a table: the rankings board is the leaderboard
+        // golden standard (UX rule 5), so a row is .olb-rank-card and never a <tr>. The
+        // count is exact — one row per player, so a re-introduced twin fails here.
+        var rows = _page.Locator(".olb-rank-card", new PageLocatorOptions { HasTextString = "E2E" });
+        await Expect(rows).ToHaveCountAsync(2);
     }
 }

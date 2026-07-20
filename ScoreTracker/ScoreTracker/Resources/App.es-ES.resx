@@ -4344,17 +4344,20 @@
   <data name="Best place" xml:space="preserve">
     <value>Mejor puesto</value>
   </data>
-  <data name="Board #1s" xml:space="preserve">
-    <value>Números 1 en leaderboards</value>
+  <data name="Chart Board #1s" xml:space="preserve">
+    <value>Números 1 en leaderboards de charts</value>
   </data>
-  <data name="Board placements" xml:space="preserve">
-    <value>Puestos en leaderboards</value>
+  <data name="Chart Boards" xml:space="preserve">
+    <value>Leaderboards de charts</value>
   </data>
-  <data name="Board rank - lower is better" xml:space="preserve">
-    <value>Puesto en el leaderboard - cuanto más bajo, mejor</value>
+  <data name="Chart board placements" xml:space="preserve">
+    <value>Puestos en leaderboards de charts</value>
   </data>
-  <data name="boards" xml:space="preserve">
-    <value>leaderboards</value>
+  <data name="PUMBILITY rank - lower is better" xml:space="preserve">
+    <value>Puesto PUMBILITY - cuanto más bajo, mejor</value>
+  </data>
+  <data name="chart boards" xml:space="preserve">
+    <value>leaderboards de charts</value>
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Leaderboards</value>
@@ -4389,8 +4392,8 @@
   <data name="Last import failed" xml:space="preserve">
     <value>La última importación falló</value>
   </data>
-  <data name="level 24+, first ever, SS and up" xml:space="preserve">
-    <value>nivel 24+, primera vez en la historia, SS o superior</value>
+  <data name="level 24+, first ever, any grade" xml:space="preserve">
+    <value>nivel 24+, primera vez en la historia, cualquier grade</value>
   </data>
   <data name="level 24+, must beat the standing record" xml:space="preserve">
     <value>nivel 24+, hay que superar el récord vigente</value>
@@ -4398,8 +4401,8 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>Vinculado a una cuenta del sitio</value>
   </data>
-  <data name="Most boards climbed" xml:space="preserve">
-    <value>Más leaderboards escalados</value>
+  <data name="Biggest board climbers" xml:space="preserve">
+    <value>Mayores escaladas en leaderboards de charts</value>
   </data>
   <data name="Movers of the week" xml:space="preserve">
     <value>Escaladas de la semana</value>
@@ -4431,8 +4434,8 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>Aún no hay clasificaciones - aparecen tras la primera importación semanal.</value>
   </data>
-  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
-    <value>Nadie superó el umbral de escalada esta semana.</value>
+  <data name="Nobody climbed a chart board this week." xml:space="preserve">
+    <value>Nadie escaló en un leaderboard de charts esta semana.</value>
   </data>
   <data name="Official Leaderboards Admin" xml:space="preserve">
     <value>Administración de leaderboards oficiales</value>
@@ -4962,20 +4965,17 @@
   <data name="PUMBILITY movers" xml:space="preserve">
     <value>Movimientos de PUMBILITY</value>
   </data>
-  <data name="Boards climbed" xml:space="preserve">
-    <value>Leaderboards escalados</value>
-  </data>
-  <data name="**{0}** climbed {1} boards (+{2})" xml:space="preserve">
-    <value>**{0}** escaló {1} leaderboards (+{2})</value>
+  <data name="**{0}** climbed {1} chart boards (+{2})" xml:space="preserve">
+    <value>**{0}** escaló {1} leaderboards de charts (+{2})</value>
   </data>
   <data name="World firsts &amp; new #1s" xml:space="preserve">
     <value>Primeras mundiales y nuevos #1</value>
   </data>
-  <data name="First **{0}** — **{1}** in the {2} folder · {3:N0}" xml:space="preserve">
-    <value>Primer **{0}** — **{1}** en la carpeta {2} · {3:N0}</value>
+  <data name="World First" xml:space="preserve">
+    <value>World First</value>
   </data>
-  <data name="First **{0}** — **{1}** on {2} · {3:N0}" xml:space="preserve">
-    <value>Primer **{0}** — **{1}** en {2} · {3:N0}</value>
+  <data name="{0} folder first" xml:space="preserve">
+    <value>primero del folder {0}</value>
   </data>
   <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
     <value>Nuevo #1 — **{0}** en {1} · {2:N0}</value>
@@ -5765,5 +5765,68 @@
   </data>
   <data name="Speaks your language." xml:space="preserve">
     <value>Habla tu idioma.</value>
+  </data>
+  <data name="This week on the boards" xml:space="preserve">
+    <value>Esta semana en los leaderboards</value>
+  </data>
+  <data name="{0} players left their mark on the chart boards." xml:space="preserve">
+    <value>{0} jugadores dejaron su marca en los leaderboards de charts.</value>
+  </data>
+  <data name="{0} players left their mark — and {1} fell to its first {2}." xml:space="preserve">
+    <value>{0} jugadores dejaron su marca — y {1} cayó ante su primer {2}.</value>
+  </data>
+  <data name="Chart board entries" xml:space="preserve">
+    <value>Entradas en leaderboards de charts</value>
+  </data>
+  <data name="{0} new · {1} upscored" xml:space="preserve">
+    <value>{0} nuevas · {1} mejoradas</value>
+  </data>
+  <data name="Players active" xml:space="preserve">
+    <value>Jugadores activos</value>
+  </data>
+  <data name="on any chart board" xml:space="preserve">
+    <value>en algún leaderboard de charts</value>
+  </data>
+  <data name="first ever, any grade" xml:space="preserve">
+    <value>primeros de la historia, cualquier grade</value>
+  </data>
+  <data name="Biggest PUMBILITY gainer" xml:space="preserve">
+    <value>Mayor subida de PUMBILITY</value>
+  </data>
+  <data name="Highest world first" xml:space="preserve">
+    <value>World First de mayor nivel</value>
+  </data>
+  <data name="Biggest board climber" xml:space="preserve">
+    <value>Mayor escalada en leaderboards de charts</value>
+  </data>
+  <data name="{0} new" xml:space="preserve">
+    <value>{0} nuevos</value>
+  </data>
+  <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
+    <value>Cortes del Top 100 · Top 1000 — 50× SS</value>
+  </data>
+  <data name="held" xml:space="preserve">
+    <value>se mantiene</value>
+  </data>
+  <data name="what it takes to hold each rung of the PUMBILITY board" xml:space="preserve">
+    <value>lo que hace falta para mantener cada peldaño del leaderboard PUMBILITY</value>
+  </data>
+  <data name="Debuted this week" xml:space="preserve">
+    <value>Debutaron esta semana</value>
+  </data>
+  <data name="first-ever appearance on any chart board" xml:space="preserve">
+    <value>primera aparición en un leaderboard de charts</value>
+  </data>
+  <data name="{0} new · net +{1} places" xml:space="preserve">
+    <value>{0} nuevas · neto +{1} puestos</value>
+  </data>
+  <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
+    <value>**{0}** — {1} leaderboards de charts ({2} nuevos, neto +{3})</value>
+  </data>
+  <data name="Chart leaderboard" xml:space="preserve">
+    <value>Leaderboard del chart</value>
+  </data>
+  <data name="Nobody is on this chart board yet." xml:space="preserve">
+    <value>Todavía no hay nadie en este leaderboard.</value>
   </data>
 </root>

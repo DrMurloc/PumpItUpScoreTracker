@@ -146,12 +146,15 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     private async Task ComputeHighlights(int snapshotId, MixEnum mix, bool isBaseline, CancellationToken ct)
     {
         var previous = await _snapshots.GetSealedBefore(mix, snapshotId, ct);
-        var input = new HighlightsInput(snapshotId, isBaseline,
+        var input = new HighlightsInput(mix, snapshotId, isBaseline,
             await _snapshots.GetBoards(mix, ct),
             await _snapshots.GetPlacements(snapshotId, ct),
             previous == null ? null : await _snapshots.GetPlacements(previous.Id, ct),
             await _records.GetBoardRecords(mix, ct),
-            await _records.GetFolderRecords(mix, ct));
+            await _records.GetFolderRecords(mix, ct),
+            await _records.GetCrossMixHighs(mix, ct),
+            await _snapshots.GetSeenPlayerIds(mix, snapshotId, ct),
+            ScoringConfiguration.PumbilityScoring(mix, false));
         var result = HighlightsCalculator.Calculate(input);
         await _records.WriteHighlights(snapshotId, mix, result.Highlights, ct);
         await _records.UpsertBoardRecords(result.UpdatedBoardRecords, ct);
@@ -267,17 +270,26 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
 
         var runs = await _snapshots.GetSealedAscending(mix, ct);
         var boards = await _snapshots.GetBoards(mix, ct);
+        // The other mixes' books are read once, as of now, not per replayed week: they only
+        // ever grow, and Phoenix's freezes at sunset, so the drift window is a transient edge.
+        var crossMix = await _records.GetCrossMixHighs(mix, ct);
+        var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
+        // The seen-set accumulates as the replay walks forward — each week's debuts are
+        // judged against exactly the history that existed then.
+        var seen = new HashSet<int>();
         IReadOnlyList<PlacementRow>? previous = null;
         var isFirst = true;
         foreach (var run in runs)
         {
             var current = await _snapshots.GetPlacements(run.Id, ct);
-            var input = new HighlightsInput(run.Id, isFirst || run.IsBaseline, boards, current, previous,
-                await _records.GetBoardRecords(mix, ct), await _records.GetFolderRecords(mix, ct));
+            var input = new HighlightsInput(mix, run.Id, isFirst || run.IsBaseline, boards, current, previous,
+                await _records.GetBoardRecords(mix, ct), await _records.GetFolderRecords(mix, ct), crossMix,
+                seen, scoring);
             var result = HighlightsCalculator.Calculate(input);
             await _records.WriteHighlights(run.Id, mix, result.Highlights, ct);
             await _records.UpsertBoardRecords(result.UpdatedBoardRecords, ct);
             await _records.UpsertFolderRecords(mix, result.UpdatedFolderRecords, ct);
+            foreach (var placement in current) seen.Add(placement.PlayerId);
             previous = current;
             isFirst = false;
         }
@@ -437,11 +449,17 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         public async Task<IReadOnlyDictionary<string, int>> Resolve(
             IReadOnlyCollection<(string Username, Uri? Avatar)> players, CancellationToken ct)
         {
-            var toEnsure = players
-                .Where(p => !_players.TryGetValue(p.Username, out var known) ||
+            // The cache keys on the normalized tag (matching storage); the result dictionary
+            // keeps the caller's raw scraped names so placement rows look up by what they parsed.
+            var requested = players
+                .Select(p => (p.Username, Tag: OfficialPlayerTag.Normalize(p.Username), p.Avatar))
+                .ToArray();
+            var toEnsure = requested
+                .Where(p => !_players.TryGetValue(p.Tag, out var known) ||
                             (!known.HasAvatar && p.Avatar != null))
-                .GroupBy(p => p.Username, StringComparer.OrdinalIgnoreCase)
+                .GroupBy(p => p.Tag, StringComparer.OrdinalIgnoreCase)
                 .Select(g => g.OrderByDescending(p => p.Avatar != null).First())
+                .Select(p => (p.Username, p.Avatar))
                 .ToArray();
             if (toEnsure.Length > 0)
             {
@@ -450,8 +468,9 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
                     _players[player.Username] = (player.Id, player.Avatar != null);
             }
 
-            return players.Select(p => p.Username).Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(u => u, u => _players[u].Id, StringComparer.OrdinalIgnoreCase);
+            return requested
+                .GroupBy(p => p.Username, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => _players[g.First().Tag].Id, StringComparer.OrdinalIgnoreCase);
         }
     }
 }

@@ -52,7 +52,7 @@
             @if (_best?.Score != null)
             {
                 <div class="chart-record-score">
-                    <ScoreBreakdown Score="_best.Score.Value" IsBroken="_best.IsBroken" OneLine="true"
+                    <ScoreBreakdown Score="_best.Score.Value" IsBroken="_best.IsBroken" Mix="Mix" OneLine="true"
                                     ShowScore="true" Plate="_best.Plate" Ranking="_ranking"></ScoreBreakdown>
                 </div>
                 @if (_ageDays != null)
@@ -75,7 +75,7 @@
                             <span class="chart-record-journey-score">@(entry.Score?.ToString() ?? "—")</span>
                             @if (entry.Score != null)
                             {
-                                <LetterGradeIcon Grade="entry.Score.Value.LetterGrade" IsBroken="entry.IsBroken" Height="16"></LetterGradeIcon>
+                                <LetterGradeIcon Grade="entry.Score.Value.LetterGradeFor(Mix)" IsBroken="entry.IsBroken" Height="16"></LetterGradeIcon>
                             }
                         </div>
                     }

@@ -404,11 +404,11 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             .ToArray();
         if (folderBests.Any(b => b?.Score == null || b.IsBroken)) return;
 
-        var minGrade = folderBests.Min(b => b!.Score!.Value.LetterGrade);
+        var minGrade = folderBests.Min(b => b!.Score!.Value.LetterGradeFor(e.Mix));
         var gradeFloorIsNew = newlyCompleted || folderChanges.Any(c =>
-            data.Bests[c.ChartId].Score!.Value.LetterGrade == minGrade
+            data.Bests[c.ChartId].Score!.Value.LetterGradeFor(e.Mix) == minGrade
             && (c.IsNewPass || c.OldScore == null ||
-                PhoenixScore.From(c.OldScore.Value).LetterGrade < minGrade));
+                PhoenixScore.From(c.OldScore.Value).LetterGradeFor(e.Mix) < minGrade));
         if (gradeFloorIsNew)
             lamps.Add(new PlayerMilestoneWrite(MilestoneKind.FolderGradeLamp, e.SessionId, e.OccurredAt,
                 Detail: $"{folderName}|{minGrade.GetName()}"));

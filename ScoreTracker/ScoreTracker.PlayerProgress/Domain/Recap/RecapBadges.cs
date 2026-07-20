@@ -79,10 +79,10 @@ internal static class RecapBadges
         return passedBanYaCharts / (double)totalBanYaCharts > .5 ? RecapBadge.BanYaLover : null;
     }
 
-    public static bool EarnsBigFeet(RecordedPhoenixScore? uhHeungSingles22)
+    public static bool EarnsBigFeet(RecordedPhoenixScore? uhHeungSingles22, MixEnum mix)
     {
         return uhHeungSingles22 is { IsBroken: false, Score: not null } &&
-               (int)uhHeungSingles22.Score.Value >= (int)PhoenixLetterGrade.SSSPlus.GetMinimumScore();
+               (int)uhHeungSingles22.Score.Value >= (int)PhoenixLetterGrade.SSSPlus.GetMinimumScoreFor(mix);
     }
 
     /// <summary>
@@ -92,10 +92,10 @@ internal static class RecapBadges
     ///     matching the calibration query.
     /// </summary>
     public static bool EarnsGrandMashter(IEnumerable<RecordedPhoenixScore> singles24PlusRecords,
-        int totalSingles24PlusCharts)
+        int totalSingles24PlusCharts, MixEnum mix)
     {
         if (totalSingles24PlusCharts <= 0) return false;
-        var mashCap = (int)PhoenixLetterGrade.AAPlus.GetMaximumScore();
+        var mashCap = (int)PhoenixLetterGrade.AAPlus.GetMaximumScoreFor(mix);
         var mashPasses = singles24PlusRecords.Count(r =>
             r is { IsBroken: false, Score: not null } && (int)r.Score.Value <= mashCap);
         return mashPasses > .75 * totalSingles24PlusCharts;

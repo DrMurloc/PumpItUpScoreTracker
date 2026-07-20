@@ -1,13 +1,17 @@
-@using MediatR
+﻿@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.HomeDashboard
 @using ScoreTracker.Web.Services.Theming
 @using Chart = ScoreTracker.SharedKernel.Models.Chart
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject CommunityGlowReader CommunityGlow
 
 @if (_loading)
 {
@@ -27,6 +31,169 @@ else if (!_highlights.Movers.Any() && !_highlights.WorldFirsts.Any() && !_highli
 }
 else
 {
+    <style>
+        /* The weekly hype hero (signed-off mock, I2): everything reads mix tokens; the
+           soft washes come from color-mix over tokens so no literal ever lands here. */
+        .olb-hero {
+            border: 1px solid color-mix(in srgb, var(--mix-primary) 25%, var(--mix-surface-muted));
+            border-radius: 14px;
+            background:
+                radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--mix-primary) 9%, transparent), transparent 55%),
+                radial-gradient(120% 140% at 100% 100%, color-mix(in srgb, var(--mix-secondary) 7%, transparent), transparent 55%),
+                var(--mix-surface);
+            box-shadow: 0 0 24px color-mix(in srgb, var(--mix-glow) 30%, transparent);
+            padding: 14px 14px 12px;
+            margin-bottom: 16px;
+        }
+
+        .olb-hero-kicker { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+
+        .olb-hero-k {
+            font-family: var(--font-display);
+            font-weight: 700; font-size: 15px; letter-spacing: 2.5px;
+            text-transform: uppercase; color: var(--mix-primary);
+        }
+
+        .olb-hero-hype { color: var(--mix-ink-muted); font-size: 13px; }
+
+        .olb-hero-pulse { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+
+        .olb-hero-stat {
+            background: color-mix(in srgb, var(--mix-bg) 45%, transparent);
+            border: 1px solid var(--mix-surface-muted);
+            border-radius: 10px; padding: 9px 12px 7px; min-width: 0;
+        }
+
+        .olb-hero-label {
+            font-size: 10.5px; letter-spacing: 1.4px; text-transform: uppercase;
+            color: var(--mix-ink-muted); margin-bottom: 2px;
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        .olb-hero-stat .num-big {
+            font-family: var(--font-display); font-weight: 800;
+            font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums;
+        }
+
+        .olb-hero-sub { font-size: 12px; color: var(--mix-ink-muted); margin-top: 3px; }
+        .olb-hero-sub b { color: var(--mix-ink); font-weight: 600; }
+
+        .olb-hero-snap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .olb-hero-card {
+            background: color-mix(in srgb, var(--mix-bg) 45%, transparent);
+            border: 1px solid var(--mix-surface-muted);
+            border-radius: 10px; padding: 10px 12px 9px;
+            display: flex; flex-direction: column; gap: 7px; min-width: 0;
+        }
+
+        .olb-hero-card .olb-hero-label::before,
+        .olb-hero-stat .olb-hero-label::before {
+            content: ""; width: 7px; height: 7px; border-radius: 2px;
+            background: var(--mix-primary); flex: 0 0 auto;
+        }
+
+        .olb-hero-card.first .olb-hero-label::before { background: var(--rarity-gold); }
+        .olb-hero-card.floor .olb-hero-label::before { background: var(--mix-secondary); }
+
+        .olb-hero-gain {
+            font-family: var(--font-display); font-weight: 800;
+            font-size: 34px; line-height: 1; color: var(--mix-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .olb-hero-ctx { font-size: 12.5px; color: var(--mix-ink-muted); }
+        .olb-hero-ctx b { color: var(--mix-ink); font-weight: 600; }
+
+        .olb-hero-rankchip {
+            display: inline-block; font-size: 12px; font-weight: 700;
+            background: var(--mix-surface-muted); border-radius: 999px;
+            padding: 1px 9px; color: var(--mix-ink);
+        }
+
+        .olb-hero-chartline { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+        .olb-hero-song {
+            font-family: var(--font-display); font-weight: 700; font-size: 19px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .olb-hero-firstword {
+            font-family: var(--font-display); font-weight: 700; font-size: 16px;
+            text-transform: uppercase; letter-spacing: 1.5px; color: var(--rarity-gold);
+        }
+
+        .olb-floor-row { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+        .olb-floor-row + .olb-floor-row { margin-top: 5px; }
+
+        .olb-floor-rank {
+            flex: 0 0 auto; min-width: 46px; text-align: right;
+            font-family: var(--font-display); font-weight: 700; font-size: 15px;
+            letter-spacing: .5px; color: var(--mix-secondary);
+        }
+
+        .olb-floor-jump {
+            display: flex; align-items: baseline; gap: 6px;
+            font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1;
+        }
+
+        .olb-floor-jump .from { color: var(--mix-ink-muted); font-size: 18px; font-weight: 700; }
+        .olb-floor-jump .arrow { color: var(--mix-primary); font-size: 16px; }
+        .olb-floor-jump .hold { color: var(--mix-ink-muted); font-size: 15px; font-weight: 600; }
+
+        .olb-floor-val { margin-left: auto; font-size: 12px; color: var(--mix-ink-muted); white-space: nowrap; }
+        .olb-floor-val b { color: var(--mix-ink); font-weight: 600; }
+
+        .olb-hero-debuts { margin-top: 10px; }
+        .olb-hero-debuts .olb-hero-label::before { background: var(--mix-accent); }
+        .olb-hero-debuts .olb-hero-label b {
+            color: var(--mix-ink); font-family: var(--font-display);
+            font-size: 15px; letter-spacing: .5px;
+        }
+
+        .olb-debut-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+
+        .olb-debut-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: color-mix(in srgb, var(--mix-bg) 45%, transparent);
+            border: 1px solid var(--mix-surface-muted);
+            border-radius: 999px; padding: 3px 11px 3px 4px;
+            font-size: 12.5px; font-weight: 600; max-width: 100%;
+            color: var(--mix-primary); text-decoration: none;
+        }
+
+        .olb-debut-chip .mini {
+            width: 20px; height: 20px; border-radius: 50%; flex: 0 0 auto;
+            background: var(--mix-surface-muted); border: 1px solid var(--mix-accent);
+            display: grid; place-items: center; overflow: hidden;
+            font-family: var(--font-display); font-weight: 700; font-size: 10px;
+            color: var(--mix-ink);
+        }
+
+        .olb-debut-chip .mini img { width: 100%; height: 100%; object-fit: cover; }
+        .olb-debut-chip.more { padding: 3px 11px; color: var(--mix-ink-muted); }
+        button.olb-debut-chip { font: inherit; font-weight: 600; cursor: pointer; }
+        .olb-debut-note { font-size: 11.5px; color: var(--mix-ink-muted); margin-top: 6px; }
+
+        .olb-hero-listrow {
+            display: flex; align-items: center; gap: 10px; padding: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* The stacking half of this pair lives in the section frame's mobile block,
+           alongside the world-first tail it matches. */
+        .olb-hero-listtail {
+            margin-left: auto; display: flex; align-items: center;
+            gap: 12px; text-align: right; flex: 0 0 auto;
+        }
+
+        @@media (max-width: 700px) {
+            .olb-hero-pulse { grid-template-columns: 1fr; }
+            .olb-hero-stat .num-big { font-size: 33px; }
+            .olb-hero-snap { grid-template-columns: 1fr; }
+        }
+    </style>
+
     <MudText Typo="Typo.body2" Class="mb-3">
         @L["Week of"] @_highlights.SnapshotAt.ToLocalTime().ToString("d")
         @if (_highlights.PreviousSnapshotAt != null)
@@ -35,6 +202,169 @@ else
             <span> · @L["vs"] @_highlights.PreviousSnapshotAt.Value.ToLocalTime().ToString("d")@(gap > 1 ? $" ({gap} {L["weeks"]})" : "")</span>
         }
     </MudText>
+
+    @if (_highlights.Pulse is { } pulse && pulse.NewEntries + pulse.UpscoredEntries > 0)
+    {
+        var gainer = _highlights.Gainers?.FirstOrDefault();
+        var highestFirst = HighestFirst();
+        var activity = _highlights.BoardsClimbed.FirstOrDefault();
+        var floors = _highlights.Floors ?? Array.Empty<OfficialFloorMarkRecord>();
+        var debuts = _highlights.Debuts ?? Array.Empty<OfficialDebutRecord>();
+        <div class="olb-hero">
+            <div class="olb-hero-kicker">
+                <span class="olb-hero-k">@L["This week on the boards"]</span>
+                <span class="olb-hero-hype">@HypeSentence(pulse, highestFirst)</span>
+            </div>
+
+            <div class="olb-hero-pulse">
+                <div class="olb-hero-stat">
+                    <div class="olb-hero-label">@L["Chart board entries"]</div>
+                    <div class="num-big">@((pulse.NewEntries + pulse.UpscoredEntries).ToString("N0"))</div>
+                    <div class="olb-hero-sub">@L["{0} new · {1} upscored", pulse.NewEntries.ToString("N0"), pulse.UpscoredEntries.ToString("N0")]</div>
+                </div>
+                <div class="olb-hero-stat">
+                    <div class="olb-hero-label">@L["Players active"]</div>
+                    <div class="num-big">@pulse.PlayersActive.ToString("N0")</div>
+                    <div class="olb-hero-sub">@L["on any chart board"]</div>
+                </div>
+                <div class="olb-hero-stat">
+                    <div class="olb-hero-label">@L["World firsts"]</div>
+                    <div class="num-big">@_highlights.WorldFirsts.Count.ToString("N0")</div>
+                    <div class="olb-hero-sub">@L["first ever, any grade"]</div>
+                </div>
+            </div>
+
+            <div class="olb-hero-snap">
+                @if (gainer != null)
+                {
+                    <div class="olb-hero-card">
+                        <div class="olb-hero-label">@L["Biggest PUMBILITY gainer"]</div>
+                        <HubPlayerChip Player="gainer.Player"/>
+                        <div class="olb-hero-gain">+@((gainer.NewPumbility - gainer.PreviousPumbility).ToString("N2"))</div>
+                        <div class="olb-hero-ctx">
+                            <b>@gainer.PreviousPumbility.ToString("N2") → @gainer.NewPumbility.ToString("N2")</b>
+                            <span class="olb-hero-rankchip ml-1">#@gainer.PreviousRank → #@gainer.NewRank</span>
+                        </div>
+                    </div>
+                }
+                @if (highestFirst != null)
+                {
+                    var chart = highestFirst.ChartId != null && Charts.TryGetValue(highestFirst.ChartId.Value, out var c) ? c : null;
+                    <div class="olb-hero-card first">
+                        <div class="olb-hero-label">@L["Highest world first"]</div>
+                        <div class="olb-hero-chartline">
+                            @if (chart != null)
+                            {
+                                <SongImage Song="chart.Song" Small="true"/>
+                                <DifficultyBubble Chart="chart" Small="true"/>
+                                <span class="olb-hero-song">@chart.Song.Name</span>
+                            }
+                        </div>
+                        <div class="olb-hero-chartline">
+                            <span class="olb-hero-firstword">@L["First"]</span>
+                            <MudChip T="string" Size="Size.Small"
+                                     Style="@($"background:{BandColor(highestFirst.GradeBand)};color:var(--mix-primary-contrast);font-weight:800")">
+                                @highestFirst.GradeBand
+                            </MudChip>
+                            <span class="olb-hero-ctx"><b>@highestFirst.Score.ToString("N0")</b></span>
+                        </div>
+                        <div class="olb-hero-ctx"><HubPlayerChip Player="highestFirst.Player" Dense="true"/></div>
+                    </div>
+                }
+                @if (activity != null)
+                {
+                    <div class="olb-hero-card">
+                        <div class="olb-hero-label">@L["Biggest board climber"]</div>
+                        <HubPlayerChip Player="activity.Player"/>
+                        <div class="olb-hero-gain">+@activity.NetPlacesGained.ToString("N0")</div>
+                        <div class="olb-hero-ctx">
+                            @L["places"] · <b>@activity.BoardsClimbed.ToString("N0")</b> @L["chart boards"]@(activity.NewBoards is { } freshBoards ? $" · {L["{0} new", freshBoards.ToString("N0")]}" : "")
+                        </div>
+                    </div>
+                }
+                @if (floors.Any())
+                {
+                    <div class="olb-hero-card floor">
+                        <div class="olb-hero-label">@L["Top 100 · Top 1000 floors — 50× SS"]</div>
+                        @foreach (var floor in floors)
+                        {
+                            <div class="olb-floor-row">
+                                <span class="olb-floor-rank">#@floor.Rank</span>
+                                <span class="olb-floor-jump">
+                                    @if (floor.PreviousLevelForSS != null && floor.LevelForSS != null &&
+                                         floor.PreviousLevelForSS != floor.LevelForSS)
+                                    {
+                                        <span class="from">Lv.@floor.PreviousLevelForSS</span>
+                                        <span class="arrow">→</span>
+                                        <span>Lv.@floor.LevelForSS</span>
+                                    }
+                                    else if (floor.LevelForSS != null)
+                                    {
+                                        <span>Lv.@floor.LevelForSS</span>
+                                        @if (floor.PreviousLevelForSS != null)
+                                        {
+                                            <span class="hold">@L["held"]</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="hold">—</span>
+                                    }
+                                </span>
+                                <span class="olb-floor-val">
+                                    <b>@floor.Value.ToString("N2")</b>
+                                    @if (floor.PreviousValue is { } prev && floor.Value > prev)
+                                    {
+                                        <span class="olb-delta-up"> ▲@((floor.Value - prev).ToString("N2"))</span>
+                                    }
+                                </span>
+                            </div>
+                        }
+                        <div class="olb-hero-ctx">@L["what it takes to hold each rung of the PUMBILITY board"]</div>
+                    </div>
+                }
+            </div>
+
+            @if (debuts.Any())
+            {
+                var debutsShown = _debutsExpanded ? debuts.Count : Math.Min(6, debuts.Count);
+                <div class="olb-hero-debuts">
+                    <div class="olb-hero-label">@L["Debuted this week"] <b>@pulse.DebutCount.ToString("N0")</b></div>
+                    <div class="olb-debut-chips">
+                        @foreach (var debut in debuts.Take(debutsShown))
+                        {
+                            <a class="olb-debut-chip" href="@PlayerHref(debut.Player.Username)">
+                                <span class="mini">
+                                    @if (debut.Player.AvatarUrl != null)
+                                    {
+                                        <img src="@debut.Player.AvatarUrl" alt=""/>
+                                    }
+                                    else
+                                    {
+                                        @debut.Player.Username[..1]
+                                    }
+                                </span>
+                                <span class="olb-player-name">@HubPlayerChip.NameOf(debut.Player.Username)</span>
+                            </a>
+                        }
+                        @if (!_debutsExpanded && debuts.Count > debutsShown)
+                        {
+                            <button type="button" class="olb-debut-chip more" @onclick="() => _debutsExpanded = true">
+                                @L["+{0} more", (pulse.DebutCount - debutsShown).ToString("N0")]
+                            </button>
+                        }
+                        else if (pulse.DebutCount > debutsShown)
+                        {
+                            <span class="olb-debut-chip more">
+                                @L["+{0} more", (pulse.DebutCount - debutsShown).ToString("N0")]
+                            </span>
+                        }
+                    </div>
+                    <div class="olb-debut-note">@L["first-ever appearance on any chart board"]</div>
+                </div>
+            }
+        </div>
+    }
 
     <MudGrid>
         <MudItem xs="12" md="6">
@@ -46,40 +376,43 @@ else
                 }
                 @foreach (var (mover, index) in _highlights.Movers.Select((m, i) => (m, i)))
                 {
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2"
-                              Class="@(index == 0 ? "olb-mover-lead pa-2" : "pa-2")">
+                    <div class="@($"olb-hero-listrow {(index == 0 ? "olb-mover-lead " : "")}{GlowClass(mover.Player)}")">
                         <MudText Typo="@(index == 0 ? Typo.h6 : Typo.body1)" Class="olb-delta-up">
                             ▲@(mover.PreviousRank - mover.NewRank)
                         </MudText>
                         <HubPlayerChip Player="mover.Player"/>
-                        <MudSpacer/>
-                        <MudText Typo="Typo.body2">#@mover.PreviousRank → <b>#@mover.NewRank</b></MudText>
-                        <MudText Typo="Typo.body1"><b>@mover.Pumbility.ToString("N2")</b></MudText>
-                    </MudStack>
+                        <div class="olb-hero-listtail">
+                            <MudText Typo="Typo.body2">#@mover.PreviousRank → <b>#@mover.NewRank</b></MudText>
+                            <MudText Typo="Typo.body1"><b>@mover.Pumbility.ToString("N2")</b></MudText>
+                        </div>
+                    </div>
                 }
             </MudPaper>
         </MudItem>
         <MudItem xs="12" md="6">
             <MudPaper Class="pa-3">
-                <MudText Typo="Typo.overline">@L["Most boards climbed"]</MudText>
+                <MudText Typo="Typo.overline">@L["Biggest board climbers"]</MudText>
                 @if (!_highlights.BoardsClimbed.Any())
                 {
-                    <MudText Typo="Typo.body2">@L["Nobody cleared the climb threshold this week."]</MudText>
+                    <MudText Typo="Typo.body2">@L["Nobody climbed a chart board this week."]</MudText>
                 }
                 @foreach (var entry in _highlights.BoardsClimbed)
                 {
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="pa-2">
+                    <div class="olb-hero-listrow @GlowClass(entry.Player)">
                         <HubPlayerChip Player="entry.Player"/>
-                        <MudSpacer/>
-                        <MudText Typo="Typo.body1"><b>+@entry.BoardsClimbed @L["boards"]</b></MudText>
-                        <MudText Typo="Typo.body2">@L["net"] +@entry.NetPlacesGained @L["places"]</MudText>
-                    </MudStack>
+                        <div class="olb-hero-listtail">
+                            <MudText Typo="Typo.body1"><b>+@entry.NetPlacesGained.ToString("N0") @L["places"]</b></MudText>
+                            <MudText Typo="Typo.body2">
+                                @entry.BoardsClimbed.ToString("N0") @L["chart boards"]@(entry.NewBoards is { } fresh ? $" · {L["{0} new", fresh.ToString("N0")]}" : "")
+                            </MudText>
+                        </div>
+                    </div>
                 }
             </MudPaper>
         </MudItem>
     </MudGrid>
 
-    <MudText Typo="Typo.overline" Class="mt-4 d-block">@L["World firsts"] · @L["level 24+, first ever, SS and up"]</MudText>
+    <MudText Typo="Typo.overline" Class="mt-4 d-block">@L["World firsts"] · @L["level 24+, first ever, any grade"]</MudText>
     <MudPaper Class="pa-3">
         @if (!_highlights.WorldFirsts.Any())
         {
@@ -88,17 +421,19 @@ else
         @foreach (var first in _highlights.WorldFirsts)
         {
             var chart = first.ChartId != null && Charts.TryGetValue(first.ChartId.Value, out var c) ? c : null;
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2"
-                      Class="@(first.IsFolderFirst ? "olb-folder-first pa-2 mb-2" : "pa-2")">
+            <div class="@($"olb-first-row {(first.IsFolderFirst ? "olb-folder-first mb-2" : "")} {GlowClass(first.Player)}")">
                 <MudChip T="string" Size="Size.Small"
                          Style="@($"background:{BandColor(first.GradeBand)};color:var(--mix-primary-contrast);font-weight:800")">
                     @first.GradeBand
                 </MudChip>
                 @if (chart != null)
                 {
-                    <SongImage Song="chart.Song" Small="true"/>
-                    <DifficultyBubble Chart="chart" Small="true"/>
-                    <MudText Typo="Typo.body1"><b>@chart.Song.Name</b></MudText>
+                    <MudLink title="@L["Chart leaderboard"]" Class="olb-chartlink" Style="cursor:pointer"
+                             Underline="Underline.None" OnClick="() => OpenBoard(chart)">
+                        <SongImage Song="chart.Song" Small="true"/>
+                        <DifficultyBubble Chart="chart" Small="true"/>
+                        <MudText Typo="Typo.body1" Class="olb-song-text"><b>@chart.Song.Name</b></MudText>
+                    </MudLink>
                 }
                 @if (first.IsFolderFirst && first.ChartType != null && first.Level != null)
                 {
@@ -106,10 +441,11 @@ else
                         @L["First in the folder"] · @(first.ChartType == ChartType.Double.ToString() ? "D" : "S")@first.Level
                     </MudChip>
                 }
-                <MudSpacer/>
-                <HubPlayerChip Player="first.Player"/>
-                <MudText Typo="Typo.body1"><b>@first.Score.ToString("N0")</b></MudText>
-            </MudStack>
+                <span class="olb-first-tail">
+                    <HubPlayerChip Player="first.Player" Dense="true"/>
+                    <MudText Typo="Typo.body1"><b>@first.Score.ToString("N0")</b></MudText>
+                </span>
+            </div>
         }
     </MudPaper>
 
@@ -123,7 +459,7 @@ else
         {
             var chart = Charts.TryGetValue(one.ChartId, out var c) ? c : null;
             <MudItem xs="12" sm="6" md="4">
-                <MudPaper Class="pa-3">
+                <MudPaper Class="@($"pa-3 {GlowClass(one.Player)}")">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                         @if (chart != null)
                         {
@@ -131,14 +467,26 @@ else
                             <DifficultyBubble Chart="chart" Small="true"/>
                         }
                         <MudStack Spacing="0" Class="min-width-0">
-                            <MudText Typo="Typo.body1"><b>@(chart?.Song.Name.ToString() ?? "?")</b></MudText>
+                            @if (chart != null)
+                            {
+                                <MudLink title="@L["Chart leaderboard"]" Style="cursor:pointer" Underline="Underline.None"
+                                         OnClick="() => OpenBoard(chart)">
+                                    <MudText Typo="Typo.body1"><b>@chart.Song.Name</b></MudText>
+                                </MudLink>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body1"><b>?</b></MudText>
+                            }
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                                 <HubPlayerChip Player="one.Player" Dense="true"/>
                                 <MudText Typo="Typo.body2"><b>@one.Score.ToString("N0")</b></MudText>
                             </MudStack>
                             @if (one.Dethroned != null)
                             {
-                                <MudText Typo="Typo.caption">@L["dethroned"] @one.Dethroned.Username</MudText>
+                                <MudText Typo="Typo.caption">
+                                    @L["dethroned"] @HubPlayerChip.NameOf(one.Dethroned.Username)
+                                </MudText>
                             }
                         </MudStack>
                     </MudStack>
@@ -148,21 +496,67 @@ else
     </MudGrid>
 }
 
+<OfficialChartBoardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Mix="Mix"/>
+
 @code {
     [Parameter] public MixEnum Mix { get; set; }
     [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
 
     private bool _loading = true;
+    private bool _debutsExpanded;
+    private bool _boardOpen;
+    private Chart? _boardChart;
     private WeeklyHighlightsRecord? _highlights;
+    private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
 
     protected override async Task OnInitializedAsync()
     {
+        _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
         _highlights = await Mediator.Send(new GetWeeklyHighlightsQuery(Mix));
         _loading = false;
+    }
+
+    private void OpenBoard(Chart chart)
+    {
+        _boardChart = chart;
+        _boardOpen = true;
+    }
+
+    private string GlowClass(OfficialPlayerRecord player)
+    {
+        if (player.UserId == null) return string.Empty;
+        if (CurrentUser.IsLoggedIn && player.UserId == CurrentUser.User.Id) return "olb-row-me";
+        return _communityIds.Contains(player.UserId.Value) ? "olb-row-community" : string.Empty;
     }
 
     private static string BandColor(string band)
     {
         return band == "PG" ? MixThemes.PlateHex("PG") : MixThemes.GradeHex(band);
+    }
+
+    // The marquee first: the highest chart level wins; the better score breaks ties.
+    private OfficialGradeFirstRecord? HighestFirst()
+    {
+        return _highlights?.WorldFirsts
+            .OrderByDescending(f => f.Level ?? 0)
+            .ThenByDescending(f => f.Score)
+            .FirstOrDefault();
+    }
+
+    private string HypeSentence(WeeklyPulseRecord pulse, OfficialGradeFirstRecord? highestFirst)
+    {
+        var chart = highestFirst?.ChartId != null && Charts.TryGetValue(highestFirst.ChartId.Value, out var c)
+            ? c
+            : null;
+        return chart == null || highestFirst == null
+            ? L["{0} players left their mark on the chart boards.", pulse.PlayersActive.ToString("N0")]
+            : L["{0} players left their mark — and {1} fell to its first {2}.",
+                pulse.PlayersActive.ToString("N0"), $"{chart.Song.Name} {chart.DifficultyString}",
+                highestFirst.GradeBand];
+    }
+
+    private static string PlayerHref(string username)
+    {
+        return $"/OfficialLeaderboards/Players?player={Uri.EscapeDataString(username)}";
     }
 }
