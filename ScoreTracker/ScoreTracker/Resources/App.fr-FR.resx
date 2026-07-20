@@ -4508,8 +4508,8 @@
   <data name="Last import failed" xml:space="preserve">
     <value>Le dernier import a échoué</value>
   </data>
-  <data name="level 24+, first ever, SS and up" xml:space="preserve">
-    <value>niveau 24+, première historique, SS et plus</value>
+  <data name="level 24+, first ever, any grade" xml:space="preserve">
+    <value>niveau 24+, première historique, tous les grades</value>
   </data>
   <data name="level 24+, must beat the standing record" xml:space="preserve">
     <value>niveau 24+, il faut battre le record en place</value>
@@ -5507,8 +5507,8 @@
   <data name="on any chart board" xml:space="preserve">
     <value>sur au moins un leaderboard de charts</value>
   </data>
-  <data name="first ever, SS and up" xml:space="preserve">
-    <value>premières historiques, SS et plus</value>
+  <data name="first ever, any grade" xml:space="preserve">
+    <value>premières historiques, tous les grades</value>
   </data>
   <data name="Biggest PUMBILITY gainer" xml:space="preserve">
     <value>Plus forte hausse de PUMBILITY</value>

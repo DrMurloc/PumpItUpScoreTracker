@@ -4395,8 +4395,8 @@
   <data name="Last import failed" xml:space="preserve">
     <value>마지막 가져오기 실패</value>
   </data>
-  <data name="level 24+, first ever, SS and up" xml:space="preserve">
-    <value>레벨 24 이상, 사상 최초, SS 이상</value>
+  <data name="level 24+, first ever, any grade" xml:space="preserve">
+    <value>레벨 24 이상, 사상 최초, 모든 등급</value>
   </data>
   <data name="level 24+, must beat the standing record" xml:space="preserve">
     <value>레벨 24 이상, 기존 기록을 넘어야 함</value>
@@ -5394,8 +5394,8 @@
   <data name="on any chart board" xml:space="preserve">
     <value>채보 보드 기준</value>
   </data>
-  <data name="first ever, SS and up" xml:space="preserve">
-    <value>역대 최초, SS 이상</value>
+  <data name="first ever, any grade" xml:space="preserve">
+    <value>역대 최초, 모든 등급</value>
   </data>
   <data name="Biggest PUMBILITY gainer" xml:space="preserve">
     <value>PUMBILITY 최다 상승</value>

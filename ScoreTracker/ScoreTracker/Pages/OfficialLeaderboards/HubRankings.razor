@@ -88,8 +88,8 @@ else
             <MudTd Class="olb-hide-mobile">
                 @if (context.PlayerType != null)
                 {
-                    <MudChip T="string" Size="Size.Small"
-                             Style="@($"background:{PlayerTypeHex(context.PlayerType.Value)};color:var(--mix-primary-contrast);font-weight:700")">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                             Style="@PlayerTypeChipStyle(context.PlayerType.Value)">
                         @L[PlayerTypeName(context.PlayerType.Value)]
                     </MudChip>
                 }
@@ -236,18 +236,19 @@ else
         };
     }
 
-    // Archetype chips wear the grade ladder their score bands are anchored to: the
-    // in-game sub-AAA green for Pass Pusher, then each band's top grade climbing the
-    // metal ladder - AAA+ silver, S+ gold, SSS ice, SSS+ ice.
-    internal static string PlayerTypeHex(RecapPlayerType type)
+    // Archetype chips wear the grade-metal ladder, outlined: AA bronze for Pass Pusher,
+    // then AAA+ silver, S+ gold, SSS ice — and the summit type glows.
+    internal static string PlayerTypeChipStyle(RecapPlayerType type)
     {
-        return type switch
+        var hex = type switch
         {
-            RecapPlayerType.PassPusher => MixThemes.GradeHex("B"),
+            RecapPlayerType.PassPusher => MixThemes.GradeHex("AA"),
             RecapPlayerType.PassRefiner => MixThemes.GradeHex("AAA+"),
             RecapPlayerType.BalancedPlayer => MixThemes.GradeHex("S+"),
             RecapPlayerType.Competitive => MixThemes.GradeHex("SSS"),
             _ => MixThemes.GradeHex("SSS+")
         };
+        var style = $"border-color:{hex};color:{hex};font-weight:700";
+        return type == RecapPlayerType.Perfectionist ? $"{style};box-shadow:0 0 9px {hex}99" : style;
     }
 }

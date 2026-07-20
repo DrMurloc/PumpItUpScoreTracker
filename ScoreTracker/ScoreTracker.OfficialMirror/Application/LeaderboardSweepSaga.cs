@@ -146,7 +146,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     private async Task ComputeHighlights(int snapshotId, MixEnum mix, bool isBaseline, CancellationToken ct)
     {
         var previous = await _snapshots.GetSealedBefore(mix, snapshotId, ct);
-        var input = new HighlightsInput(snapshotId, isBaseline,
+        var input = new HighlightsInput(mix, snapshotId, isBaseline,
             await _snapshots.GetBoards(mix, ct),
             await _snapshots.GetPlacements(snapshotId, ct),
             previous == null ? null : await _snapshots.GetPlacements(previous.Id, ct),
@@ -282,7 +282,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         foreach (var run in runs)
         {
             var current = await _snapshots.GetPlacements(run.Id, ct);
-            var input = new HighlightsInput(run.Id, isFirst || run.IsBaseline, boards, current, previous,
+            var input = new HighlightsInput(mix, run.Id, isFirst || run.IsBaseline, boards, current, previous,
                 await _records.GetBoardRecords(mix, ct), await _records.GetFolderRecords(mix, ct), crossMix,
                 seen, scoring);
             var result = HighlightsCalculator.Calculate(input);

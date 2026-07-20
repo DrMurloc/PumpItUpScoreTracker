@@ -214,7 +214,7 @@ else
                 <div class="olb-hero-stat">
                     <div class="olb-hero-label">@L["World firsts"]</div>
                     <div class="num-big">@_highlights.WorldFirsts.Count.ToString("N0")</div>
-                    <div class="olb-hero-sub">@L["first ever, SS and up"]</div>
+                    <div class="olb-hero-sub">@L["first ever, any grade"]</div>
                 </div>
             </div>
 
@@ -395,7 +395,7 @@ else
         </MudItem>
     </MudGrid>
 
-    <MudText Typo="Typo.overline" Class="mt-4 d-block">@L["World firsts"] · @L["level 24+, first ever, SS and up"]</MudText>
+    <MudText Typo="Typo.overline" Class="mt-4 d-block">@L["World firsts"] · @L["level 24+, first ever, any grade"]</MudText>
     <MudPaper Class="pa-3">
         @if (!_highlights.WorldFirsts.Any())
         {
@@ -483,12 +483,12 @@ else
         return band == "PG" ? MixThemes.PlateHex("PG") : MixThemes.GradeHex(band);
     }
 
-    // The marquee first: the highest chart level wins; folder banners break ties.
+    // The marquee first: the highest chart level wins; the better score breaks ties.
     private OfficialGradeFirstRecord? HighestFirst()
     {
         return _highlights?.WorldFirsts
             .OrderByDescending(f => f.Level ?? 0)
-            .ThenBy(f => f.IsFolderFirst ? 0 : 1)
+            .ThenByDescending(f => f.Score)
             .FirstOrDefault();
     }
 

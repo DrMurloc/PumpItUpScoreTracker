@@ -4437,8 +4437,8 @@
   <data name="Last import failed" xml:space="preserve">
     <value>Last mrglport went blrgl</value>
   </data>
-  <data name="level 24+, first ever, SS and up" xml:space="preserve">
-    <value>lvl 24+, frst evrgl, SS n up</value>
+  <data name="level 24+, first ever, any grade" xml:space="preserve">
+    <value>lvl 24+, frst evrgl, any grrgl</value>
   </data>
   <data name="level 24+, must beat the standing record" xml:space="preserve">
     <value>lvl 24+, must mrglbeat standing record</value>
@@ -5439,8 +5439,8 @@
   <data name="on any chart board" xml:space="preserve">
     <value>on any chart mrglboard</value>
   </data>
-  <data name="first ever, SS and up" xml:space="preserve">
-    <value>frst ever, SS and up</value>
+  <data name="first ever, any grade" xml:space="preserve">
+    <value>frst ever, any grrgl</value>
   </data>
   <data name="Biggest PUMBILITY gainer" xml:space="preserve">
     <value>Biggest PUMBILITY gainer mrgl</value>

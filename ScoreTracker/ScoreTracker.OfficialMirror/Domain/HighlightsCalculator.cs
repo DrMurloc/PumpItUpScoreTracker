@@ -4,6 +4,7 @@ using ScoreTracker.SharedKernel.Models;
 namespace ScoreTracker.OfficialMirror.Domain;
 
 internal sealed record HighlightsInput(
+    MixEnum Mix,
     int SnapshotId,
     bool IsBaseline,
     IReadOnlyList<BoardDimension> Boards,
@@ -29,9 +30,10 @@ internal sealed record HighlightsResult(
 ///     - Boards-climbed counts chart boards where a player improved or newly entered.
 ///     - A new #1 must BEAT the all-time record; matching a standing score credits
 ///       nothing, while players sharing the record score in the same week co-credit.
-///     - Grade firsts (SS and up, PG included, level 24+) fire once per chart per band and
-///       once per folder per band; a multi-band jump claims only the highest band; a
-///       folder first absorbs its chart first, and any grade first absorbs its new-#1.
+///     - Grade firsts (every band on the ladder, PG on top, level 24+) fire once per chart
+///       per band and once per folder per band; a multi-band jump claims only the highest
+///       band; a folder first absorbs its chart first, and any grade first absorbs its
+///       new-#1. The page leads with the highest-level first of the week.
 ///     - A baseline snapshot emits no highlights but still primes both record books.
 /// </summary>
 internal static class HighlightsCalculator
@@ -43,20 +45,6 @@ internal static class HighlightsCalculator
     public const int DebutsTaken = 24;
     public const string PumbilityBoardName = "PUMBILITY";
     public static readonly int[] FloorRanks = { 100, 1000 };
-
-    // Highlight bands are score-anchored policy, deliberately not derived from a grade
-    // table: SS and up share these floors in every Phoenix-family mix (Phoenix 2 re-cut
-    // only the sub-AAA grades), and comparing them across mixes must stay apples-to-apples.
-    // If a future mix moves an SS+ floor, widening or splitting these bands is a policy
-    // decision made here, never a silent follow.
-    private static readonly (string Band, int Floor)[] GradeBands =
-    {
-        ("PG", 1_000_000),
-        ("SSS+", 995_000),
-        ("SSS", 990_000),
-        ("SS+", 985_000),
-        ("SS", 980_000)
-    };
 
     public static HighlightsResult Calculate(HighlightsInput input)
     {
@@ -327,19 +315,21 @@ internal static class HighlightsCalculator
         var folderRows = new List<HighlightRow>();
         foreach (var folderGroup in eligible.GroupBy(b => (b.Board.ChartType!, b.Board.Level!.Value)))
         {
-            // "First ever" spans every mix: the folder's prior high is the best of this
-            // mix's record book and the other mixes' — a Phoenix-era SS makes a Phoenix 2
-            // re-clear a reclear, not a first.
-            var priorHigh = priorFolderHighs.TryGetValue(folderGroup.Key, out var high) ? high : (int?)null;
-            if (crossMix.FolderHighs.TryGetValue(folderGroup.Key, out var crossFolderHigh))
-                priorHigh = Math.Max(priorHigh ?? 0, crossFolderHigh);
-            if (priorHigh == null) continue;
+            // "First ever" spans every mix: the folder's prior band is the best of this
+            // mix's record book and the other mixes' (each banded in its own table) — a
+            // Phoenix-era AA makes a Phoenix 2 re-clear a reclear, not a first.
+            var priorRank = priorFolderHighs.TryGetValue(folderGroup.Key, out var high)
+                ? GradeBandLadder.Of(high, input.Mix).Rank
+                : (int?)null;
+            if (crossMix.FolderBandRanks.TryGetValue(folderGroup.Key, out var crossFolderRank))
+                priorRank = Math.Max(priorRank ?? 0, crossFolderRank);
+            if (priorRank == null) continue;
 
             var folderTop = folderGroup.Max(b => b.NewHigh);
-            var newBand = BandFor(folderTop);
+            var (newRank, newBand) = GradeBandLadder.Of(folderTop, input.Mix);
             // A board record can fall while the folder high stands above it — the folder
             // first only fires when the folder's own band moved UP.
-            if (newBand == null || BandRank(newBand) <= BandRank(BandFor(priorHigh.Value))) continue;
+            if (newRank <= priorRank) continue;
 
             foreach (var beaten in folderGroup.Where(b => b.NewHigh == folderTop))
             {
@@ -356,14 +346,13 @@ internal static class HighlightsCalculator
             // Same cross-mix rule per chart: a band already claimed on this chart in any
             // mix cannot be a world first again — but beating this mix's standing record
             // still counts below as a new #1.
-            var priorHigh = beaten.Board.ChartId is { } chartId &&
-                            crossMix.ChartHighs.TryGetValue(chartId, out var crossChartHigh)
-                ? Math.Max(beaten.PreviousHigh, crossChartHigh)
-                : beaten.PreviousHigh;
-            var newBand = BandFor(beaten.NewHigh);
-            var crossed = newBand != null && BandRank(newBand) > BandRank(BandFor(priorHigh));
-            if (crossed)
-                chartRows.AddRange(ClaimantRows(input, beaten, HighlightKinds.ChartGradeFirst, newBand!,
+            var priorRank = GradeBandLadder.Of(beaten.PreviousHigh, input.Mix).Rank;
+            if (beaten.Board.ChartId is { } chartId &&
+                crossMix.ChartBandRanks.TryGetValue(chartId, out var crossChartRank))
+                priorRank = Math.Max(priorRank, crossChartRank);
+            var (newRank, newBand) = GradeBandLadder.Of(beaten.NewHigh, input.Mix);
+            if (newRank > priorRank)
+                chartRows.AddRange(ClaimantRows(input, beaten, HighlightKinds.ChartGradeFirst, newBand,
                     previousByBoard));
             // A perfect that isn't a first (the chart's PG lives on another mix) tells no
             // dethroning story either — tying the ceiling never lists as a new #1.
@@ -376,7 +365,8 @@ internal static class HighlightsCalculator
 
         static IEnumerable<HighlightRow> Order(List<HighlightRow> rows)
         {
-            return rows.OrderByDescending(r => BandRank(r.GradeBand)).ThenByDescending(r => r.Score)
+            return rows.OrderByDescending(r => GradeBandLadder.RankOf(r.GradeBand))
+                .ThenByDescending(r => r.Score)
                 .Select((r, i) => r with { SortOrder = i + 1 });
         }
     }
@@ -395,22 +385,6 @@ internal static class HighlightsCalculator
             .Select(p => new HighlightRow(kind, 0, p.PlayerId,
                 dethroned == p.PlayerId ? null : dethroned, beaten.Board.Id, beaten.Board.ChartId,
                 beaten.Board.ChartType, beaten.Board.Level, band, beaten.NewHigh, beaten.PreviousHigh, null));
-    }
-
-    private static string? BandFor(int score)
-    {
-        foreach (var (band, floor) in GradeBands)
-            if (score >= floor)
-                return band;
-        return null;
-    }
-
-    private static int BandRank(string? band)
-    {
-        for (var i = 0; i < GradeBands.Length; i++)
-            if (GradeBands[i].Band == band)
-                return GradeBands.Length - i;
-        return 0;
     }
 
     private sealed record BeatenBoard(BoardDimension Board, int PreviousHigh, int NewHigh);

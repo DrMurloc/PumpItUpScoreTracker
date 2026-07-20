@@ -4508,8 +4508,8 @@
   <data name="Last import failed" xml:space="preserve">
     <value>Last import failed</value>
   </data>
-  <data name="level 24+, first ever, SS and up" xml:space="preserve">
-    <value>level 24+, first ever, SS and up</value>
+  <data name="level 24+, first ever, any grade" xml:space="preserve">
+    <value>level 24+, first ever, any grade</value>
   </data>
   <data name="level 24+, must beat the standing record" xml:space="preserve">
     <value>level 24+, must beat the standing record</value>
@@ -5507,8 +5507,8 @@
   <data name="on any chart board" xml:space="preserve">
     <value>on any chart board</value>
   </data>
-  <data name="first ever, SS and up" xml:space="preserve">
-    <value>first ever, SS and up</value>
+  <data name="first ever, any grade" xml:space="preserve">
+    <value>first ever, any grade</value>
   </data>
   <data name="Biggest PUMBILITY gainer" xml:space="preserve">
     <value>Biggest PUMBILITY gainer</value>

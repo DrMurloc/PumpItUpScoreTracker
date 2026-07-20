@@ -4514,8 +4514,8 @@
   <data name="Last import failed" xml:space="preserve">
     <value>前回のインポートが失敗しました</value>
   </data>
-  <data name="level 24+, first ever, SS and up" xml:space="preserve">
-    <value>レベル24以上、史上初、SS以上</value>
+  <data name="level 24+, first ever, any grade" xml:space="preserve">
+    <value>レベル24以上、史上初、全グレード対象</value>
   </data>
   <data name="level 24+, must beat the standing record" xml:space="preserve">
     <value>レベル24以上、既存記録の更新が必要</value>
@@ -5513,8 +5513,8 @@
   <data name="on any chart board" xml:space="preserve">
     <value>譜面ボード基準</value>
   </data>
-  <data name="first ever, SS and up" xml:space="preserve">
-    <value>史上初、SS以上</value>
+  <data name="first ever, any grade" xml:space="preserve">
+    <value>史上初、全グレード対象</value>
   </data>
   <data name="Biggest PUMBILITY gainer" xml:space="preserve">
     <value>PUMBILITY最大上昇</value>

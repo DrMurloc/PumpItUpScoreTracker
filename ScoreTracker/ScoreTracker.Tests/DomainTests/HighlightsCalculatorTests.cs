@@ -33,9 +33,10 @@ public sealed class HighlightsCalculatorTests
         bool isBaseline = false,
         CrossMixRecordHighs? crossMix = null,
         IReadOnlySet<int>? seen = null,
-        ScoringConfiguration? scoring = null)
+        ScoringConfiguration? scoring = null,
+        MixEnum mix = MixEnum.Phoenix2)
     {
-        return new HighlightsInput(SnapshotId, isBaseline,
+        return new HighlightsInput(mix, SnapshotId, isBaseline,
             (boards ?? new[] { Pumbility }).ToArray(),
             (current ?? Array.Empty<PlacementRow>()).ToArray(),
             previous?.ToArray(),
@@ -179,7 +180,10 @@ public sealed class HighlightsCalculatorTests
             previous: new[] { new PlacementRow(board.Id, 9, 1, 962000) },
             boardRecords: new[] { new BoardRecordRow(board.Id, 962000, 1) },
             crossMix: new CrossMixRecordHighs(
-                new Dictionary<Guid, int> { [board.ChartId!.Value] = 983000 },
+                new Dictionary<Guid, int>
+                {
+                    [board.ChartId!.Value] = GradeBandLadder.Of(983000, MixEnum.Phoenix).Rank
+                },
                 new Dictionary<(string, int), int>())));
 
         Assert.DoesNotContain(result.Highlights, h => h.Kind == HighlightKinds.ChartGradeFirst);
@@ -197,7 +201,10 @@ public sealed class HighlightsCalculatorTests
             previous: new[] { new PlacementRow(board.Id, 9, 1, 962000) },
             boardRecords: new[] { new BoardRecordRow(board.Id, 962000, 1) },
             crossMix: new CrossMixRecordHighs(
-                new Dictionary<Guid, int> { [board.ChartId!.Value] = 983000 },
+                new Dictionary<Guid, int>
+                {
+                    [board.ChartId!.Value] = GradeBandLadder.Of(983000, MixEnum.Phoenix).Rank
+                },
                 new Dictionary<(string, int), int>())));
 
         var first = Assert.Single(result.Highlights, h => h.Kind == HighlightKinds.ChartGradeFirst);
@@ -218,7 +225,10 @@ public sealed class HighlightsCalculatorTests
             folderRecords: new[] { new FolderRecordRow("Double", 26, 962000, 1) },
             crossMix: new CrossMixRecordHighs(
                 new Dictionary<Guid, int>(),
-                new Dictionary<(string, int), int> { [("Double", 26)] = 984000 })));
+                new Dictionary<(string, int), int>
+                {
+                    [("Double", 26)] = GradeBandLadder.Of(984000, MixEnum.Phoenix).Rank
+                })));
 
         Assert.DoesNotContain(result.Highlights, h => h.Kind == HighlightKinds.FolderGradeFirst);
         Assert.Single(result.Highlights, h => h.Kind == HighlightKinds.ChartGradeFirst);
@@ -365,6 +375,29 @@ public sealed class HighlightsCalculatorTests
     }
 
     [Fact]
+    public void SubSsBandsAreWorldFirstsToo()
+    {
+        // First AAA on a hard chart is huge: the standing Phoenix 2 record was an AA+
+        // (948k), the Phoenix board also only ever reached AA+, and this week's 952k
+        // crosses into AAA for the first time anywhere.
+        var board = ChartBoard(level: 26);
+        var result = HighlightsCalculator.Calculate(Input(
+            boards: new[] { board },
+            current: new[] { new PlacementRow(board.Id, 7, 1, 952000) },
+            previous: new[] { new PlacementRow(board.Id, 9, 1, 948000) },
+            boardRecords: new[] { new BoardRecordRow(board.Id, 948000, 1) },
+            crossMix: new CrossMixRecordHighs(
+                new Dictionary<Guid, int>
+                {
+                    [board.ChartId!.Value] = GradeBandLadder.Of(945000, MixEnum.Phoenix).Rank
+                },
+                new Dictionary<(string, int), int>())));
+
+        var first = Assert.Single(result.Highlights, h => h.Kind == HighlightKinds.ChartGradeFirst);
+        Assert.Equal("AAA", first.GradeBand);
+    }
+
+    [Fact]
     public void TyingThePerfectCeilingNeverListsAsANewNumberOne()
     {
         // The chart's PG lives on the other mix, so this week's PG is no world first — and
@@ -376,7 +409,10 @@ public sealed class HighlightsCalculatorTests
             previous: new[] { new PlacementRow(board.Id, 9, 1, 998_000) },
             boardRecords: new[] { new BoardRecordRow(board.Id, 998_000, 1) },
             crossMix: new CrossMixRecordHighs(
-                new Dictionary<Guid, int> { [board.ChartId!.Value] = 1_000_000 },
+                new Dictionary<Guid, int>
+                {
+                    [board.ChartId!.Value] = GradeBandLadder.Of(1_000_000, MixEnum.Phoenix).Rank
+                },
                 new Dictionary<(string, int), int>())));
 
         Assert.DoesNotContain(result.Highlights, h => h.Kind == HighlightKinds.ChartGradeFirst);
