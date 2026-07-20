@@ -128,7 +128,8 @@ else
             <MudSwitch T="bool" @bind-Value="_showFullLadder" Color="Color.Primary" Size="Size.Small"
                        Label="@L["Full ladder"]"/>
         </MudStack>
-        <MudTable T="CutlineTierRecord" Items="VisibleTiers" Dense="true" Breakpoint="Breakpoint.None">
+        <MudTable T="CutlineTierRecord" Items="VisibleTiers" Dense="true" Breakpoint="Breakpoint.None"
+                  Class="olb-tier-table">
             <HeaderContent>
                 <MudTh>@L["Tier"]</MudTh>
                 <MudTh Style="text-align:right">PUMBILITY</MudTh>

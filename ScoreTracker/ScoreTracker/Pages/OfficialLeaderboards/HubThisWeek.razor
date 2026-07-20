@@ -175,8 +175,13 @@ else
         button.olb-debut-chip { font: inherit; font-weight: 600; cursor: pointer; }
         .olb-debut-note { font-size: 11.5px; color: var(--mix-ink-muted); margin-top: 6px; }
 
-        .olb-hero-listrow { display: flex; align-items: center; gap: 10px; padding: 8px; }
+        .olb-hero-listrow {
+            display: flex; align-items: center; gap: 10px; padding: 8px;
+            flex-wrap: wrap;
+        }
 
+        /* The stacking half of this pair lives in the section frame's mobile block,
+           alongside the world-first tail it matches. */
         .olb-hero-listtail {
             margin-left: auto; display: flex; align-items: center;
             gap: 12px; text-align: right; flex: 0 0 auto;
@@ -185,7 +190,6 @@ else
         @@media (max-width: 700px) {
             .olb-hero-pulse { grid-template-columns: 1fr; }
             .olb-hero-stat .num-big { font-size: 33px; }
-            .olb-hero-listtail { flex-direction: column; align-items: flex-end; gap: 0; }
             .olb-hero-snap { grid-template-columns: 1fr; }
         }
     </style>
@@ -340,7 +344,7 @@ else
                                         @debut.Player.Username[..1]
                                     }
                                 </span>
-                                @debut.Player.Username
+                                <span class="olb-player-name">@HubPlayerChip.NameOf(debut.Player.Username)</span>
                             </a>
                         }
                         @if (!_debutsExpanded && debuts.Count > debutsShown)
@@ -417,19 +421,18 @@ else
         @foreach (var first in _highlights.WorldFirsts)
         {
             var chart = first.ChartId != null && Charts.TryGetValue(first.ChartId.Value, out var c) ? c : null;
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2"
-                      Class="@($"{(first.IsFolderFirst ? "olb-folder-first pa-2 mb-2" : "pa-2")} {GlowClass(first.Player)}")">
+            <div class="@($"olb-first-row {(first.IsFolderFirst ? "olb-folder-first mb-2" : "")} {GlowClass(first.Player)}")">
                 <MudChip T="string" Size="Size.Small"
                          Style="@($"background:{BandColor(first.GradeBand)};color:var(--mix-primary-contrast);font-weight:800")">
                     @first.GradeBand
                 </MudChip>
                 @if (chart != null)
                 {
-                    <SongImage Song="chart.Song" Small="true"/>
-                    <DifficultyBubble Chart="chart" Small="true"/>
-                    <MudLink title="@L["Chart leaderboard"]" Style="cursor:pointer" Underline="Underline.None"
-                             OnClick="() => OpenBoard(chart)">
-                        <MudText Typo="Typo.body1"><b>@chart.Song.Name</b></MudText>
+                    <MudLink title="@L["Chart leaderboard"]" Class="olb-chartlink" Style="cursor:pointer"
+                             Underline="Underline.None" OnClick="() => OpenBoard(chart)">
+                        <SongImage Song="chart.Song" Small="true"/>
+                        <DifficultyBubble Chart="chart" Small="true"/>
+                        <MudText Typo="Typo.body1" Class="olb-song-text"><b>@chart.Song.Name</b></MudText>
                     </MudLink>
                 }
                 @if (first.IsFolderFirst && first.ChartType != null && first.Level != null)
@@ -438,10 +441,11 @@ else
                         @L["First in the folder"] · @(first.ChartType == ChartType.Double.ToString() ? "D" : "S")@first.Level
                     </MudChip>
                 }
-                <MudSpacer/>
-                <HubPlayerChip Player="first.Player"/>
-                <MudText Typo="Typo.body1"><b>@first.Score.ToString("N0")</b></MudText>
-            </MudStack>
+                <span class="olb-first-tail">
+                    <HubPlayerChip Player="first.Player" Dense="true"/>
+                    <MudText Typo="Typo.body1"><b>@first.Score.ToString("N0")</b></MudText>
+                </span>
+            </div>
         }
     </MudPaper>
 
@@ -480,7 +484,9 @@ else
                             </MudStack>
                             @if (one.Dethroned != null)
                             {
-                                <MudText Typo="Typo.caption">@L["dethroned"] @one.Dethroned.Username</MudText>
+                                <MudText Typo="Typo.caption">
+                                    @L["dethroned"] @HubPlayerChip.NameOf(one.Dethroned.Username)
+                                </MudText>
                             }
                         </MudStack>
                     </MudStack>

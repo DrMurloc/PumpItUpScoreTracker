@@ -84,6 +84,40 @@
 
     .olb-rank-expand { padding: 4px 0 10px; }
 
+    /* Board tags run long (LIKEASLAM01#8073). Lists print the human half — the digits
+       identify an account, they don't name anyone — and truncate what's still too long;
+       the full tag stays in the row's tooltip and on the player's own page. */
+    .olb-player-name {
+        max-width: 16ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* World firsts: the chart banner leads, the claimant closes. */
+    .olb-first-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        flex-wrap: wrap;
+    }
+
+    .olb-chartlink { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+
+    .olb-first-tail {
+        margin-left: auto; flex: 0 0 auto;
+        display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+    }
+
+    /* A frozen header keeps the grade columns labelled down the full ladder. */
+    .olb-tier-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        background: var(--mix-surface);
+    }
+
     /* The leaderboard skin for the collections that need real table semantics
        (sortable columns): same flat surface, hairlines, and row rhythm as the
        rankings cards — the section's one leaderboard look. */
@@ -118,38 +152,31 @@
         border-radius: 6px;
     }
 
-    /* Mobile: identifier columns pin while the rest of the row side-scrolls, low-value
-       columns step aside, and the pager sheds enough width to fit a phone. */
+    /* Mobile: the row identifier pins while the rest side-scrolls, song titles fall back
+       to their jacket and bubble, names truncate harder, and value/context pairs stack. */
     @@media (max-width: 760px) {
         .olb-hide-mobile { display: none !important; }
 
+        .olb-song-text { display: none; }
 
-        .olb-sticky-first td:first-child, .olb-sticky-first th:first-child,
-        .olb-sticky-second td:first-child, .olb-sticky-second th:first-child,
-        .olb-sticky-second td:nth-child(2), .olb-sticky-second th:nth-child(2) {
+        .olb-player-name { max-width: 11ch; }
+
+        .olb-first-tail, .olb-hero-listtail {
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0;
+        }
+
+        .olb-sticky-first td:first-child, .olb-sticky-first th:first-child {
             position: sticky;
+            left: 0;
             z-index: 2;
             background: var(--mix-surface);
-        }
-
-        .olb-sticky-first td:first-child, .olb-sticky-first th:first-child,
-        .olb-sticky-second td:first-child, .olb-sticky-second th:first-child { left: 0; }
-
-        .olb-sticky-second td:first-child, .olb-sticky-second th:first-child {
-            min-width: 44px;
-            max-width: 44px;
-        }
-
-        .olb-sticky-second td:nth-child(2), .olb-sticky-second th:nth-child(2) {
-            left: 44px;
-            max-width: 180px;
+            max-width: 200px;
             overflow: hidden;
         }
 
-        .olb-sticky-first td:first-child, .olb-sticky-first th:first-child { max-width: 200px; overflow: hidden; }
-
-        .olb-sticky-first td:first-child .mud-typography,
-        .olb-sticky-second td:nth-child(2) .mud-typography {
+        .olb-sticky-first td:first-child .mud-typography {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;

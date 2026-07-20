@@ -294,7 +294,10 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         var cut = RenderComponent<HubRankings>(p => p.Add(x => x.Mix, MixEnum.Phoenix2));
 
         var mine = Assert.Single(cut.FindAll(".olb-rank-card.olb-row-me"));
-        Assert.Contains("DRMURLOC#7222", mine.TextContent);
+        // Lists print the human half of the tag; the digits stay in the tooltip.
+        Assert.Contains("DRMURLOC", mine.TextContent);
+        Assert.DoesNotContain("#7222", mine.TextContent);
+        Assert.Contains("DRMURLOC#7222", mine.InnerHtml);
     }
 
     [Fact]
@@ -394,10 +397,11 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
 
         var cut = RenderBoardDialog(chart);
 
-        cut.WaitForAssertion(() => Assert.Contains("FEFEMZ#1489", cut.Markup));
+        cut.WaitForAssertion(() => Assert.Contains("FEFEMZ", cut.Markup));
         Assert.Contains("962,777", cut.Markup);
         var mine = Assert.Single(cut.FindAll(".olb-board-row.olb-row-me"));
-        Assert.Contains("DRMURLOC#7222", mine.TextContent);
+        Assert.Contains("DRMURLOC", mine.TextContent);
+        Assert.DoesNotContain("#7222", mine.TextContent);
     }
 
     [Fact]

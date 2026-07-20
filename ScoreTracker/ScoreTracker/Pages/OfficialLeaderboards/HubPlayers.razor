@@ -32,7 +32,8 @@ else
 {
     <MudPaper Class="pa-3">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
-            <HubPlayerChip Player="_profile.Player"/>
+            @* The one place the full TAG#1234 belongs — this page is that account. *@
+            <HubPlayerChip Player="_profile.Player" ShowTag="true"/>
             @if (_profile.PlayerType != null)
             {
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"

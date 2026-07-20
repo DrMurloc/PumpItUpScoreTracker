@@ -3,7 +3,8 @@
     <MudAvatar Size="@(Dense ? Size.Small : Size.Medium)">
         <MudImage Src="@AvatarUrl" ObjectFit="ObjectFit.Cover"/>
     </MudAvatar>
-    <MudText Typo="@(Dense ? Typo.body2 : Typo.body1)" Style="font-weight:700">@Player.Username</MudText>
+    <MudText Typo="@(Dense ? Typo.body2 : Typo.body1)" Class="olb-player-name"
+             Style="font-weight:700" title="@Player.Username">@Display</MudText>
     @if (Player.UserId != null)
     {
         <MudTooltip Text="@L["Linked to a site account"]">
@@ -18,5 +19,19 @@
     [Parameter] public OfficialPlayerRecord Player { get; set; } = null!;
     [Parameter] public bool Dense { get; set; }
 
+    /// <summary>True on the player's own profile header, where the full TAG#1234 is the point.</summary>
+    [Parameter] public bool ShowTag { get; set; }
+
     private string AvatarUrl => Player.AvatarUrl?.ToString() ?? DefaultAvatar;
+    private string Display => ShowTag ? Player.Username : NameOf(Player.Username);
+
+    /// <summary>
+    ///     Board tags are TAG#1234; lists show the human half only and keep the full tag in
+    ///     the row's tooltip. The digits identify an account, they don't name a person.
+    /// </summary>
+    public static string NameOf(string username)
+    {
+        var hash = username.IndexOf('#');
+        return hash > 0 ? username[..hash] : username;
+    }
 }
