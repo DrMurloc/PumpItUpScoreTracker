@@ -283,10 +283,10 @@ public sealed class HighlightsCalculatorTests
     }
 
     [Fact]
-    public void BoardsClimbedCountsImprovementsAndNewEntriesAboveTheMinimum()
+    public void BoardsClimbedCountsImprovementsAndNewEntries()
     {
         var boards = Enumerable.Range(100, 6).Select(id => ChartBoard(id, name: $"Board {id}")).ToArray();
-        // Player 1 climbs 4 boards and enters a 5th fresh; player 2 climbs only 1.
+        // Player 1 climbs 4 boards and enters a 5th fresh; player 2 climbs one board one place.
         var current = boards.Take(4)
             .Select(b => new PlacementRow(b.Id, 1, 5, 900000))
             .Append(new PlacementRow(boards[4].Id, 1, 20, 880000))
@@ -302,14 +302,17 @@ public sealed class HighlightsCalculatorTests
             boards: boards, current: current, previous: previous, boardRecords: records,
             folderRecords: new[] { new FolderRecordRow("Double", 26, 999000, 1) }));
 
-        var climbed = result.Highlights.Where(h => h.Kind == HighlightKinds.BoardsClimbed).ToArray();
-        var playerOne = Assert.Single(climbed);
-        Assert.Equal(1, playerOne.PlayerId);
+        // No eligibility gate: every climber lists, net-first — even a one-board move.
+        var climbed = result.Highlights.Where(h => h.Kind == HighlightKinds.BoardsClimbed)
+            .OrderBy(h => h.SortOrder).ToArray();
+        Assert.Equal(new int?[] { 1, 2 }, climbed.Select(c => c.PlayerId).ToArray());
+        var playerOne = climbed[0];
         Assert.Equal(5, playerOne.NewValue); // four climbs + one new entry
         // Four boards climbed 15 -> 5 (+40) plus the fresh entry's climb from off the
         // board (its one-row board floors the credit at 1).
         Assert.Equal(41, playerOne.PrevValue);
         Assert.Equal(1, playerOne.Level); // the split remembers which were first-time entries
+        Assert.Equal(1, climbed[1].PrevValue);
     }
 
     [Fact]
@@ -338,7 +341,8 @@ public sealed class HighlightsCalculatorTests
     [Fact]
     public void EnteringABoardCreditsTheClimbFromOffTheBoard()
     {
-        // Fifty players hold the board; the newcomer lands #1 and is credited all fifty.
+        // Fifty players hold the board; the newcomer lands #1 and is credited all fifty —
+        // one deep splash is enough to list.
         var board = ChartBoard();
         var current = Enumerable.Range(2, 49)
             .Select(place => new PlacementRow(board.Id, place + 100, place, 990000 - place * 100))
@@ -353,28 +357,11 @@ public sealed class HighlightsCalculatorTests
             previous: previous,
             boardRecords: new[] { new BoardRecordRow(board.Id, 999000, 1) }));
 
-        var entry = result.Highlights.FirstOrDefault(h =>
+        var entry = Assert.Single(result.Highlights, h =>
             h.Kind == HighlightKinds.BoardsClimbed && h.PlayerId == 7);
-        // Below the five-board minimum no row lists — assert through a multi-board setup instead.
-        Assert.Null(entry);
-
-        var boards = Enumerable.Range(300, 5).Select(id => ChartBoard(id, name: $"Board {id}")).ToArray();
-        var wide = HighlightsCalculator.Calculate(Input(
-            boards: boards,
-            current: boards.SelectMany(b => Enumerable.Range(2, 49)
-                    .Select(place => new PlacementRow(b.Id, place + 100, place, 990000 - place * 100))
-                    .Append(new PlacementRow(b.Id, 7, 1, 991000)))
-                .ToArray(),
-            previous: boards.SelectMany(b => Enumerable.Range(2, 49)
-                    .Select(place => new PlacementRow(b.Id, place + 100, place - 1, 990000 - place * 100)))
-                .ToArray(),
-            boardRecords: boards.Select(b => new BoardRecordRow(b.Id, 999000, 1)).ToArray()));
-
-        var row = Assert.Single(wide.Highlights, h =>
-            h.Kind == HighlightKinds.BoardsClimbed && h.PlayerId == 7);
-        Assert.Equal(5, row.NewValue); // five boards entered
-        Assert.Equal(250, row.PrevValue); // #1 over fifty players, five times
-        Assert.Equal(5, row.Level);
+        Assert.Equal(1, entry.NewValue); // one board
+        Assert.Equal(50, entry.PrevValue); // #1 over fifty players
+        Assert.Equal(1, entry.Level);
     }
 
     [Fact]
@@ -594,8 +581,10 @@ public sealed class HighlightsCalculatorTests
             current: new[] { new PlacementRow(board.Id, 7, 1, 991000) },
             previous: Array.Empty<PlacementRow>()));
 
-        // The entry still counts in the pulse, but nothing celebrates it.
-        Assert.All(result.Highlights, h => Assert.Equal(HighlightKinds.WeeklyPulse, h.Kind));
+        // The entry still counts as activity (pulse, boards climbed), but nothing
+        // celebrates it as a record moment.
+        Assert.DoesNotContain(result.Highlights, h => h.Kind is HighlightKinds.NewNumberOne
+            or HighlightKinds.ChartGradeFirst or HighlightKinds.FolderGradeFirst);
         Assert.Equal(991000, result.UpdatedBoardRecords.Single().HighScore);
     }
 
@@ -612,6 +601,7 @@ public sealed class HighlightsCalculatorTests
 
         Assert.Empty(result.UpdatedBoardRecords);
         Assert.Empty(result.UpdatedFolderRecords);
-        Assert.All(result.Highlights, h => Assert.Equal(HighlightKinds.WeeklyPulse, h.Kind));
+        Assert.DoesNotContain(result.Highlights, h => h.Kind is HighlightKinds.NewNumberOne
+            or HighlightKinds.ChartGradeFirst or HighlightKinds.FolderGradeFirst);
     }
 }

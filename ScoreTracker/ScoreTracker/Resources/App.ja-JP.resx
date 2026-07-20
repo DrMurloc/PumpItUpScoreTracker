@@ -4556,8 +4556,8 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>ランキングはまだありません - 最初の週次インポート後に表示されます。</value>
   </data>
-  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
-    <value>今週は上昇基準を超えたプレイヤーはいません。</value>
+  <data name="Nobody climbed a chart board this week." xml:space="preserve">
+    <value>今週は譜面ボードで順位を上げたプレイヤーはいません。</value>
   </data>
   <data name="Official Leaderboards Admin" xml:space="preserve">
     <value>公開ランキング管理</value>

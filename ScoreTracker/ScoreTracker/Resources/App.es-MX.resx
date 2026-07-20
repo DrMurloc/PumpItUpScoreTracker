@@ -4436,8 +4436,8 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>Aún no hay clasificaciones - aparecen después de la primera importación semanal.</value>
   </data>
-  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
-    <value>Nadie superó el umbral de ascensos esta semana.</value>
+  <data name="Nobody climbed a chart board this week." xml:space="preserve">
+    <value>Nadie subió en un tablero de charts esta semana.</value>
   </data>
   <data name="Official Leaderboards Admin" xml:space="preserve">
     <value>Administración de clasificaciones oficiales</value>

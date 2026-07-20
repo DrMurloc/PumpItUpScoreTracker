@@ -4437,8 +4437,8 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>아직 랭킹이 없습니다 - 첫 주간 가져오기 후에 표시됩니다.</value>
   </data>
-  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
-    <value>이번 주에는 상승 기준을 넘은 플레이어가 없습니다.</value>
+  <data name="Nobody climbed a chart board this week." xml:space="preserve">
+    <value>이번 주에는 채보 보드에서 상승한 플레이어가 없습니다.</value>
   </data>
   <data name="Official Leaderboards Admin" xml:space="preserve">
     <value>공식 리더보드 관리</value>

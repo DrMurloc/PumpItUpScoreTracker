@@ -38,7 +38,6 @@ internal static class HighlightsCalculator
 {
     public const int MoversTaken = 8;
     public const int BoardsClimbedTaken = 8;
-    public const int BoardsClimbedMinimum = 5;
     public const int HighlightMinimumLevel = 24;
     public const int GainersTaken = 3;
     public const int DebutsTaken = 24;
@@ -299,9 +298,10 @@ internal static class HighlightsCalculator
         }
 
         // Net places leads: with entries credited as climbs from off the board, the one
-        // number carries breadth and depth together. Board count only breaks ties.
+        // number carries breadth and depth together — a #250→#40 rocket on one board
+        // competes with a hundred shallow climbs. Board count only breaks ties, and the
+        // take is the only cap.
         var ranked = climbs
-            .Where(kv => kv.Value.Boards >= BoardsClimbedMinimum)
             .OrderByDescending(kv => kv.Value.NetPlaces).ThenByDescending(kv => kv.Value.Boards)
             .Take(BoardsClimbedTaken)
             .ToArray();

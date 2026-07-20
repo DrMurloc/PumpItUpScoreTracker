@@ -4479,8 +4479,8 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>No rankmrgls yet - appear aftrgl frst wkly mrglport.</value>
   </data>
-  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
-    <value>Nomrgl clrgled da climb threshold dis wk.</value>
+  <data name="Nobody climbed a chart board this week." xml:space="preserve">
+    <value>Nomrgl clrglmbed a chart brglrd dis wk.</value>
   </data>
   <data name="Official Leaderboards Admin" xml:space="preserve">
     <value>Arglmrgl Admrgln</value>
