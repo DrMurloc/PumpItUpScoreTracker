@@ -85,7 +85,7 @@ namespace ScoreTracker.ChartIntelligence.Application
 
             for (var letter = ParagonLevel.AA; letter <= ParagonLevel.PG; letter++)
             {
-                var threshold = letter.MinThreshold();
+                var threshold = letter.MinThreshold(mix);
                 var relevantScores = scores.Where(s => s.Record.Score != null && s.Record.Score >= threshold);
 
 

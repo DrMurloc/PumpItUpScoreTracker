@@ -64,6 +64,34 @@ internal sealed class EFOfficialRecordRepository : IOfficialRecordRepository
             .ToArrayAsync(ct);
     }
 
+    public async Task<CrossMixRecordHighs> GetCrossMixHighs(MixEnum mix, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        // ChartId is mix-agnostic, so the other mixes' board records collapse to one
+        // best-ever band per chart — each source score banded in ITS mix's grade table,
+        // because the sub-AAA floors differ per mix. Folders match on nominal (type, level).
+        var chartRows = await database.Set<OfficialBoardRecordEntity>()
+            .Join(database.Set<OfficialLeaderboardEntity>()
+                    .Where(b => b.MixId != mixId && b.ChartId != null),
+                r => r.LeaderboardId, b => b.Id,
+                (r, b) => new { ChartId = b.ChartId!.Value, b.MixId, r.HighScore })
+            .ToArrayAsync(ct);
+        var chartRanks = chartRows
+            .GroupBy(x => x.ChartId)
+            .ToDictionary(g => g.Key,
+                g => g.Max(x => GradeBandLadder.Of(x.HighScore, MixIds.ToEnum(x.MixId)).Rank));
+        var folderRows = await database.Set<OfficialFolderRecordEntity>()
+            .Where(r => r.MixId != mixId)
+            .Select(r => new { r.ChartType, r.Level, r.MixId, r.HighScore })
+            .ToArrayAsync(ct);
+        var folderRanks = folderRows
+            .GroupBy(x => (x.ChartType, x.Level))
+            .ToDictionary(g => g.Key,
+                g => g.Max(x => GradeBandLadder.Of(x.HighScore, MixIds.ToEnum(x.MixId)).Rank));
+        return new CrossMixRecordHighs(chartRanks, folderRanks);
+    }
+
     public async Task UpsertFolderRecords(MixEnum mix, IReadOnlyCollection<FolderRecordRow> records,
         CancellationToken ct)
     {

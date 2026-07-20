@@ -59,14 +59,14 @@ public static class ParagonLevelGradeHelperMethods
         return _letterNames[name];
     }
 
-    public static ParagonLevel GetParagonLevel(this PhoenixScore score)
+    public static ParagonLevel GetParagonLevel(this PhoenixScore score, MixEnum mix)
     {
-        return score == 1000000 ? ParagonLevel.PG : _levelDict[score.LetterGrade];
+        return score == 1000000 ? ParagonLevel.PG : _levelDict[score.LetterGradeFor(mix)];
     }
 
-    public static PhoenixScore MinThreshold(this ParagonLevel level)
+    public static PhoenixScore MinThreshold(this ParagonLevel level, MixEnum mix)
     {
-        return level == ParagonLevel.PG ? PhoenixScore.Max : level.GetLetterGrade().GetMinimumScore();
+        return level == ParagonLevel.PG ? PhoenixScore.Max : level.GetLetterGrade().GetMinimumScoreFor(mix);
     }
 
     public static ParagonLevel GetParagonLevel(this PhoenixLetterGrade letterGrade)

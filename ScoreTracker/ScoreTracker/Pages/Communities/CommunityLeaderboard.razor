@@ -141,7 +141,7 @@
                     </MudTd>
                 }
                 <MudTd>
-                    <ScoreBreakdown Score="context.Score"></ScoreBreakdown>
+                    <ScoreBreakdown Score="context.Score" Mix="_currentMix"></ScoreBreakdown>
                 </MudTd>
             }
             @if (_currentType == LeaderboardType.Total)
@@ -182,7 +182,7 @@
                                     <MudCardMedia Height="150" Image="@entry.Chart.Song.ImagePath.ToString()" />
                                     <MudCardContent>
                                         <DifficultyBubble Chart="entry.Chart"></DifficultyBubble>
-                                        <ScoreBreakdown Score="entry.Score" Plate="entry.Plate" IsBroken="entry.IsBroken" Text=@(_showingType=="Rating"?entry.Rating.ToString("N0"):entry.CompetitiveLevel.ToString("0.00")) Height="17"></ScoreBreakdown>
+                                        <ScoreBreakdown Score="entry.Score" Plate="entry.Plate" IsBroken="entry.IsBroken" Mix="_currentMix" Text=@(_showingType=="Rating"?entry.Rating.ToString("N0"):entry.CompetitiveLevel.ToString("0.00")) Height="17"></ScoreBreakdown>
 
                                     </MudCardContent>
                                 </MudCard>
@@ -289,7 +289,7 @@
             @foreach (var key in _playerScores.Keys)
             {
                 <MudTd>
-                    @(_playerScores[key].TryGetValue(context.Id, out var score) ? $"{score} ({score.LetterGrade.GetName()})" : "")
+                    @(_playerScores[key].TryGetValue(context.Id, out var score) ? $"{score} ({score.LetterGradeFor(_currentMix).GetName()})" : "")
                 </MudTd>
             }
             <MudTd>@(_scoreDiffs[context.Id]==-1?"PG":_scoreDiffs[context.Id]?.ToString("N0"))</MudTd>
@@ -341,7 +341,7 @@
                     }
                 </MudTd>
                 <MudTd>@context.Item2.UserName</MudTd>
-                <MudTd><ScoreBreakdown Score="context.Item2.Score" Plate="context.Item2.Plate" IsBroken="context.Item2.IsBroken" ShowScore="true"></ScoreBreakdown></MudTd>
+                <MudTd><ScoreBreakdown Score="context.Item2.Score" Plate="context.Item2.Plate" IsBroken="context.Item2.IsBroken" Mix="_currentMix" ShowScore="true"></ScoreBreakdown></MudTd>
             </RowTemplate>
         </MudTable>
     }

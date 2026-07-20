@@ -162,7 +162,7 @@
                                 <DifficultyBubble Chart="_charts[context.ChartId]"></DifficultyBubble>
                             </MudTd>
                             <MudTd>
-                                <ScoreBreakdown Score="context.Score" Plate="context.Plate" ShowScore="true" OneLine="true"
+                                <ScoreBreakdown Score="context.Score" Plate="context.Plate" Mix="_currentMix" ShowScore="true" OneLine="true"
                                                 Ranking="_rankings.TryGetValue(context.ChartId, out var r) ? r : null"></ScoreBreakdown>
                             </MudTd>
                         </RowTemplate>

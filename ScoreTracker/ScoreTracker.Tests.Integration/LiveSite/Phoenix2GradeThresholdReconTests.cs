@@ -12,7 +12,7 @@ namespace ScoreTracker.Tests.Integration.LiveSite;
 ///     grade image (<c>/l_img/grade/{stem}.png</c>) next to each raw score, so pairing the two
 ///     across a busy board (which spans ~700k–1,000,000 in a single page) pins every grade
 ///     boundary the site is actually using. For each observed (score, site-grade) pair this
-///     also computes our own code's grade via <see cref="PhoenixScore.LetterGrade" /> and reports
+///     also computes our own code's grade via <see cref="PhoenixLetterGradeHelperMethods.LetterGradeFor" /> and reports
 ///     the min/max site score per grade plus every disagreement — that mismatch list is the
 ///     answer to "did the thresholds move, and to what". Read-only, login-gated, manual-run.
 /// </summary>
@@ -108,12 +108,12 @@ public sealed class Phoenix2GradeThresholdReconTests : IClassFixture<PiuGameSess
         }
 
         _output.WriteLine($"Phoenix 1: {observations.Count} graded rows from {boardIds.Distinct().Take(4).Count()} boards");
-        var mismatches = observations.Where(o => PhoenixScore.From(o.Score).LetterGrade != o.SiteGrade)
+        var mismatches = observations.Where(o => PhoenixScore.From(o.Score).LetterGradeFor(MixEnum.Phoenix) != o.SiteGrade)
             .OrderBy(o => o.Score).ToList();
         _output.WriteLine($"Phoenix 1: {mismatches.Count} of {observations.Count} rows disagree with our thresholds");
         foreach (var m in mismatches.Take(30))
             _output.WriteLine(
-                $"  score {m.Score,10:N0}: site='{m.SiteGrade.GetName()}' ours='{PhoenixScore.From(m.Score).LetterGrade.GetName()}'");
+                $"  score {m.Score,10:N0}: site='{m.SiteGrade.GetName()}' ours='{PhoenixScore.From(m.Score).LetterGradeFor(MixEnum.Phoenix).GetName()}'");
         _output.WriteLine(mismatches.Count == 0
             ? "=> Phoenix 1 STILL MATCHES our thresholds: the new table is Phoenix-2-only (per-mix needed)."
             : "=> Phoenix 1 ALSO disagrees: the whole game moved to the new grade table.");
@@ -165,14 +165,14 @@ public sealed class Phoenix2GradeThresholdReconTests : IClassFixture<PiuGameSess
             if (forGrade.Count == 0) continue;
             _output.WriteLine(
                 $"{grade.GetName(),-6} {forGrade.Count,6} {forGrade.Min(o => o.Score),10:N0} {forGrade.Max(o => o.Score),10:N0}   " +
-                $"[{(int)grade.GetMinimumScore():N0} .. {(int)grade.GetMaximumScore():N0}]");
+                $"[{(int)grade.GetMinimumScoreFor(MixEnum.Phoenix2):N0} .. {(int)grade.GetMaximumScoreFor(MixEnum.Phoenix2):N0}]");
         }
 
         _output.WriteLine("");
         _output.WriteLine("=== Every row the SITE grades below A (B/C/D/F — score asc) ===");
         foreach (var o in observations.Where(o => o.SiteGrade < PhoenixLetterGrade.A).OrderBy(o => o.Score))
             _output.WriteLine(
-                $"  score {o.Score,10:N0}: site='{o.SiteGrade.GetName()}' ours='{PhoenixScore.From(o.Score).LetterGrade.GetName()}'");
+                $"  score {o.Score,10:N0}: site='{o.SiteGrade.GetName()}' ours='{PhoenixScore.From(o.Score).LetterGradeFor(MixEnum.Phoenix2).GetName()}'");
 
         Assert.NotEmpty(observations);
     }
@@ -246,8 +246,8 @@ public sealed class Phoenix2GradeThresholdReconTests : IClassFixture<PiuGameSess
         {
             var forGrade = observations.Where(o => o.SiteGrade == grade).ToList();
             if (forGrade.Count == 0) continue;
-            var ourMin = (int)grade.GetMinimumScore();
-            var ourMax = (int)grade.GetMaximumScore();
+            var ourMin = (int)grade.GetMinimumScoreFor(MixEnum.Phoenix2);
+            var ourMax = (int)grade.GetMaximumScoreFor(MixEnum.Phoenix2);
             _output.WriteLine(
                 $"{grade.GetName(),-6} {forGrade.Count,6} {forGrade.Min(o => o.Score),10:N0} {forGrade.Max(o => o.Score),10:N0}   " +
                 $"[{ourMin:N0} .. {ourMax:N0}]");
@@ -255,7 +255,7 @@ public sealed class Phoenix2GradeThresholdReconTests : IClassFixture<PiuGameSess
 
         // ---- Disagreements: the site says one grade, our thresholds say another ----
         var mismatches = observations
-            .Where(o => PhoenixScore.From(o.Score).LetterGrade != o.SiteGrade)
+            .Where(o => PhoenixScore.From(o.Score).LetterGradeFor(MixEnum.Phoenix2) != o.SiteGrade)
             .OrderBy(o => o.Score)
             .ToList();
 
@@ -263,7 +263,7 @@ public sealed class Phoenix2GradeThresholdReconTests : IClassFixture<PiuGameSess
         _output.WriteLine($"=== {mismatches.Count} of {observations.Count} rows disagree with our current thresholds ===");
         foreach (var m in mismatches.Take(60))
             _output.WriteLine(
-                $"  score {m.Score,10:N0}: site='{m.SiteGrade.GetName()}' ours='{PhoenixScore.From(m.Score).LetterGrade.GetName()}'  ({m.Source})");
+                $"  score {m.Score,10:N0}: site='{m.SiteGrade.GetName()}' ours='{PhoenixScore.From(m.Score).LetterGradeFor(MixEnum.Phoenix2).GetName()}'  ({m.Source})");
         if (mismatches.Count > 60) _output.WriteLine($"  ... and {mismatches.Count - 60} more");
 
         // ---- Inferred boundaries: lowest score seen at each grade (the grade's floor) ----
@@ -274,7 +274,7 @@ public sealed class Phoenix2GradeThresholdReconTests : IClassFixture<PiuGameSess
             var forGrade = observations.Where(o => o.SiteGrade == grade).ToList();
             if (forGrade.Count == 0) continue;
             var observedFloor = forGrade.Min(o => o.Score);
-            var ourFloor = (int)grade.GetMinimumScore();
+            var ourFloor = (int)grade.GetMinimumScoreFor(MixEnum.Phoenix2);
             var flag = observedFloor < ourFloor ? "  <-- observed BELOW our floor (floor moved down or grade shifted)" : "";
             _output.WriteLine($"{grade.GetName(),-6} observed-floor {observedFloor,10:N0}   our-floor {ourFloor,10:N0}{flag}");
         }

@@ -4389,17 +4389,20 @@
   <data name="Best place" xml:space="preserve">
     <value>Bestest mrglplace</value>
   </data>
-  <data name="Board #1s" xml:space="preserve">
-    <value>Mrgl #1s</value>
+  <data name="Chart Board #1s" xml:space="preserve">
+    <value>Chart Mrgl #1s</value>
   </data>
-  <data name="Board placements" xml:space="preserve">
-    <value>Mrglboard placemrgls</value>
+  <data name="Chart Boards" xml:space="preserve">
+    <value>Chart Mrglboards</value>
   </data>
-  <data name="Board rank - lower is better" xml:space="preserve">
-    <value>Mrglrank - smol number gud</value>
+  <data name="Chart board placements" xml:space="preserve">
+    <value>Chart mrglboard placemrgls</value>
   </data>
-  <data name="boards" xml:space="preserve">
-    <value>mrglboards</value>
+  <data name="PUMBILITY rank - lower is better" xml:space="preserve">
+    <value>PUMBILITY mrglrank - smol number gud</value>
+  </data>
+  <data name="chart boards" xml:space="preserve">
+    <value>chart mrglboards</value>
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Mrglboards</value>
@@ -4434,8 +4437,8 @@
   <data name="Last import failed" xml:space="preserve">
     <value>Last mrglport went blrgl</value>
   </data>
-  <data name="level 24+, first ever, SS and up" xml:space="preserve">
-    <value>lvl 24+, frst evrgl, SS n up</value>
+  <data name="level 24+, first ever, any grade" xml:space="preserve">
+    <value>lvl 24+, frst evrgl, any grrgl</value>
   </data>
   <data name="level 24+, must beat the standing record" xml:space="preserve">
     <value>lvl 24+, must mrglbeat standing record</value>
@@ -4443,8 +4446,8 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>Mrgllinked to site accmrglnt</value>
   </data>
-  <data name="Most boards climbed" xml:space="preserve">
-    <value>Most mrglboards clrgled</value>
+  <data name="Biggest board climbers" xml:space="preserve">
+    <value>Biggest brglrd clrglmbers</value>
   </data>
   <data name="Movers of the week" xml:space="preserve">
     <value>Mrglmovers of da wk</value>
@@ -4476,8 +4479,8 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>No rankmrgls yet - appear aftrgl frst wkly mrglport.</value>
   </data>
-  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
-    <value>Nomrgl clrgled da climb threshold dis wk.</value>
+  <data name="Nobody climbed a chart board this week." xml:space="preserve">
+    <value>Nomrgl clrglmbed a chart brglrd dis wk.</value>
   </data>
   <data name="Official Leaderboards Admin" xml:space="preserve">
     <value>Arglmrgl Admrgln</value>
@@ -5010,20 +5013,17 @@
   <data name="PUMBILITY movers" xml:space="preserve">
     <value>PUMBILITY mrglvers</value>
   </data>
-  <data name="Boards climbed" xml:space="preserve">
-    <value>Brglrds clrglmbed</value>
-  </data>
-  <data name="**{0}** climbed {1} boards (+{2})" xml:space="preserve">
-    <value>**{0}** clrglmbed {1} brglrds (+{2})</value>
+  <data name="**{0}** climbed {1} chart boards (+{2})" xml:space="preserve">
+    <value>**{0}** clrglmbed {1} chart brglrds (+{2})</value>
   </data>
   <data name="World firsts &amp; new #1s" xml:space="preserve">
     <value>Wrglrld frglrsts &amp; nrglw #1s</value>
   </data>
-  <data name="First **{0}** — **{1}** in the {2} folder · {3:N0}" xml:space="preserve">
-    <value>Frglrst **{0}** — **{1}** rgln {2} frglder · {3:N0}</value>
+  <data name="World First" xml:space="preserve">
+    <value>Wrgld Frglst</value>
   </data>
-  <data name="First **{0}** — **{1}** on {2} · {3:N0}" xml:space="preserve">
-    <value>Frglrst **{0}** — **{1}** rgln {2} · {3:N0}</value>
+  <data name="{0} folder first" xml:space="preserve">
+    <value>{0} frglder frst</value>
   </data>
   <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
     <value>Nrglw #1 — **{0}** rgln {1} · {2:N0}</value>
@@ -5417,5 +5417,71 @@
   </data>
   <data name="{0} Players" xml:space="preserve">
     <value>{0} Playrgls</value>
+  </data>
+  <data name="This week on the boards" xml:space="preserve">
+    <value>This week on the mrglboards</value>
+  </data>
+  <data name="{0} players left their mark on the chart boards." xml:space="preserve">
+    <value>{0} mrgls left their mark on the chart mrglboards.</value>
+  </data>
+  <data name="{0} players left their mark — and {1} fell to its first {2}." xml:space="preserve">
+    <value>{0} mrgls left their mark — and {1} fell to its frst {2}.</value>
+  </data>
+  <data name="Chart board entries" xml:space="preserve">
+    <value>Chart mrglboard entries</value>
+  </data>
+  <data name="{0} new · {1} upscored" xml:space="preserve">
+    <value>{0} new · {1} upscrgled</value>
+  </data>
+  <data name="Players active" xml:space="preserve">
+    <value>Mrgls active</value>
+  </data>
+  <data name="on any chart board" xml:space="preserve">
+    <value>on any chart mrglboard</value>
+  </data>
+  <data name="first ever, any grade" xml:space="preserve">
+    <value>frst ever, any grrgl</value>
+  </data>
+  <data name="Biggest PUMBILITY gainer" xml:space="preserve">
+    <value>Biggest PUMBILITY gainer mrgl</value>
+  </data>
+  <data name="Highest world first" xml:space="preserve">
+    <value>Highest wrgld frst</value>
+  </data>
+  <data name="Biggest board climber" xml:space="preserve">
+    <value>Biggest brglrd clrglmber</value>
+  </data>
+  <data name="{0} new" xml:space="preserve">
+    <value>{0} new</value>
+  </data>
+  <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
+    <value>Top 100 · Top 1000 flrgrs — 50× SS</value>
+  </data>
+  <data name="held" xml:space="preserve">
+    <value>hrgld</value>
+  </data>
+  <data name="what it takes to hold each rung of the PUMBILITY board" xml:space="preserve">
+    <value>what it takes to hrgld each rung of the PUMBILITY mrglboard</value>
+  </data>
+  <data name="Debuted this week" xml:space="preserve">
+    <value>Debrgluted this week</value>
+  </data>
+  <data name="+{0} more" xml:space="preserve">
+    <value>+{0} mrgl</value>
+  </data>
+  <data name="first-ever appearance on any chart board" xml:space="preserve">
+    <value>frst-ever appearance on any chart mrglboard</value>
+  </data>
+  <data name="{0} new · net +{1} places" xml:space="preserve">
+    <value>{0} new · net +{1} plrgls</value>
+  </data>
+  <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
+    <value>**{0}** — {1} chart brglrds ({2} new, net +{3})</value>
+  </data>
+  <data name="Chart leaderboard" xml:space="preserve">
+    <value>Chart mrglboard</value>
+  </data>
+  <data name="Nobody is on this chart board yet." xml:space="preserve">
+    <value>Nobody on dis chart mrglboard yet, mrgl.</value>
   </data>
 </root>

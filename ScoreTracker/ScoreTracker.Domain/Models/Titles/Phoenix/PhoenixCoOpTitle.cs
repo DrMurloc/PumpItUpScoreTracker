@@ -17,6 +17,6 @@ public sealed class PhoenixCoOpTitle : PhoenixTitle
     public override double CompletionProgress(Chart chart, RecordedPhoenixScore attempt)
     {
         if (chart.Type != ChartType.CoOp || attempt.IsBroken || attempt.Score == null) return 0;
-        return 2000 * attempt.Score.Value.LetterGrade.GetModifier();
+        return 2000 * attempt.Score.Value.LetterGradeFor(chart.Mix).GetModifier();
     }
 }

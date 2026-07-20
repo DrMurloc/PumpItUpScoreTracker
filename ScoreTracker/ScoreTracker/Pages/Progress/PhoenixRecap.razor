@@ -136,7 +136,7 @@ else if (_user != null && _recap != null)
                     <h1 class="precap-h1">@TypeName(playerType)</h1>
                     @if (_recap.PlayerTypeAverageScore is { } avg)
                     {
-                        <p class="precap-lede precap-lede-center">@L["Top-50 average score {0} — {1}", avg.ToString("N0"), ((PhoenixScore)avg).LetterGrade.GetName()]</p>
+                        <p class="precap-lede precap-lede-center">@L["Top-50 average score {0} — {1}", avg.ToString("N0"), ((PhoenixScore)avg).LetterGradeFor(MixEnum.Phoenix).GetName()]</p>
                     }
                     <div class="precap-typebar">
                         @foreach (var band in TypeBands)

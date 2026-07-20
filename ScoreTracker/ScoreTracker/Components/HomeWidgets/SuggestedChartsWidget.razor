@@ -83,7 +83,7 @@ else
                             }
                             else if (row.ShowScore && row.Score?.Score != null)
                             {
-                                <LetterGradeIcon Grade="row.Score.Score.Value.LetterGrade"
+                                <LetterGradeIcon Grade="row.Score.Score.Value.LetterGradeFor(_mix)"
                                                  IsBroken="row.Score.IsBroken" Height="16"/>
                                 <span>@(((int)row.Score.Score.Value).ToString("N0"))</span>
                             }
@@ -442,7 +442,7 @@ else
                 }
                 else if (ctx.Row.ShowScore && ctx.Row.Score?.Score != null)
                 {
-                    <LetterGradeIcon Grade="ctx.Row.Score.Score.Value.LetterGrade"
+                    <LetterGradeIcon Grade="ctx.Row.Score.Score.Value.LetterGradeFor(_mix)"
                                      IsBroken="ctx.Row.Score.IsBroken" Height="14"/>
                     <span>@(((int)ctx.Row.Score.Score.Value).ToString("N0"))</span>
                 }

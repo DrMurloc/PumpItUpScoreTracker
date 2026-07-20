@@ -86,19 +86,36 @@ namespace ScoreTracker.OfficialMirror.Application
                     $"**{m.Player.Username}** #{m.PreviousRank} → **#{m.NewRank}** · {m.Pumbility:N2}"));
 
             if (highlights.BoardsClimbed.Count > 0)
-                AddSection($"🧗 **{_localizer.Get(culture, "Boards climbed")}**", highlights.BoardsClimbed.Take(5)
-                    .Select(b => _localizer.Get(culture, "**{0}** climbed {1} boards (+{2})",
-                        b.Player.Username, b.BoardsClimbed, b.NetPlacesGained)));
+                AddSection($"🧗 **{_localizer.Get(culture, "Biggest board climbers")}**", highlights.BoardsClimbed.Take(5)
+                    .Select(b => b.NewBoards is { } fresh
+                        ? _localizer.Get(culture, "**{0}** — {1} chart boards ({2} new, net +{3})",
+                            b.Player.Username, b.BoardsClimbed, fresh, b.NetPlacesGained)
+                        : _localizer.Get(culture, "**{0}** climbed {1} chart boards (+{2})",
+                            b.Player.Username, b.BoardsClimbed, b.NetPlacesGained)));
 
             if (highlights.WorldFirsts.Count > 0 || highlights.NewNumberOnes.Count > 0)
             {
-                // Difficulties render as plain text here (not bubble emojis) so the highlight
-                // lines don't stack emoji on emoji.
-                var lines = highlights.WorldFirsts.Take(6).Select(f => f.IsFolderFirst
-                        ? _localizer.Get(culture, "First **{0}** — **{1}** in the {2} folder · {3:N0}",
-                            f.GradeBand, f.Player.Username, $"{f.ChartType}{f.Level}", f.Score)
-                        : _localizer.Get(culture, "First **{0}** — **{1}** on {2} · {3:N0}",
-                            f.GradeBand, f.Player.Username, ChartName(charts, f.ChartId, culture), f.Score))
+                // World-first lines follow a fixed shape: difficulty bubble, song, the words
+                // "World First", the grade as its emoji (a PG rides its plate art), then the
+                // player linked to their board profile. Folder firsts append their folder tag.
+                var lines = highlights.WorldFirsts.Take(6).Select(f =>
+                    {
+                        var chart = f.ChartId != null && charts.TryGetValue(f.ChartId.Value, out var c) ? c : null;
+                        var bubble = chart == null ? "" : $"#DIFFICULTY|{chart.DifficultyString}# ";
+                        var song = chart == null
+                            ? _localizer.Get(culture, "a chart")
+                            : (string)chart.Song.Name;
+                        var grade = f.GradeBand == "PG"
+                            ? $"#PLATE|{PhoenixPlate.PerfectGame}#"
+                            : $"#LETTERGRADE|{PhoenixLetterGradeHelperMethods.TryParse(f.GradeBand)}#";
+                        var link = $"[{f.Player.Username}]({SiteBase}/OfficialLeaderboards/Players" +
+                                   $"?player={Uri.EscapeDataString(f.Player.Username)})";
+                        var folder = f.IsFolderFirst && f.ChartType != null && f.Level != null
+                            ? " · " + _localizer.Get(culture, "{0} folder first",
+                                $"{(f.ChartType == ChartType.Double.ToString() ? "D" : "S")}{f.Level}")
+                            : "";
+                        return $"{bubble}**{song}** — {_localizer.Get(culture, "World First")} {grade} — {link}{folder}";
+                    })
                     .Concat(highlights.NewNumberOnes.Take(4).Select(n =>
                         _localizer.Get(culture, "New #1 — **{0}** on {1} · {2:N0}",
                             n.Player.Username, ChartName(charts, n.ChartId, culture), n.Score) +

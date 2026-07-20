@@ -1,5 +1,6 @@
 @using ApexCharts
 @using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
@@ -8,6 +9,7 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Theming
 @inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
 
 <MudAutocomplete T="string" Value="_selected" ValueChanged="SelectPlayer" Clearable="true"
                  Label="@L["Search any board player"]" AdornmentIcon="@Icons.Material.Filled.Search"
@@ -30,10 +32,12 @@ else
 {
     <MudPaper Class="pa-3">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
-            <HubPlayerChip Player="_profile.Player"/>
+            @* The one place the full TAG#1234 belongs — this page is that account. *@
+            <HubPlayerChip Player="_profile.Player" ShowTag="true"/>
             @if (_profile.PlayerType != null)
             {
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                         Style="@HubRankings.PlayerTypeChipStyle(_profile.PlayerType.Value)">
                     @L[HubRankings.PlayerTypeName(_profile.PlayerType.Value)]
                 </MudChip>
             }
@@ -64,13 +68,13 @@ else
             </MudItem>
             <MudItem xs="6" sm="3">
                 <MudPaper Class="pa-2" Outlined="true">
-                    <MudText Typo="Typo.overline">@L["Boards"]</MudText>
+                    <MudText Typo="Typo.overline">@L["Chart Boards"]</MudText>
                     <MudText Typo="Typo.h5"><b>@_profile.BoardsInTop</b></MudText>
                 </MudPaper>
             </MudItem>
             <MudItem xs="6" sm="3">
                 <MudPaper Class="pa-2" Outlined="true">
-                    <MudText Typo="Typo.overline">@L["Board #1s"]</MudText>
+                    <MudText Typo="Typo.overline">@L["Chart Board #1s"]</MudText>
                     <MudText Typo="Typo.h5"><b>@_profile.NumberOnes</b></MudText>
                 </MudPaper>
             </MudItem>
@@ -88,69 +92,60 @@ else
             <MudGrid Class="mt-1">
                 <MudItem xs="12" md="7">
                     <MudText Typo="Typo.overline">@L["PUMBILITY over time"]</MudText>
-                    <ApexChart TItem="HistoryPoint" Options="_lineOptions" Height="220">
-                        <ApexPointSeries TItem="HistoryPoint"
-                                         Items="_pumbilityHistory"
-                                         Name="PUMBILITY"
-                                         Color="@MixThemes.PaletteFor(Mix).Primary"
-                                         SeriesType="SeriesType.Line"
-                                         XValue="@(p => p.Label)"
-                                         YValue="@(p => p.Value)"/>
-                    </ApexChart>
+                    <div class="@ApexChartTheming.WrapperClass">
+                        <ApexChart TItem="HistoryPoint" Options="_lineOptions" Height="220">
+                            <ApexPointSeries TItem="HistoryPoint"
+                                             Items="_pumbilityHistory"
+                                             Name="PUMBILITY"
+                                             Color="@MixThemes.PaletteFor(Mix).Primary"
+                                             SeriesType="SeriesType.Line"
+                                             XValue="@(p => p.Label)"
+                                             YValue="@(p => p.Value)"/>
+                        </ApexChart>
+                    </div>
                 </MudItem>
                 <MudItem xs="12" md="5">
-                    <MudText Typo="Typo.overline">@L["Board rank - lower is better"]</MudText>
-                    <ApexChart TItem="HistoryPoint" Options="_rankOptions" Height="220">
-                        <ApexPointSeries TItem="HistoryPoint"
-                                         Items="_rankHistory"
-                                         Name="@L["Rank"]"
-                                         Color="@MixThemes.PaletteFor(Mix).Secondary"
-                                         SeriesType="SeriesType.Line"
-                                         XValue="@(p => p.Label)"
-                                         YValue="@(p => p.Value)"/>
-                    </ApexChart>
+                    <MudText Typo="Typo.overline">@L["PUMBILITY rank - lower is better"]</MudText>
+                    <div class="@ApexChartTheming.WrapperClass">
+                        <ApexChart TItem="HistoryPoint" Options="_rankOptions" Height="220">
+                            <ApexPointSeries TItem="HistoryPoint"
+                                             Items="_rankHistory"
+                                             Name="@L["Rank"]"
+                                             Color="@MixThemes.PaletteFor(Mix).Secondary"
+                                             SeriesType="SeriesType.Line"
+                                             XValue="@(p => p.Label)"
+                                             YValue="@(p => p.Value)"/>
+                        </ApexChart>
+                    </div>
                 </MudItem>
             </MudGrid>
         }
 
         <MudText Typo="Typo.overline" Class="mt-3 d-block">
-            @L["Board placements"] · @_profile.BoardsInTop
+            @L["Chart board placements"] · @_profile.BoardsInTop
         </MudText>
-        <MudTable T="OfficialPlayerChartRecord" Items="_profile.Placements" Dense="true"
-                  Breakpoint="Breakpoint.None" RowsPerPage="25" Class="olb-sticky-first olb-pager-tight">
+        <MudTable T="OfficialPlayerChartRecord" Items="_profile.Placements" Dense="true" Elevation="0"
+                  Breakpoint="Breakpoint.None" RowsPerPage="25"
+                  Class="olb-board-table olb-sticky-first olb-pager-tight">
             <HeaderContent>
-                <MudTh>@L["Chart"]</MudTh>
-                <MudTh Style="text-align:right">@L["Score"]</MudTh>
-                <MudTh></MudTh>
-                <MudTh Style="text-align:right">@L["Place"]</MudTh>
-                <MudTh></MudTh>
+                <MudTh Style="text-align:right">
+                    <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => (object)(e.Place ?? int.MaxValue)">@L["Place"]</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => (object)(e.PlaceDelta ?? int.MinValue)">Δ</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => SongName(e)">@L["Chart"]</MudTableSortLabel>
+                </MudTh>
+                <MudTh Style="text-align:right">
+                    <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => (object)e.Score">@L["Score"]</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => (object)e.Score">@L["Letter Grade"]</MudTableSortLabel>
+                </MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd>
-                    @if (Charts.TryGetValue(context.ChartId, out var chart))
-                    {
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                            <SongImage Song="chart.Song" Small="true"/>
-                            <DifficultyBubble Chart="chart" Small="true"/>
-                            <MudText Typo="Typo.body2">@chart.Song.Name</MudText>
-                        </MudStack>
-                    }
-                </MudTd>
-                <MudTd Style="text-align:right"><b>@context.Score.ToString("N0")</b></MudTd>
-                <MudTd><LetterGradeIcon Grade="PhoenixScore.From(context.Score).LetterGrade"/></MudTd>
-                <MudTd Style="text-align:right">
-                    @if (context.Supplemented)
-                    {
-                        <MudTooltip Text="@L["From their linked piuscores account - not on an official board yet"]">
-                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
-                                     Color="Color.Secondary">@L["piuscores"]</MudChip>
-                        </MudTooltip>
-                    }
-                    else
-                    {
-                        <b>#@context.Place</b>
-                    }
-                </MudTd>
+                <MudTd Style="text-align:right"><b>#@context.Place</b></MudTd>
                 <MudTd>
                     @if (context.PlaceDelta is > 0)
                     {
@@ -165,6 +160,21 @@ else
                         <span class="olb-delta-flat">—</span>
                     }
                 </MudTd>
+                <MudTd>
+                    @if (Charts.TryGetValue(context.ChartId, out var chart))
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <DifficultyBubble Chart="chart" Small="true"/>
+                            <SongImage Song="chart.Song" Small="true"/>
+                            <MudLink title="@L["Chart leaderboard"]" Style="cursor:pointer" Underline="Underline.None"
+                                     OnClick="() => OpenBoard(chart)">
+                                <MudText Typo="Typo.body2">@chart.Song.Name</MudText>
+                            </MudLink>
+                        </MudStack>
+                    }
+                </MudTd>
+                <MudTd Style="text-align:right"><b>@context.Score.ToString("N0")</b></MudTd>
+                <MudTd><LetterGradeIcon Grade="PhoenixScore.From(context.Score).LetterGradeFor(Mix)"/></MudTd>
             </RowTemplate>
             <PagerContent>
                 <MudTablePager HideRowsPerPage="true"/>
@@ -172,6 +182,8 @@ else
         </MudTable>
     </MudPaper>
 }
+
+<OfficialChartBoardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Mix="Mix"/>
 
 @code {
     [Parameter] public MixEnum Mix { get; set; }
@@ -185,28 +197,54 @@ else
     private string _selected = string.Empty;
     private string[] _names = Array.Empty<string>();
     private bool _loadingProfile;
+    private bool _boardOpen;
+    private Chart? _boardChart;
     private OfficialPlayerProfileRecord? _profile;
     private HistoryPoint[] _pumbilityHistory = Array.Empty<HistoryPoint>();
     private HistoryPoint[] _rankHistory = Array.Empty<HistoryPoint>();
 
-    private readonly ApexChartOptions<HistoryPoint> _lineOptions = new()
-    {
-        Chart = new ApexCharts.Chart { Toolbar = new Toolbar { Show = false }, Background = "transparent" },
-        Theme = new Theme { Mode = Mode.Dark },
-        Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 }
-    };
+    private ApexChartOptions<HistoryPoint> _lineOptions = new();
+    private ApexChartOptions<HistoryPoint> _rankOptions = new();
 
-    private readonly ApexChartOptions<HistoryPoint> _rankOptions = new()
+    // Frozen, whisper-grid canvases in the popularity-page vocabulary: no zoom or drag
+    // capture, no vertical gridlines, no crosshair — these charts are glances.
+    private ApexChartOptions<HistoryPoint> GlanceOptions()
     {
-        Chart = new ApexCharts.Chart { Toolbar = new Toolbar { Show = false }, Background = "transparent" },
-        Theme = new Theme { Mode = Mode.Dark },
-        Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 },
-        Yaxis = new List<YAxis> { new() { Reversed = true, DecimalsInFloat = 0 } }
-    };
+        var options = ApexChartTheming.BaseOptions<HistoryPoint>(MixThemes.PaletteFor(Mix));
+        options.Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 };
+        options.Grid.Xaxis = new GridXAxis { Lines = new Lines { Show = false } };
+        options.Xaxis = new XAxis
+        {
+            AxisTicks = new AxisTicks { Show = false },
+            Crosshairs = new AxisCrosshairs { Show = false }
+        };
+        return options;
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        _lineOptions = GlanceOptions();
+        _rankOptions = GlanceOptions();
+        _rankOptions.Yaxis = new List<YAxis> { new() { Reversed = true, DecimalsInFloat = 0 } };
         _names = (await Mediator.Send(new GetOfficialPlayerNamesQuery(Mix))).ToArray();
+
+        // Nothing picked yet: land on your own board tag when the account is linked,
+        // otherwise on whoever tops the combined ranking board.
+        if (string.IsNullOrWhiteSpace(Selected))
+        {
+            var defaultTag = CurrentUser.IsLoggedIn
+                ? await Mediator.Send(new GetLinkedOfficialPlayerTagQuery(Mix, CurrentUser.User.Id))
+                : null;
+            defaultTag ??= (await Mediator.Send(new GetOfficialRankingsQuery(Mix, "All")))
+                ?.Rankings.FirstOrDefault()?.Player.Username;
+            if (!string.IsNullOrWhiteSpace(defaultTag)) await SelectPlayer(defaultTag);
+        }
+    }
+
+    private void OpenBoard(Chart chart)
+    {
+        _boardChart = chart;
+        _boardOpen = true;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -243,6 +281,11 @@ else
                        ?? Array.Empty<HistoryPoint>();
         _loadingProfile = false;
         StateHasChanged();
+    }
+
+    private string SongName(OfficialPlayerChartRecord record)
+    {
+        return Charts.TryGetValue(record.ChartId, out var chart) ? (string)chart.Song.Name : string.Empty;
     }
 
     private sealed record HistoryPoint(string Label, decimal Value);

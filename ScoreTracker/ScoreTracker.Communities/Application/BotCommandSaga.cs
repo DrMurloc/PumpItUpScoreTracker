@@ -655,16 +655,17 @@ namespace ScoreTracker.Communities.Application
             if (!screen.IsValid)
                 return new BotReply(Text: _localizer.Get(culture, "That scoring configuration is invalid."));
 
+            var mix = ReadMix(interaction);
             var loss = (double)(1000000 - screen.CalculatePhoenixScore);
             var lines = new List<string>
             {
                 _localizer.Get(culture,
                     "{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} Max Combo",
                     perfects, greats, goods, bads, misses, combo),
-                $"**{((int)screen.CalculatePhoenixScore).ToString("N0", FormatCulture(culture))} (#LETTERGRADE|{screen.LetterGrade}##PLATE|{screen.PlateText}#)**",
+                $"**{((int)screen.CalculatePhoenixScore).ToString("N0", FormatCulture(culture))} (#LETTERGRADE|{screen.LetterGradeFor(mix)}##PLATE|{screen.PlateText}#)**",
                 // The next-grade line composes inside the Domain record and stays English —
                 // the site shows it raw behind a localized label the same way.
-                screen.NextLetterGrade(),
+                screen.NextLetterGrade(mix),
                 "- " + _localizer.Get(culture, "{0:N0} Lost to Greats ({1}%)", screen.GreatLoss,
                     SafePercent(screen.GreatLoss, loss)),
                 "- " + _localizer.Get(culture, "{0:N0} Lost to Goods ({1}%)", screen.GoodLoss,

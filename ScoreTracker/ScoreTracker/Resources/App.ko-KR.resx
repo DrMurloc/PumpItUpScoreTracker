@@ -4347,17 +4347,20 @@
   <data name="Best place" xml:space="preserve">
     <value>최고 순위</value>
   </data>
-  <data name="Board #1s" xml:space="preserve">
-    <value>보드 1위</value>
+  <data name="Chart Board #1s" xml:space="preserve">
+    <value>채보 보드 1위</value>
   </data>
-  <data name="Board placements" xml:space="preserve">
-    <value>보드 순위</value>
+  <data name="Chart Boards" xml:space="preserve">
+    <value>채보 보드</value>
   </data>
-  <data name="Board rank - lower is better" xml:space="preserve">
-    <value>보드 랭킹 - 낮을수록 좋음</value>
+  <data name="Chart board placements" xml:space="preserve">
+    <value>채보 보드 순위</value>
   </data>
-  <data name="boards" xml:space="preserve">
-    <value>보드</value>
+  <data name="PUMBILITY rank - lower is better" xml:space="preserve">
+    <value>PUMBILITY 랭킹 - 낮을수록 좋음</value>
+  </data>
+  <data name="chart boards" xml:space="preserve">
+    <value>채보 보드</value>
   </data>
   <data name="Boards" xml:space="preserve">
     <value>보드</value>
@@ -4392,8 +4395,8 @@
   <data name="Last import failed" xml:space="preserve">
     <value>마지막 가져오기 실패</value>
   </data>
-  <data name="level 24+, first ever, SS and up" xml:space="preserve">
-    <value>레벨 24 이상, 사상 최초, SS 이상</value>
+  <data name="level 24+, first ever, any grade" xml:space="preserve">
+    <value>레벨 24 이상, 사상 최초, 모든 등급</value>
   </data>
   <data name="level 24+, must beat the standing record" xml:space="preserve">
     <value>레벨 24 이상, 기존 기록을 넘어야 함</value>
@@ -4401,8 +4404,8 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>사이트 계정과 연결됨</value>
   </data>
-  <data name="Most boards climbed" xml:space="preserve">
-    <value>보드 상승 최다</value>
+  <data name="Biggest board climbers" xml:space="preserve">
+    <value>채보 보드 상승 순위</value>
   </data>
   <data name="Movers of the week" xml:space="preserve">
     <value>이번 주의 무버</value>
@@ -4434,8 +4437,8 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>아직 랭킹이 없습니다 - 첫 주간 가져오기 후에 표시됩니다.</value>
   </data>
-  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
-    <value>이번 주에는 상승 기준을 넘은 플레이어가 없습니다.</value>
+  <data name="Nobody climbed a chart board this week." xml:space="preserve">
+    <value>이번 주에는 채보 보드에서 상승한 플레이어가 없습니다.</value>
   </data>
   <data name="Official Leaderboards Admin" xml:space="preserve">
     <value>공식 리더보드 관리</value>
@@ -4965,20 +4968,17 @@
   <data name="PUMBILITY movers" xml:space="preserve">
     <value>PUMBILITY 순위 변동</value>
   </data>
-  <data name="Boards climbed" xml:space="preserve">
-    <value>보드 상승</value>
-  </data>
-  <data name="**{0}** climbed {1} boards (+{2})" xml:space="preserve">
-    <value>**{0}** {1}개 보드 상승 (+{2})</value>
+  <data name="**{0}** climbed {1} chart boards (+{2})" xml:space="preserve">
+    <value>**{0}** {1}개 채보 보드 상승 (+{2})</value>
   </data>
   <data name="World firsts &amp; new #1s" xml:space="preserve">
     <value>세계 최초 &amp; 새로운 #1</value>
   </data>
-  <data name="First **{0}** — **{1}** in the {2} folder · {3:N0}" xml:space="preserve">
-    <value>최초 **{0}** — **{1}** ({2} 폴더) · {3:N0}</value>
+  <data name="World First" xml:space="preserve">
+    <value>세계 최초</value>
   </data>
-  <data name="First **{0}** — **{1}** on {2} · {3:N0}" xml:space="preserve">
-    <value>최초 **{0}** — **{1}** ({2}) · {3:N0}</value>
+  <data name="{0} folder first" xml:space="preserve">
+    <value>{0} 폴더 최초</value>
   </data>
   <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
     <value>새로운 #1 — **{0}** ({1}) · {2:N0}</value>
@@ -5372,5 +5372,71 @@
   </data>
   <data name="{0} Players" xml:space="preserve">
     <value>{0}명</value>
+  </data>
+  <data name="This week on the boards" xml:space="preserve">
+    <value>이번 주 보드에서는</value>
+  </data>
+  <data name="{0} players left their mark on the chart boards." xml:space="preserve">
+    <value>{0}명의 플레이어가 채보 보드에 기록을 남겼습니다.</value>
+  </data>
+  <data name="{0} players left their mark — and {1} fell to its first {2}." xml:space="preserve">
+    <value>{0}명의 플레이어가 기록을 남겼고, {1}의 첫 {2}가 나왔습니다.</value>
+  </data>
+  <data name="Chart board entries" xml:space="preserve">
+    <value>채보 보드 엔트리</value>
+  </data>
+  <data name="{0} new · {1} upscored" xml:space="preserve">
+    <value>신규 {0} · 갱신 {1}</value>
+  </data>
+  <data name="Players active" xml:space="preserve">
+    <value>활동한 플레이어</value>
+  </data>
+  <data name="on any chart board" xml:space="preserve">
+    <value>채보 보드 기준</value>
+  </data>
+  <data name="first ever, any grade" xml:space="preserve">
+    <value>역대 최초, 모든 등급</value>
+  </data>
+  <data name="Biggest PUMBILITY gainer" xml:space="preserve">
+    <value>PUMBILITY 최다 상승</value>
+  </data>
+  <data name="Highest world first" xml:space="preserve">
+    <value>최고 레벨 세계 최초</value>
+  </data>
+  <data name="Biggest board climber" xml:space="preserve">
+    <value>채보 보드 상승 1위</value>
+  </data>
+  <data name="{0} new" xml:space="preserve">
+    <value>신규 {0}</value>
+  </data>
+  <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
+    <value>Top 100 · Top 1000 컷 — 50× SS</value>
+  </data>
+  <data name="held" xml:space="preserve">
+    <value>유지</value>
+  </data>
+  <data name="what it takes to hold each rung of the PUMBILITY board" xml:space="preserve">
+    <value>PUMBILITY 보드 각 순위를 지키는 데 필요한 점수</value>
+  </data>
+  <data name="Debuted this week" xml:space="preserve">
+    <value>이번 주 데뷔</value>
+  </data>
+  <data name="+{0} more" xml:space="preserve">
+    <value>+{0}명 더</value>
+  </data>
+  <data name="first-ever appearance on any chart board" xml:space="preserve">
+    <value>채보 보드 첫 등장</value>
+  </data>
+  <data name="{0} new · net +{1} places" xml:space="preserve">
+    <value>신규 {0} · 순상승 +{1}</value>
+  </data>
+  <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
+    <value>**{0}** — 채보 보드 {1}개 ({2} 신규, 순 +{3})</value>
+  </data>
+  <data name="Chart leaderboard" xml:space="preserve">
+    <value>채보 리더보드</value>
+  </data>
+  <data name="Nobody is on this chart board yet." xml:space="preserve">
+    <value>아직 이 채보 보드에 아무도 없습니다.</value>
   </data>
 </root>

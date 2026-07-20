@@ -191,7 +191,7 @@ public sealed class Phoenix2PumbilityScoringTests
         foreach (var score in new[] { 830_000, 926_000, 972_000 })
             Assert.Equal(
                 DifficultyLevel.From(level).BaseRating *
-                PhoenixScore.From(score).LetterGrade.GetModifier(),
+                PhoenixScore.From(score).LetterGradeFor(MixEnum.Phoenix).GetModifier(),
                 scoring.GetScore(DifficultyLevel.From(level), PhoenixScore.From(score)), 5);
 
         Assert.Equal(0, ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, false)

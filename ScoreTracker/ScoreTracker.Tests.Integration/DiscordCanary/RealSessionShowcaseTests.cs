@@ -327,12 +327,14 @@ public sealed class RealSessionShowcaseTests
             var folderName = $"{type.GetShortHand()}{(int)level}";
             lamps.Add(new PlayerMilestoneRecord(MilestoneKind.FolderPassLamp, null, occurredAt, null, null, null,
                 folderName));
-            var folderBests = charts.Values
+            var folderCharts = charts.Values
                 .Where(c => c.Type == type && c.Level == level)
+                .ToArray();
+            var folderBests = folderCharts
                 .Select(c => bests.GetValueOrDefault(c.Id))
                 .ToArray();
             if (folderBests.Any(b => b?.Score == null || b.IsBroken)) continue;
-            var minGrade = folderBests.Min(b => b!.Score!.Value.LetterGrade);
+            var minGrade = folderBests.Min(b => b!.Score!.Value.LetterGradeFor(folderCharts[0].Mix));
             lamps.Add(new PlayerMilestoneRecord(MilestoneKind.FolderGradeLamp, null, occurredAt, null, null, null,
                 $"{folderName}|{minGrade.GetName()}"));
             if (folderBests.Any(b => b!.Plate == null)) continue;

@@ -133,20 +133,11 @@ public static class PhoenixLetterGradeHelperMethods
     private static readonly IDictionary<string, PhoenixLetterGrade> Parser =
         Enum.GetValues<PhoenixLetterGrade>().ToDictionary(e => e.GetName());
 
-    public static PhoenixScore GetMinimumScore(this PhoenixLetterGrade letterGrade)
-    {
-        return CachedRanges[letterGrade].MinimumScore;
-    }
-
-    public static PhoenixScore GetMaximumScore(this PhoenixLetterGrade letterGrade)
-    {
-        return CachedRanges[letterGrade].MaximumScore;
-    }
-
     /// <summary>
     ///     The minimum score that earns <paramref name="letterGrade" /> in the given mix. Phoenix 2
     ///     shifted the sub-AAA cutoffs (see <see cref="Phoenix2Floors" />); every other mix uses the
-    ///     original Phoenix table.
+    ///     original Phoenix table. There is deliberately no mix-less overload — every score→grade
+    ///     boundary names its mix.
     /// </summary>
     public static PhoenixScore GetMinimumScoreFor(this PhoenixLetterGrade letterGrade, MixEnum mix)
     {
@@ -154,10 +145,22 @@ public static class PhoenixLetterGradeHelperMethods
     }
 
     /// <summary>
-    ///     The letter grade a raw score earns in the given mix — the single mix-aware entry point
-    ///     for score→grade resolution. Callers that know which mix a record belongs to must use this
-    ///     rather than the parameterless <see cref="PhoenixScore.LetterGrade" /> (which is the Phoenix
-    ///     default), or a Phoenix 2 score in the 800k–950k band grades one rung too high.
+    ///     The top score of <paramref name="letterGrade" />'s band in the given mix — one below
+    ///     the next grade's floor, or the perfect 1,000,000 for SSS+.
+    /// </summary>
+    public static PhoenixScore GetMaximumScoreFor(this PhoenixLetterGrade letterGrade, MixEnum mix)
+    {
+        var floors = mix == MixEnum.Phoenix2 ? Phoenix2FloorsDescending : Phoenix1FloorsDescending;
+        for (var i = 0; i < floors.Count; i++)
+            if (floors[i].Grade == letterGrade)
+                return i == 0 ? 1_000_000 : floors[i - 1].Floor - 1;
+        throw new Exception($"Score floor not set up for {letterGrade}");
+    }
+
+    /// <summary>
+    ///     The letter grade a raw score earns in the given mix — the single entry point for
+    ///     score→grade resolution. There is deliberately no mix-less form: resolving without
+    ///     naming the mix would grade a Phoenix 2 score in the 800k–950k band one rung too high.
     /// </summary>
     public static PhoenixLetterGrade LetterGradeFor(this PhoenixScore score, MixEnum mix)
     {

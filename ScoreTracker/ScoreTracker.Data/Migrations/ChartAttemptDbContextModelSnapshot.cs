@@ -2029,7 +2029,7 @@ namespace ScoreTracker.Data.Migrations
                         .HasPrecision(9, 2)
                         .HasColumnType("decimal(9,2)");
 
-                    b.Property<int>("PlayerId")
+                    b.Property<int?>("PlayerId")
                         .HasColumnType("int");
 
                     b.Property<decimal?>("PrevValue")

@@ -63,18 +63,22 @@ public sealed record ScoreScreen(StepCount Perfects, StepCount Greats, StepCount
         }
     }
 
-    public PhoenixLetterGrade LetterGrade => CalculatePhoenixScore.LetterGrade;
+    public PhoenixLetterGrade LetterGradeFor(MixEnum mix)
+    {
+        return CalculatePhoenixScore.LetterGradeFor(mix);
+    }
 
     public bool IsValid => TotalCount is < 10000 and > 0 &&
                            TotalCount >= MaxCombo
                            && MaxCombo >= 0;
 
-    public string NextLetterGrade()
+    public string NextLetterGrade(MixEnum mix)
     {
-        if (LetterGrade == PhoenixLetterGrade.SSSPlus) return "This is best grade possible!";
+        var current = LetterGradeFor(mix);
+        if (current == PhoenixLetterGrade.SSSPlus) return "This is best grade possible!";
         if (!IsValid) return "This Score is Invalid";
         var next = IterateWithWeightedRandom(this);
-        while (next.LetterGrade == LetterGrade) next = IterateWithWeightedRandom(next);
+        while (next.LetterGradeFor(mix) == current) next = IterateWithWeightedRandom(next);
 
         var misses = Misses - next.Misses;
         var perfects = next.Perfects - Perfects;
@@ -82,7 +86,7 @@ public sealed record ScoreScreen(StepCount Perfects, StepCount Greats, StepCount
         var goods = Goods - next.Goods;
         var greats = Greats - next.Greats;
         var comboGain = misses + bads + goods;
-        var result = $"Get a {next.LetterGrade.GetName()} with";
+        var result = $"Get a {next.LetterGradeFor(mix).GetName()} with";
         if (perfects > 0) result += $" {perfects} more Perfects,";
 
         if (misses > 0) result += $" {misses} fewer Misses,";

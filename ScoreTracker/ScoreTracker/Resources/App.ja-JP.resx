@@ -4466,17 +4466,20 @@
   <data name="Best place" xml:space="preserve">
     <value>最高順位</value>
   </data>
-  <data name="Board #1s" xml:space="preserve">
-    <value>ボード1位</value>
+  <data name="Chart Board #1s" xml:space="preserve">
+    <value>譜面ボード1位</value>
   </data>
-  <data name="Board placements" xml:space="preserve">
-    <value>ボード順位</value>
+  <data name="Chart Boards" xml:space="preserve">
+    <value>譜面ボード</value>
   </data>
-  <data name="Board rank - lower is better" xml:space="preserve">
-    <value>ボードランキング - 低いほど上位</value>
+  <data name="Chart board placements" xml:space="preserve">
+    <value>譜面ボード順位</value>
   </data>
-  <data name="boards" xml:space="preserve">
-    <value>ボード</value>
+  <data name="PUMBILITY rank - lower is better" xml:space="preserve">
+    <value>PUMBILITYランキング - 低いほど上位</value>
+  </data>
+  <data name="chart boards" xml:space="preserve">
+    <value>譜面ボード</value>
   </data>
   <data name="Boards" xml:space="preserve">
     <value>ボード</value>
@@ -4511,8 +4514,8 @@
   <data name="Last import failed" xml:space="preserve">
     <value>前回のインポートが失敗しました</value>
   </data>
-  <data name="level 24+, first ever, SS and up" xml:space="preserve">
-    <value>レベル24以上、史上初、SS以上</value>
+  <data name="level 24+, first ever, any grade" xml:space="preserve">
+    <value>レベル24以上、史上初、全グレード対象</value>
   </data>
   <data name="level 24+, must beat the standing record" xml:space="preserve">
     <value>レベル24以上、既存記録の更新が必要</value>
@@ -4520,8 +4523,8 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>サイトアカウントと連携済み</value>
   </data>
-  <data name="Most boards climbed" xml:space="preserve">
-    <value>ボード上昇数トップ</value>
+  <data name="Biggest board climbers" xml:space="preserve">
+    <value>譜面ボード上昇ランキング</value>
   </data>
   <data name="Movers of the week" xml:space="preserve">
     <value>今週のムーバー</value>
@@ -4553,8 +4556,8 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>ランキングはまだありません - 最初の週次インポート後に表示されます。</value>
   </data>
-  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
-    <value>今週は上昇基準を超えたプレイヤーはいません。</value>
+  <data name="Nobody climbed a chart board this week." xml:space="preserve">
+    <value>今週は譜面ボードで順位を上げたプレイヤーはいません。</value>
   </data>
   <data name="Official Leaderboards Admin" xml:space="preserve">
     <value>公開ランキング管理</value>
@@ -5084,20 +5087,17 @@
   <data name="PUMBILITY movers" xml:space="preserve">
     <value>PUMBILITY 変動</value>
   </data>
-  <data name="Boards climbed" xml:space="preserve">
-    <value>ボードを駆け上がり</value>
-  </data>
-  <data name="**{0}** climbed {1} boards (+{2})" xml:space="preserve">
-    <value>**{0}** が {1} ボードで順位上昇（+{2}）</value>
+  <data name="**{0}** climbed {1} chart boards (+{2})" xml:space="preserve">
+    <value>**{0}** が {1} 譜面ボードで順位上昇（+{2}）</value>
   </data>
   <data name="World firsts &amp; new #1s" xml:space="preserve">
     <value>世界初 &amp; 新 #1</value>
   </data>
-  <data name="First **{0}** — **{1}** in the {2} folder · {3:N0}" xml:space="preserve">
-    <value>初の **{0}** — **{1}**（{2} フォルダ）· {3:N0}</value>
+  <data name="World First" xml:space="preserve">
+    <value>世界初</value>
   </data>
-  <data name="First **{0}** — **{1}** on {2} · {3:N0}" xml:space="preserve">
-    <value>初の **{0}** — **{1}**（{2}）· {3:N0}</value>
+  <data name="{0} folder first" xml:space="preserve">
+    <value>{0}フォルダ初</value>
   </data>
   <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
     <value>新 #1 — **{0}**（{1}）· {2:N0}</value>
@@ -5491,5 +5491,71 @@
   </data>
   <data name="{0} Players" xml:space="preserve">
     <value>{0}人</value>
+  </data>
+  <data name="This week on the boards" xml:space="preserve">
+    <value>今週のボード</value>
+  </data>
+  <data name="{0} players left their mark on the chart boards." xml:space="preserve">
+    <value>{0}人のプレイヤーが譜面ボードに記録を残しました。</value>
+  </data>
+  <data name="{0} players left their mark — and {1} fell to its first {2}." xml:space="preserve">
+    <value>{0}人が記録を残し、{1}に初の{2}が誕生しました。</value>
+  </data>
+  <data name="Chart board entries" xml:space="preserve">
+    <value>譜面ボードエントリー</value>
+  </data>
+  <data name="{0} new · {1} upscored" xml:space="preserve">
+    <value>新規 {0} · 更新 {1}</value>
+  </data>
+  <data name="Players active" xml:space="preserve">
+    <value>アクティブプレイヤー</value>
+  </data>
+  <data name="on any chart board" xml:space="preserve">
+    <value>譜面ボード基準</value>
+  </data>
+  <data name="first ever, any grade" xml:space="preserve">
+    <value>史上初、全グレード対象</value>
+  </data>
+  <data name="Biggest PUMBILITY gainer" xml:space="preserve">
+    <value>PUMBILITY最大上昇</value>
+  </data>
+  <data name="Highest world first" xml:space="preserve">
+    <value>最高レベルの世界初</value>
+  </data>
+  <data name="Biggest board climber" xml:space="preserve">
+    <value>譜面ボード上昇トップ</value>
+  </data>
+  <data name="{0} new" xml:space="preserve">
+    <value>新規 {0}</value>
+  </data>
+  <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
+    <value>Top 100 · Top 1000 ボーダー — 50× SS</value>
+  </data>
+  <data name="held" xml:space="preserve">
+    <value>維持</value>
+  </data>
+  <data name="what it takes to hold each rung of the PUMBILITY board" xml:space="preserve">
+    <value>PUMBILITYボードの各順位を守るために必要な水準</value>
+  </data>
+  <data name="Debuted this week" xml:space="preserve">
+    <value>今週デビュー</value>
+  </data>
+  <data name="+{0} more" xml:space="preserve">
+    <value>+{0}人</value>
+  </data>
+  <data name="first-ever appearance on any chart board" xml:space="preserve">
+    <value>譜面ボード初登場</value>
+  </data>
+  <data name="{0} new · net +{1} places" xml:space="preserve">
+    <value>新規 {0} · 純増 +{1}</value>
+  </data>
+  <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
+    <value>**{0}** — 譜面ボード{1}面（新規{2}・純増+{3}）</value>
+  </data>
+  <data name="Chart leaderboard" xml:space="preserve">
+    <value>譜面ランキング</value>
+  </data>
+  <data name="Nobody is on this chart board yet." xml:space="preserve">
+    <value>この譜面ボードにはまだ誰もいません。</value>
   </data>
 </root>

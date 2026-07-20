@@ -171,7 +171,7 @@
         _ranges.Clear();
         for (var letter = ParagonLevel.AA; letter <= ParagonLevel.PG; letter++)
         {
-            var threshold = letter.MinThreshold();
+            var threshold = letter.MinThreshold(MixEnum.Phoenix);
             var relevantScores = scores.Where(s => s.record.Score != null && s.record.Score >= threshold);
 
 
