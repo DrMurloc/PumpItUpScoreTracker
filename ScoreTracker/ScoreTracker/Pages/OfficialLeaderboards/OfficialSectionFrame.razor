@@ -92,7 +92,7 @@
        identify an account, they don't name anyone — and truncate what's still too long;
        the full tag stays in the row's tooltip and on the player's own page. */
     .olb-player-name {
-        max-width: 16ch;
+        max-width: 22ch;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -156,35 +156,16 @@
         border-radius: 6px;
     }
 
-    /* Mobile: the row identifier pins while the rest side-scrolls, song titles fall back
-       to their jacket and bubble, names truncate harder, and value/context pairs stack. */
+    /* Two tiers. Narrow (≤760): the row identifier pins while the rest side-scrolls,
+       optional columns and song titles step aside, names truncate. Phone (≤500): the
+       row is a width budget, so padding tightens and value/context pairs stack — above
+       that they stay inline, where stacking would just leave a hole. */
     @@media (max-width: 760px) {
         .olb-hide-mobile { display: none !important; }
 
         .olb-song-text { display: none; }
 
-        .olb-player-name { max-width: 11ch; }
-
-        /* A phone row is a width budget: trim the frame's own padding and gaps, shrink
-           the chip and the disclosure to their content, and stack the payload pair the
-           way This Week's rows already do. */
-        .olb-rank-card, .olb-board-row { gap: 5px; padding: 3px 4px; }
-
-        .olb-rank-rankbox { min-width: 42px; }
-
-        .olb-rank-card .mud-chip {
-            height: 20px;
-            padding: 0 7px;
-            font-size: 10.5px;
-        }
-
-        .olb-rank-card .mud-icon-button { padding: 2px; }
-
-        .olb-first-tail, .olb-hero-listtail, .olb-rank-tail {
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0;
-        }
+        .olb-player-name { max-width: 16ch; }
 
         .olb-sticky-first td:first-child, .olb-sticky-first th:first-child {
             position: sticky;
@@ -204,6 +185,26 @@
         .olb-pager-tight .mud-table-pagination { padding-inline: 2px; }
 
         .olb-pager-tight .mud-table-pagination-caption { font-size: 11px; margin: 0 4px; }
+    }
+
+    @@media (max-width: 500px) {
+        .olb-rank-card, .olb-board-row { gap: 5px; padding: 3px 4px; }
+
+        .olb-rank-rankbox { min-width: 42px; }
+
+        .olb-rank-card .mud-chip {
+            height: 20px;
+            padding: 0 7px;
+            font-size: 10.5px;
+        }
+
+        .olb-rank-card .mud-icon-button { padding: 2px; }
+
+        .olb-first-tail, .olb-hero-listtail, .olb-rank-tail {
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0;
+        }
     }
 
 </style>
