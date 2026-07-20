@@ -42,7 +42,6 @@ internal static class HighlightsCalculator
     public const int BoardsClimbedTaken = 8;
     public const int HighlightMinimumLevel = 24;
     public const int GainersTaken = 3;
-    public const int DebutsTaken = 24;
     public const string PumbilityBoardName = "PUMBILITY";
     public static readonly int[] FloorRanks = { 100, 1000 };
 
@@ -80,8 +79,9 @@ internal static class HighlightsCalculator
         IReadOnlyDictionary<int, IReadOnlyList<PlacementRow>> currentByBoard,
         IReadOnlyDictionary<int, IReadOnlyList<PlacementRow>> previousByBoard)
     {
-        // Debuts: on a chart board now, never on ANY board in any earlier snapshot. The
-        // stored rows are a most-notable-first sample; the pulse row keeps the true total.
+        // Debuts: on a chart board now, never on ANY board in any earlier snapshot. Every
+        // debut gets a row, best place first — early weeks will be huge, deliberately, so
+        // the strip can expand to the whole class. The pulse row keeps the total.
         var debuts = Array.Empty<(int PlayerId, int BestPlace)>();
         var debutTotal = 0;
         if (input.PreviouslySeenPlayerIds is { } seen)
@@ -95,7 +95,7 @@ internal static class HighlightsCalculator
                 .OrderBy(d => d.BestPlace).ThenBy(d => d.PlayerId)
                 .ToArray();
             debutTotal = byPlayer.Length;
-            debuts = byPlayer.Take(DebutsTaken).ToArray();
+            debuts = byPlayer;
         }
 
         for (var i = 0; i < debuts.Length; i++)

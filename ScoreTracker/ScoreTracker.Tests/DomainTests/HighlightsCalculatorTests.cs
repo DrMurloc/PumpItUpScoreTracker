@@ -102,6 +102,27 @@ public sealed class HighlightsCalculatorTests
     }
 
     [Fact]
+    public void EveryDebutGetsAStoredRowNoMatterHowMany()
+    {
+        // A first-real-week class of forty rookies stores forty rows — the strip expands
+        // to the whole class, so nothing gets sampled away.
+        var board = ChartBoard();
+        var result = HighlightsCalculator.Calculate(Input(
+            boards: new[] { board },
+            current: Enumerable.Range(1, 40)
+                .Select(i => new PlacementRow(board.Id, 100 + i, i, 990000 - i * 100))
+                .ToArray(),
+            previous: Array.Empty<PlacementRow>(),
+            crossMix: CrossMixRecordHighs.Empty,
+            seen: new HashSet<int>()));
+
+        var debuts = result.Highlights.Where(h => h.Kind == HighlightKinds.Debut).ToArray();
+        Assert.Equal(40, debuts.Length);
+        Assert.Equal(Enumerable.Range(1, 40), debuts.Select(d => d.SortOrder));
+        Assert.Equal(40, Assert.Single(result.Highlights, h => h.Kind == HighlightKinds.WeeklyPulse).Level);
+    }
+
+    [Fact]
     public void GainersRankByPumbilityValueGained()
     {
         var result = HighlightsCalculator.Calculate(Input(

@@ -149,7 +149,7 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
     }
 
     [Fact]
-    public void ThisWeekDebutStripPlopsOutTheRestOnClick()
+    public void ThisWeekDebutStripPlopsOutEveryDebutOnClick()
     {
         var record = new WeeklyHighlightsRecord(Week2, Week1,
             new[] { new OfficialMoverRecord(Player(), 31, 17, 18204.51m) },
@@ -158,7 +158,7 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
             Array.Empty<OfficialNewNumberOneRecord>(),
             new WeeklyPulseRecord(100, 50, 80, 41),
             Array.Empty<OfficialGainerRecord>(),
-            Enumerable.Range(1, 8)
+            Enumerable.Range(1, 41)
                 .Select(i => new OfficialDebutRecord(Player(10 + i, $"FRESH{i}"), i))
                 .ToArray(),
             Array.Empty<OfficialFloorMarkRecord>());
@@ -174,8 +174,34 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
 
         cut.Find("button.olb-debut-chip").Click();
 
-        // Expanded: every stored chip, with the unstored tail still counted.
+        // Expanded: the whole class, nothing left to count.
         Assert.Contains("FRESH7", cut.Markup);
+        Assert.Contains("FRESH41", cut.Markup);
+        Assert.Empty(cut.FindAll(".olb-debut-chip.more"));
+    }
+
+    [Fact]
+    public void ThisWeekDebutStripStillCountsALegacyCappedTail()
+    {
+        // Weeks materialized before the storage cap was lifted hold fewer rows than the
+        // pulse total; the expansion shows what exists and keeps counting the rest.
+        var record = new WeeklyHighlightsRecord(Week2, Week1,
+            new[] { new OfficialMoverRecord(Player(), 31, 17, 18204.51m) },
+            Array.Empty<OfficialBoardsClimbedRecord>(),
+            Array.Empty<OfficialGradeFirstRecord>(),
+            Array.Empty<OfficialNewNumberOneRecord>(),
+            new WeeklyPulseRecord(100, 50, 80, 41),
+            Array.Empty<OfficialGainerRecord>(),
+            Enumerable.Range(1, 8)
+                .Select(i => new OfficialDebutRecord(Player(10 + i, $"FRESH{i}"), i))
+                .ToArray(),
+            Array.Empty<OfficialFloorMarkRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(record);
+
+        var cut = RenderComponent<HubThisWeek>(p => p.Add(x => x.Mix, MixEnum.Phoenix2));
+        cut.Find("button.olb-debut-chip").Click();
+
         Assert.Contains("FRESH8", cut.Markup);
         Assert.Contains("+33 more", cut.Markup);
     }

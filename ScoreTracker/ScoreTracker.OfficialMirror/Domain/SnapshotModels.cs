@@ -64,7 +64,7 @@ internal static class HighlightKinds
     /// <summary>
     ///     One playerless row per snapshot: PrevValue = chart-board entries that are new,
     ///     NewValue = entries that upscored, Score = distinct players behind them,
-    ///     Level = total debut count (the stored Debut rows are a capped sample).
+    ///     Level = total debut count (every debut also gets its own stored row).
     /// </summary>
     public const string WeeklyPulse = "WeeklyPulse";
 
@@ -77,7 +77,8 @@ internal static class HighlightKinds
     /// <summary>
     ///     A player's first-ever appearance on a chart board (never seen on any board in
     ///     any earlier snapshot). Score = their best chart-board place this week; ordered
-    ///     by it, capped — the pulse row carries the uncapped total.
+    ///     by it, one row per debut — the pulse row carries the matching total. (Weeks
+    ///     materialized before the cap was lifted may hold fewer rows than the total.)
     /// </summary>
     public const string Debut = "Debut";
 
