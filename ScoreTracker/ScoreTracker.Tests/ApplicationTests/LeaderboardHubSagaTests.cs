@@ -83,6 +83,57 @@ public sealed class LeaderboardHubSagaTests
     }
 
     [Fact]
+    public async Task ChartBoardServesTheLatestSealedBoardInPlaceOrder()
+    {
+        var fixture = Arrange(Run(4, Week2));
+        fixture.Snapshots.Setup(s => s.GetBoards(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new BoardDimension(516, LeaderboardTypes.Chart, "1948 D29", ChartA, "Double", 29),
+                new BoardDimension(9, LeaderboardTypes.Rating, "PUMBILITY", null, null, null)
+            });
+        fixture.Snapshots.Setup(s => s.GetBoardPlacements(4, 516, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new PlacementRow(516, 7, 2, 951210),
+                new PlacementRow(516, 3, 1, 962777)
+            });
+
+        var board = await fixture.Saga.Handle(new GetOfficialChartBoardQuery(MixEnum.Phoenix2, ChartA),
+            CancellationToken.None);
+
+        Assert.NotNull(board);
+        Assert.Equal(new[] { 1, 2 }, board!.Entries.Select(e => e.Place).ToArray());
+        Assert.Equal("PLAYER3", board.Entries[0].Player.Username);
+        Assert.Equal(962777, board.Entries[0].Score);
+    }
+
+    [Fact]
+    public async Task ChartBoardIsNullWhenTheChartHasNoBoard()
+    {
+        var fixture = Arrange(Run(4, Week2));
+        fixture.Snapshots.Setup(s => s.GetBoards(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<BoardDimension>());
+
+        Assert.Null(await fixture.Saga.Handle(new GetOfficialChartBoardQuery(MixEnum.Phoenix2, ChartA),
+            CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task LinkedTagResolvesThroughThePlayerDimension()
+    {
+        var fixture = Arrange(Run(4, Week2));
+        var userId = Guid.NewGuid();
+        fixture.Snapshots.Setup(s => s.GetPlayerByUserId(MixEnum.Phoenix2, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PlayerDimension(3, "FEFEMZ#1489", null, userId));
+
+        Assert.Equal("FEFEMZ#1489", await fixture.Saga.Handle(
+            new GetLinkedOfficialPlayerTagQuery(MixEnum.Phoenix2, userId), CancellationToken.None));
+        Assert.Null(await fixture.Saga.Handle(
+            new GetLinkedOfficialPlayerTagQuery(MixEnum.Phoenix2, Guid.NewGuid()), CancellationToken.None));
+    }
+
+    [Fact]
     public async Task HighlightsAreNullBeforeTheFirstSeal()
     {
         var f = Arrange(latest: null);
