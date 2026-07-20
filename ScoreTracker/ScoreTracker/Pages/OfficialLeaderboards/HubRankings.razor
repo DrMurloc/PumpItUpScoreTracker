@@ -5,14 +5,15 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Components
-@using ScoreTracker.Web.Enums
-@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
 @using ScoreTracker.Web.Services.Theming
 @using Chart = ScoreTracker.SharedKernel.Models.Chart
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
-@inject IUiSettingsAccessor UiSettings
+@inject ICurrentUserAccessor CurrentUser
+@inject CommunityGlowReader CommunityGlow
 
 @if (_type == "CoOp")
 {
@@ -41,17 +42,6 @@ else if (_rankings != null)
     <MudTextField T="string" @bind-Value="_filter" Label="@L["Find a player"]" Immediate="true"
                   Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true"
                   Style="max-width:280px"/>
-    <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" aria-label="@L["Density"]">
-        <MudIconButton Icon="@Icons.Material.Filled.ViewAgenda" aria-label="@L["Comfortable"]" title="@L["Comfortable"]"
-                       Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
-                       OnClick="() => SetDensity(UiDensity.Comfortable)"/>
-        <MudIconButton Icon="@Icons.Material.Filled.GridView" aria-label="@L["Compact"]" title="@L["Compact"]"
-                       Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
-                       OnClick="() => SetDensity(UiDensity.Compact)"/>
-        <MudIconButton Icon="@Icons.Material.Filled.TableRows" aria-label="@L["Table"]" title="@L["Table"]"
-                       Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
-                       OnClick="() => SetDensity(UiDensity.Table)"/>
-    </MudButtonGroup>
 </MudStack>
 
 @if (_loading)
@@ -62,81 +52,14 @@ else if (_rankings == null || !_rankings.Rankings.Any())
 {
     <MudAlert Severity="Severity.Info">@L["No rankings yet - they appear after the first weekly import."]</MudAlert>
 }
-else if (_density == UiDensity.Table)
-{
-    <MudTable T="OfficialRankingRecord" Items="Filtered" Breakpoint="Breakpoint.None" Dense="true"
-              RowsPerPage="50" Class="olb-sticky-second olb-pager-tight olb-rank-table">
-        <HeaderContent>
-            <MudTh>@L["Rank"]</MudTh>
-            <MudTh>@L["Player"]</MudTh>
-            <MudTh Style="text-align:right">@(_rankings.RatingIsOfficial ? "PUMBILITY" : L["Rating"])</MudTh>
-            <MudTh Style="text-align:right">@L["Chart Boards"]</MudTh>
-            <MudTh Class="olb-hide-mobile">@L["Type"]</MudTh>
-            <MudTh></MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>
-                <div class="olb-rank-cell">
-                    <b>@context.Rank</b>
-                    @if (context.PreviousRank != null && context.PreviousRank != context.Rank)
-                    {
-                        var delta = context.PreviousRank.Value - context.Rank;
-                        <span class="@(delta > 0 ? "olb-delta-up" : "olb-delta-down")">
-                            @(delta > 0 ? "▲" : "▼")@Math.Abs(delta)
-                        </span>
-                    }
-                    else if (context.PreviousRank != null)
-                    {
-                        <span class="olb-delta-flat">—</span>
-                    }
-                </div>
-            </MudTd>
-            <MudTd>
-                <MudLink title="@L["See their boards"]" Style="cursor:pointer" Underline="Underline.None"
-                         OnClick="() => OnShowPlayer.InvokeAsync(context.Player.Username)">
-                    <HubPlayerChip Player="context.Player" Dense="true"/>
-                </MudLink>
-            </MudTd>
-            <MudTd Style="text-align:right"><b>@context.Rating.ToString(_rankings.RatingIsOfficial ? "N2" : "N0")</b></MudTd>
-            <MudTd Style="text-align:right">@context.BoardsInTop</MudTd>
-            <MudTd Class="olb-hide-mobile">
-                @if (context.PlayerType != null)
-                {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
-                             Style="@PlayerTypeChipStyle(context.PlayerType.Value)">
-                        @L[PlayerTypeName(context.PlayerType.Value)]
-                    </MudChip>
-                }
-            </MudTd>
-            <MudTd>
-                <MudButton Size="Size.Small" Variant="Variant.Outlined"
-                           OnClick="() => ToggleExpand(context.Player.Username)">
-                    @L["Top 50"] @(_expanded == context.Player.Username ? "▴" : "▾")
-                </MudButton>
-            </MudTd>
-        </RowTemplate>
-        <ChildRowContent>
-            @if (_expanded == context.Player.Username)
-            {
-                <td colspan="6">
-                    <HubRankingsTopCharts Profile="_expandedProfile" TypeFilter="@_type" Charts="Charts"
-                                          OnOpen="OpenChart"/>
-                </td>
-            }
-        </ChildRowContent>
-        <PagerContent>
-            <MudTablePager HideRowsPerPage="true"/>
-        </PagerContent>
-    </MudTable>
-}
 else
 {
     var pageCount = PageCount;
     var page = Math.Min(_page, pageCount);
-    <div class="@(_density == UiDensity.Comfortable ? "olb-rank-cards" : "olb-rank-cards olb-rank-cards-compact")">
+    <div class="olb-rank-cards">
         @foreach (var row in Filtered.Skip((page - 1) * PageSize).Take(PageSize))
         {
-            <div class="olb-rank-card">
+            <div class="olb-rank-card @GlowClass(row.Player)">
                 <span class="olb-rank-rankbox">
                     <b>@row.Rank</b>
                     @if (row.PreviousRank != null && row.PreviousRank != row.Rank)
@@ -149,21 +72,17 @@ else
                 </span>
                 <MudLink title="@L["See their boards"]" Style="cursor:pointer" Underline="Underline.None"
                          OnClick="() => OnShowPlayer.InvokeAsync(row.Player.Username)">
-                    <HubPlayerChip Player="row.Player" Dense="@(_density == UiDensity.Compact)"/>
+                    <HubPlayerChip Player="row.Player" Dense="true"/>
                 </MudLink>
-                @if (_density == UiDensity.Comfortable && row.PlayerType != null)
+                @if (row.PlayerType != null)
                 {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Class="olb-hide-mobile"
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
                              Style="@PlayerTypeChipStyle(row.PlayerType.Value)">
                         @L[PlayerTypeName(row.PlayerType.Value)]
                     </MudChip>
                 }
                 <span class="olb-rank-tail">
-                    <MudText Typo="Typo.body1"><b>@row.Rating.ToString(_rankings.RatingIsOfficial ? "N2" : "N0")</b></MudText>
-                    @if (_density == UiDensity.Comfortable)
-                    {
-                        <MudText Typo="Typo.caption" Class="d-block">@row.BoardsInTop @L["chart boards"]</MudText>
-                    }
+                    <MudText Typo="Typo.body2"><b>@row.Rating.ToString(_rankings.RatingIsOfficial ? "N2" : "N0")</b></MudText>
                 </span>
                 <MudIconButton Size="Size.Small" aria-label="@L["Top 50"]" title="@L["Top 50"]"
                                Icon="@(_expanded == row.Player.Username ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
@@ -196,7 +115,6 @@ else
     // with that player selected.
     [Parameter] public EventCallback<string> OnShowPlayer { get; set; }
 
-    private const string DensityKey = "Density__OfficialRankings";
     private const int PageSize = 50;
 
     private bool _loading = true;
@@ -207,7 +125,7 @@ else
     private string? _expanded;
     private OfficialPlayerProfileRecord? _expandedProfile;
     private OfficialRankingsRecord? _rankings;
-    private UiDensity _density = UiDensity.Table;
+    private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
     private int _page = 1;
 
     private int PageCount => Math.Max(1, (int)Math.Ceiling(Filtered.Count() / (double)PageSize));
@@ -220,15 +138,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var density = await UiSettings.GetSetting(DensityKey);
-        if (Enum.TryParse<UiDensity>(density, out var d)) _density = d;
+        _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
         await Load();
     }
 
-    private async Task SetDensity(UiDensity density)
+    private string GlowClass(OfficialPlayerRecord player)
     {
-        _density = density;
-        await UiSettings.SetSetting(DensityKey, density.ToString());
+        if (player.UserId == null) return string.Empty;
+        if (CurrentUser.IsLoggedIn && player.UserId == CurrentUser.User.Id) return "olb-row-me";
+        return _communityIds.Contains(player.UserId.Value) ? "olb-row-community" : string.Empty;
     }
 
     private async Task Load()

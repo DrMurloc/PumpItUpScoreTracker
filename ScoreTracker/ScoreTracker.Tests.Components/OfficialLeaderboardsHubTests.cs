@@ -6,7 +6,11 @@ using Bunit;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using MudBlazor;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
+using ScoreTracker.Communities.Contracts.Queries;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
@@ -14,8 +18,9 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Pages.OfficialLeaderboards;
-using ScoreTracker.Web.Services.Contracts;
+using ScoreTracker.Web.Services.HomeDashboard;
 using Xunit;
+using Chart = ScoreTracker.SharedKernel.Models.Chart;
 using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 
 namespace ScoreTracker.Tests.Components;
@@ -38,12 +43,8 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         Services.AddSingleton(_mediator.Object);
         // The popularity view mounts ChartDetailsDialog (closed) — it injects this.
         Services.AddSingleton(Mock.Of<IAdminNotificationClient>());
-        // Rankings persists its density preference; no stored value means Table.
-        var uiSettings = new Mock<IUiSettingsAccessor>();
-        uiSettings.Setup(u =>
-                u.GetSetting(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
-            .ReturnsAsync((string?)null);
-        Services.AddSingleton(uiSettings.Object);
+        // Rankings, This Week, and the chart-board dialog glow you/community rows.
+        Services.AddScoped<CommunityGlowReader>();
         // Last: it reads the renderer, locking the service collection. The hub views run in
         // an interactive circuit; SongImage/DifficultyBubble gate tooltips on RendererInfo.
         this.RenderInteractive();
@@ -252,7 +253,7 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
     }
 
     [Fact]
-    public void RankingsComfortableDensitySwapsTheTableForCardRows()
+    public void RankingsAreCompactCardsWithTheArchetypeAndNoBoardCount()
     {
         _mediator.Setup(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new OfficialRankingsRecord(Week2, true, new[]
@@ -262,16 +263,38 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
             }));
 
         var cut = RenderComponent<HubRankings>(p => p.Add(x => x.Mix, MixEnum.Phoenix2));
-        Assert.NotEmpty(cut.FindAll("table")); // Table is the default until a preference is stored.
 
-        cut.FindAll("button").First(b => b.GetAttribute("aria-label") == "Comfortable").Click();
-
+        // Compact card rows are the only rendering — the table and its density toggle are gone.
         Assert.Empty(cut.FindAll("table"));
         var card = Assert.Single(cut.FindAll(".olb-rank-card"));
         Assert.Contains("STARFORGE", card.TextContent);
         Assert.Contains("19,412.88", card.TextContent);
-        Assert.Contains("241 chart boards", card.TextContent);
+        Assert.Contains("Perfectionist", card.TextContent);
         Assert.Contains("▲1", card.TextContent);
+        Assert.DoesNotContain("241", card.TextContent); // the boards count came off the rankings view
+    }
+
+    [Fact]
+    public void RankingsGlowYourOwnLinkedRow()
+    {
+        var me = Guid.NewGuid();
+        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        CurrentUser.SetupGet(c => c.User)
+            .Returns(new User(me, "Me", true, null, new Uri("https://piu.test/me.png"), null));
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialRankingsRecord(Week2, true, new[]
+            {
+                new OfficialRankingRecord(1, null,
+                    new OfficialPlayerRecord(9, "DRMURLOC#7222", null, me), 19412.88m, 241, null),
+                new OfficialRankingRecord(2, null, Player(2, "MIRAGE"), 19205.13m, 228, null)
+            }));
+
+        var cut = RenderComponent<HubRankings>(p => p.Add(x => x.Mix, MixEnum.Phoenix2));
+
+        var mine = Assert.Single(cut.FindAll(".olb-rank-card.olb-row-me"));
+        Assert.Contains("DRMURLOC#7222", mine.TextContent);
     }
 
     [Fact]
@@ -306,6 +329,116 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         cut.FindAll("a").First(a => a.TextContent.Contains("STARFORGE")).Click();
 
         Assert.Equal("STARFORGE", shown);
+    }
+
+    [Fact]
+    public void PlayersAutoSelectYourLinkedTagWhenNothingIsPicked()
+    {
+        var me = Guid.NewGuid();
+        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        CurrentUser.SetupGet(c => c.User)
+            .Returns(new User(me, "Me", true, null, new Uri("https://piu.test/me.png"), null));
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialPlayerNamesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { "DRMURLOC#7222" });
+        _mediator.Setup(m => m.Send(It.Is<GetLinkedOfficialPlayerTagQuery>(q => q.UserId == me),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync("DRMURLOC#7222");
+        _mediator.Setup(m => m.Send(It.Is<GetOfficialPlayerProfileQuery>(q => q.Username == "DRMURLOC#7222"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialPlayerProfileRecord(Player(9, "DRMURLOC#7222"), null,
+                17903.40m, 8, null, 182, 4, 1, 61,
+                Array.Empty<OfficialPlayerHistoryPoint>(), Array.Empty<OfficialPlayerChartRecord>()));
+
+        var cut = RenderComponent<HubPlayers>(p => p.Add(x => x.Mix, MixEnum.Phoenix2));
+
+        cut.WaitForAssertion(() => Assert.Contains("DRMURLOC#7222", cut.Markup));
+        // Your own tag wins outright — the top-of-the-board fallback never runs.
+        _mediator.Verify(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    private IRenderedFragment RenderBoardDialog(Chart chart)
+    {
+        // Inline MudDialogs render through the provider, so the fragment hosts both.
+        return Render(builder =>
+        {
+            builder.OpenComponent<MudDialogProvider>(0);
+            builder.CloseComponent();
+            builder.OpenComponent<OfficialChartBoardDialog>(1);
+            builder.AddAttribute(2, nameof(OfficialChartBoardDialog.Chart), chart);
+            builder.AddAttribute(3, nameof(OfficialChartBoardDialog.Visible), true);
+            builder.AddAttribute(4, nameof(OfficialChartBoardDialog.Mix), MixEnum.Phoenix2);
+            builder.CloseComponent();
+        });
+    }
+
+    [Fact]
+    public void ChartBoardDialogListsTheBoardAndGlowsYourRow()
+    {
+        var me = Guid.NewGuid();
+        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        CurrentUser.SetupGet(c => c.User)
+            .Returns(new User(me, "Me", true, null, new Uri("https://piu.test/me.png"), null));
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+        var chart = MakeChart("1948", ChartType.Double, 29);
+        _mediator.Setup(m => m.Send(It.Is<GetOfficialChartBoardQuery>(q => q.ChartId == chart.Id),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialChartBoardRecord(Week2, new[]
+            {
+                new OfficialChartBoardEntryRecord(1,
+                    new OfficialPlayerRecord(3, "FEFEMZ#1489", null, null), 962777),
+                new OfficialChartBoardEntryRecord(2,
+                    new OfficialPlayerRecord(9, "DRMURLOC#7222", null, me), 951210)
+            }));
+
+        var cut = RenderBoardDialog(chart);
+
+        cut.WaitForAssertion(() => Assert.Contains("FEFEMZ#1489", cut.Markup));
+        Assert.Contains("962,777", cut.Markup);
+        var mine = Assert.Single(cut.FindAll(".olb-board-row.olb-row-me"));
+        Assert.Contains("DRMURLOC#7222", mine.TextContent);
+    }
+
+    [Fact]
+    public void ThisWeekWorldFirstSongOpensItsChartBoard()
+    {
+        var chart = MakeChart("1948", ChartType.Double, 29);
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WeeklyHighlightsRecord(Week2, Week1,
+                Array.Empty<OfficialMoverRecord>(),
+                Array.Empty<OfficialBoardsClimbedRecord>(),
+                new[]
+                {
+                    new OfficialGradeFirstRecord(Player(3, "FEFEMZ#1489"), chart.Id, "Double", 29,
+                        "AAA+", 962777, false)
+                },
+                Array.Empty<OfficialNewNumberOneRecord>(), null,
+                Array.Empty<OfficialGainerRecord>(), Array.Empty<OfficialDebutRecord>(),
+                Array.Empty<OfficialFloorMarkRecord>()));
+        _mediator.Setup(m => m.Send(It.Is<GetOfficialChartBoardQuery>(q => q.ChartId == chart.Id),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialChartBoardRecord(Week2, new[]
+            {
+                new OfficialChartBoardEntryRecord(1, Player(3, "FEFEMZ#1489"), 962777)
+            }));
+
+        var cut = Render(builder =>
+        {
+            builder.OpenComponent<MudDialogProvider>(0);
+            builder.CloseComponent();
+            builder.OpenComponent<HubThisWeek>(1);
+            builder.AddAttribute(2, nameof(HubThisWeek.Mix), MixEnum.Phoenix2);
+            builder.AddAttribute(3, nameof(HubThisWeek.Charts),
+                (IDictionary<Guid, Chart>)new Dictionary<Guid, Chart> { [chart.Id] = chart });
+            builder.CloseComponent();
+        });
+
+        cut.WaitForAssertion(() => cut.FindAll("a").First(a => a.TextContent.Contains("1948")).Click());
+
+        cut.WaitForAssertion(() => Assert.Contains("#1", cut.Markup));
+        _mediator.Verify(m => m.Send(It.Is<GetOfficialChartBoardQuery>(q => q.ChartId == chart.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // ── Popularity ───────────────────────────────────────────────────────────

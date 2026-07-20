@@ -5423,4 +5423,10 @@
   <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
     <value>**{0}** — {1} placares de charts ({2} novos, saldo +{3})</value>
   </data>
+  <data name="Chart leaderboard" xml:space="preserve">
+    <value>Placar do chart</value>
+  </data>
+  <data name="Nobody is on this chart board yet." xml:space="preserve">
+    <value>Ainda não há ninguém neste placar.</value>
+  </data>
 </root>

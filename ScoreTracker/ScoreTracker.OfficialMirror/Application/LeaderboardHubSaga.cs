@@ -23,7 +23,9 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetOfficialPlayerNamesQuery, IReadOnlyList<string>>,
     IRequestHandler<GetOfficialPopularityQuery, IReadOnlyList<OfficialPopularityRecord>>,
     IRequestHandler<GetImportRunsQuery, IReadOnlyList<ImportRunRecord>>,
-    IRequestHandler<GetWhatItTakesQuery, WhatItTakesRecord>
+    IRequestHandler<GetWhatItTakesQuery, WhatItTakesRecord>,
+    IRequestHandler<GetOfficialChartBoardQuery, OfficialChartBoardRecord?>,
+    IRequestHandler<GetLinkedOfficialPlayerTagQuery, string?>
 {
     private const string PumbilityAll = "PUMBILITY";
     private const string PumbilitySingles = "PUMBILITY Singles";
@@ -303,6 +305,35 @@ internal sealed class LeaderboardHubSaga :
         CancellationToken cancellationToken)
     {
         return await _snapshots.GetPlayerNames(request.Mix, cancellationToken);
+    }
+
+    public async Task<OfficialChartBoardRecord?> Handle(GetOfficialChartBoardQuery request,
+        CancellationToken cancellationToken)
+    {
+        var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
+        if (latest?.CompletedAt == null) return null;
+
+        var board = (await _snapshots.GetBoards(request.Mix, cancellationToken))
+            .FirstOrDefault(b => b.LeaderboardType == LeaderboardTypes.Chart && b.ChartId == request.ChartId);
+        if (board == null) return null;
+
+        var placements = await _snapshots.GetBoardPlacements(latest.Id, board.Id, cancellationToken);
+        var players = (await _snapshots.GetPlayersByIds(
+                placements.Select(p => p.PlayerId).Distinct().ToArray(), cancellationToken))
+            .ToDictionary(p => p.Id);
+        return new OfficialChartBoardRecord(latest.CompletedAt.Value, placements
+            .OrderBy(p => p.Place)
+            .Select(p => new OfficialChartBoardEntryRecord(p.Place,
+                players.TryGetValue(p.PlayerId, out var player)
+                    ? ToRecord(player)
+                    : new OfficialPlayerRecord(p.PlayerId, "?", null, null),
+                (int)p.Score))
+            .ToArray());
+    }
+
+    public async Task<string?> Handle(GetLinkedOfficialPlayerTagQuery request, CancellationToken cancellationToken)
+    {
+        return (await _snapshots.GetPlayerByUserId(request.Mix, request.UserId, cancellationToken))?.Username;
     }
 
     public async Task<IReadOnlyList<OfficialPopularityRecord>> Handle(GetOfficialPopularityQuery request,

@@ -5552,4 +5552,10 @@
   <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
     <value>**{0}** — 譜面ボード{1}面（新規{2}・純増+{3}）</value>
   </data>
+  <data name="Chart leaderboard" xml:space="preserve">
+    <value>譜面ランキング</value>
+  </data>
+  <data name="Nobody is on this chart board yet." xml:space="preserve">
+    <value>この譜面ボードにはまだ誰もいません。</value>
+  </data>
 </root>

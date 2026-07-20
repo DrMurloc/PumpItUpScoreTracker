@@ -1,5 +1,6 @@
 @using ApexCharts
 @using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
@@ -8,6 +9,7 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Theming
 @inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
 
 <MudAutocomplete T="string" Value="_selected" ValueChanged="SelectPlayer" Clearable="true"
                  Label="@L["Search any board player"]" AdornmentIcon="@Icons.Material.Filled.Search"
@@ -124,6 +126,12 @@ else
         <MudTable T="OfficialPlayerChartRecord" Items="_profile.Placements" Dense="true"
                   Breakpoint="Breakpoint.None" RowsPerPage="25" Class="olb-sticky-first olb-pager-tight">
             <HeaderContent>
+                <MudTh Style="text-align:right">
+                    <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => (object)(e.Place ?? int.MaxValue)">@L["Place"]</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => (object)(e.PlaceDelta ?? int.MinValue)">Δ</MudTableSortLabel>
+                </MudTh>
                 <MudTh>
                     <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => SongName(e)">@L["Chart"]</MudTableSortLabel>
                 </MudTh>
@@ -133,26 +141,8 @@ else
                 <MudTh>
                     <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => (object)e.Score">@L["Letter Grade"]</MudTableSortLabel>
                 </MudTh>
-                <MudTh Style="text-align:right">
-                    <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => (object)(e.Place ?? int.MaxValue)">@L["Place"]</MudTableSortLabel>
-                </MudTh>
-                <MudTh>
-                    <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => (object)(e.PlaceDelta ?? int.MinValue)">Δ</MudTableSortLabel>
-                </MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd>
-                    @if (Charts.TryGetValue(context.ChartId, out var chart))
-                    {
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                            <DifficultyBubble Chart="chart" Small="true"/>
-                            <SongImage Song="chart.Song" Small="true"/>
-                            <MudText Typo="Typo.body2">@chart.Song.Name</MudText>
-                        </MudStack>
-                    }
-                </MudTd>
-                <MudTd Style="text-align:right"><b>@context.Score.ToString("N0")</b></MudTd>
-                <MudTd><LetterGradeIcon Grade="PhoenixScore.From(context.Score).LetterGradeFor(Mix)"/></MudTd>
                 <MudTd Style="text-align:right">
                     @if (context.Supplemented)
                     {
@@ -180,6 +170,21 @@ else
                         <span class="olb-delta-flat">—</span>
                     }
                 </MudTd>
+                <MudTd>
+                    @if (Charts.TryGetValue(context.ChartId, out var chart))
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <DifficultyBubble Chart="chart" Small="true"/>
+                            <SongImage Song="chart.Song" Small="true"/>
+                            <MudLink title="@L["Chart leaderboard"]" Style="cursor:pointer" Underline="Underline.None"
+                                     OnClick="() => OpenBoard(chart)">
+                                <MudText Typo="Typo.body2">@chart.Song.Name</MudText>
+                            </MudLink>
+                        </MudStack>
+                    }
+                </MudTd>
+                <MudTd Style="text-align:right"><b>@context.Score.ToString("N0")</b></MudTd>
+                <MudTd><LetterGradeIcon Grade="PhoenixScore.From(context.Score).LetterGradeFor(Mix)"/></MudTd>
             </RowTemplate>
             <PagerContent>
                 <MudTablePager HideRowsPerPage="true"/>
@@ -187,6 +192,8 @@ else
         </MudTable>
     </MudPaper>
 }
+
+<OfficialChartBoardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Mix="Mix"/>
 
 @code {
     [Parameter] public MixEnum Mix { get; set; }
@@ -200,6 +207,8 @@ else
     private string _selected = string.Empty;
     private string[] _names = Array.Empty<string>();
     private bool _loadingProfile;
+    private bool _boardOpen;
+    private Chart? _boardChart;
     private OfficialPlayerProfileRecord? _profile;
     private HistoryPoint[] _pumbilityHistory = Array.Empty<HistoryPoint>();
     private HistoryPoint[] _rankHistory = Array.Empty<HistoryPoint>();
@@ -228,6 +237,24 @@ else
         _rankOptions = GlanceOptions();
         _rankOptions.Yaxis = new List<YAxis> { new() { Reversed = true, DecimalsInFloat = 0 } };
         _names = (await Mediator.Send(new GetOfficialPlayerNamesQuery(Mix))).ToArray();
+
+        // Nothing picked yet: land on your own board tag when the account is linked,
+        // otherwise on whoever tops the combined ranking board.
+        if (string.IsNullOrWhiteSpace(Selected))
+        {
+            var defaultTag = CurrentUser.IsLoggedIn
+                ? await Mediator.Send(new GetLinkedOfficialPlayerTagQuery(Mix, CurrentUser.User.Id))
+                : null;
+            defaultTag ??= (await Mediator.Send(new GetOfficialRankingsQuery(Mix, "All")))
+                ?.Rankings.FirstOrDefault()?.Player.Username;
+            if (!string.IsNullOrWhiteSpace(defaultTag)) await SelectPlayer(defaultTag);
+        }
+    }
+
+    private void OpenBoard(Chart chart)
+    {
+        _boardChart = chart;
+        _boardOpen = true;
     }
 
     protected override async Task OnParametersSetAsync()

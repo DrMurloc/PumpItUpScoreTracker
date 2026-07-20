@@ -61,34 +61,44 @@
 
     .olb-mover-lead { background: color-mix(in srgb, var(--mix-primary) 8%, transparent); border-radius: 9px; }
 
-    /* Rankings in Comfortable/Compact density: card rows instead of a table, so a phone
-       reads rank, player, and rating without side-scrolling. */
-    .olb-rank-card {
+    /* Rankings and chart boards render as compact card rows, never tables — a phone
+       reads rank, player, and rating with zero side-scrolling (UX rule: tabular
+       collections lean compact). */
+    .olb-rank-card, .olb-board-row {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 10px 12px;
+        gap: 8px;
+        padding: 4px 8px;
         border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+        flex-wrap: wrap;
     }
 
-    .olb-rank-cards-compact .olb-rank-card { padding: 3px 8px; gap: 8px; }
-
     .olb-rank-rankbox { min-width: 52px; display: inline-flex; align-items: center; gap: 4px; }
+
+    .olb-board-place { min-width: 40px; font-weight: 700; }
 
     .olb-rank-tail { margin-left: auto; text-align: right; flex: 0 0 auto; }
 
     .olb-rank-expand { padding: 4px 0 10px; }
 
-    .olb-rank-cell { display: flex; align-items: center; gap: 4px; }
+    /* Row glow: the dashboard vocabulary — you blue, your opt-in crews green. */
+    .olb-row-me {
+        background: color-mix(in srgb, var(--daily-you) 15%, transparent);
+        box-shadow: inset 0 0 0 1.5px var(--daily-you);
+        border-radius: 6px;
+    }
+
+    .olb-row-community {
+        background: color-mix(in srgb, var(--daily-community) 13%, transparent);
+        box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--daily-community) 60%, transparent);
+        border-radius: 6px;
+    }
 
     /* Mobile: identifier columns pin while the rest of the row side-scrolls, low-value
        columns step aside, and the pager sheds enough width to fit a phone. */
     @@media (max-width: 760px) {
         .olb-hide-mobile { display: none !important; }
 
-        /* The rank cell stacks its week delta under the number, so the number column
-           stays 44px wide even on a triple-digit climb. */
-        .olb-rank-cell { flex-direction: column; align-items: flex-start; gap: 0; }
 
         .olb-sticky-first td:first-child, .olb-sticky-first th:first-child,
         .olb-sticky-second td:first-child, .olb-sticky-second th:first-child,
@@ -111,10 +121,6 @@
             max-width: 180px;
             overflow: hidden;
         }
-
-        /* The rankings board truncates the pinned player a little earlier — the rating
-           column is the payload there and needs the width more than the tag tail does. */
-        .olb-rank-table td:nth-child(2), .olb-rank-table th:nth-child(2) { max-width: 140px; }
 
         .olb-sticky-first td:first-child, .olb-sticky-first th:first-child { max-width: 200px; overflow: hidden; }
 

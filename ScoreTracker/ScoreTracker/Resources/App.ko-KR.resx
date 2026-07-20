@@ -5433,4 +5433,10 @@
   <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
     <value>**{0}** — 채보 보드 {1}개 ({2} 신규, 순 +{3})</value>
   </data>
+  <data name="Chart leaderboard" xml:space="preserve">
+    <value>채보 리더보드</value>
+  </data>
+  <data name="Nobody is on this chart board yet." xml:space="preserve">
+    <value>아직 이 채보 보드에 아무도 없습니다.</value>
+  </data>
 </root>

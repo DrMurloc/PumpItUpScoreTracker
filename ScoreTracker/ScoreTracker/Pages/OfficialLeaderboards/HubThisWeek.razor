@@ -1,13 +1,17 @@
 ﻿@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.HomeDashboard
 @using ScoreTracker.Web.Services.Theming
 @using Chart = ScoreTracker.SharedKernel.Models.Chart
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject CommunityGlowReader CommunityGlow
 
 @if (_loading)
 {
@@ -368,7 +372,7 @@ else
                 }
                 @foreach (var (mover, index) in _highlights.Movers.Select((m, i) => (m, i)))
                 {
-                    <div class="@(index == 0 ? "olb-hero-listrow olb-mover-lead" : "olb-hero-listrow")">
+                    <div class="@($"olb-hero-listrow {(index == 0 ? "olb-mover-lead " : "")}{GlowClass(mover.Player)}")">
                         <MudText Typo="@(index == 0 ? Typo.h6 : Typo.body1)" Class="olb-delta-up">
                             ▲@(mover.PreviousRank - mover.NewRank)
                         </MudText>
@@ -390,7 +394,7 @@ else
                 }
                 @foreach (var entry in _highlights.BoardsClimbed)
                 {
-                    <div class="olb-hero-listrow">
+                    <div class="olb-hero-listrow @GlowClass(entry.Player)">
                         <HubPlayerChip Player="entry.Player"/>
                         <div class="olb-hero-listtail">
                             <MudText Typo="Typo.body1"><b>+@entry.NetPlacesGained.ToString("N0") @L["places"]</b></MudText>
@@ -414,7 +418,7 @@ else
         {
             var chart = first.ChartId != null && Charts.TryGetValue(first.ChartId.Value, out var c) ? c : null;
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2"
-                      Class="@(first.IsFolderFirst ? "olb-folder-first pa-2 mb-2" : "pa-2")">
+                      Class="@($"{(first.IsFolderFirst ? "olb-folder-first pa-2 mb-2" : "pa-2")} {GlowClass(first.Player)}")">
                 <MudChip T="string" Size="Size.Small"
                          Style="@($"background:{BandColor(first.GradeBand)};color:var(--mix-primary-contrast);font-weight:800")">
                     @first.GradeBand
@@ -423,7 +427,10 @@ else
                 {
                     <SongImage Song="chart.Song" Small="true"/>
                     <DifficultyBubble Chart="chart" Small="true"/>
-                    <MudText Typo="Typo.body1"><b>@chart.Song.Name</b></MudText>
+                    <MudLink title="@L["Chart leaderboard"]" Style="cursor:pointer" Underline="Underline.None"
+                             OnClick="() => OpenBoard(chart)">
+                        <MudText Typo="Typo.body1"><b>@chart.Song.Name</b></MudText>
+                    </MudLink>
                 }
                 @if (first.IsFolderFirst && first.ChartType != null && first.Level != null)
                 {
@@ -448,7 +455,7 @@ else
         {
             var chart = Charts.TryGetValue(one.ChartId, out var c) ? c : null;
             <MudItem xs="12" sm="6" md="4">
-                <MudPaper Class="pa-3">
+                <MudPaper Class="@($"pa-3 {GlowClass(one.Player)}")">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                         @if (chart != null)
                         {
@@ -456,7 +463,17 @@ else
                             <DifficultyBubble Chart="chart" Small="true"/>
                         }
                         <MudStack Spacing="0" Class="min-width-0">
-                            <MudText Typo="Typo.body1"><b>@(chart?.Song.Name.ToString() ?? "?")</b></MudText>
+                            @if (chart != null)
+                            {
+                                <MudLink title="@L["Chart leaderboard"]" Style="cursor:pointer" Underline="Underline.None"
+                                         OnClick="() => OpenBoard(chart)">
+                                    <MudText Typo="Typo.body1"><b>@chart.Song.Name</b></MudText>
+                                </MudLink>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body1"><b>?</b></MudText>
+                            }
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                                 <HubPlayerChip Player="one.Player" Dense="true"/>
                                 <MudText Typo="Typo.body2"><b>@one.Score.ToString("N0")</b></MudText>
@@ -473,18 +490,37 @@ else
     </MudGrid>
 }
 
+<OfficialChartBoardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Mix="Mix"/>
+
 @code {
     [Parameter] public MixEnum Mix { get; set; }
     [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
 
     private bool _loading = true;
     private bool _debutsExpanded;
+    private bool _boardOpen;
+    private Chart? _boardChart;
     private WeeklyHighlightsRecord? _highlights;
+    private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
 
     protected override async Task OnInitializedAsync()
     {
+        _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
         _highlights = await Mediator.Send(new GetWeeklyHighlightsQuery(Mix));
         _loading = false;
+    }
+
+    private void OpenBoard(Chart chart)
+    {
+        _boardChart = chart;
+        _boardOpen = true;
+    }
+
+    private string GlowClass(OfficialPlayerRecord player)
+    {
+        if (player.UserId == null) return string.Empty;
+        if (CurrentUser.IsLoggedIn && player.UserId == CurrentUser.User.Id) return "olb-row-me";
+        return _communityIds.Contains(player.UserId.Value) ? "olb-row-community" : string.Empty;
     }
 
     private static string BandColor(string band)
