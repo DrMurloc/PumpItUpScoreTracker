@@ -82,13 +82,10 @@ public sealed record OfficialPlayerProfileRecord(
 public sealed record OfficialPlayerHistoryPoint(DateTimeOffset At, decimal? Pumbility, int? PumbilityRank,
     int BoardsInTop);
 
-/// <summary>
-///     One chart on a player's list. Board rows carry a Place; a Supplemented row came
-///     from the player's linked piuscores bests instead (no board placement to show).
-/// </summary>
+/// <summary>One chart on a player's list — mirrored board rows only, every one with a Place.</summary>
 [ExcludeFromCodeCoverage]
 public sealed record OfficialPlayerChartRecord(Guid ChartId, int? Place, int? PlaceDelta, int Score,
-    int ComputedRating, bool Supplemented = false);
+    int ComputedRating);
 
 [ExcludeFromCodeCoverage]
 public sealed record OfficialPopularityRecord(Guid ChartId, int Place, int? PreviousPlace,

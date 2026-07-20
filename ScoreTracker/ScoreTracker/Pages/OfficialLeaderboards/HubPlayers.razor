@@ -123,8 +123,9 @@ else
         <MudText Typo="Typo.overline" Class="mt-3 d-block">
             @L["Chart board placements"] · @_profile.BoardsInTop
         </MudText>
-        <MudTable T="OfficialPlayerChartRecord" Items="_profile.Placements" Dense="true"
-                  Breakpoint="Breakpoint.None" RowsPerPage="25" Class="olb-sticky-first olb-pager-tight">
+        <MudTable T="OfficialPlayerChartRecord" Items="_profile.Placements" Dense="true" Elevation="0"
+                  Breakpoint="Breakpoint.None" RowsPerPage="25"
+                  Class="olb-board-table olb-sticky-first olb-pager-tight">
             <HeaderContent>
                 <MudTh Style="text-align:right">
                     <MudTableSortLabel T="OfficialPlayerChartRecord" SortBy="e => (object)(e.Place ?? int.MaxValue)">@L["Place"]</MudTableSortLabel>
@@ -143,19 +144,7 @@ else
                 </MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd Style="text-align:right">
-                    @if (context.Supplemented)
-                    {
-                        <MudTooltip Text="@L["From their linked piuscores account - not on an official board yet"]">
-                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
-                                     Color="Color.Secondary">@L["piuscores"]</MudChip>
-                        </MudTooltip>
-                    }
-                    else
-                    {
-                        <b>#@context.Place</b>
-                    }
-                </MudTd>
+                <MudTd Style="text-align:right"><b>#@context.Place</b></MudTd>
                 <MudTd>
                     @if (context.PlaceDelta is > 0)
                     {

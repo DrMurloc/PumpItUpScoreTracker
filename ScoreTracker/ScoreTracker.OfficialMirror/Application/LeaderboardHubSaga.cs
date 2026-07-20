@@ -37,17 +37,13 @@ internal sealed class LeaderboardHubSaga :
 
     private readonly IOfficialSnapshotRepository _snapshots;
     private readonly IOfficialRecordRepository _records;
-    private readonly IScoreReader _scores;
-    private readonly IChartRepository _charts;
     private readonly IMemoryCache _cache;
 
     public LeaderboardHubSaga(IOfficialSnapshotRepository snapshots, IOfficialRecordRepository records,
-        IScoreReader scores, IChartRepository charts, IMemoryCache cache)
+        IMemoryCache cache)
     {
         _snapshots = snapshots;
         _records = records;
-        _scores = scores;
-        _charts = charts;
         _cache = cache;
     }
 
@@ -249,7 +245,6 @@ internal sealed class LeaderboardHubSaga :
                 (int)r.Score, playerStats?.ChartRatings.TryGetValue(r.ChartId.Value, out var rating) == true
                     ? rating
                     : 0))
-            .Concat(await SupplementFromLinkedScores(request.Mix, player, chartRows, cancellationToken))
             .ToArray();
 
         return new OfficialPlayerProfileRecord(ToRecord(player), playerStats?.PlayerType,
@@ -262,43 +257,6 @@ internal sealed class LeaderboardHubSaga :
             chartRows.Length == 0 ? 0 : chartRows.Min(r => r.Place),
             chartRows.Count(r => r.Place <= 10),
             history, placements);
-    }
-
-    /// <summary>
-    ///     A linked player whose boards can't fill a top 50 gets the balance from their own
-    ///     piuscores bests — flagged Supplemented, no board place to show. Board rows stay
-    ///     the source of truth for every stat tile; this only rounds out the chart list.
-    /// </summary>
-    private async Task<IEnumerable<OfficialPlayerChartRecord>> SupplementFromLinkedScores(MixEnum mix,
-        PlayerDimension player, IReadOnlyCollection<PlayerTimelineRow> boardRows, CancellationToken ct)
-    {
-        if (player.UserId == null || boardRows.Count >= 50) return Array.Empty<OfficialPlayerChartRecord>();
-
-        var charts = await GetChartLookup(mix, ct);
-        var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
-        var onBoards = boardRows.Where(r => r.ChartId != null).Select(r => r.ChartId!.Value).ToHashSet();
-        return (await _scores.GetBestScores(mix, player.UserId.Value, ct))
-            .Where(s => !s.IsBroken && s.Score != null && !onBoards.Contains(s.ChartId) &&
-                        charts.TryGetValue(s.ChartId, out var chart) &&
-                        chart.Type is ChartType.Single or ChartType.Double)
-            .Select(s =>
-            {
-                var chart = charts[s.ChartId];
-                return new OfficialPlayerChartRecord(s.ChartId, null, null, (int)s.Score!.Value,
-                    (int)scoring.GetScore(chart.Type, chart.Level, s.Score.Value), Supplemented: true);
-            })
-            .OrderByDescending(s => s.ComputedRating)
-            .Take(50 - boardRows.Count);
-    }
-
-    private async Task<IReadOnlyDictionary<Guid, Chart>> GetChartLookup(MixEnum mix, CancellationToken ct)
-    {
-        return (await _cache.GetOrCreateAsync($"OfficialHubCharts__{mix}", async entry =>
-        {
-            entry.SlidingExpiration = TimeSpan.FromHours(12);
-            return (IReadOnlyDictionary<Guid, Chart>)(await _charts.GetCharts(mix, cancellationToken: ct))
-                .ToDictionary(c => c.Id);
-        }))!;
     }
 
     public async Task<IReadOnlyList<string>> Handle(GetOfficialPlayerNamesQuery request,

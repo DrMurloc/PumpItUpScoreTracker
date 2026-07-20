@@ -74,14 +74,14 @@ else
                          OnClick="() => OnShowPlayer.InvokeAsync(row.Player.Username)">
                     <HubPlayerChip Player="row.Player" Dense="true"/>
                 </MudLink>
-                @if (row.PlayerType != null)
-                {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
-                             Style="@PlayerTypeChipStyle(row.PlayerType.Value)">
-                        @L[PlayerTypeName(row.PlayerType.Value)]
-                    </MudChip>
-                }
                 <span class="olb-rank-tail">
+                    @if (row.PlayerType != null)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                                 Style="@PlayerTypeChipStyle(row.PlayerType.Value)">
+                            @L[PlayerTypeName(row.PlayerType.Value)]
+                        </MudChip>
+                    }
                     <MudText Typo="Typo.body2"><b>@row.Rating.ToString(_rankings.RatingIsOfficial ? "N2" : "N0")</b></MudText>
                 </span>
                 <MudIconButton Size="Size.Small" aria-label="@L["Top 50"]" title="@L["Top 50"]"

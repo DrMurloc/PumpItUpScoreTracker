@@ -77,9 +77,33 @@
 
     .olb-board-place { min-width: 40px; font-weight: 700; }
 
-    .olb-rank-tail { margin-left: auto; text-align: right; flex: 0 0 auto; }
+    .olb-rank-tail {
+        margin-left: auto; flex: 0 0 auto;
+        display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+    }
 
     .olb-rank-expand { padding: 4px 0 10px; }
+
+    /* The leaderboard skin for the collections that need real table semantics
+       (sortable columns): same flat surface, hairlines, and row rhythm as the
+       rankings cards — the section's one leaderboard look. */
+    .olb-board-table.mud-table { background: transparent; }
+
+    .olb-board-table .mud-table-cell {
+        border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+        padding: 4px 8px;
+    }
+
+    .olb-board-table .mud-table-head .mud-table-cell {
+        color: var(--mix-ink-muted);
+        font-size: 11.5px;
+        letter-spacing: .4px;
+        text-transform: uppercase;
+    }
+
+    .olb-board-table .mud-table-body .mud-table-row:hover .mud-table-cell {
+        background: color-mix(in srgb, var(--mix-ink) 5%, transparent);
+    }
 
     /* Row glow: the dashboard vocabulary — you blue, your opt-in crews green. */
     .olb-row-me {
@@ -136,20 +160,6 @@
         .olb-pager-tight .mud-table-pagination-caption { font-size: 11px; margin: 0 4px; }
     }
 
-    /* The tier card's border language is owner-locked (dashed = To-Do / other-mix), so
-       supplemented rows mark with a corner badge instead of touching the border. */
-    .olb-supplemented-card { position: relative; }
-
-    .olb-supplemented-card .olb-supplemented-badge {
-        position: absolute;
-        top: 4px;
-        right: 4px;
-        z-index: 1;
-        color: var(--mix-secondary);
-        background: var(--mix-nav);
-        border-radius: 50%;
-        padding: 2px;
-    }
 </style>
 
 <MudText Typo="Typo.h4">@L["Official Leaderboards"]</MudText>

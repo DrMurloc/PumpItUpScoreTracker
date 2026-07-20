@@ -26,22 +26,8 @@ else
         {
             var chart = Charts.TryGetValue(placement.ChartId, out var c) ? c : null;
             if (chart == null) continue;
-            @if (placement.Supplemented)
-            {
-                <div class="olb-supplemented-card">
-                    <MudTooltip Text="@L["From their linked piuscores account - not on an official board yet"]">
-                        <MudIcon Icon="@Icons.Material.Filled.CloudSync" Size="Size.Small"
-                                 Class="olb-supplemented-badge"/>
-                    </MudTooltip>
-                    <TierListChartCard Chart="chart" Score="MirrorScore(placement)"
-                                       ShowToDo="false" OnOpen="OnOpen"/>
-                </div>
-            }
-            else
-            {
-                <TierListChartCard Chart="chart" Score="MirrorScore(placement)"
-                                   ShowToDo="false" OnOpen="OnOpen"/>
-            }
+            <TierListChartCard Chart="chart" Score="MirrorScore(placement)"
+                               ShowToDo="false" OnOpen="OnOpen"/>
         }
     </div>
 }
