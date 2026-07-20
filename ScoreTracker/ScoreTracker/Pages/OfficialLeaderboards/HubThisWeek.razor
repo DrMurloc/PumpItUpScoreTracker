@@ -171,9 +171,17 @@ else
         button.olb-debut-chip { font: inherit; font-weight: 600; cursor: pointer; }
         .olb-debut-note { font-size: 11.5px; color: var(--mix-ink-muted); margin-top: 6px; }
 
+        .olb-hero-listrow { display: flex; align-items: center; gap: 10px; padding: 8px; }
+
+        .olb-hero-listtail {
+            margin-left: auto; display: flex; align-items: center;
+            gap: 12px; text-align: right; flex: 0 0 auto;
+        }
+
         @@media (max-width: 700px) {
             .olb-hero-pulse { grid-template-columns: 1fr; }
             .olb-hero-stat .num-big { font-size: 33px; }
+            .olb-hero-listtail { flex-direction: column; align-items: flex-end; gap: 0; }
             .olb-hero-snap { grid-template-columns: 1fr; }
         }
     </style>
@@ -360,16 +368,16 @@ else
                 }
                 @foreach (var (mover, index) in _highlights.Movers.Select((m, i) => (m, i)))
                 {
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2"
-                              Class="@(index == 0 ? "olb-mover-lead pa-2" : "pa-2")">
+                    <div class="@(index == 0 ? "olb-hero-listrow olb-mover-lead" : "olb-hero-listrow")">
                         <MudText Typo="@(index == 0 ? Typo.h6 : Typo.body1)" Class="olb-delta-up">
                             ▲@(mover.PreviousRank - mover.NewRank)
                         </MudText>
                         <HubPlayerChip Player="mover.Player"/>
-                        <MudSpacer/>
-                        <MudText Typo="Typo.body2">#@mover.PreviousRank → <b>#@mover.NewRank</b></MudText>
-                        <MudText Typo="Typo.body1"><b>@mover.Pumbility.ToString("N2")</b></MudText>
-                    </MudStack>
+                        <div class="olb-hero-listtail">
+                            <MudText Typo="Typo.body2">#@mover.PreviousRank → <b>#@mover.NewRank</b></MudText>
+                            <MudText Typo="Typo.body1"><b>@mover.Pumbility.ToString("N2")</b></MudText>
+                        </div>
+                    </div>
                 }
             </MudPaper>
         </MudItem>
@@ -382,14 +390,15 @@ else
                 }
                 @foreach (var entry in _highlights.BoardsClimbed)
                 {
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="pa-2">
+                    <div class="olb-hero-listrow">
                         <HubPlayerChip Player="entry.Player"/>
-                        <MudSpacer/>
-                        <MudText Typo="Typo.body1"><b>+@entry.NetPlacesGained.ToString("N0") @L["places"]</b></MudText>
-                        <MudText Typo="Typo.body2">
-                            @entry.BoardsClimbed.ToString("N0") @L["chart boards"]@(entry.NewBoards is { } fresh ? $" · {L["{0} new", fresh.ToString("N0")]}" : "")
-                        </MudText>
-                    </MudStack>
+                        <div class="olb-hero-listtail">
+                            <MudText Typo="Typo.body1"><b>+@entry.NetPlacesGained.ToString("N0") @L["places"]</b></MudText>
+                            <MudText Typo="Typo.body2">
+                                @entry.BoardsClimbed.ToString("N0") @L["chart boards"]@(entry.NewBoards is { } fresh ? $" · {L["{0} new", fresh.ToString("N0")]}" : "")
+                            </MudText>
+                        </div>
+                    </div>
                 }
             </MudPaper>
         </MudItem>

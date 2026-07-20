@@ -14,6 +14,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Pages.OfficialLeaderboards;
+using ScoreTracker.Web.Services.Contracts;
 using Xunit;
 using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 
@@ -37,6 +38,12 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         Services.AddSingleton(_mediator.Object);
         // The popularity view mounts ChartDetailsDialog (closed) — it injects this.
         Services.AddSingleton(Mock.Of<IAdminNotificationClient>());
+        // Rankings persists its density preference; no stored value means Table.
+        var uiSettings = new Mock<IUiSettingsAccessor>();
+        uiSettings.Setup(u =>
+                u.GetSetting(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
+            .ReturnsAsync((string?)null);
+        Services.AddSingleton(uiSettings.Object);
         // Last: it reads the renderer, locking the service collection. The hub views run in
         // an interactive circuit; SongImage/DifficultyBubble gate tooltips on RendererInfo.
         this.RenderInteractive();
@@ -242,6 +249,29 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         Assert.Contains("▼1", cut.Markup);
         Assert.Contains("19,412.88", cut.Markup);
         Assert.Contains("Perfectionist", cut.Markup);
+    }
+
+    [Fact]
+    public void RankingsComfortableDensitySwapsTheTableForCardRows()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialRankingsRecord(Week2, true, new[]
+            {
+                new OfficialRankingRecord(1, 2, Player(1, "STARFORGE", linked: true), 19412.88m, 241,
+                    RecapPlayerType.Perfectionist)
+            }));
+
+        var cut = RenderComponent<HubRankings>(p => p.Add(x => x.Mix, MixEnum.Phoenix2));
+        Assert.NotEmpty(cut.FindAll("table")); // Table is the default until a preference is stored.
+
+        cut.FindAll("button").First(b => b.GetAttribute("aria-label") == "Comfortable").Click();
+
+        Assert.Empty(cut.FindAll("table"));
+        var card = Assert.Single(cut.FindAll(".olb-rank-card"));
+        Assert.Contains("STARFORGE", card.TextContent);
+        Assert.Contains("19,412.88", card.TextContent);
+        Assert.Contains("241 chart boards", card.TextContent);
+        Assert.Contains("▲1", card.TextContent);
     }
 
     [Fact]

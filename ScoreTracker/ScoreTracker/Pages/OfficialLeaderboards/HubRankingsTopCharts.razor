@@ -1,0 +1,60 @@
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using Chart = ScoreTracker.SharedKernel.Models.Chart
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* A ranked player's Top 50 chart cards — the expansion body shared by the rankings
+   table's child row and the Comfortable/Compact card rows. *@
+@if (Profile == null)
+{
+    <MudSkeleton Height="120px" SkeletonType="SkeletonType.Rectangle"/>
+}
+else
+{
+    <MudText Typo="Typo.caption" Class="d-block pa-2">
+        @L[TypeFilter == "CoOp"
+            ? "Top co-op charts by estimated rating - plates inferred from score."
+            : "Top charts by computed rating - board totals are official; per-chart contribution is computed from score and grade."]
+    </MudText>
+    <div class="tier-card-grid pa-2">
+        @foreach (var placement in Profile.Placements
+                      .Where(p => Charts.TryGetValue(p.ChartId, out var pc) &&
+                                  (pc.Type == ChartType.CoOp) == (TypeFilter == "CoOp"))
+                      .OrderByDescending(p => p.ComputedRating).Take(50))
+        {
+            var chart = Charts.TryGetValue(placement.ChartId, out var c) ? c : null;
+            if (chart == null) continue;
+            @if (placement.Supplemented)
+            {
+                <div class="olb-supplemented-card">
+                    <MudTooltip Text="@L["From their linked piuscores account - not on an official board yet"]">
+                        <MudIcon Icon="@Icons.Material.Filled.CloudSync" Size="Size.Small"
+                                 Class="olb-supplemented-badge"/>
+                    </MudTooltip>
+                    <TierListChartCard Chart="chart" Score="MirrorScore(placement)"
+                                       ShowToDo="false" OnOpen="OnOpen"/>
+                </div>
+            }
+            else
+            {
+                <TierListChartCard Chart="chart" Score="MirrorScore(placement)"
+                                   ShowToDo="false" OnOpen="OnOpen"/>
+            }
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public OfficialPlayerProfileRecord? Profile { get; set; }
+    [Parameter] public string TypeFilter { get; set; } = "All";
+    [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+    [Parameter] public EventCallback<Guid> OnOpen { get; set; }
+
+    private static RecordedPhoenixScore MirrorScore(OfficialPlayerChartRecord placement)
+    {
+        // Mirrored boards expose score only — no plate, never broken.
+        return new RecordedPhoenixScore(placement.ChartId, placement.Score, null, false, default);
+    }
+}
