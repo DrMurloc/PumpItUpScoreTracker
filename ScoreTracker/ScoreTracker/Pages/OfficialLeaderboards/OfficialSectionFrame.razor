@@ -75,6 +75,10 @@
 
     .olb-rank-rankbox { min-width: 52px; display: inline-flex; align-items: center; gap: 4px; }
 
+    /* Mud chips ship 4px of margin — inside a row that is already budgeting every
+       pixel, that reads as a misalignment rather than as spacing. */
+    .olb-rank-card .mud-chip { margin: 0; }
+
     .olb-board-place { min-width: 40px; font-weight: 700; }
 
     .olb-rank-tail {
@@ -161,7 +165,22 @@
 
         .olb-player-name { max-width: 11ch; }
 
-        .olb-first-tail, .olb-hero-listtail {
+        /* A phone row is a width budget: trim the frame's own padding and gaps, shrink
+           the chip and the disclosure to their content, and stack the payload pair the
+           way This Week's rows already do. */
+        .olb-rank-card, .olb-board-row { gap: 5px; padding: 3px 4px; }
+
+        .olb-rank-rankbox { min-width: 42px; }
+
+        .olb-rank-card .mud-chip {
+            height: 20px;
+            padding: 0 7px;
+            font-size: 10.5px;
+        }
+
+        .olb-rank-card .mud-icon-button { padding: 2px; }
+
+        .olb-first-tail, .olb-hero-listtail, .olb-rank-tail {
             flex-direction: column;
             align-items: flex-end;
             gap: 0;
