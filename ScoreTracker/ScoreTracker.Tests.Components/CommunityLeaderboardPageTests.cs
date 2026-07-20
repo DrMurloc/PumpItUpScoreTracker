@@ -16,6 +16,7 @@ using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Pages.Communities;
 using ScoreTracker.Web.Services.Contracts;
 using Xunit;
@@ -96,14 +97,15 @@ public sealed class CommunityLeaderboardPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void CombinedBoardShowsPumbilityCompetitiveAndPlayCountColumns()
+    public void CombinedBoardShowsPumbilityCompetitiveAndPlayCountOnCompactRows()
     {
+        // The board wears the rankings row look — a labelled value per figure, no table header.
         var cut = Render();
-        var headers = cut.FindAll("th").Select(h => h.TextContent.Trim()).ToArray();
-        Assert.Contains("PUMBILITY", headers);
-        Assert.Contains("Comp Lv", headers);
-        Assert.Contains("Charts Played", headers);
-        Assert.DoesNotContain("Highest Level", headers);
+        Assert.NotEmpty(cut.FindAll(".olb-rank-card"));
+        Assert.Empty(cut.FindAll("th"));
+        Assert.Contains("title=\"PUMBILITY\"", cut.Markup);
+        Assert.Contains("title=\"Comp Lv\"", cut.Markup);
+        Assert.Contains("title=\"Charts Played\"", cut.Markup);
         // The board types ride the tier-list-style toggle, not table columns.
         var toggles = cut.FindAll("button").Select(b => b.TextContent.Trim()).ToArray();
         Assert.Contains("Combined", toggles);
@@ -126,9 +128,8 @@ public sealed class CommunityLeaderboardPageTests : ComponentTestBase
     {
         var cut = Render();
         cut.FindAll("button").First(b => b.TextContent.Trim() == "CoOp").Click();
-        var headers = cut.FindAll("th").Select(h => h.TextContent.Trim()).ToArray();
-        Assert.Contains("CoOp Completion", headers);
-        Assert.DoesNotContain("Comp Lv", headers);
+        Assert.Contains("title=\"CoOp Completion\"", cut.Markup);
+        Assert.DoesNotContain("title=\"Comp Lv\"", cut.Markup);
         Assert.Contains("50", cut.Markup);
     }
 
@@ -158,7 +159,7 @@ public sealed class CommunityLeaderboardPageTests : ComponentTestBase
         // carries that band's grade color, computed from site stats (no official-mirror data).
         var cut = Render();
         Assert.Contains("Pass Refiner", cut.Markup);
-        Assert.Contains(CommunityLeaderboard.PlayerTypeStyle(RecapPlayerType.PassRefiner), cut.Markup);
+        Assert.Contains(PlayerTypeChip.ChipStyle(RecapPlayerType.PassRefiner), cut.Markup);
     }
 
     [Fact]

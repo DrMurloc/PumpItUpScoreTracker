@@ -330,6 +330,14 @@ aggregate + new ports, if structural), this file, and — only if deferred work 
   (`Components/RankDelta.razor`), the `olb-*` styling, and the expandable `tier-card-grid` +
   `TierListChartCard` pattern; a generic templated table wrapper would have been speculative
   generality — the tables agree on look, not shape.
+- **The community rankings board is compact rows, not a table** (post-merge with the official
+  field-test rounds): the leaderboard skin moved out of `OfficialSectionFrame`'s `<style>` into
+  `site.css`, so the community board renders the same `.olb-rank-card` rows — rank left, player
+  next, a tail carrying the playstyle chip, charts played, competitive level and PUMBILITY —
+  with its own `MudPagination`, `.olb-row-me` on your row, and the sortable compare/members
+  tables wearing `.olb-board-table`. The playstyle chip is one shared component
+  (`Components/PlayerTypeChip.razor`) over `MixThemes.PlayerTypeHex`, whose ramp is now the
+  grade-metal ladder the official rankings shipped (AA → AAA+ → S+ → SSS → SSS+, summit glows).
 - **The directory's World card shows member count + your PUMBILITY, not your world rank** —
   computing a live rank means sorting the whole World membership on a directory load; deferred
   with the rank-delta snapshot work.

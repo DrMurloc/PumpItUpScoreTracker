@@ -318,13 +318,13 @@ public static class MixThemes
 
     /// <summary>
     ///     Playstyle archetype color — the archetypes are letter-grade bands over a player's
-    ///     top-Pumbility average, so each wears its band's grade color: sub-A green for Pass
-    ///     Pusher, AAA silver for Pass Refiner, S gold for Balanced, then the SSS/SSS+ ice-blues.
+    ///     top-Pumbility average, so each wears the grade-metal ladder: AA copper for Pass
+    ///     Pusher, AAA+ silver for Pass Refiner, S+ gold for Balanced, then the SSS/SSS+ ice-blues.
     /// </summary>
     public static string PlayerTypeHex(RecapPlayerType type) => type switch
     {
-        RecapPlayerType.PassPusher => SubAGradeHex,
-        RecapPlayerType.PassRefiner => TgHex,
+        RecapPlayerType.PassPusher => FgHex,
+        RecapPlayerType.PassRefiner => MgHex,
         RecapPlayerType.BalancedPlayer => SgHex,
         RecapPlayerType.Competitive => UgHex,
         _ => PgHex

@@ -54,88 +54,66 @@
         </MudButtonGroup>
     </MudStack>
 
-    <MudTable T="LeaderboardEntry" Items="_entries" Breakpoint="Breakpoint.None" Dense="true"
-              RowsPerPage="50" Class="olb-sticky-second olb-pager-tight">
-        <HeaderContent>
-            <MudTh>@L["Rank"]</MudTh>
-            <MudTh>@L["Player"]</MudTh>
-            <MudTh Style="text-align:right">PUMBILITY</MudTh>
-            @if (_currentType == LeaderboardType.CoOp)
-            {
-                <MudTh Style="text-align:right">@L["CoOp Completion"]</MudTh>
-            }
-            else
-            {
-                <MudTh Style="text-align:right">@L["Comp Lv"]</MudTh>
-            }
-            <MudTh Style="text-align:right">@L["Charts Played"]</MudTh>
-            <MudTh Class="olb-hide-mobile">@L["Playstyle"]</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>
-                <RankDelta Rank="context.Place"/>
-            </MudTd>
-            <MudTd>
-                <div style="display:flex;align-items:center;gap:8px">
-                    <MudLink Style="cursor:pointer;display:flex;align-items:center;gap:8px" Underline="Underline.None"
-                             Href="@($"/Community/Player?CommunityName={HttpUtility.UrlEncode(CommunityName)}&UserId={context.UserId}")">
-                        <MudImage Src="@context.ProfileImage.ToString()" Height="28" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-                        <UserLabel User="_users[context.UserId]"></UserLabel>
-                    </MudLink>
-                    @if (context.IsPublic && _currentMix == MixEnum.Phoenix)
-                    {
-                        <MudTooltip Text="@L["Phoenix Recap"]">
-                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.LocalFireDepartment"
-                                           Href=@($"/Player/{context.UserId}/PhoenixRecap")></MudIconButton>
-                        </MudTooltip>
-                    }
-                </div>
-            </MudTd>
-            <MudTd Style="text-align:right">
-                <span style="display:inline-flex;align-items:center;gap:2px;justify-content:flex-end">
-                    <b style="color:@context.Color">@context.Rating</b>
-                    @if (_currentType != LeaderboardType.CoOp)
-                    {
-                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Visibility"
-                                       aria-label="@L["View top charts"]"
-                                       OnClick="() => ToggleExpand(context.UserId, ExpandTypeFor(_currentType), false)"/>
-                    }
+    @{
+        var pageCount = PageCount;
+        var page = Math.Min(_page, pageCount);
+    }
+    <div class="olb-rank-cards">
+        @foreach (var entry in _entries.Skip((page - 1) * PageSize).Take(PageSize))
+        {
+            <div class="olb-rank-card @(IsMe(entry.UserId) ? "olb-row-me" : "")">
+                <span class="olb-rank-rankbox">
+                    <RankDelta Rank="entry.Place"/>
                 </span>
-            </MudTd>
-            @if (_currentType == LeaderboardType.CoOp)
-            {
-                <MudTd Style="text-align:right">
-                    @(_coOpCompletion.TryGetValue(context.UserId, out var completion)
-                        ? completion.ToString("P0")
-                        : "—")
-                </MudTd>
-            }
-            else
-            {
-                <MudTd Style="text-align:right">
-                    <span style="display:inline-flex;align-items:center;gap:2px;justify-content:flex-end">
-                        <span>@context.CompetitiveLevel.ToString("0.00")</span>
-                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Visibility"
-                                       aria-label="@L["View top charts"]"
-                                       OnClick="() => ToggleExpand(context.UserId, ExpandTypeFor(_currentType), true)"/>
-                    </span>
-                </MudTd>
-            }
-            <MudTd Style="text-align:right">@(_playCounts.TryGetValue(context.UserId, out var plays) ? plays.ToString("N0") : "—")</MudTd>
-            <MudTd Class="olb-hide-mobile">
-                @if (_playerTypes.TryGetValue(context.UserId, out var playerType))
+                <MudLink Style="cursor:pointer;display:flex;align-items:center;gap:8px" Underline="Underline.None"
+                         Href="@($"/Community/Player?CommunityName={HttpUtility.UrlEncode(CommunityName)}&UserId={entry.UserId}")">
+                    <MudImage Src="@entry.ProfileImage.ToString()" Height="26" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+                    <UserLabel User="_users[entry.UserId]"></UserLabel>
+                </MudLink>
+                @if (entry.IsPublic && _currentMix == MixEnum.Phoenix)
                 {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
-                             Style="@PlayerTypeStyle(playerType)">
-                        @L[OfficialLeaderboards.HubRankings.PlayerTypeName(playerType)]
-                    </MudChip>
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.LocalFireDepartment"
+                                   aria-label="@L["Phoenix Recap"]" title="@L["Phoenix Recap"]"
+                                   Href=@($"/Player/{entry.UserId}/PhoenixRecap")></MudIconButton>
                 }
-            </MudTd>
-        </RowTemplate>
-        <ChildRowContent>
-            @if (_expandedUserId == context.UserId)
+                <span class="olb-rank-tail">
+                    @if (_playerTypes.TryGetValue(entry.UserId, out var playerType))
+                    {
+                        <span class="olb-hide-mobile"><PlayerTypeChip Type="playerType"/></span>
+                    }
+                    <span class="olb-hide-mobile mud-text-secondary" title="@L["Charts Played"]">
+                        @(_playCounts.TryGetValue(entry.UserId, out var plays) ? plays.ToString("N0") : "—")
+                    </span>
+                    @if (_currentType == LeaderboardType.CoOp)
+                    {
+                        <span class="mud-text-secondary" title="@L["CoOp Completion"]">
+                            @(_coOpCompletion.TryGetValue(entry.UserId, out var completion)
+                                ? completion.ToString("P0")
+                                : "—")
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="mud-text-secondary" title="@L["Comp Lv"]"
+                              style="display:inline-flex;align-items:center;gap:2px">
+                            @entry.CompetitiveLevel.ToString("0.00")
+                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Visibility"
+                                           aria-label="@L["View top charts"]"
+                                           OnClick="() => ToggleExpand(entry.UserId, ExpandTypeFor(_currentType), true)"/>
+                        </span>
+                    }
+                    <b style="color:@entry.Color" title="PUMBILITY">@entry.Rating</b>
+                </span>
+                @if (_currentType != LeaderboardType.CoOp)
+                {
+                    <MudIconButton Size="Size.Small" aria-label="@L["View top charts"]" title="@L["View top charts"]"
+                                   Icon="@(IsExpandedRating(entry.UserId) ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                   OnClick="() => ToggleExpand(entry.UserId, ExpandTypeFor(_currentType), false)"/>
+                }
+            </div>
+            @if (_expandedUserId == entry.UserId)
             {
-                <td colspan="6">
+                <div class="olb-rank-expand">
                     @if (_scores == null)
                     {
                         <MudSkeleton Height="120px" SkeletonType="SkeletonType.Rectangle"/>
@@ -143,22 +121,25 @@
                     else
                     {
                         <div class="tier-card-grid pa-2">
-                            @foreach (var entry in _scores)
+                            @foreach (var score in _scores)
                             {
-                                <TierListChartCard Chart="entry.Chart"
-                                                   Score="new RecordedPhoenixScore(entry.Chart.Id, entry.Score, entry.Plate, entry.IsBroken, default)"
-                                                   TierLabel="@(_expandedCompetitive ? entry.CompetitiveLevel.ToString("0.00") : entry.Rating.ToString("N0"))"
+                                <TierListChartCard Chart="score.Chart"
+                                                   Score="new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken, default)"
+                                                   TierLabel="@(_expandedCompetitive ? score.CompetitiveLevel.ToString("0.00") : score.Rating.ToString("N0"))"
                                                    ShowToDo="false"/>
                             }
                         </div>
                     }
-                </td>
+                </div>
             }
-        </ChildRowContent>
-        <PagerContent>
-            <MudTablePager HideRowsPerPage="true"/>
-        </PagerContent>
-    </MudTable>
+        }
+    </div>
+    @if (pageCount > 1)
+    {
+        <div class="d-flex justify-center mt-2">
+            <MudPagination Count="pageCount" Selected="page" SelectedChanged="p => _page = p"/>
+        </div>
+    }
 
     @if (_noScores.Any())
     {
@@ -207,6 +188,11 @@
     private ThemeScales.PopulationScale _coOpScale = ThemeScales.ScaleFrom(Array.Empty<int>());
 
     private LeaderboardType _currentType = LeaderboardType.Combined;
+
+    private const int PageSize = 50;
+    private int _page = 1;
+
+    private int PageCount => Math.Max(1, (int)Math.Ceiling(_entries.Count() / (double)PageSize));
 
     private Guid _expandedUserId = Guid.Empty;
     private ChartType? _expandedChartType;
@@ -290,6 +276,7 @@
         if (_community == null) return;
         _expandedUserId = Guid.Empty;
         _scores = null;
+        _page = 1;
         if (type == LeaderboardType.CoOp && !_coOpCompletionLoaded)
         {
             _coOpCompletion = await Mediator.Send(
@@ -311,6 +298,8 @@
             _ => entries.OrderByDescending(l => l.SkillRating).Select((l, i) =>
                 Entry(l, i, l.SkillRating, l.CompetitiveLevel, _skillScale.GetColor((int)l.SkillRating)))
         };
+        // Paging walks the list on every render — materialize once per board switch.
+        _entries = _entries.ToArray();
         _currentType = type;
     }
 
@@ -349,11 +338,9 @@
             .ToArray();
     }
 
-    internal static string PlayerTypeStyle(RecapPlayerType type)
-    {
-        var hex = MixThemes.PlayerTypeHex(type);
-        return $"color:{hex};border-color:{hex}";
-    }
+    private bool IsMe(Guid userId) => CurrentUser.IsLoggedIn && CurrentUser.User.Id == userId;
+
+    private bool IsExpandedRating(Guid userId) => _expandedUserId == userId && !_expandedCompetitive;
 
     private void GoToMembers()
     {

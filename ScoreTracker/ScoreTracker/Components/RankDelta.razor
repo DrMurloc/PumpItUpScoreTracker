@@ -1,22 +1,17 @@
 @namespace ScoreTracker.Web.Components
 
 @* The ranked-board rank cell: bold rank plus movement since the previous snapshot.
-   No PreviousRank (boards without history, e.g. community rankings) renders the rank
-   alone — arrows light up when a snapshot source starts supplying it. *@
-<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-    <b>@Rank</b>
-    @if (PreviousRank != null && PreviousRank != Rank)
-    {
-        var delta = PreviousRank.Value - Rank;
-        <span class="@(delta > 0 ? "olb-delta-up" : "olb-delta-down")">
-            @(delta > 0 ? "▲" : "▼")@Math.Abs(delta)
-        </span>
-    }
-    else if (PreviousRank != null)
-    {
-        <span class="olb-delta-flat">—</span>
-    }
-</MudStack>
+   A rank that didn't move says nothing worth a row's width, and boards without
+   history (community rankings) render the rank alone — arrows light up when a
+   snapshot source starts supplying a previous rank. *@
+<b>@Rank</b>
+@if (PreviousRank != null && PreviousRank != Rank)
+{
+    var delta = PreviousRank.Value - Rank;
+    <span class="@(delta > 0 ? "olb-delta-up" : "olb-delta-down")">
+        @(delta > 0 ? "▲" : "▼")@Math.Abs(delta)
+    </span>
+}
 
 @code {
     [Parameter] public int Rank { get; set; }

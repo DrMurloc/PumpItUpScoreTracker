@@ -223,7 +223,8 @@ else
                     <div class="cmp-tile"><div class="cmp-tile-label">@L["Completion (you / them)"]</div><div class="cmp-tile-num">@CompletionLabel</div></div>
                 </div>
 
-                <MudTable T="CompareRow" Items="ComparedCharts" Breakpoint="Breakpoint.None" Dense="true">
+                <MudTable T="CompareRow" Items="ComparedCharts" Breakpoint="Breakpoint.None" Dense="true"
+                          Class="olb-board-table olb-pager-tight">
                     <HeaderContent>
                         <MudTh><MudTableSortLabel T="CompareRow" SortBy="@(r => r.Chart.Song.Name.ToString())">@L["Chart"]</MudTableSortLabel></MudTh>
                         <MudTh Style="text-align:right"><MudTableSortLabel T="CompareRow" SortBy="@(r => r.Data.MyScore ?? -1)">@L["You"]</MudTableSortLabel></MudTh>
