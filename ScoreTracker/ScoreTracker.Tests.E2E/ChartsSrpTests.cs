@@ -64,6 +64,21 @@ public sealed class ChartsSrpTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task AChartTheViewersMixDroppedStillRendersItsPage()
+    {
+        // Reached from All Mixes: the viewer sits in Phoenix, the chart is XX-only. The URL
+        // resolves, so the chart exists — the page must render it from the mix that carries
+        // it rather than 404 (field-test round 1).
+        await _fixture.Seed.SeedXXChartAsync("Legacy Relic", 19, "Double");
+
+        await _page.GotoAsync("/Charts/xx/legacy-relic/d19");
+
+        await Expect(_page.Locator("text=Legacy Relic").First)
+            .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
+        await Expect(_page.Locator("text=404")).ToHaveCountAsync(0);
+    }
+
+    [Fact]
     public async Task TheOldPagesParameterNamesStillLandFiltered()
     {
         // Pre-redesign shared links keep working as read-time aliases.
