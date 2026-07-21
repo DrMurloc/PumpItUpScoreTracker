@@ -6548,13 +6548,8 @@ button.chart-card-art {
     padding-top: 8px;
 }
 
-/* SRP densities: sticker sheet + table */
-.srp-sticker-sheet {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
+/* SRP densities: sticker sheet + table. The sheet itself is the tier lists'
+   .tier-card-grid.tier-card-grid-compact — the tiles take their width from that grid. */
 .srp-sticker-legacy-grade {
     font-weight: 700;
     font-size: .7rem;

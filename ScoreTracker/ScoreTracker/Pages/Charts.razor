@@ -106,7 +106,9 @@ else
 {
     @if (_density == UiDensity.Compact)
     {
-        <div class="srp-sticker-sheet">
+        @* The tier lists' own compact grid — the tiles size from the container, so reusing
+           the grid classes is what makes the sticker sheet a sticker sheet. *@
+        <div class="tier-card-grid tier-card-grid-compact">
             @foreach (var result in _results)
             {
                 <ChartSearchSticker Result="result" LeadFact="@LeadFact(result)"

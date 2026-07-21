@@ -300,6 +300,9 @@ public sealed class ChartsPageTests : ComponentTestBase
         {
             Assert.Equal(2, cut.FindAll(".tier-chart-card-compact").Count);
             Assert.Empty(cut.FindAll(".srp-card"));
+            // The tiles size from the tier lists' compact grid — without that container
+            // they collapse to slivers, which is exactly how this shipped broken once.
+            Assert.Single(cut.FindAll(".tier-card-grid.tier-card-grid-compact"));
         });
         _uiSettings.Verify(u => u.SetSetting("Density__Charts", "Compact", It.IsAny<CancellationToken>()),
             Times.Once);
