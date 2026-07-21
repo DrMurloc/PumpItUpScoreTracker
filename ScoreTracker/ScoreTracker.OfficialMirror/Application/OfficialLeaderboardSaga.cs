@@ -4,7 +4,6 @@ using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Domain;
-using System.Globalization;
 using System.Text.RegularExpressions;
 using MassTransit;
 using MediatR;
@@ -199,15 +198,8 @@ namespace ScoreTracker.OfficialMirror.Application
                     : null;
             }
 
-            var watermarkSetting = $"BestScoreWatermark__{mix}__{cardId}";
-            DateTimeOffset? since = settings.TryGetValue(watermarkSetting, out var storedWatermark) &&
-                                    DateTimeOffset.TryParse(storedWatermark, CultureInfo.InvariantCulture,
-                                        DateTimeStyles.RoundtripKind, out var parsedWatermark)
-                ? parsedWatermark
-                : null;
-
             var scores =
-                (await _officialSite.GetRecordedScores(mix, userId, sid, cardId, includeBroken, limit, since,
+                (await _officialSite.GetRecordedScores(mix, userId, sid, cardId, includeBroken, limit,
                     cancellationToken))
                 .ToArray();
             var count = 0;
@@ -261,14 +253,6 @@ namespace ScoreTracker.OfficialMirror.Application
             if (maxPages != null)
                 await _mediator.Send(new SaveUserUiSettingCommand(pageCountSetting, maxPages.Value.ToString()),
                     cancellationToken);
-
-            // The next dated import stops paging at already-imported territory: remember the
-            // newest saved date this run observed for this card.
-            var newestSeen = scores.Where(s => s.RecordedAt != null).Select(s => s.RecordedAt!.Value)
-                .DefaultIfEmpty().Max();
-            if (newestSeen != default)
-                await _mediator.Send(new SaveUserUiSettingCommand(watermarkSetting,
-                    newestSeen.ToString("O", CultureInfo.InvariantCulture)), cancellationToken);
         }
 
         /// <summary>
