@@ -403,15 +403,15 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         return results.Values;
     }
 
-    // Four consecutive best pages holding nothing new-or-improved end the dated walk — the
-    // port of the classic up-score window (~12 cards a page, so a ~48-chart look-back). Any
-    // page with even one savable card resets the count.
-    private const int MaxDatedPagesWithoutNewBest = 3;
+    // Five consecutive best pages holding nothing new-or-improved end the dated walk — the
+    // port of the classic "five folders back" up-score window (~12 cards a page, so a
+    // ~60-chart look-back). Any page with even one savable card resets the count.
+    private const int MaxDatedPagesWithoutNewBest = 5;
 
     /// <summary>
     ///     Walks the redesigned (newest-played-first) best list, collecting every card for the
     ///     caller to best-filter. Stops on the up-score window — <see cref="MaxDatedPagesWithoutNewBest" />
-    ///     + 1 consecutive pages holding nothing we don't already have at an equal-or-better
+    ///     consecutive pages holding nothing we don't already have at an equal-or-better
     ///     result — never on the card's displayed date. On the redesign that date is the
     ///     chart's FIRST play, unrelated to the newest-played sort order, so trusting it as a
     ///     cutoff ended the walk a page in whenever a replayed old chart sat near the top (the
@@ -452,7 +452,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             if (added == 0 || page.Scores.Length == 0) break;
 
             pagesWithoutNewBest = newBests == 0 ? pagesWithoutNewBest + 1 : 0;
-            if (pagesWithoutNewBest > MaxDatedPagesWithoutNewBest) break;
+            if (pagesWithoutNewBest >= MaxDatedPagesWithoutNewBest) break;
 
             page = await _piuGame.GetBestScores(mix, sessionId, pageNumber + 1, cancellationToken);
         }

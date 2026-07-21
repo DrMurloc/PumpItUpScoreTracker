@@ -278,38 +278,8 @@ public sealed class OfficialSiteClientTests
         // The redesign sorts by last-played and dates each card by FIRST play, so a replayed
         // upscore can sit pages behind freshly-replayed charts we already hold at the same
         // result. The walk must page through those no-work cards to reach it — the exact case
-        // the old date cutoff truncated. Three held pages fit inside the window; page 4's
-        // upscore is found.
-        var h = new ImportHarness();
-        var held = new List<Chart>();
-        for (var i = 1; i <= 3; i++)
-        {
-            var chart = h.GivenChart(new ChartBuilder().WithSongName($"Held{i}").WithNoteCount(100).Build());
-            h.GivenStoredBest(chart, 950000);
-            h.GivenBestScorePage(i, Card(chart, 950000, T0.AddMinutes(-i)));
-            held.Add(chart);
-        }
-
-        var upscored = h.GivenChart(new ChartBuilder().WithSongName("Upscored").WithNoteCount(100).Build());
-        h.GivenStoredBest(upscored, 900000);
-        h.GivenBestScorePage(4, Card(upscored, 990000, T0.AddHours(-99)));
-        h.GivenBestScorePage(5); // empty → end of list
-
-        var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
-            includeBroken: false, maxPages: null, CancellationToken.None)).ToArray();
-
-        Assert.Contains(results, r => r.Chart.Id == upscored.Id && (int)r.Score == 990000);
-        h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 4, It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task DatedWalkStopsAfterAWindowOfPagesWithNoNewBest()
-    {
-        // Every card on these pages is already held at an equal result: after the window of
-        // no-work pages the walk stops without reading the whole list. A real upscore sits on
-        // page 5, past the window — the walk must never reach it (the accepted look-back
-        // limit, matching the classic up-score window).
+        // the old date cutoff truncated. Four held pages fit inside the five-page window; page
+        // 5's upscore is found.
         var h = new ImportHarness();
         for (var i = 1; i <= 4; i++)
         {
@@ -318,15 +288,43 @@ public sealed class OfficialSiteClientTests
             h.GivenBestScorePage(i, Card(chart, 950000, T0.AddMinutes(-i)));
         }
 
+        var upscored = h.GivenChart(new ChartBuilder().WithSongName("Upscored").WithNoteCount(100).Build());
+        h.GivenStoredBest(upscored, 900000);
+        h.GivenBestScorePage(5, Card(upscored, 990000, T0.AddHours(-99)));
+        h.GivenBestScorePage(6); // empty → end of list
+
+        var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: false, maxPages: null, CancellationToken.None)).ToArray();
+
+        Assert.Contains(results, r => r.Chart.Id == upscored.Id && (int)r.Score == 990000);
+        h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 5, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task DatedWalkStopsAfterAWindowOfPagesWithNoNewBest()
+    {
+        // Every card on these pages is already held at an equal result: after five no-work
+        // pages the walk stops without reading the whole list. A real upscore sits on page 6,
+        // past the window — the walk must never reach it (the accepted look-back limit,
+        // matching the classic "five folders back" up-score window).
+        var h = new ImportHarness();
+        for (var i = 1; i <= 5; i++)
+        {
+            var chart = h.GivenChart(new ChartBuilder().WithSongName($"Held{i}").WithNoteCount(100).Build());
+            h.GivenStoredBest(chart, 950000);
+            h.GivenBestScorePage(i, Card(chart, 950000, T0.AddMinutes(-i)));
+        }
+
         var beyond = h.GivenChart(new ChartBuilder().WithSongName("Beyond").WithNoteCount(100).Build());
         h.GivenStoredBest(beyond, 900000);
-        h.GivenBestScorePage(5, Card(beyond, 999000, T0.AddHours(-99)));
+        h.GivenBestScorePage(6, Card(beyond, 999000, T0.AddHours(-99)));
 
         var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
             includeBroken: false, maxPages: null, CancellationToken.None)).ToArray();
 
         Assert.DoesNotContain(results, r => r.Chart.Id == beyond.Id);
-        h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 5, It.IsAny<CancellationToken>()),
+        h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 6, It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
