@@ -47,7 +47,7 @@ public static class ChartSearchUrlParser
             PassRateMin = Int(query, "PassRateMin") is { } rate ? rate / 100.0 : null,
             ScoringLevelMin = Dbl(query, "SlMin"),
             ScoringLevelMax = Dbl(query, "SlMax"),
-            ScoreState = EnumValue<ChartScoreStateFilter>(Str(query, "State")),
+            ScoreStates = CsvEnum<ChartScoreStateFilter>(Str(query, "State")),
             PhoenixGradeMin = EnumValue<PhoenixLetterGrade>(Str(query, "PhxGrade")),
             PhoenixPlateMin = EnumValue<PhoenixPlate>(Str(query, "PhxPlate")),
             PhoenixScoreMin = Int(query, "PhxMin"),

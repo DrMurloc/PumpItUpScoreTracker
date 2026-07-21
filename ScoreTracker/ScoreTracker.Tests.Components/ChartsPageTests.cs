@@ -149,11 +149,10 @@ public sealed class ChartsPageTests : ComponentTestBase
         var cut = RenderComponent<Charts>();
         cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
         cut.Find("button[aria-label=Filters]").Click();
-        var inputs = cut.FindAll(".srp-drawer input");
-        inputs[0].Change("bee");
+        cut.FindAll(".srp-drawer input")[0].Change("bee");
         cut.WaitForAssertion(() => Assert.Equal("bee", _lastQuery!.SongNameContains));
-        cut.FindAll(".srp-drawer input")[1].Change("19");
-        cut.WaitForAssertion(() => Assert.Equal(19, _lastQuery!.LevelMin));
+        ChipNamed(cut, "Double").Click();
+        cut.WaitForAssertion(() => Assert.Contains(ChartType.Double, _lastQuery!.Types!));
 
         var clearAll = cut.FindAll("button").Single(b => b.TextContent.Trim() == "Clear all");
         clearAll.Click();
@@ -161,8 +160,84 @@ public sealed class ChartsPageTests : ComponentTestBase
         cut.WaitForAssertion(() =>
         {
             Assert.Null(_lastQuery!.SongNameContains);
-            Assert.Null(_lastQuery.LevelMin);
+            Assert.Null(_lastQuery.Types);
         });
+    }
+
+    private static AngleSharp.Dom.IElement ChipNamed(IRenderedComponent<Charts> cut, string label)
+    {
+        return cut.FindAll(".srp-facet-chip").First(c => c.TextContent.Trim().StartsWith(label));
+    }
+
+    private static void OpenMoreFilters(IRenderedComponent<Charts> cut)
+    {
+        cut.FindAll("button").First(b => b.TextContent.Contains("More filters")).Click();
+    }
+
+    [Fact]
+    public void ChartTypeChipsSpellTypesOutAndCarryCounts()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<ChartSearchResultPage>, CancellationToken>((q, _) => _lastQuery = (SearchChartsQuery)q)
+            .ReturnsAsync(() => new ChartSearchResultPage(new[] { MakeResult("District 1", 21) }, 1,
+                new ChartSearchFacetCounts(
+                    new Dictionary<ChartType, int> { [ChartType.Double] = 812 },
+                    new Dictionary<SongType, int>(), new Dictionary<string, int>(),
+                    new Dictionary<TierListCategory, int>(), new Dictionary<TierListCategory, int>(),
+                    new Dictionary<TierListCategory, int>(), new Dictionary<LegacySlot, int>(),
+                    new Dictionary<MixEnum, int>(), new Dictionary<ChartScoreStateFilter, int>(),
+                    new Dictionary<int, int>())));
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-card")));
+
+        cut.Find("button[aria-label=Filters]").Click();
+
+        // Full words, never the S/D shorthand, and the count rides the chip.
+        Assert.Contains("Double (812)", cut.Markup);
+        Assert.Contains("Single Performance", cut.Markup);
+        Assert.DoesNotContain(">S<", cut.Markup);
+    }
+
+    [Fact]
+    public void ScoreStateChipsAreMultiSelect()
+    {
+        SignIn();
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Filters]").Click();
+
+        ChipNamed(cut, "Unplayed").Click();
+        cut.WaitForAssertion(() => Assert.Equal(new[] { ChartScoreStateFilter.Unplayed }, _lastQuery!.ScoreStates!));
+        ChipNamed(cut, "Failed").Click();
+
+        // "Unplayed or Failed" — everything I haven't beaten — which a single select can't say.
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(2, _lastQuery!.ScoreStates!.Count);
+            Assert.Contains(ChartScoreStateFilter.Failed, _lastQuery.ScoreStates);
+        });
+    }
+
+    [Fact]
+    public void TheLongTailHidesBehindMoreFiltersAndPersists()
+    {
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Filters]").Click();
+
+        // Basics only: no skills cloud, no song-type chips, no community sliders.
+        Assert.Empty(cut.FindAll(".srp-badge-cloud"));
+        Assert.DoesNotContain("Community intelligence", cut.Markup);
+
+        cut.FindAll("button").First(b => b.TextContent.Contains("More filters")).Click();
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Contains("Community intelligence", cut.Markup);
+            Assert.Contains("Short Cut", cut.Markup);
+        });
+        _uiSettings.Verify(u => u.SetSetting("Charts__MoreFilters", true.ToString(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -213,11 +288,14 @@ public sealed class ChartsPageTests : ComponentTestBase
                     new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["staggered_bracket"] = 7 },
                     new Dictionary<TierListCategory, int>(),
                     new Dictionary<TierListCategory, int>(),
-                    new Dictionary<TierListCategory, int>())));
+                    new Dictionary<TierListCategory, int>(), new Dictionary<LegacySlot, int>(),
+                    new Dictionary<MixEnum, int>(), new Dictionary<ChartScoreStateFilter, int>(),
+                    new Dictionary<int, int>())));
         var cut = RenderComponent<Charts>();
         cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-card")));
 
         cut.Find("button[aria-label=Filters]").Click();
+        OpenMoreFilters(cut);
         cut.WaitForAssertion(() => Assert.Contains("Staggered Brackets (7)", cut.Markup));
 
         cut.Find(".srp-badge-opt").Click();
@@ -234,6 +312,7 @@ public sealed class ChartsPageTests : ComponentTestBase
         var cut = RenderComponent<Charts>();
         cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
         cut.Find("button[aria-label=Filters]").Click();
+        OpenMoreFilters(cut);
 
         // Pure Phoenix scope: no vote facet, no mix-scope group.
         Assert.DoesNotContain("Community Vote", cut.Markup);
@@ -257,6 +336,7 @@ public sealed class ChartsPageTests : ComponentTestBase
             i.Arguments.FirstOrDefault() is SearchChartsQuery);
 
         cut.Find("button[aria-label=Filters]").Click();
+        OpenMoreFilters(cut);
         var stepArtistSwitch = cut.FindAll("input[type=checkbox]")
             .First(i => i.Closest("label")!.TextContent.Contains("Step Artist"));
         stepArtistSwitch.Change(true);

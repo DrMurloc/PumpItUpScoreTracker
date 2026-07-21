@@ -247,7 +247,7 @@ else
                         OnSaved="OnQuickRecordSaved"></ChartQuickRecordDialog>
 
 <MudLayout>
-    <MudDrawer @bind-Open="_filtersOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="360px">
+    <MudDrawer @bind-Open="_filtersOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="420px">
         <div class="srp-drawer">
             <div class="srp-drawer-head">
                 <MudText Typo="Typo.h6">@L["Filters"]</MudText>
@@ -256,224 +256,321 @@ else
                                aria-label="@L["Close"]"></MudIconButton>
             </div>
 
-            <MudText Typo="Typo.overline">@L["Content"]</MudText>
+            @* The basics carry the everyday query — level, type, score state, a name. The long
+               tail opts in below, so opening the drawer isn't a wall of chips. *@
             <MudTextField T="string" Value="_songNameContains" ValueChanged="SetSongNameContains"
                           Label="@L["Song name contains"]" Clearable="true"
                           Variant="Variant.Outlined" Margin="Margin.Dense"></MudTextField>
-            <div class="srp-drawer-range">
-                <MudNumericField T="int?" Value="_levelMin" ValueChanged="SetLevelMin" Label="@L["Level from"]"
-                                 Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Variant="Variant.Outlined"
-                                 Margin="Margin.Dense" Clearable="true"></MudNumericField>
-                <MudNumericField T="int?" Value="_levelMax" ValueChanged="SetLevelMax" Label="@L["Level to"]"
-                                 Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Variant="Variant.Outlined"
-                                 Margin="Margin.Dense" Clearable="true"></MudNumericField>
-            </div>
-            <MudSelect T="string" MultiSelection="true" SelectedValues="_types.Select(t => t.ToString())"
-                       SelectedValuesChanged="SetTypes" Label="@L["Chart Type"]" Variant="Variant.Outlined"
-                       Margin="Margin.Dense" Clearable="true">
-                @foreach (var type in Enum.GetValues<ChartType>())
-                {
-                    <MudSelectItem T="string" Value="@type.ToString()">@type.GetShortHand()@CountSuffix(_facetCounts?.Types, type)</MudSelectItem>
-                }
-            </MudSelect>
-            <MudSelect T="string" MultiSelection="true" SelectedValues="_songTypes.Select(t => t.ToString())"
-                       SelectedValuesChanged="SetSongTypes" Label="@L["Song Type"]" Variant="Variant.Outlined"
-                       Margin="Margin.Dense" Clearable="true">
-                @foreach (var type in Enum.GetValues<SongType>())
-                {
-                    <MudSelectItem T="string" Value="@type.ToString()">@type.ToString()@CountSuffix(_facetCounts?.SongTypes, type)</MudSelectItem>
-                }
-            </MudSelect>
-            <MudAutocomplete T="string" Value="@null" ValueChanged="AddArtist" Label="@L["Song Artist"]"
-                             SearchFunc="SearchArtists" Clearable="true" CoerceText="false" CoerceValue="false"
-                             Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true"></MudAutocomplete>
-            <MudAutocomplete T="string" Value="@null" ValueChanged="AddStepArtist" Label="@L["Step Artist"]"
-                             SearchFunc="SearchStepArtists" Clearable="true" CoerceText="false" CoerceValue="false"
-                             Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true"></MudAutocomplete>
-            <div class="srp-drawer-range">
-                <MudNumericField T="decimal?" Value="_bpmMin" ValueChanged="SetBpmMin" Label="@L["BPM from"]"
-                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
-                <MudNumericField T="decimal?" Value="_bpmMax" ValueChanged="SetBpmMax" Label="@L["BPM to"]"
-                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
-            </div>
-            <div class="srp-drawer-range">
-                <MudNumericField T="decimal?" Value="_npsMin" ValueChanged="SetNpsMin" Label="@L["NPS from"]"
-                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
-                <MudNumericField T="decimal?" Value="_npsMax" ValueChanged="SetNpsMax" Label="@L["NPS to"]"
-                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
-            </div>
-            <div class="srp-drawer-range">
-                <MudNumericField T="int?" Value="_noteMin" ValueChanged="SetNoteMin" Label="@L["Notes from"]"
-                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
-                <MudNumericField T="int?" Value="_noteMax" ValueChanged="SetNoteMax" Label="@L["Notes to"]"
-                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
+
+            <div class="srp-facet">
+                <div class="srp-facet-head">@L["Level"] <span class="srp-facet-value">@LevelRangeLabel</span></div>
+                <MudRangeSlider T="int" Value="_levelMin ?? DifficultyLevel.Min"
+                                UpperValue="_levelMax ?? DifficultyLevel.Max"
+                                ValueChanged="SetLevelMin" UpperValueChanged="SetLevelMax"
+                                Min="DifficultyLevel.Min" Max="DifficultyLevel.Max" Step="1"
+                                Color="Color.Primary" Size="Size.Small"></MudRangeSlider>
             </div>
 
-            <MudText Typo="Typo.overline">@L["Skills"] <span class="srp-drawer-sub">@L["highlighted only"]</span></MudText>
-            <div class="srp-badge-cloud">
-                @foreach (var badge in _badgeVocabulary)
-                {
-                    var selected = _badges.Contains(badge.Key, StringComparer.OrdinalIgnoreCase);
-                    <span class="srp-badge-opt tier-chart-card-skill @(badge.Category == null ? "" : $"skillcat-{badge.Category.Value.ToString().ToLowerInvariant()}") @(selected ? "srp-badge-opt-sel" : "")"
-                          role="button" tabindex="0" @onclick="() => ToggleBadge(badge.Key)">
-                        @L[badge.DisplayName]@BadgeCount(badge.Key)
-                    </span>
-                }
-            </div>
-
-            @if (_allMixes)
-            {
-                <MudText Typo="Typo.overline">@L["Mix scope"]</MudText>
-                <MudSelect T="string" MultiSelection="true" SelectedValues="_debutMixes.Select(m => m.ToString())"
-                           SelectedValuesChanged="SetDebutMixes" Label="@L["Debut mix"]" Variant="Variant.Outlined"
-                           Margin="Margin.Dense" Clearable="true">
-                    @foreach (var mix in AllKnownMixes)
+            <div class="srp-facet">
+                <div class="srp-facet-head">@L["Chart Type"]</div>
+                <div class="srp-chipset">
+                    @foreach (var type in Enum.GetValues<ChartType>())
                     {
-                        <MudSelectItem T="string" Value="@mix.ToString()">@mix.GetName()</MudSelectItem>
+                        var captured = type;
+                        <span class="srp-facet-chip @(_types.Contains(captured) ? "srp-facet-chip-on" : "")"
+                              role="button" tabindex="0" @onclick="() => ToggleType(captured)">
+                            @L[TypeName(captured)]@CountSuffix(_facetCounts?.Types, captured)
+                        </span>
                     }
-                </MudSelect>
-                <div class="srp-drawer-range">
-                    <MudSelect T="MixEnum?" Value="_availableIn" ValueChanged="SetAvailableIn" Label="@L["Available in"]"
-                               Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                        @foreach (var mix in AllKnownMixes)
-                        {
-                            <MudSelectItem T="MixEnum?" Value="@((MixEnum?)mix)">@mix.GetName()</MudSelectItem>
-                        }
-                    </MudSelect>
-                    <MudSelect T="MixEnum?" Value="_notAvailableIn" ValueChanged="SetNotAvailableIn" Label="@L["Not available in"]"
-                               Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                        @foreach (var mix in AllKnownMixes)
-                        {
-                            <MudSelectItem T="MixEnum?" Value="@((MixEnum?)mix)">@mix.GetName()</MudSelectItem>
-                        }
-                    </MudSelect>
                 </div>
-                <div class="srp-drawer-switches">
-                    <MudSwitch T="bool" Value="_reratedUp" ValueChanged="SetReratedUp" Color="Color.Primary"
-                               Label="@L["Rerated up"]"></MudSwitch>
-                    <MudSwitch T="bool" Value="_reratedDown" ValueChanged="SetReratedDown" Color="Color.Primary"
-                               Label="@L["Rerated down"]"></MudSwitch>
-                </div>
-                <MudSelect T="string" MultiSelection="true" SelectedValues="_legacySlots.Select(s => s.ToString())"
-                           SelectedValuesChanged="SetLegacySlots" Label="@L["Legacy Difficulty"]" Variant="Variant.Outlined"
-                           Margin="Margin.Dense" Clearable="true">
-                    @foreach (var slot in Enum.GetValues<LegacySlot>())
-                    {
-                        <MudSelectItem T="string" Value="@slot.ToString()">@slot.GetName()</MudSelectItem>
-                    }
-                </MudSelect>
-            }
-
-            <MudText Typo="Typo.overline">@L["Community intelligence"]</MudText>
-            <MudSelect T="string" MultiSelection="true" SelectedValues="_passDifficulty.Select(c => c.ToString())"
-                       SelectedValuesChanged="SetPassDifficulty" Label="@L["Pass Difficulty"]" Variant="Variant.Outlined"
-                       Margin="Margin.Dense" Clearable="true">
-                @foreach (var category in RankedCategories)
+                @if (_types.Contains(ChartType.CoOp))
                 {
-                    <MudSelectItem T="string" Value="@category.ToString()">@L[ChartSearchCard.CategoryName(category)]@CountSuffix(_facetCounts?.PassDifficulty, category)</MudSelectItem>
+                    <div class="srp-chipset srp-chipset-sub">
+                        @foreach (var players in CoOpPlayerRange)
+                        {
+                            var captured = players;
+                            <span class="srp-facet-chip @(_coOpPlayers.Contains(captured) ? "srp-facet-chip-on" : "")"
+                                  role="button" tabindex="0" @onclick="() => ToggleCoOpPlayers(captured)">
+                                ×@captured@CountSuffix(_facetCounts?.CoOpPlayerCounts, captured)
+                            </span>
+                        }
+                    </div>
                 }
-            </MudSelect>
-            <MudSelect T="string" MultiSelection="true" SelectedValues="_scoreDifficulty.Select(c => c.ToString())"
-                       SelectedValuesChanged="SetScoreDifficulty" Label="@L["Score Difficulty"]" Variant="Variant.Outlined"
-                       Margin="Margin.Dense" Clearable="true">
-                @foreach (var category in RankedCategories)
-                {
-                    <MudSelectItem T="string" Value="@category.ToString()">@L[ChartSearchCard.CategoryName(category)]@CountSuffix(_facetCounts?.ScoreDifficulty, category)</MudSelectItem>
-                }
-            </MudSelect>
-            @if (LegacyInScope)
-            {
-                <MudSelect T="string" MultiSelection="true" SelectedValues="_communityVote.Select(c => c.ToString())"
-                           SelectedValuesChanged="SetCommunityVote" Label="@L["Community Vote"]" Variant="Variant.Outlined"
-                           Margin="Margin.Dense" Clearable="true">
-                    @foreach (var category in RankedCategories)
-                    {
-                        <MudSelectItem T="string" Value="@category.ToString()">@L[ChartSearchCard.CategoryName(category)]@CountSuffix(_facetCounts?.CommunityVote, category)</MudSelectItem>
-                    }
-                </MudSelect>
-            }
-            <div class="srp-drawer-range">
-                <MudNumericField T="int?" Value="_passRateMin" ValueChanged="SetPassRateMin" Label="@L["Pass rate at least (%)"]"
-                                 Min="0" Max="100" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
-            </div>
-            <div class="srp-drawer-range">
-                <MudNumericField T="double?" Value="_scoringLevelMin" ValueChanged="SetScoringLevelMin" Label="@L["Scoring level from"]"
-                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
-                <MudNumericField T="double?" Value="_scoringLevelMax" ValueChanged="SetScoringLevelMax" Label="@L["Scoring level to"]"
-                                 Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
             </div>
 
             @if (CurrentUser.IsLoggedIn)
             {
-                <MudText Typo="Typo.overline">@L["My data"]</MudText>
-                <MudSelect T="ChartScoreStateFilter?" Value="_scoreState" ValueChanged="SetScoreState"
-                           Label="@L["Score State"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                    <MudSelectItem T="ChartScoreStateFilter?" Value="ChartScoreStateFilter.Unplayed">@L["Unplayed"]</MudSelectItem>
-                    <MudSelectItem T="ChartScoreStateFilter?" Value="ChartScoreStateFilter.Played">@L["Played"]</MudSelectItem>
-                    <MudSelectItem T="ChartScoreStateFilter?" Value="ChartScoreStateFilter.Passed">@L["Passed"]</MudSelectItem>
-                    <MudSelectItem T="ChartScoreStateFilter?" Value="ChartScoreStateFilter.Failed">@L["Failed"]</MudSelectItem>
-                </MudSelect>
-                @if (ModernInScope)
-                {
-                    <div class="srp-drawer-range">
-                        <MudSelect T="PhoenixLetterGrade?" Value="_phoenixGradeMin" ValueChanged="SetPhoenixGradeMin"
-                                   Label="@L["Phoenix grade at least"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                            @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>().Reverse())
-                            {
-                                <MudSelectItem T="PhoenixLetterGrade?" Value="@((PhoenixLetterGrade?)grade)">@grade.GetName()</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudSelect T="PhoenixPlate?" Value="_phoenixPlateMin" ValueChanged="SetPhoenixPlateMin"
-                                   Label="@L["Phoenix plate at least"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                            @foreach (var plate in Enum.GetValues<PhoenixPlate>().Reverse())
-                            {
-                                <MudSelectItem T="PhoenixPlate?" Value="@((PhoenixPlate?)plate)">@plate.GetShorthand()</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </div>
-                    <div class="srp-drawer-range">
-                        <MudNumericField T="int?" Value="_phoenixScoreMin" ValueChanged="SetPhoenixScoreMin" Label="@L["Phoenix score from"]"
-                                         Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
-                        <MudNumericField T="int?" Value="_phoenixScoreMax" ValueChanged="SetPhoenixScoreMax" Label="@L["Phoenix score to"]"
-                                         Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudNumericField>
-                    </div>
-                }
-                @if (LegacyInScope)
-                {
-                    <MudSelect T="XXLetterGrade?" Value="_legacyGradeMin" ValueChanged="SetLegacyGradeMin"
-                               Label="@L["Legacy grade at least"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                        @foreach (var grade in Enum.GetValues<XXLetterGrade>().Reverse())
+                <div class="srp-facet">
+                    <div class="srp-facet-head">@L["Score State"]</div>
+                    <div class="srp-chipset">
+                        @foreach (var state in Enum.GetValues<ChartScoreStateFilter>())
                         {
-                            <MudSelectItem T="XXLetterGrade?" Value="@((XXLetterGrade?)grade)">@grade.ToString()</MudSelectItem>
+                            var captured = state;
+                            <span class="srp-facet-chip @(_scoreStates.Contains(captured) ? "srp-facet-chip-on" : "")"
+                                  role="button" tabindex="0" @onclick="() => ToggleScoreState(captured)">
+                                @L[ScoreStateName(captured)]@CountSuffix(_facetCounts?.ScoreStates, captured)
+                            </span>
                         }
-                    </MudSelect>
-                }
-                <div class="srp-drawer-range">
-                    <MudDatePicker Date="_recordedFrom" DateChanged="SetRecordedFrom" Label="@L["Recorded from"]"
-                                   Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudDatePicker>
-                    <MudDatePicker Date="_recordedTo" DateChanged="SetRecordedTo" Label="@L["Recorded to"]"
-                                   Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudDatePicker>
+                    </div>
                 </div>
-                <div class="srp-drawer-switches">
-                    <MudSwitch T="bool" Value="_onlyFavorites" ValueChanged="SetOnlyFavorites" Color="Color.Secondary"
-                               Label="@L["Favorites"]"></MudSwitch>
-                    <MudSwitch T="bool" Value="_onlyToDo" ValueChanged="SetOnlyToDo" Color="Color.Info"
-                               Label="@L["To Do"]"></MudSwitch>
-                </div>
-                @if (_allMixes)
-                {
-                    <MudSwitch T="bool" Value="_reclearGap" ValueChanged="SetReclearGap" Color="Color.Primary"
-                               Label="@L["Not yet re-cleared in {0}", NewestMix.GetName()]"></MudSwitch>
-                }
             }
 
-            <MudText Typo="Typo.overline">@L["Display"]</MudText>
-            <div class="srp-drawer-switches">
-                <MudSwitch T="bool" Value="_showStepArtist" ValueChanged="SetShowStepArtist" Color="Color.Primary"
-                           Label="@L["Step Artist"]"></MudSwitch>
-                <MudSwitch T="bool" Value="_showNoteCount" ValueChanged="SetShowNoteCount" Color="Color.Primary"
-                           Label="@L["Note count"]"></MudSwitch>
-            </div>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
+                       StartIcon="@(_moreFilters ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                       OnClick="ToggleMoreFilters">
+                @(_moreFilters ? L["Fewer filters"] : L["More filters"])
+            </MudButton>
+
+            @if (_moreFilters)
+            {
+                <MudText Typo="Typo.overline">@L["Content"]</MudText>
+                <div class="srp-facet">
+                    <div class="srp-facet-head">@L["Song Type"]</div>
+                    <div class="srp-chipset">
+                        @foreach (var type in Enum.GetValues<SongType>())
+                        {
+                            var captured = type;
+                            <span class="srp-facet-chip @(_songTypes.Contains(captured) ? "srp-facet-chip-on" : "")"
+                                  role="button" tabindex="0" @onclick="() => ToggleSongType(captured)">
+                                @L[SongTypeName(captured)]@CountSuffix(_facetCounts?.SongTypes, captured)
+                            </span>
+                        }
+                    </div>
+                </div>
+                <MudAutocomplete T="string" Value="@null" ValueChanged="AddArtist" Label="@L["Song Artist"]"
+                                 SearchFunc="SearchArtists" Clearable="true" CoerceText="false" CoerceValue="false"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true"></MudAutocomplete>
+                <MudAutocomplete T="string" Value="@null" ValueChanged="AddStepArtist" Label="@L["Step Artist"]"
+                                 SearchFunc="SearchStepArtists" Clearable="true" CoerceText="false" CoerceValue="false"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true"></MudAutocomplete>
+
+                @if (_ranges?.BpmMin != null && _ranges.BpmMax != null && _ranges.BpmMax > _ranges.BpmMin)
+                {
+                    <div class="srp-facet">
+                        <div class="srp-facet-head">@L["BPM"] <span class="srp-facet-value">@RangeLabel(_bpmMin, _bpmMax, _ranges.BpmMin, _ranges.BpmMax)</span></div>
+                        <MudRangeSlider T="int" Value="(int)(_bpmMin ?? _ranges.BpmMin.Value)"
+                                        UpperValue="(int)(_bpmMax ?? _ranges.BpmMax.Value)"
+                                        ValueChanged="v => SetBpmMin(v)" UpperValueChanged="v => SetBpmMax(v)"
+                                        Min="_ranges.BpmMin.Value" Max="_ranges.BpmMax.Value" Step="1"
+                                        Color="Color.Primary" Size="Size.Small"></MudRangeSlider>
+                    </div>
+                }
+                @if (_ranges?.NpsMin != null && _ranges.NpsMax != null && _ranges.NpsMax > _ranges.NpsMin)
+                {
+                    <div class="srp-facet">
+                        <div class="srp-facet-head">@L["NPS"] <span class="srp-facet-value">@RangeLabel(_npsMin, _npsMax, _ranges.NpsMin, _ranges.NpsMax)</span></div>
+                        <MudRangeSlider T="int" Value="(int)(_npsMin ?? _ranges.NpsMin.Value)"
+                                        UpperValue="(int)(_npsMax ?? _ranges.NpsMax.Value)"
+                                        ValueChanged="v => SetNpsMin(v)" UpperValueChanged="v => SetNpsMax(v)"
+                                        Min="(int)_ranges.NpsMin.Value" Max="(int)_ranges.NpsMax.Value" Step="1"
+                                        Color="Color.Primary" Size="Size.Small"></MudRangeSlider>
+                    </div>
+                }
+                @if (_ranges?.NoteCountMin != null && _ranges.NoteCountMax != null && _ranges.NoteCountMax > _ranges.NoteCountMin)
+                {
+                    <div class="srp-facet">
+                        <div class="srp-facet-head">@L["Note count"] <span class="srp-facet-value">@RangeLabel(_noteMin, _noteMax, _ranges.NoteCountMin, _ranges.NoteCountMax)</span></div>
+                        <MudRangeSlider T="int" Value="_noteMin ?? _ranges.NoteCountMin.Value"
+                                        UpperValue="_noteMax ?? _ranges.NoteCountMax.Value"
+                                        ValueChanged="SetNoteMin" UpperValueChanged="SetNoteMax"
+                                        Min="_ranges.NoteCountMin.Value" Max="_ranges.NoteCountMax.Value" Step="10"
+                                        Color="Color.Primary" Size="Size.Small"></MudRangeSlider>
+                    </div>
+                }
+                @if (_ranges?.DurationSecondsMin != null && _ranges.DurationSecondsMax != null
+                     && _ranges.DurationSecondsMax > _ranges.DurationSecondsMin)
+                {
+                    <div class="srp-facet">
+                        <div class="srp-facet-head">@L["Duration"] <span class="srp-facet-value">@DurationRangeLabel</span></div>
+                        <MudRangeSlider T="int" Value="DurationSeconds(_durationMin) ?? _ranges.DurationSecondsMin.Value"
+                                        UpperValue="DurationSeconds(_durationMax) ?? _ranges.DurationSecondsMax.Value"
+                                        ValueChanged="SetDurationMin" UpperValueChanged="SetDurationMax"
+                                        Min="_ranges.DurationSecondsMin.Value" Max="_ranges.DurationSecondsMax.Value" Step="5"
+                                        Color="Color.Primary" Size="Size.Small"></MudRangeSlider>
+                    </div>
+                }
+
+                <MudText Typo="Typo.overline">@L["Skills"] <span class="srp-drawer-sub">@L["highlighted only"]</span></MudText>
+                <div class="srp-badge-cloud">
+                    @foreach (var badge in _badgeVocabulary)
+                    {
+                        var selected = _badges.Contains(badge.Key, StringComparer.OrdinalIgnoreCase);
+                        <span class="srp-badge-opt tier-chart-card-skill @(badge.Category == null ? "" : $"skillcat-{badge.Category.Value.ToString().ToLowerInvariant()}") @(selected ? "srp-badge-opt-sel" : "")"
+                              role="button" tabindex="0" @onclick="() => ToggleBadge(badge.Key)">
+                            @L[badge.DisplayName]@BadgeCount(badge.Key)
+                        </span>
+                    }
+                </div>
+
+                @if (_allMixes)
+                {
+                    <MudText Typo="Typo.overline">@L["Mix scope"]</MudText>
+                    <div class="srp-facet">
+                        <div class="srp-facet-head">@L["Debut mix"]</div>
+                        @foreach (var era in MixEras)
+                        {
+                            <div class="srp-era">
+                                <div class="srp-era-name">@L[era.Name]</div>
+                                <div class="srp-chipset">
+                                    @foreach (var mix in era.Mixes)
+                                    {
+                                        var captured = mix;
+                                        <span class="srp-facet-chip @(_debutMixes.Contains(captured) ? "srp-facet-chip-on" : "")"
+                                              role="button" tabindex="0" @onclick="() => ToggleDebutMix(captured)">
+                                            @captured.GetName()@CountSuffix(_facetCounts?.DebutMixes, captured)
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="srp-drawer-range">
+                        <MudSelect T="MixEnum?" Value="_availableIn" ValueChanged="SetAvailableIn" Label="@L["Available in"]"
+                                   Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                            @foreach (var mix in AllKnownMixes)
+                            {
+                                <MudSelectItem T="MixEnum?" Value="@((MixEnum?)mix)">@mix.GetName()</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect T="MixEnum?" Value="_notAvailableIn" ValueChanged="SetNotAvailableIn" Label="@L["Not available in"]"
+                                   Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                            @foreach (var mix in AllKnownMixes)
+                            {
+                                <MudSelectItem T="MixEnum?" Value="@((MixEnum?)mix)">@mix.GetName()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </div>
+                    <div class="srp-chipset">
+                        <span class="srp-facet-chip @(_reratedUp ? "srp-facet-chip-on" : "")"
+                              role="button" tabindex="0" @onclick="() => SetReratedUp(!_reratedUp)">@L["Rerated up"]</span>
+                        <span class="srp-facet-chip @(_reratedDown ? "srp-facet-chip-on" : "")"
+                              role="button" tabindex="0" @onclick="() => SetReratedDown(!_reratedDown)">@L["Rerated down"]</span>
+                    </div>
+                    <div class="srp-facet">
+                        <div class="srp-facet-head">@L["Legacy Difficulty"]</div>
+                        <div class="srp-chipset">
+                            @foreach (var slot in Enum.GetValues<LegacySlot>())
+                            {
+                                var captured = slot;
+                                <span class="srp-facet-chip @(_legacySlots.Contains(captured) ? "srp-facet-chip-on" : "")"
+                                      role="button" tabindex="0" @onclick="() => ToggleSlot(captured)">
+                                    @captured.GetName()@CountSuffix(_facetCounts?.LegacySlots, captured)
+                                </span>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <MudText Typo="Typo.overline">@L["Community intelligence"]</MudText>
+                <div class="srp-facet">
+                    <div class="srp-facet-head">@L["Pass Difficulty"] <span class="srp-facet-value">@TierRangeLabel(_passDifficulty)</span></div>
+                    <MudRangeSlider T="int" Value="TierLow(_passDifficulty)" UpperValue="TierHigh(_passDifficulty)"
+                                    ValueChanged="v => SetTierLow(_passDifficulty, v, SetPassDifficulty)"
+                                    UpperValueChanged="v => SetTierHigh(_passDifficulty, v, SetPassDifficulty)"
+                                    Min="0" Max="@(RankedCategories.Length - 1)" Step="1"
+                                    Color="Color.Primary" Size="Size.Small"></MudRangeSlider>
+                </div>
+                <div class="srp-facet">
+                    <div class="srp-facet-head">@L["Score Difficulty"] <span class="srp-facet-value">@TierRangeLabel(_scoreDifficulty)</span></div>
+                    <MudRangeSlider T="int" Value="TierLow(_scoreDifficulty)" UpperValue="TierHigh(_scoreDifficulty)"
+                                    ValueChanged="v => SetTierLow(_scoreDifficulty, v, SetScoreDifficulty)"
+                                    UpperValueChanged="v => SetTierHigh(_scoreDifficulty, v, SetScoreDifficulty)"
+                                    Min="0" Max="@(RankedCategories.Length - 1)" Step="1"
+                                    Color="Color.Primary" Size="Size.Small"></MudRangeSlider>
+                </div>
+                @if (LegacyInScope)
+                {
+                    <div class="srp-facet">
+                        <div class="srp-facet-head">@L["Community Vote"] <span class="srp-facet-value">@TierRangeLabel(_communityVote)</span></div>
+                        <MudRangeSlider T="int" Value="TierLow(_communityVote)" UpperValue="TierHigh(_communityVote)"
+                                        ValueChanged="v => SetTierLow(_communityVote, v, SetCommunityVote)"
+                                        UpperValueChanged="v => SetTierHigh(_communityVote, v, SetCommunityVote)"
+                                        Min="0" Max="@(RankedCategories.Length - 1)" Step="1"
+                                        Color="Color.Primary" Size="Size.Small"></MudRangeSlider>
+                    </div>
+                }
+                <div class="srp-facet">
+                    <div class="srp-facet-head">@L["Pass rate"] <span class="srp-facet-value">@(_passRateMin == null ? L["Any"].Value : $"≥ {_passRateMin}%")</span></div>
+                    @* 0 is "no floor", so it clears rather than filtering to everything. *@
+                    <MudSlider T="int" Value="_passRateMin ?? 0" ValueChanged="v => SetPassRateMin(v <= 0 ? null : v)"
+                               Min="0" Max="100" Step="5" Color="Color.Primary" Size="Size.Small"></MudSlider>
+                </div>
+                @if (ModernInScope && _ranges?.ScoringLevelMin != null && _ranges.ScoringLevelMax != null
+                     && _ranges.ScoringLevelMax > _ranges.ScoringLevelMin)
+                {
+                    <div class="srp-facet">
+                        <div class="srp-facet-head">@L["Scoring level"] <span class="srp-facet-value">@RangeLabel((decimal?)_scoringLevelMin, (decimal?)_scoringLevelMax, (decimal?)_ranges.ScoringLevelMin, (decimal?)_ranges.ScoringLevelMax)</span></div>
+                        <MudRangeSlider T="int" Value="(int)(_scoringLevelMin ?? _ranges.ScoringLevelMin.Value)"
+                                        UpperValue="(int)(_scoringLevelMax ?? _ranges.ScoringLevelMax.Value)"
+                                        ValueChanged="v => SetScoringLevelMin(v)" UpperValueChanged="v => SetScoringLevelMax(v)"
+                                        Min="(int)_ranges.ScoringLevelMin.Value" Max="(int)_ranges.ScoringLevelMax.Value" Step="1"
+                                        Color="Color.Primary" Size="Size.Small"></MudRangeSlider>
+                    </div>
+                }
+
+                @if (CurrentUser.IsLoggedIn)
+                {
+                    <MudText Typo="Typo.overline">@L["My data"]</MudText>
+                    <div class="srp-chipset">
+                        <span class="srp-facet-chip @(_onlyFavorites ? "srp-facet-chip-on" : "")"
+                              role="button" tabindex="0" @onclick="() => SetOnlyFavorites(!_onlyFavorites)">@L["Favorites"]</span>
+                        <span class="srp-facet-chip @(_onlyToDo ? "srp-facet-chip-on" : "")"
+                              role="button" tabindex="0" @onclick="() => SetOnlyToDo(!_onlyToDo)">@L["To Do"]</span>
+                        @if (_allMixes)
+                        {
+                            <span class="srp-facet-chip @(_reclearGap ? "srp-facet-chip-on" : "")"
+                                  role="button" tabindex="0" @onclick="() => SetReclearGap(!_reclearGap)">@L["Not yet re-cleared in {0}", NewestMix.GetName()]</span>
+                        }
+                    </div>
+                    @if (ModernInScope)
+                    {
+                        <div class="srp-facet">
+                            <div class="srp-facet-head">@L["Phoenix grade"] <span class="srp-facet-value">@(_phoenixGradeMin?.GetName() ?? L["Any"].Value)</span></div>
+                            <MudSlider T="int" Value="GradeIndex(_phoenixGradeMin)" ValueChanged="SetPhoenixGradeIndex"
+                                       Min="0" Max="@(PhoenixGrades.Length)" Step="1"
+                                       Color="Color.Primary" Size="Size.Small"></MudSlider>
+                        </div>
+                        <div class="srp-facet">
+                            <div class="srp-facet-head">@L["Phoenix plate"] <span class="srp-facet-value">@(_phoenixPlateMin?.GetShorthand() ?? L["Any"].Value)</span></div>
+                            <MudSlider T="int" Value="PlateIndex(_phoenixPlateMin)" ValueChanged="SetPhoenixPlateIndex"
+                                       Min="0" Max="@(PhoenixPlates.Length)" Step="1"
+                                       Color="Color.Primary" Size="Size.Small"></MudSlider>
+                        </div>
+                        <div class="srp-facet">
+                            <div class="srp-facet-head">@L["Phoenix score"] <span class="srp-facet-value">@RangeLabel(_phoenixScoreMin, _phoenixScoreMax, 0, 1000000)</span></div>
+                            <MudRangeSlider T="int" Value="_phoenixScoreMin ?? 0" UpperValue="_phoenixScoreMax ?? 1000000"
+                                            ValueChanged="SetPhoenixScoreMin" UpperValueChanged="SetPhoenixScoreMax"
+                                            Min="0" Max="1000000" Step="5000"
+                                            Color="Color.Primary" Size="Size.Small"></MudRangeSlider>
+                        </div>
+                    }
+                    @if (LegacyInScope)
+                    {
+                        <div class="srp-facet">
+                            <div class="srp-facet-head">@L["Legacy grade"] <span class="srp-facet-value">@(_legacyGradeMin?.ToString() ?? L["Any"].Value)</span></div>
+                            <MudSlider T="int" Value="LegacyGradeIndex(_legacyGradeMin)" ValueChanged="SetLegacyGradeIndex"
+                                       Min="0" Max="@(LegacyGrades.Length)" Step="1"
+                                       Color="Color.Primary" Size="Size.Small"></MudSlider>
+                        </div>
+                    }
+                    <div class="srp-drawer-range">
+                        <MudDatePicker Date="_recordedFrom" DateChanged="SetRecordedFrom" Label="@L["Recorded from"]"
+                                       Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudDatePicker>
+                        <MudDatePicker Date="_recordedTo" DateChanged="SetRecordedTo" Label="@L["Recorded to"]"
+                                       Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudDatePicker>
+                    </div>
+                }
+
+                @* Display switches stay switches on purpose: they change what a card shows,
+                   not which charts match, and shouldn't read as filters. *@
+                <MudText Typo="Typo.overline">@L["Display"]</MudText>
+                <div class="srp-drawer-switches">
+                    <MudSwitch T="bool" Value="_showStepArtist" ValueChanged="SetShowStepArtist" Color="Color.Primary"
+                               Label="@L["Step Artist"]"></MudSwitch>
+                    <MudSwitch T="bool" Value="_showNoteCount" ValueChanged="SetShowNoteCount" Color="Color.Primary"
+                               Label="@L["Note count"]"></MudSwitch>
+                </div>
+            }
         </div>
     </MudDrawer>
 </MudLayout>
@@ -519,7 +616,13 @@ else
     private int? _passRateMin;
     private double? _scoringLevelMin;
     private double? _scoringLevelMax;
-    private ChartScoreStateFilter? _scoreState;
+    private List<ChartScoreStateFilter> _scoreStates = new();
+    private List<int> _coOpPlayers = new();
+    private TimeSpan? _durationMin;
+    private TimeSpan? _durationMax;
+    private bool _moreFilters;
+    private ChartSearchRanges? _ranges;
+    private const string MoreFiltersKey = "Charts__MoreFilters";
     private PhoenixLetterGrade? _phoenixGradeMin;
     private PhoenixPlate? _phoenixPlateMin;
     private int? _phoenixScoreMin;
@@ -563,6 +666,68 @@ else
 
     private static readonly MixEnum[] AllKnownMixes =
         Enum.GetValues<MixEnum>().OrderBy(m => m.DisplayOrder()).ToArray();
+
+    /// <summary>
+    ///     The debut-mix facet grouped into eras — twenty-nine loose chips is a wall. Pro,
+    ///     Pro 2 and Infinity are their own line (owner, 2026-07-20), which is why they sit
+    ///     apart from the main timeline rather than interleaved by release order.
+    /// </summary>
+    internal sealed record MixEra(string Name, MixEnum[] Mixes);
+
+    internal static readonly MixEra[] MixEras =
+    {
+        new("Modern", new[] { MixEnum.Phoenix2, MixEnum.Phoenix, MixEnum.XX }),
+        new("Prime", new[] { MixEnum.Prime2, MixEnum.Prime }),
+        new("Pro & Infinity", new[] { MixEnum.Infinity, MixEnum.Pro2, MixEnum.Pro }),
+        new("Fiesta", new[] { MixEnum.Fiesta2, MixEnum.FiestaEx, MixEnum.Fiesta }),
+        new("Exceed & NX", new[]
+        {
+            MixEnum.NxAbsolute, MixEnum.Nx2, MixEnum.Nx, MixEnum.Zero, MixEnum.Exceed2, MixEnum.Exceed
+        }),
+        new("Classic", new[]
+        {
+            MixEnum.Prex3, MixEnum.Premiere3, MixEnum.Prex2, MixEnum.Premiere2, MixEnum.Rebirth, MixEnum.Prex,
+            MixEnum.Premiere, MixEnum.Extra, MixEnum.PerfectCollection, MixEnum.Collection,
+            MixEnum.ObgSeasonEvolution, MixEnum.ThirdObg, MixEnum.SecondUltimateRemix, MixEnum.FirstDanceFloor
+        })
+    };
+
+    /// <summary>Filter labels spell the type out; the shorthand belongs on bubbles, not chips.</summary>
+    internal static string TypeName(ChartType type)
+    {
+        return type switch
+        {
+            ChartType.Single => "Single",
+            ChartType.Double => "Double",
+            ChartType.SinglePerformance => "Single Performance",
+            ChartType.DoublePerformance => "Double Performance",
+            ChartType.CoOp => "Co-Op",
+            ChartType.HalfDouble => "Half-Double",
+            _ => type.ToString()
+        };
+    }
+
+    internal static string SongTypeName(SongType type)
+    {
+        return type switch
+        {
+            SongType.Arcade => "Arcade",
+            SongType.ShortCut => "Short Cut",
+            SongType.FullSong => "Full Song",
+            SongType.Remix => "Remix",
+            _ => type.ToString()
+        };
+    }
+
+    private static List<int> ParseCsvInts(string? csv)
+    {
+        return csv?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(v => int.TryParse(v, out var parsed) ? parsed : (int?)null)
+            .Where(v => v != null)
+            .Select(v => v!.Value)
+            .Distinct()
+            .ToList() ?? new List<int>();
+    }
 
     private static readonly TierListCategory[] RankedCategories =
     {
@@ -619,6 +784,9 @@ else
     [Parameter] [SupplyParameterFromQuery(Name = "Saved")] public string? SavedParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Reclear")] public bool ReclearParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "State")] public string? StateParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "CoOp")] public string? CoOpParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "DurMin")] public int? DurMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "DurMax")] public int? DurMaxParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Sort")] public string? SortParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Dir")] public string? DirParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Scope")] public string? ScopeParam { get; set; }
@@ -671,15 +839,22 @@ else
         _onlyFavorites = saved.Contains("Favorites", StringComparer.OrdinalIgnoreCase);
         _onlyToDo = saved.Contains("ToDo", StringComparer.OrdinalIgnoreCase);
         _reclearGap = ReclearParam;
-        _scoreState = Enum.TryParse<ChartScoreStateFilter>(StateParam, true, out var state)
-            ? state
-            : LegacyScoreStateParam?.ToLowerInvariant() switch
+        _scoreStates = ParseCsvEnum<ChartScoreStateFilter>(StateParam);
+        if (_scoreStates.Count == 0)
+        {
+            var legacyState = LegacyScoreStateParam?.ToLowerInvariant() switch
             {
                 "passed" => ChartScoreStateFilter.Passed,
                 "broken" or "notpassed" => ChartScoreStateFilter.Failed,
                 "ungraded" => ChartScoreStateFilter.Unplayed,
-                _ => null
+                _ => (ChartScoreStateFilter?)null
             };
+            if (legacyState != null) _scoreStates.Add(legacyState.Value);
+        }
+
+        _coOpPlayers = ParseCsvInts(CoOpParam);
+        _durationMin = DurMinParam == null ? null : TimeSpan.FromSeconds(DurMinParam.Value);
+        _durationMax = DurMaxParam == null ? null : TimeSpan.FromSeconds(DurMaxParam.Value);
         _sort = Enum.TryParse<ChartSearchSort>(SortParam, true, out var sort) ? sort : ChartSearchSort.Level;
         _sortDescending = DirParam?.ToLowerInvariant() != "asc" &&
                           (DirParam?.ToLowerInvariant() == "desc" || DefaultDescending(_sort));
@@ -749,7 +924,10 @@ else
             ["RecTo"] = _recordedTo?.ToString("yyyy-MM-dd"),
             ["Saved"] = SavedCsv,
             ["Reclear"] = _reclearGap ? true : null,
-            ["State"] = _scoreState?.ToString(),
+            ["State"] = Csv(_scoreStates),
+            ["CoOp"] = _coOpPlayers.Count == 0 ? null : string.Join(',', _coOpPlayers),
+            ["DurMin"] = DurationSeconds(_durationMin),
+            ["DurMax"] = DurationSeconds(_durationMax),
             ["Sort"] = IsDefaultSort ? null : _sort.ToString(),
             ["Dir"] = IsDefaultSort || _sortDescending == DefaultDescending(_sort)
                 ? null
@@ -783,6 +961,9 @@ else
 
         _showStepArtist = await UiSettings.GetSetting(StepArtistDisplayKey) == true.ToString();
         _showNoteCount = await UiSettings.GetSetting(NoteCountDisplayKey) == true.ToString();
+        // An advanced filter arriving by URL opens its own section — otherwise the chip is
+        // visible but the control that set it is hidden.
+        _moreFilters = await UiSettings.GetSetting(MoreFiltersKey) == true.ToString() || HasAdvancedFilter;
         if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensitySettingKey), out var density))
             _density = density;
 
@@ -844,7 +1025,10 @@ else
             PassRateMin = _passRateMin == null ? null : _passRateMin.Value / 100.0,
             ScoringLevelMin = _scoringLevelMin,
             ScoringLevelMax = _scoringLevelMax,
-            ScoreState = CurrentUser.IsLoggedIn ? _scoreState : null,
+            ScoreStates = CurrentUser.IsLoggedIn && _scoreStates.Count > 0 ? _scoreStates : null,
+            CoOpPlayerCounts = _coOpPlayers.Count == 0 ? null : _coOpPlayers,
+            DurationMin = _durationMin,
+            DurationMax = _durationMax,
             PhoenixGradeMin = _phoenixGradeMin,
             PhoenixPlateMin = _phoenixPlateMin,
             PhoenixScoreMin = _phoenixScoreMin,
@@ -915,11 +1099,21 @@ else
     private async Task OpenFilters()
     {
         _filtersOpen = true;
+        if (_moreFilters) await LoadDrawerVocabulary();
+    }
+
+    /// <summary>
+    ///     The advanced facets' dictionaries and slider extents — fetched when the long tail
+    ///     is actually on screen, so the everyday open costs nothing.
+    /// </summary>
+    private async Task LoadDrawerVocabulary()
+    {
         if (_vocabularyLoaded) return;
         _vocabularyLoaded = true;
         _badgeVocabulary = await Mediator.Send(new GetSearchBadgesQuery());
         _artistVocabulary = await Mediator.Send(new GetSearchArtistsQuery(_mix, _allMixes));
         _stepArtistVocabulary = await Mediator.Send(new GetSearchStepArtistsQuery(_mix, _allMixes));
+        _ranges = await Mediator.Send(new GetSearchRangesQuery(_mix, _allMixes));
     }
 
     // ---- chips ----------------------------------------------------------------------
@@ -945,8 +1139,17 @@ else
                     _levelMax = null;
                     await ApplyChange();
                 }));
-            AddListChips(chips, _types, t => t.GetShortHand());
-            AddListChips(chips, _songTypes, t => t.ToString());
+            AddListChips(chips, _types, t => L[TypeName(t)].Value);
+            AddListChips(chips, _coOpPlayers, p => $"{L["Co-Op"]} ×{p}");
+            if (_durationMin != null || _durationMax != null)
+                chips.Add(RangeChip(L["Duration"], FormatDuration(_durationMin), FormatDuration(_durationMax),
+                    async () =>
+                    {
+                        _durationMin = null;
+                        _durationMax = null;
+                        await ApplyChange();
+                    }));
+            AddListChips(chips, _songTypes, t => L[SongTypeName(t)].Value);
             AddListChips(chips, _artists, a => a);
             AddListChips(chips, _stepArtists, a => $"{L["Step Artist"]}: {a}");
             if (_bpmMin != null || _bpmMax != null)
@@ -997,8 +1200,7 @@ else
                     }));
             if (CurrentUser.IsLoggedIn)
             {
-                if (_scoreState != null)
-                    chips.Add(new QueryChip(L[ScoreStateName(_scoreState.Value)], false, () => SetScoreState(null)));
+                AddListChips(chips, _scoreStates, s => L[ScoreStateName(s)].Value);
                 if (_phoenixGradeMin != null)
                     chips.Add(new QueryChip($"{L["Grade"]} ≥ {_phoenixGradeMin.Value.GetName()}", false,
                         () => SetPhoenixGradeMin(null)));
@@ -1078,6 +1280,20 @@ else
 
     private int ActiveFilterCount => QueryChips.Count(c => !c.IsSort);
 
+    /// <summary>Anything set that only the More-filters section can edit.</summary>
+    private bool HasAdvancedFilter =>
+        _songTypes.Count > 0 || _artists.Count > 0 || _stepArtists.Count > 0 || _badges.Count > 0
+        || _bpmMin != null || _bpmMax != null || _npsMin != null || _npsMax != null
+        || _noteMin != null || _noteMax != null || _durationMin != null || _durationMax != null
+        || _debutMixes.Count > 0 || _availableIn != null || _notAvailableIn != null
+        || _reratedUp || _reratedDown || _legacySlots.Count > 0
+        || _passDifficulty.Count > 0 || _scoreDifficulty.Count > 0 || _communityVote.Count > 0
+        || _passRateMin != null || _scoringLevelMin != null || _scoringLevelMax != null
+        || _phoenixGradeMin != null || _phoenixPlateMin != null
+        || _phoenixScoreMin != null || _phoenixScoreMax != null || _legacyGradeMin != null
+        || _recordedFrom != null || _recordedTo != null
+        || _onlyFavorites || _onlyToDo || _reclearGap;
+
     private async Task ClearAllFilters()
     {
         _songNameContains = null;
@@ -1106,7 +1322,10 @@ else
         _passRateMin = null;
         _scoringLevelMin = null;
         _scoringLevelMax = null;
-        _scoreState = null;
+        _scoreStates.Clear();
+        _coOpPlayers.Clear();
+        _durationMin = null;
+        _durationMax = null;
         _phoenixGradeMin = null;
         _phoenixPlateMin = null;
         _phoenixScoreMin = null;
@@ -1128,13 +1347,9 @@ else
     {
         if (_allMixes == allMixes) return;
         _allMixes = allMixes;
+        // Scope changes the vocabularies and the sliders' extents alike.
         _vocabularyLoaded = false;
-        if (_filtersOpen)
-        {
-            _vocabularyLoaded = true;
-            _artistVocabulary = await Mediator.Send(new GetSearchArtistsQuery(_mix, _allMixes));
-            _stepArtistVocabulary = await Mediator.Send(new GetSearchStepArtistsQuery(_mix, _allMixes));
-        }
+        if (_filtersOpen && _moreFilters) await LoadDrawerVocabulary();
 
         await ApplyChange();
     }
@@ -1157,16 +1372,28 @@ else
         await ApplyChange();
     }
 
-    private async Task SetTypes(IEnumerable<string>? values)
+    // ---- chip facets: every one is "any of", the SRP default ------------------------
+
+    private async Task Toggle<T>(List<T> list, T value)
     {
-        _types = ParseCsvEnum<ChartType>(values == null ? null : string.Join(',', values));
+        if (!list.Remove(value)) list.Add(value);
         await ApplyChange();
     }
 
-    private async Task SetSongTypes(IEnumerable<string>? values)
+    private Task ToggleType(ChartType type) => Toggle(_types, type);
+    private Task ToggleSongType(SongType type) => Toggle(_songTypes, type);
+    private Task ToggleScoreState(ChartScoreStateFilter state) => Toggle(_scoreStates, state);
+    private Task ToggleCoOpPlayers(int players) => Toggle(_coOpPlayers, players);
+    private Task ToggleSlot(LegacySlot slot) => Toggle(_legacySlots, slot);
+    private Task ToggleDebutMix(MixEnum mix) => Toggle(_debutMixes, mix);
+
+    private static readonly int[] CoOpPlayerRange = { 2, 3, 4, 5 };
+
+    private async Task ToggleMoreFilters()
     {
-        _songTypes = ParseCsvEnum<SongType>(values == null ? null : string.Join(',', values));
-        await ApplyChange();
+        _moreFilters = !_moreFilters;
+        await UiSettings.SetSetting(MoreFiltersKey, _moreFilters.ToString());
+        if (_moreFilters) await LoadDrawerVocabulary();
     }
 
     private async Task AddArtist(string? artist)
@@ -1318,10 +1545,133 @@ else
         await ApplyChange();
     }
 
-    private async Task SetScoreState(ChartScoreStateFilter? value)
+    private async Task SetDurationMin(int seconds)
     {
-        _scoreState = value;
+        _durationMin = seconds <= (_ranges?.DurationSecondsMin ?? 0) ? null : TimeSpan.FromSeconds(seconds);
         await ApplyChange();
+    }
+
+    private async Task SetDurationMax(int seconds)
+    {
+        _durationMax = seconds >= (_ranges?.DurationSecondsMax ?? int.MaxValue)
+            ? null
+            : TimeSpan.FromSeconds(seconds);
+        await ApplyChange();
+    }
+
+    private static int? DurationSeconds(TimeSpan? duration)
+    {
+        return duration == null ? null : (int)duration.Value.TotalSeconds;
+    }
+
+    private static string? FormatDuration(TimeSpan? duration)
+    {
+        return duration?.ToString(@"m\:ss");
+    }
+
+    // ---- ordinal sliders: enum scales ride an index, 0 meaning "any" ----------------
+
+    internal static readonly PhoenixLetterGrade[] PhoenixGrades = Enum.GetValues<PhoenixLetterGrade>();
+    internal static readonly PhoenixPlate[] PhoenixPlates = Enum.GetValues<PhoenixPlate>();
+    internal static readonly XXLetterGrade[] LegacyGrades = Enum.GetValues<XXLetterGrade>();
+
+    private static int GradeIndex(PhoenixLetterGrade? grade) =>
+        grade == null ? 0 : Array.IndexOf(PhoenixGrades, grade.Value) + 1;
+
+    private static int PlateIndex(PhoenixPlate? plate) =>
+        plate == null ? 0 : Array.IndexOf(PhoenixPlates, plate.Value) + 1;
+
+    private static int LegacyGradeIndex(XXLetterGrade? grade) =>
+        grade == null ? 0 : Array.IndexOf(LegacyGrades, grade.Value) + 1;
+
+    private async Task SetPhoenixGradeIndex(int index)
+    {
+        _phoenixGradeMin = index <= 0 ? null : PhoenixGrades[Math.Min(index, PhoenixGrades.Length) - 1];
+        await ApplyChange();
+    }
+
+    private async Task SetPhoenixPlateIndex(int index)
+    {
+        _phoenixPlateMin = index <= 0 ? null : PhoenixPlates[Math.Min(index, PhoenixPlates.Length) - 1];
+        await ApplyChange();
+    }
+
+    private async Task SetLegacyGradeIndex(int index)
+    {
+        _legacyGradeMin = index <= 0 ? null : LegacyGrades[Math.Min(index, LegacyGrades.Length) - 1];
+        await ApplyChange();
+    }
+
+    // Tier sliders travel the ordered ranked scale; an untouched full-width range means no
+    // filter, so Unranked charts (which sit on no rung at all) aren't quietly excluded.
+    private static int TierLow(List<TierListCategory> selected) =>
+        selected.Count == 0 ? 0 : RankedCategories.Select((c, i) => (c, i))
+            .Where(x => selected.Contains(x.c)).Min(x => x.i);
+
+    private static int TierHigh(List<TierListCategory> selected) =>
+        selected.Count == 0
+            ? RankedCategories.Length - 1
+            : RankedCategories.Select((c, i) => (c, i)).Where(x => selected.Contains(x.c)).Max(x => x.i);
+
+    private Task SetTierLow(List<TierListCategory> selected, int low, Func<List<TierListCategory>, Task> apply)
+    {
+        return apply(TierSpan(low, TierHigh(selected)));
+    }
+
+    private Task SetTierHigh(List<TierListCategory> selected, int high, Func<List<TierListCategory>, Task> apply)
+    {
+        return apply(TierSpan(TierLow(selected), high));
+    }
+
+    private static List<TierListCategory> TierSpan(int low, int high)
+    {
+        if (low <= 0 && high >= RankedCategories.Length - 1) return new List<TierListCategory>();
+        return RankedCategories.Skip(low).Take(Math.Max(0, high - low + 1)).ToList();
+    }
+
+    private async Task SetPassDifficulty(List<TierListCategory> value)
+    {
+        _passDifficulty = value;
+        await ApplyChange();
+    }
+
+    private async Task SetScoreDifficulty(List<TierListCategory> value)
+    {
+        _scoreDifficulty = value;
+        await ApplyChange();
+    }
+
+    private async Task SetCommunityVote(List<TierListCategory> value)
+    {
+        _communityVote = value;
+        await ApplyChange();
+    }
+
+    private string TierRangeLabel(List<TierListCategory> selected)
+    {
+        if (selected.Count == 0) return L["Any"];
+        var low = L[ChartSearchCard.CategoryName(RankedCategories[TierLow(selected)])].Value;
+        var high = L[ChartSearchCard.CategoryName(RankedCategories[TierHigh(selected)])].Value;
+        return low == high ? low : $"{low} – {high}";
+    }
+
+    private string LevelRangeLabel => _levelMin == null && _levelMax == null
+        ? L["Any"]
+        : $"{_levelMin ?? DifficultyLevel.Min}–{_levelMax ?? DifficultyLevel.Max}";
+
+    private string DurationRangeLabel => _durationMin == null && _durationMax == null
+        ? L["Any"]
+        : $"{FormatDuration(_durationMin) ?? "0:00"}–{FormatDuration(_durationMax) ?? "∞"}";
+
+    private string RangeLabel(decimal? from, decimal? to, decimal? floor, decimal? ceiling)
+    {
+        if (from == null && to == null) return L["Any"];
+        return $"{from ?? floor ?? 0:0.#}–{to ?? ceiling ?? 0:0.#}";
+    }
+
+    private string RangeLabel(int? from, int? to, int? floor, int? ceiling)
+    {
+        return RangeLabel((decimal?)from, (decimal?)to, (decimal?)floor, (decimal?)ceiling);
     }
 
     private async Task SetPhoenixGradeMin(PhoenixLetterGrade? value)

@@ -5838,4 +5838,49 @@
   <data name="Side-3 Singles" xml:space="preserve">
     <value>Srglde-3 Srglngles</value>
   </data>
+  <data name="Single" xml:space="preserve">
+    <value>Srglngle</value>
+  </data>
+  <data name="Double" xml:space="preserve">
+    <value>Drglbble</value>
+  </data>
+  <data name="Single Performance" xml:space="preserve">
+    <value>Srglngle Prglformance</value>
+  </data>
+  <data name="Double Performance" xml:space="preserve">
+    <value>Drglbble Prglformance</value>
+  </data>
+  <data name="Half-Double" xml:space="preserve">
+    <value>Hrglf-Drglbble</value>
+  </data>
+  <data name="Arcade" xml:space="preserve">
+    <value>Arglcade</value>
+  </data>
+  <data name="Any" xml:space="preserve">
+    <value>Mrgl</value>
+  </data>
+  <data name="More filters" xml:space="preserve">
+    <value>Mrgle Frglters</value>
+  </data>
+  <data name="Fewer filters" xml:space="preserve">
+    <value>Fewrgl Frglters</value>
+  </data>
+  <data name="Phoenix grade" xml:space="preserve">
+    <value>Phoenix Grrglde</value>
+  </data>
+  <data name="Phoenix plate" xml:space="preserve">
+    <value>Phoenix Prglate</value>
+  </data>
+  <data name="Phoenix score" xml:space="preserve">
+    <value>Phoenix Prgl</value>
+  </data>
+  <data name="Modern" xml:space="preserve">
+    <value>Mrgldern</value>
+  </data>
+  <data name="Pro &amp; Infinity" xml:space="preserve">
+    <value>Pro &amp; Inrglfinity</value>
+  </data>
+  <data name="Exceed &amp; NX" xml:space="preserve">
+    <value>Exceed &amp; NX</value>
+  </data>
 </root>

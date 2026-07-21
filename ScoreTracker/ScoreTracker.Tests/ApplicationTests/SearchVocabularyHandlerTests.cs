@@ -20,10 +20,23 @@ public sealed class SearchVocabularyHandlerTests
 {
     private readonly Mock<IChartRepository> _charts = new();
     private readonly Mock<IChartSkillMetricRepository> _metrics = new();
+    private readonly Mock<IChartScoringLevelRepository> _scoringLevels = new();
+
+    public SearchVocabularyHandlerTests()
+    {
+        _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int)>());
+        _metrics.Setup(m => m.GetMetricsByChart(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>());
+        _scoringLevels.Setup(s => s.GetScoringLevels(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, double>());
+        _charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+    }
 
     private SearchVocabularyHandler BuildHandler()
     {
-        return new SearchVocabularyHandler(_charts.Object, _metrics.Object);
+        return new SearchVocabularyHandler(_charts.Object, _metrics.Object, _scoringLevels.Object);
     }
 
     private static Chart MakeChart(string song, string artist, string? stepArtist, MixEnum mix)

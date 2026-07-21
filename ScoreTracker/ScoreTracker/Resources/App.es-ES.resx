@@ -5790,4 +5790,49 @@
   <data name="Side-3 Singles" xml:space="preserve">
     <value>Singles laterales (3 paneles)</value>
   </data>
+  <data name="Single" xml:space="preserve">
+    <value>Single</value>
+  </data>
+  <data name="Double" xml:space="preserve">
+    <value>Double</value>
+  </data>
+  <data name="Single Performance" xml:space="preserve">
+    <value>Single Performance</value>
+  </data>
+  <data name="Double Performance" xml:space="preserve">
+    <value>Double Performance</value>
+  </data>
+  <data name="Half-Double" xml:space="preserve">
+    <value>Half-Double</value>
+  </data>
+  <data name="Arcade" xml:space="preserve">
+    <value>Arcade</value>
+  </data>
+  <data name="Any" xml:space="preserve">
+    <value>Cualquiera</value>
+  </data>
+  <data name="More filters" xml:space="preserve">
+    <value>Más filtros</value>
+  </data>
+  <data name="Fewer filters" xml:space="preserve">
+    <value>Menos filtros</value>
+  </data>
+  <data name="Phoenix grade" xml:space="preserve">
+    <value>Grado de Phoenix</value>
+  </data>
+  <data name="Phoenix plate" xml:space="preserve">
+    <value>Plate de Phoenix</value>
+  </data>
+  <data name="Phoenix score" xml:space="preserve">
+    <value>Score de Phoenix</value>
+  </data>
+  <data name="Modern" xml:space="preserve">
+    <value>Actuales</value>
+  </data>
+  <data name="Pro &amp; Infinity" xml:space="preserve">
+    <value>Pro e Infinity</value>
+  </data>
+  <data name="Exceed &amp; NX" xml:space="preserve">
+    <value>Exceed y NX</value>
+  </data>
 </root>

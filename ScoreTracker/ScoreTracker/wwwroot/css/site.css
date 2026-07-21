@@ -6588,3 +6588,72 @@ button.chart-card-art {
 .srp-card-official {
     color: var(--mix-accent);
 }
+
+/* SRP drawer facets: chip sets, range-slider headers, debut-mix eras */
+.srp-facet {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.srp-facet-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: .75rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.srp-facet-value {
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--mix-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-chipset {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.srp-chipset-sub {
+    padding-left: 10px;
+    border-left: 2px solid var(--mix-surface-muted);
+}
+
+.srp-facet-chip {
+    font-size: .75rem;
+    border: 1px solid var(--mix-surface-muted);
+    border-radius: 999px;
+    padding: 3px 10px;
+    color: var(--mix-ink-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color .12s, color .12s, background-color .12s;
+}
+
+.srp-facet-chip:hover,
+.srp-facet-chip:focus-visible {
+    color: var(--mix-ink);
+    border-color: var(--mix-primary);
+}
+
+.srp-facet-chip-on {
+    color: var(--mix-primary-contrast);
+    background: var(--mix-primary);
+    border-color: var(--mix-primary);
+    font-weight: 600;
+}
+
+.srp-era {
+    margin-top: 6px;
+}
+
+.srp-era-name {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    margin-bottom: 3px;
+}

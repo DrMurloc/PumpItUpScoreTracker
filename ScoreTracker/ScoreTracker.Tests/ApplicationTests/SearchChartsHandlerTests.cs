@@ -429,11 +429,11 @@ public sealed class SearchChartsHandlerTests
         var handler = BuildHandler();
         var query = new SearchChartsQuery { Mix = MixEnum.Phoenix, UserId = User };
 
-        var unplayed = await handler.Handle(query with { ScoreState = ChartScoreStateFilter.Unplayed },
+        var unplayed = await handler.Handle(query with { ScoreStates = new[] { ChartScoreStateFilter.Unplayed } },
             CancellationToken.None);
-        var failed = await handler.Handle(query with { ScoreState = ChartScoreStateFilter.Failed },
+        var failed = await handler.Handle(query with { ScoreStates = new[] { ChartScoreStateFilter.Failed } },
             CancellationToken.None);
-        var passed = await handler.Handle(query with { ScoreState = ChartScoreStateFilter.Passed },
+        var passed = await handler.Handle(query with { ScoreStates = new[] { ChartScoreStateFilter.Passed } },
             CancellationToken.None);
 
         Assert.Equal(untouched, Assert.Single(unplayed.Results).Chart.Id);

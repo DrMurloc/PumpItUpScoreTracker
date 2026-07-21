@@ -20,7 +20,23 @@ public sealed record ChartSearchFacetCounts(
     IReadOnlyDictionary<string, int> Badges,
     IReadOnlyDictionary<TierListCategory, int> PassDifficulty,
     IReadOnlyDictionary<TierListCategory, int> ScoreDifficulty,
-    IReadOnlyDictionary<TierListCategory, int> CommunityVote);
+    IReadOnlyDictionary<TierListCategory, int> CommunityVote,
+    IReadOnlyDictionary<LegacySlot, int> LegacySlots,
+    IReadOnlyDictionary<MixEnum, int> DebutMixes,
+    IReadOnlyDictionary<ChartScoreStateFilter, int> ScoreStates,
+    IReadOnlyDictionary<int, int> CoOpPlayerCounts);
+
+/// <summary>
+///     The scope's real extents for the range facets, so a slider's travel matches the
+///     catalogue instead of a guessed span. Null where nothing in scope carries the value.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ChartSearchRanges(
+    int? BpmMin, int? BpmMax,
+    decimal? NpsMin, decimal? NpsMax,
+    int? NoteCountMin, int? NoteCountMax,
+    int? DurationSecondsMin, int? DurationSecondsMax,
+    double? ScoringLevelMin, double? ScoringLevelMax);
 
 /// <summary>
 ///     ScoringLevel is the difficulty-signal sort: score-derived scoring level for

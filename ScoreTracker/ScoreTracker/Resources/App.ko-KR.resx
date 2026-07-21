@@ -5793,4 +5793,49 @@
   <data name="Side-3 Singles" xml:space="preserve">
     <value>사이드 3패널</value>
   </data>
+  <data name="Single" xml:space="preserve">
+    <value>싱글</value>
+  </data>
+  <data name="Double" xml:space="preserve">
+    <value>더블</value>
+  </data>
+  <data name="Single Performance" xml:space="preserve">
+    <value>싱글 퍼포먼스</value>
+  </data>
+  <data name="Double Performance" xml:space="preserve">
+    <value>더블 퍼포먼스</value>
+  </data>
+  <data name="Half-Double" xml:space="preserve">
+    <value>하프 더블</value>
+  </data>
+  <data name="Arcade" xml:space="preserve">
+    <value>아케이드</value>
+  </data>
+  <data name="Any" xml:space="preserve">
+    <value>전체</value>
+  </data>
+  <data name="More filters" xml:space="preserve">
+    <value>필터 더 보기</value>
+  </data>
+  <data name="Fewer filters" xml:space="preserve">
+    <value>필터 접기</value>
+  </data>
+  <data name="Phoenix grade" xml:space="preserve">
+    <value>Phoenix 등급</value>
+  </data>
+  <data name="Phoenix plate" xml:space="preserve">
+    <value>Phoenix 플레이트</value>
+  </data>
+  <data name="Phoenix score" xml:space="preserve">
+    <value>Phoenix 점수</value>
+  </data>
+  <data name="Modern" xml:space="preserve">
+    <value>현행</value>
+  </data>
+  <data name="Pro &amp; Infinity" xml:space="preserve">
+    <value>Pro &amp; Infinity</value>
+  </data>
+  <data name="Exceed &amp; NX" xml:space="preserve">
+    <value>Exceed &amp; NX</value>
+  </data>
 </root>

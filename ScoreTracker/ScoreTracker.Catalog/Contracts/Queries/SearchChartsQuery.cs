@@ -59,7 +59,8 @@ public sealed record SearchChartsQuery : IQuery<ChartSearchResultPage>
     public double? ScoringLevelMin { get; init; }
     public double? ScoringLevelMax { get; init; }
 
-    public ChartScoreStateFilter? ScoreState { get; init; }
+    /// <summary>Any-of: "Unplayed or Failed" is a real ask ("everything I haven't beaten").</summary>
+    public IReadOnlyList<ChartScoreStateFilter>? ScoreStates { get; init; }
     public PhoenixLetterGrade? PhoenixGradeMin { get; init; }
     public PhoenixPlate? PhoenixPlateMin { get; init; }
     public int? PhoenixScoreMin { get; init; }

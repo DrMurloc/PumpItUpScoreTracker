@@ -56,19 +56,17 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
         foreach (var mix in identities.Select(i => i.Linked.Mix).Distinct())
             bundles[mix] = await GetCommunityBundle(mix, cancellationToken);
 
-        var rows = identities
-            .Select(i => Project(i, bundles[i.Linked.Mix]))
-            .Where(r => MatchesContent(r, request) && MatchesCommunity(r, request))
-            .ToList();
+        var projected = identities.Select(i => Project(i, bundles[i.Linked.Mix])).ToList();
 
+        IReadOnlyDictionary<(MixEnum, Guid), MyRecord>? myRecords = null;
         if (request.UserId != null)
         {
-            var myRecords = await LoadMyRecords(request.UserId.Value, scope, cancellationToken);
-            rows = rows
-                .Select(r => r with { My = BuildMyState(r, myRecords) })
-                .Where(r => MatchesUser(r, request, myRecords))
-                .ToList();
+            myRecords = await LoadMyRecords(request.UserId.Value, scope, cancellationToken);
+            var records = myRecords;
+            projected = projected.Select(r => r with { My = BuildMyState(r, records) }).ToList();
         }
+
+        var rows = Filter(projected, request, myRecords).ToList();
 
         var sorted = Sort(rows, request).ToList();
         var total = sorted.Count;
@@ -77,21 +75,60 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
             : sorted.Skip((Math.Max(1, request.Page.Value) - 1) * request.PageSize).Take(request.PageSize).ToList();
 
         return new ChartSearchResultPage(page, total,
-            request.IncludeFacetCounts ? CountFacets(rows) : null);
+            request.IncludeFacetCounts ? CountFacets(projected, request, myRecords) : null);
     }
 
-    /// <summary>How the current filtered set distributes per enum facet value (drawer annotations).</summary>
-    private static ChartSearchFacetCounts CountFacets(IReadOnlyList<ChartSearchResult> rows)
+    private static IEnumerable<ChartSearchResult> Filter(IEnumerable<ChartSearchResult> rows,
+        SearchChartsQuery q, IReadOnlyDictionary<(MixEnum, Guid), MyRecord>? myRecords)
     {
+        return rows.Where(r => MatchesContent(r, q) && MatchesCommunity(r, q)
+                               && (myRecords == null || MatchesUser(r, q, myRecords)));
+    }
+
+    /// <summary>
+    ///     Per-facet distributions for the drawer. Each facet counts with its OWN filter
+    ///     lifted, so the numbers answer "what would I get if I picked this instead" —
+    ///     counted against the filtered set they would all read 0 the moment you chose one
+    ///     value, which looks like a broken page rather than a live facet.
+    /// </summary>
+    private static ChartSearchFacetCounts CountFacets(IReadOnlyList<ChartSearchResult> projected,
+        SearchChartsQuery q, IReadOnlyDictionary<(MixEnum, Guid), MyRecord>? myRecords)
+    {
+        IEnumerable<ChartSearchResult> Without(SearchChartsQuery lifted) =>
+            Filter(projected, lifted, myRecords);
+
         return new ChartSearchFacetCounts(
-            rows.GroupBy(r => r.Chart.Type).ToDictionary(g => g.Key, g => g.Count()),
-            rows.GroupBy(r => r.Chart.Song.Type).ToDictionary(g => g.Key, g => g.Count()),
-            rows.SelectMany(r => r.Badges.Select(b => b.Key))
+            Without(q with { Types = null }).GroupBy(r => r.Chart.Type)
+                .ToDictionary(g => g.Key, g => g.Count()),
+            Without(q with { SongTypes = null }).GroupBy(r => r.Chart.Song.Type)
+                .ToDictionary(g => g.Key, g => g.Count()),
+            Without(q with { Badges = null }).SelectMany(r => r.Badges.Select(b => b.Key))
                 .GroupBy(k => k, StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase),
-            CountCategories(rows, r => r.PassDifficulty),
-            CountCategories(rows, r => r.ScoreDifficulty),
-            CountCategories(rows, r => r.CommunityVote));
+            CountCategories(Without(q with { PassDifficulty = null }), r => r.PassDifficulty),
+            CountCategories(Without(q with { ScoreDifficulty = null }), r => r.ScoreDifficulty),
+            CountCategories(Without(q with { CommunityVote = null }), r => r.CommunityVote),
+            Without(q with { LegacySlots = null })
+                .SelectMany(r => r.Appearances.Where(a => a.Slot != null).Select(a => a.Slot!.Value).Distinct())
+                .GroupBy(s => s).ToDictionary(g => g.Key, g => g.Count()),
+            Without(q with { DebutMixes = null }).GroupBy(r => r.DebutMix)
+                .ToDictionary(g => g.Key, g => g.Count()),
+            myRecords == null
+                ? new Dictionary<ChartScoreStateFilter, int>()
+                : Without(q with { ScoreStates = null })
+                    .GroupBy(r => StateOf(r, myRecords))
+                    .ToDictionary(g => g.Key, g => g.Count()),
+            Without(q with { CoOpPlayerCounts = null }).Where(r => r.Chart.Type == ChartType.CoOp)
+                .GroupBy(r => r.Chart.PlayerCount).ToDictionary(g => g.Key, g => g.Count()));
+    }
+
+    /// <summary>Passed outranks failed outranks played-unscored; no record at all is unplayed.</summary>
+    private static ChartScoreStateFilter StateOf(ChartSearchResult row,
+        IReadOnlyDictionary<(MixEnum, Guid), MyRecord> records)
+    {
+        if (!records.TryGetValue((row.Chart.Mix, row.Chart.Id), out var linked))
+            return ChartScoreStateFilter.Unplayed;
+        return linked.Passed ? ChartScoreStateFilter.Passed : ChartScoreStateFilter.Failed;
     }
 
     private static IReadOnlyDictionary<TierListCategory, int> CountCategories(
@@ -395,16 +432,16 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
     {
         var hasLinkedRecord = records.TryGetValue((row.Chart.Mix, row.Chart.Id), out var linked);
 
-        if (q.ScoreState != null)
+        if (q.ScoreStates is { Count: > 0 })
         {
-            var matches = q.ScoreState.Value switch
+            var matches = q.ScoreStates.Any(state => state switch
             {
                 ChartScoreStateFilter.Unplayed => !hasLinkedRecord,
                 ChartScoreStateFilter.Played => hasLinkedRecord,
                 ChartScoreStateFilter.Passed => linked is { Passed: true },
                 ChartScoreStateFilter.Failed => linked is { Passed: false },
                 _ => true
-            };
+            });
             if (!matches) return false;
         }
 
