@@ -167,7 +167,10 @@ markup with jump links + the next-reset countdown.
    **your line** (dim "—" when unplayed), footer count + ▲ Record + ☰ Board. Compact: jacket
    sticker + count-chip → board (M12). Table: rows with name, top-1, your line, count, actions.
    Suggested = gold border only (M11). Empty state: "This week's charts post Monday at
-   midnight ET."
+   midnight ET." **Board order is the query's, not the draw's**: `GetWeeklyBoardQuery` returns
+   the week sorted difficulty-descending, doubles ahead of singles on a tie, CO-OPs last (their
+   "level" is a player count) — the homepage widget's order, so the grid, the page's JSON-LD,
+   and any future consumer read the same way.
 4. **Monthly board** (`#monthly`) — type pills in the section header (`?type=` links), window
    subtitle (week N, best M count, PUMBILITY), the table: rarity place, player, top-4 chips,
    count (a `<details>` expansion with all counted scores), total. Empty state: "Scores land

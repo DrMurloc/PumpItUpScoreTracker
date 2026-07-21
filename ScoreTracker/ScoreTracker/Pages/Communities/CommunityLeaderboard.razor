@@ -65,6 +65,31 @@
        500 shortens the chip. Values carry their label as a tooltip. *@
     <div class="olb-rank-cards"
          style="--olb-grid-cols:34px minmax(150px,1.6fr) 1fr 1fr 1fr 1fr 40px;--olb-grid-cols-narrow:28px minmax(110px,1fr) auto auto auto 34px;--olb-grid-cols-phone:26px minmax(96px,1fr) auto auto 32px">
+        @* The figures only read as columns if something names them. The header is the row
+           template with labels in it, so it sheds the same columns at the same widths. Labels
+           stay short — below 760 the columns size to their content, and a spelled-out heading
+           would take the width away from the player it is meant to describe. *@
+        @if (_entries.Any())
+        {
+            <div class="olb-grid-head">
+                <span>#</span>
+                <span>@L["Player"]</span>
+                <span>@L["Playstyle"]</span>
+                <span class="olb-hide-narrow olb-grid-num" title="@L["Charts Played"]">@L["Charts"]</span>
+                <span class="olb-stack">
+                    @if (_currentType == LeaderboardType.CoOp)
+                    {
+                        <span class="olb-grid-num" title="@L["CoOp Completion"]">@L["Completion"]</span>
+                    }
+                    else
+                    {
+                        <span class="olb-grid-num">@L["Comp Lv"]</span>
+                    }
+                    <span class="olb-grid-num">PUMBILITY</span>
+                </span>
+                <span></span>
+            </div>
+        }
         @foreach (var entry in _entries.Skip((page - 1) * PageSize).Take(PageSize))
         {
             <div class="olb-grid-row @(IsMe(entry.UserId) ? "olb-row-me" : "")">

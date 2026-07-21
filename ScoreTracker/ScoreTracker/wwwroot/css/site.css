@@ -50,6 +50,96 @@ body {
     letter-spacing: .02em;
 }
 
+/* ===== The circuit-drop overlay =====
+   App.razor supplies #components-reconnect-modal, so Blazor stops building its own and just
+   toggles state classes on ours. Everything here is --mix-*: a dropped circuit is exactly the
+   moment MudThemeProvider's --mud-* vars can't be relied on. Every rule is id-scoped because
+   MudBlazor ships its own #components-reconnect-modal rules (background, z-index, and a
+   `#components-reconnect-modal button` that outranks a bare class). */
+
+#components-reconnect-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    /* !important answers MudBlazor's own !important background; site.css loads after theirs. */
+    background: color-mix(in srgb, var(--mix-bg) 82%, transparent) !important;
+    backdrop-filter: blur(2px);
+}
+
+/* No state class means no circuit trouble; -hide is the reconnected case. Both stay down. */
+#components-reconnect-modal.components-reconnect-show,
+#components-reconnect-modal.components-reconnect-failed,
+#components-reconnect-modal.components-reconnect-rejected {
+    display: flex;
+}
+
+#components-reconnect-modal .reconnect-card {
+    min-width: 240px;
+    padding: 22px 28px;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    background: var(--mix-surface);
+    color: var(--mix-ink);
+    box-shadow: 0 14px 44px -16px color-mix(in srgb, var(--mix-bg) 90%, transparent);
+    font-family: var(--font-body);
+    text-align: center;
+}
+
+/* All three states ship; the class Blazor set decides which one has a box. */
+#components-reconnect-modal .reconnect-state { display: none; }
+
+#components-reconnect-modal.components-reconnect-show .reconnect-on-show,
+#components-reconnect-modal.components-reconnect-failed .reconnect-on-failed,
+#components-reconnect-modal.components-reconnect-rejected .reconnect-on-rejected {
+    display: block;
+}
+
+#components-reconnect-modal .reconnect-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: .01em;
+}
+
+#components-reconnect-modal .reconnect-spinner {
+    display: block;
+    width: 28px;
+    height: 28px;
+    margin: 0 auto 12px;
+    border-radius: 50%;
+    border: 3px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    border-top-color: var(--mix-primary);
+    animation: reconnect-spin .9s linear infinite;
+}
+
+@keyframes reconnect-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #components-reconnect-modal .reconnect-spinner { animation-duration: 3s; }
+}
+
+#components-reconnect-modal .reconnect-btn {
+    margin-top: 16px;
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: 1px solid var(--mix-primary);
+    background: var(--mix-primary);
+    color: var(--mix-primary-contrast);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#components-reconnect-modal .reconnect-btn:hover {
+    background: color-mix(in srgb, var(--mix-primary) 85%, var(--mix-ink));
+}
+
 /* ===== Shell: app bar, wordmark, top nav, mega-menus, mix pill =====
    The bar and its menus are server-rendered HTML with no circuit behind them, so every value
    MudAppBar/MudMenu used to supply is pinned here. Heights and z-indexes match the MudTheme
@@ -6250,7 +6340,7 @@ button.chart-card-art {
    their own columns instead: the owning page supplies the template in
    --olb-grid-cols (and --olb-grid-cols-narrow for the width where its optional
    columns drop out), and the identity column stays pinned left. */
-.olb-grid-row {
+.olb-grid-row, .olb-grid-head {
     display: grid;
     grid-template-columns: var(--olb-grid-cols);
     align-items: center;
@@ -6260,6 +6350,23 @@ button.chart-card-art {
 }
 
 .olb-grid-row .mud-chip { margin: 0; }
+
+/* Column names, in the table-head voice the sortable boards already use. The header
+   is the row template with labels in it, so it drops the same columns at the same
+   widths; a label that outruns its column clips rather than reflowing the row. */
+.olb-grid-head {
+    color: var(--mix-ink-muted);
+    font-size: 11.5px;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    line-height: 1.25;
+}
+
+.olb-grid-head span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
 /* Figures are read down a column, so they align on their right edge. */
 .olb-grid-num {
@@ -6300,6 +6407,27 @@ button.chart-card-art {
 
 .olb-player-name > :last-child {
     flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Every UserLabel, everywhere: flag then name, laid out so a bounded caller truncates
+   the NAME. max-width keeps the label inside its container instead of overflowing as one
+   atomic box — an overflowing atomic box is replaced wholesale by the container's
+   ellipsis, which is how a flagged player used to render as a bare "…". */
+.user-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    vertical-align: middle;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.user-label > :not(:last-child) { flex: 0 0 auto; }
+
+.user-label > :last-child {
+    flex: 0 1 auto;
     min-width: 0;
     overflow: hidden;
 }
@@ -6365,11 +6493,15 @@ button.chart-card-art {
     .olb-hide-mobile { display: none !important; }
 
     /* The optional columns are display:none by now, so the template loses them too. */
-    .olb-grid-row {
+    .olb-grid-row, .olb-grid-head {
         grid-template-columns: var(--olb-grid-cols-narrow, var(--olb-grid-cols));
         gap: 6px;
         padding: 3px 4px;
     }
+
+    /* Below here the columns size to their content, so the header sets in a size that
+       does not widen a column past the figure it names. */
+    .olb-grid-head { font-size: 10px; letter-spacing: .2px; }
 
     .olb-stack {
         display: flex;
@@ -6405,7 +6537,7 @@ button.chart-card-art {
 @media (max-width: 640px) {
     .olb-hide-narrow { display: none !important; }
 
-    .olb-grid-row {
+    .olb-grid-row, .olb-grid-head {
         grid-template-columns: var(--olb-grid-cols-phone, var(--olb-grid-cols-narrow, var(--olb-grid-cols)));
     }
 }

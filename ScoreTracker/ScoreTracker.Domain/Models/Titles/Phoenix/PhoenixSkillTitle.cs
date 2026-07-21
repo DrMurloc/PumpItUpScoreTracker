@@ -20,13 +20,12 @@ public sealed class PhoenixSkillTitle : PhoenixTitle, ISpecificChartTitle
         _songName = songName;
         _chartType = chartType;
         _level = level;
+        // Owner call: skill progress measures the climb from a decent pass (900k) to the
+        // SSS, so a fresh pass doesn't read as nearly complete.
+        FloorAt(900_000);
     }
 
     public override bool PopulatesFromDatabase => false;
-
-    // Owner call: skill progress measures the climb from a decent pass (900k) to the SSS,
-    // so a fresh pass doesn't read as nearly complete.
-    public override int CompletionFloor => 900_000;
 
 
     public override double CompletionProgress(Chart chart, RecordedPhoenixScore attempt)

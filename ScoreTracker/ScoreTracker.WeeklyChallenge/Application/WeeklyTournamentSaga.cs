@@ -166,7 +166,25 @@ namespace ScoreTracker.WeeklyChallenge.Application
                     mine, suggested.Contains(chart.ChartId), inRangeTop, chartInRange.Length);
             }).ToArray();
 
-            return new WeeklyBoardView(summaries, isLive, suggestionsAvailable);
+            return new WeeklyBoardView(InBoardOrder(summaries, chartDict), isLive, suggestionsAvailable);
+        }
+
+        // The board arrives in whatever order the week's rows were written — a chart list nobody
+        // can scan. Sorts it the way the homepage widget already presents the same week:
+        // difficulty descending, doubles before singles on ties, CO-OPs last since their "level"
+        // is a player count and doesn't compare with S/D levels. A chart the catalog can't
+        // resolve sorts to the end rather than claiming level 0.
+        private static IReadOnlyList<WeeklyBoardChartSummary> InBoardOrder(
+            IEnumerable<WeeklyBoardChartSummary> summaries, IReadOnlyDictionary<Guid, Chart> charts)
+        {
+            return summaries
+                .Select(s => (Summary: s, Chart: charts.GetValueOrDefault(s.ChartId)))
+                .OrderBy(x => x.Chart == null ? 2 : x.Chart.Type == ChartType.CoOp ? 1 : 0)
+                .ThenByDescending(x => x.Chart == null ? 0 : (int)x.Chart.Level)
+                .ThenBy(x => x.Chart?.Type == ChartType.Double ? 0 : 1)
+                .ThenBy(x => x.Chart?.Song.Name.ToString() ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                .Select(x => x.Summary)
+                .ToArray();
         }
 
         // The monthly board, aggregated and priced here instead of week-by-week in the page.

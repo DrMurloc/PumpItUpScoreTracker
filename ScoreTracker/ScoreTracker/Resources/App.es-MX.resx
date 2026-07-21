@@ -5846,4 +5846,22 @@
   <data name="PF" xml:space="preserve">
     <value>PF</value>
   </data>
+  <data name="No differences between these mixes." xml:space="preserve">
+    <value>No hay diferencias entre estas versiones.</value>
+  </data>
+  <data name="Reconnecting…" xml:space="preserve">
+    <value>Reconectando…</value>
+  </data>
+  <data name="Couldn't reconnect." xml:space="preserve">
+    <value>No se pudo reconectar.</value>
+  </data>
+  <data name="Try again" xml:space="preserve">
+    <value>Reintentar</value>
+  </data>
+  <data name="Your session ended." xml:space="preserve">
+    <value>Tu sesión ha terminado.</value>
+  </data>
+  <data name="Reload the page" xml:space="preserve">
+    <value>Recargar la página</value>
+  </data>
 </root>

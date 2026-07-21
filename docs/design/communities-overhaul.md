@@ -211,7 +211,11 @@ multi-player head-to-head tool is **removed** (superseded by the player-page fol
 - **Rankings** — the Official-style ranked table: PUMBILITY primary sort, board selector
   (PUMBILITY / Total Rating / Co-Op), with Singles / Doubles / competitive-level as columns;
   rows deep-link to the player summary. **No separate Players tab** — the ranking rows are the
-  index into player pages.
+  index into player pages. The grid carries a `.olb-grid-head` label row — the same template as
+  the rows, so it sheds the same columns at the same breakpoints — because a board of four
+  unlabeled figures per player is a board nobody can read. Labels stay short (Charts, Comp Lv):
+  below 760 the columns size to their content, and a spelled-out heading takes width away from
+  the player it describes.
 - **By Chart** — the existing per-chart community board (`ChartSelector` →
   `GetPhoenixRecordsForCommunityQuery`), kept as its own tab.
 - **Members** — roster visible to all; promote/demote/ban/unban/edit-perms controls gated by

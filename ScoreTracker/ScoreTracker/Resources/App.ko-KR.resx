@@ -5847,4 +5847,22 @@
   <data name="PF" xml:space="preserve">
     <value>PF</value>
   </data>
+  <data name="No differences between these mixes." xml:space="preserve">
+    <value>이 시리즈 간에 차이가 없습니다.</value>
+  </data>
+  <data name="Reconnecting…" xml:space="preserve">
+    <value>다시 연결하는 중…</value>
+  </data>
+  <data name="Couldn't reconnect." xml:space="preserve">
+    <value>다시 연결하지 못했습니다.</value>
+  </data>
+  <data name="Try again" xml:space="preserve">
+    <value>다시 시도</value>
+  </data>
+  <data name="Your session ended." xml:space="preserve">
+    <value>세션이 종료되었습니다.</value>
+  </data>
+  <data name="Reload the page" xml:space="preserve">
+    <value>페이지 새로 고침</value>
+  </data>
 </root>
