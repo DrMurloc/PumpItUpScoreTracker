@@ -6275,8 +6275,8 @@ button.chart-card-art {
    ordinary grid items, narrow they stack into a single cell. */
 .olb-stack { display: contents; }
 
-/* The counterpart to .olb-hide-mobile: the short form of a label, phone only. */
-.olb-only-mobile { display: none; }
+/* A label that has a short form: the long one until the row runs out of width. */
+.olb-short-form { display: none; }
 
 /* Board tags run long (LIKEASLAM01#8073). Lists print the human half — the digits
    identify an account, they don't name anyone — and truncate what's still too long;
@@ -6284,6 +6284,10 @@ button.chart-card-art {
 .olb-player-name {
     display: inline-block;
     vertical-align: middle;
+    /* min-width:0 is what lets a flex item shrink past its content: without it the
+       name keeps its full width, the column collapses around it, and every name
+       renders as a bare ellipsis instead of as many letters as actually fit. */
+    min-width: 0;
     max-width: 22ch;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -6330,14 +6334,13 @@ button.chart-card-art {
     border-radius: 6px;
 }
 
-/* Two tiers. Narrow (≤760): the row identifier pins while the rest side-scrolls,
-   optional columns and song titles step aside, names truncate. Phone (≤500): the
-   row is a width budget, so padding tightens and value/context pairs stack — above
-   that they stay inline, where stacking would just leave a hole. */
+/* A board sheds width in three steps, each one giving up the least it can: at 760
+   the row identifier pins while the rest side-scrolls, optional columns and song
+   titles step aside, and paired values stack instead of sitting side by side; at
+   640 the second-tier figures drop out entirely; at 500 the row is a width budget,
+   so padding tightens and labels fall back to their short forms. */
 @media (max-width: 760px) {
     .olb-hide-mobile { display: none !important; }
-
-    .olb-only-mobile { display: inline; }
 
     /* The optional columns are display:none by now, so the template loses them too. */
     .olb-grid-row {
@@ -6377,7 +6380,19 @@ button.chart-card-art {
     .olb-pager-tight .mud-table-pagination-caption { font-size: 11px; margin: 0 4px; }
 }
 
+@media (max-width: 640px) {
+    .olb-hide-narrow { display: none !important; }
+
+    .olb-grid-row {
+        grid-template-columns: var(--olb-grid-cols-phone, var(--olb-grid-cols-narrow, var(--olb-grid-cols)));
+    }
+}
+
 @media (max-width: 500px) {
+    .olb-long-form { display: none; }
+
+    .olb-short-form { display: inline; }
+
     .olb-rank-card, .olb-board-row { gap: 5px; padding: 3px 4px; }
 
     .olb-rank-rankbox { min-width: 42px; }

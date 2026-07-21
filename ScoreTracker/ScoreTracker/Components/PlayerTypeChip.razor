@@ -8,8 +8,8 @@
    initials there — the full archetype stays in the tooltip either way. *@
 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Style="@ChipStyle(Type)"
          title="@L[NameOf(Type)]">
-    <span class="olb-hide-mobile">@L[NameOf(Type)]</span>
-    <span class="olb-only-mobile">@L[ShortNameOf(Type)]</span>
+    <span class="olb-long-form">@L[NameOf(Type)]</span>
+    <span class="olb-short-form">@L[ShortNameOf(Type)]</span>
 </MudChip>
 
 @code {
