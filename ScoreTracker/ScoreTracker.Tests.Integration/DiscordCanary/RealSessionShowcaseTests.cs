@@ -136,6 +136,9 @@ public sealed class RealSessionShowcaseTests
         });
         services.AddSingleton<ICurrentUserAccessor>(new NoCurrentUser());
         services.AddSingleton<IDateTimeOffsetAccessor>(new SystemClock());
+        // The resx catalogues live in the Web assembly, which this pipeline deliberately
+        // excludes — the showcase posts in English, so a passthrough localizer suffices.
+        services.AddSingleton<ILocalizedTextAccessor>(new EnglishPassthroughLocalizer());
         services.AddMediatR(o => o.RegisterServicesFromAssemblies(
             typeof(CommunitiesRegistrationExtensions).Assembly,
             typeof(PlayerProgressRegistrationExtensions).Assembly,
@@ -227,8 +230,7 @@ public sealed class RealSessionShowcaseTests
             WHERE c.Name = 'World' AND m.UserId = @UserId
             """, ("UserId", userId)) > 0, TimeSpan.FromSeconds(15), "World membership");
 
-        await mediator.Send(new AddDiscordChannelToCommunityCommand(Name.From("World"), null, ChannelId!.Value,
-            SendScores: true, SendTitles: true, SendNewMembers: true));
+        await mediator.Send(new AddDiscordChannelToCommunityCommand(Name.From("World"), null, ChannelId!.Value));
     }
 
     /// <summary>
@@ -325,12 +327,14 @@ public sealed class RealSessionShowcaseTests
             var folderName = $"{type.GetShortHand()}{(int)level}";
             lamps.Add(new PlayerMilestoneRecord(MilestoneKind.FolderPassLamp, null, occurredAt, null, null, null,
                 folderName));
-            var folderBests = charts.Values
+            var folderCharts = charts.Values
                 .Where(c => c.Type == type && c.Level == level)
+                .ToArray();
+            var folderBests = folderCharts
                 .Select(c => bests.GetValueOrDefault(c.Id))
                 .ToArray();
             if (folderBests.Any(b => b?.Score == null || b.IsBroken)) continue;
-            var minGrade = folderBests.Min(b => b!.Score!.Value.LetterGrade);
+            var minGrade = folderBests.Min(b => b!.Score!.Value.LetterGradeFor(folderCharts[0].Mix));
             lamps.Add(new PlayerMilestoneRecord(MilestoneKind.FolderGradeLamp, null, occurredAt, null, null, null,
                 $"{folderName}|{minGrade.GetName()}"));
             if (folderBests.Any(b => b!.Plate == null)) continue;
@@ -509,5 +513,11 @@ public sealed class RealSessionShowcaseTests
     private sealed class SystemClock : IDateTimeOffsetAccessor
     {
         public DateTimeOffset Now => DateTimeOffset.Now;
+    }
+
+    private sealed class EnglishPassthroughLocalizer : ILocalizedTextAccessor
+    {
+        public string Get(string? culture, string key) => key;
+        public string Get(string? culture, string key, params object[] args) => string.Format(key, args);
     }
 }

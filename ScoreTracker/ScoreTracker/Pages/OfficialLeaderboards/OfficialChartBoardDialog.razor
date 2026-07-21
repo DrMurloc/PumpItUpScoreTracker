@@ -1,0 +1,121 @@
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.HomeDashboard
+@using Chart = ScoreTracker.SharedKernel.Models.Chart
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject CommunityGlowReader CommunityGlow
+
+@* One chart's full mirrored board, summoned from any chart reference in the section.
+   Rows glow with the dashboard vocabulary: you blue, your opt-in crews green. *@
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="_options">
+    <TitleContent>
+        @if (Chart != null)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <DifficultyBubble Chart="Chart" Small="true"/>
+                <SongImage Song="Chart.Song" Small="true"/>
+                <MudText Typo="Typo.h6">@Chart.Song.Name</MudText>
+            </MudStack>
+        }
+    </TitleContent>
+    <DialogContent>
+        @if (_loading)
+        {
+            <MudSkeleton Height="200px" SkeletonType="SkeletonType.Rectangle"/>
+        }
+        else if (_board == null || !_board.Entries.Any())
+        {
+            <MudText Typo="Typo.body2">@L["Nobody is on this chart board yet."]</MudText>
+        }
+        else
+        {
+            <div class="olb-board-rows">
+                @foreach (var entry in _board.Entries.Take(_visible))
+                {
+                    <div class="olb-board-row @GlowClass(entry.Player)">
+                        <span class="olb-board-place">#@entry.Place</span>
+                        <HubPlayerChip Player="entry.Player" Dense="true"/>
+                        <span class="olb-rank-tail">
+                            <MudText Typo="Typo.body2" Style="display:inline-flex;align-items:center;gap:6px">
+                                <b>@entry.Score.ToString("N0")</b>
+                                <LetterGradeIcon Grade="PhoenixScore.From(entry.Score).LetterGradeFor(Mix)"/>
+                            </MudText>
+                        </span>
+                    </div>
+                }
+            </div>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-2 flex-wrap" Spacing="2">
+                <span class="chart-lb-legend">
+                    <i class="chart-lb-dot chart-lb-dot-community"></i>@L["your communities"]
+                    <i class="chart-lb-dot chart-lb-dot-me"></i>@L["you"]
+                </span>
+                <MudSpacer/>
+                @if (_visible < _board.Entries.Count)
+                {
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="ShowMore">
+                        @(ShowAllNext
+                            ? L["Show all {0} scores", _board.Entries.Count]
+                            : L["Show more of {0} scores", _board.Entries.Count])
+                    </MudButton>
+                }
+            </MudStack>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public Chart? Chart { get; set; }
+    [Parameter] public MixEnum Mix { get; set; }
+
+    private const int InitialPlaces = 10;
+    private const int PageSize = 25;
+    private const int PagesBeforeShowAll = 2;
+
+    private readonly DialogOptions _options = new()
+    {
+        CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true
+    };
+
+    private bool _loading;
+    private OfficialChartBoardRecord? _board;
+    private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
+    private int _visible = InitialPlaces;
+    private int _pagesShown;
+    private Guid _loadedFor;
+
+    private bool ShowAllNext => _pagesShown >= PagesBeforeShowAll;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Visible || Chart == null || Chart.Id == _loadedFor) return;
+        _loadedFor = Chart.Id;
+        _loading = true;
+        _visible = InitialPlaces;
+        _pagesShown = 0;
+        _board = await Mediator.Send(new GetOfficialChartBoardQuery(Mix, Chart.Id));
+        _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
+        _loading = false;
+    }
+
+    private void ShowMore()
+    {
+        _pagesShown++;
+        _visible = ShowAllNext ? _board!.Entries.Count : Math.Min(_visible + PageSize, _board!.Entries.Count);
+    }
+
+    private string GlowClass(OfficialPlayerRecord player)
+    {
+        if (player.UserId == null) return string.Empty;
+        if (CurrentUser.IsLoggedIn && player.UserId == CurrentUser.User.Id) return "olb-row-me";
+        return _communityIds.Contains(player.UserId.Value) ? "olb-row-community" : string.Empty;
+    }
+}

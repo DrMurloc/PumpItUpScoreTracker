@@ -11,7 +11,6 @@ namespace ScoreTracker.Data.Clients;
 
 public sealed class DiscordBotClient : IBotClient
 {
-    private static readonly ulong[] ChannelIds = { 1009932033365127168 };
     private readonly DiscordConfiguration _configuration;
     private readonly ILogger _logger;
     private DiscordSocketClient? _client;
@@ -58,156 +57,130 @@ public sealed class DiscordBotClient : IBotClient
         _client?.Dispose();
     }
 
-    private async Task SendMessage(IEnumerable<ulong> channelIds,
-        string message)
-    {
-        if (_client == null) throw new Exception("Client was never started");
-        foreach (var channelId in channelIds)
-        {
-            if (await _client.GetChannelAsync(channelId) is not IMessageChannel channel)
-            {
-                _logger.LogWarning($"Channel {channelId} was not found");
-                continue;
-            }
-
-            var userMessage = await channel.SendMessageAsync(message);
-        }
-    }
-
-    public async Task SendMessageToUser(ulong userId, string message, CancellationToken cancellationToken = default)
-    {
-        var user = await GetUser(userId);
-
-        await user.SendMessageAsync(message);
-    }
-
     public async Task SendMessages(IEnumerable<string> messages, IEnumerable<ulong> channelIds,
         CancellationToken cancellationToken = default)
     {
         await SendMessages(messages, channelIds, m => m);
     }
 
-
-    public void RegisterReactRemoved(Func<string, ulong, ulong, Task> execution)
+    public async Task<bool> CanPostToChannel(ulong channelId, CancellationToken cancellationToken = default)
     {
-        if (_client == null) throw new Exception("Bot was not initialized");
-        _client.ReactionRemoved += async (message, channel, reaction) =>
+        if (_client == null) throw new InvalidOperationException("Client was never started");
+        if (await _client.GetChannelAsync(channelId) is not IGuildChannel channel) return false;
+        var botUser = await channel.Guild.GetCurrentUserAsync();
+        var permissions = botUser.GetPermissions(channel);
+        return permissions.ViewChannel && permissions.SendMessages;
+    }
+
+    public async Task RegisterCommands(
+        IReadOnlyList<BotCommandDefinition> commands,
+        Func<BotInteraction, Task<BotReply>> onInteraction,
+        Func<BotAutocompleteRequest, Task<IReadOnlyList<BotOptionChoice>>> onAutocomplete)
+    {
+        if (_client == null) throw new InvalidOperationException("Discord client was not started");
+
+        var definitions = commands.ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase);
+
+        // Bulk overwrite replaces the whole global command set atomically — any commands
+        // registered by an earlier build (the pre-/piu top-level commands) are dropped.
+        await _client.BulkOverwriteGlobalApplicationCommandsAsync(
+            commands.Select(DiscordCommandTranslator.ToProperties).Cast<ApplicationCommandProperties>().ToArray());
+
+        _client.SlashCommandExecuted += async command =>
         {
-            await execution(reaction.Emote.ToString() ?? string.Empty, reaction.UserId, reaction.MessageId);
-        };
-    }
-
-    public void RegisterReactAdded(Func<string, ulong, ulong, Task> execution)
-    {
-        if (_client == null) throw new Exception("Bot was not initialized");
-        _client.ReactionAdded += async (message, channel, reaction) =>
-        {
-            await execution(reaction.Emote.ToString() ?? string.Empty, reaction.UserId, reaction.MessageId);
-        };
-    }
-
-    public async Task SendFileToUser(ulong userId, Stream fileStream, string fileName, string? message = null,
-        CancellationToken cancellationToken = default)
-    {
-        var user = await GetUser(userId);
-
-        await user.SendFileAsync(fileStream, fileName, message);
-    }
-
-    public async Task RegisterSlashCommand(string name, string description, string response,
-        Func<ulong, Task> execution)
-    {
-        await RegisterSlashCommand(name, description, response, o => { },
-            async command => await execution(command.Channel.Id));
-    }
-
-    public async Task RegisterSlashCommand(string name, string description, string response,
-        Func<ulong, ulong, IDictionary<string, string>, Task> execution,
-        IEnumerable<(string name, string description, bool isRequired)> options,
-        bool requireChannelAdmin = false)
-    {
-        await RegisterSlashCommand(name, description, response, builder =>
-        {
-            if (requireChannelAdmin) builder.DefaultMemberPermissions = GuildPermission.ManageChannels;
-            foreach (var option in options)
+            if (!definitions.TryGetValue(command.CommandName, out var definition)) return;
+            var (path, options) = DiscordCommandTranslator.ResolveInvocation(command);
+            var ephemeral = DiscordCommandTranslator.IsEphemeral(definition, path);
+            try
             {
-                var optionBuilder = new SlashCommandOptionBuilder()
-                    .WithName(option.name)
-                    .WithDescription(option.description)
-                    .WithType(ApplicationCommandOptionType.String)
-                    .WithRequired(option.isRequired);
-                builder.AddOption(optionBuilder);
+                await command.DeferAsync(ephemeral);
+                var reply = await onInteraction(BuildInteraction(command, path, options));
+                await Followup(command, reply, ephemeral);
             }
-        }, async command =>
-        {
-            await execution(command.Channel.Id, command.User.Id,
-                command.Data.Options.ToDictionary(o => o.Name, o => o.Value.ToString() ?? string.Empty));
-        });
-    }
-
-    public async Task RegisterMenuSlashCommand(string name, string description, string response,
-        IEnumerable<(string label, string url)> menuButtons)
-    {
-        await RegisterSlashCommand(name, description, response, c => { }, _ => Task.CompletedTask,
-            builder =>
+            catch (Exception e)
             {
-                foreach (var button in menuButtons)
-                    builder.WithButton(button.label,
-                        style: ButtonStyle.Link, url: button.url);
-            });
-    }
+                _logger.LogError(e, "Error executing /{Command} {Path}", command.CommandName, string.Join(' ', path));
+                try
+                {
+                    await command.FollowupAsync("Something went wrong running that command.", ephemeral: ephemeral);
+                }
+                catch (Exception followupError)
+                {
+                    _logger.LogWarning(followupError, "Could not send the command error follow-up");
+                }
+            }
+        };
 
-    private async Task RegisterSlashCommand(string name, string description, string response,
-        Action<SlashCommandBuilder> builderOptions,
-        Func<SocketSlashCommand, Task> execution,
-        Action<ComponentBuilder>? componentOptions = null)
-    {
-        if (_client == null) throw new Exception("Discord client was not started");
-        var builder = new SlashCommandBuilder()
-            .WithName(name)
-            .WithDescription(description);
-        builderOptions(builder);
-
-        try
+        _client.AutocompleteExecuted += async interaction =>
         {
-            await _client.CreateGlobalApplicationCommandAsync(builder.Build());
-            _client.SlashCommandExecuted += async command =>
+            if (!definitions.ContainsKey(interaction.Data.CommandName)) return;
+            try
             {
-                if (command.CommandName == name)
-                    try
-                    {
-                        ComponentBuilder? componentBuilder = null;
-                        if (componentOptions != null)
-                        {
-                            componentBuilder = new ComponentBuilder();
-                            componentOptions(componentBuilder);
-                        }
-
-                        await command.RespondAsync(response, components: componentBuilder?.Build());
-                        await execution(command);
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogError(
-                            $"An exception while executing the command for {command.CommandName}: {e.Message} {e.StackTrace}",
-                            e);
-                    }
-            };
-        }
-        catch (Exception e)
-        {
-            _logger.LogError($"Error when registering the slash command {name}", e);
-        }
+                var (path, options) = DiscordCommandTranslator.ResolveAutocomplete(interaction);
+                var focused = interaction.Data.Current;
+                var request = new BotAutocompleteRequest(path, focused.Name,
+                    focused.Value?.ToString() ?? string.Empty, options,
+                    interaction.User.Id, interaction.Channel.Id, (interaction.Channel as IGuildChannel)?.GuildId);
+                var choices = await onAutocomplete(request);
+                await interaction.RespondAsync(choices.Take(25)
+                    .Select(c => new AutocompleteResult(c.Name, c.Value)));
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, "Autocomplete failed for /{Command}", interaction.Data.CommandName);
+                try
+                {
+                    await interaction.RespondAsync(Array.Empty<AutocompleteResult>());
+                }
+                catch (Exception respondError)
+                {
+                    _logger.LogWarning(respondError, "Could not send empty autocomplete response");
+                }
+            }
+        };
     }
 
-    private async Task<IUser> GetUser(ulong userId)
+    private static BotInteraction BuildInteraction(SocketSlashCommand command, IReadOnlyList<string> path,
+        IReadOnlyDictionary<string, string> options)
     {
-        if (_client == null) throw new Exception("Client was never started");
+        var guildUser = command.User as IGuildUser;
+        var canManage = guildUser != null && command.Channel is IGuildChannel guildChannel &&
+                        guildUser.GetPermissions(guildChannel).ManageChannel;
+        var display = guildUser?.DisplayName ?? command.User.GlobalName ?? command.User.Username;
+        return new BotInteraction(path, options, command.Channel.Id,
+            (command.Channel as IGuildChannel)?.GuildId, command.User.Id, display, canManage);
+    }
 
-        var user = await _client.GetUserAsync(userId);
-        if (user == null) throw new Exception($"User {userId} was not found when sending a message");
+    private async Task Followup(SocketSlashCommand command, BotReply reply, bool ephemeral)
+    {
+        if (reply.Card != null)
+        {
+            var (components, fallback) = DiscordRichMessageRenderer.Render(reply.Card, ReplaceEmojiTokens);
+            if (_configuration.RichScoreMessages)
+                try
+                {
+                    await command.FollowupAsync(components: components, flags: MessageFlags.ComponentsV2,
+                        ephemeral: ephemeral);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Rich command follow-up failed — falling back to plain text");
+                }
 
-        return user;
+            await command.FollowupAsync(TrimToLimit(ReplaceEmojiTokens(fallback)), ephemeral: ephemeral);
+            return;
+        }
+
+        await command.FollowupAsync(TrimToLimit(ReplaceEmojiTokens(reply.Text ?? "​")), ephemeral: ephemeral);
+    }
+
+    // Discord caps a message's content at 2000 characters; a card's text budget is
+    // enforced by the renderer, so this only ever clamps a long plain-text reply.
+    private static string TrimToLimit(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return "​";
+        return message.Length <= 2000 ? message : message[..1999] + "…";
     }
 
     private IDictionary<PhoenixLetterGrade, string> _letterGradeEmojis = new Dictionary<PhoenixLetterGrade, string>

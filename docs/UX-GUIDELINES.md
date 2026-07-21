@@ -67,6 +67,7 @@ Percentile semantics are the established `ScoreRankingRecord.Ranking` convention
 **4. No raw color literals.** ⚙ *Ratcheted by `UiColorTokenTests`.* UI code under `Pages/`, `Components/`, and `Shared/` reads theme tokens, not hex strings or `Colors.*` constants. The allowlist is launch-day debt and only shrinks; each page overhaul burns down its own entries. (Exception by design: the Phoenix Recap deck is self-styled slide art and stays allowlisted.)
 
 **5. Density is a setting, not a redesign.** Three sanctioned densities — **Comfortable** (cards), **Compact** (the jacket "sticker sheet"), **Table** (rows) — stored per user **per page** in UiSettings under `Density__<Page>` (e.g. `Density__TierLists`): players use different densities for different tasks, so the choice travels with the page, not the site. A collection page picks its default and honors the stored choice; it never invents a fourth mode. (Landed with the tier-list overhaul; the previously reserved `Universal__Density` key was retired unshipped.)
+   **A leaderboard is compact rows, not a table, and the Official Leaderboards rankings board is the golden standard** (owner directive, official-leaderboards field test rounds 5–6). Every board of ranked entities — rankings, chart boards, weekly boards — renders one dense flex row per entry: place and week delta left, identity next, payload (rating, score, archetype chip) right-aligned in a tail, wrapping instead of side-scrolling, no density toggle and no per-row card. When a board genuinely needs table semantics — sortable columns, like a player's placements sheet — it keeps the `<table>` but wears the same skin: flat transparent surface, hairline separators (`--mix-ink` at ~12%), tight row rhythm, quiet uppercase headers. Never a card around a board, never heavier lines than the rankings rows. Real tables — numeric matrices like the What It Takes ladder — are exempt: they *are* tables and keep table styling. 
 
 **6. Filters are furniture.** The filter entry point and its active-filter chips (labeled, removable) sit in a content bar directly above the list they affect; the full panel lives in a drawer; at phone widths the bottom action bar keeps filters thumb-reachable. Filters never push the answer below the fold. The sticky toolbar is reserved for controls that change *what data* you're looking at — presentation controls (density, download, filters) travel with the content instead. (Amended in the tier-list overhaul field test; previously the filter row itself was sticky.)
 
@@ -115,10 +116,12 @@ The widget home page ([design doc](design/HomePageWidgets/README.md)) adds a voc
   `ChartTypeHex` so red/green S/D reads the same everywhere.
 - **Chart rows/cards in widgets open `ChartDetailsDialog` on click** (browse mode only — edit mode
   owns clicks for arranging). Every catalog widget inherits this rule.
-- **Per-chart leaderboards use the shared `LeaderboardDialog`** (top ten plus your own row when you
-  sit outside it): the caller passes the entries and a sort direction, so an inverted board — Daily
-  Step's weekly **Limbo Day**, where the lowest *passing* score wins — ranks ascending without a
-  second component.
+- **Per-chart leaderboards use the shared `LeaderboardDialog`** (every entry, your own row glowing
+  in place — the `MaxPlaces` cap was retired in the challenges-hub overhaul; the dialog scrolls):
+  the caller passes the entries and a sort direction, so an inverted board — Daily Step's weekly
+  **Limbo Day**, where the lowest *passing* score wins — ranks ascending without a second component.
+  Rows wear the **trust ladder** when the caller tracks provenance: ✔ officially imported > 📷 photo
+  attached (the icon opens the proof) > nothing for a bare self-report (weekly-charts-overhaul.md M5).
 - **Drag is swap, not insertion**: dropping widget A on widget B trades their places; bystanders
   never move. The arrows remain the accessible and mobile reorder path.
 - **Quiet scrolling**: widget inner scrollers use `dash-scroll` — no scrollbar at rest, a thin themed
@@ -132,3 +135,25 @@ The widget home page ([design doc](design/HomePageWidgets/README.md)) adds a voc
   PG) and colors the "% have it" rarity through the rarity ramp — the on-site feed and the Discord cards
   read as one system. Persisted win data is structured, never pre-rendered text: the row localizes every
   caption (a UI string never rides the DB payload).
+
+## 5. Challenge boards (Weekly Charts + Daily Step)
+
+The `/WeeklyCharts` challenges hub ([design](design/weekly-charts-overhaul.md)) is the first page
+rebuilt as **static SSR + one island**, and it adds a small vocabulary of its own:
+
+- **The page is a static region** (static-shell.md rules): `--mix-*` and semantic tokens only, no
+  `--mud-*`; every number is printed alongside its color; no row depends on a Mud popover. The one
+  interactive root is `ChallengeDialogHost` — Record, the shared board and chart-details dialogs, and
+  the admin rotate — reached from static `data-challenge-*` controls through `challenge-board.js`.
+- **State that changes *what data* you see is URL state**, so it is shareable and crawlable: the week
+  (`?week=`), the monthly type (`?type=`), the suggested filter (`?suggested=all`), the pool
+  (`?pool=1`). Presentation travels separately — density via `Density__WeeklyCharts` (rule 5), swapped
+  in JS and persisted through `POST /Preferences/Set`.
+- **Chart identity opens `ChartDetailsDialog` from everywhere** — every density and the Daily strip —
+  but the jacket/name stay real `/Chart/{id}` anchors so a crawler follows the internal-link mesh; the
+  island upgrades the click.
+- **The trust ladder** (✔ imported · 📷 photo proof · blank) is the shared board vocabulary — see the
+  `LeaderboardDialog` note in §4. It pairs an icon with a printed score, never color alone (rule 8).
+- **Manual competitive entries are score + plate, a pass** — no broken, no plated-broken (those are
+  personal-recording concerns). Photos are optional proof, not a gate; the enforcement lever for
+  suspected cheaters is stated in the Record dialog, not yet built.

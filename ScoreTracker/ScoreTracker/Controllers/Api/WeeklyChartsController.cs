@@ -58,7 +58,7 @@ public sealed class WeeklyChartsController : Controller
         {
             ChartId = e.ChartId,
             Player = new PlayerDto(users[e.UserId]),
-            Score = new ScoreDto(e.Score, e.Plate, e.IsBroken)
+            Score = new ScoreDto(e.Score, e.Plate, e.IsBroken, mix)
         }));
     }
 

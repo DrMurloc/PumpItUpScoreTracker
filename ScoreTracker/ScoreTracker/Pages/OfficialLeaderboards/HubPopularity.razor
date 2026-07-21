@@ -301,10 +301,11 @@ else
     }
     else
     {
-        <MudPaper Class="pa-2">
+        <div>
             <MudText Typo="Typo.overline" Class="d-block px-2 pt-1">@L["Leaderboard"]</MudText>
-            <MudTable T="Row" Items="VisibleRows" Dense="true" Breakpoint="Breakpoint.None"
-                      RowsPerPage="50" RowClass="olb-poprow" Class="olb-sticky-second olb-pager-tight">
+            <MudTable T="Row" Items="VisibleRows" Dense="true" Breakpoint="Breakpoint.None" Elevation="0"
+                      RowsPerPage="50" RowClass="olb-poprow"
+                      Class="olb-board-table olb-pager-tight">
                 <HeaderContent>
                     <MudTh Style="text-align:right">@L["Place"]</MudTh>
                     <MudTh>@L["Chart"]</MudTh>
@@ -321,7 +322,7 @@ else
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                             <SongImage Song="context.Chart.Song" Small="true"/>
                             <DifficultyBubble Chart="context.Chart" Small="true"/>
-                            <MudText Typo="Typo.body1"><b>@context.Chart.Song.Name</b></MudText>
+                            <MudText Typo="Typo.body1" Class="olb-song-text"><b>@context.Chart.Song.Name</b></MudText>
                         </MudStack>
                     </MudTd>
                     <MudTd Class="olb-pop-artist">
@@ -353,7 +354,7 @@ else
                     <MudTablePager HideRowsPerPage="true"/>
                 </PagerContent>
             </MudTable>
-        </MudPaper>
+        </div>
     }
 }
 

@@ -1,0 +1,127 @@
+@namespace ScoreTracker.Web.Components.Challenges
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.WeeklyChallenge.Contracts
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Theming
+
+@* Daily Step as a rail card (weekly-charts-overhaul.md §12.2): the homepage widget's card
+   grammar — kicker head with the ⊕/🏆 icon pair (M15), chart identity, the top five, your
+   standing pinned when you sit past them. Limbo flips the card's edge and chip. Static: every
+   control is inert markup here; the island wires the clicks (§3.3). *@
+
+<div class="challenge-railcard @(View?.Board.IsLimbo == true ? "limbo" : "")" id="daily">
+    <div class="challenge-railhead">
+        <span class="challenge-kicker">@L["Daily Step"]</span>
+        <span class="spacer"></span>
+        @if (Chart != null && IsLoggedIn)
+        {
+            <button class="challenge-iconbtn rec" data-challenge-record="@Chart.Id" data-daily="true"
+                    title="@L["Record"]" aria-label="@L["Record"]">
+                <MudIcon Icon="@Icons.Material.Filled.AddCircleOutline" Size="Size.Small"></MudIcon>
+            </button>
+        }
+        @if (Chart != null)
+        {
+            <button class="challenge-iconbtn tro" data-challenge-board="@Chart.Id" data-daily="true"
+                    title="@L["Leaderboard"]" aria-label="@L["Leaderboard"]">
+                <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small"></MudIcon>
+            </button>
+        }
+    </div>
+
+    @if (View == null || Chart == null)
+    {
+        <div class="challenge-empty">@L["Today's Step posts at midnight."]</div>
+    }
+    else
+    {
+        <div class="challenge-railchart">
+            <a class="challenge-rail-jacket" href="@Chart.CanonicalPath()" data-challenge-chart="@Chart.Id"
+               style="background-image:url('@Chart.Song.ImagePath')" aria-label="@Chart.Song.Name"></a>
+            <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
+            <span class="challenge-railchart-id">
+                <a class="name" href="@Chart.CanonicalPath()" data-challenge-chart="@Chart.Id">@Chart.Song.Name</a>
+                @if (ResetsIn != null)
+                {
+                    <span class="sub">@L["resets in {0}", ResetsIn]</span>
+                }
+            </span>
+        </div>
+        @if (View.Board.IsLimbo)
+        {
+            <span class="challenge-limbo-chip">@L["Limbo — lowest pass wins"]</span>
+        }
+
+        @if (!View.Rows.Any())
+        {
+            <div class="challenge-empty">@L["No entries yet."]</div>
+        }
+        else
+        {
+            <div class="challenge-lb">
+                @foreach (var row in View.Rows.Take(TopCount))
+                {
+                    @LbRow(row)
+                }
+            </div>
+            @if (View.MyRow != null && View.MyRow.Place > TopCount)
+            {
+                <div class="challenge-lb-divider">@L["Your standing"]</div>
+                <div class="challenge-lb">@LbRow(View.MyRow)</div>
+            }
+        }
+
+        <div class="challenge-railfoot">
+            <span>@L["{0} on board", View.Rows.Count]</span>
+            <span class="spacer"></span>
+            <button class="challenge-ghostbtn" data-challenge-board="@Chart.Id" data-daily="true">
+                <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small"></MudIcon>@L["Full board"]
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    private const int TopCount = 5;
+
+    [Parameter] public DailyStepBoardView? View { get; set; }
+
+    /// <summary>The board's chart, resolved from the catalog by the page; null renders the empty state.</summary>
+    [Parameter] public Chart? Chart { get; set; }
+
+    /// <summary>Server-computed "resets in …" text (the page owns the clock seam); null omits it.</summary>
+    [Parameter] public string? ResetsIn { get; set; }
+
+    [Parameter] public bool IsLoggedIn { get; set; }
+
+    /// <summary>The caller — their row wears the you-glow wherever it renders.</summary>
+    [Parameter] public Guid? UserId { get; set; }
+
+    /// <summary>User ids in a community you share — their rows glow green.</summary>
+    [Parameter] public IReadOnlySet<Guid>? CommunityUserIds { get; set; }
+
+    private double Fraction(int place) => View!.Rows.Count <= 0 ? 0 : 1.0 - (double)place / View.Rows.Count;
+
+    private string RowClass(DailyStepBoardRow row) => row.Player?.Id == UserId ? "mine"
+        : CommunityUserIds?.Contains(row.Player?.Id ?? Guid.Empty) == true ? "community" : "";
+
+    private RenderFragment LbRow(DailyStepBoardRow row) =>@<div class="challenge-lb-row @RowClass(row)">
+        <span class="challenge-lb-place" style="@ThemeScales.RarityStyle(Fraction(row.Place))">@row.Place</span>
+        <ChallengeAvatar Player="row.Player"></ChallengeAvatar>
+        <span class="challenge-lb-name">
+            @if (row.Player != null)
+            {
+                <UserLabel User="row.Player"></UserLabel>
+            }
+            else
+            {
+                @("—")
+            }
+        </span>
+        <span class="challenge-lb-score"><ScoreBreakdown Score="row.Entry.Score" Plate="row.Entry.Plate"
+                                                 Mix="Chart?.Mix ?? MixEnum.Phoenix"
+                                                         IsBroken="row.Entry.IsBroken" OneLine="true" ShowScore="true" Height="15"></ScoreBreakdown></span>
+    </div>;
+}

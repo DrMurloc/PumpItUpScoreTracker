@@ -4466,17 +4466,20 @@
   <data name="Best place" xml:space="preserve">
     <value>Miglior posizione</value>
   </data>
-  <data name="Board #1s" xml:space="preserve">
-    <value>Primi posti</value>
+  <data name="Chart Board #1s" xml:space="preserve">
+    <value>Primi posti nelle classifiche dei chart</value>
   </data>
-  <data name="Board placements" xml:space="preserve">
-    <value>Posizioni in classifica</value>
+  <data name="Chart Boards" xml:space="preserve">
+    <value>Classifiche dei chart</value>
   </data>
-  <data name="Board rank - lower is better" xml:space="preserve">
-    <value>Posizione in classifica - più bassa è, meglio è</value>
+  <data name="Chart board placements" xml:space="preserve">
+    <value>Posizioni nelle classifiche dei chart</value>
   </data>
-  <data name="boards" xml:space="preserve">
-    <value>classifiche</value>
+  <data name="PUMBILITY rank - lower is better" xml:space="preserve">
+    <value>Posizione PUMBILITY - più bassa è, meglio è</value>
+  </data>
+  <data name="chart boards" xml:space="preserve">
+    <value>classifiche dei chart</value>
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Classifiche</value>
@@ -4511,8 +4514,8 @@
   <data name="Last import failed" xml:space="preserve">
     <value>L'ultimo import non è riuscito</value>
   </data>
-  <data name="level 24+, first ever, SS and up" xml:space="preserve">
-    <value>livello 24+, primo nella storia, da SS in su</value>
+  <data name="level 24+, first ever, any grade" xml:space="preserve">
+    <value>livello 24+, primo nella storia, qualsiasi grade</value>
   </data>
   <data name="level 24+, must beat the standing record" xml:space="preserve">
     <value>livello 24+, bisogna battere il record in carica</value>
@@ -4520,8 +4523,8 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>Collegato a un account del sito</value>
   </data>
-  <data name="Most boards climbed" xml:space="preserve">
-    <value>Più classifiche scalate</value>
+  <data name="Biggest board climbers" xml:space="preserve">
+    <value>Maggiori scalate nelle classifiche dei chart</value>
   </data>
   <data name="Movers of the week" xml:space="preserve">
     <value>Scalatori della settimana</value>
@@ -4553,8 +4556,8 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>Ancora nessuna classifica - compare dopo il primo import settimanale.</value>
   </data>
-  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
-    <value>Nessuno ha superato la soglia di scalata questa settimana.</value>
+  <data name="Nobody climbed a chart board this week." xml:space="preserve">
+    <value>Nessuno è salito in una classifica dei chart questa settimana.</value>
   </data>
   <data name="Official Leaderboards Admin" xml:space="preserve">
     <value>Amministrazione classifiche ufficiali</value>
@@ -4760,6 +4763,801 @@
   <data name="Biased towards larger folders" xml:space="preserve">
     <value>Sbilanciato verso le cartelle grandi</value>
   </data>
+  <data name="Add the PIU Scores bot to your Discord server" xml:space="preserve">
+    <value>Aggiungi il bot di PIU Scores al tuo server Discord</value>
+  </data>
+  <data name="Invite the bot, then run /piu register in any channel to start its feeds and commands." xml:space="preserve">
+    <value>Invita il bot, poi esegui /piu register in un canale per attivare i suoi feed e comandi.</value>
+  </data>
+  <data name="Add the bot" xml:space="preserve">
+    <value>Aggiungi il bot</value>
+  </data>
+  <data name="This channel now receives **{0} — {1}**. {2}" xml:space="preserve">
+    <value>Questo canale ora riceve **{0} — {1}**. {2}</value>
+  </data>
+  <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
+    <value>I risultati e i nuovi chart vengono pubblicati quando la classifica ruota ogni lunedì.</value>
+  </data>
+  <data name="Yesterday's board and today's chart post each day." xml:space="preserve">
+    <value>La classifica di ieri e il chart di oggi vengono pubblicati ogni giorno.</value>
+  </data>
+  <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
+    <value>Il riepilogo viene pubblicato dopo la scansione settimanale della domenica.</value>
+  </data>
+  <data name="This channel was updated to receive notifications for the {0} community in PIU Scores!" xml:space="preserve">
+    <value>Questo canale ora riceve le notifiche della community {0} su PIU Scores!</value>
+  </data>
+  <data name="This channel no longer receives notifications for the {0} community in PIU Scores" xml:space="preserve">
+    <value>Questo canale non riceve più le notifiche della community {0} su PIU Scores</value>
+  </data>
+  <data name="That command isn't available yet." xml:space="preserve">
+    <value>Questo comando non è ancora disponibile.</value>
+  </data>
+  <data name="{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} Max Combo" xml:space="preserve">
+    <value>{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, combo massima {5:N0}</value>
+  </data>
+  <data name="{0:N0} Lost to Greats ({1}%)" xml:space="preserve">
+    <value>{0:N0} persi per i Greats ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Goods ({1}%)" xml:space="preserve">
+    <value>{0:N0} persi per i Goods ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Bads ({1}%)" xml:space="preserve">
+    <value>{0:N0} persi per i Bads ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Misses ({1}%)" xml:space="preserve">
+    <value>{0:N0} persi per i Misses ({1}%)</value>
+  </data>
+  <data name="{0:N0} Lost to Combo ({1}%)" xml:space="preserve">
+    <value>{0:N0} persi per la combo ({1}%)</value>
+  </data>
+  <data name="{0:N0} Estimated Arrow Presses" xml:space="preserve">
+    <value>{0:N0} frecce stimate</value>
+  </data>
+  <data name="That scoring configuration is invalid." xml:space="preserve">
+    <value>Questa configurazione di punteggio non è valida.</value>
+  </data>
+  <data name="Give a song name." xml:space="preserve">
+    <value>Inserisci il nome di una canzone.</value>
+  </data>
+  <data name="No chart found for &quot;{0}&quot; on {1}." xml:space="preserve">
+    <value>Nessun chart trovato per &quot;{0}&quot; su {1}.</value>
+  </data>
+  <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
+    <value>Scegli una difficoltà dall'elenco per vedere i dettagli e i chart simili.</value>
+  </data>
+  <data name="Scoring level **{0:0.0}** (listed {1})" xml:space="preserve">
+    <value>Livello di punteggio **{0:0.0}** (elencato {1})</value>
+  </data>
+  <data name="Pass **{0}**" xml:space="preserve">
+    <value>Pass **{0}**</value>
+  </data>
+  <data name="Similar charts" xml:space="preserve">
+    <value>Chart simili</value>
+  </data>
+  <data name="Open chart page" xml:space="preserve">
+    <value>Apri la pagina del chart</value>
+  </data>
+  <data name="No charts matched those settings." xml:space="preserve">
+    <value>Nessun chart corrisponde a queste impostazioni.</value>
+  </data>
+  <data name="Drew 1 chart" xml:space="preserve">
+    <value>1 chart estratto</value>
+  </data>
+  <data name="Drew {0} charts" xml:space="preserve">
+    <value>{0} chart estratti</value>
+  </data>
+  <data name="Drew {0} — {1}" xml:space="preserve">
+    <value>{0} estratti — {1}</value>
+  </data>
+  <data name="Your saved randomizer settings" xml:space="preserve">
+    <value>Le tue impostazioni salvate del randomizer</value>
+  </data>
+  <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
+    <value>{0} · livelli {1}–{2} · {3}</value>
+  </data>
+  <data name="Co-op" xml:space="preserve">
+    <value>Co-op</value>
+  </data>
+  <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
+    <value>Non hai un preset salvato chiamato &quot;{0}&quot;.</value>
+  </data>
+  <data name="&quot;{0}&quot; didn't match any charts right now." xml:space="preserve">
+    <value>&quot;{0}&quot; non corrisponde a nessun chart al momento.</value>
+  </data>
+  <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
+    <value>Nessun suggerimento al momento — prova un altro obiettivo o importa prima più punteggi.</value>
+  </data>
+  <data name="Suggested for you — {0}" xml:space="preserve">
+    <value>Suggeriti per te — {0}</value>
+  </data>
+  <data name="based on your scores" xml:space="preserve">
+    <value>in base ai tuoi punteggi</value>
+  </data>
+  <data name="Open Suggested Charts" xml:space="preserve">
+    <value>Apri i chart suggeriti</value>
+  </data>
+  <data name="Done — this channel now receives {0} for {1}." xml:space="preserve">
+    <value>Fatto — questo canale ora riceve {0} per {1}.</value>
+  </data>
+  <data name="Unknown feed." xml:space="preserve">
+    <value>Feed sconosciuto.</value>
+  </data>
+  <data name="Pick a mix." xml:space="preserve">
+    <value>Scegli un Mix.</value>
+  </data>
+  <data name="Give a community name or an invite code." xml:space="preserve">
+    <value>Inserisci il nome di una community o un codice di invito.</value>
+  </data>
+  <data name="Done — this channel is registered for that community." xml:space="preserve">
+    <value>Fatto — questo canale è registrato per quella community.</value>
+  </data>
+  <data name="That community wasn't found, or the invite code is wrong." xml:space="preserve">
+    <value>Quella community non è stata trovata o il codice di invito è errato.</value>
+  </data>
+  <data name="You need the Manage Channels permission in this server to do that." xml:space="preserve">
+    <value>Ti serve il permesso Gestire i canali in questo server per farlo.</value>
+  </data>
+  <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
+    <value>Non posso ancora pubblicare in questo canale — dammi i permessi Visualizzare il canale e Inviare messaggi qui, poi riesegui il comando.</value>
+  </data>
+  <data name="Removed {0} for {1} from this channel." xml:space="preserve">
+    <value>{0} per {1} rimosso da questo canale.</value>
+  </data>
+  <data name="That feed wasn't registered here." xml:space="preserve">
+    <value>Quel feed non era registrato qui.</value>
+  </data>
+  <data name="Removed the {0} community feed from this channel." xml:space="preserve">
+    <value>Feed della community {0} rimosso da questo canale.</value>
+  </data>
+  <data name="That community registration wasn't found." xml:space="preserve">
+    <value>Quella registrazione della community non è stata trovata.</value>
+  </data>
+  <data name="Pick a registration to remove from the list." xml:space="preserve">
+    <value>Scegli dall'elenco una registrazione da rimuovere.</value>
+  </data>
+  <data name="This channel isn't registered for anything yet. Use /piu register to add a feed." xml:space="preserve">
+    <value>Questo canale non è ancora registrato per nulla. Usa /piu register per aggiungere un feed.</value>
+  </data>
+  <data name="This channel receives" xml:space="preserve">
+    <value>Questo canale riceve</value>
+  </data>
+  <data name="Remove one with /piu unregister" xml:space="preserve">
+    <value>Rimuovine una con /piu unregister</value>
+  </data>
+  <data name="PIU Scores tools" xml:space="preserve">
+    <value>Strumenti PIU Scores</value>
+  </data>
+  <data name="Calculate a Phoenix score from a result screen" xml:space="preserve">
+    <value>Calcola un punteggio Phoenix da una schermata dei risultati</value>
+  </data>
+  <data name="Find a chart and its pages" xml:space="preserve">
+    <value>Trova un chart e le sue pagine</value>
+  </data>
+  <data name="Draw a random set of charts" xml:space="preserve">
+    <value>Estrai un set casuale di chart</value>
+  </data>
+  <data name="Personalized chart suggestions (private)" xml:space="preserve">
+    <value>Suggerimenti di chart personalizzati (privato)</value>
+  </data>
+  <data name="Register this channel for a feed" xml:space="preserve">
+    <value>Registra questo canale per un feed</value>
+  </data>
+  <data name="Community score and title notifications" xml:space="preserve">
+    <value>Notifiche di punteggi e titoli della community</value>
+  </data>
+  <data name="Weekly Charts — results and the new lineup" xml:space="preserve">
+    <value>Chart settimanali — risultati e nuova selezione</value>
+  </data>
+  <data name="Daily Step — yesterday's board and today's chart" xml:space="preserve">
+    <value>Passo Giornaliero — la classifica di ieri e il chart di oggi</value>
+  </data>
+  <data name="Official leaderboards — the weekly digest" xml:space="preserve">
+    <value>Classifiche ufficiali — il riepilogo settimanale</value>
+  </data>
+  <data name="Stop one of this channel's feeds" xml:space="preserve">
+    <value>Interrompi uno dei feed di questo canale</value>
+  </data>
+  <data name="Show what this channel is registered for" xml:space="preserve">
+    <value>Mostra a cosa è registrato questo canale</value>
+  </data>
+  <data name="Song name" xml:space="preserve">
+    <value>Nome della canzone</value>
+  </data>
+  <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
+    <value>Quale Mix (predefinito Phoenix 2)</value>
+  </data>
+  <data name="Which mix" xml:space="preserve">
+    <value>Quale Mix</value>
+  </data>
+  <data name="How many (1–10, default 3)" xml:space="preserve">
+    <value>Quanti (1–10, predefinito 3)</value>
+  </data>
+  <data name="Chart type (default Singles)" xml:space="preserve">
+    <value>Tipo di chart (predefinito Singles)</value>
+  </data>
+  <data name="Singles or Doubles" xml:space="preserve">
+    <value>Singles o Doubles</value>
+  </data>
+  <data name="Lowest level" xml:space="preserve">
+    <value>Livello minimo</value>
+  </data>
+  <data name="Highest level" xml:space="preserve">
+    <value>Livello massimo</value>
+  </data>
+  <data name="One of your saved randomizer presets" xml:space="preserve">
+    <value>Uno dei tuoi preset salvati del randomizer</value>
+  </data>
+  <data name="What to work on (default Title Hunt)" xml:space="preserve">
+    <value>Su cosa lavorare (predefinito Title Hunt)</value>
+  </data>
+  <data name="Community name" xml:space="preserve">
+    <value>Nome della community</value>
+  </data>
+  <data name="Invite code (private communities only)" xml:space="preserve">
+    <value>Codice di invito (solo community private)</value>
+  </data>
+  <data name="Language for this channel's posts (default English)" xml:space="preserve">
+    <value>Lingua dei post di questo canale (predefinito inglese)</value>
+  </data>
+  <data name="Perfect count" xml:space="preserve">
+    <value>Numero di Perfects</value>
+  </data>
+  <data name="Great count" xml:space="preserve">
+    <value>Numero di Greats</value>
+  </data>
+  <data name="Good count" xml:space="preserve">
+    <value>Numero di Goods</value>
+  </data>
+  <data name="Bad count" xml:space="preserve">
+    <value>Numero di Bads</value>
+  </data>
+  <data name="Miss count" xml:space="preserve">
+    <value>Numero di Misses</value>
+  </data>
+  <data name="Max combo" xml:space="preserve">
+    <value>Combo massima</value>
+  </data>
+  <data name="Calories burned (optional — estimates step count)" xml:space="preserve">
+    <value>Calorie bruciate (facoltativo — stima il numero di passi)</value>
+  </data>
+  <data name="Which registration to remove" xml:space="preserve">
+    <value>Quale registrazione rimuovere</value>
+  </data>
+  <data name="Weekly Charts — final board" xml:space="preserve">
+    <value>Chart settimanali — classifica finale</value>
+  </data>
+  <data name="{0} players · week of {1}" xml:space="preserve">
+    <value>{0} giocatori · settimana del {1}</value>
+  </data>
+  <data name="Card {0} of {1}" xml:space="preserve">
+    <value>Scheda {0} di {1}</value>
+  </data>
+  <data name="{0} more charts had entries" xml:space="preserve">
+    <value>altri {0} chart hanno avuto punteggi</value>
+  </data>
+  <data name="one per level bucket" xml:space="preserve">
+    <value>uno per fascia di livello</value>
+  </data>
+  <data name="The new board is being drawn." xml:space="preserve">
+    <value>La nuova classifica è in fase di estrazione.</value>
+  </data>
+  <data name="resets Monday midnight ET" xml:space="preserve">
+    <value>si azzera lunedì a mezzanotte ET</value>
+  </data>
+  <data name="Yesterday" xml:space="preserve">
+    <value>Ieri</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Oggi</value>
+  </data>
+  <data name="Limbo (lowest passing won)" xml:space="preserve">
+    <value>Limbo (ha vinto il pass più basso)</value>
+  </data>
+  <data name="**Limbo Day** — lowest passing score wins. No breaking." xml:space="preserve">
+    <value>**Giorno Limbo** — vince il punteggio di pass più basso. Senza break.</value>
+  </data>
+  <data name="Highest score wins." xml:space="preserve">
+    <value>Vince il punteggio più alto.</value>
+  </data>
+  <data name="yesterday's board settled" xml:space="preserve">
+    <value>la classifica di ieri è chiusa</value>
+  </data>
+  <data name="resets midnight ET" xml:space="preserve">
+    <value>si azzera a mezzanotte ET</value>
+  </data>
+  <data name="Daily Step board" xml:space="preserve">
+    <value>Classifica del Passo Giornaliero</value>
+  </data>
+  <data name="This week on the official boards" xml:space="preserve">
+    <value>Questa settimana nelle classifiche ufficiali</value>
+  </data>
+  <data name="vs {0}" xml:space="preserve">
+    <value>vs {0}</value>
+  </data>
+  <data name="first week" xml:space="preserve">
+    <value>prima settimana</value>
+  </data>
+  <data name="swept Sunday" xml:space="preserve">
+    <value>scansione della domenica</value>
+  </data>
+  <data name="PUMBILITY top 10" xml:space="preserve">
+    <value>Top 10 PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY movers" xml:space="preserve">
+    <value>Movimenti PUMBILITY</value>
+  </data>
+  <data name="**{0}** climbed {1} chart boards (+{2})" xml:space="preserve">
+    <value>**{0}** ha scalato {1} classifiche dei chart (+{2})</value>
+  </data>
+  <data name="World firsts &amp; new #1s" xml:space="preserve">
+    <value>Prime mondiali e nuovi #1</value>
+  </data>
+  <data name="World First" xml:space="preserve">
+    <value>World First</value>
+  </data>
+  <data name="{0} folder first" xml:space="preserve">
+    <value>primo della cartella {0}</value>
+  </data>
+  <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
+    <value>Nuovo #1 — **{0}** su {1} · {2:N0}</value>
+  </data>
+  <data name=", dethroning {0}" xml:space="preserve">
+    <value>, spodestando {0}</value>
+  </data>
+  <data name="To make the top 1000" xml:space="preserve">
+    <value>Per entrare nella top 1000</value>
+  </data>
+  <data name="**50× AAA at Lv.{0}**" xml:space="preserve">
+    <value>**50× AAA al Lv.{0}**</value>
+  </data>
+  <data name="**50× SSS at Lv.{0}**" xml:space="preserve">
+    <value>**50× SSS al Lv.{0}**</value>
+  </data>
+  <data name="PIU Scores official mirror" xml:space="preserve">
+    <value>mirror ufficiale PIU Scores</value>
+  </data>
+  <data name="This week" xml:space="preserve">
+    <value>Questa settimana</value>
+  </data>
+  <data name="What it takes" xml:space="preserve">
+    <value>Cosa serve</value>
+  </data>
+  <data name="a chart" xml:space="preserve">
+    <value>un chart</value>
+  </data>
+  <data name="**{0}** completed" xml:space="preserve">
+    <value>**{0}** completato</value>
+  </data>
+  <data name="**{0}** paragon → {1}" xml:space="preserve">
+    <value>Paragon **{0}** → {1}</value>
+  </data>
+  <data name="1 title" xml:space="preserve">
+    <value>1 titolo</value>
+  </data>
+  <data name="{0} titles" xml:space="preserve">
+    <value>{0} titoli</value>
+  </data>
+  <data name="1 paragon" xml:space="preserve">
+    <value>1 paragon</value>
+  </data>
+  <data name="{0} paragons" xml:space="preserve">
+    <value>{0} paragon</value>
+  </data>
+  <data name="See more" xml:space="preserve">
+    <value>Vedi altro</value>
+  </data>
+  <data name="passed {0:N0} · upscored {1:N0}" xml:space="preserve">
+    <value>{0:N0} passati · {1:N0} migliorati</value>
+  </data>
+  <data name="passed 1 chart" xml:space="preserve">
+    <value>1 chart passato</value>
+  </data>
+  <data name="passed {0:N0} charts" xml:space="preserve">
+    <value>{0:N0} chart passati</value>
+  </data>
+  <data name="upscored 1 chart" xml:space="preserve">
+    <value>1 chart migliorato</value>
+  </data>
+  <data name="upscored {0:N0} charts" xml:space="preserve">
+    <value>{0:N0} chart migliorati</value>
+  </data>
+  <data name="updated 1 chart" xml:space="preserve">
+    <value>1 chart aggiornato</value>
+  </data>
+  <data name="updated {0:N0} charts" xml:space="preserve">
+    <value>{0:N0} chart aggiornati</value>
+  </data>
+  <data name="**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**Singles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**Competitivo Singles** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**Doubles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**Competitivo Doubles** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**All passed!**" xml:space="preserve">
+    <value>**Tutti passati!**</value>
+  </data>
+  <data name="**All {0} or better**" xml:space="preserve">
+    <value>**Tutti {0} o meglio**</value>
+  </data>
+  <data name="**#{0}** on {1} {2} weekly" xml:space="preserve">
+    <value>**#{0}** su {1} {2} settimanale</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
+    <value>**#{0}** su {1} {2} Passo Giornaliero</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step (Limbo)" xml:space="preserve">
+    <value>**#{0}** su {1} {2} Passo Giornaliero (Limbo)</value>
+  </data>
+  <data name="{0} {1}% → **{2}%**" xml:space="preserve">
+    <value>{0} {1}% → **{2}%**</value>
+  </data>
+  <data name="More scores" xml:space="preserve">
+    <value>Altri punteggi</value>
+  </data>
+  <data name="+{0} more: {1}" xml:space="preserve">
+    <value>+{0} altri: {1}</value>
+  </data>
+  <data name="\* = reclears" xml:space="preserve">
+    <value>\* = reclear</value>
+  </data>
+  <data name="#{0} in your PUMBILITY" xml:space="preserve">
+    <value>#{0} nel tuo PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY top 50" xml:space="preserve">
+    <value>Top 50 PUMBILITY</value>
+  </data>
+  <data name="Top scores among peers" xml:space="preserve">
+    <value>Punteggi alti tra i pari</value>
+  </data>
+  <data name="PG · {0} of {1} peers have it" xml:space="preserve">
+    <value>PG · {0} pari su {1} ce l'hanno</value>
+  </data>
+  <data name="#{0} of {1} peers" xml:space="preserve">
+    <value>#{0} su {1} pari</value>
+  </data>
+  <data name="Folder debut" xml:space="preserve">
+    <value>Debutto nella cartella</value>
+  </data>
+  <data name="Raised competitive level" xml:space="preserve">
+    <value>Livello competitivo in aumento</value>
+  </data>
+  <data name="Biggest gain of the session" xml:space="preserve">
+    <value>Miglior guadagno della sessione</value>
+  </data>
+  <data name="Title progress" xml:space="preserve">
+    <value>Progresso del titolo</value>
+  </data>
+  <data name="First" xml:space="preserve">
+    <value>Primo</value>
+  </data>
+  <data name="Second" xml:space="preserve">
+    <value>Secondo</value>
+  </data>
+  <data name="Third" xml:space="preserve">
+    <value>Terzo</value>
+  </data>
+  <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
+    <value>{0} ha ottenuto {1} {2} sull'UCS {4} {5} di {3}</value>
+  </data>
+  <data name="Hot Streak" xml:space="preserve">
+    <value>Striscia vincente</value>
+  </data>
+  <data name="Suggested · Hot Streak" xml:space="preserve">
+    <value>Suggeriti · Striscia vincente</value>
+  </data>
+  <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
+    <value>Altri chart come quelli che hai stracciato di recente rispetto ai tuoi pari.</value>
+  </data>
+  <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
+    <value>Ancora nessuna prestazione degna di nota: datti una spinta per ricevere suggerimenti!</value>
+  </data>
+  <data name="Standout bar" xml:space="preserve">
+    <value>Soglia di spicco</value>
+  </data>
+  <data name="Count a chart when you beat this % of Peers on it." xml:space="preserve">
+    <value>Un chart conta quando batti questa % dei tuoi pari su di esso.</value>
+  </data>
+  <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
+    <value>Soglia disattivata — conta ogni partita che ha alzato il tuo livello competitivo.</value>
+  </data>
+  <data name="Look back" xml:space="preserve">
+    <value>Periodo</value>
+  </data>
+  <data name="Last 30 days" xml:space="preserve">
+    <value>Ultimi 30 giorni</value>
+  </data>
+  <data name="Last 90 days" xml:space="preserve">
+    <value>Ultimi 90 giorni</value>
+  </data>
+  <data name="Last year" xml:space="preserve">
+    <value>Ultimo anno</value>
+  </data>
+  <data name="All time" xml:space="preserve">
+    <value>Tutto lo storico</value>
+  </data>
+  <data name="Treat very old scores as unplayed" xml:space="preserve">
+    <value>Considera i punteggi molto vecchi come non giocati</value>
+  </data>
+  <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
+    <value>Un chart passato anni fa e mai rigiocato conta come territorio nuovo.</value>
+  </data>
+  <data name="Group by seed chart" xml:space="preserve">
+    <value>Raggruppa per chart di origine</value>
+  </data>
+  <data name="Like {0}" xml:space="preserve">
+    <value>Simili a {0}</value>
+  </data>
+  <data name="You beat {0}% of Peers on this." xml:space="preserve">
+    <value>Hai battuto il {0}% dei tuoi pari su questo chart.</value>
+  </data>
+  <data name="One of your all-time best — you beat {0}% of Peers." xml:space="preserve">
+    <value>Uno dei tuoi migliori di sempre — hai battuto il {0}% dei tuoi pari.</value>
+  </data>
+  <data name="One of your all-time best." xml:space="preserve">
+    <value>Uno dei tuoi migliori di sempre.</value>
+  </data>
+  <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
+    <value>Nessuna prestazione recente corrispondente: suggeriamo chart simili ai tuoi migliori di sempre.</value>
+  </data>
+  <data name="Imported" xml:space="preserve">
+    <value>Importato</value>
+  </data>
+  <data name="Photo proof" xml:space="preserve">
+    <value>Prova fotografica</value>
+  </data>
+  <data name="#{0} / {1}" xml:space="preserve">
+    <value>#{0} / {1}</value>
+  </data>
+  <data name="Back to Weekly Charts" xml:space="preserve">
+    <value>Torna a Weekly Charts</value>
+  </data>
+  <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
+    <value>Le giocate rotte valgono 0 — superala per fare punti.</value>
+  </data>
+  <data name="Charts Not Yet Featured" xml:space="preserve">
+    <value>Chart non ancora proposti</value>
+  </data>
+  <data name="Charts not yet featured" xml:space="preserve">
+    <value>Chart non ancora proposti</value>
+  </data>
+  <data name="Co-op earns no PUMBILITY; the Co-Op view ranks raw score." xml:space="preserve">
+    <value>Il co-op non dà PUMBILITY; la vista Co-Op ordina per punteggio grezzo.</value>
+  </data>
+  <data name="Counted" xml:space="preserve">
+    <value>Conteggiate</value>
+  </data>
+  <data name="Daily" xml:space="preserve">
+    <value>Giornaliero</value>
+  </data>
+  <data name="Density" xml:space="preserve">
+    <value>Densità</value>
+  </data>
+  <data name="Every eligible chart has been featured." xml:space="preserve">
+    <value>Tutti i chart idonei sono già stati proposti.</value>
+  </data>
+  <data name="Grade multipliers" xml:space="preserve">
+    <value>Moltiplicatori di grado</value>
+  </data>
+  <data name="How Scoring Works" xml:space="preserve">
+    <value>Come funziona il punteggio</value>
+  </data>
+  <data name="Level {0}" xml:space="preserve">
+    <value>Livello {0}</value>
+  </data>
+  <data name="Limbo" xml:space="preserve">
+    <value>Limbo</value>
+  </data>
+  <data name="Limbo — lowest pass wins" xml:space="preserve">
+    <value>Limbo — vince il punteggio superato più basso</value>
+  </data>
+  <data name="Monthly" xml:space="preserve">
+    <value>Mensile</value>
+  </data>
+  <data name="Not played yet" xml:space="preserve">
+    <value>Non ancora giocato</value>
+  </data>
+  <data name="Plate bonuses" xml:space="preserve">
+    <value>Bonus targa</value>
+  </data>
+  <data name="Play today's Step to start your streak." xml:space="preserve">
+    <value>Gioca il Daily Step di oggi per iniziare la tua serie.</value>
+  </data>
+  <data name="Process Weekly Charts" xml:space="preserve">
+    <value>Elabora i Weekly Charts</value>
+  </data>
+  <data name="Scores land here as boards close." xml:space="preserve">
+    <value>I punteggi compaiono qui alla chiusura dei tabelloni.</value>
+  </data>
+  <data name="Sign in to record scores, track your standings and keep your Daily Step history." xml:space="preserve">
+    <value>Accedi per registrare i punteggi, seguire la tua posizione e conservare la cronologia Daily Step.</value>
+  </data>
+  <data name="The rules" xml:space="preserve">
+    <value>Le regole</value>
+  </data>
+  <data name="This week's charts post Monday at midnight ET." xml:space="preserve">
+    <value>I chart di questa settimana escono lunedì a mezzanotte (ET).</value>
+  </data>
+  <data name="Ties break by total raw score." xml:space="preserve">
+    <value>I pari merito si decidono col punteggio grezzo totale.</value>
+  </data>
+  <data name="Top scores" xml:space="preserve">
+    <value>Punteggi migliori</value>
+  </data>
+  <data name="Week" xml:space="preserve">
+    <value>Settimana</value>
+  </data>
+  <data name="Week {0} — best {1} count · PUMBILITY" xml:space="preserve">
+    <value>Settimana {0} — contano i {1} migliori · PUMBILITY</value>
+  </data>
+  <data name="Your Daily Step History" xml:space="preserve">
+    <value>La tua cronologia Daily Step</value>
+  </data>
+  <data name="Your best 4 scores per week of the month count." xml:space="preserve">
+    <value>Contano i tuoi 4 migliori punteggi per settimana del mese.</value>
+  </data>
+  <data name="current" xml:space="preserve">
+    <value>attuale</value>
+  </data>
+  <data name="last 14 days" xml:space="preserve">
+    <value>ultimi 14 giorni</value>
+  </data>
+  <data name="resets in {0}" xml:space="preserve">
+    <value>si azzera tra {0}</value>
+  </data>
+  <data name="show all {0}" xml:space="preserve">
+    <value>mostra tutti i {0}</value>
+  </data>
+  <data name="show suggested only" xml:space="preserve">
+    <value>mostra solo consigliati</value>
+  </data>
+  <data name="showing suggested" xml:space="preserve">
+    <value>consigliati mostrati</value>
+  </data>
+  <data name="suggested left" xml:space="preserve">
+    <value>consigliati rimasti</value>
+  </data>
+  <data name="{0} charts · rotates Monday midnight ET" xml:space="preserve">
+    <value>{0} chart · cambio lunedì mezzanotte (ET)</value>
+  </data>
+  <data name="{0} on board" xml:space="preserve">
+    <value>{0} sul tabellone</value>
+  </data>
+  <data name="{0}d {1}h" xml:space="preserve">
+    <value>{0}d {1}h</value>
+  </data>
+  <data name="{0}h {1}m" xml:space="preserve">
+    <value>{0}h {1}m</value>
+  </data>
+  <data name="{0}m" xml:space="preserve">
+    <value>{0}m</value>
+  </data>
+  <data name="Add photo" xml:space="preserve">
+    <value>Aggiungi foto</value>
+  </data>
+  <data name="Importing with your PIUGAME login records scores automatically — manual entry is the fallback." xml:space="preserve">
+    <value>Importando col tuo login PIUGAME i punteggi si registrano da soli — l'inserimento manuale è il ripiego.</value>
+  </data>
+  <data name="Optional — a photo is your proof if a score's legitimacy is ever disputed." xml:space="preserve">
+    <value>Facoltativo — una foto è la tua prova se la legittimità di un punteggio viene contestata.</value>
+  </data>
+  <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
+    <value>Ruotare ora il tabellone della settimana? Chiude la settimana attuale ed estrae il set successivo.</value>
+  </data>
+  <data name="Rotation started." xml:space="preserve">
+    <value>Rotazione avviata.</value>
+  </data>
+  <data name="Suspected cheaters will be required to attach photos for future competition entries." xml:space="preserve">
+    <value>Ai sospetti imbroglioni sarà richiesto di allegare foto per le future partecipazioni.</value>
+  </data>
+  <data name="There was an error while recording the score." xml:space="preserve">
+    <value>Si è verificato un errore durante la registrazione del punteggio.</value>
+  </data>
+  <data name="There was an error while uploading your image, please try again." xml:space="preserve">
+    <value>Si è verificato un errore durante il caricamento dell'immagine, riprova.</value>
+  </data>
+  <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
+    <value>Il file superava i 10MB, riducilo e riprova.</value>
+  </data>
+  <data name="Weekly Charts — Pump It Up" xml:space="preserve">
+    <value>Weekly Charts — Pump It Up</value>
+  </data>
+  <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
+    <value>{0} chart sfida di Pump It Up questa settimana, un chart giornaliero con classifiche live e il tabellone mensile PUMBILITY.</value>
+  </data>
+  <data name="Full board" xml:space="preserve">
+    <value>Classifica completa</value>
+  </data>
+  <data name="top {0} of {1}" xml:space="preserve">
+    <value>top {0} di {1}</value>
+  </data>
+  <data name="Week {0} — best {1} count · raw score" xml:space="preserve">
+    <value>Settimana {0} — contano i {1} migliori · punteggio grezzo</value>
+  </data>
+  <data name="Leave empty if broken." xml:space="preserve">
+    <value>Lascia vuoto se rotto.</value>
+  </data>
+  <data name="1 Player" xml:space="preserve">
+    <value>1 giocatore</value>
+  </data>
+  <data name="{0} Players" xml:space="preserve">
+    <value>{0} giocatori</value>
+  </data>
+  <data name="This week on the boards" xml:space="preserve">
+    <value>Questa settimana nelle classifiche</value>
+  </data>
+  <data name="{0} players left their mark on the chart boards." xml:space="preserve">
+    <value>{0} giocatori hanno lasciato il segno nelle classifiche dei chart.</value>
+  </data>
+  <data name="{0} players left their mark — and {1} fell to its first {2}." xml:space="preserve">
+    <value>{0} giocatori hanno lasciato il segno — e {1} è caduto al suo primo {2}.</value>
+  </data>
+  <data name="Chart board entries" xml:space="preserve">
+    <value>Ingressi nelle classifiche dei chart</value>
+  </data>
+  <data name="{0} new · {1} upscored" xml:space="preserve">
+    <value>{0} nuovi · {1} migliorati</value>
+  </data>
+  <data name="Players active" xml:space="preserve">
+    <value>Giocatori attivi</value>
+  </data>
+  <data name="on any chart board" xml:space="preserve">
+    <value>in almeno una classifica dei chart</value>
+  </data>
+  <data name="first ever, any grade" xml:space="preserve">
+    <value>primi assoluti, qualsiasi grade</value>
+  </data>
+  <data name="Biggest PUMBILITY gainer" xml:space="preserve">
+    <value>Maggior guadagno di PUMBILITY</value>
+  </data>
+  <data name="Highest world first" xml:space="preserve">
+    <value>World First di livello più alto</value>
+  </data>
+  <data name="Biggest board climber" xml:space="preserve">
+    <value>Maggior scalata nelle classifiche dei chart</value>
+  </data>
+  <data name="{0} new" xml:space="preserve">
+    <value>{0} nuove</value>
+  </data>
+  <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
+    <value>Soglie Top 100 · Top 1000 — 50× SS</value>
+  </data>
+  <data name="held" xml:space="preserve">
+    <value>mantenuto</value>
+  </data>
+  <data name="what it takes to hold each rung of the PUMBILITY board" xml:space="preserve">
+    <value>cosa serve per difendere ogni gradino della classifica PUMBILITY</value>
+  </data>
+  <data name="Debuted this week" xml:space="preserve">
+    <value>Debutti questa settimana</value>
+  </data>
+  <data name="+{0} more" xml:space="preserve">
+    <value>+{0} altri</value>
+  </data>
+  <data name="first-ever appearance on any chart board" xml:space="preserve">
+    <value>prima apparizione assoluta in una classifica dei chart</value>
+  </data>
+  <data name="{0} new · net +{1} places" xml:space="preserve">
+    <value>{0} nuovi · netto +{1} posizioni</value>
+  </data>
+  <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
+    <value>**{0}** — {1} classifiche dei chart ({2} nuovi, netto +{3})</value>
+  </data>
+  <data name="Chart leaderboard" xml:space="preserve">
+    <value>Classifica del chart</value>
+  </data>
+  <data name="Nobody is on this chart board yet." xml:space="preserve">
+    <value>Nessuno è ancora in questa classifica.</value>
+  </data>
   <data name="All Mixes" xml:space="preserve">
     <value>Tutti i Mix</value>
   </data>
@@ -4918,9 +5716,6 @@
   </data>
   <data name="Short Cut" xml:space="preserve">
     <value>Short Cut</value>
-  </data>
-  <data name="Song name" xml:space="preserve">
-    <value>Nome della canzone</value>
   </data>
   <data name="Song name contains" xml:space="preserve">
     <value>Il nome contiene</value>

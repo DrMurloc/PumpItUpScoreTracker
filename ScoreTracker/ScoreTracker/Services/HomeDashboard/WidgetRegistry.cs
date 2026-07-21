@@ -119,7 +119,10 @@ public static class WidgetRegistry
                     })),
                 new WidgetDrawerPreset("Suggested · Pumbility Push",
                     "The biggest Pumbility gains available to you right now.",
-                    WidgetConfigJson.Write(new SuggestedChartsConfig { Goal = SuggestedGoal.PumbilityPush }))
+                    WidgetConfigJson.Write(new SuggestedChartsConfig { Goal = SuggestedGoal.PumbilityPush })),
+                new WidgetDrawerPreset("Suggested · Hot Streak",
+                    "More charts like the recent plays you crushed against your Peers.",
+                    WidgetConfigJson.Write(new SuggestedChartsConfig { Goal = SuggestedGoal.HotStreak }))
             },
             // Instance titles follow the configured goal so rapid-firing all three
             // presets never yields three "Suggested Charts" (owner, field test).
@@ -129,6 +132,7 @@ public static class WidgetRegistry
                     SuggestedGoal.ScorePush => "Suggested · Score Push",
                     SuggestedGoal.FillGaps => "Suggested · Fill Gaps",
                     SuggestedGoal.PumbilityPush => "Suggested · Pumbility Push",
+                    SuggestedGoal.HotStreak => "Suggested · Hot Streak",
                     _ => "Suggested · Title Hunt"
                 },
             RefreshIcon: Icons.Material.Filled.Shuffle,

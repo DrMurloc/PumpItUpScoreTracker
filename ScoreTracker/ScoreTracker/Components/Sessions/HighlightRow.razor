@@ -22,6 +22,7 @@
                 }
             </div>
             <ScoreBreakdown Score="Row.Score == null ? null : PhoenixScore.From(Row.Score.Value)"
+                Mix="Chart?.Mix ?? MixEnum.Phoenix"
                             IsBroken="Row.IsBroken"
                             Plate="PhoenixPlateHelperMethods.TryParse(Row.Plate)"
                             ShowScore="true" OneLine="true"></ScoreBreakdown>

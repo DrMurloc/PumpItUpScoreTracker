@@ -5,11 +5,11 @@ namespace ScoreTracker.Web.Dtos.Api
 {
     public sealed class ScoreDto
     {
-        public ScoreDto(PhoenixScore score, PhoenixPlate plate, bool isBroken)
+        public ScoreDto(PhoenixScore score, PhoenixPlate plate, bool isBroken, MixEnum mix = MixEnum.Phoenix)
         {
             Score = score;
             Plate = plate.ToString();
-            LetterGrade = score.LetterGrade.GetName();
+            LetterGrade = score.LetterGradeFor(mix).GetName();
             IsBroken = isBroken;
         }
 

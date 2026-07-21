@@ -87,17 +87,85 @@ public static class PhoenixLetterGradeHelperMethods
             g => typeof(PhoenixLetterGrade).GetField(g.ToString())?.GetCustomAttribute<ScoreRangeAttribute>() ??
                  throw new Exception($"Score Range not set up for {g}"));
 
+    // Phoenix 2 rebalanced the sub-AAA grade cutoffs upward — verified from live piugame.com
+    // boards 2026-07-18 (see ScoreTracker.Tests.Integration/LiveSite/Phoenix2GradeThresholdReconTests):
+    // A 800k, A+ 900k, AA 920k, AA+ 940k; AAA (950k) and everything above are identical to Phoenix.
+    // A-tier through AAA are crawl-verified. The A and B floors are BRACKETED by live board rows
+    // (2026-07-19, the sub800k probe fact in the same recon class reading grade art off the only
+    // eight sub-800k rows on any board): 799,815 = B vs 804,414 = A pins the A floor to 800k
+    // within a 4.6k window, and 690,647 = C vs 707,042 = B pins the B floor to 700k within a
+    // 17k window. C and D floors are owner-ratified working values (2026-07-19: hold
+    // B 700k / C 600k / D 500k until proven wrong) — nothing below 690,647 exists on any
+    // board, so they are unobservable from crawling. F stays 0 as the lookup's catch-all:
+    // with D at 500k there is no band boundary below it for an F floor to express. Only the
+    // score→grade cutoffs differ per mix; grade identity, modifiers and names are shared, so
+    // only the floors table is overridden here.
+    private static readonly IReadOnlyDictionary<PhoenixLetterGrade, int> Phoenix2Floors =
+        new Dictionary<PhoenixLetterGrade, int>
+        {
+            [PhoenixLetterGrade.F] = 0,
+            [PhoenixLetterGrade.D] = 500000,
+            [PhoenixLetterGrade.C] = 600000,
+            [PhoenixLetterGrade.B] = 700000,
+            [PhoenixLetterGrade.A] = 800000,
+            [PhoenixLetterGrade.APlus] = 900000,
+            [PhoenixLetterGrade.AA] = 920000,
+            [PhoenixLetterGrade.AAPlus] = 940000,
+            [PhoenixLetterGrade.AAA] = 950000,
+            [PhoenixLetterGrade.AAAPlus] = 960000,
+            [PhoenixLetterGrade.S] = 970000,
+            [PhoenixLetterGrade.SPlus] = 975000,
+            [PhoenixLetterGrade.SS] = 980000,
+            [PhoenixLetterGrade.SSPlus] = 985000,
+            [PhoenixLetterGrade.SSS] = 990000,
+            [PhoenixLetterGrade.SSSPlus] = 995000
+        };
+
+    // Grades highest-floor-first, per mix, so a score resolves to the first grade it clears.
+    private static readonly IReadOnlyList<(PhoenixLetterGrade Grade, int Floor)> Phoenix1FloorsDescending =
+        Enum.GetValues<PhoenixLetterGrade>()
+            .Select(g => (g, (int)CachedRanges[g].MinimumScore))
+            .OrderByDescending(x => x.Item2).ToArray();
+
+    private static readonly IReadOnlyList<(PhoenixLetterGrade Grade, int Floor)> Phoenix2FloorsDescending =
+        Phoenix2Floors.Select(kv => (kv.Key, kv.Value)).OrderByDescending(x => x.Item2).ToArray();
+
     private static readonly IDictionary<string, PhoenixLetterGrade> Parser =
         Enum.GetValues<PhoenixLetterGrade>().ToDictionary(e => e.GetName());
 
-    public static PhoenixScore GetMinimumScore(this PhoenixLetterGrade letterGrade)
+    /// <summary>
+    ///     The minimum score that earns <paramref name="letterGrade" /> in the given mix. Phoenix 2
+    ///     shifted the sub-AAA cutoffs (see <see cref="Phoenix2Floors" />); every other mix uses the
+    ///     original Phoenix table. There is deliberately no mix-less overload — every score→grade
+    ///     boundary names its mix.
+    /// </summary>
+    public static PhoenixScore GetMinimumScoreFor(this PhoenixLetterGrade letterGrade, MixEnum mix)
     {
-        return CachedRanges[letterGrade].MinimumScore;
+        return mix == MixEnum.Phoenix2 ? Phoenix2Floors[letterGrade] : CachedRanges[letterGrade].MinimumScore;
     }
 
-    public static PhoenixScore GetMaximumScore(this PhoenixLetterGrade letterGrade)
+    /// <summary>
+    ///     The top score of <paramref name="letterGrade" />'s band in the given mix — one below
+    ///     the next grade's floor, or the perfect 1,000,000 for SSS+.
+    /// </summary>
+    public static PhoenixScore GetMaximumScoreFor(this PhoenixLetterGrade letterGrade, MixEnum mix)
     {
-        return CachedRanges[letterGrade].MaximumScore;
+        var floors = mix == MixEnum.Phoenix2 ? Phoenix2FloorsDescending : Phoenix1FloorsDescending;
+        for (var i = 0; i < floors.Count; i++)
+            if (floors[i].Grade == letterGrade)
+                return i == 0 ? 1_000_000 : floors[i - 1].Floor - 1;
+        throw new Exception($"Score floor not set up for {letterGrade}");
+    }
+
+    /// <summary>
+    ///     The letter grade a raw score earns in the given mix — the single entry point for
+    ///     score→grade resolution. There is deliberately no mix-less form: resolving without
+    ///     naming the mix would grade a Phoenix 2 score in the 800k–950k band one rung too high.
+    /// </summary>
+    public static PhoenixLetterGrade LetterGradeFor(this PhoenixScore score, MixEnum mix)
+    {
+        var floors = mix == MixEnum.Phoenix2 ? Phoenix2FloorsDescending : Phoenix1FloorsDescending;
+        return floors.First(f => (int)score >= f.Floor).Grade;
     }
 
     public static double GetModifier(this PhoenixLetterGrade enumValue)

@@ -48,7 +48,8 @@ internal static class CutlineCalculator
     {
         var perChart = (double)tierValue / ChartsCounted;
         foreach (var level in DifficultyLevel.All.OrderBy(l => (int)l))
-            if (scoring.GetScore(chartType, level, grade.GetMinimumScore(), PhoenixPlate.SuperbGame) >= perChart)
+            if (scoring.GetScore(chartType, level, grade.GetMinimumScoreFor(scoring.Mix), PhoenixPlate.SuperbGame) >=
+                perChart)
                 return level;
 
         return null;

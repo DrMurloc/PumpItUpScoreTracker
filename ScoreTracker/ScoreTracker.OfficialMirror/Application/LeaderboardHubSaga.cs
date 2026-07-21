@@ -23,7 +23,9 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetOfficialPlayerNamesQuery, IReadOnlyList<string>>,
     IRequestHandler<GetOfficialPopularityQuery, IReadOnlyList<OfficialPopularityRecord>>,
     IRequestHandler<GetImportRunsQuery, IReadOnlyList<ImportRunRecord>>,
-    IRequestHandler<GetWhatItTakesQuery, WhatItTakesRecord>
+    IRequestHandler<GetWhatItTakesQuery, WhatItTakesRecord>,
+    IRequestHandler<GetOfficialChartBoardQuery, OfficialChartBoardRecord?>,
+    IRequestHandler<GetLinkedOfficialPlayerTagQuery, string?>
 {
     private const string PumbilityAll = "PUMBILITY";
     private const string PumbilitySingles = "PUMBILITY Singles";
@@ -35,17 +37,13 @@ internal sealed class LeaderboardHubSaga :
 
     private readonly IOfficialSnapshotRepository _snapshots;
     private readonly IOfficialRecordRepository _records;
-    private readonly IScoreReader _scores;
-    private readonly IChartRepository _charts;
     private readonly IMemoryCache _cache;
 
     public LeaderboardHubSaga(IOfficialSnapshotRepository snapshots, IOfficialRecordRepository records,
-        IScoreReader scores, IChartRepository charts, IMemoryCache cache)
+        IMemoryCache cache)
     {
         _snapshots = snapshots;
         _records = records;
-        _scores = scores;
-        _charts = charts;
         _cache = cache;
     }
 
@@ -58,7 +56,8 @@ internal sealed class LeaderboardHubSaga :
         var previous = await _snapshots.GetSealedBefore(request.Mix, latest.Id, cancellationToken);
         var highlights = await _records.GetHighlights(latest.Id, cancellationToken);
         var players = (await _snapshots.GetPlayersByIds(
-                highlights.SelectMany(h => new[] { h.PlayerId, h.DethronedPlayerId ?? h.PlayerId })
+                highlights.SelectMany(h => new[] { h.PlayerId, h.DethronedPlayerId })
+                    .Where(id => id != null).Select(id => id!.Value)
                     .Distinct().ToArray(), cancellationToken))
             .ToDictionary(p => p.Id);
 
@@ -77,7 +76,7 @@ internal sealed class LeaderboardHubSaga :
         var climbed = highlights.Where(h => h.Kind == HighlightKinds.BoardsClimbed)
             .OrderBy(h => h.SortOrder)
             .Select(h => new OfficialBoardsClimbedRecord(Resolve(h.PlayerId)!, (int)h.NewValue!,
-                (int)h.PrevValue!))
+                (int)h.PrevValue!, h.Level))
             .ToArray();
         var firsts = highlights
             .Where(h => h.Kind is HighlightKinds.FolderGradeFirst or HighlightKinds.ChartGradeFirst)
@@ -92,8 +91,28 @@ internal sealed class LeaderboardHubSaga :
                 Resolve(h.DethronedPlayerId)))
             .ToArray();
 
+        var pulseRow = highlights.FirstOrDefault(h => h.Kind == HighlightKinds.WeeklyPulse);
+        var pulse = pulseRow == null
+            ? null
+            : new WeeklyPulseRecord((int)(pulseRow.PrevValue ?? 0), (int)(pulseRow.NewValue ?? 0),
+                (int)(pulseRow.Score ?? 0), pulseRow.Level ?? 0);
+        var gainers = highlights.Where(h => h.Kind == HighlightKinds.PumbilityGainer)
+            .OrderBy(h => h.SortOrder)
+            .Select(h => new OfficialGainerRecord(Resolve(h.PlayerId)!, h.PrevValue ?? 0, h.Score ?? 0,
+                h.Level ?? 0, (int)(h.NewValue ?? 0)))
+            .ToArray();
+        var debuts = highlights.Where(h => h.Kind == HighlightKinds.Debut)
+            .OrderBy(h => h.SortOrder)
+            .Select(h => new OfficialDebutRecord(Resolve(h.PlayerId)!, (int)(h.Score ?? 0)))
+            .ToArray();
+        var floors = highlights.Where(h => h.Kind == HighlightKinds.FloorMark)
+            .OrderBy(h => h.SortOrder)
+            .Select(h => new OfficialFloorMarkRecord(h.SortOrder, h.Score ?? 0, h.PrevValue,
+                h.Level, (int?)h.NewValue))
+            .ToArray();
+
         return new WeeklyHighlightsRecord(latest.CompletedAt.Value, previous?.CompletedAt, movers, climbed,
-            firsts, numberOnes);
+            firsts, numberOnes, pulse, gainers, debuts, floors);
     }
 
     public async Task<OfficialRankingsRecord> Handle(GetOfficialRankingsQuery request,
@@ -226,7 +245,6 @@ internal sealed class LeaderboardHubSaga :
                 (int)r.Score, playerStats?.ChartRatings.TryGetValue(r.ChartId.Value, out var rating) == true
                     ? rating
                     : 0))
-            .Concat(await SupplementFromLinkedScores(request.Mix, player, chartRows, cancellationToken))
             .ToArray();
 
         return new OfficialPlayerProfileRecord(ToRecord(player), playerStats?.PlayerType,
@@ -241,47 +259,39 @@ internal sealed class LeaderboardHubSaga :
             history, placements);
     }
 
-    /// <summary>
-    ///     A linked player whose boards can't fill a top 50 gets the balance from their own
-    ///     piuscores bests — flagged Supplemented, no board place to show. Board rows stay
-    ///     the source of truth for every stat tile; this only rounds out the chart list.
-    /// </summary>
-    private async Task<IEnumerable<OfficialPlayerChartRecord>> SupplementFromLinkedScores(MixEnum mix,
-        PlayerDimension player, IReadOnlyCollection<PlayerTimelineRow> boardRows, CancellationToken ct)
-    {
-        if (player.UserId == null || boardRows.Count >= 50) return Array.Empty<OfficialPlayerChartRecord>();
-
-        var charts = await GetChartLookup(mix, ct);
-        var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
-        var onBoards = boardRows.Where(r => r.ChartId != null).Select(r => r.ChartId!.Value).ToHashSet();
-        return (await _scores.GetBestScores(mix, player.UserId.Value, ct))
-            .Where(s => !s.IsBroken && s.Score != null && !onBoards.Contains(s.ChartId) &&
-                        charts.TryGetValue(s.ChartId, out var chart) &&
-                        chart.Type is ChartType.Single or ChartType.Double)
-            .Select(s =>
-            {
-                var chart = charts[s.ChartId];
-                return new OfficialPlayerChartRecord(s.ChartId, null, null, (int)s.Score!.Value,
-                    (int)scoring.GetScore(chart.Type, chart.Level, s.Score.Value), Supplemented: true);
-            })
-            .OrderByDescending(s => s.ComputedRating)
-            .Take(50 - boardRows.Count);
-    }
-
-    private async Task<IReadOnlyDictionary<Guid, Chart>> GetChartLookup(MixEnum mix, CancellationToken ct)
-    {
-        return (await _cache.GetOrCreateAsync($"OfficialHubCharts__{mix}", async entry =>
-        {
-            entry.SlidingExpiration = TimeSpan.FromHours(12);
-            return (IReadOnlyDictionary<Guid, Chart>)(await _charts.GetCharts(mix, cancellationToken: ct))
-                .ToDictionary(c => c.Id);
-        }))!;
-    }
-
     public async Task<IReadOnlyList<string>> Handle(GetOfficialPlayerNamesQuery request,
         CancellationToken cancellationToken)
     {
         return await _snapshots.GetPlayerNames(request.Mix, cancellationToken);
+    }
+
+    public async Task<OfficialChartBoardRecord?> Handle(GetOfficialChartBoardQuery request,
+        CancellationToken cancellationToken)
+    {
+        var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
+        if (latest?.CompletedAt == null) return null;
+
+        var board = (await _snapshots.GetBoards(request.Mix, cancellationToken))
+            .FirstOrDefault(b => b.LeaderboardType == LeaderboardTypes.Chart && b.ChartId == request.ChartId);
+        if (board == null) return null;
+
+        var placements = await _snapshots.GetBoardPlacements(latest.Id, board.Id, cancellationToken);
+        var players = (await _snapshots.GetPlayersByIds(
+                placements.Select(p => p.PlayerId).Distinct().ToArray(), cancellationToken))
+            .ToDictionary(p => p.Id);
+        return new OfficialChartBoardRecord(latest.CompletedAt.Value, placements
+            .OrderBy(p => p.Place)
+            .Select(p => new OfficialChartBoardEntryRecord(p.Place,
+                players.TryGetValue(p.PlayerId, out var player)
+                    ? ToRecord(player)
+                    : new OfficialPlayerRecord(p.PlayerId, "?", null, null),
+                (int)p.Score))
+            .ToArray());
+    }
+
+    public async Task<string?> Handle(GetLinkedOfficialPlayerTagQuery request, CancellationToken cancellationToken)
+    {
+        return (await _snapshots.GetPlayerByUserId(request.Mix, request.UserId, cancellationToken))?.Username;
     }
 
     public async Task<IReadOnlyList<OfficialPopularityRecord>> Handle(GetOfficialPopularityQuery request,

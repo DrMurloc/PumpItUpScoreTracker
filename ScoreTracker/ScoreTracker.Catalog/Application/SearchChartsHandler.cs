@@ -366,8 +366,10 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
                 }
             else
                 foreach (var record in await _scores.GetBestScores(mix, userId, cancellationToken))
+                    // Grades resolve against the record's own mix — Phoenix 2 shifted the
+                    // A/A+/AA/AA+ floors, so a shared score means different letters per mix.
                     records[(mix, record.ChartId)] = new MyRecord(!record.IsBroken, record.IsBroken,
-                        record.Score == null ? null : (int)record.Score.Value, record.Score?.LetterGrade,
+                        record.Score == null ? null : (int)record.Score.Value, record.Score?.LetterGradeFor(mix),
                         record.Plate, null, null, record.RecordedDate);
 
         return records;

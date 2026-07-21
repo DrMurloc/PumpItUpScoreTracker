@@ -17,7 +17,7 @@ The system is decomposed into **vertical slices, one per bounded context** of th
 Cross-vertical communication happens two ways, and only two ways:
 
 1. **Contracts** — one vertical sends another's published commands/queries via MediatR, or consumes its published events off the bus.
-2. **Published ports** — read interfaces (e.g. `IScoreReader`, `IPlayerStatsReader`) for high-traffic reads.
+2. **Published ports** — read interfaces (e.g. `IScoreReader`, `IPlayerStatsReader`) for high-traffic reads. This is also the escape hatch when a consumer would otherwise close a reference cycle: the Discord broadcast feeds fan out to channel subscriptions that Communities owns, but OfficialMirror can't reference Communities (`OfficialMirror → ScoreLedger → Communities`), so it reads the subscriptions through the published `IDiscordFeedReader` port instead.
 
 **Never SQL joins onto another vertical's tables.** A vertical's tables are private storage, not an integration surface. This is what keeps a vertical extractable: its data model can change shape without a ripple, because nothing else touches it below the contract line.
 

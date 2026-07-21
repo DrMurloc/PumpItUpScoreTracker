@@ -112,11 +112,11 @@ public sealed class RecapBadgesTests
     [Fact]
     public void BigFeetNeedsAnUnbrokenSssPlusOnTheChart()
     {
-        Assert.False(RecapBadges.EarnsBigFeet(null));
-        Assert.False(RecapBadges.EarnsBigFeet(Record(999_000, isBroken: true)));
-        Assert.False(RecapBadges.EarnsBigFeet(Record(994_999)));
-        Assert.True(RecapBadges.EarnsBigFeet(Record(995_000)));
-        Assert.True(RecapBadges.EarnsBigFeet(Record(1_000_000, plate: PhoenixPlate.PerfectGame)));
+        Assert.False(RecapBadges.EarnsBigFeet(null, MixEnum.Phoenix));
+        Assert.False(RecapBadges.EarnsBigFeet(Record(999_000, isBroken: true), MixEnum.Phoenix));
+        Assert.False(RecapBadges.EarnsBigFeet(Record(994_999), MixEnum.Phoenix));
+        Assert.True(RecapBadges.EarnsBigFeet(Record(995_000), MixEnum.Phoenix));
+        Assert.True(RecapBadges.EarnsBigFeet(Record(1_000_000, plate: PhoenixPlate.PerfectGame), MixEnum.Phoenix));
     }
 
     [Fact]
@@ -125,8 +125,8 @@ public sealed class RecapBadgesTests
         var twentySeven = Enumerable.Range(0, 27).Select(_ => Record(940_000)).ToArray();
         var twentyEight = Enumerable.Range(0, 28).Select(_ => Record(940_000)).ToArray();
 
-        Assert.False(RecapBadges.EarnsGrandMashter(twentySeven, 36));
-        Assert.True(RecapBadges.EarnsGrandMashter(twentyEight, 36));
+        Assert.False(RecapBadges.EarnsGrandMashter(twentySeven, 36, MixEnum.Phoenix));
+        Assert.True(RecapBadges.EarnsGrandMashter(twentyEight, 36, MixEnum.Phoenix));
     }
 
     [Fact]
@@ -136,7 +136,7 @@ public sealed class RecapBadgesTests
             .Concat(Enumerable.Range(0, 5).Select(_ => Record(985_000)))
             .ToArray();
 
-        Assert.True(RecapBadges.EarnsGrandMashter(mashWithAaaPasses, 36));
+        Assert.True(RecapBadges.EarnsGrandMashter(mashWithAaaPasses, 36, MixEnum.Phoenix));
     }
 
     [Fact]
@@ -147,13 +147,13 @@ public sealed class RecapBadgesTests
             .Append(Record(940_000, isBroken: true))
             .ToArray();
 
-        Assert.False(RecapBadges.EarnsGrandMashter(records, 36));
+        Assert.False(RecapBadges.EarnsGrandMashter(records, 36, MixEnum.Phoenix));
     }
 
     [Fact]
     public void GrandMashterNeedsAFolderToMash()
     {
-        Assert.False(RecapBadges.EarnsGrandMashter(Array.Empty<RecordedPhoenixScore>(), 0));
+        Assert.False(RecapBadges.EarnsGrandMashter(Array.Empty<RecordedPhoenixScore>(), 0, MixEnum.Phoenix));
     }
 
     [Fact]

@@ -411,7 +411,7 @@ public sealed class MatchSaga : IRequestHandler<GetMatchQuery, MatchView>,
             var score = match.Scores[player][request.ChartIndex];
             message +=
                 @$"
-- {player} - {score} #LETTERGRADE|{score.LetterGrade}#  ({match.Points[player][request.ChartIndex]} Points)";
+- {player} - {score} #LETTERGRADE|{score.LetterGradeFor(MixEnum.Phoenix)}#  ({match.Points[player][request.ChartIndex]} Points)";
         }
 
         await _bot.SendMessage(

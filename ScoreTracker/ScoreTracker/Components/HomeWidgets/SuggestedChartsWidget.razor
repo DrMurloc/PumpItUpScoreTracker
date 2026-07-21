@@ -30,8 +30,17 @@ else if (!_sections.Any(s => s.Rows.Any()))
 {
     <div class="dash-widget-message">
         <div>
-            <MudText Typo="Typo.body2">@L["Nothing to suggest yet — play and import some scores first."]</MudText>
-            <MudLink Href="/UploadPhoenixScores" Typo="Typo.body2">@L["Upload Scores"]</MudLink>
+            @if (_isHotStreak)
+            {
+                @* Hot Streak runs dry legitimately: no recent plays raised a competitive
+                   level (or none cleared the bar). Different fix, different message. *@
+                <MudText Typo="Typo.body2">@L["No matching standouts yet, go push yourself to start getting suggestions!"]</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2">@L["Nothing to suggest yet — play and import some scores first."]</MudText>
+                <MudLink Href="/UploadPhoenixScores" Typo="Typo.body2">@L["Upload Scores"]</MudLink>
+            }
         </div>
     </div>
 }
@@ -43,27 +52,28 @@ else
         <div class="dash-targets dash-scroll">
             @foreach (var section in _sections.Where(s => s.Rows.Any()))
             {
-                @if (_sections.Count(s => s.Rows.Any()) > 1)
+                @if (ShowCaptions)
                 {
-                    <MudText Typo="Typo.caption" Class="dash-muted dash-target-caption">@section.Caption</MudText>
+                    <MudText Typo="Typo.caption" Class="dash-muted dash-target-caption"
+                             title="@section.CaptionDetail">@section.Caption</MudText>
                 }
                 @foreach (var row in section.Rows)
                 {
                     var chart = row.Chart;
                     var sect = section;
                     var r = row;
-                    @* Names only at 2 columns wide (rounds 3–4) — narrow rows give the
-                       width to the score; the art tooltip and details dialog carry it. *@
+                    @* The name is always here; CSS (a container query on .dash-suggested)
+                       shows it only when the row is physically wide enough — so a
+                       full-width single-column widget fills the gap the score's
+                       margin-left:auto would otherwise leave, and a cramped narrow cell
+                       still hands the width to the score. *@
                     <div class="dash-target-row @(EditMode ? "" : "dash-clickable")"
                          @onclick="() => OnChartClick.InvokeAsync(new ChartClickContext(chart, sect.CategoryKey))">
                         <span class="dash-mini-art">
                             <SongImage Song="chart.Song" Small="true"></SongImage>
                         </span>
                         <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
-                        @if (_showNames)
-                        {
-                            <span class="dash-target-name">@chart.Song.Name</span>
-                        }
+                        <span class="dash-target-name">@chart.Song.Name</span>
                         <span class="dash-target-score">
                             @if (row.Tier != null)
                             {
@@ -73,7 +83,7 @@ else
                             }
                             else if (row.ShowScore && row.Score?.Score != null)
                             {
-                                <LetterGradeIcon Grade="row.Score.Score.Value.LetterGrade"
+                                <LetterGradeIcon Grade="row.Score.Score.Value.LetterGradeFor(_mix)"
                                                  IsBroken="row.Score.IsBroken" Height="16"/>
                                 <span>@(((int)row.Score.Score.Value).ToString("N0"))</span>
                             }
@@ -111,9 +121,10 @@ else
                     @foreach (var section in _sections.Where(s => s.Rows.Any()))
                     {
                         var sect = section;
-                        @if (_sections.Count(s => s.Rows.Any()) > 1)
+                        @if (ShowCaptions)
                         {
-                            <div class="dash-strip-divider" title="@section.Caption">@section.Caption</div>
+                            <div class="dash-strip-divider"
+                                 title="@(section.CaptionDetail ?? section.Caption)">@section.Caption</div>
                         }
                         @foreach (var row in section.Rows)
                         {
@@ -179,6 +190,10 @@ else
     /// <summary>Bumped by the host's header shuffle — the engine re-rolls its picks.</summary>
     [Parameter] public int RefreshToken { get; set; }
 
+    /// <summary>Title-bar slot (§2.3): carries the Hot Streak fallback stamp when the
+    /// suggestions came from the standing best pool rather than recent standouts.</summary>
+    [CascadingParameter] private WidgetHeaderSlot? HeaderSlot { get; set; }
+
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
     // Fill rows never show a score (they're unpassed by definition, owner round 3) —
@@ -188,13 +203,15 @@ else
 
     // CategoryKey is the engine's raw category name — the feedback store's key (the
     // pushing-title section's key is the title's own name, matching WSIP's behavior).
-    private sealed record SuggestionSection(string CategoryKey, string Caption, List<SuggestionRow> Rows);
+    // CaptionDetail rides as the caption's tooltip — the Peers-bar brag lives there
+    // so the visible caption stays short (owner, field test 1).
+    private sealed record SuggestionSection(string CategoryKey, string Caption, List<SuggestionRow> Rows,
+        string? CaptionDetail = null);
 
     private bool _loaded;
     private string? _loadedFor;
     private MixEnum _mix = MixEnum.Phoenix;
     private bool _useStrips;
-    private bool _showNames;
     private List<SuggestionSection> _sections = new();
 
     protected override async Task OnParametersSetAsync()
@@ -212,7 +229,6 @@ else
         // when the widget is two columns wide (owner, rounds 2-4).
         var size = SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.OneByTwo;
         _useStrips = size is { Columns: > 1, Rows: 1 };
-        _showNames = size.Columns > 1 && !_useStrips;
         var config = WidgetConfigJson.Read<SuggestedChartsConfig>(Widget.ConfigJson);
         _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
             : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
@@ -221,12 +237,23 @@ else
         var recommendations = (await Mediator.Send(new GetRecommendedChartsQuery(
                 config.ChartType, LevelOffset: 0, _mix,
                 Categories: categories.ToHashSet(),
-                LevelWindow: SuggestedGoals.BuildWindow(config))))
+                LevelWindow: SuggestedGoals.BuildWindow(config),
+                HotStreak: SuggestedGoals.BuildHotStreakOptions(config))))
             .ToArray();
 
         var charts = await ChartCatalog.GetCharts(_mix);
         var scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _mix)))
             .ToDictionary(s => s.ChartId);
+
+        _isHotStreak = config.Goal == SuggestedGoal.HotStreak;
+        if (_isHotStreak)
+        {
+            await LoadHotStreakAsync(recommendations, charts, scores, config.GroupBySeed);
+            _loaded = true;
+            return;
+        }
+
+        UpdateFallbackPill(false);
 
         // Fill Gaps lens (owner, round 3): tier-list difficulty per fill chart — the
         // blended list covers unplayed charts, and Personalized bends it with the
@@ -273,6 +300,119 @@ else
         _loaded = true;
     }
 
+    private bool _isHotStreak;
+    private bool _groupBySeedMode;
+
+    // A lone Hot Streak seed still deserves its caption — the caption IS the goal's
+    // provenance ("more like X, you beat Y% of Peers"), not a disambiguator.
+    private bool ShowCaptions => _isHotStreak
+        ? _groupBySeedMode
+        : _sections.Count(s => s.Rows.Any()) > 1;
+
+    // Hot Streak sections: one per seed (newest first, the engine's order), captioned
+    // with the seed and the Peers bar it cleared; flat mode is one section with the
+    // seed riding each row's detail. The right column is the personalized Pass blend —
+    // targets are unpassed, so pass difficulty is the honest read — fetched once per
+    // folder present, which also drives the easiest-first ordering inside a group.
+    private async Task LoadHotStreakAsync(ChartRecommendation[] recommendations,
+        IReadOnlyDictionary<Guid, Chart> charts, IReadOnlyDictionary<Guid, RecordedPhoenixScore> scores,
+        bool groupBySeed)
+    {
+        _groupBySeedMode = groupBySeed;
+        var known = recommendations.Where(r => charts.ContainsKey(r.ChartId)).ToArray();
+        // All of one load's recommendations share a seed source; any row tells us.
+        UpdateFallbackPill(known.Any(r => r.SeedIsFallback));
+
+        _lensTiers.Clear();
+        foreach (var folder in known.Select(r => charts[r.ChartId]).GroupBy(c => (c.Type, c.Level)))
+        {
+            var tierList = await Mediator.Send(new GetBlendedTierListQuery(folder.Key.Type,
+                folder.Key.Level, "Pass", Personalized: true, Mix: _mix));
+            foreach (var entry in tierList.Entries.Where(e => e.Category != TierListCategory.Unrecorded))
+                _lensTiers[entry.ChartId] = entry.Category;
+        }
+
+        _sections = new List<SuggestionSection>();
+        if (groupBySeed)
+        {
+            foreach (var group in known.GroupBy(r => r.SeedChartId))
+            {
+                var rows = group
+                    .Select(r => BuildHotStreakRow(charts[r.ChartId], scores.GetValueOrDefault(r.ChartId),
+                        seedLabel: null))
+                    .OrderBy(r => r.Tier ?? TierListCategory.Unrecorded)
+                    .ToList();
+                var label = SeedLabel(group.Key, charts);
+                _sections.Add(new SuggestionSection(RecommendationCategories.HotStreak,
+                    label != null ? L["Like {0}", label].Value : L[RecommendationCategories.HotStreak].Value,
+                    rows,
+                    HotStreakCaptionDetail(group.First().SeedPeerRanking, group.First().SeedIsFallback)));
+            }
+        }
+        else
+        {
+            var rows = known
+                .Select(r => BuildHotStreakRow(charts[r.ChartId], scores.GetValueOrDefault(r.ChartId),
+                    SeedLabel(r.SeedChartId, charts)))
+                .ToList();
+            _sections.Add(new SuggestionSection(RecommendationCategories.HotStreak,
+                L[RecommendationCategories.HotStreak].Value, rows));
+        }
+    }
+
+    // The visible caption is just "Like {seed}" (owner, field test 1 — the long form
+    // read as clutter); the Peers-bar brag and the fallback distinction ride the
+    // caption's tooltip instead.
+    private string? HotStreakCaptionDetail(double? peerRanking, bool isFallback)
+    {
+        var pct = peerRanking != null ? (int)Math.Round(peerRanking.Value * 100) : (int?)null;
+        if (isFallback)
+            return pct != null
+                ? L["One of your all-time best — you beat {0}% of Peers.", pct].Value
+                : L["One of your all-time best."].Value;
+        return pct != null ? L["You beat {0}% of Peers on this.", pct].Value : null;
+    }
+
+    private bool _fallbackPillShown;
+
+    private void UpdateFallbackPill(bool show)
+    {
+        if (HeaderSlot == null || show == _fallbackPillShown) return;
+        _fallbackPillShown = show;
+        HeaderSlot.Set(show ? FallbackPill() : null);
+    }
+
+    // A quiet warning glyph, not a text pill (owner, field test 1): the title bar has
+    // no room for words, and the full story fits in the tooltip.
+    private RenderFragment FallbackPill() =>
+        @<span class="dash-head-flag"
+               title="@L["You don't have any matching recent highlights — suggesting charts similar to your all-time best instead."]">
+            <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small"/>
+        </span>;
+
+    private static string? SeedLabel(Guid? seedChartId, IReadOnlyDictionary<Guid, Chart> charts)
+    {
+        return seedChartId != null && charts.TryGetValue(seedChartId.Value, out var seed)
+            ? $"{seed.Song.Name} {seed.DifficultyString}"
+            : null;
+    }
+
+    // Unpassed targets carry the tier; outdated-score targets (the toggle) keep their
+    // stale score with its age — the row says why it counts as unexplored.
+    private SuggestionRow BuildHotStreakRow(Chart chart, RecordedPhoenixScore? score, string? seedLabel)
+    {
+        var hasScore = score is { IsBroken: false, Score: not null };
+        var age = hasScore
+            ? L["{0} days old", (int)(Clock.Now - score!.RecordedDate).TotalDays].Value
+            : null;
+        var detail = seedLabel != null
+            ? age != null ? $"≈ {seedLabel} · {age}" : $"≈ {seedLabel}"
+            : age;
+        return new SuggestionRow(chart, score, detail,
+            hasScore ? null : _lensTiers.TryGetValue(chart.Id, out var tier) ? tier : (TierListCategory?)null,
+            ShowScore: hasScore);
+    }
+
     // The compact chart card the strips render — art-forward, bubble overlaid, veto
     // overlay in edit mode. Same click/veto semantics as the vertical rows.
     private RenderFragment<(SuggestionSection Section, SuggestionRow Row)> Card => ctx =>
@@ -302,7 +442,7 @@ else
                 }
                 else if (ctx.Row.ShowScore && ctx.Row.Score?.Score != null)
                 {
-                    <LetterGradeIcon Grade="ctx.Row.Score.Score.Value.LetterGrade"
+                    <LetterGradeIcon Grade="ctx.Row.Score.Score.Value.LetterGradeFor(_mix)"
                                      IsBroken="ctx.Row.Score.IsBroken" Height="14"/>
                     <span>@(((int)ctx.Row.Score.Score.Value).ToString("N0"))</span>
                 }
@@ -391,7 +531,7 @@ else
         RecommendationCategories.SkillTitles, RecommendationCategories.PushPGs,
         RecommendationCategories.ImproveTop50, RecommendationCategories.RevisitOldScores,
         RecommendationCategories.FillScores, RecommendationCategories.WeeklyCharts,
-        RecommendationCategories.PushPumbility
+        RecommendationCategories.PushPumbility, RecommendationCategories.HotStreak
     };
 
     private static string? CategoryName(RecommendationCategory category)
@@ -405,6 +545,7 @@ else
             RecommendationCategory.FillScores => RecommendationCategories.FillScores,
             RecommendationCategory.WeeklyCharts => RecommendationCategories.WeeklyCharts,
             RecommendationCategory.PushPumbility => RecommendationCategories.PushPumbility,
+            RecommendationCategory.HotStreak => RecommendationCategories.HotStreak,
             _ => null
         };
     }

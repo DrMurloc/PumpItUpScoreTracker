@@ -4460,17 +4460,20 @@
   <data name="Best place" xml:space="preserve">
     <value>Best place</value>
   </data>
-  <data name="Board #1s" xml:space="preserve">
-    <value>Board #1s</value>
+  <data name="Chart Board #1s" xml:space="preserve">
+    <value>Chart Board #1s</value>
   </data>
-  <data name="Board placements" xml:space="preserve">
-    <value>Board placements</value>
+  <data name="Chart Boards" xml:space="preserve">
+    <value>Chart Boards</value>
   </data>
-  <data name="Board rank - lower is better" xml:space="preserve">
-    <value>Board rank - lower is better</value>
+  <data name="Chart board placements" xml:space="preserve">
+    <value>Chart board placements</value>
   </data>
-  <data name="boards" xml:space="preserve">
-    <value>boards</value>
+  <data name="PUMBILITY rank - lower is better" xml:space="preserve">
+    <value>PUMBILITY rank - lower is better</value>
+  </data>
+  <data name="chart boards" xml:space="preserve">
+    <value>chart boards</value>
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Boards</value>
@@ -4505,8 +4508,8 @@
   <data name="Last import failed" xml:space="preserve">
     <value>Last import failed</value>
   </data>
-  <data name="level 24+, first ever, SS and up" xml:space="preserve">
-    <value>level 24+, first ever, SS and up</value>
+  <data name="level 24+, first ever, any grade" xml:space="preserve">
+    <value>level 24+, first ever, any grade</value>
   </data>
   <data name="level 24+, must beat the standing record" xml:space="preserve">
     <value>level 24+, must beat the standing record</value>
@@ -4514,8 +4517,8 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>Linked to a site account</value>
   </data>
-  <data name="Most boards climbed" xml:space="preserve">
-    <value>Most boards climbed</value>
+  <data name="Biggest board climbers" xml:space="preserve">
+    <value>Biggest board climbers</value>
   </data>
   <data name="Movers of the week" xml:space="preserve">
     <value>Movers of the week</value>
@@ -4547,8 +4550,8 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>No rankings yet - they appear after the first weekly import.</value>
   </data>
-  <data name="Nobody cleared the climb threshold this week." xml:space="preserve">
-    <value>Nobody cleared the climb threshold this week.</value>
+  <data name="Nobody climbed a chart board this week." xml:space="preserve">
+    <value>Nobody climbed a chart board this week.</value>
   </data>
   <data name="Official Leaderboards Admin" xml:space="preserve">
     <value>Official Leaderboards Admin</value>
@@ -4754,361 +4757,1153 @@
   <data name="Biased towards larger folders" xml:space="preserve">
     <value>Biased towards larger folders</value>
   </data>
-  <data name="All Mixes" xml:space="preserve">
-    <value>모든 시리즈|||All Mixes|||모든 시리즈</value>
+  <data name="Add the PIU Scores bot to your Discord server" xml:space="preserve">
+    <value>Add the PIU Scores bot to your Discord server</value>
   </data>
-  <data name="Applied filters" xml:space="preserve">
-    <value>적용된 필터|||Applied filters|||적용된 필터</value>
+  <data name="Invite the bot, then run /piu register in any channel to start its feeds and commands." xml:space="preserve">
+    <value>Invite the bot, then run /piu register in any channel to start its feeds and commands.</value>
   </data>
-  <data name="Available in" xml:space="preserve">
-    <value>수록된 시리즈|||Available in|||수록된 시리즈</value>
+  <data name="Add the bot" xml:space="preserve">
+    <value>Add the bot</value>
   </data>
-  <data name="BPM from" xml:space="preserve">
-    <value>최소 BPM|||BPM from|||최소 BPM</value>
+  <data name="This channel now receives **{0} — {1}**. {2}" xml:space="preserve">
+    <value>This channel now receives **{0} — {1}**. {2}</value>
   </data>
-  <data name="BPM to" xml:space="preserve">
-    <value>최대 BPM|||BPM to|||최대 BPM</value>
+  <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
+    <value>Results and the new lineup post when the board rotates each Monday.</value>
   </data>
-  <data name="Community Vote" xml:space="preserve">
-    <value>커뮤니티 투표|||Community Vote|||커뮤니티 투표</value>
+  <data name="Yesterday's board and today's chart post each day." xml:space="preserve">
+    <value>Yesterday's board and today's chart post each day.</value>
   </data>
-  <data name="Community intelligence" xml:space="preserve">
-    <value>커뮤니티 데이터|||Community intelligence|||커뮤니티 데이터</value>
+  <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
+    <value>The digest posts after the weekly Sunday sweep.</value>
   </data>
-  <data name="Content" xml:space="preserve">
-    <value>콘텐츠|||Content|||콘텐츠</value>
+  <data name="This channel was updated to receive notifications for the {0} community in PIU Scores!" xml:space="preserve">
+    <value>This channel was updated to receive notifications for the {0} community in PIU Scores!</value>
   </data>
-  <data name="Debut" xml:space="preserve">
-    <value>데뷔|||Debut|||데뷔</value>
+  <data name="This channel no longer receives notifications for the {0} community in PIU Scores" xml:space="preserve">
+    <value>This channel no longer receives notifications for the {0} community in PIU Scores</value>
   </data>
-  <data name="Debut mix" xml:space="preserve">
-    <value>데뷔 시리즈|||Debut mix|||데뷔 시리즈</value>
+  <data name="That command isn't available yet." xml:space="preserve">
+    <value>That command isn't available yet.</value>
   </data>
-  <data name="Download CSV" xml:space="preserve">
-    <value>CSV 다운로드|||Download CSV|||CSV 다운로드</value>
+  <data name="{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} Max Combo" xml:space="preserve">
+    <value>{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} Max Combo</value>
   </data>
-  <data name="Export charts" xml:space="preserve">
-    <value>채보 내보내기|||Export charts|||채보 내보내기</value>
+  <data name="{0:N0} Lost to Greats ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lost to Greats ({1}%)</value>
   </data>
-  <data name="Full Song" xml:space="preserve">
-    <value>풀 송|||Full Song|||풀 송</value>
+  <data name="{0:N0} Lost to Goods ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lost to Goods ({1}%)</value>
   </data>
-  <data name="Grade" xml:space="preserve">
-    <value>등급|||Grade|||등급</value>
+  <data name="{0:N0} Lost to Bads ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lost to Bads ({1}%)</value>
   </data>
-  <data name="Group by chart" xml:space="preserve">
-    <value>채보별로 묶기|||Group by chart|||채보별로 묶기</value>
+  <data name="{0:N0} Lost to Misses ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lost to Misses ({1}%)</value>
   </data>
-  <data name="Grouped: one row per chart, level history collapsed. Per-mix: every appearance is its own row. Identical while scope is a single mix." xml:space="preserve">
-    <value>묶기: 채보당 한 줄로 레벨 변화를 함께 표시합니다. 시리즈별: 수록마다 한 줄입니다. 단일 시리즈 범위에서는 동일합니다.|||Grouped: one row per chart, level history collapsed. Per-mix: every appearance is its own row. Identical while scope is a single mix.|||묶기: 채보당 한 줄로 레벨 변화를 함께 표시합니다. 시리즈별: 수록마다 한 줄입니다. 단일 시리즈 범위에서는 동일합니다.</value>
+  <data name="{0:N0} Lost to Combo ({1}%)" xml:space="preserve">
+    <value>{0:N0} Lost to Combo ({1}%)</value>
   </data>
-  <data name="In" xml:space="preserve">
-    <value>수록|||In|||수록</value>
+  <data name="{0:N0} Estimated Arrow Presses" xml:space="preserve">
+    <value>{0:N0} Estimated Arrow Presses</value>
   </data>
-  <data name="Legacy Difficulty" xml:space="preserve">
-    <value>레거시 난이도|||Legacy Difficulty|||레거시 난이도</value>
+  <data name="That scoring configuration is invalid." xml:space="preserve">
+    <value>That scoring configuration is invalid.</value>
   </data>
-  <data name="Legacy grade" xml:space="preserve">
-    <value>레거시 등급|||Legacy grade|||레거시 등급</value>
+  <data name="Give a song name." xml:space="preserve">
+    <value>Give a song name.</value>
   </data>
-  <data name="Legacy grade at least" xml:space="preserve">
-    <value>레거시 등급 이상|||Legacy grade at least|||레거시 등급 이상</value>
+  <data name="No chart found for &quot;{0}&quot; on {1}." xml:space="preserve">
+    <value>No chart found for &quot;{0}&quot; on {1}.</value>
   </data>
-  <data name="Level change" xml:space="preserve">
-    <value>레벨 변화|||Level change|||레벨 변화</value>
+  <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
+    <value>Pick a difficulty from the list for its breakdown and similar charts.</value>
   </data>
-  <data name="Level from" xml:space="preserve">
-    <value>최소 레벨|||Level from|||최소 레벨</value>
+  <data name="Scoring level **{0:0.0}** (listed {1})" xml:space="preserve">
+    <value>Scoring level **{0:0.0}** (listed {1})</value>
   </data>
-  <data name="Level to" xml:space="preserve">
-    <value>최대 레벨|||Level to|||최대 레벨</value>
+  <data name="Pass **{0}**" xml:space="preserve">
+    <value>Pass **{0}**</value>
   </data>
-  <data name="Mix scope" xml:space="preserve">
-    <value>시리즈 범위|||Mix scope|||시리즈 범위</value>
+  <data name="Similar charts" xml:space="preserve">
+    <value>Similar charts</value>
   </data>
-  <data name="Mixes" xml:space="preserve">
-    <value>시리즈|||Mixes|||시리즈</value>
+  <data name="Open chart page" xml:space="preserve">
+    <value>Open chart page</value>
   </data>
-  <data name="My data" xml:space="preserve">
-    <value>내 기록|||My data|||내 기록</value>
+  <data name="No charts matched those settings." xml:space="preserve">
+    <value>No charts matched those settings.</value>
   </data>
-  <data name="My score" xml:space="preserve">
-    <value>내 점수|||My score|||내 점수</value>
+  <data name="Drew 1 chart" xml:space="preserve">
+    <value>Drew 1 chart</value>
   </data>
-  <data name="NPS from" xml:space="preserve">
-    <value>최소 NPS|||NPS from|||최소 NPS</value>
+  <data name="Drew {0} charts" xml:space="preserve">
+    <value>Drew {0} charts</value>
   </data>
-  <data name="NPS to" xml:space="preserve">
-    <value>최대 NPS|||NPS to|||최대 NPS</value>
+  <data name="Drew {0} — {1}" xml:space="preserve">
+    <value>Drew {0} — {1}</value>
   </data>
-  <data name="No charts match these filters" xml:space="preserve">
-    <value>필터에 맞는 채보가 없습니다|||No charts match these filters|||필터에 맞는 채보가 없습니다</value>
+  <data name="Your saved randomizer settings" xml:space="preserve">
+    <value>Your saved randomizer settings</value>
   </data>
-  <data name="Not available in" xml:space="preserve">
-    <value>미수록 시리즈|||Not available in|||미수록 시리즈</value>
+  <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
+    <value>{0} · levels {1}–{2} · {3}</value>
   </data>
-  <data name="Not in" xml:space="preserve">
-    <value>미수록|||Not in|||미수록</value>
+  <data name="Co-op" xml:space="preserve">
+    <value>Co-op</value>
   </data>
-  <data name="Not yet re-cleared in {0}" xml:space="preserve">
-    <value>{0}에서 아직 재클리어하지 않음|||Not yet re-cleared in {0}|||{0}에서 아직 재클리어하지 않음</value>
+  <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
+    <value>You don't have a saved preset called &quot;{0}&quot;.</value>
   </data>
-  <data name="Note count" xml:space="preserve">
-    <value>노트 수|||Note count|||노트 수</value>
+  <data name="&quot;{0}&quot; didn't match any charts right now." xml:space="preserve">
+    <value>&quot;{0}&quot; didn't match any charts right now.</value>
   </data>
-  <data name="Notes from" xml:space="preserve">
-    <value>최소 노트 수|||Notes from|||최소 노트 수</value>
+  <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
+    <value>No suggestions right now — try a different goal, or import more scores first.</value>
   </data>
-  <data name="Notes to" xml:space="preserve">
-    <value>최대 노트 수|||Notes to|||최대 노트 수</value>
+  <data name="Suggested for you — {0}" xml:space="preserve">
+    <value>Suggested for you — {0}</value>
   </data>
-  <data name="One row per chart and mix" xml:space="preserve">
-    <value>채보·시리즈별 한 줄|||One row per chart and mix|||채보·시리즈별 한 줄</value>
+  <data name="based on your scores" xml:space="preserve">
+    <value>based on your scores</value>
   </data>
-  <data name="Pass rate at least (%)" xml:space="preserve">
-    <value>최소 클리어율 (%)|||Pass rate at least (%)|||최소 클리어율 (%)</value>
+  <data name="Open Suggested Charts" xml:space="preserve">
+    <value>Open Suggested Charts</value>
   </data>
-  <data name="Phoenix grade at least" xml:space="preserve">
-    <value>Phoenix 등급 이상|||Phoenix grade at least|||Phoenix 등급 이상</value>
+  <data name="Done — this channel now receives {0} for {1}." xml:space="preserve">
+    <value>Done — this channel now receives {0} for {1}.</value>
   </data>
-  <data name="Phoenix plate at least" xml:space="preserve">
-    <value>Phoenix 플레이트 이상|||Phoenix plate at least|||Phoenix 플레이트 이상</value>
+  <data name="Unknown feed." xml:space="preserve">
+    <value>Unknown feed.</value>
   </data>
-  <data name="Phoenix score from" xml:space="preserve">
-    <value>Phoenix 최저 점수|||Phoenix score from|||Phoenix 최저 점수</value>
+  <data name="Pick a mix." xml:space="preserve">
+    <value>Pick a mix.</value>
   </data>
-  <data name="Phoenix score to" xml:space="preserve">
-    <value>Phoenix 최고 점수|||Phoenix score to|||Phoenix 최고 점수</value>
+  <data name="Give a community name or an invite code." xml:space="preserve">
+    <value>Give a community name or an invite code.</value>
   </data>
-  <data name="Quick record" xml:space="preserve">
-    <value>빠른 기록|||Quick record|||빠른 기록</value>
+  <data name="Done — this channel is registered for that community." xml:space="preserve">
+    <value>Done — this channel is registered for that community.</value>
   </data>
-  <data name="Recorded from" xml:space="preserve">
-    <value>기록일 시작|||Recorded from|||기록일 시작</value>
+  <data name="That community wasn't found, or the invite code is wrong." xml:space="preserve">
+    <value>That community wasn't found, or the invite code is wrong.</value>
   </data>
-  <data name="Recorded to" xml:space="preserve">
-    <value>기록일 끝|||Recorded to|||기록일 끝</value>
+  <data name="You need the Manage Channels permission in this server to do that." xml:space="preserve">
+    <value>You need the Manage Channels permission in this server to do that.</value>
   </data>
-  <data name="Recorded {0}" xml:space="preserve">
-    <value>{0} 기록 완료|||Recorded {0}|||{0} 기록 완료</value>
+  <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
+    <value>I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again.</value>
   </data>
-  <data name="Remix" xml:space="preserve">
-    <value>리믹스|||Remix|||리믹스</value>
+  <data name="Removed {0} for {1} from this channel." xml:space="preserve">
+    <value>Removed {0} for {1} from this channel.</value>
   </data>
-  <data name="Rerated down" xml:space="preserve">
-    <value>레벨 하향|||Rerated down|||레벨 하향</value>
+  <data name="That feed wasn't registered here." xml:space="preserve">
+    <value>That feed wasn't registered here.</value>
   </data>
-  <data name="Rerated up" xml:space="preserve">
-    <value>레벨 상향|||Rerated up|||레벨 상향</value>
+  <data name="Removed the {0} community feed from this channel." xml:space="preserve">
+    <value>Removed the {0} community feed from this channel.</value>
   </data>
-  <data name="Scoring level from" xml:space="preserve">
-    <value>최소 스코어링 레벨|||Scoring level from|||최소 스코어링 레벨</value>
+  <data name="That community registration wasn't found." xml:space="preserve">
+    <value>That community registration wasn't found.</value>
   </data>
-  <data name="Scoring level to" xml:space="preserve">
-    <value>최대 스코어링 레벨|||Scoring level to|||최대 스코어링 레벨</value>
+  <data name="Pick a registration to remove from the list." xml:space="preserve">
+    <value>Pick a registration to remove from the list.</value>
   </data>
-  <data name="Shape" xml:space="preserve">
-    <value>형식|||Shape|||형식</value>
+  <data name="This channel isn't registered for anything yet. Use /piu register to add a feed." xml:space="preserve">
+    <value>This channel isn't registered for anything yet. Use /piu register to add a feed.</value>
   </data>
-  <data name="Short Cut" xml:space="preserve">
-    <value>숏컷|||Short Cut|||숏컷</value>
+  <data name="This channel receives" xml:space="preserve">
+    <value>This channel receives</value>
+  </data>
+  <data name="Remove one with /piu unregister" xml:space="preserve">
+    <value>Remove one with /piu unregister</value>
+  </data>
+  <data name="PIU Scores tools" xml:space="preserve">
+    <value>PIU Scores tools</value>
+  </data>
+  <data name="Calculate a Phoenix score from a result screen" xml:space="preserve">
+    <value>Calculate a Phoenix score from a result screen</value>
+  </data>
+  <data name="Find a chart and its pages" xml:space="preserve">
+    <value>Find a chart and its pages</value>
+  </data>
+  <data name="Draw a random set of charts" xml:space="preserve">
+    <value>Draw a random set of charts</value>
+  </data>
+  <data name="Personalized chart suggestions (private)" xml:space="preserve">
+    <value>Personalized chart suggestions (private)</value>
+  </data>
+  <data name="Register this channel for a feed" xml:space="preserve">
+    <value>Register this channel for a feed</value>
+  </data>
+  <data name="Community score and title notifications" xml:space="preserve">
+    <value>Community score and title notifications</value>
+  </data>
+  <data name="Weekly Charts — results and the new lineup" xml:space="preserve">
+    <value>Weekly Charts — results and the new lineup</value>
+  </data>
+  <data name="Daily Step — yesterday's board and today's chart" xml:space="preserve">
+    <value>Daily Step — yesterday's board and today's chart</value>
+  </data>
+  <data name="Official leaderboards — the weekly digest" xml:space="preserve">
+    <value>Official leaderboards — the weekly digest</value>
+  </data>
+  <data name="Stop one of this channel's feeds" xml:space="preserve">
+    <value>Stop one of this channel's feeds</value>
+  </data>
+  <data name="Show what this channel is registered for" xml:space="preserve">
+    <value>Show what this channel is registered for</value>
   </data>
   <data name="Song name" xml:space="preserve">
-    <value>노래 이름|||Song name|||노래 이름</value>
+    <value>Song name</value>
+  </data>
+  <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
+    <value>Which mix (defaults to Phoenix 2)</value>
+  </data>
+  <data name="Which mix" xml:space="preserve">
+    <value>Which mix</value>
+  </data>
+  <data name="How many (1–10, default 3)" xml:space="preserve">
+    <value>How many (1–10, default 3)</value>
+  </data>
+  <data name="Chart type (default Singles)" xml:space="preserve">
+    <value>Chart type (default Singles)</value>
+  </data>
+  <data name="Singles or Doubles" xml:space="preserve">
+    <value>Singles or Doubles</value>
+  </data>
+  <data name="Lowest level" xml:space="preserve">
+    <value>Lowest level</value>
+  </data>
+  <data name="Highest level" xml:space="preserve">
+    <value>Highest level</value>
+  </data>
+  <data name="One of your saved randomizer presets" xml:space="preserve">
+    <value>One of your saved randomizer presets</value>
+  </data>
+  <data name="What to work on (default Title Hunt)" xml:space="preserve">
+    <value>What to work on (default Title Hunt)</value>
+  </data>
+  <data name="Community name" xml:space="preserve">
+    <value>Community name</value>
+  </data>
+  <data name="Invite code (private communities only)" xml:space="preserve">
+    <value>Invite code (private communities only)</value>
+  </data>
+  <data name="Language for this channel's posts (default English)" xml:space="preserve">
+    <value>Language for this channel's posts (default English)</value>
+  </data>
+  <data name="Perfect count" xml:space="preserve">
+    <value>Perfect count</value>
+  </data>
+  <data name="Great count" xml:space="preserve">
+    <value>Great count</value>
+  </data>
+  <data name="Good count" xml:space="preserve">
+    <value>Good count</value>
+  </data>
+  <data name="Bad count" xml:space="preserve">
+    <value>Bad count</value>
+  </data>
+  <data name="Miss count" xml:space="preserve">
+    <value>Miss count</value>
+  </data>
+  <data name="Max combo" xml:space="preserve">
+    <value>Max combo</value>
+  </data>
+  <data name="Calories burned (optional — estimates step count)" xml:space="preserve">
+    <value>Calories burned (optional — estimates step count)</value>
+  </data>
+  <data name="Which registration to remove" xml:space="preserve">
+    <value>Which registration to remove</value>
+  </data>
+  <data name="Weekly Charts — final board" xml:space="preserve">
+    <value>Weekly Charts — final board</value>
+  </data>
+  <data name="{0} players · week of {1}" xml:space="preserve">
+    <value>{0} players · week of {1}</value>
+  </data>
+  <data name="Card {0} of {1}" xml:space="preserve">
+    <value>Card {0} of {1}</value>
+  </data>
+  <data name="{0} more charts had entries" xml:space="preserve">
+    <value>{0} more charts had entries</value>
+  </data>
+  <data name="one per level bucket" xml:space="preserve">
+    <value>one per level bucket</value>
+  </data>
+  <data name="The new board is being drawn." xml:space="preserve">
+    <value>The new board is being drawn.</value>
+  </data>
+  <data name="resets Monday midnight ET" xml:space="preserve">
+    <value>resets Monday midnight ET</value>
+  </data>
+  <data name="Yesterday" xml:space="preserve">
+    <value>Yesterday</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="Limbo (lowest passing won)" xml:space="preserve">
+    <value>Limbo (lowest passing won)</value>
+  </data>
+  <data name="**Limbo Day** — lowest passing score wins. No breaking." xml:space="preserve">
+    <value>**Limbo Day** — lowest passing score wins. No breaking.</value>
+  </data>
+  <data name="Highest score wins." xml:space="preserve">
+    <value>Highest score wins.</value>
+  </data>
+  <data name="yesterday's board settled" xml:space="preserve">
+    <value>yesterday's board settled</value>
+  </data>
+  <data name="resets midnight ET" xml:space="preserve">
+    <value>resets midnight ET</value>
+  </data>
+  <data name="Daily Step board" xml:space="preserve">
+    <value>Daily Step board</value>
+  </data>
+  <data name="This week on the official boards" xml:space="preserve">
+    <value>This week on the official boards</value>
+  </data>
+  <data name="vs {0}" xml:space="preserve">
+    <value>vs {0}</value>
+  </data>
+  <data name="first week" xml:space="preserve">
+    <value>first week</value>
+  </data>
+  <data name="swept Sunday" xml:space="preserve">
+    <value>swept Sunday</value>
+  </data>
+  <data name="PUMBILITY top 10" xml:space="preserve">
+    <value>PUMBILITY top 10</value>
+  </data>
+  <data name="PUMBILITY movers" xml:space="preserve">
+    <value>PUMBILITY movers</value>
+  </data>
+  <data name="**{0}** climbed {1} chart boards (+{2})" xml:space="preserve">
+    <value>**{0}** climbed {1} chart boards (+{2})</value>
+  </data>
+  <data name="World firsts &amp; new #1s" xml:space="preserve">
+    <value>World firsts &amp; new #1s</value>
+  </data>
+  <data name="World First" xml:space="preserve">
+    <value>World First</value>
+  </data>
+  <data name="{0} folder first" xml:space="preserve">
+    <value>{0} folder first</value>
+  </data>
+  <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
+    <value>New #1 — **{0}** on {1} · {2:N0}</value>
+  </data>
+  <data name=", dethroning {0}" xml:space="preserve">
+    <value>, dethroning {0}</value>
+  </data>
+  <data name="To make the top 1000" xml:space="preserve">
+    <value>To make the top 1000</value>
+  </data>
+  <data name="**50× AAA at Lv.{0}**" xml:space="preserve">
+    <value>**50× AAA at Lv.{0}**</value>
+  </data>
+  <data name="**50× SSS at Lv.{0}**" xml:space="preserve">
+    <value>**50× SSS at Lv.{0}**</value>
+  </data>
+  <data name="PIU Scores official mirror" xml:space="preserve">
+    <value>PIU Scores official mirror</value>
+  </data>
+  <data name="This week" xml:space="preserve">
+    <value>This week</value>
+  </data>
+  <data name="What it takes" xml:space="preserve">
+    <value>What it takes</value>
+  </data>
+  <data name="a chart" xml:space="preserve">
+    <value>a chart</value>
+  </data>
+  <data name="**{0}** completed" xml:space="preserve">
+    <value>**{0}** completed</value>
+  </data>
+  <data name="**{0}** paragon → {1}" xml:space="preserve">
+    <value>**{0}** paragon → {1}</value>
+  </data>
+  <data name="1 title" xml:space="preserve">
+    <value>1 title</value>
+  </data>
+  <data name="{0} titles" xml:space="preserve">
+    <value>{0} titles</value>
+  </data>
+  <data name="1 paragon" xml:space="preserve">
+    <value>1 paragon</value>
+  </data>
+  <data name="{0} paragons" xml:space="preserve">
+    <value>{0} paragons</value>
+  </data>
+  <data name="See more" xml:space="preserve">
+    <value>See more</value>
+  </data>
+  <data name="passed {0:N0} · upscored {1:N0}" xml:space="preserve">
+    <value>passed {0:N0} · upscored {1:N0}</value>
+  </data>
+  <data name="passed 1 chart" xml:space="preserve">
+    <value>passed 1 chart</value>
+  </data>
+  <data name="passed {0:N0} charts" xml:space="preserve">
+    <value>passed {0:N0} charts</value>
+  </data>
+  <data name="upscored 1 chart" xml:space="preserve">
+    <value>upscored 1 chart</value>
+  </data>
+  <data name="upscored {0:N0} charts" xml:space="preserve">
+    <value>upscored {0:N0} charts</value>
+  </data>
+  <data name="updated 1 chart" xml:space="preserve">
+    <value>updated 1 chart</value>
+  </data>
+  <data name="updated {0:N0} charts" xml:space="preserve">
+    <value>updated {0:N0} charts</value>
+  </data>
+  <data name="**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**Singles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**Singles competitive** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**Doubles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
+    <value>**Doubles competitive** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**All passed!**" xml:space="preserve">
+    <value>**All passed!**</value>
+  </data>
+  <data name="**All {0} or better**" xml:space="preserve">
+    <value>**All {0} or better**</value>
+  </data>
+  <data name="**#{0}** on {1} {2} weekly" xml:space="preserve">
+    <value>**#{0}** on {1} {2} weekly</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
+    <value>**#{0}** on {1} {2} Daily Step</value>
+  </data>
+  <data name="**#{0}** on {1} {2} Daily Step (Limbo)" xml:space="preserve">
+    <value>**#{0}** on {1} {2} Daily Step (Limbo)</value>
+  </data>
+  <data name="{0} {1}% → **{2}%**" xml:space="preserve">
+    <value>{0} {1}% → **{2}%**</value>
+  </data>
+  <data name="More scores" xml:space="preserve">
+    <value>More scores</value>
+  </data>
+  <data name="+{0} more: {1}" xml:space="preserve">
+    <value>+{0} more: {1}</value>
+  </data>
+  <data name="\* = reclears" xml:space="preserve">
+    <value>\* = reclears</value>
+  </data>
+  <data name="#{0} in your PUMBILITY" xml:space="preserve">
+    <value>#{0} in your PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY top 50" xml:space="preserve">
+    <value>PUMBILITY top 50</value>
+  </data>
+  <data name="Top scores among peers" xml:space="preserve">
+    <value>Top scores among peers</value>
+  </data>
+  <data name="PG · {0} of {1} peers have it" xml:space="preserve">
+    <value>PG · {0} of {1} peers have it</value>
+  </data>
+  <data name="#{0} of {1} peers" xml:space="preserve">
+    <value>#{0} of {1} peers</value>
+  </data>
+  <data name="Folder debut" xml:space="preserve">
+    <value>Folder debut</value>
+  </data>
+  <data name="Raised competitive level" xml:space="preserve">
+    <value>Raised competitive level</value>
+  </data>
+  <data name="Biggest gain of the session" xml:space="preserve">
+    <value>Biggest gain of the session</value>
+  </data>
+  <data name="Title progress" xml:space="preserve">
+    <value>Title progress</value>
+  </data>
+  <data name="First" xml:space="preserve">
+    <value>First</value>
+  </data>
+  <data name="Second" xml:space="preserve">
+    <value>Second</value>
+  </data>
+  <data name="Third" xml:space="preserve">
+    <value>Third</value>
+  </data>
+  <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
+    <value>{0} scored {1} {2} on {3}'s {4} {5} UCS</value>
+  </data>
+  <data name="Hot Streak" xml:space="preserve">
+    <value>Hot Streak</value>
+  </data>
+  <data name="Suggested · Hot Streak" xml:space="preserve">
+    <value>Suggested · Hot Streak</value>
+  </data>
+  <data name="More charts like the recent plays you crushed against your Peers." xml:space="preserve">
+    <value>More charts like the recent plays you crushed against your Peers.</value>
+  </data>
+  <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
+    <value>No matching standouts yet, go push yourself to start getting suggestions!</value>
+  </data>
+  <data name="Standout bar" xml:space="preserve">
+    <value>Standout bar</value>
+  </data>
+  <data name="Count a chart when you beat this % of Peers on it." xml:space="preserve">
+    <value>Count a chart when you beat this % of Peers on it.</value>
+  </data>
+  <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
+    <value>Bar off — any play that raised your competitive level counts.</value>
+  </data>
+  <data name="Look back" xml:space="preserve">
+    <value>Look back</value>
+  </data>
+  <data name="Last 30 days" xml:space="preserve">
+    <value>Last 30 days</value>
+  </data>
+  <data name="Last 90 days" xml:space="preserve">
+    <value>Last 90 days</value>
+  </data>
+  <data name="Last year" xml:space="preserve">
+    <value>Last year</value>
+  </data>
+  <data name="All time" xml:space="preserve">
+    <value>All time</value>
+  </data>
+  <data name="Treat very old scores as unplayed" xml:space="preserve">
+    <value>Treat very old scores as unplayed</value>
+  </data>
+  <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
+    <value>A chart you passed years ago and never revisited counts as new territory.</value>
+  </data>
+  <data name="Group by seed chart" xml:space="preserve">
+    <value>Group by seed chart</value>
+  </data>
+  <data name="Like {0}" xml:space="preserve">
+    <value>Like {0}</value>
+  </data>
+  <data name="You beat {0}% of Peers on this." xml:space="preserve">
+    <value>You beat {0}% of Peers on this.</value>
+  </data>
+  <data name="One of your all-time best — you beat {0}% of Peers." xml:space="preserve">
+    <value>One of your all-time best — you beat {0}% of Peers.</value>
+  </data>
+  <data name="One of your all-time best." xml:space="preserve">
+    <value>One of your all-time best.</value>
+  </data>
+  <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
+    <value>You don't have any matching recent highlights — suggesting charts similar to your all-time best instead.</value>
+  </data>
+  <data name="Imported" xml:space="preserve">
+    <value>Imported</value>
+  </data>
+  <data name="Photo proof" xml:space="preserve">
+    <value>Photo proof</value>
+  </data>
+  <data name="#{0} / {1}" xml:space="preserve">
+    <value>#{0} / {1}</value>
+  </data>
+  <data name="Back to Weekly Charts" xml:space="preserve">
+    <value>Back to Weekly Charts</value>
+  </data>
+  <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
+    <value>Broken plays score 0 — pass it to score it.</value>
+  </data>
+  <data name="Charts Not Yet Featured" xml:space="preserve">
+    <value>Charts Not Yet Featured</value>
+  </data>
+  <data name="Charts not yet featured" xml:space="preserve">
+    <value>Charts not yet featured</value>
+  </data>
+  <data name="Co-op earns no PUMBILITY; the Co-Op view ranks raw score." xml:space="preserve">
+    <value>Co-op earns no PUMBILITY; the Co-Op view ranks raw score.</value>
+  </data>
+  <data name="Counted" xml:space="preserve">
+    <value>Counted</value>
+  </data>
+  <data name="Daily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="Density" xml:space="preserve">
+    <value>Density</value>
+  </data>
+  <data name="Every eligible chart has been featured." xml:space="preserve">
+    <value>Every eligible chart has been featured.</value>
+  </data>
+  <data name="Grade multipliers" xml:space="preserve">
+    <value>Grade multipliers</value>
+  </data>
+  <data name="How Scoring Works" xml:space="preserve">
+    <value>How Scoring Works</value>
+  </data>
+  <data name="Level {0}" xml:space="preserve">
+    <value>Level {0}</value>
+  </data>
+  <data name="Limbo" xml:space="preserve">
+    <value>Limbo</value>
+  </data>
+  <data name="Limbo — lowest pass wins" xml:space="preserve">
+    <value>Limbo — lowest pass wins</value>
+  </data>
+  <data name="Monthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="Not played yet" xml:space="preserve">
+    <value>Not played yet</value>
+  </data>
+  <data name="Plate bonuses" xml:space="preserve">
+    <value>Plate bonuses</value>
+  </data>
+  <data name="Play today's Step to start your streak." xml:space="preserve">
+    <value>Play today's Step to start your streak.</value>
+  </data>
+  <data name="Process Weekly Charts" xml:space="preserve">
+    <value>Process Weekly Charts</value>
+  </data>
+  <data name="Scores land here as boards close." xml:space="preserve">
+    <value>Scores land here as boards close.</value>
+  </data>
+  <data name="Sign in to record scores, track your standings and keep your Daily Step history." xml:space="preserve">
+    <value>Sign in to record scores, track your standings and keep your Daily Step history.</value>
+  </data>
+  <data name="The rules" xml:space="preserve">
+    <value>The rules</value>
+  </data>
+  <data name="This week's charts post Monday at midnight ET." xml:space="preserve">
+    <value>This week's charts post Monday at midnight ET.</value>
+  </data>
+  <data name="Ties break by total raw score." xml:space="preserve">
+    <value>Ties break by total raw score.</value>
+  </data>
+  <data name="Top scores" xml:space="preserve">
+    <value>Top scores</value>
+  </data>
+  <data name="Week" xml:space="preserve">
+    <value>Week</value>
+  </data>
+  <data name="Week {0} — best {1} count · PUMBILITY" xml:space="preserve">
+    <value>Week {0} — best {1} count · PUMBILITY</value>
+  </data>
+  <data name="Your Daily Step History" xml:space="preserve">
+    <value>Your Daily Step History</value>
+  </data>
+  <data name="Your best 4 scores per week of the month count." xml:space="preserve">
+    <value>Your best 4 scores per week of the month count.</value>
+  </data>
+  <data name="current" xml:space="preserve">
+    <value>current</value>
+  </data>
+  <data name="last 14 days" xml:space="preserve">
+    <value>last 14 days</value>
+  </data>
+  <data name="resets in {0}" xml:space="preserve">
+    <value>resets in {0}</value>
+  </data>
+  <data name="show all {0}" xml:space="preserve">
+    <value>show all {0}</value>
+  </data>
+  <data name="show suggested only" xml:space="preserve">
+    <value>show suggested only</value>
+  </data>
+  <data name="showing suggested" xml:space="preserve">
+    <value>showing suggested</value>
+  </data>
+  <data name="suggested left" xml:space="preserve">
+    <value>suggested left</value>
+  </data>
+  <data name="{0} charts · rotates Monday midnight ET" xml:space="preserve">
+    <value>{0} charts · rotates Monday midnight ET</value>
+  </data>
+  <data name="{0} on board" xml:space="preserve">
+    <value>{0} on board</value>
+  </data>
+  <data name="{0}d {1}h" xml:space="preserve">
+    <value>{0}d {1}h</value>
+  </data>
+  <data name="{0}h {1}m" xml:space="preserve">
+    <value>{0}h {1}m</value>
+  </data>
+  <data name="{0}m" xml:space="preserve">
+    <value>{0}m</value>
+  </data>
+  <data name="Add photo" xml:space="preserve">
+    <value>Add photo</value>
+  </data>
+  <data name="Importing with your PIUGAME login records scores automatically — manual entry is the fallback." xml:space="preserve">
+    <value>Importing with your PIUGAME login records scores automatically — manual entry is the fallback.</value>
+  </data>
+  <data name="Optional — a photo is your proof if a score's legitimacy is ever disputed." xml:space="preserve">
+    <value>Optional — a photo is your proof if a score's legitimacy is ever disputed.</value>
+  </data>
+  <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
+    <value>Rotate this week's board now? This closes the current week and draws the next set.</value>
+  </data>
+  <data name="Rotation started." xml:space="preserve">
+    <value>Rotation started.</value>
+  </data>
+  <data name="Suspected cheaters will be required to attach photos for future competition entries." xml:space="preserve">
+    <value>Suspected cheaters will be required to attach photos for future competition entries.</value>
+  </data>
+  <data name="There was an error while recording the score." xml:space="preserve">
+    <value>There was an error while recording the score.</value>
+  </data>
+  <data name="There was an error while uploading your image, please try again." xml:space="preserve">
+    <value>There was an error while uploading your image, please try again.</value>
+  </data>
+  <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
+    <value>Your file was larger than 10MB, please reduce it and try again.</value>
+  </data>
+  <data name="Weekly Charts — Pump It Up" xml:space="preserve">
+    <value>Weekly Charts — Pump It Up</value>
+  </data>
+  <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
+    <value>{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board.</value>
+  </data>
+  <data name="Full board" xml:space="preserve">
+    <value>Full board</value>
+  </data>
+  <data name="top {0} of {1}" xml:space="preserve">
+    <value>top {0} of {1}</value>
+  </data>
+  <data name="Week {0} — best {1} count · raw score" xml:space="preserve">
+    <value>Week {0} — best {1} count · raw score</value>
+  </data>
+  <data name="Leave empty if broken." xml:space="preserve">
+    <value>Leave empty if broken.</value>
+  </data>
+  <data name="1 Player" xml:space="preserve">
+    <value>1 Player</value>
+  </data>
+  <data name="{0} Players" xml:space="preserve">
+    <value>{0} Players</value>
+  </data>
+  <data name="This week on the boards" xml:space="preserve">
+    <value>This week on the boards</value>
+  </data>
+  <data name="{0} players left their mark on the chart boards." xml:space="preserve">
+    <value>{0} players left their mark on the chart boards.</value>
+  </data>
+  <data name="{0} players left their mark — and {1} fell to its first {2}." xml:space="preserve">
+    <value>{0} players left their mark — and {1} fell to its first {2}.</value>
+  </data>
+  <data name="Chart board entries" xml:space="preserve">
+    <value>Chart board entries</value>
+  </data>
+  <data name="{0} new · {1} upscored" xml:space="preserve">
+    <value>{0} new · {1} upscored</value>
+  </data>
+  <data name="Players active" xml:space="preserve">
+    <value>Players active</value>
+  </data>
+  <data name="on any chart board" xml:space="preserve">
+    <value>on any chart board</value>
+  </data>
+  <data name="first ever, any grade" xml:space="preserve">
+    <value>first ever, any grade</value>
+  </data>
+  <data name="Biggest PUMBILITY gainer" xml:space="preserve">
+    <value>Biggest PUMBILITY gainer</value>
+  </data>
+  <data name="Highest world first" xml:space="preserve">
+    <value>Highest world first</value>
+  </data>
+  <data name="Biggest board climber" xml:space="preserve">
+    <value>Biggest board climber</value>
+  </data>
+  <data name="{0} new" xml:space="preserve">
+    <value>{0} new</value>
+  </data>
+  <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
+    <value>Top 100 · Top 1000 floors — 50× SS</value>
+  </data>
+  <data name="held" xml:space="preserve">
+    <value>held</value>
+  </data>
+  <data name="what it takes to hold each rung of the PUMBILITY board" xml:space="preserve">
+    <value>what it takes to hold each rung of the PUMBILITY board</value>
+  </data>
+  <data name="Debuted this week" xml:space="preserve">
+    <value>Debuted this week</value>
+  </data>
+  <data name="+{0} more" xml:space="preserve">
+    <value>+{0} more</value>
+  </data>
+  <data name="first-ever appearance on any chart board" xml:space="preserve">
+    <value>first-ever appearance on any chart board</value>
+  </data>
+  <data name="{0} new · net +{1} places" xml:space="preserve">
+    <value>{0} new · net +{1} places</value>
+  </data>
+  <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
+    <value>**{0}** — {1} chart boards ({2} new, net +{3})</value>
+  </data>
+  <data name="Chart leaderboard" xml:space="preserve">
+    <value>Chart leaderboard</value>
+  </data>
+  <data name="Nobody is on this chart board yet." xml:space="preserve">
+    <value>Nobody is on this chart board yet.</value>
+  </data>
+  <data name="All Mixes" xml:space="preserve">
+    <value>All Mixes</value>
+  </data>
+  <data name="Applied filters" xml:space="preserve">
+    <value>Applied filters</value>
+  </data>
+  <data name="Available in" xml:space="preserve">
+    <value>Available in</value>
+  </data>
+  <data name="BPM from" xml:space="preserve">
+    <value>BPM from</value>
+  </data>
+  <data name="BPM to" xml:space="preserve">
+    <value>BPM to</value>
+  </data>
+  <data name="Community Vote" xml:space="preserve">
+    <value>Community Vote</value>
+  </data>
+  <data name="Community intelligence" xml:space="preserve">
+    <value>Community intelligence</value>
+  </data>
+  <data name="Content" xml:space="preserve">
+    <value>Content</value>
+  </data>
+  <data name="Debut" xml:space="preserve">
+    <value>Debut</value>
+  </data>
+  <data name="Debut mix" xml:space="preserve">
+    <value>Debut mix</value>
+  </data>
+  <data name="Download CSV" xml:space="preserve">
+    <value>Download CSV</value>
+  </data>
+  <data name="Export charts" xml:space="preserve">
+    <value>Export charts</value>
+  </data>
+  <data name="Full Song" xml:space="preserve">
+    <value>Full Song</value>
+  </data>
+  <data name="Grade" xml:space="preserve">
+    <value>Grade</value>
+  </data>
+  <data name="Group by chart" xml:space="preserve">
+    <value>Group by chart</value>
+  </data>
+  <data name="Grouped: one row per chart, level history collapsed. Per-mix: every appearance is its own row. Identical while scope is a single mix." xml:space="preserve">
+    <value>Grouped: one row per chart, level history collapsed. Per-mix: every appearance is its own row. Identical while scope is a single mix.</value>
+  </data>
+  <data name="In" xml:space="preserve">
+    <value>In</value>
+  </data>
+  <data name="Legacy Difficulty" xml:space="preserve">
+    <value>Legacy Difficulty</value>
+  </data>
+  <data name="Legacy grade" xml:space="preserve">
+    <value>Legacy grade</value>
+  </data>
+  <data name="Legacy grade at least" xml:space="preserve">
+    <value>Legacy grade at least</value>
+  </data>
+  <data name="Level change" xml:space="preserve">
+    <value>Level change</value>
+  </data>
+  <data name="Level from" xml:space="preserve">
+    <value>Level from</value>
+  </data>
+  <data name="Level to" xml:space="preserve">
+    <value>Level to</value>
+  </data>
+  <data name="Mix scope" xml:space="preserve">
+    <value>Mix scope</value>
+  </data>
+  <data name="Mixes" xml:space="preserve">
+    <value>Mixes</value>
+  </data>
+  <data name="My data" xml:space="preserve">
+    <value>My data</value>
+  </data>
+  <data name="My score" xml:space="preserve">
+    <value>My score</value>
+  </data>
+  <data name="NPS from" xml:space="preserve">
+    <value>NPS from</value>
+  </data>
+  <data name="NPS to" xml:space="preserve">
+    <value>NPS to</value>
+  </data>
+  <data name="No charts match these filters" xml:space="preserve">
+    <value>No charts match these filters</value>
+  </data>
+  <data name="Not available in" xml:space="preserve">
+    <value>Not available in</value>
+  </data>
+  <data name="Not in" xml:space="preserve">
+    <value>Not in</value>
+  </data>
+  <data name="Not yet re-cleared in {0}" xml:space="preserve">
+    <value>Not yet re-cleared in {0}</value>
+  </data>
+  <data name="Note count" xml:space="preserve">
+    <value>Note count</value>
+  </data>
+  <data name="Notes from" xml:space="preserve">
+    <value>Notes from</value>
+  </data>
+  <data name="Notes to" xml:space="preserve">
+    <value>Notes to</value>
+  </data>
+  <data name="One row per chart and mix" xml:space="preserve">
+    <value>One row per chart and mix</value>
+  </data>
+  <data name="Pass rate at least (%)" xml:space="preserve">
+    <value>Pass rate at least (%)</value>
+  </data>
+  <data name="Phoenix grade at least" xml:space="preserve">
+    <value>Phoenix grade at least</value>
+  </data>
+  <data name="Phoenix plate at least" xml:space="preserve">
+    <value>Phoenix plate at least</value>
+  </data>
+  <data name="Phoenix score from" xml:space="preserve">
+    <value>Phoenix score from</value>
+  </data>
+  <data name="Phoenix score to" xml:space="preserve">
+    <value>Phoenix score to</value>
+  </data>
+  <data name="Quick record" xml:space="preserve">
+    <value>Quick record</value>
+  </data>
+  <data name="Recorded from" xml:space="preserve">
+    <value>Recorded from</value>
+  </data>
+  <data name="Recorded to" xml:space="preserve">
+    <value>Recorded to</value>
+  </data>
+  <data name="Recorded {0}" xml:space="preserve">
+    <value>Recorded {0}</value>
+  </data>
+  <data name="Remix" xml:space="preserve">
+    <value>Remix</value>
+  </data>
+  <data name="Rerated down" xml:space="preserve">
+    <value>Rerated down</value>
+  </data>
+  <data name="Rerated up" xml:space="preserve">
+    <value>Rerated up</value>
+  </data>
+  <data name="Scoring level from" xml:space="preserve">
+    <value>Scoring level from</value>
+  </data>
+  <data name="Scoring level to" xml:space="preserve">
+    <value>Scoring level to</value>
+  </data>
+  <data name="Shape" xml:space="preserve">
+    <value>Shape</value>
+  </data>
+  <data name="Short Cut" xml:space="preserve">
+    <value>Short Cut</value>
   </data>
   <data name="Song name contains" xml:space="preserve">
-    <value>노래 이름 포함|||Song name contains|||노래 이름 포함</value>
+    <value>Song name contains</value>
   </data>
   <data name="Sort by" xml:space="preserve">
-    <value>정렬|||Sort by|||정렬</value>
+    <value>Sort by</value>
   </data>
   <data name="Unplayed" xml:space="preserve">
-    <value>미플레이|||Unplayed|||미플레이</value>
+    <value>Unplayed</value>
   </data>
   <data name="highlighted only" xml:space="preserve">
-    <value>대표 스킬만|||highlighted only|||대표 스킬만</value>
+    <value>highlighted only</value>
   </data>
   <data name="official" xml:space="preserve">
-    <value>공식|||official|||공식</value>
+    <value>official</value>
   </data>
   <data name="{0} charts · current filters" xml:space="preserve">
-    <value>채보 {0}개 · 현재 필터|||{0} charts · current filters|||채보 {0}개 · 현재 필터</value>
+    <value>{0} charts · current filters</value>
   </data>
   <data name="{0} columns" xml:space="preserve">
-    <value>열 {0}개|||{0} columns|||열 {0}개</value>
+    <value>{0} columns</value>
   </data>
   <data name="{0} mixes" xml:space="preserve">
-    <value>시리즈 {0}개|||{0} mixes|||시리즈 {0}개</value>
+    <value>{0} mixes</value>
   </data>
   <data name="{0} notes" xml:space="preserve">
-    <value>노트 {0}개|||{0} notes|||노트 {0}개</value>
+    <value>{0} notes</value>
   </data>
   <data name="{0} scores" xml:space="preserve">
-    <value>스코어 {0}개|||{0} scores|||스코어 {0}개</value>
+    <value>{0} scores</value>
   </data>
   <data name="Newest content" xml:space="preserve">
-    <value>최신 수록곡|||Newest content|||최신 수록곡</value>
+    <value>Newest content</value>
   </data>
   <data name="My grade" xml:space="preserve">
-    <value>내 등급|||My grade|||내 등급</value>
+    <value>My grade</value>
   </data>
   <data name="My recent" xml:space="preserve">
-    <value>내 최근 기록|||My recent|||내 최근 기록</value>
+    <value>My recent</value>
   </data>
   <data name="Overrated" xml:space="preserve">
-    <value>과대평가|||Overrated|||과대평가</value>
+    <value>Overrated</value>
   </data>
   <data name="Unranked" xml:space="preserve">
-    <value>미분류|||Unranked|||미분류</value>
+    <value>Unranked</value>
   </data>
   <data name="Chart columns" xml:space="preserve">
-    <value>채보 열|||Chart columns|||채보 열</value>
+    <value>Chart columns</value>
   </data>
   <data name="Community columns" xml:space="preserve">
-    <value>커뮤니티 열|||Community columns|||커뮤니티 열</value>
+    <value>Community columns</value>
   </data>
   <data name="My columns" xml:space="preserve">
-    <value>내 기록 열|||My columns|||내 기록 열</value>
+    <value>My columns</value>
   </data>
   <data name="Artist" xml:space="preserve">
-    <value>아티스트|||Artist|||아티스트</value>
+    <value>Artist</value>
   </data>
   <data name="Latest mix" xml:space="preserve">
-    <value>최신 시리즈|||Latest mix|||최신 시리즈</value>
+    <value>Latest mix</value>
   </data>
   <data name="Duration (seconds)" xml:space="preserve">
-    <value>시간 (초)|||Duration (seconds)|||시간 (초)</value>
+    <value>Duration (seconds)</value>
   </data>
   <data name="Badges" xml:space="preserve">
-    <value>배지|||Badges|||배지</value>
+    <value>Badges</value>
   </data>
   <data name="Community Vote rating" xml:space="preserve">
-    <value>커뮤니티 투표 점수|||Community Vote rating|||커뮤니티 투표 점수</value>
+    <value>Community Vote rating</value>
   </data>
   <data name="Score count" xml:space="preserve">
-    <value>스코어 수|||Score count|||스코어 수</value>
+    <value>Score count</value>
   </data>
   <data name="PG count" xml:space="preserve">
-    <value>PG 수|||PG count|||PG 수</value>
+    <value>PG count</value>
   </data>
   <data name="My Phoenix score" xml:space="preserve">
-    <value>내 Phoenix 점수|||My Phoenix score|||내 Phoenix 점수</value>
+    <value>My Phoenix score</value>
   </data>
   <data name="My Phoenix grade" xml:space="preserve">
-    <value>내 Phoenix 등급|||My Phoenix grade|||내 Phoenix 등급</value>
+    <value>My Phoenix grade</value>
   </data>
   <data name="My Phoenix plate" xml:space="preserve">
-    <value>내 Phoenix 플레이트|||My Phoenix plate|||내 Phoenix 플레이트</value>
+    <value>My Phoenix plate</value>
   </data>
   <data name="My legacy grade" xml:space="preserve">
-    <value>내 레거시 등급|||My legacy grade|||내 레거시 등급</value>
+    <value>My legacy grade</value>
   </data>
   <data name="My legacy score" xml:space="preserve">
-    <value>내 레거시 점수|||My legacy score|||내 레거시 점수</value>
+    <value>My legacy score</value>
   </data>
   <data name="My broken flag" xml:space="preserve">
-    <value>브레이크 여부|||My broken flag|||브레이크 여부</value>
+    <value>My broken flag</value>
   </data>
   <data name="My recorded date" xml:space="preserve">
-    <value>내 기록 날짜|||My recorded date|||내 기록 날짜</value>
+    <value>My recorded date</value>
   </data>
   <data name="Runs" xml:space="preserve">
-    <value>폭타|||Runs|||폭타</value>
+    <value>Runs</value>
   </data>
   <data name="Anchor Runs" xml:space="preserve">
-    <value>앵커 폭타|||Anchor Runs|||앵커 폭타</value>
+    <value>Anchor Runs</value>
   </data>
   <data name="Runs Without Twists" xml:space="preserve">
-    <value>틀기 없는 폭타|||Runs Without Twists|||틀기 없는 폭타</value>
+    <value>Runs Without Twists</value>
   </data>
   <data name="Drills" xml:space="preserve">
-    <value>드릴|||Drills|||드릴</value>
+    <value>Drills</value>
   </data>
   <data name="Jumps" xml:space="preserve">
-    <value>점프|||Jumps|||점프</value>
+    <value>Jumps</value>
   </data>
   <data name="Jacks" xml:space="preserve">
-    <value>잭|||Jacks|||잭</value>
+    <value>Jacks</value>
   </data>
   <data name="Brackets" xml:space="preserve">
-    <value>브라켓|||Brackets|||브라켓</value>
+    <value>Brackets</value>
   </data>
   <data name="Staggered Brackets" xml:space="preserve">
-    <value>엇갈린 브라켓|||Staggered Brackets|||엇갈린 브라켓</value>
+    <value>Staggered Brackets</value>
   </data>
   <data name="Bracket Runs" xml:space="preserve">
-    <value>브라켓 폭타|||Bracket Runs|||브라켓 폭타</value>
+    <value>Bracket Runs</value>
   </data>
   <data name="Bracket Drills" xml:space="preserve">
-    <value>브라켓 드릴|||Bracket Drills|||브라켓 드릴</value>
+    <value>Bracket Drills</value>
   </data>
   <data name="Bracket Jumps" xml:space="preserve">
-    <value>브라켓 점프|||Bracket Jumps|||브라켓 점프</value>
+    <value>Bracket Jumps</value>
   </data>
   <data name="Bracket Twists" xml:space="preserve">
-    <value>브라켓 틀기|||Bracket Twists|||브라켓 틀기</value>
+    <value>Bracket Twists</value>
   </data>
   <data name="Twists" xml:space="preserve">
-    <value>틀기|||Twists|||틀기</value>
+    <value>Twists</value>
   </data>
   <data name="Twist 90" xml:space="preserve">
-    <value>90도 틀기|||Twist 90|||90도 틀기</value>
+    <value>Twist 90</value>
   </data>
   <data name="Over-90 Twists" xml:space="preserve">
-    <value>90도 이상 틀기|||Over-90 Twists|||90도 이상 틀기</value>
+    <value>Over-90 Twists</value>
   </data>
   <data name="Close Twists" xml:space="preserve">
-    <value>좁은 틀기|||Close Twists|||좁은 틀기</value>
+    <value>Close Twists</value>
   </data>
   <data name="Far Twists" xml:space="preserve">
-    <value>넓은 틀기|||Far Twists|||넓은 틀기</value>
+    <value>Far Twists</value>
   </data>
   <data name="Mid-6 Doubles" xml:space="preserve">
-    <value>중앙 6패널|||Mid-6 Doubles|||중앙 6패널</value>
+    <value>Mid-6 Doubles</value>
   </data>
   <data name="Mid-4 Doubles" xml:space="preserve">
-    <value>중앙 4패널|||Mid-4 Doubles|||중앙 4패널</value>
+    <value>Mid-4 Doubles</value>
   </data>
   <data name="Sustained" xml:space="preserve">
-    <value>지속형|||Sustained|||지속형</value>
+    <value>Sustained</value>
   </data>
   <data name="Bursty" xml:space="preserve">
-    <value>순간 폭타|||Bursty|||순간 폭타</value>
+    <value>Bursty</value>
   </data>
   <data name="Footswitches" xml:space="preserve">
-    <value>풋스위치|||Footswitches|||풋스위치</value>
+    <value>Footswitches</value>
   </data>
   <data name="Hold Footswitches" xml:space="preserve">
-    <value>홀드 풋스위치|||Hold Footswitches|||홀드 풋스위치</value>
+    <value>Hold Footswitches</value>
   </data>
   <data name="Hold Footslides" xml:space="preserve">
-    <value>홀드 슬라이드|||Hold Footslides|||홀드 슬라이드</value>
+    <value>Hold Footslides</value>
   </data>
   <data name="5-Stairs" xml:space="preserve">
-    <value>5계단|||5-Stairs|||5계단</value>
+    <value>5-Stairs</value>
   </data>
   <data name="10-Stairs" xml:space="preserve">
-    <value>10계단|||10-Stairs|||10계단</value>
+    <value>10-Stairs</value>
   </data>
   <data name="Yog Walks" xml:space="preserve">
-    <value>요그 워크|||Yog Walks|||요그 워크</value>
+    <value>Yog Walks</value>
   </data>
   <data name="Cross-pad Transitions" xml:space="preserve">
-    <value>패드 이동|||Cross-pad Transitions|||패드 이동</value>
+    <value>Cross-pad Transitions</value>
   </data>
   <data name="Co-op Pad Transitions" xml:space="preserve">
-    <value>코옵 패드 이동|||Co-op Pad Transitions|||코옵 패드 이동</value>
+    <value>Co-op Pad Transitions</value>
   </data>
   <data name="Splits" xml:space="preserve">
-    <value>스플릿|||Splits|||스플릿</value>
+    <value>Splits</value>
   </data>
   <data name="Hands" xml:space="preserve">
-    <value>손|||Hands|||손</value>
+    <value>Hands</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
-    <value>더블스텝|||Doublesteps|||더블스텝</value>
+    <value>Doublesteps</value>
   </data>
   <data name="Side-3 Singles" xml:space="preserve">
-    <value>사이드 3패널|||Side-3 Singles|||사이드 3패널</value>
+    <value>Side-3 Singles</value>
   </data>
 </root>

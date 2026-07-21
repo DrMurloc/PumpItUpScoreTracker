@@ -98,7 +98,7 @@
             <DifficultyBubble Chart="context"></DifficultyBubble>
         </MudTd>
         <MudTd>
-            @(_scores.TryGetValue(context.Id,out var score)?$"{score} ({score.LetterGrade.GetName()})":"")
+            @(_scores.TryGetValue(context.Id,out var score)?$"{score} ({score.LetterGradeFor(_currentMix).GetName()})":"")
         </MudTd>
         <MudTd>
             @(_scores.TryGetValue(context.Id,out var score)?ScoringConfiguration.CalculateFungScore(context.Level,score,context.Type).ToString("0.00000"):"")
@@ -145,9 +145,9 @@
     private string GetCompetitiveString(DifficultyLevel level)
     {
         var range = _competetiveScores[level].ToArray();
-        var minLetter = range.Min(e => e.LetterGrade);
-        var maxLetter = range.Max(e => e.LetterGrade);
-        var averageLetter = PhoenixScore.From((int)range.Average(s => (int)s)).LetterGrade;
+        var minLetter = range.Min(e => e.LetterGradeFor(_currentMix));
+        var maxLetter = range.Max(e => e.LetterGradeFor(_currentMix));
+        var averageLetter = PhoenixScore.From((int)range.Average(s => (int)s)).LetterGradeFor(_currentMix);
         var result = minLetter.GetName();
         if (maxLetter != minLetter)
         {

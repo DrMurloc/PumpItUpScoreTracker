@@ -103,7 +103,7 @@
 </MudGrid>
 @code {
     private XXLetterGrade? _selectedLetterGrade { get; set; }
-    private PhoenixLetterGrade? PhoenixLetter => _inputScore == null ? null : PhoenixScore.TryParse(_inputScore.Value, out var score) ? score.LetterGrade : null;
+    private PhoenixLetterGrade? PhoenixLetter => _inputScore == null ? null : PhoenixScore.TryParse(_inputScore.Value, out var score) ? score.LetterGradeFor(CurrentMix) : null;
     private PhoenixPlate? _selectedPlate;
     private int? _selectedAdjustment;
     private int? _inputScore;
@@ -195,7 +195,7 @@
                 await Mediator.Send(new UpdatePhoenixBestAttemptCommand(_selectedChart.Id, _isBroken, parsedScore, _selectedPlate, Mix: CurrentMix));
                 
                 var chartName = $"{_selectedChart.Song.Name} {DifficultyLevel.ToShorthand(_selectedChart.Type,_selectedChart.Level)}";
-                var grade = parsedScore?.LetterGrade.GetName()+" " ?? "";
+                var grade = parsedScore?.LetterGradeFor(CurrentMix).GetName()+" " ?? "";
                 Snackbar.Add($"Recorded {(_isBroken ? "Broken" : "Passing")} {grade}for {chartName}", Severity.Success);
             }
 

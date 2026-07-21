@@ -36,6 +36,11 @@ namespace ScoreTracker.SharedKernel.Models
             .ToDictionary(p => p, p => 1.0);
 
         public double PgLetterGradeModifier { get; set; } = PhoenixLetterGrade.SSSPlus.GetModifier();
+
+        // The mix whose grade cutoffs price score→grade in this config. Phoenix 2 shifted the
+        // sub-AAA thresholds, so a P2 config must grade against the P2 table; everything else
+        // keeps the original Phoenix table (the default).
+        public MixEnum Mix { get; set; } = MixEnum.Phoenix;
         public int MinimumScore { get; set; } = 0;
         public IDictionary<Guid, double> ChartModifiers { get; set; } = new Dictionary<Guid, double>();
         public double StageBreakModifier { get; set; } = 1.0;
@@ -103,7 +108,7 @@ namespace ScoreTracker.SharedKernel.Models
             TimeSpan duration, bool isBroken, PhoenixScore score, PhoenixPlate plate, bool includeLevelOverride)
         {
             if (score < MinimumScore) return 0;
-            var letterGrade = score.LetterGrade;
+            var letterGrade = score.LetterGradeFor(Mix);
             var letterGradeModifier = LetterGradeModifiers[letterGrade];
             if (ContinuousLetterGradeScale && score != 1000000)
             {
@@ -113,7 +118,7 @@ namespace ScoreTracker.SharedKernel.Models
                 {
                     var nextGrade = letterGrade + 1;
                     nextModifier = LetterGradeModifiers[nextGrade];
-                    nextThreshold = nextGrade.GetMinimumScore();
+                    nextThreshold = nextGrade.GetMinimumScoreFor(Mix);
                 }
                 else
                 {
@@ -121,7 +126,7 @@ namespace ScoreTracker.SharedKernel.Models
                     nextThreshold = 1000000;
                 }
 
-                var threshold = letterGrade.GetMinimumScore();
+                var threshold = letterGrade.GetMinimumScoreFor(Mix);
                 var modifier = LetterGradeModifiers[letterGrade];
                 letterGradeModifier =
                     modifier + (nextModifier - modifier) * (score - threshold) / (nextThreshold - threshold);
@@ -154,11 +159,16 @@ namespace ScoreTracker.SharedKernel.Models
                 }
                 case CalculationType.GradePlusPlate:
                 {
-                    // Phoenix 2 PUMBILITY: the grade multiplier and the plate bonus combine
-                    // ADDITIVELY before multiplying the base (validated against real per-chart
-                    // pumbility samples; a multiplicative plate overshoots every sample).
+                    // Phoenix 2 PUMBILITY (per-chart values read off my_page/pumbility.php,
+                    // 2026-07-19): charts below level 10 price at ZERO, singles price one level
+                    // UP the shared base curve (an S17 is worth Base(18) — the kink at 24 rides
+                    // along), and the grade multiplier and plate bonus combine ADDITIVELY
+                    // before multiplying the base.
+                    if (Mix == MixEnum.Phoenix2 && (int)level < 10) return 0;
                     var result = GetScorelessScore(chartId, level, chartType, songType, duration,
                         includeLevelOverride);
+                    if (Mix == MixEnum.Phoenix2 && chartType == ChartType.Single && result > 0)
+                        result += (int)level + 1 > 24 ? 10 : 5;
                     result *= letterGradeModifier + PlateModifiers[plate];
                     if (isBroken) result *= StageBreakModifier;
 
@@ -296,15 +306,18 @@ namespace ScoreTracker.SharedKernel.Models
         /// <summary>
         ///     Phoenix 2's PUMBILITY per-chart formula: contribution =
         ///     Base(level) × (gradeMultiplier + plateBonus), grade and plate combining
-        ///     ADDITIVELY. CO-OP, U.C.S. and half-double (performance) charts never
-        ///     contribute, and broken plays never contribute. This config prices a single
-        ///     chart; the caller aggregates — Singles and Doubles each into their own top-50
-        ///     pool, and the overall total from the top 50 across both types.
+        ///     ADDITIVELY — where SINGLES price one level up the base curve (an S17 is worth
+        ///     Base(18)) and charts below level 10 price at zero (both verified per-chart from
+        ///     my_page/pumbility.php, 2026-07-19). CO-OP, U.C.S. and half-double (performance)
+        ///     charts never contribute, and broken plays never contribute. This config prices
+        ///     a single chart; the caller aggregates — Singles and Doubles each into their own
+        ///     top-50 pool, and the overall total from the top 50 across both types.
         /// </summary>
         private static ScoringConfiguration Phoenix2PumbilityScoring()
         {
             var config = new ScoringConfiguration
             {
+                Mix = MixEnum.Phoenix2,
                 Formula = CalculationType.GradePlusPlate,
                 AdjustToTime = false,
                 StageBreakModifier = 0.0,
@@ -326,15 +339,25 @@ namespace ScoreTracker.SharedKernel.Models
             config.LetterGradeModifiers[PhoenixLetterGrade.AAAPlus] = 1.43;
             config.LetterGradeModifiers[PhoenixLetterGrade.AAA] = 1.41;
             config.LetterGradeModifiers[PhoenixLetterGrade.AAPlus] = 1.39;
-            config.LetterGradeModifiers[PhoenixLetterGrade.AA] = 1.37;
-            config.LetterGradeModifiers[PhoenixLetterGrade.APlus] = 1.35;
-            // TODO(P2-pumbility): grades below A+ are UNVERIFIED — no live sample exists yet.
-            // Pattern-extended at −0.02 per step pending real data.
-            config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.33;
-            config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.31;
-            config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.29;
-            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.27;
-            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 1.25;
+            // AA and A+ solved 2026-07-19 from the mirrored boards: reconstructing 19
+            // singles-tab players' pools from their chart-board rows (Base(L+1), known
+            // multipliers) bounds A+ to [1.32, 1.34] and AA to [1.35, 1.37] — the launch-era
+            // pre-rebalance values (1.35/1.37) produce impossible NEGATIVE plate residuals
+            // for stable players (KONA/WONDANG/HNGEAR/HORRORCOMEDY reconstruct with clean
+            // FG/TG-sized residuals at 1.33/1.36). The pre-launch xlsx AA row (D24 AA RG
+            // 342.50 = 250 × 1.37) was location-test tuning, superseded like the singles +1.
+            config.LetterGradeModifiers[PhoenixLetterGrade.AA] = 1.36;
+            config.LetterGradeModifiers[PhoenixLetterGrade.APlus] = 1.33;
+            // A verified live 2026-07-19 (my_page/pumbility.php per-chart read: an S14 A TG at
+            // 263.22 = Base(15) × 1.284). Descending steps land at −0.01 (S tier), −0.02
+            // (AAA tier), −0.03 (AA/A+), −0.05 (A+→A).
+            config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.28;
+            // TODO(P2-pumbility): B and below are UNVERIFIED — extended at the last observed
+            // −0.05 step pending a live sub-800k sample on a counting chart.
+            config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.23;
+            config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.18;
+            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.13;
+            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 1.08;
 
             // Plate bonuses (ADDITIVE terms, not multipliers).
             // TODO(P2-pumbility): community data suggested singles-specific UG/EG/RG values

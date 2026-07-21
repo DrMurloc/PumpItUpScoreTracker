@@ -200,7 +200,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 MixId = mixId,
                 IsBroken = score.IsBroken,
                 Score = score.Score,
-                LetterGrade = score.Score?.LetterGrade.GetName(),
+                LetterGrade = score.Score?.LetterGradeFor(mix).GetName(),
                 Plate = score.Plate?.GetName(),
                 RecordedDate = score.RecordedDate,
                 Source = score.Source,
@@ -214,7 +214,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         else
         {
             existing.Score = score.Score;
-            existing.LetterGrade = score.Score?.LetterGrade.GetName();
+            existing.LetterGrade = score.Score?.LetterGradeFor(mix).GetName();
             existing.Plate = score.Plate?.GetName();
             existing.IsBroken = score.IsBroken;
             existing.RecordedDate = score.RecordedDate;

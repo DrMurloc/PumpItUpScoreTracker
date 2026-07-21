@@ -26,7 +26,10 @@ public sealed class RenderModeDeclarationTests
         // The branded 404: pure links and a static image — nothing needs a circuit.
         "NotFound.razor",
         // The unmatched-route catch-all: renders nothing itself, it routes into NotFound.
-        "NotFoundCatchAll.razor"
+        "NotFoundCatchAll.razor",
+        // The challenges hub: real HTML for crawlers, its dialogs islanded
+        // (docs/design/weekly-charts-overhaul.md).
+        "Competition/WeeklyCharts.razor"
     };
 
     [Fact]

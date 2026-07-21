@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Records;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -9,4 +10,4 @@ namespace ScoreTracker.WeeklyChallenge.Contracts;
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record DailyStepEntry(Guid UserId, Guid ChartId, PhoenixScore Score, PhoenixPlate Plate,
-    bool IsBroken, double CompetitiveLevel, DailyStepSource Source);
+    bool IsBroken, double CompetitiveLevel, ChallengeEntrySource Source);

@@ -1,0 +1,49 @@
+@namespace ScoreTracker.Web.Components.Challenges
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.WeeklyChallenge.Contracts
+@using ScoreTracker.Web.Components
+
+@* Your Daily Step history (weekly-charts-overhaul.md §4.5, daily-step.md L6's reserved view):
+   the last N finished days from the placings snapshot — the day, its chart, a Limbo tag, your
+   place/total, grade + score. Signed-in only; the page shows a sign-in CTA to anonymous visitors. *@
+
+@if (!Records.Any())
+{
+    <div class="challenge-empty">@L["Play today's Step to start your streak."]</div>
+}
+else
+{
+    <div class="challenge-history">
+        @foreach (var record in Records)
+        {
+            var chart = Charts.GetValueOrDefault(record.ChartId);
+            <div class="challenge-hist-row">
+                <span class="challenge-hist-date">@record.ForDate.ToString("MMM d")</span>
+                <span class="challenge-hist-chart">
+                    @if (chart != null)
+                    {
+                        <DifficultyBubble Chart="chart" Small="true" Height="14"></DifficultyBubble>
+                        <a href="@chart.CanonicalPath()" data-challenge-chart="@chart.Id">@chart.Song.Name</a>
+                    }
+                    @if (record.IsLimbo)
+                    {
+                        <span class="challenge-limbo-tag">@L["Limbo"]</span>
+                    }
+                </span>
+                <span class="challenge-hist-place">@L["#{0} / {1}", record.Place, record.TotalPlayers]</span>
+                <span class="challenge-hist-score">
+                    <ScoreBreakdown Score="record.Score" Plate="record.Plate" IsBroken="record.IsBroken"
+                                    Mix="chart?.Mix ?? MixEnum.Phoenix"
+                                    OneLine="true" ShowScore="true" Height="16"></ScoreBreakdown>
+                </span>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<DailyStepHistoryRecord> Records { get; set; } = Array.Empty<DailyStepHistoryRecord>();
+    [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+}

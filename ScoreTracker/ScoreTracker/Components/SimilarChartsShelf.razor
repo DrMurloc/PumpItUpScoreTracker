@@ -214,12 +214,10 @@
 
 @code {
     /// <summary>
-    ///     What counts as a real match. A render-time constant by design: the graph stores
-    ///     its top 20 floor-free, so moving this bar is a redeploy rather than a rebuild,
-    ///     and the rows below it are the near-misses rather than rows that never existed.
-    ///     Pending calibration against a real score distribution.
+    ///     The shared match bar (see <see cref="ChartSimilarityRecord.MatchFloor" />) —
+    ///     rows at or above it are matches, rows below are the near-misses.
     /// </summary>
-    internal const double ScoreFloor = 0.55;
+    internal const double ScoreFloor = ChartSimilarityRecord.MatchFloor;
 
     /// <summary>How many near-misses are worth curiosity before it turns into a list of everything.</summary>
     internal const int NearMissCount = 10;

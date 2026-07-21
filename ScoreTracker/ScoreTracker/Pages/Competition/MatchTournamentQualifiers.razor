@@ -62,7 +62,7 @@
                 <MudTooltip Text="@(entry.Item1.Song.Name + ' ' + entry.Item1.DifficultyString)">
                     <MudImage Src="@entry.Item1.Song.ImagePath.ToString()" Height="20" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
                 </MudTooltip>
-                <ScoreBreakdown Score="@entry.Item2" Height="20"></ScoreBreakdown>
+                <ScoreBreakdown Score="@entry.Item2" Mix="MixEnum.Phoenix" Height="20"></ScoreBreakdown>
 
                 @(entry.Item3.ToString("0.##"))
 
@@ -114,7 +114,7 @@
                                         <DifficultyBubble Chart="@item.Item1"></DifficultyBubble>
                                     </MudCardHeader>
                                     <MudCardContent>
-                                        <ScoreBreakdown ShowScore="true" Score="item.Item2" OneLine="true"></ScoreBreakdown>
+                                        <ScoreBreakdown ShowScore="true" Score="item.Item2" Mix="MixEnum.Phoenix" OneLine="true"></ScoreBreakdown>
                                         @if (_configuration.ScoringType != "Score")
                                         {
                                             <br/>

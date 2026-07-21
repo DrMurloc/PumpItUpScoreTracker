@@ -17,9 +17,12 @@ re-roll in the body meta row. The page's vestigial `LevelOffset` UI is supersede
   *Score Push* = PushPGs + ImproveTop50 + RevisitOldScores · *Fill Gaps* = FillScores · *Pumbility
   Push* = PushPumbility (PR #149: the gain-ranked projected targets that moved off the Account Stats
   widget — `ProjectPumbilityGainsQuery`, biggest overall-rating gain first, stamps "+N"; distinct from
-  the random ImproveTop50, and has its own drawer preset). The Weekly category is dropped from the
-  widget — the Weekly widget owns that board. Defaults per drawer preset: Score Push = Any level;
-  Fill Gaps = Dynamic ±3.
+  the random ImproveTop50, and has its own drawer preset) · *Hot Streak* = HotStreak (the
+  seed-and-expand goal, spec in §Hot Streak below — the one category that never runs for
+  null-Categories callers, and the one whose sections group by seed rather than by category). The
+  Weekly category is dropped from the widget — the Weekly widget owns that board. Defaults per
+  drawer preset: Score Push = Any level; Fill Gaps = Dynamic ±3; Hot Streak = 80% bar, 30-day
+  look-back, grouped.
 - **Engine** (`RecommendedChartsSaga`): `GetRecommendedChartsQuery` gained additive `Categories` +
   `RecommendationLevelWindow` params — null = legacy, the WSIP page is untouched until cutover.
   An explicit window REPLACES the legacy per-category bands (fills CL−3..CL−1, old scores CL−2..CL)
@@ -49,83 +52,90 @@ re-roll in the body meta row. The page's vestigial `LevelOffset` UI is supersede
 
 ---
 
-## Proposed goal: "Based on recent sessions" (owner idea, 2026-07-15 — NOT SCOPED)
+## Hot Streak goal (decisions locked 2026-07-16 — BUILT, awaiting field test)
 
-> **STATUS: an idea with one unanswered question at its centre.** Everything below is grounded in
-> shipped contracts, but **§"Who are 'peers'?" decides whether this is a cheap goal or a re-run of
-> the argument that put skill-gaps on hold.** Do not build past that question.
+> **STATUS: implemented per this section's commit plan (C0–C6 on one branch).**
+> As-built mock (grouped/flat treatments, config panel, empty state):
+> https://claude.ai/code/artifact/6291253d-ed3e-44a6-9bbb-6a2cd141eea5
 
 **The pitch, in the owner's shape:** take the charts you *crushed* in recent sessions, and offer
 the charts most like them that you haven't done. "That felt great — here's more of it."
 
-### The shape
+**"Peers"** is the settled site term for *players near your competitive level* — the cohort the
+bucket-cached machinery already ranks against. All Hot Streak copy uses it. (Account Stats still
+says "competitive matches"; renaming it is deferred, deliberately out of this scope.)
 
-1. **Seed** — charts from recent sessions where you performed **>80% compared to peers**
-   (configurable % in the configurator).
-2. **Order seeds** by session age, then by performance level.
-3. **Expand** — for each seed, its similar charts ([chart-similarity.md](../chart-similarity.md)).
-4. **Keep** the ones you **haven't passed**.
-5. **Rank** through your **personalized tier list**.
-6. **Configurator toggle: "include very old scores"** — charts whose score is *super outdated* join
-   the not-passed pool as eligible targets. A chart you passed once three years ago and never
-   touched is unexplored territory in every sense that matters.
+### Locked decisions
 
-### What already exists (name these, don't rebuild them)
-
-| Piece | Contract | Notes |
+| Decision | Call | Why |
 |---|---|---|
-| Sessions | `GetRecentSessionsQuery(UserId, Page, PageSize)` → `RecentSessionsPage` | `SessionGroup` carries `Start`/`End`/`SessionId`; rows carry `ChartId`, `OccurredAt`, `Score`, `PreviousBest`. Session age is free. Rows predating session capture group by calendar day — the ordering must tolerate `SessionId == null`. |
-| Similarity | `GetSimilarChartsQuery(chartId, mix)` → top-20 | PK-prefix seek, ≤20 rows. **Cheap** — N seeds = N seeks. Shipped PR #155. |
-| Personalized tier list | `GetBlendedTierListQuery(type, level, lens, Personalized: true)` | **The cost driver.** One read per (type, level) touched, and the personalized blend is the slow one. Seeds spanning 5 levels × 2 types = 10 blend reads. |
-| "Super outdated" | `TierListBlendBuilder.AgeOutlierWeights` | Already exactly the owner's category: a score is old only when it is **both** past the 30-day grace floor **and** an age outlier (mean + 1σ) in the player's *own* record. `OutdatedScoreCount` already surfaces the count on the Personalized Breakdown. **The toggle needs no new math.** |
-| Widget shell | `SuggestedGoal`, `DrawerPresets`, veto/feedback | A new goal is an enum value + a category + a preset. |
+| Name | **Hot Streak** | The offer is "more of what just worked", not "based on recent sessions". |
+| Peers | **Players near your competitive level** — `GetChartScoreRankingsQuery` → `CohortScoreProvider` | The feared cohort-ranking cost is already solved: half-level buckets, 1h-cached per-chart distributions — the 2026-07-10 incident fix *is* the implementation. `Ranking` runs 0.0 (last) to 1.0 (first); the bar is `Ranking ≥ N/100`. |
+| Seed gate | **CompetitiveImprover highlight flag AND the Peers bar** (bar slidable to **0 = off**) | `PlayerRatingSaga.FlagCompetitiveImprovers` already stamps a per-chart, per-session flag on exactly the charts that pulled a competitive level up. The flag finds what moved you; the bar (the config knob) picks the standouts within that. Bar at 0 skips the cohort reads entirely. |
+| Push floor (targets) | **Per chart type: the 25th-percentile folder level of (that type's competitive top-50 ∪ that type's members of the Pumbility top-50)** | Owner's own formulation — a pool read, not a projection. Per-type because the competitive pools are per-type and Pumbility is moving type-specific; a combined floor would wall off a weaker side's entire lane. **No projected-score algorithms** (owner: the Pumbility one needs work — don't touch it). |
+| Recency window | **Configurable: 30 days (default) / 90 days / 1 year / All time** | Approved after confirming `ScoreHighlight` is indexed `(UserId, MixId, OccurredAt)` — the seed read is a TOP-capped backward range scan over only *flagged* rows, so "All time" widens the scan's reach, not the page cost. |
+| Layout | **Grouped by seed (default)** — caption per seed is just **"Like {seed}"** (owner, field test 1: the long form read as clutter), with the Peers-bar brag in the caption's tooltip; flat mode as config with "≈ {seed}" in the detail slot | Owner: grouped looks better. Dedupe always, both modes: each target once, under its newest seed (tie-break: higher similarity). Tooltip omitted when the bar is 0. |
+| Right column | **Personalized Pass-lens blended tier** (targets are unpassed); old-score targets show their stale score + age | Owner: "super good." Pass difficulty is the honest read for unpassed charts. |
+| Old-scores toggle | "Treat very old scores as unplayed" — outdated = `AgeOutlierWeights` weight < 1.0 | Already exactly the owner's category (30-day grace floor + own-record age outlier). Composes with the push floor: the S9 passed three years ago fails the floor regardless. |
+| Level config | **None** | The similarity graph gates at folder ±1 ∩ scoring ±1.25, so expansion inherits "near what you just played" — like Title Hunt, this goal pins its own levels. |
+| Fallback seeds (owner, field test 1) | **When zero flag seeds survive, the standing per-type competitive top-50 seeds instead** — newest score first, Peers bar still applies, look-back deliberately ignored, recommendations marked `SeedIsFallback` | The flags are write-time-only and born 2026-07-06; an established player whose plays predate the pipeline (the owner, on his own field test) has none at ANY window. The pool charts are by definition the plays that made their level. Fallback captions get a "one of your all-time best" tooltip, and the widget pushes a small amber warning glyph into the title bar via the §2.3 header slot whose tooltip explains "no matching recent highlights" (owner, field test 1: icon + tooltip, not a text pill). Seeds pre-claim themselves so a stale-scored seed never appears as another seed's target. |
+| Empty state | "No matching standouts yet, go push yourself to start getting suggestions!" | With the fallback in place this now only appears for accounts with no rating pools at all (or a bar nothing clears). |
+| Veto/feedback | Category key `"Hot Streak"`, one key across both layouts | Captions are display-only; the feedback store must not fragment per seed. |
 
-The similarity graph gates at level ±1 ∩ scoring level ±1.25, so expansion stays near the seed by
-construction — this goal inherits "near what you just played" for free and does not need its own
-level window. That is a **reason to prefer it over a level-mode config**, not an accident.
+Defaults taken without a decision round (flip any at field test): seeds from CL-improver flags only
+(no Pumbility-side seed source — the floor carries Pumbility relevance on the target side, and the
+pools overlap heavily); the 25th percentile is a code constant, not config; within-group ordering
+happens widget-side by the tier it fetches for display anyway.
 
-### Who are "peers"? — the question that decides the feature
+### The pipeline
 
-">80% compared to peers" has no shipped implementation, and the three ways to get one are not
-close to each other.
+1. **Seeds** — newest-first CompetitiveImprover highlights in the window (capped read), deduped
+   per chart, filtered to the config chart type. **Zero survivors → fallback**: the per-type
+   competitive top-50, newest score first, no window.
+2. **Peers bar** — `GetChartScoreRankingsQuery` over the seed charts; keep `Ranking ≥ bar`.
+   Skipped when the bar is 0. Tiny cohorts auto-pass (the rankings handler returns 1.0 with no
+   cohort scores) — the improver flag already vouches for the seed. Note the semantics: the query
+   ranks your **best** score, not the session's score — for recent improvers these coincide almost
+   always, and the copy says "you beat", which stays true.
+3. **Order seeds** newest session first, then ranking.
+4. **Floors** — compute the per-type push floors from the two pools.
+5. **Expand** — `GetSimilarChartsQuery` per seed; keep targets that clear the shared similarity
+   match floor, sit at or above their type's push floor, aren't vetoed, and are unpassed/broken —
+   or outdated-scored when the toggle is on.
+6. **Dedupe + attribute** each target to its newest seed; cap (~6 seeds, ~4 targets each,
+   tunable consts); emit `ChartRecommendation`s carrying `SeedChartId` + `SeedPeerRanking`.
+7. **Widget** groups by seed, fetches the personalized Pass blend per folder present (existing
+   Fill Gaps `_lensTiers` flow), orders within groups by it, renders tier/score+age columns.
 
-| Option | Cost | The problem |
+### What carries it (all shipped; nothing crosses a boundary that isn't already crossed)
+
+| Piece | Where | Notes |
 |---|---|---|
-| **(a) Everyone who played the chart** | Moderate | **Probably meaningless.** A D23 player beats 80% of *everyone* on nearly every chart below their level — the seed set becomes "every easy chart you touched", and the goal recommends downward forever. |
-| **(b) Players near your competitive level** | ⚠️ **Dangerous** | This is almost certainly what the owner means, and it is cohort ranking — **the exact query shape that melted prod on 2026-07-10** (100% CPU, worker-limit exhaustion; mitigated by bucket caching + a covering index, PR #129). Doable, but it must reuse the cached buckets and be designed against that incident, not around it. |
-| **(c) Letter-grade percentile** — `ChartLetterGradeDifficulty.Percentiles` (banked 0–100, per chart per grade) | **Cheap** | Banked already, but **coarse** (grade granularity, ~7 buckets) and it is "everyone", so it inherits (a)'s problem. On a chart where 60% of players SSS, it cannot discriminate within that 60%. |
+| Seed source | `IScoreHighlightRepository` + one new capped read | In-vertical (PlayerProgress) — **the ScoreLedger sessions read the earlier draft called for is not needed**; the flags are richer than the journal for this purpose and already carry session + time. |
+| Peer percentile | `GetChartScoreRankingsQuery` → `CohortScoreProvider` | The incident-safe path; do not bypass. |
+| Pools for the floor | `GetTop50CompetitiveQuery(type)` / `GetTop50ForPlayerQuery` | Both in PlayerProgress. |
+| Similarity | `GetSimilarChartsQuery(chartId, mix)` → top-20 | PK-prefix seek. The contract returns the tail unfiltered; the match floor (0.55, calibrated PR #155) gets promoted from `SimilarChartsShelf`'s private const to a ChartIntelligence contracts constant so shelf and engine share one bar. |
+| "Super outdated" | `AgeOutlierWeights` → moves to `Domain.Services.ScoreAgePolicy` | Pure math beside `TierListProcessor` (which it already uses); `TierListBlendBuilder` delegates, behavior byte-identical — the "baselines use the same weights" invariant keeps one implementation. |
+| Personalized tier | `GetBlendedTierListQuery(type, level, "Pass", Personalized: true)` | The cost driver — paid widget-side only, one read per folder present in results. |
+| Provenance | `ChartRecommendation` gains `Guid? SeedChartId`, `double? SeedPeerRanking` | Additive defaults; WSIP page and existing categories untouched. |
+| Widget shell | `SuggestedGoal.HotStreak`, drawer preset, `DynamicNameKey` | The established new-goal recipe. |
 
-**A fourth framing worth considering, because it may be what's actually wanted and it costs
-nothing:** *the chart's scoring level is already the peer-normalized expectation.* It is measured
-from the whole population — "this chart scores like a 22.3" is a statement about peers. So
-"overperformed" can be read as **your score here vs. what you typically score at this scoring
-level**, with no peer query at all. That is not literally "beat 80% of players"; it is "beat your
-own peer-calibrated baseline". It may be the better feature *and* it is free — but it is a
-different claim, and the widget must not say "top 20% of players" if this is what it computes.
+### Commit plan
 
-### Reconcile with the held skill-gaps goal first
-
-**D10's skill-gaps goal is HELD pending owner iteration on the deviation approach**, and this idea
-is its cousin: both are "find where you over/under-perform and act on it". Skill-gaps looks for
-weakness, this looks for strength, but they want the same missing primitive — a trustworthy
-per-chart or per-skill over/under-performance signal. Settling that primitive once serves both.
-**Building this without settling it means having the deviation argument a second time.**
-
-Note `PlayerSkillDeviationsHandler` already publishes deviations **per skill**, not per chart, and
-converts to score units at the boundary. If per-skill is enough ("you're crushing bracket charts →
-here are bracket charts you haven't passed"), much of this exists and the peer question dissolves.
-That is a materially different — and cheaper — feature than the per-chart one described above, and
-it may be the same feature the owner wants.
-
-### Open questions for the owner
-
-1. **Peers = who?** (a), (b), (c), or the scoring-level framing? This decides everything below it.
-2. **Is the seed per-chart or per-skill?** Per-skill is nearly free and reuses shipped machinery.
-3. **What does ">80%" mean when the config says 80** — top 20% of players, or a 0–100 knob on
-   whatever signal wins Q1? The label has to match the math.
-4. **"Ordered by session age, then performance level"** — session age *ascending* (newest session
-   first) is assumed. Worth confirming: it means yesterday's good chart outranks last month's
-   great one.
-5. **How many sessions back** is "recent"? A page? A date window? Config?
-6. **Name.** "Based on recent sessions" describes the seed, not the offer. The offer is "more of
-   what just worked."
+- **C0** — this design-doc rewrite (the locked spec + plan).
+- **C1 — Core moves + contracts**: `ScoreAgePolicy` extracted to `Domain.Services` (builder
+  delegates); `ChartRecommendation` seed fields; `RecommendationCategory.HotStreak` + category
+  const; `GetRecommendedChartsQuery.HotStreakOptions (PeerPercentile, LookbackDays?, IncludeOutdatedScores)`;
+  similarity match floor promoted to ChartIntelligence contracts (shelf reads it).
+- **C2 — Infrastructure**: capped newest-first flag-filtered highlight read on the existing
+  index + integration tests (window, cap, flag filter, ordering).
+- **C3 — Engine**: pure `HotStreakPolicy` (floor percentile incl. tiny/asymmetric pools,
+  ordering, dedupe/attribution) + DomainTests; the `RecommendedChartsSaga` builder +
+  ApplicationTests (bar-0 skips rankings, per-type floors, outdated toggle, veto, all-time).
+- **C4 — Web**: config fields (`HotStreakPeerPercentile` 80, `HotStreakLookback` 30d,
+  `HotStreakIncludeOldScores` off, `GroupBySeed` on), goal bundle, config panel branch (slider +
+  look-back select + toggles, Levels hidden), widget grouped/flat rendering + tier/age column +
+  empty state, registry preset + dynamic name; Tests.Components; mock round-2.
+- **C5 — Localization**: every new key ×9 locales.
+- **C6 — Docs polish**: fold Hot Streak into this doc's shipped-goals list above, "Peers" entry
+  in DOMAIN.md.

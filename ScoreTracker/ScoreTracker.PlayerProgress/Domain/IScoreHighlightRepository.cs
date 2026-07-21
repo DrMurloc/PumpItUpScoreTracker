@@ -17,6 +17,15 @@ internal interface IScoreHighlightRepository
         DateTimeOffset until, CancellationToken cancellationToken);
 
     /// <summary>
+    ///     The user's newest rows carrying any of the given flags, newest first, at most
+    ///     <paramref name="count" /> — the Hot Streak seed read. Null <paramref name="since" />
+    ///     means all time: the read stays a backward scan of the (UserId, MixId, OccurredAt)
+    ///     index either way, so the window widens reach, not cost.
+    /// </summary>
+    Task<IReadOnlyList<ScoreHighlightRecord>> GetNewestHighlights(MixEnum mix, Guid userId, HighlightFlags flags,
+        DateTimeOffset? since, int count, CancellationToken cancellationToken);
+
+    /// <summary>
     ///     Reads highlights for specific sessions (the Sessions page). FK by SessionId, not a
     ///     date window — highlight OccurredAt is the batch-drain time, minutes past the
     ///     journal rows, so a row-time window drops the freshest session's flags.

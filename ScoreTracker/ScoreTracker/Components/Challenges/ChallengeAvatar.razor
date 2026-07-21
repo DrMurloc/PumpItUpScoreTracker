@@ -1,0 +1,14 @@
+@namespace ScoreTracker.Web.Components.Challenges
+@using ScoreTracker.Domain.Models
+
+@* The rail rows' avatar (M16): a plain image so it renders in static SSR, falling back to the
+   site default for deleted accounts. *@
+<img class="challenge-avatar" src="@AvatarUrl" alt="" loading="lazy"/>
+
+@code {
+    private const string DefaultAvatar = "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
+
+    [Parameter] public User? Player { get; set; }
+
+    private string AvatarUrl => Player?.ProfileImage.ToString() ?? DefaultAvatar;
+}

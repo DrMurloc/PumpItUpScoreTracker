@@ -126,16 +126,6 @@ public readonly struct PhoenixScore : IComparable<PhoenixScore>, IComparable<int
         }
     }
 
-    public PhoenixLetterGrade LetterGrade
-    {
-        get
-        {
-            var score = _score;
-            return Enum.GetValues<PhoenixLetterGrade>().First(letter =>
-                letter.GetMinimumScore() <= score && score <= letter.GetMaximumScore());
-        }
-    }
-
     private bool Equals(PhoenixScore otherParam)
     {
         return _score == otherParam._score;
@@ -144,11 +134,6 @@ public readonly struct PhoenixScore : IComparable<PhoenixScore>, IComparable<int
     public override int GetHashCode()
     {
         return _score.GetHashCode();
-    }
-
-    public string ToGradeString()
-    {
-        return $"{_score} ({LetterGrade.GetName()})";
     }
 
     public static PhoenixScore From(int score)

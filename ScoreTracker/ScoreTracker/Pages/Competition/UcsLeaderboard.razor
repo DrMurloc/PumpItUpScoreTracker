@@ -192,7 +192,8 @@
                         }
                     </MudTd>
                     <MudTd>
-                        <ScoreBreakdown Score="context.Entry.Score" Plate="context.Entry.Plate" IsBroken="context.Entry.IsBroken" ShowScore="true"></ScoreBreakdown>
+                        @* UCS boards live on the current game's site, so scores grade on the Phoenix 2 table. *@
+                    <ScoreBreakdown Score="context.Entry.Score" Plate="context.Entry.Plate" IsBroken="context.Entry.IsBroken" Mix="MixEnum.Phoenix2" ShowScore="true"></ScoreBreakdown>
                     </MudTd>
                     <MudTd>
                         @if (context.Entry.ImagePath != null)

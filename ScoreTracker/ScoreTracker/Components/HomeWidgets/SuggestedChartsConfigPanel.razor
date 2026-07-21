@@ -10,6 +10,7 @@
     <MudSelectItem T="SuggestedGoal" Value="SuggestedGoal.ScorePush">@L["Score Push"]</MudSelectItem>
     <MudSelectItem T="SuggestedGoal" Value="SuggestedGoal.FillGaps">@L["Fill Gaps"]</MudSelectItem>
     <MudSelectItem T="SuggestedGoal" Value="SuggestedGoal.PumbilityPush">@L["Pumbility Push"]</MudSelectItem>
+    <MudSelectItem T="SuggestedGoal" Value="SuggestedGoal.HotStreak">@L["Hot Streak"]</MudSelectItem>
 </MudSelect>
 @if (SuggestedGoals.CategoriesFor(_goal).Count > 1)
 {
@@ -25,9 +26,10 @@
     <MudSelectItem T="ChartType?" Value="ChartType.Single">@L["Singles"]</MudSelectItem>
     <MudSelectItem T="ChartType?" Value="ChartType.Double">@L["Doubles"]</MudSelectItem>
 </MudSelect>
-@if (_goal != SuggestedGoal.TitleHunt)
+@if (_goal != SuggestedGoal.TitleHunt && _goal != SuggestedGoal.HotStreak)
 {
-    @* Title Hunt pins its own levels (the pushing title), so no level config there. *@
+    @* Title Hunt pins its own levels (the pushing title); Hot Streak inherits the
+       similarity graph's reach around each seed. No level config for either. *@
     <MudSelect T="SuggestedLevelMode" @bind-Value="_levelMode" Label="@L["Levels"]" Class="mb-2">
         <MudSelectItem T="SuggestedLevelMode" Value="SuggestedLevelMode.Any">@L["Any level"]</MudSelectItem>
         <MudSelectItem T="SuggestedLevelMode" Value="SuggestedLevelMode.Dynamic">@L["Around my level"]</MudSelectItem>
@@ -65,6 +67,27 @@
                 : L["The level printed on the chart."])
         </MudText>
     }
+}
+@if (_goal == SuggestedGoal.HotStreak)
+{
+    <MudNumericField T="int" @bind-Value="_peerPercentile" Min="0" Max="99"
+                     Label="@L["Standout bar"]" Class="mt-2"/>
+    <MudText Typo="Typo.caption" Class="dash-muted">
+        @(_peerPercentile > 0
+            ? L["Count a chart when you beat this % of Peers on it."]
+            : L["Bar off — any play that raised your competitive level counts."])
+    </MudText>
+    <MudSelect T="SuggestedLookback" @bind-Value="_lookback" Label="@L["Look back"]" Class="mb-1 mt-2">
+        <MudSelectItem T="SuggestedLookback" Value="SuggestedLookback.Days30">@L["Last 30 days"]</MudSelectItem>
+        <MudSelectItem T="SuggestedLookback" Value="SuggestedLookback.Days90">@L["Last 90 days"]</MudSelectItem>
+        <MudSelectItem T="SuggestedLookback" Value="SuggestedLookback.Year1">@L["Last year"]</MudSelectItem>
+        <MudSelectItem T="SuggestedLookback" Value="SuggestedLookback.AllTime">@L["All time"]</MudSelectItem>
+    </MudSelect>
+    <MudCheckBox T="bool" @bind-Value="_includeOldScores" Label="@L["Treat very old scores as unplayed"]"/>
+    <MudText Typo="Typo.caption" Class="dash-muted ml-8" Style="margin-top:-6px;display:block">
+        @L["A chart you passed years ago and never revisited counts as new territory."]
+    </MudText>
+    <MudCheckBox T="bool" @bind-Value="_groupBySeed" Label="@L["Group by seed chart"]"/>
 }
 @if (_goal == SuggestedGoal.FillGaps)
 {
@@ -112,6 +135,10 @@
     private RecommendationLevelBasis _basis = RecommendationLevelBasis.ChartLevel;
     private SuggestedDifficultyLens _lens = SuggestedDifficultyLens.None;
     private bool _personalized;
+    private int _peerPercentile = 80;
+    private SuggestedLookback _lookback = SuggestedLookback.Days30;
+    private bool _includeOldScores;
+    private bool _groupBySeed = true;
 
     protected override void OnParametersSet()
     {
@@ -129,6 +156,10 @@
         _basis = config.LevelBasis;
         _lens = config.DifficultyLens;
         _personalized = config.PersonalizedLens;
+        _peerPercentile = config.HotStreakPeerPercentile;
+        _lookback = config.HotStreakLookback;
+        _includeOldScores = config.HotStreakIncludeOldScores;
+        _groupBySeed = config.GroupBySeed;
     }
 
     private void SetGoal(SuggestedGoal goal)
@@ -181,7 +212,12 @@
             LevelBasis = _basis,
             DifficultyLens = _goal == SuggestedGoal.FillGaps ? _lens : SuggestedDifficultyLens.None,
             PersonalizedLens = _goal == SuggestedGoal.FillGaps && _lens != SuggestedDifficultyLens.None
-                               && _personalized
+                               && _personalized,
+            // Hot Streak knobs persist only for Hot Streak — other goals export defaults.
+            HotStreakPeerPercentile = _goal == SuggestedGoal.HotStreak ? Math.Clamp(_peerPercentile, 0, 99) : 80,
+            HotStreakLookback = _goal == SuggestedGoal.HotStreak ? _lookback : SuggestedLookback.Days30,
+            HotStreakIncludeOldScores = _goal == SuggestedGoal.HotStreak && _includeOldScores,
+            GroupBySeed = _goal != SuggestedGoal.HotStreak || _groupBySeed
         };
         await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
     }

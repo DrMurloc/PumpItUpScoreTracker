@@ -114,9 +114,10 @@ else
     private bool CanSave => _isLegacy ? _letterGrade != null : _score != null;
 
     // Live letter grade off the typed score (Phoenix only) — display only; the domain
-    // derives the grade from the score on save, we never send it.
+    // derives the grade from the score on save, we never send it. Resolved against the
+    // target mix: Phoenix 2 moved the A/A+/AA/AA+ floors.
     private PhoenixLetterGrade? _derivedGrade =>
-        !_isLegacy && _score is { } v && PhoenixScore.TryParse(v, out var s) ? s.LetterGrade : null;
+        !_isLegacy && _score is { } v && PhoenixScore.TryParse(v, out var s) ? s.LetterGradeFor(Mix) : null;
 
     // The plate dropdown doubles as the result picker: a plate shorthand, "Broken", or empty.
     // Selecting a plate is a pass; "Broken" is the clean fail (no plate). The grade-icon
@@ -221,7 +222,7 @@ else
                 var parsed = PhoenixScore.TryParse(_score!.Value, out var s) ? (PhoenixScore?)s : null;
                 await Mediator.Send(new UpdatePhoenixBestAttemptCommand(Chart.Id, _broken, parsed, _plate,
                     Mix: Mix));
-                result = new Result(parsed, parsed?.LetterGrade, _plate, null, null, _broken);
+                result = new Result(parsed, parsed?.LetterGradeFor(Mix), _plate, null, null, _broken);
             }
 
             _isSaving = false;
