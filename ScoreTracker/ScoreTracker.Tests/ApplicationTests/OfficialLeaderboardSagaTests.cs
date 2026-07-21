@@ -103,7 +103,7 @@ public sealed class OfficialLeaderboardSagaTests
         site.Setup(s => s.GetScorePageCount(mix, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(maxPages);
         site.Setup(s => s.GetRecordedScores(mix, ImportUserId, It.IsAny<string>(), "card1", It.IsAny<bool>(),
-                It.IsAny<int?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
+                It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(officialScores ?? Array.Empty<OfficialRecordedScore>());
         site.Setup(s => s.GetGameCards(mix, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<GameCardRecord>());
@@ -295,7 +295,7 @@ public sealed class OfficialLeaderboardSagaTests
 
         // limit = maxPages - previous + 1 = 5 - 3 + 1
         f.Site.Verify(s => s.GetRecordedScores(MixEnum.Phoenix, ImportUserId, It.IsAny<string>(), "card1", false, 3,
-            It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -324,7 +324,7 @@ public sealed class OfficialLeaderboardSagaTests
             It.IsAny<CancellationToken>()), Times.Once);
         // A session that can't resolve to an account is terminal — no scrape follows.
         f.Site.Verify(s => s.GetRecordedScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
-            It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<DateTimeOffset?>(),
+            It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -347,7 +347,7 @@ public sealed class OfficialLeaderboardSagaTests
         f.Site.Verify(s => s.GetAccountData(MixEnum.Phoenix2, It.IsAny<string>(), "card1",
             It.IsAny<CancellationToken>()), Times.Once);
         f.Site.Verify(s => s.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, It.IsAny<string>(), "card1",
-            It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()),
+            It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
             Times.Once);
 
         // Existing-score comparison reads the Phoenix 2 rows, not Phoenix 1's.
@@ -372,39 +372,34 @@ public sealed class OfficialLeaderboardSagaTests
     }
 
     [Fact]
-    public async Task Phoenix2ImportUsesTheSavedDateWatermarkInsteadOfPageCounts()
+    public async Task Phoenix2ImportIgnoresPageCountsEntirely()
     {
-        // The dated (redesigned) best list imports by saved-date watermark, keyed per card:
-        // the P2 import never reads the page count, ignores the retired page-count keys, and
-        // remembers the newest saved date it returned for the next run's cutoff.
-        var storedWatermark = new DateTimeOffset(2026, 7, 16, 10, 0, 0, TimeSpan.FromHours(9));
-        var newestSave = new DateTimeOffset(2026, 7, 17, 23, 16, 30, TimeSpan.FromHours(9));
+        // The dated (redesigned) best list paginates by its own up-score window inside the
+        // site client — passing maxPages null. The P2 import never reads the score page count
+        // and never reads or writes the retired page-count keys.
         var chart = new ChartBuilder().Build();
         var f = ArrangeImport(mix: MixEnum.Phoenix2,
             uiSettings: new Dictionary<string, string>
             {
-                ["PreviousPageCount"] = "2", // legacy keys — never read by a dated import
-                ["PreviousPageCount__Phoenix2"] = "4",
-                ["BestScoreWatermark__Phoenix2__card1"] = storedWatermark.ToString("O")
+                ["PreviousPageCount"] = "2", // legacy keys — never read or written by a dated import
+                ["PreviousPageCount__Phoenix2"] = "4"
             },
             officialScores: new[]
             {
                 new OfficialRecordedScore(chart, 920000, PhoenixPlate.FairGame, false,
-                    newestSave.AddMinutes(-5)),
+                    new DateTimeOffset(2026, 7, 17, 23, 11, 30, TimeSpan.FromHours(9))),
                 new OfficialRecordedScore(new ChartBuilder().Build(), 930000, PhoenixPlate.FairGame, false,
-                    newestSave)
+                    new DateTimeOffset(2026, 7, 17, 23, 16, 30, TimeSpan.FromHours(9)))
             });
         var saga = BuildImportSaga(f);
 
         await saga.Handle(ImportCommand(mix: MixEnum.Phoenix2), CancellationToken.None);
 
+        // maxPages null — the classic page-count delta never drives a dated import.
         f.Site.Verify(s => s.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, It.IsAny<string>(), "card1", false,
-            null, storedWatermark, It.IsAny<CancellationToken>()), Times.Once);
+            null, It.IsAny<CancellationToken>()), Times.Once);
         f.Site.Verify(s => s.GetScorePageCount(MixEnum.Phoenix2, It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
-        f.Mediator.Verify(m => m.Send(It.Is<SaveUserUiSettingCommand>(c =>
-                c.SettingName == "BestScoreWatermark__Phoenix2__card1" && c.NewValue == newestSave.ToString("O")),
-            It.IsAny<CancellationToken>()), Times.Once);
         f.Mediator.Verify(m => m.Send(It.Is<SaveUserUiSettingCommand>(c =>
                 c.SettingName.StartsWith("PreviousPageCount")),
             It.IsAny<CancellationToken>()), Times.Never);

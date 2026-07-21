@@ -290,7 +290,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     public async Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(MixEnum mix, Guid userId,
         string sid, string id,
         bool includeBroken,
-        int? maxPages, DateTimeOffset? since, CancellationToken cancellationToken)
+        int? maxPages, CancellationToken cancellationToken)
     {
         await _mediator.Publish(
             new ImportStatusUpdatedEvent(userId, "Logging In",
@@ -308,7 +308,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         // incremental cutoff; the classic list has no dates and keeps the page-count delta +
         // up-score-window walk. Strategy follows the page shape, never the mix.
         var responses = firstPage.Scores.Any(s => s.RecordedAt != null)
-            ? await WalkDatedBestScores(mix, userId, sessionId, firstPage, since, cancellationToken)
+            ? await WalkDatedBestScores(mix, userId, sessionId, firstPage, cancellationToken)
             : await WalkClassicBestScores(mix, userId, sessionId, firstPage, maxPages, cancellationToken);
 
         var results = new Dictionary<Guid, OfficialRecordedScore>();
@@ -403,19 +403,31 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         return results.Values;
     }
 
+    // Five consecutive best pages holding nothing new-or-improved end the dated walk — the
+    // port of the classic "five folders back" up-score window (~12 cards a page, so a
+    // ~60-chart look-back). Any page with even one savable card resets the count.
+    private const int MaxDatedPagesWithoutNewBest = 5;
+
     /// <summary>
-    ///     Walks the redesigned (dated, newest-first) best list. Stops after the page that
-    ///     crosses the watermark — that page still processes whole, so equal-timestamp saves
-    ///     re-import harmlessly — or when a page adds nothing new. The site clamps
-    ///     out-of-range page numbers to the last page, so repetition is the reliable end
-    ///     signal and the pager markup is never trusted.
+    ///     Walks the redesigned (newest-played-first) best list, collecting every card for the
+    ///     caller to best-filter. Stops on the up-score window — <see cref="MaxDatedPagesWithoutNewBest" />
+    ///     consecutive pages holding nothing we don't already have at an equal-or-better
+    ///     result — never on the card's displayed date. On the redesign that date is the
+    ///     chart's FIRST play, unrelated to the newest-played sort order, so trusting it as a
+    ///     cutoff ended the walk a page in whenever a replayed old chart sat near the top (the
+    ///     bug that truncated every incremental import after the first). A page that adds
+    ///     nothing is also the reliable end-of-list signal, since the site clamps out-of-range
+    ///     page numbers to the last page and its pager markup is never trusted.
     /// </summary>
     private async Task<List<PiuGameGetBestScoresResult.ScoreDto>> WalkDatedBestScores(MixEnum mix, Guid userId,
-        HttpClient sessionId, PiuGameGetBestScoresResult firstPage, DateTimeOffset? since,
+        HttpClient sessionId, PiuGameGetBestScoresResult firstPage,
         CancellationToken cancellationToken)
     {
         var responses = new List<PiuGameGetBestScoresResult.ScoreDto>();
         var seen = new HashSet<(string, ChartType, int, int, DateTimeOffset?)>();
+        var storedBests = (await _phoenixRecords.GetBestScores(mix, userId, cancellationToken))
+            .ToDictionary(r => r.ChartId);
+        var pagesWithoutNewBest = 0;
         var page = firstPage;
         for (var pageNumber = 1; pageNumber <= 1000; pageNumber++)
         {
@@ -424,6 +436,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                     Array.Empty<RecordedPhoenixScore>(), mix),
                 cancellationToken);
             var added = 0;
+            var newBests = 0;
             foreach (var score in page.Scores)
             {
                 if (!seen.Add((score.SongName.ToString(), score.ChartType, (int)score.Level, (int)score.Score,
@@ -431,16 +444,39 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
 
                 responses.Add(score);
                 added++;
+                if (await IsNewOrImprovedBest(mix, score, storedBests, cancellationToken)) newBests++;
             }
 
-            var crossedWatermark = since != null &&
-                                   page.Scores.Any(s => s.RecordedAt != null && s.RecordedAt < since);
-            if (crossedWatermark || added == 0 || page.Scores.Length == 0) break;
+            // A page that adds nothing is the end of the list (or the clamp re-serving a page
+            // we've already read): stop regardless of the window.
+            if (added == 0 || page.Scores.Length == 0) break;
+
+            pagesWithoutNewBest = newBests == 0 ? pagesWithoutNewBest + 1 : 0;
+            if (pagesWithoutNewBest >= MaxDatedPagesWithoutNewBest) break;
 
             page = await _piuGame.GetBestScores(mix, sessionId, pageNumber + 1, cancellationToken);
         }
 
         return responses;
+    }
+
+    /// <summary>
+    ///     Whether a best card would change what we store — a chart we don't hold yet, a
+    ///     stage break we've since cleared, or a better plate/score at the same broken-ness.
+    ///     Mirrors the saga's save filter so the dated walk pages exactly as far as there is
+    ///     new work to save, and no farther. An unmappable card is never "work".
+    /// </summary>
+    private async Task<bool> IsNewOrImprovedBest(MixEnum mix, PiuGameGetBestScoresResult.ScoreDto card,
+        IReadOnlyDictionary<Guid, RecordedPhoenixScore> storedBests, CancellationToken cancellationToken)
+    {
+        var song = await GetMappedName(card.SongName, cancellationToken);
+        var chart = (await _charts.GetChartsForSong(mix, song, cancellationToken))
+            .FirstOrDefault(c => c.Type == card.ChartType && c.Level == card.Level);
+        if (chart == null) return false;
+        if (!storedBests.TryGetValue(chart.Id, out var stored)) return true;
+        if (stored.IsBroken && !card.IsBroken) return true;
+        if (stored.IsBroken != card.IsBroken) return false;
+        return stored.Plate < card.Plate || (stored.Score ?? 0) < card.Score;
     }
 
     private async Task<List<PiuGameGetBestScoresResult.ScoreDto>> WalkClassicBestScores(MixEnum mix, Guid userId,
