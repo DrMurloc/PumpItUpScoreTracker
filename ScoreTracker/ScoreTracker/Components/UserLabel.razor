@@ -25,15 +25,18 @@
             <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@_countryImage"></MudImage>
         }
     }
+    @* The name is its own element so a caller that has to truncate can truncate the
+       NAME: ellipsis applied to the label as a whole would spend the row's width on
+       the flag and print nothing but a "…" for anyone with a country. *@
     @if (RendererInfo.IsInteractive)
     {
         <MudTooltip Text="@Tooltip">
-            @User.Name
+            <span class="user-label-name">@User.Name</span>
         </MudTooltip>
     }
     else
     {
-        @User.Name
+        <span class="user-label-name">@User.Name</span>
     }
 }
 @inject IUserRepository Users

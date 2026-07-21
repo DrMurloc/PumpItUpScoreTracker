@@ -6281,17 +6281,39 @@ button.chart-card-art {
 /* Board tags run long (LIKEASLAM01#8073). Lists print the human half — the digits
    identify an account, they don't name anyone — and truncate what's still too long;
    the full tag stays in the row's tooltip and on the player's own page. */
+/* The flag is atomic and the name is what gives: a UserLabel truncated as one box
+   spends the width on the flag and prints a bare "…", so the label lays out as a
+   flex row whose last child — the name — is the only part allowed to shrink.
+   min-width:0 is what permits that shrink; without it the text keeps its full
+   width and the ellipsis swallows the whole name. */
 .olb-player-name {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     vertical-align: middle;
-    /* min-width:0 is what lets a flex item shrink past its content: without it the
-       name keeps its full width, the column collapses around it, and every name
-       renders as a bare ellipsis instead of as many letters as actually fit. */
     min-width: 0;
     max-width: 22ch;
     overflow: hidden;
+}
+
+.olb-player-name > :not(:last-child) { flex: 0 0 auto; }
+
+.olb-player-name > :last-child {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Inline-block, not block: this rule reaches every UserLabel on the site, and the
+   label sits inline in most of them. It only truncates where a caller has bounded
+   the width. */
+.user-label-name {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    vertical-align: middle;
 }
 
 .olb-delta-up { color: var(--mix-primary); font-weight: 700; }

@@ -57,14 +57,21 @@
     /* Folder completion keeps the real folder slope: each track's height follows the
        folder's chart count (no per-folder normalization), with singles and doubles passes
        stacked in the game's ball colors inside the uncompleted remainder. */
-    .cmp-folders { display: flex; align-items: flex-end; gap: 10px; height: 150px; padding-top: 4px; }
+    /* Twenty-odd folders at a fixed bar width is wider than a phone, so the columns
+       share the width they have: each takes an equal fraction and the bar fills its
+       column up to the full-size 34px. The MudTooltip wrapper sits between the two
+       and defaults to an auto-width inline-block, which is what collapsed a
+       percentage-width bar to nothing before — it stretches with the column now. */
+    .cmp-folders { display: flex; align-items: flex-end; gap: clamp(3px, 1.2vw, 10px); height: 150px; padding-top: 4px; }
 
-    .cmp-folder-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; justify-content: flex-end; height: 100%; }
+    .cmp-folder-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0; justify-content: flex-end; height: 100%; }
 
-    /* Fixed width: the MudTooltip wrapper is an auto-width inline-block, so a
-       percentage width here collapses the bar to nothing. */
+    .cmp-folder-col > .mud-tooltip-root { display: block; width: 100%; min-width: 0; }
+
     .cmp-folder-track {
-        width: 34px;
+        width: 100%;
+        max-width: 34px;
+        margin: 0 auto;
         background: var(--mix-surface-muted);
         border-radius: 5px 5px 0 0;
         display: flex;
@@ -76,7 +83,8 @@
 
     .cmp-folder-doubles { background: var(--type-doubles); }
 
-    .cmp-folder-label { font-size: .72rem; font-weight: 700; color: var(--mix-ink-muted); }
+    /* A two-digit label is wider than its column once the bars are sharing a phone. */
+    .cmp-folder-label { font-size: clamp(.54rem, 1.8vw, .72rem); line-height: 1; font-weight: 700; color: var(--mix-ink-muted); }
 
     .cmp-stale { color: var(--mix-ink-muted); font-size: .68rem; white-space: nowrap; }
 
