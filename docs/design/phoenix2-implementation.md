@@ -68,7 +68,11 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   `[P.B] BRONZE` observed live, 7 placeholder names pending reveals); nine skill ladders
   (chart + SSS, `Phoenix2ChartGradeTitle`) with EXPERT/SPECIALIST metas; 34 boss breakers
   (`Phoenix2ChartClearTitle`; `1948 D??` matches any level); step-artist/play-count/CO-OP/judgment
-  badges site-detected only (CO-OP Rating formula unknown — TODO).
+  badges site-detected only (CO-OP Rating formula unknown — TODO). **The `/Titles` page is live
+  for Phoenix 2** (2026-07-21) — renders through the same grid as Phoenix. **`[Legacy]` titles
+  are deliberately excluded**: the site ports the Phoenix 1 titles into Phoenix 2 prefixed
+  `[Legacy]`, and we already carry the real Phoenix 1 list, so mirroring them would double every
+  Phoenix title under a second mix.
 - **Avatar hosts split by era**: P2 serves `/data/avatar_img2/` — `ImageRegex` accepts both, and
   BOTH shapes are pinned by approval fixtures (this was the recurring avatar bug).
 - **P2 leaderboard mirror / world rankings: LANDED (same branch, C10–C14).** The P2 site
@@ -182,7 +186,6 @@ already correct); cosmetic, so run it only if you want existing recaps updated.
 > Phoenix 2 separately from Phoenix, and your Phoenix data is untouched.
 >
 > Still under construction while we verify against real hardware:
-> - **Titles** — Phoenix 2's title list hasn't been revealed yet.
 > - **What Should I Play** — recommendations return after launch.
 > - **Score import** — opens after we verify the importer against a real Phoenix 2 machine.
 >   (CSV upload and manual recording work now.)
