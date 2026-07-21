@@ -6275,6 +6275,9 @@ button.chart-card-art {
    ordinary grid items, narrow they stack into a single cell. */
 .olb-stack { display: contents; }
 
+/* The counterpart to .olb-hide-mobile: the short form of a label, phone only. */
+.olb-only-mobile { display: none; }
+
 /* Board tags run long (LIKEASLAM01#8073). Lists print the human half — the digits
    identify an account, they don't name anyone — and truncate what's still too long;
    the full tag stays in the row's tooltip and on the player's own page. */
@@ -6333,6 +6336,8 @@ button.chart-card-art {
    that they stay inline, where stacking would just leave a hole. */
 @media (max-width: 760px) {
     .olb-hide-mobile { display: none !important; }
+
+    .olb-only-mobile { display: inline; }
 
     /* The optional columns are display:none by now, so the template loses them too. */
     .olb-grid-row {

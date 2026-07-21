@@ -4,8 +4,12 @@
 @* The playstyle archetype, one chip everywhere it appears — official rankings,
    official player pages, community boards. *@
 
-<MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Style="@ChipStyle(Type)">
-    @L[NameOf(Type)]
+@* Phone widths spend their pixels on the player's name, so the chip shortens to its
+   initials there — the full archetype stays in the tooltip either way. *@
+<MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Style="@ChipStyle(Type)"
+         title="@L[NameOf(Type)]">
+    <span class="olb-hide-mobile">@L[NameOf(Type)]</span>
+    <span class="olb-only-mobile">@L[ShortNameOf(Type)]</span>
 </MudChip>
 
 @code {
@@ -20,6 +24,18 @@
             RecapPlayerType.BalancedPlayer => "Balanced Player",
             RecapPlayerType.Competitive => "Competitive",
             _ => "Perfectionist"
+        };
+    }
+
+    public static string ShortNameOf(RecapPlayerType type)
+    {
+        return type switch
+        {
+            RecapPlayerType.PassPusher => "PP",
+            RecapPlayerType.PassRefiner => "PR",
+            RecapPlayerType.BalancedPlayer => "BP",
+            RecapPlayerType.Competitive => "CP",
+            _ => "PF"
         };
     }
 
