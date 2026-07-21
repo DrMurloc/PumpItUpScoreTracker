@@ -6245,10 +6245,42 @@ button.chart-card-art {
 
 .olb-rank-expand { padding: 4px 0 10px; }
 
+/* The column variant of the same row. A board carrying several figures per player
+   reads as a pile when every figure is flush right, so the figures spread into
+   their own columns instead: the owning page supplies the template in
+   --olb-grid-cols (and --olb-grid-cols-narrow for the width where its optional
+   columns drop out), and the identity column stays pinned left. */
+.olb-grid-row {
+    display: grid;
+    grid-template-columns: var(--olb-grid-cols);
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+}
+
+.olb-grid-row .mud-chip { margin: 0; }
+
+/* Figures are read down a column, so they align on their right edge. */
+.olb-grid-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+}
+
+/* Two figures that are one column's worth of width on a phone: full-width they are
+   ordinary grid items, narrow they stack into a single cell. */
+.olb-stack { display: contents; }
+
 /* Board tags run long (LIKEASLAM01#8073). Lists print the human half — the digits
    identify an account, they don't name anyone — and truncate what's still too long;
    the full tag stays in the row's tooltip and on the player's own page. */
 .olb-player-name {
+    display: inline-block;
+    vertical-align: middle;
     max-width: 22ch;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -6301,6 +6333,20 @@ button.chart-card-art {
    that they stay inline, where stacking would just leave a hole. */
 @media (max-width: 760px) {
     .olb-hide-mobile { display: none !important; }
+
+    /* The optional columns are display:none by now, so the template loses them too. */
+    .olb-grid-row {
+        grid-template-columns: var(--olb-grid-cols-narrow, var(--olb-grid-cols));
+        gap: 6px;
+        padding: 3px 4px;
+    }
+
+    .olb-stack {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        line-height: 1.2;
+    }
 
     .olb-song-text { display: none; }
 

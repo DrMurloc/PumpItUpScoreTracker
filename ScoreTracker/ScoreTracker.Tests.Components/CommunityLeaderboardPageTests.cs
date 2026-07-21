@@ -99,9 +99,10 @@ public sealed class CommunityLeaderboardPageTests : ComponentTestBase
     [Fact]
     public void CombinedBoardShowsPumbilityCompetitiveAndPlayCountOnCompactRows()
     {
-        // The board wears the rankings row look — a labelled value per figure, no table header.
+        // The board wears the rankings row look — figures in columns, labels in tooltips,
+        // no table and no header row.
         var cut = Render();
-        Assert.NotEmpty(cut.FindAll(".olb-rank-card"));
+        Assert.NotEmpty(cut.FindAll(".olb-grid-row"));
         Assert.Empty(cut.FindAll("th"));
         Assert.Contains("title=\"PUMBILITY\"", cut.Markup);
         Assert.Contains("title=\"Comp Lv\"", cut.Markup);
