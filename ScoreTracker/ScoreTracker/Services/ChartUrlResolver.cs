@@ -6,8 +6,8 @@ using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.Web.Services;
 
-/// <summary>Where a requested chart URL actually lives.</summary>
-public sealed record ChartUrlResolution(Guid ChartId, string CanonicalPath);
+/// <summary>Where a requested chart URL actually lives. Mix is the mix the URL named.</summary>
+public sealed record ChartUrlResolution(Guid ChartId, string CanonicalPath, MixEnum Mix);
 
 /// <summary>
 ///     The redirect lattice's brain (docs/design/chart-details-overhaul.md), built dark at
@@ -67,8 +67,26 @@ public sealed class ChartUrlResolver
     public async Task<string?> CanonicalPathFor(Guid chartId, MixEnum defaultMix,
         CancellationToken cancellationToken)
     {
-        var chart = await FindChart(chartId, defaultMix, cancellationToken);
+        var chart = await CanonicalChart(chartId, defaultMix, cancellationToken);
         return chart == null ? null : ChartSlugs.CanonicalPath(chart);
+    }
+
+    /// <summary>
+    ///     The appearance that owns the chart's canonical URL (owner, 2026-07-20): the
+    ///     default mix's copy when the chart still lives there, else the copy in the mix it
+    ///     debuted in. Charts the current era dropped keep a stable home rather than
+    ///     drifting to whichever mix happened to carry them last.
+    /// </summary>
+    public async Task<Chart?> CanonicalChart(Guid chartId, MixEnum defaultMix,
+        CancellationToken cancellationToken)
+    {
+        var current = await FindInMix(defaultMix, chartId, cancellationToken);
+        if (current != null) return current;
+
+        // OriginalMix rides every appearance, so any copy names the debut mix.
+        var any = await FindChart(chartId, defaultMix, cancellationToken);
+        if (any == null) return null;
+        return await FindInMix(any.OriginalMix, chartId, cancellationToken) ?? any;
     }
 
     /// <summary>
@@ -91,7 +109,18 @@ public sealed class ChartUrlResolver
         if (match == null) return null;
 
         var canonical = await CanonicalPathFor(match.Id, defaultMix, cancellationToken);
-        return canonical == null ? null : new ChartUrlResolution(match.Id, canonical);
+        return canonical == null ? null : new ChartUrlResolution(match.Id, canonical, mix);
+    }
+
+    /// <summary>
+    ///     What a chart page renders: the viewer's mix when it carries the chart, else the
+    ///     mix the URL named (which, post-301, is the canonical one).
+    /// </summary>
+    public async Task<Chart?> FindInMixOrUrlMix(Guid chartId, MixEnum viewerMix, MixEnum urlMix,
+        CancellationToken cancellationToken)
+    {
+        return await FindInMix(viewerMix, chartId, cancellationToken)
+               ?? await FindInMix(urlMix, chartId, cancellationToken);
     }
 
     private async Task<Chart?> FindInMix(MixEnum mix, Guid chartId, CancellationToken cancellationToken)

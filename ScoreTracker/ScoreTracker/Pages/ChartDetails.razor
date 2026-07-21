@@ -259,9 +259,10 @@
         if (_chart?.Id == resolution.ChartId) return;
         // The URL names the chart; it renders in the viewer's own mix (scores, verdict and
         // leaderboard are per-mix) when it lives there. A chart the viewer's mix dropped —
-        // every legacy-only chart, for one — renders from the newest mix that still carries
-        // it rather than 404ing; the URL resolved, so the chart exists.
-        var chart = await UrlResolver.FindChart(resolution.ChartId, _mix,
+        // every legacy-only chart, for one — renders from the mix the URL names rather than
+        // 404ing; the URL resolved, so the chart exists. After the 301 that mix IS the
+        // canonical one, so the page's content and its canonical URL always agree.
+        var chart = await UrlResolver.FindInMixOrUrlMix(resolution.ChartId, _mix, resolution.Mix,
             HttpContext?.RequestAborted ?? default);
         if (chart == null)
         {

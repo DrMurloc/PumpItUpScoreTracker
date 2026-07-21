@@ -79,6 +79,22 @@ public sealed class ChartsSrpTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ALegacyCoOpChartPageRendersFromItsOwnMix()
+    {
+        // The exact field-test URL shape: /Charts/infinity/gargoyle-full-song/coop27 — a
+        // co-op chart living only in a pumpout-era mix, whose difficulty slug carries a real
+        // level rather than a player count.
+        await _fixture.Seed.SeedLegacyChartAsync(E2ESeedData.InfinityMixId, "Infinity",
+            "Gargoyle - FULL SONG -", 27, "CoOp");
+
+        await _page.GotoAsync("/Charts/infinity/gargoyle-full-song/coop27");
+
+        await Expect(_page.Locator("text=Gargoyle").First)
+            .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
+        await Expect(_page.Locator("text=404 — PAGE NOT FOUND")).ToHaveCountAsync(0);
+    }
+
+    [Fact]
     public async Task TheOldPagesParameterNamesStillLandFiltered()
     {
         // Pre-redesign shared links keep working as read-time aliases.
