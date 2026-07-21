@@ -8,7 +8,7 @@ using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit.Abstractions;
 
-namespace ScoreTracker.Tests.Integration.LiveSite;
+namespace ScoreTracker.ExplorationTests.LiveSite;
 
 /// <summary>
 ///     Whole-account PUMBILITY reconciliation: crawls the PiuTest account's complete best-score

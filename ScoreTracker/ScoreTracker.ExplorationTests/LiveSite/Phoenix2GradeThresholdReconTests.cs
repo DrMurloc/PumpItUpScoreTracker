@@ -5,7 +5,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit.Abstractions;
 
-namespace ScoreTracker.Tests.Integration.LiveSite;
+namespace ScoreTracker.ExplorationTests.LiveSite;
 
 /// <summary>
 ///     Empirical recon for the Phoenix 2 letter-grade thresholds. The official pages render a

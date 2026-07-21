@@ -2,7 +2,7 @@ using HtmlAgilityPack;
 using ScoreTracker.SharedKernel.Enums;
 using Xunit.Abstractions;
 
-namespace ScoreTracker.Tests.Integration.LiveSite;
+namespace ScoreTracker.ExplorationTests.LiveSite;
 
 /// <summary>
 ///     Live canary for the Phoenix 2 chart boards (over_ranking_view). Pins the structural

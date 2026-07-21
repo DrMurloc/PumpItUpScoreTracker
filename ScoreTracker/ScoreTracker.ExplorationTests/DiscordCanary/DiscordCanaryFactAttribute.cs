@@ -1,4 +1,4 @@
-namespace ScoreTracker.Tests.Integration.DiscordCanary;
+namespace ScoreTracker.ExplorationTests.DiscordCanary;
 
 /// <summary>
 ///     Marks a test that talks to real Discord with the owner's TESTING bot. Manual runs

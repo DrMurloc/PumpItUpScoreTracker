@@ -1,7 +1,7 @@
 using System.Net;
 using Xunit.Abstractions;
 
-namespace ScoreTracker.Tests.Integration.LiveSite;
+namespace ScoreTracker.ExplorationTests.LiveSite;
 
 /// <summary>
 ///     Diagnostic probe for the piugame login flow: replays the login_check POST step by

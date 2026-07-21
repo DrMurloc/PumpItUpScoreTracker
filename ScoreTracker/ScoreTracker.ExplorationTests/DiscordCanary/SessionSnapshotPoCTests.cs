@@ -6,7 +6,7 @@ using ScoreTracker.Data.Clients;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.Records;
 
-namespace ScoreTracker.Tests.Integration.DiscordCanary;
+namespace ScoreTracker.ExplorationTests.DiscordCanary;
 
 /// <summary>
 ///     Proof-of-concept for the single-message session snapshot (owner direction,
