@@ -114,6 +114,121 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task JoinCommunityRejectsABannedUser()
+    {
+        var userId = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: userId);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public,
+            new[] { new CommunityMember(userId, CommunityRole.Banned, CommunityPermission.None, null, null) },
+            Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(), false,
+            Community.DefaultAdminPermissionsSeed, null);
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        await Assert.ThrowsAsync<DeniedFromCommunityException>(() =>
+            ctx.Saga.Handle(new JoinCommunityCommand(Name.From("Acme"), null), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task LeaderboardHidesPrivateProfilesFromViewersOutsideTheCommunity()
+    {
+        var member = Guid.NewGuid();
+        var viewer = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: viewer);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public,
+            new[] { member }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false);
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+        ctx.Communities.Setup(c => c.GetLeaderboard(It.IsAny<MixEnum>(), It.IsAny<Name>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityLeaderboardRecord(Name.From("Hidden"), false,
+                    new Uri("https://piu.test/a.png"), member, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+            });
+
+        // An outside viewer sees no private-profile rows; the member themselves sees the row.
+        var outside = await ctx.Saga.Handle(new GetCommunityLeaderboardQuery(Name.From("Acme"), MixEnum.Phoenix),
+            CancellationToken.None);
+        Assert.Empty(outside);
+
+        var insideCtx = new HandlerContext(currentUserId: member);
+        insideCtx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+        insideCtx.Communities.Setup(c => c.GetLeaderboard(It.IsAny<MixEnum>(), It.IsAny<Name>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityLeaderboardRecord(Name.From("Hidden"), false,
+                    new Uri("https://piu.test/a.png"), member, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+            });
+        var inside = await insideCtx.Saga.Handle(
+            new GetCommunityLeaderboardQuery(Name.From("Acme"), MixEnum.Phoenix), CancellationToken.None);
+        Assert.Single(inside);
+    }
+
+    [Fact]
+    public async Task InvitePreviewReturnsNullForAnUnknownCode()
+    {
+        var ctx = new HandlerContext();
+        ctx.Communities.Setup(c => c.GetCommunityByInviteCode(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Name?)null);
+
+        var preview = await ctx.Saga.Handle(new GetCommunityInvitePreviewQuery(Guid.NewGuid()),
+            CancellationToken.None);
+
+        Assert.Null(preview);
+    }
+
+    [Fact]
+    public async Task InvitePreviewReturnsCommunityShapeAndCallerStanding()
+    {
+        var userId = Guid.NewGuid();
+        var code = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: userId);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.PublicWithCode,
+            new[] { Guid.NewGuid(), Guid.NewGuid() }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?> { [code] = null }, false);
+        ctx.Communities.Setup(c => c.GetCommunityByInviteCode(code, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Name.From("Acme"));
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        var preview = await ctx.Saga.Handle(new GetCommunityInvitePreviewQuery(code), CancellationToken.None);
+
+        Assert.NotNull(preview);
+        Assert.Equal("Acme", (string)preview!.CommunityName);
+        Assert.Equal(2, preview.MemberCount);
+        Assert.False(preview.IsExpired);
+        Assert.False(preview.IsBanned);
+        Assert.False(preview.IsAlreadyMember);
+    }
+
+    [Fact]
+    public async Task InvitePreviewFlagsAnExpiredCodeAndABannedCaller()
+    {
+        var userId = Guid.NewGuid();
+        var code = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: userId);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Private,
+            new[] { new CommunityMember(userId, CommunityRole.Banned, CommunityPermission.None, null, null) },
+            Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?> { [code] = new DateOnly(2020, 1, 1) }, false,
+            Community.DefaultAdminPermissionsSeed, null);
+        ctx.Communities.Setup(c => c.GetCommunityByInviteCode(code, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Name.From("Acme"));
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        var preview = await ctx.Saga.Handle(new GetCommunityInvitePreviewQuery(code), CancellationToken.None);
+
+        Assert.NotNull(preview);
+        Assert.True(preview!.IsExpired);
+        Assert.True(preview.IsBanned);
+    }
+
+    [Fact]
     public async Task LeaveCommunityRemovesMemberFromTheSet()
     {
         var userId = Guid.NewGuid();
@@ -146,12 +261,12 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task CreateInviteLinkPersistsTheCodeAndReturnsIt()
+    public async Task CreateInviteLinkPersistsTheCodeForAHolderOfTheInvitePermission()
     {
-        var memberId = Guid.NewGuid();
-        var ctx = new HandlerContext(currentUserId: memberId);
-        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public,
-            new[] { memberId }, Array.Empty<Community.ChannelConfiguration>(),
+        var ownerId = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: ownerId);
+        var community = new Community(Name.From("Acme"), ownerId, CommunityPrivacyType.Public,
+            new[] { ownerId }, Array.Empty<Community.ChannelConfiguration>(),
             new Dictionary<Guid, DateOnly?>(), false);
         ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(community);
@@ -163,6 +278,22 @@ public sealed class CommunitySagaTests
         ctx.Communities.Verify(c => c.SaveCommunity(
             It.Is<Community>(comm => comm.InviteCodes.ContainsKey(code)),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateInviteLinkThrowsForAPlainMemberWithoutThePermission()
+    {
+        var memberId = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: memberId);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public,
+            new[] { memberId }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false);
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        await Assert.ThrowsAsync<DeniedFromCommunityException>(() =>
+            ctx.Saga.Handle(new CreateInviteLinkCommand(Name.From("Acme"), ExpirationDate: null),
+                CancellationToken.None));
     }
 
     [Theory]
@@ -239,6 +370,39 @@ public sealed class CommunitySagaTests
             It.IsAny<CancellationToken>()), Times.Once);
         ctx.Localizer.Verify(l => l.Get("ko-KR", "passed 1 chart"), Times.Once);
         ctx.Localizer.Verify(l => l.Get(null, "passed 1 chart"), Times.Once);
+    }
+
+    [Fact]
+    public async Task ACommunityDefaultLanguageBacksChannelsThatRegisteredWithoutOne()
+    {
+        // The channel registered with no language, but the creator set a community default:
+        // the card renders in the community's language instead of English.
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.Communities.Setup(c => c.GetCommunities(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityOverviewRecord(Name.From("Tokyo"), CommunityPrivacyType.Public, 1, false)
+            });
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.Is<Name>(n => (string)n == "Tokyo"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Community(Name.From("Tokyo"), Guid.NewGuid(), CommunityPrivacyType.Public,
+                new[] { new CommunityMember(userId, CommunityRole.Member, CommunityPermission.None, null, null) },
+                new[] { new Community.ChannelConfiguration(333) },
+                new Dictionary<Guid, DateOnly?>(), false,
+                Community.DefaultAdminPermissionsSeed, "ja-JP"));
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, chart, score: 950000);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
+            (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(),
+            It.Is<IEnumerable<ulong>>(ids => ids.Count() == 1 && ids.First() == 333),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Localizer.Verify(l => l.Get("ja-JP", "passed 1 chart"), Times.Once);
+        ctx.Localizer.Verify(l => l.Get(null, "passed 1 chart"), Times.Never);
     }
 
     [Fact]

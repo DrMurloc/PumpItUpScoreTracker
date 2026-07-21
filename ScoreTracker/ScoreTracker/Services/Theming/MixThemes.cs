@@ -316,6 +316,20 @@ public static class MixThemes
     public static string GradeHex(string gradeName) =>
         GradeColors.TryGetValue(gradeName, out var hex) ? hex : UnpassedGradeHex;
 
+    /// <summary>
+    ///     Playstyle archetype color — the archetypes are letter-grade bands over a player's
+    ///     top-Pumbility average, so each wears the grade-metal ladder: AA copper for Pass
+    ///     Pusher, AAA+ silver for Pass Refiner, S+ gold for Balanced, then the SSS/SSS+ ice-blues.
+    /// </summary>
+    public static string PlayerTypeHex(RecapPlayerType type) => type switch
+    {
+        RecapPlayerType.PassPusher => FgHex,
+        RecapPlayerType.PassRefiner => MgHex,
+        RecapPlayerType.BalancedPlayer => SgHex,
+        RecapPlayerType.Competitive => UgHex,
+        _ => PgHex
+    };
+
     /// <summary>Raw hex for a plate (shorthand, e.g. "PG"), for ApexCharts plate bars.</summary>
     public static string PlateHex(string plateShorthand) =>
         PlateColors[PhoenixPlateHelperMethods.ParseShorthand(plateShorthand)];
@@ -360,6 +374,11 @@ public static class MixThemes
             $"    --skillcat-{c.ToString().ToLowerInvariant()}: {c.GetColor()};"));
         var brands = string.Join("\n", BrandColors.Select(kv =>
             $"    --brand-{kv.Key}: {kv.Value};"));
+        // The difficulty-ball type vocabulary (red Single / green Double / gold Co-Op) as
+        // tokens, so markup can stack singles-vs-doubles segments without literals.
+        var chartTypes = $"    --type-singles: {SinglesTypeHex};\n" +
+                         $"    --type-doubles: {DoublesTypeHex};\n" +
+                         $"    --type-coop: {CoOpTypeHex};";
         return $@":root {{
     --mix-bg: {p.Background};
     --mix-surface: {p.Surface};
@@ -384,6 +403,7 @@ public static class MixThemes
 {plates}
 {skillCategories}
 {brands}
+{chartTypes}
 }}";
     }
 

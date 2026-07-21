@@ -73,6 +73,14 @@ public interface IScoreReader
     /// </summary>
     Task<int> GetPlayDayCount(MixEnum mix, Guid userId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Distinct charts with any journaled submission per player in a mix, over the whole
+    ///     journal span. Same backfill caveat as <see cref="GetPlayDayCount" /> — a lower bound,
+    ///     not full history. Players with no journal rows are absent from the result.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, int>> GetJournaledChartCounts(MixEnum mix, IEnumerable<Guid> userIds,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Per-chart population counts for a mix: players with a scored record, and how many passed.</summary>
     Task<IEnumerable<ChartScoreAggregate>> GetChartScoreAggregates(MixEnum mix,
         CancellationToken cancellationToken = default);

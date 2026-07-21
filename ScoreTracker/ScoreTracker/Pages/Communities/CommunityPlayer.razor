@@ -1,0 +1,470 @@
+@page "/Community/Player"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Communities.Contracts
+@using ScoreTracker.Communities.Contracts.Queries
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using System.Web
+@using Chart = ScoreTracker.SharedKernel.Models.Chart
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+<PageTitle>@L["Player"]</PageTitle>
+
+<style>
+    .cmp-hero { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+
+    .cmp-hero-pum { display: flex; flex-direction: column; align-items: center; min-width: 140px; }
+
+    .cmp-hero-num {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 3.4rem;
+        line-height: 1;
+        color: var(--rarity-gold);
+        text-shadow: 0 0 14px var(--mix-glow);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .cmp-hero-cap {
+        font-size: .62rem;
+        text-transform: uppercase;
+        letter-spacing: .14em;
+        color: var(--mix-ink-muted);
+        margin-top: 4px;
+    }
+
+    .cmp-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px; }
+
+    @@media (max-width: 640px) { .cmp-tiles { grid-template-columns: repeat(2, 1fr); } }
+
+    .cmp-tile { background: var(--mix-surface-muted); border-radius: 11px; padding: 12px; }
+
+    .cmp-tile-label {
+        font-size: .62rem;
+        text-transform: uppercase;
+        letter-spacing: .07em;
+        color: var(--mix-ink-muted);
+    }
+
+    .cmp-tile-num { font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; margin-top: 3px; }
+
+    /* Folder completion keeps the real folder slope: each track's height follows the
+       folder's chart count (no per-folder normalization), with singles and doubles passes
+       stacked in the game's ball colors from the top of the track — what's left to clear
+       is the gap along the bottom, where the eye reads it against a flat baseline. */
+    /* Twenty-odd folders at a fixed bar width is wider than a phone, so the columns
+       share the width they have: each takes an equal fraction and the bar fills its
+       column up to the full-size 34px. The MudTooltip wrapper sits between the two
+       and defaults to an auto-width inline-block, which is what collapsed a
+       percentage-width bar to nothing before — it stretches with the column now. */
+    .cmp-folders { display: flex; align-items: flex-end; gap: clamp(3px, 1.2vw, 10px); height: 150px; padding-top: 4px; }
+
+    .cmp-folder-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0; justify-content: flex-end; height: 100%; }
+
+    .cmp-folder-col > .mud-tooltip-root { display: block; width: 100%; min-width: 0; }
+
+    .cmp-folder-track {
+        width: 100%;
+        max-width: 34px;
+        margin: 0 auto;
+        background: var(--mix-surface-muted);
+        border-radius: 5px 5px 0 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .cmp-folder-singles { background: var(--type-singles); }
+
+    .cmp-folder-doubles { background: var(--type-doubles); }
+
+    /* A two-digit label is wider than its column once the bars are sharing a phone. */
+    .cmp-folder-label { font-size: clamp(.54rem, 1.8vw, .72rem); line-height: 1; font-weight: 700; color: var(--mix-ink-muted); }
+
+    .cmp-stale { color: var(--mix-ink-muted); font-size: .68rem; white-space: nowrap; }
+
+    .cmp-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+
+    @@media (max-width: 640px) { .cmp-summary { grid-template-columns: repeat(2, 1fr); } }
+</style>
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary"/>
+}
+else if (_profile == null)
+{
+    <MudText Typo="Typo.h5">@L["Player was not found in this community."]</MudText>
+    <MudButton Variant="Variant.Outlined" Class="mt-2" OnClick="BackToCommunity">@L["Back to community"]</MudButton>
+}
+else
+{
+    <MudBreadcrumbs Items="_crumbs" Class="pa-0 mb-2"></MudBreadcrumbs>
+
+    <MudPaper Class="pa-4 mb-4">
+        <div class="cmp-hero">
+            <div class="cmp-hero-pum">
+                <span class="cmp-hero-num">@_profile.Pumbility</span>
+                <span class="cmp-hero-cap">PUMBILITY</span>
+            </div>
+            <div style="flex:1;min-width:240px">
+                <div style="display:flex;align-items:center;gap:14px">
+                    <MudImage Src="@_profile.ProfileImage.ToString()" Height="56" ObjectFit="ObjectFit.ScaleDown"
+                              Style="border-radius:12px"></MudImage>
+                    <div>
+                        <MudText Typo="Typo.h5">@((string)_profile.PlayerName)</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                            @if (_profile.Country != null)
+                            {
+                                <span>@((string)_profile.Country.Value) · </span>
+                            }
+                            @L["Competitive Level"] <b>@_profile.CompetitiveLevel.ToString("0.00")</b>
+                        </MudText>
+                        @if (_standing != null)
+                        {
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+                                <MudLink Href="@($"/OfficialLeaderboards/Players?player={Uri.EscapeDataString(_standing.Username)}")">
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary">
+                                        @L["{0} top-board charts", _standing.BoardsInTop] →
+                                    </MudChip>
+                                </MudLink>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="cmp-tiles">
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Total Rating"]</div><div class="cmp-tile-num">@_profile.TotalRating.ToString("N0")</div></div>
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Singles"]</div><div class="cmp-tile-num">@_profile.SinglesRating.ToString("N0")</div></div>
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Doubles"]</div><div class="cmp-tile-num">@_profile.DoublesRating.ToString("N0")</div></div>
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Highest Clear"]</div><div class="cmp-tile-num">@L["Lv {0}", _profile.HighestLevel]</div></div>
+                </div>
+            </div>
+        </div>
+    </MudPaper>
+
+    @if (_standing != null)
+    {
+        <MudPaper Class="pa-4 mb-4">
+            <MudText Typo="Typo.h6" Class="mb-1">@L["Official Boards"]</MudText>
+            <div class="cmp-tiles" style="margin-top:8px">
+                @if (_standing.PumbilityRank != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">PUMBILITY</div><div class="cmp-tile-num">#@_standing.PumbilityRank</div></div>
+                }
+                @if (_standing.SinglesRank != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Singles"]</div><div class="cmp-tile-num" style="color:var(--chart-singles)">#@_standing.SinglesRank</div></div>
+                }
+                @if (_standing.DoublesRank != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Doubles"]</div><div class="cmp-tile-num" style="color:var(--chart-doubles)">#@_standing.DoublesRank</div></div>
+                }
+                @if (_standing.CoOpRank != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["CoOp"]</div><div class="cmp-tile-num">#@_standing.CoOpRank</div></div>
+                }
+                @if (_standing.NumberOnes > 0)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Chart #1s"]</div><div class="cmp-tile-num">@_standing.NumberOnes</div></div>
+                }
+                @if (_standing.BestPlace != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Best chart placement"]</div><div class="cmp-tile-num">#@_standing.BestPlace</div></div>
+                }
+            </div>
+        </MudPaper>
+    }
+
+    <MudPaper Class="pa-4 mb-4">
+        <MudText Typo="Typo.h6" Class="mb-1">@L["Folder Completion"]</MudText>
+        <div class="cmp-folders">
+            @{
+                var folders = _profile.FolderCompletion.Where(f => f.Total > 0 && f.Level >= MinFolderLevel).ToArray();
+                var maxTotal = folders.Length == 0 ? 1 : folders.Max(f => f.Total);
+            }
+            @foreach (var folder in folders)
+            {
+                var trackHeight = Math.Max(6, (int)(118.0 * folder.Total / maxTotal));
+                var singlesPercent = 100.0 * folder.SinglesPassed / folder.Total;
+                var doublesPercent = 100.0 * folder.DoublesPassed / folder.Total;
+                <div class="cmp-folder-col">
+                    <MudTooltip Text="@($"S {folder.SinglesPassed} · D {folder.DoublesPassed} / {folder.Total}")">
+                        <div class="cmp-folder-track" style="height:@(trackHeight)px">
+                            <div class="cmp-folder-singles" style="height:@(singlesPercent.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                            <div class="cmp-folder-doubles" style="height:@(doublesPercent.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                        </div>
+                    </MudTooltip>
+                    <span class="cmp-folder-label">@folder.Level</span>
+                </div>
+            }
+        </div>
+    </MudPaper>
+
+    @if (CurrentUser.IsLoggedIn && CurrentUser.User.Id != _profile.UserId)
+    {
+        <MudPaper Class="pa-4">
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap" class="mb-3">
+                <MudText Typo="Typo.h6">@L["Compare in folder"]</MudText>
+                <FolderPicker Type="_compareType" Level="_compareLevel" ShowCoOp="false"
+                              FolderChanged="OnFolderChanged"></FolderPicker>
+                <MudSpacer/>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                    @L["You"] <b style="color:var(--mix-secondary)">vs</b> @((string)_profile.PlayerName)
+                </MudText>
+            </div>
+
+            @if (_comparing)
+            {
+                <MudSkeleton Height="160px" SkeletonType="SkeletonType.Rectangle"/>
+            }
+            else if (_comparison.Any())
+            {
+                <div class="cmp-summary">
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Charts you win"]</div><div class="cmp-tile-num" style="color:var(--rarity-emerald)">@Wins</div></div>
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Charts you lose"]</div><div class="cmp-tile-num" style="color:var(--mix-secondary)">@Losses</div></div>
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Score average (you / them)"]</div><div class="cmp-tile-num">@AverageLabel</div></div>
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Completion (you / them)"]</div><div class="cmp-tile-num">@CompletionLabel</div></div>
+                </div>
+
+                <MudTable T="CompareRow" Items="ComparedCharts" Breakpoint="Breakpoint.None" Dense="true"
+                          Class="olb-board-table olb-pager-tight">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel T="CompareRow" SortBy="@(r => r.Chart.Song.Name.ToString())">@L["Chart"]</MudTableSortLabel></MudTh>
+                        <MudTh Style="text-align:right"><MudTableSortLabel T="CompareRow" SortBy="@(r => r.Data.MyScore ?? -1)">@L["You"]</MudTableSortLabel></MudTh>
+                        <MudTh Style="text-align:right"><MudTableSortLabel T="CompareRow" SortBy="@(r => r.Data.TheirScore ?? -1)">@((string)_profile.PlayerName)</MudTableSortLabel></MudTh>
+                        <MudTh Style="text-align:right"><MudTableSortLabel T="CompareRow" SortBy="@(r => r.Difference ?? int.MinValue)">@L["Difference"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel T="CompareRow" SortBy="@(r => r.Winner)">@L["Winner"]</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <DifficultyBubble Chart="context.Chart"></DifficultyBubble>
+                                <span class="olb-hide-mobile">@context.Chart.Song.Name</span>
+                            </div>
+                        </MudTd>
+                        <MudTd Style="text-align:right">
+                            @if (context.Data.MyScore != null)
+                            {
+                                <span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end">
+                                    <LetterGradeIcon Grade="((PhoenixScore)context.Data.MyScore.Value).LetterGradeFor(_currentMix)"
+                                                     IsBroken="context.Data.MyIsBroken" Height="16"/>
+                                    <span>@context.Data.MyScore.Value.ToString("N0")</span>
+                                    @if (IsStale(context.Data.MyRecordedOn))
+                                    {
+                                        <span class="cmp-stale">@AgeLabel(context.Data.MyRecordedOn)</span>
+                                    }
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="mud-text-secondary">—</span>
+                            }
+                        </MudTd>
+                        <MudTd Style="text-align:right">
+                            @if (context.Data.TheirScore != null)
+                            {
+                                <span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end">
+                                    <LetterGradeIcon Grade="((PhoenixScore)context.Data.TheirScore.Value).LetterGradeFor(_currentMix)"
+                                                     IsBroken="context.Data.TheirIsBroken" Height="16"/>
+                                    <span>@context.Data.TheirScore.Value.ToString("N0")</span>
+                                    @if (IsStale(context.Data.TheirRecordedOn))
+                                    {
+                                        <span class="cmp-stale">@AgeLabel(context.Data.TheirRecordedOn)</span>
+                                    }
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="mud-text-secondary">—</span>
+                            }
+                        </MudTd>
+                        <MudTd Style="text-align:right">
+                            @if (context.Difference is { } diff)
+                            {
+                                <b style="color:@(diff >= 0 ? "var(--rarity-emerald)" : "var(--mix-secondary)")">
+                                    @(diff >= 0 ? "+" : "−")@Math.Abs(diff).ToString("N0")
+                                </b>
+                            }
+                        </MudTd>
+                        <MudTd>
+                            @if (context.Winner < 0)
+                            {
+                                <span style="color:var(--rarity-emerald);font-weight:600">@L["You"]</span>
+                            }
+                            else if (context.Winner > 0)
+                            {
+                                <span class="mud-text-secondary">@((string)_profile.PlayerName)</span>
+                            }
+                            else
+                            {
+                                <span class="mud-text-secondary">@L["Tie"]</span>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager HideRowsPerPage="true"/>
+                    </PagerContent>
+                </MudTable>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["Pick a folder to compare your scores."]</MudText>
+            }
+        </MudPaper>
+    }
+}
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IDateTimeOffsetAccessor DateTimeOffset
+@inject NavigationManager NavManager
+@inject ScoreTracker.Web.Services.Contracts.IUiSettingsAccessor UiSettings
+@code {
+    [Parameter, SupplyParameterFromQuery] public string CommunityName { get; set; } = string.Empty;
+    [Parameter, SupplyParameterFromQuery] public Guid UserId { get; set; }
+
+    private bool _loading = true;
+    private CommunityPlayerProfileRecord? _profile;
+    private OfficialPlayerStandingRecord? _standing;
+    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private List<BreadcrumbItem> _crumbs = new();
+    private MixEnum _currentMix = MixEnum.Phoenix;
+
+    private ChartType _compareType = ChartType.Double;
+    private int? _compareLevel;
+    private bool _comparing;
+    private CommunityChartComparisonRecord[] _comparison = Array.Empty<CommunityChartComparisonRecord>();
+
+    // Low folders exist but tell little at a glance — the graph starts where content does.
+    private const int MinFolderLevel = 6;
+
+    // Winner: 1 = them, -1 = you, 0 = tie. The default order leads with the charts you're
+    // losing, widest gap first — the work list.
+    private sealed record CompareRow(Chart Chart, CommunityChartComparisonRecord Data, int? Difference, int Winner);
+
+    private IEnumerable<CompareRow> ComparedCharts =>
+        _comparison.Where(c => (c.MyScore != null || c.TheirScore != null) && _charts.ContainsKey(c.ChartId))
+            .Select(c => new CompareRow(_charts[c.ChartId], c,
+                c.MyScore != null && c.TheirScore != null ? c.MyScore.Value - c.TheirScore.Value : null,
+                Winner: c.MyScore == c.TheirScore ? 0
+                    : (c.MyScore ?? -1) > (c.TheirScore ?? -1) ? -1 : 1))
+            .OrderByDescending(r => r.Winner)
+            .ThenByDescending(r => r.Winner > 0
+                ? (r.Data.TheirScore ?? 0) - (r.Data.MyScore ?? 0)
+                : r.Difference ?? 0);
+
+    private int Wins => _comparison.Count(c =>
+        c.MyScore != null && (c.TheirScore == null || c.MyScore > c.TheirScore));
+
+    private int Losses => _comparison.Count(c =>
+        c.TheirScore != null && (c.MyScore == null || c.TheirScore > c.MyScore));
+
+    private string AverageLabel
+    {
+        get
+        {
+            var mine = _comparison.Where(c => c.MyScore != null).Select(c => (double)c.MyScore!.Value).ToArray();
+            var theirs = _comparison.Where(c => c.TheirScore != null).Select(c => (double)c.TheirScore!.Value).ToArray();
+            return $"{Short(mine)} / {Short(theirs)}";
+
+            static string Short(double[] scores) =>
+                scores.Length == 0 ? "—" : $"{scores.Average() / 1000:0}k";
+        }
+    }
+
+    private string CompletionLabel
+    {
+        get
+        {
+            if (_comparison.Length == 0) return "—";
+            var mine = 100.0 * _comparison.Count(c => c.MyScore != null && !c.MyIsBroken) / _comparison.Length;
+            var theirs = 100.0 * _comparison.Count(c => c.TheirScore != null && !c.TheirIsBroken) / _comparison.Length;
+            return $"{mine:0}% / {theirs:0}%";
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var communityName = HttpUtility.UrlDecode(CommunityName);
+        if (string.IsNullOrWhiteSpace(communityName) || UserId == default)
+        {
+            NavManager.NavigateTo("/Communities");
+            return;
+        }
+
+        // Community stats are Phoenix-lineage — XX viewers keep seeing Phoenix, as before.
+        var selectedMix = await UiSettings.GetSelectedMix();
+        _currentMix = selectedMix == MixEnum.XX ? MixEnum.Phoenix : selectedMix;
+
+        try
+        {
+            _profile = await Mediator.Send(new GetCommunityPlayerProfileQuery(communityName, UserId, _currentMix));
+        }
+        catch (Exception e) when (e is CommunityNotFoundException or DeniedFromCommunityException)
+        {
+            NavManager.NavigateTo("/Communities");
+            return;
+        }
+
+        if (_profile != null)
+        {
+            _crumbs = new List<BreadcrumbItem>
+            {
+                new(L["Communities"].Value, "/Communities"),
+                new(communityName, $"/Community/Leaderboard?CommunityName={HttpUtility.UrlEncode(communityName)}"),
+                new((string)_profile.PlayerName, null, true)
+            };
+            // Official tiles are strictly if-applicable: no import-stamped link → no tiles.
+            _standing = await Mediator.Send(new GetOfficialPlayerStandingQuery(_currentMix, UserId));
+            _charts = (await Mediator.Send(new Catalog.Contracts.Queries.GetChartsQuery(_currentMix)))
+                .ToDictionary(c => c.Id);
+        }
+
+        _loading = false;
+
+        // The comparison opens on the pairing that means the most: the chart type where the
+        // two competitive levels sit closest, at the folder between them.
+        if (_profile != null && CurrentUser.IsLoggedIn && CurrentUser.User.Id != _profile.UserId)
+        {
+            var mine = await Mediator.Send(new PlayerProgress.Contracts.Queries.GetPlayerStatsQuery(
+                CurrentUser.User.Id, _currentMix));
+            var singlesGap = Math.Abs(mine.SinglesCompetitiveLevel - _profile.SinglesCompetitiveLevel);
+            var doublesGap = Math.Abs(mine.DoublesCompetitiveLevel - _profile.DoublesCompetitiveLevel);
+            var (type, myLevel, theirLevel) = singlesGap <= doublesGap
+                ? (ChartType.Single, mine.SinglesCompetitiveLevel, _profile.SinglesCompetitiveLevel)
+                : (ChartType.Double, mine.DoublesCompetitiveLevel, _profile.DoublesCompetitiveLevel);
+            var level = Math.Clamp((int)Math.Round((myLevel + theirLevel) / 2), 1, (int)DifficultyLevel.Max);
+            await OnFolderChanged((type, level));
+        }
+    }
+
+    private async Task OnFolderChanged((ChartType Type, int Level) folder)
+    {
+        _compareType = folder.Type;
+        _compareLevel = folder.Level;
+        _comparing = true;
+        _comparison = (await Mediator.Send(new GetCommunityFolderComparisonQuery(
+                HttpUtility.UrlDecode(CommunityName), UserId, folder.Type, folder.Level, _currentMix)))
+            .ToArray();
+        _comparing = false;
+    }
+
+    private void BackToCommunity() =>
+        NavManager.NavigateTo($"/Community/Leaderboard?CommunityName={CommunityName}");
+
+    private bool IsStale(DateTimeOffset? recordedOn) =>
+        recordedOn != null && recordedOn.Value != default &&
+        (DateTimeOffset.Now - recordedOn.Value).TotalDays >= 365;
+
+    private string AgeLabel(DateTimeOffset? recordedOn)
+    {
+        var years = (int)((DateTimeOffset.Now - recordedOn!.Value).TotalDays / 365);
+        return L["{0}y old", years].Value;
+    }
+}

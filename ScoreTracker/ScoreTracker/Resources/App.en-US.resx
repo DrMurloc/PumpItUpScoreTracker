@@ -5303,6 +5303,288 @@
   <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
     <value>You don't have any matching recent highlights — suggesting charts similar to your all-time best instead.</value>
   </data>
+  <data name="A community with this name already exists." xml:space="preserve">
+    <value>A community with this name already exists.</value>
+  </data>
+  <data name="Accept invite &amp; join" xml:space="preserve">
+    <value>Accept invite &amp; join</value>
+  </data>
+  <data name="Applied when a member is promoted; each admin's set can be tuned individually." xml:space="preserve">
+    <value>Applied when a member is promoted; each admin's set can be tuned individually.</value>
+  </data>
+  <data name="Back to community" xml:space="preserve">
+    <value>Back to community</value>
+  </data>
+  <data name="Ban" xml:space="preserve">
+    <value>Ban</value>
+  </data>
+  <data name="Banned" xml:space="preserve">
+    <value>Banned</value>
+  </data>
+  <data name="Browse Communities" xml:space="preserve">
+    <value>Browse Communities</value>
+  </data>
+  <data name="Browse regions" xml:space="preserve">
+    <value>Browse regions</value>
+  </data>
+  <data name="By Chart" xml:space="preserve">
+    <value>By Chart</value>
+  </data>
+  <data name="Charts you lose" xml:space="preserve">
+    <value>Charts you lose</value>
+  </data>
+  <data name="Charts you win" xml:space="preserve">
+    <value>Charts you win</value>
+  </data>
+  <data name="Clear Count" xml:space="preserve">
+    <value>Clear Count</value>
+  </data>
+  <data name="Community Name" xml:space="preserve">
+    <value>Community Name</value>
+  </data>
+  <data name="Community Settings" xml:space="preserve">
+    <value>Community Settings</value>
+  </data>
+  <data name="Community was not found." xml:space="preserve">
+    <value>Community was not found.</value>
+  </data>
+  <data name="Comp Lv" xml:space="preserve">
+    <value>Comp Lv</value>
+  </data>
+  <data name="Compare in folder" xml:space="preserve">
+    <value>Compare in folder</value>
+  </data>
+  <data name="Completion (you / them)" xml:space="preserve">
+    <value>Completion (you / them)</value>
+  </data>
+  <data name="Copy Invite Link" xml:space="preserve">
+    <value>Copy Invite Link</value>
+  </data>
+  <data name="Could not delete the community." xml:space="preserve">
+    <value>Could not delete the community.</value>
+  </data>
+  <data name="Create Community" xml:space="preserve">
+    <value>Create Community</value>
+  </data>
+  <data name="Create Invite Code" xml:space="preserve">
+    <value>Create Invite Code</value>
+  </data>
+  <data name="Creator" xml:space="preserve">
+    <value>Creator</value>
+  </data>
+  <data name="Default Admin Permissions" xml:space="preserve">
+    <value>Default Admin Permissions</value>
+  </data>
+  <data name="Default notification language (culture code)" xml:space="preserve">
+    <value>Default notification language (culture code)</value>
+  </data>
+  <data name="Delete Community" xml:space="preserve">
+    <value>Delete Community</value>
+  </data>
+  <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
+    <value>Delete this community and everything in it? This cannot be undone.</value>
+  </data>
+  <data name="Demote" xml:space="preserve">
+    <value>Demote</value>
+  </data>
+  <data name="Difference" xml:space="preserve">
+    <value>Difference</value>
+  </data>
+  <data name="Edit Permissions" xml:space="preserve">
+    <value>Edit Permissions</value>
+  </data>
+  <data name="Everyone who has gone public" xml:space="preserve">
+    <value>Everyone who has gone public</value>
+  </data>
+  <data name="Explore" xml:space="preserve">
+    <value>Explore</value>
+  </data>
+  <data name="Folder Completion" xml:space="preserve">
+    <value>Folder Completion</value>
+  </data>
+  <data name="Go Private" xml:space="preserve">
+    <value>Go Private</value>
+  </data>
+  <data name="Go Public" xml:space="preserve">
+    <value>Go Public</value>
+  </data>
+  <data name="Highest Clear" xml:space="preserve">
+    <value>Highest Clear</value>
+  </data>
+  <data name="Highest Level" xml:space="preserve">
+    <value>Highest Level</value>
+  </data>
+  <data name="I understand — join" xml:space="preserve">
+    <value>I understand — join</value>
+  </data>
+  <data name="Invite" xml:space="preserve">
+    <value>Invite</value>
+  </data>
+  <data name="Invite Required" xml:space="preserve">
+    <value>Invite Required</value>
+  </data>
+  <data name="Join" xml:space="preserve">
+    <value>Join</value>
+  </data>
+  <data name="Leave" xml:space="preserve">
+    <value>Leave</value>
+  </data>
+  <data name="Lv {0}" xml:space="preserve">
+    <value>Lv {0}</value>
+  </data>
+  <data name="Make Creator" xml:space="preserve">
+    <value>Make Creator</value>
+  </data>
+  <data name="Manage" xml:space="preserve">
+    <value>Manage</value>
+  </data>
+  <data name="Manage channel subscriptions" xml:space="preserve">
+    <value>Manage channel subscriptions</value>
+  </data>
+  <data name="Manage invite links" xml:space="preserve">
+    <value>Manage invite links</value>
+  </data>
+  <data name="Manage users (ban/unban)" xml:space="preserve">
+    <value>Manage users (ban/unban)</value>
+  </data>
+  <data name="Member" xml:space="preserve">
+    <value>Member</value>
+  </data>
+  <data name="Members" xml:space="preserve">
+    <value>Members</value>
+  </data>
+  <data name="Must give the community a name." xml:space="preserve">
+    <value>Must give the community a name.</value>
+  </data>
+  <data name="No scores for the chart recorded in this community." xml:space="preserve">
+    <value>No scores for the chart recorded in this community.</value>
+  </data>
+  <data name="No thanks" xml:space="preserve">
+    <value>No thanks</value>
+  </data>
+  <data name="Official #{0}" xml:space="preserve">
+    <value>Official #{0}</value>
+  </data>
+  <data name="Open Community" xml:space="preserve">
+    <value>Open Community</value>
+  </data>
+  <data name="Open world board" xml:space="preserve">
+    <value>Open world board</value>
+  </data>
+  <data name="Pick a folder to compare your scores." xml:space="preserve">
+    <value>Pick a folder to compare your scores.</value>
+  </data>
+  <data name="Player was not found in this community." xml:space="preserve">
+    <value>Player was not found in this community.</value>
+  </data>
+  <data name="Private" xml:space="preserve">
+    <value>Private</value>
+  </data>
+  <data name="Promote other admins" xml:space="preserve">
+    <value>Promote other admins</value>
+  </data>
+  <data name="Promote to Admin" xml:space="preserve">
+    <value>Promote to Admin</value>
+  </data>
+  <data name="Role" xml:space="preserve">
+    <value>Role</value>
+  </data>
+  <data name="Score average (you / them)" xml:space="preserve">
+    <value>Score average (you / them)</value>
+  </data>
+  <data name="Select a chart to see this community's leaderboard!" xml:space="preserve">
+    <value>Select a chart to see this community's leaderboard!</value>
+  </data>
+  <data name="Set your country on your account page to join a region." xml:space="preserve">
+    <value>Set your country on your account page to join a region.</value>
+  </data>
+  <data name="Show Regional Guests" xml:space="preserve">
+    <value>Show Regional Guests</value>
+  </data>
+  <data name="Sign In" xml:space="preserve">
+    <value>Sign In</value>
+  </data>
+  <data name="Sign in to accept this invite." xml:space="preserve">
+    <value>Sign in to accept this invite.</value>
+  </data>
+  <data name="Tap a rating to expand the player's top charts." xml:space="preserve">
+    <value>Tap a rating to expand the player's top charts.</value>
+  </data>
+  <data name="The code may have been revoked, or the community no longer exists." xml:space="preserve">
+    <value>The code may have been revoked, or the community no longer exists.</value>
+  </data>
+  <data name="The roster is visible to everyone; management controls appear based on your role." xml:space="preserve">
+    <value>The roster is visible to everyone; management controls appear based on your role.</value>
+  </data>
+  <data name="There was an error while joining the community" xml:space="preserve">
+    <value>There was an error while joining the community</value>
+  </data>
+  <data name="There was an error while leaving the community" xml:space="preserve">
+    <value>There was an error while leaving the community</value>
+  </data>
+  <data name="This invite code has expired. Ask a member for a new link." xml:space="preserve">
+    <value>This invite code has expired. Ask a member for a new link.</value>
+  </data>
+  <data name="This invite link isn't valid." xml:space="preserve">
+    <value>This invite link isn't valid.</value>
+  </data>
+  <data name="Unban" xml:space="preserve">
+    <value>Unban</value>
+  </data>
+  <data name="World" xml:space="preserve">
+    <value>World</value>
+  </data>
+  <data name="World and regions follow your account's country and public setting — no invites, no roles." xml:space="preserve">
+    <value>World and regions follow your account's country and public setting — no invites, no roles.</value>
+  </data>
+  <data name="You are the Creator. Only you can transfer the community, delete it, change its privacy, set default admin permissions, and set the notification language." xml:space="preserve">
+    <value>You are the Creator. Only you can transfer the community, delete it, change its privacy, set default admin permissions, and set the notification language.</value>
+  </data>
+  <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
+    <value>You haven't joined any communities yet — find one below or create your own.</value>
+  </data>
+  <data name="You're already a member of this community." xml:space="preserve">
+    <value>You're already a member of this community.</value>
+  </data>
+  <data name="You've been banned from this community and can't rejoin." xml:space="preserve">
+    <value>You've been banned from this community and can't rejoin.</value>
+  </data>
+  <data name="You've been invited to join this community." xml:space="preserve">
+    <value>You've been invited to join this community.</value>
+  </data>
+  <data name="Your Communities" xml:space="preserve">
+    <value>Your Communities</value>
+  </data>
+  <data name="Your PUMBILITY" xml:space="preserve">
+    <value>Your PUMBILITY</value>
+  </data>
+  <data name="Your Region" xml:space="preserve">
+    <value>Your Region</value>
+  </data>
+  <data name="Your groups, your region, and the world." xml:space="preserve">
+    <value>Your groups, your region, and the world.</value>
+  </data>
+  <data name="Your profile is private. Joining this community makes your scores visible to everyone in it — on its leaderboards, player pages, and comparisons. You'll stay hidden everywhere else." xml:space="preserve">
+    <value>Your profile is private. Joining this community makes your scores visible to everyone in it — on its leaderboards, player pages, and comparisons. You'll stay hidden everywhere else.</value>
+  </data>
+  <data name="Your scores will be visible" xml:space="preserve">
+    <value>Your scores will be visible</value>
+  </data>
+  <data name="all permissions" xml:space="preserve">
+    <value>all permissions</value>
+  </data>
+  <data name="no pass" xml:space="preserve">
+    <value>no pass</value>
+  </data>
+  <data name="{0} members" xml:space="preserve">
+    <value>{0} members</value>
+  </data>
+  <data name="{0} top-board charts" xml:space="preserve">
+    <value>{0} top-board charts</value>
+  </data>
+  <data name="{0}y old" xml:space="preserve">
+    <value>{0}y old</value>
+  </data>
   <data name="Imported" xml:space="preserve">
     <value>Imported</value>
   </data>
@@ -5486,6 +5768,120 @@
   <data name="{0} Players" xml:space="preserve">
     <value>{0} Players</value>
   </data>
+  <data name="Charts Played" xml:space="preserve">
+    <value>Charts Played</value>
+  </data>
+  <data name="CoOp Completion" xml:space="preserve">
+    <value>CoOp Completion</value>
+  </data>
+  <data name="Join by going public" xml:space="preserve">
+    <value>Join by going public</value>
+  </data>
+  <data name="Default notification language" xml:space="preserve">
+    <value>Default notification language</value>
+  </data>
+  <data name="Singles {0}-{1}" xml:space="preserve">
+    <value>Singles {0}-{1}</value>
+  </data>
+  <data name="Doubles {0}-{1}" xml:space="preserve">
+    <value>Doubles {0}-{1}</value>
+  </data>
+  <data name="Playstyle" xml:space="preserve">
+    <value>Playstyle</value>
+  </data>
+  <data name="Official Boards" xml:space="preserve">
+    <value>Official Boards</value>
+  </data>
+  <data name="Chart #1s" xml:space="preserve">
+    <value>Chart #1s</value>
+  </data>
+  <data name="Best chart placement" xml:space="preserve">
+    <value>Best chart placement</value>
+  </data>
+  <data name="Invite Links" xml:space="preserve">
+    <value>Invite Links</value>
+  </data>
+  <data name="Expires (optional)" xml:space="preserve">
+    <value>Expires (optional)</value>
+  </data>
+  <data name="New invite link" xml:space="preserve">
+    <value>New invite link</value>
+  </data>
+  <data name="No invite links yet — create one to bring people in." xml:space="preserve">
+    <value>No invite links yet — create one to bring people in.</value>
+  </data>
+  <data name="Never expires" xml:space="preserve">
+    <value>Never expires</value>
+  </data>
+  <data name="Expires {0}" xml:space="preserve">
+    <value>Expires {0}</value>
+  </data>
+  <data name="Copy link" xml:space="preserve">
+    <value>Copy link</value>
+  </data>
+  <data name="Could not create the invite link." xml:space="preserve">
+    <value>Could not create the invite link.</value>
+  </data>
+  <data name="What can it do?" xml:space="preserve">
+    <value>What can it do?</value>
+  </data>
+  <data name="The PIU Scores bot" xml:space="preserve">
+    <value>The PIU Scores bot</value>
+  </data>
+  <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
+    <value>Feeds — register a channel once, the bot keeps it fed</value>
+  </data>
+  <data name="score session cards, new titles, and member announcements for your community" xml:space="preserve">
+    <value>score session cards, new titles, and member announcements for your community</value>
+  </data>
+  <data name="Weekly Charts results and each new lineup" xml:space="preserve">
+    <value>Weekly Charts results and each new lineup</value>
+  </data>
+  <data name="the official leaderboards' weekly digest" xml:space="preserve">
+    <value>the official leaderboards' weekly digest</value>
+  </data>
+  <data name="Commands — anyone in the server can use these" xml:space="preserve">
+    <value>Commands — anyone in the server can use these</value>
+  </data>
+  <data name="calculate a Phoenix score from a result screen" xml:space="preserve">
+    <value>calculate a Phoenix score from a result screen</value>
+  </data>
+  <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
+    <value>pull up a chart's stats and similar charts, with links to its pages</value>
+  </data>
+  <data name="No scores in this mix yet" xml:space="preserve">
+    <value>No scores in this mix yet</value>
+  </data>
+  <data name="draw a random set of charts, presets included" xml:space="preserve">
+    <value>draw a random set of charts, presets included</value>
+  </data>
+  <data name="personalized chart suggestions, sent privately" xml:space="preserve">
+    <value>personalized chart suggestions, sent privately</value>
+  </data>
+  <data name="see and manage what this channel is registered for" xml:space="preserve">
+    <value>see and manage what this channel is registered for</value>
+  </data>
+  <data name="Every feed can post in its own language — pick one when registering; replies to commands follow each player's account language." xml:space="preserve">
+    <value>Every feed can post in its own language — pick one when registering; replies to commands follow each player's account language.</value>
+  </data>
+  <data name="View top charts" xml:space="preserve">
+    <value>View top charts</value>
+  </data>
+  <data name="Winner" xml:space="preserve">
+    <value>Winner</value>
+  </data>
+  <data name="Tie" xml:space="preserve">
+    <value>Tie</value>
+  </data>
+  <data name="Everything it can do in your server" xml:space="preserve">
+    <value>Everything it can do in your server</value>
+  </data>
+  <data name="Per-channel language" xml:space="preserve">
+    <value>Per-channel language</value>
+  </data>
+  <data name="Speaks your language." xml:space="preserve">
+    <value>Speaks your language.</value>
+  </data>
   <data name="This week on the boards" xml:space="preserve">
     <value>This week on the boards</value>
   </data>
@@ -5534,9 +5930,6 @@
   <data name="Debuted this week" xml:space="preserve">
     <value>Debuted this week</value>
   </data>
-  <data name="+{0} more" xml:space="preserve">
-    <value>+{0} more</value>
-  </data>
   <data name="first-ever appearance on any chart board" xml:space="preserve">
     <value>first-ever appearance on any chart board</value>
   </data>
@@ -5551,5 +5944,20 @@
   </data>
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>Nobody is on this chart board yet.</value>
+  </data>
+  <data name="PP" xml:space="preserve">
+    <value>PP</value>
+  </data>
+  <data name="PR" xml:space="preserve">
+    <value>PR</value>
+  </data>
+  <data name="BP" xml:space="preserve">
+    <value>BP</value>
+  </data>
+  <data name="CP" xml:space="preserve">
+    <value>CP</value>
+  </data>
+  <data name="PF" xml:space="preserve">
+    <value>PF</value>
   </data>
 </root>

@@ -1,0 +1,49 @@
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.Theming
+
+@* The playstyle archetype, one chip everywhere it appears — official rankings,
+   official player pages, community boards. *@
+
+@* Phone widths spend their pixels on the player's name, so the chip shortens to its
+   initials there — the full archetype stays in the tooltip either way. *@
+<MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Style="@ChipStyle(Type)"
+         title="@L[NameOf(Type)]">
+    <span class="olb-long-form">@L[NameOf(Type)]</span>
+    <span class="olb-short-form">@L[ShortNameOf(Type)]</span>
+</MudChip>
+
+@code {
+    [Parameter] [EditorRequired] public RecapPlayerType Type { get; set; }
+
+    public static string NameOf(RecapPlayerType type)
+    {
+        return type switch
+        {
+            RecapPlayerType.PassPusher => "Pass Pusher",
+            RecapPlayerType.PassRefiner => "Pass Refiner",
+            RecapPlayerType.BalancedPlayer => "Balanced Player",
+            RecapPlayerType.Competitive => "Competitive",
+            _ => "Perfectionist"
+        };
+    }
+
+    public static string ShortNameOf(RecapPlayerType type)
+    {
+        return type switch
+        {
+            RecapPlayerType.PassPusher => "PP",
+            RecapPlayerType.PassRefiner => "PR",
+            RecapPlayerType.BalancedPlayer => "BP",
+            RecapPlayerType.Competitive => "CP",
+            _ => "PF"
+        };
+    }
+
+    // Archetype chips wear the grade-metal ladder, outlined — and the summit type glows.
+    public static string ChipStyle(RecapPlayerType type)
+    {
+        var hex = MixThemes.PlayerTypeHex(type);
+        var style = $"border-color:{hex};color:{hex};font-weight:700";
+        return type == RecapPlayerType.Perfectionist ? $"{style};box-shadow:0 0 9px {hex}99" : style;
+    }
+}

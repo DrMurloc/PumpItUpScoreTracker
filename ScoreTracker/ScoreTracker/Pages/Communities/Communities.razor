@@ -1,167 +1,517 @@
-﻿@page "/Communities"
+@page "/Communities"
 @rendermode RenderModes.Interactive
-@using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.Domain.Records
 @using MediatR
-@using ScoreTracker.Application.Commands
-@using ScoreTracker.Communities.Contracts.Queries
+@using ScoreTracker.Communities.Contracts
 @using ScoreTracker.Communities.Contracts.Commands
-@using ScoreTracker.Application.Queries
+@using ScoreTracker.Communities.Contracts.Queries
 @using ScoreTracker.Domain.Exceptions
 @using ScoreTracker.Domain.Models
-@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.Contracts
 @using System.Web
-@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using Microsoft.Extensions.Options
 @using ScoreTracker.Data.Configuration
 @inject IOptions<DiscordConfiguration> DiscordConfig
 <PageTitle>@L["Communities"]</PageTitle>
+
+<style>
+    .communities-page { padding-top: 16px; }
+
+    /* Two independent columns: the rail (World + Regions) and the main field (Yours +
+       Explore) each flow at their own height, so a long region list never pushes Explore
+       down. On mobile the wrappers dissolve (display: contents) and the four blocks
+       reorder as flex items: World, Yours, Explore, Regions. */
+    .communities-dir {
+        display: grid;
+        grid-template-columns: 290px 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+
+    .communities-rail, .communities-main {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        min-width: 0;
+    }
+
+    @@media (max-width: 820px) {
+        .communities-dir { display: flex; flex-direction: column; }
+        .communities-rail, .communities-main { display: contents; }
+        .communities-world { order: 1; }
+        .communities-your { order: 2; }
+        .communities-explore { order: 3; }
+        .communities-regions { order: 4; }
+    }
+
+    .communities-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 15px;
+        margin-bottom: 11px;
+        background: var(--mix-surface);
+        border: 1px solid var(--mix-surface-muted);
+        border-radius: 14px;
+    }
+
+    .communities-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        font-size: 20px;
+        background: var(--mix-surface-muted);
+        color: var(--mix-ink);
+    }
+
+    .communities-card-main { flex: 1; min-width: 0; }
+
+    .communities-card-meta {
+        color: var(--mix-ink-muted);
+        font-size: 12.5px;
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .communities-card-actions { display: flex; gap: 8px; align-items: center; flex: 0 0 auto; flex-wrap: wrap; }
+
+    .communities-stat-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--mix-surface-muted);
+    }
+
+    .communities-stat-row:last-child { border-bottom: none; }
+
+    .communities-region-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 2px;
+        border-bottom: 1px solid var(--mix-surface-muted);
+    }
+
+    .communities-region-row:last-child { border-bottom: none; }
+
+    /* Long region names truncate instead of wrapping under the member/range block. */
+    .communities-region-name {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .communities-region-name .communities-region-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+    }
+
+    .communities-region-stats {
+        flex: 0 0 auto;
+        text-align: right;
+    }
+
+    /* The bot-features dialog: monospace command names in the site accent, one icon square
+       per row, and the language callout — the mock's vocabulary, token-for-token. */
+    .bot-dialog-head { display: flex; align-items: center; gap: 12px; }
+
+    .bot-dialog-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: var(--brand-discord);
+        display: grid;
+        place-items: center;
+        color: var(--mix-ink);
+    }
+
+    .bot-dialog-section {
+        font-size: .74rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .1em;
+        color: var(--mix-ink-muted);
+        margin: 14px 0 8px;
+    }
+
+    .bot-dialog-row { display: flex; gap: 12px; padding: 8px 10px; border-radius: 10px; align-items: flex-start; }
+
+    .bot-dialog-row:hover { background: var(--mix-surface-muted); }
+
+    .bot-dialog-ico {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: var(--mix-surface-muted);
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        color: var(--mix-ink-muted);
+    }
+
+    .bot-dialog-cmd { font-family: ui-monospace, monospace; font-size: .82rem; font-weight: 700; color: var(--mix-primary); }
+
+    .bot-dialog-desc { color: var(--mix-ink-muted); font-size: .8rem; }
+
+    .bot-dialog-chip {
+        display: inline-block;
+        font-size: .62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        border-radius: 5px;
+        padding: 1px 6px;
+        background: color-mix(in srgb, var(--brand-discord) 18%, transparent);
+        color: var(--brand-discord);
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+
+    .bot-dialog-lang {
+        display: flex;
+        align-items: flex-start;
+        margin-top: 14px;
+        padding: 11px 13px;
+        border-radius: 10px;
+        background: var(--mix-surface-muted);
+        font-size: .8rem;
+        color: var(--mix-ink-muted);
+    }
+
+    .bot-dialog-lang b { color: var(--mix-ink); }
+
+    .communities-range {
+        font-size: 11.5px;
+        color: var(--mix-ink-muted);
+        display: inline-flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .communities-range span { white-space: nowrap; }
+
+    /* The letter carries the series color; the numbers stay muted. */
+    .communities-range-singles { color: var(--chart-singles); font-weight: 700; }
+    .communities-range-doubles { color: var(--chart-doubles); font-weight: 700; }
+</style>
+
+<div class="communities-page">
 @if (!string.IsNullOrWhiteSpace(DiscordConfig.Value.ClientId))
 {
     <MudPaper Class="pa-4 mb-4" Outlined="true">
         <MudText Typo="Typo.h6">@L["Add the PIU Scores bot to your Discord server"]</MudText>
         <MudText Typo="Typo.body2" Class="mb-3">@L["Invite the bot, then run /piu register in any channel to start its feeds and commands."]</MudText>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SmartToy"
-                   Href="@BotInviteUrl" Target="_blank">@L["Add the bot"]</MudButton>
+        <div class="d-flex flex-wrap" style="gap:8px">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SmartToy"
+                       Href="@BotInviteUrl" Target="_blank">@L["Add the bot"]</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome"
+                       OnClick="() => _showBotFeatures = true">@L["What can it do?"]</MudButton>
+        </div>
     </MudPaper>
 }
-@foreach (var item in new[] { ("Your Communities",true), ("Other Communities",false) })
-{
-    <MudText Typo="Typo.h5">@item.Item1</MudText>
-    <MudTable T="CommunityOverviewRecord" Items="_communities.Where(c=>item.Item2==_myCommunities.Contains(c.CommunityName)).OrderByDescending(c=>c.MemberCount)">
-        <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh>Members</MudTh>
-            <MudTh>Leaderboard</MudTh>
-            <MudTh>@(_currentUser == null ? "Privacy" : "Join")</MudTh>
-            <MudTh>Invite</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>
-                @if (context.IsRegional)
-                {
-                    <MudTooltip Text="@context.CommunityName">
-                        <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@_countryImages[context.CommunityName].ToString()"></MudImage>
-                    </MudTooltip>
-                }
-                @context.CommunityName
-            </MudTd>
-            <MudTd>@context.MemberCount</MudTd>
-            <MudTd><MudButton StartIcon="@Icons.Material.Filled.Leaderboard" OnClick="()=>GoToLeaderboard(context.CommunityName)">Leaderboard</MudButton></MudTd>
-            <MudTd>
-                @if (_currentUser == null)
-                {
-                    @if (context.PrivacyType == CommunityPrivacyType.PublicWithCode)
-                    {
-                        <MudText>Requires Invite</MudText>
-                    }
-                    else if (context.PrivacyType == CommunityPrivacyType.Public)
-                    {
-                        <MudText>Public</MudText>
-                    }
-                    else
-                    {
-                        <MudText>Private</MudText>
-                    }
-                }
-                else
-                {
-                    @if (_myCommunities.Contains(context.CommunityName) && context.CommunityName != "World")
-                    {
-                        <MudButton Disabled="_isSaving" OnClick="()=>Leave(context.CommunityName)" Color="Color.Warning" Variant="Variant.Filled">Leave</MudButton>
-                    }
-                    else if (_myCommunities.Contains(context.CommunityName) && context.CommunityName == "World")
-                    {
-                        <MudButton Disabled="_isSaving" Href="/Account" Target="_blank" Color="Color.Warning" Variant="Variant.Filled">Go Private</MudButton>
-                    }
-                    else if (context.PrivacyType == CommunityPrivacyType.Public && context.CommunityName != "World")
-                    {
-                        <MudButton Disabled="_isSaving" OnClick="()=>Join(context.CommunityName)" Color="Color.Primary" Variant="Variant.Filled">Join</MudButton>
-                    }
-                    else if (context.PrivacyType == CommunityPrivacyType.Public && context.CommunityName == "World")
-                    {
-                        <MudButton Disabled="_isSaving" Href="/Account" Target="_blank" Color="Color.Primary" Variant="Variant.Filled">Go Public</MudButton>
-                    }
-                    else if (context.PrivacyType == CommunityPrivacyType.PublicWithCode)
-                    {
-                        <MudText>Requires Invite</MudText>
-                    }
-                    else if (context.PrivacyType == CommunityPrivacyType.Private)
-                    {
-                        <MudText>Private</MudText>
-                    }
-                }
 
-            </MudTd>
-            <MudTd>
-                @if (_myCommunities.Contains(context.CommunityName) && context.PrivacyType != CommunityPrivacyType.Public)
-                {
-                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="()=>OpenCommunity(context.CommunityName)" StartIcon="@Icons.Material.Filled.Link">Invite</MudButton>
-                }
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
+<MudDialog @bind-Visible="_showBotFeatures" Options="new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }">
+    <TitleContent>
+        <div class="bot-dialog-head">
+            <div class="bot-dialog-avatar"><MudIcon Icon="@Icons.Material.Filled.SmartToy"/></div>
+            <div>
+                <MudText Typo="Typo.h6" Style="line-height:1.1">@L["The PIU Scores bot"]</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["Everything it can do in your server"]</MudText>
+            </div>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="bot-dialog-section">@L["Feeds — register a channel once, the bot keeps it fed"]</div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Groups" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu register community</span>
+                <span class="bot-dialog-chip">@L["Per-channel language"]</span>
+                <div class="bot-dialog-desc">@L["score session cards, new titles, and member announcements for your community"]</div>
+            </div>
+        </div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu register weekly</span>
+                <div class="bot-dialog-desc">@L["Weekly Charts results and each new lineup"]</div>
+            </div>
+        </div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Today" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu register daily</span>
+                <div class="bot-dialog-desc">@L["Daily Step — yesterday's board and today's chart"]</div>
+            </div>
+        </div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Public" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu register official</span>
+                <div class="bot-dialog-desc">@L["the official leaderboards' weekly digest"]</div>
+            </div>
+        </div>
 
-}
-<br/>
-<MudButton OnClick="()=>_showCreateDialog=true" Variant="Variant.Outlined">Create Community</MudButton>
+        <div class="bot-dialog-section">@L["Commands — anyone in the server can use these"]</div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Calculate" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu calc</span>
+                <div class="bot-dialog-desc">@L["calculate a Phoenix score from a result screen"]</div>
+            </div>
+        </div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu chart</span>
+                <div class="bot-dialog-desc">@L["pull up a chart's stats and similar charts, with links to its pages"]</div>
+            </div>
+        </div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Casino" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu random</span>
+                <div class="bot-dialog-desc">@L["draw a random set of charts, presets included"]</div>
+            </div>
+        </div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.TipsAndUpdates" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu suggest</span>
+                <div class="bot-dialog-desc">@L["personalized chart suggestions, sent privately"]</div>
+            </div>
+        </div>
+        <div class="bot-dialog-row">
+            <div class="bot-dialog-ico"><MudIcon Icon="@Icons.Material.Filled.Checklist" Size="Size.Small"/></div>
+            <div>
+                <span class="bot-dialog-cmd">/piu feeds</span>
+                <div class="bot-dialog-desc">@L["see and manage what this channel is registered for"]</div>
+            </div>
+        </div>
+
+        <div class="bot-dialog-lang">
+            <MudIcon Icon="@Icons.Material.Filled.Translate" Size="Size.Small" Class="mr-2"/>
+            <span><b>@L["Speaks your language."]</b> @L["Every feed can post in its own language — pick one when registering; replies to commands follow each player's account language."]</span>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showBotFeatures = false">@L["Close"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SmartToy"
+                   Href="@BotInviteUrl" Target="_blank">@L["Add the bot"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<div class="d-flex align-end justify-space-between flex-wrap mb-4" style="gap:12px">
+    <div>
+        <MudText Typo="Typo.h4">@L["Communities"]</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["Your groups, your region, and the world."]</MudText>
+    </div>
+    @if (_currentUser != null)
+    {
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _showCreateDialog = true">
+            @L["Create Community"]
+        </MudButton>
+    }
+</div>
+
+<div class="communities-dir">
+    <div class="communities-rail">
+    <div class="communities-world">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6">@L["World"]</MudText>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["Everyone who has gone public"]</MudText>
+            <div class="mt-2">
+                <div class="communities-stat-row">
+                    <span class="mud-text-secondary">@L["Members"]</span><b>@(_world?.MemberCount ?? 0)</b>
+                </div>
+                @if (_myPumbility != null)
+                {
+                    <div class="communities-stat-row">
+                        <span class="mud-text-secondary">@L["Your PUMBILITY"]</span><b>@_myPumbility</b>
+                    </div>
+                }
+                @if (_world != null && RangeChip(_world.CommunityName) is { } worldRange)
+                {
+                    <div class="communities-stat-row">@worldRange</div>
+                }
+            </div>
+            @if (_world != null)
+            {
+                <MudButton Variant="Variant.Outlined" Size="Size.Small" Class="mt-3" FullWidth="true"
+                           OnClick="@(() => GoToLeaderboard(_world.CommunityName))">@L["Rankings"]</MudButton>
+            }
+            @if (_currentUser is { IsPublic: false })
+            {
+                <MudButton Variant="Variant.Text" Size="Size.Small" Class="mt-1" FullWidth="true" Href="/Account">
+                    @L["Join by going public"]
+                </MudButton>
+            }
+        </MudPaper>
+    </div>
+
+    <div class="communities-regions">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6">@L["Your Region"]</MudText>
+            @if (_myRegion != null)
+            {
+                <div class="communities-card" style="margin-top:8px">
+                    @if (_countryImages.TryGetValue(_myRegion.CommunityName, out var flag))
+                    {
+                        <MudImage Height="18" ObjectFit="ObjectFit.ScaleDown" Src="@flag.ToString()"></MudImage>
+                    }
+                    <div class="communities-card-main">
+                        <b>@((string)_myRegion.CommunityName)</b>
+                        <div class="communities-card-meta">
+                            <span>@L["{0} members", _myRegion.MemberCount]</span>
+                            @RangeChip(_myRegion.CommunityName)
+                        </div>
+                    </div>
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small"
+                               OnClick="@(() => GoToLeaderboard(_myRegion.CommunityName))">@L["Rankings"]</MudButton>
+                </div>
+            }
+            else
+            {
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["Set your country on your account page to join a region."]</MudText>
+            }
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mt-3" Style="text-transform:uppercase;letter-spacing:.09em">@L["Browse regions"]</MudText>
+            @foreach (var region in _otherRegions)
+            {
+                <div class="communities-region-row">
+                    <MudLink OnClick="@(() => GoToLeaderboard(region.CommunityName))" Class="communities-region-name"
+                             Style="display:flex;align-items:center;gap:8px">
+                        @if (_countryImages.TryGetValue(region.CommunityName, out var flag))
+                        {
+                            <MudImage Height="14" ObjectFit="ObjectFit.ScaleDown" Src="@flag.ToString()"></MudImage>
+                        }
+                        <span class="communities-region-label">@((string)region.CommunityName)</span>
+                    </MudLink>
+                    <div class="communities-region-stats">
+                        <span class="mud-text-secondary">@L["{0} members", region.MemberCount]</span>
+                        <div>@RangeChip(region.CommunityName)</div>
+                    </div>
+                </div>
+            }
+        </MudPaper>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2 d-block">
+            @L["World and regions follow your account's country and public setting — no invites, no roles."]
+        </MudText>
+    </div>
+    </div>
+
+    <div class="communities-main">
+    <div class="communities-your">
+        <MudText Typo="Typo.h6" Class="mb-2">@L["Your Communities"]</MudText>
+        @if (!_yourCommunities.Any())
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">@L["You haven't joined any communities yet — find one below or create your own."]</MudText>
+        }
+        @foreach (var community in _yourCommunities)
+        {
+            <div class="communities-card">
+                <div class="communities-avatar">@Initials(community.CommunityName)</div>
+                <div class="communities-card-main">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                        <b>@((string)community.CommunityName)</b>
+                        <MudChip T="string" Size="Size.Small">@PrivacyLabel(community.PrivacyType)</MudChip>
+                        @if (RoleOf(community.CommunityName) is { } role && role != CommunityRole.Member)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@(role == CommunityRole.Creator ? Color.Warning : Color.Info)">
+                                @(role == CommunityRole.Creator ? L["Creator"] : L["Admin"])
+                            </MudChip>
+                        }
+                    </div>
+                    <div class="communities-card-meta">
+                        <span>@L["{0} members", community.MemberCount]</span>
+                        @RangeChip(community.CommunityName)
+                    </div>
+                </div>
+                <div class="communities-card-actions">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                               OnClick="@(() => GoToLeaderboard(community.CommunityName))">@L["Rankings"]</MudButton>
+                    @if (RoleOf(community.CommunityName) != CommunityRole.Creator)
+                    {
+                        <MudButton Variant="Variant.Text" Color="Color.Warning" Size="Size.Small" Disabled="_isSaving"
+                                   OnClick="@(() => Leave(community.CommunityName))">@L["Leave"]</MudButton>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="communities-explore">
+        <MudText Typo="Typo.h6" Class="mb-2 mt-2">@L["Explore"]</MudText>
+        @foreach (var community in _exploreCommunities)
+        {
+            <div class="communities-card">
+                <div class="communities-avatar">@Initials(community.CommunityName)</div>
+                <div class="communities-card-main">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                        <b>@((string)community.CommunityName)</b>
+                        <MudChip T="string" Size="Size.Small">@PrivacyLabel(community.PrivacyType)</MudChip>
+                    </div>
+                    <div class="communities-card-meta">
+                        <span>@L["{0} members", community.MemberCount]</span>
+                        @RangeChip(community.CommunityName)
+                    </div>
+                </div>
+                <div class="communities-card-actions">
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small"
+                               OnClick="@(() => GoToLeaderboard(community.CommunityName))">@L["Rankings"]</MudButton>
+                    @if (_currentUser != null && community.PrivacyType == CommunityPrivacyType.Public)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="_isSaving"
+                                   OnClick="@(() => Join(community.CommunityName))">@L["Join"]</MudButton>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+    </div>
+</div>
+</div>
+
 <MudDialog @bind-Visible="_showCreateDialog">
     <DialogContent>
         <MudGrid>
             <MudItem xs="12">
-                <MudTextField @bind-Value="_name" MaxLength="50" Label="Community Name"></MudTextField>
+                <MudTextField T="string" Value="_name" ValueChanged="OnNameChanged" MaxLength="50"
+                              Label="@L["Community Name"]" Immediate="true" DebounceInterval="400"
+                              Error="_nameTaken"
+                              ErrorText="@L["A community with this name already exists."]"></MudTextField>
             </MudItem>
             <MudItem xs="12">
                 <MudRadioGroup T="CommunityPrivacyType" @bind-Value="_privacyType">
-                    <MudRadio Value="@CommunityPrivacyType.Public" Color="Color.Primary">Public</MudRadio>
-                    <MudRadio Value="@CommunityPrivacyType.PublicWithCode" Color="Color.Primary">Invite Required</MudRadio>
-                    <MudRadio Value="@CommunityPrivacyType.Private" Color="Color.Primary">Private</MudRadio>
+                    <MudRadio Value="@CommunityPrivacyType.Public" Color="Color.Primary">@L["Public"]</MudRadio>
+                    <MudRadio Value="@CommunityPrivacyType.PublicWithCode" Color="Color.Primary">@L["Invite Required"]</MudRadio>
+                    <MudRadio Value="@CommunityPrivacyType.Private" Color="Color.Primary">@L["Private"]</MudRadio>
                 </MudRadioGroup>
             </MudItem>
         </MudGrid>
     </DialogContent>
     <DialogActions>
-        <MudSpacer>
-        </MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showCreateDialog=false">@L["Close"]</MudButton>
-        <MudButton Variant="Variant.Filled" Disabled="_isSaving" Color="Color.Primary" OnClick="CreateCommunity">Create</MudButton>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showCreateDialog = false">@L["Close"]</MudButton>
+        <MudButton Variant="Variant.Filled" Disabled="_isSaving || _nameTaken" Color="Color.Primary" OnClick="CreateCommunity">@L["Create"]</MudButton>
     </DialogActions>
 </MudDialog>
 
-<MudDialog @bind-Visible="_showManageDialog">
-    <DialogContent>
-        @if (_community != null)
-        {
-            <MudGrid>
-                @foreach (var link in _community.InviteCodes)
-                {
-                    <MudItem xs="8">
-                        <MudText>@link.Key</MudText>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudButton StartIcon="@Icons.Material.Filled.ContentCopy" Variant="Variant.Outlined" OnClick="()=>CopyCode(link.Key)">Copy Invite Link</MudButton>
-                    </MudItem>
-                }
-                <MudItem xs="12">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateCode">Create Invite Code</MudButton>
-
-                </MudItem>
-            </MudGrid>
-        }
-    </DialogContent>
-    <DialogActions>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showManageDialog=false">@L["Close"]</MudButton>
-
-    </DialogActions>
-</MudDialog>
 @inject IMediator Mediator;
 @inject ICurrentUserAccessor CurrentUser;
 @inject ISnackbar Snackbar;
-@inject IJSRuntime JSRuntime;
 @inject NavigationManager NavManager
 @inject IUserRepository Users;
+@inject IUiSettingsAccessor UiSettings;
 @code {
 
     // Requested scopes: bot + application commands; permissions cover view channel, send
@@ -171,31 +521,87 @@
 
     private IEnumerable<CommunityOverviewRecord> _communities = Array.Empty<CommunityOverviewRecord>();
     private ISet<Name> _myCommunities = new HashSet<Name>();
+    private IDictionary<Name, MyCommunityRoleRecord> _roles = new Dictionary<Name, MyCommunityRoleRecord>();
+    private IDictionary<Name, CommunityCompetitiveRangeRecord> _ranges = new Dictionary<Name, CommunityCompetitiveRangeRecord>();
     private User? _currentUser;
     private bool _showCreateDialog = false;
+    private bool _showBotFeatures = false;
     private bool _isSaving = false;
     private string _name = string.Empty;
-    private bool _showManageDialog = false;
+    private bool _nameTaken = false;
     private IDictionary<Name, Uri> _countryImages = new Dictionary<Name, Uri>();
     private CommunityPrivacyType _privacyType = CommunityPrivacyType.PublicWithCode;
+    private int? _myPumbility;
+
+    private CommunityOverviewRecord? _world;
+    private CommunityOverviewRecord? _myRegion;
+    private CommunityOverviewRecord[] _otherRegions = Array.Empty<CommunityOverviewRecord>();
+    private CommunityOverviewRecord[] _yourCommunities = Array.Empty<CommunityOverviewRecord>();
+    private CommunityOverviewRecord[] _exploreCommunities = Array.Empty<CommunityOverviewRecord>();
+
+    private static string Initials(Name name)
+    {
+        var value = name.ToString().Trim();
+        return value.Length <= 2 ? value.ToUpperInvariant() : value[..2].ToUpperInvariant();
+    }
+
+    private CommunityRole? RoleOf(Name communityName) =>
+        _roles.TryGetValue(communityName, out var role) ? role.Role : null;
+
+    // Competitive spread in the S/D shorthand the FolderPicker taught, wearing the singles /
+    // doubles series colors the home-page stats widget established.
+    private RenderFragment? RangeChip(Name communityName)
+    {
+        if (!_ranges.TryGetValue(communityName, out var range)) return null;
+        if (range.SinglesMin == null && range.DoublesMin == null) return null;
+        return @<span class="communities-range">
+                   @if (range.SinglesMin != null)
+                   {
+                       <span><span class="communities-range-singles">S</span> @range.SinglesMin.Value.ToString("0.0") - @range.SinglesMax!.Value.ToString("0.0")</span>
+                   }
+                   @if (range.DoublesMin != null)
+                   {
+                       <span><span class="communities-range-doubles">D</span> @range.DoublesMin.Value.ToString("0.0") - @range.DoublesMax!.Value.ToString("0.0")</span>
+                   }
+               </span>;
+    }
+
+    private string PrivacyLabel(CommunityPrivacyType privacy) => privacy switch
+    {
+        CommunityPrivacyType.Private => L["Private"].Value,
+        CommunityPrivacyType.PublicWithCode => L["Invite Required"].Value,
+        _ => L["Public"].Value
+    };
+
+    // Debounced by the field: the availability answer arrives while typing, not on save.
+    private async Task OnNameChanged(string name)
+    {
+        _name = name;
+        _nameTaken = !string.IsNullOrWhiteSpace(name) &&
+                     Name.TryParse(name, out var parsed) &&
+                     await Mediator.Send(new DoesCommunityExistQuery(parsed));
+    }
 
     private async Task CreateCommunity()
     {
         if (string.IsNullOrWhiteSpace(_name))
         {
-            Snackbar.Add("Must give the community a name.", Severity.Error);
+            Snackbar.Add(L["Must give the community a name."].Value, Severity.Error);
             return;
         }
         _isSaving = true;
         try
         {
             await Mediator.Send(new CreateCommunityCommand(_name, _privacyType));
-            _communities = _communities.Append(new CommunityOverviewRecord(_name, _privacyType, 1,false)).ToArray();
+            _communities = _communities.Append(new CommunityOverviewRecord(_name, _privacyType, 1, false)).ToArray();
             _myCommunities.Add(_name);
+            _roles[_name] = new MyCommunityRoleRecord(_name, CommunityRole.Creator, CommunityPermission.All);
+            _showCreateDialog = false;
+            Split();
         }
         catch (CommunityAlreadyExistsException)
         {
-            Snackbar.Add("A community with this name already exists.", Severity.Error);
+            Snackbar.Add(L["A community with this name already exists."].Value, Severity.Error);
         }
         _isSaving = false;
     }
@@ -204,17 +610,7 @@
     {
         NavManager.NavigateTo($"/Community/Leaderboard?CommunityName={HttpUtility.UrlEncode(communityName)}");
     }
-    private async Task CreateCode()
-    {
-        if (_community == null)
-        {
-            return;
-        }
-        _isSaving = true;
-        var code = await Mediator.Send(new CreateInviteLinkCommand(_community.Name, null));
-        _community.InviteCodes[code] = null;
-        _isSaving = false;
-    }
+
     private async Task Join(Name communityName)
     {
         _isSaving = true;
@@ -222,13 +618,14 @@
         {
             await Mediator.Send(new JoinCommunityCommand(communityName, null));
             _myCommunities.Add(communityName);
+            _roles[communityName] = new MyCommunityRoleRecord(communityName, CommunityRole.Member, CommunityPermission.None);
+            Split();
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Snackbar.Add("There was an error while joining the community", Severity.Error);
+            Snackbar.Add(L["There was an error while joining the community"].Value, Severity.Error);
         }
         _isSaving = false;
-        
     }
 
     private async Task Leave(Name communityName)
@@ -238,29 +635,39 @@
         {
             await Mediator.Send(new LeaveCommunityCommand(communityName));
             _myCommunities.Remove(communityName);
+            _roles.Remove(communityName);
+            Split();
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Snackbar.Add("There was an error while leaving the community", Severity.Error);
+            Snackbar.Add(L["There was an error while leaving the community"].Value, Severity.Error);
         }
         _isSaving = false;
     }
 
-    private Community? _community = null;
+    // Regional communities feed the rail; player communities split into yours vs. explore.
+    // Legacy rows can predate the IsRegional flag, so World and country-named communities
+    // classify by name too.
+    private bool IsRegionalCommunity(CommunityOverviewRecord community) =>
+        community.IsRegional || (string)community.CommunityName == "World" ||
+        _countryImages.ContainsKey(community.CommunityName);
 
-    private async Task OpenCommunity(Name name)
+    private void Split()
     {
-        _isSaving = true;
-        _community = await Mediator.Send(new GetCommunityQuery(name));
-        _showManageDialog = true;
-        _isSaving = false;
-    }
+        var regional = _communities.Where(IsRegionalCommunity).ToArray();
+        _world = regional.FirstOrDefault(c => (string)c.CommunityName == "World");
+        _myRegion = _currentUser?.Country is { } country
+            ? regional.FirstOrDefault(c => c.CommunityName == country)
+            : null;
+        _otherRegions = regional
+            .Where(c => (string)c.CommunityName != "World" && c.CommunityName != _myRegion?.CommunityName)
+            .OrderByDescending(c => c.MemberCount).ToArray();
 
-    
-    private async Task CopyCode(Guid code)
-    {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", $"https://piuscores.arroweclip.se/Communities/Invite/{code}");
-        Snackbar.Add(L["Copied to clipboard!"].Value, Severity.Success);
+        var player = _communities.Where(c => !IsRegionalCommunity(c)).ToArray();
+        _yourCommunities = player.Where(c => _myCommunities.Contains(c.CommunityName))
+            .OrderByDescending(c => c.MemberCount).ToArray();
+        _exploreCommunities = player.Where(c => !_myCommunities.Contains(c.CommunityName))
+            .OrderByDescending(c => c.MemberCount).ToArray();
     }
 
     protected override async Task OnInitializedAsync()
@@ -268,12 +675,23 @@
         _currentUser = CurrentUser.IsLoggedIn ? CurrentUser.User : null;
         _communities = (await Mediator.Send(new GetPublicCommunitiesQuery())).ToArray();
         _countryImages = (await Users.GetCountries()).ToDictionary(c => c.Name, c => c.ImagePath);
+        var mix = await UiSettings.GetSelectedMix();
+        var dataMix = mix == MixEnum.XX ? MixEnum.Phoenix : mix;
+        _ranges = (await Mediator.Send(new GetCommunityCompetitiveRangesQuery(dataMix)))
+            .ToDictionary(r => r.CommunityName);
         if (CurrentUser.IsLoggedIn)
         {
             var myCommunities = (await Mediator.Send(new GetMyCommunitiesQuery())).ToArray();
             _myCommunities = myCommunities.Select(c => c.CommunityName).ToHashSet();
             _communities = _communities.Concat(myCommunities.Where(c => c.PrivacyType == CommunityPrivacyType.Private)).ToArray();
+            _roles = (await Mediator.Send(new GetMyCommunityRolesQuery()))
+                .Where(r => r.Role != CommunityRole.Banned)
+                .ToDictionary(r => r.CommunityName);
+
+            var stats = await Mediator.Send(new GetPlayerStatsQuery(_currentUser!.Id, dataMix));
+            _myPumbility = stats.SkillRating > 0 ? stats.SkillRating : null;
         }
-        
+
+        Split();
     }
 }

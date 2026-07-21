@@ -536,6 +536,13 @@ namespace ScoreTracker.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("DefaultAdminPermissions")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DefaultLanguage")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<bool>("IsRegional")
                         .HasColumnType("bit");
 
@@ -625,10 +632,26 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<Guid>("CommunityId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("GrantedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("JoinedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Permissions")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CommunityId", "Role");
 
                     b.HasIndex("CommunityId", "UserId");
 

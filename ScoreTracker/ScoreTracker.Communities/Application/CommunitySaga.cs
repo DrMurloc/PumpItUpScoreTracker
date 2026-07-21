@@ -27,12 +27,15 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     IRequestHandler<LeaveCommunityCommand>,
     IRequestHandler<GetCommunityMembersQuery, IEnumerable<Guid>>,
     IRequestHandler<GetCommunityLeaderboardQuery, IEnumerable<CommunityLeaderboardRecord>>,
+    IRequestHandler<GetCommunityCompetitiveRangesQuery, IEnumerable<Contracts.CommunityCompetitiveRangeRecord>>,
     IRequestHandler<CreateInviteLinkCommand, Guid>,
     IRequestHandler<GetMyCommunitiesQuery, IEnumerable<CommunityOverviewRecord>>,
     IRequestHandler<GetPublicCommunitiesQuery, IEnumerable<CommunityOverviewRecord>>,
     IRequestHandler<GetCommunityCountQuery, int>,
+    IRequestHandler<DoesCommunityExistQuery, bool>,
     IRequestHandler<GetCommunityQuery, Community>,
     IRequestHandler<JoinCommunityByInviteCodeCommand>,
+    IRequestHandler<GetCommunityInvitePreviewQuery, Contracts.CommunityInvitePreviewRecord?>,
     IRequestHandler<AddDiscordChannelToCommunityCommand>,
     IRequestHandler<RemoveDiscordChannelFromCommunityCommand>,
     IRequestHandler<GetPhoenixRecordsForCommunityQuery, IEnumerable<UserPhoenixScore>>,
@@ -858,9 +861,9 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     public async Task<Guid> Handle(CreateInviteLinkCommand request, CancellationToken cancellationToken)
     {
         var community = await GetCommunity(request.CommunityName, cancellationToken);
-        if (!community.MemberIds.Contains(_currentUser.User.Id))
+        if (!community.HasPermission(_currentUser.User.Id, CommunityPermission.ManageInviteLinks))
             throw new DeniedFromCommunityException(
-                "You must be a member of a community to create invite links for it");
+                "You must have the invite-links permission to create invite links for this community");
 
         var newCode = Guid.NewGuid();
         community.InviteCodes[newCode] = request.ExpirationDate;
@@ -877,7 +880,18 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
                                                                            .User.Id)))
             throw new DeniedFromCommunityException("This community is private and you must be a member to view it");
 
-        return await _communities.GetLeaderboard(request.Mix, request.Community, cancellationToken);
+        var leaderboard = await _communities.GetLeaderboard(request.Mix, request.Community, cancellationToken);
+
+        // Membership is the score-visibility consent: private-profile members exist only for
+        // people inside the community. Outside viewers get the public members alone.
+        var viewerIsMember = _currentUser.IsLoggedIn && community.MemberIds.Contains(_currentUser.User.Id);
+        return viewerIsMember ? leaderboard : leaderboard.Where(l => l.IsPublic).ToArray();
+    }
+
+    public async Task<IEnumerable<Contracts.CommunityCompetitiveRangeRecord>> Handle(
+        GetCommunityCompetitiveRangesQuery request, CancellationToken cancellationToken)
+    {
+        return await _communities.GetCompetitiveRanges(request.Mix, cancellationToken);
     }
 
     public async Task<Community> Handle(GetCommunityQuery request, CancellationToken cancellationToken)
@@ -918,6 +932,11 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         return await _communities.CountNonRegionalCommunities(cancellationToken);
     }
 
+    public async Task<bool> Handle(DoesCommunityExistQuery request, CancellationToken cancellationToken)
+    {
+        return await _communities.GetCommunityByName(request.CommunityName, cancellationToken) != null;
+    }
+
     public async Task<IEnumerable<Guid>> Handle(GetCommunityMembersQuery request,
         CancellationToken cancellationToken)
     {
@@ -932,10 +951,35 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         await Handle(new JoinCommunityCommand(community.Value, request.InviteCode), cancellationToken);
     }
 
+    public async Task<Contracts.CommunityInvitePreviewRecord?> Handle(GetCommunityInvitePreviewQuery request,
+        CancellationToken cancellationToken)
+    {
+        var communityName = await _communities.GetCommunityByInviteCode(request.InviteCode, cancellationToken);
+        if (communityName == null) return null;
+        var community = await _communities.GetCommunityByName(communityName.Value, cancellationToken);
+        if (community == null) return null;
+
+        community.InviteCodes.TryGetValue(request.InviteCode, out var expiration);
+        var today = new DateOnly(_dateTime.Now.Year, _dateTime.Now.Month, _dateTime.Now.Day);
+        var userId = _currentUser.IsLoggedIn ? _currentUser.User.Id : (Guid?)null;
+        return new Contracts.CommunityInvitePreviewRecord(
+            community.Name,
+            community.PrivacyType,
+            community.MemberIds.Count,
+            expiration,
+            expiration < today,
+            userId != null && community.IsBanned(userId.Value),
+            userId != null && community.MemberIds.Contains(userId.Value));
+    }
+
     public async Task Handle(JoinCommunityCommand request, CancellationToken cancellationToken)
     {
         var userId = request.UserId ?? _currentUser.User.Id;
         var community = await GetCommunity(request.CommunityName, cancellationToken);
+
+        // A retained ban row blocks both public join and invite-code join.
+        if (community.IsBanned(userId))
+            throw new DeniedFromCommunityException("You have been banned from this community");
 
         if (community.MemberIds.Contains(userId)) return;
 
@@ -1064,7 +1108,10 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             var community = await _communities.GetCommunityByName(communityName, cancellationToken);
             if (community == null) continue;
 
-            channels.AddRange(community.Channels.Select(c => new DiscordFeedChannel(c.ChannelId, c.Culture)));
+            // A channel's own registered language wins; the community's creator-set default
+            // fills in when the channel registered without one; null falls through to English.
+            channels.AddRange(community.Channels.Select(c =>
+                new DiscordFeedChannel(c.ChannelId, c.Culture ?? community.DefaultLanguage)));
         }
 
         // A channel reachable through two communities posts once; the first registration's

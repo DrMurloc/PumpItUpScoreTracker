@@ -28,7 +28,16 @@ public static class RecapPlayerTypeCalculator
     {
         if (topPumbilityScores.Count < MinimumScores) return null;
 
-        var average = topPumbilityScores.Average(s => (int)s);
+        return FromAverage(topPumbilityScores.Average(s => (int)s));
+    }
+
+    /// <summary>
+    ///     Bands a precomputed top-Pumbility average — for callers that persist the average
+    ///     (player stats) instead of the raw score list. The caller owns the
+    ///     <see cref="MinimumScores" /> sample-size guard.
+    /// </summary>
+    public static RecapPlayerType FromAverage(double average)
+    {
         if (average >= PerfectionistFloor) return RecapPlayerType.Perfectionist;
         if (average >= CompetitiveFloor) return RecapPlayerType.Competitive;
         if (average >= BalancedFloor) return RecapPlayerType.BalancedPlayer;

@@ -45,12 +45,6 @@
         box-shadow: 0 0 14px var(--mix-glow);
     }
 
-    .olb-delta-up { color: var(--mix-primary); font-weight: 700; }
-
-    .olb-delta-down { color: var(--mix-accent); font-weight: 700; }
-
-    .olb-delta-flat { color: var(--mix-ink-muted); }
-
     .olb-spark polyline {
         fill: none;
         stroke: var(--mix-secondary);
@@ -60,43 +54,6 @@
     .olb-spark circle { fill: var(--mix-secondary); }
 
     .olb-mover-lead { background: color-mix(in srgb, var(--mix-primary) 8%, transparent); border-radius: 9px; }
-
-    /* Rankings and chart boards render as compact card rows, never tables — a phone
-       reads rank, player, and rating with zero side-scrolling (UX rule: tabular
-       collections lean compact). */
-    .olb-rank-card, .olb-board-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 4px 8px;
-        border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
-        flex-wrap: wrap;
-    }
-
-    .olb-rank-rankbox { min-width: 52px; display: inline-flex; align-items: center; gap: 4px; }
-
-    /* Mud chips ship 4px of margin — inside a row that is already budgeting every
-       pixel, that reads as a misalignment rather than as spacing. */
-    .olb-rank-card .mud-chip { margin: 0; }
-
-    .olb-board-place { min-width: 40px; font-weight: 700; }
-
-    .olb-rank-tail {
-        margin-left: auto; flex: 0 0 auto;
-        display: flex; align-items: center; justify-content: flex-end; gap: 8px;
-    }
-
-    .olb-rank-expand { padding: 4px 0 10px; }
-
-    /* Board tags run long (LIKEASLAM01#8073). Lists print the human half — the digits
-       identify an account, they don't name anyone — and truncate what's still too long;
-       the full tag stays in the row's tooltip and on the player's own page. */
-    .olb-player-name {
-        max-width: 22ch;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
 
     /* World firsts: the chart banner leads, the claimant closes. */
     .olb-first-row {
@@ -122,91 +79,9 @@
         background: var(--mix-surface);
     }
 
-    /* The leaderboard skin for the collections that need real table semantics
-       (sortable columns): same flat surface, hairlines, and row rhythm as the
-       rankings cards — the section's one leaderboard look. */
-    .olb-board-table.mud-table { background: transparent; }
-
-    .olb-board-table .mud-table-cell {
-        border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
-        padding: 4px 8px;
-    }
-
-    .olb-board-table .mud-table-head .mud-table-cell {
-        color: var(--mix-ink-muted);
-        font-size: 11.5px;
-        letter-spacing: .4px;
-        text-transform: uppercase;
-    }
-
-    .olb-board-table .mud-table-body .mud-table-row:hover .mud-table-cell {
-        background: color-mix(in srgb, var(--mix-ink) 5%, transparent);
-    }
-
-    /* Row glow: the dashboard vocabulary — you blue, your opt-in crews green. */
-    .olb-row-me {
-        background: color-mix(in srgb, var(--daily-you) 15%, transparent);
-        box-shadow: inset 0 0 0 1.5px var(--daily-you);
-        border-radius: 6px;
-    }
-
-    .olb-row-community {
-        background: color-mix(in srgb, var(--daily-community) 13%, transparent);
-        box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--daily-community) 60%, transparent);
-        border-radius: 6px;
-    }
-
-    /* Two tiers. Narrow (≤760): the row identifier pins while the rest side-scrolls,
-       optional columns and song titles step aside, names truncate. Phone (≤500): the
-       row is a width budget, so padding tightens and value/context pairs stack — above
-       that they stay inline, where stacking would just leave a hole. */
-    @@media (max-width: 760px) {
-        .olb-hide-mobile { display: none !important; }
-
-        .olb-song-text { display: none; }
-
-        .olb-player-name { max-width: 16ch; }
-
-        .olb-sticky-first td:first-child, .olb-sticky-first th:first-child {
-            position: sticky;
-            left: 0;
-            z-index: 2;
-            background: var(--mix-surface);
-            max-width: 200px;
-            overflow: hidden;
-        }
-
-        .olb-sticky-first td:first-child .mud-typography {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .olb-pager-tight .mud-table-pagination { padding-inline: 2px; }
-
-        .olb-pager-tight .mud-table-pagination-caption { font-size: 11px; margin: 0 4px; }
-    }
-
-    @@media (max-width: 500px) {
-        .olb-rank-card, .olb-board-row { gap: 5px; padding: 3px 4px; }
-
-        .olb-rank-rankbox { min-width: 42px; }
-
-        .olb-rank-card .mud-chip {
-            height: 20px;
-            padding: 0 7px;
-            font-size: 10.5px;
-        }
-
-        .olb-rank-card .mud-icon-button { padding: 2px; }
-
-        .olb-first-tail, .olb-hero-listtail, .olb-rank-tail {
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0;
-        }
-    }
-
+    /* The compact row vocabulary every ranked collection wears — .olb-rank-card,
+       .olb-board-table, the row glows, the responsive tiers — lives in site.css:
+       the Communities boards share this section's look. */
 </style>
 
 <MudText Typo="Typo.h4">@L["Official Leaderboards"]</MudText>

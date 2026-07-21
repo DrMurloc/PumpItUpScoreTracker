@@ -20,13 +20,15 @@ namespace ScoreTracker.Communities.Infrastructure
         private readonly IMemoryCache _cache;
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
         private readonly IPlayerStatsReader _playerStats;
+        private readonly IDateTimeOffsetAccessor _dateTime;
 
         public EFCommunitiesRepository(IDbContextFactory<ChartAttemptDbContext> factory,
-            IPlayerStatsReader playerStats, IMemoryCache cache)
+            IPlayerStatsReader playerStats, IMemoryCache cache, IDateTimeOffsetAccessor dateTime)
         {
             _factory = factory;
             _playerStats = playerStats;
             _cache = cache;
+            _dateTime = dateTime;
         }
 
         public async Task<int> CountNonRegionalCommunities(CancellationToken cancellationToken)
@@ -66,7 +68,9 @@ namespace ScoreTracker.Communities.Infrastructure
                     Name = communityString,
                     OwningUserId = community.OwnerId,
                     IsRegional = community.IsRegional,
-                    PrivacyType = community.PrivacyType.ToString()
+                    PrivacyType = community.PrivacyType.ToString(),
+                    DefaultAdminPermissions = (int)community.DefaultAdminPermissions,
+                    DefaultLanguage = community.DefaultLanguage
                 }, cancellationToken);
             }
             else
@@ -74,19 +78,37 @@ namespace ScoreTracker.Communities.Infrastructure
                 entity.PrivacyType = community.PrivacyType.ToString();
                 entity.OwningUserId = community.OwnerId;
                 entity.IsRegional = community.IsRegional;
+                entity.DefaultAdminPermissions = (int)community.DefaultAdminPermissions;
+                entity.DefaultLanguage = community.DefaultLanguage;
             }
 
-            //Members
+            //Members — persist the full projection (creator, admins, members, and retained bans)
+            // so a Banned row survives even though the user is out of MemberIds. A row absent from
+            // the projection entirely (a member who left) is deleted.
+            var desiredMembers = community.Members.ToDictionary(m => m.UserId);
             var memberEntities = await database.Set<CommunityMembershipEntity>().Where(cm => cm.CommunityId == communityId.Value)
                 .ToArrayAsync(cancellationToken);
             var existingSet = memberEntities.Select(m => m.UserId).Distinct().ToHashSet();
-            var toDelete = memberEntities.Where(e => !community.MemberIds.Contains(e.UserId)).ToArray();
-            var toCreate = community.MemberIds.Where(m => !existingSet.Contains(m)).Select(m =>
+            var toDelete = memberEntities.Where(e => !desiredMembers.ContainsKey(e.UserId)).ToArray();
+            foreach (var existing in memberEntities)
+            {
+                if (!desiredMembers.TryGetValue(existing.UserId, out var member)) continue;
+                existing.Role = member.Role.ToString();
+                existing.Permissions = (int)member.Permissions;
+                existing.GrantedByUserId = member.GrantedBy;
+                existing.JoinedAt ??= member.JoinedAt ?? _dateTime.Now;
+            }
+
+            var toCreate = desiredMembers.Values.Where(m => !existingSet.Contains(m.UserId)).Select(m =>
                 new CommunityMembershipEntity
                 {
                     Id = Guid.NewGuid(),
                     CommunityId = communityId.Value,
-                    UserId = m
+                    UserId = m.UserId,
+                    Role = m.Role.ToString(),
+                    Permissions = (int)m.Permissions,
+                    GrantedByUserId = m.GrantedBy,
+                    JoinedAt = m.JoinedAt ?? _dateTime.Now
                 }).ToArray();
             database.Set<CommunityMembershipEntity>().RemoveRange(toDelete);
             await database.Set<CommunityMembershipEntity>().AddRangeAsync(toCreate, cancellationToken);
@@ -256,13 +278,114 @@ namespace ScoreTracker.Communities.Infrastructure
                 .ToArrayAsync(cancellationToken);
 
             return new Community(entity.Name, entity.OwningUserId, Enum.Parse<CommunityPrivacyType>(entity.PrivacyType),
-                members.Select(c => c.UserId),
+                members.Select(c => new CommunityMember(c.UserId,
+                    Enum.TryParse<CommunityRole>(c.Role, out var role) ? role : CommunityRole.Member,
+                    (CommunityPermission)c.Permissions, c.GrantedByUserId, c.JoinedAt)),
                 channels.Select(c => new Community.ChannelConfiguration(c.ChannelId, c.Culture)),
                 invites.ToDictionary(i => i.InviteCode,
                     i => i.ExpirationDate == null
                         ? null
                         : (DateOnly?)new DateOnly(i.ExpirationDate.Value.Year, i.ExpirationDate.Value.Month,
-                            i.ExpirationDate.Value.Day)), entity.IsRegional);
+                            i.ExpirationDate.Value.Day)), entity.IsRegional,
+                (CommunityPermission)entity.DefaultAdminPermissions, entity.DefaultLanguage);
+        }
+
+        public async Task DeleteCommunity(Name communityName, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var nameString = communityName.ToString();
+            var entity = await database.Set<CommunityEntity>()
+                .FirstOrDefaultAsync(c => c.Name == nameString, cancellationToken);
+            if (entity == null) return;
+            var id = entity.Id;
+
+            await database.Set<CommunityMembershipEntity>().Where(m => m.CommunityId == id)
+                .ExecuteDeleteAsync(cancellationToken);
+            await database.Set<CommunityInviteCodeEntity>().Where(m => m.CommunityId == id)
+                .ExecuteDeleteAsync(cancellationToken);
+            await database.Set<CommunityChannelEntity>().Where(m => m.CommunityId == id)
+                .ExecuteDeleteAsync(cancellationToken);
+            await database.Set<CommunityHighlightEntity>().Where(m => m.CommunityId == id)
+                .ExecuteDeleteAsync(cancellationToken);
+            await database.Set<CommunityEntity>().Where(c => c.Id == id)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // The non-regional count is a cached front-door stat — evict so it reflects the deletion.
+            _cache.Remove(CommunityCountCacheKey);
+        }
+
+        public async Task<IEnumerable<CommunityCompetitiveRangeRecord>> GetCompetitiveRanges(MixEnum mix,
+            CancellationToken cancellationToken)
+        {
+            return (await _cache.GetOrCreateAsync($"{nameof(EFCommunitiesRepository)}_CompRanges_{mix}",
+                async cache =>
+                {
+                    // Directory metadata over every community incl. regional/World; day-stale is
+                    // acceptable (owner call), and the stats reader is chunked so World-sized
+                    // member sets never overrun the SQL parameter ceiling.
+                    cache.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24);
+                    await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+                    var memberships = await (from cm in database.Set<CommunityMembershipEntity>()
+                        where cm.Role != nameof(CommunityRole.Banned)
+                        join c in database.Set<CommunityEntity>() on cm.CommunityId equals c.Id
+                        select new { c.Name, cm.UserId }).ToArrayAsync(cancellationToken);
+
+                    var stats = new Dictionary<Guid, PlayerStatsRecord>();
+                    foreach (var chunk in memberships.Select(m => m.UserId).Distinct().Chunk(1000))
+                    foreach (var stat in await _playerStats.GetStats(mix, chunk, cancellationToken))
+                        stats[stat.UserId] = stat;
+
+                    return memberships.GroupBy(m => m.Name)
+                        .Select(g =>
+                        {
+                            var singles = g.Select(m => stats.GetValueOrDefault(m.UserId))
+                                .Where(s => s is { SinglesCompetitiveLevel: >= 5 })
+                                .Select(s => s!.SinglesCompetitiveLevel).ToArray();
+                            var doubles = g.Select(m => stats.GetValueOrDefault(m.UserId))
+                                .Where(s => s is { DoublesCompetitiveLevel: >= 5 })
+                                .Select(s => s!.DoublesCompetitiveLevel).ToArray();
+                            return new CommunityCompetitiveRangeRecord(g.Key,
+                                singles.Length > 0 ? singles.Min() : null,
+                                singles.Length > 0 ? singles.Max() : null,
+                                doubles.Length > 0 ? doubles.Min() : null,
+                                doubles.Length > 0 ? doubles.Max() : null);
+                        })
+                        .Where(r => r.SinglesMin != null || r.DoublesMin != null)
+                        .ToArray();
+                }))!;
+        }
+
+        public async Task<IEnumerable<MyCommunityRoleRecord>> GetUserRoles(Guid userId,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var rows = await (from cm in database.Set<CommunityMembershipEntity>()
+                    where cm.UserId == userId
+                    join c in database.Set<CommunityEntity>() on cm.CommunityId equals c.Id
+                    select new { c.Name, cm.Role, cm.Permissions })
+                .ToArrayAsync(cancellationToken);
+
+            return rows.Select(r => new MyCommunityRoleRecord(r.Name,
+                Enum.TryParse<CommunityRole>(r.Role, out var role) ? role : CommunityRole.Member,
+                (CommunityPermission)r.Permissions)).ToArray();
+        }
+
+        public async Task<IEnumerable<CommunityMemberRecord>> GetRoster(Name communityName,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var nameString = communityName.ToString();
+            var rows = await (from c in database.Set<CommunityEntity>()
+                    where c.Name == nameString
+                    join cm in database.Set<CommunityMembershipEntity>() on c.Id equals cm.CommunityId
+                    join u in database.User on cm.UserId equals u.Id
+                    select new { cm.UserId, u.Name, u.ProfileImage, cm.Role, cm.Permissions, u.IsPublic })
+                .ToArrayAsync(cancellationToken);
+
+            return rows.Select(r => new CommunityMemberRecord(r.UserId, r.Name,
+                new Uri(r.ProfileImage, UriKind.Absolute),
+                Enum.TryParse<CommunityRole>(r.Role, out var role) ? role : CommunityRole.Member,
+                (CommunityPermission)r.Permissions, r.IsPublic)).ToArray();
         }
     }
 }

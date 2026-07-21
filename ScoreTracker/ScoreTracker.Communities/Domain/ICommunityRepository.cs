@@ -11,6 +11,23 @@ namespace ScoreTracker.Communities.Domain
     {
         Task<Name?> GetCommunityByInviteCode(Guid inviteCode, CancellationToken cancellationToken);
         Task SaveCommunity(Community community, CancellationToken cancellationToken);
+
+        /// <summary>Delete a community and all of its member/invite/channel/highlight rows.</summary>
+        Task DeleteCommunity(Name communityName, CancellationToken cancellationToken);
+
+        /// <summary>The member roster (including retained bans) joined to user display identity + role.</summary>
+        Task<IEnumerable<CommunityMemberRecord>> GetRoster(Name communityName, CancellationToken cancellationToken);
+
+        /// <summary>One row per community the user holds a membership row in (bans included).</summary>
+        Task<IEnumerable<MyCommunityRoleRecord>> GetUserRoles(Guid userId, CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     Directory metadata: every community's Singles/Doubles competitive-level spread over
+        ///     members with mix stats and level ≥ 5. Day-cached — the numbers may go stale.
+        /// </summary>
+        Task<IEnumerable<CommunityCompetitiveRangeRecord>> GetCompetitiveRanges(MixEnum mix,
+            CancellationToken cancellationToken);
+
         Task<IEnumerable<CommunityOverviewRecord>> GetCommunities(Guid userId, CancellationToken cancellationToken);
         Task<IEnumerable<CommunityOverviewRecord>> GetPublicCommunities(CancellationToken cancellationToken);
 

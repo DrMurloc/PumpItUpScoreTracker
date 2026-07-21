@@ -6211,3 +6211,225 @@ button.chart-card-art {
     color: #ffd94d;
     text-shadow: 0 0 12px rgba(255, 217, 77, .35);
 }
+
+/* ── The leaderboard skin ─────────────────────────────────────────────────────
+   The Official Leaderboards rankings board is the golden standard for every
+   ranked collection on the site, so its vocabulary lives here rather than in
+   the section's own <style> block: the Communities boards wear the same look.
+   Names keep their olb- prefix — the Official pages and the E2E suite pin them. */
+
+/* Rankings and chart boards render as compact card rows, never tables — a phone
+   reads rank, player, and rating with zero side-scrolling (UX rule: tabular
+   collections lean compact). */
+.olb-rank-card, .olb-board-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    flex-wrap: wrap;
+}
+
+.olb-rank-rankbox { min-width: 52px; display: inline-flex; align-items: center; gap: 4px; }
+
+/* Mud chips ship 4px of margin — inside a row that is already budgeting every
+   pixel, that reads as a misalignment rather than as spacing. */
+.olb-rank-card .mud-chip { margin: 0; }
+
+.olb-board-place { min-width: 40px; font-weight: 700; }
+
+.olb-rank-tail {
+    margin-left: auto; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+}
+
+.olb-rank-expand { padding: 4px 0 10px; }
+
+/* The column variant of the same row. A board carrying several figures per player
+   reads as a pile when every figure is flush right, so the figures spread into
+   their own columns instead: the owning page supplies the template in
+   --olb-grid-cols (and --olb-grid-cols-narrow for the width where its optional
+   columns drop out), and the identity column stays pinned left. */
+.olb-grid-row {
+    display: grid;
+    grid-template-columns: var(--olb-grid-cols);
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+}
+
+.olb-grid-row .mud-chip { margin: 0; }
+
+/* Figures are read down a column, so they align on their right edge. */
+.olb-grid-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+}
+
+/* Two figures that are one column's worth of width on a phone: full-width they are
+   ordinary grid items, narrow they stack into a single cell. */
+.olb-stack { display: contents; }
+
+/* A label that has a short form: the long one until the row runs out of width. */
+.olb-short-form { display: none; }
+
+/* Board tags run long (LIKEASLAM01#8073). Lists print the human half — the digits
+   identify an account, they don't name anyone — and truncate what's still too long;
+   the full tag stays in the row's tooltip and on the player's own page. */
+/* The flag is atomic and the name is what gives: a UserLabel truncated as one box
+   spends the width on the flag and prints a bare "…", so the label lays out as a
+   flex row whose last child — the name — is the only part allowed to shrink.
+   min-width:0 is what permits that shrink; without it the text keeps its full
+   width and the ellipsis swallows the whole name. */
+.olb-player-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    vertical-align: middle;
+    min-width: 0;
+    max-width: 22ch;
+    overflow: hidden;
+}
+
+.olb-player-name > :not(:last-child) { flex: 0 0 auto; }
+
+.olb-player-name > :last-child {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Inline-block, not block: this rule reaches every UserLabel on the site, and the
+   label sits inline in most of them. It only truncates where a caller has bounded
+   the width. */
+.user-label-name {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.olb-delta-up { color: var(--mix-primary); font-weight: 700; }
+
+.olb-delta-down { color: var(--mix-accent); font-weight: 700; }
+
+.olb-delta-flat { color: var(--mix-ink-muted); }
+
+/* The leaderboard skin for the collections that need real table semantics
+   (sortable columns): same flat surface, hairlines, and row rhythm as the
+   rankings cards — the site's one leaderboard look. */
+.olb-board-table.mud-table { background: transparent; }
+
+.olb-board-table .mud-table-cell {
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    padding: 4px 8px;
+}
+
+.olb-board-table .mud-table-head .mud-table-cell {
+    color: var(--mix-ink-muted);
+    font-size: 11.5px;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+}
+
+.olb-board-table .mud-table-body .mud-table-row:hover .mud-table-cell {
+    background: color-mix(in srgb, var(--mix-ink) 5%, transparent);
+}
+
+/* Row glow: the dashboard vocabulary — you blue, your opt-in crews green. */
+.olb-row-me {
+    background: color-mix(in srgb, var(--daily-you) 15%, transparent);
+    box-shadow: inset 0 0 0 1.5px var(--daily-you);
+    border-radius: 6px;
+}
+
+.olb-row-community {
+    background: color-mix(in srgb, var(--daily-community) 13%, transparent);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--daily-community) 60%, transparent);
+    border-radius: 6px;
+}
+
+/* A board sheds width in three steps, each one giving up the least it can: at 760
+   the row identifier pins while the rest side-scrolls, optional columns and song
+   titles step aside, and paired values stack instead of sitting side by side; at
+   640 the second-tier figures drop out entirely; at 500 the row is a width budget,
+   so padding tightens and labels fall back to their short forms. */
+@media (max-width: 760px) {
+    .olb-hide-mobile { display: none !important; }
+
+    /* The optional columns are display:none by now, so the template loses them too. */
+    .olb-grid-row {
+        grid-template-columns: var(--olb-grid-cols-narrow, var(--olb-grid-cols));
+        gap: 6px;
+        padding: 3px 4px;
+    }
+
+    .olb-stack {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        line-height: 1.2;
+    }
+
+    .olb-song-text { display: none; }
+
+    .olb-player-name { max-width: 16ch; }
+
+    .olb-sticky-first td:first-child, .olb-sticky-first th:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        background: var(--mix-surface);
+        max-width: 200px;
+        overflow: hidden;
+    }
+
+    .olb-sticky-first td:first-child .mud-typography {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .olb-pager-tight .mud-table-pagination { padding-inline: 2px; }
+
+    .olb-pager-tight .mud-table-pagination-caption { font-size: 11px; margin: 0 4px; }
+}
+
+@media (max-width: 640px) {
+    .olb-hide-narrow { display: none !important; }
+
+    .olb-grid-row {
+        grid-template-columns: var(--olb-grid-cols-phone, var(--olb-grid-cols-narrow, var(--olb-grid-cols)));
+    }
+}
+
+@media (max-width: 500px) {
+    .olb-long-form { display: none; }
+
+    .olb-short-form { display: inline; }
+
+    .olb-rank-card, .olb-board-row { gap: 5px; padding: 3px 4px; }
+
+    .olb-rank-rankbox { min-width: 42px; }
+
+    .olb-rank-card .mud-chip {
+        height: 20px;
+        padding: 0 7px;
+        font-size: 10.5px;
+    }
+
+    .olb-rank-card .mud-icon-button { padding: 2px; }
+
+    .olb-first-tail, .olb-hero-listtail, .olb-rank-tail {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0;
+    }
+}
