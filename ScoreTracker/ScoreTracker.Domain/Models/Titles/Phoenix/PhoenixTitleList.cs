@@ -231,6 +231,15 @@ public static class PhoenixTitleList
 
     private static readonly IDictionary<Name, PhoenixTitle> TitleLookup = Titles.ToDictionary(n => n.Name);
 
+    static PhoenixTitleList()
+    {
+        // A folder's titles are one ladder — Advanced Lv. 2 wants the same 20s as Lv. 1,
+        // just more of them — and every CO-OP title reads the same CO-OP rating. Each rung
+        // measures the climb from the one below it rather than from nothing.
+        TitleHelpers.LinkLadder(Titles.OfType<PhoenixDifficultyTitle>(), t => (int)t.Level);
+        TitleHelpers.LinkLadder(Titles.OfType<PhoenixCoOpTitle>(), _ => 0);
+    }
+
     public static PhoenixTitle GetTitleByName(Name name)
     {
         return TitleLookup[name];

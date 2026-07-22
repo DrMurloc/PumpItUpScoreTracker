@@ -23,10 +23,10 @@
 #   3. First deploy run will prompt to permit this pipeline to use the service connection and
 #      environment — approve both.
 #   4. Disable/delete the classic release pipeline so it doesn't double-deploy off the drop.
-#   5. Live-site smoke tests (Tests.Integration/LiveSite/) are manual-run only — CI does not
-#      provision the PIU account, so they skip in every PR/main build (a flaky real site can't
-#      fail the gate). Run them locally with PiuTest:Username / PiuTest:Password user-secrets
-#      when a change touches the PIU scraper. No Key Vault wiring needed.
+#   5. The exploration workbench (ScoreTracker.ExplorationTests — PIU live-site probes + the
+#      Discord canary) is manual-run only and is named in no `dotnet test` step below, so it
+#      never runs in CI. It builds with the solution but is Sonar-excluded. Run it locally with
+#      PiuTest:* / Discord:* user-secrets when crawling the real site. No Key Vault wiring needed.
 
 trigger:
 - main
@@ -79,8 +79,9 @@ stages:
         projectName: 'PumpItUpScoreTracker'
         extraProperties: |
           # EF migrations are generated code — 89k of the repo's 128k C# lines; analyzing
-          # them buries real findings and wrecks the new-code metrics.
-          sonar.exclusions=**/Migrations/**
+          # them buries real findings and wrecks the new-code metrics. ExplorationTests is a
+          # manual-only crawl/OCR workbench (never a CI suite), so its findings are noise here.
+          sonar.exclusions=**/Migrations/**,ScoreTracker/ScoreTracker.ExplorationTests/**
           # Coverage comes from the coverlet collectors on the two fast suites below.
           # Before this property existed the analysis had NO coverage input, so the
           # gate's coverage-on-new-code condition read 0.0% on every PR.
@@ -166,9 +167,9 @@ stages:
     # First run on a fresh agent pulls the SQL Server 2025 image (~2 min). Subsequent tests against
     # the same agent are fast — but Microsoft-hosted agents are fresh per run, so expect that cost
     # every time. ~3 min total job runtime on a clean agent.
-    # The live-site smoke tests (Tests.Integration/LiveSite/) are manual-run only, like the Discord
-    # canary: CI does not provision the PIU account, so [LiveSiteFact] skips here and a flaky real
-    # site can never fail a PR. Run them locally with PiuTest:Username / PiuTest:Password.
+    # The PIU live-site probes and the Discord canary now live in ScoreTracker.ExplorationTests, a
+    # manual-only workbench that no `dotnet test` step names — it never runs in CI. Run it locally
+    # with PiuTest:* / Discord:* user-secrets when a change touches the PIU scraper or Discord cards.
     - script: dotnet test ScoreTracker/ScoreTracker.Tests.Integration/ScoreTracker.Tests.Integration.csproj -c $(buildConfiguration) --logger "trx;LogFileName=integration.trx" --results-directory $(Agent.TempDirectory)
       displayName: 'Run integration tests (real SQL Server 2025 via Testcontainers)'
 

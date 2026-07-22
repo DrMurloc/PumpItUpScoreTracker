@@ -333,6 +333,14 @@ public static class Phoenix2TitleList
 
     private static readonly IDictionary<Name, PhoenixTitle> TitleLookup = Titles.ToDictionary(n => n.Name);
 
+    static Phoenix2TitleList()
+    {
+        // A pool's whole ladder is linked — [S] INTERMEDIATE LV.2 reads the same singles
+        // PUMBILITY as LV.1, at a higher threshold — so each rung's progress starts where
+        // the rung below it finished.
+        TitleHelpers.LinkLadder(Titles.OfType<Phoenix2PumbilityTitle>(), t => t.Pool);
+    }
+
     public static PhoenixTitle GetTitleByName(Name name)
     {
         return TitleLookup[name];

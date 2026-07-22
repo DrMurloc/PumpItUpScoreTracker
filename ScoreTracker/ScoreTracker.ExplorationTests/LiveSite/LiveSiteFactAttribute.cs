@@ -1,4 +1,4 @@
-namespace ScoreTracker.Tests.Integration.LiveSite;
+namespace ScoreTracker.ExplorationTests.LiveSite;
 
 /// <summary>
 ///     Marks a test that talks to the real phoenix.piugame.com. Manual runs only, never the PR

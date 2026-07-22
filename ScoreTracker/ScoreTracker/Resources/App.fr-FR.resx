@@ -5960,4 +5960,46 @@
   <data name="PF" xml:space="preserve">
     <value>PF</value>
   </data>
+  <data name="No differences between these mixes." xml:space="preserve">
+    <value>Aucune différence entre ces mix.</value>
+  </data>
+  <data name="Reconnecting…" xml:space="preserve">
+    <value>Reconnexion…</value>
+  </data>
+  <data name="Couldn't reconnect." xml:space="preserve">
+    <value>Échec de la reconnexion.</value>
+  </data>
+  <data name="Try again" xml:space="preserve">
+    <value>Réessayer</value>
+  </data>
+  <data name="Your session ended." xml:space="preserve">
+    <value>Votre session est terminée.</value>
+  </data>
+  <data name="Reload the page" xml:space="preserve">
+    <value>Recharger la page</value>
+  </data>
+  <data name="from {0}" xml:space="preserve">
+    <value>depuis {0}</value>
+  </data>
+  <data name="Next title" xml:space="preserve">
+    <value>Titre suivant</value>
+  </data>
+  <data name="~{0} more charts in this folder" xml:space="preserve">
+    <value>~{0} charts de plus dans ce dossier</value>
+  </data>
+  <data name="Get this folder to {0}" xml:space="preserve">
+    <value>Montez ce dossier à {0}</value>
+  </data>
+  <data name="This folder serves {0}" xml:space="preserve">
+    <value>Ce dossier vise {0}</value>
+  </data>
+  <data name="Behind your top 50 — serves {0}" xml:space="preserve">
+    <value>Sous votre top 50 — vise {0}</value>
+  </data>
+  <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
+    <value>Réussis {0} charts dans ce dossier avec {1} ou mieux</value>
+  </data>
+  <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
+    <value>Réussis {0} charts avec {1} ou mieux (seulement {2} dans ce dossier)</value>
+  </data>
 </root>

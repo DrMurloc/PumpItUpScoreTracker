@@ -2,7 +2,7 @@ using HtmlAgilityPack;
 using ScoreTracker.SharedKernel.Enums;
 using Xunit.Abstractions;
 
-namespace ScoreTracker.Tests.Integration.LiveSite;
+namespace ScoreTracker.ExplorationTests.LiveSite;
 
 /// <summary>
 ///     Live recon for the play-ranking endpoint (/ajax/top_steps.php — the same call the

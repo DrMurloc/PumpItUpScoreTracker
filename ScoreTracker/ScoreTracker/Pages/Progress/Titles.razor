@@ -17,14 +17,10 @@
 @using ScoreTracker.Web.Services.Contracts
 <PageTitle>@L["Titles"]</PageTitle>
 
-@if (_currentMix == MixEnum.Phoenix2)
-{
-    @* Locked decision (docs/design/phoenix2-implementation.md): the Phoenix 2 title list is
-       empty until the titles are revealed — explicit state instead of a blank grid. *@
-    <ComingSoon Message="@L["Phoenix 2 titles have not been revealed yet. Check back after launch!"].Value"></ComingSoon>
+@{
+    // Phoenix 2's title list is live (title.php scrape). It renders through the same grid as
+    // Phoenix — its ladders build in the TitleSaga's Phoenix2 branch.
 }
-else
-{
 <MudDataGrid @ref="_dataGrid" T="TitleProgressDto" Items="_titleProgress" Hover="true" ReadOnly="true"
              Groupable="true" FixedHeader="true" Height="500" Loading="@_isLoading">
     <ToolBarContent>
@@ -152,7 +148,6 @@ else
         }
     </ChildRowContent>
 </MudDataGrid>
-}
 <br/>
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser;
@@ -216,12 +211,6 @@ else
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
-        if (_currentMix == MixEnum.Phoenix2)
-        {
-            // Coming-soon state — the Phoenix 2 title list is deliberately empty.
-            _isLoading = false;
-            return;
-        }
         await LoadTitles();
     }
 }

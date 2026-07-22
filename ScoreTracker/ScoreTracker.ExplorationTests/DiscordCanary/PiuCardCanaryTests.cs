@@ -7,7 +7,7 @@ using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.SharedKernel.Enums;
 
-namespace ScoreTracker.Tests.Integration.DiscordCanary;
+namespace ScoreTracker.ExplorationTests.DiscordCanary;
 
 /// <summary>
 ///     Posts the /piu command-reply and feed sample cards to the owner's lab channel and

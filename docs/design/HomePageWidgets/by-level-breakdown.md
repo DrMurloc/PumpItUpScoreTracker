@@ -47,6 +47,12 @@ Completion mode ("what fraction of this folder did I touch in the last N days").
 climb the rarity ramp (freshest on top) since days carry no metal/grade identity. Available for
 **every** mix — legacy imports carry a recorded date too.
 
+An **ordinal distribution reads as its ladder, not as ranks**: "Average Plate by Level" averages
+plate *ranks*, so the aggregator ships the rung names in `BreakdownResult.YCategoryLabels` and the
+widget formats both the y-axis and the tooltip through them — PG / UG / MG, never 5 / 4 / 3. The
+bounds land on whole rungs for the same reason: a half-step pad would put a tick between two plates,
+where no plate exists.
+
 "Completion Rates" is **not** a metric — it is the Completion aggregation pointed at any metric; plain
 pass-rate is Completion-of-Pass. Multi-threshold is allowed (each threshold = one line); misconfiguration
 is possible by design (owner: "make it hard to do *unintentionally*, don't nanny") — sensible presets and

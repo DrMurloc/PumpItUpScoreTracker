@@ -5847,4 +5847,46 @@
   <data name="PF" xml:space="preserve">
     <value>PF</value>
   </data>
+  <data name="No differences between these mixes." xml:space="preserve">
+    <value>이 시리즈 간에 차이가 없습니다.</value>
+  </data>
+  <data name="Reconnecting…" xml:space="preserve">
+    <value>다시 연결하는 중…</value>
+  </data>
+  <data name="Couldn't reconnect." xml:space="preserve">
+    <value>다시 연결하지 못했습니다.</value>
+  </data>
+  <data name="Try again" xml:space="preserve">
+    <value>다시 시도</value>
+  </data>
+  <data name="Your session ended." xml:space="preserve">
+    <value>세션이 종료되었습니다.</value>
+  </data>
+  <data name="Reload the page" xml:space="preserve">
+    <value>페이지 새로 고침</value>
+  </data>
+  <data name="from {0}" xml:space="preserve">
+    <value>{0}에서</value>
+  </data>
+  <data name="Next title" xml:space="preserve">
+    <value>다음 칭호</value>
+  </data>
+  <data name="~{0} more charts in this folder" xml:space="preserve">
+    <value>이 폴더에서 약 {0}개 더</value>
+  </data>
+  <data name="Get this folder to {0}" xml:space="preserve">
+    <value>이 폴더를 {0}(으)로</value>
+  </data>
+  <data name="This folder serves {0}" xml:space="preserve">
+    <value>이 폴더는 {0}용</value>
+  </data>
+  <data name="Behind your top 50 — serves {0}" xml:space="preserve">
+    <value>상위 50위 미만 — {0}용</value>
+  </data>
+  <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
+    <value>이 폴더에서 {0}개를 {1} 이상으로</value>
+  </data>
+  <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
+    <value>{0}개를 {1} 이상으로 (이 폴더에 {2}개뿐)</value>
+  </data>
 </root>

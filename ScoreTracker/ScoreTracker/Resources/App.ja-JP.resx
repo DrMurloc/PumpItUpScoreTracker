@@ -5966,4 +5966,46 @@
   <data name="PF" xml:space="preserve">
     <value>PF</value>
   </data>
+  <data name="No differences between these mixes." xml:space="preserve">
+    <value>これらのバージョンに違いはありません。</value>
+  </data>
+  <data name="Reconnecting…" xml:space="preserve">
+    <value>再接続中…</value>
+  </data>
+  <data name="Couldn't reconnect." xml:space="preserve">
+    <value>再接続できませんでした。</value>
+  </data>
+  <data name="Try again" xml:space="preserve">
+    <value>再試行</value>
+  </data>
+  <data name="Your session ended." xml:space="preserve">
+    <value>セッションが終了しました。</value>
+  </data>
+  <data name="Reload the page" xml:space="preserve">
+    <value>ページを再読み込み</value>
+  </data>
+  <data name="from {0}" xml:space="preserve">
+    <value>{0} から</value>
+  </data>
+  <data name="Next title" xml:space="preserve">
+    <value>次のタイトル</value>
+  </data>
+  <data name="~{0} more charts in this folder" xml:space="preserve">
+    <value>このフォルダーであと約{0}譜面</value>
+  </data>
+  <data name="Get this folder to {0}" xml:space="preserve">
+    <value>このフォルダーを{0}に</value>
+  </data>
+  <data name="This folder serves {0}" xml:space="preserve">
+    <value>このフォルダーは{0}向け</value>
+  </data>
+  <data name="Behind your top 50 — serves {0}" xml:space="preserve">
+    <value>トップ50未満 — {0}向け</value>
+  </data>
+  <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
+    <value>このフォルダーで{0}譜面を{1}以上で</value>
+  </data>
+  <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
+    <value>{0}譜面を{1}以上で（このフォルダーには{2}譜面のみ）</value>
+  </data>
 </root>

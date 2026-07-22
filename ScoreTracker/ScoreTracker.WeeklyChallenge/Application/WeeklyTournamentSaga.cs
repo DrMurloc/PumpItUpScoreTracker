@@ -166,7 +166,19 @@ namespace ScoreTracker.WeeklyChallenge.Application
                     mine, suggested.Contains(chart.ChartId), inRangeTop, chartInRange.Length);
             }).ToArray();
 
-            return new WeeklyBoardView(summaries, isLive, suggestionsAvailable);
+            return new WeeklyBoardView(InBoardOrder(summaries, chartDict), isLive, suggestionsAvailable);
+        }
+
+        // The board arrives in whatever order the week's rows were written — a chart list nobody
+        // can scan. WeeklyBoardOrder is the canonical Phoenix 1 order (shared with the homepage
+        // widget): level descending, singles before doubles within a level, co-ops last with the
+        // 2-player duet last of all.
+        private static IReadOnlyList<WeeklyBoardChartSummary> InBoardOrder(
+            IEnumerable<WeeklyBoardChartSummary> summaries, IReadOnlyDictionary<Guid, Chart> charts)
+        {
+            return summaries
+                .OrderBy(s => WeeklyBoardOrder.SortKey(charts.GetValueOrDefault(s.ChartId)))
+                .ToArray();
         }
 
         // The monthly board, aggregated and priced here instead of week-by-week in the page.

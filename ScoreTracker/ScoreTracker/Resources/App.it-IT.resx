@@ -5966,4 +5966,46 @@
   <data name="PF" xml:space="preserve">
     <value>PF</value>
   </data>
+  <data name="No differences between these mixes." xml:space="preserve">
+    <value>Nessuna differenza tra questi mix.</value>
+  </data>
+  <data name="Reconnecting…" xml:space="preserve">
+    <value>Riconnessione…</value>
+  </data>
+  <data name="Couldn't reconnect." xml:space="preserve">
+    <value>Riconnessione non riuscita.</value>
+  </data>
+  <data name="Try again" xml:space="preserve">
+    <value>Riprova</value>
+  </data>
+  <data name="Your session ended." xml:space="preserve">
+    <value>La tua sessione è terminata.</value>
+  </data>
+  <data name="Reload the page" xml:space="preserve">
+    <value>Ricarica la pagina</value>
+  </data>
+  <data name="from {0}" xml:space="preserve">
+    <value>da {0}</value>
+  </data>
+  <data name="Next title" xml:space="preserve">
+    <value>Prossimo titolo</value>
+  </data>
+  <data name="~{0} more charts in this folder" xml:space="preserve">
+    <value>~{0} chart in più in questa cartella</value>
+  </data>
+  <data name="Get this folder to {0}" xml:space="preserve">
+    <value>Porta questa cartella a {0}</value>
+  </data>
+  <data name="This folder serves {0}" xml:space="preserve">
+    <value>Questa cartella porta a {0}</value>
+  </data>
+  <data name="Behind your top 50 — serves {0}" xml:space="preserve">
+    <value>Sotto la tua top 50 — porta a {0}</value>
+  </data>
+  <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
+    <value>Supera {0} chart in questa cartella con {1} o meglio</value>
+  </data>
+  <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
+    <value>Supera {0} chart con {1} o meglio (solo {2} in questa cartella)</value>
+  </data>
 </root>

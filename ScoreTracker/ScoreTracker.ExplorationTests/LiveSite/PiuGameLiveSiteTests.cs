@@ -1,6 +1,6 @@
 using ScoreTracker.SharedKernel.Enums;
 
-namespace ScoreTracker.Tests.Integration.LiveSite;
+namespace ScoreTracker.ExplorationTests.LiveSite;
 
 /// <summary>
 ///     Live canary for the PIU site scraper: every method the score-import flow depends on,
@@ -10,7 +10,7 @@ namespace ScoreTracker.Tests.Integration.LiveSite;
 ///     <para>
 ///         Gated on PIU_TEST_USERNAME / PIU_TEST_PASSWORD environment variables — skipped
 ///         everywhere they aren't set, including CI. Run on demand with:
-///         <c>dotnet test ScoreTracker/ScoreTracker.Tests.Integration/... --filter "FullyQualifiedName~PiuGameLiveSiteTests"</c>
+///         <c>dotnet test ScoreTracker/ScoreTracker.ExplorationTests/... --filter "FullyQualifiedName~PiuGameLiveSiteTests"</c>
 ///     </para>
 ///     <para>
 ///         Assertions are shape-and-sanity based (parsers produce validated value types, so

@@ -1,62 +1,175 @@
-﻿@page "/ChartCompare"
+@page "/ChartCompare"
 @rendermode RenderModes.Interactive
 @using MediatR
-@using ScoreTracker.Application.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.Contracts
 
 <PageTitle>@L["Chart Compare"]</PageTitle>
 
-<MudPaper>
-    <MudText Typo="Typo.body1">@L["Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings."] @L["Note that this information is not final until referenced against actual released mix."]</MudText>
-    <MudText Typo="Typo.h4">@L["Added"]</MudText>
-    @foreach (var s in _addedSongs.OrderBy(s => s.ToString()))
+@* Any two mixes, not just XX → Phoenix: a chart keeps its identity across mixes (one chart
+   row, one membership per mix), so the same three questions — what arrived, what left, what
+   changed level — answer for every pair the catalog knows. *@
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h4" Class="mb-2">@L["Chart Compare"]</MudText>
+
+    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-4 flex-wrap">
+        <MudSelect T="MixEnum" Value="_fromMix" ValueChanged="SetFrom" Label="@L["From"]" Dense="true"
+                   Style="min-width:190px">
+            @foreach (var mix in Mixes)
+            {
+                <MudSelectItem T="MixEnum" Value="@mix">@mix.GetName()</MudSelectItem>
+            }
+        </MudSelect>
+        <MudIcon Icon="@Icons.Material.Filled.ArrowForward"></MudIcon>
+        <MudSelect T="MixEnum" Value="_toMix" ValueChanged="SetTo" Label="@L["To"]" Dense="true"
+                   Style="min-width:190px">
+            @foreach (var mix in Mixes)
+            {
+                <MudSelectItem T="MixEnum" Value="@mix">@mix.GetName()</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+
+    @if (_fromMix == MixEnum.XX && _toMix == MixEnum.Phoenix)
     {
-        <MudText Typo="Typo.body1" Color="Color.Success">@s</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
+            @L["Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings."]
+        </MudText>
     }
-    @foreach (var c in _addedCharts)
+    @if (_toMix == MixEnum.Phoenix2)
     {
-        <MudText Typo="Typo.body1" Color="Color.Success">@c.Song.Name @c.DifficultyString</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
+            @L["Note that this information is not final until referenced against actual released mix."]
+        </MudText>
     }
-    <MudText Typo="Typo.h4">@L["Changed Level"]</MudText>
-    @foreach (var c in _updatedCharts)
+
+    @if (_loading)
     {
-        <MudText Typo="Typo.body1" Color="Color.Info">@c.Song.Name @_xxCharts[c.Id].DifficultyString -> @c.Level</MudText>
+        <MudSkeleton Height="220px" SkeletonType="SkeletonType.Rectangle"></MudSkeleton>
     }
-    <MudText Typo="Typo.h4">@L["Removed"]</MudText>
-    @foreach (var s in _removedSongs.OrderBy(s => s.ToString()))
+    else if (!_addedSongs.Any() && !_addedCharts.Any() && !_updatedCharts.Any()
+             && !_removedSongs.Any() && !_removedCharts.Any())
     {
-        <MudText Typo="Typo.body1" Color="Color.Error">@s</MudText>
+        <MudText Typo="Typo.body1">@L["No differences between these mixes."]</MudText>
     }
-    @foreach (var c in _removedCharts)
+    else
     {
-        <MudText Typo="Typo.body1" Color="Color.Error">@c.Song.Name @c.DifficultyString</MudText>
+        @if (_addedSongs.Any() || _addedCharts.Any())
+        {
+            <MudText Typo="Typo.h5" Class="mt-3">@L["Added"]</MudText>
+            @foreach (var s in _addedSongs.OrderBy(s => s.ToString(), StringComparer.OrdinalIgnoreCase))
+            {
+                <MudText Typo="Typo.body1" Color="Color.Success">@s</MudText>
+            }
+            @foreach (var c in _addedCharts)
+            {
+                <MudText Typo="Typo.body1" Color="Color.Success">@c.Song.Name @c.DifficultyDisplay</MudText>
+            }
+        }
+        @if (_updatedCharts.Any())
+        {
+            <MudText Typo="Typo.h5" Class="mt-3">@L["Changed Level"]</MudText>
+            @foreach (var c in _updatedCharts)
+            {
+                <MudText Typo="Typo.body1" Color="Color.Info">
+                    @c.Song.Name @_fromCharts[c.Id].DifficultyDisplay -> @c.DifficultyDisplay
+                </MudText>
+            }
+        }
+        @if (_removedSongs.Any() || _removedCharts.Any())
+        {
+            <MudText Typo="Typo.h5" Class="mt-3">@L["Removed"]</MudText>
+            @foreach (var s in _removedSongs.OrderBy(s => s.ToString(), StringComparer.OrdinalIgnoreCase))
+            {
+                <MudText Typo="Typo.body1" Color="Color.Error">@s</MudText>
+            }
+            @foreach (var c in _removedCharts)
+            {
+                <MudText Typo="Typo.body1" Color="Color.Error">@c.Song.Name @c.DifficultyDisplay</MudText>
+            }
+        }
     }
 </MudPaper>
 @inject IMediator Mediator;
+@inject IUiSettingsAccessor UiSettings;
 @code
 {
-    private ISet<Name> _xxSongs = new HashSet<Name>();
-    private ISet<Name> _phoenixSongs = new HashSet<Name>();
-    private IDictionary<Guid, Chart> _xxCharts = new Dictionary<Guid, Chart>();
-    private IDictionary<Guid, Chart> _phoenixCharts = new Dictionary<Guid, Chart>();
+    private static readonly MixEnum[] Mixes =
+        Enum.GetValues<MixEnum>().OrderByDescending(m => m.DisplayOrder()).ToArray();
+
+    private MixEnum _fromMix = MixEnum.XX;
+    private MixEnum _toMix = MixEnum.Phoenix;
+    private bool _loading = true;
+
+    private IDictionary<Guid, Chart> _fromCharts = new Dictionary<Guid, Chart>();
     private ISet<Name> _removedSongs = new HashSet<Name>();
     private ISet<Name> _addedSongs = new HashSet<Name>();
     private IEnumerable<Chart> _removedCharts = Array.Empty<Chart>();
     private IEnumerable<Chart> _addedCharts = Array.Empty<Chart>();
     private IEnumerable<Chart> _updatedCharts = Array.Empty<Chart>();
+
     protected override async Task OnInitializedAsync()
     {
-        _xxSongs = (await Mediator.Send(new GetSongNamesQuery(MixEnum.XX))).ToHashSet();
-        _phoenixSongs = (await Mediator.Send(new GetSongNamesQuery(MixEnum.Phoenix))).ToHashSet();
+        // The comparison a player wants by default is the one they are living through: their
+        // mix, against the mix it succeeded. Mixes is newest-first, so that is the next entry.
+        var selected = await UiSettings.GetSelectedMix();
+        var index = Math.Max(0, Array.IndexOf(Mixes, selected));
+        if (index + 1 < Mixes.Length)
+        {
+            _toMix = selected;
+            _fromMix = Mixes[index + 1];
+        }
+        else
+        {
+            // Nothing precedes the oldest mix — compare it forward instead of against itself.
+            _fromMix = selected;
+            _toMix = Mixes[Math.Max(0, index - 1)];
+        }
 
-        _removedSongs = _xxSongs.Where(c => !_phoenixSongs.Contains(c) && !c.ToString().EndsWith("Short Cut",StringComparison.OrdinalIgnoreCase)).ToHashSet();
-        _addedSongs = _phoenixSongs.Where(c => !_xxSongs.Contains(c)).ToHashSet();
-
-        _xxCharts = (await Mediator.Send(new GetChartsQuery(MixEnum.XX))).ToDictionary(c => c.Id);
-        _phoenixCharts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToDictionary(c => c.Id);
-        _addedCharts = _phoenixCharts.Values.Where(c => !_addedSongs.Contains(c.Song.Name) && !_xxCharts.ContainsKey(c.Id)).OrderBy(c=>c.Song.Name.ToString()).ToArray();
-        _removedCharts = _xxCharts.Values.Where(c => !_removedSongs.Contains(c.Song.Name) && !c.Song.Name.ToString().EndsWith("Short Cut", StringComparison.OrdinalIgnoreCase) && !_phoenixCharts.ContainsKey(c.Id)).OrderBy(c => c.Song.Name.ToString()).ToArray();
-        _updatedCharts = _phoenixCharts.Values.Where(c => _xxCharts.ContainsKey(c.Id) && _xxCharts[c.Id].Level != c.Level).OrderBy(c=>c.Song.Name.ToString()).ToArray();
+        await Compare();
     }
+
+    private async Task SetFrom(MixEnum mix)
+    {
+        _fromMix = mix;
+        await Compare();
+    }
+
+    private async Task SetTo(MixEnum mix)
+    {
+        _toMix = mix;
+        await Compare();
+    }
+
+    private async Task Compare()
+    {
+        _loading = true;
+        var fromSongs = (await Mediator.Send(new GetSongNamesQuery(_fromMix))).ToHashSet();
+        var toSongs = (await Mediator.Send(new GetSongNamesQuery(_toMix))).ToHashSet();
+
+        // A song that only lost its Short Cut suffix is not a song that left — the cuts get
+        // renamed across mixes often enough that listing them buries the real departures.
+        _removedSongs = fromSongs.Where(c => !toSongs.Contains(c) && !IsShortCut(c)).ToHashSet();
+        _addedSongs = toSongs.Where(c => !fromSongs.Contains(c)).ToHashSet();
+
+        _fromCharts = (await Mediator.Send(new GetChartsQuery(_fromMix))).ToDictionary(c => c.Id);
+        var toCharts = (await Mediator.Send(new GetChartsQuery(_toMix))).ToDictionary(c => c.Id);
+
+        // Charts of a song that arrived or left whole are already reported by song — only the
+        // charts that came and went on their own are listed individually.
+        _addedCharts = toCharts.Values.Where(c => !_addedSongs.Contains(c.Song.Name) && !_fromCharts.ContainsKey(c.Id))
+            .OrderBy(c => c.Song.Name.ToString(), StringComparer.OrdinalIgnoreCase).ToArray();
+        _removedCharts = _fromCharts.Values
+            .Where(c => !_removedSongs.Contains(c.Song.Name) && !IsShortCut(c.Song.Name) && !toCharts.ContainsKey(c.Id))
+            .OrderBy(c => c.Song.Name.ToString(), StringComparer.OrdinalIgnoreCase).ToArray();
+        _updatedCharts = toCharts.Values
+            .Where(c => _fromCharts.ContainsKey(c.Id) && _fromCharts[c.Id].Level != c.Level)
+            .OrderBy(c => c.Song.Name.ToString(), StringComparer.OrdinalIgnoreCase).ToArray();
+        _loading = false;
+    }
+
+    private static bool IsShortCut(Name songName) =>
+        songName.ToString().EndsWith("Short Cut", StringComparison.OrdinalIgnoreCase);
 }

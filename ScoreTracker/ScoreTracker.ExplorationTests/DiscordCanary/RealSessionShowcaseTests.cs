@@ -26,7 +26,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 
-namespace ScoreTracker.Tests.Integration.DiscordCanary;
+namespace ScoreTracker.ExplorationTests.DiscordCanary;
 
 /// <summary>
 ///     Replays a real play session from the LOCAL development database through the

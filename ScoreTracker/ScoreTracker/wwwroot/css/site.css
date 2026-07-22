@@ -50,6 +50,96 @@ body {
     letter-spacing: .02em;
 }
 
+/* ===== The circuit-drop overlay =====
+   App.razor supplies #components-reconnect-modal, so Blazor stops building its own and just
+   toggles state classes on ours. Everything here is --mix-*: a dropped circuit is exactly the
+   moment MudThemeProvider's --mud-* vars can't be relied on. Every rule is id-scoped because
+   MudBlazor ships its own #components-reconnect-modal rules (background, z-index, and a
+   `#components-reconnect-modal button` that outranks a bare class). */
+
+#components-reconnect-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    /* !important answers MudBlazor's own !important background; site.css loads after theirs. */
+    background: color-mix(in srgb, var(--mix-bg) 82%, transparent) !important;
+    backdrop-filter: blur(2px);
+}
+
+/* No state class means no circuit trouble; -hide is the reconnected case. Both stay down. */
+#components-reconnect-modal.components-reconnect-show,
+#components-reconnect-modal.components-reconnect-failed,
+#components-reconnect-modal.components-reconnect-rejected {
+    display: flex;
+}
+
+#components-reconnect-modal .reconnect-card {
+    min-width: 240px;
+    padding: 22px 28px;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    background: var(--mix-surface);
+    color: var(--mix-ink);
+    box-shadow: 0 14px 44px -16px color-mix(in srgb, var(--mix-bg) 90%, transparent);
+    font-family: var(--font-body);
+    text-align: center;
+}
+
+/* All three states ship; the class Blazor set decides which one has a box. */
+#components-reconnect-modal .reconnect-state { display: none; }
+
+#components-reconnect-modal.components-reconnect-show .reconnect-on-show,
+#components-reconnect-modal.components-reconnect-failed .reconnect-on-failed,
+#components-reconnect-modal.components-reconnect-rejected .reconnect-on-rejected {
+    display: block;
+}
+
+#components-reconnect-modal .reconnect-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: .01em;
+}
+
+#components-reconnect-modal .reconnect-spinner {
+    display: block;
+    width: 28px;
+    height: 28px;
+    margin: 0 auto 12px;
+    border-radius: 50%;
+    border: 3px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    border-top-color: var(--mix-primary);
+    animation: reconnect-spin .9s linear infinite;
+}
+
+@keyframes reconnect-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #components-reconnect-modal .reconnect-spinner { animation-duration: 3s; }
+}
+
+#components-reconnect-modal .reconnect-btn {
+    margin-top: 16px;
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: 1px solid var(--mix-primary);
+    background: var(--mix-primary);
+    color: var(--mix-primary-contrast);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#components-reconnect-modal .reconnect-btn:hover {
+    background: color-mix(in srgb, var(--mix-primary) 85%, var(--mix-ink));
+}
+
 /* ===== Shell: app bar, wordmark, top nav, mega-menus, mix pill =====
    The bar and its menus are server-rendered HTML with no circuit behind them, so every value
    MudAppBar/MudMenu used to supply is pinned here. Heights and z-indexes match the MudTheme
@@ -5180,7 +5270,11 @@ button.chart-card-art {
 .challenge-grid {
     display: grid;
     gap: 14px;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    /* Cap the comfortable grid at 6 columns: a wide monitor otherwise fits a 7th, and the
+       weekly board's chart count divides cleanly by 6, so the 7th just orphans the last row.
+       Each track is at least 280px but never narrower than a sixth of the row, so at most six
+       ever fill the width — fewer when the row can't hold six at 280px. */
+    grid-template-columns: repeat(auto-fill, minmax(max(280px, (100% - 5 * 14px) / 6), 1fr));
 }
 
 .challenge-grid.suggested-only .challenge-card[data-suggested="false"] {
@@ -5663,6 +5757,179 @@ button.chart-card-art {
 
 .challenge-mboard[hidden] {
     display: none;
+}
+
+/* ── The Phoenix 2 folder-title track (docs/design/pumbility-title-track.md): the glowy bar
+   toward your next PUMBILITY title + one folder-aware caption, replacing the Phoenix 1 folder
+   bars. --mix-* so it wears the mix accent, not a fixed green. ── */
+.ptt {
+    display: grid;
+    gap: 10px;
+    margin: 0 0 14px;
+}
+
+/* No card behind the bar — it sits directly on the page (owner call). */
+.ptt-band {
+    padding: 2px 2px 4px;
+    display: grid;
+    gap: 9px;
+}
+
+.ptt-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+/* The bar's top-left slot: the "from …" whisper, or the "serves" notifier on wider screens. */
+.ptt-lead {
+    display: flex;
+    align-items: flex-end;
+    min-width: 0;
+    min-height: 1em;
+}
+
+.ptt-from {
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: .02em;
+    color: var(--mix-ink-muted);
+    min-height: 1em;
+}
+
+/* The compact "serves" notifier riding the top-left of the bar (wide screens only — see the
+   breakpoint by .ptt-serves). Mirrors the banner's accent tint at chip scale. */
+.ptt-serves-top {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    padding: 3px 9px;
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: .02em;
+    white-space: nowrap;
+    color: var(--mix-ink);
+    border: 1px solid color-mix(in srgb, var(--mix-accent) 38%, transparent);
+    background: color-mix(in srgb, var(--mix-accent) 12%, transparent);
+}
+
+.ptt-target {
+    text-align: right;
+    line-height: 1.02;
+}
+
+.ptt-k {
+    display: block;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    font-size: 9.5px;
+    color: var(--mix-primary);
+    font-weight: 600;
+    margin-bottom: 1px;
+}
+
+.ptt-t {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: .02em;
+    color: var(--mix-ink);
+}
+
+/* The glowy bar. overflow:visible so the ring's shadow reads; the fill and dot both carry the
+   mix glow. */
+.ptt-bar {
+    position: relative;
+    height: 18px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--mix-bg) 55%, #000);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    overflow: visible;
+}
+
+.ptt-fill {
+    position: absolute;
+    inset: 1px auto 1px 1px;
+    border-radius: 9px;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--mix-primary) 68%, #000), var(--mix-primary));
+    box-shadow: 0 0 16px -3px var(--mix-primary);
+}
+
+.ptt-you {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--mix-bg);
+    border: 2.5px solid var(--mix-primary);
+    box-shadow: 0 0 0 3px var(--mix-bg), 0 0 13px -1px var(--mix-primary);
+}
+
+/* The one caption where the Phoenix 1 percentage used to be. */
+.ptt-cap {
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14.5px;
+    letter-spacing: .02em;
+    color: var(--mix-primary);
+}
+
+/* Grade-up is a bigger ask than volume, so it reads neutral rather than the encouraging accent. */
+.ptt-cap-grade {
+    color: var(--mix-ink);
+}
+
+/* The folder sits above your current title — you can push past it here. This is the phone
+   placement (a banner under the bar); above ~480 it moves up to the top-left .ptt-serves-top chip. */
+.ptt-serves {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border-radius: 10px;
+    padding: 8px 13px;
+    font-size: 13px;
+    border: 1px solid color-mix(in srgb, var(--mix-accent) 40%, transparent);
+    background: color-mix(in srgb, var(--mix-accent) 12%, transparent);
+    color: var(--mix-ink);
+}
+
+@media (min-width: 481px) {
+    .ptt-serves-top { display: inline-flex; }
+    .ptt-serves { display: none; }
+}
+
+.ptt-serves-ic {
+    color: var(--mix-accent);
+    flex: none;
+    font-size: 13px;
+}
+
+/* The collapsed state: the folder is beneath your top 50, so the bar's gone — the serves whisper
+   is all that remains. */
+.ptt-behind {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 14px;
+    font-family: var(--font-display);
+    font-size: 14px;
+    letter-spacing: .02em;
+    color: var(--mix-ink-muted);
+    background: color-mix(in srgb, var(--mix-surface) 55%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    border-radius: 10px;
+}
+
+.ptt-behind-ic {
+    flex: none;
+    font-size: 15px;
 }
 
 /* ── The tier-list segment row (M18): joined buttons, filled primary when active. ── */
@@ -6250,7 +6517,7 @@ button.chart-card-art {
    their own columns instead: the owning page supplies the template in
    --olb-grid-cols (and --olb-grid-cols-narrow for the width where its optional
    columns drop out), and the identity column stays pinned left. */
-.olb-grid-row {
+.olb-grid-row, .olb-grid-head {
     display: grid;
     grid-template-columns: var(--olb-grid-cols);
     align-items: center;
@@ -6260,6 +6527,23 @@ button.chart-card-art {
 }
 
 .olb-grid-row .mud-chip { margin: 0; }
+
+/* Column names, in the table-head voice the sortable boards already use. The header
+   is the row template with labels in it, so it drops the same columns at the same
+   widths; a label that outruns its column clips rather than reflowing the row. */
+.olb-grid-head {
+    color: var(--mix-ink-muted);
+    font-size: 11.5px;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    line-height: 1.25;
+}
+
+.olb-grid-head span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
 /* Figures are read down a column, so they align on their right edge. */
 .olb-grid-num {
@@ -6271,8 +6555,9 @@ button.chart-card-art {
     gap: 2px;
 }
 
-/* Two figures that are one column's worth of width on a phone: full-width they are
-   ordinary grid items, narrow they stack into a single cell. */
+/* Competitive level and PUMBILITY are two ordinary grid columns, never stacked (owner
+   call) — the wrapper is display:contents so its two children sit in the template's cells
+   directly, at every width. */
 .olb-stack { display: contents; }
 
 /* A label that has a short form: the long one until the row runs out of width. */
@@ -6300,6 +6585,27 @@ button.chart-card-art {
 
 .olb-player-name > :last-child {
     flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Every UserLabel, everywhere: flag then name, laid out so a bounded caller truncates
+   the NAME. max-width keeps the label inside its container instead of overflowing as one
+   atomic box — an overflowing atomic box is replaced wholesale by the container's
+   ellipsis, which is how a flagged player used to render as a bare "…". */
+.user-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    vertical-align: middle;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.user-label > :not(:last-child) { flex: 0 0 auto; }
+
+.user-label > :last-child {
+    flex: 0 1 auto;
     min-width: 0;
     overflow: hidden;
 }
@@ -6356,27 +6662,13 @@ button.chart-card-art {
     border-radius: 6px;
 }
 
-/* A board sheds width in three steps, each one giving up the least it can: at 760
-   the row identifier pins while the rest side-scrolls, optional columns and song
-   titles step aside, and paired values stack instead of sitting side by side; at
-   640 the second-tier figures drop out entirely; at 500 the row is a width budget,
-   so padding tightens and labels fall back to their short forms. */
+/* A board sheds width one column at a time: at 760 the sortable-table variant pins its
+   row identifier while the rest side-scrolls and song titles step aside; the community
+   grid then drops its play count at 600 and its playstyle chip at 500 (see those blocks
+   below); at 500 the compact card rows tighten padding and long labels fall back to their
+   short forms. Figures never stack — every value keeps its own column. */
 @media (max-width: 760px) {
     .olb-hide-mobile { display: none !important; }
-
-    /* The optional columns are display:none by now, so the template loses them too. */
-    .olb-grid-row {
-        grid-template-columns: var(--olb-grid-cols-narrow, var(--olb-grid-cols));
-        gap: 6px;
-        padding: 3px 4px;
-    }
-
-    .olb-stack {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        line-height: 1.2;
-    }
 
     .olb-song-text { display: none; }
 
@@ -6402,15 +6694,29 @@ button.chart-card-art {
     .olb-pager-tight .mud-table-pagination-caption { font-size: 11px; margin: 0 4px; }
 }
 
-@media (max-width: 640px) {
-    .olb-hide-narrow { display: none !important; }
-
-    .olb-grid-row {
-        grid-template-columns: var(--olb-grid-cols-phone, var(--olb-grid-cols-narrow, var(--olb-grid-cols)));
+/* The community grid sheds whole columns, never stacking its figures: at 600 the play
+   count drops, at 500 the playstyle chip drops (no initials fallback — owner call). The
+   header, built from the same template, loses the same columns at the same widths. */
+@media (max-width: 600px) {
+    .olb-grid-row, .olb-grid-head {
+        grid-template-columns: var(--olb-grid-cols-600, var(--olb-grid-cols));
+        gap: 6px;
+        padding: 3px 4px;
     }
+
+    /* Columns size to their content now, so the header sets smaller to not out-widen a figure. */
+    .olb-grid-head { font-size: 10px; letter-spacing: .2px; }
+
+    .olb-hide-narrow { display: none !important; }
 }
 
 @media (max-width: 500px) {
+    .olb-grid-row, .olb-grid-head {
+        grid-template-columns: var(--olb-grid-cols-500, var(--olb-grid-cols-600, var(--olb-grid-cols)));
+    }
+
+    .olb-hide-phone { display: none !important; }
+
     .olb-long-form { display: none; }
 
     .olb-short-form { display: inline; }

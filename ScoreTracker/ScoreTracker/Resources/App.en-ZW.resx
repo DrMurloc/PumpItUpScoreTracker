@@ -5892,4 +5892,46 @@
   <data name="PF" xml:space="preserve">
     <value>PF</value>
   </data>
+  <data name="No differences between these mixes." xml:space="preserve">
+    <value>Mrgl mrgl... grlgl mrgl.</value>
+  </data>
+  <data name="Reconnecting…" xml:space="preserve">
+    <value>Mrgllll…</value>
+  </data>
+  <data name="Couldn't reconnect." xml:space="preserve">
+    <value>Mrgl... grlgl mrgl.</value>
+  </data>
+  <data name="Try again" xml:space="preserve">
+    <value>Mrgl mrgl</value>
+  </data>
+  <data name="Your session ended." xml:space="preserve">
+    <value>Grlgl mrgl mrgl.</value>
+  </data>
+  <data name="Reload the page" xml:space="preserve">
+    <value>Mrgl!</value>
+  </data>
+  <data name="from {0}" xml:space="preserve">
+    <value>mrgl {0}</value>
+  </data>
+  <data name="Next title" xml:space="preserve">
+    <value>Mrglmrgl</value>
+  </data>
+  <data name="~{0} more charts in this folder" xml:space="preserve">
+    <value>~{0} mrgl grblgl mrgl</value>
+  </data>
+  <data name="Get this folder to {0}" xml:space="preserve">
+    <value>Mrgl mrgl {0}</value>
+  </data>
+  <data name="This folder serves {0}" xml:space="preserve">
+    <value>Mrgl mrgl {0}</value>
+  </data>
+  <data name="Behind your top 50 — serves {0}" xml:space="preserve">
+    <value>Mrgl 50 — mrgl {0}</value>
+  </data>
+  <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
+    <value>Mrgl {0} mrgl grblgl mrgl {1}</value>
+  </data>
+  <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
+    <value>Mrgl {0} mrgl {1} grblgl (mrgl {2} rgllgl mrgl)</value>
+  </data>
 </root>

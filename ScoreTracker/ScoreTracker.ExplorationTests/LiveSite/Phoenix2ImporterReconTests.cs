@@ -2,7 +2,7 @@ using System.Text;
 using ScoreTracker.SharedKernel.Enums;
 using Xunit.Abstractions;
 
-namespace ScoreTracker.Tests.Integration.LiveSite;
+namespace ScoreTracker.ExplorationTests.LiveSite;
 
 /// <summary>
 ///     Phoenix 2 import-path canaries plus the page-snapshot instrument. The canaries mirror

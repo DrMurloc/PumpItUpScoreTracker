@@ -2,7 +2,7 @@ using ScoreTracker.OfficialMirror.Infrastructure.Apis.Dtos;
 using ScoreTracker.SharedKernel.Enums;
 using Xunit.Abstractions;
 
-namespace ScoreTracker.Tests.Integration.LiveSite;
+namespace ScoreTracker.ExplorationTests.LiveSite;
 
 /// <summary>
 ///     Live canary for the Phoenix 2 PUMBILITY aggregation. Crawls the board's three tabs

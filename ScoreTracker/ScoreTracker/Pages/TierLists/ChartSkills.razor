@@ -213,11 +213,8 @@ else
 
         @* Piucenter round 5: the inline desktop strip died — the folder-skills block
            regrew it past the fold, so the Folder Stats drawer is now folder progress's
-           ONE home at every width (the button shows everywhere). The legend stays
-           inline on desktop: it explains the borders on the cards beside it. *@
-        <div class="tier-desktop-only">
-            <BorderLegend></BorderLegend>
-        </div>
+           ONE home at every width (the button shows everywhere). The border legend moved
+           into the content bar (between the lens and density switch). *@
         @* Each drawer brings its own MudLayout container — the layout stopped hosting one. *@
         <MudLayout>
         <MudDrawer @bind-Open="_statsOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="320px">
@@ -230,7 +227,9 @@ else
                 </div>
                 @folderStatsCore
                 <BorderLegend></BorderLegend>
-                @if (!IsLegacy)
+                @* Phoenix's difficulty-title bars. Phoenix 2 replaces these with the PUMBILITY
+                   title track above the tier sections, so they're skipped there. *@
+                @if (!IsLegacy && _currentMix != MixEnum.Phoenix2)
                 {
                     <MudText Typo="Typo.overline">@L["Folder Levels"]</MudText>
                     <MudGrid>
@@ -265,6 +264,13 @@ else
            where it's actionable (round 4). Attribution per the round-3 agreement. *@
         <MudText Typo="Typo.caption" Class="tier-attribution">@L["Skill data: PIU Center — maintained by aesthete"]</MudText>
     }
+    @* Phoenix 2 folder-title track: the glowy bar toward your next PUMBILITY title + one
+       folder-aware line, above the fold, above the tier sections (not in Folder Stats). Phoenix
+       and legacy keep the difficulty-title bars in the drawer. *@
+    @if (_titleTrack != null)
+    {
+        <PumbilityTitleTrack Result="_titleTrack"></PumbilityTitleTrack>
+    }
     @* 2 — content bar: how the list PRESENTS (lens ordering, grouping, density,
        Download, Filters). Sits with the list it affects, not in the sticky toolbar. *@
     <div class="tier-content-bar">
@@ -277,6 +283,12 @@ else
         }
         <div class="tier-flat tier-desktop-only">
             @lensControls
+        </div>
+        <MudSpacer></MudSpacer>
+        @* The card-outline legend rides the middle of the toolbar, between the lens and the
+           density switch — it explains the borders on the cards below (desktop only). *@
+        <div class="tier-desktop-only">
+            <BorderLegend></BorderLegend>
         </div>
         <MudSpacer></MudSpacer>
         <MudButtonGroup OverrideStyles="false">
@@ -987,6 +999,7 @@ else
     private sealed record TierGroup(string Key, string Name, string Color, string ShareHex, IReadOnlyList<SongTierListEntry> Entries);
 
     private IEnumerable<TitleProgress> _titleProgress = Array.Empty<TitleProgress>();
+    private FolderTitleTrackResult? _titleTrack;
     private IEnumerable<Guid> _unpassedTodos => _finalEntries.Select(e => e.ChartId).Where(chartId => _scores.ContainsKey(chartId) && _scores[chartId].IsBroken && _todos.Contains(chartId));
     private IDictionary<Guid, TierListCategory> _chartDifficulties = new Dictionary<Guid, TierListCategory>();
     private Name[] _availableStepArtists = Array.Empty<Name>();
@@ -1570,6 +1583,12 @@ else
             .Where(c => c.Level == _level && c.Type == _chartType)
             .ToDictionary(c => c.Id);
         _folderScores = _scores.Where(kv => _charts.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
+
+        // Phoenix 2's folder-title track — recomputed for THIS folder on every change (the full
+        // load runs once, so it can't live there). Null for Phoenix/legacy and signed-out.
+        _titleTrack = CurrentUser.IsLoggedIn
+            ? FolderTitleTrack.Compute(_currentMix, _chartType, _level, _allCharts, _scores)
+            : null;
         // Dominance-ordered skills + segment coverage for the card chips and the
         // table's Skills column; empty until the first piucenter crawl banks metrics.
         _skillChips = await Mediator.Send(new GetChartSkillChipsQuery(_charts.Keys.ToArray()), cancellationToken);

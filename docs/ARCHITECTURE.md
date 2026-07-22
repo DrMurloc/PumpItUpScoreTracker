@@ -101,9 +101,12 @@ ScoreTracker.sln
     ├── ScoreTracker.ServiceDefaults   OTel/resilience defaults
     ├── ScoreTracker.Tests             unit + component + architecture tests
     ├── ScoreTracker.Tests.Api         API wire-shape approval tests
+    ├── ScoreTracker.Tests.Components  Blazor rendering/behavior tests (bUnit)
     ├── ScoreTracker.Tests.Integration real-DB tests (Testcontainers + Respawn)
-    └── ScoreTracker.Tests.E2E         Playwright critical-workflow tests (Kestrel-hosted
-                                       app + WireMock PIU stub + Testcontainers SQL)
+    ├── ScoreTracker.Tests.E2E         Playwright critical-workflow tests (Kestrel-hosted
+    │                                  app + WireMock PIU stub + Testcontainers SQL)
+    └── ScoreTracker.ExplorationTests  manual-only workbench: live PIU crawl + Discord canary
+                                       (never CI; read-only unless the owner asks to mutate)
 ```
 
 ### Inside a vertical

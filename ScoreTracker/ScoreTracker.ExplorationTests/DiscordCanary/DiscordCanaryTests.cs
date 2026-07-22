@@ -8,7 +8,7 @@ using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.SharedKernel.Enums;
 
-namespace ScoreTracker.Tests.Integration.DiscordCanary;
+namespace ScoreTracker.ExplorationTests.DiscordCanary;
 
 /// <summary>
 ///     Posts the sample score cards to the owner's lab channel and reads them back over

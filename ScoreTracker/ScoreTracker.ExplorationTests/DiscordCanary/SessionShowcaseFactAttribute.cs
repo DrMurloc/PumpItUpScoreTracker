@@ -1,4 +1,4 @@
-namespace ScoreTracker.Tests.Integration.DiscordCanary;
+namespace ScoreTracker.ExplorationTests.DiscordCanary;
 
 /// <summary>
 ///     Marks the real-session showcase: a manual-run-only harness that replays a real

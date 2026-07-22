@@ -7,6 +7,7 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.WeeklyChallenge.Contracts
 @using ScoreTracker.WeeklyChallenge.Contracts.Queries
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.HomeDashboard
@@ -143,16 +144,13 @@ else
             .ToDictionary(p => p.ChartId, p => p.Place)
             : new Dictionary<Guid, int>();
 
-        // Owner order (field-test round 1): difficulty descending, doubles before
-        // singles on ties; CO-OPs last — their "level" is a player count, which
-        // doesn't compare with S/D levels.
+        // Canonical Phoenix 1 board order, shared with the weekly page via WeeklyBoardOrder:
+        // level descending, singles before doubles within a level, co-ops last (2-player last).
         _rows = filtered
             .Select(c => new BoardRow(c,
                 placements.TryGetValue(c.Id, out var place) ? place : null,
                 totals.GetValueOrDefault(c.Id)))
-            .OrderBy(r => r.Chart.Type == ChartType.CoOp ? 1 : 0)
-            .ThenByDescending(r => (int)r.Chart.Level)
-            .ThenBy(r => r.Chart.Type == ChartType.Double ? 0 : 1)
+            .OrderBy(r => WeeklyBoardOrder.SortKey(r.Chart))
             .ToList();
         _loaded = true;
     }

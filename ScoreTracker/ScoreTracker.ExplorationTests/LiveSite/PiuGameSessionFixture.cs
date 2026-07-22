@@ -7,7 +7,7 @@ using ScoreTracker.OfficialMirror.Infrastructure.Apis;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.SharedKernel.Enums;
 
-namespace ScoreTracker.Tests.Integration.LiveSite;
+namespace ScoreTracker.ExplorationTests.LiveSite;
 
 /// <summary>
 ///     Shares one real PiuGameApi (and at most one login) across the live-site tests.

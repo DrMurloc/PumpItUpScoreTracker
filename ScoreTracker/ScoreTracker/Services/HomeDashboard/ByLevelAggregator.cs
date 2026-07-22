@@ -242,8 +242,19 @@ public static class ByLevelAggregator
         if (ordinal)
         {
             yLabels = config.Metric == BreakdownMetric.Plate ? scales.PlateNames : scales.GradeNames;
-            yMin = Math.Max(0, min - 0.5);
-            yMax = max + 0.5;
+            // A grade/plate axis is a ladder of names, so its bounds sit ON rungs: a
+            // half-step pad would put a tick between two plates, where no plate exists.
+            // A folder that averages to one flat value still needs a rung either side.
+            var lowest = Math.Floor(min);
+            var highest = Math.Ceiling(max);
+            if (highest - lowest < 1)
+            {
+                lowest = Math.Max(0, lowest - 1);
+                highest = lowest + 2;
+            }
+
+            yMin = lowest;
+            yMax = highest;
         }
         else
         {

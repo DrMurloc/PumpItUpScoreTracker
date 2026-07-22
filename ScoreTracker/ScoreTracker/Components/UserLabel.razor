@@ -10,34 +10,37 @@
 @* MudTooltip renders a popover, which throws in static SSR (no provider in the static tree).
    The tooltips carry hover text only, so a static render drops them and keeps the flag and
    name; in a circuit they come back. *@
+@* The label is a flex row that never outgrows its container, with the flag pinned and the
+   name the only part allowed to shrink. Left as loose inline content it truncates as one
+   atomic box in any bounded row — the flag takes the width and the name prints as a bare
+   "…" for everyone with a country. *@
 @if (User != null)
 {
-    @if (!string.IsNullOrWhiteSpace(_countryImage) && User.Country != null)
-    {
+    <span class="user-label">
+        @if (!string.IsNullOrWhiteSpace(_countryImage) && User.Country != null)
+        {
+            @if (RendererInfo.IsInteractive)
+            {
+                <MudTooltip Text="@User.Country.Value.ToString()">
+                    <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@_countryImage"></MudImage>
+                </MudTooltip>
+            }
+            else
+            {
+                <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@_countryImage"></MudImage>
+            }
+        }
         @if (RendererInfo.IsInteractive)
         {
-            <MudTooltip Text="@User.Country.Value.ToString()">
-                <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@_countryImage"></MudImage>
+            <MudTooltip Text="@Tooltip">
+                <span class="user-label-name">@User.Name</span>
             </MudTooltip>
         }
         else
         {
-            <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@_countryImage"></MudImage>
-        }
-    }
-    @* The name is its own element so a caller that has to truncate can truncate the
-       NAME: ellipsis applied to the label as a whole would spend the row's width on
-       the flag and print nothing but a "…" for anyone with a country. *@
-    @if (RendererInfo.IsInteractive)
-    {
-        <MudTooltip Text="@Tooltip">
             <span class="user-label-name">@User.Name</span>
-        </MudTooltip>
-    }
-    else
-    {
-        <span class="user-label-name">@User.Name</span>
-    }
+        }
+    </span>
 }
 @inject IUserRepository Users
 @code {
