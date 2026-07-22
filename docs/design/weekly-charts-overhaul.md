@@ -168,9 +168,10 @@ markup with jump links + the next-reset countdown.
    sticker + count-chip → board (M12). Table: rows with name, top-1, your line, count, actions.
    Suggested = gold border only (M11). Empty state: "This week's charts post Monday at
    midnight ET." **Board order is the query's, not the draw's**: `GetWeeklyBoardQuery` returns
-   the week sorted difficulty-descending, doubles ahead of singles on a tie, CO-OPs last (their
-   "level" is a player count) — the homepage widget's order, so the grid, the page's JSON-LD,
-   and any future consumer read the same way.
+   the week in the canonical Phoenix 1 order — level descending, **singles before doubles within
+   a level**, CO-OPs last with the 2-player duet last of all. The order lives in one shared key
+   (`WeeklyBoardOrder.SortKey`) that both the query and the homepage Weekly widget sort by, so
+   the grid, the widget, the page's JSON-LD, and any future consumer can't drift.
 4. **Monthly board** (`#monthly`) — type pills in the section header (`?type=` links), window
    subtitle (week N, best M count, PUMBILITY), the table: rarity place, player, top-4 chips,
    count (a `<details>` expansion with all counted scores), total. Empty state: "Scores land

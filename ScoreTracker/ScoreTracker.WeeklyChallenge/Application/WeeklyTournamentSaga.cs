@@ -170,20 +170,14 @@ namespace ScoreTracker.WeeklyChallenge.Application
         }
 
         // The board arrives in whatever order the week's rows were written — a chart list nobody
-        // can scan. Sorts it the way the homepage widget already presents the same week:
-        // difficulty descending, doubles before singles on ties, CO-OPs last since their "level"
-        // is a player count and doesn't compare with S/D levels. A chart the catalog can't
-        // resolve sorts to the end rather than claiming level 0.
+        // can scan. WeeklyBoardOrder is the canonical Phoenix 1 order (shared with the homepage
+        // widget): level descending, singles before doubles within a level, co-ops last with the
+        // 2-player duet last of all.
         private static IReadOnlyList<WeeklyBoardChartSummary> InBoardOrder(
             IEnumerable<WeeklyBoardChartSummary> summaries, IReadOnlyDictionary<Guid, Chart> charts)
         {
             return summaries
-                .Select(s => (Summary: s, Chart: charts.GetValueOrDefault(s.ChartId)))
-                .OrderBy(x => x.Chart == null ? 2 : x.Chart.Type == ChartType.CoOp ? 1 : 0)
-                .ThenByDescending(x => x.Chart == null ? 0 : (int)x.Chart.Level)
-                .ThenBy(x => x.Chart?.Type == ChartType.Double ? 0 : 1)
-                .ThenBy(x => x.Chart?.Song.Name.ToString() ?? string.Empty, StringComparer.OrdinalIgnoreCase)
-                .Select(x => x.Summary)
+                .OrderBy(s => WeeklyBoardOrder.SortKey(charts.GetValueOrDefault(s.ChartId)))
                 .ToArray();
         }
 

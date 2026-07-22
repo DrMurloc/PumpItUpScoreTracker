@@ -582,16 +582,17 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
-    public async Task WeeklyBoardComesBackInLevelOrderNotTheOrderItWasWritten()
+    public async Task WeeklyBoardComesBackInCanonicalOrderNotTheOrderItWasWritten()
     {
-        // The week's rows arrive in whatever order they were drawn. The board is read
-        // top-down by difficulty: hardest first, doubles ahead of singles at the same
-        // level, co-ops last since their "level" is a player count.
+        // The week's rows arrive in whatever order they were drawn. The board reads top-down in
+        // the Phoenix 1 order: hardest first, and within a level SINGLES before doubles; co-ops
+        // last, the 2-player duet last of all.
         var s18 = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).WithSongName("s18").Build();
         var s21 = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).WithSongName("s21").Build();
         var d21 = new ChartBuilder().WithType(ChartType.Double).WithLevel(21).WithSongName("d21").Build();
-        var coOp = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(2).WithSongName("coop").Build();
-        var drawn = new[] { coOp, s18, s21, d21 };
+        var coOp5 = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(5).WithSongName("coop5").Build();
+        var coOp2 = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(2).WithSongName("coop2").Build();
+        var drawn = new[] { coOp2, s18, coOp5, d21, s21 };
         var weeklyTournies = new Mock<IWeeklyTournamentRepository>();
         weeklyTournies.Setup(w => w.GetWeeklyCharts(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
             .ReturnsAsync(drawn.Select(c => new WeeklyTournamentChart(c.Id, Now.AddDays(3))).ToArray());
@@ -600,7 +601,10 @@ public sealed class WeeklyTournamentSagaTests
 
         var view = await saga.Handle(new GetWeeklyBoardQuery(MixEnum.Phoenix), CancellationToken.None);
 
-        Assert.Equal(new[] { d21.Id, s21.Id, s18.Id, coOp.Id }, view.Charts.Select(c => c.ChartId).ToArray());
+        // S21 before D21 (singles first within the 21s); then S18; then co-ops with the 5-player
+        // ahead of the 2-player.
+        Assert.Equal(new[] { s21.Id, d21.Id, s18.Id, coOp5.Id, coOp2.Id },
+            view.Charts.Select(c => c.ChartId).ToArray());
     }
 
     [Fact]
