@@ -98,6 +98,24 @@ public sealed class FolderTitleTrackTests
     }
 
     [Fact]
+    public void GradeUpNeverAsksForBelowAPass()
+    {
+        // A solid pool, then a folder the player's barely touched (< 5 charts → no median → grade
+        // up). The grade named must be a pass (A) or better — never "get this folder to F".
+        var (charts, scores) = Folder(ChartType.Single, 22, 50, 55, 925_000, PhoenixPlate.FairGame);
+        Folder(ChartType.Single, 20, 3, 40, 920_000, PhoenixPlate.FairGame, charts, scores);
+
+        var result = FolderTitleTrack.Compute(MixEnum.Phoenix2, ChartType.Single, 20, charts, scores);
+
+        Assert.NotNull(result);
+        if (result!.Show && result.Mode == FolderTrackMode.GradeUp)
+        {
+            Assert.True(result.NeededGrade >= PhoenixLetterGrade.A, $"named {result.NeededGrade}, below an A pass");
+            Assert.InRange(result.ChartsLeft, 1, 40);
+        }
+    }
+
+    [Fact]
     public void IdenticalContributionsDoNotDivideByZero()
     {
         // Every chart the same value → median equals the floor; the on-pace count must not run.

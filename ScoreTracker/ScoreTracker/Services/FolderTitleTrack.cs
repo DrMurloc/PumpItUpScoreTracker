@@ -112,33 +112,44 @@ public static class FolderTitleTrack
         // Beneath your top 50: even a perfect folder can't reach the title. Bar hides; serves stays.
         if (PoolIf(effBase * PgCeiling) < target.CompletionRequired)
             return new FolderTitleTrackResult(false, from?.Name.ToString() ?? "", target.Name.ToString(),
-                progress, FolderTrackMode.GradeUp, 0, PhoenixLetterGrade.SSSPlus, servesName, servesAbove);
+                progress, FolderTrackMode.GradeUp, 0, PhoenixLetterGrade.A, servesName, servesAbove);
 
-        // The lowest grade whose whole-folder clear reaches the title.
-        var neededGrade = PhoenixLetterGrade.SSSPlus;
-        var neededPerChart = effBase * PgCeiling;
-        foreach (var grade in Enum.GetValues<PhoenixLetterGrade>().OrderBy(g => config.LetterGradeModifiers[g]))
+        // How many charts at what grade. The floor is a PASS (A) — grinding a folder to a fail
+        // means nothing — and we only name a higher grade when the folder is too small to reach
+        // the title at A. Each chart at grade `per` evicts your weakest pool chart, netting
+        // per − floor; count them against the deficit.
+        var deficit = target.CompletionRequired - poolValue;
+        var passFloor = config.LetterGradeModifiers[PhoenixLetterGrade.A];
+        var fitGrade = PhoenixLetterGrade.SSSPlus;
+        var fitPerChart = effBase * PgCeiling;
+        var fitCount = folderCount;
+        foreach (var grade in Enum.GetValues<PhoenixLetterGrade>()
+                     .Where(g => config.LetterGradeModifiers[g] >= passFloor)
+                     .OrderBy(g => config.LetterGradeModifiers[g]))
         {
             var perChart = effBase * config.LetterGradeModifiers[grade];
-            if (PoolIf(perChart) < target.CompletionRequired) continue;
-            neededGrade = grade;
-            neededPerChart = perChart;
+            if (perChart <= floor) continue;
+            var count = (int)Math.Ceiling(deficit / (perChart - floor));
+            if (count > folderCount) continue;
+            fitGrade = grade;
+            fitPerChart = perChart;
+            fitCount = Math.Max(1, count);
             break;
         }
 
-        // On pace when you already score at least that grade here (5+ charts for a stable median);
-        // otherwise you need to grade up. A grade that clears the title always beats the floor, so
-        // median ≥ neededPerChart guarantees the count's denominator is positive.
+        // On pace when you already score at least that grade here (5+ charts for a stable median):
+        // "~N more charts" at your own pace. Otherwise it's "pass N at {grade} or better". A grade
+        // that fits always beats the floor, so median ≥ fitPerChart keeps the denominator positive.
         var median = folder.Count >= 5 ? Median(folder) : (double?)null;
-        if (median is { } m && m > floor && m >= neededPerChart)
+        if (median is { } m && m > floor && m >= fitPerChart)
         {
-            var chartsLeft = (int)Math.Ceiling((target.CompletionRequired - poolValue) / (m - floor));
+            var onPace = (int)Math.Ceiling(deficit / (m - floor));
             return new FolderTitleTrackResult(true, from?.Name.ToString() ?? "", target.Name.ToString(),
-                progress, FolderTrackMode.OnPace, Math.Max(1, chartsLeft), neededGrade, servesName, servesAbove);
+                progress, FolderTrackMode.OnPace, Math.Max(1, onPace), fitGrade, servesName, servesAbove);
         }
 
         return new FolderTitleTrackResult(true, from?.Name.ToString() ?? "", target.Name.ToString(),
-            progress, FolderTrackMode.GradeUp, 0, neededGrade, servesName, servesAbove);
+            progress, FolderTrackMode.GradeUp, fitCount, fitGrade, servesName, servesAbove);
     }
 
     private static double Median(List<double> values)

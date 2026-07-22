@@ -22,7 +22,9 @@ read; wired from `ChartSkills.razor`.
   is a quiet "from …" on the left. Singles folders read the `[S]` pool, doubles the `[D]` pool.
 - **One caption**, where the Phoenix 1 percentage used to be, in three reads:
   - **On pace** — your grade here already clears it, so it's just volume: *"~4 more charts in this folder."*
-  - **Grade up** — you'd need to score higher: *"Get this folder to AAA"* — the whole-folder grade it'd take.
+  - **Grade up** — you'd need to score higher: *"Pass 8 charts in this folder with AAA or better"* —
+    a count at a **pass (A) floor**, naming a higher grade only when the folder is too small to
+    reach the title at A. Never names a fail grade.
   - **Behind you** — even a perfect folder falls short of the title: the bar disappears; only the
     "serves" whisper stays.
 - **The serves banner** (▲) — shown only when the folder outranks your target: *"This folder serves
@@ -31,14 +33,16 @@ read; wired from `ChartSkills.razor`.
 ## The model (all from the shipped `Phoenix2PumbilityScoring`)
 
 - **floor** = your 50th (weakest) contribution in the pool. A chart helps only if it beats the floor.
-- **The one question, per grade:** *if every chart in this folder were graded X, does the pool reach
-  the title?* Try grades ascending; the lowest X that clears it is the grade shown.
-  - `neededGrade > PG` (even a perfect folder falls short) → **hide the bar** (`Show = false`);
-    the serves whisper stays. This one check replaces a per-chart floor rule and self-handles folder
-    size — a thin folder needs a higher X, so it hides sooner.
-  - `neededGrade ≤ what you already score here` (median, needs 5+ scored charts) → **on pace**;
-    count = `ceil((title − pool) / (median − floor))`.
-  - otherwise → **grade up**, show `neededGrade`.
+- **Count at a grade:** how many charts, at what grade, reach the title. Each chart at grade `per`
+  evicts your weakest pool chart (nets `per − floor`), so `count = ceil((title − pool) / (per − floor))`.
+  Scan grades from **A** (a pass — grinding to a fail means nothing) upward; take the lowest whose
+  `count` fits the folder's chart total. Name a higher grade only when the folder's too small at A.
+  - If even the **whole folder at PG** (`× 1.52`) can't reach the title → **hide the bar**
+    (`Show = false`); the serves whisper stays. Self-handles folder size — a thin folder needs a
+    higher grade, so it hides sooner.
+  - `fitGrade ≤ what you already score here` (median, needs 5+ scored charts) → **on pace**;
+    *"~N more charts"* at your own pace.
+  - otherwise → **grade up**: *"Pass N charts … with {fitGrade} or better."*
 - **serves** = the rung a folder of **AA** clears lands on (`50 × Base(effL) × 1.36`). AA (925k) is
   the realistic average pass — not A (900k). Reference grade is deliberately different from the
   personalized median: "serves" is the folder's objective ladder slot, the caption is yours.

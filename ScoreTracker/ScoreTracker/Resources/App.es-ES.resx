@@ -5880,4 +5880,7 @@
   <data name="Behind your top 50 — serves {0}" xml:space="preserve">
     <value>Por debajo de tu top 50 — sirve para {0}</value>
   </data>
+  <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
+    <value>Pasa {0} charts en este folder con {1} o mejor</value>
+  </data>
 </root>

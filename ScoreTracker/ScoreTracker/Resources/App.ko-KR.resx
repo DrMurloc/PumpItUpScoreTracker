@@ -5883,4 +5883,7 @@
   <data name="Behind your top 50 — serves {0}" xml:space="preserve">
     <value>상위 50위 미만 — {0}용</value>
   </data>
+  <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
+    <value>이 폴더에서 {0}개를 {1} 이상으로</value>
+  </data>
 </root>

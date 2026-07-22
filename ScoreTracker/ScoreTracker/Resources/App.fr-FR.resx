@@ -5996,4 +5996,7 @@
   <data name="Behind your top 50 — serves {0}" xml:space="preserve">
     <value>Sous votre top 50 — vise {0}</value>
   </data>
+  <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
+    <value>Réussis {0} charts dans ce dossier avec {1} ou mieux</value>
+  </data>
 </root>

@@ -5768,11 +5768,9 @@ button.chart-card-art {
     margin: 0 0 14px;
 }
 
+/* No card behind the bar — it sits directly on the page (owner call). */
 .ptt-band {
-    background: color-mix(in srgb, var(--mix-surface) 72%, transparent);
-    border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
-    border-radius: 12px;
-    padding: 13px 16px 12px;
+    padding: 2px 2px 4px;
     display: grid;
     gap: 9px;
 }

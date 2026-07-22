@@ -5873,4 +5873,7 @@
   <data name="Behind your top 50 — serves {0}" xml:space="preserve">
     <value>Abaixo do seu top 50 — serve para {0}</value>
   </data>
+  <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
+    <value>Passe {0} charts nesta pasta com {1} ou melhor</value>
+  </data>
 </root>

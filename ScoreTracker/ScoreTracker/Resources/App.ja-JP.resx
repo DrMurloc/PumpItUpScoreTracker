@@ -6002,4 +6002,7 @@
   <data name="Behind your top 50 — serves {0}" xml:space="preserve">
     <value>トップ50未満 — {0}向け</value>
   </data>
+  <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
+    <value>このフォルダーで{0}譜面を{1}以上で</value>
+  </data>
 </root>

@@ -213,11 +213,8 @@ else
 
         @* Piucenter round 5: the inline desktop strip died — the folder-skills block
            regrew it past the fold, so the Folder Stats drawer is now folder progress's
-           ONE home at every width (the button shows everywhere). The legend stays
-           inline on desktop: it explains the borders on the cards beside it. *@
-        <div class="tier-desktop-only">
-            <BorderLegend></BorderLegend>
-        </div>
+           ONE home at every width (the button shows everywhere). The border legend moved
+           into the content bar (between the lens and density switch). *@
         @* Each drawer brings its own MudLayout container — the layout stopped hosting one. *@
         <MudLayout>
         <MudDrawer @bind-Open="_statsOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="320px">
@@ -286,6 +283,12 @@ else
         }
         <div class="tier-flat tier-desktop-only">
             @lensControls
+        </div>
+        <MudSpacer></MudSpacer>
+        @* The card-outline legend rides the middle of the toolbar, between the lens and the
+           density switch — it explains the borders on the cards below (desktop only). *@
+        <div class="tier-desktop-only">
+            <BorderLegend></BorderLegend>
         </div>
         <MudSpacer></MudSpacer>
         <MudButtonGroup OverrideStyles="false">
@@ -1580,6 +1583,12 @@ else
             .Where(c => c.Level == _level && c.Type == _chartType)
             .ToDictionary(c => c.Id);
         _folderScores = _scores.Where(kv => _charts.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
+
+        // Phoenix 2's folder-title track — recomputed for THIS folder on every change (the full
+        // load runs once, so it can't live there). Null for Phoenix/legacy and signed-out.
+        _titleTrack = CurrentUser.IsLoggedIn
+            ? FolderTitleTrack.Compute(_currentMix, _chartType, _level, _allCharts, _scores)
+            : null;
         // Dominance-ordered skills + segment coverage for the card chips and the
         // table's Skills column; empty until the first piucenter crawl banks metrics.
         _skillChips = await Mediator.Send(new GetChartSkillChipsQuery(_charts.Keys.ToArray()), cancellationToken);
@@ -2007,13 +2016,6 @@ else
         _allCharts = (await chartsTask).ToDictionary(c => c.Id);
         _scoringLevels = await scoringLevelsTask;
         _titleProgress = (await titleProgressTask).ToArray();
-
-        // Phoenix 2's folder-title track: your standing toward the next PUMBILITY title + one
-        // folder-aware line. Null for Phoenix/legacy (they keep the difficulty-title bars) and
-        // for signed-out visitors. Computed from the full-mix scores + catalog just loaded.
-        _titleTrack = CurrentUser.IsLoggedIn
-            ? FolderTitleTrack.Compute(_currentMix, _chartType, _level, _allCharts, _scores)
-            : null;
 
         var settingsString = await userSettingsTask;
         if (!string.IsNullOrWhiteSpace(settingsString))

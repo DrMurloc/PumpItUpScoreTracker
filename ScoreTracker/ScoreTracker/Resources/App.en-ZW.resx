@@ -5928,4 +5928,7 @@
   <data name="Behind your top 50 — serves {0}" xml:space="preserve">
     <value>Mrgl 50 — mrgl {0}</value>
   </data>
+  <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
+    <value>Mrgl {0} mrgl grblgl mrgl {1}</value>
+  </data>
 </root>
