@@ -20,15 +20,18 @@ read; wired from `ChartSkills.razor`.
 - **The glowy bar** — your standing toward your next title, rung-to-rung (floored at the last
   earned rung, not zero). The **target title sits top-right** (bold, "NEXT"); the last-earned title
   is a quiet "from …" on the left. Singles folders read the `[S]` pool, doubles the `[D]` pool.
-- **One caption**, where the Phoenix 1 percentage used to be, in three reads:
+- **One caption**, where the Phoenix 1 percentage used to be, in these reads:
   - **On pace** — your grade here already clears it, so it's just volume: *"~4 more charts in this folder."*
   - **Grade up** — you'd need to score higher: *"Pass 8 charts in this folder with AAA or better"* —
     a count at a **pass (A) floor**, naming a higher grade only when the folder is too small to
     reach the title at A. Never names a fail grade.
-  - **Behind you** — even a perfect folder falls short of the title: the bar disappears; only the
-    "serves" whisper stays.
-- **The serves banner** (▲) — shown only when the folder outranks your target: *"This folder serves
-  Expert Lv.1"*, i.e. you can keep pushing past your current title here.
+  - **Reach** — the folder is *above* your level: a chart here helps, but even the whole folder maxed
+    can't finish your next title on its own. No count line — the serves notifier carries it.
+  - **Behind you** — the folder is *beneath* your top 50 (a maxed chart can't crack it): the bar
+    disappears; only the "serves" whisper stays.
+- **The serves notifier** (▲) — shown when the folder outranks your target (or is a Reach folder):
+  *"This folder serves Expert Lv.1"*, i.e. you can keep pushing past your current title here. It rides
+  the **top-left of the bar** above ~480px and drops to a **banner under the bar** on phones.
 
 ## The model (all from the shipped `Phoenix2PumbilityScoring`)
 
@@ -37,9 +40,13 @@ read; wired from `ChartSkills.razor`.
   evicts your weakest pool chart (nets `per − floor`), so `count = ceil((title − pool) / (per − floor))`.
   Scan grades from **A** (a pass — grinding to a fail means nothing) upward; take the lowest whose
   `count` fits the folder's chart total. Name a higher grade only when the folder's too small at A.
-  - If even the **whole folder at PG** (`× 1.52`) can't reach the title → **hide the bar**
-    (`Show = false`); the serves whisper stays. Self-handles folder size — a thin folder needs a
-    higher grade, so it hides sooner.
+  - **Beneath you is the one true hide:** a single maxed chart (SSS+ on a PG, `× 1.52`) still can't
+    crack your top 50 → **hide the bar** (`Show = false`); the serves whisper stays. This is a folder
+    *below* your level. A small folder *above* your level clears this test and keeps its bar — it must
+    not read as "behind you" just because it's thin (the D28/D29 field-test bug).
+  - No grade's `count` fits the folder (a chart helps, but even the full folder maxed can't finish the
+    title alone) → **reach**: the folder is above your level. Drop the count line; the serves notifier
+    says where it sits.
   - `fitGrade ≤ what you already score here` (median, needs 5+ scored charts) → **on pace**;
     *"~N more charts"* at your own pace.
   - otherwise → **grade up**: *"Pass N charts … with {fitGrade} or better."*
@@ -56,5 +63,7 @@ is why the caption leads on charts/folder, and the "serves" ladder spans the who
 ## Tests
 
 `FolderTitleTrackTests` (ScoreTracker.Tests.Components) covers the null cases (off-Phoenix-2,
-co-op), a live pool's bounded progress, the hide-below-floor rule, serves-above, and the
-identical-contributions guard (median == floor must not divide by zero).
+co-op), a live pool's bounded progress, the hide-below-floor rule, serves-above, grade-up never
+naming below an A pass, a thin folder far above your level staying visible (the D28/D29 fix, not
+the beneath-you whisper), and the identical-contributions guard (median == floor must not divide by
+zero).

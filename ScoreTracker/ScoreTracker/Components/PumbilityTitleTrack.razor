@@ -10,13 +10,23 @@
    accent, not a fixed green. *@
 @if (Result is { Show: true })
 {
+    var serves = Result.ServesTitle is not null && (Result.ServesAbove || Result.Mode == FolderTrackMode.Reach);
     <div class="ptt">
         <div class="ptt-band">
             <div class="ptt-head">
-                <span class="ptt-from">
-                    @if (!string.IsNullOrEmpty(Result.FromTitle))
+                <span class="ptt-lead">
+                    @if (serves)
                     {
-                        @L["from {0}", Strip(Result.FromTitle)]
+                        @* Wide screens: the "serves" notifier rides the top-left of the bar. Below
+                           ~480 it drops to the banner under the bar (same text, CSS toggles which). *@
+                        <span class="ptt-serves-top">
+                            <span class="ptt-serves-ic" aria-hidden="true">▲</span>
+                            <span>@L["This folder serves {0}", Strip(Result.ServesTitle!)]</span>
+                        </span>
+                    }
+                    else if (!string.IsNullOrEmpty(Result.FromTitle))
+                    {
+                        <span class="ptt-from">@L["from {0}", Strip(Result.FromTitle)]</span>
                     }
                 </span>
                 <span class="ptt-target">
@@ -28,22 +38,25 @@
                 <span class="ptt-fill" style="width:@Pct%"></span>
                 <span class="ptt-you" style="left:@Pct%"></span>
             </div>
-            <div class="ptt-cap @(Result.Mode == FolderTrackMode.GradeUp ? "ptt-cap-grade" : "")">
-                @if (Result.Mode == FolderTrackMode.OnPace)
-                {
-                    @L["~{0} more charts in this folder", Result.ChartsLeft]
-                }
-                else
-                {
-                    @L["Pass {0} charts in this folder with {1} or better", Result.ChartsLeft, Result.NeededGrade.GetName()]
-                }
-            </div>
+            @if (Result.Mode != FolderTrackMode.Reach)
+            {
+                <div class="ptt-cap @(Result.Mode == FolderTrackMode.GradeUp ? "ptt-cap-grade" : "")">
+                    @if (Result.Mode == FolderTrackMode.OnPace)
+                    {
+                        @L["~{0} more charts in this folder", Result.ChartsLeft]
+                    }
+                    else
+                    {
+                        @L["Pass {0} charts in this folder with {1} or better", Result.ChartsLeft, Result.NeededGrade.GetName()]
+                    }
+                </div>
+            }
         </div>
-        @if (Result is { ServesAbove: true, ServesTitle: not null })
+        @if (serves)
         {
             <div class="ptt-serves">
                 <span class="ptt-serves-ic" aria-hidden="true">▲</span>
-                <span>@L["This folder serves {0}", Strip(Result.ServesTitle)]</span>
+                <span>@L["This folder serves {0}", Strip(Result.ServesTitle!)]</span>
             </div>
         }
     </div>

@@ -116,6 +116,24 @@ public sealed class FolderTitleTrackTests
     }
 
     [Fact]
+    public void AThinFolderFarAboveYourLevelStaysVisibleAndServesAbove()
+    {
+        // A mid doubles pool, then a sky-high D28 folder with only a couple of charts in it. The old
+        // rule hid it — too few charts to finish the title single-handed — so it read as "behind your
+        // level" (the D28/D29 bug). A folder above you must stay visible and flag that it serves above,
+        // never collapse to the beneath-you whisper.
+        var (charts, scores) = Folder(ChartType.Double, 18, 50, 55, 850_000, PhoenixPlate.FairGame);
+        Folder(ChartType.Double, 28, 0, 2, 0, PhoenixPlate.FairGame, charts, scores);
+
+        var result = FolderTitleTrack.Compute(MixEnum.Phoenix2, ChartType.Double, 28, charts, scores);
+
+        Assert.NotNull(result);
+        Assert.True(result!.Show, "a folder above your level must not hide as 'behind your top 50'");
+        Assert.True(result.ServesAbove);
+        Assert.False(string.IsNullOrEmpty(result.ServesTitle));
+    }
+
+    [Fact]
     public void IdenticalContributionsDoNotDivideByZero()
     {
         // Every chart the same value → median equals the floor; the on-pace count must not run.

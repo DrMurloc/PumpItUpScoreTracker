@@ -12,8 +12,14 @@ public enum FolderTrackMode
     /// <summary>Your grade here already clears it — just play more: "~N more charts in this folder".</summary>
     OnPace,
 
-    /// <summary>You'd need to score higher: "Get this folder to {grade}".</summary>
-    GradeUp
+    /// <summary>You'd need to score higher: "Pass N charts in this folder with {grade} or better".</summary>
+    GradeUp,
+
+    /// <summary>
+    ///     The folder is above your level: a chart here helps, but even the whole folder maxed can't
+    ///     finish your next title on its own. No count caption — the "serves" line carries it.
+    /// </summary>
+    Reach
 }
 
 /// <summary>
@@ -103,26 +109,25 @@ public static class FolderTitleTrack
         var servesName = servesTitle?.Name.ToString();
         var servesAbove = servesTitle != null && servesTitle.CompletionRequired > target.CompletionRequired;
 
-        // The one question, per grade: with the WHOLE folder at grade X, does the pool clear the
-        // title? poolIf holds your non-folder charts fixed and drops the folder in at a flat value.
+        // "Beneath your top 50" is the one true hide: a chart here can't crack your pool even maxed
+        // out (SSS+ on a Perfect Game), so the folder is genuinely below your level. A small folder
+        // ABOVE your level (high base, few charts) clears this test and keeps its bar — it must not
+        // read as "behind you" just because it's too thin to finish a title single-handed.
         var folderCount = allCharts.Values.Count(c => c.Type == folderType && (int)c.Level == (int)folderLevel);
-        double PoolIf(double perChart) =>
-            rest.Concat(Enumerable.Repeat(perChart, folderCount)).OrderByDescending(v => v).Take(50).Sum();
-
-        // Beneath your top 50: even a perfect folder can't reach the title. Bar hides; serves stays.
-        if (PoolIf(effBase * PgCeiling) < target.CompletionRequired)
+        if (effBase * PgCeiling <= floor)
             return new FolderTitleTrackResult(false, from?.Name.ToString() ?? "", target.Name.ToString(),
                 progress, FolderTrackMode.GradeUp, 0, PhoenixLetterGrade.A, servesName, servesAbove);
 
-        // How many charts at what grade. The floor is a PASS (A) — grinding a folder to a fail
-        // means nothing — and we only name a higher grade when the folder is too small to reach
-        // the title at A. Each chart at grade `per` evicts your weakest pool chart, netting
-        // per − floor; count them against the deficit.
+        // How many charts at what grade close the gap to the title. The floor is a PASS (A) —
+        // grinding a folder to a fail means nothing — and we only name a higher grade when the
+        // folder is too small to reach the title at A. Each chart at grade `per` evicts your
+        // weakest pool chart, netting per − floor; count them against the deficit.
         var deficit = target.CompletionRequired - poolValue;
         var passFloor = config.LetterGradeModifiers[PhoenixLetterGrade.A];
         var fitGrade = PhoenixLetterGrade.SSSPlus;
         var fitPerChart = effBase * PgCeiling;
         var fitCount = folderCount;
+        var fits = false;
         foreach (var grade in Enum.GetValues<PhoenixLetterGrade>()
                      .Where(g => config.LetterGradeModifiers[g] >= passFloor)
                      .OrderBy(g => config.LetterGradeModifiers[g]))
@@ -134,8 +139,15 @@ public static class FolderTitleTrack
             fitGrade = grade;
             fitPerChart = perChart;
             fitCount = Math.Max(1, count);
+            fits = true;
             break;
         }
+
+        // A chart here helps, but even the whole folder maxed can't finish the title on its own — a
+        // folder above your level. Drop the count caption; the "serves" line says where it sits.
+        if (!fits)
+            return new FolderTitleTrackResult(true, from?.Name.ToString() ?? "", target.Name.ToString(),
+                progress, FolderTrackMode.Reach, 0, PhoenixLetterGrade.A, servesName, servesAbove);
 
         // On pace when you already score at least that grade here (5+ charts for a stable median):
         // "~N more charts" at your own pace. Otherwise it's "pass N at {grade} or better". A grade

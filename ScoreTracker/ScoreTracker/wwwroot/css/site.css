@@ -5782,12 +5782,38 @@ button.chart-card-art {
     gap: 12px;
 }
 
+/* The bar's top-left slot: the "from …" whisper, or the "serves" notifier on wider screens. */
+.ptt-lead {
+    display: flex;
+    align-items: flex-end;
+    min-width: 0;
+    min-height: 1em;
+}
+
 .ptt-from {
     font-family: var(--font-display);
     font-size: 13px;
     letter-spacing: .02em;
     color: var(--mix-ink-muted);
     min-height: 1em;
+}
+
+/* The compact "serves" notifier riding the top-left of the bar (wide screens only — see the
+   breakpoint by .ptt-serves). Mirrors the banner's accent tint at chip scale. */
+.ptt-serves-top {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    padding: 3px 9px;
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: .02em;
+    white-space: nowrap;
+    color: var(--mix-ink);
+    border: 1px solid color-mix(in srgb, var(--mix-accent) 38%, transparent);
+    background: color-mix(in srgb, var(--mix-accent) 12%, transparent);
 }
 
 .ptt-target {
@@ -5860,7 +5886,8 @@ button.chart-card-art {
     color: var(--mix-ink);
 }
 
-/* Shown only when the folder outranks your target — you can push past your current title here. */
+/* The folder sits above your current title — you can push past it here. This is the phone
+   placement (a banner under the bar); above ~480 it moves up to the top-left .ptt-serves-top chip. */
 .ptt-serves {
     display: flex;
     align-items: center;
@@ -5871,6 +5898,11 @@ button.chart-card-art {
     border: 1px solid color-mix(in srgb, var(--mix-accent) 40%, transparent);
     background: color-mix(in srgb, var(--mix-accent) 12%, transparent);
     color: var(--mix-ink);
+}
+
+@media (min-width: 481px) {
+    .ptt-serves-top { display: inline-flex; }
+    .ptt-serves { display: none; }
 }
 
 .ptt-serves-ic {
