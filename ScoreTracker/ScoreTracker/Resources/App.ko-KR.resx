@@ -5865,4 +5865,22 @@
   <data name="Reload the page" xml:space="preserve">
     <value>페이지 새로 고침</value>
   </data>
+  <data name="from {0}" xml:space="preserve">
+    <value>{0}에서</value>
+  </data>
+  <data name="Next title" xml:space="preserve">
+    <value>다음 칭호</value>
+  </data>
+  <data name="~{0} more charts in this folder" xml:space="preserve">
+    <value>이 폴더에서 약 {0}개 더</value>
+  </data>
+  <data name="Get this folder to {0}" xml:space="preserve">
+    <value>이 폴더를 {0}(으)로</value>
+  </data>
+  <data name="This folder serves {0}" xml:space="preserve">
+    <value>이 폴더는 {0}용</value>
+  </data>
+  <data name="Behind your top 50 — serves {0}" xml:space="preserve">
+    <value>상위 50위 미만 — {0}용</value>
+  </data>
 </root>

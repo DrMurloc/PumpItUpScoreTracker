@@ -5862,4 +5862,22 @@
   <data name="Reload the page" xml:space="preserve">
     <value>Recargar la página</value>
   </data>
+  <data name="from {0}" xml:space="preserve">
+    <value>desde {0}</value>
+  </data>
+  <data name="Next title" xml:space="preserve">
+    <value>Siguiente título</value>
+  </data>
+  <data name="~{0} more charts in this folder" xml:space="preserve">
+    <value>~{0} charts más en este folder</value>
+  </data>
+  <data name="Get this folder to {0}" xml:space="preserve">
+    <value>Sube este folder a {0}</value>
+  </data>
+  <data name="This folder serves {0}" xml:space="preserve">
+    <value>Este folder sirve para {0}</value>
+  </data>
+  <data name="Behind your top 50 — serves {0}" xml:space="preserve">
+    <value>Por debajo de tu top 50 — sirve para {0}</value>
+  </data>
 </root>

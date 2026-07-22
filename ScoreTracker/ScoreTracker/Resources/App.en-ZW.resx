@@ -5910,4 +5910,22 @@
   <data name="Reload the page" xml:space="preserve">
     <value>Mrgl!</value>
   </data>
+  <data name="from {0}" xml:space="preserve">
+    <value>mrgl {0}</value>
+  </data>
+  <data name="Next title" xml:space="preserve">
+    <value>Mrglmrgl</value>
+  </data>
+  <data name="~{0} more charts in this folder" xml:space="preserve">
+    <value>~{0} mrgl grblgl mrgl</value>
+  </data>
+  <data name="Get this folder to {0}" xml:space="preserve">
+    <value>Mrgl mrgl {0}</value>
+  </data>
+  <data name="This folder serves {0}" xml:space="preserve">
+    <value>Mrgl mrgl {0}</value>
+  </data>
+  <data name="Behind your top 50 — serves {0}" xml:space="preserve">
+    <value>Mrgl 50 — mrgl {0}</value>
+  </data>
 </root>

@@ -230,7 +230,9 @@ else
                 </div>
                 @folderStatsCore
                 <BorderLegend></BorderLegend>
-                @if (!IsLegacy)
+                @* Phoenix's difficulty-title bars. Phoenix 2 replaces these with the PUMBILITY
+                   title track above the tier sections, so they're skipped there. *@
+                @if (!IsLegacy && _currentMix != MixEnum.Phoenix2)
                 {
                     <MudText Typo="Typo.overline">@L["Folder Levels"]</MudText>
                     <MudGrid>
@@ -264,6 +266,13 @@ else
         @* Skill sections sort weakest-first — the radar charts' information, placed
            where it's actionable (round 4). Attribution per the round-3 agreement. *@
         <MudText Typo="Typo.caption" Class="tier-attribution">@L["Skill data: PIU Center — maintained by aesthete"]</MudText>
+    }
+    @* Phoenix 2 folder-title track: the glowy bar toward your next PUMBILITY title + one
+       folder-aware line, above the fold, above the tier sections (not in Folder Stats). Phoenix
+       and legacy keep the difficulty-title bars in the drawer. *@
+    @if (_titleTrack != null)
+    {
+        <PumbilityTitleTrack Result="_titleTrack"></PumbilityTitleTrack>
     }
     @* 2 — content bar: how the list PRESENTS (lens ordering, grouping, density,
        Download, Filters). Sits with the list it affects, not in the sticky toolbar. *@
@@ -987,6 +996,7 @@ else
     private sealed record TierGroup(string Key, string Name, string Color, string ShareHex, IReadOnlyList<SongTierListEntry> Entries);
 
     private IEnumerable<TitleProgress> _titleProgress = Array.Empty<TitleProgress>();
+    private FolderTitleTrackResult? _titleTrack;
     private IEnumerable<Guid> _unpassedTodos => _finalEntries.Select(e => e.ChartId).Where(chartId => _scores.ContainsKey(chartId) && _scores[chartId].IsBroken && _todos.Contains(chartId));
     private IDictionary<Guid, TierListCategory> _chartDifficulties = new Dictionary<Guid, TierListCategory>();
     private Name[] _availableStepArtists = Array.Empty<Name>();
@@ -1997,6 +2007,13 @@ else
         _allCharts = (await chartsTask).ToDictionary(c => c.Id);
         _scoringLevels = await scoringLevelsTask;
         _titleProgress = (await titleProgressTask).ToArray();
+
+        // Phoenix 2's folder-title track: your standing toward the next PUMBILITY title + one
+        // folder-aware line. Null for Phoenix/legacy (they keep the difficulty-title bars) and
+        // for signed-out visitors. Computed from the full-mix scores + catalog just loaded.
+        _titleTrack = CurrentUser.IsLoggedIn
+            ? FolderTitleTrack.Compute(_currentMix, _chartType, _level, _allCharts, _scores)
+            : null;
 
         var settingsString = await userSettingsTask;
         if (!string.IsNullOrWhiteSpace(settingsString))

@@ -5984,4 +5984,22 @@
   <data name="Reload the page" xml:space="preserve">
     <value>Ricarica la pagina</value>
   </data>
+  <data name="from {0}" xml:space="preserve">
+    <value>da {0}</value>
+  </data>
+  <data name="Next title" xml:space="preserve">
+    <value>Prossimo titolo</value>
+  </data>
+  <data name="~{0} more charts in this folder" xml:space="preserve">
+    <value>~{0} chart in più in questa cartella</value>
+  </data>
+  <data name="Get this folder to {0}" xml:space="preserve">
+    <value>Porta questa cartella a {0}</value>
+  </data>
+  <data name="This folder serves {0}" xml:space="preserve">
+    <value>Questa cartella porta a {0}</value>
+  </data>
+  <data name="Behind your top 50 — serves {0}" xml:space="preserve">
+    <value>Sotto la tua top 50 — porta a {0}</value>
+  </data>
 </root>
