@@ -629,13 +629,41 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task UnremarkablePassesFillTheMoreScoresBucketThenOverflow()
+    public async Task AnUnflaggedBatchPromotesItsTopScoresToJacketRows()
     {
-        // Owner call: non-highlighted scores now show — up to 10 compact one-liners in the
-        // "More scores" bucket (no art), the rest compress into "+N more", and the folder
-        // progress + header totals still summarize.
+        // Owner call: with nothing flagged, a batch of 5+ scores still leads with jackets — the
+        // top scores (level desc) are promoted to art rows so the card is never a bare text list.
+        // Fewer than an art row's worth stays compact (covered by the reclear tests).
         var userId = Guid.NewGuid();
-        var charts = Enumerable.Range(10, 12)
+        var charts = Enumerable.Range(15, 6) // S15..S20
+            .Select(level => new ChartBuilder().WithType(ChartType.Single).WithLevel(level).Build())
+            .ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, charts, score: 950000);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
+            charts.Select(c => (c.Id, true, HighlightFlags.None)).ToArray())));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs =>
+                // The top five levels (S20..S16) become jacketed art rows; the sixth (S15) does not.
+                msgs.Single().Blocks.OfType<RichBotSection>().Count() == 5
+                && msgs.Single().Blocks.OfType<RichBotSection>().All(s => s.Thumbnail != null)
+                && msgs.Single().Blocks.OfType<RichBotSection>().Any(s => s.Markdown.Contains("#DIFFICULTY|S20#"))
+                && msgs.Single().Blocks.OfType<RichBotSection>().All(s => !s.Markdown.Contains("#DIFFICULTY|S15#"))),
+            It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task PromotedArtRowsLeadThenMoreScoresBucketThenOverflow()
+    {
+        // The promoted top 5 lead with art; the next 10 fill the compact "More scores" bucket, the
+        // rest compress into "+N more", and the folder progress + header totals still summarize.
+        var userId = Guid.NewGuid();
+        var charts = Enumerable.Range(10, 17) // S10..S26
             .Select(level => new ChartBuilder().WithType(ChartType.Single).WithLevel(level).Build())
             .ToArray();
         var ctx = new HandlerContext();
@@ -648,11 +676,10 @@ public sealed class CommunitySagaTests
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Count() == 1
-                && msgs.Single().Header!.Markdown.Contains("passed 12")
-                && !msgs.Single().Blocks.OfType<RichBotSection>().Any()
+                && msgs.Single().Header!.Markdown.Contains("passed 17")
+                && msgs.Single().Blocks.OfType<RichBotSection>().Count() == 5
                 && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("-# More scores"))
-                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("+2 more"))
-                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("#DIFFICULTY|S21# 1/1"))),
+                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("+2 more"))),
             It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
