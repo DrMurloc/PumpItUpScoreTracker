@@ -17,7 +17,8 @@ public enum FolderTrackMode
 
     /// <summary>
     ///     The folder is above your level: a chart here helps, but even the whole folder maxed can't
-    ///     finish your next title on its own. No count caption — the "serves" line carries it.
+    ///     finish your next title on its own. Names the count at the cheapest contributing grade plus
+    ///     the folder's real size — "Pass N charts at A or better (only M exist in this folder)".
     /// </summary>
     Reach
 }
@@ -37,7 +38,8 @@ public sealed record FolderTitleTrackResult(
     int ChartsLeft,
     PhoenixLetterGrade NeededGrade,
     string? ServesTitle,
-    bool ServesAbove);
+    bool ServesAbove,
+    int FolderChartCount);
 
 /// <summary>
 ///     Pure per-folder title read for Phoenix 2 (no I/O — unit-tested in ScoreTracker.Tests). Turns
@@ -61,6 +63,9 @@ public static class FolderTitleTrack
         // Phoenix 2 PUMBILITY titles only, and only the two pooled types — co-op never counts.
         if (mix != MixEnum.Phoenix2) return null;
         if (folderType is not (ChartType.Single or ChartType.Double)) return null;
+        // Charts below level 10 price at zero in Phoenix 2 (ScoringConfiguration line 167), so a
+        // sub-10 folder contributes nothing to the pool — there's no title progress to show.
+        if ((int)folderLevel < 10) return null;
 
         var pool = folderType == ChartType.Single ? PumbilityPool.Singles : PumbilityPool.Doubles;
         var ladder = Phoenix2TitleList.BuildList().OfType<Phoenix2PumbilityTitle>()
@@ -116,38 +121,50 @@ public static class FolderTitleTrack
         var folderCount = allCharts.Values.Count(c => c.Type == folderType && (int)c.Level == (int)folderLevel);
         if (effBase * PgCeiling <= floor)
             return new FolderTitleTrackResult(false, from?.Name.ToString() ?? "", target.Name.ToString(),
-                progress, FolderTrackMode.GradeUp, 0, PhoenixLetterGrade.A, servesName, servesAbove);
+                progress, FolderTrackMode.GradeUp, 0, PhoenixLetterGrade.A, servesName, servesAbove, folderCount);
 
-        // How many charts at what grade close the gap to the title. The floor is a PASS (A) —
-        // grinding a folder to a fail means nothing — and we only name a higher grade when the
-        // folder is too small to reach the title at A. Each chart at grade `per` evicts your
-        // weakest pool chart, netting per − floor; count them against the deficit.
+        // How many charts at what grade close the gap to the title. Take the grades that both clear a
+        // pass (A — grinding to a fail means nothing) and actually beat your floor, cheapest first.
+        // Each chart at grade `per` evicts your weakest pool chart, netting per − floor.
         var deficit = target.CompletionRequired - poolValue;
         var passFloor = config.LetterGradeModifiers[PhoenixLetterGrade.A];
-        var fitGrade = PhoenixLetterGrade.SSSPlus;
-        var fitPerChart = effBase * PgCeiling;
-        var fitCount = folderCount;
+        var contributing = Enum.GetValues<PhoenixLetterGrade>()
+            .Where(g => config.LetterGradeModifiers[g] >= passFloor)
+            .OrderBy(g => config.LetterGradeModifiers[g])
+            .Select(g => (grade: g, per: effBase * config.LetterGradeModifiers[g]))
+            .Where(x => x.per > floor)
+            .ToArray();
+
+        // The cheapest grade that still beats your floor is the baseline "or better" ask. If even
+        // SSS+ on grade alone can't beat it, only a Perfect Game plate can — fall to SSS+ on the ceiling.
+        var (baseGrade, basePer) = contributing.Length > 0
+            ? contributing[0]
+            : (PhoenixLetterGrade.SSSPlus, effBase * PgCeiling);
+        var baseCount = Math.Max(1, (int)Math.Ceiling(deficit / (basePer - floor)));
+
+        // The first grade whose full-folder count fits the folder is the achievable ask — we only
+        // name a higher grade when a lower one would need more charts than the folder holds.
+        var fitGrade = baseGrade;
+        var fitPerChart = basePer;
+        var fitCount = baseCount;
         var fits = false;
-        foreach (var grade in Enum.GetValues<PhoenixLetterGrade>()
-                     .Where(g => config.LetterGradeModifiers[g] >= passFloor)
-                     .OrderBy(g => config.LetterGradeModifiers[g]))
+        foreach (var (grade, per) in contributing)
         {
-            var perChart = effBase * config.LetterGradeModifiers[grade];
-            if (perChart <= floor) continue;
-            var count = (int)Math.Ceiling(deficit / (perChart - floor));
+            var count = (int)Math.Ceiling(deficit / (per - floor));
             if (count > folderCount) continue;
             fitGrade = grade;
-            fitPerChart = perChart;
+            fitPerChart = per;
             fitCount = Math.Max(1, count);
             fits = true;
             break;
         }
 
         // A chart here helps, but even the whole folder maxed can't finish the title on its own — a
-        // folder above your level. Drop the count caption; the "serves" line says where it sits.
+        // folder above your level. Name the count at the cheapest contributing grade and the folder's
+        // real size, so "only N exist" carries why this folder alone can't get you there.
         if (!fits)
             return new FolderTitleTrackResult(true, from?.Name.ToString() ?? "", target.Name.ToString(),
-                progress, FolderTrackMode.Reach, 0, PhoenixLetterGrade.A, servesName, servesAbove);
+                progress, FolderTrackMode.Reach, baseCount, baseGrade, servesName, servesAbove, folderCount);
 
         // On pace when you already score at least that grade here (5+ charts for a stable median):
         // "~N more charts" at your own pace. Otherwise it's "pass N at {grade} or better". A grade
@@ -157,11 +174,11 @@ public static class FolderTitleTrack
         {
             var onPace = (int)Math.Ceiling(deficit / (m - floor));
             return new FolderTitleTrackResult(true, from?.Name.ToString() ?? "", target.Name.ToString(),
-                progress, FolderTrackMode.OnPace, Math.Max(1, onPace), fitGrade, servesName, servesAbove);
+                progress, FolderTrackMode.OnPace, Math.Max(1, onPace), fitGrade, servesName, servesAbove, folderCount);
         }
 
         return new FolderTitleTrackResult(true, from?.Name.ToString() ?? "", target.Name.ToString(),
-            progress, FolderTrackMode.GradeUp, fitCount, fitGrade, servesName, servesAbove);
+            progress, FolderTrackMode.GradeUp, fitCount, fitGrade, servesName, servesAbove, folderCount);
     }
 
     private static double Median(List<double> values)

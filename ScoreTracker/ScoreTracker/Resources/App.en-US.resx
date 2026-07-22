@@ -5999,4 +5999,7 @@
   <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
     <value>Pass {0} charts in this folder with {1} or better</value>
   </data>
+  <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
+    <value>Pass {0} charts at {1} or better (only {2} exist in this folder)</value>
+  </data>
 </root>

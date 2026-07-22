@@ -6005,4 +6005,7 @@
   <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
     <value>このフォルダーで{0}譜面を{1}以上で</value>
   </data>
+  <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
+    <value>{0}譜面を{1}以上で（このフォルダーには{2}譜面のみ）</value>
+  </data>
 </root>

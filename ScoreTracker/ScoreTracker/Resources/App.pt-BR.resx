@@ -5876,4 +5876,7 @@
   <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
     <value>Passe {0} charts nesta pasta com {1} ou melhor</value>
   </data>
+  <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
+    <value>Passe {0} charts com {1} ou melhor (só {2} nesta pasta)</value>
+  </data>
 </root>

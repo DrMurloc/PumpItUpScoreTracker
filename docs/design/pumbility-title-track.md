@@ -11,9 +11,10 @@ Mocked and iterated with the owner (six passes) before build; the mock's final s
 
 On the page, directly under the folder controls and **above the tier sections** — deliberately
 **not** in the Folder Stats drawer (the fold belongs to the tier list, but this one strip earns its
-place). Signed-in + Phoenix 2 only; Phoenix/legacy keep the difficulty-title bars in the drawer.
-`PumbilityTitleTrack.razor` renders it; `FolderTitleTrack.Compute` (pure, in `Web/Services`) is the
-read; wired from `ChartSkills.razor`.
+place). Signed-in + Phoenix 2 only; Phoenix/legacy keep the difficulty-title bars in the drawer. Not
+shown for folders below level 10 — Phoenix 2 prices sub-10 charts at zero, so those folders have no
+pool contribution and no title to chase. `PumbilityTitleTrack.razor` renders it;
+`FolderTitleTrack.Compute` (pure, in `Web/Services`) is the read; wired from `ChartSkills.razor`.
 
 ## The element
 
@@ -26,7 +27,9 @@ read; wired from `ChartSkills.razor`.
     a count at a **pass (A) floor**, naming a higher grade only when the folder is too small to
     reach the title at A. Never names a fail grade.
   - **Reach** — the folder is *above* your level: a chart here helps, but even the whole folder maxed
-    can't finish your next title on its own. No count line — the serves notifier carries it.
+    can't finish your next title on its own: *"Pass 6 charts at A or better (only 2 exist in this
+    folder)"* — the count at the cheapest contributing grade, and the folder's real size so *"only N
+    exist"* says why this folder alone can't get you there.
   - **Behind you** — the folder is *beneath* your top 50 (a maxed chart can't crack it): the bar
     disappears; only the "serves" whisper stays.
 - **The serves notifier** (▲) — shown when the folder outranks your target (or is a Reach folder):
@@ -45,8 +48,8 @@ read; wired from `ChartSkills.razor`.
     *below* your level. A small folder *above* your level clears this test and keeps its bar — it must
     not read as "behind you" just because it's thin (the D28/D29 field-test bug).
   - No grade's `count` fits the folder (a chart helps, but even the full folder maxed can't finish the
-    title alone) → **reach**: the folder is above your level. Drop the count line; the serves notifier
-    says where it sits.
+    title alone) → **reach**: the folder is above your level. Report `count` at the cheapest grade that
+    still beats your floor, alongside the folder's real size — *"(only N exist)"*.
   - `fitGrade ≤ what you already score here` (median, needs 5+ scored charts) → **on pace**;
     *"~N more charts"* at your own pace.
   - otherwise → **grade up**: *"Pass N charts … with {fitGrade} or better."*
@@ -63,7 +66,7 @@ is why the caption leads on charts/folder, and the "serves" ladder spans the who
 ## Tests
 
 `FolderTitleTrackTests` (ScoreTracker.Tests.Components) covers the null cases (off-Phoenix-2,
-co-op), a live pool's bounded progress, the hide-below-floor rule, serves-above, grade-up never
-naming below an A pass, a thin folder far above your level staying visible (the D28/D29 fix, not
-the beneath-you whisper), and the identical-contributions guard (median == floor must not divide by
-zero).
+co-op, below level 10), a live pool's bounded progress, the hide-below-floor rule, serves-above,
+grade-up never naming below an A pass, a thin folder far above your level staying visible as a Reach
+(the D28/D29 fix, not the beneath-you whisper), and the identical-contributions guard (median ==
+floor must not divide by zero).

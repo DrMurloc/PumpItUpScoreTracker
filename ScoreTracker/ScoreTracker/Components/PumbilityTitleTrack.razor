@@ -38,19 +38,21 @@
                 <span class="ptt-fill" style="width:@Pct%"></span>
                 <span class="ptt-you" style="left:@Pct%"></span>
             </div>
-            @if (Result.Mode != FolderTrackMode.Reach)
-            {
-                <div class="ptt-cap @(Result.Mode == FolderTrackMode.GradeUp ? "ptt-cap-grade" : "")">
-                    @if (Result.Mode == FolderTrackMode.OnPace)
-                    {
-                        @L["~{0} more charts in this folder", Result.ChartsLeft]
-                    }
-                    else
-                    {
-                        @L["Pass {0} charts in this folder with {1} or better", Result.ChartsLeft, Result.NeededGrade.GetName()]
-                    }
-                </div>
-            }
+            <div class="ptt-cap @(Result.Mode == FolderTrackMode.OnPace ? "" : "ptt-cap-grade")">
+                @if (Result.Mode == FolderTrackMode.OnPace)
+                {
+                    @L["~{0} more charts in this folder", Result.ChartsLeft]
+                }
+                else if (Result.Mode == FolderTrackMode.Reach)
+                {
+                    @* Above your level and too thin to finish the title alone — "(only N exist)" says why. *@
+                    @L["Pass {0} charts at {1} or better (only {2} exist in this folder)", Result.ChartsLeft, Result.NeededGrade.GetName(), Result.FolderChartCount]
+                }
+                else
+                {
+                    @L["Pass {0} charts in this folder with {1} or better", Result.ChartsLeft, Result.NeededGrade.GetName()]
+                }
+            </div>
         </div>
         @if (serves)
         {

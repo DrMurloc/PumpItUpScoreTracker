@@ -5931,4 +5931,7 @@
   <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
     <value>Mrgl {0} mrgl grblgl mrgl {1}</value>
   </data>
+  <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
+    <value>Mrgl {0} mrgl {1} grblgl (mrgl {2} rgllgl mrgl)</value>
+  </data>
 </root>
