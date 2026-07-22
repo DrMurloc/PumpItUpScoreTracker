@@ -629,13 +629,13 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task AnUnflaggedBatchPromotesItsTopScoresToJacketRows()
+    public async Task AHandfulOfUnflaggedScoresAllBecomeArtRows()
     {
-        // Owner call: with nothing flagged, a batch of 5+ scores still leads with jackets — the
-        // top scores (level desc) are promoted to art rows so the card is never a bare text list.
-        // Fewer than an art row's worth stays compact (covered by the reclear tests).
+        // Owner call: with nothing flagged, every score becomes a jacket art row (up to the cap) —
+        // three passes make three art rows that ARE the whole highlights section, nothing spilling
+        // to a compact bucket. The card is never a bare text list.
         var userId = Guid.NewGuid();
-        var charts = Enumerable.Range(15, 6) // S15..S20
+        var charts = new[] { 18, 19, 20 }
             .Select(level => new ChartBuilder().WithType(ChartType.Single).WithLevel(level).Build())
             .ToArray();
         var ctx = new HandlerContext();
@@ -648,11 +648,9 @@ public sealed class CommunitySagaTests
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs =>
-                // The top five levels (S20..S16) become jacketed art rows; the sixth (S15) does not.
-                msgs.Single().Blocks.OfType<RichBotSection>().Count() == 5
+                msgs.Single().Blocks.OfType<RichBotSection>().Count() == 3
                 && msgs.Single().Blocks.OfType<RichBotSection>().All(s => s.Thumbnail != null)
-                && msgs.Single().Blocks.OfType<RichBotSection>().Any(s => s.Markdown.Contains("#DIFFICULTY|S20#"))
-                && msgs.Single().Blocks.OfType<RichBotSection>().All(s => !s.Markdown.Contains("#DIFFICULTY|S15#"))),
+                && !msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("-# More scores"))),
             It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -1112,21 +1110,25 @@ public sealed class CommunitySagaTests
     {
         // A new pass on a chart the player already cleared in another mix is a reclear: its
         // compact row gets a trailing asterisk and the footer explains it. A genuine
-        // first-clear in the same batch stays unmarked.
+        // first-clear in the same batch stays unmarked. Higher unflagged charts take the promoted
+        // art rows, so the two reclear candidates render in the compact "More scores" bucket.
         var userId = Guid.NewGuid();
         var reclaimed = new ChartBuilder().WithSongName("Reclaimed").WithType(ChartType.Single).WithLevel(18)
             .WithMix(MixEnum.Phoenix2).Build();
         var fresh = new ChartBuilder().WithSongName("Fresh").WithType(ChartType.Single).WithLevel(17)
             .WithMix(MixEnum.Phoenix2).Build();
+        var higher = Enumerable.Range(19, 5)
+            .Select(l => new ChartBuilder().WithSongName($"Higher{l}").WithType(ChartType.Single).WithLevel(l)
+                .WithMix(MixEnum.Phoenix2).Build()).ToArray();
+        var all = new[] { reclaimed, fresh }.Concat(higher).ToArray();
         var ctx = new HandlerContext();
         ctx.GivenUser(userId, name: "alice");
         ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
-        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, new[] { reclaimed, fresh }, score: 960000);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, all, score: 960000);
         ctx.GivenCrossMixPasses(MixEnum.Phoenix, userId, reclaimed);
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, null,
-            (reclaimed.Id, true, HighlightFlags.None),
-            (fresh.Id, true, HighlightFlags.None))));
+            all.Select(c => (c.Id, true, HighlightFlags.None)).ToArray())));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
@@ -1168,13 +1170,18 @@ public sealed class CommunitySagaTests
     {
         // "Any other mix" includes legacy XX: a non-broken XX clear of the same chart marks the
         // new Phoenix 2 pass as a reclear, matching the tier list's cross-mix pass semantics.
+        // Higher unflagged charts take the promoted art rows, so the reclear renders compact.
         var userId = Guid.NewGuid();
         var chart = new ChartBuilder().WithSongName("Throwback").WithType(ChartType.Single).WithLevel(18)
             .WithMix(MixEnum.Phoenix2).Build();
+        var higher = Enumerable.Range(19, 5)
+            .Select(l => new ChartBuilder().WithSongName($"Higher{l}").WithType(ChartType.Single).WithLevel(l)
+                .WithMix(MixEnum.Phoenix2).Build()).ToArray();
+        var all = new[] { chart }.Concat(higher).ToArray();
         var ctx = new HandlerContext();
         ctx.GivenUser(userId, name: "alice");
         ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
-        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 960000);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, all, score: 960000);
         ctx.Scores.Setup(s => s.GetBestXXAttempts(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
@@ -1182,7 +1189,7 @@ public sealed class CommunitySagaTests
             });
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, null,
-            (chart.Id, true, HighlightFlags.None))));
+            all.Select(c => (c.Id, true, HighlightFlags.None)).ToArray())));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Footer!.Contains("\\* = reclears")

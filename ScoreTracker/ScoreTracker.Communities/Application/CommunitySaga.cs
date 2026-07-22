@@ -205,13 +205,12 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             .ThenByDescending(c => (int)(bests[c.ChartId].Score ?? 0))
             .ToArray();
         var notable = standard.Where(Notable).Take(NotableRowCap).ToArray();
-        // When nothing was flagged, a batch of at least an art row's worth of scores would still show
-        // no art at all — just a compact list. Promote the session's top scores (owner call) so it
-        // leads with a full set of jacket rows: the art cap, in the noteworthy order (level, then
-        // scoring level, then score), the promoted rows just carrying no caption ("Passed"/the upscore
-        // delta, no why-line). A card that earned any real highlight keeps its curated set, and a
-        // handful of scores (under the cap) stays compact as before.
-        if (notable.Length == 0 && standard.Length >= ArtRowCap)
+        // When nothing was flagged the card would have no art at all — just a compact list. Promote
+        // the session's top scores (owner call) so it leads with jacket rows: up to the art cap, in
+        // the noteworthy order (level, then scoring level, then score), the promoted rows just carrying
+        // no caption ("Passed"/the upscore delta, no why-line). Three scores become three art rows —
+        // they ARE the highlights section. A card that earned any real highlight keeps its curated set.
+        if (notable.Length == 0)
             notable = standard.Take(ArtRowCap).ToArray();
         var notableIds = notable.Select(c => c.ChartId).ToHashSet();
         // Re-sort the remainder purely by level (owner call): when notable overflows its cap
