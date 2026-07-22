@@ -5270,7 +5270,11 @@ button.chart-card-art {
 .challenge-grid {
     display: grid;
     gap: 14px;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    /* Cap the comfortable grid at 6 columns: a wide monitor otherwise fits a 7th, and the
+       weekly board's chart count divides cleanly by 6, so the 7th just orphans the last row.
+       Each track is at least 280px but never narrower than a sixth of the row, so at most six
+       ever fill the width — fewer when the row can't hold six at 280px. */
+    grid-template-columns: repeat(auto-fill, minmax(max(280px, (100% - 5 * 14px) / 6), 1fr));
 }
 
 .challenge-grid.suggested-only .challenge-card[data-suggested="false"] {
