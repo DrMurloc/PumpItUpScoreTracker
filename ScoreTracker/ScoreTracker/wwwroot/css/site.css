@@ -6378,8 +6378,9 @@ button.chart-card-art {
     gap: 2px;
 }
 
-/* Two figures that are one column's worth of width on a phone: full-width they are
-   ordinary grid items, narrow they stack into a single cell. */
+/* Competitive level and PUMBILITY are two ordinary grid columns, never stacked (owner
+   call) — the wrapper is display:contents so its two children sit in the template's cells
+   directly, at every width. */
 .olb-stack { display: contents; }
 
 /* A label that has a short form: the long one until the row runs out of width. */
@@ -6484,31 +6485,13 @@ button.chart-card-art {
     border-radius: 6px;
 }
 
-/* A board sheds width in three steps, each one giving up the least it can: at 760
-   the row identifier pins while the rest side-scrolls, optional columns and song
-   titles step aside, and paired values stack instead of sitting side by side; at
-   640 the second-tier figures drop out entirely; at 500 the row is a width budget,
-   so padding tightens and labels fall back to their short forms. */
+/* A board sheds width one column at a time: at 760 the sortable-table variant pins its
+   row identifier while the rest side-scrolls and song titles step aside; the community
+   grid then drops its play count at 600 and its playstyle chip at 500 (see those blocks
+   below); at 500 the compact card rows tighten padding and long labels fall back to their
+   short forms. Figures never stack — every value keeps its own column. */
 @media (max-width: 760px) {
     .olb-hide-mobile { display: none !important; }
-
-    /* The optional columns are display:none by now, so the template loses them too. */
-    .olb-grid-row, .olb-grid-head {
-        grid-template-columns: var(--olb-grid-cols-narrow, var(--olb-grid-cols));
-        gap: 6px;
-        padding: 3px 4px;
-    }
-
-    /* Below here the columns size to their content, so the header sets in a size that
-       does not widen a column past the figure it names. */
-    .olb-grid-head { font-size: 10px; letter-spacing: .2px; }
-
-    .olb-stack {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        line-height: 1.2;
-    }
 
     .olb-song-text { display: none; }
 
@@ -6534,15 +6517,29 @@ button.chart-card-art {
     .olb-pager-tight .mud-table-pagination-caption { font-size: 11px; margin: 0 4px; }
 }
 
-@media (max-width: 640px) {
-    .olb-hide-narrow { display: none !important; }
-
+/* The community grid sheds whole columns, never stacking its figures: at 600 the play
+   count drops, at 500 the playstyle chip drops (no initials fallback — owner call). The
+   header, built from the same template, loses the same columns at the same widths. */
+@media (max-width: 600px) {
     .olb-grid-row, .olb-grid-head {
-        grid-template-columns: var(--olb-grid-cols-phone, var(--olb-grid-cols-narrow, var(--olb-grid-cols)));
+        grid-template-columns: var(--olb-grid-cols-600, var(--olb-grid-cols));
+        gap: 6px;
+        padding: 3px 4px;
     }
+
+    /* Columns size to their content now, so the header sets smaller to not out-widen a figure. */
+    .olb-grid-head { font-size: 10px; letter-spacing: .2px; }
+
+    .olb-hide-narrow { display: none !important; }
 }
 
 @media (max-width: 500px) {
+    .olb-grid-row, .olb-grid-head {
+        grid-template-columns: var(--olb-grid-cols-500, var(--olb-grid-cols-600, var(--olb-grid-cols)));
+    }
+
+    .olb-hide-phone { display: none !important; }
+
     .olb-long-form { display: none; }
 
     .olb-short-form { display: inline; }

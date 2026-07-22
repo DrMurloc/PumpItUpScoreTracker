@@ -58,13 +58,13 @@
         var pageCount = PageCount;
         var page = Math.Min(_page, pageCount);
     }
-    @* Player pinned left, figures spread evenly across what's left — a right-aligned
-       tail piles five values into one corner. One grid template drives every row, so
-       the columns line up down the board, and the row sheds a column at a time as it
-       narrows: 760 stacks competitive level over PUMBILITY, 640 drops the play count,
-       500 shortens the chip. Values carry their label as a tooltip. *@
+    @* Player pinned left, each figure its own column across what's left. Competitive level
+       and PUMBILITY never stack (owner call) — they stay side by side at every width. One
+       grid template drives every row, so the columns line up down the board, and the row
+       sheds a whole column at a time as it narrows: 600 drops the play count, 500 drops the
+       playstyle chip entirely (no initials). Values carry their label as a tooltip. *@
     <div class="olb-rank-cards"
-         style="--olb-grid-cols:34px minmax(150px,1.6fr) 1fr 1fr 1fr 1fr 40px;--olb-grid-cols-narrow:28px minmax(110px,1fr) auto auto auto 34px;--olb-grid-cols-phone:26px minmax(96px,1fr) auto auto 32px">
+         style="--olb-grid-cols:34px minmax(150px,1.6fr) 1fr 1fr 1fr 1fr 40px;--olb-grid-cols-600:34px minmax(140px,1.6fr) 1fr 1fr 1fr 40px;--olb-grid-cols-500:30px minmax(96px,1fr) 1fr 1fr 34px">
         @* The figures only read as columns if something names them. The header is the row
            template with labels in it, so it sheds the same columns at the same widths. Labels
            stay short — below 760 the columns size to their content, and a spelled-out heading
@@ -74,7 +74,7 @@
             <div class="olb-grid-head">
                 <span>#</span>
                 <span>@L["Player"]</span>
-                <span>@L["Playstyle"]</span>
+                <span class="olb-hide-phone">@L["Playstyle"]</span>
                 <span class="olb-hide-narrow olb-grid-num" title="@L["Charts Played"]">@L["Charts"]</span>
                 <span class="olb-stack">
                     @if (_currentType == LeaderboardType.CoOp)
@@ -109,7 +109,7 @@
                                        Href=@($"/Player/{entry.UserId}/PhoenixRecap")></MudIconButton>
                     }
                 </span>
-                <span>
+                <span class="olb-hide-phone">
                     @if (_playerTypes.TryGetValue(entry.UserId, out var playerType))
                     {
                         <PlayerTypeChip Type="playerType"/>
