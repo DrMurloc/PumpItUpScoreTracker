@@ -2223,6 +2223,9 @@
   <data name="New Pass" xml:space="preserve">
     <value>新規クリア</value>
   </data>
+  <data name="{0} from {1}" xml:space="preserve">
+    <value>{1}から{0}</value>
+  </data>
   <data name="Upscore" xml:space="preserve">
     <value>スコア更新</value>
   </data>

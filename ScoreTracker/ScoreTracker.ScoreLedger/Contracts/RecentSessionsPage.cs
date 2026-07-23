@@ -30,5 +30,10 @@ public sealed record RecentSessionsPage(int TotalGroups, IReadOnlyList<RecentSes
         string Source,
         Guid? SessionId,
         ScoreEventClassification Classification,
-        int? PreviousBest);
+        int? PreviousBest,
+        // A NewPass on a newer version (e.g. first Phoenix 2 pass) carries the player's best
+        // on an earlier same-scale version, so the row can show "+X from <PreviousMix>".
+        // Null unless the row is a cross-version first pass with an earlier-version score.
+        int? PreviousMixBest = null,
+        MixEnum? PreviousMix = null);
 }

@@ -33,6 +33,15 @@
             {
                 <MudText Typo="Typo.caption" Color="Color.Success">+@((Row.Score.Value - Row.PreviousBest.Value).ToString("N0"))</MudText>
             }
+            else if (Row.Classification == ScoreEventClassification.NewPass && Row.PreviousMixBest != null
+                     && Row.PreviousMix != null && Row.Score != null)
+            {
+                @* First pass on a newer version: reference the carried-over best from the earlier
+                   version, e.g. "+40 from Phoenix" on a first Phoenix 2 pass. *@
+                <MudText Typo="Typo.caption" Color="Color.Default">
+                    @L["{0} from {1}", CarryoverDelta, Row.PreviousMix.Value.GetName()]
+                </MudText>
+            }
         </div>
     }
 </div>
@@ -63,6 +72,17 @@
             if (Flags.HasFlag(HighlightFlags.FolderDebut))
                 yield return ("🆕", Detail?.FolderDebutOrdinal is { } o ? $"#{o}" : null,
                     L["One of your first passes in this folder"].Value);
+        }
+    }
+
+    // Signed carryover vs the earlier-version best, e.g. "+40" or "-120". Only rendered when
+    // both operands are present (the else-if guard), so the null-forgiving reads are safe.
+    private string CarryoverDelta
+    {
+        get
+        {
+            var diff = Row.Score!.Value - Row.PreviousMixBest!.Value;
+            return (diff > 0 ? "+" : "") + diff.ToString("N0");
         }
     }
 

@@ -66,15 +66,33 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
         ScoreJournalEntry[] chartHistory)
     {
         var prior = chartHistory.Where(h => h.OccurredAt < row.OccurredAt).ToArray();
-        var priorBest = prior.Where(p => p.Score != null).Select(p => (int?)(int)p.Score!.Value).Max();
-        var priorPassed = prior.Any(p => !p.IsBroken);
-        var priorBestPlate = prior.Where(p => !p.IsBroken && p.Plate != null).Select(p => p.Plate).Max();
+        // Classification is per-mix. Phoenix and Phoenix 2 share the 1M scoring scale, so an
+        // un-scoped comparison mislabels a first Phoenix 2 pass as an Upscore over the Phoenix
+        // best (the record-based Discord path is already per-mix; this read is the outlier).
+        // Scope pass/upscore/break to the row's own mix, and surface the earlier-version best
+        // separately as a carryover.
+        var sameMix = prior.Where(p => p.Mix == row.Mix).ToArray();
+        var priorBest = sameMix.Where(p => p.Score != null).Select(p => (int?)(int)p.Score!.Value).Max();
+        var priorPassed = sameMix.Any(p => !p.IsBroken);
+        var priorBestPlate = sameMix.Where(p => !p.IsBroken && p.Plate != null).Select(p => p.Plate).Max();
         var classification = ClassifyRow(row, priorPassed, priorBest, priorBestPlate);
+
+        // A first pass on a newer version still means something against the player's best on an
+        // earlier version of the same (1M) scale — carry it so the row can show "+X from <mix>".
+        var carryover = classification == ScoreEventClassification.NewPass
+                        && row.Score != null && !row.Mix.UsesLegacyScoring()
+            ? prior.Where(p => p.Score != null && !p.Mix.UsesLegacyScoring()
+                               && p.Mix.DisplayOrder() < row.Mix.DisplayOrder())
+                .OrderByDescending(p => (int)p.Score!.Value)
+                .FirstOrDefault()
+            : null;
 
         return new RecentSessionsPage.ScoreEventRecord(row.ChartId, row.OccurredAt,
             row.Score == null ? null : (int)row.Score.Value, row.Plate?.ToString(), row.IsBroken, row.Source,
             row.SessionId, classification,
-            classification == ScoreEventClassification.Upscore ? priorBest : null);
+            classification == ScoreEventClassification.Upscore ? priorBest : null,
+            carryover == null ? null : (int?)(int)carryover.Score!.Value,
+            carryover?.Mix);
     }
 
     private static ScoreEventClassification ClassifyRow(ScoreJournalEntry row, bool priorPassed, int? priorBest,

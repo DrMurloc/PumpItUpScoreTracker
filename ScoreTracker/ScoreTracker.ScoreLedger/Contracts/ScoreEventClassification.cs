@@ -7,10 +7,14 @@ namespace ScoreTracker.ScoreLedger.Contracts;
 /// </summary>
 public enum ScoreEventClassification
 {
-    /// <summary>First unbroken best for the chart.</summary>
+    /// <summary>
+    ///     First unbroken best for the chart on its mix. A first pass on a newer version
+    ///     (e.g. first Phoenix 2 pass) is a NewPass even when an earlier-version best exists;
+    ///     that earlier best rides along as a carryover for display ("+X from Phoenix").
+    /// </summary>
     NewPass,
 
-    /// <summary>Score (or plate at the same score) improved over the prior best.</summary>
+    /// <summary>Score (or plate at the same score) improved over the prior best on the same mix.</summary>
     Upscore,
 
     /// <summary>A broken entry — first for the chart, or a broken-best improvement.</summary>

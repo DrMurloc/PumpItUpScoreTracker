@@ -94,6 +94,53 @@ public sealed class SessionFeedHandlerTests
     }
 
     [Fact]
+    public async Task FirstPassOnANewerVersionIsANewPassNotACrossMixUpscore()
+    {
+        // Phoenix and Phoenix 2 share the 1M scale: a first Phoenix 2 pass must not be
+        // mislabeled an Upscore over the Phoenix best. It reads as a NewPass carrying the
+        // earlier-version best (981199) for the "+40 from Phoenix" note.
+        var ctx = new HandlerContext();
+        var phoenixBest = Entry(Now.AddDays(-5), 981199, mix: MixEnum.Phoenix);
+        var firstPhoenix2 = Entry(Now, 981239, mix: MixEnum.Phoenix2);
+        var rows = new[] { phoenixBest, firstPhoenix2 };
+        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2, rows));
+        ctx.GivenHistories(rows);
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
+            CancellationToken.None);
+
+        var latest = page.Groups.Single().Rows.OrderBy(r => r.OccurredAt).Last();
+        Assert.Equal(ScoreEventClassification.NewPass, latest.Classification);
+        Assert.Null(latest.PreviousBest);
+        Assert.Equal(981199, latest.PreviousMixBest);
+        Assert.Equal(MixEnum.Phoenix, latest.PreviousMix);
+    }
+
+    [Fact]
+    public async Task UpscoresAreScopedToTheSameMix()
+    {
+        // A prior Phoenix 2 best is what a later Phoenix 2 row upscores against — the Phoenix
+        // best is carried, not compared.
+        var ctx = new HandlerContext();
+        var rows = new[]
+        {
+            Entry(Now.AddDays(-5), 990000, mix: MixEnum.Phoenix),
+            Entry(Now.AddDays(-1), 970000, mix: MixEnum.Phoenix2),
+            Entry(Now, 975000, mix: MixEnum.Phoenix2)
+        };
+        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2, rows));
+        ctx.GivenHistories(rows);
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
+            CancellationToken.None);
+
+        var latest = page.Groups.Single().Rows.OrderBy(r => r.OccurredAt).Last();
+        Assert.Equal(ScoreEventClassification.Upscore, latest.Classification);
+        Assert.Equal(970000, latest.PreviousBest);
+        Assert.Null(latest.PreviousMixBest);
+    }
+
+    [Fact]
     public async Task PlateOnlyImprovementsClassifyAsUpscores()
     {
         var ctx = new HandlerContext();
@@ -138,9 +185,10 @@ public sealed class SessionFeedHandlerTests
     }
 
     private static ScoreJournalEntry Entry(DateTimeOffset at, int score, bool isBroken = false,
-        string source = "manual", PhoenixPlate? plate = PhoenixPlate.FairGame, Guid? sessionId = null)
+        string source = "manual", PhoenixPlate? plate = PhoenixPlate.FairGame, Guid? sessionId = null,
+        MixEnum mix = MixEnum.Phoenix)
     {
-        return new ScoreJournalEntry(at, source, UserId, ChartId, score, plate, isBroken, MixEnum.Phoenix,
+        return new ScoreJournalEntry(at, source, UserId, ChartId, score, plate, isBroken, mix,
             sessionId);
     }
 

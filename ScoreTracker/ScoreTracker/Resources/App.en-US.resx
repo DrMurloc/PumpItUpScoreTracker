@@ -2232,6 +2232,9 @@
   <data name="New Pass" xml:space="preserve">
     <value>New Pass</value>
   </data>
+  <data name="{0} from {1}" xml:space="preserve">
+    <value>{0} from {1}</value>
+  </data>
   <data name="Upscore" xml:space="preserve">
     <value>Upscore</value>
   </data>

@@ -2104,6 +2104,9 @@
   <data name="New Pass" xml:space="preserve">
     <value>신규 클리어</value>
   </data>
+  <data name="{0} from {1}" xml:space="preserve">
+    <value>{1}에서 {0}</value>
+  </data>
   <data name="Upscore" xml:space="preserve">
     <value>점수 갱신</value>
   </data>
