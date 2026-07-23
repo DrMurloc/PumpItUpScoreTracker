@@ -113,6 +113,7 @@ Added by the 2026-07-12 main-merge batch (tier-lists overhaul, PIU Center crawle
 | age bands | `Ancestral` / `Muy antiguo` / `Antiguo` / `Nuevo` / `Muy nuevo` / `Más reciente` | |
 | popularity bands | `Ultra popular` … `Ultra impopular` | |
 | cleared | `superado(s)` | distinct from `pasado` (passed) |
+| Played (session chip) | `Clear` (EN) | the neutral `ClassificationChip` state (played, no new pass/upscore/break). Errlena flagged `Jugado` as unnatural 2026-07; keep the EN loanword `Clear` per the loanword lean. Sibling chips: `New Pass`/`Upscore`/`Break` |
 | crawl / snapshot / sustain | EN verbatim (`crawl de PIU Center`, `snapshot`, `Tiempo de sustain`) | admin/technical jargon |
 | PIU Center | verbatim | external site name; `aesthete` credited verbatim |
 | mix names (Prime, Fiesta, NX, Exceed / Zero, Premiere / Prex, Classic, American) | verbatim | intake: version names stay as-is |
