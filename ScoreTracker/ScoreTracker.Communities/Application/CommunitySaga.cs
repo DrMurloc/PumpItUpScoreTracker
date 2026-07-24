@@ -993,7 +993,6 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         switch (community.PrivacyType)
         {
             case CommunityPrivacyType.Public:
-                community.MemberIds.Add(userId);
                 break;
             case CommunityPrivacyType.Private:
             case CommunityPrivacyType.PublicWithCode:
@@ -1007,13 +1006,14 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
                     new DateOnly(_dateTime.Now.Year, _dateTime.Now.Month, _dateTime.Now.Day))
                     throw new DeniedFromCommunityException("This invite code is expired");
 
-                community.MemberIds.Add(userId);
                 break;
             default:
                 throw new DeniedFromCommunityException("Community privacy type could not be determined");
         }
 
-        await _communities.SaveCommunity(community, cancellationToken);
+        // One row, not the whole aggregate: saving the community would write back the member set
+        // as it looked when this handler loaded it, deleting anyone who joined in between.
+        await _communities.AddMembership(community.Name, userId, cancellationToken);
     }
 
     public async Task Handle(LeaveCommunityCommand request, CancellationToken cancellationToken)
@@ -1022,8 +1022,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var community = await GetCommunity(request.CommunityName, cancellationToken);
         if (!community.MemberIds.Contains(userId)) return;
 
-        community.MemberIds.Remove(userId);
-        await _communities.SaveCommunity(community, cancellationToken);
+        await _communities.RemoveMembership(community.Name, userId, cancellationToken);
     }
 
     public async Task Handle(RemoveDiscordChannelFromCommunityCommand request, CancellationToken cancellationToken)

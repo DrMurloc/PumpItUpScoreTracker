@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.Communities.Infrastructure.Entities
 {
-    [Index(nameof(CommunityId), nameof(UserId))]
+    // A user holds at most one row per community — member, admin, creator or ban are all the
+    // same seat. Unique so a concurrent join cannot double-insert.
+    [Index(nameof(CommunityId), nameof(UserId), IsUnique = true)]
     [Index(nameof(CommunityId), nameof(Role))]
     internal sealed class CommunityMembershipEntity
     {

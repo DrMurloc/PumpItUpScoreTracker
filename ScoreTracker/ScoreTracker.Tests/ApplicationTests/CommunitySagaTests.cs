@@ -95,9 +95,12 @@ public sealed class CommunitySagaTests
 
         await ctx.Saga.Handle(new JoinCommunityCommand(Name.From("Acme"), null), CancellationToken.None);
 
-        ctx.Communities.Verify(c => c.SaveCommunity(
-            It.Is<Community>(comm => comm.MemberIds.Contains(userId)),
-            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Communities.Verify(c => c.AddMembership(Name.From("Acme"), userId, It.IsAny<CancellationToken>()),
+            Times.Once);
+        // Writing the aggregate back would persist the member set as it looked when the handler
+        // loaded it, dropping anyone who joined while this join was in flight.
+        ctx.Communities.Verify(c => c.SaveCommunity(It.IsAny<Community>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -241,9 +244,10 @@ public sealed class CommunitySagaTests
 
         await ctx.Saga.Handle(new LeaveCommunityCommand(Name.From("Acme")), CancellationToken.None);
 
-        ctx.Communities.Verify(c => c.SaveCommunity(
-            It.Is<Community>(comm => !comm.MemberIds.Contains(userId)),
-            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Communities.Verify(c => c.RemoveMembership(Name.From("Acme"), userId, It.IsAny<CancellationToken>()),
+            Times.Once);
+        ctx.Communities.Verify(c => c.SaveCommunity(It.IsAny<Community>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
