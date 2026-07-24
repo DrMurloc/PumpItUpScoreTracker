@@ -145,9 +145,15 @@ namespace ScoreTracker.WeeklyChallenge.Application
             {
                 var chartRanked = ranked[chart.ChartId];
                 var chartInRange = inRangeRanked[chart.ChartId];
+                // Place is the OVERALL place for every row, including the in-range-top rows. The grid
+                // merges the two heads and orders by Place (WeeklyBoardGrid.MergedTop); an in-range
+                // row carrying its own renumbered place would sort into the overall ladder by the
+                // wrong number — a 947k in-range #2 landing above an 989k overall #3.
+                var overallPlaces = chartRanked.ToDictionary(r => r.Item2.UserId, r => r.Item1);
                 var inRangePlaces = chartInRange.ToDictionary(r => r.Item2.UserId, r => r.Item1);
                 var catalogChart = chartDict.GetValueOrDefault(chart.ChartId);
-                WeeklyBoardRow ToRow((int, WeeklyTournamentEntry) r) => new(r.Item1,
+                WeeklyBoardRow ToRow((int, WeeklyTournamentEntry) r) => new(
+                    overallPlaces.TryGetValue(r.Item2.UserId, out var op) ? op : r.Item1,
                     userDict.GetValueOrDefault(r.Item2.UserId), r.Item2,
                     sources.TryGetValue((r.Item2.UserId, r.Item2.ChartId), out var source)
                         ? source
