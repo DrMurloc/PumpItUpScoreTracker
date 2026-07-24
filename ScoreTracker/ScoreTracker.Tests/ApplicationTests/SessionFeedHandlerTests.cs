@@ -94,6 +94,48 @@ public sealed class SessionFeedHandlerTests
     }
 
     [Fact]
+    public async Task FirstPlayInANewMixIsANewPassDespitePriorHistoryInAnotherMix()
+    {
+        // Phoenix and Phoenix 2 share chart ids, so a returning song's Phoenix 1 journal
+        // must not bleed into its first-ever Phoenix 2 play. Errlena's report: charts show
+        // "Upscore" (or "Played") on the first Phoenix 2 play. Real case — Yog-Sothoth S23:
+        // Phoenix 1 best 961,294, first Phoenix 2 play 949,264.
+        var ctx = new HandlerContext();
+        var priorMixBest = Entry(Now.AddMonths(-2), 961000, mix: MixEnum.Phoenix);
+        var firstPhoenix2 = Entry(Now, 949000, mix: MixEnum.Phoenix2);
+        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2,
+            new[] { firstPhoenix2 }));
+        ctx.GivenHistories(new[] { priorMixBest, firstPhoenix2 });
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
+            CancellationToken.None);
+
+        var row = page.Groups.Single().Rows.Single();
+        Assert.Equal(ScoreEventClassification.NewPass, row.Classification);
+        Assert.Null(row.PreviousBest);
+    }
+
+    [Fact]
+    public async Task FirstPlayInANewMixThatBeatsAnotherMixsBestIsStillANewPass()
+    {
+        // The headline symptom: a first Phoenix 2 play that happens to edge out the
+        // Phoenix 1 best must not read as an Upscore over that cross-mix score.
+        var ctx = new HandlerContext();
+        var priorMixBest = Entry(Now.AddMonths(-2), 981199, mix: MixEnum.Phoenix);
+        var firstPhoenix2 = Entry(Now, 981239, mix: MixEnum.Phoenix2);
+        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2,
+            new[] { firstPhoenix2 }));
+        ctx.GivenHistories(new[] { priorMixBest, firstPhoenix2 });
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
+            CancellationToken.None);
+
+        var row = page.Groups.Single().Rows.Single();
+        Assert.Equal(ScoreEventClassification.NewPass, row.Classification);
+        Assert.Null(row.PreviousBest);
+    }
+
+    [Fact]
     public async Task PlateOnlyImprovementsClassifyAsUpscores()
     {
         var ctx = new HandlerContext();
@@ -138,9 +180,10 @@ public sealed class SessionFeedHandlerTests
     }
 
     private static ScoreJournalEntry Entry(DateTimeOffset at, int score, bool isBroken = false,
-        string source = "manual", PhoenixPlate? plate = PhoenixPlate.FairGame, Guid? sessionId = null)
+        string source = "manual", PhoenixPlate? plate = PhoenixPlate.FairGame, Guid? sessionId = null,
+        MixEnum mix = MixEnum.Phoenix)
     {
-        return new ScoreJournalEntry(at, source, UserId, ChartId, score, plate, isBroken, MixEnum.Phoenix,
+        return new ScoreJournalEntry(at, source, UserId, ChartId, score, plate, isBroken, mix,
             sessionId);
     }
 

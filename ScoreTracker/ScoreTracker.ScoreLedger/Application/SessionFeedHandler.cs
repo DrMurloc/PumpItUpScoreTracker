@@ -10,8 +10,11 @@ namespace ScoreTracker.ScoreLedger.Application;
 
 /// <summary>
 ///     The Sessions page's journal read: pages session groups and classifies every row
-///     against the chart's prior journal state. The journal is complete back to the
-///     2026-06 backfill, so "no prior row" genuinely means a first entry.
+///     against the chart's prior journal state <em>in the same mix</em>. The journal is
+///     complete back to the 2026-06 backfill, so "no prior row" genuinely means a first
+///     entry. Mix scoping matters because Phoenix and Phoenix 2 share chart ids (a
+///     returning song is one ChartId in both), so a first-ever Phoenix 2 play must read as
+///     a New Pass, not an Upscore/Clear over the player's Phoenix 1 best.
 /// </summary>
 internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuery, RecentSessionsPage>
 {
@@ -65,7 +68,9 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
     private static RecentSessionsPage.ScoreEventRecord Classify(ScoreJournalEntry row,
         ScoreJournalEntry[] chartHistory)
     {
-        var prior = chartHistory.Where(h => h.OccurredAt < row.OccurredAt).ToArray();
+        // Same-mix only: a returning song carries one ChartId across Phoenix and Phoenix 2,
+        // so its Phoenix 1 history must not count as prior state for a Phoenix 2 play.
+        var prior = chartHistory.Where(h => h.Mix == row.Mix && h.OccurredAt < row.OccurredAt).ToArray();
         var priorBest = prior.Where(p => p.Score != null).Select(p => (int?)(int)p.Score!.Value).Max();
         var priorPassed = prior.Any(p => !p.IsBroken);
         var priorBestPlate = prior.Where(p => !p.IsBroken && p.Plate != null).Select(p => p.Plate).Max();
