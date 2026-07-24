@@ -578,7 +578,11 @@ public sealed class WeeklyTournamentSagaTests
         Assert.Equal(1, topSecond.InRangePlace);
 
         Assert.Equal(new[] { second, third }, summary.InRangeTopPlaces.Select(r => r.Entry.UserId).ToArray());
-        Assert.Equal(new[] { 1, 2 }, summary.InRangeTopPlaces.Select(r => r.Place).ToArray());
+        // Place stays the OVERALL rank (2, 3) even in the in-range head; the renumbered ladder lives
+        // in InRangePlace (1, 2). The grid merges both heads and orders by Place, so a row carrying
+        // its renumbered place there would interleave the two ladders (goldenmule's 1,2,2,3,3 board).
+        Assert.Equal(new[] { 2, 3 }, summary.InRangeTopPlaces.Select(r => r.Place).ToArray());
+        Assert.Equal(new int?[] { 1, 2 }, summary.InRangeTopPlaces.Select(r => r.InRangePlace).ToArray());
     }
 
     [Fact]

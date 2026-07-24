@@ -134,6 +134,39 @@ public sealed class TitleSagaTests
         Assert.True(result.Progress.Count <= 5);
     }
 
+    [Fact]
+    public async Task ContiguousLadderFloorsKeepAllButTheActiveRungOffTheProgressList()
+    {
+        // The reported bug: one single score reported progress on EVERY [S] pumbility rung at
+        // once ("[S] INTERMEDIATE LV.1 0% → 19%, LV.2 0% → 16%, LV.3 0% → 13%") because the delta
+        // percent divided by the raw requirement, ignoring the floor. Ladder floors are
+        // contiguous (a rung floors on the rung below's requirement), so at most one rung can be
+        // mid-progress — no ladder may report two rungs moving at once.
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(23).Build();
+        var ctx = new SagaContext(MixEnum.Phoenix2, single);
+        ctx.GivenBestScores(Score(single.Id, 985000));
+
+        var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix2, null,
+                new[]
+                {
+                    new PlayerScoresUpdatedEvent.ScoreChange(single.Id, false, 500000, 985000, "SuperbGame", false)
+                }),
+            CancellationToken.None);
+
+        Assert.Contains(result.Progress, d => d.Title.StartsWith("[S]")); // the [S] ladder is exercised
+        var doubledUp = result.Progress
+            .GroupBy(LadderBase)
+            .Where(g => g.Count() > 1)
+            .Select(g => $"{g.Key} -> {string.Join(", ", g.Select(d => d.Title))}")
+            .ToArray();
+        Assert.True(doubledUp.Length == 0,
+            "A ladder reported multiple rungs moving at once (floor ignored): " + string.Join(" | ", doubledUp));
+    }
+
+    // Strip a trailing "LV.N" / "Lv. N" rung number so sibling rungs collapse to one ladder key.
+    private static string LadderBase(TitleProgressDelta delta) =>
+        System.Text.RegularExpressions.Regex.Replace(delta.Title, @"\s*[Ll][Vv]\.?\s*\d+$", "").Trim();
+
     private sealed class SagaContext
     {
         private readonly MixEnum _mix;

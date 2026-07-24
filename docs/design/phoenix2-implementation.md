@@ -65,7 +65,8 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   "Recalculate Phoenix 2 Player Ratings" button (`RecalculateMixRatingsCommand` bus sweep).
 - **All 272 Phoenix 2 titles landed** (crawled authenticated from my_page/title.php 2026-07-09):
   [S]/[D] ladders + 8 hidden total tiers gate on the pool values (`Phoenix2PumbilityTitle`;
-  `[P.B] BRONZE` observed live, 7 placeholder names pending reveals); nine skill ladders
+  `[P.B] BRONZE`..`ALEXANDRITE` (10000..19000) confirmed from worn titles on the live PUMBILITY
+  ranking 2026-07-23, the 20000 tier still unreached so its name stays masked); nine skill ladders
   (chart + SSS, `Phoenix2ChartGradeTitle`) with EXPERT/SPECIALIST metas; 34 boss breakers
   (`Phoenix2ChartClearTitle`; `1948 D??` matches any level); step-artist/play-count/CO-OP/judgment
   badges site-detected only (CO-OP Rating formula unknown — TODO). **The `/Titles` page is live
