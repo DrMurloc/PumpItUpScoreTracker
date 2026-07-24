@@ -51,6 +51,47 @@ public sealed class UpdateUserHandlerTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    // The signed-in user is a claims snapshot that only refreshes after this handler returns, so
+    // it still reports the pre-update flags. Subscribers treat the event as the new state:
+    // CommunitySaga reads IsPublic to decide whether to join or leave World, and reads Country to
+    // pick the regional community. Publishing the snapshot means turning your profile public
+    // announces IsPublic=false and removes you from World instead of adding you.
+    [Fact]
+    public async Task PublishesTheSavedFlagsRatherThanTheStaleClaimsSnapshot()
+    {
+        var signedIn = new UserBuilder().WithIsPublic(false).WithCountry("US").Build();
+        var users = new Mock<IUserRepository>();
+        users.Setup(u => u.GetUser(signedIn.Id, It.IsAny<CancellationToken>())).ReturnsAsync(signedIn);
+        var currentUser = new Mock<ICurrentUserAccessor>();
+        currentUser.SetupGet(c => c.User).Returns(signedIn);
+        var bus = new Mock<IBus>();
+
+        var handler = new UpdateUserHandler(users.Object, currentUser.Object, bus.Object);
+        await handler.Handle(new UpdateUserCommand(signedIn.Name, true, Name.From("CA")), CancellationToken.None);
+
+        bus.Verify(b => b.Publish(
+            It.Is<UserUpdatedEvent>(e => e.UserId == signedIn.Id && e.IsPublic && e.Country == "CA"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task PublishesClearedCountryWhenTheProfileDropsIt()
+    {
+        var signedIn = new UserBuilder().WithIsPublic(true).WithCountry("US").Build();
+        var users = new Mock<IUserRepository>();
+        users.Setup(u => u.GetUser(signedIn.Id, It.IsAny<CancellationToken>())).ReturnsAsync(signedIn);
+        var currentUser = new Mock<ICurrentUserAccessor>();
+        currentUser.SetupGet(c => c.User).Returns(signedIn);
+        var bus = new Mock<IBus>();
+
+        var handler = new UpdateUserHandler(users.Object, currentUser.Object, bus.Object);
+        await handler.Handle(new UpdateUserCommand(signedIn.Name, false, null), CancellationToken.None);
+
+        bus.Verify(b => b.Publish(
+            It.Is<UserUpdatedEvent>(e => !e.IsPublic && e.Country == null),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task UsesDefaultProfileImageWhenExistingUserHasNone()
     {
