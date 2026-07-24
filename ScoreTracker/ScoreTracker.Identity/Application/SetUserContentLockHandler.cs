@@ -44,6 +44,6 @@ internal sealed class SetUserContentLockHandler : IRequestHandler<SetUserContent
             existing.Country, request.IsLocked, _clock.Now);
 
         await _users.SaveUser(locked, cancellationToken);
-        await _bus.Publish(new UserUpdatedEvent(existing.Id, existing.Country, existing.IsPublic), cancellationToken);
+        await _bus.Publish(UserUpdatedEvent.From(locked), cancellationToken);
     }
 }

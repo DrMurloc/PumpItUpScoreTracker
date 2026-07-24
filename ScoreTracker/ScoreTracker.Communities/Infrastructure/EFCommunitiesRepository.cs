@@ -156,6 +156,74 @@ namespace ScoreTracker.Communities.Infrastructure
             await database.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task<bool> AddMembership(Name communityName, Guid userId, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var communityId = await FindCommunityId(database, communityName, cancellationToken);
+            if (communityId == null) return false;
+
+            if (await HoldsARow(database, communityId.Value, userId, cancellationToken)) return false;
+
+            await database.Set<CommunityMembershipEntity>().AddAsync(new CommunityMembershipEntity
+            {
+                Id = Guid.NewGuid(),
+                CommunityId = communityId.Value,
+                UserId = userId,
+                Role = nameof(CommunityRole.Member),
+                Permissions = (int)CommunityPermission.None,
+                GrantedByUserId = null,
+                JoinedAt = _dateTime.Now
+            }, cancellationToken);
+
+            try
+            {
+                await database.SaveChangesAsync(cancellationToken);
+                return true;
+            }
+            catch (DbUpdateException)
+            {
+                // The unique index turns a lost concurrent insert into a failure here. If the row
+                // that beat us is the one we wanted, the join already happened; anything else is a
+                // real fault and still surfaces.
+                database.ChangeTracker.Clear();
+                if (await HoldsARow(database, communityId.Value, userId, cancellationToken)) return false;
+                throw;
+            }
+        }
+
+        public async Task RemoveMembership(Name communityName, Guid userId, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var communityId = await FindCommunityId(database, communityName, cancellationToken);
+            if (communityId == null) return;
+
+            var banned = nameof(CommunityRole.Banned);
+            var creator = nameof(CommunityRole.Creator);
+            var rows = await database.Set<CommunityMembershipEntity>()
+                .Where(m => m.CommunityId == communityId.Value && m.UserId == userId
+                                                              && m.Role != banned && m.Role != creator)
+                .ToArrayAsync(cancellationToken);
+            if (rows.Length == 0) return;
+
+            database.Set<CommunityMembershipEntity>().RemoveRange(rows);
+            await database.SaveChangesAsync(cancellationToken);
+        }
+
+        private static async Task<Guid?> FindCommunityId(ChartAttemptDbContext database, Name communityName,
+            CancellationToken cancellationToken)
+        {
+            var name = communityName.ToString();
+            return await database.Set<CommunityEntity>().Where(c => c.Name == name)
+                .Select(c => (Guid?)c.Id).FirstOrDefaultAsync(cancellationToken);
+        }
+
+        private static async Task<bool> HoldsARow(ChartAttemptDbContext database, Guid communityId, Guid userId,
+            CancellationToken cancellationToken)
+        {
+            return await database.Set<CommunityMembershipEntity>().AsNoTracking()
+                .AnyAsync(m => m.CommunityId == communityId && m.UserId == userId, cancellationToken);
+        }
+
         public async Task<IReadOnlyList<ChannelCommunityInfo>> GetChannelCommunities(ulong channelId,
             CancellationToken cancellationToken)
         {
