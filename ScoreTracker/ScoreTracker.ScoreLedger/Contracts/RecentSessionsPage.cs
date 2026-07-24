@@ -30,5 +30,6 @@ public sealed record RecentSessionsPage(int TotalGroups, IReadOnlyList<RecentSes
         string Source,
         Guid? SessionId,
         ScoreEventClassification Classification,
-        int? PreviousBest);
+        int? PreviousBest,
+        bool IsReclear = false);
 }

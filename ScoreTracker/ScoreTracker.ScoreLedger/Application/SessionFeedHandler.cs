@@ -21,12 +21,15 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
     private readonly IScoreJournalRepository _journal;
     private readonly IUserReader _users;
     private readonly ICurrentUserAccessor _currentUser;
+    private readonly IScoreReader _scores;
 
-    public SessionFeedHandler(IScoreJournalRepository journal, IUserReader users, ICurrentUserAccessor currentUser)
+    public SessionFeedHandler(IScoreJournalRepository journal, IUserReader users, ICurrentUserAccessor currentUser,
+        IScoreReader scores)
     {
         _journal = journal;
         _users = users;
         _currentUser = currentUser;
+        _scores = scores;
     }
 
     public async Task<RecentSessionsPage> Handle(GetRecentSessionsQuery request,
@@ -47,6 +50,18 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
             .GroupBy(r => r.ChartId)
             .ToDictionary(g => g.Key, g => g.OrderBy(r => r.OccurredAt).ToArray());
 
+        // Cross-mix reclear (parity with the Discord session card): a New Pass on a chart
+        // already cleared non-broken in the OTHER Phoenix-family mix (free from the cross-mix
+        // history) or in legacy XX. The XX bests load only when the page actually holds a New
+        // Pass, so an upscore-only page skips the read entirely, like the card does.
+        var anyNewPass = groups.Any(g => g.Rows.Any(r => !r.IsBroken
+            && Classify(r, History(histories, r)).Classification == ScoreEventClassification.NewPass));
+        var xxCleared = anyNewPass
+            ? (await _scores.GetBestXXAttempts(request.UserId, cancellationToken))
+                .Where(a => a.BestAttempt is { IsBroken: false })
+                .Select(a => a.Chart.Id).ToHashSet()
+            : new HashSet<Guid>();
+
         return new RecentSessionsPage(total, groups.Select(g => new RecentSessionsPage.SessionGroup(
                 g.SessionId,
                 g.Day,
@@ -55,9 +70,15 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
                 g.Rows.Min(r => r.OccurredAt),
                 g.Rows.Max(r => r.OccurredAt),
                 g.Rows.OrderByDescending(r => r.OccurredAt)
-                    .Select(r => Classify(r, histories.GetValueOrDefault(r.ChartId, Array.Empty<ScoreJournalEntry>())))
+                    .Select(r => Classify(r, History(histories, r), xxCleared))
                     .ToArray()))
             .ToArray());
+    }
+
+    private static ScoreJournalEntry[] History(IReadOnlyDictionary<Guid, ScoreJournalEntry[]> histories,
+        ScoreJournalEntry row)
+    {
+        return histories.GetValueOrDefault(row.ChartId, Array.Empty<ScoreJournalEntry>());
     }
 
     private static string DominantSource(IReadOnlyList<ScoreJournalEntry> rows)
@@ -66,7 +87,7 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
     }
 
     private static RecentSessionsPage.ScoreEventRecord Classify(ScoreJournalEntry row,
-        ScoreJournalEntry[] chartHistory)
+        ScoreJournalEntry[] chartHistory, IReadOnlySet<Guid>? xxCleared = null)
     {
         // Same-mix only: a returning song carries one ChartId across Phoenix and Phoenix 2,
         // so its Phoenix 1 history must not count as prior state for a Phoenix 2 play.
@@ -76,10 +97,18 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
         var priorBestPlate = prior.Where(p => !p.IsBroken && p.Plate != null).Select(p => p.Plate).Max();
         var classification = ClassifyRow(row, priorPassed, priorBest, priorBestPlate);
 
+        // A New Pass on a chart cleared non-broken elsewhere is a reclear: the other
+        // Phoenix-family mix shows up in the cross-mix history, legacy XX comes in via
+        // xxCleared. Only new passes qualify — matching the Discord card's "* = reclears".
+        var isReclear = classification == ScoreEventClassification.NewPass
+                        && (chartHistory.Any(h => h.Mix != row.Mix && !h.IsBroken)
+                            || (xxCleared?.Contains(row.ChartId) ?? false));
+
         return new RecentSessionsPage.ScoreEventRecord(row.ChartId, row.OccurredAt,
             row.Score == null ? null : (int)row.Score.Value, row.Plate?.ToString(), row.IsBroken, row.Source,
             row.SessionId, classification,
-            classification == ScoreEventClassification.Upscore ? priorBest : null);
+            classification == ScoreEventClassification.Upscore ? priorBest : null,
+            isReclear);
     }
 
     private static ScoreEventClassification ClassifyRow(ScoreJournalEntry row, bool priorPassed, int? priorBest,
