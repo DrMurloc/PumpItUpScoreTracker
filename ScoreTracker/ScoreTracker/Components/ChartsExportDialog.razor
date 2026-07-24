@@ -15,17 +15,6 @@
     <DialogContent>
         <div class="srp-export">
             <MudText Typo="Typo.body2" Class="srp-export-count">@L["{0} charts · current filters", TotalCount.ToString("N0")]</MudText>
-            <MudText Typo="Typo.overline">@L["Shape"]</MudText>
-            <MudButtonGroup OverrideStyles="false">
-                <MudButton Variant="@(_shape == ChartExportShape.Grouped ? Variant.Filled : Variant.Outlined)"
-                           Color="@(_shape == ChartExportShape.Grouped ? Color.Primary : Color.Default)"
-                           OnClick="() => SetShape(ChartExportShape.Grouped)">@L["Group by chart"]</MudButton>
-                <MudButton Variant="@(_shape == ChartExportShape.PerMix ? Variant.Filled : Variant.Outlined)"
-                           Color="@(_shape == ChartExportShape.PerMix ? Color.Primary : Color.Default)"
-                           OnClick="() => SetShape(ChartExportShape.PerMix)">@L["One row per chart and mix"]</MudButton>
-            </MudButtonGroup>
-            <MudText Typo="Typo.caption" Class="srp-export-hint">@L["Grouped: one row per chart, level history collapsed. Per-mix: every appearance is its own row. Identical while scope is a single mix."]</MudText>
-
             @foreach (var (group, keys) in Groups)
             {
                 if (group == "My columns" && !SignedIn) continue;
@@ -54,25 +43,22 @@
 
 @code {
     private const string ColumnsSettingKey = "Charts__Export__Columns";
-    private const string ShapeSettingKey = "Charts__Export__Shape";
 
     [Parameter] public bool Visible { get; set; }
     [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
     [Parameter] public IReadOnlyDictionary<string, object?> FilterParameters { get; set; } = new Dictionary<string, object?>();
     [Parameter] public int TotalCount { get; set; }
     [Parameter] public MixEnum Mix { get; set; }
-    [Parameter] public bool AllMixes { get; set; }
     [Parameter] public bool SignedIn { get; set; }
 
-    private ChartExportShape _shape = ChartExportShape.Grouped;
     private HashSet<string> _columns = new(ChartExport.DefaultColumns, StringComparer.OrdinalIgnoreCase);
 
     private static readonly (string Group, string[] Keys)[] Groups =
     {
         ("Chart columns", new[]
         {
-            "Song", "Artist", "StepArtist", "Type", "Level", "Mix", "Mixes", "DebutMix", "LatestMix",
-            "LevelChange", "LegacyDifficulty", "SongType", "BPM", "DurationSeconds", "NoteCount", "NPS", "Badges"
+            "Song", "Artist", "StepArtist", "Type", "Level", "Mix", "DebutMix",
+            "LegacyDifficulty", "SongType", "BPM", "DurationSeconds", "NoteCount", "NPS", "Badges"
         }),
         ("Community columns", new[]
         {
@@ -92,8 +78,6 @@
         if (!string.IsNullOrWhiteSpace(savedColumns))
             _columns = savedColumns.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        if (Enum.TryParse<ChartExportShape>(await UiSettings.GetSetting(ShapeSettingKey), out var shape))
-            _shape = shape;
     }
 
     private async Task ToggleColumn(string key)
@@ -102,13 +86,7 @@
         await UiSettings.SetSetting(ColumnsSettingKey, string.Join(',', _columns));
     }
 
-    private async Task SetShape(ChartExportShape shape)
-    {
-        _shape = shape;
-        await UiSettings.SetSetting(ShapeSettingKey, shape.ToString());
-    }
-
-    private string FileName => $"charts_{(AllMixes ? "all-mixes" : ChartSlugs.MixSlug(Mix))}.csv";
+    private string FileName => $"charts_{ChartSlugs.MixSlug(Mix)}.csv";
 
     private string ExportUrl
     {
@@ -118,7 +96,6 @@
             {
                 ["Mix"] = Mix.ToString(),
                 ["Columns"] = string.Join(',', OrderedColumns),
-                ["Shape"] = _shape.ToString(),
                 ["Page"] = null
             };
             return NavManager.GetUriWithQueryParameters(NavManager.ToAbsoluteUri("/Charts/Export.csv").ToString(),
@@ -136,8 +113,6 @@
         {
             "StepArtist" => "Step Artist",
             "DebutMix" => "Debut mix",
-            "LatestMix" => "Latest mix",
-            "LevelChange" => "Level change",
             "LegacyDifficulty" => "Legacy Difficulty",
             "SongType" => "Song Type",
             "DurationSeconds" => "Duration (seconds)",

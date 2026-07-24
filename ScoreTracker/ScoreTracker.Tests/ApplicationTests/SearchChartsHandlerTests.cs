@@ -77,42 +77,6 @@ public sealed class SearchChartsHandlerTests
     }
 
     [Fact]
-    public async Task GroupsOneIdentityAcrossScopeMixesWithChronologicalAppearances()
-    {
-        var id = Guid.NewGuid();
-        SeedMix(MixEnum.Phoenix, MakeChart(id, MixEnum.Phoenix, "Bee", 18));
-        SeedMix(MixEnum.Phoenix2, MakeChart(id, MixEnum.Phoenix2, "Bee", 19));
-
-        var result = await BuildHandler().Handle(new SearchChartsQuery
-        {
-            Mix = MixEnum.Phoenix2,
-            Mixes = new[] { MixEnum.Phoenix2, MixEnum.Phoenix }
-        }, CancellationToken.None);
-
-        var row = Assert.Single(result.Results);
-        Assert.Equal(MixEnum.Phoenix2, row.Chart.Mix);
-        Assert.Equal(new[] { MixEnum.Phoenix, MixEnum.Phoenix2 }, row.Appearances.Select(a => a.Mix));
-        Assert.Equal(MixEnum.Phoenix2, row.LatestMix);
-        Assert.Equal(1, row.LevelChange);
-    }
-
-    [Fact]
-    public async Task LinksToTheLatestAppearanceWhenAbsentFromTheVisitorsMix()
-    {
-        var id = Guid.NewGuid();
-        SeedMix(MixEnum.XX, MakeChart(id, MixEnum.XX, "Canon-D", 19));
-        SeedMix(MixEnum.Phoenix, MakeChart(id, MixEnum.Phoenix, "Canon-D", 19));
-
-        var result = await BuildHandler().Handle(new SearchChartsQuery
-        {
-            Mix = MixEnum.Phoenix2,
-            Mixes = new[] { MixEnum.XX, MixEnum.Phoenix }
-        }, CancellationToken.None);
-
-        Assert.Equal(MixEnum.Phoenix, Assert.Single(result.Results).Chart.Mix);
-    }
-
-    [Fact]
     public async Task DefaultSortIsLevelDescendingWithScoringLevelTiebreak()
     {
         var easy21 = Guid.NewGuid();
@@ -176,44 +140,39 @@ public sealed class SearchChartsHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { new SongTierListEntry("Difficulty", legacyChart, TierListCategory.VeryHard, 1) });
 
-        var result = await BuildHandler().Handle(new SearchChartsQuery
-        {
-            Mix = MixEnum.Phoenix,
-            Mixes = new[] { MixEnum.Phoenix, MixEnum.XX }
-        }, CancellationToken.None);
+        var handler = BuildHandler();
+        var modern = Assert.Single((await handler.Handle(new SearchChartsQuery { Mix = MixEnum.Phoenix },
+            CancellationToken.None)).Results);
+        var legacy = Assert.Single((await handler.Handle(new SearchChartsQuery { Mix = MixEnum.XX },
+            CancellationToken.None)).Results);
 
-        var modern = result.Results.Single(r => r.Chart.Id == phoenixChart);
-        var legacy = result.Results.Single(r => r.Chart.Id == legacyChart);
         Assert.Equal(TierListCategory.Hard, modern.PassDifficulty);
         Assert.Equal(TierListCategory.Easy, modern.ScoreDifficulty);
         Assert.Null(modern.CommunityVote);
         Assert.Equal(TierListCategory.VeryHard, legacy.CommunityVote);
         Assert.Null(legacy.PassDifficulty);
+        // The vote list is never even read for a Phoenix-family mix.
         _tierLists.Verify(t => t.GetAllEntries(MixEnum.Phoenix, It.Is<Name>(n => n == "Difficulty"),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task LevelRangeMatchesAnyInScopeAppearance()
+    public async Task LevelRangeMatchesTheChartsLevelInThisMix()
     {
-        var rerated = Guid.NewGuid();
+        var inRange = Guid.NewGuid();
         var tooHigh = Guid.NewGuid();
         SeedMix(MixEnum.Phoenix,
-            MakeChart(rerated, MixEnum.Phoenix, "Moved", 18),
+            MakeChart(inRange, MixEnum.Phoenix, "Moved", 18),
             MakeChart(tooHigh, MixEnum.Phoenix, "High", 20));
-        SeedMix(MixEnum.Phoenix2,
-            MakeChart(rerated, MixEnum.Phoenix2, "Moved", 19),
-            MakeChart(tooHigh, MixEnum.Phoenix2, "High", 20));
 
         var result = await BuildHandler().Handle(new SearchChartsQuery
         {
-            Mix = MixEnum.Phoenix2,
-            Mixes = new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            Mix = MixEnum.Phoenix,
             LevelMin = 18,
             LevelMax = 18
         }, CancellationToken.None);
 
-        Assert.Equal(rerated, Assert.Single(result.Results).Chart.Id);
+        Assert.Equal(inRange, Assert.Single(result.Results).Chart.Id);
     }
 
     [Fact]
@@ -263,58 +222,6 @@ public sealed class SearchChartsHandlerTests
         }, CancellationToken.None);
 
         Assert.Equal(matched, Assert.Single(result.Results).Chart.Id);
-    }
-
-    [Fact]
-    public async Task ReratedFiltersReadTheSignedLevelChange()
-    {
-        var up = Guid.NewGuid();
-        var down = Guid.NewGuid();
-        var flat = Guid.NewGuid();
-        SeedMix(MixEnum.Phoenix,
-            MakeChart(up, MixEnum.Phoenix, "Buffed", 18),
-            MakeChart(down, MixEnum.Phoenix, "Nerfed", 20),
-            MakeChart(flat, MixEnum.Phoenix, "Same", 19));
-        SeedMix(MixEnum.Phoenix2,
-            MakeChart(up, MixEnum.Phoenix2, "Buffed", 19),
-            MakeChart(down, MixEnum.Phoenix2, "Nerfed", 19),
-            MakeChart(flat, MixEnum.Phoenix2, "Same", 19));
-
-        var query = new SearchChartsQuery
-        {
-            Mix = MixEnum.Phoenix2,
-            Mixes = new[] { MixEnum.Phoenix, MixEnum.Phoenix2 }
-        };
-        var handler = BuildHandler();
-
-        var upOnly = await handler.Handle(query with { ReratedUp = true }, CancellationToken.None);
-        var either = await handler.Handle(query with { ReratedUp = true, ReratedDown = true },
-            CancellationToken.None);
-
-        Assert.Equal(up, Assert.Single(upOnly.Results).Chart.Id);
-        Assert.Equal(2, either.Results.Count);
-        Assert.DoesNotContain(either.Results, r => r.Chart.Id == flat);
-    }
-
-    [Fact]
-    public async Task AvailabilityFiltersFindTheCutContent()
-    {
-        var cut = Guid.NewGuid();
-        var kept = Guid.NewGuid();
-        SeedMix(MixEnum.Phoenix,
-            MakeChart(cut, MixEnum.Phoenix, "Cut", 19),
-            MakeChart(kept, MixEnum.Phoenix, "Kept", 19));
-        SeedMix(MixEnum.Phoenix2, MakeChart(kept, MixEnum.Phoenix2, "Kept", 19));
-
-        var result = await BuildHandler().Handle(new SearchChartsQuery
-        {
-            Mix = MixEnum.Phoenix,
-            Mixes = new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
-            AvailableIn = MixEnum.Phoenix,
-            NotAvailableIn = MixEnum.Phoenix2
-        }, CancellationToken.None);
-
-        Assert.Equal(cut, Assert.Single(result.Results).Chart.Id);
     }
 
     [Fact]
@@ -391,32 +298,7 @@ public sealed class SearchChartsHandlerTests
     }
 
     [Fact]
-    public async Task MyStateShowsTheLinkedBestAndTheCrossMixPassMarker()
-    {
-        var id = Guid.NewGuid();
-        SeedMix(MixEnum.Phoenix, MakeChart(id, MixEnum.Phoenix, "Bee", 19));
-        SeedMix(MixEnum.Phoenix2, MakeChart(id, MixEnum.Phoenix2, "Bee", 19));
-        SeedPhoenixRecords(MixEnum.Phoenix,
-            new RecordedPhoenixScore(id, PhoenixScore.From(977210), PhoenixPlate.SuperbGame, false,
-                new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero)));
-        SeedPhoenixRecords(MixEnum.Phoenix2);
-
-        var result = await BuildHandler().Handle(new SearchChartsQuery
-        {
-            Mix = MixEnum.Phoenix2,
-            Mixes = new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
-            UserId = User
-        }, CancellationToken.None);
-
-        var my = Assert.Single(result.Results).My;
-        Assert.NotNull(my);
-        Assert.Null(my!.PhoenixScore);
-        Assert.False(my.PassedInLinkedMix);
-        Assert.True(my.PassedInAnotherScopeMix);
-    }
-
-    [Fact]
-    public async Task ScoreStateFiltersJudgeTheLinkedAppearance()
+    public async Task ScoreStateFiltersJudgeTheRecordInThisMix()
     {
         var played = Guid.NewGuid();
         var untouched = Guid.NewGuid();
@@ -442,38 +324,6 @@ public sealed class SearchChartsHandlerTests
     }
 
     [Fact]
-    public async Task ReclearGapFindsPassesThatHaveNotLandedInTheTargetMix()
-    {
-        var gap = Guid.NewGuid();
-        var recleared = Guid.NewGuid();
-        var neverPassed = Guid.NewGuid();
-        SeedMix(MixEnum.Phoenix,
-            MakeChart(gap, MixEnum.Phoenix, "Gap", 19),
-            MakeChart(recleared, MixEnum.Phoenix, "Recleared", 19),
-            MakeChart(neverPassed, MixEnum.Phoenix, "Never", 19));
-        SeedMix(MixEnum.Phoenix2,
-            MakeChart(gap, MixEnum.Phoenix2, "Gap", 19),
-            MakeChart(recleared, MixEnum.Phoenix2, "Recleared", 19),
-            MakeChart(neverPassed, MixEnum.Phoenix2, "Never", 19));
-        var may = new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero);
-        SeedPhoenixRecords(MixEnum.Phoenix,
-            new RecordedPhoenixScore(gap, PhoenixScore.From(960000), null, false, may),
-            new RecordedPhoenixScore(recleared, PhoenixScore.From(950000), null, false, may));
-        SeedPhoenixRecords(MixEnum.Phoenix2,
-            new RecordedPhoenixScore(recleared, PhoenixScore.From(940000), null, false, may));
-
-        var result = await BuildHandler().Handle(new SearchChartsQuery
-        {
-            Mix = MixEnum.Phoenix2,
-            Mixes = new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
-            UserId = User,
-            NotReclearedIn = MixEnum.Phoenix2
-        }, CancellationToken.None);
-
-        Assert.Equal(gap, Assert.Single(result.Results).Chart.Id);
-    }
-
-    [Fact]
     public async Task FamilyScoreFiltersJudgeEachRowByItsOwnFamilyOnly()
     {
         var modern = Guid.NewGuid();
@@ -487,25 +337,25 @@ public sealed class SearchChartsHandlerTests
             new BestXXChartAttempt(MakeChart(legacy, MixEnum.XX, "Old", 19),
                 new XXChartAttempt(XXLetterGrade.S, false, 92410, may)));
         var handler = BuildHandler();
-        var query = new SearchChartsQuery
-        {
-            Mix = MixEnum.Phoenix,
-            Mixes = new[] { MixEnum.XX, MixEnum.Phoenix },
-            UserId = User
-        };
+        var phoenixQuery = new SearchChartsQuery { Mix = MixEnum.Phoenix, UserId = User };
+        var legacyQuery = new SearchChartsQuery { Mix = MixEnum.XX, UserId = User };
 
-        var phoenixOnly = await handler.Handle(query with { PhoenixGradeMin = PhoenixLetterGrade.SSS },
+        // A Phoenix grade floor keeps the Phoenix row...
+        var phoenixKept = await handler.Handle(phoenixQuery with { PhoenixGradeMin = PhoenixLetterGrade.SSS },
             CancellationToken.None);
-        var bothFamilies = await handler.Handle(query with
+        // ...and a legacy row can never satisfy it, because it has no Phoenix grade to judge.
+        var legacyVsPhoenixFloor = await handler.Handle(legacyQuery with
         {
-            PhoenixGradeMin = PhoenixLetterGrade.SSS,
-            LegacyGradeMin = XXLetterGrade.S
+            PhoenixGradeMin = PhoenixLetterGrade.SSS
         }, CancellationToken.None);
-        var legacyTooHigh = await handler.Handle(query with { LegacyGradeMin = XXLetterGrade.SSS },
+        var legacyKept = await handler.Handle(legacyQuery with { LegacyGradeMin = XXLetterGrade.S },
+            CancellationToken.None);
+        var legacyTooHigh = await handler.Handle(legacyQuery with { LegacyGradeMin = XXLetterGrade.SSS },
             CancellationToken.None);
 
-        Assert.Equal(modern, Assert.Single(phoenixOnly.Results).Chart.Id);
-        Assert.Equal(2, bothFamilies.Results.Count);
+        Assert.Equal(modern, Assert.Single(phoenixKept.Results).Chart.Id);
+        Assert.Empty(legacyVsPhoenixFloor.Results);
+        Assert.Equal(legacy, Assert.Single(legacyKept.Results).Chart.Id);
         Assert.Empty(legacyTooHigh.Results);
     }
 

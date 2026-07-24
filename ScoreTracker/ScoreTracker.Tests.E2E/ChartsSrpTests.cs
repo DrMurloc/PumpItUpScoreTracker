@@ -66,9 +66,9 @@ public sealed class ChartsSrpTests : IAsyncLifetime
     [Fact]
     public async Task AChartTheViewersMixDroppedStillRendersItsPage()
     {
-        // Reached from All Mixes: the viewer sits in Phoenix, the chart is XX-only. The URL
-        // resolves, so the chart exists — the page must render it from the mix that carries
-        // it rather than 404 (field-test round 1).
+        // The viewer sits in Phoenix; the chart is XX-only, reached by canonical URL, the
+        // sitemap or a search result. The URL resolves, so the chart exists — the page must
+        // render it from the mix that carries it rather than 404 (field-test round 1).
         await _fixture.Seed.SeedXXChartAsync("Legacy Relic", 19, "Double");
 
         await _page.GotoAsync("/Charts/xx/legacy-relic/d19");

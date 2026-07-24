@@ -25,21 +25,19 @@ flips the model:
 
 | Decision | Ruling |
 |---|---|
-| Result unit | **Grouped chart identity** (`ChartMix` spans mixes): one card per lineage, debut → latest, level history. Mix is a facet. |
-| All Mixes | **Page-local scope toggle** (Current mix / All / Custom). Global mix pill and theme untouched. |
-| VDP link target | Selected mix when the chart appears there, else its latest mix. My-score overlay shows the linked mix's best + cross-mix marker (dashed-green family). |
+| Scope | **The selected mix, and only that mix.** One card per chart. A cross-mix view was built and then deliberately removed (see §7) — it needs its own design pass, not a scope flag bolted onto this page. |
+| VDP link target | The chart's page in the mix being searched. My-score overlay shows that mix's best. |
 | Skills facet | **Granular piucenter badge vocabulary** (`top3:` metrics: `staggered_bracket`, `twist_over90`, `anchor_run`, `yog_walk`, `hands`, …). NOT the rollup `Skill` enum (the high-level generic tags — slated to retire), NOT `SkillCategory` buckets. **Highlighted-only matching** = badge present in the chart's top-3 dominance summary; contains-level badges neither render nor match. |
 | NPS | The banked piucenter `nps` metric ONLY — never `NoteCount / Duration` (holds inflate perfects). Unmatched charts silently drop from NPS filter/sort. |
 | Tier facet source | Splits by scoring family: **Phoenix / Phoenix 2 = Pass Difficulty / Score Difficulty** (score-derived); **XX and older = Community Vote** (the voted list — always called exactly that, everywhere). There is deliberately no single "legacy" flag — each feature keeps its own boundary (scoring family here, Exceed for rerates, slot era for chips). Community Vote also ships as an export column, populated for XX-and-older rows. Known divergence: today's `/TierLists` serves XX through the score-derived lens set; aligning it is out of scope here. |
-| Rerates | `Rerated Up` / `Rerated Down` filters + signed **Level Change** sortable. Computed over **Exceed-onward** appearances only — pre-Exceed levels live on per-era scales. |
-| My Score | **Phoenix Score and Legacy Score are separate facet groups**, never compared or blended. XX letter grades behave as clear-quality (plate-like). Each group filters only its own family's appearances. |
-| Score state | Unplayed / Played / Passed / Failed, plus per-family grade ≥ / plate ≥ / score range / recorded date. |
-| Re-clear gap | *Passed in an in-scope mix, no pass in the target mix* — promoted to prominent placement while the Phoenix 2 transition is hot; demotes to the drawer later. |
-| Popularity | Site score counts drive the sort (all mixes); official mirror rank renders as a badge when present (display-only, never a filter). |
-| Default sort | **Level descending**; within-level tiebreak = **Scoring Level** (score-derived) in modern scope, Community Vote average in XX-and-older scope. Vote data never orders modern-scope results, tiebreaks included. |
-| Sorts | Level · scoring level · popularity · pass rate · newest content (debut era) · name · BPM · NPS · duration · my grade · my recent (Community Vote replaces scoring level as the difficulty sort in XX-and-older scope). **Level Change left the sort menu** (owner call — rarely useful live); it survives as an export column and the Rerated Up/Down drawer filters stay. |
+| Debut mix | A chart's origin (`OriginalMix`) rides every appearance, so **it filters and sorts inside one mix** — this is the "new content" query and it survives the cross-mix removal. |
+| My Score | **Phoenix Score and Legacy Score are separate facet groups**, never compared or blended. XX letter grades behave as clear-quality (plate-like). Only the family matching the searched mix is offered. |
+| Score state | Unplayed / Played / Passed / Failed as **multi-select chips** ("Unplayed or Failed" = everything you haven't beaten), plus per-family grade ≥ / plate ≥ / score range / recorded date. |
+| Popularity | Site score counts for the searched mix drive the sort; official mirror rank renders as a badge when present (display-only, never a filter). |
+| Default sort | **Level descending**; within-level tiebreak = **Scoring Level** (score-derived) in a Phoenix-family mix, Community Vote average in XX and older. Vote data never orders modern-mix results, tiebreaks included. |
+| Sorts | Level · scoring level · popularity · pass rate · newest content (debut era) · name · BPM · NPS · duration · my grade · my recent (Community Vote replaces scoring level as the difficulty sort in XX and older). |
 | Card display | Fixed core card + a small curated **Display switch set** in Comfortable (the tier-lists idiom: step artist, duration, note count). **The active sort key always auto-surfaces on the card/table and cannot be hidden** — sorting by an invisible value is impossible by construction; the sort menu never greys out. Table shows the full fact set with the sort column highlighted. No column pickers anywhere on the page. |
-| Export | Toolbar **⤓ Export** button → dialog: column picker over the full inventory (this is where column freedom lives), **Group by chart vs one row per chart + mix** shape toggle (the flat spreadsheet shape's home; identical in single-mix scope), downloads a CSV of the **entire filtered set** via an endpoint reusing the page's query-string contract. Column picks persist as a UiSetting; My columns signed-in only; stable English headers (convenience surface, outside the versioned `api/*` contract); Excel formula-injection hygiene on values. |
+| Export | Toolbar **⤓ Export** button → dialog: column picker over the full inventory (this is where column freedom lives), downloading a CSV of the **entire filtered set** via an endpoint reusing the page's query-string contract. Column picks persist as a UiSetting; My columns signed-in only; stable English headers in registry order (convenience surface, outside the versioned `api/*` contract); Excel formula-injection hygiene on values. |
 | Dropped | Has-video, recently-added (needs version/date backfill the owner defers), letter-grade percentiles, single-select level (→ range), the `/{userId}/Charts` share view, UCS (separate rethink). |
 | Nulls | Facets with gappy coverage (NPS, badges, BPM on legacy) silently exclude unmatched charts. |
 | Rendering | Interactive circuit page. Load state from the query string, filter live without reloads, write state back via the history interop (the PR #164 pattern — no programmatic `NavigateTo` for filter state). SSR/SEO facets are explicitly not v1. |
@@ -49,8 +47,9 @@ flips the model:
 | Default landing | Unfiltered = the catalog, Level ↓. |
 
 "Legacy Difficulty" is the user-facing name for the pre-Exceed slot filter (matches the
-`--slot-*` chip vocabulary in UX-GUIDELINES); it activates only when scope includes
-pre-Exceed mixes.
+`--slot-*` chip vocabulary in UX-GUIDELINES). It appears only when the mix in view actually
+has slotted charts — asked of the facet counts rather than guessed from the mix, so a
+backfilled catalogue answers for itself.
 
 ### Vocabulary (pinned — UI copy, l10n keys, and this doc use these names exactly)
 
@@ -60,16 +59,14 @@ pre-Exceed mixes.
 | **Pass Difficulty** | Tier bucket (Overrated → Underrated): how hard the chart is to *pass* relative to its level, from weighted recorded passes. Modern mixes. | `Pass Count` tier list |
 | **Score Difficulty** | Tier bucket: how hard it is to *score well* on, relative to its level. Modern mixes. | `Scores` tier list |
 | **Pass Rate** | Raw percentage of recorded scores that are passes. Not relative to anything. | `PassCount ÷ Count` from score aggregates |
-| **Scoring Level** | Score-derived decimal difficulty estimate; the modern-scope difficulty sort and the default-sort tiebreak. | `IChartScoringLevelRepository` |
+| **Scoring Level** | Score-derived decimal difficulty estimate; the Phoenix-family difficulty sort and the default-sort tiebreak. | `IChartScoringLevelRepository` |
 
 ### The page stack (locked, toolbar rounds 3–5)
 
 Top to bottom, nothing else between the stack and the results:
 
-1. **Page header** — the page title plus the **Current Mix / All Mixes** segmented control.
-   Scope is page furniture, never among the filters; it is still a query-string key so
-   links carry it, and flipping it never touches the chip row, the theme, or the global
-   mix pill.
+1. **Page header** — the page title plus the mix being searched. The mix is page furniture,
+   never a filter and never a chip; it follows the global mix selection.
 2. **The query (chip row)** — one chip language: every applied filter renders as a small
    clearable chip, and a **non-default sort joins them** as an accent-bordered `⇅` chip.
    Clearing the sort chip returns to Level ↓; the default sort shows no chip. Clear-all
@@ -96,27 +93,26 @@ re-sorts; the `⇅` menu stays available.
   `ChartDetailsDialog` usage on this page, inline edit cells, the column/filter toggle
   UiSettings, and the dead vote plumbing (`GetChartRatingsQuery` full-table load,
   uncalled `UpdateDifficultyRating`) are deleted with it.
-- **Components** (one concept, one component): the page header (title + scope segmented);
+- **Components** (one concept, one component): the page header (title + mix);
   the **query chip** (one shared component rendering filter chips and the sort chip — the
   page-stack rules above); the count line (count + the four icon controls, funnel badge);
   the filter drawer (the sole home of every filter: grouped per the inventory,
-  contextually activated — Community Vote and Legacy Difficulty with legacy scope, co-op
+  contextually activated — Community Vote in legacy mixes, Legacy Difficulty when the mix has slotted charts, co-op
   player count with CoOp type — plus the Display switches); the sort menu; a search card
   (Comfortable), the compact **jacket sticker tile** (the tier-list idiom verbatim: art
-  tile + bubble + tier dot + grade overlay, identity in the tooltip, the owner-locked
-  state-border language — solid green passed / dashed blue To-Do / dashed green
-  other-mix), and a table renderer (fixed columns, sorted-column highlight, header-click
-  sorting) over the same result model; the All-Mixes span line (debut → latest · n mixes ·
-  level change) and re-clear/cut markers. Reuses `SongImage`, `DifficultyBubble` (modern
-  image bubbles; legacy CSS chips), `LetterGradeIcon`.
-- **URL contract**: every facet, the sort, and the scope are query-string keys; init
+  tile + bubble + tier dot + grade overlay, chart identity in the tooltip, the owner-locked
+  state-border language — solid green passed, dashed blue To-Do), and a table renderer
+  (fixed columns, sorted-column highlight, header-click sorting) over the same result
+  model. Reuses `SongImage`, `DifficultyBubble` (modern image bubbles; legacy CSS chips),
+  `LetterGradeIcon`.
+- **URL contract**: every facet and the sort are query-string keys; init
   parses, changes push via history interop. The old page's param names (`Difficulty`,
   `ChartType`, `SongName`, `SongType`, `SongArtist`, `ScoreState`, `SavedCharts`) are
   honored as read-time aliases so shared links keep working (`SongName`'s exact match maps
   onto the contains filter); the page emits only the new names.
-- **Export**: the dialog (shape toggle + grouped column picker + filename preview) and a
+- **Export**: the dialog (grouped column picker + filename preview) and a
   UI-support controller endpoint (house pattern: culture/sitemap — not under `api/*`)
-  that accepts the page's query-string filters plus `columns` and `shape`, dispatches the
+  that accepts the page's query-string filters plus `columns`, dispatches the
   unpaged search, and streams the CSV. Anonymous callers get content/community columns;
   My columns require the signed-in user.
 - **Quick record**: extract the record body of
@@ -127,7 +123,7 @@ re-sorts; the `⇅` menu stays available.
 - **Localization**: every string through `L[…]`; all nine locales in the same pass, per the
   locale glossaries. The granular badge display names are new key volume (~30 keys).
 - **Tests**: bUnit (`Tests.Components`) for filter-bar dispatch, card states (families,
-  span/rerate/re-clear, unplayed), drawer, densities, `RecordScoreForm` under both
+  passed/To-Do borders, unplayed), drawer, densities, `RecordScoreForm` under both
   consumers. One Playwright E2E fact for the URL round-trip + card → VDP navigation —
   history-interop territory bUnit can't observe.
 
@@ -139,16 +135,15 @@ Catalog queries), so Catalog must never reference ChartIntelligence; everything 
 needs from other verticals is reachable through Domain ports. **Zero new project
 references.**
 
-- **`Contracts/Queries/SearchChartsQuery.cs`** (+ result records): filters (text, level
-  range, types, co-op player count, song type, artist, step artist, BPM/NPS/duration/note
-  ranges, badges, mix scope incl. debut / available-in / not-in / rerated, tier categories,
-  pass-rate floor, score-state + per-family score facets, re-clear target, recorded-date
-  range, `RestrictToChartIds`), sort + direction, page + size. Returns identity groups
-  (chart + per-mix appearances + span/rerate data + facet payload for the card) and a
-  total count (+ enum facet counts).
+- **`Contracts/Queries/SearchChartsQuery.cs`** (+ result records): the mix, plus filters
+  (text, level range, types, co-op player count, song type, artist, step artist,
+  BPM/NPS/duration/note ranges, badges, debut mixes, legacy slots, tier categories,
+  pass-rate floor, score states + per-family score facets, recorded-date range,
+  `RestrictToChartIds`), sort + direction, page + size. Returns each chart with its
+  community and personal overlays, and a total count (+ enum facet counts).
 - **Handler pipeline** (`Application/`):
-  1. Content facets + mix scope against Catalog-owned data (charts, `ChartMix`, songs,
-     `top3:`/`nps` metrics).
+  1. Content facets against the mix's cached chart dictionary plus the banked
+     `top3:`/`nps` metrics.
   2. Community facets via Domain ports: `ITierListRepository` — `Pass Count`/`Scores`
      entries (Pass/Score Difficulty) for Phoenix-family mixes, `Difficulty` entries
      (**Community Vote**) for XX-and-older;
@@ -157,13 +152,13 @@ references.**
   3. User facets when signed in: `IScoreReader` best-scores per family; saved-lists arrive
      from the page as `RestrictToChartIds` (Catalog stays agnostic of list storage).
   4. Sort, tiebreak, page slice. An unpaged path serves the CSV export — bounded by
-     catalog size (~25k identity rows worst case), so no streaming gymnastics needed.
+     catalog size (~4–5k rows per mix), so no streaming gymnastics needed.
 - **Caching**: community-wide dictionaries (per mix: aggregates, tier entries, scoring
   levels, badge index) in `IMemoryCache`, expiring after the nightly analytics chain like
   `ChartVerdictHandler` (13:00 UTC). User reads are per-request, never cached cross-user.
-  Scale check: ~4–5k charts per modern mix, ~25k `ChartMix` rows across all mixes —
-  in-memory composition over cached dictionaries is comfortably within budget; the
-  structural win is that the *circuit* stops holding four full tables.
+  Scale check: ~4–5k charts per mix — in-memory composition over cached dictionaries is
+  comfortably within budget; the structural win is that the *circuit* stops holding four
+  full tables.
 - **Official ranks** are page-side enrichment: the page sends the OfficialMirror contract
   query for the returned page of ids. Keeps Catalog free of OfficialMirror types; ranks are
   display-only.
@@ -172,24 +167,22 @@ references.**
 
 - **`ScoreTracker.Domain` / SharedKernel: no changes.** `IScoreReader.GetChartScoreAggregates`
   already exists; query params ride existing value types.
-- **Catalog `Domain/` (internal)**: the span/rerate calculator (appearances → debut, latest,
-  mix count, Exceed-onward signed level delta; slot-era rows excluded from the math), the
-  badge display-name catalog (piucenter key → English display, Title-cased fallback for
-  unknown keys so new vocabulary degrades gracefully; UI layer localizes), the
-  `ModernScaleStart = Exceed` constant, family classification helpers (delegating to
-  `UsesLegacyScoring`).
-- **Unit tests** (`DomainTests/`): rerate math (up/down/net, per-era exclusion, single-
-  appearance = no rerate), span derivation, badge naming fallback.
+- **Catalog `Domain/` (internal)**: the badge display-name catalog (piucenter key → English
+  display, Title-cased fallback for unknown keys so new vocabulary degrades gracefully; UI
+  layer localizes) and family classification helpers (delegating to `UsesLegacyScoring`).
+  A span/rerate calculator over a chart's appearances lived here until the cross-mix
+  removal took it (§7); rebuild it there when All Mixes gets its design pass.
+- **Unit tests** (`DomainTests/`): badge naming fallback.
 
 ### Infrastructure (Catalog `Infrastructure/`)
 
-- Extended internal repositories: identity-grouped reads (chart + all `ChartMix`
-  appearances + song in one shape), badge reads (`top3:` names per chart; distinct-name
-  enumeration for the facet cloud), `nps` reads.
+- Extended internal repositories: badge reads (`top3:` names per chart; distinct-name
+  enumeration for the facet cloud) and `nps` reads. Charts themselves come from the
+  existing per-mix cached read.
 - **No new tables; no expected migrations.** `ChartMix` is already indexed on
   MixId/Level/ChartId. If profiling shows the metrics table needs a `MetricName`-prefix
   index, it lands as a standard scaffolded migration.
-- Integration tests (`Tests.Integration`): identity grouping and metric reads against real
+- Integration tests (`Tests.Integration`): metric reads against real
   SQL.
 
 ## 4. Commit order
@@ -199,14 +192,14 @@ Each commit leaves all fast suites green; integration/E2E green at their touchpo
 | # | Commit | Layer |
 |---|---|---|
 | C1 | This design doc | docs |
-| C2 | Catalog contracts + domain: `SearchChartsQuery`/results, span+rerate calculators, badge display catalog + unit tests | Application/Domain |
-| C3 | Catalog infrastructure: identity-grouped reads, badge/nps reads + integration tests | Infrastructure |
-| C4 | Search handler v1: content facets, mix scope, paging, sorts, cached community dictionaries (tier source fork incl. votes-for-legacy) + component tests | Application |
-| C5 | User facets: per-family score facets, re-clear gap, `RestrictToChartIds` + component tests | Application |
-| C6 | Page skeleton: rebuilt `/Charts` on the locked stack (header + scope, query chips, count line + icon controls), Comfortable cards, paging, sort menu, minimal drawer (level range, type, score state, song-name-contains), URL contract with old-name aliases; old page internals deleted + bUnit | Presentation |
-| C7 | All Mixes: page-level scope wired, grouped identity cards (span/rerate/re-clear/cut), linked-mix VDP resolution + bUnit | Presentation |
+| C2 | Catalog contracts + domain: `SearchChartsQuery`/results, badge display catalog + unit tests (the span+rerate calculators landed here and left with §7) | Application/Domain |
+| C3 | Catalog infrastructure: badge/nps reads + integration tests | Infrastructure |
+| C4 | Search handler v1: content facets, paging, sorts, cached community dictionaries (tier source fork incl. votes-for-legacy) + component tests | Application |
+| C5 | User facets: per-family score facets, `RestrictToChartIds` + component tests | Application |
+| C6 | Page skeleton: rebuilt `/Charts` on the locked stack (header, query chips, count line + icon controls), Comfortable cards, paging, sort menu, minimal drawer (level range, type, score state, song-name-contains), URL contract with old-name aliases; old page internals deleted + bUnit | Presentation |
+| C7 | (built then removed — see §7) |
 | C8 | Full drawer: complete facet inventory, contextual activation, enum facet counts, Display switches + bUnit | Presentation |
-| C9 | Export: CSV endpoint reusing the query-string contract + dialog (column picker, shape toggle, UiSetting persistence, hygiene) + bUnit | Presentation |
+| C9 | Export: CSV endpoint reusing the query-string contract + dialog (column picker, UiSetting persistence, hygiene) + bUnit | Presentation |
 | C10 | Densities: Compact sticker sheet + Table (header-click sorting, sorted-column highlight, sort-chip suppression) + `Density__Charts` persistence + bUnit | Presentation |
 | C11 | Quick record: `RecordScoreForm` extraction (widget pinned unchanged), ✎ dialog, in-place overlay update + bUnit both consumers | Presentation |
 | C12 | Official-rank badges (page-side), desktop nav promotion | Presentation |
@@ -234,3 +227,80 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
   cratering, the first lever is default-open drawer on first visit, not new chrome.
 - **`GetChartsQuery` consumers elsewhere** (randomizer, upload pages, admin) are untouched —
   the SRP query is additive; the old page's four full-table loads die with the page.
+
+## 6. Field-test fixes
+
+### Round 1
+
+- **Compact rendered as slivers** — the tier lists' compact tiles take their width from
+  `.tier-card-grid.tier-card-grid-compact`; the sheet had wrapped them in a plain flex row.
+  The sheet reuses that grid outright now, and a bUnit fact pins the container.
+- **Legacy chart pages 404'd** — `ChartDetails` resolved the URL, then re-fetched the chart
+  in the *viewer's* mix and `NotFound()` when it wasn't there, so every chart the current
+  mix had dropped 404'd. It now renders the appearance the URL names. Proven by running the
+  new E2E fact against the pre-fix commit (404) and the fix (renders).
+- **Canonical for a dropped chart is its debut mix** (owner ruling): the default mix's copy
+  when it still lives there, else the copy in its `OriginalMix`. The sitemap lists every
+  legacy-only chart's canonical once, at that debut appearance, so the whole back catalogue
+  is crawlable. This reverses the rejected-alternatives note in
+  [chart-details-overhaul.md](chart-details-overhaul.md), which reasoned about charts that
+  *do* exist in the current mix — a case this rule doesn't touch.
+
+### Round 2 — the drawer (owner-locked)
+
+- **Basics first, long tail behind "More filters"** (persisted; auto-opened when a URL
+  arrives carrying an advanced filter) so chips never flood the panel. Drawer widened to
+  420px to suit them.
+- **Chips wherever a facet is a set of toggles**: chart type — spelled out, *Single /
+  Double / Single Performance*, never `S`/`D` — song type, score state, legacy difficulty,
+  saved lists, and a co-op player-count row that appears only when Co-Op is picked. Score
+  state going multi is a capability gain: "Unplayed or Failed" is everything you haven't
+  beaten, which one select could not say.
+- **Sliders replace paired numeric fields**: level, BPM, NPS, note count, duration, pass
+  rate, scoring level, Phoenix score, and the tier lists — which work because
+  `TierListCategory` is an ordered scale, so Overrated-to-Underrated is a real range. Grade
+  and plate become ordinal sliders too, turning "at least" into a range. Extents come from
+  the mix's own catalogue via `GetSearchRangesQuery` rather than guessed spans; an untouched
+  slider means no filter at all, so nulls are never quietly cut.
+- **Facet counts ride every chip facet, computed with that facet's own filter lifted.**
+  Counted against the filtered set they would all read 0 the moment you picked a value,
+  which reads as a broken page rather than a live facet.
+- **Debut mix groups into eras** (Pro, Pro 2 and Infinity are their own line).
+- **Multi-selects are all any-of for now**; the AND/OR toggle is deferred (owner: "do 'Any'
+  for now, which I THINK is what's expected").
+- **Display switches stay switches** — they change what a card shows, not which charts match.
+
+## 7. Cross-mix: built, removed, deferred
+
+A cross-mix ("All Mixes") view shipped in C7 and was **removed before the branch landed**
+(owner call, 2026-07-21). Recording it here because the reasons constrain the redesign:
+
+- **It was slow in the way that matters.** Every request re-grouped ~25k `ChartMix` rows
+  into ~15k identities before filtering — so pagination and each filter change paid the
+  regroup, not just the first load. The fix (a cached identity index) is real work and was
+  being designed as an emergency perf patch rather than as a model.
+- **It needed UI decisions nobody had made**: which mix a quick record writes to when a
+  chart spans several; whether "Unplayed" means *this mix* or *never played at all*;
+  whether a my-score overlay may ever show a best from another mix (it may not — scoring
+  families are incomparable); how a legacy grade and a 1M Phoenix score sit side by side.
+- **The model wants naming first.** Today's `Chart` is a denormalized join of the `Chart`
+  (identity) and `ChartMix` (appearance) tables. Cross-mix work needs the identity named —
+  the working name is **`ChartLineage`**, holding a `Chart` template plus its appearances
+  and *materializing plain `Chart`s* (`In(mix)`, `Canonical`) so existing leaf components
+  keep taking `Chart` and only page shells learn the new type. `Chart` stays the appearance:
+  it is the dominant, correct view (you record a score on a chart-in-a-mix) and ubiquitously
+  what players call a chart.
+
+What survived the removal, because it is single-mix meaningful: the **debut-mix** facet and
+the newest-content sort (`OriginalMix` is a per-chart fact), and **Legacy Difficulty**
+(slots are per-appearance, and a legacy mix can be the selected mix). What went: the scope
+toggle, available-in / not-available-in, rerate filters and Level Change, the re-clear gap,
+the identity span line, the cross-mix pass marker, and the export's per-mix row shape.
+
+The twelve l10n keys the removal orphaned (`Mixes`, `Available in`, `Not available in`,
+`Rerated up`/`down`, `Level change`, `In`, `Not in`, `Shape`, `Group by chart`, `One row per
+chart and mix`, and the shape-toggle helper paragraph) stay translated in all nine locales —
+they are the exact vocabulary the redesign will want back, and re-translating them ×9 costs
+more than an unreferenced key does.
+
+When cross-mix returns it gets a full mock from the start, not a flag on this page.

@@ -11,12 +11,14 @@ using ScoreTracker.SharedKernel.Models;
 namespace ScoreTracker.Catalog.Application;
 
 /// <summary>
-///     The /Charts SRP search (docs/design/charts-srp.md §3). Identity groups come from the
-///     per-mix chart dictionaries (already cached by the chart repository); community facets
-///     ride per-mix bundles cached until just after the nightly analytics chain, split by
-///     scoring family — Pass/Score Difficulty and Scoring Level for Phoenix-family mixes,
-///     Community Vote for XX and older. Vote data never reaches a modern-scope facet or
-///     ordering, tiebreaks included.
+///     The /Charts SRP search (docs/design/charts-srp.md §3). Charts come from the mix's
+///     cached dictionary; community facets ride a per-mix bundle cached until just after the
+///     nightly analytics chain, split by scoring family — Pass/Score Difficulty and Scoring
+///     Level for Phoenix-family mixes, Community Vote for XX and older. Vote data never
+///     reaches a modern-mix facet or ordering, tiebreaks included.
+///     Searching is single-mix by design: a cross-mix view needs its own model (identity
+///     grouping, per-appearance levels, incomparable scoring families) and is deferred to
+///     its own design pass rather than bolted on here.
 /// </summary>
 internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, ChartSearchResultPage>
 {
@@ -49,19 +51,16 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
 
     public async Task<ChartSearchResultPage> Handle(SearchChartsQuery request, CancellationToken cancellationToken)
     {
-        var scope = await ResolveScope(request, cancellationToken);
-        var identities = await BuildIdentities(request.Mix, scope, cancellationToken);
+        var charts = await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken);
+        var metricsByChart = await _metrics.GetMetricsByChart(PiuCenterMetrics.Source, cancellationToken);
+        var bundle = await GetCommunityBundle(request.Mix, cancellationToken);
 
-        var bundles = new Dictionary<MixEnum, CommunityBundle>();
-        foreach (var mix in identities.Select(i => i.Linked.Mix).Distinct())
-            bundles[mix] = await GetCommunityBundle(mix, cancellationToken);
+        var projected = charts.Select(c => Project(c, metricsByChart, bundle)).ToList();
 
-        var projected = identities.Select(i => Project(i, bundles[i.Linked.Mix])).ToList();
-
-        IReadOnlyDictionary<(MixEnum, Guid), MyRecord>? myRecords = null;
+        IReadOnlyDictionary<Guid, MyRecord>? myRecords = null;
         if (request.UserId != null)
         {
-            myRecords = await LoadMyRecords(request.UserId.Value, scope, cancellationToken);
+            myRecords = await LoadMyRecords(request.Mix, request.UserId.Value, cancellationToken);
             var records = myRecords;
             projected = projected.Select(r => r with { My = BuildMyState(r, records) }).ToList();
         }
@@ -79,7 +78,7 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
     }
 
     private static IEnumerable<ChartSearchResult> Filter(IEnumerable<ChartSearchResult> rows,
-        SearchChartsQuery q, IReadOnlyDictionary<(MixEnum, Guid), MyRecord>? myRecords)
+        SearchChartsQuery q, IReadOnlyDictionary<Guid, MyRecord>? myRecords)
     {
         return rows.Where(r => MatchesContent(r, q) && MatchesCommunity(r, q)
                                && (myRecords == null || MatchesUser(r, q, myRecords)));
@@ -92,7 +91,7 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
     ///     value, which looks like a broken page rather than a live facet.
     /// </summary>
     private static ChartSearchFacetCounts CountFacets(IReadOnlyList<ChartSearchResult> projected,
-        SearchChartsQuery q, IReadOnlyDictionary<(MixEnum, Guid), MyRecord>? myRecords)
+        SearchChartsQuery q, IReadOnlyDictionary<Guid, MyRecord>? myRecords)
     {
         IEnumerable<ChartSearchResult> Without(SearchChartsQuery lifted) =>
             Filter(projected, lifted, myRecords);
@@ -108,9 +107,8 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
             CountCategories(Without(q with { PassDifficulty = null }), r => r.PassDifficulty),
             CountCategories(Without(q with { ScoreDifficulty = null }), r => r.ScoreDifficulty),
             CountCategories(Without(q with { CommunityVote = null }), r => r.CommunityVote),
-            Without(q with { LegacySlots = null })
-                .SelectMany(r => r.Appearances.Where(a => a.Slot != null).Select(a => a.Slot!.Value).Distinct())
-                .GroupBy(s => s).ToDictionary(g => g.Key, g => g.Count()),
+            Without(q with { LegacySlots = null }).Where(r => r.Chart.Slot != null)
+                .GroupBy(r => r.Chart.Slot!.Value).ToDictionary(g => g.Key, g => g.Count()),
             Without(q with { DebutMixes = null }).GroupBy(r => r.DebutMix)
                 .ToDictionary(g => g.Key, g => g.Count()),
             myRecords == null
@@ -122,13 +120,47 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
                 .GroupBy(r => r.Chart.PlayerCount).ToDictionary(g => g.Key, g => g.Count()));
     }
 
-    /// <summary>Passed outranks failed outranks played-unscored; no record at all is unplayed.</summary>
+    /// <summary>No record at all is unplayed; otherwise the record's pass flag decides.</summary>
     private static ChartScoreStateFilter StateOf(ChartSearchResult row,
-        IReadOnlyDictionary<(MixEnum, Guid), MyRecord> records)
+        IReadOnlyDictionary<Guid, MyRecord> records)
     {
-        if (!records.TryGetValue((row.Chart.Mix, row.Chart.Id), out var linked))
-            return ChartScoreStateFilter.Unplayed;
-        return linked.Passed ? ChartScoreStateFilter.Passed : ChartScoreStateFilter.Failed;
+        if (!records.TryGetValue(row.Chart.Id, out var record)) return ChartScoreStateFilter.Unplayed;
+        return record.Passed ? ChartScoreStateFilter.Passed : ChartScoreStateFilter.Failed;
+    }
+
+    private static ChartSearchResult Project(Chart chart,
+        IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillMetric>> metricsByChart, CommunityBundle bundle)
+    {
+        var id = chart.Id;
+        var badges = Array.Empty<ChartBadge>();
+        decimal? nps = null;
+        if (metricsByChart.TryGetValue(id, out var metrics))
+        {
+            badges = metrics
+                .Where(m => m.MetricName.StartsWith(PiuCenterMetrics.Top3Prefix, StringComparison.Ordinal))
+                .Select(m => m.MetricName[PiuCenterMetrics.Top3Prefix.Length..])
+                .OrderBy(k => k, StringComparer.Ordinal)
+                .Select(k => new ChartBadge(k, PiuCenterBadges.DisplayName(k), PiuCenterBadges.CategoryFor(k)))
+                .ToArray();
+            nps = metrics.FirstOrDefault(m => m.MetricName == PiuCenterMetrics.Nps)?.Value;
+        }
+
+        var aggregate = bundle.Aggregates.TryGetValue(id, out var agg) ? agg : null;
+
+        return new ChartSearchResult(
+            chart,
+            chart.OriginalMix,
+            badges,
+            nps,
+            bundle.PassDifficulty.TryGetValue(id, out var pass) ? pass : null,
+            bundle.ScoreDifficulty.TryGetValue(id, out var score) ? score : null,
+            bundle.CommunityVote.TryGetValue(id, out var vote) ? vote : null,
+            bundle.ScoringLevels.TryGetValue(id, out var level) ? level : null,
+            bundle.VoteRatings.TryGetValue(id, out var rating) ? rating : null,
+            aggregate?.Count ?? 0,
+            aggregate?.PassCount ?? 0,
+            aggregate?.PgCount ?? 0,
+            null);
     }
 
     private static IReadOnlyDictionary<TierListCategory, int> CountCategories(
@@ -137,71 +169,6 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
         return rows.Where(r => category(r) != null)
             .GroupBy(r => category(r)!.Value)
             .ToDictionary(g => g.Key, g => g.Count());
-    }
-
-    private async Task<IReadOnlyList<MixEnum>> ResolveScope(SearchChartsQuery request,
-        CancellationToken cancellationToken)
-    {
-        if (request.Mixes is { Count: > 0 }) return request.Mixes.OrderBy(m => m.DisplayOrder()).ToArray();
-        if (!request.AllMixes) return new[] { request.Mix };
-
-        var allLevels = await _charts.GetChartMixLevels(cancellationToken);
-        return allLevels.Select(l => l.Mix).Distinct().OrderBy(m => m.DisplayOrder()).ToArray();
-    }
-
-    private sealed record Identity(
-        Chart Linked,
-        IReadOnlyList<ChartMixAppearance> Appearances,
-        IReadOnlySet<MixEnum> Present,
-        MixEnum LatestMix,
-        int? LevelChange,
-        IReadOnlyList<string> Top3,
-        decimal? Nps);
-
-    private async Task<IReadOnlyList<Identity>> BuildIdentities(MixEnum preferredMix,
-        IReadOnlyList<MixEnum> scope, CancellationToken cancellationToken)
-    {
-        var byId = new Dictionary<Guid, List<Chart>>();
-        foreach (var mix in scope)
-        foreach (var chart in await _charts.GetCharts(mix, cancellationToken: cancellationToken))
-        {
-            if (!byId.TryGetValue(chart.Id, out var list)) byId[chart.Id] = list = new List<Chart>();
-            list.Add(chart);
-        }
-
-        var metricsByChart = await _metrics.GetMetricsByChart(PiuCenterMetrics.Source, cancellationToken);
-
-        var identities = new List<Identity>(byId.Count);
-        foreach (var (id, charts) in byId)
-        {
-            var ordered = charts.OrderBy(c => c.Mix.DisplayOrder()).ToArray();
-            var present = ordered.Select(c => c.Mix).ToHashSet();
-            var linkedMix = ChartSpanCalculator.LinkedMix(preferredMix, present);
-            var linked = ordered.First(c => c.Mix == linkedMix);
-            var appearances = ordered
-                .Select(c => new ChartMixAppearance(c.Mix, (int)c.Level, c.Slot))
-                .ToArray();
-            var levelChange = ChartSpanCalculator.LevelChange(
-                ordered.Select(c => new ChartSpanCalculator.Appearance(c.Mix, (int)c.Level, c.Slot != null))
-                    .ToArray(),
-                linked.Type == ChartType.CoOp);
-
-            string[] top3 = Array.Empty<string>();
-            decimal? nps = null;
-            if (metricsByChart.TryGetValue(id, out var metrics))
-            {
-                top3 = metrics
-                    .Where(m => m.MetricName.StartsWith(PiuCenterMetrics.Top3Prefix, StringComparison.Ordinal))
-                    .Select(m => m.MetricName[PiuCenterMetrics.Top3Prefix.Length..])
-                    .OrderBy(k => k, StringComparer.Ordinal)
-                    .ToArray();
-                nps = metrics.FirstOrDefault(m => m.MetricName == PiuCenterMetrics.Nps)?.Value;
-            }
-
-            identities.Add(new Identity(linked, appearances, present, ordered[^1].Mix, levelChange, top3, nps));
-        }
-
-        return identities;
     }
 
     private sealed record CommunityBundle(
@@ -259,33 +226,6 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
         return (now < today ? today : today.AddDays(1)) - now;
     }
 
-    private static ChartSearchResult Project(Identity identity, CommunityBundle bundle)
-    {
-        var id = identity.Linked.Id;
-        var badges = identity.Top3
-            .Select(k => new ChartBadge(k, PiuCenterBadges.DisplayName(k), PiuCenterBadges.CategoryFor(k)))
-            .ToArray();
-        var aggregate = bundle.Aggregates.TryGetValue(id, out var agg) ? agg : null;
-
-        return new ChartSearchResult(
-            identity.Linked,
-            identity.Appearances,
-            identity.Linked.OriginalMix,
-            identity.LatestMix,
-            identity.LevelChange,
-            badges,
-            identity.Nps,
-            bundle.PassDifficulty.TryGetValue(id, out var pass) ? pass : null,
-            bundle.ScoreDifficulty.TryGetValue(id, out var score) ? score : null,
-            bundle.CommunityVote.TryGetValue(id, out var vote) ? vote : null,
-            bundle.ScoringLevels.TryGetValue(id, out var level) ? level : null,
-            bundle.VoteRatings.TryGetValue(id, out var rating) ? rating : null,
-            aggregate?.Count ?? 0,
-            aggregate?.PassCount ?? 0,
-            aggregate?.PgCount ?? 0,
-            null);
-    }
-
     private static bool MatchesContent(ChartSearchResult row, SearchChartsQuery q)
     {
         var chart = row.Chart;
@@ -300,7 +240,7 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
         {
             var min = q.LevelMin ?? int.MinValue;
             var max = q.LevelMax ?? int.MaxValue;
-            if (!row.Appearances.Any(a => a.Level >= min && a.Level <= max)) return false;
+            if ((int)chart.Level < min || (int)chart.Level > max) return false;
         }
 
         if (q.Types is { Count: > 0 } && !q.Types.Contains(chart.Type)) return false;
@@ -336,18 +276,9 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
             return false;
 
         if (q.DebutMixes is { Count: > 0 } && !q.DebutMixes.Contains(row.DebutMix)) return false;
-        if (q.AvailableIn != null && row.Appearances.All(a => a.Mix != q.AvailableIn.Value)) return false;
-        if (q.NotAvailableIn != null && row.Appearances.Any(a => a.Mix == q.NotAvailableIn.Value)) return false;
-
-        if (q.ReratedUp || q.ReratedDown)
-        {
-            var up = q.ReratedUp && row.LevelChange is > 0;
-            var down = q.ReratedDown && row.LevelChange is < 0;
-            if (!up && !down) return false;
-        }
 
         if (q.LegacySlots is { Count: > 0 } &&
-            !row.Appearances.Any(a => a.Slot != null && q.LegacySlots.Contains(a.Slot.Value)))
+            (chart.Slot == null || !q.LegacySlots.Contains(chart.Slot.Value)))
             return false;
 
         return true;
@@ -387,59 +318,52 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
     private sealed record MyRecord(bool Passed, bool IsBroken, int? PhoenixScore, PhoenixLetterGrade? PhoenixGrade,
         PhoenixPlate? PhoenixPlate, XXLetterGrade? LegacyGrade, int? LegacyScore, DateTimeOffset? RecordedOn);
 
-    /// <summary>The visitor's best per (mix, chart) across the scope, family-shaped per mix.</summary>
-    private async Task<IReadOnlyDictionary<(MixEnum Mix, Guid ChartId), MyRecord>> LoadMyRecords(Guid userId,
-        IReadOnlyList<MixEnum> scope, CancellationToken cancellationToken)
+    /// <summary>The visitor's best per chart in this mix, family-shaped by its scoring model.</summary>
+    private async Task<IReadOnlyDictionary<Guid, MyRecord>> LoadMyRecords(MixEnum mix, Guid userId,
+        CancellationToken cancellationToken)
     {
-        var records = new Dictionary<(MixEnum, Guid), MyRecord>();
-        foreach (var mix in scope)
-            if (mix.UsesLegacyScoring())
-                foreach (var attempt in await _scores.GetBestXXAttempts(mix, userId, cancellationToken))
-                {
-                    var best = attempt.BestAttempt;
-                    if (best == null) continue;
-                    records[(mix, attempt.Chart.Id)] = new MyRecord(!best.IsBroken, best.IsBroken, null, null, null,
-                        best.LetterGrade, best.Score, best.RecordedOn);
-                }
-            else
-                foreach (var record in await _scores.GetBestScores(mix, userId, cancellationToken))
-                    // Grades resolve against the record's own mix — Phoenix 2 shifted the
-                    // A/A+/AA/AA+ floors, so a shared score means different letters per mix.
-                    records[(mix, record.ChartId)] = new MyRecord(!record.IsBroken, record.IsBroken,
-                        record.Score == null ? null : (int)record.Score.Value, record.Score?.LetterGradeFor(mix),
-                        record.Plate, null, null, record.RecordedDate);
+        var records = new Dictionary<Guid, MyRecord>();
+        if (mix.UsesLegacyScoring())
+            foreach (var attempt in await _scores.GetBestXXAttempts(mix, userId, cancellationToken))
+            {
+                var best = attempt.BestAttempt;
+                if (best == null) continue;
+                records[attempt.Chart.Id] = new MyRecord(!best.IsBroken, best.IsBroken, null, null, null,
+                    best.LetterGrade, best.Score, best.RecordedOn);
+            }
+        else
+            foreach (var record in await _scores.GetBestScores(mix, userId, cancellationToken))
+                // Grades resolve against the mix — Phoenix 2 shifted the A/A+/AA/AA+ floors,
+                // so a shared score means different letters per mix.
+                records[record.ChartId] = new MyRecord(!record.IsBroken, record.IsBroken,
+                    record.Score == null ? null : (int)record.Score.Value, record.Score?.LetterGradeFor(mix),
+                    record.Plate, null, null, record.RecordedDate);
 
         return records;
     }
 
     private static ChartSearchMyState? BuildMyState(ChartSearchResult row,
-        IReadOnlyDictionary<(MixEnum, Guid), MyRecord> records)
+        IReadOnlyDictionary<Guid, MyRecord> records)
     {
-        var id = row.Chart.Id;
-        records.TryGetValue((row.Chart.Mix, id), out var linked);
-        var passedElsewhere = row.Appearances.Any(a =>
-            a.Mix != row.Chart.Mix && records.TryGetValue((a.Mix, id), out var other) && other.Passed);
+        if (!records.TryGetValue(row.Chart.Id, out var record)) return null;
 
-        if (linked == null && !passedElsewhere) return null;
-
-        return new ChartSearchMyState(linked?.PhoenixScore, linked?.PhoenixGrade, linked?.PhoenixPlate,
-            linked?.LegacyGrade, linked?.LegacyScore, linked?.IsBroken ?? false, linked?.RecordedOn,
-            linked?.Passed ?? false, passedElsewhere);
+        return new ChartSearchMyState(record.PhoenixScore, record.PhoenixGrade, record.PhoenixPlate,
+            record.LegacyGrade, record.LegacyScore, record.IsBroken, record.Passed, record.RecordedOn);
     }
 
     private static bool MatchesUser(ChartSearchResult row, SearchChartsQuery q,
-        IReadOnlyDictionary<(MixEnum, Guid), MyRecord> records)
+        IReadOnlyDictionary<Guid, MyRecord> records)
     {
-        var hasLinkedRecord = records.TryGetValue((row.Chart.Mix, row.Chart.Id), out var linked);
+        var hasRecord = records.TryGetValue(row.Chart.Id, out var record);
 
         if (q.ScoreStates is { Count: > 0 })
         {
             var matches = q.ScoreStates.Any(state => state switch
             {
-                ChartScoreStateFilter.Unplayed => !hasLinkedRecord,
-                ChartScoreStateFilter.Played => hasLinkedRecord,
-                ChartScoreStateFilter.Passed => linked is { Passed: true },
-                ChartScoreStateFilter.Failed => linked is { Passed: false },
+                ChartScoreStateFilter.Unplayed => !hasRecord,
+                ChartScoreStateFilter.Played => hasRecord,
+                ChartScoreStateFilter.Passed => record is { Passed: true },
+                ChartScoreStateFilter.Failed => record is { Passed: false },
                 _ => true
             });
             if (!matches) return false;
@@ -475,17 +399,6 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
                 if (q.PhoenixScoreMax != null &&
                     (row.My?.PhoenixScore == null || row.My.PhoenixScore > q.PhoenixScoreMax)) return false;
             }
-        }
-
-        if (q.NotReclearedIn != null)
-        {
-            var target = q.NotReclearedIn.Value;
-            var id = row.Chart.Id;
-            if (row.Appearances.All(a => a.Mix != target)) return false;
-            if (records.TryGetValue((target, id), out var inTarget) && inTarget.Passed) return false;
-            var passedElsewhere = row.Appearances.Any(a => a.Mix != target &&
-                records.TryGetValue((a.Mix, id), out var other) && other.Passed);
-            if (!passedElsewhere) return false;
         }
 
         return true;

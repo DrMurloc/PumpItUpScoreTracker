@@ -34,21 +34,21 @@ internal sealed class SearchVocabularyHandler :
     public async Task<ChartSearchRanges> Handle(GetSearchRangesQuery request,
         CancellationToken cancellationToken)
     {
-        var mixes = await ScopeMixes(request.Mix, request.AllMixes, cancellationToken);
-        var charts = new List<Chart>();
-        foreach (var mix in mixes)
-            charts.AddRange(await _charts.GetCharts(mix, cancellationToken: cancellationToken));
+        var charts = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken)).ToArray();
+        var chartIds = charts.Select(c => c.Id).ToHashSet();
 
+        // NPS is banked catalogue-wide, so narrow it to the mix's own charts or the slider
+        // travels over eras that aren't on screen.
         var npsValues = (await _metrics.GetMetricsByChart(PiuCenterMetrics.Source, cancellationToken))
-            .Values
-            .Select(rows => rows.FirstOrDefault(m => m.MetricName == PiuCenterMetrics.Nps)?.Value)
+            .Where(kv => chartIds.Contains(kv.Key))
+            .Select(kv => kv.Value.FirstOrDefault(m => m.MetricName == PiuCenterMetrics.Nps)?.Value)
             .Where(v => v != null)
             .Select(v => v!.Value)
             .ToArray();
 
-        var scoringLevels = new List<double>();
-        foreach (var mix in mixes.Where(m => !m.UsesLegacyScoring()))
-            scoringLevels.AddRange((await _scoringLevels.GetScoringLevels(mix, cancellationToken)).Values);
+        var scoringLevels = request.Mix.UsesLegacyScoring()
+            ? Array.Empty<double>()
+            : (await _scoringLevels.GetScoringLevels(request.Mix, cancellationToken)).Values.ToArray();
 
         var bpms = charts.Where(c => c.Song.Bpm != null).Select(c => c.Song.Bpm!.Value).ToArray();
         var notes = charts.Where(c => c.NoteCount != null).Select(c => c.NoteCount!.Value).ToArray();
@@ -63,16 +63,8 @@ internal sealed class SearchVocabularyHandler :
             notes.Length == 0 ? null : notes.Max(),
             seconds.Length == 0 ? null : seconds.Min(),
             seconds.Length == 0 ? null : seconds.Max(),
-            scoringLevels.Count == 0 ? null : Math.Floor(scoringLevels.Min()),
-            scoringLevels.Count == 0 ? null : Math.Ceiling(scoringLevels.Max()));
-    }
-
-    private async Task<IReadOnlyList<MixEnum>> ScopeMixes(MixEnum mix, bool allMixes,
-        CancellationToken cancellationToken)
-    {
-        return allMixes
-            ? (await _charts.GetChartMixLevels(cancellationToken)).Select(l => l.Mix).Distinct().ToArray()
-            : new[] { mix };
+            scoringLevels.Length == 0 ? null : Math.Floor(scoringLevels.Min()),
+            scoringLevels.Length == 0 ? null : Math.Ceiling(scoringLevels.Max()));
     }
 
     public async Task<IReadOnlyList<ChartBadge>> Handle(GetSearchBadgesQuery request,
@@ -94,24 +86,20 @@ internal sealed class SearchVocabularyHandler :
     public async Task<IReadOnlyList<string>> Handle(GetSearchArtistsQuery request,
         CancellationToken cancellationToken)
     {
-        return await DistinctOverScope(request.Mix, request.AllMixes,
-            c => c.Song.Artist.ToString(), cancellationToken);
+        return await DistinctInMix(request.Mix, c => c.Song.Artist.ToString(), cancellationToken);
     }
 
     public async Task<IReadOnlyList<string>> Handle(GetSearchStepArtistsQuery request,
         CancellationToken cancellationToken)
     {
-        return await DistinctOverScope(request.Mix, request.AllMixes,
-            c => c.StepArtist?.ToString(), cancellationToken);
+        return await DistinctInMix(request.Mix, c => c.StepArtist?.ToString(), cancellationToken);
     }
 
-    private async Task<IReadOnlyList<string>> DistinctOverScope(MixEnum mix, bool allMixes,
+    private async Task<IReadOnlyList<string>> DistinctInMix(MixEnum mix,
         Func<Chart, string?> value, CancellationToken cancellationToken)
     {
-        var mixes = await ScopeMixes(mix, allMixes, cancellationToken);
         var values = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var scopeMix in mixes)
-        foreach (var chart in await _charts.GetCharts(scopeMix, cancellationToken: cancellationToken))
+        foreach (var chart in await _charts.GetCharts(mix, cancellationToken: cancellationToken))
         {
             var v = value(chart);
             if (!string.IsNullOrWhiteSpace(v)) values.Add(v);

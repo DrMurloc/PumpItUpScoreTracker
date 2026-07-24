@@ -27,8 +27,8 @@ public sealed record ChartSearchFacetCounts(
     IReadOnlyDictionary<int, int> CoOpPlayerCounts);
 
 /// <summary>
-///     The scope's real extents for the range facets, so a slider's travel matches the
-///     catalogue instead of a guessed span. Null where nothing in scope carries the value.
+///     The mix's real extents for the range facets, so a slider's travel matches the
+///     catalogue instead of a guessed span. Null where nothing in the mix carries the value.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record ChartSearchRanges(
@@ -67,18 +67,14 @@ public enum ChartScoreStateFilter
 }
 
 /// <summary>
-///     One chart identity across the searched scope. <see cref="Chart" /> is the linked
-///     appearance (the visitor's mix when present, else the latest); appearances are
-///     chronological. LevelChange is the signed Exceed-onward rerate delta (null when
-///     fewer than two comparable appearances, or co-op).
+///     One chart in the searched mix, with its community and personal overlays. DebutMix is
+///     the chart's own origin (it rides every appearance), which is what powers the
+///     newest-content sort without needing a cross-mix scope.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record ChartSearchResult(
     Chart Chart,
-    IReadOnlyList<ChartMixAppearance> Appearances,
     MixEnum DebutMix,
-    MixEnum LatestMix,
-    int? LevelChange,
     IReadOnlyList<ChartBadge> Badges,
     decimal? Nps,
     TierListCategory? PassDifficulty,
@@ -91,16 +87,13 @@ public sealed record ChartSearchResult(
     int PgCount,
     ChartSearchMyState? My);
 
-[ExcludeFromCodeCoverage]
-public sealed record ChartMixAppearance(MixEnum Mix, int Level, LegacySlot? Slot);
-
 /// <summary>A granular piucenter badge with its English display name; the UI localizes DisplayName.</summary>
 [ExcludeFromCodeCoverage]
 public sealed record ChartBadge(string Key, string DisplayName, SkillCategory? Category);
 
 /// <summary>
-///     The signed-in visitor's best on the linked appearance, family-shaped: Phoenix fields
-///     for Phoenix-family mixes, Legacy fields for XX and older — never both.
+///     The signed-in visitor's best on this chart, family-shaped: Phoenix fields for
+///     Phoenix-family mixes, Legacy fields for XX and older — never both.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record ChartSearchMyState(
@@ -110,6 +103,5 @@ public sealed record ChartSearchMyState(
     XXLetterGrade? LegacyGrade,
     int? LegacyScore,
     bool IsBroken,
-    DateTimeOffset? RecordedOn,
-    bool PassedInLinkedMix,
-    bool PassedInAnotherScopeMix);
+    bool Passed,
+    DateTimeOffset? RecordedOn);

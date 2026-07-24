@@ -10,7 +10,7 @@ namespace ScoreTracker.Web.Controllers;
 
 /// <summary>
 ///     The /Charts CSV export — a UI-support endpoint (culture/sitemap family, not under
-///     api/*): it accepts the page's own query-string filters plus columns and shape,
+///     api/*): it accepts the page's own query-string filters plus a column list,
 ///     runs the unpaged search, and streams the file. My* columns require the signed-in
 ///     caller; anonymous requests get them silently dropped.
 /// </summary>
@@ -46,14 +46,11 @@ public class ChartsExportController : Controller
             .ToArray();
         if (columns.Length == 0) return BadRequest("No exportable columns requested.");
 
-        var shape = Enum.TryParse<ChartExportShape>(Request.Query["Shape"], true, out var parsedShape)
-            ? parsedShape
-            : ChartExportShape.Grouped;
 
         var page = await _mediator.Send(query, cancellationToken);
-        var csv = ChartExport.Write(page.Results, columns, shape);
+        var csv = ChartExport.Write(page.Results, columns);
 
-        var scopeSlug = query.AllMixes ? "all-mixes" : ChartSlugs.MixSlug(mix);
+        var scopeSlug = ChartSlugs.MixSlug(mix);
         return File(Encoding.UTF8.GetBytes(csv), "text/csv", $"charts_{scopeSlug}.csv");
     }
 }

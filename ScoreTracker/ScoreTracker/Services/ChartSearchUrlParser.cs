@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Http;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
-using ScoreTracker.Web.Services.Theming;
 
 namespace ScoreTracker.Web.Services;
 
@@ -19,7 +18,6 @@ public static class ChartSearchUrlParser
         return new SearchChartsQuery
         {
             Mix = mix,
-            AllMixes = string.Equals(Str(query, "Scope"), "all", StringComparison.OrdinalIgnoreCase),
             UserId = userId,
             SongNameContains = Str(query, "Song") ?? Str(query, "SongName"),
             LevelMin = Int(query, "LevelMin") ?? Int(query, "Difficulty"),
@@ -36,10 +34,6 @@ public static class ChartSearchUrlParser
             NoteCountMax = Int(query, "NoteMax"),
             Badges = Csv(Str(query, "Badges")),
             DebutMixes = CsvEnum<MixEnum>(Str(query, "DebutMix")),
-            AvailableIn = EnumValue<MixEnum>(Str(query, "In")),
-            NotAvailableIn = EnumValue<MixEnum>(Str(query, "NotIn")),
-            ReratedUp = Bool(query, "RUp"),
-            ReratedDown = Bool(query, "RDown"),
             LegacySlots = CsvEnum<LegacySlot>(Str(query, "Slots")),
             PassDifficulty = CsvEnum<TierListCategory>(Str(query, "PassDiff")),
             ScoreDifficulty = CsvEnum<TierListCategory>(Str(query, "ScoreDiff")),
@@ -55,10 +49,6 @@ public static class ChartSearchUrlParser
             LegacyGradeMin = EnumValue<XXLetterGrade>(Str(query, "LegGrade")),
             RecordedFrom = Date(query, "RecFrom"),
             RecordedTo = Date(query, "RecTo") is { } to ? to.AddDays(1).AddTicks(-1) : null,
-            // Same target the page's switch uses: the newest themed mix.
-            NotReclearedIn = Bool(query, "Reclear")
-                ? MixThemes.ThemedMixes.OrderBy(m => m.DisplayOrder()).Last()
-                : null,
             Sort = EnumValue<ChartSearchSort>(Str(query, "Sort")) ?? ChartSearchSort.Level,
             SortDescending = Str(query, "Dir")?.ToLowerInvariant() != "asc",
             Page = null

@@ -17,19 +17,13 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 <PageTitle>@L["Charts"]</PageTitle>
 
-@* The SRP page stack (docs/design/charts-srp.md): page header with the scope mode, then
-   the query as one chip language, then the answer line (count + controls), then results.
-   No search input — Song name contains is a drawer filter; filters live behind the funnel. *@
+@* The SRP page stack (docs/design/charts-srp.md): page header, then the query as one chip
+   language, then the answer line (count + controls), then results. No search input — Song
+   name contains is a drawer filter; filters live behind the funnel. The page searches the
+   selected mix; a cross-mix view is deferred to its own design pass. *@
 <div class="srp-head">
     <MudText Typo="Typo.h4" Class="srp-title">@L["Charts"]</MudText>
-    <MudButtonGroup OverrideStyles="false" Class="srp-scope">
-        <MudButton Variant="@(!_allMixes ? Variant.Filled : Variant.Outlined)"
-                   Color="@(!_allMixes ? Color.Primary : Color.Default)"
-                   OnClick="() => SetScope(false)">@_mix.GetName()</MudButton>
-        <MudButton Variant="@(_allMixes ? Variant.Filled : Variant.Outlined)"
-                   Color="@(_allMixes ? Color.Primary : Color.Default)"
-                   OnClick="() => SetScope(true)">@L["All Mixes"]</MudButton>
-    </MudButtonGroup>
+    <span class="srp-head-mix">@_mix.GetName()</span>
 </div>
 
 <div class="srp-chip-row" role="list" aria-label="@L["Applied filters"]">
@@ -139,11 +133,6 @@ else
                         @onclick="() => SelectSort(ChartSearchSort.PassRate)">@L["Pass rate"]@SortMark(ChartSearchSort.PassRate)</th>
                     <th class="@SortableHeaderClass(ChartSearchSort.Popularity)" role="button" tabindex="0"
                         @onclick="() => SelectSort(ChartSearchSort.Popularity)">@L["Scores"]@SortMark(ChartSearchSort.Popularity)</th>
-                    @if (_allMixes)
-                    {
-                        <th>@L["Mixes"]</th>
-                        <th>@L["Level change"]</th>
-                    }
                     @if (CurrentUser.IsLoggedIn)
                     {
                         <th class="@SortableHeaderClass(ChartSearchSort.MyGrade)" role="button" tabindex="0"
@@ -181,16 +170,6 @@ else
                             }
                         </td>
                         <td class="srp-table-num">@result.ScoreCount</td>
-                        @if (_allMixes)
-                        {
-                            <td class="srp-table-num">@result.Appearances.Count</td>
-                            <td class="srp-table-num">
-                                @if (result.LevelChange is not null and not 0)
-                                {
-                                    <span class="@(result.LevelChange > 0 ? "srp-rerate-up" : "srp-rerate-down")">@(result.LevelChange > 0 ? "+" : "")@result.LevelChange</span>
-                                }
-                            </td>
-                        }
                         @if (CurrentUser.IsLoggedIn)
                         {
                             <td class="srp-table-num">@((result.My?.PhoenixScore ?? result.My?.LegacyScore)?.ToString("N0"))</td>
@@ -241,7 +220,7 @@ else
 }
 
 <ChartsExportDialog @bind-Visible="_exportOpen" FilterParameters="QueryParameters()" TotalCount="_totalCount"
-                    Mix="_mix" AllMixes="_allMixes" SignedIn="CurrentUser.IsLoggedIn"></ChartsExportDialog>
+                    Mix="_mix" SignedIn="CurrentUser.IsLoggedIn"></ChartsExportDialog>
 
 <ChartQuickRecordDialog @bind-Visible="_quickRecordOpen" Target="_quickRecordTarget"
                         OnSaved="OnQuickRecordSaved"></ChartQuickRecordDialog>
@@ -402,50 +381,31 @@ else
                     }
                 </div>
 
-                @if (_allMixes)
-                {
-                    <MudText Typo="Typo.overline">@L["Mix scope"]</MudText>
-                    <div class="srp-facet">
-                        <div class="srp-facet-head">@L["Debut mix"]</div>
-                        @foreach (var era in MixEras)
-                        {
-                            <div class="srp-era">
-                                <div class="srp-era-name">@L[era.Name]</div>
-                                <div class="srp-chipset">
-                                    @foreach (var mix in era.Mixes)
-                                    {
-                                        var captured = mix;
-                                        <span class="srp-facet-chip @(_debutMixes.Contains(captured) ? "srp-facet-chip-on" : "")"
-                                              role="button" tabindex="0" @onclick="() => ToggleDebutMix(captured)">
-                                            @captured.GetName()@CountSuffix(_facetCounts?.DebutMixes, captured)
-                                        </span>
-                                    }
-                                </div>
+                @* Debut mix is a per-chart fact (a chart's origin rides every appearance),
+                   so it filters fine inside one mix. Legacy Difficulty only appears when the
+                   mix in view actually has slotted charts — data-driven, not mix-guessed. *@
+                <MudText Typo="Typo.overline">@L["Mix scope"]</MudText>
+                <div class="srp-facet">
+                    <div class="srp-facet-head">@L["Debut mix"]</div>
+                    @foreach (var era in MixEras)
+                    {
+                        <div class="srp-era">
+                            <div class="srp-era-name">@L[era.Name]</div>
+                            <div class="srp-chipset">
+                                @foreach (var mix in era.Mixes)
+                                {
+                                    var captured = mix;
+                                    <span class="srp-facet-chip @(_debutMixes.Contains(captured) ? "srp-facet-chip-on" : "")"
+                                          role="button" tabindex="0" @onclick="() => ToggleDebutMix(captured)">
+                                        @captured.GetName()@CountSuffix(_facetCounts?.DebutMixes, captured)
+                                    </span>
+                                }
                             </div>
-                        }
-                    </div>
-                    <div class="srp-drawer-range">
-                        <MudSelect T="MixEnum?" Value="_availableIn" ValueChanged="SetAvailableIn" Label="@L["Available in"]"
-                                   Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                            @foreach (var mix in AllKnownMixes)
-                            {
-                                <MudSelectItem T="MixEnum?" Value="@((MixEnum?)mix)">@mix.GetName()</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudSelect T="MixEnum?" Value="_notAvailableIn" ValueChanged="SetNotAvailableIn" Label="@L["Not available in"]"
-                                   Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                            @foreach (var mix in AllKnownMixes)
-                            {
-                                <MudSelectItem T="MixEnum?" Value="@((MixEnum?)mix)">@mix.GetName()</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </div>
-                    <div class="srp-chipset">
-                        <span class="srp-facet-chip @(_reratedUp ? "srp-facet-chip-on" : "")"
-                              role="button" tabindex="0" @onclick="() => SetReratedUp(!_reratedUp)">@L["Rerated up"]</span>
-                        <span class="srp-facet-chip @(_reratedDown ? "srp-facet-chip-on" : "")"
-                              role="button" tabindex="0" @onclick="() => SetReratedDown(!_reratedDown)">@L["Rerated down"]</span>
-                    </div>
+                        </div>
+                    }
+                </div>
+                @if (HasLegacySlots)
+                {
                     <div class="srp-facet">
                         <div class="srp-facet-head">@L["Legacy Difficulty"]</div>
                         <div class="srp-chipset">
@@ -516,11 +476,6 @@ else
                               role="button" tabindex="0" @onclick="() => SetOnlyFavorites(!_onlyFavorites)">@L["Favorites"]</span>
                         <span class="srp-facet-chip @(_onlyToDo ? "srp-facet-chip-on" : "")"
                               role="button" tabindex="0" @onclick="() => SetOnlyToDo(!_onlyToDo)">@L["To Do"]</span>
-                        @if (_allMixes)
-                        {
-                            <span class="srp-facet-chip @(_reclearGap ? "srp-facet-chip-on" : "")"
-                                  role="button" tabindex="0" @onclick="() => SetReclearGap(!_reclearGap)">@L["Not yet re-cleared in {0}", NewestMix.GetName()]</span>
-                        }
                     </div>
                     @if (ModernInScope)
                     {
@@ -585,7 +540,6 @@ else
 @code {
 
     private MixEnum _mix = MixEnum.Phoenix;
-    private bool _allMixes;
     private bool _filtersOpen;
     private bool _exportOpen;
     private bool _isLoading = true;
@@ -605,10 +559,6 @@ else
     private int? _noteMax;
     private List<string> _badges = new();
     private List<MixEnum> _debutMixes = new();
-    private MixEnum? _availableIn;
-    private MixEnum? _notAvailableIn;
-    private bool _reratedUp;
-    private bool _reratedDown;
     private List<LegacySlot> _legacySlots = new();
     private List<TierListCategory> _passDifficulty = new();
     private List<TierListCategory> _scoreDifficulty = new();
@@ -632,7 +582,6 @@ else
     private DateTime? _recordedTo;
     private bool _onlyFavorites;
     private bool _onlyToDo;
-    private bool _reclearGap;
     private ChartSearchSort _sort = ChartSearchSort.Level;
     private bool _sortDescending = true;
     private int _pageNumber = 1;
@@ -659,10 +608,16 @@ else
 
     private int PageCount => (int)Math.Ceiling(_totalCount / (double)PageSize);
 
-    private bool LegacyInScope => _allMixes || _mix.UsesLegacyScoring();
-    private bool ModernInScope => _allMixes || !_mix.UsesLegacyScoring();
+    private bool LegacyInScope => _mix.UsesLegacyScoring();
+    private bool ModernInScope => !_mix.UsesLegacyScoring();
 
-    private static readonly MixEnum NewestMix = MixThemes.ThemedMixes.OrderBy(m => m.DisplayOrder()).Last();
+    /// <summary>
+    ///     Slots are pre-Exceed identity, so the facet only means something when the mix in
+    ///     view actually has slotted charts — asked of the data rather than guessed from the
+    ///     mix, so a backfilled catalogue answers for itself.
+    /// </summary>
+    private bool HasLegacySlots => _facetCounts?.LegacySlots.Count > 0 || _legacySlots.Count > 0;
+
 
     private static readonly MixEnum[] AllKnownMixes =
         Enum.GetValues<MixEnum>().OrderBy(m => m.DisplayOrder()).ToArray();
@@ -763,10 +718,6 @@ else
     [Parameter] [SupplyParameterFromQuery(Name = "NoteMax")] public int? NoteMaxParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Badges")] public string? BadgesParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "DebutMix")] public string? DebutMixParam { get; set; }
-    [Parameter] [SupplyParameterFromQuery(Name = "In")] public string? AvailableInParam { get; set; }
-    [Parameter] [SupplyParameterFromQuery(Name = "NotIn")] public string? NotAvailableInParam { get; set; }
-    [Parameter] [SupplyParameterFromQuery(Name = "RUp")] public bool RUpParam { get; set; }
-    [Parameter] [SupplyParameterFromQuery(Name = "RDown")] public bool RDownParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Slots")] public string? SlotsParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "PassDiff")] public string? PassDiffParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "ScoreDiff")] public string? ScoreDiffParam { get; set; }
@@ -782,14 +733,12 @@ else
     [Parameter] [SupplyParameterFromQuery(Name = "RecFrom")] public string? RecFromParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "RecTo")] public string? RecToParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Saved")] public string? SavedParam { get; set; }
-    [Parameter] [SupplyParameterFromQuery(Name = "Reclear")] public bool ReclearParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "State")] public string? StateParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "CoOp")] public string? CoOpParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "DurMin")] public int? DurMinParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "DurMax")] public int? DurMaxParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Sort")] public string? SortParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Dir")] public string? DirParam { get; set; }
-    [Parameter] [SupplyParameterFromQuery(Name = "Scope")] public string? ScopeParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Page")] public int? PageParam { get; set; }
 
     // The old page's parameter names, honored as read-time aliases so shared links keep
@@ -817,10 +766,6 @@ else
         _noteMax = NoteMaxParam;
         _badges = ParseCsv(BadgesParam);
         _debutMixes = ParseCsvEnum<MixEnum>(DebutMixParam);
-        _availableIn = Enum.TryParse<MixEnum>(AvailableInParam, true, out var aIn) ? aIn : null;
-        _notAvailableIn = Enum.TryParse<MixEnum>(NotAvailableInParam, true, out var nIn) ? nIn : null;
-        _reratedUp = RUpParam;
-        _reratedDown = RDownParam;
         _legacySlots = ParseCsvEnum<LegacySlot>(SlotsParam);
         _passDifficulty = ParseCsvEnum<TierListCategory>(PassDiffParam);
         _scoreDifficulty = ParseCsvEnum<TierListCategory>(ScoreDiffParam);
@@ -838,7 +783,6 @@ else
         var saved = ParseCsv(SavedParam);
         _onlyFavorites = saved.Contains("Favorites", StringComparer.OrdinalIgnoreCase);
         _onlyToDo = saved.Contains("ToDo", StringComparer.OrdinalIgnoreCase);
-        _reclearGap = ReclearParam;
         _scoreStates = ParseCsvEnum<ChartScoreStateFilter>(StateParam);
         if (_scoreStates.Count == 0)
         {
@@ -858,7 +802,6 @@ else
         _sort = Enum.TryParse<ChartSearchSort>(SortParam, true, out var sort) ? sort : ChartSearchSort.Level;
         _sortDescending = DirParam?.ToLowerInvariant() != "asc" &&
                           (DirParam?.ToLowerInvariant() == "desc" || DefaultDescending(_sort));
-        _allMixes = string.Equals(ScopeParam, "all", StringComparison.OrdinalIgnoreCase);
         _pageNumber = Math.Max(1, PageParam ?? 1);
     }
 
@@ -904,10 +847,6 @@ else
             ["NoteMax"] = _noteMax,
             ["Badges"] = _badges.Count == 0 ? null : string.Join(',', _badges),
             ["DebutMix"] = Csv(_debutMixes),
-            ["In"] = _availableIn?.ToString(),
-            ["NotIn"] = _notAvailableIn?.ToString(),
-            ["RUp"] = _reratedUp ? true : null,
-            ["RDown"] = _reratedDown ? true : null,
             ["Slots"] = Csv(_legacySlots),
             ["PassDiff"] = Csv(_passDifficulty),
             ["ScoreDiff"] = Csv(_scoreDifficulty),
@@ -923,7 +862,6 @@ else
             ["RecFrom"] = _recordedFrom?.ToString("yyyy-MM-dd"),
             ["RecTo"] = _recordedTo?.ToString("yyyy-MM-dd"),
             ["Saved"] = SavedCsv,
-            ["Reclear"] = _reclearGap ? true : null,
             ["State"] = Csv(_scoreStates),
             ["CoOp"] = _coOpPlayers.Count == 0 ? null : string.Join(',', _coOpPlayers),
             ["DurMin"] = DurationSeconds(_durationMin),
@@ -932,7 +870,6 @@ else
             ["Dir"] = IsDefaultSort || _sortDescending == DefaultDescending(_sort)
                 ? null
                 : _sortDescending ? "desc" : "asc",
-            ["Scope"] = _allMixes ? "all" : null,
             ["Page"] = _pageNumber <= 1 ? null : _pageNumber
         };
     }
@@ -997,7 +934,6 @@ else
         return new SearchChartsQuery
         {
             Mix = _mix,
-            AllMixes = _allMixes,
             UserId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null,
             SongNameContains = _songNameContains,
             LevelMin = _levelMin,
@@ -1014,10 +950,6 @@ else
             NoteCountMax = _noteMax,
             Badges = _badges.Count == 0 ? null : _badges,
             DebutMixes = _debutMixes.Count == 0 ? null : _debutMixes,
-            AvailableIn = _allMixes ? _availableIn : null,
-            NotAvailableIn = _allMixes ? _notAvailableIn : null,
-            ReratedUp = _allMixes && _reratedUp,
-            ReratedDown = _allMixes && _reratedDown,
             LegacySlots = _legacySlots.Count == 0 ? null : _legacySlots,
             PassDifficulty = _passDifficulty.Count == 0 ? null : _passDifficulty,
             ScoreDifficulty = _scoreDifficulty.Count == 0 ? null : _scoreDifficulty,
@@ -1036,7 +968,6 @@ else
             LegacyGradeMin = _legacyGradeMin,
             RecordedFrom = _recordedFrom == null ? null : new DateTimeOffset(_recordedFrom.Value, TimeSpan.Zero),
             RecordedTo = _recordedTo == null ? null : new DateTimeOffset(_recordedTo.Value.AddDays(1).AddTicks(-1), TimeSpan.Zero),
-            NotReclearedIn = _allMixes && _reclearGap && CurrentUser.IsLoggedIn ? NewestMix : null,
             RestrictToChartIds = restrictTo,
             Sort = _sort,
             SortDescending = _sortDescending,
@@ -1111,9 +1042,9 @@ else
         if (_vocabularyLoaded) return;
         _vocabularyLoaded = true;
         _badgeVocabulary = await Mediator.Send(new GetSearchBadgesQuery());
-        _artistVocabulary = await Mediator.Send(new GetSearchArtistsQuery(_mix, _allMixes));
-        _stepArtistVocabulary = await Mediator.Send(new GetSearchStepArtistsQuery(_mix, _allMixes));
-        _ranges = await Mediator.Send(new GetSearchRangesQuery(_mix, _allMixes));
+        _artistVocabulary = await Mediator.Send(new GetSearchArtistsQuery(_mix));
+        _stepArtistVocabulary = await Mediator.Send(new GetSearchStepArtistsQuery(_mix));
+        _ranges = await Mediator.Send(new GetSearchRangesQuery(_mix));
     }
 
     // ---- chips ----------------------------------------------------------------------
@@ -1175,15 +1106,6 @@ else
                 }));
             AddListChips(chips, _badges, b => BadgeDisplay(b));
             AddListChips(chips, _debutMixes, m => $"{L["Debut"]}: {m.GetName()}");
-            if (_availableIn != null)
-                chips.Add(new QueryChip($"{L["In"]}: {_availableIn.Value.GetName()}", false, () => SetAvailableIn(null)));
-            if (_notAvailableIn != null)
-                chips.Add(new QueryChip($"{L["Not in"]}: {_notAvailableIn.Value.GetName()}", false,
-                    () => SetNotAvailableIn(null)));
-            if (_reratedUp)
-                chips.Add(new QueryChip(L["Rerated up"], false, () => SetReratedUp(false)));
-            if (_reratedDown)
-                chips.Add(new QueryChip(L["Rerated down"], false, () => SetReratedDown(false)));
             AddListChips(chips, _legacySlots, s => s.GetName());
             AddListChips(chips, _passDifficulty, c => $"{L["Pass"]}: {L[ChartSearchCard.CategoryName(c)]}");
             AddListChips(chips, _scoreDifficulty, c => $"{L["Score"]}: {L[ChartSearchCard.CategoryName(c)]}");
@@ -1230,9 +1152,6 @@ else
                     chips.Add(new QueryChip(L["Favorites"], false, () => SetOnlyFavorites(false)));
                 if (_onlyToDo)
                     chips.Add(new QueryChip(L["To Do"], false, () => SetOnlyToDo(false)));
-                if (_reclearGap && _allMixes)
-                    chips.Add(new QueryChip(L["Not yet re-cleared in {0}", NewestMix.GetName()], false,
-                        () => SetReclearGap(false)));
             }
 
             return chips;
@@ -1285,14 +1204,13 @@ else
         _songTypes.Count > 0 || _artists.Count > 0 || _stepArtists.Count > 0 || _badges.Count > 0
         || _bpmMin != null || _bpmMax != null || _npsMin != null || _npsMax != null
         || _noteMin != null || _noteMax != null || _durationMin != null || _durationMax != null
-        || _debutMixes.Count > 0 || _availableIn != null || _notAvailableIn != null
-        || _reratedUp || _reratedDown || _legacySlots.Count > 0
+        || _debutMixes.Count > 0 || _legacySlots.Count > 0
         || _passDifficulty.Count > 0 || _scoreDifficulty.Count > 0 || _communityVote.Count > 0
         || _passRateMin != null || _scoringLevelMin != null || _scoringLevelMax != null
         || _phoenixGradeMin != null || _phoenixPlateMin != null
         || _phoenixScoreMin != null || _phoenixScoreMax != null || _legacyGradeMin != null
         || _recordedFrom != null || _recordedTo != null
-        || _onlyFavorites || _onlyToDo || _reclearGap;
+        || _onlyFavorites || _onlyToDo;
 
     private async Task ClearAllFilters()
     {
@@ -1311,10 +1229,6 @@ else
         _noteMax = null;
         _badges.Clear();
         _debutMixes.Clear();
-        _availableIn = null;
-        _notAvailableIn = null;
-        _reratedUp = false;
-        _reratedDown = false;
         _legacySlots.Clear();
         _passDifficulty.Clear();
         _scoreDifficulty.Clear();
@@ -1335,24 +1249,12 @@ else
         _recordedTo = null;
         _onlyFavorites = false;
         _onlyToDo = false;
-        _reclearGap = false;
         _sort = ChartSearchSort.Level;
         _sortDescending = true;
         await ApplyChange();
     }
 
     // ---- control handlers -----------------------------------------------------------
-
-    private async Task SetScope(bool allMixes)
-    {
-        if (_allMixes == allMixes) return;
-        _allMixes = allMixes;
-        // Scope changes the vocabularies and the sliders' extents alike.
-        _vocabularyLoaded = false;
-        if (_filtersOpen && _moreFilters) await LoadDrawerVocabulary();
-
-        await ApplyChange();
-    }
 
     private async Task SetSongNameContains(string? value)
     {
@@ -1476,30 +1378,6 @@ else
     private async Task SetDebutMixes(IEnumerable<string>? values)
     {
         _debutMixes = ParseCsvEnum<MixEnum>(values == null ? null : string.Join(',', values));
-        await ApplyChange();
-    }
-
-    private async Task SetAvailableIn(MixEnum? value)
-    {
-        _availableIn = value;
-        await ApplyChange();
-    }
-
-    private async Task SetNotAvailableIn(MixEnum? value)
-    {
-        _notAvailableIn = value;
-        await ApplyChange();
-    }
-
-    private async Task SetReratedUp(bool value)
-    {
-        _reratedUp = value;
-        await ApplyChange();
-    }
-
-    private async Task SetReratedDown(bool value)
-    {
-        _reratedDown = value;
         await ApplyChange();
     }
 
@@ -1728,12 +1606,6 @@ else
         await ApplyChange();
     }
 
-    private async Task SetReclearGap(bool value)
-    {
-        _reclearGap = value;
-        await ApplyChange();
-    }
-
     private async Task SetShowStepArtist(bool value)
     {
         _showStepArtist = value;
@@ -1868,7 +1740,7 @@ else
         var my = new ChartSearchMyState(
             result.PhoenixScore == null ? null : (int)result.PhoenixScore.Value,
             result.PhoenixGrade, result.Plate, result.LegacyGrade, result.LegacyScore, result.IsBroken,
-            Clock.Now, !result.IsBroken, target.My?.PassedInAnotherScopeMix ?? false);
+            !result.IsBroken, Clock.Now);
         _results = _results
             .Select(r => r.Chart.Id == target.Chart.Id ? r with { My = my } : r)
             .ToList();

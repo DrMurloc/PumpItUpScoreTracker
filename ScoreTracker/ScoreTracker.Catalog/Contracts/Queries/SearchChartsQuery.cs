@@ -14,13 +14,8 @@ namespace ScoreTracker.Catalog.Contracts.Queries;
 [ExcludeFromCodeCoverage]
 public sealed record SearchChartsQuery : IQuery<ChartSearchResultPage>
 {
-    /// <summary>The visitor's mix — the linked appearance preference and single-mix scope.</summary>
+    /// <summary>The mix being searched. A cross-mix scope is deliberately not modelled here yet.</summary>
     public MixEnum Mix { get; init; } = MixEnum.Phoenix;
-
-    /// <summary>Widen scope to every mix. <see cref="Mixes" /> overrides with a custom set.</summary>
-    public bool AllMixes { get; init; }
-
-    public IReadOnlyList<MixEnum>? Mixes { get; init; }
 
     /// <summary>Null = anonymous: My-state is omitted and user facets are ignored.</summary>
     public Guid? UserId { get; init; }
@@ -45,11 +40,10 @@ public sealed record SearchChartsQuery : IQuery<ChartSearchResultPage>
     /// <summary>Piucenter badge keys; a chart matches when ANY key is in its top-3 dominance summary.</summary>
     public IReadOnlyList<string>? Badges { get; init; }
 
+    /// <summary>The mix a chart debuted in — its origin rides every appearance, so this is a per-chart fact.</summary>
     public IReadOnlyList<MixEnum>? DebutMixes { get; init; }
-    public MixEnum? AvailableIn { get; init; }
-    public MixEnum? NotAvailableIn { get; init; }
-    public bool ReratedUp { get; init; }
-    public bool ReratedDown { get; init; }
+
+    /// <summary>Pre-Exceed slot identity ("Crazy 6" vs "Hard 6"); only pre-Exceed mixes carry one.</summary>
     public IReadOnlyList<LegacySlot>? LegacySlots { get; init; }
 
     public IReadOnlyList<TierListCategory>? PassDifficulty { get; init; }
@@ -68,9 +62,6 @@ public sealed record SearchChartsQuery : IQuery<ChartSearchResultPage>
     public XXLetterGrade? LegacyGradeMin { get; init; }
     public DateTimeOffset? RecordedFrom { get; init; }
     public DateTimeOffset? RecordedTo { get; init; }
-
-    /// <summary>Passed in some in-scope mix but not yet in this one — the re-clear gap.</summary>
-    public MixEnum? NotReclearedIn { get; init; }
 
     /// <summary>Caller-supplied id restriction (saved lists ride in through this).</summary>
     public IReadOnlyList<Guid>? RestrictToChartIds { get; init; }

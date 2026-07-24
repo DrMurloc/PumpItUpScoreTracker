@@ -49,7 +49,7 @@ public sealed class ChartsExportDialogTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheDownloadUrlCarriesTheFiltersColumnsAndShape()
+    public void TheDownloadUrlCarriesTheFiltersAndColumns()
     {
         var cut = RenderDialog(signedIn: false);
 
@@ -60,7 +60,6 @@ public sealed class ChartsExportDialogTests : ComponentTestBase
             Assert.Contains("/Charts/Export.csv", href);
             Assert.Contains("LevelMin=19", href);
             Assert.Contains("Type=Double", href);
-            Assert.Contains("Shape=Grouped", href);
             Assert.Contains("Columns=Song", href);
         });
     }

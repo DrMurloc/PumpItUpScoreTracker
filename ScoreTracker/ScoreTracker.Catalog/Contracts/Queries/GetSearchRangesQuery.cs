@@ -10,5 +10,5 @@ namespace ScoreTracker.Catalog.Contracts.Queries;
 ///     catalogue is 90–250 wastes most of its travel.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record GetSearchRangesQuery(MixEnum Mix, bool AllMixes = false)
+public sealed record GetSearchRangesQuery(MixEnum Mix)
     : IQuery<ChartSearchRanges>;

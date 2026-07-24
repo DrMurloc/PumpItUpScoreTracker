@@ -50,16 +50,10 @@ public sealed class ChartsExportControllerTests
             new Song("=SUM(A1), \"Danger\"", SongType.Arcade, new Uri("https://piu.test/a.png"),
                 TimeSpan.FromSeconds(125), "BanYa", Bpm.From(160, 160)),
             ChartType.Double, 19, MixEnum.Phoenix, null, 700, new HashSet<Skill>());
-        return new ChartSearchResult(chart,
-            new[]
-            {
-                new ChartMixAppearance(MixEnum.XX, 18, null),
-                new ChartMixAppearance(MixEnum.Phoenix, 19, null)
-            },
-            MixEnum.XX, MixEnum.Phoenix, 1,
+        return new ChartSearchResult(chart, MixEnum.XX,
             Array.Empty<ChartBadge>(), 10.5m, TierListCategory.Hard, null, null, 19.6, null, 40, 25, 1,
             new ChartSearchMyState(950000, PhoenixLetterGrade.AAA, null, null, null, false,
-                DateTimeOffset.Parse("2026-06-01T00:00:00Z"), true, false));
+                true, DateTimeOffset.Parse("2026-06-01T00:00:00Z")));
     }
 
     private ChartsExportController BuildController(string queryString)
@@ -80,10 +74,10 @@ public sealed class ChartsExportControllerTests
     [Fact]
     public async Task TheFilteredSetExportsUnpagedWithStableHeaders()
     {
-        var result = await BuildController("?LevelMin=19&Columns=Song,Level,Mixes").Export(CancellationToken.None);
+        var result = await BuildController("?LevelMin=19&Columns=Song,Level,Mix").Export(CancellationToken.None);
 
         var csv = Content(result);
-        Assert.StartsWith("Song,Level,Mixes", csv);
+        Assert.StartsWith("Song,Level,Mix", csv);
         Assert.Null(_lastQuery!.Page);
         Assert.Equal(19, _lastQuery.LevelMin);
     }
@@ -123,20 +117,19 @@ public sealed class ChartsExportControllerTests
     }
 
     [Fact]
-    public async Task PerMixShapeWritesOneRowPerAppearanceWithMyStateOnTheLinkedRow()
+    public async Task ColumnsWriteInRegistryOrderRegardlessOfRequestOrder()
     {
         _currentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
         _currentUser.SetupGet(c => c.User).Returns(new User(
             Guid.NewGuid(), "Tester", true, null, new Uri("https://piu.test/a.png"), null));
 
-        var result = await BuildController("?Columns=Mix,Level,MyPhoenixScore&Shape=PerMix")
+        var result = await BuildController("?Columns=Mix,Level,MyPhoenixScore")
             .Export(CancellationToken.None);
 
         var lines = Content(result).TrimEnd().Split('\n').Select(l => l.TrimEnd()).ToArray();
-        Assert.Equal(3, lines.Length);
-        // Column order is registry order regardless of the request's order — stable files.
+        Assert.Equal(2, lines.Length);
+        // Registry order, not the order the caller asked in — stable files.
         Assert.Equal("Level,Mix,MyPhoenixScore", lines[0]);
-        Assert.Equal("18,XX,", lines[1]);
-        Assert.Equal("19,Phoenix,950000", lines[2]);
+        Assert.Equal("19,Phoenix,950000", lines[1]);
     }
 }

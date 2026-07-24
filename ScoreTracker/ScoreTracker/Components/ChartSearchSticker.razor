@@ -46,9 +46,8 @@
 
     private TierListCategory? TierCategory => Result.CommunityVote ?? Result.PassDifficulty;
 
-    private string StateClass => Result.My is { PassedInLinkedMix: true } ? "tier-chart-card-pass" :
-        IsToDo ? "tier-chart-card-todo" :
-        Result.My is { PassedInAnotherScopeMix: true } ? "tier-chart-card-other-mix" : string.Empty;
+    private string StateClass => Result.My is { Passed: true } ? "tier-chart-card-pass" :
+        IsToDo ? "tier-chart-card-todo" : string.Empty;
 
     private string Tooltip
     {
@@ -56,9 +55,8 @@
         {
             var parts = new List<string>
                 { $"{Result.Chart.Song.Name} {Result.Chart.DifficultyDisplay}" };
-            if (Result.My is { PassedInLinkedMix: true }) parts.Add(L["Passed"]);
+            if (Result.My is { Passed: true }) parts.Add(L["Passed"]);
             else if (IsToDo) parts.Add(L["To Do"]);
-            else if (Result.My is { PassedInAnotherScopeMix: true }) parts.Add(L["Passed in another mix"]);
             if (TierCategory != null)
                 parts.Add(L[ChartSearchCard.CategoryName(TierCategory.Value)]);
             if (LeadFact != null) parts.Add(LeadFact);

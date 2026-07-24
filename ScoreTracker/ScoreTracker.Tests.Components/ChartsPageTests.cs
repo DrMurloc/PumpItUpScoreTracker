@@ -89,9 +89,7 @@ public sealed class ChartsPageTests : ComponentTestBase
             new Song(song, SongType.Arcade, new Uri("https://piu.test/art.png"),
                 TimeSpan.FromSeconds(125), "BanYa", Bpm.From(160, 160)),
             ChartType.Double, level, mix, null, 700, new HashSet<Skill>());
-        return new ChartSearchResult(chart,
-            new[] { new ChartMixAppearance(mix, level, null) },
-            mix, mix, null,
+        return new ChartSearchResult(chart, mix,
             badges ?? Array.Empty<ChartBadge>(), 11.2m,
             passDifficulty, null, communityVote, 21.4, null, 40, 25, 2, my);
     }
@@ -106,8 +104,8 @@ public sealed class ChartsPageTests : ComponentTestBase
             Assert.Contains("2 charts", cut.Markup);
             Assert.Equal(2, cut.FindAll(".srp-card").Count);
         });
-        // The scope mode sits in the page header; there is no search input anywhere.
-        Assert.Contains("All Mixes", cut.Markup);
+        // The searched mix names itself in the page header; there is no search input anywhere.
+        Assert.Equal(MixEnum.Phoenix.GetName(), cut.Find(".srp-head-mix").TextContent.Trim());
         Assert.DoesNotContain("srp-search", cut.Markup);
     }
 
@@ -307,23 +305,17 @@ public sealed class ChartsPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void CommunityVoteAndMixScopeGroupsOnlyActivateWhenLegacyIsInScope()
+    public void TheVoteFacetStaysOutOfAPhoenixFamilyMix()
     {
         var cut = RenderComponent<Charts>();
         cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
         cut.Find("button[aria-label=Filters]").Click();
         OpenMoreFilters(cut);
 
-        // Pure Phoenix scope: no vote facet, no mix-scope group.
+        // Votes are the legacy mixes' difficulty source; a Phoenix-family mix reads the
+        // score-derived tiers instead, so the facet must not appear at all.
         Assert.DoesNotContain("Community Vote", cut.Markup);
-        Assert.DoesNotContain("Rerated up", cut.Markup);
-
-        cut.FindAll("button").Single(b => b.TextContent.Trim() == "All Mixes").Click();
-        cut.WaitForAssertion(() =>
-        {
-            Assert.Contains("Community Vote", cut.Markup);
-            Assert.Contains("Rerated up", cut.Markup);
-        });
+        Assert.Contains("Pass Difficulty", cut.Markup);
     }
 
     [Fact]
@@ -416,14 +408,13 @@ public sealed class ChartsPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheScopeToggleWidensToAllMixesWithoutBecomingAChip()
+    public void ThePageSearchesTheSelectedMix()
     {
         var cut = RenderComponent<Charts>();
-        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
 
-        cut.FindAll("button").Single(b => b.TextContent.Trim() == "All Mixes").Click();
-
-        cut.WaitForAssertion(() => Assert.True(_lastQuery!.AllMixes));
-        Assert.DoesNotContain("All Mixes", cut.Find(".srp-chip-row").TextContent);
+        cut.WaitForAssertion(() => Assert.Equal(MixEnum.Phoenix, _lastQuery!.Mix));
+        // The mix is page furniture, not a filter — it never joins the chip row.
+        Assert.Contains("Phoenix", cut.Find(".srp-head").TextContent);
+        Assert.Empty(cut.FindAll(".srp-chip-row .mud-chip"));
     }
 }

@@ -60,7 +60,7 @@ public sealed class ChartSearchCardTests : ComponentTestBase
         var unplayed = ChartsPageTests.MakeResult("Bee", 23);
         var played = ChartsPageTests.MakeResult("District 1", 21,
             my: new ChartSearchMyState(912447, PhoenixLetterGrade.A, PhoenixPlate.TalentedGame, null, null,
-                true, DateTimeOffset.Parse("2026-06-01T00:00:00Z"), false, false));
+                true, false, DateTimeOffset.Parse("2026-06-01T00:00:00Z")));
 
         var unplayedCut = RenderComponent<ChartSearchCard>(p => p
             .Add(x => x.Result, unplayed).Add(x => x.ShowMyState, true));
@@ -84,56 +84,22 @@ public sealed class ChartSearchCardTests : ComponentTestBase
     }
 
     [Fact]
-    public void MultiMixIdentitiesRenderTheSpanWithTheRerateArrow()
-    {
-        var result = ChartsPageTests.MakeResult("Beethoven Virus", 19) with
-        {
-            Appearances = new[]
-            {
-                new ChartMixAppearance(MixEnum.Exceed, 18, null),
-                new ChartMixAppearance(MixEnum.Phoenix, 19, null)
-            },
-            DebutMix = MixEnum.PerfectCollection,
-            LatestMix = MixEnum.Phoenix,
-            LevelChange = 1
-        };
-
-        var cut = RenderComponent<ChartSearchCard>(p => p.Add(x => x.Result, result));
-
-        var span = cut.Find(".srp-card-span").TextContent;
-        Assert.Contains("The Perfect Collection", span);
-        Assert.Contains("2 mixes", span);
-        Assert.Contains("18 → 19", cut.Find(".srp-rerate-up").TextContent);
-    }
-
-    [Fact]
-    public void SingleMixResultsSkipTheSpanLine()
-    {
-        var cut = RenderComponent<ChartSearchCard>(p => p.Add(x => x.Result,
-            ChartsPageTests.MakeResult("Bee", 23)));
-
-        Assert.Empty(cut.FindAll(".srp-card-span"));
-    }
-
-    [Fact]
-    public void TheStateBorderLanguageFollowsPassedThenToDoThenOtherMix()
+    public void TheStateBorderLanguagePutsPassedAheadOfToDo()
     {
         var passed = ChartsPageTests.MakeResult("Passed", 19,
             my: new ChartSearchMyState(950000, PhoenixLetterGrade.AAA, null, null, null, false,
-                DateTimeOffset.Parse("2026-06-01T00:00:00Z"), true, false));
-        var otherMix = ChartsPageTests.MakeResult("Elsewhere", 19,
-            my: new ChartSearchMyState(null, null, null, null, null, false, null, false, true));
+                true, DateTimeOffset.Parse("2026-06-01T00:00:00Z")));
+        var todoOnly = ChartsPageTests.MakeResult("Saved", 19);
 
         var passedCut = RenderComponent<ChartSearchCard>(p => p
             .Add(x => x.Result, passed).Add(x => x.IsToDo, true).Add(x => x.ShowMyState, true));
-        var otherCut = RenderComponent<ChartSearchCard>(p => p
-            .Add(x => x.Result, otherMix).Add(x => x.ShowMyState, true));
+        var todoCut = RenderComponent<ChartSearchCard>(p => p
+            .Add(x => x.Result, todoOnly).Add(x => x.IsToDo, true).Add(x => x.ShowMyState, true));
 
-        // Passed outranks To-Do; the cross-mix pass wears the dashed-green language + chip.
+        // Passed outranks To-Do when a chart is both.
         Assert.NotNull(passedCut.Find(".srp-card-pass"));
         Assert.Empty(passedCut.FindAll(".srp-card-todo"));
-        Assert.NotNull(otherCut.Find(".srp-card-other-mix"));
-        Assert.Contains("Passed in another mix", otherCut.Markup);
+        Assert.NotNull(todoCut.Find(".srp-card-todo"));
     }
 
     [Fact]
