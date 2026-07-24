@@ -59,7 +59,7 @@ public sealed class TitleLadderFloorTests
         Assert.Equal(18900, Phoenix2("SINGLE MASTER").CompletionFloor);
         // The doubles ladder is its own pool — its Lv.2 floors on the doubles Lv.1.
         Assert.Equal(5000, Phoenix2("[D] INTERMEDIATE LV.2").CompletionFloor);
-        Assert.Equal(10000, Phoenix2("[P.B] ??? 12500").CompletionFloor);
+        Assert.Equal(10000, Phoenix2("[P.B] SILVER").CompletionFloor);
     }
 
     [Fact]

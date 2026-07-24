@@ -160,16 +160,19 @@ public static class Phoenix2TitleList
         new Phoenix2PumbilityTitle("DOUBLE MASTER", PumbilityPool.Doubles, 19500),
 
         // ---- Total PUMBILITY tiers ----
-        // Names are masked ("????") on title.php until earned. [P.B] BRONZE was observed
-        // worn on the live rankings; the rest are placeholders.
-        // TODO(P2-titles): replace placeholder names as players reveal them post-launch.
+        // Names are masked ("????") on title.php until earned, so the tier names come from
+        // players wearing them on the live PUMBILITY ranking (Phoenix2PumbilityTitleReconTests).
+        // BRONZE..ALEXANDRITE confirmed 2026-07-23 by worn titles whose lowest wearer sits just
+        // above each threshold (SILVER@12,804 .. ALEXANDRITE@19,047 for the 12500..19000 rungs).
+        // The 20000 tier exists on title.php but is still unreached (top of board ~19,640), so its
+        // name stays masked — re-run the recon to reveal it once someone earns it.
         new Phoenix2PumbilityTitle("[P.B] BRONZE", PumbilityPool.Total, 10000),
-        new Phoenix2PumbilityTitle("[P.B] ??? 12500", PumbilityPool.Total, 12500),
-        new Phoenix2PumbilityTitle("[P.B] ??? 15000", PumbilityPool.Total, 15000),
-        new Phoenix2PumbilityTitle("[P.B] ??? 16000", PumbilityPool.Total, 16000),
-        new Phoenix2PumbilityTitle("[P.B] ??? 17000", PumbilityPool.Total, 17000),
-        new Phoenix2PumbilityTitle("[P.B] ??? 18000", PumbilityPool.Total, 18000),
-        new Phoenix2PumbilityTitle("[P.B] ??? 19000", PumbilityPool.Total, 19000),
+        new Phoenix2PumbilityTitle("[P.B] SILVER", PumbilityPool.Total, 12500),
+        new Phoenix2PumbilityTitle("[P.B] GOLD", PumbilityPool.Total, 15000),
+        new Phoenix2PumbilityTitle("[P.B] PLATINUM", PumbilityPool.Total, 16000),
+        new Phoenix2PumbilityTitle("[P.B] DIAMOND", PumbilityPool.Total, 17000),
+        new Phoenix2PumbilityTitle("[P.B] RED BERYL", PumbilityPool.Total, 18000),
+        new Phoenix2PumbilityTitle("[P.B] ALEXANDRITE", PumbilityPool.Total, 19000),
         new Phoenix2PumbilityTitle("[P.B] ??? 20000", PumbilityPool.Total, 20000),
 
         // ---- Skill ladders (chart + grade) ----
