@@ -6288,4 +6288,16 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>{0}개를 {1} 이상으로 (이 폴더에 {2}개뿐)</value>
   </data>
+  <data name="Added to Favorites!" xml:space="preserve">
+    <value>즐겨찾기에 추가됨!</value>
+  </data>
+  <data name="Removed from Favorites!" xml:space="preserve">
+    <value>즐겨찾기에서 제거됨!</value>
+  </data>
+  <data name="Clear all" xml:space="preserve">
+    <value>모두 지우기</value>
+  </data>
+  <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
+    <value>위의 검색창에서 곡 이름으로 검색하세요 — 모든 채보에는 각자의 페이지가 있습니다.</value>
+  </data>
 </root>

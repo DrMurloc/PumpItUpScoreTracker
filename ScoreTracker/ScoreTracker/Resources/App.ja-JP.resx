@@ -6407,4 +6407,16 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>{0}譜面を{1}以上で（このフォルダーには{2}譜面のみ）</value>
   </data>
+  <data name="Added to Favorites!" xml:space="preserve">
+    <value>気に入れに追加しました！</value>
+  </data>
+  <data name="Removed from Favorites!" xml:space="preserve">
+    <value>気に入れから削除しました！</value>
+  </data>
+  <data name="Clear all" xml:space="preserve">
+    <value>すべてクリア</value>
+  </data>
+  <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
+    <value>上の検索バーで曲名を検索してください — 譜面ごとに専用ページがあります。</value>
+  </data>
 </root>

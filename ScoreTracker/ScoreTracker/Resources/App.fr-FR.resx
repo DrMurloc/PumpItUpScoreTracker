@@ -6401,4 +6401,16 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Réussis {0} charts avec {1} ou mieux (seulement {2} dans ce dossier)</value>
   </data>
+  <data name="Added to Favorites!" xml:space="preserve">
+    <value>Ajouté aux Favoris !</value>
+  </data>
+  <data name="Removed from Favorites!" xml:space="preserve">
+    <value>Retiré des Favoris !</value>
+  </data>
+  <data name="Clear all" xml:space="preserve">
+    <value>Tout effacer</value>
+  </data>
+  <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
+    <value>Recherchez par nom de la chanson dans la barre ci-dessus — chaque chart a sa propre page.</value>
+  </data>
 </root>

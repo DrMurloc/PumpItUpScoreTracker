@@ -1709,13 +1709,13 @@ else
         {
             await Mediator.Send(new RemoveChartFromListCommand(ChartListType.Favorite, chartId));
             _favoriteCharts.Remove(chartId);
-            Snackbar.Add(L["Chart removed from Favorites"].Value, Severity.Success);
+            Snackbar.Add(L["Removed from Favorites!"].Value, Severity.Success);
         }
         else
         {
             await Mediator.Send(new SaveChartToListCommand(ChartListType.Favorite, chartId));
             _favoriteCharts.Add(chartId);
-            Snackbar.Add(L["Chart added to Favorites"].Value, Severity.Success);
+            Snackbar.Add(L["Added to Favorites!"].Value, Severity.Success);
         }
     }
 
@@ -1754,13 +1754,13 @@ else
         {
             await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
             _todoCharts.Remove(chartId);
-            Snackbar.Add(L["Chart removed from To Do list"].Value, Severity.Success);
+            Snackbar.Add(L["Removed from ToDo List!"].Value, Severity.Success);
         }
         else
         {
             await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
             _todoCharts.Add(chartId);
-            Snackbar.Add(L["Chart added to To Do list"].Value, Severity.Success);
+            Snackbar.Add(L["Added to ToDo List!"].Value, Severity.Success);
         }
     }
 }

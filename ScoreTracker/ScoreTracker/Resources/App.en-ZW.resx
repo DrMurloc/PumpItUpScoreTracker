@@ -6333,4 +6333,16 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Mrgl {0} mrgl {1} grblgl (mrgl {2} rgllgl mrgl)</value>
   </data>
+  <data name="Added to Favorites!" xml:space="preserve">
+    <value>Mrglrgl rgl Mrrglrglrgl!</value>
+  </data>
+  <data name="Removed from Favorites!" xml:space="preserve">
+    <value>Argrl blgrl Mrrglrglrgl!</value>
+  </data>
+  <data name="Clear all" xml:space="preserve">
+    <value>Mrgl clearrgl mrrgl</value>
+  </data>
+  <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
+    <value>Srglrch brgl Srglng nrglme mrgl brglr — mrrgl Mrglrgl hrgls rgls rglwn prgle.</value>
+  </data>
 </root>
