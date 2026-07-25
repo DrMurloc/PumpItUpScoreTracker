@@ -1,13 +1,39 @@
-﻿@page "/RatingCalculator"
+@page "/RatingCalculator"
 @rendermode RenderModes.Interactive
 @using MediatR;
-@using ScoreTracker.Application.Queries;
-@using ScoreTracker.Domain.Records
-@using ScoreTracker.Web.Dtos
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
 <PageTitle>@L["Rating Calculator"]</PageTitle>
+
+<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-3 flex-wrap">
+    <MudButtonGroup OverrideStyles="false">
+        @foreach (var mix in Mixes)
+        {
+            <MudButton Size="Size.Small" Color="Color.Primary"
+                       Variant="@(_mix == mix ? Variant.Filled : Variant.Outlined)"
+                       OnClick="@(() => SetMix(mix))">@mix.GetName()</MudButton>
+        }
+    </MudButtonGroup>
+    @if (_mix == MixEnum.Phoenix2)
+    {
+        @* Singles and doubles diverge on Phoenix 2 — a single prices one level up the base
+           curve — so the table picks a type. Phoenix's rating is level-only, no toggle needed. *@
+        <MudButtonGroup OverrideStyles="false">
+            <MudButton Size="Size.Small" Color="Color.Secondary"
+                       Variant="@(_type == ChartType.Single ? Variant.Filled : Variant.Outlined)"
+                       OnClick="@(() => SetType(ChartType.Single))">@L["Singles"]</MudButton>
+            <MudButton Size="Size.Small" Color="Color.Secondary"
+                       Variant="@(_type == ChartType.Double ? Variant.Filled : Variant.Outlined)"
+                       OnClick="@(() => SetType(ChartType.Double))">@L["Doubles"]</MudButton>
+        </MudButtonGroup>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+            @L["Phoenix 2 PUMBILITY = base × (grade + plate). This shows the grade value at the lowest plate; plate adds a small bonus on top."]
+        </MudText>
+    }
+</MudStack>
 
 <MudTable T="TableEntry" Dense="true" Breakpoint="Breakpoint.None" Items="Entries">
     <HeaderContent>
@@ -36,6 +62,10 @@
 @inject IMediator Mediator;
 @code
 {
+    private static readonly MixEnum[] Mixes = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+    private MixEnum _mix = MixEnum.Phoenix;
+    private ChartType _type = ChartType.Single;
+
     private IEnumerable<TableEntry> Entries = Array.Empty<TableEntry>();
     private int Min = 0;
     private int Median = 1;
@@ -67,29 +97,82 @@
         return $"background-color:rgba({red}, {green}, {blue}, 0.8)";
 
     }
-    protected async override Task OnInitializedAsync()
+
+    private async Task SetMix(MixEnum mix)
     {
-        var charts = await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix));
-        var coOps = charts.Where(c => c.Type == SharedKernel.Enums.ChartType.CoOp).Count();
-        var levels = charts.Where(c => c.Type != SharedKernel.Enums.ChartType.CoOp).GroupBy(c => c.Level)
-        .ToDictionary(g => g.Key, g => g.Count());
-        Entries = DifficultyLevel.All.Where(l => l.BaseRating != 0).OrderBy(l => l).Select(l => new TableEntry
+        if (_mix == mix) return;
+        _mix = mix;
+        await Build();
+    }
+
+    private async Task SetType(ChartType type)
+    {
+        if (_type == type) return;
+        _type = type;
+        await Build();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Build();
+    }
+
+    private async Task Build()
+    {
+        var charts = await Mediator.Send(new GetChartsQuery(_mix));
+        Entries = _mix == MixEnum.Phoenix2 ? BuildPhoenix2(charts) : BuildPhoenix(charts);
+
+        var ratings = Entries.SelectMany(e => e.Ratings.Values).OrderBy(r => r).ToArray();
+        Min = Entries.Min(e => e.Ratings[PhoenixLetterGrade.F]);
+        Max = Entries.Max(e => e.Ratings[PhoenixLetterGrade.SSSPlus]);
+        Median = ratings[ratings.Length / 2];
+    }
+
+    private static TableEntry[] BuildPhoenix(IEnumerable<Chart> charts)
+    {
+        var chartList = charts.ToArray();
+        var coOps = chartList.Count(c => c.Type == ChartType.CoOp);
+        var levels = chartList.Where(c => c.Type != ChartType.CoOp).GroupBy(c => c.Level)
+            .ToDictionary(g => g.Key, g => g.Count());
+        return DifficultyLevel.All.Where(l => l.BaseRating != 0 && levels.ContainsKey(l)).OrderBy(l => l)
+            .Select(l => new TableEntry
             {
                 Level = l.ToString(),
                 Ratings = Enum.GetValues<PhoenixLetterGrade>().ToDictionary(g => g, g => (int)(g.GetModifier() * l.BaseRating)),
                 ChartCount = levels[l]
             })
             .Append(new TableEntry
-                {
-                    Level = "CoOp",
-                    ChartCount = coOps,
-                    Ratings = Enum.GetValues<PhoenixLetterGrade>().ToDictionary(g => g, g => (int)(g.GetModifier() * 2000))
-                }).ToArray();
-        var ratings = Entries.SelectMany(e => e.Ratings.Values).OrderBy(r => r).ToArray();
-        Min = Entries.Min(e => e.Ratings[PhoenixLetterGrade.F]);
-        Max = Entries.Max(e => e.Ratings[PhoenixLetterGrade.SSSPlus]);
-        Median = ratings[ratings.Length / 2];
+            {
+                Level = "CoOp",
+                ChartCount = coOps,
+                Ratings = Enum.GetValues<PhoenixLetterGrade>().ToDictionary(g => g, g => (int)(g.GetModifier() * 2000))
+            }).ToArray();
     }
+
+    // Phoenix 2: base × grade multiplier, singles priced one level up the base curve (an S17
+    // is worth Base(18)). Co-op never counts, sub-10 prices at zero — both drop out naturally
+    // (co-op filtered here, sub-10 charts have no folder in the catalog for this range).
+    private TableEntry[] BuildPhoenix2(IEnumerable<Chart> charts)
+    {
+        var config = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var grades = Enum.GetValues<PhoenixLetterGrade>();
+        var levels = charts.Where(c => c.Type == _type).GroupBy(c => (int)c.Level)
+            .ToDictionary(g => g.Key, g => g.Count());
+        var maxLevel = (int)DifficultyLevel.Max;
+        return levels.Keys.Where(l => l >= 10).OrderBy(l => l)
+            .Select(level =>
+            {
+                var effLevel = _type == ChartType.Single ? Math.Min(level + 1, maxLevel) : level;
+                var baseRating = ScoringConfiguration.Phoenix2BaseRating(DifficultyLevel.From(effLevel));
+                return new TableEntry
+                {
+                    Level = level.ToString(),
+                    ChartCount = levels[level],
+                    Ratings = grades.ToDictionary(g => g, g => (int)(baseRating * config.LetterGradeModifiers[g]))
+                };
+            }).ToArray();
+    }
+
     private sealed class TableEntry
     {
         public string Level = "";

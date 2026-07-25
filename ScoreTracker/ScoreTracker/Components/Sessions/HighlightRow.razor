@@ -63,6 +63,10 @@
             if (Flags.HasFlag(HighlightFlags.FolderDebut))
                 yield return ("🆕", Detail?.FolderDebutOrdinal is { } o ? $"#{o}" : null,
                     L["One of your first passes in this folder"].Value);
+            // A first pass this mix on a chart cleared in Phoenix 1 or XX — the same signal
+            // the Discord card and tier list carry; the card foots a legend when one renders.
+            if (Row.IsReclear)
+                yield return ("🔁", null, L["Passed in another mix"].Value);
         }
     }
 

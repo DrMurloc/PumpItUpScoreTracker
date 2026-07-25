@@ -61,14 +61,7 @@ else
         {
             <div class="olb-rank-card @GlowClass(row.Player)">
                 <span class="olb-rank-rankbox">
-                    <b>@row.Rank</b>
-                    @if (row.PreviousRank != null && row.PreviousRank != row.Rank)
-                    {
-                        var delta = row.PreviousRank.Value - row.Rank;
-                        <span class="@(delta > 0 ? "olb-delta-up" : "olb-delta-down")">
-                            @(delta > 0 ? "▲" : "▼")@Math.Abs(delta)
-                        </span>
-                    }
+                    <RankDelta Rank="row.Rank" PreviousRank="row.PreviousRank"/>
                 </span>
                 <MudLink title="@L["See their boards"]" Style="cursor:pointer" Underline="Underline.None"
                          OnClick="() => OnShowPlayer.InvokeAsync(row.Player.Username)">
@@ -77,10 +70,7 @@ else
                 <span class="olb-rank-tail">
                     @if (row.PlayerType != null)
                     {
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
-                                 Style="@PlayerTypeChipStyle(row.PlayerType.Value)">
-                            @L[PlayerTypeName(row.PlayerType.Value)]
-                        </MudChip>
+                        <PlayerTypeChip Type="row.PlayerType.Value"/>
                     }
                     <MudText Typo="Typo.body2"><b>@row.Rating.ToString(_rankings.RatingIsOfficial ? "N2" : "N0")</b></MudText>
                 </span>
@@ -186,31 +176,4 @@ else
         _expandedProfile = await Mediator.Send(new GetOfficialPlayerProfileQuery(Mix, username));
     }
 
-    internal static string PlayerTypeName(RecapPlayerType type)
-    {
-        return type switch
-        {
-            RecapPlayerType.PassPusher => "Pass Pusher",
-            RecapPlayerType.PassRefiner => "Pass Refiner",
-            RecapPlayerType.BalancedPlayer => "Balanced Player",
-            RecapPlayerType.Competitive => "Competitive",
-            _ => "Perfectionist"
-        };
-    }
-
-    // Archetype chips wear the grade-metal ladder, outlined: AA bronze for Pass Pusher,
-    // then AAA+ silver, S+ gold, SSS ice — and the summit type glows.
-    internal static string PlayerTypeChipStyle(RecapPlayerType type)
-    {
-        var hex = type switch
-        {
-            RecapPlayerType.PassPusher => MixThemes.GradeHex("AA"),
-            RecapPlayerType.PassRefiner => MixThemes.GradeHex("AAA+"),
-            RecapPlayerType.BalancedPlayer => MixThemes.GradeHex("S+"),
-            RecapPlayerType.Competitive => MixThemes.GradeHex("SSS"),
-            _ => MixThemes.GradeHex("SSS+")
-        };
-        var style = $"border-color:{hex};color:{hex};font-weight:700";
-        return type == RecapPlayerType.Perfectionist ? $"{style};box-shadow:0 0 9px {hex}99" : style;
-    }
 }

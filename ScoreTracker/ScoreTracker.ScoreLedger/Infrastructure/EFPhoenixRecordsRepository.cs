@@ -132,6 +132,27 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .CountAsync(cancellationToken);
     }
 
+    async Task<IReadOnlyDictionary<Guid, int>> IScoreReader.GetJournaledChartCounts(MixEnum mix,
+        IEnumerable<Guid> userIds, CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        var ids = userIds.Distinct().ToArray();
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var counts = new Dictionary<Guid, int>();
+        // Chunked so a big community never overruns the SQL parameter ceiling.
+        foreach (var chunk in ids.Chunk(1000))
+        {
+            var rows = await database.Set<ScoreEventJournalEntity>()
+                .Where(e => e.MixId == mixId && chunk.Contains(e.UserId))
+                .GroupBy(e => e.UserId)
+                .Select(g => new { UserId = g.Key, Count = g.Select(e => e.ChartId).Distinct().Count() })
+                .ToArrayAsync(cancellationToken);
+            foreach (var row in rows) counts[row.UserId] = row.Count;
+        }
+
+        return counts;
+    }
+
     Task<IEnumerable<BestXXChartAttempt>> IScoreReader.GetBestXXAttempts(Guid userId,
         CancellationToken cancellationToken)
     {

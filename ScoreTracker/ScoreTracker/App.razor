@@ -119,6 +119,30 @@
     <Routes />
 </main>
 
+@* Blazor builds its own reconnect overlay — framework markup, framework light styling — but
+   only when the document has none of its own. Supplying the element switches it to toggling
+   state classes on ours instead (components-reconnect-show / -hide / -failed / -rejected), so
+   the overlay is site chrome. Reads --mix-* only: every --mud-* var is emitted by
+   MudThemeProvider inside the circuit, which is the thing this overlay exists to report on. *@
+<div id="components-reconnect-modal" data-nosnippet aria-live="assertive">
+    <div class="reconnect-card">
+        <div class="reconnect-state reconnect-on-show">
+            <span class="reconnect-spinner" aria-hidden="true"></span>
+            <p class="reconnect-title">@L["Reconnecting…"]</p>
+        </div>
+        @* Reconnect ran out of attempts — the server may still be there, so offer another go. *@
+        <div class="reconnect-state reconnect-on-failed">
+            <p class="reconnect-title">@L["Couldn't reconnect."]</p>
+            <button type="button" class="reconnect-btn" onclick="Blazor.reconnect()">@L["Try again"]</button>
+        </div>
+        @* The server answered and refused: that circuit is gone, and only a fresh load builds one. *@
+        <div class="reconnect-state reconnect-on-rejected">
+            <p class="reconnect-title">@L["Your session ended."]</p>
+            <button type="button" class="reconnect-btn" onclick="location.reload()">@L["Reload the page"]</button>
+        </div>
+    </div>
+</div>
+
 <div id="blazor-error-ui">
     @if (Env.IsDevelopment())
     {

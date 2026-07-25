@@ -119,11 +119,13 @@ public sealed class Phoenix2TitleListTests
     }
 
     [Theory]
-    [InlineData(28)]
-    [InlineData(29)]
-    public void TheLevellessPhoenixDoubleBossMatchesAnyLevelOf1948(int level)
+    [InlineData(29, true)]
+    [InlineData(27, false)]
+    [InlineData(24, false)]
+    public void ThePhoenixDoubleBossIsThe1948D29Alone(int level, bool completes)
     {
-        // The [PHOENIX] double boss renders a "??" stepball — no parseable level.
+        // The "??" stepball on the official page is how 1948 D29's level renders, not a wildcard:
+        // the song's easier doubles charts must not hand out the title.
         var chart = new ChartBuilder().WithSongName("1948").WithType(ChartType.Double)
             .WithLevel(level).Build();
         var charts = new Dictionary<Guid, Chart> { [chart.Id] = chart };
@@ -131,19 +133,22 @@ public sealed class Phoenix2TitleListTests
         var progress = Phoenix2TitleList.BuildProgress(charts,
             new[] { Attempt(chart.Id, 900000) }, new HashSet<Name>());
 
-        Assert.True(progress.Single(p => p.Title.Name == "[PHOENIX] DOUBLE BOSS BREAKER").IsComplete);
+        Assert.Equal(completes,
+            progress.Single(p => p.Title.Name == "[PHOENIX] DOUBLE BOSS BREAKER").IsComplete);
     }
 
     [Fact]
     public void LadderExpertCountsItsTenMembers()
     {
-        // Completing all ten [TWIST S] charts completes [TWIST S] EXPERT; nine does not.
+        // Completing all ten [TWIST S] charts completes [TWIST S] EXPERT; nine does not. The song
+        // names are the catalog's, not the official requirement page's abbreviations — a title
+        // matches on the catalog spelling (TitleSongNameTests).
         var songs = new[]
         {
             ("Scorpion King", 15), ("Street show down", 16), ("U Got Me Rocking", 17),
             ("Solitary 2", 18), ("U Got 2 Know", 19), ("Canon D", 20),
-            ("Love Is A Danger Zone (Cranky Mix)", 21), ("DUEL", 21),
-            ("Love is a Danger Zone pt.2", 22), ("Uranium", 22)
+            ("Love is a Danger Zone(Cranky Mix)", 21), ("DUEL", 21),
+            ("Love is a Danger Zone pt. 2", 22), ("Uranium", 22)
         };
         var charts = songs
             .Select(s => new ChartBuilder().WithSongName(s.Item1).WithType(ChartType.Single)

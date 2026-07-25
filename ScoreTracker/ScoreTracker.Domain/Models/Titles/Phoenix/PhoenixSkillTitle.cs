@@ -7,7 +7,6 @@ namespace ScoreTracker.Domain.Models.Titles.Phoenix;
 
 public sealed class PhoenixSkillTitle : PhoenixTitle, ISpecificChartTitle
 {
-    private readonly Name _songName;
     private readonly ChartType _chartType;
     private readonly DifficultyLevel _level;
 
@@ -17,16 +16,17 @@ public sealed class PhoenixSkillTitle : PhoenixTitle, ISpecificChartTitle
         $"Get {letterRequirement.GetName()} on {songName} {chartType.GetShortHand()}{level}", "Skill",
         990000)
     {
-        _songName = songName;
+        SongName = songName;
         _chartType = chartType;
         _level = level;
+        // Owner call: skill progress measures the climb from a decent pass (900k) to the
+        // SSS, so a fresh pass doesn't read as nearly complete.
+        FloorAt(900_000);
     }
 
-    public override bool PopulatesFromDatabase => false;
+    public Name SongName { get; }
 
-    // Owner call: skill progress measures the climb from a decent pass (900k) to the SSS,
-    // so a fresh pass doesn't read as nearly complete.
-    public override int CompletionFloor => 900_000;
+    public override bool PopulatesFromDatabase => false;
 
 
     public override double CompletionProgress(Chart chart, RecordedPhoenixScore attempt)
@@ -39,6 +39,6 @@ public sealed class PhoenixSkillTitle : PhoenixTitle, ISpecificChartTitle
 
     public bool AppliesToChart(Chart chart)
     {
-        return chart.Song.Name == _songName && _chartType == chart.Type && _level == chart.Level;
+        return chart.Song.Name == SongName && _chartType == chart.Type && _level == chart.Level;
     }
 }

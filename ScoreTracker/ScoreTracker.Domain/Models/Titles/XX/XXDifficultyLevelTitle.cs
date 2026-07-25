@@ -8,6 +8,9 @@ public sealed class XXDifficultyLevelTitle : XXTitle
     private readonly DifficultyLevel _maximumLevel;
     private readonly DifficultyLevel _minimumLevel;
 
+    /// <summary>The folder this title counts passes in — two titles over the same range are one ladder.</summary>
+    public (int Minimum, int Maximum) LevelRange => (_minimumLevel, _maximumLevel);
+
     public XXDifficultyLevelTitle(Name title, DifficultyLevel minimumLevel, DifficultyLevel maximumLevel,
         int requiredCount) : base(title,
         $"{requiredCount} stage passes on {minimumLevel}-{maximumLevel}s, except Missions", "Difficulty", requiredCount)

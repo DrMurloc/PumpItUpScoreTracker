@@ -8,24 +8,24 @@ namespace ScoreTracker.Domain.Models.Titles.Phoenix2;
 
 /// <summary>
 ///     A Phoenix 2 boss-breaker title: clear one specific chart ("ROUGH GAME or more" on the
-///     official page = any unbroken pass). A null level matches the song+type at any level —
-///     the [PHOENIX] double boss renders a "??" stepball with no parseable level.
+///     official page = any unbroken pass). Always one exact chart: a "??" stepball on the official
+///     page is how the game displays that chart's level, not a wildcard, so matching the song+type
+///     at any level would hand the title to anyone who cleared an easier chart of the same song.
 /// </summary>
 public sealed class Phoenix2ChartClearTitle : PhoenixTitle, ISpecificChartTitle
 {
     private readonly ChartType _chartType;
-    private readonly DifficultyLevel? _level;
-    private readonly Name _songName;
+    private readonly DifficultyLevel _level;
 
-    public Phoenix2ChartClearTitle(Name name, Name songName, ChartType chartType, DifficultyLevel? level)
-        : base(name,
-            $"Clear {songName} {chartType.GetShortHand()}{(level == null ? "??" : ((int)level.Value).ToString())}",
-            "Boss Breaker", 1)
+    public Phoenix2ChartClearTitle(Name name, Name songName, ChartType chartType, DifficultyLevel level)
+        : base(name, $"Clear {songName} {chartType.GetShortHand()}{(int)level}", "Boss Breaker", 1)
     {
-        _songName = songName;
+        SongName = songName;
         _chartType = chartType;
         _level = level;
     }
+
+    public Name SongName { get; }
 
     public override bool PopulatesFromDatabase => false;
 
@@ -36,7 +36,6 @@ public sealed class Phoenix2ChartClearTitle : PhoenixTitle, ISpecificChartTitle
 
     public bool AppliesToChart(Chart chart)
     {
-        return chart.Song.Name == _songName && _chartType == chart.Type &&
-               (_level == null || _level.Value == chart.Level);
+        return chart.Song.Name == SongName && _chartType == chart.Type && _level == chart.Level;
     }
 }

@@ -1,0 +1,86 @@
+@namespace ScoreTracker.Web.Components
+@using System.Globalization
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+
+@* The Phoenix 2 folder-title track (docs/design/pumbility-title-track.md): the glowy bar toward
+   your next PUMBILITY title, and one line reading the folder you're standing in. Replaces the
+   Phoenix 1 folder-title bars. When the folder is beneath your top 50 the bar hides and only the
+   "serves" whisper stays. --mix-* only: it renders inside the tier-list circuit but wants the mix
+   accent, not a fixed green. *@
+@if (Result is { Show: true })
+{
+    var serves = Result.ServesTitle is not null && (Result.ServesAbove || Result.Mode == FolderTrackMode.Reach);
+    <div class="ptt">
+        <div class="ptt-band">
+            <div class="ptt-head">
+                <span class="ptt-lead">
+                    @if (serves)
+                    {
+                        @* Wide screens: the "serves" notifier rides the top-left of the bar. Below
+                           ~480 it drops to the banner under the bar (same text, CSS toggles which). *@
+                        <span class="ptt-serves-top">
+                            <span class="ptt-serves-ic" aria-hidden="true">▲</span>
+                            <span>@L["This folder serves {0}", Strip(Result.ServesTitle!)]</span>
+                        </span>
+                    }
+                    else if (!string.IsNullOrEmpty(Result.FromTitle))
+                    {
+                        <span class="ptt-from">@L["from {0}", Strip(Result.FromTitle)]</span>
+                    }
+                </span>
+                <span class="ptt-target">
+                    <span class="ptt-k">@L["Next title"]</span>
+                    <span class="ptt-t">@Strip(Result.TargetTitle)</span>
+                </span>
+            </div>
+            <div class="ptt-bar">
+                <span class="ptt-fill" style="width:@Pct%"></span>
+                <span class="ptt-you" style="left:@Pct%"></span>
+            </div>
+            <div class="ptt-cap @(Result.Mode == FolderTrackMode.OnPace ? "" : "ptt-cap-grade")">
+                @if (Result.Mode == FolderTrackMode.OnPace)
+                {
+                    @L["~{0} more charts in this folder", Result.ChartsLeft]
+                }
+                else if (Result.Mode == FolderTrackMode.Reach)
+                {
+                    @* Above your level and too thin to finish the title alone — "(only N exist)" says why. *@
+                    @L["Pass {0} charts at {1} or better (only {2} exist in this folder)", Result.ChartsLeft, Result.NeededGrade.GetName(), Result.FolderChartCount]
+                }
+                else
+                {
+                    @L["Pass {0} charts in this folder with {1} or better", Result.ChartsLeft, Result.NeededGrade.GetName()]
+                }
+            </div>
+        </div>
+        @if (serves)
+        {
+            <div class="ptt-serves">
+                <span class="ptt-serves-ic" aria-hidden="true">▲</span>
+                <span>@L["This folder serves {0}", Strip(Result.ServesTitle!)]</span>
+            </div>
+        }
+    </div>
+}
+else if (Result is { Show: false, ServesTitle: not null })
+{
+    <div class="ptt ptt-behind">
+        <span class="ptt-behind-ic" aria-hidden="true">⊘</span>
+        <span>@L["Behind your top 50 — serves {0}", Strip(Result.ServesTitle)]</span>
+    </div>
+}
+
+@code {
+    [Parameter] public FolderTitleTrackResult? Result { get; set; }
+
+    private string Pct =>
+        (Result == null ? 0 : Math.Round(Result.Progress * 100)).ToString("0", CultureInfo.InvariantCulture);
+
+    // The pool prefix is redundant on a folder that's already one type: "[S] ADVANCED LV.9" reads
+    // as "ADVANCED LV.9". SINGLE/DOUBLE MASTER carry no prefix and pass through untouched.
+    private static string Strip(string title) =>
+        title.StartsWith("[S] ", StringComparison.Ordinal) || title.StartsWith("[D] ", StringComparison.Ordinal)
+            ? title[4..]
+            : title;
+}

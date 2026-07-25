@@ -20,6 +20,25 @@ public sealed class FolderGridTests : ComponentTestBase
     }
 
     [Fact]
+    public void SinglesTabStopsAt26_NoHarderSingleChartExistsYet()
+    {
+        var cut = RenderComponent<FolderGrid>(p => p.Add(x => x.InitialType, ChartType.Single));
+
+        var levels = cut.FindAll(".folder-picker-level").Select(b => b.TextContent).ToArray();
+        Assert.Equal("26", levels.Last());
+        Assert.DoesNotContain("27", levels);
+    }
+
+    [Fact]
+    public void DoublesTabGoesHigherThanSingles()
+    {
+        var cut = RenderComponent<FolderGrid>(p => p.Add(x => x.InitialType, ChartType.Double));
+
+        var levels = cut.FindAll(".folder-picker-level").Select(b => int.Parse(b.TextContent)).ToArray();
+        Assert.True(levels.Max() > 26, "Doubles folders should still offer levels above 26.");
+    }
+
+    [Fact]
     public void CoOpTabShowsPlayerCountsOnly()
     {
         var cut = RenderComponent<FolderGrid>(p => p.Add(x => x.InitialType, ChartType.CoOp));

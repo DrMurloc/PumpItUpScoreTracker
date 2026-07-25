@@ -34,7 +34,8 @@ public sealed class UiColorTokenTests
     {
         // ChartDetails burned its 2 literals in the chart-page overhaul (the old
         // #FF0000/#00FF00 letter-graph threshold hack) — entry removed, ratchet tightened.
-        ["Pages/Communities/CommunityLeaderboard.razor"] = 4,
+        // CommunityLeaderboard burned its 4 in the communities overhaul (the head-to-head
+        // percentile legend went with the tool) — entry removed, ratchet tightened.
         ["Pages/Competition/MatchTournamentQualifiers.razor"] = 1,
         ["Pages/Competition/MatchTournamentQualifiersSubmit.razor"] = 4,
         ["Pages/Competition/ScoreRankings.razor"] = 7,

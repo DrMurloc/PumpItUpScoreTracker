@@ -1,4 +1,5 @@
 @using ApexCharts
+@using System.Text.Json
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.SharedKernel.Enums
@@ -74,9 +75,15 @@ else
     // matched by x-VALUE (series skip empty buckets, so a shared index can point at different levels),
     // band (range-area) series skipped via the NaN guard, values as thousands-separated integers.
     // A chart mixing range-area + line otherwise renders line values as "undefined – undefined".
-    // Single-quoted HTML attrs keep the C# verbatim string quote-free.
+    // Single-quoted HTML attrs keep the C# verbatim string quote-free. __NAMES__ carries the
+    // ordinal ladder (plates, letter grades) so those readouts name a rung instead of its index.
     private const string DistributionTooltip =
-        @"function(o){var w=o.w,hi=o.dataPointIndex,hs=o.seriesIndex,hx=null;if(w.globals.seriesX[hs]&&w.globals.seriesX[hs][hi]!=null)hx=w.globals.seriesX[hs][hi];var rows='';for(var s=0;s<w.config.series.length;s++){if(w.config.series[s].type==='rangeArea')continue;var v=null;if(hx!=null&&w.globals.seriesX[s]){var j=w.globals.seriesX[s].indexOf(hx);if(j>=0)v=w.globals.series[s][j];}else v=w.globals.series[s][hi];if(v==null||isNaN(v))continue;var c=w.globals.colors[s],n=w.config.series[s].name;rows+=`<div style='display:flex;align-items:center;gap:6px;padding:1px 0'><span style='width:9px;height:9px;border-radius:50%;background:${c};flex:none'></span><span style='opacity:.75'>${n}</span><b style='margin-left:auto;padding-left:14px'>${Math.round(v).toLocaleString()}</b></div>`;}if(!rows)return '';return `<div style='padding:6px 9px;font-size:12px;line-height:1.5'>${hx!=null?`<div style='font-weight:700;margin-bottom:3px'>${hx}</div>`:''}${rows}</div>`;}";
+        @"function(o){var NM=__NAMES__;function f(v){if(NM&&NM.length){var i=Math.round(v);return (i>=0&&i<NM.length)?NM[i]:i;}return Math.round(v).toLocaleString();}var w=o.w,hi=o.dataPointIndex,hs=o.seriesIndex,hx=null;if(w.globals.seriesX[hs]&&w.globals.seriesX[hs][hi]!=null)hx=w.globals.seriesX[hs][hi];var rows='';for(var s=0;s<w.config.series.length;s++){if(w.config.series[s].type==='rangeArea')continue;var v=null;if(hx!=null&&w.globals.seriesX[s]){var j=w.globals.seriesX[s].indexOf(hx);if(j>=0)v=w.globals.series[s][j];}else v=w.globals.series[s][hi];if(v==null||isNaN(v))continue;var c=w.globals.colors[s],n=w.config.series[s].name;rows+=`<div style='display:flex;align-items:center;gap:6px;padding:1px 0'><span style='width:9px;height:9px;border-radius:50%;background:${c};flex:none'></span><span style='opacity:.75'>${n}</span><b style='margin-left:auto;padding-left:14px'>${f(v)}</b></div>`;}if(!rows)return '';return `<div style='padding:6px 9px;font-size:12px;line-height:1.5'>${hx!=null?`<div style='font-weight:700;margin-bottom:3px'>${hx}</div>`:''}${rows}</div>`;}";
+
+    // The y-axis of an ordinal metric is a ladder of names, not a count — an average plate of
+    // 3.4 is "between MG and TG", never "3.4". Serialized to a JS array the formatter indexes.
+    private static string NamesJson(IReadOnlyList<string>? labels) =>
+        labels is { Count: > 0 } ? JsonSerializer.Serialize(labels) : "null";
 
     private sealed record Pt(double X, decimal Y, decimal Low = 0, decimal High = 0);
 
@@ -176,7 +183,11 @@ else
             // Own the tooltip HTML: a chart mixing range-area bands with line series otherwise
             // renders every line value as an undefined range ("undefined – undefined"). Shared
             // readout, band series skipped (their y is NaN).
-            _options.Tooltip = new Tooltip { Shared = true, Custom = DistributionTooltip };
+            _options.Tooltip = new Tooltip
+            {
+                Shared = true,
+                Custom = DistributionTooltip.Replace("__NAMES__", NamesJson(result.YCategoryLabels))
+            };
         }
 
         // Numeric x-axis: series align by level/player VALUE, not point index — a category axis
@@ -187,10 +198,22 @@ else
         };
         // Everything the y-axis shows is a whole number (score, days, %, counts, ranks) — no decimals,
         // which also kills the "890.900000000000" float labels.
-        _options.Yaxis = new List<YAxis>
+        var yAxis = new YAxis { Min = result.SuggestedYMin, Max = result.SuggestedYMax, DecimalsInFloat = 0 };
+        // An ordinal metric's axis reads as its ladder: "Average Plate by Level" prints
+        // PG / UG / EG, not 5 / 4 / 3. The aggregator pins the bounds to whole rungs, so one
+        // tick per rung lands each label on a plate that exists.
+        if (result.YCategoryLabels is { Count: > 0 } && result.SuggestedYMin is { } lowestRung &&
+            result.SuggestedYMax is { } highestRung)
         {
-            new() { Min = result.SuggestedYMin, Max = result.SuggestedYMax, DecimalsInFloat = 0 }
-        };
+            yAxis.TickAmount = Math.Max(1, (int)(highestRung - lowestRung));
+            yAxis.Labels = new YAxisLabels
+            {
+                Formatter =
+                    $"function(v){{var n={NamesJson(result.YCategoryLabels)};var i=Math.round(v);return (i>=0&&i<n.length)?n[i]:'';}}"
+            };
+        }
+
+        _options.Yaxis = new List<YAxis> { yAxis };
         // Distribution (lines) leans on the hover tooltip; stacked bars keep the category legend.
         _options.Legend = new Legend { Show = isBars };
         _renderKey = signature;

@@ -10,7 +10,44 @@ namespace ScoreTracker.Communities.Domain
     internal interface ICommunityRepository
     {
         Task<Name?> GetCommunityByInviteCode(Guid inviteCode, CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     Persist the whole community: settings, the full member projection, invite codes and
+        ///     channels. Rows missing from the projection are deleted, so callers must hold a
+        ///     current aggregate — use <see cref="AddMembership" />/<see cref="RemoveMembership" />
+        ///     for a plain join or leave, which touch one row and cannot clobber a concurrent one.
+        /// </summary>
         Task SaveCommunity(Community community, CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     Add one plain membership row, leaving every other member untouched. A no-op when the
+        ///     user already holds a row of any kind (including a retained ban), so joining twice —
+        ///     or concurrently — is safe. False means no row was written.
+        /// </summary>
+        Task<bool> AddMembership(Name communityName, Guid userId, CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     Delete one user's membership row. Retained bans and the creator seat stay, matching
+        ///     what saving the aggregate does with them.
+        /// </summary>
+        Task RemoveMembership(Name communityName, Guid userId, CancellationToken cancellationToken);
+
+        /// <summary>Delete a community and all of its member/invite/channel/highlight rows.</summary>
+        Task DeleteCommunity(Name communityName, CancellationToken cancellationToken);
+
+        /// <summary>The member roster (including retained bans) joined to user display identity + role.</summary>
+        Task<IEnumerable<CommunityMemberRecord>> GetRoster(Name communityName, CancellationToken cancellationToken);
+
+        /// <summary>One row per community the user holds a membership row in (bans included).</summary>
+        Task<IEnumerable<MyCommunityRoleRecord>> GetUserRoles(Guid userId, CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     Directory metadata: every community's Singles/Doubles competitive-level spread over
+        ///     members with mix stats and level ≥ 5. Day-cached — the numbers may go stale.
+        /// </summary>
+        Task<IEnumerable<CommunityCompetitiveRangeRecord>> GetCompetitiveRanges(MixEnum mix,
+            CancellationToken cancellationToken);
+
         Task<IEnumerable<CommunityOverviewRecord>> GetCommunities(Guid userId, CancellationToken cancellationToken);
         Task<IEnumerable<CommunityOverviewRecord>> GetPublicCommunities(CancellationToken cancellationToken);
 

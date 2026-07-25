@@ -182,6 +182,13 @@ public static class XXTitleList
         new XXBasicTitle("Tap Dancer", "Play Papasito FULL SONG 5 times", "Songs")
     };
 
+    static XXTitleList()
+    {
+        // Same folder, same ladder: Advanced LV.6 asks for the 22s LV.5 already counted,
+        // so its progress starts at LV.5's requirement instead of at zero.
+        TitleHelpers.LinkLadder(Titles.OfType<XXDifficultyLevelTitle>(), t => t.LevelRange);
+    }
+
     public static IEnumerable<XXTitleProgress> BuildProgress(IEnumerable<BestXXChartAttempt> attempts)
     {
         var progress = Titles.Select(t => new XXTitleProgress(t)).ToImmutableArray();

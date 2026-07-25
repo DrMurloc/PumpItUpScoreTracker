@@ -8,10 +8,13 @@
 
   <ItemGroup>
     <!-- Only Contracts/ and Wiring/ are public (ADR-001 D2); the vertical's tests see the rest.
-         DynamicProxyGenAssembly2 is Moq's proxy assembly — required to mock internal ports. -->
+         DynamicProxyGenAssembly2 is Moq's proxy assembly — required to mock internal ports.
+         ExplorationTests constructs the internal PiuGameApi to crawl the live site (the PIU
+         probes moved there from Tests.Integration). -->
     <InternalsVisibleTo Include="ScoreTracker.Tests" />
     <InternalsVisibleTo Include="ScoreTracker.Tests.Integration" />
     <InternalsVisibleTo Include="ScoreTracker.Tests.E2E" />
+    <InternalsVisibleTo Include="ScoreTracker.ExplorationTests" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
   </ItemGroup>
 

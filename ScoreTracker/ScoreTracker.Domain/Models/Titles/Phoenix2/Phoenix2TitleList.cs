@@ -160,16 +160,19 @@ public static class Phoenix2TitleList
         new Phoenix2PumbilityTitle("DOUBLE MASTER", PumbilityPool.Doubles, 19500),
 
         // ---- Total PUMBILITY tiers ----
-        // Names are masked ("????") on title.php until earned. [P.B] BRONZE was observed
-        // worn on the live rankings; the rest are placeholders.
-        // TODO(P2-titles): replace placeholder names as players reveal them post-launch.
+        // Names are masked ("????") on title.php until earned, so the tier names come from
+        // players wearing them on the live PUMBILITY ranking (Phoenix2PumbilityTitleReconTests).
+        // BRONZE..ALEXANDRITE confirmed 2026-07-23 by worn titles whose lowest wearer sits just
+        // above each threshold (SILVER@12,804 .. ALEXANDRITE@19,047 for the 12500..19000 rungs).
+        // The 20000 tier exists on title.php but is still unreached (top of board ~19,640), so its
+        // name stays masked — re-run the recon to reveal it once someone earns it.
         new Phoenix2PumbilityTitle("[P.B] BRONZE", PumbilityPool.Total, 10000),
-        new Phoenix2PumbilityTitle("[P.B] ??? 12500", PumbilityPool.Total, 12500),
-        new Phoenix2PumbilityTitle("[P.B] ??? 15000", PumbilityPool.Total, 15000),
-        new Phoenix2PumbilityTitle("[P.B] ??? 16000", PumbilityPool.Total, 16000),
-        new Phoenix2PumbilityTitle("[P.B] ??? 17000", PumbilityPool.Total, 17000),
-        new Phoenix2PumbilityTitle("[P.B] ??? 18000", PumbilityPool.Total, 18000),
-        new Phoenix2PumbilityTitle("[P.B] ??? 19000", PumbilityPool.Total, 19000),
+        new Phoenix2PumbilityTitle("[P.B] SILVER", PumbilityPool.Total, 12500),
+        new Phoenix2PumbilityTitle("[P.B] GOLD", PumbilityPool.Total, 15000),
+        new Phoenix2PumbilityTitle("[P.B] PLATINUM", PumbilityPool.Total, 16000),
+        new Phoenix2PumbilityTitle("[P.B] DIAMOND", PumbilityPool.Total, 17000),
+        new Phoenix2PumbilityTitle("[P.B] RED BERYL", PumbilityPool.Total, 18000),
+        new Phoenix2PumbilityTitle("[P.B] ALEXANDRITE", PumbilityPool.Total, 19000),
         new Phoenix2PumbilityTitle("[P.B] ??? 20000", PumbilityPool.Total, 20000),
 
         // ---- Skill ladders (chart + grade) ----
@@ -179,9 +182,9 @@ public static class Phoenix2TitleList
         new Phoenix2ChartGradeTitle("[TWIST S] LV.4", "TWIST S", "Solitary 2", ChartType.Single, 18, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[TWIST S] LV.5", "TWIST S", "U Got 2 Know", ChartType.Single, 19, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[TWIST S] LV.6", "TWIST S", "Canon D", ChartType.Single, 20, PhoenixLetterGrade.SSS),
-        new Phoenix2ChartGradeTitle("[TWIST S] LV.7", "TWIST S", "Love Is A Danger Zone (Cranky Mix)", ChartType.Single, 21, PhoenixLetterGrade.SSS),
+        new Phoenix2ChartGradeTitle("[TWIST S] LV.7", "TWIST S", "Love is a Danger Zone(Cranky Mix)", ChartType.Single, 21, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[TWIST S] LV.8", "TWIST S", "DUEL", ChartType.Single, 21, PhoenixLetterGrade.SSS),
-        new Phoenix2ChartGradeTitle("[TWIST S] LV.9", "TWIST S", "Love is a Danger Zone pt.2", ChartType.Single, 22, PhoenixLetterGrade.SSS),
+        new Phoenix2ChartGradeTitle("[TWIST S] LV.9", "TWIST S", "Love is a Danger Zone pt. 2", ChartType.Single, 22, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[TWIST S] LV.10", "TWIST S", "Uranium", ChartType.Single, 22, PhoenixLetterGrade.SSS),
         new Phoenix2TitleSetTitle("[TWIST S] EXPERT", "[TWIST S] Earn 10 Titles", "TWIST S", new Name[] { "TWIST S" }, 10),
         new Phoenix2ChartGradeTitle("[TWIST D] LV.1", "TWIST D", "Redline", ChartType.Double, 16, PhoenixLetterGrade.SSS),
@@ -192,8 +195,8 @@ public static class Phoenix2TitleList
         new Phoenix2ChartGradeTitle("[TWIST D] LV.6", "TWIST D", "Witch Doctor #1", ChartType.Double, 20, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[TWIST D] LV.7", "TWIST D", "Love is a Danger Zone", ChartType.Double, 21, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[TWIST D] LV.8", "TWIST D", "Super Fantasy", ChartType.Double, 22, PhoenixLetterGrade.SSS),
-        new Phoenix2ChartGradeTitle("[TWIST D] LV.9", "TWIST D", "Love Is A Danger Zone (Cranky Mix)", ChartType.Double, 23, PhoenixLetterGrade.SSS),
-        new Phoenix2ChartGradeTitle("[TWIST D] LV.10", "TWIST D", "Love is a Danger Zone pt.2", ChartType.Double, 24, PhoenixLetterGrade.SSS),
+        new Phoenix2ChartGradeTitle("[TWIST D] LV.9", "TWIST D", "Love is a Danger Zone(Cranky Mix)", ChartType.Double, 23, PhoenixLetterGrade.SSS),
+        new Phoenix2ChartGradeTitle("[TWIST D] LV.10", "TWIST D", "Love is a Danger Zone pt. 2", ChartType.Double, 24, PhoenixLetterGrade.SSS),
         new Phoenix2TitleSetTitle("[TWIST D] EXPERT", "[TWIST D] Earn 10 Titles", "TWIST D", new Name[] { "TWIST D" }, 10),
         new Phoenix2ChartGradeTitle("[RUN S] LV.1", "RUN S", "Switronic", ChartType.Single, 15, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[RUN S] LV.2", "RUN S", "Super Fantasy", ChartType.Single, 16, PhoenixLetterGrade.SSS),
@@ -240,12 +243,12 @@ public static class Phoenix2TitleList
         new Phoenix2ChartGradeTitle("[GIMMICK] LV.10", "GIMMICK", "Everybody Got 2 Know", ChartType.Single, 21, PhoenixLetterGrade.SSS),
         new Phoenix2TitleSetTitle("[GIMMICK] EXPERT", "[GIMMICK] Earn 10 Titles", "GIMMICK", new Name[] { "GIMMICK" }, 10),
         new Phoenix2ChartGradeTitle("[SLOW] LV.1", "SLOW", "Yeo rae a", ChartType.Single, 13, PhoenixLetterGrade.SSS),
-        new Phoenix2ChartGradeTitle("[SLOW] LV.2", "SLOW", "Twist of Fate", ChartType.Single, 19, PhoenixLetterGrade.SSS),
+        new Phoenix2ChartGradeTitle("[SLOW] LV.2", "SLOW", "Twist of Fate (feat. Ruriling)", ChartType.Single, 19, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[SLOW] LV.3", "SLOW", "Moonlight", ChartType.Single, 20, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[SLOW] LV.4", "SLOW", "Night Duty", ChartType.Single, 20, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[SLOW] LV.5", "SLOW", "Karyawisata", ChartType.Single, 21, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[SLOW] LV.6", "SLOW", "Take Out", ChartType.Single, 21, PhoenixLetterGrade.SSS),
-        new Phoenix2ChartGradeTitle("[SLOW] LV.7", "SLOW", "Twist of Fate", ChartType.Double, 21, PhoenixLetterGrade.SSS),
+        new Phoenix2ChartGradeTitle("[SLOW] LV.7", "SLOW", "Twist of Fate (feat. Ruriling)", ChartType.Double, 21, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[SLOW] LV.8", "SLOW", "Moonlight", ChartType.Double, 22, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[SLOW] LV.9", "SLOW", "Take Out", ChartType.Double, 23, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[SLOW] LV.10", "SLOW", "Banya-P Guitar Remix", ChartType.Single, 23, PhoenixLetterGrade.SSS),
@@ -256,7 +259,7 @@ public static class Phoenix2TitleList
         new Phoenix2ChartGradeTitle("[HALF] LV.4", "HALF", "Super Fantasy", ChartType.Double, 19, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[HALF] LV.5", "HALF", "Phantom -Intermezzo-", ChartType.Double, 20, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[HALF] LV.6", "HALF", "Phantom", ChartType.Double, 20, PhoenixLetterGrade.SSS),
-        new Phoenix2ChartGradeTitle("[HALF] LV.7", "HALF", "Utsushiyo No Kaze", ChartType.Double, 21, PhoenixLetterGrade.SSS),
+        new Phoenix2ChartGradeTitle("[HALF] LV.7", "HALF", "Utsushiyo No Kaze feat. Kana", ChartType.Double, 21, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[HALF] LV.8", "HALF", "Redline", ChartType.Double, 22, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[HALF] LV.9", "HALF", "Love is a Danger Zone 2 Try To B.P.M", ChartType.Double, 23, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[HALF] LV.10", "HALF", "Imprinting", ChartType.Double, 24, PhoenixLetterGrade.SSS),
@@ -264,12 +267,12 @@ public static class Phoenix2TitleList
         new Phoenix2ChartGradeTitle("[BRACKET] LV.1", "BRACKET", "Allegro Furioso", ChartType.Double, 20, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[BRACKET] LV.2", "BRACKET", "Mad5cience", ChartType.Single, 20, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[BRACKET] LV.3", "BRACKET", "Pop Sequence", ChartType.Single, 21, PhoenixLetterGrade.SSS),
-        new Phoenix2ChartGradeTitle("[BRACKET] LV.4", "BRACKET", "Meteo5cience", ChartType.Single, 21, PhoenixLetterGrade.SSS),
-        new Phoenix2ChartGradeTitle("[BRACKET] LV.5", "BRACKET", "Phalanx", ChartType.Single, 22, PhoenixLetterGrade.SSS),
-        new Phoenix2ChartGradeTitle("[BRACKET] LV.6", "BRACKET", "Meteo5cience", ChartType.Double, 22, PhoenixLetterGrade.SSS),
+        new Phoenix2ChartGradeTitle("[BRACKET] LV.4", "BRACKET", "Meteo5cience (GADGET mix)", ChartType.Single, 21, PhoenixLetterGrade.SSS),
+        new Phoenix2ChartGradeTitle("[BRACKET] LV.5", "BRACKET", "Phalanx \"RS2018 edit\"", ChartType.Single, 22, PhoenixLetterGrade.SSS),
+        new Phoenix2ChartGradeTitle("[BRACKET] LV.6", "BRACKET", "Meteo5cience (GADGET mix)", ChartType.Double, 22, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[BRACKET] LV.7", "BRACKET", "What Happened", ChartType.Double, 23, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[BRACKET] LV.8", "BRACKET", "Scorpion King", ChartType.Double, 23, PhoenixLetterGrade.SSS),
-        new Phoenix2ChartGradeTitle("[BRACKET] LV.9", "BRACKET", "Phalanx", ChartType.Double, 24, PhoenixLetterGrade.SSS),
+        new Phoenix2ChartGradeTitle("[BRACKET] LV.9", "BRACKET", "Phalanx \"RS2018 edit\"", ChartType.Double, 24, PhoenixLetterGrade.SSS),
         new Phoenix2ChartGradeTitle("[BRACKET] LV.10", "BRACKET", "Hymn of Golden Glory - SHORT CUT -", ChartType.Double, 24, PhoenixLetterGrade.SSS),
         new Phoenix2TitleSetTitle("[BRACKET] EXPERT", "[BRACKET] Earn 10 Titles", "BRACKET", new Name[] { "BRACKET" }, 10),
 
@@ -307,8 +310,8 @@ public static class Phoenix2TitleList
         new Phoenix2ChartClearTitle("[EXCEED] DOUBLE BOSS BREAKER", "Dignity", ChartType.Double, 25),
         new Phoenix2ChartClearTitle("[EXCEED2] SINGLE BOSS BREAKER", "Canon D", ChartType.Single, 20),
         new Phoenix2ChartClearTitle("[EXCEED2] DOUBLE BOSS BREAKER", "Canon D", ChartType.Double, 23),
-        new Phoenix2ChartClearTitle("[ZERO] SINGLE BOSS BREAKER", "Love is a Danger Zone pt.2", ChartType.Single, 22),
-        new Phoenix2ChartClearTitle("[ZERO] DOUBLE BOSS BREAKER", "Love is a Danger Zone pt.2", ChartType.Double, 24),
+        new Phoenix2ChartClearTitle("[ZERO] SINGLE BOSS BREAKER", "Love is a Danger Zone pt. 2", ChartType.Single, 22),
+        new Phoenix2ChartClearTitle("[ZERO] DOUBLE BOSS BREAKER", "Love is a Danger Zone pt. 2", ChartType.Double, 24),
         new Phoenix2ChartClearTitle("[NX] SINGLE BOSS BREAKER", "BEMERA", ChartType.Single, 24),
         new Phoenix2ChartClearTitle("[NX] DOUBLE BOSS BREAKER", "BEMERA", ChartType.Double, 26),
         new Phoenix2ChartClearTitle("[NX2] SINGLE BOSS BREAKER", "Banya-P Guitar Remix", ChartType.Single, 23),
@@ -319,8 +322,8 @@ public static class Phoenix2TitleList
         new Phoenix2ChartClearTitle("[FIESTA] DOUBLE BOSS BREAKER", "Vacuum", ChartType.Double, 25),
         new Phoenix2ChartClearTitle("[FIESTA EX] SINGLE BOSS BREAKER", "Vacuum Cleaner", ChartType.Single, 25),
         new Phoenix2ChartClearTitle("[FIESTA EX] DOUBLE BOSS BREAKER", "Vacuum Cleaner", ChartType.Double, 26),
-        new Phoenix2ChartClearTitle("[FIESTA2] SINGLE BOSS BREAKER", "Ignis Fatuus", ChartType.Single, 22),
-        new Phoenix2ChartClearTitle("[FIESTA2] DOUBLE BOSS BREAKER", "Ignis Fatuus", ChartType.Double, 25),
+        new Phoenix2ChartClearTitle("[FIESTA2] SINGLE BOSS BREAKER", "Ignis Fatuus(DM Ashura Mix)", ChartType.Single, 22),
+        new Phoenix2ChartClearTitle("[FIESTA2] DOUBLE BOSS BREAKER", "Ignis Fatuus(DM Ashura Mix)", ChartType.Double, 25),
         new Phoenix2ChartClearTitle("[PRIME] SINGLE BOSS BREAKER", "Paradoxx", ChartType.Single, 26),
         new Phoenix2ChartClearTitle("[PRIME] DOUBLE BOSS BREAKER", "Paradoxx", ChartType.Double, 28),
         new Phoenix2ChartClearTitle("[PRIME2] SINGLE BOSS BREAKER", "Shub Sothoth", ChartType.Single, 25),
@@ -328,10 +331,20 @@ public static class Phoenix2TitleList
         new Phoenix2ChartClearTitle("[XX] SINGLE BOSS BREAKER", "ERRORCODE: 0", ChartType.Single, 25),
         new Phoenix2ChartClearTitle("[XX] DOUBLE BOSS BREAKER", "1949", ChartType.Double, 28),
         new Phoenix2ChartClearTitle("[PHOENIX] SINGLE BOSS BREAKER", "1948", ChartType.Single, 26),
-        new Phoenix2ChartClearTitle("[PHOENIX] DOUBLE BOSS BREAKER", "1948", ChartType.Double, null),
+        // The "??" stepball on the official page is how the game displays 1948 D29's level, not an
+        // unknown one — the D24 and D27 render their numbers normally, so only the D29 counts.
+        new Phoenix2ChartClearTitle("[PHOENIX] DOUBLE BOSS BREAKER", "1948", ChartType.Double, 29),
     };
 
     private static readonly IDictionary<Name, PhoenixTitle> TitleLookup = Titles.ToDictionary(n => n.Name);
+
+    static Phoenix2TitleList()
+    {
+        // A pool's whole ladder is linked — [S] INTERMEDIATE LV.2 reads the same singles
+        // PUMBILITY as LV.1, at a higher threshold — so each rung's progress starts where
+        // the rung below it finished.
+        TitleHelpers.LinkLadder(Titles.OfType<Phoenix2PumbilityTitle>(), t => t.Pool);
+    }
 
     public static PhoenixTitle GetTitleByName(Name name)
     {

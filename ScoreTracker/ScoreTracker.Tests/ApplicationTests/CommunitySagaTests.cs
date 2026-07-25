@@ -95,9 +95,12 @@ public sealed class CommunitySagaTests
 
         await ctx.Saga.Handle(new JoinCommunityCommand(Name.From("Acme"), null), CancellationToken.None);
 
-        ctx.Communities.Verify(c => c.SaveCommunity(
-            It.Is<Community>(comm => comm.MemberIds.Contains(userId)),
-            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Communities.Verify(c => c.AddMembership(Name.From("Acme"), userId, It.IsAny<CancellationToken>()),
+            Times.Once);
+        // Writing the aggregate back would persist the member set as it looked when the handler
+        // loaded it, dropping anyone who joined while this join was in flight.
+        ctx.Communities.Verify(c => c.SaveCommunity(It.IsAny<Community>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -114,6 +117,121 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task JoinCommunityRejectsABannedUser()
+    {
+        var userId = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: userId);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public,
+            new[] { new CommunityMember(userId, CommunityRole.Banned, CommunityPermission.None, null, null) },
+            Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(), false,
+            Community.DefaultAdminPermissionsSeed, null);
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        await Assert.ThrowsAsync<DeniedFromCommunityException>(() =>
+            ctx.Saga.Handle(new JoinCommunityCommand(Name.From("Acme"), null), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task LeaderboardHidesPrivateProfilesFromViewersOutsideTheCommunity()
+    {
+        var member = Guid.NewGuid();
+        var viewer = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: viewer);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public,
+            new[] { member }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false);
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+        ctx.Communities.Setup(c => c.GetLeaderboard(It.IsAny<MixEnum>(), It.IsAny<Name>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityLeaderboardRecord(Name.From("Hidden"), false,
+                    new Uri("https://piu.test/a.png"), member, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+            });
+
+        // An outside viewer sees no private-profile rows; the member themselves sees the row.
+        var outside = await ctx.Saga.Handle(new GetCommunityLeaderboardQuery(Name.From("Acme"), MixEnum.Phoenix),
+            CancellationToken.None);
+        Assert.Empty(outside);
+
+        var insideCtx = new HandlerContext(currentUserId: member);
+        insideCtx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+        insideCtx.Communities.Setup(c => c.GetLeaderboard(It.IsAny<MixEnum>(), It.IsAny<Name>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityLeaderboardRecord(Name.From("Hidden"), false,
+                    new Uri("https://piu.test/a.png"), member, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+            });
+        var inside = await insideCtx.Saga.Handle(
+            new GetCommunityLeaderboardQuery(Name.From("Acme"), MixEnum.Phoenix), CancellationToken.None);
+        Assert.Single(inside);
+    }
+
+    [Fact]
+    public async Task InvitePreviewReturnsNullForAnUnknownCode()
+    {
+        var ctx = new HandlerContext();
+        ctx.Communities.Setup(c => c.GetCommunityByInviteCode(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Name?)null);
+
+        var preview = await ctx.Saga.Handle(new GetCommunityInvitePreviewQuery(Guid.NewGuid()),
+            CancellationToken.None);
+
+        Assert.Null(preview);
+    }
+
+    [Fact]
+    public async Task InvitePreviewReturnsCommunityShapeAndCallerStanding()
+    {
+        var userId = Guid.NewGuid();
+        var code = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: userId);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.PublicWithCode,
+            new[] { Guid.NewGuid(), Guid.NewGuid() }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?> { [code] = null }, false);
+        ctx.Communities.Setup(c => c.GetCommunityByInviteCode(code, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Name.From("Acme"));
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        var preview = await ctx.Saga.Handle(new GetCommunityInvitePreviewQuery(code), CancellationToken.None);
+
+        Assert.NotNull(preview);
+        Assert.Equal("Acme", (string)preview!.CommunityName);
+        Assert.Equal(2, preview.MemberCount);
+        Assert.False(preview.IsExpired);
+        Assert.False(preview.IsBanned);
+        Assert.False(preview.IsAlreadyMember);
+    }
+
+    [Fact]
+    public async Task InvitePreviewFlagsAnExpiredCodeAndABannedCaller()
+    {
+        var userId = Guid.NewGuid();
+        var code = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: userId);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Private,
+            new[] { new CommunityMember(userId, CommunityRole.Banned, CommunityPermission.None, null, null) },
+            Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?> { [code] = new DateOnly(2020, 1, 1) }, false,
+            Community.DefaultAdminPermissionsSeed, null);
+        ctx.Communities.Setup(c => c.GetCommunityByInviteCode(code, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Name.From("Acme"));
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        var preview = await ctx.Saga.Handle(new GetCommunityInvitePreviewQuery(code), CancellationToken.None);
+
+        Assert.NotNull(preview);
+        Assert.True(preview!.IsExpired);
+        Assert.True(preview.IsBanned);
+    }
+
+    [Fact]
     public async Task LeaveCommunityRemovesMemberFromTheSet()
     {
         var userId = Guid.NewGuid();
@@ -126,9 +244,10 @@ public sealed class CommunitySagaTests
 
         await ctx.Saga.Handle(new LeaveCommunityCommand(Name.From("Acme")), CancellationToken.None);
 
-        ctx.Communities.Verify(c => c.SaveCommunity(
-            It.Is<Community>(comm => !comm.MemberIds.Contains(userId)),
-            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Communities.Verify(c => c.RemoveMembership(Name.From("Acme"), userId, It.IsAny<CancellationToken>()),
+            Times.Once);
+        ctx.Communities.Verify(c => c.SaveCommunity(It.IsAny<Community>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -146,12 +265,12 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task CreateInviteLinkPersistsTheCodeAndReturnsIt()
+    public async Task CreateInviteLinkPersistsTheCodeForAHolderOfTheInvitePermission()
     {
-        var memberId = Guid.NewGuid();
-        var ctx = new HandlerContext(currentUserId: memberId);
-        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public,
-            new[] { memberId }, Array.Empty<Community.ChannelConfiguration>(),
+        var ownerId = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: ownerId);
+        var community = new Community(Name.From("Acme"), ownerId, CommunityPrivacyType.Public,
+            new[] { ownerId }, Array.Empty<Community.ChannelConfiguration>(),
             new Dictionary<Guid, DateOnly?>(), false);
         ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(community);
@@ -163,6 +282,22 @@ public sealed class CommunitySagaTests
         ctx.Communities.Verify(c => c.SaveCommunity(
             It.Is<Community>(comm => comm.InviteCodes.ContainsKey(code)),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateInviteLinkThrowsForAPlainMemberWithoutThePermission()
+    {
+        var memberId = Guid.NewGuid();
+        var ctx = new HandlerContext(currentUserId: memberId);
+        var community = new Community(Name.From("Acme"), Guid.NewGuid(), CommunityPrivacyType.Public,
+            new[] { memberId }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false);
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+
+        await Assert.ThrowsAsync<DeniedFromCommunityException>(() =>
+            ctx.Saga.Handle(new CreateInviteLinkCommand(Name.From("Acme"), ExpirationDate: null),
+                CancellationToken.None));
     }
 
     [Theory]
@@ -239,6 +374,39 @@ public sealed class CommunitySagaTests
             It.IsAny<CancellationToken>()), Times.Once);
         ctx.Localizer.Verify(l => l.Get("ko-KR", "passed 1 chart"), Times.Once);
         ctx.Localizer.Verify(l => l.Get(null, "passed 1 chart"), Times.Once);
+    }
+
+    [Fact]
+    public async Task ACommunityDefaultLanguageBacksChannelsThatRegisteredWithoutOne()
+    {
+        // The channel registered with no language, but the creator set a community default:
+        // the card renders in the community's language instead of English.
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.Communities.Setup(c => c.GetCommunities(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityOverviewRecord(Name.From("Tokyo"), CommunityPrivacyType.Public, 1, false)
+            });
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.Is<Name>(n => (string)n == "Tokyo"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Community(Name.From("Tokyo"), Guid.NewGuid(), CommunityPrivacyType.Public,
+                new[] { new CommunityMember(userId, CommunityRole.Member, CommunityPermission.None, null, null) },
+                new[] { new Community.ChannelConfiguration(333) },
+                new Dictionary<Guid, DateOnly?>(), false,
+                Community.DefaultAdminPermissionsSeed, "ja-JP"));
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, chart, score: 950000);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
+            (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(),
+            It.Is<IEnumerable<ulong>>(ids => ids.Count() == 1 && ids.First() == 333),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Localizer.Verify(l => l.Get("ja-JP", "passed 1 chart"), Times.Once);
+        ctx.Localizer.Verify(l => l.Get(null, "passed 1 chart"), Times.Never);
     }
 
     [Fact]
@@ -465,13 +633,39 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
-    public async Task UnremarkablePassesFillTheMoreScoresBucketThenOverflow()
+    public async Task AHandfulOfUnflaggedScoresAllBecomeArtRows()
     {
-        // Owner call: non-highlighted scores now show — up to 10 compact one-liners in the
-        // "More scores" bucket (no art), the rest compress into "+N more", and the folder
-        // progress + header totals still summarize.
+        // Owner call: with nothing flagged, every score becomes a jacket art row (up to the cap) —
+        // three passes make three art rows that ARE the whole highlights section, nothing spilling
+        // to a compact bucket. The card is never a bare text list.
         var userId = Guid.NewGuid();
-        var charts = Enumerable.Range(10, 12)
+        var charts = new[] { 18, 19, 20 }
+            .Select(level => new ChartBuilder().WithType(ChartType.Single).WithLevel(level).Build())
+            .ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, charts, score: 950000);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null,
+            charts.Select(c => (c.Id, true, HighlightFlags.None)).ToArray())));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs =>
+                msgs.Single().Blocks.OfType<RichBotSection>().Count() == 3
+                && msgs.Single().Blocks.OfType<RichBotSection>().All(s => s.Thumbnail != null)
+                && !msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("-# More scores"))),
+            It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task PromotedArtRowsLeadThenMoreScoresBucketThenOverflow()
+    {
+        // The promoted top 5 lead with art; the next 10 fill the compact "More scores" bucket, the
+        // rest compress into "+N more", and the folder progress + header totals still summarize.
+        var userId = Guid.NewGuid();
+        var charts = Enumerable.Range(10, 17) // S10..S26
             .Select(level => new ChartBuilder().WithType(ChartType.Single).WithLevel(level).Build())
             .ToArray();
         var ctx = new HandlerContext();
@@ -484,11 +678,10 @@ public sealed class CommunitySagaTests
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Count() == 1
-                && msgs.Single().Header!.Markdown.Contains("passed 12")
-                && !msgs.Single().Blocks.OfType<RichBotSection>().Any()
+                && msgs.Single().Header!.Markdown.Contains("passed 17")
+                && msgs.Single().Blocks.OfType<RichBotSection>().Count() == 5
                 && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("-# More scores"))
-                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("+2 more"))
-                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("#DIFFICULTY|S21# 1/1"))),
+                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("+2 more"))),
             It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -921,21 +1114,25 @@ public sealed class CommunitySagaTests
     {
         // A new pass on a chart the player already cleared in another mix is a reclear: its
         // compact row gets a trailing asterisk and the footer explains it. A genuine
-        // first-clear in the same batch stays unmarked.
+        // first-clear in the same batch stays unmarked. Higher unflagged charts take the promoted
+        // art rows, so the two reclear candidates render in the compact "More scores" bucket.
         var userId = Guid.NewGuid();
         var reclaimed = new ChartBuilder().WithSongName("Reclaimed").WithType(ChartType.Single).WithLevel(18)
             .WithMix(MixEnum.Phoenix2).Build();
         var fresh = new ChartBuilder().WithSongName("Fresh").WithType(ChartType.Single).WithLevel(17)
             .WithMix(MixEnum.Phoenix2).Build();
+        var higher = Enumerable.Range(19, 5)
+            .Select(l => new ChartBuilder().WithSongName($"Higher{l}").WithType(ChartType.Single).WithLevel(l)
+                .WithMix(MixEnum.Phoenix2).Build()).ToArray();
+        var all = new[] { reclaimed, fresh }.Concat(higher).ToArray();
         var ctx = new HandlerContext();
         ctx.GivenUser(userId, name: "alice");
         ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
-        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, new[] { reclaimed, fresh }, score: 960000);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, all, score: 960000);
         ctx.GivenCrossMixPasses(MixEnum.Phoenix, userId, reclaimed);
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, null,
-            (reclaimed.Id, true, HighlightFlags.None),
-            (fresh.Id, true, HighlightFlags.None))));
+            all.Select(c => (c.Id, true, HighlightFlags.None)).ToArray())));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
@@ -977,13 +1174,18 @@ public sealed class CommunitySagaTests
     {
         // "Any other mix" includes legacy XX: a non-broken XX clear of the same chart marks the
         // new Phoenix 2 pass as a reclear, matching the tier list's cross-mix pass semantics.
+        // Higher unflagged charts take the promoted art rows, so the reclear renders compact.
         var userId = Guid.NewGuid();
         var chart = new ChartBuilder().WithSongName("Throwback").WithType(ChartType.Single).WithLevel(18)
             .WithMix(MixEnum.Phoenix2).Build();
+        var higher = Enumerable.Range(19, 5)
+            .Select(l => new ChartBuilder().WithSongName($"Higher{l}").WithType(ChartType.Single).WithLevel(l)
+                .WithMix(MixEnum.Phoenix2).Build()).ToArray();
+        var all = new[] { chart }.Concat(higher).ToArray();
         var ctx = new HandlerContext();
         ctx.GivenUser(userId, name: "alice");
         ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
-        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 960000);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, all, score: 960000);
         ctx.Scores.Setup(s => s.GetBestXXAttempts(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
@@ -991,7 +1193,7 @@ public sealed class CommunitySagaTests
             });
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, null,
-            (chart.Id, true, HighlightFlags.None))));
+            all.Select(c => (c.Id, true, HighlightFlags.None)).ToArray())));
 
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Footer!.Contains("\\* = reclears")

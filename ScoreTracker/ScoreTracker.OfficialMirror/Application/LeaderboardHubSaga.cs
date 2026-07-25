@@ -20,6 +20,7 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetWeeklyHighlightsQuery, WeeklyHighlightsRecord?>,
     IRequestHandler<GetOfficialRankingsQuery, OfficialRankingsRecord>,
     IRequestHandler<GetOfficialPlayerProfileQuery, OfficialPlayerProfileRecord?>,
+    IRequestHandler<GetOfficialPlayerStandingQuery, OfficialPlayerStandingRecord?>,
     IRequestHandler<GetOfficialPlayerNamesQuery, IReadOnlyList<string>>,
     IRequestHandler<GetOfficialPopularityQuery, IReadOnlyList<OfficialPopularityRecord>>,
     IRequestHandler<GetImportRunsQuery, IReadOnlyList<ImportRunRecord>>,
@@ -192,6 +193,28 @@ internal sealed class LeaderboardHubSaga :
         var ranks = new Dictionary<int, int>(ranked.Length);
         for (var i = 0; i < ranked.Length; i++) ranks[ranked[i].PlayerId] = i + 1;
         return ranks;
+    }
+
+    public async Task<OfficialPlayerStandingRecord?> Handle(GetOfficialPlayerStandingQuery request,
+        CancellationToken cancellationToken)
+    {
+        var player = await _snapshots.GetPlayerByUserId(request.Mix, request.UserId, cancellationToken);
+        if (player == null) return null;
+        var profile = await Handle(new GetOfficialPlayerProfileQuery(request.Mix, player.Username),
+            cancellationToken);
+        if (profile == null) return null;
+
+        // Per-board placements read the same snapshot-cached stats the rankings view uses.
+        async Task<int?> RankOn(string type)
+        {
+            var rankings = await Handle(new GetOfficialRankingsQuery(request.Mix, type), cancellationToken);
+            return rankings.Rankings.FirstOrDefault(r => r.Player.PlayerId == player.Id)?.Rank;
+        }
+
+        var bestPlace = profile.Placements.Any(p => p.Place != null) ? profile.BestPlace : (int?)null;
+        return new OfficialPlayerStandingRecord(player.Username, profile.PumbilityRank, profile.BoardsInTop,
+            profile.NumberOnes, bestPlace,
+            await RankOn("Singles"), await RankOn("Doubles"), await RankOn(CoOpType));
     }
 
     public async Task<OfficialPlayerProfileRecord?> Handle(GetOfficialPlayerProfileQuery request,

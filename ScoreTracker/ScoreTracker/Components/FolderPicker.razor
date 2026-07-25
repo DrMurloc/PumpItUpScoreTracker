@@ -60,10 +60,9 @@
         _open = !_open;
     }
 
-    private static (int Min, int Max) Bounds(ChartType type)
-    {
-        return type == ChartType.CoOp ? (2, 5) : (1, DifficultyLevel.Max);
-    }
+    // Shared with the grid (FolderLevels): singles stop at 26, so ◄ ► can't step onto a
+    // folder the grid won't show, and a deep-linked S27+ clamps back to 26.
+    private static (int Min, int Max) Bounds(ChartType type) => FolderLevels.Range(type);
 
     private bool CanStep(int direction)
     {

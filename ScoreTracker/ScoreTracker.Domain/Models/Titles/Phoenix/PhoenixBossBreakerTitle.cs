@@ -7,7 +7,6 @@ namespace ScoreTracker.Domain.Models.Titles.Phoenix
 {
     public sealed class PhoenixBossBreakerTitle : PhoenixTitle, ISpecificChartTitle
     {
-        private readonly Name _songName;
         private readonly ChartType _chartType;
         private readonly DifficultyLevel _level;
 
@@ -17,10 +16,12 @@ namespace ScoreTracker.Domain.Models.Titles.Phoenix
             $"Pass {songName} {chartType.GetShortHand()}{level}", "Boss Breaker",
             1)
         {
-            _songName = songName;
+            SongName = songName;
             _chartType = chartType;
             _level = level;
         }
+
+        public Name SongName { get; }
 
         public override bool PopulatesFromDatabase => false;
 
@@ -31,7 +32,7 @@ namespace ScoreTracker.Domain.Models.Titles.Phoenix
 
         public bool AppliesToChart(Chart chart)
         {
-            return chart.Song.Name == _songName && _chartType == chart.Type && _level == chart.Level;
+            return chart.Song.Name == SongName && _chartType == chart.Type && _level == chart.Level;
         }
     }
 }

@@ -210,6 +210,74 @@ public sealed class ByLevelAggregatorTests
         Assert.Equal(25, Value(result, "Not cleared"));
     }
 
+    [Fact]
+    public void AveragePlateByLevelShipsThePlateLadderAsItsAxis()
+    {
+        // "Average Plate by Level" averages plate RANKS — 3.5 means "between MG and UG".
+        // The rungs travel with the result so the axis and tooltip can name them instead of
+        // printing the index, and the bounds land on whole rungs so no tick sits between two
+        // plates that exist.
+        var records = new[]
+        {
+            Passed(ChartType.Single, 20, 950_000, 5, 3), // MG
+            Passed(ChartType.Single, 20, 990_000, 6, 4) // UG
+        };
+        var config = new ByLevelBreakdownConfig
+        {
+            Metric = BreakdownMetric.Plate,
+            Aggregation = BreakdownAggregation.Distribution,
+            Series = new() { DistributionSeries.Average },
+            SeparateSinglesDoubles = false,
+            MinLevel = 20, MaxLevel = 20
+        };
+
+        var result = ByLevelAggregator.Aggregate(config, records, Scales);
+
+        Assert.Equal(3.5, Assert.Single(result.Series).Values[0]);
+        Assert.Equal(new[] { "RG", "FG", "TG", "MG", "UG", "PG" }, result.YCategoryLabels);
+        Assert.Equal(3, result.SuggestedYMin);
+        Assert.Equal(4, result.SuggestedYMax);
+    }
+
+    [Fact]
+    public void AFolderWithOneFlatPlateStillGetsARungEitherSide()
+    {
+        // Everything plated the same: floor and ceiling would collapse onto one value and
+        // the line would have nowhere to sit.
+        var records = new[] { Passed(ChartType.Single, 20, 950_000, 5, 3) };
+        var config = new ByLevelBreakdownConfig
+        {
+            Metric = BreakdownMetric.Plate,
+            Aggregation = BreakdownAggregation.Distribution,
+            Series = new() { DistributionSeries.Average },
+            SeparateSinglesDoubles = false,
+            MinLevel = 20, MaxLevel = 20
+        };
+
+        var result = ByLevelAggregator.Aggregate(config, records, Scales);
+
+        Assert.Equal(2, result.SuggestedYMin);
+        Assert.Equal(4, result.SuggestedYMax);
+    }
+
+    [Fact]
+    public void AScoreAxisCarriesNoRungLabels()
+    {
+        var records = new[] { Passed(ChartType.Single, 20, 950_000, 5), Passed(ChartType.Single, 20, 990_000, 6) };
+        var config = new ByLevelBreakdownConfig
+        {
+            Metric = BreakdownMetric.Score,
+            Aggregation = BreakdownAggregation.Distribution,
+            Series = new() { DistributionSeries.Average },
+            SeparateSinglesDoubles = false,
+            MinLevel = 20, MaxLevel = 20
+        };
+
+        var result = ByLevelAggregator.Aggregate(config, records, Scales);
+
+        Assert.Null(result.YCategoryLabels);
+    }
+
     // ---- Breakdown ----
 
     [Fact]

@@ -73,6 +73,32 @@ public sealed class AccountMergeSagaTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    // Hiding the retired account is a visibility change, and the subscribers that act on
+    // visibility only hear about it through UserUpdatedEvent — AccountsMergedEvent means
+    // something else. Without it the retired account keeps its World membership.
+    [Fact]
+    public async Task MergeAnnouncesTheRetiredAccountIsNoLongerPublic()
+    {
+        await _saga.Handle(new ExecuteAccountMergeCommand(_survivor.Id, _retired.Id), CancellationToken.None);
+
+        _bus.Verify(b => b.Publish(It.Is<UserUpdatedEvent>(e => e.UserId == _retired.Id && !e.IsPublic),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UndoAnnouncesTheRestoredVisibility()
+    {
+        var merge = ExistingMerge();
+        _merges.Setup(m => m.Get(merge.Id, It.IsAny<CancellationToken>())).ReturnsAsync(merge);
+        _users.Setup(u => u.GetUser(_retired.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(_retired with { IsPublic = false, GameTag = null });
+
+        await _saga.Handle(new UndoAccountMergeCommand(merge.Id), CancellationToken.None);
+
+        _bus.Verify(b => b.Publish(It.Is<UserUpdatedEvent>(e => e.UserId == _retired.Id && e.IsPublic),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task MergeRequiresTheCurrentUserToBeAParticipant()
     {

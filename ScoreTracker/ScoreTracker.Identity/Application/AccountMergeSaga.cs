@@ -68,8 +68,11 @@ internal sealed class AccountMergeSaga :
 
         var now = _dateTime.Now;
         var snapshot = new RetiredUserSnapshot(retired.IsPublic, retired.GameTag?.ToString());
-        await _users.SaveUser(retired with { IsPublic = false, GameTag = null, ClaimsInvalidatedAt = now },
-            cancellationToken);
+        var hidden = retired with { IsPublic = false, GameTag = null, ClaimsInvalidatedAt = now };
+        await _users.SaveUser(hidden, cancellationToken);
+        // Retiring an account makes it private, which is a profile change like any other:
+        // without this the account keeps its World membership and stays on public boards.
+        await _bus.Publish(UserUpdatedEvent.From(hidden), cancellationToken);
 
         var merge = new MergeRequest(Guid.NewGuid(), survivor.Id, retired.Id, movedLogins, snapshot,
             MergeState.Active, now, now + GraceWindow, null);
@@ -100,9 +103,11 @@ internal sealed class AccountMergeSaga :
 
         var retired = await _users.GetUser(merge.RetiredUserId, cancellationToken)
                       ?? throw new UserNotFoundException(merge.RetiredUserId);
-        await _users.SaveUser(
-            retired with { IsPublic = merge.Snapshot.IsPublic, GameTag = merge.Snapshot.GameTag },
-            cancellationToken);
+        var restored = retired with { IsPublic = merge.Snapshot.IsPublic, GameTag = merge.Snapshot.GameTag };
+        await _users.SaveUser(restored, cancellationToken);
+        // Restoring the snapshot can make the account public again, which has to put it back
+        // into the communities the retire took it out of.
+        await _bus.Publish(UserUpdatedEvent.From(restored), cancellationToken);
 
         await _merges.Save(merge with { State = MergeState.Undone }, cancellationToken);
     }

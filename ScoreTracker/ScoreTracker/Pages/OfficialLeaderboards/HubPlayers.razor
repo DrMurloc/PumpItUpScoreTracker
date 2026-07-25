@@ -36,10 +36,7 @@ else
             <HubPlayerChip Player="_profile.Player" ShowTag="true"/>
             @if (_profile.PlayerType != null)
             {
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
-                         Style="@HubRankings.PlayerTypeChipStyle(_profile.PlayerType.Value)">
-                    @L[HubRankings.PlayerTypeName(_profile.PlayerType.Value)]
-                </MudChip>
+                <PlayerTypeChip Type="_profile.PlayerType.Value"/>
             }
         </MudStack>
 

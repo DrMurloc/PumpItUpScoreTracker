@@ -40,6 +40,6 @@ internal sealed class UpdateUserHandler : IRequestHandler<UpdateUserCommand>
             existing?.IsContentLocked ?? false,
             existing?.ClaimsInvalidatedAt ?? default);
         await _users.SaveUser(newUser, cancellationToken);
-        await _bus.Publish(new UserUpdatedEvent(user.Id, user.Country, user.IsPublic), cancellationToken);
+        await _bus.Publish(UserUpdatedEvent.From(newUser), cancellationToken);
     }
 }

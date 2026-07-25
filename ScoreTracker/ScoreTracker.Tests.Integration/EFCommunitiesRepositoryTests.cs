@@ -28,7 +28,40 @@ public sealed class EFCommunitiesRepositoryTests : IAsyncLifetime
     // leaking between tests (Respawn resets the DB, not the process).
     private EFCommunitiesRepository BuildRepository() =>
         new(_fixture.DbContextFactory, Mock.Of<IPlayerStatsReader>(),
-            new MemoryCache(new MemoryCacheOptions()));
+            new MemoryCache(new MemoryCacheOptions()),
+            Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == DateTimeOffset.UtcNow));
+
+    [Fact]
+    public async Task SaveCommunityPersistsRolesPermissionsAndBans()
+    {
+        var owner = Guid.NewGuid();
+        var admin = Guid.NewGuid();
+        var member = Guid.NewGuid();
+        var banned = Guid.NewGuid();
+
+        var community = new Community("Roled", owner, CommunityPrivacyType.Private,
+            new[] { owner, admin, member, banned }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false);
+        community.PromoteToAdmin(owner, admin,
+            CommunityPermission.ManageInviteLinks | CommunityPermission.ManageUsers);
+        community.Ban(owner, banned);
+        community.SetDefaultAdminPermissions(owner, CommunityPermission.ManageInviteLinks);
+        community.SetDefaultLanguage(owner, "ko");
+
+        await BuildRepository().SaveCommunity(community, CancellationToken.None);
+        var retrieved = await BuildRepository().GetCommunityByName("Roled", CancellationToken.None);
+
+        Assert.NotNull(retrieved);
+        Assert.Equal(CommunityRole.Creator, retrieved!.RoleOf(owner));
+        Assert.Equal(CommunityRole.Admin, retrieved.RoleOf(admin));
+        Assert.Equal(CommunityPermission.ManageInviteLinks | CommunityPermission.ManageUsers,
+            retrieved.PermissionsOf(admin));
+        Assert.Equal(CommunityRole.Member, retrieved.RoleOf(member));
+        Assert.True(retrieved.IsBanned(banned));
+        Assert.DoesNotContain(banned, retrieved.MemberIds);
+        Assert.Equal(CommunityPermission.ManageInviteLinks, retrieved.DefaultAdminPermissions);
+        Assert.Equal("ko", retrieved.DefaultLanguage);
+    }
 
     [Fact]
     public async Task SaveCommunityAndGetCommunityByNameRoundTripPreservesMembersAndInvites()
@@ -159,5 +192,69 @@ public sealed class EFCommunitiesRepositoryTests : IAsyncLifetime
         Assert.Contains(publicCommunities, c => (string)c.CommunityName == "PublicOne");
         Assert.Contains(publicCommunities, c => (string)c.CommunityName == "PublicWithCodeOne");
         Assert.DoesNotContain(publicCommunities, c => (string)c.CommunityName == "PrivateOne");
+    }
+
+    // SaveCommunity writes the member projection the caller is holding, so two joins that load
+    // the community at the same time each save a set missing the other's row. World is the
+    // busiest community on the site and the most exposed to it.
+    [Fact]
+    public async Task ConcurrentJoinsAllSurvive()
+    {
+        var owner = Guid.NewGuid();
+        await BuildRepository().SaveCommunity(new Community("World", owner, CommunityPrivacyType.Public,
+            new[] { owner }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false), CancellationToken.None);
+
+        var joiners = Enumerable.Range(0, 12).Select(_ => Guid.NewGuid()).ToArray();
+        await Task.WhenAll(joiners.Select(id =>
+            BuildRepository().AddMembership("World", id, CancellationToken.None)));
+
+        var world = await BuildRepository().GetCommunityByName("World", CancellationToken.None);
+        Assert.NotNull(world);
+        foreach (var joiner in joiners) Assert.Contains(joiner, world!.MemberIds);
+        Assert.Contains(owner, world!.MemberIds);
+    }
+
+    [Fact]
+    public async Task AddMembershipIsANoOpForAnExistingMemberOrABannedUser()
+    {
+        var owner = Guid.NewGuid();
+        var member = Guid.NewGuid();
+        var banned = Guid.NewGuid();
+        var community = new Community("Guarded", owner, CommunityPrivacyType.Public,
+            new[] { owner, member, banned }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false);
+        community.Ban(owner, banned);
+        await BuildRepository().SaveCommunity(community, CancellationToken.None);
+
+        Assert.False(await BuildRepository().AddMembership("Guarded", member, CancellationToken.None));
+        Assert.False(await BuildRepository().AddMembership("Guarded", banned, CancellationToken.None));
+
+        var retrieved = await BuildRepository().GetCommunityByName("Guarded", CancellationToken.None);
+        Assert.True(retrieved!.IsBanned(banned));
+        Assert.DoesNotContain(banned, retrieved.MemberIds);
+        Assert.Equal(CommunityRole.Member, retrieved.RoleOf(member));
+    }
+
+    [Fact]
+    public async Task RemoveMembershipDropsTheMemberButKeepsBansAndTheCreatorSeat()
+    {
+        var owner = Guid.NewGuid();
+        var member = Guid.NewGuid();
+        var banned = Guid.NewGuid();
+        var community = new Community("Leavers", owner, CommunityPrivacyType.Public,
+            new[] { owner, member, banned }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false);
+        community.Ban(owner, banned);
+        await BuildRepository().SaveCommunity(community, CancellationToken.None);
+
+        await BuildRepository().RemoveMembership("Leavers", member, CancellationToken.None);
+        await BuildRepository().RemoveMembership("Leavers", banned, CancellationToken.None);
+        await BuildRepository().RemoveMembership("Leavers", owner, CancellationToken.None);
+
+        var retrieved = await BuildRepository().GetCommunityByName("Leavers", CancellationToken.None);
+        Assert.DoesNotContain(member, retrieved!.MemberIds);
+        Assert.True(retrieved.IsBanned(banned));
+        Assert.Equal(CommunityRole.Creator, retrieved.RoleOf(owner));
     }
 }

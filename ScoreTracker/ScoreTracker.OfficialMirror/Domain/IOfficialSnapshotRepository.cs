@@ -56,7 +56,7 @@ internal interface IOfficialSnapshotRepository
     Task<IReadOnlyList<PlayerDimension>> GetPlayersByIds(IReadOnlyCollection<int> playerIds, CancellationToken ct);
     Task<PlayerDimension?> GetPlayerByUsername(MixEnum mix, string username, CancellationToken ct);
 
-    /// <summary>The player dimension linked to a site account on this mix, if any.</summary>
+    /// <summary>The import-linked mirror player for a site account, if the link exists.</summary>
     Task<PlayerDimension?> GetPlayerByUserId(MixEnum mix, Guid userId, CancellationToken ct);
 
     Task<IReadOnlyList<string>> GetPlayerNames(MixEnum mix, CancellationToken ct);

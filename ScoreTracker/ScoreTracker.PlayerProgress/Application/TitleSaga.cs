@@ -293,9 +293,12 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
             .ToDictionary(t => t.Title.Name);
         return BuildProgress(request.Mix, charts, current, completed)
             .Where(t => !t.IsComplete && t.Title.CompletionRequired > 0 && t.Title is not ISpecificChartTitle)
+            // Floor-aware percent (PercentComplete), so a ladder rung the player hasn't reached
+            // reads 0% instead of raw count/required — otherwise every rung above the active one
+            // shows spurious progress and the whole ladder appears to move at once.
             .Select(t => new TitleProgressDelta(t.Title.Name,
-                beforeByTitle.TryGetValue(t.Title.Name, out var b) ? Percent(b) : 0,
-                Percent(t)))
+                beforeByTitle.TryGetValue(t.Title.Name, out var b) ? b.PercentComplete : 0,
+                t.PercentComplete))
             .Where(d => (int)(d.NewPercent * 100) > (int)(d.OldPercent * 100))
             .OrderByDescending(d => d.NewPercent)
             .Take(5)
@@ -357,13 +360,6 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         await _milestones.Append(request.Mix, request.UserId, writes, cancellationToken);
         return writes.Select(w => new PlayerMilestoneRecord(w.Kind, w.SessionId, w.OccurredAt, w.OldValue,
             w.NewValue, w.Title, w.Detail)).ToList();
-    }
-
-    private static double Percent(TitleProgress progress)
-    {
-        return progress.Title.CompletionRequired <= 0
-            ? 0
-            : Math.Min(1.0, progress.CompletionCount / progress.Title.CompletionRequired);
     }
 
     private static IEnumerable<TitleProgress> BuildProgress(MixEnum mix, IDictionary<Guid, Chart> charts,

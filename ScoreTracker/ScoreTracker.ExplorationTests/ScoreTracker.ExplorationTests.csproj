@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The exploration assembly (docs/HOW-TO-TEST.md): a MANUAL-ONLY workbench, never a CI or
+       feature suite. It exists so live pages can be crawled (read-only unless the owner asks
+       for a mutation), files downloaded, and formulas tried against real data/images. It is
+       named in NO azure-pipelines.yml `dotnet test` step, so it never runs in CI; it builds
+       with the solution and is excluded from Sonar analysis. No Testcontainers/Respawn — these
+       tests talk to real external sites, not an ephemeral DB. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <!-- Deliberately the AppHost's id (as Tests.Integration was): local secrets live in ONE
+         store, so a `dotnet user-secrets set` against ScoreTracker.AppHost also configures the
+         PIU live-site login and the Discord canary here. Only PiuTest:*, Discord:*, and
+         DiscordTest:* keys are read. -->
+    <UserSecretsId>2957ac5b-8cbb-49cf-be12-3b607ea9b818</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.2" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- CompositionRoot brings every vertical transitively for the DI-container recon tests;
+         OfficialMirror is direct because the PIU probes construct its internal PiuGameApi (it
+         grants this assembly InternalsVisibleTo). -->
+    <ProjectReference Include="..\ScoreTracker.CompositionRoot\ScoreTracker.CompositionRoot.csproj" />
+    <ProjectReference Include="..\ScoreTracker.OfficialMirror\ScoreTracker.OfficialMirror.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Communities\ScoreTracker.Communities.csproj" />
+    <ProjectReference Include="..\ScoreTracker.PlayerProgress\ScoreTracker.PlayerProgress.csproj" />
+    <ProjectReference Include="..\ScoreTracker.EventCompetition\ScoreTracker.EventCompetition.csproj" />
+    <ProjectReference Include="..\ScoreTracker.WeeklyChallenge\ScoreTracker.WeeklyChallenge.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Catalog\ScoreTracker.Catalog.csproj" />
+    <ProjectReference Include="..\ScoreTracker.ChartIntelligence\ScoreTracker.ChartIntelligence.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Identity\ScoreTracker.Identity.csproj" />
+    <ProjectReference Include="..\ScoreTracker.ScoreLedger\ScoreTracker.ScoreLedger.csproj" />
+  </ItemGroup>
+
+</Project>

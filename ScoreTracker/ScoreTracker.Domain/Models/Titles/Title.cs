@@ -22,9 +22,19 @@ public abstract class Title
     public int CompletionRequired { get; }
 
     /// <summary>
-    ///     The progress baseline below which "how close" is meaningless — 0 for
-    ///     rating-accumulation titles, but skill titles floor at a decent pass so a
-    ///     barely-passed chart doesn't read as ~98% of the way to the SSS.
+    ///     The progress baseline below which "how close" is meaningless — 0 for a
+    ///     standalone title, the rung below it for a title on a ladder (see
+    ///     <see cref="TitleHelpers.LinkLadder{TTitle,TKey}" />), and a decent pass for
+    ///     skill titles so a barely-passed chart doesn't read as ~98% of the way to the SSS.
     /// </summary>
-    public virtual int CompletionFloor => 0;
+    public int CompletionFloor { get; private set; }
+
+    /// <summary>
+    ///     Sets where this title's progress starts measuring from. Ladder rungs get the
+    ///     requirement of the rung below them; skill titles set their own floor.
+    /// </summary>
+    internal void FloorAt(int floor)
+    {
+        CompletionFloor = floor;
+    }
 }

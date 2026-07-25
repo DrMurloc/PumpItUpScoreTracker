@@ -265,33 +265,66 @@ public sealed class OfficialSiteClientTests
 
     // ───────────────────────────────────────────────────────────────────────────
     // The import walk over the best-scores pages: the dated (redesigned) list stops
-    // on the saved-date watermark or on page repetition — never trusting the pager —
-    // and recent plays attribute their judgement breakdowns onto the bests they
-    // produced.
+    // on the up-score window — a run of pages holding nothing new-or-improved — or on
+    // page repetition, never on the card's displayed (first-play) date, and recent
+    // plays attribute their judgement breakdowns onto the bests they produced.
 
     private static readonly Guid ImportUserId = Guid.NewGuid();
     private static readonly DateTimeOffset T0 = new(2026, 7, 17, 23, 0, 0, TimeSpan.FromHours(9));
 
     [Fact]
-    public async Task DatedWalkStopsAfterThePageThatCrossesTheWatermark()
+    public async Task DatedWalkPagesPastAlreadyHeldChartsToReachABuriedUpscore()
     {
+        // The redesign sorts by last-played and dates each card by FIRST play, so a replayed
+        // upscore can sit pages behind freshly-replayed charts we already hold at the same
+        // result. The walk must page through those no-work cards to reach it — the exact case
+        // the old date cutoff truncated. Four held pages fit inside the five-page window; page
+        // 5's upscore is found.
         var h = new ImportHarness();
-        var newest = h.GivenChart(new ChartBuilder().WithSongName("Newest").WithNoteCount(100).Build());
-        var newer = h.GivenChart(new ChartBuilder().WithSongName("Newer").WithNoteCount(100).Build());
-        var older = h.GivenChart(new ChartBuilder().WithSongName("Older").WithNoteCount(100).Build());
-        var watermark = T0.AddHours(-12);
-        h.GivenBestScorePage(1, Card(newest, 950000, T0), Card(newer, 940000, T0.AddMinutes(-5)));
-        // Page 2 crosses the watermark: it is still processed whole, but no page 3 is read.
-        h.GivenBestScorePage(2, Card(older, 930000, watermark.AddHours(-1)));
+        for (var i = 1; i <= 4; i++)
+        {
+            var chart = h.GivenChart(new ChartBuilder().WithSongName($"Held{i}").WithNoteCount(100).Build());
+            h.GivenStoredBest(chart, 950000);
+            h.GivenBestScorePage(i, Card(chart, 950000, T0.AddMinutes(-i)));
+        }
+
+        var upscored = h.GivenChart(new ChartBuilder().WithSongName("Upscored").WithNoteCount(100).Build());
+        h.GivenStoredBest(upscored, 900000);
+        h.GivenBestScorePage(5, Card(upscored, 990000, T0.AddHours(-99)));
+        h.GivenBestScorePage(6); // empty → end of list
 
         var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
-            includeBroken: false, maxPages: null, since: watermark, CancellationToken.None)).ToArray();
+            includeBroken: false, maxPages: null, CancellationToken.None)).ToArray();
 
-        Assert.Equal(3, results.Length);
-        Assert.Contains(results, r => r.Chart.Id == older.Id);
-        h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 2, It.IsAny<CancellationToken>()),
+        Assert.Contains(results, r => r.Chart.Id == upscored.Id && (int)r.Score == 990000);
+        h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 5, It.IsAny<CancellationToken>()),
             Times.Once);
-        h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 3, It.IsAny<CancellationToken>()),
+    }
+
+    [Fact]
+    public async Task DatedWalkStopsAfterAWindowOfPagesWithNoNewBest()
+    {
+        // Every card on these pages is already held at an equal result: after five no-work
+        // pages the walk stops without reading the whole list. A real upscore sits on page 6,
+        // past the window — the walk must never reach it (the accepted look-back limit,
+        // matching the classic "five folders back" up-score window).
+        var h = new ImportHarness();
+        for (var i = 1; i <= 5; i++)
+        {
+            var chart = h.GivenChart(new ChartBuilder().WithSongName($"Held{i}").WithNoteCount(100).Build());
+            h.GivenStoredBest(chart, 950000);
+            h.GivenBestScorePage(i, Card(chart, 950000, T0.AddMinutes(-i)));
+        }
+
+        var beyond = h.GivenChart(new ChartBuilder().WithSongName("Beyond").WithNoteCount(100).Build());
+        h.GivenStoredBest(beyond, 900000);
+        h.GivenBestScorePage(6, Card(beyond, 999000, T0.AddHours(-99)));
+
+        var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: false, maxPages: null, CancellationToken.None)).ToArray();
+
+        Assert.DoesNotContain(results, r => r.Chart.Id == beyond.Id);
+        h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 6, It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -307,7 +340,7 @@ public sealed class OfficialSiteClientTests
         h.GivenBestScorePage(2, card);
 
         var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
-            includeBroken: false, maxPages: null, since: null, CancellationToken.None)).ToArray();
+            includeBroken: false, maxPages: null, CancellationToken.None)).ToArray();
 
         Assert.Single(results);
         h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 3, It.IsAny<CancellationToken>()),
@@ -325,9 +358,9 @@ public sealed class OfficialSiteClientTests
         h.GivenBestScorePage(2, brokenCard); // the clamp: out-of-range pages repeat the last page
 
         var without = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
-            includeBroken: false, maxPages: null, since: null, CancellationToken.None)).ToArray();
+            includeBroken: false, maxPages: null, CancellationToken.None)).ToArray();
         var withBroken = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
-            includeBroken: true, maxPages: null, since: null, CancellationToken.None)).ToArray();
+            includeBroken: true, maxPages: null, CancellationToken.None)).ToArray();
 
         Assert.Empty(without);
         var saved = Assert.Single(withBroken);
@@ -352,7 +385,7 @@ public sealed class OfficialSiteClientTests
             Play(chart, 960000, T0.AddMinutes(-10), perfects: 1000, greats: 60, goods: 30, bads: 20, misses: 20));
 
         var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
-            includeBroken: false, maxPages: null, since: null, CancellationToken.None)).ToArray();
+            includeBroken: false, maxPages: null, CancellationToken.None)).ToArray();
 
         var saved = Assert.Single(results);
         Assert.Equal(new JudgementCounts(1100, 14, 1, 1, 14), saved.Judgements);
@@ -371,7 +404,7 @@ public sealed class OfficialSiteClientTests
         h.GivenBestScorePage(4, maxPage: 4);
 
         var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix, ImportUserId, "sid", "card1",
-            includeBroken: false, maxPages: 2, since: null, CancellationToken.None)).ToArray();
+            includeBroken: false, maxPages: 2, CancellationToken.None)).ToArray();
 
         Assert.Equal(2, results.Length);
         Assert.All(results, r => Assert.Null(r.RecordedAt));
@@ -422,6 +455,7 @@ public sealed class OfficialSiteClientTests
     private sealed class ImportHarness
     {
         private readonly List<Chart> _charts = new();
+        private readonly List<ScoreTracker.Domain.Models.RecordedPhoenixScore> _storedBests = new();
 
         public Mock<IPiuGameApi> Api { get; } = new();
         public Mock<IChartRepository> Charts { get; } = new();
@@ -449,7 +483,7 @@ public sealed class OfficialSiteClientTests
                     _charts.Where(c => c.Song.Name == name).ToArray());
             var scores = new Mock<IScoreReader>();
             scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Array.Empty<ScoreTracker.Domain.Models.RecordedPhoenixScore>());
+                .ReturnsAsync(() => _storedBests.ToArray());
             Client = new OfficialSiteClient(Api.Object, Charts.Object, NullLogger<OfficialSiteClient>.Instance,
                 Mock.Of<IMediator>(), Mock.Of<ICurrentUserAccessor>(), scores.Object, Mock.Of<IFileUploadClient>(),
                 Mock.Of<IOfficialLeaderboardRepository>(), Mock.Of<IBus>(), FakeDateTime.At(T0).Object,
@@ -459,6 +493,14 @@ public sealed class OfficialSiteClientTests
         public Chart GivenChart(Chart chart)
         {
             _charts.Add(chart);
+            return chart;
+        }
+
+        /// <summary>Seeds a stored best the dated walk reads to decide whether a card is work.</summary>
+        public Chart GivenStoredBest(Chart chart, int score, PhoenixPlate plate = PhoenixPlate.FairGame,
+            bool isBroken = false)
+        {
+            _storedBests.Add(new ScoreTracker.Domain.Models.RecordedPhoenixScore(chart.Id, score, plate, isBroken, T0));
             return chart;
         }
 

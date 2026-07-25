@@ -46,6 +46,16 @@
                       Flags="FlagsFor(row)" Detail="DetailFor(row)"></HighlightRow>
     }
 
+    @* Legend rides along only when a 🔁 row actually rendered — a reclear folded into the
+       hidden "+N more" tail leaves the card clean, matching the Discord footnote. *@
+    @if (InlineRows.Any(r => r.IsReclear))
+    {
+        <div class="d-flex align-center gap-1 px-3 py-1"
+             style="border-top: 1px solid var(--mud-palette-table-lines)">
+            <MudText Typo="Typo.caption">🔁 @L["Passed in another mix"]</MudText>
+        </div>
+    }
+
     <MudSpacer/>
     <div class="d-flex align-center px-2 pb-1">
         <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="() => _showAllScores = true"
@@ -70,6 +80,12 @@
             {
                 <HighlightRow Row="row" Chart="Charts.GetValueOrDefault(row.ChartId)"
                               Flags="FlagsFor(row)" Detail="DetailFor(row)"></HighlightRow>
+            }
+            @if (Ordered.Any(r => r.IsReclear))
+            {
+                <div class="d-flex align-center gap-1 px-2 py-1">
+                    <MudText Typo="Typo.caption">🔁 @L["Passed in another mix"]</MudText>
+                </div>
             }
         </div>
     </DialogContent>

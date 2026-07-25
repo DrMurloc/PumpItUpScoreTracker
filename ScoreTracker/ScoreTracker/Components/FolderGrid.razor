@@ -56,8 +56,7 @@
         return _pendingType == type ? Variant.Filled : Variant.Outlined;
     }
 
-    private static IEnumerable<int> LevelsFor(ChartType type)
-    {
-        return type == ChartType.CoOp ? Enumerable.Range(2, 4) : Enumerable.Range(1, DifficultyLevel.Max);
-    }
+    // Singles cap at 26, doubles at the game ceiling, co-op at player counts — FolderLevels
+    // is the shared source so this grid and the picker's stepper never disagree.
+    private static IEnumerable<int> LevelsFor(ChartType type) => FolderLevels.LevelsFor(type);
 }

@@ -90,8 +90,8 @@ public static class PhoenixTitleList
         new PhoenixBossBreakerTitle("PRIME2", "Shub Sothoth", ChartType.Single, 25),
         new PhoenixBossBreakerTitle("PRIME", "Paradoxx", ChartType.Double, 28),
         new PhoenixBossBreakerTitle("PRIME", "Paradoxx", ChartType.Single, 26),
-        new PhoenixBossBreakerTitle("FIESTA2", "Ignis Fatuus", ChartType.Double, 25),
-        new PhoenixBossBreakerTitle("FIESTA2", "Ignis Fatuus", ChartType.Single, 22),
+        new PhoenixBossBreakerTitle("FIESTA2", "Ignis Fatuus(DM Ashura Mix)", ChartType.Double, 25),
+        new PhoenixBossBreakerTitle("FIESTA2", "Ignis Fatuus(DM Ashura Mix)", ChartType.Single, 22),
         new PhoenixBossBreakerTitle("FIESTA EX", "Vacuum Cleaner", ChartType.Double, 26),
         new PhoenixBossBreakerTitle("FIESTA EX", "Vacuum Cleaner", ChartType.Single, 25),
         new PhoenixBossBreakerTitle("FIESTA", "Vacuum", ChartType.Double, 25),
@@ -230,6 +230,15 @@ public static class PhoenixTitleList
     };
 
     private static readonly IDictionary<Name, PhoenixTitle> TitleLookup = Titles.ToDictionary(n => n.Name);
+
+    static PhoenixTitleList()
+    {
+        // A folder's titles are one ladder — Advanced Lv. 2 wants the same 20s as Lv. 1,
+        // just more of them — and every CO-OP title reads the same CO-OP rating. Each rung
+        // measures the climb from the one below it rather than from nothing.
+        TitleHelpers.LinkLadder(Titles.OfType<PhoenixDifficultyTitle>(), t => (int)t.Level);
+        TitleHelpers.LinkLadder(Titles.OfType<PhoenixCoOpTitle>(), _ => 0);
+    }
 
     public static PhoenixTitle GetTitleByName(Name name)
     {
