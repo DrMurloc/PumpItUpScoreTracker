@@ -75,6 +75,14 @@ PR. Decisions and rationale:
    with one flagged score showed one jacket over a bare list. **Co-ops are eligible** — they sort
    last so they never take a slot an S/D score could fill, but a co-op-only session gets jackets
    instead of nothing. ("Co-ops lost their dedicated art rows" was never an owner decision.)
+
+   ⚠ **Amended 2026-07-26 — compact rows show the upscore gain.** A one-liner used to render
+   only the resulting score, so an upscore in a bucket was indistinguishable from a fresh pass.
+   Both buckets now carry the same `(+12,340)` gain and the same `<old grade> →` crossing the
+   art rows use — one `UpscoreDelta` helper builds the fragment for both, so the two can't
+   drift. New passes have nothing to compare against and stay bare. The buckets already pack
+   by estimated rendered width, so the wider rows just mean a full card spills one row earlier
+   into "+N more".
 2. **Score-computable title completions ride the card.** The "piugame site detected" legacy
    message now covers only badges the score pipeline can't compute (`CompletionRequired == 0`:
    events, play/plate counts, staff). Difficulty, skill, boss-breaker and co-op completions
