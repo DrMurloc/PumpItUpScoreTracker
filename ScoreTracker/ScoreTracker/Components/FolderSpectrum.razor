@@ -1,0 +1,103 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@*
+    A folder as one bar: its charts sorted best-first, each segment wearing its own grade metal,
+    with everything unplayed capped in grey (docs/design/folder-level-progression.md §3.2). The
+    filled length IS the completion percent, so depth reads as length and quality reads as hue
+    without a number in sight.
+
+    Tier ticks sit at 20/40/60/80% of the track and the lamp flag closes the right edge. The
+    segment counts are the same data the By-Level Breakdown widget's Grade Distribution preset
+    computes -- this is that, horizontal, for one folder.
+*@
+
+<div class="fl-spectrum @SizeClass">
+    <div class="fl-track">
+        <div class="fl-fill" style="background:@Gradient"></div>
+        @if (ShowTicks)
+        {
+            @foreach (var tier in FolderCompletionTier.All.Where(t => t < FolderCompletionTier.Lamp))
+            {
+                <div class="fl-tick" style="left:@(tier)%"></div>
+            }
+        }
+        <div class="fl-lamp-flag"></div>
+    </div>
+</div>
+
+@code {
+    /// <summary>Charts in the folder, best-first. Fewer than the folder's size leaves a grey tail.</summary>
+    [Parameter] [EditorRequired] public IReadOnlyList<PhoenixLetterGrade> GradesDescending { get; set; } =
+        Array.Empty<PhoenixLetterGrade>();
+
+    /// <summary>Total charts in the folder — the denominator the bar is drawn against.</summary>
+    [Parameter] [EditorRequired] public int Size { get; set; }
+
+    [Parameter] public bool ShowTicks { get; set; } = true;
+
+    /// <summary>Slim for widget rows and dense lists, chunky for the tier-list header.</summary>
+    [Parameter] public FolderSpectrumSize Height { get; set; } = FolderSpectrumSize.Normal;
+
+    private string SizeClass => Height switch
+    {
+        FolderSpectrumSize.Slim => "fl-slim",
+        FolderSpectrumSize.Chunky => "fl-chunky",
+        _ => string.Empty
+    };
+
+    // Hard-stop gradient rather than one element per chart: a 196-chart folder would otherwise
+    // put 196 divs on the page for every row of a widget.
+    private string Gradient
+    {
+        get
+        {
+            if (Size <= 0) return "var(--unplayed-grade)";
+
+            var stops = new List<string>();
+            var cursor = 0.0;
+            foreach (var run in Runs())
+            {
+                var end = cursor + 100.0 * run.Count / Size;
+                stops.Add(FormattableString.Invariant(
+                    $"{MixThemes.GradeVar(run.Grade)} {cursor:0.##}% {end:0.##}%"));
+                cursor = end;
+            }
+
+            if (cursor < 100)
+                stops.Add(FormattableString.Invariant($"var(--unplayed-grade) {cursor:0.##}% 100%"));
+            return $"linear-gradient(90deg,{string.Join(",", stops)})";
+        }
+    }
+
+    // Adjacent grades sharing a metal (AA+/AA, S+/S) collapse into one run, which is the whole
+    // point of the eight-metal ladder: the bar shows bands, not sixteen near-identical slivers.
+    // A run is named by the best grade in it, since the list runs best-first.
+    private IEnumerable<(PhoenixLetterGrade Grade, int Count)> Runs()
+    {
+        PhoenixLetterGrade? leading = null;
+        var count = 0;
+        foreach (var grade in GradesDescending.Take(Size))
+        {
+            if (leading == null)
+            {
+                leading = grade;
+                count = 1;
+            }
+            else if (MixThemes.ShareGradeMetal(leading.Value, grade))
+            {
+                count++;
+            }
+            else
+            {
+                yield return (leading.Value, count);
+                leading = grade;
+                count = 1;
+            }
+        }
+
+        if (leading != null) yield return (leading.Value, count);
+    }
+}
