@@ -366,6 +366,9 @@ public static class MixThemes
         var plates = string.Join("\n", PlateColors.Select(kv =>
             $"    --plate-{kv.Key.GetShorthand().ToLowerInvariant()}: {kv.Value};"))
             + $"\n    --plate-none: {PlateNoneColor};"
+            // Grades below A have no plate to borrow from — in-game they render green.
+            // Emitted alongside the plates because ThemeScales.GradeColor bottoms out here.
+            + $"\n    --grade-sub-a: {SubAGradeHex};"
             + "\n" + string.Join("\n", SlotColors.Select(kv => $"    --slot-{kv.Key}: {kv.Value};"));
         // The five skill-category identity colors (Speed/Stamina/Twist/Bracket/Tech),
         // promoted from the SharedKernel constants so markup can tint skill chips

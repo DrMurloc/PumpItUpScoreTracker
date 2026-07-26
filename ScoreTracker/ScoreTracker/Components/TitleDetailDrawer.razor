@@ -1,0 +1,199 @@
+@namespace ScoreTracker.Web.Components
+@using System.Globalization
+@using MediatR
+@using ScoreTracker.Domain.Models.Titles
+@using ScoreTracker.Domain.Models.Titles.Phoenix
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Theming
+
+@* Everything about one title. Absorbs what the old grid buried in a child row and a second
+   stacked progress bar: the requirement, your standing, the paragon ladder, how rare it is,
+   and who else holds it. Holders load on open, never with the page. *@
+<MudLayout>
+    <MudDrawer @bind-Open="_open" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="400px">
+        @if (Rung != null)
+        {
+            <div class="title-drawer">
+                <div class="title-drawer-head">
+                    <div class="title-drawer-eyebrow">@Rung.Title.Category</div>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="Close"
+                                   aria-label="@L["Close"]" Class="title-drawer-close"></MudIconButton>
+                    <h3>@Rung.Title.Name</h3>
+                </div>
+                <div class="title-drawer-body">
+                    <p class="title-req">@Rung.Title.Description</p>
+
+                    @if (Rung.Official)
+                    {
+                        <p class="title-note">
+                            @L["Progress tracked by the official piugame import, not by piuscores data."]
+                        </p>
+                    }
+                    else if (IsLoggedIn)
+                    {
+                        <p class="title-label">@L["Your progress"]</p>
+                        <div class="title-bar @(Rung.State == RungState.Earned ? "done" : "")">
+                            <i style="width:@Percent"></i>
+                        </div>
+                        <div class="title-figures">
+                            <span>@FloorText</span>
+                            <span><b>@Have</b> / @Need</span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(Rung.Progress.AdditionalNote))
+                        {
+                            <p class="title-hint">@Rung.Progress.AdditionalNote</p>
+                        }
+                    }
+
+                    @if (Paragon != null)
+                    {
+                        <p class="title-label">@L["Paragon"]</p>
+                        <div class="paragon-ladder">
+                            @foreach (var level in ParagonLadder)
+                            {
+                                <span class="paragon-rung @(level <= Paragon.ParagonLevel ? "have" : "") @(level == Paragon.ParagonLevel ? "at" : "")"
+                                      style="--metal:@ThemeScales.ParagonColor(level)">@level.GetName()</span>
+                            }
+                        </div>
+                        <p class="title-hint">
+                            @if (Paragon.ParagonLevel == ParagonLevel.PG)
+                            {
+                                @L["Every chart in this folder is a Perfect Game."]
+                            }
+                            else
+                            {
+                                @L["{0} of {1} charts at {2}", Paragon.NextParagonProgress, Paragon.RequiredAaCount, (Paragon.ParagonLevel + 1).GetName()]
+                            }
+                        </p>
+                    }
+
+                    @if (Suggested != null)
+                    {
+                        <p class="title-label">@L["Suggested level"]</p>
+                        <div class="title-suggest">
+                            <span class="title-suggest-folder">@string.Join(" · ", Suggested.Folders)</span>
+                            <span class="title-suggest-ask">
+                                @L["Assuming {0} with a {1} plate.", Suggested.Grade.GetName(), Suggested.Plate.GetShorthand()]
+                            </span>
+                        </div>
+                    }
+
+                    <p class="title-label">@L["How rare"]</p>
+                    <div class="title-rarity" style="--band:@ThemeScales.CssVar(Rung.Band)">
+                        <span class="title-rarity-pct @ThemeScales.RarityClass(Rung.Band)">@RarityText</span>
+                        <span class="title-hint">@RaritySubtext</span>
+                    </div>
+
+                    <p class="title-label">@L["Who has it"]</p>
+                    @if (_loadingHolders)
+                    {
+                        <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Small"/>
+                    }
+                    else if (_holders == null || _holders.Holders.Count == 0)
+                    {
+                        <p class="title-hint">
+                            @(_holders is { HiddenCount: > 0 }
+                                ? L["Everyone who holds this keeps their profile private."]
+                                : L["Nobody here holds this title yet."])
+                        </p>
+                    }
+                    else
+                    {
+                        <div class="title-holders">
+                            @foreach (var holder in _holders.Holders)
+                            {
+                                <div class="olb-rank-card @(holder.User.Id == CurrentUserId ? "olb-row-me" : "")">
+                                    @if (holder.ParagonLevel != ParagonLevel.None)
+                                    {
+                                        <span class="paragon-tag" style="--metal:@ThemeScales.ParagonColor(holder.ParagonLevel)">
+                                            @holder.ParagonLevel.GetName()
+                                        </span>
+                                    }
+                                    <UserLabel User="holder.User"></UserLabel>
+                                </div>
+                            }
+                        </div>
+                        @if (_holders.HiddenCount > 0)
+                        {
+                            <p class="title-hint">@L["{0} more keep their profile private.", _holders.HiddenCount]</p>
+                        }
+                    }
+                </div>
+            </div>
+        }
+    </MudDrawer>
+</MudLayout>
+
+@inject IMediator Mediator
+@code {
+    private static readonly ParagonLevel[] ParagonLadder =
+        Enum.GetValues<ParagonLevel>().Where(l => l != ParagonLevel.None).ToArray();
+
+    [Parameter] public TitleRung? Rung { get; set; }
+    [Parameter] public MixEnum Mix { get; set; }
+    [Parameter] public bool IsLoggedIn { get; set; }
+    [Parameter] public Guid? CurrentUserId { get; set; }
+    [Parameter] public int TrackedPlayers { get; set; }
+    [Parameter] public EventCallback OnClosed { get; set; }
+
+    private bool _open;
+    private bool _loadingHolders;
+    private TitleHoldersRecord? _holders;
+    private string? _loadedFor;
+
+    private PhoenixTitleProgress? Paragon =>
+        IsLoggedIn && Rung?.Progress is PhoenixTitleProgress { RequiredAaCount: > 0 } p && Rung.State == RungState.Earned
+            ? p
+            : null;
+
+    private SuggestedLevel? Suggested => Rung == null ? null : SuggestedTitleLevel.For(Rung.Title);
+
+    private string Percent =>
+        Rung == null ? "0%"
+            : (Rung.State == RungState.Earned ? 100 : Math.Round(Rung.Fraction * 100)).ToString(CultureInfo.InvariantCulture) + "%";
+
+    private string Have => Rung == null ? "0" : ((int)Math.Min(Rung.Progress.CompletionCount, Rung.Title.CompletionRequired)).ToString("N0");
+    private string Need => Rung?.Title.CompletionRequired.ToString("N0") ?? "0";
+
+    private string FloorText => Rung is { Title.CompletionFloor: > 0 }
+        ? L["From {0}", Rung.Title.CompletionFloor.ToString("N0")]
+        : "0";
+
+    private string RarityText => Rung == null ? "" : (Rung.Share * 100).ToString(Rung.Share >= 0.1 ? "N0" : "N1") + "%";
+
+    private string RaritySubtext => Rung == null
+        ? string.Empty
+        : L["{0} of {1} tracked players", ((int)Math.Round(Rung.Share * TrackedPlayers)).ToString("N0"), TrackedPlayers.ToString("N0")];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Rung == null)
+        {
+            _open = false;
+            return;
+        }
+
+        _open = true;
+        // Re-fetch only when the drawer actually changed title — reopening the same one
+        // keeps what it already has.
+        var key = $"{Mix}:{Rung.Title.Name}";
+        if (_loadedFor == key) return;
+
+        _loadedFor = key;
+        _holders = null;
+        _loadingHolders = true;
+        StateHasChanged();
+        _holders = await Mediator.Send(new GetTitleHoldersQuery(Mix, Rung.Title.Name));
+        _loadingHolders = false;
+    }
+
+    private async Task Close()
+    {
+        _open = false;
+        await OnClosed.InvokeAsync();
+    }
+
+}

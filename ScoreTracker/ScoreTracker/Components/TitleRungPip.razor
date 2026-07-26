@@ -1,0 +1,80 @@
+@namespace ScoreTracker.Web.Components
+@using System.Globalization
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Domain.Models.Titles.Phoenix
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Theming
+
+@*
+    One rung. Three channels, never colour alone (UX rule 8): the state carries the fill, a
+    dashed edge marks a title only the official import can award, and an earned rung with a
+    paragon shows its grade letter in that grade's own metal.
+*@
+<button type="button"
+        class="@CssClass"
+        style="@Style"
+        title="@Rung.Title.Name"
+        aria-label="@Rung.Title.Name"
+        @onclick="OnSelect">
+    @if (Paragon != ParagonLevel.None)
+    {
+        <span class="rung-no">@Label</span>
+        <span class="rung-para" style="color:@ThemeScales.ParagonColor(Paragon);">@Paragon.GetName()</span>
+    }
+    else
+    {
+        <span>@Label</span>
+    }
+</button>
+
+@code {
+    [Parameter] [EditorRequired] public TitleRung Rung { get; set; } = default!;
+
+    /// <summary>Wide rungs carry a name instead of a number — a capstone, a plate tier, a gem.</summary>
+    [Parameter] public string? WideLabel { get; set; }
+
+    [Parameter] public EventCallback<TitleRung> OnSelected { get; set; }
+
+    private ParagonLevel Paragon =>
+        Rung.Progress is PhoenixTitleProgress { RequiredAaCount: > 0 } p && Rung.State == RungState.Earned
+            ? p.ParagonLevel
+            : ParagonLevel.None;
+
+    private string Label => WideLabel ?? Rung.Rung.ToString();
+
+    private string CssClass
+    {
+        get
+        {
+            var state = Rung.State switch
+            {
+                RungState.Earned => "earned",
+                RungState.Active => "active",
+                _ => "locked"
+            };
+            var classes = $"title-pip {state}";
+            if (WideLabel != null) classes += " wide";
+            if (Rung.Official) classes += " official";
+            if (Paragon == ParagonLevel.PG) classes += " pg";
+            return classes;
+        }
+    }
+
+    private string Style
+    {
+        get
+        {
+            var band = $"--band:{ThemeScales.CssVar(Rung.Band)};";
+            // The fill height is the rung's own progress, measured from the rung below it.
+            return Rung.State == RungState.Active
+                ? band + $"--fill:{Math.Clamp(Math.Round(Rung.Fraction * 100), 6, 100).ToString(CultureInfo.InvariantCulture)}%;"
+                : band;
+        }
+    }
+
+    private async Task OnSelect()
+    {
+        await OnSelected.InvokeAsync(Rung);
+    }
+
+}

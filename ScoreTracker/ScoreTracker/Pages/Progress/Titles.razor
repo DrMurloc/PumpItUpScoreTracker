@@ -1,216 +1,307 @@
-﻿@page "/Titles"
+@page "/Titles"
 @rendermode RenderModes.Interactive
+@using System.Globalization
 @using MediatR
-@using ScoreTracker.ScoreLedger.Contracts.Queries
-@using ScoreTracker.PlayerProgress.Contracts.Queries
-@using ScoreTracker.PlayerProgress.Contracts.Commands
-@using ScoreTracker.Application.Queries
-@using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Domain.Models
-@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Domain.Models.Titles
 @using ScoreTracker.Domain.Models.Titles.Phoenix
-@using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
+@using Title = ScoreTracker.Domain.Models.Titles.Title
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
-@using ScoreTracker.Web.Dtos
+@using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
 <PageTitle>@L["Titles"]</PageTitle>
 
-@{
-    // Phoenix 2's title list is live (title.php scrape). It renders through the same grid as
-    // Phoenix — its ladders build in the TitleSaga's Phoenix2 branch.
+@* Titles are ladders — a folder tier, a skill track, a plate family, a mix's boss pair — so
+   the page draws one rail per ladder rather than one row per title. See
+   docs/design/titles-overhaul.md. *@
+
+@if (_loading)
+{
+    <div class="title-skeleton">
+        @for (var i = 0; i < 8; i++)
+        {
+            <div class="title-skeleton-rail"></div>
+        }
+    </div>
 }
-<MudDataGrid @ref="_dataGrid" T="TitleProgressDto" Items="_titleProgress" Hover="true" ReadOnly="true"
-             Groupable="true" FixedHeader="true" Height="500" Loading="@_isLoading">
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">@L["Titles"]</MudText>
-    </ToolBarContent>
-    <Columns>
-        <PropertyColumn Property="t=>t.TitleCategory" Title=@L["Category"] Grouping="true"></PropertyColumn>
-        <PropertyColumn Property="t=>t.TitleName" Title=@L["Title"] Groupable="false"></PropertyColumn>
-        <PropertyColumn Property="t=>t.TitleDescription" Title=@L["Description"] Groupable="false"></PropertyColumn>
-        <TemplateColumn Title=@L["Community Completion"] Groupable="false" T="TitleProgressDto">
-            <CellTemplate>
-                @if (_titleCounts.TryGetValue(context.Item.TitleName, out var count))
-                {
-                    <MudTooltip Text=@($"{count}/{_userCount} Players")>
-                        <MudButton StartIcon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Variant="Variant.Outlined" OnClick="()=>ShowTitledUsers(context.Item.TitleName)">
-                            @($"{(100.0 * count / (double)_userCount):N2}%")
-                        </MudButton>
-                    </MudTooltip>
-                }
-                else
-                {
-
-                    <MudText>0%</MudText>
-                }
-            </CellTemplate>
-        </TemplateColumn>
-        @if (CurrentUser.IsLoggedIn)
-        {
-            <TemplateColumn T="TitleProgressDto" Field="IsTrackable" Title=@L["Completion"] Groupable="false">
-                <CellTemplate>
-                    @if (context.Item.IsTrackable)
-                    {
-                        <MudProgressLinear Color="@(context.Item.CompletionCount >= context.Item.RequiredCount ? Color.Success : Color.Primary)"  Min="context.Item.Floor" Max="context.Item.RequiredCount" Value="context.Item.CompletionCount">
-                            @if (context.Item.CompletionCount < context.Item.RequiredCount)
-                            {
-                                @if (context.Item.TitleCategory == "Skill")
-                                {
-                                    @if (context.Item.CompletionCount > 0)
-                                    {
-                                        <MudText Typo="Typo.subtitle1">
-                                            @(PhoenixScore.From(context.Item.CompletionCount).LetterGradeFor(_currentMix).GetName())
-                                        </MudText>
-                                    }
-                                }
-                                else
-                                {
-                                    <MudText Typo="Typo.subtitle1">
-                                        @context.Item.CompletionCount / @context.Item.RequiredCount
-                                    </MudText>
-                                }
-                            }
-                        </MudProgressLinear>
-                        @if (context.Item.CompletionCount >= context.Item.RequiredCount && context.Item.HasParagonLevel)
-                        {
-                            @if (context.Item.ParagonLevel!=ParagonLevel.PG)
-                            {
-                                <br/>
-                                <MudProgressLinear Color="Color.Primary" Min="0" Max="context.Item.NextParagonRequirement" Value="context.Item.NextParagonProgress">
-                                    @context.Item.NextParagonProgress/@context.Item.NextParagonRequirement @(context.Item.ParagonLevel==ParagonLevel.None?L["Passes"]:(context.Item.ParagonLevel+1).GetName())
-                                </MudProgressLinear>
-
-                            } else if (context.Item.ParagonLevel == ParagonLevel.PG)
-                            {
-                                <br/>
-                                <MudProgressLinear Color="Color.Success" Min="0" Max="1" Value="1">
-                                    @context.Item.NextParagonRequirement/@context.Item.NextParagonRequirement PG
-                                </MudProgressLinear>
-                            }
-                            <MudText>Paragon Level: @(context.Item.ParagonLevel.GetName())</MudText>
-                        }
-                    } else
-                    {
-                        <MudProgressLinear Min="0" Max="100" Value=@(context.Item.IsCompleted?100:0) Color=@(context.Item.IsCompleted?Color.Success:Color.Primary)></MudProgressLinear>
-                    }
-
-                </CellTemplate>
-            </TemplateColumn>
-
-            <TemplateColumn T="TitleProgressDto" Field="IsTrackable" Title="Breakdown" Groupable="false">
-                <CellTemplate>
-                    @if (!string.IsNullOrWhiteSpace(context.Item.AdditionalNote))
-                    {
-                        <br/>
-                        <MudText>@context.Item.AdditionalNote</MudText>
-                    }
-                    @if (_currentMix != MixEnum.XX && context.Item.CompletionCount < context.Item.RequiredCount && context.Item.DifficultyLevel != null)
-                    {
-                        <br/>
-                        <MudText>@(_difficultyCounts[context.Item.DifficultyLevel.Value]-_completedCounts[context.Item.DifficultyLevel.Value]) Remaining Charts In Folder</MudText>
-                    }
-                </CellTemplate>
-            </TemplateColumn>
-        } else if (_titleProgress.Any(p => !string.IsNullOrWhiteSpace(p.AdditionalNote)))
-        {
-            <PropertyColumn Property="t=>t.AdditionalNote" Title="Notes" Groupable="false"></PropertyColumn>
-        }
-    </Columns>        
-    <ChildRowContent>
-        @if (_showingTitle == context.Item.TitleName && _showingTitle!=null)
-        {
-            <td colspan="@(CurrentUser.IsLoggedIn?6:5)">
-                @if (_currentTitleUsers.Count() < _titleCounts[_showingTitle.Value])
-                {
-                    <MudText Typo="Typo.body1">Not Showing @(_titleCounts[_showingTitle.Value]-_currentTitleUsers.Count()) Private Players</MudText>
-                    <br/><br/>
-                }
-                <MudGrid>
-                    @foreach (var user in _currentTitleUsers.OrderByDescending(u => u.titleAchievedRecord.ParagonLevel).ThenBy(u=>u.user.Name))
-                    {
-                        <MudItem xs="12">
-                        @if (user.titleAchievedRecord.ParagonLevel != ParagonLevel.None)
-                        {
-                            
-                                <ParagonLevelImage Level="@user.titleAchievedRecord.ParagonLevel"></ParagonLevelImage>
-                        }
-
-                        <MudImage Src="@user.user.ProfileImage.ToString()" Height="25" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-
-                        <UserLabel User="user.user"></UserLabel>
-
-                        </MudItem>
-                    }
-                </MudGrid>
-            </td>
-        }
-    </ChildRowContent>
-</MudDataGrid>
-<br/>
-@inject IMediator Mediator
-@inject ICurrentUserAccessor CurrentUser;
-@inject IUiSettingsAccessor UiSettings;
-@inject IUserRepository Users;
-@inject ITitleRepository TitleRepo;
-@code {
-    private MudDataGrid<TitleProgressDto>? _dataGrid;
-    private IEnumerable<TitleProgressDto> _titleProgress = Array.Empty<TitleProgressDto>();
-    private IDictionary<int, int> _difficultyCounts = new Dictionary<int, int>();
-    private IDictionary<int, int> _completedCounts = new Dictionary<int, int>();
-    private MixEnum _currentMix;
-    private bool _isLoading = true;
-    private int _userCount = 1;
-    private IDictionary<Name, int> _titleCounts = new Dictionary<Name, int>();
-    private IEnumerable<(User user, TitleAchievedRecord titleAchievedRecord)> _currentTitleUsers = Array.Empty<(User user, TitleAchievedRecord titleAchievedRecord)>();
-    private Name? _showingTitle = null;
-    private async Task ShowTitledUsers(Name title)
+else
+{
+    @if (CurrentUser.IsLoggedIn)
     {
-        if (_showingTitle == title)
-        {
-            _showingTitle = null;
-            return;
-        }
-        var titles = (await TitleRepo.GetUsersWithTitle(_currentMix, title, CancellationToken.None)).ToArray();
-        var users = (await Users.GetUsers(titles.Select(t=>t.UserId), CancellationToken.None)).ToDictionary(u=>u.Id);
-        _currentTitleUsers = titles.Where(t=>users[t.UserId].IsPublic)
-            .Select(t=>(users[t.UserId],t)).ToArray();
-        _showingTitle = title;
+        <section class="title-standing">
+            <div class="title-standing-id">
+                <p class="title-eyebrow">@L["Your title"]</p>
+                <h1 class="title-worn">@(_worn?.Name.ToString() ?? L["No title yet"])</h1>
+                @if (_wornNote != null)
+                {
+                    <p class="title-worn-note">@_wornNote</p>
+                }
+            </div>
+            <div class="title-standing-tally">
+                <div class="title-tally">
+                    <span class="title-tally-num">@_earned / @_total</span>
+                    <span class="title-tally-of">@L["titles earned"]</span>
+                </div>
+                <div class="title-meter">
+                    <i style="width:@(_total == 0 ? "0" : (100.0 * _earned / _total).ToString("N1", CultureInfo.InvariantCulture) + "%")"></i>
+                </div>
+                <div class="title-meter-legend">
+                    <span>@L["{0} tracked here, {1} from the official import", _total - _official, _official]</span>
+                </div>
+            </div>
+        </section>
     }
-    private async Task LoadTitles()
+    else
     {
+        <section class="title-anon">
+            <p>@L["{0} titles, and the game shows you none of your progress.", _total]</p>
+            <MudButton Href="/Login" Variant="Variant.Filled" Color="Color.Primary">@L["Log In"]</MudButton>
+        </section>
+    }
 
-        _isLoading = true;
-        _titleProgress = (await Mediator.Send(new GetTitleProgressQuery(_currentMix))).Select(TitleProgressDto.From).ToArray();
-        _isLoading = false;
-        if (_currentMix != MixEnum.XX)
-        {
-
-            var charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
-            _difficultyCounts = charts.Values.GroupBy(c => (int)c.Level).ToDictionary(g => g.Key, g => g.Count());
-            _completedCounts = CurrentUser.IsLoggedIn?(await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _currentMix)))
-                .Where(r => !r.IsBroken)
-                .GroupBy(r => (int)charts[r.ChartId].Level)
-                .ToDictionary(g => g.Key, g => g.Count()) : new Dictionary<int, int>();
-            foreach (var key in _difficultyCounts.Keys.Where(k => !_completedCounts.ContainsKey(k)))
+    <div class="title-controls">
+        <MudTextField T="string" Value="_search" ValueChanged="OnSearch" DebounceInterval="200"
+                      Placeholder="@L["Search a title, chart, or step artist"]"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Class="title-search"></MudTextField>
+        <div class="title-chips">
+            @foreach (var filter in Filters)
             {
-                _completedCounts[key] = 0;
+                <button type="button" class="title-chip @(_filter == filter.State ? "on" : "")"
+                        @onclick="() => SetFilter(filter.State)">
+                    @filter.Label<span class="n">@CountFor(filter.State)</span>
+                </button>
             }
-        }
-        if (_dataGrid != null)
-        {
+        </div>
+    </div>
 
-            _dataGrid.Items = _titleProgress;
-            _dataGrid?.GroupItems();
+    @foreach (var section in _sections)
+    {
+        var rails = VisibleRails(section);
+        var oneOffs = VisibleOneOffs(section);
+        if (rails.Count == 0 && oneOffs.Count == 0)
+        {
+            continue;
         }
-        _userCount = await TitleRepo.CountTitledUsers(CancellationToken.None);
-        _titleCounts = (await TitleRepo.GetTitleAggregations(_currentMix, CancellationToken.None)).ToDictionary(t => t.Title, t => t.Count);
+
+        <section class="title-section">
+            <div class="title-section-head">
+                <h2>@SectionName(section.Section)</h2>
+                <span class="title-section-count">
+                    @(CurrentUser.IsLoggedIn
+                        ? L["{0} of {1} earned", section.Earned, section.Total]
+                        : L["{0} titles", section.Total])
+                </span>
+            </div>
+
+            @if (rails.Count > 0)
+            {
+                <div class="@(section.Section == TitleSection.BossBreakers ? "title-rails grid" : "title-rails")">
+                    @foreach (var rail in rails)
+                    {
+                        <div class="title-rail">
+                            <div class="title-rail-name">
+                                <span>@rail.Name</span>
+                                @if (rail.Official)
+                                {
+                                    <span class="title-official-tag">@L["official"]</span>
+                                }
+                            </div>
+                            <div class="title-rail-track">
+                                @foreach (var rung in rail.Rungs)
+                                {
+                                    <TitleRungPip Rung="rung" WideLabel="@WideLabelFor(rail, rung)"
+                                                  OnSelected="Select"></TitleRungPip>
+                                }
+                            </div>
+                            <div class="title-rail-tail"><b>@rail.Earned</b> / @rail.Total</div>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (oneOffs.Count > 0)
+            {
+                <div class="title-badges">
+                    @foreach (var rung in oneOffs)
+                    {
+                        <button type="button"
+                                class="title-badge @(rung.State == RungState.Earned ? "owned" : "unowned") @(rung.Official ? "official" : "") @ThemeScales.RarityClass(rung.Band)"
+                                style="--band:@ThemeScales.CssVar(rung.Band)"
+                                @onclick="() => Select(rung)">
+                            <span class="title-badge-dot"></span>
+                            <span class="title-badge-name">@rung.Title.Name</span>
+                        </button>
+                    }
+                </div>
+            }
+        </section>
     }
+
+    @if (_sections.Count > 0 && !_sections.Any(s => VisibleRails(s).Count > 0 || VisibleOneOffs(s).Count > 0))
+    {
+        <MudText Class="title-empty">@L["No titles match what you're looking for."]</MudText>
+    }
+
+    <TitleDetailDrawer Rung="_selected" Mix="_currentMix" IsLoggedIn="CurrentUser.IsLoggedIn"
+                       CurrentUserId="_currentUserId" TrackedPlayers="_trackedPlayers"
+                       OnClosed="() => _selected = null"></TitleDetailDrawer>
+}
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+@code {
+    private sealed record FilterChip(RungState? State, string Label);
+
+    private IReadOnlyList<FilterChip> Filters => new[]
+    {
+        new FilterChip(null, L["All"]),
+        new FilterChip(RungState.Active, L["In progress"]),
+        new FilterChip(RungState.Earned, L["Earned"]),
+        new FilterChip(RungState.Locked, L["Not yet"])
+    };
+
+    private MixEnum _currentMix;
+    private bool _loading = true;
+    private IReadOnlyList<TitleSectionRows> _sections = Array.Empty<TitleSectionRows>();
+    private TitleRung? _selected;
+    private RungState? _filter;
+    private string _search = string.Empty;
+
+    private int _total;
+    private int _earned;
+    private int _official;
+    private int _trackedPlayers;
+    private Guid? _currentUserId;
+    private Title? _worn;
+    private string? _wornNote;
 
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
-        await LoadTitles();
+        _currentUserId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
+
+        var progress = (await Mediator.Send(new GetTitleProgressQuery(_currentMix))).ToArray();
+        var rarity = await Mediator.Send(new GetTitleRarityQuery(_currentMix));
+        _trackedPlayers = rarity.TrackedPlayers;
+        _sections = TitleRails.Build(progress, rarity);
+
+        var rungs = _sections.SelectMany(s => s.Rails.SelectMany(r => r.Rungs).Concat(s.OneOffs)).ToArray();
+        _total = rungs.Length;
+        _earned = rungs.Count(r => r.State == RungState.Earned);
+        _official = rungs.Count(r => r.Official);
+        ResolveWornTitle(rungs);
+
+        _loading = false;
     }
+
+    /// <summary>
+    ///     The title you wear. Phoenix 2 progression is three PUMBILITY pools and the merged
+    ///     one is the one that counts, so a per-type ladder only stands in until you have a
+    ///     merged rung. Every other mix wears its furthest progression title.
+    /// </summary>
+    private void ResolveWornTitle(IReadOnlyList<TitleRung> rungs)
+    {
+        var progression = _sections.FirstOrDefault(s => s.Section == TitleSection.Progression);
+        if (progression == null) return;
+
+        TitleRung? Furthest(Func<TitleRailRow, bool> pick)
+        {
+            return progression.Rails.Where(pick)
+                .SelectMany(r => r.Rungs)
+                .Where(r => r.State == RungState.Earned)
+                .OrderByDescending(r => r.Title.CompletionRequired)
+                .ThenByDescending(r => r.Rung)
+                .FirstOrDefault();
+        }
+
+        var merged = Furthest(r => r.Name == (Name)"[P.B]");
+        var worn = merged ?? Furthest(r => r.Name != (Name)"[P.B]");
+        _worn = worn?.Title;
+
+        if (worn?.Progress is PhoenixTitleProgress { RequiredAaCount: > 0 } paragon &&
+            paragon.ParagonLevel != ParagonLevel.None)
+        {
+            _wornNote = L["Paragon {0}", paragon.ParagonLevel.GetName()];
+        }
+    }
+
+    private void SetFilter(RungState? state)
+    {
+        _filter = state;
+    }
+
+    private void OnSearch(string value)
+    {
+        _search = value ?? string.Empty;
+    }
+
+    private int CountFor(RungState? state)
+    {
+        var all = _sections.SelectMany(s => s.Rails.SelectMany(r => r.Rungs).Concat(s.OneOffs));
+        return state == null ? _total : all.Count(r => r.State == state);
+    }
+
+    private bool Matches(TitleRung rung)
+    {
+        if (_filter != null && rung.State != _filter) return false;
+        if (string.IsNullOrWhiteSpace(_search)) return true;
+
+        var needle = _search.Trim();
+        return rung.Title.Name.ToString().Contains(needle, StringComparison.OrdinalIgnoreCase)
+               || rung.Title.Description.Contains(needle, StringComparison.OrdinalIgnoreCase)
+               || (rung.Title.Ladder?.ToString().Contains(needle, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+
+    /// <summary>A rail survives filtering when any of its rungs does; it never renders half-empty.</summary>
+    private IReadOnlyList<TitleRailRow> VisibleRails(TitleSectionRows section)
+    {
+        if (_filter == null && string.IsNullOrWhiteSpace(_search)) return section.Rails;
+        return section.Rails.Where(r => r.Rungs.Any(Matches)).ToArray();
+    }
+
+    private IReadOnlyList<TitleRung> VisibleOneOffs(TitleSectionRows section)
+    {
+        if (_filter == null && string.IsNullOrWhiteSpace(_search)) return section.OneOffs;
+        return section.OneOffs.Where(Matches).ToArray();
+    }
+
+    /// <summary>
+    ///     A rung shows its number unless the rail is short enough that a name fits, or the
+    ///     rung's own name is the point — a capstone, a plate tier, a PUMBILITY gem.
+    /// </summary>
+    private string? WideLabelFor(TitleRailRow rail, TitleRung rung)
+    {
+        if (rail.Rungs.Count > 8 && rung.Rung <= 10) return null;
+
+        var name = rung.Title.Name.ToString();
+        // "[BRACKET] EXPERT" reads as EXPERT once the rail already says BRACKET.
+        var trimmed = name.Replace($"[{rail.Name}]", string.Empty).Replace(rail.Name.ToString(), string.Empty).Trim();
+        if (trimmed.StartsWith('(') && trimmed.EndsWith(')')) trimmed = trimmed[1..^1];
+        return string.IsNullOrWhiteSpace(trimmed) ? name : trimmed;
+    }
+
+    private string SectionName(TitleSection section) => section switch
+    {
+        TitleSection.Progression => _currentMix == MixEnum.Phoenix2 ? L["PUMBILITY"] : L["Progression"],
+        TitleSection.Skill => L["Skill"],
+        TitleSection.CoOp => L["CO-OP"],
+        TitleSection.Plates => L["Plates"],
+        TitleSection.BossBreakers => L["Boss breakers"],
+        TitleSection.StepArtists => L["Step artists"],
+        TitleSection.PlayCount => L["Play count"],
+        _ => L["One-offs"]
+    };
+
+    private void Select(TitleRung rung)
+    {
+        _selected = rung;
+    }
+
 }
