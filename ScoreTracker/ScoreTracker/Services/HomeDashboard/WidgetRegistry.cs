@@ -94,7 +94,7 @@ public static class WidgetRegistry
             new[]
             {
                 SizePreset.OneByOne, SizePreset.TwoByOne, SizePreset.TwoByTwo, SizePreset.TwoByThree,
-                SizePreset.FourByThree
+                SizePreset.TwoByFour
             },
             SizePreset.TwoByTwo,
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },

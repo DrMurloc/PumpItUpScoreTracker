@@ -2519,7 +2519,7 @@ html.sheet-open .more-sheet-scrim {
 
     .dash-cols-2, .dash-cols-3, .dash-cols-4 { grid-column: span 1; }
 
-    .dash-rows-2, .dash-rows-3 { grid-row: span 1; }
+    .dash-rows-2, .dash-rows-3, .dash-rows-4 { grid-row: span 1; }
 }
 
 /* Edit mode: toolbar, edit chrome, add-drawer. */
@@ -2970,6 +2970,9 @@ html.sheet-open .more-sheet-scrim {
    tall pumbility. */
 
 .dash-rows-3 { grid-row: span 3; }
+
+/* Four deep exists for the tall list widgets (Folder Levels). */
+.dash-rows-4 { grid-row: span 4; }
 
 .dash-swap-target {
     outline: 2px solid var(--mix-primary);
@@ -6990,4 +6993,10 @@ button.chart-card-art {
     flex-wrap: wrap;
     gap: 4px;
     margin-bottom: 10px;
+}
+
+/* The Select Folders popover anchor — same shape as the tier list's folder picker. */
+.fl-cfg-anchor {
+    position: relative;
+    display: inline-block;
 }

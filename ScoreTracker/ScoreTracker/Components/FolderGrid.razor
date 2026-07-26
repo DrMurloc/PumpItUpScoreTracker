@@ -4,10 +4,17 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
 @* The difficulty selector's shared guts (one concept, one component): the
-   Singles/Doubles/CoOp segment row + the level grid. FolderPicker wraps it in its
-   popover for single-pick navigation (tier lists); the randomizer renders it inline in
-   multi-toggle mode for weighted-level selection. Type tabs are internal state — the
-   panel stays open across type switches in both hosts. *@
+   Singles/Doubles/CoOp segment row + the level grid. Type tabs are internal state — the
+   panel stays open across type switches in every host.
+
+   THIS IS A POPOVER CONTROL, like a date picker: it is opened from a button, it takes
+   the picks, it closes. It is never chrome plopped onto a page — three type tabs over a
+   thirty-cell grid is a whole screen of controls, and inline it drowns whatever it was
+   meant to help you configure. FolderPicker wraps it for single-pick navigation (tier
+   lists); FolderLevelsConfigPanel wraps it behind "Select Folders" for multi-toggle.
+
+   The randomizer's inline render predates the rule and is the one exception; it should
+   move behind a button the next time that page is touched. *@
 <div class="folder-grid">
     <MudButtonGroup OverrideStyles="false" Class="folder-picker-types">
         <MudButton Variant="@TypeVariant(ChartType.Single)" Color="Color.Primary" Size="Size.Small"

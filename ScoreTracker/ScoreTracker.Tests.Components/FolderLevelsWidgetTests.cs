@@ -125,7 +125,7 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
         GivenFolder(ChartType.Single, 22, 10, 930000, 930000);
 
         var narrow = Render("2x2", (ChartType.Single, 22));
-        var wide = Render("4x3", (ChartType.Single, 22));
+        var wide = Render("2x4", (ChartType.Single, 22));
 
         Assert.Empty(narrow.FindAll(".dash-fl-row-count"));
         Assert.Contains("2 of 10", wide.Markup);
@@ -136,7 +136,7 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
     [InlineData("2x1", 2)]
     [InlineData("2x2", 4)]
     [InlineData("2x3", 6)]
-    [InlineData("4x3", 8)]
+    [InlineData("2x4", 8)]
     public void EachSizeShowsExactlyAsManyFoldersAsItHoldsRoomFor(string sizePreset, int capacity)
     {
         // Ten configured folders, so every size is asked for more than it can hold.

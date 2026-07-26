@@ -35,7 +35,24 @@
     </div>
 }
 
-<FolderGrid IsSelected="IsSelected" LevelPicked="Toggle" ShowCoOp="true"></FolderGrid>
+@* FolderGrid is a popover control, never inline chrome — see its own summary. Owns the
+   popover rather than using MudMenu, because MudMenu closes on any interior click and
+   multi-select needs the panel to survive every tap. *@
+<div class="fl-cfg-anchor">
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Folder"
+               OnClick="@(() => _open = !_open)"
+               aria-haspopup="true" aria-expanded="@(_open ? "true" : "false")">@L["Select Folders"]</MudButton>
+    <MudPopover Open="_open" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft">
+        <div class="folder-picker-pop">
+            @if (_open)
+            {
+                <FolderGrid IsSelected="IsSelected" LevelPicked="Toggle" ShowCoOp="true"></FolderGrid>
+            }
+        </div>
+    </MudPopover>
+</div>
+@* Transparent click-away layer: below the popover (1200), above the dialog's own content. *@
+<MudOverlay Visible="_open" OnClick="() => _open = false" ZIndex="1199"></MudOverlay>
 
 <div class="d-flex justify-end gap-2 mt-4">
     <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
@@ -51,6 +68,7 @@
     [Inject] private IMediator Mediator { get; set; } = null!;
     [Inject] private ICurrentUserAccessor CurrentUser { get; set; } = null!;
 
+    private bool _open;
     private MixEnum? _mix;
     private int _capacity = 4;
     private List<FolderLevelsTarget> _folders = new();

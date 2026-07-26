@@ -21,7 +21,7 @@ public sealed class FolderLevelsDefaultsTests
     [InlineData(2, 1)]
     [InlineData(2, 2)]
     [InlineData(2, 3)]
-    [InlineData(4, 3)]
+    [InlineData(2, 4)]
     public void EverySupportedSizeHasACapacity(int columns, int rows)
     {
         Assert.True(FolderLevelsDefaults.CapacityFor(new SizePreset(columns, rows)) > 0);

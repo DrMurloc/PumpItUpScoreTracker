@@ -21,7 +21,7 @@ public static class FolderLevelsDefaults
         "2x1" => 2,
         "2x2" => 4,
         "2x3" => 6,
-        "4x3" => 8,
+        "2x4" => 8,
         _ => 4
     };
 

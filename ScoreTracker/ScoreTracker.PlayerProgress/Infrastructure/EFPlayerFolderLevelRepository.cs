@@ -30,7 +30,8 @@ internal sealed class EFPlayerFolderLevelRepository : IPlayerFolderLevelReposito
         // throw, the same way milestone reads tolerate unknown kinds.
         return rows
             .Select(e => Enum.TryParse<ChartType>(e.ChartType, out var type)
-                ? new FolderLevelRecord(mix, type, DifficultyLevel.From(e.Level), e.Size, e.Played, e.AverageScore)
+                ? new FolderLevelRecord(mix, type, DifficultyLevel.From(e.Level), e.Size, e.Played, e.AverageScore,
+                    e.TierScore)
                 : null)
             .Where(r => r != null)
             .Cast<FolderLevelRecord>();
@@ -64,7 +65,7 @@ internal sealed class EFPlayerFolderLevelRepository : IPlayerFolderLevelReposito
                     await database.AddAsync(row, cancellationToken);
                 }
                 else if (row.Size == level.Size && row.Played == level.Played &&
-                         row.AverageScore == level.AverageScore)
+                         row.AverageScore == level.AverageScore && row.TierScore == level.TierScore)
                 {
                     // Nothing moved — leave UpdatedAt alone so it keeps meaning "last changed".
                     continue;
@@ -73,6 +74,7 @@ internal sealed class EFPlayerFolderLevelRepository : IPlayerFolderLevelReposito
                 row.Size = level.Size;
                 row.Played = level.Played;
                 row.AverageScore = level.AverageScore;
+                row.TierScore = level.TierScore;
                 row.UpdatedAt = asOf;
             }
         }

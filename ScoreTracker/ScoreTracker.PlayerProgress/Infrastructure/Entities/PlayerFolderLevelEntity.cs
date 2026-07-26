@@ -24,5 +24,12 @@ internal sealed class PlayerFolderLevelEntity
     /// <summary>Mean across played charts only; 0 when <see cref="Played" /> is 0.</summary>
     public int AverageScore { get; set; }
 
+    /// <summary>
+    ///     The score at the completion tier's position, best-first — what the folder grade reads
+    ///     off. Stored rather than derived because a milestone diff needs the previous grade and
+    ///     the row alone cannot rebuild a sorted score list. 0 below the first tier.
+    /// </summary>
+    public int TierScore { get; set; }
+
     public DateTimeOffset UpdatedAt { get; set; }
 }
