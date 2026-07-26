@@ -37,4 +37,30 @@ public abstract class Title
     {
         CompletionFloor = floor;
     }
+
+    /// <summary>
+    ///     The rail this title is drawn on — a folder tier, a skill track, a plate family,
+    ///     a mix's boss pair — or null for a one-off that belongs to no progression.
+    ///     <para>
+    ///         Deliberately NOT the same grouping as <see cref="TitleHelpers.LinkLadder{TTitle,TKey}" />,
+    ///         which groups by what SCORING shares. Advanced is the worked example: three
+    ///         scoring ladders (the 20s, the 21s, the 22s, each floored on its own level) but
+    ///         one rail the player reads as Lv.1 through Lv.10.
+    ///     </para>
+    /// </summary>
+    public Name? Ladder { get; private set; }
+
+    /// <summary>
+    ///     1-based position on <see cref="Ladder" />, and 0 when there is no rail. Requirement
+    ///     order cannot stand in for it: Advanced Lv.3 (39,000) outranks Lv.4 (15,000), Expert
+    ///     Lv.1 and Lv.6 are both 40,000, and every skill and boss-breaker title requires 1.
+    /// </summary>
+    public int Rung { get; private set; }
+
+    /// <summary>Places this title on a display rail. See <see cref="Ladder" />.</summary>
+    internal void OnRail(Name ladder, int rung)
+    {
+        Ladder = ladder;
+        Rung = rung;
+    }
 }

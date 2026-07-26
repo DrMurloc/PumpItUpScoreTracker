@@ -18,56 +18,63 @@ namespace ScoreTracker.Domain.Models.Titles.Phoenix2;
 /// </summary>
 public static class Phoenix2TitleList
 {
+    /// <summary>
+    ///     The nine skill tracks. Each is a title Category, which makes it both SPECIALIST's
+    ///     membership test and the track's display rail — declared once so the two can't drift.
+    /// </summary>
+    private static readonly Name[] SkillCategories =
+        { "TWIST S", "TWIST D", "RUN S", "RUN D", "DRILL", "GIMMICK", "SLOW", "HALF", "BRACKET" };
+
     private static readonly PhoenixTitle[] Titles =
     {
         // ---- Default ----
         new PhoenixBasicTitle("BEGINNER", "Default title"),
 
         // ---- Step-artist play counts (site-detected only) ----
-        new PhoenixBasicTitle("EXC FOLLOWER", "[EXC STEP] 100+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("EXC ENTHUSIAST", "[EXC STEP] 500+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("EXC DEVOTEE", "[EXC STEP] 1000+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("DULKI FOLLOWER", "[DULKI STEP] 100+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("DULKI ENTHUSIAST", "[DULKI STEP] 500+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("DULKI DEVOTEE", "[DULKI STEP] 1000+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("FEFEMZ FOLLOWER", "[FEFEMZ STEP] 100+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("FEFEMZ ENTHUSIAST", "[FEFEMZ STEP] 500+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("FEFEMZ DEVOTEE", "[FEFEMZ STEP] 1000+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("CONRAD FOLLOWER", "[CONRAD STEP] 100+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("CONRAD ENTHUSIAST", "[CONRAD STEP] 500+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("CONRAD DEVOTEE", "[CONRAD STEP] 1000+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("NIMGO FOLLOWER", "[NIMGO STEP] 100+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("NIMGO ENTHUSIAST", "[NIMGO STEP] 500+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("NIMGO DEVOTEE", "[NIMGO STEP] 1000+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("SUNNY FOLLOWER", "[SUNNY STEP] 100+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("SUNNY ENTHUSIAST", "[SUNNY STEP] 500+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("SUNNY DEVOTEE", "[SUNNY STEP] 1000+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("SPHAM FOLLOWER", "[SPHAM STEP] 100+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("SPHAM ENTHUSIAST", "[SPHAM STEP] 500+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("SPHAM DEVOTEE", "[SPHAM STEP] 1000+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("JUNARE FOLLOWER", "[JUNARE STEP] 100+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("JUNARE ENTHUSIAST", "[JUNARE STEP] 500+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("JUNARE DEVOTEE", "[JUNARE STEP] 1000+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("GGWANG FOLLOWER", "[GGWANG STEP] 100+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("GGWANG ENTHUSIAST", "[GGWANG STEP] 500+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("GGWANG DEVOTEE", "[GGWANG STEP] 1000+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("DIESEL FOLLOWER", "[DIESEL STEP] 100+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("DIESEL ENTHUSIAST", "[DIESEL STEP] 500+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("DIESEL DEVOTEE", "[DIESEL STEP] 1000+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("REFOS FOLLOWER", "[REFOS STEP] 100+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("REFOS ENTHUSIAST", "[REFOS STEP] 500+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("REFOS DEVOTEE", "[REFOS STEP] 1000+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("ABYSS FOLLOWER", "[ABYSS STEP] 100+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("ABYSS ENTHUSIAST", "[ABYSS STEP] 500+ Plays", "Step Artist"),
-        new PhoenixBasicTitle("ABYSS DEVOTEE", "[ABYSS STEP] 1000+ Plays", "Step Artist"),
+        new PhoenixBasicTitle("EXC FOLLOWER", "[EXC STEP] 100+ Plays", "Step Artist", "EXC", 1),
+        new PhoenixBasicTitle("EXC ENTHUSIAST", "[EXC STEP] 500+ Plays", "Step Artist", "EXC", 2),
+        new PhoenixBasicTitle("EXC DEVOTEE", "[EXC STEP] 1000+ Plays", "Step Artist", "EXC", 3),
+        new PhoenixBasicTitle("DULKI FOLLOWER", "[DULKI STEP] 100+ Plays", "Step Artist", "DULKI", 1),
+        new PhoenixBasicTitle("DULKI ENTHUSIAST", "[DULKI STEP] 500+ Plays", "Step Artist", "DULKI", 2),
+        new PhoenixBasicTitle("DULKI DEVOTEE", "[DULKI STEP] 1000+ Plays", "Step Artist", "DULKI", 3),
+        new PhoenixBasicTitle("FEFEMZ FOLLOWER", "[FEFEMZ STEP] 100+ Plays", "Step Artist", "FEFEMZ", 1),
+        new PhoenixBasicTitle("FEFEMZ ENTHUSIAST", "[FEFEMZ STEP] 500+ Plays", "Step Artist", "FEFEMZ", 2),
+        new PhoenixBasicTitle("FEFEMZ DEVOTEE", "[FEFEMZ STEP] 1000+ Plays", "Step Artist", "FEFEMZ", 3),
+        new PhoenixBasicTitle("CONRAD FOLLOWER", "[CONRAD STEP] 100+ Plays", "Step Artist", "CONRAD", 1),
+        new PhoenixBasicTitle("CONRAD ENTHUSIAST", "[CONRAD STEP] 500+ Plays", "Step Artist", "CONRAD", 2),
+        new PhoenixBasicTitle("CONRAD DEVOTEE", "[CONRAD STEP] 1000+ Plays", "Step Artist", "CONRAD", 3),
+        new PhoenixBasicTitle("NIMGO FOLLOWER", "[NIMGO STEP] 100+ Plays", "Step Artist", "NIMGO", 1),
+        new PhoenixBasicTitle("NIMGO ENTHUSIAST", "[NIMGO STEP] 500+ Plays", "Step Artist", "NIMGO", 2),
+        new PhoenixBasicTitle("NIMGO DEVOTEE", "[NIMGO STEP] 1000+ Plays", "Step Artist", "NIMGO", 3),
+        new PhoenixBasicTitle("SUNNY FOLLOWER", "[SUNNY STEP] 100+ Plays", "Step Artist", "SUNNY", 1),
+        new PhoenixBasicTitle("SUNNY ENTHUSIAST", "[SUNNY STEP] 500+ Plays", "Step Artist", "SUNNY", 2),
+        new PhoenixBasicTitle("SUNNY DEVOTEE", "[SUNNY STEP] 1000+ Plays", "Step Artist", "SUNNY", 3),
+        new PhoenixBasicTitle("SPHAM FOLLOWER", "[SPHAM STEP] 100+ Plays", "Step Artist", "SPHAM", 1),
+        new PhoenixBasicTitle("SPHAM ENTHUSIAST", "[SPHAM STEP] 500+ Plays", "Step Artist", "SPHAM", 2),
+        new PhoenixBasicTitle("SPHAM DEVOTEE", "[SPHAM STEP] 1000+ Plays", "Step Artist", "SPHAM", 3),
+        new PhoenixBasicTitle("JUNARE FOLLOWER", "[JUNARE STEP] 100+ Plays", "Step Artist", "JUNARE", 1),
+        new PhoenixBasicTitle("JUNARE ENTHUSIAST", "[JUNARE STEP] 500+ Plays", "Step Artist", "JUNARE", 2),
+        new PhoenixBasicTitle("JUNARE DEVOTEE", "[JUNARE STEP] 1000+ Plays", "Step Artist", "JUNARE", 3),
+        new PhoenixBasicTitle("GGWANG FOLLOWER", "[GGWANG STEP] 100+ Plays", "Step Artist", "GGWANG", 1),
+        new PhoenixBasicTitle("GGWANG ENTHUSIAST", "[GGWANG STEP] 500+ Plays", "Step Artist", "GGWANG", 2),
+        new PhoenixBasicTitle("GGWANG DEVOTEE", "[GGWANG STEP] 1000+ Plays", "Step Artist", "GGWANG", 3),
+        new PhoenixBasicTitle("DIESEL FOLLOWER", "[DIESEL STEP] 100+ Plays", "Step Artist", "DIESEL", 1),
+        new PhoenixBasicTitle("DIESEL ENTHUSIAST", "[DIESEL STEP] 500+ Plays", "Step Artist", "DIESEL", 2),
+        new PhoenixBasicTitle("DIESEL DEVOTEE", "[DIESEL STEP] 1000+ Plays", "Step Artist", "DIESEL", 3),
+        new PhoenixBasicTitle("REFOS FOLLOWER", "[REFOS STEP] 100+ Plays", "Step Artist", "REFOS", 1),
+        new PhoenixBasicTitle("REFOS ENTHUSIAST", "[REFOS STEP] 500+ Plays", "Step Artist", "REFOS", 2),
+        new PhoenixBasicTitle("REFOS DEVOTEE", "[REFOS STEP] 1000+ Plays", "Step Artist", "REFOS", 3),
+        new PhoenixBasicTitle("ABYSS FOLLOWER", "[ABYSS STEP] 100+ Plays", "Step Artist", "ABYSS", 1),
+        new PhoenixBasicTitle("ABYSS ENTHUSIAST", "[ABYSS STEP] 500+ Plays", "Step Artist", "ABYSS", 2),
+        new PhoenixBasicTitle("ABYSS DEVOTEE", "[ABYSS STEP] 1000+ Plays", "Step Artist", "ABYSS", 3),
 
         // ---- Play counts (site-detected only) ----
-        new PhoenixBasicTitle("GOLD MEMBER", "[Play count] 100 or more", "Play Count"),
-        new PhoenixBasicTitle("PLATINUM MEMBER", "[Play count] 500 or more", "Play Count"),
-        new PhoenixBasicTitle("DIAMOND MEMBER", "[Play count] 1000 or more", "Play Count"),
-        new PhoenixBasicTitle("VIP MEMBER", "[Play count] 3000 or more", "Play Count"),
-        new PhoenixBasicTitle("VVIP MEMBER", "[Play count] 5000 or more", "Play Count"),
-        new PhoenixBasicTitle("THE BLACK", "[Play count] 10000 or more", "Play Count"),
+        new PhoenixBasicTitle("GOLD MEMBER", "[Play count] 100 or more", "Play Count", "MEMBERSHIP", 1),
+        new PhoenixBasicTitle("PLATINUM MEMBER", "[Play count] 500 or more", "Play Count", "MEMBERSHIP", 2),
+        new PhoenixBasicTitle("DIAMOND MEMBER", "[Play count] 1000 or more", "Play Count", "MEMBERSHIP", 3),
+        new PhoenixBasicTitle("VIP MEMBER", "[Play count] 3000 or more", "Play Count", "MEMBERSHIP", 4),
+        new PhoenixBasicTitle("VVIP MEMBER", "[Play count] 5000 or more", "Play Count", "MEMBERSHIP", 5),
+        new PhoenixBasicTitle("THE BLACK", "[Play count] 10000 or more", "Play Count", "MEMBERSHIP", 6),
 
         // ---- Chart-specific and misc badges (site-detected only) ----
         new PhoenixBasicTitle("DOGE MAJOR STOCKHOLDER", "[Waltz of Doge D20] Max Combo of 888", "Chart Specific"),
@@ -85,9 +92,9 @@ public static class Phoenix2TitleList
         // ---- CO-OP play counts (site-detected only) ----
         // The site names the first two "LOVERS" (duplicate data-name) and masks the third;
         // suffixed like the Phoenix list. Site-detection never matches these names.
-        new PhoenixBasicTitle("LOVERS (Silver)", "[CO-OP Step] 100+ Plays", "CO-OP"),
-        new PhoenixBasicTitle("LOVERS (Gold)", "[CO-OP Step] 1000+ Plays", "CO-OP"),
-        new PhoenixBasicTitle("LOVERS (Platinum)", "[CO-OP Step] 5000+ Plays", "CO-OP"),
+        new PhoenixBasicTitle("LOVERS (Silver)", "[CO-OP Step] 100+ Plays", "CO-OP", "LOVERS", 1),
+        new PhoenixBasicTitle("LOVERS (Gold)", "[CO-OP Step] 1000+ Plays", "CO-OP", "LOVERS", 2),
+        new PhoenixBasicTitle("LOVERS (Platinum)", "[CO-OP Step] 5000+ Plays", "CO-OP", "LOVERS", 3),
 
         // ---- Chart-specific and misc badges (site-detected only) ----
         new PhoenixBasicTitle("GOD OF CONTROL", "[Gargoyle - FULL SONG - S21] Clear with 160 or more misses", "Chart Specific"),
@@ -277,63 +284,62 @@ public static class Phoenix2TitleList
         new Phoenix2TitleSetTitle("[BRACKET] EXPERT", "[BRACKET] Earn 10 Titles", "BRACKET", new Name[] { "BRACKET" }, 10),
 
         // ---- Skill meta ----
-        new Phoenix2TitleSetTitle("SPECIALIST", "Earn all skill titles", "Misc.",
-            new Name[] { "TWIST S", "TWIST D", "RUN S", "RUN D", "DRILL", "GIMMICK", "SLOW", "HALF", "BRACKET" }, 90),
+        new Phoenix2TitleSetTitle("SPECIALIST", "Earn all skill titles", "Misc.", SkillCategories, 90),
 
         // ---- CO-OP rating ladder (site-detected only) ----
         // TODO(P2-titles): the in-game "CO-OP Rating" formula is unknown â€” these stay
         // site-detected until it can be reverse-engineered from live CoOp data.
-        new PhoenixBasicTitle("[CO-OP] LV.1", "[CO-OP Rating] 1000+", "CO-OP"),
-        new PhoenixBasicTitle("[CO-OP] LV.2", "[CO-OP Rating] 2000+", "CO-OP"),
-        new PhoenixBasicTitle("[CO-OP] LV.3", "[CO-OP Rating] 3000+", "CO-OP"),
-        new PhoenixBasicTitle("[CO-OP] LV.4", "[CO-OP Rating] 4000+", "CO-OP"),
-        new PhoenixBasicTitle("[CO-OP] LV.5", "[CO-OP Rating] 5000+", "CO-OP"),
-        new PhoenixBasicTitle("[CO-OP] LV.6", "[CO-OP Rating] 6000+", "CO-OP"),
-        new PhoenixBasicTitle("[CO-OP] LV.7", "[CO-OP Rating] 7000+", "CO-OP"),
-        new PhoenixBasicTitle("[CO-OP] LV.8", "[CO-OP Rating] 8000+", "CO-OP"),
-        new PhoenixBasicTitle("[CO-OP] LV.9", "[CO-OP Rating] 9000+", "CO-OP"),
-        new PhoenixBasicTitle("[CO-OP] LV.10", "[CO-OP Rating] 10000+", "CO-OP"),
-        new PhoenixBasicTitle("[CO-OP] ADVANCED", "[CO-OP Rating] 12000+", "CO-OP"),
-        new PhoenixBasicTitle("[CO-OP] EXPERT", "[CO-OP Rating] 14000+", "CO-OP"),
-        new PhoenixBasicTitle("[CO-OP] MASTER", "[CO-OP Rating] 16000+", "CO-OP"),
+        new PhoenixBasicTitle("[CO-OP] LV.1", "[CO-OP Rating] 1000+", "CO-OP", "CO-OP", 1),
+        new PhoenixBasicTitle("[CO-OP] LV.2", "[CO-OP Rating] 2000+", "CO-OP", "CO-OP", 2),
+        new PhoenixBasicTitle("[CO-OP] LV.3", "[CO-OP Rating] 3000+", "CO-OP", "CO-OP", 3),
+        new PhoenixBasicTitle("[CO-OP] LV.4", "[CO-OP Rating] 4000+", "CO-OP", "CO-OP", 4),
+        new PhoenixBasicTitle("[CO-OP] LV.5", "[CO-OP Rating] 5000+", "CO-OP", "CO-OP", 5),
+        new PhoenixBasicTitle("[CO-OP] LV.6", "[CO-OP Rating] 6000+", "CO-OP", "CO-OP", 6),
+        new PhoenixBasicTitle("[CO-OP] LV.7", "[CO-OP Rating] 7000+", "CO-OP", "CO-OP", 7),
+        new PhoenixBasicTitle("[CO-OP] LV.8", "[CO-OP Rating] 8000+", "CO-OP", "CO-OP", 8),
+        new PhoenixBasicTitle("[CO-OP] LV.9", "[CO-OP Rating] 9000+", "CO-OP", "CO-OP", 9),
+        new PhoenixBasicTitle("[CO-OP] LV.10", "[CO-OP Rating] 10000+", "CO-OP", "CO-OP", 10),
+        new PhoenixBasicTitle("[CO-OP] ADVANCED", "[CO-OP Rating] 12000+", "CO-OP", "CO-OP", 11),
+        new PhoenixBasicTitle("[CO-OP] EXPERT", "[CO-OP Rating] 14000+", "CO-OP", "CO-OP", 12),
+        new PhoenixBasicTitle("[CO-OP] MASTER", "[CO-OP Rating] 16000+", "CO-OP", "CO-OP", 13),
 
         // ---- Boss breakers (chart clears) ----
-        new Phoenix2ChartClearTitle("[THE 1ST] BOSS BREAKER", "Another Truth", ChartType.Single, 6),
-        new Phoenix2ChartClearTitle("[THE 2ND] BOSS BREAKER", "Extravaganza", ChartType.Single, 11),
-        new Phoenix2ChartClearTitle("[THE O.B.G] BOSS BREAKER", "Turkey March", ChartType.Single, 12),
-        new Phoenix2ChartClearTitle("[THE O.B.G SE] BOSS BREAKER", "Mr. Larpus", ChartType.Single, 15),
-        new Phoenix2ChartClearTitle("[PERFECT COLLECTION] BOSS BREAKER", "Slam", ChartType.Single, 18),
-        new Phoenix2ChartClearTitle("[EXTRA] BOSS BREAKER", "Radetzky Can Can", ChartType.Double, 18),
-        new Phoenix2ChartClearTitle("[THE REBIRTH] BOSS BREAKER", "Love is a Danger Zone", ChartType.Single, 17),
-        new Phoenix2ChartClearTitle("[THE PREX3] BOSS BREAKER", "Bee", ChartType.Single, 17),
-        new Phoenix2ChartClearTitle("[EXCEED] SINGLE BOSS BREAKER", "Dignity", ChartType.Single, 21),
-        new Phoenix2ChartClearTitle("[EXCEED] DOUBLE BOSS BREAKER", "Dignity", ChartType.Double, 25),
-        new Phoenix2ChartClearTitle("[EXCEED2] SINGLE BOSS BREAKER", "Canon D", ChartType.Single, 20),
-        new Phoenix2ChartClearTitle("[EXCEED2] DOUBLE BOSS BREAKER", "Canon D", ChartType.Double, 23),
-        new Phoenix2ChartClearTitle("[ZERO] SINGLE BOSS BREAKER", "Love is a Danger Zone pt. 2", ChartType.Single, 22),
-        new Phoenix2ChartClearTitle("[ZERO] DOUBLE BOSS BREAKER", "Love is a Danger Zone pt. 2", ChartType.Double, 24),
-        new Phoenix2ChartClearTitle("[NX] SINGLE BOSS BREAKER", "BEMERA", ChartType.Single, 24),
-        new Phoenix2ChartClearTitle("[NX] DOUBLE BOSS BREAKER", "BEMERA", ChartType.Double, 26),
-        new Phoenix2ChartClearTitle("[NX2] SINGLE BOSS BREAKER", "Banya-P Guitar Remix", ChartType.Single, 23),
-        new Phoenix2ChartClearTitle("[NX2] DOUBLE BOSS BREAKER", "Banya-P Guitar Remix", ChartType.Double, 25),
-        new Phoenix2ChartClearTitle("[NXA] SINGLE BOSS BREAKER", "Final Audition Ep. 2-X", ChartType.Single, 24),
-        new Phoenix2ChartClearTitle("[NXA] DOUBLE BOSS BREAKER", "Final Audition Ep. 2-X", ChartType.Double, 24),
-        new Phoenix2ChartClearTitle("[FIESTA] SINGLE BOSS BREAKER", "Vacuum", ChartType.Single, 23),
-        new Phoenix2ChartClearTitle("[FIESTA] DOUBLE BOSS BREAKER", "Vacuum", ChartType.Double, 25),
-        new Phoenix2ChartClearTitle("[FIESTA EX] SINGLE BOSS BREAKER", "Vacuum Cleaner", ChartType.Single, 25),
-        new Phoenix2ChartClearTitle("[FIESTA EX] DOUBLE BOSS BREAKER", "Vacuum Cleaner", ChartType.Double, 26),
-        new Phoenix2ChartClearTitle("[FIESTA2] SINGLE BOSS BREAKER", "Ignis Fatuus(DM Ashura Mix)", ChartType.Single, 22),
-        new Phoenix2ChartClearTitle("[FIESTA2] DOUBLE BOSS BREAKER", "Ignis Fatuus(DM Ashura Mix)", ChartType.Double, 25),
-        new Phoenix2ChartClearTitle("[PRIME] SINGLE BOSS BREAKER", "Paradoxx", ChartType.Single, 26),
-        new Phoenix2ChartClearTitle("[PRIME] DOUBLE BOSS BREAKER", "Paradoxx", ChartType.Double, 28),
-        new Phoenix2ChartClearTitle("[PRIME2] SINGLE BOSS BREAKER", "Shub Sothoth", ChartType.Single, 25),
-        new Phoenix2ChartClearTitle("[PRIME2] DOUBLE BOSS BREAKER", "Shub Sothoth", ChartType.Double, 27),
-        new Phoenix2ChartClearTitle("[XX] SINGLE BOSS BREAKER", "ERRORCODE: 0", ChartType.Single, 25),
-        new Phoenix2ChartClearTitle("[XX] DOUBLE BOSS BREAKER", "1949", ChartType.Double, 28),
-        new Phoenix2ChartClearTitle("[PHOENIX] SINGLE BOSS BREAKER", "1948", ChartType.Single, 26),
+        new Phoenix2ChartClearTitle("[THE 1ST] BOSS BREAKER", "THE 1ST", "Another Truth", ChartType.Single, 6),
+        new Phoenix2ChartClearTitle("[THE 2ND] BOSS BREAKER", "THE 2ND", "Extravaganza", ChartType.Single, 11),
+        new Phoenix2ChartClearTitle("[THE O.B.G] BOSS BREAKER", "THE O.B.G", "Turkey March", ChartType.Single, 12),
+        new Phoenix2ChartClearTitle("[THE O.B.G SE] BOSS BREAKER", "THE O.B.G SE", "Mr. Larpus", ChartType.Single, 15),
+        new Phoenix2ChartClearTitle("[PERFECT COLLECTION] BOSS BREAKER", "PERFECT COLLECTION", "Slam", ChartType.Single, 18),
+        new Phoenix2ChartClearTitle("[EXTRA] BOSS BREAKER", "EXTRA", "Radetzky Can Can", ChartType.Double, 18),
+        new Phoenix2ChartClearTitle("[THE REBIRTH] BOSS BREAKER", "THE REBIRTH", "Love is a Danger Zone", ChartType.Single, 17),
+        new Phoenix2ChartClearTitle("[THE PREX3] BOSS BREAKER", "THE PREX3", "Bee", ChartType.Single, 17),
+        new Phoenix2ChartClearTitle("[EXCEED] SINGLE BOSS BREAKER", "EXCEED", "Dignity", ChartType.Single, 21),
+        new Phoenix2ChartClearTitle("[EXCEED] DOUBLE BOSS BREAKER", "EXCEED", "Dignity", ChartType.Double, 25),
+        new Phoenix2ChartClearTitle("[EXCEED2] SINGLE BOSS BREAKER", "EXCEED2", "Canon D", ChartType.Single, 20),
+        new Phoenix2ChartClearTitle("[EXCEED2] DOUBLE BOSS BREAKER", "EXCEED2", "Canon D", ChartType.Double, 23),
+        new Phoenix2ChartClearTitle("[ZERO] SINGLE BOSS BREAKER", "ZERO", "Love is a Danger Zone pt. 2", ChartType.Single, 22),
+        new Phoenix2ChartClearTitle("[ZERO] DOUBLE BOSS BREAKER", "ZERO", "Love is a Danger Zone pt. 2", ChartType.Double, 24),
+        new Phoenix2ChartClearTitle("[NX] SINGLE BOSS BREAKER", "NX", "BEMERA", ChartType.Single, 24),
+        new Phoenix2ChartClearTitle("[NX] DOUBLE BOSS BREAKER", "NX", "BEMERA", ChartType.Double, 26),
+        new Phoenix2ChartClearTitle("[NX2] SINGLE BOSS BREAKER", "NX2", "Banya-P Guitar Remix", ChartType.Single, 23),
+        new Phoenix2ChartClearTitle("[NX2] DOUBLE BOSS BREAKER", "NX2", "Banya-P Guitar Remix", ChartType.Double, 25),
+        new Phoenix2ChartClearTitle("[NXA] SINGLE BOSS BREAKER", "NXA", "Final Audition Ep. 2-X", ChartType.Single, 24),
+        new Phoenix2ChartClearTitle("[NXA] DOUBLE BOSS BREAKER", "NXA", "Final Audition Ep. 2-X", ChartType.Double, 24),
+        new Phoenix2ChartClearTitle("[FIESTA] SINGLE BOSS BREAKER", "FIESTA", "Vacuum", ChartType.Single, 23),
+        new Phoenix2ChartClearTitle("[FIESTA] DOUBLE BOSS BREAKER", "FIESTA", "Vacuum", ChartType.Double, 25),
+        new Phoenix2ChartClearTitle("[FIESTA EX] SINGLE BOSS BREAKER", "FIESTA EX", "Vacuum Cleaner", ChartType.Single, 25),
+        new Phoenix2ChartClearTitle("[FIESTA EX] DOUBLE BOSS BREAKER", "FIESTA EX", "Vacuum Cleaner", ChartType.Double, 26),
+        new Phoenix2ChartClearTitle("[FIESTA2] SINGLE BOSS BREAKER", "FIESTA2", "Ignis Fatuus(DM Ashura Mix)", ChartType.Single, 22),
+        new Phoenix2ChartClearTitle("[FIESTA2] DOUBLE BOSS BREAKER", "FIESTA2", "Ignis Fatuus(DM Ashura Mix)", ChartType.Double, 25),
+        new Phoenix2ChartClearTitle("[PRIME] SINGLE BOSS BREAKER", "PRIME", "Paradoxx", ChartType.Single, 26),
+        new Phoenix2ChartClearTitle("[PRIME] DOUBLE BOSS BREAKER", "PRIME", "Paradoxx", ChartType.Double, 28),
+        new Phoenix2ChartClearTitle("[PRIME2] SINGLE BOSS BREAKER", "PRIME2", "Shub Sothoth", ChartType.Single, 25),
+        new Phoenix2ChartClearTitle("[PRIME2] DOUBLE BOSS BREAKER", "PRIME2", "Shub Sothoth", ChartType.Double, 27),
+        new Phoenix2ChartClearTitle("[XX] SINGLE BOSS BREAKER", "XX", "ERRORCODE: 0", ChartType.Single, 25),
+        new Phoenix2ChartClearTitle("[XX] DOUBLE BOSS BREAKER", "XX", "1949", ChartType.Double, 28),
+        new Phoenix2ChartClearTitle("[PHOENIX] SINGLE BOSS BREAKER", "PHOENIX", "1948", ChartType.Single, 26),
         // The "??" stepball on the official page is how the game displays 1948 D29's level, not an
         // unknown one — the D24 and D27 render their numbers normally, so only the D29 counts.
-        new Phoenix2ChartClearTitle("[PHOENIX] DOUBLE BOSS BREAKER", "1948", ChartType.Double, 29),
+        new Phoenix2ChartClearTitle("[PHOENIX] DOUBLE BOSS BREAKER", "PHOENIX", "1948", ChartType.Double, 29),
     };
 
     private static readonly IDictionary<Name, PhoenixTitle> TitleLookup = Titles.ToDictionary(n => n.Name);
@@ -344,6 +350,27 @@ public static class Phoenix2TitleList
         // PUMBILITY as LV.1, at a higher threshold — so each rung's progress starts where
         // the rung below it finished.
         TitleHelpers.LinkLadder(Titles.OfType<Phoenix2PumbilityTitle>(), t => t.Pool);
+
+        // Display rails. A pool is one rail here and one ladder above, which is the exception
+        // rather than the rule — see Title.Ladder. A skill track's ten chart-grade rungs and
+        // its EXPERT capstone share a Category, so one pass rails both; boss-breaker and basic
+        // titles take their rail at construction.
+        TitleHelpers.Rail(Titles.OfType<Phoenix2PumbilityTitle>(), t => (Name?)PoolRail(t.Pool));
+        TitleHelpers.Rail(Titles.Where(t => SkillCategories.Contains(t.Category)),
+            t => (Name?)t.Category);
+        TitleHelpers.Rail(Titles.OfType<Phoenix2ChartClearTitle>(), t => t.Mix,
+            t => t.Type == ChartType.Single ? 0 : 1);
+    }
+
+    /// <summary>The rail name for a pool — the prefix its titles already wear.</summary>
+    private static Name PoolRail(PumbilityPool pool)
+    {
+        return pool switch
+        {
+            PumbilityPool.Singles => "[S]",
+            PumbilityPool.Doubles => "[D]",
+            _ => "[P.B]"
+        };
     }
 
     public static PhoenixTitle GetTitleByName(Name name)

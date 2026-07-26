@@ -17,11 +17,18 @@ namespace ScoreTracker.Domain.Models.Titles.Phoenix
             1)
         {
             SongName = songName;
+            Mix = mix;
             _chartType = chartType;
             _level = level;
         }
 
         public Name SongName { get; }
+
+        /// <summary>The mix whose boss chart this title asks for — the rail it sits on.</summary>
+        public Name Mix { get; }
+
+        /// <summary>Which of the mix's two boss charts this is — the rail orders single first.</summary>
+        public ChartType Type => _chartType;
 
         public override bool PopulatesFromDatabase => false;
 
