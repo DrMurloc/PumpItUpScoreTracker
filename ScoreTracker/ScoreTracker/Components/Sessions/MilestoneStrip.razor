@@ -51,7 +51,7 @@
         var lamp = detail.IsLamp ? " 🎉" : string.Empty;
         return detail.GradeText == null
             ? $"{detail.Folder} — {detail.CompletionText}{lamp}"
-            : $"{detail.Folder} — {detail.CompletionText} {L["at"]} {detail.GradeText}{lamp}";
+            : L["{0} — {1} at {2}", detail.Folder, detail.CompletionText, detail.GradeText] + lamp;
     }
 
     private string FolderFloor()

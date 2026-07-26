@@ -5888,4 +5888,46 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Pasa {0} charts con {1} o mejor (solo {2} en este folder)</value>
   </data>
+  <data name="Add folder" xml:space="preserve">
+    <value>Agregar carpeta</value>
+  </data>
+  <data name="Backfill Folder Levels" xml:space="preserve">
+    <value>Rellenar niveles de carpeta</value>
+  </data>
+  <data name="Folder level backfill queued" xml:space="preserve">
+    <value>Relleno de niveles de carpeta en cola</value>
+  </data>
+  <data name="LAMP" xml:space="preserve">
+    <value>LAMP</value>
+  </data>
+  <data name="Pick the folders you're working on." xml:space="preserve">
+    <value>Elige las carpetas en las que estás trabajando.</value>
+  </data>
+  <data name="**{0}** at {1}" xml:space="preserve">
+    <value>**{0}** con {1}</value>
+  </data>
+  <data name="{0} — {1} at {2}" xml:space="preserve">
+    <value>{0} — {1} con {2}</value>
+  </data>
+  <data name="{0} now {1}" xml:space="preserve">
+    <value>{0} ahora {1}</value>
+  </data>
+  <data name="{0} of {1} charts" xml:space="preserve">
+    <value>{0} de {1} charts</value>
+  </data>
+  <data name="{0} of {1} charts ({2}%)" xml:space="preserve">
+    <value>{0} de {1} charts ({2}%)</value>
+  </data>
+  <data name="{0} of {1} charts, averaging {2}" xml:space="preserve">
+    <value>{0} de {1} charts, promedio {2}</value>
+  </data>
+  <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
+    <value>{0} de {1} · {2} para el Folder Lamp</value>
+  </data>
+  <data name="{0}% complete" xml:space="preserve">
+    <value>{0}% completado</value>
+  </data>
+  <data name="{0}% of {1}" xml:space="preserve">
+    <value>{0}% de {1}</value>
+  </data>
 </root>

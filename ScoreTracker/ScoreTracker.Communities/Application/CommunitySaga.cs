@@ -657,9 +657,10 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var detail = FolderProgressDetail.TryParse(m.Detail);
         if (detail == null) return $"📈 {m.Detail}";
 
-        var line = $"{(detail.IsLamp ? "🎉" : "📈")} #DIFFICULTY|{detail.Folder}# **{detail.CompletionText}**";
-        if (detail.GradeText != null)
-            line += " " + _localizer.Get(culture, "at {0}", detail.GradeText);
+        var body = detail.GradeText == null
+            ? $"**{detail.CompletionText}**"
+            : _localizer.Get(culture, "**{0}** at {1}", detail.CompletionText, detail.GradeText);
+        var line = $"{(detail.IsLamp ? "🎉" : "📈")} #DIFFICULTY|{detail.Folder}# {body}";
         return detail.IsLamp ? line + " 🎉" : line;
     }
 

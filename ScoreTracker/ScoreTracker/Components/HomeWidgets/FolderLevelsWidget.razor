@@ -150,8 +150,8 @@ else
         ? "var(--unplayed-grade)"
         : MixThemes.GradeVar(level.Grade.Value);
 
-    private string GradeText(FolderLevelRecord level) =>
-        level.Grade?.GetName() ?? L["—"].Value;
+    // An em dash needs no translation, and a folder with nothing played has no grade to show.
+    private static string GradeText(FolderLevelRecord level) => level.Grade?.GetName() ?? "—";
 
     private string CompletionText(FolderLevelRecord level) =>
         level.IsLamped ? L["Folder Lamp"].Value : L["{0}% complete", level.CompletionPercent].Value;

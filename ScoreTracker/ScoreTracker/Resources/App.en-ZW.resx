@@ -5934,4 +5934,46 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Mrgl {0} mrgl {1} grblgl (mrgl {2} rgllgl mrgl)</value>
   </data>
+  <data name="Add folder" xml:space="preserve">
+    <value>Add folder</value>
+  </data>
+  <data name="Backfill Folder Levels" xml:space="preserve">
+    <value>Backfill Folder Levels</value>
+  </data>
+  <data name="Folder level backfill queued" xml:space="preserve">
+    <value>Folder level backfill queued</value>
+  </data>
+  <data name="LAMP" xml:space="preserve">
+    <value>LAMP</value>
+  </data>
+  <data name="Pick the folders you're working on." xml:space="preserve">
+    <value>Pick the folders you're working on.</value>
+  </data>
+  <data name="**{0}** at {1}" xml:space="preserve">
+    <value>**{0}** at {1}</value>
+  </data>
+  <data name="{0} — {1} at {2}" xml:space="preserve">
+    <value>{0} — {1} at {2}</value>
+  </data>
+  <data name="{0} now {1}" xml:space="preserve">
+    <value>{0} now {1}</value>
+  </data>
+  <data name="{0} of {1} charts" xml:space="preserve">
+    <value>{0} of {1} charts</value>
+  </data>
+  <data name="{0} of {1} charts ({2}%)" xml:space="preserve">
+    <value>{0} of {1} charts ({2}%)</value>
+  </data>
+  <data name="{0} of {1} charts, averaging {2}" xml:space="preserve">
+    <value>{0} of {1} charts, averaging {2}</value>
+  </data>
+  <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
+    <value>{0} of {1} · {2} to Folder Lamp</value>
+  </data>
+  <data name="{0}% complete" xml:space="preserve">
+    <value>{0}% complete</value>
+  </data>
+  <data name="{0}% of {1}" xml:space="preserve">
+    <value>{0}% of {1}</value>
+  </data>
 </root>
