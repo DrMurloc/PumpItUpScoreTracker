@@ -6945,6 +6945,31 @@ button.chart-card-art {
     gap: 6px;
 }
 
+/* What did NOT move is part of the answer, so it is always shown rather than hidden
+   behind a toggle. */
+.mc-unchanged {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mc-unchanged-label {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: .72rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.mc-unchanged-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    align-items: center;
+}
+
 /* Note counts line up as a column across rows, so they get tabular figures. */
 .mc-notes {
     font-variant-numeric: tabular-nums;
@@ -7194,16 +7219,45 @@ button.chart-card-art {
     gap: 7px;
     text-align: left;
     color: inherit;
+    min-width: 0;
+}
+
+/* Jacket art is a ~16:9 banner. A fixed height sizes the width from the aspect and
+   overflows a fluid card, so the box owns the geometry and the image is bounded to it. */
+.mc-sticker-art {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--mix-surface-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mc-sticker-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* The one thing on a sticker worth clicking. */
+.mc-ball {
+    background: none;
+    border: 0;
+    padding: 0;
+    line-height: 0;
     cursor: pointer;
+    border-radius: 3px;
 }
 
-.mc-sticker:hover {
-    border-color: color-mix(in srgb, var(--mix-primary) 45%, transparent);
+.mc-ball:hover {
+    filter: brightness(1.25);
 }
 
-.mc-sticker:focus-visible {
+.mc-ball:focus-visible {
     outline: 2px solid var(--mix-primary);
-    outline-offset: 2px;
+    outline-offset: 1px;
 }
 
 /* Dimming the card is what says "gone" — desaturating the bubbles instead would cost the

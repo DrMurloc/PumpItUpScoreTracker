@@ -151,10 +151,14 @@ internal sealed class EFChartRepository : IChartRepository
         ClearCache();
     }
 
-    public async Task UpdateNoteCount(Guid chartId, int noteCount, CancellationToken cancellationToken = default)
+    public async Task UpdateNoteCount(MixEnum mix, Guid chartId, int noteCount,
+        CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixIds.Phoenix;
+        // The observed mix, not a hardcoded Phoenix. Writing every observation onto the
+        // Phoenix row meant a Phoenix 2 note count could never be recorded against Phoenix 2
+        // — so a re-step between the two was undetectable by construction.
+        var mixId = MixIds.For(mix);
         var entity =
             await database.ChartMix.FirstOrDefaultAsync(c => c.ChartId == chartId && c.MixId == mixId,
                 cancellationToken);
@@ -162,9 +166,9 @@ internal sealed class EFChartRepository : IChartRepository
         entity.NoteCount = noteCount;
         await database.SaveChangesAsync(cancellationToken);
 
-        var cache = await GetAllCharts(MixEnum.Phoenix, cancellationToken);
-        var chart = cache[chartId];
-        cache[chartId] = chart with { Id = chartId, NoteCount = noteCount };
+        var cache = await GetAllCharts(mix, cancellationToken);
+        if (cache.TryGetValue(chartId, out var chart))
+            cache[chartId] = chart with { Id = chartId, NoteCount = noteCount };
     }
 
 

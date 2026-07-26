@@ -81,27 +81,20 @@
             </div>
         }
 
-        @if (Answer.Moves.Any() && Answer.Unchanged.Any())
+        @* Always open, never a toggle: what did NOT move is part of the answer, and one extra
+           row of bubbles is cheaper than a control that hides it. *@
+        @if (Answer.Verdict is not (MixChangeVerdict.Arrived or MixChangeVerdict.Departed)
+             && Answer.Unchanged.Any())
         {
-            <div class="mc-quiet">
-                <button type="button" class="mc-linkish" @onclick="() => _showUnchanged = !_showUnchanged">
-                    @L["{0} other charts unchanged", Answer.Unchanged.Count]
-                </button>
-            </div>
-            @if (_showUnchanged)
-            {
-                <div class="mc-moves">
+            <div class="mc-unchanged">
+                <span class="mc-unchanged-label">@L["Unchanged Charts:"]</span>
+                <span class="mc-unchanged-list">
                     @foreach (var chart in Answer.Unchanged)
                     {
-                        <span class="mc-move"><DifficultyBubble Chart="chart" Small="true"></DifficultyBubble></span>
+                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
                     }
-                </div>
-            }
-        }
-
-        @if (LinkTarget != null)
-        {
-            <a class="mc-linkish" href="@LinkTarget.CanonicalPath()">@L["Open the chart page"]</a>
+                </span>
+            </div>
         }
     </div>
 </div>
@@ -110,13 +103,6 @@
     [Parameter] [EditorRequired] public MixChangesAnswerModel Answer { get; set; } = null!;
     [Parameter] public MixEnum From { get; set; }
     [Parameter] public MixEnum To { get; set; }
-
-    private bool _showUnchanged;
-
-    protected override void OnParametersSet()
-    {
-        _showUnchanged = false;
-    }
 
     private string VerdictClass => Answer.Verdict switch
     {
@@ -136,8 +122,6 @@
         MixChangeVerdict.Unchanged => Answer.PinnedAfter != null ? new[] { Answer.PinnedAfter } : Array.Empty<Chart>(),
         _ => Array.Empty<Chart>()
     };
-
-    private Chart? LinkTarget => Answer.PinnedAfter ?? Answer.PinnedBefore;
 
     private bool IsPinned(MixDiffMoveRecord move)
     {

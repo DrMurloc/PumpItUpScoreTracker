@@ -9,6 +9,7 @@ using Moq;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -40,6 +41,8 @@ public sealed class MixChangesPageTests : ComponentTestBase
         settings.Setup(s => s.GetSelectedMix()).ReturnsAsync(MixEnum.Phoenix2);
         Services.AddSingleton(settings.Object);
         Services.AddSingleton(_mediator.Object);
+        // The sticker sheets mount ChartDetailsDialog (closed) so a chart ball can open it.
+        Services.AddSingleton(Mock.Of<IAdminNotificationClient>());
         this.RenderInteractive();
     }
 
@@ -223,7 +226,7 @@ public sealed class MixChangesPageTests : ComponentTestBase
         // old page could only express it as absence from three lists.
         var (_, _, unchanged) = SetupIoliteSky();
 
-        var model = MixChangesAnswerModel.For(unchanged,
+        var model = MixChangesAnswerModel.For("Iolite Sky", unchanged,
             new Dictionary<Name, Chart[]>
                 { ["Iolite Sky"] = new[] { Make(_still, "Iolite Sky", ChartType.Single, 16, MixEnum.Phoenix) } },
             new Dictionary<Name, Chart[]> { ["Iolite Sky"] = new[] { unchanged } });
@@ -370,7 +373,7 @@ public sealed class MixChangesPageTests : ComponentTestBase
         var before = Make(id, "Iolite Sky", ChartType.Double, 20, MixEnum.Phoenix);
         var after = Make(id, "Iolite Sky", ChartType.Double, 20, MixEnum.Phoenix2) with { NoteCount = 1012 };
 
-        var model = MixChangesAnswerModel.For(after,
+        var model = MixChangesAnswerModel.For("Iolite Sky", after,
             new Dictionary<Name, Chart[]> { ["Iolite Sky"] = new[] { before } },
             new Dictionary<Name, Chart[]> { ["Iolite Sky"] = new[] { after } });
 
@@ -379,48 +382,37 @@ public sealed class MixChangesPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void PickingAChartFromTheSearchAnswersForIt()
+    public void PickingASongFromTheSearchAnswersForTheWholeSong()
     {
-        // ChartSelector hands back a plain Func, not an EventCallback, so nothing re-renders
-        // on its own. This is the path that was silently dead: the row click worked because
-        // it is the page's own @onclick.
-        var (_, afterMoved, _) = SetupIoliteSky();
-
-        var page = RenderPage();
-        var selector = page.FindComponent<ChartSelector>();
-        page.InvokeAsync(() => selector.Instance.ChartIdSelected(afterMoved)).GetAwaiter().GetResult();
-
-        Assert.Contains("Moved up — D20 is now D21.", page.Find(".mc-verdict").TextContent);
-    }
-
-    [Fact]
-    public void TheSearchOffersAMovedChartUnderBothItsOldAndNewDifficulty()
-    {
-        // A rerated chart appears once per mix under different difficulties, so either name
-        // finds it — and the mix suffix is what tells the two entries apart.
+        // The search knows the song, not the chart, so the answer summarises rather than
+        // naming one chart. This whole path was silently dead once — see SongSelector's
+        // EventCallback note.
         SetupIoliteSky();
 
         var page = RenderPage();
-        var selector = page.FindComponent<ChartSelector>();
+        var selector = page.FindComponent<SongSelector>();
+        page.InvokeAsync(() => selector.Instance.SongSelected.InvokeAsync("Iolite Sky"))
+            .GetAwaiter().GetResult();
 
-        Assert.True(selector.Instance.ShowMix);
-        var names = selector.Instance.Charts!.Select(c => $"{c.Song.Name} {c.DifficultyString} {c.Mix}").ToArray();
-        Assert.Contains("Iolite Sky D20 Phoenix", names);
-        Assert.Contains("Iolite Sky D21 Phoenix2", names);
+        Assert.Contains("1 of 2 charts moved.", page.Find(".mc-verdict").TextContent);
     }
 
     [Fact]
-    public void TheSearchLeavesOutChartsNothingHappenedTo()
+    public void OnlySongsWithAChangedChartAreOffered()
     {
-        // Iolite Sky S16 held its level in both mixes. Offering it would be ~9,000
-        // suggestions of "nothing changed" for a page that cannot say anything about them.
-        SetupIoliteSky();
+        // The answer is about a whole song, so the search is too — and offering the full
+        // catalog meant thousands of suggestions that resolve to "nothing changed".
+        var untouchedBefore = Make(Guid.NewGuid(), "Conflict", ChartType.Single, 12, MixEnum.Phoenix);
+        var untouchedAfter = Make(Guid.NewGuid(), "Conflict", ChartType.Single, 12, MixEnum.Phoenix2);
+        var (beforeMoved, _, stillAfter) = SetupIoliteSky();
+        Catalog(MixEnum.Phoenix, beforeMoved, untouchedBefore);
+        Catalog(MixEnum.Phoenix2, stillAfter, untouchedAfter);
 
         var page = RenderPage();
-        var charts = page.FindComponent<ChartSelector>().Instance.Charts!.ToArray();
+        var songs = page.FindComponent<SongSelector>().Instance.Songs
+            .Select(s => s.Name.ToString()).ToArray();
 
-        Assert.DoesNotContain(charts, c => c.Type == ChartType.Single && c.Level == 16);
-        Assert.All(charts, c => Assert.Equal("Iolite Sky", c.Song.Name.ToString()));
+        Assert.Equal(new[] { "Iolite Sky" }, songs);
     }
 
     [Fact]
@@ -436,11 +428,25 @@ public sealed class MixChangesPageTests : ComponentTestBase
             Array.Empty<Chart>(), Array.Empty<Chart>(), Array.Empty<MixDiffMoveRecord>()));
 
         var page = RenderPage();
-        var songs = page.FindComponent<ChartSelector>().Instance.Charts!
-            .Select(c => c.Song.Name.ToString()).ToArray();
+        var songs = page.FindComponent<SongSelector>().Instance.Songs
+            .Select(s => s.Name.ToString()).ToArray();
 
         Assert.Contains("Freedom Dive", songs);
         Assert.Contains("Nxde", songs);
+    }
+
+    [Fact]
+    public void UnchangedChartsAreListedOutrightRatherThanHiddenBehindACount()
+    {
+        SetupIoliteSky();
+
+        var page = RenderPage();
+        page.Find(".mc-row").Click();
+
+        // Iolite Sky S16 held its level; the answer says so with its bubble, no toggle.
+        Assert.Contains("Unchanged Charts:", page.Find(".mc-unchanged").TextContent);
+        Assert.Single(page.FindAll(".mc-unchanged-list img"));
+        Assert.DoesNotContain("Open the chart page", page.Markup);
     }
 
     [Fact]

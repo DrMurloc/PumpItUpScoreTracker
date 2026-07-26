@@ -52,10 +52,9 @@
        chart search, fed both catalogs — a song that left is not in the later mix's list, and
        a rerated chart is findable under either its old or its new difficulty. *@
     <div class="mc-lookup">
-        <ChartSelector Charts="_lookupCharts" Mix="_to" Label="" ShowMix="true"
-                       Placeholder="@L["Find a chart — e.g. Iolite Sky D20"].Value"
-                       Variant="Variant.Outlined" Margin="Margin.Dense"
-                       ChartIdSelected="Answer"></ChartSelector>
+        <SongSelector Songs="_lookupSongs" Label=""
+                      Placeholder="@L["Find a song — e.g. Iolite Sky"].Value"
+                      SongSelected="AnswerForSong"></SongSelector>
         @if (_answer != null)
         {
             <MixChangesAnswer Answer="_answer" From="_from" To="_to"></MixChangesAnswer>
@@ -64,7 +63,7 @@
         {
             @* Says what the field covers, so a song that returns nothing reads as an answer
                rather than a dead end. *@
-            <div class="mc-hint">@L["Only charts that changed are listed. Add a difficulty to jump straight to one."]</div>
+            <div class="mc-hint">@L["Only songs with a changed chart are listed."]</div>
         }
     </div>
 
@@ -182,12 +181,12 @@
             else if (_tab == Tab.Arrived)
             {
                 <MixChangesSongSheet Songs="_diff.ArrivedSongs" LooseCharts="_diff.AddedCharts"
-                                     Departed="false" Mix="_to" OnChart="Answer"></MixChangesSongSheet>
+                                     Departed="false" Mix="_to"></MixChangesSongSheet>
             }
             else if (_tab == Tab.Left)
             {
                 <MixChangesSongSheet Songs="_diff.DepartedSongs" LooseCharts="_diff.RemovedCharts"
-                                     Departed="true" Mix="_from" OnChart="Answer"></MixChangesSongSheet>
+                                     Departed="true" Mix="_from"></MixChangesSongSheet>
             }
             else
             {
@@ -263,7 +262,7 @@
     private string? _notice;
 
     private MixDiffRecord _diff = MixDiffRecord.Empty(MixEnum.Phoenix, MixEnum.Phoenix2);
-    private Chart[] _lookupCharts = Array.Empty<Chart>();
+    private Song[] _lookupSongs = Array.Empty<Song>();
     private IReadOnlyDictionary<Name, Chart[]> _beforeBySong = new Dictionary<Name, Chart[]>();
     private IReadOnlyDictionary<Name, Chart[]> _afterBySong = new Dictionary<Name, Chart[]>();
     private MixChangesAnswerModel? _answer;
@@ -324,7 +323,7 @@
         if (_from == _to)
         {
             _diff = MixDiffRecord.Empty(_from, _to);
-            _lookupCharts = Array.Empty<Chart>();
+            _lookupSongs = Array.Empty<Song>();
             _loading = false;
             return;
         }
@@ -333,25 +332,27 @@
         var after = (await Mediator.Send(new GetChartsQuery(_to))).ToArray();
         _diff = await Mediator.Send(new GetMixDiffQuery(_from, _to));
 
-        // Only what the diff touched. Searching the whole catalog meant ~9,000 suggestions
-        // of which all but a few hundred resolve to "nothing changed" — and a chart that
-        // moved is offered under both its old and its new difficulty, so either one finds
-        // it. Arrivals and departures are in here too: a song that left is a thing that
-        // happened to it, and leaving it out would answer "no such song" for a song the
-        // earlier mix plainly has.
-        _lookupCharts = _diff.Rerated.Select(m => m.After)
+        // Only the songs the diff touched. The answer is about a whole song, so the search
+        // is too — and offering the full catalog meant thousands of suggestions that resolve
+        // to "nothing changed". Arrivals and departures are in scope: a song that left is a
+        // thing that happened to it, and leaving it out would answer "no such song" for a
+        // song the earlier mix plainly has.
+        var touched = _diff.Rerated.Select(m => m.After)
             .Concat(_diff.Restepped.Select(m => m.After))
             .Concat(_diff.ArrivedSongs.SelectMany(s => s.Charts))
             .Concat(_diff.AddedCharts)
-            .Concat(_diff.Rerated.Select(m => m.Before))
-            .Concat(_diff.Restepped.Select(m => m.Before))
             .Concat(_diff.DepartedSongs.SelectMany(s => s.Charts))
             .Concat(_diff.RemovedCharts)
+            .ToArray();
+        _lookupSongs = touched
+            .GroupBy(c => c.Song.Name)
+            .Select(g => g.First().Song)
+            .OrderBy(s => s.Name.ToString(), StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
         // Answering needs a song's whole line-up, unchanged charts included — but only for
         // songs something can be asked about, which is exactly the songs above.
-        var asked = _lookupCharts.Select(c => c.Song.Name).ToHashSet();
+        var asked = touched.Select(c => c.Song.Name).ToHashSet();
         _beforeBySong = before.Where(c => asked.Contains(c.Song.Name))
             .GroupBy(c => c.Song.Name).ToDictionary(g => g.Key, g => g.ToArray());
         _afterBySong = after.Where(c => asked.Contains(c.Song.Name))
@@ -448,13 +449,16 @@
         return new FolderKey(move.After.Type, _groupByDestination ? move.After.Level : move.Before.Level);
     }
 
-    // ChartSelector hands back a plain Func, not an EventCallback, so nothing re-renders on
-    // its own — the answer card only appears if this asks for it.
-    private Task Answer(Chart chart)
+    /// <summary>A row knows which chart you meant, so the answer names that chart.</summary>
+    private void Answer(Chart chart)
     {
-        _answer = MixChangesAnswerModel.For(chart, _beforeBySong, _afterBySong);
-        StateHasChanged();
-        return Task.CompletedTask;
+        _answer = MixChangesAnswerModel.For(chart.Song.Name, chart, _beforeBySong, _afterBySong);
+    }
+
+    /// <summary>The search only knows the song, so the answer summarises it.</summary>
+    private void AnswerForSong(Name song)
+    {
+        _answer = MixChangesAnswerModel.For(song, null, _beforeBySong, _afterBySong);
     }
 
     private sealed record FolderKey(ChartType Type, int Level)

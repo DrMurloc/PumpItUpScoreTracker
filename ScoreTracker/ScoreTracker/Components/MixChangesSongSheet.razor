@@ -5,7 +5,9 @@
 
 @* Arrivals and departures as a sticker sheet — players recognise jacket art faster than
    song names (UX rule 2), and a departing song reads as gone by being dimmed rather than
-   by having its bubbles greyed, which would cost the red-Single/green-Double read. *@
+   by having its bubbles greyed, which would cost the red-Single/green-Double read.
+   The card itself is inert: it already says everything it knows. The charts are the
+   clickable part, and they open the shared details dialog. *@
 <div class="mc-sheet">
     <MudAlert Severity="Severity.Info" Dense="true" Class="mc-notice">
         @if (Departed)
@@ -22,18 +24,24 @@
     <div class="mc-stickers">
         @foreach (var song in Songs)
         {
-            <button type="button" class="mc-sticker @(Departed ? "mc-sticker-gone" : "")"
-                    @onclick="() => Pick(song.Charts[0])">
-                <SongImage Song="song.Song" Height="120"></SongImage>
+            <div class="mc-sticker @(Departed ? "mc-sticker-gone" : "")">
+                @* Jacket art is a ~16:9 banner, so a fixed height overflows a fluid card.
+                   The box sets the aspect and the image is bounded to it. *@
+                <div class="mc-sticker-art">
+                    <SongImage Song="song.Song"></SongImage>
+                </div>
                 <span class="mc-sticker-name">@song.Song.Name</span>
                 <span class="mc-sticker-artist">@song.Song.Artist</span>
                 <span class="mc-sticker-strip">
                     @foreach (var chart in song.Charts)
                     {
-                        <DifficultyBubble Chart="chart" Height="20"></DifficultyBubble>
+                        <button type="button" class="mc-ball" title="@chart.DifficultyDisplay"
+                                @onclick="() => Open(chart)">
+                            <DifficultyBubble Chart="chart" Height="20"></DifficultyBubble>
+                        </button>
                     }
                 </span>
-            </button>
+            </div>
         }
     </div>
 
@@ -49,7 +57,7 @@
             </h3>
             @foreach (var chart in LooseCharts)
             {
-                <button type="button" class="mc-row" @onclick="() => Pick(chart)">
+                <button type="button" class="mc-row" @onclick="() => Open(chart)">
                     <SongImage Song="chart.Song" Small="true"></SongImage>
                     <span class="mc-name">@chart.Song.Name</span>
                     <span class="mc-tail">
@@ -61,15 +69,20 @@
     }
 </div>
 
+<ChartDetailsDialog @bind-Visible="_open" Chart="_chart" Mix="Mix"></ChartDetailsDialog>
+
 @code {
     [Parameter] [EditorRequired] public IReadOnlyList<MixDiffSongRecord> Songs { get; set; } = Array.Empty<MixDiffSongRecord>();
     [Parameter] public IReadOnlyList<Chart> LooseCharts { get; set; } = Array.Empty<Chart>();
     [Parameter] public bool Departed { get; set; }
     [Parameter] public MixEnum Mix { get; set; }
-    [Parameter] public EventCallback<Chart> OnChart { get; set; }
 
-    private Task Pick(Chart chart)
+    private bool _open;
+    private Chart? _chart;
+
+    private void Open(Chart chart)
     {
-        return OnChart.InvokeAsync(chart);
+        _chart = chart;
+        _open = true;
     }
 }

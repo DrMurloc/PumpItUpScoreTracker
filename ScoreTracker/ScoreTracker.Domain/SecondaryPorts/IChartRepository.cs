@@ -47,7 +47,12 @@ public interface IChartRepository
     Task UpdateChart(Guid chartId, Name stepArtist,
         CancellationToken cancellationToken = default);
 
-    Task UpdateNoteCount(Guid chartId, int noteCount, CancellationToken cancellationToken = default);
+    /// <summary>
+    ///     Records an observed note count against the mix it was observed in. A chart's note
+    ///     count is per-mix: the same chart can be re-stepped between mixes, which is the
+    ///     whole reason /MixChanges can ask the question.
+    /// </summary>
+    Task UpdateNoteCount(MixEnum mix, Guid chartId, int noteCount, CancellationToken cancellationToken = default);
     Task<IEnumerable<ChartSkillsRecord>> GetChartSkills(CancellationToken cancellationToken = default);
     Task SaveChartSkills(ChartSkillsRecord record, CancellationToken cancellationToken = default);
 

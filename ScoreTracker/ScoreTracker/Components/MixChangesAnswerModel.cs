@@ -1,4 +1,5 @@
 using ScoreTracker.Catalog.Contracts;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -51,11 +52,14 @@ public sealed record MixChangesAnswerModel(
     public int? PinnedNoteDelta => Restepped
         .FirstOrDefault(m => PinnedAfter != null && m.After.Id == PinnedAfter.Id)?.NoteDelta;
 
-    public static MixChangesAnswerModel For(Chart selected,
+    /// <summary>
+    ///     The answer for a song. <paramref name="pinned" /> narrows it to one chart — a row
+    ///     click knows which chart you meant, the song search does not.
+    /// </summary>
+    public static MixChangesAnswerModel For(Name name, Chart? pinned,
         IReadOnlyDictionary<Name, Chart[]> beforeBySong,
         IReadOnlyDictionary<Name, Chart[]> afterBySong)
     {
-        var name = selected.Song.Name;
         var before = beforeBySong.TryGetValue(name, out var b) ? b : Array.Empty<Chart>();
         var after = afterBySong.TryGetValue(name, out var a) ? a : Array.Empty<Chart>();
 
@@ -76,10 +80,8 @@ public sealed record MixChangesAnswerModel(
         var lost = beforeById.Values.Where(c => !afterById.ContainsKey(c.Id))
             .OrderBy(c => c.Type).ThenBy(c => c.Level).ToArray();
 
-        // The selector hands back one chart, so the answer can name that chart specifically
-        // rather than summarising the song.
-        var pinnedBefore = beforeById.GetValueOrDefault(selected.Id);
-        var pinnedAfter = afterById.GetValueOrDefault(selected.Id);
+        var pinnedBefore = pinned == null ? null : beforeById.GetValueOrDefault(pinned.Id);
+        var pinnedAfter = pinned == null ? null : afterById.GetValueOrDefault(pinned.Id);
 
         var restepped = afterById.Values
             .Where(c => beforeById.ContainsKey(c.Id))
@@ -89,7 +91,8 @@ public sealed record MixChangesAnswerModel(
             .ToArray();
 
         var verdict = VerdictFor(before, after, pinnedBefore, pinnedAfter, moves.Length);
-        var song = (after.FirstOrDefault() ?? before.FirstOrDefault() ?? selected).Song;
+        var song = (after.FirstOrDefault() ?? before.FirstOrDefault() ?? pinned)?.Song
+                   ?? new Song(name, SongType.Arcade, new Uri("about:blank"), TimeSpan.Zero, name, null);
 
         return new MixChangesAnswerModel(song, verdict, pinnedBefore, pinnedAfter, moves, unchanged,
             gained, lost, Math.Max(before.Length, after.Length), restepped);
