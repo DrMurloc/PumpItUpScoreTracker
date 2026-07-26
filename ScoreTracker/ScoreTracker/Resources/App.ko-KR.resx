@@ -2574,6 +2574,9 @@
   <data name="Passed in another mix" xml:space="preserve">
     <value>다른 시리즈에서 패스함</value>
   </data>
+  <data name="Show Passed in Another Mix" xml:space="preserve">
+    <value>다른 시리즈에서 패스함 표시</value>
+  </data>
   <data name="Remove from ToDo List" xml:space="preserve">
     <value>ToDo 목록에서 제거</value>
   </data>
