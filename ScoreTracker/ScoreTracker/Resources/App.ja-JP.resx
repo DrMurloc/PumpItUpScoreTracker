@@ -329,9 +329,6 @@
   <data name="Progress" xml:space="preserve">
     <value>進捗</value>
   </data>
-  <data name="Progress Charts" xml:space="preserve">
-    <value>進捗中の譜面</value>
-  </data>
   <data name="Public" xml:space="preserve">
     <value>公開</value>
     
@@ -1289,12 +1286,6 @@
   <data name="Best Attempts" xml:space="preserve">
 	  <value>最高試行</value>
   </data>
-  <data name="XX Progress" xml:space="preserve">
-	  <value>XX進捗</value>
-  </data>
-  <data name="Share Your Progress Page" xml:space="preserve">
-	  <value>進捗ページを共有</value>
-  </data>
   <data name="Overview" xml:space="preserve">
 	  <value>概要</value>
   </data>
@@ -1320,18 +1311,6 @@
   <data name="Unpassed" xml:space="preserve">
 	  <value>未クリア</value>
   </data>
-  <data name="Overall Letters" xml:space="preserve">
-	  <value>総合ランク</value>
-  </data>
-  <data name="Overall Passes" xml:space="preserve">
-	  <value>総合クリア</value>
-  </data>
-  <data name="Difficulty Letters" xml:space="preserve">
-	  <value>難度ランク</value>
-  </data>
-  <data name="Difficulty Passes" xml:space="preserve">
-	  <value>難度別クリア</value>
-  </data>
   <data name="Share Url" xml:space="preserve">
 	  <value>共有URL</value>
   </data>
@@ -1343,9 +1322,6 @@
   </data>
   <data name="Pass" xml:space="preserve">
 	  <value>クリア</value>
-  </data>
-  <data name="Difficulty Progress" xml:space="preserve">
-	  <value>難度進捗</value>
   </data>
   <data name="Passes" xml:space="preserve">
 	  <value>クリア</value>
@@ -1362,14 +1338,8 @@
   <data name="Avg Plate" xml:space="preserve">
 	  <value>平均プレート</value>
   </data>
-  <data name="Passes By Level" xml:space="preserve">
-	  <value>レベル別クリア</value>
-  </data>
   <data name="Remaining" xml:space="preserve">
 	  <value>残り</value>
-  </data>
-  <data name="Score Distribution Lines" xml:space="preserve">
-	  <value>スコア分布ライン</value>
   </data>
   <data name="Score Distribution" xml:space="preserve">
 	  <value>スコア分布</value>

@@ -18,16 +18,29 @@ Mock (interactive config flow, fake data): https://claude.ai/code/artifact/77692
 
 ## What it is
 
-A single, fully configurable per-level graph — "the [`/Phoenix/Progress`](../../../ScoreTracker/ScoreTracker/Pages/Progress/PhoenixProgress.razor)
-and [`/Progress`](../../../ScoreTracker/ScoreTracker/Pages/Progress/Progress.razor) pages made
+A single, fully configurable per-level graph — "the `/Phoenix/Progress` and `/Progress` pages made
 composable and dropped on the home page." A player picks a **scope**, a **metric**, and an
 **aggregation**, and the graph follows. **One widget = one graph** (owner) — compose a wall of them by
 adding more widgets, never by tiling sub-charts inside one.
 
 **~95% presentation.** Zero new domain, application, data, or migration code. The data layer is the same
-set of published queries the Progress pages already call. The only genuinely new logic is a pure
+set of published queries the Progress pages called. The only genuinely new logic is a pure
 aggregator (percentiles, standard deviation, completion %). No precompute — live pull, refresh paused in
 edit mode (D14).
+
+**The Progress pages are retired (2026-07-26).** `/Phoenix/Progress` and `/Progress` — the "Player Stats"
+nav item — are deleted; this widget is their replacement. Three of the four Phoenix tabs mapped onto
+existing presets exactly (Passes By Level → Clear Progress, Score Distribution Lines → Score
+Distribution, Singles vs Doubles → Singles vs Doubles), and the XX bar tabs onto Grade Distribution /
+Clear Progress. Four things went with the pages rather than being ported, on the owner's call — new
+widgets get built if players ask for them by name:
+
+- **Rating per folder** — accrued `BaseRating x grade modifier` against the SSS+ ceiling. No
+  `BreakdownMetric` covers it; `/Titles` shows the same raw material as title thresholds.
+- **All-levels totals** — the table's Total row and the two XX pies. This widget is strictly per-level.
+- **Tabular presentation** — exact per-level numbers at a glance. This widget is graph-only.
+- **Viewing another player** — the pages' share link (`/{userId}/Phoenix/Progress`). Widgets are
+  self-only by construction; no widget takes a target user.
 
 ## Model
 

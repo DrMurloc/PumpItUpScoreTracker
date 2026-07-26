@@ -315,9 +315,6 @@
   <data name="Progress" xml:space="preserve">
     <value>Progresso</value>
   </data>
-  <data name="Progress Charts" xml:space="preserve">
-    <value>Gráficos de progresso</value>
-  </data>
   <data name="Public" xml:space="preserve">
     <value>Público</value>
   </data>
@@ -582,15 +579,6 @@
   <data name="Difficulty" xml:space="preserve">
     <value>Dificuldade</value>
   </data>
-  <data name="Difficulty Letters" xml:space="preserve">
-    <value>Letras por dificuldade</value>
-  </data>
-  <data name="Difficulty Passes" xml:space="preserve">
-    <value>Passes por dificuldade</value>
-  </data>
-  <data name="Difficulty Progress" xml:space="preserve">
-    <value>Progresso por dificuldade</value>
-  </data>
   <data name="Level" xml:space="preserve">
     <value>Nível</value>
   </data>
@@ -618,12 +606,6 @@
   <data name="My Relative Difficulty" xml:space="preserve">
     <value>Minha dificuldade relativa</value>
   </data>
-  <data name="Overall Letters" xml:space="preserve">
-    <value>Letras gerais</value>
-  </data>
-  <data name="Overall Passes" xml:space="preserve">
-    <value>Passes gerais</value>
-  </data>
   <data name="Overview" xml:space="preserve">
     <value>Visão geral</value>
   </data>
@@ -638,9 +620,6 @@
   </data>
   <data name="Passes" xml:space="preserve">
     <value>passes</value>
-  </data>
-  <data name="Passes By Level" xml:space="preserve">
-    <value>Passes por nível</value>
   </data>
   <data name="Rating" xml:space="preserve">
     <value>Rating</value>
@@ -657,17 +636,11 @@
   <data name="Score Distribution" xml:space="preserve">
     <value>Distribuição de pontuação</value>
   </data>
-  <data name="Score Distribution Lines" xml:space="preserve">
-    <value>Linhas de distribuição de pontuação</value>
-  </data>
   <data name="Scoring Difficulty" xml:space="preserve">
     <value>Dificuldade de pontuação</value>
   </data>
   <data name="Share Url" xml:space="preserve">
     <value>URL de compartilhamento</value>
-  </data>
-  <data name="Share Your Progress Page" xml:space="preserve">
-    <value>Compartilhar sua página de progresso</value>
   </data>
   <data name="Show Scoreless" xml:space="preserve">
     <value>Mostrar sem pontuação</value>
@@ -692,9 +665,6 @@
   </data>
   <data name="Unpassed" xml:space="preserve">
     <value>Sem pass</value>
-  </data>
-  <data name="XX Progress" xml:space="preserve">
-    <value>Progresso XX</value>
   </data>
   <data name="Admin" xml:space="preserve">
     <value>Admin</value>

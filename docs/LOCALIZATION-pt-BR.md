@@ -106,7 +106,7 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Players | Jogadores | |
 | Tournaments | Campeonatos | |
 | Popularity | Popularidade | |
-| Progress | Progresso | "Progress Charts" → "Gráficos de progresso" (note: here `Charts` means graphs, not PIU charts — translated as `Gráficos`). |
+| Progress | Progresso | |
 | BPM | BPM | Untranslated. "Min BPM" → "BPM mín."; "Max BPM" → "BPM máx." |
 | Difficulty Categorization | Categorização de dificuldade | |
 | Note Count | Contagem de notas | Matches the "Contagem de pass" pattern. Min/Max: "Contagem mín./máx. de notas". |
