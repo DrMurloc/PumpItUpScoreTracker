@@ -743,9 +743,7 @@ public sealed class CommunitySagaTests
             new PlayerMilestoneRecord(MilestoneKind.SinglesCompetitiveGain, sessionId, Now, 21.416, 21.447,
                 null, null),
             new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, sessionId, Now, null, null,
-                "Intermediate Lv. 10", null),
-            new PlayerMilestoneRecord(MilestoneKind.ParagonLevelGain, sessionId, Now, null, null,
-                "Intermediate Lv. 7", "SS")
+                "Intermediate Lv. 10", null)
         };
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, sessionId, milestones,
@@ -756,8 +754,7 @@ public sealed class CommunitySagaTests
                     t.Markdown.Contains("📈 **PUMBILITY** 21,480 → **21,530** (+50)")
                     && t.Markdown.Contains("📈 **Singles competitive** 21.42 → **21.45**"))
                 && msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
-                    t.Markdown.Contains("🏅 **[Intermediate Lv. 10]** completed")
-                    && t.Markdown.Contains("🏅 **[Intermediate Lv. 7]** paragon → #LETTERGRADE|SS|False#"))),
+                    t.Markdown.Contains("🏅 **[Intermediate Lv. 10]** completed"))),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -766,7 +763,7 @@ public sealed class CommunitySagaTests
     public async Task EveryTitleCompletionIsListedWithNoNameCap()
     {
         // Owner call: titles are the card's top priority — list them ALL (the 4000-char
-        // budget is the only backstop), never "…and N more titles". Paragons don't aggregate.
+        // budget is the only backstop), never "…and N more titles".
         var userId = Guid.NewGuid();
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var ctx = new HandlerContext();
@@ -776,8 +773,6 @@ public sealed class CommunitySagaTests
         var milestones = Enumerable.Range(1, 12)
             .Select(i => new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, null, Now, null, null,
                 $"Title {i}", null))
-            .Append(new PlayerMilestoneRecord(MilestoneKind.ParagonLevelGain, null, Now, null, null,
-                "Expert Lv. 2", "PG"))
             .ToArray();
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null, milestones,
@@ -788,8 +783,7 @@ public sealed class CommunitySagaTests
                 t.Markdown.Contains("**[Title 1]** completed")
                 && t.Markdown.Contains("**[Title 11]** completed")
                 && t.Markdown.Contains("**[Title 12]** completed")
-                && !t.Markdown.Contains("more titles")
-                && t.Markdown.Contains("🏅 **[Expert Lv. 2]** paragon → #PLATE|PerfectGame#"))),
+                && !t.Markdown.Contains("more titles"))),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }

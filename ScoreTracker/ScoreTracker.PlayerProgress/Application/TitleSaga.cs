@@ -203,15 +203,16 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
 
         if (newCompleted.Length == 0 && upgraded.Length == 0) return Array.Empty<PlayerMilestoneRecord>();
 
-        // Title completions and paragon gains become timestamped milestones —
-        // UserTitle rows have no acquisition date, so this is the only record of WHEN.
+        // Title completions become timestamped milestones — UserTitle rows have no acquisition
+        // date, so this is the only record of WHEN. Paragon upgrades no longer produce one:
+        // per-level progress is folder standings now, which every player has rather than only
+        // those who already finished a title (docs/design/folder-level-progression.md §5.2).
+        // The legacy NewTitlesAcquiredEvent below still carries them, unchanged.
         var writes = newCompleted
             .Select(t => new PlayerMilestoneWrite(MilestoneKind.TitleCompleted, sessionId, _dateTime.Now,
                 Title: t))
-            .Concat(upgraded.Select(t => new PlayerMilestoneWrite(MilestoneKind.ParagonLevelGain, sessionId,
-                _dateTime.Now, Title: t.Title.ToString(), Detail: t.ParagonLevel.ToString())))
             .ToArray();
-        await _milestones.Append(mix, userId, writes, cancellationToken);
+        if (writes.Length > 0) await _milestones.Append(mix, userId, writes, cancellationToken);
         if (announceLegacy)
             await _bus.Publish(
                 new NewTitlesAcquiredEvent(userId, newCompleted,
@@ -263,7 +264,7 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
             ? scoreMilestones
             : (await _milestones.GetMilestonesBySessions(request.UserId, new[] { request.SessionId.Value },
                     cancellationToken))
-                .Where(m => m.Kind is MilestoneKind.TitleCompleted or MilestoneKind.ParagonLevelGain)
+                .Where(m => m.Kind is MilestoneKind.TitleCompleted)
                 .ToArray();
         return new SessionTitlesResult(milestones, progress);
     }
@@ -348,12 +349,6 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
             if (newlyComplete)
                 writes.Add(new PlayerMilestoneWrite(MilestoneKind.TitleCompleted, request.SessionId, _dateTime.Now,
                     Title: title.Title.Name.ToString()));
-
-            var newParagon = GetLevel(title);
-            var oldParagon = wasBefore == null ? ParagonLevel.None : GetLevel(wasBefore);
-            if (newParagon != ParagonLevel.None && (newlyComplete || newParagon > oldParagon))
-                writes.Add(new PlayerMilestoneWrite(MilestoneKind.ParagonLevelGain, request.SessionId,
-                    _dateTime.Now, Title: title.Title.Name.ToString(), Detail: newParagon.ToString()));
         }
 
         if (writes.Count == 0) return Array.Empty<PlayerMilestoneRecord>();

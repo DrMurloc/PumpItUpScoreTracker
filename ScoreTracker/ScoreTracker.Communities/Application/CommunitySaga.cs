@@ -603,12 +603,6 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         lines.AddRange(titles.Select(t =>
             "🏅 " + _localizer.Get(culture, "**{0}** completed", Bracket(t.Title))));
 
-        // Paragon gains are never counted or aggregated — the new grade IS the content
-        // (owner call), so every gain is its own grade-named line.
-        var paragons = e.Milestones.Where(m => m.Kind == MilestoneKind.ParagonLevelGain).ToArray();
-        lines.AddRange(paragons.Select(p => "🏅 " + _localizer.Get(culture, "**{0}** paragon → {1}",
-            Bracket(p.Title), ParagonEmoji(p.Detail))));
-
         foreach (var lamp in e.Milestones.Where(m => m.Kind is MilestoneKind.FolderPassLamp
                      or MilestoneKind.FolderGradeLamp or MilestoneKind.FolderPlateLamp))
             lines.Add(LampLine(lamp, culture));

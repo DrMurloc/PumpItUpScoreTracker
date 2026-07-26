@@ -18,9 +18,6 @@ public enum MilestoneKind
     /// <summary>A title completed. Title carries the name.</summary>
     TitleCompleted,
 
-    /// <summary>A completed title's paragon level advanced. Title + Detail (new level).</summary>
-    ParagonLevelGain,
-
     /// <summary>Every chart in a (type, level) folder passed. Detail = folder (e.g. "D23").</summary>
     FolderPassLamp,
 
