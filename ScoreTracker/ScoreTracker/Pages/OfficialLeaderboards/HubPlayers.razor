@@ -50,7 +50,7 @@ else
                     @if (_profile.PumbilityRank != null)
                     {
                         <MudText Typo="Typo.caption">
-                            @L["rank"] #@_profile.PumbilityRank
+                            @L["rank #{0}", _profile.PumbilityRank]
                             @if (_profile.PumbilityRankDelta is > 0)
                             {
                                 <span class="olb-delta-up"> ▲@_profile.PumbilityRankDelta</span>
@@ -65,7 +65,7 @@ else
             </MudItem>
             <MudItem xs="6" sm="3">
                 <MudPaper Class="pa-2" Outlined="true">
-                    <MudText Typo="Typo.overline">@L["Chart Boards"]</MudText>
+                    <MudText Typo="Typo.overline">@L["chart boards"]</MudText>
                     <MudText Typo="Typo.h5"><b>@_profile.BoardsInTop</b></MudText>
                 </MudPaper>
             </MudItem>

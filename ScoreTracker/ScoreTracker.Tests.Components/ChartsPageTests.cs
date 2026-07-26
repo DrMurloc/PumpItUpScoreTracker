@@ -172,7 +172,7 @@ public sealed class ChartsPageTests : ComponentTestBase
         {
             Assert.NotNull(_lastQuery);
             Assert.Equal("bee", _lastQuery!.SongNameContains);
-            Assert.Contains("Song name", cut.Find(".srp-chip-row").TextContent);
+            Assert.Contains("Song Name", cut.Find(".srp-chip-row").TextContent);
         });
         JSInterop.VerifyInvoke("history.pushState");
     }
