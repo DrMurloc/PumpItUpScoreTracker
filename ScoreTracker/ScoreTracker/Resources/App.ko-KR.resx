@@ -4359,9 +4359,6 @@
   <data name="in the top ten" xml:space="preserve">
     <value>개 보드 10위 이내</value>
   </data>
-  <data name="Last import failed" xml:space="preserve">
-    <value>마지막 가져오기 실패</value>
-  </data>
   <data name="level 24+, first ever, any grade" xml:space="preserve">
     <value>레벨 24 이상, 사상 최초, 모든 등급</value>
   </data>
