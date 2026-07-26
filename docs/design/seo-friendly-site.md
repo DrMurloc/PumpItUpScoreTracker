@@ -499,6 +499,41 @@ Google's first indexed chart page exposed how a result actually *reads* ("263Sco
   "Moonlight998,404" were snippet-eligible), leaving the hero pitch, card blurbs, and the
   live stat band as what a result quotes.
 
+### The mix diff, and rerates in chart descriptions (2026-07-26)
+
+`/ChartCompare` became `/MixChanges` (+ `/MixChanges/{from}/{to}`), and the pass added two
+SEO surfaces — one small, one broad:
+
+- **The diff page gets a head, not a body.** It runs in a circuit, so a crawler never sees its
+  rows; `StaticHeadResolver` gives it a stat-loaded description built from the same
+  `GetMixDiffQuery` the page renders ("Phoenix 2 changed 338 chart levels from Phoenix — 302
+  harder, 36 easier — added 29 songs and removed 20"), a self-canonical per pair, and
+  `Dataset` + `BreadcrumbList` JSON-LD. **Dataset, not FAQPage**: the page is a tabulation, and
+  auto-generating hundreds of Q&A pairs off a table is the pattern that draws a manual action —
+  Google restricted FAQ rich results to gov/health regardless. No `temporalCoverage`: mixes
+  carry no release date in the catalog, and inventing one is worse than omitting the field.
+- **The pair is in the path**, so each transition is its own indexable URL and the sitemap can
+  advertise them. Adjacent pairs only — every combination would be ~900 near-identical URLs,
+  and nobody asks what changed between Fiesta and Phoenix 2 in one hop.
+- **Re-steps are a measured variable when the pair records note counts.** Only Phoenix-era
+  catalogs do, so `MixDiffHeadModel.Restepped` is nullable and the Dataset omits the variable
+  entirely rather than measuring it at zero — a zero would claim we looked. Same rule in the
+  UI: no tab at all for pairs that don't track note counts, a present-and-zero tab for pairs
+  that do. Phoenix → Phoenix 2 measured **0 re-steps across 4,367 shared charts** at build
+  time (9 more have no note count on either side and are excluded, and Phoenix 2's 249 new
+  charts have no counts crawled yet).
+- **The broad win is on the chart pages.** "What happened to Iolite Sky D20" is asked one chart
+  at a time, and ~4,600 chart URLs already answer exactly one of those questions each — but
+  their descriptions never said so. `Description()` now appends "Rerated from D20 in Phoenix."
+  ahead of the population stats (so a truncated snippet keeps it), read from the `HistoryVerdict`
+  facet already riding the verdict query the population stat dispatches: no new query, no new
+  cache. It compares against the **previous mix that carried the chart**, not the debut — a
+  chart that moved twice must report where it came from last.
+
+A static-SSR conversion of the diff page stays available and unclaimed: the render-mode ratchet
+makes it a one-line change plus islanding the lookup, and it is what would make the 338 rows
+themselves quotable rather than just the summary.
+
 ### Open owner decisions
 
 | # | Decision | Blocks | Default/lean |

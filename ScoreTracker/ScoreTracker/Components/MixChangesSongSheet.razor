@@ -1,0 +1,88 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+
+@* Arrivals and departures as a sticker sheet — players recognise jacket art faster than
+   song names (UX rule 2), and a departing song reads as gone by being dimmed rather than
+   by having its bubbles greyed, which would cost the red-Single/green-Double read.
+   The card itself is inert: it already says everything it knows. The charts are the
+   clickable part, and they open the shared details dialog. *@
+<div class="mc-sheet">
+    <MudAlert Severity="Severity.Info" Dense="true" Class="mc-notice">
+        @if (Departed)
+        {
+            @L["{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile.",
+                Songs.Count, Songs.Sum(s => s.Charts.Count)]
+        }
+        else
+        {
+            @L["{0} songs arrived, bringing {1} new charts.", Songs.Count, Songs.Sum(s => s.Charts.Count)]
+        }
+    </MudAlert>
+
+    <div class="mc-stickers">
+        @foreach (var song in Songs)
+        {
+            <div class="mc-sticker @(Departed ? "mc-sticker-gone" : "")">
+                @* Jacket art is a ~16:9 banner, so a fixed height overflows a fluid card.
+                   The box sets the aspect and the image is bounded to it. *@
+                <div class="mc-sticker-art">
+                    <SongImage Song="song.Song"></SongImage>
+                </div>
+                <span class="mc-sticker-name">@song.Song.Name</span>
+                <span class="mc-sticker-artist">@song.Song.Artist</span>
+                <span class="mc-sticker-strip">
+                    @foreach (var chart in song.Charts)
+                    {
+                        <button type="button" class="mc-ball" title="@chart.DifficultyDisplay"
+                                @onclick="() => Open(chart)">
+                            <DifficultyBubble Chart="chart" Height="20"></DifficultyBubble>
+                        </button>
+                    }
+                </span>
+            </div>
+        }
+    </div>
+
+    @* A chart that came or went on its own, while its song stayed. Rare between adjacent
+       Phoenix mixes, common across the XX boundary. *@
+    @if (LooseCharts.Count > 0)
+    {
+        <div class="mc-loose">
+            <h3 class="mc-loose-title">
+                @(Departed
+                    ? L["{0} charts removed from songs that stayed", LooseCharts.Count]
+                    : L["{0} charts added to songs that were already here", LooseCharts.Count])
+            </h3>
+            @foreach (var chart in LooseCharts)
+            {
+                <button type="button" class="mc-row" @onclick="() => Open(chart)">
+                    <SongImage Song="chart.Song" Small="true"></SongImage>
+                    <span class="mc-name">@chart.Song.Name</span>
+                    <span class="mc-tail">
+                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                    </span>
+                </button>
+            }
+        </div>
+    }
+</div>
+
+<ChartDetailsDialog @bind-Visible="_open" Chart="_chart" Mix="Mix"></ChartDetailsDialog>
+
+@code {
+    [Parameter] [EditorRequired] public IReadOnlyList<MixDiffSongRecord> Songs { get; set; } = Array.Empty<MixDiffSongRecord>();
+    [Parameter] public IReadOnlyList<Chart> LooseCharts { get; set; } = Array.Empty<Chart>();
+    [Parameter] public bool Departed { get; set; }
+    [Parameter] public MixEnum Mix { get; set; }
+
+    private bool _open;
+    private Chart? _chart;
+
+    private void Open(Chart chart)
+    {
+        _chart = chart;
+        _open = true;
+    }
+}

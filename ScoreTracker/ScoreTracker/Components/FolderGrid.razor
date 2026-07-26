@@ -18,12 +18,15 @@
 <div class="folder-grid">
     <MudButtonGroup OverrideStyles="false" Class="folder-picker-types">
         <MudButton Variant="@TypeVariant(ChartType.Single)" Color="Color.Primary" Size="Size.Small"
+                   Disabled="@(!HasAny(ChartType.Single))"
                    OnClick="() => _pendingType = ChartType.Single">@L["Singles"]</MudButton>
         <MudButton Variant="@TypeVariant(ChartType.Double)" Color="Color.Primary" Size="Size.Small"
+                   Disabled="@(!HasAny(ChartType.Double))"
                    OnClick="() => _pendingType = ChartType.Double">@L["Doubles"]</MudButton>
         @if (ShowCoOp)
         {
             <MudButton Variant="@TypeVariant(ChartType.CoOp)" Color="Color.Primary" Size="Size.Small"
+                       Disabled="@(!HasAny(ChartType.CoOp))"
                        OnClick="() => _pendingType = ChartType.CoOp">@L["CoOp"]</MudButton>
         }
     </MudButtonGroup>
@@ -31,8 +34,9 @@
         @foreach (var level in LevelsFor(_pendingType))
         {
             var captured = level;
-            <button type="button" disabled="@IsDisabled(_pendingType, captured)"
-                    class="folder-picker-level @(IsSelected(_pendingType, captured) ? "folder-picker-current" : null)"
+            var missing = IsMissing(_pendingType, captured);
+            <button type="button" disabled="@(missing || IsDisabled(_pendingType, captured))"
+                    class="folder-picker-level @(IsSelected(_pendingType, captured) ? "folder-picker-current" : null) @(missing ? "folder-picker-level-off" : null)"
                     @onclick="() => LevelPicked.InvokeAsync((_pendingType, captured))">@captured</button>
         }
     </div>
@@ -50,6 +54,21 @@
     /// <summary>Which (type, level) cells render highlighted.</summary>
     [Parameter] public Func<ChartType, int, bool> IsSelected { get; set; } = (_, _) => false;
 
+    /// <summary>
+    ///     Which folders this host has nothing for — the mix diff, where most folders
+    ///     changed nothing. Distinct from <see cref="IsDisabled" /> on purpose: that is a
+    ///     transient refusal and every cell can be refused at once, so it must never take a
+    ///     tab away (you would be locked out of switching tabs to get back under the cap).
+    ///     This one is structural, so a type with nothing in it loses its tab and the grid
+    ///     never opens onto a wall of dead cells.
+    /// </summary>
+    [Parameter] public Func<ChartType, int, bool> IsMissing { get; set; } = (_, _) => false;
+
+    private bool HasAny(ChartType type)
+    {
+        return LevelsFor(type).Any(level => !IsMissing(type, level));
+    }
+
     /// <summary>Fired per tap; the host decides toggle-and-stay (multi) or pick-and-close (single).</summary>
     [Parameter] public EventCallback<(ChartType Type, int Level)> LevelPicked { get; set; }
 
@@ -61,7 +80,11 @@
 
     protected override void OnInitialized()
     {
-        _pendingType = InitialType;
+        // Opening on a tab whose every level is disabled shows nothing pickable, so a
+        // sparse host anchors on the first type that actually has a folder.
+        _pendingType = HasAny(InitialType)
+            ? InitialType
+            : new[] { ChartType.Single, ChartType.Double, ChartType.CoOp }.FirstOrDefault(HasAny, InitialType);
     }
 
     private Variant TypeVariant(ChartType type)

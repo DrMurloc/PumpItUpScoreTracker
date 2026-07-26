@@ -2093,6 +2093,18 @@ html.sheet-open .more-sheet-scrim {
     font-weight: 600;
 }
 
+/* A folder this host has nothing for. Dimmed rather than hidden: the grid is a map of
+   the level range, and holes in it are information — they say the change landed
+   somewhere else. */
+.folder-picker-level-off {
+    opacity: .3;
+    cursor: default;
+}
+
+.folder-picker-level-off:hover {
+    background: none;
+}
+
 /* ===== Home dashboard (unlisted pre-release, D7): 4-column desktop grid, mobile
    derives a single column from auto-flow order (D3), cells span via size presets
    (D5). The widget frame is owned by WidgetHost so every widget wears identical
@@ -9160,4 +9172,590 @@ button.chart-card-art {
 .dash-fl-hero > .mud-tooltip-root,
 .dash-fl-hero > .difficulty-bubble {
     flex: none;
+}
+
+/* ===== Mix Changes — the mix diff =====
+   The board wears the rankings-board skin (compact rows, hairline separators, no card per
+   row) because that is the site's standard for any dense board. The one encoding this page
+   adds is direction: warm means the game calls it harder, cool means easier, taken off the
+   existing difficulty ramp so it is never the tier lists' red/green. Every direction colour
+   is paired with an arrow and the printed delta. */
+.mc {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.mc-head {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.mc-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: .01em;
+}
+
+.mc-sub {
+    color: var(--mix-ink-muted);
+    max-width: 52ch;
+    margin-top: 5px;
+}
+
+.mc-mixpair {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mc-mixsel {
+    min-width: 168px;
+    max-width: 220px;
+}
+
+.mc-tween {
+    color: var(--mix-ink-muted);
+}
+
+.mc-lookup {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mc-hint {
+    font-size: .82rem;
+    color: var(--mix-ink-muted);
+}
+
+.mc-notice {
+    margin: 0;
+}
+
+/* ---- the answer card ---- */
+.mc-answer {
+    display: flex;
+    gap: 13px;
+    align-items: flex-start;
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    border-left: 3px solid var(--mix-primary);
+    border-radius: 5px;
+    padding: 13px 15px;
+}
+
+.mc-answer-up {
+    border-left-color: var(--diff-hard);
+}
+
+.mc-answer-down {
+    border-left-color: var(--diff-overrated);
+}
+
+.mc-answer-new {
+    border-left-color: var(--mix-accent);
+}
+
+.mc-answer-gone {
+    border-left-color: var(--diff-overrated);
+}
+
+.mc-answer-same {
+    border-left-color: color-mix(in srgb, var(--mix-ink) 20%, transparent);
+}
+
+.mc-answer-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.mc-answer-id {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.mc-answer-song {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.28rem;
+    line-height: 1.12;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mc-answer-artist {
+    font-size: .79rem;
+    color: var(--mix-ink-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mc-verdict {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.06rem;
+    line-height: 1.3;
+    margin: 0;
+}
+
+.mc-moves {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.mc-move {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 13%, transparent);
+    border-radius: 5px;
+    padding: 4px 8px;
+}
+
+.mc-move-pinned {
+    border-color: var(--mix-primary);
+    box-shadow: 0 0 0 1px var(--mix-glow);
+}
+
+/* The earlier mix's bubble, stated as past tense. */
+.mc-was {
+    filter: grayscale(.5) brightness(.82);
+    display: inline-flex;
+}
+
+.mc-arrow {
+    color: var(--mix-ink-muted);
+    font-size: .85rem;
+}
+
+.mc-delta {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: .86rem;
+    font-variant-numeric: tabular-nums;
+    min-width: 30px;
+    text-align: right;
+}
+
+.mc-up {
+    color: var(--diff-hard);
+}
+
+.mc-down {
+    color: var(--diff-overrated);
+}
+
+.mc-quiet {
+    font-size: .8rem;
+    color: var(--mix-ink-muted);
+}
+
+.mc-restepped {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* What did NOT move is part of the answer, so it is always shown rather than hidden
+   behind a toggle. */
+.mc-unchanged {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mc-unchanged-label {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: .72rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.mc-unchanged-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    align-items: center;
+}
+
+/* Note counts line up as a column across rows, so they get tabular figures. */
+.mc-notes {
+    font-variant-numeric: tabular-nums;
+    font-size: .85rem;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
+.mc-linkish {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--mix-secondary);
+    cursor: pointer;
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.mc-linkish:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 2px;
+}
+
+/* ---- tabs ---- */
+.mc-tabs {
+    display: flex;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    overflow-x: auto;
+}
+
+.mc-tab {
+    background: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    padding: 9px 14px 8px;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.02rem;
+    letter-spacing: .02em;
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+}
+
+.mc-tab-n {
+    font-variant-numeric: tabular-nums;
+    font-size: .86rem;
+    opacity: .75;
+}
+
+.mc-tab[aria-selected="true"] {
+    color: var(--mix-ink);
+    border-bottom-color: var(--mix-primary);
+}
+
+.mc-tab:hover {
+    color: var(--mix-ink);
+}
+
+.mc-tab:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: -2px;
+}
+
+/* ---- the folder picker and what narrows inside it ---- */
+.mc-filters {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 14px 0;
+}
+
+.mc-filters .folder-picker { margin-right: 4px; }
+
+/* The chart-selector suggestion's mix suffix — present only where several mixes feed it. */
+.chart-selector-mix { color: var(--mix-ink-muted); font-size: .82em; }
+
+.mc-chip {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 13%, transparent);
+    color: var(--mix-ink-muted);
+    border-radius: 99px;
+    padding: 3px 12px;
+    cursor: pointer;
+    font-size: .83rem;
+}
+
+.mc-chip:hover {
+    color: var(--mix-ink);
+}
+
+.mc-chip:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 2px;
+}
+
+.mc-chip[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--mix-primary) 15%, var(--mix-surface));
+    border-color: color-mix(in srgb, var(--mix-primary) 55%, transparent);
+    color: var(--mix-ink);
+}
+
+.mc-filter-sep {
+    width: 1px;
+    height: 18px;
+    background: color-mix(in srgb, var(--mix-ink) 13%, transparent);
+}
+
+.mc-groupby {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: .8rem;
+    color: var(--mix-ink-muted);
+}
+
+.mc-seg {
+    display: inline-flex;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 13%, transparent);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.mc-seg button {
+    background: var(--mix-surface);
+    border: 0;
+    color: var(--mix-ink-muted);
+    cursor: pointer;
+    padding: 3px 10px;
+    font-size: .81rem;
+}
+
+.mc-seg button[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--mix-primary) 18%, var(--mix-surface));
+    color: var(--mix-ink);
+}
+
+.mc-seg button:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: -2px;
+}
+
+/* ---- the folder in view, and its rows ---- */
+.mc-fgroup {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Names the folder the picker selected. Not a control — the picker is. */
+.mc-fhead {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px 5px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 22%, transparent);
+    position: sticky;
+    top: -1px;
+    background: var(--mix-surface);
+    z-index: 2;
+}
+
+.mc-ftitle {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.14rem;
+    letter-spacing: .01em;
+}
+
+.mc-fcount {
+    font-size: .79rem;
+    color: var(--mix-ink-muted);
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+}
+
+.mc-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 4px 6px;
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    background: var(--mix-surface);
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.mc-row:hover {
+    box-shadow: inset 2px 0 0 var(--mix-primary);
+}
+
+.mc-row:hover .mc-name {
+    color: var(--mix-primary);
+}
+
+.mc-row:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: -2px;
+}
+
+.mc-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: .92rem;
+}
+
+.mc-tail {
+    margin-left: auto;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+/* ---- sticker sheet ---- */
+.mc-sheet {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.mc-stickers {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+}
+
+.mc-sticker {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
+    border-radius: 5px;
+    padding: 9px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    text-align: left;
+    color: inherit;
+    min-width: 0;
+}
+
+/* Jacket art is a ~16:9 banner. A fixed height sizes the width from the aspect and
+   overflows a fluid card, so the box owns the geometry and the image is bounded to it. */
+.mc-sticker-art {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--mix-surface-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mc-sticker-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* The one thing on a sticker worth clicking. */
+.mc-ball {
+    background: none;
+    border: 0;
+    padding: 0;
+    line-height: 0;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.mc-ball:hover {
+    filter: brightness(1.25);
+}
+
+.mc-ball:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 1px;
+}
+
+/* Dimming the card is what says "gone" — desaturating the bubbles instead would cost the
+   red-Single / green-Double read for no extra meaning. */
+.mc-sticker-gone {
+    opacity: .72;
+}
+
+.mc-sticker-gone:hover {
+    opacity: 1;
+}
+
+.mc-sticker-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.02rem;
+    line-height: 1.13;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.mc-sticker-artist {
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mc-sticker-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+}
+
+.mc-loose {
+    display: flex;
+    flex-direction: column;
+}
+
+.mc-loose-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: .72rem;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    margin: 8px 0 6px;
+}
+
+.mc-empty {
+    padding: 26px 14px;
+    text-align: center;
+    color: var(--mix-ink-muted);
+    font-size: .9rem;
+    border: 1px dashed color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    border-radius: 5px;
+}
+
+@media (min-width: 820px) {
+    .mc-head {
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+    }
+}
+
+/* Narrow: the grouping control takes its own line instead of squeezing in beside a wrapped
+   direction chip. */
+@media (max-width: 600px) {
+    .mc-groupby {
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-start;
+    }
 }

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -798,13 +798,6 @@
   </data>
   <data name="Chart Compare" xml:space="preserve">
 	  <value>譜面比較</value>
-  </data>
-  <data name="Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings." xml:space="preserve">
-	  <value>FEFEMZさんの録画からこの情報をまとめてくれたKyleTTさんに感謝します。</value>
-	  
-  </data>
-  <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
-	  <value>注意：実際のリリースミックスと照合するまで、この情報は確定ではありません。</value>
   </data>
   <data name="Added" xml:space="preserve">
 	  <value>追加済み</value>
@@ -6859,5 +6852,143 @@
   </data>
   <data name="Select Folders" xml:space="preserve">
     <value>フォルダを選択</value>
+  </data>
+  <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
+    <value>{0}から{1}の間に難度が変わった・追加された・削除された譜面のすべて。</value>
+  </data>
+  <data name="Find a chart — e.g. Iolite Sky D20" xml:space="preserve">
+    <value>譜面を検索 — 例：Iolite Sky D20</value>
+  </data>
+  <data name="Re-rated" xml:space="preserve">
+    <value>難度変更</value>
+  </data>
+  <data name="Arrived" xml:space="preserve">
+    <value>追加</value>
+  </data>
+  <data name="Left" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="Group by" xml:space="preserve">
+    <value>グループ化</value>
+  </data>
+  <data name="Old folder" xml:space="preserve">
+    <value>変更前のフォルダ</value>
+  </data>
+  <data name="New folder" xml:space="preserve">
+    <value>変更後のフォルダ</value>
+  </data>
+  <data name="{0} folder" xml:space="preserve">
+    <value>{0} フォルダ</value>
+  </data>
+  <data name="Show only {0}" xml:space="preserve">
+    <value>{0} のみ表示</value>
+  </data>
+  <data name="Show every folder" xml:space="preserve">
+    <value>すべてのフォルダを表示</value>
+  </data>
+  <data name="{0} left" xml:space="preserve">
+    <value>{0} 件が出た</value>
+  </data>
+  <data name="{0} arrived" xml:space="preserve">
+    <value>{0} 件が入った</value>
+  </data>
+  <data name="Swap direction" xml:space="preserve">
+    <value>方向を入れ替える</value>
+  </data>
+  <data name="Pick two different mixes." xml:space="preserve">
+    <value>異なる2つのバージョンを選んでください。</value>
+  </data>
+  <data name="Nothing changed between these two mixes." xml:space="preserve">
+    <value>この2つのバージョンの間に変更はありません。</value>
+  </data>
+  <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
+    <value>この絞り込みに該当するものはありません。いずれかを解除してください。</value>
+  </data>
+  <data name="Moved up — {0} is now {1}." xml:space="preserve">
+    <value>難度上昇 — {0} は現在 {1} です。</value>
+  </data>
+  <data name="Moved down — {0} is now {1}." xml:space="preserve">
+    <value>難度低下 — {0} は現在 {1} です。</value>
+  </data>
+  <data name="{0} didn't move." xml:space="preserve">
+    <value>{0} は変わっていません。</value>
+  </data>
+  <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
+    <value>変更なし — {0} 譜面すべてが難度を維持しています。</value>
+  </data>
+  <data name="{0} of {1} charts moved." xml:space="preserve">
+    <value>{1} 譜面のうち {0} 譜面の難度が変わりました。</value>
+  </data>
+  <data name="New in {0} — {1} charts." xml:space="preserve">
+    <value>{0} で新規 — {1} 譜面。</value>
+  </data>
+  <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
+    <value>{0} には収録なし — {1} 譜面すべてが曲ごと削除されました。</value>
+  </data>
+  <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
+    <value>{0} は {1} に収録されていません — 曲ごと削除されました。</value>
+  </data>
+  <data name="{0} new charts" xml:space="preserve">
+    <value>新規 {0} 譜面</value>
+  </data>
+  <data name="{0} charts removed" xml:space="preserve">
+    <value>{0} 譜面が削除</value>
+  </data>
+  <data name="{0} songs arrived, bringing {1} new charts." xml:space="preserve">
+    <value>{0} 曲が追加され、{1} 譜面が増えました。</value>
+  </data>
+  <data name="{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile." xml:space="preserve">
+    <value>{0} 曲がカタログから削除され、{1} 譜面がなくなりました。記録はプロフィールに残ります。</value>
+  </data>
+  <data name="{0} charts added to songs that were already here" xml:space="preserve">
+    <value>既存曲に追加された {0} 譜面</value>
+  </data>
+  <data name="{0} charts removed from songs that stayed" xml:space="preserve">
+    <value>残った曲から削除された {0} 譜面</value>
+  </data>
+  <data name="{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}." xml:space="preserve">
+    <value>{0} は {2} から {1} 譜面の難度を変更（上昇 {3}、低下 {4}）し、{5} 曲を追加、{6} 曲を削除しました。</value>
+  </data>
+  <data name="No chart levels, songs or charts changed between {0} and {1} in Pump It Up." xml:space="preserve">
+    <value>Pump It Up の {0} と {1} の間で、難度・曲・譜面のいずれにも変更はありません。</value>
+  </data>
+  <data name="▲ Harder" xml:space="preserve">
+    <value>▲ 難化</value>
+  </data>
+  <data name="▼ Easier" xml:space="preserve">
+    <value>▼ 易化</value>
+  </data>
+  <data name="Mix Changes" xml:space="preserve">
+    <value>バージョン間の変更</value>
+  </data>
+  <data name="Mix Changes: {0} to {1}" xml:space="preserve">
+    <value>バージョン間の変更：{0}から{1}へ</value>
+  </data>
+  <data name="{0} charts have a different note count in {1} — the steps changed, not just the rating." xml:space="preserve">
+    <value>{1} でノーツ数が変わった譜面が {0} 件あります。難度だけでなく譜面そのものが変わっています。</value>
+  </data>
+  <data name="No chart's note count changed between {0} and {1}." xml:space="preserve">
+    <value>{0} と {1} の間でノーツ数が変わった譜面はありません。</value>
+  </data>
+  <data name="{0} charts have no note count recorded, so they aren't compared." xml:space="preserve">
+    <value>{0} 件の譜面はノーツ数が未記録のため、比較していません。</value>
+  </data>
+  <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
+    <value>譜面変更 — {0} ノーツ（以前は {1}）。</value>
+  </data>
+  <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
+    <value>この曲の譜面のうち {0} 件が変更されています。</value>
+  </data>
+  <data name="{0} charts were re-stepped." xml:space="preserve">
+    <value>{0} 件の譜面が変更されました。</value>
+  </data>
+  <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
+    <value>曲を検索 — 例：Iolite Sky</value>
+  </data>
+  <data name="Only songs with a changed chart are listed." xml:space="preserve">
+    <value>変更があった譜面を持つ曲のみ表示しています。</value>
+  </data>
+  <data name="Unchanged Charts:" xml:space="preserve">
+    <value>変更なしの譜面：</value>
   </data>
 </root>

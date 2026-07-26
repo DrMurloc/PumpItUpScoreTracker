@@ -1,0 +1,147 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+
+@* The answer to "what happened to Iolite Sky D20" — one sentence, then the moves that
+   back it up. "Nothing moved" is a first-class answer here: the old page could only
+   prove it by absence from three lists. *@
+<div class="mc-answer mc-answer-@VerdictClass">
+    <SongImage Song="Answer.Song" Height="64"></SongImage>
+    <div class="mc-answer-body">
+        <div class="mc-answer-id">
+            <span class="mc-answer-song">@Answer.Song.Name</span>
+            <span class="mc-answer-artist">@Answer.Song.Artist</span>
+        </div>
+
+        <p class="mc-verdict">@Verdict</p>
+
+        @if (ShownCharts.Any())
+        {
+            <div class="mc-moves">
+                @foreach (var chart in ShownCharts)
+                {
+                    <span class="mc-move">
+                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                    </span>
+                }
+            </div>
+        }
+        else if (Answer.Moves.Any())
+        {
+            <div class="mc-moves">
+                @foreach (var move in Answer.Moves)
+                {
+                    <span class="mc-move @(IsPinned(move) ? "mc-move-pinned" : "")">
+                        <span class="mc-was"><DifficultyBubble Chart="move.Before" Small="true"></DifficultyBubble></span>
+                        <span class="mc-arrow">→</span>
+                        <DifficultyBubble Chart="move.After" Small="true"></DifficultyBubble>
+                        <span class="mc-delta @(move.Delta > 0 ? "mc-up" : "mc-down")">
+                            @(move.Delta > 0 ? "▲" : "▼")@Math.Abs(move.Delta)
+                        </span>
+                    </span>
+                }
+            </div>
+        }
+
+        @* A chart can hold its level and still be a different chart to play. *@
+        @if (Answer.PinnedNoteDelta is { } pinnedNotes)
+        {
+            <div class="mc-quiet mc-restepped">
+                @L["Re-stepped — {0} notes, was {1}.",
+                    Answer.PinnedAfter!.NoteCount?.ToString("N0") ?? "?",
+                    Answer.PinnedBefore!.NoteCount?.ToString("N0") ?? "?"]
+                <span class="mc-delta @(pinnedNotes > 0 ? "mc-up" : "mc-down")">
+                    @(pinnedNotes > 0 ? "▲" : "▼")@Math.Abs(pinnedNotes).ToString("N0")
+                </span>
+            </div>
+        }
+        else if (Answer.Restepped.Any())
+        {
+            <div class="mc-quiet mc-restepped">
+                @L["{0} of this song's charts were re-stepped.", Answer.Restepped.Count]
+            </div>
+        }
+
+        @if (Answer.Gained.Any() || Answer.Lost.Any())
+        {
+            <div class="mc-quiet">
+                @if (Answer.Gained.Any())
+                {
+                    <span>@L["{0} new charts", Answer.Gained.Count]</span>
+                }
+                @if (Answer.Gained.Any() && Answer.Lost.Any())
+                {
+                    <span> · </span>
+                }
+                @if (Answer.Lost.Any())
+                {
+                    <span>@L["{0} charts removed", Answer.Lost.Count]</span>
+                }
+            </div>
+        }
+
+        @* Always open, never a toggle: what did NOT move is part of the answer, and one extra
+           row of bubbles is cheaper than a control that hides it. *@
+        @if (Answer.Verdict is not (MixChangeVerdict.Arrived or MixChangeVerdict.Departed)
+             && Answer.Unchanged.Any())
+        {
+            <div class="mc-unchanged">
+                <span class="mc-unchanged-label">@L["Unchanged Charts:"]</span>
+                <span class="mc-unchanged-list">
+                    @foreach (var chart in Answer.Unchanged)
+                    {
+                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                    }
+                </span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public MixChangesAnswerModel Answer { get; set; } = null!;
+    [Parameter] public MixEnum From { get; set; }
+    [Parameter] public MixEnum To { get; set; }
+
+    private string VerdictClass => Answer.Verdict switch
+    {
+        MixChangeVerdict.Arrived => "new",
+        MixChangeVerdict.Departed => "gone",
+        MixChangeVerdict.Moved => Answer.PinnedAfter!.Level > Answer.PinnedBefore!.Level ? "up" : "down",
+        MixChangeVerdict.SongMoved => "up",
+        _ => "same"
+    };
+
+    /// <summary>The whole-song cases list charts outright; the rest render before/after pairs.</summary>
+    private IReadOnlyList<Chart> ShownCharts => Answer.Verdict switch
+    {
+        MixChangeVerdict.Arrived => Answer.Gained.Count > 0 ? Answer.Gained : Answer.Unchanged,
+        MixChangeVerdict.Departed => Answer.Lost,
+        MixChangeVerdict.SongUnchanged => Answer.Unchanged,
+        MixChangeVerdict.Unchanged => Answer.PinnedAfter != null ? new[] { Answer.PinnedAfter } : Array.Empty<Chart>(),
+        _ => Array.Empty<Chart>()
+    };
+
+    private bool IsPinned(MixDiffMoveRecord move)
+    {
+        return Answer.PinnedAfter != null && move.After.Id == Answer.PinnedAfter.Id;
+    }
+
+    private string Verdict => Answer.Verdict switch
+    {
+        MixChangeVerdict.Arrived =>
+            L["New in {0} — {1} charts.", To.GetName(), Answer.TotalCharts],
+        MixChangeVerdict.Departed => Answer.PinnedBefore != null
+            ? L["{0} is not in {1} — the whole song left.", Answer.PinnedBefore.DifficultyDisplay, To.GetName()]
+            : L["Not in {0} — all {1} charts left with the song.", To.GetName(), Answer.TotalCharts],
+        MixChangeVerdict.Moved => Answer.PinnedAfter!.Level > Answer.PinnedBefore!.Level
+            ? L["Moved up — {0} is now {1}.", Answer.PinnedBefore.DifficultyDisplay, Answer.PinnedAfter.DifficultyDisplay]
+            : L["Moved down — {0} is now {1}.", Answer.PinnedBefore.DifficultyDisplay, Answer.PinnedAfter.DifficultyDisplay],
+        MixChangeVerdict.Unchanged =>
+            L["{0} didn't move.", Answer.PinnedAfter!.DifficultyDisplay],
+        MixChangeVerdict.SongMoved =>
+            L["{0} of {1} charts moved.", Answer.Moves.Count, Answer.TotalCharts],
+        _ => L["Nothing moved — all {0} charts kept their level.", Answer.TotalCharts]
+    };
+}

@@ -71,4 +71,51 @@ public sealed class FolderGridTests : ComponentTestBase
 
         Assert.Equal((ChartType.Double, 20), picked);
     }
+
+    [Fact]
+    public void EveryFolderIsPickableUnlessAHostSaysOtherwise()
+    {
+        var cut = RenderComponent<FolderGrid>(p => p.Add(x => x.InitialType, ChartType.Double));
+
+        Assert.Empty(cut.FindAll(".folder-picker-level-off"));
+        Assert.DoesNotContain(cut.FindAll(".folder-picker-level"), b => b.HasAttribute("disabled"));
+    }
+
+    [Fact]
+    public void AFolderTheHostHasNothingForRendersInertButStaysVisible()
+    {
+        // Dimmed, not hidden: the holes are the map of where the change did not land.
+        var cut = RenderComponent<FolderGrid>(p => p
+            .Add(x => x.InitialType, ChartType.Double)
+            .Add(x => x.IsMissing, (t, l) => !(t == ChartType.Double && l == 21)));
+
+        var cells = cut.FindAll(".folder-picker-level");
+        var enabled = cells.Where(b => !b.HasAttribute("disabled")).ToArray();
+        Assert.Equal("21", Assert.Single(enabled).TextContent);
+        Assert.True(cells.Count > 20, "Disabled folders still render — they are information.");
+    }
+
+    [Fact]
+    public void ATypeWithNoEnabledFolderHasItsTabDisabled()
+    {
+        var cut = RenderComponent<FolderGrid>(p => p
+            .Add(x => x.InitialType, ChartType.Double)
+            .Add(x => x.IsMissing, (t, _) => t != ChartType.Double));
+
+        var tabs = cut.FindAll(".folder-picker-types button");
+        Assert.True(tabs.First(b => b.TextContent.Contains("Singles")).HasAttribute("disabled"));
+        Assert.False(tabs.First(b => b.TextContent.Contains("Doubles")).HasAttribute("disabled"));
+    }
+
+    [Fact]
+    public void TheGridOpensOnATypeThatHasSomethingRatherThanTheRequestedDeadTab()
+    {
+        var cut = RenderComponent<FolderGrid>(p => p
+            .Add(x => x.InitialType, ChartType.Single)
+            .Add(x => x.IsMissing, (t, _) => t != ChartType.Double));
+
+        // Doubles goes above 26; landing there proves the dead Singles tab was skipped.
+        var levels = cut.FindAll(".folder-picker-level").Select(b => int.Parse(b.TextContent)).ToArray();
+        Assert.True(levels.Max() > 26);
+    }
 }

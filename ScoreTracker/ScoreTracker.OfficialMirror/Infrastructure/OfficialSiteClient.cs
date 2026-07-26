@@ -355,7 +355,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 if (chart == null) continue;
 
                 if (chart.NoteCount == null)
-                    await _charts.UpdateNoteCount(chart.Id, chartGroup.First().NoteCount, cancellationToken);
+                    await _charts.UpdateNoteCount(mix, chart.Id, chartGroup.First().NoteCount, cancellationToken);
 
                 var bestScore = chartGroup.Max(s => s.Score);
                 var bestPlate = chartGroup.Max(s => s.Plate);

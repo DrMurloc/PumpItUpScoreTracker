@@ -56,6 +56,10 @@ Percentile semantics are the established `ScoreRankingRecord.Ranking` convention
 
 **Difficulty** (how hard is this chart relative to its level — tier lists). The familiar green→red heat, `TierListCategory` → `--diff-*`. Red is at home here exactly because the rarity ramp refuses it.
 
+**Direction of change** (a chart moved between mixes — the `/MixChanges` diff) borrows two steps off that same ramp rather than inventing a third scale: warm `--diff-hard` means the game now calls it harder, cool `--diff-overrated` means easier. Deliberately **not** red/green — green already means "easy for its level" two paragraphs up, and up/down is polarity, not good/bad. Both directions print their arrow and numeric delta alongside the colour (rule 8), and a diverging encoding uses **one scale for both sides**: px-per-chart above and below the midline must match, or the smaller side is a lie.
+
+**A folder is how players navigate a big list, and `FolderPicker` is that navigation.** A page holding hundreds of charts shows **one folder at a time** rather than every group stacked into a scroll (owner, 2026-07-26, on the mix diff). Where a host's data is sparse, it passes `IsEnabled` and the picker greys the folders it has nothing for — dimmed, never hidden, because the holes are the map of where the change landed — and its ◄ ► steppers skip straight to the next folder that has something. A type whose every folder is empty has its tab disabled, and the grid opens on one that isn't.
+
 ---
 
 ## 2. The rules

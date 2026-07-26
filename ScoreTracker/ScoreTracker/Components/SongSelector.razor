@@ -1,0 +1,65 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+
+@* ChartSelector's sibling one level up: pick a song, not one of its charts. For a host
+   whose answer is about the whole song, offering per-chart suggestions promises a
+   precision the result does not have. EventCallback, deliberately — a plain Func would
+   leave the host to remember to re-render, which is exactly how the chart search shipped
+   dead once. *@
+<MudAutocomplete T="string" Dense="true" Value="_selected" ValueChanged="Pick" MaxItems="15"
+                 CoerceValue="false" CoerceText="true" Label="@Label" Placeholder="@Placeholder"
+                 Variant="Variant" Margin="Margin" SearchFunc="(s, c) => Search(s)">
+    <ItemTemplate>
+        @if (_songs.TryGetValue(context, out var song))
+        {
+            <SongImage Song="song" Small="true"></SongImage>
+        }
+        <span class="song-selector-name">@context</span>
+    </ItemTemplate>
+</MudAutocomplete>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string? Placeholder { get; set; }
+    [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
+    [Parameter] public Margin Margin { get; set; } = Margin.Dense;
+
+    /// <summary>The songs on offer. One entry per distinct name; first art wins.</summary>
+    [Parameter] public IEnumerable<Song> Songs { get; set; } = Array.Empty<Song>();
+
+    [Parameter] public EventCallback<Name> SongSelected { get; set; }
+
+    private string _selected = string.Empty;
+    private IEnumerable<Song>? _built;
+    private IDictionary<string, Song> _songs = new Dictionary<string, Song>(StringComparer.OrdinalIgnoreCase);
+
+    protected override void OnParametersSet()
+    {
+        if (_built == Songs) return;
+        _built = Songs;
+        _songs = Songs
+            .GroupBy(s => s.Name.ToString(), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+    }
+
+    private Task<IEnumerable<string>> Search(string value)
+    {
+        // An exact name sorts above the songs that merely contain it — "Conflict" should not
+        // rank below "Conflict -SHORT CUT-".
+        var matches = _songs.Keys
+            .Where(name => string.IsNullOrWhiteSpace(value) ||
+                           name.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(name => string.IsNullOrWhiteSpace(value) ? 1
+                : name.Equals(value, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+            .ThenBy(name => name, StringComparer.OrdinalIgnoreCase);
+        return Task.FromResult(matches.AsEnumerable());
+    }
+
+    private async Task Pick(string selected)
+    {
+        if (string.IsNullOrWhiteSpace(selected) || !_songs.ContainsKey(selected)) return;
+        _selected = selected;
+        await SongSelected.InvokeAsync(_songs[selected].Name);
+    }
+}

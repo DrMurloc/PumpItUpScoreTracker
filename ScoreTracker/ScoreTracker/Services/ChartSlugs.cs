@@ -37,6 +37,19 @@ public static class ChartSlugs
         return Slugify(mix.GetName());
     }
 
+    // Slugs are derived, so the reverse is a lookup over the same derivation rather than a
+    // second table that could drift out of step with MixSlug.
+    private static readonly IReadOnlyDictionary<string, MixEnum> MixesBySlug =
+        Enum.GetValues<MixEnum>().ToDictionary(MixSlug, m => m);
+
+    /// <summary>Reads a mix back out of a URL segment. False for anything the catalog doesn't name.</summary>
+    public static bool TryParseMixSlug(string? slug, out MixEnum mix)
+    {
+        if (slug != null && MixesBySlug.TryGetValue(slug.ToLowerInvariant(), out mix)) return true;
+        mix = default;
+        return false;
+    }
+
     /// <summary>
     ///     Slot-aware: pre-Exceed slots are identity (the same song can carry Hard 6 AND
     ///     Crazy 6, and "s6" alone is ambiguous there), so slotted charts slug from
