@@ -81,14 +81,15 @@ public sealed class PlayerFolderLevelRepositoryTests : IAsyncLifetime
         await repo.Save(userId, new[]
         {
             Folder(ChartType.Single, 22, 97, 90, 934_245),
-            Folder(ChartType.Single, 22, 40, 4, 934_245, MixEnum.Phoenix2)
+            // Both past the first tier, so both actually hold a grade to compare.
+            Folder(ChartType.Single, 22, 40, 30, 934_245, MixEnum.Phoenix2)
         }, Now, CancellationToken.None);
 
         var phoenix = (await repo.GetFolderLevels(MixEnum.Phoenix, userId, CancellationToken.None)).ToArray();
         var phoenix2 = (await repo.GetFolderLevels(MixEnum.Phoenix2, userId, CancellationToken.None)).ToArray();
 
         Assert.Equal(90, Assert.Single(phoenix).Played);
-        Assert.Equal(4, Assert.Single(phoenix2).Played);
+        Assert.Equal(30, Assert.Single(phoenix2).Played);
 
         // The same average sits either side of the Phoenix 2 AA+ floor, which moved to 940k.
         Assert.Equal(PhoenixLetterGrade.AAPlus, phoenix[0].Grade);
