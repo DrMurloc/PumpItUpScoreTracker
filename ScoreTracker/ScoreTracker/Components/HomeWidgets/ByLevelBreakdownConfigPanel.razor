@@ -27,13 +27,13 @@
 
 @if (_scope == BreakdownChartScope.CoOp)
 {
-    <LevelRangeSlider Label="@L["Players"]" Prefix="P" Min="2" Max="5"
+    <RangeSlider Label="@L["Players"]" Prefix="P" Min="2" Max="5"
                       ValueMin="_minPlayers" ValueMax="_maxPlayers"
                       ValueMinChanged="v => _minPlayers = v" ValueMaxChanged="v => _maxPlayers = v"/>
 }
 else
 {
-    <LevelRangeSlider Label="@L["Level"]" Prefix="" Min="MinLevel" Max="MaxLevel"
+    <RangeSlider Label="@L["Level"]" Prefix="" Min="MinLevel" Max="MaxLevel"
                       ValueMin="_minLevel" ValueMax="_maxLevel"
                       ValueMinChanged="v => _minLevel = v" ValueMaxChanged="v => _maxLevel = v"/>
     @if (_scope == BreakdownChartScope.SinglesDoubles && _aggregation == BreakdownAggregation.Distribution)

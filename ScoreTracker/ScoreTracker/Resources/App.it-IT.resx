@@ -6419,4 +6419,13 @@
   <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
     <value>Cerca per nome della canzone nella barra qui sopra — ogni chart ha la sua pagina.</value>
   </data>
+  <data name="Minimum" xml:space="preserve">
+    <value>Minimo</value>
+  </data>
+  <data name="Maximum" xml:space="preserve">
+    <value>Massimo</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>Disattivato</value>
+  </data>
 </root>

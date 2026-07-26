@@ -6345,4 +6345,13 @@
   <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
     <value>Srglrch brgl Srglng nrglme mrgl brglr — mrrgl Mrglrgl hrgls rgls rglwn prgle.</value>
   </data>
+  <data name="Minimum" xml:space="preserve">
+    <value>Mrgllest</value>
+  </data>
+  <data name="Maximum" xml:space="preserve">
+    <value>Mrgllargl</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>Mrgloff</value>
+  </data>
 </root>

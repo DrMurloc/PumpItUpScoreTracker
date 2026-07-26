@@ -250,13 +250,14 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
 
 - **Basics first, long tail behind "More filters"** (persisted; auto-opened when a URL
   arrives carrying an advanced filter) so chips never flood the panel. Drawer widened to
-  420px to suit them.
+  420px to suit them. *Round 3 replaced the expand/collapse with a pick list — same intent,
+  see below.*
 - **Chips wherever a facet is a set of toggles**: chart type — spelled out, *Single /
   Double / Single Performance*, never `S`/`D` — song type, score state, legacy difficulty,
   saved lists, and a co-op player-count row that appears only when Co-Op is picked. Score
   state going multi is a capability gain: "Unplayed or Failed" is everything you haven't
   beaten, which one select could not say.
-- **Sliders replace paired numeric fields**: level, BPM, NPS, note count, duration, pass
+- **Sliders replace paired numeric fields** *(shipped inert — see round 3)*: level, BPM, NPS, note count, duration, pass
   rate, scoring level, Phoenix score, and the tier lists — which work because
   `TierListCategory` is an ordered scale, so Overrated-to-Underrated is a real range. Grade
   and plate become ordinal sliders too, turning "at least" into a range. Extents come from
@@ -269,6 +270,35 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
 - **Multi-selects are all any-of for now**; the AND/OR toggle is deferred (owner: "do 'Any'
   for now, which I THINK is what's expected").
 - **Display switches stay switches** — they change what a card shows, not which charts match.
+
+### Round 3 — dead sliders, a pick list, and touch targets
+
+- **Every range facet was inert.** They were written as `<MudRangeSlider>`, which MudBlazor
+  8.15 does not have — it ships `MudSlider` and no range variant. An unknown component name
+  is Razor warning **RZ10012**, not an error: the tag renders as literal HTML, so all ten
+  (level, BPM, NPS, note count, duration, the three tier ramps, scoring level, Phoenix
+  score) looked like controls and did nothing, and their attributes were never even
+  type-checked. Three defences now: they use the site's real `RangeSlider`; **RZ10012 is a
+  build error** in `ScoreTracker.Web.csproj`; and the bUnit fact asserts real
+  `input[type=range]` elements that move the query, which markup-text assertions could not.
+- **`LevelRangeSlider` → `RangeSlider`.** It was never level-specific — already used for
+  co-op player counts and similarity dimensions, and its CSS was always `range-slider`. It
+  gains `Step` (a 3,000-note span should not be a pixel hunt) and `ValueText` (a filter
+  spanning its whole extent reads better as "Any" than as both ends recited).
+- **More filters is a pick list, not a disclosure.** A multi-select names the long-tail
+  filters; the ones you check are the ones your drawer keeps, persisted as
+  `Charts__ShownFilters`. **Unchecking a filter clears it** — otherwise results stay
+  narrowed by a control that is no longer on screen and Clear all is the only escape. A URL
+  carrying a filter shows that filter whether or not it was picked, for the same reason.
+  Display switches are not filters, so they stay out of the list and sit at the drawer foot.
+- **Drawer vocabulary loads whenever the drawer opens**, not when the long tail is revealed:
+  the pick list needs the extents to know which range filters this mix can offer at all. The
+  loaded flag is set *after* the reads succeed, so a failure part-way retries instead of
+  leaving the drawer permanently half-built.
+- **Chips are touch targets.** Filter chips and skill tags were ~22px, under half a thumb;
+  they sit at 40px now, applied-filter tokens at 36px with a 28px ✕. The skill tag borrows
+  the tier list's card chip, so only the SRP's interactive copy is resized — the display tag
+  is untouched.
 
 ## 7. Cross-mix: built, removed, deferred
 

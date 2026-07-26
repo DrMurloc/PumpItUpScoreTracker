@@ -6419,4 +6419,13 @@
   <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
     <value>上の検索バーで曲名を検索してください — 譜面ごとに専用ページがあります。</value>
   </data>
+  <data name="Minimum" xml:space="preserve">
+    <value>最小</value>
+  </data>
+  <data name="Maximum" xml:space="preserve">
+    <value>最大</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>オフ</value>
+  </data>
 </root>

@@ -1,9 +1,14 @@
 @namespace ScoreTracker.Web.Components
 
-@* Dual-thumb level range (docs/design/randomizer-overhaul.md): the primary way to say
+@* Dual-thumb range (docs/design/randomizer-overhaul.md): the primary way to say
    "S16–S18" — two drags instead of a wall of switches. The working range prints beside
    the label so the fill is never the only channel (rule 8). Two overlaid native range
-   inputs; thumbs alone take pointer events. Gap-y level sets live under Advanced. *@
+   inputs; thumbs alone take pointer events. Gap-y level sets live under Advanced.
+
+   This is the site's only range slider — MudBlazor ships MudSlider but no range variant,
+   and an unknown component name is a Razor *warning*, so a stray <MudRangeSlider> renders
+   as an inert tag that looks right and does nothing. Anything wanting two thumbs comes
+   here. Non-integer scales ride the track as integers and format back through Format. *@
 <div class="range-slider @(Disabled ? "range-slider-disabled" : string.Empty)">
     <div class="range-slider-head">
         <span class="range-slider-label">@Label</span>
@@ -12,9 +17,9 @@
     <div class="range-slider-track-wrap">
         <span class="range-slider-track"></span>
         <span class="range-slider-fill" style="left:@(Percent(ValueMin).ToString(System.Globalization.CultureInfo.InvariantCulture))%;right:@((100 - Percent(ValueMax)).ToString(System.Globalization.CultureInfo.InvariantCulture))%"></span>
-        <input type="range" min="@Min" max="@Max" step="1" value="@ValueMin" disabled="@Disabled"
+        <input type="range" min="@Min" max="@Max" step="@Step" value="@ValueMin" disabled="@Disabled"
                aria-label="@($"{Label} {L["Minimum"]}")" @oninput="SetMin"/>
-        <input type="range" min="@Min" max="@Max" step="1" value="@ValueMax" disabled="@Disabled"
+        <input type="range" min="@Min" max="@Max" step="@Step" value="@ValueMax" disabled="@Disabled"
                aria-label="@($"{Label} {L["Maximum"]}")" @oninput="SetMax"/>
     </div>
     <div class="range-slider-ticks">
@@ -46,6 +51,9 @@
 
     [Parameter] public bool Disabled { get; set; }
 
+    /// <summary>Track granularity. Coarse steps keep a 3,000-note span from being a pixel hunt.</summary>
+    [Parameter] public int Step { get; set; } = 1;
+
     /// <summary>
     ///     How a position reads to a human, when the number on the track is not it. The
     ///     track is integers because that is what a range input steps in, so a scale that
@@ -56,7 +64,15 @@
 
     private string Text(int value) => Format?.Invoke(value) ?? $"{Prefix}{value}";
 
-    private string Display => Disabled ? L["Off"] : $"{Text(ValueMin)} – {Text(ValueMax)}";
+    /// <summary>
+    ///     Replaces the computed "min – max" readout. A filter that spans its whole extent
+    ///     is not filtering, and reads better saying so ("Any") than reciting both ends.
+    /// </summary>
+    [Parameter] public string? ValueText { get; set; }
+
+    private string Display => Disabled
+        ? L["Off"]
+        : ValueText ?? $"{Text(ValueMin)} – {Text(ValueMax)}";
 
     private double Percent(int value)
     {

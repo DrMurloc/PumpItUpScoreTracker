@@ -6300,4 +6300,13 @@
   <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
     <value>위의 검색창에서 곡 이름으로 검색하세요 — 모든 채보에는 각자의 페이지가 있습니다.</value>
   </data>
+  <data name="Minimum" xml:space="preserve">
+    <value>최소</value>
+  </data>
+  <data name="Maximum" xml:space="preserve">
+    <value>최대</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>꺼짐</value>
+  </data>
 </root>

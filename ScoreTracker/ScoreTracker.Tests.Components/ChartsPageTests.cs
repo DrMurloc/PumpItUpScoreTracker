@@ -13,6 +13,8 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using Microsoft.AspNetCore.Components;
+using MudBlazor;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -167,9 +169,26 @@ public sealed class ChartsPageTests : ComponentTestBase
         return cut.FindAll(".srp-facet-chip").First(c => c.TextContent.Trim().StartsWith(label));
     }
 
+    /// <summary>Every long-tail filter key, in pick-list order.</summary>
+    private const string EveryFilterKey =
+        "songType,artist,stepArtist,bpm,nps,noteCount,duration,skills,debutMix,legacySlot," +
+        "passDifficulty,scoreDifficulty,communityVote,passRate,scoringLevel,lists," +
+        "phoenixGrade,phoenixPlate,phoenixScore,legacyGrade,recorded";
+
+    /// <summary>
+    ///     Puts the whole long tail on screen the way a returning visitor's saved pick list
+    ///     does. Call before rendering — the setting is read during init.
+    /// </summary>
+    private void ShowEveryFilter()
+    {
+        _uiSettings.Setup(u => u.GetSetting("Charts__ShownFilters", It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
+            .ReturnsAsync(EveryFilterKey);
+    }
+
     private static void OpenMoreFilters(IRenderedComponent<Charts> cut)
     {
-        cut.FindAll("button").First(b => b.TextContent.Contains("More filters")).Click();
+        // The long tail is a saved pick list now, so it is already rendered; the drawer only
+        // needs to be open. Kept as a seam so each test reads the same.
     }
 
     [Fact]
@@ -217,7 +236,7 @@ public sealed class ChartsPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheLongTailHidesBehindMoreFiltersAndPersists()
+    public void TheDrawerOpensOnTheBasicsUntilTheLongTailIsPicked()
     {
         var cut = RenderComponent<Charts>();
         cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
@@ -226,16 +245,90 @@ public sealed class ChartsPageTests : ComponentTestBase
         // Basics only: no skills cloud, no song-type chips, no community sliders.
         Assert.Empty(cut.FindAll(".srp-badge-cloud"));
         Assert.DoesNotContain("Community intelligence", cut.Markup);
+        // The pick list itself is always there — that is how the tail gets opted into.
+        Assert.NotEmpty(cut.FindAll(".srp-more-filters"));
+    }
 
-        cut.FindAll("button").First(b => b.TextContent.Contains("More filters")).Click();
+    [Fact]
+    public void APickedFilterRendersAndTheChoiceIsRemembered()
+    {
+        ShowEveryFilter();
+
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Filters]").Click();
 
         cut.WaitForAssertion(() =>
         {
             Assert.Contains("Community intelligence", cut.Markup);
             Assert.Contains("Short Cut", cut.Markup);
         });
-        _uiSettings.Verify(u => u.SetSetting("Charts__MoreFilters", true.ToString(),
-            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void DroppingAFilterFromThePickListClearsWhatItWasFiltering()
+    {
+        // The rule that makes the pick list safe: a filter you stop showing stops applying.
+        // Otherwise results stay narrowed by a control that is no longer on screen.
+        ShowEveryFilter();
+        Services.GetRequiredService<NavigationManager>().NavigateTo("/Charts?SongType=Remix");
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(new[] { SongType.Remix }, _lastQuery!.SongTypes));
+
+        cut.Find("button[aria-label=Filters]").Click();
+        var pickList = cut.FindComponents<MudSelect<string>>()
+            .First(s => s.Instance.Class?.Contains("srp-more-filters") == true);
+        var kept = EveryFilterKey.Split(',').Where(k => k != "songType").ToArray();
+        cut.InvokeAsync(() => pickList.Instance.SelectedValuesChanged.InvokeAsync(kept));
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Empty(_lastQuery!.SongTypes ?? Array.Empty<SongType>());
+            Assert.DoesNotContain("Short Cut", cut.Markup);
+        });
+    }
+
+    [Fact]
+    public void AFilterArrivingByUrlShowsItselfWithoutBeingPicked()
+    {
+        // The saved pick list does not include song type, but this link filters by it. If the
+        // control stayed hidden the chip would be the only evidence, and Clear all the only
+        // way to undo it.
+        Services.GetRequiredService<NavigationManager>().NavigateTo("/Charts?SongType=Remix");
+        var cut = RenderComponent<Charts>();
+
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Filters]").Click();
+
+        cut.WaitForAssertion(() => Assert.Contains("Short Cut", cut.Markup));
+    }
+
+    [Fact]
+    public void EveryRangeFacetOffersTwoDraggableThumbsThatFilter()
+    {
+        // Field-test round 3: every range facet was dead. They were written as
+        // <MudRangeSlider>, which MudBlazor does not have — an unknown component name is a
+        // Razor *warning*, so each one rendered as an inert tag that looked like a control.
+        // Asserting on labels or markup text cannot tell the difference; only a real
+        // input[type=range] that moves the query can. RZ10012 is now a build error too.
+        ShowEveryFilter();
+        _mediator.Setup(m => m.Send(It.IsAny<GetSearchRangesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChartSearchRanges(84, 300, 2m, 22m, 120, 3200, 45, 320, 17.0, 27.5));
+
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Filters]").Click();
+        OpenMoreFilters(cut);
+
+        // Two thumbs per range facet: level, BPM, NPS, notes, duration, the two tier ramps
+        // and scoring level are all present for an anonymous visitor in a Phoenix mix.
+        cut.WaitForAssertion(() =>
+            Assert.True(cut.FindAll(".range-slider input[type=range]").Count >= 16));
+
+        var bpm = cut.FindAll(".range-slider").First(s => s.TextContent.StartsWith("BPM"));
+        bpm.QuerySelectorAll("input[type=range]")[0].Input("150");
+
+        cut.WaitForAssertion(() => Assert.Equal(150, _lastQuery!.BpmMin));
     }
 
     [Fact]
@@ -268,6 +361,7 @@ public sealed class ChartsPageTests : ComponentTestBase
     [Fact]
     public void TheBadgeCloudTogglesGranularBadgesWithResultCounts()
     {
+        ShowEveryFilter();
         _mediator.Setup(m => m.Send(It.IsAny<GetSearchBadgesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
@@ -307,6 +401,7 @@ public sealed class ChartsPageTests : ComponentTestBase
     [Fact]
     public void TheVoteFacetStaysOutOfAPhoenixFamilyMix()
     {
+        ShowEveryFilter();
         var cut = RenderComponent<Charts>();
         cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
         cut.Find("button[aria-label=Filters]").Click();
@@ -322,6 +417,7 @@ public sealed class ChartsPageTests : ComponentTestBase
     public void DisplaySwitchesPersistWithoutRefiltering()
     {
         SignIn();
+        ShowEveryFilter();
         var cut = RenderComponent<Charts>();
         cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
         var sendsBefore = _mediator.Invocations.Count(i =>

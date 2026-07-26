@@ -4,12 +4,12 @@ using Xunit;
 
 namespace ScoreTracker.Tests.Components;
 
-public sealed class LevelRangeSliderTests : ComponentTestBase
+public sealed class RangeSliderTests : ComponentTestBase
 {
-    private IRenderedComponent<LevelRangeSlider> Render(int min = 10, int max = 26, int valueMin = 16,
+    private IRenderedComponent<RangeSlider> Render(int min = 10, int max = 26, int valueMin = 16,
         int valueMax = 18, bool disabled = false, Action<int>? onMin = null, Action<int>? onMax = null)
     {
-        return RenderComponent<LevelRangeSlider>(p => p
+        return RenderComponent<RangeSlider>(p => p
             .Add(x => x.Label, "Singles")
             .Add(x => x.Prefix, "S")
             .Add(x => x.Min, min)

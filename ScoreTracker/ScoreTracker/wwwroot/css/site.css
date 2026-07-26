@@ -6493,10 +6493,27 @@ button.chart-card-art {
 .srp-chip-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 6px;
     align-items: center;
     min-height: 34px;
 }
+
+/* An applied-filter token is dismissed occasionally rather than hunted for, so it sits a
+   little under the drawer chips' 40px — but its ✕ is still a real target, not a 16px icon. */
+.srp-chip {
+    min-height: 36px;
+    font-size: .8rem;
+}
+
+    .srp-chip .mud-chip-close-button {
+        width: 28px;
+        height: 28px;
+        margin-left: 2px;
+    }
+
+        .srp-chip .mud-chip-close-button .mud-icon-root {
+            font-size: 1.1rem;
+        }
 
 .srp-chip-sort {
     border-color: var(--mix-accent) !important;
@@ -6725,10 +6742,20 @@ button.chart-card-art {
 .srp-badge-cloud {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 8px;
 }
 
+/* Skill tags borrow the tier list's chip, which is sized to sit quietly on a card. Here
+   each one is something you tap, so the SRP's copy takes the same 40px target as the
+   other filter chips while keeping the category tint. */
 .srp-badge-opt {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 12px;
+    font-size: .8rem;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     cursor: pointer;
     opacity: .75;
 }
@@ -6850,7 +6877,7 @@ button.chart-card-art {
 .srp-chipset {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 8px;
 }
 
 .srp-chipset-sub {
@@ -6858,14 +6885,22 @@ button.chart-card-art {
     border-left: 2px solid var(--mix-surface-muted);
 }
 
+/* A filter chip is the drawer's primary control, and a thumb is about 9mm wide: these
+   sit at the 40px target rather than the 22px the type alone would give them. The
+   drawer is 420px, so a row still fits two or three of the longest names. */
 .srp-facet-chip {
-    font-size: .75rem;
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    font-size: .85rem;
     border: 1px solid var(--mix-surface-muted);
     border-radius: 999px;
-    padding: 3px 10px;
+    padding: 0 14px;
     color: var(--mix-ink-muted);
     cursor: pointer;
     white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     transition: border-color .12s, color .12s, background-color .12s;
 }
 
