@@ -82,6 +82,23 @@ public static class WidgetRegistry
             typeof(DailyStepConfigPanel),
             typeof(DailyStepConfig),
             RefreshOnScoreImport: true),
+        new("folder-levels",
+            "Folder Levels",
+            "How far through your folders you are, and how well.",
+            WidgetCategory.Progress,
+            Icons.Material.Filled.Folder,
+            // Detail drops by size rather than re-laying out: 1x1 is one folder large, the wider
+            // sizes stack rows, and the tier ticks need a second row to be worth cutting in.
+            new[]
+            {
+                SizePreset.OneByOne, SizePreset.TwoByOne, SizePreset.TwoByTwo, SizePreset.FourByTwo
+            },
+            SizePreset.TwoByOne,
+            new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            typeof(FolderLevelsWidget),
+            typeof(FolderLevelsConfigPanel),
+            typeof(FolderLevelsConfig),
+            RefreshOnScoreImport: true),
         new("suggested-charts",
             "Suggested Charts",
             "Charts picked for you, tuned by goal.",

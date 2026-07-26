@@ -6865,3 +6865,89 @@ button.chart-card-art {
     font-weight: 400;
     margin: 0 4px;
 }
+
+/* Folder Levels widget: a 1x1 gives one folder the whole cell, everything wider stacks rows. */
+.dash-fl-hero {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+}
+
+.dash-fl-hero-grade {
+    font-family: var(--font-display);
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.dash-fl-hero-pct {
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.dash-fl-hero-bar {
+    width: 100%;
+}
+
+.dash-fl-hero-left {
+    font-family: var(--font-display);
+    font-size: 11px;
+    color: var(--mix-ink-muted);
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-fl-rows {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    justify-content: center;
+}
+
+.dash-fl-row-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.dash-fl-row-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.dash-fl-row-count {
+    font-family: var(--font-display);
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash-fl-row-grade {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.dash-fl-row-pct {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: .05em;
+    color: var(--mix-ink-muted);
+    margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+}
