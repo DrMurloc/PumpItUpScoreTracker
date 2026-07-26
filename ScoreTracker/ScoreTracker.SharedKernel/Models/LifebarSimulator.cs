@@ -20,6 +20,43 @@ public sealed class LifebarSimulator
         _lifeMultiplier = .1;
     }
 
+    private LifebarSimulator(int maxLife, int currentLife, double lifeMultiplier)
+    {
+        MaxLife = maxLife;
+        CurrentLife = currentLife;
+        _lifeMultiplier = lifeMultiplier;
+    }
+
+    /// <summary>The life gain multiplier's ceiling.</summary>
+    public const double MaxLifeMultiplier = .8;
+
+    /// <summary>
+    ///     A simulator resumed at a known state — for carrying a run across a level change,
+    ///     where the bar rescales but the player hasn't played a note. Life clamps to the new
+    ///     level's maximum. Replaying judgments to reach a target life instead would drift:
+    ///     bads move in steps of 50 and overshoot.
+    /// </summary>
+    public static LifebarSimulator At(DifficultyLevel level, int currentLife, double lifeMultiplier)
+    {
+        var maxLife = new LifebarSimulator(level).MaxLife;
+        return new LifebarSimulator(maxLife,
+            Math.Clamp(currentLife, 0, maxLife),
+            Math.Clamp(lifeMultiplier, 0, MaxLifeMultiplier));
+    }
+
+    /// <summary>
+    ///     A detached copy at this exact state — including the life multiplier, which is the
+    ///     half of the state nobody can see. Lets a caller ask "what would this judgment do?"
+    ///     without committing to it.
+    /// </summary>
+    public LifebarSimulator Fork() => new(MaxLife, CurrentLife, _lifeMultiplier);
+
+    /// <summary>
+    ///     The life gain multiplier: near-zeroed by a miss, halved by a bad, rebuilt by clean
+    ///     notes to a 0.8 cap. Exposed because the Life Calculator's whole point is showing it.
+    /// </summary>
+    public double LifeMultiplier => _lifeMultiplier;
+
     private readonly IDictionary<Judgment, int> JudgmentWeight = new Dictionary<Judgment, int>
     {
         { Judgment.Perfect, 12 },
@@ -62,7 +99,7 @@ public sealed class LifebarSimulator
 
         if (_lifeMultiplier < 0) _lifeMultiplier = 0;
 
-        if (_lifeMultiplier > .8) _lifeMultiplier = .8;
+        if (_lifeMultiplier > MaxLifeMultiplier) _lifeMultiplier = MaxLifeMultiplier;
 
         if (CurrentLife < 0) CurrentLife = 0;
 
