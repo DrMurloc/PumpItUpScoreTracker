@@ -21,8 +21,9 @@ namespace ScoreTracker.OfficialMirror.Application;
 /// <summary>
 ///     The weekly leaderboard sweep: one run per trigger writes one snapshot — rating
 ///     boards, chart boards (checkpointed per board), popularity, the two tier-list feeds —
-///     and seals it. Only the seal makes the snapshot visible; a failure leaves the header
-///     carrying the stage and error while the site keeps serving the last sealed snapshot.
+///     and seals it. Only the seal makes the snapshot visible; a failure records its stage and
+///     exception for /Admin/OfficialLeaderboards while the site keeps serving the last sealed
+///     snapshot, so players see stale data rather than a diagnostic.
 /// </summary>
 internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCommand>,
     IConsumer<RebuildWeeklyHighlightsCommand>,

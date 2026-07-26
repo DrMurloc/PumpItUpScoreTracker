@@ -123,6 +123,7 @@ The machine-enforceable subset of [docs/UX-GUIDELINES.md](docs/UX-GUIDELINES.md)
 - **One concept, one component**: `DifficultyBubble`, `LetterGradeIcon`, `ScoreBreakdown`, `UserLabel`. New visual concept = new shared component in `Components/`.
 - **Density**: the Comfortable/Compact/Table preference persists **per page** via `Density__<Page>` UiSettings keys (landed with the tier-list overhaul; `Universal__Density` was retired unshipped). The three sanctioned modes are fixed — never invent a fourth.
 - **Localization**: every UI string goes through `L[…]`; new keys land in **all** locales in the same pass, following each `docs/LOCALIZATION-<locale>.md` glossary (Mix: ko `시리즈`, ja `バージョン`, es/pt `versión`/`versão`, fr/it `Mix`).
+- **No raw exception text outside `Pages/Admin/`** (arch-test enforced, `DiagnosticExposureTests`). Stack traces, framework error strings, and failed-job internals are maintainer data — they belong in the log and on an admin page, never on a player's screen or in an API response. What a user sees is a localized sentence they can act on; a **domain** exception's message is written to be exactly that and stays allowed. Contracts that carry raw exception text (`ImportRunRecord`, `GetImportRunsQuery`) are listed in the ratchet — add to that list when a new one appears.
 
 ## Test conventions
 

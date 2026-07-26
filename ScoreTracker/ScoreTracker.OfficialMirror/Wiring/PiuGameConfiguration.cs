@@ -42,6 +42,14 @@ public sealed class PiuGameConfiguration
     public int SweepRequestDelayMilliseconds { get; set; } = 250;
 
     /// <summary>
+    ///     First pause before a failed request is retried; each further retry doubles it
+    ///     (1s, 2s, 4s by default). The official site's edge resets connections mid-handshake
+    ///     under load, and coming straight back a second later tends to be refused the same
+    ///     way. Zero disables the waiting (tests).
+    /// </summary>
+    public int RetryBaseDelayMilliseconds { get; set; } = 1000;
+
+    /// <summary>
     ///     The official-site host for a mix. XX has no scrapeable site; anything unknown
     ///     throws loudly rather than silently scraping the wrong mix's boards.
     /// </summary>

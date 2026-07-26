@@ -1,6 +1,5 @@
 @namespace ScoreTracker.Web.Pages.OfficialLeaderboards
 @using MediatR
-@using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
@@ -9,28 +8,18 @@
 @inject IUiSettingsAccessor UiSettings
 
 @* The Official Leaderboards section chrome, shared by every page in the section:
-   title, import-health strip, the page nav, and the mix/chart context the views
+   title, last-updated stamp, the page nav, and the mix/chart context the views
    consume. Each page is its own route and circuit — the nav links are real
-   document loads, which is the site's post-flip navigation model anyway. *@
+   document loads, which is the site's post-flip navigation model anyway.
+
+   Import health is deliberately NOT here: a failed sweep's diagnostics (the raw
+   exception, stage and all) belong to /Admin/OfficialLeaderboards. A player sees
+   only the last-updated stamp, which already says the data is stale. *@
 
 <PageTitle>@L[ActiveLabel] · @L["Official Leaderboards"]</PageTitle>
 
 <style>
     .olb-subtitle { color: var(--mix-ink-muted); }
-
-    .olb-health {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        border-radius: 999px;
-        padding: 2px 10px;
-        font-size: 12px;
-        font-weight: 600;
-        border: 1px solid var(--mix-surface-muted);
-        color: var(--mix-ink-muted);
-    }
-
-    .olb-health.failed { color: var(--mix-accent); border-color: var(--mix-accent); }
 
     .olb-section-nav {
         display: flex;
@@ -89,12 +78,6 @@
     <MudText Typo="Typo.body2" Class="olb-subtitle">
         @L["Last Updated"] · @(_lastImported?.ToLocalTime().ToString("g") ?? "—")
     </MudText>
-    @if (_latestRun != null && _latestRun.CompletedAt == null && _latestRun.Error != null)
-    {
-        <MudTooltip Text="@_latestRun.Error">
-            <span class="olb-health failed">⚠ @L["Last import failed"] · @_latestRun.Stage</span>
-        </MudTooltip>
-    }
 </MudStack>
 
 <nav class="olb-section-nav" aria-label="@L["Official Leaderboards"]">
@@ -141,7 +124,6 @@
     private bool _loaded;
     private MixEnum _mix = MixEnum.Phoenix2;
     private DateTimeOffset? _lastImported;
-    private ImportRunRecord? _latestRun;
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
 
     private string ActiveLabel => Links.First(l => l.Key == Active).Label;
@@ -152,7 +134,6 @@
         if (_mix == MixEnum.XX) _mix = MixEnum.Phoenix;
 
         _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery(_mix));
-        _latestRun = (await Mediator.Send(new GetImportRunsQuery(_mix, 1))).FirstOrDefault();
         if (RequiresCharts)
             _charts = (await Mediator.Send(new ScoreTracker.Catalog.Contracts.Queries.GetChartsQuery(_mix)))
                 .ToDictionary(c => c.Id);
