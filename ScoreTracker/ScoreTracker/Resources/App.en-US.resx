@@ -6368,6 +6368,93 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Pass {0} charts at {1} or better (only {2} exist in this folder)</value>
   </data>
+  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
+    <value>Assuming {0} with a {1} plate.</value>
+  </data>
+  <data name="Boss breakers" xml:space="preserve">
+    <value>Boss breakers</value>
+  </data>
+  <data name="CO-OP" xml:space="preserve">
+    <value>CO-OP</value>
+  </data>
+  <data name="Earned" xml:space="preserve">
+    <value>Earned</value>
+  </data>
+  <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
+    <value>Everyone who holds this keeps their profile private.</value>
+  </data>
+  <data name="From {0}" xml:space="preserve">
+    <value>From {0}</value>
+  </data>
+  <data name="How rare" xml:space="preserve">
+    <value>How rare</value>
+  </data>
+  <data name="In progress" xml:space="preserve">
+    <value>In progress</value>
+  </data>
+  <data name="No title yet" xml:space="preserve">
+    <value>No title yet</value>
+  </data>
+  <data name="No titles match what you're looking for." xml:space="preserve">
+    <value>No titles match what you're looking for.</value>
+  </data>
+  <data name="Nobody here holds this title yet." xml:space="preserve">
+    <value>Nobody here holds this title yet.</value>
+  </data>
+  <data name="Not yet" xml:space="preserve">
+    <value>Not yet</value>
+  </data>
+  <data name="One-offs" xml:space="preserve">
+    <value>One-offs</value>
+  </data>
+  <data name="Play count" xml:space="preserve">
+    <value>Play count</value>
+  </data>
+  <data name="Progress tracked by the official piugame import, not by piuscores data." xml:space="preserve">
+    <value>Progress tracked by the official piugame import, not by piuscores data.</value>
+  </data>
+  <data name="Progression" xml:space="preserve">
+    <value>Progression</value>
+  </data>
+  <data name="Search a title, chart, or step artist" xml:space="preserve">
+    <value>Search a title, chart, or step artist</value>
+  </data>
+  <data name="Step artists" xml:space="preserve">
+    <value>Step artists</value>
+  </data>
+  <data name="Suggested level" xml:space="preserve">
+    <value>Suggested level</value>
+  </data>
+  <data name="Who has it" xml:space="preserve">
+    <value>Who has it</value>
+  </data>
+  <data name="Your progress" xml:space="preserve">
+    <value>Your progress</value>
+  </data>
+  <data name="Your title" xml:space="preserve">
+    <value>Your title</value>
+  </data>
+  <data name="titles earned" xml:space="preserve">
+    <value>titles earned</value>
+  </data>
+  <data name="{0} more keep their profile private." xml:space="preserve">
+    <value>{0} more keep their profile private.</value>
+  </data>
+  <data name="{0} of {1} earned" xml:space="preserve">
+    <value>{0} of {1} earned</value>
+  </data>
+  <data name="{0} of {1} tracked players" xml:space="preserve">
+    <value>{0} of {1} tracked players</value>
+  </data>
+  <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
+    <value>{0} titles, and the game shows you none of your progress.</value>
+  </data>
+  <data name="{0} tracked here, {1} from the official import" xml:space="preserve">
+    <value>{0} tracked here, {1} from the official import</value>
+  </data>
+  <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
+    <value>+{0} others have climbed higher on this ladder.</value>
+  </data>
   <data name="Added to Favorites!" xml:space="preserve">
     <value>Added to Favorites!</value>
   </data>

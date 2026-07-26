@@ -6255,6 +6255,93 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>{0}개를 {1} 이상으로 (이 폴더에 {2}개뿐)</value>
   </data>
+  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
+    <value>{0} 등급, {1} 플레이트 기준입니다.</value>
+  </data>
+  <data name="Boss breakers" xml:space="preserve">
+    <value>보스 브레이커</value>
+  </data>
+  <data name="CO-OP" xml:space="preserve">
+    <value>CO-OP</value>
+  </data>
+  <data name="Earned" xml:space="preserve">
+    <value>획득함</value>
+  </data>
+  <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
+    <value>이 칭호를 가진 유저 모두가 프로필을 비공개로 설정했습니다.</value>
+  </data>
+  <data name="From {0}" xml:space="preserve">
+    <value>{0}부터</value>
+  </data>
+  <data name="How rare" xml:space="preserve">
+    <value>희귀도</value>
+  </data>
+  <data name="In progress" xml:space="preserve">
+    <value>진행 중</value>
+  </data>
+  <data name="No title yet" xml:space="preserve">
+    <value>아직 칭호 없음</value>
+  </data>
+  <data name="No titles match what you're looking for." xml:space="preserve">
+    <value>조건에 맞는 칭호가 없습니다.</value>
+  </data>
+  <data name="Nobody here holds this title yet." xml:space="preserve">
+    <value>아직 이 칭호를 가진 유저가 없습니다.</value>
+  </data>
+  <data name="Not yet" xml:space="preserve">
+    <value>미획득</value>
+  </data>
+  <data name="One-offs" xml:space="preserve">
+    <value>개별 칭호</value>
+  </data>
+  <data name="Play count" xml:space="preserve">
+    <value>플레이 횟수</value>
+  </data>
+  <data name="Progress tracked by the official piugame import, not by piuscores data." xml:space="preserve">
+    <value>이 진행도는 piuscores가 아니라 공식 piugame 가져오기로 확인됩니다.</value>
+  </data>
+  <data name="Progression" xml:space="preserve">
+    <value>단계</value>
+  </data>
+  <data name="Search a title, chart, or step artist" xml:space="preserve">
+    <value>칭호, 채보, 스텝 아티스트 검색</value>
+  </data>
+  <data name="Step artists" xml:space="preserve">
+    <value>스텝 아티스트</value>
+  </data>
+  <data name="Suggested level" xml:space="preserve">
+    <value>추천 레벨</value>
+  </data>
+  <data name="Who has it" xml:space="preserve">
+    <value>보유 유저</value>
+  </data>
+  <data name="Your progress" xml:space="preserve">
+    <value>내 진행도</value>
+  </data>
+  <data name="Your title" xml:space="preserve">
+    <value>내 칭호</value>
+  </data>
+  <data name="titles earned" xml:space="preserve">
+    <value>칭호 획득</value>
+  </data>
+  <data name="{0} more keep their profile private." xml:space="preserve">
+    <value>{0}명이 프로필을 비공개로 설정했습니다.</value>
+  </data>
+  <data name="{0} of {1} earned" xml:space="preserve">
+    <value>{1}개 중 {0}개 획득</value>
+  </data>
+  <data name="{0} of {1} tracked players" xml:space="preserve">
+    <value>기록된 유저 {1}명 중 {0}명</value>
+  </data>
+  <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
+    <value>칭호 {0}개, 그런데 게임은 진행도를 전혀 보여주지 않습니다.</value>
+  </data>
+  <data name="{0} tracked here, {1} from the official import" xml:space="preserve">
+    <value>{0}개는 여기서 추적, {1}개는 공식 가져오기</value>
+  </data>
+  <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
+    <value>다른 {0}명은 이 단계를 더 위까지 올라갔습니다.</value>
+  </data>
   <data name="Added to Favorites!" xml:space="preserve">
     <value>즐겨찾기에 추가됨!</value>
   </data>

@@ -75,6 +75,29 @@ public static class ThemeScales
             : $"var(--plate-{plate.Value.GetShorthand().ToLowerInvariant()})";
 
     /// <summary>
+    /// Grade color token. Grades ride the plate metal ladder by tier (UX-GUIDELINES §1,
+    /// sampled from the Play Data art): SSS+/SSS ice-blue, SS/S gold, AAA+/AAA silver,
+    /// AA/A copper, and everything below A the in-game sub-A green. This is the token
+    /// sibling of <see cref="MixThemes.GradeHex"/>, for markup that can read CSS vars.
+    /// </summary>
+    public static string GradeColor(PhoenixLetterGrade grade) => grade switch
+    {
+        PhoenixLetterGrade.SSSPlus => "var(--plate-pg)",
+        PhoenixLetterGrade.SSS => "var(--plate-ug)",
+        PhoenixLetterGrade.SSPlus => "var(--plate-eg)",
+        PhoenixLetterGrade.SS => "var(--plate-eg)",
+        PhoenixLetterGrade.SPlus => "var(--plate-sg)",
+        PhoenixLetterGrade.S => "var(--plate-sg)",
+        PhoenixLetterGrade.AAAPlus => "var(--plate-mg)",
+        PhoenixLetterGrade.AAA => "var(--plate-tg)",
+        PhoenixLetterGrade.AAPlus => "var(--plate-fg)",
+        PhoenixLetterGrade.AA => "var(--plate-fg)",
+        PhoenixLetterGrade.APlus => "var(--plate-rg)",
+        PhoenixLetterGrade.A => "var(--plate-rg)",
+        _ => "var(--grade-sub-a)"
+    };
+
+    /// <summary>
     /// Legacy slot color token — the pre-Exceed song-wheel vocabulary (Crazy red,
     /// Freestyle green…). Another-variants read as their base slot; null = the neutral
     /// legacy chip (Half-Double, levelled co-ops). Never the difficulty ramp: old-scale

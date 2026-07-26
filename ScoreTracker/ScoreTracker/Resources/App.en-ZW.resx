@@ -6300,6 +6300,96 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Mrgl {0} mrgl {1} grblgl (mrgl {2} rgllgl mrgl)</value>
   </data>
+  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
+    <value>Mrgl {0} glrgl {1} plate.</value>
+  </data>
+  <data name="Boss breakers" xml:space="preserve">
+    <value>Mrgglsnap</value>
+  </data>
+  <data name="CO-OP" xml:space="preserve">
+    <value>CO-OP</value>
+  </data>
+  <data name="Earned" xml:space="preserve">
+    <value>Mrglhad</value>
+  </data>
+  <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
+    <value>Mrglmrgl aaaugh shhhh.</value>
+  </data>
+  <data name="From {0}" xml:space="preserve">
+    <value>Mrgl {0}</value>
+  </data>
+  <data name="How rare" xml:space="preserve">
+    <value>Glrglshiny</value>
+  </data>
+  <data name="In progress" xml:space="preserve">
+    <value>Mrgling</value>
+  </data>
+  <data name="No title yet" xml:space="preserve">
+    <value>Nrgl mrglargrlrgl</value>
+  </data>
+  <data name="No titles match what you're looking for." xml:space="preserve">
+    <value>Nrgl mrglargrlrgl glurg.</value>
+  </data>
+  <data name="Nobody here holds this title yet." xml:space="preserve">
+    <value>Nrgl mrgl glurgle blub.</value>
+  </data>
+  <data name="Not yet" xml:space="preserve">
+    <value>Nrgl</value>
+  </data>
+  <data name="One-offs" xml:space="preserve">
+    <value>Blurblurb</value>
+  </data>
+  <data name="Play count" xml:space="preserve">
+    <value>Glub glub glub</value>
+  </data>
+  <data name="Progress tracked by the official piugame import, not by piuscores data." xml:space="preserve">
+    <value>Mrgl glurgle piugame blub, nrgl piuscores blub.</value>
+  </data>
+  <data name="Progression" xml:space="preserve">
+    <value>Mrglaargh</value>
+  </data>
+  <data name="Search a title, chart, or step artist" xml:space="preserve">
+    <value>Mrgl mrglargrlrgl, glurg, mrglstep</value>
+  </data>
+  <data name="Step artists" xml:space="preserve">
+    <value>Mrglstep</value>
+  </data>
+  <data name="Suggested level" xml:space="preserve">
+    <value>Glrgl mrgl</value>
+  </data>
+  <data name="Who has it" xml:space="preserve">
+    <value>Mrgl haaas</value>
+  </data>
+  <data name="Your progress" xml:space="preserve">
+    <value>Mrgl mrglaargh</value>
+  </data>
+  <data name="Your title" xml:space="preserve">
+    <value>Mrgl mrglargrlrgl</value>
+  </data>
+  <data name="titles earned" xml:space="preserve">
+    <value>mrglargrlrgl mrglhad</value>
+  </data>
+  <data name="{0} more keep their profile private." xml:space="preserve">
+    <value>{0} mrgl aaaugh shhhh.</value>
+  </data>
+  <data name="{0} of {1} earned" xml:space="preserve">
+    <value>{0} glurg {1} mrglhad</value>
+  </data>
+  <data name="{0} of {1} tracked players" xml:space="preserve">
+    <value>{0} glurg {1} mrglfolk</value>
+  </data>
+  <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
+    <value>{0} mrglargrlrgl, nrgl blub glurgle mrglaargh!</value>
+  </data>
+  <data name="{0} tracked here, {1} from the official import" xml:space="preserve">
+    <value>{0} mrgl blub, {1} mrglcial blub</value>
+  </data>
+  <data name="PUMBILITY" xml:space="preserve">
+    <value>MRGLBILITY</value>
+  </data>
+  <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
+    <value>+{0} mrgl glurgle uuup.</value>
+  </data>
   <data name="Added to Favorites!" xml:space="preserve">
     <value>Mrglrgl rgl Mrrglrglrgl!</value>
   </data>

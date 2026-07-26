@@ -145,6 +145,20 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                 .ToArrayAsync(cancellationToken);
         }
 
+        public async Task<IEnumerable<TitleAchievedRecord>> GetUsersWithTitles(MixEnum mix,
+            IEnumerable<Name> titles, CancellationToken cancellationToken)
+        {
+            var titleStrings = titles.Select(t => t.ToString()).Distinct().ToArray();
+            if (titleStrings.Length == 0) return Array.Empty<TitleAchievedRecord>();
+
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            return await database.Set<UserTitleEntity>()
+                .Where(t => titleStrings.Contains(t.Title) && t.MixId == mixId)
+                .Select(u => new TitleAchievedRecord(u.UserId, u.Title, Enum.Parse<ParagonLevel>(u.ParagonLevel)))
+                .ToArrayAsync(cancellationToken);
+        }
+
         public async Task<IEnumerable<Guid>> GetUserIdsOnHighestLevel(MixEnum mix, DifficultyLevel level,
             CancellationToken cancellationToken)
         {
