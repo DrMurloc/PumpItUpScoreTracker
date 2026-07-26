@@ -19,6 +19,17 @@ Charting for progress/stat visualizations.
 ### DartSassBuilder
 Compiles the repo's lone Sass file ([charts.scss](../ScoreTracker/ScoreTracker/wwwroot/css/charts.scss) → committed `charts.css`, compressed) on build. Chosen because it runs on any OS — its predecessor (`Delegate.SassBuilder`) shipped a Windows-only compiler binary that broke the Linux E2E CI job; anything replacing it must stay cross-platform. Its build tool targets **net8.0**: machines with only a newer runtime need `DOTNET_ROLL_FORWARD=Major` (CI sets this as a pipeline variable; dev machines normally have a net8 runtime around).
 
+### Static asset delivery (`MapStaticAssets`)
+The framework's build-time asset pipeline, in place of `UseStaticFiles`. Every file under `wwwroot` (and every RCL's `_content/`) is published twice: under its plain name, and under a content-hashed one (`css/site.ivd8qpcnra.css`), gzip-precompressed. Razor components ask for the hashed name via `@Assets["css/site.css"]` and get `Cache-Control: max-age=31536000, immutable` back. **A release that changes a file changes its URL**, which is what stops a browser from painting the previous release's stylesheet over the new markup; the hand-bumped `nav.js?v=3` was the manual version of this. Anything still requested by its plain name (fonts and images referenced from inside CSS) gets `no-cache` + an ETag, so it revalidates and 304s instead of being heuristically cached for however long the browser felt like.
+
+⚠ **`@Assets` is components-only.** The collection behind it belongs to the Blazor component endpoint and is *not* registered in DI, so a Razor Page that does `@inject ResourceAssetCollection` throws `No service for type ...` at render time and returns a 500 — which, on `FrontDoor.cshtml`, is the site's most-linked public page. Razor Pages version their assets with the `asp-append-version="true"` TagHelper instead (a content hash on the query, which is as far as that surface goes).
+
+**In Development, `MapStaticAssets` answers `no-cache` for every asset**, hashed ones included, so local work never fights the browser cache. The immutable year-long headers are a property of the shipped manifest (`ScoreTracker.Web.staticwebassets.endpoints.json`) and only appear at runtime outside Development — which is why the E2E suite, which hosts in Development, pins them by reading the manifest rather than the response.
+
+The three ES modules the circuit imports at runtime (`./js/helpers.js`, `./js/life-calculator.js`, `./js/phoenix-recap.js`) have no tag to carry a hashed name, so `<ImportMap />` in `App.razor` rewrites those specifiers in the browser — the C# call sites keep asking for the plain path. `_framework/blazor.web.js` stays on its plain name; the framework versions its own boot script.
+
+DartSassBuilder runs **before** the manifest is fingerprinted (verified: editing `charts.scss` moves the hash on `charts.<hash>.css`), so a Sass-only change busts the cache like any other. Ratcheted by `StaticAssetVersioningTests`.
+
 ### Localization (resx)
 Eight locales (`en-US`, `pt-BR`, `ko-KR`, `en-ZW`, `es-MX`, `fr-FR`, `ja-JP`, `it-IT`). A scoped `IStringLocalizer<App>` is injected globally as `L` ([_Imports.razor](../ScoreTracker/ScoreTracker/_Imports.razor)); resource keys are the **English UI text verbatim**. Per-locale translation glossaries live at the repo root (`LOCALIZATION-<locale>.md`). New keys must be populated in every locale's resx in the same pass.
 

@@ -36,6 +36,11 @@
        so this page can never drift from the site palette. Anonymous visitors resolve
        to Phoenix by the same rule the layout uses. *@
     <style>@Html.Raw(MixThemes.CssVariablesFor(MixEnum.Phoenix))</style>
+    @* A content hash on the query, which is as far as a Razor Page can go: @Assets — the hashed
+       FILENAME the Blazor shell uses — reaches the component endpoint's asset collection, and
+       that collection is not in DI for a page to inject (asking for it throws and takes the
+       front door down with it). The hash still turns over whenever the file changes, and
+       MapStaticAssets serves the plain name with an ETag, so this revalidates either way. *@
     <link href="/css/front-door.css" rel="stylesheet" asp-append-version="true" />
     <script type="text/javascript">
         (function(c,l,a,r,i,t,y){
