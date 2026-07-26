@@ -1870,6 +1870,16 @@ html.sheet-open .more-sheet-scrim {
 .skillcat-bracket { --skill-chip: var(--skillcat-bracket); }
 .skillcat-tech { --skill-chip: var(--skillcat-tech); }
 
+/* The owner's five badge families (docs/design/nuke-old-skill-categories.md §2): the granular
+   piucenter vocabulary's identity colors, feeding the same --skill-chip variable the chip and
+   bar rules already read, so a badge chip tints exactly like the rollup chips used to. */
+.badgecat-brackets { --skill-chip: var(--badgecat-brackets); }
+.badgecat-twists { --skill-chip: var(--badgecat-twists); }
+.badgecat-staminaandruns { --skill-chip: var(--badgecat-staminaandruns); }
+.badgecat-tech { --skill-chip: var(--badgecat-tech); }
+.badgecat-doublestech { --skill-chip: var(--badgecat-doublestech); }
+
+.tier-chart-card-skill[class*="badgecat-"],
 .tier-chart-card-skill[class*="skillcat-"] {
     color: color-mix(in srgb, var(--skill-chip) 55%, var(--mix-ink));
     background: color-mix(in srgb, var(--skill-chip) 16%, transparent);
@@ -6477,6 +6487,445 @@ button.chart-card-art {
     letter-spacing: .3em;
     color: #ffd94d;
     text-shadow: 0 0 12px rgba(255, 217, 77, .35);
+}
+
+/* ===== Charts SRP (docs/design/charts-srp.md) ================================
+   The page stack: header (title + scope) → query chips → answer line → results.
+   Tokens only — the two ramps and --mix-* carry every color. */
+.srp-head {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.srp-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    min-height: 34px;
+}
+
+/* An applied-filter token is dismissed occasionally rather than hunted for, so it sits a
+   little under the drawer chips' 40px — but its ✕ is still a real target, not a 16px icon. */
+.srp-chip {
+    min-height: 36px;
+    font-size: .8rem;
+}
+
+    .srp-chip .mud-chip-close-button {
+        width: 28px;
+        height: 28px;
+        margin-left: 2px;
+    }
+
+        .srp-chip .mud-chip-close-button .mud-icon-root {
+            font-size: 1.1rem;
+        }
+
+.srp-chip-sort {
+    border-color: var(--mix-accent) !important;
+}
+
+.srp-answer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0 12px;
+}
+
+.srp-count {
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 12px;
+}
+
+.srp-pager {
+    display: flex;
+    justify-content: center;
+    margin: 18px 0 8px;
+}
+
+.srp-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 48px 0;
+    color: var(--mix-ink-muted);
+}
+
+.srp-card {
+    position: relative;
+    display: flex;
+    gap: 12px;
+    background: var(--mix-surface);
+    border: 1px solid var(--mix-surface-muted);
+    border-radius: 10px;
+    padding: 12px;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.srp-card:hover,
+.srp-card:focus-within {
+    border-color: var(--mix-primary);
+    box-shadow: 0 0 14px var(--mix-glow);
+}
+
+.srp-card-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: 10px;
+}
+
+.srp-card-art {
+    flex: 0 0 auto;
+}
+
+.srp-card-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.srp-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.srp-card-song {
+    font-weight: 600;
+    font-size: 1.05rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.srp-card-songtype {
+    font-size: .7rem;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
+.srp-card-artist {
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+}
+
+.srp-card-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 6px;
+    align-items: center;
+}
+
+.srp-card-tier {
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+    border: 1px solid;
+    border-radius: 5px;
+    padding: 1px 7px;
+    white-space: nowrap;
+}
+
+.srp-card-facts {
+    margin-top: 7px;
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 10px;
+}
+
+.srp-card-fact-lead {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.srp-card-my {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    min-width: 70px;
+    text-align: right;
+}
+
+.srp-card-unplayed {
+    font-size: .7rem;
+    color: var(--mix-ink-muted);
+    border: 1px dashed var(--mix-surface-muted);
+    border-radius: 4px;
+    padding: 2px 7px;
+}
+
+.srp-card-plate {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+}
+
+.srp-card-score {
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-card-actions {
+    position: absolute;
+    right: 8px;
+    bottom: 6px;
+    z-index: 2;
+    display: flex;
+    gap: 2px;
+}
+
+.srp-drawer {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.srp-drawer-head {
+    display: flex;
+    align-items: center;
+}
+
+.srp-drawer-range {
+    display: flex;
+    gap: 10px;
+}
+
+@media (max-width: 600px) {
+    .srp-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .srp-head {
+        gap: 12px;
+    }
+}
+
+/* SRP card state borders — the tier lists' owner-locked language */
+.srp-card-pass {
+    border-color: var(--mud-palette-success);
+}
+
+.srp-card-todo {
+    border-style: dashed;
+    border-color: var(--mud-palette-info);
+}
+
+.srp-head-mix {
+    color: var(--mix-ink-muted);
+    font-size: .9rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+/* SRP drawer: badge cloud + switch rows */
+.srp-drawer-sub {
+    font-size: .65rem;
+    color: var(--mix-ink-muted);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.srp-badge-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Skill tags borrow the tier list's chip, which is sized to sit quietly on a card. Here
+   each one is something you tap, so the SRP's copy takes the same 40px target as the
+   other filter chips while keeping the category tint. */
+.srp-badge-opt {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 12px;
+    font-size: .8rem;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    cursor: pointer;
+    opacity: .75;
+}
+
+.srp-badge-opt:hover,
+.srp-badge-opt:focus-visible {
+    opacity: 1;
+}
+
+.srp-badge-opt-sel {
+    opacity: 1;
+    outline: 1px solid var(--mix-primary);
+}
+
+.srp-card-stepartist {
+    color: var(--mix-ink-muted);
+}
+
+/* SRP export dialog */
+.srp-export {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.srp-export-count {
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-export-columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.srp-export-hint {
+    color: var(--mix-ink-muted);
+}
+
+.srp-export-file {
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    border-top: 1px solid var(--mix-surface-muted);
+    padding-top: 8px;
+}
+
+/* SRP densities: sticker sheet + table. The sheet itself is the tier lists'
+   .tier-card-grid.tier-card-grid-compact — the tiles take their width from that grid. */
+.srp-table .srp-th-sortable {
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.srp-table .srp-th-sorted {
+    color: var(--mix-ink);
+    border-bottom: 2px solid var(--mix-accent);
+}
+
+.srp-table-link {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.srp-table-link:hover {
+    color: var(--mix-primary);
+}
+
+.srp-table-muted {
+    color: var(--mix-ink-muted);
+}
+
+.srp-table-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* SRP drawer facets: chip sets, range-slider headers, debut-mix eras */
+.srp-facet {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.srp-facet-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: .75rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.srp-facet-value {
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--mix-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-chipset {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.srp-chipset-sub {
+    padding-left: 10px;
+    border-left: 2px solid var(--mix-surface-muted);
+}
+
+/* A filter chip is the drawer's primary control, and a thumb is about 9mm wide: these
+   sit at the 40px target rather than the 22px the type alone would give them. The
+   drawer is 420px, so a row still fits two or three of the longest names. */
+.srp-facet-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    font-size: .85rem;
+    border: 1px solid var(--mix-surface-muted);
+    border-radius: 999px;
+    padding: 0 14px;
+    color: var(--mix-ink-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: border-color .12s, color .12s, background-color .12s;
+}
+
+.srp-facet-chip:hover,
+.srp-facet-chip:focus-visible {
+    color: var(--mix-ink);
+    border-color: var(--mix-primary);
+}
+
+/* A plate chip wears its own plate colour, so the row reads as the plate ladder it is rather
+   than five identical pills. --plate-chip is set inline from ThemeScales.PlateColor. */
+.srp-facet-chip[style*="--plate-chip"] {
+    color: color-mix(in srgb, var(--plate-chip) 62%, var(--mix-ink));
+    border-color: color-mix(in srgb, var(--plate-chip) 50%, transparent);
+}
+
+    .srp-facet-chip[style*="--plate-chip"].srp-facet-chip-on {
+        color: var(--mix-primary-contrast);
+        background: var(--plate-chip);
+        border-color: var(--plate-chip);
+    }
+
+.srp-facet-chip-on {
+    color: var(--mix-primary-contrast);
+    background: var(--mix-primary);
+    border-color: var(--mix-primary);
+    font-weight: 600;
+}
+
+.srp-era {
+    margin-top: 6px;
+}
+
+.srp-era-name {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    margin-bottom: 3px;
 }
 
 /* ── The leaderboard skin ─────────────────────────────────────────────────────

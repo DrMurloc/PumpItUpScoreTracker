@@ -1,0 +1,560 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Bunit;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
+using ScoreTracker.Application.Queries;
+using ScoreTracker.Catalog.Contracts;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.SecondaryPorts;
+using Microsoft.AspNetCore.Components;
+using MudBlazor;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Web.Components;
+using ScoreTracker.Web.Pages;
+using ScoreTracker.Web.Services;
+using ScoreTracker.Web.Services.Contracts;
+using Xunit;
+using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
+
+namespace ScoreTracker.Tests.Components;
+
+/// <summary>
+///     The rebuilt /Charts SRP (docs/design/charts-srp.md): the page stack renders header →
+///     query chips → answer line → cards, every filter lives behind the funnel, and cards
+///     are links to the chart page. The search itself is the handler's job — these facts
+///     pin the page's dispatch and chip language.
+/// </summary>
+public sealed class ChartsPageTests : ComponentTestBase
+{
+    private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<IUiSettingsAccessor> _uiSettings = new();
+    private SearchChartsQuery? _lastQuery;
+
+    public ChartsPageTests()
+    {
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MixEnum.Phoenix);
+        _uiSettings.Setup(u => u.GetSetting(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
+            .ReturnsAsync((string?)null);
+        Services.AddSingleton(_uiSettings.Object);
+
+        _mediator.Setup(m => m.Send(It.IsAny<ScoreTracker.ChartIntelligence.Contracts.Queries.GetChartScoringLevelsQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, double>());
+        _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<ChartSearchResultPage>, CancellationToken>((q, _) => _lastQuery = (SearchChartsQuery)q)
+            .ReturnsAsync(() => new ChartSearchResultPage(
+                new[] { MakeResult("District 1", 21), MakeResult("Bee", 23) }, 2));
+        _mediator.Setup(m => m.Send(It.IsAny<GetSavedChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<SavedChartRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetSearchBadgesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartBadge>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetSearchArtistsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartSearchVocabularyEntry>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetSearchStepArtistsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartSearchVocabularyEntry>());
+        _mediator.Setup(m => m.Send(It.IsAny<ScoreTracker.OfficialMirror.Contracts.Queries.GetOfficialPopularityQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ScoreTracker.OfficialMirror.Contracts.OfficialPopularityRecord>());
+        // The details dialog the cards open pulls these; registered here because bUnit seals
+        // the container the moment the first service is resolved.
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartBadgeChipsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartBadgeChipRecord>>());
+        _mediator.Setup(m => m.Send(
+                It.IsAny<ScoreTracker.ChartIntelligence.Contracts.Queries.GetTierListWithFallbackQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ScoreTracker.ChartIntelligence.Contracts.TierListResult(
+                Array.Empty<SongTierListEntry>(), false));
+        Services.AddSingleton(_mediator.Object);
+        Services.AddSingleton(Mock.Of<IAdminNotificationClient>());
+        Services.AddScoped<ChartScoringLevels>();
+        Services.AddSingleton(Mock.Of<IDateTimeOffsetAccessor>());
+        Services.AddLogging();
+
+        // DifficultyBubble branches on RendererInfo (the MudTooltip static-SSR gate).
+        SetRendererInfo(new Microsoft.AspNetCore.Components.RendererInfo("Server", true));
+
+        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(false);
+    }
+
+    private void SignIn()
+    {
+        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        CurrentUser.SetupGet(c => c.User).Returns(new User(
+            Guid.NewGuid(), "Tester", true, null, new Uri("https://piu.test/avatar.png"), null));
+    }
+
+    internal static ChartSearchResult MakeResult(string song, int level,
+        MixEnum mix = MixEnum.Phoenix, ChartSearchMyState? my = null,
+        IReadOnlyList<ChartBadge>? badges = null, TierListCategory? communityVote = null,
+        TierListCategory? passDifficulty = null)
+    {
+        var chart = new Chart(Guid.NewGuid(), mix,
+            new Song(song, SongType.Arcade, new Uri("https://piu.test/art.png"),
+                TimeSpan.FromSeconds(125), "BanYa", Bpm.From(160, 160)),
+            ChartType.Double, level, mix, "SUNNY", 700, new HashSet<Skill>());
+        return new ChartSearchResult(chart, mix,
+            badges ?? Array.Empty<ChartBadge>(), 11.2m,
+            passDifficulty, null, communityVote, 21.4, null, 40, 25, 2, my);
+    }
+
+    [Fact]
+    public void TheStackRendersHeaderCountAndCards()
+    {
+        var cut = RenderComponent<Charts>();
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Contains("2 charts", cut.Markup);
+            Assert.Equal(2, cut.FindAll(".srp-card").Count);
+        });
+        // The searched mix names itself in the page header; there is no search input anywhere.
+        Assert.Equal(MixEnum.Phoenix.GetName(), cut.Find(".srp-head-mix").TextContent.Trim());
+        Assert.DoesNotContain("srp-search", cut.Markup);
+    }
+
+    [Fact]
+    public void CardsKeepTheirHrefSoANewTabStillReachesTheChartPage()
+    {
+        // Clicking opens the dialog, but the anchor stays real: the status bar previews the
+        // destination and right-click → open in new tab still works.
+        var cut = RenderComponent<Charts>();
+
+        cut.WaitForAssertion(() =>
+        {
+            var links = cut.FindAll(".srp-card-link");
+            Assert.Equal(2, links.Count);
+            Assert.All(links, l => Assert.StartsWith("/Charts/phoenix/", l.GetAttribute("href")));
+        });
+    }
+
+    [Fact]
+    public void ClickingACardOpensTheDetailsDialogInsteadOfNavigating()
+    {
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        var startedAt = Services.GetRequiredService<NavigationManager>().Uri;
+
+        cut.Find(".srp-card-link").Click();
+
+        // Asserted on the component rather than the rendered dialog: MudDialog paints through
+        // MudDialogProvider, which a page under test has no way to host.
+        cut.WaitForAssertion(() =>
+        {
+            var dialog = cut.FindComponent<ChartDetailsDialog>();
+            Assert.True(dialog.Instance.Visible);
+            Assert.Equal("District 1", dialog.Instance.Chart!.Song.Name.ToString());
+        });
+        // The search is still behind the dialog — the click did not leave the page.
+        Assert.Equal(startedAt, Services.GetRequiredService<NavigationManager>().Uri);
+    }
+
+    [Fact]
+    public void ASongNameFilterBecomesAChipCountsOnTheFunnelAndRequeries()
+    {
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+
+        cut.Find("button[aria-label=Filters]").Click();
+        var songInput = cut.FindAll(".srp-drawer input")[0];
+        songInput.Change("bee");
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.NotNull(_lastQuery);
+            Assert.Equal("bee", _lastQuery!.SongNameContains);
+            Assert.Contains("Song name", cut.Find(".srp-chip-row").TextContent);
+        });
+        JSInterop.VerifyInvoke("history.pushState");
+    }
+
+    [Fact]
+    public void ClearAllReturnsToTheBareQuery()
+    {
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Filters]").Click();
+        cut.FindAll(".srp-drawer input")[0].Change("bee");
+        cut.WaitForAssertion(() => Assert.Equal("bee", _lastQuery!.SongNameContains));
+        ChipNamed(cut, "Double").Click();
+        cut.WaitForAssertion(() => Assert.Contains(ChartType.Double, _lastQuery!.Types!));
+
+        var clearAll = cut.FindAll("button").Single(b => b.TextContent.Trim() == "Clear all");
+        clearAll.Click();
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Null(_lastQuery!.SongNameContains);
+            Assert.Null(_lastQuery.Types);
+        });
+    }
+
+    private static AngleSharp.Dom.IElement ChipNamed(IRenderedComponent<Charts> cut, string label)
+    {
+        return cut.FindAll(".srp-facet-chip").First(c => c.TextContent.Trim().StartsWith(label));
+    }
+
+    /// <summary>Every long-tail filter key, in pick-list order.</summary>
+    private const string EveryFilterKey =
+        "songType,artist,stepArtist,bpm,nps,noteCount,duration,skills,debutMix,legacySlot," +
+        "passDifficulty,scoreDifficulty,communityVote,passRate,scoringLevel,lists," +
+        "phoenixGrade,phoenixPlate,phoenixScore,legacyGrade,recorded";
+
+    /// <summary>
+    ///     Puts the whole long tail on screen the way a returning visitor's saved pick list
+    ///     does. Call before rendering — the setting is read during init.
+    /// </summary>
+    private void ShowEveryFilter()
+    {
+        _uiSettings.Setup(u => u.GetSetting("Charts__ShownFilters", It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
+            .ReturnsAsync(EveryFilterKey);
+    }
+
+    private static void OpenMoreFilters(IRenderedComponent<Charts> cut)
+    {
+        // The long tail is a saved pick list now, so it is already rendered; the drawer only
+        // needs to be open. Kept as a seam so each test reads the same.
+    }
+
+    [Fact]
+    public void ChartTypeChipsSpellTypesOutCarryCountsAndHideWhatTheMixLacks()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<ChartSearchResultPage>, CancellationToken>((q, _) => _lastQuery = (SearchChartsQuery)q)
+            .ReturnsAsync(() => new ChartSearchResultPage(new[] { MakeResult("District 1", 21) }, 1,
+                new ChartSearchFacetCounts(
+                    new Dictionary<ChartType, int> { [ChartType.Double] = 812, [ChartType.Single] = 799 },
+                    new Dictionary<SongType, int>(), new Dictionary<string, int>(),
+                    new Dictionary<TierListCategory, int>(), new Dictionary<TierListCategory, int>(),
+                    new Dictionary<TierListCategory, int>(), new Dictionary<LegacySlot, int>(),
+                    new Dictionary<MixEnum, int>(), new Dictionary<ChartScoreStateFilter, int>(),
+                    new Dictionary<int, int>())));
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-card")));
+
+        cut.Find("button[aria-label=Filters]").Click();
+
+        // Full words, never the S/D shorthand, and the count rides the chip.
+        Assert.Contains("Double (812)", cut.Markup);
+        Assert.Contains("Single (799)", cut.Markup);
+        Assert.DoesNotContain(">S<", cut.Markup);
+        // A type this mix has none of is not a choice — Single Performance carries no count
+        // here, exactly as it carries none in a Phoenix mix.
+        Assert.DoesNotContain("Single Performance", cut.Markup);
+    }
+
+    [Fact]
+    public void ScoreStateChipsAreMultiSelect()
+    {
+        SignIn();
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Filters]").Click();
+
+        ChipNamed(cut, "Unplayed").Click();
+        cut.WaitForAssertion(() => Assert.Equal(new[] { ChartScoreStateFilter.Unplayed }, _lastQuery!.ScoreStates!));
+        ChipNamed(cut, "Failed").Click();
+
+        // "Unplayed or Failed" — everything I haven't beaten — which a single select can't say.
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(2, _lastQuery!.ScoreStates!.Count);
+            Assert.Contains(ChartScoreStateFilter.Failed, _lastQuery.ScoreStates);
+        });
+    }
+
+    [Fact]
+    public void TheDrawerOpensOnTheBasicsUntilTheLongTailIsPicked()
+    {
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Filters]").Click();
+
+        // Basics only: no skills cloud, no song-type chips, no community sliders.
+        Assert.Empty(cut.FindAll(".srp-badge-cloud"));
+        Assert.DoesNotContain("Community intelligence", cut.Markup);
+        // The pick list itself is always there — that is how the tail gets opted into.
+        Assert.NotEmpty(cut.FindAll(".srp-more-filters"));
+    }
+
+    [Fact]
+    public void APickedFilterRendersAndTheChoiceIsRemembered()
+    {
+        ShowEveryFilter();
+
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Filters]").Click();
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Contains("Community intelligence", cut.Markup);
+            Assert.Contains("Short Cut", cut.Markup);
+        });
+    }
+
+    [Fact]
+    public void DroppingAFilterFromThePickListClearsWhatItWasFiltering()
+    {
+        // The rule that makes the pick list safe: a filter you stop showing stops applying.
+        // Otherwise results stay narrowed by a control that is no longer on screen.
+        ShowEveryFilter();
+        Services.GetRequiredService<NavigationManager>().NavigateTo("/Charts?SongType=Remix");
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(new[] { SongType.Remix }, _lastQuery!.SongTypes));
+
+        cut.Find("button[aria-label=Filters]").Click();
+        var pickList = cut.FindComponents<MudSelect<string>>()
+            .First(s => s.Instance.Class?.Contains("srp-more-filters") == true);
+        var kept = EveryFilterKey.Split(',').Where(k => k != "songType").ToArray();
+        cut.InvokeAsync(() => pickList.Instance.SelectedValuesChanged.InvokeAsync(kept));
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Empty(_lastQuery!.SongTypes ?? Array.Empty<SongType>());
+            Assert.DoesNotContain("Short Cut", cut.Markup);
+        });
+    }
+
+    [Fact]
+    public void AFilterArrivingByUrlShowsItselfWithoutBeingPicked()
+    {
+        // The saved pick list does not include song type, but this link filters by it. If the
+        // control stayed hidden the chip would be the only evidence, and Clear all the only
+        // way to undo it.
+        Services.GetRequiredService<NavigationManager>().NavigateTo("/Charts?SongType=Remix");
+        var cut = RenderComponent<Charts>();
+
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Filters]").Click();
+
+        cut.WaitForAssertion(() => Assert.Contains("Short Cut", cut.Markup));
+    }
+
+    [Fact]
+    public void EveryRangeFacetOffersTwoDraggableThumbsThatFilter()
+    {
+        // Field-test round 3: every range facet was dead. They were written as
+        // <MudRangeSlider>, which MudBlazor does not have — an unknown component name is a
+        // Razor *warning*, so each one rendered as an inert tag that looked like a control.
+        // Asserting on labels or markup text cannot tell the difference; only a real
+        // input[type=range] that moves the query can. RZ10012 is now a build error too.
+        ShowEveryFilter();
+        _mediator.Setup(m => m.Send(It.IsAny<GetSearchRangesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChartSearchRanges(84, 300, 2m, 22m, 120, 3200, 45, 320, 17.0, 27.5));
+
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Filters]").Click();
+        OpenMoreFilters(cut);
+
+        // Two thumbs per range facet: level, BPM, NPS, notes, duration, the two tier ramps
+        // and scoring level are all present for an anonymous visitor in a Phoenix mix.
+        cut.WaitForAssertion(() =>
+            Assert.True(cut.FindAll(".range-slider input[type=range]").Count >= 16));
+
+        // Change, not Input: the value publishes on release so a drag does not re-run the
+        // search once per step.
+        var bpm = cut.FindAll(".range-slider").First(s => s.TextContent.StartsWith("BPM"));
+        bpm.QuerySelectorAll("input[type=range]")[0].Change("150");
+
+        cut.WaitForAssertion(() => Assert.Equal(150, _lastQuery!.BpmMin));
+    }
+
+    [Fact]
+    public void AnonymousVisitorsGetNoScoreStateFilterOrMyOverlay()
+    {
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+
+        cut.Find("button[aria-label=Filters]").Click();
+
+        Assert.DoesNotContain("Score State", cut.Markup);
+        Assert.Empty(cut.FindAll(".srp-card-my"));
+        Assert.Null(_lastQuery!.UserId);
+    }
+
+    [Fact]
+    public void SignedInVisitorsSearchAsThemselves()
+    {
+        SignIn();
+
+        var cut = RenderComponent<Charts>();
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.NotNull(_lastQuery?.UserId);
+            Assert.NotEmpty(cut.FindAll(".srp-card-my"));
+        });
+    }
+
+    [Fact]
+    public void TheBadgeCloudTogglesGranularBadgesWithResultCounts()
+    {
+        ShowEveryFilter();
+        _mediator.Setup(m => m.Send(It.IsAny<GetSearchBadgesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ChartBadge("staggered_bracket", "Staggered Brackets", BadgeCategory.Brackets)
+            });
+        _mediator.Setup(m => m.Send(It.IsAny<GetSearchArtistsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartSearchVocabularyEntry>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetSearchStepArtistsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartSearchVocabularyEntry>());
+        _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<ChartSearchResultPage>, CancellationToken>((q, _) => _lastQuery = (SearchChartsQuery)q)
+            .ReturnsAsync(() => new ChartSearchResultPage(new[] { MakeResult("District 1", 21) }, 1,
+                new ChartSearchFacetCounts(
+                    new Dictionary<ChartType, int>(),
+                    new Dictionary<SongType, int>(),
+                    new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["staggered_bracket"] = 7 },
+                    new Dictionary<TierListCategory, int>(),
+                    new Dictionary<TierListCategory, int>(),
+                    new Dictionary<TierListCategory, int>(), new Dictionary<LegacySlot, int>(),
+                    new Dictionary<MixEnum, int>(), new Dictionary<ChartScoreStateFilter, int>(),
+                    new Dictionary<int, int>())));
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-card")));
+
+        cut.Find("button[aria-label=Filters]").Click();
+        OpenMoreFilters(cut);
+        cut.WaitForAssertion(() => Assert.Contains("Staggered Brackets (7)", cut.Markup));
+
+        cut.Find(".srp-badge-opt").Click();
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(new[] { "staggered_bracket" }, _lastQuery!.Badges);
+            Assert.Contains("Staggered Brackets", cut.Find(".srp-chip-row").TextContent);
+        });
+    }
+
+    [Fact]
+    public void TheVoteFacetStaysOutOfAPhoenixFamilyMix()
+    {
+        ShowEveryFilter();
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Filters]").Click();
+        OpenMoreFilters(cut);
+
+        // Votes are the legacy mixes' difficulty source; a Phoenix-family mix reads the
+        // score-derived tiers instead, so the facet must not appear at all.
+        Assert.DoesNotContain("Community Vote", cut.Markup);
+        Assert.Contains("Pass Difficulty", cut.Markup);
+    }
+
+    [Fact]
+    public void TheStepArtistIsAlwaysOnTheCard()
+    {
+        // It used to hide behind a Display switch. It is part of what a chart is, so it just
+        // shows; the switches (and the note-count one with them) are gone.
+        var cut = RenderComponent<Charts>();
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(2, cut.FindAll(".srp-card").Count);
+            Assert.NotEmpty(cut.FindAll(".srp-card-stepartist"));
+        });
+    }
+
+    [Fact]
+    public void OfficialPlacesDecorateCardsWithoutTouchingLegacyMixes()
+    {
+        var modern = MakeResult("District 1", 21);
+        var legacy = MakeResult("Turkey March", 6, MixEnum.Prex3);
+        _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChartSearchResultPage(new[] { modern, legacy }, 2));
+        _mediator.Setup(m => m.Send(It.Is<ScoreTracker.OfficialMirror.Contracts.Queries.GetOfficialPopularityQuery>(
+                    q => q.Mix == MixEnum.Phoenix), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ScoreTracker.OfficialMirror.Contracts.OfficialPopularityRecord(modern.Chart.Id, 213, null,
+                    Array.Empty<int>())
+            });
+
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+
+        // Popularity moved off the card and into the dialog, as two separate facts: where the
+        // chart sits on piugame's whole-mix play ranking, and where it sits inside its folder.
+        // Only the modern chart is ranked, so it is first in a folder of one.
+        cut.Find(".srp-card-link").Click();
+
+        cut.WaitForAssertion(() =>
+        {
+            var dialog = cut.FindComponent<ChartDetailsDialog>().Instance;
+            Assert.Equal(213, dialog.OfficialPlace);
+            Assert.Equal(1, dialog.OfficialFolderPlace);
+        });
+        Assert.DoesNotContain("most played", cut.Markup);
+        // A legacy mix has no official board to ask for.
+        _mediator.Verify(m => m.Send(It.Is<ScoreTracker.OfficialMirror.Contracts.Queries.GetOfficialPopularityQuery>(
+            q => q.Mix == MixEnum.Prex3), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public void DensityCyclesCardsStickersAndTableAndPersists()
+    {
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+
+        cut.Find("button[aria-label=Compact]").Click();
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(2, cut.FindAll(".tier-chart-card-compact").Count);
+            Assert.Empty(cut.FindAll(".srp-card"));
+            // The tiles size from the tier lists' compact grid — without that container
+            // they collapse to slivers, which is exactly how this shipped broken once.
+            Assert.Single(cut.FindAll(".tier-card-grid.tier-card-grid-compact"));
+        });
+        _uiSettings.Verify(u => u.SetSetting("Density__Charts", "Compact", It.IsAny<CancellationToken>()),
+            Times.Once);
+        // Stickers are links too — the tooltip carries identity, the href carries the page.
+        Assert.All(cut.FindAll("a.tier-chart-card"),
+            a => Assert.StartsWith("/Charts/phoenix/", a.GetAttribute("href")));
+
+        cut.Find("button[aria-label=Table]").Click();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-table")));
+    }
+
+    [Fact]
+    public void TableHeadersCarryTheSortAndTheSortChipRetires()
+    {
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Table]").Click();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-table")));
+
+        var npsHeader = cut.FindAll("th").Single(h => h.TextContent.Trim().StartsWith("NPS"));
+        npsHeader.Click();
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(ChartSearchSort.Nps, _lastQuery!.Sort);
+            var sorted = cut.Find(".srp-th-sorted");
+            Assert.StartsWith("NPS", sorted.TextContent.Trim());
+        });
+        // The header shows the sort; no ⇅ chip joins the query row in Table density.
+        Assert.DoesNotContain("⇅", cut.Find(".srp-chip-row").TextContent);
+    }
+
+    [Fact]
+    public void ThePageSearchesTheSelectedMix()
+    {
+        var cut = RenderComponent<Charts>();
+
+        cut.WaitForAssertion(() => Assert.Equal(MixEnum.Phoenix, _lastQuery!.Mix));
+        // The mix is page furniture, not a filter — it never joins the chip row.
+        Assert.Contains("Phoenix", cut.Find(".srp-head").TextContent);
+        Assert.Empty(cut.FindAll(".srp-chip-row .mud-chip"));
+    }
+}

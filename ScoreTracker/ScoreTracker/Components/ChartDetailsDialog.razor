@@ -66,6 +66,24 @@
                 }
                 <div><span class="chart-details-meta-label">@L["Song Artist"]</span><span>@Chart.Song.Artist</span></div>
                 <div><span class="chart-details-meta-label">@L["Song Type"]</span><span>@Chart.Song.Type</span></div>
+                @* Two separate facts, because they answer different questions: how played this
+                   chart is across the whole mix, and how played it is against its own folder —
+                   a chart four hundredth overall can still be the most played thing in its
+                   folder. Both are piugame's play ranking, not this site's score counts. *@
+                @if (OfficialPlace != null)
+                {
+                    <div>
+                        <span class="chart-details-meta-label">@L["Popularity overall"]</span>
+                        <span>@L["#{0}", OfficialPlace.Value.ToString("N0")]</span>
+                    </div>
+                }
+                @if (OfficialFolderPlace != null)
+                {
+                    <div>
+                        <span class="chart-details-meta-label">@L["Popularity in {0}", Chart.DifficultyString]</span>
+                        <span>@L["#{0}", OfficialFolderPlace.Value.ToString("N0")]</span>
+                    </div>
+                }
             </div>
             @if (Score?.Score != null)
             {
@@ -88,24 +106,16 @@
                     }
                 </div>
             }
-            @* Skill coverage bars — mapped skills ordered dominance-first (their top-3
-               pick, then segment coverage), tinted per category. Pre-crawl charts fall
-               back to the plain tag chips. *@
+            @* Badge coverage bars — granular piucenter badges, dominance-first (their top-3
+               pick, then coverage). A pre-crawl chart shows nothing here rather than falling
+               back to the rollup tags: an arbitrary "Technical" is worse than silence
+               (docs/design/nuke-old-skill-categories.md). *@
             @if (_skillChips.Any())
             {
                 <MudText Typo="Typo.overline">@L["Skills"]</MudText>
                 @* Bars extracted to SkillCoverageBars (chart-page overhaul): one concept,
                    one component — the page renders the same bars at section scale. *@
                 <SkillCoverageBars Chips="_skillChips"></SkillCoverageBars>
-            }
-            else if (Chart.Skills.Any())
-            {
-                <div class="chart-details-skills">
-                    @foreach (var skill in Chart.Skills)
-                    {
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@skill.GetName()</MudChip>
-                    }
-                </div>
             }
             @* Round 4 (piucenter): "Your journey" renamed Score History and moved next
                to the recording inputs it feeds — past scores directly above the new one. *@
@@ -166,16 +176,35 @@
                        Disabled="_isSaving || _feedbackSent"
                        OnClick="SubmitGoodSuggestion">@L["Good Suggestion"]</MudButton>
         }
+        @* The dialog is a summary; the chart page is the whole record (videos, similar charts,
+           the score distribution). A real link, so it opens in a tab like any other. *@
+        @if (Chart != null)
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew"
+                       Href="@ChartSlugs.CanonicalPath(Chart)">@L["More info"]</MudButton>
+        }
         <MudSpacer></MudSpacer>
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close"
                    OnClick="Close">@L["Close"]</MudButton>
     </DialogActions>
 </MudDialog>
 <style>
-    /* Desktop cap (owner, widget-shell field-test round 1): MaxWidth.Small let the
-       video domineer — nothing in the dialog needs more than ~520px. */
+    /* Desktop cap. This has to be said once, here, and it only works because the dialog no
+       longer asks for MaxWidth.Small: wwwroot/css/charts.scss carries a site-wide
+       `.mud-dialog-width-sm { max-width: none !important }` — added long ago so a video
+       dialog could outgrow the cap — and no normal-weight rule can beat `!important`, which
+       is why every previous attempt to cap this dialog did nothing at all. Options now use
+       MaxWidth.False, so MudBlazor never tags it with that class and this rule governs. */
     .mud-dialog.chart-details-dialog {
-        max-width: 520px;
+        max-width: 572px;
+    }
+
+    /* The content is tall (video, meta, bars, history, the record row). Bounding it keeps
+       the scroll inside the dialog, where the bar is next to the content it moves, instead
+       of running the dialog off the bottom of the viewport with no hint it continues. */
+    .mud-dialog.chart-details-dialog .mud-dialog-content {
+        max-height: min(70vh, 720px);
+        overflow-y: auto;
     }
 
     .chart-details-video {
@@ -258,12 +287,6 @@
         margin: 8px 0;
     }
 
-    /* Owner call (piucenter round 2): the desktop dialog ran wide enough that the
-       16:9 video outgrew laptop viewports — cap under MudBlazor's Small. */
-    .mud-dialog.chart-details-dialog {
-        max-width: 520px;
-    }
-
     .chart-details-piucenter {
         display: inline-block;
         margin-top: 8px;
@@ -295,7 +318,11 @@
 </style>
 
 @code {
-    private readonly DialogOptions _options = new() { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small };
+    // MaxWidth.False on purpose: Small would tag the dialog `mud-dialog-width-sm`, which
+    // charts.scss globally forces to `max-width: none !important`. The cap lives in this
+    // component's own stylesheet instead — see the note beside it.
+    private readonly DialogOptions _options = new()
+        { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.False };
     private Guid _loadedChartId = Guid.Empty;
     private int? _inputScore;
     private PhoenixPlate? _inputPlate;
@@ -328,6 +355,16 @@
     [Parameter] public int? ScoreAgeDays { get; set; }
 
     /// <summary>
+    ///     The chart's place on piugame's play ranking for the whole mix, and its place among
+    ///     the charts of its own folder. Optional: a caller that has not fetched the official
+    ///     board leaves both null and neither line renders. Not this site's Popularity sort,
+    ///     which counts scores recorded here.
+    /// </summary>
+    [Parameter] public int? OfficialPlace { get; set; }
+
+    [Parameter] public int? OfficialFolderPlace { get; set; }
+
+    /// <summary>
     ///     The recommendation category this chart was suggested under (Suggested Charts
     ///     widget). Non-null unlocks the Good Suggestion action.
     /// </summary>
@@ -350,9 +387,9 @@
         _placements = await LoadPlacements(Chart.Id);
         // The alias table's key beats the guessed one (crawler project hardening).
         _externalKey = (await Mediator.Send(new GetChartStepAnalysisQuery(Chart.Id)))?.ExternalKey;
-        // Coverage bars: mapped skills, dominance-ordered, from the banked metrics.
-        _skillChips = (await Mediator.Send(new GetChartSkillChipsQuery(new[] { Chart.Id })))
-            .GetValueOrDefault(Chart.Id) ?? Array.Empty<ChartSkillChipRecord>();
+        // Coverage bars: granular piucenter badges, dominance-ordered, from the banked metrics.
+        _skillChips = (await Mediator.Send(new GetChartBadgeChipsQuery(new[] { Chart.Id })))
+            .GetValueOrDefault(Chart.Id) ?? Array.Empty<ChartBadgeChipRecord>();
     }
 
     private async Task<IReadOnlyList<(string, string)>> LoadPlacements(Guid chartId)
@@ -395,7 +432,7 @@
     }
 
     private string? _externalKey;
-    private IReadOnlyList<ChartSkillChipRecord> _skillChips = Array.Empty<ChartSkillChipRecord>();
+    private IReadOnlyList<ChartBadgeChipRecord> _skillChips = Array.Empty<ChartBadgeChipRecord>();
 
     // The resolved alias key when the crawler has one; otherwise a best-effort guess
     // in the current key format ("<Song>_-_<Artist>_<S|D><level>_<SONGTYPE>").

@@ -72,6 +72,12 @@ internal sealed class EFChartSkillMetricRepository : IChartSkillMetricRepository
         return (await GetAllMetrics(source, cancellationToken)).Keys.ToHashSet();
     }
 
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillMetric>>> GetMetricsByChart(string source,
+        CancellationToken cancellationToken = default)
+    {
+        return await GetAllMetrics(source, cancellationToken);
+    }
+
     private async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillMetric>>> GetAllMetrics(string source,
         CancellationToken cancellationToken)
     {
