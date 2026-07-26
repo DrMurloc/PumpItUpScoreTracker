@@ -495,9 +495,6 @@
   <data name="Disclaimer: This data was data-mined in NX2 and Prime, it is unconfirmed how accurate it is today." xml:space="preserve">
     <value>Aviso: estos datos fueron extraídos por data-mine en NX2 y Prime; no está confirmado qué tan precisos son hoy.</value>
   </data>
-  <data name="Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists." xml:space="preserve">
-    <value>Aviso: esta lista se está refinando; a algunos charts les faltan step artists y algunos pueden tener artistas incorrectos.</value>
-  </data>
   <data name="Discord" xml:space="preserve">
     <value>Discord</value>
   </data>
@@ -1490,9 +1487,6 @@
   </data>
   <data name="Step Artist: X" xml:space="preserve">
     <value>Step Artist: {0}</value>
-  </data>
-  <data name="Step Artists" xml:space="preserve">
-    <value>Step Artists</value>
   </data>
   <data name="Submission Page" xml:space="preserve">
     <value>Página de envío</value>

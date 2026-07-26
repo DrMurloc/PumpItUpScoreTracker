@@ -753,12 +753,6 @@
   <data name="Removed" xml:space="preserve">
     <value>Eliminado</value>
   </data>
-  <data name="Step Artists" xml:space="preserve">
-    <value>Step artists</value>
-  </data>
-  <data name="Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists." xml:space="preserve">
-    <value>Aviso: esta lista se está refinando; a algunos charts les falta el step artist y otros pueden tenerlo incorrecto.</value>
-  </data>
   <data name="PIU Life Calculator" xml:space="preserve">
     <value>Calculadora de vida de PIU</value>
   </data>

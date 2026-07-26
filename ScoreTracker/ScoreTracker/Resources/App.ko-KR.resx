@@ -754,12 +754,6 @@
   <data name="Removed" xml:space="preserve">
     <value>제거됨</value>
   </data>
-  <data name="Step Artists" xml:space="preserve">
-    <value>스텝 아티스트</value>
-  </data>
-  <data name="Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists." xml:space="preserve">
-    <value>참고: 이 목록은 정리 중이며, 일부 채보는 스텝 아티스트가 누락되거나 잘못된 아티스트가 표시될 수 있습니다.</value>
-  </data>
   <data name="PIU Life Calculator" xml:space="preserve">
     <value>PIU 라이프 계산기</value>
   </data>
