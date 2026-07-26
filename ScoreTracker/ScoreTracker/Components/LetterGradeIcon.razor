@@ -4,7 +4,7 @@
 @using Align = MudBlazor.Align
 @namespace ScoreTracker.Web.Components
 
-@if (Grade != null)
+@if (Shown != null)
 {
     <MudImage tabindex="0" Src="@LetterGradeImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
 
@@ -13,13 +13,28 @@
     [Parameter]
     public PhoenixLetterGrade? Grade { get; set; }
 
+    /// <summary>
+    ///     An XX-and-older grade, drawn with the Phoenix art for the same letter until the
+    ///     XX letter set exists — the two scales share every letter XX uses (F…SSS), and a
+    ///     letter as a picture beats a letter as bare text next to a broken marker. When the
+    ///     real art lands, this is the only place that has to know.
+    /// </summary>
+    [Parameter]
+    public XXLetterGrade? LegacyGrade { get; set; }
+
     [Parameter]
     public int Height { get; set; } = 20;
     [Parameter]
     public bool IsBroken { get; set; } = false;
 
-    private string LetterGradeImage => 
-        $"https://piuimages.arroweclip.se/letters/{Grade?.ToString().ToLower()}{BrokenPiece}.png";
+    private PhoenixLetterGrade? Shown => Grade
+                                         ?? (LegacyGrade != null
+                                             && Enum.TryParse<PhoenixLetterGrade>(LegacyGrade.Value.ToString(), out var equivalent)
+                                             ? equivalent
+                                             : null);
+
+    private string LetterGradeImage =>
+        $"https://piuimages.arroweclip.se/letters/{Shown?.ToString().ToLower()}{BrokenPiece}.png";
 
 
     private string BrokenPiece => IsBroken ? "_broken" : "";

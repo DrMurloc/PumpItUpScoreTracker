@@ -6309,4 +6309,10 @@
   <data name="Off" xml:space="preserve">
     <value>꺼짐</value>
   </data>
+  <data name="#{0} most played" xml:space="preserve">
+    <value>플레이 {0}위</value>
+  </data>
+  <data name="Official play ranking on piugame.com" xml:space="preserve">
+    <value>piugame.com 공식 플레이 순위</value>
+  </data>
 </root>

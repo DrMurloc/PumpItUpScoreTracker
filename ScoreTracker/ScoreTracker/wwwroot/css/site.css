@@ -6661,11 +6661,6 @@ button.chart-card-art {
     padding: 2px 7px;
 }
 
-.srp-card-legacy-grade {
-    font-weight: 700;
-    font-size: 1rem;
-}
-
 .srp-card-plate {
     font-size: .72rem;
     font-weight: 700;
@@ -6811,13 +6806,6 @@ button.chart-card-art {
 
 /* SRP densities: sticker sheet + table. The sheet itself is the tier lists'
    .tier-card-grid.tier-card-grid-compact — the tiles take their width from that grid. */
-.srp-sticker-legacy-grade {
-    font-weight: 700;
-    font-size: .7rem;
-    color: var(--mix-ink);
-    text-shadow: 0 1px 3px rgb(0 0 0 / 80%);
-}
-
 .srp-table .srp-th-sortable {
     cursor: pointer;
     white-space: nowrap;

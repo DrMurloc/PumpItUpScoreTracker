@@ -83,9 +83,14 @@
             {
                 <span>@L["{0} notes", Result.Chart.NoteCount.Value.ToString("N0")]</span>
             }
+            @* "#12 official" never said what it ranked. It is piugame's own play ranking —
+               a different number from this page's Popularity sort, which counts scores
+               recorded here — so the badge names the measure and the title names the source. *@
             @if (OfficialPlace != null)
             {
-                <span class="srp-card-official">#@OfficialPlace.Value.ToString("N0") @L["official"]</span>
+                <span class="srp-card-official" title="@L["Official play ranking on piugame.com"]">
+                    @L["#{0} most played", OfficialPlace.Value.ToString("N0")]
+                </span>
             }
         </div>
     </div>
@@ -104,7 +109,7 @@
                 }
                 else if (Result.My.LegacyGrade != null)
                 {
-                    <span class="srp-card-legacy-grade">@Result.My.LegacyGrade@(Result.My.IsBroken ? " ⨯" : "")</span>
+                    <LetterGradeIcon LegacyGrade="Result.My.LegacyGrade" IsBroken="Result.My.IsBroken" Height="20"></LetterGradeIcon>
                 }
                 @if (Result.My.PhoenixPlate != null)
                 {

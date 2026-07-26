@@ -295,6 +295,19 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
   the pick list needs the extents to know which range filters this mix can offer at all. The
   loaded flag is set *after* the reads succeed, so a failure part-way retries instead of
   leaving the drawer permanently half-built.
+- **Legacy grades wear letter art.** An XX grade printed as bare text with `⨯` for broken
+  read as "D x" and meant nothing. `LetterGradeIcon` takes a `LegacyGrade` and draws the
+  Phoenix art for the same letter — every letter XX uses (F…SSS) exists in that set, so the
+  borrow is exact. One component, one parameter: when the XX letter art is drawn it is the
+  only place that has to learn about it. Card, sticker and table row all route through it.
+  This does not cut against [legacy-mixes.md](legacy-mixes.md), which bars legacy
+  *difficulty* from borrowing the modern ramp: that doc calls grades "the stable currency"
+  precisely because the F→SSS ladder does span eras, which is what makes the letters shareable
+  when the levels are not.
+- **The official badge names its measure.** "#12 official" never said what 12 ranked. It is
+  piugame's play ranking, and this page *also* sorts by Popularity — which counts scores
+  recorded here — so the two were indistinguishable. It reads "#12 most played" with the
+  source in its title.
 - **Chips are touch targets.** Filter chips and skill tags were ~22px, under half a thumb;
   they sit at 40px now, applied-filter tokens at 36px with a 28px ✕. The skill tag borrows
   the tier list's card chip, so only the SRP's interactive copy is resized — the display tag

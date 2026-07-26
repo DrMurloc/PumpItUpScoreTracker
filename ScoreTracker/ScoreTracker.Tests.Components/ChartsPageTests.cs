@@ -452,7 +452,8 @@ public sealed class ChartsPageTests : ComponentTestBase
 
         var cut = RenderComponent<Charts>();
 
-        cut.WaitForAssertion(() => Assert.Contains("#213 official", cut.Markup));
+        // The badge names the measure — "#213 official" never said what it ranked.
+        cut.WaitForAssertion(() => Assert.Contains("#213 most played", cut.Markup));
         _mediator.Verify(m => m.Send(It.Is<ScoreTracker.OfficialMirror.Contracts.Queries.GetOfficialPopularityQuery>(
             q => q.Mix == MixEnum.Prex3), It.IsAny<CancellationToken>()), Times.Never);
     }

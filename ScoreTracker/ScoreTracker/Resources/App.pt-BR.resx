@@ -6299,4 +6299,10 @@
   <data name="Off" xml:space="preserve">
     <value>Desativado</value>
   </data>
+  <data name="#{0} most played" xml:space="preserve">
+    <value>#{0} mais jogadas</value>
+  </data>
+  <data name="Official play ranking on piugame.com" xml:space="preserve">
+    <value>Ranking oficial de partidas no piugame.com</value>
+  </data>
 </root>

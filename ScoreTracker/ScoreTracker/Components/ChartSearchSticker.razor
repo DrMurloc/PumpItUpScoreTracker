@@ -28,8 +28,8 @@
             }
             else if (Result.My?.LegacyGrade != null)
             {
-                <div class="tier-chart-card-compact-grade srp-sticker-legacy-grade">
-                    @Result.My.LegacyGrade@(Result.My.IsBroken ? "⨯" : string.Empty)
+                <div class="tier-chart-card-compact-grade">
+                    <LetterGradeIcon LegacyGrade="Result.My.LegacyGrade" IsBroken="Result.My.IsBroken" Height="16"></LetterGradeIcon>
                 </div>
             }
         </div>

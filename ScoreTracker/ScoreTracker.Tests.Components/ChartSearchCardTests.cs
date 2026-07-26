@@ -73,6 +73,23 @@ public sealed class ChartSearchCardTests : ComponentTestBase
     }
 
     [Fact]
+    public void ALegacyGradeRendersAsLetterArtNotBareText()
+    {
+        // "D ⨯" read as "D x" and meant nothing. XX grades borrow the Phoenix letter art
+        // (every letter XX uses exists there) until the XX set is drawn.
+        var result = ChartsPageTests.MakeResult("Turkey March", 6, MixEnum.Prex3,
+            my: new ChartSearchMyState(null, null, null, XXLetterGrade.D, 88000, true,
+                true, DateTimeOffset.Parse("2026-06-01T00:00:00Z")));
+
+        var cut = RenderComponent<ChartSearchCard>(p => p
+            .Add(x => x.Result, result).Add(x => x.ShowMyState, true));
+
+        var src = cut.Find(".srp-card-my img").GetAttribute("src")!;
+        Assert.Contains("/letters/d_broken.png", src);
+        Assert.DoesNotContain("⨯", cut.Markup);
+    }
+
+    [Fact]
     public void TheLeadFactRendersAheadOfTheStandingFacts()
     {
         var result = ChartsPageTests.MakeResult("District 1", 21);

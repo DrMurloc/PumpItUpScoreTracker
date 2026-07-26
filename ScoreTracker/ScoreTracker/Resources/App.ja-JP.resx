@@ -6428,4 +6428,10 @@
   <data name="Off" xml:space="preserve">
     <value>オフ</value>
   </data>
+  <data name="#{0} most played" xml:space="preserve">
+    <value>プレイ数 {0}位</value>
+  </data>
+  <data name="Official play ranking on piugame.com" xml:space="preserve">
+    <value>piugame.com の公式プレイランキング</value>
+  </data>
 </root>

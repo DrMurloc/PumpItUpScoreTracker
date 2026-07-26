@@ -180,7 +180,7 @@ else
                                 }
                                 else if (result.My?.LegacyGrade != null)
                                 {
-                                    @result.My.LegacyGrade@(result.My.IsBroken ? " ⨯" : "")
+                                    <LetterGradeIcon LegacyGrade="result.My.LegacyGrade" IsBroken="result.My.IsBroken" Height="16"></LetterGradeIcon>
                                 }
                             </td>
                             <td>@result.My?.PhoenixPlate?.GetShorthand()</td>

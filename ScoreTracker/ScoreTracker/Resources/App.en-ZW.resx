@@ -6354,4 +6354,10 @@
   <data name="Off" xml:space="preserve">
     <value>Mrgloff</value>
   </data>
+  <data name="#{0} most played" xml:space="preserve">
+    <value>#{0} mrrgl plrgld</value>
+  </data>
+  <data name="Official play ranking on piugame.com" xml:space="preserve">
+    <value>Mrgloffrgl plrgl rrglnkrgl mrgl piugame.com</value>
+  </data>
 </root>

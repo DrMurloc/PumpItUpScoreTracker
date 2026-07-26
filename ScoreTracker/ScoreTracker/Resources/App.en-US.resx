@@ -6422,4 +6422,10 @@
   <data name="Off" xml:space="preserve">
     <value>Off</value>
   </data>
+  <data name="#{0} most played" xml:space="preserve">
+    <value>#{0} most played</value>
+  </data>
+  <data name="Official play ranking on piugame.com" xml:space="preserve">
+    <value>Official play ranking on piugame.com</value>
+  </data>
 </root>
