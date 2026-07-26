@@ -124,16 +124,17 @@ Added by the 2026-07-12 main-merge batch (tier-lists overhaul, PIU Center crawle
 
 Ordered by importance. These shipped as translator's choice or verbatim-anchor extrapolations; a native speaker (ideally Errlena) should confirm.
 
-1. **Opening `¡` omitted on all exclamations** (`Guardado!`, `Copiado al portapapeles!`, `Bienvenido/a a Score Tracker, {0}!`). Extrapolated from the intake §4 anchors, which used `¿…?` but never `¡`. If that was an oversight rather than a style choice, sweep the file to add `¡…!` pairs. Questions keep `¿…?` either way. (Her known intake open question turned out to be play/run, since resolved — this one still needs her explicit confirmation.)
-2. **`TLDR:` prefix dropped** in the life-calculator summary — the volunteer's §4.10 translation omitted it (shipped verbatim). The standalone `TLDR` header key kept it. Confirm whether the prefix should return.
-3. **Loanword capitalization in buttons** (`Subir Scores`, `Ocultar Charts Conseguidos`) vs sentence case (`Grabar sesión`) — the §4 anchors are internally inconsistent; the batch capitalized loanwords in button labels and lowercased them in prose. Confirm the pattern.
-4. **`Lamp de folder`** (`Folder Lamp`) — "lamp" is imported rhythm-game jargon; no es-ES precedent known. Alternatives: `Folder completo`, `Lámpara`.
-5. **`Completado` for the Completion feature** — chosen over `compleción` (stiff) and keeping EN. |
-6. **`conseguido` generalized** from the §4.5 anchor to the standalone `Completed` key — if `Completed` ever labels non-chart things, revisit.
-7. **`clasificatorias`** (accepted draft) coexists with EN `leaderboard`/`brackets`/`seed` — confirm the tournament scene actually says it.
-8. **Archetype/recap flavor names** (`Cazador/a de passes`, `Copo de nieve especial`, `Alma social`, `Momentos matagigantes`, `Espero que fuerais de la mano en Canon D`) — playful translations of site-invented labels; wordsmithing welcome.
-9. **`Reportar vídeo`** — `reportar` is LatAm-rooted but common in es-ES gaming; alternative `Denunciar`/`Informar de`.
-10. **Multi-line prose pages** (Life Calculator, ChartScoring explainer, import flows) — translated mechanically from the glossary; same high-priority review caveat as every other locale's bulk batch.
+1. **`puntuación` vs the English `score` (70 values as of the 2026-07-26 QC pass).** This file's defining choice is that `score` stays English — and it is 142-to-70 in favour, so the minority is large enough to read as a second convention rather than a slip. The newest offender (the retired-charts notice) was swept to `Tus scores siguen en tu perfil` in that pass. Deciding the rest is a native call: sweep the 70 to `score(s)`, or narrow the rule to "English in labels, `puntuación` in prose" and document it. Either way it wants **one dedicated sweep**, not piecemeal edits, and it is the single largest consistency question in the file.
+2. **Opening `¡` omitted on all exclamations** (`Guardado!`, `Copiado al portapapeles!`, `Bienvenido/a a Score Tracker, {0}!`). Extrapolated from the intake §4 anchors, which used `¿…?` but never `¡`. If that was an oversight rather than a style choice, sweep the file to add `¡…!` pairs. Questions keep `¿…?` either way. (Her known intake open question turned out to be play/run, since resolved — this one still needs her explicit confirmation.)
+3. **`TLDR:` prefix dropped** in the life-calculator summary — the volunteer's §4.10 translation omitted it (shipped verbatim). The standalone `TLDR` header key kept it. Confirm whether the prefix should return.
+4. **Loanword capitalization in buttons** (`Subir Scores`, `Ocultar Charts Conseguidos`) vs sentence case (`Grabar sesión`) — the §4 anchors are internally inconsistent; the batch capitalized loanwords in button labels and lowercased them in prose. Confirm the pattern.
+5. **`Lamp de folder`** (`Folder Lamp`) — "lamp" is imported rhythm-game jargon; no es-ES precedent known. Alternatives: `Folder completo`, `Lámpara`.
+6. **`Completado` for the Completion feature** — chosen over `compleción` (stiff) and keeping EN. |
+7. **`conseguido` generalized** from the §4.5 anchor to the standalone `Completed` key — if `Completed` ever labels non-chart things, revisit.
+8. **`clasificatorias`** (accepted draft) coexists with EN `leaderboard`/`brackets`/`seed` — confirm the tournament scene actually says it.
+9. **Archetype/recap flavor names** (`Cazador/a de passes`, `Copo de nieve especial`, `Alma social`, `Momentos matagigantes`, `Espero que fuerais de la mano en Canon D`) — playful translations of site-invented labels; wordsmithing welcome.
+10. **`Reportar vídeo`** — `reportar` is LatAm-rooted but common in es-ES gaming; alternative `Denunciar`/`Informar de`.
+11. **Multi-line prose pages** (Life Calculator, ChartScoring explainer, import flows) — translated mechanically from the glossary; same high-priority review caveat as every other locale's bulk batch.
 
 ## Intake form provenance
 
