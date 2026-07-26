@@ -315,9 +315,6 @@
   <data name="Progress" xml:space="preserve">
     <value>Progresso</value>
   </data>
-  <data name="Progress Charts" xml:space="preserve">
-    <value>Gráficos de progresso</value>
-  </data>
   <data name="Public" xml:space="preserve">
     <value>Público</value>
   </data>
@@ -582,15 +579,6 @@
   <data name="Difficulty" xml:space="preserve">
     <value>Dificuldade</value>
   </data>
-  <data name="Difficulty Letters" xml:space="preserve">
-    <value>Letras por dificuldade</value>
-  </data>
-  <data name="Difficulty Passes" xml:space="preserve">
-    <value>Passes por dificuldade</value>
-  </data>
-  <data name="Difficulty Progress" xml:space="preserve">
-    <value>Progresso por dificuldade</value>
-  </data>
   <data name="Level" xml:space="preserve">
     <value>Nível</value>
   </data>
@@ -618,12 +606,6 @@
   <data name="My Relative Difficulty" xml:space="preserve">
     <value>Minha dificuldade relativa</value>
   </data>
-  <data name="Overall Letters" xml:space="preserve">
-    <value>Letras gerais</value>
-  </data>
-  <data name="Overall Passes" xml:space="preserve">
-    <value>Passes gerais</value>
-  </data>
   <data name="Overview" xml:space="preserve">
     <value>Visão geral</value>
   </data>
@@ -638,9 +620,6 @@
   </data>
   <data name="Passes" xml:space="preserve">
     <value>passes</value>
-  </data>
-  <data name="Passes By Level" xml:space="preserve">
-    <value>Passes por nível</value>
   </data>
   <data name="Rating" xml:space="preserve">
     <value>Rating</value>
@@ -657,17 +636,11 @@
   <data name="Score Distribution" xml:space="preserve">
     <value>Distribuição de pontuação</value>
   </data>
-  <data name="Score Distribution Lines" xml:space="preserve">
-    <value>Linhas de distribuição de pontuação</value>
-  </data>
   <data name="Scoring Difficulty" xml:space="preserve">
     <value>Dificuldade de pontuação</value>
   </data>
   <data name="Share Url" xml:space="preserve">
     <value>URL de compartilhamento</value>
-  </data>
-  <data name="Share Your Progress Page" xml:space="preserve">
-    <value>Compartilhar sua página de progresso</value>
   </data>
   <data name="Show Scoreless" xml:space="preserve">
     <value>Mostrar sem pontuação</value>
@@ -692,9 +665,6 @@
   </data>
   <data name="Unpassed" xml:space="preserve">
     <value>Sem pass</value>
-  </data>
-  <data name="XX Progress" xml:space="preserve">
-    <value>Progresso XX</value>
   </data>
   <data name="Admin" xml:space="preserve">
     <value>Admin</value>
@@ -867,9 +837,6 @@
   <data name="Starting Life" xml:space="preserve">
     <value>Vida inicial</value>
   </data>
-  <data name="Step Artists" xml:space="preserve">
-    <value>Autores dos passos</value>
-  </data>
   <data name="TLDR" xml:space="preserve">
     <value>TLDR</value>
   </data>
@@ -890,9 +857,6 @@
   </data>
   <data name="Disclaimer: This data was data-mined in NX2 and Prime, it is unconfirmed how accurate it is today." xml:space="preserve">
     <value>Aviso: estes dados foram extraídos via data-mining no NX2 e no Prime; não há confirmação de quão precisos eles ainda são hoje.</value>
-  </data>
-  <data name="Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists." xml:space="preserve">
-    <value>Aviso: esta lista está sendo refinada; alguns charts estão sem autor dos passos e outros podem ter autores incorretos.</value>
   </data>
   <data name="Each perfect or great you get increases the multiplier by a minor amount." xml:space="preserve">
     <value>Cada perfect ou great que você acerta aumenta o multiplicador em uma pequena quantidade.</value>

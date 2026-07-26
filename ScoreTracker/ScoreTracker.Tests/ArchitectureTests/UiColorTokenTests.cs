@@ -43,7 +43,8 @@ public sealed class UiColorTokenTests
         ["Pages/Dev/Populate.razor"] = 4,
         ["Pages/Experiments/ChartLetterDifficulties.razor"] = 8,
         ["Pages/Experiments/GameStats.razor"] = 12,
-        ["Pages/Progress/PhoenixProgress.razor"] = 2,
+        // PhoenixProgress.razor took its 2 literals (the Singles/Doubles line colors) with it
+        // when the Player Stats pages were retired for the home-page widgets — entry removed.
         // The recap deck is deliberately self-styled slide art (its design doc owns its
         // palette); it stays allowlisted rather than tokenized.
         ["Pages/Progress/PhoenixRecap.razor"] = 22,

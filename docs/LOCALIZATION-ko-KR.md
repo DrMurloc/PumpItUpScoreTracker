@@ -112,7 +112,7 @@ These have at least one existing translation in `App.ko-KR.resx`. New translatio
 | Suggested Chart | 추천 채보 | |
 | Title (in-game title award) | 칭호 | (Cross-reference: same as generic UI Title.) |
 | Favorites | 즐겨찾기 | (Cross-reference.) |
-| Progress | 진행상황 | "Progress Charts" → 진행중인 채보 (note: rendered as "in-progress charts," meaning the chart-list page, not generic-progress charts). |
+| Progress | 진행상황 | |
 | Popularity | 인기 | |
 
 ### Game-mechanic vocabulary
