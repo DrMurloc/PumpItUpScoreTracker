@@ -15,7 +15,7 @@
 *@
 
 <div class="fl-spectrum @SizeClass @(Vertical ? "fl-vertical" : "")">
-    <div class="fl-track @(IsLamped ? "fl-track-lamped" : "")">
+    <div class="fl-track @(IsLamped ? "fl-track-lamped" : "")" style="@LampGlowStyle">
         <div class="fl-fill" style="background:@Gradient"></div>
         @if (ShowTicks)
         {
@@ -52,6 +52,15 @@
     ///     there was drawing a finish line on top of the finish line. The whole bar glows instead.
     /// </summary>
     private bool IsLamped => Size > 0 && GradesDescending.Count >= Size;
+
+    /// <summary>
+    ///     The lamp glows in the folder's own grade metal rather than a flat accent, so a folder
+    ///     lamped at AA burns copper and one lamped at SSS+ burns ice-blue — the glow says how
+    ///     well it was lamped, not just that it was. The CSS reads it as currentColor.
+    /// </summary>
+    private string LampGlowStyle => IsLamped && GradesDescending.Count > 0
+        ? $"color:{MixThemes.GradeVar(GradesDescending[^1])}"
+        : string.Empty;
 
     private string SizeClass => Height switch
     {

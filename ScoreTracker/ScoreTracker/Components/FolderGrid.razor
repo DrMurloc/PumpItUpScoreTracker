@@ -31,7 +31,7 @@
         @foreach (var level in LevelsFor(_pendingType))
         {
             var captured = level;
-            <button type="button"
+            <button type="button" disabled="@IsDisabled(_pendingType, captured)"
                     class="folder-picker-level @(IsSelected(_pendingType, captured) ? "folder-picker-current" : null)"
                     @onclick="() => LevelPicked.InvokeAsync((_pendingType, captured))">@captured</button>
         }
@@ -52,6 +52,12 @@
 
     /// <summary>Fired per tap; the host decides toggle-and-stay (multi) or pick-and-close (single).</summary>
     [Parameter] public EventCallback<(ChartType Type, int Level)> LevelPicked { get; set; }
+
+    /// <summary>
+    ///     Which cells refuse a tap. A multi-select host at its cap greys the rest rather than
+    ///     swallowing the click — a dead button that still looks live reads as a broken grid.
+    /// </summary>
+    [Parameter] public Func<ChartType, int, bool> IsDisabled { get; set; } = (_, _) => false;
 
     protected override void OnInitialized()
     {

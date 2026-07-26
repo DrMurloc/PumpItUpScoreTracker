@@ -30,6 +30,9 @@ else if (_rows.Length == 0)
 else if (_hero is { } hero)
 {
     <div class="dash-fl-hero">
+        @* A 1x1 has no row header to name the folder, so the bubble carries it — otherwise the
+           cell is a grade with nothing saying what it is a grade of. *@
+        <DifficultyBubble Type="hero.Level.Type" Level="hero.Level.Level" Mix="_mix"></DifficultyBubble>
         <div>
             <div class="dash-fl-hero-grade @GlowFor(hero.Level)"
                  style="color:@GradeColor(hero.Level)">@GradeText(hero.Level)</div>

@@ -94,6 +94,8 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
         Assert.Contains("AA+", cut.Markup);
         Assert.Contains("50% complete", cut.Markup);
         Assert.Contains("5 to Folder Lamp", cut.Markup);
+        // Nothing else in a 1x1 names the folder, so the ball has to.
+        Assert.Contains("S22", cut.Find(".dash-fl-hero").TextContent);
     }
 
     [Fact]
@@ -137,8 +139,7 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
     [InlineData("1x1", 1)]
     [InlineData("2x1", 2)]
     [InlineData("2x2", 4)]
-    [InlineData("2x3", 6)]
-    [InlineData("2x4", 8)]
+    [InlineData("2x3", 7)]
     public void EachSizeShowsExactlyAsManyFoldersAsItHoldsRoomFor(string sizePreset, int capacity)
     {
         // Ten configured folders, so every size is asked for more than it can hold.

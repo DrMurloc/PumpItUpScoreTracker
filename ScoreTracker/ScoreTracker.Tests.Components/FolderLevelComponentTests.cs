@@ -133,6 +133,33 @@ public sealed class FolderLevelComponentTests : ComponentTestBase
     }
 
     [Fact]
+    public void TheLampGlowTakesTheFoldersOwnGradeMetal()
+    {
+        // A folder lamped at AA burns copper; one lamped at SSS+ burns ice-blue. The glow says
+        // how well it was lamped, not only that it was.
+        var copper = RenderComponent<FolderSpectrum>(p => p
+            .Add(s => s.GradesDescending, Grades((PhoenixLetterGrade.SSSPlus, 2), (PhoenixLetterGrade.AA, 2)))
+            .Add(s => s.Size, 4));
+        var ice = RenderComponent<FolderSpectrum>(p => p
+            .Add(s => s.GradesDescending, Grades((PhoenixLetterGrade.SSSPlus, 4)))
+            .Add(s => s.Size, 4));
+
+        // The worst score in the folder is what the whole thing is held at, so that is the hue.
+        Assert.Contains("var(--grade-aa)", copper.Find(".fl-track").GetAttribute("style") ?? string.Empty);
+        Assert.Contains("var(--grade-sssplus)", ice.Find(".fl-track").GetAttribute("style") ?? string.Empty);
+    }
+
+    [Fact]
+    public void APartialFolderCarriesNoGlowColourAtAll()
+    {
+        var cut = RenderComponent<FolderSpectrum>(p => p
+            .Add(s => s.GradesDescending, Grades((PhoenixLetterGrade.AA, 3)))
+            .Add(s => s.Size, 4));
+
+        Assert.DoesNotContain("var(--grade-", cut.Find(".fl-track").GetAttribute("style") ?? string.Empty);
+    }
+
+    [Fact]
     public void TierTicksSitAtTheLadderAndCanBeTurnedOff()
     {
         var withTicks = RenderComponent<FolderSpectrum>(p => p

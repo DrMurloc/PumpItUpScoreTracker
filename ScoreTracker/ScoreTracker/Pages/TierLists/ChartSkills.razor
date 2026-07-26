@@ -167,10 +167,10 @@ else
     @if (CurrentUser.IsLoggedIn)
     {
         RenderFragment folderStatsCore = @<text>
-            <div class="tier-progress-strip-summary">
-                <MudText Typo="Typo.subtitle1">@L["Folder Progress"]</MudText>
-                <MudText Typo="Typo.caption">@L["{0} / {1} passed", PassedCount, _charts.Count]</MudText>
-            </div>
+            @* The "N / M passed" summary that used to head this drawer is gone: the folder bar on
+               the page states it, and repeating it in a drawer you have to open is worse than
+               not saying it twice. What stays here is everything the bar cannot say — the lamp
+               ladder's exact counts, where you sit against similar players, and your skills. *@
             <LampStrip Lamps="_lamps" Total="_charts.Count"></LampStrip>
             @* Round 7: cohort standing as labeled bars — fill + hue from the rarity ramp,
                with the percentage always printed beside it (rule 8). *@

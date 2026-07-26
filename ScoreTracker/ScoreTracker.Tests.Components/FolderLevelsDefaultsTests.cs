@@ -21,7 +21,6 @@ public sealed class FolderLevelsDefaultsTests
     [InlineData(2, 1)]
     [InlineData(2, 2)]
     [InlineData(2, 3)]
-    [InlineData(2, 4)]
     public void EverySupportedSizeHasACapacity(int columns, int rows)
     {
         Assert.True(FolderLevelsDefaults.CapacityFor(new SizePreset(columns, rows)) > 0);
@@ -46,30 +45,30 @@ public sealed class FolderLevelsDefaultsTests
     public void SuggestionsNeverLeaveTheLevelsATypeActuallyHas()
     {
         // Singles stop at 26 and doubles at 29, so a ceiling player's walk goes down, not past.
-        var picks = FolderLevelsDefaults.Suggest(8, 26, 29);
+        var picks = FolderLevelsDefaults.Suggest(7, 26, 29);
 
         Assert.All(picks, p =>
         {
             var (min, max) = FolderLevels.Range(p.Type);
             Assert.InRange(p.Level, min, max);
         });
-        Assert.Equal(8, picks.Count);
+        Assert.Equal(7, picks.Count);
     }
 
     [Fact]
     public void ACellIsFilledEvenWhenOneDisciplineRunsOutOfLevels()
     {
         // A brand-new account sits at level 1 in both, where the walk can only climb.
-        var picks = FolderLevelsDefaults.Suggest(8, 1, 1);
+        var picks = FolderLevelsDefaults.Suggest(7, 1, 1);
 
-        Assert.Equal(8, picks.Count);
-        Assert.Equal(8, picks.Select(Name).Distinct().Count());
+        Assert.Equal(7, picks.Count);
+        Assert.Equal(7, picks.Select(Name).Distinct().Count());
     }
 
     [Fact]
     public void SuggestionsDoNotRepeatAFolder()
     {
-        var picks = FolderLevelsDefaults.Suggest(8, 21.34, 19.87).Select(Name).ToArray();
+        var picks = FolderLevelsDefaults.Suggest(7, 21.34, 19.87).Select(Name).ToArray();
 
         Assert.Equal(picks.Length, picks.Distinct().Count());
     }

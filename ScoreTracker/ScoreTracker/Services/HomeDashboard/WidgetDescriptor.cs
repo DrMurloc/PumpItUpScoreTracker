@@ -29,7 +29,6 @@ public readonly record struct SizePreset(int Columns, int Rows)
     public static readonly SizePreset FourByTwo = new(4, 2);
     public static readonly SizePreset TwoByThree = new(2, 3);
     public static readonly SizePreset ThreeByThree = new(3, 3);
-    public static readonly SizePreset TwoByFour = new(2, 4);
 
     public string Token => $"{Columns}x{Rows}";
 
@@ -39,9 +38,7 @@ public readonly record struct SizePreset(int Columns, int Rows)
         var parts = token.Split('x');
         if (parts.Length != 2
             || !int.TryParse(parts[0], out var columns) || columns is < 1 or > 4
-            // Four rows deep exists for the tall list widgets (Folder Levels); raising the cap is
-            // additive, so every token minted under the old limit still parses.
-            || !int.TryParse(parts[1], out var rows) || rows is < 1 or > 4)
+            || !int.TryParse(parts[1], out var rows) || rows is < 1 or > 3)
             return null;
         return new SizePreset(columns, rows);
     }

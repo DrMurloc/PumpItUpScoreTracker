@@ -2519,7 +2519,7 @@ html.sheet-open .more-sheet-scrim {
 
     .dash-cols-2, .dash-cols-3, .dash-cols-4 { grid-column: span 1; }
 
-    .dash-rows-2, .dash-rows-3, .dash-rows-4 { grid-row: span 1; }
+    .dash-rows-2, .dash-rows-3 { grid-row: span 1; }
 }
 
 /* Edit mode: toolbar, edit chrome, add-drawer. */
@@ -2970,9 +2970,6 @@ html.sheet-open .more-sheet-scrim {
    tall pumbility. */
 
 .dash-rows-3 { grid-row: span 3; }
-
-/* Four deep exists for the tall list widgets (Folder Levels). */
-.dash-rows-4 { grid-row: span 4; }
 
 .dash-swap-target {
     outline: 2px solid var(--mix-primary);
@@ -6966,12 +6963,14 @@ button.chart-card-art {
 }
 
 
-/* A lamped folder glows. There is deliberately no end-of-track marker: the track's own end
-   already IS 100%, so a flag there drew a finish line on top of the finish line. Completion
-   is a state of the whole bar, and this is how the bar wears it. */
+/* A lamped folder glows, in its own grade metal — a folder lamped at AA burns copper and one
+   lamped at SSS+ burns ice-blue, so the glow says how well it was lamped and not only that it
+   was. The hue arrives as currentColor from the component. There is deliberately no
+   end-of-track marker: the track own end already IS 100%, so a flag there drew a finish line
+   on top of the finish line. */
 .fl-track-lamped {
-    border-color: color-mix(in srgb, var(--mix-accent) 55%, transparent);
-    box-shadow: 0 0 12px -2px var(--mix-accent);
+    border-color: currentColor;
+    box-shadow: 0 0 12px -2px currentColor;
 }
 
 /* Folder Levels config: the running count sits above the grid so a full widget explains
@@ -6999,4 +6998,17 @@ button.chart-card-art {
 .fl-cfg-anchor {
     position: relative;
     display: inline-block;
+}
+
+/* A folder grid at its host's cap: unpicked cells go quiet so the grid reads as full,
+   while the picked ones stay live because removing is how you make room. */
+.folder-picker-level:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+/* The 1x1 hero leads with the difficulty ball — nothing else in that cell names the folder. */
+.dash-fl-hero > .mud-tooltip-root,
+.dash-fl-hero > .difficulty-bubble {
+    flex: none;
 }

@@ -46,7 +46,8 @@
         <div class="folder-picker-pop">
             @if (_open)
             {
-                <FolderGrid IsSelected="IsSelected" LevelPicked="Toggle" ShowCoOp="true"></FolderGrid>
+                <FolderGrid IsSelected="IsSelected" IsDisabled="IsAtCap" LevelPicked="Toggle"
+                            ShowCoOp="true"></FolderGrid>
             }
         </div>
     </MudPopover>
@@ -102,6 +103,11 @@
 
     private bool IsSelected(ChartType type, int level) =>
         _folders.Any(f => f.Type == type && f.Level == level);
+
+    // At the cap every unpicked cell greys out, so the grid says "full" instead of going quiet
+    // on a tap. The picked ones stay live — removing is how you make room.
+    private bool IsAtCap(ChartType type, int level) =>
+        _folders.Count >= _capacity && !IsSelected(type, level);
 
     // Toggle-and-stay: tapping a picked folder drops it, tapping a new one adds it while there
     // is room. A full widget ignores the tap rather than evicting something the player chose.
