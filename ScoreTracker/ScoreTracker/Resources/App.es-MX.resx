@@ -6314,4 +6314,16 @@
   <data name="Official play ranking on piugame.com" xml:space="preserve">
     <value>Clasificación oficial de partidas en piugame.com</value>
   </data>
+  <data name="More info" xml:space="preserve">
+    <value>Más información</value>
+  </data>
+  <data name="Popularity overall" xml:space="preserve">
+    <value>Popularidad general</value>
+  </data>
+  <data name="Popularity in {0}" xml:space="preserve">
+    <value>Popularidad en {0}</value>
+  </data>
+  <data name="#{0}" xml:space="preserve">
+    <value>#{0}</value>
+  </data>
 </root>

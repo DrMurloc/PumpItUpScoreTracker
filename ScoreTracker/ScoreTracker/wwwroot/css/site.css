@@ -6828,10 +6828,6 @@ button.chart-card-art {
     font-variant-numeric: tabular-nums;
 }
 
-.srp-card-official {
-    color: var(--mix-accent);
-}
-
 /* SRP drawer facets: chip sets, range-slider headers, debut-mix eras */
 .srp-facet {
     display: flex;

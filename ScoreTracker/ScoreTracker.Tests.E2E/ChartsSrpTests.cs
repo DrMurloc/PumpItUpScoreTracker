@@ -57,8 +57,16 @@ public sealed class ChartsSrpTests : IAsyncLifetime
             new PageAssertionsToHaveURLOptions { Timeout = 60_000 });
         await _page.Locator(".mud-overlay").ClickAsync();
 
-        // The card is one link to the canonical chart page.
+        // Round 4: the card opens the details dialog rather than navigating, and the dialog's
+        // More info link is the way through to the chart page. The search survives the look.
         await _page.Locator(".srp-card-link").First.ClickAsync();
+        await Expect(_page.Locator(".mud-dialog")).ToBeVisibleAsync(
+            new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
+        await Expect(_page).ToHaveURLAsync(new Regex("Song=Wire"),
+            new PageAssertionsToHaveURLOptions { Timeout = 60_000 });
+
+        await _page.Locator(".mud-dialog a", new PageLocatorOptions())
+            .Filter(new LocatorFilterOptions { HasTextString = "More info" }).First.ClickAsync();
         await Expect(_page).ToHaveURLAsync(new Regex("/Charts/phoenix/wire-shock/d20"),
             new PageAssertionsToHaveURLOptions { Timeout = 60_000 });
     }

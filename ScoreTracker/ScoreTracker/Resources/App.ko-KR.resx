@@ -6315,4 +6315,16 @@
   <data name="Official play ranking on piugame.com" xml:space="preserve">
     <value>piugame.com 공식 플레이 순위</value>
   </data>
+  <data name="More info" xml:space="preserve">
+    <value>자세히 보기</value>
+  </data>
+  <data name="Popularity overall" xml:space="preserve">
+    <value>전체 인기 순위</value>
+  </data>
+  <data name="Popularity in {0}" xml:space="preserve">
+    <value>{0} 내 인기 순위</value>
+  </data>
+  <data name="#{0}" xml:space="preserve">
+    <value>{0}위</value>
+  </data>
 </root>

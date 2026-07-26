@@ -106,7 +106,8 @@ else
             @foreach (var result in _results)
             {
                 <ChartSearchSticker Result="result" LeadFact="@LeadFact(result)"
-                                    IsToDo="_todoCharts.Contains(result.Chart.Id)"></ChartSearchSticker>
+                                    IsToDo="_todoCharts.Contains(result.Chart.Id)"
+                                    OnOpen="OpenDetails"></ChartSearchSticker>
             }
         </div>
     }
@@ -199,12 +200,10 @@ else
                 <ChartSearchCard Result="result" LeadFact="@LeadFact(result)"
                                  ShowMyState="CurrentUser.IsLoggedIn"
                                  ShowActions="CurrentUser.IsLoggedIn"
-                                 IsFavorite="_favoriteCharts.Contains(result.Chart.Id)"
                                  IsToDo="_todoCharts.Contains(result.Chart.Id)"
-                                 OnToggleFavorite="ToggleFavorite"
                                  OnToggleToDo="ToggleToDo"
                                  OnQuickRecord="OpenQuickRecord"
-                                 OfficialPlace="OfficialPlace(result)"></ChartSearchCard>
+                                 OnOpen="OpenDetails"></ChartSearchCard>
             }
         </div>
     }
@@ -222,6 +221,19 @@ else
 
 <ChartQuickRecordDialog @bind-Visible="_quickRecordOpen" Target="_quickRecordTarget"
                         OnSaved="OnQuickRecordSaved"></ChartQuickRecordDialog>
+
+@* Clicking a result opens the details dialog rather than leaving the search behind. The two
+   popularity places ride in from here: the page already holds the mix's official board, and
+   OfficialMirror cannot see Catalog to work out which folder a ranked chart belongs to.
+   Rendered only once something has been opened — the dialog pulls its own dependencies and a
+   search that never opens one should not pay for it. *@
+@if (_detailsChart != null)
+{
+    <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_mix"
+                        IsToDo="_todoCharts.Contains(_detailsChart.Id)"
+                        OnToDo="ToggleToDo"
+                        OfficialPlace="_detailsPlace" OfficialFolderPlace="_detailsFolderPlace"></ChartDetailsDialog>
+}
 
 <MudLayout>
     <MudDrawer @bind-Open="_filtersOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="420px">
@@ -661,6 +673,14 @@ else
     private int _totalCount;
     private ChartSearchFacetCounts? _facetCounts;
     private ISet<Guid> _favoriteCharts = new HashSet<Guid>();
+
+    // The details dialog the results open into, and the two official popularity places it
+    // shows. The card no longer carries a rank badge — the numbers live where there is room
+    // to say which is which.
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+    private int? _detailsPlace;
+    private int? _detailsFolderPlace;
     private ISet<Guid> _todoCharts = new HashSet<Guid>();
 
     private IReadOnlyList<ChartBadge> _badgeVocabulary = Array.Empty<ChartBadge>();
@@ -1098,6 +1118,50 @@ else
                places.TryGetValue(result.Chart.Id, out var place)
             ? place
             : null;
+    }
+
+    // Folder standings, memoized per folder. The official board knows chart ids and places
+    // but nothing about type or level — OfficialMirror cannot see Catalog — so the folder's
+    // membership comes from one unpaged search and the ranking is done here.
+    private readonly Dictionary<string, IReadOnlyDictionary<Guid, int>> _officialFolderPlaces = new();
+
+    private async Task<int?> OfficialFolderPlace(ChartSearchResult result)
+    {
+        if (!_officialPlaces.TryGetValue(result.Chart.Mix, out var places) ||
+            !places.ContainsKey(result.Chart.Id)) return null;
+
+        var folderKey = $"{result.Chart.Mix}|{result.Chart.Type}|{(int)result.Chart.Level}";
+        if (!_officialFolderPlaces.TryGetValue(folderKey, out var ranked))
+        {
+            var folder = await Mediator.Send(new SearchChartsQuery
+            {
+                Mix = result.Chart.Mix,
+                Types = new[] { result.Chart.Type },
+                LevelMin = (int)result.Chart.Level,
+                LevelMax = (int)result.Chart.Level,
+                Page = null
+            });
+            ranked = folder.Results
+                .Select(r => r.Chart.Id)
+                .Where(places.ContainsKey)
+                .OrderBy(id => places[id])
+                .Select((id, index) => (id, place: index + 1))
+                .ToDictionary(p => p.id, p => p.place);
+            _officialFolderPlaces[folderKey] = ranked;
+        }
+
+        return ranked.TryGetValue(result.Chart.Id, out var folderPlace) ? folderPlace : null;
+    }
+
+    private async Task OpenDetails(ChartSearchResult result)
+    {
+        _detailsChart = result.Chart;
+        _detailsPlace = OfficialPlace(result);
+        _detailsFolderPlace = null;
+        _detailsOpen = true;
+        // The folder ranking needs a query; the dialog opens first and the second line fills
+        // in rather than making the click wait on it.
+        _detailsFolderPlace = await OfficialFolderPlace(result);
     }
 
     private async Task ApplyChange(bool resetPage = true)

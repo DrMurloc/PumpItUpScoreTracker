@@ -5,11 +5,13 @@
 @namespace ScoreTracker.Web.Components
 
 @* The SRP's Compact density: the tier lists' jacket sticker sheet verbatim — same CSS
-   classes, same owner-locked border language — except the sticker is a real link to the
-   chart page. Identity rides the tooltip (no truncation without a tooltip); the active
-   sort's value joins it so Compact never sorts by an invisible value. *@
+   classes, same owner-locked border language. Identity rides the tooltip (no truncation
+   without a tooltip); the active sort's value joins it so Compact never sorts by an invisible
+   value. Clicking opens the details dialog, same as the comfortable card, and the href stays
+   so right-click → new tab still reaches the chart page. *@
 <MudTooltip Text="@Tooltip" ShowOnFocus="true">
     <a class="tier-chart-card tier-chart-card-compact @StateClass" href="@ChartSlugs.CanonicalPath(Result.Chart)"
+       @onclick="() => OnOpen.InvokeAsync(Result)" @onclick:preventDefault="true"
        aria-label="@Tooltip">
         <div class="tier-chart-card-jacket tier-chart-card-compact-jacket"
              style="background-image:url('@Result.Chart.Song.ImagePath')">
@@ -39,6 +41,9 @@
 @code {
     [Parameter] public ChartSearchResult Result { get; set; } = null!;
     [Parameter] public bool IsToDo { get; set; }
+
+    /// <summary>Opening the sticker — the details dialog, not a navigation.</summary>
+    [Parameter] public EventCallback<ChartSearchResult> OnOpen { get; set; }
 
     /// <summary>The active sort's printed value — the tooltip carries it at this density.</summary>
     [Parameter]

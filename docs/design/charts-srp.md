@@ -338,6 +338,28 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
   drawer-content scroll; neither drifts, and the page behind cannot move at all while the
   drawer is open — MudDrawer already locks it.
 
+### Round 4 — the card opens a dialog
+
+- **Clicking a result opens `ChartDetailsDialog`, not the chart page.** A searcher usually
+  wants a look, not a page load, and losing the result list to a navigation is the expensive
+  part. The card and the compact sticker stay real `<a href>` elements with the plain left
+  click intercepted, so the status bar previews the destination and right-click → open in new
+  tab still reaches the chart page. The dialog is only rendered once something has been
+  opened — it pulls its own dependencies, and a search that never opens one should not pay.
+- **Popularity moved into the dialog as two facts**: place on piugame's play ranking for the
+  whole mix, and place within the chart's own folder — a chart four hundredth overall can
+  still be the most played thing in its folder, which one number could not say. The card's
+  `#12 most played` badge is gone. Folder membership comes from one unpaged folder-scoped
+  search, memoized per folder, because the official board knows chart ids and places but
+  nothing about type or level, and OfficialMirror cannot see Catalog.
+- **The dialog gained a "More info" link** to the canonical chart page — it is a summary, and
+  the page is the whole record. Every dialog consumer gets it.
+- **The favourite icon is gone from the card** (owner: the feature is not built out). The
+  drawer's Favorites filter stays — it still filters lists saved elsewhere.
+- **Skills**: the SRP's chips were already the granular piucenter badges; they lose their
+  category tint, and the coverage bars on the chart page and dialog move to granular badges
+  too. See [nuke-old-skill-categories.md](nuke-old-skill-categories.md).
+
 ## 7. Cross-mix: built, removed, deferred
 
 A cross-mix ("All Mixes") view shipped in C7 and was **removed before the branch landed**

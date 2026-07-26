@@ -66,6 +66,24 @@
                 }
                 <div><span class="chart-details-meta-label">@L["Song Artist"]</span><span>@Chart.Song.Artist</span></div>
                 <div><span class="chart-details-meta-label">@L["Song Type"]</span><span>@Chart.Song.Type</span></div>
+                @* Two separate facts, because they answer different questions: how played this
+                   chart is across the whole mix, and how played it is against its own folder —
+                   a chart four hundredth overall can still be the most played thing in its
+                   folder. Both are piugame's play ranking, not this site's score counts. *@
+                @if (OfficialPlace != null)
+                {
+                    <div>
+                        <span class="chart-details-meta-label">@L["Popularity overall"]</span>
+                        <span>@L["#{0}", OfficialPlace.Value.ToString("N0")]</span>
+                    </div>
+                }
+                @if (OfficialFolderPlace != null)
+                {
+                    <div>
+                        <span class="chart-details-meta-label">@L["Popularity in {0}", Chart.DifficultyString]</span>
+                        <span>@L["#{0}", OfficialFolderPlace.Value.ToString("N0")]</span>
+                    </div>
+                }
             </div>
             @if (Score?.Score != null)
             {
@@ -157,6 +175,13 @@
             <MudButton StartIcon="@Icons.Material.Filled.ThumbUp" Color="Color.Secondary"
                        Disabled="_isSaving || _feedbackSent"
                        OnClick="SubmitGoodSuggestion">@L["Good Suggestion"]</MudButton>
+        }
+        @* The dialog is a summary; the chart page is the whole record (videos, similar charts,
+           the score distribution). A real link, so it opens in a tab like any other. *@
+        @if (Chart != null)
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew"
+                       Href="@ChartSlugs.CanonicalPath(Chart)">@L["More info"]</MudButton>
         }
         <MudSpacer></MudSpacer>
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close"
@@ -318,6 +343,16 @@
     // Round 10: the active-lens meta row was removed — the placements chips already
     // name every lens's tier, so it double-printed the active one.
     [Parameter] public int? ScoreAgeDays { get; set; }
+
+    /// <summary>
+    ///     The chart's place on piugame's play ranking for the whole mix, and its place among
+    ///     the charts of its own folder. Optional: a caller that has not fetched the official
+    ///     board leaves both null and neither line renders. Not this site's Popularity sort,
+    ///     which counts scores recorded here.
+    /// </summary>
+    [Parameter] public int? OfficialPlace { get; set; }
+
+    [Parameter] public int? OfficialFolderPlace { get; set; }
 
     /// <summary>
     ///     The recommendation category this chart was suggested under (Suggested Charts

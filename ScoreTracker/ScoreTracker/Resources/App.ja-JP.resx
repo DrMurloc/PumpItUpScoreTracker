@@ -6434,4 +6434,16 @@
   <data name="Official play ranking on piugame.com" xml:space="preserve">
     <value>piugame.com の公式プレイランキング</value>
   </data>
+  <data name="More info" xml:space="preserve">
+    <value>詳細を見る</value>
+  </data>
+  <data name="Popularity overall" xml:space="preserve">
+    <value>全体の人気順位</value>
+  </data>
+  <data name="Popularity in {0}" xml:space="preserve">
+    <value>{0} 内の人気順位</value>
+  </data>
+  <data name="#{0}" xml:space="preserve">
+    <value>{0}位</value>
+  </data>
 </root>

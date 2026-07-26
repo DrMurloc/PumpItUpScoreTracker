@@ -4,11 +4,17 @@
 @using ScoreTracker.Web.Services.Theming
 @namespace ScoreTracker.Web.Components
 
-@* The SRP result card (docs/design/charts-srp.md): the whole card is one link to the
-   chart's canonical page — actions float above the stretched link. The lead fact is the
-   active sort's value, so sorting by an invisible value cannot happen. *@
+@* The SRP result card (docs/design/charts-srp.md): the whole card is one stretched hit area
+   and actions float above it. The lead fact is the active sort's value, so sorting by an
+   invisible value cannot happen.
+
+   Clicking opens the details dialog rather than navigating — a searcher usually wants a look,
+   not a page load, and the dialog carries a More info link for the full record. It stays a
+   real <a href> so the status bar previews the destination and right-click → open in new tab
+   still reaches the chart page; only the plain left click is intercepted. *@
 <div class="srp-card @StateClass" title="@StateTitle">
     <a class="srp-card-link" href="@ChartSlugs.CanonicalPath(Result.Chart)"
+       @onclick="() => OnOpen.InvokeAsync(Result)" @onclick:preventDefault="true"
        aria-label="@($"{Result.Chart.Song.Name} {Result.Chart.DifficultyDisplay}")"></a>
     <div class="srp-card-art">
         <SongImage Song="Result.Chart.Song" Small="true"></SongImage>
@@ -81,15 +87,6 @@
             {
                 <span>@L["{0} scores", Result.ScoreCount]</span>
             }
-            @* "#12 official" never said what it ranked. It is piugame's own play ranking —
-               a different number from this page's Popularity sort, which counts scores
-               recorded here — so the badge names the measure and the title names the source. *@
-            @if (OfficialPlace != null)
-            {
-                <span class="srp-card-official" title="@L["Official play ranking on piugame.com"]">
-                    @L["#{0} most played", OfficialPlace.Value.ToString("N0")]
-                </span>
-            }
         </div>
     </div>
     @if (ShowMyState)
@@ -131,11 +128,6 @@
                            OnClick="() => OnQuickRecord.InvokeAsync(Result)"
                            aria-label="@L["Quick record"]"></MudIconButton>
             <MudIconButton Size="Size.Small"
-                           Icon="@(IsFavorite ? Icons.Material.Filled.Favorite : Icons.Material.Outlined.FavoriteBorder)"
-                           Color="@(IsFavorite ? Color.Secondary : Color.Default)"
-                           OnClick="() => OnToggleFavorite.InvokeAsync(Result.Chart.Id)"
-                           aria-label="@L["Favorites"]"></MudIconButton>
-            <MudIconButton Size="Size.Small"
                            Icon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
                            Color="@(IsToDo ? Color.Info : Color.Default)"
                            OnClick="() => OnToggleToDo.InvokeAsync(Result.Chart.Id)"
@@ -157,15 +149,12 @@
     [Parameter] public bool ShowMyState { get; set; }
     [Parameter] public bool ShowActions { get; set; }
 
-    [Parameter] public bool IsFavorite { get; set; }
     [Parameter] public bool IsToDo { get; set; }
-    [Parameter] public EventCallback<Guid> OnToggleFavorite { get; set; }
     [Parameter] public EventCallback<Guid> OnToggleToDo { get; set; }
     [Parameter] public EventCallback<ChartSearchResult> OnQuickRecord { get; set; }
 
-    /// <summary>The official mirror's popularity place — decoration, never a filter.</summary>
-    [Parameter]
-    public int? OfficialPlace { get; set; }
+    /// <summary>Opening the card — the details dialog, not a navigation.</summary>
+    [Parameter] public EventCallback<ChartSearchResult> OnOpen { get; set; }
 
     // The owner-locked state-border language (tier lists §4): solid success = passed,
     // dashed info = To-Do, dashed success = passed in another mix; passed > To-Do > other.

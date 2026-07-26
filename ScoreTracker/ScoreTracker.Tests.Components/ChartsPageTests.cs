@@ -18,6 +18,7 @@ using MudBlazor;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Pages;
 using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.Contracts;
@@ -64,7 +65,17 @@ public sealed class ChartsPageTests : ComponentTestBase
         _mediator.Setup(m => m.Send(It.IsAny<ScoreTracker.OfficialMirror.Contracts.Queries.GetOfficialPopularityQuery>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ScoreTracker.OfficialMirror.Contracts.OfficialPopularityRecord>());
+        // The details dialog the cards open pulls these; registered here because bUnit seals
+        // the container the moment the first service is resolved.
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartBadgeChipsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartBadgeChipRecord>>());
+        _mediator.Setup(m => m.Send(
+                It.IsAny<ScoreTracker.ChartIntelligence.Contracts.Queries.GetTierListWithFallbackQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ScoreTracker.ChartIntelligence.Contracts.TierListResult(
+                Array.Empty<SongTierListEntry>(), false));
         Services.AddSingleton(_mediator.Object);
+        Services.AddSingleton(Mock.Of<IAdminNotificationClient>());
         Services.AddScoped<ChartScoringLevels>();
         Services.AddSingleton(Mock.Of<IDateTimeOffsetAccessor>());
         Services.AddLogging();
@@ -112,8 +123,10 @@ public sealed class ChartsPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void CardsAreLinksToTheChartPage()
+    public void CardsKeepTheirHrefSoANewTabStillReachesTheChartPage()
     {
+        // Clicking opens the dialog, but the anchor stays real: the status bar previews the
+        // destination and right-click → open in new tab still works.
         var cut = RenderComponent<Charts>();
 
         cut.WaitForAssertion(() =>
@@ -122,6 +135,27 @@ public sealed class ChartsPageTests : ComponentTestBase
             Assert.Equal(2, links.Count);
             Assert.All(links, l => Assert.StartsWith("/Charts/phoenix/", l.GetAttribute("href")));
         });
+    }
+
+    [Fact]
+    public void ClickingACardOpensTheDetailsDialogInsteadOfNavigating()
+    {
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        var startedAt = Services.GetRequiredService<NavigationManager>().Uri;
+
+        cut.Find(".srp-card-link").Click();
+
+        // Asserted on the component rather than the rendered dialog: MudDialog paints through
+        // MudDialogProvider, which a page under test has no way to host.
+        cut.WaitForAssertion(() =>
+        {
+            var dialog = cut.FindComponent<ChartDetailsDialog>();
+            Assert.True(dialog.Instance.Visible);
+            Assert.Equal("District 1", dialog.Instance.Chart!.Song.Name.ToString());
+        });
+        // The search is still behind the dialog — the click did not leave the page.
+        Assert.Equal(startedAt, Services.GetRequiredService<NavigationManager>().Uri);
     }
 
     [Fact]
@@ -445,9 +479,21 @@ public sealed class ChartsPageTests : ComponentTestBase
             });
 
         var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
 
-        // The badge names the measure — "#213 official" never said what it ranked.
-        cut.WaitForAssertion(() => Assert.Contains("#213 most played", cut.Markup));
+        // Popularity moved off the card and into the dialog, as two separate facts: where the
+        // chart sits on piugame's whole-mix play ranking, and where it sits inside its folder.
+        // Only the modern chart is ranked, so it is first in a folder of one.
+        cut.Find(".srp-card-link").Click();
+
+        cut.WaitForAssertion(() =>
+        {
+            var dialog = cut.FindComponent<ChartDetailsDialog>().Instance;
+            Assert.Equal(213, dialog.OfficialPlace);
+            Assert.Equal(1, dialog.OfficialFolderPlace);
+        });
+        Assert.DoesNotContain("most played", cut.Markup);
+        // A legacy mix has no official board to ask for.
         _mediator.Verify(m => m.Send(It.Is<ScoreTracker.OfficialMirror.Contracts.Queries.GetOfficialPopularityQuery>(
             q => q.Mix == MixEnum.Prex3), It.IsAny<CancellationToken>()), Times.Never);
     }
