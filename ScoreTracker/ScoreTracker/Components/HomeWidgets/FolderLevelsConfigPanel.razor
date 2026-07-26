@@ -1,0 +1,139 @@
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* Folder picking reuses FolderGrid in the multi-toggle mode the randomizer already drives —
+   one concept, one component. The cell size fixes how many folders fit, so the panel says how
+   many are left and refuses the tap that would overflow rather than silently dropping it. *@
+
+<MudSelect T="MixEnum?" @bind-Value="_mix" Label="@L["Mix"]" Class="mb-3">
+    <MudSelectItem T="MixEnum?" Value="null">@L["Follow current mix"]</MudSelectItem>
+    <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix">Phoenix</MudSelectItem>
+    <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix2">Phoenix 2</MudSelectItem>
+</MudSelect>
+
+<div class="fl-cfg-head">
+    <span>@L["{0} of {1} folders", _folders.Count, _capacity]</span>
+    <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="ResetToSuggested">@L["Reset"]</MudButton>
+</div>
+
+@if (_folders.Count > 0)
+{
+    <div class="fl-cfg-picks">
+        @foreach (var folder in _folders.ToArray())
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined"
+                     OnClose="@(() => Remove(folder))">
+                @FolderName(folder)
+            </MudChip>
+        }
+    </div>
+}
+
+@* FolderGrid is a popover control, never inline chrome — see its own summary. Owns the
+   popover rather than using MudMenu, because MudMenu closes on any interior click and
+   multi-select needs the panel to survive every tap. *@
+<div class="fl-cfg-anchor">
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Folder"
+               OnClick="@(() => _open = !_open)"
+               aria-haspopup="true" aria-expanded="@(_open ? "true" : "false")">@L["Select Folders"]</MudButton>
+    <MudPopover Open="_open" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft">
+        <div class="folder-picker-pop">
+            @if (_open)
+            {
+                <FolderGrid IsSelected="IsSelected" IsDisabled="IsAtCap" LevelPicked="Toggle"
+                            ShowCoOp="true"></FolderGrid>
+            }
+        </div>
+    </MudPopover>
+</div>
+@* Transparent click-away layer: below the popover (1200), above the dialog's own content. *@
+<MudOverlay Visible="_open" OnClick="() => _open = false" ZIndex="1199"></MudOverlay>
+
+<div class="d-flex justify-end gap-2 mt-4">
+    <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">@L["Save"]</MudButton>
+</div>
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public EventCallback<(string ConfigJson, int ConfigVersion)> OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    [Inject] private IMediator Mediator { get; set; } = null!;
+    [Inject] private ICurrentUserAccessor CurrentUser { get; set; } = null!;
+
+    private bool _open;
+    private MixEnum? _mix;
+    private int _capacity = 4;
+    private List<FolderLevelsTarget> _folders = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var config = WidgetConfigJson.Read<FolderLevelsConfig>(Widget.ConfigJson);
+        _mix = config.Mix;
+        _capacity = FolderLevelsDefaults.CapacityFor(
+            SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.TwoByTwo);
+        _folders = config.Folders
+            .Select(f => new FolderLevelsTarget { Type = f.Type, Level = f.Level })
+            .Take(_capacity)
+            .ToList();
+        if (_folders.Count == 0) await ResetToSuggested();
+    }
+
+    private async Task ResetToSuggested()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            _folders = new List<FolderLevelsTarget>();
+            return;
+        }
+
+        var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id,
+            _mix ?? MixEnum.Phoenix));
+        _folders = FolderLevelsDefaults.Suggest(_capacity, stats.SinglesCompetitiveLevel,
+            stats.DoublesCompetitiveLevel);
+    }
+
+    private bool IsSelected(ChartType type, int level) =>
+        _folders.Any(f => f.Type == type && f.Level == level);
+
+    // At the cap every unpicked cell greys out, so the grid says "full" instead of going quiet
+    // on a tap. The picked ones stay live — removing is how you make room.
+    private bool IsAtCap(ChartType type, int level) =>
+        _folders.Count >= _capacity && !IsSelected(type, level);
+
+    // Toggle-and-stay: tapping a picked folder drops it, tapping a new one adds it while there
+    // is room. A full widget ignores the tap rather than evicting something the player chose.
+    private void Toggle((ChartType Type, int Level) folder)
+    {
+        var existing = _folders.FirstOrDefault(f => f.Type == folder.Type && f.Level == folder.Level);
+        if (existing != null)
+        {
+            _folders.Remove(existing);
+            return;
+        }
+
+        if (_folders.Count >= _capacity) return;
+        _folders.Add(new FolderLevelsTarget { Type = folder.Type, Level = folder.Level });
+    }
+
+    private void Remove(FolderLevelsTarget folder) => _folders.Remove(folder);
+
+    private string FolderName(FolderLevelsTarget folder) => folder.Type == ChartType.CoOp
+        ? L["CO-OP {0}", folder.Level].Value
+        : $"{folder.Type.GetShortHand()}{folder.Level}";
+
+    private async Task Save()
+    {
+        var config = new FolderLevelsConfig { Mix = _mix, Folders = _folders.ToList() };
+        await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
+    }
+
+}

@@ -38,6 +38,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     private readonly IMemoryCache _cache;
     private readonly IChartRepository _charts;
     private readonly IDateTimeOffsetAccessor _dateTime;
+    private readonly IPlayerFolderLevelRepository _folderLevels;
     private readonly IScoreHighlightRepository _highlights;
     private readonly ILogger<HighlightCaptureSaga> _logger;
     private readonly IMediator _mediator;
@@ -47,14 +48,15 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
 
     public HighlightCaptureSaga(IChartRepository charts, IScoreReader scores,
         IPlayerStatsReader playerStats, IScoreHighlightRepository highlights,
-        IPlayerMilestoneRepository milestones, IMediator mediator, IMemoryCache cache,
-        IDateTimeOffsetAccessor dateTime, ILogger<HighlightCaptureSaga> logger)
+        IPlayerMilestoneRepository milestones, IPlayerFolderLevelRepository folderLevels, IMediator mediator,
+        IMemoryCache cache, IDateTimeOffsetAccessor dateTime, ILogger<HighlightCaptureSaga> logger)
     {
         _charts = charts;
         _scores = scores;
         _playerStats = playerStats;
         _highlights = highlights;
         _milestones = milestones;
+        _folderLevels = folderLevels;
         _mediator = mediator;
         _cache = cache;
         _dateTime = dateTime;
@@ -204,13 +206,33 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             .ToArray();
 
         FlagTop50(known, data, flags, details);
+
+        // The folder standings this batch moved. Built from data already in hand, one record per
+        // touched folder rather than per chart, and saved in a single call below. The stored rows
+        // are the only record of where the player stood before this batch, so they are also what
+        // a movement gets diffed against — and a folder with no stored row seeds silently.
+        var passed = FolderLevelCalculator.PassedScores(data.Bests.Values);
+        var previousFolders = await LoadPreviousFolderLevels(e, cancellationToken);
+        var touchedFolders = new List<FolderLevelRecord>();
+
         foreach (var folder in known.GroupBy(c => (data.Charts[c.ChartId].Type, data.Charts[c.ChartId].Level)))
         {
             await FlagScoreQuality(e, folder.Key, folder.ToArray(), data, flags, details, cancellationToken);
             var newPasses = folder.Where(c => c.IsNewPass && !data.Bests[c.ChartId].IsBroken).ToArray();
             CaptureFolderLamps(e, folder.ToArray(), folder.Key, data, newPasses.Length, lamps);
             FlagFolderCompletionAndDebut(folder.Key, newPasses, data, flags, details);
+
+            var level = FolderLevelCalculator.ComputeOne(e.Mix, folder.Key.Type, folder.Key.Level,
+                data.Charts.Values, passed);
+            if (level == null) continue;
+            touchedFolders.Add(level);
+
+            var moved = FolderLevelCalculator.Diff(previousFolders?.GetValueOrDefault(level.Folder), level,
+                e.SessionId, e.OccurredAt);
+            if (moved != null) lamps.Add(moved);
         }
+
+        await SaveFolderLevels(e, touchedFolders, cancellationToken);
 
         return known
             .Where(c => flags.GetValueOrDefault(c.ChartId) != HighlightFlags.None)
@@ -384,6 +406,48 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         if (plateFloorIsNew)
             lamps.Add(new PlayerMilestoneWrite(MilestoneKind.FolderPlateLamp, e.SessionId, e.OccurredAt,
                 Detail: $"{folderName}|{minPlate}"));
+    }
+
+    /// <summary>
+    ///     Where the player stood before this batch, keyed by folder. Null — not empty — when the
+    ///     read fails, so a lookup miss stays honest: an empty dictionary would read as "every
+    ///     folder is new" and silence a whole session's worth of real movements.
+    /// </summary>
+    private async Task<Dictionary<string, FolderLevelRecord>?> LoadPreviousFolderLevels(
+        PlayerScoresUpdatedEvent e, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return (await _folderLevels.GetFolderLevels(e.Mix, e.UserId, cancellationToken))
+                .ToDictionary(l => l.Folder);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Folder level read failed for user {UserId} ({Mix}) — movements not announced",
+                e.UserId, e.Mix);
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     Persists the standings for the folders this batch touched
+    ///     (docs/design/folder-level-progression.md §4). Isolated from the rest of the capture:
+    ///     ComputeFlags already runs inside one try/catch, so an unguarded write here would cost
+    ///     the flags and the lamps too — a projection failure must only lose the projection.
+    /// </summary>
+    private async Task SaveFolderLevels(PlayerScoresUpdatedEvent e, IReadOnlyCollection<FolderLevelRecord> levels,
+        CancellationToken cancellationToken)
+    {
+        if (levels.Count == 0) return;
+        try
+        {
+            await _folderLevels.Save(e.UserId, levels, e.OccurredAt, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Folder level write failed for user {UserId} ({Mix}) — {Count} folders skipped",
+                e.UserId, e.Mix, levels.Count);
+        }
     }
 
     private async Task<IReadOnlyDictionary<Guid, PhoenixScore[]>> GetCohortScores(MixEnum mix, Guid userId,

@@ -773,9 +773,7 @@ public sealed class CommunitySagaTests
             new PlayerMilestoneRecord(MilestoneKind.SinglesCompetitiveGain, sessionId, Now, 21.416, 21.447,
                 null, null),
             new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, sessionId, Now, null, null,
-                "Intermediate Lv. 10", null),
-            new PlayerMilestoneRecord(MilestoneKind.ParagonLevelGain, sessionId, Now, null, null,
-                "Intermediate Lv. 7", "SS")
+                "Intermediate Lv. 10", null)
         };
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, sessionId, milestones,
@@ -786,17 +784,57 @@ public sealed class CommunitySagaTests
                     t.Markdown.Contains("📈 **PUMBILITY** 21,480 → **21,530** (+50)")
                     && t.Markdown.Contains("📈 **Singles competitive** 21.42 → **21.45**"))
                 && msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
-                    t.Markdown.Contains("🏅 **[Intermediate Lv. 10]** completed")
-                    && t.Markdown.Contains("🏅 **[Intermediate Lv. 7]** paragon → #LETTERGRADE|SS|False#"))),
+                    t.Markdown.Contains("🏅 **[Intermediate Lv. 10]** completed"))),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
+    public async Task FolderMovementRidesTheCardAsOneLineShowingOnlyWhatMoved()
+    {
+        // Discord gets the full spectrum, unlike the homepage widget: a shallow tier and a
+        // sub-S grade both belong here (docs/design/folder-level-progression.md §5.5).
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, chart, score: 950000);
+        var milestones = new[]
+        {
+            // Both halves moved.
+            Progress("S22", 80, PhoenixLetterGrade.AAPlus, 60, PhoenixLetterGrade.AAA),
+            // Tier only — no grade clause.
+            Progress("D23", 80, PhoenixLetterGrade.AAPlus, 60),
+            // Grade only — no arrow on the percent.
+            Progress("D21", 60, PhoenixLetterGrade.S, null, PhoenixLetterGrade.AAAPlus),
+            // A lamp takes the confetti.
+            Progress("S24", 100, PhoenixLetterGrade.APlus, 80)
+        };
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null, milestones,
+            (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
+                t.Markdown.Contains("📈 #DIFFICULTY|S22# **60% → 80%** at AAA → AA+")
+                && t.Markdown.Contains("📈 #DIFFICULTY|D23# **60% → 80%** at AA+")
+                && t.Markdown.Contains("📈 #DIFFICULTY|D21# **60%** at AAA+ → S")
+                && t.Markdown.Contains("🎉 #DIFFICULTY|S24# **80% → 100%** at A+ 🎉"))),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private static PlayerMilestoneRecord Progress(string folder, int tier, PhoenixLetterGrade grade,
+        int? fromTier = null, PhoenixLetterGrade? fromGrade = null) =>
+        new(MilestoneKind.FolderProgress, null, Now, null, null, null,
+            new FolderProgressDetail(folder, tier, grade, fromTier, fromGrade).Format());
+
+    [Fact]
     public async Task EveryTitleCompletionIsListedWithNoNameCap()
     {
         // Owner call: titles are the card's top priority — list them ALL (the 4000-char
-        // budget is the only backstop), never "…and N more titles". Paragons don't aggregate.
+        // budget is the only backstop), never "…and N more titles".
         var userId = Guid.NewGuid();
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var ctx = new HandlerContext();
@@ -806,8 +844,6 @@ public sealed class CommunitySagaTests
         var milestones = Enumerable.Range(1, 12)
             .Select(i => new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, null, Now, null, null,
                 $"Title {i}", null))
-            .Append(new PlayerMilestoneRecord(MilestoneKind.ParagonLevelGain, null, Now, null, null,
-                "Expert Lv. 2", "PG"))
             .ToArray();
 
         await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null, milestones,
@@ -818,8 +854,7 @@ public sealed class CommunitySagaTests
                 t.Markdown.Contains("**[Title 1]** completed")
                 && t.Markdown.Contains("**[Title 11]** completed")
                 && t.Markdown.Contains("**[Title 12]** completed")
-                && !t.Markdown.Contains("more titles")
-                && t.Markdown.Contains("🏅 **[Expert Lv. 2]** paragon → #PLATE|PerfectGame#"))),
+                && !t.Markdown.Contains("more titles"))),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }

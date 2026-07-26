@@ -55,9 +55,27 @@
     .cmp-tile-num { font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; margin-top: 3px; }
 
     /* Folder completion keeps the real folder slope: each track's height follows the
-       folder's chart count (no per-folder normalization), with singles and doubles passes
-       stacked in the game's ball colors from the top of the track — what's left to clear
-       is the gap along the bottom, where the eye reads it against a flat baseline. */
+       folder's chart count (no per-folder normalization). Singles and doubles are separate
+       folders with separate standings, so they get separate graphs side by side, and each
+       column fills with its folder's own grade spectrum — height says how big the folder
+       is, fill says how far through it you are, hue says how well. */
+    .cmp-folder-pair { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(14px, 3vw, 30px); }
+
+    @@media (max-width: 700px) { .cmp-folder-pair { grid-template-columns: 1fr; } }
+
+    .cmp-folder-head {
+        font-family: var(--font-display);
+        font-size: .8rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+
+    .cmp-folder-head-singles { color: var(--type-singles); }
+
+    .cmp-folder-head-doubles { color: var(--type-doubles); }
+
     /* Twenty-odd folders at a fixed bar width is wider than a phone, so the columns
        share the width they have: each takes an equal fraction and the bar fills its
        column up to the full-size 34px. The MudTooltip wrapper sits between the two
@@ -73,16 +91,14 @@
         width: 100%;
         max-width: 34px;
         margin: 0 auto;
-        background: var(--mix-surface-muted);
         border-radius: 5px 5px 0 0;
-        display: flex;
-        flex-direction: column;
         overflow: hidden;
     }
 
-    .cmp-folder-singles { background: var(--type-singles); }
-
-    .cmp-folder-doubles { background: var(--type-doubles); }
+    /* The spectrum is horizontal everywhere else, so the column hands it a full-height box
+       and the vertical variant grows from the base. */
+    .cmp-folder-track > .fl-spectrum,
+    .cmp-folder-track > .fl-spectrum > .fl-track { height: 100%; }
 
     /* A two-digit label is wider than its column once the bars are sharing a phone. */
     .cmp-folder-label { font-size: clamp(.54rem, 1.8vw, .72rem); line-height: 1; font-weight: 700; color: var(--mix-ink-muted); }
@@ -181,28 +197,15 @@ else
         </MudPaper>
     }
 
+    @* Singles and doubles are separate folders with separate standings, so they get separate
+       graphs — one merged column per level hid which discipline the coverage belonged to
+       entirely (docs/design/folder-level-progression.md §6). Column height stays the folder's
+       real chart count; the fill is now the folder's grade spectrum rather than a type hue. *@
     <MudPaper Class="pa-4 mb-4">
         <MudText Typo="Typo.h6" Class="mb-1">@L["Folder Completion"]</MudText>
-        <div class="cmp-folders">
-            @{
-                var folders = _profile.FolderCompletion.Where(f => f.Total > 0 && f.Level >= MinFolderLevel).ToArray();
-                var maxTotal = folders.Length == 0 ? 1 : folders.Max(f => f.Total);
-            }
-            @foreach (var folder in folders)
-            {
-                var trackHeight = Math.Max(6, (int)(118.0 * folder.Total / maxTotal));
-                var singlesPercent = 100.0 * folder.SinglesPassed / folder.Total;
-                var doublesPercent = 100.0 * folder.DoublesPassed / folder.Total;
-                <div class="cmp-folder-col">
-                    <MudTooltip Text="@($"S {folder.SinglesPassed} · D {folder.DoublesPassed} / {folder.Total}")">
-                        <div class="cmp-folder-track" style="height:@(trackHeight)px">
-                            <div class="cmp-folder-singles" style="height:@(singlesPercent.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></div>
-                            <div class="cmp-folder-doubles" style="height:@(doublesPercent.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></div>
-                        </div>
-                    </MudTooltip>
-                    <span class="cmp-folder-label">@folder.Level</span>
-                </div>
-            }
+        <div class="cmp-folder-pair">
+            @RenderFolderGraph(ChartType.Single, L["Singles"], "cmp-folder-head-singles")
+            @RenderFolderGraph(ChartType.Double, L["Doubles"], "cmp-folder-head-doubles")
         </div>
     </MudPaper>
 
@@ -343,6 +346,46 @@ else
 
     // Low folders exist but tell little at a glance — the graph starts where content does.
     private const int MinFolderLevel = 6;
+
+    // Both graphs share one height scale so the two disciplines stay visually comparable —
+    // a level's column means the same thing whichever half of the pair it sits in.
+    private RenderFragment RenderFolderGraph(ChartType type, string title, string headClass) =>@<div>
+        <div class="cmp-folder-head @headClass">@title</div>
+        <div class="cmp-folders">
+            @{
+                var all = _profile!.FolderCompletion.Where(f => f.Total > 0 && f.Level >= MinFolderLevel).ToArray();
+                var maxTotal = all.Length == 0 ? 1 : all.Max(f => f.Total);
+                var folders = all.Where(f => f.Type == type).OrderBy(f => f.Level).ToArray();
+            }
+            @foreach (var folder in folders)
+            {
+                var trackHeight = Math.Max(6, (int)(118.0 * folder.Total / maxTotal));
+                <div class="cmp-folder-col">
+                    <MudTooltip Text="@FolderTip(folder)">
+                        <div class="cmp-folder-track" style="height:@(trackHeight)px">
+                            <FolderSpectrum GradesDescending="Expand(folder)" Size="folder.Total"
+                                            Vertical="true" ShowTicks="false"></FolderSpectrum>
+                        </div>
+                    </MudTooltip>
+                    <span class="cmp-folder-label">@folder.Level</span>
+                </div>
+            }
+        </div>
+    </div>;
+
+    // The payload carries a grade histogram rather than a chart-by-chart list; the spectrum
+    // wants the list, and best-first is the order it draws in.
+    private static IReadOnlyList<PhoenixLetterGrade> Expand(CommunityFolderCompletionRecord folder) =>
+        folder.GradeCounts
+            .OrderByDescending(kv => kv.Key)
+            .SelectMany(kv => Enumerable.Repeat(kv.Key, kv.Value))
+            .ToArray();
+
+    private string FolderTip(CommunityFolderCompletionRecord folder)
+    {
+        var percent = folder.Total == 0 ? 0 : (int)Math.Floor(100.0 * folder.Passed / folder.Total);
+        return L["{0} of {1} charts ({2}%)", folder.Passed, folder.Total, percent].Value;
+    }
 
     // Winner: 1 = them, -1 = you, 0 = tie. The default order leads with the charts you're
     // losing, widest gap first — the work list.

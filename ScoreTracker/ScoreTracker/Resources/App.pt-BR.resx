@@ -6242,6 +6242,57 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Passe {0} charts com {1} ou melhor (só {2} nesta pasta)</value>
   </data>
+  <data name="Add folder" xml:space="preserve">
+    <value>Adicionar pasta</value>
+  </data>
+  <data name="Backfill Folder Levels" xml:space="preserve">
+    <value>Preencher níveis de pasta</value>
+  </data>
+  <data name="Folder level backfill queued" xml:space="preserve">
+    <value>Preenchimento de níveis de pasta na fila</value>
+  </data>
+  <data name="LAMP" xml:space="preserve">
+    <value>LAMP</value>
+  </data>
+  <data name="Pick the folders you're working on." xml:space="preserve">
+    <value>Escolha as pastas em que você está trabalhando.</value>
+  </data>
+  <data name="**{0}** at {1}" xml:space="preserve">
+    <value>**{0}** com {1}</value>
+  </data>
+  <data name="{0} — {1} at {2}" xml:space="preserve">
+    <value>{0} — {1} com {2}</value>
+  </data>
+  <data name="{0} now {1}" xml:space="preserve">
+    <value>{0} agora {1}</value>
+  </data>
+  <data name="{0} of {1} charts" xml:space="preserve">
+    <value>{0} de {1} charts</value>
+  </data>
+  <data name="{0} of {1} charts ({2}%)" xml:space="preserve">
+    <value>{0} de {1} charts ({2}%)</value>
+  </data>
+  <data name="{0} of {1} charts, averaging {2}" xml:space="preserve">
+    <value>{0} de {1} charts, média {2}</value>
+  </data>
+  <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
+    <value>{0} de {1} · {2} para o Folder Lamp</value>
+  </data>
+  <data name="{0}% complete" xml:space="preserve">
+    <value>{0}% completo</value>
+  </data>
+  <data name="{0}% of {1}" xml:space="preserve">
+    <value>{0}% de {1}</value>
+  </data>
+  <data name="CO-OP {0}" xml:space="preserve">
+    <value>CO-OP {0}</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Redefinir</value>
+  </data>
+  <data name="{0} of {1} folders" xml:space="preserve">
+    <value>{0} de {1} pastas</value>
+  </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>Calculadora de vida</value>
   </data>
@@ -6676,5 +6727,8 @@
   </data>
   <data name="#{0}" xml:space="preserve">
     <value>#{0}</value>
+  </data>
+  <data name="Select Folders" xml:space="preserve">
+    <value>Selecionar pastas</value>
   </data>
 </root>

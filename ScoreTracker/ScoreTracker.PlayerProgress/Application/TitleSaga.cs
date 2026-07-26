@@ -163,16 +163,13 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
         var completed = minted.Where(m => m.Kind == MilestoneKind.TitleCompleted)
             .Select(m => m.Title!)
             .ToArray();
-        var paragons = minted.Where(m => m.Kind == MilestoneKind.ParagonLevelGain)
-            .ToDictionary(m => m.Title!, m => m.Detail ?? string.Empty);
-
-        // Paragon upgrades on a site-only badge aren't a thing today; if one ever appears, take
-        // the card of its own rather than silently dropping it from the snapshot.
-        if (paragons.Count == 0 && _batches.TryAddDetectedTitles(e.Mix, e.UserId, completed)) return;
+        if (_batches.TryAddDetectedTitles(e.Mix, e.UserId, completed)) return;
 
         // No batch to carry them — an import that saved no scores at all, so no snapshot card is
-        // coming. They get their own card, exactly as before.
-        await _bus.Publish(new NewTitlesAcquiredEvent(e.UserId, completed, paragons, e.Mix, e.SessionId),
+        // coming. They get their own card, exactly as before. Paragon levels are retired, so the
+        // event's upgrade map is always empty now.
+        await _bus.Publish(
+            new NewTitlesAcquiredEvent(e.UserId, completed, new Dictionary<string, string>(), e.Mix, e.SessionId),
             context.CancellationToken);
     }
 
@@ -225,15 +222,16 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
 
         if (newCompleted.Length == 0 && upgraded.Length == 0) return Array.Empty<PlayerMilestoneRecord>();
 
-        // Title completions and paragon gains become timestamped milestones —
-        // UserTitle rows have no acquisition date, so this is the only record of WHEN.
+        // Title completions become timestamped milestones — UserTitle rows have no acquisition
+        // date, so this is the only record of WHEN. Paragon upgrades no longer produce one:
+        // per-level progress is folder standings now, which every player has rather than only
+        // those who already finished a title (docs/design/folder-level-progression.md §5.2).
+        // The legacy NewTitlesAcquiredEvent below still carries them, unchanged.
         var writes = newCompleted
             .Select(t => new PlayerMilestoneWrite(MilestoneKind.TitleCompleted, sessionId, _dateTime.Now,
                 Title: t))
-            .Concat(upgraded.Select(t => new PlayerMilestoneWrite(MilestoneKind.ParagonLevelGain, sessionId,
-                _dateTime.Now, Title: t.Title.ToString(), Detail: t.ParagonLevel.ToString())))
             .ToArray();
-        await _milestones.Append(mix, userId, writes, cancellationToken);
+        if (writes.Length > 0) await _milestones.Append(mix, userId, writes, cancellationToken);
         if (announceLegacy)
             await _bus.Publish(
                 new NewTitlesAcquiredEvent(userId, newCompleted,
@@ -375,12 +373,6 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
             if (newlyComplete)
                 writes.Add(new PlayerMilestoneWrite(MilestoneKind.TitleCompleted, request.SessionId, _dateTime.Now,
                     Title: title.Title.Name.ToString()));
-
-            var newParagon = GetLevel(title);
-            var oldParagon = wasBefore == null ? ParagonLevel.None : GetLevel(wasBefore);
-            if (newParagon != ParagonLevel.None && (newlyComplete || newParagon > oldParagon))
-                writes.Add(new PlayerMilestoneWrite(MilestoneKind.ParagonLevelGain, request.SessionId,
-                    _dateTime.Now, Title: title.Title.Name.ToString(), Detail: newParagon.ToString()));
         }
 
         if (writes.Count == 0) return Array.Empty<PlayerMilestoneRecord>();

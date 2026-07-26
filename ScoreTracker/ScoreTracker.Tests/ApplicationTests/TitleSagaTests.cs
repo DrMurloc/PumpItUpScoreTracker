@@ -369,7 +369,8 @@ public sealed class TitleSagaTests
         // A session envelope lasts 8 hours and a score batch drains after 2 minutes, so one
         // session emits many cards. Reading the session's milestone rows back out made every
         // card repeat the previous ones' titles — the batch's own crossings are the answer, and
-        // rows already written against the session must NOT come back.
+        // rows already written against the session must NOT come back. The seeded ladder rung is
+        // the live case: BOLSADGUY's card relisted [D] LV.1-3 from earlier batches.
         var when = new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
         var sessionId = Guid.NewGuid();
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(6)
@@ -379,8 +380,8 @@ public sealed class TitleSagaTests
         ctx.GivenSessionMilestones(sessionId,
             new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, sessionId, when, null, null,
                 "RISE CHALLENGER", null),
-            new PlayerMilestoneRecord(MilestoneKind.ParagonLevelGain, sessionId, when, null, null,
-                "Expert Lv. 2", "PG"));
+            new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, sessionId, when, null, null,
+                "[D] INTERMEDIATE LV.1", null));
 
         var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix,
                 sessionId,
@@ -391,7 +392,7 @@ public sealed class TitleSagaTests
             CancellationToken.None);
 
         Assert.DoesNotContain(result.Milestones, m => m.Title == "RISE CHALLENGER");
-        Assert.DoesNotContain(result.Milestones, m => m.Title == "Expert Lv. 2");
+        Assert.DoesNotContain(result.Milestones, m => m.Title == "[D] INTERMEDIATE LV.1");
     }
 
     private static RecordedPhoenixScore Score(Guid chartId, int score) =>

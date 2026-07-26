@@ -6371,6 +6371,57 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>{0}譜面を{1}以上で（このフォルダーには{2}譜面のみ）</value>
   </data>
+  <data name="Add folder" xml:space="preserve">
+    <value>フォルダを追加</value>
+  </data>
+  <data name="Backfill Folder Levels" xml:space="preserve">
+    <value>フォルダレベルを再計算</value>
+  </data>
+  <data name="Folder level backfill queued" xml:space="preserve">
+    <value>フォルダレベルの再計算をキューに追加しました</value>
+  </data>
+  <data name="LAMP" xml:space="preserve">
+    <value>LAMP</value>
+  </data>
+  <data name="Pick the folders you're working on." xml:space="preserve">
+    <value>取り組んでいるフォルダを選んでください。</value>
+  </data>
+  <data name="**{0}** at {1}" xml:space="preserve">
+    <value>**{0}**（{1}）</value>
+  </data>
+  <data name="{0} — {1} at {2}" xml:space="preserve">
+    <value>{0} — {1}（{2}）</value>
+  </data>
+  <data name="{0} now {1}" xml:space="preserve">
+    <value>{0} が {1} に</value>
+  </data>
+  <data name="{0} of {1} charts" xml:space="preserve">
+    <value>{1} 譜面中 {0}</value>
+  </data>
+  <data name="{0} of {1} charts ({2}%)" xml:space="preserve">
+    <value>{1} 譜面中 {0}（{2}%）</value>
+  </data>
+  <data name="{0} of {1} charts, averaging {2}" xml:space="preserve">
+    <value>{1} 譜面中 {0}、平均 {2}</value>
+  </data>
+  <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
+    <value>{1} 譜面中 {0} · フォルダーランプまで {2}</value>
+  </data>
+  <data name="{0}% complete" xml:space="preserve">
+    <value>{0}% 完了</value>
+  </data>
+  <data name="{0}% of {1}" xml:space="preserve">
+    <value>{1} の {0}%</value>
+  </data>
+  <data name="CO-OP {0}" xml:space="preserve">
+    <value>CO-OP {0}</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>リセット</value>
+  </data>
+  <data name="{0} of {1} folders" xml:space="preserve">
+    <value>{1} 中 {0} フォルダ</value>
+  </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>体力計算機</value>
   </data>
@@ -6805,5 +6856,8 @@
   </data>
   <data name="#{0}" xml:space="preserve">
     <value>{0}位</value>
+  </data>
+  <data name="Select Folders" xml:space="preserve">
+    <value>フォルダを選択</value>
   </data>
 </root>
