@@ -6054,4 +6054,22 @@
   <data name="Mix Changes: {0} to {1}" xml:space="preserve">
     <value>Mrrrglub Murglgl: {0} mrgl {1}</value>
   </data>
+  <data name="{0} charts have a different note count in {1} — the steps changed, not just the rating." xml:space="preserve">
+    <value>{0} plglrglgrrr mrgllurgrgl murglgl mrgl {1} — blurb argrlglar murglgl.</value>
+  </data>
+  <data name="No chart's note count changed between {0} and {1}." xml:space="preserve">
+    <value>Mrgl plglrglgrrr mrgllurgrgl murglgl blurgl {0} argrl {1}.</value>
+  </data>
+  <data name="{0} charts have no note count recorded, so they aren't compared." xml:space="preserve">
+    <value>{0} plglrglgrrr mrgl mrgllurgrgl, mrgl blurb glurgl.</value>
+  </data>
+  <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
+    <value>Murglgl blurb — {0} mrgllurgrgl, murgl {1}.</value>
+  </data>
+  <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
+    <value>{0} mrgllurg plglrglgrrr murglgl blurb.</value>
+  </data>
+  <data name="{0} charts were re-stepped." xml:space="preserve">
+    <value>{0} plglrglgrrr murglgl blurb.</value>
+  </data>
 </root>

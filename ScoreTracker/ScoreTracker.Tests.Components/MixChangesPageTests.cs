@@ -75,7 +75,7 @@ public sealed class MixChangesPageTests : ComponentTestBase
         Diff(new MixDiffRecord(MixEnum.Phoenix, MixEnum.Phoenix2,
             new[] { new MixDiffMoveRecord(beforeMoved, afterMoved) },
             Array.Empty<MixDiffSongRecord>(), Array.Empty<MixDiffSongRecord>(),
-            Array.Empty<Chart>(), Array.Empty<Chart>()));
+            Array.Empty<Chart>(), Array.Empty<Chart>(), Array.Empty<MixDiffMoveRecord>()));
         return (beforeMoved, afterMoved, stillAfter);
     }
 
@@ -95,7 +95,7 @@ public sealed class MixChangesPageTests : ComponentTestBase
         Diff(new MixDiffRecord(MixEnum.Phoenix, MixEnum.Phoenix2,
             new[] { new MixDiffMoveRecord(beforeMoved, afterMoved), new MixDiffMoveRecord(otherBefore, otherAfter) },
             Array.Empty<MixDiffSongRecord>(), Array.Empty<MixDiffSongRecord>(),
-            Array.Empty<Chart>(), Array.Empty<Chart>()));
+            Array.Empty<Chart>(), Array.Empty<Chart>(), Array.Empty<MixDiffMoveRecord>()));
 
         var page = RenderPage();
 
@@ -133,7 +133,7 @@ public sealed class MixChangesPageTests : ComponentTestBase
         Diff(new MixDiffRecord(MixEnum.Phoenix, MixEnum.Phoenix2,
             busy.Append(new MixDiffMoveRecord(beforeMoved, afterMoved)).ToArray(),
             Array.Empty<MixDiffSongRecord>(), Array.Empty<MixDiffSongRecord>(),
-            Array.Empty<Chart>(), Array.Empty<Chart>()));
+            Array.Empty<Chart>(), Array.Empty<Chart>(), Array.Empty<MixDiffMoveRecord>()));
 
         var page = RenderPage();
 
@@ -170,7 +170,7 @@ public sealed class MixChangesPageTests : ComponentTestBase
                     Make(id, "Conflict", ChartType.Double, 13, MixEnum.Phoenix2))
             },
             Array.Empty<MixDiffSongRecord>(), Array.Empty<MixDiffSongRecord>(),
-            Array.Empty<Chart>(), Array.Empty<Chart>()));
+            Array.Empty<Chart>(), Array.Empty<Chart>(), Array.Empty<MixDiffMoveRecord>()));
 
         var page = RenderPage();
         var picker = page.FindComponent<FolderPicker>();
@@ -191,7 +191,7 @@ public sealed class MixChangesPageTests : ComponentTestBase
         Diff(new MixDiffRecord(MixEnum.Phoenix, MixEnum.Phoenix2,
             new[] { new MixDiffMoveRecord(beforeMoved, afterMoved), new MixDiffMoveRecord(easierBefore, easierAfter) },
             Array.Empty<MixDiffSongRecord>(), Array.Empty<MixDiffSongRecord>(),
-            Array.Empty<Chart>(), Array.Empty<Chart>()));
+            Array.Empty<Chart>(), Array.Empty<Chart>(), Array.Empty<MixDiffMoveRecord>()));
 
         // Both left D20, so both are in the folder in view.
         var page = RenderPage();
@@ -265,7 +265,7 @@ public sealed class MixChangesPageTests : ComponentTestBase
         Catalog(MixEnum.Phoenix2, arrival);
         Diff(new MixDiffRecord(MixEnum.Phoenix, MixEnum.Phoenix2, Array.Empty<MixDiffMoveRecord>(),
             new[] { new MixDiffSongRecord(arrival.Song, new[] { arrival }) },
-            Array.Empty<MixDiffSongRecord>(), Array.Empty<Chart>(), Array.Empty<Chart>()));
+            Array.Empty<MixDiffSongRecord>(), Array.Empty<Chart>(), Array.Empty<Chart>(), Array.Empty<MixDiffMoveRecord>()));
 
         var page = RenderPage();
         page.FindAll(".mc-tab")[1].Click();
@@ -283,7 +283,7 @@ public sealed class MixChangesPageTests : ComponentTestBase
         Diff(new MixDiffRecord(MixEnum.Phoenix, MixEnum.Phoenix2, Array.Empty<MixDiffMoveRecord>(),
             Array.Empty<MixDiffSongRecord>(),
             new[] { new MixDiffSongRecord(departure.Song, new[] { departure }) },
-            Array.Empty<Chart>(), Array.Empty<Chart>()));
+            Array.Empty<Chart>(), Array.Empty<Chart>(), Array.Empty<MixDiffMoveRecord>()));
 
         var page = RenderPage();
         page.FindAll(".mc-tab")[2].Click();
@@ -305,6 +305,77 @@ public sealed class MixChangesPageTests : ComponentTestBase
 
         Assert.Contains("D21 folder", page.Find(".mc-fhead").TextContent);
         Assert.Contains("1 arrived", page.Find(".mc-fcount").TextContent);
+    }
+
+    [Fact]
+    public void ResteppedChartsGetTheirOwnSectionWithBeforeAndAfterNoteCounts()
+    {
+        var id = Guid.NewGuid();
+        var before = Make(id, "Iolite Sky", ChartType.Double, 20, MixEnum.Phoenix);
+        var after = Make(id, "Iolite Sky", ChartType.Double, 20, MixEnum.Phoenix2) with { NoteCount = 1012 };
+        Catalog(MixEnum.Phoenix, before);
+        Catalog(MixEnum.Phoenix2, after);
+        Diff(new MixDiffRecord(MixEnum.Phoenix, MixEnum.Phoenix2, Array.Empty<MixDiffMoveRecord>(),
+            Array.Empty<MixDiffSongRecord>(),
+            new[] { new MixDiffSongRecord(before.Song, new[] { before }) },
+            Array.Empty<Chart>(), Array.Empty<Chart>(),
+            new[] { new MixDiffMoveRecord(before, after) }, true));
+
+        var page = RenderPage();
+        page.FindAll(".mc-tab").First(t => t.TextContent.Contains("Note Counts")).Click();
+
+        var row = page.Find(".mc-sheet .mc-row");
+        Assert.Contains("Iolite Sky", row.TextContent);
+        Assert.Contains("1,000", row.TextContent);
+        Assert.Contains("1,012", row.TextContent);
+        Assert.Contains("▲12", row.TextContent);
+    }
+
+    [Fact]
+    public void APairThatTracksNoteCountsButHasNoRestepsSaysSo()
+    {
+        SetupIoliteSky();
+        Diff(new MixDiffRecord(MixEnum.Phoenix, MixEnum.Phoenix2, Array.Empty<MixDiffMoveRecord>(),
+            Array.Empty<MixDiffSongRecord>(),
+            new[] { new MixDiffSongRecord(Make(Guid.NewGuid(), "Nxde", ChartType.Single, 17, MixEnum.Phoenix).Song,
+                new[] { Make(Guid.NewGuid(), "Nxde", ChartType.Single, 17, MixEnum.Phoenix) }) },
+            Array.Empty<Chart>(), Array.Empty<Chart>(),
+            Array.Empty<MixDiffMoveRecord>(), true, 9));
+
+        var page = RenderPage();
+        page.FindAll(".mc-tab").First(t => t.TextContent.Contains("Note Counts")).Click();
+
+        var notice = page.Find(".mc-sheet .mud-alert").TextContent;
+        Assert.Contains("No chart's note count changed", notice);
+        // "None re-stepped" must not be mistaken for "we checked everything".
+        Assert.Contains("9 charts have no note count recorded", notice);
+        Assert.Empty(page.FindAll(".mc-sheet .mc-row"));
+    }
+
+    [Fact]
+    public void APairThatRecordsNoNoteCountsHasNoSuchTabAtAll()
+    {
+        // Absent, not zero: a zero would claim the question was asked and answered.
+        SetupIoliteSky();
+
+        var page = RenderPage();
+
+        Assert.DoesNotContain(page.FindAll(".mc-tab"), t => t.TextContent.Contains("Note Counts"));
+    }
+
+    [Fact]
+    public void TheAnswerCardNamesARestepEvenWhenTheLevelHeld()
+    {
+        var id = Guid.NewGuid();
+        var before = Make(id, "Iolite Sky", ChartType.Double, 20, MixEnum.Phoenix);
+        var after = Make(id, "Iolite Sky", ChartType.Double, 20, MixEnum.Phoenix2) with { NoteCount = 1012 };
+
+        var model = MixChangesAnswerModel.For(after,
+            new Dictionary<Name, Chart[]> { ["Iolite Sky"] = new[] { before } },
+            new Dictionary<Name, Chart[]> { ["Iolite Sky"] = new[] { after } });
+
+        Assert.Equal(MixChangeVerdict.Unchanged, model.Verdict);
+        Assert.Equal(12, model.PinnedNoteDelta);
     }
 
     [Fact]

@@ -51,22 +51,37 @@ internal sealed class GetMixDiffHandler : IRequestHandler<GetMixDiffQuery, MixDi
             .ThenBy(c => c.Type).ThenBy(c => c.Level)
             .ToArray();
 
-        var rerated = after.Values
-            .Where(c => before.ContainsKey(c.Id) && before[c.Id].Level != c.Level)
+        var survivors = after.Values.Where(c => before.ContainsKey(c.Id))
             .Select(c => new MixDiffMoveRecord(before[c.Id], c))
+            .ToArray();
+
+        var rerated = survivors
+            .Where(m => m.Before.Level != m.After.Level)
             .OrderBy(m => m.After.Song.Name.ToString(), StringComparer.OrdinalIgnoreCase)
             .ThenBy(m => m.After.Type).ThenBy(m => m.After.Level)
             .ToArray();
 
+        // A different note count means the steps themselves changed, which is a bigger deal
+        // to anyone who has the chart memorised than a rerate is. Only Phoenix-era catalogs
+        // record note counts, so whether the question is answerable at all is data-driven
+        // rather than a hardcoded mix list — and charts missing a count on either side are
+        // counted separately, because unknown is not unchanged.
+        var comparable = survivors.Where(m => m.NoteDelta != null).ToArray();
+        var restepped = comparable
+            .Where(m => m.NoteDelta != 0)
+            .OrderByDescending(m => Math.Abs(m.NoteDelta!.Value))
+            .ThenBy(m => m.After.Song.Name.ToString(), StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
         return new MixDiffRecord(request.From, request.To, rerated, arrivedSongs, departedSongs,
-            addedCharts, removedCharts);
+            addedCharts, removedCharts, restepped,
+            NoteCountsTracked: comparable.Length > 0,
+            NoteCountsUnknown: survivors.Length - comparable.Length);
     }
 
     private static MixDiffRecord Empty(GetMixDiffQuery request)
     {
-        return new MixDiffRecord(request.From, request.To, Array.Empty<MixDiffMoveRecord>(),
-            Array.Empty<MixDiffSongRecord>(), Array.Empty<MixDiffSongRecord>(),
-            Array.Empty<Chart>(), Array.Empty<Chart>());
+        return MixDiffRecord.Empty(request.From, request.To);
     }
 
     private static Dictionary<Name, List<Chart>> SongsByName(IEnumerable<Chart> charts)

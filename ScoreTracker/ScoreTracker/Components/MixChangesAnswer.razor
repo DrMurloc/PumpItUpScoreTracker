@@ -44,6 +44,25 @@
             </div>
         }
 
+        @* A chart can hold its level and still be a different chart to play. *@
+        @if (Answer.PinnedNoteDelta is { } pinnedNotes)
+        {
+            <div class="mc-quiet mc-restepped">
+                @L["Re-stepped — {0} notes, was {1}.",
+                    Answer.PinnedAfter!.NoteCount?.ToString("N0") ?? "?",
+                    Answer.PinnedBefore!.NoteCount?.ToString("N0") ?? "?"]
+                <span class="mc-delta @(pinnedNotes > 0 ? "mc-up" : "mc-down")">
+                    @(pinnedNotes > 0 ? "▲" : "▼")@Math.Abs(pinnedNotes).ToString("N0")
+                </span>
+            </div>
+        }
+        else if (Answer.Restepped.Any())
+        {
+            <div class="mc-quiet mc-restepped">
+                @L["{0} of this song's charts were re-stepped.", Answer.Restepped.Count]
+            </div>
+        }
+
         @if (Answer.Gained.Any() || Answer.Lost.Any())
         {
             <div class="mc-quiet">

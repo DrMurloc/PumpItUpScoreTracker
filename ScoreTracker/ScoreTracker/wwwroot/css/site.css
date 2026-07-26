@@ -6939,6 +6939,20 @@ button.chart-card-art {
     color: var(--mix-ink-muted);
 }
 
+.mc-restepped {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Note counts line up as a column across rows, so they get tabular figures. */
+.mc-notes {
+    font-variant-numeric: tabular-nums;
+    font-size: .85rem;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
 .mc-linkish {
     background: none;
     border: 0;

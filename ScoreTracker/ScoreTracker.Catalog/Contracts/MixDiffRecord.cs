@@ -21,15 +21,21 @@ public sealed record MixDiffRecord(
     IReadOnlyList<MixDiffSongRecord> ArrivedSongs,
     IReadOnlyList<MixDiffSongRecord> DepartedSongs,
     IReadOnlyList<Chart> AddedCharts,
-    IReadOnlyList<Chart> RemovedCharts)
+    IReadOnlyList<Chart> RemovedCharts,
+    IReadOnlyList<MixDiffMoveRecord> Restepped,
+    bool NoteCountsTracked = false,
+    int NoteCountsUnknown = 0)
 {
     /// <summary>A pair with nothing to say — a mix against itself, or a catalog not yet imported.</summary>
     public static MixDiffRecord Empty(MixEnum from, MixEnum to)
     {
         return new MixDiffRecord(from, to, Array.Empty<MixDiffMoveRecord>(), Array.Empty<MixDiffSongRecord>(),
-            Array.Empty<MixDiffSongRecord>(), Array.Empty<Chart>(), Array.Empty<Chart>());
+            Array.Empty<MixDiffSongRecord>(), Array.Empty<Chart>(), Array.Empty<Chart>(),
+            Array.Empty<MixDiffMoveRecord>());
     }
 
+    // Restepped is not part of IsEmpty on purpose: it is a subset of the charts in both mixes,
+    // so a pair with nothing else to say has nothing here either.
     public bool IsEmpty => Rerated.Count == 0 && ArrivedSongs.Count == 0 && DepartedSongs.Count == 0
                            && AddedCharts.Count == 0 && RemovedCharts.Count == 0;
 
@@ -40,14 +46,23 @@ public sealed record MixDiffRecord(
 }
 
 /// <summary>
-///     One chart at both ends of the comparison — same chart id, different level. Both
-///     sides are carried because each mix's copy knows its own level, note count and
-///     legacy slot, and the page shows the before and the after side by side.
+///     One chart at both ends of the comparison — same chart id, something different about
+///     it. Both sides are carried because each mix's copy knows its own level, note count
+///     and legacy slot, and the page shows the before and the after side by side.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record MixDiffMoveRecord(Chart Before, Chart After)
 {
     public int Delta => After.Level - Before.Level;
+
+    /// <summary>
+    ///     How many notes the chart gained or lost. Null when either side has no note count
+    ///     recorded — "we don't know" is not "no change", and only Phoenix-era mixes carry
+    ///     note counts at all.
+    /// </summary>
+    public int? NoteDelta => Before.NoteCount != null && After.NoteCount != null
+        ? After.NoteCount.Value - Before.NoteCount.Value
+        : null;
 }
 
 /// <summary>A song that arrived or left whole, with the charts that travelled with it.</summary>

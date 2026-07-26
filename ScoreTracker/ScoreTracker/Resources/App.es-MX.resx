@@ -6008,4 +6008,22 @@
   <data name="Mix Changes: {0} to {1}" xml:space="preserve">
     <value>Cambios de versión: de {0} a {1}</value>
   </data>
+  <data name="{0} charts have a different note count in {1} — the steps changed, not just the rating." xml:space="preserve">
+    <value>{0} charts tienen un número de notas distinto en {1}: cambiaron los pasos, no solo el nivel.</value>
+  </data>
+  <data name="No chart's note count changed between {0} and {1}." xml:space="preserve">
+    <value>Ningún chart cambió su número de notas entre {0} y {1}.</value>
+  </data>
+  <data name="{0} charts have no note count recorded, so they aren't compared." xml:space="preserve">
+    <value>{0} charts no tienen número de notas registrado, así que no se comparan.</value>
+  </data>
+  <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
+    <value>Repisado: {0} notas, antes {1}.</value>
+  </data>
+  <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
+    <value>{0} charts de esta canción fueron repisados.</value>
+  </data>
+  <data name="{0} charts were re-stepped." xml:space="preserve">
+    <value>{0} charts fueron repisados.</value>
+  </data>
 </root>

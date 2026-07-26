@@ -248,12 +248,13 @@
                 ["name"] = "PIU Scores",
                 ["url"] = "https://piuscores.arroweclip.se"
             },
-            ["variableMeasured"] = new object[]
-            {
-                Measured("Charts re-rated", diff.Rerated),
-                Measured("Songs added", diff.SongsArrived),
-                Measured("Songs removed", diff.SongsDeparted)
-            },
+            ["variableMeasured"] = new object?[]
+                {
+                    Measured("Charts re-rated", diff.Rerated),
+                    Measured("Songs added", diff.SongsArrived),
+                    Measured("Songs removed", diff.SongsDeparted),
+                    diff.Restepped is { } restepped ? Measured("Charts re-stepped", restepped) : null
+                }.Where(v => v != null).ToArray(),
             ["about"] = new object[]
             {
                 new Dictionary<string, object?> { ["@type"] = "VideoGame", ["name"] = $"Pump It Up {diff.FromMix}" },

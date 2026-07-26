@@ -6128,4 +6128,22 @@
   <data name="Mix Changes: {0} to {1}" xml:space="preserve">
     <value>バージョン間の変更：{0}から{1}へ</value>
   </data>
+  <data name="{0} charts have a different note count in {1} — the steps changed, not just the rating." xml:space="preserve">
+    <value>{1} でノーツ数が変わった譜面が {0} 件あります。難度だけでなく譜面そのものが変わっています。</value>
+  </data>
+  <data name="No chart's note count changed between {0} and {1}." xml:space="preserve">
+    <value>{0} と {1} の間でノーツ数が変わった譜面はありません。</value>
+  </data>
+  <data name="{0} charts have no note count recorded, so they aren't compared." xml:space="preserve">
+    <value>{0} 件の譜面はノーツ数が未記録のため、比較していません。</value>
+  </data>
+  <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
+    <value>譜面変更 — {0} ノーツ（以前は {1}）。</value>
+  </data>
+  <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
+    <value>この曲の譜面のうち {0} 件が変更されています。</value>
+  </data>
+  <data name="{0} charts were re-stepped." xml:space="preserve">
+    <value>{0} 件の譜面が変更されました。</value>
+  </data>
 </root>

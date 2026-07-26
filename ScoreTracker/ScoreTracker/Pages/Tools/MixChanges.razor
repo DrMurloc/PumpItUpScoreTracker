@@ -102,6 +102,15 @@
                     @onclick="() => SetTab(Tab.Left)">
                 <span>@L["Left"]</span><span class="mc-tab-n">@(_diff.DepartedSongs.Count + _diff.RemovedCharts.Count)</span>
             </button>
+            @* Absent, not zero, when the pair records no note counts: a 0 would claim we
+               looked. Present-and-zero when we did look and nothing moved. *@
+            @if (_diff.NoteCountsTracked)
+            {
+                <button type="button" role="tab" class="mc-tab" aria-selected="@Aria(_tab == Tab.Restepped)"
+                        @onclick="() => SetTab(Tab.Restepped)">
+                    <span>@L["Note Counts"]</span><span class="mc-tab-n">@_diff.Restepped.Count</span>
+                </button>
+            }
         </div>
 
         <div role="tabpanel">
@@ -173,10 +182,52 @@
                 <MixChangesSongSheet Songs="_diff.ArrivedSongs" LooseCharts="_diff.AddedCharts"
                                      Departed="false" Mix="_to" OnChart="Answer"></MixChangesSongSheet>
             }
-            else
+            else if (_tab == Tab.Left)
             {
                 <MixChangesSongSheet Songs="_diff.DepartedSongs" LooseCharts="_diff.RemovedCharts"
                                      Departed="true" Mix="_from" OnChart="Answer"></MixChangesSongSheet>
+            }
+            else
+            {
+                @* A changed note count means the steps changed, not the rating — the chart you
+                   memorised is a different chart now. Not folder-scoped: this is a short list
+                   by nature, and it is the one section you want whole. *@
+                <div class="mc-sheet">
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="mc-notice">
+                        @if (_diff.Restepped.Any())
+                        {
+                            @L["{0} charts have a different note count in {1} — the steps changed, not just the rating.",
+                                _diff.Restepped.Count, _to.GetName()]
+                        }
+                        else
+                        {
+                            @L["No chart's note count changed between {0} and {1}.", _from.GetName(), _to.GetName()]
+                        }
+                        @if (_diff.NoteCountsUnknown > 0)
+                        {
+                            <span> </span>
+                            @L["{0} charts have no note count recorded, so they aren't compared.", _diff.NoteCountsUnknown]
+                        }
+                    </MudAlert>
+
+                    @foreach (var move in _diff.Restepped)
+                    {
+                        <button type="button" class="mc-row" @onclick="() => Answer(move.After)">
+                            <SongImage Song="move.After.Song" Small="true"></SongImage>
+                            <span class="mc-name">@move.After.Song.Name</span>
+                            <span class="mc-tail">
+                                <DifficultyBubble Chart="move.After" Small="true"></DifficultyBubble>
+                                <span class="mc-notes">
+                                    @move.Before.NoteCount?.ToString("N0") <span class="mc-arrow">→</span>
+                                    @move.After.NoteCount?.ToString("N0")
+                                </span>
+                                <span class="mc-delta @(move.NoteDelta > 0 ? "mc-up" : "mc-down")">
+                                    @(move.NoteDelta > 0 ? "▲" : "▼")@Math.Abs(move.NoteDelta ?? 0).ToString("N0")
+                                </span>
+                            </span>
+                        </button>
+                    }
+                </div>
             }
         </div>
     }
@@ -192,7 +243,8 @@
     {
         Rerated,
         Arrived,
-        Left
+        Left,
+        Restepped
     }
 
     /// <summary>Newest first — the pair a player wants is usually the one they are living through.</summary>

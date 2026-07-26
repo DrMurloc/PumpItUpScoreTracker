@@ -40,8 +40,17 @@ public sealed record MixChangesAnswerModel(
     IReadOnlyList<Chart> Unchanged,
     IReadOnlyList<Chart> Gained,
     IReadOnlyList<Chart> Lost,
-    int TotalCharts)
+    int TotalCharts,
+    IReadOnlyList<MixDiffMoveRecord> Restepped)
 {
+    /// <summary>
+    ///     How the chart they named was re-stepped, if it was. A chart can hold its level and
+    ///     still be a different chart to play, so this is worth saying even when the verdict
+    ///     above it reads "didn't move".
+    /// </summary>
+    public int? PinnedNoteDelta => Restepped
+        .FirstOrDefault(m => PinnedAfter != null && m.After.Id == PinnedAfter.Id)?.NoteDelta;
+
     public static MixChangesAnswerModel For(Chart selected,
         IReadOnlyDictionary<Name, Chart[]> beforeBySong,
         IReadOnlyDictionary<Name, Chart[]> afterBySong)
@@ -72,11 +81,18 @@ public sealed record MixChangesAnswerModel(
         var pinnedBefore = beforeById.GetValueOrDefault(selected.Id);
         var pinnedAfter = afterById.GetValueOrDefault(selected.Id);
 
+        var restepped = afterById.Values
+            .Where(c => beforeById.ContainsKey(c.Id))
+            .Select(c => new MixDiffMoveRecord(beforeById[c.Id], c))
+            .Where(m => m.NoteDelta is not (null or 0))
+            .OrderBy(m => m.After.Type).ThenBy(m => m.After.Level)
+            .ToArray();
+
         var verdict = VerdictFor(before, after, pinnedBefore, pinnedAfter, moves.Length);
         var song = (after.FirstOrDefault() ?? before.FirstOrDefault() ?? selected).Song;
 
         return new MixChangesAnswerModel(song, verdict, pinnedBefore, pinnedAfter, moves, unchanged,
-            gained, lost, Math.Max(before.Length, after.Length));
+            gained, lost, Math.Max(before.Length, after.Length), restepped);
     }
 
     private static MixChangeVerdict VerdictFor(IReadOnlyList<Chart> before, IReadOnlyList<Chart> after,

@@ -6009,4 +6009,22 @@
   <data name="Mix Changes: {0} to {1}" xml:space="preserve">
     <value>시리즈 변경사항: {0} → {1}</value>
   </data>
+  <data name="{0} charts have a different note count in {1} — the steps changed, not just the rating." xml:space="preserve">
+    <value>{1}에서 노트 수가 달라진 채보가 {0}개 있습니다. 난이도만이 아니라 채보 자체가 바뀌었습니다.</value>
+  </data>
+  <data name="No chart's note count changed between {0} and {1}." xml:space="preserve">
+    <value>{0}과(와) {1} 사이에 노트 수가 바뀐 채보는 없습니다.</value>
+  </data>
+  <data name="{0} charts have no note count recorded, so they aren't compared." xml:space="preserve">
+    <value>{0}개 채보는 노트 수가 기록되어 있지 않아 비교하지 않았습니다.</value>
+  </data>
+  <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
+    <value>채보 변경 — {0}노트, 이전에는 {1}.</value>
+  </data>
+  <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
+    <value>이 노래의 채보 중 {0}개가 변경되었습니다.</value>
+  </data>
+  <data name="{0} charts were re-stepped." xml:space="preserve">
+    <value>채보 {0}개가 변경되었습니다.</value>
+  </data>
 </root>

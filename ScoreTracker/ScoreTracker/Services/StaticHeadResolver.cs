@@ -24,8 +24,12 @@ public sealed record StaticHeadModel(string Title, string Description, string? O
 ///     schema.org Dataset rather than an article — that is the type that says "this page is
 ///     the table" to a reader deciding what to quote.
 /// </summary>
+/// <param name="Restepped">
+///     Null when the pair records no note counts — the Dataset then omits the variable rather
+///     than measuring it at zero, which would claim we looked.
+/// </param>
 public sealed record MixDiffHeadModel(string FromMix, string ToMix, int Rerated, int SongsArrived,
-    int SongsDeparted);
+    int SongsDeparted, int? Restepped);
 
 /// <summary>
 ///     Resolves the document head from the request path
@@ -173,17 +177,22 @@ public sealed class StaticHeadResolver
         var title = _localizer["Mix Changes: {0} to {1}", from.GetName(), to.GetName()];
         var description = diff.IsEmpty
             ? _localizer["No chart levels, songs or charts changed between {0} and {1} in Pump It Up.",
-                from.GetName(), to.GetName()]
+                from.GetName(), to.GetName()].Value
             : _localizer[
                 "{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}.",
                 to.GetName(), diff.Rerated.Count, from.GetName(), diff.RatedHarder, diff.RatedEasier,
-                diff.ArrivedSongs.Count, diff.DepartedSongs.Count];
+                diff.ArrivedSongs.Count, diff.DepartedSongs.Count].Value;
+
+        // Re-steps only join the sentence when there are any: "and 0 re-stepped" is noise in a
+        // snippet, and the pair may not record note counts to begin with.
+        if (diff.Restepped.Count > 0)
+            description += " " + _localizer["{0} charts were re-stepped.", diff.Restepped.Count];
 
         var canonical =
             $"https://piuscores.arroweclip.se/MixChanges/{ChartSlugs.MixSlug(from)}/{ChartSlugs.MixSlug(to)}";
         return new StaticHeadModel(title, description, null, canonical, null, null,
             new MixDiffHeadModel(from.GetName(), to.GetName(), diff.Rerated.Count, diff.ArrivedSongs.Count,
-                diff.DepartedSongs.Count));
+                diff.DepartedSongs.Count, diff.NoteCountsTracked ? diff.Restepped.Count : null));
     }
 
     /// <summary>

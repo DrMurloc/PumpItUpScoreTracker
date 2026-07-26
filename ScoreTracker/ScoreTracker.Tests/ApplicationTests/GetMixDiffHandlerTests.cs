@@ -34,6 +34,12 @@ public sealed class GetMixDiffHandlerTests
         return new ChartBuilder().WithId(id).WithSongName(song).WithType(type).WithLevel(level).WithMix(mix);
     }
 
+    private static Chart Chart(Guid id, string song, ChartType type, int level, MixEnum mix, int notes)
+    {
+        return new ChartBuilder().WithId(id).WithSongName(song).WithType(type).WithLevel(level).WithMix(mix)
+            .WithNoteCount(notes);
+    }
+
     private Task<MixDiffRecord> Diff(MixEnum from = MixEnum.Phoenix, MixEnum to = MixEnum.Phoenix2)
     {
         return Handler.Handle(new GetMixDiffQuery(from, to), CancellationToken.None);
@@ -198,6 +204,88 @@ public sealed class GetMixDiffHandlerTests
             diff.Rerated.Select(m => m.After.Song.Name.ToString()).ToArray());
         Assert.Equal(new[] { ChartType.Single, ChartType.Double, ChartType.Single },
             diff.Rerated.Select(m => m.After.Type).ToArray());
+    }
+
+    [Fact]
+    public async Task AChangedNoteCountIsReportedAsARestep()
+    {
+        var id = Guid.NewGuid();
+        Catalog(MixEnum.Phoenix, Chart(id, "Iolite Sky", ChartType.Double, 20, MixEnum.Phoenix, 1000));
+        Catalog(MixEnum.Phoenix2, Chart(id, "Iolite Sky", ChartType.Double, 20, MixEnum.Phoenix2, 1012));
+
+        var diff = await Diff();
+
+        var restep = Assert.Single(diff.Restepped);
+        Assert.Equal(12, restep.NoteDelta);
+        Assert.True(diff.NoteCountsTracked);
+        Assert.Equal(0, diff.NoteCountsUnknown);
+        // Its level held, so it is not a rerate — the two lists answer different questions.
+        Assert.Empty(diff.Rerated);
+    }
+
+    [Fact]
+    public async Task AChartCanBeBothReRatedAndRestepped()
+    {
+        var id = Guid.NewGuid();
+        Catalog(MixEnum.Phoenix, Chart(id, "Iolite Sky", ChartType.Double, 20, MixEnum.Phoenix, 1000));
+        Catalog(MixEnum.Phoenix2, Chart(id, "Iolite Sky", ChartType.Double, 21, MixEnum.Phoenix2, 980));
+
+        var diff = await Diff();
+
+        Assert.Single(diff.Rerated);
+        Assert.Equal(-20, Assert.Single(diff.Restepped).NoteDelta);
+    }
+
+    [Fact]
+    public async Task AChartMissingANoteCountOnEitherSideIsCountedAsUnknownNotUnchanged()
+    {
+        var known = Guid.NewGuid();
+        var unknown = Guid.NewGuid();
+        Catalog(MixEnum.Phoenix,
+            Chart(known, "Conflict", ChartType.Single, 12, MixEnum.Phoenix, 500),
+            Chart(unknown, "Butterfly", ChartType.Single, 4, MixEnum.Phoenix));
+        Catalog(MixEnum.Phoenix2,
+            Chart(known, "Conflict", ChartType.Single, 12, MixEnum.Phoenix2, 500),
+            Chart(unknown, "Butterfly", ChartType.Single, 4, MixEnum.Phoenix2));
+
+        var diff = await Diff();
+
+        Assert.Empty(diff.Restepped);
+        Assert.True(diff.NoteCountsTracked);
+        Assert.Equal(1, diff.NoteCountsUnknown);
+    }
+
+    [Fact]
+    public async Task APairThatRecordsNoNoteCountsAtAllIsNotTracked()
+    {
+        // Pre-Phoenix catalogs have no note counts, so the question is unanswerable rather
+        // than answered "nothing changed".
+        var id = Guid.NewGuid();
+        Catalog(MixEnum.XX, Chart(id, "Conflict", ChartType.Single, 12, MixEnum.XX));
+        Catalog(MixEnum.Phoenix, Chart(id, "Conflict", ChartType.Single, 12, MixEnum.Phoenix));
+
+        var diff = await Diff(MixEnum.XX, MixEnum.Phoenix);
+
+        Assert.False(diff.NoteCountsTracked);
+        Assert.Empty(diff.Restepped);
+    }
+
+    [Fact]
+    public async Task RestepsAreOrderedByHowMuchTheChartChanged()
+    {
+        var small = Guid.NewGuid();
+        var big = Guid.NewGuid();
+        Catalog(MixEnum.Phoenix,
+            Chart(small, "Small", ChartType.Single, 12, MixEnum.Phoenix, 500),
+            Chart(big, "Big", ChartType.Single, 12, MixEnum.Phoenix, 500));
+        Catalog(MixEnum.Phoenix2,
+            Chart(small, "Small", ChartType.Single, 12, MixEnum.Phoenix2, 505),
+            Chart(big, "Big", ChartType.Single, 12, MixEnum.Phoenix2, 300));
+
+        var diff = await Diff();
+
+        Assert.Equal(new[] { "Big", "Small" },
+            diff.Restepped.Select(m => m.After.Song.Name.ToString()).ToArray());
     }
 
     [Fact]
