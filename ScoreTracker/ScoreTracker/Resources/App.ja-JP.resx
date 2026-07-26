@@ -4478,9 +4478,6 @@
   <data name="in the top ten" xml:space="preserve">
     <value>件がトップ10以内</value>
   </data>
-  <data name="Last import failed" xml:space="preserve">
-    <value>前回のインポートが失敗しました</value>
-  </data>
   <data name="level 24+, first ever, any grade" xml:space="preserve">
     <value>レベル24以上、史上初、全グレード対象</value>
   </data>
