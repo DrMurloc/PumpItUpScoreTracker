@@ -6765,12 +6765,6 @@ button.chart-card-art {
     outline: 1px solid var(--mix-primary);
 }
 
-.srp-drawer-switches {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 16px;
-}
-
 .srp-card-stepartist {
     color: var(--mix-ink-muted);
 }

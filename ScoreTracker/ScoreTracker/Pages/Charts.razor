@@ -199,8 +199,6 @@ else
                 <ChartSearchCard Result="result" LeadFact="@LeadFact(result)"
                                  ShowMyState="CurrentUser.IsLoggedIn"
                                  ShowActions="CurrentUser.IsLoggedIn"
-                                 ShowStepArtist="_showStepArtist"
-                                 ShowNoteCount="_showNoteCount"
                                  IsFavorite="_favoriteCharts.Contains(result.Chart.Id)"
                                  IsToDo="_todoCharts.Contains(result.Chart.Id)"
                                  OnToggleFavorite="ToggleFavorite"
@@ -295,9 +293,13 @@ else
             @* The long tail is a pick list, not a disclosure: you choose which filters live in
                your drawer and they stay. Unchecking one clears it (SetShownFilters), so a
                filter can never be narrowing the results from off screen. *@
+            @* LockScroll: the list is long enough to scroll on its own, and without this a
+               wheel over it drives the page behind instead, which reads as the list sliding
+               away from its input. *@
             <MudSelect T="string" Label="@L["More filters"]" MultiSelection="true"
                        SelectedValues="_shownFilters" SelectedValuesChanged="SetShownFilters"
                        MultiSelectionTextFunc="@ShownFiltersText" Clearable="false"
+                       LockScroll="true" MaxHeight="360"
                        Variant="Variant.Outlined" Margin="Margin.Dense" Class="srp-more-filters">
                 @foreach (var filter in AdvancedFilters)
                 {
@@ -325,17 +327,46 @@ else
                     </div>
                 </div>
             }
+            @* Both artist facets take several values. A mix has hundreds of artists, so the
+               type-ahead stays the finder — a plain dropdown would be a scroll-hunt with no
+               search — and the picks live beside it as chips you can drop one at a time. *@
             @if (Shows("artist"))
             {
-                <MudAutocomplete T="string" Value="@null" ValueChanged="AddArtist" Label="@L["Song Artist"]"
-                                 SearchFunc="SearchArtists" Clearable="true" CoerceText="false" CoerceValue="false"
-                                 Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true"></MudAutocomplete>
+                <div class="srp-facet">
+                    <MudAutocomplete T="string" Value="@null" ValueChanged="AddArtist" Label="@L["Song Artist"]"
+                                     SearchFunc="SearchArtists" Clearable="true" CoerceText="false" CoerceValue="false"
+                                     Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true"></MudAutocomplete>
+                    @if (_artists.Count > 0)
+                    {
+                        <div class="srp-chipset">
+                            @foreach (var artist in _artists)
+                            {
+                                var captured = artist;
+                                <span class="srp-facet-chip srp-facet-chip-on" role="button" tabindex="0"
+                                      @onclick="() => RemoveArtist(captured)">@captured ✕</span>
+                            }
+                        </div>
+                    }
+                </div>
             }
             @if (Shows("stepArtist"))
             {
-                <MudAutocomplete T="string" Value="@null" ValueChanged="AddStepArtist" Label="@L["Step Artist"]"
-                                 SearchFunc="SearchStepArtists" Clearable="true" CoerceText="false" CoerceValue="false"
-                                 Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true"></MudAutocomplete>
+                <div class="srp-facet">
+                    <MudAutocomplete T="string" Value="@null" ValueChanged="AddStepArtist" Label="@L["Step Artist"]"
+                                     SearchFunc="SearchStepArtists" Clearable="true" CoerceText="false" CoerceValue="false"
+                                     Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true"></MudAutocomplete>
+                    @if (_stepArtists.Count > 0)
+                    {
+                        <div class="srp-chipset">
+                            @foreach (var stepArtist in _stepArtists)
+                            {
+                                var captured = stepArtist;
+                                <span class="srp-facet-chip srp-facet-chip-on" role="button" tabindex="0"
+                                      @onclick="() => RemoveStepArtist(captured)">@captured ✕</span>
+                            }
+                        </div>
+                    }
+                </div>
             }
 
                 @if (Shows("bpm") && _ranges?.BpmMin != null && _ranges.BpmMax > _ranges.BpmMin)
@@ -484,15 +515,14 @@ else
                                Min="0" Max="100" Step="5" Color="Color.Primary" Size="Size.Small"></MudSlider>
                 </div>
                 }
-                @if (Shows("scoringLevel") && ModernInScope && _ranges?.ScoringLevelMin != null
-                     && _ranges.ScoringLevelMax > _ranges.ScoringLevelMin)
+                @if (Shows("scoringLevel") && ModernInScope)
                 {
                     <div class="srp-facet">
                         <RangeSlider Label="@L["Scoring level"]"
-                                     ValueText="@RangeLabel((decimal?)_scoringLevelMin, (decimal?)_scoringLevelMax, (decimal?)_ranges.ScoringLevelMin, (decimal?)_ranges.ScoringLevelMax)"
-                                     Min="(int)_ranges.ScoringLevelMin.Value" Max="(int)_ranges.ScoringLevelMax.Value"
-                                     ValueMin="(int)(_scoringLevelMin ?? _ranges.ScoringLevelMin.Value)"
-                                     ValueMax="(int)(_scoringLevelMax ?? _ranges.ScoringLevelMax.Value)"
+                                     ValueText="@RangeLabel((decimal?)_scoringLevelMin, (decimal?)_scoringLevelMax, (decimal?)ScoringLevelFloor, (decimal?)ScoringLevelCeiling)"
+                                     Min="ScoringLevelFloor" Max="ScoringLevelCeiling"
+                                     ValueMin="(int)(_scoringLevelMin ?? ScoringLevelFloor)"
+                                     ValueMax="(int)(_scoringLevelMax ?? ScoringLevelCeiling)"
                                      ValueMinChanged="v => SetScoringLevelMin(v)" ValueMaxChanged="v => SetScoringLevelMax(v)"></RangeSlider>
                     </div>
                 }
@@ -560,16 +590,6 @@ else
                     </div>
                 }
 
-                @* Display switches stay switches on purpose: they change what a card shows,
-                   not which charts match, and shouldn't read as filters — so they are not in
-                   the pick list either, and stay put at the foot of the drawer. *@
-                <MudText Typo="Typo.overline">@L["Display"]</MudText>
-                <div class="srp-drawer-switches">
-                    <MudSwitch T="bool" Value="_showStepArtist" ValueChanged="SetShowStepArtist" Color="Color.Primary"
-                               Label="@L["Step Artist"]"></MudSwitch>
-                    <MudSwitch T="bool" Value="_showNoteCount" ValueChanged="SetShowNoteCount" Color="Color.Primary"
-                               Label="@L["Note count"]"></MudSwitch>
-                </div>
         </div>
     </MudDrawer>
 </MudLayout>
@@ -633,10 +653,6 @@ else
     private int _pageNumber = 1;
     private const int PageSize = 24;
 
-    private bool _showStepArtist;
-    private bool _showNoteCount;
-    private const string StepArtistDisplayKey = "Charts__Display__StepArtist";
-    private const string NoteCountDisplayKey = "Charts__Display__NoteCount";
 
     private UiDensity _density = UiDensity.Comfortable;
     private const string DensitySettingKey = "Density__Charts";
@@ -653,6 +669,22 @@ else
     private bool _vocabularyLoaded;
 
     private int PageCount => (int)Math.Ceiling(_totalCount / (double)PageSize);
+
+    /// <summary>
+    ///     The scoring-level track. Banked extents when the mix has them; otherwise the level
+    ///     scale, which scoring level is expressed on anyway — the filter is offered wherever
+    ///     the sort is, so it cannot vanish just because the analytics have not run yet.
+    /// </summary>
+    private int ScoringLevelFloor => (int?)_ranges?.ScoringLevelMin ?? DifficultyLevel.Min;
+
+    private int ScoringLevelCeiling
+    {
+        get
+        {
+            var ceiling = (int?)_ranges?.ScoringLevelMax ?? DifficultyLevel.Max;
+            return ceiling > ScoringLevelFloor ? ceiling : ScoringLevelFloor + 1;
+        }
+    }
 
     private bool LegacyInScope => _mix.UsesLegacyScoring();
     private bool ModernInScope => !_mix.UsesLegacyScoring();
@@ -942,8 +974,6 @@ else
             _todoCharts = saves.Where(s => s.ListType == ChartListType.ToDo).Select(s => s.ChartId).ToHashSet();
         }
 
-        _showStepArtist = await UiSettings.GetSetting(StepArtistDisplayKey) == true.ToString();
-        _showNoteCount = await UiSettings.GetSetting(NoteCountDisplayKey) == true.ToString();
         // The long tail you chose to keep on screen, plus whatever this URL is filtering by —
         // otherwise the chip is visible but the control that set it is not.
         var shown = await UiSettings.GetSetting(ShownFiltersKey);
@@ -1386,7 +1416,10 @@ else
                     () => _communityVote.Count > 0, () => _communityVote.Clear()),
                 new("passRate", L["Pass rate"], true,
                     () => _passRateMin != null, () => _passRateMin = null),
-                new("scoringLevel", L["Scoring level"], modern && _ranges?.ScoringLevelMin != null,
+                // Offered wherever the sort is offered — sorting by scoring level while being
+                // unable to filter by it was the odd bit. The track falls back to the level
+                // scale when the mix has no banked extents; scoring level rides that scale.
+                new("scoringLevel", L["Scoring level"], modern,
                     () => _scoringLevelMin != null || _scoringLevelMax != null,
                     () => { _scoringLevelMin = null; _scoringLevelMax = null; }),
                 new("lists", L["Favorites"] + " / " + L["To Do"], mine,
@@ -1453,6 +1486,18 @@ else
         if (string.IsNullOrWhiteSpace(artist) ||
             _artists.Contains(artist, StringComparer.OrdinalIgnoreCase)) return;
         _artists.Add(artist);
+        await ApplyChange();
+    }
+
+    private async Task RemoveArtist(string artist)
+    {
+        _artists.RemoveAll(a => string.Equals(a, artist, StringComparison.OrdinalIgnoreCase));
+        await ApplyChange();
+    }
+
+    private async Task RemoveStepArtist(string stepArtist)
+    {
+        _stepArtists.RemoveAll(a => string.Equals(a, stepArtist, StringComparison.OrdinalIgnoreCase));
         await ApplyChange();
     }
 
@@ -1773,18 +1818,6 @@ else
     {
         _onlyToDo = value;
         await ApplyChange();
-    }
-
-    private async Task SetShowStepArtist(bool value)
-    {
-        _showStepArtist = value;
-        await UiSettings.SetSetting(StepArtistDisplayKey, value.ToString());
-    }
-
-    private async Task SetShowNoteCount(bool value)
-    {
-        _showNoteCount = value;
-        await UiSettings.SetSetting(NoteCountDisplayKey, value.ToString());
     }
 
     private async Task SelectSort(ChartSearchSort sort, bool forceDefaultDirection = false)

@@ -90,7 +90,7 @@ public sealed class ChartsPageTests : ComponentTestBase
         var chart = new Chart(Guid.NewGuid(), mix,
             new Song(song, SongType.Arcade, new Uri("https://piu.test/art.png"),
                 TimeSpan.FromSeconds(125), "BanYa", Bpm.From(160, 160)),
-            ChartType.Double, level, mix, null, 700, new HashSet<Skill>());
+            ChartType.Double, level, mix, "SUNNY", 700, new HashSet<Skill>());
         return new ChartSearchResult(chart, mix,
             badges ?? Array.Empty<ChartBadge>(), 11.2m,
             passDifficulty, null, communityVote, 21.4, null, 40, 25, 2, my);
@@ -325,8 +325,10 @@ public sealed class ChartsPageTests : ComponentTestBase
         cut.WaitForAssertion(() =>
             Assert.True(cut.FindAll(".range-slider input[type=range]").Count >= 16));
 
+        // Change, not Input: the value publishes on release so a drag does not re-run the
+        // search once per step.
         var bpm = cut.FindAll(".range-slider").First(s => s.TextContent.StartsWith("BPM"));
-        bpm.QuerySelectorAll("input[type=range]")[0].Input("150");
+        bpm.QuerySelectorAll("input[type=range]")[0].Change("150");
 
         cut.WaitForAssertion(() => Assert.Equal(150, _lastQuery!.BpmMin));
     }
@@ -414,25 +416,17 @@ public sealed class ChartsPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void DisplaySwitchesPersistWithoutRefiltering()
+    public void TheStepArtistIsAlwaysOnTheCard()
     {
-        SignIn();
-        ShowEveryFilter();
+        // It used to hide behind a Display switch. It is part of what a chart is, so it just
+        // shows; the switches (and the note-count one with them) are gone.
         var cut = RenderComponent<Charts>();
-        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
-        var sendsBefore = _mediator.Invocations.Count(i =>
-            i.Arguments.FirstOrDefault() is SearchChartsQuery);
 
-        cut.Find("button[aria-label=Filters]").Click();
-        OpenMoreFilters(cut);
-        var stepArtistSwitch = cut.FindAll("input[type=checkbox]")
-            .First(i => i.Closest("label")!.TextContent.Contains("Step Artist"));
-        stepArtistSwitch.Change(true);
-
-        cut.WaitForAssertion(() => _uiSettings.Verify(u =>
-            u.SetSetting("Charts__Display__StepArtist", true.ToString(), It.IsAny<CancellationToken>()), Times.Once));
-        Assert.Equal(sendsBefore, _mediator.Invocations.Count(i =>
-            i.Arguments.FirstOrDefault() is SearchChartsQuery));
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(2, cut.FindAll(".srp-card").Count);
+            Assert.NotEmpty(cut.FindAll(".srp-card-stepartist"));
+        });
     }
 
     [Fact]

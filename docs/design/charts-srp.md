@@ -270,6 +270,7 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
 - **Multi-selects are all any-of for now**; the AND/OR toggle is deferred (owner: "do 'Any'
   for now, which I THINK is what's expected").
 - **Display switches stay switches** — they change what a card shows, not which charts match.
+  *(Round 4 deleted them: step artist just shows, and note-count display went with them.)*
 
 ### Round 3 — dead sliders, a pick list, and touch targets
 
@@ -290,7 +291,8 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
   `Charts__ShownFilters`. **Unchecking a filter clears it** — otherwise results stay
   narrowed by a control that is no longer on screen and Clear all is the only escape. A URL
   carrying a filter shows that filter whether or not it was picked, for the same reason.
-  Display switches are not filters, so they stay out of the list and sit at the drawer foot.
+  Display switches are not filters, so they stayed out of the list — and round 4 removed them
+  entirely.
 - **Drawer vocabulary loads whenever the drawer opens**, not when the long tail is revealed:
   the pick list needs the extents to know which range filters this mix can offer at all. The
   loaded flag is set *after* the reads succeed, so a failure part-way retries instead of
@@ -312,6 +314,29 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
   they sit at 40px now, applied-filter tokens at 36px with a 28px ✕. The skill tag borrows
   the tier list's card chip, so only the SRP's interactive copy is resized — the display tag
   is untouched.
+
+### Round 4 — release-to-commit sliders, and what the drawer is for
+
+- **A range slider publishes on release, not per step.** Level is nineteen steps and felt
+  fine; BPM is two hundred, and each one re-ran the search, so the thumb fought the results.
+  The fill and readout still follow the drag — and the readout stops deferring to the
+  caller's `ValueText` mid-drag, which would otherwise sit frozen on "Any" while the thumb
+  moved. `RangeSliderTests` pins both halves: input moves the readout and publishes nothing,
+  change publishes once.
+- **The Display switches are gone.** Step artist is part of what a chart is, so it just
+  shows; the note-count toggle went with it, and with it the whole Display section.
+- **Scoring level is a filter wherever it is a sort.** It was always in `SortOrder` but the
+  filter was gated on banked extents, so a mix whose analytics had not run could be ordered
+  by it and not filtered by it. The track falls back to the level scale, which scoring level
+  is expressed on anyway.
+- **Both artist facets read as multi-value.** The type-ahead stays the finder — a mix has
+  hundreds of artists and a plain dropdown is a scroll-hunt with no search — and the picks
+  sit beside it as chips you drop one at a time.
+- **The pick list locks the page while open** (`LockScroll`, 360px max height): the list is
+  long enough to scroll itself, and without the lock a wheel over it drove the page behind.
+  A Playwright fact measures the gap between list and input across a page wheel and a
+  drawer-content scroll; neither drifts, and the page behind cannot move at all while the
+  drawer is open — MudDrawer already locks it.
 
 ## 7. Cross-mix: built, removed, deferred
 

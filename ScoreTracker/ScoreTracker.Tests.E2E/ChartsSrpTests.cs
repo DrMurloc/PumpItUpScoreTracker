@@ -103,4 +103,63 @@ public sealed class ChartsSrpTests : IAsyncLifetime
         var timeout = new LocatorAssertionsToHaveCountOptions { Timeout = 60_000 };
         await Expect(_page.Locator(".srp-card")).ToHaveCountAsync(2, timeout);
     }
+
+    [Fact]
+    public async Task TheMoreFiltersListStaysPutWhenThePageBehindScrolls()
+    {
+        // Field-test round 4: the open pick list appeared to slide with the background. The
+        // drawer is position:fixed but MudBlazor's popovers live in a provider at document
+        // level, so an absolutely-positioned one travels with the document while its anchor
+        // does not. Two guarantees, measured rather than eyeballed: while the list is open
+        // the page behind cannot scroll at all, and the gap between list and input does not
+        // move — through a page wheel and through the drawer's own content scrolling.
+        // The page has to be long enough to actually scroll, or this proves nothing.
+        for (var i = 0; i < 20; i++)
+            await _fixture.Seed.SeedPhoenixChartAsync($"Filler {i:00}", 15, "Single");
+
+        await _page.GotoAsync("/Charts", new PageGotoOptions { Timeout = 60_000 });
+        await Expect(_page.Locator(".srp-card").First)
+            .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
+
+        await _page.Locator("button[aria-label=Filters]").ClickAsync();
+        await _page.Locator(".srp-more-filters").ClickAsync();
+        var popover = _page.Locator(".mud-popover-open").First;
+        await Expect(popover).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
+
+        var anchorBefore = await _page.Locator(".srp-more-filters").BoundingBoxAsync();
+        var popoverBefore = await popover.BoundingBoxAsync();
+
+        await _page.Mouse.WheelAsync(0, 600);
+        await _page.WaitForTimeoutAsync(400);
+
+        // The page behind is locked while the drawer is open, so a wheel cannot slide it out
+        // from under the list — even though the results below are long enough to scroll.
+        Assert.Equal(0, await _page.EvaluateAsync<double>("window.scrollY"));
+
+        var anchorAfter = await _page.Locator(".srp-more-filters").BoundingBoxAsync();
+        var popoverAfter = await popover.BoundingBoxAsync();
+
+        var driftBefore = popoverBefore!.Y - anchorBefore!.Y;
+        var driftAfter = popoverAfter!.Y - anchorAfter!.Y;
+        Assert.True(Math.Abs(driftAfter - driftBefore) < 4,
+            $"the list drifted {driftAfter - driftBefore:0.#}px from its input when the page scrolled");
+
+        // And the other way it can happen: the drawer's own content scrolling under a
+        // popover that is anchored to the document. A short viewport guarantees it scrolls.
+        await _page.SetViewportSizeAsync(1280, 420);
+        await _page.WaitForTimeoutAsync(300);
+        var anchorTight = await _page.Locator(".srp-more-filters").BoundingBoxAsync();
+        var popoverTight = await popover.BoundingBoxAsync();
+
+        await _page.Mouse.MoveAsync(anchorTight!.X + 10, anchorTight.Y + 10);
+        await _page.Mouse.WheelAsync(0, 300);
+        await _page.WaitForTimeoutAsync(400);
+
+        var anchorScrolled = await _page.Locator(".srp-more-filters").BoundingBoxAsync();
+        var popoverScrolled = await popover.BoundingBoxAsync();
+        var tightBefore = popoverTight!.Y - anchorTight.Y;
+        var tightAfter = popoverScrolled!.Y - anchorScrolled!.Y;
+        Assert.True(Math.Abs(tightAfter - tightBefore) < 4,
+            $"the list drifted {tightAfter - tightBefore:0.#}px from its input when the drawer scrolled");
+    }
 }
