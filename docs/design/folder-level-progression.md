@@ -1,7 +1,10 @@
 # Folder Level Progression
 
-**Status: designed, not built.** Supersedes the 2026-07-10 workshop capture. Decisions below are
-owner-locked unless marked open.
+**Status: built.** Supersedes the 2026-07-10 workshop capture. Decisions below are owner-locked
+unless marked open; §7.7 lists the commits that landed them.
+
+**Post-deploy:** press **Backfill Folder Levels** on the admin dashboard once. Until it runs,
+folders only appear for players who have imported since the deploy (§7.6).
 
 A folder carries **two numbers**: how much of it you've completed, and what you average across what
 you've played. Together they replace Phoenix 1's Paragon levels, which have no Phoenix 2 equivalent.
