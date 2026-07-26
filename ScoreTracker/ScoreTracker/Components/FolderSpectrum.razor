@@ -14,14 +14,14 @@
     computes -- this is that, horizontal, for one folder.
 *@
 
-<div class="fl-spectrum @SizeClass">
+<div class="fl-spectrum @SizeClass @(Vertical ? "fl-vertical" : "")">
     <div class="fl-track">
         <div class="fl-fill" style="background:@Gradient"></div>
         @if (ShowTicks)
         {
             @foreach (var tier in FolderCompletionTier.All.Where(t => t < FolderCompletionTier.Lamp))
             {
-                <div class="fl-tick" style="left:@(tier)%"></div>
+                <div class="fl-tick" style="@(Vertical ? $"bottom:{tier}%" : $"left:{tier}%")"></div>
             }
         }
         <div class="fl-lamp-flag"></div>
@@ -37,6 +37,13 @@
     [Parameter] [EditorRequired] public int Size { get; set; }
 
     [Parameter] public bool ShowTicks { get; set; } = true;
+
+    /// <summary>
+    ///     Grows upward instead of rightward, best grades at the base. The community profile
+    ///     stacks folders as columns whose height is the folder's real size, so there the long
+    ///     axis is vertical.
+    /// </summary>
+    [Parameter] public bool Vertical { get; set; }
 
     /// <summary>Slim for widget rows and dense lists, chunky for the tier-list header.</summary>
     [Parameter] public FolderSpectrumSize Height { get; set; } = FolderSpectrumSize.Normal;
@@ -68,7 +75,7 @@
 
             if (cursor < 100)
                 stops.Add(FormattableString.Invariant($"var(--unplayed-grade) {cursor:0.##}% 100%"));
-            return $"linear-gradient(90deg,{string.Join(",", stops)})";
+            return $"linear-gradient({(Vertical ? "to top" : "90deg")},{string.Join(",", stops)})";
         }
     }
 
