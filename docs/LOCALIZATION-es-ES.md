@@ -143,6 +143,21 @@ Ordered by importance. These shipped as translator's choice or verbatim-anchor e
 - Her §4 pitfall note: machine translation failures in es-ES are about **expressions and whole sentences**, not word choice — prioritize sentence-level naturalness over term-table fidelity when the two conflict.
 - The filled form arrived as a markdown export; any Word/Google-Docs comments did not survive conversion. Her one flagged open question — the play/run row — was resolved directly over Discord on 2026-07-12: **`intento`**.
 
+## Lifebar terms (Life Calculator redesign, 2026-07-26)
+
+Settled with the `/LifeCalculator` rebuild ([design](design/life-calculator-redesign.md)). These
+extend the existing `barra de vida` / `vida` rows above.
+
+| English | es-ES | Notes |
+|---|---|---|
+| Overflow (life above the visible 1000) | desbordamiento | The owner's chosen English term is "overflow", never "reserve" — one root everywhere. "Overflow full" → `Desbordamiento lleno`. |
+| Visible bar | barra visible | |
+| Rainbow (the full visible bar) | Rainbow | Stays English, per the established Rainbow row. |
+| Gain multiplier | multiplicador de ganancia | Bare "multiplier" mid-sentence → `multiplicador`. |
+| Break (a miss or bad that ends a combo) | fallo | `Combo between breaks` → `Combo entre fallos`. Avoids `rotura`, which reads mechanical. |
+| Settles at (converges to) | se estabiliza en | `Where life settles` → `Dónde se estabiliza la vida`. |
+| Cliff (the survival threshold) | acantilado | Deliberately literal — the metaphor is the point. |
+
 ## Process for future batches
 
 1. New keys land in `App.en-US.resx` → translate into `App.es-ES.resx` in the same PR (same rule as all locales).

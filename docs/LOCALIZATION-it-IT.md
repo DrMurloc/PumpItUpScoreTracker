@@ -399,6 +399,23 @@ These are terms the en-US source contains that don't yet have an obvious recomme
 5. `dotnet build ScoreTracker/ScoreTracker.sln -c Release` to confirm resx well-formedness.
 6. PR titled like `Translate <Folder> to it-IT`.
 
+## Lifebar terms (Life Calculator redesign, 2026-07-26)
+
+Settled with the `/LifeCalculator` rebuild ([design](design/life-calculator-redesign.md)). These
+extend the existing `lifebar` loanword rows above.
+
+| English | it-IT | Notes |
+|---|---|---|
+| Life (the quantity) | vita | The UI element itself stays `lifebar`. |
+| Overflow (life above the visible 1000) | eccedenza | The owner's chosen English term is "overflow", never "reserve" — one root everywhere. `Eccedenza` over `superamento`: it names the surplus, not the act. |
+| Visible bar | barra visibile | |
+| Rainbow (the full visible bar) | Rainbow | Stays English, matching the other locales. |
+| Gain multiplier | moltiplicatore di guadagno | Bare "multiplier" mid-sentence → `moltiplicatore`. |
+| Break (a miss or bad that ends a combo) | rottura | `Combo between breaks` → `Combo tra le rotture`. |
+| Settles at (converges to) | si stabilizza a | `Where life settles` → `Dove si stabilizza la vita`. |
+| Cliff (the survival threshold) | dirupo | Deliberately literal — the metaphor is the point. `Dirupo` over `scogliera` (which is coastal). |
+| Run (a single play attempt) | run | Untranslated, masculine (`la run` would need `corsa`, which reads athletic). |
+
 ## Native review priority
 
 Like the other machine-assisted locales (ja-JP, ko-KR, fr-FR, es-MX), Italian translations in this codebase will be machine-drafted by Claude until a native speaker reviews. Priority for native review:

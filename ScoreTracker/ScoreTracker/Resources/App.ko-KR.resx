@@ -5889,4 +5889,313 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>{0}개를 {1} 이상으로 (이 폴더에 {2}개뿐)</value>
   </data>
+  <data name="Life Calculator" xml:space="preserve">
+    <value>라이프 계산기</value>
+  </data>
+  <data name="What a miss actually costs you, and how much clean combo it takes to earn it back." xml:space="preserve">
+    <value>Miss가 실제로 얼마나 손해인지, 그리고 그것을 되찾는 데 필요한 클린 콤보는 얼마인지.</value>
+  </data>
+  <data name="NX2 / Prime data-mine" xml:space="preserve">
+    <value>NX2 / Prime 데이터마이닝</value>
+  </data>
+  <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
+    <value>이 공식들은 Team Infinitesimal이 NX2와 Prime에서 데이터마이닝한 것입니다. Phoenix나 Phoenix 2에서 재검증한 사람은 없으므로, 이 수치는 정확한 기체 값이 아니라 시스템의 형태로 받아들이세요.</value>
+  </data>
+  <data name="of {0} max" xml:space="preserve">
+    <value>최대 {0} 중</value>
+  </data>
+  <data name="Visible bar" xml:space="preserve">
+    <value>보이는 바</value>
+  </data>
+  <data name="Overflow" xml:space="preserve">
+    <value>오버플로우</value>
+  </data>
+  <data name="Current life" xml:space="preserve">
+    <value>현재 라이프</value>
+  </data>
+  <data name="12%" xml:space="preserve">
+    <value>12%</value>
+  </data>
+  <data name="Song start" xml:space="preserve">
+    <value>곡 시작</value>
+  </data>
+  <data name="Rainbow" xml:space="preserve">
+    <value>레인보우</value>
+  </data>
+  <data name="Notes per press" xml:space="preserve">
+    <value>한 번 누를 때 노트 수</value>
+  </data>
+  <data name="Reset to song start" xml:space="preserve">
+    <value>곡 시작으로 되돌리기</value>
+  </data>
+  <data name="Fill to max" xml:space="preserve">
+    <value>최대까지 채우기</value>
+  </data>
+  <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
+    <value>Phoenix 2에서는 오버플로우가 완전히 가득 차면 바를 따라 전기 효과가 흐릅니다. 게임이 숨겨진 라이프의 존재를 인정하는 유일한 순간입니다.</value>
+  </data>
+  <data name="Combo" xml:space="preserve">
+    <value>콤보</value>
+  </data>
+  <data name="Multiplier is on the floor" xml:space="preserve">
+    <value>배율이 바닥입니다</value>
+  </data>
+  <data name="Notes since your last break" xml:space="preserve">
+    <value>마지막 브레이크 이후 노트 수</value>
+  </data>
+  <data name="Gain multiplier" xml:space="preserve">
+    <value>회복 배율</value>
+  </data>
+  <data name="A miss right now" xml:space="preserve">
+    <value>지금 Miss가 나면</value>
+  </data>
+  <data name="Misses left" xml:space="preserve">
+    <value>남은 Miss 수</value>
+  </data>
+  <data name="Back to back, from here" xml:space="preserve">
+    <value>여기서부터 연속으로</value>
+  </data>
+  <data name="Your survival budget" xml:space="preserve">
+    <value>당신의 생존 예산</value>
+  </data>
+  <data name="One break every N notes" xml:space="preserve">
+    <value>N노트마다 브레이크 한 번</value>
+  </data>
+  <data name="How much clean combo you have to buy back between breaks, and where your life ends up if you keep paying exactly that." xml:space="preserve">
+    <value>브레이크 사이에 얼마나 클린 콤보를 되사야 하는지, 그리고 그만큼만 계속 지불했을 때 라이프가 어디에 머무르는지.</value>
+  </data>
+  <data name="Combo, priced" xml:space="preserve">
+    <value>콤보의 가격</value>
+  </data>
+  <data name="Chart view" xml:space="preserve">
+    <value>그래프 보기</value>
+  </data>
+  <data name="Where life settles" xml:space="preserve">
+    <value>라이프가 머무는 곳</value>
+  </data>
+  <data name="How long you survive" xml:space="preserve">
+    <value>얼마나 버티는지</value>
+  </data>
+  <data name="Starting from a full bar, how many notes you get before you fail. Series stop where you stop dying: past that combo the bar recovers faster than the breaks drain it." xml:space="preserve">
+    <value>가득 찬 바에서 시작해 실패할 때까지 몇 노트를 버티는지. 죽지 않게 되는 지점에서 계열이 끊깁니다. 그 콤보를 넘으면 브레이크가 깎는 것보다 회복이 빨라집니다.</value>
+  </data>
+  <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
+    <value>N노트마다 브레이크를 계속 내면 라이프는 어딘가로 수렴합니다. 절벽 아래에서는 0으로 수렴합니다. 곡선은 완만해지는 게 아니라 뚝 떨어집니다. 배율을 다시 쌓는 속도보다 배율이 죽는 속도가 빠르기 때문입니다.</value>
+  </data>
+  <data name="Level only buys you overflow" xml:space="preserve">
+    <value>레벨이 사주는 건 오버플로우뿐</value>
+  </data>
+  <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
+    <value>레인보우 바는 1레벨에서도 29레벨에서도 라이프 1000입니다. 어려운 채보가 주는 것은 바 뒤에 숨은 라이프, 즉 기체에는 보이지 않으면서 레벨에 따라 달라지는 유일한 값입니다. Miss 하나당 필요한 콤보는 끝까지 동일합니다.</value>
+  </data>
+  <data name="Lv" xml:space="preserve">
+    <value>Lv</value>
+  </data>
+  <data name="Total life" xml:space="preserve">
+    <value>전체 라이프</value>
+  </data>
+  <data name="Visible bar — always 1000" xml:space="preserve">
+    <value>보이는 바 — 항상 1000</value>
+  </data>
+  <data name="Overflow — 3 x level squared" xml:space="preserve">
+    <value>오버플로우 — 레벨의 제곱 × 3</value>
+  </data>
+  <data name="Rules of thumb" xml:space="preserve">
+    <value>요령</value>
+  </data>
+  <data name="The cliff, not a slope" xml:space="preserve">
+    <value>경사가 아니라 절벽</value>
+  </data>
+  <data name="Below {0} notes between misses you die at every level. At {0} you cling on at about 1% life. There is no gentle middle: under the cliff your multiplier never rebuilds, so your gain rounds to nothing." xml:space="preserve">
+    <value>Miss 간격이 {0}노트 미만이면 어느 레벨에서든 죽습니다. {0}이면 라이프 약 1%로 겨우 버팁니다. 완만한 중간 지대는 없습니다. 절벽 아래에서는 배율이 다시 쌓이지 않아 회복량이 0으로 내림됩니다.</value>
+  </data>
+  <data name="A miss costs 40 notes" xml:space="preserve">
+    <value>Miss 하나가 40노트</value>
+  </data>
+  <data name="Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life." xml:space="preserve">
+    <value>Miss는 회복 배율을 0으로 만듭니다. 상한까지 되돌리려면 Perfect {0}개 또는 Great {1}개가 필요합니다. 그전까지는 라이프가 거의 오르지 않는 노트를 밟게 됩니다.</value>
+  </data>
+  <data name="The rainbow is expensive" xml:space="preserve">
+    <value>레인보우는 비쌉니다</value>
+  </data>
+  <data name="Holding a full visible bar costs {0} clean notes per miss, or {1} if you are hitting greats. Simply staying alive costs {2}. Most of your combo budget goes to looking healthy — and below level 10 it cannot be bought at all, because the overflow is thinner than one miss." xml:space="preserve">
+    <value>보이는 바를 가득 유지하려면 Miss 하나당 클린 {0}노트, Great 위주라면 {1}노트가 듭니다. 그냥 살아남는 데는 {2}면 충분합니다. 콤보 예산의 대부분이 &quot;건강해 보이는 것&quot;에 쓰이는 셈입니다. 게다가 10레벨 미만에서는 오버플로우가 Miss 하나보다 얇아 아예 살 수 없습니다.</value>
+  </data>
+  <data name="Bads are cheap, then they are not" xml:space="preserve">
+    <value>Bad는 싸다가, 싸지 않습니다</value>
+  </data>
+  <data name="A bad is a flat −50 at any life; a miss is up to −270. But a bad still halves your multiplier, so back-to-back bads strangle recovery just as effectively." xml:space="preserve">
+    <value>Bad는 라이프와 무관하게 일정하게 −50, Miss는 최대 −270입니다. 하지만 Bad도 배율을 절반으로 깎기 때문에, 연속된 Bad는 그만큼 확실하게 회복을 옥죕니다.</value>
+  </data>
+  <data name="The intro is the danger zone" xml:space="preserve">
+    <value>도입부가 위험 구간</value>
+  </data>
+  <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
+    <value>모든 곡은 라이프 500, 배율은 거의 0에서 시작합니다. 연속 {0} Miss면 어느 레벨에서든 죽습니다. 도입부를 넘기면 {1}레벨에서는 {2}번까지 버팁니다. 시작을 강하게 가세요.</value>
+  </data>
+  <data name="A good is a dead note" xml:space="preserve">
+    <value>Good은 죽은 노트</value>
+  </data>
+  <data name="Goods give no life, and — unlike perfects and greats — they do not build the multiplier either. They never hurt you. They just do not count." xml:space="preserve">
+    <value>Good은 라이프를 주지 않고, Perfect나 Great과 달리 배율도 쌓지 않습니다. 해롭지는 않습니다. 그저 셈에 들어가지 않을 뿐입니다.</value>
+  </data>
+  <data name="How the bar works" xml:space="preserve">
+    <value>바의 작동 방식</value>
+  </data>
+  <data name="Gain" xml:space="preserve">
+    <value>회복</value>
+  </data>
+  <data name="A perfect at a capped multiplier." xml:space="preserve">
+    <value>배율 상한에서의 Perfect.</value>
+  </data>
+  <data name="A great at a capped multiplier." xml:space="preserve">
+    <value>배율 상한에서의 Great.</value>
+  </data>
+  <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
+    <value>같은 Perfect라도 콤보 전, 곡 시작 시점.</value>
+  </data>
+  <data name="A good, always." xml:space="preserve">
+    <value>Good은 언제나.</value>
+  </data>
+  <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
+    <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
+  </data>
+  <data name="Loss" xml:space="preserve">
+    <value>손실</value>
+  </data>
+  <data name="A miss at 1000 life or above — the worst it gets." xml:space="preserve">
+    <value>라이프 1000 이상에서의 Miss — 최악의 경우.</value>
+  </data>
+  <data name="A bad, flat, at any life." xml:space="preserve">
+    <value>Bad는 라이프와 무관하게 일정.</value>
+  </data>
+  <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
+    <value>라이프 100에서의 Miss. 라이프가 줄수록 Miss는 싸집니다.</value>
+  </data>
+  <data name="Below this life a miss costs less than a bad." xml:space="preserve">
+    <value>이 라이프 아래에서는 Miss가 Bad보다 손해가 적습니다.</value>
+  </data>
+  <data name="miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50" xml:space="preserve">
+    <value>miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50</value>
+  </data>
+  <data name="The multiplier" xml:space="preserve">
+    <value>배율</value>
+  </data>
+  <data name="The cap. Reached after 40 perfects." xml:space="preserve">
+    <value>상한. Perfect 40개면 도달.</value>
+  </data>
+  <data name="Where every song starts you." xml:space="preserve">
+    <value>모든 곡이 여기서 시작합니다.</value>
+  </data>
+  <data name="A miss. In practice: straight to zero." xml:space="preserve">
+    <value>Miss. 사실상 0 직행.</value>
+  </data>
+  <data name="A bad. Roughly 22 notes of progress gone." xml:space="preserve">
+    <value>Bad. 약 22노트 분량의 축적이 사라집니다.</value>
+  </data>
+  <data name="perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80" xml:space="preserve">
+    <value>perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80</value>
+  </data>
+  <data name="&quot;Lifebars are weird.&quot;" xml:space="preserve">
+    <value>&quot;Lifebars are weird.&quot;</value>
+  </data>
+  <data name="— Zelllooo" xml:space="preserve">
+    <value>— Zelllooo</value>
+  </data>
+  <data name="Formulas data-mined from NX2 and Prime by" xml:space="preserve">
+    <value>NX2와 Prime에서 데이터마이닝한 출처:</value>
+  </data>
+  <data name="Team Infinitesimal" xml:space="preserve">
+    <value>Team Infinitesimal</value>
+  </data>
+  <data name="Unconfirmed against Phoenix and Phoenix 2 — see the note at the top of the page." xml:space="preserve">
+    <value>Phoenix 및 Phoenix 2에서는 미확인입니다. 페이지 상단의 안내를 참고하세요.</value>
+  </data>
+  <data name="Overflow full" xml:space="preserve">
+    <value>오버플로우 가득참</value>
+  </data>
+  <data name="Into overflow" xml:space="preserve">
+    <value>오버플로우 진입</value>
+  </data>
+  <data name="One miss from out" xml:space="preserve">
+    <value>Miss 하나면 끝</value>
+  </data>
+  <data name="{0}% of the bar" xml:space="preserve">
+    <value>바의 {0}%</value>
+  </data>
+  <data name="Capped — perfects pay +{0}" xml:space="preserve">
+    <value>상한 — Perfect가 +{0}</value>
+  </data>
+  <data name="{0} more perfects to cap" xml:space="preserve">
+    <value>상한까지 Perfect {0}개 더</value>
+  </data>
+  <data name="and {0} notes of multiplier" xml:space="preserve">
+    <value>그리고 배율 {0}노트 분량</value>
+  </data>
+  <data name="multiplier already gone" xml:space="preserve">
+    <value>배율은 이미 0</value>
+  </data>
+  <data name="Just stay alive" xml:space="preserve">
+    <value>그냥 살아남기</value>
+  </data>
+  <data name="Impossible at level {0} — the overflow is thinner than one miss." xml:space="preserve">
+    <value>{0}레벨에서는 불가능합니다 — 오버플로우가 Miss 하나보다 얇습니다.</value>
+  </data>
+  <data name="Hold half the bar" xml:space="preserve">
+    <value>바의 절반 유지</value>
+  </data>
+  <data name="Hold the rainbow" xml:space="preserve">
+    <value>레인보우 유지</value>
+  </data>
+  <data name="Hold the rainbow, on bads" xml:space="preserve">
+    <value>Bad로 레인보우 유지</value>
+  </data>
+  <data name="Impossible at level {0} — the overflow is thinner than one bad." xml:space="preserve">
+    <value>{0}레벨에서는 불가능합니다 — 오버플로우가 Bad 하나보다 얇습니다.</value>
+  </data>
+  <data name="Those assume perfects in between. On greats the same three cost {0}, {1} and {2} notes." xml:space="preserve">
+    <value>위 수치는 사이를 Perfect로 채운 경우입니다. Great이라면 같은 세 값이 {0}, {1}, {2}노트가 됩니다.</value>
+  </data>
+  <data name="From the opening 500 life, {0} straight misses or {1} straight bads end the run — {2} and {3} once the overflow is full." xml:space="preserve">
+    <value>시작 라이프 500에서는 연속 {0} Miss 또는 연속 {1} Bad면 끝납니다. 오버플로우가 가득 차 있으면 각각 {2}번과 {3}번입니다.</value>
+  </data>
+  <data name="notes per bad" xml:space="preserve">
+    <value>Bad 하나당 노트 수</value>
+  </data>
+  <data name="notes per miss" xml:space="preserve">
+    <value>Miss 하나당 노트 수</value>
+  </data>
+  <data name="Settles at a full bar — {0} life" xml:space="preserve">
+    <value>가득 찬 바에서 머무릅니다 — 라이프 {0}</value>
+  </data>
+  <data name="Settles at {0} life, {1}% of the bar" xml:space="preserve">
+    <value>라이프 {0}에서 머무릅니다, 바의 {1}%</value>
+  </data>
+  <data name="Perfect combo, miss break" xml:space="preserve">
+    <value>Perfect 콤보, Miss 브레이크</value>
+  </data>
+  <data name="Great combo, miss break" xml:space="preserve">
+    <value>Great 콤보, Miss 브레이크</value>
+  </data>
+  <data name="Perfect combo, bad break" xml:space="preserve">
+    <value>Perfect 콤보, Bad 브레이크</value>
+  </data>
+  <data name="Great combo, bad break" xml:space="preserve">
+    <value>Great 콤보, Bad 브레이크</value>
+  </data>
+  <data name="Combo between breaks" xml:space="preserve">
+    <value>브레이크 사이 콤보</value>
+  </data>
+  <data name="Notes before you fail" xml:space="preserve">
+    <value>실패까지의 노트 수</value>
+  </data>
+  <data name="Life it settles at" xml:space="preserve">
+    <value>머무는 라이프</value>
+  </data>
+  <data name="Rainbow · 1000" xml:space="preserve">
+    <value>레인보우 · 1000</value>
+  </data>
+  <data name="Half bar · 500" xml:space="preserve">
+    <value>바의 절반 · 500</value>
+  </data>
 </root>

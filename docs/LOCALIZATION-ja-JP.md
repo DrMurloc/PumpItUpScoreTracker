@@ -175,6 +175,21 @@ The 396 entries added in PR #90 were generated against nabulator's domain glossa
 
 For short labels (column headers, button text, single-noun keys), the machine pass is generally fine.
 
+## Lifebar terms (Life Calculator redesign, 2026-07-26)
+
+Settled with the `/LifeCalculator` rebuild ([design](design/life-calculator-redesign.md)). These
+extend the existing Life / Lifebar rows above.
+
+| English | ja-JP | Notes |
+|---|---|---|
+| Overflow (life above the visible 1000) | オーバーフロー | The owner's chosen English term is "overflow", never "reserve"; the katakana loanword keeps that one root. "Overflow full" → オーバーフロー満タン, "Into overflow" → オーバーフロー突入. |
+| Visible bar | 視覚バー | Matches the established 視覚体力 for "Visible Life". |
+| Rainbow (the full visible bar) | 虹色 | Matches the established 虹色ライフ. |
+| Gain multiplier | 回復倍率 | The hidden multiplier that scales life gain. Bare "multiplier" mid-sentence → 倍率. |
+| Break (a miss or bad that ends a combo) | 失敗 | Follows the established Bad失敗 / Miss失敗 forms. "Combo between breaks" → 失敗の間のコンボ. |
+| Settles at (converges to) | 落ち着く | "Where life settles" → 体力の落ち着き先. |
+| Cliff (the survival threshold) | 崖 | Deliberately literal — the metaphor is the point: below it you die outright. |
+
 ## Process for future batches
 
 1. Pick a feature folder (Tournaments, Tier Lists, Progress, Admin, Tools, etc.) or a category from the Known issues list above.

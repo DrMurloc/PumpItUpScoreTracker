@@ -546,6 +546,26 @@ The Life Calculator and ChartScoring pages have ~30 dense paragraph entries. The
 
 Short labels (column headers, button text) are likely fine.
 
+## Lifebar terms (Life Calculator redesign, 2026-07-26)
+
+Settled with the `/LifeCalculator` rebuild ([design](design/life-calculator-redesign.md)). These
+extend the existing `lifebar` loanword rows above.
+
+| English | fr-FR | Notes |
+|---|---|---|
+| Life (the quantity) | vie | `Max Life` → `vie maximale`; the UI element itself stays `lifebar`. |
+| Overflow (life above the visible 1000) | débordement | The owner's chosen English term is "overflow", never "reserve" — one root everywhere. |
+| Visible bar | barre visible | |
+| Rainbow (the full visible bar) | Rainbow | Stays English, matching the other locales. |
+| Gain multiplier | multiplicateur de gain | Bare "multiplier" mid-sentence → `multiplicateur`. |
+| Break (a miss or bad that ends a combo) | cassure | `Combo between breaks` → `Combo entre cassures`. |
+| Settles at (converges to) | se stabilise à | `Where life settles` → `Où la vie se stabilise`. |
+| Cliff (the survival threshold) | falaise | Deliberately literal — the metaphor is the point. |
+| Cap (the multiplier ceiling) | plafond | |
+
+Percent signs in this page's prose use the French narrow-space convention (`12 %`), consistent with
+the rest of the file.
+
 ## Process for future batches
 
 1. Pick a feature folder (Tournaments, Tier Lists, Progress, Admin, Tools, etc.) or a category from the Known issues list above.

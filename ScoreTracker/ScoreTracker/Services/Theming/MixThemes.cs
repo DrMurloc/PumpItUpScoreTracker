@@ -312,6 +312,31 @@ public static class MixThemes
     private const string DoublesTypeHex = "#33A653";
     private const string CoOpTypeHex = "#D9A82E";
 
+    // The game's own judgment vocabulary. Mix-invariant on purpose, exactly like the alert
+    // colors: a MISS has to read as a miss whichever theme is on. Perfect takes the ice-blue
+    // that anchors the elite end everywhere else on the site (SSS grades, PG plates).
+    private static readonly IReadOnlyDictionary<Judgment, string> JudgmentColors =
+        new Dictionary<Judgment, string>
+        {
+            [Judgment.Perfect] = "#4DC3FF",
+            [Judgment.Great] = "#43D96B",
+            [Judgment.Good] = "#FFC94A",
+            [Judgment.Bad] = "#C070FF",
+            [Judgment.Miss] = "#E8385A"
+        };
+
+    // The lifebar's own zones (docs/design/life-calculator-redesign.md). The seven stops are
+    // the in-game rainbow, painted across the visible bar so a draining bar reveals its red
+    // end — the danger read comes free. Overflow is a cool chrome that deliberately does not
+    // belong to the rainbow: it is the part of your life the cabinet never shows you.
+    private static readonly string[] LifeRainbowStops =
+        { "#FF4D4D", "#FF9A3C", "#FFD24A", "#4FE33F", "#29C9F7", "#3FA9F5", "#B36BFF" };
+
+    private const string LifeOverflowHex = "#7FB3D5";
+
+    /// <summary>Raw hex for a judgment — for ApexCharts, which can't read CSS custom properties.</summary>
+    public static string JudgmentHex(Judgment judgment) => JudgmentColors[judgment];
+
     /// <summary>Raw hex for a letter grade (display name), for ApexCharts grade bars. Unknown → the unpassed grey.</summary>
     public static string GradeHex(string gradeName) =>
         GradeColors.TryGetValue(gradeName, out var hex) ? hex : UnpassedGradeHex;
@@ -379,6 +404,18 @@ public static class MixThemes
         var chartTypes = $"    --type-singles: {SinglesTypeHex};\n" +
                          $"    --type-doubles: {DoublesTypeHex};\n" +
                          $"    --type-coop: {CoOpTypeHex};";
+        var judgments = string.Join("\n", JudgmentColors.Select(kv =>
+            $"    --judg-{kv.Key.ToString().ToLowerInvariant()}: {kv.Value};"));
+        // The rainbow ships as both its stops and a ready-made gradient, so markup can paint
+        // the visible bar without re-listing seven colors at every call site.
+        var lifeStops = string.Join("\n", LifeRainbowStops.Select((hex, i) =>
+            $"    --life-r{i + 1}: {hex};"));
+        var lifeRainbow = "    --life-rainbow: linear-gradient(90deg, " + string.Join(", ",
+            LifeRainbowStops.Select((_, i) =>
+                $"var(--life-r{i + 1}) {RainbowStopPercent(i)}%")) + ");";
+        var life = $"{lifeStops}\n{lifeRainbow}\n" +
+                   $"    --life-overflow: {LifeOverflowHex};\n" +
+                   $"    --life-danger: {JudgmentColors[Judgment.Miss]};";
         return $@":root {{
     --mix-bg: {p.Background};
     --mix-surface: {p.Surface};
@@ -404,8 +441,15 @@ public static class MixThemes
 {skillCategories}
 {brands}
 {chartTypes}
+{judgments}
+{life}
 }}";
     }
+
+    // The rainbow's stops aren't evenly spaced: the warm end is compressed so a bar sitting
+    // at low life reads unmistakably red rather than drifting through orange.
+    private static int RainbowStopPercent(int index) =>
+        new[] { 0, 17, 33, 52, 70, 85, 100 }[index];
 
     private static MudTheme Build(MixPalette p)
     {

@@ -1,284 +1,764 @@
-﻿@page "/LifeCalculator"
+@page "/LifeCalculator"
 @rendermode RenderModes.Interactive
-@using ScoreTracker.Domain.Records
-@using ScoreTracker.Web.Dtos
+@using ApexCharts
 @using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Domain.Models
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
+@using System.Collections.Concurrent
+@implements IAsyncDisposable
+
+@* The lifebar as an instrument you can play, rather than a wall of prose
+   (docs/design/life-calculator-redesign.md). Every number here is computed from
+   LifebarSimulator through LifebarAnalysis — nothing is hardcoded copy. *@
 
 <PageTitle>@L["PIU Life Calculator"]</PageTitle>
 <HeadContent>
-    <meta name="description" content="Get a basic understanding of the Lifebar system in PIU, as well as calculate how many misses/bads you can get before you fail." />
+    <meta name="description" content="Work out how many misses and bads you can afford before you fail, and how much combo it takes to earn the life back."/>
     <meta property="og:title" content="PIU Life Calculator">
-    <meta property="og:description" content="Get a basic understanding of the Lifebar system in PIU, as well as calculate how many misses/bads you can get before you fail.">
+    <meta property="og:description" content="Work out how many misses and bads you can afford before you fail, and how much combo it takes to earn the life back.">
 </HeadContent>
-<MudText Color="Color.Warning">@L["Disclaimer: This data was data-mined in NX2 and Prime, it is unconfirmed how accurate it is today."]</MudText>
 
-<MudText Typo="Typo.h4">@L["Lifebar stats"]</MudText>
-<br/>
-<ApexChart TItem="DataPoint"
-           Title=@L["Life Bar by Level"]>
-    <ApexPointSeries TItem="DataPoint"
-                     Items="_startingLifePoints"
-                     SeriesType="SeriesType.Bar"
-                     Name=@L["Starting Life"]
-                     XValue="@(e => e.X)"
-                     YValue="@(e=>e.Y)"></ApexPointSeries>
-    <ApexPointSeries TItem="DataPoint"
-                     Items="_visibleLife"
-                     SeriesType="SeriesType.Bar"
-                     Name=@L["Visible Life"]
-                     XValue="@(e => e.X)"
-                     YValue="@(e=>e.Y)"></ApexPointSeries>
-    <ApexPointSeries TItem="DataPoint"
-                     Items="_maxLife"
-                     SeriesType="SeriesType.Bar"
-                     Name=@L["Max Life"]
-                     XValue="@(e => e.X)"
-                     YValue="@(e=>e.Y)"></ApexPointSeries>
-</ApexChart>
-<br/>
-<MudGrid>
-    <MudItem xs="12" sm="6" md="4">
-        <MudNumericField T="int" Value="_level" Label=@L["Level"] Min="1" Max="DifficultyLevel.Max" ValueChanged="l=>CalculateComboToDeath(_lifeThreshold,l)"></MudNumericField>
-    </MudItem>
-    <MudItem xs="12" sm="6" md="4">
-        <MudNumericField T="int" Value="_lifeThreshold" Label=@L["Life Threshold"] Min="0" Max="3000" ValueChanged="l=>CalculateComboToDeath(l,_level)"></MudNumericField>
-    </MudItem>
-</MudGrid>
-<br/>
-<ApexChart TItem="DataPoint"
-           @ref="_comboBreakGraph"
-           Title=@L["Note Count from Full Life to Death/Threshold based on Combo between Breaks"]>
-    <ApexPointSeries TItem="DataPoint"
-                     Items="_notesToDeadPerfect"
-                     Name=@L["Perfect Combo, Miss Break"]
-                     SeriesType="SeriesType.Line"
-                     XValue="@(e => e.X)"
-                     YValue="@(e => e.Y)"
-                     OrderBy="e => e.X"/>
-    <ApexPointSeries TItem="DataPoint"
-                     Items="_notesToDeadGreat"
-                     Name=@L["Great Combo, Miss Break"]
-                     SeriesType="SeriesType.Line"
-                     XValue="@(e => e.X)"
-                     YValue="@(e => e.Y)"
-                     OrderBy="e => e.X"/>
-    <ApexPointSeries TItem="DataPoint"
-                     Items="_notesToDeadBadPerfect"
-                     Name=@L["Perfect Combo, Bad Break"]
-                     SeriesType="SeriesType.Line"
-                     XValue="@(e => e.X)"
-                     YValue="@(e => e.Y)"
-                     OrderBy="e => e.X"/>
-    <ApexPointSeries TItem="DataPoint"
-                     Items="_notesToDeadBadGreat"
-                     Name=@L["Great Combo, Bad Break"]
-                     SeriesType="SeriesType.Line"
-                     XValue="@(e => e.X)"
-                     YValue="@(e => e.Y)"
-                     OrderBy="e => e.X"/>
-</ApexChart>
+<header class="lc-head">
+    <div>
+        <span class="lc-eyebrow">@L["Tools"]</span>
+        <MudText Typo="Typo.h4">@L["Life Calculator"]</MudText>
+        <p class="lc-sub">@L["What a miss actually costs you, and how much clean combo it takes to earn it back."]</p>
+    </div>
+    <button type="button" class="lc-provenance" aria-expanded="@_showProvenance.ToString().ToLowerInvariant()"
+            @onclick="() => _showProvenance = !_showProvenance">
+        @L["NX2 / Prime data-mine"]
+    </button>
+</header>
+@if (_showProvenance)
+{
+    <p class="lc-provenance-body">
+        @L["These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values."]
+    </p>
+}
 
-<br/>
-<ApexChart TItem="DataPoint"
-           Title=@L["Notes to Full Life From Start of Song (50%)"]>
-    <ApexPointSeries TItem="DataPoint"
-                     Items="_perfectsToMax"
-                     Name=@L["Perfects"]
-                     SeriesType="SeriesType.Line"
-                     XValue="@(e => e.X)"
-                     YValue="@(e => e.Y)"
-                     OrderBy="e => e.X" />
-    <ApexPointSeries TItem="DataPoint"
-                     Items="_greatsToMax"
-                     Name=@L["Greats"]
-                     SeriesType="SeriesType.Line"
-                     XValue="@(e => e.X)"
-                     YValue="@(e => e.Y)"
-                     OrderBy="e => e.X" />
-</ApexChart>
-<br/>
-<MudText Typo="Typo.h4">@L["Lifebar Description"]</MudText>
-<MudText>@L["Starting life is 500, visible  Life (Rainbow life bar) is 1000."]</MudText>
-<MudText>@L["Lifebar overflows exponentially by level, up to about a 2350 overflow at level 28."]</MudText>
-<br/>
-<MudText Typo="Typo.h4">@L["Life loss description"]</MudText>
-<MudText>@L["By default, bads lose 50 health, misses lose 250 health (at ~100% health)."]</MudText>
-<MudText>@L["Misses lose LESS health the further beneath 1000 health you are at (at 0 life you would lose 20 health for a miss)"]</MudText>
-<br />
-<MudText Typo="Typo.h4">@L["Life gain description"]</MudText>
-<MudText>@L["By default at high combo, perfects gain 9.6 life, greats gain 8 life, goods gain 0 life."]</MudText>
-<MudText>@L["This is modified by a multiplier that is almost entirely reset on a miss, and decreased drastically on a bad."]</MudText>
-<MudText>@L["Each perfect or great you get increases the multiplier by a minor amount."]</MudText>
-<MudText>@L["Effectively, this means that your life gain is heavily affected by combo, reaching maximum gain at ~40-50 combo."]</MudText>
-<br />
-<MudText Typo="Typo.h4">@L["Bads vs Misses Observations"]</MudText>
-<MudText>@L["To recover from Bads you require 17-21 combo per Bad. Bads typically let you live for 3x as long as misses."]</MudText>
-<MudText>@L["To remain alive you need to maintain 17-21 combo per Miss."]</MudText>
-<MudText>@L["To remain at 50% visible life, you need 37-46 combo per Miss."]</MudText>
-<MudText>@L["To remain at Rainbow Life, you 46-55 combo per Miss."]</MudText>
-<MudText>@L["Bads at low health let you live for roughly 3x as long as misses, this gap increases the higher the life threshold you want to keep, up to misses punishing 6x as much when maintaining 100% visual life."]</MudText>
-<MudText><b>@L["TLDR: Misses matter less at low life, but are always significantly more punishing than Bads."]</b></MudText>
-<br/>
-<MudText Typo="Typo.h4">@L["Recovery Observations"]</MudText>
-<MudText>@L["Misses or back-to-back Bads early in a run put you in a terribly position for maintaining life, as they reset your life gain multiplier and require you to combo ~40-50 to regain it. Start runs strong for increased success rates."]</MudText>
-<MudText>@L["When at 12% or lower visual life, a miss gives less life loss than a bad, but inhibits your recovery severely. This only really matters for notes at the end of a song or before guaranteed 100+ combo sections."]</MudText>
-<br/>
-<MudText Typo="Typo.h4">@L["TLDR"]</MudText>
-<MudText>@L["Misses severely hurt your lifebar."]</MudText>
-<MudText>@L["Bads mostly hurt your recovery."]</MudText>
-<MudText>@L["Try to maintain 17-21 combo per bad."]</MudText>
-<MudText>@L["Try to maintain 40-50 combo per miss."]</MudText>
-<MudText>"@L["Lifebars are weird."]" - Zelllooo</MudText>
-<br/>
-<MudText Typo="Typo.h4">@L["Source"]</MudText>
-<MudLink Href="https://github.com/Team-Infinitesimal/Infinitesimal/blob/lts/Modules/PIU/Gameplay.Life.lua" Target="_blank">@L["Team Infinitesimal, data-mine from NX2 + Prime"]</MudLink>
-@inject ISnackbar Snackbar;
-@inject ILogger<PhoenixCalculator> Logger;
+@* ---------------- the bench ---------------- *@
+<section class="lc-bench" style="--lc-sweep: @(_sweepMs)ms">
+    <div class="lc-bench-main">
+        <div class="lc-bench-head">
+            <div class="lc-level">
+                <label class="lc-eyebrow" for="lc-level">@L["Level"]</label>
+                <input type="range" id="lc-level" min="1" max="@DifficultyLevel.Max" step="1"
+                       value="@_level" @oninput="OnLevelInput"/>
+                <span class="lc-level-value">@_level</span>
+            </div>
+        </div>
+
+        <div class="lc-readout">
+            <span class="lc-life" @ref="_lifeElement">@_sim.CurrentLife.ToString("N0")</span>
+            <span class="lc-life-max">@L["of {0} max", _sim.MaxLife.ToString("N0")]</span>
+            <span class="lc-state" data-state="@StateSlug">@StateLabel</span>
+        </div>
+
+        <div class="lc-zones" aria-hidden="true">
+            <span class="lc-zone-cap" style="flex: 0 0 @(VisibleShare.ToString("0.###"))%">
+                @L["Visible bar"] <b>@VisibleCap.ToString("N0")</b>
+            </span>
+            @if (Overflow > 0)
+            {
+                <span class="lc-zone-cap lc-zone-cap-overflow" style="flex: 0 0 @((100 - VisibleShare).ToString("0.###"))%">
+                    @L["Overflow"] <b>+@Overflow.ToString("N0")</b>
+                </span>
+            }
+        </div>
+
+        <div class="lc-track" role="meter" aria-valuemin="0" aria-valuemax="@_sim.MaxLife"
+             aria-valuenow="@_sim.CurrentLife" aria-label="@L["Current life"]"
+             data-rainbow="@((_sim.CurrentLife >= LifebarAnalysis.VisibleLife).ToString().ToLowerInvariant())"
+             data-danger="@((_sim.CurrentLife > 0 && _sim.CurrentLife <= DangerLife).ToString().ToLowerInvariant())">
+            <div class="lc-zone lc-zone-visible" style="flex: 0 0 @(VisibleShare.ToString("0.###"))%">
+                <div class="lc-fill lc-fill-visible" style="clip-path: inset(0 @((100 - VisibleFillPercent).ToString("0.###"))% 0 0)"></div>
+            </div>
+            @if (Overflow > 0)
+            {
+                <div class="lc-zone lc-zone-overflow" style="flex: 0 0 @((100 - VisibleShare).ToString("0.###"))%">
+                    <div class="lc-fill lc-fill-overflow" style="clip-path: inset(0 @((100 - OverflowFillPercent).ToString("0.###"))% 0 0)"></div>
+                </div>
+            }
+            <div class="lc-glow"></div>
+            <div class="lc-tick lc-tick-danger" style="left: @(TickAt(DangerLife).ToString("0.###"))%"><span>@L["12%"]</span></div>
+            <div class="lc-tick" style="left: @(TickAt(LifebarAnalysis.StartingLife).ToString("0.###"))%"><span>@L["Song start"]</span></div>
+            @if (Overflow > 0)
+            {
+                <div class="lc-tick" style="left: @(VisibleShare.ToString("0.###"))%"><span>@L["Rainbow"]</span></div>
+            }
+        </div>
+        <div class="lc-scale" aria-hidden="true"></div>
+
+        <div class="lc-keys">
+            @foreach (var key in JudgmentKeys)
+            {
+                <button type="button" class="lc-key lc-key-@key.Slug" @onclick="() => Hit(key.Judgment)">
+                    <span class="lc-key-hint" aria-hidden="true">@key.Hint</span>
+                    <span>
+                        @key.Label
+                        @if (_step > 1)
+                        {
+                            <span class="lc-key-step">&times;@_step</span>
+                        }
+                    </span>
+                    <span class="lc-key-delta">@Signed(LifebarAnalysis.PreviewDelta(_sim, key.Judgment, _step))</span>
+                </button>
+            }
+        </div>
+
+        <div class="lc-runs">
+            <span class="lc-runs-label" id="lc-step-label">@L["Notes per press"]</span>
+            <span class="lc-seg" role="group" aria-labelledby="lc-step-label">
+                @foreach (var option in StepOptions)
+                {
+                    <button type="button" aria-pressed="@((_step == option).ToString().ToLowerInvariant())"
+                            @onclick="() => _step = option">
+                        &times;@option
+                    </button>
+                }
+            </span>
+            <span class="lc-runs-gap"></span>
+            <button type="button" class="lc-ghost" @onclick="ResetToSongStart">@L["Reset to song start"]</button>
+            <button type="button" class="lc-ghost" @onclick="FillToMax">@L["Fill to max"]</button>
+        </div>
+
+        <p class="lc-note" data-live="@IsMaxOverflow.ToString().ToLowerInvariant()">
+            <span class="lc-bolt" aria-hidden="true">⚡</span>
+            @L["Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there."]
+        </p>
+    </div>
+
+    <div class="lc-tele">
+        <div>
+            <span class="lc-tele-label">@L["Combo"]</span>
+            <span class="lc-tele-value">@_combo.ToString("N0")</span>
+            <span class="lc-tele-note">
+                @(_combo == 0 ? L["Multiplier is on the floor"] : L["Notes since your last break"])
+            </span>
+        </div>
+        <div>
+            <span class="lc-tele-label">@L["Gain multiplier"]</span>
+            <span class="lc-tele-value">@_sim.LifeMultiplier.ToString("0.00")</span>
+            <div class="lc-mult-meter">
+                <div class="lc-mult-fill" style="width: @((_sim.LifeMultiplier / MaxMultiplier * 100).ToString("0.#"))%"></div>
+            </div>
+            <span class="lc-tele-note">@MultiplierNote</span>
+        </div>
+        <div>
+            <span class="lc-tele-label">@L["A miss right now"]</span>
+            <span class="lc-tele-value lc-tele-miss">@Signed(LifebarAnalysis.PreviewDelta(_sim, Judgment.Miss, 1))</span>
+            <span class="lc-tele-note">@MissMultiplierNote</span>
+        </div>
+        <div>
+            <span class="lc-tele-label">@L["Misses left"]</span>
+            <span class="lc-tele-value">@MissesLeft</span>
+            <span class="lc-tele-note">@L["Back to back, from here"]</span>
+        </div>
+    </div>
+</section>
+
+@* ---------------- survival budget ---------------- *@
+<section class="lc-section">
+    <div class="lc-section-head">
+        <MudText Typo="Typo.h5">@L["Your survival budget"]</MudText>
+        <span class="lc-eyebrow">@L["One break every N notes"]</span>
+    </div>
+    <p class="lc-section-sub">@L["How much clean combo you have to buy back between breaks, and where your life ends up if you keep paying exactly that."]</p>
+    <div class="lc-budget">
+        @foreach (var tile in _budget)
+        {
+            <div class="lc-bud @(tile.IsBad ? "lc-bud-bad" : "lc-bud-miss")">
+                @if (tile.Combo is null)
+                {
+                    <div class="lc-bud-value">&mdash;</div>
+                    <div class="lc-bud-what">@tile.What</div>
+                    <div class="lc-bud-settle">@tile.Impossible</div>
+                }
+                else
+                {
+                    <div class="lc-bud-value">
+                        @tile.Combo
+                        <span class="lc-bud-unit">@tile.Unit</span>
+                    </div>
+                    <div class="lc-bud-what">@tile.What</div>
+                    <div class="lc-bud-settle">@tile.Settle</div>
+                    <div class="lc-bud-bar"><i style="width: @(tile.SettlePercent.ToString("0.#"))%"></i></div>
+                }
+            </div>
+        }
+    </div>
+    <p class="lc-budget-note">@_budgetNote</p>
+</section>
+
+@* ---------------- the curve ---------------- *@
+<section class="lc-section">
+    <div class="lc-section-head">
+        <MudText Typo="Typo.h5">@L["Combo, priced"]</MudText>
+        <span class="lc-seg" role="group" aria-label="@L["Chart view"]">
+            <button type="button" aria-pressed="@((!_surviveView).ToString().ToLowerInvariant())"
+                    @onclick="() => SetView(false)">
+                @L["Where life settles"]
+            </button>
+            <button type="button" aria-pressed="@(_surviveView.ToString().ToLowerInvariant())"
+                    @onclick="() => SetView(true)">
+                @L["How long you survive"]
+            </button>
+        </span>
+    </div>
+    <p class="lc-section-sub">
+        @(_surviveView
+            ? L["Starting from a full bar, how many notes you get before you fail. Series stop where you stop dying: past that combo the bar recovers faster than the breaks drain it."]
+            : L["Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it."])
+    </p>
+    <div class="@ApexChartTheming.WrapperClass">
+        <ApexChart TItem="LifePoint" Options="_chartOptions" Height="320" @key="_chartKey">
+            @foreach (var series in _chartSeries)
+            {
+                <ApexPointSeries TItem="LifePoint"
+                                 Items="series.Points"
+                                 Name="@series.Name"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="@(p => p.Combo)"
+                                 YValue="@(p => p.Value)"
+                                 OrderBy="p => p.X"/>
+            }
+        </ApexChart>
+    </div>
+</section>
+
+@* ---------------- level ladder ---------------- *@
+<section class="lc-section">
+    <div class="lc-section-head">
+        <MudText Typo="Typo.h5">@L["Level only buys you overflow"]</MudText>
+    </div>
+    <p class="lc-section-sub">@L["The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up."]</p>
+    <div class="lc-ladder">
+        <div class="lc-ladder-head">
+            <span>@L["Lv"]</span><span>@L["Total life"]</span><span>@L["Max"]</span>
+        </div>
+        @foreach (var level in DifficultyLevel.All)
+        {
+            var max = MaxLifeFor(level);
+            var captured = level;
+            <button type="button" class="lc-ladder-row" data-current="@((level == _level).ToString().ToLowerInvariant())"
+                    @onclick="() => SetLevel(captured)">
+                <span class="lc-ladder-level">@level</span>
+                <span class="lc-ladder-bar">
+                    <span class="lc-ladder-visible" style="width: @((Math.Min(LifebarAnalysis.VisibleLife, max) * 100.0 / WidestLife).ToString("0.###"))%"></span>
+                    <span class="lc-ladder-overflow" style="width: @((Math.Max(0, max - LifebarAnalysis.VisibleLife) * 100.0 / WidestLife).ToString("0.###"))%"></span>
+                </span>
+                <span class="lc-ladder-max">@max.ToString("N0")</span>
+            </button>
+        }
+        <div class="lc-ladder-key">
+            <span><i class="lc-k-visible"></i>@L["Visible bar — always 1000"]</span>
+            <span><i class="lc-k-overflow"></i>@L["Overflow — 3 x level squared"]</span>
+        </div>
+    </div>
+</section>
+
+@* ---------------- rules of thumb ---------------- *@
+<section class="lc-section">
+    <div class="lc-section-head">
+        <MudText Typo="Typo.h5">@L["Rules of thumb"]</MudText>
+    </div>
+    <div class="lc-rules">
+        <article class="lc-rule lc-rule-miss">
+            <div class="lc-rule-value">@_aliveCombo</div>
+            <MudText Typo="Typo.h6">@L["The cliff, not a slope"]</MudText>
+            <p>@L["Below {0} notes between misses you die at every level. At {0} you cling on at about 1% life. There is no gentle middle: under the cliff your multiplier never rebuilds, so your gain rounds to nothing.", _aliveCombo]</p>
+        </article>
+        <article class="lc-rule lc-rule-perfect">
+            <div class="lc-rule-value">@PerfectsToCap</div>
+            <MudText Typo="Typo.h6">@L["A miss costs 40 notes"]</MudText>
+            <p>@L["Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life.", PerfectsToCap, GreatsToCap]</p>
+        </article>
+        <article class="lc-rule lc-rule-miss">
+            <div class="lc-rule-value">@(_rainbowCombo?.ToString() ?? "—")</div>
+            <MudText Typo="Typo.h6">@L["The rainbow is expensive"]</MudText>
+            <p>@L["Holding a full visible bar costs {0} clean notes per miss, or {1} if you are hitting greats. Simply staying alive costs {2}. Most of your combo budget goes to looking healthy — and below level 10 it cannot be bought at all, because the overflow is thinner than one miss.", _rainbowCombo?.ToString() ?? "—", _rainbowGreatCombo?.ToString() ?? "—", _aliveCombo]</p>
+        </article>
+        <article class="lc-rule lc-rule-bad">
+            <div class="lc-rule-value">3&times;</div>
+            <MudText Typo="Typo.h6">@L["Bads are cheap, then they are not"]</MudText>
+            <p>@L["A bad is a flat −50 at any life; a miss is up to −270. But a bad still halves your multiplier, so back-to-back bads strangle recovery just as effectively."]</p>
+        </article>
+        <article class="lc-rule lc-rule-miss">
+            <div class="lc-rule-value">@_missesFromStart</div>
+            <MudText Typo="Typo.h6">@L["The intro is the danger zone"]</MudText>
+            <p>@L["You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong.", _missesFromStart, _level, _missesFromFull]</p>
+        </article>
+        <article class="lc-rule lc-rule-good">
+            <div class="lc-rule-value">0</div>
+            <MudText Typo="Typo.h6">@L["A good is a dead note"]</MudText>
+            <p>@L["Goods give no life, and — unlike perfects and greats — they do not build the multiplier either. They never hurt you. They just do not count."]</p>
+        </article>
+    </div>
+</section>
+
+@* ---------------- mechanics ---------------- *@
+<section class="lc-section">
+    <div class="lc-section-head">
+        <MudText Typo="Typo.h5">@L["How the bar works"]</MudText>
+    </div>
+    <div class="lc-mech">
+        <div class="lc-mech-col">
+            <MudText Typo="Typo.h6" Class="lc-mech-gain">@L["Gain"]</MudText>
+            <ul>
+                <li><b>+9</b><span>@L["A perfect at a capped multiplier."]</span></li>
+                <li><b>+8</b><span>@L["A great at a capped multiplier."]</span></li>
+                <li><b>+1</b><span>@L["The same perfect at the start of a song, before any combo."]</span></li>
+                <li><b>0</b><span>@L["A good, always."]</span></li>
+            </ul>
+            <p class="lc-formula">@L["life += trunc(weight x multiplier) · perfect weight 12 · great weight 10"]</p>
+        </div>
+        <div class="lc-mech-col">
+            <MudText Typo="Typo.h6" Class="lc-mech-loss">@L["Loss"]</MudText>
+            <ul>
+                <li><b>−270</b><span>@L["A miss at 1000 life or above — the worst it gets."]</span></li>
+                <li><b>−50</b><span>@L["A bad, flat, at any life."]</span></li>
+                <li><b>−45</b><span>@L["A miss at 100 life. Misses get cheaper as you drain."]</span></li>
+                <li><b>120</b><span>@L["Below this life a miss costs less than a bad."]</span></li>
+            </ul>
+            <p class="lc-formula">@L["miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50"]</p>
+        </div>
+        <div class="lc-mech-col">
+            <MudText Typo="Typo.h6" Class="lc-mech-mult">@L["The multiplier"]</MudText>
+            <ul>
+                <li><b>0.80</b><span>@L["The cap. Reached after 40 perfects."]</span></li>
+                <li><b>0.10</b><span>@L["Where every song starts you."]</span></li>
+                <li><b>−0.70</b><span>@L["A miss. In practice: straight to zero."]</span></li>
+                <li><b>−0.35</b><span>@L["A bad. Roughly 22 notes of progress gone."]</span></li>
+            </ul>
+            <p class="lc-formula">@L["perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80"]</p>
+        </div>
+    </div>
+</section>
+
+<footer class="lc-foot">
+    <blockquote class="lc-quote">
+        @L["\"Lifebars are weird.\""]
+        <cite>@L["— Zelllooo"]</cite>
+    </blockquote>
+    <p class="lc-foot-src">
+        <span class="lc-eyebrow">@L["Source"]</span>
+        @L["Formulas data-mined from NX2 and Prime by"]
+        <MudLink Href="https://github.com/Team-Infinitesimal/Infinitesimal/blob/lts/Modules/PIU/Gameplay.Life.lua" Target="_blank">@L["Team Infinitesimal"]</MudLink>.
+        @L["Unconfirmed against Phoenix and Phoenix 2 — see the note at the top of the page."]
+    </p>
+</footer>
+
+@inject IJSRuntime JS
+@inject IUiSettingsAccessor UiSettings
+
 @code
 {
+    private const int DangerLife = 120;
+    private const double MaxMultiplier = .8;
+    private const int MaxCombo = 70;
+    private const int PerfectsToCap = 40;
+    private const int GreatsToCap = 50;
+    private static readonly int[] StepOptions = { 1, 20, 50 };
 
-    private ApexChart<DataPoint>? _comboBreakGraph;
-    //Life measures
-    private IList<DataPoint> _startingLifePoints = new List<DataPoint>();
-    private IList<DataPoint> _visibleLife = new List<DataPoint>();
-    private IList<DataPoint> _maxLife = new List<DataPoint>();
+    // Memoized because a level's whole answer set is deterministic: pure functions over
+    // LifebarSimulator with no clock, user or randomness in them. Bounded by the 29 levels.
+    private static readonly ConcurrentDictionary<int, LevelAnswers> AnswerCache = new();
 
-    //Notes To Dead
-    private IList<DataPoint> _notesToDeadPerfect = new List<DataPoint>();
-    private IList<DataPoint> _notesToDeadGreat = new List<DataPoint>();
-    private IList<DataPoint> _notesToDeadBadPerfect = new List<DataPoint>();
-    private IList<DataPoint> _notesToDeadBadGreat = new List<DataPoint>();
-    //Notes To Max
-    private IList<DataPoint> _perfectsToMax = new List<DataPoint>();
-    private IList<DataPoint> _greatsToMax = new List<DataPoint>();
+    // Judgment names stay English in every locale (each LOCALIZATION-*.md glossary says so),
+    // so they are literals rather than resource keys. Routing "Good" through L[…] would also
+    // collide with the existing "Good" key, which is the adjective — ja-JP renders it 良い.
+    private static readonly JudgmentKey[] JudgmentKeys =
+    {
+        new(Judgment.Perfect, "perfect", "Perfect", "P"),
+        new(Judgment.Great, "great", "Great", "G"),
+        new(Judgment.Good, "good", "Good", "O"),
+        new(Judgment.Bad, "bad", "Bad", "B"),
+        new(Judgment.Miss, "miss", "Miss", "M")
+    };
 
-    private int _lifeThreshold = 0;
     private int _level = 23;
-    private async Task CalculateComboToDeath(int newThreshold, int level)
+    private LifebarSimulator _sim = new(DifficultyLevel.From(23), true);
+    private int _combo;
+    private int _step = 1;
+    private int _sweepMs = 130;
+    private bool _surviveView;
+    private bool _showProvenance;
+
+    private ElementReference _lifeElement;
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<LifeCalculator>? _selfRef;
+
+    private BudgetTile[] _budget = Array.Empty<BudgetTile>();
+    private string _budgetNote = string.Empty;
+    private ChartSeries[] _chartSeries = Array.Empty<ChartSeries>();
+    private ApexChartOptions<LifePoint> _chartOptions = new();
+    private string _chartKey = string.Empty;
+    private int _aliveCombo = 18;
+    private int? _rainbowCombo;
+    private int? _rainbowGreatCombo;
+    private int _missesFromStart;
+    private int _missesFromFull;
+
+    private static readonly int WidestLife = MaxLifeFor(DifficultyLevel.Max);
+
+    private int Overflow => _sim.MaxLife - LifebarAnalysis.VisibleLife;
+    private int VisibleCap => Math.Min(LifebarAnalysis.VisibleLife, _sim.MaxLife);
+    private double VisibleShare => VisibleCap * 100.0 / _sim.MaxLife;
+    private double VisibleFillPercent => Math.Min(_sim.CurrentLife, VisibleCap) * 100.0 / VisibleCap;
+
+    private double OverflowFillPercent =>
+        Overflow <= 0 ? 0 : Math.Max(0, _sim.CurrentLife - LifebarAnalysis.VisibleLife) * 100.0 / Overflow;
+
+    private bool IsMaxOverflow => _sim.CurrentLife == _sim.MaxLife && Overflow > 0;
+
+    private double TickAt(int life) => Math.Min(life, VisibleCap) * 100.0 / VisibleCap * (VisibleShare / 100.0);
+
+    private static int MaxLifeFor(DifficultyLevel level) => new LifebarSimulator(level).MaxLife;
+
+    private string StateSlug => _sim.CurrentLife switch
     {
-        _lifeThreshold = newThreshold;
-        var comboMax = 0;
+        0 => "dead",
+        var l when l == _sim.MaxLife && Overflow > 0 => "overflow-full",
+        var l when l > LifebarAnalysis.VisibleLife => "into-overflow",
+        var l when l <= DangerLife => "danger",
+        _ => "ok"
+    };
+
+    private string StateLabel => StateSlug switch
+    {
+        "dead" => L["Failed"],
+        "overflow-full" => L["Overflow full"],
+        "into-overflow" => L["Into overflow"],
+        "danger" => L["One miss from out"],
+        _ => L["{0}% of the bar", (int)Math.Round(_sim.CurrentLife * 100.0 / VisibleCap)]
+    };
+
+    private string MultiplierNote => _sim.LifeMultiplier >= MaxMultiplier
+        ? L["Capped — perfects pay +{0}", LifebarAnalysis.PreviewDelta(_sim, Judgment.Perfect, 1)]
+        : L["{0} more perfects to cap", (int)Math.Ceiling((MaxMultiplier - _sim.LifeMultiplier) / .02)];
+
+    private string MissMultiplierNote => _sim.LifeMultiplier > 0
+        ? L["and {0} notes of multiplier", (int)Math.Ceiling(_sim.LifeMultiplier / .02)]
+        : L["multiplier already gone"];
+
+    private string MissesLeft
+    {
+        get
+        {
+            if (_sim.CurrentLife == 0) return "—";
+            var probe = _sim.Fork();
+            var count = 0;
+            while (probe.CurrentLife > 0)
+            {
+                probe.ApplyJudgment(Judgment.Miss);
+                count++;
+            }
+
+            return count.ToString("N0");
+        }
+    }
+
+    private string Signed(int value) => value > 0 ? $"+{value:N0}" : value < 0 ? $"−{Math.Abs(value):N0}" : "0";
+
+    protected override void OnInitialized() => LoadLevel(_level);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/life-calculator.js");
+    }
+
+    private void OnLevelInput(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var level)) SetLevel(level);
+    }
+
+    private void SetLevel(int level)
+    {
+        if (level == _level) return;
+        var previousLife = _sim.CurrentLife;
+        var multiplier = _sim.LifeMultiplier;
         _level = level;
-        _notesToDeadBadPerfect.Clear();
-        _notesToDeadGreat.Clear();
-        _notesToDeadPerfect.Clear();
-        _notesToDeadBadGreat.Clear();
-        while (true)
-        {
-            var next = CalculateLifeToDead(Judgment.Perfect, Judgment.Miss, comboMax,_lifeThreshold,_level);
-            if (next == -1)
-            {
-                break;
-            }
-            _notesToDeadPerfect.Add(new DataPoint(comboMax,next));
-            comboMax++;
-        }
-        comboMax = 0;
-        while (true)
-        {
-            var next = CalculateLifeToDead(Judgment.Great, Judgment.Miss, comboMax, _lifeThreshold, _level);
-            if (next == -1)
-            {
-                break;
-            }
-            _notesToDeadGreat.Add(new DataPoint(comboMax, next));
-            comboMax++;
-        }
-        comboMax = 0;
-        while (true)
-        {
-            var next = CalculateLifeToDead(Judgment.Perfect, Judgment.Bad, comboMax, _lifeThreshold, _level);
-            if (next == -1)
-            {
-                break;
-            }
-            _notesToDeadBadPerfect.Add(new DataPoint(comboMax, next));
-            comboMax++;
-        }
-        comboMax = 0;
-        while (true)
-        {
-            var next = CalculateLifeToDead(Judgment.Great, Judgment.Bad, comboMax, _lifeThreshold, _level);
-            if (next == -1)
-            {
-                break;
-            }
-            _notesToDeadBadGreat.Add(new DataPoint(comboMax, next));
-            comboMax++;
-        }
-        if (_comboBreakGraph != null)
-        {
-            await _comboBreakGraph.UpdateSeriesAsync(true);
-        }
+        _sim = new LifebarSimulator(DifficultyLevel.From(level), true);
+        // Hold the player's place on the bar rather than silently refilling it.
+        RestoreState(Math.Min(previousLife, _sim.MaxLife), multiplier);
+        LoadLevel(level);
     }
-    protected override async Task OnInitializedAsync()
-    {
-        foreach (var level in DifficultyLevel.All)
-        {
-            var sim = new LifebarSimulator(level);
-            _startingLifePoints.Add(new DataPoint(level, sim.CurrentLife));
-            _visibleLife.Add(new DataPoint(level, 1000));
-            _maxLife.Add(new DataPoint(level, sim.MaxLife));
-            _perfectsToMax.Add(new DataPoint(level,CalculateNotesToMax(Judgment.Perfect,level)));
-            _greatsToMax.Add(new DataPoint(level, CalculateNotesToMax(Judgment.Great, level)));
 
-        }
-        await CalculateComboToDeath(0,23);
-    }
-    private int CalculateNotesToMax(Judgment judgement, int level)
+    /// <summary>
+    ///     Rebuilds a simulator at a given life and multiplier. The simulator only exposes
+    ///     forward moves, so replay bads (a flat −50) down and perfects up.
+    /// </summary>
+    private void RestoreState(int life, double multiplier)
     {
-        var sim = new LifebarSimulator(level);
-        var noteCount = 0;
-        while (sim.CurrentLife < sim.MaxLife)
-        {
-            sim.ApplyJudgment(judgement);
-            noteCount++;
-        }
-        return noteCount;
+        while (_sim.CurrentLife > life && _sim.CurrentLife > 0) _sim.ApplyJudgment(Judgment.Bad);
+        var perfects = (int)Math.Round(multiplier / .02);
+        for (var i = 0; i < perfects; i++) _sim.ApplyJudgment(Judgment.Perfect);
     }
-    private int CalculateLifeToDead(Judgment judgment, Judgment breakJudgment, int combo, int threshold, int level)
-    {
-        var sim = new LifebarSimulator(level, true);
 
-        sim.ApplyJudgment(breakJudgment);
-        var last = sim.CurrentLife;
-        var lastRepeat = 0;
-        var noteCount = 0;
-        while (true)
+    private void LoadLevel(int level)
+    {
+        var answers = AnswerCache.GetOrAdd(level, Compute);
+
+        _aliveCombo = answers.AliveCombo;
+        _rainbowCombo = answers.RainbowCombo;
+        _rainbowGreatCombo = answers.RainbowGreatCombo;
+        _missesFromStart = answers.MissesFromStart;
+        _missesFromFull = answers.MissesFromFull;
+
+        var visibleCap = Math.Min(LifebarAnalysis.VisibleLife, answers.MaxLife);
+        _budget = new[]
         {
-            for (var i = 0; i < combo; i++)
+            Tile(answers.AliveCombo, answers.AliveSettle, false, L["Just stay alive"],
+                L["Impossible at level {0} — the overflow is thinner than one miss.", level], visibleCap),
+            Tile(answers.HalfCombo, answers.HalfSettle, false, L["Hold half the bar"],
+                L["Impossible at level {0} — the overflow is thinner than one miss.", level], visibleCap),
+            Tile(answers.RainbowCombo, answers.RainbowSettle, false, L["Hold the rainbow"],
+                L["Impossible at level {0} — the overflow is thinner than one miss.", level], visibleCap),
+            Tile(answers.BadCombo, answers.BadSettle, true, L["Hold the rainbow, on bads"],
+                L["Impossible at level {0} — the overflow is thinner than one bad.", level], visibleCap)
+        };
+
+        _budgetNote =
+            L["Those assume perfects in between. On greats the same three cost {0}, {1} and {2} notes.",
+                Dash(answers.GreatAliveCombo), Dash(answers.GreatHalfCombo), Dash(answers.RainbowGreatCombo)]
+            + " "
+            + L["From the opening 500 life, {0} straight misses or {1} straight bads end the run — {2} and {3} once the overflow is full.",
+                answers.MissesFromStart, answers.BadsFromStart, answers.MissesFromFull, answers.BadsFromFull];
+
+        BuildChart(answers);
+    }
+
+    private static string Dash(int? value) => value?.ToString() ?? "—";
+
+    // The unit is two whole strings rather than "notes per {0}" with a judgment spliced in:
+    // a language that inflects the noun can't be served by one template.
+    private BudgetTile Tile(int? combo, int settle, bool isBad, string what, string impossible, int visibleCap) =>
+        new(combo, isBad, what, impossible, isBad ? L["notes per bad"] : L["notes per miss"],
+            settle >= visibleCap
+                ? L["Settles at a full bar — {0} life", settle.ToString("N0")]
+                : L["Settles at {0} life, {1}% of the bar", settle.ToString("N0"),
+                    (int)Math.Round(Math.Min(settle, visibleCap) * 100.0 / visibleCap)],
+            Math.Min(100, Math.Min(settle, visibleCap) * 100.0 / visibleCap));
+
+    private void SetView(bool survive)
+    {
+        if (_surviveView == survive) return;
+        _surviveView = survive;
+        BuildChart(AnswerCache.GetOrAdd(_level, Compute));
+    }
+
+    private void BuildChart(LevelAnswers answers)
+    {
+        var missHex = MixThemes.JudgmentHex(Judgment.Miss);
+        var badHex = MixThemes.JudgmentHex(Judgment.Bad);
+        var source = _surviveView ? answers.Survive : answers.Settle;
+
+        _chartSeries = new[]
+        {
+            new ChartSeries(L["Perfect combo, miss break"], source[0]),
+            new ChartSeries(L["Great combo, miss break"], source[1]),
+            new ChartSeries(L["Perfect combo, bad break"], source[2]),
+            new ChartSeries(L["Great combo, bad break"], source[3])
+        };
+
+        // Two hues x two line styles rather than four hues: the break judgment carries the
+        // color, the filler carries the dash (the era trick from the widget charts).
+        _chartOptions = ApexChartTheming.BaseOptions<LifePoint>(_palette);
+        _chartOptions.Colors = new List<string> { missHex, missHex, badHex, badHex };
+        _chartOptions.Stroke = new Stroke
+        {
+            Curve = Curve.Straight,
+            Width = 2.5,
+            DashArray = new List<double> { 0, 6, 0, 6 }
+        };
+        _chartOptions.Markers = new Markers { Size = 0 };
+        _chartOptions.Xaxis = new XAxis { Title = new AxisTitle { Text = L["Combo between breaks"].Value } };
+        _chartOptions.Yaxis = new List<YAxis>
+        {
+            new()
             {
-                noteCount++;
-                sim.ApplyJudgment(judgment);
-                if (sim.CurrentLife == sim.MaxLife)
+                Title = new AxisTitle
                 {
-                    return -1;
+                    Text = (_surviveView ? L["Notes before you fail"] : L["Life it settles at"]).Value
                 }
             }
-            sim.ApplyJudgment(breakJudgment);
-            if (sim.CurrentLife == last)
+        };
+        // Reference lines are furniture, not data — neutral ink, never a series hue.
+        _chartOptions.Annotations = _surviveView
+            ? null
+            : new Annotations
             {
-                lastRepeat++;
-                if (lastRepeat == 10)
+                Yaxis = new List<AnnotationsYAxis>
                 {
-                    return -1;
+                    Reference(Math.Min(LifebarAnalysis.VisibleLife, answers.MaxLife), L["Rainbow · 1000"]),
+                    Reference(LifebarAnalysis.VisibleLife / 2, L["Half bar · 500"])
                 }
-            }
-            else
-            {
-                last = sim.CurrentLife;
-                lastRepeat = 0;
-            }
-
-            noteCount++;
-            if (sim.CurrentLife <= threshold)
-            {
-                return noteCount;
-            }
-        }
+            };
+        _chartKey = $"{_level}-{_surviveView}";
     }
-    private sealed record DataPoint(int X, int Y);
+
+    private AnnotationsYAxis Reference(int value, string label) => new()
+    {
+        Y = value,
+        BorderColor = _palette.InkMuted,
+        StrokeDashArray = 4,
+        Label = new Label { Text = label }
+    };
+
+    private MixPalette _palette = MixThemes.PaletteFor(MixEnum.Phoenix);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _palette = MixThemes.PaletteFor(MixThemes.ResolveThemeMix(
+            await UiSettings.GetSetting(MixThemes.OverrideSettingKey), await UiSettings.GetSelectedMix()));
+        BuildChart(AnswerCache.GetOrAdd(_level, Compute));
+    }
+
+    private async Task Hit(Judgment judgment)
+    {
+        var from = _sim.CurrentLife;
+        for (var i = 0; i < _step; i++) _sim.ApplyJudgment(judgment);
+        _combo = judgment is Judgment.Miss or Judgment.Bad ? 0 : _combo + _step;
+        _sweepMs = SweepMs(_step);
+        await Sweep(from, _sim.CurrentLife);
+    }
+
+    private async Task ResetToSongStart()
+    {
+        var from = _sim.CurrentLife;
+        _sim = new LifebarSimulator(DifficultyLevel.From(_level));
+        _combo = 0;
+        _sweepMs = SweepMs(20);
+        await Sweep(from, _sim.CurrentLife);
+    }
+
+    private async Task FillToMax()
+    {
+        var from = _sim.CurrentLife;
+        while (_sim.CurrentLife < _sim.MaxLife) _sim.ApplyJudgment(Judgment.Perfect);
+        _sweepMs = SweepMs(20);
+        await Sweep(from, _sim.CurrentLife);
+    }
+
+    // A multi-note press earns a longer sweep; a single note stays snappy.
+    private static int SweepMs(int notes) => notes <= 1 ? 130 : Math.Min(620, 260 + notes * 7);
+
+    private async Task Sweep(int from, int to)
+    {
+        if (_module is null || from == to) return;
+        // One interop call for the whole press. Never a frame loop in C#: on a server
+        // circuit that would be one round-trip per frame.
+        await _module.InvokeVoidAsync("countTo", _lifeElement, from, to, _sweepMs);
+    }
+
+    private static LevelAnswers Compute(int rawLevel)
+    {
+        var level = DifficultyLevel.From(rawLevel);
+        var maxLife = MaxLifeFor(level);
+        var visibleCap = Math.Min(LifebarAnalysis.VisibleLife, maxLife);
+        var half = visibleCap / 2;
+        var full = visibleCap - 1;
+
+        var alive = LifebarAnalysis.BreakEvenCombo(level, Judgment.Perfect, Judgment.Miss, 0);
+        var halfCombo = LifebarAnalysis.BreakEvenCombo(level, Judgment.Perfect, Judgment.Miss, half);
+        var rainbow = LifebarAnalysis.BreakEvenCombo(level, Judgment.Perfect, Judgment.Miss, full);
+        var bad = LifebarAnalysis.BreakEvenCombo(level, Judgment.Perfect, Judgment.Bad, full);
+
+        var pairs = new[]
+        {
+            (Filler: Judgment.Perfect, Break: Judgment.Miss),
+            (Filler: Judgment.Great, Break: Judgment.Miss),
+            (Filler: Judgment.Perfect, Break: Judgment.Bad),
+            (Filler: Judgment.Great, Break: Judgment.Bad)
+        };
+
+        var settle = pairs.Select(p => Enumerable.Range(0, MaxCombo + 1)
+            .Select(c => new LifePoint(c, LifebarAnalysis.SettlePoint(level, p.Filler, p.Break, c)))
+            .ToArray()).ToArray();
+
+        var survive = pairs.Select(p => Enumerable.Range(0, MaxCombo + 1)
+            .Select(c => (Combo: c, Notes: LifebarAnalysis.NotesToThreshold(level, p.Filler, p.Break, c, 0)))
+            .Where(x => x.Notes is not null)
+            .Select(x => new LifePoint(x.Combo, x.Notes!.Value))
+            .ToArray()).ToArray();
+
+        return new LevelAnswers(
+            maxLife,
+            alive ?? 0,
+            halfCombo,
+            rainbow,
+            bad,
+            LifebarAnalysis.BreakEvenCombo(level, Judgment.Great, Judgment.Miss, 0),
+            LifebarAnalysis.BreakEvenCombo(level, Judgment.Great, Judgment.Miss, half),
+            LifebarAnalysis.BreakEvenCombo(level, Judgment.Great, Judgment.Miss, full),
+            SettleAt(level, Judgment.Perfect, Judgment.Miss, alive),
+            SettleAt(level, Judgment.Perfect, Judgment.Miss, halfCombo),
+            SettleAt(level, Judgment.Perfect, Judgment.Miss, rainbow),
+            SettleAt(level, Judgment.Perfect, Judgment.Bad, bad),
+            LifebarAnalysis.ConsecutiveBreaksToFail(level, Judgment.Miss, false),
+            LifebarAnalysis.ConsecutiveBreaksToFail(level, Judgment.Bad, false),
+            LifebarAnalysis.ConsecutiveBreaksToFail(level, Judgment.Miss, true),
+            LifebarAnalysis.ConsecutiveBreaksToFail(level, Judgment.Bad, true),
+            settle,
+            survive);
+    }
+
+    private static int SettleAt(DifficultyLevel level, Judgment filler, Judgment brk, int? combo) =>
+        combo is null ? 0 : LifebarAnalysis.SettlePoint(level, filler, brk, combo.Value);
+
+    public async ValueTask DisposeAsync()
+    {
+        _selfRef?.Dispose();
+        if (_module is not null)
+            try
+            {
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // The circuit went away first; nothing to release.
+            }
+    }
+
+    private sealed record JudgmentKey(Judgment Judgment, string Slug, string Label, string Hint);
+
+    private sealed record BudgetTile(
+        int? Combo,
+        bool IsBad,
+        string What,
+        string Impossible,
+        string Unit,
+        string Settle,
+        double SettlePercent);
+
+    private sealed record ChartSeries(string Name, LifePoint[] Points);
+
+    private sealed record LevelAnswers(
+        int MaxLife,
+        int AliveCombo,
+        int? HalfCombo,
+        int? RainbowCombo,
+        int? BadCombo,
+        int? GreatAliveCombo,
+        int? GreatHalfCombo,
+        int? RainbowGreatCombo,
+        int AliveSettle,
+        int HalfSettle,
+        int RainbowSettle,
+        int BadSettle,
+        int MissesFromStart,
+        int BadsFromStart,
+        int MissesFromFull,
+        int BadsFromFull,
+        LifePoint[][] Settle,
+        LifePoint[][] Survive);
+
+    public sealed record LifePoint(int Combo, int Value)
+    {
+        public int X => Combo;
+    }
 }

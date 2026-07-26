@@ -5934,4 +5934,313 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Mrgl {0} mrgl {1} grblgl (mrgl {2} rgllgl mrgl)</value>
   </data>
+  <data name="Life Calculator" xml:space="preserve">
+    <value>Mrglglgl Rgllulator</value>
+  </data>
+  <data name="What a miss actually costs you, and how much clean combo it takes to earn it back." xml:space="preserve">
+    <value>Mrgllll a Miss glub grglrgl, blurb mrgl grglglub mrrrgl blrgl aaaughibbrgubugbugrguburgle.</value>
+  </data>
+  <data name="NX2 / Prime data-mine" xml:space="preserve">
+    <value>NX2 / Prime mrglmine</value>
+  </data>
+  <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
+    <value>Grglub mrglformulas mrgrgl NX2 blub Prime, Team Infinitesimal grglglub. Nrrgl mrglglgl Phoenix blurb Phoenix 2 grgllrgl, mrrrgl blrglnumbers grgl shape-mrgl nrgl exact-glub cabinetgrgl.</value>
+  </data>
+  <data name="of {0} max" xml:space="preserve">
+    <value>mrgl {0} grglmax</value>
+  </data>
+  <data name="Visible bar" xml:space="preserve">
+    <value>Mrgllub blrgl</value>
+  </data>
+  <data name="Overflow" xml:space="preserve">
+    <value>Blurblurb</value>
+  </data>
+  <data name="Current life" xml:space="preserve">
+    <value>Mrglglgl nrrgl</value>
+  </data>
+  <data name="12%" xml:space="preserve">
+    <value>12%</value>
+  </data>
+  <data name="Song start" xml:space="preserve">
+    <value>Grglsong mrgl</value>
+  </data>
+  <data name="Rainbow" xml:space="preserve">
+    <value>Mrglbow</value>
+  </data>
+  <data name="Notes per press" xml:space="preserve">
+    <value>Mrglnotes grgl blub</value>
+  </data>
+  <data name="Reset to song start" xml:space="preserve">
+    <value>Mrgl blrgl grglsong</value>
+  </data>
+  <data name="Fill to max" xml:space="preserve">
+    <value>Grglub mrglmax</value>
+  </data>
+  <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
+    <value>Phoenix 2 mrgl zzzrglglub blrgl mrrrgl blurblurb grglub full — nrrgl mrglmoment grglgame blub mrglglgl hidden-mrgl grgl.</value>
+  </data>
+  <data name="Combo" xml:space="preserve">
+    <value>Mrglbo</value>
+  </data>
+  <data name="Multiplier is on the floor" xml:space="preserve">
+    <value>Mrgltiplier grgl blrglfloor</value>
+  </data>
+  <data name="Notes since your last break" xml:space="preserve">
+    <value>Mrglnotes mrgl grglbreak</value>
+  </data>
+  <data name="Gain multiplier" xml:space="preserve">
+    <value>Blubgrgl mrgltiplier</value>
+  </data>
+  <data name="A miss right now" xml:space="preserve">
+    <value>A Miss mrgl nrrgl</value>
+  </data>
+  <data name="Misses left" xml:space="preserve">
+    <value>Mrgl Miss blrgl</value>
+  </data>
+  <data name="Back to back, from here" xml:space="preserve">
+    <value>Grglgrgl, mrgl blub</value>
+  </data>
+  <data name="Your survival budget" xml:space="preserve">
+    <value>Mrgl grglsurvival blrgl</value>
+  </data>
+  <data name="One break every N notes" xml:space="preserve">
+    <value>Nrrgl break mrgl N mrglnotes</value>
+  </data>
+  <data name="How much clean combo you have to buy back between breaks, and where your life ends up if you keep paying exactly that." xml:space="preserve">
+    <value>Mrgl grglmrglbo blub mrrrgl blrglbreaks, blurb mrgl grglglgl nrrgl grgl blub mrgl grglpay blrgl.</value>
+  </data>
+  <data name="Combo, priced" xml:space="preserve">
+    <value>Mrglbo, grglpriced</value>
+  </data>
+  <data name="Chart view" xml:space="preserve">
+    <value>Grglchart mrgl</value>
+  </data>
+  <data name="Where life settles" xml:space="preserve">
+    <value>Mrgl grglglgl blrgl</value>
+  </data>
+  <data name="How long you survive" xml:space="preserve">
+    <value>Mrgl blub grglsurvive</value>
+  </data>
+  <data name="Starting from a full bar, how many notes you get before you fail. Series stop where you stop dying: past that combo the bar recovers faster than the breaks drain it." xml:space="preserve">
+    <value>Mrgl grglfull blrgl, mrglnotes blub grglfail. Grglseries mrgl blrgl grglglgl: mrrrgl mrglbo blrgl grglrecover blub grglbreaks mrgl.</value>
+  </data>
+  <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
+    <value>Nrrgl break mrgl N mrglnotes grglforever, mrgl grglglgl blrgl grgl. Blub grglcliff mrgl zerogrgl — grglcurve nrgl mrgltaper, blrgl grglfall. Mrgltiplier grgldying blub mrgl grglrebuild.</value>
+  </data>
+  <data name="Level only buys you overflow" xml:space="preserve">
+    <value>Rglmrgl grglbuys mrgl blurblurb</value>
+  </data>
+  <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
+    <value>Grglmrglbow blrgl grgl 1000 mrglglgl mrgl 1 blub 1000 mrglglgl mrgl 29. Grglharder chart blub mrgl grglglgl blrglbehind — nrgl grglcabinet, blub nrrgl mrglthing grglchange mrgl rglmrgl. Mrglbo grgl Miss blrgl grglsame blub grgltop.</value>
+  </data>
+  <data name="Lv" xml:space="preserve">
+    <value>Rgl</value>
+  </data>
+  <data name="Total life" xml:space="preserve">
+    <value>Grgltotal mrglglgl</value>
+  </data>
+  <data name="Visible bar — always 1000" xml:space="preserve">
+    <value>Mrgllub blrgl — grglalways 1000</value>
+  </data>
+  <data name="Overflow — 3 x level squared" xml:space="preserve">
+    <value>Blurblurb — 3 x rglmrgl grglsquared</value>
+  </data>
+  <data name="Rules of thumb" xml:space="preserve">
+    <value>Mrglrules grgl blub</value>
+  </data>
+  <data name="The cliff, not a slope" xml:space="preserve">
+    <value>Grglcliff, nrgl grglslope</value>
+  </data>
+  <data name="Below {0} notes between misses you die at every level. At {0} you cling on at about 1% life. There is no gentle middle: under the cliff your multiplier never rebuilds, so your gain rounds to nothing." xml:space="preserve">
+    <value>Blub {0} mrglnotes grgl Miss mrgl grgldie mrgl rglmrgl. Mrgl {0} blrgl grglcling mrgl 1% mrglglgl. Nrgl grglmiddle: blub grglcliff mrgltiplier nrgl grglrebuild, blurb grglgain mrgl nrrgl.</value>
+  </data>
+  <data name="A miss costs 40 notes" xml:space="preserve">
+    <value>A Miss grglcosts 40 mrglnotes</value>
+  </data>
+  <data name="Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life." xml:space="preserve">
+    <value>Grglevery Miss mrgl mrgltiplier zerogrgl. Blrgl {0} Perfect — grgl {1} Great — mrgl grglcap. Blub mrrrgl grglhitting mrglnotes grgl nrgl mrglglgl.</value>
+  </data>
+  <data name="The rainbow is expensive" xml:space="preserve">
+    <value>Grglmrglbow blrgl grglexpensive</value>
+  </data>
+  <data name="Holding a full visible bar costs {0} clean notes per miss, or {1} if you are hitting greats. Simply staying alive costs {2}. Most of your combo budget goes to looking healthy — and below level 10 it cannot be bought at all, because the overflow is thinner than one miss." xml:space="preserve">
+    <value>Grglhold mrgllub blrgl grglcosts {0} mrglnotes grgl Miss, grgl {1} blub Great. Grglalive blrgl {2}. Mrglbo blrgl grgl mrgllooking grglhealthy — blub rglmrgl 10 nrgl grglbuy, blurblurb grglthinner blub nrrgl Miss.</value>
+  </data>
+  <data name="Bads are cheap, then they are not" xml:space="preserve">
+    <value>Bad grglcheap, blub nrgl</value>
+  </data>
+  <data name="A bad is a flat −50 at any life; a miss is up to −270. But a bad still halves your multiplier, so back-to-back bads strangle recovery just as effectively." xml:space="preserve">
+    <value>Bad grgl −50 mrgl grglany mrglglgl; Miss blrgl −270. Blub Bad grglhalves mrgltiplier, blurb grglgrgl Bad mrgl grglrecovery blrgl.</value>
+  </data>
+  <data name="The intro is the danger zone" xml:space="preserve">
+    <value>Grglintro blrgl grgldanger mrgl</value>
+  </data>
+  <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
+    <value>Mrgl grglsong 500 mrglglgl blub mrgltiplier zerogrgl — {0} Miss grglkill mrgl, grgl rglmrgl. Grglsurvive blrgl blub {1} grglgives {2}. Mrgl grglstrong.</value>
+  </data>
+  <data name="A good is a dead note" xml:space="preserve">
+    <value>Good grgl mrgldead note</value>
+  </data>
+  <data name="Goods give no life, and — unlike perfects and greats — they do not build the multiplier either. They never hurt you. They just do not count." xml:space="preserve">
+    <value>Good nrgl mrglglgl, blub — nrgl Perfect blub Great — nrgl mrgltiplier. Nrgl grglhurt mrgl. Blrgl nrgl grglcount.</value>
+  </data>
+  <data name="How the bar works" xml:space="preserve">
+    <value>Mrgl blrgl grglworks</value>
+  </data>
+  <data name="Gain" xml:space="preserve">
+    <value>Blubgrgl</value>
+  </data>
+  <data name="A perfect at a capped multiplier." xml:space="preserve">
+    <value>Perfect mrgl grglcapped mrgltiplier.</value>
+  </data>
+  <data name="A great at a capped multiplier." xml:space="preserve">
+    <value>Great mrgl grglcapped mrgltiplier.</value>
+  </data>
+  <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
+    <value>Grglsame Perfect mrgl grglsong, blub mrglbo.</value>
+  </data>
+  <data name="A good, always." xml:space="preserve">
+    <value>Good, grglalways.</value>
+  </data>
+  <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
+    <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
+  </data>
+  <data name="Loss" xml:space="preserve">
+    <value>Mrglloss</value>
+  </data>
+  <data name="A miss at 1000 life or above — the worst it gets." xml:space="preserve">
+    <value>Miss mrgl 1000 mrglglgl grgl blub — grglworst.</value>
+  </data>
+  <data name="A bad, flat, at any life." xml:space="preserve">
+    <value>Bad, grglflat, mrgl grglany mrglglgl.</value>
+  </data>
+  <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
+    <value>Miss mrgl 100 mrglglgl. Miss grglcheaper blub mrgl grgldrain.</value>
+  </data>
+  <data name="Below this life a miss costs less than a bad." xml:space="preserve">
+    <value>Blub grglmrglglgl Miss grglcosts nrgl blub Bad.</value>
+  </data>
+  <data name="miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50" xml:space="preserve">
+    <value>miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50</value>
+  </data>
+  <data name="The multiplier" xml:space="preserve">
+    <value>Grglmrgltiplier</value>
+  </data>
+  <data name="The cap. Reached after 40 perfects." xml:space="preserve">
+    <value>Grglcap. Mrgl 40 Perfect.</value>
+  </data>
+  <data name="Where every song starts you." xml:space="preserve">
+    <value>Mrgl grglsong blrgl mrgl.</value>
+  </data>
+  <data name="A miss. In practice: straight to zero." xml:space="preserve">
+    <value>Miss. Grglpractice: mrgl zerogrgl.</value>
+  </data>
+  <data name="A bad. Roughly 22 notes of progress gone." xml:space="preserve">
+    <value>Bad. Grgl 22 mrglnotes grglprogress mrgl.</value>
+  </data>
+  <data name="perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80" xml:space="preserve">
+    <value>perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80</value>
+  </data>
+  <data name="&quot;Lifebars are weird.&quot;" xml:space="preserve">
+    <value>&quot;Lifebars are weird.&quot;</value>
+  </data>
+  <data name="— Zelllooo" xml:space="preserve">
+    <value>— Zelllooo</value>
+  </data>
+  <data name="Formulas data-mined from NX2 and Prime by" xml:space="preserve">
+    <value>Mrglformulas grglmined NX2 blub Prime mrgl</value>
+  </data>
+  <data name="Team Infinitesimal" xml:space="preserve">
+    <value>Team Infinitesimal</value>
+  </data>
+  <data name="Unconfirmed against Phoenix and Phoenix 2 — see the note at the top of the page." xml:space="preserve">
+    <value>Nrgl grglconfirmed Phoenix blub Phoenix 2 — mrgl grglnote blrgl grglpage.</value>
+  </data>
+  <data name="Overflow full" xml:space="preserve">
+    <value>Blurblurb grglfull</value>
+  </data>
+  <data name="Into overflow" xml:space="preserve">
+    <value>Mrgl blurblurb</value>
+  </data>
+  <data name="One miss from out" xml:space="preserve">
+    <value>Nrrgl Miss grglout</value>
+  </data>
+  <data name="{0}% of the bar" xml:space="preserve">
+    <value>{0}% grgl blrgl</value>
+  </data>
+  <data name="Capped — perfects pay +{0}" xml:space="preserve">
+    <value>Grglcap — Perfect grglpay +{0}</value>
+  </data>
+  <data name="{0} more perfects to cap" xml:space="preserve">
+    <value>{0} mrgl Perfect grglcap</value>
+  </data>
+  <data name="and {0} notes of multiplier" xml:space="preserve">
+    <value>blub {0} mrglnotes mrgltiplier</value>
+  </data>
+  <data name="multiplier already gone" xml:space="preserve">
+    <value>mrgltiplier grglgone</value>
+  </data>
+  <data name="Just stay alive" xml:space="preserve">
+    <value>Grglstay mrglglgl</value>
+  </data>
+  <data name="Impossible at level {0} — the overflow is thinner than one miss." xml:space="preserve">
+    <value>Nrgl mrgl rglmrgl {0} — blurblurb grglthinner blub nrrgl Miss.</value>
+  </data>
+  <data name="Hold half the bar" xml:space="preserve">
+    <value>Grglhold mrglhalf blrgl</value>
+  </data>
+  <data name="Hold the rainbow" xml:space="preserve">
+    <value>Grglhold mrglbow</value>
+  </data>
+  <data name="Hold the rainbow, on bads" xml:space="preserve">
+    <value>Grglhold mrglbow, mrgl Bad</value>
+  </data>
+  <data name="Impossible at level {0} — the overflow is thinner than one bad." xml:space="preserve">
+    <value>Nrgl mrgl rglmrgl {0} — blurblurb grglthinner blub nrrgl Bad.</value>
+  </data>
+  <data name="Those assume perfects in between. On greats the same three cost {0}, {1} and {2} notes." xml:space="preserve">
+    <value>Grglassume Perfect mrgl blrgl. Mrgl Great grglsame blub {0}, {1} blub {2} mrglnotes.</value>
+  </data>
+  <data name="From the opening 500 life, {0} straight misses or {1} straight bads end the run — {2} and {3} once the overflow is full." xml:space="preserve">
+    <value>Grgl 500 mrglglgl, {0} Miss grgl {1} Bad mrgl grglend — {2} blub {3} blurblurb grglfull.</value>
+  </data>
+  <data name="notes per bad" xml:space="preserve">
+    <value>mrglnotes grgl Bad</value>
+  </data>
+  <data name="notes per miss" xml:space="preserve">
+    <value>mrglnotes grgl Miss</value>
+  </data>
+  <data name="Settles at a full bar — {0} life" xml:space="preserve">
+    <value>Grglsettle mrglfull blrgl — {0} mrglglgl</value>
+  </data>
+  <data name="Settles at {0} life, {1}% of the bar" xml:space="preserve">
+    <value>Grglsettle {0} mrglglgl, {1}% grgl blrgl</value>
+  </data>
+  <data name="Perfect combo, miss break" xml:space="preserve">
+    <value>Perfect mrglbo, Miss grglbreak</value>
+  </data>
+  <data name="Great combo, miss break" xml:space="preserve">
+    <value>Great mrglbo, Miss grglbreak</value>
+  </data>
+  <data name="Perfect combo, bad break" xml:space="preserve">
+    <value>Perfect mrglbo, Bad grglbreak</value>
+  </data>
+  <data name="Great combo, bad break" xml:space="preserve">
+    <value>Great mrglbo, Bad grglbreak</value>
+  </data>
+  <data name="Combo between breaks" xml:space="preserve">
+    <value>Mrglbo grgl grglbreaks</value>
+  </data>
+  <data name="Notes before you fail" xml:space="preserve">
+    <value>Mrglnotes blub grglfail</value>
+  </data>
+  <data name="Life it settles at" xml:space="preserve">
+    <value>Mrglglgl grglsettle</value>
+  </data>
+  <data name="Rainbow · 1000" xml:space="preserve">
+    <value>Mrglbow · 1000</value>
+  </data>
+  <data name="Half bar · 500" xml:space="preserve">
+    <value>Mrglhalf blrgl · 500</value>
+  </data>
 </root>

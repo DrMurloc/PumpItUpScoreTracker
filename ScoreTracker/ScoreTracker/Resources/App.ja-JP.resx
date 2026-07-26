@@ -6008,4 +6008,313 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>{0}譜面を{1}以上で（このフォルダーには{2}譜面のみ）</value>
   </data>
+  <data name="Life Calculator" xml:space="preserve">
+    <value>体力計算機</value>
+  </data>
+  <data name="What a miss actually costs you, and how much clean combo it takes to earn it back." xml:space="preserve">
+    <value>Miss の本当のコストと、それを取り戻すのに必要なクリーンコンボ数。</value>
+  </data>
+  <data name="NX2 / Prime data-mine" xml:space="preserve">
+    <value>NX2 / Prime データマイン</value>
+  </data>
+  <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
+    <value>これらの計算式は Team Infinitesimal が NX2 と Prime からデータマインしたものです。Phoenix や Phoenix 2 での再検証は誰も行っていないため、数値は正確な筐体値ではなく仕組みの形として捉えてください。</value>
+  </data>
+  <data name="of {0} max" xml:space="preserve">
+    <value>最大 {0} 中</value>
+  </data>
+  <data name="Visible bar" xml:space="preserve">
+    <value>視覚バー</value>
+  </data>
+  <data name="Overflow" xml:space="preserve">
+    <value>オーバーフロー</value>
+  </data>
+  <data name="Current life" xml:space="preserve">
+    <value>現在の体力</value>
+  </data>
+  <data name="12%" xml:space="preserve">
+    <value>12%</value>
+  </data>
+  <data name="Song start" xml:space="preserve">
+    <value>曲の開始</value>
+  </data>
+  <data name="Rainbow" xml:space="preserve">
+    <value>虹色</value>
+  </data>
+  <data name="Notes per press" xml:space="preserve">
+    <value>1回の押下あたりのノート数</value>
+  </data>
+  <data name="Reset to song start" xml:space="preserve">
+    <value>曲の開始に戻す</value>
+  </data>
+  <data name="Fill to max" xml:space="preserve">
+    <value>最大まで回復</value>
+  </data>
+  <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
+    <value>Phoenix 2 ではオーバーフローが完全に満タンになるとバーに電撃エフェクトが走ります。ゲームが隠れた体力の存在を認める唯一の瞬間です。</value>
+  </data>
+  <data name="Combo" xml:space="preserve">
+    <value>コンボ</value>
+  </data>
+  <data name="Multiplier is on the floor" xml:space="preserve">
+    <value>倍率は最低値です</value>
+  </data>
+  <data name="Notes since your last break" xml:space="preserve">
+    <value>最後の失敗からのノート数</value>
+  </data>
+  <data name="Gain multiplier" xml:space="preserve">
+    <value>回復倍率</value>
+  </data>
+  <data name="A miss right now" xml:space="preserve">
+    <value>今 Miss したら</value>
+  </data>
+  <data name="Misses left" xml:space="preserve">
+    <value>残り Miss 数</value>
+  </data>
+  <data name="Back to back, from here" xml:space="preserve">
+    <value>ここから連続で</value>
+  </data>
+  <data name="Your survival budget" xml:space="preserve">
+    <value>あなたの生存予算</value>
+  </data>
+  <data name="One break every N notes" xml:space="preserve">
+    <value>Nノートごとに1回の失敗</value>
+  </data>
+  <data name="How much clean combo you have to buy back between breaks, and where your life ends up if you keep paying exactly that." xml:space="preserve">
+    <value>失敗の間にどれだけクリーンコンボを稼ぎ直す必要があるか、そしてそれをちょうど払い続けた場合に体力がどこへ落ち着くか。</value>
+  </data>
+  <data name="Combo, priced" xml:space="preserve">
+    <value>コンボの値段</value>
+  </data>
+  <data name="Chart view" xml:space="preserve">
+    <value>グラフ表示</value>
+  </data>
+  <data name="Where life settles" xml:space="preserve">
+    <value>体力の落ち着き先</value>
+  </data>
+  <data name="How long you survive" xml:space="preserve">
+    <value>生存できる長さ</value>
+  </data>
+  <data name="Starting from a full bar, how many notes you get before you fail. Series stop where you stop dying: past that combo the bar recovers faster than the breaks drain it." xml:space="preserve">
+    <value>満タンから始めて、失敗するまでに何ノート持つか。死ななくなる地点で系列は途切れます。そのコンボを超えると、失敗で減る速さより回復の方が速くなります。</value>
+  </data>
+  <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
+    <value>Nノートごとに1回失敗し続けると、体力はどこかに収束します。崖の下ではゼロに収束します。曲線は緩やかに落ちるのではなく、崖のように落ちます。倍率を建て直すより速く倍率が死んでいるからです。</value>
+  </data>
+  <data name="Level only buys you overflow" xml:space="preserve">
+    <value>レベルが買えるのはオーバーフローだけ</value>
+  </data>
+  <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
+    <value>虹色バーはレベル1でも29でも1000体力です。難しいチャートが与えてくれるのはバーの裏側の体力、つまり筐体には見えず、レベルによって変わる唯一のものです。Miss 1回あたりに必要なコンボは、どのレベルでも同じです。</value>
+  </data>
+  <data name="Lv" xml:space="preserve">
+    <value>Lv</value>
+  </data>
+  <data name="Total life" xml:space="preserve">
+    <value>総体力</value>
+  </data>
+  <data name="Visible bar — always 1000" xml:space="preserve">
+    <value>視覚バー — 常に1000</value>
+  </data>
+  <data name="Overflow — 3 x level squared" xml:space="preserve">
+    <value>オーバーフロー — レベルの2乗×3</value>
+  </data>
+  <data name="Rules of thumb" xml:space="preserve">
+    <value>目安</value>
+  </data>
+  <data name="The cliff, not a slope" xml:space="preserve">
+    <value>坂ではなく崖</value>
+  </data>
+  <data name="Below {0} notes between misses you die at every level. At {0} you cling on at about 1% life. There is no gentle middle: under the cliff your multiplier never rebuilds, so your gain rounds to nothing." xml:space="preserve">
+    <value>Miss の間隔が {0} ノート未満だと、どのレベルでも死にます。{0} ならおよそ1%の体力で踏みとどまります。緩やかな中間はありません。崖の下では倍率が建て直せず、回復量がゼロに丸められます。</value>
+  </data>
+  <data name="A miss costs 40 notes" xml:space="preserve">
+    <value>Miss 1回は40ノート分</value>
+  </data>
+  <data name="Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life." xml:space="preserve">
+    <value>Miss は回復倍率をゼロにします。上限まで戻すには Perfect {0} 回、または Great {1} 回かかります。それまではほとんど体力の増えないノートを叩くことになります。</value>
+  </data>
+  <data name="The rainbow is expensive" xml:space="preserve">
+    <value>虹色は高くつく</value>
+  </data>
+  <data name="Holding a full visible bar costs {0} clean notes per miss, or {1} if you are hitting greats. Simply staying alive costs {2}. Most of your combo budget goes to looking healthy — and below level 10 it cannot be bought at all, because the overflow is thinner than one miss." xml:space="preserve">
+    <value>視覚バーを満タンに保つには Miss 1回あたりクリーン {0} ノート、Great 主体なら {1} ノート必要です。ただ生き残るだけなら {2} で済みます。コンボ予算の大半は「健康に見えること」に使われています。しかもレベル10未満では、オーバーフローが Miss 1回より薄いため、そもそも買えません。</value>
+  </data>
+  <data name="Bads are cheap, then they are not" xml:space="preserve">
+    <value>Bad は安い、そうでもない</value>
+  </data>
+  <data name="A bad is a flat −50 at any life; a miss is up to −270. But a bad still halves your multiplier, so back-to-back bads strangle recovery just as effectively." xml:space="preserve">
+    <value>Bad はどの体力でも一律 −50、Miss は最大 −270 です。ただし Bad も倍率を半減させるため、連続する Bad は同じくらい確実に回復の首を絞めます。</value>
+  </data>
+  <data name="The intro is the danger zone" xml:space="preserve">
+    <value>序盤が危険地帯</value>
+  </data>
+  <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
+    <value>どの曲も体力500・倍率ほぼゼロから始まります。連続 {0} Miss でどのレベルでも死にます。序盤を乗り切れば、レベル {1} では {2} 回まで耐えられます。走り出しは強く。</value>
+  </data>
+  <data name="A good is a dead note" xml:space="preserve">
+    <value>Good は死にノート</value>
+  </data>
+  <data name="Goods give no life, and — unlike perfects and greats — they do not build the multiplier either. They never hurt you. They just do not count." xml:space="preserve">
+    <value>Good は体力を与えず、Perfect や Great と違って倍率も積みません。害はありませんが、ただ数に入らないだけです。</value>
+  </data>
+  <data name="How the bar works" xml:space="preserve">
+    <value>バーの仕組み</value>
+  </data>
+  <data name="Gain" xml:space="preserve">
+    <value>回復</value>
+  </data>
+  <data name="A perfect at a capped multiplier." xml:space="preserve">
+    <value>倍率上限での Perfect。</value>
+  </data>
+  <data name="A great at a capped multiplier." xml:space="preserve">
+    <value>倍率上限での Great。</value>
+  </data>
+  <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
+    <value>同じ Perfect でも、コンボ前の曲開始時。</value>
+  </data>
+  <data name="A good, always." xml:space="preserve">
+    <value>Good は常に。</value>
+  </data>
+  <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
+    <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
+  </data>
+  <data name="Loss" xml:space="preserve">
+    <value>減少</value>
+  </data>
+  <data name="A miss at 1000 life or above — the worst it gets." xml:space="preserve">
+    <value>体力1000以上での Miss — 最悪のケース。</value>
+  </data>
+  <data name="A bad, flat, at any life." xml:space="preserve">
+    <value>Bad は体力に関わらず一律。</value>
+  </data>
+  <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
+    <value>体力100での Miss。減るほど Miss は安くなります。</value>
+  </data>
+  <data name="Below this life a miss costs less than a bad." xml:space="preserve">
+    <value>この体力を下回ると Miss の方が Bad より安くなります。</value>
+  </data>
+  <data name="miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50" xml:space="preserve">
+    <value>miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50</value>
+  </data>
+  <data name="The multiplier" xml:space="preserve">
+    <value>倍率</value>
+  </data>
+  <data name="The cap. Reached after 40 perfects." xml:space="preserve">
+    <value>上限。Perfect 40回で到達。</value>
+  </data>
+  <data name="Where every song starts you." xml:space="preserve">
+    <value>どの曲もここから始まります。</value>
+  </data>
+  <data name="A miss. In practice: straight to zero." xml:space="preserve">
+    <value>Miss。実質ゼロ直行。</value>
+  </data>
+  <data name="A bad. Roughly 22 notes of progress gone." xml:space="preserve">
+    <value>Bad。およそ22ノート分の積み上げが消えます。</value>
+  </data>
+  <data name="perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80" xml:space="preserve">
+    <value>perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80</value>
+  </data>
+  <data name="&quot;Lifebars are weird.&quot;" xml:space="preserve">
+    <value>&quot;Lifebars are weird.&quot;</value>
+  </data>
+  <data name="— Zelllooo" xml:space="preserve">
+    <value>— Zelllooo</value>
+  </data>
+  <data name="Formulas data-mined from NX2 and Prime by" xml:space="preserve">
+    <value>NX2 と Prime からのデータマイン元：</value>
+  </data>
+  <data name="Team Infinitesimal" xml:space="preserve">
+    <value>Team Infinitesimal</value>
+  </data>
+  <data name="Unconfirmed against Phoenix and Phoenix 2 — see the note at the top of the page." xml:space="preserve">
+    <value>Phoenix および Phoenix 2 では未確認です。ページ上部の注記を参照してください。</value>
+  </data>
+  <data name="Overflow full" xml:space="preserve">
+    <value>オーバーフロー満タン</value>
+  </data>
+  <data name="Into overflow" xml:space="preserve">
+    <value>オーバーフロー突入</value>
+  </data>
+  <data name="One miss from out" xml:space="preserve">
+    <value>Miss 1回で終了</value>
+  </data>
+  <data name="{0}% of the bar" xml:space="preserve">
+    <value>バーの {0}%</value>
+  </data>
+  <data name="Capped — perfects pay +{0}" xml:space="preserve">
+    <value>上限 — Perfect は +{0}</value>
+  </data>
+  <data name="{0} more perfects to cap" xml:space="preserve">
+    <value>上限まであと Perfect {0} 回</value>
+  </data>
+  <data name="and {0} notes of multiplier" xml:space="preserve">
+    <value>さらに倍率 {0} ノート分</value>
+  </data>
+  <data name="multiplier already gone" xml:space="preserve">
+    <value>倍率はすでにゼロ</value>
+  </data>
+  <data name="Just stay alive" xml:space="preserve">
+    <value>とにかく生き残る</value>
+  </data>
+  <data name="Impossible at level {0} — the overflow is thinner than one miss." xml:space="preserve">
+    <value>レベル {0} では不可能 — オーバーフローが Miss 1回より薄いためです。</value>
+  </data>
+  <data name="Hold half the bar" xml:space="preserve">
+    <value>バーの半分を保つ</value>
+  </data>
+  <data name="Hold the rainbow" xml:space="preserve">
+    <value>虹色を保つ</value>
+  </data>
+  <data name="Hold the rainbow, on bads" xml:space="preserve">
+    <value>Bad で虹色を保つ</value>
+  </data>
+  <data name="Impossible at level {0} — the overflow is thinner than one bad." xml:space="preserve">
+    <value>レベル {0} では不可能 — オーバーフローが Bad 1回より薄いためです。</value>
+  </data>
+  <data name="Those assume perfects in between. On greats the same three cost {0}, {1} and {2} notes." xml:space="preserve">
+    <value>以上は間を Perfect で埋めた場合です。Great の場合、同じ3つは {0}、{1}、{2} ノートになります。</value>
+  </data>
+  <data name="From the opening 500 life, {0} straight misses or {1} straight bads end the run — {2} and {3} once the overflow is full." xml:space="preserve">
+    <value>開始時の体力500からは、連続 {0} Miss または連続 {1} Bad で終了します。オーバーフローが満タンなら {2} 回と {3} 回です。</value>
+  </data>
+  <data name="notes per bad" xml:space="preserve">
+    <value>Bad 1回あたりのノート数</value>
+  </data>
+  <data name="notes per miss" xml:space="preserve">
+    <value>Miss 1回あたりのノート数</value>
+  </data>
+  <data name="Settles at a full bar — {0} life" xml:space="preserve">
+    <value>満タンで落ち着きます — 体力 {0}</value>
+  </data>
+  <data name="Settles at {0} life, {1}% of the bar" xml:space="preserve">
+    <value>体力 {0} で落ち着きます、バーの {1}%</value>
+  </data>
+  <data name="Perfect combo, miss break" xml:space="preserve">
+    <value>Perfect コンボ、Miss で失敗</value>
+  </data>
+  <data name="Great combo, miss break" xml:space="preserve">
+    <value>Great コンボ、Miss で失敗</value>
+  </data>
+  <data name="Perfect combo, bad break" xml:space="preserve">
+    <value>Perfect コンボ、Bad で失敗</value>
+  </data>
+  <data name="Great combo, bad break" xml:space="preserve">
+    <value>Great コンボ、Bad で失敗</value>
+  </data>
+  <data name="Combo between breaks" xml:space="preserve">
+    <value>失敗の間のコンボ</value>
+  </data>
+  <data name="Notes before you fail" xml:space="preserve">
+    <value>失敗までのノート数</value>
+  </data>
+  <data name="Life it settles at" xml:space="preserve">
+    <value>落ち着く体力</value>
+  </data>
+  <data name="Rainbow · 1000" xml:space="preserve">
+    <value>虹色 · 1000</value>
+  </data>
+  <data name="Half bar · 500" xml:space="preserve">
+    <value>バーの半分 · 500</value>
+  </data>
 </root>

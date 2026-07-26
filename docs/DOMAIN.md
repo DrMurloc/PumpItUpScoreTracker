@@ -18,6 +18,8 @@ For solution layout and patterns, see [ARCHITECTURE.md](ARCHITECTURE.md). For pr
 - **XX score** — the pre-Phoenix scoring scheme (combo and letter based). **Legacy** — retained for historical data; new feature work targets Phoenix only.
 - **Letter grade** — end-of-chart performance rating. Phoenix and XX have separate letter-grade systems (`PhoenixLetterGrade`, `XXLetterGrade`).
 - **Plate** — Phoenix-only secondary rating, based on per-step accuracy distribution. Modeled by `PhoenixPlate`.
+- **Judgment** — the per-step verdict: Perfect, Great, Good, Bad, Miss. Drives both score and the lifebar. Kept in English in every locale. Modeled by `Judgment`.
+- **Lifebar** — the health gauge. The **visible bar** is 0–1000 life (full = the rainbow bar); every song starts you at 500. Above 1000 sits the **overflow**, `3 × level²` of life the cabinet never shows you — the only thing a higher level changes. Phoenix 2 runs an electric effect along the bar when the overflow is completely full. A hidden **gain multiplier** (0.1 at song start, capped at 0.8, near-zeroed by a miss and halved by a bad) scales what clean notes pay, which is why misses cost far more than the life they take. Modeled by [`LifebarSimulator`](../ScoreTracker/ScoreTracker.SharedKernel/Models/LifebarSimulator.cs); derived answers live in `LifebarAnalysis` and surface on `/LifeCalculator` ([design](design/life-calculator-redesign.md)). Formulas are an NX2/Prime data-mine, unverified against Phoenix.
 
 ## Player progression
 
