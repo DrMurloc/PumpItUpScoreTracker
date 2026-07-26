@@ -146,9 +146,11 @@ public sealed class FolderLevelCalculatorTests
             charts, scores));
     }
 
-    private static FolderLevelRecord Standing(int size, int played, int average,
+    // The grade reads off the score at the tier's position, so these standings name that
+    // directly; the average rides along as the display number it is.
+    private static FolderLevelRecord Standing(int size, int played, int tierScore,
         MixEnum mix = MixEnum.Phoenix) =>
-        new(mix, ChartType.Single, DifficultyLevel.From(22), size, played, average);
+        new(mix, ChartType.Single, DifficultyLevel.From(22), size, played, tierScore, tierScore);
 
     [Fact]
     public void AFolderSeenForTheFirstTimeAnnouncesNothing()

@@ -120,15 +120,17 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
     }
 
     [Fact]
-    public void OnlyTheWidestSizeSpendsRoomOnChartCounts()
+    public void TheCompactSizeDropsChartCountsAndEverythingTallerKeepsThem()
     {
+        // A row is the same height at every stacked size, so detail splits on one line rather
+        // than easing in: 2x1 is the compact variant, 2x2 and taller carry the counts.
         GivenFolder(ChartType.Single, 22, 10, 930000, 930000);
 
-        var narrow = Render("2x2", (ChartType.Single, 22));
-        var wide = Render("2x4", (ChartType.Single, 22));
+        var compact = Render("2x1", (ChartType.Single, 22));
+        var tall = Render("2x2", (ChartType.Single, 22));
 
-        Assert.Empty(narrow.FindAll(".dash-fl-row-count"));
-        Assert.Contains("2 of 10", wide.Markup);
+        Assert.Empty(compact.FindAll(".dash-fl-row-count"));
+        Assert.Contains("2 of 10", tall.Markup);
     }
 
     [Theory]

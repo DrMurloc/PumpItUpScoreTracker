@@ -103,9 +103,11 @@ else
         _loaded = false;
 
         var size = SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.OneByOne;
-        // Ticks need a track tall enough to cut them into; counts need horizontal room.
+        // Every stacked size gives a row the same height — a taller cell holds more folders, not
+        // roomier ones — so detail splits on one line: 2x1 is the compact variant with slim bars
+        // and no ticks, and everything taller carries ticks and chart counts.
         _showTicks = size.Rows > 1;
-        _showCounts = size.Columns > 2;
+        _showCounts = size.Rows > 1;
         var capacity = FolderLevelsDefaults.CapacityFor(size);
 
         var config = WidgetConfigJson.Read<FolderLevelsConfig>(Widget.ConfigJson);

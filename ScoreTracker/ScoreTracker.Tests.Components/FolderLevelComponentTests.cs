@@ -17,9 +17,11 @@ namespace ScoreTracker.Tests.Components;
 /// </summary>
 public sealed class FolderLevelComponentTests : ComponentTestBase
 {
-    private static FolderLevelRecord Folder(int size, int played, int average,
+    // The grade reads off the score at the tier's position, so these standings name that
+    // directly; the average rides along as the display number it is.
+    private static FolderLevelRecord Folder(int size, int played, int tierScore,
         ChartType type = ChartType.Single, int level = 22, MixEnum mix = MixEnum.Phoenix) =>
-        new(mix, type, DifficultyLevel.From(level), size, played, average);
+        new(mix, type, DifficultyLevel.From(level), size, played, tierScore, tierScore);
 
     private static IReadOnlyList<PhoenixLetterGrade> Grades(params (PhoenixLetterGrade Grade, int Count)[] runs) =>
         runs.SelectMany(r => Enumerable.Repeat(r.Grade, r.Count)).ToArray();
