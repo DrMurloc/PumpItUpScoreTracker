@@ -6,6 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>6f4693e7-1ca7-4d9c-948c-e1b84341535d</UserSecretsId>
 	  <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+    <!-- RZ10012 is "unknown component name". Razor treats it as a warning and emits the tag
+         as literal HTML, so a misspelled or nonexistent component renders as an inert
+         element that looks plausible and does nothing - which is how ten dead range sliders
+         shipped. An unknown component is a build failure here. -->
+    <WarningsAsErrors>$(WarningsAsErrors);RZ10012</WarningsAsErrors>
   </PropertyGroup>
 	<PropertyGroup>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
