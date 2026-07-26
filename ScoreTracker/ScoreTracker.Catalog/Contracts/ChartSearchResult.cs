@@ -48,7 +48,7 @@ public enum ChartSearchSort
     Level,
     ScoringLevel,
     Popularity,
-    PassRate,
+    PassDifficulty,
     DebutEra,
     Name,
     Bpm,

@@ -43,7 +43,7 @@ public static class ChartSearchUrlParser
             ScoringLevelMax = Dbl(query, "SlMax"),
             ScoreStates = CsvEnum<ChartScoreStateFilter>(Str(query, "State")),
             PhoenixGradeMin = EnumValue<PhoenixLetterGrade>(Str(query, "PhxGrade")),
-            PhoenixPlateMin = EnumValue<PhoenixPlate>(Str(query, "PhxPlate")),
+            PhoenixPlates = CsvEnum<PhoenixPlate>(Str(query, "PhxPlate")),
             PhoenixScoreMin = Int(query, "PhxMin"),
             PhoenixScoreMax = Int(query, "PhxMax"),
             LegacyGradeMin = EnumValue<XXLetterGrade>(Str(query, "LegGrade")),

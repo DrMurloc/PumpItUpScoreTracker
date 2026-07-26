@@ -377,7 +377,7 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
         // Family facets judge a row by its own family only — Phoenix filters can never
         // exclude a legacy row on Phoenix terms, and vice versa. When only the other
         // family's filters are set, the row has no way to satisfy the expressed intent.
-        var phoenixSet = q.PhoenixGradeMin != null || q.PhoenixPlateMin != null ||
+        var phoenixSet = q.PhoenixGradeMin != null || q.PhoenixPlates is { Count: > 0 } ||
                          q.PhoenixScoreMin != null || q.PhoenixScoreMax != null;
         var legacySet = q.LegacyGradeMin != null;
         if (phoenixSet || legacySet)
@@ -392,8 +392,9 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
                 if (!phoenixSet) return false;
                 if (q.PhoenixGradeMin != null &&
                     (row.My?.PhoenixGrade == null || row.My.PhoenixGrade < q.PhoenixGradeMin)) return false;
-                if (q.PhoenixPlateMin != null &&
-                    (row.My?.PhoenixPlate == null || row.My.PhoenixPlate < q.PhoenixPlateMin)) return false;
+                if (q.PhoenixPlates is { Count: > 0 } &&
+                    (row.My?.PhoenixPlate == null ||
+                     !q.PhoenixPlates.Contains(row.My.PhoenixPlate.Value))) return false;
                 if (q.PhoenixScoreMin != null &&
                     (row.My?.PhoenixScore == null || row.My.PhoenixScore < q.PhoenixScoreMin)) return false;
                 if (q.PhoenixScoreMax != null &&
@@ -439,7 +440,9 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
                 : rows.OrderBy(r => (int)r.Chart.Level).ThenBy(DifficultySignal),
             ChartSearchSort.ScoringLevel => NullsLast(DifficultySignalOrNull),
             ChartSearchSort.Popularity => By(r => r.ScoreCount),
-            ChartSearchSort.PassRate => NullsLast(PassRate),
+            // Pass Difficulty is the community lens, not the raw rate: the ramp already encodes
+            // "hard for its level", where a rate needs a sample floor to mean anything.
+            ChartSearchSort.PassDifficulty => NullsLast(r => r.PassDifficulty == null ? null : (double)r.PassDifficulty.Value),
             ChartSearchSort.DebutEra => By(r => r.DebutMix.DisplayOrder()),
             ChartSearchSort.Name => By(r => r.Chart.Song.Name.ToString()),
             ChartSearchSort.Bpm => NullsLast(r => r.Chart.Song.Bpm == null ? null : (double)r.Chart.Song.Bpm.Value.Max),

@@ -59,9 +59,9 @@ public sealed class ChartsPageTests : ComponentTestBase
         _mediator.Setup(m => m.Send(It.IsAny<GetSearchBadgesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ChartBadge>());
         _mediator.Setup(m => m.Send(It.IsAny<GetSearchArtistsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<string>());
+            .ReturnsAsync(Array.Empty<ChartSearchVocabularyEntry>());
         _mediator.Setup(m => m.Send(It.IsAny<GetSearchStepArtistsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<string>());
+            .ReturnsAsync(Array.Empty<ChartSearchVocabularyEntry>());
         _mediator.Setup(m => m.Send(It.IsAny<ScoreTracker.OfficialMirror.Contracts.Queries.GetOfficialPopularityQuery>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ScoreTracker.OfficialMirror.Contracts.OfficialPopularityRecord>());
@@ -407,9 +407,9 @@ public sealed class ChartsPageTests : ComponentTestBase
                 new ChartBadge("staggered_bracket", "Staggered Brackets", BadgeCategory.Brackets)
             });
         _mediator.Setup(m => m.Send(It.IsAny<GetSearchArtistsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<string>());
+            .ReturnsAsync(Array.Empty<ChartSearchVocabularyEntry>());
         _mediator.Setup(m => m.Send(It.IsAny<GetSearchStepArtistsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<string>());
+            .ReturnsAsync(Array.Empty<ChartSearchVocabularyEntry>());
         _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
             .Callback<IRequest<ChartSearchResultPage>, CancellationToken>((q, _) => _lastQuery = (SearchChartsQuery)q)
             .ReturnsAsync(() => new ChartSearchResultPage(new[] { MakeResult("District 1", 21) }, 1,

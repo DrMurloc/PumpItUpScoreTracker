@@ -130,8 +130,8 @@ else
                         @onclick="() => SelectSort(ChartSearchSort.Nps)">@L["NPS"]@SortMark(ChartSearchSort.Nps)</th>
                     <th class="@SortableHeaderClass(ChartSearchSort.Bpm)" role="button" tabindex="0"
                         @onclick="() => SelectSort(ChartSearchSort.Bpm)">@L["BPM"]@SortMark(ChartSearchSort.Bpm)</th>
-                    <th class="@SortableHeaderClass(ChartSearchSort.PassRate)" role="button" tabindex="0"
-                        @onclick="() => SelectSort(ChartSearchSort.PassRate)">@L["Pass rate"]@SortMark(ChartSearchSort.PassRate)</th>
+                    <th class="@SortableHeaderClass(ChartSearchSort.PassDifficulty)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.PassDifficulty)">@L["Pass Difficulty"]@SortMark(ChartSearchSort.PassDifficulty)</th>
                     <th class="@SortableHeaderClass(ChartSearchSort.Popularity)" role="button" tabindex="0"
                         @onclick="() => SelectSort(ChartSearchSort.Popularity)">@L["Scores"]@SortMark(ChartSearchSort.Popularity)</th>
                     @if (CurrentUser.IsLoggedIn)
@@ -347,8 +347,9 @@ else
             @if (Shows("artist"))
             {
                 <div class="srp-facet">
-                    <MudAutocomplete T="string" Value="@null" ValueChanged="AddArtist" Label="@L["Song Artist"]"
-                                     SearchFunc="SearchArtists" Clearable="true" CoerceText="false" CoerceValue="false"
+                    <MudAutocomplete T="ChartSearchVocabularyEntry" Value="_noVocabularyPick" ValueChanged="AddArtist"
+                                     Label="@L["Song Artist"]" SearchFunc="SearchArtists" Clearable="true"
+                                     ToStringFunc="VocabularyLabel" CoerceText="false" CoerceValue="false"
                                      Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true"></MudAutocomplete>
                     @if (_artists.Count > 0)
                     {
@@ -366,8 +367,9 @@ else
             @if (Shows("stepArtist"))
             {
                 <div class="srp-facet">
-                    <MudAutocomplete T="string" Value="@null" ValueChanged="AddStepArtist" Label="@L["Step Artist"]"
-                                     SearchFunc="SearchStepArtists" Clearable="true" CoerceText="false" CoerceValue="false"
+                    <MudAutocomplete T="ChartSearchVocabularyEntry" Value="_noVocabularyPick" ValueChanged="AddStepArtist"
+                                     Label="@L["Step Artist"]" SearchFunc="SearchStepArtists" Clearable="true"
+                                     ToStringFunc="VocabularyLabel" CoerceText="false" CoerceValue="false"
                                      Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true"></MudAutocomplete>
                     @if (_stepArtists.Count > 0)
                     {
@@ -553,29 +555,35 @@ else
                 }
                 @if (CurrentUser.IsLoggedIn && ModernInScope)
                 {
-                    @if (Shows("phoenixGrade"))
-                    {
-                        <div class="srp-facet">
-                            <div class="srp-facet-head">@L["Phoenix grade"] <span class="srp-facet-value">@(_phoenixGradeMin?.GetName() ?? L["Any"].Value)</span></div>
-                            <MudSlider T="int" Value="GradeIndex(_phoenixGradeMin)" ValueChanged="SetPhoenixGradeIndex"
-                                       Min="0" Max="@(PhoenixGrades.Length)" Step="1"
-                                       Color="Color.Primary" Size="Size.Small"></MudSlider>
-                        </div>
-                    }
+                    @* Plates are a set, not a floor: "MG or PG" is a real question and a
+                       floor cannot ask it. Each chip wears its own plate colour. *@
                     @if (Shows("phoenixPlate"))
                     {
                         <div class="srp-facet">
-                            <div class="srp-facet-head">@L["Phoenix plate"] <span class="srp-facet-value">@(_phoenixPlateMin?.GetShorthand() ?? L["Any"].Value)</span></div>
-                            <MudSlider T="int" Value="PlateIndex(_phoenixPlateMin)" ValueChanged="SetPhoenixPlateIndex"
-                                       Min="0" Max="@(PhoenixPlates.Length)" Step="1"
-                                       Color="Color.Primary" Size="Size.Small"></MudSlider>
+                            <div class="srp-facet-head">@L["Phoenix plate"]</div>
+                            <div class="srp-chipset">
+                                @foreach (var plate in PhoenixPlates)
+                                {
+                                    var captured = plate;
+                                    <span class="srp-facet-chip @(_phoenixPlates.Contains(captured) ? "srp-facet-chip-on" : "")"
+                                          style="--plate-chip:@ThemeScales.PlateColor(captured)"
+                                          role="button" tabindex="0" @onclick="() => TogglePlate(captured)">
+                                        @captured.GetShorthand()
+                                    </span>
+                                }
+                            </div>
                         </div>
                     }
                     @if (Shows("phoenixScore"))
                     {
+                        @* One control, not two: a Phoenix grade IS the score's floor, so a
+                           separate "grade at least" slider asked the same question in coarser
+                           units. The track's ticks and readout name the grade each end sits
+                           in, so "AA or better" is the AA floor and you can still say
+                           "between A and AA" — which the grade slider never could. *@
                         <div class="srp-facet">
-                            <RangeSlider Label="@L["Phoenix score"]" ValueText="@RangeLabel(_phoenixScoreMin, _phoenixScoreMax, 0, 1000000)"
-                                         Format="ScoreText" Min="0" Max="1000000" Step="5000"
+                            <RangeSlider Label="@L["Phoenix score"]" ValueText="@PhoenixScoreRangeLabel"
+                                         Format="GradedScoreText" Min="0" Max="1000000" Step="5000"
                                          ValueMin="_phoenixScoreMin ?? 0" ValueMax="_phoenixScoreMax ?? 1000000"
                                          ValueMinChanged="v => SetPhoenixScoreMin(v)" ValueMaxChanged="v => SetPhoenixScoreMax(v)"></RangeSlider>
                         </div>
@@ -650,7 +658,7 @@ else
     private ChartSearchRanges? _ranges;
     private const string ShownFiltersKey = "Charts__ShownFilters";
     private PhoenixLetterGrade? _phoenixGradeMin;
-    private PhoenixPlate? _phoenixPlateMin;
+    private List<PhoenixPlate> _phoenixPlates = new();
     private int? _phoenixScoreMin;
     private int? _phoenixScoreMax;
     private XXLetterGrade? _legacyGradeMin;
@@ -682,8 +690,10 @@ else
     private ISet<Guid> _todoCharts = new HashSet<Guid>();
 
     private IReadOnlyList<ChartBadge> _badgeVocabulary = Array.Empty<ChartBadge>();
-    private IReadOnlyList<string> _artistVocabulary = Array.Empty<string>();
-    private IReadOnlyList<string> _stepArtistVocabulary = Array.Empty<string>();
+    private IReadOnlyList<ChartSearchVocabularyEntry> _artistVocabulary =
+        Array.Empty<ChartSearchVocabularyEntry>();
+    private IReadOnlyList<ChartSearchVocabularyEntry> _stepArtistVocabulary =
+        Array.Empty<ChartSearchVocabularyEntry>();
     private bool _vocabularyLoaded;
 
     private int PageCount => (int)Math.Ceiling(_totalCount / (double)PageSize);
@@ -788,7 +798,7 @@ else
 
     private static readonly ChartSearchSort[] SortOrder =
     {
-        ChartSearchSort.Level, ChartSearchSort.ScoringLevel, ChartSearchSort.Popularity, ChartSearchSort.PassRate,
+        ChartSearchSort.Level, ChartSearchSort.ScoringLevel, ChartSearchSort.Popularity, ChartSearchSort.PassDifficulty,
         ChartSearchSort.DebutEra, ChartSearchSort.Name, ChartSearchSort.Bpm, ChartSearchSort.Nps,
         ChartSearchSort.Duration, ChartSearchSort.MyGrade, ChartSearchSort.MyRecent
     };
@@ -870,7 +880,7 @@ else
         _scoringLevelMin = SlMinParam;
         _scoringLevelMax = SlMaxParam;
         _phoenixGradeMin = Enum.TryParse<PhoenixLetterGrade>(PhxGradeParam, true, out var pg) ? pg : null;
-        _phoenixPlateMin = Enum.TryParse<PhoenixPlate>(PhxPlateParam, true, out var pp) ? pp : null;
+        _phoenixPlates = ParseCsvEnum<PhoenixPlate>(PhxPlateParam);
         _phoenixScoreMin = PhxMinParam;
         _phoenixScoreMax = PhxMaxParam;
         _legacyGradeMin = Enum.TryParse<XXLetterGrade>(LegGradeParam, true, out var lg) ? lg : null;
@@ -951,7 +961,7 @@ else
             ["SlMin"] = _scoringLevelMin,
             ["SlMax"] = _scoringLevelMax,
             ["PhxGrade"] = _phoenixGradeMin?.ToString(),
-            ["PhxPlate"] = _phoenixPlateMin?.ToString(),
+            ["PhxPlate"] = Csv(_phoenixPlates),
             ["PhxMin"] = _phoenixScoreMin,
             ["PhxMax"] = _phoenixScoreMax,
             ["LegGrade"] = _legacyGradeMin?.ToString(),
@@ -1060,7 +1070,7 @@ else
             DurationMin = _durationMin,
             DurationMax = _durationMax,
             PhoenixGradeMin = _phoenixGradeMin,
-            PhoenixPlateMin = _phoenixPlateMin,
+            PhoenixPlates = _phoenixPlates.Count == 0 ? null : _phoenixPlates,
             PhoenixScoreMin = _phoenixScoreMin,
             PhoenixScoreMax = _phoenixScoreMax,
             LegacyGradeMin = _legacyGradeMin,
@@ -1269,12 +1279,7 @@ else
             if (CurrentUser.IsLoggedIn)
             {
                 AddListChips(chips, _scoreStates, s => L[ScoreStateName(s)].Value);
-                if (_phoenixGradeMin != null)
-                    chips.Add(new QueryChip($"{L["Grade"]} ≥ {_phoenixGradeMin.Value.GetName()}", false,
-                        () => SetPhoenixGradeMin(null)));
-                if (_phoenixPlateMin != null)
-                    chips.Add(new QueryChip($"{L["Plate"]} ≥ {_phoenixPlateMin.Value.GetShorthand()}", false,
-                        () => SetPhoenixPlateMin(null)));
+                AddListChips(chips, _phoenixPlates, p => p.GetShorthand());
                 if (_phoenixScoreMin != null || _phoenixScoreMax != null)
                     chips.Add(RangeChip(L["Score"], _phoenixScoreMin?.ToString("N0"), _phoenixScoreMax?.ToString("N0"),
                         async () =>
@@ -1388,7 +1393,7 @@ else
         _durationMin = null;
         _durationMax = null;
         _phoenixGradeMin = null;
-        _phoenixPlateMin = null;
+        _phoenixPlates.Clear();
         _phoenixScoreMin = null;
         _phoenixScoreMax = null;
         _legacyGradeMin = null;
@@ -1435,6 +1440,7 @@ else
     private Task ToggleCoOpPlayers(int players) => Toggle(_coOpPlayers, players);
     private Task ToggleSlot(LegacySlot slot) => Toggle(_legacySlots, slot);
     private Task ToggleDebutMix(MixEnum mix) => Toggle(_debutMixes, mix);
+    private Task TogglePlate(PhoenixPlate plate) => Toggle(_phoenixPlates, plate);
 
     private static readonly int[] CoOpPlayerRange = { 2, 3, 4, 5 };
 
@@ -1501,10 +1507,9 @@ else
                     () => { _scoringLevelMin = null; _scoringLevelMax = null; }),
                 new("lists", L["Favorites"] + " / " + L["To Do"], mine,
                     () => _onlyFavorites || _onlyToDo, () => { _onlyFavorites = false; _onlyToDo = false; }),
-                new("phoenixGrade", L["Phoenix grade"], mine && modern,
-                    () => _phoenixGradeMin != null, () => _phoenixGradeMin = null),
+                // No separate grade entry: the score range says it exactly, in finer units.
                 new("phoenixPlate", L["Phoenix plate"], mine && modern,
-                    () => _phoenixPlateMin != null, () => _phoenixPlateMin = null),
+                    () => _phoenixPlates.Count > 0, () => _phoenixPlates.Clear()),
                 new("phoenixScore", L["Phoenix score"], mine && modern,
                     () => _phoenixScoreMin != null || _phoenixScoreMax != null,
                     () => { _phoenixScoreMin = null; _phoenixScoreMax = null; }),
@@ -1558,8 +1563,23 @@ else
         if (dropped.Length > 0) await ApplyChange();
     }
 
-    private async Task AddArtist(string? artist)
+    // The artist autocompletes are finders, not fields: each pick is appended to a list and
+    // the box clears, so its bound value stays empty. A typed field rather than a literal
+    // null, which Razor cannot infer a generic from.
+    private readonly ChartSearchVocabularyEntry? _noVocabularyPick = null;
+
+    /// <summary>
+    ///     How an option reads in the list: the name plus how many charts it would narrow to.
+    ///     The count is decoration — the filter itself is only ever the name.
+    /// </summary>
+    private static string VocabularyLabel(ChartSearchVocabularyEntry? entry)
     {
+        return entry == null ? string.Empty : $"{entry.Value} ({entry.ChartCount})";
+    }
+
+    private async Task AddArtist(ChartSearchVocabularyEntry? entry)
+    {
+        var artist = entry?.Value;
         if (string.IsNullOrWhiteSpace(artist) ||
             _artists.Contains(artist, StringComparer.OrdinalIgnoreCase)) return;
         _artists.Add(artist);
@@ -1578,29 +1598,33 @@ else
         await ApplyChange();
     }
 
-    private async Task AddStepArtist(string? artist)
+    private async Task AddStepArtist(ChartSearchVocabularyEntry? entry)
     {
+        var artist = entry?.Value;
         if (string.IsNullOrWhiteSpace(artist) ||
             _stepArtists.Contains(artist, StringComparer.OrdinalIgnoreCase)) return;
         _stepArtists.Add(artist);
         await ApplyChange();
     }
 
-    private Task<IEnumerable<string>> SearchArtists(string? value, CancellationToken cancellationToken)
+    private Task<IEnumerable<ChartSearchVocabularyEntry>> SearchArtists(string? value,
+        CancellationToken cancellationToken)
     {
         return Task.FromResult(FilterVocabulary(_artistVocabulary, value));
     }
 
-    private Task<IEnumerable<string>> SearchStepArtists(string? value, CancellationToken cancellationToken)
+    private Task<IEnumerable<ChartSearchVocabularyEntry>> SearchStepArtists(string? value,
+        CancellationToken cancellationToken)
     {
         return Task.FromResult(FilterVocabulary(_stepArtistVocabulary, value));
     }
 
-    private static IEnumerable<string> FilterVocabulary(IReadOnlyList<string> vocabulary, string? value)
+    private static IEnumerable<ChartSearchVocabularyEntry> FilterVocabulary(
+        IReadOnlyList<ChartSearchVocabularyEntry> vocabulary, string? value)
     {
         return string.IsNullOrWhiteSpace(value)
             ? vocabulary
-            : vocabulary.Where(v => v.Contains(value, StringComparison.OrdinalIgnoreCase));
+            : vocabulary.Where(v => v.Value.Contains(value, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -1742,6 +1766,21 @@ else
         return score >= 1000000 ? "1M" : $"{score / 1000}k";
     }
 
+    /// <summary>
+    ///     A score tick, named by the grade it earns. This is what lets one control replace
+    ///     the old score-range plus grade-floor pair: the grade IS the floor the score cleared
+    ///     (PhoenixLetterGrade.LetterGradeFor), and it is per-mix, so the label follows the
+    ///     searched mix rather than assuming Phoenix 1's thresholds.
+    /// </summary>
+    private string GradedScoreText(int score)
+    {
+        return $"{PhoenixScore.From(Math.Clamp(score, 0, 1000000)).LetterGradeFor(_mix).GetName()} {ScoreText(score)}";
+    }
+
+    private string PhoenixScoreRangeLabel => _phoenixScoreMin == null && _phoenixScoreMax == null
+        ? L["Any"]
+        : $"{GradedScoreText(_phoenixScoreMin ?? 0)} – {GradedScoreText(_phoenixScoreMax ?? 1000000)}";
+
     /// <summary>The tier tracks ride the ramp's index; a tick names the category it lands on.</summary>
     private string TierText(int index)
     {
@@ -1767,12 +1806,6 @@ else
     private async Task SetPhoenixGradeIndex(int index)
     {
         _phoenixGradeMin = index <= 0 ? null : PhoenixGrades[Math.Min(index, PhoenixGrades.Length) - 1];
-        await ApplyChange();
-    }
-
-    private async Task SetPhoenixPlateIndex(int index)
-    {
-        _phoenixPlateMin = index <= 0 ? null : PhoenixPlates[Math.Min(index, PhoenixPlates.Length) - 1];
         await ApplyChange();
     }
 
@@ -1857,12 +1890,6 @@ else
     private async Task SetPhoenixGradeMin(PhoenixLetterGrade? value)
     {
         _phoenixGradeMin = value;
-        await ApplyChange();
-    }
-
-    private async Task SetPhoenixPlateMin(PhoenixPlate? value)
-    {
-        _phoenixPlateMin = value;
         await ApplyChange();
     }
 
@@ -1951,7 +1978,7 @@ else
             ChartSearchSort.Level => "Level",
             ChartSearchSort.ScoringLevel => "Scoring level",
             ChartSearchSort.Popularity => "Popularity",
-            ChartSearchSort.PassRate => "Pass rate",
+            ChartSearchSort.PassDifficulty => "Pass Difficulty",
             ChartSearchSort.DebutEra => "Newest content",
             ChartSearchSort.Name => "Name",
             ChartSearchSort.Bpm => "BPM",

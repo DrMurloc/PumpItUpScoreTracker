@@ -15,8 +15,8 @@ namespace ScoreTracker.Catalog.Application;
 /// </summary>
 internal sealed class SearchVocabularyHandler :
     IRequestHandler<GetSearchBadgesQuery, IReadOnlyList<ChartBadge>>,
-    IRequestHandler<GetSearchArtistsQuery, IReadOnlyList<string>>,
-    IRequestHandler<GetSearchStepArtistsQuery, IReadOnlyList<string>>,
+    IRequestHandler<GetSearchArtistsQuery, IReadOnlyList<ChartSearchVocabularyEntry>>,
+    IRequestHandler<GetSearchStepArtistsQuery, IReadOnlyList<ChartSearchVocabularyEntry>>,
     IRequestHandler<GetSearchRangesQuery, ChartSearchRanges>
 {
     private readonly IChartRepository _charts;
@@ -86,28 +86,39 @@ internal sealed class SearchVocabularyHandler :
             .ToArray();
     }
 
-    public async Task<IReadOnlyList<string>> Handle(GetSearchArtistsQuery request,
+    public async Task<IReadOnlyList<ChartSearchVocabularyEntry>> Handle(GetSearchArtistsQuery request,
         CancellationToken cancellationToken)
     {
-        return await DistinctInMix(request.Mix, c => c.Song.Artist.ToString(), cancellationToken);
+        return await CountedInMix(request.Mix, c => c.Song.Artist.ToString(), cancellationToken);
     }
 
-    public async Task<IReadOnlyList<string>> Handle(GetSearchStepArtistsQuery request,
+    public async Task<IReadOnlyList<ChartSearchVocabularyEntry>> Handle(GetSearchStepArtistsQuery request,
         CancellationToken cancellationToken)
     {
-        return await DistinctInMix(request.Mix, c => c.StepArtist?.ToString(), cancellationToken);
+        return await CountedInMix(request.Mix, c => c.StepArtist?.ToString(), cancellationToken);
     }
 
-    private async Task<IReadOnlyList<string>> DistinctInMix(MixEnum mix,
+    /// <summary>
+    ///     Distinct values with their chart counts. The first spelling encountered wins as the
+    ///     label — matching is case-insensitive, so "BanYa" and "Banya" are one artist with one
+    ///     total rather than two half-counts.
+    /// </summary>
+    private async Task<IReadOnlyList<ChartSearchVocabularyEntry>> CountedInMix(MixEnum mix,
         Func<Chart, string?> value, CancellationToken cancellationToken)
     {
-        var values = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var counts = new Dictionary<string, (string Label, int Count)>(StringComparer.OrdinalIgnoreCase);
         foreach (var chart in await _charts.GetCharts(mix, cancellationToken: cancellationToken))
         {
             var v = value(chart);
-            if (!string.IsNullOrWhiteSpace(v)) values.Add(v);
+            if (string.IsNullOrWhiteSpace(v)) continue;
+            counts[v] = counts.TryGetValue(v, out var seen)
+                ? (seen.Label, seen.Count + 1)
+                : (v, 1);
         }
 
-        return values.OrderBy(v => v, StringComparer.OrdinalIgnoreCase).ToArray();
+        return counts.Values
+            .OrderBy(e => e.Label, StringComparer.OrdinalIgnoreCase)
+            .Select(e => new ChartSearchVocabularyEntry(e.Label, e.Count))
+            .ToArray();
     }
 }

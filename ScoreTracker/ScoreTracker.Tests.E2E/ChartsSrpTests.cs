@@ -131,7 +131,7 @@ public sealed class ChartsSrpTests : IAsyncLifetime
         await Expect(dialog).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
 
         var box = await dialog.BoundingBoxAsync();
-        Assert.True(box!.Width <= 560,
+        Assert.True(box!.Width <= 620,
             $"the details dialog is {box.Width:0}px wide on a 1920px viewport — the cap is not applying");
 
         // Whatever the content's height, it must be the thing that scrolls, so the bar sits

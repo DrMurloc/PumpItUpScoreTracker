@@ -55,8 +55,16 @@ public sealed record SearchChartsQuery : IQuery<ChartSearchResultPage>
 
     /// <summary>Any-of: "Unplayed or Failed" is a real ask ("everything I haven't beaten").</summary>
     public IReadOnlyList<ChartScoreStateFilter>? ScoreStates { get; init; }
+    /// <summary>
+    ///     Kept for shared links only. A Phoenix grade is a pure function of the score — the
+    ///     letter is which floor the score cleared — so the score range expresses it exactly
+    ///     and the drawer offers one control instead of two saying the same thing.
+    /// </summary>
     public PhoenixLetterGrade? PhoenixGradeMin { get; init; }
-    public PhoenixPlate? PhoenixPlateMin { get; init; }
+
+    /// <summary>The plates to accept, not a floor: "MG or PG" is a real question, and one a floor cannot ask.</summary>
+    public IReadOnlyList<PhoenixPlate>? PhoenixPlates { get; init; }
+
     public int? PhoenixScoreMin { get; init; }
     public int? PhoenixScoreMax { get; init; }
     public XXLetterGrade? LegacyGradeMin { get; init; }

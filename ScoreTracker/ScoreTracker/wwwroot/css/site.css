@@ -6898,6 +6898,19 @@ button.chart-card-art {
     border-color: var(--mix-primary);
 }
 
+/* A plate chip wears its own plate colour, so the row reads as the plate ladder it is rather
+   than five identical pills. --plate-chip is set inline from ThemeScales.PlateColor. */
+.srp-facet-chip[style*="--plate-chip"] {
+    color: color-mix(in srgb, var(--plate-chip) 62%, var(--mix-ink));
+    border-color: color-mix(in srgb, var(--plate-chip) 50%, transparent);
+}
+
+    .srp-facet-chip[style*="--plate-chip"].srp-facet-chip-on {
+        color: var(--mix-primary-contrast);
+        background: var(--plate-chip);
+        border-color: var(--plate-chip);
+    }
+
 .srp-facet-chip-on {
     color: var(--mix-primary-contrast);
     background: var(--mix-primary);

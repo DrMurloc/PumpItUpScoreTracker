@@ -95,6 +95,8 @@ public sealed class SearchVocabularyHandlerTests
             CancellationToken.None);
 
         Assert.Equal(2, artists.Count);
-        Assert.Equal(new[] { "EXC", "SPHAM" }, stepArtists.OrderBy(s => s));
+        Assert.Equal(new[] { "EXC", "SPHAM" }, stepArtists.Select(s => s.Value).OrderBy(s => s));
+        // The count rides along so an option says how far it narrows before you pick it.
+        Assert.All(stepArtists, s => Assert.True(s.ChartCount > 0));
     }
 }
