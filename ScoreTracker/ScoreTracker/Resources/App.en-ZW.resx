@@ -326,9 +326,6 @@
   <data name="Progress" xml:space="preserve">
     <value>Mrrglrglmrg</value>
   </data>
-  <data name="Progress Charts" xml:space="preserve">
-    <value>Mrrglrglmrg Mrglrglrgl</value>
-  </data>
   <data name="Public" xml:space="preserve">
     <value>Arglmrrgl</value>
     <comment>(on/off, if account is set to public)</comment>
@@ -1288,12 +1285,6 @@
   <data name="Best Attempts" xml:space="preserve">
 	  <value>Mrrglub Lrglglargurgblgrlrgl</value>
   </data>
-  <data name="XX Progress" xml:space="preserve">
-	  <value>XX Mrrglrglmrg</value>
-  </data>
-  <data name="Share Your Progress Page" xml:space="preserve">
-	  <value>Mrrgla Murlgrgl Mrrglrglmrg Murgbagl</value>
-  </data>
   <data name="Overview" xml:space="preserve">
 	  <value>Urgmrgl</value>
   </data>
@@ -1319,18 +1310,6 @@
   <data name="Unpassed" xml:space="preserve">
 	  <value>Grrrbrglurg</value>
   </data>
-  <data name="Overall Letters" xml:space="preserve">
-	  <value>Murglrgl Lrglarglrgl</value>
-  </data>
-  <data name="Overall Passes" xml:space="preserve">
-	  <value>Murglrgl Brglurgrgl</value>
-  </data>
-  <data name="Difficulty Letters" xml:space="preserve">
-	  <value>Grlgrgl Lrglarglrgl</value>
-  </data>
-  <data name="Difficulty Passes" xml:space="preserve">
-	  <value>Grlgrgl Brglurgrgl</value>
-  </data>
   <data name="Share Url" xml:space="preserve">
 	  <value>Mrrgla URL</value>
   </data>
@@ -1342,9 +1321,6 @@
   </data>
   <data name="Pass" xml:space="preserve">
 	  <value>Brglurg</value>
-  </data>
-  <data name="Difficulty Progress" xml:space="preserve">
-	  <value>Grlgrgl Mrrglrglmrg</value>
   </data>
   <data name="Passes" xml:space="preserve">
 	  <value>Brglurgrgl</value>
@@ -1361,14 +1337,8 @@
   <data name="Avg Plate" xml:space="preserve">
 	  <value>Lurglrglprgl Blgrlmrg</value>
   </data>
-  <data name="Passes By Level" xml:space="preserve">
-	  <value>Brglurgrgl Blgrl Rglmrgl</value>
-  </data>
   <data name="Remaining" xml:space="preserve">
 	  <value>Mrrglubgrl</value>
-  </data>
-  <data name="Score Distribution Lines" xml:space="preserve">
-	  <value>Grglrgl Glubmrrglrgl Lrglrgl</value>
   </data>
   <data name="Score Distribution" xml:space="preserve">
 	  <value>Grglrgl Glubmrrglrgl</value>

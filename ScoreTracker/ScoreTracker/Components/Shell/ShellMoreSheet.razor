@@ -24,8 +24,6 @@
             <div class="nav-section">@L["My Progress"]</div>
             @if (Model.IsLoggedIn)
             {
-                @* XX keeps its legacy progress page; Phoenix and Phoenix 2 share the Phoenix-style pages. *@
-                <ShellMenuItem Href=@(Model.CurrentMix == MixEnum.XX ? "/Progress" : "/Phoenix/Progress") Icon="@Icons.Material.Filled.BarChart">@L["Progress Charts"]</ShellMenuItem>
                 @if (Model.CurrentMix != MixEnum.XX)
                 {
                     <ShellMenuItem Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</ShellMenuItem>

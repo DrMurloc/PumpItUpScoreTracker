@@ -329,9 +329,6 @@
   <data name="Progress" xml:space="preserve">
     <value>Progression</value>
   </data>
-  <data name="Progress Charts" xml:space="preserve">
-    <value>Statistiques Joueur</value>
-  </data>
   <data name="Public" xml:space="preserve">
     <value>Publique</value>
     <comment>(on/off, si le compte est configuré en tant que publique)</comment>
@@ -1279,12 +1276,6 @@
   <data name="Best Attempts" xml:space="preserve">
     <value>Meilleures tentatives</value>
   </data>
-  <data name="XX Progress" xml:space="preserve">
-    <value>Progression XX</value>
-  </data>
-  <data name="Share Your Progress Page" xml:space="preserve">
-    <value>Partager votre page de progression</value>
-  </data>
   <data name="Overview" xml:space="preserve">
     <value>Vue d'ensemble</value>
   </data>
@@ -1310,18 +1301,6 @@
   <data name="Unpassed" xml:space="preserve">
     <value>Non Passed</value>
   </data>
-  <data name="Overall Letters" xml:space="preserve">
-    <value>Lettres globales</value>
-  </data>
-  <data name="Overall Passes" xml:space="preserve">
-    <value>Pass globaux</value>
-  </data>
-  <data name="Difficulty Letters" xml:space="preserve">
-    <value>Lettres par difficulté</value>
-  </data>
-  <data name="Difficulty Passes" xml:space="preserve">
-    <value>Pass par difficulté</value>
-  </data>
   <data name="Share Url" xml:space="preserve">
     <value>URL de partage</value>
   </data>
@@ -1333,9 +1312,6 @@
   </data>
   <data name="Pass" xml:space="preserve">
     <value>Pass</value>
-  </data>
-  <data name="Difficulty Progress" xml:space="preserve">
-    <value>Progression par difficulté</value>
   </data>
   <data name="Passes" xml:space="preserve">
     <value>Passes</value>
@@ -1352,14 +1328,8 @@
   <data name="Avg Plate" xml:space="preserve">
     <value>Plaque moyenne</value>
   </data>
-  <data name="Passes By Level" xml:space="preserve">
-    <value>Pass par niveau</value>
-  </data>
   <data name="Remaining" xml:space="preserve">
     <value>Restant</value>
-  </data>
-  <data name="Score Distribution Lines" xml:space="preserve">
-    <value>Lignes de distribution de scores</value>
   </data>
   <data name="Score Distribution" xml:space="preserve">
     <value>Distribution de scores</value>

@@ -171,7 +171,9 @@ server HTML.**
 
 Static-rendered. Markup parity with MainLayout 68–371: wordmark, the same nav groups with the
 same items and the same `L[…]` keys, same auth/gate/mix conditionals (`IsLoggedIn`,
-`IsGatedMix`, XX→`/Progress` vs `/Phoenix/Progress`), avatar block with the `onerror`-fallback
+`IsGatedMix`, XX→`/Progress` vs `/Phoenix/Progress` — *that Player Stats item is gone as of
+2026-07-26, retired for the home-page widgets; the `IsGatedMix` / `IsLoggedIn` conditionals it
+sat inside remain*), avatar block with the `onerror`-fallback
 `<img>` exactly as MainLayout 230–232, the hidden import-pulse span (D11), sign-in icon link
 when anonymous. Then the More sheet and `<nav class="bottom-nav">`.
 

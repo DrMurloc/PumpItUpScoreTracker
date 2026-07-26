@@ -477,17 +477,8 @@
   <data name="Difficulty Categorization" xml:space="preserve">
     <value>Categorización por dificultad</value>
   </data>
-  <data name="Difficulty Letters" xml:space="preserve">
-    <value>Letras por dificultad</value>
-  </data>
   <data name="Difficulty Level" xml:space="preserve">
     <value>Nivel de dificultad</value>
-  </data>
-  <data name="Difficulty Passes" xml:space="preserve">
-    <value>Pases por dificultad</value>
-  </data>
-  <data name="Difficulty Progress" xml:space="preserve">
-    <value>Progreso por dificultad</value>
   </data>
   <data name="Difficulty Range" xml:space="preserve">
     <value>Rango de dificultad</value>
@@ -957,12 +948,6 @@
   <data name="Other" xml:space="preserve">
     <value>Otro</value>
   </data>
-  <data name="Overall Letters" xml:space="preserve">
-    <value>Letras generales</value>
-  </data>
-  <data name="Overall Passes" xml:space="preserve">
-    <value>Pases generales</value>
-  </data>
   <data name="Overview" xml:space="preserve">
     <value>Resumen general</value>
   </data>
@@ -992,9 +977,6 @@
   </data>
   <data name="Passes by Competitive Level" xml:space="preserve">
     <value>Pases por nivel competitivo</value>
-  </data>
-  <data name="Passes By Level" xml:space="preserve">
-    <value>Pases por nivel</value>
   </data>
   <data name="Pending" xml:space="preserve">
     <value>Pendiente</value>
@@ -1137,9 +1119,6 @@
   <data name="Progress" xml:space="preserve">
     <value>Progreso</value>
   </data>
-  <data name="Progress Charts" xml:space="preserve">
-    <value>Estadísticas del jugador</value>
-  </data>
   <data name="Public" xml:space="preserve">
     <value>Pública</value>
   </data>
@@ -1254,9 +1233,6 @@
   <data name="Score Distribution By Player Level" xml:space="preserve">
     <value>Distribución de puntajes por nivel de jugador</value>
   </data>
-  <data name="Score Distribution Lines" xml:space="preserve">
-    <value>Líneas de distribución de puntajes</value>
-  </data>
   <data name="Score Formula Shoutout" xml:space="preserve">
     <value>¡Un saludo a MR_WEQ por hacer ingeniería inversa de esta fórmula de puntaje!</value>
   </data>
@@ -1337,9 +1313,6 @@
   </data>
   <data name="Share Url" xml:space="preserve">
     <value>URL para compartir</value>
-  </data>
-  <data name="Share Your Progress Page" xml:space="preserve">
-    <value>Comparta su página de progreso</value>
   </data>
   <data name="Show" xml:space="preserve">
     <value>Mostrar</value>
@@ -1811,9 +1784,6 @@
   </data>
   <data name="X/Y Uploaded. Z Remaining. W Failed to record" xml:space="preserve">
     <value>{0}/{1} subidos. {2} restantes. {3} fallaron al registrarse</value>
-  </data>
-  <data name="XX Progress" xml:space="preserve">
-    <value>Progreso XX</value>
   </data>
   <data name="XXLetterGrade" xml:space="preserve">
     <value>XXLetterGrade</value>
