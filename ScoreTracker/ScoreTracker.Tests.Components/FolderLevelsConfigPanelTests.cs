@@ -12,6 +12,7 @@ using ScoreTracker.HomePage.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Components.HomeWidgets;
 using ScoreTracker.Web.Services.HomeDashboard;
 using Xunit;
@@ -19,8 +20,10 @@ using Xunit;
 namespace ScoreTracker.Tests.Components;
 
 /// <summary>
-///     The Folder Levels config panel: folders come from the shared grid behind a popover, and
-///     the cell size caps how many fit (docs/design/folder-level-progression.md §6).
+///     The Folder Levels config panel and the grid it drives. The panel's own job is the popover
+///     trigger and the cap; the greying-out is FolderGrid's, so it is pinned there directly —
+///     MudPopover renders its content into a provider that a component-under-test has no tree for
+///     (docs/design/folder-level-progression.md §6).
 /// </summary>
 public sealed class FolderLevelsConfigPanelTests : ComponentTestBase
 {
@@ -56,58 +59,70 @@ public sealed class FolderLevelsConfigPanelTests : ComponentTestBase
     {
         var cut = Render("2x2", (ChartType.Single, 22));
 
-        Assert.Contains("Select Folders", cut.Markup);
-        Assert.Empty(cut.FindAll(".folder-grid"));
+        var trigger = cut.Find(".fl-cfg-anchor button");
+        Assert.Contains("Select Folders", trigger.TextContent);
+        Assert.Equal("false", trigger.GetAttribute("aria-expanded"));
 
-        cut.Find(".fl-cfg-anchor button").Click();
+        trigger.Click();
 
-        Assert.Single(cut.FindAll(".folder-grid"));
-    }
-
-    [Fact]
-    public void AFullWidgetGreysTheCellsItCannotTakeAndKeepsThePickedOnesLive()
-    {
-        // 2x2 holds four; hand it four so the grid is at its cap on open.
-        var cut = Render("2x2", (ChartType.Single, 20), (ChartType.Single, 21),
-            (ChartType.Single, 22), (ChartType.Single, 23));
-        cut.Find(".fl-cfg-anchor button").Click();
-
-        var cells = cut.FindAll(".folder-picker-level");
-        var picked = cells.Where(c => c.ClassList.Contains("folder-picker-current")).ToArray();
-        var unpicked = cells.Where(c => !c.ClassList.Contains("folder-picker-current")).ToArray();
-
-        Assert.Equal(4, picked.Length);
-        Assert.All(picked, c => Assert.False(c.HasAttribute("disabled")));
-        Assert.All(unpicked, c => Assert.True(c.HasAttribute("disabled")));
-    }
-
-    [Fact]
-    public void RoomLeftMeansEveryCellStaysLive()
-    {
-        var cut = Render("2x2", (ChartType.Single, 22));
-        cut.Find(".fl-cfg-anchor button").Click();
-
-        Assert.All(cut.FindAll(".folder-picker-level"), c => Assert.False(c.HasAttribute("disabled")));
+        Assert.Equal("true", cut.Find(".fl-cfg-anchor button").GetAttribute("aria-expanded"));
     }
 
     [Fact]
     public void ThePanelSaysHowManySlotsTheSizeHolds()
     {
-        var cut = Render("2x3", (ChartType.Single, 22));
-
-        Assert.Contains("1 of 7 folders", cut.Markup);
+        Assert.Contains("1 of 7 folders", Render("2x3", (ChartType.Single, 22)).Markup);
+        Assert.Contains("1 of 4 folders", Render("2x2", (ChartType.Single, 22)).Markup);
     }
 
     [Fact]
-    public void DroppingAPickFreesTheGridAgain()
+    public void PicksShowAsChipsSoTheChoiceIsVisibleWithTheGridClosed()
     {
-        var cut = Render("2x1", (ChartType.Single, 22), (ChartType.Single, 23));
-        cut.Find(".fl-cfg-anchor button").Click();
-        Assert.Contains(cut.FindAll(".folder-picker-level"), c => c.HasAttribute("disabled"));
+        var cut = Render("2x2", (ChartType.Single, 22), (ChartType.Double, 18));
 
-        // Tapping a picked cell removes it, which is how you make room.
-        cut.FindAll(".folder-picker-level").First(c => c.ClassList.Contains("folder-picker-current")).Click();
+        Assert.Contains("S22", cut.Markup);
+        Assert.Contains("D18", cut.Markup);
+    }
+
+    [Fact]
+    public void AFullGridGreysTheCellsItCannotTakeAndKeepsThePickedOnesLive()
+    {
+        // FolderGrid's own contract: a host at its cap greys the rest rather than looking live
+        // and swallowing the tap.
+        var picked = new HashSet<int> { 20, 21, 22, 23 };
+        var cut = RenderComponent<FolderGrid>(p => p
+            .Add(g => g.IsSelected, (t, l) => t == ChartType.Single && picked.Contains(l))
+            .Add(g => g.IsDisabled, (t, l) => !(t == ChartType.Single && picked.Contains(l))));
+
+        var cells = cut.FindAll(".folder-picker-level");
+        var live = cells.Where(c => c.ClassList.Contains("folder-picker-current")).ToArray();
+        var greyed = cells.Where(c => !c.ClassList.Contains("folder-picker-current")).ToArray();
+
+        Assert.Equal(4, live.Length);
+        Assert.All(live, c => Assert.False(c.HasAttribute("disabled")));
+        Assert.All(greyed, c => Assert.True(c.HasAttribute("disabled")));
+    }
+
+    [Fact]
+    public void RoomLeftMeansEveryCellStaysLive()
+    {
+        var cut = RenderComponent<FolderGrid>(p => p
+            .Add(g => g.IsSelected, (_, l) => l == 22)
+            .Add(g => g.IsDisabled, (_, _) => false));
 
         Assert.All(cut.FindAll(".folder-picker-level"), c => Assert.False(c.HasAttribute("disabled")));
+    }
+
+    [Fact]
+    public void ADisabledCellDoesNotRaiseAPick()
+    {
+        var picks = new List<int>();
+        var cut = RenderComponent<FolderGrid>(p => p
+            .Add(g => g.IsDisabled, (_, l) => l != 22)
+            .Add(g => g.LevelPicked, f => picks.Add(f.Level)));
+
+        cut.FindAll(".folder-picker-level").First(c => !c.HasAttribute("disabled")).Click();
+
+        Assert.Equal(new[] { 22 }, picks);
     }
 }

@@ -94,8 +94,9 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
         Assert.Contains("AA+", cut.Markup);
         Assert.Contains("50% complete", cut.Markup);
         Assert.Contains("5 to Folder Lamp", cut.Markup);
-        // Nothing else in a 1x1 names the folder, so the ball has to.
-        Assert.Contains("S22", cut.Find(".dash-fl-hero").TextContent);
+        // Nothing else in a 1x1 names the folder, so the ball has to — and the ball is art, so
+        // the folder's name rides its alt text.
+        Assert.Equal("S22", cut.Find(".dash-fl-hero img").GetAttribute("alt"));
     }
 
     [Fact]
