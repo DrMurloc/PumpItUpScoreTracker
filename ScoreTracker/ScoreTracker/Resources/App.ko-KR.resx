@@ -5901,9 +5901,6 @@
   <data name="Earned" xml:space="preserve">
     <value>획득함</value>
   </data>
-  <data name="Every chart in this folder is a Perfect Game." xml:space="preserve">
-    <value>이 폴더의 모든 채보가 퍼펙트 게임입니다.</value>
-  </data>
   <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
     <value>이 칭호를 가진 유저 모두가 프로필을 비공개로 설정했습니다.</value>
   </data>
@@ -5930,9 +5927,6 @@
   </data>
   <data name="One-offs" xml:space="preserve">
     <value>개별 칭호</value>
-  </data>
-  <data name="Paragon {0}" xml:space="preserve">
-    <value>파라곤 {0}</value>
   </data>
   <data name="Play count" xml:space="preserve">
     <value>플레이 횟수</value>
@@ -5969,9 +5963,6 @@
   </data>
   <data name="{0} more keep their profile private." xml:space="preserve">
     <value>{0}명이 프로필을 비공개로 설정했습니다.</value>
-  </data>
-  <data name="{0} of {1} charts at {2}" xml:space="preserve">
-    <value>{2} 이상 채보 {1}개 중 {0}개</value>
   </data>
   <data name="{0} of {1} earned" xml:space="preserve">
     <value>{1}개 중 {0}개 획득</value>

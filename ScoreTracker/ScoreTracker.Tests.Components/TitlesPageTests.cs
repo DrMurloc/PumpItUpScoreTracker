@@ -188,6 +188,38 @@ public sealed class TitlesPageTests : ComponentTestBase
     }
 
     [Fact]
+    public void ClosingTheDrawerStaysClosedWhenTheRestOfThePageRerenders()
+    {
+        // Field test: dismissing the drawer left the selected rung set, so the next render of
+        // anything else on the page opened it straight back up. The selection is now the only
+        // open state there is.
+        var page = Render();
+        page.FindAll(".title-pip")[0].Click();
+        Assert.NotEmpty(page.FindAll(".title-drawer"));
+
+        page.Find(".title-drawer-close").Click();
+        Assert.Empty(page.FindAll(".title-drawer"));
+
+        page.FindAll(".title-chip")[1].Click();
+
+        Assert.Empty(page.FindAll(".title-drawer"));
+    }
+
+    [Fact]
+    public void DismissingTheDrawerAnyOtherWayAlsoClearsTheSelection()
+    {
+        // The scrim and Escape come back through MudDrawer's OpenChanged rather than through
+        // the close button, and that was the path that used to leave the selection behind.
+        var page = Render();
+        page.FindAll(".title-pip")[0].Click();
+
+        var drawer = page.FindComponent<MudBlazor.MudDrawer>();
+        page.InvokeAsync(() => drawer.Instance.OpenChanged.InvokeAsync(false)).GetAwaiter().GetResult();
+
+        Assert.Empty(page.FindAll(".title-drawer"));
+    }
+
+    [Fact]
     public void TheDetailOfAnImportOnlyTitleExplainsItselfInsteadOfShowingABar()
     {
         var page = Render();

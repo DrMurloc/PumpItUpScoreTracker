@@ -1,4 +1,5 @@
 using ScoreTracker.Domain.Models.Titles;
+using ScoreTracker.Domain.Models.Titles.Phoenix;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -128,6 +129,37 @@ public static class TitleRails
             .Where(s => s.Total > 0)
             .ToArray();
     }
+
+    /// <summary>
+    ///     The title a player wears: the furthest rung they have earned on a progression rail.
+    ///     <para>
+    ///         Requirement order is NOT progression order and never has been — Expert Lv.2 asks
+    ///         80,000 on the 23s while Lv.5 asks 20,000 on the 25s, so the bigger number is the
+    ///         easier title. Phoenix folders rank by level then by rating, matching what
+    ///         TitleSaga already writes as your highest difficulty title. Phoenix 2 has no
+    ///         levels: its pools do rise monotonically, and the merged [P.B] ladder is the one
+    ///         you wear, with the per-type ladders standing in only until you hold a rung of it.
+    ///     </para>
+    /// </summary>
+    public static TitleRung? WornTitle(IEnumerable<TitleSectionRows> sections)
+    {
+        var progression = sections.FirstOrDefault(s => s.Section == TitleSection.Progression);
+        if (progression == null) return null;
+
+        TitleRung? Furthest(IEnumerable<TitleRailRow> rails)
+        {
+            return rails.SelectMany(r => r.Rungs)
+                .Where(r => r.State == RungState.Earned)
+                .OrderByDescending(r => r.Title is PhoenixDifficultyTitle d ? (int)d.Level : 0)
+                .ThenByDescending(r => r.Title.CompletionRequired)
+                .FirstOrDefault();
+        }
+
+        var merged = progression.Rails.Where(r => r.Name == MergedPoolRail).ToArray();
+        return Furthest(merged) ?? Furthest(progression.Rails.Where(r => r.Name != MergedPoolRail));
+    }
+
+    private static readonly Name MergedPoolRail = "[P.B]";
 
     private static TitleRung Rung(TitleProgress progress, TitleRarityRecord rarity)
     {

@@ -7111,22 +7111,6 @@ button.chart-card-art {
     border-style: dashed;
 }
 
-.title-pip .rung-no {
-    position: absolute;
-    top: 1px;
-    left: 3px;
-    font-size: 9px;
-    font-weight: 600;
-    opacity: .5;
-    z-index: 1;
-}
-
-.title-pip .rung-para {
-    font-size: 12.5px;
-    font-weight: 700;
-    letter-spacing: -.01em;
-}
-
 /* One-offs: titles with no ladder behind them. Name colour is how many players hold it,
    and the glow ramp orders the bands where hue cannot. */
 .title-badges {
@@ -7332,51 +7316,6 @@ button.chart-card-art {
 
 .title-hint b {
     color: var(--mix-ink);
-}
-
-/* The paragon ladder — what the old page stacked as a second progress bar. */
-.paragon-ladder {
-    display: flex;
-    gap: 3px;
-    flex-wrap: wrap;
-}
-
-.paragon-rung {
-    min-width: 26px;
-    height: 22px;
-    padding: 0 4px;
-    border-radius: 2px;
-    border: 1px solid color-mix(in srgb, var(--mix-ink) 16%, transparent);
-    font-family: var(--font-display);
-    font-size: 12px;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: color-mix(in srgb, var(--mix-ink) 32%, transparent);
-}
-
-.paragon-rung.have {
-    color: var(--mix-primary-contrast);
-    background: var(--metal);
-    border-color: var(--metal);
-}
-
-.paragon-rung.at {
-    outline: 2px solid var(--mix-accent);
-    outline-offset: 1px;
-}
-
-.paragon-tag {
-    font-family: var(--font-display);
-    font-size: 12px;
-    font-weight: 700;
-    padding: 0 5px;
-    border-radius: 2px;
-    border: 1px solid var(--metal);
-    color: var(--metal);
-    line-height: 17px;
-    flex: 0 0 auto;
 }
 
 .title-suggest {

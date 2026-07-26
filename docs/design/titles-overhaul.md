@@ -46,16 +46,20 @@ data and a rename would silently collapse a rail.
 
 ## The page
 
-- **Standing bar** — the title you wear and how much of the list you hold, above the fold. On
-  Phoenix 2 the worn title is the merged-pool `[P.B]` rung; the `[S]`/`[D]` ladders only stand in
-  until you have one.
-- **Rails** — one row per ladder. A rung shows its number, or its paragon grade in that grade's
-  own metal once earned. Only an in-progress rung carries a fill, and the fill is that rung's
-  climb from the rung below it (`CompletionFloor`), not from zero.
+- **Standing bar** — the title you wear and how much of the list you hold, above the fold. The
+  worn title is the **furthest** progression rung, which is not the dearest one: Expert Lv.2 asks
+  80,000 on the 23s where Lv.5 asks 20,000 on the 25s, so Phoenix ranks by folder level then
+  rating, matching what `TitleSaga` already writes as your highest difficulty title. On Phoenix 2
+  it is the merged-pool `[P.B]` rung; the `[S]`/`[D]` ladders only stand in until you have one.
+  (Field test round 4: shipped ordering by requirement alone, which read Expert Lv.2 for a player
+  on Lv.5.)
+- **Rails** — one row per ladder. Only an in-progress rung carries a fill, and the fill is that
+  rung's climb from the rung below it (`CompletionFloor`), not from zero.
 - **Boss breakers** tile instead of stacking — 20 rails of one or two rungs each read as a grid.
 - **One-offs** are a badge sheet. Name colour is rarity.
-- **Detail drawer** — requirement, your climb, the paragon ladder (which used to be a second
-  stacked progress bar), rarity, and holders. Holders load on open, never with the page.
+- **Detail drawer** — requirement, your climb, rarity, and holders. Holders load on open, never
+  with the page. **The selected rung is the only open state**: a second boolean let a scrim
+  dismissal reopen itself on the page's next render (field test round 4).
 - **Filters are furniture** above the list, never sticky. A non-matching rung **fades in place**
   rather than disappearing: a ladder with holes punched through it stops reading as a ladder.
 
@@ -107,6 +111,10 @@ reads wrong against real data.
 - **A per-section segmented meter** in the standing bar. Eight abutting fills in a 7px strip read
   as mush and the smallest segment was 15px wide; the per-section counts already live in each
   section header. Replaced with one overall bar.
+- **Paragon anywhere on the page** — the grade letter inside an earned rung, the paragon ladder in
+  the drawer, the paragon tag on a holder row. Dropped in round 4: paragon levels are being
+  retired in favour of folder completion, which is not title-related. Nothing on this page
+  references `ParagonLevel` any more, so the retirement will not collide with it.
 
 ## Tests
 

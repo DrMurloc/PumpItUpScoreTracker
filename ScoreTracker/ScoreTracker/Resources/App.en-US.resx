@@ -6014,9 +6014,6 @@
   <data name="Earned" xml:space="preserve">
     <value>Earned</value>
   </data>
-  <data name="Every chart in this folder is a Perfect Game." xml:space="preserve">
-    <value>Every chart in this folder is a Perfect Game.</value>
-  </data>
   <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
     <value>Everyone who holds this keeps their profile private.</value>
   </data>
@@ -6043,9 +6040,6 @@
   </data>
   <data name="One-offs" xml:space="preserve">
     <value>One-offs</value>
-  </data>
-  <data name="Paragon {0}" xml:space="preserve">
-    <value>Paragon {0}</value>
   </data>
   <data name="Play count" xml:space="preserve">
     <value>Play count</value>
@@ -6082,9 +6076,6 @@
   </data>
   <data name="{0} more keep their profile private." xml:space="preserve">
     <value>{0} more keep their profile private.</value>
-  </data>
-  <data name="{0} of {1} charts at {2}" xml:space="preserve">
-    <value>{0} of {1} charts at {2}</value>
   </data>
   <data name="{0} of {1} earned" xml:space="preserve">
     <value>{0} of {1} earned</value>

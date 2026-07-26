@@ -98,17 +98,6 @@ public static class ThemeScales
     };
 
     /// <summary>
-    /// Paragon color token. A Perfect Game paragon is the plate, not a grade — everything
-    /// below it reads as its letter grade.
-    /// </summary>
-    public static string ParagonColor(ParagonLevel level) => level switch
-    {
-        ParagonLevel.None => "var(--plate-none)",
-        ParagonLevel.PG => "var(--plate-pg)",
-        _ => GradeColor(level.GetLetterGrade())
-    };
-
-    /// <summary>
     /// Legacy slot color token — the pre-Exceed song-wheel vocabulary (Crazy red,
     /// Freestyle green…). Another-variants read as their base slot; null = the neutral
     /// legacy chip (Half-Double, levelled co-ops). Never the difficulty ramp: old-scale

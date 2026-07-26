@@ -37,10 +37,6 @@ else
             <div class="title-standing-id">
                 <p class="title-eyebrow">@L["Your title"]</p>
                 <h1 class="title-worn">@(_worn?.Name.ToString() ?? L["No title yet"])</h1>
-                @if (_wornNote != null)
-                {
-                    <p class="title-worn-note">@_wornNote</p>
-                }
             </div>
             <div class="title-standing-tally">
                 <div class="title-tally">
@@ -180,7 +176,6 @@ else
     private int _trackedPlayers;
     private Guid? _currentUserId;
     private Title? _worn;
-    private string? _wornNote;
 
     protected override async Task OnInitializedAsync()
     {
@@ -196,40 +191,9 @@ else
         _total = rungs.Length;
         _earned = rungs.Count(r => r.State == RungState.Earned);
         _official = rungs.Count(r => r.Official);
-        ResolveWornTitle(rungs);
+        _worn = TitleRails.WornTitle(_sections)?.Title;
 
         _loading = false;
-    }
-
-    /// <summary>
-    ///     The title you wear. Phoenix 2 progression is three PUMBILITY pools and the merged
-    ///     one is the one that counts, so a per-type ladder only stands in until you have a
-    ///     merged rung. Every other mix wears its furthest progression title.
-    /// </summary>
-    private void ResolveWornTitle(IReadOnlyList<TitleRung> rungs)
-    {
-        var progression = _sections.FirstOrDefault(s => s.Section == TitleSection.Progression);
-        if (progression == null) return;
-
-        TitleRung? Furthest(Func<TitleRailRow, bool> pick)
-        {
-            return progression.Rails.Where(pick)
-                .SelectMany(r => r.Rungs)
-                .Where(r => r.State == RungState.Earned)
-                .OrderByDescending(r => r.Title.CompletionRequired)
-                .ThenByDescending(r => r.Rung)
-                .FirstOrDefault();
-        }
-
-        var merged = Furthest(r => r.Name == (Name)"[P.B]");
-        var worn = merged ?? Furthest(r => r.Name != (Name)"[P.B]");
-        _worn = worn?.Title;
-
-        if (worn?.Progress is PhoenixTitleProgress { RequiredAaCount: > 0 } paragon &&
-            paragon.ParagonLevel != ParagonLevel.None)
-        {
-            _wornNote = L["Paragon {0}", paragon.ParagonLevel.GetName()];
-        }
     }
 
     private void SetFilter(RungState? state)

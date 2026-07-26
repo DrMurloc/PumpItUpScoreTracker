@@ -72,7 +72,7 @@ public sealed class TitleCommunityHandlerTests
     }
 
     [Fact]
-    public async Task HoldersComeBackStrongestParagonFirstThenByName()
+    public async Task HoldersComeBackByName()
     {
         HasHolders(
             (Player("Zephyr"), ParagonLevel.AA),
@@ -83,7 +83,6 @@ public sealed class TitleCommunityHandlerTests
             CancellationToken.None);
 
         Assert.Equal(new[] { "Alpha", "Mid", "Zephyr" }, result.Holders.Select(h => h.User.Name.ToString()));
-        Assert.Equal(ParagonLevel.PG, result.Holders[0].ParagonLevel);
     }
 
     [Fact]

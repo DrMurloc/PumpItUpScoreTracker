@@ -6020,9 +6020,6 @@
   <data name="Earned" xml:space="preserve">
     <value>獲得済み</value>
   </data>
-  <data name="Every chart in this folder is a Perfect Game." xml:space="preserve">
-    <value>このフォルダの全譜面がパーフェクトゲームです。</value>
-  </data>
   <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
     <value>この称号の保持者は全員プロフィールを非公開にしています。</value>
   </data>
@@ -6049,9 +6046,6 @@
   </data>
   <data name="One-offs" xml:space="preserve">
     <value>単発称号</value>
-  </data>
-  <data name="Paragon {0}" xml:space="preserve">
-    <value>パラゴン {0}</value>
   </data>
   <data name="Play count" xml:space="preserve">
     <value>プレイ回数</value>
@@ -6088,9 +6082,6 @@
   </data>
   <data name="{0} more keep their profile private." xml:space="preserve">
     <value>他 {0} 人はプロフィールを非公開にしています。</value>
-  </data>
-  <data name="{0} of {1} charts at {2}" xml:space="preserve">
-    <value>{2} 以上の譜面 {1} 個中 {0} 個</value>
   </data>
   <data name="{0} of {1} earned" xml:space="preserve">
     <value>{1} 個中 {0} 個獲得</value>

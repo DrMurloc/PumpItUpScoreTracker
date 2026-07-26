@@ -43,9 +43,8 @@ internal sealed class TitleCommunityHandler :
         // A private profile stays out of the list entirely; the drawer only learns how many.
         var holders = achieved
             .Where(a => users.TryGetValue(a.UserId, out var user) && user.IsPublic)
-            .Select(a => new TitleHolder(users[a.UserId], a.ParagonLevel))
-            .OrderByDescending(h => h.ParagonLevel)
-            .ThenBy(h => h.User.Name.ToString())
+            .Select(a => new TitleHolder(users[a.UserId]))
+            .OrderBy(h => h.User.Name.ToString())
             .ToArray();
 
         return new TitleHoldersRecord(holders, achieved.Length - holders.Length);

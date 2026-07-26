@@ -1,14 +1,11 @@
 @namespace ScoreTracker.Web.Components
 @using System.Globalization
-@using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Domain.Models.Titles.Phoenix
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Theming
 
 @*
-    One rung. Three channels, never colour alone (UX rule 8): the state carries the fill, a
-    dashed edge marks a title only the official import can award, and an earned rung with a
-    paragon shows its grade letter in that grade's own metal.
+    One rung. Colour is never the only channel (UX rule 8): the state carries the fill, and a
+    dashed edge marks a title only the official import can award.
 *@
 <button type="button"
         class="@CssClass"
@@ -16,15 +13,7 @@
         title="@Rung.Title.Name"
         aria-label="@Rung.Title.Name"
         @onclick="OnSelect">
-    @if (Paragon != ParagonLevel.None)
-    {
-        <span class="rung-no">@Label</span>
-        <span class="rung-para" style="color:@ThemeScales.ParagonColor(Paragon);">@Paragon.GetName()</span>
-    }
-    else
-    {
-        <span>@Label</span>
-    }
+    <span>@Label</span>
 </button>
 
 @code {
@@ -42,11 +31,6 @@
 
     [Parameter] public EventCallback<TitleRung> OnSelected { get; set; }
 
-    private ParagonLevel Paragon =>
-        Rung.Progress is PhoenixTitleProgress { RequiredAaCount: > 0 } p && Rung.State == RungState.Earned
-            ? p.ParagonLevel
-            : ParagonLevel.None;
-
     private string Label => WideLabel ?? Rung.Rung.ToString();
 
     private string CssClass
@@ -62,7 +46,6 @@
             var classes = $"title-pip {state}";
             if (WideLabel != null) classes += " wide";
             if (Rung.Official) classes += " official";
-            if (Paragon == ParagonLevel.PG) classes += " pg";
             if (Dimmed) classes += " dim";
             return classes;
         }

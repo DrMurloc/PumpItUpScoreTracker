@@ -154,6 +154,58 @@ public sealed class TitleRailsTests
     }
 
     [Fact]
+    public void TheWornTitleIsTheFurthestFolderNotTheBiggestRequirement()
+    {
+        // Field test: a player holding Expert Lv.5 was shown Expert Lv.2, because Lv.2 asks
+        // 80,000 on the 23s while Lv.5 asks 20,000 on the 25s. Requirement order is not
+        // progression order — the folder level decides, matching what TitleSaga writes as
+        // your highest difficulty title.
+        var sections = Phoenix(new HashSet<Name>
+        {
+            "Intermediate Lv. 10", "Advanced Lv. 10", "Expert Lv. 1", "Expert Lv. 2", "Expert Lv. 5"
+        });
+
+        Assert.Equal("Expert Lv. 5", TitleRails.WornTitle(sections)!.Title.Name.ToString());
+    }
+
+    [Fact]
+    public void TheWornTitleClimbsThroughTheTiersRatherThanStickingOnTheRichestRail()
+    {
+        var sections = Phoenix(new HashSet<Name> { "Intermediate Lv. 10", "Advanced Lv. 1" });
+
+        // Intermediate Lv. 10 asks 11,000 and Advanced Lv. 1 asks 13,000, but the point is
+        // the 20s outrank the 19s regardless of what either costs.
+        Assert.Equal("Advanced Lv. 1", TitleRails.WornTitle(sections)!.Title.Name.ToString());
+    }
+
+    [Fact]
+    public void APlayerWithNoProgressionTitleWearsNothingRatherThanTheFirstRung()
+    {
+        // Plates and play counts are not a progression; holding them is not a title to wear.
+        var sections = Phoenix(new HashSet<Name> { "GOLD MEMBER", "ROUGH GAMER (Bronze)" });
+
+        Assert.Null(TitleRails.WornTitle(sections));
+    }
+
+    [Fact]
+    public void PhoenixTwoWearsItsMergedPoolRungOverEitherPerTypeLadder()
+    {
+        // [S] EXPERT LV.10 asks 18,900 against [P.B] BRONZE's 10,000, so requirement alone
+        // would pick the singles ladder. The merged pool is the one you wear.
+        var sections = Phoenix2(new HashSet<Name> { "[S] EXPERT LV.10", "[D] ADVANCED LV.1", "[P.B] BRONZE" });
+
+        Assert.Equal("[P.B] BRONZE", TitleRails.WornTitle(sections)!.Title.Name.ToString());
+    }
+
+    [Fact]
+    public void PhoenixTwoFallsBackToThePerTypeLaddersUntilAMergedRungIsHeld()
+    {
+        var sections = Phoenix2(new HashSet<Name> { "[S] ADVANCED LV.1", "[D] INTERMEDIATE LV.4" });
+
+        Assert.Equal("[S] ADVANCED LV.1", TitleRails.WornTitle(sections)!.Title.Name.ToString());
+    }
+
+    [Fact]
     public void PhoenixTwoPoolsAreThreeRailsUnderProgression()
     {
         var progression = Phoenix2().Single(s => s.Section == TitleSection.Progression);

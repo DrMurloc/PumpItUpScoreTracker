@@ -1,19 +1,21 @@
 @namespace ScoreTracker.Web.Components
 @using System.Globalization
 @using MediatR
-@using ScoreTracker.Domain.Models.Titles
-@using ScoreTracker.Domain.Models.Titles.Phoenix
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Theming
 
-@* Everything about one title. Absorbs what the old grid buried in a child row and a second
-   stacked progress bar: the requirement, your standing, the paragon ladder, how rare it is,
-   and who else holds it. Holders load on open, never with the page. *@
+@* Everything about one title. Absorbs what the old grid buried in a child row: the requirement,
+   your standing, how rare it is, and who else holds it. Holders load on open, never with the
+   page.
+
+   The selected rung IS the open state — there is no second boolean to fall out of step with it,
+   which is what let a scrim dismissal reopen itself on the page's next render. *@
 <MudLayout>
-    <MudDrawer @bind-Open="_open" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="400px">
+    <MudDrawer Open="@(Rung != null)" OpenChanged="OpenChanged" Anchor="Anchor.Right"
+               Variant="@DrawerVariant.Temporary" Width="400px">
         @if (Rung != null)
         {
             <div class="title-drawer">
@@ -46,28 +48,6 @@
                         {
                             <p class="title-hint">@Rung.Progress.AdditionalNote</p>
                         }
-                    }
-
-                    @if (Paragon != null)
-                    {
-                        <p class="title-label">@L["Paragon"]</p>
-                        <div class="paragon-ladder">
-                            @foreach (var level in ParagonLadder)
-                            {
-                                <span class="paragon-rung @(level <= Paragon.ParagonLevel ? "have" : "") @(level == Paragon.ParagonLevel ? "at" : "")"
-                                      style="--metal:@ThemeScales.ParagonColor(level)">@level.GetName()</span>
-                            }
-                        </div>
-                        <p class="title-hint">
-                            @if (Paragon.ParagonLevel == ParagonLevel.PG)
-                            {
-                                @L["Every chart in this folder is a Perfect Game."]
-                            }
-                            else
-                            {
-                                @L["{0} of {1} charts at {2}", Paragon.NextParagonProgress, Paragon.RequiredAaCount, (Paragon.ParagonLevel + 1).GetName()]
-                            }
-                        </p>
                     }
 
                     @if (Suggested != null)
@@ -106,12 +86,6 @@
                             @foreach (var holder in _holders.Holders)
                             {
                                 <div class="olb-rank-card @(holder.User.Id == CurrentUserId ? "olb-row-me" : "")">
-                                    @if (holder.ParagonLevel != ParagonLevel.None)
-                                    {
-                                        <span class="paragon-tag" style="--metal:@ThemeScales.ParagonColor(holder.ParagonLevel)">
-                                            @holder.ParagonLevel.GetName()
-                                        </span>
-                                    }
                                     <UserLabel User="holder.User"></UserLabel>
                                 </div>
                             }
@@ -129,9 +103,6 @@
 
 @inject IMediator Mediator
 @code {
-    private static readonly ParagonLevel[] ParagonLadder =
-        Enum.GetValues<ParagonLevel>().Where(l => l != ParagonLevel.None).ToArray();
-
     [Parameter] public TitleRung? Rung { get; set; }
     [Parameter] public MixEnum Mix { get; set; }
     [Parameter] public bool IsLoggedIn { get; set; }
@@ -139,15 +110,9 @@
     [Parameter] public int TrackedPlayers { get; set; }
     [Parameter] public EventCallback OnClosed { get; set; }
 
-    private bool _open;
     private bool _loadingHolders;
     private TitleHoldersRecord? _holders;
     private string? _loadedFor;
-
-    private PhoenixTitleProgress? Paragon =>
-        IsLoggedIn && Rung?.Progress is PhoenixTitleProgress { RequiredAaCount: > 0 } p && Rung.State == RungState.Earned
-            ? p
-            : null;
 
     private SuggestedLevel? Suggested => Rung == null ? null : SuggestedTitleLevel.For(Rung.Title);
 
@@ -170,15 +135,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Rung == null)
-        {
-            _open = false;
-            return;
-        }
+        if (Rung == null) return;
 
-        _open = true;
-        // Re-fetch only when the drawer actually changed title — reopening the same one
-        // keeps what it already has.
+        // Re-fetch only when the drawer actually changed title — reopening the same one keeps
+        // what it already has.
         var key = $"{Mix}:{Rung.Title.Name}";
         if (_loadedFor == key) return;
 
@@ -190,9 +150,14 @@
         _loadingHolders = false;
     }
 
+    /// <summary>Every dismissal — the scrim, Escape, the close button — clears the selection.</summary>
+    private async Task OpenChanged(bool open)
+    {
+        if (!open) await Close();
+    }
+
     private async Task Close()
     {
-        _open = false;
         await OnClosed.InvokeAsync();
     }
 

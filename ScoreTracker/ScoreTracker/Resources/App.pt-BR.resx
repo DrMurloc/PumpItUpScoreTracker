@@ -5891,9 +5891,6 @@
   <data name="Earned" xml:space="preserve">
     <value>Conquistados</value>
   </data>
-  <data name="Every chart in this folder is a Perfect Game." xml:space="preserve">
-    <value>Todos os charts desta pasta são Perfect Game.</value>
-  </data>
   <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
     <value>Todos que têm este título mantêm o perfil privado.</value>
   </data>
@@ -5920,9 +5917,6 @@
   </data>
   <data name="One-offs" xml:space="preserve">
     <value>Títulos avulsos</value>
-  </data>
-  <data name="Paragon {0}" xml:space="preserve">
-    <value>Paragon {0}</value>
   </data>
   <data name="Play count" xml:space="preserve">
     <value>Partidas jogadas</value>
@@ -5959,9 +5953,6 @@
   </data>
   <data name="{0} more keep their profile private." xml:space="preserve">
     <value>Outros {0} mantêm o perfil privado.</value>
-  </data>
-  <data name="{0} of {1} charts at {2}" xml:space="preserve">
-    <value>{0} de {1} charts com {2}</value>
   </data>
   <data name="{0} of {1} earned" xml:space="preserve">
     <value>{0} de {1} conquistados</value>
