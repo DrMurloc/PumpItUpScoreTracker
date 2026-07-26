@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.HomePage.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -41,6 +43,10 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
             .ReturnsAsync(() => _charts.ToArray());
         _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => _scores.ToArray());
+        // Singles 21.34 / doubles 19.87 — what a fresh widget centres its folder picks on.
+        _mediator.Setup(m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PlayerStatsRecord(_me, 5000, 26, 100, 0, 0, 868, 900000, 21.5,
+                852, 900000, 21.3, 774, 880000, 19.9, 20.61, 21.34, 19.87));
         Services.AddSingleton(_mediator.Object);
         // Rows nest DifficultyBubble, which gates its MudTooltip on RendererInfo; declare the
         // render world so bUnit can supply it.
@@ -109,7 +115,7 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
 
         var cut = Render("2x2", (ChartType.Single, 22));
 
-        // 20/40/60/80 — the lamp is the flag at the end, not a tick.
+        // 20/40/60/80 — 100 is the track own end, so it never gets one.
         Assert.Equal(4, cut.FindAll(".fl-tick").Count);
     }
 
@@ -119,10 +125,51 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
         GivenFolder(ChartType.Single, 22, 10, 930000, 930000);
 
         var narrow = Render("2x2", (ChartType.Single, 22));
-        var wide = Render("4x2", (ChartType.Single, 22));
+        var wide = Render("4x3", (ChartType.Single, 22));
 
         Assert.Empty(narrow.FindAll(".dash-fl-row-count"));
         Assert.Contains("2 of 10", wide.Markup);
+    }
+
+    [Theory]
+    [InlineData("1x1", 1)]
+    [InlineData("2x1", 2)]
+    [InlineData("2x2", 4)]
+    [InlineData("2x3", 6)]
+    [InlineData("4x3", 8)]
+    public void EachSizeShowsExactlyAsManyFoldersAsItHoldsRoomFor(string sizePreset, int capacity)
+    {
+        // Ten configured folders, so every size is asked for more than it can hold.
+        var targets = Enumerable.Range(16, 10)
+            .Select(level => (ChartType.Single, level)).ToArray();
+        foreach (var (_, level) in targets) GivenFolder(ChartType.Single, level, 4, 930000);
+
+        var cut = Render(sizePreset, targets);
+
+        var shown = sizePreset == "1x1"
+            ? cut.FindAll(".dash-fl-hero").Count
+            : cut.FindAll(".dash-fl-row").Count;
+        Assert.Equal(capacity, shown);
+    }
+
+    [Fact]
+    public void AFreshWidgetFillsItselfAroundYourCompetitiveLevel()
+    {
+        // Nothing configured: the widget picks folders rather than showing an empty prompt.
+        for (var level = 15; level <= 25; level++)
+        {
+            GivenFolder(ChartType.Single, level, 4, 930000);
+            GivenFolder(ChartType.Double, level, 4, 930000);
+        }
+
+        var cut = Render("2x2");
+
+        Assert.Equal(4, cut.FindAll(".dash-fl-row").Count);
+        // Singles 21.3 and doubles 19.9 (see the stats stub): own level first, then upward.
+        Assert.Contains("S21", cut.Markup);
+        Assert.Contains("D19", cut.Markup);
+        Assert.Contains("S22", cut.Markup);
+        Assert.Contains("D20", cut.Markup);
     }
 
     [Fact]
@@ -147,8 +194,9 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
     }
 
     [Fact]
-    public void ConfiguringNoFoldersAsksForSome()
+    public void AMixWithNoChartsAtAllStillAsksForFolders()
     {
+        // Nothing to suggest from, so the empty prompt is the honest state.
         var cut = Render("2x1");
 
         Assert.Contains("Pick the folders you're working on.", cut.Markup);

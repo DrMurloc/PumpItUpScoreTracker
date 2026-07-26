@@ -392,9 +392,10 @@
         "1x1",
         "2x1",
         "2x2",
-        "4x2"
+        "2x3",
+        "4x3"
       ],
-      "defaultSize": "2x1",
+      "defaultSize": "2x2",
       "supportedMixes": [
         "Phoenix",
         "Phoenix2"

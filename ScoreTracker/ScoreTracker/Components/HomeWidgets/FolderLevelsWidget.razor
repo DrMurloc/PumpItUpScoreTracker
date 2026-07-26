@@ -2,6 +2,7 @@
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Enums
@@ -105,10 +106,14 @@ else
         // Ticks need a track tall enough to cut them into; counts need horizontal room.
         _showTicks = size.Rows > 1;
         _showCounts = size.Columns > 2;
+        var capacity = FolderLevelsDefaults.CapacityFor(size);
 
         var config = WidgetConfigJson.Read<FolderLevelsConfig>(Widget.ConfigJson);
         _mix = config.Mix ?? EffectiveMix;
-        _rows = await LoadRows(config);
+        // A widget dropped on the dashboard shows something immediately rather than an empty
+        // prompt: folders around your own competitive level, until you pick your own.
+        var folders = config.Folders.Count > 0 ? config.Folders : await SuggestFolders(capacity);
+        _rows = (await LoadRows(folders)).Take(capacity).ToArray();
         // One folder in a 1x1 gets the whole cell; anything else stacks.
         _hero = size is { Columns: 1, Rows: 1 } ? _rows.FirstOrDefault() : null;
         if (_hero != null) _rows = new[] { _hero };
@@ -118,15 +123,23 @@ else
     // Live from the player's scores rather than the stored projection: the spectrum needs per-chart
     // grades the projection does not carry, and a widget that disagreed with the tier-list page it
     // links to would be worse than one extra read.
-    private async Task<Row[]> LoadRows(FolderLevelsConfig config)
+    private async Task<List<FolderLevelsTarget>> SuggestFolders(int capacity)
     {
-        if (!CurrentUser.IsLoggedIn || config.Folders.Count == 0) return Array.Empty<Row>();
+        if (!CurrentUser.IsLoggedIn) return new List<FolderLevelsTarget>();
+        var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _mix));
+        return FolderLevelsDefaults.Suggest(capacity, stats.SinglesCompetitiveLevel,
+            stats.DoublesCompetitiveLevel);
+    }
+
+    private async Task<Row[]> LoadRows(IReadOnlyList<FolderLevelsTarget> targets)
+    {
+        if (!CurrentUser.IsLoggedIn || targets.Count == 0) return Array.Empty<Row>();
 
         var charts = (await Mediator.Send(new GetChartsQuery(_mix))).ToArray();
         var passed = FolderLevelRecord.PassedScores(
             await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _mix)));
 
-        return config.Folders
+        return targets
             .Select(target =>
             {
                 var folder = charts.Where(c => c.Type == target.Type && (int)c.Level == target.Level).ToArray();

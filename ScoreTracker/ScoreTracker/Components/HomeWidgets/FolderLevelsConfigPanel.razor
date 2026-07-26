@@ -1,8 +1,15 @@
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.HomeDashboard
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* Folder picking reuses FolderGrid in the multi-toggle mode the randomizer already drives —
+   one concept, one component. The cell size fixes how many folders fit, so the panel says how
+   many are left and refuses the tap that would overflow rather than silently dropping it. *@
 
 <MudSelect T="MixEnum?" @bind-Value="_mix" Label="@L["Mix"]" Class="mb-3">
     <MudSelectItem T="MixEnum?" Value="null">@L["Follow current mix"]</MudSelectItem>
@@ -10,33 +17,25 @@
     <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix2">Phoenix 2</MudSelectItem>
 </MudSelect>
 
-@foreach (var folder in _folders)
+<div class="fl-cfg-head">
+    <span>@L["{0} of {1} folders", _folders.Count, _capacity]</span>
+    <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="ResetToSuggested">@L["Reset"]</MudButton>
+</div>
+
+@if (_folders.Count > 0)
 {
-    <div class="d-flex gap-2 align-center mb-2">
-        <MudSelect T="ChartType" Value="folder.Type" Label="@L["Type"]"
-                   ValueChanged="@(t => SetType(folder, t))">
-            <MudSelectItem T="ChartType" Value="ChartType.Single">@L["Singles"]</MudSelectItem>
-            <MudSelectItem T="ChartType" Value="ChartType.Double">@L["Doubles"]</MudSelectItem>
-            <MudSelectItem T="ChartType" Value="ChartType.CoOp">CO-OP</MudSelectItem>
-        </MudSelect>
-        <MudSelect T="int" Value="folder.Level" Label="@LevelLabel(folder.Type)"
-                   ValueChanged="@(l => { folder.Level = l; StateHasChanged(); })">
-            @foreach (var level in FolderLevels.LevelsFor(folder.Type))
-            {
-                <MudSelectItem T="int" Value="level">@level</MudSelectItem>
-            }
-        </MudSelect>
-        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small"
-                       OnClick="@(() => _folders.Remove(folder))"
-                       aria-label="@L["Remove"]"></MudIconButton>
+    <div class="fl-cfg-picks">
+        @foreach (var folder in _folders.ToArray())
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined"
+                     OnClose="@(() => Remove(folder))">
+                @FolderName(folder)
+            </MudChip>
+        }
     </div>
 }
 
-@if (_folders.Count < MaxFolders)
-{
-    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddFolder" Variant="Variant.Outlined"
-               Size="Size.Small">@L["Add folder"]</MudButton>
-}
+<FolderGrid IsSelected="IsSelected" LevelPicked="Toggle" ShowCoOp="true"></FolderGrid>
 
 <div class="d-flex justify-end gap-2 mt-4">
     <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
@@ -49,34 +48,63 @@
     [Parameter] public EventCallback<(string ConfigJson, int ConfigVersion)> OnSave { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
-    // Six rows fill a 4x2 comfortably and anything past that is a scroll, not a dashboard.
-    private const int MaxFolders = 6;
+    [Inject] private IMediator Mediator { get; set; } = null!;
+    [Inject] private ICurrentUserAccessor CurrentUser { get; set; } = null!;
 
     private MixEnum? _mix;
+    private int _capacity = 4;
     private List<FolderLevelsTarget> _folders = new();
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         var config = WidgetConfigJson.Read<FolderLevelsConfig>(Widget.ConfigJson);
         _mix = config.Mix;
-        _folders = config.Folders.Select(f => new FolderLevelsTarget { Type = f.Type, Level = f.Level }).ToList();
-        if (_folders.Count == 0) AddFolder();
+        _capacity = FolderLevelsDefaults.CapacityFor(
+            SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.TwoByTwo);
+        _folders = config.Folders
+            .Select(f => new FolderLevelsTarget { Type = f.Type, Level = f.Level })
+            .Take(_capacity)
+            .ToList();
+        if (_folders.Count == 0) await ResetToSuggested();
     }
 
-    // Co-op "levels" are player counts 2–5, so a level carried over from singles would be
-    // out of range — clamp into whatever the new type actually offers.
-    private void SetType(FolderLevelsTarget folder, ChartType type)
+    private async Task ResetToSuggested()
     {
-        var (min, max) = FolderLevels.Range(type);
-        folder.Type = type;
-        folder.Level = Math.Clamp(folder.Level, min, max);
-        StateHasChanged();
+        if (!CurrentUser.IsLoggedIn)
+        {
+            _folders = new List<FolderLevelsTarget>();
+            return;
+        }
+
+        var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id,
+            _mix ?? MixEnum.Phoenix));
+        _folders = FolderLevelsDefaults.Suggest(_capacity, stats.SinglesCompetitiveLevel,
+            stats.DoublesCompetitiveLevel);
     }
 
-    private string LevelLabel(ChartType type) =>
-        type == ChartType.CoOp ? L["Players"].Value : L["Level"].Value;
+    private bool IsSelected(ChartType type, int level) =>
+        _folders.Any(f => f.Type == type && f.Level == level);
 
-    private void AddFolder() => _folders.Add(new FolderLevelsTarget { Type = ChartType.Single, Level = 20 });
+    // Toggle-and-stay: tapping a picked folder drops it, tapping a new one adds it while there
+    // is room. A full widget ignores the tap rather than evicting something the player chose.
+    private void Toggle((ChartType Type, int Level) folder)
+    {
+        var existing = _folders.FirstOrDefault(f => f.Type == folder.Type && f.Level == folder.Level);
+        if (existing != null)
+        {
+            _folders.Remove(existing);
+            return;
+        }
+
+        if (_folders.Count >= _capacity) return;
+        _folders.Add(new FolderLevelsTarget { Type = folder.Type, Level = folder.Level });
+    }
+
+    private void Remove(FolderLevelsTarget folder) => _folders.Remove(folder);
+
+    private string FolderName(FolderLevelsTarget folder) => folder.Type == ChartType.CoOp
+        ? L["CO-OP {0}", folder.Level].Value
+        : $"{folder.Type.GetShortHand()}{folder.Level}";
 
     private async Task Save()
     {

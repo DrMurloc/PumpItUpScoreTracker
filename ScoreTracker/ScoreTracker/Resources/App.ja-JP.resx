@@ -6050,4 +6050,13 @@
   <data name="{0}% of {1}" xml:space="preserve">
     <value>{1} の {0}%</value>
   </data>
+  <data name="CO-OP {0}" xml:space="preserve">
+    <value>CO-OP {0}</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>リセット</value>
+  </data>
+  <data name="{0} of {1} folders" xml:space="preserve">
+    <value>{1} 中 {0} フォルダ</value>
+  </data>
 </root>

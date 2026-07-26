@@ -6970,3 +6970,24 @@ button.chart-card-art {
     border-color: color-mix(in srgb, var(--mix-accent) 55%, transparent);
     box-shadow: 0 0 12px -2px var(--mix-accent);
 }
+
+/* Folder Levels config: the running count sits above the grid so a full widget explains
+   itself before a tap does nothing. */
+.fl-cfg-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: .04em;
+    color: var(--mix-ink-muted);
+    margin-bottom: 6px;
+}
+
+.fl-cfg-picks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 10px;
+}

@@ -6044,4 +6044,13 @@
   <data name="{0}% of {1}" xml:space="preserve">
     <value>{0}% de {1}</value>
   </data>
+  <data name="CO-OP {0}" xml:space="preserve">
+    <value>CO-OP {0}</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Réinitialiser</value>
+  </data>
+  <data name="{0} of {1} folders" xml:space="preserve">
+    <value>{0} sur {1} dossiers</value>
+  </data>
 </root>

@@ -87,13 +87,16 @@ public static class WidgetRegistry
             "How far through your folders you are, and how well.",
             WidgetCategory.Progress,
             Icons.Material.Filled.Folder,
-            // Detail drops by size rather than re-laying out: 1x1 is one folder large, the wider
-            // sizes stack rows, and the tier ticks need a second row to be worth cutting in.
+            // Each size holds a fixed number of folders (FolderLevelsDefaults.CapacityFor), and
+            // detail drops with the cell rather than the layout changing: 1x1 is one folder
+            // large, everything else stacks rows, and the tier ticks need a second row to be
+            // worth cutting in.
             new[]
             {
-                SizePreset.OneByOne, SizePreset.TwoByOne, SizePreset.TwoByTwo, SizePreset.FourByTwo
+                SizePreset.OneByOne, SizePreset.TwoByOne, SizePreset.TwoByTwo, SizePreset.TwoByThree,
+                SizePreset.FourByThree
             },
-            SizePreset.TwoByOne,
+            SizePreset.TwoByTwo,
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(FolderLevelsWidget),
             typeof(FolderLevelsConfigPanel),
