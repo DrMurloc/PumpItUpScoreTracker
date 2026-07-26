@@ -52,6 +52,33 @@ internal static class FolderLevelCalculator
     }
 
     /// <summary>
+    ///     The milestone a folder's movement earns, or null when it earned none.
+    ///     <para>
+    ///         Null when <paramref name="previous" /> is null — the seed-silently rule. A folder
+    ///         being observed for the first time writes its row and announces nothing, which is
+    ///         what stops a first import of a few thousand scores emitting a milestone per folder
+    ///         (docs/design/folder-level-progression.md §5.3).
+    ///     </para>
+    ///     Only improvements count. A folder gaining charts pushes completion down, and a weak new
+    ///     pass can nudge the average down; neither is news.
+    /// </summary>
+    public static PlayerMilestoneWrite? Diff(FolderLevelRecord? previous, FolderLevelRecord current,
+        Guid? sessionId, DateTimeOffset occurredAt)
+    {
+        if (previous == null) return null;
+
+        var tierMoved = current.Tier > previous.Tier;
+        var gradeMoved = current.Grade != null && (previous.Grade == null || current.Grade > previous.Grade);
+        if (!tierMoved && !gradeMoved) return null;
+
+        var detail = new FolderProgressDetail(current.Folder, current.Tier, current.Grade,
+            tierMoved ? previous.Tier : null,
+            gradeMoved ? previous.Grade : null);
+        return new PlayerMilestoneWrite(MilestoneKind.FolderProgress, sessionId, occurredAt,
+            Detail: detail.Format());
+    }
+
+    /// <summary>
     ///     The scores a folder standing is built from: passed charts only. A broken score is a
     ///     failed run, so it counts toward neither completion nor the average — the same rule
     ///     the folder lamps already apply. Every caller goes through here so the two never drift.

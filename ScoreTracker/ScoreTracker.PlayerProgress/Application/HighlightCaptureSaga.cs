@@ -213,8 +213,11 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         FlagTop50AndTitleProgress(known, data, flags, details);
 
         // The folder standings this batch moved. Built from data already in hand, one record per
-        // touched folder rather than per chart, and saved in a single call below.
+        // touched folder rather than per chart, and saved in a single call below. The stored rows
+        // are the only record of where the player stood before this batch, so they are also what
+        // a movement gets diffed against — and a folder with no stored row seeds silently.
         var passed = FolderLevelCalculator.PassedScores(data.Bests.Values);
+        var previousFolders = await LoadPreviousFolderLevels(e, cancellationToken);
         var touchedFolders = new List<FolderLevelRecord>();
 
         foreach (var folder in known.GroupBy(c => (data.Charts[c.ChartId].Type, data.Charts[c.ChartId].Level)))
@@ -226,7 +229,12 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
 
             var level = FolderLevelCalculator.ComputeOne(e.Mix, folder.Key.Type, folder.Key.Level,
                 data.Charts.Values, passed);
-            if (level != null) touchedFolders.Add(level);
+            if (level == null) continue;
+            touchedFolders.Add(level);
+
+            var moved = FolderLevelCalculator.Diff(previousFolders?.GetValueOrDefault(level.Folder), level,
+                e.SessionId, e.OccurredAt);
+            if (moved != null) lamps.Add(moved);
         }
 
         await SaveFolderLevels(e, touchedFolders, cancellationToken);
@@ -434,6 +442,27 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         if (plateFloorIsNew)
             lamps.Add(new PlayerMilestoneWrite(MilestoneKind.FolderPlateLamp, e.SessionId, e.OccurredAt,
                 Detail: $"{folderName}|{minPlate}"));
+    }
+
+    /// <summary>
+    ///     Where the player stood before this batch, keyed by folder. Null — not empty — when the
+    ///     read fails, so a lookup miss stays honest: an empty dictionary would read as "every
+    ///     folder is new" and silence a whole session's worth of real movements.
+    /// </summary>
+    private async Task<Dictionary<string, FolderLevelRecord>?> LoadPreviousFolderLevels(
+        PlayerScoresUpdatedEvent e, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return (await _folderLevels.GetFolderLevels(e.Mix, e.UserId, cancellationToken))
+                .ToDictionary(l => l.Folder);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Folder level read failed for user {UserId} ({Mix}) — movements not announced",
+                e.UserId, e.Mix);
+            return null;
+        }
     }
 
     /// <summary>

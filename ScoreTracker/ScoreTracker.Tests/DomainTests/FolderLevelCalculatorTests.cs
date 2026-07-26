@@ -146,6 +146,106 @@ public sealed class FolderLevelCalculatorTests
             charts, scores));
     }
 
+    private static FolderLevelRecord Standing(int size, int played, int average,
+        MixEnum mix = MixEnum.Phoenix) =>
+        new(mix, ChartType.Single, DifficultyLevel.From(22), size, played, average);
+
+    [Fact]
+    public void AFolderSeenForTheFirstTimeAnnouncesNothing()
+    {
+        // The seed-silently rule: without it a first import of a few thousand scores would emit a
+        // milestone per folder and the Discord card would be a wall.
+        Assert.Null(FolderLevelCalculator.Diff(null, Standing(100, 90, 940_000), Guid.NewGuid(),
+            DateTimeOffset.UnixEpoch));
+    }
+
+    [Fact]
+    public void CrossingATierAnnouncesTheCrossingAndCarriesTheCurrentGrade()
+    {
+        var before = Standing(100, 59, 940_000);
+        var after = Standing(100, 80, 940_000);
+
+        var milestone = FolderLevelCalculator.Diff(before, after, null, DateTimeOffset.UnixEpoch);
+
+        Assert.NotNull(milestone);
+        Assert.Equal(MilestoneKind.FolderProgress, milestone!.Kind);
+        var detail = FolderProgressDetail.TryParse(milestone.Detail);
+        Assert.NotNull(detail);
+        Assert.True(detail!.TierMoved);
+        Assert.False(detail.GradeMoved);
+        Assert.Equal("40% → 80%", detail.CompletionText);
+        Assert.Equal("AA+", detail.GradeText);
+    }
+
+    [Fact]
+    public void ImprovingTheGradeInsideOneTierAnnouncesOnlyTheGrade()
+    {
+        var before = Standing(100, 90, 930_000);
+        var after = Standing(100, 90, 955_000);
+
+        var detail = FolderProgressDetail.TryParse(
+            FolderLevelCalculator.Diff(before, after, null, DateTimeOffset.UnixEpoch)!.Detail);
+
+        Assert.False(detail!.TierMoved);
+        Assert.True(detail.GradeMoved);
+        // The tier, not the raw 90% — a milestone reports the ladder it sits on, and the live
+        // percent belongs to the surfaces that read the projection directly.
+        Assert.Equal("80%", detail.CompletionText);
+        Assert.Equal("AA+ → AAA", detail.GradeText);
+    }
+
+    [Fact]
+    public void AFolderGainingChartsIsNotAMilestoneEvenThoughCompletionMoved()
+    {
+        var before = Standing(50, 45, 940_000);
+        var after = Standing(100, 45, 940_000);
+
+        Assert.Null(FolderLevelCalculator.Diff(before, after, null, DateTimeOffset.UnixEpoch));
+    }
+
+    [Fact]
+    public void AWeakNewPassThatDropsTheAverageIsNotAnnounced()
+    {
+        var before = Standing(100, 90, 940_000);
+        var after = Standing(100, 91, 921_000);
+
+        Assert.Null(FolderLevelCalculator.Diff(before, after, null, DateTimeOffset.UnixEpoch));
+    }
+
+    [Fact]
+    public void ALampCarriesTheHundredPercentTier()
+    {
+        var before = Standing(10, 9, 900_000);
+        var after = Standing(10, 10, 900_000);
+
+        var detail = FolderProgressDetail.TryParse(
+            FolderLevelCalculator.Diff(before, after, null, DateTimeOffset.UnixEpoch)!.Detail);
+
+        Assert.True(detail!.IsLamp);
+        Assert.Equal("80% → 100%", detail.CompletionText);
+    }
+
+    [Fact]
+    public void DetailRoundTripsThroughItsWireShape()
+    {
+        var detail = new FolderProgressDetail("D23", 80, PhoenixLetterGrade.AAPlus, 60, PhoenixLetterGrade.AAA);
+
+        var parsed = FolderProgressDetail.TryParse(detail.Format());
+
+        Assert.Equal(detail, parsed);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("S22")]
+    [InlineData("S22|notanumber|AA+||")]
+    [InlineData("|80|AA+||")]
+    public void AnUnreadableDetailParsesToNullRatherThanThrowing(string? detail)
+    {
+        Assert.Null(FolderProgressDetail.TryParse(detail));
+    }
+
     [Theory]
     [InlineData(0, 0)]
     [InlineData(19, 0)]
