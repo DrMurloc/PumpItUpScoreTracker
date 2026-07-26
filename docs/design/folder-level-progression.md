@@ -6,12 +6,14 @@ unless marked open; §7.7 lists the commits that landed them.
 **Post-deploy:** press **Backfill Folder Levels** on the admin dashboard once. Until it runs,
 folders only appear for players who have imported since the deploy (§7.6).
 
-A folder carries **two numbers**: how much of it you've completed, and what you average across what
-you've played. Together they replace Phoenix 1's Paragon levels, which have no Phoenix 2 equivalent.
+A folder carries **two numbers**: how much of it you've completed, and the grade you hold across that
+much of it. Together they replace Phoenix 1's Paragon levels, which have no Phoenix 2 equivalent.
 
 ```
-S22 · 93% complete · AA+
+S22 · 92% complete · A+
 ```
+
+Read it as one sentence: *A+ or better on 80% of S22.*
 
 ---
 
@@ -59,19 +61,21 @@ as two numbers and both become honest and monotone in the ways that matter.
 
 ### 2.1 Two numbers
 
-| | Definition | Behaviour when the folder gains charts |
-|---|---|---|
-| **Completion** | `played / folderSize`, as a percent | Falls. Correct and legible — the folder got bigger, you've completed less of it. |
-| **Folder grade** | mean score across the charts you have played, via `LetterGradeFor(mix)` | **Unaffected.** Unplayed charts never enter the average. |
+| | Definition |
+|---|---|
+| **Completion** | `played / folderSize`, as a percent. Falls when the folder gains charts — correct and legible: the folder got bigger, you've completed less of it. |
+| **Folder grade** | the score at the **completion tier's position**, reading the folder best-first. "80% · AAA" means *AAA or better on 80% of the folder*. |
 
-That second row is the whole design. The grade is immune to content growth by construction, and the
-completion percent is the one place a drop is expected and self-explaining ("S22 went to 101 charts —
-you're at 89%").
+The grade is a **held** grade, not an average: it is the worst score inside the tier, so it is the
+grade the whole tier is carried at. It is also the colour under the tick on the spectrum, which is
+what makes the bar and the letter the same claim rather than two numbers sitting near each other.
 
-The grade's one soft spot: playing a *new* chart badly nudges the average down. It is small and
-self-correcting — S22 sits at 934,245 over 90 charts, and one fresh 850k play moves it to 933,319, a
-926-point dip well inside the AA+ band. Milestones fire only on improvement, so a dip is never
-announced.
+**This is a completionist measure first, and it costs a letter.** Climbing a tier reaches deeper into
+the folder, so the grade can go *down* when completion goes up — DrMurloc's D19 reads SSS at 20%, SS+
+at 40%, S+ at 60%, and AAA at 80%. That is the trade the folder is asking for, and it is the point:
+depth is the achievement, and the letter says what the depth cost.
+
+Below 20% there is no tier, so there is no grade — nothing has been held yet.
 
 ### 2.2 Completion tiers
 
@@ -102,7 +106,7 @@ so it is 0% or 100%. Display `passed / total` alongside the percent wherever roo
 
 Everything is per-mix by construction — rosters from `ChartMix`, grades from `LetterGradeFor(mix)`.
 **P1 floors are looser below AAA** (A 750k vs P2's 800k, A+ 825k vs 900k, AA 900k vs 920k, AA+ 925k
-vs 940k); AAA and up are identical. The same average therefore grades higher in P1 — S22's 934,245 is
+vs 940k); AAA and up are identical. The same tier score therefore grades higher in P1 — 934,609 is
 AA+ in P1 and AA in P2. Correct, not drift.
 
 Build mix-agnostic from the start: P1 has ~1,562 users with records against P2's ~19, so P1 is where
@@ -110,20 +114,24 @@ this reaches an audience on day one.
 
 ### 2.6 What it reads like
 
-DrMurloc, Phoenix 1 — the completion percent and the grade tell two different, both-true stories:
+DrMurloc, Phoenix 1 — measured, not illustrative:
 
 | | S16 | S17 | S18 | S19 | S20 | S21 | S22 | S23 | S24 |
 |---|---|---|---|---|---|---|---|---|---|
-| completion | 94% | 97% | 98% | **66%** | 95% | 95% | 93% | 84% | **100%** |
-| grade | SSS | SSS | SS+ | SS | S | AAA+ | AA+ | AA | A+ |
+| completion | 93% | 96% | 97% | **66%** | 94% | 94% | 92% | 83% | **100%** |
+| tier | 80 | 80 | 80 | **60** | 80 | 80 | 80 | 80 | **100** |
+| grade | SS+ | SS+ | S+ | AAA | AAA | AA+ | A+ | A+ | A+ |
 
-| | D18 | D19 | D20 | D21 | D22 | D23 | D24 | D25 |
-|---|---|---|---|---|---|---|---|---|
-| completion | 98% | 86% | **61%** | 66% | 72% | 77% | 44% | 23% |
-| grade | SSS | SS | SS | S | AAA | AA+ | AA+ | AA |
+| | D19 | D20 | D21 | D22 | D23 | D24 | D25 |
+|---|---|---|---|---|---|---|---|
+| completion | 86% | **61%** | 66% | 72% | 76% | 44% | 21% |
+| tier | 80 | 60 | 60 | 60 | 60 | 40 | 20 |
+| grade | AAA | AAA | AA+ | AA+ | AA | A+ | A+ |
 
-The grade row is a clean skill curve in both disciplines. The completion row is where the personality
-shows: S19 is his one singles gap, and his doubles completion falls away far earlier than his singles.
+Two things fall out of the tier row. S19 is his one singles gap — 66% keeps it on the 60 tier while
+its neighbours sit on 80, and it reads a *better* grade for it, which is exactly the trade being
+made. And his doubles are shallower throughout: D22 holds AA+ at 60% where S21 holds AA+ at 80%, so
+the same letter is a different achievement on each side.
 
 ---
 
@@ -179,8 +187,9 @@ score journal carries them.
 | Column | Notes |
 |---|---|
 | `UserId`, `MixId`, `ChartType`, `Level` | composite PK; `Level` holds player count for co-op |
-| `Size`, `Played` | folder roster size, and charts with a real score |
-| `AverageScore` | mean across played charts |
+| `Size`, `Played` | folder roster size, and charts with a passed score |
+| `TierScore` | the score at the completion tier's position — what the grade reads off. Stored rather than derived because a milestone diff needs the previous grade and a row cannot rebuild a sorted score list. 0 below the first tier |
+| `AverageScore` | mean across played charts — a display number (tooltips), not the grade |
 | `UpdatedAt` | |
 
 The stored row *is* the previous state at diff time, so tier and grade both derive from it — no
@@ -289,7 +298,7 @@ tier ticks, grade chip. One concept, one component.
 
 | # | Surface | Shape |
 |---|---|---|
-| 1 | **Home widget** | A `folder-levels` widget for folders you pick. Each size holds a fixed count — **1x1 one, 2x1 two, 2x2 four, 2x3 six, 4x3 eight** — because a bigger cell should show *more folders*, not the same folders with a scrollbar. Picking reuses `FolderGrid` in the multi-toggle mode the randomizer already drives. A fresh widget fills itself with folders around your competitive level, alternating singles and doubles, each type walking its own level. Separately, By-Level Breakdown gains a **Clear Progress by Grade** preset — the same view at all-folders scale. It is a preset rather than a colour field on Clear Progress because the `LetterGrade` metric with `IncludeUnplayed` already expresses it exactly, and a second way to say the same thing would widen the public config vocabulary (D19) for nothing. |
+| 1 | **Home widget** | A `folder-levels` widget for folders you pick. Each size holds a fixed count — **1x1 one, 2x1 two, 2x2 four, 2x3 six, 2x4 eight** (two wide, up to four deep) — because a bigger cell should show *more folders*, not the same folders with a scrollbar. Picking sits behind a **Select Folders** popover — `FolderGrid` is a popover control like a date picker, never inline chrome — in the multi-toggle mode the randomizer already drives. A fresh widget fills itself with folders around your competitive level, alternating singles and doubles, each type walking its own level. Separately, By-Level Breakdown gains a **Clear Progress by Grade** preset — the same view at all-folders scale. It is a preset rather than a colour field on Clear Progress because the `LetterGrade` metric with `IncludeUnplayed` already expresses it exactly, and a second way to say the same thing would widen the public config vocabulary (D19) for nothing. |
 | 2 | **Tier list page** | The full bar for the folder you are on, under the existing `.ptt` PUMBILITY title track. That one answers "what is my next title"; this answers "how far through this folder am I, and how well". |
 | 3 | **Community player** | `CommunityPlayer.razor`'s Folder Completion strip, **split into two graphs — singles and doubles** — since a folder level is per type. Track height keeps following real folder size; the type-hue fill becomes the spectrum. |
 | 4 | **Community Discord** | §5.4's line. |
