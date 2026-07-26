@@ -57,6 +57,14 @@
                the script early. The weekly hub emits its own ItemList in the page body. *@
             @((MarkupString)$"<script type=\"application/ld+json\">{JsonLd(_head)}</script>")
         }
+        else if (_head.MixDiff != null)
+        {
+            @* The mix diff is a tabulation, so it marks up as a Dataset — the type that tells a
+               reader "this page IS the table of chart changes" rather than an article about
+               them. Head-level on purpose: the page runs in a circuit, so its body is not what
+               a crawler reads. *@
+            @((MarkupString)$"<script type=\"application/ld+json\">{MixDiffJsonLd(_head)}</script>")
+        }
     }
     @* Interactive, and not prerendered — matching every <PageTitle> in the app. Static, it would
        only ever see static components and every page's title would read "PIU Scores". *@
@@ -220,6 +228,77 @@
                 }
             }
         });
+    }
+
+    // What variables the table actually measures, named the way a reader would ask for them.
+    // No temporalCoverage: mixes have no release date in the catalog, and inventing one would
+    // be worse than omitting the field.
+    private static string MixDiffJsonLd(StaticHeadModel head)
+    {
+        var diff = head.MixDiff!;
+        var dataset = new Dictionary<string, object?>
+        {
+            ["@type"] = "Dataset",
+            ["name"] = head.Title,
+            ["description"] = head.Description,
+            ["url"] = head.Canonical,
+            ["creator"] = new Dictionary<string, object?>
+            {
+                ["@type"] = "Organization",
+                ["name"] = "PIU Scores",
+                ["url"] = "https://piuscores.arroweclip.se"
+            },
+            ["variableMeasured"] = new object[]
+            {
+                Measured("Charts re-rated", diff.Rerated),
+                Measured("Songs added", diff.SongsArrived),
+                Measured("Songs removed", diff.SongsDeparted)
+            },
+            ["about"] = new object[]
+            {
+                new Dictionary<string, object?> { ["@type"] = "VideoGame", ["name"] = $"Pump It Up {diff.FromMix}" },
+                new Dictionary<string, object?> { ["@type"] = "VideoGame", ["name"] = $"Pump It Up {diff.ToMix}" }
+            }
+        };
+        return System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object?>
+        {
+            ["@context"] = "https://schema.org",
+            ["@graph"] = new object[]
+            {
+                dataset,
+                new Dictionary<string, object?>
+                {
+                    ["@type"] = "BreadcrumbList",
+                    ["itemListElement"] = new object[]
+                    {
+                        new Dictionary<string, object?>
+                        {
+                            ["@type"] = "ListItem",
+                            ["position"] = 1,
+                            ["name"] = "Charts",
+                            ["item"] = "https://piuscores.arroweclip.se/Charts"
+                        },
+                        new Dictionary<string, object?>
+                        {
+                            ["@type"] = "ListItem",
+                            ["position"] = 2,
+                            ["name"] = head.Title,
+                            ["item"] = head.Canonical
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private static Dictionary<string, object?> Measured(string name, int value)
+    {
+        return new Dictionary<string, object?>
+        {
+            ["@type"] = "PropertyValue",
+            ["name"] = name,
+            ["value"] = value
+        };
     }
 
     // Resolved here rather than in OnInitializedAsync: an async init renders once at its first

@@ -1,0 +1,75 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+
+@* Arrivals and departures as a sticker sheet — players recognise jacket art faster than
+   song names (UX rule 2), and a departing song reads as gone by being dimmed rather than
+   by having its bubbles greyed, which would cost the red-Single/green-Double read. *@
+<div class="wc-sheet">
+    <MudAlert Severity="Severity.Info" Dense="true" Class="wc-notice">
+        @if (Departed)
+        {
+            @L["{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile.",
+                Songs.Count, Songs.Sum(s => s.Charts.Count)]
+        }
+        else
+        {
+            @L["{0} songs arrived, bringing {1} new charts.", Songs.Count, Songs.Sum(s => s.Charts.Count)]
+        }
+    </MudAlert>
+
+    <div class="wc-stickers">
+        @foreach (var song in Songs)
+        {
+            <button type="button" class="wc-sticker @(Departed ? "wc-sticker-gone" : "")"
+                    @onclick="() => Pick(song.Charts[0])">
+                <SongImage Song="song.Song" Height="120"></SongImage>
+                <span class="wc-sticker-name">@song.Song.Name</span>
+                <span class="wc-sticker-artist">@song.Song.Artist</span>
+                <span class="wc-sticker-strip">
+                    @foreach (var chart in song.Charts)
+                    {
+                        <DifficultyBubble Chart="chart" Height="20"></DifficultyBubble>
+                    }
+                </span>
+            </button>
+        }
+    </div>
+
+    @* A chart that came or went on its own, while its song stayed. Rare between adjacent
+       Phoenix mixes, common across the XX boundary. *@
+    @if (LooseCharts.Count > 0)
+    {
+        <div class="wc-loose">
+            <h3 class="wc-loose-title">
+                @(Departed
+                    ? L["{0} charts removed from songs that stayed", LooseCharts.Count]
+                    : L["{0} charts added to songs that were already here", LooseCharts.Count])
+            </h3>
+            @foreach (var chart in LooseCharts)
+            {
+                <button type="button" class="wc-row" @onclick="() => Pick(chart)">
+                    <SongImage Song="chart.Song" Small="true"></SongImage>
+                    <span class="wc-name">@chart.Song.Name</span>
+                    <span class="wc-tail">
+                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                    </span>
+                </button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public IReadOnlyList<MixDiffSongRecord> Songs { get; set; } = Array.Empty<MixDiffSongRecord>();
+    [Parameter] public IReadOnlyList<Chart> LooseCharts { get; set; } = Array.Empty<Chart>();
+    [Parameter] public bool Departed { get; set; }
+    [Parameter] public MixEnum Mix { get; set; }
+    [Parameter] public EventCallback<Chart> OnChart { get; set; }
+
+    private Task Pick(Chart chart)
+    {
+        return OnChart.InvokeAsync(chart);
+    }
+}

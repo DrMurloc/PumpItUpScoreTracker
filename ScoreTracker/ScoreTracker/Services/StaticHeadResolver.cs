@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Localization;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -16,7 +17,15 @@ namespace ScoreTracker.Web.Services;
 ///     weekly hub Canonical is the clean path its filter/week variants fold into.
 /// </summary>
 public sealed record StaticHeadModel(string Title, string Description, string? OgImage, string? Canonical,
-    string? SongName = null, string? Artist = null);
+    string? SongName = null, string? Artist = null, MixDiffHeadModel? MixDiff = null);
+
+/// <summary>
+///     The mix-diff page's structured-data payload. It is a tabulation, so it marks up as a
+///     schema.org Dataset rather than an article — that is the type that says "this page is
+///     the table" to a reader deciding what to quote.
+/// </summary>
+public sealed record MixDiffHeadModel(string FromMix, string ToMix, int Rerated, int SongsArrived,
+    int SongsDeparted);
 
 /// <summary>
 ///     Resolves the document head from the request path
@@ -47,6 +56,9 @@ public sealed class StaticHeadResolver
     {
         if (path.Equals("/WeeklyCharts", StringComparison.OrdinalIgnoreCase))
             return await ResolveWeeklyCharts(currentMix, cancellationToken);
+
+        if (path.StartsWithSegments("/WhatChanged", out var pair))
+            return await ResolveWhatChanged(pair, currentMix, cancellationToken);
 
         // /Charts/{mix}/{song}/{difficulty} — the canonical chart page. Historical triples
         // 301 to canonical before rendering, so a rendered page is always self-canonical.
@@ -84,13 +96,94 @@ public sealed class StaticHeadResolver
         const string tail = "Difficulty verdict, skill breakdown, and the full leaderboard on PIU Scores.";
         // The chart's own mix, not the viewer's: FindChart can fall back to another mix's
         // copy, and the population only exists where the chart does.
-        var population = (await _mediator.Send(new GetChartVerdictQuery(chart.Id, chart.Mix), cancellationToken))
-            .OfType<PopulationVerdict>().FirstOrDefault();
-        if (population is not { ScoresTracked: > 0 }) return $"{identity} {tail}";
+        var facets = (await _mediator.Send(new GetChartVerdictQuery(chart.Id, chart.Mix), cancellationToken))
+            .ToArray();
+        // "Where did my chart go" is asked one chart at a time, so the answer belongs in the
+        // snippet of the page that owns that chart — not only on the mix diff. The history
+        // facet rides the verdict query the population stat already dispatched.
+        var rerate = RerateClause(chart, facets.OfType<HistoryVerdict>().FirstOrDefault());
+        var population = facets.OfType<PopulationVerdict>().FirstOrDefault();
+        if (population is not { ScoresTracked: > 0 }) return $"{identity}{rerate} {tail}";
 
         var scores = population.ScoresTracked == 1 ? "score" : "scores";
         var passRate = (int)Math.Round(population.PassRate * 100);
-        return $"{identity} {population.ScoresTracked:N0} {scores} tracked, {passRate}% pass rate. {tail}";
+        return $"{identity}{rerate} {population.ScoresTracked:N0} {scores} tracked, {passRate}% pass rate. {tail}";
+    }
+
+    /// <summary>
+    ///     " Rerated from D20 in Phoenix." when this mix's level differs from the level in
+    ///     the previous mix that carried the chart, empty otherwise. Levels arrive in era
+    ///     order, so the comparison is against the entry immediately before this mix's —
+    ///     never against the debut, which would misreport a chart that moved twice.
+    /// </summary>
+    private static string RerateClause(Chart chart, HistoryVerdict? history)
+    {
+        if (history == null) return string.Empty;
+        var index = -1;
+        for (var i = 0; i < history.Levels.Count; i++)
+            if (history.Levels[i].Mix == chart.Mix)
+            {
+                index = i;
+                break;
+            }
+
+        if (index <= 0) return string.Empty;
+        var previous = history.Levels[index - 1];
+        if (previous.Level == history.Levels[index].Level) return string.Empty;
+
+        var shorthand = $"{chart.Type.GetShortHand()}{previous.Level}";
+        return $" Rerated from {shorthand} in {previous.Mix.GetName()}.";
+    }
+
+    /// <summary>
+    ///     The mix diff's head. The description is deliberately stat-loaded — the aggregate
+    ///     question ("what changed in Phoenix 2") is answered by the counts, and a snippet
+    ///     that carries them is one an engine quotes instead of stitching page text together.
+    ///     The pair rides the path so each transition is its own indexable URL; the bare
+    ///     /WhatChanged canonicalizes to the pair it defaults to.
+    /// </summary>
+    private async Task<StaticHeadModel?> ResolveWhatChanged(PathString pair, MixEnum currentMix,
+        CancellationToken cancellationToken)
+    {
+        var segments = pair.Value?.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries)
+                       ?? Array.Empty<string>();
+        MixEnum from, to;
+        if (segments.Length == 2)
+        {
+            if (!ChartSlugs.TryParseMixSlug(segments[0], out from) ||
+                !ChartSlugs.TryParseMixSlug(segments[1], out to)) return null;
+        }
+        else if (segments.Length == 0)
+        {
+            // Mirrors the page's own default: the viewer's mix against the one it succeeded.
+            var ordered = Enum.GetValues<MixEnum>().OrderByDescending(m => m.DisplayOrder()).ToArray();
+            var index = Math.Max(0, Array.IndexOf(ordered, currentMix));
+            (from, to) = index + 1 < ordered.Length
+                ? (ordered[index + 1], currentMix)
+                : (currentMix, ordered[Math.Max(0, index - 1)]);
+        }
+        else
+        {
+            return null;
+        }
+
+        if (from == to) return null;
+
+        var diff = await _mediator.Send(new GetMixDiffQuery(from, to), cancellationToken);
+        var title = _localizer["What Changed: {0} to {1}", from.GetName(), to.GetName()];
+        var description = diff.IsEmpty
+            ? _localizer["No chart levels, songs or charts changed between {0} and {1} in Pump It Up.",
+                from.GetName(), to.GetName()]
+            : _localizer[
+                "{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}.",
+                to.GetName(), diff.Rerated.Count, from.GetName(), diff.RatedHarder, diff.RatedEasier,
+                diff.ArrivedSongs.Count, diff.DepartedSongs.Count];
+
+        var canonical =
+            $"https://piuscores.arroweclip.se/WhatChanged/{ChartSlugs.MixSlug(from)}/{ChartSlugs.MixSlug(to)}";
+        return new StaticHeadModel(title, description, null, canonical, null, null,
+            new MixDiffHeadModel(from.GetName(), to.GetName(), diff.Rerated.Count, diff.ArrivedSongs.Count,
+                diff.DepartedSongs.Count));
     }
 
     /// <summary>

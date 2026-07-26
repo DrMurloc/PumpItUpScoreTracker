@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
     Microsoft ResX Schema
@@ -6007,5 +6007,125 @@
   </data>
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Supera {0} chart con {1} o meglio (solo {2} in questa cartella)</value>
+  </data>
+  <data name="What Changed" xml:space="preserve">
+    <value>Cosa è cambiato</value>
+  </data>
+  <data name="What Changed: {0} to {1}" xml:space="preserve">
+    <value>Cosa è cambiato: da {0} a {1}</value>
+  </data>
+  <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
+    <value>Tutte le chart che hanno cambiato livello, sono arrivate o sono uscite tra {0} e {1}.</value>
+  </data>
+  <data name="Find a chart — e.g. Iolite Sky D20" xml:space="preserve">
+    <value>Cerca una chart — es. Iolite Sky D20</value>
+  </data>
+  <data name="Search a song, or add a difficulty to jump straight to one chart." xml:space="preserve">
+    <value>Cerca una canzone, oppure aggiungi una difficoltà per andare dritto a una chart.</value>
+  </data>
+  <data name="Re-rated" xml:space="preserve">
+    <value>Rivalutate</value>
+  </data>
+  <data name="Arrived" xml:space="preserve">
+    <value>Arrivate</value>
+  </data>
+  <data name="Left" xml:space="preserve">
+    <value>Uscite</value>
+  </data>
+  <data name="Group by" xml:space="preserve">
+    <value>Raggruppa per</value>
+  </data>
+  <data name="Old folder" xml:space="preserve">
+    <value>Cartella precedente</value>
+  </data>
+  <data name="New folder" xml:space="preserve">
+    <value>Nuova cartella</value>
+  </data>
+  <data name="{0} folder" xml:space="preserve">
+    <value>Cartella {0}</value>
+  </data>
+  <data name="Show only {0}" xml:space="preserve">
+    <value>Mostra solo {0}</value>
+  </data>
+  <data name="Show every folder" xml:space="preserve">
+    <value>Mostra tutte le cartelle</value>
+  </data>
+  <data name="{0} left" xml:space="preserve">
+    <value>{0} uscite</value>
+  </data>
+  <data name="{0} arrived" xml:space="preserve">
+    <value>{0} entrate</value>
+  </data>
+  <data name="Swap direction" xml:space="preserve">
+    <value>Inverti il verso</value>
+  </data>
+  <data name="Pick two different mixes." xml:space="preserve">
+    <value>Scegli due mix diversi.</value>
+  </data>
+  <data name="Nothing changed between these two mixes." xml:space="preserve">
+    <value>Non è cambiato nulla tra questi due mix.</value>
+  </data>
+  <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
+    <value>Nessun risultato con questi filtri. Rimuovine uno per vedere il resto.</value>
+  </data>
+  <data name="Moved up — {0} is now {1}." xml:space="preserve">
+    <value>Salita — {0} ora è {1}.</value>
+  </data>
+  <data name="Moved down — {0} is now {1}." xml:space="preserve">
+    <value>Scesa — {0} ora è {1}.</value>
+  </data>
+  <data name="{0} didn't move." xml:space="preserve">
+    <value>{0} non è cambiata.</value>
+  </data>
+  <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
+    <value>Nulla è cambiato — tutte le {0} chart hanno mantenuto il livello.</value>
+  </data>
+  <data name="{0} of {1} charts moved." xml:space="preserve">
+    <value>{0} chart su {1} hanno cambiato livello.</value>
+  </data>
+  <data name="{0} other charts unchanged" xml:space="preserve">
+    <value>Altre {0} chart invariate</value>
+  </data>
+  <data name="New in {0} — {1} charts." xml:space="preserve">
+    <value>Nuova in {0} — {1} chart.</value>
+  </data>
+  <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
+    <value>Non è in {0} — tutte le {1} chart sono uscite con la canzone.</value>
+  </data>
+  <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
+    <value>{0} non è in {1} — è uscita l'intera canzone.</value>
+  </data>
+  <data name="{0} new charts" xml:space="preserve">
+    <value>{0} nuove chart</value>
+  </data>
+  <data name="{0} charts removed" xml:space="preserve">
+    <value>{0} chart rimosse</value>
+  </data>
+  <data name="{0} songs arrived, bringing {1} new charts." xml:space="preserve">
+    <value>Sono arrivate {0} canzoni, con {1} nuove chart.</value>
+  </data>
+  <data name="{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile." xml:space="preserve">
+    <value>{0} canzoni sono uscite dal catalogo, portando via {1} chart. I tuoi punteggi restano sul profilo.</value>
+  </data>
+  <data name="{0} charts added to songs that were already here" xml:space="preserve">
+    <value>{0} chart aggiunte a canzoni già presenti</value>
+  </data>
+  <data name="{0} charts removed from songs that stayed" xml:space="preserve">
+    <value>{0} chart rimosse da canzoni rimaste</value>
+  </data>
+  <data name="Open the chart page" xml:space="preserve">
+    <value>Apri la pagina della chart</value>
+  </data>
+  <data name="{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}." xml:space="preserve">
+    <value>{0} ha cambiato il livello di {1} chart rispetto a {2} — {3} più difficili, {4} più facili — {5} canzoni aggiunte e {6} rimosse.</value>
+  </data>
+  <data name="No chart levels, songs or charts changed between {0} and {1} in Pump It Up." xml:space="preserve">
+    <value>Nessun livello, canzone o chart è cambiato tra {0} e {1} in Pump It Up.</value>
+  </data>
+  <data name="▲ Harder" xml:space="preserve">
+    <value>▲ Più difficile</value>
+  </data>
+  <data name="▼ Easier" xml:space="preserve">
+    <value>▼ Più facile</value>
   </data>
 </root>

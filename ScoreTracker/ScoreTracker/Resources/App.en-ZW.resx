@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -5933,5 +5933,125 @@
   </data>
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Mrgl {0} mrgl {1} grblgl (mrgl {2} rgllgl mrgl)</value>
+  </data>
+  <data name="What Changed" xml:space="preserve">
+    <value>Mrrrglub Murglgl</value>
+  </data>
+  <data name="What Changed: {0} to {1}" xml:space="preserve">
+    <value>Mrrrglub Murglgl: {0} mrgl {1}</value>
+  </data>
+  <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
+    <value>Blurb plglrglgrrr murglgl, mrgllurg, urg blubmrrglglrgl blurgl {0} argrl {1}.</value>
+  </data>
+  <data name="Find a chart — e.g. Iolite Sky D20" xml:space="preserve">
+    <value>Mrrglrgl plglrglgrrr — mrgl Iolite Sky D20</value>
+  </data>
+  <data name="Search a song, or add a difficulty to jump straight to one chart." xml:space="preserve">
+    <value>Mrrglrgl mrgllurg, urg blurb argrlglar mrgl blurb plglrglgrrr.</value>
+  </data>
+  <data name="Re-rated" xml:space="preserve">
+    <value>Murglgl</value>
+  </data>
+  <data name="Arrived" xml:space="preserve">
+    <value>Mrgllurg</value>
+  </data>
+  <data name="Left" xml:space="preserve">
+    <value>Blubmrrglglrgl</value>
+  </data>
+  <data name="Group by" xml:space="preserve">
+    <value>Grglglub mrgl</value>
+  </data>
+  <data name="Old folder" xml:space="preserve">
+    <value>Murgl blurgrgl</value>
+  </data>
+  <data name="New folder" xml:space="preserve">
+    <value>Mrgllurg blurgrgl</value>
+  </data>
+  <data name="{0} folder" xml:space="preserve">
+    <value>{0} blurgrgl</value>
+  </data>
+  <data name="Show only {0}" xml:space="preserve">
+    <value>Blurb {0} mrgl</value>
+  </data>
+  <data name="Show every folder" xml:space="preserve">
+    <value>Blurb blurb blurgrgl</value>
+  </data>
+  <data name="{0} left" xml:space="preserve">
+    <value>{0} blubmrrglglrgl</value>
+  </data>
+  <data name="{0} arrived" xml:space="preserve">
+    <value>{0} mrgllurg</value>
+  </data>
+  <data name="Swap direction" xml:space="preserve">
+    <value>Mrrrgl blurgl</value>
+  </data>
+  <data name="Pick two different mixes." xml:space="preserve">
+    <value>Mrrglrgl blurgl mrrrglub.</value>
+  </data>
+  <data name="Nothing changed between these two mixes." xml:space="preserve">
+    <value>Mrgl murglgl blurgl blurb mrrrglub.</value>
+  </data>
+  <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
+    <value>Mrgl mrrglrgl blurb glurgl. Mrrrgl blurb mrgl blurb.</value>
+  </data>
+  <data name="Moved up — {0} is now {1}." xml:space="preserve">
+    <value>Murglgl urgl — {0} mrgl {1}.</value>
+  </data>
+  <data name="Moved down — {0} is now {1}." xml:space="preserve">
+    <value>Murglgl blub — {0} mrgl {1}.</value>
+  </data>
+  <data name="{0} didn't move." xml:space="preserve">
+    <value>{0} mrgl murglgl.</value>
+  </data>
+  <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
+    <value>Mrgl murglgl — blurb {0} plglrglgrrr mrgl argrlglar.</value>
+  </data>
+  <data name="{0} of {1} charts moved." xml:space="preserve">
+    <value>{0} mrgl {1} plglrglgrrr murglgl.</value>
+  </data>
+  <data name="{0} other charts unchanged" xml:space="preserve">
+    <value>{0} blurb plglrglgrrr mrgl murglgl</value>
+  </data>
+  <data name="New in {0} — {1} charts." xml:space="preserve">
+    <value>Mrgllurg mrgl {0} — {1} plglrglgrrr.</value>
+  </data>
+  <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
+    <value>Mrgl mrgl {0} — blurb {1} plglrglgrrr blubmrrglglrgl mrgl mrgllurg.</value>
+  </data>
+  <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
+    <value>{0} mrgl mrgl {1} — blurb mrgllurg blubmrrglglrgl.</value>
+  </data>
+  <data name="{0} new charts" xml:space="preserve">
+    <value>{0} mrgllurg plglrglgrrr</value>
+  </data>
+  <data name="{0} charts removed" xml:space="preserve">
+    <value>{0} plglrglgrrr blubmrrglglrgl</value>
+  </data>
+  <data name="{0} songs arrived, bringing {1} new charts." xml:space="preserve">
+    <value>{0} mrgllurg mrgllurg, blurb {1} mrgllurg plglrglgrrr.</value>
+  </data>
+  <data name="{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile." xml:space="preserve">
+    <value>{0} mrgllurg blubmrrglglrgl, blurb {1} plglrglgrrr. Prgl mrrr mrgl blurb.</value>
+  </data>
+  <data name="{0} charts added to songs that were already here" xml:space="preserve">
+    <value>{0} plglrglgrrr mrgllurg mrgl mrgllurg murgl</value>
+  </data>
+  <data name="{0} charts removed from songs that stayed" xml:space="preserve">
+    <value>{0} plglrglgrrr blubmrrglglrgl mrgl mrgllurg murgl</value>
+  </data>
+  <data name="Open the chart page" xml:space="preserve">
+    <value>Blurb plglrglgrrr mrrrglub</value>
+  </data>
+  <data name="{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}." xml:space="preserve">
+    <value>{0} murglgl {1} plglrglgrrr argrlglar mrgl {2} — {3} grrrrgl, {4} blurb — mrgllurg {5} argrl blubmrrglglrgl {6}.</value>
+  </data>
+  <data name="No chart levels, songs or charts changed between {0} and {1} in Pump It Up." xml:space="preserve">
+    <value>Mrgl argrlglar, mrgllurg urg plglrglgrrr murglgl blurgl {0} argrl {1} mrgl Pump It Up.</value>
+  </data>
+  <data name="▲ Harder" xml:space="preserve">
+    <value>▲ Grrrrgl</value>
+  </data>
+  <data name="▼ Easier" xml:space="preserve">
+    <value>▼ Blurb</value>
   </data>
 </root>

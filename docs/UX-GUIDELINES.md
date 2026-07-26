@@ -54,6 +54,8 @@ Percentile semantics are the established `ScoreRankingRecord.Ranking` convention
 
 **Difficulty** (how hard is this chart relative to its level — tier lists). The familiar green→red heat, `TierListCategory` → `--diff-*`. Red is at home here exactly because the rarity ramp refuses it.
 
+**Direction of change** (a chart moved between mixes — the `/WhatChanged` diff) borrows two steps off that same ramp rather than inventing a third scale: warm `--diff-hard` means the game now calls it harder, cool `--diff-overrated` means easier. Deliberately **not** red/green — green already means "easy for its level" two paragraphs up, and up/down is polarity, not good/bad. Both directions print their arrow and numeric delta alongside the colour (rule 8), and a diverging encoding uses **one scale for both sides**: px-per-chart above and below the midline must match, or the smaller side is a lie.
+
 ---
 
 ## 2. The rules
