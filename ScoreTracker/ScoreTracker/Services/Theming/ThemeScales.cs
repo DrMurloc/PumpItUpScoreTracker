@@ -131,6 +131,25 @@ public static class ThemeScales
     };
 
     /// <summary>
+    /// Judgment color token — the game's own vocabulary (perfect ice-blue, great green,
+    /// good amber, bad violet, miss red). Mix-invariant like the alert colors: a MISS has
+    /// to read as a miss in every theme.
+    /// </summary>
+    public static string JudgmentColor(Judgment judgment) =>
+        $"var(--judg-{judgment.ToString().ToLowerInvariant()})";
+
+    /// <summary>
+    /// The lifebar's zone tokens. The rainbow paints the visible bar (0–1000); overflow is
+    /// the cool chrome above it, which the cabinet never shows you
+    /// (docs/design/life-calculator-redesign.md).
+    /// </summary>
+    public static string LifeRainbow => "var(--life-rainbow)";
+
+    public static string LifeOverflow => "var(--life-overflow)";
+
+    public static string LifeDanger => "var(--life-danger)";
+
+    /// <summary>
     /// Percentile coloring against a concrete population (community leaderboards).
     /// Zeroes are excluded from the curve — unrated players shouldn't drag it — and
     /// color as Common.

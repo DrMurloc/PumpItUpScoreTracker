@@ -7189,6 +7189,929 @@ button.chart-card-art {
     }
 }
 
+/* ============================================================================
+   Life Calculator (/LifeCalculator) — docs/design/life-calculator-redesign.md
+   The lifebar is the page's hero instrument: the visible bar (0-1000, the
+   rainbow) and the overflow above it, drawn to true proportion.
+   ============================================================================ */
+
+.lc-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px 24px;
+    flex-wrap: wrap;
+    padding-bottom: 16px;
+}
+
+.lc-sub {
+    margin: 7px 0 0;
+    max-width: 56ch;
+    color: var(--mix-ink-muted);
+    font-size: .95rem;
+    line-height: 1.5;
+}
+
+.lc-eyebrow {
+    display: block;
+    font-size: .68rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    font-weight: 600;
+}
+
+.lc-provenance {
+    background: none;
+    border: 1px solid color-mix(in srgb, var(--mix-accent) 45%, transparent);
+    color: var(--mix-accent);
+    border-radius: 2px;
+    padding: 4px 9px;
+    font: 600 .66rem/1.3 var(--font-body);
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.lc-provenance-body {
+    margin: 10px 0 0;
+    padding: 10px 13px;
+    border-left: 2px solid var(--mix-accent);
+    background: var(--mix-surface);
+    font-size: .85rem;
+    line-height: 1.55;
+    color: var(--mix-ink-muted);
+    max-width: 74ch;
+}
+
+/* ---------- the bench ---------- */
+.lc-bench {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
+    border-radius: 3px;
+    padding: 18px 20px 20px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 232px;
+    gap: 22px 26px;
+}
+
+.lc-bench-main {
+    min-width: 0;
+}
+
+.lc-bench-head {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px 18px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.lc-level {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.lc-level-value {
+    font-family: var(--font-display);
+    font-size: 1.9rem;
+    line-height: 1;
+    font-weight: 700;
+    min-width: 2.1ch;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-level input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: clamp(120px, 20vw, 210px);
+    height: 3px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    cursor: pointer;
+}
+
+.lc-level input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--mix-primary);
+    border: none;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--mix-primary) 22%, transparent);
+    cursor: pointer;
+}
+
+.lc-level input[type="range"]::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    border: none;
+    border-radius: 50%;
+    background: var(--mix-primary);
+}
+
+/* ---------- the readout ---------- */
+.lc-readout {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.lc-life {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 6vw, 3.3rem);
+    font-weight: 700;
+    line-height: .95;
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-life-max {
+    font-size: .95rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-state {
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-size: .95rem;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    padding: 2px 9px;
+    border-radius: 2px;
+}
+
+.lc-state[data-state="overflow-full"] {
+    color: var(--life-overflow);
+    background: color-mix(in srgb, var(--life-overflow) 15%, transparent);
+}
+
+.lc-state[data-state="into-overflow"] {
+    color: var(--life-r7);
+    background: color-mix(in srgb, var(--life-r7) 15%, transparent);
+}
+
+.lc-state[data-state="ok"] {
+    color: var(--mix-ink-muted);
+    background: color-mix(in srgb, var(--mix-ink) 8%, transparent);
+}
+
+.lc-state[data-state="danger"] {
+    color: var(--life-danger);
+    background: color-mix(in srgb, var(--life-danger) 16%, transparent);
+}
+
+.lc-state[data-state="dead"] {
+    color: var(--mix-bg);
+    background: var(--life-danger);
+}
+
+/* ---------- the bar ---------- */
+.lc-zones {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 5px;
+}
+
+.lc-zone-cap {
+    font-size: .62rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 16%, transparent);
+    padding-top: 3px;
+}
+
+.lc-zone-cap b {
+    color: var(--mix-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-zone-cap-overflow {
+    border-top-color: color-mix(in srgb, var(--life-overflow) 42%, transparent);
+    text-align: right;
+}
+
+.lc-track {
+    position: relative;
+    display: flex;
+    gap: 2px;
+    height: 52px;
+    background: var(--mix-bg);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    padding: 3px;
+    border-radius: 2px;
+}
+
+.lc-zone {
+    position: relative;
+    overflow: hidden;
+    min-width: 2px;
+}
+
+.lc-zone::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: .1;
+}
+
+.lc-zone-visible::before {
+    background: var(--life-rainbow);
+}
+
+.lc-zone-overflow::before {
+    background: var(--life-overflow);
+}
+
+/* A multi-note press sweeps rather than snapping. The durations ride custom
+   properties the page sets inline, so a x50 press can take longer than a x1 —
+   pure CSS, which is what keeps it free on a server circuit. The two zones run in
+   SEQUENCE, not together: gaining, the visible bar fills before the overflow starts;
+   draining, the overflow empties first. Life crosses the zones in that order. */
+.lc-fill {
+    position: absolute;
+    inset: 0;
+}
+
+.lc-fill-visible {
+    background: var(--life-rainbow);
+    transition: clip-path var(--lc-vis-sweep, .13s) linear var(--lc-vis-delay, 0s);
+}
+
+.lc-fill-overflow {
+    background:
+        repeating-linear-gradient(115deg, transparent 0 5px, color-mix(in srgb, var(--mix-bg) 55%, transparent) 5px 8px),
+        linear-gradient(90deg, color-mix(in srgb, var(--life-overflow) 62%, transparent), var(--life-overflow));
+    transition: clip-path var(--lc-overflow-sweep, .13s) linear var(--lc-overflow-delay, 0s);
+}
+
+.lc-glow {
+    position: absolute;
+    inset: -1px;
+    pointer-events: none;
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity .35s ease;
+    box-shadow: inset 0 0 22px 2px color-mix(in srgb, var(--life-r7) 55%, transparent);
+}
+
+.lc-track[data-rainbow="true"] .lc-glow {
+    opacity: 1;
+}
+
+.lc-track[data-danger="true"] {
+    border-color: var(--life-danger);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--life-danger) 45%, transparent);
+}
+
+.lc-tick {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 1px;
+    background: color-mix(in srgb, var(--mix-ink) 55%, transparent);
+    pointer-events: none;
+}
+
+.lc-tick-danger {
+    background: var(--life-danger);
+}
+
+.lc-tick span {
+    position: absolute;
+    top: calc(100% + 3px);
+    left: 0;
+    transform: translateX(-50%);
+    font-size: .6rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
+.lc-tick-danger span {
+    color: var(--life-danger);
+}
+
+.lc-scale {
+    height: 15px;
+}
+
+/* ---------- judgment keys ---------- */
+.lc-keys {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 22px;
+}
+
+.lc-key {
+    --lc-k: var(--mix-ink);
+    position: relative;
+    background: var(--mix-surface-muted);
+    border: 1px solid color-mix(in srgb, var(--lc-k) 38%, transparent);
+    border-bottom-width: 3px;
+    border-bottom-color: var(--lc-k);
+    border-radius: 3px;
+    padding: 9px 6px 7px;
+    cursor: pointer;
+    color: var(--mix-ink);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    transition: transform .07s ease, background .12s ease;
+}
+
+.lc-key:hover {
+    background: color-mix(in srgb, var(--lc-k) 16%, var(--mix-surface-muted));
+}
+
+.lc-key:active {
+    transform: translateY(2px);
+    border-bottom-width: 1px;
+    margin-bottom: 2px;
+    background: color-mix(in srgb, var(--lc-k) 30%, var(--mix-surface-muted));
+}
+
+.lc-key-delta {
+    font-family: var(--font-body);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    color: var(--lc-k);
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-key-hint {
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    font-family: var(--font-body);
+    font-size: .58rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--mix-ink-muted);
+}
+
+.lc-key-step {
+    color: var(--lc-k);
+    margin-left: 3px;
+}
+
+.lc-key-perfect {
+    --lc-k: var(--judg-perfect);
+}
+
+.lc-key-great {
+    --lc-k: var(--judg-great);
+}
+
+.lc-key-good {
+    --lc-k: var(--judg-good);
+}
+
+.lc-key-bad {
+    --lc-k: var(--judg-bad);
+}
+
+.lc-key-miss {
+    --lc-k: var(--judg-miss);
+}
+
+/* ---------- step toggle + run buttons ---------- */
+.lc-runs {
+    display: flex;
+    align-items: center;
+    gap: 7px 10px;
+    flex-wrap: wrap;
+    margin-top: 11px;
+}
+
+.lc-runs-label {
+    font-size: .63rem;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    font-weight: 600;
+}
+
+.lc-runs-gap {
+    flex: 1 1 12px;
+}
+
+.lc-seg {
+    display: inline-flex;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.lc-seg button {
+    background: none;
+    border: none;
+    color: var(--mix-ink-muted);
+    font: 600 .74rem/1.3 var(--font-body);
+    padding: 5px 12px;
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-seg button + button {
+    border-left: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+}
+
+.lc-seg button[aria-pressed="true"] {
+    background: var(--mix-primary);
+    color: var(--mix-primary-contrast);
+}
+
+.lc-ghost {
+    background: none;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 20%, transparent);
+    color: var(--mix-ink-muted);
+    border-radius: 2px;
+    padding: 4px 10px;
+    font: 600 .72rem/1.3 var(--font-body);
+    cursor: pointer;
+}
+
+.lc-ghost:hover {
+    color: var(--mix-ink);
+    border-color: color-mix(in srgb, var(--mix-ink) 42%, transparent);
+}
+
+/* Phoenix 2's electric overflow effect: the note lights up when the state it
+   describes is actually on screen. */
+.lc-note {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 14px 0 0;
+    font-size: .8rem;
+    line-height: 1.45;
+    color: var(--mix-ink-muted);
+    max-width: 62ch;
+    transition: color .25s ease;
+}
+
+.lc-bolt {
+    flex: none;
+    font-size: .95rem;
+    opacity: .35;
+    transition: opacity .25s ease, filter .25s ease;
+}
+
+.lc-note[data-live="true"] {
+    color: var(--mix-ink);
+}
+
+.lc-note[data-live="true"] .lc-bolt {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px var(--mix-accent));
+}
+
+/* ---------- telemetry rail ---------- */
+.lc-tele {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    border-left: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    padding-left: 20px;
+}
+
+.lc-tele-label {
+    display: block;
+    font-size: .63rem;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    font-weight: 600;
+}
+
+.lc-tele-value {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-tele-miss {
+    color: var(--judg-miss);
+}
+
+.lc-tele-note {
+    display: block;
+    font-size: .76rem;
+    color: var(--mix-ink-muted);
+    margin-top: 1px;
+}
+
+.lc-mult-meter {
+    position: relative;
+    height: 5px;
+    margin-top: 6px;
+    background: color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.lc-mult-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--judg-perfect) 45%, transparent), var(--judg-perfect));
+    transition: width var(--lc-sweep, .13s) linear;
+}
+
+/* ---------- sections ---------- */
+.lc-section {
+    margin-top: 34px;
+}
+
+.lc-section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px 14px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.lc-section-sub {
+    margin: 0 0 14px;
+    color: var(--mix-ink-muted);
+    font-size: .9rem;
+    line-height: 1.5;
+    max-width: 70ch;
+}
+
+/* ---------- survival budget ---------- */
+.lc-budget {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.lc-bud {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
+    border-top: 2px solid var(--lc-bud-c, var(--mix-primary));
+    border-radius: 3px;
+    padding: 12px 13px 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.lc-bud-miss {
+    --lc-bud-c: var(--judg-miss);
+}
+
+.lc-bud-bad {
+    --lc-bud-c: var(--judg-bad);
+}
+
+.lc-bud-value {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 2.7rem);
+    font-weight: 700;
+    line-height: .95;
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+}
+
+.lc-bud-unit {
+    font-family: var(--font-body);
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    line-height: 1.2;
+}
+
+.lc-bud-what {
+    font-size: .86rem;
+    line-height: 1.4;
+    color: var(--mix-ink);
+}
+
+.lc-bud-bar {
+    position: relative;
+    height: 6px;
+    background: var(--mix-bg);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: auto;
+}
+
+.lc-bud-bar i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--life-rainbow);
+}
+
+.lc-bud-settle {
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-budget-note {
+    margin: 11px 0 0;
+    font-size: .82rem;
+    color: var(--mix-ink-muted);
+}
+
+/* ---------- level ladder ---------- */
+.lc-ladder {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
+    border-radius: 3px;
+    padding: 14px 16px 16px;
+}
+
+.lc-ladder-head,
+.lc-ladder-row {
+    display: grid;
+    grid-template-columns: 3ch minmax(0, 1fr) 7ch;
+    gap: 12px;
+}
+
+.lc-ladder-head {
+    font-size: .62rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    padding-bottom: 7px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+}
+
+.lc-ladder-head span:last-child {
+    text-align: right;
+}
+
+.lc-ladder-row {
+    align-items: center;
+    padding: 2px 0;
+    background: none;
+    border: none;
+    width: 100%;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+
+.lc-ladder-row:hover {
+    background: color-mix(in srgb, var(--mix-ink) 5%, transparent);
+}
+
+.lc-ladder-row[data-current="true"] {
+    background: color-mix(in srgb, var(--mix-primary) 13%, transparent);
+    box-shadow: inset 2px 0 0 var(--mix-primary);
+}
+
+.lc-ladder-level {
+    font-family: var(--font-display);
+    font-size: .95rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    color: var(--mix-ink-muted);
+}
+
+.lc-ladder-row[data-current="true"] .lc-ladder-level {
+    color: var(--mix-ink);
+}
+
+.lc-ladder-bar {
+    display: flex;
+    height: 9px;
+    gap: 1px;
+}
+
+.lc-ladder-visible {
+    background: var(--life-rainbow);
+    opacity: .95;
+}
+
+.lc-ladder-overflow {
+    background:
+        repeating-linear-gradient(115deg, transparent 0 4px, color-mix(in srgb, var(--mix-surface) 70%, transparent) 4px 6px),
+        color-mix(in srgb, var(--life-overflow) 78%, transparent);
+}
+
+.lc-ladder-max {
+    font-size: .76rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--mix-ink-muted);
+    text-align: right;
+}
+
+.lc-ladder-row[data-current="true"] .lc-ladder-max {
+    color: var(--mix-ink);
+}
+
+.lc-ladder-key {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    font-size: .76rem;
+    color: var(--mix-ink-muted);
+}
+
+.lc-ladder-key i {
+    display: inline-block;
+    width: 22px;
+    height: 8px;
+    vertical-align: -1px;
+    margin-right: 7px;
+}
+
+.lc-ladder-key i.lc-k-visible {
+    background: var(--life-rainbow);
+}
+
+.lc-ladder-key i.lc-k-overflow {
+    background:
+        repeating-linear-gradient(115deg, transparent 0 4px, color-mix(in srgb, var(--mix-surface) 70%, transparent) 4px 6px),
+        color-mix(in srgb, var(--life-overflow) 78%, transparent);
+}
+
+/* ---------- rules of thumb ---------- */
+.lc-rules {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.lc-rule {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
+    border-radius: 3px;
+    padding: 14px 15px 15px;
+}
+
+.lc-rule-value {
+    font-family: var(--font-display);
+    font-size: 2.1rem;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--lc-rule-c, var(--mix-ink));
+}
+
+.lc-rule h3 {
+    font-size: 1.08rem;
+    letter-spacing: .02em;
+    margin: 8px 0 5px;
+}
+
+.lc-rule p {
+    margin: 0;
+    font-size: .87rem;
+    line-height: 1.5;
+    color: var(--mix-ink-muted);
+}
+
+.lc-rule-miss {
+    --lc-rule-c: var(--judg-miss);
+}
+
+.lc-rule-bad {
+    --lc-rule-c: var(--judg-bad);
+}
+
+.lc-rule-perfect {
+    --lc-rule-c: var(--judg-perfect);
+}
+
+.lc-rule-good {
+    --lc-rule-c: var(--judg-good);
+}
+
+/* ---------- mechanics ---------- */
+.lc-mech {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.lc-mech-col {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
+    border-radius: 3px;
+    padding: 14px 15px 15px;
+}
+
+.lc-mech-col h3 {
+    font-size: 1.05rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin: 0 0 9px;
+}
+
+.lc-mech-gain {
+    color: var(--judg-perfect);
+}
+
+.lc-mech-loss {
+    color: var(--judg-miss);
+}
+
+.lc-mech-mult {
+    color: var(--mix-accent);
+}
+
+.lc-mech-col ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.lc-mech-col li {
+    font-size: .87rem;
+    line-height: 1.5;
+    color: var(--mix-ink-muted);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: baseline;
+}
+
+.lc-mech-col li b {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--mix-ink);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.lc-formula {
+    margin: 11px 0 0;
+    padding-top: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    font-size: .74rem;
+    line-height: 1.5;
+    color: var(--mix-ink-muted);
+    word-break: break-word;
+}
+
+/* ---------- footer ---------- */
+.lc-foot {
+    margin-top: 36px;
+    padding-top: 18px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px 30px;
+    align-items: start;
+}
+
+.lc-quote {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    line-height: 1.15;
+    color: var(--mix-ink);
+}
+
+.lc-quote cite {
+    display: block;
+    margin-top: 5px;
+    font-family: var(--font-body);
+    font-size: .78rem;
+    font-style: normal;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
 /* ===== /Titles =====
    Titles are ladders, so the page draws one rail per ladder rather than one row per title
    (docs/design/titles-overhaul.md). Tokens only: this page carries no colour-literal
@@ -7697,6 +8620,73 @@ button.chart-card-art {
     letter-spacing: .18em;
     text-transform: uppercase;
     color: var(--mix-ink-muted);
+}
+
+.lc-foot-src {
+    font-size: .84rem;
+    line-height: 1.55;
+    color: var(--mix-ink-muted);
+}
+
+.lc-foot-src a {
+    color: var(--mix-primary);
+}
+
+/* ---------- narrow widths ---------- */
+@media (max-width: 959.98px) {
+    .lc-bench {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .lc-tele {
+        border-left: none;
+        border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+        padding-left: 0;
+        padding-top: 15px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 14px 18px;
+    }
+
+    .lc-budget {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .lc-rules {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .lc-mech {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 639.98px) {
+    .lc-track {
+        height: 40px;
+    }
+
+    .lc-bench {
+        padding: 14px 13px 16px;
+    }
+
+    .lc-rules {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .lc-foot {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 479.98px) {
+    .lc-keys {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .lc-budget {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 .title-drawer-head h3 {

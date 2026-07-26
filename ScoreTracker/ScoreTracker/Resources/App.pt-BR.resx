@@ -6245,6 +6245,315 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Passe {0} charts com {1} ou melhor (só {2} nesta pasta)</value>
   </data>
+  <data name="Life Calculator" xml:space="preserve">
+    <value>Calculadora de vida</value>
+  </data>
+  <data name="What a miss actually costs you, and how much clean combo it takes to earn it back." xml:space="preserve">
+    <value>O que um Miss realmente custa, e quanto combo limpo é preciso para recuperá-lo.</value>
+  </data>
+  <data name="NX2 / Prime data-mine" xml:space="preserve">
+    <value>Dados extraídos de NX2 / Prime</value>
+  </data>
+  <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
+    <value>A Team Infinitesimal extraiu estas fórmulas do código de NX2 e Prime. Ninguém as verificou novamente no Phoenix ou no Phoenix 2, então trate os números como o formato do sistema e não como valores exatos da máquina.</value>
+  </data>
+  <data name="of {0} max" xml:space="preserve">
+    <value>de {0} máx.</value>
+  </data>
+  <data name="Visible bar" xml:space="preserve">
+    <value>Barra visível</value>
+  </data>
+  <data name="Overflow" xml:space="preserve">
+    <value>Transbordo</value>
+  </data>
+  <data name="Current life" xml:space="preserve">
+    <value>Vida atual</value>
+  </data>
+  <data name="12%" xml:space="preserve">
+    <value>12%</value>
+  </data>
+  <data name="Song start" xml:space="preserve">
+    <value>Início da música</value>
+  </data>
+  <data name="Rainbow" xml:space="preserve">
+    <value>Rainbow</value>
+  </data>
+  <data name="Notes per press" xml:space="preserve">
+    <value>Notas por toque</value>
+  </data>
+  <data name="Reset to song start" xml:space="preserve">
+    <value>Voltar ao início da música</value>
+  </data>
+  <data name="Fill to max" xml:space="preserve">
+    <value>Encher até o máximo</value>
+  </data>
+  <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
+    <value>O Phoenix 2 passa um efeito elétrico pela barra quando o transbordo fica completamente cheio: o único momento em que o jogo admite que aquela vida escondida existe.</value>
+  </data>
+  <data name="Combo" xml:space="preserve">
+    <value>Combo</value>
+  </data>
+  <data name="Multiplier is on the floor" xml:space="preserve">
+    <value>O multiplicador está no chão</value>
+  </data>
+  <data name="Notes since your last break" xml:space="preserve">
+    <value>Notas desde a sua última quebra</value>
+  </data>
+  <data name="Gain multiplier" xml:space="preserve">
+    <value>Multiplicador de ganho</value>
+  </data>
+  <data name="A miss right now" xml:space="preserve">
+    <value>Um Miss agora</value>
+  </data>
+  <data name="Misses left" xml:space="preserve">
+    <value>Miss restantes</value>
+  </data>
+  <data name="Back to back, from here" xml:space="preserve">
+    <value>Seguidos, a partir daqui</value>
+  </data>
+  <data name="Your survival budget" xml:space="preserve">
+    <value>Seu orçamento de sobrevivência</value>
+  </data>
+  <data name="One break every N notes" xml:space="preserve">
+    <value>Uma quebra a cada N notas</value>
+  </data>
+  <data name="How much clean combo you have to buy back between breaks, and where your life ends up if you keep paying exactly that." xml:space="preserve">
+    <value>Quanto combo limpo você precisa recomprar entre quebras, e onde sua vida termina se você pagar exatamente isso.</value>
+  </data>
+  <data name="Combo, priced" xml:space="preserve">
+    <value>O combo, com preço</value>
+  </data>
+  <data name="Chart view" xml:space="preserve">
+    <value>Visualização do gráfico</value>
+  </data>
+  <data name="Where life settles" xml:space="preserve">
+    <value>Onde a vida se estabiliza</value>
+  </data>
+  <data name="How long you survive" xml:space="preserve">
+    <value>Quanto tempo você sobrevive</value>
+  </data>
+  <data name="Starting from a full bar, how many notes you get before you fail. Series stop where you stop dying: past that combo the bar recovers faster than the breaks drain it." xml:space="preserve">
+    <value>Partindo de uma barra cheia, quantas notas você aguenta antes de falhar. As séries param onde você deixa de morrer: passado esse combo, a barra recupera mais rápido do que as quebras drenam.</value>
+  </data>
+  <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
+    <value>Quebre uma vez a cada N notas indefinidamente e sua vida converge em algum ponto. Abaixo do penhasco ela converge em zero: a curva não suaviza, ela despenca. É o multiplicador morrendo mais rápido do que você consegue reconstruir.</value>
+  </data>
+  <data name="Level only buys you overflow" xml:space="preserve">
+    <value>O nível só compra transbordo</value>
+  </data>
+  <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
+    <value>A barra Rainbow são 1000 de vida em um 1 e 1000 de vida em um 29. O que um chart mais difícil te dá é vida atrás da barra: invisível na máquina, e a única coisa que muda com o nível. O combo necessário por Miss é idêntico até o topo.</value>
+  </data>
+  <data name="Lv" xml:space="preserve">
+    <value>Nv</value>
+  </data>
+  <data name="Total life" xml:space="preserve">
+    <value>Vida total</value>
+  </data>
+  <data name="Visible bar — always 1000" xml:space="preserve">
+    <value>Barra visível: sempre 1000</value>
+  </data>
+  <data name="Overflow — 3 x level squared" xml:space="preserve">
+    <value>Transbordo: nível ao quadrado × 3</value>
+  </data>
+  <data name="Rules of thumb" xml:space="preserve">
+    <value>Regras práticas</value>
+  </data>
+  <data name="The cliff, not a slope" xml:space="preserve">
+    <value>Um penhasco, não uma ladeira</value>
+  </data>
+  <data name="Below {0} notes between misses you die at every level. At {0} you cling on at about 1% life. There is no gentle middle: under the cliff your multiplier never rebuilds, so your gain rounds to nothing." xml:space="preserve">
+    <value>Abaixo de {0} notas entre Miss você morre em qualquer nível. Com {0} você se segura em cerca de 1% de vida. Não existe meio-termo: sob o penhasco seu multiplicador nunca se reconstrói, então seu ganho é arredondado para nada.</value>
+  </data>
+  <data name="A miss costs 40 notes" xml:space="preserve">
+    <value>Um Miss custa 40 notas</value>
+  </data>
+  <data name="Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life." xml:space="preserve">
+    <value>Todo Miss zera o multiplicador de ganho. São necessários {0} Perfects — ou {1} Greats — para levá-lo de volta ao teto. Até lá você pisa notas por quase nenhuma vida.</value>
+  </data>
+  <data name="The rainbow is expensive" xml:space="preserve">
+    <value>O Rainbow é caro</value>
+  </data>
+  <data name="Holding a full visible bar costs {0} clean notes per miss, or {1} if you are hitting greats. Simply staying alive costs {2}. Most of your combo budget goes to looking healthy — and below level 10 it cannot be bought at all, because the overflow is thinner than one miss." xml:space="preserve">
+    <value>Manter a barra visível cheia custa {0} notas limpas por Miss, ou {1} se você estiver fazendo Greats. Simplesmente continuar vivo custa {2}. A maior parte do seu orçamento de combo vai para parecer saudável, e abaixo do nível 10 nem dá para comprar, porque o transbordo é mais fino que um único Miss.</value>
+  </data>
+  <data name="Bads are cheap, then they are not" xml:space="preserve">
+    <value>Bads são baratos, até que não são</value>
+  </data>
+  <data name="A bad is a flat −50 at any life; a miss is up to −270. But a bad still halves your multiplier, so back-to-back bads strangle recovery just as effectively." xml:space="preserve">
+    <value>Um Bad é −50 fixos com qualquer vida; um Miss chega a −270. Mas um Bad também corta seu multiplicador pela metade, então Bads seguidos sufocam a recuperação com a mesma eficiência.</value>
+  </data>
+  <data name="The intro is the danger zone" xml:space="preserve">
+    <value>A introdução é a zona de perigo</value>
+  </data>
+  <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
+    <value>Você começa toda música com 500 de vida e o multiplicador perto de zero: {0} Miss seguidos te matam, em qualquer nível. Sobreviva à abertura e um {1} te dá {2}. Comece forte.</value>
+  </data>
+  <data name="A good is a dead note" xml:space="preserve">
+    <value>Um Good é uma nota morta</value>
+  </data>
+  <data name="Goods give no life, and — unlike perfects and greats — they do not build the multiplier either. They never hurt you. They just do not count." xml:space="preserve">
+    <value>Goods não dão vida e, diferente dos Perfects e Greats, também não constroem o multiplicador. Nunca prejudicam você. Só não contam.</value>
+  </data>
+  <data name="How the bar works" xml:space="preserve">
+    <value>Como a barra funciona</value>
+  </data>
+  <data name="Gain" xml:space="preserve">
+    <value>Ganho</value>
+  </data>
+  <data name="A perfect at a capped multiplier." xml:space="preserve">
+    <value>Um Perfect com o multiplicador no teto.</value>
+  </data>
+  <data name="A great at a capped multiplier." xml:space="preserve">
+    <value>Um Great com o multiplicador no teto.</value>
+  </data>
+  <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
+    <value>O mesmo Perfect no início da música, antes de qualquer combo.</value>
+  </data>
+  <data name="A good, always." xml:space="preserve">
+    <value>Um Good, sempre.</value>
+  </data>
+  <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
+    <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
+  </data>
+  <data name="Loss" xml:space="preserve">
+    <value>Perda</value>
+  </data>
+  <data name="A miss at 1000 life or above — the worst it gets." xml:space="preserve">
+    <value>Um Miss com 1000 de vida ou mais: o pior caso.</value>
+  </data>
+  <data name="A bad, flat, at any life." xml:space="preserve">
+    <value>Um Bad, fixo, com qualquer vida.</value>
+  </data>
+  <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
+    <value>Um Miss com 100 de vida. Miss ficam mais baratos conforme você drena.</value>
+  </data>
+  <data name="Below this life a miss costs less than a bad." xml:space="preserve">
+    <value>Abaixo desta vida, um Miss custa menos que um Bad.</value>
+  </data>
+  <data name="miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50" xml:space="preserve">
+    <value>miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50</value>
+  </data>
+  <data name="The multiplier" xml:space="preserve">
+    <value>O multiplicador</value>
+  </data>
+  <data name="The cap. Reached after 40 perfects." xml:space="preserve">
+    <value>O teto. Alcançado após 40 Perfects.</value>
+  </data>
+  <data name="Where every song starts you." xml:space="preserve">
+    <value>Onde o início de cada música te coloca.</value>
+  </data>
+  <data name="A miss. In practice: straight to zero." xml:space="preserve">
+    <value>Um Miss. Na prática: direto para zero.</value>
+  </data>
+  <data name="A bad. Roughly 22 notes of progress gone." xml:space="preserve">
+    <value>Um Bad. Cerca de 22 notas de progresso perdidas.</value>
+  </data>
+  <data name="perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80" xml:space="preserve">
+    <value>perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80</value>
+  </data>
+  <data name="&quot;Lifebars are weird.&quot;" xml:space="preserve">
+    <value>&quot;Lifebars are weird.&quot;</value>
+  </data>
+  <data name="— Zelllooo" xml:space="preserve">
+    <value>— Zelllooo</value>
+  </data>
+  <data name="Formulas data-mined from NX2 and Prime by" xml:space="preserve">
+    <value>Fórmulas extraídas de NX2 e Prime por</value>
+  </data>
+  <data name="Team Infinitesimal" xml:space="preserve">
+    <value>Team Infinitesimal</value>
+  </data>
+  <data name="Unconfirmed against Phoenix and Phoenix 2 — see the note at the top of the page." xml:space="preserve">
+    <value>Não confirmado no Phoenix nem no Phoenix 2: veja a nota no topo da página.</value>
+  </data>
+  <data name="Overflow full" xml:space="preserve">
+    <value>Transbordo cheio</value>
+  </data>
+  <data name="Into overflow" xml:space="preserve">
+    <value>Em transbordo</value>
+  </data>
+  <data name="One miss from out" xml:space="preserve">
+    <value>A um Miss de cair</value>
+  </data>
+  <data name="{0}% of the bar" xml:space="preserve">
+    <value>{0}% da barra</value>
+  </data>
+  <data name="Capped — perfects pay +{0}" xml:space="preserve">
+    <value>No teto: Perfects dão +{0}</value>
+  </data>
+  <data name="{0} more perfects to cap" xml:space="preserve">
+    <value>Mais {0} Perfects para o teto</value>
+  </data>
+  <data name="and {0} notes of multiplier" xml:space="preserve">
+    <value>e {0} notas de multiplicador</value>
+  </data>
+  <data name="multiplier already gone" xml:space="preserve">
+    <value>o multiplicador já se foi</value>
+  </data>
+  <data name="Just stay alive" xml:space="preserve">
+    <value>Só continuar vivo</value>
+  </data>
+  <data name="Impossible at level {0} — the overflow is thinner than one miss." xml:space="preserve">
+    <value>Impossível no nível {0}: o transbordo é mais fino que um único Miss.</value>
+  </data>
+  <data name="Hold half the bar" xml:space="preserve">
+    <value>Manter meia barra</value>
+  </data>
+  <data name="Hold the rainbow" xml:space="preserve">
+    <value>Manter o Rainbow</value>
+  </data>
+  <data name="Hold the rainbow, on bads" xml:space="preserve">
+    <value>Manter o Rainbow, com Bads</value>
+  </data>
+  <data name="Impossible at level {0} — the overflow is thinner than one bad." xml:space="preserve">
+    <value>Impossível no nível {0}: o transbordo é mais fino que um único Bad.</value>
+  </data>
+  <data name="Those assume perfects in between. On greats the same three cost {0}, {1} and {2} notes." xml:space="preserve">
+    <value>Isso assume Perfects no meio. Com Greats, esses mesmos três custam {0}, {1} e {2} notas.</value>
+  </data>
+  <data name="From the opening 500 life, {0} straight misses or {1} straight bads end the run — {2} and {3} once the overflow is full." xml:space="preserve">
+    <value>A partir dos 500 de vida iniciais, {0} Miss seguidos ou {1} Bads seguidos encerram a run; {2} e {3} com o transbordo cheio.</value>
+  </data>
+  <data name="notes per bad" xml:space="preserve">
+    <value>notas por Bad</value>
+  </data>
+  <data name="notes per miss" xml:space="preserve">
+    <value>notas por Miss</value>
+  </data>
+  <data name="Settles at a full bar — {0} life" xml:space="preserve">
+    <value>Estabiliza com a barra cheia: {0} de vida</value>
+  </data>
+  <data name="Settles at {0} life, {1}% of the bar" xml:space="preserve">
+    <value>Estabiliza em {0} de vida, {1}% da barra</value>
+  </data>
+  <data name="Perfect combo, miss break" xml:space="preserve">
+    <value>Combo de Perfects, quebra por Miss</value>
+  </data>
+  <data name="Great combo, miss break" xml:space="preserve">
+    <value>Combo de Greats, quebra por Miss</value>
+  </data>
+  <data name="Perfect combo, bad break" xml:space="preserve">
+    <value>Combo de Perfects, quebra por Bad</value>
+  </data>
+  <data name="Great combo, bad break" xml:space="preserve">
+    <value>Combo de Greats, quebra por Bad</value>
+  </data>
+  <data name="Combo between breaks" xml:space="preserve">
+    <value>Combo entre quebras</value>
+  </data>
+  <data name="Notes before you fail" xml:space="preserve">
+    <value>Notas antes de falhar</value>
+  </data>
+  <data name="Life it settles at" xml:space="preserve">
+    <value>Vida em que estabiliza</value>
+  </data>
+  <data name="Rainbow · 1000" xml:space="preserve">
+    <value>Rainbow · 1000</value>
+  </data>
+  <data name="Half bar · 500" xml:space="preserve">
+    <value>Meia barra · 500</value>
+  </data>
   <data name="Assuming {0} with a {1} plate." xml:space="preserve">
     <value>Assumindo {0} com plate {1}.</value>
   </data>
