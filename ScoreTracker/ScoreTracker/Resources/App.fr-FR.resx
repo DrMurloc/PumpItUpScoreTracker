@@ -615,7 +615,7 @@
 	  <comment>BPM</comment>
   </data>
   <data name="Note Count" xml:space="preserve">
-	  <value>Nombre de Notes</value>
+	  <value>Nombre de notes</value>
 	  <comment>Nombre de Notes</comment>
   </data>
   <data name="Score (Data Backed)" xml:space="preserve">
@@ -633,10 +633,6 @@
   <data name="Difficulty Categorization" xml:space="preserve">
 	  <value>Catégorisation par difficulté</value>
 	  <comment>Catégorisation par difficulté</comment>
-  </data>
-  <data name="Scoring Level" xml:space="preserve">
-	  <value>Niveau de Score</value>
-	  <comment>Niveau de Score</comment>
   </data>
   <data name="Skill" xml:space="preserve">
 	  <value>Compétence</value>
@@ -833,18 +829,6 @@
   </data>
   <data name="Note Count from Full Life to Death/Threshold based on Combo between Breaks" xml:space="preserve">
     <value>Nombre de notes entre vie pleine et mort/seuil selon le combo entre les Breaks</value>
-  </data>
-  <data name="Perfect Combo, Miss Break" xml:space="preserve">
-    <value>Combo Perfect, Miss Break</value>
-  </data>
-  <data name="Great Combo, Miss Break" xml:space="preserve">
-    <value>Combo Great, Miss Break</value>
-  </data>
-  <data name="Perfect Combo, Bad Break" xml:space="preserve">
-    <value>Combo Perfect, Bad Break</value>
-  </data>
-  <data name="Great Combo, Bad Break" xml:space="preserve">
-    <value>Combo Great, Bad Break</value>
   </data>
   <data name="Notes to Full Life From Start of Song (50%)" xml:space="preserve">
     <value>Notes pour atteindre la vie pleine depuis le début de la chanson (50%)</value>
@@ -1501,9 +1485,6 @@
   <data name="Total Chart Bonus" xml:space="preserve">
     <value>Bonus total du chart</value>
   </data>
-  <data name="Pass Rate" xml:space="preserve">
-    <value>Taux de Pass</value>
-  </data>
   <data name="Average PPS" xml:space="preserve">
     <value>PPS moyen</value>
   </data>
@@ -1531,9 +1512,6 @@
   </data>
   <data name="Chart Statistics" xml:space="preserve">
     <value>Statistiques du chart</value>
-  </data>
-  <data name="Play Count" xml:space="preserve">
-    <value>Nombre de plays</value>
   </data>
   <data name="Best Score" xml:space="preserve">
     <value>Meilleur score</value>
@@ -1832,15 +1810,6 @@
   </data>
   <data name="Score Distribution By Player Level" xml:space="preserve">
     <value>Distribution de scores par niveau de joueur</value>
-  </data>
-  <data name="Scores by Competitive Level" xml:space="preserve">
-    <value>Scores par niveau compétitif</value>
-  </data>
-  <data name="Passes by Competitive Level" xml:space="preserve">
-    <value>Pass par niveau compétitif</value>
-  </data>
-  <data name="Chart Leaderboard" xml:space="preserve">
-    <value>Leaderboard du chart</value>
   </data>
   <data name="Content Lock" xml:space="preserve">
     <value>Verrou de contenu</value>
@@ -2208,9 +2177,6 @@
   <data name="Play Session" xml:space="preserve">
     <value>Session de jeu</value>
   </data>
-  <data name="min" xml:space="preserve">
-    <value>min</value>
-  </data>
   <data name="Score Journal" xml:space="preserve">
     <value>Journal des scores</value>
   </data>
@@ -2363,9 +2329,6 @@
   </data>
   <data name="Scores, vs your level" xml:space="preserve">
     <value>Scores, face à ton niveau</value>
-  </data>
-  <data name="Weekly charts" xml:space="preserve">
-    <value>Charts hebdo</value>
   </data>
   <data name="weeks. No misses." xml:space="preserve">
     <value>semaines. Sans en manquer une.</value>
@@ -2786,9 +2749,6 @@
   <data name="Not Enough Data" xml:space="preserve">
     <value>Données insuffisantes</value>
   </data>
-  <data name="Applied Filters" xml:space="preserve">
-    <value>Filtres appliqués</value>
-  </data>
   <data name="Filters and Columns" xml:space="preserve">
     <value>Filtres et colonnes</value>
   </data>
@@ -2969,9 +2929,6 @@
   <data name="Players Like You" xml:space="preserve">
     <value>Joueurs comme vous</value>
   </data>
-  <data name="Players like you" xml:space="preserve">
-    <value>Joueurs comme vous</value>
-  </data>
   <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
     <value>Les joueurs à un niveau compétitif du vôtre — les plus proches comptent davantage, tout comme ceux dont les évaluations de dossiers rejoignent les vôtres.</value>
   </data>
@@ -2981,8 +2938,8 @@
   <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
     <value>Mêmes compétences, deux questions : la vue dossier demande comment se passent les charts que vous avez joués ici — la vue mélange demande quelles compétences surperforment ou sous-performent sur tout ce que vous avez scoré à proximité. Une compétence peut sembler correcte ici et déplacer des charts quand même.</value>
   </data>
-  <data name="Show all {0}" xml:space="preserve">
-    <value>Tout afficher ({0})</value>
+  <data name="show all {0}" xml:space="preserve">
+    <value>voir les {0}</value>
   </data>
   <data name="Show fewer" xml:space="preserve">
     <value>En afficher moins</value>
@@ -3368,9 +3325,6 @@
   <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
     <value>Quand un nouveau Mix arrive, rien ne se réinitialise ici. Chaque score enregistré reste — pour se retourner, comparer et progresser. {0} Mix archivés, côte à côte, de 1999 à aujourd'hui.</value>
   </data>
-  <data name="today" xml:space="preserve">
-    <value>aujourd'hui</value>
-  </data>
   <data name="Private by default" xml:space="preserve">
     <value>Privé par défaut</value>
   </data>
@@ -3578,9 +3532,6 @@
   <data name="only {0} hold it" xml:space="preserve">
     <value>seuls {0} le détiennent</value>
   </data>
-  <data name="completed" xml:space="preserve">
-    <value>terminé</value>
-  </data>
   <data name="now" xml:space="preserve">
     <value>maintenant</value>
   </data>
@@ -3676,9 +3627,6 @@
   </data>
   <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
     <value>Ton Pumbility et ton niveau compétitif, plus tes rivaux les plus proches.</value>
-  </data>
-  <data name="Pumbility" xml:space="preserve">
-    <value>Pumbility</value>
   </data>
   <data name="Match players on" xml:space="preserve">
     <value>Associer les joueurs selon</value>
@@ -4019,9 +3967,6 @@
   <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
     <value>Ce n'est pas du zéro-connaissance : comme la connexion s'exécute sur notre serveur, nous pouvons techniquement déchiffrer votre identifiant au moment de l'import. Nous ne le journalisons ni ne le conservons — mais vous nous confiez le même accès que nous avons déjà à chaque import manuel.</value>
   </data>
-  <data name="Import scores" xml:space="preserve">
-    <value>Importer les scores</value>
-  </data>
   <data name="Creating Your Home Page" xml:space="preserve">
     <value>Création de votre page d’accueil</value>
   </data>
@@ -4143,7 +4088,7 @@
     <value>Score minimum, moyen et maximum à chaque niveau compétitif.</value>
   </data>
   <data name="Passes by competitive level" xml:space="preserve">
-    <value>Passes par niveau compétitif</value>
+    <value>Pass par niveau compétitif</value>
   </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>Où se situent les passes de ce chart, par niveau compétitif.</value>
@@ -4153,12 +4098,6 @@
   </data>
   <data name="No scores recorded yet — be the first." xml:space="preserve">
     <value>Pas encore de scores — soyez le premier.</value>
-  </data>
-  <data name="your communities" xml:space="preserve">
-    <value>vos communautés</value>
-  </data>
-  <data name="you" xml:space="preserve">
-    <value>vous</value>
   </data>
   <data name="Show more of {0} scores" xml:space="preserve">
     <value>Voir plus des {0} scores</value>
@@ -4176,7 +4115,7 @@
     <value>Apparu dans</value>
   </data>
   <data name="Pass rate" xml:space="preserve">
-    <value>Taux de réussite</value>
+    <value>Taux de pass</value>
   </data>
   <data name="The evidence" xml:space="preserve">
     <value>Les preuves</value>
@@ -4424,9 +4363,6 @@
   <data name="Chart Board #1s" xml:space="preserve">
     <value>Premières places sur les leaderboards de charts</value>
   </data>
-  <data name="Chart Boards" xml:space="preserve">
-    <value>Leaderboards de charts</value>
-  </data>
   <data name="Chart board placements" xml:space="preserve">
     <value>Places sur les leaderboards de charts</value>
   </data>
@@ -4526,9 +4462,6 @@
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITY dans le temps</value>
   </data>
-  <data name="rank" xml:space="preserve">
-    <value>rang</value>
-  </data>
   <data name="Rank" xml:space="preserve">
     <value>Rang</value>
   </data>
@@ -4555,9 +4488,6 @@
   </data>
   <data name="Seed baseline from legacy tables" xml:space="preserve">
     <value>Créer la référence initiale depuis les anciennes tables</value>
-  </data>
-  <data name="skipped" xml:space="preserve">
-    <value>ignorés</value>
   </data>
   <data name="Songs" xml:space="preserve">
     <value>Chansons</value>
@@ -4808,9 +4738,6 @@
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0} · niveaux {1}–{2} · {3}</value>
   </data>
-  <data name="Co-op" xml:space="preserve">
-    <value>Co-op</value>
-  </data>
   <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
     <value>Vous n'avez pas de préréglage enregistré nommé « {0} ».</value>
   </data>
@@ -4912,9 +4839,6 @@
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>Affichez à quoi ce salon est inscrit</value>
-  </data>
-  <data name="Song name" xml:space="preserve">
-    <value>Nom de la chanson</value>
   </data>
   <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
     <value>Quel Mix (par défaut Phoenix 2)</value>
@@ -5069,12 +4993,6 @@
   <data name="PIU Scores official mirror" xml:space="preserve">
     <value>miroir officiel PIU Scores</value>
   </data>
-  <data name="This week" xml:space="preserve">
-    <value>Cette semaine</value>
-  </data>
-  <data name="What it takes" xml:space="preserve">
-    <value>Ce qu'il faut</value>
-  </data>
   <data name="a chart" xml:space="preserve">
     <value>un chart</value>
   </data>
@@ -5186,9 +5104,6 @@
   <data name="Biggest gain of the session" xml:space="preserve">
     <value>Plus gros gain de la session</value>
   </data>
-  <data name="Title progress" xml:space="preserve">
-    <value>Progression de titre</value>
-  </data>
   <data name="First" xml:space="preserve">
     <value>Premier</value>
   </data>
@@ -5297,9 +5212,6 @@
   <data name="Clear Count" xml:space="preserve">
     <value>Nombre de Pass</value>
   </data>
-  <data name="Community Name" xml:space="preserve">
-    <value>Nom de la communauté</value>
-  </data>
   <data name="Community Settings" xml:space="preserve">
     <value>Réglages de la communauté</value>
   </data>
@@ -5368,9 +5280,6 @@
   </data>
   <data name="Highest Clear" xml:space="preserve">
     <value>Niveau max Pass</value>
-  </data>
-  <data name="Highest Level" xml:space="preserve">
-    <value>Niveau max</value>
   </data>
   <data name="I understand — join" xml:space="preserve">
     <value>J'ai compris — rejoindre</value>
@@ -5458,9 +5367,6 @@
   </data>
   <data name="Show Regional Guests" xml:space="preserve">
     <value>Montrer les invités régionaux</value>
-  </data>
-  <data name="Sign In" xml:space="preserve">
-    <value>Se connecter</value>
   </data>
   <data name="Sign in to accept this invite." xml:space="preserve">
     <value>Connectez-vous pour accepter cette invitation.</value>
@@ -5558,9 +5464,6 @@
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>Un jeu cassé vaut 0 — réussis-le pour marquer.</value>
   </data>
-  <data name="Charts Not Yet Featured" xml:space="preserve">
-    <value>Charts pas encore proposés</value>
-  </data>
   <data name="Charts not yet featured" xml:space="preserve">
     <value>Charts pas encore proposés</value>
   </data>
@@ -5639,17 +5542,11 @@
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>Tes 4 meilleurs scores par semaine du mois comptent.</value>
   </data>
-  <data name="current" xml:space="preserve">
-    <value>actuelle</value>
-  </data>
   <data name="last 14 days" xml:space="preserve">
     <value>14 derniers jours</value>
   </data>
   <data name="resets in {0}" xml:space="preserve">
     <value>réinitialisation dans {0}</value>
-  </data>
-  <data name="show all {0}" xml:space="preserve">
-    <value>voir les {0}</value>
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>voir les suggérés</value>
@@ -5801,9 +5698,6 @@
   <data name="Commands — anyone in the server can use these" xml:space="preserve">
     <value>Commandes — tout le monde sur le serveur peut les utiliser</value>
   </data>
-  <data name="calculate a Phoenix score from a result screen" xml:space="preserve">
-    <value>calculer un score Phoenix depuis un écran de résultat</value>
-  </data>
   <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
     <value>afficher les statistiques d'un Chart et les Charts similaires, avec des liens vers ses pages</value>
   </data>
@@ -5903,9 +5797,6 @@
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>Personne n'est encore sur ce leaderboard.</value>
   </data>
-  <data name="All Mixes" xml:space="preserve">
-    <value>Tous les Mix</value>
-  </data>
   <data name="Applied filters" xml:space="preserve">
     <value>Filtres appliqués</value>
   </data>
@@ -5981,9 +5872,6 @@
   <data name="My data" xml:space="preserve">
     <value>Mes données</value>
   </data>
-  <data name="My score" xml:space="preserve">
-    <value>Mon score</value>
-  </data>
   <data name="NPS from" xml:space="preserve">
     <value>NPS min</value>
   </data>
@@ -6001,9 +5889,6 @@
   </data>
   <data name="Not yet re-cleared in {0}" xml:space="preserve">
     <value>Pas encore re-clear sur {0}</value>
-  </data>
-  <data name="Note count" xml:space="preserve">
-    <value>Nombre de notes</value>
   </data>
   <data name="Notes from" xml:space="preserve">
     <value>Notes min</value>
@@ -6028,9 +5913,6 @@
   </data>
   <data name="Phoenix score to" xml:space="preserve">
     <value>Score Phoenix max</value>
-  </data>
-  <data name="Quick record" xml:space="preserve">
-    <value>Enregistrement rapide</value>
   </data>
   <data name="Recorded from" xml:space="preserve">
     <value>Enregistré depuis</value>
@@ -6335,8 +6217,8 @@
   <data name="Reload the page" xml:space="preserve">
     <value>Recharger la page</value>
   </data>
-  <data name="from {0}" xml:space="preserve">
-    <value>depuis {0}</value>
+  <data name="From {0}" xml:space="preserve">
+    <value>À partir de {0}</value>
   </data>
   <data name="Next title" xml:space="preserve">
     <value>Titre suivant</value>
@@ -6725,17 +6607,11 @@
   <data name="Boss breakers" xml:space="preserve">
     <value>Boss breakers</value>
   </data>
-  <data name="CO-OP" xml:space="preserve">
-    <value>CO-OP</value>
-  </data>
   <data name="Earned" xml:space="preserve">
     <value>Obtenus</value>
   </data>
   <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
     <value>Tous ceux qui l'ont gardent leur profil privé.</value>
-  </data>
-  <data name="From {0}" xml:space="preserve">
-    <value>À partir de {0}</value>
   </data>
   <data name="How rare" xml:space="preserve">
     <value>Rareté</value>
@@ -6759,7 +6635,7 @@
     <value>Titres isolés</value>
   </data>
   <data name="Play count" xml:space="preserve">
-    <value>Parties jouées</value>
+    <value>Nombre de plays</value>
   </data>
   <data name="Progress tracked by the official piugame import, not by piuscores data." xml:space="preserve">
     <value>La progression est suivie par l'import officiel piugame, pas par les données piuscores.</value>
@@ -6985,5 +6861,11 @@
   </data>
   <data name="Unchanged Charts:" xml:space="preserve">
     <value>Charts inchangés :</value>
+  </data>
+  <data name="{0} min" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="rank #{0}" xml:space="preserve">
+    <value>rang #{0}</value>
   </data>
 </root>

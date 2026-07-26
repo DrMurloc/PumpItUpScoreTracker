@@ -175,7 +175,9 @@
         get
         {
             var duration = Group.End - Group.Start;
-            return duration.TotalMinutes < 5 ? string.Empty : $" · {(int)duration.TotalMinutes} {L["min"]}";
+            return duration.TotalMinutes < 5
+                ? string.Empty
+                : $" · {L["{0} min", (int)duration.TotalMinutes]}";
         }
     }
 }

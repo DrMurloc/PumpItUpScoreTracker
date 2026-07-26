@@ -62,7 +62,7 @@ else
                         <MudText Typo="Typo.caption" Class="mt-1">@L["Game tag"]: @_gameTag</MudText>
                     }
                     <MudButton Class="mt-3" FullWidth="true" Variant="Variant.Filled" Color="Color.Primary"
-                               Disabled="EditMode" OnClick="ImportFromStored">@L["Import scores"]</MudButton>
+                               Disabled="EditMode" OnClick="ImportFromStored">@L["Import Scores"]</MudButton>
                     @if (_error != null)
                     {
                         <MudText Typo="Typo.caption" Color="Color.Error" Align="MudBlazor.Align.Center" Class="mt-1">@_error</MudText>
@@ -86,7 +86,7 @@ else
                                       Margin="Margin.Dense" Variant="Variant.Outlined" Disabled="EditMode"/>
                     </div>
                     <MudButton Class="import-typed-go" Variant="Variant.Filled" Color="Color.Primary"
-                               title="@L["Import scores"].Value"
+                               title="@L["Import Scores"].Value"
                                Disabled="EditMode || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)"
                                OnClick="ImportFromTyped">
                         <MudIcon Icon="@Icons.Material.Filled.CloudDownload"/>

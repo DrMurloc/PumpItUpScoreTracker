@@ -133,7 +133,7 @@ else
         <MudTd>@context.Stage</MudTd>
         <MudTd Style="text-align:right">
             @context.BoardsWritten@(context.BoardsExpected > 0 ? $"/{context.BoardsExpected}" : "")
-            @(context.BoardsSkipped > 0 ? $" (+{context.BoardsSkipped} {L["skipped"]})" : "")
+            @(context.BoardsSkipped > 0 ? $" (+{context.BoardsSkipped} {L["Skipped"]})" : "")
         </MudTd>
         <MudTd Style="text-align:right">
             @(context.CompletedAt != null

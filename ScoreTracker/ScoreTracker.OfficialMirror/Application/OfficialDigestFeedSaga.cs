@@ -156,9 +156,9 @@ namespace ScoreTracker.OfficialMirror.Application
                 mix.GetAccentColor(),
                 new[]
                 {
-                    new RichBotLink(_localizer.Get(culture, "This week"),
+                    new RichBotLink(_localizer.Get(culture, "This Week"),
                         new Uri($"{SiteBase}/OfficialLeaderboards")),
-                    new RichBotLink(_localizer.Get(culture, "What it takes"),
+                    new RichBotLink(_localizer.Get(culture, "What It Takes"),
                         new Uri($"{SiteBase}/OfficialLeaderboards/WhatItTakes"))
                 });
         }

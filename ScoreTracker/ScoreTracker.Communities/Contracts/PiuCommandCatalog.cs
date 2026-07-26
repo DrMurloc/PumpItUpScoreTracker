@@ -110,7 +110,7 @@ namespace ScoreTracker.Communities.Contracts
         {
             new BotOptionChoice("Singles", "Single"),
             new BotOptionChoice("Doubles", "Double"),
-            new BotOptionChoice("Co-op", "CoOp")
+            new BotOptionChoice("Co-Op", "CoOp")
         };
 
         private static BotSubCommand Random =>
@@ -140,7 +140,7 @@ namespace ScoreTracker.Communities.Contracts
             new("chart", "Find a chart and its pages",
                 new[]
                 {
-                    new BotCommandOption("song", "Song name", BotCommandOptionType.String, Required: true,
+                    new BotCommandOption("song", "Song Name", BotCommandOptionType.String, Required: true,
                         Autocomplete: true),
                     OptionalMix
                 });

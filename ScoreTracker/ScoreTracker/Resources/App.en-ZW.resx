@@ -643,10 +643,6 @@
 	  <value>Grlgrgl Lurgplglrglglarmrogl</value>
 	  <comment>Difficulty Categorization</comment>
   </data>
-  <data name="Scoring Level" xml:space="preserve">
-	  <value>Grglrglmrg Rglmrgl</value>
-	  <comment>Scoring Level</comment>
-  </data>
   <data name="Skill" xml:space="preserve">
 	  <value>Glrglurg</value>
 	  <comment>Skill</comment>
@@ -839,18 +835,6 @@
   </data>
   <data name="Note Count from Full Life to Death/Threshold based on Combo between Breaks" xml:space="preserve">
 	  <value>Mrrglurg Grglrgl blgrl Blubmrrr Murggrgl rgl Murgmrrr/Grrrmurg grarrgl urg Lrgl murggrl Brglubrgl</value>
-  </data>
-  <data name="Perfect Combo, Miss Break" xml:space="preserve">
-	  <value>Mrglub Lrgl, Grrrmrg Brglub</value>
-  </data>
-  <data name="Great Combo, Miss Break" xml:space="preserve">
-	  <value>Mrrglub Lrgl, Grrrmrg Brglub</value>
-  </data>
-  <data name="Perfect Combo, Bad Break" xml:space="preserve">
-	  <value>Mrglub Lrgl, Grrrgl Brglub</value>
-  </data>
-  <data name="Great Combo, Bad Break" xml:space="preserve">
-	  <value>Mrrglub Lrgl, Grrrgl Brglub</value>
   </data>
   <data name="Notes to Full Life From Start of Song (50%)" xml:space="preserve">
 	  <value>Mrrglurgrgl rgl Blubmrrr Murggrgl Blgrl Start glub Glurgl (50%)</value>
@@ -1509,9 +1493,6 @@
   <data name="Total Chart Bonus" xml:space="preserve">
 	  <value>Glrglmrrgl Mrglrgl Glubmrg</value>
   </data>
-  <data name="Pass Rate" xml:space="preserve">
-	  <value>Brglurg Rrglrgl</value>
-  </data>
   <data name="Average PPS" xml:space="preserve">
 	  <value>Mrrglmrg PPS</value>
   </data>
@@ -1539,9 +1520,6 @@
   </data>
   <data name="Chart Statistics" xml:space="preserve">
 	  <value>Mrglrgl Grglubgrlrgl</value>
-  </data>
-  <data name="Play Count" xml:space="preserve">
-	  <value>Plargl Grglrgl</value>
   </data>
   <data name="Best Score" xml:space="preserve">
 	  <value>Mrrglub Grglrgl</value>
@@ -1843,15 +1821,6 @@
   <data name="Score Distribution By Player Level" xml:space="preserve">
 	  <value>Grglrgl Glubmrrglrgl Blgrl Murglargrl Rglmrgl</value>
   </data>
-  <data name="Scores by Competitive Level" xml:space="preserve">
-	  <value>Grglrglrgl blgrl Grrrmrrglmrg Rglmrgl</value>
-  </data>
-  <data name="Passes by Competitive Level" xml:space="preserve">
-	  <value>Brglurgrgl blgrl Grrrmrrglmrg Rglmrgl</value>
-  </data>
-  <data name="Chart Leaderboard" xml:space="preserve">
-	  <value>Mrglrgl Arglmrgl</value>
-  </data>
   <data name="Sign-In Methods" xml:space="preserve">
 	  <value>Mrgl-Mrgl Grrblubs</value>
   </data>
@@ -2137,9 +2106,6 @@
   <data name="Play Session" xml:space="preserve">
     <value>Mrgl Mrglsh</value>
   </data>
-  <data name="min" xml:space="preserve">
-    <value>mrgl</value>
-  </data>
   <data name="Score Journal" xml:space="preserve">
     <value>Mrgl Jrrnl</value>
   </data>
@@ -2292,9 +2258,6 @@
   </data>
   <data name="Scores, vs your level" xml:space="preserve">
     <value>Mrgl scores</value>
-  </data>
-  <data name="Weekly charts" xml:space="preserve">
-    <value>Mrgl weekly</value>
   </data>
   <data name="weeks. No misses." xml:space="preserve">
     <value>mrgl weeks. No mrgl.</value>
@@ -2714,9 +2677,6 @@
   <data name="Not Enough Data" xml:space="preserve">
     <value>Not Enough Mrgldata</value>
   </data>
-  <data name="Applied Filters" xml:space="preserve">
-    <value>Applied Glrglblubrgl</value>
-  </data>
   <data name="Filters and Columns" xml:space="preserve">
     <value>Glrglblubrgl and Columrgls</value>
   </data>
@@ -2897,9 +2857,6 @@
   <data name="Players Like You" xml:space="preserve">
     <value>Mrglplayers Like Mrglyou</value>
   </data>
-  <data name="Players like you" xml:space="preserve">
-    <value>Mrglplayers like mrglyou</value>
-  </data>
   <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
     <value>Mrglplayers within one grrrmrrgl level of you — closer mrglplayers count more, mrgl mrgl!</value>
   </data>
@@ -2909,7 +2866,7 @@
   <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
     <value>Same mrglskills, two mrglquestions: this mrglfolder view asks how your mrglrglrgl go — the mrglblend view asks which mrglskills run hot or cold mrglnearby. Mrgl!</value>
   </data>
-  <data name="Show all {0}" xml:space="preserve">
+  <data name="show all {0}" xml:space="preserve">
     <value>Show all {0} mrgl</value>
   </data>
   <data name="Show fewer" xml:space="preserve">
@@ -3296,9 +3253,6 @@
   <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
     <value>Whrgln mrgl nrglw mrglx mrglrrrglvs, nrglthng hrglre rrglsrglts. Mrglvrgl scrgle mrgl'vrgl rrglcrgldrgld strglys — mrgl lrglk brglck mrgln, cmrglprglre mrglgrglnst, mrgl brglld frglm. {0} mrglxrgls mrgln rrglcrgld, srglde brgl srglde, 1999 mrgl trgldrgly.</value>
   </data>
-  <data name="today" xml:space="preserve">
-    <value>trgldrgly</value>
-  </data>
   <data name="Private by default" xml:space="preserve">
     <value>Prglvrglte brgl drglfrgllt</value>
   </data>
@@ -3506,9 +3460,6 @@
   <data name="only {0} hold it" xml:space="preserve">
     <value>only {0} hold it</value>
   </data>
-  <data name="completed" xml:space="preserve">
-    <value>completed</value>
-  </data>
   <data name="now" xml:space="preserve">
     <value>now</value>
   </data>
@@ -3604,9 +3555,6 @@
   </data>
   <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
     <value>Yer Pumbility an' competitive level, plus yer closest mrglmates.</value>
-  </data>
-  <data name="Pumbility" xml:space="preserve">
-    <value>Pumbility</value>
   </data>
   <data name="Match players on" xml:space="preserve">
     <value>Mrgl players by</value>
@@ -3947,9 +3895,6 @@
   <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
     <value>This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import.</value>
   </data>
-  <data name="Import scores" xml:space="preserve">
-    <value>Import scores</value>
-  </data>
   <data name="Creating Your Home Page" xml:space="preserve">
     <value>Crrgltng Mrgl Hrglme Prglge</value>
   </data>
@@ -4081,12 +4026,6 @@
   </data>
   <data name="No scores recorded yet — be the first." xml:space="preserve">
     <value>Mrgl first-rgl!</value>
-  </data>
-  <data name="your communities" xml:space="preserve">
-    <value>mrgl tribergl</value>
-  </data>
-  <data name="you" xml:space="preserve">
-    <value>mrgl (you)</value>
   </data>
   <data name="Show more of {0} scores" xml:space="preserve">
     <value>Mrgl more {0} scorlgl</value>
@@ -4352,9 +4291,6 @@
   <data name="Chart Board #1s" xml:space="preserve">
     <value>Chart Mrgl #1s</value>
   </data>
-  <data name="Chart Boards" xml:space="preserve">
-    <value>Chart Mrglboards</value>
-  </data>
   <data name="Chart board placements" xml:space="preserve">
     <value>Chart mrglboard placemrgls</value>
   </data>
@@ -4454,9 +4390,6 @@
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITY ovrgl time</value>
   </data>
-  <data name="rank" xml:space="preserve">
-    <value>mrglrank</value>
-  </data>
   <data name="Rank" xml:space="preserve">
     <value>Mrglrank</value>
   </data>
@@ -4483,9 +4416,6 @@
   </data>
   <data name="Seed baseline from legacy tables" xml:space="preserve">
     <value>Mrglseed baseline from old mrgltables</value>
-  </data>
-  <data name="skipped" xml:space="preserve">
-    <value>skiprgld</value>
   </data>
   <data name="Songs" xml:space="preserve">
     <value>Mrglsongs</value>
@@ -4739,9 +4669,6 @@
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0} · lrglvrgls {1}–{2} · {3}</value>
   </data>
-  <data name="Co-op" xml:space="preserve">
-    <value>Crgl-rglp</value>
-  </data>
   <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
     <value>Yrgl drglnt hrglve prrglsrglt &quot;{0}&quot;. Mrgl.</value>
   </data>
@@ -4843,9 +4770,6 @@
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>Shrglw chrglnnrgl rrglgrglstrrgltions</value>
-  </data>
-  <data name="Song name" xml:space="preserve">
-    <value>Srglng nrglme</value>
   </data>
   <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
     <value>Whrglch mrglx (drglfrglt Phoenix 2)</value>
@@ -5000,12 +4924,6 @@
   <data name="PIU Scores official mirror" xml:space="preserve">
     <value>PIU Scores rglffrglcial mrglrror</value>
   </data>
-  <data name="This week" xml:space="preserve">
-    <value>Thrgls wrglk</value>
-  </data>
-  <data name="What it takes" xml:space="preserve">
-    <value>Whrglt rglt trglkes</value>
-  </data>
   <data name="a chart" xml:space="preserve">
     <value>rgl chrglrt</value>
   </data>
@@ -5117,9 +5035,6 @@
   <data name="Biggest gain of the session" xml:space="preserve">
     <value>Brglggest grgln rglf thrgl srglssion</value>
   </data>
-  <data name="Title progress" xml:space="preserve">
-    <value>Trgltle prrglgress</value>
-  </data>
   <data name="First" xml:space="preserve">
     <value>Frglrst</value>
   </data>
@@ -5228,9 +5143,6 @@
   <data name="Clear Count" xml:space="preserve">
     <value>Mrgl grl</value>
   </data>
-  <data name="Community Name" xml:space="preserve">
-    <value>Mrglrgl mrgl</value>
-  </data>
   <data name="Community Settings" xml:space="preserve">
     <value>Mrglrgl grlgrl</value>
   </data>
@@ -5299,9 +5211,6 @@
   </data>
   <data name="Highest Clear" xml:space="preserve">
     <value>MRGL grl!</value>
-  </data>
-  <data name="Highest Level" xml:space="preserve">
-    <value>Mrgl grlgrl</value>
   </data>
   <data name="I understand — join" xml:space="preserve">
     <value>Mrgl... mrgl. MRGL.</value>
@@ -5389,9 +5298,6 @@
   </data>
   <data name="Show Regional Guests" xml:space="preserve">
     <value>Mrgl grlgrl mrgl</value>
-  </data>
-  <data name="Sign In" xml:space="preserve">
-    <value>MRGL-grl</value>
   </data>
   <data name="Sign in to accept this invite." xml:space="preserve">
     <value>MRGL-grl mrgl mrgl.</value>
@@ -5489,9 +5395,6 @@
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>Broken plays score 0 — pass it to score it.</value>
   </data>
-  <data name="Charts Not Yet Featured" xml:space="preserve">
-    <value>Charts Not Yet Featured</value>
-  </data>
   <data name="Charts not yet featured" xml:space="preserve">
     <value>Charts not yet featured</value>
   </data>
@@ -5570,17 +5473,11 @@
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>Your best 4 scores per week of the month count.</value>
   </data>
-  <data name="current" xml:space="preserve">
-    <value>current</value>
-  </data>
   <data name="last 14 days" xml:space="preserve">
     <value>last 14 days</value>
   </data>
   <data name="resets in {0}" xml:space="preserve">
     <value>resets in {0}</value>
-  </data>
-  <data name="show all {0}" xml:space="preserve">
-    <value>show all {0}</value>
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>show suggested only</value>
@@ -5732,9 +5629,6 @@
   <data name="Commands — anyone in the server can use these" xml:space="preserve">
     <value>Mrgl — MRGL mrgl mrgl!</value>
   </data>
-  <data name="calculate a Phoenix score from a result screen" xml:space="preserve">
-    <value>mrgl grl Mrgl-mrgl mrgl</value>
-  </data>
   <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
     <value>grl mrgl, MRGL grl! Mrgl mrglgl grl-grl!</value>
   </data>
@@ -5834,9 +5728,6 @@
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>Nobody on dis chart mrglboard yet, mrgl.</value>
   </data>
-  <data name="All Mixes" xml:space="preserve">
-    <value>Mrgl Mrglxes</value>
-  </data>
   <data name="Applied filters" xml:space="preserve">
     <value>Mrglplied Frglters</value>
   </data>
@@ -5912,9 +5803,6 @@
   <data name="My data" xml:space="preserve">
     <value>Mrgl Drglta</value>
   </data>
-  <data name="My score" xml:space="preserve">
-    <value>Mrgl Prgl</value>
-  </data>
   <data name="NPS from" xml:space="preserve">
     <value>NPS Frglm</value>
   </data>
@@ -5932,9 +5820,6 @@
   </data>
   <data name="Not yet re-cleared in {0}" xml:space="preserve">
     <value>Nrglt yet re-brglurged mrgl {0}</value>
-  </data>
-  <data name="Note count" xml:space="preserve">
-    <value>Nrglte Crglunt</value>
   </data>
   <data name="Notes from" xml:space="preserve">
     <value>Nrgltes Frglm</value>
@@ -5959,9 +5844,6 @@
   </data>
   <data name="Phoenix score to" xml:space="preserve">
     <value>Phoenix Prgl Trgl</value>
-  </data>
-  <data name="Quick record" xml:space="preserve">
-    <value>Qrglck Rrglcord</value>
   </data>
   <data name="Recorded from" xml:space="preserve">
     <value>Rrglcorded Frglm</value>
@@ -6266,7 +6148,7 @@
   <data name="Reload the page" xml:space="preserve">
     <value>Mrgl!</value>
   </data>
-  <data name="from {0}" xml:space="preserve">
+  <data name="From {0}" xml:space="preserve">
     <value>mrgl {0}</value>
   </data>
   <data name="Next title" xml:space="preserve">
@@ -6656,17 +6538,11 @@
   <data name="Boss breakers" xml:space="preserve">
     <value>Mrgglsnap</value>
   </data>
-  <data name="CO-OP" xml:space="preserve">
-    <value>CO-OP</value>
-  </data>
   <data name="Earned" xml:space="preserve">
     <value>Mrglhad</value>
   </data>
   <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
     <value>Mrglmrgl aaaugh shhhh.</value>
-  </data>
-  <data name="From {0}" xml:space="preserve">
-    <value>Mrgl {0}</value>
   </data>
   <data name="How rare" xml:space="preserve">
     <value>Glrglshiny</value>
@@ -6919,5 +6795,11 @@
   </data>
   <data name="Unchanged Charts:" xml:space="preserve">
     <value>Mrgl Murglgl Plglrglgrrr:</value>
+  </data>
+  <data name="{0} min" xml:space="preserve">
+    <value>{0} mrgl</value>
+  </data>
+  <data name="rank #{0}" xml:space="preserve">
+    <value>mrgl #{0}</value>
   </data>
 </root>
