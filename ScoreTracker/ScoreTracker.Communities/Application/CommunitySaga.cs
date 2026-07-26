@@ -454,7 +454,8 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var lines = new List<string>();
         foreach (var c in rows)
         {
-            var row = CompactRow(inputs.Charts[c.ChartId], inputs.Bests[c.ChartId], ReclearMark(inputs, c.ChartId));
+            var row = CompactRow(c, inputs.Charts[c.ChartId], inputs.Bests[c.ChartId],
+                ReclearMark(inputs, c.ChartId));
             var cost = Estimate(row) + 1; // + newline
             if (used + cost > remaining) break;
             used += cost;
@@ -467,10 +468,28 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         blocks.Add(new RichBotText($"-# {label}\n" + string.Join("\n", lines)));
     }
 
-    private static string CompactRow(Chart chart, RecordedPhoenixScore best, string reclearMark)
+    private static string CompactRow(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
+        RecordedPhoenixScore best, string reclearMark)
     {
-        return $"#DIFFICULTY|{chart.DifficultyString}# {chart.Song.Name}{reclearMark} — **{(int)best.Score!.Value:N0}** " +
-               $"#LETTERGRADE|{best.Score!.Value.LetterGradeFor(chart.Mix)}|{best.IsBroken}##PLATE|{best.Plate}#";
+        return $"#DIFFICULTY|{chart.DifficultyString}# {chart.Song.Name}{reclearMark} — **{(int)best.Score!.Value:N0}**" +
+               UpscoreDelta(change, chart, best) +
+               $" #LETTERGRADE|{best.Score!.Value.LetterGradeFor(chart.Mix)}|{best.IsBroken}##PLATE|{best.Plate}#";
+    }
+
+    // The gain an upscore earned, plus the grade it came from when it crossed one:
+    // " (+12,340) <A> →". Shared by the notable art rows and the compact buckets, so an
+    // upscore reads the same wherever it lands. New passes have nothing to compare against
+    // and render bare. The batch only records an old score when the new one beat it, so the
+    // gain is always positive.
+    private static string UpscoreDelta(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
+        RecordedPhoenixScore best)
+    {
+        if (change.IsNewPass || change.OldScore == null) return string.Empty;
+        var gain = $" (+{(int)best.Score!.Value - change.OldScore.Value:N0})";
+        var oldLetter = PhoenixScore.From(change.OldScore.Value).LetterGradeFor(chart.Mix);
+        return oldLetter == best.Score!.Value.LetterGradeFor(chart.Mix)
+            ? gain
+            : gain + $" #LETTERGRADE|{oldLetter}|False# →";
     }
 
     private void AddOverflowLine(List<IRichBotBlock> blocks, SnapshotInputs inputs, string? culture,
@@ -720,17 +739,9 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     private string UpscoreRow(ScoreHighlightsCapturedEvent.HighlightedChange change, Chart chart,
         RecordedPhoenixScore best, bool bigGain, string? culture)
     {
-        var row = $"#DIFFICULTY|{chart.DifficultyString}# {SongLink(change, chart, bigGain)} " +
-                  $"**{(int)best.Score!.Value:N0}**";
-        if (change.OldScore != null)
-        {
-            row += $" (+{(int)best.Score!.Value - change.OldScore.Value:N0})";
-            var oldLetter = PhoenixScore.From(change.OldScore.Value).LetterGradeFor(chart.Mix);
-            if (oldLetter != best.Score!.Value.LetterGradeFor(chart.Mix))
-                row += $" #LETTERGRADE|{oldLetter}|False# →";
-        }
-
-        return row + $" #LETTERGRADE|{best.Score!.Value.LetterGradeFor(chart.Mix)}|{best.IsBroken}##PLATE|{best.Plate}#" +
+        return $"#DIFFICULTY|{chart.DifficultyString}# {SongLink(change, chart, bigGain)} " +
+               $"**{(int)best.Score!.Value:N0}**" + UpscoreDelta(change, chart, best) +
+               $" #LETTERGRADE|{best.Score!.Value.LetterGradeFor(chart.Mix)}|{best.IsBroken}##PLATE|{best.Plate}#" +
                FlagCaption(change, chart, best, bigGain, culture);
     }
 

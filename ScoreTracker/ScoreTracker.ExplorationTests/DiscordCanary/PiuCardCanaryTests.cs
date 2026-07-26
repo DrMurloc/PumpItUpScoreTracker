@@ -67,7 +67,7 @@ public sealed class PiuCardCanaryTests
                 new RichBotText(
                     "-# 그 외 점수\n" +
                     "#DIFFICULTY|S19# Trashy Innocence\\* — **984,120** #LETTERGRADE|SS|False##PLATE|SuperbGame#\n" +
-                    "#DIFFICULTY|S18# Bee — **977,860** #LETTERGRADE|SS|False##PLATE|SuperbGame#"),
+                    "#DIFFICULTY|S18# Bee — **977,860** (+6,560) #LETTERGRADE|S|False# → #LETTERGRADE|SS|False##PLATE|SuperbGame#"),
                 new RichBotDivider(),
                 new RichBotText("#DIFFICULTY|S21# 3/42 · #DIFFICULTY|S18# 12/58")
             },
@@ -170,7 +170,7 @@ public sealed class PiuCardCanaryTests
                 new RichBotText(
                     "-# More scores\n" +
                     "#DIFFICULTY|S19# Trashy Innocence\\* — **984,120** #LETTERGRADE|SS|False##PLATE|SuperbGame#\n" +
-                    "#DIFFICULTY|S18# Bee — **977,860** #LETTERGRADE|SS|False##PLATE|SuperbGame#"),
+                    "#DIFFICULTY|S18# Bee — **977,860** (+6,560) #LETTERGRADE|S|False# → #LETTERGRADE|SS|False##PLATE|SuperbGame#"),
                 new RichBotDivider(),
                 new RichBotText("#DIFFICULTY|S21# 3/42 · #DIFFICULTY|S18# 12/58")
             },

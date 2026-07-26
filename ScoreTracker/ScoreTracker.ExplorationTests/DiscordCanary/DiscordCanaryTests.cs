@@ -99,7 +99,9 @@ public sealed class DiscordCanaryTests
                 new RichBotSection(
                     "#DIFFICULTY|s18# **Turkey March -Minimal Tunes-**\n**972,340** #LETTERGRADE|SSS|False##PLATE|SuperbGame#\n-# 🏅 [DRILL] Lv.4 (972k/990k) · 📊 #3 of 47 peers",
                     new Uri("https://piuimages.arroweclip.se/songs/TurkeyMarchMinimalTunes.png")),
-                new RichBotText("-# More scores\n#DIFFICULTY|s16# Bad Apple — **945,120** #LETTERGRADE|SS|False##PLATE|MarvelousGame#"),
+                // Bad Apple is this sample's one upscore, so its compact row carries the gain
+                // and the grade it crossed — the same fragment the art rows use.
+                new RichBotText("-# More scores\n#DIFFICULTY|s16# Bad Apple — **945,120** (+5,120) #LETTERGRADE|SPlus|False# → #LETTERGRADE|SS|False##PLATE|MarvelousGame#"),
                 new RichBotDivider(),
                 new RichBotText("#DIFFICULTY|d19# 84/141 · #DIFFICULTY|s18# 182/195")
             },
@@ -127,8 +129,10 @@ public sealed class DiscordCanaryTests
                 new RichBotSection(
                     "#DIFFICULTY|d20# **Removable Disk0**\n**962,410** #LETTERGRADE|AAAPlus|False##PLATE|FairGame#\n-# 👑 #7 in your PUMBILITY",
                     new Uri("https://piuimages.arroweclip.se/songs/RemovableDisk0.png")),
+                // One upscore (gain + crossing) beside one fresh pass (bare) — both compact
+                // shapes in a single bucket.
                 new RichBotText("-# More scores\n" +
-                                "#DIFFICULTY|d19# Yog-Sothoth — **951,020** #LETTERGRADE|SS|False##PLATE|SuperbGame#\n" +
+                                "#DIFFICULTY|d19# Yog-Sothoth — **951,020** (+7,410) #LETTERGRADE|SPlus|False# → #LETTERGRADE|SS|False##PLATE|SuperbGame#\n" +
                                 "#DIFFICULTY|s21# Errorcode 0 — **933,400** #LETTERGRADE|S|False##PLATE|MarvelousGame#"),
                 new RichBotText("+2,008 more: D23 ×12, S22 ×48, S21 ×95, CO-OP ×31"),
                 new RichBotDivider(),

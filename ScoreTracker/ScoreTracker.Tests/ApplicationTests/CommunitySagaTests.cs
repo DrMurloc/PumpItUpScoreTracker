@@ -758,6 +758,54 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task CompactBucketUpscoresCarryTheGainAndTheGradeTheyCrossed()
+    {
+        // An upscore that falls to a compact bucket reads like one that won an art row — the
+        // gain, then the grade it came from. Both buckets ("More scores" and "Co-op") do it; a
+        // fresh pass has nothing to compare against and stays bare. Gains sit under the 💥
+        // threshold so nothing gets promoted out of the buckets.
+        var userId = Guid.NewGuid();
+        var singles = Enumerable.Range(10, 7) // S10..S16 — the top five take the art rows
+            .Select(level => new ChartBuilder().WithType(ChartType.Single).WithLevel(level).Build())
+            .ToArray();
+        var coOp = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(2).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, singles.Append(coOp).ToArray(),
+            score: 950000);
+
+        // S11 and the co-op upscore off 945,000 (AA+ → AAA); every other chart is a fresh pass.
+        var changes = singles.Select(c => Change(c, c == singles[1] ? 945000 : null))
+            .Append(Change(coOp, 945000)).ToArray();
+        await ctx.Saga.Consume(BuildContext(ScoreHighlightsCapturedEvent.Create(Now, userId,
+            MixEnum.Phoenix, null, changes)));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs =>
+                BucketRow(msgs, "More scores", "S11")
+                    .Contains("**950,000** (+5,000) #LETTERGRADE|AAPlus|False# → #LETTERGRADE|AAA")
+                && !BucketRow(msgs, "More scores", "S10").Contains("(+")
+                && BucketRow(msgs, "Co-op", "CoOp2").Contains("(+5,000) #LETTERGRADE|AAPlus|False# →")),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private static ScoreHighlightsCapturedEvent.HighlightedChange Change(Chart chart, int? oldScore)
+    {
+        return new ScoreHighlightsCapturedEvent.HighlightedChange(chart.Id, oldScore == null, oldScore,
+            950000, "SuperbGame", false, HighlightFlags.None);
+    }
+
+    // One row out of a labelled compact bucket, picked by its difficulty token.
+    private static string BucketRow(IEnumerable<RichBotMessage> msgs, string label, string difficulty)
+    {
+        return msgs.Single().Blocks.OfType<RichBotText>()
+            .First(t => t.Markdown.StartsWith($"-# {label}")).Markdown
+            .Split('\n').First(l => l.Contains($"#DIFFICULTY|{difficulty}#"));
+    }
+
+    [Fact]
     public async Task StatsAndAchievementsOpenTheCardAsTheirOwnSections()
     {
         var userId = Guid.NewGuid();
