@@ -739,9 +739,6 @@
   <data name="Chart Compare" xml:space="preserve">
     <value>채보 비교</value>
   </data>
-  <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
-    <value>이 정보는 실제 출시된 시리즈와 대조되기 전까지는 확정된 것이 아닙니다.</value>
-  </data>
   <data name="Added" xml:space="preserve">
     <value>추가됨</value>
   </data>
@@ -5952,9 +5949,6 @@
   <data name="{0} of {1} charts moved." xml:space="preserve">
     <value>{1}개 채보 중 {0}개의 난이도가 바뀌었습니다.</value>
   </data>
-  <data name="{0} other charts unchanged" xml:space="preserve">
-    <value>나머지 {0}개 채보는 변경 없음</value>
-  </data>
   <data name="New in {0} — {1} charts." xml:space="preserve">
     <value>{0}에서 새로 추가 — 채보 {1}개.</value>
   </data>
@@ -5981,9 +5975,6 @@
   </data>
   <data name="{0} charts removed from songs that stayed" xml:space="preserve">
     <value>남아 있는 노래에서 삭제된 채보 {0}개</value>
-  </data>
-  <data name="Open the chart page" xml:space="preserve">
-    <value>채보 페이지 열기</value>
   </data>
   <data name="{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}." xml:space="preserve">
     <value>{0}은(는) {2} 대비 채보 {1}개의 난이도를 조정했고(상향 {3}, 하향 {4}), 노래 {5}곡을 추가하고 {6}곡을 삭제했습니다.</value>
@@ -6021,7 +6012,13 @@
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>채보 {0}개가 변경되었습니다.</value>
   </data>
-  <data name="Only charts that changed are listed. Add a difficulty to jump straight to one." xml:space="preserve">
-    <value>변경된 채보만 표시됩니다. 난이도를 함께 입력하면 해당 채보로 바로 이동합니다.</value>
+  <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
+    <value>노래 찾기 — 예: Iolite Sky</value>
+  </data>
+  <data name="Only songs with a changed chart are listed." xml:space="preserve">
+    <value>변경된 채보가 있는 노래만 표시됩니다.</value>
+  </data>
+  <data name="Unchanged Charts:" xml:space="preserve">
+    <value>변경 없는 채보:</value>
   </data>
 </root>

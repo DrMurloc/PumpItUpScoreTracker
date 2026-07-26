@@ -811,9 +811,6 @@
   <data name="Chart Compare" xml:space="preserve">
 	  <value>Chart Compare</value>
   </data>
-  <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
-	  <value>Note that this information is not final until referenced against actual released mix.</value>
-  </data>
   <data name="Added" xml:space="preserve">
 	  <value>Added</value>
   </data>
@@ -6064,9 +6061,6 @@
   <data name="{0} of {1} charts moved." xml:space="preserve">
     <value>{0} of {1} charts moved.</value>
   </data>
-  <data name="{0} other charts unchanged" xml:space="preserve">
-    <value>{0} other charts unchanged</value>
-  </data>
   <data name="New in {0} — {1} charts." xml:space="preserve">
     <value>New in {0} — {1} charts.</value>
   </data>
@@ -6093,9 +6087,6 @@
   </data>
   <data name="{0} charts removed from songs that stayed" xml:space="preserve">
     <value>{0} charts removed from songs that stayed</value>
-  </data>
-  <data name="Open the chart page" xml:space="preserve">
-    <value>Open the chart page</value>
   </data>
   <data name="{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}." xml:space="preserve">
     <value>{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}.</value>
@@ -6133,7 +6124,13 @@
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} charts were re-stepped.</value>
   </data>
-  <data name="Only charts that changed are listed. Add a difficulty to jump straight to one." xml:space="preserve">
-    <value>Only charts that changed are listed. Add a difficulty to jump straight to one.</value>
+  <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
+    <value>Find a song — e.g. Iolite Sky</value>
+  </data>
+  <data name="Only songs with a changed chart are listed." xml:space="preserve">
+    <value>Only songs with a changed chart are listed.</value>
+  </data>
+  <data name="Unchanged Charts:" xml:space="preserve">
+    <value>Unchanged Charts:</value>
   </data>
 </root>

@@ -802,9 +802,6 @@
   <data name="Chart Compare" xml:space="preserve">
 	  <value>譜面比較</value>
   </data>
-  <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
-	  <value>注意：実際のリリースミックスと照合するまで、この情報は確定ではありません。</value>
-  </data>
   <data name="Added" xml:space="preserve">
 	  <value>追加済み</value>
   </data>
@@ -6070,9 +6067,6 @@
   <data name="{0} of {1} charts moved." xml:space="preserve">
     <value>{1} 譜面のうち {0} 譜面の難度が変わりました。</value>
   </data>
-  <data name="{0} other charts unchanged" xml:space="preserve">
-    <value>他 {0} 譜面は変更なし</value>
-  </data>
   <data name="New in {0} — {1} charts." xml:space="preserve">
     <value>{0} で新規 — {1} 譜面。</value>
   </data>
@@ -6099,9 +6093,6 @@
   </data>
   <data name="{0} charts removed from songs that stayed" xml:space="preserve">
     <value>残った曲から削除された {0} 譜面</value>
-  </data>
-  <data name="Open the chart page" xml:space="preserve">
-    <value>譜面ページを開く</value>
   </data>
   <data name="{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}." xml:space="preserve">
     <value>{0} は {2} から {1} 譜面の難度を変更（上昇 {3}、低下 {4}）し、{5} 曲を追加、{6} 曲を削除しました。</value>
@@ -6139,7 +6130,13 @@
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} 件の譜面が変更されました。</value>
   </data>
-  <data name="Only charts that changed are listed. Add a difficulty to jump straight to one." xml:space="preserve">
-    <value>変更があった譜面のみ表示しています。難度を付ければ特定の譜面に直接移動できます。</value>
+  <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
+    <value>曲を検索 — 例：Iolite Sky</value>
+  </data>
+  <data name="Only songs with a changed chart are listed." xml:space="preserve">
+    <value>変更があった譜面を持つ曲のみ表示しています。</value>
+  </data>
+  <data name="Unchanged Charts:" xml:space="preserve">
+    <value>変更なしの譜面：</value>
   </data>
 </root>

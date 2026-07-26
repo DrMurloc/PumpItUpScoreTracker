@@ -915,9 +915,6 @@
   <data name="Misses severely hurt your lifebar." xml:space="preserve">
     <value>Misses prejudicam severamente sua lifebar.</value>
   </data>
-  <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
-    <value>Observe que essas informações não são finais até serem comparadas com a versão lançada.</value>
-  </data>
   <data name="Starting life is 500, visible  Life (Rainbow life bar) is 1000." xml:space="preserve">
     <value>A vida inicial é 500; a vida visível (lifebar Rainbow) é 1000.</value>
   </data>
@@ -5942,9 +5939,6 @@
   <data name="{0} of {1} charts moved." xml:space="preserve">
     <value>{0} de {1} charts mudaram de nível.</value>
   </data>
-  <data name="{0} other charts unchanged" xml:space="preserve">
-    <value>Outras {0} charts sem mudança</value>
-  </data>
   <data name="New in {0} — {1} charts." xml:space="preserve">
     <value>Nova em {0} — {1} charts.</value>
   </data>
@@ -5971,9 +5965,6 @@
   </data>
   <data name="{0} charts removed from songs that stayed" xml:space="preserve">
     <value>{0} charts removidas de músicas que ficaram</value>
-  </data>
-  <data name="Open the chart page" xml:space="preserve">
-    <value>Abrir a página da chart</value>
   </data>
   <data name="{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}." xml:space="preserve">
     <value>{0} mudou o nível de {1} charts em relação a {2} — {3} mais difíceis, {4} mais fáceis — adicionou {5} músicas e removeu {6}.</value>
@@ -6011,7 +6002,13 @@
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} charts foram repisadas.</value>
   </data>
-  <data name="Only charts that changed are listed. Add a difficulty to jump straight to one." xml:space="preserve">
-    <value>Só aparecem as charts que mudaram. Adicione uma dificuldade para ir direto a uma.</value>
+  <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
+    <value>Procure uma música — ex. Iolite Sky</value>
+  </data>
+  <data name="Only songs with a changed chart are listed." xml:space="preserve">
+    <value>Só aparecem as músicas com alguma chart que mudou.</value>
+  </data>
+  <data name="Unchanged Charts:" xml:space="preserve">
+    <value>Charts sem mudança:</value>
   </data>
 </root>

@@ -67,11 +67,6 @@
         }
     </div>
 
-    @if (_notice != null)
-    {
-        <MudAlert Severity="Severity.Info" Dense="true" Class="mc-notice">@_notice</MudAlert>
-    }
-
     @if (_loading)
     {
         <MudSkeleton Height="52px" SkeletonType="SkeletonType.Rectangle"></MudSkeleton>
@@ -259,7 +254,6 @@
     private MixEnum _to = MixEnum.Phoenix2;
     private bool _loading = true;
     private Tab _tab = Tab.Rerated;
-    private string? _notice;
 
     private MixDiffRecord _diff = MixDiffRecord.Empty(MixEnum.Phoenix, MixEnum.Phoenix2);
     private Song[] _lookupSongs = Array.Empty<Song>();
@@ -318,7 +312,6 @@
     {
         _loading = true;
         _answer = null;
-        _notice = NoticeFor(_from, _to);
 
         if (_from == _to)
         {
@@ -360,13 +353,6 @@
 
         _folder = DefaultFolder();
         _loading = false;
-    }
-
-    private string? NoticeFor(MixEnum from, MixEnum to)
-    {
-        return to == MixEnum.Phoenix2
-            ? L["Note that this information is not final until referenced against actual released mix."]
-            : null;
     }
 
     // A pair change is a different dataset, so it travels through the URL — which also makes

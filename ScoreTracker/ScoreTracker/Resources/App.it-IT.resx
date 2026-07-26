@@ -802,9 +802,6 @@
   <data name="Chart Compare" xml:space="preserve">
     <value>Confronto chart</value>
   </data>
-  <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
-    <value>Nota: queste informazioni non sono definitive finché non vengono confrontate con il Mix effettivamente rilasciato.</value>
-  </data>
   <data name="Added" xml:space="preserve">
     <value>Aggiunto</value>
   </data>
@@ -6070,9 +6067,6 @@
   <data name="{0} of {1} charts moved." xml:space="preserve">
     <value>{0} chart su {1} hanno cambiato livello.</value>
   </data>
-  <data name="{0} other charts unchanged" xml:space="preserve">
-    <value>Altre {0} chart invariate</value>
-  </data>
   <data name="New in {0} — {1} charts." xml:space="preserve">
     <value>Nuova in {0} — {1} chart.</value>
   </data>
@@ -6099,9 +6093,6 @@
   </data>
   <data name="{0} charts removed from songs that stayed" xml:space="preserve">
     <value>{0} chart rimosse da canzoni rimaste</value>
-  </data>
-  <data name="Open the chart page" xml:space="preserve">
-    <value>Apri la pagina della chart</value>
   </data>
   <data name="{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}." xml:space="preserve">
     <value>{0} ha cambiato il livello di {1} chart rispetto a {2} — {3} più difficili, {4} più facili — {5} canzoni aggiunte e {6} rimosse.</value>
@@ -6139,7 +6130,13 @@
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} chart sono state ripassate.</value>
   </data>
-  <data name="Only charts that changed are listed. Add a difficulty to jump straight to one." xml:space="preserve">
-    <value>Sono elencate solo le chart che sono cambiate. Aggiungi una difficoltà per andare dritto a una.</value>
+  <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
+    <value>Cerca una canzone — es. Iolite Sky</value>
+  </data>
+  <data name="Only songs with a changed chart are listed." xml:space="preserve">
+    <value>Sono elencate solo le canzoni con almeno una chart cambiata.</value>
+  </data>
+  <data name="Unchanged Charts:" xml:space="preserve">
+    <value>Chart invariate:</value>
   </data>
 </root>

@@ -807,9 +807,6 @@
   <data name="Chart Compare" xml:space="preserve">
 	  <value>Mrglrgl Mrrglrgl</value>
   </data>
-  <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
-	  <value>Mrrglurg rglmrgl mrglrgl glorglurg argl grrrgl mrrglub urglrgl blubbrgl grgl arglmrg grglmrglgurg mrgla.</value>
-  </data>
   <data name="Added" xml:space="preserve">
 	  <value>Mrglrgl</value>
   </data>
@@ -5996,9 +5993,6 @@
   <data name="{0} of {1} charts moved." xml:space="preserve">
     <value>{0} mrgl {1} plglrglgrrr murglgl.</value>
   </data>
-  <data name="{0} other charts unchanged" xml:space="preserve">
-    <value>{0} blurb plglrglgrrr mrgl murglgl</value>
-  </data>
   <data name="New in {0} — {1} charts." xml:space="preserve">
     <value>Mrgllurg mrgl {0} — {1} plglrglgrrr.</value>
   </data>
@@ -6025,9 +6019,6 @@
   </data>
   <data name="{0} charts removed from songs that stayed" xml:space="preserve">
     <value>{0} plglrglgrrr blubmrrglglrgl mrgl mrgllurg murgl</value>
-  </data>
-  <data name="Open the chart page" xml:space="preserve">
-    <value>Blurb plglrglgrrr mrrrglub</value>
   </data>
   <data name="{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}." xml:space="preserve">
     <value>{0} murglgl {1} plglrglgrrr argrlglar mrgl {2} — {3} grrrrgl, {4} blurb — mrgllurg {5} argrl blubmrrglglrgl {6}.</value>
@@ -6065,7 +6056,13 @@
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} plglrglgrrr murglgl blurb.</value>
   </data>
-  <data name="Only charts that changed are listed. Add a difficulty to jump straight to one." xml:space="preserve">
-    <value>Blurb plglrglgrrr murglgl mrgl. Blurb argrlglar mrgl blurb.</value>
+  <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
+    <value>Mrrglrgl mrgllurg — mrgl Iolite Sky</value>
+  </data>
+  <data name="Only songs with a changed chart are listed." xml:space="preserve">
+    <value>Blurb mrgllurg mrgl murglgl plglrglgrrr mrgl.</value>
+  </data>
+  <data name="Unchanged Charts:" xml:space="preserve">
+    <value>Mrgl Murglgl Plglrglgrrr:</value>
   </data>
 </root>

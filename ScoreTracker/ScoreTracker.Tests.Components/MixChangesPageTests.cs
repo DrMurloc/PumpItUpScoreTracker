@@ -450,16 +450,15 @@ public sealed class MixChangesPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheXxToPhoenixSourcingCreditIsGone()
+    public void ThePageCarriesNoSourcingOrProvisionalDisclaimers()
     {
-        Catalog(MixEnum.XX);
-        Catalog(MixEnum.Phoenix);
-        Diff(MixDiffRecord.Empty(MixEnum.XX, MixEnum.Phoenix));
+        // Both were retired once they stopped being true: the XX sourcing credit, and the
+        // "not final until the mix releases" caveat on anything compared against Phoenix 2.
+        SetupIoliteSky();
 
-        var page = RenderComponent<MixChanges>(p => p
-            .Add(c => c.FromSlug, "xx")
-            .Add(c => c.ToSlug, "phoenix"));
+        var page = RenderPage();
 
         Assert.DoesNotContain("KyleTT", page.Markup);
+        Assert.DoesNotContain("not final", page.Markup);
     }
 }
