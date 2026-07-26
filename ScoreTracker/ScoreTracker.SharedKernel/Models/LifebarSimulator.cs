@@ -27,6 +27,23 @@ public sealed class LifebarSimulator
         _lifeMultiplier = lifeMultiplier;
     }
 
+    /// <summary>The life gain multiplier's ceiling.</summary>
+    public const double MaxLifeMultiplier = .8;
+
+    /// <summary>
+    ///     A simulator resumed at a known state — for carrying a run across a level change,
+    ///     where the bar rescales but the player hasn't played a note. Life clamps to the new
+    ///     level's maximum. Replaying judgments to reach a target life instead would drift:
+    ///     bads move in steps of 50 and overshoot.
+    /// </summary>
+    public static LifebarSimulator At(DifficultyLevel level, int currentLife, double lifeMultiplier)
+    {
+        var maxLife = new LifebarSimulator(level).MaxLife;
+        return new LifebarSimulator(maxLife,
+            Math.Clamp(currentLife, 0, maxLife),
+            Math.Clamp(lifeMultiplier, 0, MaxLifeMultiplier));
+    }
+
     /// <summary>
     ///     A detached copy at this exact state — including the life multiplier, which is the
     ///     half of the state nobody can see. Lets a caller ask "what would this judgment do?"
@@ -82,7 +99,7 @@ public sealed class LifebarSimulator
 
         if (_lifeMultiplier < 0) _lifeMultiplier = 0;
 
-        if (_lifeMultiplier > .8) _lifeMultiplier = .8;
+        if (_lifeMultiplier > MaxLifeMultiplier) _lifeMultiplier = MaxLifeMultiplier;
 
         if (CurrentLife < 0) CurrentLife = 0;
 

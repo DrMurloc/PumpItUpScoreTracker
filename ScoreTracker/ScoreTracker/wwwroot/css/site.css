@@ -7433,23 +7433,26 @@ button.chart-card-art {
     background: var(--life-overflow);
 }
 
-/* A multi-note press sweeps rather than snapping. The duration rides a custom
-   property the page sets inline, so a x50 press can take longer than a x1 —
-   pure CSS, which is what keeps it free on a server circuit. */
+/* A multi-note press sweeps rather than snapping. The durations ride custom
+   properties the page sets inline, so a x50 press can take longer than a x1 —
+   pure CSS, which is what keeps it free on a server circuit. The two zones run in
+   SEQUENCE, not together: gaining, the visible bar fills before the overflow starts;
+   draining, the overflow empties first. Life crosses the zones in that order. */
 .lc-fill {
     position: absolute;
     inset: 0;
-    transition: clip-path var(--lc-sweep, .13s) linear;
 }
 
 .lc-fill-visible {
     background: var(--life-rainbow);
+    transition: clip-path var(--lc-vis-sweep, .13s) linear var(--lc-vis-delay, 0s);
 }
 
 .lc-fill-overflow {
     background:
         repeating-linear-gradient(115deg, transparent 0 5px, color-mix(in srgb, var(--mix-bg) 55%, transparent) 5px 8px),
         linear-gradient(90deg, color-mix(in srgb, var(--life-overflow) 62%, transparent), var(--life-overflow));
+    transition: clip-path var(--lc-overflow-sweep, .13s) linear var(--lc-overflow-delay, 0s);
 }
 
 .lc-glow {

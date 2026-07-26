@@ -55,20 +55,37 @@ public sealed class LifeCalculatorPageTests : ComponentTestBase
     private static string Tele(IRenderedComponent<LifeCalculator> page, int index) =>
         page.FindAll(".lc-tele-value")[index].TextContent.Trim();
 
+    /// <summary>
+    ///     Opens where a run opens. On a full bar the first perfect anyone tries does nothing
+    ///     — the bar is already clamped at max — which reads as a broken page.
+    /// </summary>
     [Fact]
-    public void OpensOnAFullBarAtTheDefaultLevel()
+    public void OpensAtSongStartNotOnAFullBar()
     {
         var page = RenderComponent<LifeCalculator>();
 
-        // Level 23 tops out at 1000 + 23*23*3.
-        Assert.Equal(2587, Life(page));
-        Assert.Equal("overflow-full", page.Find(".lc-state").GetAttribute("data-state"));
+        Assert.Equal(500, Life(page));
+        Assert.Equal("ok", page.Find(".lc-state").GetAttribute("data-state"));
+        Assert.Equal("false", page.Find(".lc-note").GetAttribute("data-live"));
+    }
+
+    [Fact]
+    public async Task APerfectAtSongStartActuallyMovesTheBar()
+    {
+        var page = RenderComponent<LifeCalculator>();
+
+        await Press(page, "perfect");
+
+        Assert.True(Life(page) > 500);
     }
 
     [Fact]
     public async Task AMissFromAFullBarCosts270()
     {
         var page = RenderComponent<LifeCalculator>();
+        await ClickWithText(page, ".lc-ghost", "Fill");
+        // Level 23 tops out at 1000 + 23*23*3.
+        Assert.Equal(2587, Life(page));
 
         await Press(page, "miss");
 
@@ -79,6 +96,7 @@ public sealed class LifeCalculatorPageTests : ComponentTestBase
     public async Task TheStepToggleMultipliesTheWholePress()
     {
         var page = RenderComponent<LifeCalculator>();
+        await ClickWithText(page, ".lc-ghost", "Fill");
         await ClickWithText(page, ".lc-seg button", "20");
 
         await Press(page, "bad");
@@ -86,6 +104,40 @@ public sealed class LifeCalculatorPageTests : ComponentTestBase
         // Twenty bads at a flat -50 each.
         Assert.Equal(2587 - 20 * 50, Life(page));
         Assert.Equal("0", Tele(page, 0));
+    }
+
+    /// <summary>
+    ///     Dragging the slider rebuilt the simulator by replaying bads down to the old life,
+    ///     which overshoots in steps of 50 — so every tick of the drag quietly bled life.
+    /// </summary>
+    [Fact]
+    public async Task DraggingTheLevelSliderDoesNotChangeLife()
+    {
+        var page = RenderComponent<LifeCalculator>();
+        await Press(page, "perfect");
+        var before = Life(page);
+        var multiplier = Tele(page, 1);
+
+        // oninput, not onchange: the slider updates live as you drag, which is exactly the
+        // path that used to bleed life on every tick.
+        foreach (var level in new[] { 24, 25, 26, 25, 24, 23, 22, 21 })
+            await page.InvokeAsync(() => page.Find("#lc-level").Input(level.ToString()));
+
+        Assert.Equal(before, Life(page));
+        Assert.Equal(multiplier, Tele(page, 1));
+    }
+
+    [Fact]
+    public async Task DroppingToALowerLevelClampsLifeToTheNewMaximum()
+    {
+        var page = RenderComponent<LifeCalculator>();
+        await ClickWithText(page, ".lc-ghost", "Fill");
+        Assert.Equal(2587, Life(page));
+
+        // Level 1 tops out at 1003.
+        await ClickAt(page, ".lc-ladder-row", 0);
+
+        Assert.Equal(1003, Life(page));
     }
 
     [Fact]
@@ -108,8 +160,6 @@ public sealed class LifeCalculatorPageTests : ComponentTestBase
     public async Task AMissLeavesTheNextPerfectPayingNothing()
     {
         var page = RenderComponent<LifeCalculator>();
-        // Reset to song start, so the bar isn't clamped at max and a gain would be visible.
-        await ClickWithText(page, ".lc-ghost", "Reset");
 
         await Press(page, "miss");
         var afterMiss = Life(page);
@@ -126,7 +176,6 @@ public sealed class LifeCalculatorPageTests : ComponentTestBase
     public async Task GoodsMoveNeitherLifeNorMultiplier()
     {
         var page = RenderComponent<LifeCalculator>();
-        await ClickWithText(page, ".lc-ghost", "Reset");
         var before = Life(page);
         var multiplier = Tele(page, 1);
 
@@ -140,7 +189,11 @@ public sealed class LifeCalculatorPageTests : ComponentTestBase
     public async Task ThePhoenix2NoteLightsUpOnlyAtFullOverflow()
     {
         var page = RenderComponent<LifeCalculator>();
+        Assert.Equal("false", page.Find(".lc-note").GetAttribute("data-live"));
+
+        await ClickWithText(page, ".lc-ghost", "Fill");
         Assert.Equal("true", page.Find(".lc-note").GetAttribute("data-live"));
+        Assert.Equal("overflow-full", page.Find(".lc-state").GetAttribute("data-state"));
 
         await Press(page, "miss");
 
@@ -154,10 +207,8 @@ public sealed class LifeCalculatorPageTests : ComponentTestBase
         var page = RenderComponent<LifeCalculator>();
         Assert.NotNull(page.Find(".lc-zone-overflow"));
 
-        // Level 1 buys only 3 life of overflow.
         await ClickAt(page, ".lc-ladder-row", 0);
 
-        Assert.Equal(1003, Life(page));
         Assert.Equal("1", page.Find(".lc-level-value").TextContent.Trim());
     }
 

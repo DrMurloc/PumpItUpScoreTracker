@@ -22,9 +22,12 @@ have caught it because the math lived in the `.razor` code-behind.
 
 1. **The playable lifebar is the hero.** The bar renders to scale, judgment keys drive it,
    and a telemetry rail exposes the two variables the cabinet hides: the gain multiplier
-   and what a miss costs *right now*. Pressing MISS at a full bar and watching perfects pay
-   `+0` afterwards teaches the multiplier in one gesture. Considered and rejected: opening
-   on the survival-budget tiles with the bar demoted beneath them.
+   and what a miss costs *right now*. Pressing MISS and watching perfects pay `+0` afterwards
+   teaches the multiplier in one gesture. Considered and rejected: opening on the
+   survival-budget tiles with the bar demoted beneath them.
+   **The page opens at song start (500 life), not on a full bar** (field test 1): from a full
+   bar the first perfect anyone presses does nothing, because the bar is already clamped at
+   its maximum — which reads as a broken control rather than a full one.
 2. **The bar is drawn in two zones.** The **visible bar** (0–1000, the rainbow) and the
    **overflow** above it, at true proportion. At level 23 that's 1000 visible and 1587 you
    can't see — the single most useful fact on the page, previously three overlapping bar
@@ -41,12 +44,16 @@ have caught it because the math lived in the `.razor` code-behind.
    (mouse and keyboard). Each key's delta previews the *whole* press, which is what makes
    the multiplier legible: ×50 perfects from a dead multiplier reads `+303`, the same fifty
    from a capped one reads `+450`.
-6. **Multi-note presses sweep.** The bar animates on a CSS transition whose duration rides
-   a `--sweep` custom property set inline — free on a server circuit. The digits count up
-   through one `InvokeVoidAsync` per press. **Never animate this in C#**: on
-   `InteractiveServerRenderMode` that is one round-trip per frame, fifty for a ×50 press.
+6. **Multi-note presses sweep, and the two zones run in sequence.** The bar animates on CSS
+   transitions whose durations ride custom properties set inline — free on a server circuit.
+   The digits count up through one `InvokeVoidAsync` per press. **Never animate this in C#**:
+   on `InteractiveServerRenderMode` that is one round-trip per frame, fifty for a ×50 press.
    The readout is data, so the count-up carries a timer-based guarantee that the true value
    lands even when animation frames never run (background tab).
+   **Gaining, the visible bar fills before the overflow starts; draining, the overflow empties
+   first** (field test 2). The page splits the sweep between the zones in proportion to how
+   much of the change each one absorbs and delays the second — life crosses the zones in that
+   order, and animating both at once read as two unrelated bars.
 7. **Two views on one chart.** *Where life settles* (new) answers "what does 1 miss per 30
    notes actually leave me at" and exposes the cliffs; *How long you survive* is the old
    notes-to-death curve, kept and retitled. Both stay ApexCharts on
@@ -58,6 +65,11 @@ have caught it because the math lived in the `.razor` code-behind.
    with level; it makes the bar concrete at a level you actually play. A chart picker was
    considered and rejected, which also keeps the page dispatch-free — no `IMediator`, no
    catalog read, no DB.
+   Changing level **carries the run across the rescale exactly**, via
+   `LifebarSimulator.At(level, life, multiplier)`, clamping only when the new maximum is
+   lower. The first cut rebuilt the state by replaying bads down to the old life, which
+   overshoots in steps of 50 — so every tick of a slider drag quietly bled life (field
+   test 3). Pinned by `AtResumesExactlyWithNoDrift`.
 10. **The lifebar stays page-local markup, not a shared component.** One-off until the
     judgment-distribution work finds it a second home. Promotion later is mechanical: the
     markup already reads every color from tokens.

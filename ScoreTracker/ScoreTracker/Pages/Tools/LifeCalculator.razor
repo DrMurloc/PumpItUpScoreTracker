@@ -40,7 +40,8 @@
 }
 
 @* ---------------- the bench ---------------- *@
-<section class="lc-bench" style="--lc-sweep: @(_sweepMs)ms">
+<section class="lc-bench"
+         style="--lc-sweep: @(_sweepMs)ms; --lc-vis-sweep: @(_visSweepMs)ms; --lc-vis-delay: @(_visDelayMs)ms; --lc-overflow-sweep: @(_overflowSweepMs)ms; --lc-overflow-delay: @(_overflowDelayMs)ms">
     <div class="lc-bench-main">
         <div class="lc-bench-head">
             <div class="lc-level">
@@ -380,10 +381,16 @@
     };
 
     private int _level = 23;
-    private LifebarSimulator _sim = new(DifficultyLevel.From(23), true);
+    // Opens where a real run opens. Starting on a full bar made perfects look inert: the
+    // bar is already clamped at max, so the first thing you try does nothing.
+    private LifebarSimulator _sim = new(DifficultyLevel.From(23));
     private int _combo;
     private int _step = 1;
     private int _sweepMs = 130;
+    private int _visSweepMs = 130;
+    private int _visDelayMs;
+    private int _overflowSweepMs = 130;
+    private int _overflowDelayMs;
     private bool _surviveView;
     private bool _showProvenance;
 
@@ -479,24 +486,12 @@
     private void SetLevel(int level)
     {
         if (level == _level) return;
-        var previousLife = _sim.CurrentLife;
-        var multiplier = _sim.LifeMultiplier;
         _level = level;
-        _sim = new LifebarSimulator(DifficultyLevel.From(level), true);
-        // Hold the player's place on the bar rather than silently refilling it.
-        RestoreState(Math.Min(previousLife, _sim.MaxLife), multiplier);
+        // Carry the run across the rescale exactly. Replaying judgments to get back to the
+        // same life drifts — bads move in steps of 50 — which bled life on every drag of
+        // the slider.
+        _sim = LifebarSimulator.At(DifficultyLevel.From(level), _sim.CurrentLife, _sim.LifeMultiplier);
         LoadLevel(level);
-    }
-
-    /// <summary>
-    ///     Rebuilds a simulator at a given life and multiplier. The simulator only exposes
-    ///     forward moves, so replay bads (a flat −50) down and perfects up.
-    /// </summary>
-    private void RestoreState(int life, double multiplier)
-    {
-        while (_sim.CurrentLife > life && _sim.CurrentLife > 0) _sim.ApplyJudgment(Judgment.Bad);
-        var perfects = (int)Math.Round(multiplier / .02);
-        for (var i = 0; i < perfects; i++) _sim.ApplyJudgment(Judgment.Perfect);
     }
 
     private void LoadLevel(int level)
@@ -639,7 +634,9 @@
     private async Task FillToMax()
     {
         var from = _sim.CurrentLife;
-        while (_sim.CurrentLife < _sim.MaxLife) _sim.ApplyJudgment(Judgment.Perfect);
+        // A state shortcut, not a play: filling by replaying perfects would silently cap the
+        // multiplier too, which is the one thing this page is trying to make visible.
+        _sim = LifebarSimulator.At(DifficultyLevel.From(_level), _sim.MaxLife, _sim.LifeMultiplier);
         _sweepMs = SweepMs(20);
         await Sweep(from, _sim.CurrentLife);
     }
@@ -647,8 +644,36 @@
     // A multi-note press earns a longer sweep; a single note stays snappy.
     private static int SweepMs(int notes) => notes <= 1 ? 130 : Math.Min(620, 260 + notes * 7);
 
+    /// <summary>
+    ///     Splits the sweep across the two zones so they run in sequence rather than together:
+    ///     gaining, the visible bar fills and only then does the overflow; draining, the
+    ///     overflow empties first and the visible bar follows. Life moves through the zones in
+    ///     that order, so animating both at once reads as two unrelated bars.
+    /// </summary>
+    private void PlanSweep(int from, int to, int totalMs)
+    {
+        var cap = VisibleCap;
+        var visibleDelta = Math.Abs(Math.Min(to, cap) - Math.Min(from, cap));
+        var overflowDelta = Math.Abs(Math.Max(0, to - cap) - Math.Max(0, from - cap));
+        var total = visibleDelta + overflowDelta;
+
+        if (total == 0)
+        {
+            _visSweepMs = _overflowSweepMs = totalMs;
+            _visDelayMs = _overflowDelayMs = 0;
+            return;
+        }
+
+        _visSweepMs = totalMs * visibleDelta / total;
+        _overflowSweepMs = totalMs - _visSweepMs;
+        var gaining = to > from;
+        _visDelayMs = gaining ? 0 : _overflowSweepMs;
+        _overflowDelayMs = gaining ? _visSweepMs : 0;
+    }
+
     private async Task Sweep(int from, int to)
     {
+        PlanSweep(from, to, _sweepMs);
         if (_module is null || from == to) return;
         // One interop call for the whole press. Never a frame loop in C#: on a server
         // circuit that would be one round-trip per frame.

@@ -173,6 +173,40 @@ public sealed class LifebarAnalysisTests
         Assert.Equal(303, wipedGain);
     }
 
+    /// <summary>
+    ///     Carrying a run across a level change has to be exact. Rebuilding by replaying
+    ///     judgments back down to the old life drifts — bads move in steps of 50 — which bled
+    ///     life on every tick of the Life Calculator's level slider.
+    /// </summary>
+    [Fact]
+    public void AtResumesExactlyWithNoDrift()
+    {
+        var sim = LifebarSimulator.At(DifficultyLevel.From(23), 1234, .42);
+
+        Assert.Equal(1234, sim.CurrentLife);
+        Assert.Equal(.42, sim.LifeMultiplier);
+
+        // Round-tripping through every level must not move a thing.
+        var carried = sim;
+        foreach (var level in new[] { 24, 25, 26, 25, 24, 23 })
+            carried = LifebarSimulator.At(DifficultyLevel.From(level), carried.CurrentLife, carried.LifeMultiplier);
+
+        Assert.Equal(1234, carried.CurrentLife);
+        Assert.Equal(.42, carried.LifeMultiplier);
+    }
+
+    [Fact]
+    public void AtClampsToTheNewLevelsCeiling()
+    {
+        var dropped = LifebarSimulator.At(DifficultyLevel.From(1), 2587, LifebarSimulator.MaxLifeMultiplier);
+
+        Assert.Equal(1003, dropped.CurrentLife);
+        Assert.Equal(LifebarSimulator.MaxLifeMultiplier, dropped.LifeMultiplier);
+        Assert.Equal(0, LifebarSimulator.At(DifficultyLevel.From(20), -5, 5).CurrentLife);
+        Assert.Equal(LifebarSimulator.MaxLifeMultiplier,
+            LifebarSimulator.At(DifficultyLevel.From(20), 100, 5).LifeMultiplier);
+    }
+
     [Fact]
     public void ForkCopiesTheHiddenMultiplierNotJustTheLife()
     {
