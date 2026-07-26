@@ -418,7 +418,7 @@ else
                     @foreach (var badge in _badgeVocabulary)
                     {
                         var selected = _badges.Contains(badge.Key, StringComparer.OrdinalIgnoreCase);
-                        <span class="srp-badge-opt tier-chart-card-skill @(badge.Category == null ? "" : $"skillcat-{badge.Category.Value.ToString().ToLowerInvariant()}") @(selected ? "srp-badge-opt-sel" : "")"
+                        <span class="srp-badge-opt tier-chart-card-skill @(selected ? "srp-badge-opt-sel" : "")"
                               role="button" tabindex="0" @onclick="() => ToggleBadge(badge.Key)">
                             @L[badge.DisplayName]@BadgeCount(badge.Key)
                         </span>

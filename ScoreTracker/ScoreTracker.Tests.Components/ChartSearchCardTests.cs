@@ -22,19 +22,22 @@ public sealed class ChartSearchCardTests : ComponentTestBase
     }
 
     [Fact]
-    public void BadgesRenderTheirDisplayNamesWithCategoryTint()
+    public void BadgesRenderTheirOwnNamesAndNothingFromTheRollup()
     {
+        // Every badge is named in full and tinted by nothing: the category buckets belonged
+        // to the Skill rollup and went with it. "doublestep" was one of the two badges that
+        // rollup dropped entirely, so it appearing here is the point.
         var result = ChartsPageTests.MakeResult("District 1", 21, badges: new[]
         {
-            new ChartBadge("staggered_bracket", "Staggered Brackets", SkillCategory.Bracket),
-            new ChartBadge("doublestep", "Doublesteps", null)
+            new ChartBadge("staggered_bracket", "Staggered Brackets"),
+            new ChartBadge("doublestep", "Doublesteps")
         });
 
         var cut = RenderComponent<ChartSearchCard>(p => p.Add(x => x.Result, result));
 
         Assert.Contains("Staggered Brackets", cut.Markup);
-        Assert.Single(cut.FindAll(".skillcat-bracket"));
         Assert.Contains("Doublesteps", cut.Markup);
+        Assert.Empty(cut.FindAll("[class*=skillcat-]"));
     }
 
     [Fact]

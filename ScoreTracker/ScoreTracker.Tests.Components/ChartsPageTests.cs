@@ -367,7 +367,7 @@ public sealed class ChartsPageTests : ComponentTestBase
         _mediator.Setup(m => m.Send(It.IsAny<GetSearchBadgesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                new ChartBadge("staggered_bracket", "Staggered Brackets", SkillCategory.Bracket)
+                new ChartBadge("staggered_bracket", "Staggered Brackets")
             });
         _mediator.Setup(m => m.Send(It.IsAny<GetSearchArtistsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<string>());

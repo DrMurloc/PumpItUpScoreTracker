@@ -206,7 +206,7 @@
     private Chart? _chart;
     private IReadOnlyList<ChartVerdictFacet> _facets = Array.Empty<ChartVerdictFacet>();
     private IReadOnlyList<Chart> _siblings = Array.Empty<Chart>();
-    private IReadOnlyList<ChartSkillChipRecord> _skillChips = Array.Empty<ChartSkillChipRecord>();
+    private IReadOnlyList<ChartBadgeChipRecord> _skillChips = Array.Empty<ChartBadgeChipRecord>();
     private ChartStepAnalysisRecord? _analysis;
 
     private ChartIntensityFacts? Intensity => _chart == null ? null : ChartIntensityFacts.For(_chart, _analysis);
@@ -282,10 +282,10 @@
             .OrderBy(c => c.Type)
             .ThenBy(c => (int)c.Level)
             .ToArray();
-        _skillChips = (await Mediator.Send(new GetChartSkillChipsQuery(new[] { chart.Id })))
+        _skillChips = (await Mediator.Send(new GetChartBadgeChipsQuery(new[] { chart.Id })))
             .TryGetValue(chart.Id, out var chips)
             ? chips
-            : Array.Empty<ChartSkillChipRecord>();
+            : Array.Empty<ChartBadgeChipRecord>();
         _analysis = await Mediator.Send(new GetChartStepAnalysisQuery(chart.Id));
     }
 }

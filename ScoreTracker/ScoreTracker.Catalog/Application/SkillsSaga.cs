@@ -13,6 +13,7 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
     IRequestHandler<GetChartStepAnalysisQuery, ChartStepAnalysisRecord?>,
     IRequestHandler<GetChartStepAnalysesQuery, IReadOnlyDictionary<Guid, ChartStepAnalysisRecord>>,
     IRequestHandler<GetChartSkillChipsQuery, IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>>,
+    IRequestHandler<GetChartBadgeChipsQuery, IReadOnlyDictionary<Guid, IReadOnlyList<ChartBadgeChipRecord>>>,
     IRequestHandler<GetChartBadgeCoverageQuery, IReadOnlyDictionary<Guid, IReadOnlyDictionary<string, double>>>,
     IRequestHandler<GetUnresolvedAliasesQuery, IReadOnlyList<UnresolvedAliasRecord>>,
     IRequestHandler<ResolveExternalAliasCommand>
@@ -99,6 +100,46 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
                     .Where(s => !topRank.ContainsKey(s))
                     .OrderByDescending(s => fractions[s])
                     .Select(s => new ChartSkillChipRecord(s, false, fractions[s])))
+                .ToArray();
+            if (chips.Length > 0) result[group.Key] = chips;
+        }
+
+        return result;
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ChartBadgeChipRecord>>> Handle(
+        GetChartBadgeChipsQuery request, CancellationToken cancellationToken)
+    {
+        var metrics = await _metrics.GetMetrics(request.ChartIds, PiuCenterMetrics.Source, cancellationToken);
+        var result = new Dictionary<Guid, IReadOnlyList<ChartBadgeChipRecord>>();
+        foreach (var group in metrics.GroupBy(m => m.ChartId))
+        {
+            // The Skill-chip policy without the rollup hop: no max across mapped skills, no
+            // fan-out, no default weight. Coverage per badge, dominance from the top-3 pick,
+            // and a badge qualifies on its own threshold.
+            var coverage = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+            var qualified = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var topRank = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+            foreach (var metric in group)
+                if (metric.MetricName.StartsWith(PiuCenterMetrics.BadgeFractionPrefix, StringComparison.Ordinal))
+                {
+                    var badge = metric.MetricName[PiuCenterMetrics.BadgeFractionPrefix.Length..];
+                    coverage[badge] = metric.Value;
+                    if (metric.Value >= PiuCenterSkillMapper.ThresholdFor(badge)) qualified.Add(badge);
+                }
+                else if (metric.MetricName.StartsWith(PiuCenterMetrics.Top3Prefix, StringComparison.Ordinal))
+                {
+                    topRank[metric.MetricName[PiuCenterMetrics.Top3Prefix.Length..]] = metric.Value;
+                }
+
+            var chips = topRank
+                .OrderBy(kv => kv.Value)
+                .Select(kv => new ChartBadgeChipRecord(kv.Key, PiuCenterBadges.DisplayName(kv.Key), true,
+                    coverage.TryGetValue(kv.Key, out var f) ? f : null))
+                .Concat(qualified
+                    .Where(b => !topRank.ContainsKey(b))
+                    .OrderByDescending(b => coverage[b])
+                    .Select(b => new ChartBadgeChipRecord(b, PiuCenterBadges.DisplayName(b), false, coverage[b])))
                 .ToArray();
             if (chips.Length > 0) result[group.Key] = chips;
         }

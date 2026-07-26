@@ -2,19 +2,23 @@
 @using ScoreTracker.SharedKernel.Enums
 @namespace ScoreTracker.Web.Components
 
-@* The mapped-skill coverage bars — extracted from ChartDetailsDialog (one concept, one
-   component) so the chart page and the dialog can never drift. Category tints ride the
-   --skillcat-* token group; null coverage = a whole-chart quality (full bar, no number). *@
+@* The badge coverage bars — extracted from ChartDetailsDialog (one concept, one component)
+   so the chart page and the dialog can never drift. These read the granular piucenter
+   badges, the same vocabulary the similar-charts algorithm compares on: "Staggered
+   Brackets 40%", not five kinds of twist averaged into one "Twists" bar
+   (docs/design/nuke-old-skill-categories.md). Null coverage = a whole-chart quality
+   (bursty, sustained): full bar, no number. No category tint — those buckets went with the
+   rollup, and the printed name carries the meaning (rule 8). *@
 @if (Chips != null && Chips.Count > 0)
 {
     <div class="chart-details-skill-bars">
         @foreach (var chip in Chips.Take(Take))
         {
-            var percent = chip.SegmentFraction == null
+            var percent = chip.Coverage == null
                 ? (int?)null
-                : (int)Math.Round(chip.SegmentFraction.Value * 100);
-            <div class="chart-details-skill-bar skillcat-@(chip.Skill.GetPrimaryCategory().ToString().ToLowerInvariant())">
-                <span class="chart-details-skill-bar-label">@chip.Skill.GetName()</span>
+                : (int)Math.Round(chip.Coverage.Value * 100);
+            <div class="chart-details-skill-bar">
+                <span class="chart-details-skill-bar-label">@L[chip.DisplayName]</span>
                 <span class="chart-details-skill-bar-track"><span class="chart-details-skill-bar-fill" style="width:@(percent ?? 100)%"></span></span>
                 <span class="chart-details-skill-bar-value">@(percent == null ? "" : $"{percent}%")</span>
             </div>
@@ -78,7 +82,7 @@
 
 @code {
     [Parameter]
-    public IReadOnlyList<ChartSkillChipRecord>? Chips { get; set; }
+    public IReadOnlyList<ChartBadgeChipRecord>? Chips { get; set; }
 
     [Parameter]
     public int Take { get; set; } = 6;

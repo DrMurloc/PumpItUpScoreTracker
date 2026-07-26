@@ -76,10 +76,11 @@ internal sealed class SearchVocabularyHandler :
             .Where(m => m.MetricName.StartsWith(PiuCenterMetrics.Top3Prefix, StringComparison.Ordinal))
             .Select(m => m.MetricName[PiuCenterMetrics.Top3Prefix.Length..])
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Select(k => new ChartBadge(k, PiuCenterBadges.DisplayName(k), PiuCenterBadges.CategoryFor(k)))
-            .OrderBy(b => b.Category == null ? 1 : 0)
-            .ThenBy(b => b.Category)
-            .ThenBy(b => b.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .Select(k => new ChartBadge(k, PiuCenterBadges.DisplayName(k)))
+            // Alphabetical: the cloud used to group by the rollup's category buckets, and
+            // those went with it. A name is something a reader can scan for; a bucket that
+            // put five kinds of twist in one pile was not.
+            .OrderBy(b => b.DisplayName, StringComparer.OrdinalIgnoreCase)
             .ToArray();
     }
 

@@ -88,24 +88,16 @@
                     }
                 </div>
             }
-            @* Skill coverage bars — mapped skills ordered dominance-first (their top-3
-               pick, then segment coverage), tinted per category. Pre-crawl charts fall
-               back to the plain tag chips. *@
+            @* Badge coverage bars — granular piucenter badges, dominance-first (their top-3
+               pick, then coverage). A pre-crawl chart shows nothing here rather than falling
+               back to the rollup tags: an arbitrary "Technical" is worse than silence
+               (docs/design/nuke-old-skill-categories.md). *@
             @if (_skillChips.Any())
             {
                 <MudText Typo="Typo.overline">@L["Skills"]</MudText>
                 @* Bars extracted to SkillCoverageBars (chart-page overhaul): one concept,
                    one component — the page renders the same bars at section scale. *@
                 <SkillCoverageBars Chips="_skillChips"></SkillCoverageBars>
-            }
-            else if (Chart.Skills.Any())
-            {
-                <div class="chart-details-skills">
-                    @foreach (var skill in Chart.Skills)
-                    {
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@skill.GetName()</MudChip>
-                    }
-                </div>
             }
             @* Round 4 (piucenter): "Your journey" renamed Score History and moved next
                to the recording inputs it feeds — past scores directly above the new one. *@
@@ -350,9 +342,9 @@
         _placements = await LoadPlacements(Chart.Id);
         // The alias table's key beats the guessed one (crawler project hardening).
         _externalKey = (await Mediator.Send(new GetChartStepAnalysisQuery(Chart.Id)))?.ExternalKey;
-        // Coverage bars: mapped skills, dominance-ordered, from the banked metrics.
-        _skillChips = (await Mediator.Send(new GetChartSkillChipsQuery(new[] { Chart.Id })))
-            .GetValueOrDefault(Chart.Id) ?? Array.Empty<ChartSkillChipRecord>();
+        // Coverage bars: granular piucenter badges, dominance-ordered, from the banked metrics.
+        _skillChips = (await Mediator.Send(new GetChartBadgeChipsQuery(new[] { Chart.Id })))
+            .GetValueOrDefault(Chart.Id) ?? Array.Empty<ChartBadgeChipRecord>();
     }
 
     private async Task<IReadOnlyList<(string, string)>> LoadPlacements(Guid chartId)
@@ -395,7 +387,7 @@
     }
 
     private string? _externalKey;
-    private IReadOnlyList<ChartSkillChipRecord> _skillChips = Array.Empty<ChartSkillChipRecord>();
+    private IReadOnlyList<ChartBadgeChipRecord> _skillChips = Array.Empty<ChartBadgeChipRecord>();
 
     // The resolved alias key when the crawler has one; otherwise a best-effort guess
     // in the current key format ("<Song>_-_<Artist>_<S|D><level>_<SONGTYPE>").

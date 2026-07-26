@@ -38,9 +38,11 @@
             }
         </div>
         <div class="srp-card-chips">
+            @* No category tint: those buckets belonged to the rollup vocabulary and went with
+               it. The badge's own name carries the meaning (rule 8). *@
             @foreach (var badge in Result.Badges)
             {
-                <span class="tier-chart-card-skill @CategoryClass(badge)">@L[badge.DisplayName]</span>
+                <span class="tier-chart-card-skill">@L[badge.DisplayName]</span>
             }
             @if (Result.CommunityVote != null)
             {
@@ -173,10 +175,6 @@
     private string? StateTitle => Result.My is { Passed: true } ? L["Passed"] :
         IsToDo ? L["To Do"] : null;
 
-    private static string CategoryClass(ChartBadge badge)
-    {
-        return badge.Category == null ? string.Empty : $"skillcat-{badge.Category.Value.ToString().ToLowerInvariant()}";
-    }
 
     internal static string CategoryName(TierListCategory category)
     {

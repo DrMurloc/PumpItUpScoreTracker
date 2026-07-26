@@ -1,12 +1,13 @@
-using ScoreTracker.SharedKernel.Enums;
-
 namespace ScoreTracker.Catalog.Domain;
 
 /// <summary>
-///     English display names and color families for the granular piucenter badge
-///     vocabulary (the SRP skills facet — the rollup <see cref="Skill" /> enum is not
-///     consumed there). Unknown keys fall back to Title Case so new piucenter vocabulary
-///     degrades to something readable without a code change; the UI layer localizes.
+///     English display names for the granular piucenter badge vocabulary — the one label
+///     table for every chart surface (the SRP facet and chips, the coverage bars on the
+///     chart page and its dialog). Unknown keys fall back to Title Case so new piucenter
+///     vocabulary degrades to something readable without a code change; the UI layer
+///     localizes. Colour families used to ride the rollup's category buckets and went with
+///     them (docs/design/nuke-old-skill-categories.md) — a badge chip is neutral and its
+///     printed name carries the meaning.
 /// </summary>
 internal static class PiuCenterBadges
 {
@@ -58,10 +59,4 @@ internal static class PiuCenterBadges
         return string.Join(' ', words);
     }
 
-    /// <summary>Color family via the badge's rollup mapping; null for unmapped badges (neutral chip).</summary>
-    public static SkillCategory? CategoryFor(string badgeKey)
-    {
-        var mapped = PiuCenterSkillMapper.MapTheirSkill(badgeKey);
-        return mapped.Count == 0 ? null : mapped[0].GetPrimaryCategory();
-    }
 }

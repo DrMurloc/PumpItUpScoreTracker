@@ -25,19 +25,12 @@ public sealed class PiuCenterBadgesTests
         Assert.Equal("Quad Anchor Stomp", PiuCenterBadges.DisplayName("quad_anchor-stomp"));
     }
 
-    [Theory]
-    [InlineData("drill", SkillCategory.Stamina)]
-    [InlineData("staggered_bracket", SkillCategory.Bracket)]
-    [InlineData("twist_over90", SkillCategory.Twist)]
-    [InlineData("hands", SkillCategory.Tech)]
-    public void CategoryRidesTheBadgesRollupMapping(string key, SkillCategory expected)
-    {
-        Assert.Equal(expected, PiuCenterBadges.CategoryFor(key));
-    }
-
     [Fact]
-    public void DeliberatelyUnmappedBadgesGetNoColorFamily()
+    public void TheBadgesTheRollupThrewAwayHaveNamesToo()
     {
-        Assert.Null(PiuCenterBadges.CategoryFor("doublestep"));
+        // The rollup mapped these to nothing at all, so they could never be displayed. They
+        // are ordinary badges here (docs/design/nuke-old-skill-categories.md §1).
+        Assert.Equal("Doublesteps", PiuCenterBadges.DisplayName("doublestep"));
+        Assert.Equal("Side-3 Singles", PiuCenterBadges.DisplayName("side3_singles"));
     }
 }

@@ -89,7 +89,7 @@ public sealed record ChartSearchResult(
 
 /// <summary>A granular piucenter badge with its English display name; the UI localizes DisplayName.</summary>
 [ExcludeFromCodeCoverage]
-public sealed record ChartBadge(string Key, string DisplayName, SkillCategory? Category);
+public sealed record ChartBadge(string Key, string DisplayName);
 
 /// <summary>
 ///     The signed-in visitor's best on this chart, family-shaped: Phoenix fields for
