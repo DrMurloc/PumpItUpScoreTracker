@@ -116,7 +116,7 @@ else
                                 @foreach (var rung in rail.Rungs)
                                 {
                                     <TitleRungPip Rung="rung" WideLabel="@WideLabelFor(rail, rung)"
-                                                  OnSelected="Select"></TitleRungPip>
+                                                  Dimmed="@(!Matches(rung))" OnSelected="Select"></TitleRungPip>
                                 }
                             </div>
                             <div class="title-rail-tail"><b>@rail.Earned</b> / @rail.Total</div>

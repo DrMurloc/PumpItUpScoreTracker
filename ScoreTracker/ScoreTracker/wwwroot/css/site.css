@@ -7478,3 +7478,15 @@ button.chart-card-art {
         margin-top: 2px;
     }
 }
+
+/* Filtered out, not removed: a ladder with holes punched through it stops reading as a
+   ladder, so a non-matching rung fades in place. */
+.title-pip.dim {
+    opacity: .16;
+    pointer-events: none;
+}
+
+.title-badge.dim {
+    opacity: .16;
+    pointer-events: none;
+}

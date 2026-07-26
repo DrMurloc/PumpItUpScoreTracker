@@ -33,6 +33,13 @@
     /// <summary>Wide rungs carry a name instead of a number — a capstone, a plate tier, a gem.</summary>
     [Parameter] public string? WideLabel { get; set; }
 
+    /// <summary>
+    ///     Filtered out. The rung stays in place rather than disappearing: a ladder with holes
+    ///     punched through it stops reading as a ladder, and where your earned rungs sit on the
+    ///     climb is the thing worth seeing.
+    /// </summary>
+    [Parameter] public bool Dimmed { get; set; }
+
     [Parameter] public EventCallback<TitleRung> OnSelected { get; set; }
 
     private ParagonLevel Paragon =>
@@ -56,6 +63,7 @@
             if (WideLabel != null) classes += " wide";
             if (Rung.Official) classes += " official";
             if (Paragon == ParagonLevel.PG) classes += " pg";
+            if (Dimmed) classes += " dim";
             return classes;
         }
     }
