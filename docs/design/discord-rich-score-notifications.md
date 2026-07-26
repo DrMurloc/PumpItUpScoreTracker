@@ -22,15 +22,31 @@ Owner feedback after iteration 2 ran live. Three asks plus a sort bug, one PR:
    only backstop), and the **folder line are reserved first**; only the score buckets flex to
    fit, overflowing the rest into the "+N more" count. The folder breakdown always survives on
    the bottom.
-2. **Site-detected titles ride the main card.** All title completions are top priority and show
-   in a card. The import stamps `TitlesDetectedEvent` with the run's `SessionId` when it saved
-   scores; the title path attributes the site-only badges (`CompletionRequired == 0`) to that
-   session instead of announcing them, and `CaptureSessionTitles` single-sources the card's
-   completions from the milestone table by session — folding site badges in with the
-   score-crossing ones (disjoint title sets, no double-count). A **zero-score** import (detected
-   a badge but saved no scores) keeps a null `SessionId` and its titles render as their own rich
-   **titles-card** (`NewTitlesAcquiredEvent`, upgraded from the old plain-text list — owner Q1=a),
-   not the session card. Big fresh imports showing nothing but titles is intended.
+2. **Site-detected titles ride the main card, parked on the open batch.** All title completions
+   are top priority and show in a card. The title path **parks** the site-only badges
+   (`CompletionRequired == 0`) on the open score batch via
+   `IPlayerScoreBatchAccumulator.TryAddDetectedTitles`, and `CaptureSessionTitles` takes them
+   with `TakeDetectedTitles` and merges them into the card's own batch crossings. Badges carry no
+   requirement to climb, so they trail the ladder crossings, alphabetically.
+
+   The hand-off is safe on **timing, not luck**: the import publishes `TitlesDetectedEvent`
+   immediately after its last score save, and that batch does not drain for another two minutes.
+   The parked titles live in a slot of their own on the accumulator, **not** on `BatchState` —
+   `TakeBatch` destroys the batch at drain time, before the title step that reads them runs.
+   Taking on read is what makes a badge announceable exactly once.
+
+   ⚠ **The card must never find these by reading the session's milestone rows.** That was the
+   original design and it caused every card in a session to repeat the previous ones' titles: a
+   session envelope spans **8 hours** while a batch drains after **2 minutes**, so one session
+   emits many cards and the unbounded read handed each of them everything earned since the
+   session opened. Equally, do not split the park and any "drain the batch now" trigger across
+   two published messages — consumers run concurrently, and `TakeBatch` (an in-memory op at the
+   head of the drain) beats a multi-round-trip title diff every time.
+
+   A **zero-score** import (detected a badge but saved no scores) has no batch to park on, so
+   `TryAddDetectedTitles` refuses and its titles render as their own rich **titles-card**
+   (`NewTitlesAcquiredEvent`, upgraded from the old plain-text list — owner Q1=a). Same fallback
+   if the batch already drained. Big fresh imports showing nothing but titles is intended.
 3. **Peer comparison stops below competitive − 5.** A chart more than 5 levels under the player's
    competitive level for its type (singles competitive → singles charts, doubles → doubles) is
    noise (a 23-competitive player back-filling S5s). The `ScoreQuality90` flag is skipped
@@ -50,7 +66,15 @@ PR. Decisions and rationale:
 
 1. **Non-highlighted scores show.** Flagged rows keep art (≤5); the rest render as compact
    one-liners — ≤10 "More scores" (non-co-op) + ≤5 "Co-op" (co-op difficulty desc) — then the
-   grouped "+N more". Co-ops lost their dedicated art rows.
+   grouped "+N more".
+
+   ⚠ **Superseded 2026-07-26 — the art rows ALWAYS fill.** The highlights section fills to the
+   art cap (5) whenever the batch has that many scores, or to however many it has if fewer:
+   flagged rows lead and keep their captions, then the best unflagged scores top the section up
+   carrying none. The earlier rule promoted top scores *only* when nothing was flagged, so a card
+   with one flagged score showed one jacket over a bare list. **Co-ops are eligible** — they sort
+   last so they never take a slot an S/D score could fill, but a co-op-only session gets jackets
+   instead of nothing. ("Co-ops lost their dedicated art rows" was never an owner decision.)
 2. **Score-computable title completions ride the card.** The "piugame site detected" legacy
    message now covers only badges the score pipeline can't compute (`CompletionRequired == 0`:
    events, play/plate counts, staff). Difficulty, skill, boss-breaker and co-op completions
@@ -58,7 +82,9 @@ PR. Decisions and rationale:
    score path (`CaptureSessionTitles`) detects completions by the batch's **before→after
    crossing** against a score-only completion state — a fresh crossing surfaces even when the
    site path already persisted the title. Both paths still `SaveTitles` the full set (replace
-   semantics — nothing is dropped); only mint/announce is scoped.
+   semantics — nothing is dropped); only mint/announce is scoped. The parked site badges are
+   already persisted by the site path, so the records `CaptureSessionTitles` builds for them
+   exist only to reach the card — they are never re-appended.
 3. **Skill-title % floored at 900k.** `Title.CompletionFloor` (0 default, 900k for skill) +
    `TitleProgress.PercentComplete` rebase so a fresh pass isn't ~95%. The card shows
    `score/threshold` for skill instead of a percent, so the floor is a /Titles-surface fix
@@ -69,10 +95,24 @@ PR. Decisions and rationale:
    majority of the cohort also holds is suppressed (not noteworthy); an empty cohort never flags.
 7. **Folder-debut ordinal** — `🆕 First D24` / `Second` / `Third`.
 8. **Title routing.** Completions and generic difficulty/co-op progress deltas always ride the
-   top section; chart-specific **skill** progress rides the per-row caption as
-   `🏅 [DRILL] Lv.4 (972k/990k)`. Per-row `TitleProgress` is now skill-only, which also cuts the
-   flag's noise. Titles render **bracketed** everywhere (`[Expert Lv. 4]`); already-bracketed
+   top section. Titles render **bracketed** everywhere (`[Expert Lv. 4]`); already-bracketed
    skill/co-op/boss names aren't double-wrapped.
+
+   ⚠ **The per-row `TitleProgress` flag is RETIRED** (owner call 2026-07-26, "get rid of that").
+   It no longer fires and its `🏅 [DRILL] Lv.4 (972k/990k)` caption is gone from the card. The
+   `HighlightFlags` member and the `SkillTitle*` columns stay so historical rows keep their
+   meaning — the Sessions page still renders the badge for scores that earned it. Retiring it
+   also removed a **full title-list rebuild per score batch** from `LoadCaptureData`, which
+   existed only to find skill titles for that caption.
+9. **Completions are ordered ladder, then rung** — grouped by ladder with the lowest rung first,
+   so a run of crossings reads like the climb it was. Ladders lead in the same order as the stat
+   lines above them: total PUMBILITY (`[P.B]`), singles, doubles, then difficulty and skill
+   ladders, then site badges. Sorting happens in the **producer** (`ComputeBatchCompletions` via
+   `LadderOrder`), not the card, so `CommunitySaga` needs no title knowledge. The milestone table
+   has no `ORDER BY`, so without this the card renders in SQL's arbitrary order.
+
+   ⚠ **No collapsing** (owner call 2026-07-26): five rungs render as five lines. "Many titles
+   should feel like many titles" — do not compress a run into `[D] INTERMEDIATE LV.1 → LV.5`.
 
 **Persistence.** The captured detail (pumbility rank, folder-debut ordinal, peer
 count/better/PG-holders, skill title name/score/threshold) persists on `ScoreHighlight` as a
@@ -522,11 +562,12 @@ card's CTA before it gets linked from other UI surfaces.
 
 ### Scores of note — flags, milestones, sessions
 
-**Five flag kinds** mark a score row as noteworthy:
+**Flag kinds** that mark a score row as noteworthy (one of the original five is retired):
 
 1. 👑 **Pumbility contributor** — the chart sits in the player's top 50 at batch time.
-2. 🏅 **Title progress** — the score counts toward a not-yet-complete title (the
-   `TitleProgress` rules behind `GetTitleProgressQuery`).
+2. ~~🏅 **Title progress**~~ — **RETIRED 2026-07-26.** It counted a score toward a
+   not-yet-complete skill title. No longer computed or rendered; see the routing rule above for
+   what survives and why.
 3. 📊 **Score Quality ≥ 90th** — the score ranks in the top decile against comparable
    players (the Score Quality machinery: `GetPlayerScoreQualityQuery` →
    `ScoreRankingRecord(Ranking, PlayerCount)`, `ScoreQualitySaga`). Compute the percentile
