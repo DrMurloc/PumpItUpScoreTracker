@@ -8,7 +8,17 @@
     <span class="border-legend-item">
         <span class="border-legend-swatch tier-chart-card-todo"></span>@L["To Do"]
     </span>
-    <span class="border-legend-item">
-        <span class="border-legend-swatch tier-chart-card-other-mix"></span>@L["Passed in another mix"]
-    </span>
+    @if (ShowOtherMix)
+    {
+        <span class="border-legend-item">
+            <span class="border-legend-swatch tier-chart-card-other-mix"></span>@L["Passed in another mix"]
+        </span>
+    }
 </div>
+
+@code {
+
+    // The cross-mix outline is a per-player toggle, and a legend entry for a border that
+    // isn't on any card is noise — so the item leaves with the outline.
+    [Parameter] public bool ShowOtherMix { get; set; } = true;
+}

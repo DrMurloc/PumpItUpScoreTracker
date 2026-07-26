@@ -1870,6 +1870,16 @@ html.sheet-open .more-sheet-scrim {
 .skillcat-bracket { --skill-chip: var(--skillcat-bracket); }
 .skillcat-tech { --skill-chip: var(--skillcat-tech); }
 
+/* The owner's five badge families (docs/design/nuke-old-skill-categories.md §2): the granular
+   piucenter vocabulary's identity colors, feeding the same --skill-chip variable the chip and
+   bar rules already read, so a badge chip tints exactly like the rollup chips used to. */
+.badgecat-brackets { --skill-chip: var(--badgecat-brackets); }
+.badgecat-twists { --skill-chip: var(--badgecat-twists); }
+.badgecat-staminaandruns { --skill-chip: var(--badgecat-staminaandruns); }
+.badgecat-tech { --skill-chip: var(--badgecat-tech); }
+.badgecat-doublestech { --skill-chip: var(--badgecat-doublestech); }
+
+.tier-chart-card-skill[class*="badgecat-"],
 .tier-chart-card-skill[class*="skillcat-"] {
     color: color-mix(in srgb, var(--skill-chip) 55%, var(--mix-ink));
     background: color-mix(in srgb, var(--skill-chip) 16%, transparent);
@@ -6479,6 +6489,445 @@ button.chart-card-art {
     text-shadow: 0 0 12px rgba(255, 217, 77, .35);
 }
 
+/* ===== Charts SRP (docs/design/charts-srp.md) ================================
+   The page stack: header (title + scope) → query chips → answer line → results.
+   Tokens only — the two ramps and --mix-* carry every color. */
+.srp-head {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.srp-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    min-height: 34px;
+}
+
+/* An applied-filter token is dismissed occasionally rather than hunted for, so it sits a
+   little under the drawer chips' 40px — but its ✕ is still a real target, not a 16px icon. */
+.srp-chip {
+    min-height: 36px;
+    font-size: .8rem;
+}
+
+    .srp-chip .mud-chip-close-button {
+        width: 28px;
+        height: 28px;
+        margin-left: 2px;
+    }
+
+        .srp-chip .mud-chip-close-button .mud-icon-root {
+            font-size: 1.1rem;
+        }
+
+.srp-chip-sort {
+    border-color: var(--mix-accent) !important;
+}
+
+.srp-answer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0 12px;
+}
+
+.srp-count {
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 12px;
+}
+
+.srp-pager {
+    display: flex;
+    justify-content: center;
+    margin: 18px 0 8px;
+}
+
+.srp-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 48px 0;
+    color: var(--mix-ink-muted);
+}
+
+.srp-card {
+    position: relative;
+    display: flex;
+    gap: 12px;
+    background: var(--mix-surface);
+    border: 1px solid var(--mix-surface-muted);
+    border-radius: 10px;
+    padding: 12px;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.srp-card:hover,
+.srp-card:focus-within {
+    border-color: var(--mix-primary);
+    box-shadow: 0 0 14px var(--mix-glow);
+}
+
+.srp-card-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: 10px;
+}
+
+.srp-card-art {
+    flex: 0 0 auto;
+}
+
+.srp-card-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.srp-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.srp-card-song {
+    font-weight: 600;
+    font-size: 1.05rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.srp-card-songtype {
+    font-size: .7rem;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
+.srp-card-artist {
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+}
+
+.srp-card-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 6px;
+    align-items: center;
+}
+
+.srp-card-tier {
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+    border: 1px solid;
+    border-radius: 5px;
+    padding: 1px 7px;
+    white-space: nowrap;
+}
+
+.srp-card-facts {
+    margin-top: 7px;
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 10px;
+}
+
+.srp-card-fact-lead {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.srp-card-my {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    min-width: 70px;
+    text-align: right;
+}
+
+.srp-card-unplayed {
+    font-size: .7rem;
+    color: var(--mix-ink-muted);
+    border: 1px dashed var(--mix-surface-muted);
+    border-radius: 4px;
+    padding: 2px 7px;
+}
+
+.srp-card-plate {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+}
+
+.srp-card-score {
+    font-size: .75rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-card-actions {
+    position: absolute;
+    right: 8px;
+    bottom: 6px;
+    z-index: 2;
+    display: flex;
+    gap: 2px;
+}
+
+.srp-drawer {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.srp-drawer-head {
+    display: flex;
+    align-items: center;
+}
+
+.srp-drawer-range {
+    display: flex;
+    gap: 10px;
+}
+
+@media (max-width: 600px) {
+    .srp-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .srp-head {
+        gap: 12px;
+    }
+}
+
+/* SRP card state borders — the tier lists' owner-locked language */
+.srp-card-pass {
+    border-color: var(--mud-palette-success);
+}
+
+.srp-card-todo {
+    border-style: dashed;
+    border-color: var(--mud-palette-info);
+}
+
+.srp-head-mix {
+    color: var(--mix-ink-muted);
+    font-size: .9rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+/* SRP drawer: badge cloud + switch rows */
+.srp-drawer-sub {
+    font-size: .65rem;
+    color: var(--mix-ink-muted);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.srp-badge-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Skill tags borrow the tier list's chip, which is sized to sit quietly on a card. Here
+   each one is something you tap, so the SRP's copy takes the same 40px target as the
+   other filter chips while keeping the category tint. */
+.srp-badge-opt {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 12px;
+    font-size: .8rem;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    cursor: pointer;
+    opacity: .75;
+}
+
+.srp-badge-opt:hover,
+.srp-badge-opt:focus-visible {
+    opacity: 1;
+}
+
+.srp-badge-opt-sel {
+    opacity: 1;
+    outline: 1px solid var(--mix-primary);
+}
+
+.srp-card-stepartist {
+    color: var(--mix-ink-muted);
+}
+
+/* SRP export dialog */
+.srp-export {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.srp-export-count {
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-export-columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.srp-export-hint {
+    color: var(--mix-ink-muted);
+}
+
+.srp-export-file {
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    border-top: 1px solid var(--mix-surface-muted);
+    padding-top: 8px;
+}
+
+/* SRP densities: sticker sheet + table. The sheet itself is the tier lists'
+   .tier-card-grid.tier-card-grid-compact — the tiles take their width from that grid. */
+.srp-table .srp-th-sortable {
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.srp-table .srp-th-sorted {
+    color: var(--mix-ink);
+    border-bottom: 2px solid var(--mix-accent);
+}
+
+.srp-table-link {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.srp-table-link:hover {
+    color: var(--mix-primary);
+}
+
+.srp-table-muted {
+    color: var(--mix-ink-muted);
+}
+
+.srp-table-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* SRP drawer facets: chip sets, range-slider headers, debut-mix eras */
+.srp-facet {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.srp-facet-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: .75rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.srp-facet-value {
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--mix-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-chipset {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.srp-chipset-sub {
+    padding-left: 10px;
+    border-left: 2px solid var(--mix-surface-muted);
+}
+
+/* A filter chip is the drawer's primary control, and a thumb is about 9mm wide: these
+   sit at the 40px target rather than the 22px the type alone would give them. The
+   drawer is 420px, so a row still fits two or three of the longest names. */
+.srp-facet-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    font-size: .85rem;
+    border: 1px solid var(--mix-surface-muted);
+    border-radius: 999px;
+    padding: 0 14px;
+    color: var(--mix-ink-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: border-color .12s, color .12s, background-color .12s;
+}
+
+.srp-facet-chip:hover,
+.srp-facet-chip:focus-visible {
+    color: var(--mix-ink);
+    border-color: var(--mix-primary);
+}
+
+/* A plate chip wears its own plate colour, so the row reads as the plate ladder it is rather
+   than five identical pills. --plate-chip is set inline from ThemeScales.PlateColor. */
+.srp-facet-chip[style*="--plate-chip"] {
+    color: color-mix(in srgb, var(--plate-chip) 62%, var(--mix-ink));
+    border-color: color-mix(in srgb, var(--plate-chip) 50%, transparent);
+}
+
+    .srp-facet-chip[style*="--plate-chip"].srp-facet-chip-on {
+        color: var(--mix-primary-contrast);
+        background: var(--plate-chip);
+        border-color: var(--plate-chip);
+    }
+
+.srp-facet-chip-on {
+    color: var(--mix-primary-contrast);
+    background: var(--mix-primary);
+    border-color: var(--mix-primary);
+    font-weight: 600;
+}
+
+.srp-era {
+    margin-top: 6px;
+}
+
+.srp-era-name {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    margin-bottom: 3px;
+}
+
 /* ── The leaderboard skin ─────────────────────────────────────────────────────
    The Official Leaderboards rankings board is the golden standard for every
    ranked collection on the site, so its vocabulary lives here rather than in
@@ -7660,6 +8109,516 @@ button.chart-card-art {
     color: var(--mix-ink-muted);
 }
 
+/* ===== /Titles =====
+   Titles are ladders, so the page draws one rail per ladder rather than one row per title
+   (docs/design/titles-overhaul.md). Tokens only: this page carries no colour-literal
+   allowance and is not to acquire one. */
+
+/* The shell leaves the page flush against the nav, and this one opens on a panel edge or a
+   section rule rather than on a heading, so it owes itself the breathing room. */
+.title-standing,
+.title-anon,
+.title-skeleton {
+    margin-top: 16px;
+}
+
+.title-standing {
+    display: grid;
+    grid-template-columns: minmax(230px, 1fr) minmax(250px, 1fr);
+    gap: 14px 30px;
+    align-items: center;
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    border-radius: 4px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+}
+
+.title-eyebrow {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    margin: 0 0 6px;
+}
+
+.title-worn {
+    font-family: var(--font-display);
+    font-size: clamp(26px, 6vw, 44px);
+    font-weight: 700;
+    line-height: 1;
+    margin: 0;
+    color: var(--mix-ink);
+    text-wrap: balance;
+}
+
+.title-worn-note {
+    color: var(--mix-ink-muted);
+    font-size: 13.5px;
+    margin: 8px 0 0;
+}
+
+.title-tally {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.title-tally-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 30px;
+    line-height: 1;
+    color: var(--mix-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.title-tally-of {
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+}
+
+.title-meter {
+    height: 10px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--mix-ink) 9%, transparent);
+    overflow: hidden;
+}
+
+.title-meter i {
+    display: block;
+    height: 100%;
+    background: var(--mix-primary);
+    box-shadow: 0 0 8px var(--mix-glow);
+}
+
+.title-meter-legend {
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+    margin-top: 6px;
+}
+
+.title-anon {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-primary) 40%, transparent);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+}
+
+.title-anon p {
+    margin: 0;
+    flex: 1 1 260px;
+    font-size: 14px;
+    color: var(--mix-ink);
+}
+
+/* Filter furniture sits above the list and never sticks (UX rule 6). */
+.title-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 9px 0;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    margin-bottom: 18px;
+}
+
+.title-search {
+    flex: 1 1 190px;
+    min-width: 150px;
+    margin: 0;
+}
+
+.title-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.title-chip {
+    font: inherit;
+    font-size: 13px;
+    background: transparent;
+    color: var(--mix-ink-muted);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 20%, transparent);
+    border-radius: 999px;
+    padding: 2px 12px;
+    cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s;
+}
+
+.title-chip:hover {
+    color: var(--mix-ink);
+    border-color: color-mix(in srgb, var(--mix-ink) 40%, transparent);
+}
+
+.title-chip.on {
+    background: color-mix(in srgb, var(--mix-primary) 20%, transparent);
+    border-color: var(--mix-primary);
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.title-chip .n {
+    opacity: .65;
+    margin-left: 5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.title-section {
+    margin: 0 0 26px;
+}
+
+.title-section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+}
+
+.title-section-head h2 {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--mix-ink);
+    margin: 0;
+}
+
+.title-section-count {
+    font-size: 12.5px;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.title-rails {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Boss breakers are one short rail per mix, so they tile instead of stacking. */
+/* Boss breakers are one short rail per mix. The mix name sits ABOVE its buttons rather than
+   beside them: side by side, a long mix name and a 150px button fought over a 190px cell and
+   the name lost, truncating to nothing. Stacked, every cell also gets the same button width
+   for free — the labels are chart data rather than UI strings, so they are the same two
+   near-identical widths in every language, which is what made them look misaligned. */
+.title-rails.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 4px 18px;
+    align-items: start;
+}
+
+.title-rail {
+    display: grid;
+    grid-template-columns: 168px 1fr auto;
+    align-items: center;
+    gap: 4px 14px;
+    padding: 7px 6px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
+}
+
+.title-rails.grid .title-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 6px 6px 10px;
+}
+
+.title-rails.grid .title-rail-track {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+}
+
+/* Identical width per cell, so a column of them reads as a column. */
+.title-rails.grid .title-pip.wide {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+}
+
+.title-rail:last-child {
+    border-bottom: 0;
+}
+
+.title-rail:hover {
+    background: color-mix(in srgb, var(--mix-ink) 4%, transparent);
+}
+
+.title-rail-name {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    line-height: 1.1;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+.title-rail-name > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Stacked, the mix name owns the full cell width and no longer needs to truncate. */
+.title-rails.grid .title-rail-name > span:first-child {
+    overflow: visible;
+    white-space: normal;
+}
+
+.title-rails.grid .title-rail-name {
+    font-size: 14px;
+    letter-spacing: .1em;
+    color: var(--mix-ink-muted);
+}
+
+.title-rail-track {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.title-rail-tail {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.title-rail-tail b {
+    color: var(--mix-ink);
+}
+
+.title-rails.grid .title-rail-tail {
+    display: none;
+}
+
+.title-pip {
+    position: relative;
+    width: 32px;
+    height: 30px;
+    flex: 0 0 auto;
+    border-radius: 3px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 20%, transparent);
+    background: transparent;
+    color: var(--mix-ink-muted);
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform .12s ease, border-color .15s, box-shadow .15s;
+}
+
+.title-pip:hover {
+    transform: translateY(-2px);
+    border-color: var(--mix-ink);
+    z-index: 2;
+}
+
+.title-pip:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 2px;
+    z-index: 2;
+}
+
+.title-pip > span {
+    position: relative;
+    z-index: 1;
+}
+
+.title-pip.wide {
+    width: auto;
+    min-width: 62px;
+    padding: 0 9px;
+    font-size: 13px;
+    letter-spacing: .06em;
+}
+
+.title-pip.earned {
+    border-color: color-mix(in srgb, var(--mix-primary) 62%, transparent);
+    background: color-mix(in srgb, var(--mix-primary) 17%, transparent);
+    color: var(--mix-ink);
+}
+
+.title-pip.pg {
+    border-color: var(--plate-pg);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--plate-pg) 45%, transparent);
+}
+
+.title-pip.active {
+    border-color: var(--mix-accent);
+    color: var(--mix-ink);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mix-accent) 30%, transparent);
+}
+
+/* The fill is this rung's own climb from the rung below it. */
+.title-pip.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--fill, 0%);
+    background: color-mix(in srgb, var(--mix-accent) 30%, transparent);
+    z-index: 0;
+}
+
+.title-pip.locked {
+    border-color: color-mix(in srgb, var(--mix-ink) 15%, transparent);
+    color: color-mix(in srgb, var(--mix-ink) 34%, transparent);
+}
+
+.title-pip.official {
+    border-style: dashed;
+}
+
+/* One-offs: titles with no ladder behind them. Name colour is how many players hold it,
+   and the glow ramp orders the bands where hue cannot. */
+.title-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.title-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 11px 4px 8px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--mix-ink) 4%, transparent);
+    font: inherit;
+    color: var(--mix-ink);
+    cursor: pointer;
+    transition: transform .12s, border-color .15s;
+}
+
+.title-badge:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--mix-ink) 45%, transparent);
+}
+
+.title-badge:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 2px;
+}
+
+.title-badge.official {
+    border-style: dashed;
+}
+
+.title-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+    background: var(--band);
+}
+
+.title-badge-name {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    color: var(--band);
+}
+
+.title-badge.owned {
+    border-color: color-mix(in srgb, var(--mix-primary) 55%, transparent);
+    background: color-mix(in srgb, var(--mix-primary) 12%, transparent);
+}
+
+.title-badge.unowned {
+    opacity: .42;
+}
+
+.title-badge.unowned .title-badge-name {
+    color: var(--mix-ink-muted);
+}
+
+.title-empty {
+    color: var(--mix-ink-muted);
+    padding: 12px 0;
+}
+
+/* Loading looks like the layout it becomes (UX rule 9), not a lone spinner. */
+.title-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 12px;
+}
+
+.title-skeleton-rail {
+    height: 44px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--mix-ink) 7%, transparent);
+    animation: title-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes title-skeleton-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: .55;
+    }
+}
+
+/* ---- the detail drawer ---- */
+.title-drawer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    color: var(--mix-ink);
+}
+
+.title-drawer-head {
+    position: relative;
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    flex: 0 0 auto;
+}
+
+.title-drawer-eyebrow {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
 .lc-foot-src {
     font-size: .84rem;
     line-height: 1.55;
@@ -7725,4 +8684,204 @@ button.chart-card-art {
     .lc-budget {
         grid-template-columns: minmax(0, 1fr);
     }
+}
+
+.title-drawer-head h3 {
+    font-family: var(--font-display);
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1.05;
+    margin: 2px 0 4px;
+    padding-right: 40px;
+}
+
+.title-drawer-close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+}
+
+.title-drawer-body {
+    padding: 12px 16px 24px;
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
+
+.title-req {
+    font-size: 14px;
+    background: color-mix(in srgb, var(--mix-ink) 6%, transparent);
+    border-left: 2px solid var(--mix-primary);
+    padding: 7px 10px;
+    margin: 0 0 14px;
+}
+
+.title-note {
+    font-size: 12.5px;
+    color: var(--mix-ink-muted);
+    border: 1px dashed color-mix(in srgb, var(--mix-ink) 26%, transparent);
+    border-radius: 3px;
+    padding: 7px 9px;
+    margin: 0 0 14px;
+}
+
+.title-label {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    margin: 16px 0 6px;
+}
+
+.title-bar {
+    height: 9px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    overflow: hidden;
+}
+
+.title-bar i {
+    display: block;
+    height: 100%;
+    background: var(--mix-accent);
+}
+
+.title-bar.done i {
+    background: var(--rarity-emerald);
+}
+
+.title-figures {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--mix-ink-muted);
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+}
+
+.title-figures b {
+    color: var(--mix-ink);
+}
+
+.title-hint {
+    font-size: 12.5px;
+    color: var(--mix-ink-muted);
+    margin: 6px 0 0;
+}
+
+.title-hint b {
+    color: var(--mix-ink);
+}
+
+.title-suggest {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: color-mix(in srgb, var(--mix-primary) 10%, transparent);
+    border-left: 2px solid var(--mix-primary);
+    padding: 8px 10px;
+}
+
+.title-suggest-folder {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--mix-primary);
+    flex: 0 0 auto;
+    font-variant-numeric: tabular-nums;
+}
+
+.title-suggest-ask {
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.title-rarity {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+}
+
+.title-rarity-pct {
+    font-family: var(--font-display);
+    font-size: 31px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--band);
+}
+
+.title-holders {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (max-width: 860px) {
+    .title-standing {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 700px) {
+    .title-standing {
+        gap: 10px;
+        padding: 11px 12px;
+        margin-bottom: 14px;
+    }
+
+    .title-worn {
+        font-size: clamp(24px, 8vw, 34px);
+    }
+
+    .title-controls {
+        padding: 7px 0;
+        margin-bottom: 12px;
+        gap: 6px 8px;
+    }
+
+    .title-search {
+        flex: 1 1 100%;
+    }
+
+    .title-chip {
+        padding: 2px 9px;
+        font-size: 12.5px;
+    }
+
+    .title-section {
+        margin-bottom: 20px;
+    }
+
+    /* The rail wraps onto its own row; it never side-scrolls. */
+    .title-rail {
+        grid-template-columns: 1fr auto;
+        gap: 3px 10px;
+        padding: 9px 4px;
+    }
+
+    .title-rail-name {
+        grid-column: 1;
+    }
+
+    .title-rail-tail {
+        grid-column: 2;
+    }
+
+    .title-rail-track {
+        grid-column: 1 / -1;
+        margin-top: 2px;
+    }
+}
+
+/* Filtered out, not removed: a ladder with holes punched through it stops reading as a
+   ladder, so a non-matching rung fades in place. */
+.title-pip.dim {
+    opacity: .16;
+    pointer-events: none;
+}
+
+.title-badge.dim {
+    opacity: .16;
+    pointer-events: none;
 }

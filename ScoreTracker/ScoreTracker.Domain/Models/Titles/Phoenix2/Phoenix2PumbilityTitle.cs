@@ -19,13 +19,22 @@ public enum PumbilityPool
 /// </summary>
 public sealed class Phoenix2PumbilityTitle : PhoenixTitle
 {
-    public Phoenix2PumbilityTitle(Name name, PumbilityPool pool, int threshold)
+    /// <param name="tier">
+    ///     The band of ten this rung sits in — Intermediate, Advanced, Expert — or null for a
+    ///     ladder with no bands (the merged [P.B] gems). The page draws a band per line, so
+    ///     thirty-one rungs read as three tens and a capstone rather than one long row.
+    /// </param>
+    public Phoenix2PumbilityTitle(Name name, PumbilityPool pool, int threshold, Name? tier = null)
         : base(name, $"{Label(pool)} of {threshold:N0}+", "Difficulty", threshold)
     {
         Pool = pool;
+        Tier = tier;
     }
 
     public PumbilityPool Pool { get; }
+
+    /// <summary>The band of ten this rung sits in, and the rail it draws on. See the constructor.</summary>
+    public Name? Tier { get; }
 
     public override bool PopulatesFromDatabase => false;
 

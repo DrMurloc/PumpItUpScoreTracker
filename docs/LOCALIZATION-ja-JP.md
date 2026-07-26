@@ -75,7 +75,7 @@ These have at least one existing translation in `App.ja-JP.resx`. New translatio
 | Source | 出典 | |
 | Source Code | ソースコード | |
 | Start | 開始 | "Start Date" → 開始日, "Starting Life" → 開始体力. |
-| Stats / Statistics | 統計 | "Player Stats" → 進捗中の譜面 (note: nabulator interpreted this as in-progress charts, not literal stats — see Known issues). "Game Stats" → ゲーム統計. |
+| Stats / Statistics | 統計 | "Game Stats" → ゲーム統計. |
 | Submit | 登録 | Also used for "Submission". |
 | Tag(s) | タグ | |
 | Title (in-game title award) | タイトル | "Title Progress" → タイトル進捗, "Titles" → タイトル. |
@@ -162,7 +162,7 @@ The mechanical items originally tracked here (nabulator-seed typos and inconsist
 - **`Broken` → `Break Off`**. Left as English (and a different English phrase from the source). Candidates: `失敗` to match the break/fail vocabulary, or keep `Break Off` — ko-KR deliberately uses the equivalent loanword 브레이크 오프, so the current value is defensible.
 - **`Communities` → `地域ランキング`** ("regional rankings"). Loses the social-community connotation; the feature is about player groups, not just regions. Reasonable candidate: `コミュニティ` (which is what ko-KR does with 커뮤니티).
 - **`Players` → `プレーヤー達`**. The `達` plural marker is grammatically valid but unusual in game UI, where bare `プレーヤー` is the norm. Compounds drop it correctly (`プレーヤー数`, `プレーヤーレベル`).
-- **`Player Stats` → `進捗中の譜面`** ("in-progress charts"). nabulator interpreted "Stats" as the in-progress chart list this label is associated with on the page; not a literal translation. May or may not be the right call — depends on how the label reads in context.
+- ~~**`Player Stats` → `進捗中の譜面`** ("in-progress charts").~~ **Moot as of 2026-07-26** — the Player Stats pages were retired for the home-page widgets and the key is gone from every locale. Kept as a record of the interpretive-vs-literal question, which will recur if a similar label lands.
 - **Rough nabulator prose that survives the typo fixes**: `残してる` (plain form + questionable transitivity) in Unpassed ToDos, `サービスを上げます` ("raise a service") in Use Password 3, `公開ランキング` ("public rankings") where the English says "Official". Grammatical now, but a native pass should rephrase.
 
 ### Machine-translation review priority

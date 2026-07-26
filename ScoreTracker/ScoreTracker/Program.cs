@@ -306,6 +306,19 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+// The retired /StepArtists page 301s to the chart browser, which filters by step artist
+// (?StepArtist=) instead of grouping the whole catalog under one expansion panel.
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.Equals("/StepArtists", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.Redirect("/Charts", true);
+        return;
+    }
+
+    await next();
+});
+
 // Tier-lists overhaul C3: legacy tier list URLs 301 to the canonical path form
 // (/TierLists/{Single|Double|CoOp}/{level}); the lens survives as a query param.
 // A real 301 (not a Blazor NavigateTo) so crawlers and old bookmarks consolidate.

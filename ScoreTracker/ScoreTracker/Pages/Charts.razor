@@ -1,953 +1,2083 @@
-@page "/{RequestedUserId:guid}/Charts"
 @page "/Charts"
 @rendermode RenderModes.Interactive
 @using MediatR
-@using ScoreTracker.ScoreLedger.Contracts.Commands
-@using ScoreTracker.ScoreLedger.Contracts.Queries
-@using ScoreTracker.PlayerProgress.Contracts.Queries
-@using ScoreTracker.PlayerProgress.Contracts.Commands
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
-@using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Domain.Models
-@using ScoreTracker.SharedKernel.Models
-@using ScoreTracker.Domain.Records
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
-@using ScoreTracker.Web.Dtos
-@using ScoreTracker.Web.Services.Contracts
-@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 <PageTitle>@L["Charts"]</PageTitle>
 
-<MudGrid>
-    @if (FilterStatus(FilterEnum.Difficulty))
+@* The SRP page stack (docs/design/charts-srp.md): page header, then the query as one chip
+   language, then the answer line (count + controls), then results. No search input — Song
+   name contains is a drawer filter; filters live behind the funnel. The page searches the
+   selected mix; a cross-mix view is deferred to its own design pass. *@
+<div class="srp-head">
+    <MudText Typo="Typo.h4" Class="srp-title">@L["Charts"]</MudText>
+    <span class="srp-head-mix">@_mix.GetName()</span>
+</div>
+
+<div class="srp-chip-row" role="list" aria-label="@L["Applied filters"]">
+    @foreach (var chip in QueryChips)
     {
-        <MudItem xs="6" sm="4">
-            <MudSelect T="int?" AdornmentIcon="@Icons.Material.Filled.Bolt" Label=@L["Difficulty Level"] Value="@DifficultyFilter" ValueChanged="DifficultyFilterChanged" Clearable="true" Disabled="ChartTypeFilter == ChartType.CoOp.ToString()">
-                @foreach (var level in Enumerable.Range(DifficultyLevel.Min, DifficultyLevel.Max))
-                {
-                    <MudSelectItem T="int?" Value="@level">@level</MudSelectItem>
-                }
-            </MudSelect>
-        </MudItem>
+        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                 Class="@(chip.IsSort ? "srp-chip srp-chip-sort" : "srp-chip")"
+                 OnClose="() => chip.Remove()" CloseIcon="@Icons.Material.Filled.Close">@chip.Label</MudChip>
     }
-    @if (FilterStatus(FilterEnum.SongType))
+    @if (QueryChips.Count >= 2)
     {
-        <MudItem xs="6" sm="4">
-            <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.MusicNote" Label=@L["Song Type"] Value="SongTypeFilter" ValueChanged="SongTypeFilterChanged" Clearable="true">
-                @foreach (var type in Enum.GetValues<SongType>())
-                {
-                    <MudSelectItem T="string" Value="@type.ToString()">@type.ToString()</MudSelectItem>
-                }
-            </MudSelect>
-        </MudItem>
+        <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="ClearAllFilters">@L["Clear all"]</MudButton>
     }
-    @if (FilterStatus(FilterEnum.SongArtist))
-    {
-        <MudItem xs="6" sm="4">
-            <MudAutocomplete T="string" AdornmentIcon="@Icons.Material.Filled.MusicNote" Label=@L["Song Artist"] Value="SongArtistFilter" ValueChanged="SongArtistFilterChanged" Clearable="true"
-                             CoerceValue="true"
-                             CoerceText="false"
-                             Immediate="true"
-                             DebounceInterval="100"
-                             SearchFunc="(s,c)=>Task.FromResult(_songArtists.Where(a=>string.IsNullOrWhiteSpace(s)||a.Contains(s,StringComparison.OrdinalIgnoreCase)))"
-                             ></MudAutocomplete>
-        </MudItem>
-    }
-    @if (FilterStatus(FilterEnum.ChartType))
-    {
-        <MudItem xs="6" sm="4">
-            <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.Category" Label=@L["Chart Type"] Value="ChartTypeFilter" ValueChanged="ChartTypeFilterChanged" Clearable="true">
-                @foreach (var type in Enum.GetValues<ChartType>())
-                {
-                    @if (type == ChartType.CoOp && DifficultyFilter != null)
-                    {
-                        continue;
-                    }
-                    <MudSelectItem T="string" Value="@type.ToString()">@type.ToString()</MudSelectItem>
-                }
-            </MudSelect>
-        </MudItem>
-    }
-    
-    @if (RequestedUserId != null)
-    {
-        @if (FilterStatus(FilterEnum.ScoreState))
+</div>
+
+<div class="srp-answer">
+    <MudText Typo="Typo.subtitle1" Class="srp-count">
+        @if (_isLoading)
         {
-
-            <MudItem xs="6" sm="4">
-                <MudSelect T="ScoreState?" AdornmentIcon="@Icons.Material.Filled.Rule" Label=@L["Score State"] Value="_scoreStateFilter" ValueChanged="ScoreStateFilterChanged" Clearable="true">
-                    @foreach (var ss in Enum.GetValues<ScoreState>())
-                    {
-                        <MudSelectItem T="ScoreState?" Value="@ss">@ss.ToString()</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"></MudProgressCircular>
         }
-        @if (FilterStatus(FilterEnum.SavedCharts))
+        else
         {
-            <MudItem xs="6" sm="4">
-
-                <MudSelect T="string" AdornmentIcon="@Icons.Material.Filled.ListAlt" Label="Saved Charts" MultiSelection="true" SelectedValues="_chartListsFilter" SelectedValuesChanged="ChartListFilterChanged" Clearable="true">
-                    <MudSelectItem T="string" Value="@ChartListType.ToDo.ToString()">@L["To Do"]</MudSelectItem>
-                    <MudSelectItem T="string" Value="@ChartListType.Favorite.ToString()">@L["Favorites"]</MudSelectItem>
-
-                </MudSelect>
-            </MudItem>
+            @L["{0} charts", _totalCount.ToString("N0")]
         }
-    }
-    @if (FilterStatus(FilterEnum.SongName))
-    {
-        <MudItem xs="12" sm="4">
+    </MudText>
+    <MudSpacer></MudSpacer>
+    <MudTooltip Text="@L["Export CSV"]">
+        <MudIconButton Icon="@Icons.Material.Filled.Download" OnClick="() => _exportOpen = true"
+                       aria-label="@L["Export CSV"]"></MudIconButton>
+    </MudTooltip>
+    <MudButtonGroup OverrideStyles="false">
+        <MudTooltip Text="@L["Comfortable"]">
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
+                           Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
+                           OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
+        </MudTooltip>
+        <MudTooltip Text="@L["Compact"]">
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView"
+                           Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
+                           OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
+        </MudTooltip>
+        <MudTooltip Text="@L["Table"]">
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows"
+                           Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
+                           OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
+        </MudTooltip>
+    </MudButtonGroup>
+    <MudTooltip Text="@L["Sort by"]">
+        <MudMenu Icon="@Icons.Material.Filled.SwapVert" Dense="true" AriaLabel="@L["Sort by"]">
+            @foreach (var sort in AvailableSorts)
+            {
+                <MudMenuItem Icon="@(sort == _sort ? (_sortDescending ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowUpward) : string.Empty)"
+                             OnClick="() => SelectSort(sort)">@L[SortName(sort)]</MudMenuItem>
+            }
+        </MudMenu>
+    </MudTooltip>
+    <MudTooltip Text="@L["Filters"]">
+        <MudBadge Content="ActiveFilterCount" Visible="ActiveFilterCount > 0" Color="Color.Primary" Overlap="true">
+            <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Variant="Variant.Outlined"
+                           OnClick="OpenFilters" aria-label="@L["Filters"]"></MudIconButton>
+        </MudBadge>
+    </MudTooltip>
+</div>
 
-
-            <MudAutocomplete T="string"
-                             Value="SongNameFilter"
-                             ValueChanged="SongNameFilterChanged"
-                             AdornmentIcon="@Icons.Material.Filled.Search"
-                             ResetValueOnEmptyText="true"
-                             Label=@L["Song Name"]
-                             Clearable="true"
-                             Adornment="Adornment.End"
-                             SearchFunc="(s,c)=>SearchSongs(s)"
-                             Immediate="true"
-                             Variant="Variant.Text"
-                             CoerceText="true"
-                             CoerceValue="false">
-
-            </MudAutocomplete>
-        </MudItem>
-    }
-</MudGrid>
-@if (RequestedUserId != null)
+@if (!_isLoading && _totalCount == 0)
 {
-    <br />
-    <MudChip  T="string" Variant="Variant.Outlined" Size="Size.Small" Color="Color.Info">@L["Total Count"]: @FileredCharts.Count()</MudChip>
-    <MudChip  T="string" Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Ungraded))">@L["Not Graded Count"]: @NotGradedCount</MudChip>
-    <MudChip  T="string" Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.NotPassed))">@L["Not Passed Count"]: @NotPassedCount</MudChip>
-    <MudChip  T="string" Variant="Variant.Outlined" Size="Size.Small" Color="Color.Warning" OnClick="@(()=>SetScoreStateFilter(ScoreState.Broken))">@L["Broken"] @BrokenCount</MudChip>
-    <MudChip  T="string" Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => SetScoreStateFilter(ScoreState.Passed))">@L["Passed Count"]: @PassedCount</MudChip>
-    <br/>
+    <div class="srp-empty">
+        <MudText Typo="Typo.h6">@L["No charts match these filters"]</MudText>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ClearAllFilters">@L["Clear all"]</MudButton>
+    </div>
 }
-<MudTable T="BestAttemptDto" Items="@_charts" Filter="FilterChart"  Loading="@_isLoading" Breakpoint="Breakpoint.None">
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">Charts</MudText>
-        <MudSpacer></MudSpacer>
-        @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic && CurrentUser.User.Id == RequestedUserId)
-        {
-            <MudTooltip Text="Share Your Chart List">
-                <MudIconButton Icon="@Icons.Material.Filled.Share" OnClick="()=>_showShareDialog=true"></MudIconButton>
-            </MudTooltip>
-        }
-        <MudTooltip Text="Filters">
-            <MudMenu Icon="@Icons.Material.Filled.FilterList" Dense="true">
-                <MudMenuItem Icon="@(FilterStatus(FilterEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.Difficulty))">@L["Difficulty Level"]</MudMenuItem>
-                <MudMenuItem Icon="@(FilterStatus(FilterEnum.ChartType)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.ChartType))">@L["Chart Type"]</MudMenuItem>
-                <MudMenuItem Icon="@(FilterStatus(FilterEnum.SongType)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SongType))">@L["Song Type"]</MudMenuItem>
-                <MudMenuItem Icon="@(FilterStatus(FilterEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SongName))">@L["Song Name"]</MudMenuItem>
-                <MudMenuItem Icon="@(FilterStatus(FilterEnum.SongArtist)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SongArtist))">@L["Song Artist"]</MudMenuItem>
-                @if (CurrentUser.IsLoggedIn)
-                {
-                    <MudMenuItem Icon="@(FilterStatus(FilterEnum.ScoreState)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.ScoreState))">@L["Score State"]</MudMenuItem>
-                    <MudMenuItem Icon="@(FilterStatus(FilterEnum.SavedCharts)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleFilter(FilterEnum.SavedCharts))">@L["Saved Charts"]</MudMenuItem>
-                }
-            </MudMenu>
-        </MudTooltip>
-        <MudTooltip Text="Columns">
-            <MudMenu Icon="@Icons.Material.Filled.ViewColumn" Dense="true">
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Difficulty)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Difficulty))">@L["Difficulty Level"]</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongImage)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongImage))">@L["Song Image"]</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongName)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongName))">@L["Song Name"]</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongArtist)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongArtist))">@L["Song Artist"]</MudMenuItem>
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.SongDuration)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.SongDuration))">@L["Song Duration"]</MudMenuItem>
-
-
-                <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Video)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Video))">@L["Video"]</MudMenuItem>
-                @if (!_currentMix.UsesLegacyScoring())
-                {
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Overview)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Overview))">@L["Leaderboard"]</MudMenuItem>
-                }
-                @if (RequestedUserId != null)
-                {         
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Broken)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Broken))">@L["Broken"]</MudMenuItem>
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Grade)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Grade))">@L["Letter Grade"]</MudMenuItem>
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Score)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Score))">@L["Score"]</MudMenuItem>
-                    @if (!_currentMix.UsesLegacyScoring())
+else
+{
+    @if (_density == UiDensity.Compact)
+    {
+        @* The tier lists' own compact grid — the tiles size from the container, so reusing
+           the grid classes is what makes the sticker sheet a sticker sheet. *@
+        <div class="tier-card-grid tier-card-grid-compact">
+            @foreach (var result in _results)
+            {
+                <ChartSearchSticker Result="result" LeadFact="@LeadFact(result)"
+                                    IsToDo="_todoCharts.Contains(result.Chart.Id)"
+                                    OnOpen="OpenDetails"></ChartSearchSticker>
+            }
+        </div>
+    }
+    else if (_density == UiDensity.Table)
+    {
+        <div class="tier-table-wrap">
+            <table class="tier-table srp-table">
+                <thead>
+                <tr>
+                    <th class="@SortableHeaderClass(ChartSearchSort.Level)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.Level)">@L["Level"]@SortMark(ChartSearchSort.Level)</th>
+                    <th class="@SortableHeaderClass(ChartSearchSort.Name)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.Name)">@L["Chart"]@SortMark(ChartSearchSort.Name)</th>
+                    <th>@L["Song Artist"]</th>
+                    <th>@L["Skills"]</th>
+                    <th>@L["Tier"]</th>
+                    <th class="@SortableHeaderClass(ChartSearchSort.ScoringLevel)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.ScoringLevel)">@L["Scoring level"]@SortMark(ChartSearchSort.ScoringLevel)</th>
+                    <th class="@SortableHeaderClass(ChartSearchSort.Nps)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.Nps)">@L["NPS"]@SortMark(ChartSearchSort.Nps)</th>
+                    <th class="@SortableHeaderClass(ChartSearchSort.Bpm)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.Bpm)">@L["BPM"]@SortMark(ChartSearchSort.Bpm)</th>
+                    <th class="@SortableHeaderClass(ChartSearchSort.PassDifficulty)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.PassDifficulty)">@L["Pass Difficulty"]@SortMark(ChartSearchSort.PassDifficulty)</th>
+                    <th class="@SortableHeaderClass(ChartSearchSort.Popularity)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.Popularity)">@L["Scores"]@SortMark(ChartSearchSort.Popularity)</th>
+                    @if (CurrentUser.IsLoggedIn)
                     {
-                        <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Plate)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Plate))">@L["Plate"]</MudMenuItem>
+                        <th class="@SortableHeaderClass(ChartSearchSort.MyGrade)" role="button" tabindex="0"
+                            @onclick="() => SelectSort(ChartSearchSort.MyGrade)">@L["My score"]@SortMark(ChartSearchSort.MyGrade)</th>
+                        <th>@L["Letter Grade"]</th>
+                        <th>@L["Plate"]</th>
                     }
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.RecordedOn)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.RecordedOn))">@L["Recorded Date"]</MudMenuItem>
-                    <MudMenuItem Icon="@(ColumnStatus(ColumnEnum.Actions)?@Icons.Material.Filled.Check:string.Empty)" OnClick="@(_=>ToggleColumn(ColumnEnum.Actions))">@L["Actions"]</MudMenuItem>
-
-                }
-            </MudMenu>
-        </MudTooltip>
-    </ToolBarContent>
-    <HeaderContent>
-        @if (ColumnStatus(ColumnEnum.Difficulty))
-        {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Level">@L["Difficulty Level"]</MudTableSortLabel></MudTh>
-        }
-        @if (ColumnStatus(ColumnEnum.SongImage))
-        {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.SongName" InitialDirection="SortDirection.Ascending">@L["Song Image"]</MudTableSortLabel></MudTh>
-        }
-        @if (ColumnStatus(ColumnEnum.SongName))
-        {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.SongName">@L["Song Name"]</MudTableSortLabel></MudTh>
-        }
-        @if (ColumnStatus(ColumnEnum.SongArtist))
-        {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.SongArtist">@L["Song Artist"]</MudTableSortLabel></MudTh>
-        }
-        @if (ColumnStatus(ColumnEnum.SongDuration))
-        {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.SongDuration">@L["Song Duration"]</MudTableSortLabel></MudTh>
-        }
-
-        @if (ColumnStatus(ColumnEnum.Video))
-        {
-            <MudTh>@L["Video"]</MudTh>
-        }
-        @if (!_currentMix.UsesLegacyScoring() && ColumnStatus(ColumnEnum.Overview))
-        {
-            <MudTh>@L["Leaderboard"]</MudTh>
-        }
-        @if (ColumnStatus(ColumnEnum.Broken))
-        {
-            
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.IsBroken">@L["Broken"]</MudTableSortLabel></MudTh>
-        }
-        @if (ColumnStatus(ColumnEnum.Score))
-        {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.Score">@L["Score"]</MudTableSortLabel></MudTh>
-        }
-        @if (ColumnStatus(ColumnEnum.Grade))
-        {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => _currentMix.UsesLegacyScoring()?e.XXLetterGrade:e.PhoenixLetterGrade">@L["Letter Grade"]</MudTableSortLabel></MudTh>
-        }
-        @if (ColumnStatus(ColumnEnum.Plate) && !_currentMix.UsesLegacyScoring())
-        {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e => e.PhoenixPlate">@L["Plate"]</MudTableSortLabel></MudTh>
-        }
-        @if (ColumnStatus(ColumnEnum.RecordedOn))
-        {
-            <MudTh><MudTableSortLabel T="BestAttemptDto" SortBy="e=>e.RecordedOn">@L["Recorded Date"]</MudTableSortLabel></MudTh>
-        }
-        @if (CurrentUser.IsLoggedIn && ColumnStatus(ColumnEnum.Actions))
-        {
-            <MudTh>
-                @L["Actions"]
-            </MudTh>
-        }
-    </HeaderContent>
-    <RowTemplate>
-        @if (ColumnStatus(ColumnEnum.Difficulty))
-        {
-            
-            <MudTd>
-                <DifficultyBubble Chart="context.Chart"></DifficultyBubble>
-            </MudTd>
-        }
-        @if (ColumnStatus(ColumnEnum.SongImage))
-        {
-            
-            <MudTd>
-                <MudImage Src="@context.ImagePath" Height="35" Alt="@context.SongName" Elevation="25" ObjectFit="ObjectFit.ScaleDown"/>
-              
-            </MudTd>
-        }
-        @if (ColumnStatus(ColumnEnum.SongName))
-        {
-            
-            <MudTd>
-                <MudText>@context.SongName</MudText>
-            </MudTd>
-        }
-        @if (ColumnStatus(ColumnEnum.SongArtist))
-        {
-            <MudTd>
-                <MudText>@context.SongArtist</MudText>
-            </MudTd>
-        }
-        @if (ColumnStatus(ColumnEnum.SongDuration))
-        {
-            <MudTd>
-                <MudText>@context.SongDuration.ToString(@"m\:ss")</MudText>
-            </MudTd>
-        }
-        @if (ColumnStatus(ColumnEnum.Video))
-        {
-            <MudTd>
-                <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="()=>ShowChartDetails(context.ChartId)"></MudIconButton>
-                  
-            </MudTd>
-        }
-        @if (!_currentMix.UsesLegacyScoring() && ColumnStatus(ColumnEnum.Overview))
-        {
-            <MudTd>
-                @if (_chartScoreCount.ContainsKey(context.ChartId) && _chartScoreCount[context.ChartId] > 0)
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var result in _results)
                 {
-                    <MudIconButton Icon="@Icons.Material.Filled.Leaderboard" OnClick="@(_ => ShowLeaderboard(context.ChartId))"></MudIconButton>
-                
-                }
-            </MudTd>
-        }
-        @if (ColumnStatus(ColumnEnum.Broken))
-        {
-            <MudTd>
-                @if (CanEdit)
-                {
-                    <MudCheckBox T="bool" Value="context.IsBroken" ValueChanged="@(newValue => SetBroken(context, newValue))" Margin="@Margin.Dense"></MudCheckBox>
-                }
-                else
-                {
-                    <MudText>@(context.IsBroken?"Broken":"Passed")</MudText>
-                }
-            </MudTd>
-        }
-        @if (ColumnStatus(ColumnEnum.Score))
-        {
-            <MudTd>
-                @if (CanEdit)
-                {
-                    <MudNumericField T="int?" Label=@L["Score"] Value="context.Score" ValueChanged="@(newValue => SetScore(context, newValue))" Min="XXScore.Min" Max="XXScore.Max" Variant="Variant.Text" Clearable="true" HideSpinButtons="true"></MudNumericField>
-                }
-                else
-                {
-                    <MudText>@context.Score</MudText>
-                }
-                
-            </MudTd>
-        }
-        @if (ColumnStatus(ColumnEnum.Grade))
-        {
-            
-            <MudTd>
-                @if (CanEdit && _currentMix.UsesLegacyScoring())
-                {
-                    
-                    <MudSelect T="string" Value="@context.XXLetterGrade" ValueChanged="@(newValue => SetLetter(context, newValue))" Clearable="true" Margin="@Margin.Dense">
-                        @foreach (var letterGrade in Enum.GetValues<XXLetterGrade>())
+                    <tr>
+                        <td>
+                            <DifficultyBubble Chart="result.Chart" Small="true"></DifficultyBubble>
+                        </td>
+                        <td>
+                            <a class="srp-table-link" href="@ChartSlugs.CanonicalPath(result.Chart)">@result.Chart.Song.Name</a>
+                        </td>
+                        <td class="srp-table-muted">@result.Chart.Song.Artist</td>
+                        <td class="srp-table-muted">@string.Join(", ", result.Badges.Select(b => L[b.DisplayName].ToString()))</td>
+                        <td>
+                            @if ((result.CommunityVote ?? result.PassDifficulty) is { } tier)
+                            {
+                                <span style="color:@ThemeScales.DifficultyColor(tier)">@L[ChartSearchCard.CategoryName(tier)]</span>
+                            }
+                        </td>
+                        <td class="srp-table-num">@((result.Chart.Mix.UsesLegacyScoring() ? result.CommunityVoteRating : result.ScoringLevel)?.ToString("0.0"))</td>
+                        <td class="srp-table-num">@result.Nps?.ToString("0.0")</td>
+                        <td class="srp-table-num">@result.Chart.Song.Bpm?.ToString()</td>
+                        <td class="srp-table-num">
+                            @if (result.ScoreCount >= 10)
+                            {
+                                @((result.PassCount * 100 / result.ScoreCount))@:%
+                            }
+                        </td>
+                        <td class="srp-table-num">@result.ScoreCount</td>
+                        @if (CurrentUser.IsLoggedIn)
                         {
-                            <MudSelectItem Value="@letterGrade.ToString()">@letterGrade.ToString()</MudSelectItem>
+                            <td class="srp-table-num">@((result.My?.PhoenixScore ?? result.My?.LegacyScore)?.ToString("N0"))</td>
+                            <td>
+                                @if (result.My?.PhoenixGrade != null)
+                                {
+                                    <LetterGradeIcon Grade="result.My.PhoenixGrade" IsBroken="result.My.IsBroken" Height="16"></LetterGradeIcon>
+                                }
+                                else if (result.My?.LegacyGrade != null)
+                                {
+                                    <LetterGradeIcon LegacyGrade="result.My.LegacyGrade" IsBroken="result.My.IsBroken" Height="16"></LetterGradeIcon>
+                                }
+                            </td>
+                            <td>@result.My?.PhoenixPlate?.GetShorthand()</td>
                         }
-                    </MudSelect>
+                    </tr>
                 }
-                else
-                {
-                    <MudText>@(_currentMix.UsesLegacyScoring()?context.XXLetterGrade:context.PhoenixLetterGrade?.GetName())</MudText>
-                }
-            </MudTd>
-        }
-        @if (ColumnStatus(ColumnEnum.Plate) && !_currentMix.UsesLegacyScoring())
-        {
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="srp-grid">
+            @foreach (var result in _results)
+            {
+                <ChartSearchCard Result="result" LeadFact="@LeadFact(result)"
+                                 ShowMyState="CurrentUser.IsLoggedIn"
+                                 ShowActions="CurrentUser.IsLoggedIn"
+                                 IsFavorite="_favoriteCharts.Contains(result.Chart.Id)"
+                                 IsToDo="_todoCharts.Contains(result.Chart.Id)"
+                                 OnToggleFavorite="ToggleFavorite"
+                                 OnToggleToDo="ToggleToDo"
+                                 OnQuickRecord="OpenQuickRecord"
+                                 OnOpen="OpenDetails"></ChartSearchCard>
+            }
+        </div>
+    }
+    @if (PageCount > 1)
+    {
+        <div class="srp-pager">
+            <MudPagination Count="PageCount" Selected="_pageNumber" SelectedChanged="GoToPage"
+                           Color="Color.Primary" Size="Size.Small"></MudPagination>
+        </div>
+    }
+}
 
+<ChartsExportDialog @bind-Visible="_exportOpen" FilterParameters="QueryParameters()" TotalCount="_totalCount"
+                    Mix="_mix" SignedIn="CurrentUser.IsLoggedIn"></ChartsExportDialog>
 
-            <MudTd>
-                @if (CanEdit)
+<ChartQuickRecordDialog @bind-Visible="_quickRecordOpen" Target="_quickRecordTarget"
+                        OnSaved="OnQuickRecordSaved"></ChartQuickRecordDialog>
+
+@* Clicking a result opens the details dialog rather than leaving the search behind. The two
+   popularity places ride in from here: the page already holds the mix's official board, and
+   OfficialMirror cannot see Catalog to work out which folder a ranked chart belongs to.
+   Rendered only once something has been opened — the dialog pulls its own dependencies and a
+   search that never opens one should not pay for it. *@
+@if (_detailsChart != null)
+{
+    <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_mix"
+                        IsToDo="_todoCharts.Contains(_detailsChart.Id)"
+                        OnToDo="ToggleToDo"
+                        OfficialPlace="_detailsPlace" OfficialFolderPlace="_detailsFolderPlace"></ChartDetailsDialog>
+}
+
+<MudLayout>
+    <MudDrawer @bind-Open="_filtersOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="420px">
+        <div class="srp-drawer">
+            <div class="srp-drawer-head">
+                <MudText Typo="Typo.h6">@L["Filters"]</MudText>
+                <MudSpacer></MudSpacer>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="() => _filtersOpen = false"
+                               aria-label="@L["Close"]"></MudIconButton>
+            </div>
+
+            @* The basics carry the everyday query — level, type, score state, a name. The long
+               tail opts in below, so opening the drawer isn't a wall of chips. *@
+            <MudTextField T="string" Value="_songNameContains" ValueChanged="SetSongNameContains"
+                          Label="@L["Song name contains"]" Clearable="true"
+                          Variant="Variant.Outlined" Margin="Margin.Dense"></MudTextField>
+
+            <div class="srp-facet">
+                <RangeSlider Label="@L["Level"]" ValueText="@LevelRangeLabel"
+                             Min="DifficultyLevel.Min" Max="DifficultyLevel.Max"
+                             ValueMin="_levelMin ?? DifficultyLevel.Min" ValueMax="_levelMax ?? DifficultyLevel.Max"
+                             ValueMinChanged="v => SetLevelMin(v)" ValueMaxChanged="v => SetLevelMax(v)"></RangeSlider>
+            </div>
+
+            <div class="srp-facet">
+                <div class="srp-facet-head">@L["Chart Type"]</div>
+                <div class="srp-chipset">
+                    @foreach (var type in Enum.GetValues<ChartType>().Where(t => HasAny(_facetCounts?.Types, t, _types.Contains(t))))
+                    {
+                        var captured = type;
+                        <span class="srp-facet-chip @(_types.Contains(captured) ? "srp-facet-chip-on" : "")"
+                              role="button" tabindex="0" @onclick="() => ToggleType(captured)">
+                            @L[TypeName(captured)]@CountSuffix(_facetCounts?.Types, captured)
+                        </span>
+                    }
+                </div>
+                @if (_types.Contains(ChartType.CoOp))
                 {
-                    
-                    <MudSelect T="PhoenixPlate?" Label=@L["Plate"] Value="@context.PhoenixPlate" ValueChanged="@(newValue => SetPlate(context, newValue))" Clearable="true" Margin="@Margin.Dense">
-                        @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                    <div class="srp-chipset srp-chipset-sub">
+                        @foreach (var players in CoOpPlayerRange.Where(p => HasAny(_facetCounts?.CoOpPlayerCounts, p, _coOpPlayers.Contains(p))))
                         {
-                            <MudSelectItem T="PhoenixPlate?" Value="@plate">@plate.GetName()</MudSelectItem>
+                            var captured = players;
+                            <span class="srp-facet-chip @(_coOpPlayers.Contains(captured) ? "srp-facet-chip-on" : "")"
+                                  role="button" tabindex="0" @onclick="() => ToggleCoOpPlayers(captured)">
+                                ×@captured@CountSuffix(_facetCounts?.CoOpPlayerCounts, captured)
+                            </span>
                         }
-                    </MudSelect>
+                    </div>
                 }
-                else
+            </div>
+
+            @if (CurrentUser.IsLoggedIn)
+            {
+                <div class="srp-facet">
+                    <div class="srp-facet-head">@L["Score State"]</div>
+                    <div class="srp-chipset">
+                        @foreach (var state in Enum.GetValues<ChartScoreStateFilter>().Where(s => HasAny(_facetCounts?.ScoreStates, s, _scoreStates.Contains(s))))
+                        {
+                            var captured = state;
+                            <span class="srp-facet-chip @(_scoreStates.Contains(captured) ? "srp-facet-chip-on" : "")"
+                                  role="button" tabindex="0" @onclick="() => ToggleScoreState(captured)">
+                                @L[ScoreStateName(captured)]@CountSuffix(_facetCounts?.ScoreStates, captured)
+                            </span>
+                        }
+                    </div>
+                </div>
+            }
+
+            @* The long tail is a pick list, not a disclosure: you choose which filters live in
+               your drawer and they stay. Unchecking one clears it (SetShownFilters), so a
+               filter can never be narrowing the results from off screen. *@
+            @* LockScroll: the list is long enough to scroll on its own, and without this a
+               wheel over it drives the page behind instead, which reads as the list sliding
+               away from its input. *@
+            <MudSelect T="string" Label="@L["More filters"]" MultiSelection="true"
+                       SelectedValues="_shownFilters" SelectedValuesChanged="SetShownFilters"
+                       MultiSelectionTextFunc="@ShownFiltersText" Clearable="false"
+                       LockScroll="true" MaxHeight="360"
+                       Variant="Variant.Outlined" Margin="Margin.Dense" Class="srp-more-filters">
+                @foreach (var filter in AdvancedFilters)
                 {
-                    <MudText>@context.PhoenixPlate?.GetName()</MudText>
+                    <MudSelectItem T="string" Value="@filter.Key">@filter.Name</MudSelectItem>
                 }
-            </MudTd>
-        }
-        @if (ColumnStatus(ColumnEnum.RecordedOn))
-        {
-            <MudTd>
-            @context.RecordedOn?.ToString("MM/dd/yyyy")
-            </MudTd>
-        }
-        @if (CurrentUser.IsLoggedIn && ColumnStatus(ColumnEnum.Actions))
-        {
-            <MudTh>
-                <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-                    @if (_favoriteCharts.Contains(context.ChartId))
+            </MudSelect>
+
+            @if (ShowsAny("songType", "artist", "stepArtist", "bpm", "nps", "noteCount", "duration"))
+            {
+                <MudText Typo="Typo.overline">@L["Content"]</MudText>
+            }
+            @if (Shows("songType"))
+            {
+                <div class="srp-facet">
+                    <div class="srp-facet-head">@L["Song Type"]</div>
+                    <div class="srp-chipset">
+                        @foreach (var type in Enum.GetValues<SongType>().Where(t => HasAny(_facetCounts?.SongTypes, t, _songTypes.Contains(t))))
+                        {
+                            var captured = type;
+                            <span class="srp-facet-chip @(_songTypes.Contains(captured) ? "srp-facet-chip-on" : "")"
+                                  role="button" tabindex="0" @onclick="() => ToggleSongType(captured)">
+                                @L[SongTypeName(captured)]@CountSuffix(_facetCounts?.SongTypes, captured)
+                            </span>
+                        }
+                    </div>
+                </div>
+            }
+            @* Both artist facets take several values. A mix has hundreds of artists, so the
+               type-ahead stays the finder — a plain dropdown would be a scroll-hunt with no
+               search — and the picks live beside it as chips you can drop one at a time. *@
+            @if (Shows("artist"))
+            {
+                <div class="srp-facet">
+                    <MudAutocomplete T="ChartSearchVocabularyEntry" Value="_noVocabularyPick" ValueChanged="AddArtist"
+                                     Label="@L["Song Artist"]" SearchFunc="SearchArtists" Clearable="true"
+                                     ToStringFunc="VocabularyLabel" CoerceText="false" CoerceValue="false"
+                                     Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true"></MudAutocomplete>
+                    @if (_artists.Count > 0)
                     {
-                        <MudMenuItem>
-                            <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" OnClick="()=>RemoveFromFavorites(context.ChartId)"></MudIconButton>
-                   
-                        </MudMenuItem>
+                        <div class="srp-chipset">
+                            @foreach (var artist in _artists)
+                            {
+                                var captured = artist;
+                                <span class="srp-facet-chip srp-facet-chip-on" role="button" tabindex="0"
+                                      @onclick="() => RemoveArtist(captured)">@captured ✕</span>
+                            }
+                        </div>
                     }
-                    else
+                </div>
+            }
+            @if (Shows("stepArtist"))
+            {
+                <div class="srp-facet">
+                    <MudAutocomplete T="ChartSearchVocabularyEntry" Value="_noVocabularyPick" ValueChanged="AddStepArtist"
+                                     Label="@L["Step Artist"]" SearchFunc="SearchStepArtists" Clearable="true"
+                                     ToStringFunc="VocabularyLabel" CoerceText="false" CoerceValue="false"
+                                     Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true"></MudAutocomplete>
+                    @if (_stepArtists.Count > 0)
                     {
-                        <MudMenuItem>
-                            <MudIconButton Icon="@Icons.Material.Outlined.Favorite" OnClick="()=>AddToFavorites(context.ChartId)"></MudIconButton>
-                        </MudMenuItem>
+                        <div class="srp-chipset">
+                            @foreach (var stepArtist in _stepArtists)
+                            {
+                                var captured = stepArtist;
+                                <span class="srp-facet-chip srp-facet-chip-on" role="button" tabindex="0"
+                                      @onclick="() => RemoveStepArtist(captured)">@captured ✕</span>
+                            }
+                        </div>
                     }
-                    @if(_todoCharts.Contains(context.ChartId))
+                </div>
+            }
+
+                @if (Shows("bpm") && _ranges?.BpmMin != null && _ranges.BpmMax > _ranges.BpmMin)
+                {
+                    <div class="srp-facet">
+                        <RangeSlider Label="@L["BPM"]" ValueText="@RangeLabel(_bpmMin, _bpmMax, _ranges.BpmMin, _ranges.BpmMax)"
+                                     Min="_ranges.BpmMin.Value" Max="_ranges.BpmMax.Value"
+                                     ValueMin="(int)(_bpmMin ?? _ranges.BpmMin.Value)"
+                                     ValueMax="(int)(_bpmMax ?? _ranges.BpmMax.Value)"
+                                     ValueMinChanged="v => SetBpmMin(v)" ValueMaxChanged="v => SetBpmMax(v)"></RangeSlider>
+                    </div>
+                }
+                @if (Shows("nps") && _ranges?.NpsMin != null && _ranges.NpsMax > _ranges.NpsMin)
+                {
+                    <div class="srp-facet">
+                        <RangeSlider Label="@L["NPS"]" ValueText="@RangeLabel(_npsMin, _npsMax, _ranges.NpsMin, _ranges.NpsMax)"
+                                     Min="(int)_ranges.NpsMin.Value" Max="(int)_ranges.NpsMax.Value"
+                                     ValueMin="(int)(_npsMin ?? _ranges.NpsMin.Value)"
+                                     ValueMax="(int)(_npsMax ?? _ranges.NpsMax.Value)"
+                                     ValueMinChanged="v => SetNpsMin(v)" ValueMaxChanged="v => SetNpsMax(v)"></RangeSlider>
+                    </div>
+                }
+                @if (Shows("noteCount") && _ranges?.NoteCountMin != null && _ranges.NoteCountMax > _ranges.NoteCountMin)
+                {
+                    <div class="srp-facet">
+                        <RangeSlider Label="@L["Note count"]" ValueText="@RangeLabel(_noteMin, _noteMax, _ranges.NoteCountMin, _ranges.NoteCountMax)"
+                                     Min="_ranges.NoteCountMin.Value" Max="_ranges.NoteCountMax.Value" Step="10"
+                                     ValueMin="_noteMin ?? _ranges.NoteCountMin.Value"
+                                     ValueMax="_noteMax ?? _ranges.NoteCountMax.Value"
+                                     ValueMinChanged="v => SetNoteMin(v)" ValueMaxChanged="v => SetNoteMax(v)"></RangeSlider>
+                    </div>
+                }
+                @if (Shows("duration") && _ranges?.DurationSecondsMin != null
+                     && _ranges.DurationSecondsMax > _ranges.DurationSecondsMin)
+                {
+                    <div class="srp-facet">
+                        <RangeSlider Label="@L["Duration"]" ValueText="@DurationRangeLabel" Format="ClockText"
+                                     Min="_ranges.DurationSecondsMin.Value" Max="_ranges.DurationSecondsMax.Value" Step="5"
+                                     ValueMin="DurationSeconds(_durationMin) ?? _ranges.DurationSecondsMin.Value"
+                                     ValueMax="DurationSeconds(_durationMax) ?? _ranges.DurationSecondsMax.Value"
+                                     ValueMinChanged="v => SetDurationMin(v)" ValueMaxChanged="v => SetDurationMax(v)"></RangeSlider>
+                    </div>
+                }
+
+                @if (Shows("skills"))
+                {
+                <MudText Typo="Typo.overline">@L["Skills"] <span class="srp-drawer-sub">@L["highlighted only"]</span></MudText>
+                <div class="srp-badge-cloud">
+                    @foreach (var badge in _badgeVocabulary)
                     {
-                    <MudMenuItem>
-                        <MudIconButton Icon="@Icons.Material.Filled.ListAlt" Color="Color.Secondary" OnClick="()=>RemoveFromToDo(context.ChartId)"></MudIconButton>
-                    </MudMenuItem>
+                        var selected = _badges.Contains(badge.Key, StringComparer.OrdinalIgnoreCase);
+                        <span class="srp-badge-opt tier-chart-card-skill @BadgeCategoryClasses.For(badge.Category) @(selected ? "srp-badge-opt-sel" : "")"
+                              role="button" tabindex="0" @onclick="() => ToggleBadge(badge.Key)">
+                            @L[badge.DisplayName]@BadgeCount(badge.Key)
+                        </span>
                     }
-                    else
+                </div>
+                }
+
+                @* Debut mix is a per-chart fact (a chart's origin rides every appearance),
+                   so it filters fine inside one mix. Legacy Difficulty only appears when the
+                   mix in view actually has slotted charts — data-driven, not mix-guessed. *@
+                @if (ShowsAny("debutMix", "legacySlot"))
+                {
+                    <MudText Typo="Typo.overline">@L["Mix scope"]</MudText>
+                }
+                @if (Shows("debutMix"))
+                {
+                <div class="srp-facet">
+                    <div class="srp-facet-head">@L["Debut mix"]</div>
+                    @* An era whose mixes contributed nothing to this search drops out whole —
+                       a bare era heading over no chips reads as a loading failure. *@
+                    @foreach (var era in MixEras
+                        .Select(e => new { e.Name, Mixes = e.Mixes
+                            .Where(m => HasAny(_facetCounts?.DebutMixes, m, _debutMixes.Contains(m))).ToArray() })
+                        .Where(e => e.Mixes.Length > 0))
                     {
-                    <MudMenuItem>
-                        <MudIconButton Icon="@Icons.Material.Outlined.ListAlt" OnClick="()=>AddToToDo(context.ChartId)"></MudIconButton>
-                    
-                    </MudMenuItem>
+                        <div class="srp-era">
+                            <div class="srp-era-name">@L[era.Name]</div>
+                            <div class="srp-chipset">
+                                @foreach (var mix in era.Mixes)
+                                {
+                                    var captured = mix;
+                                    <span class="srp-facet-chip @(_debutMixes.Contains(captured) ? "srp-facet-chip-on" : "")"
+                                          role="button" tabindex="0" @onclick="() => ToggleDebutMix(captured)">
+                                        @captured.GetName()@CountSuffix(_facetCounts?.DebutMixes, captured)
+                                    </span>
+                                }
+                            </div>
+                        </div>
                     }
-                </MudMenu>
-            </MudTh>
-        }
-    </RowTemplate>
-    <PagerContent>
-        <MudTablePager></MudTablePager>
-    </PagerContent>
-</MudTable>
-<MudDialog @bind-Visible="_showShareDialog">
-    <DialogContent>
-        <MudText>@L["Chart List Share Description"]</MudText>
-        <br/>
-        <MudTextField Value="@ShareUrl" Label="Share Url" Variant="Variant.Outlined" Margin="Margin.Dense" ReadOnly="true"/>
-    </DialogContent>
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyShareLink">@L["Copy to Clipboard"]</MudButton>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="()=>_showShareDialog=false">@L["Close"]</MudButton>
-    </DialogActions>
-</MudDialog>
-<MudDialog @bind-Visible="_showChartOverview">
-    <DialogContent>
-        @if (_overViewChart != null && !_currentMix.UsesLegacyScoring())
-        {
-            <ChartOverview ChartId="_overViewChart.Value" Mix="_currentMix"></ChartOverview>
-        }
-    </DialogContent>
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showChartOverview = false">@L["Close"]</MudButton>
-    </DialogActions>
-</MudDialog>
-<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"></ChartDetailsDialog>
+                </div>
+                }
+                @if (Shows("legacySlot") && HasLegacySlots)
+                {
+                    <div class="srp-facet">
+                        <div class="srp-facet-head">@L["Legacy Difficulty"]</div>
+                        <div class="srp-chipset">
+                            @foreach (var slot in Enum.GetValues<LegacySlot>().Where(s => HasAny(_facetCounts?.LegacySlots, s, _legacySlots.Contains(s))))
+                            {
+                                var captured = slot;
+                                <span class="srp-facet-chip @(_legacySlots.Contains(captured) ? "srp-facet-chip-on" : "")"
+                                      role="button" tabindex="0" @onclick="() => ToggleSlot(captured)">
+                                    @captured.GetName()@CountSuffix(_facetCounts?.LegacySlots, captured)
+                                </span>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (ShowsAny("passDifficulty", "scoreDifficulty", "communityVote", "scoringLevel"))
+                {
+                    <MudText Typo="Typo.overline">@L["Community intelligence"]</MudText>
+                }
+                @if (Shows("passDifficulty"))
+                {
+                <div class="srp-facet">
+                    <RangeSlider Label="@L["Pass Difficulty"]" ValueText="@TierRangeLabel(_passDifficulty)" Format="TierText"
+                                 Min="0" Max="@(RankedCategories.Length - 1)"
+                                 ValueMin="TierLow(_passDifficulty)" ValueMax="TierHigh(_passDifficulty)"
+                                 ValueMinChanged="v => SetTierLow(_passDifficulty, v, SetPassDifficulty)"
+                                 ValueMaxChanged="v => SetTierHigh(_passDifficulty, v, SetPassDifficulty)"></RangeSlider>
+                </div>
+                }
+                @if (Shows("scoreDifficulty"))
+                {
+                <div class="srp-facet">
+                    <RangeSlider Label="@L["Score Difficulty"]" ValueText="@TierRangeLabel(_scoreDifficulty)" Format="TierText"
+                                 Min="0" Max="@(RankedCategories.Length - 1)"
+                                 ValueMin="TierLow(_scoreDifficulty)" ValueMax="TierHigh(_scoreDifficulty)"
+                                 ValueMinChanged="v => SetTierLow(_scoreDifficulty, v, SetScoreDifficulty)"
+                                 ValueMaxChanged="v => SetTierHigh(_scoreDifficulty, v, SetScoreDifficulty)"></RangeSlider>
+                </div>
+                }
+                @if (Shows("communityVote") && LegacyInScope)
+                {
+                    <div class="srp-facet">
+                        <RangeSlider Label="@L["Community Vote"]" ValueText="@TierRangeLabel(_communityVote)" Format="TierText"
+                                     Min="0" Max="@(RankedCategories.Length - 1)"
+                                     ValueMin="TierLow(_communityVote)" ValueMax="TierHigh(_communityVote)"
+                                     ValueMinChanged="v => SetTierLow(_communityVote, v, SetCommunityVote)"
+                                     ValueMaxChanged="v => SetTierHigh(_communityVote, v, SetCommunityVote)"></RangeSlider>
+                    </div>
+                }
+                @if (Shows("scoringLevel") && ModernInScope)
+                {
+                    <div class="srp-facet">
+                        <RangeSlider Label="@L["Scoring level"]"
+                                     ValueText="@RangeLabel((decimal?)_scoringLevelMin, (decimal?)_scoringLevelMax, (decimal?)ScoringLevelFloor, (decimal?)ScoringLevelCeiling)"
+                                     Min="ScoringLevelFloor" Max="ScoringLevelCeiling"
+                                     ValueMin="(int)(_scoringLevelMin ?? ScoringLevelFloor)"
+                                     ValueMax="(int)(_scoringLevelMax ?? ScoringLevelCeiling)"
+                                     ValueMinChanged="v => SetScoringLevelMin(v)" ValueMaxChanged="v => SetScoringLevelMax(v)"></RangeSlider>
+                    </div>
+                }
+
+                @if (CurrentUser.IsLoggedIn
+                     && ShowsAny("lists", "phoenixGrade", "phoenixPlate", "phoenixScore", "legacyGrade", "recorded"))
+                {
+                    <MudText Typo="Typo.overline">@L["My data"]</MudText>
+                }
+                @if (CurrentUser.IsLoggedIn && Shows("lists"))
+                {
+                    <div class="srp-chipset">
+                        <span class="srp-facet-chip @(_onlyFavorites ? "srp-facet-chip-on" : "")"
+                              role="button" tabindex="0" @onclick="() => SetOnlyFavorites(!_onlyFavorites)">@L["Favorites"]</span>
+                        <span class="srp-facet-chip @(_onlyToDo ? "srp-facet-chip-on" : "")"
+                              role="button" tabindex="0" @onclick="() => SetOnlyToDo(!_onlyToDo)">@L["To Do"]</span>
+                    </div>
+                }
+                @if (CurrentUser.IsLoggedIn && ModernInScope)
+                {
+                    @* Plates are a set, not a floor: "MG or PG" is a real question and a
+                       floor cannot ask it. Each chip wears its own plate colour. *@
+                    @if (Shows("phoenixPlate"))
+                    {
+                        <div class="srp-facet">
+                            <div class="srp-facet-head">@L["Phoenix plate"]</div>
+                            <div class="srp-chipset">
+                                @foreach (var plate in PhoenixPlates)
+                                {
+                                    var captured = plate;
+                                    <span class="srp-facet-chip @(_phoenixPlates.Contains(captured) ? "srp-facet-chip-on" : "")"
+                                          style="--plate-chip:@ThemeScales.PlateColor(captured)"
+                                          role="button" tabindex="0" @onclick="() => TogglePlate(captured)">
+                                        @captured.GetShorthand()
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    }
+                    @if (Shows("phoenixScore"))
+                    {
+                        @* One control, not two: a Phoenix grade IS the score's floor, so a
+                           separate "grade at least" slider asked the same question in coarser
+                           units. The track's ticks and readout name the grade each end sits
+                           in, so "AA or better" is the AA floor and you can still say
+                           "between A and AA" — which the grade slider never could. *@
+                        <div class="srp-facet">
+                            <RangeSlider Label="@L["Phoenix score"]" ValueText="@PhoenixScoreRangeLabel"
+                                         Format="GradedScoreText" Min="0" Max="1000000" Step="5000"
+                                         ValueMin="_phoenixScoreMin ?? 0" ValueMax="_phoenixScoreMax ?? 1000000"
+                                         ValueMinChanged="v => SetPhoenixScoreMin(v)" ValueMaxChanged="v => SetPhoenixScoreMax(v)"></RangeSlider>
+                        </div>
+                    }
+                }
+                @if (CurrentUser.IsLoggedIn && Shows("legacyGrade") && LegacyInScope)
+                {
+                    <div class="srp-facet">
+                        <div class="srp-facet-head">@L["Legacy grade"] <span class="srp-facet-value">@(_legacyGradeMin?.ToString() ?? L["Any"].Value)</span></div>
+                        <MudSlider T="int" Value="LegacyGradeIndex(_legacyGradeMin)" ValueChanged="SetLegacyGradeIndex"
+                                   Min="0" Max="@(LegacyGrades.Length)" Step="1"
+                                   Color="Color.Primary" Size="Size.Small"></MudSlider>
+                    </div>
+                }
+                @if (CurrentUser.IsLoggedIn && Shows("recorded"))
+                {
+                    <div class="srp-drawer-range">
+                        <MudDatePicker Date="_recordedFrom" DateChanged="SetRecordedFrom" Label="@L["Recorded from"]"
+                                       Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudDatePicker>
+                        <MudDatePicker Date="_recordedTo" DateChanged="SetRecordedTo" Label="@L["Recorded to"]"
+                                       Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"></MudDatePicker>
+                    </div>
+                }
+
+        </div>
+    </MudDrawer>
+</MudLayout>
+
 @inject IMediator Mediator
 @inject NavigationManager NavManager
-@inject ICurrentUserAccessor CurrentUser;
-@inject IUiSettingsAccessor UiSettings;
-@inject ISnackbar Snackbar;
-@inject IJSRuntime Javascript;
-@inject ILogger<Charts> Logger;
-@inject IAdminNotificationClient Notifications;
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+@inject ISnackbar Snackbar
+@inject IJSRuntime Javascript
+@inject IDateTimeOffsetAccessor Clock
 @code {
-    private bool _showShareDialog;
-    private bool _showChartOverview = false;
-    private Guid? _overViewChart = null;
-    private MixEnum _currentMix = MixEnum.Phoenix;
-    private Chart? _detailsChart;
-    private bool _detailsOpen;
 
-    // Rows carry DTOs, not Chart records — the dialog wants the full chart, so look it up.
-    private async Task ShowChartDetails(Guid chartId)
-    {
-        var chart = (await Mediator.Send(new GetChartsQuery(_currentMix, ChartIds: new[] { chartId })))
-            .FirstOrDefault();
-        if (chart == null) return;
-        _detailsChart = chart;
-        _detailsOpen = true;
-    }
-
-    [Parameter]
-    public Guid? RequestedUserId { get => _requestedUserId;
-        set => _requestedUserId = value ?? (CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null);
-    }
-
-                        private void ShowLeaderboard(Guid chartId)
-        {
-                _overViewChart = chartId;
-                _showChartOverview = true;
-                }
-    private Guid? _requestedUserId;
-    private IEnumerable<string> _songArtists = Array.Empty<string>();
-    private bool CanEdit => CurrentUser.IsLoggedIn && CurrentUser.User.Id == RequestedUserId;
-    private string ShareUrl => CurrentUser.IsLoggedIn ? $"{NavManager.BaseUri}{CurrentUser.User.Id}/Charts" : string.Empty;
-    private BestAttemptDto[] _charts = Array.Empty<BestAttemptDto>();
-    private IDictionary<Guid, ChartDifficultyRatingRecord> _adjustedDifficulties = new Dictionary<Guid, ChartDifficultyRatingRecord>();
-    
+    private MixEnum _mix = MixEnum.Phoenix;
+    private bool _filtersOpen;
+    private bool _exportOpen;
     private bool _isLoading = true;
-    
-    [Parameter] [SupplyParameterFromQuery(Name=nameof(FilterEnum.SongArtist))] public string? SongArtistFilter { get; set; }
 
-    private void SongArtistFilterChanged(string? songArtistFilter)
-    {
-        SongArtistFilter = songArtistFilter;
+    private string? _songNameContains;
+    private int? _levelMin;
+    private int? _levelMax;
+    private List<ChartType> _types = new();
+    private List<SongType> _songTypes = new();
+    private List<string> _artists = new();
+    private List<string> _stepArtists = new();
+    private decimal? _bpmMin;
+    private decimal? _bpmMax;
+    private decimal? _npsMin;
+    private decimal? _npsMax;
+    private int? _noteMin;
+    private int? _noteMax;
+    private List<string> _badges = new();
+    private List<MixEnum> _debutMixes = new();
+    private List<LegacySlot> _legacySlots = new();
+    private List<TierListCategory> _passDifficulty = new();
+    private List<TierListCategory> _scoreDifficulty = new();
+    private List<TierListCategory> _communityVote = new();
+    private int? _passRateMin;
+    private double? _scoringLevelMin;
+    private double? _scoringLevelMax;
+    private List<ChartScoreStateFilter> _scoreStates = new();
+    private List<int> _coOpPlayers = new();
+    private TimeSpan? _durationMin;
+    private TimeSpan? _durationMax;
+    // Replaced rather than mutated on every change: MudSelect reads this as a parameter, and
+    // an in-place edit leaves the reference identical for change detection to compare.
+    private HashSet<string> _shownFilters = new(StringComparer.OrdinalIgnoreCase);
+    private ChartSearchRanges? _ranges;
+    private const string ShownFiltersKey = "Charts__ShownFilters";
+    private PhoenixLetterGrade? _phoenixGradeMin;
+    private List<PhoenixPlate> _phoenixPlates = new();
+    private int? _phoenixScoreMin;
+    private int? _phoenixScoreMax;
+    private XXLetterGrade? _legacyGradeMin;
+    private DateTime? _recordedFrom;
+    private DateTime? _recordedTo;
+    private bool _onlyFavorites;
+    private bool _onlyToDo;
+    private ChartSearchSort _sort = ChartSearchSort.Level;
+    private bool _sortDescending = true;
+    private int _pageNumber = 1;
+    private const int PageSize = 24;
 
-        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.SongArtist), songArtistFilter));
-    }
-    [Parameter] [SupplyParameterFromQuery(Name = nameof(FilterEnum.Difficulty))] public int? DifficultyFilter { get; set; }
 
+    private UiDensity _density = UiDensity.Comfortable;
+    private const string DensitySettingKey = "Density__Charts";
 
-
-    private void DifficultyFilterChanged(int? difficulty)
-    {
-        DifficultyFilter = difficulty;
-        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.Difficulty),difficulty));
-    }
-    [Parameter] [SupplyParameterFromQuery(Name=nameof(FilterEnum.ChartType))] public string? ChartTypeFilter { get; set; }
-
-    private void ChartTypeFilterChanged(string? chartType)
-    {
-        ChartTypeFilter = chartType;
-        
-        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.ChartType),chartType));
-    }
-
-    [Parameter]
-    [SupplyParameterFromQuery(Name = nameof(FilterEnum.ScoreState))]
-    public string? ScoreStateFilterString
-    {
-        get => _scoreStateFilter?.ToString();
-        set => _scoreStateFilter =value==null?null: (Enum.TryParse<ScoreState>(value,out var v)?v:null);
-    }
-
-    private ScoreState? _scoreStateFilter;
-    private void ScoreStateFilterChanged(ScoreState? scoreState)
-    {
-            
-        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.ScoreState),scoreState?.ToString()));
-        
-    }
-    [Parameter] [SupplyParameterFromQuery(Name=nameof(FilterEnum.SavedCharts))] public string? ChartListsFilterString {
-        get => _chartListsFilter == null ? null : string.Join(',', _chartListsFilter);
-        set => _chartListsFilter = value?.Split(',');
-    }
-    
-    private IEnumerable<string>? _chartListsFilter { get; set; }
-    private void ChartListFilterChanged(IEnumerable<string>? chartLists)
-    {
-        _chartListsFilter = chartLists ?? Array.Empty<string>();
-
-        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.SavedCharts), _chartListsFilter.Any() ? string.Join(',', _chartListsFilter) : null));
-    }
-    [Parameter] [SupplyParameterFromQuery(Name=nameof(FilterEnum.SongName))] public string? SongNameFilter { get; set; }
-    [Parameter] [SupplyParameterFromQuery(Name=nameof(FilterEnum.SongType))] public string? SongTypeFilter { get; set; }
-    private void SongNameFilterChanged(string? songName)
-    {
-        SongNameFilter=songName;
-        
-        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.SongName),string.IsNullOrWhiteSpace(songName)?null:songName));
-    }
-
-    private void SongTypeFilterChanged(string? songType)
-    {
-        SongTypeFilter = songType;
-        
-        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(nameof(FilterEnum.SongType),string.IsNullOrWhiteSpace(songType)?null:songType));
-    }
-    private IDictionary<string, string> _uiSettings = new Dictionary<string, string>();
-
-    private IEnumerable<BestAttemptDto> FileredCharts => _charts.Where(FilterChart);
+    private IReadOnlyList<ChartSearchResult> _results = Array.Empty<ChartSearchResult>();
+    private int _totalCount;
+    private ChartSearchFacetCounts? _facetCounts;
     private ISet<Guid> _favoriteCharts = new HashSet<Guid>();
+
+    // The details dialog the results open into, and the two official popularity places it
+    // shows. The card no longer carries a rank badge — the numbers live where there is room
+    // to say which is which.
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+    private int? _detailsPlace;
+    private int? _detailsFolderPlace;
     private ISet<Guid> _todoCharts = new HashSet<Guid>();
-    private IEnumerable<string> _songNames = Array.Empty<string>();
-    private int NotGradedCount => _currentMix.UsesLegacyScoring()? FileredCharts.Count(c => string.IsNullOrWhiteSpace(c.XXLetterGrade))
-    :FileredCharts.Count(c=>c.PhoenixLetterGrade==null);
-    private int NotPassedCount => FileredCharts.Count(c => c.IsBroken);
-    private int BrokenCount => FileredCharts.Count(c => c is { Score: { },IsBroken: true });
 
-    private int PassedCount => _currentMix.UsesLegacyScoring() ?
-        FileredCharts.Count(c => !string.IsNullOrWhiteSpace(c.XXLetterGrade) && !c.IsBroken)
-        : FileredCharts.Count(c => c.PhoenixLetterGrade != null && !c.IsBroken);
-    private string CountText(int count) => $"{count} votes";
-    private IDictionary<Guid, int> _chartScoreCount = new Dictionary<Guid, int>();
-    private async Task SetScoreStateFilter(ScoreState state)
+    private IReadOnlyList<ChartBadge> _badgeVocabulary = Array.Empty<ChartBadge>();
+    private IReadOnlyList<ChartSearchVocabularyEntry> _artistVocabulary =
+        Array.Empty<ChartSearchVocabularyEntry>();
+    private IReadOnlyList<ChartSearchVocabularyEntry> _stepArtistVocabulary =
+        Array.Empty<ChartSearchVocabularyEntry>();
+    private bool _vocabularyLoaded;
+
+    private int PageCount => (int)Math.Ceiling(_totalCount / (double)PageSize);
+
+    /// <summary>
+    ///     The scoring-level track. Banked extents when the mix has them; otherwise the level
+    ///     scale, which scoring level is expressed on anyway — the filter is offered wherever
+    ///     the sort is, so it cannot vanish just because the analytics have not run yet.
+    /// </summary>
+    private int ScoringLevelFloor => (int?)_ranges?.ScoringLevelMin ?? DifficultyLevel.Min;
+
+    private int ScoringLevelCeiling
     {
-        ScoreStateFilterChanged(state);
-        await ToggleFilter(FilterEnum.ScoreState, true);
-
+        get
+        {
+            var ceiling = (int?)_ranges?.ScoringLevelMax ?? DifficultyLevel.Max;
+            return ceiling > ScoringLevelFloor ? ceiling : ScoringLevelFloor + 1;
+        }
     }
-    private bool FilterChart(BestAttemptDto chart)
+
+    private bool LegacyInScope => _mix.UsesLegacyScoring();
+    private bool ModernInScope => !_mix.UsesLegacyScoring();
+
+    /// <summary>
+    ///     Slots are pre-Exceed identity, so the facet only means something when the mix in
+    ///     view actually has slotted charts — asked of the data rather than guessed from the
+    ///     mix, so a backfilled catalogue answers for itself.
+    /// </summary>
+    private bool HasLegacySlots => _facetCounts?.LegacySlots.Count > 0 || _legacySlots.Count > 0;
+
+
+    private static readonly MixEnum[] AllKnownMixes =
+        Enum.GetValues<MixEnum>().OrderBy(m => m.DisplayOrder()).ToArray();
+
+    /// <summary>
+    ///     The debut-mix facet grouped into eras — twenty-nine loose chips is a wall. Pro,
+    ///     Pro 2 and Infinity are their own line (owner, 2026-07-20), which is why they sit
+    ///     apart from the main timeline rather than interleaved by release order.
+    /// </summary>
+    internal sealed record MixEra(string Name, MixEnum[] Mixes);
+
+    internal static readonly MixEra[] MixEras =
     {
-        var result = true;
-        if (!string.IsNullOrWhiteSpace(SongNameFilter))
+        new("Modern", new[] { MixEnum.Phoenix2, MixEnum.Phoenix, MixEnum.XX }),
+        new("Prime", new[] { MixEnum.Prime2, MixEnum.Prime }),
+        new("Pro & Infinity", new[] { MixEnum.Infinity, MixEnum.Pro2, MixEnum.Pro }),
+        new("Fiesta", new[] { MixEnum.Fiesta2, MixEnum.FiestaEx, MixEnum.Fiesta }),
+        new("Exceed & NX", new[]
         {
-            result = result && chart.SongName.Equals(SongNameFilter.Trim(), StringComparison.OrdinalIgnoreCase);
-        }
-        if (_chartListsFilter?.Any()??false)
+            MixEnum.NxAbsolute, MixEnum.Nx2, MixEnum.Nx, MixEnum.Zero, MixEnum.Exceed2, MixEnum.Exceed
+        }),
+        new("Classic", new[]
         {
-            result = result && ((_chartListsFilter.Contains(ChartListType.Favorite.ToString()) && _favoriteCharts.Contains(chart.ChartId)) || (_chartListsFilter.Contains(ChartListType.ToDo.ToString()) && _todoCharts.Contains(chart.ChartId)));
-        }
-        if (DifficultyFilter != null)
+            MixEnum.Prex3, MixEnum.Premiere3, MixEnum.Prex2, MixEnum.Premiere2, MixEnum.Rebirth, MixEnum.Prex,
+            MixEnum.Premiere, MixEnum.Extra, MixEnum.PerfectCollection, MixEnum.Collection,
+            MixEnum.ObgSeasonEvolution, MixEnum.ThirdObg, MixEnum.SecondUltimateRemix, MixEnum.FirstDanceFloor
+        })
+    };
+
+    /// <summary>Filter labels spell the type out; the shorthand belongs on bubbles, not chips.</summary>
+    internal static string TypeName(ChartType type)
+    {
+        return type switch
         {
-            result = result && (chart.Level == DifficultyFilter.Value && chart.ChartType != ChartType.CoOp.ToString());
-        }
-        if (!string.IsNullOrWhiteSpace(ChartTypeFilter))
+            ChartType.Single => "Single",
+            ChartType.Double => "Double",
+            ChartType.SinglePerformance => "Single Performance",
+            ChartType.DoublePerformance => "Double Performance",
+            ChartType.CoOp => "Co-Op",
+            ChartType.HalfDouble => "Half-Double",
+            _ => type.ToString()
+        };
+    }
+
+    internal static string SongTypeName(SongType type)
+    {
+        return type switch
         {
-            result = result && chart.ChartType == ChartTypeFilter;
-        }
-        if (!string.IsNullOrWhiteSpace(SongTypeFilter))
+            SongType.Arcade => "Arcade",
+            SongType.ShortCut => "Short Cut",
+            SongType.FullSong => "Full Song",
+            SongType.Remix => "Remix",
+            _ => type.ToString()
+        };
+    }
+
+    private static List<int> ParseCsvInts(string? csv)
+    {
+        return csv?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(v => int.TryParse(v, out var parsed) ? parsed : (int?)null)
+            .Where(v => v != null)
+            .Select(v => v!.Value)
+            .Distinct()
+            .ToList() ?? new List<int>();
+    }
+
+    private static readonly TierListCategory[] RankedCategories =
+    {
+        TierListCategory.Overrated, TierListCategory.VeryEasy, TierListCategory.Easy, TierListCategory.Medium,
+        TierListCategory.Hard, TierListCategory.VeryHard, TierListCategory.Underrated
+    };
+
+    private static readonly ChartSearchSort[] SortOrder =
+    {
+        ChartSearchSort.Level, ChartSearchSort.ScoringLevel, ChartSearchSort.Popularity, ChartSearchSort.PassDifficulty,
+        ChartSearchSort.DebutEra, ChartSearchSort.Name, ChartSearchSort.Bpm, ChartSearchSort.Nps,
+        ChartSearchSort.Duration, ChartSearchSort.MyGrade, ChartSearchSort.MyRecent
+    };
+
+    private IEnumerable<ChartSearchSort> AvailableSorts => CurrentUser.IsLoggedIn
+        ? SortOrder
+        : SortOrder.Where(s => s is not (ChartSearchSort.MyGrade or ChartSearchSort.MyRecent));
+
+    // ---- query-string contract ------------------------------------------------------
+
+    [Parameter] [SupplyParameterFromQuery(Name = "Song")] public string? SongParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "LevelMin")] public int? LevelMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "LevelMax")] public int? LevelMaxParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Type")] public string? TypeParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "SongType")] public string? SongTypeParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Artist")] public string? ArtistParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "StepArtist")] public string? StepArtistParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "BpmMin")] public decimal? BpmMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "BpmMax")] public decimal? BpmMaxParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "NpsMin")] public decimal? NpsMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "NpsMax")] public decimal? NpsMaxParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "NoteMin")] public int? NoteMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "NoteMax")] public int? NoteMaxParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Badges")] public string? BadgesParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "DebutMix")] public string? DebutMixParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Slots")] public string? SlotsParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "PassDiff")] public string? PassDiffParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "ScoreDiff")] public string? ScoreDiffParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Vote")] public string? VoteParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "PassRateMin")] public int? PassRateMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "SlMin")] public double? SlMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "SlMax")] public double? SlMaxParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "PhxGrade")] public string? PhxGradeParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "PhxPlate")] public string? PhxPlateParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "PhxMin")] public int? PhxMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "PhxMax")] public int? PhxMaxParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "LegGrade")] public string? LegGradeParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "RecFrom")] public string? RecFromParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "RecTo")] public string? RecToParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Saved")] public string? SavedParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "State")] public string? StateParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "CoOp")] public string? CoOpParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "DurMin")] public int? DurMinParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "DurMax")] public int? DurMaxParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Sort")] public string? SortParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Dir")] public string? DirParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Page")] public int? PageParam { get; set; }
+
+    // The old page's parameter names, honored as read-time aliases so shared links keep
+    // working. SongName was an exact match; it maps onto the contains filter.
+    [Parameter] [SupplyParameterFromQuery(Name = "Difficulty")] public int? LegacyDifficultyParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "ChartType")] public string? LegacyChartTypeParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "SongName")] public string? LegacySongNameParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "SongArtist")] public string? LegacySongArtistParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "ScoreState")] public string? LegacyScoreStateParam { get; set; }
+
+    private void ParseQuery()
+    {
+        _songNameContains = SongParam ?? LegacySongNameParam;
+        _levelMin = LevelMinParam ?? LegacyDifficultyParam;
+        _levelMax = LevelMaxParam ?? LegacyDifficultyParam;
+        _types = ParseCsvEnum<ChartType>(TypeParam ?? LegacyChartTypeParam);
+        _songTypes = ParseCsvEnum<SongType>(SongTypeParam);
+        _artists = ParseCsv(ArtistParam ?? LegacySongArtistParam);
+        _stepArtists = ParseCsv(StepArtistParam);
+        _bpmMin = BpmMinParam;
+        _bpmMax = BpmMaxParam;
+        _npsMin = NpsMinParam;
+        _npsMax = NpsMaxParam;
+        _noteMin = NoteMinParam;
+        _noteMax = NoteMaxParam;
+        _badges = ParseCsv(BadgesParam);
+        _debutMixes = ParseCsvEnum<MixEnum>(DebutMixParam);
+        _legacySlots = ParseCsvEnum<LegacySlot>(SlotsParam);
+        _passDifficulty = ParseCsvEnum<TierListCategory>(PassDiffParam);
+        _scoreDifficulty = ParseCsvEnum<TierListCategory>(ScoreDiffParam);
+        _communityVote = ParseCsvEnum<TierListCategory>(VoteParam);
+        _passRateMin = PassRateMinParam;
+        _scoringLevelMin = SlMinParam;
+        _scoringLevelMax = SlMaxParam;
+        _phoenixGradeMin = Enum.TryParse<PhoenixLetterGrade>(PhxGradeParam, true, out var pg) ? pg : null;
+        _phoenixPlates = ParseCsvEnum<PhoenixPlate>(PhxPlateParam);
+        _phoenixScoreMin = PhxMinParam;
+        _phoenixScoreMax = PhxMaxParam;
+        _legacyGradeMin = Enum.TryParse<XXLetterGrade>(LegGradeParam, true, out var lg) ? lg : null;
+        _recordedFrom = DateTime.TryParse(RecFromParam, out var from) ? from : null;
+        _recordedTo = DateTime.TryParse(RecToParam, out var to) ? to : null;
+        var saved = ParseCsv(SavedParam);
+        _onlyFavorites = saved.Contains("Favorites", StringComparer.OrdinalIgnoreCase);
+        _onlyToDo = saved.Contains("ToDo", StringComparer.OrdinalIgnoreCase);
+        _scoreStates = ParseCsvEnum<ChartScoreStateFilter>(StateParam);
+        if (_scoreStates.Count == 0)
         {
-            result = result && chart.SongType == SongTypeFilter;
-        }
-        if (!string.IsNullOrWhiteSpace(SongArtistFilter))
-        {
-            result = result && chart.SongArtist.Contains(SongArtistFilter, StringComparison.OrdinalIgnoreCase);
-        }
-        if (_scoreStateFilter != null)
-        {
-            result = _scoreStateFilter.Value switch
+            var legacyState = LegacyScoreStateParam?.ToLowerInvariant() switch
             {
-                ScoreState.NotPassed => result && chart.IsBroken,
-                ScoreState.Broken=>result && chart is { Score: { },IsBroken: true },
-                ScoreState.Passed => result && (_currentMix.UsesLegacyScoring()?!string.IsNullOrWhiteSpace(chart.XXLetterGrade):chart.PhoenixLetterGrade!=null) && !chart.IsBroken,
-                ScoreState.Ungraded => result && (_currentMix.UsesLegacyScoring()?string.IsNullOrWhiteSpace(chart.XXLetterGrade):chart.PhoenixLetterGrade==null),
-                _ => result
-                };
+                "passed" => ChartScoreStateFilter.Passed,
+                "broken" or "notpassed" => ChartScoreStateFilter.Failed,
+                "ungraded" => ChartScoreStateFilter.Unplayed,
+                _ => (ChartScoreStateFilter?)null
+            };
+            if (legacyState != null) _scoreStates.Add(legacyState.Value);
         }
-        return result;
+
+        _coOpPlayers = ParseCsvInts(CoOpParam);
+        _durationMin = DurMinParam == null ? null : TimeSpan.FromSeconds(DurMinParam.Value);
+        _durationMax = DurMaxParam == null ? null : TimeSpan.FromSeconds(DurMaxParam.Value);
+        _sort = Enum.TryParse<ChartSearchSort>(SortParam, true, out var sort) ? sort : ChartSearchSort.Level;
+        _sortDescending = DirParam?.ToLowerInvariant() != "asc" &&
+                          (DirParam?.ToLowerInvariant() == "desc" || DefaultDescending(_sort));
+        _pageNumber = Math.Max(1, PageParam ?? 1);
     }
 
-    private async Task RemoveFromToDo(Guid chartId)
+    private static List<string> ParseCsv(string? csv)
     {
-        await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
-        _todoCharts.Remove(chartId);
-        
-        Snackbar.Add("Chart removed from To Do list", Severity.Success);
-    }
-    private async Task AddToToDo(Guid chartId)
-    {
-        await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
-        if (!_todoCharts.Contains(chartId))
-        {
-            _todoCharts.Add(chartId);
-        }
-        Snackbar.Add("Chart added to To Do list", Severity.Success);
-    }
-    private async Task RemoveFromFavorites(Guid chartId)
-    {
-        await Mediator.Send(new RemoveChartFromListCommand(ChartListType.Favorite, chartId));
-        _favoriteCharts.Remove(chartId);
-        Snackbar.Add("Chart removed from Favorites", Severity.Success);
-    }
-    private async Task AddToFavorites(Guid chartId)
-    {
-        await Mediator.Send(new SaveChartToListCommand(ChartListType.Favorite, chartId));
-        if (!_favoriteCharts.Contains(chartId))
-        {
-            _favoriteCharts.Add(chartId);
-        }
-        Snackbar.Add("Chart added to Favorites", Severity.Success);
-    }
-    private string ChartSearch(BestAttemptDto dto)
-    {
-        var searchString = "Pump It Up "+dto.SongName+" "+dto.DifficultyShorthand;
-        return $"https://www.youtube.com/results?search_query={searchString.Replace("%","Percent ").Replace(" ", "+")}";
-    }
-    private async Task CopyShareLink()
-    {
-        await Javascript.InvokeVoidAsync("navigator.clipboard.writeText", ShareUrl);
-        Snackbar.Add(L["Copied to clipboard!"].Value, Severity.Success);
+        return csv?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+               ?? new List<string>();
     }
 
-    private async Task LoadCharts(Guid? userId)
+    private static List<T> ParseCsvEnum<T>(string? csv) where T : struct, Enum
     {
-        _isLoading = true;
-
-        var charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToArray();
-        _songArtists = charts.Select(c => c.Song.Artist.ToString()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        if (_currentMix.UsesLegacyScoring())
-        {
-            var bestAttempts = userId == null ? new Dictionary<Guid, XXChartAttempt>() :
-                (await Mediator.Send(new GetXXBestChartAttemptsQuery(userId.Value, _currentMix))).Where(b=>b.BestAttempt!=null)
-                    .ToDictionary(b => b.Chart.Id,b=>(XXChartAttempt)b.BestAttempt!);
-            
-            _charts = charts.Select(c => new BestAttemptDto(c)
-            {
-                ChartId = c.Id,
-                Category = c.Type == SharedKernel.Enums.ChartType.CoOp
-                    ? nameof(SharedKernel.Enums.ChartType.CoOp) + " x" + c.PlayerCount
-                    : c.Type.ToString(),
-                IsBroken = !bestAttempts.ContainsKey(c.Id) || bestAttempts[c.Id].IsBroken,
-                XXLetterGrade = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].LetterGrade.ToString() : string.Empty,
-                SongName = c.Song.Name,
-                SongDuration = c.Song.Duration,
-                Level = c.Level,
-                ChartType = c.Type.ToString(),
-                SongArtist = c.Song.Artist,
-                SongType = c.Song.Type.ToString(),
-                ImagePath = c.Song.ImagePath.ToString(),
-                DifficultyShorthand = DifficultyLevel.ToShorthand(c.Type, c.Level),
-                Score = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].Score : null,
-                RecordedOn = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].RecordedOn : null
-            }).ToArray();
-        }
-        else
-        {
-            var records = userId == null ? Array.Empty<RecordedPhoenixScore>() : await Mediator.Send(new GetPhoenixRecordsQuery(userId.Value, _currentMix));
-            var bestAttempts = records.ToDictionary(b => b.ChartId);
-            
-            _charts = charts.Select(c => new BestAttemptDto(c)
-            {
-                ChartId = c.Id,
-                Category = c.Type == SharedKernel.Enums.ChartType.CoOp
-                    ? nameof(SharedKernel.Enums.ChartType.CoOp) + " x" + c.PlayerCount
-                    : c.Type.ToString(),
-                IsBroken = !bestAttempts.ContainsKey(c.Id) || bestAttempts[c.Id].IsBroken,
-                SongName = c.Song.Name,
-                Level = c.Level,
-                    ChartType = c.Type.ToString(),
-                    SongDuration = c.Song.Duration,
-                    SongType = c.Song.Type.ToString(),
-                    SongArtist = c.Song.Artist,
-                ImagePath = c.Song.ImagePath.ToString(),
-                DifficultyShorthand = DifficultyLevel.ToShorthand(c.Type, c.Level),
-                Score = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].Score : null,
-                PhoenixLetterGrade = bestAttempts.ContainsKey(c.Id)?bestAttempts[c.Id].Score?.LetterGradeFor(_currentMix):null,
-                PhoenixPlate = bestAttempts.ContainsKey(c.Id)? bestAttempts[c.Id].Plate:null,
-                RecordedOn = bestAttempts.ContainsKey(c.Id) ? bestAttempts[c.Id].RecordedDate : null
-            }).ToArray();
-        }
-        
-        var ratings = await Mediator.Send(new GetChartRatingsQuery(_currentMix));
-        _adjustedDifficulties = ratings.ToDictionary(r => r.ChartId);
-        foreach (var chart in _charts)
-        {
-            if (!_adjustedDifficulties.ContainsKey(chart.ChartId))
-            {
-                _adjustedDifficulties[chart.ChartId] = new ChartDifficultyRatingRecord(chart.ChartId, chart.Level + .5, 0,0);
-            }
-        }
-        var videos = (await Mediator.Send(new GetChartVideosQuery())).ToDictionary(cv => cv.ChartId);
-        foreach (var chart in _charts.Where(c=>videos.ContainsKey(c.ChartId)))
-        {
-            chart.VideoUrl = videos[chart.ChartId].VideoUrl.ToString();
-        }
-        _songNames = charts.Select(c => c.Song.Name).Distinct().Select(n=>n.ToString()).OrderBy(n=>n).ToArray();
-        _isLoading = false;
+        return csv?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(v => Enum.TryParse<T>(v, true, out var parsed) ? parsed : (T?)null)
+            .Where(v => v != null)
+            .Select(v => v!.Value)
+            .Distinct()
+            .ToList() ?? new List<T>();
     }
+
+    private async Task PushUrl()
+    {
+        var url = NavManager.GetUriWithQueryParameters("/Charts", QueryParameters());
+        await Javascript.InvokeVoidAsync("history.pushState", null, "", url);
+    }
+
+    /// <summary>The page's query-string contract — also handed to the export dialog verbatim.</summary>
+    private Dictionary<string, object?> QueryParameters()
+    {
+        return new Dictionary<string, object?>
+        {
+            ["Song"] = string.IsNullOrWhiteSpace(_songNameContains) ? null : _songNameContains,
+            ["LevelMin"] = _levelMin,
+            ["LevelMax"] = _levelMax,
+            ["Type"] = Csv(_types),
+            ["SongType"] = Csv(_songTypes),
+            ["Artist"] = _artists.Count == 0 ? null : string.Join(',', _artists),
+            ["StepArtist"] = _stepArtists.Count == 0 ? null : string.Join(',', _stepArtists),
+            ["BpmMin"] = _bpmMin,
+            ["BpmMax"] = _bpmMax,
+            ["NpsMin"] = _npsMin,
+            ["NpsMax"] = _npsMax,
+            ["NoteMin"] = _noteMin,
+            ["NoteMax"] = _noteMax,
+            ["Badges"] = _badges.Count == 0 ? null : string.Join(',', _badges),
+            ["DebutMix"] = Csv(_debutMixes),
+            ["Slots"] = Csv(_legacySlots),
+            ["PassDiff"] = Csv(_passDifficulty),
+            ["ScoreDiff"] = Csv(_scoreDifficulty),
+            ["Vote"] = Csv(_communityVote),
+            ["PassRateMin"] = _passRateMin,
+            ["SlMin"] = _scoringLevelMin,
+            ["SlMax"] = _scoringLevelMax,
+            ["PhxGrade"] = _phoenixGradeMin?.ToString(),
+            ["PhxPlate"] = Csv(_phoenixPlates),
+            ["PhxMin"] = _phoenixScoreMin,
+            ["PhxMax"] = _phoenixScoreMax,
+            ["LegGrade"] = _legacyGradeMin?.ToString(),
+            ["RecFrom"] = _recordedFrom?.ToString("yyyy-MM-dd"),
+            ["RecTo"] = _recordedTo?.ToString("yyyy-MM-dd"),
+            ["Saved"] = SavedCsv,
+            ["State"] = Csv(_scoreStates),
+            ["CoOp"] = _coOpPlayers.Count == 0 ? null : string.Join(',', _coOpPlayers),
+            ["DurMin"] = DurationSeconds(_durationMin),
+            ["DurMax"] = DurationSeconds(_durationMax),
+            ["Sort"] = IsDefaultSort ? null : _sort.ToString(),
+            ["Dir"] = IsDefaultSort || _sortDescending == DefaultDescending(_sort)
+                ? null
+                : _sortDescending ? "desc" : "asc",
+            ["Page"] = _pageNumber <= 1 ? null : _pageNumber
+        };
+    }
+
+    private static string? Csv<T>(IReadOnlyCollection<T> values)
+    {
+        return values.Count == 0 ? null : string.Join(',', values);
+    }
+
+    private string? SavedCsv => _onlyFavorites || _onlyToDo
+        ? string.Join(',', new[] { _onlyFavorites ? "Favorites" : null, _onlyToDo ? "ToDo" : null }.Where(v => v != null))
+        : null;
+
+    // ---- loading --------------------------------------------------------------------
+
     protected override async Task OnInitializedAsync()
     {
-        _currentMix = await UiSettings.GetSelectedMix();
-        _chartScoreCount = (await Mediator.Send(new GetAllChartScoreAggregatesQuery(_currentMix))).ToDictionary(c => c.ChartId, c => c.Count);
-        await LoadCharts(RequestedUserId);
+        _mix = await UiSettings.GetSelectedMix();
+        ParseQuery();
         if (CurrentUser.IsLoggedIn)
         {
-            var chartSaves = (await Mediator.Send(new GetSavedChartsQuery())).ToArray();
-            _favoriteCharts = chartSaves.Where(cs => cs.ListType is ChartListType.Favorite).Select(cs => cs.ChartId).Distinct().ToHashSet();
-            
-            _todoCharts = chartSaves.Where(cs => cs.ListType is ChartListType.ToDo).Select(cs => cs.ChartId).Distinct().ToHashSet();
-
-            _uiSettings = await Mediator.Send(new GetUserUiSettingsQuery());
-
+            var saves = (await Mediator.Send(new GetSavedChartsQuery())).ToArray();
+            _favoriteCharts = saves.Where(s => s.ListType == ChartListType.Favorite).Select(s => s.ChartId).ToHashSet();
+            _todoCharts = saves.Where(s => s.ListType == ChartListType.ToDo).Select(s => s.ChartId).ToHashSet();
         }
-        foreach (var filter in Enum.GetValues<FilterEnum>())
-        {
-            var settingName = FilterSettingName(filter);
-            if (_uiSettings.ContainsKey(settingName)) continue;
 
-            _uiSettings[settingName] = DefaultFilters.Contains(filter).ToString();
+        // The long tail you chose to keep on screen, plus whatever this URL is filtering by —
+        // otherwise the chip is visible but the control that set it is not.
+        var shown = await UiSettings.GetSetting(ShownFiltersKey);
+        if (!string.IsNullOrWhiteSpace(shown))
+            foreach (var key in shown.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                _shownFilters.Add(key);
+        ShowFiltersCarryingValues();
+        if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensitySettingKey), out var density))
+            _density = density;
+
+        await LoadPage();
+    }
+
+    private async Task SetDensity(UiDensity density)
+    {
+        _density = density;
+        await UiSettings.SetSetting(DensitySettingKey, density.ToString());
+    }
+
+    private string SortableHeaderClass(ChartSearchSort sort)
+    {
+        return _sort == sort ? "srp-th-sortable srp-th-sorted" : "srp-th-sortable";
+    }
+
+    private string SortMark(ChartSearchSort sort)
+    {
+        return _sort == sort ? _sortDescending ? " ↓" : " ↑" : string.Empty;
+    }
+
+    private SearchChartsQuery BuildQuery()
+    {
+        var restrictTo = _onlyFavorites || _onlyToDo
+            ? (_onlyFavorites ? _favoriteCharts : Enumerable.Empty<Guid>())
+            .Concat(_onlyToDo ? _todoCharts : Enumerable.Empty<Guid>())
+            .Distinct().ToArray()
+            : null;
+
+        return new SearchChartsQuery
+        {
+            Mix = _mix,
+            UserId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null,
+            SongNameContains = _songNameContains,
+            LevelMin = _levelMin,
+            LevelMax = _levelMax,
+            Types = _types.Count == 0 ? null : _types,
+            SongTypes = _songTypes.Count == 0 ? null : _songTypes,
+            Artists = _artists.Count == 0 ? null : _artists,
+            StepArtists = _stepArtists.Count == 0 ? null : _stepArtists,
+            BpmMin = _bpmMin,
+            BpmMax = _bpmMax,
+            NpsMin = _npsMin,
+            NpsMax = _npsMax,
+            NoteCountMin = _noteMin,
+            NoteCountMax = _noteMax,
+            Badges = _badges.Count == 0 ? null : _badges,
+            DebutMixes = _debutMixes.Count == 0 ? null : _debutMixes,
+            LegacySlots = _legacySlots.Count == 0 ? null : _legacySlots,
+            PassDifficulty = _passDifficulty.Count == 0 ? null : _passDifficulty,
+            ScoreDifficulty = _scoreDifficulty.Count == 0 ? null : _scoreDifficulty,
+            CommunityVote = _communityVote.Count == 0 ? null : _communityVote,
+            PassRateMin = _passRateMin == null ? null : _passRateMin.Value / 100.0,
+            ScoringLevelMin = _scoringLevelMin,
+            ScoringLevelMax = _scoringLevelMax,
+            ScoreStates = CurrentUser.IsLoggedIn && _scoreStates.Count > 0 ? _scoreStates : null,
+            CoOpPlayerCounts = _coOpPlayers.Count == 0 ? null : _coOpPlayers,
+            DurationMin = _durationMin,
+            DurationMax = _durationMax,
+            PhoenixGradeMin = _phoenixGradeMin,
+            PhoenixPlates = _phoenixPlates.Count == 0 ? null : _phoenixPlates,
+            PhoenixScoreMin = _phoenixScoreMin,
+            PhoenixScoreMax = _phoenixScoreMax,
+            LegacyGradeMin = _legacyGradeMin,
+            RecordedFrom = _recordedFrom == null ? null : new DateTimeOffset(_recordedFrom.Value, TimeSpan.Zero),
+            RecordedTo = _recordedTo == null ? null : new DateTimeOffset(_recordedTo.Value.AddDays(1).AddTicks(-1), TimeSpan.Zero),
+            RestrictToChartIds = restrictTo,
+            Sort = _sort,
+            SortDescending = _sortDescending,
+            Page = _pageNumber,
+            PageSize = PageSize,
+            IncludeFacetCounts = true
+        };
+    }
+
+    private async Task LoadPage()
+    {
+        _isLoading = true;
+        var page = await Mediator.Send(BuildQuery());
+        _results = page.Results;
+        _totalCount = page.TotalCount;
+        _facetCounts = page.FacetCounts;
+        // Landing past the tail (a stale shared link) snaps back to the last real page.
+        if (_pageNumber > 1 && _results.Count == 0 && _totalCount > 0)
+        {
+            _pageNumber = Math.Max(1, PageCount);
+            page = await Mediator.Send(BuildQuery());
+            _results = page.Results;
+            _totalCount = page.TotalCount;
+            _facetCounts = page.FacetCounts;
+        }
+
+        _isLoading = false;
+        await LoadOfficialPlaces();
+    }
+
+    // The official mirror's popularity places — display-only badges, fetched per modern
+    // mix once per circuit and never a filter (docs/design/charts-srp.md §2 Popularity).
+    private readonly Dictionary<MixEnum, IReadOnlyDictionary<Guid, int>> _officialPlaces = new();
+
+    private async Task LoadOfficialPlaces()
+    {
+        foreach (var mix in _results.Select(r => r.Chart.Mix).Distinct().Where(m => !m.UsesLegacyScoring()))
+        {
+            if (_officialPlaces.ContainsKey(mix)) continue;
+            _officialPlaces[mix] = (await Mediator.Send(new GetOfficialPopularityQuery(mix)))
+                .ToDictionary(p => p.ChartId, p => p.Place);
+        }
+    }
+
+    private int? OfficialPlace(ChartSearchResult result)
+    {
+        return _officialPlaces.TryGetValue(result.Chart.Mix, out var places) &&
+               places.TryGetValue(result.Chart.Id, out var place)
+            ? place
+            : null;
+    }
+
+    // Folder standings, memoized per folder. The official board knows chart ids and places
+    // but nothing about type or level — OfficialMirror cannot see Catalog — so the folder's
+    // membership comes from one unpaged search and the ranking is done here.
+    private readonly Dictionary<string, IReadOnlyDictionary<Guid, int>> _officialFolderPlaces = new();
+
+    private async Task<int?> OfficialFolderPlace(ChartSearchResult result)
+    {
+        if (!_officialPlaces.TryGetValue(result.Chart.Mix, out var places) ||
+            !places.ContainsKey(result.Chart.Id)) return null;
+
+        var folderKey = $"{result.Chart.Mix}|{result.Chart.Type}|{(int)result.Chart.Level}";
+        if (!_officialFolderPlaces.TryGetValue(folderKey, out var ranked))
+        {
+            var folder = await Mediator.Send(new SearchChartsQuery
+            {
+                Mix = result.Chart.Mix,
+                Types = new[] { result.Chart.Type },
+                LevelMin = (int)result.Chart.Level,
+                LevelMax = (int)result.Chart.Level,
+                Page = null
+            });
+            ranked = folder.Results
+                .Select(r => r.Chart.Id)
+                .Where(places.ContainsKey)
+                .OrderBy(id => places[id])
+                .Select((id, index) => (id, place: index + 1))
+                .ToDictionary(p => p.id, p => p.place);
+            _officialFolderPlaces[folderKey] = ranked;
+        }
+
+        return ranked.TryGetValue(result.Chart.Id, out var folderPlace) ? folderPlace : null;
+    }
+
+    private async Task OpenDetails(ChartSearchResult result)
+    {
+        _detailsChart = result.Chart;
+        _detailsPlace = OfficialPlace(result);
+        _detailsFolderPlace = null;
+        _detailsOpen = true;
+        // The folder ranking needs a query; the dialog opens first and the second line fills
+        // in rather than making the click wait on it.
+        _detailsFolderPlace = await OfficialFolderPlace(result);
+    }
+
+    private async Task ApplyChange(bool resetPage = true)
+    {
+        if (resetPage) _pageNumber = 1;
+        await PushUrl();
+        await LoadPage();
+    }
+
+    private async Task OpenFilters()
+    {
+        _filtersOpen = true;
+        await LoadDrawerVocabulary();
+    }
+
+    /// <summary>
+    ///     The advanced facets' dictionaries and slider extents — fetched when the drawer
+    ///     first opens rather than on page load, so a visitor who never filters pays nothing.
+    ///     The pick list needs the extents to know which range filters this mix can even
+    ///     offer, so this cannot wait for a filter to be picked.
+    /// </summary>
+    private async Task LoadDrawerVocabulary()
+    {
+        if (_vocabularyLoaded) return;
+        _badgeVocabulary = await Mediator.Send(new GetSearchBadgesQuery());
+        _artistVocabulary = await Mediator.Send(new GetSearchArtistsQuery(_mix));
+        _stepArtistVocabulary = await Mediator.Send(new GetSearchStepArtistsQuery(_mix));
+        _ranges = await Mediator.Send(new GetSearchRangesQuery(_mix));
+        // Only now: a throw part-way through would otherwise leave the drawer permanently
+        // half-loaded, with no retry for the life of the circuit.
+        _vocabularyLoaded = true;
+    }
+
+    // ---- chips ----------------------------------------------------------------------
+
+    private sealed record QueryChip(string Label, bool IsSort, Func<Task> Remove);
+
+    private IReadOnlyList<QueryChip> QueryChips
+    {
+        get
+        {
+            var chips = new List<QueryChip>();
+            // In Table density the sorted column header carries the sort — the chip retires.
+            if (!IsDefaultSort && _density != UiDensity.Table)
+                chips.Add(new QueryChip($"⇅ {L[SortName(_sort)]} {(_sortDescending ? "↓" : "↑")}", true,
+                    () => SelectSort(ChartSearchSort.Level, true)));
+            if (!string.IsNullOrWhiteSpace(_songNameContains))
+                chips.Add(new QueryChip($"{L["Song name"]}: “{_songNameContains}”", false,
+                    () => SetSongNameContains(null)));
+            if (_levelMin != null || _levelMax != null)
+                chips.Add(new QueryChip(LevelChipLabel, false, async () =>
+                {
+                    _levelMin = null;
+                    _levelMax = null;
+                    await ApplyChange();
+                }));
+            AddListChips(chips, _types, t => L[TypeName(t)].Value);
+            AddListChips(chips, _coOpPlayers, p => $"{L["Co-Op"]} ×{p}");
+            if (_durationMin != null || _durationMax != null)
+                chips.Add(RangeChip(L["Duration"], FormatDuration(_durationMin), FormatDuration(_durationMax),
+                    async () =>
+                    {
+                        _durationMin = null;
+                        _durationMax = null;
+                        await ApplyChange();
+                    }));
+            AddListChips(chips, _songTypes, t => L[SongTypeName(t)].Value);
+            AddListChips(chips, _artists, a => a);
+            AddListChips(chips, _stepArtists, a => $"{L["Step Artist"]}: {a}");
+            if (_bpmMin != null || _bpmMax != null)
+                chips.Add(RangeChip("BPM", _bpmMin?.ToString("0"), _bpmMax?.ToString("0"), async () =>
+                {
+                    _bpmMin = null;
+                    _bpmMax = null;
+                    await ApplyChange();
+                }));
+            if (_npsMin != null || _npsMax != null)
+                chips.Add(RangeChip("NPS", _npsMin?.ToString("0.#"), _npsMax?.ToString("0.#"), async () =>
+                {
+                    _npsMin = null;
+                    _npsMax = null;
+                    await ApplyChange();
+                }));
+            if (_noteMin != null || _noteMax != null)
+                chips.Add(RangeChip(L["Notes"], _noteMin?.ToString(), _noteMax?.ToString(), async () =>
+                {
+                    _noteMin = null;
+                    _noteMax = null;
+                    await ApplyChange();
+                }));
+            AddListChips(chips, _badges, b => BadgeDisplay(b));
+            AddListChips(chips, _debutMixes, m => $"{L["Debut"]}: {m.GetName()}");
+            AddListChips(chips, _legacySlots, s => s.GetName());
+            AddListChips(chips, _passDifficulty, c => $"{L["Pass"]}: {L[ChartSearchCard.CategoryName(c)]}");
+            AddListChips(chips, _scoreDifficulty, c => $"{L["Score"]}: {L[ChartSearchCard.CategoryName(c)]}");
+            AddListChips(chips, _communityVote, c => $"{L["Community Vote"]}: {L[ChartSearchCard.CategoryName(c)]}");
+            if (_passRateMin != null)
+                chips.Add(new QueryChip($"{L["Pass rate"]} ≥ {_passRateMin}%", false, () => SetPassRateMin(null)));
+            if (_scoringLevelMin != null || _scoringLevelMax != null)
+                chips.Add(RangeChip(L["Scoring level"], _scoringLevelMin?.ToString("0.#"),
+                    _scoringLevelMax?.ToString("0.#"), async () =>
+                    {
+                        _scoringLevelMin = null;
+                        _scoringLevelMax = null;
+                        await ApplyChange();
+                    }));
             if (CurrentUser.IsLoggedIn)
             {
-                await Mediator.Send(new SaveUserUiSettingCommand(settingName,true.ToString()));
+                AddListChips(chips, _scoreStates, s => L[ScoreStateName(s)].Value);
+                AddListChips(chips, _phoenixPlates, p => p.GetShorthand());
+                if (_phoenixScoreMin != null || _phoenixScoreMax != null)
+                    chips.Add(RangeChip(L["Score"], _phoenixScoreMin?.ToString("N0"), _phoenixScoreMax?.ToString("N0"),
+                        async () =>
+                        {
+                            _phoenixScoreMin = null;
+                            _phoenixScoreMax = null;
+                            await ApplyChange();
+                        }));
+                if (_legacyGradeMin != null)
+                    chips.Add(new QueryChip($"{L["Legacy grade"]} ≥ {_legacyGradeMin}", false,
+                        () => SetLegacyGradeMin(null)));
+                if (_recordedFrom != null || _recordedTo != null)
+                    chips.Add(RangeChip(L["Recorded"], _recordedFrom?.ToString("yyyy-MM-dd"),
+                        _recordedTo?.ToString("yyyy-MM-dd"), async () =>
+                        {
+                            _recordedFrom = null;
+                            _recordedTo = null;
+                            await ApplyChange();
+                        }));
+                if (_onlyFavorites)
+                    chips.Add(new QueryChip(L["Favorites"], false, () => SetOnlyFavorites(false)));
+                if (_onlyToDo)
+                    chips.Add(new QueryChip(L["To Do"], false, () => SetOnlyToDo(false)));
             }
+
+            return chips;
         }
-        foreach (var column in Enum.GetValues<ColumnEnum>())
+    }
+
+    private void AddListChips<T>(List<QueryChip> chips, List<T> list, Func<T, string> label)
+    {
+        foreach (var item in list)
         {
-            var settingName = ColumnSettingName(column);
-
-            if (_uiSettings.ContainsKey(settingName)) continue;
-
-
-            _uiSettings[settingName] = CurrentUser.IsLoggedIn ? DefaultLoggedInColumns.Contains(column).ToString() : 
-                RequestedUserId == null?
-                DefaultNotLoggedInColumns.Contains(column).ToString() : DefaultViewingOthersColumns.Contains(column).ToString();
-            if (CurrentUser.IsLoggedIn)
+            var captured = item;
+            chips.Add(new QueryChip(label(captured), false, async () =>
             {
-                await Mediator.Send(new SaveUserUiSettingCommand(settingName, _uiSettings[settingName]));
-            }
+                list.Remove(captured);
+                await ApplyChange();
+            }));
         }
-        
-    }
-    
-    private Task<IEnumerable<string>> SearchSongs(string? value)
-    {
-        return Task.FromResult(string.IsNullOrWhiteSpace(value)
-            ? _songNames.Select(s => s.ToString())
-            : _songNames.Where(name => name.ToString().Contains(value, StringComparison.OrdinalIgnoreCase)).Select(name => (string)name));
     }
 
-    private async Task UpdateDifficultyRating(Guid chartId, int? scale)
+    private static QueryChip RangeChip(string label, string? from, string? to, Func<Task> remove)
     {
-        if (scale == null)
-        {
-            return;
-        }
-        await Mediator.Send(new RateChartDifficultyCommand(_currentMix,chartId, DifficultyAdjustmentHelpers.From(scale.Value)));
-
-        var newRating = await Mediator.Send(new GetChartRatingQuery(_currentMix,chartId));
-        _adjustedDifficulties[chartId] = newRating;
-        Snackbar.Add("Suggested Difficulty Rating Submitted", Severity.Success);
+        var range = from != null && to != null ? $"{from}–{to}" : from != null ? $"≥ {from}" : $"≤ {to}";
+        return new QueryChip($"{label} {range}", false, remove);
     }
-    private async Task SetScore(BestAttemptDto dto, int? newScore)
+
+    private string BadgeDisplay(string key)
     {
-        if (_currentMix.UsesLegacyScoring())
+        return _badgeVocabulary.FirstOrDefault(b =>
+            string.Equals(b.Key, key, StringComparison.OrdinalIgnoreCase))?.DisplayName ?? key;
+    }
+
+    private string BadgeCount(string key)
+    {
+        return _facetCounts?.Badges.TryGetValue(key, out var count) == true ? $" ({count})" : string.Empty;
+    }
+
+    private static string CountSuffix<TKey>(IReadOnlyDictionary<TKey, int>? counts, TKey key) where TKey : notnull
+    {
+        return counts != null && counts.TryGetValue(key, out var count) ? $" ({count})" : string.Empty;
+    }
+
+    /// <summary>
+    ///     Whether a chip facet is worth showing. Nothing this mix has none of belongs on
+    ///     screen — Single Performance in a Phoenix mix is noise, not a choice. A chip the
+    ///     visitor has already picked always shows, or it becomes an applied filter with no
+    ///     control to clear it. Counts absent (facets not loaded yet) means show everything,
+    ///     so the drawer never starts out mysteriously empty.
+    /// </summary>
+    private static bool HasAny<TKey>(IReadOnlyDictionary<TKey, int>? counts, TKey key, bool selected)
+        where TKey : notnull
+    {
+        return selected || counts == null || (counts.TryGetValue(key, out var count) && count > 0);
+    }
+
+    private string LevelChipLabel => _levelMin == _levelMax
+        ? $"{L["Level"]} {_levelMin}"
+        : $"{L["Level"]} {_levelMin?.ToString() ?? DifficultyLevel.Min.ToString()}–{_levelMax?.ToString() ?? DifficultyLevel.Max.ToString()}";
+
+    private int ActiveFilterCount => QueryChips.Count(c => !c.IsSort);
+
+
+    private async Task ClearAllFilters()
+    {
+        _songNameContains = null;
+        _levelMin = null;
+        _levelMax = null;
+        _types.Clear();
+        _songTypes.Clear();
+        _artists.Clear();
+        _stepArtists.Clear();
+        _bpmMin = null;
+        _bpmMax = null;
+        _npsMin = null;
+        _npsMax = null;
+        _noteMin = null;
+        _noteMax = null;
+        _badges.Clear();
+        _debutMixes.Clear();
+        _legacySlots.Clear();
+        _passDifficulty.Clear();
+        _scoreDifficulty.Clear();
+        _communityVote.Clear();
+        _passRateMin = null;
+        _scoringLevelMin = null;
+        _scoringLevelMax = null;
+        _scoreStates.Clear();
+        _coOpPlayers.Clear();
+        _durationMin = null;
+        _durationMax = null;
+        _phoenixGradeMin = null;
+        _phoenixPlates.Clear();
+        _phoenixScoreMin = null;
+        _phoenixScoreMax = null;
+        _legacyGradeMin = null;
+        _recordedFrom = null;
+        _recordedTo = null;
+        _onlyFavorites = false;
+        _onlyToDo = false;
+        _sort = ChartSearchSort.Level;
+        _sortDescending = true;
+        await ApplyChange();
+    }
+
+    // ---- control handlers -----------------------------------------------------------
+
+    private async Task SetSongNameContains(string? value)
+    {
+        _songNameContains = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        await ApplyChange();
+    }
+
+    private async Task SetLevelMin(int? value)
+    {
+        _levelMin = (int?)OpenEnded(value, DifficultyLevel.Min);
+        await ApplyChange();
+    }
+
+    private async Task SetLevelMax(int? value)
+    {
+        _levelMax = (int?)OpenEnded(value, DifficultyLevel.Max);
+        await ApplyChange();
+    }
+
+    // ---- chip facets: every one is "any of", the SRP default ------------------------
+
+    private async Task Toggle<T>(List<T> list, T value)
+    {
+        if (!list.Remove(value)) list.Add(value);
+        await ApplyChange();
+    }
+
+    private Task ToggleType(ChartType type) => Toggle(_types, type);
+    private Task ToggleSongType(SongType type) => Toggle(_songTypes, type);
+    private Task ToggleScoreState(ChartScoreStateFilter state) => Toggle(_scoreStates, state);
+    private Task ToggleCoOpPlayers(int players) => Toggle(_coOpPlayers, players);
+    private Task ToggleSlot(LegacySlot slot) => Toggle(_legacySlots, slot);
+    private Task ToggleDebutMix(MixEnum mix) => Toggle(_debutMixes, mix);
+    private Task TogglePlate(PhoenixPlate plate) => Toggle(_phoenixPlates, plate);
+
+    private static readonly int[] CoOpPlayerRange = { 2, 3, 4, 5 };
+
+    /// <summary>
+    ///     One entry in the More-filters pick list. It knows whether it applies to this mix
+    ///     and viewer at all, whether it currently carries a value, and how to drop that
+    ///     value — unchecking has to clear, or the search would go on obeying a filter the
+    ///     drawer no longer shows and the only cure would be Clear all.
+    /// </summary>
+    private sealed record AdvancedFilter(string Key, string Name, bool Applies,
+        Func<bool> HasValue, Action Clear);
+
+    /// <summary>
+    ///     Every long-tail filter, including ones this mix or viewer cannot use. The pick
+    ///     list shows only the applicable ones, but a URL is matched against all of them —
+    ///     a filter must become visible when a link arrives carrying it, and applicability
+    ///     depends on extents that land after the first render.
+    /// </summary>
+    private IReadOnlyList<AdvancedFilter> AllAdvancedFilters
+    {
+        get
         {
-            dto.Score = newScore;
-            if (string.IsNullOrWhiteSpace(dto.XXLetterGrade) && newScore != null)
+            var mine = CurrentUser.IsLoggedIn;
+            var modern = ModernInScope;
+            var legacy = LegacyInScope;
+            return new List<AdvancedFilter>
             {
-                dto.XXLetterGrade = XXLetterGrade.A.ToString();
-            }
-            await UpdateBest(dto);
+                new("songType", L["Song Type"], true,
+                    () => _songTypes.Count > 0, () => _songTypes.Clear()),
+                new("artist", L["Song Artist"], true,
+                    () => _artists.Count > 0, () => _artists.Clear()),
+                new("stepArtist", L["Step Artist"], true,
+                    () => _stepArtists.Count > 0, () => _stepArtists.Clear()),
+                new("bpm", L["BPM"], _ranges?.BpmMin != null,
+                    () => _bpmMin != null || _bpmMax != null, () => { _bpmMin = null; _bpmMax = null; }),
+                new("nps", L["NPS"], _ranges?.NpsMin != null,
+                    () => _npsMin != null || _npsMax != null, () => { _npsMin = null; _npsMax = null; }),
+                new("noteCount", L["Note count"], _ranges?.NoteCountMin != null,
+                    () => _noteMin != null || _noteMax != null, () => { _noteMin = null; _noteMax = null; }),
+                new("duration", L["Duration"], _ranges?.DurationSecondsMin != null,
+                    () => _durationMin != null || _durationMax != null,
+                    () => { _durationMin = null; _durationMax = null; }),
+                new("skills", L["Skills"], true,
+                    () => _badges.Count > 0, () => _badges.Clear()),
+                new("debutMix", L["Debut mix"], true,
+                    () => _debutMixes.Count > 0, () => _debutMixes.Clear()),
+                new("legacySlot", L["Legacy Difficulty"], HasLegacySlots,
+                    () => _legacySlots.Count > 0, () => _legacySlots.Clear()),
+                new("passDifficulty", L["Pass Difficulty"], true,
+                    () => _passDifficulty.Count > 0, () => _passDifficulty.Clear()),
+                new("scoreDifficulty", L["Score Difficulty"], true,
+                    () => _scoreDifficulty.Count > 0, () => _scoreDifficulty.Clear()),
+                new("communityVote", L["Community Vote"], legacy,
+                    () => _communityVote.Count > 0, () => _communityVote.Clear()),
+                // Pass rate is off the pick list until the threshold behaviour is tuned
+                // (owner). The query field, the URL parameter and the chip all still work, so
+                // it comes back by re-listing it here.
+
+                // Offered wherever the sort is offered — sorting by scoring level while being
+                // unable to filter by it was the odd bit. The track falls back to the level
+                // scale when the mix has no banked extents; scoring level rides that scale.
+                new("scoringLevel", L["Scoring level"], modern,
+                    () => _scoringLevelMin != null || _scoringLevelMax != null,
+                    () => { _scoringLevelMin = null; _scoringLevelMax = null; }),
+                new("lists", L["Favorites"] + " / " + L["To Do"], mine,
+                    () => _onlyFavorites || _onlyToDo, () => { _onlyFavorites = false; _onlyToDo = false; }),
+                // No separate grade entry: the score range says it exactly, in finer units.
+                new("phoenixPlate", L["Phoenix plate"], mine && modern,
+                    () => _phoenixPlates.Count > 0, () => _phoenixPlates.Clear()),
+                new("phoenixScore", L["Phoenix score"], mine && modern,
+                    () => _phoenixScoreMin != null || _phoenixScoreMax != null,
+                    () => { _phoenixScoreMin = null; _phoenixScoreMax = null; }),
+                new("legacyGrade", L["Legacy grade"], mine && legacy,
+                    () => _legacyGradeMin != null, () => _legacyGradeMin = null),
+                new("recorded", L["Recorded"], mine,
+                    () => _recordedFrom != null || _recordedTo != null,
+                    () => { _recordedFrom = null; _recordedTo = null; })
+            };
+        }
+    }
+
+    private IReadOnlyList<AdvancedFilter> AdvancedFilters =>
+        AllAdvancedFilters.Where(f => f.Applies).ToList();
+
+    /// <summary>
+    ///     A shared link's filters have to be on screen: otherwise the results are narrowed
+    ///     by something the drawer never shows, and Clear all is the only way out.
+    /// </summary>
+    private void ShowFiltersCarryingValues()
+    {
+        foreach (var filter in AllAdvancedFilters.Where(f => f.HasValue()))
+            _shownFilters.Add(filter.Key);
+    }
+
+    private bool Shows(string key)
+    {
+        return _shownFilters.Contains(key);
+    }
+
+    private bool ShowsAny(params string[] keys)
+    {
+        return keys.Any(Shows);
+    }
+
+    private string ShownFiltersText(List<string> selected)
+    {
+        var names = AdvancedFilters.Where(f => selected.Contains(f.Key)).Select(f => f.Name).ToArray();
+        return names.Length == 0 ? L["None"] : string.Join(", ", names);
+    }
+
+    private async Task SetShownFilters(IEnumerable<string> keys)
+    {
+        var next = new HashSet<string>(keys, StringComparer.OrdinalIgnoreCase);
+        var dropped = AdvancedFilters.Where(f => Shows(f.Key) && !next.Contains(f.Key) && f.HasValue()).ToArray();
+
+        _shownFilters = new HashSet<string>(next, StringComparer.OrdinalIgnoreCase);
+        await UiSettings.SetSetting(ShownFiltersKey, string.Join(',', _shownFilters));
+
+        foreach (var filter in dropped) filter.Clear();
+        if (dropped.Length > 0) await ApplyChange();
+    }
+
+    // The artist autocompletes are finders, not fields: each pick is appended to a list and
+    // the box clears, so its bound value stays empty. A typed field rather than a literal
+    // null, which Razor cannot infer a generic from.
+    private readonly ChartSearchVocabularyEntry? _noVocabularyPick = null;
+
+    /// <summary>
+    ///     How an option reads in the list: the name plus how many charts it would narrow to.
+    ///     The count is decoration — the filter itself is only ever the name.
+    /// </summary>
+    private static string VocabularyLabel(ChartSearchVocabularyEntry? entry)
+    {
+        return entry == null ? string.Empty : $"{entry.Value} ({entry.ChartCount})";
+    }
+
+    private async Task AddArtist(ChartSearchVocabularyEntry? entry)
+    {
+        var artist = entry?.Value;
+        if (string.IsNullOrWhiteSpace(artist) ||
+            _artists.Contains(artist, StringComparer.OrdinalIgnoreCase)) return;
+        _artists.Add(artist);
+        await ApplyChange();
+    }
+
+    private async Task RemoveArtist(string artist)
+    {
+        _artists.RemoveAll(a => string.Equals(a, artist, StringComparison.OrdinalIgnoreCase));
+        await ApplyChange();
+    }
+
+    private async Task RemoveStepArtist(string stepArtist)
+    {
+        _stepArtists.RemoveAll(a => string.Equals(a, stepArtist, StringComparison.OrdinalIgnoreCase));
+        await ApplyChange();
+    }
+
+    private async Task AddStepArtist(ChartSearchVocabularyEntry? entry)
+    {
+        var artist = entry?.Value;
+        if (string.IsNullOrWhiteSpace(artist) ||
+            _stepArtists.Contains(artist, StringComparer.OrdinalIgnoreCase)) return;
+        _stepArtists.Add(artist);
+        await ApplyChange();
+    }
+
+    private Task<IEnumerable<ChartSearchVocabularyEntry>> SearchArtists(string? value,
+        CancellationToken cancellationToken)
+    {
+        return Task.FromResult(FilterVocabulary(_artistVocabulary, value));
+    }
+
+    private Task<IEnumerable<ChartSearchVocabularyEntry>> SearchStepArtists(string? value,
+        CancellationToken cancellationToken)
+    {
+        return Task.FromResult(FilterVocabulary(_stepArtistVocabulary, value));
+    }
+
+    private static IEnumerable<ChartSearchVocabularyEntry> FilterVocabulary(
+        IReadOnlyList<ChartSearchVocabularyEntry> vocabulary, string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? vocabulary
+            : vocabulary.Where(v => v.Value.Contains(value, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    ///     A thumb parked on its own end of the track is not a filter. Nulling there drops the
+    ///     chip and the URL parameter rather than leaving "BPM 84–300" applied, which matches
+    ///     every chart and reads as a filter that will not clear. Duration always worked this
+    ///     way; every range agrees now.
+    /// </summary>
+    private static decimal? OpenEnded(decimal? value, decimal? extreme)
+    {
+        return value == null || value == extreme ? null : value;
+    }
+
+    private async Task SetBpmMin(decimal? value)
+    {
+        _bpmMin = OpenEnded(value, _ranges?.BpmMin);
+        await ApplyChange();
+    }
+
+    private async Task SetBpmMax(decimal? value)
+    {
+        _bpmMax = OpenEnded(value, _ranges?.BpmMax);
+        await ApplyChange();
+    }
+
+    private async Task SetNpsMin(decimal? value)
+    {
+        _npsMin = OpenEnded(value, _ranges?.NpsMin);
+        await ApplyChange();
+    }
+
+    private async Task SetNpsMax(decimal? value)
+    {
+        _npsMax = OpenEnded(value, _ranges?.NpsMax);
+        await ApplyChange();
+    }
+
+    private async Task SetNoteMin(int? value)
+    {
+        _noteMin = (int?)OpenEnded(value, _ranges?.NoteCountMin);
+        await ApplyChange();
+    }
+
+    private async Task SetNoteMax(int? value)
+    {
+        _noteMax = (int?)OpenEnded(value, _ranges?.NoteCountMax);
+        await ApplyChange();
+    }
+
+    private async Task ToggleBadge(string key)
+    {
+        var existing = _badges.FirstOrDefault(b => string.Equals(b, key, StringComparison.OrdinalIgnoreCase));
+        if (existing != null) _badges.Remove(existing);
+        else _badges.Add(key);
+        await ApplyChange();
+    }
+
+    private async Task SetDebutMixes(IEnumerable<string>? values)
+    {
+        _debutMixes = ParseCsvEnum<MixEnum>(values == null ? null : string.Join(',', values));
+        await ApplyChange();
+    }
+
+    private async Task SetLegacySlots(IEnumerable<string>? values)
+    {
+        _legacySlots = ParseCsvEnum<LegacySlot>(values == null ? null : string.Join(',', values));
+        await ApplyChange();
+    }
+
+    private async Task SetPassDifficulty(IEnumerable<string>? values)
+    {
+        _passDifficulty = ParseCsvEnum<TierListCategory>(values == null ? null : string.Join(',', values));
+        await ApplyChange();
+    }
+
+    private async Task SetScoreDifficulty(IEnumerable<string>? values)
+    {
+        _scoreDifficulty = ParseCsvEnum<TierListCategory>(values == null ? null : string.Join(',', values));
+        await ApplyChange();
+    }
+
+    private async Task SetCommunityVote(IEnumerable<string>? values)
+    {
+        _communityVote = ParseCsvEnum<TierListCategory>(values == null ? null : string.Join(',', values));
+        await ApplyChange();
+    }
+
+    private async Task SetPassRateMin(int? value)
+    {
+        _passRateMin = value;
+        await ApplyChange();
+    }
+
+    private async Task SetScoringLevelMin(double? value)
+    {
+        _scoringLevelMin = (double?)OpenEnded((decimal?)value, ScoringLevelFloor);
+        await ApplyChange();
+    }
+
+    private async Task SetScoringLevelMax(double? value)
+    {
+        _scoringLevelMax = (double?)OpenEnded((decimal?)value, ScoringLevelCeiling);
+        await ApplyChange();
+    }
+
+    private async Task SetDurationMin(int seconds)
+    {
+        _durationMin = seconds <= (_ranges?.DurationSecondsMin ?? 0) ? null : TimeSpan.FromSeconds(seconds);
+        await ApplyChange();
+    }
+
+    private async Task SetDurationMax(int seconds)
+    {
+        _durationMax = seconds >= (_ranges?.DurationSecondsMax ?? int.MaxValue)
+            ? null
+            : TimeSpan.FromSeconds(seconds);
+        await ApplyChange();
+    }
+
+    private static int? DurationSeconds(TimeSpan? duration)
+    {
+        return duration == null ? null : (int)duration.Value.TotalSeconds;
+    }
+
+    private static string? FormatDuration(TimeSpan? duration)
+    {
+        return duration?.ToString(@"m\:ss");
+    }
+
+    /// <summary>The duration track counts seconds; its ticks read as a clock.</summary>
+    private static string ClockText(int seconds)
+    {
+        return TimeSpan.FromSeconds(seconds).ToString(@"m\:ss");
+    }
+
+    /// <summary>A million-point track needs short ticks, so they read in thousands.</summary>
+    private static string ScoreText(int score)
+    {
+        return score >= 1000000 ? "1M" : $"{score / 1000}k";
+    }
+
+    /// <summary>
+    ///     A score tick, named by the grade it earns. This is what lets one control replace
+    ///     the old score-range plus grade-floor pair: the grade IS the floor the score cleared
+    ///     (PhoenixLetterGrade.LetterGradeFor), and it is per-mix, so the label follows the
+    ///     searched mix rather than assuming Phoenix 1's thresholds.
+    /// </summary>
+    private string GradedScoreText(int score)
+    {
+        return $"{PhoenixScore.From(Math.Clamp(score, 0, 1000000)).LetterGradeFor(_mix).GetName()} {ScoreText(score)}";
+    }
+
+    private string PhoenixScoreRangeLabel => _phoenixScoreMin == null && _phoenixScoreMax == null
+        ? L["Any"]
+        : $"{GradedScoreText(_phoenixScoreMin ?? 0)} – {GradedScoreText(_phoenixScoreMax ?? 1000000)}";
+
+    /// <summary>The tier tracks ride the ramp's index; a tick names the category it lands on.</summary>
+    private string TierText(int index)
+    {
+        var clamped = Math.Clamp(index, 0, RankedCategories.Length - 1);
+        return L[ChartSearchCard.CategoryName(RankedCategories[clamped])].Value;
+    }
+
+    // ---- ordinal sliders: enum scales ride an index, 0 meaning "any" ----------------
+
+    internal static readonly PhoenixLetterGrade[] PhoenixGrades = Enum.GetValues<PhoenixLetterGrade>();
+    internal static readonly PhoenixPlate[] PhoenixPlates = Enum.GetValues<PhoenixPlate>();
+    internal static readonly XXLetterGrade[] LegacyGrades = Enum.GetValues<XXLetterGrade>();
+
+    private static int GradeIndex(PhoenixLetterGrade? grade) =>
+        grade == null ? 0 : Array.IndexOf(PhoenixGrades, grade.Value) + 1;
+
+    private static int PlateIndex(PhoenixPlate? plate) =>
+        plate == null ? 0 : Array.IndexOf(PhoenixPlates, plate.Value) + 1;
+
+    private static int LegacyGradeIndex(XXLetterGrade? grade) =>
+        grade == null ? 0 : Array.IndexOf(LegacyGrades, grade.Value) + 1;
+
+    private async Task SetPhoenixGradeIndex(int index)
+    {
+        _phoenixGradeMin = index <= 0 ? null : PhoenixGrades[Math.Min(index, PhoenixGrades.Length) - 1];
+        await ApplyChange();
+    }
+
+    private async Task SetLegacyGradeIndex(int index)
+    {
+        _legacyGradeMin = index <= 0 ? null : LegacyGrades[Math.Min(index, LegacyGrades.Length) - 1];
+        await ApplyChange();
+    }
+
+    // Tier sliders travel the ordered ranked scale; an untouched full-width range means no
+    // filter, so Unranked charts (which sit on no rung at all) aren't quietly excluded.
+    private static int TierLow(List<TierListCategory> selected) =>
+        selected.Count == 0 ? 0 : RankedCategories.Select((c, i) => (c, i))
+            .Where(x => selected.Contains(x.c)).Min(x => x.i);
+
+    private static int TierHigh(List<TierListCategory> selected) =>
+        selected.Count == 0
+            ? RankedCategories.Length - 1
+            : RankedCategories.Select((c, i) => (c, i)).Where(x => selected.Contains(x.c)).Max(x => x.i);
+
+    private Task SetTierLow(List<TierListCategory> selected, int low, Func<List<TierListCategory>, Task> apply)
+    {
+        return apply(TierSpan(low, TierHigh(selected)));
+    }
+
+    private Task SetTierHigh(List<TierListCategory> selected, int high, Func<List<TierListCategory>, Task> apply)
+    {
+        return apply(TierSpan(TierLow(selected), high));
+    }
+
+    private static List<TierListCategory> TierSpan(int low, int high)
+    {
+        if (low <= 0 && high >= RankedCategories.Length - 1) return new List<TierListCategory>();
+        return RankedCategories.Skip(low).Take(Math.Max(0, high - low + 1)).ToList();
+    }
+
+    private async Task SetPassDifficulty(List<TierListCategory> value)
+    {
+        _passDifficulty = value;
+        await ApplyChange();
+    }
+
+    private async Task SetScoreDifficulty(List<TierListCategory> value)
+    {
+        _scoreDifficulty = value;
+        await ApplyChange();
+    }
+
+    private async Task SetCommunityVote(List<TierListCategory> value)
+    {
+        _communityVote = value;
+        await ApplyChange();
+    }
+
+    private string TierRangeLabel(List<TierListCategory> selected)
+    {
+        if (selected.Count == 0) return L["Any"];
+        var low = L[ChartSearchCard.CategoryName(RankedCategories[TierLow(selected)])].Value;
+        var high = L[ChartSearchCard.CategoryName(RankedCategories[TierHigh(selected)])].Value;
+        return low == high ? low : $"{low} – {high}";
+    }
+
+    private string LevelRangeLabel => _levelMin == null && _levelMax == null
+        ? L["Any"]
+        : $"{_levelMin ?? DifficultyLevel.Min}–{_levelMax ?? DifficultyLevel.Max}";
+
+    private string DurationRangeLabel => _durationMin == null && _durationMax == null
+        ? L["Any"]
+        : $"{FormatDuration(_durationMin) ?? "0:00"}–{FormatDuration(_durationMax) ?? "∞"}";
+
+    private string RangeLabel(decimal? from, decimal? to, decimal? floor, decimal? ceiling)
+    {
+        if (from == null && to == null) return L["Any"];
+        return $"{from ?? floor ?? 0:0.#}–{to ?? ceiling ?? 0:0.#}";
+    }
+
+    private string RangeLabel(int? from, int? to, int? floor, int? ceiling)
+    {
+        return RangeLabel((decimal?)from, (decimal?)to, (decimal?)floor, (decimal?)ceiling);
+    }
+
+    private async Task SetPhoenixGradeMin(PhoenixLetterGrade? value)
+    {
+        _phoenixGradeMin = value;
+        await ApplyChange();
+    }
+
+    private async Task SetPhoenixScoreMin(int? value)
+    {
+        _phoenixScoreMin = (int?)OpenEnded(value, 0);
+        await ApplyChange();
+    }
+
+    private async Task SetPhoenixScoreMax(int? value)
+    {
+        _phoenixScoreMax = (int?)OpenEnded(value, 1000000);
+        await ApplyChange();
+    }
+
+    private async Task SetLegacyGradeMin(XXLetterGrade? value)
+    {
+        _legacyGradeMin = value;
+        await ApplyChange();
+    }
+
+    private async Task SetRecordedFrom(DateTime? value)
+    {
+        _recordedFrom = value;
+        await ApplyChange();
+    }
+
+    private async Task SetRecordedTo(DateTime? value)
+    {
+        _recordedTo = value;
+        await ApplyChange();
+    }
+
+    private async Task SetOnlyFavorites(bool value)
+    {
+        _onlyFavorites = value;
+        await ApplyChange();
+    }
+
+    private async Task SetOnlyToDo(bool value)
+    {
+        _onlyToDo = value;
+        await ApplyChange();
+    }
+
+    private async Task SelectSort(ChartSearchSort sort, bool forceDefaultDirection = false)
+    {
+        if (sort == _sort && !forceDefaultDirection)
+        {
+            _sortDescending = !_sortDescending;
         }
         else
         {
-            var parsedScore = newScore == null ? null : PhoenixScore.TryParse(newScore.Value, out var score) ? (PhoenixScore?)score : null;
-
-            dto.Score = parsedScore;
-            dto.PhoenixLetterGrade = parsedScore?.LetterGradeFor(_currentMix);
-            await UpdateBest(dto);
+            _sort = sort;
+            _sortDescending = DefaultDescending(sort);
         }
+
+        await ApplyChange();
     }
 
-    private async Task SetPlate(BestAttemptDto dto, PhoenixPlate? plate)
+    private bool IsDefaultSort => _sort == ChartSearchSort.Level && _sortDescending;
+
+    private static bool DefaultDescending(ChartSearchSort sort)
     {
-        dto.PhoenixPlate = plate;
-        await UpdateBest(dto);
-    }
-    private async Task SetBroken(BestAttemptDto dto, bool newBroken)
-    {
-        dto.IsBroken = newBroken;
-        if (string.IsNullOrWhiteSpace(dto.XXLetterGrade) && !newBroken && !_currentMix.UsesLegacyScoring())
+        return sort switch
         {
-            dto.XXLetterGrade = XXLetterGrade.A.ToString();
-        }
-        await UpdateBest(dto);
+            ChartSearchSort.Name => false,
+            ChartSearchSort.Duration => false,
+            ChartSearchSort.DebutEra => false,
+            _ => true
+        };
     }
-    private async Task SetLetter(BestAttemptDto dto, string newLetterGrade)
+
+    private async Task GoToPage(int page)
     {
-        dto.XXLetterGrade = newLetterGrade;
-        if (string.IsNullOrWhiteSpace(newLetterGrade) && !dto.IsBroken)
-        {
-            dto.IsBroken = true;
-        }
-        await UpdateBest(dto);
+        _pageNumber = page;
+        await ApplyChange(resetPage: false);
     }
-    private async Task UpdateBest(BestAttemptDto dto)
+
+    // ---- display helpers ------------------------------------------------------------
+
+    internal static string SortName(ChartSearchSort sort)
     {
-        var chartType = Enum.Parse<ChartType>(dto.ChartType);
-        if (_currentMix.UsesLegacyScoring())
+        return sort switch
         {
-            XXLetterGrade? letterGrade = Enum.TryParse<XXLetterGrade>(dto.XXLetterGrade, out var grade) ? grade : null;
+            ChartSearchSort.Level => "Level",
+            ChartSearchSort.ScoringLevel => "Scoring level",
+            ChartSearchSort.Popularity => "Popularity",
+            ChartSearchSort.PassDifficulty => "Pass Difficulty",
+            ChartSearchSort.DebutEra => "Newest content",
+            ChartSearchSort.Name => "Name",
+            ChartSearchSort.Bpm => "BPM",
+            ChartSearchSort.Nps => "NPS",
+            ChartSearchSort.Duration => "Duration",
+            ChartSearchSort.MyGrade => "My grade",
+            ChartSearchSort.MyRecent => "My recent",
+            _ => sort.ToString()
+        };
+    }
 
-            try
-            {
-                await Mediator.Send(new UpdateXXBestAttemptCommand(dto.ChartId, letterGrade, dto.IsBroken, dto.Score, Mix: _currentMix));
+    private static string ScoreStateName(ChartScoreStateFilter state)
+    {
+        return state switch
+        {
+            ChartScoreStateFilter.Unplayed => "Unplayed",
+            ChartScoreStateFilter.Played => "Played",
+            ChartScoreStateFilter.Passed => "Passed",
+            ChartScoreStateFilter.Failed => "Failed",
+            _ => state.ToString()
+        };
+    }
 
-                dto.RecordedOn = letterGrade == null ? null : DateTimeOffset.Now;
+    /// <summary>The active sort's value, printed on every card — the auto-surface rule.</summary>
+    private string? LeadFact(ChartSearchResult result)
+    {
+        return _sort switch
+        {
+            ChartSearchSort.ScoringLevel when result.Chart.Mix.UsesLegacyScoring() =>
+                result.CommunityVoteRating == null ? null : $"{L["Community Vote"]} {result.CommunityVoteRating.Value:0.0}",
+            ChartSearchSort.ScoringLevel =>
+                result.ScoringLevel == null ? null : $"{L["Scoring level"]} {result.ScoringLevel.Value:0.0}",
+            ChartSearchSort.DebutEra => $"{L["Debut"]}: {result.DebutMix.GetName()}",
+            ChartSearchSort.MyRecent when result.My?.RecordedOn != null =>
+                result.My.RecordedOn.Value.ToString("yyyy-MM-dd"),
+            _ => null
+        };
+    }
 
-                var chartName = $"{dto.SongName} {DifficultyLevel.ToShorthand(chartType, dto.Level)}";
+    // ---- saved lists ----------------------------------------------------------------
 
-                Snackbar.Add(letterGrade == null ? $"Removed score for {chartName}" : $"Recorded {(dto.IsBroken ? "Broken" : "")} {letterGrade} for {chartName}", Severity.Success);
-            }
-            catch (Exception e)
-            {
-                Logger.LogError(e,$"There was an error while recording a score");
-                Snackbar.Add("There was an error while recording the score", Severity.Error);
-            }
+    private async Task ToggleFavorite(Guid chartId)
+    {
+        if (_favoriteCharts.Contains(chartId))
+        {
+            await Mediator.Send(new RemoveChartFromListCommand(ChartListType.Favorite, chartId));
+            _favoriteCharts.Remove(chartId);
+            Snackbar.Add(L["Removed from Favorites!"].Value, Severity.Success);
         }
         else
         {
-            try
-            {
-                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(dto.ChartId, dto.IsBroken, dto.Score, dto.PhoenixPlate, Mix: _currentMix));
-                dto.RecordedOn = DateTimeOffset.Now;
-                
-
-                var chartName = $"{dto.SongName} {DifficultyLevel.ToShorthand(chartType, dto.Level)}";
-                var grade = dto.PhoenixLetterGrade?.GetName()+" " ?? "";
-                Snackbar.Add($"Recorded {(dto.IsBroken ? "Broken" : "Passing")} {grade}for {chartName}", Severity.Success);
-            }
-            catch (Exception e)
-            {
-                Logger.LogError(e,$"There was an error while recording a score");
-                Snackbar.Add("There was an error while recording the score", Severity.Error);
-            }
+            await Mediator.Send(new SaveChartToListCommand(ChartListType.Favorite, chartId));
+            _favoriteCharts.Add(chartId);
+            Snackbar.Add(L["Added to Favorites!"].Value, Severity.Success);
         }
-
     }
 
-    private bool FilterStatus(FilterEnum filter)
+    // ---- quick record ---------------------------------------------------------------
+
+    private bool _quickRecordOpen;
+    private ChartSearchResult? _quickRecordTarget;
+
+    private void OpenQuickRecord(ChartSearchResult target)
     {
-        var settingName = FilterSettingName(filter);
-        return _uiSettings.ContainsKey(settingName) && _uiSettings[settingName] == true.ToString();
+        _quickRecordTarget = target;
+        _quickRecordOpen = true;
     }
 
-    private async Task ToggleFilter(FilterEnum filter, bool? newState=null)
+    private void OnQuickRecordSaved(RecordScoreForm.Result result)
     {
-        var settingName = FilterSettingName(filter);
-        _uiSettings[settingName] =newState?.ToString()?? (_uiSettings[settingName] == false.ToString()).ToString();
-        if (CurrentUser.IsLoggedIn)
+        var target = _quickRecordTarget;
+        if (target == null) return;
+
+        // The card's overlay updates in place — no refetch; the search projection catches
+        // up on the next load.
+        var my = new ChartSearchMyState(
+            result.PhoenixScore == null ? null : (int)result.PhoenixScore.Value,
+            result.PhoenixGrade, result.Plate, result.LegacyGrade, result.LegacyScore, result.IsBroken,
+            !result.IsBroken, Clock.Now);
+        _results = _results
+            .Select(r => r.Chart.Id == target.Chart.Id ? r with { My = my } : r)
+            .ToList();
+        Snackbar.Add(L["Recorded {0}", $"{target.Chart.Song.Name} {target.Chart.DifficultyDisplay}"].Value,
+            Severity.Success);
+    }
+
+    private async Task ToggleToDo(Guid chartId)
+    {
+        if (_todoCharts.Contains(chartId))
         {
-            await Mediator.Send(new SaveUserUiSettingCommand(settingName, _uiSettings[settingName]));
+            await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
+            _todoCharts.Remove(chartId);
+            Snackbar.Add(L["Removed from ToDo List!"].Value, Severity.Success);
         }
-    }
-
-    private string FilterSettingName(FilterEnum filter) => $"Charts__Filter__{filter}";
-    private bool ColumnStatus(ColumnEnum column)
-    {
-        
-        var settingName = ColumnSettingName(column);
-        return _uiSettings.ContainsKey(settingName) && _uiSettings[settingName] == true.ToString();
-    }
-    private async Task ToggleColumn(ColumnEnum column)
-    {
-        var settingName = ColumnSettingName(column);
-        
-        _uiSettings[settingName] = (_uiSettings[settingName] == false.ToString()).ToString();
-
-        if (CurrentUser.IsLoggedIn)
+        else
         {
-            await Mediator.Send(new SaveUserUiSettingCommand(settingName, _uiSettings[settingName]));
+            await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
+            _todoCharts.Add(chartId);
+            Snackbar.Add(L["Added to ToDo List!"].Value, Severity.Success);
         }
-    }
-    private static string ColumnSettingName(ColumnEnum column) => $"Charts__Column__{column.ToString()}";
-    private static readonly ISet<FilterEnum> DefaultFilters = new HashSet<FilterEnum>(new[] { FilterEnum.Difficulty, FilterEnum.ChartType });
-    private static readonly ISet<ColumnEnum> DefaultLoggedInColumns = new HashSet<ColumnEnum>(new[] { ColumnEnum.Difficulty, ColumnEnum.SongImage, ColumnEnum.Grade, ColumnEnum.Broken, ColumnEnum.Video, ColumnEnum.Actions });
-
-    private static readonly ISet<ColumnEnum> DefaultNotLoggedInColumns = new HashSet<ColumnEnum>(new[] { ColumnEnum.Difficulty, ColumnEnum.Video, ColumnEnum.SongImage });
-    private static readonly ISet<ColumnEnum> DefaultViewingOthersColumns = new HashSet<ColumnEnum>(DefaultNotLoggedInColumns.Concat(new[] { ColumnEnum.Grade, ColumnEnum.Broken }));
-    private enum FilterEnum
-    {
-        Difficulty,
-        ChartType,
-        SongName,
-        SongType,
-        SongArtist,
-        ScoreState,
-        SavedCharts
-    }
-    private enum ColumnEnum
-    {
-        Difficulty,
-        SongImage,
-        SongName,
-        SongArtist,
-        SongDuration,
-        Grade,
-        Broken,
-        Score,
-        RecordedOn,
-        Actions,
-        Video,
-        Plate,
-        Overview
-    }
-    private enum ScoreState
-    {
-        Ungraded,
-        NotPassed,
-        Passed,
-        Broken
     }
 }
