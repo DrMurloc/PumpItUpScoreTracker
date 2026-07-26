@@ -116,6 +116,12 @@ public static class PhoenixTitleList
         new PhoenixBossBreakerTitle("The O.B.G", "Turkey March", ChartType.Single, 12, false),
         new PhoenixBossBreakerTitle("The 2nd", "Extravaganza", ChartType.Single, 11, false),
         new PhoenixBossBreakerTitle("The 1st", "Another Truth", ChartType.Single, 6, false),
+        // The plate titles stay site-detected — no CompletionRequired, no CompletionProgress.
+        // They look computable, since every imported record carries its plate and "count the
+        // charts at PG" is right there, but that is not what the game counts: the in-game rule
+        // is considerably more convoluted than a plate threshold and cannot be reproduced
+        // accurately (owner, 2026-07-26). The descriptions below are the official page's
+        // shorthand, not a specification.
         new PhoenixBasicTitle("PERFECT GAMER (Platinum)", "3000+ PGs", "Plates", "PERFECT GAMER", 4),
         new PhoenixBasicTitle("PERFECT GAMER (Gold)", "1000+ PGs", "Plates", "PERFECT GAMER", 3),
         new PhoenixBasicTitle("PERFECT GAMER (Silver)", "500+ PGs", "Plates", "PERFECT GAMER", 2),

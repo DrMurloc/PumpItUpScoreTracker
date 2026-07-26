@@ -74,8 +74,9 @@ data and a rename would silently collapse a rail.
 ## Officially-awarded titles
 
 A title with `CompletionRequired == 0` — every `PhoenixBasicTitle`, which is 77 of Phoenix's 213
-and 66 of Phoenix 2's 272 — has no formula behind it. Plate counts, play counts and step-artist
-plays are things piuscores never sees; Phoenix 2's CO-OP rating formula is still unknown.
+and 66 of Phoenix 2's 272 — has no formula behind it. Play counts and step-artist plays are things
+piuscores never sees at all; Phoenix 2's CO-OP rating formula is still unknown; and the plate
+titles do not count what they appear to (see below).
 
 These **never show partial progress** — the old page drew them as 0% of a requirement that does
 not exist. A dashed edge is the only mark they carry on the page itself; the drawer says the rest
@@ -85,8 +86,11 @@ the drawer already explains.)
 The marking follows the model, not the name: Phoenix's `[X] EXPERT` capstones are basic titles
 (official-only), while Phoenix 2 made the same titles `Phoenix2TitleSetTitle` and computes them.
 
-> Plate counts are the one group that is officially-awarded but *genuinely computable* — every
-> imported record carries its plate. Left as-is to match shipped behaviour; a candidate follow-up.
+> **The Phoenix plate titles are not a follow-up.** They look computable — every imported record
+> carries its plate, so "count the charts at UG or better" is right there — but that is not what
+> the game counts. The in-game rule is considerably more convoluted than a plate threshold, and
+> the owner's call (2026-07-26) is that we cannot reproduce it accurately. They stay
+> official-import-only. Do not offer to compute them.
 
 ## Rarity
 
