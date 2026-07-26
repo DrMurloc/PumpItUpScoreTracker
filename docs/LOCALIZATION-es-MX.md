@@ -68,7 +68,7 @@ These have at least one existing translation in `App.es-MX.resx`. New translatio
 | Save Scores | Guardar puntajes | |
 | Submit | (untranslated stub) | Existing entry is the English string `Submit`. Translate as `Enviar` when next touched. |
 | Text View | (untranslated stub) | Existing entry is the English string `Text View`. Translate as `Vista de texto`. |
-| Title (in-game title award) | Título | "Title Progress" → `Progreso de títulos`; "Titles" → `Títulos`. |
+| Title (in-game title award) | Título | "Title progress" → `Progreso de títulos`; "Titles" → `Títulos`. |
 | To Do | Cosas que hacer | Literal "things to do." Used compositionally: `Agregar a Cosas que hacer`, `Borrar de la lista de Cosas que hacer`. Alternative `Pendientes` (matches pt-BR) is more idiomatic and shorter; consider switching in a future cleanup. |
 | Tools | Herramientas | |
 | Total Count | Total | `Count` left implicit. |

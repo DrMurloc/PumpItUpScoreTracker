@@ -78,7 +78,7 @@ These have at least one existing translation in `App.ja-JP.resx`. New translatio
 | Stats / Statistics | 統計 | "Player Stats" → 進捗中の譜面 (note: nabulator interpreted this as in-progress charts, not literal stats — see Known issues). "Game Stats" → ゲーム統計. |
 | Submit | 登録 | Also used for "Submission". |
 | Tag(s) | タグ | |
-| Title (in-game title award) | タイトル | "Title Progress" → タイトル進捗, "Titles" → タイトル. |
+| Title (in-game title award) | タイトル | "Title progress" → タイトル進捗, "Titles" → タイトル. |
 | To Do | やること | Compounds use やることリスト. |
 | Tools | ツール | Also "this tool" mid-prose: このツール. |
 | Total | 総計 | |

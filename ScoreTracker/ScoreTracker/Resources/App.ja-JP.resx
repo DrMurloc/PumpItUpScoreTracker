@@ -417,9 +417,6 @@
   <data name="Tier Lists" xml:space="preserve">
     <value>ティアリスト</value>
   </data>
-  <data name="Title Progress" xml:space="preserve">
-    <value>タイトル進捗</value>
-  </data>
   <data name="Titles" xml:space="preserve">
     <value>タイトル</value>
   </data>
@@ -1881,15 +1878,6 @@
   <data name="Score Distribution By Player Level" xml:space="preserve">
 	  <value>プレーヤーレベル別スコア分布</value>
   </data>
-  <data name="Scores by Competitive Level" xml:space="preserve">
-	  <value>競技レベル別スコア</value>
-  </data>
-  <data name="Passes by Competitive Level" xml:space="preserve">
-	  <value>競技レベル別クリア</value>
-  </data>
-  <data name="Chart Leaderboard" xml:space="preserve">
-	  <value>譜面ランキング</value>
-  </data>
   <data name="Content Lock" xml:space="preserve">
 	  <value>コンテンツロック</value>
   </data>
@@ -2411,9 +2399,6 @@
   </data>
   <data name="Scores, vs your level" xml:space="preserve">
     <value>スコア（同レベル帯比較）</value>
-  </data>
-  <data name="Weekly charts" xml:space="preserve">
-    <value>ウィークリーチャート</value>
   </data>
   <data name="weeks. No misses." xml:space="preserve">
     <value>週連続。皆勤。</value>
@@ -3014,9 +2999,6 @@
   <data name="Players Like You" xml:space="preserve">
     <value>あなたに近いプレイヤー</value>
   </data>
-  <data name="Players like you" xml:space="preserve">
-    <value>あなたに近いプレイヤー</value>
-  </data>
   <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
     <value>競技レベルが±1以内のプレイヤー — レベルが近いほど、そしてフォルダ評価があなたと一致するほど重く数えられます。</value>
   </data>
@@ -3413,9 +3395,6 @@
   <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
     <value>新しいバージョンが来ても、ここでは何もリセットされません。記録したスコアはすべて残ります — 振り返り、比較し、積み上げるために。{0} バージョンの記録が、1999年から今日まで並んでいます。</value>
   </data>
-  <data name="today" xml:space="preserve">
-    <value>現在</value>
-  </data>
   <data name="Private by default" xml:space="preserve">
     <value>デフォルトで非公開</value>
   </data>
@@ -3557,9 +3536,6 @@
   <data name="{0} days old" xml:space="preserve">
     <value>{0}日前</value>
   </data>
-  <data name="Scoring level" xml:space="preserve">
-    <value>スコアリングレベル</value>
-  </data>
   <data name="± levels" xml:space="preserve">
     <value>±レベル</value>
   </data>
@@ -3622,9 +3598,6 @@
   </data>
   <data name="only {0} hold it" xml:space="preserve">
     <value>{0} のみ保持</value>
-  </data>
-  <data name="completed" xml:space="preserve">
-    <value>達成</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>たった今</value>
@@ -3721,9 +3694,6 @@
   </data>
   <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
     <value>あなたのPumbilityと競技レベル、そして最も近いライバル。</value>
-  </data>
-  <data name="Pumbility" xml:space="preserve">
-    <value>Pumbility</value>
   </data>
   <data name="Match players on" xml:space="preserve">
     <value>プレイヤーの一致基準</value>
@@ -4064,9 +4034,6 @@
   <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
     <value>これはゼロ知識ではありません。ログインは私たちのサーバーで実行されるため、あなたがインポートする瞬間には技術的には認証情報を復号できます。私たちはそれを記録も保持もしませんが、手動インポートのたびに既に持っているのと同じアクセスを、あなたは私たちに委ねていることになります。</value>
   </data>
-  <data name="Import scores" xml:space="preserve">
-    <value>スコアをインポート</value>
-  </data>
   <data name="Creating Your Home Page" xml:space="preserve">
     <value>ホームページを作成中</value>
   </data>
@@ -4199,12 +4166,6 @@
   <data name="No scores recorded yet — be the first." xml:space="preserve">
     <value>まだスコアがありません——最初の1人になりましょう。</value>
   </data>
-  <data name="your communities" xml:space="preserve">
-    <value>自分のコミュニティ</value>
-  </data>
-  <data name="you" xml:space="preserve">
-    <value>自分</value>
-  </data>
   <data name="Show more of {0} scores" xml:space="preserve">
     <value>全{0}件のスコアをもっと見る</value>
   </data>
@@ -4219,9 +4180,6 @@
   </data>
   <data name="Debuted in" xml:space="preserve">
     <value>初登場バージョン</value>
-  </data>
-  <data name="Pass rate" xml:space="preserve">
-    <value>クリア率</value>
   </data>
   <data name="The evidence" xml:space="preserve">
     <value>根拠データ</value>
@@ -4469,9 +4427,6 @@
   <data name="Chart Board #1s" xml:space="preserve">
     <value>譜面ボード1位</value>
   </data>
-  <data name="Chart Boards" xml:space="preserve">
-    <value>譜面ボード</value>
-  </data>
   <data name="Chart board placements" xml:space="preserve">
     <value>譜面ボード順位</value>
   </data>
@@ -4574,9 +4529,6 @@
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITYの推移</value>
   </data>
-  <data name="rank" xml:space="preserve">
-    <value>ランキング</value>
-  </data>
   <data name="Rank" xml:space="preserve">
     <value>ランキング</value>
   </data>
@@ -4603,9 +4555,6 @@
   </data>
   <data name="Seed baseline from legacy tables" xml:space="preserve">
     <value>旧テーブルからベースラインを作成</value>
-  </data>
-  <data name="skipped" xml:space="preserve">
-    <value>スキップ</value>
   </data>
   <data name="Songs" xml:space="preserve">
     <value>曲</value>
@@ -4856,9 +4805,6 @@
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0}・レベル {1}–{2}・{3}</value>
   </data>
-  <data name="Co-op" xml:space="preserve">
-    <value>Co-op</value>
-  </data>
   <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
     <value>「{0}」という保存済みプリセットはありません。</value>
   </data>
@@ -4961,9 +4907,6 @@
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>このチャンネルの登録内容を表示</value>
   </data>
-  <data name="Song name" xml:space="preserve">
-    <value>曲名</value>
-  </data>
   <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
     <value>バージョン（既定は Phoenix 2）</value>
   </data>
@@ -4990,9 +4933,6 @@
   </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>取り組む目標（既定は称号ハント）</value>
-  </data>
-  <data name="Community name" xml:space="preserve">
-    <value>コミュニティ名</value>
   </data>
   <data name="Invite code (private communities only)" xml:space="preserve">
     <value>招待コード（非公開コミュニティのみ）</value>
@@ -5116,12 +5056,6 @@
   </data>
   <data name="PIU Scores official mirror" xml:space="preserve">
     <value>PIU Scores 公式ミラー</value>
-  </data>
-  <data name="This week" xml:space="preserve">
-    <value>今週</value>
-  </data>
-  <data name="What it takes" xml:space="preserve">
-    <value>必要条件</value>
   </data>
   <data name="a chart" xml:space="preserve">
     <value>譜面</value>
@@ -5417,9 +5351,6 @@
   <data name="Highest Clear" xml:space="preserve">
     <value>最高クリア</value>
   </data>
-  <data name="Highest Level" xml:space="preserve">
-    <value>最高レベル</value>
-  </data>
   <data name="I understand — join" xml:space="preserve">
     <value>理解しました — 参加する</value>
   </data>
@@ -5506,9 +5437,6 @@
   </data>
   <data name="Show Regional Guests" xml:space="preserve">
     <value>地域ゲスト表示</value>
-  </data>
-  <data name="Sign In" xml:space="preserve">
-    <value>ログイン</value>
   </data>
   <data name="Sign in to accept this invite." xml:space="preserve">
     <value>招待を受けるにはログインしてください。</value>
@@ -5609,9 +5537,6 @@
   <data name="Charts Not Yet Featured" xml:space="preserve">
     <value>まだ出題されていない譜面</value>
   </data>
-  <data name="Charts not yet featured" xml:space="preserve">
-    <value>まだ出題されていない譜面</value>
-  </data>
   <data name="Co-op earns no PUMBILITY; the Co-Op view ranks raw score." xml:space="preserve">
     <value>CO-OPはPUMBILITYになりません。Co-Op表示は素点で順位付けします。</value>
   </data>
@@ -5687,17 +5612,11 @@
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>月内の各週で上位4件のスコアが対象です。</value>
   </data>
-  <data name="current" xml:space="preserve">
-    <value>今週</value>
-  </data>
   <data name="last 14 days" xml:space="preserve">
     <value>過去14日</value>
   </data>
   <data name="resets in {0}" xml:space="preserve">
     <value>{0}後にリセット</value>
-  </data>
-  <data name="show all {0}" xml:space="preserve">
-    <value>すべて{0}件を表示</value>
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>おすすめのみ表示</value>
@@ -5848,9 +5767,6 @@
   </data>
   <data name="Commands — anyone in the server can use these" xml:space="preserve">
     <value>コマンド — サーバーの誰でも使えます</value>
-  </data>
-  <data name="calculate a Phoenix score from a result screen" xml:space="preserve">
-    <value>リザルト画面からPhoenixスコアを計算</value>
   </data>
   <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
     <value>譜面のステータスと類似譜面を表示、ページへのリンク付き</value>

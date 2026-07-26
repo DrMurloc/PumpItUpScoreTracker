@@ -97,7 +97,7 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Song | Música | "Song Name" → "Nome da música"; "Song Duration" → "Duração da música". |
 | Song Artist | Artista da música | |
 | Song Type | Tipo de música | |
-| Title (in-game title award) | Título | "Title Progress" → "Progresso do título"; "Titles" → "Títulos". |
+| Title (in-game title award) | Título | "Title progress" → "Progresso do título"; "Titles" → "Títulos". |
 | To Do | Pendentes | "Add to ToDo" → "Adicionar à lista de tarefas"; "Show Only ToDo Charts" → `Mostrar somente charts "Pendentes"`. |
 | Favorites | Favoritos | "Add to Favorites" → "Adicionar aos favoritos". |
 | Tier Lists | Faixas de dificuldade | |

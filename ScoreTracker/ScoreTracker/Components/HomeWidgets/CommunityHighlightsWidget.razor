@@ -224,7 +224,7 @@ else
 
     private string TitleSuffix(SignificantWin win) => win.Kind == WinKind.RareTitle && win.RarityShare != null
         ? $"· {L["only {0} hold it", Pct(win.RarityShare)]}"
-        : L["completed"];
+        : L["Completed"];
 
     private static string Pct(double? share) =>
         share == null ? "" : (share.Value * 100).ToString("0.#", CultureInfo.InvariantCulture) + "%";

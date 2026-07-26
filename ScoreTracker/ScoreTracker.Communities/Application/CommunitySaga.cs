@@ -367,7 +367,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         AddNotableRows(blocks, inputs, culture, ref remaining, shown);
         AddCompactBucket(blocks, inputs.MoreScores, inputs, _localizer.Get(culture, "More scores"),
             ref remaining, shown);
-        AddCompactBucket(blocks, inputs.CoOpScores, inputs, _localizer.Get(culture, "Co-op"),
+        AddCompactBucket(blocks, inputs.CoOpScores, inputs, _localizer.Get(culture, "Co-Op"),
             ref remaining, shown);
         AddOverflowLine(blocks, inputs, culture, shown);
 

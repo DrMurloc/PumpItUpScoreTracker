@@ -22,7 +22,7 @@
     {
         @* Both states ship; :has() on the grid's class decides which shows (M13). *@
         <span class="challenge-filter-note">
-            <span class="when-filtered">@L["showing suggested"] <a data-challenge-showall="">@L["show all {0}", Summaries.Count]</a></span>
+            <span class="when-filtered">@L["showing suggested"] <a data-challenge-showall="">@L["Show all {0}", Summaries.Count]</a></span>
             <span class="when-all"><a data-challenge-showall="">@L["show suggested only"]</a></span>
         </span>
     }
@@ -80,7 +80,7 @@ else
                             <span class="who">
                                 @if (IsMine(row))
                                 {
-                                    @L["you"]
+                                    @L["You"]
                                 }
                                 else if (row.Player != null)
                                 {
@@ -121,7 +121,7 @@ else
     </div>
 }
 
-<p class="challenge-poollink"><a href="@PoolHref">@L["Charts not yet featured"]</a></p>
+<p class="challenge-poollink"><a href="@PoolHref">@L["Charts Not Yet Featured"]</a></p>
 
 @code {
     [Parameter] public IReadOnlyList<WeeklyBoardChartSummary> Summaries { get; set; } = Array.Empty<WeeklyBoardChartSummary>();

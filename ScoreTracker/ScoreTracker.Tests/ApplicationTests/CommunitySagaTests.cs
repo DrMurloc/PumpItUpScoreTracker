@@ -896,7 +896,7 @@ public sealed class CommunitySagaTests
         // labelled bucket, the remainder compressing with a CO-OP count; header still marks CO-OP.
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => !msgs.Single().Blocks.OfType<RichBotSection>().Any()
-                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("-# Co-op")
+                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("-# Co-Op")
                     && t.Markdown.Split('\n').Count(l => l.Contains("#DIFFICULTY|")) == 5)
                 && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("+2 more: CO-OP ×2"))
                 && msgs.Single().Header!.Markdown.Contains("CO-OP")),

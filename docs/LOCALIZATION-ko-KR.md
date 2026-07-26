@@ -65,7 +65,7 @@ These have at least one existing translation in `App.ko-KR.resx`. New translatio
 | Show | 표시 | "Show Score Distribution" → 점수 분포 표시. Suffix pattern. |
 | Show Only X | X만 보기 | "Show Only ToDo Charts" → 목표 채보만 보기. Particle `만` ("only") + 보기 ("view"). |
 | Submit | 제출 | "Submission Page" → 제출 페이지. |
-| Title (in-game title award) | 칭호 | "Title Progress" → 칭호 진행상태, "Titles" → 칭호. |
+| Title (in-game title award) | 칭호 | "Title progress" → 칭호 진행상태, "Titles" → 칭호. |
 | To Do | 목표 | Rendered as "goal." "Add to ToDo" → 목표 목록에 추가; "Show Only ToDo Charts" → 목표 채보만 보기. |
 | Tools | 도구 | |
 | Total Count | 총 | Rendered as bare 총 ("total"); the `Count` is implicit. |

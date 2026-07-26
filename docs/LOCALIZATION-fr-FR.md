@@ -107,7 +107,7 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 | Tag / Tags | Tag / Tags | Loanwords. |
 | Text View | Vue Textuelle | |
 | Tier Lists | Tier Lists | Untranslated. |
-| Title Progress | Progression des titres | |
+| Title progress | Progression des titres | |
 | Titles | Titres | |
 | To Do | À Faire | "ToDo List" / "ToDo Charts" stay English in compounds, but bare "To Do" → `À Faire`. |
 | To Leaderboard | Vers le Leaderboard | Nav label pointing at the leaderboard page. |
@@ -178,7 +178,7 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 | Skill | Compétence | |
 | Stage Pass | Stage Pass | Untranslated. |
 | Suggested Chart | Chart Suggérée | |
-| Title (in-game title award) | Titre | "Title Progress" → "Progression des titres"; "Titles" → "Titres". |
+| Title (in-game title award) | Titre | "Title progress" → "Progression des titres"; "Titles" → "Titres". |
 | Favorites | Favoris | "Add to Favorites" → "Ajouter aux favoris". |
 | Progress Charts | Statistiques Joueur | nabulator-style interpretive rendering ("player statistics" rather than "progress charts"). Title Case. Loses the literal meaning — see Known issues. |
 | Player Stats | (covered by Progress Charts) | |

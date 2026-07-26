@@ -161,7 +161,7 @@ Prescribed ahead of the first batch and applied by it — these are now in force
 | Suggested Chart | Chart suggerito | Masculine agreement per Charts gender decision below. |
 | Tag / Tags | Tag / Tag | Loanword, masculine. Italian loanwords are invariable in plural — don't write `Tags`. |
 | Text View | Vista testo | Or `Visualizzazione testo`; pick the shorter for a column header. |
-| Title | Titolo | "Title Progress" → `Progresso dei titoli`; "Titles" → `Titoli`. |
+| Title | Titolo | "Title progress" → `Progresso dei titoli`; "Titles" → `Titoli`. |
 | TLDR | TLDR | Acronym preserved (matches all other locales). |
 | To Do | Da fare | Bare "To Do" → `Da fare`. Compounds keep `ToDo` English (`ToDo List`, `ToDo Charts`). |
 | Tools | Strumenti | Masculine plural. |
@@ -299,7 +299,7 @@ Prescribed ahead of the first batch and applied by it — these are now in force
 | Top 50 X | Top 50 {0} | |
 | What Should I Play (?) | Cosa dovrei giocare(?) | Both with-and-without-`?` source variants present. |
 | XX Progress | Progresso XX | No article (matches pt-BR/fr-FR/es-MX pattern, sidesteps gender ambiguity). |
-| Title (in-game title award) | Titolo | "Title Progress" → `Progresso dei titoli`; "Titles" → `Titoli`. |
+| Title (in-game title award) | Titolo | "Title progress" → `Progresso dei titoli`; "Titles" → `Titoli`. |
 | Favorites | Preferiti | (Cross-reference.) |
 
 ### Game-mechanic vocabulary
