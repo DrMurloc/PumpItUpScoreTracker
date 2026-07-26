@@ -312,9 +312,6 @@
   <data name="Progress" xml:space="preserve">
     <value>진행상황</value>
   </data>
-  <data name="Progress Charts" xml:space="preserve">
-    <value>진행중인 채보</value>
-  </data>
   <data name="Public" xml:space="preserve">
     <value>공개</value>
   </data>
@@ -753,12 +750,6 @@
   </data>
   <data name="Removed" xml:space="preserve">
     <value>제거됨</value>
-  </data>
-  <data name="Step Artists" xml:space="preserve">
-    <value>스텝 아티스트</value>
-  </data>
-  <data name="Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists." xml:space="preserve">
-    <value>참고: 이 목록은 정리 중이며, 일부 채보는 스텝 아티스트가 누락되거나 잘못된 아티스트가 표시될 수 있습니다.</value>
   </data>
   <data name="PIU Life Calculator" xml:space="preserve">
     <value>PIU 라이프 계산기</value>
@@ -1201,12 +1192,6 @@
   <data name="Best Attempts" xml:space="preserve">
     <value>최고 기록</value>
   </data>
-  <data name="XX Progress" xml:space="preserve">
-    <value>XX 진행상황</value>
-  </data>
-  <data name="Share Your Progress Page" xml:space="preserve">
-    <value>본인 진행상황 페이지 공유</value>
-  </data>
   <data name="Overview" xml:space="preserve">
     <value>개요</value>
   </data>
@@ -1228,18 +1213,6 @@
   <data name="Unpassed" xml:space="preserve">
     <value>미클리어</value>
   </data>
-  <data name="Overall Letters" xml:space="preserve">
-    <value>전체 랭크</value>
-  </data>
-  <data name="Overall Passes" xml:space="preserve">
-    <value>전체 클리어</value>
-  </data>
-  <data name="Difficulty Letters" xml:space="preserve">
-    <value>난이도별 랭크</value>
-  </data>
-  <data name="Difficulty Passes" xml:space="preserve">
-    <value>난이도별 클리어</value>
-  </data>
   <data name="Share Url" xml:space="preserve">
     <value>공유 URL</value>
   </data>
@@ -1251,9 +1224,6 @@
   </data>
   <data name="Pass" xml:space="preserve">
     <value>클리어</value>
-  </data>
-  <data name="Difficulty Progress" xml:space="preserve">
-    <value>난이도 진행</value>
   </data>
   <data name="Passes" xml:space="preserve">
     <value>클리어 수</value>
@@ -1270,14 +1240,8 @@
   <data name="Avg Plate" xml:space="preserve">
     <value>평균 플레이트</value>
   </data>
-  <data name="Passes By Level" xml:space="preserve">
-    <value>레벨별 클리어</value>
-  </data>
   <data name="Remaining" xml:space="preserve">
     <value>남음</value>
-  </data>
-  <data name="Score Distribution Lines" xml:space="preserve">
-    <value>점수 분포 선</value>
   </data>
   <data name="Score Distribution" xml:space="preserve">
     <value>점수 분포</value>
