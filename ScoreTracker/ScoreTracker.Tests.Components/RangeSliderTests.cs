@@ -4,12 +4,12 @@ using Xunit;
 
 namespace ScoreTracker.Tests.Components;
 
-public sealed class LevelRangeSliderTests : ComponentTestBase
+public sealed class RangeSliderTests : ComponentTestBase
 {
-    private IRenderedComponent<LevelRangeSlider> Render(int min = 10, int max = 26, int valueMin = 16,
+    private IRenderedComponent<RangeSlider> Render(int min = 10, int max = 26, int valueMin = 16,
         int valueMax = 18, bool disabled = false, Action<int>? onMin = null, Action<int>? onMax = null)
     {
-        return RenderComponent<LevelRangeSlider>(p => p
+        return RenderComponent<RangeSlider>(p => p
             .Add(x => x.Label, "Singles")
             .Add(x => x.Prefix, "S")
             .Add(x => x.Min, min)
@@ -38,14 +38,32 @@ public sealed class LevelRangeSliderTests : ComponentTestBase
     }
 
     [Fact]
-    public void DraggingTheMinThumbRaisesValueMinChanged()
+    public void ReleasingTheMinThumbRaisesValueMinChanged()
     {
         int? changed = null;
         var cut = Render(onMin: v => changed = v);
 
-        cut.FindAll("input[type=range]")[0].Input("14");
+        cut.FindAll("input[type=range]")[0].Change("14");
 
         Assert.Equal(14, changed);
+    }
+
+    [Fact]
+    public void TheDragItselfMovesTheReadoutButPublishesNothing()
+    {
+        // A drag across a wide scale crosses hundreds of steps. Publishing each one re-runs
+        // whatever the caller does on change — for the SRP, the whole search — which fights
+        // the thumb. The readout still follows so the drag stays direct.
+        var published = 0;
+        var cut = Render(onMin: _ => published++);
+
+        cut.FindAll("input[type=range]")[0].Input("14");
+
+        Assert.Equal(0, published);
+        Assert.Equal("S14 – S18", cut.Find(".range-slider-value").TextContent);
+
+        cut.FindAll("input[type=range]")[0].Change("14");
+        Assert.Equal(1, published);
     }
 
     [Fact]
@@ -54,7 +72,7 @@ public sealed class LevelRangeSliderTests : ComponentTestBase
         int? minChanged = null;
         var cut = Render(onMin: v => minChanged = v);
 
-        cut.FindAll("input[type=range]")[0].Input("22");
+        cut.FindAll("input[type=range]")[0].Change("22");
 
         Assert.Equal(18, minChanged);
     }
@@ -65,7 +83,7 @@ public sealed class LevelRangeSliderTests : ComponentTestBase
         int? maxChanged = null;
         var cut = Render(onMax: v => maxChanged = v);
 
-        cut.FindAll("input[type=range]")[1].Input("12");
+        cut.FindAll("input[type=range]")[1].Change("12");
 
         Assert.Equal(16, maxChanged);
     }

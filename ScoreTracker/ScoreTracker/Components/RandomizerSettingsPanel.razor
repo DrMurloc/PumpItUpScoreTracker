@@ -55,11 +55,11 @@
                            aria-label="@L["Singles"]"></MudSwitch>
             }
         </div>
-        <LevelRangeSlider Label="@L["Singles"].ToString()" Prefix="S" Min="MinLevel" Max="MaxLevel"
+        <RangeSlider Label="@L["Singles"].ToString()" Prefix="S" Min="MinLevel" Max="MaxLevel"
                           ValueMin="SinglesRange.min" ValueMax="SinglesRange.max"
                           Disabled="@(!SinglesOn || _weightedMode)"
                           ValueMinChanged="v => SetSinglesRange(v, SinglesRange.max)"
-                          ValueMaxChanged="v => SetSinglesRange(SinglesRange.min, v)"></LevelRangeSlider>
+                          ValueMaxChanged="v => SetSinglesRange(SinglesRange.min, v)"></RangeSlider>
     </div>
 
     <div class="rand-settings-row">
@@ -74,11 +74,11 @@
                            aria-label="@L["Doubles"]"></MudSwitch>
             }
         </div>
-        <LevelRangeSlider Label="@L["Doubles"].ToString()" Prefix="D" Min="MinLevel" Max="MaxLevel"
+        <RangeSlider Label="@L["Doubles"].ToString()" Prefix="D" Min="MinLevel" Max="MaxLevel"
                           ValueMin="DoublesRange.min" ValueMax="DoublesRange.max"
                           Disabled="@(!DoublesOn || _weightedMode)"
                           ValueMinChanged="v => SetDoublesRange(v, DoublesRange.max)"
-                          ValueMaxChanged="v => SetDoublesRange(DoublesRange.min, v)"></LevelRangeSlider>
+                          ValueMaxChanged="v => SetDoublesRange(DoublesRange.min, v)"></RangeSlider>
     </div>
 
     <div class="rand-settings-row">

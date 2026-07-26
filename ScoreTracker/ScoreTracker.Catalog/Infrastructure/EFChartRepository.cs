@@ -349,6 +349,10 @@ internal sealed class EFChartRepository : IChartRepository
             SongId = songId,
             Type = type.ToString(),
             StepArtist = stepArtist,
+            // The mix a chart is created for IS its debut. Left unset this column takes its
+            // database default of Phoenix, which made every chart ever added through here
+            // claim a Phoenix origin no matter which mix it belongs to.
+            OriginalMixId = MixIds.For(mix),
             // Co-ops store the player count in Level, and readers treat the persisted
             // PlayerCount column as authoritative — it must be materialized here or the
             // chart reports a 1-player co-op.

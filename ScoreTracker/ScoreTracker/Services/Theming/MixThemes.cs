@@ -1,4 +1,5 @@
 using MudBlazor;
+using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 
@@ -230,6 +231,21 @@ public static class MixThemes
 
     private const string PlateNoneColor = "#8E24AA";
 
+    /// <summary>
+    ///     The five badge families' identity hues (owner 2026-07-26). Blue, red, purple and
+    ///     green were his; Twists took amber as the remaining hue that reads apart from all
+    ///     four. Material 700s, matching the tones the site already uses elsewhere.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<BadgeCategory, string> BadgeCategoryColors =
+        new Dictionary<BadgeCategory, string>
+        {
+            [BadgeCategory.Brackets] = "#1976D2",
+            [BadgeCategory.Twists] = "#F57C00",
+            [BadgeCategory.StaminaAndRuns] = "#D32F2F",
+            [BadgeCategory.Tech] = "#7B1FA2",
+            [BadgeCategory.DoublesTech] = "#388E3C"
+        };
+
     // Legacy slot colors: the classic song-wheel language of the pre-Exceed eras
     // (Crazy red, Freestyle green, Nightmare purple…). Deliberately NOT the difficulty
     // ramp — old-scale numbers don't translate to modern levels, and the distinct
@@ -372,6 +388,11 @@ public static class MixThemes
         // without color literals. Mix-invariant — category identity never re-hues.
         var skillCategories = string.Join("\n", Enum.GetValues<SkillCategory>().Select(c =>
             $"    --skillcat-{c.ToString().ToLowerInvariant()}: {c.GetColor()};"));
+        // The owner's five badge families (2026-07-26) — the granular piucenter vocabulary's
+        // identity colors, replacing the retired rollup buckets. Mix-invariant: a family's hue
+        // is what makes it recognisable, so it never re-hues per theme.
+        var badgeCategories = string.Join("\n", BadgeCategoryColors.Select(kv =>
+            $"    --badgecat-{kv.Key.ToString().ToLowerInvariant()}: {kv.Value};"));
         var brands = string.Join("\n", BrandColors.Select(kv =>
             $"    --brand-{kv.Key}: {kv.Value};"));
         // The difficulty-ball type vocabulary (red Single / green Double / gold Co-Op) as
@@ -402,6 +423,7 @@ public static class MixThemes
 {difficulty}
 {plates}
 {skillCategories}
+{badgeCategories}
 {brands}
 {chartTypes}
 }}";
