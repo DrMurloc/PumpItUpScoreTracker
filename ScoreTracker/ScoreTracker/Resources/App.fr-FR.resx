@@ -6002,4 +6002,100 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Réussis {0} charts avec {1} ou mieux (seulement {2} dans ce dossier)</value>
   </data>
+  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
+    <value>En supposant {0} avec un plate {1}.</value>
+  </data>
+  <data name="Boss breakers" xml:space="preserve">
+    <value>Boss breakers</value>
+  </data>
+  <data name="CO-OP" xml:space="preserve">
+    <value>CO-OP</value>
+  </data>
+  <data name="Earned" xml:space="preserve">
+    <value>Obtenus</value>
+  </data>
+  <data name="Every chart in this folder is a Perfect Game." xml:space="preserve">
+    <value>Tous les charts de ce dossier sont en Perfect Game.</value>
+  </data>
+  <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
+    <value>Tous ceux qui l'ont gardent leur profil privé.</value>
+  </data>
+  <data name="From {0}" xml:space="preserve">
+    <value>À partir de {0}</value>
+  </data>
+  <data name="How rare" xml:space="preserve">
+    <value>Rareté</value>
+  </data>
+  <data name="In progress" xml:space="preserve">
+    <value>En cours</value>
+  </data>
+  <data name="No title yet" xml:space="preserve">
+    <value>Pas encore de titre</value>
+  </data>
+  <data name="No titles match what you're looking for." xml:space="preserve">
+    <value>Aucun titre ne correspond à ta recherche.</value>
+  </data>
+  <data name="Nobody here holds this title yet." xml:space="preserve">
+    <value>Personne ici n'a encore ce titre.</value>
+  </data>
+  <data name="Not yet" xml:space="preserve">
+    <value>Pas encore</value>
+  </data>
+  <data name="One-offs" xml:space="preserve">
+    <value>Titres isolés</value>
+  </data>
+  <data name="Paragon {0}" xml:space="preserve">
+    <value>Paragon {0}</value>
+  </data>
+  <data name="Play count" xml:space="preserve">
+    <value>Parties jouées</value>
+  </data>
+  <data name="Progress tracked by the official piugame import, not by piuscores data." xml:space="preserve">
+    <value>La progression est suivie par l'import officiel piugame, pas par les données piuscores.</value>
+  </data>
+  <data name="Progression" xml:space="preserve">
+    <value>Progression</value>
+  </data>
+  <data name="Search a title, chart, or step artist" xml:space="preserve">
+    <value>Cherche un titre, un chart ou un step artist</value>
+  </data>
+  <data name="Step artists" xml:space="preserve">
+    <value>Step artists</value>
+  </data>
+  <data name="Suggested level" xml:space="preserve">
+    <value>Niveau conseillé</value>
+  </data>
+  <data name="Who has it" xml:space="preserve">
+    <value>Qui l'a</value>
+  </data>
+  <data name="Your progress" xml:space="preserve">
+    <value>Ta progression</value>
+  </data>
+  <data name="Your title" xml:space="preserve">
+    <value>Ton titre</value>
+  </data>
+  <data name="official" xml:space="preserve">
+    <value>officiel</value>
+  </data>
+  <data name="titles earned" xml:space="preserve">
+    <value>titres obtenus</value>
+  </data>
+  <data name="{0} more keep their profile private." xml:space="preserve">
+    <value>{0} autres gardent leur profil privé.</value>
+  </data>
+  <data name="{0} of {1} charts at {2}" xml:space="preserve">
+    <value>{0} charts sur {1} en {2}</value>
+  </data>
+  <data name="{0} of {1} earned" xml:space="preserve">
+    <value>{0} sur {1} obtenus</value>
+  </data>
+  <data name="{0} of {1} tracked players" xml:space="preserve">
+    <value>{0} joueurs suivis sur {1}</value>
+  </data>
+  <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
+    <value>{0} titres, et le jeu ne te montre rien de ta progression.</value>
+  </data>
+  <data name="{0} tracked here, {1} from the official import" xml:space="preserve">
+    <value>{0} suivis ici, {1} venus de l'import officiel</value>
+  </data>
 </root>
