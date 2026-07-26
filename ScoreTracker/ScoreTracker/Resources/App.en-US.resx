@@ -811,10 +811,6 @@
   <data name="Chart Compare" xml:space="preserve">
 	  <value>Chart Compare</value>
   </data>
-  <data name="Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings." xml:space="preserve">
-	  <value>Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings.</value>
-	  <comment>Double space between "FEFEMZ's" and "recordings" preserved verbatim from source.</comment>
-  </data>
   <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
 	  <value>Note that this information is not final until referenced against actual released mix.</value>
   </data>
@@ -6008,9 +6004,6 @@
   <data name="Find a chart — e.g. Iolite Sky D20" xml:space="preserve">
     <value>Find a chart — e.g. Iolite Sky D20</value>
   </data>
-  <data name="Search a song, or add a difficulty to jump straight to one chart." xml:space="preserve">
-    <value>Search a song, or add a difficulty to jump straight to one chart.</value>
-  </data>
   <data name="Re-rated" xml:space="preserve">
     <value>Re-rated</value>
   </data>
@@ -6139,5 +6132,8 @@
   </data>
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} charts were re-stepped.</value>
+  </data>
+  <data name="Only charts that changed are listed. Add a difficulty to jump straight to one." xml:space="preserve">
+    <value>Only charts that changed are listed. Add a difficulty to jump straight to one.</value>
   </data>
 </root>

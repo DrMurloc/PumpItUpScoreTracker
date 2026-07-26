@@ -738,9 +738,6 @@
   <data name="Chart Compare" xml:space="preserve">
     <value>Comparar charts</value>
   </data>
-  <data name="Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings." xml:space="preserve">
-    <value>Mil gracias a KyleTT por recopilar esta información a partir de las grabaciones de FEFEMZ.</value>
-  </data>
   <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
     <value>Ten en cuenta que esta información no es definitiva hasta contrastarla con la versión publicada.</value>
   </data>
@@ -5892,9 +5889,6 @@
   <data name="Find a chart — e.g. Iolite Sky D20" xml:space="preserve">
     <value>Busca un chart — p. ej. Iolite Sky D20</value>
   </data>
-  <data name="Search a song, or add a difficulty to jump straight to one chart." xml:space="preserve">
-    <value>Busca una canción, o añade una dificultad para ir directo a un chart.</value>
-  </data>
   <data name="Re-rated" xml:space="preserve">
     <value>Renivelados</value>
   </data>
@@ -6023,5 +6017,8 @@
   </data>
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} charts fueron repisados.</value>
+  </data>
+  <data name="Only charts that changed are listed. Add a difficulty to jump straight to one." xml:space="preserve">
+    <value>Solo aparecen los charts que cambiaron. Añade una dificultad para ir directo a uno.</value>
   </data>
 </root>

@@ -62,7 +62,9 @@
         }
         else
         {
-            <div class="mc-hint">@L["Search a song, or add a difficulty to jump straight to one chart."]</div>
+            @* Says what the field covers, so a song that returns nothing reads as an answer
+               rather than a dead end. *@
+            <div class="mc-hint">@L["Only charts that changed are listed. Add a difficulty to jump straight to one."]</div>
         }
     </div>
 
@@ -329,21 +331,38 @@
 
         var before = (await Mediator.Send(new GetChartsQuery(_from))).ToArray();
         var after = (await Mediator.Send(new GetChartsQuery(_to))).ToArray();
-        _beforeBySong = before.GroupBy(c => c.Song.Name).ToDictionary(g => g.Key, g => g.ToArray());
-        _afterBySong = after.GroupBy(c => c.Song.Name).ToDictionary(g => g.Key, g => g.ToArray());
-
-        // Both catalogs feed the search: a chart that left is only in the earlier one, and a
-        // chart that moved is findable under either its old or its new difficulty.
-        _lookupCharts = after.Concat(before).ToArray();
         _diff = await Mediator.Send(new GetMixDiffQuery(_from, _to));
+
+        // Only what the diff touched. Searching the whole catalog meant ~9,000 suggestions
+        // of which all but a few hundred resolve to "nothing changed" — and a chart that
+        // moved is offered under both its old and its new difficulty, so either one finds
+        // it. Arrivals and departures are in here too: a song that left is a thing that
+        // happened to it, and leaving it out would answer "no such song" for a song the
+        // earlier mix plainly has.
+        _lookupCharts = _diff.Rerated.Select(m => m.After)
+            .Concat(_diff.Restepped.Select(m => m.After))
+            .Concat(_diff.ArrivedSongs.SelectMany(s => s.Charts))
+            .Concat(_diff.AddedCharts)
+            .Concat(_diff.Rerated.Select(m => m.Before))
+            .Concat(_diff.Restepped.Select(m => m.Before))
+            .Concat(_diff.DepartedSongs.SelectMany(s => s.Charts))
+            .Concat(_diff.RemovedCharts)
+            .ToArray();
+
+        // Answering needs a song's whole line-up, unchanged charts included — but only for
+        // songs something can be asked about, which is exactly the songs above.
+        var asked = _lookupCharts.Select(c => c.Song.Name).ToHashSet();
+        _beforeBySong = before.Where(c => asked.Contains(c.Song.Name))
+            .GroupBy(c => c.Song.Name).ToDictionary(g => g.Key, g => g.ToArray());
+        _afterBySong = after.Where(c => asked.Contains(c.Song.Name))
+            .GroupBy(c => c.Song.Name).ToDictionary(g => g.Key, g => g.ToArray());
+
         _folder = DefaultFolder();
         _loading = false;
     }
 
     private string? NoticeFor(MixEnum from, MixEnum to)
     {
-        if (from == MixEnum.XX && to == MixEnum.Phoenix)
-            return L["Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings."];
         return to == MixEnum.Phoenix2
             ? L["Note that this information is not final until referenced against actual released mix."]
             : null;

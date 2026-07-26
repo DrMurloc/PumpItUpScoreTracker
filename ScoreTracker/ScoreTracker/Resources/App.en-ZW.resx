@@ -807,10 +807,6 @@
   <data name="Chart Compare" xml:space="preserve">
 	  <value>Mrglrgl Mrrglrgl</value>
   </data>
-  <data name="Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings." xml:space="preserve">
-	  <value>Gurgmrrr mrgl murlg mrlgrgl KyleTT mrlgrgl plglgrglmglamrogl mrglrgl glorglurg blgrl FEFEMZ's  murgblub.</value>
-	  <comment>Double space between "FEFEMZ's" and "recordings" preserved verbatim from source.</comment>
-  </data>
   <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
 	  <value>Mrrglurg rglmrgl mrglrgl glorglurg argl grrrgl mrrglub urglrgl blubbrgl grgl arglmrg grglmrglgurg mrgla.</value>
   </data>
@@ -5940,9 +5936,6 @@
   <data name="Find a chart — e.g. Iolite Sky D20" xml:space="preserve">
     <value>Mrrglrgl plglrglgrrr — mrgl Iolite Sky D20</value>
   </data>
-  <data name="Search a song, or add a difficulty to jump straight to one chart." xml:space="preserve">
-    <value>Mrrglrgl mrgllurg, urg blurb argrlglar mrgl blurb plglrglgrrr.</value>
-  </data>
   <data name="Re-rated" xml:space="preserve">
     <value>Murglgl</value>
   </data>
@@ -6071,5 +6064,8 @@
   </data>
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} plglrglgrrr murglgl blurb.</value>
+  </data>
+  <data name="Only charts that changed are listed. Add a difficulty to jump straight to one." xml:space="preserve">
+    <value>Blurb plglrglgrrr murglgl mrgl. Blurb argrlglar mrgl blurb.</value>
   </data>
 </root>

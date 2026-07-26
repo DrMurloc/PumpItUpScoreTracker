@@ -394,10 +394,10 @@ public sealed class MixChangesPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheSearchIsFedBothCatalogsAndLabelsEachSuggestionWithItsMix()
+    public void TheSearchOffersAMovedChartUnderBothItsOldAndNewDifficulty()
     {
-        // A departed song is only in the earlier catalog, and a rerated chart appears once
-        // per mix under different difficulties — the mix suffix is what tells them apart.
+        // A rerated chart appears once per mix under different difficulties, so either name
+        // finds it — and the mix suffix is what tells the two entries apart.
         SetupIoliteSky();
 
         var page = RenderPage();
@@ -407,5 +407,53 @@ public sealed class MixChangesPageTests : ComponentTestBase
         var names = selector.Instance.Charts!.Select(c => $"{c.Song.Name} {c.DifficultyString} {c.Mix}").ToArray();
         Assert.Contains("Iolite Sky D20 Phoenix", names);
         Assert.Contains("Iolite Sky D21 Phoenix2", names);
+    }
+
+    [Fact]
+    public void TheSearchLeavesOutChartsNothingHappenedTo()
+    {
+        // Iolite Sky S16 held its level in both mixes. Offering it would be ~9,000
+        // suggestions of "nothing changed" for a page that cannot say anything about them.
+        SetupIoliteSky();
+
+        var page = RenderPage();
+        var charts = page.FindComponent<ChartSelector>().Instance.Charts!.ToArray();
+
+        Assert.DoesNotContain(charts, c => c.Type == ChartType.Single && c.Level == 16);
+        Assert.All(charts, c => Assert.Equal("Iolite Sky", c.Song.Name.ToString()));
+    }
+
+    [Fact]
+    public void ArrivalsAndDeparturesStaySearchableBecauseThatIsAlsoWhatHappenedToThem()
+    {
+        var arrival = Make(Guid.NewGuid(), "Freedom Dive", ChartType.Single, 22, MixEnum.Phoenix2);
+        var departure = Make(Guid.NewGuid(), "Nxde", ChartType.Single, 17, MixEnum.Phoenix);
+        Catalog(MixEnum.Phoenix, departure);
+        Catalog(MixEnum.Phoenix2, arrival);
+        Diff(new MixDiffRecord(MixEnum.Phoenix, MixEnum.Phoenix2, Array.Empty<MixDiffMoveRecord>(),
+            new[] { new MixDiffSongRecord(arrival.Song, new[] { arrival }) },
+            new[] { new MixDiffSongRecord(departure.Song, new[] { departure }) },
+            Array.Empty<Chart>(), Array.Empty<Chart>(), Array.Empty<MixDiffMoveRecord>()));
+
+        var page = RenderPage();
+        var songs = page.FindComponent<ChartSelector>().Instance.Charts!
+            .Select(c => c.Song.Name.ToString()).ToArray();
+
+        Assert.Contains("Freedom Dive", songs);
+        Assert.Contains("Nxde", songs);
+    }
+
+    [Fact]
+    public void TheXxToPhoenixSourcingCreditIsGone()
+    {
+        Catalog(MixEnum.XX);
+        Catalog(MixEnum.Phoenix);
+        Diff(MixDiffRecord.Empty(MixEnum.XX, MixEnum.Phoenix));
+
+        var page = RenderComponent<MixChanges>(p => p
+            .Add(c => c.FromSlug, "xx")
+            .Add(c => c.ToSlug, "phoenix"));
+
+        Assert.DoesNotContain("KyleTT", page.Markup);
     }
 }

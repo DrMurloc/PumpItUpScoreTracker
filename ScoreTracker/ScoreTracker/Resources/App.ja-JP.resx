@@ -802,10 +802,6 @@
   <data name="Chart Compare" xml:space="preserve">
 	  <value>譜面比較</value>
   </data>
-  <data name="Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings." xml:space="preserve">
-	  <value>FEFEMZさんの録画からこの情報をまとめてくれたKyleTTさんに感謝します。</value>
-	  
-  </data>
   <data name="Note that this information is not final until referenced against actual released mix." xml:space="preserve">
 	  <value>注意：実際のリリースミックスと照合するまで、この情報は確定ではありません。</value>
   </data>
@@ -6014,9 +6010,6 @@
   <data name="Find a chart — e.g. Iolite Sky D20" xml:space="preserve">
     <value>譜面を検索 — 例：Iolite Sky D20</value>
   </data>
-  <data name="Search a song, or add a difficulty to jump straight to one chart." xml:space="preserve">
-    <value>曲を検索するか、難度を付けて特定の譜面に直接移動できます。</value>
-  </data>
   <data name="Re-rated" xml:space="preserve">
     <value>難度変更</value>
   </data>
@@ -6145,5 +6138,8 @@
   </data>
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} 件の譜面が変更されました。</value>
+  </data>
+  <data name="Only charts that changed are listed. Add a difficulty to jump straight to one." xml:space="preserve">
+    <value>変更があった譜面のみ表示しています。難度を付ければ特定の譜面に直接移動できます。</value>
   </data>
 </root>

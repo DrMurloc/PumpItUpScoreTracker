@@ -645,9 +645,6 @@
   <data name="Home" xml:space="preserve">
     <value>Inicio</value>
   </data>
-  <data name="Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings." xml:space="preserve">
-    <value>Enorme agradecimiento a KyleTT por compilar esta información de las grabaciones de FEFEMZ.</value>
-  </data>
   <data name="I Don't Like The Chart" xml:space="preserve">
     <value>No me gusta el chart</value>
   </data>
@@ -5894,9 +5891,6 @@
   <data name="Find a chart — e.g. Iolite Sky D20" xml:space="preserve">
     <value>Busca un chart — p. ej. Iolite Sky D20</value>
   </data>
-  <data name="Search a song, or add a difficulty to jump straight to one chart." xml:space="preserve">
-    <value>Busca una canción, o agrega una dificultad para ir directo a un chart.</value>
-  </data>
   <data name="Re-rated" xml:space="preserve">
     <value>Renivelados</value>
   </data>
@@ -6025,5 +6019,8 @@
   </data>
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} charts fueron repisados.</value>
+  </data>
+  <data name="Only charts that changed are listed. Add a difficulty to jump straight to one." xml:space="preserve">
+    <value>Solo aparecen los charts que cambiaron. Agrega una dificultad para ir directo a uno.</value>
   </data>
 </root>

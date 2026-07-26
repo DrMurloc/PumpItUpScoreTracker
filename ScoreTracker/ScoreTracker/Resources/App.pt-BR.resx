@@ -900,9 +900,6 @@
   <data name="Effectively, this means that your life gain is heavily affected by combo, reaching maximum gain at ~40-50 combo." xml:space="preserve">
     <value>Na prática, isso significa que seu ganho de vida é fortemente afetado pelo combo, atingindo o ganho máximo em ~40-50 de combo.</value>
   </data>
-  <data name="Huge thank you for KyleTT for compiling this information from FEFEMZ's  recordings." xml:space="preserve">
-    <value>Muito obrigado a KyleTT por compilar essas informações a partir das gravações do FEFEMZ.</value>
-  </data>
   <data name="Lifebar overflows exponentially by level, up to about a 2350 overflow at level 28." xml:space="preserve">
     <value>A lifebar transborda exponencialmente conforme o nível, chegando a um excedente de cerca de 2350 no nível 28.</value>
   </data>
@@ -5885,9 +5882,6 @@
   <data name="Find a chart — e.g. Iolite Sky D20" xml:space="preserve">
     <value>Procure uma chart — ex. Iolite Sky D20</value>
   </data>
-  <data name="Search a song, or add a difficulty to jump straight to one chart." xml:space="preserve">
-    <value>Procure uma música, ou adicione uma dificuldade para ir direto a uma chart.</value>
-  </data>
   <data name="Re-rated" xml:space="preserve">
     <value>Renivelados</value>
   </data>
@@ -6016,5 +6010,8 @@
   </data>
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} charts foram repisadas.</value>
+  </data>
+  <data name="Only charts that changed are listed. Add a difficulty to jump straight to one." xml:space="preserve">
+    <value>Só aparecem as charts que mudaram. Adicione uma dificuldade para ir direto a uma.</value>
   </data>
 </root>
