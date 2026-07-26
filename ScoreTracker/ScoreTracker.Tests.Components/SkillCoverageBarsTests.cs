@@ -27,9 +27,9 @@ public sealed class SkillCoverageBarsTests : ComponentTestBase
         // Two twists that the rollup would have averaged into one "Twists" bar, and a
         // bracket variety it would have merged with plain brackets.
         var cut = Render(
-            new ChartBadgeChipRecord("twist_over90", "Over-90 Twists", true, 0.42m),
-            new ChartBadgeChipRecord("twist_close", "Close Twists", true, 0.11m),
-            new ChartBadgeChipRecord("staggered_bracket", "Staggered Brackets", false, 0.30m));
+            new ChartBadgeChipRecord("twist_over90", "Over-90 Twists", BadgeCategory.Twists, true, 0.42m),
+            new ChartBadgeChipRecord("twist_close", "Close Twists", BadgeCategory.Twists, true, 0.11m),
+            new ChartBadgeChipRecord("staggered_bracket", "Staggered Brackets", BadgeCategory.Brackets, false, 0.30m));
 
         var bars = cut.FindAll(".chart-details-skill-bar");
         Assert.Equal(3, bars.Count);
@@ -40,11 +40,27 @@ public sealed class SkillCoverageBarsTests : ComponentTestBase
     }
 
     [Fact]
-    public void NoCategoryTintSurvives()
+    public void EachBarWearsItsFamilysTintAndNoneOfTheRollupsBuckets()
     {
-        var cut = Render(new ChartBadgeChipRecord("hands", "Hands", true, 0.2m));
+        var cut = Render(
+            new ChartBadgeChipRecord("hands", "Hands", BadgeCategory.Tech, true, 0.2m),
+            new ChartBadgeChipRecord("mid6_doubles", "Mid-6 Doubles", BadgeCategory.DoublesTech, true, 0.4m));
 
+        Assert.Single(cut.FindAll(".badgecat-tech"));
+        Assert.Single(cut.FindAll(".badgecat-doublestech"));
+        // The retired rollup's buckets must not come back through a side door.
         Assert.Empty(cut.FindAll("[class*=skillcat-]"));
+    }
+
+    [Fact]
+    public void ABadgeWithNoKnownFamilyStillRendersUntinted()
+    {
+        // piucenter can add vocabulary faster than the category table learns it; an unplaced
+        // badge is still worth showing.
+        var cut = Render(new ChartBadgeChipRecord("quad_anchor-stomp", "Quad Anchor Stomp", null, true, 0.1m));
+
+        Assert.Contains("Quad Anchor Stomp", cut.Markup);
+        Assert.Empty(cut.FindAll("[class*=badgecat-]"));
     }
 
     [Fact]
@@ -52,7 +68,7 @@ public sealed class SkillCoverageBarsTests : ComponentTestBase
     {
         // bursty and sustained are intensity facts, not segment coverage: a null must read as
         // "true of this chart", never as zero percent.
-        var cut = Render(new ChartBadgeChipRecord("sustained", "Sustained", true, null));
+        var cut = Render(new ChartBadgeChipRecord("sustained", "Sustained", BadgeCategory.StaminaAndRuns, true, null));
 
         Assert.Contains("width:100%", cut.Markup);
         Assert.Equal(string.Empty, cut.Find(".chart-details-skill-bar-value").TextContent.Trim());

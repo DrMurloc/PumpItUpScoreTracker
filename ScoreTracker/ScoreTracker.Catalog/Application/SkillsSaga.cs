@@ -134,12 +134,12 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
 
             var chips = topRank
                 .OrderBy(kv => kv.Value)
-                .Select(kv => new ChartBadgeChipRecord(kv.Key, PiuCenterBadges.DisplayName(kv.Key), true,
+                .Select(kv => new ChartBadgeChipRecord(kv.Key, PiuCenterBadges.DisplayName(kv.Key), PiuCenterBadges.CategoryFor(kv.Key), true,
                     coverage.TryGetValue(kv.Key, out var f) ? f : null))
                 .Concat(qualified
                     .Where(b => !topRank.ContainsKey(b))
                     .OrderByDescending(b => coverage[b])
-                    .Select(b => new ChartBadgeChipRecord(b, PiuCenterBadges.DisplayName(b), false, coverage[b])))
+                    .Select(b => new ChartBadgeChipRecord(b, PiuCenterBadges.DisplayName(b), PiuCenterBadges.CategoryFor(b), false, coverage[b])))
                 .ToArray();
             if (chips.Length > 0) result[group.Key] = chips;
         }

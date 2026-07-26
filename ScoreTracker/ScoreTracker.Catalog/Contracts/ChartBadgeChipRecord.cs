@@ -13,5 +13,5 @@ namespace ScoreTracker.Catalog.Contracts;
 ///     true of the chart", not "zero percent".
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record ChartBadgeChipRecord(string Badge, string DisplayName, bool Highlighted,
-    decimal? Coverage);
+public sealed record ChartBadgeChipRecord(string Badge, string DisplayName, BadgeCategory? Category,
+    bool Highlighted, decimal? Coverage);

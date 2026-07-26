@@ -200,7 +200,9 @@ else
                 <ChartSearchCard Result="result" LeadFact="@LeadFact(result)"
                                  ShowMyState="CurrentUser.IsLoggedIn"
                                  ShowActions="CurrentUser.IsLoggedIn"
+                                 IsFavorite="_favoriteCharts.Contains(result.Chart.Id)"
                                  IsToDo="_todoCharts.Contains(result.Chart.Id)"
+                                 OnToggleFavorite="ToggleFavorite"
                                  OnToggleToDo="ToggleToDo"
                                  OnQuickRecord="OpenQuickRecord"
                                  OnOpen="OpenDetails"></ChartSearchCard>
@@ -261,7 +263,7 @@ else
             <div class="srp-facet">
                 <div class="srp-facet-head">@L["Chart Type"]</div>
                 <div class="srp-chipset">
-                    @foreach (var type in Enum.GetValues<ChartType>())
+                    @foreach (var type in Enum.GetValues<ChartType>().Where(t => HasAny(_facetCounts?.Types, t, _types.Contains(t))))
                     {
                         var captured = type;
                         <span class="srp-facet-chip @(_types.Contains(captured) ? "srp-facet-chip-on" : "")"
@@ -273,7 +275,7 @@ else
                 @if (_types.Contains(ChartType.CoOp))
                 {
                     <div class="srp-chipset srp-chipset-sub">
-                        @foreach (var players in CoOpPlayerRange)
+                        @foreach (var players in CoOpPlayerRange.Where(p => HasAny(_facetCounts?.CoOpPlayerCounts, p, _coOpPlayers.Contains(p))))
                         {
                             var captured = players;
                             <span class="srp-facet-chip @(_coOpPlayers.Contains(captured) ? "srp-facet-chip-on" : "")"
@@ -290,7 +292,7 @@ else
                 <div class="srp-facet">
                     <div class="srp-facet-head">@L["Score State"]</div>
                     <div class="srp-chipset">
-                        @foreach (var state in Enum.GetValues<ChartScoreStateFilter>())
+                        @foreach (var state in Enum.GetValues<ChartScoreStateFilter>().Where(s => HasAny(_facetCounts?.ScoreStates, s, _scoreStates.Contains(s))))
                         {
                             var captured = state;
                             <span class="srp-facet-chip @(_scoreStates.Contains(captured) ? "srp-facet-chip-on" : "")"
@@ -328,7 +330,7 @@ else
                 <div class="srp-facet">
                     <div class="srp-facet-head">@L["Song Type"]</div>
                     <div class="srp-chipset">
-                        @foreach (var type in Enum.GetValues<SongType>())
+                        @foreach (var type in Enum.GetValues<SongType>().Where(t => HasAny(_facetCounts?.SongTypes, t, _songTypes.Contains(t))))
                         {
                             var captured = type;
                             <span class="srp-facet-chip @(_songTypes.Contains(captured) ? "srp-facet-chip-on" : "")"
@@ -430,7 +432,7 @@ else
                     @foreach (var badge in _badgeVocabulary)
                     {
                         var selected = _badges.Contains(badge.Key, StringComparer.OrdinalIgnoreCase);
-                        <span class="srp-badge-opt tier-chart-card-skill @(selected ? "srp-badge-opt-sel" : "")"
+                        <span class="srp-badge-opt tier-chart-card-skill @BadgeCategoryClasses.For(badge.Category) @(selected ? "srp-badge-opt-sel" : "")"
                               role="button" tabindex="0" @onclick="() => ToggleBadge(badge.Key)">
                             @L[badge.DisplayName]@BadgeCount(badge.Key)
                         </span>
@@ -449,7 +451,12 @@ else
                 {
                 <div class="srp-facet">
                     <div class="srp-facet-head">@L["Debut mix"]</div>
-                    @foreach (var era in MixEras)
+                    @* An era whose mixes contributed nothing to this search drops out whole —
+                       a bare era heading over no chips reads as a loading failure. *@
+                    @foreach (var era in MixEras
+                        .Select(e => new { e.Name, Mixes = e.Mixes
+                            .Where(m => HasAny(_facetCounts?.DebutMixes, m, _debutMixes.Contains(m))).ToArray() })
+                        .Where(e => e.Mixes.Length > 0))
                     {
                         <div class="srp-era">
                             <div class="srp-era-name">@L[era.Name]</div>
@@ -472,7 +479,7 @@ else
                     <div class="srp-facet">
                         <div class="srp-facet-head">@L["Legacy Difficulty"]</div>
                         <div class="srp-chipset">
-                            @foreach (var slot in Enum.GetValues<LegacySlot>())
+                            @foreach (var slot in Enum.GetValues<LegacySlot>().Where(s => HasAny(_facetCounts?.LegacySlots, s, _legacySlots.Contains(s))))
                             {
                                 var captured = slot;
                                 <span class="srp-facet-chip @(_legacySlots.Contains(captured) ? "srp-facet-chip-on" : "")"
@@ -484,7 +491,7 @@ else
                     </div>
                 }
 
-                @if (ShowsAny("passDifficulty", "scoreDifficulty", "communityVote", "passRate", "scoringLevel"))
+                @if (ShowsAny("passDifficulty", "scoreDifficulty", "communityVote", "scoringLevel"))
                 {
                     <MudText Typo="Typo.overline">@L["Community intelligence"]</MudText>
                 }
@@ -517,15 +524,6 @@ else
                                      ValueMinChanged="v => SetTierLow(_communityVote, v, SetCommunityVote)"
                                      ValueMaxChanged="v => SetTierHigh(_communityVote, v, SetCommunityVote)"></RangeSlider>
                     </div>
-                }
-                @if (Shows("passRate"))
-                {
-                <div class="srp-facet">
-                    <div class="srp-facet-head">@L["Pass rate"] <span class="srp-facet-value">@(_passRateMin == null ? L["Any"].Value : $"≥ {_passRateMin}%")</span></div>
-                    @* 0 is "no floor", so it clears rather than filtering to everything. *@
-                    <MudSlider T="int" Value="_passRateMin ?? 0" ValueChanged="v => SetPassRateMin(v <= 0 ? null : v)"
-                               Min="0" Max="100" Step="5" Color="Color.Primary" Size="Size.Small"></MudSlider>
-                </div>
                 }
                 @if (Shows("scoringLevel") && ModernInScope)
                 {
@@ -1341,6 +1339,19 @@ else
         return counts != null && counts.TryGetValue(key, out var count) ? $" ({count})" : string.Empty;
     }
 
+    /// <summary>
+    ///     Whether a chip facet is worth showing. Nothing this mix has none of belongs on
+    ///     screen — Single Performance in a Phoenix mix is noise, not a choice. A chip the
+    ///     visitor has already picked always shows, or it becomes an applied filter with no
+    ///     control to clear it. Counts absent (facets not loaded yet) means show everything,
+    ///     so the drawer never starts out mysteriously empty.
+    /// </summary>
+    private static bool HasAny<TKey>(IReadOnlyDictionary<TKey, int>? counts, TKey key, bool selected)
+        where TKey : notnull
+    {
+        return selected || counts == null || (counts.TryGetValue(key, out var count) && count > 0);
+    }
+
     private string LevelChipLabel => _levelMin == _levelMax
         ? $"{L["Level"]} {_levelMin}"
         : $"{L["Level"]} {_levelMin?.ToString() ?? DifficultyLevel.Min.ToString()}–{_levelMax?.ToString() ?? DifficultyLevel.Max.ToString()}";
@@ -1400,13 +1411,13 @@ else
 
     private async Task SetLevelMin(int? value)
     {
-        _levelMin = value;
+        _levelMin = (int?)OpenEnded(value, DifficultyLevel.Min);
         await ApplyChange();
     }
 
     private async Task SetLevelMax(int? value)
     {
-        _levelMax = value;
+        _levelMax = (int?)OpenEnded(value, DifficultyLevel.Max);
         await ApplyChange();
     }
 
@@ -1478,8 +1489,10 @@ else
                     () => _scoreDifficulty.Count > 0, () => _scoreDifficulty.Clear()),
                 new("communityVote", L["Community Vote"], legacy,
                     () => _communityVote.Count > 0, () => _communityVote.Clear()),
-                new("passRate", L["Pass rate"], true,
-                    () => _passRateMin != null, () => _passRateMin = null),
+                // Pass rate is off the pick list until the threshold behaviour is tuned
+                // (owner). The query field, the URL parameter and the chip all still work, so
+                // it comes back by re-listing it here.
+
                 // Offered wherever the sort is offered — sorting by scoring level while being
                 // unable to filter by it was the odd bit. The track falls back to the level
                 // scale when the mix has no banked extents; scoring level rides that scale.
@@ -1590,39 +1603,50 @@ else
             : vocabulary.Where(v => v.Contains(value, StringComparison.OrdinalIgnoreCase));
     }
 
+    /// <summary>
+    ///     A thumb parked on its own end of the track is not a filter. Nulling there drops the
+    ///     chip and the URL parameter rather than leaving "BPM 84–300" applied, which matches
+    ///     every chart and reads as a filter that will not clear. Duration always worked this
+    ///     way; every range agrees now.
+    /// </summary>
+    private static decimal? OpenEnded(decimal? value, decimal? extreme)
+    {
+        return value == null || value == extreme ? null : value;
+    }
+
     private async Task SetBpmMin(decimal? value)
     {
-        _bpmMin = value;
+        _bpmMin = OpenEnded(value, _ranges?.BpmMin);
         await ApplyChange();
     }
 
     private async Task SetBpmMax(decimal? value)
     {
-        _bpmMax = value;
+        _bpmMax = OpenEnded(value, _ranges?.BpmMax);
         await ApplyChange();
     }
 
     private async Task SetNpsMin(decimal? value)
     {
-        _npsMin = value;
+        _npsMin = OpenEnded(value, _ranges?.NpsMin);
         await ApplyChange();
     }
 
     private async Task SetNpsMax(decimal? value)
     {
-        _npsMax = value;
+        _npsMax = OpenEnded(value, _ranges?.NpsMax);
         await ApplyChange();
     }
 
     private async Task SetNoteMin(int? value)
     {
-        _noteMin = value;
+        _noteMin = (int?)OpenEnded(value, _ranges?.NoteCountMin);
         await ApplyChange();
     }
 
     private async Task SetNoteMax(int? value)
     {
-        _noteMax = value;
+        _noteMax = (int?)OpenEnded(value, _ranges?.NoteCountMax);
         await ApplyChange();
     }
 
@@ -1672,13 +1696,13 @@ else
 
     private async Task SetScoringLevelMin(double? value)
     {
-        _scoringLevelMin = value;
+        _scoringLevelMin = (double?)OpenEnded((decimal?)value, ScoringLevelFloor);
         await ApplyChange();
     }
 
     private async Task SetScoringLevelMax(double? value)
     {
-        _scoringLevelMax = value;
+        _scoringLevelMax = (double?)OpenEnded((decimal?)value, ScoringLevelCeiling);
         await ApplyChange();
     }
 
@@ -1844,13 +1868,13 @@ else
 
     private async Task SetPhoenixScoreMin(int? value)
     {
-        _phoenixScoreMin = value;
+        _phoenixScoreMin = (int?)OpenEnded(value, 0);
         await ApplyChange();
     }
 
     private async Task SetPhoenixScoreMax(int? value)
     {
-        _phoenixScoreMax = value;
+        _phoenixScoreMax = (int?)OpenEnded(value, 1000000);
         await ApplyChange();
     }
 

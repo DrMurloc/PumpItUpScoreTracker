@@ -1870,6 +1870,16 @@ html.sheet-open .more-sheet-scrim {
 .skillcat-bracket { --skill-chip: var(--skillcat-bracket); }
 .skillcat-tech { --skill-chip: var(--skillcat-tech); }
 
+/* The owner's five badge families (docs/design/nuke-old-skill-categories.md §2): the granular
+   piucenter vocabulary's identity colors, feeding the same --skill-chip variable the chip and
+   bar rules already read, so a badge chip tints exactly like the rollup chips used to. */
+.badgecat-brackets { --skill-chip: var(--badgecat-brackets); }
+.badgecat-twists { --skill-chip: var(--badgecat-twists); }
+.badgecat-staminaandruns { --skill-chip: var(--badgecat-staminaandruns); }
+.badgecat-tech { --skill-chip: var(--badgecat-tech); }
+.badgecat-doublestech { --skill-chip: var(--badgecat-doublestech); }
+
+.tier-chart-card-skill[class*="badgecat-"],
 .tier-chart-card-skill[class*="skillcat-"] {
     color: color-mix(in srgb, var(--skill-chip) 55%, var(--mix-ink));
     background: color-mix(in srgb, var(--skill-chip) 16%, transparent);

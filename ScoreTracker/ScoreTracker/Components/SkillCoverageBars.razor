@@ -17,7 +17,7 @@
             var percent = chip.Coverage == null
                 ? (int?)null
                 : (int)Math.Round(chip.Coverage.Value * 100);
-            <div class="chart-details-skill-bar">
+            <div class="chart-details-skill-bar @BadgeCategoryClasses.For(chip.Category)">
                 <span class="chart-details-skill-bar-label">@L[chip.DisplayName]</span>
                 <span class="chart-details-skill-bar-track"><span class="chart-details-skill-bar-fill" style="width:@(percent ?? 100)%"></span></span>
                 <span class="chart-details-skill-bar-value">@(percent == null ? "" : $"{percent}%")</span>

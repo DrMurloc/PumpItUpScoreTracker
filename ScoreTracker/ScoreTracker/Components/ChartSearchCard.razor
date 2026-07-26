@@ -44,11 +44,12 @@
             }
         </div>
         <div class="srp-card-chips">
-            @* No category tint: those buckets belonged to the rollup vocabulary and went with
-               it. The badge's own name carries the meaning (rule 8). *@
+            @* Tinted by the owner's five badge families — the granular vocabulary's identity
+               colours, not the retired rollup's buckets. The name still carries the meaning
+               (rule 8); the hue is what lets you read a card's shape at a glance. *@
             @foreach (var badge in Result.Badges)
             {
-                <span class="tier-chart-card-skill">@L[badge.DisplayName]</span>
+                <span class="tier-chart-card-skill @BadgeCategoryClasses.For(badge.Category)">@L[badge.DisplayName]</span>
             }
             @if (Result.CommunityVote != null)
             {
@@ -128,6 +129,11 @@
                            OnClick="() => OnQuickRecord.InvokeAsync(Result)"
                            aria-label="@L["Quick record"]"></MudIconButton>
             <MudIconButton Size="Size.Small"
+                           Icon="@(IsFavorite ? Icons.Material.Filled.Favorite : Icons.Material.Outlined.FavoriteBorder)"
+                           Color="@(IsFavorite ? Color.Secondary : Color.Default)"
+                           OnClick="() => OnToggleFavorite.InvokeAsync(Result.Chart.Id)"
+                           aria-label="@L["Favorites"]"></MudIconButton>
+            <MudIconButton Size="Size.Small"
                            Icon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
                            Color="@(IsToDo ? Color.Info : Color.Default)"
                            OnClick="() => OnToggleToDo.InvokeAsync(Result.Chart.Id)"
@@ -149,7 +155,9 @@
     [Parameter] public bool ShowMyState { get; set; }
     [Parameter] public bool ShowActions { get; set; }
 
+    [Parameter] public bool IsFavorite { get; set; }
     [Parameter] public bool IsToDo { get; set; }
+    [Parameter] public EventCallback<Guid> OnToggleFavorite { get; set; }
     [Parameter] public EventCallback<Guid> OnToggleToDo { get; set; }
     [Parameter] public EventCallback<ChartSearchResult> OnQuickRecord { get; set; }
 

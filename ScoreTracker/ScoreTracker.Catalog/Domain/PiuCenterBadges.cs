@@ -1,3 +1,5 @@
+using ScoreTracker.Catalog.Contracts;
+
 namespace ScoreTracker.Catalog.Domain;
 
 /// <summary>
@@ -58,5 +60,63 @@ internal static class PiuCenterBadges
             .Select(w => char.ToUpperInvariant(w[0]) + w[1..]);
         return string.Join(' ', words);
     }
+
+    /// <summary>
+    ///     Owner-defined families (2026-07-26), one per badge, all 33 accounted for. The calls
+    ///     worth naming because they are not obvious: jacks and jumps are Tech rather than
+    ///     stamina, side-3 singles are a Twists problem, and everything that lives across the
+    ///     far pad — 10-stairs, transitions, mid-4/6, splits, yog walks — is its own Doubles
+    ///     Tech family rather than being folded into Tech.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, BadgeCategory> Categories =
+        new Dictionary<string, BadgeCategory>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["bracket"] = BadgeCategory.Brackets,
+            ["staggered_bracket"] = BadgeCategory.Brackets,
+            ["bracket_run"] = BadgeCategory.Brackets,
+            ["bracket_drill"] = BadgeCategory.Brackets,
+            ["bracket_jump"] = BadgeCategory.Brackets,
+            ["bracket_twist"] = BadgeCategory.Brackets,
+
+            ["twists"] = BadgeCategory.Twists,
+            ["twist_90"] = BadgeCategory.Twists,
+            ["twist_over90"] = BadgeCategory.Twists,
+            ["twist_close"] = BadgeCategory.Twists,
+            ["twist_far"] = BadgeCategory.Twists,
+            ["side3_singles"] = BadgeCategory.Twists,
+
+            ["run"] = BadgeCategory.StaminaAndRuns,
+            ["anchor_run"] = BadgeCategory.StaminaAndRuns,
+            ["run_without_twists"] = BadgeCategory.StaminaAndRuns,
+            ["drill"] = BadgeCategory.StaminaAndRuns,
+            ["sustained"] = BadgeCategory.StaminaAndRuns,
+            ["bursty"] = BadgeCategory.StaminaAndRuns,
+
+            ["jack"] = BadgeCategory.Tech,
+            ["jump"] = BadgeCategory.Tech,
+            ["footswitch"] = BadgeCategory.Tech,
+            ["hold_footswitch"] = BadgeCategory.Tech,
+            ["hold_footslide"] = BadgeCategory.Tech,
+            ["5-stair"] = BadgeCategory.Tech,
+            ["hands"] = BadgeCategory.Tech,
+            ["doublestep"] = BadgeCategory.Tech,
+
+            ["10-stair"] = BadgeCategory.DoublesTech,
+            ["mid4_doubles"] = BadgeCategory.DoublesTech,
+            ["mid6_doubles"] = BadgeCategory.DoublesTech,
+            ["split"] = BadgeCategory.DoublesTech,
+            ["yog_walk"] = BadgeCategory.DoublesTech,
+            ["cross-pad_transition"] = BadgeCategory.DoublesTech,
+            ["co-op_pad_transition"] = BadgeCategory.DoublesTech
+        };
+
+    /// <summary>Null only for a badge piucenter adds that this table has not learned yet.</summary>
+    public static BadgeCategory? CategoryFor(string badgeKey)
+    {
+        return Categories.TryGetValue(badgeKey, out var category) ? category : null;
+    }
+
+    /// <summary>Every badge with a display name, so a test can prove none lacks a family.</summary>
+    public static IReadOnlyCollection<string> KnownBadges => DisplayNames.Keys.ToArray();
 
 }

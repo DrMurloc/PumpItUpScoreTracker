@@ -226,13 +226,13 @@ public sealed class ChartsPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void ChartTypeChipsSpellTypesOutAndCarryCounts()
+    public void ChartTypeChipsSpellTypesOutCarryCountsAndHideWhatTheMixLacks()
     {
         _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
             .Callback<IRequest<ChartSearchResultPage>, CancellationToken>((q, _) => _lastQuery = (SearchChartsQuery)q)
             .ReturnsAsync(() => new ChartSearchResultPage(new[] { MakeResult("District 1", 21) }, 1,
                 new ChartSearchFacetCounts(
-                    new Dictionary<ChartType, int> { [ChartType.Double] = 812 },
+                    new Dictionary<ChartType, int> { [ChartType.Double] = 812, [ChartType.Single] = 799 },
                     new Dictionary<SongType, int>(), new Dictionary<string, int>(),
                     new Dictionary<TierListCategory, int>(), new Dictionary<TierListCategory, int>(),
                     new Dictionary<TierListCategory, int>(), new Dictionary<LegacySlot, int>(),
@@ -245,8 +245,11 @@ public sealed class ChartsPageTests : ComponentTestBase
 
         // Full words, never the S/D shorthand, and the count rides the chip.
         Assert.Contains("Double (812)", cut.Markup);
-        Assert.Contains("Single Performance", cut.Markup);
+        Assert.Contains("Single (799)", cut.Markup);
         Assert.DoesNotContain(">S<", cut.Markup);
+        // A type this mix has none of is not a choice — Single Performance carries no count
+        // here, exactly as it carries none in a Phoenix mix.
+        Assert.DoesNotContain("Single Performance", cut.Markup);
     }
 
     [Fact]
@@ -401,7 +404,7 @@ public sealed class ChartsPageTests : ComponentTestBase
         _mediator.Setup(m => m.Send(It.IsAny<GetSearchBadgesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                new ChartBadge("staggered_bracket", "Staggered Brackets")
+                new ChartBadge("staggered_bracket", "Staggered Brackets", BadgeCategory.Brackets)
             });
         _mediator.Setup(m => m.Send(It.IsAny<GetSearchArtistsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<string>());
