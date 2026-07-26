@@ -180,8 +180,6 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 | Suggested Chart | Chart Suggérée | |
 | Title (in-game title award) | Titre | "Title Progress" → "Progression des titres"; "Titles" → "Titres". |
 | Favorites | Favoris | "Add to Favorites" → "Ajouter aux favoris". |
-| Progress Charts | Statistiques Joueur | nabulator-style interpretive rendering ("player statistics" rather than "progress charts"). Title Case. Loses the literal meaning — see Known issues. |
-| Player Stats | (covered by Progress Charts) | |
 | Avatar | Avatar | |
 
 ### Game-mechanic vocabulary
@@ -225,7 +223,7 @@ Only the worst Title Case offenders were fixed. Plenty remains (`Sauvegarder les
 
 - **`Public` → `Publique`.** `Publique` is the feminine singular form. As a generic on/off label whose grammatical antecedent isn't in the key, the masculine `Public` would be safer. The comment (`(on/off, si le compte est configuré en tant que publique)`) implies the antecedent is `[la visibilité]`, justifying feminine — but as a bare label this is fragile. Compare `Make Public` → `Rendre public` (masculine), so the file is internally split.
 - **`Score Loss` → `Perte de Score liée aux {0}`.** Adds `liée` (feminine, agrees with `Perte`) and `aux` (plural). Works for plural masculine judgment terms (`Goods`, `Greats`, `Bads`, `Misses`). For singular or ambiguous placeholders the agreement may be wrong. The English source is `{0} Score Loss` (e.g. "Goods Score Loss") — known to be plural in current usage, so this is currently safe but fragile.
-- **`Progress Charts` → `Statistiques Joueur`.** "Player statistics" rather than literal "progress charts" — interpretive, like nabulator's ja-JP `進捗中の譜面` for `Player Stats`. May or may not be the right call depending on the page-context label.
+- ~~**`Progress Charts` → `Statistiques Joueur`.**~~ **Moot as of 2026-07-26** — the Player Stats pages were retired for the home-page widgets and the key is gone from every locale. Kept as a record of the interpretive-vs-literal question, which will recur if a similar label lands.
 - **`Plate` → `Plaque`.** Literal French translation. Other locales (ja-JP, ko-KR, pt-BR, it-IT) keep `Plate` or use a phonetic loanword. The PIU community in France probably uses `Plate` in conversation; `Plaque` reads as an over-translation. Consider switching to `Plate`. The comment lists `MG, PG, UG` (in-game tier names) which stay untranslated regardless.
 
 ### Typographic spacing
@@ -545,6 +543,26 @@ The Life Calculator and ChartScoring pages have ~30 dense paragraph entries. The
 - The `For CoOps, scoring level is simply the lowest level player who's been able to pass the chart.` paragraph and its neighbors on /Experiments/ChartScoring.
 
 Short labels (column headers, button text) are likely fine.
+
+## Lifebar terms (Life Calculator redesign, 2026-07-26)
+
+Settled with the `/LifeCalculator` rebuild ([design](design/life-calculator-redesign.md)). These
+extend the existing `lifebar` loanword rows above.
+
+| English | fr-FR | Notes |
+|---|---|---|
+| Life (the quantity) | vie | `Max Life` → `vie maximale`; the UI element itself stays `lifebar`. |
+| Overflow (life above the visible 1000) | débordement | The owner's chosen English term is "overflow", never "reserve" — one root everywhere. |
+| Visible bar | barre visible | |
+| Rainbow (the full visible bar) | Rainbow | Stays English, matching the other locales. |
+| Gain multiplier | multiplicateur de gain | Bare "multiplier" mid-sentence → `multiplicateur`. |
+| Break (a miss or bad that ends a combo) | cassure | `Combo between breaks` → `Combo entre cassures`. |
+| Settles at (converges to) | se stabilise à | `Where life settles` → `Où la vie se stabilise`. |
+| Cliff (the survival threshold) | falaise | Deliberately literal — the metaphor is the point. |
+| Cap (the multiplier ceiling) | plafond | |
+
+Percent signs in this page's prose use the French narrow-space convention (`12 %`), consistent with
+the rest of the file.
 
 ## Process for future batches
 

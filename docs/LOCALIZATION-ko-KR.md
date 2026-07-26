@@ -112,7 +112,7 @@ These have at least one existing translation in `App.ko-KR.resx`. New translatio
 | Suggested Chart | 추천 채보 | |
 | Title (in-game title award) | 칭호 | (Cross-reference: same as generic UI Title.) |
 | Favorites | 즐겨찾기 | (Cross-reference.) |
-| Progress | 진행상황 | "Progress Charts" → 진행중인 채보 (note: rendered as "in-progress charts," meaning the chart-list page, not generic-progress charts). |
+| Progress | 진행상황 | |
 | Popularity | 인기 | |
 
 ### Game-mechanic vocabulary
@@ -185,6 +185,21 @@ Pulled from the ~440 untranslated keys. Each is a term that doesn't yet have an 
 | Welcome (greeting) | 환영합니다 | Suggested. |
 | Tag(s) | 태그 | Suggested loanword. |
 | Avatar | 아바타 | Suggested loanword. |
+
+## Lifebar terms (Life Calculator redesign, 2026-07-26)
+
+Settled with the `/LifeCalculator` rebuild ([design](design/life-calculator-redesign.md)).
+
+| English | ko-KR | Notes |
+|---|---|---|
+| Life / lifebar | 라이프 | Hangul loanword, matching the Plate / Lifebar loanword treatment. |
+| Overflow (life above the visible 1000) | 오버플로우 | The owner's chosen English term is "overflow", never "reserve"; the loanword keeps that one root. "Overflow full" → 오버플로우 가득참. |
+| Visible bar | 보이는 바 | |
+| Rainbow (the full visible bar) | 레인보우 | Loanword, matching the in-game term players use. |
+| Gain multiplier | 회복 배율 | Bare "multiplier" mid-sentence → 배율. |
+| Break (a miss or bad that ends a combo) | 브레이크 | Loanword, consistent with the 브레이크 오프 treatment. "Combo between breaks" → 브레이크 사이 콤보. |
+| Settles at (converges to) | 머무르다 | "Where life settles" → 라이프가 머무는 곳. |
+| Cliff (the survival threshold) | 절벽 | Deliberately literal — the metaphor is the point. |
 
 ## Process for future batches
 

@@ -329,9 +329,6 @@
   <data name="Progress" xml:space="preserve">
     <value>進捗</value>
   </data>
-  <data name="Progress Charts" xml:space="preserve">
-    <value>進捗中の譜面</value>
-  </data>
   <data name="Public" xml:space="preserve">
     <value>公開</value>
     
@@ -811,12 +808,6 @@
   <data name="Removed" xml:space="preserve">
 	  <value>削除済</value>
   </data>
-  <data name="Step Artists" xml:space="preserve">
-	  <value>譜面作者</value>
-  </data>
-  <data name="Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists." xml:space="preserve">
-	  <value>注意：このリストは調整中で、譜面作者が未登録または誤っている場合があります。</value>
-  </data>
   <data name="PIU Life Calculator" xml:space="preserve">
 	  <value>PIU体力計算</value>
   </data>
@@ -1282,12 +1273,6 @@
   <data name="Best Attempts" xml:space="preserve">
 	  <value>最高試行</value>
   </data>
-  <data name="XX Progress" xml:space="preserve">
-	  <value>XX進捗</value>
-  </data>
-  <data name="Share Your Progress Page" xml:space="preserve">
-	  <value>進捗ページを共有</value>
-  </data>
   <data name="Overview" xml:space="preserve">
 	  <value>概要</value>
   </data>
@@ -1313,18 +1298,6 @@
   <data name="Unpassed" xml:space="preserve">
 	  <value>未クリア</value>
   </data>
-  <data name="Overall Letters" xml:space="preserve">
-	  <value>総合ランク</value>
-  </data>
-  <data name="Overall Passes" xml:space="preserve">
-	  <value>総合クリア</value>
-  </data>
-  <data name="Difficulty Letters" xml:space="preserve">
-	  <value>難度ランク</value>
-  </data>
-  <data name="Difficulty Passes" xml:space="preserve">
-	  <value>難度別クリア</value>
-  </data>
   <data name="Share Url" xml:space="preserve">
 	  <value>共有URL</value>
   </data>
@@ -1336,9 +1309,6 @@
   </data>
   <data name="Pass" xml:space="preserve">
 	  <value>クリア</value>
-  </data>
-  <data name="Difficulty Progress" xml:space="preserve">
-	  <value>難度進捗</value>
   </data>
   <data name="Passes" xml:space="preserve">
 	  <value>クリア</value>
@@ -1355,14 +1325,8 @@
   <data name="Avg Plate" xml:space="preserve">
 	  <value>平均プレート</value>
   </data>
-  <data name="Passes By Level" xml:space="preserve">
-	  <value>レベル別クリア</value>
-  </data>
   <data name="Remaining" xml:space="preserve">
 	  <value>残り</value>
-  </data>
-  <data name="Score Distribution Lines" xml:space="preserve">
-	  <value>スコア分布ライン</value>
   </data>
   <data name="Score Distribution" xml:space="preserve">
 	  <value>スコア分布</value>
@@ -2721,6 +2685,9 @@
   </data>
   <data name="Passed in another mix" xml:space="preserve">
     <value>別バージョンでパス済み</value>
+  </data>
+  <data name="Show Passed in Another Mix" xml:space="preserve">
+    <value>別バージョンでパス済みを表示</value>
   </data>
   <data name="Remove from ToDo List" xml:space="preserve">
     <value>ToDoリストから削除</value>
@@ -4504,9 +4471,6 @@
   <data name="in the top ten" xml:space="preserve">
     <value>件がトップ10以内</value>
   </data>
-  <data name="Last import failed" xml:space="preserve">
-    <value>前回のインポートが失敗しました</value>
-  </data>
   <data name="level 24+, first ever, any grade" xml:space="preserve">
     <value>レベル24以上、史上初、全グレード対象</value>
   </data>
@@ -5944,6 +5908,405 @@
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>この譜面ボードにはまだ誰もいません。</value>
   </data>
+  <data name="All Mixes" xml:space="preserve">
+    <value>全バージョン</value>
+  </data>
+  <data name="Applied filters" xml:space="preserve">
+    <value>適用中のフィルター</value>
+  </data>
+  <data name="Available in" xml:space="preserve">
+    <value>収録バージョン</value>
+  </data>
+  <data name="BPM from" xml:space="preserve">
+    <value>最低BPM</value>
+  </data>
+  <data name="BPM to" xml:space="preserve">
+    <value>最高BPM</value>
+  </data>
+  <data name="Community Vote" xml:space="preserve">
+    <value>コミュニティ投票</value>
+  </data>
+  <data name="Community intelligence" xml:space="preserve">
+    <value>コミュニティデータ</value>
+  </data>
+  <data name="Content" xml:space="preserve">
+    <value>コンテンツ</value>
+  </data>
+  <data name="Debut" xml:space="preserve">
+    <value>初出</value>
+  </data>
+  <data name="Debut mix" xml:space="preserve">
+    <value>初出バージョン</value>
+  </data>
+  <data name="Download CSV" xml:space="preserve">
+    <value>CSVダウンロード</value>
+  </data>
+  <data name="Export charts" xml:space="preserve">
+    <value>譜面をエクスポート</value>
+  </data>
+  <data name="Full Song" xml:space="preserve">
+    <value>フルソング</value>
+  </data>
+  <data name="Grade" xml:space="preserve">
+    <value>ランク</value>
+  </data>
+  <data name="Group by chart" xml:space="preserve">
+    <value>譜面ごとにまとめる</value>
+  </data>
+  <data name="Grouped: one row per chart, level history collapsed. Per-mix: every appearance is its own row. Identical while scope is a single mix." xml:space="preserve">
+    <value>まとめる：譜面ごとに1行、レベル履歴をまとめて表示します。バージョン別：収録ごとに1行です。単一バージョンでは同じ結果になります。</value>
+  </data>
+  <data name="In" xml:space="preserve">
+    <value>収録</value>
+  </data>
+  <data name="Legacy Difficulty" xml:space="preserve">
+    <value>レガシー難度</value>
+  </data>
+  <data name="Legacy grade" xml:space="preserve">
+    <value>レガシーランク</value>
+  </data>
+  <data name="Legacy grade at least" xml:space="preserve">
+    <value>レガシーランク以上</value>
+  </data>
+  <data name="Level change" xml:space="preserve">
+    <value>レベル変動</value>
+  </data>
+  <data name="Level from" xml:space="preserve">
+    <value>最低レベル</value>
+  </data>
+  <data name="Level to" xml:space="preserve">
+    <value>最高レベル</value>
+  </data>
+  <data name="Mix scope" xml:space="preserve">
+    <value>バージョン範囲</value>
+  </data>
+  <data name="Mixes" xml:space="preserve">
+    <value>バージョン</value>
+  </data>
+  <data name="My data" xml:space="preserve">
+    <value>自分の記録</value>
+  </data>
+  <data name="My score" xml:space="preserve">
+    <value>自分のスコア</value>
+  </data>
+  <data name="NPS from" xml:space="preserve">
+    <value>最低NPS</value>
+  </data>
+  <data name="NPS to" xml:space="preserve">
+    <value>最高NPS</value>
+  </data>
+  <data name="No charts match these filters" xml:space="preserve">
+    <value>このフィルターに一致する譜面はありません</value>
+  </data>
+  <data name="Not available in" xml:space="preserve">
+    <value>未収録バージョン</value>
+  </data>
+  <data name="Not in" xml:space="preserve">
+    <value>未収録</value>
+  </data>
+  <data name="Not yet re-cleared in {0}" xml:space="preserve">
+    <value>{0}ではまだ再クリアしていません</value>
+  </data>
+  <data name="Note count" xml:space="preserve">
+    <value>ノーツ数</value>
+  </data>
+  <data name="Notes from" xml:space="preserve">
+    <value>最低ノーツ数</value>
+  </data>
+  <data name="Notes to" xml:space="preserve">
+    <value>最高ノーツ数</value>
+  </data>
+  <data name="One row per chart and mix" xml:space="preserve">
+    <value>譜面×バージョンごとに1行</value>
+  </data>
+  <data name="Pass rate at least (%)" xml:space="preserve">
+    <value>最低クリア率（%）</value>
+  </data>
+  <data name="Phoenix grade at least" xml:space="preserve">
+    <value>Phoenixランク以上</value>
+  </data>
+  <data name="Phoenix plate at least" xml:space="preserve">
+    <value>Phoenixプレート以上</value>
+  </data>
+  <data name="Phoenix score from" xml:space="preserve">
+    <value>Phoenix最低スコア</value>
+  </data>
+  <data name="Phoenix score to" xml:space="preserve">
+    <value>Phoenix最高スコア</value>
+  </data>
+  <data name="Quick record" xml:space="preserve">
+    <value>クイック記録</value>
+  </data>
+  <data name="Recorded from" xml:space="preserve">
+    <value>記録日（から）</value>
+  </data>
+  <data name="Recorded to" xml:space="preserve">
+    <value>記録日（まで）</value>
+  </data>
+  <data name="Recorded {0}" xml:space="preserve">
+    <value>{0}を記録しました</value>
+  </data>
+  <data name="Remix" xml:space="preserve">
+    <value>リミックス</value>
+  </data>
+  <data name="Rerated down" xml:space="preserve">
+    <value>レベル下方修正</value>
+  </data>
+  <data name="Rerated up" xml:space="preserve">
+    <value>レベル上方修正</value>
+  </data>
+  <data name="Scoring level from" xml:space="preserve">
+    <value>最低スコアリングレベル</value>
+  </data>
+  <data name="Scoring level to" xml:space="preserve">
+    <value>最高スコアリングレベル</value>
+  </data>
+  <data name="Shape" xml:space="preserve">
+    <value>形式</value>
+  </data>
+  <data name="Short Cut" xml:space="preserve">
+    <value>ショートカット</value>
+  </data>
+  <data name="Song name contains" xml:space="preserve">
+    <value>曲名に含む</value>
+  </data>
+  <data name="Sort by" xml:space="preserve">
+    <value>並び替え</value>
+  </data>
+  <data name="Unplayed" xml:space="preserve">
+    <value>未プレイ</value>
+  </data>
+  <data name="highlighted only" xml:space="preserve">
+    <value>代表スキルのみ</value>
+  </data>
+  <data name="official" xml:space="preserve">
+    <value>公式</value>
+  </data>
+  <data name="{0} charts · current filters" xml:space="preserve">
+    <value>{0}譜面・現在のフィルター</value>
+  </data>
+  <data name="{0} columns" xml:space="preserve">
+    <value>{0}列</value>
+  </data>
+  <data name="{0} mixes" xml:space="preserve">
+    <value>{0}バージョン</value>
+  </data>
+  <data name="{0} notes" xml:space="preserve">
+    <value>{0}ノーツ</value>
+  </data>
+  <data name="{0} scores" xml:space="preserve">
+    <value>{0}スコア</value>
+  </data>
+  <data name="Newest content" xml:space="preserve">
+    <value>最新収録</value>
+  </data>
+  <data name="My grade" xml:space="preserve">
+    <value>自分のランク</value>
+  </data>
+  <data name="My recent" xml:space="preserve">
+    <value>自分の最近の記録</value>
+  </data>
+  <data name="Overrated" xml:space="preserve">
+    <value>過大評価</value>
+  </data>
+  <data name="Unranked" xml:space="preserve">
+    <value>未分類</value>
+  </data>
+  <data name="Chart columns" xml:space="preserve">
+    <value>譜面の列</value>
+  </data>
+  <data name="Community columns" xml:space="preserve">
+    <value>コミュニティの列</value>
+  </data>
+  <data name="My columns" xml:space="preserve">
+    <value>自分の列</value>
+  </data>
+  <data name="Artist" xml:space="preserve">
+    <value>アーティスト</value>
+  </data>
+  <data name="Latest mix" xml:space="preserve">
+    <value>最新バージョン</value>
+  </data>
+  <data name="Duration (seconds)" xml:space="preserve">
+    <value>時間（秒）</value>
+  </data>
+  <data name="Badges" xml:space="preserve">
+    <value>バッジ</value>
+  </data>
+  <data name="Community Vote rating" xml:space="preserve">
+    <value>コミュニティ投票値</value>
+  </data>
+  <data name="Score count" xml:space="preserve">
+    <value>スコア数</value>
+  </data>
+  <data name="PG count" xml:space="preserve">
+    <value>PG数</value>
+  </data>
+  <data name="My Phoenix score" xml:space="preserve">
+    <value>自分のPhoenixスコア</value>
+  </data>
+  <data name="My Phoenix grade" xml:space="preserve">
+    <value>自分のPhoenixランク</value>
+  </data>
+  <data name="My Phoenix plate" xml:space="preserve">
+    <value>自分のPhoenixプレート</value>
+  </data>
+  <data name="My legacy grade" xml:space="preserve">
+    <value>自分のレガシーランク</value>
+  </data>
+  <data name="My legacy score" xml:space="preserve">
+    <value>自分のレガシースコア</value>
+  </data>
+  <data name="My broken flag" xml:space="preserve">
+    <value>ブレイク状態</value>
+  </data>
+  <data name="My recorded date" xml:space="preserve">
+    <value>自分の記録日</value>
+  </data>
+  <data name="Runs" xml:space="preserve">
+    <value>ラン</value>
+  </data>
+  <data name="Anchor Runs" xml:space="preserve">
+    <value>アンカーラン</value>
+  </data>
+  <data name="Runs Without Twists" xml:space="preserve">
+    <value>捻りなしラン</value>
+  </data>
+  <data name="Drills" xml:space="preserve">
+    <value>ドリル</value>
+  </data>
+  <data name="Jumps" xml:space="preserve">
+    <value>ジャンプ</value>
+  </data>
+  <data name="Jacks" xml:space="preserve">
+    <value>ジャック</value>
+  </data>
+  <data name="Brackets" xml:space="preserve">
+    <value>ブラケット</value>
+  </data>
+  <data name="Staggered Brackets" xml:space="preserve">
+    <value>段違いブラケット</value>
+  </data>
+  <data name="Bracket Runs" xml:space="preserve">
+    <value>ブラケットラン</value>
+  </data>
+  <data name="Bracket Drills" xml:space="preserve">
+    <value>ブラケットドリル</value>
+  </data>
+  <data name="Bracket Jumps" xml:space="preserve">
+    <value>ブラケットジャンプ</value>
+  </data>
+  <data name="Bracket Twists" xml:space="preserve">
+    <value>ブラケット捻り</value>
+  </data>
+  <data name="Twists" xml:space="preserve">
+    <value>捻り</value>
+  </data>
+  <data name="Twist 90" xml:space="preserve">
+    <value>90度捻り</value>
+  </data>
+  <data name="Over-90 Twists" xml:space="preserve">
+    <value>90度以上の捻り</value>
+  </data>
+  <data name="Close Twists" xml:space="preserve">
+    <value>近距離捻り</value>
+  </data>
+  <data name="Far Twists" xml:space="preserve">
+    <value>遠距離捻り</value>
+  </data>
+  <data name="Mid-6 Doubles" xml:space="preserve">
+    <value>中央6パネル</value>
+  </data>
+  <data name="Mid-4 Doubles" xml:space="preserve">
+    <value>中央4パネル</value>
+  </data>
+  <data name="Sustained" xml:space="preserve">
+    <value>持久型</value>
+  </data>
+  <data name="Bursty" xml:space="preserve">
+    <value>瞬間密度型</value>
+  </data>
+  <data name="Footswitches" xml:space="preserve">
+    <value>フットスイッチ</value>
+  </data>
+  <data name="Hold Footswitches" xml:space="preserve">
+    <value>ホールドフットスイッチ</value>
+  </data>
+  <data name="Hold Footslides" xml:space="preserve">
+    <value>ホールドスライド</value>
+  </data>
+  <data name="5-Stairs" xml:space="preserve">
+    <value>5段階段</value>
+  </data>
+  <data name="10-Stairs" xml:space="preserve">
+    <value>10段階段</value>
+  </data>
+  <data name="Yog Walks" xml:space="preserve">
+    <value>ヨグウォーク</value>
+  </data>
+  <data name="Cross-pad Transitions" xml:space="preserve">
+    <value>パッド間移動</value>
+  </data>
+  <data name="Co-op Pad Transitions" xml:space="preserve">
+    <value>コーオプパッド移動</value>
+  </data>
+  <data name="Splits" xml:space="preserve">
+    <value>スプリット</value>
+  </data>
+  <data name="Hands" xml:space="preserve">
+    <value>ハンド</value>
+  </data>
+  <data name="Doublesteps" xml:space="preserve">
+    <value>ダブルステップ</value>
+  </data>
+  <data name="Side-3 Singles" xml:space="preserve">
+    <value>サイド3パネル</value>
+  </data>
+  <data name="Single" xml:space="preserve">
+    <value>シングル</value>
+  </data>
+  <data name="Double" xml:space="preserve">
+    <value>ダブル</value>
+  </data>
+  <data name="Single Performance" xml:space="preserve">
+    <value>シングルパフォーマンス</value>
+  </data>
+  <data name="Double Performance" xml:space="preserve">
+    <value>ダブルパフォーマンス</value>
+  </data>
+  <data name="Half-Double" xml:space="preserve">
+    <value>ハーフダブル</value>
+  </data>
+  <data name="Arcade" xml:space="preserve">
+    <value>アーケード</value>
+  </data>
+  <data name="Any" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="More filters" xml:space="preserve">
+    <value>フィルターを増やす</value>
+  </data>
+  <data name="Fewer filters" xml:space="preserve">
+    <value>フィルターを減らす</value>
+  </data>
+  <data name="Phoenix grade" xml:space="preserve">
+    <value>Phoenixランク</value>
+  </data>
+  <data name="Phoenix plate" xml:space="preserve">
+    <value>Phoenixプレート</value>
+  </data>
+  <data name="Phoenix score" xml:space="preserve">
+    <value>Phoenixスコア</value>
+  </data>
+  <data name="Modern" xml:space="preserve">
+    <value>現行</value>
+  </data>
+  <data name="Pro &amp; Infinity" xml:space="preserve">
+    <value>Pro &amp; Infinity</value>
+  </data>
+  <data name="Exceed &amp; NX" xml:space="preserve">
+    <value>Exceed &amp; NX</value>
+  </data>
   <data name="PP" xml:space="preserve">
     <value>PP</value>
   </data>
@@ -6000,6 +6363,495 @@
   </data>
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>{0}譜面を{1}以上で（このフォルダーには{2}譜面のみ）</value>
+  </data>
+  <data name="Add folder" xml:space="preserve">
+    <value>フォルダを追加</value>
+  </data>
+  <data name="Backfill Folder Levels" xml:space="preserve">
+    <value>フォルダレベルを再計算</value>
+  </data>
+  <data name="Folder level backfill queued" xml:space="preserve">
+    <value>フォルダレベルの再計算をキューに追加しました</value>
+  </data>
+  <data name="LAMP" xml:space="preserve">
+    <value>LAMP</value>
+  </data>
+  <data name="Pick the folders you're working on." xml:space="preserve">
+    <value>取り組んでいるフォルダを選んでください。</value>
+  </data>
+  <data name="**{0}** at {1}" xml:space="preserve">
+    <value>**{0}**（{1}）</value>
+  </data>
+  <data name="{0} — {1} at {2}" xml:space="preserve">
+    <value>{0} — {1}（{2}）</value>
+  </data>
+  <data name="{0} now {1}" xml:space="preserve">
+    <value>{0} が {1} に</value>
+  </data>
+  <data name="{0} of {1} charts" xml:space="preserve">
+    <value>{1} 譜面中 {0}</value>
+  </data>
+  <data name="{0} of {1} charts ({2}%)" xml:space="preserve">
+    <value>{1} 譜面中 {0}（{2}%）</value>
+  </data>
+  <data name="{0} of {1} charts, averaging {2}" xml:space="preserve">
+    <value>{1} 譜面中 {0}、平均 {2}</value>
+  </data>
+  <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
+    <value>{1} 譜面中 {0} · フォルダーランプまで {2}</value>
+  </data>
+  <data name="{0}% complete" xml:space="preserve">
+    <value>{0}% 完了</value>
+  </data>
+  <data name="{0}% of {1}" xml:space="preserve">
+    <value>{1} の {0}%</value>
+  </data>
+  <data name="CO-OP {0}" xml:space="preserve">
+    <value>CO-OP {0}</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>リセット</value>
+  </data>
+  <data name="{0} of {1} folders" xml:space="preserve">
+    <value>{1} 中 {0} フォルダ</value>
+  </data>
+  <data name="Life Calculator" xml:space="preserve">
+    <value>体力計算機</value>
+  </data>
+  <data name="What a miss actually costs you, and how much clean combo it takes to earn it back." xml:space="preserve">
+    <value>Miss の本当のコストと、それを取り戻すのに必要なクリーンコンボ数。</value>
+  </data>
+  <data name="NX2 / Prime data-mine" xml:space="preserve">
+    <value>NX2 / Prime データマイン</value>
+  </data>
+  <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
+    <value>これらの計算式は Team Infinitesimal が NX2 と Prime からデータマインしたものです。Phoenix や Phoenix 2 での再検証は誰も行っていないため、数値は正確な筐体値ではなく仕組みの形として捉えてください。</value>
+  </data>
+  <data name="of {0} max" xml:space="preserve">
+    <value>最大 {0} 中</value>
+  </data>
+  <data name="Visible bar" xml:space="preserve">
+    <value>視覚バー</value>
+  </data>
+  <data name="Overflow" xml:space="preserve">
+    <value>オーバーフロー</value>
+  </data>
+  <data name="Current life" xml:space="preserve">
+    <value>現在の体力</value>
+  </data>
+  <data name="12%" xml:space="preserve">
+    <value>12%</value>
+  </data>
+  <data name="Song start" xml:space="preserve">
+    <value>曲の開始</value>
+  </data>
+  <data name="Rainbow" xml:space="preserve">
+    <value>虹色</value>
+  </data>
+  <data name="Notes per press" xml:space="preserve">
+    <value>1回の押下あたりのノート数</value>
+  </data>
+  <data name="Reset to song start" xml:space="preserve">
+    <value>曲の開始に戻す</value>
+  </data>
+  <data name="Fill to max" xml:space="preserve">
+    <value>最大まで回復</value>
+  </data>
+  <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
+    <value>Phoenix 2 ではオーバーフローが完全に満タンになるとバーに電撃エフェクトが走ります。ゲームが隠れた体力の存在を認める唯一の瞬間です。</value>
+  </data>
+  <data name="Combo" xml:space="preserve">
+    <value>コンボ</value>
+  </data>
+  <data name="Multiplier is on the floor" xml:space="preserve">
+    <value>倍率は最低値です</value>
+  </data>
+  <data name="Notes since your last break" xml:space="preserve">
+    <value>最後の失敗からのノート数</value>
+  </data>
+  <data name="Gain multiplier" xml:space="preserve">
+    <value>回復倍率</value>
+  </data>
+  <data name="A miss right now" xml:space="preserve">
+    <value>今 Miss したら</value>
+  </data>
+  <data name="Misses left" xml:space="preserve">
+    <value>残り Miss 数</value>
+  </data>
+  <data name="Back to back, from here" xml:space="preserve">
+    <value>ここから連続で</value>
+  </data>
+  <data name="Your survival budget" xml:space="preserve">
+    <value>あなたの生存予算</value>
+  </data>
+  <data name="One break every N notes" xml:space="preserve">
+    <value>Nノートごとに1回の失敗</value>
+  </data>
+  <data name="How much clean combo you have to buy back between breaks, and where your life ends up if you keep paying exactly that." xml:space="preserve">
+    <value>失敗の間にどれだけクリーンコンボを稼ぎ直す必要があるか、そしてそれをちょうど払い続けた場合に体力がどこへ落ち着くか。</value>
+  </data>
+  <data name="Combo, priced" xml:space="preserve">
+    <value>コンボの値段</value>
+  </data>
+  <data name="Chart view" xml:space="preserve">
+    <value>グラフ表示</value>
+  </data>
+  <data name="Where life settles" xml:space="preserve">
+    <value>体力の落ち着き先</value>
+  </data>
+  <data name="How long you survive" xml:space="preserve">
+    <value>生存できる長さ</value>
+  </data>
+  <data name="Starting from a full bar, how many notes you get before you fail. Series stop where you stop dying: past that combo the bar recovers faster than the breaks drain it." xml:space="preserve">
+    <value>満タンから始めて、失敗するまでに何ノート持つか。死ななくなる地点で系列は途切れます。そのコンボを超えると、失敗で減る速さより回復の方が速くなります。</value>
+  </data>
+  <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
+    <value>Nノートごとに1回失敗し続けると、体力はどこかに収束します。崖の下ではゼロに収束します。曲線は緩やかに落ちるのではなく、崖のように落ちます。倍率を建て直すより速く倍率が死んでいるからです。</value>
+  </data>
+  <data name="Level only buys you overflow" xml:space="preserve">
+    <value>レベルが買えるのはオーバーフローだけ</value>
+  </data>
+  <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
+    <value>虹色バーはレベル1でも29でも1000体力です。難しいチャートが与えてくれるのはバーの裏側の体力、つまり筐体には見えず、レベルによって変わる唯一のものです。Miss 1回あたりに必要なコンボは、どのレベルでも同じです。</value>
+  </data>
+  <data name="Lv" xml:space="preserve">
+    <value>Lv</value>
+  </data>
+  <data name="Total life" xml:space="preserve">
+    <value>総体力</value>
+  </data>
+  <data name="Visible bar — always 1000" xml:space="preserve">
+    <value>視覚バー — 常に1000</value>
+  </data>
+  <data name="Overflow — 3 x level squared" xml:space="preserve">
+    <value>オーバーフロー — レベルの2乗×3</value>
+  </data>
+  <data name="Rules of thumb" xml:space="preserve">
+    <value>目安</value>
+  </data>
+  <data name="The cliff, not a slope" xml:space="preserve">
+    <value>坂ではなく崖</value>
+  </data>
+  <data name="Below {0} notes between misses you die at every level. At {0} you cling on at about 1% life. There is no gentle middle: under the cliff your multiplier never rebuilds, so your gain rounds to nothing." xml:space="preserve">
+    <value>Miss の間隔が {0} ノート未満だと、どのレベルでも死にます。{0} ならおよそ1%の体力で踏みとどまります。緩やかな中間はありません。崖の下では倍率が建て直せず、回復量がゼロに丸められます。</value>
+  </data>
+  <data name="A miss costs 40 notes" xml:space="preserve">
+    <value>Miss 1回は40ノート分</value>
+  </data>
+  <data name="Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life." xml:space="preserve">
+    <value>Miss は回復倍率をゼロにします。上限まで戻すには Perfect {0} 回、または Great {1} 回かかります。それまではほとんど体力の増えないノートを叩くことになります。</value>
+  </data>
+  <data name="The rainbow is expensive" xml:space="preserve">
+    <value>虹色は高くつく</value>
+  </data>
+  <data name="Holding a full visible bar costs {0} clean notes per miss, or {1} if you are hitting greats. Simply staying alive costs {2}. Most of your combo budget goes to looking healthy — and below level 10 it cannot be bought at all, because the overflow is thinner than one miss." xml:space="preserve">
+    <value>視覚バーを満タンに保つには Miss 1回あたりクリーン {0} ノート、Great 主体なら {1} ノート必要です。ただ生き残るだけなら {2} で済みます。コンボ予算の大半は「健康に見えること」に使われています。しかもレベル10未満では、オーバーフローが Miss 1回より薄いため、そもそも買えません。</value>
+  </data>
+  <data name="Bads are cheap, then they are not" xml:space="preserve">
+    <value>Bad は安い、そうでもない</value>
+  </data>
+  <data name="A bad is a flat −50 at any life; a miss is up to −270. But a bad still halves your multiplier, so back-to-back bads strangle recovery just as effectively." xml:space="preserve">
+    <value>Bad はどの体力でも一律 −50、Miss は最大 −270 です。ただし Bad も倍率を半減させるため、連続する Bad は同じくらい確実に回復の首を絞めます。</value>
+  </data>
+  <data name="The intro is the danger zone" xml:space="preserve">
+    <value>序盤が危険地帯</value>
+  </data>
+  <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
+    <value>どの曲も体力500・倍率ほぼゼロから始まります。連続 {0} Miss でどのレベルでも死にます。序盤を乗り切れば、レベル {1} では {2} 回まで耐えられます。走り出しは強く。</value>
+  </data>
+  <data name="A good is a dead note" xml:space="preserve">
+    <value>Good は死にノート</value>
+  </data>
+  <data name="Goods give no life, and — unlike perfects and greats — they do not build the multiplier either. They never hurt you. They just do not count." xml:space="preserve">
+    <value>Good は体力を与えず、Perfect や Great と違って倍率も積みません。害はありませんが、ただ数に入らないだけです。</value>
+  </data>
+  <data name="How the bar works" xml:space="preserve">
+    <value>バーの仕組み</value>
+  </data>
+  <data name="Gain" xml:space="preserve">
+    <value>回復</value>
+  </data>
+  <data name="A perfect at a capped multiplier." xml:space="preserve">
+    <value>倍率上限での Perfect。</value>
+  </data>
+  <data name="A great at a capped multiplier." xml:space="preserve">
+    <value>倍率上限での Great。</value>
+  </data>
+  <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
+    <value>同じ Perfect でも、コンボ前の曲開始時。</value>
+  </data>
+  <data name="A good, always." xml:space="preserve">
+    <value>Good は常に。</value>
+  </data>
+  <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
+    <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
+  </data>
+  <data name="Loss" xml:space="preserve">
+    <value>減少</value>
+  </data>
+  <data name="A miss at 1000 life or above — the worst it gets." xml:space="preserve">
+    <value>体力1000以上での Miss — 最悪のケース。</value>
+  </data>
+  <data name="A bad, flat, at any life." xml:space="preserve">
+    <value>Bad は体力に関わらず一律。</value>
+  </data>
+  <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
+    <value>体力100での Miss。減るほど Miss は安くなります。</value>
+  </data>
+  <data name="Below this life a miss costs less than a bad." xml:space="preserve">
+    <value>この体力を下回ると Miss の方が Bad より安くなります。</value>
+  </data>
+  <data name="miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50" xml:space="preserve">
+    <value>miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50</value>
+  </data>
+  <data name="The multiplier" xml:space="preserve">
+    <value>倍率</value>
+  </data>
+  <data name="The cap. Reached after 40 perfects." xml:space="preserve">
+    <value>上限。Perfect 40回で到達。</value>
+  </data>
+  <data name="Where every song starts you." xml:space="preserve">
+    <value>どの曲もここから始まります。</value>
+  </data>
+  <data name="A miss. In practice: straight to zero." xml:space="preserve">
+    <value>Miss。実質ゼロ直行。</value>
+  </data>
+  <data name="A bad. Roughly 22 notes of progress gone." xml:space="preserve">
+    <value>Bad。およそ22ノート分の積み上げが消えます。</value>
+  </data>
+  <data name="perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80" xml:space="preserve">
+    <value>perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80</value>
+  </data>
+  <data name="&quot;Lifebars are weird.&quot;" xml:space="preserve">
+    <value>&quot;Lifebars are weird.&quot;</value>
+  </data>
+  <data name="— Zelllooo" xml:space="preserve">
+    <value>— Zelllooo</value>
+  </data>
+  <data name="Formulas data-mined from NX2 and Prime by" xml:space="preserve">
+    <value>NX2 と Prime からのデータマイン元：</value>
+  </data>
+  <data name="Team Infinitesimal" xml:space="preserve">
+    <value>Team Infinitesimal</value>
+  </data>
+  <data name="Unconfirmed against Phoenix and Phoenix 2 — see the note at the top of the page." xml:space="preserve">
+    <value>Phoenix および Phoenix 2 では未確認です。ページ上部の注記を参照してください。</value>
+  </data>
+  <data name="Overflow full" xml:space="preserve">
+    <value>オーバーフロー満タン</value>
+  </data>
+  <data name="Into overflow" xml:space="preserve">
+    <value>オーバーフロー突入</value>
+  </data>
+  <data name="One miss from out" xml:space="preserve">
+    <value>Miss 1回で終了</value>
+  </data>
+  <data name="{0}% of the bar" xml:space="preserve">
+    <value>バーの {0}%</value>
+  </data>
+  <data name="Capped — perfects pay +{0}" xml:space="preserve">
+    <value>上限 — Perfect は +{0}</value>
+  </data>
+  <data name="{0} more perfects to cap" xml:space="preserve">
+    <value>上限まであと Perfect {0} 回</value>
+  </data>
+  <data name="and {0} notes of multiplier" xml:space="preserve">
+    <value>さらに倍率 {0} ノート分</value>
+  </data>
+  <data name="multiplier already gone" xml:space="preserve">
+    <value>倍率はすでにゼロ</value>
+  </data>
+  <data name="Just stay alive" xml:space="preserve">
+    <value>とにかく生き残る</value>
+  </data>
+  <data name="Impossible at level {0} — the overflow is thinner than one miss." xml:space="preserve">
+    <value>レベル {0} では不可能 — オーバーフローが Miss 1回より薄いためです。</value>
+  </data>
+  <data name="Hold half the bar" xml:space="preserve">
+    <value>バーの半分を保つ</value>
+  </data>
+  <data name="Hold the rainbow" xml:space="preserve">
+    <value>虹色を保つ</value>
+  </data>
+  <data name="Hold the rainbow, on bads" xml:space="preserve">
+    <value>Bad で虹色を保つ</value>
+  </data>
+  <data name="Impossible at level {0} — the overflow is thinner than one bad." xml:space="preserve">
+    <value>レベル {0} では不可能 — オーバーフローが Bad 1回より薄いためです。</value>
+  </data>
+  <data name="Those assume perfects in between. On greats the same three cost {0}, {1} and {2} notes." xml:space="preserve">
+    <value>以上は間を Perfect で埋めた場合です。Great の場合、同じ3つは {0}、{1}、{2} ノートになります。</value>
+  </data>
+  <data name="From the opening 500 life, {0} straight misses or {1} straight bads end the run — {2} and {3} once the overflow is full." xml:space="preserve">
+    <value>開始時の体力500からは、連続 {0} Miss または連続 {1} Bad で終了します。オーバーフローが満タンなら {2} 回と {3} 回です。</value>
+  </data>
+  <data name="notes per bad" xml:space="preserve">
+    <value>Bad 1回あたりのノート数</value>
+  </data>
+  <data name="notes per miss" xml:space="preserve">
+    <value>Miss 1回あたりのノート数</value>
+  </data>
+  <data name="Settles at a full bar — {0} life" xml:space="preserve">
+    <value>満タンで落ち着きます — 体力 {0}</value>
+  </data>
+  <data name="Settles at {0} life, {1}% of the bar" xml:space="preserve">
+    <value>体力 {0} で落ち着きます、バーの {1}%</value>
+  </data>
+  <data name="Perfect combo, miss break" xml:space="preserve">
+    <value>Perfect コンボ、Miss で失敗</value>
+  </data>
+  <data name="Great combo, miss break" xml:space="preserve">
+    <value>Great コンボ、Miss で失敗</value>
+  </data>
+  <data name="Perfect combo, bad break" xml:space="preserve">
+    <value>Perfect コンボ、Bad で失敗</value>
+  </data>
+  <data name="Great combo, bad break" xml:space="preserve">
+    <value>Great コンボ、Bad で失敗</value>
+  </data>
+  <data name="Combo between breaks" xml:space="preserve">
+    <value>失敗の間のコンボ</value>
+  </data>
+  <data name="Notes before you fail" xml:space="preserve">
+    <value>失敗までのノート数</value>
+  </data>
+  <data name="Life it settles at" xml:space="preserve">
+    <value>落ち着く体力</value>
+  </data>
+  <data name="Rainbow · 1000" xml:space="preserve">
+    <value>虹色 · 1000</value>
+  </data>
+  <data name="Half bar · 500" xml:space="preserve">
+    <value>バーの半分 · 500</value>
+  </data>
+  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
+    <value>{0}、{1}プレート想定です。</value>
+  </data>
+  <data name="Boss breakers" xml:space="preserve">
+    <value>ボスブレイカー</value>
+  </data>
+  <data name="CO-OP" xml:space="preserve">
+    <value>CO-OP</value>
+  </data>
+  <data name="Earned" xml:space="preserve">
+    <value>獲得済み</value>
+  </data>
+  <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
+    <value>この称号の保持者は全員プロフィールを非公開にしています。</value>
+  </data>
+  <data name="From {0}" xml:space="preserve">
+    <value>{0}から</value>
+  </data>
+  <data name="How rare" xml:space="preserve">
+    <value>レア度</value>
+  </data>
+  <data name="In progress" xml:space="preserve">
+    <value>進行中</value>
+  </data>
+  <data name="No title yet" xml:space="preserve">
+    <value>称号はまだありません</value>
+  </data>
+  <data name="No titles match what you're looking for." xml:space="preserve">
+    <value>条件に合う称号がありません。</value>
+  </data>
+  <data name="Nobody here holds this title yet." xml:space="preserve">
+    <value>この称号の保持者はまだいません。</value>
+  </data>
+  <data name="Not yet" xml:space="preserve">
+    <value>未獲得</value>
+  </data>
+  <data name="One-offs" xml:space="preserve">
+    <value>単発称号</value>
+  </data>
+  <data name="Play count" xml:space="preserve">
+    <value>プレイ回数</value>
+  </data>
+  <data name="Progress tracked by the official piugame import, not by piuscores data." xml:space="preserve">
+    <value>この進捗は piuscores ではなく公式 piugame のインポートで確認されます。</value>
+  </data>
+  <data name="Progression" xml:space="preserve">
+    <value>ステップ</value>
+  </data>
+  <data name="Search a title, chart, or step artist" xml:space="preserve">
+    <value>称号・譜面・ステップアーティストを検索</value>
+  </data>
+  <data name="Step artists" xml:space="preserve">
+    <value>ステップアーティスト</value>
+  </data>
+  <data name="Suggested level" xml:space="preserve">
+    <value>おすすめレベル</value>
+  </data>
+  <data name="Who has it" xml:space="preserve">
+    <value>保持者</value>
+  </data>
+  <data name="Your progress" xml:space="preserve">
+    <value>あなたの進捗</value>
+  </data>
+  <data name="Your title" xml:space="preserve">
+    <value>あなたの称号</value>
+  </data>
+  <data name="titles earned" xml:space="preserve">
+    <value>称号獲得</value>
+  </data>
+  <data name="{0} more keep their profile private." xml:space="preserve">
+    <value>他 {0} 人はプロフィールを非公開にしています。</value>
+  </data>
+  <data name="{0} of {1} earned" xml:space="preserve">
+    <value>{1} 個中 {0} 個獲得</value>
+  </data>
+  <data name="{0} of {1} tracked players" xml:space="preserve">
+    <value>記録のあるプレイヤー {1} 人中 {0} 人</value>
+  </data>
+  <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
+    <value>称号は {0} 個ありますが、ゲームは進捗を一切見せてくれません。</value>
+  </data>
+  <data name="{0} tracked here, {1} from the official import" xml:space="preserve">
+    <value>{0} 個はここで追跡、{1} 個は公式インポート</value>
+  </data>
+  <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
+    <value>他 {0} 人はこの段位をさらに上まで進んでいます。</value>
+  </data>
+  <data name="Added to Favorites!" xml:space="preserve">
+    <value>気に入れに追加しました！</value>
+  </data>
+  <data name="Removed from Favorites!" xml:space="preserve">
+    <value>気に入れから削除しました！</value>
+  </data>
+  <data name="Clear all" xml:space="preserve">
+    <value>すべてクリア</value>
+  </data>
+  <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
+    <value>上の検索バーで曲名を検索してください — 譜面ごとに専用ページがあります。</value>
+  </data>
+  <data name="Minimum" xml:space="preserve">
+    <value>最小</value>
+  </data>
+  <data name="Maximum" xml:space="preserve">
+    <value>最大</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>オフ</value>
+  </data>
+  <data name="#{0} most played" xml:space="preserve">
+    <value>プレイ数 {0}位</value>
+  </data>
+  <data name="Official play ranking on piugame.com" xml:space="preserve">
+    <value>piugame.com の公式プレイランキング</value>
+  </data>
+  <data name="More info" xml:space="preserve">
+    <value>詳細を見る</value>
+  </data>
+  <data name="Popularity overall" xml:space="preserve">
+    <value>全体の人気順位</value>
+  </data>
+  <data name="Popularity in {0}" xml:space="preserve">
+    <value>{0} 内の人気順位</value>
+  </data>
+  <data name="#{0}" xml:space="preserve">
+    <value>{0}位</value>
+  </data>
+  <data name="Select Folders" xml:space="preserve">
+    <value>フォルダを選択</value>
   </data>
   <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
     <value>{0}から{1}の間に難度が変わった・追加された・削除された譜面のすべて。</value>

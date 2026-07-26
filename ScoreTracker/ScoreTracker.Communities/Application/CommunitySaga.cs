@@ -193,39 +193,41 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             return c.Flags != HighlightFlags.None || ReferenceEquals(c, bigGain);
         }
 
-        // Non-co-op rows in the universal noteworthy order (difficulty desc, scoring level
-        // desc, score desc): flagged rows lead as art/text rows and own the captions, the
-        // rest fall to the compact "More scores" block, anything past that to the grouped
-        // overflow line.
-        var standard = known
-            .Where(c => charts[c.ChartId].Type != ChartType.CoOp)
+        // The highlights section ALWAYS fills its art rows when the batch has the scores to
+        // fill them: flagged rows lead and own the captions, then the best unflagged scores top
+        // it up to the art cap, carrying no caption. A card with one flagged score still shows
+        // five jackets, not one jacket over a bare list. Co-ops are last in line — they never
+        // take a slot an S/D score could fill — but they ARE eligible, so a co-op-only session
+        // gets jackets instead of nothing.
+        var promotable = known
             .OrderByDescending(Notable)
+            .ThenBy(c => charts[c.ChartId].Type == ChartType.CoOp)
             .ThenByDescending(c => (int)charts[c.ChartId].Level)
             .ThenByDescending(c => scoringLevels.TryGetValue(c.ChartId, out var sl) ? sl : 0)
             .ThenByDescending(c => (int)(bests[c.ChartId].Score ?? 0))
             .ToArray();
-        var notable = standard.Where(Notable).Take(NotableRowCap).ToArray();
-        // When nothing was flagged the card would have no art at all — just a compact list. Promote
-        // the session's top scores (owner call) so it leads with jacket rows: up to the art cap, in
-        // the noteworthy order (level, then scoring level, then score), the promoted rows just carrying
-        // no caption ("Passed"/the upscore delta, no why-line). Three scores become three art rows —
-        // they ARE the highlights section. A card that earned any real highlight keeps its curated set.
-        if (notable.Length == 0)
-            notable = standard.Take(ArtRowCap).ToArray();
+        var notable = promotable.Where(Notable).Take(NotableRowCap).ToArray();
+        if (notable.Length < ArtRowCap)
+            notable = notable
+                .Concat(promotable.Where(c => !Notable(c)).Take(ArtRowCap - notable.Length))
+                .ToArray();
         var notableIds = notable.Select(c => c.ChartId).ToHashSet();
-        // Re-sort the remainder purely by level (owner call): when notable overflows its cap
-        // the extra flagged rows are lower-level, and leaving them in the notable-first order
-        // would float them above higher-level unflagged charts. "More scores" is one clean run.
-        var moreScores = standard.Where(c => !notableIds.Contains(c.ChartId))
+        // The non-co-op remainder, sorted purely by level: when notable overflows its cap the
+        // extra flagged rows are lower-level, and leaving them in the notable-first order would
+        // float them above higher-level unflagged charts. "More scores" is one clean run.
+        var moreScores = known
+            .Where(c => charts[c.ChartId].Type != ChartType.CoOp && !notableIds.Contains(c.ChartId))
             .OrderByDescending(c => (int)charts[c.ChartId].Level)
             .ThenByDescending(c => scoringLevels.TryGetValue(c.ChartId, out var sl) ? sl : 0)
             .ThenByDescending(c => (int)(bests[c.ChartId].Score ?? 0))
             .Take(MoreScoresCap)
             .ToArray();
 
-        // Co-ops get their own compact bucket (owner call): up to 5, community co-op pass
-        // difficulty descending. They no longer take art rows.
-        var coOpChanges = known.Where(c => charts[c.ChartId].Type == ChartType.CoOp).ToArray();
+        // Co-ops get their own compact bucket: up to 5, community co-op pass difficulty
+        // descending. Any co-op the highlights section already promoted to an art row drops out.
+        var coOpChanges = known
+            .Where(c => charts[c.ChartId].Type == ChartType.CoOp && !notableIds.Contains(c.ChartId))
+            .ToArray();
         var coOpScores = Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>();
         if (coOpChanges.Length > 0)
         {
@@ -290,7 +292,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             context.CancellationToken);
 
         var inputs = new SnapshotInputs(e, user, known, notable, moreScores, coOpScores, charts, bests, weekly,
-            daily, dailyChartId, reclears);
+            daily, dailyChartId, reclears, bigGain?.ChartId);
         await SendRichToCommunityDiscords(user.Id,
             culture => new[] { BuildSnapshotCard(inputs, folderStats, culture) }, context.CancellationToken);
     }
@@ -336,7 +338,8 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         WeeklyPlacementRecord[] Weekly,
         DailyStepPlacement? Daily,
         Guid DailyChartId,
-        IReadOnlySet<Guid> Reclears);
+        IReadOnlySet<Guid> Reclears,
+        Guid? BigGainChartId);
 
     private RichBotMessage BuildSnapshotCard(SnapshotInputs inputs, string folderStats, string? culture)
     {
@@ -425,8 +428,10 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         foreach (var change in inputs.Notable)
         {
             var chart = inputs.Charts[change.ChartId];
-            var text = RowText(change, chart, inputs.Bests[change.ChartId], IsBigGain(change, inputs.Known),
-                ReclearMark(inputs, change.ChartId), culture);
+            // The 💥 winner is chosen once in Consume, so a tie for the biggest gain can never
+            // caption two rows as "the biggest".
+            var text = RowText(change, chart, inputs.Bests[change.ChartId],
+                change.ChartId == inputs.BigGainChartId, ReclearMark(inputs, change.ChartId), culture);
             var cost = Estimate(text);
             // Notable rows are the priciest; when one won't fit, the rest fall to overflow
             // (the cheaper compact buckets still get their turn at the leftover budget).
@@ -533,18 +538,6 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         };
     }
 
-    /// <summary>The 💥 row: the session's single biggest upscore, when ≥ the threshold.</summary>
-    private static bool IsBigGain(ScoreHighlightsCapturedEvent.HighlightedChange change,
-        ScoreHighlightsCapturedEvent.HighlightedChange[] known)
-    {
-        if (change.IsBroken || change.OldScore == null || change.NewScore == null) return false;
-        var gain = change.NewScore.Value - change.OldScore.Value;
-        if (gain < BigGainThreshold) return false;
-        return gain == known
-            .Where(c => !c.IsBroken && c.OldScore != null && c.NewScore != null)
-            .Max(c => c.NewScore!.Value - c.OldScore!.Value);
-    }
-
     // A cross-mix reclear gets a trailing asterisk on its row, escaped so Discord renders it
     // literally rather than reading it as emphasis against an adjacent bold song link. The set
     // holds only new-pass reclears, so membership alone qualifies the mark.
@@ -603,11 +596,12 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         lines.AddRange(titles.Select(t =>
             "🏅 " + _localizer.Get(culture, "**{0}** completed", Bracket(t.Title))));
 
-        // Paragon gains are never counted or aggregated — the new grade IS the content
-        // (owner call), so every gain is its own grade-named line.
-        var paragons = e.Milestones.Where(m => m.Kind == MilestoneKind.ParagonLevelGain).ToArray();
-        lines.AddRange(paragons.Select(p => "🏅 " + _localizer.Get(culture, "**{0}** paragon → {1}",
-            Bracket(p.Title), ParagonEmoji(p.Detail))));
+        // Folder movement gets the full spectrum here — every tier crossing and every grade
+        // improvement. The homepage Community Highlights widget is the surface that keeps a high
+        // bar (docs/design/folder-level-progression.md §5.5); a channel the player opted into
+        // wants the detail.
+        foreach (var moved in e.Milestones.Where(m => m.Kind == MilestoneKind.FolderProgress))
+            lines.Add(FolderProgressLine(moved, culture));
 
         foreach (var lamp in e.Milestones.Where(m => m.Kind is MilestoneKind.FolderPassLamp
                      or MilestoneKind.FolderGradeLamp or MilestoneKind.FolderPlateLamp))
@@ -644,6 +638,23 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             "PG" => "#PLATE|PerfectGame#",
             _ => $"#LETTERGRADE|{detail}|False#"
         };
+    }
+
+    /// <summary>
+    ///     One shape for every folder movement: "&lt;bubble&gt; 60%→80% at AAA→AA+", with a half
+    ///     shown only when it actually moved, and 🎉 on a Folder Lamp. The bubble is the guild's
+    ///     own difficulty emoji — the game's ball art, never recoloured by letter grade.
+    /// </summary>
+    private string FolderProgressLine(PlayerMilestoneRecord m, string? culture)
+    {
+        var detail = FolderProgressDetail.TryParse(m.Detail);
+        if (detail == null) return $"📈 {m.Detail}";
+
+        var body = detail.GradeText == null
+            ? $"**{detail.CompletionText}**"
+            : _localizer.Get(culture, "**{0}** at {1}", detail.CompletionText, detail.GradeText);
+        var line = $"{(detail.IsLamp ? "🎉" : "📈")} #DIFFICULTY|{detail.Folder}# {body}";
+        return detail.IsLamp ? line + " 🎉" : line;
     }
 
     private string LampLine(PlayerMilestoneRecord m, string? culture)
@@ -746,7 +757,6 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
                 ? _localizer.Get(culture, "#{0} in your PUMBILITY", d.PumbilityRank)
                 : _localizer.Get(culture, "PUMBILITY top 50")));
         if (flags.HasFlag(HighlightFlags.ScoreQuality90)) parts.Add(PeerCaption(d, best, culture));
-        if (flags.HasFlag(HighlightFlags.TitleProgress)) parts.Add(SkillCaption(d, culture));
         if (flags.HasFlag(HighlightFlags.FolderDebut))
             parts.Add("🆕 " + (d?.FolderDebutOrdinal != null
                 ? $"{Ordinal(d.FolderDebutOrdinal.Value, culture)} {chart.Type.GetShortHand()}{(int)chart.Level}"
@@ -766,14 +776,6 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         if (isPg && d.PeerPgCount != null)
             return "📊 " + _localizer.Get(culture, "PG · {0} of {1} peers have it", d.PeerPgCount, d.PeerCount);
         return "📊 " + _localizer.Get(culture, "#{0} of {1} peers", (d.PeerBetterCount ?? 0) + 1, d.PeerCount);
-    }
-
-    private string SkillCaption(HighlightDetail? d, string? culture)
-    {
-        if (d?.SkillTitleName == null) return "🏅 " + _localizer.Get(culture, "Title progress");
-        return d.SkillTitleScore != null && d.SkillTitleThreshold != null
-            ? $"🏅 {Bracket(d.SkillTitleName)} ({Abbrev(d.SkillTitleScore.Value)}/{Abbrev(d.SkillTitleThreshold.Value)})"
-            : $"🏅 {Bracket(d.SkillTitleName)}";
     }
 
     // In-game titles show bracketed ([Expert Lv. 4]); skill/co-op/boss names already carry

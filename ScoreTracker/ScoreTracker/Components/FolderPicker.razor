@@ -21,7 +21,7 @@
                 {
                     <FolderGrid InitialType="Type" ShowCoOp="ShowCoOp"
                                 IsSelected="(t, l) => t == Type && l == Level"
-                                IsEnabled="IsEnabled"
+                                IsMissing="IsMissing"
                                 LevelPicked="Pick"></FolderGrid>
                 }
             </div>
@@ -49,11 +49,11 @@
     [Parameter] public bool ShowCoOp { get; set; } = true;
 
     /// <summary>
-    ///     Which folders exist for this host (default: all of them). The steppers respect it
-    ///     too — ◄ ► walk to the next folder that has something in it rather than marching
-    ///     one level at a time through folders the grid greys out.
+    ///     Which folders this host has nothing for (default: none of them). The steppers
+    ///     respect it too — ◄ ► walk to the next folder that has something in it rather than
+    ///     marching one level at a time through folders the grid greys out.
     /// </summary>
-    [Parameter] public Func<ChartType, int, bool> IsEnabled { get; set; } = (_, _) => true;
+    [Parameter] public Func<ChartType, int, bool> IsMissing { get; set; } = (_, _) => false;
 
     [Parameter] public EventCallback<(ChartType Type, int Level)> FolderChanged { get; set; }
 
@@ -77,7 +77,7 @@
         if (Level == null) return null;
         var (min, max) = Bounds(Type);
         for (var target = Level.Value + direction; target >= min && target <= max; target += direction)
-            if (IsEnabled(Type, target))
+            if (!IsMissing(Type, target))
                 return target;
         return null;
     }

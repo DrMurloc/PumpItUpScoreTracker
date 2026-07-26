@@ -82,6 +82,25 @@ public static class WidgetRegistry
             typeof(DailyStepConfigPanel),
             typeof(DailyStepConfig),
             RefreshOnScoreImport: true),
+        new("folder-levels",
+            "Folder Levels",
+            "How far through your folders you are, and how well.",
+            WidgetCategory.Progress,
+            Icons.Material.Filled.Folder,
+            // Each size holds a fixed number of folders (FolderLevelsDefaults.CapacityFor), and
+            // detail drops with the cell rather than the layout changing: 1x1 is one folder
+            // large, everything else stacks rows, and the tier ticks need a second row to be
+            // worth cutting in.
+            new[]
+            {
+                SizePreset.OneByOne, SizePreset.TwoByOne, SizePreset.TwoByTwo, SizePreset.TwoByThree
+            },
+            SizePreset.TwoByTwo,
+            new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            typeof(FolderLevelsWidget),
+            typeof(FolderLevelsConfigPanel),
+            typeof(FolderLevelsConfig),
+            RefreshOnScoreImport: true),
         new("suggested-charts",
             "Suggested Charts",
             "Charts picked for you, tuned by goal.",
@@ -198,6 +217,19 @@ public static class WidgetRegistry
                     {
                         Metric = BreakdownMetric.Pass, Aggregation = BreakdownAggregation.Breakdown,
                         SeparateSinglesDoubles = false, MinLevel = 1, MaxLevel = 28
+                    })),
+                // Clear Progress coloured by grade — the folder-levels spectrum at all-folders
+                // scale (docs/design/folder-level-progression.md §6). Deliberately a preset
+                // rather than a colour field on Clear Progress: the LetterGrade metric already
+                // expresses it exactly, and a second way to say the same thing would widen the
+                // public config vocabulary (D19) for nothing.
+                new WidgetDrawerPreset("Clear Progress by Grade",
+                    "How much of every folder you've cleared, coloured by the grades you hold.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Metric = BreakdownMetric.LetterGrade, Aggregation = BreakdownAggregation.Breakdown,
+                        Normalize = true, IncludeUnplayed = true, SeparateSinglesDoubles = false,
+                        MinLevel = 1, MaxLevel = 28
                     })),
                 new WidgetDrawerPreset("Co-Op Completion",
                     "How many co-op charts you've cleared, by player count.",

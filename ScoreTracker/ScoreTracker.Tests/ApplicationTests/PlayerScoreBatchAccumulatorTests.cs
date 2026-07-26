@@ -97,4 +97,64 @@ public sealed class PlayerScoreBatchAccumulatorTests
         Assert.Equal(sessionB, batch!.SessionId);
         Assert.Equal(2, batch.NewChartIds.Length);
     }
+
+    [Fact]
+    public void DetectedTitlesParkOnAnOpenBatchAndSurviveItsDrain()
+    {
+        // The site path parks badges while the batch is open, but the title step that reads them
+        // runs AFTER the drain removed the batch — so they must live outside the batch state.
+        var batcher = new PlayerScoreBatchAccumulator();
+        batcher.AddToBatch(MixEnum.Phoenix, UserId, Now.UtcDateTime, Guid.NewGuid(), true, null, Guid.NewGuid());
+
+        Assert.True(batcher.TryAddDetectedTitles(MixEnum.Phoenix, UserId, new[] { "THE BLACK" }));
+        batcher.TakeBatch(MixEnum.Phoenix, UserId);
+
+        Assert.Equal(new[] { "THE BLACK" }, batcher.TakeDetectedTitles(MixEnum.Phoenix, UserId));
+    }
+
+    [Fact]
+    public void DetectedTitlesAreRefusedWhenNoBatchIsOpenToCarryThem()
+    {
+        // Nothing to ride on means the caller has to announce them itself.
+        var batcher = new PlayerScoreBatchAccumulator();
+
+        Assert.False(batcher.TryAddDetectedTitles(MixEnum.Phoenix, UserId, new[] { "THE BLACK" }));
+        Assert.Empty(batcher.TakeDetectedTitles(MixEnum.Phoenix, UserId));
+    }
+
+    [Fact]
+    public void TakingDetectedTitlesEmptiesThemSoASecondCardCannotRepeatThem()
+    {
+        // This is the property that fixes the repeated-titles bug: a session spans many batches,
+        // and only the first one to take a badge may announce it.
+        var batcher = new PlayerScoreBatchAccumulator();
+        batcher.AddToBatch(MixEnum.Phoenix, UserId, Now.UtcDateTime, Guid.NewGuid(), true, null, Guid.NewGuid());
+        batcher.TryAddDetectedTitles(MixEnum.Phoenix, UserId, new[] { "THE BLACK" });
+
+        Assert.Single(batcher.TakeDetectedTitles(MixEnum.Phoenix, UserId));
+        Assert.Empty(batcher.TakeDetectedTitles(MixEnum.Phoenix, UserId));
+    }
+
+    [Fact]
+    public void SuccessiveDepositsAccumulateAndDeduplicate()
+    {
+        var batcher = new PlayerScoreBatchAccumulator();
+        batcher.AddToBatch(MixEnum.Phoenix, UserId, Now.UtcDateTime, Guid.NewGuid(), true, null, Guid.NewGuid());
+
+        batcher.TryAddDetectedTitles(MixEnum.Phoenix, UserId, new[] { "THE BLACK" });
+        batcher.TryAddDetectedTitles(MixEnum.Phoenix, UserId, new[] { "THE BLACK", "LOVERS (Silver)" });
+
+        Assert.Equal(2, batcher.TakeDetectedTitles(MixEnum.Phoenix, UserId).Length);
+    }
+
+    [Fact]
+    public void DetectedTitlesDoNotLeakAcrossMixes()
+    {
+        var batcher = new PlayerScoreBatchAccumulator();
+        batcher.AddToBatch(MixEnum.Phoenix, UserId, Now.UtcDateTime, Guid.NewGuid(), true, null, Guid.NewGuid());
+        batcher.TryAddDetectedTitles(MixEnum.Phoenix, UserId, new[] { "THE BLACK" });
+
+        Assert.Empty(batcher.TakeDetectedTitles(MixEnum.Phoenix2, UserId));
+        Assert.Single(batcher.TakeDetectedTitles(MixEnum.Phoenix, UserId));
+    }
 }

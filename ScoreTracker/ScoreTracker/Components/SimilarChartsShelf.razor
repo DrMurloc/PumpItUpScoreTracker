@@ -101,7 +101,7 @@
             {
                 var state = _filters[dimension.Key];
                 var key = dimension.Key;
-                <LevelRangeSlider Label="@L[dimension.Label]" Min="state.TrackMin" Max="state.TrackMax"
+                <RangeSlider Label="@L[dimension.Label]" Min="state.TrackMin" Max="state.TrackMax"
                                   ValueMin="state.From" ValueMax="state.To" Disabled="Busy"
                                   Format="v => Format(key, v)"
                                   ValueMinChanged="v => SetRange(key, v, null)"

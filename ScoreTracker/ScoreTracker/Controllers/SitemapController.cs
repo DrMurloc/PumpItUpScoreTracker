@@ -26,13 +26,22 @@ namespace ScoreTracker.Web.Controllers
         [Route("sitemap.xml")]
         public async Task<IActionResult> GetSitemap(CancellationToken cancellationToken)
         {
-            var charts = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken)).ToArray();
+            var charts = (await _mediator.Send(new GetChartsQuery(ChartUrlResolver.DefaultMix), cancellationToken))
+                .ToArray();
             // The front door: anonymous "/" and "/Login" both resolve to the same page,
             // which canonicalizes itself to /Welcome — only the canonical is listed.
             var pages = new List<string> { "https://piuscores.arroweclip.se/Welcome" };
             // Canonical vanity URLs, never GUIDs: the pretty URL is the one to index, and it
             // is what the GUID permalink 301s to (ChartPermalinkController).
             pages.AddRange(charts.Select(chart => $"https://piuscores.arroweclip.se{chart.CanonicalPath()}"));
+            // Charts the current mix dropped are canonical in the mix they debuted in
+            // (owner, 2026-07-20), so the whole back catalogue is crawlable — every legacy
+            // chart is listed exactly once, at its debut appearance.
+            var current = charts.Select(c => c.Id).ToHashSet();
+            foreach (var mix in Enum.GetValues<MixEnum>().Where(m => m != ChartUrlResolver.DefaultMix))
+                pages.AddRange((await _mediator.Send(new GetChartsQuery(mix), cancellationToken))
+                    .Where(c => c.OriginalMix == mix && !current.Contains(c.Id))
+                    .Select(chart => $"https://piuscores.arroweclip.se{chart.CanonicalPath()}"));
             pages.Add("https://piuscores.arroweclip.se/TierLists");
             // The challenges hub — a fresh weekly chart set + a daily chart, now real HTML
             // (weekly-charts-overhaul.md §3.4). Absent before the static rebuild.

@@ -49,8 +49,8 @@ public sealed class ChartDetailsDialogTests : TestContext
         Services.AddScoped<ChartScoringLevels>();
         _mediator.Setup(m => m.Send(It.IsAny<GetTierListWithFallbackQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TierListResult(Array.Empty<SongTierListEntry>(), false));
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartSkillChipsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartBadgeChipsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartBadgeChipRecord>>());
         var localizer = new Mock<IStringLocalizer<App>>();
         localizer.Setup(l => l[It.IsAny<string>()])
             .Returns((string key) => new LocalizedString(key, key));

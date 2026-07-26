@@ -6,8 +6,6 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
-using ScoreTracker.Domain.Models.Titles.Phoenix;
-using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Events;
@@ -40,25 +38,25 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     private readonly IMemoryCache _cache;
     private readonly IChartRepository _charts;
     private readonly IDateTimeOffsetAccessor _dateTime;
+    private readonly IPlayerFolderLevelRepository _folderLevels;
     private readonly IScoreHighlightRepository _highlights;
     private readonly ILogger<HighlightCaptureSaga> _logger;
     private readonly IMediator _mediator;
     private readonly IPlayerMilestoneRepository _milestones;
     private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreReader _scores;
-    private readonly ITitleRepository _titles;
 
-    public HighlightCaptureSaga(IChartRepository charts, IScoreReader scores, ITitleRepository titles,
+    public HighlightCaptureSaga(IChartRepository charts, IScoreReader scores,
         IPlayerStatsReader playerStats, IScoreHighlightRepository highlights,
-        IPlayerMilestoneRepository milestones, IMediator mediator, IMemoryCache cache,
-        IDateTimeOffsetAccessor dateTime, ILogger<HighlightCaptureSaga> logger)
+        IPlayerMilestoneRepository milestones, IPlayerFolderLevelRepository folderLevels, IMediator mediator,
+        IMemoryCache cache, IDateTimeOffsetAccessor dateTime, ILogger<HighlightCaptureSaga> logger)
     {
         _charts = charts;
         _scores = scores;
-        _titles = titles;
         _playerStats = playerStats;
         _highlights = highlights;
         _milestones = milestones;
+        _folderLevels = folderLevels;
         _mediator = mediator;
         _cache = cache;
         _dateTime = dateTime;
@@ -192,7 +190,6 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         Dictionary<Guid, Chart> Charts,
         Dictionary<Guid, RecordedPhoenixScore> Bests,
         Dictionary<Guid, int> Top50Ranks,
-        PhoenixTitleProgress[] IncompleteTitles,
         IDictionary<Guid, double> ScoringLevels,
         Dictionary<(ChartType Type, DifficultyLevel Level), int> FolderSizes,
         Dictionary<(ChartType Type, DifficultyLevel Level), int> FolderClears,
@@ -208,14 +205,34 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             .Where(c => data.Charts.ContainsKey(c.ChartId) && data.Bests.ContainsKey(c.ChartId))
             .ToArray();
 
-        FlagTop50AndTitleProgress(known, data, flags, details);
+        FlagTop50(known, data, flags, details);
+
+        // The folder standings this batch moved. Built from data already in hand, one record per
+        // touched folder rather than per chart, and saved in a single call below. The stored rows
+        // are the only record of where the player stood before this batch, so they are also what
+        // a movement gets diffed against — and a folder with no stored row seeds silently.
+        var passed = FolderLevelCalculator.PassedScores(data.Bests.Values);
+        var previousFolders = await LoadPreviousFolderLevels(e, cancellationToken);
+        var touchedFolders = new List<FolderLevelRecord>();
+
         foreach (var folder in known.GroupBy(c => (data.Charts[c.ChartId].Type, data.Charts[c.ChartId].Level)))
         {
             await FlagScoreQuality(e, folder.Key, folder.ToArray(), data, flags, details, cancellationToken);
             var newPasses = folder.Where(c => c.IsNewPass && !data.Bests[c.ChartId].IsBroken).ToArray();
             CaptureFolderLamps(e, folder.ToArray(), folder.Key, data, newPasses.Length, lamps);
             FlagFolderCompletionAndDebut(folder.Key, newPasses, data, flags, details);
+
+            var level = FolderLevelCalculator.ComputeOne(e.Mix, folder.Key.Type, folder.Key.Level,
+                data.Charts.Values, passed);
+            if (level == null) continue;
+            touchedFolders.Add(level);
+
+            var moved = FolderLevelCalculator.Diff(previousFolders?.GetValueOrDefault(level.Folder), level,
+                e.SessionId, e.OccurredAt);
+            if (moved != null) lamps.Add(moved);
         }
+
+        await SaveFolderLevels(e, touchedFolders, cancellationToken);
 
         return known
             .Where(c => flags.GetValueOrDefault(c.ChartId) != HighlightFlags.None)
@@ -235,14 +252,6 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         var top50 = (await _mediator.Send(new GetTop50ForPlayerQuery(e.UserId, null, Mix: e.Mix), cancellationToken))
             .Select((s, i) => (s.ChartId, Rank: i + 1))
             .ToDictionary(x => x.ChartId, x => x.Rank);
-        var completed = (await _titles.GetCompletedTitles(e.Mix, e.UserId, cancellationToken))
-            .Select(t => t.Title).ToHashSet();
-        var incompleteTitles = (e.Mix == MixEnum.Phoenix
-                ? PhoenixTitleList.BuildProgress(charts, bests.Values, completed)
-                : Phoenix2TitleList.BuildProgress(charts, bests.Values, completed))
-            .OfType<PhoenixTitleProgress>()
-            .Where(t => !t.IsComplete && t.Title.CompletionRequired > 0)
-            .ToArray();
         var scoringLevels = await _mediator.Send(new GetChartScoringLevelsQuery(e.Mix), cancellationToken);
 
         // Competitive levels gate Score Quality (and are cheap to carry): a back-filled chart
@@ -257,7 +266,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             .Where(b => !b.IsBroken && b.Score != null && charts.ContainsKey(b.ChartId))
             .GroupBy(b => (charts[b.ChartId].Type, charts[b.ChartId].Level))
             .ToDictionary(g => g.Key, g => g.Count());
-        return new CaptureData(charts, bests, top50, incompleteTitles, scoringLevels, folderSizes, folderClears,
+        return new CaptureData(charts, bests, top50, scoringLevels, folderSizes, folderClears,
             stats.SinglesCompetitiveLevel, stats.DoublesCompetitiveLevel);
     }
 
@@ -270,7 +279,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         return details.TryGetValue(id, out var d) ? d : new HighlightDetail();
     }
 
-    private static void FlagTop50AndTitleProgress(PlayerScoresUpdatedEvent.ScoreChange[] known,
+    private static void FlagTop50(PlayerScoresUpdatedEvent.ScoreChange[] known,
         CaptureData data, Dictionary<Guid, HighlightFlags> flags, Dictionary<Guid, HighlightDetail> details)
     {
         foreach (var change in known)
@@ -279,32 +288,9 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             var best = data.Bests[change.ChartId];
             if (best.IsBroken || best.Score == null) continue;
 
-            var f = HighlightFlags.None;
-            if (data.Top50Ranks.TryGetValue(chart.Id, out var rank))
-            {
-                f |= HighlightFlags.PumbilityTop50;
-                details[chart.Id] = Detail(details, chart.Id) with { PumbilityRank = rank };
-            }
-
-            // Per-row title progress is chart-specific only (skill titles). Generic
-            // difficulty/co-op progress rides the card's top section as % deltas, not a row
-            // caption — so a level's worth of upscores no longer each claim a title flag.
-            var skill = data.IncompleteTitles
-                .Select(t => t.PhoenixTitle)
-                .OfType<PhoenixSkillTitle>()
-                .FirstOrDefault(t => t.AppliesToChart(chart) && t.CompletionProgress(chart, best) > 0);
-            if (skill != null)
-            {
-                f |= HighlightFlags.TitleProgress;
-                details[chart.Id] = Detail(details, chart.Id) with
-                {
-                    SkillTitleName = skill.Name.ToString(),
-                    SkillTitleScore = (int)best.Score.Value,
-                    SkillTitleThreshold = skill.CompletionRequired
-                };
-            }
-
-            if (f != HighlightFlags.None) flags[chart.Id] = flags.GetValueOrDefault(chart.Id) | f;
+            if (!data.Top50Ranks.TryGetValue(chart.Id, out var rank)) continue;
+            flags[chart.Id] = flags.GetValueOrDefault(chart.Id) | HighlightFlags.PumbilityTop50;
+            details[chart.Id] = Detail(details, chart.Id) with { PumbilityRank = rank };
         }
     }
 
@@ -420,6 +406,48 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         if (plateFloorIsNew)
             lamps.Add(new PlayerMilestoneWrite(MilestoneKind.FolderPlateLamp, e.SessionId, e.OccurredAt,
                 Detail: $"{folderName}|{minPlate}"));
+    }
+
+    /// <summary>
+    ///     Where the player stood before this batch, keyed by folder. Null — not empty — when the
+    ///     read fails, so a lookup miss stays honest: an empty dictionary would read as "every
+    ///     folder is new" and silence a whole session's worth of real movements.
+    /// </summary>
+    private async Task<Dictionary<string, FolderLevelRecord>?> LoadPreviousFolderLevels(
+        PlayerScoresUpdatedEvent e, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return (await _folderLevels.GetFolderLevels(e.Mix, e.UserId, cancellationToken))
+                .ToDictionary(l => l.Folder);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Folder level read failed for user {UserId} ({Mix}) — movements not announced",
+                e.UserId, e.Mix);
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     Persists the standings for the folders this batch touched
+    ///     (docs/design/folder-level-progression.md §4). Isolated from the rest of the capture:
+    ///     ComputeFlags already runs inside one try/catch, so an unguarded write here would cost
+    ///     the flags and the lamps too — a projection failure must only lose the projection.
+    /// </summary>
+    private async Task SaveFolderLevels(PlayerScoresUpdatedEvent e, IReadOnlyCollection<FolderLevelRecord> levels,
+        CancellationToken cancellationToken)
+    {
+        if (levels.Count == 0) return;
+        try
+        {
+            await _folderLevels.Save(e.UserId, levels, e.OccurredAt, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Folder level write failed for user {UserId} ({Mix}) — {Count} folders skipped",
+                e.UserId, e.Mix, levels.Count);
+        }
     }
 
     private async Task<IReadOnlyDictionary<Guid, PhoenixScore[]>> GetCohortScores(MixEnum mix, Guid userId,

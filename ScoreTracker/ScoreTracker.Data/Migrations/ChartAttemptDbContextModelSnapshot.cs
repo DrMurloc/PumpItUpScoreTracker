@@ -2159,6 +2159,41 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserWorldRanking", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.PlayerFolderLevelEntity", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ChartType")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AverageScore")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Played")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Size")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TierScore")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("UserId", "MixId", "ChartType", "Level");
+
+                    b.ToTable("PlayerFolderLevel", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.PlayerHistoryEntity", b =>
                 {
                     b.Property<int>("Id")

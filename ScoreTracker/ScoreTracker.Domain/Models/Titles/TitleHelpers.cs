@@ -1,4 +1,5 @@
 ﻿using ScoreTracker.Domain.Models.Titles.Phoenix;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Domain.Models.Titles
 {
@@ -29,6 +30,42 @@ namespace ScoreTracker.Domain.Models.Titles
                     title.FloorAt(floor);
                     floor = title.CompletionRequired;
                 }
+            }
+        }
+
+        /// <summary>
+        ///     Places titles on their display rails, numbering rungs by declaration order
+        ///     within each rail — the list reads top to bottom the way the page draws it.
+        ///     A null key leaves a title off every rail (a one-off badge).
+        /// </summary>
+        /// <remarks>
+        ///     Separate from <see cref="LinkLadder{TTitle,TKey}" /> on purpose: that groups by
+        ///     what scoring shares, this by what the page draws, and they legitimately differ
+        ///     (see <see cref="Title.Ladder" />).
+        /// </remarks>
+        public static void Rail<TTitle>(IEnumerable<TTitle> titles, Func<TTitle, Name?> railKey)
+            where TTitle : Title
+        {
+            Rail(titles, railKey, _ => 0);
+        }
+
+        /// <summary>
+        ///     As <see cref="Rail{TTitle}(IEnumerable{TTitle},Func{TTitle,Name?})" />, but numbering
+        ///     rungs by an explicit order rather than by declaration. Rungs stay contiguous from 1
+        ///     however sparse the rail is — a mix with only a double boss chart gets a rung 1, not
+        ///     a rung 2 with a hole in front of it.
+        /// </summary>
+        public static void Rail<TTitle, TOrder>(IEnumerable<TTitle> titles, Func<TTitle, Name?> railKey,
+            Func<TTitle, TOrder> rungOrder)
+            where TTitle : Title
+        {
+            foreach (var rail in titles.Select(t => (title: t, key: railKey(t)))
+                         .Where(x => x.key != null)
+                         .GroupBy(x => x.key!.Value))
+            {
+                var rung = 1;
+                foreach (var entry in rail.OrderBy(x => rungOrder(x.title)))
+                    entry.title.OnRail(rail.Key, rung++);
             }
         }
 

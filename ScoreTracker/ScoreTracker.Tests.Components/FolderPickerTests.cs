@@ -36,7 +36,7 @@ public sealed class FolderPickerTests : ComponentTestBase
         var cut = RenderComponent<FolderPicker>(p => p
             .Add(x => x.Type, ChartType.Double)
             .Add(x => x.Level, 20)
-            .Add(x => x.IsEnabled, (_, l) => l is 20 or 25)
+            .Add(x => x.IsMissing, (_, l) => l is not (20 or 25))
             .Add(x => x.FolderChanged, f => picked = f));
 
         cut.FindAll("button.mud-icon-button")[1].Click();
@@ -50,7 +50,7 @@ public sealed class FolderPickerTests : ComponentTestBase
         var cut = RenderComponent<FolderPicker>(p => p
             .Add(x => x.Type, ChartType.Double)
             .Add(x => x.Level, 20)
-            .Add(x => x.IsEnabled, (_, l) => l == 20));
+            .Add(x => x.IsMissing, (_, l) => l != 20));
 
         var arrows = cut.FindAll("button.mud-icon-button");
         Assert.True(arrows[0].HasAttribute("disabled"));

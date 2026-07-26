@@ -18,11 +18,15 @@ public enum MilestoneKind
     /// <summary>A title completed. Title carries the name.</summary>
     TitleCompleted,
 
-    /// <summary>A completed title's paragon level advanced. Title + Detail (new level).</summary>
-    ParagonLevelGain,
-
     /// <summary>Every chart in a (type, level) folder passed. Detail = folder (e.g. "D23").</summary>
     FolderPassLamp,
+
+    /// <summary>
+    ///     A folder's completion crossed a tier, or its grade improved, or both. Detail is a
+    ///     <see cref="FolderProgressDetail" /> — one kind carries every folder movement rather
+    ///     than a kind per shape (docs/design/folder-level-progression.md §5.1).
+    /// </summary>
+    FolderProgress,
 
     /// <summary>The folder's minimum letter grade reached a new floor. Detail = "D23|SS".</summary>
     FolderGradeLamp,

@@ -106,7 +106,7 @@ These have **at least one** existing translation in `App.pt-BR.resx`. New transl
 | Players | Jogadores | |
 | Tournaments | Campeonatos | |
 | Popularity | Popularidade | |
-| Progress | Progresso | "Progress Charts" → "Gráficos de progresso" (note: here `Charts` means graphs, not PIU charts — translated as `Gráficos`). |
+| Progress | Progresso | |
 | BPM | BPM | Untranslated. "Min BPM" → "BPM mín."; "Max BPM" → "BPM máx." |
 | Difficulty Categorization | Categorização de dificuldade | |
 | Note Count | Contagem de notas | Matches the "Contagem de pass" pattern. Min/Max: "Contagem mín./máx. de notas". |
@@ -185,6 +185,22 @@ Pulled from the 442 missing keys. Each is a term that doesn't yet have an establ
 | English | Recommendation | Notes |
 |---|---|---|
 | Add | Adicionar | |
+
+## Lifebar terms (Life Calculator redesign, 2026-07-26)
+
+Settled with the `/LifeCalculator` rebuild ([design](design/life-calculator-redesign.md)). These
+extend the existing `lifebar` (untranslated) / `Vida` split above.
+
+| English | pt-BR | Notes |
+|---|---|---|
+| Overflow (life above the visible 1000) | transbordo | The owner's chosen English term is "overflow", never "reserve" — one root everywhere. Translated rather than kept English: unlike `lifebar` and `chart`, it isn't community jargon. |
+| Visible bar | barra visível | |
+| Rainbow (the full visible bar) | Rainbow | Stays English, matching the judgment-term loanword policy. |
+| Gain multiplier | multiplicador de ganho | Bare "multiplier" mid-sentence → `multiplicador`. |
+| Break (a miss or bad that ends a combo) | quebra | `Combo between breaks` → `Combo entre quebras`. |
+| Settles at (converges to) | estabiliza em | `Where life settles` → `Onde a vida se estabiliza`. |
+| Cliff (the survival threshold) | penhasco | Deliberately literal — the metaphor is the point. |
+| Run (a single play attempt) | run | Untranslated, matching the community's own usage. |
 
 ## Process for future batches
 

@@ -1,0 +1,149 @@
+@namespace ScoreTracker.Web.Components
+
+@* Dual-thumb range (docs/design/randomizer-overhaul.md): the primary way to say
+   "S16–S18" — two drags instead of a wall of switches. The working range prints beside
+   the label so the fill is never the only channel (rule 8). Two overlaid native range
+   inputs; thumbs alone take pointer events. Gap-y level sets live under Advanced.
+
+   This is the site's only range slider — MudBlazor ships MudSlider but no range variant,
+   and an unknown component name is a Razor *warning*, so a stray <MudRangeSlider> renders
+   as an inert tag that looks right and does nothing. Anything wanting two thumbs comes
+   here. Non-integer scales ride the track as integers and format back through Format.
+
+   The track moves on every input event but the value is only *published* on release: a
+   drag across a BPM range crosses two hundred steps, and telling the page about each one
+   re-runs the search two hundred times, which fights the thumb. The fill and readout still
+   track the drag, so it stays direct — the caller just hears the answer, not the journey. *@
+<div class="range-slider @(Disabled ? "range-slider-disabled" : string.Empty)">
+    <div class="range-slider-head">
+        <span class="range-slider-label">@Label</span>
+        <span class="range-slider-value">@Display</span>
+    </div>
+    <div class="range-slider-track-wrap">
+        <span class="range-slider-track"></span>
+        <span class="range-slider-fill" style="left:@(Percent(DraggedMin).ToString(System.Globalization.CultureInfo.InvariantCulture))%;right:@((100 - Percent(DraggedMax)).ToString(System.Globalization.CultureInfo.InvariantCulture))%"></span>
+        <input type="range" min="@Min" max="@Max" step="@Step" value="@DraggedMin" disabled="@Disabled"
+               aria-label="@($"{Label} {L["Minimum"]}")" @oninput="DragMin" @onchange="CommitMin"/>
+        <input type="range" min="@Min" max="@Max" step="@Step" value="@DraggedMax" disabled="@Disabled"
+               aria-label="@($"{Label} {L["Maximum"]}")" @oninput="DragMax" @onchange="CommitMax"/>
+    </div>
+    <div class="range-slider-ticks">
+        @foreach (var tick in Ticks)
+        {
+            <span style="left:@(Percent(tick).ToString(System.Globalization.CultureInfo.InvariantCulture))%">@Text(tick)</span>
+        }
+    </div>
+</div>
+
+@code {
+
+    [Parameter] public string Label { get; set; } = string.Empty;
+
+    /// <summary>Display prefix for values and ticks ("S", "D"); not part of the data.</summary>
+    [Parameter] public string Prefix { get; set; } = string.Empty;
+
+    [Parameter] public int Min { get; set; } = 1;
+
+    [Parameter] public int Max { get; set; } = 29;
+
+    [Parameter] public int ValueMin { get; set; }
+
+    [Parameter] public EventCallback<int> ValueMinChanged { get; set; }
+
+    [Parameter] public int ValueMax { get; set; }
+
+    [Parameter] public EventCallback<int> ValueMaxChanged { get; set; }
+
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Track granularity. Coarse steps keep a 3,000-note span from being a pixel hunt.</summary>
+    [Parameter] public int Step { get; set; } = 1;
+
+    /// <summary>
+    ///     How a position reads to a human, when the number on the track is not it. The
+    ///     track is integers because that is what a range input steps in, so a scale that
+    ///     needs a fraction rides as tenths and formats back — 107 on the track, "10.7" on
+    ///     the page. Default is the value itself behind <see cref="Prefix" />.
+    /// </summary>
+    [Parameter] public Func<int, string>? Format { get; set; }
+
+    private string Text(int value) => Format?.Invoke(value) ?? $"{Prefix}{value}";
+
+    /// <summary>
+    ///     Replaces the computed "min – max" readout. A filter that spans its whole extent
+    ///     is not filtering, and reads better saying so ("Any") than reciting both ends.
+    /// </summary>
+    [Parameter] public string? ValueText { get; set; }
+
+    // Where the thumbs are right now. Null between drags, so a value pushed in from the
+    // outside (a cleared filter, a shared URL) still wins.
+    private int? _draggingMin;
+    private int? _draggingMax;
+
+    private int DraggedMin => _draggingMin ?? ValueMin;
+    private int DraggedMax => _draggingMax ?? ValueMax;
+
+    private string Display => Disabled
+        ? L["Off"]
+        // Mid-drag the readout follows the thumbs; the caller's ValueText only describes the
+        // committed filter, so it would sit frozen at "Any" while you drag.
+        : _draggingMin != null || _draggingMax != null
+            ? $"{Text(DraggedMin)} – {Text(DraggedMax)}"
+            : ValueText ?? $"{Text(ValueMin)} – {Text(ValueMax)}";
+
+    private double Percent(int value)
+    {
+        return Max == Min ? 0 : (value - Min) * 100.0 / (Max - Min);
+    }
+
+    // Ends plus quarter points, deduplicated for small ranges.
+    private IEnumerable<int> Ticks
+    {
+        get
+        {
+            var span = Max - Min;
+            return new[] { Min, Min + span / 4, Min + span / 2, Min + 3 * span / 4, Max }.Distinct();
+        }
+    }
+
+    // Thumbs never cross: each stops where the other stands.
+    private int ClampMin(ChangeEventArgs e)
+    {
+        return int.TryParse(e.Value?.ToString(), out var value)
+            ? Math.Clamp(value, Min, DraggedMax)
+            : DraggedMin;
+    }
+
+    private int ClampMax(ChangeEventArgs e)
+    {
+        return int.TryParse(e.Value?.ToString(), out var value)
+            ? Math.Clamp(value, DraggedMin, Max)
+            : DraggedMax;
+    }
+
+    private void DragMin(ChangeEventArgs e)
+    {
+        _draggingMin = ClampMin(e);
+    }
+
+    private void DragMax(ChangeEventArgs e)
+    {
+        _draggingMax = ClampMax(e);
+    }
+
+    private async Task CommitMin(ChangeEventArgs e)
+    {
+        var clamped = ClampMin(e);
+        _draggingMin = null;
+        ValueMin = clamped;
+        await ValueMinChanged.InvokeAsync(clamped);
+    }
+
+    private async Task CommitMax(ChangeEventArgs e)
+    {
+        var clamped = ClampMax(e);
+        _draggingMax = null;
+        ValueMax = clamped;
+        await ValueMaxChanged.InvokeAsync(clamped);
+    }
+}

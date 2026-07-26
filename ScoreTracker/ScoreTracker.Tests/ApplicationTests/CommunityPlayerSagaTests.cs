@@ -102,11 +102,13 @@ public sealed class CommunityPlayerSagaTests
         Assert.NotNull(profile);
         Assert.Equal(900, profile!.Pumbility);
         Assert.Equal(20.6, profile.CompetitiveLevel);
-        // The level-20 folder counts 1 doubles pass of 2 charts; the co-op chart stays out.
-        var folder = profile.FolderCompletion.Single(f => f.Level == 20);
-        Assert.Equal(0, folder.SinglesPassed);
-        Assert.Equal(1, folder.DoublesPassed);
-        Assert.Equal(2, folder.Total);
+        // S20 and D20 are separate folders now. Both level-20 charts are doubles, so D20 holds
+        // them both with one pass and there is no S20 folder at all; the co-op chart stays out.
+        var doubles = profile.FolderCompletion.Single(f => f.Level == 20 && f.Type == ChartType.Double);
+        Assert.Equal(1, doubles.Passed);
+        Assert.Equal(2, doubles.Total);
+        Assert.Equal(1, doubles.GradeCounts[PhoenixLetterGrade.SSS]);
+        Assert.DoesNotContain(profile.FolderCompletion, f => f.Level == 20 && f.Type == ChartType.Single);
         Assert.DoesNotContain(profile.FolderCompletion, f => f.Level == 2);
     }
 

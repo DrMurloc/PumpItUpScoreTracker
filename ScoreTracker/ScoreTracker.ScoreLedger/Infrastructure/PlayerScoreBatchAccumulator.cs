@@ -25,6 +25,12 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
         public DateTimeOffset LastActivity;
     }
 
+    private sealed class DetectedTitleState
+    {
+        public readonly object Gate = new();
+        public readonly HashSet<string> Titles = new();
+    }
+
     // A session envelope groups journal rows across event batches: same (user, mix,
     // source) within the gap = one session. Envelopes are identity only — they never
     // delay the 2-minute event batches. In-memory by design: a restart closes open
@@ -35,6 +41,11 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
     private readonly ConcurrentDictionary<(Guid UserId, MixEnum Mix), BatchState> _batches = new();
 
     private readonly ConcurrentDictionary<(Guid UserId, MixEnum Mix, string Source), SessionState> _sessions = new();
+
+    // Site-detected badges waiting for their batch's card. Keyed like the batches but held
+    // separately, because TakeBatch destroys the BatchState at drain time and the title step
+    // that reads these runs after that.
+    private readonly ConcurrentDictionary<(Guid UserId, MixEnum Mix), DetectedTitleState> _detectedTitles = new();
 
     public Guid GetOrExtendSession(MixEnum mix, Guid userId, string source, DateTimeOffset now,
         Guid? explicitSessionId = null)
@@ -99,6 +110,29 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
             _batches.TryRemove(key, out _);
             return new PendingScoreBatch(mix, newCharts, upscores, state.SessionId);
         }
+    }
+
+    public bool TryAddDetectedTitles(MixEnum mix, Guid userId, IEnumerable<string> titles)
+    {
+        var names = titles.Distinct().ToArray();
+        if (names.Length == 0) return false;
+        // Only worth parking when a batch is open to carry them. Checking rather than locking
+        // the batch is deliberate: losing the microsecond race against a concurrent drain costs
+        // the caller a fallback card, never a lost badge.
+        if (!_batches.ContainsKey((userId, mix))) return false;
+        var state = _detectedTitles.GetOrAdd((userId, mix), _ => new DetectedTitleState());
+        lock (state.Gate)
+        {
+            foreach (var name in names) state.Titles.Add(name);
+        }
+
+        return true;
+    }
+
+    public string[] TakeDetectedTitles(MixEnum mix, Guid userId)
+    {
+        if (!_detectedTitles.TryRemove((userId, mix), out var state)) return Array.Empty<string>();
+        lock (state.Gate) return state.Titles.ToArray();
     }
 
     public IReadOnlyCollection<BatchAccumulatorSnapshotEntry> Dump()

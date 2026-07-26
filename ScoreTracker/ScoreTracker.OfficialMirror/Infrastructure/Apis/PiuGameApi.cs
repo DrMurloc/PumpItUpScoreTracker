@@ -488,76 +488,84 @@ internal sealed class PiuGameApi : IPiuGameApi
         return results;
     }
 
-    private async Task<string> PostWithRetries(string url, IDictionary<string, string> form,
+    private Task<string> PostWithRetries(string url, IDictionary<string, string> form,
         CancellationToken cancellationToken = default, HttpClient? client = null)
     {
-        var retry = 0;
-        while (true)
-            try
-            {
-                var response = await (client ?? _client).PostAsync(url, new FormUrlEncodedContent(form),
-                    cancellationToken);
-                ThrowIfSsoBounced(response);
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadAsStringAsync(cancellationToken);
-                break;
-            }
-            catch
-            {
-                if (retry == 3) throw;
-
-                retry++;
-                await Task.Delay(1000, cancellationToken);
-            }
+        return WithRetries(async () =>
+        {
+            var response = await (client ?? _client).PostAsync(url, new FormUrlEncodedContent(form),
+                cancellationToken);
+            ThrowIfSsoBounced(response);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsStringAsync(cancellationToken);
+        }, url, cancellationToken);
     }
 
-    private async Task<HttpResponseMessage> PostForMessageWithRetries(string url, IDictionary<string, string> form,
+    private Task<HttpResponseMessage> PostForMessageWithRetries(string url, IDictionary<string, string> form,
         CancellationToken cancellationToken = default, HttpClient? client = null)
     {
-        var retry = 0;
-        while (true)
-            try
-            {
-                var response =
-                    await (client ?? _client).PostAsync(url, new FormUrlEncodedContent(form), cancellationToken);
+        return WithRetries(async () =>
+        {
+            var response =
+                await (client ?? _client).PostAsync(url, new FormUrlEncodedContent(form), cancellationToken);
 
-                ThrowIfSsoBounced(response);
-                //response.EnsureSuccessStatusCode();
-                return response;
-                break;
-            }
-            catch
-            {
-                if (retry == 3) throw;
-
-                retry++;
-                await Task.Delay(1000, cancellationToken);
-            }
+            ThrowIfSsoBounced(response);
+            //response.EnsureSuccessStatusCode();
+            return response;
+        }, url, cancellationToken);
     }
 
-    private async Task<string> GetWithRetries(string url, CancellationToken cancellationToken = default,
+    private Task<string> GetWithRetries(string url, CancellationToken cancellationToken = default,
         HttpClient? client = null)
     {
-        var retry = 0;
-        while (true)
+        return WithRetries(async () =>
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            var response = await (client ?? _client).SendAsync(request, cancellationToken);
+            ThrowIfSsoBounced(response);
+            // An error page must fail the fetch, not parse as an empty board.
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsStringAsync(cancellationToken);
+        }, url, cancellationToken);
+    }
+
+    /// <summary>
+    ///     Every call into the official site goes through here. The site's SSO bounce makes the
+    ///     FIRST request of a fresh session fail by design (see
+    ///     <see cref="ThrowIfSsoBounced" />), and its edge intermittently resets connections
+    ///     mid-TLS-handshake under sweep load — so a single attempt is never a verdict. Backoff
+    ///     grows between tries: a flat second isn't long enough for an edge that just dropped us,
+    ///     and the weekly sweep can afford seven seconds far more than it can afford a lost week.
+    ///     A cancelled run is a decision, not a fault, and stops here — but only when it is OUR
+    ///     token that fired: HttpClient reports its own request timeout as a cancellation too, and
+    ///     that one is exactly the transient we are here to survive.
+    /// </summary>
+    private async Task<T> WithRetries<T>(Func<Task<T>> attempt, string url, CancellationToken cancellationToken)
+    {
+        for (var retry = 0;; retry++)
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, url);
-                var response = await (client ?? _client).SendAsync(request, cancellationToken);
-                ThrowIfSsoBounced(response);
-                // An error page must fail the fetch, not parse as an empty board.
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadAsStringAsync(cancellationToken);
-                break;
+                return await attempt();
             }
-            catch
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                if (retry == 3) throw;
-
-                retry++;
-                await Task.Delay(1000, cancellationToken);
+                throw;
+            }
+            catch (Exception e) when (retry < MaxRetries)
+            {
+                var delay = _urls.RetryBaseDelayMilliseconds * (1 << retry);
+                // The SSO bounce is the site working as designed, so it stays out of the warning
+                // stream — otherwise every fresh session cries wolf and buries the real resets.
+                if (e is SsoBounceException)
+                    _logger.LogDebug("{Url} bounced through SSO; retrying with session cookies", url);
+                else
+                    _logger.LogWarning(e, "{Url} failed (attempt {Attempt} of {Total}); retrying in {Delay}ms", url,
+                        retry + 1, MaxRetries + 1, delay);
+                if (delay > 0) await Task.Delay(delay, cancellationToken);
             }
     }
+
+    private const int MaxRetries = 3;
 
     /// <summary>
     ///     Since the Phoenix 2 site rollout, phoenix.piugame.com fronts anonymous traffic with an
@@ -571,8 +579,16 @@ internal sealed class PiuGameApi : IPiuGameApi
     {
         if (response.RequestMessage?.RequestUri?.AbsolutePath.Contains("ssoc", StringComparison.OrdinalIgnoreCase) ==
             true)
-            throw new HttpRequestException(
+            throw new SsoBounceException(
                 $"Bounced to the am-pass SSO handshake ({response.RequestMessage.RequestUri}); retrying now that session cookies are set.");
+    }
+
+    /// <summary>The expected first-request-of-a-session bounce, told apart from a real fault.</summary>
+    private sealed class SsoBounceException : HttpRequestException
+    {
+        public SsoBounceException(string message) : base(message)
+        {
+        }
     }
 
     private ChartType? GetChartTypeFromUrl(string chartTypeUrl)
@@ -603,7 +619,13 @@ internal sealed class PiuGameApi : IPiuGameApi
         var client = new HttpClient(webRequestHandler);
         client.DefaultRequestHeaders.Add("origin", baseUrl);
 
-        await client.GetAsync(baseUrl, cancellationToken);
+        // The warm-up hop that collects the site's anonymous session cookies, and the am-pass
+        // hop below, run through the same retry policy as everything else. They used to be bare
+        // awaits, which made them the one un-retried pair of requests in the whole client — and
+        // the weekly Phoenix 2 sweep opens with them, so a single reset TLS handshake here
+        // (2026-07-26) killed a run that the retry policy would have absorbed anywhere else.
+        // Phoenix 1's sweep needs no login at all, which is why it sailed through the same window.
+        await WithRetries(() => client.GetAsync(baseUrl, cancellationToken), baseUrl, cancellationToken);
 
         var result = await PostForMessageWithRetries($"{baseUrl}/bbs/login_check.php",
             new Dictionary<string, string>
@@ -620,7 +642,8 @@ internal sealed class PiuGameApi : IPiuGameApi
             .GetCookies(new Uri(baseUrl))
             .FirstOrDefault(v => v.Name.StartsWith("sid", StringComparison.OrdinalIgnoreCase))?.Value;
         if (sid == null) throw new InvalidCredentialException("Could not log in user to PIUgame");
-        await client.GetAsync(_urls.AmPassUrl, cancellationToken);
+        await WithRetries(() => client.GetAsync(_urls.AmPassUrl, cancellationToken), _urls.AmPassUrl,
+            cancellationToken);
         return (client, sid);
     }
 

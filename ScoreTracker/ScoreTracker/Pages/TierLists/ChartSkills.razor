@@ -6,6 +6,7 @@
 @using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.ChartIntelligence.Contracts
 @using ScoreTracker.ChartIntelligence.Contracts.Queries
@@ -166,10 +167,10 @@ else
     @if (CurrentUser.IsLoggedIn)
     {
         RenderFragment folderStatsCore = @<text>
-            <div class="tier-progress-strip-summary">
-                <MudText Typo="Typo.subtitle1">@L["Folder Progress"]</MudText>
-                <MudText Typo="Typo.caption">@L["{0} / {1} passed", PassedCount, _charts.Count]</MudText>
-            </div>
+            @* The "N / M passed" summary that used to head this drawer is gone: the folder bar on
+               the page states it, and repeating it in a drawer you have to open is worse than
+               not saying it twice. What stays here is everything the bar cannot say — the lamp
+               ladder's exact counts, where you sit against similar players, and your skills. *@
             <LampStrip Lamps="_lamps" Total="_charts.Count"></LampStrip>
             @* Round 7: cohort standing as labeled bars — fill + hue from the rarity ramp,
                with the percentage always printed beside it (rule 8). *@
@@ -226,7 +227,7 @@ else
                                    aria-label="@L["Close"]"></MudIconButton>
                 </div>
                 @folderStatsCore
-                <BorderLegend></BorderLegend>
+                <BorderLegend ShowOtherMix="_settings.ShowOtherMixPasses"></BorderLegend>
                 @* Phoenix's difficulty-title bars. Phoenix 2 replaces these with the PUMBILITY
                    title track above the tier sections, so they're skipped there. *@
                 @if (!IsLegacy && _currentMix != MixEnum.Phoenix2)
@@ -271,6 +272,33 @@ else
     {
         <PumbilityTitleTrack Result="_titleTrack"></PumbilityTitleTrack>
     }
+    @* Folder standing: one line and the bar, nothing else. No difficulty ball (you are already
+       on this folder's page) and no chart counts — the segments, the tier ticks and the lamp
+       flag carry the rest (docs/design/folder-level-progression.md §3.3). *@
+    @if (_folderLevel is { Size: > 0 })
+    {
+        <div class="fl-header">
+            <div class="fl-header-line">
+                @if (_folderLevel.IsLamped)
+                {
+                    <span>@L["Folder Lamp"]</span>
+                }
+                else
+                {
+                    <span>@L["{0}% complete", _folderLevel.CompletionPercent]</span>
+                }
+                @if (_folderLevel.Grade != null)
+                {
+                    <span class="fl-header-dot">·</span>
+                    <span class="@FolderGradeGlow" style="color:@MixThemes.GradeVar(_folderLevel.Grade.Value)">
+                        @_folderLevel.Grade.Value.GetName()
+                    </span>
+                }
+            </div>
+            <FolderSpectrum GradesDescending="_folderGrades" Size="_folderLevel.Size"
+                            Height="FolderSpectrumSize.Chunky"></FolderSpectrum>
+        </div>
+    }
     @* 2 — content bar: how the list PRESENTS (lens ordering, grouping, density,
        Download, Filters). Sits with the list it affects, not in the sticky toolbar. *@
     <div class="tier-content-bar">
@@ -288,7 +316,7 @@ else
         @* The card-outline legend rides the middle of the toolbar, between the lens and the
            density switch — it explains the borders on the cards below (desktop only). *@
         <div class="tier-desktop-only">
-            <BorderLegend></BorderLegend>
+            <BorderLegend ShowOtherMix="_settings.ShowOtherMixPasses"></BorderLegend>
         </div>
         <MudSpacer></MudSpacer>
         <MudButtonGroup OverrideStyles="false">
@@ -496,7 +524,7 @@ else
                                                Ranking="_scoreRankings.TryGetValue(chart.Id, out var rank) ? rank : null"
                                                Passed="score is { IsBroken: false }"
                                                IsToDo="_todos.Contains(chart.Id)"
-                                               PassedInAnotherMix="_otherMixPasses.Contains(chart.Id)"
+                                               PassedInAnotherMix="IsOtherMixPass(chart.Id)"
                                                ShowName="_settings.ShowSongName"
                                                ShowToDo="CurrentUser.IsLoggedIn"
                                                Density="_density"
@@ -586,6 +614,10 @@ else
             {
                 <MudSwitch T="bool" Color="Color.Primary" Value="_showAge" ValueChanged="SetShowAge"
                            Disabled="_density == UiDensity.Compact" Label=@L["Show Age"]></MudSwitch>
+                @* A border fits on a jacket where a column never would, so — unlike the
+                   switches above — this one stays live in every density. *@
+                <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowOtherMixPasses" ValueChanged="SetShowOtherMixPasses"
+                           Label=@L["Show Passed in Another Mix"]></MudSwitch>
             }
         </text>;
     }
@@ -967,6 +999,9 @@ else
     private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
     private ISet<Guid> _popularCharts = new HashSet<Guid>();
     private IReadOnlySet<Guid> _otherMixPasses = new HashSet<Guid>();
+    private bool _otherMixPassesLoaded = false;
+
+    private bool IsOtherMixPass(Guid chartId) => _settings.ShowOtherMixPasses && _otherMixPasses.Contains(chartId);
     private bool _isBuildingImage = false;
     private FilterSettings _settings = new FilterSettings();
     private const string UserSettingsKey = @"ChartSkills__Settings";
@@ -989,6 +1024,8 @@ else
         public bool ShowSongName { get; set; } = true;
         public bool ShowSkills { get; set; } = true;
         public bool ShowSkillMetric { get; set; }
+        // Defaults on, so an existing player's folder looks the same until they turn it off.
+        public bool ShowOtherMixPasses { get; set; } = true;
         public int? MinNoteCount { get; set; }
         public int? MaxNoteCount { get; set; }
         public HashSet<string> StepArtists { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -1000,6 +1037,19 @@ else
 
     private IEnumerable<TitleProgress> _titleProgress = Array.Empty<TitleProgress>();
     private FolderTitleTrackResult? _titleTrack;
+
+    // This folder's standing, computed from the scores the page already holds rather than read
+    // back from the stored projection — the page's own score list is the freshest copy there is.
+    private FolderLevelRecord? _folderLevel;
+    private IReadOnlyList<PhoenixLetterGrade> _folderGrades = Array.Empty<PhoenixLetterGrade>();
+
+    private string FolderGradeGlow => _folderLevel?.Tier switch
+    {
+        >= FolderCompletionTier.Lamp => "rarity-glow-3",
+        >= 80 => "rarity-glow-2",
+        >= 60 => "rarity-glow-1",
+        _ => string.Empty
+    };
     private IEnumerable<Guid> _unpassedTodos => _finalEntries.Select(e => e.ChartId).Where(chartId => _scores.ContainsKey(chartId) && _scores[chartId].IsBroken && _todos.Contains(chartId));
     private IDictionary<Guid, TierListCategory> _chartDifficulties = new Dictionary<Guid, TierListCategory>();
     private Name[] _availableStepArtists = Array.Empty<Name>();
@@ -1106,6 +1156,19 @@ else
         _settings.ShowStepArtist = show;
         await SaveSettings();
     }
+
+    // Turning it off skips the cross-mix query on later folder loads, so turning it back
+    // on inside the same folder has to fetch what that load never asked for.
+    private async Task SetShowOtherMixPasses(bool show)
+    {
+        _settings.ShowOtherMixPasses = show;
+        await SaveSettings();
+        if (show && !_otherMixPassesLoaded && CurrentUser.IsLoggedIn)
+        {
+            _otherMixPasses = await Mediator.Send(new GetCrossMixPassesQuery(_currentMix));
+            _otherMixPassesLoaded = true;
+        }
+    }
     private async Task SetShowName(bool show)
     {
         _settings.ShowSongName = show;
@@ -1140,7 +1203,7 @@ else
     {
         return score is { IsBroken: false } ? "tier-row-pass" :
             _todos.Contains(chartId) ? "tier-row-todo" :
-            _otherMixPasses.Contains(chartId) ? "tier-row-other-mix" : string.Empty;
+            IsOtherMixPass(chartId) ? "tier-row-other-mix" : string.Empty;
     }
 
     private async Task SetShowAge(bool newSetting)
@@ -1589,6 +1652,25 @@ else
         _titleTrack = CurrentUser.IsLoggedIn
             ? FolderTitleTrack.Compute(_currentMix, _chartType, _level, _allCharts, _scores)
             : null;
+
+        // Folder standing, recomputed per folder alongside the title track. Signed-out visitors
+        // have no standing to show.
+        if (CurrentUser.IsLoggedIn)
+        {
+            var passed = FolderLevelRecord.PassedScores(_folderScores.Values);
+            _folderLevel = FolderLevelRecord.For(_currentMix, _chartType, _level, _charts.Values, passed);
+            _folderGrades = _charts.Values
+                .Select(c => passed.TryGetValue(c.Id, out var score) ? score : (int?)null)
+                .Where(s => s != null)
+                .Select(s => PhoenixScore.From(s!.Value).LetterGradeFor(_currentMix))
+                .OrderByDescending(g => g)
+                .ToArray();
+        }
+        else
+        {
+            _folderLevel = null;
+            _folderGrades = Array.Empty<PhoenixLetterGrade>();
+        }
         // Dominance-ordered skills + segment coverage for the card chips and the
         // table's Skills column; empty until the first piucenter crawl banks metrics.
         _skillChips = await Mediator.Send(new GetChartSkillChipsQuery(_charts.Keys.ToArray()), cancellationToken);
@@ -1637,7 +1719,11 @@ else
 
         // Personal phase — the overlay streams in after the population paint.
         var rankingsTask = Mediator.Send(new GetPlayerScoreQualityQuery(_level, _chartType, _currentMix), cancellationToken);
-        var crossMixTask = Mediator.Send(new GetCrossMixPassesQuery(_currentMix), cancellationToken);
+        // Nobody's looking at the cross-mix outline when it's switched off, so don't pay
+        // for it; SetShowOtherMixPasses backfills when it comes back on.
+        var crossMixTask = _settings.ShowOtherMixPasses
+            ? Mediator.Send(new GetCrossMixPassesQuery(_currentMix), cancellationToken)
+            : Task.FromResult<IReadOnlySet<Guid>>(new HashSet<Guid>());
         var competitiveTask = Mediator.Send(new GetCompetitivePlayersQuery(_chartType, _currentMix), cancellationToken);
         // Round 7: pass standing among similar players, from the folder's materialized
         // cohort histograms. CoOp has no cohort data (the rebuild covers S/D only).
@@ -1648,6 +1734,7 @@ else
                 cancellationToken);
         _scoreRankings = await rankingsTask;
         _otherMixPasses = await crossMixTask;
+        _otherMixPassesLoaded = _settings.ShowOtherMixPasses;
         _competitivePlayerCount = (await competitiveTask).Count();
         _cohortSummary = await cohortTask;
         cancellationToken.ThrowIfCancellationRequested();

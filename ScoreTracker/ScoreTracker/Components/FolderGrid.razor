@@ -4,10 +4,17 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
 @* The difficulty selector's shared guts (one concept, one component): the
-   Singles/Doubles/CoOp segment row + the level grid. FolderPicker wraps it in its
-   popover for single-pick navigation (tier lists); the randomizer renders it inline in
-   multi-toggle mode for weighted-level selection. Type tabs are internal state — the
-   panel stays open across type switches in both hosts. *@
+   Singles/Doubles/CoOp segment row + the level grid. Type tabs are internal state — the
+   panel stays open across type switches in every host.
+
+   THIS IS A POPOVER CONTROL, like a date picker: it is opened from a button, it takes
+   the picks, it closes. It is never chrome plopped onto a page — three type tabs over a
+   thirty-cell grid is a whole screen of controls, and inline it drowns whatever it was
+   meant to help you configure. FolderPicker wraps it for single-pick navigation (tier
+   lists); FolderLevelsConfigPanel wraps it behind "Select Folders" for multi-toggle.
+
+   The randomizer's inline render predates the rule and is the one exception; it should
+   move behind a button the next time that page is touched. *@
 <div class="folder-grid">
     <MudButtonGroup OverrideStyles="false" Class="folder-picker-types">
         <MudButton Variant="@TypeVariant(ChartType.Single)" Color="Color.Primary" Size="Size.Small"
@@ -27,9 +34,9 @@
         @foreach (var level in LevelsFor(_pendingType))
         {
             var captured = level;
-            var enabled = IsEnabled(_pendingType, captured);
-            <button type="button" disabled="@(!enabled)"
-                    class="folder-picker-level @(IsSelected(_pendingType, captured) ? "folder-picker-current" : null) @(enabled ? null : "folder-picker-level-off")"
+            var missing = IsMissing(_pendingType, captured);
+            <button type="button" disabled="@(missing || IsDisabled(_pendingType, captured))"
+                    class="folder-picker-level @(IsSelected(_pendingType, captured) ? "folder-picker-current" : null) @(missing ? "folder-picker-level-off" : null)"
                     @onclick="() => LevelPicked.InvokeAsync((_pendingType, captured))">@captured</button>
         }
     </div>
@@ -48,20 +55,28 @@
     [Parameter] public Func<ChartType, int, bool> IsSelected { get; set; } = (_, _) => false;
 
     /// <summary>
-    ///     Which folders can be picked at all. Everything is pickable by default — only a
-    ///     host whose data is sparse (the mix diff, where most folders changed nothing)
-    ///     narrows it. A type whose every level is off has its tab disabled too, so the
-    ///     grid never opens onto a wall of dead cells.
+    ///     Which folders this host has nothing for — the mix diff, where most folders
+    ///     changed nothing. Distinct from <see cref="IsDisabled" /> on purpose: that is a
+    ///     transient refusal and every cell can be refused at once, so it must never take a
+    ///     tab away (you would be locked out of switching tabs to get back under the cap).
+    ///     This one is structural, so a type with nothing in it loses its tab and the grid
+    ///     never opens onto a wall of dead cells.
     /// </summary>
-    [Parameter] public Func<ChartType, int, bool> IsEnabled { get; set; } = (_, _) => true;
+    [Parameter] public Func<ChartType, int, bool> IsMissing { get; set; } = (_, _) => false;
 
     private bool HasAny(ChartType type)
     {
-        return LevelsFor(type).Any(level => IsEnabled(type, level));
+        return LevelsFor(type).Any(level => !IsMissing(type, level));
     }
 
     /// <summary>Fired per tap; the host decides toggle-and-stay (multi) or pick-and-close (single).</summary>
     [Parameter] public EventCallback<(ChartType Type, int Level)> LevelPicked { get; set; }
+
+    /// <summary>
+    ///     Which cells refuse a tap. A multi-select host at its cap greys the rest rather than
+    ///     swallowing the click — a dead button that still looks live reads as a broken grid.
+    /// </summary>
+    [Parameter] public Func<ChartType, int, bool> IsDisabled { get; set; } = (_, _) => false;
 
     protected override void OnInitialized()
     {

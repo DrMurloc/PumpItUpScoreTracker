@@ -1,0 +1,189 @@
+@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.Theming
+
+@* Folder Levels (docs/design/folder-level-progression.md §6): the folders you picked, each as a
+   completion percent and a folder grade. Detail drops by size rather than re-laying out — 1x1 is
+   one folder large, wider sizes stack rows, and the tier ticks appear once there is room for them. *@
+
+@if (!_loaded)
+{
+    <div class="dash-widget-message">
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+    </div>
+}
+else if (_rows.Length == 0)
+{
+    <div class="dash-widget-message">
+        <MudText Typo="Typo.body2">@L["Pick the folders you're working on."]</MudText>
+    </div>
+}
+else if (_hero is { } hero)
+{
+    <div class="dash-fl-hero">
+        @* A 1x1 has no row header to name the folder, so the bubble carries it — otherwise the
+           cell is a grade with nothing saying what it is a grade of. *@
+        <DifficultyBubble Type="hero.Level.Type" Level="hero.Level.Level" Mix="_mix"></DifficultyBubble>
+        <div>
+            <div class="dash-fl-hero-grade @GlowFor(hero.Level)"
+                 style="color:@GradeColor(hero.Level)">@GradeText(hero.Level)</div>
+            <div class="dash-fl-hero-pct">@CompletionText(hero.Level)</div>
+        </div>
+        <div class="dash-fl-hero-bar">
+            <FolderSpectrum GradesDescending="hero.Grades" Size="hero.Level.Size" ShowTicks="false"
+                            Height="FolderSpectrumSize.Slim"></FolderSpectrum>
+            <div class="dash-fl-hero-left">@RemainingText(hero.Level)</div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="dash-fl-rows">
+        @foreach (var row in _rows)
+        {
+            <div class="dash-fl-row">
+                <div class="dash-fl-row-head">
+                    <span class="dash-fl-row-name">
+                        <DifficultyBubble Type="row.Level.Type" Level="row.Level.Level" Mix="_mix" Small="true"></DifficultyBubble>
+                        @if (_showCounts)
+                        {
+                            <span class="dash-fl-row-count">@RemainingText(row.Level)</span>
+                        }
+                    </span>
+                    <span>
+                        <span class="dash-fl-row-grade @GlowFor(row.Level)"
+                              style="color:@GradeColor(row.Level)">@GradeText(row.Level)</span>
+                        <span class="dash-fl-row-pct">@CompletionText(row.Level)</span>
+                    </span>
+                </div>
+                <FolderSpectrum GradesDescending="row.Grades" Size="row.Level.Size" ShowTicks="_showTicks"
+                                Height="@(_showTicks ? FolderSpectrumSize.Normal : FolderSpectrumSize.Slim)">
+                </FolderSpectrum>
+            </div>
+        }
+    </div>
+}
+
+@code {
+
+    [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
+    [Parameter] public MixEnum EffectiveMix { get; set; }
+    [Parameter] public bool EditMode { get; set; }
+
+    /// <summary>Shell render contract (§2.2) — this widget raises no chart dialogs, but must declare it.</summary>
+    [Parameter] public EventCallback<ChartClickContext> OnChartClick { get; set; }
+
+    /// <summary>Bumped by the host's refresh control; part of the five-param render contract.</summary>
+    [Parameter] public int RefreshToken { get; set; }
+
+    [Inject] private IMediator Mediator { get; set; } = null!;
+    [Inject] private ICurrentUserAccessor CurrentUser { get; set; } = null!;
+
+    private sealed record Row(FolderLevelRecord Level, IReadOnlyList<PhoenixLetterGrade> Grades);
+
+    private bool _loaded;
+    private bool _showTicks;
+    private bool _showCounts;
+    private string? _loadedFor;
+    private MixEnum _mix = MixEnum.Phoenix;
+    private Row[] _rows = Array.Empty<Row>();
+    private Row? _hero;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var signature = $"{Widget.Id}|{Widget.ConfigJson}|{Widget.SizePreset}|{EffectiveMix}|{RefreshToken}";
+        if (_loadedFor == signature) return;
+        _loadedFor = signature;
+        _loaded = false;
+
+        var size = SizePreset.TryParse(Widget.SizePreset) ?? SizePreset.OneByOne;
+        // Every stacked size gives a row the same height — a taller cell holds more folders, not
+        // roomier ones — so detail splits on one line: 2x1 is the compact variant with slim bars
+        // and no ticks, and everything taller carries ticks and chart counts.
+        _showTicks = size.Rows > 1;
+        _showCounts = size.Rows > 1;
+        var capacity = FolderLevelsDefaults.CapacityFor(size);
+
+        var config = WidgetConfigJson.Read<FolderLevelsConfig>(Widget.ConfigJson);
+        _mix = config.Mix ?? EffectiveMix;
+        // A widget dropped on the dashboard shows something immediately rather than an empty
+        // prompt: folders around your own competitive level, until you pick your own.
+        var folders = config.Folders.Count > 0 ? config.Folders : await SuggestFolders(capacity);
+        _rows = (await LoadRows(folders)).Take(capacity).ToArray();
+        // One folder in a 1x1 gets the whole cell; anything else stacks.
+        _hero = size is { Columns: 1, Rows: 1 } ? _rows.FirstOrDefault() : null;
+        if (_hero != null) _rows = new[] { _hero };
+        _loaded = true;
+    }
+
+    // Live from the player's scores rather than the stored projection: the spectrum needs per-chart
+    // grades the projection does not carry, and a widget that disagreed with the tier-list page it
+    // links to would be worse than one extra read.
+    private async Task<List<FolderLevelsTarget>> SuggestFolders(int capacity)
+    {
+        if (!CurrentUser.IsLoggedIn) return new List<FolderLevelsTarget>();
+        var stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _mix));
+        return FolderLevelsDefaults.Suggest(capacity, stats.SinglesCompetitiveLevel,
+            stats.DoublesCompetitiveLevel);
+    }
+
+    private async Task<Row[]> LoadRows(IReadOnlyList<FolderLevelsTarget> targets)
+    {
+        if (!CurrentUser.IsLoggedIn || targets.Count == 0) return Array.Empty<Row>();
+
+        var charts = (await Mediator.Send(new GetChartsQuery(_mix))).ToArray();
+        var passed = FolderLevelRecord.PassedScores(
+            await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _mix)));
+
+        return targets
+            .Select(target =>
+            {
+                var folder = charts.Where(c => c.Type == target.Type && (int)c.Level == target.Level).ToArray();
+                if (folder.Length == 0) return null;
+                var level = FolderLevelRecord.For(_mix, target.Type, DifficultyLevel.From(target.Level),
+                    folder, passed);
+                var grades = folder
+                    .Select(c => passed.TryGetValue(c.Id, out var score) ? score : (int?)null)
+                    .Where(s => s != null)
+                    .Select(s => PhoenixScore.From(s!.Value).LetterGradeFor(_mix))
+                    .OrderByDescending(g => g)
+                    .ToArray();
+                return new Row(level, grades);
+            })
+            .Where(r => r != null)
+            .Cast<Row>()
+            .ToArray();
+    }
+
+    private string GradeColor(FolderLevelRecord level) => level.Grade == null
+        ? "var(--unplayed-grade)"
+        : MixThemes.GradeVar(level.Grade.Value);
+
+    // An em dash needs no translation, and a folder with nothing played has no grade to show.
+    private static string GradeText(FolderLevelRecord level) => level.Grade?.GetName() ?? "—";
+
+    private string CompletionText(FolderLevelRecord level) =>
+        level.IsLamped ? L["Folder Lamp"].Value : L["{0}% complete", level.CompletionPercent].Value;
+
+    private string RemainingText(FolderLevelRecord level) => level.IsLamped
+        ? L["{0} charts", level.Size].Value
+        : L["{0} of {1} · {2} to Folder Lamp", level.Played, level.Size, level.Size - level.Played].Value;
+
+    private static string GlowFor(FolderLevelRecord level) => level.Tier switch
+    {
+        >= FolderCompletionTier.Lamp => "rarity-glow-3",
+        >= 80 => "rarity-glow-2",
+        >= 60 => "rarity-glow-1",
+        _ => string.Empty
+    };
+
+}

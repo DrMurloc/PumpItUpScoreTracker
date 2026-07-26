@@ -64,9 +64,11 @@ public sealed class ChartUrlCutoverTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task LegacyChartAndRecordAliases301ToTheCatalog()
+    public async Task RetiredRouteAliases301ToTheCatalog()
     {
-        foreach (var alias in new[] { "/Chart", "/Record" })
+        // /StepArtists was a whole page (charts grouped under one panel per step artist);
+        // the catalog filters by step artist instead, so the old URL consolidates into it.
+        foreach (var alias in new[] { "/Chart", "/Record", "/StepArtists" })
         {
             var response = await _client.GetAsync(alias);
             Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);

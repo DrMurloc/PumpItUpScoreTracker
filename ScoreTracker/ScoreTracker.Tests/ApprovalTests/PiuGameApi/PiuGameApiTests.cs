@@ -635,13 +635,82 @@ public sealed class PiuGameApiTests
         Assert.Equal("https://phoenix.piugame.com/data/song_img/district1.png?v=1", entry.SongImage);
     }
 
+    [Fact]
+    public async Task ATransientConnectionFailureIsRetriedRatherThanFailingTheFetch()
+    {
+        // 2026-07-26 incident: the Phoenix 2 sweep died at its first stage on a single reset TLS
+        // handshake ("The SSL connection could not be established"), costing a full week of
+        // boards. The site's edge resets connections under sweep load and its SSO bounce fails
+        // the first request of every session by design — one attempt is never a verdict.
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetSongLeaderboard_HappyPath.html"));
+        var api = BuildApi(html);
+        var (client, attempts) = FlakyHttpClientReturning(html, failures: 3,
+            () => new HttpRequestException("The SSL connection could not be established"));
+
+        var result = await api.GetSongLeaderboard(MixEnum.Phoenix2, songId: "any", page: 1, CancellationToken.None,
+            client);
+
+        Assert.Equal(4, attempts.Count);
+        Assert.Equal(2, result.Results.Length);
+    }
+
+    [Fact]
+    public async Task AConnectionThatNeverRecoversGivesUpAfterFourAttempts()
+    {
+        var api = BuildApi("<html></html>");
+        var (client, attempts) = FlakyHttpClientReturning("<html></html>", failures: int.MaxValue,
+            () => new HttpRequestException("The SSL connection could not be established"));
+
+        await Assert.ThrowsAsync<HttpRequestException>(() =>
+            api.GetSongLeaderboard(MixEnum.Phoenix2, songId: "any", page: 1, CancellationToken.None, client));
+
+        Assert.Equal(4, attempts.Count);
+    }
+
+    [Fact]
+    public async Task ACancelledSweepIsNotRetried()
+    {
+        // Cancellation is a decision, not a transient fault — the old bare catch treated it as
+        // one and burned the retry budget shutting down.
+        var api = BuildApi("<html></html>");
+        using var cancelled = new CancellationTokenSource();
+        await cancelled.CancelAsync();
+        var (client, attempts) = FlakyHttpClientReturning("<html></html>", failures: int.MaxValue,
+            () => new OperationCanceledException(cancelled.Token));
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            api.GetSongLeaderboard(MixEnum.Phoenix2, songId: "any", page: 1, cancelled.Token, client));
+
+        Assert.Single(attempts);
+    }
+
+    [Fact]
+    public async Task ARequestTimeoutIsRetriedEvenThoughItArrivesAsACancellation()
+    {
+        // HttpClient reports its own 100s request timeout as TaskCanceledException with nobody's
+        // token cancelled. That is a hung connection — the exact transient the policy exists for —
+        // so it must not be mistaken for the caller calling the run off.
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetSongLeaderboard_HappyPath.html"));
+        var api = BuildApi(html);
+        var (client, attempts) = FlakyHttpClientReturning(html, failures: 2,
+            () => new TaskCanceledException("The request was canceled due to the configured HttpClient.Timeout",
+                new TimeoutException()));
+
+        var result = await api.GetSongLeaderboard(MixEnum.Phoenix2, songId: "any", page: 1, CancellationToken.None,
+            client);
+
+        Assert.Equal(3, attempts.Count);
+        Assert.Equal(2, result.Results.Length);
+    }
+
     private static PiuGameApi BuildApi(string responseHtml)
     {
         return new PiuGameApi(
             HttpClientReturning(responseHtml),
             NullLogger<PiuGameApi>.Instance,
             Mock.Of<ICurrentUserAccessor>(),
-            Options.Create(new PiuGameConfiguration()));
+            // Zero backoff so the retry tests don't spend the policy's real 1s/2s/4s waits.
+            Options.Create(new PiuGameConfiguration { RetryBaseDelayMilliseconds = 0 }));
     }
 
     private static HttpClient HttpClientReturning(string html)
@@ -656,6 +725,32 @@ public sealed class PiuGameApiTests
                 Content = new StringContent(html, Encoding.UTF8, "text/html")
             });
         return new HttpClient(handler.Object);
+    }
+
+    /// <summary>
+    ///     A client whose first <paramref name="failures" /> attempts throw before any response is
+    ///     produced — the shape of a handshake that never completed.
+    /// </summary>
+    private static (HttpClient Client, List<Uri> Attempts) FlakyHttpClientReturning(string html, int failures,
+        Func<Exception> fault)
+    {
+        var attempts = new List<Uri>();
+        var handler = new Mock<HttpMessageHandler>();
+        handler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .Returns<HttpRequestMessage, CancellationToken>((req, _) =>
+            {
+                attempts.Add(req.RequestUri!);
+                if (attempts.Count <= failures) throw fault();
+
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(html, Encoding.UTF8, "text/html")
+                });
+            });
+        return (new HttpClient(handler.Object), attempts);
     }
 
     private static (HttpClient Client, List<Uri> Requests) CapturingHttpClientReturning(string html)

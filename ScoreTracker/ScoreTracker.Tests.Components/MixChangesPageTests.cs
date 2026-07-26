@@ -153,9 +153,9 @@ public sealed class MixChangesPageTests : ComponentTestBase
         var page = RenderPage();
         var picker = page.FindComponent<FolderPicker>().Instance;
 
-        Assert.True(picker.IsEnabled(ChartType.Double, 20));
-        Assert.False(picker.IsEnabled(ChartType.Double, 19));
-        Assert.False(picker.IsEnabled(ChartType.Single, 16));
+        Assert.False(picker.IsMissing(ChartType.Double, 20));
+        Assert.True(picker.IsMissing(ChartType.Double, 19));
+        Assert.True(picker.IsMissing(ChartType.Single, 16));
         // Co-op charts have no level to move between, so the page hides that tab entirely.
         Assert.False(picker.ShowCoOp);
     }

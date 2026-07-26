@@ -118,7 +118,7 @@
                    the mix actually churned. *@
                 <div class="mc-filters">
                     <FolderPicker Type="_folder.Type" Level="_folder.Level" ShowCoOp="false"
-                                  IsEnabled="HasChanges" FolderChanged="SetFolder"></FolderPicker>
+                                  IsMissing="(t, l) => !HasChanges(t, l)" FolderChanged="SetFolder"></FolderPicker>
                     <span class="mc-filter-sep"></span>
                     @foreach (var (dir, text) in DirectionFilters)
                     {
