@@ -66,7 +66,7 @@ surface and the destination worthy of the dialog's vocabulary.
 2. **The answer above the fold** (UX rule 1): identity + verdict + your score in the first
    viewport at 390×844.
 3. **Historical data becomes first-class**: debut mix + cross-mix level changes (derivable today
-   from mix catalogs sharing chart GUIDs — the `/WhatChanged` mix diff proves it).
+   from mix catalogs sharing chart GUIDs — the `/MixChanges` mix diff proves it).
 4. **"Is X harder than Y" gets settled by sentences**, with the graphs as evidence
    ([chart-verdicts.md](chart-verdicts.md)).
 5. **Every chart page links onward**: similar-charts shelf ([chart-similarity.md](chart-similarity.md)),
@@ -354,7 +354,7 @@ its sharp end.
   similarity intensity vector. The §8a boundary (link out, don't import their full rendering)
   still applies.
 - **Chart-vs-chart compare tool** (cut in the workshop). The name is free: the mix-diff page
-  that held it moved to `/WhatChanged` in 2026-07, and `/ChartCompare` now 301s there — so a
+  that held it moved to `/MixChanges` in 2026-07, and `/ChartCompare` now 301s there — so a
   real compare tool can claim the name it always promised.
 - **Per-mix historical pages**: old-mix URLs 301 to canonical until a frozen-history view earns
   its keep.

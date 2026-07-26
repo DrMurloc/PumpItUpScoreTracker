@@ -6,8 +6,8 @@
 @* Arrivals and departures as a sticker sheet — players recognise jacket art faster than
    song names (UX rule 2), and a departing song reads as gone by being dimmed rather than
    by having its bubbles greyed, which would cost the red-Single/green-Double read. *@
-<div class="wc-sheet">
-    <MudAlert Severity="Severity.Info" Dense="true" Class="wc-notice">
+<div class="mc-sheet">
+    <MudAlert Severity="Severity.Info" Dense="true" Class="mc-notice">
         @if (Departed)
         {
             @L["{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile.",
@@ -19,15 +19,15 @@
         }
     </MudAlert>
 
-    <div class="wc-stickers">
+    <div class="mc-stickers">
         @foreach (var song in Songs)
         {
-            <button type="button" class="wc-sticker @(Departed ? "wc-sticker-gone" : "")"
+            <button type="button" class="mc-sticker @(Departed ? "mc-sticker-gone" : "")"
                     @onclick="() => Pick(song.Charts[0])">
                 <SongImage Song="song.Song" Height="120"></SongImage>
-                <span class="wc-sticker-name">@song.Song.Name</span>
-                <span class="wc-sticker-artist">@song.Song.Artist</span>
-                <span class="wc-sticker-strip">
+                <span class="mc-sticker-name">@song.Song.Name</span>
+                <span class="mc-sticker-artist">@song.Song.Artist</span>
+                <span class="mc-sticker-strip">
                     @foreach (var chart in song.Charts)
                     {
                         <DifficultyBubble Chart="chart" Height="20"></DifficultyBubble>
@@ -41,18 +41,18 @@
        Phoenix mixes, common across the XX boundary. *@
     @if (LooseCharts.Count > 0)
     {
-        <div class="wc-loose">
-            <h3 class="wc-loose-title">
+        <div class="mc-loose">
+            <h3 class="mc-loose-title">
                 @(Departed
                     ? L["{0} charts removed from songs that stayed", LooseCharts.Count]
                     : L["{0} charts added to songs that were already here", LooseCharts.Count])
             </h3>
             @foreach (var chart in LooseCharts)
             {
-                <button type="button" class="wc-row" @onclick="() => Pick(chart)">
+                <button type="button" class="mc-row" @onclick="() => Pick(chart)">
                     <SongImage Song="chart.Song" Small="true"></SongImage>
-                    <span class="wc-name">@chart.Song.Name</span>
-                    <span class="wc-tail">
+                    <span class="mc-name">@chart.Song.Name</span>
+                    <span class="mc-tail">
                         <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
                     </span>
                 </button>

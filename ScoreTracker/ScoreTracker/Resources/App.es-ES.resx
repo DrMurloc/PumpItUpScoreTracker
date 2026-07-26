@@ -5886,12 +5886,6 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Pasa {0} charts con {1} o mejor (solo {2} en este folder)</value>
   </data>
-  <data name="What Changed" xml:space="preserve">
-    <value>Qué ha cambiado</value>
-  </data>
-  <data name="What Changed: {0} to {1}" xml:space="preserve">
-    <value>Qué ha cambiado: de {0} a {1}</value>
-  </data>
   <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
     <value>Todos los charts que cambiaron de nivel, llegaron o se fueron entre {0} y {1}.</value>
   </data>
@@ -6005,5 +5999,11 @@
   </data>
   <data name="▼ Easier" xml:space="preserve">
     <value>▼ Más fácil</value>
+  </data>
+  <data name="Mix Changes" xml:space="preserve">
+    <value>Cambios de versión</value>
+  </data>
+  <data name="Mix Changes: {0} to {1}" xml:space="preserve">
+    <value>Cambios de versión: de {0} a {1}</value>
   </data>
 </root>

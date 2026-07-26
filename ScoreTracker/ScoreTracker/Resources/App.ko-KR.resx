@@ -5889,12 +5889,6 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>{0}개를 {1} 이상으로 (이 폴더에 {2}개뿐)</value>
   </data>
-  <data name="What Changed" xml:space="preserve">
-    <value>무엇이 바뀌었나</value>
-  </data>
-  <data name="What Changed: {0} to {1}" xml:space="preserve">
-    <value>무엇이 바뀌었나: {0} → {1}</value>
-  </data>
   <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
     <value>{0}에서 {1} 사이에 난이도가 바뀌거나 추가되거나 삭제된 모든 채보.</value>
   </data>
@@ -6008,5 +6002,11 @@
   </data>
   <data name="▼ Easier" xml:space="preserve">
     <value>▼ 하향</value>
+  </data>
+  <data name="Mix Changes" xml:space="preserve">
+    <value>시리즈 변경사항</value>
+  </data>
+  <data name="Mix Changes: {0} to {1}" xml:space="preserve">
+    <value>시리즈 변경사항: {0} → {1}</value>
   </data>
 </root>

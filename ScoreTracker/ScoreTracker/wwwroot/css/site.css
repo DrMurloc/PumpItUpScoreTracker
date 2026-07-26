@@ -2083,6 +2083,18 @@ html.sheet-open .more-sheet-scrim {
     font-weight: 600;
 }
 
+/* A folder this host has nothing for. Dimmed rather than hidden: the grid is a map of
+   the level range, and holes in it are information — they say the change landed
+   somewhere else. */
+.folder-picker-level-off {
+    opacity: .3;
+    cursor: default;
+}
+
+.folder-picker-level-off:hover {
+    background: none;
+}
+
 /* ===== Home dashboard (unlisted pre-release, D7): 4-column desktop grid, mobile
    derives a single column from auto-flow order (D3), cells span via size presets
    (D5). The widget frame is owned by WidgetHost so every widget wears identical
@@ -6740,70 +6752,70 @@ button.chart-card-art {
     }
 }
 
-/* ===== What Changed — the mix diff =====
+/* ===== Mix Changes — the mix diff =====
    The board wears the rankings-board skin (compact rows, hairline separators, no card per
    row) because that is the site's standard for any dense board. The one encoding this page
    adds is direction: warm means the game calls it harder, cool means easier, taken off the
    existing difficulty ramp so it is never the tier lists' red/green. Every direction colour
    is paired with an arrow and the printed delta. */
-.wc {
+.mc {
     display: flex;
     flex-direction: column;
     gap: 18px;
 }
 
-.wc-head {
+.mc-head {
     display: flex;
     flex-direction: column;
     gap: 14px;
 }
 
-.wc-title {
+.mc-title {
     font-family: var(--font-display);
     font-weight: 700;
     line-height: 1;
     letter-spacing: .01em;
 }
 
-.wc-sub {
+.mc-sub {
     color: var(--mix-ink-muted);
     max-width: 52ch;
     margin-top: 5px;
 }
 
-.wc-mixpair {
+.mc-mixpair {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
 }
 
-.wc-mixsel {
+.mc-mixsel {
     min-width: 168px;
     max-width: 220px;
 }
 
-.wc-tween {
+.mc-tween {
     color: var(--mix-ink-muted);
 }
 
-.wc-lookup {
+.mc-lookup {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.wc-hint {
+.mc-hint {
     font-size: .82rem;
     color: var(--mix-ink-muted);
 }
 
-.wc-notice {
+.mc-notice {
     margin: 0;
 }
 
 /* ---- the answer card ---- */
-.wc-answer {
+.mc-answer {
     display: flex;
     gap: 13px;
     align-items: flex-start;
@@ -6814,27 +6826,27 @@ button.chart-card-art {
     padding: 13px 15px;
 }
 
-.wc-answer-up {
+.mc-answer-up {
     border-left-color: var(--diff-hard);
 }
 
-.wc-answer-down {
+.mc-answer-down {
     border-left-color: var(--diff-overrated);
 }
 
-.wc-answer-new {
+.mc-answer-new {
     border-left-color: var(--mix-accent);
 }
 
-.wc-answer-gone {
+.mc-answer-gone {
     border-left-color: var(--diff-overrated);
 }
 
-.wc-answer-same {
+.mc-answer-same {
     border-left-color: color-mix(in srgb, var(--mix-ink) 20%, transparent);
 }
 
-.wc-answer-body {
+.mc-answer-body {
     flex: 1 1 auto;
     min-width: 0;
     display: flex;
@@ -6842,13 +6854,13 @@ button.chart-card-art {
     gap: 9px;
 }
 
-.wc-answer-id {
+.mc-answer-id {
     display: flex;
     flex-direction: column;
     min-width: 0;
 }
 
-.wc-answer-song {
+.mc-answer-song {
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 1.28rem;
@@ -6858,7 +6870,7 @@ button.chart-card-art {
     white-space: nowrap;
 }
 
-.wc-answer-artist {
+.mc-answer-artist {
     font-size: .79rem;
     color: var(--mix-ink-muted);
     overflow: hidden;
@@ -6866,7 +6878,7 @@ button.chart-card-art {
     white-space: nowrap;
 }
 
-.wc-verdict {
+.mc-verdict {
     font-family: var(--font-display);
     font-weight: 600;
     font-size: 1.06rem;
@@ -6874,13 +6886,13 @@ button.chart-card-art {
     margin: 0;
 }
 
-.wc-moves {
+.mc-moves {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
 }
 
-.wc-move {
+.mc-move {
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -6889,23 +6901,23 @@ button.chart-card-art {
     padding: 4px 8px;
 }
 
-.wc-move-pinned {
+.mc-move-pinned {
     border-color: var(--mix-primary);
     box-shadow: 0 0 0 1px var(--mix-glow);
 }
 
 /* The earlier mix's bubble, stated as past tense. */
-.wc-was {
+.mc-was {
     filter: grayscale(.5) brightness(.82);
     display: inline-flex;
 }
 
-.wc-arrow {
+.mc-arrow {
     color: var(--mix-ink-muted);
     font-size: .85rem;
 }
 
-.wc-delta {
+.mc-delta {
     font-family: var(--font-display);
     font-weight: 700;
     font-size: .86rem;
@@ -6914,20 +6926,20 @@ button.chart-card-art {
     text-align: right;
 }
 
-.wc-up {
+.mc-up {
     color: var(--diff-hard);
 }
 
-.wc-down {
+.mc-down {
     color: var(--diff-overrated);
 }
 
-.wc-quiet {
+.mc-quiet {
     font-size: .8rem;
     color: var(--mix-ink-muted);
 }
 
-.wc-linkish {
+.mc-linkish {
     background: none;
     border: 0;
     padding: 0;
@@ -6938,19 +6950,19 @@ button.chart-card-art {
     text-underline-offset: 2px;
 }
 
-.wc-linkish:focus-visible {
+.mc-linkish:focus-visible {
     outline: 2px solid var(--mix-primary);
     outline-offset: 2px;
 }
 
 /* ---- tabs ---- */
-.wc-tabs {
+.mc-tabs {
     display: flex;
     border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
     overflow-x: auto;
 }
 
-.wc-tab {
+.mc-tab {
     background: none;
     border: 0;
     border-bottom: 2px solid transparent;
@@ -6967,28 +6979,28 @@ button.chart-card-art {
     gap: 7px;
 }
 
-.wc-tab-n {
+.mc-tab-n {
     font-variant-numeric: tabular-nums;
     font-size: .86rem;
     opacity: .75;
 }
 
-.wc-tab[aria-selected="true"] {
+.mc-tab[aria-selected="true"] {
     color: var(--mix-ink);
     border-bottom-color: var(--mix-primary);
 }
 
-.wc-tab:hover {
+.mc-tab:hover {
     color: var(--mix-ink);
 }
 
-.wc-tab:focus-visible {
+.mc-tab:focus-visible {
     outline: 2px solid var(--mix-primary);
     outline-offset: -2px;
 }
 
-/* ---- filters ---- */
-.wc-filters {
+/* ---- the folder picker and what narrows inside it ---- */
+.mc-filters {
     display: flex;
     gap: 8px;
     align-items: center;
@@ -6996,7 +7008,12 @@ button.chart-card-art {
     margin: 14px 0;
 }
 
-.wc-chip {
+.mc-filters .folder-picker { margin-right: 4px; }
+
+/* The chart-selector suggestion's mix suffix — present only where several mixes feed it. */
+.chart-selector-mix { color: var(--mix-ink-muted); font-size: .82em; }
+
+.mc-chip {
     background: var(--mix-surface);
     border: 1px solid color-mix(in srgb, var(--mix-ink) 13%, transparent);
     color: var(--mix-ink-muted);
@@ -7006,28 +7023,28 @@ button.chart-card-art {
     font-size: .83rem;
 }
 
-.wc-chip:hover {
+.mc-chip:hover {
     color: var(--mix-ink);
 }
 
-.wc-chip:focus-visible {
+.mc-chip:focus-visible {
     outline: 2px solid var(--mix-primary);
     outline-offset: 2px;
 }
 
-.wc-chip[aria-pressed="true"] {
+.mc-chip[aria-pressed="true"] {
     background: color-mix(in srgb, var(--mix-primary) 15%, var(--mix-surface));
     border-color: color-mix(in srgb, var(--mix-primary) 55%, transparent);
     color: var(--mix-ink);
 }
 
-.wc-filter-sep {
+.mc-filter-sep {
     width: 1px;
     height: 18px;
     background: color-mix(in srgb, var(--mix-ink) 13%, transparent);
 }
 
-.wc-groupby {
+.mc-groupby {
     margin-left: auto;
     display: inline-flex;
     align-items: center;
@@ -7036,14 +7053,14 @@ button.chart-card-art {
     color: var(--mix-ink-muted);
 }
 
-.wc-seg {
+.mc-seg {
     display: inline-flex;
     border: 1px solid color-mix(in srgb, var(--mix-ink) 13%, transparent);
     border-radius: 5px;
     overflow: hidden;
 }
 
-.wc-seg button {
+.mc-seg button {
     background: var(--mix-surface);
     border: 0;
     color: var(--mix-ink-muted);
@@ -7052,74 +7069,50 @@ button.chart-card-art {
     font-size: .81rem;
 }
 
-.wc-seg button[aria-pressed="true"] {
+.mc-seg button[aria-pressed="true"] {
     background: color-mix(in srgb, var(--mix-primary) 18%, var(--mix-surface));
     color: var(--mix-ink);
 }
 
-.wc-seg button:focus-visible {
+.mc-seg button:focus-visible {
     outline: 2px solid var(--mix-primary);
     outline-offset: -2px;
 }
 
-/* ---- folder groups and rows ---- */
-.wc-groups {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.wc-fgroup {
+/* ---- the folder in view, and its rows ---- */
+.mc-fgroup {
     display: flex;
     flex-direction: column;
 }
 
-/* The header is also the folder filter — nothing else on the page narrows to one folder. */
-.wc-fhead {
+/* Names the folder the picker selected. Not a control — the picker is. */
+.mc-fhead {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 4px 8px 5px;
-    width: 100%;
-    border: 0;
     border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 22%, transparent);
     position: sticky;
     top: -1px;
     background: var(--mix-surface);
     z-index: 2;
-    color: inherit;
-    text-align: left;
-    cursor: pointer;
 }
 
-.wc-fhead:hover .wc-ftitle {
-    color: var(--mix-primary);
-}
-
-.wc-fhead:focus-visible {
-    outline: 2px solid var(--mix-primary);
-    outline-offset: -2px;
-}
-
-.wc-fhead-on {
-    box-shadow: inset 0 -2px 0 var(--mix-primary);
-}
-
-.wc-ftitle {
+.mc-ftitle {
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 1.14rem;
     letter-spacing: .01em;
 }
 
-.wc-fcount {
+.mc-fcount {
     font-size: .79rem;
     color: var(--mix-ink-muted);
     margin-left: auto;
     font-variant-numeric: tabular-nums;
 }
 
-.wc-row {
+.mc-row {
     display: flex;
     align-items: center;
     gap: 9px;
@@ -7133,20 +7126,20 @@ button.chart-card-art {
     cursor: pointer;
 }
 
-.wc-row:hover {
+.mc-row:hover {
     box-shadow: inset 2px 0 0 var(--mix-primary);
 }
 
-.wc-row:hover .wc-name {
+.mc-row:hover .mc-name {
     color: var(--mix-primary);
 }
 
-.wc-row:focus-visible {
+.mc-row:focus-visible {
     outline: 2px solid var(--mix-primary);
     outline-offset: -2px;
 }
 
-.wc-name {
+.mc-name {
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
@@ -7155,7 +7148,7 @@ button.chart-card-art {
     font-size: .92rem;
 }
 
-.wc-tail {
+.mc-tail {
     margin-left: auto;
     flex: 0 0 auto;
     display: flex;
@@ -7164,20 +7157,20 @@ button.chart-card-art {
 }
 
 /* ---- sticker sheet ---- */
-.wc-sheet {
+.mc-sheet {
     display: flex;
     flex-direction: column;
     gap: 14px;
     margin-top: 14px;
 }
 
-.wc-stickers {
+.mc-stickers {
     display: grid;
     gap: 10px;
     grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
 }
 
-.wc-sticker {
+.mc-sticker {
     background: var(--mix-surface);
     border: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
     border-radius: 5px;
@@ -7190,26 +7183,26 @@ button.chart-card-art {
     cursor: pointer;
 }
 
-.wc-sticker:hover {
+.mc-sticker:hover {
     border-color: color-mix(in srgb, var(--mix-primary) 45%, transparent);
 }
 
-.wc-sticker:focus-visible {
+.mc-sticker:focus-visible {
     outline: 2px solid var(--mix-primary);
     outline-offset: 2px;
 }
 
 /* Dimming the card is what says "gone" — desaturating the bubbles instead would cost the
    red-Single / green-Double read for no extra meaning. */
-.wc-sticker-gone {
+.mc-sticker-gone {
     opacity: .72;
 }
 
-.wc-sticker-gone:hover {
+.mc-sticker-gone:hover {
     opacity: 1;
 }
 
-.wc-sticker-name {
+.mc-sticker-name {
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 1.02rem;
@@ -7220,7 +7213,7 @@ button.chart-card-art {
     overflow: hidden;
 }
 
-.wc-sticker-artist {
+.mc-sticker-artist {
     font-size: .72rem;
     color: var(--mix-ink-muted);
     overflow: hidden;
@@ -7228,18 +7221,18 @@ button.chart-card-art {
     white-space: nowrap;
 }
 
-.wc-sticker-strip {
+.mc-sticker-strip {
     display: flex;
     flex-wrap: wrap;
     gap: 2px;
 }
 
-.wc-loose {
+.mc-loose {
     display: flex;
     flex-direction: column;
 }
 
-.wc-loose-title {
+.mc-loose-title {
     font-family: var(--font-display);
     font-weight: 600;
     font-size: .72rem;
@@ -7249,7 +7242,7 @@ button.chart-card-art {
     margin: 8px 0 6px;
 }
 
-.wc-empty {
+.mc-empty {
     padding: 26px 14px;
     text-align: center;
     color: var(--mix-ink-muted);
@@ -7259,7 +7252,7 @@ button.chart-card-art {
 }
 
 @media (min-width: 820px) {
-    .wc-head {
+    .mc-head {
         flex-direction: row;
         align-items: flex-end;
         justify-content: space-between;
@@ -7270,7 +7263,7 @@ button.chart-card-art {
 /* Narrow: the grouping control takes its own line instead of squeezing in beside a wrapped
    direction chip. */
 @media (max-width: 600px) {
-    .wc-groupby {
+    .mc-groupby {
         margin-left: 0;
         width: 100%;
         justify-content: flex-start;

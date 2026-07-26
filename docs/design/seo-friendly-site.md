@@ -501,7 +501,7 @@ Google's first indexed chart page exposed how a result actually *reads* ("263Sco
 
 ### The mix diff, and rerates in chart descriptions (2026-07-26)
 
-`/ChartCompare` became `/WhatChanged` (+ `/WhatChanged/{from}/{to}`), and the pass added two
+`/ChartCompare` became `/MixChanges` (+ `/MixChanges/{from}/{to}`), and the pass added two
 SEO surfaces — one small, one broad:
 
 - **The diff page gets a head, not a body.** It runs in a circuit, so a crawler never sees its

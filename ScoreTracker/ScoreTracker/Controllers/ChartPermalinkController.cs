@@ -36,9 +36,9 @@ namespace ScoreTracker.Web.Controllers
         // "Chart Compare" promised chart A vs chart B, which the page never was — it is a mix
         // diff, and it now says so. The old name is freed for the real compare tool.
         [HttpGet("/ChartCompare")]
-        public IActionResult ToWhatChanged()
+        public IActionResult ToMixChanges()
         {
-            return RedirectPermanent("/WhatChanged");
+            return RedirectPermanent("/MixChanges");
         }
     }
 }

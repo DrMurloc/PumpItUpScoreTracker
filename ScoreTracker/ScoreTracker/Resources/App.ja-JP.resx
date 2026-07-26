@@ -6008,12 +6008,6 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>{0}譜面を{1}以上で（このフォルダーには{2}譜面のみ）</value>
   </data>
-  <data name="What Changed" xml:space="preserve">
-    <value>変更点</value>
-  </data>
-  <data name="What Changed: {0} to {1}" xml:space="preserve">
-    <value>変更点：{0}から{1}へ</value>
-  </data>
   <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
     <value>{0}から{1}の間に難度が変わった・追加された・削除された譜面のすべて。</value>
   </data>
@@ -6127,5 +6121,11 @@
   </data>
   <data name="▼ Easier" xml:space="preserve">
     <value>▼ 易化</value>
+  </data>
+  <data name="Mix Changes" xml:space="preserve">
+    <value>バージョン間の変更</value>
+  </data>
+  <data name="Mix Changes: {0} to {1}" xml:space="preserve">
+    <value>バージョン間の変更：{0}から{1}へ</value>
   </data>
 </root>

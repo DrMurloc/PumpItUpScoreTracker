@@ -12,6 +12,13 @@
     <ItemTemplate>
         <SongImage Song="_chartNames[context].Song" Small="true"></SongImage>
         <DifficultyBubble Chart="_chartNames[context]" Small="true"></DifficultyBubble> @_chartNames[context].Song.Name
+        @* A host fed one mix's catalog has nothing to disambiguate. One fed several does:
+           a rerated chart appears once per mix under different difficulties, and the mix
+           is what says which of them is the one you remember. *@
+        @if (ShowMix)
+        {
+            <span class="chart-selector-mix"> - @_chartNames[context].Mix.GetName()</span>
+        }
     </ItemTemplate>
 </MudAutocomplete>
 @code {
@@ -35,6 +42,14 @@
     public Func<Chart, Task> ChartIdSelected { get; set; } = c => Task.CompletedTask;
     [Parameter]
     public string Label { get; set; } = "Chart";
+
+    /// <summary>
+    ///     Appends " - {Mix}" to each suggestion. Off by default: it is noise when Charts
+    ///     comes from a single mix, and identity when it comes from several.
+    /// </summary>
+    [Parameter]
+    public bool ShowMix { get; set; } = false;
+
     private IEnumerable<Chart>? _charts = null;
     [Parameter]
     public IEnumerable<Chart>? Charts { get; set; } = null;
@@ -101,8 +116,12 @@
     }
     protected override void OnParametersSet()
     {
-        if (_charts!=Charts)
+        // Latching the new list is what makes this a guard. Without it _charts kept the
+        // value it was initialised with forever, so a host that passes a real catalog
+        // rebuilt the whole name dictionary on every one of its own re-renders.
+        if (_charts != Charts)
         {
+            _charts = Charts;
             InvokeAsync(UpdateChartList);
         }
     }

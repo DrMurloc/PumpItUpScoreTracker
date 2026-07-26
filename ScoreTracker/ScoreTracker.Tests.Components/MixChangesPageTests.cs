@@ -26,13 +26,13 @@ namespace ScoreTracker.Tests.Components;
 ///     GetMixDiffHandlerTests; these cover what the page does with the answer — above all
 ///     that every lookup outcome, including "nothing moved", says something out loud.
 /// </summary>
-public sealed class WhatChangedPageTests : ComponentTestBase
+public sealed class MixChangesPageTests : ComponentTestBase
 {
     private readonly Mock<IMediator> _mediator = new();
     private readonly Guid _moved = Guid.NewGuid();
     private readonly Guid _still = Guid.NewGuid();
 
-    public WhatChangedPageTests()
+    public MixChangesPageTests()
     {
         _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double>());
@@ -79,27 +79,15 @@ public sealed class WhatChangedPageTests : ComponentTestBase
         return (beforeMoved, afterMoved, stillAfter);
     }
 
-    private IRenderedComponent<WhatChanged> RenderPage()
+    private IRenderedComponent<MixChanges> RenderPage()
     {
-        return RenderComponent<WhatChanged>(p => p
+        return RenderComponent<MixChanges>(p => p
             .Add(c => c.FromSlug, "phoenix")
             .Add(c => c.ToSlug, "phoenix-2"));
     }
 
     [Fact]
-    public void TheBoardGroupsReRatesByTheFolderTheyLeft()
-    {
-        SetupIoliteSky();
-
-        var page = RenderPage();
-
-        Assert.Contains("D20 folder", page.Find(".wc-fhead").TextContent);
-        Assert.Equal("Iolite Sky", page.Find(".wc-row .wc-name").TextContent.Trim());
-        Assert.Contains("▲1", page.Find(".wc-row .wc-delta").TextContent);
-    }
-
-    [Fact]
-    public void TappingAFolderHeaderNarrowsToThatFolderAndTappingItAgainReleases()
+    public void OnlyTheSelectedFolderIsOnScreen()
     {
         var otherBefore = Make(Guid.NewGuid(), "Conflict", ChartType.Single, 12, MixEnum.Phoenix);
         var otherAfter = Make(Guid.NewGuid(), "Conflict", ChartType.Single, 13, MixEnum.Phoenix2);
@@ -110,32 +98,108 @@ public sealed class WhatChangedPageTests : ComponentTestBase
             Array.Empty<Chart>(), Array.Empty<Chart>()));
 
         var page = RenderPage();
-        Assert.Equal(2, page.FindAll(".wc-fgroup").Count);
 
-        page.FindAll(".wc-fhead")[0].Click();
-        Assert.Single(page.FindAll(".wc-fgroup"));
+        // Two folders changed; one is on screen, with only its own row.
+        Assert.Single(page.FindAll(".mc-fgroup"));
+        Assert.Single(page.FindAll(".mc-row"));
+        Assert.Contains("folder", page.Find(".mc-fhead").TextContent);
+    }
 
-        page.Find(".wc-fhead").Click();
-        Assert.Equal(2, page.FindAll(".wc-fgroup").Count);
+    [Fact]
+    public void TheFolderInViewShowsItsChartsWithTheirMove()
+    {
+        SetupIoliteSky();
+
+        var page = RenderPage();
+
+        Assert.Contains("D20 folder", page.Find(".mc-fhead").TextContent);
+        Assert.Equal("Iolite Sky", page.Find(".mc-row .mc-name").TextContent.Trim());
+        Assert.Contains("▲1", page.Find(".mc-row .mc-delta").TextContent);
+    }
+
+    [Fact]
+    public void ThePageOpensOnTheFolderWithTheMostChanges()
+    {
+        // Two D21 rerates against one D20: landing on the busiest folder means the first
+        // view is never one lonely row from the bottom of the level range.
+        var (beforeMoved, afterMoved, _) = SetupIoliteSky();
+        var busy = Enumerable.Range(0, 2).Select(i =>
+        {
+            var id = Guid.NewGuid();
+            return new MixDiffMoveRecord(
+                Make(id, $"Busy {i}", ChartType.Double, 21, MixEnum.Phoenix),
+                Make(id, $"Busy {i}", ChartType.Double, 22, MixEnum.Phoenix2));
+        }).ToArray();
+        Diff(new MixDiffRecord(MixEnum.Phoenix, MixEnum.Phoenix2,
+            busy.Append(new MixDiffMoveRecord(beforeMoved, afterMoved)).ToArray(),
+            Array.Empty<MixDiffSongRecord>(), Array.Empty<MixDiffSongRecord>(),
+            Array.Empty<Chart>(), Array.Empty<Chart>()));
+
+        var page = RenderPage();
+
+        Assert.Contains("D21 folder", page.Find(".mc-fhead").TextContent);
+        Assert.Equal(2, page.FindAll(".mc-row").Count);
+    }
+
+    [Fact]
+    public void OnlyFoldersSomethingMovedOutOfArePickable()
+    {
+        // The predicate is the contract; FolderGridTests covers what the grid does with it.
+        SetupIoliteSky();
+
+        var page = RenderPage();
+        var picker = page.FindComponent<FolderPicker>().Instance;
+
+        Assert.True(picker.IsEnabled(ChartType.Double, 20));
+        Assert.False(picker.IsEnabled(ChartType.Double, 19));
+        Assert.False(picker.IsEnabled(ChartType.Single, 16));
+        // Co-op charts have no level to move between, so the page hides that tab entirely.
+        Assert.False(picker.ShowCoOp);
+    }
+
+    [Fact]
+    public void PickingAFolderSwapsWhichOneIsOnScreen()
+    {
+        var id = Guid.NewGuid();
+        var (beforeMoved, afterMoved, _) = SetupIoliteSky();
+        Diff(new MixDiffRecord(MixEnum.Phoenix, MixEnum.Phoenix2,
+            new[]
+            {
+                new MixDiffMoveRecord(beforeMoved, afterMoved),
+                new MixDiffMoveRecord(Make(id, "Conflict", ChartType.Double, 12, MixEnum.Phoenix),
+                    Make(id, "Conflict", ChartType.Double, 13, MixEnum.Phoenix2))
+            },
+            Array.Empty<MixDiffSongRecord>(), Array.Empty<MixDiffSongRecord>(),
+            Array.Empty<Chart>(), Array.Empty<Chart>()));
+
+        var page = RenderPage();
+        var picker = page.FindComponent<FolderPicker>();
+        page.InvokeAsync(() => picker.Instance.FolderChanged.InvokeAsync((ChartType.Double, 12)))
+            .GetAwaiter().GetResult();
+
+        Assert.Contains("D12 folder", page.Find(".mc-fhead").TextContent);
+        Assert.Equal("Conflict", page.Find(".mc-row .mc-name").TextContent.Trim());
     }
 
     [Fact]
     public void TheDirectionFilterKeepsOnlyOneSideOfTheRamp()
     {
-        var easierBefore = Make(Guid.NewGuid(), "About The Universe", ChartType.Single, 21, MixEnum.Phoenix);
-        var easierAfter = Make(Guid.NewGuid(), "About The Universe", ChartType.Single, 20, MixEnum.Phoenix2);
+        var id = Guid.NewGuid();
+        var easierBefore = Make(id, "About The Universe", ChartType.Double, 20, MixEnum.Phoenix);
+        var easierAfter = Make(id, "About The Universe", ChartType.Double, 19, MixEnum.Phoenix2);
         var (beforeMoved, afterMoved, _) = SetupIoliteSky();
         Diff(new MixDiffRecord(MixEnum.Phoenix, MixEnum.Phoenix2,
             new[] { new MixDiffMoveRecord(beforeMoved, afterMoved), new MixDiffMoveRecord(easierBefore, easierAfter) },
             Array.Empty<MixDiffSongRecord>(), Array.Empty<MixDiffSongRecord>(),
             Array.Empty<Chart>(), Array.Empty<Chart>()));
 
+        // Both left D20, so both are in the folder in view.
         var page = RenderPage();
-        Assert.Equal(2, page.FindAll(".wc-row").Count);
+        Assert.Equal(2, page.FindAll(".mc-row").Count);
 
-        page.FindAll(".wc-chip").First(c => c.TextContent.Contains("Easier")).Click();
+        page.FindAll(".mc-chip").First(c => c.TextContent.Contains("Easier")).Click();
 
-        var rows = page.FindAll(".wc-row");
+        var rows = page.FindAll(".mc-row");
         Assert.Single(rows);
         Assert.Contains("About The Universe", rows[0].TextContent);
         Assert.Contains("▼1", rows[0].TextContent);
@@ -147,9 +211,9 @@ public sealed class WhatChangedPageTests : ComponentTestBase
         SetupIoliteSky();
 
         var page = RenderPage();
-        page.Find(".wc-row").Click();
+        page.Find(".mc-row").Click();
 
-        Assert.Contains("Moved up — D20 is now D21.", page.Find(".wc-verdict").TextContent);
+        Assert.Contains("Moved up — D20 is now D21.", page.Find(".mc-verdict").TextContent);
     }
 
     [Fact]
@@ -159,14 +223,12 @@ public sealed class WhatChangedPageTests : ComponentTestBase
         // old page could only express it as absence from three lists.
         var (_, _, unchanged) = SetupIoliteSky();
 
-        var page = RenderPage();
-        page.Instance.GetType();
-        var model = WhatChangedAnswerModel.For(unchanged,
+        var model = MixChangesAnswerModel.For(unchanged,
             new Dictionary<Name, Chart[]>
                 { ["Iolite Sky"] = new[] { Make(_still, "Iolite Sky", ChartType.Single, 16, MixEnum.Phoenix) } },
             new Dictionary<Name, Chart[]> { ["Iolite Sky"] = new[] { unchanged } });
 
-        Assert.Equal(WhatChangedVerdict.Unchanged, model.Verdict);
+        Assert.Equal(MixChangeVerdict.Unchanged, model.Verdict);
     }
 
     [Fact]
@@ -175,11 +237,11 @@ public sealed class WhatChangedPageTests : ComponentTestBase
         Catalog(MixEnum.Phoenix2);
         Diff(MixDiffRecord.Empty(MixEnum.Phoenix2, MixEnum.Phoenix2));
 
-        var page = RenderComponent<WhatChanged>(p => p
+        var page = RenderComponent<MixChanges>(p => p
             .Add(c => c.FromSlug, "phoenix-2")
             .Add(c => c.ToSlug, "phoenix-2"));
 
-        Assert.Contains("Pick two different mixes.", page.Find(".wc-empty").TextContent);
+        Assert.Contains("Pick two different mixes.", page.Find(".mc-empty").TextContent);
     }
 
     [Fact]
@@ -191,8 +253,8 @@ public sealed class WhatChangedPageTests : ComponentTestBase
 
         var page = RenderPage();
 
-        Assert.Contains("Nothing changed between these two mixes.", page.Find(".wc-empty").TextContent);
-        Assert.Empty(page.FindAll(".wc-tab"));
+        Assert.Contains("Nothing changed between these two mixes.", page.Find(".mc-empty").TextContent);
+        Assert.Empty(page.FindAll(".mc-tab"));
     }
 
     [Fact]
@@ -206,10 +268,10 @@ public sealed class WhatChangedPageTests : ComponentTestBase
             Array.Empty<MixDiffSongRecord>(), Array.Empty<Chart>(), Array.Empty<Chart>()));
 
         var page = RenderPage();
-        page.FindAll(".wc-tab")[1].Click();
+        page.FindAll(".mc-tab")[1].Click();
 
-        Assert.Equal("Freedom Dive", page.Find(".wc-sticker-name").TextContent.Trim());
-        Assert.DoesNotContain("wc-sticker-gone", page.Find(".wc-sticker").ClassName);
+        Assert.Equal("Freedom Dive", page.Find(".mc-sticker-name").TextContent.Trim());
+        Assert.DoesNotContain("mc-sticker-gone", page.Find(".mc-sticker").ClassName);
     }
 
     [Fact]
@@ -224,10 +286,10 @@ public sealed class WhatChangedPageTests : ComponentTestBase
             Array.Empty<Chart>(), Array.Empty<Chart>()));
 
         var page = RenderPage();
-        page.FindAll(".wc-tab")[2].Click();
+        page.FindAll(".mc-tab")[2].Click();
 
-        Assert.Contains("wc-sticker-gone", page.Find(".wc-sticker").ClassName);
-        Assert.Contains("stay on your profile", page.Find(".wc-sheet .mud-alert").TextContent);
+        Assert.Contains("mc-sticker-gone", page.Find(".mc-sticker").ClassName);
+        Assert.Contains("stay on your profile", page.Find(".mc-sheet .mud-alert").TextContent);
     }
 
     [Fact]
@@ -236,30 +298,43 @@ public sealed class WhatChangedPageTests : ComponentTestBase
         SetupIoliteSky();
 
         var page = RenderPage();
-        Assert.Contains("D20 folder", page.Find(".wc-fhead").TextContent);
-        Assert.Contains("1 left", page.Find(".wc-fcount").TextContent);
+        Assert.Contains("D20 folder", page.Find(".mc-fhead").TextContent);
+        Assert.Contains("1 left", page.Find(".mc-fcount").TextContent);
 
-        page.FindAll(".wc-seg button")[1].Click();
+        page.FindAll(".mc-seg button")[1].Click();
 
-        Assert.Contains("D21 folder", page.Find(".wc-fhead").TextContent);
-        Assert.Contains("1 arrived", page.Find(".wc-fcount").TextContent);
+        Assert.Contains("D21 folder", page.Find(".mc-fhead").TextContent);
+        Assert.Contains("1 arrived", page.Find(".mc-fcount").TextContent);
     }
 
     [Fact]
-    public void TheLastRemainingChartTypeCannotBeSwitchedOff()
+    public void PickingAChartFromTheSearchAnswersForIt()
     {
+        // ChartSelector hands back a plain Func, not an EventCallback, so nothing re-renders
+        // on its own. This is the path that was silently dead: the row click worked because
+        // it is the page's own @onclick.
+        var (_, afterMoved, _) = SetupIoliteSky();
+
+        var page = RenderPage();
+        var selector = page.FindComponent<ChartSelector>();
+        page.InvokeAsync(() => selector.Instance.ChartIdSelected(afterMoved)).GetAwaiter().GetResult();
+
+        Assert.Contains("Moved up — D20 is now D21.", page.Find(".mc-verdict").TextContent);
+    }
+
+    [Fact]
+    public void TheSearchIsFedBothCatalogsAndLabelsEachSuggestionWithItsMix()
+    {
+        // A departed song is only in the earlier catalog, and a rerated chart appears once
+        // per mix under different difficulties — the mix suffix is what tells them apart.
         SetupIoliteSky();
 
         var page = RenderPage();
-        var singles = page.FindAll(".wc-chip").First(c => c.TextContent.Trim() == "Singles");
-        var doubles = page.FindAll(".wc-chip").First(c => c.TextContent.Trim() == "Doubles");
+        var selector = page.FindComponent<ChartSelector>();
 
-        singles.Click();
-        page.FindAll(".wc-chip").First(c => c.TextContent.Trim() == "Doubles").Click();
-
-        // Doubles stayed pressed: turning the last one off would leave a dead board.
-        Assert.Equal("true",
-            page.FindAll(".wc-chip").First(c => c.TextContent.Trim() == "Doubles").GetAttribute("aria-pressed"));
-        Assert.Single(page.FindAll(".wc-row"));
+        Assert.True(selector.Instance.ShowMix);
+        var names = selector.Instance.Charts!.Select(c => $"{c.Song.Name} {c.DifficultyString} {c.Mix}").ToArray();
+        Assert.Contains("Iolite Sky D20 Phoenix", names);
+        Assert.Contains("Iolite Sky D21 Phoenix2", names);
     }
 }

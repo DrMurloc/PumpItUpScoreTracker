@@ -50,7 +50,7 @@ namespace ScoreTracker.Web.Controllers
             // and Phoenix 2 in one hop.
             var era = Enum.GetValues<MixEnum>().OrderBy(m => m.DisplayOrder()).ToArray();
             pages.AddRange(era.Zip(era.Skip(1), (from, to) =>
-                $"https://piuscores.arroweclip.se/WhatChanged/{ChartSlugs.MixSlug(from)}/{ChartSlugs.MixSlug(to)}"));
+                $"https://piuscores.arroweclip.se/MixChanges/{ChartSlugs.MixSlug(from)}/{ChartSlugs.MixSlug(to)}"));
             pages.Add("https://piuscores.arroweclip.se/ChartRandomizer");
             pages.Add("https://piuscores.arroweclip.se/PhoenixCalculator");
             pages.Add("https://piuscores.arroweclip.se/LifeCalculator");

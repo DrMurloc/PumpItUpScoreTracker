@@ -131,7 +131,7 @@ internal sealed class ChartVerdictHandler : IRequestHandler<GetChartVerdictQuery
 
     /// <summary>
     ///     Every chart's level in every mix that carries it (shared chart GUIDs across mix
-    ///     catalogs — the same derivation the /WhatChanged mix diff runs), era order. One
+    ///     catalogs — the same derivation the /MixChanges mix diff runs), era order. One
     ///     sweep, cached daily:
     ///     the per-chart lookup is what History reads.
     /// </summary>

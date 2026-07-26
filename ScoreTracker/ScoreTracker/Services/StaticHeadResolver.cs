@@ -57,8 +57,8 @@ public sealed class StaticHeadResolver
         if (path.Equals("/WeeklyCharts", StringComparison.OrdinalIgnoreCase))
             return await ResolveWeeklyCharts(currentMix, cancellationToken);
 
-        if (path.StartsWithSegments("/WhatChanged", out var pair))
-            return await ResolveWhatChanged(pair, currentMix, cancellationToken);
+        if (path.StartsWithSegments("/MixChanges", out var pair))
+            return await ResolveMixChanges(pair, currentMix, cancellationToken);
 
         // /Charts/{mix}/{song}/{difficulty} — the canonical chart page. Historical triples
         // 301 to canonical before rendering, so a rendered page is always self-canonical.
@@ -140,9 +140,9 @@ public sealed class StaticHeadResolver
     ///     question ("what changed in Phoenix 2") is answered by the counts, and a snippet
     ///     that carries them is one an engine quotes instead of stitching page text together.
     ///     The pair rides the path so each transition is its own indexable URL; the bare
-    ///     /WhatChanged canonicalizes to the pair it defaults to.
+    ///     /MixChanges canonicalizes to the pair it defaults to.
     /// </summary>
-    private async Task<StaticHeadModel?> ResolveWhatChanged(PathString pair, MixEnum currentMix,
+    private async Task<StaticHeadModel?> ResolveMixChanges(PathString pair, MixEnum currentMix,
         CancellationToken cancellationToken)
     {
         var segments = pair.Value?.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries)
@@ -170,7 +170,7 @@ public sealed class StaticHeadResolver
         if (from == to) return null;
 
         var diff = await _mediator.Send(new GetMixDiffQuery(from, to), cancellationToken);
-        var title = _localizer["What Changed: {0} to {1}", from.GetName(), to.GetName()];
+        var title = _localizer["Mix Changes: {0} to {1}", from.GetName(), to.GetName()];
         var description = diff.IsEmpty
             ? _localizer["No chart levels, songs or charts changed between {0} and {1} in Pump It Up.",
                 from.GetName(), to.GetName()]
@@ -180,7 +180,7 @@ public sealed class StaticHeadResolver
                 diff.ArrivedSongs.Count, diff.DepartedSongs.Count];
 
         var canonical =
-            $"https://piuscores.arroweclip.se/WhatChanged/{ChartSlugs.MixSlug(from)}/{ChartSlugs.MixSlug(to)}";
+            $"https://piuscores.arroweclip.se/MixChanges/{ChartSlugs.MixSlug(from)}/{ChartSlugs.MixSlug(to)}";
         return new StaticHeadModel(title, description, null, canonical, null, null,
             new MixDiffHeadModel(from.GetName(), to.GetName(), diff.Rerated.Count, diff.ArrivedSongs.Count,
                 diff.DepartedSongs.Count));

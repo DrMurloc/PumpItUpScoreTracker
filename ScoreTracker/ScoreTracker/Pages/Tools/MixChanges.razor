@@ -1,5 +1,5 @@
-@page "/WhatChanged"
-@page "/WhatChanged/{FromSlug}/{ToSlug}"
+@page "/MixChanges"
+@page "/MixChanges/{FromSlug}/{ToSlug}"
 @rendermode RenderModes.Interactive
 @using MediatR
 @using ScoreTracker.Catalog.Contracts
@@ -12,32 +12,32 @@
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
-<PageTitle>@L["What Changed"]</PageTitle>
+<PageTitle>@L["Mix Changes"]</PageTitle>
 
 @* The mix diff. Any two mixes, not just XX to Phoenix: a chart keeps its identity across
    mixes, so the same three questions — what arrived, what left, what changed level — answer
    for every pair the catalog knows. The pair is URL state so an answer is linkable; the
-   filters below are presentation and stay in the circuit. *@
+   folder and the filters below are presentation and stay in the circuit. *@
 
-<div class="wc">
-    <div class="wc-head">
+<div class="mc">
+    <div class="mc-head">
         <div>
-            <MudText Typo="Typo.h4" Class="wc-title">@L["What Changed"]</MudText>
-            <MudText Typo="Typo.body2" Class="wc-sub">
+            <MudText Typo="Typo.h4" Class="mc-title">@L["Mix Changes"]</MudText>
+            <MudText Typo="Typo.body2" Class="mc-sub">
                 @L["Every chart that moved, arrived, or left between {0} and {1}.", _from.GetName(), _to.GetName()]
             </MudText>
         </div>
-        <div class="wc-mixpair">
+        <div class="mc-mixpair">
             <MudSelect T="MixEnum" Value="_from" ValueChanged="SetFrom" Label="@L["From"]" Dense="true"
-                       Variant="Variant.Outlined" Margin="Margin.Dense" Class="wc-mixsel">
+                       Variant="Variant.Outlined" Margin="Margin.Dense" Class="mc-mixsel">
                 @foreach (var mix in Mixes)
                 {
                     <MudSelectItem T="MixEnum" Value="@mix">@mix.GetName()</MudSelectItem>
                 }
             </MudSelect>
-            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Class="wc-tween"></MudIcon>
+            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Class="mc-tween"></MudIcon>
             <MudSelect T="MixEnum" Value="_to" ValueChanged="SetTo" Label="@L["To"]" Dense="true"
-                       Variant="Variant.Outlined" Margin="Margin.Dense" Class="wc-mixsel wc-mixsel-to">
+                       Variant="Variant.Outlined" Margin="Margin.Dense" Class="mc-mixsel mc-mixsel-to">
                 @foreach (var mix in Mixes)
                 {
                     <MudSelectItem T="MixEnum" Value="@mix">@mix.GetName()</MudSelectItem>
@@ -49,25 +49,26 @@
     </div>
 
     @* The page's job: one field, above the fold, answering in a sentence. The shell's own
-       chart search, fed both catalogs — a song that left is not in the later mix's list. *@
-    <div class="wc-lookup">
-        <ChartSelector Charts="_lookupCharts" Mix="_to" Label=""
+       chart search, fed both catalogs — a song that left is not in the later mix's list, and
+       a rerated chart is findable under either its old or its new difficulty. *@
+    <div class="mc-lookup">
+        <ChartSelector Charts="_lookupCharts" Mix="_to" Label="" ShowMix="true"
                        Placeholder="@L["Find a chart — e.g. Iolite Sky D20"].Value"
                        Variant="Variant.Outlined" Margin="Margin.Dense"
                        ChartIdSelected="Answer"></ChartSelector>
         @if (_answer != null)
         {
-            <WhatChangedAnswer Answer="_answer" From="_from" To="_to"></WhatChangedAnswer>
+            <MixChangesAnswer Answer="_answer" From="_from" To="_to"></MixChangesAnswer>
         }
         else
         {
-            <div class="wc-hint">@L["Search a song, or add a difficulty to jump straight to one chart."]</div>
+            <div class="mc-hint">@L["Search a song, or add a difficulty to jump straight to one chart."]</div>
         }
     </div>
 
     @if (_notice != null)
     {
-        <MudAlert Severity="Severity.Info" Dense="true" Class="wc-notice">@_notice</MudAlert>
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mc-notice">@_notice</MudAlert>
     }
 
     @if (_loading)
@@ -77,56 +78,51 @@
     }
     else if (_from == _to)
     {
-        <div class="wc-empty">@L["Pick two different mixes."]</div>
+        <div class="mc-empty">@L["Pick two different mixes."]</div>
     }
     else if (_diff.IsEmpty)
     {
-        <div class="wc-empty">@L["Nothing changed between these two mixes."]</div>
+        <div class="mc-empty">@L["Nothing changed between these two mixes."]</div>
     }
     else
     {
         @* aria-* values are written as strings, not bools: Blazor renders a bool-valued
            attribute as a boolean attribute (present-and-empty, or absent), which the
            [aria-pressed="true"] selectors these controls are styled by cannot match. *@
-        <div class="wc-tabs" role="tablist">
-            <button type="button" role="tab" class="wc-tab" aria-selected="@Aria(_tab == Tab.Rerated)"
+        <div class="mc-tabs" role="tablist">
+            <button type="button" role="tab" class="mc-tab" aria-selected="@Aria(_tab == Tab.Rerated)"
                     @onclick="() => SetTab(Tab.Rerated)">
-                <span>@L["Re-rated"]</span><span class="wc-tab-n">@_diff.Rerated.Count</span>
+                <span>@L["Re-rated"]</span><span class="mc-tab-n">@_diff.Rerated.Count</span>
             </button>
-            <button type="button" role="tab" class="wc-tab" aria-selected="@Aria(_tab == Tab.Arrived)"
+            <button type="button" role="tab" class="mc-tab" aria-selected="@Aria(_tab == Tab.Arrived)"
                     @onclick="() => SetTab(Tab.Arrived)">
-                <span>@L["Arrived"]</span><span class="wc-tab-n">@(_diff.ArrivedSongs.Count + _diff.AddedCharts.Count)</span>
+                <span>@L["Arrived"]</span><span class="mc-tab-n">@(_diff.ArrivedSongs.Count + _diff.AddedCharts.Count)</span>
             </button>
-            <button type="button" role="tab" class="wc-tab" aria-selected="@Aria(_tab == Tab.Left)"
+            <button type="button" role="tab" class="mc-tab" aria-selected="@Aria(_tab == Tab.Left)"
                     @onclick="() => SetTab(Tab.Left)">
-                <span>@L["Left"]</span><span class="wc-tab-n">@(_diff.DepartedSongs.Count + _diff.RemovedCharts.Count)</span>
+                <span>@L["Left"]</span><span class="mc-tab-n">@(_diff.DepartedSongs.Count + _diff.RemovedCharts.Count)</span>
             </button>
         </div>
 
         <div role="tabpanel">
             @if (_tab == Tab.Rerated)
             {
-                <div class="wc-filters">
-                    @foreach (var (type, text) in TypeFilters)
-                    {
-                        <button type="button" class="wc-chip" aria-pressed="@Aria(_types.Contains(type))"
-                                @onclick="() => ToggleType(type)">@L[text]</button>
-                    }
-                    <span class="wc-filter-sep"></span>
+                @* One folder at a time. 338 rerates across 41 folders is a scroll, not an
+                   answer — and the folder is the unit players think in. Folders nothing
+                   moved in or out of are disabled, so the picker doubles as a map of where
+                   the mix actually churned. *@
+                <div class="mc-filters">
+                    <FolderPicker Type="_folder.Type" Level="_folder.Level" ShowCoOp="false"
+                                  IsEnabled="HasChanges" FolderChanged="SetFolder"></FolderPicker>
+                    <span class="mc-filter-sep"></span>
                     @foreach (var (dir, text) in DirectionFilters)
                     {
-                        <button type="button" class="wc-chip" aria-pressed="@Aria(_direction == dir)"
+                        <button type="button" class="mc-chip" aria-pressed="@Aria(_direction == dir)"
                                 @onclick="() => SetDirection(dir)">@L[text]</button>
                     }
-                    @if (_folder != null)
-                    {
-                        <button type="button" class="wc-chip" aria-pressed="true" @onclick="() => SetFolder(null)">
-                            @_folder.Value.Label ✕
-                        </button>
-                    }
-                    <div class="wc-groupby">
+                    <div class="mc-groupby">
                         <span>@L["Group by"]</span>
-                        <div class="wc-seg">
+                        <div class="mc-seg">
                             <button type="button" aria-pressed="@Aria(!_groupByDestination)"
                                     @onclick="() => SetGrouping(false)">@L["Old folder"]</button>
                             <button type="button" aria-pressed="@Aria(_groupByDestination)"
@@ -135,59 +131,52 @@
                     </div>
                 </div>
 
-                @if (!VisibleMoves.Any())
-                {
-                    <div class="wc-empty">@L["Nothing matches these filters. Clear one to see the rest."]</div>
-                }
-                else
-                {
-                    <div class="wc-groups">
-                        @foreach (var group in Folders)
-                        {
-                            <section class="wc-fgroup">
-                                <button type="button" class="wc-fhead @(_folder == group.Key ? "wc-fhead-on" : "")"
-                                        title="@(_folder == group.Key ? L["Show every folder"] : L["Show only {0}", group.Key.Label])"
-                                        @onclick="() => SetFolder(_folder == group.Key ? null : group.Key)">
-                                    <DifficultyBubble Type="group.Key.Type" Level="DifficultyLevel.From(group.Key.Level)"
-                                                      Mix="_groupByDestination ? _to : _from" Small="true"></DifficultyBubble>
-                                    <span class="wc-ftitle">@L["{0} folder", group.Key.Label]</span>
-                                    <span class="wc-fcount">
-                                        @(_groupByDestination
-                                            ? L["{0} arrived", group.Moves.Count]
-                                            : L["{0} left", group.Moves.Count])
-                                    </span>
-                                </button>
-                                @foreach (var move in group.Moves)
-                                {
-                                    <button type="button" class="wc-row" @onclick="() => Answer(move.After)">
-                                        <SongImage Song="move.After.Song" Small="true"></SongImage>
-                                        <span class="wc-name">@move.After.Song.Name</span>
-                                        <span class="wc-tail">
-                                            <span class="wc-was">
-                                                <DifficultyBubble Chart="move.Before" Small="true"></DifficultyBubble>
-                                            </span>
-                                            <span class="wc-arrow">→</span>
-                                            <DifficultyBubble Chart="move.After" Small="true"></DifficultyBubble>
-                                            <span class="wc-delta @(move.Delta > 0 ? "wc-up" : "wc-down")">
-                                                @(move.Delta > 0 ? "▲" : "▼")@Math.Abs(move.Delta)
-                                            </span>
-                                        </span>
-                                    </button>
-                                }
-                            </section>
-                        }
+                <section class="mc-fgroup">
+                    <div class="mc-fhead">
+                        <DifficultyBubble Type="_folder.Type" Level="DifficultyLevel.From(_folder.Level)"
+                                          Mix="_groupByDestination ? _to : _from" Small="true"></DifficultyBubble>
+                        <span class="mc-ftitle">@L["{0} folder", _folder.Label]</span>
+                        <span class="mc-fcount">
+                            @(_groupByDestination
+                                ? L["{0} arrived", FolderMoves.Count()]
+                                : L["{0} left", FolderMoves.Count()])
+                        </span>
                     </div>
-                }
+                    @if (!FolderMoves.Any())
+                    {
+                        <div class="mc-empty">@L["Nothing matches these filters. Clear one to see the rest."]</div>
+                    }
+                    else
+                    {
+                        @foreach (var move in FolderMoves)
+                        {
+                            <button type="button" class="mc-row" @onclick="() => Answer(move.After)">
+                                <SongImage Song="move.After.Song" Small="true"></SongImage>
+                                <span class="mc-name">@move.After.Song.Name</span>
+                                <span class="mc-tail">
+                                    <span class="mc-was">
+                                        <DifficultyBubble Chart="move.Before" Small="true"></DifficultyBubble>
+                                    </span>
+                                    <span class="mc-arrow">→</span>
+                                    <DifficultyBubble Chart="move.After" Small="true"></DifficultyBubble>
+                                    <span class="mc-delta @(move.Delta > 0 ? "mc-up" : "mc-down")">
+                                        @(move.Delta > 0 ? "▲" : "▼")@Math.Abs(move.Delta)
+                                    </span>
+                                </span>
+                            </button>
+                        }
+                    }
+                </section>
             }
             else if (_tab == Tab.Arrived)
             {
-                <WhatChangedSongSheet Songs="_diff.ArrivedSongs" LooseCharts="_diff.AddedCharts"
-                                      Departed="false" Mix="_to" OnChart="Answer"></WhatChangedSongSheet>
+                <MixChangesSongSheet Songs="_diff.ArrivedSongs" LooseCharts="_diff.AddedCharts"
+                                     Departed="false" Mix="_to" OnChart="Answer"></MixChangesSongSheet>
             }
             else
             {
-                <WhatChangedSongSheet Songs="_diff.DepartedSongs" LooseCharts="_diff.RemovedCharts"
-                                      Departed="true" Mix="_from" OnChart="Answer"></WhatChangedSongSheet>
+                <MixChangesSongSheet Songs="_diff.DepartedSongs" LooseCharts="_diff.RemovedCharts"
+                                     Departed="true" Mix="_from" OnChart="Answer"></MixChangesSongSheet>
             }
         </div>
     }
@@ -223,17 +212,11 @@
     private Chart[] _lookupCharts = Array.Empty<Chart>();
     private IReadOnlyDictionary<Name, Chart[]> _beforeBySong = new Dictionary<Name, Chart[]>();
     private IReadOnlyDictionary<Name, Chart[]> _afterBySong = new Dictionary<Name, Chart[]>();
-    private WhatChangedAnswerModel? _answer;
+    private MixChangesAnswerModel? _answer;
 
-    private readonly HashSet<ChartType> _types = new() { ChartType.Single, ChartType.Double };
     private int _direction;
     private bool _groupByDestination;
-    private FolderKey? _folder;
-
-    private static readonly (ChartType Type, string Text)[] TypeFilters =
-    {
-        (ChartType.Single, "Singles"), (ChartType.Double, "Doubles")
-    };
+    private FolderKey _folder = new(ChartType.Double, 20);
 
     private static readonly (int Direction, string Text)[] DirectionFilters =
     {
@@ -282,7 +265,6 @@
     {
         _loading = true;
         _answer = null;
-        _folder = null;
         _notice = NoticeFor(_from, _to);
 
         if (_from == _to)
@@ -302,6 +284,7 @@
         // chart that moved is findable under either its old or its new difficulty.
         _lookupCharts = after.Concat(before).ToArray();
         _diff = await Mediator.Send(new GetMixDiffQuery(_from, _to));
+        _folder = DefaultFolder();
         _loading = false;
     }
 
@@ -333,7 +316,7 @@
 
     private void Go(MixEnum from, MixEnum to)
     {
-        Nav.NavigateTo($"/WhatChanged/{ChartSlugs.MixSlug(from)}/{ChartSlugs.MixSlug(to)}");
+        Nav.NavigateTo($"/MixChanges/{ChartSlugs.MixSlug(from)}/{ChartSlugs.MixSlug(to)}");
     }
 
     private void SetTab(Tab tab)
@@ -341,58 +324,70 @@
         _tab = tab;
     }
 
-    private void ToggleType(ChartType type)
-    {
-        // One type must stay on — an empty board is a dead end, not a filter.
-        if (_types.Contains(type) && _types.Count == 1) return;
-        if (!_types.Remove(type)) _types.Add(type);
-        _folder = null;
-    }
-
     private void SetDirection(int direction)
     {
         _direction = direction;
+        if (!HasChanges(_folder.Type, _folder.Level)) _folder = DefaultFolder();
     }
 
     private void SetGrouping(bool byDestination)
     {
         _groupByDestination = byDestination;
-        _folder = null;
+        // Grouping by destination is a different set of folders; the one in view may not be
+        // one of them any more.
+        if (!HasChanges(_folder.Type, _folder.Level)) _folder = DefaultFolder();
     }
 
-    private void SetFolder(FolderKey? folder)
+    private void SetFolder((ChartType Type, int Level) folder)
     {
-        _folder = folder;
+        _folder = new FolderKey(folder.Type, folder.Level);
     }
 
-    private Task Answer(Chart chart)
+    /// <summary>
+    ///     Opening on the busiest folder: it is the mix's headline, and it guarantees the
+    ///     first thing a visitor sees is populated rather than the lowest folder that
+    ///     happens to have one chart in it.
+    /// </summary>
+    private FolderKey DefaultFolder()
     {
-        _answer = WhatChangedAnswerModel.For(chart, _beforeBySong, _afterBySong);
-        return Task.CompletedTask;
+        var best = Moves
+            .GroupBy(KeyFor)
+            .OrderByDescending(g => g.Count())
+            .ThenBy(g => g.Key.Type)
+            .ThenBy(g => g.Key.Level)
+            .FirstOrDefault();
+        return best?.Key ?? new FolderKey(ChartType.Double, 20);
     }
 
-    private IEnumerable<MixDiffMoveRecord> VisibleMoves => _diff.Rerated
-        .Where(m => _types.Contains(m.After.Type))
-        .Where(m => _direction == 0 || (_direction > 0 ? m.Delta > 0 : m.Delta < 0))
-        .Where(m => _folder == null || _folder.Value == KeyFor(m));
+    private bool HasChanges(ChartType type, int level)
+    {
+        return Moves.Any(m => KeyFor(m) == new FolderKey(type, level));
+    }
+
+    /// <summary>Every rerate the direction filter allows, before the folder narrows it.</summary>
+    private IEnumerable<MixDiffMoveRecord> Moves => _diff.Rerated
+        .Where(m => _direction == 0 || (_direction > 0 ? m.Delta > 0 : m.Delta < 0));
+
+    private IEnumerable<MixDiffMoveRecord> FolderMoves => Moves
+        .Where(m => KeyFor(m) == _folder)
+        .OrderBy(m => m.After.Song.Name.ToString(), StringComparer.OrdinalIgnoreCase);
 
     private FolderKey KeyFor(MixDiffMoveRecord move)
     {
         return new FolderKey(move.After.Type, _groupByDestination ? move.After.Level : move.Before.Level);
     }
 
-    /// <summary>Folder order follows the song wheel: Singles then Doubles, level ascending.</summary>
-    private IEnumerable<FolderGroup> Folders => VisibleMoves
-        .GroupBy(KeyFor)
-        .OrderBy(g => g.Key.Type)
-        .ThenBy(g => g.Key.Level)
-        .Select(g => new FolderGroup(g.Key,
-            g.OrderBy(m => m.After.Song.Name.ToString(), StringComparer.OrdinalIgnoreCase).ToArray()));
+    // ChartSelector hands back a plain Func, not an EventCallback, so nothing re-renders on
+    // its own — the answer card only appears if this asks for it.
+    private Task Answer(Chart chart)
+    {
+        _answer = MixChangesAnswerModel.For(chart, _beforeBySong, _afterBySong);
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
 
-    private readonly record struct FolderKey(ChartType Type, int Level)
+    private sealed record FolderKey(ChartType Type, int Level)
     {
         public string Label => $"{Type.GetShortHand()}{Level}";
     }
-
-    private sealed record FolderGroup(FolderKey Key, IReadOnlyList<MixDiffMoveRecord> Moves);
 }

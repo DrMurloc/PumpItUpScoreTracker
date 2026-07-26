@@ -5934,12 +5934,6 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Mrgl {0} mrgl {1} grblgl (mrgl {2} rgllgl mrgl)</value>
   </data>
-  <data name="What Changed" xml:space="preserve">
-    <value>Mrrrglub Murglgl</value>
-  </data>
-  <data name="What Changed: {0} to {1}" xml:space="preserve">
-    <value>Mrrrglub Murglgl: {0} mrgl {1}</value>
-  </data>
   <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
     <value>Blurb plglrglgrrr murglgl, mrgllurg, urg blubmrrglglrgl blurgl {0} argrl {1}.</value>
   </data>
@@ -6053,5 +6047,11 @@
   </data>
   <data name="▼ Easier" xml:space="preserve">
     <value>▼ Blurb</value>
+  </data>
+  <data name="Mix Changes" xml:space="preserve">
+    <value>Mrrrglub Murglgl</value>
+  </data>
+  <data name="Mix Changes: {0} to {1}" xml:space="preserve">
+    <value>Mrrrglub Murglgl: {0} mrgl {1}</value>
   </data>
 </root>

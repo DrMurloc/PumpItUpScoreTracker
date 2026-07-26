@@ -5,7 +5,7 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.Web.Components;
 
 /// <summary>What happened to the chart the player asked about.</summary>
-public enum WhatChangedVerdict
+public enum MixChangeVerdict
 {
     /// <summary>The chart they named changed level.</summary>
     Moved,
@@ -31,9 +31,9 @@ public enum WhatChangedVerdict
 ///     the diff: the diff only carries what changed, and "nothing changed" is a thing this
 ///     page has to be able to say out loud.
 /// </summary>
-public sealed record WhatChangedAnswerModel(
+public sealed record MixChangesAnswerModel(
     Song Song,
-    WhatChangedVerdict Verdict,
+    MixChangeVerdict Verdict,
     Chart? PinnedBefore,
     Chart? PinnedAfter,
     IReadOnlyList<MixDiffMoveRecord> Moves,
@@ -42,7 +42,7 @@ public sealed record WhatChangedAnswerModel(
     IReadOnlyList<Chart> Lost,
     int TotalCharts)
 {
-    public static WhatChangedAnswerModel For(Chart selected,
+    public static MixChangesAnswerModel For(Chart selected,
         IReadOnlyDictionary<Name, Chart[]> beforeBySong,
         IReadOnlyDictionary<Name, Chart[]> afterBySong)
     {
@@ -75,21 +75,21 @@ public sealed record WhatChangedAnswerModel(
         var verdict = VerdictFor(before, after, pinnedBefore, pinnedAfter, moves.Length);
         var song = (after.FirstOrDefault() ?? before.FirstOrDefault() ?? selected).Song;
 
-        return new WhatChangedAnswerModel(song, verdict, pinnedBefore, pinnedAfter, moves, unchanged,
+        return new MixChangesAnswerModel(song, verdict, pinnedBefore, pinnedAfter, moves, unchanged,
             gained, lost, Math.Max(before.Length, after.Length));
     }
 
-    private static WhatChangedVerdict VerdictFor(IReadOnlyList<Chart> before, IReadOnlyList<Chart> after,
+    private static MixChangeVerdict VerdictFor(IReadOnlyList<Chart> before, IReadOnlyList<Chart> after,
         Chart? pinnedBefore, Chart? pinnedAfter, int moveCount)
     {
-        if (before.Count == 0) return WhatChangedVerdict.Arrived;
-        if (after.Count == 0) return WhatChangedVerdict.Departed;
+        if (before.Count == 0) return MixChangeVerdict.Arrived;
+        if (after.Count == 0) return MixChangeVerdict.Departed;
         if (pinnedBefore != null && pinnedAfter != null)
             return pinnedBefore.Level == pinnedAfter.Level
-                ? WhatChangedVerdict.Unchanged
-                : WhatChangedVerdict.Moved;
+                ? MixChangeVerdict.Unchanged
+                : MixChangeVerdict.Moved;
         // The pinned chart exists on only one side, so the song survived but that chart
         // did not (or did not exist yet) — the song-level summary is the honest answer.
-        return moveCount > 0 ? WhatChangedVerdict.SongMoved : WhatChangedVerdict.SongUnchanged;
+        return moveCount > 0 ? MixChangeVerdict.SongMoved : MixChangeVerdict.SongUnchanged;
     }
 }

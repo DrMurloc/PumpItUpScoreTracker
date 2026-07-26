@@ -21,6 +21,7 @@
                 {
                     <FolderGrid InitialType="Type" ShowCoOp="ShowCoOp"
                                 IsSelected="(t, l) => t == Type && l == Level"
+                                IsEnabled="IsEnabled"
                                 LevelPicked="Pick"></FolderGrid>
                 }
             </div>
@@ -47,6 +48,13 @@
     /// <summary>Passed through to the grid — hosts without co-op data hide that tab.</summary>
     [Parameter] public bool ShowCoOp { get; set; } = true;
 
+    /// <summary>
+    ///     Which folders exist for this host (default: all of them). The steppers respect it
+    ///     too — ◄ ► walk to the next folder that has something in it rather than marching
+    ///     one level at a time through folders the grid greys out.
+    /// </summary>
+    [Parameter] public Func<ChartType, int, bool> IsEnabled { get; set; } = (_, _) => true;
+
     [Parameter] public EventCallback<(ChartType Type, int Level)> FolderChanged { get; set; }
 
     private string FolderLabel => Level == null
@@ -64,18 +72,25 @@
     // folder the grid won't show, and a deep-linked S27+ clamps back to 26.
     private static (int Min, int Max) Bounds(ChartType type) => FolderLevels.Range(type);
 
+    private int? NextEnabled(int direction)
+    {
+        if (Level == null) return null;
+        var (min, max) = Bounds(Type);
+        for (var target = Level.Value + direction; target >= min && target <= max; target += direction)
+            if (IsEnabled(Type, target))
+                return target;
+        return null;
+    }
+
     private bool CanStep(int direction)
     {
-        if (Level == null) return false;
-        var (min, max) = Bounds(Type);
-        var target = Level.Value + direction;
-        return target >= min && target <= max;
+        return NextEnabled(direction) != null;
     }
 
     private async Task Step(int direction)
     {
-        if (!CanStep(direction)) return;
-        await FolderChanged.InvokeAsync((Type, Level!.Value + direction));
+        if (NextEnabled(direction) is not { } target) return;
+        await FolderChanged.InvokeAsync((Type, target));
     }
 
     private async Task Pick((ChartType Type, int Level) folder)

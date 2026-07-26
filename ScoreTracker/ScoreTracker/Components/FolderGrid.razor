@@ -11,12 +11,15 @@
 <div class="folder-grid">
     <MudButtonGroup OverrideStyles="false" Class="folder-picker-types">
         <MudButton Variant="@TypeVariant(ChartType.Single)" Color="Color.Primary" Size="Size.Small"
+                   Disabled="@(!HasAny(ChartType.Single))"
                    OnClick="() => _pendingType = ChartType.Single">@L["Singles"]</MudButton>
         <MudButton Variant="@TypeVariant(ChartType.Double)" Color="Color.Primary" Size="Size.Small"
+                   Disabled="@(!HasAny(ChartType.Double))"
                    OnClick="() => _pendingType = ChartType.Double">@L["Doubles"]</MudButton>
         @if (ShowCoOp)
         {
             <MudButton Variant="@TypeVariant(ChartType.CoOp)" Color="Color.Primary" Size="Size.Small"
+                       Disabled="@(!HasAny(ChartType.CoOp))"
                        OnClick="() => _pendingType = ChartType.CoOp">@L["CoOp"]</MudButton>
         }
     </MudButtonGroup>
@@ -24,8 +27,9 @@
         @foreach (var level in LevelsFor(_pendingType))
         {
             var captured = level;
-            <button type="button"
-                    class="folder-picker-level @(IsSelected(_pendingType, captured) ? "folder-picker-current" : null)"
+            var enabled = IsEnabled(_pendingType, captured);
+            <button type="button" disabled="@(!enabled)"
+                    class="folder-picker-level @(IsSelected(_pendingType, captured) ? "folder-picker-current" : null) @(enabled ? null : "folder-picker-level-off")"
                     @onclick="() => LevelPicked.InvokeAsync((_pendingType, captured))">@captured</button>
         }
     </div>
@@ -43,12 +47,29 @@
     /// <summary>Which (type, level) cells render highlighted.</summary>
     [Parameter] public Func<ChartType, int, bool> IsSelected { get; set; } = (_, _) => false;
 
+    /// <summary>
+    ///     Which folders can be picked at all. Everything is pickable by default — only a
+    ///     host whose data is sparse (the mix diff, where most folders changed nothing)
+    ///     narrows it. A type whose every level is off has its tab disabled too, so the
+    ///     grid never opens onto a wall of dead cells.
+    /// </summary>
+    [Parameter] public Func<ChartType, int, bool> IsEnabled { get; set; } = (_, _) => true;
+
+    private bool HasAny(ChartType type)
+    {
+        return LevelsFor(type).Any(level => IsEnabled(type, level));
+    }
+
     /// <summary>Fired per tap; the host decides toggle-and-stay (multi) or pick-and-close (single).</summary>
     [Parameter] public EventCallback<(ChartType Type, int Level)> LevelPicked { get; set; }
 
     protected override void OnInitialized()
     {
-        _pendingType = InitialType;
+        // Opening on a tab whose every level is disabled shows nothing pickable, so a
+        // sparse host anchors on the first type that actually has a folder.
+        _pendingType = HasAny(InitialType)
+            ? InitialType
+            : new[] { ChartType.Single, ChartType.Double, ChartType.CoOp }.FirstOrDefault(HasAny, InitialType);
     }
 
     private Variant TypeVariant(ChartType type)
