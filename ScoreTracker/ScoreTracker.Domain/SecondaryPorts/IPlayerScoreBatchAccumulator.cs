@@ -49,6 +49,23 @@ public interface IPlayerScoreBatchAccumulator
     PendingScoreBatch? TakeBatch(MixEnum mix, Guid userId);
 
     /// <summary>
+    /// Parks site-detected title names (the badges no score can compute) so the open
+    /// (user, mix) batch's snapshot card can announce them instead of a card of their own.
+    /// Returns false when no batch is open to carry them — the caller announces them
+    /// itself. Deposits accumulate, so a name is never dropped by a second deposit.
+    /// Held in a slot of its own rather than on the batch: the drain removes the batch
+    /// before the title step that reads these runs.
+    /// </summary>
+    bool TryAddDetectedTitles(MixEnum mix, Guid userId, IEnumerable<string> titles);
+
+    /// <summary>
+    /// Atomically removes and returns the parked site-detected titles for the (user, mix),
+    /// or empty when none were parked. Removing on read is what keeps a title from being
+    /// announced twice across a session's successive batches.
+    /// </summary>
+    string[] TakeDetectedTitles(MixEnum mix, Guid userId);
+
+    /// <summary>
     /// Diagnostic snapshot of every active batch. Best-effort — entries may be
     /// added or removed concurrently with the read.
     /// </summary>

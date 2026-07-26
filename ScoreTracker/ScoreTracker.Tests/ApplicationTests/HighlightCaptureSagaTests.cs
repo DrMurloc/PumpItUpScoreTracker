@@ -52,39 +52,20 @@ public sealed class HighlightCaptureSagaTests
     }
 
     [Fact]
-    public async Task TitleProgressFlagsChartSpecificSkillTitlesWithScoreDetail()
+    public async Task TheRetiredTitleProgressFlagIsNeverWritten()
     {
-        // Per-row title progress is skill titles only (owner call): Moonlight S18 is
-        // [DRILL] Lv.4, and a non-broken score below the SSS threshold carries the
-        // score/threshold the card renders as "972k/990k".
-        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(18)
+        // Title progress is no longer a per-row flag. Moonlight S18 IS [DRILL] Lv.4 and would
+        // have claimed it under the old rule, so it stays the case that proves the flag is gone.
+        // The enum member survives only so historical rows keep their meaning.
+        var skillChart = new ChartBuilder().WithType(ChartType.Single).WithLevel(18)
             .WithSongName("Moonlight").Build();
+        var plainChart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var ctx = new HandlerContext();
-        ctx.GivenCharts(chart);
-        ctx.GivenBest(chart, 972000);
+        ctx.GivenCharts(skillChart, plainChart);
+        ctx.GivenBest(skillChart, 972000);
+        ctx.GivenBest(plainChart, 910000);
 
-        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
-
-        ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
-            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
-                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.TitleProgress)
-                && x.Detail != null && x.Detail.SkillTitleName == "[DRILL] Lv.4"
-                && x.Detail.SkillTitleScore == 972000 && x.Detail.SkillTitleThreshold == 990000)),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task GenericDifficultyTitleProgressDoesNotFlagPerRow()
-    {
-        // A plain level-20 chart nudges the "Advanced" difficulty titles but is not
-        // chart-specific — it must NOT claim the per-row TitleProgress flag (that noise
-        // rides the card's top section as a delta instead).
-        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
-        var ctx = new HandlerContext();
-        ctx.GivenCharts(chart);
-        ctx.GivenBest(chart, 910000);
-
-        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+        await ctx.Saga.Consume(ctx.Context(NewPassesEvent(skillChart, plainChart)));
 
         ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
@@ -443,6 +424,13 @@ public sealed class HighlightCaptureSagaTests
             It.IsAny<IEnumerable<ScoreHighlightWrite>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    private static PlayerScoresUpdatedEvent NewPassesEvent(params Chart[] charts)
+    {
+        return PlayerScoresUpdatedEvent.Create(Now, UserId, MixEnum.Phoenix,
+            charts.Select(c => new PlayerScoresUpdatedEvent.ScoreChange(c.Id, IsNewPass: true, OldScore: null,
+                NewScore: 910000, Plate: "FairGame", IsBroken: false)).ToArray(), null);
+    }
+
     private static PlayerScoresUpdatedEvent NewPassEvent(Chart chart, Guid? sessionId = null)
     {
         return PlayerScoresUpdatedEvent.Create(Now, UserId, MixEnum.Phoenix,
@@ -458,7 +446,6 @@ public sealed class HighlightCaptureSagaTests
         private readonly List<RecordedPhoenixScore> _bests = new();
         public Mock<IChartRepository> Charts { get; } = new();
         public Mock<IScoreReader> Scores { get; } = new();
-        public Mock<ITitleRepository> Titles { get; } = new();
         public Mock<IPlayerStatsReader> PlayerStats { get; } = new();
         public Mock<IScoreHighlightRepository> Highlights { get; } = new();
         public Mock<IPlayerMilestoneRepository> Milestones { get; } = new();
@@ -469,8 +456,6 @@ public sealed class HighlightCaptureSagaTests
         {
             Scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), UserId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(_bests);
-            Titles.Setup(t => t.GetCompletedTitles(It.IsAny<MixEnum>(), UserId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Array.Empty<TitleAchievedRecord>());
             Mediator.Setup(m => m.Send(It.IsAny<GetTop50ForPlayerQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
             Mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
@@ -483,7 +468,7 @@ public sealed class HighlightCaptureSagaTests
             Scores.Setup(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
                     It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
-            Saga = new HighlightCaptureSaga(Charts.Object, Scores.Object, Titles.Object, PlayerStats.Object,
+            Saga = new HighlightCaptureSaga(Charts.Object, Scores.Object, PlayerStats.Object,
                 Highlights.Object, Milestones.Object, Mediator.Object, new MemoryCache(new MemoryCacheOptions()),
                 FakeDateTime.At(Now).Object, NullLogger<HighlightCaptureSaga>.Instance);
         }

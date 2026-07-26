@@ -6,8 +6,6 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
-using ScoreTracker.Domain.Models.Titles.Phoenix;
-using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Events;
@@ -46,16 +44,14 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     private readonly IPlayerMilestoneRepository _milestones;
     private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreReader _scores;
-    private readonly ITitleRepository _titles;
 
-    public HighlightCaptureSaga(IChartRepository charts, IScoreReader scores, ITitleRepository titles,
+    public HighlightCaptureSaga(IChartRepository charts, IScoreReader scores,
         IPlayerStatsReader playerStats, IScoreHighlightRepository highlights,
         IPlayerMilestoneRepository milestones, IMediator mediator, IMemoryCache cache,
         IDateTimeOffsetAccessor dateTime, ILogger<HighlightCaptureSaga> logger)
     {
         _charts = charts;
         _scores = scores;
-        _titles = titles;
         _playerStats = playerStats;
         _highlights = highlights;
         _milestones = milestones;
@@ -192,7 +188,6 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         Dictionary<Guid, Chart> Charts,
         Dictionary<Guid, RecordedPhoenixScore> Bests,
         Dictionary<Guid, int> Top50Ranks,
-        PhoenixTitleProgress[] IncompleteTitles,
         IDictionary<Guid, double> ScoringLevels,
         Dictionary<(ChartType Type, DifficultyLevel Level), int> FolderSizes,
         Dictionary<(ChartType Type, DifficultyLevel Level), int> FolderClears,
@@ -208,7 +203,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             .Where(c => data.Charts.ContainsKey(c.ChartId) && data.Bests.ContainsKey(c.ChartId))
             .ToArray();
 
-        FlagTop50AndTitleProgress(known, data, flags, details);
+        FlagTop50(known, data, flags, details);
         foreach (var folder in known.GroupBy(c => (data.Charts[c.ChartId].Type, data.Charts[c.ChartId].Level)))
         {
             await FlagScoreQuality(e, folder.Key, folder.ToArray(), data, flags, details, cancellationToken);
@@ -235,14 +230,6 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         var top50 = (await _mediator.Send(new GetTop50ForPlayerQuery(e.UserId, null, Mix: e.Mix), cancellationToken))
             .Select((s, i) => (s.ChartId, Rank: i + 1))
             .ToDictionary(x => x.ChartId, x => x.Rank);
-        var completed = (await _titles.GetCompletedTitles(e.Mix, e.UserId, cancellationToken))
-            .Select(t => t.Title).ToHashSet();
-        var incompleteTitles = (e.Mix == MixEnum.Phoenix
-                ? PhoenixTitleList.BuildProgress(charts, bests.Values, completed)
-                : Phoenix2TitleList.BuildProgress(charts, bests.Values, completed))
-            .OfType<PhoenixTitleProgress>()
-            .Where(t => !t.IsComplete && t.Title.CompletionRequired > 0)
-            .ToArray();
         var scoringLevels = await _mediator.Send(new GetChartScoringLevelsQuery(e.Mix), cancellationToken);
 
         // Competitive levels gate Score Quality (and are cheap to carry): a back-filled chart
@@ -257,7 +244,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             .Where(b => !b.IsBroken && b.Score != null && charts.ContainsKey(b.ChartId))
             .GroupBy(b => (charts[b.ChartId].Type, charts[b.ChartId].Level))
             .ToDictionary(g => g.Key, g => g.Count());
-        return new CaptureData(charts, bests, top50, incompleteTitles, scoringLevels, folderSizes, folderClears,
+        return new CaptureData(charts, bests, top50, scoringLevels, folderSizes, folderClears,
             stats.SinglesCompetitiveLevel, stats.DoublesCompetitiveLevel);
     }
 
@@ -270,7 +257,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         return details.TryGetValue(id, out var d) ? d : new HighlightDetail();
     }
 
-    private static void FlagTop50AndTitleProgress(PlayerScoresUpdatedEvent.ScoreChange[] known,
+    private static void FlagTop50(PlayerScoresUpdatedEvent.ScoreChange[] known,
         CaptureData data, Dictionary<Guid, HighlightFlags> flags, Dictionary<Guid, HighlightDetail> details)
     {
         foreach (var change in known)
@@ -279,32 +266,9 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             var best = data.Bests[change.ChartId];
             if (best.IsBroken || best.Score == null) continue;
 
-            var f = HighlightFlags.None;
-            if (data.Top50Ranks.TryGetValue(chart.Id, out var rank))
-            {
-                f |= HighlightFlags.PumbilityTop50;
-                details[chart.Id] = Detail(details, chart.Id) with { PumbilityRank = rank };
-            }
-
-            // Per-row title progress is chart-specific only (skill titles). Generic
-            // difficulty/co-op progress rides the card's top section as % deltas, not a row
-            // caption — so a level's worth of upscores no longer each claim a title flag.
-            var skill = data.IncompleteTitles
-                .Select(t => t.PhoenixTitle)
-                .OfType<PhoenixSkillTitle>()
-                .FirstOrDefault(t => t.AppliesToChart(chart) && t.CompletionProgress(chart, best) > 0);
-            if (skill != null)
-            {
-                f |= HighlightFlags.TitleProgress;
-                details[chart.Id] = Detail(details, chart.Id) with
-                {
-                    SkillTitleName = skill.Name.ToString(),
-                    SkillTitleScore = (int)best.Score.Value,
-                    SkillTitleThreshold = skill.CompletionRequired
-                };
-            }
-
-            if (f != HighlightFlags.None) flags[chart.Id] = flags.GetValueOrDefault(chart.Id) | f;
+            if (!data.Top50Ranks.TryGetValue(chart.Id, out var rank)) continue;
+            flags[chart.Id] = flags.GetValueOrDefault(chart.Id) | HighlightFlags.PumbilityTop50;
+            details[chart.Id] = Detail(details, chart.Id) with { PumbilityRank = rank };
         }
     }
 

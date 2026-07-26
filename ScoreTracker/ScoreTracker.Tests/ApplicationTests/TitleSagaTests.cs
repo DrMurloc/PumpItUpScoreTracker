@@ -12,7 +12,9 @@ using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Tests.TestData;
@@ -163,6 +165,46 @@ public sealed class TitleSagaTests
             "A ladder reported multiple rungs moving at once (floor ignored): " + string.Join(" | ", doubledUp));
     }
 
+    [Fact]
+    public async Task BatchCompletionsAreOrderedByLadderThenRung()
+    {
+        // A big batch crosses many rungs at once. They must arrive grouped by ladder with the
+        // lowest rung first, so the card reads like the climb it was — the milestone table has no
+        // ORDER BY, so this ordering is the only thing standing between the player and a jumble
+        // like "BRONZE, D LV.1, D LV.2, SILVER, S LV.5, D LV.3".
+        var charts = Enumerable.Range(0, 50)
+            .SelectMany(_ => new[]
+            {
+                new ChartBuilder().WithType(ChartType.Single).WithLevel(26).Build(),
+                new ChartBuilder().WithType(ChartType.Double).WithLevel(26).Build()
+            })
+            .ToArray();
+        var ctx = new SagaContext(MixEnum.Phoenix2, charts);
+        ctx.GivenBestScores(charts.Select(c => Score(c.Id, 999000)).ToArray());
+
+        var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix2, null,
+                charts.Select(c => new PlayerScoresUpdatedEvent.ScoreChange(c.Id, true, null, 999000,
+                    "SuperbGame", false)).ToArray()),
+            CancellationToken.None);
+
+        var pumbilityRungs = result.Milestones
+            .Where(m => m.Kind == MilestoneKind.TitleCompleted)
+            .Select(m => Phoenix2TitleList.GetTitleByName(Name.From(m.Title!)))
+            .OfType<Phoenix2PumbilityTitle>()
+            .Select(t => (Ladder: t.Pool, t.CompletionRequired))
+            .ToArray();
+
+        // Enough rungs to make ordering meaningful, across more than one ladder.
+        Assert.True(pumbilityRungs.Length > 3, $"expected several rungs, got {pumbilityRungs.Length}");
+        Assert.True(pumbilityRungs.Select(r => r.Ladder).Distinct().Count() > 1, "expected multiple ladders");
+
+        var expected = pumbilityRungs
+            .OrderBy(r => r.Ladder == PumbilityPool.Total ? 0 : r.Ladder == PumbilityPool.Singles ? 1 : 2)
+            .ThenBy(r => r.CompletionRequired)
+            .ToArray();
+        Assert.Equal(expected, pumbilityRungs);
+    }
+
     // Strip a trailing "LV.N" / "Lv. N" rung number so sibling rungs collapse to one ladder key.
     private static string LadderBase(TitleProgressDelta delta) =>
         System.Text.RegularExpressions.Regex.Replace(delta.Title, @"\s*[Ll][Vv]\.?\s*\d+$", "").Trim();
@@ -176,6 +218,7 @@ public sealed class TitleSagaTests
         public Mock<IChartRepository> Charts { get; } = new();
         public Mock<ITitleRepository> Titles { get; } = new();
         public Mock<IPlayerMilestoneRepository> Milestones { get; } = new();
+        public Mock<IPlayerScoreBatchAccumulator> Batches { get; } = new();
         public Mock<IBus> Bus { get; } = new();
         public TitleSaga Saga { get; }
 
@@ -191,10 +234,25 @@ public sealed class TitleSagaTests
                 .ReturnsAsync(Array.Empty<TitleAchievedRecord>());
             Scores.Setup(s => s.GetBestScores(mix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+            // Default: nothing parked, and no batch open to park into — the fallback path.
+            Batches.Setup(b => b.TakeDetectedTitles(It.IsAny<MixEnum>(), It.IsAny<Guid>()))
+                .Returns(Array.Empty<string>());
 
             Saga = new TitleSaga(CurrentUser.Object, Scores.Object, Charts.Object, Titles.Object,
                 Milestones.Object, FakeDateTime.At(new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero)).Object,
-                Bus.Object);
+                Batches.Object, Bus.Object);
+        }
+
+        /// <summary>An open score batch accepts the parked badges (the import saved scores).</summary>
+        public void GivenAnOpenBatch()
+        {
+            Batches.Setup(b => b.TryAddDetectedTitles(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+                It.IsAny<IEnumerable<string>>())).Returns(true);
+        }
+
+        public void GivenParkedBadges(params string[] titles)
+        {
+            Batches.Setup(b => b.TakeDetectedTitles(It.IsAny<MixEnum>(), It.IsAny<Guid>())).Returns(titles);
         }
 
         public void GivenBestScores(params RecordedPhoenixScore[] scores)
@@ -214,8 +272,9 @@ public sealed class TitleSagaTests
     [Fact]
     public async Task DetectedBasicBadgesAreCapturedAsMilestonesAndAnnounced()
     {
-        // Site-only badges (CompletionRequired == 0: events, play/plate counts) have no
-        // session and no card — the legacy announcement stays alive on this path only.
+        // The fallback route for site-only badges (CompletionRequired == 0: events, play/plate
+        // counts): an import that saved no scores has no open batch to park them on and no
+        // snapshot card coming, so they must take a card of their own rather than be swallowed.
         var ctx = new SagaContext(MixEnum.Phoenix);
 
         await ctx.Saga.Consume(BuildContext(new TitlesDetectedEvent(ctx.UserId,
@@ -251,12 +310,14 @@ public sealed class TitleSagaTests
     }
 
     [Fact]
-    public async Task DetectedBadgesRideTheSessionWhenTheImportSavedScores()
+    public async Task DetectedBadgesParkOnTheOpenBatchInsteadOfTakingTheirOwnCard()
     {
-        // With a SessionId (the import saved scores), a site-only badge is attributed to that
-        // session and the legacy announcement is suppressed — the snapshot card carries it.
+        // With a score batch open, a site-only badge is parked on it so the ONE snapshot card
+        // carries it alongside the scores — no card of its own. Still written as a milestone
+        // against the session so the Sessions page groups it.
         var sessionId = Guid.NewGuid();
         var ctx = new SagaContext(MixEnum.Phoenix);
+        ctx.GivenAnOpenBatch();
 
         await ctx.Saga.Consume(BuildContext(new TitlesDetectedEvent(ctx.UserId,
             new[] { "RISE CHALLENGER" }, MixEnum.Phoenix, sessionId)));
@@ -266,16 +327,49 @@ public sealed class TitleSagaTests
                 x.Kind == MilestoneKind.TitleCompleted && x.Title == "RISE CHALLENGER"
                 && x.SessionId == sessionId)),
             It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Batches.Verify(b => b.TryAddDetectedTitles(MixEnum.Phoenix, ctx.UserId,
+            It.Is<IEnumerable<string>>(t => t.Contains("RISE CHALLENGER"))), Times.Once);
         ctx.Bus.Verify(b => b.Publish(It.IsAny<NewTitlesAcquiredEvent>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
     [Fact]
-    public async Task CaptureSingleSourcesTheSessionsTitleMilestonesFoldingInSiteBadges()
+    public async Task ParkedBadgesRideTheCardAfterTheLaddersAndAreTakenOnlyOnce()
     {
-        // The card shows ALL of a session's completions: with a SessionId, CaptureSessionTitles
-        // single-sources from the milestone table, folding the site path's basic badges and
-        // paragon gains in with the score-crossing ones — and dropping non-title milestones.
+        // The title step collects whatever the site path parked. Badges carry no requirement to
+        // climb, so they trail the ladder crossings, alphabetically. Taking them is what stops the
+        // next batch in the same session from announcing them again.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(6).Build();
+        var ctx = new SagaContext(MixEnum.Phoenix, chart);
+        ctx.GivenBestScores(Score(chart.Id, 950000));
+        ctx.GivenParkedBadges("THE BLACK", "LOVERS (Silver)");
+
+        var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix,
+                Guid.NewGuid(),
+                new[]
+                {
+                    new PlayerScoresUpdatedEvent.ScoreChange(chart.Id, true, null, 950000, "SuperbGame", false)
+                }),
+            CancellationToken.None);
+
+        var titles = result.Milestones.Where(m => m.Kind == MilestoneKind.TitleCompleted)
+            .Select(m => m.Title).ToArray();
+        Assert.Equal(new[] { "LOVERS (Silver)", "THE BLACK" }, titles.TakeLast(2));
+        ctx.Batches.Verify(b => b.TakeDetectedTitles(MixEnum.Phoenix, ctx.UserId), Times.Once);
+        // Parked badges are already persisted by the site path — the card records must not
+        // re-append them.
+        ctx.Milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x => x.Title == "THE BLACK")),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CaptureReturnsOnlyThisBatchsCompletionsNotTheWholeSessions()
+    {
+        // A session envelope lasts 8 hours and a score batch drains after 2 minutes, so one
+        // session emits many cards. Reading the session's milestone rows back out made every
+        // card repeat the previous ones' titles — the batch's own crossings are the answer, and
+        // rows already written against the session must NOT come back.
         var when = new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
         var sessionId = Guid.NewGuid();
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(6)
@@ -286,8 +380,7 @@ public sealed class TitleSagaTests
             new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, sessionId, when, null, null,
                 "RISE CHALLENGER", null),
             new PlayerMilestoneRecord(MilestoneKind.ParagonLevelGain, sessionId, when, null, null,
-                "Expert Lv. 2", "PG"),
-            new PlayerMilestoneRecord(MilestoneKind.PumbilityGain, sessionId, when, 1, 2, null, null));
+                "Expert Lv. 2", "PG"));
 
         var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix,
                 sessionId,
@@ -297,11 +390,8 @@ public sealed class TitleSagaTests
                 }),
             CancellationToken.None);
 
-        Assert.Contains(result.Milestones,
-            m => m.Kind == MilestoneKind.TitleCompleted && m.Title == "RISE CHALLENGER");
-        Assert.Contains(result.Milestones,
-            m => m.Kind == MilestoneKind.ParagonLevelGain && m.Title == "Expert Lv. 2");
-        Assert.DoesNotContain(result.Milestones, m => m.Kind == MilestoneKind.PumbilityGain);
+        Assert.DoesNotContain(result.Milestones, m => m.Title == "RISE CHALLENGER");
+        Assert.DoesNotContain(result.Milestones, m => m.Title == "Expert Lv. 2");
     }
 
     private static RecordedPhoenixScore Score(Guid chartId, int score) =>
