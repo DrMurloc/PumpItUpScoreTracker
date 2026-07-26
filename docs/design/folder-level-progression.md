@@ -281,7 +281,7 @@ tier ticks, grade chip. One concept, one component.
 
 | # | Surface | Shape |
 |---|---|---|
-| 1 | **Home widget** | A `folder-levels` widget for folders you pick, at 1x1 / 2x1 / 2x2 / 4x2. Separately, By-Level Breakdown's *Clear Progress* preset gains **colour by: type / letter grade / flat** — a config field, not a widget. |
+| 1 | **Home widget** | A `folder-levels` widget for folders you pick, at 1x1 / 2x1 / 2x2 / 4x2. Separately, By-Level Breakdown gains a **Clear Progress by Grade** preset — the same view at all-folders scale. It is a preset rather than a colour field on Clear Progress because the `LetterGrade` metric with `IncludeUnplayed` already expresses it exactly, and a second way to say the same thing would widen the public config vocabulary (D19) for nothing. |
 | 2 | **Tier list page** | The full bar for the folder you are on, under the existing `.ptt` PUMBILITY title track. That one answers "what is my next title"; this answers "how far through this folder am I, and how well". |
 | 3 | **Community player** | `CommunityPlayer.razor`'s Folder Completion strip, **split into two graphs — singles and doubles** — since a folder level is per type. Track height keeps following real folder size; the type-hue fill becomes the spectrum. |
 | 4 | **Community Discord** | §5.4's line. |

@@ -216,6 +216,19 @@ public static class WidgetRegistry
                         Metric = BreakdownMetric.Pass, Aggregation = BreakdownAggregation.Breakdown,
                         SeparateSinglesDoubles = false, MinLevel = 1, MaxLevel = 28
                     })),
+                // Clear Progress coloured by grade — the folder-levels spectrum at all-folders
+                // scale (docs/design/folder-level-progression.md §6). Deliberately a preset
+                // rather than a colour field on Clear Progress: the LetterGrade metric already
+                // expresses it exactly, and a second way to say the same thing would widen the
+                // public config vocabulary (D19) for nothing.
+                new WidgetDrawerPreset("Clear Progress by Grade",
+                    "How much of every folder you've cleared, coloured by the grades you hold.",
+                    WidgetConfigJson.Write(new ByLevelBreakdownConfig
+                    {
+                        Metric = BreakdownMetric.LetterGrade, Aggregation = BreakdownAggregation.Breakdown,
+                        Normalize = true, IncludeUnplayed = true, SeparateSinglesDoubles = false,
+                        MinLevel = 1, MaxLevel = 28
+                    })),
                 new WidgetDrawerPreset("Co-Op Completion",
                     "How many co-op charts you've cleared, by player count.",
                     WidgetConfigJson.Write(new ByLevelBreakdownConfig
