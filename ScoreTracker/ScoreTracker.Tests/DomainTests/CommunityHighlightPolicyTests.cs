@@ -39,6 +39,11 @@ public sealed class CommunityHighlightPolicyTests
         new(MilestoneKind.FolderPassLamp, SessionId: null, When, OldValue: null, NewValue: null, Title: null,
             Detail: folder);
 
+    private static PlayerMilestoneRecord FolderProgress(string folder, int tier, PhoenixLetterGrade grade,
+        int? fromTier = null, PhoenixLetterGrade? fromGrade = null) =>
+        new(MilestoneKind.FolderProgress, SessionId: null, When, OldValue: null, NewValue: null, Title: null,
+            new FolderProgressDetail(folder, tier, grade, fromTier, fromGrade).Format());
+
     private static Chart Chart(Guid id, int level, ChartType type = ChartType.Double, string song = "Bee") =>
         new ChartBuilder().WithId(id).WithLevel(level).WithType(type).WithSongName(song).Build();
 
@@ -61,6 +66,64 @@ public sealed class CommunityHighlightPolicyTests
     private static IReadOnlyList<SignificantWin> Classify(ScoreHighlightsCapturedEvent e,
         IReadOnlyDictionary<Guid, Chart> charts, RaritySnapshot snapshot, PlayerStatsRecord? stats = null) =>
         CommunityHighlightPolicy.Classify(e, charts, snapshot, stats ?? Stats());
+
+    [Fact]
+    public void ADeepCompletionTierIsACommunityWin()
+    {
+        var wins = Classify(
+            Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                FolderProgress("S22", 80, PhoenixLetterGrade.AAPlus, fromTier: 60)),
+            Charts(), Snapshot());
+
+        var win = Assert.Single(wins);
+        Assert.Equal(WinKind.FolderProgress, win.Kind);
+        Assert.Equal("S22", win.Difficulty);
+        Assert.Equal(80, win.Rank);
+        // Detail is null when the tier is the news, so the row reads "80% of S22".
+        Assert.Null(win.Detail);
+    }
+
+    [Fact]
+    public void AShallowTierStaysOffTheFeedEvenThoughDiscordCarriesIt()
+    {
+        var wins = Classify(
+            Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                FolderProgress("S22", 40, PhoenixLetterGrade.AAPlus, fromTier: 20)),
+            Charts(), Snapshot());
+
+        Assert.Empty(wins);
+    }
+
+    [Fact]
+    public void AGradeClimbCountsOnlyFromSUpward()
+    {
+        var below = Classify(
+            Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                FolderProgress("S22", 40, PhoenixLetterGrade.AAAPlus, fromGrade: PhoenixLetterGrade.AAA)),
+            Charts(), Snapshot());
+        var atS = Classify(
+            Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                FolderProgress("S22", 40, PhoenixLetterGrade.S, fromGrade: PhoenixLetterGrade.AAAPlus)),
+            Charts(), Snapshot());
+
+        Assert.Empty(below);
+        // Detail carries the grade when the grade is the news, so the row reads "S22 now S".
+        Assert.Equal("S", Assert.Single(atS).Detail);
+    }
+
+    [Fact]
+    public void ALampDoesNotDoubleUpAsProgressAndACompletion()
+    {
+        // FolderPassLamp and FolderProgress both fire at 100% — the feed shows one row.
+        var wins = Classify(
+            Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                FolderPassLamp("S24"),
+                FolderProgress("S24", 100, PhoenixLetterGrade.APlus, fromTier: 80)),
+            Charts(), Snapshot());
+
+        var win = Assert.Single(wins);
+        Assert.Equal(WinKind.FolderComplete, win.Kind);
+    }
 
     [Fact]
     public void DifficultyTitleCompletionIsABigTitle()

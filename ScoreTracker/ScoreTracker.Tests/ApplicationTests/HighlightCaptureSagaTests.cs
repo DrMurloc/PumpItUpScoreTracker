@@ -189,6 +189,86 @@ public sealed class HighlightCaptureSagaTests
     }
 
     [Fact]
+    public async Task TouchedFoldersGetTheirStandingWritten()
+    {
+        // A 10-chart folder with four passes: 40% complete, averaging the four scores.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(22).Build();
+        var others = Enumerable.Range(0, 9)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(22).Build()).ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(others.Append(chart).ToArray());
+        foreach (var passed in others.Take(3)) ctx.GivenBest(passed, 930000);
+        ctx.GivenBest(chart, 930000);
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.FolderLevels.Verify(f => f.Save(UserId,
+            It.Is<IEnumerable<FolderLevelRecord>>(l => l.Single().Folder == "S22"
+                                                       && l.Single().Size == 10
+                                                       && l.Single().Played == 4
+                                                       && l.Single().AverageScore == 930000
+                                                       && l.Single().CompletionPercent == 40),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task FoldersTheBatchNeverTouchedAreLeftAlone()
+    {
+        var touched = new ChartBuilder().WithType(ChartType.Single).WithLevel(22).Build();
+        var untouched = new ChartBuilder().WithType(ChartType.Double).WithLevel(18).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(touched, untouched);
+        ctx.GivenBest(touched, 930000);
+        ctx.GivenBest(untouched, 990000);
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(touched)));
+
+        ctx.FolderLevels.Verify(f => f.Save(UserId,
+            It.Is<IEnumerable<FolderLevelRecord>>(l => l.All(x => x.Folder == "S22")),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ABrokenScoreCountsTowardNeitherCompletionNorTheAverage()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(22).Build();
+        var broken = new ChartBuilder().WithType(ChartType.Single).WithLevel(22).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart, broken);
+        ctx.GivenBest(chart, 930000);
+        ctx.GivenBrokenBest(broken, 999999);
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.FolderLevels.Verify(f => f.Save(UserId,
+            It.Is<IEnumerable<FolderLevelRecord>>(l => l.Single().Played == 1
+                                                       && l.Single().AverageScore == 930000),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFailedFolderLevelWriteStillLetsTheCaptureShip()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(22).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 930000);
+        ctx.FolderLevels.Setup(f => f.Save(It.IsAny<Guid>(), It.IsAny<IEnumerable<FolderLevelRecord>>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("projection is down"));
+        var context = ctx.Context(NewPassEvent(chart));
+
+        await ctx.Saga.Consume(context);
+
+        // ComputeFlags runs inside one try/catch, so an unguarded projection failure would take
+        // the flags and the published snapshot with it.
+        Mock.Get(context).Verify(c => c.Publish(
+            It.IsAny<ScoreHighlightsCapturedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<IEnumerable<ScoreHighlightWrite>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task FolderDebutFlagsTheFirstPassesInAFolder()
     {
         // Folder has 10 charts; this is the player's second-ever pass there.
@@ -462,6 +542,7 @@ public sealed class HighlightCaptureSagaTests
         public Mock<IPlayerStatsReader> PlayerStats { get; } = new();
         public Mock<IScoreHighlightRepository> Highlights { get; } = new();
         public Mock<IPlayerMilestoneRepository> Milestones { get; } = new();
+        public Mock<IPlayerFolderLevelRepository> FolderLevels { get; } = new();
         public Mock<IMediator> Mediator { get; } = new();
         public HighlightCaptureSaga Saga { get; }
 
@@ -483,9 +564,12 @@ public sealed class HighlightCaptureSagaTests
             Scores.Setup(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
                     It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
+            FolderLevels.Setup(f => f.GetFolderLevels(It.IsAny<MixEnum>(), UserId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<FolderLevelRecord>());
             Saga = new HighlightCaptureSaga(Charts.Object, Scores.Object, Titles.Object, PlayerStats.Object,
-                Highlights.Object, Milestones.Object, Mediator.Object, new MemoryCache(new MemoryCacheOptions()),
-                FakeDateTime.At(Now).Object, NullLogger<HighlightCaptureSaga>.Instance);
+                Highlights.Object, Milestones.Object, FolderLevels.Object, Mediator.Object,
+                new MemoryCache(new MemoryCacheOptions()), FakeDateTime.At(Now).Object,
+                NullLogger<HighlightCaptureSaga>.Instance);
         }
 
         public void GivenCharts(params Chart[] charts)
@@ -498,6 +582,11 @@ public sealed class HighlightCaptureSagaTests
         public void GivenBest(Chart chart, PhoenixScore score)
         {
             _bests.Add(new RecordedPhoenixScore(chart.Id, score, PhoenixPlate.FairGame, false, Now));
+        }
+
+        public void GivenBrokenBest(Chart chart, PhoenixScore score)
+        {
+            _bests.Add(new RecordedPhoenixScore(chart.Id, score, PhoenixPlate.FairGame, true, Now));
         }
 
         public void GivenTop50(params Guid[] chartIds)

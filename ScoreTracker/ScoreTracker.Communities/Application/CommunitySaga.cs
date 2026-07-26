@@ -603,11 +603,12 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         lines.AddRange(titles.Select(t =>
             "🏅 " + _localizer.Get(culture, "**{0}** completed", Bracket(t.Title))));
 
-        // Paragon gains are never counted or aggregated — the new grade IS the content
-        // (owner call), so every gain is its own grade-named line.
-        var paragons = e.Milestones.Where(m => m.Kind == MilestoneKind.ParagonLevelGain).ToArray();
-        lines.AddRange(paragons.Select(p => "🏅 " + _localizer.Get(culture, "**{0}** paragon → {1}",
-            Bracket(p.Title), ParagonEmoji(p.Detail))));
+        // Folder movement gets the full spectrum here — every tier crossing and every grade
+        // improvement. The homepage Community Highlights widget is the surface that keeps a high
+        // bar (docs/design/folder-level-progression.md §5.5); a channel the player opted into
+        // wants the detail.
+        foreach (var moved in e.Milestones.Where(m => m.Kind == MilestoneKind.FolderProgress))
+            lines.Add(FolderProgressLine(moved, culture));
 
         foreach (var lamp in e.Milestones.Where(m => m.Kind is MilestoneKind.FolderPassLamp
                      or MilestoneKind.FolderGradeLamp or MilestoneKind.FolderPlateLamp))
@@ -644,6 +645,23 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             "PG" => "#PLATE|PerfectGame#",
             _ => $"#LETTERGRADE|{detail}|False#"
         };
+    }
+
+    /// <summary>
+    ///     One shape for every folder movement: "&lt;bubble&gt; 60%→80% at AAA→AA+", with a half
+    ///     shown only when it actually moved, and 🎉 on a Folder Lamp. The bubble is the guild's
+    ///     own difficulty emoji — the game's ball art, never recoloured by letter grade.
+    /// </summary>
+    private string FolderProgressLine(PlayerMilestoneRecord m, string? culture)
+    {
+        var detail = FolderProgressDetail.TryParse(m.Detail);
+        if (detail == null) return $"📈 {m.Detail}";
+
+        var body = detail.GradeText == null
+            ? $"**{detail.CompletionText}**"
+            : _localizer.Get(culture, "**{0}** at {1}", detail.CompletionText, detail.GradeText);
+        var line = $"{(detail.IsLamp ? "🎉" : "📈")} #DIFFICULTY|{detail.Folder}# {body}";
+        return detail.IsLamp ? line + " 🎉" : line;
     }
 
     private string LampLine(PlayerMilestoneRecord m, string? culture)

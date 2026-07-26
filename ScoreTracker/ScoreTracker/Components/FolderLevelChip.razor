@@ -1,0 +1,52 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@*
+    A folder's standing at a glance: the grade in its metal, glowing by how much of the folder
+    is complete (docs/design/folder-level-progression.md §3.1). Hue and glow are two channels
+    over two systems the site already ships -- GradeColors for the letter, the rarity treatment
+    ramp for the completion tier -- and the glow classes take currentColor on purpose, so depth
+    never introduces a second palette.
+
+    A folder with nothing played has no grade, only a count: the average of nothing is an
+    absence, not an F.
+*@
+
+<span class="fl-chip @(Level.IsLamped ? "fl-lamped" : "")" style="@ColorStyle" title="@Tooltip">
+    @if (Level.Grade == null)
+    {
+        <span class="fl-chip-count">@Level.Played / @Level.Size</span>
+    }
+    else
+    {
+        <span class="fl-chip-grade @GlowClass">@Level.Grade.Value.GetName()</span>
+        <span class="fl-chip-pct">@(Level.IsLamped ? L["LAMP"] : $"{Level.CompletionPercent}%")</span>
+    }
+</span>
+
+@code {
+    [Parameter] [EditorRequired] public FolderLevelRecord Level { get; set; } = null!;
+
+    /// <summary>Shown under the grade instead of the percent — the tier-list page is one folder deep.</summary>
+    [Parameter] public bool HidePercent { get; set; }
+
+    private string ColorStyle => Level.Grade == null
+        ? "color:var(--unplayed-grade)"
+        : $"color:{MixThemes.GradeVar(Level.Grade.Value)}";
+
+    // Glow starts where community significance does, so "this is worth showing other people"
+    // and "this looks impressive" are the same threshold (§2.2).
+    private string GlowClass => Level.Tier switch
+    {
+        >= FolderCompletionTier.Lamp => "rarity-glow-3",
+        >= 80 => "rarity-glow-2",
+        >= 60 => "rarity-glow-1",
+        _ => string.Empty
+    };
+
+    private string Tooltip => Level.Grade == null
+        ? L["{0} of {1} charts", Level.Played, Level.Size].Value
+        : L["{0} of {1} charts, averaging {2}", Level.Played, Level.Size, Level.AverageScore.ToString("N0")].Value;
+}

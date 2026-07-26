@@ -16,6 +16,7 @@ namespace ScoreTracker.Communities.Contracts;
 ///         <item>TopPumbility — Chart* + Score + Rank (pumbility rank, e.g. 2 for #2)</item>
 ///         <item>PeerElite — Chart* + Score + Rank (peer position, 1 = #1) + RarityShare (top fraction → "top N%")</item>
 ///         <item>NotablePg — Chart* + Score + RarityShare (fraction of active players holding the PG)</item>
+///         <item>FolderProgress — Difficulty (the folder) + Rank (completion tier) + Detail (the grade)</item>
 ///     </list>
 /// </summary>
 [ExcludeFromCodeCoverage]
@@ -27,7 +28,8 @@ public sealed record SignificantWin(
     string? TitleName = null,
     double? RarityShare = null,
     int? Rank = null,
-    int? Score = null);
+    int? Score = null,
+    string? Detail = null);
 
 public enum WinKind
 {
@@ -37,12 +39,27 @@ public enum WinKind
     FolderFirst,
     TopPumbility,
     PeerElite,
-    NotablePg
+    NotablePg,
+
+    /// <summary>
+    ///     A folder reached a deep completion tier, or its grade climbed into the top band.
+    ///     Narrower than the Discord card on purpose (docs/design/folder-level-progression.md §5.5).
+    /// </summary>
+    FolderProgress
 }
 
-/// <summary>Schema version stamped on every persisted highlight payload — older rows read as stale.</summary>
+/// <summary>
+///     Schema version stamped on every persisted highlight payload — older rows read as stale.
+///     <para>
+///         v2 added <see cref="SignificantWin.Detail" /> and <see cref="WinKind.FolderProgress" />.
+///         v1 rows deserialize cleanly (the new field is optional and lands null) but are treated
+///         as stale rather than rendered, which is the point of the stamp: a feed row is a summary
+///         of a moment, and a moment summarised before folder standings existed is incomplete
+///         rather than wrong. The weekly purge clears them inside 30 days.
+///     </para>
+/// </summary>
 [ExcludeFromCodeCoverage]
 public static class CommunityHighlightSchema
 {
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 }

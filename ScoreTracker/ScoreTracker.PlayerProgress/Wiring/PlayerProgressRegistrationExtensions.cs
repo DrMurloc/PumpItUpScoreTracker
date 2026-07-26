@@ -29,6 +29,7 @@ public static class PlayerProgressRegistrationExtensions
         services.AddTransient<IScoreHighlightRepository, EFScoreHighlightRepository>();
         services.AddTransient<IPlayerMilestoneRepository, EFPlayerMilestoneRepository>();
         services.AddTransient<IPlayerSeasonRecapRepository, EFPlayerSeasonRecapRepository>();
+        services.AddTransient<IPlayerFolderLevelRepository, EFPlayerFolderLevelRepository>();
         services.AddTransient<CohortScoreProvider>();
         services.AddSingleton<IDbModelContribution, PlayerProgressModelContribution>();
         return services;
@@ -48,6 +49,9 @@ public static class PlayerProgressRegistrationExtensions
         configurator.AddConsumer<TitleSaga>();
         configurator.AddConsumer<PlayerHistorySaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();
+        // Folder standings: the admin backfill only. The per-import write rides
+        // HighlightCaptureSaga, where the charts and bests are already in hand.
+        configurator.AddConsumer<FolderLevelSaga>();
         // The session-snapshot orchestrator: consumes every score batch, runs the
         // rating/title steps, publishes ScoreHighlightsCapturedEvent — if this
         // registration drops, stats, Pumbility, titles, AND the Discord cards all

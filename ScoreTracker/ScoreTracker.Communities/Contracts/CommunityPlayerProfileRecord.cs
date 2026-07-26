@@ -1,3 +1,4 @@
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Communities.Contracts;
@@ -26,11 +27,19 @@ public sealed record CommunityPlayerProfileRecord(
     IReadOnlyList<CommunityFolderCompletionRecord> FolderCompletion);
 
 /// <summary>
-///     One level folder: singles and doubles passes separately over the folder's chart total
-///     (co-op excluded), so the graph can stack the two types inside the folder's true size.
+///     One folder — a (chart type, level) pair, since S18 and D18 are different folders with
+///     different levels (docs/design/folder-level-progression.md §2.4). Co-op stays out: its
+///     "levels" are player counts, which do not belong on a difficulty axis.
+///     <para>
+///         <see cref="GradeCounts" /> is the folder's passes bucketed by grade, which is what lets
+///         the column render as a spectrum rather than a flat bar. Passes only — a broken score is
+///         a failed run and feeds nothing here.
+///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record CommunityFolderCompletionRecord(int Level, int SinglesPassed, int DoublesPassed, int Total)
-{
-    public int Passed => SinglesPassed + DoublesPassed;
-}
+public sealed record CommunityFolderCompletionRecord(
+    ChartType Type,
+    int Level,
+    int Passed,
+    int Total,
+    IReadOnlyDictionary<PhoenixLetterGrade, int> GradeCounts);

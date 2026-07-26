@@ -6365,6 +6365,57 @@
   <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
     <value>Réussis {0} charts avec {1} ou mieux (seulement {2} dans ce dossier)</value>
   </data>
+  <data name="Add folder" xml:space="preserve">
+    <value>Ajouter un dossier</value>
+  </data>
+  <data name="Backfill Folder Levels" xml:space="preserve">
+    <value>Recalculer les niveaux de dossier</value>
+  </data>
+  <data name="Folder level backfill queued" xml:space="preserve">
+    <value>Recalcul des niveaux de dossier mis en file</value>
+  </data>
+  <data name="LAMP" xml:space="preserve">
+    <value>LAMP</value>
+  </data>
+  <data name="Pick the folders you're working on." xml:space="preserve">
+    <value>Choisissez les dossiers sur lesquels vous travaillez.</value>
+  </data>
+  <data name="**{0}** at {1}" xml:space="preserve">
+    <value>**{0}** avec {1}</value>
+  </data>
+  <data name="{0} — {1} at {2}" xml:space="preserve">
+    <value>{0} — {1} avec {2}</value>
+  </data>
+  <data name="{0} now {1}" xml:space="preserve">
+    <value>{0} désormais {1}</value>
+  </data>
+  <data name="{0} of {1} charts" xml:space="preserve">
+    <value>{0} sur {1} charts</value>
+  </data>
+  <data name="{0} of {1} charts ({2}%)" xml:space="preserve">
+    <value>{0} sur {1} charts ({2}%)</value>
+  </data>
+  <data name="{0} of {1} charts, averaging {2}" xml:space="preserve">
+    <value>{0} sur {1} charts, moyenne {2}</value>
+  </data>
+  <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
+    <value>{0} sur {1} · {2} avant le Folder Lamp</value>
+  </data>
+  <data name="{0}% complete" xml:space="preserve">
+    <value>{0}% terminé</value>
+  </data>
+  <data name="{0}% of {1}" xml:space="preserve">
+    <value>{0}% de {1}</value>
+  </data>
+  <data name="CO-OP {0}" xml:space="preserve">
+    <value>CO-OP {0}</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Réinitialiser</value>
+  </data>
+  <data name="{0} of {1} folders" xml:space="preserve">
+    <value>{0} sur {1} dossiers</value>
+  </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>Calculateur de vie</value>
   </data>
@@ -6799,5 +6850,8 @@
   </data>
   <data name="#{0}" xml:space="preserve">
     <value>#{0}</value>
+  </data>
+  <data name="Select Folders" xml:space="preserve">
+    <value>Choisir les dossiers</value>
   </data>
 </root>

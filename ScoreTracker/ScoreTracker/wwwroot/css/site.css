@@ -8888,3 +8888,276 @@ button.chart-card-art {
     opacity: .16;
     pointer-events: none;
 }
+
+/* ── Folder levels (docs/design/folder-level-progression.md): a folder is two numbers, and
+   these are the two ways it renders. The chip carries the grade in its metal with the glow
+   stepping by completion tier; the spectrum lays the whole folder out best-first so length
+   reads as completion and hue reads as quality. All colour arrives as tokens — the grade
+   metals via --grade-*, everything unplayed via --unplayed-grade. ── */
+.fl-chip {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    min-width: 58px;
+    padding: 6px 7px 5px;
+    border-radius: 9px;
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+}
+
+.fl-chip-grade {
+    font-size: 23px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: .01em;
+}
+
+.fl-chip-pct,
+.fl-chip-count {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .07em;
+    color: var(--mix-ink-muted);
+}
+
+.fl-chip-count {
+    font-size: 15px;
+    color: var(--unplayed-grade);
+}
+
+/* A lamped folder is ringed in its own grade metal — the trophy state, and the one rung
+   content growth can take back. */
+.fl-lamped {
+    border-color: currentColor;
+    box-shadow: 0 0 0 1px currentColor, 0 0 16px -4px currentColor;
+}
+
+.fl-spectrum {
+    width: 100%;
+}
+
+.fl-track {
+    position: relative;
+    height: 18px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--mix-bg) 55%, #000);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+}
+
+.fl-slim .fl-track {
+    height: 11px;
+    border-radius: 7px;
+}
+
+.fl-chunky .fl-track {
+    height: 22px;
+    border-radius: 11px;
+}
+
+.fl-fill {
+    position: absolute;
+    inset: 1px;
+    border-radius: 9px;
+}
+
+.fl-slim .fl-fill {
+    border-radius: 6px;
+}
+
+.fl-chunky .fl-fill {
+    border-radius: 10px;
+}
+
+/* Ticks are cut out of the bar rather than drawn over it, so they read at every fill colour. */
+.fl-tick {
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    width: 2px;
+    border-radius: 1px;
+    background: var(--mix-bg);
+}
+
+
+/* The tier list's folder standing: one line and the bar, sitting under the title track. */
+.fl-header {
+    display: grid;
+    gap: 8px;
+    margin: 0 0 16px;
+    padding: 2px 2px 4px;
+}
+
+.fl-header-line {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    line-height: 1.1;
+}
+
+.fl-header-dot {
+    color: var(--mix-ink-muted);
+    font-weight: 400;
+    margin: 0 4px;
+}
+
+/* Folder Levels widget: a 1x1 gives one folder the whole cell, everything wider stacks rows. */
+.dash-fl-hero {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+}
+
+.dash-fl-hero-grade {
+    font-family: var(--font-display);
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.dash-fl-hero-pct {
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.dash-fl-hero-bar {
+    width: 100%;
+}
+
+.dash-fl-hero-left {
+    font-family: var(--font-display);
+    font-size: 11px;
+    color: var(--mix-ink-muted);
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-fl-rows {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    justify-content: center;
+}
+
+.dash-fl-row-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.dash-fl-row-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.dash-fl-row-count {
+    font-family: var(--font-display);
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash-fl-row-grade {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.dash-fl-row-pct {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: .05em;
+    color: var(--mix-ink-muted);
+    margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Vertical spectrum: the community profile stacks folders as columns, so the long axis
+   flips and the fill grows from the base. Ticks become horizontal rules. */
+.fl-vertical .fl-track {
+    height: 100%;
+    border-radius: 5px 5px 0 0;
+}
+
+.fl-vertical .fl-fill {
+    border-radius: 4px 4px 0 0;
+}
+
+.fl-vertical .fl-tick {
+    top: auto;
+    bottom: 0;
+    left: -4px;
+    right: -4px;
+    width: auto;
+    height: 2px;
+}
+
+
+/* A lamped folder glows, in its own grade metal — a folder lamped at AA burns copper and one
+   lamped at SSS+ burns ice-blue, so the glow says how well it was lamped and not only that it
+   was. The hue arrives as currentColor from the component. There is deliberately no
+   end-of-track marker: the track own end already IS 100%, so a flag there drew a finish line
+   on top of the finish line. */
+.fl-track-lamped {
+    border-color: currentColor;
+    box-shadow: 0 0 12px -2px currentColor;
+}
+
+/* Folder Levels config: the running count sits above the grid so a full widget explains
+   itself before a tap does nothing. */
+.fl-cfg-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: .04em;
+    color: var(--mix-ink-muted);
+    margin-bottom: 6px;
+}
+
+.fl-cfg-picks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+/* The Select Folders popover anchor — same shape as the tier list's folder picker. */
+.fl-cfg-anchor {
+    position: relative;
+    display: inline-block;
+}
+
+/* A folder grid at its host's cap: unpicked cells go quiet so the grid reads as full,
+   while the picked ones stay live because removing is how you make room. */
+.folder-picker-level:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+/* The 1x1 hero leads with the difficulty ball — nothing else in that cell names the folder. */
+.dash-fl-hero > .mud-tooltip-root,
+.dash-fl-hero > .difficulty-bubble {
+    flex: none;
+}

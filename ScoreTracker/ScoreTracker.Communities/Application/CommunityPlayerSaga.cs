@@ -56,20 +56,29 @@ internal sealed class CommunityPlayerSaga :
             .ToDictionary(s => s.ChartId);
         var charts = await _charts.GetCharts(request.Mix, null, null, null, cancellationToken);
 
-        // Folder completion over singles+doubles level folders; co-op "levels" are player
-        // counts, not difficulty, so they stay out of the graph. Passes split by type so the
-        // graph can stack singles and doubles inside each folder's true size.
+        // One record per (type, level) folder — singles and doubles are separate folders with
+        // separate standings, so the page draws them as two graphs rather than stacking two
+        // types into one column. Co-op "levels" are player counts, not difficulty, so they
+        // stay off a difficulty axis.
         var completion = charts
             .Where(c => c.Type is ChartType.Single or ChartType.Double or ChartType.SinglePerformance
                 or ChartType.DoublePerformance)
-            .GroupBy(c => (int)c.Level)
-            .OrderBy(g => g.Key)
-            .Select(g => new CommunityFolderCompletionRecord(g.Key,
-                g.Count(c => c.Type is ChartType.Single or ChartType.SinglePerformance &&
-                             bestScores.TryGetValue(c.Id, out var s) && s.Score != null && !s.IsBroken),
-                g.Count(c => c.Type is ChartType.Double or ChartType.DoublePerformance &&
-                             bestScores.TryGetValue(c.Id, out var s) && s.Score != null && !s.IsBroken),
-                g.Count()))
+            .GroupBy(c => (
+                Type: c.Type is ChartType.Single or ChartType.SinglePerformance
+                    ? ChartType.Single
+                    : ChartType.Double,
+                Level: (int)c.Level))
+            .OrderBy(g => g.Key.Type).ThenBy(g => g.Key.Level)
+            .Select(g =>
+            {
+                var passes = g
+                    .Select(c => bestScores.TryGetValue(c.Id, out var s) ? s : null)
+                    .Where(s => s?.Score != null && !s.IsBroken)
+                    .Select(s => s!.Score!.Value.LetterGradeFor(request.Mix))
+                    .ToArray();
+                return new CommunityFolderCompletionRecord(g.Key.Type, g.Key.Level, passes.Length, g.Count(),
+                    passes.GroupBy(grade => grade).ToDictionary(x => x.Key, x => x.Count()));
+            })
             .ToArray();
 
         return new CommunityPlayerProfileRecord(user.Id, user.Name, user.ProfileImage, user.Country,

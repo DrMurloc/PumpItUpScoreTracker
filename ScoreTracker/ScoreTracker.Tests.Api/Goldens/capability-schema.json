@@ -384,6 +384,86 @@
       }
     },
     {
+      "type": "folder-levels",
+      "name": "Folder Levels",
+      "description": "How far through your folders you are, and how well.",
+      "category": "Progress",
+      "supportedSizes": [
+        "1x1",
+        "2x1",
+        "2x2",
+        "2x3"
+      ],
+      "defaultSize": "2x2",
+      "supportedMixes": [
+        "Phoenix",
+        "Phoenix2"
+      ],
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "mix": {
+            "enum": [
+              "XX",
+              "Phoenix",
+              "Phoenix2",
+              "FirstDanceFloor",
+              "SecondUltimateRemix",
+              "ThirdObg",
+              "ObgSeasonEvolution",
+              "Collection",
+              "PerfectCollection",
+              "Extra",
+              "Premiere",
+              "Prex",
+              "Rebirth",
+              "Premiere2",
+              "Prex2",
+              "Premiere3",
+              "Prex3",
+              "Exceed",
+              "Exceed2",
+              "Zero",
+              "Nx",
+              "Nx2",
+              "NxAbsolute",
+              "Fiesta",
+              "FiestaEx",
+              "Fiesta2",
+              "Prime",
+              "Prime2",
+              "Infinity",
+              "Pro",
+              "Pro2"
+            ],
+            "nullable": true
+          },
+          "folders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "enum": [
+                    "Single",
+                    "Double",
+                    "SinglePerformance",
+                    "DoublePerformance",
+                    "CoOp",
+                    "HalfDouble"
+                  ]
+                },
+                "level": {
+                  "type": "integer"
+                }
+              }
+            },
+            "nullable": true
+          }
+        }
+      }
+    },
+    {
       "type": "suggested-charts",
       "name": "Suggested Charts",
       "description": "Charts picked for you, tuned by goal.",

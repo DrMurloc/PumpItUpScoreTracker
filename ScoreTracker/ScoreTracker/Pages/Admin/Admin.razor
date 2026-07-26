@@ -37,6 +37,7 @@
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_backfillQueued" OnClick="BackfillUserTierLists">@L["Backfill User Tier Lists"]</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_tierListRebuildQueued" OnClick="RebuildTierLists">@L["Rebuild Tier Lists"]</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_communityHighlightsBackfillQueued" OnClick="BackfillCommunityHighlights">Backfill Community Highlights (7d)</MudButton>
+<MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_folderLevelBackfillQueued" OnClick="BackfillFolderLevels">@L["Backfill Folder Levels"]</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/PiuCenter">PIU Center</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/OfficialLeaderboards">Official Leaderboards</MudButton>
 @foreach (var name in MissingUsers)
@@ -372,6 +373,17 @@
         _communityHighlightsBackfillQueued = true;
         await Bus.Publish(new BackfillCommunityHighlightsCommand(7));
         Snackbar.Add("Community highlights backfill queued", Severity.Success);
+    }
+
+    private bool _folderLevelBackfillQueued;
+    // Seeds folder standings for every existing player across both mixes. Silent by construction
+    // (the backfill writes state, never milestones) and deliberately hand-triggered: the sweep
+    // reads every player's whole history, so it runs when somebody chooses, not inside a deploy.
+    private async Task BackfillFolderLevels()
+    {
+        _folderLevelBackfillQueued = true;
+        await Bus.Publish(new BackfillFolderLevelsCommand());
+        Snackbar.Add(L["Folder level backfill queued"].Value, Severity.Success);
     }
     private async Task RebuildOfficialLeaderboard()
     {

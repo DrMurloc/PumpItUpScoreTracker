@@ -14,8 +14,8 @@
             or MilestoneKind.DoublesPumbilityGain => "PUMBILITY",
         MilestoneKind.SinglesCompetitiveGain or MilestoneKind.DoublesCompetitiveGain => @L["Competitive"],
         MilestoneKind.TitleCompleted => @L["Title"],
-        MilestoneKind.ParagonLevelGain => @L["Paragon"],
         MilestoneKind.WeeklyPlacement => @L["Weekly"],
+        MilestoneKind.FolderProgress => @L["Folder"],
         _ => @L["Folder Lamp"]
     };
 
@@ -32,13 +32,27 @@
         MilestoneKind.DoublesCompetitiveGain =>
             $"{L["Doubles"]} {Milestone.OldValue:0.00} → {Milestone.NewValue:0.00}",
         MilestoneKind.TitleCompleted => $"{L["Completed"]} {Milestone.Title}",
-        MilestoneKind.ParagonLevelGain => $"{Milestone.Title} → {Milestone.Detail}",
         MilestoneKind.FolderPassLamp => L["All {0} passed", Milestone.Detail ?? string.Empty],
         MilestoneKind.FolderGradeLamp => FolderFloor(),
         MilestoneKind.FolderPlateLamp => FolderFloor(),
+        MilestoneKind.FolderProgress => FolderProgress(),
         MilestoneKind.WeeklyPlacement => $"#{Milestone.NewValue:0} — {Milestone.Title} {Milestone.Detail}",
         _ => Milestone.Detail ?? string.Empty
     };
+
+    // "S22 — 60% → 80% at AAA → AA+": each half only appears when it actually moved, so a tier
+    // crossing inside one grade reads "60% → 80% at AA+" and a grade climb inside one tier reads
+    // "80% at AAA → AA+" (docs/design/folder-level-progression.md §5.4).
+    private string FolderProgress()
+    {
+        var detail = FolderProgressDetail.TryParse(Milestone.Detail);
+        if (detail == null) return Milestone.Detail ?? string.Empty;
+
+        var lamp = detail.IsLamp ? " 🎉" : string.Empty;
+        return detail.GradeText == null
+            ? $"{detail.Folder} — {detail.CompletionText}{lamp}"
+            : L["{0} — {1} at {2}", detail.Folder, detail.CompletionText, detail.GradeText] + lamp;
+    }
 
     private string FolderFloor()
     {

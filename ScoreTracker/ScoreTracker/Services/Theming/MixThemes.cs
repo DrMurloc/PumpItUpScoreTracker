@@ -358,6 +358,23 @@ public static class MixThemes
         GradeColors.TryGetValue(gradeName, out var hex) ? hex : UnpassedGradeHex;
 
     /// <summary>
+    ///     Token reference for a grade's metal, for markup that must not carry colour literals
+    ///     (folder levels wear the grade as their identity colour).
+    /// </summary>
+    public static string GradeVar(PhoenixLetterGrade grade) => $"var(--grade-{GradeSlug(grade)})";
+
+    /// <summary>
+    ///     True when two grades sit on the same rung of the eight-metal ladder — AA+ and AA are
+    ///     both copper, S+ and S both gold. Sixteen grades share eight metals on purpose, and the
+    ///     folder spectrum groups by this so it draws bands rather than near-identical slivers.
+    /// </summary>
+    public static bool ShareGradeMetal(PhoenixLetterGrade left, PhoenixLetterGrade right) =>
+        GradeHex(left.GetName()) == GradeHex(right.GetName());
+
+    // "AA+" → "aaplus": the token name has to survive CSS, and the enum member already reads that way.
+    private static string GradeSlug(PhoenixLetterGrade grade) => grade.ToString().ToLowerInvariant();
+
+    /// <summary>
     ///     Playstyle archetype color — the archetypes are letter-grade bands over a player's
     ///     top-Pumbility average, so each wears the grade-metal ladder: AA copper for Pass
     ///     Pusher, AAA+ silver for Pass Refiner, S+ gold for Balanced, then the SSS/SSS+ ice-blues.
@@ -428,6 +445,12 @@ public static class MixThemes
         var chartTypes = $"    --type-singles: {SinglesTypeHex};\n" +
                          $"    --type-doubles: {DoublesTypeHex};\n" +
                          $"    --type-coop: {CoOpTypeHex};";
+        // The grade-metal ladder as tokens. It was hex-only for ApexCharts, but folder levels
+        // wear the grade as their identity colour in markup, where literals are forbidden.
+        // Eight metals across sixteen grades on purpose — adjacent pairs share a rung.
+        var grades = string.Join("\n", Enum.GetValues<PhoenixLetterGrade>()
+                         .Select(g => $"    --grade-{GradeSlug(g)}: {GradeHex(g.GetName())};")) +
+                     $"\n    --unplayed-grade: {UnpassedGradeHex};";
         var judgments = string.Join("\n", JudgmentColors.Select(kv =>
             $"    --judg-{kv.Key.ToString().ToLowerInvariant()}: {kv.Value};"));
         // The rainbow ships as both its stops and a ready-made gradient, so markup can paint
@@ -466,6 +489,7 @@ public static class MixThemes
 {badgeCategories}
 {brands}
 {chartTypes}
+{grades}
 {judgments}
 {life}
 }}";

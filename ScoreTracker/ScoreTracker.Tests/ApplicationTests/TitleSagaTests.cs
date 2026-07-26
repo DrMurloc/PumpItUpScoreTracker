@@ -274,8 +274,8 @@ public sealed class TitleSagaTests
     public async Task CaptureSingleSourcesTheSessionsTitleMilestonesFoldingInSiteBadges()
     {
         // The card shows ALL of a session's completions: with a SessionId, CaptureSessionTitles
-        // single-sources from the milestone table, folding the site path's basic badges and
-        // paragon gains in with the score-crossing ones — and dropping non-title milestones.
+        // single-sources from the milestone table, folding the site path's basic badges in with
+        // the score-crossing ones — and dropping non-title milestones.
         var when = new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
         var sessionId = Guid.NewGuid();
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(6)
@@ -285,8 +285,6 @@ public sealed class TitleSagaTests
         ctx.GivenSessionMilestones(sessionId,
             new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, sessionId, when, null, null,
                 "RISE CHALLENGER", null),
-            new PlayerMilestoneRecord(MilestoneKind.ParagonLevelGain, sessionId, when, null, null,
-                "Expert Lv. 2", "PG"),
             new PlayerMilestoneRecord(MilestoneKind.PumbilityGain, sessionId, when, 1, 2, null, null));
 
         var result = await ctx.Saga.Handle(new TitleSaga.CaptureSessionTitles(ctx.UserId, MixEnum.Phoenix,
@@ -299,8 +297,6 @@ public sealed class TitleSagaTests
 
         Assert.Contains(result.Milestones,
             m => m.Kind == MilestoneKind.TitleCompleted && m.Title == "RISE CHALLENGER");
-        Assert.Contains(result.Milestones,
-            m => m.Kind == MilestoneKind.ParagonLevelGain && m.Title == "Expert Lv. 2");
         Assert.DoesNotContain(result.Milestones, m => m.Kind == MilestoneKind.PumbilityGain);
     }
 
