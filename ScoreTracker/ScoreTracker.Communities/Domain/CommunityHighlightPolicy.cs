@@ -34,6 +34,15 @@ internal static class CommunityHighlightPolicy
     /// <summary>Among the first N passes ever in a folder.</summary>
     public const int FolderFirstMaxOrdinal = 3;
 
+    /// <summary>
+    ///     Only deep completion reads as a community win — 20% and 40% are personal progress, and
+    ///     the Discord card already carries them (docs/design/folder-level-progression.md §5.5).
+    /// </summary>
+    public const int FolderTierMinPercent = 60;
+
+    /// <summary>A folder grade improvement counts only from S upward.</summary>
+    public const PhoenixLetterGrade FolderGradeMin = PhoenixLetterGrade.S;
+
     /// <summary>Top this fraction of the ±0.5 competitive cohort (i.e. &gt; 95th percentile).</summary>
     public const double PeerEliteFraction = 0.05;
 
@@ -86,6 +95,8 @@ internal static class CommunityHighlightPolicy
         if (milestone.Kind == MilestoneKind.FolderPassLamp && milestone.Detail is { Length: > 0 } folder)
             return (PriorityFolderComplete, new SignificantWin(WinKind.FolderComplete, Difficulty: folder));
 
+        if (milestone.Kind == MilestoneKind.FolderProgress) return ClassifyFolderProgress(milestone);
+
         if (milestone.Kind != MilestoneKind.TitleCompleted || milestone.Title is null) return null;
         var title = milestone.Title;
         if (IsBigTitle(mix, title))
@@ -93,6 +104,31 @@ internal static class CommunityHighlightPolicy
         if (TitleShare(title, snapshot) is { } share && share < TitleRarityThreshold)
             return (PriorityRareTitle, new SignificantWin(WinKind.RareTitle, TitleName: title, RarityShare: share));
         return null;
+    }
+
+    /// <summary>
+    ///     A folder movement earns a community slot two ways: reaching a deep completion tier, or
+    ///     climbing the grade into the top band. Either alone is enough, but shallow tiers and
+    ///     sub-S grades stay off the feed — those already ride the Discord card in full.
+    /// </summary>
+    private static (int Priority, SignificantWin Win)? ClassifyFolderProgress(PlayerMilestoneRecord milestone)
+    {
+        var detail = FolderProgressDetail.TryParse(milestone.Detail);
+        if (detail == null) return null;
+
+        var deepTier = detail.TierMoved && detail.Tier >= FolderTierMinPercent;
+        var topGrade = detail.GradeMoved && detail.Grade >= FolderGradeMin;
+        if (!deepTier && !topGrade) return null;
+
+        // A lamp already has its own FolderComplete win, so this would double the row.
+        if (detail.IsLamp) return null;
+
+        // Which half is the news decides how the row reads, and a deep tier outranks a grade
+        // climb. Detail carries the grade only when the grade is the story, so the renderer can
+        // pick its sentence without a second flag.
+        return (PriorityFolderProgress, new SignificantWin(WinKind.FolderProgress,
+            Difficulty: detail.Folder, Rank: detail.Tier,
+            Detail: deepTier ? null : detail.Grade?.GetName()));
     }
 
     private static (int Priority, SignificantWin Win)? ClassifyChange(
@@ -175,10 +211,11 @@ internal static class CommunityHighlightPolicy
     private const int PriorityRareTitle = 0;
     private const int PriorityBigTitle = 1;
     private const int PriorityFolderComplete = 2;
-    private const int PriorityFolderFirst = 3;
-    private const int PriorityTopPumbility = 4;
-    private const int PriorityNotablePg = 5;
-    private const int PriorityPeerElite = 6;
+    private const int PriorityFolderProgress = 3;
+    private const int PriorityFolderFirst = 4;
+    private const int PriorityTopPumbility = 5;
+    private const int PriorityNotablePg = 6;
+    private const int PriorityPeerElite = 7;
 }
 
 /// <summary>

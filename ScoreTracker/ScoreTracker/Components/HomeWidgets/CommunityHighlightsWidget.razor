@@ -117,6 +117,12 @@ else
                                     <span class="dash-ch-why">🎉 @L["Cleared all of {0}", win.Difficulty ?? ""]</span>
                                 </div>
                             }
+                            else if (win.Kind == WinKind.FolderProgress)
+                            {
+                                <div class="dash-ch-win">
+                                    <span class="dash-ch-why">📈 @FolderProgressCaption(win)</span>
+                                </div>
+                            }
                             else if (win.TitleName != null)
                             {
                                 <div class="dash-ch-win">
@@ -249,6 +255,12 @@ else
     private bool IsMe(CommunityHighlightRecord record) =>
         CurrentUser.IsLoggedIn && CurrentUser.User.Id == record.UserId;
 
+    // "80% of S22" when the completion tier is the news, "D21 now S" when the grade is. The
+    // policy decides which by whether it sent a grade at all, so this never has to re-derive it.
+    private string FolderProgressCaption(SignificantWin win) => win.Detail == null
+        ? L["{0}% of {1}", win.Rank ?? 0, win.Difficulty ?? ""].Value
+        : L["{0} now {1}", win.Difficulty ?? "", win.Detail].Value;
+
     private string NonChartTip(SignificantWin win) => win.Kind == WinKind.FolderComplete
         ? $"🎉 {L["Cleared all of {0}", win.Difficulty ?? ""].Value}"
         : $"🏅 {Bracket(win.TitleName ?? "")} {TitleSuffix(win)}";
@@ -309,6 +321,20 @@ else
                             <DifficultyBubble Type="folder.Type" Level="folder.Level" Mix="_mix" Small="true"></DifficultyBubble>
                         }
                         <div class="dash-card-name">@L["Folder Cleared"]</div>
+                    </div>
+                </MudTooltip>
+            }
+            else if (win.Kind == WinKind.FolderProgress)
+            {
+                var folder = ParseFolder(win.Difficulty);
+                <MudTooltip Text="@NonChartTip(win)" Arrow="true">
+                    <div class="dash-chart-card dash-card-text">
+                        <div class="dash-card-emoji">📈</div>
+                        @if (folder.Type != null && folder.Level != null)
+                        {
+                            <DifficultyBubble Type="folder.Type" Level="folder.Level" Mix="_mix" Small="true"></DifficultyBubble>
+                        }
+                        <div class="dash-card-name">@FolderProgressCaption(win)</div>
                     </div>
                 </MudTooltip>
             }

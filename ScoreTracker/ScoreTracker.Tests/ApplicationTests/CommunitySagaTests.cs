@@ -760,6 +760,47 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task FolderMovementRidesTheCardAsOneLineShowingOnlyWhatMoved()
+    {
+        // Discord gets the full spectrum, unlike the homepage widget: a shallow tier and a
+        // sub-S grade both belong here (docs/design/folder-level-progression.md §5.5).
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, chart, score: 950000);
+        var milestones = new[]
+        {
+            // Both halves moved.
+            Progress("S22", 80, PhoenixLetterGrade.AAPlus, 60, PhoenixLetterGrade.AAA),
+            // Tier only — no grade clause.
+            Progress("D23", 80, PhoenixLetterGrade.AAPlus, 60),
+            // Grade only — no arrow on the percent.
+            Progress("D21", 60, PhoenixLetterGrade.S, null, PhoenixLetterGrade.AAAPlus),
+            // A lamp takes the confetti.
+            Progress("S24", 100, PhoenixLetterGrade.APlus, 80)
+        };
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix, null, milestones,
+            (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
+                t.Markdown.Contains("📈 #DIFFICULTY|S22# **60% → 80%** at AAA → AA+")
+                && t.Markdown.Contains("📈 #DIFFICULTY|D23# **60% → 80%** at AA+")
+                && t.Markdown.Contains("📈 #DIFFICULTY|D21# **60%** at AAA+ → S")
+                && t.Markdown.Contains("🎉 #DIFFICULTY|S24# **80% → 100%** at A+ 🎉"))),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private static PlayerMilestoneRecord Progress(string folder, int tier, PhoenixLetterGrade grade,
+        int? fromTier = null, PhoenixLetterGrade? fromGrade = null) =>
+        new(MilestoneKind.FolderProgress, null, Now, null, null, null,
+            new FolderProgressDetail(folder, tier, grade, fromTier, fromGrade).Format());
+
+    [Fact]
     public async Task EveryTitleCompletionIsListedWithNoNameCap()
     {
         // Owner call: titles are the card's top priority — list them ALL (the 4000-char
