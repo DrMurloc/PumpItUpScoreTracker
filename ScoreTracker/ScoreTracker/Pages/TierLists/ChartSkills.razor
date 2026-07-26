@@ -6,6 +6,7 @@
 @using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.ChartIntelligence.Contracts
 @using ScoreTracker.ChartIntelligence.Contracts.Queries
@@ -270,6 +271,33 @@ else
     @if (_titleTrack != null)
     {
         <PumbilityTitleTrack Result="_titleTrack"></PumbilityTitleTrack>
+    }
+    @* Folder standing: one line and the bar, nothing else. No difficulty ball (you are already
+       on this folder's page) and no chart counts — the segments, the tier ticks and the lamp
+       flag carry the rest (docs/design/folder-level-progression.md §3.3). *@
+    @if (_folderLevel is { Size: > 0 })
+    {
+        <div class="fl-header">
+            <div class="fl-header-line">
+                @if (_folderLevel.IsLamped)
+                {
+                    <span>@L["Folder Lamp"]</span>
+                }
+                else
+                {
+                    <span>@L["{0}% complete", _folderLevel.CompletionPercent]</span>
+                }
+                @if (_folderLevel.Grade != null)
+                {
+                    <span class="fl-header-dot">·</span>
+                    <span class="@FolderGradeGlow" style="color:@MixThemes.GradeVar(_folderLevel.Grade.Value)">
+                        @_folderLevel.Grade.Value.GetName()
+                    </span>
+                }
+            </div>
+            <FolderSpectrum GradesDescending="_folderGrades" Size="_folderLevel.Size"
+                            Height="FolderSpectrumSize.Chunky"></FolderSpectrum>
+        </div>
     }
     @* 2 — content bar: how the list PRESENTS (lens ordering, grouping, density,
        Download, Filters). Sits with the list it affects, not in the sticky toolbar. *@
@@ -1000,6 +1028,19 @@ else
 
     private IEnumerable<TitleProgress> _titleProgress = Array.Empty<TitleProgress>();
     private FolderTitleTrackResult? _titleTrack;
+
+    // This folder's standing, computed from the scores the page already holds rather than read
+    // back from the stored projection — the page's own score list is the freshest copy there is.
+    private FolderLevelRecord? _folderLevel;
+    private IReadOnlyList<PhoenixLetterGrade> _folderGrades = Array.Empty<PhoenixLetterGrade>();
+
+    private string FolderGradeGlow => _folderLevel?.Tier switch
+    {
+        >= FolderCompletionTier.Lamp => "rarity-glow-3",
+        >= 80 => "rarity-glow-2",
+        >= 60 => "rarity-glow-1",
+        _ => string.Empty
+    };
     private IEnumerable<Guid> _unpassedTodos => _finalEntries.Select(e => e.ChartId).Where(chartId => _scores.ContainsKey(chartId) && _scores[chartId].IsBroken && _todos.Contains(chartId));
     private IDictionary<Guid, TierListCategory> _chartDifficulties = new Dictionary<Guid, TierListCategory>();
     private Name[] _availableStepArtists = Array.Empty<Name>();
@@ -1589,6 +1630,25 @@ else
         _titleTrack = CurrentUser.IsLoggedIn
             ? FolderTitleTrack.Compute(_currentMix, _chartType, _level, _allCharts, _scores)
             : null;
+
+        // Folder standing, recomputed per folder alongside the title track. Signed-out visitors
+        // have no standing to show.
+        if (CurrentUser.IsLoggedIn)
+        {
+            var passed = FolderLevelRecord.PassedScores(_folderScores.Values);
+            _folderLevel = FolderLevelRecord.For(_currentMix, _chartType, _level, _charts.Values, passed);
+            _folderGrades = _charts.Values
+                .Select(c => passed.TryGetValue(c.Id, out var score) ? score : (int?)null)
+                .Where(s => s != null)
+                .Select(s => PhoenixScore.From(s!.Value).LetterGradeFor(_currentMix))
+                .OrderByDescending(g => g)
+                .ToArray();
+        }
+        else
+        {
+            _folderLevel = null;
+            _folderGrades = Array.Empty<PhoenixLetterGrade>();
+        }
         // Dominance-ordered skills + segment coverage for the card chips and the
         // table's Skills column; empty until the first piucenter crawl banks metrics.
         _skillChips = await Mediator.Send(new GetChartSkillChipsQuery(_charts.Keys.ToArray()), cancellationToken);

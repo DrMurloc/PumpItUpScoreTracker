@@ -24,17 +24,8 @@ internal static class FolderLevelCalculator
     {
         return charts
             .GroupBy(c => (c.Type, Level: (int)c.Level))
-            .Select(folder =>
-            {
-                var scores = folder
-                    .Select(c => scoresByChart.TryGetValue(c.Id, out var score) ? score : (int?)null)
-                    .Where(s => s != null)
-                    .Select(s => s!.Value)
-                    .ToArray();
-
-                return new FolderLevelRecord(mix, folder.Key.Type, DifficultyLevel.From(folder.Key.Level),
-                    folder.Count(), scores.Length, Average(scores));
-            })
+            .Select(folder => FolderLevelRecord.For(mix, folder.Key.Type,
+                DifficultyLevel.From(folder.Key.Level), folder.ToArray(), scoresByChart))
             .ToArray();
     }
 
@@ -78,20 +69,7 @@ internal static class FolderLevelCalculator
             Detail: detail.Format());
     }
 
-    /// <summary>
-    ///     The scores a folder standing is built from: passed charts only. A broken score is a
-    ///     failed run, so it counts toward neither completion nor the average — the same rule
-    ///     the folder lamps already apply. Every caller goes through here so the two never drift.
-    /// </summary>
+    /// <inheritdoc cref="FolderLevelRecord.PassedScores" />
     public static IReadOnlyDictionary<Guid, int> PassedScores(IEnumerable<RecordedPhoenixScore> bests) =>
-        bests
-            .Where(b => b.Score != null && !b.IsBroken)
-            .GroupBy(b => b.ChartId)
-            .ToDictionary(g => g.Key, g => (int)g.Max(b => b.Score!.Value));
-
-    // Rounded to the nearest point rather than truncated: an average is a display number here,
-    // and truncation would drop a folder sitting exactly on a grade floor one rung.
-    private static int Average(IReadOnlyCollection<int> scores) =>
-        scores.Count == 0 ? 0 : (int)Math.Round(scores.Sum(s => (long)s) / (double)scores.Count,
-            MidpointRounding.AwayFromZero);
+        FolderLevelRecord.PassedScores(bests);
 }

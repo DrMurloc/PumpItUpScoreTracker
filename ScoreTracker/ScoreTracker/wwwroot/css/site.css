@@ -6843,3 +6843,25 @@ button.chart-card-art {
     background: var(--mix-accent);
     box-shadow: 0 0 10px -1px var(--mix-accent);
 }
+
+/* The tier list's folder standing: one line and the bar, sitting under the title track. */
+.fl-header {
+    display: grid;
+    gap: 8px;
+    margin: 0 0 16px;
+    padding: 2px 2px 4px;
+}
+
+.fl-header-line {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    line-height: 1.1;
+}
+
+.fl-header-dot {
+    color: var(--mix-ink-muted);
+    font-weight: 400;
+    margin: 0 4px;
+}
