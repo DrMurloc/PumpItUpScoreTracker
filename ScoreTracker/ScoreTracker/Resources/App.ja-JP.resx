@@ -2693,6 +2693,9 @@
   <data name="Passed in another mix" xml:space="preserve">
     <value>別バージョンでパス済み</value>
   </data>
+  <data name="Show Passed in Another Mix" xml:space="preserve">
+    <value>別バージョンでパス済みを表示</value>
+  </data>
   <data name="Remove from ToDo List" xml:space="preserve">
     <value>ToDoリストから削除</value>
   </data>

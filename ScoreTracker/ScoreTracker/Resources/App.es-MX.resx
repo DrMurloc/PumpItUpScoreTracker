@@ -2573,6 +2573,9 @@
   <data name="Passed in another mix" xml:space="preserve">
     <value>Pasado en otra versión</value>
   </data>
+  <data name="Show Passed in Another Mix" xml:space="preserve">
+    <value>Mostrar pasados en otra versión</value>
+  </data>
   <data name="Remove from ToDo List" xml:space="preserve">
     <value>Quitar de la lista ToDo</value>
   </data>
