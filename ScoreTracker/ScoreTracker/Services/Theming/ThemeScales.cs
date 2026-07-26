@@ -75,6 +75,29 @@ public static class ThemeScales
             : $"var(--plate-{plate.Value.GetShorthand().ToLowerInvariant()})";
 
     /// <summary>
+    /// Grade color token. Grades ride the plate metal ladder by tier (UX-GUIDELINES §1,
+    /// sampled from the Play Data art): SSS+/SSS ice-blue, SS/S gold, AAA+/AAA silver,
+    /// AA/A copper, and everything below A the in-game sub-A green. This is the token
+    /// sibling of <see cref="MixThemes.GradeHex"/>, for markup that can read CSS vars.
+    /// </summary>
+    public static string GradeColor(PhoenixLetterGrade grade) => grade switch
+    {
+        PhoenixLetterGrade.SSSPlus => "var(--plate-pg)",
+        PhoenixLetterGrade.SSS => "var(--plate-ug)",
+        PhoenixLetterGrade.SSPlus => "var(--plate-eg)",
+        PhoenixLetterGrade.SS => "var(--plate-eg)",
+        PhoenixLetterGrade.SPlus => "var(--plate-sg)",
+        PhoenixLetterGrade.S => "var(--plate-sg)",
+        PhoenixLetterGrade.AAAPlus => "var(--plate-mg)",
+        PhoenixLetterGrade.AAA => "var(--plate-tg)",
+        PhoenixLetterGrade.AAPlus => "var(--plate-fg)",
+        PhoenixLetterGrade.AA => "var(--plate-fg)",
+        PhoenixLetterGrade.APlus => "var(--plate-rg)",
+        PhoenixLetterGrade.A => "var(--plate-rg)",
+        _ => "var(--grade-sub-a)"
+    };
+
+    /// <summary>
     /// Legacy slot color token — the pre-Exceed song-wheel vocabulary (Crazy red,
     /// Freestyle green…). Another-variants read as their base slot; null = the neutral
     /// legacy chip (Half-Double, levelled co-ops). Never the difficulty ramp: old-scale
@@ -106,6 +129,25 @@ public static class ThemeScales
         TierListCategory.Underrated => "underrated",
         _ => "unrecorded"
     };
+
+    /// <summary>
+    /// Judgment color token — the game's own vocabulary (perfect ice-blue, great green,
+    /// good amber, bad violet, miss red). Mix-invariant like the alert colors: a MISS has
+    /// to read as a miss in every theme.
+    /// </summary>
+    public static string JudgmentColor(Judgment judgment) =>
+        $"var(--judg-{judgment.ToString().ToLowerInvariant()})";
+
+    /// <summary>
+    /// The lifebar's zone tokens. The rainbow paints the visible bar (0–1000); overflow is
+    /// the cool chrome above it, which the cabinet never shows you
+    /// (docs/design/life-calculator-redesign.md).
+    /// </summary>
+    public static string LifeRainbow => "var(--life-rainbow)";
+
+    public static string LifeOverflow => "var(--life-overflow)";
+
+    public static string LifeDanger => "var(--life-danger)";
 
     /// <summary>
     /// Percentile coloring against a concrete population (community leaderboards).

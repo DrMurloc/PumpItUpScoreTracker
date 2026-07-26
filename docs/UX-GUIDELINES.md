@@ -32,6 +32,8 @@ The palette record is the single source of truth: it builds the MudBlazor `MudTh
    - `--slot-*` — legacy slot colors, the pre-Exceed song-wheel vocabulary (Crazy red, Freestyle green, Nightmare purple, `--slot-neutral` for HDB/levelled co-ops). **Deliberately not the difficulty ramp**: old-scale levels don't translate to modern ones, and legacy chips render as CSS (never image bubbles) so the different look announces the different scale ([legacy-mixes design](design/legacy-mixes.md)).
    - **Grade colors** (`MixThemes.GradeHex(name)`) reuse the **plate ladder by tier** (owner, 2026-07-13, sampled from the Play Data art): SSS+/SSS = PG/UG ice-blue, SS/S = EG/SG gold, AAA+/AAA = MG/TG silver, AA/A = FG/RG copper, and everything **below A = the in-game sub-A green**. Grades still render as art in most places; these literal hexes exist for chart bars (the first text-rendered consumer). `MixThemes.PlateHex(shorthand)` is the plate sibling.
    - **Chart-type colors** (`MixThemes.ChartTypeHex(type)`): the difficulty-ball vocabulary — **red Single, green Double, gold Co-Op**. `MixThemes.UnpassedHex` is the broken-grade grey for unpassed / not-cleared / below-threshold segments.
+   - `--judg-*` — the game's own **judgment** vocabulary: perfect ice-blue, great green, good amber, bad violet, miss red. Reached via `ThemeScales.JudgmentColor(judgment)`, or `MixThemes.JudgmentHex` for render targets that can't read custom properties (ApexCharts). **Mix-invariant, like the alert colors** — a MISS must read as a miss in every theme.
+   - `--life-*` — the **lifebar's** own zones: the seven rainbow stops (`--life-r1`…`--life-r7`) plus the ready-made `--life-rainbow` gradient for the visible bar, `--life-overflow` for the cool chrome above 1000 that the cabinet never shows you, and `--life-danger`. Also mix-invariant; `ThemeScales.LifeRainbow/LifeOverflow/LifeDanger` are the accessors. Introduced with the [Life Calculator redesign](design/life-calculator-redesign.md).
 
 Consumers never look up hues. C# code calls the [`ThemeScales`](../ScoreTracker/ScoreTracker/Services/Theming/ThemeScales.cs) façade; markup uses `var(--…)`. Both return token references, so components stay theme-blind.
 
@@ -158,3 +160,25 @@ rebuilt as **static SSR + one island**, and it adds a small vocabulary of its ow
 - **Manual competitive entries are score + plate, a pass** — no broken, no plated-broken (those are
   personal-recording concerns). Photos are optional proof, not a gate; the enforcement lever for
   suspected cheaters is stated in the Record dialog, not yet built.
+
+## 6. Ladder rails (Titles)
+
+The `/Titles` overhaul ([design](design/titles-overhaul.md)) adds one piece of vocabulary, and it
+generalizes to any progression the game already models as a ladder:
+
+- **A ladder is one rail, not N rows.** Where a collection's items form a progression, the page
+  draws the progression — one row per ladder, one pip per rung — rather than one row per item.
+  213 titles become 47 rails. The rung carries its own state; there is no continuous fill line
+  behind the pips, because ladders legitimately have holes (Expert Lv.9 is reachable without
+  Lv.1).
+- **A rung's fill measures from the rung below it**, never from zero, matching `CompletionFloor`.
+- **Filtering fades, it does not remove.** A rail keeps its whole ladder when filtered; the rungs
+  that do not match drop to 16% opacity in place. A ladder with holes punched through it stops
+  reading as a ladder, and where your earned rungs sit on the climb is the thing worth seeing.
+- **What we cannot compute says so.** A dashed edge plus an `official` tag marks anything whose
+  progress only the official piugame import knows, and such an item never renders a partial bar —
+  a 0% bar against a requirement that does not exist is a lie, not an empty state. The drawer
+  explains it in words.
+- **Rarity of a thing is the percentile of people who lack it**, so it rides the shipped rarity
+  ramp (`ThemeScales.BandFor(1 - share)`) instead of a second inverted set of cutoffs, and the
+  percentage always prints beside the colour (rule 8).

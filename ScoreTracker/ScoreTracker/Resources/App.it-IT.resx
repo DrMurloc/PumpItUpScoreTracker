@@ -329,9 +329,6 @@
   <data name="Progress" xml:space="preserve">
     <value>Progresso</value>
   </data>
-  <data name="Progress Charts" xml:space="preserve">
-    <value>Statistiche del giocatore</value>
-  </data>
   <data name="Public" xml:space="preserve">
     <value>Pubblico</value>
     <comment>(on/off, if account is set to public)</comment>
@@ -818,12 +815,6 @@
   <data name="Removed" xml:space="preserve">
     <value>Rimosso</value>
   </data>
-  <data name="Step Artists" xml:space="preserve">
-    <value>Step Artist</value>
-  </data>
-  <data name="Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists." xml:space="preserve">
-    <value>Avviso: questa lista è in fase di perfezionamento, alcuni chart non hanno lo Step Artist e alcuni potrebbero avere artisti errati.</value>
-  </data>
   <data name="PIU Life Calculator" xml:space="preserve">
     <value>Calcolatore di vita PIU</value>
   </data>
@@ -1289,12 +1280,6 @@
   <data name="Best Attempts" xml:space="preserve">
     <value>Migliori tentativi</value>
   </data>
-  <data name="XX Progress" xml:space="preserve">
-    <value>Progresso XX</value>
-  </data>
-  <data name="Share Your Progress Page" xml:space="preserve">
-    <value>Condividi la tua pagina dei progressi</value>
-  </data>
   <data name="Overview" xml:space="preserve">
     <value>Panoramica</value>
   </data>
@@ -1320,18 +1305,6 @@
   <data name="Unpassed" xml:space="preserve">
     <value>Unpassed</value>
   </data>
-  <data name="Overall Letters" xml:space="preserve">
-    <value>Lettere complessive</value>
-  </data>
-  <data name="Overall Passes" xml:space="preserve">
-    <value>Pass complessivi</value>
-  </data>
-  <data name="Difficulty Letters" xml:space="preserve">
-    <value>Lettere per difficoltà</value>
-  </data>
-  <data name="Difficulty Passes" xml:space="preserve">
-    <value>Pass per difficoltà</value>
-  </data>
   <data name="Share Url" xml:space="preserve">
     <value>URL di condivisione</value>
   </data>
@@ -1343,9 +1316,6 @@
   </data>
   <data name="Pass" xml:space="preserve">
     <value>Pass</value>
-  </data>
-  <data name="Difficulty Progress" xml:space="preserve">
-    <value>Progresso per difficoltà</value>
   </data>
   <data name="Passes" xml:space="preserve">
     <value>Pass</value>
@@ -1362,14 +1332,8 @@
   <data name="Avg Plate" xml:space="preserve">
     <value>Plate medio</value>
   </data>
-  <data name="Passes By Level" xml:space="preserve">
-    <value>Pass per livello</value>
-  </data>
   <data name="Remaining" xml:space="preserve">
     <value>Rimanenti</value>
-  </data>
-  <data name="Score Distribution Lines" xml:space="preserve">
-    <value>Linee di distribuzione dei punteggi</value>
   </data>
   <data name="Score Distribution" xml:space="preserve">
     <value>Distribuzione dei punteggi</value>
@@ -2728,6 +2692,9 @@
   </data>
   <data name="Passed in another mix" xml:space="preserve">
     <value>Superato in un altro Mix</value>
+  </data>
+  <data name="Show Passed in Another Mix" xml:space="preserve">
+    <value>Mostra i superati in un altro Mix</value>
   </data>
   <data name="Remove from ToDo List" xml:space="preserve">
     <value>Rimuovi dalla lista ToDo</value>
@@ -4511,9 +4478,6 @@
   <data name="in the top ten" xml:space="preserve">
     <value>nella top 10</value>
   </data>
-  <data name="Last import failed" xml:space="preserve">
-    <value>L'ultimo import non è riuscito</value>
-  </data>
   <data name="level 24+, first ever, any grade" xml:space="preserve">
     <value>livello 24+, primo nella storia, qualsiasi grade</value>
   </data>
@@ -5951,6 +5915,405 @@
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>Nessuno è ancora in questa classifica.</value>
   </data>
+  <data name="All Mixes" xml:space="preserve">
+    <value>Tutti i Mix</value>
+  </data>
+  <data name="Applied filters" xml:space="preserve">
+    <value>Filtri applicati</value>
+  </data>
+  <data name="Available in" xml:space="preserve">
+    <value>Disponibile in</value>
+  </data>
+  <data name="BPM from" xml:space="preserve">
+    <value>BPM min</value>
+  </data>
+  <data name="BPM to" xml:space="preserve">
+    <value>BPM max</value>
+  </data>
+  <data name="Community Vote" xml:space="preserve">
+    <value>Voto della community</value>
+  </data>
+  <data name="Community intelligence" xml:space="preserve">
+    <value>Dati della community</value>
+  </data>
+  <data name="Content" xml:space="preserve">
+    <value>Contenuto</value>
+  </data>
+  <data name="Debut" xml:space="preserve">
+    <value>Debutto</value>
+  </data>
+  <data name="Debut mix" xml:space="preserve">
+    <value>Mix di debutto</value>
+  </data>
+  <data name="Download CSV" xml:space="preserve">
+    <value>Scarica CSV</value>
+  </data>
+  <data name="Export charts" xml:space="preserve">
+    <value>Esporta chart</value>
+  </data>
+  <data name="Full Song" xml:space="preserve">
+    <value>Full Song</value>
+  </data>
+  <data name="Grade" xml:space="preserve">
+    <value>Grado</value>
+  </data>
+  <data name="Group by chart" xml:space="preserve">
+    <value>Raggruppa per chart</value>
+  </data>
+  <data name="Grouped: one row per chart, level history collapsed. Per-mix: every appearance is its own row. Identical while scope is a single mix." xml:space="preserve">
+    <value>Raggruppato: una riga per chart con lo storico dei livelli. Per Mix: una riga per ogni apparizione. Identico con un solo Mix.</value>
+  </data>
+  <data name="In" xml:space="preserve">
+    <value>In</value>
+  </data>
+  <data name="Legacy Difficulty" xml:space="preserve">
+    <value>Difficoltà legacy</value>
+  </data>
+  <data name="Legacy grade" xml:space="preserve">
+    <value>Grado legacy</value>
+  </data>
+  <data name="Legacy grade at least" xml:space="preserve">
+    <value>Grado legacy minimo</value>
+  </data>
+  <data name="Level change" xml:space="preserve">
+    <value>Cambio di livello</value>
+  </data>
+  <data name="Level from" xml:space="preserve">
+    <value>Livello min</value>
+  </data>
+  <data name="Level to" xml:space="preserve">
+    <value>Livello max</value>
+  </data>
+  <data name="Mix scope" xml:space="preserve">
+    <value>Ambito dei Mix</value>
+  </data>
+  <data name="Mixes" xml:space="preserve">
+    <value>Mix</value>
+  </data>
+  <data name="My data" xml:space="preserve">
+    <value>I miei dati</value>
+  </data>
+  <data name="My score" xml:space="preserve">
+    <value>Il mio punteggio</value>
+  </data>
+  <data name="NPS from" xml:space="preserve">
+    <value>NPS min</value>
+  </data>
+  <data name="NPS to" xml:space="preserve">
+    <value>NPS max</value>
+  </data>
+  <data name="No charts match these filters" xml:space="preserve">
+    <value>Nessun chart corrisponde a questi filtri</value>
+  </data>
+  <data name="Not available in" xml:space="preserve">
+    <value>Non disponibile in</value>
+  </data>
+  <data name="Not in" xml:space="preserve">
+    <value>Non in</value>
+  </data>
+  <data name="Not yet re-cleared in {0}" xml:space="preserve">
+    <value>Non ancora re-clear su {0}</value>
+  </data>
+  <data name="Note count" xml:space="preserve">
+    <value>Numero di note</value>
+  </data>
+  <data name="Notes from" xml:space="preserve">
+    <value>Note min</value>
+  </data>
+  <data name="Notes to" xml:space="preserve">
+    <value>Note max</value>
+  </data>
+  <data name="One row per chart and mix" xml:space="preserve">
+    <value>Una riga per chart e Mix</value>
+  </data>
+  <data name="Pass rate at least (%)" xml:space="preserve">
+    <value>Tasso di pass minimo (%)</value>
+  </data>
+  <data name="Phoenix grade at least" xml:space="preserve">
+    <value>Grado Phoenix minimo</value>
+  </data>
+  <data name="Phoenix plate at least" xml:space="preserve">
+    <value>Plate Phoenix minimo</value>
+  </data>
+  <data name="Phoenix score from" xml:space="preserve">
+    <value>Punteggio Phoenix min</value>
+  </data>
+  <data name="Phoenix score to" xml:space="preserve">
+    <value>Punteggio Phoenix max</value>
+  </data>
+  <data name="Quick record" xml:space="preserve">
+    <value>Registrazione rapida</value>
+  </data>
+  <data name="Recorded from" xml:space="preserve">
+    <value>Registrato dal</value>
+  </data>
+  <data name="Recorded to" xml:space="preserve">
+    <value>Registrato fino al</value>
+  </data>
+  <data name="Recorded {0}" xml:space="preserve">
+    <value>{0} registrato</value>
+  </data>
+  <data name="Remix" xml:space="preserve">
+    <value>Remix</value>
+  </data>
+  <data name="Rerated down" xml:space="preserve">
+    <value>Livello abbassato</value>
+  </data>
+  <data name="Rerated up" xml:space="preserve">
+    <value>Livello aumentato</value>
+  </data>
+  <data name="Scoring level from" xml:space="preserve">
+    <value>Scoring level min</value>
+  </data>
+  <data name="Scoring level to" xml:space="preserve">
+    <value>Scoring level max</value>
+  </data>
+  <data name="Shape" xml:space="preserve">
+    <value>Formato</value>
+  </data>
+  <data name="Short Cut" xml:space="preserve">
+    <value>Short Cut</value>
+  </data>
+  <data name="Song name contains" xml:space="preserve">
+    <value>Il nome contiene</value>
+  </data>
+  <data name="Sort by" xml:space="preserve">
+    <value>Ordina per</value>
+  </data>
+  <data name="Unplayed" xml:space="preserve">
+    <value>Non giocato</value>
+  </data>
+  <data name="highlighted only" xml:space="preserve">
+    <value>solo dominanti</value>
+  </data>
+  <data name="official" xml:space="preserve">
+    <value>ufficiale</value>
+  </data>
+  <data name="{0} charts · current filters" xml:space="preserve">
+    <value>{0} chart · filtri attuali</value>
+  </data>
+  <data name="{0} columns" xml:space="preserve">
+    <value>{0} colonne</value>
+  </data>
+  <data name="{0} mixes" xml:space="preserve">
+    <value>{0} mix</value>
+  </data>
+  <data name="{0} notes" xml:space="preserve">
+    <value>{0} note</value>
+  </data>
+  <data name="{0} scores" xml:space="preserve">
+    <value>{0} punteggi</value>
+  </data>
+  <data name="Newest content" xml:space="preserve">
+    <value>Contenuto più recente</value>
+  </data>
+  <data name="My grade" xml:space="preserve">
+    <value>Il mio grado</value>
+  </data>
+  <data name="My recent" xml:space="preserve">
+    <value>I miei recenti</value>
+  </data>
+  <data name="Overrated" xml:space="preserve">
+    <value>Sopravvalutato</value>
+  </data>
+  <data name="Unranked" xml:space="preserve">
+    <value>Non classificato</value>
+  </data>
+  <data name="Chart columns" xml:space="preserve">
+    <value>Colonne chart</value>
+  </data>
+  <data name="Community columns" xml:space="preserve">
+    <value>Colonne community</value>
+  </data>
+  <data name="My columns" xml:space="preserve">
+    <value>Le mie colonne</value>
+  </data>
+  <data name="Artist" xml:space="preserve">
+    <value>Artista</value>
+  </data>
+  <data name="Latest mix" xml:space="preserve">
+    <value>Ultimo Mix</value>
+  </data>
+  <data name="Duration (seconds)" xml:space="preserve">
+    <value>Durata (secondi)</value>
+  </data>
+  <data name="Badges" xml:space="preserve">
+    <value>Badge</value>
+  </data>
+  <data name="Community Vote rating" xml:space="preserve">
+    <value>Voto medio della community</value>
+  </data>
+  <data name="Score count" xml:space="preserve">
+    <value>Numero di punteggi</value>
+  </data>
+  <data name="PG count" xml:space="preserve">
+    <value>Numero di PG</value>
+  </data>
+  <data name="My Phoenix score" xml:space="preserve">
+    <value>Il mio punteggio Phoenix</value>
+  </data>
+  <data name="My Phoenix grade" xml:space="preserve">
+    <value>Il mio grado Phoenix</value>
+  </data>
+  <data name="My Phoenix plate" xml:space="preserve">
+    <value>Il mio plate Phoenix</value>
+  </data>
+  <data name="My legacy grade" xml:space="preserve">
+    <value>Il mio grado legacy</value>
+  </data>
+  <data name="My legacy score" xml:space="preserve">
+    <value>Il mio punteggio legacy</value>
+  </data>
+  <data name="My broken flag" xml:space="preserve">
+    <value>Broken (sì/no)</value>
+  </data>
+  <data name="My recorded date" xml:space="preserve">
+    <value>La mia data di registrazione</value>
+  </data>
+  <data name="Runs" xml:space="preserve">
+    <value>Runs</value>
+  </data>
+  <data name="Anchor Runs" xml:space="preserve">
+    <value>Anchor runs</value>
+  </data>
+  <data name="Runs Without Twists" xml:space="preserve">
+    <value>Runs senza twist</value>
+  </data>
+  <data name="Drills" xml:space="preserve">
+    <value>Drills</value>
+  </data>
+  <data name="Jumps" xml:space="preserve">
+    <value>Jumps</value>
+  </data>
+  <data name="Jacks" xml:space="preserve">
+    <value>Jacks</value>
+  </data>
+  <data name="Brackets" xml:space="preserve">
+    <value>Brackets</value>
+  </data>
+  <data name="Staggered Brackets" xml:space="preserve">
+    <value>Brackets sfalsati</value>
+  </data>
+  <data name="Bracket Runs" xml:space="preserve">
+    <value>Bracket runs</value>
+  </data>
+  <data name="Bracket Drills" xml:space="preserve">
+    <value>Bracket drills</value>
+  </data>
+  <data name="Bracket Jumps" xml:space="preserve">
+    <value>Bracket jumps</value>
+  </data>
+  <data name="Bracket Twists" xml:space="preserve">
+    <value>Bracket twists</value>
+  </data>
+  <data name="Twists" xml:space="preserve">
+    <value>Twists</value>
+  </data>
+  <data name="Twist 90" xml:space="preserve">
+    <value>Twists a 90°</value>
+  </data>
+  <data name="Over-90 Twists" xml:space="preserve">
+    <value>Twists oltre 90°</value>
+  </data>
+  <data name="Close Twists" xml:space="preserve">
+    <value>Twists stretti</value>
+  </data>
+  <data name="Far Twists" xml:space="preserve">
+    <value>Twists larghi</value>
+  </data>
+  <data name="Mid-6 Doubles" xml:space="preserve">
+    <value>Doubles centrali (6 frecce)</value>
+  </data>
+  <data name="Mid-4 Doubles" xml:space="preserve">
+    <value>Doubles centrali (4 frecce)</value>
+  </data>
+  <data name="Sustained" xml:space="preserve">
+    <value>Sostenuto</value>
+  </data>
+  <data name="Bursty" xml:space="preserve">
+    <value>A raffiche</value>
+  </data>
+  <data name="Footswitches" xml:space="preserve">
+    <value>Footswitches</value>
+  </data>
+  <data name="Hold Footswitches" xml:space="preserve">
+    <value>Footswitches su hold</value>
+  </data>
+  <data name="Hold Footslides" xml:space="preserve">
+    <value>Footslides su hold</value>
+  </data>
+  <data name="5-Stairs" xml:space="preserve">
+    <value>Scale da 5</value>
+  </data>
+  <data name="10-Stairs" xml:space="preserve">
+    <value>Scale da 10</value>
+  </data>
+  <data name="Yog Walks" xml:space="preserve">
+    <value>Yog walks</value>
+  </data>
+  <data name="Cross-pad Transitions" xml:space="preserve">
+    <value>Transizioni tra pad</value>
+  </data>
+  <data name="Co-op Pad Transitions" xml:space="preserve">
+    <value>Transizioni pad in co-op</value>
+  </data>
+  <data name="Splits" xml:space="preserve">
+    <value>Splits</value>
+  </data>
+  <data name="Hands" xml:space="preserve">
+    <value>Mani</value>
+  </data>
+  <data name="Doublesteps" xml:space="preserve">
+    <value>Doublesteps</value>
+  </data>
+  <data name="Side-3 Singles" xml:space="preserve">
+    <value>Singles laterali (3 frecce)</value>
+  </data>
+  <data name="Single" xml:space="preserve">
+    <value>Single</value>
+  </data>
+  <data name="Double" xml:space="preserve">
+    <value>Double</value>
+  </data>
+  <data name="Single Performance" xml:space="preserve">
+    <value>Single Performance</value>
+  </data>
+  <data name="Double Performance" xml:space="preserve">
+    <value>Double Performance</value>
+  </data>
+  <data name="Half-Double" xml:space="preserve">
+    <value>Half-Double</value>
+  </data>
+  <data name="Arcade" xml:space="preserve">
+    <value>Arcade</value>
+  </data>
+  <data name="Any" xml:space="preserve">
+    <value>Tutti</value>
+  </data>
+  <data name="More filters" xml:space="preserve">
+    <value>Più filtri</value>
+  </data>
+  <data name="Fewer filters" xml:space="preserve">
+    <value>Meno filtri</value>
+  </data>
+  <data name="Phoenix grade" xml:space="preserve">
+    <value>Grado Phoenix</value>
+  </data>
+  <data name="Phoenix plate" xml:space="preserve">
+    <value>Plate Phoenix</value>
+  </data>
+  <data name="Phoenix score" xml:space="preserve">
+    <value>Punteggio Phoenix</value>
+  </data>
+  <data name="Modern" xml:space="preserve">
+    <value>Attuali</value>
+  </data>
+  <data name="Pro &amp; Infinity" xml:space="preserve">
+    <value>Pro e Infinity</value>
+  </data>
+  <data name="Exceed &amp; NX" xml:space="preserve">
+    <value>Exceed e NX</value>
+  </data>
   <data name="PP" xml:space="preserve">
     <value>PP</value>
   </data>
@@ -6058,5 +6421,443 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{0} di {1} cartelle</value>
+  </data>
+  <data name="Life Calculator" xml:space="preserve">
+    <value>Calcolatore di vita</value>
+  </data>
+  <data name="What a miss actually costs you, and how much clean combo it takes to earn it back." xml:space="preserve">
+    <value>Quanto ti costa davvero un Miss, e quanto combo pulito serve per riguadagnarlo.</value>
+  </data>
+  <data name="NX2 / Prime data-mine" xml:space="preserve">
+    <value>Dati estratti da NX2 / Prime</value>
+  </data>
+  <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
+    <value>Team Infinitesimal ha estratto queste formule dal codice di NX2 e Prime. Nessuno le ha riverificate su Phoenix o Phoenix 2, quindi considera i numeri come la forma del sistema e non come valori esatti del cabinato.</value>
+  </data>
+  <data name="of {0} max" xml:space="preserve">
+    <value>su {0} max</value>
+  </data>
+  <data name="Visible bar" xml:space="preserve">
+    <value>Barra visibile</value>
+  </data>
+  <data name="Overflow" xml:space="preserve">
+    <value>Eccedenza</value>
+  </data>
+  <data name="Current life" xml:space="preserve">
+    <value>Vita attuale</value>
+  </data>
+  <data name="12%" xml:space="preserve">
+    <value>12%</value>
+  </data>
+  <data name="Song start" xml:space="preserve">
+    <value>Inizio della canzone</value>
+  </data>
+  <data name="Rainbow" xml:space="preserve">
+    <value>Rainbow</value>
+  </data>
+  <data name="Notes per press" xml:space="preserve">
+    <value>Note per pressione</value>
+  </data>
+  <data name="Reset to song start" xml:space="preserve">
+    <value>Torna all'inizio della canzone</value>
+  </data>
+  <data name="Fill to max" xml:space="preserve">
+    <value>Riempi al massimo</value>
+  </data>
+  <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
+    <value>Phoenix 2 fa scorrere un effetto elettrico lungo la barra quando l'eccedenza è completamente piena: l'unico momento in cui il gioco ammette che quella vita nascosta esiste.</value>
+  </data>
+  <data name="Combo" xml:space="preserve">
+    <value>Combo</value>
+  </data>
+  <data name="Multiplier is on the floor" xml:space="preserve">
+    <value>Il moltiplicatore è a terra</value>
+  </data>
+  <data name="Notes since your last break" xml:space="preserve">
+    <value>Note dall'ultima rottura</value>
+  </data>
+  <data name="Gain multiplier" xml:space="preserve">
+    <value>Moltiplicatore di guadagno</value>
+  </data>
+  <data name="A miss right now" xml:space="preserve">
+    <value>Un Miss adesso</value>
+  </data>
+  <data name="Misses left" xml:space="preserve">
+    <value>Miss rimasti</value>
+  </data>
+  <data name="Back to back, from here" xml:space="preserve">
+    <value>Di fila, da qui</value>
+  </data>
+  <data name="Your survival budget" xml:space="preserve">
+    <value>Il tuo budget di sopravvivenza</value>
+  </data>
+  <data name="One break every N notes" xml:space="preserve">
+    <value>Una rottura ogni N note</value>
+  </data>
+  <data name="How much clean combo you have to buy back between breaks, and where your life ends up if you keep paying exactly that." xml:space="preserve">
+    <value>Quanto combo pulito devi riguadagnare tra una rottura e l'altra, e dove finisce la tua vita se paghi esattamente quello.</value>
+  </data>
+  <data name="Combo, priced" xml:space="preserve">
+    <value>Il combo, con il prezzo</value>
+  </data>
+  <data name="Chart view" xml:space="preserve">
+    <value>Vista del grafico</value>
+  </data>
+  <data name="Where life settles" xml:space="preserve">
+    <value>Dove si stabilizza la vita</value>
+  </data>
+  <data name="How long you survive" xml:space="preserve">
+    <value>Quanto sopravvivi</value>
+  </data>
+  <data name="Starting from a full bar, how many notes you get before you fail. Series stop where you stop dying: past that combo the bar recovers faster than the breaks drain it." xml:space="preserve">
+    <value>Partendo da una barra piena, quante note reggi prima di fallire. Le serie si fermano dove smetti di morire: superato quel combo, la barra recupera più in fretta di quanto le rotture la svuotino.</value>
+  </data>
+  <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
+    <value>Rompi una volta ogni N note all'infinito e la tua vita converge da qualche parte. Sotto il dirupo converge a zero: la curva non si addolcisce, precipita. È il moltiplicatore che muore più in fretta di quanto tu riesca a ricostruirlo.</value>
+  </data>
+  <data name="Level only buys you overflow" xml:space="preserve">
+    <value>Il livello ti compra solo eccedenza</value>
+  </data>
+  <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
+    <value>La barra Rainbow è 1000 di vita su un 1 e 1000 di vita su un 29. Quello che un chart più difficile ti dà è vita dietro la barra: invisibile sul cabinato, e l'unica cosa che cambia con il livello. Il combo necessario per Miss è identico fino in cima.</value>
+  </data>
+  <data name="Lv" xml:space="preserve">
+    <value>Liv</value>
+  </data>
+  <data name="Total life" xml:space="preserve">
+    <value>Vita totale</value>
+  </data>
+  <data name="Visible bar — always 1000" xml:space="preserve">
+    <value>Barra visibile: sempre 1000</value>
+  </data>
+  <data name="Overflow — 3 x level squared" xml:space="preserve">
+    <value>Eccedenza: livello al quadrato × 3</value>
+  </data>
+  <data name="Rules of thumb" xml:space="preserve">
+    <value>Regole pratiche</value>
+  </data>
+  <data name="The cliff, not a slope" xml:space="preserve">
+    <value>Un dirupo, non una salita</value>
+  </data>
+  <data name="Below {0} notes between misses you die at every level. At {0} you cling on at about 1% life. There is no gentle middle: under the cliff your multiplier never rebuilds, so your gain rounds to nothing." xml:space="preserve">
+    <value>Sotto {0} note tra un Miss e l'altro muori a qualsiasi livello. A {0} ti reggi intorno all'1% di vita. Non c'è una via di mezzo: sotto il dirupo il moltiplicatore non si ricostruisce mai, quindi il guadagno viene arrotondato a nulla.</value>
+  </data>
+  <data name="A miss costs 40 notes" xml:space="preserve">
+    <value>Un Miss costa 40 note</value>
+  </data>
+  <data name="Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life." xml:space="preserve">
+    <value>Ogni Miss azzera il moltiplicatore di guadagno. Servono {0} Perfect — o {1} Great — per riportarlo al tetto. Fino ad allora colpisci note per quasi nessuna vita.</value>
+  </data>
+  <data name="The rainbow is expensive" xml:space="preserve">
+    <value>Il Rainbow costa caro</value>
+  </data>
+  <data name="Holding a full visible bar costs {0} clean notes per miss, or {1} if you are hitting greats. Simply staying alive costs {2}. Most of your combo budget goes to looking healthy — and below level 10 it cannot be bought at all, because the overflow is thinner than one miss." xml:space="preserve">
+    <value>Tenere piena la barra visibile costa {0} note pulite per Miss, o {1} se stai facendo Great. Restare semplicemente vivo costa {2}. Gran parte del tuo budget di combo se ne va per sembrare in salute, e sotto il livello 10 non si può proprio comprare, perché l'eccedenza è più sottile di un singolo Miss.</value>
+  </data>
+  <data name="Bads are cheap, then they are not" xml:space="preserve">
+    <value>I Bad costano poco, finché non è più vero</value>
+  </data>
+  <data name="A bad is a flat −50 at any life; a miss is up to −270. But a bad still halves your multiplier, so back-to-back bads strangle recovery just as effectively." xml:space="preserve">
+    <value>Un Bad è −50 fissi con qualsiasi vita; un Miss arriva a −270. Ma un Bad dimezza comunque il moltiplicatore, quindi Bad consecutivi strozzano il recupero con la stessa efficacia.</value>
+  </data>
+  <data name="The intro is the danger zone" xml:space="preserve">
+    <value>L'intro è la zona di pericolo</value>
+  </data>
+  <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
+    <value>Inizi ogni canzone con 500 di vita e il moltiplicatore quasi a zero: {0} Miss di fila ti uccidono, a qualsiasi livello. Sopravvivi all'apertura e un {1} te ne concede {2}. Parti forte.</value>
+  </data>
+  <data name="A good is a dead note" xml:space="preserve">
+    <value>Un Good è una nota morta</value>
+  </data>
+  <data name="Goods give no life, and — unlike perfects and greats — they do not build the multiplier either. They never hurt you. They just do not count." xml:space="preserve">
+    <value>I Good non danno vita e, a differenza di Perfect e Great, non costruiscono nemmeno il moltiplicatore. Non ti danneggiano mai. Semplicemente non contano.</value>
+  </data>
+  <data name="How the bar works" xml:space="preserve">
+    <value>Come funziona la barra</value>
+  </data>
+  <data name="Gain" xml:space="preserve">
+    <value>Guadagno</value>
+  </data>
+  <data name="A perfect at a capped multiplier." xml:space="preserve">
+    <value>Un Perfect con il moltiplicatore al tetto.</value>
+  </data>
+  <data name="A great at a capped multiplier." xml:space="preserve">
+    <value>Un Great con il moltiplicatore al tetto.</value>
+  </data>
+  <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
+    <value>Lo stesso Perfect all'inizio della canzone, prima di qualsiasi combo.</value>
+  </data>
+  <data name="A good, always." xml:space="preserve">
+    <value>Un Good, sempre.</value>
+  </data>
+  <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
+    <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
+  </data>
+  <data name="Loss" xml:space="preserve">
+    <value>Perdita</value>
+  </data>
+  <data name="A miss at 1000 life or above — the worst it gets." xml:space="preserve">
+    <value>Un Miss a 1000 di vita o più: il caso peggiore.</value>
+  </data>
+  <data name="A bad, flat, at any life." xml:space="preserve">
+    <value>Un Bad, fisso, con qualsiasi vita.</value>
+  </data>
+  <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
+    <value>Un Miss a 100 di vita. I Miss costano meno man mano che ti svuoti.</value>
+  </data>
+  <data name="Below this life a miss costs less than a bad." xml:space="preserve">
+    <value>Sotto questa vita un Miss costa meno di un Bad.</value>
+  </data>
+  <data name="miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50" xml:space="preserve">
+    <value>miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50</value>
+  </data>
+  <data name="The multiplier" xml:space="preserve">
+    <value>Il moltiplicatore</value>
+  </data>
+  <data name="The cap. Reached after 40 perfects." xml:space="preserve">
+    <value>Il tetto. Raggiunto dopo 40 Perfect.</value>
+  </data>
+  <data name="Where every song starts you." xml:space="preserve">
+    <value>Dove ti mette l'inizio di ogni canzone.</value>
+  </data>
+  <data name="A miss. In practice: straight to zero." xml:space="preserve">
+    <value>Un Miss. In pratica: dritto a zero.</value>
+  </data>
+  <data name="A bad. Roughly 22 notes of progress gone." xml:space="preserve">
+    <value>Un Bad. Circa 22 note di progresso perse.</value>
+  </data>
+  <data name="perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80" xml:space="preserve">
+    <value>perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80</value>
+  </data>
+  <data name="&quot;Lifebars are weird.&quot;" xml:space="preserve">
+    <value>&quot;Lifebars are weird.&quot;</value>
+  </data>
+  <data name="— Zelllooo" xml:space="preserve">
+    <value>— Zelllooo</value>
+  </data>
+  <data name="Formulas data-mined from NX2 and Prime by" xml:space="preserve">
+    <value>Formule estratte da NX2 e Prime da</value>
+  </data>
+  <data name="Team Infinitesimal" xml:space="preserve">
+    <value>Team Infinitesimal</value>
+  </data>
+  <data name="Unconfirmed against Phoenix and Phoenix 2 — see the note at the top of the page." xml:space="preserve">
+    <value>Non confermato su Phoenix e Phoenix 2: vedi la nota in cima alla pagina.</value>
+  </data>
+  <data name="Overflow full" xml:space="preserve">
+    <value>Eccedenza piena</value>
+  </data>
+  <data name="Into overflow" xml:space="preserve">
+    <value>In eccedenza</value>
+  </data>
+  <data name="One miss from out" xml:space="preserve">
+    <value>A un Miss dall'uscita</value>
+  </data>
+  <data name="{0}% of the bar" xml:space="preserve">
+    <value>{0}% della barra</value>
+  </data>
+  <data name="Capped — perfects pay +{0}" xml:space="preserve">
+    <value>Al tetto: i Perfect rendono +{0}</value>
+  </data>
+  <data name="{0} more perfects to cap" xml:space="preserve">
+    <value>Altri {0} Perfect per il tetto</value>
+  </data>
+  <data name="and {0} notes of multiplier" xml:space="preserve">
+    <value>e {0} note di moltiplicatore</value>
+  </data>
+  <data name="multiplier already gone" xml:space="preserve">
+    <value>moltiplicatore già perso</value>
+  </data>
+  <data name="Just stay alive" xml:space="preserve">
+    <value>Restare solo vivo</value>
+  </data>
+  <data name="Impossible at level {0} — the overflow is thinner than one miss." xml:space="preserve">
+    <value>Impossibile al livello {0}: l'eccedenza è più sottile di un singolo Miss.</value>
+  </data>
+  <data name="Hold half the bar" xml:space="preserve">
+    <value>Tenere metà barra</value>
+  </data>
+  <data name="Hold the rainbow" xml:space="preserve">
+    <value>Tenere il Rainbow</value>
+  </data>
+  <data name="Hold the rainbow, on bads" xml:space="preserve">
+    <value>Tenere il Rainbow, con i Bad</value>
+  </data>
+  <data name="Impossible at level {0} — the overflow is thinner than one bad." xml:space="preserve">
+    <value>Impossibile al livello {0}: l'eccedenza è più sottile di un singolo Bad.</value>
+  </data>
+  <data name="Those assume perfects in between. On greats the same three cost {0}, {1} and {2} notes." xml:space="preserve">
+    <value>Questo presuppone Perfect nel mezzo. Con i Great, quegli stessi tre costano {0}, {1} e {2} note.</value>
+  </data>
+  <data name="From the opening 500 life, {0} straight misses or {1} straight bads end the run — {2} and {3} once the overflow is full." xml:space="preserve">
+    <value>Dai 500 di vita iniziali, {0} Miss di fila o {1} Bad di fila chiudono la run; {2} e {3} con l'eccedenza piena.</value>
+  </data>
+  <data name="notes per bad" xml:space="preserve">
+    <value>note per Bad</value>
+  </data>
+  <data name="notes per miss" xml:space="preserve">
+    <value>note per Miss</value>
+  </data>
+  <data name="Settles at a full bar — {0} life" xml:space="preserve">
+    <value>Si stabilizza a barra piena: {0} di vita</value>
+  </data>
+  <data name="Settles at {0} life, {1}% of the bar" xml:space="preserve">
+    <value>Si stabilizza a {0} di vita, {1}% della barra</value>
+  </data>
+  <data name="Perfect combo, miss break" xml:space="preserve">
+    <value>Combo di Perfect, rottura da Miss</value>
+  </data>
+  <data name="Great combo, miss break" xml:space="preserve">
+    <value>Combo di Great, rottura da Miss</value>
+  </data>
+  <data name="Perfect combo, bad break" xml:space="preserve">
+    <value>Combo di Perfect, rottura da Bad</value>
+  </data>
+  <data name="Great combo, bad break" xml:space="preserve">
+    <value>Combo di Great, rottura da Bad</value>
+  </data>
+  <data name="Combo between breaks" xml:space="preserve">
+    <value>Combo tra le rotture</value>
+  </data>
+  <data name="Notes before you fail" xml:space="preserve">
+    <value>Note prima di fallire</value>
+  </data>
+  <data name="Life it settles at" xml:space="preserve">
+    <value>Vita a cui si stabilizza</value>
+  </data>
+  <data name="Rainbow · 1000" xml:space="preserve">
+    <value>Rainbow · 1000</value>
+  </data>
+  <data name="Half bar · 500" xml:space="preserve">
+    <value>Mezza barra · 500</value>
+  </data>
+  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
+    <value>Ipotizzando {0} con plate {1}.</value>
+  </data>
+  <data name="Boss breakers" xml:space="preserve">
+    <value>Boss breakers</value>
+  </data>
+  <data name="CO-OP" xml:space="preserve">
+    <value>CO-OP</value>
+  </data>
+  <data name="Earned" xml:space="preserve">
+    <value>Ottenuti</value>
+  </data>
+  <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
+    <value>Tutti quelli che lo hanno tengono il profilo privato.</value>
+  </data>
+  <data name="From {0}" xml:space="preserve">
+    <value>Da {0}</value>
+  </data>
+  <data name="How rare" xml:space="preserve">
+    <value>Rarità</value>
+  </data>
+  <data name="In progress" xml:space="preserve">
+    <value>In corso</value>
+  </data>
+  <data name="No title yet" xml:space="preserve">
+    <value>Ancora nessun titolo</value>
+  </data>
+  <data name="No titles match what you're looking for." xml:space="preserve">
+    <value>Nessun titolo corrisponde alla tua ricerca.</value>
+  </data>
+  <data name="Nobody here holds this title yet." xml:space="preserve">
+    <value>Qui nessuno ha ancora questo titolo.</value>
+  </data>
+  <data name="Not yet" xml:space="preserve">
+    <value>Non ancora</value>
+  </data>
+  <data name="One-offs" xml:space="preserve">
+    <value>Titoli singoli</value>
+  </data>
+  <data name="Play count" xml:space="preserve">
+    <value>Partite giocate</value>
+  </data>
+  <data name="Progress tracked by the official piugame import, not by piuscores data." xml:space="preserve">
+    <value>I progressi sono tracciati dall'import ufficiale di piugame, non dai dati di piuscores.</value>
+  </data>
+  <data name="Progression" xml:space="preserve">
+    <value>Progressione</value>
+  </data>
+  <data name="Search a title, chart, or step artist" xml:space="preserve">
+    <value>Cerca un titolo, un chart o uno step artist</value>
+  </data>
+  <data name="Step artists" xml:space="preserve">
+    <value>Step artists</value>
+  </data>
+  <data name="Suggested level" xml:space="preserve">
+    <value>Livello consigliato</value>
+  </data>
+  <data name="Who has it" xml:space="preserve">
+    <value>Chi ce l'ha</value>
+  </data>
+  <data name="Your progress" xml:space="preserve">
+    <value>I tuoi progressi</value>
+  </data>
+  <data name="Your title" xml:space="preserve">
+    <value>Il tuo titolo</value>
+  </data>
+  <data name="titles earned" xml:space="preserve">
+    <value>titoli ottenuti</value>
+  </data>
+  <data name="{0} more keep their profile private." xml:space="preserve">
+    <value>Altri {0} tengono il profilo privato.</value>
+  </data>
+  <data name="{0} of {1} earned" xml:space="preserve">
+    <value>{0} di {1} ottenuti</value>
+  </data>
+  <data name="{0} of {1} tracked players" xml:space="preserve">
+    <value>{0} di {1} giocatori registrati</value>
+  </data>
+  <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
+    <value>{0} titoli, e il gioco non ti mostra niente dei tuoi progressi.</value>
+  </data>
+  <data name="{0} tracked here, {1} from the official import" xml:space="preserve">
+    <value>{0} tracciati qui, {1} dall'import ufficiale</value>
+  </data>
+  <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
+    <value>+{0} altri sono saliti più in alto su questa scala.</value>
+  </data>
+  <data name="Added to Favorites!" xml:space="preserve">
+    <value>Aggiunto ai Preferiti!</value>
+  </data>
+  <data name="Removed from Favorites!" xml:space="preserve">
+    <value>Rimosso dai Preferiti!</value>
+  </data>
+  <data name="Clear all" xml:space="preserve">
+    <value>Cancella tutto</value>
+  </data>
+  <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
+    <value>Cerca per nome della canzone nella barra qui sopra — ogni chart ha la sua pagina.</value>
+  </data>
+  <data name="Minimum" xml:space="preserve">
+    <value>Minimo</value>
+  </data>
+  <data name="Maximum" xml:space="preserve">
+    <value>Massimo</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>Disattivato</value>
+  </data>
+  <data name="#{0} most played" xml:space="preserve">
+    <value>#{0} più giocate</value>
+  </data>
+  <data name="Official play ranking on piugame.com" xml:space="preserve">
+    <value>Classifica ufficiale delle partite su piugame.com</value>
+  </data>
+  <data name="More info" xml:space="preserve">
+    <value>Più informazioni</value>
+  </data>
+  <data name="Popularity overall" xml:space="preserve">
+    <value>Popolarità generale</value>
+  </data>
+  <data name="Popularity in {0}" xml:space="preserve">
+    <value>Popolarità in {0}</value>
+  </data>
+  <data name="#{0}" xml:space="preserve">
+    <value>#{0}</value>
+  </data>
+  <data name="Select Folders" xml:space="preserve">
+    <value>Seleziona cartelle</value>
   </data>
 </root>

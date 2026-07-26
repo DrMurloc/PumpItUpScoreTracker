@@ -206,7 +206,7 @@
     private Chart? _chart;
     private IReadOnlyList<ChartVerdictFacet> _facets = Array.Empty<ChartVerdictFacet>();
     private IReadOnlyList<Chart> _siblings = Array.Empty<Chart>();
-    private IReadOnlyList<ChartSkillChipRecord> _skillChips = Array.Empty<ChartSkillChipRecord>();
+    private IReadOnlyList<ChartBadgeChipRecord> _skillChips = Array.Empty<ChartBadgeChipRecord>();
     private ChartStepAnalysisRecord? _analysis;
 
     private ChartIntensityFacts? Intensity => _chart == null ? null : ChartIntensityFacts.For(_chart, _analysis);
@@ -258,9 +258,12 @@
 
         if (_chart?.Id == resolution.ChartId) return;
         // The URL names the chart; it renders in the viewer's own mix (scores, verdict and
-        // leaderboard are per-mix). A chart absent from that mix falls to the empty state.
-        var chart = (await Mediator.Send(new GetChartsQuery(_mix, ChartIds: new[] { resolution.ChartId })))
-            .FirstOrDefault();
+        // leaderboard are per-mix) when it lives there. A chart the viewer's mix dropped —
+        // every legacy-only chart, for one — renders from the mix the URL names rather than
+        // 404ing; the URL resolved, so the chart exists. After the 301 that mix IS the
+        // canonical one, so the page's content and its canonical URL always agree.
+        var chart = await UrlResolver.FindInMixOrUrlMix(resolution.ChartId, _mix, resolution.Mix,
+            HttpContext?.RequestAborted ?? default);
         if (chart == null)
         {
             _chart = null;
@@ -268,18 +271,21 @@
             return;
         }
 
+        // Per-mix reads follow the chart's own mix, so a legacy page shows that era's data
+        // instead of empty modern panels.
+        var chartMix = chart.Mix;
         _chart = chart;
-        _facets = await Mediator.Send(new GetChartVerdictQuery(chart.Id, _mix));
+        _facets = await Mediator.Send(new GetChartVerdictQuery(chart.Id, chartMix));
         // The current chart stays in its own lineup — leaving it out makes the row read as
         // "the other ones" and hides where you are in the song's ladder.
-        _siblings = (await Mediator.Send(new GetChartsBySongQuery(_mix, chart.Song.Name)))
+        _siblings = (await Mediator.Send(new GetChartsBySongQuery(chartMix, chart.Song.Name)))
             .OrderBy(c => c.Type)
             .ThenBy(c => (int)c.Level)
             .ToArray();
-        _skillChips = (await Mediator.Send(new GetChartSkillChipsQuery(new[] { chart.Id })))
+        _skillChips = (await Mediator.Send(new GetChartBadgeChipsQuery(new[] { chart.Id })))
             .TryGetValue(chart.Id, out var chips)
             ? chips
-            : Array.Empty<ChartSkillChipRecord>();
+            : Array.Empty<ChartBadgeChipRecord>();
         _analysis = await Mediator.Send(new GetChartStepAnalysisQuery(chart.Id));
     }
 }

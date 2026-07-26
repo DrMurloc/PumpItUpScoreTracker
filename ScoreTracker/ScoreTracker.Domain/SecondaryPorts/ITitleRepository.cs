@@ -22,6 +22,14 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task<IEnumerable<TitleAchievedRecord>> GetUsersWithTitle(MixEnum mix, Name title,
             CancellationToken cancellationToken);
 
+        /// <summary>
+        ///     Holders of any of these titles, in one read. Used to place players on a ladder:
+        ///     everyone who holds a rung, so a caller can tell who is standing on it from who
+        ///     has already climbed past.
+        /// </summary>
+        Task<IEnumerable<TitleAchievedRecord>> GetUsersWithTitles(MixEnum mix, IEnumerable<Name> titles,
+            CancellationToken cancellationToken);
+
         /// <summary>User ids whose highest difficulty title sits exactly on this level (tier-list cohorts).</summary>
         Task<IEnumerable<Guid>> GetUserIdsOnHighestLevel(MixEnum mix, DifficultyLevel level,
             CancellationToken cancellationToken);

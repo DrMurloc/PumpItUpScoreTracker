@@ -550,6 +550,24 @@ The Life Calculator and ChartScoring pages have ~30 dense paragraph entries. The
 
 Short labels (column headers, button text) are likely fine.
 
+## Lifebar terms (Life Calculator redesign, 2026-07-26)
+
+Settled with the `/LifeCalculator` rebuild ([design](design/life-calculator-redesign.md)). Landed in
+informal `tú`, matching the mid-2026 feature batches rather than the older `usted` strings — see the
+register fork in Known issues.
+
+| English | es-MX | Notes |
+|---|---|---|
+| Life / lifebar | vida / barra de vida | |
+| Overflow (life above the visible 1000) | desbordamiento | The owner's chosen English term is "overflow", never "reserve" — one root everywhere. |
+| Visible bar | barra visible | |
+| Rainbow (the full visible bar) | Rainbow | Stays English, as in es-ES. |
+| Gain multiplier | multiplicador de ganancia | Bare "multiplier" mid-sentence → `multiplicador`. |
+| Break (a miss or bad that ends a combo) | corte | Mexican usage prefers `corte` over Spain's `fallo` here. `Combo between breaks` → `Combo entre cortes`. |
+| Settles at (converges to) | se estabiliza en | |
+| Cliff (the survival threshold) | acantilado | Deliberately literal — the metaphor is the point. |
+| thinner (than one miss) | más delgado | Mexico prefers `delgado` over Spain's `fino` for thickness. |
+
 ## Process for future batches
 
 1. Pick a feature folder (Tournaments, Tier Lists, Progress, Admin, Tools, etc.) or a category from the Known issues list above.

@@ -326,9 +326,6 @@
   <data name="Progress" xml:space="preserve">
     <value>Mrrglrglmrg</value>
   </data>
-  <data name="Progress Charts" xml:space="preserve">
-    <value>Mrrglrglmrg Mrglrglrgl</value>
-  </data>
   <data name="Public" xml:space="preserve">
     <value>Arglmrrgl</value>
     <comment>(on/off, if account is set to public)</comment>
@@ -823,12 +820,6 @@
   <data name="Removed" xml:space="preserve">
 	  <value>Argrl</value>
   </data>
-  <data name="Step Artists" xml:space="preserve">
-	  <value>Rglmrgl Glargrlrgl</value>
-  </data>
-  <data name="Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists." xml:space="preserve">
-	  <value>Mrrrglub: Mrglrgl glrglmrg argl brglrgl arglglar, grgl mrglrglrgl argrlg grrrmrg rglmrgl glargrlrgl mrrgl grgl mglar magrgl grrrargl glargrlrgl.</value>
-  </data>
   <data name="PIU Life Calculator" xml:space="preserve">
 	  <value>PIU Murggrgl Mrrglargl</value>
   </data>
@@ -1294,12 +1285,6 @@
   <data name="Best Attempts" xml:space="preserve">
 	  <value>Mrrglub Lrglglargurgblgrlrgl</value>
   </data>
-  <data name="XX Progress" xml:space="preserve">
-	  <value>XX Mrrglrglmrg</value>
-  </data>
-  <data name="Share Your Progress Page" xml:space="preserve">
-	  <value>Mrrgla Murlgrgl Mrrglrglmrg Murgbagl</value>
-  </data>
   <data name="Overview" xml:space="preserve">
 	  <value>Urgmrgl</value>
   </data>
@@ -1325,18 +1310,6 @@
   <data name="Unpassed" xml:space="preserve">
 	  <value>Grrrbrglurg</value>
   </data>
-  <data name="Overall Letters" xml:space="preserve">
-	  <value>Murglrgl Lrglarglrgl</value>
-  </data>
-  <data name="Overall Passes" xml:space="preserve">
-	  <value>Murglrgl Brglurgrgl</value>
-  </data>
-  <data name="Difficulty Letters" xml:space="preserve">
-	  <value>Grlgrgl Lrglarglrgl</value>
-  </data>
-  <data name="Difficulty Passes" xml:space="preserve">
-	  <value>Grlgrgl Brglurgrgl</value>
-  </data>
   <data name="Share Url" xml:space="preserve">
 	  <value>Mrrgla URL</value>
   </data>
@@ -1348,9 +1321,6 @@
   </data>
   <data name="Pass" xml:space="preserve">
 	  <value>Brglurg</value>
-  </data>
-  <data name="Difficulty Progress" xml:space="preserve">
-	  <value>Grlgrgl Mrrglrglmrg</value>
   </data>
   <data name="Passes" xml:space="preserve">
 	  <value>Brglurgrgl</value>
@@ -1367,14 +1337,8 @@
   <data name="Avg Plate" xml:space="preserve">
 	  <value>Lurglrglprgl Blgrlmrg</value>
   </data>
-  <data name="Passes By Level" xml:space="preserve">
-	  <value>Brglurgrgl Blgrl Rglmrgl</value>
-  </data>
   <data name="Remaining" xml:space="preserve">
 	  <value>Mrrglubgrl</value>
-  </data>
-  <data name="Score Distribution Lines" xml:space="preserve">
-	  <value>Grglrgl Glubmrrglrgl Lrglrgl</value>
   </data>
   <data name="Score Distribution" xml:space="preserve">
 	  <value>Grglrgl Glubmrrglrgl</value>
@@ -2651,6 +2615,9 @@
   </data>
   <data name="Passed in another mix" xml:space="preserve">
     <value>Mrglpassed in another mix</value>
+  </data>
+  <data name="Show Passed in Another Mix" xml:space="preserve">
+    <value>Urgmrl Mrglpassed in Another Mix</value>
   </data>
   <data name="Remove from ToDo List" xml:space="preserve">
     <value>Remove from Mrgl-Do List</value>
@@ -4434,9 +4401,6 @@
   <data name="in the top ten" xml:space="preserve">
     <value>in mrgltop ten</value>
   </data>
-  <data name="Last import failed" xml:space="preserve">
-    <value>Last mrglport went blrgl</value>
-  </data>
   <data name="level 24+, first ever, any grade" xml:space="preserve">
     <value>lvl 24+, frst evrgl, any grrgl</value>
   </data>
@@ -5877,6 +5841,405 @@
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>Nobody on dis chart mrglboard yet, mrgl.</value>
   </data>
+  <data name="All Mixes" xml:space="preserve">
+    <value>Mrgl Mrglxes</value>
+  </data>
+  <data name="Applied filters" xml:space="preserve">
+    <value>Mrglplied Frglters</value>
+  </data>
+  <data name="Available in" xml:space="preserve">
+    <value>Avrglable Mrgl</value>
+  </data>
+  <data name="BPM from" xml:space="preserve">
+    <value>BPM Frglm</value>
+  </data>
+  <data name="BPM to" xml:space="preserve">
+    <value>BPM Trgl</value>
+  </data>
+  <data name="Community Vote" xml:space="preserve">
+    <value>Cormrglity Vrglte</value>
+  </data>
+  <data name="Community intelligence" xml:space="preserve">
+    <value>Cormrglity Brrglns</value>
+  </data>
+  <data name="Content" xml:space="preserve">
+    <value>Crgltent</value>
+  </data>
+  <data name="Debut" xml:space="preserve">
+    <value>Debrglt</value>
+  </data>
+  <data name="Debut mix" xml:space="preserve">
+    <value>Debrglt Mrglx</value>
+  </data>
+  <data name="Download CSV" xml:space="preserve">
+    <value>Dowrglload CSV</value>
+  </data>
+  <data name="Export charts" xml:space="preserve">
+    <value>Exprglt Mrrglrgrls</value>
+  </data>
+  <data name="Full Song" xml:space="preserve">
+    <value>Frgll Blgrl</value>
+  </data>
+  <data name="Grade" xml:space="preserve">
+    <value>Grrglde</value>
+  </data>
+  <data name="Group by chart" xml:space="preserve">
+    <value>Grrglup by Mrrglrgrl</value>
+  </data>
+  <data name="Grouped: one row per chart, level history collapsed. Per-mix: every appearance is its own row. Identical while scope is a single mix." xml:space="preserve">
+    <value>Grrgluped: mrgl row per mrrglrgrl, lurg hrglstory currgled. Per-mrglx: evrgly apprglance rgl own row. Idrgltical wrgl single mrglx. Mrglglglgl!</value>
+  </data>
+  <data name="In" xml:space="preserve">
+    <value>Mrgl</value>
+  </data>
+  <data name="Legacy Difficulty" xml:space="preserve">
+    <value>Lergglcy Prglmrrglprgl</value>
+  </data>
+  <data name="Legacy grade" xml:space="preserve">
+    <value>Lergglcy Grrglde</value>
+  </data>
+  <data name="Legacy grade at least" xml:space="preserve">
+    <value>Lergglcy Grrglde at Lrglst</value>
+  </data>
+  <data name="Level change" xml:space="preserve">
+    <value>Lurg Chrglnge</value>
+  </data>
+  <data name="Level from" xml:space="preserve">
+    <value>Lurg Frglm</value>
+  </data>
+  <data name="Level to" xml:space="preserve">
+    <value>Lurg Trgl</value>
+  </data>
+  <data name="Mix scope" xml:space="preserve">
+    <value>Mrglx Scrglpe</value>
+  </data>
+  <data name="Mixes" xml:space="preserve">
+    <value>Mrglxes</value>
+  </data>
+  <data name="My data" xml:space="preserve">
+    <value>Mrgl Drglta</value>
+  </data>
+  <data name="My score" xml:space="preserve">
+    <value>Mrgl Prgl</value>
+  </data>
+  <data name="NPS from" xml:space="preserve">
+    <value>NPS Frglm</value>
+  </data>
+  <data name="NPS to" xml:space="preserve">
+    <value>NPS Trgl</value>
+  </data>
+  <data name="No charts match these filters" xml:space="preserve">
+    <value>No mrrglrgrls mrgltch these frglters. Mrgllllgl.</value>
+  </data>
+  <data name="Not available in" xml:space="preserve">
+    <value>Nrglt Avrglable Mrgl</value>
+  </data>
+  <data name="Not in" xml:space="preserve">
+    <value>Nrglt Mrgl</value>
+  </data>
+  <data name="Not yet re-cleared in {0}" xml:space="preserve">
+    <value>Nrglt yet re-brglurged mrgl {0}</value>
+  </data>
+  <data name="Note count" xml:space="preserve">
+    <value>Nrglte Crglunt</value>
+  </data>
+  <data name="Notes from" xml:space="preserve">
+    <value>Nrgltes Frglm</value>
+  </data>
+  <data name="Notes to" xml:space="preserve">
+    <value>Nrgltes Trgl</value>
+  </data>
+  <data name="One row per chart and mix" xml:space="preserve">
+    <value>Mrgl Row per Mrrglrgrl and Mrglx</value>
+  </data>
+  <data name="Pass rate at least (%)" xml:space="preserve">
+    <value>Passrglrate at Lrglst (%)</value>
+  </data>
+  <data name="Phoenix grade at least" xml:space="preserve">
+    <value>Phoenix Grrglde at Lrglst</value>
+  </data>
+  <data name="Phoenix plate at least" xml:space="preserve">
+    <value>Phoenix Prglate at Lrglst</value>
+  </data>
+  <data name="Phoenix score from" xml:space="preserve">
+    <value>Phoenix Prgl Frglm</value>
+  </data>
+  <data name="Phoenix score to" xml:space="preserve">
+    <value>Phoenix Prgl Trgl</value>
+  </data>
+  <data name="Quick record" xml:space="preserve">
+    <value>Qrglck Rrglcord</value>
+  </data>
+  <data name="Recorded from" xml:space="preserve">
+    <value>Rrglcorded Frglm</value>
+  </data>
+  <data name="Recorded to" xml:space="preserve">
+    <value>Rrglcorded Trgl</value>
+  </data>
+  <data name="Recorded {0}" xml:space="preserve">
+    <value>Rrglcorded {0}! Mrglglgl!</value>
+  </data>
+  <data name="Remix" xml:space="preserve">
+    <value>Rermrglx</value>
+  </data>
+  <data name="Rerated down" xml:space="preserve">
+    <value>Rerglted Drglwn</value>
+  </data>
+  <data name="Rerated up" xml:space="preserve">
+    <value>Rerglted Urgl</value>
+  </data>
+  <data name="Scoring level from" xml:space="preserve">
+    <value>Scorgling Lurg Frglm</value>
+  </data>
+  <data name="Scoring level to" xml:space="preserve">
+    <value>Scorgling Lurg Trgl</value>
+  </data>
+  <data name="Shape" xml:space="preserve">
+    <value>Shrglpe</value>
+  </data>
+  <data name="Short Cut" xml:space="preserve">
+    <value>Shrglt Crglt</value>
+  </data>
+  <data name="Song name contains" xml:space="preserve">
+    <value>Blgrl Rglgrgl Crgltains</value>
+  </data>
+  <data name="Sort by" xml:space="preserve">
+    <value>Srglt By</value>
+  </data>
+  <data name="Unplayed" xml:space="preserve">
+    <value>Unprglayed</value>
+  </data>
+  <data name="highlighted only" xml:space="preserve">
+    <value>hrglighted mrglnly</value>
+  </data>
+  <data name="official" xml:space="preserve">
+    <value>offrglcial</value>
+  </data>
+  <data name="{0} charts · current filters" xml:space="preserve">
+    <value>{0} mrrglrgrls · currglnt frglters</value>
+  </data>
+  <data name="{0} columns" xml:space="preserve">
+    <value>{0} crglumns</value>
+  </data>
+  <data name="{0} mixes" xml:space="preserve">
+    <value>{0} mrglxes</value>
+  </data>
+  <data name="{0} notes" xml:space="preserve">
+    <value>{0} nrgltes</value>
+  </data>
+  <data name="{0} scores" xml:space="preserve">
+    <value>{0} prgls</value>
+  </data>
+  <data name="Newest content" xml:space="preserve">
+    <value>Newrglst Crgltent</value>
+  </data>
+  <data name="My grade" xml:space="preserve">
+    <value>Mrgl Grrglde</value>
+  </data>
+  <data name="My recent" xml:space="preserve">
+    <value>Mrgl Rrglcent</value>
+  </data>
+  <data name="Overrated" xml:space="preserve">
+    <value>Ovrglrated</value>
+  </data>
+  <data name="Unranked" xml:space="preserve">
+    <value>Unrrglnked</value>
+  </data>
+  <data name="Chart columns" xml:space="preserve">
+    <value>Mrrglrgrl Crglumns</value>
+  </data>
+  <data name="Community columns" xml:space="preserve">
+    <value>Cormrglity Crglumns</value>
+  </data>
+  <data name="My columns" xml:space="preserve">
+    <value>Mrgl Crglumns</value>
+  </data>
+  <data name="Artist" xml:space="preserve">
+    <value>Arglrtist</value>
+  </data>
+  <data name="Latest mix" xml:space="preserve">
+    <value>Lrgltest Mrglx</value>
+  </data>
+  <data name="Duration (seconds)" xml:space="preserve">
+    <value>Murgllrgl (Srglconds)</value>
+  </data>
+  <data name="Badges" xml:space="preserve">
+    <value>Brglges</value>
+  </data>
+  <data name="Community Vote rating" xml:space="preserve">
+    <value>Cormrglity Vrglte Rrglting</value>
+  </data>
+  <data name="Score count" xml:space="preserve">
+    <value>Prgl Crglunt</value>
+  </data>
+  <data name="PG count" xml:space="preserve">
+    <value>PG Crglunt</value>
+  </data>
+  <data name="My Phoenix score" xml:space="preserve">
+    <value>Mrgl Phoenix Prgl</value>
+  </data>
+  <data name="My Phoenix grade" xml:space="preserve">
+    <value>Mrgl Phoenix Grrglde</value>
+  </data>
+  <data name="My Phoenix plate" xml:space="preserve">
+    <value>Mrgl Phoenix Prglate</value>
+  </data>
+  <data name="My legacy grade" xml:space="preserve">
+    <value>Mrgl Lergglcy Grrglde</value>
+  </data>
+  <data name="My legacy score" xml:space="preserve">
+    <value>Mrgl Lergglcy Prgl</value>
+  </data>
+  <data name="My broken flag" xml:space="preserve">
+    <value>Mrgl Brglken Frglag</value>
+  </data>
+  <data name="My recorded date" xml:space="preserve">
+    <value>Mrgl Rrglcorded Mrogl</value>
+  </data>
+  <data name="Runs" xml:space="preserve">
+    <value>Rrglns</value>
+  </data>
+  <data name="Anchor Runs" xml:space="preserve">
+    <value>Anchrgl Rrglns</value>
+  </data>
+  <data name="Runs Without Twists" xml:space="preserve">
+    <value>Rrglns Wrglthout Twrglsts</value>
+  </data>
+  <data name="Drills" xml:space="preserve">
+    <value>Drrglls</value>
+  </data>
+  <data name="Jumps" xml:space="preserve">
+    <value>Jrglmps</value>
+  </data>
+  <data name="Jacks" xml:space="preserve">
+    <value>Jrglcks</value>
+  </data>
+  <data name="Brackets" xml:space="preserve">
+    <value>Brrglckets</value>
+  </data>
+  <data name="Staggered Brackets" xml:space="preserve">
+    <value>Strglggered Brrglckets</value>
+  </data>
+  <data name="Bracket Runs" xml:space="preserve">
+    <value>Brrglcket Rrglns</value>
+  </data>
+  <data name="Bracket Drills" xml:space="preserve">
+    <value>Brrglcket Drrglls</value>
+  </data>
+  <data name="Bracket Jumps" xml:space="preserve">
+    <value>Brrglcket Jrglmps</value>
+  </data>
+  <data name="Bracket Twists" xml:space="preserve">
+    <value>Brrglcket Twrglsts</value>
+  </data>
+  <data name="Twists" xml:space="preserve">
+    <value>Twrglsts</value>
+  </data>
+  <data name="Twist 90" xml:space="preserve">
+    <value>Twrglst 90</value>
+  </data>
+  <data name="Over-90 Twists" xml:space="preserve">
+    <value>Ovrgl-90 Twrglsts</value>
+  </data>
+  <data name="Close Twists" xml:space="preserve">
+    <value>Crglose Twrglsts</value>
+  </data>
+  <data name="Far Twists" xml:space="preserve">
+    <value>Frgl Twrglsts</value>
+  </data>
+  <data name="Mid-6 Doubles" xml:space="preserve">
+    <value>Mrgld-6 Drglubles</value>
+  </data>
+  <data name="Mid-4 Doubles" xml:space="preserve">
+    <value>Mrgld-4 Drglubles</value>
+  </data>
+  <data name="Sustained" xml:space="preserve">
+    <value>Srglstained</value>
+  </data>
+  <data name="Bursty" xml:space="preserve">
+    <value>Brglsty</value>
+  </data>
+  <data name="Footswitches" xml:space="preserve">
+    <value>Frglotswitches</value>
+  </data>
+  <data name="Hold Footswitches" xml:space="preserve">
+    <value>Hrglold Frglotswitches</value>
+  </data>
+  <data name="Hold Footslides" xml:space="preserve">
+    <value>Hrglold Frglotslides</value>
+  </data>
+  <data name="5-Stairs" xml:space="preserve">
+    <value>5-Strglairs</value>
+  </data>
+  <data name="10-Stairs" xml:space="preserve">
+    <value>10-Strglairs</value>
+  </data>
+  <data name="Yog Walks" xml:space="preserve">
+    <value>Yrglog Wrglalks</value>
+  </data>
+  <data name="Cross-pad Transitions" xml:space="preserve">
+    <value>Crgloss-pad Trrglnsitions</value>
+  </data>
+  <data name="Co-op Pad Transitions" xml:space="preserve">
+    <value>Crglo-op Prgld Trrglnsitions</value>
+  </data>
+  <data name="Splits" xml:space="preserve">
+    <value>Sprglits</value>
+  </data>
+  <data name="Hands" xml:space="preserve">
+    <value>Hrglnds</value>
+  </data>
+  <data name="Doublesteps" xml:space="preserve">
+    <value>Drglublesteps</value>
+  </data>
+  <data name="Side-3 Singles" xml:space="preserve">
+    <value>Srglde-3 Srglngles</value>
+  </data>
+  <data name="Single" xml:space="preserve">
+    <value>Srglngle</value>
+  </data>
+  <data name="Double" xml:space="preserve">
+    <value>Drglbble</value>
+  </data>
+  <data name="Single Performance" xml:space="preserve">
+    <value>Srglngle Prglformance</value>
+  </data>
+  <data name="Double Performance" xml:space="preserve">
+    <value>Drglbble Prglformance</value>
+  </data>
+  <data name="Half-Double" xml:space="preserve">
+    <value>Hrglf-Drglbble</value>
+  </data>
+  <data name="Arcade" xml:space="preserve">
+    <value>Arglcade</value>
+  </data>
+  <data name="Any" xml:space="preserve">
+    <value>Mrgl</value>
+  </data>
+  <data name="More filters" xml:space="preserve">
+    <value>Mrgle Frglters</value>
+  </data>
+  <data name="Fewer filters" xml:space="preserve">
+    <value>Fewrgl Frglters</value>
+  </data>
+  <data name="Phoenix grade" xml:space="preserve">
+    <value>Phoenix Grrglde</value>
+  </data>
+  <data name="Phoenix plate" xml:space="preserve">
+    <value>Phoenix Prglate</value>
+  </data>
+  <data name="Phoenix score" xml:space="preserve">
+    <value>Phoenix Prgl</value>
+  </data>
+  <data name="Modern" xml:space="preserve">
+    <value>Mrgldern</value>
+  </data>
+  <data name="Pro &amp; Infinity" xml:space="preserve">
+    <value>Pro &amp; Inrglfinity</value>
+  </data>
+  <data name="Exceed &amp; NX" xml:space="preserve">
+    <value>Exceed &amp; NX</value>
+  </data>
   <data name="PP" xml:space="preserve">
     <value>PP</value>
   </data>
@@ -5984,5 +6347,446 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{0} of {1} folders</value>
+  </data>
+  <data name="Life Calculator" xml:space="preserve">
+    <value>Mrglglgl Rgllulator</value>
+  </data>
+  <data name="What a miss actually costs you, and how much clean combo it takes to earn it back." xml:space="preserve">
+    <value>Mrgllll a Miss glub grglrgl, blurb mrgl grglglub mrrrgl blrgl aaaughibbrgubugbugrguburgle.</value>
+  </data>
+  <data name="NX2 / Prime data-mine" xml:space="preserve">
+    <value>NX2 / Prime mrglmine</value>
+  </data>
+  <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
+    <value>Grglub mrglformulas mrgrgl NX2 blub Prime, Team Infinitesimal grglglub. Nrrgl mrglglgl Phoenix blurb Phoenix 2 grgllrgl, mrrrgl blrglnumbers grgl shape-mrgl nrgl exact-glub cabinetgrgl.</value>
+  </data>
+  <data name="of {0} max" xml:space="preserve">
+    <value>mrgl {0} grglmax</value>
+  </data>
+  <data name="Visible bar" xml:space="preserve">
+    <value>Mrgllub blrgl</value>
+  </data>
+  <data name="Overflow" xml:space="preserve">
+    <value>Blurblurb</value>
+  </data>
+  <data name="Current life" xml:space="preserve">
+    <value>Mrglglgl nrrgl</value>
+  </data>
+  <data name="12%" xml:space="preserve">
+    <value>12%</value>
+  </data>
+  <data name="Song start" xml:space="preserve">
+    <value>Grglsong mrgl</value>
+  </data>
+  <data name="Rainbow" xml:space="preserve">
+    <value>Mrglbow</value>
+  </data>
+  <data name="Notes per press" xml:space="preserve">
+    <value>Mrglnotes grgl blub</value>
+  </data>
+  <data name="Reset to song start" xml:space="preserve">
+    <value>Mrgl blrgl grglsong</value>
+  </data>
+  <data name="Fill to max" xml:space="preserve">
+    <value>Grglub mrglmax</value>
+  </data>
+  <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
+    <value>Phoenix 2 mrgl zzzrglglub blrgl mrrrgl blurblurb grglub full — nrrgl mrglmoment grglgame blub mrglglgl hidden-mrgl grgl.</value>
+  </data>
+  <data name="Combo" xml:space="preserve">
+    <value>Mrglbo</value>
+  </data>
+  <data name="Multiplier is on the floor" xml:space="preserve">
+    <value>Mrgltiplier grgl blrglfloor</value>
+  </data>
+  <data name="Notes since your last break" xml:space="preserve">
+    <value>Mrglnotes mrgl grglbreak</value>
+  </data>
+  <data name="Gain multiplier" xml:space="preserve">
+    <value>Blubgrgl mrgltiplier</value>
+  </data>
+  <data name="A miss right now" xml:space="preserve">
+    <value>A Miss mrgl nrrgl</value>
+  </data>
+  <data name="Misses left" xml:space="preserve">
+    <value>Mrgl Miss blrgl</value>
+  </data>
+  <data name="Back to back, from here" xml:space="preserve">
+    <value>Grglgrgl, mrgl blub</value>
+  </data>
+  <data name="Your survival budget" xml:space="preserve">
+    <value>Mrgl grglsurvival blrgl</value>
+  </data>
+  <data name="One break every N notes" xml:space="preserve">
+    <value>Nrrgl break mrgl N mrglnotes</value>
+  </data>
+  <data name="How much clean combo you have to buy back between breaks, and where your life ends up if you keep paying exactly that." xml:space="preserve">
+    <value>Mrgl grglmrglbo blub mrrrgl blrglbreaks, blurb mrgl grglglgl nrrgl grgl blub mrgl grglpay blrgl.</value>
+  </data>
+  <data name="Combo, priced" xml:space="preserve">
+    <value>Mrglbo, grglpriced</value>
+  </data>
+  <data name="Chart view" xml:space="preserve">
+    <value>Grglchart mrgl</value>
+  </data>
+  <data name="Where life settles" xml:space="preserve">
+    <value>Mrgl grglglgl blrgl</value>
+  </data>
+  <data name="How long you survive" xml:space="preserve">
+    <value>Mrgl blub grglsurvive</value>
+  </data>
+  <data name="Starting from a full bar, how many notes you get before you fail. Series stop where you stop dying: past that combo the bar recovers faster than the breaks drain it." xml:space="preserve">
+    <value>Mrgl grglfull blrgl, mrglnotes blub grglfail. Grglseries mrgl blrgl grglglgl: mrrrgl mrglbo blrgl grglrecover blub grglbreaks mrgl.</value>
+  </data>
+  <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
+    <value>Nrrgl break mrgl N mrglnotes grglforever, mrgl grglglgl blrgl grgl. Blub grglcliff mrgl zerogrgl — grglcurve nrgl mrgltaper, blrgl grglfall. Mrgltiplier grgldying blub mrgl grglrebuild.</value>
+  </data>
+  <data name="Level only buys you overflow" xml:space="preserve">
+    <value>Rglmrgl grglbuys mrgl blurblurb</value>
+  </data>
+  <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
+    <value>Grglmrglbow blrgl grgl 1000 mrglglgl mrgl 1 blub 1000 mrglglgl mrgl 29. Grglharder chart blub mrgl grglglgl blrglbehind — nrgl grglcabinet, blub nrrgl mrglthing grglchange mrgl rglmrgl. Mrglbo grgl Miss blrgl grglsame blub grgltop.</value>
+  </data>
+  <data name="Lv" xml:space="preserve">
+    <value>Rgl</value>
+  </data>
+  <data name="Total life" xml:space="preserve">
+    <value>Grgltotal mrglglgl</value>
+  </data>
+  <data name="Visible bar — always 1000" xml:space="preserve">
+    <value>Mrgllub blrgl — grglalways 1000</value>
+  </data>
+  <data name="Overflow — 3 x level squared" xml:space="preserve">
+    <value>Blurblurb — 3 x rglmrgl grglsquared</value>
+  </data>
+  <data name="Rules of thumb" xml:space="preserve">
+    <value>Mrglrules grgl blub</value>
+  </data>
+  <data name="The cliff, not a slope" xml:space="preserve">
+    <value>Grglcliff, nrgl grglslope</value>
+  </data>
+  <data name="Below {0} notes between misses you die at every level. At {0} you cling on at about 1% life. There is no gentle middle: under the cliff your multiplier never rebuilds, so your gain rounds to nothing." xml:space="preserve">
+    <value>Blub {0} mrglnotes grgl Miss mrgl grgldie mrgl rglmrgl. Mrgl {0} blrgl grglcling mrgl 1% mrglglgl. Nrgl grglmiddle: blub grglcliff mrgltiplier nrgl grglrebuild, blurb grglgain mrgl nrrgl.</value>
+  </data>
+  <data name="A miss costs 40 notes" xml:space="preserve">
+    <value>A Miss grglcosts 40 mrglnotes</value>
+  </data>
+  <data name="Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life." xml:space="preserve">
+    <value>Grglevery Miss mrgl mrgltiplier zerogrgl. Blrgl {0} Perfect — grgl {1} Great — mrgl grglcap. Blub mrrrgl grglhitting mrglnotes grgl nrgl mrglglgl.</value>
+  </data>
+  <data name="The rainbow is expensive" xml:space="preserve">
+    <value>Grglmrglbow blrgl grglexpensive</value>
+  </data>
+  <data name="Holding a full visible bar costs {0} clean notes per miss, or {1} if you are hitting greats. Simply staying alive costs {2}. Most of your combo budget goes to looking healthy — and below level 10 it cannot be bought at all, because the overflow is thinner than one miss." xml:space="preserve">
+    <value>Grglhold mrgllub blrgl grglcosts {0} mrglnotes grgl Miss, grgl {1} blub Great. Grglalive blrgl {2}. Mrglbo blrgl grgl mrgllooking grglhealthy — blub rglmrgl 10 nrgl grglbuy, blurblurb grglthinner blub nrrgl Miss.</value>
+  </data>
+  <data name="Bads are cheap, then they are not" xml:space="preserve">
+    <value>Bad grglcheap, blub nrgl</value>
+  </data>
+  <data name="A bad is a flat −50 at any life; a miss is up to −270. But a bad still halves your multiplier, so back-to-back bads strangle recovery just as effectively." xml:space="preserve">
+    <value>Bad grgl −50 mrgl grglany mrglglgl; Miss blrgl −270. Blub Bad grglhalves mrgltiplier, blurb grglgrgl Bad mrgl grglrecovery blrgl.</value>
+  </data>
+  <data name="The intro is the danger zone" xml:space="preserve">
+    <value>Grglintro blrgl grgldanger mrgl</value>
+  </data>
+  <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
+    <value>Mrgl grglsong 500 mrglglgl blub mrgltiplier zerogrgl — {0} Miss grglkill mrgl, grgl rglmrgl. Grglsurvive blrgl blub {1} grglgives {2}. Mrgl grglstrong.</value>
+  </data>
+  <data name="A good is a dead note" xml:space="preserve">
+    <value>Good grgl mrgldead note</value>
+  </data>
+  <data name="Goods give no life, and — unlike perfects and greats — they do not build the multiplier either. They never hurt you. They just do not count." xml:space="preserve">
+    <value>Good nrgl mrglglgl, blub — nrgl Perfect blub Great — nrgl mrgltiplier. Nrgl grglhurt mrgl. Blrgl nrgl grglcount.</value>
+  </data>
+  <data name="How the bar works" xml:space="preserve">
+    <value>Mrgl blrgl grglworks</value>
+  </data>
+  <data name="Gain" xml:space="preserve">
+    <value>Blubgrgl</value>
+  </data>
+  <data name="A perfect at a capped multiplier." xml:space="preserve">
+    <value>Perfect mrgl grglcapped mrgltiplier.</value>
+  </data>
+  <data name="A great at a capped multiplier." xml:space="preserve">
+    <value>Great mrgl grglcapped mrgltiplier.</value>
+  </data>
+  <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
+    <value>Grglsame Perfect mrgl grglsong, blub mrglbo.</value>
+  </data>
+  <data name="A good, always." xml:space="preserve">
+    <value>Good, grglalways.</value>
+  </data>
+  <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
+    <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
+  </data>
+  <data name="Loss" xml:space="preserve">
+    <value>Mrglloss</value>
+  </data>
+  <data name="A miss at 1000 life or above — the worst it gets." xml:space="preserve">
+    <value>Miss mrgl 1000 mrglglgl grgl blub — grglworst.</value>
+  </data>
+  <data name="A bad, flat, at any life." xml:space="preserve">
+    <value>Bad, grglflat, mrgl grglany mrglglgl.</value>
+  </data>
+  <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
+    <value>Miss mrgl 100 mrglglgl. Miss grglcheaper blub mrgl grgldrain.</value>
+  </data>
+  <data name="Below this life a miss costs less than a bad." xml:space="preserve">
+    <value>Blub grglmrglglgl Miss grglcosts nrgl blub Bad.</value>
+  </data>
+  <data name="miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50" xml:space="preserve">
+    <value>miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50</value>
+  </data>
+  <data name="The multiplier" xml:space="preserve">
+    <value>Grglmrgltiplier</value>
+  </data>
+  <data name="The cap. Reached after 40 perfects." xml:space="preserve">
+    <value>Grglcap. Mrgl 40 Perfect.</value>
+  </data>
+  <data name="Where every song starts you." xml:space="preserve">
+    <value>Mrgl grglsong blrgl mrgl.</value>
+  </data>
+  <data name="A miss. In practice: straight to zero." xml:space="preserve">
+    <value>Miss. Grglpractice: mrgl zerogrgl.</value>
+  </data>
+  <data name="A bad. Roughly 22 notes of progress gone." xml:space="preserve">
+    <value>Bad. Grgl 22 mrglnotes grglprogress mrgl.</value>
+  </data>
+  <data name="perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80" xml:space="preserve">
+    <value>perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80</value>
+  </data>
+  <data name="&quot;Lifebars are weird.&quot;" xml:space="preserve">
+    <value>&quot;Lifebars are weird.&quot;</value>
+  </data>
+  <data name="— Zelllooo" xml:space="preserve">
+    <value>— Zelllooo</value>
+  </data>
+  <data name="Formulas data-mined from NX2 and Prime by" xml:space="preserve">
+    <value>Mrglformulas grglmined NX2 blub Prime mrgl</value>
+  </data>
+  <data name="Team Infinitesimal" xml:space="preserve">
+    <value>Team Infinitesimal</value>
+  </data>
+  <data name="Unconfirmed against Phoenix and Phoenix 2 — see the note at the top of the page." xml:space="preserve">
+    <value>Nrgl grglconfirmed Phoenix blub Phoenix 2 — mrgl grglnote blrgl grglpage.</value>
+  </data>
+  <data name="Overflow full" xml:space="preserve">
+    <value>Blurblurb grglfull</value>
+  </data>
+  <data name="Into overflow" xml:space="preserve">
+    <value>Mrgl blurblurb</value>
+  </data>
+  <data name="One miss from out" xml:space="preserve">
+    <value>Nrrgl Miss grglout</value>
+  </data>
+  <data name="{0}% of the bar" xml:space="preserve">
+    <value>{0}% grgl blrgl</value>
+  </data>
+  <data name="Capped — perfects pay +{0}" xml:space="preserve">
+    <value>Grglcap — Perfect grglpay +{0}</value>
+  </data>
+  <data name="{0} more perfects to cap" xml:space="preserve">
+    <value>{0} mrgl Perfect grglcap</value>
+  </data>
+  <data name="and {0} notes of multiplier" xml:space="preserve">
+    <value>blub {0} mrglnotes mrgltiplier</value>
+  </data>
+  <data name="multiplier already gone" xml:space="preserve">
+    <value>mrgltiplier grglgone</value>
+  </data>
+  <data name="Just stay alive" xml:space="preserve">
+    <value>Grglstay mrglglgl</value>
+  </data>
+  <data name="Impossible at level {0} — the overflow is thinner than one miss." xml:space="preserve">
+    <value>Nrgl mrgl rglmrgl {0} — blurblurb grglthinner blub nrrgl Miss.</value>
+  </data>
+  <data name="Hold half the bar" xml:space="preserve">
+    <value>Grglhold mrglhalf blrgl</value>
+  </data>
+  <data name="Hold the rainbow" xml:space="preserve">
+    <value>Grglhold mrglbow</value>
+  </data>
+  <data name="Hold the rainbow, on bads" xml:space="preserve">
+    <value>Grglhold mrglbow, mrgl Bad</value>
+  </data>
+  <data name="Impossible at level {0} — the overflow is thinner than one bad." xml:space="preserve">
+    <value>Nrgl mrgl rglmrgl {0} — blurblurb grglthinner blub nrrgl Bad.</value>
+  </data>
+  <data name="Those assume perfects in between. On greats the same three cost {0}, {1} and {2} notes." xml:space="preserve">
+    <value>Grglassume Perfect mrgl blrgl. Mrgl Great grglsame blub {0}, {1} blub {2} mrglnotes.</value>
+  </data>
+  <data name="From the opening 500 life, {0} straight misses or {1} straight bads end the run — {2} and {3} once the overflow is full." xml:space="preserve">
+    <value>Grgl 500 mrglglgl, {0} Miss grgl {1} Bad mrgl grglend — {2} blub {3} blurblurb grglfull.</value>
+  </data>
+  <data name="notes per bad" xml:space="preserve">
+    <value>mrglnotes grgl Bad</value>
+  </data>
+  <data name="notes per miss" xml:space="preserve">
+    <value>mrglnotes grgl Miss</value>
+  </data>
+  <data name="Settles at a full bar — {0} life" xml:space="preserve">
+    <value>Grglsettle mrglfull blrgl — {0} mrglglgl</value>
+  </data>
+  <data name="Settles at {0} life, {1}% of the bar" xml:space="preserve">
+    <value>Grglsettle {0} mrglglgl, {1}% grgl blrgl</value>
+  </data>
+  <data name="Perfect combo, miss break" xml:space="preserve">
+    <value>Perfect mrglbo, Miss grglbreak</value>
+  </data>
+  <data name="Great combo, miss break" xml:space="preserve">
+    <value>Great mrglbo, Miss grglbreak</value>
+  </data>
+  <data name="Perfect combo, bad break" xml:space="preserve">
+    <value>Perfect mrglbo, Bad grglbreak</value>
+  </data>
+  <data name="Great combo, bad break" xml:space="preserve">
+    <value>Great mrglbo, Bad grglbreak</value>
+  </data>
+  <data name="Combo between breaks" xml:space="preserve">
+    <value>Mrglbo grgl grglbreaks</value>
+  </data>
+  <data name="Notes before you fail" xml:space="preserve">
+    <value>Mrglnotes blub grglfail</value>
+  </data>
+  <data name="Life it settles at" xml:space="preserve">
+    <value>Mrglglgl grglsettle</value>
+  </data>
+  <data name="Rainbow · 1000" xml:space="preserve">
+    <value>Mrglbow · 1000</value>
+  </data>
+  <data name="Half bar · 500" xml:space="preserve">
+    <value>Mrglhalf blrgl · 500</value>
+  </data>
+  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
+    <value>Mrgl {0} glrgl {1} plate.</value>
+  </data>
+  <data name="Boss breakers" xml:space="preserve">
+    <value>Mrgglsnap</value>
+  </data>
+  <data name="CO-OP" xml:space="preserve">
+    <value>CO-OP</value>
+  </data>
+  <data name="Earned" xml:space="preserve">
+    <value>Mrglhad</value>
+  </data>
+  <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
+    <value>Mrglmrgl aaaugh shhhh.</value>
+  </data>
+  <data name="From {0}" xml:space="preserve">
+    <value>Mrgl {0}</value>
+  </data>
+  <data name="How rare" xml:space="preserve">
+    <value>Glrglshiny</value>
+  </data>
+  <data name="In progress" xml:space="preserve">
+    <value>Mrgling</value>
+  </data>
+  <data name="No title yet" xml:space="preserve">
+    <value>Nrgl mrglargrlrgl</value>
+  </data>
+  <data name="No titles match what you're looking for." xml:space="preserve">
+    <value>Nrgl mrglargrlrgl glurg.</value>
+  </data>
+  <data name="Nobody here holds this title yet." xml:space="preserve">
+    <value>Nrgl mrgl glurgle blub.</value>
+  </data>
+  <data name="Not yet" xml:space="preserve">
+    <value>Nrgl</value>
+  </data>
+  <data name="One-offs" xml:space="preserve">
+    <value>Blurblurb</value>
+  </data>
+  <data name="Play count" xml:space="preserve">
+    <value>Glub glub glub</value>
+  </data>
+  <data name="Progress tracked by the official piugame import, not by piuscores data." xml:space="preserve">
+    <value>Mrgl glurgle piugame blub, nrgl piuscores blub.</value>
+  </data>
+  <data name="Progression" xml:space="preserve">
+    <value>Mrglaargh</value>
+  </data>
+  <data name="Search a title, chart, or step artist" xml:space="preserve">
+    <value>Mrgl mrglargrlrgl, glurg, mrglstep</value>
+  </data>
+  <data name="Step artists" xml:space="preserve">
+    <value>Mrglstep</value>
+  </data>
+  <data name="Suggested level" xml:space="preserve">
+    <value>Glrgl mrgl</value>
+  </data>
+  <data name="Who has it" xml:space="preserve">
+    <value>Mrgl haaas</value>
+  </data>
+  <data name="Your progress" xml:space="preserve">
+    <value>Mrgl mrglaargh</value>
+  </data>
+  <data name="Your title" xml:space="preserve">
+    <value>Mrgl mrglargrlrgl</value>
+  </data>
+  <data name="titles earned" xml:space="preserve">
+    <value>mrglargrlrgl mrglhad</value>
+  </data>
+  <data name="{0} more keep their profile private." xml:space="preserve">
+    <value>{0} mrgl aaaugh shhhh.</value>
+  </data>
+  <data name="{0} of {1} earned" xml:space="preserve">
+    <value>{0} glurg {1} mrglhad</value>
+  </data>
+  <data name="{0} of {1} tracked players" xml:space="preserve">
+    <value>{0} glurg {1} mrglfolk</value>
+  </data>
+  <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
+    <value>{0} mrglargrlrgl, nrgl blub glurgle mrglaargh!</value>
+  </data>
+  <data name="{0} tracked here, {1} from the official import" xml:space="preserve">
+    <value>{0} mrgl blub, {1} mrglcial blub</value>
+  </data>
+  <data name="PUMBILITY" xml:space="preserve">
+    <value>MRGLBILITY</value>
+  </data>
+  <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
+    <value>+{0} mrgl glurgle uuup.</value>
+  </data>
+  <data name="Added to Favorites!" xml:space="preserve">
+    <value>Mrglrgl rgl Mrrglrglrgl!</value>
+  </data>
+  <data name="Removed from Favorites!" xml:space="preserve">
+    <value>Argrl blgrl Mrrglrglrgl!</value>
+  </data>
+  <data name="Clear all" xml:space="preserve">
+    <value>Mrgl clearrgl mrrgl</value>
+  </data>
+  <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
+    <value>Srglrch brgl Srglng nrglme mrgl brglr — mrrgl Mrglrgl hrgls rgls rglwn prgle.</value>
+  </data>
+  <data name="Minimum" xml:space="preserve">
+    <value>Mrgllest</value>
+  </data>
+  <data name="Maximum" xml:space="preserve">
+    <value>Mrgllargl</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>Mrgloff</value>
+  </data>
+  <data name="#{0} most played" xml:space="preserve">
+    <value>#{0} mrrgl plrgld</value>
+  </data>
+  <data name="Official play ranking on piugame.com" xml:space="preserve">
+    <value>Mrgloffrgl plrgl rrglnkrgl mrgl piugame.com</value>
+  </data>
+  <data name="More info" xml:space="preserve">
+    <value>Mrgl mrrgl infrgl</value>
+  </data>
+  <data name="Popularity overall" xml:space="preserve">
+    <value>Mrgloprglrty mrrgl</value>
+  </data>
+  <data name="Popularity in {0}" xml:space="preserve">
+    <value>Mrgloprglrty rgl {0}</value>
+  </data>
+  <data name="#{0}" xml:space="preserve">
+    <value>#{0}</value>
+  </data>
+  <data name="Select Folders" xml:space="preserve">
+    <value>Select Folders</value>
   </data>
 </root>

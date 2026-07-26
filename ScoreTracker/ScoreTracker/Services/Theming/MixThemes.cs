@@ -1,4 +1,5 @@
 using MudBlazor;
+using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 
@@ -230,6 +231,21 @@ public static class MixThemes
 
     private const string PlateNoneColor = "#8E24AA";
 
+    /// <summary>
+    ///     The five badge families' identity hues (owner 2026-07-26). Blue, red, purple and
+    ///     green were his; Twists took amber as the remaining hue that reads apart from all
+    ///     four. Material 700s, matching the tones the site already uses elsewhere.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<BadgeCategory, string> BadgeCategoryColors =
+        new Dictionary<BadgeCategory, string>
+        {
+            [BadgeCategory.Brackets] = "#1976D2",
+            [BadgeCategory.Twists] = "#F57C00",
+            [BadgeCategory.StaminaAndRuns] = "#D32F2F",
+            [BadgeCategory.Tech] = "#7B1FA2",
+            [BadgeCategory.DoublesTech] = "#388E3C"
+        };
+
     // Legacy slot colors: the classic song-wheel language of the pre-Exceed eras
     // (Crazy red, Freestyle green, Nightmare purple…). Deliberately NOT the difficulty
     // ramp — old-scale numbers don't translate to modern levels, and the distinct
@@ -312,6 +328,31 @@ public static class MixThemes
     private const string DoublesTypeHex = "#33A653";
     private const string CoOpTypeHex = "#D9A82E";
 
+    // The game's own judgment vocabulary. Mix-invariant on purpose, exactly like the alert
+    // colors: a MISS has to read as a miss whichever theme is on. Perfect takes the ice-blue
+    // that anchors the elite end everywhere else on the site (SSS grades, PG plates).
+    private static readonly IReadOnlyDictionary<Judgment, string> JudgmentColors =
+        new Dictionary<Judgment, string>
+        {
+            [Judgment.Perfect] = "#4DC3FF",
+            [Judgment.Great] = "#43D96B",
+            [Judgment.Good] = "#FFC94A",
+            [Judgment.Bad] = "#C070FF",
+            [Judgment.Miss] = "#E8385A"
+        };
+
+    // The lifebar's own zones (docs/design/life-calculator-redesign.md). The seven stops are
+    // the in-game rainbow, painted across the visible bar so a draining bar reveals its red
+    // end — the danger read comes free. Overflow is a cool chrome that deliberately does not
+    // belong to the rainbow: it is the part of your life the cabinet never shows you.
+    private static readonly string[] LifeRainbowStops =
+        { "#FF4D4D", "#FF9A3C", "#FFD24A", "#4FE33F", "#29C9F7", "#3FA9F5", "#B36BFF" };
+
+    private const string LifeOverflowHex = "#7FB3D5";
+
+    /// <summary>Raw hex for a judgment — for ApexCharts, which can't read CSS custom properties.</summary>
+    public static string JudgmentHex(Judgment judgment) => JudgmentColors[judgment];
+
     /// <summary>Raw hex for a letter grade (display name), for ApexCharts grade bars. Unknown → the unpassed grey.</summary>
     public static string GradeHex(string gradeName) =>
         GradeColors.TryGetValue(gradeName, out var hex) ? hex : UnpassedGradeHex;
@@ -383,12 +424,20 @@ public static class MixThemes
         var plates = string.Join("\n", PlateColors.Select(kv =>
             $"    --plate-{kv.Key.GetShorthand().ToLowerInvariant()}: {kv.Value};"))
             + $"\n    --plate-none: {PlateNoneColor};"
+            // Grades below A have no plate to borrow from — in-game they render green.
+            // Emitted alongside the plates because ThemeScales.GradeColor bottoms out here.
+            + $"\n    --grade-sub-a: {SubAGradeHex};"
             + "\n" + string.Join("\n", SlotColors.Select(kv => $"    --slot-{kv.Key}: {kv.Value};"));
         // The five skill-category identity colors (Speed/Stamina/Twist/Bracket/Tech),
         // promoted from the SharedKernel constants so markup can tint skill chips
         // without color literals. Mix-invariant — category identity never re-hues.
         var skillCategories = string.Join("\n", Enum.GetValues<SkillCategory>().Select(c =>
             $"    --skillcat-{c.ToString().ToLowerInvariant()}: {c.GetColor()};"));
+        // The owner's five badge families (2026-07-26) — the granular piucenter vocabulary's
+        // identity colors, replacing the retired rollup buckets. Mix-invariant: a family's hue
+        // is what makes it recognisable, so it never re-hues per theme.
+        var badgeCategories = string.Join("\n", BadgeCategoryColors.Select(kv =>
+            $"    --badgecat-{kv.Key.ToString().ToLowerInvariant()}: {kv.Value};"));
         var brands = string.Join("\n", BrandColors.Select(kv =>
             $"    --brand-{kv.Key}: {kv.Value};"));
         // The difficulty-ball type vocabulary (red Single / green Double / gold Co-Op) as
@@ -402,6 +451,18 @@ public static class MixThemes
         var grades = string.Join("\n", Enum.GetValues<PhoenixLetterGrade>()
                          .Select(g => $"    --grade-{GradeSlug(g)}: {GradeHex(g.GetName())};")) +
                      $"\n    --unplayed-grade: {UnpassedGradeHex};";
+        var judgments = string.Join("\n", JudgmentColors.Select(kv =>
+            $"    --judg-{kv.Key.ToString().ToLowerInvariant()}: {kv.Value};"));
+        // The rainbow ships as both its stops and a ready-made gradient, so markup can paint
+        // the visible bar without re-listing seven colors at every call site.
+        var lifeStops = string.Join("\n", LifeRainbowStops.Select((hex, i) =>
+            $"    --life-r{i + 1}: {hex};"));
+        var lifeRainbow = "    --life-rainbow: linear-gradient(90deg, " + string.Join(", ",
+            LifeRainbowStops.Select((_, i) =>
+                $"var(--life-r{i + 1}) {RainbowStopPercent(i)}%")) + ");";
+        var life = $"{lifeStops}\n{lifeRainbow}\n" +
+                   $"    --life-overflow: {LifeOverflowHex};\n" +
+                   $"    --life-danger: {JudgmentColors[Judgment.Miss]};";
         return $@":root {{
     --mix-bg: {p.Background};
     --mix-surface: {p.Surface};
@@ -425,11 +486,19 @@ public static class MixThemes
 {difficulty}
 {plates}
 {skillCategories}
+{badgeCategories}
 {brands}
 {chartTypes}
 {grades}
+{judgments}
+{life}
 }}";
     }
+
+    // The rainbow's stops aren't evenly spaced: the warm end is compressed so a bar sitting
+    // at low life reads unmistakably red rather than drifting through orange.
+    private static int RainbowStopPercent(int index) =>
+        new[] { 0, 17, 33, 52, 70, 85, 100 }[index];
 
     private static MudTheme Build(MixPalette p)
     {
