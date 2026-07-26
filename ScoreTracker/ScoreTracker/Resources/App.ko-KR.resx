@@ -5955,9 +5955,6 @@
   <data name="Your title" xml:space="preserve">
     <value>내 칭호</value>
   </data>
-  <data name="official" xml:space="preserve">
-    <value>공식</value>
-  </data>
   <data name="titles earned" xml:space="preserve">
     <value>칭호 획득</value>
   </data>
@@ -5975,5 +5972,8 @@
   </data>
   <data name="{0} tracked here, {1} from the official import" xml:space="preserve">
     <value>{0}개는 여기서 추적, {1}개는 공식 가져오기</value>
+  </data>
+  <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
+    <value>다른 {0}명은 이 단계를 더 위까지 올라갔습니다.</value>
   </data>
 </root>

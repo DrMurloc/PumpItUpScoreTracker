@@ -206,11 +206,15 @@ public sealed class TitleRailsTests
     }
 
     [Fact]
-    public void PhoenixTwoPoolsAreThreeRailsUnderProgression()
+    public void PhoenixTwoPoolsSplitIntoABandPerRailUnderProgression()
     {
         var progression = Phoenix2().Single(s => s.Section == TitleSection.Progression);
-        Assert.Equal(3, progression.Rails.Count);
+
+        // Two pools of three bands plus a capstone, and the merged gem ladder.
+        Assert.Equal(9, progression.Rails.Count);
         Assert.Equal(70, progression.Total);
+        Assert.All(progression.Rails.Where(r => r.Name.ToString().EndsWith("EXPERT")),
+            r => Assert.Equal(10, r.Total));
     }
 
     [Fact]

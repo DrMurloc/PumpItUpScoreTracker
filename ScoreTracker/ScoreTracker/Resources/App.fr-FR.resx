@@ -6068,9 +6068,6 @@
   <data name="Your title" xml:space="preserve">
     <value>Ton titre</value>
   </data>
-  <data name="official" xml:space="preserve">
-    <value>officiel</value>
-  </data>
   <data name="titles earned" xml:space="preserve">
     <value>titres obtenus</value>
   </data>
@@ -6088,5 +6085,8 @@
   </data>
   <data name="{0} tracked here, {1} from the official import" xml:space="preserve">
     <value>{0} suivis ici, {1} venus de l'import officiel</value>
+  </data>
+  <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
+    <value>+{0} autres sont montés plus haut sur cette échelle.</value>
   </data>
 </root>

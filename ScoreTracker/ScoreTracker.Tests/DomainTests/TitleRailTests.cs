@@ -78,11 +78,11 @@ public sealed class TitleRailTests
     }
 
     [Fact]
-    public void PhoenixTwoDrawsFortyEightRailsOverAllButElevenOfItsTitles()
+    public void PhoenixTwoDrawsFiftyFourRailsOverAllButElevenOfItsTitles()
     {
         var rails = RailsOf(Phoenix2);
         Assert.Equal(272, Phoenix2.Count());
-        Assert.Equal(48, rails.Count);
+        Assert.Equal(54, rails.Count);
         Assert.Equal(11, Phoenix2.Count(t => t.Ladder == null));
     }
 
@@ -127,12 +127,23 @@ public sealed class TitleRailTests
     }
 
     [Fact]
-    public void PhoenixTwoPoolsAreThreeRailsPrefixedTheWayTheirTitlesRead()
+    public void APoolIsABandPerRailSoItsRungNumbersRestartAtOne()
     {
+        // Thirty-one rungs in one row reads as nothing, so each band of ten is its own rail
+        // and the capstone stands alone. The merged pool has no bands and keeps its gems.
         var rails = RailsOf(Phoenix2);
-        Assert.Equal(31, rails[(Name)"[S]"].Length);
-        Assert.Equal(31, rails[(Name)"[D]"].Length);
+        foreach (var pool in new[] { "[S]", "[D]" })
+        {
+            Assert.Equal(10, rails[(Name)$"{pool} INTERMEDIATE"].Length);
+            Assert.Equal(10, rails[(Name)$"{pool} ADVANCED"].Length);
+            Assert.Equal(10, rails[(Name)$"{pool} EXPERT"].Length);
+            Assert.Single(rails[(Name)$"{pool} MASTER"]);
+            Assert.Equal(Enumerable.Range(1, 10),
+                rails[(Name)$"{pool} EXPERT"].OrderBy(t => t.Rung).Select(t => t.Rung));
+        }
+
         Assert.Equal(8, rails[(Name)"[P.B]"].Length);
+        Assert.Equal(70, rails.Where(r => r.Key.ToString().StartsWith('[')).Sum(r => r.Value.Length));
     }
 
     [Fact]

@@ -6000,9 +6000,6 @@
   <data name="Your title" xml:space="preserve">
     <value>Mrgl mrglargrlrgl</value>
   </data>
-  <data name="official" xml:space="preserve">
-    <value>mrglcial</value>
-  </data>
   <data name="titles earned" xml:space="preserve">
     <value>mrglargrlrgl mrglhad</value>
   </data>
@@ -6023,5 +6020,8 @@
   </data>
   <data name="PUMBILITY" xml:space="preserve">
     <value>MRGLBILITY</value>
+  </data>
+  <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
+    <value>+{0} mrgl glurgle uuup.</value>
   </data>
 </root>

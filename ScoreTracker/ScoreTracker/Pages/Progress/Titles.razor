@@ -101,13 +101,7 @@ else
                     @foreach (var rail in rails)
                     {
                         <div class="title-rail">
-                            <div class="title-rail-name">
-                                <span>@rail.Name</span>
-                                @if (rail.Official)
-                                {
-                                    <span class="title-official-tag">@L["official"]</span>
-                                }
-                            </div>
+                            <div class="title-rail-name"><span>@rail.Name</span></div>
                             <div class="title-rail-track">
                                 @foreach (var rung in rail.Rungs)
                                 {
@@ -144,9 +138,9 @@ else
         <MudText Class="title-empty">@L["No titles match what you're looking for."]</MudText>
     }
 
-    <TitleDetailDrawer Rung="_selected" Mix="_currentMix" IsLoggedIn="CurrentUser.IsLoggedIn"
-                       CurrentUserId="_currentUserId" TrackedPlayers="_trackedPlayers"
-                       OnClosed="() => _selected = null"></TitleDetailDrawer>
+    <TitleDetailDrawer Rung="_selected" Ladder="_selectedLadder" Mix="_currentMix"
+                       IsLoggedIn="CurrentUser.IsLoggedIn" CurrentUserId="_currentUserId"
+                       TrackedPlayers="_trackedPlayers" OnClosed="Deselect"></TitleDetailDrawer>
 }
 
 @inject IMediator Mediator
@@ -167,6 +161,7 @@ else
     private bool _loading = true;
     private IReadOnlyList<TitleSectionRows> _sections = Array.Empty<TitleSectionRows>();
     private TitleRung? _selected;
+    private IReadOnlyList<Name> _selectedLadder = Array.Empty<Name>();
     private RungState? _filter;
     private string _search = string.Empty;
 
@@ -263,9 +258,23 @@ else
         _ => L["One-offs"]
     };
 
+    /// <summary>
+    ///     The rung opens the drawer, and its rail travels with it: the drawer needs the whole
+    ///     ladder to tell who is standing on this rung from who has climbed past it.
+    /// </summary>
     private void Select(TitleRung rung)
     {
         _selected = rung;
+        _selectedLadder = rung.Title.Ladder == null
+            ? Array.Empty<Name>()
+            : _sections.SelectMany(s => s.Rails).FirstOrDefault(r => r.Name == rung.Title.Ladder.Value)
+                ?.Rungs.Select(r => r.Title.Name).ToArray() ?? Array.Empty<Name>();
+    }
+
+    private void Deselect()
+    {
+        _selected = null;
+        _selectedLadder = Array.Empty<Name>();
     }
 
 }

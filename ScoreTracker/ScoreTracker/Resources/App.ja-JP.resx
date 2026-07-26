@@ -6074,9 +6074,6 @@
   <data name="Your title" xml:space="preserve">
     <value>あなたの称号</value>
   </data>
-  <data name="official" xml:space="preserve">
-    <value>公式</value>
-  </data>
   <data name="titles earned" xml:space="preserve">
     <value>称号獲得</value>
   </data>
@@ -6094,5 +6091,8 @@
   </data>
   <data name="{0} tracked here, {1} from the official import" xml:space="preserve">
     <value>{0} 個はここで追跡、{1} 個は公式インポート</value>
+  </data>
+  <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
+    <value>他 {0} 人はこの段位をさらに上まで進んでいます。</value>
   </data>
 </root>

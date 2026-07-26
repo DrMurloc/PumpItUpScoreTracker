@@ -14,7 +14,7 @@ About 90% of every mix's title list is a ladder:
 
 | Section | Phoenix | Phoenix 2 |
 |---|---|---|
-| Progression | 31 (4 rails) | 70 (3 PUMBILITY pools) |
+| Progression | 31 (4 rails) | 70 (9 rails: 2 pools × 3 bands + capstone, plus the merged gems) |
 | Skill | 67 (6 rails) | 100 (9 rails) |
 | CO-OP | 15 (2 rails) | 16 (2 rails) |
 | Plates | 32 (8 rails) | — |
@@ -22,7 +22,7 @@ About 90% of every mix's title list is a ladder:
 | Step artists | 12 (6 rails) | 36 (12 rails) |
 | Play count | 5 (1 rail) | 6 (1 rail) |
 | One-offs | 19 | 11 |
-| **Total** | **213 titles, 47 rails** | **272 titles, 48 rails** |
+| **Total** | **213 titles, 47 rails** | **272 titles, 54 rails** |
 
 Ratcheted by `TitleRailTests` and `TitleRailsTests`; if those numbers move, the tests say so.
 
@@ -55,8 +55,16 @@ data and a rename would silently collapse a rail.
   on Lv.5.)
 - **Rails** — one row per ladder. Only an in-progress rung carries a fill, and the fill is that
   rung's climb from the rung below it (`CompletionFloor`), not from zero.
-- **Boss breakers** tile instead of stacking — 20 rails of one or two rungs each read as a grid.
+- **Boss breakers** tile as cells, with the mix name **above** its buttons rather than beside
+  them. Side by side, a long mix name and a 150px button fought over a 190px cell and the name
+  lost; stacked, every cell also gets an identical button width, which is what stops the two
+  near-identical labels ("Single Boss breaker" / "Double Boss breaker" — chart data, so the same
+  in every language) from looking misaligned.
 - **One-offs** are a badge sheet. Name colour is rarity.
+- **Who has it lists who is standing on the rung**, not everyone who has ever held it, and counts
+  the rest as "+N others have climbed higher". On Intermediate Lv.1 the raw holder list is very
+  nearly the whole site and says nothing. One indexed read over the whole rail answers it, rather
+  than one per rung.
 - **Detail drawer** — requirement, your climb, rarity, and holders. Holders load on open, never
   with the page. **The selected rung is the only open state**: a second boolean let a scrim
   dismissal reopen itself on the page's next render (field test round 4).
@@ -69,8 +77,10 @@ A title with `CompletionRequired == 0` — every `PhoenixBasicTitle`, which is 7
 and 66 of Phoenix 2's 272 — has no formula behind it. Plate counts, play counts and step-artist
 plays are things piuscores never sees; Phoenix 2's CO-OP rating formula is still unknown.
 
-These wear a dashed edge and an `official` tag, and **never show partial progress**. The old page
-drew them as 0% of a requirement that does not exist. The drawer says so in words.
+These **never show partial progress** — the old page drew them as 0% of a requirement that does
+not exist. A dashed edge is the only mark they carry on the page itself; the drawer says the rest
+in words. (Field test round 5: they also wore an "official" tag, which was noise for something
+the drawer already explains.)
 
 The marking follows the model, not the name: Phoenix's `[X] EXPERT` capstones are basic titles
 (official-only), while Phoenix 2 made the same titles `Phoenix2TitleSetTitle` and computes them.
@@ -120,7 +130,7 @@ reads wrong against real data.
 
 | Suite | Covers |
 |---|---|
-| `TitleRailTests` (unit) | The rail inventory: counts, contiguous rungs, capstones, the EXTRA double-only trap, rung order ≠ requirement order |
-| `TitleRailsTests` (component) | Section assembly, official marking across both mixes, rarity banding |
+| `TitleRailTests` (unit) | The rail inventory: counts, contiguous rungs, capstones, the EXTRA double-only trap, rung order ≠ requirement order, a PUMBILITY band per rail |
+| `TitleRailsTests` (component) | Section assembly, official marking across both mixes, rarity banding, the worn title |
 | `SuggestedTitleLevelTests` (component) | Impersonality, singles-one-level-up, monotonicity, the level-10 floor |
 | `TitlesPageTests` (bUnit) | Rails render, filters dim, search matches a title's chart, drawer states, signed-out |

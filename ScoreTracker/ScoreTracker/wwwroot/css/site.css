@@ -6745,6 +6745,14 @@ button.chart-card-art {
    (docs/design/titles-overhaul.md). Tokens only: this page carries no colour-literal
    allowance and is not to acquire one. */
 
+/* The shell leaves the page flush against the nav, and this one opens on a panel edge or a
+   section rule rather than on a heading, so it owes itself the breathing room. */
+.title-standing,
+.title-anon,
+.title-skeleton {
+    margin-top: 16px;
+}
+
 .title-standing {
     display: grid;
     grid-template-columns: minmax(230px, 1fr) minmax(250px, 1fr);
@@ -6934,10 +6942,16 @@ button.chart-card-art {
 }
 
 /* Boss breakers are one short rail per mix, so they tile instead of stacking. */
+/* Boss breakers are one short rail per mix. The mix name sits ABOVE its buttons rather than
+   beside them: side by side, a long mix name and a 150px button fought over a 190px cell and
+   the name lost, truncating to nothing. Stacked, every cell also gets the same button width
+   for free — the labels are chart data rather than UI strings, so they are the same two
+   near-identical widths in every language, which is what made them look misaligned. */
 .title-rails.grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-    gap: 0 18px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 4px 18px;
+    align-items: start;
 }
 
 .title-rail {
@@ -6950,8 +6964,24 @@ button.chart-card-art {
 }
 
 .title-rails.grid .title-rail {
-    grid-template-columns: 1fr auto;
-    padding: 4px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 6px 6px 10px;
+}
+
+.title-rails.grid .title-rail-track {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+}
+
+/* Identical width per cell, so a column of them reads as a column. */
+.title-rails.grid .title-pip.wide {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
 }
 
 .title-rail:last-child {
@@ -6980,8 +7010,15 @@ button.chart-card-art {
     white-space: nowrap;
 }
 
+/* Stacked, the mix name owns the full cell width and no longer needs to truncate. */
+.title-rails.grid .title-rail-name > span:first-child {
+    overflow: visible;
+    white-space: normal;
+}
+
 .title-rails.grid .title-rail-name {
     font-size: 14px;
+    letter-spacing: .1em;
     color: var(--mix-ink-muted);
 }
 
@@ -7007,23 +7044,6 @@ button.chart-card-art {
 
 .title-rails.grid .title-rail-tail {
     display: none;
-}
-
-/* A title with no formula behind it: the official import awards it and nothing else, so a
-   dashed edge says "not measured here" without spending a colour. */
-.title-official-tag {
-    font-family: var(--font-body);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--mix-ink-muted);
-    border: 1px dashed color-mix(in srgb, var(--mix-ink) 30%, transparent);
-    border-radius: 2px;
-    padding: 0 4px;
-    line-height: 15px;
-    white-space: nowrap;
-    flex: 0 0 auto;
 }
 
 .title-pip {

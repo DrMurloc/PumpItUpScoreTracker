@@ -4,6 +4,7 @@
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Theming
 
@@ -94,6 +95,10 @@
                         {
                             <p class="title-hint">@L["{0} more keep their profile private.", _holders.HiddenCount]</p>
                         }
+                        @if (_holders.ClimbedPastCount > 0)
+                        {
+                            <p class="title-hint">@L["+{0} others have climbed higher on this ladder.", _holders.ClimbedPastCount]</p>
+                        }
                     }
                 </div>
             </div>
@@ -104,6 +109,9 @@
 @inject IMediator Mediator
 @code {
     [Parameter] public TitleRung? Rung { get; set; }
+
+    /// <summary>Every title on the selected rung's ladder, weakest first. Empty off a ladder.</summary>
+    [Parameter] public IReadOnlyList<Name> Ladder { get; set; } = Array.Empty<Name>();
     [Parameter] public MixEnum Mix { get; set; }
     [Parameter] public bool IsLoggedIn { get; set; }
     [Parameter] public Guid? CurrentUserId { get; set; }
@@ -146,7 +154,7 @@
         _holders = null;
         _loadingHolders = true;
         StateHasChanged();
-        _holders = await Mediator.Send(new GetTitleHoldersQuery(Mix, Rung.Title.Name));
+        _holders = await Mediator.Send(new GetTitleHoldersQuery(Mix, Rung.Title.Name, Ladder));
         _loadingHolders = false;
     }
 

@@ -34,19 +34,44 @@ internal sealed class TitleCommunityHandler :
 
     public async Task<TitleHoldersRecord> Handle(GetTitleHoldersQuery request, CancellationToken cancellationToken)
     {
-        var achieved = (await _titles.GetUsersWithTitle(request.Mix, request.Title, cancellationToken)).ToArray();
-        if (achieved.Length == 0) return new TitleHoldersRecord(Array.Empty<TitleHolder>(), 0);
+        var (standing, climbedPast) = await WhoIsStandingHere(request, cancellationToken);
+        if (standing.Length == 0) return new TitleHoldersRecord(Array.Empty<TitleHolder>(), 0, climbedPast);
 
-        var users = (await _users.GetUsers(achieved.Select(a => a.UserId), cancellationToken))
-            .ToDictionary(u => u.Id);
+        var users = (await _users.GetUsers(standing, cancellationToken)).ToDictionary(u => u.Id);
 
         // A private profile stays out of the list entirely; the drawer only learns how many.
-        var holders = achieved
-            .Where(a => users.TryGetValue(a.UserId, out var user) && user.IsPublic)
-            .Select(a => new TitleHolder(users[a.UserId]))
+        var holders = standing
+            .Where(id => users.TryGetValue(id, out var user) && user.IsPublic)
+            .Select(id => new TitleHolder(users[id]))
             .OrderBy(h => h.User.Name.ToString())
             .ToArray();
 
-        return new TitleHoldersRecord(holders, achieved.Length - holders.Length);
+        return new TitleHoldersRecord(holders, standing.Length - holders.Length, climbedPast);
+    }
+
+    /// <summary>
+    ///     Splits a rung's holders into the ones standing on it and the ones who have climbed
+    ///     past. Off a ladder every holder is standing on it, and one read answers that. On a
+    ///     ladder it takes the whole rail in one read instead — the rungs above this one are
+    ///     what say whether a holder has moved on, and asking per rung would be N queries.
+    /// </summary>
+    private async Task<(Guid[] Standing, int ClimbedPast)> WhoIsStandingHere(GetTitleHoldersQuery request,
+        CancellationToken cancellationToken)
+    {
+        var above = request.Ladder.SkipWhile(t => t != request.Title).Skip(1).ToArray();
+        if (above.Length == 0)
+        {
+            var holders = await _titles.GetUsersWithTitle(request.Mix, request.Title, cancellationToken);
+            return (holders.Select(h => h.UserId).Distinct().ToArray(), 0);
+        }
+
+        var rail = (await _titles.GetUsersWithTitles(request.Mix, above.Append(request.Title), cancellationToken))
+            .ToArray();
+        var higher = above.ToHashSet();
+        var climbers = rail.Where(r => higher.Contains(r.Title)).Select(r => r.UserId).ToHashSet();
+        var standing = rail.Where(r => r.Title == request.Title && !climbers.Contains(r.UserId))
+            .Select(r => r.UserId).Distinct().ToArray();
+
+        return (standing, climbers.Count);
     }
 }

@@ -101,6 +101,75 @@ public sealed class TitleCommunityHandlerTests
     }
 
     [Fact]
+    public async Task OnALadderOnlyThePlayersStandingOnTheRungAreListed()
+    {
+        // Intermediate Lv.1 is held by nearly everyone, so listing every holder says nothing.
+        // The ones who matter are the ones it is still their furthest rung.
+        var standing = Player("Standing");
+        var climber = Player("Climber");
+        var ladder = new Name[] { "Intermediate Lv. 1", "Intermediate Lv. 2", "Intermediate Lv. 3" };
+
+        _titles.Setup(t => t.GetUsersWithTitles(MixEnum.Phoenix, It.IsAny<IEnumerable<Name>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new TitleAchievedRecord(standing.Id, "Intermediate Lv. 1", ParagonLevel.None),
+                new TitleAchievedRecord(climber.Id, "Intermediate Lv. 1", ParagonLevel.None),
+                new TitleAchievedRecord(climber.Id, "Intermediate Lv. 3", ParagonLevel.None)
+            });
+        _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { standing });
+
+        var result = await Handler.Handle(
+            new GetTitleHoldersQuery(MixEnum.Phoenix, "Intermediate Lv. 1", ladder), CancellationToken.None);
+
+        Assert.Equal(new[] { "Standing" }, result.Holders.Select(h => h.User.Name.ToString()));
+        Assert.Equal(1, result.ClimbedPastCount);
+    }
+
+    [Fact]
+    public async Task ClimbingPastCountsOnceHoweverManyRungsAbovePlayerHolds()
+    {
+        var climber = Player("Climber");
+        var ladder = new Name[] { "Advanced Lv. 1", "Advanced Lv. 2", "Advanced Lv. 3" };
+
+        _titles.Setup(t => t.GetUsersWithTitles(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Name>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new TitleAchievedRecord(climber.Id, "Advanced Lv. 1", ParagonLevel.None),
+                new TitleAchievedRecord(climber.Id, "Advanced Lv. 2", ParagonLevel.None),
+                new TitleAchievedRecord(climber.Id, "Advanced Lv. 3", ParagonLevel.None)
+            });
+
+        var result = await Handler.Handle(
+            new GetTitleHoldersQuery(MixEnum.Phoenix, "Advanced Lv. 1", ladder), CancellationToken.None);
+
+        Assert.Empty(result.Holders);
+        Assert.Equal(1, result.ClimbedPastCount);
+    }
+
+    [Fact]
+    public async Task TheTopRungOfALadderCountsNobodyAsHavingClimbedPastIt()
+    {
+        var top = Player("Top");
+        var ladder = new Name[] { "Advanced Lv. 1", "Advanced Lv. 2" };
+        _titles.Setup(t => t.GetUsersWithTitle(It.IsAny<MixEnum>(), It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new TitleAchievedRecord(top.Id, "Advanced Lv. 2", ParagonLevel.None) });
+        _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { top });
+
+        var result = await Handler.Handle(
+            new GetTitleHoldersQuery(MixEnum.Phoenix, "Advanced Lv. 2", ladder), CancellationToken.None);
+
+        Assert.Single(result.Holders);
+        Assert.Equal(0, result.ClimbedPastCount);
+        // Nothing above it to compare against, so it takes the cheaper single-title read.
+        _titles.Verify(t => t.GetUsersWithTitles(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Name>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task ATitleWithNoHoldersSkipsTheUserLookupEntirely()
     {
         _titles.Setup(t => t.GetUsersWithTitle(It.IsAny<MixEnum>(), It.IsAny<Name>(), It.IsAny<CancellationToken>()))
