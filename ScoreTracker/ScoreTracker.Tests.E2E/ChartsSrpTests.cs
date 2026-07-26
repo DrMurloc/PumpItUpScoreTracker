@@ -113,6 +113,36 @@ public sealed class ChartsSrpTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TheDetailsDialogStaysNarrowOnDesktopAndKeepsItsScrollInside()
+    {
+        // Field-test: the dialog opened 1856px wide on a 1920px viewport with no sign it
+        // scrolled. Three earlier attempts to cap it changed nothing, because
+        // wwwroot/css/charts.scss carries `.mud-dialog-width-sm { max-width: none !important }`
+        // site-wide and the dialog was asking for MaxWidth.Small — `!important` beats any
+        // normal-weight rule, including MudBlazor's own cap. Measured here rather than
+        // eyeballed, so a future "cap" that does nothing fails instead of shipping.
+        await _page.SetViewportSizeAsync(1920, 1000);
+        await _page.GotoAsync("/Charts?LevelMin=20&LevelMax=20&Type=Double");
+        await Expect(_page.Locator(".srp-card").First)
+            .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
+
+        await _page.Locator(".srp-card-link").First.ClickAsync();
+        var dialog = _page.Locator(".mud-dialog.chart-details-dialog");
+        await Expect(dialog).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
+
+        var box = await dialog.BoundingBoxAsync();
+        Assert.True(box!.Width <= 560,
+            $"the details dialog is {box.Width:0}px wide on a 1920px viewport — the cap is not applying");
+
+        // Whatever the content's height, it must be the thing that scrolls, so the bar sits
+        // beside the content rather than the whole dialog running off the viewport.
+        var contentScrolls = await _page.EvaluateAsync<bool>(
+            "() => { const c = document.querySelector('.mud-dialog.chart-details-dialog .mud-dialog-content');" +
+            "  return getComputedStyle(c).overflowY === 'auto' && c.getBoundingClientRect().height <= window.innerHeight; }");
+        Assert.True(contentScrolls, "the dialog content is not a bounded scroll region");
+    }
+
+    [Fact]
     public async Task TheMoreFiltersListStaysPutWhenThePageBehindScrolls()
     {
         // Field-test round 4: the open pick list appeared to slide with the background. The

@@ -189,10 +189,22 @@
     </DialogActions>
 </MudDialog>
 <style>
-    /* Desktop cap (owner, widget-shell field-test round 1): MaxWidth.Small let the
-       video domineer — nothing in the dialog needs more than ~520px. */
+    /* Desktop cap. This has to be said once, here, and it only works because the dialog no
+       longer asks for MaxWidth.Small: wwwroot/css/charts.scss carries a site-wide
+       `.mud-dialog-width-sm { max-width: none !important }` — added long ago so a video
+       dialog could outgrow the cap — and no normal-weight rule can beat `!important`, which
+       is why every previous attempt to cap this dialog did nothing at all. Options now use
+       MaxWidth.False, so MudBlazor never tags it with that class and this rule governs. */
     .mud-dialog.chart-details-dialog {
         max-width: 520px;
+    }
+
+    /* The content is tall (video, meta, bars, history, the record row). Bounding it keeps
+       the scroll inside the dialog, where the bar is next to the content it moves, instead
+       of running the dialog off the bottom of the viewport with no hint it continues. */
+    .mud-dialog.chart-details-dialog .mud-dialog-content {
+        max-height: min(70vh, 720px);
+        overflow-y: auto;
     }
 
     .chart-details-video {
@@ -275,12 +287,6 @@
         margin: 8px 0;
     }
 
-    /* Owner call (piucenter round 2): the desktop dialog ran wide enough that the
-       16:9 video outgrew laptop viewports — cap under MudBlazor's Small. */
-    .mud-dialog.chart-details-dialog {
-        max-width: 520px;
-    }
-
     .chart-details-piucenter {
         display: inline-block;
         margin-top: 8px;
@@ -312,7 +318,11 @@
 </style>
 
 @code {
-    private readonly DialogOptions _options = new() { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small };
+    // MaxWidth.False on purpose: Small would tag the dialog `mud-dialog-width-sm`, which
+    // charts.scss globally forces to `max-width: none !important`. The cap lives in this
+    // component's own stylesheet instead — see the note beside it.
+    private readonly DialogOptions _options = new()
+        { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.False };
     private Guid _loadedChartId = Guid.Empty;
     private int? _inputScore;
     private PhoenixPlate? _inputPlate;
