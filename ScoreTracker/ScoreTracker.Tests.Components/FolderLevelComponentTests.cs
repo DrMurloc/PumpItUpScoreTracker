@@ -115,13 +115,19 @@ public sealed class FolderLevelComponentTests : ComponentTestBase
     }
 
     [Fact]
-    public void ALampedSpectrumHasNoGreyTail()
+    public void ALampedSpectrumHasNoGreyTailAndGlows()
     {
-        var cut = RenderComponent<FolderSpectrum>(p => p
+        var lamped = RenderComponent<FolderSpectrum>(p => p
             .Add(s => s.GradesDescending, Grades((PhoenixLetterGrade.A, 4)))
             .Add(s => s.Size, 4));
+        var partial = RenderComponent<FolderSpectrum>(p => p
+            .Add(s => s.GradesDescending, Grades((PhoenixLetterGrade.A, 3)))
+            .Add(s => s.Size, 4));
 
-        Assert.DoesNotContain("var(--unplayed-grade)", cut.Find(".fl-fill").GetAttribute("style") ?? string.Empty);
+        Assert.DoesNotContain("var(--unplayed-grade)",
+            lamped.Find(".fl-fill").GetAttribute("style") ?? string.Empty);
+        Assert.Contains("fl-track-lamped", lamped.Find(".fl-track").GetAttribute("class"));
+        Assert.DoesNotContain("fl-track-lamped", partial.Find(".fl-track").GetAttribute("class"));
     }
 
     [Fact]
@@ -135,10 +141,9 @@ public sealed class FolderLevelComponentTests : ComponentTestBase
             .Add(s => s.Size, 10)
             .Add(s => s.ShowTicks, false));
 
-        // Four ticks: 20/40/60/80. The lamp is the flag at the end, not a tick.
+        // Four ticks: 20/40/60/80. 100 is the track's own end, so it never gets one.
         Assert.Equal(4, withTicks.FindAll(".fl-tick").Count);
         Assert.Empty(without.FindAll(".fl-tick"));
-        Assert.Single(withTicks.FindAll(".fl-lamp-flag"));
     }
 
     [Fact]

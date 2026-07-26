@@ -6833,16 +6833,6 @@ button.chart-card-art {
     background: var(--mix-bg);
 }
 
-.fl-lamp-flag {
-    position: absolute;
-    top: -6px;
-    bottom: -6px;
-    right: -1px;
-    width: 3px;
-    border-radius: 2px;
-    background: var(--mix-accent);
-    box-shadow: 0 0 10px -1px var(--mix-accent);
-}
 
 /* The tier list's folder standing: one line and the bar, sitting under the title track. */
 .fl-header {
@@ -6972,11 +6962,11 @@ button.chart-card-art {
     height: 2px;
 }
 
-.fl-vertical .fl-lamp-flag {
-    top: -1px;
-    bottom: auto;
-    left: -6px;
-    right: -6px;
-    width: auto;
-    height: 3px;
+
+/* A lamped folder glows. There is deliberately no end-of-track marker: the track's own end
+   already IS 100%, so a flag there drew a finish line on top of the finish line. Completion
+   is a state of the whole bar, and this is how the bar wears it. */
+.fl-track-lamped {
+    border-color: color-mix(in srgb, var(--mix-accent) 55%, transparent);
+    box-shadow: 0 0 12px -2px var(--mix-accent);
 }

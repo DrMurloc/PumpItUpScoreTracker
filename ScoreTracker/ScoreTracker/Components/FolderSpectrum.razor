@@ -15,7 +15,7 @@
 *@
 
 <div class="fl-spectrum @SizeClass @(Vertical ? "fl-vertical" : "")">
-    <div class="fl-track">
+    <div class="fl-track @(IsLamped ? "fl-track-lamped" : "")">
         <div class="fl-fill" style="background:@Gradient"></div>
         @if (ShowTicks)
         {
@@ -24,7 +24,6 @@
                 <div class="fl-tick" style="@(Vertical ? $"bottom:{tier}%" : $"left:{tier}%")"></div>
             }
         }
-        <div class="fl-lamp-flag"></div>
     </div>
 </div>
 
@@ -47,6 +46,12 @@
 
     /// <summary>Slim for widget rows and dense lists, chunky for the tier-list header.</summary>
     [Parameter] public FolderSpectrumSize Height { get; set; } = FolderSpectrumSize.Normal;
+
+    /// <summary>
+    ///     Every chart passed. There is no marker for it — the track's own end IS 100%, so a flag
+    ///     there was drawing a finish line on top of the finish line. The whole bar glows instead.
+    /// </summary>
+    private bool IsLamped => Size > 0 && GradesDescending.Count >= Size;
 
     private string SizeClass => Height switch
     {
