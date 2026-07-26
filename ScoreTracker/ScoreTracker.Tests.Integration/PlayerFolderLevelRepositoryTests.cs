@@ -24,9 +24,11 @@ public sealed class PlayerFolderLevelRepositoryTests : IAsyncLifetime
     public Task InitializeAsync() => _fixture.ResetAsync();
     public Task DisposeAsync() => Task.CompletedTask;
 
+    // The grade reads off the score at the tier's position; these rows carry the same value as
+    // both so the round-trip assertions can talk about either.
     private static FolderLevelRecord Folder(ChartType type, int level, int size, int played, int average,
         MixEnum mix = MixEnum.Phoenix) =>
-        new(mix, type, DifficultyLevel.From(level), size, played, average);
+        new(mix, type, DifficultyLevel.From(level), size, played, average, average);
 
     [Fact]
     public async Task SavingTheSameFolderTwiceUpsertsRatherThanDuplicating()
