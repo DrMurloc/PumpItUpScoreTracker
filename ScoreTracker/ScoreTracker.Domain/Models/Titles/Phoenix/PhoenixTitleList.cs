@@ -265,11 +265,15 @@ public static class PhoenixTitleList
         var progress = Titles.Select(t => new PhoenixTitleProgress(t)).ToImmutableArray();
         foreach (var attempt in attempts)
         foreach (var title in progress)
-        {
             title.ApplyAttempt(charts[attempt.ChartId], attempt);
+
+        // Completions the official site reports stand on their own — a player who linked
+        // their account but has imported no scores still holds every title it granted them.
+        // (This ran inside the attempt loop, so with no attempts none of them applied, and
+        // with attempts it re-applied once per score. Phoenix 2 always did it this way.)
+        foreach (var title in progress)
             if (completedTitles.Contains(title.Title.Name))
                 title.Complete();
-        }
 
         return progress;
     }
