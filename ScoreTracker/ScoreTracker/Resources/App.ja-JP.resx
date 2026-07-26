@@ -818,12 +818,6 @@
   <data name="Removed" xml:space="preserve">
 	  <value>削除済</value>
   </data>
-  <data name="Step Artists" xml:space="preserve">
-	  <value>譜面作者</value>
-  </data>
-  <data name="Disclaimer: This list is being refined, some charts are missing step artists and some may have incorrect artists." xml:space="preserve">
-	  <value>注意：このリストは調整中で、譜面作者が未登録または誤っている場合があります。</value>
-  </data>
   <data name="PIU Life Calculator" xml:space="preserve">
 	  <value>PIU体力計算</value>
   </data>
