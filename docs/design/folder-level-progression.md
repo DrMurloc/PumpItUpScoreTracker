@@ -155,8 +155,8 @@ Charts sorted best-first, each segment wearing its own grade metal, unplayed cap
 
 **There is no 100% marker.** The track's own end already *is* 100%, so a flag there draws a finish
 line on top of the finish line — it reads as a stray artifact hanging off the bar, and on a vertical
-column it reads as a progress cap it never was. A lamped folder glows instead: completion is a state
-of the whole bar, matching the ring the chip gets.
+column it reads as a progress cap it never was. A lamped folder glows instead, in its own grade metal — lamped at AA burns copper, lamped at
+SSS+ burns ice-blue, so the glow says how well it was lamped and not only that it was.
 
 Same data the By-Level Breakdown widget's **Grade Distribution** preset already computes (grades
 stacked per folder with an unplayed cap), rendered horizontally for a single folder.
@@ -298,7 +298,7 @@ tier ticks, grade chip. One concept, one component.
 
 | # | Surface | Shape |
 |---|---|---|
-| 1 | **Home widget** | A `folder-levels` widget for folders you pick. Each size holds a fixed count — **1x1 one, 2x1 two, 2x2 four, 2x3 six, 2x4 eight** (two wide, up to four deep) — because a bigger cell should show *more folders*, not the same folders with a scrollbar. Picking sits behind a **Select Folders** popover — `FolderGrid` is a popover control like a date picker, never inline chrome — in the multi-toggle mode the randomizer already drives. A fresh widget fills itself with folders around your competitive level, alternating singles and doubles, each type walking its own level. Separately, By-Level Breakdown gains a **Clear Progress by Grade** preset — the same view at all-folders scale. It is a preset rather than a colour field on Clear Progress because the `LetterGrade` metric with `IncludeUnplayed` already expresses it exactly, and a second way to say the same thing would widen the public config vocabulary (D19) for nothing. |
+| 1 | **Home widget** | A `folder-levels` widget for folders you pick. Each size holds a fixed count — **1x1 one, 2x1 two, 2x2 four, 2x3 seven** (two wide, up to three deep) — because a bigger cell should show *more folders*, not the same folders with a scrollbar. Picking sits behind a **Select Folders** popover — `FolderGrid` is a popover control like a date picker, never inline chrome — in the multi-toggle mode the randomizer already drives. A fresh widget fills itself with folders around your competitive level, alternating singles and doubles, each type walking its own level. Separately, By-Level Breakdown gains a **Clear Progress by Grade** preset — the same view at all-folders scale. It is a preset rather than a colour field on Clear Progress because the `LetterGrade` metric with `IncludeUnplayed` already expresses it exactly, and a second way to say the same thing would widen the public config vocabulary (D19) for nothing. |
 | 2 | **Tier list page** | The full bar for the folder you are on, under the existing `.ptt` PUMBILITY title track. That one answers "what is my next title"; this answers "how far through this folder am I, and how well". |
 | 3 | **Community player** | `CommunityPlayer.razor`'s Folder Completion strip, **split into two graphs — singles and doubles** — since a folder level is per type. Track height keeps following real folder size; the type-hue fill becomes the spectrum. |
 | 4 | **Community Discord** | §5.4's line. |
