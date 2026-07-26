@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -49,6 +50,17 @@ internal static class FolderLevelCalculator
         if (folder.Length == 0) return null;
         return Compute(mix, folder, scoresByChart).SingleOrDefault();
     }
+
+    /// <summary>
+    ///     The scores a folder standing is built from: passed charts only. A broken score is a
+    ///     failed run, so it counts toward neither completion nor the average — the same rule
+    ///     the folder lamps already apply. Every caller goes through here so the two never drift.
+    /// </summary>
+    public static IReadOnlyDictionary<Guid, int> PassedScores(IEnumerable<RecordedPhoenixScore> bests) =>
+        bests
+            .Where(b => b.Score != null && !b.IsBroken)
+            .GroupBy(b => b.ChartId)
+            .ToDictionary(g => g.Key, g => (int)g.Max(b => b.Score!.Value));
 
     // Rounded to the nearest point rather than truncated: an average is a display number here,
     // and truncation would drop a folder sitting exactly on a grade floor one rung.

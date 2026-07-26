@@ -10,8 +10,10 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 ///     costs. Completion reacts to the folder gaining charts; the grade cannot, because
 ///     unplayed charts never enter an average of what was played.
 ///     <para>
-///         <see cref="Level" /> carries the player count for co-op folders, matching the
-///         convention <see cref="Chart.Level" /> already uses.
+///         <see cref="Played" /> counts <em>passed</em> charts — a broken score is a failed run and
+///         feeds neither number, the same rule the folder lamps apply. <see cref="Level" /> carries
+///         the player count for co-op folders, matching the convention <see cref="Chart.Level" />
+///         already uses.
 ///     </para>
 /// </summary>
 public sealed record FolderLevelRecord(
