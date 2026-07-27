@@ -361,7 +361,7 @@ internal sealed class LeaderboardHubSaga :
                 Array.Empty<BoardCutlineRecord>(), Array.Empty<CutlineHistoryPointRecord>());
 
         return (await _cache.GetOrCreateAsync(
-            $"OfficialWhatItTakes__{request.Mix}__{request.Type}__{latest.Id}", async entry =>
+            OfficialCacheKeys.WhatItTakes(request.Mix, request.Type, latest.Id), async entry =>
             {
                 entry.SlidingExpiration = TimeSpan.FromHours(12);
                 return await BuildWhatItTakes(request.Mix, request.Type, latest, cancellationToken);
@@ -479,7 +479,7 @@ internal sealed class LeaderboardHubSaga :
 
     private async Task<SnapshotStats> GetSnapshotStats(MixEnum mix, int snapshotId, CancellationToken ct)
     {
-        return (await _cache.GetOrCreateAsync($"OfficialSnapshotStats__{mix}__{snapshotId}", async entry =>
+        return (await _cache.GetOrCreateAsync(OfficialCacheKeys.SnapshotStats(mix, snapshotId), async entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromHours(12);
             var details = await _snapshots.GetPlacementDetails(snapshotId, ct);

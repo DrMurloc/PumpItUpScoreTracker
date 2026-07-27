@@ -40,6 +40,15 @@
                OnClick="RefreshPopularity">
         @L["Refresh popularity"]
     </MudButton>
+    @* ONE-TIME repair press — delete this button, RefreshRatingBoardsCommand, its consumer
+       and DeleteRatingPlacements once both mixes have been run through it. Its two strings
+       are deliberately NOT in the resx: they resolve to the English literal, which is what
+       the one admin who will ever see them reads anyway, and translating a button we intend
+       to delete would mean editing eighteen resx entries twice. *@
+    <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_ratingBoardsQueued"
+               OnClick="RefreshRatingBoards">
+        @L["Refresh rating boards (one-time)"]
+    </MudButton>
 </MudStack>
 
 <MudText Typo="Typo.h6">@L["Rename proposals"]</MudText>
@@ -190,6 +199,19 @@ else
         _popularityQueued = true;
         await Bus.Publish(new RefreshPopularityCommand(_mix));
         Snackbar.Add(L["Popularity refresh queued - re-attaches to the latest snapshot"].Value,
+            Severity.Success);
+    }
+
+    // ONE-TIME repair press (see RefreshRatingBoardsCommand): re-scrapes the rating boards
+    // onto the latest sealed snapshot so Phoenix gets the PUMBILITY board it never mirrored
+    // and Phoenix 2's default-avatar rows get their real art, without a second import.
+    private bool _ratingBoardsQueued;
+
+    private async Task RefreshRatingBoards()
+    {
+        _ratingBoardsQueued = true;
+        await Bus.Publish(new RefreshRatingBoardsCommand(_mix));
+        Snackbar.Add(L["Rating board refresh queued - re-attaches to the latest snapshot"].Value,
             Severity.Success);
     }
 

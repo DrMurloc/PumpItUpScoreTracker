@@ -216,6 +216,9 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 (ChartType.Double, "PUMBILITY Doubles")
             }
             : new (ChartType?, string)[] { (null, "PUMBILITY") };
+        // These pages carry an avatar per row — the only avatar source outside the board
+        // sweep, and far cheaper than it. Mirrored once per unique URL for the whole scrape.
+        var avatarCache = new Dictionary<string, Uri?>();
         foreach (var (chartType, boardName) in boards)
         {
             var seen = new HashSet<string>();
@@ -228,7 +231,10 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 {
                     if (!seen.Add(entry.ProfileName)) continue;
 
-                    result.Add(new RatingBoardEntry(boardName, entry.ProfileName, (decimal)entry.Pumbility));
+                    result.Add(new RatingBoardEntry(boardName, entry.ProfileName, (decimal)entry.Pumbility,
+                        entry.AvatarUrl == null
+                            ? null
+                            : await MirrorAvatar(entry.AvatarUrl, avatarCache, cancellationToken)));
                     added++;
                     count++;
                 }

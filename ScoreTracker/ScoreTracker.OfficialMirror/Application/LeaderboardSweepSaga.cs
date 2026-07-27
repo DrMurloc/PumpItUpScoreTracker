@@ -1,5 +1,6 @@
 using MassTransit;
 using MediatR;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
@@ -28,6 +29,8 @@ namespace ScoreTracker.OfficialMirror.Application;
 internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCommand>,
     IConsumer<RebuildWeeklyHighlightsCommand>,
     IConsumer<RefreshPopularityCommand>,
+    // ONE-TIME: drop with RefreshRatingBoardsCommand once the repair press has been run.
+    IConsumer<RefreshRatingBoardsCommand>,
     IConsumer<SeedBaselineSnapshotCommand>,
     IRequestHandler<GetLastLeaderboardImportTimestampQuery, DateTimeOffset?>,
     IRequestHandler<GetMissingChartsQuery, IReadOnlyList<MissingChartRecord>>,
@@ -50,12 +53,17 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     private readonly IBus _bus;
     private readonly ILogger _logger;
 
+    // ONE-TIME: only RefreshRatingBoardsCommand needs it — writing onto an already-sealed
+    // snapshot is the one case the hub's snapshot-keyed cache cannot notice by itself.
+    private readonly IMemoryCache _cache;
+
     public LeaderboardSweepSaga(IOfficialSiteClient officialSite, IOfficialSnapshotRepository snapshots,
         IOfficialRecordRepository records, IOfficialPlayerIdentityRepository identity,
         IOfficialLeaderboardRepository legacy, IChartRepository charts,
         ITierListRepository tierLists, IDateTimeOffsetAccessor dateTime,
-        IBus bus, ILogger<LeaderboardSweepSaga> logger)
+        IBus bus, IMemoryCache cache, ILogger<LeaderboardSweepSaga> logger)
     {
+        _cache = cache;
         _officialSite = officialSite;
         _snapshots = snapshots;
         _records = records;
@@ -238,6 +246,48 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     }
 
     /// <summary>
+    ///     ONE-TIME ADMIN PRESS — see <see cref="RefreshRatingBoardsCommand" />; delete this
+    ///     consumer, the command and the button once it has been run. Re-scrapes the rating
+    ///     boards alone onto the latest SEALED snapshot, so the repaired rows belong to the
+    ///     import that already ran rather than to a second one.
+    ///     Order is deliberate: the whole scrape completes before anything stored is touched,
+    ///     so a fetch that dies part-way leaves the sealed snapshot exactly as it was and the
+    ///     press is safe to hit again. The hub memoizes per snapshot id — normally sound,
+    ///     since a sealed snapshot never changes — so writing more rows onto one means
+    ///     evicting those entries by hand.
+    /// </summary>
+    public async Task Consume(ConsumeContext<RefreshRatingBoardsCommand> context)
+    {
+        var mix = context.Message.Mix;
+        var ct = context.CancellationToken;
+        var latest = await _snapshots.GetLatestSealed(mix, ct);
+        if (latest == null)
+        {
+            _logger.LogWarning("No sealed {Mix} snapshot to attach rating boards to; run an import first", mix);
+            return;
+        }
+
+        var entries = (await _officialSite.GetRatingBoards(mix, ct)).ToArray();
+        if (entries.Length == 0)
+        {
+            _logger.LogWarning("{Mix} rating-board scrape came back empty; snapshot {SnapshotId} left alone", mix,
+                latest.Id);
+            return;
+        }
+
+        await _snapshots.DeleteRatingPlacements(latest.Id, ct);
+        await WriteRatingBoards(latest.Id, mix, new SweepPlayerCache(_snapshots, mix, _dateTime.Now), entries, ct);
+
+        _cache.Remove(OfficialCacheKeys.SnapshotStats(mix, latest.Id));
+        foreach (var type in OfficialCacheKeys.WhatItTakesTypes)
+            _cache.Remove(OfficialCacheKeys.WhatItTakes(mix, type, latest.Id));
+
+        _logger.LogInformation("{Mix} rating boards refreshed onto snapshot {SnapshotId}: {Rows} rows across " +
+                               "{Boards} boards", mix, latest.Id, entries.Length,
+            entries.Select(e => e.BoardName).Distinct().Count());
+    }
+
+    /// <summary>
     ///     Re-scrapes the play ranking alone and re-attaches it to the latest sealed
     ///     snapshot — the cheap repair/refresh when a full board sweep isn't warranted.
     /// </summary>
@@ -302,11 +352,17 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         CancellationToken ct)
     {
         var entries = (await _officialSite.GetRatingBoards(mix, ct)).ToArray();
+        await WriteRatingBoards(snapshotId, mix, players, entries, ct);
+    }
+
+    private async Task WriteRatingBoards(int snapshotId, MixEnum mix, SweepPlayerCache players,
+        IReadOnlyCollection<RatingBoardEntry> entries, CancellationToken ct)
+    {
         foreach (var boardGroup in entries.GroupBy(e => e.BoardName))
         {
             var board = await _snapshots.EnsureBoard(mix, LeaderboardTypes.Rating, boardGroup.Key, null, null,
                 null, ct);
-            var ids = await players.Resolve(boardGroup.Select(e => (e.Username, (Uri?)null)).ToArray(), ct);
+            var ids = await players.Resolve(boardGroup.Select(e => (e.Username, e.AvatarUrl)).ToArray(), ct);
             var rows = Placements.Olympic(boardGroup, e => e.Value)
                 .Select(p => new PlacementRow(board.Id, ids[p.Item.Username], p.Place, p.Item.Value))
                 .ToArray();
