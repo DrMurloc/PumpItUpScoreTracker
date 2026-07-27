@@ -328,23 +328,22 @@ body {
     background: rgba(255, 255, 255, .08);
 }
 
-.mega-panel {
-    display: flex;
-    gap: 8px;
-    padding: 4px 6px;
+/* Tier Lists is top-level when the bar has room for seven items and folds into Play when
+   it doesn't. 1280 is MudBlazor's Lg — the ladder the rest of the app speaks — and it puts
+   every tablet-landscape width (1024, 1180, 1194) on the folded side while every real
+   laptop keeps the full bar. Both copies ship in the HTML; exactly one is ever shown. */
+.nav-wide-only {
+    display: none;
 }
 
-.mega-col {
-    min-width: 180px;
-}
+@media (min-width: 1280px) {
+    .top-nav .nav-wide-only {
+        display: inline-flex;
+    }
 
-.mega-head {
-    font-family: var(--font-display);
-    font-size: .7rem;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--mix-ink-muted);
-    padding: 8px 16px 2px;
+    .nav-folded-only {
+        display: none;
+    }
 }
 
 .mix-pill {

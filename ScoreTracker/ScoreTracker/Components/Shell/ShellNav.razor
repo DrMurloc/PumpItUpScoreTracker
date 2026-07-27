@@ -12,6 +12,10 @@
         {
             <ShellMenuItem Href="/" Icon="@Icons.Material.Filled.Home">@L["Home"]</ShellMenuItem>
         }
+        @* Tier Lists sits at top level when the bar has room and folds in here when it
+           doesn't (see the standalone copy below). Both are always in the DOM; CSS picks
+           one, so only ever one is visible. *@
+        <ShellMenuItem Href="/TierLists" Icon="@Icons.Material.Filled.Topic" Class="nav-folded-only">@L["Tier Lists"]</ShellMenuItem>
         <ShellMenuItem Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts"]</ShellMenuItem>
         @if (Model.IsLoggedIn && !Model.IsGatedMix)
         {
@@ -23,7 +27,11 @@
         }
     </ShellMenu>
 
-    <a href="/TierLists" class="top-nav-btn">@L["Tier Lists"]</a>
+    @* Seven top-level items don't fit between the wordmark and the app bar's right side
+       until ~1280 (MudBlazor's Lg, and the ladder the rest of the app already speaks).
+       Below that this hides and the copy inside Play takes over — which puts every
+       tablet-landscape width on the folded side and every real laptop on this one. *@
+    <a href="/TierLists" class="top-nav-btn nav-wide-only">@L["Tier Lists"]</a>
 
     @* Nav follows LegacyMixGate: destinations a pre-XX mix can't reach yet
        simply don't show (docs/design/legacy-mixes.md). *@
@@ -46,38 +54,35 @@
         </ShellMenu>
 
         <ShellMenu Label=@L["Compete"]>
-            <div class="mega-panel">
-                <div class="mega-col">
-                    <div class="mega-head">@L["Compete"]</div>
-                    <ShellMenuItem Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</ShellMenuItem>
-                    @* Compete, not Tools (round 11): the randomizer runs micro-tournaments now. *@
-                    <ShellMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.Casino">@L["Chart Randomizer"]</ShellMenuItem>
-                    <ShellMenuItem Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</ShellMenuItem>
-                    @foreach (var tourney in Model.HighlightedEvents)
-                    {
-                        @if (tourney.Type == TournamentType.Stamina)
-                        {
-                            <ShellMenuItem Href=@($"/Tournament/Stamina/{tourney.Id}") Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
-                        }
-                        else if (tourney.LinkOverride != null)
-                        {
-                            <ShellMenuItem Href="@tourney.LinkOverride.ToString()" External="true" Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
-                        }
-                        else
-                        {
-                            <ShellMenuItem Href=@($"/Tournament/{tourney.Id}/Qualifiers") Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
-                        }
-                    }
-                </div>
-                <div class="mega-col">
-                    <div class="mega-head">@L["Official Leaderboards"]</div>
-                    <ShellMenuItem Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Whatshot">@L["This Week"]</ShellMenuItem>
-                    <ShellMenuItem Href="/OfficialLeaderboards/Rankings" Icon="@Icons.Material.Filled.Leaderboard">@L["Rankings"]</ShellMenuItem>
-                    <ShellMenuItem Href="/OfficialLeaderboards/Players" Icon="@Icons.Material.Filled.PersonSearch">@L["Players"]</ShellMenuItem>
-                    <ShellMenuItem Href="/OfficialLeaderboards/Popularity" Icon="@Icons.Material.Filled.TrendingUp">@L["Popularity"]</ShellMenuItem>
-                    <ShellMenuItem Href="/OfficialLeaderboards/WhatItTakes" Icon="@Icons.Material.Filled.Stairs">@L["What It Takes"]</ShellMenuItem>
-                </div>
-            </div>
+            <ShellMenuItem Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</ShellMenuItem>
+            @* Compete, not Tools (round 11): the randomizer runs micro-tournaments now. *@
+            <ShellMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.Casino">@L["Chart Randomizer"]</ShellMenuItem>
+            <ShellMenuItem Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</ShellMenuItem>
+            @foreach (var tourney in Model.HighlightedEvents)
+            {
+                @if (tourney.Type == TournamentType.Stamina)
+                {
+                    <ShellMenuItem Href=@($"/Tournament/Stamina/{tourney.Id}") Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
+                }
+                else if (tourney.LinkOverride != null)
+                {
+                    <ShellMenuItem Href="@tourney.LinkOverride.ToString()" External="true" Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
+                }
+                else
+                {
+                    <ShellMenuItem Href=@($"/Tournament/{tourney.Id}/Qualifiers") Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
+                }
+            }
+        </ShellMenu>
+
+        @* The official boards are the only leaderboards left, so they get the top-level
+           slot under their plain name rather than a column inside Compete. *@
+        <ShellMenu Label=@L["Leaderboards"]>
+            <ShellMenuItem Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Whatshot">@L["This Week"]</ShellMenuItem>
+            <ShellMenuItem Href="/OfficialLeaderboards/Rankings" Icon="@Icons.Material.Filled.Leaderboard">@L["Rankings"]</ShellMenuItem>
+            <ShellMenuItem Href="/OfficialLeaderboards/Players" Icon="@Icons.Material.Filled.PersonSearch">@L["Players"]</ShellMenuItem>
+            <ShellMenuItem Href="/OfficialLeaderboards/Popularity" Icon="@Icons.Material.Filled.TrendingUp">@L["Popularity"]</ShellMenuItem>
+            <ShellMenuItem Href="/OfficialLeaderboards/WhatItTakes" Icon="@Icons.Material.Filled.Stairs">@L["What It Takes"]</ShellMenuItem>
         </ShellMenu>
     }
 
