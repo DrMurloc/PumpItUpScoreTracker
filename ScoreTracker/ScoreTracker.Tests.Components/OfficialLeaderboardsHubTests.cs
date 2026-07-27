@@ -229,6 +229,73 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         Assert.Contains("(2 weeks)", cut.Markup);
     }
 
+    [Fact]
+    public void ThisWeekDrawsWorldFirstBandsAsGradeArt()
+    {
+        // A band is a picture everywhere else on the site; the world-first rows read the
+        // same way. The perfect game is a plate, every letter below it is letter art.
+        var chart = MakeChart();
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WeeklyHighlightsRecord(Week2, Week1,
+                Array.Empty<OfficialMoverRecord>(),
+                Array.Empty<OfficialBoardsClimbedRecord>(),
+                new[]
+                {
+                    new OfficialGradeFirstRecord(Player(), chart.Id, "Double", 26, "PG", 1_000_000, true),
+                    new OfficialGradeFirstRecord(Player(2, "PUMPJACK"), chart.Id, "Double", 26, "AA+",
+                        930_000, false)
+                },
+                Array.Empty<OfficialNewNumberOneRecord>()));
+
+        var cut = RenderComponent<HubThisWeek>(p => p
+            .Add(x => x.Mix, MixEnum.Phoenix2)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [chart.Id] = chart }));
+
+        Assert.Contains("plates/pg.png", cut.Markup);
+        Assert.Contains("letters/aaplus.png", cut.Markup);
+    }
+
+    // ── What It Takes ────────────────────────────────────────────────────────
+
+    [Fact]
+    public void WhatItTakesDrawsItsGradeLadderAsArtAndHidesAOneBoardPicker()
+    {
+        // Phoenix publishes one PUMBILITY board, so there is nothing to pick between — the
+        // Board select would offer tabs the mix does not have.
+        _mediator.Setup(m => m.Send(It.IsAny<GetWhatItTakesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WhatItTakesRecord(Week2, true, 1000,
+                new CutlineTierRecord(1000, 13000m, 100m, 23, 22, 21, 20),
+                new[] { new CutlineTierRecord(1000, 13000m, 100m, 23, 22, 21, 20) },
+                new[] { new BoardCutlineRecord("All", 13000m, 100m, true) },
+                Array.Empty<CutlineHistoryPointRecord>()));
+
+        var cut = RenderComponent<HubWhatItTakes>(p => p.Add(x => x.Mix, MixEnum.Phoenix));
+
+        Assert.Contains("letters/aaa.png", cut.Markup);
+        Assert.Contains("letters/sss.png", cut.Markup);
+        Assert.Empty(cut.FindAll(".mud-select"));
+    }
+
+    [Fact]
+    public void WhatItTakesOffersThePickerWhenTheMixSplitsItsBoard()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetWhatItTakesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WhatItTakesRecord(Week2, true, 1000,
+                new CutlineTierRecord(1000, 13000m, 100m, 23, 22, 21, 20),
+                new[] { new CutlineTierRecord(1000, 13000m, 100m, 23, 22, 21, 20) },
+                new[]
+                {
+                    new BoardCutlineRecord("All", 13000m, 100m, true),
+                    new BoardCutlineRecord("Singles", 11000m, 50m, true),
+                    new BoardCutlineRecord("Doubles", 9000m, 25m, true)
+                },
+                Array.Empty<CutlineHistoryPointRecord>()));
+
+        var cut = RenderComponent<HubWhatItTakes>(p => p.Add(x => x.Mix, MixEnum.Phoenix2));
+
+        Assert.NotEmpty(cut.FindAll(".mud-select"));
+    }
+
     // ── Rankings ─────────────────────────────────────────────────────────────
 
     [Fact]

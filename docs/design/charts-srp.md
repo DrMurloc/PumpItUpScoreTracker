@@ -359,6 +359,15 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
 - **Skills**: the SRP's chips were already the granular piucenter badges; they lose their
   category tint, and the coverage bars on the chart page and dialog move to granular badges
   too. See [nuke-old-skill-categories.md](nuke-old-skill-categories.md).
+- **The page stops side-scrolling on a phone**: the answer line's six controls plus the count
+  are wider than a 360px viewport, so they travel as one right-aligned block
+  (`.srp-answer-controls`) on a row that wraps. Table density borrowed the tier lists'
+  `.tier-table` classes, which lived inside `ChartSkills.razor`'s `<style>` block and
+  therefore did not exist on this page at all — the table rendered unstyled and took the
+  document sideways with it. Those base rules moved to `site.css`, where both pages read
+  them, and the wrap is what scrolls.
+- **The filter drawer closes from its foot**: the drawer is taller than a phone screen, so
+  the header's ✕ has scrolled out of reach by the time the picking is done.
 
 ## 7. Cross-mix: built, removed, deferred
 

@@ -524,6 +524,32 @@ public sealed class PiuGameApiTests
     }
 
     [Fact]
+    public async Task GetPumbilityRankingsParsesThePhoenixBoard()
+    {
+        // Phoenix publishes a PUMBILITY board too, on the same page and markup — but its
+        // values are whole numbers with no decimal span, its avatars ride /data/avatar_img/,
+        // and the whole 1000-player board is one un-paginated page. The parser has to read
+        // that shape without an authenticated client (Phoenix's rankings stay anonymous).
+        var html = await File.ReadAllTextAsync(
+            Path.Combine(FixtureRoot, "GetPumbilityRankings_Phoenix.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetPumbilityRankings(MixEnum.Phoenix, null, 1, null, CancellationToken.None);
+
+        Assert.Equal(2, result.Entries.Length);
+        Assert.Equal("FEFEMZ#1489", result.Entries[0].ProfileName);
+        Assert.Equal("PIU STEPMAKER", result.Entries[0].Title);
+        Assert.Equal(102362, result.Entries[0].Pumbility, 2);
+        Assert.Equal(
+            new Uri(
+                "https://phoenix.piugame.com/data/avatar_img/9516a7cc69a1b2b86c6a3541283ca495.png?v=20250923184201"),
+            result.Entries[0].AvatarUrl);
+        Assert.Equal("FRANKEZA#9606", result.Entries[1].ProfileName);
+        Assert.Equal(100240, result.Entries[1].Pumbility, 2);
+        Assert.True(result.IsEnd);
+    }
+
+    [Fact]
     public async Task GetPumbilityRankingsReportsTheLastPage()
     {
         // Same fixture minus the pagination icons = the board's final page.

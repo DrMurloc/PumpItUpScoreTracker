@@ -4430,14 +4430,14 @@
   <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
     <value>No populrglity snapmrgl yet - comes wif wkly mrglport.</value>
   </data>
-  <data name="No PUMBILITY board on this mix - movers live on Phoenix 2." xml:space="preserve">
-    <value>No PUMBILITY mrglboard here - mrglmovers live on Phoenix 2.</value>
-  </data>
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>No rankmrgls yet - appear aftrgl frst wkly mrglport.</value>
   </data>
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>Nomrgl clrglmbed a chart brglrd dis wk.</value>
+  </data>
+  <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
+    <value>Nomrgl mrglved up da PUMBILITY brglrd dis wk.</value>
   </data>
   <data name="Official Leaderboards Admin" xml:space="preserve">
     <value>Arglmrgl Admrgln</value>

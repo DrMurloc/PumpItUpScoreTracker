@@ -85,6 +85,91 @@ public sealed class OfficialSiteClientTests
             client.GetAccountData(MixEnum.Phoenix2, "sid123", null, CancellationToken.None));
     }
 
+    [Theory]
+    [InlineData("https://phoenix.piugame.com/data/avatar_img/9516a7cc69a1b2b86c6a3541283ca495.png?v=20250923184201",
+        "https://piuimages.arroweclip.se/avatars/9516a7cc69a1b2b86c6a3541283ca495.png")]
+    [InlineData("https://piugame.com/data/avatar_img2/33ecd96b847c0f8433ca999e63ba6c75.png?v=20260701144004",
+        "https://piuimages.arroweclip.se/avatars/p2/33ecd96b847c0f8433ca999e63ba6c75.png")]
+    public async Task AvatarsMirrorIntoAFolderPerSourceDirectory(string source, string expected)
+    {
+        // Phoenix 2 serves avatars from /data/avatar_img2/. The mirror regex only knew
+        // /avatar_img/, so every P2 avatar missed and the board fell back to the default
+        // art. Widening it is only half the fix: the two directories REUSE ids for
+        // unrelated pictures, so a shared mirror folder would serve whichever mix imported
+        // an id first to both.
+        var piuGame = ArrangeSessionWithAccountData(MixEnum.Phoenix2, new PiuGameGetAccountDataResult
+        {
+            AccountName = "BYEOL#3627",
+            ImageUrl = new Uri(source)
+        });
+        piuGame.Setup(p => p.GetCards(It.IsAny<MixEnum>(), It.IsAny<HttpClient>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<GameCardRecord>());
+        var upload = new Mock<IFileUploadClient>();
+        var unmirrored = new Uri("https://piuimages.arroweclip.se/avatars/never.png");
+        upload.Setup(u => u.DoesFileExist(It.IsAny<string>(), out unmirrored, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        upload.Setup(u => u.CopyFromSource(It.IsAny<Uri>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Uri _, string path, CancellationToken _) =>
+                new Uri("https://piuimages.arroweclip.se" + path));
+        var client = BuildClient(piuGame, fileUpload: upload.Object);
+
+        var identity = await client.GetAccountIdentity(MixEnum.Phoenix2, "user", "pass", CancellationToken.None);
+
+        Assert.Equal(expected, identity.ProfileImage?.ToString());
+        upload.Verify(u => u.CopyFromSource(new Uri(source), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ThePersonalImportMirrorsThePhoenix2Avatar()
+    {
+        // The import path reads the same mirror. Its failure mode was quieter than the
+        // leaderboard's: a null avatar makes the saga skip the ProfileImage write entirely
+        // and UpdateUserGameProfile coalesce back to the stored one, so a P2 import simply
+        // never refreshed your picture.
+        var piuGame = ArrangeSessionWithAccountData(MixEnum.Phoenix2, new PiuGameGetAccountDataResult
+        {
+            AccountName = "DRMURLOC#7251",
+            ImageUrl = new Uri(
+                "https://piugame.com/data/avatar_img2/33ecd96b847c0f8433ca999e63ba6c75.png?v=20260701144004"),
+            TitleEntries = Array.Empty<PiuGameGetAccountDataResult.TitleEntry>()
+        });
+        var upload = new Mock<IFileUploadClient>();
+        var unmirrored = new Uri("https://piuimages.arroweclip.se/avatars/never.png");
+        upload.Setup(u => u.DoesFileExist(It.IsAny<string>(), out unmirrored, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        upload.Setup(u => u.CopyFromSource(It.IsAny<Uri>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Uri _, string path, CancellationToken _) =>
+                new Uri("https://piuimages.arroweclip.se" + path));
+        var client = BuildClient(piuGame, fileUpload: upload.Object);
+
+        var data = await client.GetAccountData(MixEnum.Phoenix2, "sid123", null, CancellationToken.None);
+
+        Assert.Equal("https://piuimages.arroweclip.se/avatars/p2/33ecd96b847c0f8433ca999e63ba6c75.png",
+            data.AvatarUrl?.ToString());
+    }
+
+    [Fact]
+    public async Task AnUnrecognizableAvatarUrlKeepsWhateverThePlayerHas()
+    {
+        // A miss must never write the bare directory URL over a good avatar.
+        var piuGame = ArrangeSessionWithAccountData(MixEnum.Phoenix2, new PiuGameGetAccountDataResult
+        {
+            AccountName = "BYEOL#3627",
+            ImageUrl = new Uri("https://piugame.com/data/avatar_img2/")
+        });
+        piuGame.Setup(p => p.GetCards(It.IsAny<MixEnum>(), It.IsAny<HttpClient>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<GameCardRecord>());
+        var upload = new Mock<IFileUploadClient>();
+        var client = BuildClient(piuGame, fileUpload: upload.Object);
+
+        var identity = await client.GetAccountIdentity(MixEnum.Phoenix2, "user", "pass", CancellationToken.None);
+
+        Assert.Null(identity.ProfileImage);
+        upload.Verify(u => u.CopyFromSource(It.IsAny<Uri>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
     private static Mock<IPiuGameApi> ArrangeSessionWithAccountData(MixEnum mix,
         PiuGameGetAccountDataResult accountData)
     {
@@ -223,10 +308,52 @@ public sealed class OfficialSiteClientTests
     }
 
     [Fact]
-    public async Task PhoenixRatingBoardsStayAnonymous()
+    public async Task PhoenixRatingBoardsAreThePumbilityBoardPlusThePerLevelLists()
     {
-        // The Phoenix mirror never logs in — byte-identical to before the P2 arm existed.
+        // Phoenix publishes a PUMBILITY board of its own — the mirror takes it alongside the
+        // per-level rating lists the mix also still publishes. Neither needs a login.
+        var piuGame = PhoenixRatingBoardApi();
+        var client = BuildClient(piuGame);
+
+        var entries = (await client.GetRatingBoards(MixEnum.Phoenix, CancellationToken.None)).ToArray();
+
+        Assert.Equal(new[] { "PUMBILITY", "S20" }, entries.Select(e => e.BoardName).ToArray());
+        Assert.Equal(102362m, entries[0].Value);
+        Assert.Equal(12345m, entries[1].Value);
+        piuGame.Verify(p => p.GetSessionId(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task PhoenixAsksForTheAllTabOnly()
+    {
+        // Phoenix's board ignores the tab parameter and serves the same list for every one,
+        // so asking for Singles and Doubles would mirror three copies of one board under
+        // names the rankings view reads as real per-type boards.
+        var piuGame = PhoenixRatingBoardApi();
+        var client = BuildClient(piuGame);
+
+        await client.GetRatingBoards(MixEnum.Phoenix, CancellationToken.None);
+
+        piuGame.Verify(p => p.GetPumbilityRankings(MixEnum.Phoenix, null, It.IsAny<int>(),
+            It.IsAny<HttpClient?>(), It.IsAny<CancellationToken>()), Times.Once);
+        piuGame.Verify(p => p.GetPumbilityRankings(MixEnum.Phoenix, It.IsNotNull<ChartType?>(), It.IsAny<int>(),
+            It.IsAny<HttpClient?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private static Mock<IPiuGameApi> PhoenixRatingBoardApi()
+    {
         var piuGame = new Mock<IPiuGameApi>();
+        piuGame.Setup(p => p.GetPumbilityRankings(MixEnum.Phoenix, It.IsAny<ChartType?>(), It.IsAny<int>(),
+                It.IsAny<HttpClient?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PiuGameGetPumbilityRankingResult
+            {
+                IsEnd = true,
+                Entries = new[]
+                {
+                    new PiuGameGetPumbilityRankingResult.Entry { ProfileName = "FEFEMZ#1489", Pumbility = 102362 }
+                }
+            });
         piuGame.Setup(p => p.GetLeaderboards(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PiuGameGetLeaderboardListResult
             {
@@ -238,23 +365,16 @@ public sealed class OfficialSiteClientTests
                 Entries = new[]
                     { new PiuGameGetLeaderboardResult.Entry { ProfileName = "BYEOL#3627", Rating = 12345 } }
             });
-        var client = BuildClient(piuGame);
-
-        var entries = (await client.GetRatingBoards(MixEnum.Phoenix, CancellationToken.None)).ToArray();
-
-        Assert.Single(entries);
-        Assert.Equal("S20", entries[0].BoardName);
-        Assert.Equal(12345m, entries[0].Value);
-        piuGame.Verify(p => p.GetSessionId(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+        return piuGame;
     }
 
     private static OfficialSiteClient BuildClient(Mock<IPiuGameApi> piuGame, string? serviceUsername = null,
-        string? servicePassword = null)
+        string? servicePassword = null, IFileUploadClient? fileUpload = null)
     {
         return new OfficialSiteClient(piuGame.Object, Mock.Of<IChartRepository>(),
             NullLogger<OfficialSiteClient>.Instance, Mock.Of<IMediator>(), Mock.Of<ICurrentUserAccessor>(),
-            Mock.Of<IScoreReader>(), Mock.Of<IFileUploadClient>(), Mock.Of<IOfficialLeaderboardRepository>(),
+            Mock.Of<IScoreReader>(), fileUpload ?? Mock.Of<IFileUploadClient>(),
+            Mock.Of<IOfficialLeaderboardRepository>(),
             Mock.Of<IBus>(), FakeDateTime.At(Now).Object, Mock.Of<IDailyStepReader>(),
             Options.Create(new PiuGameConfiguration
             {

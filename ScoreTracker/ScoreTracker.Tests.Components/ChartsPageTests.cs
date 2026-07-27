@@ -178,6 +178,21 @@ public sealed class ChartsPageTests : ComponentTestBase
     }
 
     [Fact]
+    public void TheFilterDrawerClosesFromItsFootAsWellAsItsHead()
+    {
+        // On a phone the drawer is taller than the screen, so the header's ✕ has scrolled
+        // out of reach by the time the picking is done.
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".srp-card").Count));
+        cut.Find("button[aria-label=Filters]").Click();
+        cut.WaitForAssertion(() => Assert.Contains("mud-drawer--open", DrawerClasses(cut)));
+
+        cut.Find(".srp-drawer-foot button").Click();
+
+        cut.WaitForAssertion(() => Assert.Contains("mud-drawer--closed", DrawerClasses(cut)));
+    }
+
+    [Fact]
     public void ClearAllReturnsToTheBareQuery()
     {
         var cut = RenderComponent<Charts>();
@@ -217,6 +232,12 @@ public sealed class ChartsPageTests : ComponentTestBase
     {
         _uiSettings.Setup(u => u.GetSetting("Charts__ShownFilters", It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
             .ReturnsAsync(EveryFilterKey);
+    }
+
+    // A temporary MudDrawer always renders its content; open/closed is the class it carries.
+    private static string DrawerClasses(IRenderedComponent<Charts> cut)
+    {
+        return cut.Find(".mud-drawer").GetAttribute("class") ?? string.Empty;
     }
 
     private static void OpenMoreFilters(IRenderedComponent<Charts> cut)

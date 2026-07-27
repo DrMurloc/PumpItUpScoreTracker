@@ -50,43 +50,46 @@
             @L["{0} charts", _totalCount.ToString("N0")]
         }
     </MudText>
-    <MudSpacer></MudSpacer>
-    <MudTooltip Text="@L["Export CSV"]">
-        <MudIconButton Icon="@Icons.Material.Filled.Download" OnClick="() => _exportOpen = true"
-                       aria-label="@L["Export CSV"]"></MudIconButton>
-    </MudTooltip>
-    <MudButtonGroup OverrideStyles="false">
-        <MudTooltip Text="@L["Comfortable"]">
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
-                           Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
-                           OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
+    @* The controls travel as one block: on a phone the row is wider than the viewport, and
+       a bare wrap would strand the export button on its own line. *@
+    <div class="srp-answer-controls">
+        <MudTooltip Text="@L["Export CSV"]">
+            <MudIconButton Icon="@Icons.Material.Filled.Download" OnClick="() => _exportOpen = true"
+                           aria-label="@L["Export CSV"]"></MudIconButton>
         </MudTooltip>
-        <MudTooltip Text="@L["Compact"]">
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView"
-                           Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
-                           OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
+        <MudButtonGroup OverrideStyles="false">
+            <MudTooltip Text="@L["Comfortable"]">
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
+                               Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
+                               OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
+            </MudTooltip>
+            <MudTooltip Text="@L["Compact"]">
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView"
+                               Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
+                               OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
+            </MudTooltip>
+            <MudTooltip Text="@L["Table"]">
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows"
+                               Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
+                               OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
+            </MudTooltip>
+        </MudButtonGroup>
+        <MudTooltip Text="@L["Sort by"]">
+            <MudMenu Icon="@Icons.Material.Filled.SwapVert" Dense="true" AriaLabel="@L["Sort by"]">
+                @foreach (var sort in AvailableSorts)
+                {
+                    <MudMenuItem Icon="@(sort == _sort ? (_sortDescending ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowUpward) : string.Empty)"
+                                 OnClick="() => SelectSort(sort)">@L[SortName(sort)]</MudMenuItem>
+                }
+            </MudMenu>
         </MudTooltip>
-        <MudTooltip Text="@L["Table"]">
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows"
-                           Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
-                           OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
+        <MudTooltip Text="@L["Filters"]">
+            <MudBadge Content="ActiveFilterCount" Visible="ActiveFilterCount > 0" Color="Color.Primary" Overlap="true">
+                <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Variant="Variant.Outlined"
+                               OnClick="OpenFilters" aria-label="@L["Filters"]"></MudIconButton>
+            </MudBadge>
         </MudTooltip>
-    </MudButtonGroup>
-    <MudTooltip Text="@L["Sort by"]">
-        <MudMenu Icon="@Icons.Material.Filled.SwapVert" Dense="true" AriaLabel="@L["Sort by"]">
-            @foreach (var sort in AvailableSorts)
-            {
-                <MudMenuItem Icon="@(sort == _sort ? (_sortDescending ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowUpward) : string.Empty)"
-                             OnClick="() => SelectSort(sort)">@L[SortName(sort)]</MudMenuItem>
-            }
-        </MudMenu>
-    </MudTooltip>
-    <MudTooltip Text="@L["Filters"]">
-        <MudBadge Content="ActiveFilterCount" Visible="ActiveFilterCount > 0" Color="Color.Primary" Overlap="true">
-            <MudIconButton Icon="@Icons.Material.Filled.FilterList" Color="Color.Primary" Variant="Variant.Outlined"
-                           OnClick="OpenFilters" aria-label="@L["Filters"]"></MudIconButton>
-        </MudBadge>
-    </MudTooltip>
+    </div>
 </div>
 
 @if (!_isLoading && _totalCount == 0)
@@ -608,6 +611,12 @@ else
                     </div>
                 }
 
+            @* The drawer is taller than a phone screen, so the header's ✕ has scrolled away
+               by the time you have finished picking — the way back out has to be here too. *@
+            <div class="srp-drawer-foot">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                           OnClick="() => _filtersOpen = false">@L["Close"]</MudButton>
+            </div>
         </div>
     </MudDrawer>
 </MudLayout>

@@ -177,10 +177,12 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     public async Task<IEnumerable<RatingBoardEntry>> GetRatingBoards(MixEnum mix,
         CancellationToken cancellationToken)
     {
-        if (mix == MixEnum.Phoenix2) return await GetPumbilityRatingBoards(mix, cancellationToken);
+        var result = new List<RatingBoardEntry>(await GetPumbilityRatingBoards(mix, cancellationToken));
+        if (mix == MixEnum.Phoenix2) return result;
 
+        // Phoenix kept its per-level rating lists when the PUMBILITY board arrived, so it
+        // publishes both. Phoenix 2 dropped them.
         var leaderboardList = await _piuGame.GetLeaderboards(mix, cancellationToken);
-        var result = new List<RatingBoardEntry>();
         foreach (var leaderboard in leaderboardList.Entries)
         {
             var entries = await _piuGame.GetLeaderboard(mix, leaderboard.Id, cancellationToken);
@@ -193,22 +195,28 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     }
 
     /// <summary>
-    ///     Phoenix 2 replaced the per-level rating boards with one daily PUMBILITY board —
-    ///     its All/Single/Double tabs ARE the mix's rating boards. The site clamps
-    ///     out-of-range pages to the last one, so paging stops on the end markers or the
-    ///     first page that adds nothing new. Values keep their decimal cents.
+    ///     The mix's PUMBILITY board(s). Phoenix 2 splits it into All/Single/Double tabs and
+    ///     keeps decimal cents; Phoenix serves ONE whole-number board that ignores the tab
+    ///     parameter, so asking for its Single and Double tabs would store three copies of
+    ///     the same board under names the rankings view would then read as per-type boards.
+    ///     Paging stops on the end markers or the first page that adds nothing new — the site
+    ///     clamps an out-of-range page to the last one. Phoenix 2's whole leaderboard area is
+    ///     login-gated; Phoenix serves the board to an anonymous session.
     /// </summary>
     private async Task<IEnumerable<RatingBoardEntry>> GetPumbilityRatingBoards(MixEnum mix,
         CancellationToken cancellationToken)
     {
-        var client = await GetServiceClient(mix, cancellationToken);
+        var client = mix == MixEnum.Phoenix2 ? await GetServiceClient(mix, cancellationToken) : null;
         var result = new List<RatingBoardEntry>();
-        foreach (var (chartType, boardName) in new (ChartType?, string)[]
-                 {
-                     (null, "PUMBILITY"),
-                     (ChartType.Single, "PUMBILITY Singles"),
-                     (ChartType.Double, "PUMBILITY Doubles")
-                 })
+        var boards = mix == MixEnum.Phoenix2
+            ? new (ChartType?, string)[]
+            {
+                (null, "PUMBILITY"),
+                (ChartType.Single, "PUMBILITY Singles"),
+                (ChartType.Double, "PUMBILITY Doubles")
+            }
+            : new (ChartType?, string)[] { (null, "PUMBILITY") };
+        foreach (var (chartType, boardName) in boards)
         {
             var seen = new HashSet<string>();
             var count = 0;
@@ -275,12 +283,18 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     ///     the scraped URL doesn't carry a recognizable file — persisting anything in
     ///     that case wrote the bare /avatars/ directory URL over players' good avatars
     ///     (the sporadic broken-avatar bug). Callers treat null as "keep what you have".
+    ///     Phoenix 2's avatars mirror one folder down: its ids collide with Phoenix's on
+    ///     entirely different art, and a shared folder would serve whichever mix imported
+    ///     first to both — the same /p2/ split the site itself uses for stepballs.
     /// </summary>
     private async Task<Uri?> ConvertPiuGameAvatarToPiuScoresAvatar(Uri avatar, CancellationToken cancellationToken)
     {
         var match = ImageRegex.Match(avatar.ToString());
-        if (!match.Success || string.IsNullOrWhiteSpace(match.Groups[1].Value)) return null;
-        var path = $"/avatars/{HttpUtility.UrlEncode(match.Groups[1].Value)}";
+        var file = match.Groups["file"].Value;
+        if (!match.Success || string.IsNullOrWhiteSpace(file)) return null;
+
+        var folder = match.Groups["p2"].Success ? "avatars/p2" : "avatars";
+        var path = $"/{folder}/{HttpUtility.UrlEncode(file)}";
         if (!await _fileUpload.DoesFileExist(path, out var imagePath, cancellationToken))
             imagePath = await _fileUpload.CopyFromSource(avatar, path, cancellationToken);
 
@@ -569,9 +583,14 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
 
     // Loosened from the pinned "https://piugame.com/.../file.png?v=" form: Phoenix 2's
     // markup varies the host, extension, and query, and a miss must never fabricate an
-    // empty filename.
-    private readonly Regex ImageRegex = new(@"avatar_img\/([A-Za-z0-9_\-]+\.[A-Za-z]{3,4})",
-        RegexOptions.Compiled);
+    // empty filename. The optional trailing "2" is load-bearing twice over: Phoenix 2
+    // serves avatars from /data/avatar_img2/, and without it every P2 avatar missed the
+    // match and fell back to the default art; and the two directories REUSE ids for
+    // unrelated pictures (verified 2026-07-26 — avatar_img/9516….png and
+    // avatar_img2/9516….png are different images), so the capture also decides which
+    // mirror folder the file belongs in.
+    private readonly Regex ImageRegex =
+        new(@"avatar_img(?<p2>2)?\/(?<file>[A-Za-z0-9_\-]+\.[A-Za-z]{3,4})", RegexOptions.Compiled);
 
     public async Task<PiuGameAccountDataImport> GetAccountData(MixEnum mix, string sid, string? id,
         CancellationToken cancellationToken)

@@ -17,11 +17,13 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Apis.Contracts
             HttpClient? client = null);
 
         /// <summary>
-        ///     The Phoenix 2 PUMBILITY ranking (login-gated — always needs an authenticated
-        ///     client). Tab: null = All, Single = the ?t=s board, Double = ?t=d.
+        ///     A mix's PUMBILITY ranking. Tab: null = All, Single = the ?t=s board, Double =
+        ///     ?t=d — Phoenix ignores the tab and serves its single board for any of them.
+        ///     Login-gated on Phoenix 2 (pass an authenticated service client); Phoenix stays
+        ///     anonymous (null).
         /// </summary>
         Task<PiuGameGetPumbilityRankingResult> GetPumbilityRankings(MixEnum mix, ChartType? chartType, int page,
-            HttpClient client, CancellationToken cancellationToken);
+            HttpClient? client, CancellationToken cancellationToken);
 
         /// <summary>
         ///     One page of a chart board. Phoenix serves the whole board on page 1 (no paging
