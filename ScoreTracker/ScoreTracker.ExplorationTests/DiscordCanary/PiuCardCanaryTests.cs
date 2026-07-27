@@ -144,8 +144,8 @@ public sealed class PiuCardCanaryTests
             MixEnum.Phoenix2.GetAccentColor(),
             new[]
             {
-                new RichBotLink("This week", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards")),
-                new RichBotLink("What it takes", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards/WhatItTakes"))
+                new RichBotLink("This Week", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards")),
+                new RichBotLink("What It Takes", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards/WhatItTakes"))
             });
 
     // Session snapshot — the score-batch card, here carrying cross-mix reclears (F7): a new

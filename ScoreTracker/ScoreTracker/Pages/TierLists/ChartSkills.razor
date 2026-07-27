@@ -80,7 +80,7 @@ else
                     <MudSelectItem T="string" Value="@("Age")">@L["Age"]</MudSelectItem>
                     <MudSelectItem T="string" Value="@("Score Ranking")">@L["Score Ranking"]</MudSelectItem>
                 }
-                <MudSelectItem T="string" Value="@("Scoring Level")">@L["Scoring Level"]</MudSelectItem>
+                <MudSelectItem T="string" Value="@("Scoring Level")">@L["Scoring level"]</MudSelectItem>
             </MudSelect>
         }
     </text>;
@@ -349,7 +349,7 @@ else
     @if (HasActiveFilters)
     {
         <div class="tier-filter-chips">
-            <span class="tier-filter-chips-label">@L["Applied Filters"]:</span>
+            <span class="tier-filter-chips-label">@L["Applied filters"]:</span>
             @if (!string.IsNullOrWhiteSpace(_songFilter))
             {
                 <MudChip T="string" Size="Size.Small" OnClose="ClearSongNameFilter">@L["Song Name"]: @_songFilter</MudChip>

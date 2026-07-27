@@ -647,10 +647,6 @@
 	  <value>Difficulty Categorization</value>
 	  <comment>Difficulty Categorization</comment>
   </data>
-  <data name="Scoring Level" xml:space="preserve">
-	  <value>Scoring Level</value>
-	  <comment>Scoring Level</comment>
-  </data>
   <data name="Skill" xml:space="preserve">
 	  <value>Skill</value>
 	  <comment>Skill</comment>
@@ -843,18 +839,6 @@
   </data>
   <data name="Note Count from Full Life to Death/Threshold based on Combo between Breaks" xml:space="preserve">
 	  <value>Note Count from Full Life to Death/Threshold based on Combo between Breaks</value>
-  </data>
-  <data name="Perfect Combo, Miss Break" xml:space="preserve">
-	  <value>Perfect Combo, Miss Break</value>
-  </data>
-  <data name="Great Combo, Miss Break" xml:space="preserve">
-	  <value>Great Combo, Miss Break</value>
-  </data>
-  <data name="Perfect Combo, Bad Break" xml:space="preserve">
-	  <value>Perfect Combo, Bad Break</value>
-  </data>
-  <data name="Great Combo, Bad Break" xml:space="preserve">
-	  <value>Great Combo, Bad Break</value>
   </data>
   <data name="Notes to Full Life From Start of Song (50%)" xml:space="preserve">
 	  <value>Notes to Full Life From Start of Song (50%)</value>
@@ -1513,9 +1497,6 @@
   <data name="Total Chart Bonus" xml:space="preserve">
 	  <value>Total Chart Bonus</value>
   </data>
-  <data name="Pass Rate" xml:space="preserve">
-	  <value>Pass Rate</value>
-  </data>
   <data name="Average PPS" xml:space="preserve">
 	  <value>Average PPS</value>
   </data>
@@ -1543,9 +1524,6 @@
   </data>
   <data name="Chart Statistics" xml:space="preserve">
 	  <value>Chart Statistics</value>
-  </data>
-  <data name="Play Count" xml:space="preserve">
-	  <value>Play Count</value>
   </data>
   <data name="Best Score" xml:space="preserve">
 	  <value>Best Score</value>
@@ -1846,15 +1824,6 @@
   </data>
   <data name="Score Distribution By Player Level" xml:space="preserve">
 	  <value>Score Distribution By Player Level</value>
-  </data>
-  <data name="Scores by Competitive Level" xml:space="preserve">
-	  <value>Scores by Competitive Level</value>
-  </data>
-  <data name="Passes by Competitive Level" xml:space="preserve">
-	  <value>Passes by Competitive Level</value>
-  </data>
-  <data name="Chart Leaderboard" xml:space="preserve">
-	  <value>Chart Leaderboard</value>
   </data>
   <data name="Content Lock" xml:space="preserve">
 	  <value>Content Lock</value>
@@ -2222,9 +2191,6 @@
   <data name="Play Session" xml:space="preserve">
     <value>Play Session</value>
   </data>
-  <data name="min" xml:space="preserve">
-    <value>min</value>
-  </data>
   <data name="Score Journal" xml:space="preserve">
     <value>Score Journal</value>
   </data>
@@ -2377,9 +2343,6 @@
   </data>
   <data name="Scores, vs your level" xml:space="preserve">
     <value>Scores, vs your level</value>
-  </data>
-  <data name="Weekly charts" xml:space="preserve">
-    <value>Weekly charts</value>
   </data>
   <data name="weeks. No misses." xml:space="preserve">
     <value>weeks. No misses.</value>
@@ -2800,9 +2763,6 @@
   <data name="Not Enough Data" xml:space="preserve">
     <value>Not Enough Data</value>
   </data>
-  <data name="Applied Filters" xml:space="preserve">
-    <value>Applied Filters</value>
-  </data>
   <data name="Filters and Columns" xml:space="preserve">
     <value>Filters and Columns</value>
   </data>
@@ -2983,9 +2943,6 @@
   <data name="Players Like You" xml:space="preserve">
     <value>Players Like You</value>
   </data>
-  <data name="Players like you" xml:space="preserve">
-    <value>Players like you</value>
-  </data>
   <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
     <value>Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours.</value>
   </data>
@@ -2995,8 +2952,8 @@
   <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
     <value>Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts.</value>
   </data>
-  <data name="Show all {0}" xml:space="preserve">
-    <value>Show all {0}</value>
+  <data name="show all {0}" xml:space="preserve">
+    <value>show all {0}</value>
   </data>
   <data name="Show fewer" xml:space="preserve">
     <value>Show fewer</value>
@@ -3382,9 +3339,6 @@
   <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
     <value>When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today.</value>
   </data>
-  <data name="today" xml:space="preserve">
-    <value>today</value>
-  </data>
   <data name="Private by default" xml:space="preserve">
     <value>Private by default</value>
   </data>
@@ -3592,9 +3546,6 @@
   <data name="only {0} hold it" xml:space="preserve">
     <value>only {0} hold it</value>
   </data>
-  <data name="completed" xml:space="preserve">
-    <value>completed</value>
-  </data>
   <data name="now" xml:space="preserve">
     <value>now</value>
   </data>
@@ -3690,9 +3641,6 @@
   </data>
   <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
     <value>Your Pumbility and competitive level, plus your closest matches.</value>
-  </data>
-  <data name="Pumbility" xml:space="preserve">
-    <value>Pumbility</value>
   </data>
   <data name="Match players on" xml:space="preserve">
     <value>Match players on</value>
@@ -4033,9 +3981,6 @@
   <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
     <value>This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import.</value>
   </data>
-  <data name="Import scores" xml:space="preserve">
-    <value>Import scores</value>
-  </data>
   <data name="Creating Your Home Page" xml:space="preserve">
     <value>Creating Your Home Page</value>
   </data>
@@ -4167,12 +4112,6 @@
   </data>
   <data name="No scores recorded yet — be the first." xml:space="preserve">
     <value>No scores recorded yet — be the first.</value>
-  </data>
-  <data name="your communities" xml:space="preserve">
-    <value>your communities</value>
-  </data>
-  <data name="you" xml:space="preserve">
-    <value>you</value>
   </data>
   <data name="Show more of {0} scores" xml:space="preserve">
     <value>Show more of {0} scores</value>
@@ -4423,9 +4362,6 @@
   <data name="Chart Board #1s" xml:space="preserve">
     <value>Chart Board #1s</value>
   </data>
-  <data name="Chart Boards" xml:space="preserve">
-    <value>Chart Boards</value>
-  </data>
   <data name="Chart board placements" xml:space="preserve">
     <value>Chart board placements</value>
   </data>
@@ -4525,9 +4461,6 @@
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITY over time</value>
   </data>
-  <data name="rank" xml:space="preserve">
-    <value>rank</value>
-  </data>
   <data name="Rank" xml:space="preserve">
     <value>Rank</value>
   </data>
@@ -4554,9 +4487,6 @@
   </data>
   <data name="Seed baseline from legacy tables" xml:space="preserve">
     <value>Seed baseline from legacy tables</value>
-  </data>
-  <data name="skipped" xml:space="preserve">
-    <value>skipped</value>
   </data>
   <data name="Songs" xml:space="preserve">
     <value>Songs</value>
@@ -4807,9 +4737,6 @@
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0} · levels {1}–{2} · {3}</value>
   </data>
-  <data name="Co-op" xml:space="preserve">
-    <value>Co-op</value>
-  </data>
   <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
     <value>You don't have a saved preset called &quot;{0}&quot;.</value>
   </data>
@@ -4911,9 +4838,6 @@
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>Show what this channel is registered for</value>
-  </data>
-  <data name="Song name" xml:space="preserve">
-    <value>Song name</value>
   </data>
   <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
     <value>Which mix (defaults to Phoenix 2)</value>
@@ -5068,12 +4992,6 @@
   <data name="PIU Scores official mirror" xml:space="preserve">
     <value>PIU Scores official mirror</value>
   </data>
-  <data name="This week" xml:space="preserve">
-    <value>This week</value>
-  </data>
-  <data name="What it takes" xml:space="preserve">
-    <value>What it takes</value>
-  </data>
   <data name="a chart" xml:space="preserve">
     <value>a chart</value>
   </data>
@@ -5185,9 +5103,6 @@
   <data name="Biggest gain of the session" xml:space="preserve">
     <value>Biggest gain of the session</value>
   </data>
-  <data name="Title progress" xml:space="preserve">
-    <value>Title progress</value>
-  </data>
   <data name="First" xml:space="preserve">
     <value>First</value>
   </data>
@@ -5296,9 +5211,6 @@
   <data name="Clear Count" xml:space="preserve">
     <value>Clear Count</value>
   </data>
-  <data name="Community Name" xml:space="preserve">
-    <value>Community Name</value>
-  </data>
   <data name="Community Settings" xml:space="preserve">
     <value>Community Settings</value>
   </data>
@@ -5367,9 +5279,6 @@
   </data>
   <data name="Highest Clear" xml:space="preserve">
     <value>Highest Clear</value>
-  </data>
-  <data name="Highest Level" xml:space="preserve">
-    <value>Highest Level</value>
   </data>
   <data name="I understand — join" xml:space="preserve">
     <value>I understand — join</value>
@@ -5457,9 +5366,6 @@
   </data>
   <data name="Show Regional Guests" xml:space="preserve">
     <value>Show Regional Guests</value>
-  </data>
-  <data name="Sign In" xml:space="preserve">
-    <value>Sign In</value>
   </data>
   <data name="Sign in to accept this invite." xml:space="preserve">
     <value>Sign in to accept this invite.</value>
@@ -5557,9 +5463,6 @@
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>Broken plays score 0 — pass it to score it.</value>
   </data>
-  <data name="Charts Not Yet Featured" xml:space="preserve">
-    <value>Charts Not Yet Featured</value>
-  </data>
   <data name="Charts not yet featured" xml:space="preserve">
     <value>Charts not yet featured</value>
   </data>
@@ -5638,17 +5541,11 @@
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>Your best 4 scores per week of the month count.</value>
   </data>
-  <data name="current" xml:space="preserve">
-    <value>current</value>
-  </data>
   <data name="last 14 days" xml:space="preserve">
     <value>last 14 days</value>
   </data>
   <data name="resets in {0}" xml:space="preserve">
     <value>resets in {0}</value>
-  </data>
-  <data name="show all {0}" xml:space="preserve">
-    <value>show all {0}</value>
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>show suggested only</value>
@@ -5800,9 +5697,6 @@
   <data name="Commands — anyone in the server can use these" xml:space="preserve">
     <value>Commands — anyone in the server can use these</value>
   </data>
-  <data name="calculate a Phoenix score from a result screen" xml:space="preserve">
-    <value>calculate a Phoenix score from a result screen</value>
-  </data>
   <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
     <value>pull up a chart's stats and similar charts, with links to its pages</value>
   </data>
@@ -5902,9 +5796,6 @@
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>Nobody is on this chart board yet.</value>
   </data>
-  <data name="All Mixes" xml:space="preserve">
-    <value>All Mixes</value>
-  </data>
   <data name="Applied filters" xml:space="preserve">
     <value>Applied filters</value>
   </data>
@@ -5980,9 +5871,6 @@
   <data name="My data" xml:space="preserve">
     <value>My data</value>
   </data>
-  <data name="My score" xml:space="preserve">
-    <value>My score</value>
-  </data>
   <data name="NPS from" xml:space="preserve">
     <value>NPS from</value>
   </data>
@@ -6000,9 +5888,6 @@
   </data>
   <data name="Not yet re-cleared in {0}" xml:space="preserve">
     <value>Not yet re-cleared in {0}</value>
-  </data>
-  <data name="Note count" xml:space="preserve">
-    <value>Note count</value>
   </data>
   <data name="Notes from" xml:space="preserve">
     <value>Notes from</value>
@@ -6027,9 +5912,6 @@
   </data>
   <data name="Phoenix score to" xml:space="preserve">
     <value>Phoenix score to</value>
-  </data>
-  <data name="Quick record" xml:space="preserve">
-    <value>Quick record</value>
   </data>
   <data name="Recorded from" xml:space="preserve">
     <value>Recorded from</value>
@@ -6334,8 +6216,8 @@
   <data name="Reload the page" xml:space="preserve">
     <value>Reload the page</value>
   </data>
-  <data name="from {0}" xml:space="preserve">
-    <value>from {0}</value>
+  <data name="From {0}" xml:space="preserve">
+    <value>From {0}</value>
   </data>
   <data name="Next title" xml:space="preserve">
     <value>Next title</value>
@@ -6724,17 +6606,11 @@
   <data name="Boss breakers" xml:space="preserve">
     <value>Boss breakers</value>
   </data>
-  <data name="CO-OP" xml:space="preserve">
-    <value>CO-OP</value>
-  </data>
   <data name="Earned" xml:space="preserve">
     <value>Earned</value>
   </data>
   <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
     <value>Everyone who holds this keeps their profile private.</value>
-  </data>
-  <data name="From {0}" xml:space="preserve">
-    <value>From {0}</value>
   </data>
   <data name="How rare" xml:space="preserve">
     <value>How rare</value>
@@ -6984,5 +6860,17 @@
   </data>
   <data name="Unchanged Charts:" xml:space="preserve">
     <value>Unchanged Charts:</value>
+  </data>
+  <data name="{0} min" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="rank #{0}" xml:space="preserve">
+    <value>rank #{0}</value>
+  </data>
+  <data name="Game Card" xml:space="preserve">
+    <value>Game Card</value>
+  </data>
+  <data name="Include Broken Scores" xml:space="preserve">
+    <value>Include Broken Scores</value>
   </data>
 </root>

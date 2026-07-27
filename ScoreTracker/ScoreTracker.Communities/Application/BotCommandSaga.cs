@@ -429,7 +429,7 @@ namespace ScoreTracker.Communities.Application
             var typeName = _localizer.Get(culture, type switch
             {
                 ChartType.Double => "Doubles",
-                ChartType.CoOp => "Co-op",
+                ChartType.CoOp => "Co-Op",
                 _ => "Singles"
             });
             return type == ChartType.CoOp

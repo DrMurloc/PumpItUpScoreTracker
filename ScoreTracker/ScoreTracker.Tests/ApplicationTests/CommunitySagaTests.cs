@@ -786,7 +786,7 @@ public sealed class CommunitySagaTests
                 BucketRow(msgs, "More scores", "S11")
                     .Contains("**950,000** (+5,000) #LETTERGRADE|AAPlus|False# → #LETTERGRADE|AAA")
                 && !BucketRow(msgs, "More scores", "S10").Contains("(+")
-                && BucketRow(msgs, "Co-op", "CoOp2").Contains("(+5,000) #LETTERGRADE|AAPlus|False# →")),
+                && BucketRow(msgs, "Co-Op", "CoOp2").Contains("(+5,000) #LETTERGRADE|AAPlus|False# →")),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -1010,7 +1010,7 @@ public sealed class CommunitySagaTests
         // the remainder compressing with a CO-OP count; header marks CO-OP.
         ctx.Bot.Verify(b => b.SendRichMessages(
             It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotSection>().Count() == 5
-                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("-# Co-op")
+                && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("-# Co-Op")
                     && t.Markdown.Split('\n').Count(l => l.Contains("#DIFFICULTY|")) == 5)
                 && msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("+2 more: CO-OP ×2"))
                 && msgs.Single().Header!.Markdown.Contains("CO-OP")),

@@ -137,7 +137,7 @@ else
                     @if (CurrentUser.IsLoggedIn)
                     {
                         <th class="@SortableHeaderClass(ChartSearchSort.MyGrade)" role="button" tabindex="0"
-                            @onclick="() => SelectSort(ChartSearchSort.MyGrade)">@L["My score"]@SortMark(ChartSearchSort.MyGrade)</th>
+                            @onclick="() => SelectSort(ChartSearchSort.MyGrade)">@L["My Score"]@SortMark(ChartSearchSort.MyGrade)</th>
                         <th>@L["Letter Grade"]</th>
                         <th>@L["Plate"]</th>
                     }
@@ -408,7 +408,7 @@ else
                 @if (Shows("noteCount") && _ranges?.NoteCountMin != null && _ranges.NoteCountMax > _ranges.NoteCountMin)
                 {
                     <div class="srp-facet">
-                        <RangeSlider Label="@L["Note count"]" ValueText="@RangeLabel(_noteMin, _noteMax, _ranges.NoteCountMin, _ranges.NoteCountMax)"
+                        <RangeSlider Label="@L["Note Count"]" ValueText="@RangeLabel(_noteMin, _noteMax, _ranges.NoteCountMin, _ranges.NoteCountMax)"
                                      Min="_ranges.NoteCountMin.Value" Max="_ranges.NoteCountMax.Value" Step="10"
                                      ValueMin="_noteMin ?? _ranges.NoteCountMin.Value"
                                      ValueMax="_noteMax ?? _ranges.NoteCountMax.Value"
@@ -1217,7 +1217,7 @@ else
                 chips.Add(new QueryChip($"⇅ {L[SortName(_sort)]} {(_sortDescending ? "↓" : "↑")}", true,
                     () => SelectSort(ChartSearchSort.Level, true)));
             if (!string.IsNullOrWhiteSpace(_songNameContains))
-                chips.Add(new QueryChip($"{L["Song name"]}: “{_songNameContains}”", false,
+                chips.Add(new QueryChip($"{L["Song Name"]}: “{_songNameContains}”", false,
                     () => SetSongNameContains(null)));
             if (_levelMin != null || _levelMax != null)
                 chips.Add(new QueryChip(LevelChipLabel, false, async () =>
@@ -1478,7 +1478,7 @@ else
                     () => _bpmMin != null || _bpmMax != null, () => { _bpmMin = null; _bpmMax = null; }),
                 new("nps", L["NPS"], _ranges?.NpsMin != null,
                     () => _npsMin != null || _npsMax != null, () => { _npsMin = null; _npsMax = null; }),
-                new("noteCount", L["Note count"], _ranges?.NoteCountMin != null,
+                new("noteCount", L["Note Count"], _ranges?.NoteCountMin != null,
                     () => _noteMin != null || _noteMax != null, () => { _noteMin = null; _noteMax = null; }),
                 new("duration", L["Duration"], _ranges?.DurationSecondsMin != null,
                     () => _durationMin != null || _durationMax != null,

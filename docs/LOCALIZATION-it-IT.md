@@ -46,7 +46,7 @@ Prescribed ahead of the first batch and applied by it — these are now in force
 | Clear Cache | Svuota cache | |
 | Close | Chiudi | |
 | Combined | Combinato | Masculine default. |
-| Communities | Comunità | Italian invariable feminine — singular and plural identical (`la comunità` / `le comunità`). |
+| Communities | Comunità | Italian invariable feminine — singular and plural identical (`la comunità` / `le comunità`). **The social entity is always `comunità`** (`Le tue comunità`, `Nome della comunità`, `Per la tua comunità`). The bare English `community` survives only inside the tier-list **feature names** — `Community Vote` → `Voto della community`, `Community Tier List`, `Community Rating` — where it reads as a product name rather than a noun, and in possessive prose about the playerbase (`the community's` → `della community`). The file is ~37/33 split on those two senses; keep the split, don't unify it in either direction. |
 | Completed | Completato | Masculine default; agrees with the implicit antecedent. |
 | Confirm | Conferma | |
 | Copied to clipboard! | Copiato negli appunti! | `appunti` is the standard Italian for clipboard; masculine plural. |

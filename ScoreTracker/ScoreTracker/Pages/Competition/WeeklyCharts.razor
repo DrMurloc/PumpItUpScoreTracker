@@ -36,7 +36,7 @@
 @if (_pool != null)
 {
     <div class="challenge-head">
-        <h1>@L["Charts Not Yet Featured"]</h1>
+        <h1>@L["Charts not yet featured"]</h1>
         <a class="challenge-btn ghost" href="/WeeklyCharts">@L["Back to Weekly Charts"]</a>
     </div>
     <ChallengePool Charts="_pool"></ChallengePool>
@@ -53,7 +53,7 @@ else
         }
         <div class="challenge-controls">
             <details class="challenge-picker">
-                <summary>@L["Week"]: @(_weekStart == null ? L["current"] : WeekLabel(_weekStart.Value))</summary>
+                <summary>@L["Week"]: @(_weekStart == null ? L["Current"] : WeekLabel(_weekStart.Value))</summary>
                 <div class="challenge-picker-menu">
                     <a href="/WeeklyCharts" class="@(_weekStart == null ? "on" : "")">@L["Current"]</a>
                     @foreach (var date in _pastDates)
