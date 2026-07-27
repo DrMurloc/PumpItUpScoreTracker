@@ -70,15 +70,6 @@
                     }
                 </div>
                 <div class="mega-col">
-                    <div class="mega-head">@L["Rankings"]</div>
-                    @if (Model.IsLoggedIn)
-                    {
-                        <ShellMenuItem Href="/ScoreRankings" Icon="@Icons.Material.Filled.Stars">@L["Score Ranking"]</ShellMenuItem>
-                    }
-                    <ShellMenuItem Href="/Completion" Icon="@Icons.Material.Filled.Done">@L["Completion Leaderboards"]</ShellMenuItem>
-                    <ShellMenuItem Href="/UcsLeaderboards" Icon="@Icons.Material.Filled.EditNote">@L["UCS Leaderboards"]</ShellMenuItem>
-                </div>
-                <div class="mega-col">
                     <div class="mega-head">@L["Official Leaderboards"]</div>
                     <ShellMenuItem Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Whatshot">@L["This Week"]</ShellMenuItem>
                     <ShellMenuItem Href="/OfficialLeaderboards/Rankings" Icon="@Icons.Material.Filled.Leaderboard">@L["Rankings"]</ShellMenuItem>

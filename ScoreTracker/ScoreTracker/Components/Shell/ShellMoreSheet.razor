@@ -58,20 +58,6 @@
             <details class="shell-disclosure">
                 <summary class="shell-menu-item">
                     <MudIcon Icon="@Icons.Material.Filled.Leaderboard" Size="Size.Small"></MudIcon>
-                    <span>@L["Rankings"]</span>
-                </summary>
-                <div class="shell-disclosure-body">
-                    @if (Model.IsLoggedIn)
-                    {
-                        <ShellMenuItem Href="/ScoreRankings" Icon="@Icons.Material.Filled.Stars">@L["Score Ranking"]</ShellMenuItem>
-                    }
-                    <ShellMenuItem Href="/Completion" Icon="@Icons.Material.Filled.Done">@L["Completion Leaderboards"]</ShellMenuItem>
-                    <ShellMenuItem Href="/UcsLeaderboards" Icon="@Icons.Material.Filled.EditNote">@L["UCS Leaderboards"]</ShellMenuItem>
-                </div>
-            </details>
-            <details class="shell-disclosure">
-                <summary class="shell-menu-item">
-                    <MudIcon Icon="@Icons.Material.Filled.Leaderboard" Size="Size.Small"></MudIcon>
                     <span>@L["Official Leaderboards"]</span>
                 </summary>
                 <div class="shell-disclosure-body">
