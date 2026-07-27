@@ -81,33 +81,20 @@
             : string.Empty;
 }
 
-@* Same shape as the app bar the rest of the site wears: nav left, search right. The two
-   destinations named are the ones a visitor most often arrives already wanting, and both
-   are reachable signed out (D5) — nothing here leads to a login wall. There is no sign-in
-   button: the hero card sits beside this bar with three real provider buttons on it, and a
-   chip that only scrolls to something already on screen reads as broken (D14).
+@* Three public destinations, each the one a visitor most often arrives already wanting,
+   and each reachable signed out (D5) — nothing here leads to a login wall. Links only: a
+   search box that isn't the app bar's autocomplete looks like the same control and behaves
+   differently, and this page cannot host that control (D13). No sign-in button either —
+   the hero card sits beside this bar with three real provider buttons on it, and a chip
+   that only scrolls to something already on screen reads as broken (D14).
    Below the desktop breakpoint the nav takes a row of its own rather than disappearing. *@
 <header class="topbar">
     <a class="wordmark" href="/">PIU <b>SCORES</b></a>
     <nav class="topnav">
         <a href="/TierLists">@L["Tier Lists"]</a>
         <a href="/OfficialLeaderboards">@L["Leaderboards"]</a>
+        <a href="/Charts">@L["Charts"]</a>
     </nav>
-    <span class="spacer"></span>
-    @* A GET form, not the app bar's autocomplete island. This page runs no circuit by
-       design, and a MudBlazor control would render unthemed here even if it did — the
-       --mud-* properties are emitted from inside the circuit. Submitting lands on the
-       chart SRP with the song facet already filled. *@
-    <form class="topsearch" action="/Charts" method="get" role="search">
-        <input class="topsearch-input" type="search" name="Song" autocomplete="off"
-               placeholder="@L["Find a chart"]" aria-label="@L["Find a chart"]" />
-        <button class="topsearch-go" type="submit" aria-label="@L["Find a chart"]">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
-                <circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" />
-            </svg>
-        </button>
-    </form>
 </header>
 
 <main>

@@ -58,40 +58,6 @@ body.front-door {
     background: color-mix(in srgb, var(--mix-primary) 10%, transparent);
     text-decoration: none;
 }
-.front-door .spacer { flex: 1; }
-/* Hand-built to match the app bar's search pill, because the app bar's is a MudBlazor
-   autocomplete inside a circuit and this page has none. Shrinks before it overflows. */
-.front-door .topsearch {
-    display: flex; align-items: center;
-    flex: 0 1 auto; min-width: 0;
-    background: color-mix(in srgb, var(--mix-ink) 7%, transparent);
-    border: 1px solid color-mix(in srgb, var(--mix-ink-muted) 28%, transparent);
-    border-radius: 8px;
-    padding-left: 10px;
-}
-.front-door .topsearch:focus-within {
-    border-color: color-mix(in srgb, var(--mix-primary) 55%, transparent);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mix-primary) 16%, transparent);
-}
-.front-door .topsearch-input {
-    flex: 1 1 auto; width: 178px; min-width: 0;
-    background: none; border: 0; outline: none;
-    color: var(--mix-ink); font: inherit; font-size: 13.5px;
-    padding: 6px 0;
-}
-.front-door .topsearch-input::placeholder { color: var(--mix-ink-muted); }
-/* The UA's own clear affordance for type=search. Nothing else on the site offers one, so
-   it reads as a control the site doesn't have. */
-.front-door .topsearch-input::-webkit-search-cancel-button,
-.front-door .topsearch-input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
-.front-door .topsearch-go {
-    display: grid; place-items: center; flex: none;
-    background: none; border: 0; cursor: pointer;
-    color: var(--mix-ink-muted);
-    padding: 6px 8px; border-radius: 0 7px 7px 0;
-}
-.front-door .topsearch-go:hover { color: var(--mix-primary); }
-.front-door .topsearch-go:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: -2px; }
 
 /* ---------- hero ---------- */
 .front-door .hero {
@@ -499,17 +465,12 @@ body.front-door {
 
 /* ---------- responsive ---------- */
 @media (max-width: 960px) {
-    /* Two rows: wordmark and search up top — the same left-and-right pairing the desktop
-       bar reads as — with the nav spanning underneath. This bar is sticky, so every pixel
-       of it is charged against the hero on a phone; the nav row rides lighter than the
-       first to keep the total down. */
-    .front-door .topbar { gap: 8px 12px; padding: 8px 16px; }
-    .front-door .wordmark { order: 1; font-size: 20px; }
-    .front-door .spacer { order: 2; }
-    .front-door .topsearch { order: 3; flex: 0 1 auto; min-width: 120px; padding-left: 8px; }
-    .front-door .topsearch-input { width: 150px; font-size: 13px; }
-    .front-door .topsearch-go { padding: 6px 6px; }
-    .front-door .topnav { order: 4; flex-basis: 100%; margin-left: 0; gap: 2px; }
+    /* Wordmark up top, nav spanning underneath. This bar is sticky, so every pixel of it
+       is charged against the hero on a phone; the nav row rides lighter than the first to
+       keep the total down, and wraps within itself if a locale runs long. */
+    .front-door .topbar { gap: 6px 12px; padding: 8px 16px; }
+    .front-door .wordmark { font-size: 20px; }
+    .front-door .topnav { flex-basis: 100%; margin-left: -8px; gap: 2px; }
     .front-door .topnav a { padding: 3px 8px; font-size: 13.5px; }
     .front-door .hero {
         grid-template-columns: 1fr;

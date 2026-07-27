@@ -59,8 +59,8 @@ logged-out path.
   or `/Welcome`). This overhaul threads a returnUrl through the OAuth state / PIUGAME login
   flow so deep-link bounces resume where they were headed.
 - **D5 — Link policy.** Every link on the page lands on a public surface (`/TierLists`,
-  `/OfficialLeaderboards`, `/WeeklyCharts`, `/Titles`, `/PlayerRankings`, calculators,
-  `/Privacy`, Swagger), a
+  `/OfficialLeaderboards`, `/Charts`, `/WeeklyCharts`, `/Titles`, `/PlayerRankings`,
+  calculators, `/Privacy`, Swagger), a
   sign-in entry (`/Login/{Provider}`, `/PiuGameLogin`, the card anchor), or an in-page
   anchor. Never a login wall. Feature pitches whose destination is gated (score import)
   point their CTA at the sign-in card instead.
@@ -94,22 +94,33 @@ logged-out path.
   for toolmakers (public API + Swagger). The mix-transition claim is framed positively —
   "when a new mix arrives, nothing here resets" — deliberately without referencing anyone
   else's resets.
-- **D11 — The top bar is the page's only chrome-level exit** (owner, 2026-07-26). It wears
-  the app bar's shape — nav left, search right — and names the two
-  destinations a visitor most often arrives already wanting: `/TierLists` and
-  `/OfficialLeaderboards` (the This Week page), labelled `Leaderboards` to match the
-  top-level menu the nav restructure shipped in #201. Both are public, so the bar can never
+- **D11 — The top bar is the page's only chrome-level exit** (owner, 2026-07-26). Three
+  links, no controls, naming the destinations a visitor most often arrives already wanting:
+  `/TierLists`, `/OfficialLeaderboards` (the This Week page, labelled `Leaderboards`) and
+  `/Charts`. Each reuses the shell's own label, so the bar speaks the site's vocabulary and
+  costs no new localization keys. All are public, so the bar can never
   bounce a signed-out visitor into a login wall. The mix pill is gone with it — the page
   wears one pinned palette rather than reporting a mix the visitor cannot change, and a
   chip reading the game's name next to nothing selectable was chrome without a job.
-- **D13 — Chart search here is a GET form, not the app bar's island.** `AppBarSearch` is a
-  MudBlazor autocomplete that needs a circuit, and this page has none by design; it would
-  also render unthemed, because the `--mud-*` properties it styles against are emitted from
-  inside the circuit (the static-region rule in ARCHITECTURE.md). So the front door posts
-  `GET /Charts?Song=<text>` — zero JS, one hop to the real chart SRP with the song facet
-  filled. It keeps the shell's own `Find a chart` wording so the two read as one control.
-  Unlike the app bar's, it stays visible on phones: this page has no bottom nav to hold a
-  Search slot, so hiding it would mean phones have no chart search at all.
+- **D13 — No chart search in the bar; a `Charts` link instead** (owner, 2026-07-26, after
+  field-testing a search box here). A GET form to `/Charts?Song=` was tried and pulled: it
+  wore the app bar's pill, so it read as the same control, but it had no autocomplete and
+  carried the UA's native clear affordance. A control that looks identical and behaves
+  differently is worse than one that looks different.
+  **The real control cannot be dropped in here, and this is the reason not to try again:**
+  the front door is a standalone Razor Page (`Layout = null`, its own `<html>`), which puts
+  it outside the Blazor Web App pipeline. Islands work in `App.razor` because that document
+  *is* the Blazor root. Reaching a component from a Razor Page means the Component Tag
+  Helper, whose render modes are the legacy `Mvc.Rendering.RenderMode` — bootstrapped by
+  `AddServerSideBlazor()` + `MapBlazorHub()` + `blazor.server.js`, a second Blazor hosting
+  model beside this app's `MapRazorComponents<App>()`. The only alternative is making the
+  front door a routed component, which additionally means suppressing the site shell in
+  `App.razor` for that one route. Both also pay for MudBlazor's CSS/JS and a circuit on a
+  cold-cache anonymous page, against D7. Docs-based; not tested empirically.
+  A vanilla typeahead is not the cheap escape it looks like either: it needs an *anonymous*
+  chart-search endpoint, outside the API-token ecosystem fronting `api/*` — a new public
+  surface with its own abuse and rate-limiting questions, which integrators would build
+  against whatever the contract says.
 - **D14 — No sign-in button in the top bar** (owner, 2026-07-26). It was an `#signin` anchor
   to the hero card — which on first paint is already on screen, beside it. A prominent CTA
   that visibly does nothing when you click it teaches a visitor the page is broken, and it
@@ -125,7 +136,7 @@ logged-out path.
 
 ## Page anatomy
 
-Top bar (wordmark → public nav → chart search) → hero (eyebrow /
+Top bar (wordmark → three public nav links) → hero (eyebrow /
 headline / pitch line; sign-in card right; stat row + 30-day pulse under the copy) →
 "See where you stand" showcase 2×2 → "More than a tracker" 2×2 (home widgets · run real
 events · tournaments & qualifiers · Discord wired in) → "New mix. Same you." stewardship
@@ -134,11 +145,12 @@ events · tournaments & qualifiers · Discord wired in) → "New mix. Same you."
 
 On phones the hero stacks copy → card → stats, keeping both goals of G1 inside the first
 viewport-and-a-bit; primary actions stay thumb-reachable. Below 960px the top bar splits
-into two rows rather than hiding anything — wordmark and the search pill above, the nav
-spanning below — because the destinations it names are the page's only chrome-level exits
-and phones are where most of them are wanted. Measured at 390px: 85px tall, no horizontal
-overflow, 150px of input with the `Find a chart` placeholder uncut, and the nav row holding
-its ground in every locale including en-ZW.
+into two rows rather than hiding the nav, which is what it did before — wordmark above, the
+three links spanning below, their text aligned to the wordmark's. The destinations it names
+are the page's only chrome-level exits and phones are where most of them are wanted.
+Measured: one 55px row on desktop; two rows at 81px on a phone, and at 375px (narrower than
+the 390px design target) all three links still share a single row with the longest locale,
+en-ZW, ending 56px clear of the edge. No horizontal overflow at any width.
 
 ## Technical shape
 
