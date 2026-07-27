@@ -4998,9 +4998,6 @@
   <data name="Third" xml:space="preserve">
     <value>Tercer</value>
   </data>
-  <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
-    <value>{0} sacó {1} {2} en el UCS {4} {5} de {3}</value>
-  </data>
   <data name="Hot Streak" xml:space="preserve">
     <value>En racha</value>
   </data>
@@ -6752,5 +6749,11 @@
   </data>
   <data name="rank #{0}" xml:space="preserve">
     <value>puesto #{0}</value>
+  </data>
+  <data name="Leaderboards" xml:space="preserve">
+    <value>Leaderboards</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Atrás</value>
   </data>
 </root>

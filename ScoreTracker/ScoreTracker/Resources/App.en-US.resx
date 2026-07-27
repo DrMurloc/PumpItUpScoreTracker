@@ -5112,9 +5112,6 @@
   <data name="Third" xml:space="preserve">
     <value>Third</value>
   </data>
-  <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
-    <value>{0} scored {1} {2} on {3}'s {4} {5} UCS</value>
-  </data>
   <data name="Hot Streak" xml:space="preserve">
     <value>Hot Streak</value>
   </data>
@@ -6872,5 +6869,11 @@
   </data>
   <data name="Include Broken Scores" xml:space="preserve">
     <value>Include Broken Scores</value>
+  </data>
+  <data name="Leaderboards" xml:space="preserve">
+    <value>Leaderboards</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Back</value>
   </data>
 </root>

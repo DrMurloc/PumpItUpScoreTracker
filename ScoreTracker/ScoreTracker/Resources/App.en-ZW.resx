@@ -5044,9 +5044,6 @@
   <data name="Third" xml:space="preserve">
     <value>Thrglrd</value>
   </data>
-  <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
-    <value>{0} scrglred {1} {2} rgln {3}'s {4} {5} UCS. Mrgl!</value>
-  </data>
   <data name="Hot Streak" xml:space="preserve">
     <value>Hot Mrgl Streak</value>
   </data>
@@ -6801,5 +6798,11 @@
   </data>
   <data name="rank #{0}" xml:space="preserve">
     <value>mrgl #{0}</value>
+  </data>
+  <data name="Leaderboards" xml:space="preserve">
+    <value>Glorgmurgmurgls</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Blrrgk</value>
   </data>
 </root>
