@@ -80,6 +80,10 @@ body.front-door {
     padding: 6px 0;
 }
 .front-door .topsearch-input::placeholder { color: var(--mix-ink-muted); }
+/* The UA's own clear affordance for type=search. Nothing else on the site offers one, so
+   it reads as a control the site doesn't have. */
+.front-door .topsearch-input::-webkit-search-cancel-button,
+.front-door .topsearch-input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
 .front-door .topsearch-go {
     display: grid; place-items: center; flex: none;
     background: none; border: 0; cursor: pointer;

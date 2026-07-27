@@ -97,7 +97,8 @@ logged-out path.
 - **D11 — The top bar is the page's only chrome-level exit** (owner, 2026-07-26). It wears
   the app bar's shape — nav left, search right — and names the two
   destinations a visitor most often arrives already wanting: `/TierLists` and
-  `/OfficialLeaderboards` (the This Week page). Both are public, so the bar can never
+  `/OfficialLeaderboards` (the This Week page), labelled `Leaderboards` to match the
+  top-level menu the nav restructure shipped in #201. Both are public, so the bar can never
   bounce a signed-out visitor into a login wall. The mix pill is gone with it — the page
   wears one pinned palette rather than reporting a mix the visitor cannot change, and a
   chip reading the game's name next to nothing selectable was chrome without a job.
@@ -227,12 +228,6 @@ Checkpoint commits, suites green at each. FT = owner field-test checkpoint.
   `ShellModelFactory.ResolveMix` falls through to Phoenix when there is no cookie — so a
   visitor following the top-bar nav crosses from the green front door onto a blue
   `/TierLists`. One line, site-wide blast radius; owner's call.
-- **The nav label follows the shell's vocabulary, one branch behind** — the bar says
-  `Official Leaderboards` because that key exists in all nine locales today. The nav
-  restructure (`claude/menu-nav-restructure-df6ff5`) renames the section to
-  `Leaderboards` and adds that key; once it lands, flipping this one label is a one-word
-  change. Doing it earlier means either eight locales falling back to English or the same
-  key added twice across nine resx files.
 - **Front-door showcase data is Phoenix-sourced** — `FrontDoorModel` reads
   `GetChartsQuery(MixEnum.Phoenix)`, so the tier bands, weekly rows, and the hardcoded S21
   bubble are Phoenix content under a Phoenix 2 palette. Moving the showcase to Phoenix 2
