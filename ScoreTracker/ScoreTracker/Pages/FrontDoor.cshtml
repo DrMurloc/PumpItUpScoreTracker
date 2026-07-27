@@ -33,9 +33,9 @@
        it a result is labelled with the bare domain. The brand is never localized. *@
     <script type="application/ld+json">@Html.Raw(SiteJsonLd)</script>
     @* The shipped theme tokens — same single source as the Blazor shell (MixThemes),
-       so this page can never drift from the site palette. Anonymous visitors resolve
-       to Phoenix by the same rule the layout uses. *@
-    <style>@Html.Raw(MixThemes.CssVariablesFor(MixEnum.Phoenix))</style>
+       so this page can never drift from the site palette. The front door is pinned to
+       Phoenix 2: it pitches the current game, and it carries no mix picker to mirror. *@
+    <style>@Html.Raw(MixThemes.CssVariablesFor(MixEnum.Phoenix2))</style>
     @* A content hash on the query, which is as far as a Razor Page can go: @Assets — the hashed
        FILENAME the Blazor shell uses — reaches the component endpoint's asset collection, and
        that collection is not in DI for a page to inject (asking for it throws and takes the
@@ -81,13 +81,31 @@
             : string.Empty;
 }
 
+@* Same shape as the app bar the rest of the site wears: nav left, search and the account
+   slot right. The two destinations named are the ones a visitor most often arrives already
+   wanting, and both are reachable signed out (D5) — nothing here leads to a login wall.
+   Below the desktop breakpoint the nav takes a row of its own rather than disappearing. *@
 <header class="topbar">
     <a class="wordmark" href="/">PIU <b>SCORES</b></a>
-    <span class="mix-pill">PHOENIX</span>
     <nav class="topnav">
         <a href="/TierLists">@L["Tier Lists"]</a>
+        <a href="/OfficialLeaderboards">@L["Official Leaderboards"]</a>
     </nav>
     <span class="spacer"></span>
+    @* A GET form, not the app bar's autocomplete island. This page runs no circuit by
+       design, and a MudBlazor control would render unthemed here even if it did — the
+       --mud-* properties are emitted from inside the circuit. Submitting lands on the
+       chart SRP with the song facet already filled. *@
+    <form class="topsearch" action="/Charts" method="get" role="search">
+        <input class="topsearch-input" type="search" name="Song" autocomplete="off"
+               placeholder="@L["Find a chart"]" aria-label="@L["Find a chart"]" />
+        <button class="topsearch-go" type="submit" aria-label="@L["Find a chart"]">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+                <circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" />
+            </svg>
+        </button>
+    </form>
     <a class="topbar-signin" href="#signin">@L["Sign in"]</a>
 </header>
 

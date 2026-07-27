@@ -28,13 +28,15 @@ body.front-door {
 
 /* Display face mirrors the Blazor shell's heading stack (MixThemes.DisplayFontStack). */
 .front-door h1, .front-door h2, .front-door .eyebrow, .front-door .wordmark,
-.front-door .mix-pill, .front-door .topbar-signin, .front-door .stat .n {
+.front-door .topbar-signin, .front-door .stat .n {
     font-family: "Barlow Condensed", "Malgun Gothic", "Yu Gothic UI", "Apple SD Gothic Neo", "Hiragino Sans", "Arial Narrow", sans-serif;
 }
 
 /* ---------- top bar ---------- */
+/* Wraps rather than overflows: a long localized nav label can push the row past the
+   viewport, and a sticky bar that overflows takes the whole document sideways. */
 .front-door .topbar {
-    display: flex; align-items: center; gap: 26px;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 26px;
     padding: 10px 28px;
     background: color-mix(in srgb, var(--mix-nav) 88%, transparent);
     backdrop-filter: blur(8px);
@@ -46,15 +48,7 @@ body.front-door {
     color: var(--mix-ink);
 }
 .front-door .wordmark b { color: var(--mix-primary); }
-.front-door .mix-pill {
-    font-size: 13px; letter-spacing: .14em;
-    padding: 3px 12px; border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--mix-primary) 45%, transparent);
-    color: var(--mix-primary);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--mix-primary) 25%, transparent);
-    white-space: nowrap;
-}
-.front-door .topnav { display: flex; gap: 4px; margin-left: 8px; }
+.front-door .topnav { display: flex; flex-wrap: wrap; gap: 4px; margin-left: 8px; }
 .front-door .topnav a {
     color: var(--mix-ink-muted); font-size: 14px; padding: 6px 12px;
     border-radius: 6px;
@@ -65,6 +59,35 @@ body.front-door {
     text-decoration: none;
 }
 .front-door .spacer { flex: 1; }
+/* Hand-built to match the app bar's search pill, because the app bar's is a MudBlazor
+   autocomplete inside a circuit and this page has none. Shrinks before it overflows. */
+.front-door .topsearch {
+    display: flex; align-items: center;
+    flex: 0 1 auto; min-width: 0;
+    background: color-mix(in srgb, var(--mix-ink) 7%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mix-ink-muted) 28%, transparent);
+    border-radius: 8px;
+    padding-left: 10px;
+}
+.front-door .topsearch:focus-within {
+    border-color: color-mix(in srgb, var(--mix-primary) 55%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mix-primary) 16%, transparent);
+}
+.front-door .topsearch-input {
+    flex: 1 1 auto; width: 178px; min-width: 0;
+    background: none; border: 0; outline: none;
+    color: var(--mix-ink); font: inherit; font-size: 13.5px;
+    padding: 6px 0;
+}
+.front-door .topsearch-input::placeholder { color: var(--mix-ink-muted); }
+.front-door .topsearch-go {
+    display: grid; place-items: center; flex: none;
+    background: none; border: 0; cursor: pointer;
+    color: var(--mix-ink-muted);
+    padding: 6px 8px; border-radius: 0 7px 7px 0;
+}
+.front-door .topsearch-go:hover { color: var(--mix-primary); }
+.front-door .topsearch-go:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: -2px; }
 .front-door .topbar-signin {
     font-size: 15px; letter-spacing: .08em; font-weight: 600;
     color: var(--mix-primary-contrast);
@@ -479,7 +502,20 @@ body.front-door {
 
 /* ---------- responsive ---------- */
 @media (max-width: 960px) {
-    .front-door .topnav { display: none; }
+    /* Two rows: wordmark and Sign in up top, nav and search below. Explicit order keeps
+       the spacer on row one, so "Sign in" stays hard right. The second row rides lighter
+       than the first — this bar is sticky, and every pixel of it is charged against the
+       hero on a phone. The search takes whatever the nav leaves and drops to a row of its
+       own only if a long locale squeezes it under its minimum. */
+    .front-door .topbar { gap: 8px 12px; padding: 8px 16px; }
+    .front-door .wordmark { order: 1; font-size: 20px; }
+    .front-door .spacer { order: 2; }
+    .front-door .topbar-signin { order: 3; }
+    .front-door .topnav { order: 4; margin-left: 0; gap: 2px; }
+    .front-door .topnav a { padding: 3px 8px; font-size: 13.5px; }
+    .front-door .topsearch { order: 5; flex: 1 1 96px; min-width: 96px; margin-left: auto; padding-left: 8px; }
+    .front-door .topsearch-input { width: auto; font-size: 13px; }
+    .front-door .topsearch-go { padding: 6px 6px; }
     .front-door .hero {
         grid-template-columns: 1fr;
         grid-template-areas: "copy" "card" "stats";
