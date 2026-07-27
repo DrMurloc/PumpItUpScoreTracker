@@ -774,6 +774,15 @@ public sealed class CommunitySagaTests
         ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
         ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix, userId, singles.Append(coOp).ToArray(),
             score: 950000);
+        // The card is captured and asserted on afterwards rather than matched inside an It.Is
+        // predicate: the row assertions then name which expectation broke and print the card,
+        // instead of collapsing into one opaque "0 matching invocations".
+        var sent = new List<RichBotMessage>();
+        ctx.Bot.Setup(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(),
+                It.IsAny<IEnumerable<ulong>>(), It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<RichBotMessage>, IEnumerable<ulong>, CancellationToken>(
+                (msgs, _, _) => sent.AddRange(msgs))
+            .Returns(Task.CompletedTask);
 
         // S11 and the co-op upscore off 945,000 (AA+ → AAA); every other chart is a fresh pass.
         var changes = singles.Select(c => Change(c, c == singles[1] ? 945000 : null))
@@ -781,14 +790,14 @@ public sealed class CommunitySagaTests
         await ctx.Saga.Consume(BuildContext(ScoreHighlightsCapturedEvent.Create(Now, userId,
             MixEnum.Phoenix, null, changes)));
 
-        ctx.Bot.Verify(b => b.SendRichMessages(
-            It.Is<IEnumerable<RichBotMessage>>(msgs =>
-                BucketRow(msgs, "More scores", "S11")
-                    .Contains("**950,000** (+5,000) #LETTERGRADE|AAPlus|False# → #LETTERGRADE|AAA")
-                && !BucketRow(msgs, "More scores", "S10").Contains("(+")
-                && BucketRow(msgs, "Co-Op", "CoOp2").Contains("(+5,000) #LETTERGRADE|AAPlus|False# →")),
-            It.IsAny<IEnumerable<ulong>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
+        var card = Assert.Single(sent);
+        Assert.Contains("**950,000** (+5,000) #LETTERGRADE|AAPlus|False# → #LETTERGRADE|AAA",
+            BucketRow(card, "More scores", "S11"));
+        var freshPass = BucketRow(card, "More scores", "S10");
+        // The score runs straight into the grade — no gain fragment between them.
+        Assert.Contains("**950,000** #LETTERGRADE|AAA", freshPass);
+        Assert.DoesNotContain("(+", freshPass);
+        Assert.Contains("(+5,000) #LETTERGRADE|AAPlus|False# →", BucketRow(card, "Co-Op", "CoOp2"));
     }
 
     private static ScoreHighlightsCapturedEvent.HighlightedChange Change(Chart chart, int? oldScore)
@@ -797,12 +806,19 @@ public sealed class CommunitySagaTests
             950000, "SuperbGame", false, HighlightFlags.None);
     }
 
-    // One row out of a labelled compact bucket, picked by its difficulty token.
-    private static string BucketRow(IEnumerable<RichBotMessage> msgs, string label, string difficulty)
+    // One row out of a labelled compact bucket, picked by its difficulty token. A missing bucket
+    // or row fails here, naming what it looked for and printing the card, so a moved bucket label
+    // or row format says which one moved. It must not hand a substitute string back to the caller:
+    // a dump of the card satisfies the callers' Assert.Contains and passes a broken test.
+    private static string BucketRow(RichBotMessage card, string label, string difficulty)
     {
-        return msgs.Single().Blocks.OfType<RichBotText>()
-            .First(t => t.Markdown.StartsWith($"-# {label}")).Markdown
-            .Split('\n').First(l => l.Contains($"#DIFFICULTY|{difficulty}#"));
+        var blocks = card.Blocks.OfType<RichBotText>().ToArray();
+        var row = blocks.Where(t => t.Markdown.StartsWith($"-# {label}"))
+            .SelectMany(t => t.Markdown.Split('\n'))
+            .FirstOrDefault(l => l.Contains($"#DIFFICULTY|{difficulty}#"));
+        Assert.True(row != null, $"No {difficulty} row under \"{label}\". Card text blocks:\n"
+                                 + string.Join("\n", blocks.Select(t => t.Markdown)));
+        return row!;
     }
 
     [Fact]
