@@ -20,7 +20,6 @@ using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
-using ScoreTracker.Ucs.Contracts.Events;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
@@ -1382,30 +1381,6 @@ public sealed class CommunitySagaTests
             changes.Select(c => new ScoreHighlightsCapturedEvent.HighlightedChange(c.ChartId, c.IsNewPass,
                 c.IsNewPass ? null : 900000, 950000, "SuperbGame", false, c.Flags)).ToArray(), milestones,
             titleProgress);
-    }
-
-    [Fact]
-    public async Task UcsPlacementBroadcastsFromEventFactsAlone()
-    {
-        // The fat event carries everything the Discord post needs — the saga must not
-        // reach back into UCS storage (it no longer can: IUcsRepository is UCS-internal).
-        var userId = Guid.NewGuid();
-        var ctx = new HandlerContext();
-        ctx.GivenUser(userId, name: "alice");
-        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
-
-        await ctx.Saga.Consume(BuildContext(UcsLeaderboardPlacedEvent.Create(
-            Now, userId, Guid.NewGuid(), score: 950000, plate: "SuperbGame", isBroken: false,
-            artist: "StepMaker", songName: "Test Song", difficulty: "S15")));
-
-        ctx.Bot.Verify(b => b.SendMessages(
-            It.Is<IEnumerable<string>>(msgs => msgs.Any(m => m.Contains("alice")
-                                                             && m.Contains("950000")
-                                                             && m.Contains("StepMaker")
-                                                             && m.Contains("Test Song")
-                                                             && m.Contains("S15"))),
-            It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
-            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
     [Fact]

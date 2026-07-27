@@ -72,6 +72,8 @@
         if (!node) return;
         node.classList.toggle('open', open);
         node.setAttribute('aria-hidden', String(!open));
+        // Reopening should land on the root list, not wherever the last visit drilled to.
+        if (!open) resetDrill(node.querySelector('[data-more-nav]'));
         var button = document.querySelector(spec.button);
         if (button) button.setAttribute('aria-expanded', String(open));
         // Read back rather than trust `open`: the flag means "some sheet is up".
@@ -93,6 +95,101 @@
     function closeSheets() {
         var spec = openSheet();
         if (spec) setSheet(spec, false);
+    }
+
+    // ===== More sheet: drill-down =====
+
+    // The sheet ships one grouped list. Where there is horizontal room the CSS lays it out as
+    // an icon grid and this module stays asleep; on a narrow, tall phone there is no such
+    // room, so the groups collapse to a root list of section names and open one at a time.
+    //
+    // The media query is the one the shell already uses for squarish viewports (the bottom
+    // nav's wide-only slot), plus a width floor for portrait tablets — those are TALLER than
+    // 1:1 but have plenty of width, and would otherwise get the phone treatment across 768px.
+    var GRID_QUERY = '(min-aspect-ratio: 1/1), (min-width: 700px)';
+
+    function moreNav() {
+        return document.querySelector('[data-more-nav]');
+    }
+
+    function isGridLayout() {
+        return window.matchMedia(GRID_QUERY).matches;
+    }
+
+    // Root: heads are rows, bodies are away, back bar is gone.
+    // Opened: one body showing, everything else away, back bar naming where you are.
+    function showGroup(nav, group) {
+        var back = nav.querySelector('[data-more-back]');
+        var label = nav.querySelector('[data-more-back-label]');
+        var groups = nav.querySelectorAll('[data-more-group]');
+
+        for (var i = 0; i < groups.length; i++) {
+            var isTarget = groups[i] === group;
+            groups[i].classList.toggle('drill-open', isTarget);
+            groups[i].hidden = !!group && !isTarget;
+            var head = groups[i].querySelector('[data-more-group-head]');
+            if (head && head.hasAttribute('role')) head.setAttribute('aria-expanded', String(isTarget));
+        }
+        // Ungrouped rows (About, the gated-mix import link) belong to the root only.
+        nav.classList.toggle('drill-inside', !!group);
+
+        if (back) back.hidden = !group;
+        if (label && group) {
+            var heading = group.querySelector('[data-more-group-head] span');
+            label.textContent = heading ? heading.textContent : '';
+        }
+        // The sheet is the scroll container, not this list — coming back from a long
+        // section otherwise leaves the root scrolled to where that section ended.
+        var sheet = el(nav, '[data-more-sheet]');
+        if (sheet) sheet.scrollTop = 0;
+    }
+
+    function resetDrill(nav) {
+        var target = nav || moreNav();
+        if (target) showGroup(target, null);
+    }
+
+    // A head is a label in grid mode and a control in drill mode. It only gets a role and a
+    // tab stop in the mode where it actually does something — otherwise keyboard users tab
+    // onto five inert rows.
+    function syncDrillAffordances() {
+        var nav = moreNav();
+        if (!nav) return;
+        var grid = isGridLayout();
+        var heads = nav.querySelectorAll('[data-more-group-head]');
+
+        for (var i = 0; i < heads.length; i++) {
+            if (grid) {
+                heads[i].removeAttribute('role');
+                heads[i].removeAttribute('tabindex');
+                heads[i].removeAttribute('aria-expanded');
+            } else {
+                heads[i].setAttribute('role', 'button');
+                heads[i].setAttribute('tabindex', '0');
+                heads[i].setAttribute('aria-expanded', 'false');
+            }
+        }
+        nav.classList.toggle('drill-mode', !grid);
+        // Unfolding a phone mid-session swaps the layout underneath an open drill panel;
+        // the grid has no notion of "inside a group", so it has to start from the root.
+        if (grid) resetDrill(nav);
+    }
+
+    function onDrillClick(target) {
+        var nav = moreNav();
+        if (!nav || isGridLayout()) return false;
+
+        if (el(target, '[data-more-back]')) {
+            resetDrill(nav);
+            return true;
+        }
+        var head = el(target, '[data-more-group-head]');
+        if (head && nav.contains(head)) {
+            var group = el(head, '[data-more-group]');
+            if (group) showGroup(nav, group);
+            return true;
+        }
+        return false;
     }
 
     // ===== Bottom nav active slot =====
@@ -153,7 +250,14 @@
             return;
         }
 
+        // Drilling into a section is movement WITHIN the sheet, so it must not close it.
+        if (onDrillClick(target)) {
+            e.preventDefault();
+            return;
+        }
+
         // A <summary> drives disclosure inside a panel — it must not close what contains it.
+        // The More sheet's own disclosures are gone, but the mix picker still uses one.
         var isSummary = !!el(target, 'summary');
 
         if (openMenu && !isSummary && (!el(target, '[data-menu]') || el(target, 'a'))) closeMenu();
@@ -165,7 +269,24 @@
     }
 
     function onKeyDown(e) {
+        // A head carries role="button" only in drill mode, so it owes the keyboard the
+        // activation a real button would have given for free.
+        if (e.key === 'Enter' || e.key === ' ') {
+            var head = el(e.target, '[data-more-group-head]');
+            if (head && !isGridLayout() && onDrillClick(e.target)) e.preventDefault();
+            return;
+        }
+
         if (e.key !== 'Escape') return;
+
+        // Inside a section, Escape is "back" before it is "close" — the sheet is still the
+        // thing you meant to be in.
+        var nav = moreNav();
+        if (nav && nav.classList.contains('drill-inside')) {
+            resetDrill(nav);
+            return;
+        }
+
         if (openMenu) {
             var activator = openMenu.querySelector('[data-menu-activator]');
             closeMenu();
@@ -238,6 +359,13 @@
         window.addEventListener('popstate', refreshActiveNav);
         wrapHistory('pushState', true);
         wrapHistory('replaceState', false);
+        // A fold phone changes viewport mid-session, so the sheet has to re-decide its
+        // layout live rather than once at load. matchMedia fires on the transition itself;
+        // resize would too, but this only wakes on the boundary that matters.
+        var gridWatch = window.matchMedia(GRID_QUERY);
+        if (gridWatch.addEventListener) gridWatch.addEventListener('change', syncDrillAffordances);
+        else if (gridWatch.addListener) gridWatch.addListener(syncDrillAffordances);
+        syncDrillAffordances();
         // The dock's scroll watcher needs no circuit, so it starts with the page.
         if (window.pageDock) window.pageDock.watch();
         refreshActiveNav();

@@ -16,7 +16,6 @@ using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.Randomizer.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
-using ScoreTracker.Ucs.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 
 namespace ScoreTracker.CompositionRoot;
@@ -52,7 +51,6 @@ public static class RegistrationExtensions
         builder.AddPlayerProgress();
         builder.AddRandomizer();
         builder.AddScoreLedger();
-        builder.AddUcs();
         builder.AddWeeklyChallenge();
 
         // Not pooled: pooling requires an options-only constructor, and the context takes

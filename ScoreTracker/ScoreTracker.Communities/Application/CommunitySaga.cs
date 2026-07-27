@@ -7,7 +7,6 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Identity.Contracts.Events;
-using ScoreTracker.Ucs.Contracts.Events;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
@@ -41,8 +40,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     IRequestHandler<GetPhoenixRecordsForCommunityQuery, IEnumerable<UserPhoenixScore>>,
     IConsumer<ScoreHighlightsCapturedEvent>,
     IConsumer<NewTitlesAcquiredEvent>,
-    IConsumer<UserUpdatedEvent>,
-    IConsumer<UcsLeaderboardPlacedEvent>
+    IConsumer<UserUpdatedEvent>
 
 {
     private readonly IBotClient _bot;
@@ -1136,19 +1134,5 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         // A channel reachable through two communities posts once; the first registration's
         // language wins.
         return channels.GroupBy(c => c.ChannelId).Select(g => g.First()).ToList();
-    }
-
-    public async Task Consume(ConsumeContext<UcsLeaderboardPlacedEvent> context)
-    {
-        var user = await _users.GetUser(context.Message.UserId);
-        if (user == null) return;
-        var placed = context.Message;
-        // UCS boards live on the current game's site, so scores grade on the Phoenix 2 table.
-        await SendToCommunityDiscords(context.Message.UserId, culture => _localizer.Get(culture,
-                "{0} scored {1} {2} on {3}'s {4} {5} UCS",
-                user.Name, placed.Score,
-                $"#LETTERGRADE|{PhoenixScore.From(placed.Score).LetterGradeFor(MixEnum.Phoenix2)}|{placed.IsBroken}#",
-                placed.Artist, placed.SongName, $"#DIFFICULTY|{placed.Difficulty}#"),
-            context.CancellationToken);
     }
 }

@@ -2,7 +2,6 @@ using System;
 using System.Text.Json;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.SharedKernel.Enums;
-using ScoreTracker.Ucs.Contracts.Events;
 using Xunit;
 
 namespace ScoreTracker.Tests.DomainTests;
@@ -56,17 +55,6 @@ public sealed class ContractEventSerializationTests
                 new ScoreImportCompletedEvent.ImportedScore(
                     Guid.Parse("11111111-1111-1111-1111-111111111111"), 985000, "ExtremeGame", false)
             }));
-    }
-
-    [Fact]
-    public void UcsLeaderboardPlacedEventRoundTripsJson()
-    {
-        AssertRoundTrips(UcsLeaderboardPlacedEvent.Create(
-            new DateTimeOffset(2026, 6, 12, 0, 0, 0, TimeSpan.Zero),
-            Guid.Parse("33333333-3333-3333-3333-333333333333"),
-            Guid.Parse("11111111-1111-1111-1111-111111111111"),
-            score: 950000, plate: "SuperbGame", isBroken: false,
-            artist: "StepMaker", songName: "Test Song", difficulty: "S15"));
     }
 
     [Fact]

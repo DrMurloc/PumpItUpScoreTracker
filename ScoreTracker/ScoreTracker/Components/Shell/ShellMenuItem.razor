@@ -4,7 +4,7 @@
    Blazor's router intercepts every same-origin anchor on the page, including these, which is
    what keeps nav clicks a fast in-app navigation. Routes that MVC or Razor Pages own must set
    FullLoad so the browser handles them instead; without it they resolve to NotFound. *@
-<a class="shell-menu-item" href="@Href" target="@Target" rel="@Rel">
+<a class="@ItemClass" href="@Href" target="@Target" rel="@Rel">
     @if (!string.IsNullOrWhiteSpace(Icon))
     {
         <MudIcon Icon="@Icon" Size="Size.Small"></MudIcon>
@@ -23,7 +23,13 @@
     /// <summary>For routes Blazor has no page for — MVC actions and Razor Pages.</summary>
     [Parameter] public bool FullLoad { get; set; }
 
+    /// <summary>Extra classes on the row — the responsive show/hide toggles use this.</summary>
+    [Parameter] public string? Class { get; set; }
+
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string ItemClass =>
+        string.IsNullOrWhiteSpace(Class) ? "shell-menu-item" : $"shell-menu-item {Class}";
 
     private string? Target => External ? "_blank" : FullLoad ? "_top" : null;
 

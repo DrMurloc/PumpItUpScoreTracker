@@ -5118,9 +5118,6 @@
   <data name="Third" xml:space="preserve">
     <value>3 枚目</value>
   </data>
-  <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
-    <value>{0} が {3} の UCS {4} {5} で {1} {2} を記録</value>
-  </data>
   <data name="Hot Streak" xml:space="preserve">
     <value>絶好調</value>
   </data>
@@ -6872,5 +6869,11 @@
   </data>
   <data name="rank #{0}" xml:space="preserve">
     <value>{0}位</value>
+  </data>
+  <data name="Leaderboards" xml:space="preserve">
+    <value>ランキング</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>戻る</value>
   </data>
 </root>

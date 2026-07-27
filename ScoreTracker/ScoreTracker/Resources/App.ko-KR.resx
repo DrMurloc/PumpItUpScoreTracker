@@ -5001,9 +5001,6 @@
   <data name="Third" xml:space="preserve">
     <value>세 번째</value>
   </data>
-  <data name="{0} scored {1} {2} on {3}'s {4} {5} UCS" xml:space="preserve">
-    <value>{0}님이 {3}의 UCS {4} {5}에서 {1} {2} 기록</value>
-  </data>
   <data name="Hot Streak" xml:space="preserve">
     <value>핫 스트릭</value>
   </data>
@@ -6755,5 +6752,11 @@
   </data>
   <data name="rank #{0}" xml:space="preserve">
     <value>{0}위</value>
+  </data>
+  <data name="Leaderboards" xml:space="preserve">
+    <value>리더보드</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>뒤로</value>
   </data>
 </root>
