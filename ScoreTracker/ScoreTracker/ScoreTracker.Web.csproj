@@ -60,7 +60,6 @@
     <ProjectReference Include="..\ScoreTracker.PlayerProgress\ScoreTracker.PlayerProgress.csproj" />
     <ProjectReference Include="..\ScoreTracker.ScoreLedger\ScoreTracker.ScoreLedger.csproj" />
     <ProjectReference Include="..\ScoreTracker.HomePage\ScoreTracker.HomePage.csproj" />
-    <ProjectReference Include="..\ScoreTracker.Ucs\ScoreTracker.Ucs.csproj" />
     <ProjectReference Include="..\ScoreTracker.ServiceDefaults\ScoreTracker.ServiceDefaults.csproj" />
   </ItemGroup>
 

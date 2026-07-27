@@ -15,9 +15,7 @@ using Moq;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Application;
 using ScoreTracker.ScoreLedger.Wiring;
-using ScoreTracker.Ucs.Contracts;
-using ScoreTracker.Ucs.Contracts.Commands;
-using ScoreTracker.Ucs.Domain;
+using ScoreTracker.WeeklyChallenge.Contracts.Commands;
 using Xunit;
 
 namespace ScoreTracker.Tests.ArchitectureTests;
@@ -34,7 +32,6 @@ public sealed class VerticalBoundaryTests
     // assembly and its root namespace. New verticals add themselves here.
     public static TheoryData<Type> VerticalWiringMarkers => new()
     {
-        typeof(Ucs.Wiring.UcsRegistrationExtensions),
         typeof(ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions),
         typeof(OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions),
         typeof(Catalog.Wiring.CatalogRegistrationExtensions),
@@ -227,21 +224,29 @@ public sealed class VerticalBoundaryTests
     }
 
     [Fact]
-    public void MediatRDiscoversTheUcsVerticalsInternalHandlers()
+    public void MediatRDiscoversAVerticalsInternalHandlers()
     {
-        // The vertical's handlers are internal classes behind public contract records. If the
-        // host's MediatR assembly scan ever skips non-public types, every UCS page breaks at
-        // runtime while unit tests (which construct the saga directly) stay green — this
-        // wiring test is the tripwire.
+        // A vertical's handlers are internal classes behind public contract records. If the
+        // host's MediatR assembly scan ever skips non-public types, every page served by a
+        // vertical breaks at runtime while unit tests (which construct the saga directly)
+        // stay green — this wiring test is the tripwire. It rode on Ucs until that vertical
+        // was retired; the guarantee is about the scan, not about any one vertical, so it
+        // moved to WeeklyChallenge rather than going away with it.
         var services = new ServiceCollection();
-        services.AddMediatR(o => o.RegisterServicesFromAssemblies(typeof(UcsChart).Assembly));
+        services.AddLogging();
+        services.AddMemoryCache();
+        services.AddMediatR(o =>
+            o.RegisterServicesFromAssemblies(typeof(RegisterWeeklyChartScoreCommand).Assembly));
         services.AddTransient(_ => new Mock<IBus>().Object);
-        services.AddTransient(_ => new Mock<IUcsRepository>().Object);
-        services.AddTransient(_ => new Mock<ICurrentUserAccessor>().Object);
+        services.AddTransient(_ => new Mock<IChartRepository>().Object);
+        services.AddTransient(_ => new Mock<IWeeklyTournamentRepository>().Object);
+        services.AddTransient(_ => new Mock<IPlayerStatsReader>().Object);
+        services.AddTransient(_ => new Mock<IUserReader>().Object);
         services.AddTransient(_ => new Mock<IDateTimeOffsetAccessor>().Object);
+        services.AddTransient(_ => new Mock<IRandomNumberGenerator>().Object);
         using var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetService<IRequestHandler<RegisterUcsEntryCommand>>();
+        var handler = provider.GetService<IRequestHandler<RegisterWeeklyChartScoreCommand>>();
 
         Assert.NotNull(handler);
     }

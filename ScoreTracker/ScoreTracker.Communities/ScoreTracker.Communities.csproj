@@ -30,14 +30,13 @@
          Application is also transitional: CommunitySaga sends GetChartsQuery via IMediator;
          the reference drops when the chart reads move to Catalog. -->
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
-    <!-- Vertical→vertical contracts: CommunitySaga consumes UcsLeaderboardPlacedEvent and
-         sends PlayerProgress's GetTop50ForPlayerQuery. -->
+    <!-- Vertical→vertical contracts: CommunitySaga sends PlayerProgress's
+         GetTop50ForPlayerQuery. -->
     <ProjectReference Include="..\ScoreTracker.Catalog\ScoreTracker.Catalog.csproj" />
     <!-- Scoring levels drive the universal noteworthy ordering on the score cards. -->
     <ProjectReference Include="..\ScoreTracker.ChartIntelligence\ScoreTracker.ChartIntelligence.csproj" />
     <ProjectReference Include="..\ScoreTracker.PlayerProgress\ScoreTracker.PlayerProgress.csproj" />
     <ProjectReference Include="..\ScoreTracker.Randomizer\ScoreTracker.Randomizer.csproj" />
-    <ProjectReference Include="..\ScoreTracker.Ucs\ScoreTracker.Ucs.csproj" />
     <!-- The snapshot card reads current weekly-board placements at render time. -->
     <ProjectReference Include="..\ScoreTracker.WeeklyChallenge\ScoreTracker.WeeklyChallenge.csproj" />
   </ItemGroup>

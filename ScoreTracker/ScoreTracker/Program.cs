@@ -25,7 +25,6 @@ using ScoreTracker.Identity.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
-using ScoreTracker.Ucs.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Accessors;
@@ -94,7 +93,6 @@ builder.Services.AddMassTransit(o =>
     o.AddWeeklyChallengeConsumers();
     o.AddEventCompetitionConsumers();
     o.AddCommunitiesConsumers();
-    o.AddUcsConsumers();
     o.AddCatalogConsumers();
     o.AddIdentityConsumers();
 
@@ -234,7 +232,6 @@ builder.Services.AddBlazorApplicationInsights()
             typeof(MatchSaga).Assembly
             , typeof(MainLayout).Assembly,
             typeof(PlayerProgressRegistrationExtensions).Assembly,
-            typeof(ScoreTracker.Ucs.Wiring.UcsRegistrationExtensions).Assembly,
             typeof(IdentityRegistrationExtensions).Assembly,
             typeof(ScoreTracker.ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly,
             typeof(ScoreTracker.OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly,

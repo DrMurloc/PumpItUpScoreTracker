@@ -97,7 +97,6 @@ public sealed class LayerDependencyTests
         // still inject the port transitionally — this rule covers the verticals.
         var verticalAssemblies = new[]
         {
-            typeof(Ucs.Wiring.UcsRegistrationExtensions).Assembly,
             typeof(ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly,
             typeof(OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly,
             typeof(Catalog.Wiring.CatalogRegistrationExtensions).Assembly,
