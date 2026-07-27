@@ -59,7 +59,8 @@ logged-out path.
   or `/Welcome`). This overhaul threads a returnUrl through the OAuth state / PIUGAME login
   flow so deep-link bounces resume where they were headed.
 - **D5 — Link policy.** Every link on the page lands on a public surface (`/TierLists`,
-  `/WeeklyCharts`, `/Titles`, `/PlayerRankings`, calculators, `/Privacy`, Swagger), a
+  `/OfficialLeaderboards`, `/Charts`, `/WeeklyCharts`, `/Titles`, `/PlayerRankings`,
+  calculators, `/Privacy`, Swagger), a
   sign-in entry (`/Login/{Provider}`, `/PiuGameLogin`, the card anchor), or an in-page
   anchor. Never a login wall. Feature pitches whose destination is gated (score import)
   point their CTA at the sign-in card instead.
@@ -93,10 +94,49 @@ logged-out path.
   for toolmakers (public API + Swagger). The mix-transition claim is framed positively —
   "when a new mix arrives, nothing here resets" — deliberately without referencing anyone
   else's resets.
+- **D11 — The top bar is the page's only chrome-level exit** (owner, 2026-07-26). Three
+  links, no controls, naming the destinations a visitor most often arrives already wanting:
+  `/TierLists`, `/OfficialLeaderboards` (the This Week page, labelled `Leaderboards`) and
+  `/Charts`. Each reuses the shell's own label, so the bar speaks the site's vocabulary and
+  costs no new localization keys. All are public, so the bar can never
+  bounce a signed-out visitor into a login wall. The mix pill is gone with it — the page
+  wears one pinned palette rather than reporting a mix the visitor cannot change, and a
+  chip reading the game's name next to nothing selectable was chrome without a job.
+- **D13 — No chart search in the bar; a `Charts` link instead** (owner, 2026-07-26, after
+  field-testing a search box here). A GET form to `/Charts?Song=` was tried and pulled: it
+  wore the app bar's pill, so it read as the same control, but it had no autocomplete and
+  carried the UA's native clear affordance. A control that looks identical and behaves
+  differently is worse than one that looks different.
+  **The real control cannot be dropped in here, and this is the reason not to try again:**
+  the front door is a standalone Razor Page (`Layout = null`, its own `<html>`), which puts
+  it outside the Blazor Web App pipeline. Islands work in `App.razor` because that document
+  *is* the Blazor root. Reaching a component from a Razor Page means the Component Tag
+  Helper, whose render modes are the legacy `Mvc.Rendering.RenderMode` — bootstrapped by
+  `AddServerSideBlazor()` + `MapBlazorHub()` + `blazor.server.js`, a second Blazor hosting
+  model beside this app's `MapRazorComponents<App>()`. The only alternative is making the
+  front door a routed component, which additionally means suppressing the site shell in
+  `App.razor` for that one route. Both also pay for MudBlazor's CSS/JS and a circuit on a
+  cold-cache anonymous page, against D7. Docs-based; not tested empirically.
+  A vanilla typeahead is not the cheap escape it looks like either: it needs an *anonymous*
+  chart-search endpoint, outside the API-token ecosystem fronting `api/*` — a new public
+  surface with its own abuse and rate-limiting questions, which integrators would build
+  against whatever the contract says.
+- **D14 — No sign-in button in the top bar** (owner, 2026-07-26). It was an `#signin` anchor
+  to the hero card — which on first paint is already on screen, beside it. A prominent CTA
+  that visibly does nothing when you click it teaches a visitor the page is broken, and it
+  was competing with the three real provider buttons a few hundred pixels away. The anchor
+  target and the import card's "Sign in and import yours" CTA both stay: from far down the
+  page that jump is real work. If a persistent sign-in affordance is wanted later, the
+  honest form is one that appears only once the hero card has scrolled out of view.
+- **D12 — The front door is pinned to Phoenix 2** (owner, 2026-07-26, resolving the launch
+  question below). The palette is hardcoded in the page head, not resolved from the mix
+  cookie: the front door pitches the current game to someone who has no picker on it. The
+  rest of the anonymous site still resolves Phoenix by default
+  (`ShellModelFactory.ResolveMix`) — flipping that is a separate, site-wide call.
 
 ## Page anatomy
 
-Top bar (existing logged-out shell; "Sign in" where the avatar goes) → hero (eyebrow /
+Top bar (wordmark → three public nav links) → hero (eyebrow /
 headline / pitch line; sign-in card right; stat row + 30-day pulse under the copy) →
 "See where you stand" showcase 2×2 → "More than a tracker" 2×2 (home widgets · run real
 events · tournaments & qualifiers · Discord wired in) → "New mix. Same you." stewardship
@@ -104,7 +144,13 @@ events · tournaments & qualifiers · Discord wired in) → "New mix. Same you."
 (free/ad-free line, Privacy, API link, locale list).
 
 On phones the hero stacks copy → card → stats, keeping both goals of G1 inside the first
-viewport-and-a-bit; primary actions stay thumb-reachable.
+viewport-and-a-bit; primary actions stay thumb-reachable. Below 960px the top bar splits
+into two rows rather than hiding the nav, which is what it did before — wordmark above, the
+three links spanning below, their text aligned to the wordmark's. The destinations it names
+are the page's only chrome-level exits and phones are where most of them are wanted.
+Measured: one 55px row on desktop; two rows at 81px on a phone, and at 375px (narrower than
+the 390px design target) all three links still share a single row with the longest locale,
+en-ZW, ending 56px clear of the edge. No horizontal overflow at any width.
 
 ## Technical shape
 
@@ -189,6 +235,12 @@ Checkpoint commits, suites green at each. FT = owner field-test checkpoint.
 - **`/Welcome` fate** — the post-first-login page is the same era as the old `/Login`.
   Likely folds into a first-login step of the home dashboard rather than this work; owner to
   decide.
-- **Logged-out theme at Phoenix 2 launch** — anonymous visitors currently resolve to the
-  Phoenix palette; flipping the logged-out default to Phoenix 2 when the game releases is a
-  one-line change in the resolution default. Decide at launch.
+- ~~**Logged-out theme at Phoenix 2 launch**~~ — settled for this page by D12: the front
+  door is pinned to Phoenix 2. Still open for the *rest* of the anonymous site, where
+  `ShellModelFactory.ResolveMix` falls through to Phoenix when there is no cookie — so a
+  visitor following the top-bar nav crosses from the green front door onto a blue
+  `/TierLists`. One line, site-wide blast radius; owner's call.
+- **Front-door showcase data is Phoenix-sourced** — `FrontDoorModel` reads
+  `GetChartsQuery(MixEnum.Phoenix)`, so the tier bands, weekly rows, and the hardcoded S21
+  bubble are Phoenix content under a Phoenix 2 palette. Moving the showcase to Phoenix 2
+  depends on P2 having enough tier-list coverage to fill the bands.

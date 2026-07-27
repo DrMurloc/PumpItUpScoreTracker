@@ -28,13 +28,15 @@ body.front-door {
 
 /* Display face mirrors the Blazor shell's heading stack (MixThemes.DisplayFontStack). */
 .front-door h1, .front-door h2, .front-door .eyebrow, .front-door .wordmark,
-.front-door .mix-pill, .front-door .topbar-signin, .front-door .stat .n {
+.front-door .stat .n {
     font-family: "Barlow Condensed", "Malgun Gothic", "Yu Gothic UI", "Apple SD Gothic Neo", "Hiragino Sans", "Arial Narrow", sans-serif;
 }
 
 /* ---------- top bar ---------- */
+/* Wraps rather than overflows: a long localized nav label can push the row past the
+   viewport, and a sticky bar that overflows takes the whole document sideways. */
 .front-door .topbar {
-    display: flex; align-items: center; gap: 26px;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 26px;
     padding: 10px 28px;
     background: color-mix(in srgb, var(--mix-nav) 88%, transparent);
     backdrop-filter: blur(8px);
@@ -46,15 +48,7 @@ body.front-door {
     color: var(--mix-ink);
 }
 .front-door .wordmark b { color: var(--mix-primary); }
-.front-door .mix-pill {
-    font-size: 13px; letter-spacing: .14em;
-    padding: 3px 12px; border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--mix-primary) 45%, transparent);
-    color: var(--mix-primary);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--mix-primary) 25%, transparent);
-    white-space: nowrap;
-}
-.front-door .topnav { display: flex; gap: 4px; margin-left: 8px; }
+.front-door .topnav { display: flex; flex-wrap: wrap; gap: 4px; margin-left: 8px; }
 .front-door .topnav a {
     color: var(--mix-ink-muted); font-size: 14px; padding: 6px 12px;
     border-radius: 6px;
@@ -64,14 +58,6 @@ body.front-door {
     background: color-mix(in srgb, var(--mix-primary) 10%, transparent);
     text-decoration: none;
 }
-.front-door .spacer { flex: 1; }
-.front-door .topbar-signin {
-    font-size: 15px; letter-spacing: .08em; font-weight: 600;
-    color: var(--mix-primary-contrast);
-    background: var(--mix-primary);
-    padding: 7px 18px; border-radius: 8px;
-}
-.front-door .topbar-signin:hover { text-decoration: none; filter: brightness(1.1); }
 
 /* ---------- hero ---------- */
 .front-door .hero {
@@ -479,7 +465,13 @@ body.front-door {
 
 /* ---------- responsive ---------- */
 @media (max-width: 960px) {
-    .front-door .topnav { display: none; }
+    /* Wordmark up top, nav spanning underneath. This bar is sticky, so every pixel of it
+       is charged against the hero on a phone; the nav row rides lighter than the first to
+       keep the total down, and wraps within itself if a locale runs long. */
+    .front-door .topbar { gap: 6px 12px; padding: 8px 16px; }
+    .front-door .wordmark { font-size: 20px; }
+    .front-door .topnav { flex-basis: 100%; margin-left: -8px; gap: 2px; }
+    .front-door .topnav a { padding: 3px 8px; font-size: 13.5px; }
     .front-door .hero {
         grid-template-columns: 1fr;
         grid-template-areas: "copy" "card" "stats";
