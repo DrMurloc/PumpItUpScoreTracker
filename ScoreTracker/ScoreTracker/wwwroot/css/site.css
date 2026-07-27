@@ -328,23 +328,22 @@ body {
     background: rgba(255, 255, 255, .08);
 }
 
-.mega-panel {
-    display: flex;
-    gap: 8px;
-    padding: 4px 6px;
+/* Tier Lists is top-level when the bar has room for seven items and folds into Play when
+   it doesn't. 1280 is MudBlazor's Lg — the ladder the rest of the app speaks — and it puts
+   every tablet-landscape width (1024, 1180, 1194) on the folded side while every real
+   laptop keeps the full bar. Both copies ship in the HTML; exactly one is ever shown. */
+.nav-wide-only {
+    display: none;
 }
 
-.mega-col {
-    min-width: 180px;
-}
+@media (min-width: 1280px) {
+    .top-nav .nav-wide-only {
+        display: inline-flex;
+    }
 
-.mega-head {
-    font-family: var(--font-display);
-    font-size: .7rem;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--mix-ink-muted);
-    padding: 8px 16px 2px;
+    .nav-folded-only {
+        display: none;
+    }
 }
 
 .mix-pill {
@@ -666,7 +665,13 @@ html.sheet-open .more-sheet-scrim {
     font-size: 1rem;
 }
 
-.more-sheet .nav-section {
+/* The group head is a section label by default. nav.js promotes it to a tappable row when
+   the viewport is too narrow for the grid; until then its chevron stays hidden so it never
+   advertises an interaction it doesn't have. */
+.more-sheet .more-group-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     padding: 12px 16px 2px;
     font-family: var(--font-display);
     font-size: .6875rem;
@@ -674,6 +679,119 @@ html.sheet-open .more-sheet-scrim {
     line-height: 1.4;
     text-transform: uppercase;
     opacity: .65;
+}
+
+.more-sheet .more-group-head .mud-icon-root {
+    font-size: .95rem;
+}
+
+.more-sheet .more-group-chevron,
+.more-sheet .more-back {
+    display: none;
+}
+
+/* ---- Drill-down: narrow, tall viewports ----------------------------------------------
+   No horizontal room for tiles, so the groups collapse to a root list of section names and
+   open one at a time. nav.js adds .drill-mode (layout is narrow) and .drill-inside (a group
+   is open); the markup is identical to the grid's. */
+.more-sheet .drill-mode .more-group-head {
+    padding: 8px 16px;
+    font-family: var(--font-body);
+    font-size: .875rem;
+    letter-spacing: normal;
+    text-transform: none;
+    opacity: 1;
+    cursor: pointer;
+}
+
+.more-sheet .drill-mode .more-group-head:hover,
+.more-sheet .drill-mode .more-group-head:focus-visible {
+    background: rgba(255, 255, 255, .08);
+}
+
+.more-sheet .drill-mode .more-group-head .mud-icon-root {
+    font-size: 1.25rem;
+}
+
+/* Pushed to the far edge so the row reads as "there is more this way". */
+.more-sheet .drill-mode .more-group-chevron {
+    display: inline-flex;
+    margin-left: auto;
+    opacity: .5;
+}
+
+.more-sheet .drill-mode .more-group-body {
+    display: none;
+}
+
+.more-sheet .drill-mode .more-group.drill-open .more-group-body {
+    display: block;
+}
+
+/* The open group's own head is redundant once the back bar names the section. */
+.more-sheet .drill-mode .more-group.drill-open .more-group-head {
+    display: none;
+}
+
+.more-sheet .drill-mode.drill-inside > .shell-menu-item {
+    display: none;
+}
+
+.more-sheet .drill-mode .more-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 16px;
+    background: none;
+    border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    color: var(--mix-primary);
+    font-family: var(--font-display);
+    font-size: .9375rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+/* ---- Icon grid: squarish or wide viewports -------------------------------------------
+   The aspect half is the same rule the bottom nav's wide-only slot uses (fold phones,
+   landscape). The width floor catches portrait tablets, which are taller than 1:1 but have
+   room to spare. Above 960 none of this applies — the desktop top nav has taken over. */
+@media (min-aspect-ratio: 1/1), (min-width: 700px) {
+    .more-sheet .more-group-body {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+        gap: 6px;
+        padding: 4px 10px 2px;
+    }
+
+    .more-sheet .more-group-body .shell-menu-item {
+        flex-direction: column;
+        gap: 6px;
+        min-height: 82px;
+        padding: 12px 6px 10px;
+        border-radius: 10px;
+        background: var(--mix-surface);
+        text-align: center;
+        white-space: normal;
+    }
+
+    .more-sheet .more-group-body .shell-menu-item .mud-icon-root {
+        font-size: 1.4rem;
+    }
+
+    /* Two lines, then ellipsis. Tournament names are owner-authored and can be any length,
+       so the tile has to survive one without stretching the row it sits in. */
+    .more-sheet .more-group-body .shell-menu-item span {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-size: .75rem;
+        line-height: 1.25;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

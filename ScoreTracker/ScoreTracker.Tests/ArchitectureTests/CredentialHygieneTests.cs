@@ -20,7 +20,6 @@ public sealed class CredentialHygieneTests
         typeof(Application.Commands.UpdateMatchCommand).Assembly,
         typeof(PlayerProgress.Contracts.Queries.GetTop50CompetitiveQuery).Assembly,
         typeof(Domain.Models.User).Assembly,
-        typeof(Ucs.Contracts.UcsChart).Assembly,
         typeof(ScoreLedger.Contracts.Queries.GetPhoenixRecordQuery).Assembly,
         typeof(OfficialMirror.Contracts.Queries.GetGameCardsQuery).Assembly,
         typeof(Catalog.Contracts.Queries.GetChartsQuery).Assembly,

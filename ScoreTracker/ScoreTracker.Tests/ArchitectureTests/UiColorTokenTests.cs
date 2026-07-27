@@ -38,7 +38,8 @@ public sealed class UiColorTokenTests
         // percentile legend went with the tool) — entry removed, ratchet tightened.
         ["Pages/Competition/MatchTournamentQualifiers.razor"] = 1,
         ["Pages/Competition/MatchTournamentQualifiersSubmit.razor"] = 4,
-        ["Pages/Competition/ScoreRankings.razor"] = 7,
+        // ScoreRankings took its 7 literals (the percentile colour legend) with it when the
+        // page was retired — entry removed, ratchet tightened.
         ["Pages/Competition/StaminaTournament.razor"] = 2,
         ["Pages/Dev/Populate.razor"] = 4,
         ["Pages/Experiments/ChartLetterDifficulties.razor"] = 8,
