@@ -3,93 +3,138 @@
 @using ScoreTracker.Web.Services
 
 @* Everything that didn't earn a bottom-nav slot, mirroring the desktop menu groups in the same
-   order. Bottom-anchored for thumb reach; nav.js toggles .open and the scrim. The Rankings and
-   Tools subgroups use native <details>, so the sheet needs no circuit. *@
+   order. Bottom-anchored for thumb reach; nav.js toggles .open and the scrim.
+
+   One markup, two layouts. Every destination is emitted exactly once, inside a group; CSS and
+   nav.js decide how the groups present themselves based on the room available:
+     - narrow, tall viewports  -> drill-down, one section per screen (nav.js)
+     - squarish or wide ones   -> icon grid, everything one tap (CSS alone)
+   Emitting both structures would mean twenty-odd duplicate links in the DOM, so the group
+   head doubles as a static label in grid mode and a tappable row in drill mode.
+
+   The back bar and the heads' chevrons are inert until nav.js promotes them, so a grid-mode
+   viewer never sees affordances that do nothing. *@
 <div class="more-sheet-scrim" data-sheet-scrim></div>
 <div class="more-sheet shell-mobile-only" data-more-sheet aria-hidden="true">
-    <div class="more-sheet-body">
+    <div class="more-sheet-body" data-more-nav>
+        <button type="button" class="more-back" data-more-back hidden>
+            <MudIcon Icon="@Icons.Material.Filled.ChevronLeft" Size="Size.Small"></MudIcon>
+            <span data-more-back-label></span>
+        </button>
+
         @* Nav follows LegacyMixGate: destinations a pre-XX mix can't reach yet
            simply don't show (docs/design/legacy-mixes.md). *@
         @if (Model.IsGatedMix && Model.IsLoggedIn)
         {
             <ShellMenuItem Href="/UploadXXScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</ShellMenuItem>
         }
-        @* Top, because desktop keeps it in the Play menu and this sheet mirrors those groups.
-           It gave up its bottom-nav slot to Search: the list is where you go to browse, the
-           search is where you go when you already know the chart, and only one of those is
-           worth a permanent slot on a phone. *@
-        <ShellMenuItem Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts"]</ShellMenuItem>
+
         @if (!Model.IsGatedMix)
         {
-            <div class="nav-section">@L["My Progress"]</div>
-            @if (Model.IsLoggedIn)
-            {
-                @if (Model.CurrentMix != MixEnum.XX)
-                {
-                    <ShellMenuItem Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</ShellMenuItem>
-                }
-                @if (Model.HasRecap)
-                {
-                    <ShellMenuItem Href=@($"/Player/{Model.UserId}/PhoenixRecap") Icon="@Icons.Material.Filled.LocalFireDepartment">@L["My Recap"]</ShellMenuItem>
-                }
-                <ShellMenuItem Href=@($"/Player/{Model.UserId}/Sessions") Icon="@Icons.Material.Filled.History">@L["My Sessions"]</ShellMenuItem>
-            }
-            <ShellMenuItem Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</ShellMenuItem>
+            <div class="more-group" data-more-group>
+                <div class="more-group-head" data-more-group-head>
+                    <MudIcon Icon="@Icons.Material.Filled.Grade" Size="Size.Small"></MudIcon>
+                    <span>@L["My Progress"]</span>
+                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="more-group-chevron"></MudIcon>
+                </div>
+                <div class="more-group-body">
+                    @if (Model.IsLoggedIn)
+                    {
+                        @if (Model.CurrentMix != MixEnum.XX)
+                        {
+                            <ShellMenuItem Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</ShellMenuItem>
+                        }
+                        @if (Model.HasRecap)
+                        {
+                            <ShellMenuItem Href=@($"/Player/{Model.UserId}/PhoenixRecap") Icon="@Icons.Material.Filled.LocalFireDepartment">@L["My Recap"]</ShellMenuItem>
+                        }
+                        <ShellMenuItem Href=@($"/Player/{Model.UserId}/Sessions") Icon="@Icons.Material.Filled.History">@L["My Sessions"]</ShellMenuItem>
+                    }
+                    <ShellMenuItem Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</ShellMenuItem>
+                </div>
+            </div>
 
-            <div class="nav-section">@L["Compete"]</div>
-            <ShellMenuItem Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</ShellMenuItem>
-            <ShellMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.Casino">@L["Chart Randomizer"]</ShellMenuItem>
-            <ShellMenuItem Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</ShellMenuItem>
-            @foreach (var tourney in Model.HighlightedEvents)
-            {
-                @if (tourney.Type == TournamentType.Stamina)
-                {
-                    <ShellMenuItem Href=@($"/Tournament/Stamina/{tourney.Id}") Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
-                }
-                else if (tourney.LinkOverride != null)
-                {
-                    <ShellMenuItem Href="@tourney.LinkOverride.ToString()" External="true" Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
-                }
-                else
-                {
-                    <ShellMenuItem Href=@($"/Tournament/{tourney.Id}/Qualifiers") Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
-                }
-            }
-            <details class="shell-disclosure">
-                <summary class="shell-menu-item">
+            <div class="more-group" data-more-group>
+                <div class="more-group-head" data-more-group-head>
+                    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small"></MudIcon>
+                    <span>@L["Compete"]</span>
+                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="more-group-chevron"></MudIcon>
+                </div>
+                <div class="more-group-body">
+                    <ShellMenuItem Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</ShellMenuItem>
+                    <ShellMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.Casino">@L["Chart Randomizer"]</ShellMenuItem>
+                    <ShellMenuItem Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</ShellMenuItem>
+                    @foreach (var tourney in Model.HighlightedEvents)
+                    {
+                        @if (tourney.Type == TournamentType.Stamina)
+                        {
+                            <ShellMenuItem Href=@($"/Tournament/Stamina/{tourney.Id}") Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
+                        }
+                        else if (tourney.LinkOverride != null)
+                        {
+                            <ShellMenuItem Href="@tourney.LinkOverride.ToString()" External="true" Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
+                        }
+                        else
+                        {
+                            <ShellMenuItem Href=@($"/Tournament/{tourney.Id}/Qualifiers") Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="more-group" data-more-group>
+                <div class="more-group-head" data-more-group-head>
                     <MudIcon Icon="@Icons.Material.Filled.Leaderboard" Size="Size.Small"></MudIcon>
-                    <span>@L["Official Leaderboards"]</span>
-                </summary>
-                <div class="shell-disclosure-body">
+                    <span>@L["Leaderboards"]</span>
+                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="more-group-chevron"></MudIcon>
+                </div>
+                <div class="more-group-body">
                     <ShellMenuItem Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Whatshot">@L["This Week"]</ShellMenuItem>
                     <ShellMenuItem Href="/OfficialLeaderboards/Rankings" Icon="@Icons.Material.Filled.Leaderboard">@L["Rankings"]</ShellMenuItem>
                     <ShellMenuItem Href="/OfficialLeaderboards/Players" Icon="@Icons.Material.Filled.PersonSearch">@L["Players"]</ShellMenuItem>
                     <ShellMenuItem Href="/OfficialLeaderboards/Popularity" Icon="@Icons.Material.Filled.TrendingUp">@L["Popularity"]</ShellMenuItem>
                     <ShellMenuItem Href="/OfficialLeaderboards/WhatItTakes" Icon="@Icons.Material.Filled.Stairs">@L["What It Takes"]</ShellMenuItem>
                 </div>
-            </details>
-
-            <div class="nav-section">@L["Community"]</div>
-            <ShellMenuItem Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</ShellMenuItem>
+            </div>
         }
-        <ShellMenuItem Href="https://discord.gg/MEYvr3bFte" External="true" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</ShellMenuItem>
 
-        <div class="shell-menu-divider"></div>
-        @if (!Model.IsGatedMix)
-        {
-            <details class="shell-disclosure">
-                <summary class="shell-menu-item">
-                    <MudIcon Icon="@Icons.Material.Filled.Build" Size="Size.Small"></MudIcon>
-                    <span>@L["Tools"]</span>
-                </summary>
-                <div class="shell-disclosure-body">
+        <div class="more-group" data-more-group>
+            <div class="more-group-head" data-more-group-head>
+                <MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small"></MudIcon>
+                <span>@L["Community"]</span>
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="more-group-chevron"></MudIcon>
+            </div>
+            <div class="more-group-body">
+                @if (!Model.IsGatedMix)
+                {
+                    <ShellMenuItem Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</ShellMenuItem>
+                }
+                <ShellMenuItem Href="https://discord.gg/MEYvr3bFte" External="true" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</ShellMenuItem>
+            </div>
+        </div>
+
+        @* Charts lives in Play on desktop but under Tools here — the phone's Tools group is a
+           catch-all in a way the desktop menu isn't. The group renders on gated mixes too,
+           carrying Charts alone: the calculators are gated, but the chart list is the one door
+           a pre-XX viewer still needs, and it used to sit ungrouped at the top of this sheet. *@
+        <div class="more-group" data-more-group>
+            <div class="more-group-head" data-more-group-head>
+                <MudIcon Icon="@Icons.Material.Filled.Build" Size="Size.Small"></MudIcon>
+                <span>@L["Tools"]</span>
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="more-group-chevron"></MudIcon>
+            </div>
+            <div class="more-group-body">
+                <ShellMenuItem Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts"]</ShellMenuItem>
+                @if (!Model.IsGatedMix)
+                {
                     <ShellMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</ShellMenuItem>
                     <ShellMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</ShellMenuItem>
                     <ShellMenuItem Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</ShellMenuItem>
                     <ShellMenuItem Href="/MixChanges" Icon="@Icons.Material.Filled.Compare">@L["Mix Changes"]</ShellMenuItem>
-                </div>
-            </details>
-        }
+                }
+            </div>
+        </div>
+
         <ShellMenuItem Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</ShellMenuItem>
     </div>
 </div>

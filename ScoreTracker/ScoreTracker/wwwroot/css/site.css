@@ -665,7 +665,13 @@ html.sheet-open .more-sheet-scrim {
     font-size: 1rem;
 }
 
-.more-sheet .nav-section {
+/* The group head is a section label by default. nav.js promotes it to a tappable row when
+   the viewport is too narrow for the grid; until then its chevron stays hidden so it never
+   advertises an interaction it doesn't have. */
+.more-sheet .more-group-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     padding: 12px 16px 2px;
     font-family: var(--font-display);
     font-size: .6875rem;
@@ -673,6 +679,15 @@ html.sheet-open .more-sheet-scrim {
     line-height: 1.4;
     text-transform: uppercase;
     opacity: .65;
+}
+
+.more-sheet .more-group-head .mud-icon-root {
+    font-size: .95rem;
+}
+
+.more-sheet .more-group-chevron,
+.more-sheet .more-back {
+    display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
