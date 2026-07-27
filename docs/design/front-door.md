@@ -222,6 +222,12 @@ Checkpoint commits, suites green at each. FT = owner field-test checkpoint.
   `ShellModelFactory.ResolveMix` falls through to Phoenix when there is no cookie — so a
   visitor following the top-bar nav crosses from the green front door onto a blue
   `/TierLists`. One line, site-wide blast radius; owner's call.
+- **The nav label follows the shell's vocabulary, one branch behind** — the bar says
+  `Official Leaderboards` because that key exists in all nine locales today. The nav
+  restructure (`claude/menu-nav-restructure-df6ff5`) renames the section to
+  `Leaderboards` and adds that key; once it lands, flipping this one label is a one-word
+  change. Doing it earlier means either eight locales falling back to English or the same
+  key added twice across nine resx files.
 - **Front-door showcase data is Phoenix-sourced** — `FrontDoorModel` reads
   `GetChartsQuery(MixEnum.Phoenix)`, so the tier bands, weekly rows, and the hardcoded S21
   bubble are Phoenix content under a Phoenix 2 palette. Moving the showcase to Phoenix 2
