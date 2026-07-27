@@ -172,7 +172,7 @@ internal sealed class PiuGameApi : IPiuGameApi
     }
 
     public async Task<PiuGameGetPumbilityRankingResult> GetPumbilityRankings(MixEnum mix, ChartType? chartType,
-        int page, HttpClient client, CancellationToken cancellationToken)
+        int page, HttpClient? client, CancellationToken cancellationToken)
     {
         var tab = chartType switch
         {

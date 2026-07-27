@@ -3,8 +3,12 @@ using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.OfficialMirror.Domain;
 
-/// <summary>One player's value on one rating board (P1 per-level lists, P2 PUMBILITY tabs).</summary>
-internal sealed record RatingBoardEntry(string BoardName, string Username, decimal Value);
+/// <summary>
+///     One player's value on one rating board. The avatar is already mirrored when the
+///     board's scrape carries one (the PUMBILITY pages do; the per-level lists don't) —
+///     null means "keep whatever this player already has", never "use the default".
+/// </summary>
+internal sealed record RatingBoardEntry(string BoardName, string Username, decimal Value, Uri? AvatarUrl = null);
 
 /// <summary>A scraped chart the catalog could not match — the raw identity as the site named it.</summary>
 internal sealed record MissingChartSighting(string SongName, string ChartType, int? Level);

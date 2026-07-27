@@ -848,29 +848,8 @@ else
     }
 
     @* Section / card / lamp / legend / folder-picker styles live in wwwroot/css/site.css —
-       they belong to the shared components, not this page. *@
-    .tier-table-wrap {
-        overflow-x: auto;
-    }
-
-    .tier-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .tier-table th {
-        text-align: left;
-        color: var(--mud-palette-text-secondary);
-        font-size: .75rem;
-        padding: 4px 8px;
-        border-bottom: 1px solid var(--mud-palette-lines-default);
-    }
-
-    .tier-table td {
-        padding: 4px 8px;
-        border-bottom: 1px solid var(--mud-palette-lines-default);
-    }
-
+       they belong to the shared components, not this page. The table shell itself moved
+       there too once the chart SRP's table density started borrowing it. *@
     .tier-table-jacket-cell {
         width: 36px;
     }

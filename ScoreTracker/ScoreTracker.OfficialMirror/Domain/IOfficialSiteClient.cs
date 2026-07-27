@@ -19,8 +19,9 @@ internal interface IOfficialSiteClient
         CancellationToken cancellationToken);
 
     /// <summary>
-    ///     The mix's rating boards: Phoenix's per-level rating lists, Phoenix 2's PUMBILITY
-    ///     All/Singles/Doubles tabs (values keep their decimal cents).
+    ///     The mix's rating boards. Both mixes publish a PUMBILITY board — Phoenix 2 splits
+    ///     it into All/Singles/Doubles tabs whose values keep decimal cents, Phoenix serves
+    ///     one whole-number board and additionally keeps its per-level rating lists.
     /// </summary>
     Task<IEnumerable<RatingBoardEntry>> GetRatingBoards(MixEnum mix, CancellationToken cancellationToken);
 

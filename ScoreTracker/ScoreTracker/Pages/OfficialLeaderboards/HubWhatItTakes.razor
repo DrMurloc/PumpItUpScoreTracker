@@ -3,16 +3,23 @@
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Theming
 @inject IMediator Mediator
 
 <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2 flex-wrap">
-    <MudSelect T="string" Value="_type" ValueChanged="SetType" Label="@L["Board"]" Dense="true"
-               Style="max-width:180px">
-        <MudSelectItem T="string" Value="@("All")">@L["All"]</MudSelectItem>
-        <MudSelectItem T="string" Value="@("Singles")">@L["Singles"]</MudSelectItem>
-        <MudSelectItem T="string" Value="@("Doubles")">@L["Doubles"]</MudSelectItem>
-    </MudSelect>
+    @* The picker offers the boards this mix publishes — Phoenix has one PUMBILITY list, so
+       a Singles tab there would be a board that does not exist. *@
+    @if (AvailableTypes.Count > 1)
+    {
+        <MudSelect T="string" Value="_type" ValueChanged="SetType" Label="@L["Board"]" Dense="true"
+                   Style="max-width:180px">
+            @foreach (var type in AvailableTypes)
+            {
+                <MudSelectItem T="string" Value="@type">@L[type]</MudSelectItem>
+            }
+        </MudSelect>
+    }
     @if (_data != null && _data.Boards.Any())
     {
         <MudText Typo="Typo.body2" Class="num">
@@ -57,15 +64,12 @@ else
                     </MudText>
                     <MudText Typo="Typo.caption">@L["50 charts at, SG plates assumed"]</MudText>
                 </MudStack>
-                @foreach (var (label, level) in GradePairs(_data.Entry))
+                @foreach (var (grade, level) in GradePairs(_data.Entry))
                 {
                     <MudPaper Outlined="true" Class="pa-2 px-3">
-                        <MudStack Row="true" AlignItems="AlignItems.Baseline" Spacing="1">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                             <MudText Typo="Typo.h5" Class="num"><b>@LevelLabel(level)</b></MudText>
-                            <MudChip T="string" Size="Size.Small"
-                                     Style="@($"background:{MixThemes.GradeHex(label)};color:var(--mix-primary-contrast);font-weight:800")">
-                                @label
-                            </MudChip>
+                            <LetterGradeIcon Grade="grade" Height="22"></LetterGradeIcon>
                         </MudStack>
                     </MudPaper>
                 }
@@ -134,10 +138,12 @@ else
                 <MudTh>@L["Tier"]</MudTh>
                 <MudTh Style="text-align:right">PUMBILITY</MudTh>
                 <MudTh Style="text-align:right">Δ</MudTh>
-                <MudTh>50× AAA</MudTh>
-                <MudTh>50× S</MudTh>
-                <MudTh>50× SS</MudTh>
-                <MudTh>50× SSS</MudTh>
+                @foreach (var grade in LadderGrades)
+                {
+                    <MudTh>
+                        <span class="olb-tier-head">50×<LetterGradeIcon Grade="grade" Height="18"></LetterGradeIcon></span>
+                    </MudTh>
+                }
             </HeaderContent>
             <RowTemplate>
                 <MudTd><b>#@context.Rank</b></MudTd>
@@ -162,6 +168,13 @@ else
 
 @code {
     private static readonly int[] LandmarkRanks = { 1000, 500, 100, 10, 1 };
+
+    // The four rungs the cutline math inverts a board value into, lowest first — the table's
+    // columns and the "to get on the board" chips read the same ladder in the same order.
+    private static readonly PhoenixLetterGrade[] LadderGrades =
+    {
+        PhoenixLetterGrade.AAA, PhoenixLetterGrade.S, PhoenixLetterGrade.SS, PhoenixLetterGrade.SSS
+    };
 
     [Parameter] public MixEnum Mix { get; set; }
 
@@ -191,6 +204,12 @@ else
         };
         return options;
     }
+
+    // Whatever the snapshot holds, in the fixed All → Singles → Doubles order. Before the
+    // first load there is nothing to pick from, so the picker stays hidden rather than
+    // flashing a full set the mix may not have.
+    private IReadOnlyList<string> AvailableTypes =>
+        _data?.Boards.Select(b => b.Type).ToArray() ?? Array.Empty<string>();
 
     private IEnumerable<CutlineTierRecord> VisibleTiers =>
         _data == null
@@ -252,12 +271,12 @@ else
         return $"{prefix}{level}";
     }
 
-    private static IEnumerable<(string Label, int? Level)> GradePairs(CutlineTierRecord tier)
+    private static IEnumerable<(PhoenixLetterGrade Grade, int? Level)> GradePairs(CutlineTierRecord tier)
     {
-        yield return ("AAA", tier.LevelForAAA);
-        yield return ("S", tier.LevelForS);
-        yield return ("SS", tier.LevelForSS);
-        yield return ("SSS", tier.LevelForSSS);
+        yield return (PhoenixLetterGrade.AAA, tier.LevelForAAA);
+        yield return (PhoenixLetterGrade.S, tier.LevelForS);
+        yield return (PhoenixLetterGrade.SS, tier.LevelForSS);
+        yield return (PhoenixLetterGrade.SSS, tier.LevelForSSS);
     }
 
     private sealed record GradeSeries(string Label, List<LevelPoint> Points);

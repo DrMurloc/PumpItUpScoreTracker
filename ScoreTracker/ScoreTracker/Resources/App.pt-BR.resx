@@ -4316,14 +4316,14 @@
   <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
     <value>Ainda não há captura de popularidade - ela chega com a importação semanal.</value>
   </data>
-  <data name="No PUMBILITY board on this mix - movers live on Phoenix 2." xml:space="preserve">
-    <value>Esta versão não tem placar PUMBILITY - as subidas vivem no Phoenix 2.</value>
-  </data>
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>Ainda não há classificações - elas aparecem após a primeira importação semanal.</value>
   </data>
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>Ninguém subiu em um placar de charts esta semana.</value>
+  </data>
+  <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
+    <value>Ninguém subiu no placar PUMBILITY esta semana.</value>
   </data>
   <data name="Official Leaderboards Admin" xml:space="preserve">
     <value>Administração das classificações oficiais</value>

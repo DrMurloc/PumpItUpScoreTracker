@@ -382,9 +382,33 @@ public sealed class LeaderboardHubSagaTests
         Assert.True(result.Entry.LevelForSSS <= result.Entry.LevelForAAA);
         Assert.Equal(28, result.Tiers.Count);
         Assert.Equal(2, result.History.Count);
-        Assert.Equal(3, result.Boards.Count);
+        // Only the boards the snapshot actually holds: this one mirrored the All board.
+        Assert.Equal(new[] { "All" }, result.Boards.Select(b => b.Type).ToArray());
         Assert.Equal(13000m, result.Boards.Single(b => b.Type == "All").EntryValue);
-        Assert.False(result.Boards.Single(b => b.Type == "Singles").BoardFull);
+    }
+
+    [Fact]
+    public async Task WhatItTakesOnlyComparesBoardsTheMixPublishes()
+    {
+        // Phoenix serves one PUMBILITY list with no per-type split; Phoenix 2 splits it in
+        // three. The comparison strip names what was mirrored, never an invented board.
+        var f = Arrange(Run(2, Week2));
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Enumerable.Range(1, 1000)
+                .SelectMany(rank => new[]
+                {
+                    Pumbility(rank, rank, 21000m - rank * 8),
+                    Pumbility(rank, rank, 19000m - rank * 8, "PUMBILITY Singles")
+                })
+                .ToArray());
+        f.Snapshots.Setup(s => s.GetBoardFloorHistory(MixEnum.Phoenix2, "PUMBILITY",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<(int, DateTimeOffset, decimal, int)>());
+
+        var result = await f.Saga.Handle(new GetWhatItTakesQuery(MixEnum.Phoenix2), CancellationToken.None);
+
+        Assert.Equal(new[] { "All", "Singles" }, result.Boards.Select(b => b.Type).ToArray());
+        Assert.Equal(11000m, result.Boards.Single(b => b.Type == "Singles").EntryValue);
     }
 
     [Fact]

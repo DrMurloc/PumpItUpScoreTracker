@@ -6,7 +6,6 @@
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.HomeDashboard
-@using ScoreTracker.Web.Services.Theming
 @using Chart = ScoreTracker.SharedKernel.Models.Chart
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
@@ -262,10 +261,7 @@ else
                         </div>
                         <div class="olb-hero-chartline">
                             <span class="olb-hero-firstword">@L["First"]</span>
-                            <MudChip T="string" Size="Size.Small"
-                                     Style="@($"background:{BandColor(highestFirst.GradeBand)};color:var(--mix-primary-contrast);font-weight:800")">
-                                @highestFirst.GradeBand
-                            </MudChip>
+                            <GradeBandIcon Band="@highestFirst.GradeBand" Height="26"/>
                             <span class="olb-hero-ctx"><b>@highestFirst.Score.ToString("N0")</b></span>
                         </div>
                         <div class="olb-hero-ctx"><HubPlayerChip Player="highestFirst.Player" Dense="true"/></div>
@@ -372,7 +368,7 @@ else
                 <MudText Typo="Typo.overline">@L["Movers of the week"]</MudText>
                 @if (!_highlights.Movers.Any())
                 {
-                    <MudText Typo="Typo.body2">@L["No PUMBILITY board on this mix - movers live on Phoenix 2."]</MudText>
+                    <MudText Typo="Typo.body2">@L["Nobody moved up the PUMBILITY board this week."]</MudText>
                 }
                 @foreach (var (mover, index) in _highlights.Movers.Select((m, i) => (m, i)))
                 {
@@ -422,10 +418,7 @@ else
         {
             var chart = first.ChartId != null && Charts.TryGetValue(first.ChartId.Value, out var c) ? c : null;
             <div class="@($"olb-first-row {(first.IsFolderFirst ? "olb-folder-first mb-2" : "")} {GlowClass(first.Player)}")">
-                <MudChip T="string" Size="Size.Small"
-                         Style="@($"background:{BandColor(first.GradeBand)};color:var(--mix-primary-contrast);font-weight:800")">
-                    @first.GradeBand
-                </MudChip>
+                <GradeBandIcon Band="@first.GradeBand" Height="24"/>
                 @if (chart != null)
                 {
                     <MudLink title="@L["Chart leaderboard"]" Class="olb-chartlink" Style="cursor:pointer"
@@ -527,11 +520,6 @@ else
         if (player.UserId == null) return string.Empty;
         if (CurrentUser.IsLoggedIn && player.UserId == CurrentUser.User.Id) return "olb-row-me";
         return _communityIds.Contains(player.UserId.Value) ? "olb-row-community" : string.Empty;
-    }
-
-    private static string BandColor(string band)
-    {
-        return band == "PG" ? MixThemes.PlateHex("PG") : MixThemes.GradeHex(band);
     }
 
     // The marquee first: the highest chart level wins; the better score breaks ties.

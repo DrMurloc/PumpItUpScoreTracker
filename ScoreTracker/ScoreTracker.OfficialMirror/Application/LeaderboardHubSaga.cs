@@ -361,7 +361,7 @@ internal sealed class LeaderboardHubSaga :
                 Array.Empty<BoardCutlineRecord>(), Array.Empty<CutlineHistoryPointRecord>());
 
         return (await _cache.GetOrCreateAsync(
-            $"OfficialWhatItTakes__{request.Mix}__{request.Type}__{latest.Id}", async entry =>
+            OfficialCacheKeys.WhatItTakes(request.Mix, request.Type, latest.Id), async entry =>
             {
                 entry.SlidingExpiration = TimeSpan.FromHours(12);
                 return await BuildWhatItTakes(request.Mix, request.Type, latest, cancellationToken);
@@ -409,15 +409,16 @@ internal sealed class LeaderboardHubSaga :
         var boardFull = board.Count >= CutlineCalculator.BoardCapacity;
         var entry = boardFull ? tiers.FirstOrDefault(t => t.Rank == CutlineCalculator.BoardCapacity) : null;
 
+        // Only boards this mix actually publishes: Phoenix serves one PUMBILITY list with no
+        // per-type split, so offering it empty Singles and Doubles tabs would invent boards.
         var comparisons = new List<BoardCutlineRecord>();
         foreach (var (name, label) in new[]
                  {
                      (PumbilityAll, "All"), (PumbilitySingles, "Singles"), (PumbilityDoubles, "Doubles")
                  })
         {
-            var compareBoard = stats.RatingBoards.TryGetValue(name, out var b)
-                ? b
-                : Array.Empty<PlacementRow>();
+            if (!stats.RatingBoards.TryGetValue(name, out var compareBoard)) continue;
+
             var compareFull = compareBoard.Count >= CutlineCalculator.BoardCapacity;
             var value = compareFull
                 ? CutlineCalculator.ValueAtRank(compareBoard, CutlineCalculator.BoardCapacity)
@@ -478,7 +479,7 @@ internal sealed class LeaderboardHubSaga :
 
     private async Task<SnapshotStats> GetSnapshotStats(MixEnum mix, int snapshotId, CancellationToken ct)
     {
-        return (await _cache.GetOrCreateAsync($"OfficialSnapshotStats__{mix}__{snapshotId}", async entry =>
+        return (await _cache.GetOrCreateAsync(OfficialCacheKeys.SnapshotStats(mix, snapshotId), async entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromHours(12);
             var details = await _snapshots.GetPlacementDetails(snapshotId, ct);

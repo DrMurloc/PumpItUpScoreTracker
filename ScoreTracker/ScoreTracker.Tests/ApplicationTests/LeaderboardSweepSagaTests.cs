@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ScoreTracker.OfficialMirror.Application;
@@ -113,7 +114,8 @@ public sealed class LeaderboardSweepSagaTests
         var tierLists = new Mock<ITierListRepository>();
         var saga = new LeaderboardSweepSaga(site.Object, snapshots.Object, records.Object, identity.Object,
             legacy.Object, charts.Object, tierLists.Object, FakeDateTime.At(Now).Object,
-            new Mock<IBus>().Object, NullLogger<LeaderboardSweepSaga>.Instance);
+            new Mock<IBus>().Object, new MemoryCache(new MemoryCacheOptions()),
+            NullLogger<LeaderboardSweepSaga>.Instance);
         return new Fixture(site, snapshots, records, tierLists, saga) { Legacy = legacy, Charts = charts };
     }
 
@@ -461,6 +463,81 @@ public sealed class LeaderboardSweepSagaTests
             It.IsAny<IReadOnlyCollection<(Guid ChartId, int Place)>>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
+
+    // ── ONE-TIME repair press (RefreshRatingBoardsCommand) ───────────────────
+    // Delete this region with the command, its consumer and the button.
+
+    [Fact]
+    public async Task RatingBoardRefreshRewritesTheSealedSnapshotCarryingAvatars()
+    {
+        var avatar = new Uri("https://piuimages.arroweclip.se/avatars/p2/abc.png");
+        var f = Arrange(new[]
+        {
+            new RatingBoardEntry("PUMBILITY", "BYEOL#3627", 17418.45m, avatar),
+            new RatingBoardEntry("PUMBILITY", "JYUNG#5351", 16032.26m, null)
+        });
+        f.Snapshots.Setup(s => s.GetLatestSealed(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SnapshotRun(41, Now.AddMinutes(-90), Now.AddMinutes(-50), false, "Sealed",
+                600, 600, 0, null));
+
+        await ConsumeRatingBoardRefresh(f);
+
+        // Onto the sealed snapshot, replacing its rating rows — never a second import.
+        f.Snapshots.Verify(s => s.DeleteRatingPlacements(41, It.IsAny<CancellationToken>()), Times.Once);
+        f.Snapshots.Verify(s => s.WritePlacements(41,
+            It.Is<IReadOnlyCollection<PlacementRow>>(rows => rows.Count == 2 && rows.Any(r => r.Place == 1)),
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.Snapshots.Verify(s => s.CreateRun(It.IsAny<MixEnum>(), It.IsAny<bool>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        f.Snapshots.Verify(s => s.Seal(It.IsAny<int>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        // The board's avatars are the point of the press — they have to reach the player dim.
+        f.Snapshots.Verify(s => s.EnsurePlayers(MixEnum.Phoenix2,
+            It.Is<IReadOnlyCollection<(string Username, Uri? Avatar)>>(p =>
+                p.Any(x => x.Username == "BYEOL#3627" && x.Avatar == avatar)),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ARatingBoardScrapeThatComesBackEmptyLeavesTheSnapshotAlone()
+    {
+        // Scrape first, delete second: a fetch that dies part-way must not strip a sealed
+        // snapshot's board and leave the site worse than before the press.
+        var f = Arrange();
+        f.Snapshots.Setup(s => s.GetLatestSealed(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SnapshotRun(41, Now.AddMinutes(-90), Now.AddMinutes(-50), false, "Sealed",
+                600, 600, 0, null));
+
+        await ConsumeRatingBoardRefresh(f);
+
+        f.Snapshots.Verify(s => s.DeleteRatingPlacements(It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ARatingBoardRefreshWithoutASealedSnapshotDoesNothing()
+    {
+        var f = Arrange(new[] { new RatingBoardEntry("PUMBILITY", "BYEOL#3627", 17418.45m) });
+        f.Snapshots.Setup(s => s.GetLatestSealed(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((SnapshotRun?)null);
+
+        await ConsumeRatingBoardRefresh(f);
+
+        f.Snapshots.Verify(s => s.DeleteRatingPlacements(It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        f.Snapshots.Verify(s => s.WritePlacements(It.IsAny<int>(),
+            It.IsAny<IReadOnlyCollection<PlacementRow>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private static async Task ConsumeRatingBoardRefresh(Fixture f)
+    {
+        var refresh = new Mock<ConsumeContext<RefreshRatingBoardsCommand>>();
+        refresh.SetupGet(c => c.Message).Returns(new RefreshRatingBoardsCommand(MixEnum.Phoenix2));
+        refresh.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+        await f.Saga.Consume(refresh.Object);
+    }
+
+    // ── end ONE-TIME region ──────────────────────────────────────────────────
 
     [Fact]
     public async Task StaleUnsealedRunsPurgeBeforeANewRunStarts()
