@@ -43,11 +43,12 @@ public sealed class OfficialLeaderboardsHubTests : IAsyncLifetime
         await _page.GotoAsync("/OfficialLeaderboards");
 
         var timeout = new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 };
-        // The world-first row: PG chip, the chart's song, and the champion's tag.
+        // The world-first row: the band as art, the chart's song, and the champion's tag.
+        // A perfect game reads as its plate picture — asserted by src, since the art itself
+        // is served from a CDN this suite never reaches.
         await Expect(_page.GetByText("E2ECHAMP").First).ToBeVisibleAsync(timeout);
         await Expect(_page.GetByText("Wire Inferno").First).ToBeVisibleAsync();
-        await Expect(_page.Locator(".mud-chip", new PageLocatorOptions { HasTextString = "PG" }).First)
-            .ToBeVisibleAsync();
+        await Expect(_page.Locator("img[src*='plates/pg.png']")).ToHaveCountAsync(1);
         // The subtitle reads the sealed run's timestamp, not a stored value.
         await Expect(_page.GetByText("Last Updated")).ToBeVisibleAsync();
         // The section nav links every page in the group. Scoped to the page's nav —
@@ -62,8 +63,9 @@ public sealed class OfficialLeaderboardsHubTests : IAsyncLifetime
         await _page.GotoAsync("/OfficialLeaderboards/Rankings");
 
         var timeout = new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 };
-        // Phoenix has no PUMBILITY board — the caption says computed, and both seeded
-        // players rank by their computed rating (the million-point PG on top).
+        // The seed mirrors chart boards only, no PUMBILITY board — so the caption says
+        // computed, and both seeded players rank by their computed rating (the
+        // million-point PG on top).
         await Expect(_page.GetByText("computed rating", new PageGetByTextOptions { Exact = false }))
             .ToBeVisibleAsync(timeout);
         await Expect(_page.GetByText("E2ECHAMP").First).ToBeVisibleAsync();

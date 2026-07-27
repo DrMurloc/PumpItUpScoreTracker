@@ -16,9 +16,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
-    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
-    <link href="/css/site.css" rel="stylesheet" />
-    <link href="/css/charts.css" rel="stylesheet" />
+    @* @Assets resolves each one to its content-hashed name (css/site.<hash>.css), so a release
+       that changes a file changes its URL and no browser can serve the old one back. A raw
+       "/css/site.css" here would be cached across the deploy and paint the previous release's
+       styles over this one's markup. *@
+    <link href="@Assets["_content/MudBlazor/MudBlazor.min.css"]" rel="stylesheet" />
+    <link href="@Assets["css/site.css"]" rel="stylesheet" />
+    <link href="@Assets["css/charts.css"]" rel="stylesheet" />
     @* The active palette's --mix-* tokens. Server-side: the shell paints before any circuit, and
        MudThemeProvider's own vars only arrive with one. *@
     <style>@((MarkupString)MixThemes.CssVariablesFor(_shell.ThemeMix))</style>
@@ -66,6 +70,12 @@
             @((MarkupString)$"<script type=\"application/ld+json\">{MixDiffJsonLd(_head)}</script>")
         }
     }
+    @* The other half of the cache story. Three scripts are ES modules the circuit pulls in by
+       name at runtime (JSRuntime "import" of ./js/helpers.js, ./js/life-calculator.js,
+       ./js/phoenix-recap.js) — there is no tag to hang @Assets on. The import map rewrites those
+       specifiers to the hashed names in the browser, so the C# call sites keep asking for the
+       plain path and still never get a stale module. Ahead of anything that imports. *@
+    <ImportMap />
     @* Interactive, and not prerendered — matching every <PageTitle> in the app. Static, it would
        only ever see static components and every page's title would read "PIU Scores". *@
     <HeadOutlet @rendermode="RenderModes.Interactive" />
@@ -164,13 +174,15 @@
     <a class="dismiss">🗙</a>
 </div>
 
+@* blazor.web.js stays on its plain name: the framework versions and caches its own boot script,
+   and the manifest entry for it is not ours to redirect. *@
 <script src="_framework/blazor.web.js"></script>
-<script src="_content/MudBlazor/MudBlazor.min.js"></script>
-<script src="/js/page-dock.js"></script>
-<script src="/js/nav.js?v=3"></script>
-<script src="/js/dashboard-grid.js"></script>
-<script src="/js/credential-storage.js"></script>
-<script src="/js/challenge-board.js"></script>
+<script src="@Assets["_content/MudBlazor/MudBlazor.min.js"]"></script>
+<script src="@Assets["js/page-dock.js"]"></script>
+<script src="@Assets["js/nav.js"]"></script>
+<script src="@Assets["js/dashboard-grid.js"]"></script>
+<script src="@Assets["js/credential-storage.js"]"></script>
+<script src="@Assets["js/challenge-board.js"]"></script>
 </body>
 </html>
 

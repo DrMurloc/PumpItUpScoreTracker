@@ -4437,14 +4437,14 @@
   <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
     <value>No popularity snapshot yet - it lands with the weekly import.</value>
   </data>
-  <data name="No PUMBILITY board on this mix - movers live on Phoenix 2." xml:space="preserve">
-    <value>No PUMBILITY board on this mix - movers live on Phoenix 2.</value>
-  </data>
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>No rankings yet - they appear after the first weekly import.</value>
   </data>
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>Nobody climbed a chart board this week.</value>
+  </data>
+  <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
+    <value>Nobody moved up the PUMBILITY board this week.</value>
   </data>
   <data name="Official Leaderboards Admin" xml:space="preserve">
     <value>Official Leaderboards Admin</value>

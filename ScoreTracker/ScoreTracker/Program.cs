@@ -301,7 +301,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
 
 // The retired /StepArtists page 301s to the chart browser, which filters by step artist
 // (?StepArtist=) instead of grouping the whole catalog under one expansion panel.
@@ -429,6 +428,17 @@ app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
 
 app.MapDefaultEndpoints();
+// Serves wwwroot and every RCL's _content/ from the build-time asset manifest. Two things
+// follow from that, and both are the point:
+//   - Assets requested through @Assets[...] / <ImportMap /> carry a content hash in the FILE
+//     NAME (css/site.<hash>.css) and ship Cache-Control: immutable for a year. A release that
+//     changes a file changes its URL, so a browser holding the old copy never serves it back.
+//   - Assets still requested by their plain name (fonts and images reached from inside CSS)
+//     get no-cache plus an ETag, so they revalidate and 304 rather than sitting in the cache
+//     for whatever stretch the browser picks on its own.
+// Only manifest assets are served; nothing writes to wwwroot at runtime (uploads go to blob
+// storage through IFileUploadClient), so there is nothing here the build cannot see.
+app.MapStaticAssets();
 // Real Razor Pages (the static front door) route ahead of the Blazor fallback —
 // AddRazorPages() alone only wires services, not endpoints.
 app.MapRazorPages();

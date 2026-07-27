@@ -165,3 +165,5 @@ One SQL Server database, one `DbContext`, table-by-table breakdown in [DATABASE-
 ### Composition
 
 [`Program.cs`](../ScoreTracker/ScoreTracker/Program.cs) is the single bootstrap: authentication, MediatR scans, MassTransit + every vertical's `AddXxxConsumers` hook, Hangfire + recurring-job registrations, localization, Swagger, and the CompositionRoot's `AddInfrastructure(...)` (reflection-binds every `Domain.SecondaryPorts` interface to its `Data` implementation, transient by default; `IBotClient` is the lone singleton).
+
+Static files are served by `MapStaticAssets()` off the build-time manifest, not `UseStaticFiles` — markup reads `@Assets["css/site.css"]` and ships a content-hashed, year-immutable URL, so a release invalidates its own CSS and JS ([TECHNOLOGIES.md](TECHNOLOGIES.md)).

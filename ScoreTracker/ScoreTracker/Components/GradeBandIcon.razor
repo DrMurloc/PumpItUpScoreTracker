@@ -1,0 +1,30 @@
+@using ScoreTracker.SharedKernel.Enums
+@namespace ScoreTracker.Web.Components
+
+@* A grade band drawn as the art the game uses: the perfect-game plate on the top rung, the
+   letter art on every rung below it. The band arrives as the world-first ladder's own name
+   ("PG", "SSS+", "AA", …); a name that is neither falls back to its text rather than to a
+   broken image. *@
+@if (Band == PerfectGameBand)
+{
+    <MudImage tabindex="0" Src="@PlateImage" Height="@Height" Alt="@Band" ObjectFit="ObjectFit.ScaleDown"></MudImage>
+}
+else if (Grade != null)
+{
+    <LetterGradeIcon Grade="Grade" Height="Height"></LetterGradeIcon>
+}
+else
+{
+    <span>@Band</span>
+}
+
+@code {
+    private const string PerfectGameBand = "PG";
+    private const string PlateImage = "https://piuimages.arroweclip.se/plates/pg.png";
+
+    [Parameter] public string Band { get; set; } = string.Empty;
+
+    [Parameter] public int Height { get; set; } = 20;
+
+    private PhoenixLetterGrade? Grade => PhoenixLetterGradeHelperMethods.TryParse(Band);
+}

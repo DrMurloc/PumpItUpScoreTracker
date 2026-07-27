@@ -6659,11 +6659,22 @@ button.chart-card-art {
     border-color: var(--mix-accent) !important;
 }
 
+/* The count and the controls. Six targets plus the count are wider than a phone, so the
+   row wraps — the controls stay one block, right-aligned, and drop to their own line
+   rather than pushing the page sideways. */
 .srp-answer {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 10px;
     margin: 4px 0 12px;
+}
+
+.srp-answer-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
 }
 
 .srp-count {
@@ -6691,9 +6702,15 @@ button.chart-card-art {
     color: var(--mix-ink-muted);
 }
 
+/* min-width:0 is load-bearing, not tidying. A grid item's automatic minimum size is its
+   MIN-CONTENT width, and the card's title is `nowrap` — so one long song name ("Extreme
+   Music School 2nd period feat. Nanahira", 482px) floored the whole column at its width,
+   stretched every other card to match, and scrolled the page sideways. Letting the card
+   shrink is also what lets the title's ellipsis do its job. */
 .srp-card {
     position: relative;
     display: flex;
+    min-width: 0;
     gap: 12px;
     background: var(--mix-surface);
     border: 1px solid var(--mix-surface-muted);
@@ -6839,13 +6856,31 @@ button.chart-card-art {
     gap: 10px;
 }
 
+/* The bottom way out, separated from the last facet so it doesn't read as one more
+   filter. */
+.srp-drawer-foot {
+    border-top: 1px solid var(--mix-surface-muted);
+    padding-top: 12px;
+}
+
 @media (max-width: 600px) {
+    /* minmax(0, …), not a bare 1fr: `1fr` is minmax(auto, 1fr) and that `auto` floors the
+       track at the widest card's min-content, which is how the one-column phone layout
+       ended up wider than the phone. */
     .srp-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .srp-head {
         gap: 12px;
+    }
+}
+
+/* The bottom nav outranks the drawer, so the drawer's close button has to clear it —
+   only where the nav exists (the same Md seam the shell uses). */
+@media (max-width: 959.98px) {
+    .srp-drawer-foot {
+        padding-bottom: calc(var(--bottom-nav-h) + 12px);
     }
 }
 
@@ -6936,6 +6971,32 @@ button.chart-card-art {
     font-variant-numeric: tabular-nums;
     border-top: 1px solid var(--mix-surface-muted);
     padding-top: 8px;
+}
+
+/* The shared table shell: the tier lists' table density and the chart SRP's both render
+   it, so it lives here rather than in either page. The wrap is what side-scrolls — a
+   ten-column table on a phone must move inside its own box, never take the page with it. */
+.tier-table-wrap {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.tier-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tier-table th {
+    text-align: left;
+    color: var(--mud-palette-text-secondary);
+    font-size: .75rem;
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.tier-table td {
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
 }
 
 /* SRP densities: sticker sheet + table. The sheet itself is the tier lists'
@@ -7199,6 +7260,15 @@ button.chart-card-art {
     text-overflow: ellipsis;
     white-space: nowrap;
     vertical-align: middle;
+}
+
+/* A "50× <grade art>" column head: the multiplier and the letter picture read as one
+   token, so they never wrap apart. */
+.olb-tier-head {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
 }
 
 .olb-delta-up { color: var(--mix-primary); font-weight: 700; }
