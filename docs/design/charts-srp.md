@@ -359,13 +359,26 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
 - **Skills**: the SRP's chips were already the granular piucenter badges; they lose their
   category tint, and the coverage bars on the chart page and dialog move to granular badges
   too. See [nuke-old-skill-categories.md](nuke-old-skill-categories.md).
-- **The page stops side-scrolling on a phone**: the answer line's six controls plus the count
-  are wider than a 360px viewport, so they travel as one right-aligned block
-  (`.srp-answer-controls`) on a row that wraps. Table density borrowed the tier lists'
-  `.tier-table` classes, which lived inside `ChartSkills.razor`'s `<style>` block and
-  therefore did not exist on this page at all — the table rendered unstyled and took the
-  document sideways with it. Those base rules moved to `site.css`, where both pages read
-  them, and the wrap is what scrolls.
+- **The page stops side-scrolling on a phone**, from three independent causes — measured on
+  the live page at 390px, where the document was 498px wide:
+  - **Comfortable, 124px of it**: a grid item's automatic minimum size is its *min-content*
+    width, and `grid-template-columns: 1fr` is `minmax(auto, 1fr)` — so the one-column phone
+    track was floored at the widest card in the result set. One long song title ("Extreme
+    Music School 2nd period feat. Nanahira", 482px min-content, `nowrap` on
+    `.srp-card-song`) stretched every other card to match and pushed the page sideways,
+    which is why it read as intermittent: it depends on a long title landing on the page.
+    `.srp-card` gets `min-width: 0` and the mobile track becomes `minmax(0, 1fr)` — the
+    first also covers desktop, where an over-wide card would spill out of its own
+    `minmax(330px, 1fr)` track. Letting the card shrink is what lets the title's ellipsis
+    work at all. Compact/sticker density was never exposed: its tracks carry an explicit
+    96px floor rather than `auto`.
+  - **12px more**: the answer line's six controls plus the count are wider than the
+    viewport, so they travel as one right-aligned block (`.srp-answer-controls`) on a row
+    that wraps.
+  - **Table**: it borrowed the tier lists' `.tier-table` classes, which lived inside
+    `ChartSkills.razor`'s `<style>` block and therefore did not exist on this page at all —
+    the table rendered unstyled and took the document sideways with it. Those base rules
+    moved to `site.css`, where both pages read them, and the wrap is what scrolls.
 - **The filter drawer closes from its foot**: the drawer is taller than a phone screen, so
   the header's ✕ has scrolled out of reach by the time the picking is done.
 
