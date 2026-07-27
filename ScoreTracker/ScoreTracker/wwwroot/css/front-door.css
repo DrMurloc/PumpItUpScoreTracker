@@ -28,7 +28,7 @@ body.front-door {
 
 /* Display face mirrors the Blazor shell's heading stack (MixThemes.DisplayFontStack). */
 .front-door h1, .front-door h2, .front-door .eyebrow, .front-door .wordmark,
-.front-door .topbar-signin, .front-door .stat .n {
+.front-door .stat .n {
     font-family: "Barlow Condensed", "Malgun Gothic", "Yu Gothic UI", "Apple SD Gothic Neo", "Hiragino Sans", "Arial Narrow", sans-serif;
 }
 
@@ -88,13 +88,6 @@ body.front-door {
 }
 .front-door .topsearch-go:hover { color: var(--mix-primary); }
 .front-door .topsearch-go:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: -2px; }
-.front-door .topbar-signin {
-    font-size: 15px; letter-spacing: .08em; font-weight: 600;
-    color: var(--mix-primary-contrast);
-    background: var(--mix-primary);
-    padding: 7px 18px; border-radius: 8px;
-}
-.front-door .topbar-signin:hover { text-decoration: none; filter: brightness(1.1); }
 
 /* ---------- hero ---------- */
 .front-door .hero {
@@ -502,20 +495,18 @@ body.front-door {
 
 /* ---------- responsive ---------- */
 @media (max-width: 960px) {
-    /* Two rows: wordmark and Sign in up top, nav and search below. Explicit order keeps
-       the spacer on row one, so "Sign in" stays hard right. The second row rides lighter
-       than the first — this bar is sticky, and every pixel of it is charged against the
-       hero on a phone. The search takes whatever the nav leaves and drops to a row of its
-       own only if a long locale squeezes it under its minimum. */
+    /* Two rows: wordmark and search up top — the same left-and-right pairing the desktop
+       bar reads as — with the nav spanning underneath. This bar is sticky, so every pixel
+       of it is charged against the hero on a phone; the nav row rides lighter than the
+       first to keep the total down. */
     .front-door .topbar { gap: 8px 12px; padding: 8px 16px; }
     .front-door .wordmark { order: 1; font-size: 20px; }
     .front-door .spacer { order: 2; }
-    .front-door .topbar-signin { order: 3; }
-    .front-door .topnav { order: 4; margin-left: 0; gap: 2px; }
-    .front-door .topnav a { padding: 3px 8px; font-size: 13.5px; }
-    .front-door .topsearch { order: 5; flex: 1 1 96px; min-width: 96px; margin-left: auto; padding-left: 8px; }
-    .front-door .topsearch-input { width: auto; font-size: 13px; }
+    .front-door .topsearch { order: 3; flex: 0 1 auto; min-width: 120px; padding-left: 8px; }
+    .front-door .topsearch-input { width: 150px; font-size: 13px; }
     .front-door .topsearch-go { padding: 6px 6px; }
+    .front-door .topnav { order: 4; flex-basis: 100%; margin-left: 0; gap: 2px; }
+    .front-door .topnav a { padding: 3px 8px; font-size: 13.5px; }
     .front-door .hero {
         grid-template-columns: 1fr;
         grid-template-areas: "copy" "card" "stats";

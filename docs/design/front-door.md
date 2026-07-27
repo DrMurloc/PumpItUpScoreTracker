@@ -95,7 +95,7 @@ logged-out path.
   "when a new mix arrives, nothing here resets" — deliberately without referencing anyone
   else's resets.
 - **D11 — The top bar is the page's only chrome-level exit** (owner, 2026-07-26). It wears
-  the app bar's shape — nav left, search and the account slot right — and names the two
+  the app bar's shape — nav left, search right — and names the two
   destinations a visitor most often arrives already wanting: `/TierLists` and
   `/OfficialLeaderboards` (the This Week page). Both are public, so the bar can never
   bounce a signed-out visitor into a login wall. The mix pill is gone with it — the page
@@ -109,6 +109,13 @@ logged-out path.
   filled. It keeps the shell's own `Find a chart` wording so the two read as one control.
   Unlike the app bar's, it stays visible on phones: this page has no bottom nav to hold a
   Search slot, so hiding it would mean phones have no chart search at all.
+- **D14 — No sign-in button in the top bar** (owner, 2026-07-26). It was an `#signin` anchor
+  to the hero card — which on first paint is already on screen, beside it. A prominent CTA
+  that visibly does nothing when you click it teaches a visitor the page is broken, and it
+  was competing with the three real provider buttons a few hundred pixels away. The anchor
+  target and the import card's "Sign in and import yours" CTA both stay: from far down the
+  page that jump is real work. If a persistent sign-in affordance is wanted later, the
+  honest form is one that appears only once the hero card has scrolled out of view.
 - **D12 — The front door is pinned to Phoenix 2** (owner, 2026-07-26, resolving the launch
   question below). The palette is hardcoded in the page head, not resolved from the mix
   cookie: the front door pitches the current game to someone who has no picker on it. The
@@ -117,7 +124,7 @@ logged-out path.
 
 ## Page anatomy
 
-Top bar (wordmark → public nav → "Sign in" where the avatar goes) → hero (eyebrow /
+Top bar (wordmark → public nav → chart search) → hero (eyebrow /
 headline / pitch line; sign-in card right; stat row + 30-day pulse under the copy) →
 "See where you stand" showcase 2×2 → "More than a tracker" 2×2 (home widgets · run real
 events · tournaments & qualifiers · Discord wired in) → "New mix. Same you." stewardship
@@ -126,13 +133,11 @@ events · tournaments & qualifiers · Discord wired in) → "New mix. Same you."
 
 On phones the hero stacks copy → card → stats, keeping both goals of G1 inside the first
 viewport-and-a-bit; primary actions stay thumb-reachable. Below 960px the top bar splits
-into two rows rather than hiding anything — wordmark and Sign in above, nav and the search
-pill below — because the destinations it names are the page's only chrome-level exits and
-phones are where most of them are wanted. Measured at 390px: 89px empty / 96px with the
-search, no horizontal overflow, and the `Find a chart` placeholder uncut in every shipping
-locale (only en-ZW, the Murloc joke locale, is long enough to push the search to a third
-row). It costs the hero ~11% of a phone viewport, which is the price of a sticky bar that
-actually goes somewhere.
+into two rows rather than hiding anything — wordmark and the search pill above, the nav
+spanning below — because the destinations it names are the page's only chrome-level exits
+and phones are where most of them are wanted. Measured at 390px: 85px tall, no horizontal
+overflow, 150px of input with the `Find a chart` placeholder uncut, and the nav row holding
+its ground in every locale including en-ZW.
 
 ## Technical shape
 

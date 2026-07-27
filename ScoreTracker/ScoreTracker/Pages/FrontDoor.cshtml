@@ -81,9 +81,11 @@
             : string.Empty;
 }
 
-@* Same shape as the app bar the rest of the site wears: nav left, search and the account
-   slot right. The two destinations named are the ones a visitor most often arrives already
-   wanting, and both are reachable signed out (D5) — nothing here leads to a login wall.
+@* Same shape as the app bar the rest of the site wears: nav left, search right. The two
+   destinations named are the ones a visitor most often arrives already wanting, and both
+   are reachable signed out (D5) — nothing here leads to a login wall. There is no sign-in
+   button: the hero card sits beside this bar with three real provider buttons on it, and a
+   chip that only scrolls to something already on screen reads as broken (D14).
    Below the desktop breakpoint the nav takes a row of its own rather than disappearing. *@
 <header class="topbar">
     <a class="wordmark" href="/">PIU <b>SCORES</b></a>
@@ -106,7 +108,6 @@
             </svg>
         </button>
     </form>
-    <a class="topbar-signin" href="#signin">@L["Sign in"]</a>
 </header>
 
 <main>
