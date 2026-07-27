@@ -544,3 +544,67 @@ The load-bearing facts. Each was checked, not assumed — do not re-litigate wit
   work, so MudBlazor's `Href` dodges interception by a mechanism not yet identified. Doesn't
   block D8 (plain anchors get `target="_top"` regardless), but worth knowing whether the shell
   is fixing two live bugs or avoiding creating them.
+
+---
+
+## 11. Responsive nav (2026-07-26 restructure)
+
+Two rules the shell resolves in **CSS, never in Razor**. That is not a style preference: a
+fold phone changes its viewport mid-session, and the shell renders once per document with no
+circuit to re-render it. Anything that has to survive an unfold has to be a media query.
+
+### 11.1 Tier Lists folds into Play below 1280px
+
+Retiring the Rankings menu and promoting the official boards to a top-level **Leaderboards**
+made seven top-level items, which stop fitting between the wordmark and the app bar's right
+side somewhere under 1280.
+
+`1280` is MudBlazor's `Lg` — the same ladder `960` (`Md`, the desktop/mobile shell switch)
+comes from. It was picked over a tighter ~1150 because of where the tablets sit: iPad 10th
+gen and Air land at **1180** in landscape and iPad Pro 11" at **1194**, so a 1150 line would
+leave exactly those devices rendering all seven labels in their tightest configuration.
+1280 puts every tablet-landscape width on the folded side and every real laptop (1366+) on
+the full side.
+
+Both copies of the link ship in the HTML — `.nav-wide-only` on the standalone button,
+`.nav-folded-only` on the copy inside Play — and CSS shows exactly one. `ShellMenuItem` takes
+a `Class` parameter for this.
+
+### 11.2 The More sheet has two layouts, one markup
+
+| Viewport | Layout | Driven by |
+|---|---|---|
+| squarish or wide (fold unfolded, landscape, portrait tablet) | icon grid, every destination one tap | CSS only |
+| narrow and tall (ordinary phone, fold cover screen) | drill-down, one section per screen | `nav.js` |
+
+```css
+@media (min-aspect-ratio: 1/1), (min-width: 700px) { /* grid */ }
+```
+
+The aspect half is the rule the bottom nav already uses for its wide-only Communities slot
+(*"squarish viewports (fold phones, landscape)"*). The width floor exists because a portrait
+tablet is **taller** than 1:1 — it would otherwise get the phone's drill-down across 768px of
+width. 700 clears the largest phone (~430) with room and sits below the 960 shell switch.
+
+`ShellMoreSheet` emits every destination **exactly once**, inside a `.more-group` with a head
+and a body. Emitting a grid structure and a drill structure side by side would mean ~20
+duplicate links in the DOM and two markups to keep in sync; instead the head is a static
+section label where there is room for a grid, and a tappable row where there isn't.
+`ShellMoreSheetTests.EveryDestinationIsEmittedExactlyOnce` pins that property.
+
+Four things in `nav.js` that are easy to get wrong:
+
+1. **Heads take `role`/`tabindex` only in drill mode.** In grid mode they are labels; a
+   keyboard user must not tab across five inert rows.
+2. **Closing the sheet resets to root**, or reopening lands wherever the last visit drilled.
+3. **Escape goes back before it closes** — inside a section, the sheet is still where the
+   user meant to be.
+4. **Scroll resets on `.more-sheet`, not on the list.** The list is not the overflow
+   container, so resetting it silently does nothing.
+
+Tiles clamp labels to two lines: tournament names come from `HighlightedEvents`, are
+owner-authored, and must not stretch the row they sit in.
+
+Charts sits in **Play** on desktop and under **Tools** on mobile — the one place the two nav
+trees deliberately disagree, because the phone's Tools group is a catch-all in a way the
+desktop menu isn't. Tools therefore renders on gated legacy mixes too, carrying Charts alone.

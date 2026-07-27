@@ -140,13 +140,14 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.UserQualifierHistory` | Timestamped snapshots of qualifier submissions |
 | `scores.CoOpTeam` / `scores.CoOpPlayers` | Co-op tournament teams and their members |
 
-## UCS (vertical: `ScoreTracker.Ucs`)
+## UCS (retired)
 
-| Table | Purpose |
-|---|---|
-| `scores.UcsChart` | User-created step chart metadata (PIU game id, level, type, uploader) |
-| `scores.UcsChartLeaderboardEntry` | UCS leaderboard entries with score, plate, video proof |
-| `scores.UcsChartTag` | User tags on UCS charts for discovery |
+The UCS vertical and its `/UcsLeaderboards` page were deleted — the feature never took hold.
+Its three tables were **renamed, not dropped**, because they hold real user submissions and
+the owner may revive the feature: `scores.UcsChart_archived`,
+`scores.UcsChartLeaderboardEntry_archived`, `scores.UcsChartTag_archived`. Nothing in the
+model references them, and no code reads them. Their PKs and indexes keep their original
+(un-suffixed) names, since `sp_rename` on a table leaves constraint names alone.
 
 ## Communities (vertical: `ScoreTracker.Communities`)
 
