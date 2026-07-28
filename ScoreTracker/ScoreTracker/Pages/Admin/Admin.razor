@@ -1,76 +1,22 @@
 @page "/Admin"
 @rendermode RenderModes.Interactive
 @using MediatR
-@using ScoreTracker.ChartIntelligence.Contracts.Messages
-@using ScoreTracker.OfficialMirror.Contracts.Commands
-@using ScoreTracker.OfficialMirror.Contracts.Messages
-@using ScoreTracker.Communities.Contracts.Messages
-@using Microsoft.EntityFrameworkCore
-@using ScoreTracker.Application.Commands
-@using ScoreTracker.Application.Queries
-@using ScoreTracker.Identity.Contracts.Commands
-@using ScoreTracker.Data.Persistence
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Domain.Services.Contracts
+@using ScoreTracker.Identity.Contracts.Commands
+@using ScoreTracker.Identity.Contracts.Queries
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services.Contracts
-@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
-@using MassTransit
-@using Microsoft.AspNetCore.Mvc
-@using Microsoft.Extensions.Caching.Memory
-@using Microsoft.Identity.Client.Extensions.Msal
-@using ScoreTracker.Application.Handlers
-@using ScoreTracker.Domain.Events
-@using ScoreTracker.Domain.Records
-@using ScoreTracker.PlayerProgress.Contracts.Messages
-@using ScoreTracker.PlayerProgress.Contracts.Queries
-@using ScoreTracker.Domain.SecondaryPorts
-@using System.Reflection
 
 <PageTitle>@L["Admin"]</PageTitle>
 
-<MudButton OnClick="RebuildOfficialLeaderboard">
-    @L["Do It"]
-</MudButton>
+@* Recurring work is triggered from the Hangfire dashboard's "Trigger now", not from here.
+   What is left is the handful of operations Hangfire cannot express: cache eviction,
+   moderation, credential security, and one-off chart metadata. *@
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="ClearCache">@L["Clear Cache"]</MudButton>
-<MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_backfillQueued" OnClick="BackfillUserTierLists">@L["Backfill User Tier Lists"]</MudButton>
-<MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_tierListRebuildQueued" OnClick="RebuildTierLists">@L["Rebuild Tier Lists"]</MudButton>
-<MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_communityHighlightsBackfillQueued" OnClick="BackfillCommunityHighlights">Backfill Community Highlights (7d)</MudButton>
-<MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_folderLevelBackfillQueued" OnClick="BackfillFolderLevels">@L["Backfill Folder Levels"]</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/PiuCenter">PIU Center</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/OfficialLeaderboards">Official Leaderboards</MudButton>
-@foreach (var name in MissingUsers)
-{
-    <br/>
-    <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="()=>Restore(name)">@name</MudButton>
-    <br/>
-}
-<MudCard>
-    <MudButton Disabled="_isReCalculating" OnClick="ReCalculateScores" Color="Color.Primary" Variant="Variant.Filled">@L["ReCalculate Ratings"]</MudButton>
 
-    @if (_isReCalculating)
-    {
-        <br />
-        <MudProgressLinear Color="Color.Primary" Max="_maxReCalculate" Min="0" Value="@_currentReCalculate"></MudProgressLinear>
-    }
-</MudCard>
-<MudCard>
-    @* The formula-adjustment exit path: sweeps every Phoenix 2 player through the stats +
-       per-chart PUMBILITY recalculations (queued on the bus, runs in the background). *@
-    <MudButton OnClick="RecalculatePhoenix2Ratings" Color="Color.Primary" Variant="Variant.Filled">@L["Recalculate Phoenix 2 Player Ratings"]</MudButton>
-</MudCard>
-<MudCard>
-    @* Season recaps: owner-first smoke test, then the one-shot all-players sweep (queued
-       on the bus, runs in the background). Design: docs/design/phoenix-season-recap.md. *@
-    <MudButton OnClick="ComputeMyRecap" Color="Color.Primary" Variant="Variant.Filled">@L["Compute My Season Recap"]</MudButton>
-    <MudButton OnClick="ComputeAllRecaps" Color="Color.Secondary" Variant="Variant.Filled">@L["Compute All Season Recaps"]</MudButton>
-    @* Targeted patch: rewrites only the PG card on stored recaps, no full rebuilds. *@
-    <MudButton OnClick="RebuildRecapPgCards" Variant="Variant.Outlined">@L["Rebuild Recap PG Cards"]</MudButton>
-    @* Targeted patch: recomputes only the Phoenix 2 finale's projected total PUMBILITY,
-       leaving the rest of each recap untouched. *@
-    <MudButton OnClick="RebuildRecapTotalPumbility" Variant="Variant.Outlined">@L["Rebuild Recap Total PUMBILITY"]</MudButton>
-</MudCard>
 <MudCard>
     <MudCardHeader>@L["Credential security"]</MudCardHeader>
     <MudCardContent>
@@ -202,155 +148,37 @@
 <MudCard>
     <MudCardHeader>@L["Create Song"]</MudCardHeader>
     <MudCardContent>
-        <MudGrid>
-            <MudItem xs="12">
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlaylistAdd"
-                           Href="/Admin/BulkAddCharts">@L["Bulk Add Charts"]</MudButton>
-            </MudItem>
-            <MudItem xs="3">
-                <MudTextField T="string" @bind-Value="_songName" Label=@L["Song Name"]></MudTextField>
-            </MudItem>
-            <MudItem xs="3">
-                <MudTextField T="string" @bind-Value="_koreanName" Label=@L["Korean Name"]></MudTextField>
-            </MudItem>
-            <MudItem xs="3">
-                <MudTextField T="string" @bind-Value="_imageUrl" Label=@L["Image Name"]></MudTextField>
-            </MudItem>
-            <MudItem xs="3">
-                <MudSelect T="SongType" @bind-Value="_songType" Label=@L["Song Type"]>
-                    @foreach (var type in Enum.GetValues<SongType>())
-                    {
-                        <MudSelectItem T="SongType" Value="type">@type.ToString()</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="3">
-                <MudNumericField T="int" Min="0" Max="60" Label=@L["Minutes"] @bind-Value="_minutes"></MudNumericField>
-            </MudItem>
-            <MudItem xs="3">
-                <MudNumericField T="int" Min="0" Max="60" Label=@L["Seconds"] @bind-Value="_seconds"></MudNumericField>
-            </MudItem>
-            <MudItem xs="6">
-                <MudAutocomplete T="string"
-                                 Label=@L["Song Artist"]
-                                 @bind-Value="_songArtist"
-                                 CoerceValue="true"
-                                 SearchFunc="(s,c)=>Task.FromResult(_songArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
-            </MudItem>
-
-            <MudItem xs="6">
-                <MudNumericField T="decimal" Label=@L["Min BPM"] ValueChanged="SetMin" Value="_minBpm"></MudNumericField>
-            </MudItem>
-            <MudItem xs="6">
-                <MudNumericField T="decimal" Label=@L["Max BPM"] @bind-Value="_maxBpm"></MudNumericField>
-            </MudItem>
-            @foreach (var chart in _newCharts)
-            {
-                <MudItem xs="2">
-                    <MudSelect T="ChartType" @bind-Value="chart.Type" Label=@L["Chart Type"]>
-                        @foreach (var type in Enum.GetValues<ChartType>())
-                        {
-                            <MudSelectItem T="ChartType" Value="type">@type.ToString()</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="2">
-                    <MudNumericField T="int" Min="(int)DifficultyLevel.Min" Max="(int)DifficultyLevel.Max" @bind-Value="chart.Level" Label=@L["Level/Players"]></MudNumericField>
-                </MudItem>
-                <MudItem xs="3">
-                    <MudTextField T="string" @bind-Value="chart.YoutubeHash" Label=@L["Youtube Hash"]></MudTextField>
-                </MudItem>
-                <MudItem xs="2">
-                    <MudTextField T="string" @bind-Value="chart.ChannelName" Label=@L["Channel Name"]></MudTextField>
-                </MudItem>
-                <MudItem xs="3">
-                    <MudAutocomplete T="string"
-                                     Label=@L["Step Artist"]
-                                     @bind-Value="chart.StepArtist"
-                                     CoerceValue="true"
-                                     SearchFunc="(s,c)=>Task.FromResult(_stepArtists.Where(a=>a.Contains(s,StringComparison.OrdinalIgnoreCase)).Distinct().ToArray().AsEnumerable())"></MudAutocomplete>
-                </MudItem>
-            }
-            <MudItem xs="12">
-                <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddChart"></MudIconButton>
-            </MudItem>
-            <MudItem xs="12">
-                <MudButton StartIcon="@Icons.Material.Filled.Save" Disabled="_isSaving||!IsValid" OnClick="CreateSong">@L["Create"]</MudButton>
-            </MudItem>
-        </MudGrid>
+        @* Songs and charts are added by dropping the generated JSON batch on the bulk page —
+           the hand-entry form it replaced only ever wrote to Phoenix. *@
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlaylistAdd"
+                   Href="/Admin/BulkAddCharts">@L["Bulk Add Charts"]</MudButton>
     </MudCardContent>
 </MudCard>
 
 @inject ICurrentUserAccessor CurrentUser;
 @inject IChartRepository _charts;
-
 @inject IMediator Mediator;
-@inject IQualifiersRepository Qualifiers;
 @inject IUiSettingsAccessor UiSettings;
 @inject ISnackbar Snackbar;
 @inject NavigationManager NavManager;
-@inject ITierListRepository TierLists;
-
-@inject IBus Bus;
-
-@inject IFileUploadClient Files;
-@inject ChartAttemptDbContext Database;
-@inject IUserRepository Users;
-@inject IBotClient Bot;
-@inject IMemoryCache Cache;
 @code
 {
-    private MudAutocomplete<string> _autocomplete;   
+    private MudAutocomplete<string> _autocomplete;
     private Chart? _selectedChart;
     private string _songSearchString = string.Empty;
     private Chart[] Charts = Array.Empty<Chart>();
     private IEnumerable<string> SongNames = Array.Empty<string>();
     private string _videoUrl = string.Empty;
     private string _videoChannel = string.Empty;
-    private string _koreanName = string.Empty;
+    private bool _isSaving = false;
+
     private Task<IEnumerable<string>> Search(string song) =>
         Task.FromResult(SongNames.Where(n => n.ToLower().Contains(song?.ToLower() ?? ""))
             .OrderBy(n => n.Equals(song, StringComparison.OrdinalIgnoreCase) ? 0 : 1).ToArray().AsEnumerable());
 
-    private void AddChart()
-    {
-        var newChart = new NewChart();
-        if (_newCharts.Any())
-        {
-            var lastChart = _newCharts.Last();
-            newChart.StepArtist = lastChart.StepArtist;
-            newChart.Type = lastChart.Type;
-        }
-        _newCharts.Add(newChart);
-    }
-
     private void ClearCache()
     {
         _charts.ClearCache();
-    }
-
-    private bool _backfillQueued = false;
-    private async Task BackfillUserTierLists()
-    {
-        // One-time, throttled materialization of every scoring user's relative tier
-        // lists (UserTierListSaga). Disabled after queueing — the saga takes minutes and
-        // double-publishing just doubles the load for the same converged rows.
-        _backfillQueued = true;
-        await Bus.Publish(new BackfillUserTierListsCommand());
-        Snackbar.Add("User tier list backfill queued", Severity.Success);
-    }
-
-    private bool _tierListRebuildQueued = false;
-    private async Task RebuildTierLists()
-    {
-        // The daily tier-list rebuilds, on demand — the same messages the Hangfire jobs
-        // publish. Locally PreventRecurringJobs strips the recurring registrations, so
-        // this button is the sanctioned trigger (it also refreshes ChartScoreStats and
-        // the round-7 FolderCohortStats histograms).
-        _tierListRebuildQueued = true;
-        await Bus.Publish(new ProcessScoresTiersListCommand());
-        await Bus.Publish(new ProcessPassTierListCommand());
-        Snackbar.Add("Tier list rebuild queued", Severity.Success);
     }
 
     private bool _confirmingCycle;
@@ -363,89 +191,6 @@
         _cycling = false;
         _confirmingCycle = false;
         Snackbar.Add(L["All saved credentials have been cleared."].Value, Severity.Success);
-    }
-
-    private bool _communityHighlightsBackfillQueued;
-    // Queues the community-feed backfill on the bus (last 7 days) — fire-and-forget so a heavy
-    // reconstruction never blocks (or outlives) the circuit; idempotent, so a re-run writes nothing new.
-    private async Task BackfillCommunityHighlights()
-    {
-        _communityHighlightsBackfillQueued = true;
-        await Bus.Publish(new BackfillCommunityHighlightsCommand(7));
-        Snackbar.Add("Community highlights backfill queued", Severity.Success);
-    }
-
-    private bool _folderLevelBackfillQueued;
-    // Seeds folder standings for every existing player across both mixes. Silent by construction
-    // (the backfill writes state, never milestones) and deliberately hand-triggered: the sweep
-    // reads every player's whole history, so it runs when somebody chooses, not inside a deploy.
-    private async Task BackfillFolderLevels()
-    {
-        _folderLevelBackfillQueued = true;
-        await Bus.Publish(new BackfillFolderLevelsCommand());
-        Snackbar.Add(L["Folder level backfill queued"].Value, Severity.Success);
-    }
-    private async Task RebuildOfficialLeaderboard()
-    {
-
-        //await Qualifiers.FixLeaderboard(Bite8);
-        /*var message = string.Join(" ", Enum.GetValues<PhoenixLetterGrade>().Select(l => $"#LETTERGRADE|{l}#").Append("#LETTERGRADE|#"));
-        message += "\n";
-        message += string.Join(" ", Enum.GetValues<PhoenixPlate>().Select(l => $"#PLATE|{l}#").Append("#PLATE|#"));
-        var message = string.Join(" ", DifficultyLevel.All.Select(l => $"#DIFFICULTY|{ChartType.Double.GetShortHand()}{l}#")
-            .Concat(Enumerable.Range(1, 26).Select(l => $"#DIFFICULTY|{ChartType.Single.GetShortHand()}{l}#"))
-            .Concat(Enumerable.Range(2, 4).Select(l => $"#DIFFICULTY|{ChartType.CoOp.GetShortHand()}{l}#")));
-        await Bot.SendMessage(message, 1164337603034759278, CancellationToken.None);*/
-
-    // await OfficialClient.FixAvatars();
-    //await Bus.Publish(new ProcessScoresTiersListCommand());
-     //await Bus.Publish(new ProcessPassTierListCommand());
-     //   await Bus.Publish(new RecalculateScoringDifficultyCommand());
-    
-    //await OfficialLeaderboards.FixRankingOrders(CancellationToken.None);
-    
-       //await Mediator.Send(new UpdateSongImagesCommand(false));
-
-        await Bus.Publish(new StartLeaderboardImportCommand());
-
-
-        //await Bus.Publish(new ProcessPassTierListCommand());
-        /*var songImages = (await Database.Song.Select(s => s.ImagePath).ToArrayAsync()).ToHashSet();
-         * 
-        var images = await Files.GetFiles("songs/");
-        var toDelete = images.Where(s => !songImages.Contains(s.ToString())).ToArray();
-        foreach (var image in toDelete)
-        {
-            await Files.DeleteFile(image.PathAndQuery);
-        }*/
-
-   /* var userIds = await Database.User.Select(u => u.Id).ToArrayAsync();
-        foreach (var userId in userIds)
-        {
-            await Mediator.Send(new RecalculateStatsCommand(userId));
-        }*/
-
-
-       // await Bus.Publish(new RecalculateChartLetterDifficultiesCommand());
-       Snackbar.Add(L["Done"].Value, Severity.Success);
-
-    }
-
-    private Guid Bite8 = new Guid("f7b2ad89-fce5-4d34-bfb5-0810b440a5e4");
-    private IEnumerable<string> MissingUsers = Array.Empty<string>();
-
-    private async Task Restore(string userName)
-    {
-        await Qualifiers.Restore(Bite8, userName,CancellationToken.None);
-        Snackbar.Add(L["Restored"].Value, Severity.Success);
-        MissingUsers = await Qualifiers.GetMissing(Bite8,CancellationToken.None);
-    }
-    private decimal _minBpm = 0;
-    private decimal _maxBpm = 0;
-    private void SetMin(decimal newMin)
-    {
-        _minBpm = newMin;
-        _maxBpm = newMin;
     }
 
     private async Task SelectChart(Chart chart)
@@ -468,6 +213,7 @@
         _isSaving = false;
         Snackbar.Add(L["Chart saved"].Value, Severity.Success);
     }
+
     private async Task SelectSong(string songName)
     {
         songName = songName ?? string.Empty;
@@ -486,114 +232,15 @@
         Charts = (await Mediator.Send(new GetChartsBySongQuery(await UiSettings.GetSelectedMix(), name))).ToArray();
 
     }
-    private bool _isReCalculating = false;
-    private int _maxReCalculate = 1;
-    private int _currentReCalculate = 0;
-    private readonly ICollection<NewChart> _newCharts = new List<NewChart>();
-    private string _songName = string.Empty;
-    private string _imageUrl = string.Empty;
-    private string _songArtist = string.Empty;
-    private int _minutes = 2;
-    private int _seconds = 0;
-    private SongType _songType = SongType.Arcade;
-    private bool IsValid => Name.TryParse(_songName, out var name) && !string.IsNullOrWhiteSpace(_imageUrl) && _newCharts.Any() && _newCharts.All(c => !string.IsNullOrWhiteSpace(c.YoutubeHash) && Name.TryParse(c.ChannelName, out var channelName));
-    private bool _isSaving = false;
 
-    private async Task CreateSong()
-    {
-        _isSaving = true;
-        var songId = await _charts.CreateSong(_songName,_koreanName, new Uri($"https://piuimages.arroweclip.se/songs/{_imageUrl}"), _songType,TimeSpan.FromMinutes(_minutes).Add(TimeSpan.FromSeconds(_seconds)),_songArtist,Bpm.From(_minBpm,_maxBpm));
-        foreach (var chart in _newCharts)
-        {
-            await _charts.CreateChart(MixEnum.Phoenix, songId, chart.Type, chart.Level, chart.ChannelName,new Uri($"https://www.youtube.com/embed/{chart.YoutubeHash}"),chart.StepArtist);
-
-        }
-        _charts.ClearCache();
-        _songName = string.Empty;
-        _koreanName = string.Empty;
-        _imageUrl = string.Empty;
-        _songType = SongType.Arcade;
-        _newCharts.Clear();
-        _isSaving = false;
-
-    }
-    private async Task RecalculatePhoenix2Ratings()
-    {
-        await Bus.Publish(new RecalculateMixRatingsCommand(MixEnum.Phoenix2));
-        Snackbar.Add(L["Done"].Value, Severity.Success);
-    }
-
-    private async Task ComputeMyRecap()
-    {
-        await Bus.Publish(new CalculateSeasonRecapsCommand(CurrentUser.User.Id));
-        Snackbar.Add(L["Done"].Value, Severity.Success);
-    }
-
-    private async Task ComputeAllRecaps()
-    {
-        await Bus.Publish(new CalculateSeasonRecapsCommand(null));
-        Snackbar.Add(L["Done"].Value, Severity.Success);
-    }
-
-    private async Task RebuildRecapPgCards()
-    {
-        await Bus.Publish(new RebuildRecapPgCardsCommand());
-        Snackbar.Add(L["Done"].Value, Severity.Success);
-    }
-
-    private async Task RebuildRecapTotalPumbility()
-    {
-        await Bus.Publish(new RebuildRecapTotalPumbilityCommand());
-        Snackbar.Add(L["Done"].Value, Severity.Success);
-    }
-
-    private async Task ReCalculateScores()
-    {
-        _isReCalculating = true;
-        //var ratingsWithVotes = (await Mediator.Send(new GetChartRatingsQuery(MixEnum.Phoenix))).Where(c => c.RatingCount > 0).ToArray();
-        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToArray();
-        _maxReCalculate = charts.Length;
-        _currentReCalculate = 1;
-        /*foreach (var rating in ratingsWithVotes)
-        {
-            await Mediator.Send(new ReCalculateChartRatingCommand(MixEnum.XX, rating.ChartId));
-            _currentReCalculate++;
-            StateHasChanged();
-        }*/
-
-        foreach (var chart in charts)
-        {
-            await Mediator.Send(new ReCalculateChartRatingCommand(MixEnum.Phoenix, chart.Id));
-            _currentReCalculate++;
-            StateHasChanged();
-        }
-        _isReCalculating = false;
-    }
-
-    private IList<PlayerStatsRecord> _stats = new List<PlayerStatsRecord>();
-    private IEnumerable<string> _songArtists = Array.Empty<string>();
-    private IEnumerable<string> _stepArtists = Array.Empty<string>();
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.User.IsAdmin)
         {
             NavManager.NavigateTo("/");
+            return;
         }
-        var charts = (await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix))).ToArray();
-        _songArtists = charts.Select(c => c.Song.Artist).Distinct().Select(s => s.ToString()).ToArray();
-        _stepArtists = charts.Where(c => c.StepArtist != null).Select(c => c.StepArtist!.Value).Distinct().Select(s=>s.ToString()).ToArray();
-        MissingUsers = await Qualifiers.GetMissing(Bite8, CancellationToken.None);
         SongNames = (await Mediator.Send(new GetChartsQuery(await UiSettings.GetSelectedMix()))).Select(c => c.Song.Name.ToString()).Distinct().ToArray();
-    }
-
-    private sealed class NewChart
-    {
-        public ChartType Type { get; set; } = ChartType.Single;
-        public int Level { get; set; } = 14;
-        public string ChannelName { get; set; } = "펌프잇업공식PUMP IT UP Official";
-        public string YoutubeHash { get; set; } = string.Empty;
-        public string StepArtist { get; set; } = string.Empty;
-
     }
 
     private ScoreTracker.Domain.Models.User? _lockTargetUser;
