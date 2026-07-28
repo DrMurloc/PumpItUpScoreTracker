@@ -26,11 +26,6 @@ public sealed class ChartAttemptDbContext : DbContext
     public DbSet<SavedChartEntity> SavedChart { get; set; }
     public DbSet<UserSettingsEntity> UserSettings { get; set; }
     public DbSet<UserApiTokenEntity> UserApiToken { get; set; }
-    public DbSet<MatchEntity> Match { get; set; }
-    public DbSet<RandomSettingsEntity> RandomSettings { get; set; }
-    public DbSet<MatchLinkEntity> MatchLink { get; set; }
-    public DbSet<TournamentPlayerEntity> TournamentPlayer { get; set; }
-    public DbSet<TournamentMachineEntity> TournamentMachine { get; set; }
     public DbSet<CountryEntity> Country { get; set; }
     public DbSet<ChartLetterDifficultyEntity> ChartLetterDifficulty { get; set; }
 
@@ -91,16 +86,6 @@ public sealed class ChartAttemptDbContext : DbContext
             .HasOne<UserEntity>()
             .WithMany()
             .HasForeignKey(e => e.UserId);
-
-        builder.Entity<MatchEntity>()
-            .Property(e => e.TournamentId)
-            .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
-        builder.Entity<MatchLinkEntity>()
-            .Property(e => e.TournamentId)
-            .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
-        builder.Entity<RandomSettingsEntity>()
-            .Property(e => e.TournamentId)
-            .HasDefaultValue(new Guid("fa27b7fb-6ef4-481b-8eee-56fdcf58433c"));
 
         builder.Entity<ChartEntity>()
             .Property(e => e.OriginalMixId)

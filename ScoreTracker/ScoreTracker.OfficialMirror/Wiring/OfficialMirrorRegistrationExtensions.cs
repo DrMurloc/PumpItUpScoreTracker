@@ -31,7 +31,6 @@ public static class OfficialMirrorRegistrationExtensions
         });
         services.AddTransient<IOfficialSiteClient, OfficialSiteClient>();
         services.AddTransient<IPiuTrackerClient, PiuTrackerClient>();
-        services.AddTransient<IOfficialLeaderboardRepository, EFOfficialLeaderboardRepository>();
         services.AddTransient<IOfficialSnapshotRepository, EFOfficialSnapshotRepository>();
         services.AddTransient<IOfficialRecordRepository, EFOfficialRecordRepository>();
         services.AddTransient<IOfficialPlayerIdentityRepository, EFOfficialPlayerIdentityRepository>();

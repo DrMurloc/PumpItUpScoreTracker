@@ -374,7 +374,6 @@ public sealed class OfficialSiteClientTests
         return new OfficialSiteClient(piuGame.Object, Mock.Of<IChartRepository>(),
             NullLogger<OfficialSiteClient>.Instance, Mock.Of<IMediator>(), Mock.Of<ICurrentUserAccessor>(),
             Mock.Of<IScoreReader>(), fileUpload ?? Mock.Of<IFileUploadClient>(),
-            Mock.Of<IOfficialLeaderboardRepository>(),
             Mock.Of<IBus>(), FakeDateTime.At(Now).Object, Mock.Of<IDailyStepReader>(),
             Options.Create(new PiuGameConfiguration
             {
@@ -606,7 +605,7 @@ public sealed class OfficialSiteClientTests
                 .ReturnsAsync(() => _storedBests.ToArray());
             Client = new OfficialSiteClient(Api.Object, Charts.Object, NullLogger<OfficialSiteClient>.Instance,
                 Mock.Of<IMediator>(), Mock.Of<ICurrentUserAccessor>(), scores.Object, Mock.Of<IFileUploadClient>(),
-                Mock.Of<IOfficialLeaderboardRepository>(), Mock.Of<IBus>(), FakeDateTime.At(T0).Object,
+                Mock.Of<IBus>(), FakeDateTime.At(T0).Object,
                 Mock.Of<IDailyStepReader>(), Options.Create(new PiuGameConfiguration()));
         }
 

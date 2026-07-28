@@ -155,39 +155,6 @@ public sealed class UserTierListSagaTests
             It.IsAny<ChartType?>(), It.IsAny<IEnumerable<Guid>?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    [Fact]
-    public async Task BackfillMaterializesEveryScoringUsersScoredFolders()
-    {
-        var d17 = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
-        var s15 = new ChartBuilder().WithLevel(15).WithType(ChartType.Single).Build();
-        var charts = ChartsMock(new[] { d17, s15 });
-        var userA = Guid.NewGuid();
-        var userB = Guid.NewGuid();
-        var scores = new Mock<IScoreReader>();
-        scores.Setup(s => s.GetActiveUserIds(MixEnum.Phoenix, It.IsAny<DateTimeOffset>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new HashSet<Guid> { userA, userB });
-        scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, userA, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { Score(d17.Id), Score(s15.Id) });
-        scores.Setup(s => s.GetBestScores(MixEnum.Phoenix, userB, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { Score(s15.Id) });
-        var mediator = MediatorReturning(Array.Empty<SongTierListEntry>());
-        var userTierLists = new Mock<IUserTierListRepository>();
-        var saga = BuildSaga(charts: charts, mediator: mediator, scores: scores, userTierLists: userTierLists);
-
-        await saga.Consume(BuildContext(new BackfillUserTierListsCommand()));
-
-        // User A scored two folders, user B one — three materializations total.
-        userTierLists.Verify(r => r.SaveUserFolder(MixEnum.Phoenix, userA,
-            It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<IEnumerable<SongTierListEntry>>(),
-            It.IsAny<IReadOnlyDictionary<Guid, double>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
-        userTierLists.Verify(r => r.SaveUserFolder(MixEnum.Phoenix, userB,
-            It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<IEnumerable<SongTierListEntry>>(),
-            It.IsAny<IReadOnlyDictionary<Guid, double>>(), It.IsAny<CancellationToken>()), Times.Once);
-        mediator.Verify(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(),
-            It.IsAny<CancellationToken>()), Times.Exactly(3));
-    }
-
     private static PlayerScoresUpdatedEvent ScoresUpdated(params Guid[] chartIds)
     {
         return PlayerScoresUpdatedEvent.Create(DateTimeOffset.UnixEpoch, UserId, MixEnum.Phoenix,

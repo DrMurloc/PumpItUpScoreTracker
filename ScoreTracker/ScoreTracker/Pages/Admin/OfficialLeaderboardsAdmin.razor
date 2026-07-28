@@ -32,22 +32,9 @@
                OnClick="RebuildHighlights">
         @L["Rebuild weekly highlights"]
     </MudButton>
-    <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_seedQueued"
-               OnClick="SeedBaseline">
-        @L["Seed baseline from legacy tables"]
-    </MudButton>
     <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_popularityQueued"
                OnClick="RefreshPopularity">
         @L["Refresh popularity"]
-    </MudButton>
-    @* ONE-TIME repair press — delete this button, RefreshRatingBoardsCommand, its consumer
-       and DeleteRatingPlacements once both mixes have been run through it. Its two strings
-       are deliberately NOT in the resx: they resolve to the English literal, which is what
-       the one admin who will ever see them reads anyway, and translating a button we intend
-       to delete would mean editing eighteen resx entries twice. *@
-    <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_ratingBoardsQueued"
-               OnClick="RefreshRatingBoards">
-        @L["Refresh rating boards (one-time)"]
     </MudButton>
 </MudStack>
 
@@ -156,7 +143,6 @@ else
     private MixEnum _mix = MixEnum.Phoenix2;
     private bool _importQueued;
     private bool _rebuildQueued;
-    private bool _seedQueued;
     private bool _popularityQueued;
     private IReadOnlyList<ImportRunRecord> _runs = Array.Empty<ImportRunRecord>();
     private IReadOnlyList<RenameProposalRecord> _proposals = Array.Empty<RenameProposalRecord>();
@@ -190,7 +176,7 @@ else
     private async Task SetMix(MixEnum mix)
     {
         _mix = mix;
-        _importQueued = _rebuildQueued = _seedQueued = _popularityQueued = false;
+        _importQueued = _rebuildQueued = _popularityQueued = false;
         await Load();
     }
 
@@ -199,19 +185,6 @@ else
         _popularityQueued = true;
         await Bus.Publish(new RefreshPopularityCommand(_mix));
         Snackbar.Add(L["Popularity refresh queued - re-attaches to the latest snapshot"].Value,
-            Severity.Success);
-    }
-
-    // ONE-TIME repair press (see RefreshRatingBoardsCommand): re-scrapes the rating boards
-    // onto the latest sealed snapshot so Phoenix gets the PUMBILITY board it never mirrored
-    // and Phoenix 2's default-avatar rows get their real art, without a second import.
-    private bool _ratingBoardsQueued;
-
-    private async Task RefreshRatingBoards()
-    {
-        _ratingBoardsQueued = true;
-        await Bus.Publish(new RefreshRatingBoardsCommand(_mix));
-        Snackbar.Add(L["Rating board refresh queued - re-attaches to the latest snapshot"].Value,
             Severity.Success);
     }
 
@@ -227,14 +200,6 @@ else
         _rebuildQueued = true;
         await Bus.Publish(new RebuildWeeklyHighlightsCommand(_mix));
         Snackbar.Add(L["Highlight rebuild queued"].Value, Severity.Success);
-    }
-
-    private async Task SeedBaseline()
-    {
-        _seedQueued = true;
-        await Bus.Publish(new SeedBaselineSnapshotCommand(_mix));
-        Snackbar.Add(L["Baseline seed queued - it refuses to run once sealed snapshots exist"].Value,
-            Severity.Success);
     }
 
     private async Task Accept(RenameProposalRecord proposal)

@@ -13,8 +13,8 @@ public static class EventCompetitionRegistrationExtensions
     /// <summary>
     ///     Wires the Event Competition vertical (tournaments, qualifiers, March of Murlocs).
     ///     ITournamentRepository and IQualifiersRepository stay shared Domain ports
-    ///     transitionally — MatchSaga (C5-gated) and several Competition pages still inject
-    ///     them; the implementations are vertical-internal. Handlers are discovered by the
+    ///     transitionally — several Competition pages still inject them directly; the
+    ///     implementations are vertical-internal. Handlers are discovered by the
     ///     host's MediatR assembly scan; bus consumers are NOT — see
     ///     <see cref="AddEventCompetitionConsumers" />.
     /// </summary>

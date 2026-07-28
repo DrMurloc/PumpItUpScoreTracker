@@ -44,6 +44,5 @@ public static class CommunitiesRegistrationExtensions
         configurator.AddConsumer<AccountPurgeConsumer>();
         configurator.AddConsumer<CommunityHighlightSaga>();
         configurator.AddConsumer<CommunityHighlightPurgeConsumer>();
-        configurator.AddConsumer<BackfillCommunityHighlightsConsumer>();
     }
 }

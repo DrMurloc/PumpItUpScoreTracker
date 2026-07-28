@@ -31,7 +31,6 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IScoreReader _phoenixRecords;
     private readonly IFileUploadClient _fileUpload;
-    private readonly IOfficialLeaderboardRepository _leaderboards;
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IDailyStepReader _dailyStep;
     private readonly PiuGameConfiguration _configuration;
@@ -40,7 +39,6 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         IMediator mediator,
         ICurrentUserAccessor currentUser,
         IScoreReader phoenixRecords, IFileUploadClient fileUpload,
-        IOfficialLeaderboardRepository leaderboards,
         IBus bus,
         IDateTimeOffsetAccessor dateTime,
         IDailyStepReader dailyStep,
@@ -53,7 +51,6 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         _currentUser = currentUser;
         _phoenixRecords = phoenixRecords;
         _fileUpload = fileUpload;
-        _leaderboards = leaderboards;
         _bus = bus;
         _dateTime = dateTime;
         _dailyStep = dailyStep;
@@ -753,17 +750,5 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         return new PiuGameUcsEntry(id,
             new Chart(new Guid(), MixEnum.Phoenix, song, entry.ChartType, entry.Level, MixEnum.Phoenix, entry.Uploader,
                 null, new HashSet<Skill>()), entry.Description);
-    }
-
-    public async Task FixAvatars()
-    {
-        var avatars = await _leaderboards.GetUserAvatars(CancellationToken.None);
-        var groups = avatars.GroupBy(a => a.AvatarPath);
-        foreach (var group in groups)
-        {
-            var newPath = await ConvertPiuGameAvatarToPiuScoresAvatar(group.Key, CancellationToken.None);
-            if (newPath == null) continue;
-            await _leaderboards.UpdateAllAvatarPaths(group.Key, newPath, CancellationToken.None);
-        }
     }
 }

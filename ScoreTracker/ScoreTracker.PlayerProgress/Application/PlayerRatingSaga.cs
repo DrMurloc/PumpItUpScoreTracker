@@ -22,8 +22,7 @@ internal sealed class PlayerRatingSaga :
     IRequestHandler<RecalculateStatsCommand>,
     IRequestHandler<RecalculatePumbilityCommand>,
     IRequestHandler<PlayerRatingSaga.CaptureSessionStats, PlayerRatingSaga.SessionStatsResult>,
-    IConsumer<UserCreatedEvent>,
-    IConsumer<RecalculateMixRatingsCommand>
+    IConsumer<UserCreatedEvent>
 {
     /// <summary>
     ///     The rating step of the session-snapshot pipeline: recalculates stats and
@@ -160,21 +159,6 @@ internal sealed class PlayerRatingSaga :
         await _stats.SaveStats(MixEnum.Phoenix, context.Message.UserId,
             new PlayerStatsRecord(context.Message.UserId, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1),
             context.CancellationToken);
-    }
-
-    public async Task Consume(ConsumeContext<RecalculateMixRatingsCommand> context)
-    {
-        // The formula-adjustment exit path: sweep every player of the mix through the
-        // same two recalculations the session pipeline uses.
-        var mix = context.Message.Mix;
-        var userIds = (await _stats.GetUserIdsWithStats(mix, context.CancellationToken)).ToArray();
-        var chartIds = (await _charts.GetCharts(mix, cancellationToken: context.CancellationToken))
-            .Select(c => c.Id).ToArray();
-        foreach (var userId in userIds)
-        {
-            await RecalculateCore(new RecalculateStatsCommand(userId, mix), context.CancellationToken);
-            await Handle(new RecalculatePumbilityCommand(userId, chartIds, mix), context.CancellationToken);
-        }
     }
 
     private async Task<SessionStatsResult> RecalculateCore(RecalculateStatsCommand request,

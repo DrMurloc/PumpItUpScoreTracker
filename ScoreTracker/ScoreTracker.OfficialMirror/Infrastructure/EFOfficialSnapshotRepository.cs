@@ -321,18 +321,6 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .ExecuteDeleteAsync(ct);
     }
 
-    // ONE-TIME (RefreshRatingBoardsCommand): scoped by joining the leaderboard dimension,
-    // so a snapshot's chart placements — the expensive ones — are never in range.
-    public async Task DeleteRatingPlacements(int snapshotId, CancellationToken ct)
-    {
-        await using var database = await _factory.CreateDbContextAsync(ct);
-        var ratingBoardIds = database.Set<OfficialLeaderboardEntity>()
-            .Where(b => b.LeaderboardType == LeaderboardTypes.Rating)
-            .Select(b => b.Id);
-        await database.Set<OfficialLeaderboardPlacementEntity>()
-            .Where(p => p.SnapshotId == snapshotId && ratingBoardIds.Contains(p.LeaderboardId))
-            .ExecuteDeleteAsync(ct);
-    }
 
     public async Task<IReadOnlyList<(Guid ChartId, int Place)>> GetPopularity(int snapshotId, CancellationToken ct)
     {

@@ -703,7 +703,7 @@
     {
         if (TournamentId == default)
         {
-            NavManager.NavigateTo("/Tournaments");
+            NavManager.NavigateTo("/");
             return;
         }
         _registeredUserIds = (await Qualifiers.GetRegisteredUsers(TournamentId)).Distinct().ToHashSet();

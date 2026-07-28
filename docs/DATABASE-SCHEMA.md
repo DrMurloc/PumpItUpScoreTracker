@@ -4,6 +4,8 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 **Table ownership follows the verticals** (see [ARCHITECTURE.md](ARCHITECTURE.md)): a vertical owns its EF entities as `internal` classes and registers them with the shared context via an `IDbModelContribution` in its `Wiring/` namespace. Cross-vertical reads go through published ports and contracts — never SQL joins onto another vertical's tables. Tables not yet extracted to a vertical live in `ScoreTracker.Data` directly.
 
+**Tables are never dropped — they are archived** (owner standard, 2026-07-27). Deleting a feature removes its EF entity and `ToTable` line, but the rows survive: the new migration transfers the table to the **`archive` schema** (`ALTER SCHEMA archive TRANSFER scores.<Table>`) instead of dropping it, so a revived feature starts from real data. Archived tables move to [Archived](#archived) below rather than leaving this document. `archive` is the only sanctioned destination — `back`, `bup`, `books`, and `smx` are unrelated legacy artifacts of unknown provenance, and the older `*_archived` suffix-in-`scores` convention (the UCS tables) is superseded.
+
 ## Game content (shared, read by everything)
 
 | Table | Purpose |
@@ -107,10 +109,6 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.OfficialFolderRecord` | Record book per folder (mix + type + level): all-time high score across the folder's boards |
 | `scores.OfficialWeeklyHighlight` | Editorial weekly highlights computed at import (movers, boards climbed, new #1s, grade firsts, plus the This Week hero's playerless summary rows: pulse, gainers, debuts, floor marks); rebuildable from snapshots |
 | `scores.OfficialPlayerRenameProposal` | Detected likely renames awaiting admin accept/dismiss; survives merges as the audit trail |
-| `scores.UserOfficialLeaderboard` | Legacy placements (pre-snapshot model) — dropped in a follow-up PR once the prod baseline seed is verified |
-| `scores.UserWorldRanking` | Legacy calculated world rankings — same retirement path |
-| `scores.OfficialUserAvatar` | Legacy avatar cache (absorbed by `OfficialPlayer`) — same retirement path |
-| `scores.OfficialLeaderboardImportState` | Legacy last-import timestamp (absorbed by snapshot seal) — same retirement path |
 
 ## Weekly Challenge (vertical: `ScoreTracker.WeeklyChallenge`)
 
@@ -160,15 +158,31 @@ model references them, and no code reads them. Their PKs and indexes keep their 
 | `scores.CommunityHighlight` | Community big-wins feed: one summary row per (score-event × community the winner belongs to), `Payload` a JSON list of `SignificantWin`, `EventId` dedupes across shared communities. Written by the highlight saga off `ScoreHighlightsCapturedEvent`, purged weekly after 30 days ([home-page-widgets §7](design/home-page-widgets.md)) |
 | `scores.DiscordFeedSubscription` | A channel's subscription to a broadcast feed, independent of any community: `ChannelId`, `FeedKind` (WeeklyCharts/DailyStep/OfficialLeaderboards), `Mix` (per-mix), `RegisteredByDiscordUserId`, `Culture` (nullable, null = English — the language its posts render in; re-registering updates it). Unique on (ChannelId, FeedKind, Mix); registered via `/piu register` ([discord-overhaul](design/discord-overhaul.md)) |
 
-## Match subsystem (shared; deprecated, deletion gated on an owner announcement)
+## Archived
 
-| Table | Purpose |
-|---|---|
-| `scores.Match` | Bracket match definition (JSON configuration) |
-| `scores.MatchLink` | Winner/loser routing between matches |
-| `scores.RandomSettings` | Named randomizer configurations for matches |
-| `scores.TournamentPlayer` | Bracket participants with seeds |
-| `scores.TournamentMachine` | Machine assignments for brackets |
+Tables whose feature was deleted. They carry no EF entity and no `ToTable` registration — the rows
+are queryable in SQL only, kept so a revived feature starts from real data. Nothing here is
+referenced by running code; a table listed here is safe to ignore unless you are reviving what
+owned it.
+
+| Table | Archived | Was |
+|---|---|---|
+| `archive.Match` | 2026-07-28 | Bracket match definition (JSON configuration) |
+| `archive.MatchLink` | 2026-07-28 | Winner/loser routing between matches |
+| `archive.RandomSettings` | 2026-07-28 | Named randomizer configurations for bracket matches — unrelated to the randomizer's own `UserRandomSettings`/`TournamentRandomSettings`, which are live |
+| `archive.TournamentPlayer` | 2026-07-28 | Bracket participants with seeds |
+| `archive.TournamentMachine` | 2026-07-28 | Machine assignments for brackets |
+| `archive.UserOfficialLeaderboard` | 2026-07-28 | Pre-snapshot official placements, superseded by `OfficialLeaderboardPlacement` |
+| `archive.UserWorldRanking` | 2026-07-28 | Calculated world rankings; the feature had no reader left |
+| `archive.OfficialUserAvatar` | 2026-07-28 | Avatar cache, absorbed by `OfficialPlayer` |
+| `archive.OfficialLeaderboardImportState` | 2026-07-28 | Last-import timestamp, absorbed by the snapshot seal |
+
+The UCS tables (`scores.UcsChart_archived` and its two siblings) predate the `archive` schema and
+keep their suffix-in-place form.
+
+Not archives, despite appearances: the `back`, `bup`, `books`, and `smx` schemas are legacy
+artifacts of unknown provenance (`back.Match` holds 83 rows against the live table's 490 — a stale
+partial backup). Leave them alone. The `scores.Ucs*_archived` tables predate this convention.
 
 ## System tables
 

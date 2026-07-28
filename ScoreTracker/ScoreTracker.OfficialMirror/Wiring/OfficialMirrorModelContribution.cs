@@ -13,10 +13,6 @@ public sealed class OfficialMirrorModelContribution : IDbModelContribution
 {
     public void Contribute(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<UserOfficialLeaderboardEntity>().ToTable("UserOfficialLeaderboard");
-        modelBuilder.Entity<UserWorldRanking>().ToTable("UserWorldRanking");
-        modelBuilder.Entity<OfficialUserAvatarEntity>().ToTable("OfficialUserAvatar");
-        modelBuilder.Entity<OfficialLeaderboardImportStateEntity>().ToTable("OfficialLeaderboardImportState");
 
         var leaderboard = modelBuilder.Entity<OfficialLeaderboardEntity>().ToTable("OfficialLeaderboard");
         leaderboard.HasIndex(e => new { e.MixId, e.LeaderboardType, e.Name }).IsUnique();

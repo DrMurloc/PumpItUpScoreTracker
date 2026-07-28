@@ -534,14 +534,19 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        // NavigateTo does not halt the lifecycle, so each bounce needs its own return —
+        // without it CurrentUser.User below throws UserNotLoggedInException for the very
+        // visitor the first guard is bouncing.
         if (!CurrentUser.IsLoggedIn)
         {
-            NavManager.NavigateTo("/Tournaments");
+            NavManager.NavigateTo("/Tournaments/MarchOfMurlocs");
+            return;
         }
         _configuration = await Mediator.Send(new GetTournamentQuery(TournamentId));
         if (!_configuration.IsActive)
         {
-            NavManager.NavigateTo("/Tournaments");
+            NavManager.NavigateTo("/Tournaments/MarchOfMurlocs");
+            return;
         }
         var userId = CurrentUser.User.Id;
         if (CurrentUser.User.IsAdmin && UserId != null)

@@ -52,11 +52,6 @@ internal interface IOfficialSnapshotRepository
     Task WritePopularity(int snapshotId, IReadOnlyCollection<(Guid ChartId, int Place)> rows, CancellationToken ct);
     Task DeletePopularity(int snapshotId, CancellationToken ct);
 
-    /// <summary>
-    ///     ONE-TIME: drops a snapshot's rating-board placements so they can be re-scraped
-    ///     onto it. Delete with <see cref="Contracts.Messages.RefreshRatingBoardsCommand" />.
-    /// </summary>
-    Task DeleteRatingPlacements(int snapshotId, CancellationToken ct);
     Task<IReadOnlyList<(Guid ChartId, int Place)>> GetPopularity(int snapshotId, CancellationToken ct);
 
     Task<IReadOnlyList<PlayerDimension>> GetPlayersByIds(IReadOnlyCollection<int> playerIds, CancellationToken ct);
