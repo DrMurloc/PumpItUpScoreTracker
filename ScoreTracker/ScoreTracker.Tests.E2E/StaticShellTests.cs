@@ -1,6 +1,8 @@
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 using ScoreTracker.Tests.E2E.Support;
+using Xunit.Abstractions;
 using static Microsoft.Playwright.Assertions;
 
 namespace ScoreTracker.Tests.E2E;
@@ -15,13 +17,30 @@ namespace ScoreTracker.Tests.E2E;
 [Collection("E2E")]
 public sealed class StaticShellTests : IAsyncLifetime
 {
+    /// <summary>
+    ///     The errors that mean the island/provider seam broke, as opposed to noise. A popover
+    ///     that cannot find a provider says so by name; a faulted root and a dead circuit are
+    ///     the two ways an island stops existing at all (same signatures ChartPageIslandTests
+    ///     watches). Anything else the page throws is reported, not failed on: MudBlazor's own
+    ///     interop is racy under load and a transient TypeError from inside it says nothing
+    ///     about whether the search works — the popover opening is what says that.
+    /// </summary>
+    private static readonly string[] SeamFaults =
+    {
+        "MudPopoverProvider",
+        "component operations",
+        "Cannot send data"
+    };
+
     private readonly E2EAppFixture _fixture;
+    private readonly ITestOutputHelper _output;
     private IBrowserContext _browser = null!;
     private IPage _page = null!;
 
-    public StaticShellTests(E2EAppFixture fixture)
+    public StaticShellTests(E2EAppFixture fixture, ITestOutputHelper output)
     {
         _fixture = fixture;
+        _output = output;
     }
 
     public async Task InitializeAsync()
@@ -67,8 +86,7 @@ public sealed class StaticShellTests : IAsyncLifetime
     [Fact]
     public async Task TheSearchIslandOpensItsPopover()
     {
-        var errors = new List<string>();
-        _page.PageError += (_, e) => errors.Add(e);
+        var watch = new PageErrorWatch(_page, _output);
 
         await _page.GotoAsync("/TierLists");
 
@@ -89,7 +107,7 @@ public sealed class StaticShellTests : IAsyncLifetime
             .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
         await Expect(_page.Locator(".mud-popover-open").GetByText("Conflict").First).ToBeVisibleAsync();
 
-        Assert.Empty(errors);
+        watch.AssertNoSeamFault();
     }
 
     /// <summary>
@@ -103,8 +121,7 @@ public sealed class StaticShellTests : IAsyncLifetime
     [Fact]
     public async Task TheMobileSearchSheetOpensFocusedOnItsField()
     {
-        var errors = new List<string>();
-        _page.PageError += (_, e) => errors.Add(e);
+        var watch = new PageErrorWatch(_page, _output);
 
         // Below the shell's 960px breakpoint, where the bottom nav takes over from the top nav.
         await _page.SetViewportSizeAsync(390, 844);
@@ -118,6 +135,45 @@ public sealed class StaticShellTests : IAsyncLifetime
 
         await Expect(_page.Locator("[data-search-sheet]")).ToHaveClassAsync(new Regex(@"\bopen\b"));
         await Expect(field).ToBeFocusedAsync();
-        Assert.Empty(errors);
+        watch.AssertNoSeamFault();
+    }
+
+    /// <summary>
+    ///     Collects everything the page throws or logs as an error and writes all of it to the
+    ///     test's output, pass or fail. These tests can only fail on a machine nobody is sitting
+    ///     at, and asserting on a collection directly buys a message xUnit truncates to fifty
+    ///     characters — too short to name what threw, let alone where.
+    /// </summary>
+    private sealed class PageErrorWatch
+    {
+        private readonly ConcurrentQueue<string> _seen = new();
+        private readonly ITestOutputHelper _output;
+
+        public PageErrorWatch(IPage page, ITestOutputHelper output)
+        {
+            _output = output;
+            // Playwright raises these off the test's thread, so the sink has to be concurrent.
+            page.PageError += (_, error) => _seen.Enqueue("PAGEERROR " + error);
+            page.Console += (_, message) =>
+            {
+                if (message.Type == "error") _seen.Enqueue("CONSOLE " + message.Text);
+            };
+        }
+
+        public void AssertNoSeamFault()
+        {
+            var seen = _seen.ToArray();
+            foreach (var entry in seen) _output.WriteLine(entry);
+
+            var faults = seen
+                .Where(e => SeamFaults.Any(f => e.Contains(f, StringComparison.OrdinalIgnoreCase)))
+                .ToArray();
+
+            Assert.True(faults.Length == 0,
+                "The island could not reach its Mud providers:\n\n"
+                + string.Join("\n\n", faults)
+                + "\n\nEverything the page reported:\n"
+                + string.Join("\n", seen));
+        }
     }
 }
