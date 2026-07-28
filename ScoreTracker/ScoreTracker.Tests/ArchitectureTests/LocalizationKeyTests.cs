@@ -76,6 +76,38 @@ public sealed class LocalizationKeyTests
     }
 
     /// <summary>
+    ///     Keys are stored alphabetically so that concurrent branches touching localization edit
+    ///     different parts of the file. Appending at the end put every branch's new keys on the same
+    ///     handful of lines, which made a conflict near-certain — and resx conflicts resolve badly:
+    ///     both sides append before <c>&lt;/root&gt;</c> and each side's last element is closed by the
+    ///     <em>shared</em> <c>&lt;/data&gt;</c> after the conflict, so naively keeping both halves
+    ///     leaves an element unterminated.
+    ///     <para>
+    ///         The comparer is <see cref="StringComparer.OrdinalIgnoreCase" />, which keeps
+    ///         same-word-different-register keys adjacent ("Min" next to "{0} min") rather than
+    ///         separating them by the whole uppercase range as an ordinal sort would. It is a strict
+    ///         total order here precisely because case-only collisions are banned above, so there are
+    ///         no ties and the order is deterministic.
+    ///     </para>
+    /// </summary>
+    [Fact]
+    public void ResxKeysAreStoredAlphabetically()
+    {
+        var violations = new List<string>();
+        foreach (var (locale, keys) in ReadAllLocales())
+            for (var i = 1; i < keys.Count; i++)
+            {
+                if (StringComparer.OrdinalIgnoreCase.Compare(keys[i - 1], keys[i]) <= 0) continue;
+
+                violations.Add(
+                    $"App.{locale}.resx: '{keys[i]}' follows '{keys[i - 1]}' — keys are stored alphabetically (OrdinalIgnoreCase) so branches touching localization edit different lines. Insert the entry in sorted position rather than appending at the end.");
+                break;
+            }
+
+        Assert.True(violations.Count == 0, string.Join(Environment.NewLine, violations));
+    }
+
+    /// <summary>
     ///     Murloc is a joke locale, and the joke only works if it is committed to. Every batch that
     ///     wrote en-ZW without a rule reached for the same shortcut — mangle the vowels out of the
     ///     English ("Search" to "Srglrch", "Back" to "Blrrgk") or just leave the English alone — which
