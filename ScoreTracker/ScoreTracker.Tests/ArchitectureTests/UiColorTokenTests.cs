@@ -42,8 +42,9 @@ public sealed class UiColorTokenTests
         // page was retired — entry removed, ratchet tightened.
         ["Pages/Competition/StaminaTournament.razor"] = 2,
         ["Pages/Dev/Populate.razor"] = 4,
-        ["Pages/Experiments/ChartLetterDifficulties.razor"] = 8,
-        ["Pages/Experiments/GameStats.razor"] = 12,
+        // The Experiments playground took its 20 literals with it when the orphaned pages
+        // were deleted (GameStats 12, ChartLetterDifficulties 8) — entries removed,
+        // ratchet tightened.
         // PhoenixProgress.razor took its 2 literals (the Singles/Doubles line colors) with it
         // when the Player Stats pages were retired for the home-page widgets — entry removed.
         // The recap deck is deliberately self-styled slide art (its design doc owns its
