@@ -56,6 +56,4 @@ internal interface IOfficialSiteClient
         GetOfficialChartLeaderboardEntries(MixEnum mix, CancellationToken cancellationToken);
 
     Task<PiuGameUcsEntry?> GetUcs(int id, CancellationToken cancellationToken);
-
-    Task FixAvatars();
 }
