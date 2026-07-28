@@ -11,7 +11,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.OfficialMirror.Infrastructure
 {
-    internal sealed class EFOfficialLeaderboardRepository : IOfficialLeaderboardRepository
+    internal sealed class EFOfficialLeaderboardRepository
     {
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
         private readonly ILogger _logger;

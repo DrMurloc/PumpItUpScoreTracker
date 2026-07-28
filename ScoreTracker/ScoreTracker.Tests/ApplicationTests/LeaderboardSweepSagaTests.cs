@@ -37,7 +37,6 @@ public sealed class LeaderboardSweepSagaTests
         Mock<ITierListRepository> TierLists,
         LeaderboardSweepSaga Saga)
     {
-        public Mock<IOfficialLeaderboardRepository> Legacy { get; init; } = null!;
         public Mock<IChartRepository> Charts { get; init; } = null!;
     }
 
@@ -104,19 +103,16 @@ public sealed class LeaderboardSweepSagaTests
         records.Setup(r => r.GetFolderRecords(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<FolderRecordRow>());
         var identity = new Mock<IOfficialPlayerIdentityRepository>();
-        var legacy = new Mock<IOfficialLeaderboardRepository>();
-        legacy.Setup(l => l.GetAllEntries(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<UserOfficialLeaderboard>());
         var charts = new Mock<IChartRepository>();
         charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(),
                 It.IsAny<ChartType?>(), It.IsAny<IEnumerable<Guid>?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
         var tierLists = new Mock<ITierListRepository>();
         var saga = new LeaderboardSweepSaga(site.Object, snapshots.Object, records.Object, identity.Object,
-            legacy.Object, charts.Object, tierLists.Object, FakeDateTime.At(Now).Object,
+            charts.Object, tierLists.Object, FakeDateTime.At(Now).Object,
             new Mock<IBus>().Object,
             NullLogger<LeaderboardSweepSaga>.Instance);
-        return new Fixture(site, snapshots, records, tierLists, saga) { Legacy = legacy, Charts = charts };
+        return new Fixture(site, snapshots, records, tierLists, saga) { Charts = charts };
     }
 
     private static async IAsyncEnumerable<OfficialChartBoardResult> ToAsync(

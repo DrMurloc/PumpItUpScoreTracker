@@ -43,7 +43,6 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     private readonly IOfficialSnapshotRepository _snapshots;
     private readonly IOfficialRecordRepository _records;
     private readonly IOfficialPlayerIdentityRepository _identity;
-    private readonly IOfficialLeaderboardRepository _legacy;
     private readonly IChartRepository _charts;
     private readonly ITierListRepository _tierLists;
     private readonly IDateTimeOffsetAccessor _dateTime;
@@ -52,15 +51,13 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
 
     public LeaderboardSweepSaga(IOfficialSiteClient officialSite, IOfficialSnapshotRepository snapshots,
         IOfficialRecordRepository records, IOfficialPlayerIdentityRepository identity,
-        IOfficialLeaderboardRepository legacy, IChartRepository charts,
-        ITierListRepository tierLists, IDateTimeOffsetAccessor dateTime,
+        IChartRepository charts, ITierListRepository tierLists, IDateTimeOffsetAccessor dateTime,
         IBus bus, ILogger<LeaderboardSweepSaga> logger)
     {
         _officialSite = officialSite;
         _snapshots = snapshots;
         _records = records;
         _identity = identity;
-        _legacy = legacy;
         _charts = charts;
         _tierLists = tierLists;
         _dateTime = dateTime;
