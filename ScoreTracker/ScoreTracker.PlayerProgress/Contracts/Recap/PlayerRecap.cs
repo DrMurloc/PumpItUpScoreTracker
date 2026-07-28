@@ -27,9 +27,9 @@ public sealed record PlayerRecap(
     RecapPhoenix2Projection? Projection)
 {
     // Still 2 after the PG-card rework (round four): old ImpressivePgs items deserialize
-    // into RecapRareChart with zero rarity, and the targeted RebuildRecapPgCardsCommand
-    // patches just that field — a version bump would have forced the full-rebuild sweep
-    // the owner explicitly didn't want.
+    // into RecapRareChart with zero rarity rather than failing, so a version bump was never
+    // needed. Recaps refresh per player off the session snapshot; a row on an older schema
+    // reads as "not computed yet" until that player next plays.
     public const int CurrentSchemaVersion = 2;
 }
 
