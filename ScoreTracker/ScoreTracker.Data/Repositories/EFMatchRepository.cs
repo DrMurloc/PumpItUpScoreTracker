@@ -13,7 +13,7 @@ using ScoreTracker.Domain.Views;
 
 namespace ScoreTracker.Data.Repositories;
 
-public sealed class EFMatchRepository : IMatchRepository
+public sealed class EFMatchRepository
 {
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
     private readonly JsonSerializerOptions _jsonOptions;
