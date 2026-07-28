@@ -109,10 +109,6 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.OfficialFolderRecord` | Record book per folder (mix + type + level): all-time high score across the folder's boards |
 | `scores.OfficialWeeklyHighlight` | Editorial weekly highlights computed at import (movers, boards climbed, new #1s, grade firsts, plus the This Week hero's playerless summary rows: pulse, gainers, debuts, floor marks); rebuildable from snapshots |
 | `scores.OfficialPlayerRenameProposal` | Detected likely renames awaiting admin accept/dismiss; survives merges as the audit trail |
-| `scores.UserOfficialLeaderboard` | Legacy placements (pre-snapshot model) — dropped in a follow-up PR once the prod baseline seed is verified |
-| `scores.UserWorldRanking` | Legacy calculated world rankings — same retirement path |
-| `scores.OfficialUserAvatar` | Legacy avatar cache (absorbed by `OfficialPlayer`) — same retirement path |
-| `scores.OfficialLeaderboardImportState` | Legacy last-import timestamp (absorbed by snapshot seal) — same retirement path |
 
 ## Weekly Challenge (vertical: `ScoreTracker.WeeklyChallenge`)
 
@@ -162,16 +158,6 @@ model references them, and no code reads them. Their PKs and indexes keep their 
 | `scores.CommunityHighlight` | Community big-wins feed: one summary row per (score-event × community the winner belongs to), `Payload` a JSON list of `SignificantWin`, `EventId` dedupes across shared communities. Written by the highlight saga off `ScoreHighlightsCapturedEvent`, purged weekly after 30 days ([home-page-widgets §7](design/home-page-widgets.md)) |
 | `scores.DiscordFeedSubscription` | A channel's subscription to a broadcast feed, independent of any community: `ChannelId`, `FeedKind` (WeeklyCharts/DailyStep/OfficialLeaderboards), `Mix` (per-mix), `RegisteredByDiscordUserId`, `Culture` (nullable, null = English — the language its posts render in; re-registering updates it). Unique on (ChannelId, FeedKind, Mix); registered via `/piu register` ([discord-overhaul](design/discord-overhaul.md)) |
 
-## Match subsystem (shared; deprecated, deletion gated on an owner announcement)
-
-| Table | Purpose |
-|---|---|
-| `scores.Match` | Bracket match definition (JSON configuration) |
-| `scores.MatchLink` | Winner/loser routing between matches |
-| `scores.RandomSettings` | Named randomizer configurations for matches |
-| `scores.TournamentPlayer` | Bracket participants with seeds |
-| `scores.TournamentMachine` | Machine assignments for brackets |
-
 ## Archived
 
 Tables whose feature was deleted. They carry no EF entity and no `ToTable` registration — the rows
@@ -181,7 +167,18 @@ owned it.
 
 | Table | Archived | Was |
 |---|---|---|
-| _(none yet — populated as [deletions-wave-1](design/deletions-wave-1.md) lands)_ | | |
+| `archive.Match` | 2026-07-28 | Bracket match definition (JSON configuration) |
+| `archive.MatchLink` | 2026-07-28 | Winner/loser routing between matches |
+| `archive.RandomSettings` | 2026-07-28 | Named randomizer configurations for bracket matches — unrelated to the randomizer's own `UserRandomSettings`/`TournamentRandomSettings`, which are live |
+| `archive.TournamentPlayer` | 2026-07-28 | Bracket participants with seeds |
+| `archive.TournamentMachine` | 2026-07-28 | Machine assignments for brackets |
+| `archive.UserOfficialLeaderboard` | 2026-07-28 | Pre-snapshot official placements, superseded by `OfficialLeaderboardPlacement` |
+| `archive.UserWorldRanking` | 2026-07-28 | Calculated world rankings; the feature had no reader left |
+| `archive.OfficialUserAvatar` | 2026-07-28 | Avatar cache, absorbed by `OfficialPlayer` |
+| `archive.OfficialLeaderboardImportState` | 2026-07-28 | Last-import timestamp, absorbed by the snapshot seal |
+
+The UCS tables (`scores.UcsChart_archived` and its two siblings) predate the `archive` schema and
+keep their suffix-in-place form.
 
 Not archives, despite appearances: the `back`, `bup`, `books`, and `smx` schemas are legacy
 artifacts of unknown provenance (`back.Match` holds 83 rows against the live table's 490 — a stale
