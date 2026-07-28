@@ -32,13 +32,22 @@ public sealed class RecapSagaTests
     private static readonly DateTimeOffset Now = new(2026, 7, 10, 12, 0, 0, TimeSpan.Zero);
     private static readonly Guid UserId = Guid.NewGuid();
 
+    /// <summary>
+    ///     A settled play session for one player — the only trigger that recomputes a recap
+    ///     now that the admin sweep is gone. The recap content assertions below all run
+    ///     through it.
+    /// </summary>
+    private static ScoreHighlightsCapturedEvent SessionSettled(Guid userId) =>
+        ScoreHighlightsCapturedEvent.Create(Now, userId, MixEnum.Phoenix, null,
+            Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>());
+
     [Fact]
     public async Task PlayersWithFewerThanTenPassesGetNoRecap()
     {
         var ctx = new HandlerContext();
         ctx.GivenEligiblePasses(9);
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         ctx.Recaps.Verify(r => r.SaveRecap(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<PlayerRecap>(),
             It.IsAny<CancellationToken>()), Times.Never);
@@ -50,29 +59,11 @@ public sealed class RecapSagaTests
         var ctx = new HandlerContext();
         ctx.GivenEligiblePasses(10);
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         Assert.NotNull(ctx.Saved);
         Assert.Equal(PlayerRecap.CurrentSchemaVersion, ctx.Saved!.SchemaVersion);
         Assert.Equal(Now, ctx.Saved.ComputedAt);
-    }
-
-    [Fact]
-    public async Task SweepComputesEveryActiveUserAndSurvivesFailures()
-    {
-        var second = Guid.NewGuid();
-        var broken = Guid.NewGuid();
-        var ctx = new HandlerContext(activeUsers: new[] { UserId, second, broken });
-        ctx.GivenEligiblePasses(10, forAnyUser: true);
-        ctx.Users.Setup(u => u.GetUser(broken, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("bad account"));
-
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(null)));
-
-        ctx.Recaps.Verify(r => r.SaveRecap(UserId, MixEnum.Phoenix, It.IsAny<PlayerRecap>(),
-            It.IsAny<CancellationToken>()), Times.Once);
-        ctx.Recaps.Verify(r => r.SaveRecap(second, MixEnum.Phoenix, It.IsAny<PlayerRecap>(),
-            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -82,7 +73,7 @@ public sealed class RecapSagaTests
         ctx.GivenEligiblePasses(10);
         ctx.GivenTop50Pumbility(Enumerable.Repeat(972_000, 10).ToArray());
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         Assert.Equal(RecapPlayerType.BalancedPlayer, ctx.Saved!.PlayerType);
         Assert.Equal(972_000, ctx.Saved.PlayerTypeAverageScore);
@@ -96,7 +87,7 @@ public sealed class RecapSagaTests
         // 108 of the 213 Phoenix titles is just past the strict 50% Hunter bar.
         ctx.GivenCompletedTitles(Enumerable.Range(0, 108).Select(i => $"Title {i}").ToArray());
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         var badge = ctx.Saved!.Badges.Single(b => b.Badge == RecapBadge.TitleHunter);
         Assert.Equal(108, badge.Count);
@@ -111,7 +102,7 @@ public sealed class RecapSagaTests
         ctx.GivenCompletedTitles("Rare Title");
         ctx.GivenTitleRarity(("Rare Title", 5), ("Common Title", 800));
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         var badge = ctx.Saved!.Badges.Single(b => b.Badge == RecapBadge.SpecialSnowflake);
         Assert.Equal("Rare Title", badge.Subject);
@@ -126,7 +117,7 @@ public sealed class RecapSagaTests
         ctx.GivenEligiblePasses(10);
         ctx.GivenPass(uhHeung, 996_000);
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         Assert.Contains(ctx.Saved!.Badges, b => b.Badge == RecapBadge.BigFeetOrInjuredBack);
     }
@@ -137,7 +128,7 @@ public sealed class RecapSagaTests
         var ctx = new HandlerContext(gameTag: "DULKI #2827");
         ctx.GivenEligiblePasses(10);
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         Assert.Contains(ctx.Saved!.Badges, b => b.Badge == RecapBadge.Dove);
     }
@@ -158,98 +149,10 @@ public sealed class RecapSagaTests
                 new ChartScoreAggregate(rare.Id, 200, 180, 3)
             });
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         Assert.Equal(new[] { rare.Id, common.Id }, ctx.Saved!.ImpressivePgs.Select(p => p.ChartId).ToArray());
         Assert.Equal(3, ctx.Saved.ImpressivePgs[0].Passers);
-    }
-
-    [Fact]
-    public async Task PgCardRebuildPatchesOnlyThePgField()
-    {
-        var rarePg = new ChartBuilder().WithType(ChartType.Single).WithLevel(22).WithSongName("Rare PG").Build();
-        var ctx = new HandlerContext(rarePg);
-        ctx.GivenPass(rarePg, 1_000_000, PhoenixPlate.PerfectGame);
-        var existing = new PlayerRecap(PlayerRecap.CurrentSchemaVersion, Now.AddDays(-3), null,
-            new RecapRollup(10, Now.AddYears(-1), 100, 1, .5, null, null, null, null, 0, 0,
-                Array.Empty<RecapStepArtist>()),
-            RecapPlayerType.Competitive, 985_000,
-            Array.Empty<RecapEarnedBadge>(), null,
-            Array.Empty<RecapRareChart>(), Array.Empty<RecapScoreHighlight>(), Array.Empty<RecapRareChart>(),
-            null,
-            new RecapTrophies(Array.Empty<RecapRareTitle>(), Array.Empty<RecapPlateCount>(), null, null,
-                Array.Empty<RecapGradeCount>(), 1, 0),
-            null);
-        ctx.Recaps.Setup(r => r.GetRecapUserIds(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { UserId });
-        ctx.Recaps.Setup(r => r.GetRecap(UserId, MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existing);
-        ctx.Scores.Setup(s => s.GetChartScoreAggregates(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { new ChartScoreAggregate(rarePg.Id, 100, 90, 2) });
-
-        await ctx.Saga.Consume(ctx.Context(new RebuildRecapPgCardsCommand()));
-
-        Assert.NotNull(ctx.Saved);
-        var pg = Assert.Single(ctx.Saved!.ImpressivePgs);
-        Assert.Equal(rarePg.Id, pg.ChartId);
-        // Everything else — including ComputedAt — rides through untouched.
-        Assert.Equal(existing.ComputedAt, ctx.Saved.ComputedAt);
-        Assert.Equal(existing.PlayerType, ctx.Saved.PlayerType);
-        Assert.Same(existing.Trophies, ctx.Saved.Trophies);
-    }
-
-    [Fact]
-    public async Task TotalPumbilityRebuildPatchesOnlyTheProjectionTotal()
-    {
-        // A stored recap whose finale projection carries a bogus old two-pool total. The
-        // rebuild must overwrite ONLY TotalPumbility (with the merged top-50) and leave the
-        // Singles/Doubles projections, the projected titles, and ComputedAt untouched.
-        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(23).Build();
-        var dbl = new ChartBuilder().WithType(ChartType.Double).WithLevel(23).Build();
-        var ctx = new HandlerContext(single, dbl);
-        ctx.GivenPass(single, 975_000, PhoenixPlate.MarvelousGame);
-        ctx.GivenPass(dbl, 960_000, PhoenixPlate.FairGame);
-
-        var staleProjection = new RecapPhoenix2Projection(
-            SinglesPumbility: 111, DoublesPumbility: 222, TotalPumbility: 999_999,
-            ProjectedSinglesTitle: "[S] INTERMEDIATE LV.1", ProjectedDoublesTitle: "[D] INTERMEDIATE LV.1",
-            CarriedOverPasses: 2, TotalPasses: 2);
-        var existing = new PlayerRecap(PlayerRecap.CurrentSchemaVersion, Now.AddDays(-3), null,
-            new RecapRollup(10, Now.AddYears(-1), 100, 1, .5, null, null, null, null, 0, 0,
-                Array.Empty<RecapStepArtist>()),
-            RecapPlayerType.Competitive, 985_000,
-            Array.Empty<RecapEarnedBadge>(), null,
-            Array.Empty<RecapRareChart>(), Array.Empty<RecapScoreHighlight>(), Array.Empty<RecapRareChart>(),
-            null,
-            new RecapTrophies(Array.Empty<RecapRareTitle>(), Array.Empty<RecapPlateCount>(), null, null,
-                Array.Empty<RecapGradeCount>(), 1, 0),
-            staleProjection);
-        ctx.Recaps.Setup(r => r.GetRecapUserIds(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { UserId });
-        ctx.Recaps.Setup(r => r.GetRecap(UserId, MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existing);
-
-        await ctx.Saga.Consume(ctx.Context(new RebuildRecapTotalPumbilityCommand()));
-
-        Assert.NotNull(ctx.Saved);
-        var projection = ctx.Saved!.Projection!;
-        // Two carried charts fit one merged top-50, so the total is their summed P2
-        // contributions (int-floored once), computed via the public scoring config.
-        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
-        var expectedTotal = (int)(
-            scoring.GetScore(ChartType.Single, DifficultyLevel.From(23), PhoenixScore.From(975_000),
-                PhoenixPlate.MarvelousGame)
-            + scoring.GetScore(ChartType.Double, DifficultyLevel.From(23), PhoenixScore.From(960_000),
-                PhoenixPlate.FairGame));
-        Assert.Equal(expectedTotal, projection.TotalPumbility);
-        Assert.NotEqual(999_999, projection.TotalPumbility);
-        // The rest of the projection — and the recap — rides through untouched.
-        Assert.Equal(111, projection.SinglesPumbility);
-        Assert.Equal(222, projection.DoublesPumbility);
-        Assert.Equal("[S] INTERMEDIATE LV.1", projection.ProjectedSinglesTitle);
-        Assert.Equal("[D] INTERMEDIATE LV.1", projection.ProjectedDoublesTitle);
-        Assert.Equal(existing.ComputedAt, ctx.Saved.ComputedAt);
-        Assert.Same(existing.Trophies, ctx.Saved.Trophies);
     }
 
     [Fact]
@@ -271,7 +174,7 @@ public sealed class RecapSagaTests
                 .Append(new ChartScoreAggregate(lowLevel.Id, 100, 90, 1))
                 .ToArray());
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         Assert.DoesNotContain(ctx.Saved!.ImpressivePgs, p => p.ChartId == lowLevel.Id);
         Assert.Equal(5, ctx.Saved.ImpressivePgs.Count);
@@ -292,7 +195,7 @@ public sealed class RecapSagaTests
         ctx.GivenCohortScores(strong, 950_000, 960_000, 970_000);
         ctx.GivenCohortScores(weak, 970_000, 980_000, 990_000);
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         var highlight = Assert.Single(ctx.Saved!.ImpressiveScores);
         Assert.Equal(strong.Id, highlight.ChartId);
@@ -312,7 +215,7 @@ public sealed class RecapSagaTests
             Stats(better, clearCount: 150, singles: 22.0),
             Stats(worse, clearCount: 50, singles: 18.0));
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         Assert.Equal(2, ctx.Saved!.Rollup.ChartsPassedRank);
         Assert.Equal(2, ctx.Saved.Rollup.SinglesRank);
@@ -329,7 +232,7 @@ public sealed class RecapSagaTests
             new PlayerRatingRecord(UserId, Now.AddYears(-1), 20.1, 20.1, 18.5, 0, 1200),
             new PlayerRatingRecord(UserId, Now, 21.4, 21.4, 20.6, 0, 1847));
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         Assert.NotNull(ctx.Saved!.Arc);
         Assert.Equal(17.8, ctx.Saved.Arc!.StartCompetitive);
@@ -382,7 +285,7 @@ public sealed class RecapSagaTests
         ctx.GivenTop50CompetitiveCharts(stranger, sharedCharts);
         ctx.GivenTop50CompetitiveCharts(communityFriend, Guid.NewGuid());
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         var singles = ctx.Saved!.Rivals!.Singles;
         Assert.Equal(communityFriend, singles[0].UserId);
@@ -398,7 +301,7 @@ public sealed class RecapSagaTests
         ctx.GivenCompletedTitles("Intermediate Lv. 1");
         ctx.GivenTitleRarity(("Intermediate Lv. 1", 420));
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         Assert.Equal("Intermediate Lv. 1", ctx.Saved!.Trophies.HighestTitle);
         Assert.Equal(420, ctx.Saved.Trophies.HighestTitleHolders);
@@ -426,7 +329,7 @@ public sealed class RecapSagaTests
         ctx.GivenTop50CompetitiveCharts(stranger, sharedCharts);
         ctx.GivenTop50CompetitiveCharts(worldMate, Guid.NewGuid());
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         // Both land in the global tier, so the higher overlap wins — World membership
         // must confer no priority.
@@ -450,7 +353,7 @@ public sealed class RecapSagaTests
         ctx.GivenTop50CompetitiveCharts(stranger, Guid.NewGuid());
         ctx.GivenTop50CompetitiveCharts(communityFriend, Guid.NewGuid());
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         Assert.Equal(communityFriend, ctx.Saved!.Rivals!.Singles[0].UserId);
     }
@@ -480,7 +383,7 @@ public sealed class RecapSagaTests
                 new ChartScoreAggregate(coOp.Id, 30, 3)
             });
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         Assert.Equal(new[] { coOp.Id, brutal.Id, common.Id },
             ctx.Saved!.RarestPasses.Select(r => r.ChartId).ToArray());
@@ -492,7 +395,7 @@ public sealed class RecapSagaTests
         var ctx = new HandlerContext();
         ctx.GivenEligiblePasses(10);
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         Assert.Equal(Now, ctx.Saved!.Rollup.FirstRecordedOn);
     }
@@ -505,7 +408,7 @@ public sealed class RecapSagaTests
         ctx.Scores.Setup(s => s.GetPlayDayCount(MixEnum.Phoenix, UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(214);
 
-        await ctx.Saga.Consume(ctx.Context(new CalculateSeasonRecapsCommand(UserId)));
+        await ctx.Saga.Consume(ctx.Context(SessionSettled(UserId)));
 
         Assert.Equal(214, ctx.Saved!.Rollup.PlayDays);
     }
@@ -712,14 +615,6 @@ public sealed class RecapSagaTests
                 .ReturnsAsync(history);
         }
 
-        public ConsumeContext<CalculateSeasonRecapsCommand> Context(CalculateSeasonRecapsCommand message)
-        {
-            var ctx = new Mock<ConsumeContext<CalculateSeasonRecapsCommand>>();
-            ctx.SetupGet(c => c.Message).Returns(message);
-            ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
-            return ctx.Object;
-        }
-
         public ConsumeContext<ScoreHighlightsCapturedEvent> Context(ScoreHighlightsCapturedEvent message)
         {
             var ctx = new Mock<ConsumeContext<ScoreHighlightsCapturedEvent>>();
@@ -728,20 +623,5 @@ public sealed class RecapSagaTests
             return ctx.Object;
         }
 
-        public ConsumeContext<RebuildRecapPgCardsCommand> Context(RebuildRecapPgCardsCommand message)
-        {
-            var ctx = new Mock<ConsumeContext<RebuildRecapPgCardsCommand>>();
-            ctx.SetupGet(c => c.Message).Returns(message);
-            ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
-            return ctx.Object;
-        }
-
-        public ConsumeContext<RebuildRecapTotalPumbilityCommand> Context(RebuildRecapTotalPumbilityCommand message)
-        {
-            var ctx = new Mock<ConsumeContext<RebuildRecapTotalPumbilityCommand>>();
-            ctx.SetupGet(c => c.Message).Returns(message);
-            ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
-            return ctx.Object;
-        }
     }
 }

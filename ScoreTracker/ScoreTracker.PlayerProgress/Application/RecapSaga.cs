@@ -26,9 +26,7 @@ namespace ScoreTracker.PlayerProgress.Application;
 ///     once per consume and shared — per-player work is in-memory except the top-50 reads
 ///     and the bucket-cached cohort scores.
 /// </summary>
-internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
-    IConsumer<RebuildRecapPgCardsCommand>,
-    IConsumer<RebuildRecapTotalPumbilityCommand>,
+internal sealed class RecapSaga :
     IConsumer<ScoreHighlightsCapturedEvent>
 {
     /// <summary>Below this many passes there isn't enough data for a meaningful recap.</summary>
@@ -92,37 +90,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             // Recaps are a nicety — a failure here must never disturb the import pipeline.
             _logger.LogError(e, "Post-session recap recompute failed for {UserId}", context.Message.UserId);
         }
-    }
-
-    public async Task Consume(ConsumeContext<CalculateSeasonRecapsCommand> context)
-    {
-        var mix = context.Message.Mix;
-        var cancellationToken = context.CancellationToken;
-        // Admin-triggered runs load fresh and reseed the shared cache the event path reads.
-        var shared = await LoadShared(mix, cancellationToken);
-        _cache.Set(SharedCacheKey(mix), shared, TimeSpan.FromMinutes(30));
-
-        if (context.Message.UserId is { } single)
-        {
-            await ComputeAndSave(mix, single, shared, cancellationToken);
-            return;
-        }
-
-        var userIds = shared.ActiveUserIds;
-        _logger.LogInformation("Recap sweep starting for {Count} players on {Mix}", userIds.Count, mix);
-        var computed = 0;
-        foreach (var userId in userIds)
-            try
-            {
-                if (await ComputeAndSave(mix, userId, shared, cancellationToken)) computed++;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Recap computation failed for {UserId} on {Mix}", userId, mix);
-            }
-
-        _logger.LogInformation("Recap sweep finished: {Computed} of {Count} players on {Mix}",
-            computed, userIds.Count, mix);
     }
 
     private async Task<bool> ComputeAndSave(MixEnum mix, Guid userId, SharedInputs shared,
@@ -319,87 +286,6 @@ internal sealed class RecapSaga : IConsumer<CalculateSeasonRecapsCommand>,
             badges.Add(new RecapEarnedBadge(RecapBadge.Dove, null, null, null));
 
         return badges;
-    }
-
-    /// <summary>
-    ///     Patch-only sweep: rewrites ImpressivePgs on every stored recap for the mix and
-    ///     nothing else — each payload keeps its rivals, weekly story, and ComputedAt.
-    ///     The targeted backfill for PG-card logic changes (owner call, round four).
-    /// </summary>
-    public async Task Consume(ConsumeContext<RebuildRecapPgCardsCommand> context)
-    {
-        var mix = context.Message.Mix;
-        var cancellationToken = context.CancellationToken;
-        var charts = (await _charts.GetCharts(mix, cancellationToken: cancellationToken))
-            .ToDictionary(c => c.Id);
-        var aggregates = (await _scores.GetChartScoreAggregates(mix, cancellationToken))
-            .ToDictionary(a => a.ChartId);
-        var population = Math.Max(1,
-            (await _scores.GetActiveUserIds(mix, DateTimeOffset.MinValue, cancellationToken)).Count);
-
-        var userIds = (await _recaps.GetRecapUserIds(mix, cancellationToken)).ToArray();
-        _logger.LogInformation("PG-card rebuild starting for {Count} recaps on {Mix}", userIds.Length, mix);
-        var patched = 0;
-        foreach (var userId in userIds)
-            try
-            {
-                var recap = await _recaps.GetRecap(userId, mix, cancellationToken);
-                if (recap == null) continue;
-                var passes = (await _scores.GetBestScores(mix, userId, cancellationToken))
-                    .Where(b => !b.IsBroken)
-                    .ToArray();
-                await _recaps.SaveRecap(userId, mix,
-                    recap with { ImpressivePgs = ComputeImpressivePgs(passes, charts, aggregates, population) },
-                    cancellationToken);
-                patched++;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "PG-card rebuild failed for {UserId} on {Mix}", userId, mix);
-            }
-
-        _logger.LogInformation("PG-card rebuild finished: {Patched} of {Count} on {Mix}",
-            patched, userIds.Length, mix);
-    }
-
-    /// <summary>
-    ///     Patch-only sweep: recomputes the Phoenix 2 finale's projected
-    ///     <c>TotalPumbility</c> on every stored recap and writes nothing else. Recaps
-    ///     without a projection, and those that no longer carry anything onto Phoenix 2, are
-    ///     left untouched.
-    /// </summary>
-    public async Task Consume(ConsumeContext<RebuildRecapTotalPumbilityCommand> context)
-    {
-        var mix = context.Message.Mix;
-        var cancellationToken = context.CancellationToken;
-        // The finale projects Phoenix onto Phoenix 2, so the projection needs the P2 catalog.
-        var phoenix2Charts = (await _charts.GetCharts(MixEnum.Phoenix2, cancellationToken: cancellationToken))
-            .ToDictionary(c => c.Id);
-
-        var userIds = (await _recaps.GetRecapUserIds(mix, cancellationToken)).ToArray();
-        _logger.LogInformation("Recap total-PUMBILITY rebuild starting for {Count} recaps on {Mix}",
-            userIds.Length, mix);
-        var patched = 0;
-        foreach (var userId in userIds)
-            try
-            {
-                var recap = await _recaps.GetRecap(userId, mix, cancellationToken);
-                if (recap?.Projection == null) continue;
-                var bests = (await _scores.GetBestScores(mix, userId, cancellationToken)).ToArray();
-                var fresh = Phoenix2ProjectionCalculator.Calculate(bests, phoenix2Charts);
-                if (fresh == null) continue;
-                await _recaps.SaveRecap(userId, mix,
-                    recap with { Projection = recap.Projection with { TotalPumbility = fresh.TotalPumbility } },
-                    cancellationToken);
-                patched++;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Recap total-PUMBILITY rebuild failed for {UserId} on {Mix}", userId, mix);
-            }
-
-        _logger.LogInformation("Recap total-PUMBILITY rebuild finished: {Patched} of {Count} on {Mix}",
-            patched, userIds.Length, mix);
     }
 
     private IReadOnlyList<RecapRareChart> BuildImpressivePgs(RecordedPhoenixScore[] passes,
