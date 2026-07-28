@@ -154,12 +154,6 @@
         </MudItem>
     </MudGrid>
 }
-@if (_myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
-{
-    <br />
-    <MudButton Href=@($"/Tournament/{TournamentId}/Brackets") Color="Color.Primary" Variant="Variant.Outlined">Bracket Manager</MudButton>
-
-}
 @if (_myRole is TournamentRole.HeadTournamentOrganizer)
 {
     <br />
