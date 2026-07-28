@@ -21,12 +21,8 @@ namespace ScoreTracker.ChartIntelligence.Application;
 ///     replaying an event recomputes the same folders to the same rows, per the
 ///     in-memory-transport rules.
 /// </summary>
-internal sealed class UserTierListSaga : IConsumer<PlayerScoresUpdatedEvent>,
-    IConsumer<BackfillUserTierListsCommand>
+internal sealed class UserTierListSaga : IConsumer<PlayerScoresUpdatedEvent>
 {
-    // Keeps the one-time backfill gentle on the shared database tier.
-    private static readonly TimeSpan BackfillDelayPerUser = TimeSpan.FromMilliseconds(100);
-
     private readonly IChartRepository _charts;
     private readonly IDateTimeOffsetAccessor _clock;
     private readonly IMediator _mediator;
@@ -56,27 +52,6 @@ internal sealed class UserTierListSaga : IConsumer<PlayerScoresUpdatedEvent>,
         foreach (var (type, level) in Folders(changedCharts))
             await MaterializeFolder(message.Mix, message.UserId, type, level, bestScores,
                 context.CancellationToken);
-    }
-
-    public async Task Consume(ConsumeContext<BackfillUserTierListsCommand> context)
-    {
-        var mix = context.Message.Mix;
-        var cancellationToken = context.CancellationToken;
-        var allCharts = (await _charts.GetCharts(mix, cancellationToken: cancellationToken))
-            .ToDictionary(c => c.Id);
-        var userIds = await _scores.GetActiveUserIds(mix, DateTimeOffset.MinValue, cancellationToken);
-        foreach (var userId in userIds)
-        {
-            var bestScores = (await _scores.GetBestScores(mix, userId, cancellationToken))
-                .ToDictionary(s => s.ChartId);
-            var scoredCharts = bestScores.Keys
-                .Where(allCharts.ContainsKey)
-                .Select(id => allCharts[id]);
-            foreach (var (type, level) in Folders(scoredCharts))
-                await MaterializeFolder(mix, userId, type, level, bestScores, cancellationToken);
-
-            await Task.Delay(BackfillDelayPerUser, cancellationToken);
-        }
     }
 
     // A folder is (type, level); performance charts live in their base type's folder and
