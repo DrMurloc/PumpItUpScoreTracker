@@ -4,6 +4,8 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 **Table ownership follows the verticals** (see [ARCHITECTURE.md](ARCHITECTURE.md)): a vertical owns its EF entities as `internal` classes and registers them with the shared context via an `IDbModelContribution` in its `Wiring/` namespace. Cross-vertical reads go through published ports and contracts — never SQL joins onto another vertical's tables. Tables not yet extracted to a vertical live in `ScoreTracker.Data` directly.
 
+**Tables are never dropped — they are archived** (owner standard, 2026-07-27). Deleting a feature removes its EF entity and `ToTable` line, but the rows survive: the new migration transfers the table to the **`archive` schema** (`ALTER SCHEMA archive TRANSFER scores.<Table>`) instead of dropping it, so a revived feature starts from real data. Archived tables move to [Archived](#archived) below rather than leaving this document. `archive` is the only sanctioned destination — `back`, `bup`, `books`, and `smx` are unrelated legacy artifacts of unknown provenance, and the older `*_archived` suffix-in-`scores` convention (the UCS tables) is superseded.
+
 ## Game content (shared, read by everything)
 
 | Table | Purpose |
@@ -169,6 +171,21 @@ model references them, and no code reads them. Their PKs and indexes keep their 
 | `scores.RandomSettings` | Named randomizer configurations for matches |
 | `scores.TournamentPlayer` | Bracket participants with seeds |
 | `scores.TournamentMachine` | Machine assignments for brackets |
+
+## Archived
+
+Tables whose feature was deleted. They carry no EF entity and no `ToTable` registration — the rows
+are queryable in SQL only, kept so a revived feature starts from real data. Nothing here is
+referenced by running code; a table listed here is safe to ignore unless you are reviving what
+owned it.
+
+| Table | Archived | Was |
+|---|---|---|
+| _(none yet — populated as [deletions-wave-1](design/deletions-wave-1.md) lands)_ | | |
+
+Not archives, despite appearances: the `back`, `bup`, `books`, and `smx` schemas are legacy
+artifacts of unknown provenance (`back.Match` holds 83 rows against the live table's 490 — a stale
+partial backup). Leave them alone. The `scores.Ucs*_archived` tables predate this convention.
 
 ## System tables
 
