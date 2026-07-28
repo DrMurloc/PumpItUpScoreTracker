@@ -22,7 +22,7 @@ public sealed class MessageTaxonomyTests
 {
     private static readonly Assembly[] MessageAssemblies =
     {
-        typeof(Application.Commands.UpdateMatchCommand).Assembly,
+        typeof(Application.Commands.SaveChartToListCommand).Assembly,
         typeof(PlayerProgress.Contracts.Queries.GetTop50CompetitiveQuery).Assembly,
         typeof(Domain.Models.User).Assembly,
         typeof(ScoreLedger.Contracts.Queries.GetPhoenixRecordQuery).Assembly,

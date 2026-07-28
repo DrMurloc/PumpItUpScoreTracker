@@ -13,7 +13,7 @@ namespace ScoreTracker.Tests.ArchitectureTests;
 public sealed class LayerDependencyTests
 {
     private static readonly Assembly DomainAssembly = typeof(Domain.Models.User).Assembly;
-    private static readonly Assembly ApplicationAssembly = typeof(Application.Commands.UpdateMatchCommand).Assembly;
+    private static readonly Assembly ApplicationAssembly = typeof(Application.Commands.SaveChartToListCommand).Assembly;
     private static readonly Assembly SharedKernelAssembly = typeof(SharedKernel.ValueTypes.Name).Assembly;
 
     private static string[] ReferencedNames(Assembly assembly)

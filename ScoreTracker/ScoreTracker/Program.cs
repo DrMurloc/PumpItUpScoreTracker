@@ -229,7 +229,7 @@ builder.Services.AddBlazorApplicationInsights()
         o.RegisterServicesFromAssemblies(
             // Data no longer holds MediatR handlers — its last two (player stats/history)
             // moved into the PlayerProgress vertical at C50.
-            typeof(MatchSaga).Assembly
+            typeof(GetSavedChartsHandler).Assembly
             , typeof(MainLayout).Assembly,
             typeof(PlayerProgressRegistrationExtensions).Assembly,
             typeof(IdentityRegistrationExtensions).Assembly,
