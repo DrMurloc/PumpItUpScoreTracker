@@ -26,6 +26,14 @@ public sealed class UiColorTokenTests
     private static readonly Regex ColorsConstant =
         new(@"\bColors\.\w+\.\w+", RegexOptions.Compiled);
 
+    // Functional colour notations — rgb(255,0,0), rgba(…), hsl(…). A hex literal in a
+    // different coat, and the hole this ratchet shipped with: the rating calculator's
+    // hand-rolled rgb lerp was the most literal-heavy colour code on the site and never
+    // needed an allowance, because nothing here looked for this form. Requires a digit after
+    // the paren so var()-driven values and color-mix(in srgb, …) are untouched.
+    private static readonly Regex FunctionalColor =
+        new(@"\b(?:rgba?|hsla?)\(\s*\d", RegexOptions.Compiled);
+
     private static readonly string[] ScannedFolders = { "Pages", "Components", "Shared" };
 
     // Baseline captured 2026-07-10 after the ramp/plate token migrations. Shrink-only:
@@ -48,8 +56,9 @@ public sealed class UiColorTokenTests
         // PhoenixProgress.razor took its 2 literals (the Singles/Doubles line colors) with it
         // when the Player Stats pages were retired for the home-page widgets — entry removed.
         // The recap deck is deliberately self-styled slide art (its design doc owns its
-        // palette); it stays allowlisted rather than tokenized.
-        ["Pages/Progress/PhoenixRecap.razor"] = 22,
+        // palette); it stays allowlisted rather than tokenized. 22 hex + 8 rgba, the latter
+        // only counted since the functional-notation hole was closed.
+        ["Pages/Progress/PhoenixRecap.razor"] = 30,
         // ChartSkills.razor burned to zero across the tier-lists overhaul (C4 shell + C7
         // radar removal) and left the allowlist entirely; the old page at /TierLists/Old
         // (26 entries) was deleted outright in the same series (C14). ChartRandomizer's
@@ -93,7 +102,9 @@ public sealed class UiColorTokenTests
     private static int CountLiterals(string file)
     {
         var text = File.ReadAllText(file);
-        return HexLiteral.Matches(text).Count + ColorsConstant.Matches(text).Count;
+        return HexLiteral.Matches(text).Count
+               + ColorsConstant.Matches(text).Count
+               + FunctionalColor.Matches(text).Count;
     }
 
     private static string FindSolutionRoot()
