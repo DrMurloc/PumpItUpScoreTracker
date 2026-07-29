@@ -1,8 +1,11 @@
 # Phoenix Calculator redesign
 
-Folds `/RatingCalculator` into `/PhoenixCalculator` and rebuilds the result as one chained
-tool. Mock (owner-driven, doubles as the spec):
+**Status: built.** Folds `/RatingCalculator` into `/PhoenixCalculator` and rebuilds the result
+as one chained tool. Mock (owner-driven, drove five rounds and doubles as the spec):
 <https://claude.ai/code/artifact/baba987d-80be-43fe-9c7f-fb91bd77312e>
+
+The maths lives in [`ScoreAnalysis`](../../ScoreTracker/ScoreTracker.SharedKernel/Models/ScoreAnalysis.cs)
+under `ScoreAnalysisTests`; the page's wiring is pinned by `PhoenixCalculatorPageTests`.
 
 Design system: [UX-GUIDELINES.md](../UX-GUIDELINES.md). Domain terms: [DOMAIN.md](../DOMAIN.md).
 
@@ -357,10 +360,13 @@ Each commit builds and leaves the suites green on its own.
 | 1 | `docs: design doc for the phoenix calculator redesign` | the spec lands before the code implementing it |
 | 2 | `feat(scoring): ScoreAnalysis — deterministic next-grade, fixes, equivalence band` + tests | pure domain, no UI; the band table in §3.5 becomes assertions |
 | 3 | `feat(calculator): rebuild /PhoenixCalculator as two routes over one chain` | the core: steps 1–3, folder picker vs slider, plate picker, baselined bar, resx ×9 |
-| 4 | `feat(calculator): the value grid` | the bottom collapsible — what actually replaces the retired page |
-| 5 | `refactor(calculator): retire /RatingCalculator` | delete, 301, nav collapse, resx key swap — safe only once 4 has landed |
-| 6 | `test(arch): catch rgb()/rgba()/hsl() in the colour ratchet` | independent; cheapest after the worst offender is already gone |
-| 7 | `docs: ARCHITECTURE + UX-GUIDELINES for the combined calculator` | the Tools row, and the derived-band rule from §3.5 |
+| 4 | `refactor(calculator): retire /RatingCalculator` | delete, 301, nav collapse, orphaned key removal |
+| 5 | `test(arch): catch rgb()/rgba()/hsl() in the colour ratchet` | independent; cheapest after the worst offender is already gone |
+| 6 | `docs: ARCHITECTURE + UX-GUIDELINES for the combined calculator` | the Tools row, and the derived-band rule from §3.5 |
+
+The value grid landed inside commit 3 rather than as its own step: it shares the page's markup
+and its heat reads the same plate and type the rest of the chain does, so splitting it would
+have meant writing it twice.
 
 Commits 3 and 4 are the review-heavy ones. Commit 3 carries the nine-locale resx pass — the
 highest-risk file set in the PR ([resx editing hazards](../../CLAUDE.md), and every value
