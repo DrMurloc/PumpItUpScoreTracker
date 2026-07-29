@@ -115,6 +115,22 @@ public sealed class PhoenixCalculatorPageTests : ComponentTestBase
         Assert.Contains(expectedCeiling, band);
     }
 
+    // @((int)Score).ToString("N0") closes the expression at the cast and ships the rest as
+    // literal text — it compiles, renders, and reads as "917168.ToString("N0")" on the page.
+    [Theory]
+    [InlineData(null)]
+    [InlineData("judgments")]
+    public void NoRazorExpressionLeaksItsOwnSourceAsText(string? from)
+    {
+        Assert.DoesNotContain("ToString", Render(from: from).Markup);
+    }
+
+    [Fact]
+    public void TheScoreRendersAsAFormattedNumber()
+    {
+        Assert.Equal("917,168", Render(from: "judgments").Find(".pc-score").TextContent.Trim());
+    }
+
     [Fact]
     public void TheResultsScreenRouteShowsBothHalvesOfTheMillion()
     {

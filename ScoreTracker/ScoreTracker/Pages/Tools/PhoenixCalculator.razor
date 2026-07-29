@@ -123,13 +123,13 @@
             <h2 class="pc-step"><span class="pc-n">2</span>@L["What it scores"]</h2>
 
             <div class="pc-hero">
-                <span class="pc-score">@((int)Score).ToString("N0")</span>
+                <span class="pc-score">@(((int)Score).ToString("N0"))</span>
                 <ScoreBreakdown Score="Score" Plate="Screen.PlateText" Mix="_mix"></ScoreBreakdown>
             </div>
 
             <div class="pc-barhead">
                 <span class="pc-label">@L["Where your score came from"]</span>
-                <b>@((int)Score).ToString("N0")</b>
+                <b>@(((int)Score).ToString("N0"))</b>
             </div>
             <div class="pc-track">
                 @foreach (var band in EarnedBands)
