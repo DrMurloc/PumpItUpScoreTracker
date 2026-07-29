@@ -394,4 +394,56 @@ Commits 1–3 ship no user-visible change; the page keeps working off the old su
 
 ## 9. As built — deviations from the plan
 
-_(to be filled in as commits land)_
+Commits 1–6 landed as planned. What differs from §1–8:
+
+- **The port move slipped from commit 3 to commit 6**, and had a third Web consumer the plan
+  found late: `MarchOfMurlocs.razor` used `GetQualifiersConfiguration(id).PlayCount > 0` to decide
+  whether to show a qualifiers link. That became `TournamentHasQualifiersQuery`. Only after
+  commits 4–5 removed the page injections did `grep -rl IQualifiersRepository ScoreTracker/ScoreTracker/`
+  come back empty, which is the gate the move actually needed.
+- **No `QualifierPoolGrid` component.** The pool grid is markup on the page; it has one caller and
+  extracting it bought nothing. `QualifierChip` and `QualifierSubmitDialog` are components as
+  planned.
+- **The "suggested next chart" pool state is not implemented.** The old page computed
+  `_suggestedCharts` and then never rendered them (§5.3 of the audit), so there was nothing to
+  port — only a spec to invent. Shipping a guess at what a player should play next is worse than
+  shipping three honest states, so the pool has **counting / not counting / not played** and the
+  legend lists only what is on screen. The mock showed four. This is the one place the build is
+  deliberately smaller than the mock.
+- **`AddPhoenixScore` was removed outright** rather than kept as a shim. Its four call sites moved
+  to `AddManualScore`/`AddImportedScore` in the same commit, so nothing needed a transitional
+  overload.
+- **Deleting one submission needs no port method.** The handler loads the entry, drops the chart
+  from the dictionary and saves — the blob rewrite covers it. `DeleteQualifiers` is only for
+  whole entries. Saved through the repository rather than `SaveQualifiersCommand`, so removing a
+  score does not announce a placement change to Discord.
+- **A Perfect Game is derived, not stored.** Every step perfect lands on exactly 1,000,000 and no
+  other judgement mix can (any great drops the weighted numerator below the note count), so the
+  chip's plate halo reads off the score and needs no extra field.
+- **Three of the 57 player-page keys collided by case** with keys already in the resx — `Max Combo`
+  vs `Max combo`, `Not Played` vs `Not played`, `Phoenix Score` vs `Phoenix score`. The existing
+  casing wins and the markup was repointed. This is the `resx-case-collision` class of bug: the
+  compiler would have kept one and silently rendered English in all eight other locales.
+- **E2E covers routing and render, not the photo round trip.** Five tests: both 301s, the
+  anonymous board-plus-pool render against a real database, no photo URL in a player's response,
+  and the admin route refusing a non-organiser. Driving a real file upload through Playwright was
+  judged to add little over the component and handler coverage; the submit path is covered at
+  those levels. The plan said "submit a score with a photo, see the board move" — that specific
+  journey is **not** E2E-covered.
+- **New E2E seed helpers**: `SeedTournamentAsync`, `SeedQualifiersConfigurationAsync`,
+  `SeedQualifierEntryAsync`. ⚠ `TournamentEntity.Type` must be a real `TournamentType`
+  (`Stamina`/`Match`/`CoOp`) — seeding `"Qualifiers"` throws inside `GetAllTournamentsQuery` and
+  the page renders as an empty shell with no error anywhere on screen.
+
+### Still open
+
+- **Photo retention** — nothing deletes qualifier blobs, before or after this change. Deleting an
+  entry drops the row and orphans its photos.
+- **Duplicate detection quality** — the normalization is a first cut (case-fold, strip
+  non-alphanumerics, trim trailing digits) and only flags a group when one side has an account and
+  one does not. Without the name gate, duplicates get easier to create, so this is doing real work.
+- **Export shape** — the seeding export in §5.5 of the plan is not built. CSV columns and the
+  start.gg paste format need one round with an actual TO first, so the admin screen ships without
+  it rather than guessing.
+- One component-suite run failed once mid-build and passed on five consecutive re-runs; the test
+  name was not captured. Watch for it in CI.

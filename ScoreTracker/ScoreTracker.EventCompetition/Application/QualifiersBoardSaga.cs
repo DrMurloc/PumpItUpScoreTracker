@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -7,6 +7,7 @@ using ScoreTracker.EventCompetition.Contracts.Commands;
 using ScoreTracker.EventCompetition.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.EventCompetition.Infrastructure;
 
 namespace ScoreTracker.EventCompetition.Application
 {
@@ -21,7 +22,8 @@ namespace ScoreTracker.EventCompetition.Application
         IDateTimeOffsetAccessor dateTimeOffset)
         : IRequestHandler<GetQualifiersBoardQuery, QualifierBoard>,
             IRequestHandler<SubmitQualifierScoreCommand>,
-            IRequestHandler<SetQualifierAutoSubmitCommand>
+            IRequestHandler<SetQualifierAutoSubmitCommand>,
+            IRequestHandler<TournamentHasQualifiersQuery, bool>
     {
         public async Task<QualifierBoard> Handle(GetQualifiersBoardQuery request,
             CancellationToken cancellationToken)
@@ -106,6 +108,21 @@ namespace ScoreTracker.EventCompetition.Application
                 entry.AddManualScore(request.ChartId, request.Score ?? 0, request.PhotoUrl, dateTimeOffset.Now);
 
             await mediator.Send(new SaveQualifiersCommand(request.TournamentId, entry), cancellationToken);
+        }
+
+        public async Task<bool> Handle(TournamentHasQualifiersQuery request,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var config = await qualifiers.GetQualifiersConfiguration(request.TournamentId, cancellationToken);
+                return config.PlayCount > 0;
+            }
+            catch (Exception)
+            {
+                // A tournament with no qualifiers configuration simply has none.
+                return false;
+            }
         }
 
         public async Task Handle(SetQualifierAutoSubmitCommand request, CancellationToken cancellationToken)

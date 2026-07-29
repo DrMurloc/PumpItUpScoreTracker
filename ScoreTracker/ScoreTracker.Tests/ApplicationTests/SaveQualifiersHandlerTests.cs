@@ -11,6 +11,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using Xunit;
+using ScoreTracker.EventCompetition.Infrastructure;
 
 namespace ScoreTracker.Tests.ApplicationTests;
 

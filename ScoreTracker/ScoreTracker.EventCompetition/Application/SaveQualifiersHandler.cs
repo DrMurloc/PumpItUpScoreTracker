@@ -2,6 +2,7 @@
 using ScoreTracker.EventCompetition.Contracts.Commands;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.EventCompetition.Infrastructure;
 
 namespace ScoreTracker.EventCompetition.Application
 {

@@ -17,6 +17,7 @@ using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using ScoreTracker.Tests.TestHelpers;
 using Xunit;
+using ScoreTracker.EventCompetition.Infrastructure;
 
 namespace ScoreTracker.Tests.ApplicationTests;
 

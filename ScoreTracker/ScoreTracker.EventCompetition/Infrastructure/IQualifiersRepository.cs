@@ -3,9 +3,13 @@ using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.SharedKernel.ValueTypes;
 
-namespace ScoreTracker.Domain.SecondaryPorts
+namespace ScoreTracker.EventCompetition.Infrastructure
 {
-    public interface IQualifiersRepository
+    /// <summary>
+    ///     Qualifier persistence. Vertical-internal: only EventCompetition implements it and
+    ///     only EventCompetition consumes it, now that the pages dispatch through MediatR.
+    /// </summary>
+    internal interface IQualifiersRepository
     {
         Task<UserQualifiers?> GetQualifiers(Guid tournamentId, Name userName, QualifiersConfiguration config,
             CancellationToken cancellationToken = default);

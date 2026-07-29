@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -12,7 +12,8 @@ public static class EventCompetitionRegistrationExtensions
 {
     /// <summary>
     ///     Wires the Event Competition vertical (tournaments, qualifiers, March of Murlocs).
-    ///     ITournamentRepository and IQualifiersRepository stay shared Domain ports
+    ///     ITournamentRepository stays a shared Domain port; IQualifiersRepository moved into
+    ///     this vertical once the pages stopped injecting it (docs/design/qualifiers-overhaul.md)
     ///     transitionally — several Competition pages still inject them directly; the
     ///     implementations are vertical-internal. Handlers are discovered by the
     ///     host's MediatR assembly scan; bus consumers are NOT — see
