@@ -239,8 +239,82 @@ public sealed class WeeklyTournamentSagaTests
     }
 
     [Fact]
+    public async Task RegisterWeeklyChartScoreReplacesHigherScoreWhenAmendingAManualEntry()
+    {
+        // The correction path (§9.2): a player fixing a fat-fingered score downward. Only
+        // reachable with Replace — the default intent keeps the higher score, below.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var userId = Guid.NewGuid();
+        var ctx = new HandlerContext(chart);
+        ctx.GivenStats(singlesCompetitive: 20, doublesCompetitive: 20);
+        ctx.GivenExistingEntries(chart.Id, new[]
+        {
+            Entry(chart.Id, score: 974220, userId: userId)
+        }, ChallengeEntrySource.Manual);
+
+        await ctx.Saga.Handle(
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 947220, userId: userId),
+                Intent: WeeklyEntryIntent.Replace),
+            CancellationToken.None);
+
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(MixEnum.Phoenix,
+            It.Is<WeeklyTournamentEntry>(e => e.UserId == userId && e.Score == (PhoenixScore)947220),
+            ChallengeEntrySource.Manual, It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RegisterWeeklyChartScoreRefusesToAmendAnOfficiallyImportedEntry()
+    {
+        // §9.4: the next import would raise it straight back, so the write is declined
+        // outright rather than persisting a value that silently reverts.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var userId = Guid.NewGuid();
+        var ctx = new HandlerContext(chart);
+        ctx.GivenStats(singlesCompetitive: 20, doublesCompetitive: 20);
+        ctx.GivenExistingEntries(chart.Id, new[]
+        {
+            Entry(chart.Id, score: 981540, userId: userId)
+        }, ChallengeEntrySource.Official);
+
+        await ctx.Saga.Handle(
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 900000, userId: userId),
+                Intent: WeeklyEntryIntent.Replace),
+            CancellationToken.None);
+
+        ctx.WeeklyTournies.Verify(w => w.SaveEntry(It.IsAny<MixEnum>(), It.IsAny<WeeklyTournamentEntry>(),
+            It.IsAny<ChallengeEntrySource>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RegisterWeeklyChartScoreDoesNotPublishWhenAnAmendLowersThePlace()
+    {
+        // §9.5: the place moves (2nd → 3rd behind the rival), but falling is not progress —
+        // publishing here would write a gold "weekly placement" milestone for a typo fix.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var userId = Guid.NewGuid();
+        var ctx = new HandlerContext(chart);
+        ctx.GivenStats(singlesCompetitive: 20, doublesCompetitive: 20);
+        ctx.GivenExistingEntries(chart.Id, new[]
+        {
+            Entry(chart.Id, score: 990000, userId: Guid.NewGuid()),
+            Entry(chart.Id, score: 974220, userId: userId),
+            Entry(chart.Id, score: 960000, userId: Guid.NewGuid())
+        }, ChallengeEntrySource.Manual);
+
+        await ctx.Saga.Handle(
+            new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 947220, userId: userId),
+                Intent: WeeklyEntryIntent.Replace),
+            CancellationToken.None);
+
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<UserWeeklyChartScoreImprovedEvent>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task RegisterWeeklyChartScoreKeepsHigherExistingScoreWhenLowerSubmitted()
     {
+        // The importer's guarantee: without an explicit Replace, replaying a stale score
+        // can never move a board. Deleting this would make imports non-idempotent.
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var userId = Guid.NewGuid();
         var ctx = new HandlerContext(chart);
@@ -318,7 +392,7 @@ public sealed class WeeklyTournamentSagaTests
             CancellationToken.None);
 
         ctx.Bus.Verify(b => b.Publish(
-            It.Is<UserWeeklyChartsProgressedEvent>(e => e.UserId == userId && e.ChartId == chart.Id
+            It.Is<UserWeeklyChartScoreImprovedEvent>(e => e.UserId == userId && e.ChartId == chart.Id
                                                        && e.Score == 950000 && e.Place == 1
                                                        && e.Mix == MixEnum.Phoenix),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -341,7 +415,7 @@ public sealed class WeeklyTournamentSagaTests
             new RegisterWeeklyChartScoreCommand(Entry(chart.Id, score: 950000, userId: userId)),
             CancellationToken.None);
 
-        ctx.Bus.Verify(b => b.Publish(It.IsAny<UserWeeklyChartsProgressedEvent>(),
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<UserWeeklyChartScoreImprovedEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 

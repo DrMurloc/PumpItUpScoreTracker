@@ -6231,6 +6231,66 @@ button.chart-card-art {
     flex-wrap: wrap;
 }
 
+/* Record dialog, amend states (weekly-charts-overhaul.md §9.6). Two edge-marked panels: the
+   warning that a submission is about to replace a higher score, and the notice that an
+   imported entry is not hand-editable. Semantic alert hues, not mix hues — "this costs you
+   something" has to read the same in every theme. */
+.challenge-amend {
+    border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 55%, transparent);
+    border-left-width: 3px;
+    background: color-mix(in srgb, var(--mud-palette-warning) 9%, transparent);
+    border-radius: 4px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.challenge-amend.locked {
+    border-color: color-mix(in srgb, var(--mix-secondary) 45%, transparent);
+    background: color-mix(in srgb, var(--mix-secondary) 9%, transparent);
+}
+
+.challenge-amend .head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 650;
+    font-size: .86rem;
+    color: var(--mud-palette-warning);
+}
+
+.challenge-amend.locked .head {
+    color: var(--mix-secondary);
+}
+
+/* The delta reads as a measurement, so it gets the tabular treatment the boards use. */
+.challenge-amend .swap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-variant-numeric: tabular-nums;
+    font-size: .82rem;
+}
+
+.challenge-amend .swap .was {
+    color: var(--mix-ink-muted);
+    text-decoration: line-through;
+}
+
+.challenge-amend .swap .arrow {
+    color: var(--mud-palette-warning);
+}
+
+.challenge-amend .swap .place {
+    color: var(--mix-ink-muted);
+}
+
+.challenge-standing {
+    font-variant-numeric: tabular-nums;
+}
+
 .challenge-iconbtn.rec:hover {
     color: var(--mix-primary);
     border-color: var(--mix-primary);

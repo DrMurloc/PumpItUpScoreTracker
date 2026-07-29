@@ -490,47 +490,33 @@ namespace ScoreTracker.WeeklyChallenge.Application
                 (await weeklyTournies.GetEntriesWithSources(mix, request.Entry.ChartId, cancellationToken))
                 .ToArray();
             var existingEntries = existingWithSources.Select(e => e.Entry).ToArray();
-            var existingPair = existingWithSources.FirstOrDefault(u => u.Entry.UserId == request.Entry.UserId);
-            var existingEntry = existingPair.Entry;
+            // Value tuples have no null, so a miss reads as (null, Official) — lift it back to a
+            // real absence before the policy has to guess which of those two fields meant "none".
+            var found = existingWithSources.FirstOrDefault(u => u.Entry.UserId == request.Entry.UserId);
+            (WeeklyTournamentEntry Entry, ChallengeEntrySource Source)? existingPair =
+                found.Entry == null ? null : found;
             var existingPlace = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(existingEntries)
                 .Where(u => u.Item2.UserId == request.Entry.UserId)
                 .Select(u => (int?)u.Item1).FirstOrDefault();
 
-            if (existingEntry != null)
-            {
-                // The source tag describes the ranked score's provenance — it only moves when
-                // the score does (a weaker manual submit never demotes a verified score).
-                var entrySource = existingPair.Source;
-                if (request.Entry.Score > existingEntry.Score)
-                {
-                    existingEntry = existingEntry with { Score = request.Entry.Score };
-                    entrySource = request.Source;
-                }
+            var merge = WeeklyEntryMergePolicy.Merge(existingPair, request.Entry, request.Source, request.Intent,
+                competitiveLevel);
+            // An amend against an officially imported entry writes nothing (§9.4). The dialog
+            // renders that entry read-only, so reaching here means the command came from
+            // somewhere else — refuse quietly rather than persist a value the next import undoes.
+            if (merge.IsRefused) return;
 
-                if (request.Entry.Plate > existingEntry.Plate)
-                    existingEntry = existingEntry with { Plate = request.Entry.Plate };
+            await weeklyTournies.SaveEntry(mix, merge.Entry, merge.Source, wasWithinRange, cancellationToken);
 
-                if (!request.Entry.IsBroken && existingEntry.IsBroken)
-                    existingEntry = existingEntry with { IsBroken = false };
-
-                existingEntry = existingEntry with { CompetitiveLevel = competitiveLevel };
-                // Photos are optional proof (M3): a photo-less submit must not wipe one already attached.
-                existingEntry = existingEntry with { PhotoUrl = request.Entry.PhotoUrl ?? existingEntry.PhotoUrl };
-                await weeklyTournies.SaveEntry(mix, existingEntry, entrySource, wasWithinRange, cancellationToken);
-            }
-            else
-            {
-                existingEntry = request.Entry with { CompetitiveLevel = competitiveLevel };
-                await weeklyTournies.SaveEntry(mix, existingEntry, request.Source, wasWithinRange, cancellationToken);
-            }
-
-            var newPlace = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(existingEntries.Where(u => u.UserId != request.Entry.UserId)
-                .Append(existingEntry)).First(e => e.Item2.UserId == request.Entry.UserId).Item1;
-            // Placement changes drive PlayerProgress's weekly-placement milestones; the
-            // per-progression Discord post retired with the hardcoded channel.
-            if (existingPlace == null || existingPlace != newPlace)
-                await bus.Publish(new UserWeeklyChartsProgressedEvent(request.Entry.UserId, chart.Id,
-                    existingEntry.Score, existingEntry.Plate.ToString(), existingEntry.IsBroken, newPlace, mix),
+            var newPlace = WeeklyChartSuggestionPolicy.ProcessIntoPlaces(existingEntries
+                    .Where(u => u.UserId != request.Entry.UserId).Append(merge.Entry))
+                .First(e => e.Item2.UserId == request.Entry.UserId).Item1;
+            // Placement gains drive PlayerProgress's weekly-placement milestones. Both halves
+            // matter: the place has to actually move, AND the score has to have gone up — a
+            // correction downward moves the place too, and falling is not a milestone (§9.5).
+            if (merge.IsImprovement && (existingPlace == null || existingPlace != newPlace))
+                await bus.Publish(new UserWeeklyChartScoreImprovedEvent(request.Entry.UserId, chart.Id,
+                    merge.Entry.Score, merge.Entry.Plate.ToString(), merge.Entry.IsBroken, newPlace, mix),
                     cancellationToken);
         }
     }

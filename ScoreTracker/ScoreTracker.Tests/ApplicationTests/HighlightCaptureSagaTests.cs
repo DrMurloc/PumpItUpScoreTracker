@@ -357,13 +357,13 @@ public sealed class HighlightCaptureSagaTests
     public async Task WeeklyPlacementChangesBecomeMilestones()
     {
         // Weekly registration rides its own eligibility flow, so placements arrive as
-        // the weekly vertical's progressed event — captured here as the gold rows the
+        // the weekly vertical's improvement event — captured here as the gold rows the
         // Sessions page shows (SessionId deliberately null: no batch session exists).
         var chart = new ChartBuilder().WithType(ChartType.Double).WithLevel(21).Build();
         var ctx = new HandlerContext();
         ctx.GivenCharts(chart);
 
-        await ctx.Saga.Consume(WeeklyContext(new UserWeeklyChartsProgressedEvent(UserId, chart.Id,
+        await ctx.Saga.Consume(WeeklyContext(new UserWeeklyChartScoreImprovedEvent(UserId, chart.Id,
             1000000, "PerfectGame", false, 1, MixEnum.Phoenix)));
 
         ctx.Milestones.Verify(m => m.Append(MixEnum.Phoenix, UserId,
@@ -374,10 +374,10 @@ public sealed class HighlightCaptureSagaTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    private static ConsumeContext<UserWeeklyChartsProgressedEvent> WeeklyContext(
-        UserWeeklyChartsProgressedEvent message)
+    private static ConsumeContext<UserWeeklyChartScoreImprovedEvent> WeeklyContext(
+        UserWeeklyChartScoreImprovedEvent message)
     {
-        var ctx = new Mock<ConsumeContext<UserWeeklyChartsProgressedEvent>>();
+        var ctx = new Mock<ConsumeContext<UserWeeklyChartScoreImprovedEvent>>();
         ctx.SetupGet(c => c.Message).Returns(message);
         ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
         return ctx.Object;

@@ -129,6 +129,13 @@ The widget home page ([design doc](design/HomePageWidgets/README.md)) adds a voc
   **Limbo Day**, where the lowest *passing* score wins — ranks ascending without a second component.
   Rows wear the **trust ladder** when the caller tracks provenance: ✔ officially imported > 📷 photo
   attached (the icon opens the proof) > nothing for a bare self-report (weekly-charts-overhaul.md M5).
+- **A costly submit relabels its own button; it does not grow a checkbox.** When a form action is
+  about to do something the player probably doesn't want — the weekly Record dialog replacing a
+  higher score with a lower one — say so *while they type*, show what it costs in their own terms
+  (the score displaced, the place they fall to), and change the action to name the consequence
+  ("Replace with lower score", warning-colored). A second confirmation tap reads as friction and
+  gets tapped through unread; a control that already says what it does is the stronger gate
+  (weekly-charts-overhaul.md §9.6).
 - **Drag is swap, not insertion**: dropping widget A on widget B trades their places; bystanders
   never move. The arrows remain the accessible and mobile reorder path.
 - **Quiet scrolling**: widget inner scrollers use `dash-scroll` — no scrollbar at rest, a thin themed

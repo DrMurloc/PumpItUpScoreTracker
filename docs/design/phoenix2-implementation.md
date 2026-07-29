@@ -150,7 +150,8 @@ already correct); cosmetic, so run it only if you want existing recaps updated.
 - [x] **Commit 5 — Bus events carry the mix.**
   `PlayerScoresUpdatedEvent`, `ScoreImportCompletedEvent`, `ImportStatusUpdatedEvent`,
   `PlayerStatsUpdatedEvent`, `TitlesDetectedEvent`, `NewTitlesAcquiredEvent`,
-  `UserWeeklyChartsProgressedEvent` + consumers route by mix; `ContractEventSerializationTests`
+  `UserWeeklyChartsProgressedEvent` (since renamed `UserWeeklyChartScoreImprovedEvent`)
+  + consumers route by mix; `ContractEventSerializationTests`
   updated deliberately; Discord "[Phoenix 2]" prefix in CommunitySaga message builders.
 
 - [x] **Commit 6 — Sagas un-hardcoded; per-mix computation.**

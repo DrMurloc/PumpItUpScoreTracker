@@ -141,6 +141,9 @@
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>#{0} em PUMBILITY</value>
   </data>
+  <data name="#{0} → #{1} of {2}" xml:space="preserve">
+    <value>#{0} → #{1} de {2}</value>
+  </data>
   <data name="(Optional) Also delete historical data" xml:space="preserve">
     <value>(Opcional) Também excluir dados históricos</value>
   </data>
@@ -2034,6 +2037,9 @@
   <data name="Imported" xml:space="preserve">
     <value>Importado</value>
   </data>
+  <data name="Imported scores cannot be edited by hand. Submit a higher score any time — your next import will pick it up too." xml:space="preserve">
+    <value>Pontuações importadas não podem ser editadas à mão. Envie uma pontuação maior quando quiser — a próxima importação também vai pegá-la.</value>
+  </data>
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>As pontuações importadas aparecerão aqui conforme chegarem.</value>
   </data>
@@ -2648,6 +2654,9 @@
   </data>
   <data name="New #1s" xml:space="preserve">
     <value>Novos primeiros lugares</value>
+  </data>
+  <data name="New best — moves you to #{0}." xml:space="preserve">
+    <value>Novo recorde — você sobe para #{0}.</value>
   </data>
   <data name="New board soon." xml:space="preserve">
     <value>Novo quadro em breve.</value>
@@ -3701,6 +3710,9 @@
   <data name="Recorded from" xml:space="preserve">
     <value>Registrado de</value>
   </data>
+  <data name="Recorded from your PIUGAME account" xml:space="preserve">
+    <value>Registrado da sua conta PIUGAME</value>
+  </data>
   <data name="Recorded On" xml:space="preserve">
     <value>Registrado em {0}</value>
   </data>
@@ -3775,6 +3787,9 @@
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>Reordenando…</value>
+  </data>
+  <data name="Replace with lower score" xml:space="preserve">
+    <value>Substituir por uma pontuação menor</value>
   </data>
   <data name="Report Video" xml:space="preserve">
     <value>Denunciar vídeo</value>
@@ -4445,6 +4460,9 @@
   <data name="Submit" xml:space="preserve">
     <value>Enviar</value>
   </data>
+  <data name="Submit only if the higher score was entered by mistake. The board keeps whatever you submit last." xml:space="preserve">
+    <value>Envie apenas se a pontuação maior foi digitada por engano. O ranking fica com o último envio.</value>
+  </data>
   <data name="Suggested Chart" xml:space="preserve">
     <value>Chart sugerido</value>
   </data>
@@ -4711,6 +4729,9 @@
   </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>Este recap ainda não foi calculado — volte em breve.</value>
+  </data>
+  <data name="This replaces a higher score" xml:space="preserve">
+    <value>Isto substitui uma pontuação maior</value>
   </data>
   <data name="This sign-in method belongs to another account, you can merge the two accounts" xml:space="preserve">
     <value>Este método de login pertence a outra conta, você pode mesclar as duas contas</value>
@@ -5425,6 +5446,9 @@
   </data>
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>Contam suas 4 melhores pontuações por semana do mês.</value>
+  </data>
+  <data name="Your board score: {0} · #{1} of {2}" xml:space="preserve">
+    <value>Sua pontuação no ranking: {0} · #{1} de {2}</value>
   </data>
   <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
     <value>Seus rivais mais próximos aparecem em 1×2 ou maior.</value>

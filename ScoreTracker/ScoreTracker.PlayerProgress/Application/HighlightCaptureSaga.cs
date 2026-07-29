@@ -29,7 +29,7 @@ namespace ScoreTracker.PlayerProgress.Application;
 ///     racing consumers (ADR-001 doctrine).
 /// </summary>
 internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>,
-    IConsumer<UserWeeklyChartsProgressedEvent>,
+    IConsumer<UserWeeklyChartScoreImprovedEvent>,
     IRequestHandler<GetScoreHighlightsQuery, IEnumerable<ScoreHighlightRecord>>,
     IRequestHandler<GetPlayerMilestonesQuery, IEnumerable<PlayerMilestoneRecord>>,
     IRequestHandler<GetScoreHighlightsForSessionsQuery, IEnumerable<ScoreHighlightRecord>>,
@@ -64,12 +64,13 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     }
 
     /// <summary>
-    ///     Weekly-board placement changes become milestones (the gold rows on the
+    ///     Weekly-board placement gains become milestones (the gold rows on the
     ///     Sessions page). SessionId stays null — weekly registration rides its own
     ///     eligibility flow (import completion / photo submission), not the score
-    ///     batches, so there is no batch session to attribute it to.
+    ///     batches, so there is no batch session to attribute it to. The publisher
+    ///     guarantees this only fires on an improvement, so every row here is a gain.
     /// </summary>
-    public async Task Consume(ConsumeContext<UserWeeklyChartsProgressedEvent> context)
+    public async Task Consume(ConsumeContext<UserWeeklyChartScoreImprovedEvent> context)
     {
         var e = context.Message;
         var chart = (await _charts.GetCharts(e.Mix, chartIds: new[] { e.ChartId },

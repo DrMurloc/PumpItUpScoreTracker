@@ -141,6 +141,9 @@
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>#{0} PUMBILITY</value>
   </data>
+  <data name="#{0} → #{1} of {2}" xml:space="preserve">
+    <value>#{0} → #{1} of {2}</value>
+  </data>
   <data name="(Optional) Also delete historical data" xml:space="preserve">
 	  <value>(Optional) Also delete historical data</value>
   </data>
@@ -2051,6 +2054,9 @@
   <data name="Imported" xml:space="preserve">
     <value>Imported</value>
   </data>
+  <data name="Imported scores cannot be edited by hand. Submit a higher score any time — your next import will pick it up too." xml:space="preserve">
+    <value>Imported scores cannot be edited by hand. Submit a higher score any time — your next import will pick it up too.</value>
+  </data>
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>Imported scores will appear here as they come in.</value>
   </data>
@@ -2678,6 +2684,9 @@
   </data>
   <data name="New #1s" xml:space="preserve">
     <value>New #1s</value>
+  </data>
+  <data name="New best — moves you to #{0}." xml:space="preserve">
+    <value>New best — moves you to #{0}.</value>
   </data>
   <data name="New board soon." xml:space="preserve">
     <value>New board soon.</value>
@@ -3740,6 +3749,9 @@
   <data name="Recorded from" xml:space="preserve">
     <value>Recorded from</value>
   </data>
+  <data name="Recorded from your PIUGAME account" xml:space="preserve">
+    <value>Recorded from your PIUGAME account</value>
+  </data>
   <data name="Recorded On" xml:space="preserve">
     <value>Recorded On {0}</value>
     <comment>I.E Recorded on 12/6/2023 (I don't support date localization yet but will eventually)</comment>
@@ -3817,6 +3829,9 @@
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>Reordering…</value>
+  </data>
+  <data name="Replace with lower score" xml:space="preserve">
+    <value>Replace with lower score</value>
   </data>
   <data name="Report Video" xml:space="preserve">
     <value>Report Video</value>
@@ -4503,6 +4518,9 @@
   <data name="Submit" xml:space="preserve">
     <value>Submit</value>
   </data>
+  <data name="Submit only if the higher score was entered by mistake. The board keeps whatever you submit last." xml:space="preserve">
+    <value>Submit only if the higher score was entered by mistake. The board keeps whatever you submit last.</value>
+  </data>
   <data name="Suggested Chart" xml:space="preserve">
     <value>Suggested Chart</value>
   </data>
@@ -4770,6 +4788,9 @@
   </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>This recap hasn&apos;t been computed yet — check back soon.</value>
+  </data>
+  <data name="This replaces a higher score" xml:space="preserve">
+    <value>This replaces a higher score</value>
   </data>
   <data name="This sign-in method belongs to another account, you can merge the two accounts" xml:space="preserve">
     <value>This sign-in method belongs to another account, you can merge the two accounts</value>
@@ -5495,6 +5516,9 @@
   </data>
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>Your best 4 scores per week of the month count.</value>
+  </data>
+  <data name="Your board score: {0} · #{1} of {2}" xml:space="preserve">
+    <value>Your board score: {0} · #{1} of {2}</value>
   </data>
   <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
     <value>Your closest matches show at 1×2 and taller.</value>

@@ -141,6 +141,9 @@
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>PUMBILITY #{0}</value>
   </data>
+  <data name="#{0} → #{1} of {2}" xml:space="preserve">
+    <value>{2}人中 #{0} → #{1}</value>
+  </data>
   <data name="(Optional) Also delete historical data" xml:space="preserve">
 	  <value>（任意）履歴データも削除する</value>
   </data>
@@ -2051,6 +2054,9 @@
   <data name="Imported" xml:space="preserve">
     <value>インポート済み</value>
   </data>
+  <data name="Imported scores cannot be edited by hand. Submit a higher score any time — your next import will pick it up too." xml:space="preserve">
+    <value>インポートしたスコアは手動で編集できません。より高いスコアはいつでも登録でき、次回のインポートでも反映されます。</value>
+  </data>
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>インポートされたスコアは、届き次第ここに表示されます。</value>
   </data>
@@ -2678,6 +2684,9 @@
   </data>
   <data name="New #1s" xml:space="preserve">
     <value>新しい1位</value>
+  </data>
+  <data name="New best — moves you to #{0}." xml:space="preserve">
+    <value>自己ベスト更新 — #{0} に上がります。</value>
   </data>
   <data name="New board soon." xml:space="preserve">
     <value>まもなく新しいボードが登場します。</value>
@@ -3740,6 +3749,9 @@
   <data name="Recorded from" xml:space="preserve">
     <value>記録日（から）</value>
   </data>
+  <data name="Recorded from your PIUGAME account" xml:space="preserve">
+    <value>PIUGAME アカウントから記録</value>
+  </data>
   <data name="Recorded On" xml:space="preserve">
     <value>{0}に記録した</value>
     
@@ -3817,6 +3829,9 @@
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>並び替え中…</value>
+  </data>
+  <data name="Replace with lower score" xml:space="preserve">
+    <value>低いスコアで上書き</value>
   </data>
   <data name="Report Video" xml:space="preserve">
     <value>ビデオを報告</value>
@@ -4503,6 +4518,9 @@
   <data name="Submit" xml:space="preserve">
     <value>登録</value>
   </data>
+  <data name="Submit only if the higher score was entered by mistake. The board keeps whatever you submit last." xml:space="preserve">
+    <value>高いほうのスコアを間違えて入力した場合のみ登録してください。ボードには最後に登録した内容が残ります。</value>
+  </data>
   <data name="Suggested Chart" xml:space="preserve">
     <value>おすすめ譜面</value>
   </data>
@@ -4770,6 +4788,9 @@
   </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>このリキャップはまだ計算されていません。後でもう一度お試しください。</value>
+  </data>
+  <data name="This replaces a higher score" xml:space="preserve">
+    <value>より高いスコアを上書きします</value>
   </data>
   <data name="This sign-in method belongs to another account, you can merge the two accounts" xml:space="preserve">
     <value>このログイン方法は別のアカウントのものです。2つのアカウントを統合できます</value>
@@ -5495,6 +5516,9 @@
   </data>
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>月内の各週で上位4件のスコアが対象です。</value>
+  </data>
+  <data name="Your board score: {0} · #{1} of {2}" xml:space="preserve">
+    <value>ボードのスコア: {0} · {2}人中 #{1}</value>
   </data>
   <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
     <value>最も近いライバルは1×2以上のサイズで表示されます。</value>
