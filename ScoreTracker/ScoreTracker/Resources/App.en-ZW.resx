@@ -35,11 +35,23 @@
   <data name="Bad" xml:space="preserve">
     <value>Blab</value>
   </data>
+  <data name="Best N" xml:space="preserve">
+    <value>Mrrrgl {0}</value>
+  </data>
   <data name="Best Of Count" xml:space="preserve">
     <value>Mrrrgl {0} lo {1} grogmrgl</value>
   </data>
+  <data name="Can Submit Again" xml:space="preserve">
+    <value>Morp blarg gapa amrol murglrgl gorb.</value>
+  </data>
+  <data name="Charts In Pool" xml:space="preserve">
+    <value>Murgl lo grubo</value>
+  </data>
   <data name="Closed" xml:space="preserve">
     <value>Grorpa</value>
+  </data>
+  <data name="Closes" xml:space="preserve">
+    <value>Grorp</value>
   </data>
   <data name="Closes In" xml:space="preserve">
     <value>Grorp lo</value>
@@ -53,14 +65,41 @@
   <data name="Days Hours Left" xml:space="preserve">
     <value>{0}g {1}m</value>
   </data>
+  <data name="Delete Entry" xml:space="preserve">
+    <value>Murgro Grumla</value>
+  </data>
+  <data name="Delete Entry Warning" xml:space="preserve">
+    <value>Murgro {0} gora {1} murgl bo glub lo mrglrmrgl.</value>
+  </data>
+  <data name="Delete Failed" xml:space="preserve">
+    <value>Blub murgro. Murgla gapa.</value>
+  </data>
+  <data name="Delete Submission Warning" xml:space="preserve">
+    <value>Murgro {0} lo {1} grumla gora mrglrgl bo glub lo mrglrmrgl.</value>
+  </data>
+  <data name="Deleted" xml:space="preserve">
+    <value>Murgro.</value>
+  </data>
+  <data name="Duplicate Explainer" xml:space="preserve">
+    <value>Bo grumla lo {0}. La mrrgl blarg amru grgl — algo grgl grumla bo murgro obo.</value>
+  </data>
+  <data name="Duplicates" xml:space="preserve">
+    <value>Groblrgl</value>
+  </data>
   <data name="Enter A Score" xml:space="preserve">
     <value>Grapl Mrglrgl</value>
   </data>
   <data name="Enter Judgements" xml:space="preserve">
     <value>Grapl Murmgl</value>
   </data>
+  <data name="Entries" xml:space="preserve">
+    <value>Grumlargl</value>
+  </data>
   <data name="Fill In The Six Counts" xml:space="preserve">
     <value>Bloga la orgo murmgl</value>
+  </data>
+  <data name="From Official" xml:space="preserve">
+    <value>Lo mrgloba</value>
   </data>
   <data name="Great" xml:space="preserve">
     <value>Grarg</value>
@@ -71,11 +110,20 @@
   <data name="How This Is Scored" xml:space="preserve">
     <value>Groga mrglrgl blurg</value>
   </data>
+  <data name="Keep" xml:space="preserve">
+    <value>Algo</value>
+  </data>
   <data name="Leading The Field" xml:space="preserve">
     <value>Mrrrgl morp</value>
   </data>
   <data name="Miss" xml:space="preserve">
     <value>Mrgla</value>
+  </data>
+  <data name="N Charts" xml:space="preserve">
+    <value>{0} murgl</value>
+  </data>
+  <data name="N Charts N Photos" xml:space="preserve">
+    <value>{0} murgl · {1} glub</value>
   </data>
   <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
     <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
@@ -2823,6 +2871,12 @@
   <data name="No close matches yet." xml:space="preserve">
     <value>Mrp grorp morgmaglblgrl argl.</value>
   </data>
+  <data name="No Cutoff" xml:space="preserve">
+    <value>Blub grorp</value>
+  </data>
+  <data name="No Duplicates Flagged" xml:space="preserve">
+    <value>Blub groblrgl. Bo grumla ba mrg gapla blarg lomo, murgro la mrrgl.</value>
+  </data>
   <data name="No entries yet." xml:space="preserve">
     <value>Mrp glplglrgl argl.</value>
   </data>
@@ -3146,6 +3200,9 @@
 	  <value>Mrprgl</value>
 	  <comment>Open</comment>
   </data>
+  <data name="Open A Row For Its Photos" xml:space="preserve">
+    <value>Gorb grumla ro glub</value>
+  </data>
   <data name="Open chart details" xml:space="preserve">
     <value>Mrprgl murgl rglrglmrgl</value>
   </data>
@@ -3376,6 +3433,9 @@
   <data name="Photo Hint Organizers Only" xml:space="preserve">
     <value>Glub lo murgla. Amru orgluma bloga.</value>
   </data>
+  <data name="Photo Privacy Note" xml:space="preserve">
+    <value>Amru orgluma bloga obo. Morp blub bloga morp glub.</value>
+  </data>
   <data name="Photo proof" xml:space="preserve">
     <value>Murpplgl grglmrgl</value>
   </data>
@@ -3530,6 +3590,9 @@
   </data>
   <data name="Player" xml:space="preserve">
 	  <value>Morp</value>
+  </data>
+  <data name="Player Page" xml:space="preserve">
+    <value>Morp Murgla</value>
   </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
 	  <value>Morp Grgl Rglgrgl (Romurm Glorg Gro Grgl Mrglrgll)</value>
@@ -3736,6 +3799,12 @@
   <data name="Qualifiers Admin" xml:space="preserve">
     <value>Murglrgl Grlgmrg</value>
   </data>
+  <data name="Qualifiers Admin Denied" xml:space="preserve">
+    <value>Amru orgluma lo Mrllrlrlrlgl gorb murglrgl grlgmrg.</value>
+  </data>
+  <data name="Qualifiers Admin Title" xml:space="preserve">
+    <value>{0} murglrgl grlgmrg</value>
+  </data>
   <data name="Qualifiers Are Closed" xml:space="preserve">
     <value>Murglrgl grorp.</value>
   </data>
@@ -3922,6 +3991,9 @@
   </data>
   <data name="Remove one with /piu unregister" xml:space="preserve">
     <value>Plglgrgl argl glgrgl /glorg rglmurgargl</value>
+  </data>
+  <data name="Remove This Score" xml:space="preserve">
+    <value>Gora Obo Mrglrgl</value>
   </data>
   <data name="Removed" xml:space="preserve">
 	  <value>Grorpmorglurg</value>
@@ -4136,6 +4208,9 @@
 	  <value>Mrglrgl: {0}</value>
 	  <comment>{0} = total session score integer.</comment>
   </data>
+  <data name="Scored" xml:space="preserve">
+    <value>Mrglrgla</value>
+  </data>
   <data name="Scores" xml:space="preserve">
 	  <value>Mgrlgmrg</value>
   </data>
@@ -4162,6 +4237,9 @@
   </data>
   <data name="Scores, vs your level" xml:space="preserve">
     <value>Mgrlgmrg, grrgl gromurp grorpmurm</value>
+  </data>
+  <data name="Scoring" xml:space="preserve">
+    <value>Mrglrglrg</value>
   </data>
   <data name="Scoring level" xml:space="preserve">
     <value>Blgrlblgrlplgl grorpmurm</value>
@@ -4278,6 +4356,9 @@
   <data name="Settles at {0} life, {1}% of the bar" xml:space="preserve">
     <value>Grrglmaglglorg mr {0} glorgrgl, {1}% mrgl mrp mr</value>
   </data>
+  <data name="Setup" xml:space="preserve">
+    <value>Grumbo</value>
+  </data>
   <data name="Shade band" xml:space="preserve">
     <value>Morgurg morgro</value>
   </data>
@@ -4353,6 +4434,9 @@
   <data name="Show Step Artist" xml:space="preserve">
 	  <value>Romorg Glorgmagl Maglrgl</value>
 	  <comment>Show Step Artist</comment>
+  </data>
+  <data name="Show Submissions" xml:space="preserve">
+    <value>Gapla Blargrgl</value>
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>romorg romorgrgl mrpmurg</value>
@@ -4861,6 +4945,9 @@
   <data name="This account will be deleted" xml:space="preserve">
     <value>Grglmrp grgl murmurg glorg mrglmorggrorp</value>
   </data>
+  <data name="This Cannot Be Undone" xml:space="preserve">
+    <value>Obo blub morgla gapa.</value>
+  </data>
   <data name="This channel isn't registered for anything yet. Use /piu register to add a feed." xml:space="preserve">
     <value>Grglmrp glmurmblarg blgrlro rolurgrgl ro arglplglmrp argl. Murg /glorg grorpplglblub grgl glorg gro grglgrrgl.</value>
   </data>
@@ -5341,6 +5428,9 @@
   </data>
   <data name="View full chart on PIU Center" xml:space="preserve">
     <value>Murmblub mrglmr murgl lurg PIU Center</value>
+  </data>
+  <data name="View Photo" xml:space="preserve">
+    <value>Bloga Glub</value>
   </data>
   <data name="View top charts" xml:space="preserve">
     <value>Murmblub blarg murgl</value>

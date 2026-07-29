@@ -10542,3 +10542,286 @@ button.chart-card-art {
 }
 
 .qual-calc-plate { font-size: 11px; font-weight: 700; }
+
+/* ---- the organiser's own screen ----
+   Photos live here and nowhere else: they are reference material for the TO,
+   not evidence the field has to audit. There is no approval queue. */
+.qual-admin-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+}
+
+.qual-admin-kicker {
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--mix-accent);
+}
+
+.qual-admin-bar h1 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -.012em;
+}
+
+.qual-tallies {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+}
+
+.qual-tally {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.qual-tally-key {
+    font-size: 8.5px;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.qual-tally-value {
+    font-size: 17px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.02em;
+}
+
+.qual-tally-flag { color: var(--mix-accent); }
+
+/* duplicates: the pair side by side, keep versus delete */
+.qual-dupe {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 10px 11px;
+    border-radius: 10px;
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+}
+
+.qual-dupe p { margin: 0; font-size: 11.5px; color: var(--mix-ink-muted); line-height: 1.45; }
+.qual-dupe p b { color: var(--mix-ink); }
+
+.qual-dupe-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 7px 9px;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--mix-ink) 6%, transparent);
+}
+
+.qual-dupe-keep { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--type-doubles) 60%, transparent); }
+.qual-dupe-name { font-weight: 700; font-size: 12.5px; }
+.qual-dupe-meta { font-size: 10.5px; color: var(--mix-ink-muted); }
+
+.qual-dupe-total {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+/* entries */
+.qual-entry {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 7px 8px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+}
+
+.qual-entry-stale { background: color-mix(in srgb, var(--mix-accent) 8%, transparent); }
+
+.qual-entry-who {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 120px;
+}
+
+.qual-entry-name {
+    font-weight: 600;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.qual-entry-sub {
+    font-size: 10px;
+    color: var(--mix-ink-muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.qual-source-chip {
+    font-size: 8.5px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: 3px;
+    flex: 0 0 auto;
+}
+
+.qual-source-account {
+    background: color-mix(in srgb, var(--mix-primary) 20%, transparent);
+    color: var(--mix-primary);
+}
+
+.qual-source-anon {
+    background: color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    color: var(--mix-ink-muted);
+}
+
+.qual-entry-tail {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.qual-entry-total { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13.5px; }
+
+/* per-entry submission review */
+.qual-submission {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+    padding: 7px 8px;
+    border-radius: 8px;
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 8%, transparent);
+}
+
+.qual-submission-jacket {
+    width: 46px;
+    height: 26px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex: 0 0 auto;
+    display: block;
+}
+
+.qual-submission-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.qual-submission-name {
+    font-size: 12px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.qual-submission-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--mix-ink-muted);
+}
+
+.qual-submission-tail {
+    margin-left: auto;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+/* An imported score has no photo because the official site is the evidence. */
+.qual-no-photo {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    padding: 3px 6px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--mix-ink) 7%, transparent);
+    text-align: center;
+    line-height: 1.25;
+    flex: 0 0 auto;
+}
+
+.qual-photo {
+    max-width: 100%;
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;
+}
+
+.qual-danger {
+    padding: 9px 11px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+    background: color-mix(in srgb, var(--mix-secondary) 14%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mix-secondary) 42%, transparent);
+}
+
+.qual-danger b { font-weight: 700; }
+
+.qual-confirm-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 9px;
+}
+
+.qual-confirm-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    padding: 6px 9px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--mix-ink) 6%, transparent);
+}
+
+.qual-confirm-item-tail {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+    color: var(--mix-ink-muted);
+}
+
+.qual-setup-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 7px 0;
+    font-size: 12.5px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
+}
+
+.qual-setup-row:last-child { border-bottom: 0; }
+.qual-setup-key { color: var(--mix-ink-muted); }
+.qual-setup-value { margin-left: auto; font-weight: 700; text-align: right; }

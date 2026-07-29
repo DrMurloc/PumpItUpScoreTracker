@@ -35,11 +35,23 @@
   <data name="Bad" xml:space="preserve">
     <value>Bad</value>
   </data>
+  <data name="Best N" xml:space="preserve">
+    <value>Les {0} meilleures</value>
+  </data>
   <data name="Best Of Count" xml:space="preserve">
     <value>Les {0} meilleures sur {1} comptent</value>
   </data>
+  <data name="Can Submit Again" xml:space="preserve">
+    <value>Il peut renvoyer à tout moment tant que les qualifications sont ouvertes.</value>
+  </data>
+  <data name="Charts In Pool" xml:space="preserve">
+    <value>Charts dans le pool</value>
+  </data>
   <data name="Closed" xml:space="preserve">
     <value>Close</value>
+  </data>
+  <data name="Closes" xml:space="preserve">
+    <value>Clôture</value>
   </data>
   <data name="Closes In" xml:space="preserve">
     <value>Clôture dans</value>
@@ -53,14 +65,41 @@
   <data name="Days Hours Left" xml:space="preserve">
     <value>{0}j {1}h</value>
   </data>
+  <data name="Delete Entry" xml:space="preserve">
+    <value>Supprimer l'inscription</value>
+  </data>
+  <data name="Delete Entry Warning" xml:space="preserve">
+    <value>Supprimer {0} retire ses {1} charts envoyées et ses photos du classement.</value>
+  </data>
+  <data name="Delete Failed" xml:space="preserve">
+    <value>La suppression a échoué. Réessayez.</value>
+  </data>
+  <data name="Delete Submission Warning" xml:space="preserve">
+    <value>Retirer {0} de l'inscription de {1} enlève ce score et sa photo du classement.</value>
+  </data>
+  <data name="Deleted" xml:space="preserve">
+    <value>Supprimé.</value>
+  </data>
+  <data name="Duplicate Explainer" xml:space="preserve">
+    <value>Deux inscriptions sous {0}. La plus ancienne date d'avant la connexion — gardez celle du compte et supprimez l'autre.</value>
+  </data>
+  <data name="Duplicates" xml:space="preserve">
+    <value>Doublons</value>
+  </data>
   <data name="Enter A Score" xml:space="preserve">
     <value>Saisissez un score</value>
   </data>
   <data name="Enter Judgements" xml:space="preserve">
     <value>Saisir les jugements</value>
   </data>
+  <data name="Entries" xml:space="preserve">
+    <value>Inscriptions</value>
+  </data>
   <data name="Fill In The Six Counts" xml:space="preserve">
     <value>Renseignez les six compteurs</value>
+  </data>
+  <data name="From Official" xml:space="preserve">
+    <value>Du site officiel</value>
   </data>
   <data name="Great" xml:space="preserve">
     <value>Great</value>
@@ -71,11 +110,20 @@
   <data name="How This Is Scored" xml:space="preserve">
     <value>Comment le score est calculé</value>
   </data>
+  <data name="Keep" xml:space="preserve">
+    <value>Garder</value>
+  </data>
   <data name="Leading The Field" xml:space="preserve">
     <value>En tête du classement</value>
   </data>
   <data name="Miss" xml:space="preserve">
     <value>Miss</value>
+  </data>
+  <data name="N Charts" xml:space="preserve">
+    <value>{0} charts</value>
+  </data>
+  <data name="N Charts N Photos" xml:space="preserve">
+    <value>{0} charts · {1} photos</value>
   </data>
   <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
     <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
@@ -2822,6 +2870,12 @@
   <data name="No close matches yet." xml:space="preserve">
     <value>Pas encore de rivaux proches.</value>
   </data>
+  <data name="No Cutoff" xml:space="preserve">
+    <value>Pas de date limite</value>
+  </data>
+  <data name="No Duplicates Flagged" xml:space="preserve">
+    <value>Rien à signaler. Deux inscriptions aux noms proches apparaîtront ici pour que vous supprimiez l'ancienne.</value>
+  </data>
   <data name="No entries yet." xml:space="preserve">
     <value>Aucune participation pour le moment.</value>
   </data>
@@ -3145,6 +3199,9 @@
 	  <value>Ouvert</value>
 	  <comment>Ouvert</comment>
   </data>
+  <data name="Open A Row For Its Photos" xml:space="preserve">
+    <value>Ouvrez une ligne pour voir ses photos</value>
+  </data>
   <data name="Open chart details" xml:space="preserve">
     <value>Ouvrir les détails du chart</value>
   </data>
@@ -3375,6 +3432,9 @@
   <data name="Photo Hint Organizers Only" xml:space="preserve">
     <value>Écran de résultats, pris sur la borne. Seuls les organisateurs le voient.</value>
   </data>
+  <data name="Photo Privacy Note" xml:space="preserve">
+    <value>Vous et les autres organisateurs êtes les seuls à voir ceci. Les joueurs ne voient jamais les photos des autres.</value>
+  </data>
   <data name="Photo proof" xml:space="preserve">
     <value>Preuve photo</value>
   </data>
@@ -3529,6 +3589,9 @@
   </data>
   <data name="Player" xml:space="preserve">
     <value>Joueur</value>
+  </data>
+  <data name="Player Page" xml:space="preserve">
+    <value>Page joueur</value>
   </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
     <value>Joueur à tester (doit être configuré en public)</value>
@@ -3735,6 +3798,12 @@
   <data name="Qualifiers Admin" xml:space="preserve">
     <value>Administration des qualifications</value>
   </data>
+  <data name="Qualifiers Admin Denied" xml:space="preserve">
+    <value>Seuls les organisateurs de ce tournoi peuvent ouvrir l'administration des qualifications.</value>
+  </data>
+  <data name="Qualifiers Admin Title" xml:space="preserve">
+    <value>Administration des qualifications {0}</value>
+  </data>
   <data name="Qualifiers Are Closed" xml:space="preserve">
     <value>Les qualifications sont closes.</value>
   </data>
@@ -3921,6 +3990,9 @@
   </data>
   <data name="Remove one with /piu unregister" xml:space="preserve">
     <value>Supprimez-en une avec /piu unregister</value>
+  </data>
+  <data name="Remove This Score" xml:space="preserve">
+    <value>Retirer ce score</value>
   </data>
   <data name="Removed" xml:space="preserve">
     <value>Supprimé</value>
@@ -4135,6 +4207,9 @@
     <value>Score : {0}</value>
     <comment>{0} = score total de la session.</comment>
   </data>
+  <data name="Scored" xml:space="preserve">
+    <value>Avec score</value>
+  </data>
   <data name="Scores" xml:space="preserve">
     <value>Scores</value>
   </data>
@@ -4161,6 +4236,9 @@
   </data>
   <data name="Scores, vs your level" xml:space="preserve">
     <value>Scores, face à ton niveau</value>
+  </data>
+  <data name="Scoring" xml:space="preserve">
+    <value>Calcul du score</value>
   </data>
   <data name="Scoring level" xml:space="preserve">
     <value>Niveau de score</value>
@@ -4277,6 +4355,9 @@
   <data name="Settles at {0} life, {1}% of the bar" xml:space="preserve">
     <value>Se stabilise à {0} de vie, {1} % de la barre</value>
   </data>
+  <data name="Setup" xml:space="preserve">
+    <value>Configuration</value>
+  </data>
   <data name="Shade band" xml:space="preserve">
     <value>Bande ombrée</value>
   </data>
@@ -4352,6 +4433,9 @@
   <data name="Show Step Artist" xml:space="preserve">
 	  <value>Montrer le Step Artist</value>
 	  <comment>Montrer le Step Artist</comment>
+  </data>
+  <data name="Show Submissions" xml:space="preserve">
+    <value>Afficher les envois</value>
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>voir les suggérés</value>
@@ -4860,6 +4944,9 @@
   <data name="This account will be deleted" xml:space="preserve">
     <value>Ce compte sera supprimé</value>
   </data>
+  <data name="This Cannot Be Undone" xml:space="preserve">
+    <value>Cette action est irréversible.</value>
+  </data>
   <data name="This channel isn't registered for anything yet. Use /piu register to add a feed." xml:space="preserve">
     <value>Ce salon n'est encore inscrit à rien. Utilisez /piu register pour ajouter un flux.</value>
   </data>
@@ -5340,6 +5427,9 @@
   </data>
   <data name="View full chart on PIU Center" xml:space="preserve">
     <value>Voir le chart complet sur PIU Center</value>
+  </data>
+  <data name="View Photo" xml:space="preserve">
+    <value>Voir la photo</value>
   </data>
   <data name="View top charts" xml:space="preserve">
     <value>Voir les meilleurs Charts</value>

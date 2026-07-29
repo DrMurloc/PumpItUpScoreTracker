@@ -35,10 +35,22 @@
   <data name="Bad" xml:space="preserve">
     <value>BAD</value>
   </data>
+  <data name="Best N" xml:space="preserve">
+    <value>상위 {0}개</value>
+  </data>
   <data name="Best Of Count" xml:space="preserve">
     <value>{1}개 중 상위 {0}개 반영</value>
   </data>
+  <data name="Can Submit Again" xml:space="preserve">
+    <value>예선이 열려 있는 동안 언제든 다시 제출할 수 있습니다.</value>
+  </data>
+  <data name="Charts In Pool" xml:space="preserve">
+    <value>채보 수</value>
+  </data>
   <data name="Closed" xml:space="preserve">
+    <value>마감</value>
+  </data>
+  <data name="Closes" xml:space="preserve">
     <value>마감</value>
   </data>
   <data name="Closes In" xml:space="preserve">
@@ -53,14 +65,41 @@
   <data name="Days Hours Left" xml:space="preserve">
     <value>{0}일 {1}시간</value>
   </data>
+  <data name="Delete Entry" xml:space="preserve">
+    <value>참가 기록 삭제</value>
+  </data>
+  <data name="Delete Entry Warning" xml:space="preserve">
+    <value>{0}을(를) 삭제하면 제출한 채보 {1}개와 사진이 순위에서 사라집니다.</value>
+  </data>
+  <data name="Delete Failed" xml:space="preserve">
+    <value>삭제되지 않았습니다. 다시 시도하세요.</value>
+  </data>
+  <data name="Delete Submission Warning" xml:space="preserve">
+    <value>{1}의 기록에서 {0}을(를) 삭제하면 그 점수와 사진이 순위에서 사라집니다.</value>
+  </data>
+  <data name="Deleted" xml:space="preserve">
+    <value>삭제되었습니다.</value>
+  </data>
+  <data name="Duplicate Explainer" xml:space="preserve">
+    <value>{0} 이름으로 두 개의 기록이 있습니다. 오래된 쪽은 로그인 전에 올린 것이니, 계정 기록을 남기고 나머지를 삭제하세요.</value>
+  </data>
+  <data name="Duplicates" xml:space="preserve">
+    <value>중복</value>
+  </data>
   <data name="Enter A Score" xml:space="preserve">
     <value>점수를 입력하세요</value>
   </data>
   <data name="Enter Judgements" xml:space="preserve">
     <value>판정 입력</value>
   </data>
+  <data name="Entries" xml:space="preserve">
+    <value>참가 기록</value>
+  </data>
   <data name="Fill In The Six Counts" xml:space="preserve">
     <value>여섯 개의 판정 수를 입력하세요</value>
+  </data>
+  <data name="From Official" xml:space="preserve">
+    <value>공식 사이트</value>
   </data>
   <data name="Great" xml:space="preserve">
     <value>GREAT</value>
@@ -71,11 +110,20 @@
   <data name="How This Is Scored" xml:space="preserve">
     <value>점수 산정 방식</value>
   </data>
+  <data name="Keep" xml:space="preserve">
+    <value>유지</value>
+  </data>
   <data name="Leading The Field" xml:space="preserve">
     <value>1위입니다</value>
   </data>
   <data name="Miss" xml:space="preserve">
     <value>MISS</value>
+  </data>
+  <data name="N Charts" xml:space="preserve">
+    <value>채보 {0}개</value>
+  </data>
+  <data name="N Charts N Photos" xml:space="preserve">
+    <value>채보 {0}개 · 사진 {1}장</value>
   </data>
   <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
     <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
@@ -2793,6 +2841,12 @@
   <data name="No close matches yet." xml:space="preserve">
     <value>아직 가까운 상대가 없습니다.</value>
   </data>
+  <data name="No Cutoff" xml:space="preserve">
+    <value>마감 없음</value>
+  </data>
+  <data name="No Duplicates Flagged" xml:space="preserve">
+    <value>표시된 항목이 없습니다. 비슷한 이름의 기록이 두 개 있으면 여기에 나타나므로 오래된 쪽을 삭제할 수 있습니다.</value>
+  </data>
   <data name="No entries yet." xml:space="preserve">
     <value>아직 참가 기록이 없습니다.</value>
   </data>
@@ -3114,6 +3168,9 @@
   <data name="Open" xml:space="preserve">
     <value>열기</value>
   </data>
+  <data name="Open A Row For Its Photos" xml:space="preserve">
+    <value>행을 열어 사진 보기</value>
+  </data>
   <data name="Open chart details" xml:space="preserve">
     <value>채보 상세 보기</value>
   </data>
@@ -3342,6 +3399,9 @@
   <data name="Photo Hint Organizers Only" xml:space="preserve">
     <value>기기 화면의 결과창 사진. 주최자만 볼 수 있습니다.</value>
   </data>
+  <data name="Photo Privacy Note" xml:space="preserve">
+    <value>이 사진은 주최자만 볼 수 있습니다. 참가자끼리는 서로의 사진을 볼 수 없습니다.</value>
+  </data>
   <data name="Photo proof" xml:space="preserve">
     <value>사진 증빙</value>
   </data>
@@ -3494,6 +3554,9 @@
   </data>
   <data name="Player" xml:space="preserve">
     <value>플레이어</value>
+  </data>
+  <data name="Player Page" xml:space="preserve">
+    <value>참가자 화면</value>
   </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
     <value>테스트할 플레이어 (공개 설정 필수)</value>
@@ -3699,6 +3762,12 @@
   <data name="Qualifiers Admin" xml:space="preserve">
     <value>예선 관리</value>
   </data>
+  <data name="Qualifiers Admin Denied" xml:space="preserve">
+    <value>이 대회의 주최자만 예선 관리 화면을 열 수 있습니다.</value>
+  </data>
+  <data name="Qualifiers Admin Title" xml:space="preserve">
+    <value>{0} 예선 관리</value>
+  </data>
   <data name="Qualifiers Are Closed" xml:space="preserve">
     <value>예선이 마감되었습니다.</value>
   </data>
@@ -3880,6 +3949,9 @@
   </data>
   <data name="Remove one with /piu unregister" xml:space="preserve">
     <value>/piu unregister로 해제할 수 있습니다</value>
+  </data>
+  <data name="Remove This Score" xml:space="preserve">
+    <value>이 점수 삭제</value>
   </data>
   <data name="Removed" xml:space="preserve">
     <value>제거됨</value>
@@ -4088,6 +4160,9 @@
   <data name="Score: X" xml:space="preserve">
     <value>점수: {0}</value>
   </data>
+  <data name="Scored" xml:space="preserve">
+    <value>점수 있음</value>
+  </data>
   <data name="Scores" xml:space="preserve">
     <value>점수</value>
   </data>
@@ -4114,6 +4189,9 @@
   </data>
   <data name="Scores, vs your level" xml:space="preserve">
     <value>점수 (동레벨 비교)</value>
+  </data>
+  <data name="Scoring" xml:space="preserve">
+    <value>점수 방식</value>
   </data>
   <data name="Scoring level" xml:space="preserve">
     <value>점수 레벨</value>
@@ -4229,6 +4307,9 @@
   <data name="Settles at {0} life, {1}% of the bar" xml:space="preserve">
     <value>라이프 {0}에서 머무릅니다, 바의 {1}%</value>
   </data>
+  <data name="Setup" xml:space="preserve">
+    <value>설정</value>
+  </data>
   <data name="Shade band" xml:space="preserve">
     <value>음영 밴드</value>
   </data>
@@ -4300,6 +4381,9 @@
   </data>
   <data name="Show Step Artist" xml:space="preserve">
     <value>스텝 아티스트 표시</value>
+  </data>
+  <data name="Show Submissions" xml:space="preserve">
+    <value>제출 내역 보기</value>
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>추천만 보기</value>
@@ -4802,6 +4886,9 @@
   <data name="This account will be deleted" xml:space="preserve">
     <value>이 계정은 삭제됩니다</value>
   </data>
+  <data name="This Cannot Be Undone" xml:space="preserve">
+    <value>되돌릴 수 없습니다.</value>
+  </data>
   <data name="This channel isn't registered for anything yet. Use /piu register to add a feed." xml:space="preserve">
     <value>이 채널은 아직 등록된 것이 없습니다. /piu register로 피드를 추가해주세요.</value>
   </data>
@@ -5278,6 +5365,9 @@
   </data>
   <data name="View full chart on PIU Center" xml:space="preserve">
     <value>PIU Center에서 채보 전체 보기</value>
+  </data>
+  <data name="View Photo" xml:space="preserve">
+    <value>사진 보기</value>
   </data>
   <data name="View top charts" xml:space="preserve">
     <value>상위 채보 보기</value>
