@@ -18,24 +18,33 @@ namespace ScoreTracker.EventCompetition.Application
 
         public async Task Handle(SaveQualifiersCommand request, CancellationToken cancellationToken)
         {
+            // One read, not two: the board before the save plus the entry being saved is the
+            // board after it, and the second round trip was only ever recomputing that.
             var previousLeaderboard =
-                await _qualifiers.GetAllUserQualifiers(request.TournamentId, request.Qualifiers.Configuration,
-                    cancellationToken);
+                (await _qualifiers.GetAllUserQualifiers(request.TournamentId, request.Qualifiers.Configuration,
+                    cancellationToken)).ToArray();
             await _qualifiers.SaveQualifiers(request.TournamentId, request.Qualifiers, cancellationToken);
-            var newLeaderboard =
-                await _qualifiers.GetAllUserQualifiers(request.TournamentId, request.Qualifiers.Configuration,
-                    cancellationToken);
+
             var config = await _qualifiers.GetQualifiersConfiguration(request.TournamentId, cancellationToken);
             var user = request.Qualifiers.UserName;
             var orderedOldLeaderboard = previousLeaderboard.Where(q => q.CalculateScore() > .001)
                 .OrderByDescending(q => q.CalculateScore())
                 .Select((q, i) => (q, i + 1)).ToArray();
 
+            var newLeaderboard = previousLeaderboard.Where(q => q.UserName != user)
+                .Append(request.Qualifiers);
+
             var orderedNewLeaderboard = newLeaderboard.Where(q => q.CalculateScore() > .001)
                 .OrderByDescending(q => q.CalculateScore())
                 .Select((q, i) => (q, i + 1)).ToArray();
 
-            var newPlace = orderedNewLeaderboard.First(kv => kv.q.UserName == user).Item2;
+            // A save that leaves the entry at zero - an empty submission, or a scoring type that
+            // returns none - is filtered out of the ordered board above. Announcing a placement
+            // for it is meaningless, and looking one up used to throw.
+            var placed = orderedNewLeaderboard.FirstOrDefault(kv => kv.q.UserName == user);
+            if (placed.q == null) return;
+
+            var newPlace = placed.Item2;
             if (orderedOldLeaderboard.All(o => o.q.UserName != user))
             {
                 await _botClient.SendMessage(
