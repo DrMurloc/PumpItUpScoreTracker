@@ -1,202 +1,687 @@
-﻿@page "/PhoenixCalculator"
+@page "/PhoenixCalculator"
 @rendermode RenderModes.Interactive
 @using ScoreTracker.Domain.Records
-@using ScoreTracker.Web.Components
-@using ScoreTracker.Web.Dtos
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
-<PageTitle>Phoenix Score Calculator</PageTitle>
+@* One chain, two ways in: judgments make a score, a score makes a grade, a grade and a
+   folder make PUMBILITY (docs/design/phoenix-calculator-redesign.md). Every number here
+   comes from ScoreScreen or ScoreAnalysis — nothing is hardcoded copy. *@
+
+<PageTitle>@L["Phoenix Calculator"]</PageTitle>
 <HeadContent>
-    <meta name="description" content="Calculate scores based on step counts and see how many judgements a score is from the next grade." />
-    <meta property="og:title" content="Phoenix Score Calculator">
-    <meta property="og:description" content="Calculate scores based on step counts and see how many judgements a score is from the next grade.">
+    <meta name="description" content="Work out what a Pump It Up play scored, how far it is from the next grade, and what it is worth in PUMBILITY."/>
+    <meta property="og:title" content="Phoenix Calculator">
+    <meta property="og:description" content="Work out what a Pump It Up play scored, how far it is from the next grade, and what it is worth in PUMBILITY.">
 </HeadContent>
-<MudImage Src="https://piuimages.arroweclip.se/PhoenixBanner.png" Style="width:95%; max-width:800px;"></MudImage>
-<MudGrid>
-    <MudItem xs="12" sm="6">
-        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Perfects" Value="_perfects" ValueChanged="n=>SetScore(n,_greats,_goods,_bads,_misses,_maxCombo,_calories)" Immediate="true" DebounceInterval="200"></MudTextField>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Greats" Value="_greats" ValueChanged="n=>SetScore(_perfects,n,_goods,_bads,_misses,_maxCombo,_calories)" Immediate="true" DebounceInterval="200"></MudTextField>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Goods" Value="_goods" ValueChanged="n=>SetScore(_perfects,_greats,n,_bads,_misses,_maxCombo,_calories)" Immediate="true" DebounceInterval="200"></MudTextField>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Bads" Value="_bads" ValueChanged="n=>SetScore(_perfects,_greats,_goods,n,_misses,_maxCombo,_calories)" Immediate="true" DebounceInterval="200"></MudTextField>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Misses" Value="_misses" ValueChanged="n=>SetScore(_perfects,_greats,_goods,_bads,n,_maxCombo,_calories)" Immediate="true" DebounceInterval="200"></MudTextField>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Max Combo" Value="_maxCombo" ValueChanged="n=>SetScore(_perfects,_greats,_goods,_bads,_misses,n,_calories)" Immediate="true" DebounceInterval="200"></MudTextField>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudTextField T="double?" InputMode="InputMode.numeric" InputType="InputType.Number" Label="Calories" Value="_calories" ValueChanged="n=>SetScore(_perfects,_greats,_goods,_bads,_misses,_maxCombo,n)"></MudTextField>
-    </MudItem>
-    <MudItem xs="12">
-        <ScoreBreakdown Score="@Score.CalculatePhoenixScore" Plate="Score.PlateText" Mix="_currentMix" ShowScore="true"></ScoreBreakdown>
 
+<header class="pc-head">
+    <span class="pc-eyebrow">@L["Tools"]</span>
+    <MudText Typo="Typo.h4">@L["Phoenix Calculator"]</MudText>
+    <p class="pc-sub">
+        @(FromJudgments
+            ? L["Type the results screen; see what it scored and what it's worth."]
+            : L["Type a score, pick a plate and a folder; see what it's worth."])
+    </p>
+</header>
 
-        @if (Score.IsValid)
+<div class="pc-routes" role="tablist">
+    <button type="button" role="tab" aria-selected="@((!FromJudgments).ToString().ToLowerInvariant())"
+            @onclick="() => SetRoute(false)">@L["From a score"]</button>
+    <button type="button" role="tab" aria-selected="@(FromJudgments.ToString().ToLowerInvariant())"
+            @onclick="() => SetRoute(true)">@L["From a results screen"]</button>
+</div>
+
+<div class="pc-chain" data-route="@(FromJudgments ? "judgments" : "score")">
+
+    @* ---------------- step 1 ---------------- *@
+    <section class="pc-col">
+        @* "Your Score" is the existing key's casing; a sentence-case twin would collide
+           case-insensitively in GenerateResource and one of them would be dropped. *@
+        <h2 class="pc-step"><span class="pc-n">1</span>@(FromJudgments ? L["What you pressed"] : L["Your Score"])</h2>
+
+        @if (FromJudgments)
         {
-            <MudText>
-                <b>@L["Next Letter"]:</b> @Score.NextLetterGrade(_currentMix)
-            </MudText>
-
-            <MudText><b>@L["Score Loss", "Greats"]:</b> @Score.GreatLoss</MudText>
-
-            <MudText><b>@L["Score Loss", "Goods"]:</b> @Score.GoodLoss</MudText>
-
-            <MudText><b>@L["Score Loss", "Bads"]:</b> @Score.BadLoss</MudText>
-
-            <MudText><b>@L["Score Loss", "Misses"]:</b> @Score.MissLoss</MudText>
-
-            <MudText><b>@L["Score Loss", "Combo"]:</b> @Score.ComboLoss</MudText>
-            <MudText>(@L["Score Loss Note"])</MudText>
-            @if (Score.EstimatedSteps != null)
-            {
-                <MudText><b>@L["Arrows Pressed"]:</b> @Score.EstimatedSteps.Value.ToString("n")</MudText>
-            }
-
-        }
-    </MudItem>
-
-    <MudItem xs="12">
-
-        @if (_showDistribution)
-        {
-
-            <ApexChart TItem="JudgementAllocation"
-                   Title="Score Distribution">
-                <ApexPointSeries TItem="JudgementAllocation"
-                                 Items="_yourAllocations"
-                                 Name="Your Spread"
-                                 SeriesType="SeriesType.Bar"
-                                 XValue="@(e => e.Type)"
-                                 YAggregate="@(e => e.Sum(z=>z.Count))"
-                                 ShowDataLabels />
-
-                <ApexPointSeries TItem="JudgementAllocation"
-                                 Items="_averageAllocation"
-                                 Name="Average Spread For This Score"
-                                 SeriesType="SeriesType.Bar"
-                             XValue="@(e => e.Type)"
-                             YAggregate="@(e => e.Sum(z=>z.Count))"
-                                 ShowDataLabels />
-            </ApexChart>
+            <div class="pc-keys">
+                @foreach (var key in JudgmentKeys)
+                {
+                    <div class="pc-key" style="--pc-jc: @ThemeScales.JudgmentColor(key.Judgment)">
+                        <span class="pc-swatch"></span>
+                        <label for="pc-@key.Slug">@key.Label</label>
+                        <input id="pc-@key.Slug" class="pc-field" type="number" inputmode="numeric" min="0"
+                               value="@key.Value" @oninput="e => key.Set(Parse(e.Value))"/>
+                    </div>
+                }
+                <div class="pc-key pc-key-combo">
+                    <span class="pc-swatch"></span>
+                    <label for="pc-combo">@L["Max combo"]</label>
+                    <input id="pc-combo" class="pc-field" type="number" inputmode="numeric" min="0"
+                           value="@_maxCombo" @oninput="e => SetCombo(Parse(e.Value))"/>
+                </div>
+            </div>
+            <div class="pc-total">
+                <span class="pc-label">@L["Total notes"]</span>
+                <b>@Counts.NoteCount.ToString("N0")</b>
+            </div>
+            <div class="pc-optional">
+                <label class="pc-label" for="pc-cal">@L["Calories"]</label>
+                <input id="pc-cal" class="pc-field" type="number" inputmode="numeric" min="0"
+                       value="@_calories" @oninput="e => SetCalories(e.Value?.ToString())"/>
+                <p class="pc-note">
+                    @if (Screen.EstimatedSteps is { } steps)
+                    {
+                        @L["≈ {0} arrows pressed", steps.ToString("N0")]
+                    }
+                </p>
+            </div>
         }
         else
         {
-            <MudButton Color="Color.Primary" Disabled="!Score.IsValid" Variant="Variant.Outlined" OnClick="ShowDistribution">@L["Show Score Distribution"]</MudButton>
-        }
-    </MudItem>
-</MudGrid>
-<br/>
-<br/>
-<MudText>
-    @L["Score Formula Shoutout"]<br/>
-</MudText>
+            <div class="pc-bigscore">
+                <input class="pc-scorefield" type="number" inputmode="numeric" min="0" max="1000000"
+                       aria-label="@L["Score"]" value="@_typedScore" @oninput="e => SetTypedScore(Parse(e.Value))"/>
+            </div>
+            <div class="pc-derived">
+                @* The grade is already resolved against the mix; the icon just draws it. *@
+                <LetterGradeIcon Grade="Grade"></LetterGradeIcon>
+                <span class="pc-band">@GradeFloor.ToString("N0") &ndash; @GradeCeiling.ToString("N0")</span>
+            </div>
+            @NextGradeFragment
 
-<MudImage Src="https://piuimages.arroweclip.se/PhoenixFormula.jpg" Style="max-width:85vw; width:auto;"></MudImage>
-<br/>
-<MudText>
-    @L["Score Range Shoutout"]
-    <br/><br/>
-    @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>().OrderByDescending(g => (int)g.GetMinimumScoreFor(_currentMix)))
+            <div class="pc-plates">
+                <span class="pc-label">@L["Plate"]</span>
+                @if (_mix == MixEnum.Phoenix2)
+                {
+                    <div class="pc-plate-row">
+                        @foreach (var plate in Enum.GetValues<PhoenixPlate>().OrderBy(p => (int)p))
+                        {
+                            <button type="button" class="pc-plate" style="--pc-pc: @ThemeScales.PlateColor(plate)"
+                                    aria-pressed="@((_plate == plate).ToString().ToLowerInvariant())"
+                                    title="@plate.GetName()" @onclick="() => SetPlate(plate)">
+                                @plate.GetShorthand()
+                            </button>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="pc-note">@L["The plate makes no difference in Phoenix — PUMBILITY is grade and level only."]</p>
+                }
+            </div>
+        }
+    </section>
+
+    @* ---------------- step 2 (results-screen route only) ---------------- *@
+    @if (FromJudgments)
     {
-        <span>@grade.GetName(): @grade.GetMinimumScoreFor(_currentMix) ~ @grade.GetMaximumScoreFor(_currentMix) points</span><br/>
+        <section class="pc-col">
+            <h2 class="pc-step"><span class="pc-n">2</span>@L["What it scores"]</h2>
+
+            <div class="pc-hero">
+                <span class="pc-score">@((int)Score).ToString("N0")</span>
+                <ScoreBreakdown Score="Score" Plate="Screen.PlateText" Mix="_mix"></ScoreBreakdown>
+            </div>
+
+            <div class="pc-barhead">
+                <span class="pc-label">@L["Where your score came from"]</span>
+                <b>@((int)Score).ToString("N0")</b>
+            </div>
+            <div class="pc-track">
+                @foreach (var band in EarnedBands)
+                {
+                    <span style="width:@Pct(band.Width); background:@band.Color" title="@band.Title"></span>
+                }
+                @if ((int)Score < PerfectScore)
+                {
+                    <span class="pc-track-short" style="width:@Pct(ShortfallWidth)"></span>
+                }
+            </div>
+            <div class="pc-axis">
+                <span>@Baseline.ToString("N0")</span>
+                <span>@PerfectScore.ToString("N0")</span>
+            </div>
+            <div class="pc-legend">
+                @foreach (var row in EarnedLegend)
+                {
+                    <span style="--pc-jc: @row.Color"><i></i>@row.Label <b>@row.Value.ToString("N0")</b><em>@row.Share</em></span>
+                }
+            </div>
+
+            <div class="pc-barhead">
+                <span class="pc-label">@L["What you lost"]</span>
+                <b>@(TotalLost > 0 ? "−" + TotalLost.ToString("N0") : "0")</b>
+            </div>
+            <div class="pc-track">
+                @if (TotalLost <= 0)
+                {
+                    <span class="pc-track-empty" style="width:100%"></span>
+                }
+                else
+                {
+                    @foreach (var row in LostLegend)
+                    {
+                        <span style="width:@Pct((double)row.Value / TotalLost); background:@row.Color" title="@row.Label"></span>
+                    }
+                }
+            </div>
+            <div class="pc-legend">
+                @if (TotalLost <= 0)
+                {
+                    <span>@L["Nothing lost — a perfect million."]</span>
+                }
+                else
+                {
+                    @foreach (var row in LostLegend)
+                    {
+                        <span style="--pc-jc: @row.Color"><i></i>@row.Label <b>@row.Value.ToString("N0")</b><em>@row.Share</em></span>
+                    }
+                }
+            </div>
+
+            <div class="pc-next">@NextGradeFragment</div>
+        </section>
     }
-    Perfect Game: 100% Perfect<br/>
-    Ultimate Game: 100% Perfect + Great<br/>
-    Extreme Game: 100% Perfect + Great + Good <br/>
-    Superb Game: 0 Miss (previous S)<br/>
-    Marvelous Game: &lt;= 5 misses<br/>
-    Talented Game: &lt;= 10 misses<br/>
-    Fair Game: &lt;= 20 misses<br/>
-    Rough Game: > 20 misses
-</MudText>
-@using ScoreTracker.Web.Services.Contracts
-@inject ISnackbar Snackbar;
-@inject ILogger<PhoenixCalculator> Logger;
-@inject IUiSettingsAccessor UiSettings;
+
+    @* ---------------- step 3 ---------------- *@
+    <section class="pc-col">
+        <h2 class="pc-step"><span class="pc-n">@(FromJudgments ? "3" : "2")</span>@L["What it's worth"]</h2>
+
+        @if (_mix == MixEnum.Phoenix2)
+        {
+            <span class="pc-label">@L["Folder"]</span>
+            <FolderPicker Type="_type" Level="_level" ShowCoOp="false"
+                          IsMissing="(_, level) => level < ScoreAnalysis.LowestScoringLevel"
+                          FolderChanged="FolderChanged"></FolderPicker>
+        }
+        else
+        {
+            <span class="pc-label">@L["Chart level"]</span>
+            <div class="pc-levelrow">
+                <input type="range" min="@ScoreAnalysis.LowestScoringLevel" max="@((int)DifficultyLevel.Max)" step="1"
+                       aria-label="@L["Chart level"]" disabled="@(_type == ChartType.CoOp)"
+                       value="@_level" @oninput="e => SetLevel(Parse(e.Value))"/>
+                <output>@(_type == ChartType.CoOp ? "—" : _level.ToString())</output>
+                <button type="button" class="pc-coop" aria-pressed="@((_type == ChartType.CoOp).ToString().ToLowerInvariant())"
+                        @onclick="ToggleCoOp">@L["CoOp"]</button>
+            </div>
+        }
+
+        <div class="pc-worth">
+            <span>@Worth.ToString("N0")</span>
+            <small>@L["PUMBILITY"]</small>
+        </div>
+        @if (Worth == 0)
+        {
+            <p class="pc-note">@L["Charts under level 10 score zero PUMBILITY."]</p>
+        }
+
+        <div class="pc-moves">
+            @foreach (var move in Moves)
+            {
+                <div class="pc-move">
+                    <span>@move.Label</span>
+                    <b>@(move.Delta > 0 ? "+" : "")@move.Delta.ToString("N0")</b>
+                </div>
+            }
+        </div>
+
+        <div class="pc-neighbours">
+            <span class="pc-label">@L["Nearby folders"]</span>
+            <div class="pc-chips">
+                @foreach (var neighbour in Neighbours)
+                {
+                    <span class="pc-chip @(neighbour.AtCeiling || neighbour.AtFloor ? "pc-chip-capped" : null)">
+                        <em style="color:@ThemeScales.GradeColor(neighbour.Grade)">@neighbour.Grade.GetName()</em>
+                        · @FolderLabel(neighbour.Type, neighbour.Level)
+                        <span>@neighbour.Value.ToString("N0")</span>
+                        <i>@(neighbour.Delta > 0 ? "+" : "")@neighbour.Delta.ToString("N0")</i>
+                    </span>
+                }
+            </div>
+        </div>
+    </section>
+</div>
+
+@* ---------------- the value grid ---------------- *@
+<div class="pc-gridsec">
+    <button type="button" class="pc-toggle" @onclick="() => _showGrid = !_showGrid">
+        @(_showGrid ? L["Hide the value grid"] : L["Show the value grid"])
+    </button>
+    @if (_showGrid)
+    {
+        <div class="pc-gridhead">
+            <div>
+                <h3>@L["PUMBILITY by level and grade"]</h3>
+                <p class="pc-note">@GridSubtitle</p>
+            </div>
+            <div class="pc-lock">
+                @if (_lock is { } locked)
+                {
+                    <span class="pc-label">
+                        <span style="color:@ThemeScales.GradeColor(locked.Grade)">@locked.Grade.GetName()</span>
+                        · @FolderLabel(GridType, locked.Level)
+                    </span>
+                    <div>
+                        <b>@locked.Value.ToString("N0")</b>
+                        <span>@L["{0} other folders within {1}", BandCount.ToString("N0"), BandText]</span>
+                    </div>
+                }
+                else
+                {
+                    <span class="pc-label">@L["Click any value to lock it"]</span>
+                }
+            </div>
+        </div>
+        <div class="pc-gridwrap">
+            <table class="pc-grid">
+                <thead>
+                <tr>
+                    <th></th>
+                    @foreach (var grade in Grades)
+                    {
+                        <th style="color:@ThemeScales.GradeColor(grade)">@grade.GetName()</th>
+                    }
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var level in GridLevels)
+                {
+                    <tr class="@(level == _level && _type != ChartType.CoOp ? "pc-row-here" : null)">
+                        <th>@FolderLabel(GridType, level)</th>
+                        @foreach (var grade in Grades)
+                        {
+                            var value = ScoreAnalysis.PumbilityValue(_mix, GridType, level, grade, _plate);
+                            <td>
+                                <button type="button"
+                                        class="pc-cell @CellClass(level, grade, value)"
+                                        style="background: color-mix(in srgb, @HeatVar(value) @HeatAlpha(value), transparent)"
+                                        @onclick="() => ToggleLock(level, grade, value)">@value.ToString("N0")</button>
+                            </td>
+                        }
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<footer class="pc-refs">
+    <span>@L["Score Formula Shoutout"]</span>
+    <span>@L["Score Range Shoutout"]</span>
+    <span>@L["Score Loss Note"]</span>
+</footer>
+
+@inject IUiSettingsAccessor UiSettings
+@inject NavigationManager Nav
 @code
 {
-    private ApexChart<ScoreDistributionDto> _distributionChart;
+    private const int PerfectScore = 1_000_000;
 
-    // Grades follow the selected mix's cutoff table (Phoenix 2 re-cut sub-AAA).
-    private MixEnum _currentMix = MixEnum.Phoenix;
+    private MixEnum _mix = MixEnum.Phoenix;
+    private ChartType _type = ChartType.Single;
+    private int _level = 21;
+    private PhoenixPlate _plate = PhoenixPlate.TalentedGame;
+    private bool _showGrid;
+    private LockedCell? _lock;
+
+    private int _perfects = 780, _greats = 120, _goods = 20, _bads = 5, _misses = 8, _maxCombo = 700;
+    private double? _calories;
+    private int _typedScore = 917_168;
+
+    // Which route you came in on is what data you are looking at, so it rides the URL and a
+    // link to either one survives being shared.
+    [SupplyParameterFromQuery(Name = "from")] private string? FromQuery { get; set; }
+
+    private bool FromJudgments => string.Equals(FromQuery, "judgments", StringComparison.OrdinalIgnoreCase);
+
+    private sealed record LockedCell(int Level, PhoenixLetterGrade Grade, int Value);
+
+    private sealed record JudgmentKey(Judgment Judgment, string Label, string Slug, int Value, Action<int> Set);
+
+    private sealed record BarBand(double Width, string Color, string Title);
+
+    private sealed record LegendRow(string Label, int Value, string Color, string Share);
+
+    private sealed record Move(string Label, int Delta);
 
     protected override async Task OnInitializedAsync()
     {
-        _currentMix = await UiSettings.GetSelectedMix();
+        // PUMBILITY only exists in the Phoenix family, and the whole page prices against it,
+        // so anything else resolves to Phoenix rather than rendering a dead tool.
+        var selected = await UiSettings.GetSelectedMix();
+        _mix = selected == MixEnum.Phoenix2 ? MixEnum.Phoenix2 : MixEnum.Phoenix;
     }
 
-    private sealed record JudgementAllocation(string Type, int Count)
+    private static int Parse(object? raw)
     {
-
-    }
-    private JudgementAllocation[] _averageAllocation = Array.Empty<JudgementAllocation>();
-    private JudgementAllocation[] _yourAllocations = Array.Empty<JudgementAllocation>();
-
-    private bool _showDistribution = false;
-    private Task SetScore(int perfects, int greats, int goods, int bads, int misses, int maxCombo,double? calories)
-    {
-        _showDistribution = false;
-        _calories = calories == null ? null : Math.Abs(calories.Value);
-        _perfects = Math.Abs(perfects);
-        _greats = Math.Abs(greats);
-        _goods = Math.Abs(goods);
-        _bads = Math.Abs(bads);
-        _misses = Math.Abs(misses);
-        _maxCombo = Math.Abs(maxCombo);
-        Score = new(_perfects, _greats, _goods, _bads, _misses, _maxCombo, calories);
-        return Task.CompletedTask;
-
+        return int.TryParse(raw?.ToString(), out var value) ? Math.Abs(value) : 0;
     }
 
-    private Task ShowDistribution()
+    private JudgementCounts Counts => new(_perfects, _greats, _goods, _bads, _misses);
+
+    private ScoreScreen Screen => new(_perfects, _greats, _goods, _bads, _misses, _maxCombo, _calories);
+
+    private PhoenixScore Score => FromJudgments
+        ? Screen.CalculatePhoenixScore
+        : Math.Clamp(_typedScore, 0, PerfectScore);
+
+    private PhoenixLetterGrade Grade => Score.LetterGradeFor(_mix);
+
+    private PhoenixPlate Plate => FromJudgments ? Screen.PlateText : _plate;
+
+    private int GradeFloor => Grade.GetMinimumScoreFor(_mix);
+
+    private int GradeCeiling => Grade.GetMaximumScoreFor(_mix);
+
+    private EarnedPoints Earned => ScoreAnalysis.Earned(Counts, _maxCombo);
+
+    private int Baseline => ScoreAnalysis.EarnedBaseline(Score, Earned.Perfects);
+
+    private double Span => PerfectScore - Baseline;
+
+    private double ShortfallWidth => (PerfectScore - (int)Score) / Span;
+
+    private static string Pct(double share)
     {
-        var scoreNoCombo = new ScoreScreen(_perfects, _greats, _goods, _bads, _misses, 0).CalculatePhoenixScore;
-        var distribution = ScoreDistributionDto.Get(scoreNoCombo);
-        var averagePerfect = distribution.AvgPerfect;
-        var averageGreat = distribution.AvgGreat;
-        var averageGood = distribution.AvgGood;
-        var averageBad = distribution.AvgBad;
-        var averageMiss = distribution.AvgMiss;
-        var scalingRatio = Score.TotalCount / (double)(averagePerfect + averageGreat + averageGood + averageBad + averageMiss);
-        _averageAllocation = new JudgementAllocation[]
+        return (share * 100).ToString("0.###") + "%";
+    }
+
+    private IEnumerable<JudgmentKey> JudgmentKeys => new[]
+    {
+        new JudgmentKey(Judgment.Perfect, "Perfect", "perfect", _perfects, v => _perfects = v),
+        new JudgmentKey(Judgment.Great, "Great", "great", _greats, v => _greats = v),
+        new JudgmentKey(Judgment.Good, "Good", "good", _goods, v => _goods = v),
+        new JudgmentKey(Judgment.Bad, "Bad", "bad", _bads, v => _bads = v),
+        new JudgmentKey(Judgment.Miss, "Miss", "miss", _misses, v => _misses = v)
+    };
+
+    // Judgement names are deliberately English literals, as on the Life Calculator: every
+    // glossary says so, and L["Good"] would collide with the existing adjective key.
+    private IReadOnlyList<(Judgment Judgment, string Label, int Value)> EarnedRows => new[]
+    {
+        (Judgment.Perfect, "Perfect", Earned.Perfects),
+        (Judgment.Great, "Great", Earned.Greats),
+        (Judgment.Good, "Good", Earned.Goods),
+        (Judgment.Bad, "Bad", Earned.Bads)
+    };
+
+    private IReadOnlyList<(string Label, int Value, Judgment? Judgment)> LostRows => new[]
+    {
+        ("Greats", Screen.GreatLoss, (Judgment?)Judgment.Great),
+        ("Goods", Screen.GoodLoss, Judgment.Good),
+        ("Bads", Screen.BadLoss, Judgment.Bad),
+        ("Misses", Screen.MissLoss, Judgment.Miss),
+        (L["Combo"].Value, Screen.ComboLoss, null)
+    };
+
+    private int TotalLost => LostRows.Sum(r => r.Value);
+
+    private string ComboColor => "var(--mix-ink-muted)";
+
+    // Biggest first, then clipped at the baseline. Because the baseline can never sit above
+    // what perfects banked, the cut always lands inside the perfects segment.
+    private IEnumerable<BarBand> EarnedBands
+    {
+        get
         {
-            new("Perfects", (int)(averagePerfect*scalingRatio)),
-            new("Greats", (int)(averageGreat*scalingRatio)),
-            new("Goods", (int)(averageGood*scalingRatio)),
-            new("Bads", (int)(averageBad*scalingRatio)),
-            new("Misses",(int)(averageMiss*scalingRatio))
-        };
-        _yourAllocations = new JudgementAllocation[]
-        {
+            var stack = EarnedRows
+                .Select(r => (Label: r.Label, Value: r.Value, Color: ThemeScales.JudgmentColor(r.Judgment)))
+                .Append((Label: L["Combo"].Value, Value: Earned.Combo, Color: ComboColor))
+                .Where(r => r.Value > 0)
+                .OrderByDescending(r => r.Value)
+                .ToArray();
 
-            new("Perfects", _perfects),
-            new("Greats", _greats),
-            new("Goods",_goods),
-            new("Bads",_bads),
-            new("Misses", _misses)
-        };
-
-        _showDistribution = true;
-        return Task.CompletedTask;
-
+            double cursor = 0;
+            foreach (var segment in stack)
+            {
+                var start = cursor;
+                var end = cursor + segment.Value;
+                cursor = end;
+                var from = Math.Max(start, Baseline);
+                var to = Math.Min(end, PerfectScore);
+                if (to <= from) continue;
+                yield return new BarBand((to - from) / Span, segment.Color,
+                    $"{segment.Label}: {segment.Value:N0}");
+            }
+        }
     }
-    public IEnumerable<ScoreDistributionDto> ScoreDistributions = ScoreDistributionDto.DefaultList;
-    private int _perfects = 0;
-    private int _greats = 0;
-    private int _goods = 0;
-    private int _bads = 0;
-    private int _misses = 0;
-    private int _maxCombo = 0;
-    private double? _calories = null;
-    private ScoreScreen Score = new (0, 0, 0, 0, 0, 0);
-    
 
+    private IEnumerable<LegendRow> EarnedLegend => Legend(
+        EarnedRows
+            .Select(r => (Label: r.Label, Value: r.Value, Color: ThemeScales.JudgmentColor(r.Judgment)))
+            .Append((Label: L["Combo"].Value, Value: Earned.Combo, Color: ComboColor)), Earned.Total);
 
+    private IEnumerable<LegendRow> LostLegend => Legend(
+        LostRows.Select(r => (Label: r.Label, Value: r.Value,
+            Color: r.Judgment is { } j ? ThemeScales.JudgmentColor(j) : ComboColor)), TotalLost);
+
+    // Shares are of the bar's own total. Where anything falls under 1% every entry gains a
+    // decimal place, or a 99.5% share rounds to "100%" beside a visible second one.
+    private static IEnumerable<LegendRow> Legend(IEnumerable<(string Label, int Value, string Color)> rows, int whole)
+    {
+        var live = rows.Where(r => r.Value > 0).ToArray();
+        if (whole <= 0) return Array.Empty<LegendRow>();
+        var fine = live.Any(r => r.Value / (double)whole * 100 < 1);
+        return live.Select(r => new LegendRow(r.Label, r.Value, r.Color,
+            (r.Value / (double)whole * 100).ToString(fine ? "0.0" : "0") + "%"));
+    }
+
+    private RenderFragment NextGradeFragment => @<text>
+        @if (ScoreAnalysis.PointsToNextGrade(Score, _mix) is { } need)
+        {
+            var next = Grade + 1;
+            <span class="pc-label">@L["{0} points to {1}", need.ToString("N0"), next.GetName()]</span>
+            <div class="pc-nextbar">
+                <span style="width:@Pct(GradeProgress)"></span>
+            </div>
+            @if (FromJudgments)
+            {
+                var diff = ScoreAnalysis.ExpectedDiff(Counts, _maxCombo, need);
+                if (!diff.Reachable)
+                {
+                    <p class="pc-note">@L["Not reachable by cleaning this play alone"]</p>
+                }
+                else
+                {
+                    <p class="pc-note">@L["A play like yours gets there by cleaning about {0} notes:", diff.Notes.ToString("N0")]</p>
+                    <div class="pc-chips">
+                        @foreach (var part in DiffParts(diff))
+                        {
+                            <span class="pc-chip" style="border-color:color-mix(in srgb, @part.Color 45%, transparent)">
+                                <b>&minus;@part.Count.ToString("N0")</b> @part.Label
+                            </span>
+                        }
+                    </div>
+                }
+            }
+        }
+        else
+        {
+            <span class="pc-label">@L["Top of the ladder"]</span>
+        }
+    </text>;
+
+    private double GradeProgress
+    {
+        get
+        {
+            var next = (Grade + 1).GetMinimumScoreFor(_mix);
+            var floor = GradeFloor;
+            if (next <= floor) return 1;
+            return Math.Clamp(((int)Score - floor) / (double)(next - floor), 0, 1);
+        }
+    }
+
+    private IEnumerable<(int Count, string Label, string Color)> DiffParts(ExpectedImprovement diff)
+    {
+        if (diff.Greats > 0) yield return (diff.Greats, diff.Greats == 1 ? "great" : "greats", ThemeScales.JudgmentColor(Judgment.Great));
+        if (diff.Goods > 0) yield return (diff.Goods, diff.Goods == 1 ? "good" : "goods", ThemeScales.JudgmentColor(Judgment.Good));
+        if (diff.Bads > 0) yield return (diff.Bads, diff.Bads == 1 ? "bad" : "bads", ThemeScales.JudgmentColor(Judgment.Bad));
+        if (diff.Misses > 0) yield return (diff.Misses, diff.Misses == 1 ? "miss" : "misses", ThemeScales.JudgmentColor(Judgment.Miss));
+    }
+
+    private int Worth => ScoreAnalysis.PumbilityValue(_mix, _type, _level, Grade, Plate);
+
+    private IEnumerable<Move> Moves
+    {
+        get
+        {
+            if (Worth <= 0) yield break;
+            if (Grade != PhoenixLetterGrade.SSSPlus)
+            {
+                var up = ScoreAnalysis.PumbilityValue(_mix, _type, _level, Grade + 1, Plate);
+                yield return new Move(L["{0} instead of {1}", (Grade + 1).GetName(), Grade.GetName()].Value, up - Worth);
+            }
+
+            if (_type != ChartType.CoOp && _level < (int)ScoreAnalysis.MaxLevelFor(_mix, _type))
+            {
+                var harder = ScoreAnalysis.PumbilityValue(_mix, _type, _level + 1, Grade, Plate);
+                yield return new Move(L["Same grade on {0}", FolderLabel(_type, _level + 1)].Value, harder - Worth);
+            }
+
+            if (_mix == MixEnum.Phoenix2 && Plate != PhoenixPlate.PerfectGame)
+            {
+                var better = Plate + 1;
+                var plated = ScoreAnalysis.PumbilityValue(_mix, _type, _level, Grade, better);
+                yield return new Move(L["{0} instead of {1}", better.GetShorthand(), Plate.GetShorthand()].Value, plated - Worth);
+            }
+        }
+    }
+
+    private IReadOnlyList<FolderNeighbour> Neighbours =>
+        ScoreAnalysis.Neighbours(_mix, _type, _level, Grade, Plate);
+
+    private string FolderLabel(ChartType type, DifficultyLevel level)
+    {
+        if (type == ChartType.CoOp) return L["CoOp"].Value;
+        return _mix == MixEnum.Phoenix2
+            ? DifficultyLevel.ToShorthand(type, level)
+            : L["Level {0}", ((int)level).ToString()].Value;
+    }
+
+    /* ---------------- the grid ---------------- */
+
+    private static readonly PhoenixLetterGrade[] Grades = Enum.GetValues<PhoenixLetterGrade>();
+
+    private ChartType GridType => _type == ChartType.CoOp ? ChartType.Single : _type;
+
+    private IEnumerable<int> GridLevels
+    {
+        get
+        {
+            var cap = (int)ScoreAnalysis.MaxLevelFor(_mix, GridType);
+            for (var level = cap; level >= ScoreAnalysis.LowestScoringLevel; level--) yield return level;
+        }
+    }
+
+    private string GridSubtitle => _mix == MixEnum.Phoenix2
+        ? L["Priced at your {0} plate.", Plate.GetShorthand()].Value
+        : L["The plate makes no difference in Phoenix — PUMBILITY is grade and level only."].Value;
+
+    private double Band => ScoreAnalysis.EquivalenceBand(_mix, GridType);
+
+    private string BandText => (Band * 100).ToString("0.0") + "%";
+
+    private int BandCount => _lock is not { } locked
+        ? 0
+        : GridLevels.SelectMany(level => Grades.Select(grade => (level, grade)))
+            .Count(cell => !(cell.level == locked.Level && cell.grade == locked.Grade)
+                           && InBand(ScoreAnalysis.PumbilityValue(_mix, GridType, cell.level, cell.grade, Plate), locked.Value));
+
+    private bool InBand(int value, int anchor)
+    {
+        return value > 0 && Math.Abs(value - anchor) <= anchor * Band;
+    }
+
+    private int GridMax => GridLevels.SelectMany(l => Grades.Select(g =>
+        ScoreAnalysis.PumbilityValue(_mix, GridType, l, g, Plate))).DefaultIfEmpty(1).Max();
+
+    private int GridMin => GridLevels.SelectMany(l => Grades.Select(g =>
+        ScoreAnalysis.PumbilityValue(_mix, GridType, l, g, Plate))).Where(v => v > 0).DefaultIfEmpty(0).Min();
+
+    private double Heat(int value)
+    {
+        var range = GridMax - GridMin;
+        return range <= 0 ? 0 : Math.Clamp((value - GridMin) / (double)range, 0, 1);
+    }
+
+    private string HeatVar(int value)
+    {
+        return ThemeScales.CssVar(ThemeScales.BandFor(Heat(value)));
+    }
+
+    private string HeatAlpha(int value)
+    {
+        return (14 + Heat(value) * 46).ToString("0") + "%";
+    }
+
+    private string? CellClass(int level, PhoenixLetterGrade grade, int value)
+    {
+        if (_lock is { } locked)
+        {
+            if (locked.Level == level && locked.Grade == grade) return "pc-cell-locked";
+            if (InBand(value, locked.Value)) return "pc-cell-band";
+        }
+
+        return level == _level && grade == Grade && _type != ChartType.CoOp ? "pc-cell-here" : null;
+    }
+
+    private void ToggleLock(int level, PhoenixLetterGrade grade, int value)
+    {
+        _lock = _lock is { } locked && locked.Level == level && locked.Grade == grade
+            ? null
+            : new LockedCell(level, grade, value);
+    }
+
+    /* ---------------- input plumbing ---------------- */
+
+    private void SetRoute(bool judgments)
+    {
+        Nav.NavigateTo(Nav.GetUriWithQueryParameter("from", judgments ? "judgments" : null));
+    }
+
+    private void SetCombo(int value)
+    {
+        _maxCombo = value;
+    }
+
+    private void SetTypedScore(int value)
+    {
+        _typedScore = Math.Clamp(value, 0, PerfectScore);
+    }
+
+    private void SetCalories(string? raw)
+    {
+        _calories = double.TryParse(raw, out var value) ? Math.Abs(value) : null;
+    }
+
+    private void SetPlate(PhoenixPlate plate)
+    {
+        _plate = plate;
+    }
+
+    private void SetLevel(int level)
+    {
+        _level = Math.Clamp(level, ScoreAnalysis.LowestScoringLevel, (int)DifficultyLevel.Max);
+        _lock = null;
+    }
+
+    private void ToggleCoOp()
+    {
+        _type = _type == ChartType.CoOp ? ChartType.Single : ChartType.CoOp;
+        _lock = null;
+    }
+
+    private void FolderChanged((ChartType Type, int Level) folder)
+    {
+        _type = folder.Type;
+        _level = folder.Level;
+        _lock = null;
+    }
 }

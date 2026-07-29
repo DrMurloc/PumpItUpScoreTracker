@@ -17,6 +17,27 @@
     <resheader name="version">2.0</resheader>
     <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
     <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+  <data name="A play like yours gets there by cleaning about {0} notes:" xml:space="preserve">
+    <value>이런 플레이는 약 {0}개의 노트를 정리하면 도달합니다:</value>
+  </data>
+  <data name="Calories" xml:space="preserve">
+    <value>칼로리</value>
+  </data>
+  <data name="Charts under level 10 score zero PUMBILITY." xml:space="preserve">
+    <value>레벨 10 미만 채보는 PUMBILITY가 0입니다.</value>
+  </data>
+  <data name="Click any value to lock it" xml:space="preserve">
+    <value>값을 클릭하면 고정됩니다</value>
+  </data>
+  <data name="From a results screen" xml:space="preserve">
+    <value>결과 화면에서</value>
+  </data>
+  <data name="From a score" xml:space="preserve">
+    <value>점수에서</value>
+  </data>
+  <data name="Hide the value grid" xml:space="preserve">
+    <value>값 표 숨기기</value>
+  </data>
     <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
     <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
     <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
@@ -2628,6 +2649,9 @@
   <data name="Name, or shorthand like S18" xml:space="preserve">
     <value>곡명 또는 S18 같은 약어</value>
   </data>
+  <data name="Nearby folders" xml:space="preserve">
+    <value>주변 폴더</value>
+  </data>
   <data name="Nearly complete folder" xml:space="preserve">
     <value>폴더 거의 완료</value>
   </data>
@@ -2856,6 +2880,9 @@
   <data name="Not played yet" xml:space="preserve">
     <value>아직 미플레이</value>
   </data>
+  <data name="Not reachable by cleaning this play alone" xml:space="preserve">
+    <value>이 플레이만 정리해서는 도달할 수 없습니다</value>
+  </data>
   <data name="Not Recorded" xml:space="preserve">
     <value>기록 없음</value>
   </data>
@@ -2900,6 +2927,9 @@
   </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>이 폴더의 채보는 인기 보드에 없습니다.</value>
+  </data>
+  <data name="Nothing lost — a perfect million." xml:space="preserve">
+    <value>잃은 점수 없음 — 완벽한 100만.</value>
   </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>이 필터에 해당하는 항목이 없습니다. 하나를 해제해 보세요.</value>
@@ -3231,6 +3261,9 @@
   <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
     <value>Phoenix 2에서는 오버플로우가 완전히 가득 차면 바를 따라 전기 효과가 흐릅니다. 게임이 숨겨진 라이프의 존재를 인정하는 유일한 순간입니다.</value>
   </data>
+  <data name="Phoenix Calculator" xml:space="preserve">
+    <value>Phoenix 계산기</value>
+  </data>
   <data name="Phoenix grade" xml:space="preserve">
     <value>Phoenix 등급</value>
   </data>
@@ -3486,6 +3519,9 @@
   <data name="Previous Folder" xml:space="preserve">
     <value>이전 폴더</value>
   </data>
+  <data name="Priced at your {0} plate." xml:space="preserve">
+    <value>{0} 플레이트 기준입니다.</value>
+  </data>
   <data name="Prime" xml:space="preserve">
     <value>Prime</value>
   </data>
@@ -3545,6 +3581,9 @@
   </data>
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY by level and grade" xml:space="preserve">
+    <value>레벨 및 등급별 PUMBILITY</value>
   </data>
   <data name="PUMBILITY movers" xml:space="preserve">
     <value>PUMBILITY 순위 변동</value>
@@ -3866,6 +3905,9 @@
   <data name="Runs Without Twists" xml:space="preserve">
     <value>틀기 없는 폭타</value>
   </data>
+  <data name="Same grade on {0}" xml:space="preserve">
+    <value>{0}에서 같은 등급</value>
+  </data>
   <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
     <value>같은 스킬, 두 가지 질문: 폴더 보기는 "여기서 플레이한 채보가 실제로 어떤가"를, 블렌드 보기는 "주변에서 기록한 모든 스코어 중 어떤 스킬이 강하고 약한가"를 묻습니다. 여기서는 괜찮아 보이는 스킬이 채보를 움직일 수도 있습니다.</value>
   </data>
@@ -4177,6 +4219,9 @@
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>가장 안 닮은 채보 보기</value>
+  </data>
+  <data name="Show the value grid" xml:space="preserve">
+    <value>값 표 보기</value>
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>이 채널의 등록 내역 보기</value>
@@ -4604,6 +4649,9 @@
   <data name="The PIU Scores bot" xml:space="preserve">
     <value>PIU Scores 봇</value>
   </data>
+  <data name="The plate makes no difference in Phoenix — PUMBILITY is grade and level only." xml:space="preserve">
+    <value>Phoenix에서는 플레이트가 영향을 주지 않습니다 — PUMBILITY는 등급과 레벨만 사용합니다.</value>
+  </data>
   <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
     <value>레인보우 바는 1레벨에서도 29레벨에서도 라이프 1000입니다. 어려운 채보가 주는 것은 바 뒤에 숨은 라이프, 즉 기체에는 보이지 않으면서 레벨에 따라 달라지는 유일한 값입니다. Miss 하나당 필요한 콤보는 끝까지 동일합니다.</value>
   </data>
@@ -4856,6 +4904,9 @@
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>추정 레이팅 기준 상위 CO-OP 채보 - 플레이트는 점수로 추정합니다.</value>
   </data>
+  <data name="Top of the ladder" xml:space="preserve">
+    <value>사다리 최상단</value>
+  </data>
   <data name="Top scores" xml:space="preserve">
     <value>최고 점수</value>
   </data>
@@ -4897,6 +4948,9 @@
   </data>
   <data name="Total life" xml:space="preserve">
     <value>전체 라이프</value>
+  </data>
+  <data name="Total notes" xml:space="preserve">
+    <value>전체 노트</value>
   </data>
   <data name="Total Rating" xml:space="preserve">
     <value>총 레이팅</value>
@@ -4949,8 +5003,14 @@
   <data name="Type" xml:space="preserve">
     <value>종류</value>
   </data>
+  <data name="Type a score, pick a plate and a folder; see what it's worth." xml:space="preserve">
+    <value>점수를 입력하고 플레이트와 폴더를 고르면 가치를 알 수 있습니다.</value>
+  </data>
   <data name="Type the name of the account being deleted to confirm" xml:space="preserve">
     <value>확인을 위해 삭제될 계정의 이름을 입력하세요</value>
+  </data>
+  <data name="Type the results screen; see what it scored and what it's worth." xml:space="preserve">
+    <value>결과 화면을 입력하면 점수와 가치를 알 수 있습니다.</value>
   </data>
   <data name="Ultra Popular" xml:space="preserve">
     <value>초인기</value>
@@ -5228,14 +5288,26 @@
   <data name="What goes into your list" xml:space="preserve">
     <value>리스트에 들어가는 것</value>
   </data>
+  <data name="What it scores" xml:space="preserve">
+    <value>점수 결과</value>
+  </data>
   <data name="What It Takes" xml:space="preserve">
     <value>필요한 것</value>
   </data>
   <data name="what it takes to hold each rung of the PUMBILITY board" xml:space="preserve">
     <value>PUMBILITY 보드 각 순위를 지키는 데 필요한 점수</value>
   </data>
+  <data name="What it's worth" xml:space="preserve">
+    <value>가치</value>
+  </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>목표 (기본 칭호 사냥)</value>
+  </data>
+  <data name="What you lost" xml:space="preserve">
+    <value>잃은 점수</value>
+  </data>
+  <data name="What you pressed" xml:space="preserve">
+    <value>입력한 판정</value>
   </data>
   <data name="When" xml:space="preserve">
     <value>일시</value>
@@ -5254,6 +5326,9 @@
   </data>
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>내 리스트가 커뮤니티와 다른 곳, 그리고 그걸 밀어낸 스킬. 채보를 탭하면 소스별 전체 분석을 볼 수 있습니다.</value>
+  </data>
+  <data name="Where your score came from" xml:space="preserve">
+    <value>점수의 출처</value>
   </data>
   <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
     <value>어떤 채보가 레벨에 정직한지 — 어떤 채보가 거짓말하는지.</value>
@@ -5657,6 +5732,9 @@
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>{0}개가 나에게 더 어려움 — 주로 {1}</value>
   </data>
+  <data name="{0} instead of {1}" xml:space="preserve">
+    <value>{1} 대신 {0}</value>
+  </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0}은(는) {1}에 없습니다 — 노래 전체가 삭제되었습니다.</value>
   </data>
@@ -5744,6 +5822,9 @@
   <data name="{0} on the board" xml:space="preserve">
     <value>{0}명 참여 중</value>
   </data>
+  <data name="{0} other folders within {1}" xml:space="preserve">
+    <value>{1} 이내의 다른 폴더 {0}개</value>
+  </data>
   <data name="{0} paragons" xml:space="preserve">
     <value>파라곤 {0}개</value>
   </data>
@@ -5764,6 +5845,9 @@
   </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>플레이어 {0}명 · {1} 주</value>
+  </data>
+  <data name="{0} points to {1}" xml:space="preserve">
+    <value>{1}까지 {0}점</value>
   </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>이번 주 Pump It Up 챌린지 채보 {0}개, 실시간 순위가 있는 데일리 채보, 그리고 월간 PUMBILITY 보드.</value>
@@ -5848,6 +5932,9 @@
   </data>
   <data name="— Zelllooo" xml:space="preserve">
     <value>— Zelllooo</value>
+  </data>
+  <data name="≈ {0} arrows pressed" xml:space="preserve">
+    <value>≈ {0}개의 화살표를 밟음</value>
   </data>
   <data name="▲ Harder" xml:space="preserve">
     <value>▲ 상향</value>

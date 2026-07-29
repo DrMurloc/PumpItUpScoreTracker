@@ -17,6 +17,27 @@
     <resheader name="version">2.0</resheader>
     <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
     <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+  <data name="A play like yours gets there by cleaning about {0} notes:" xml:space="preserve">
+    <value>Une partie comme la vôtre y arrive en nettoyant environ {0} notes :</value>
+  </data>
+  <data name="Calories" xml:space="preserve">
+    <value>Calories</value>
+  </data>
+  <data name="Charts under level 10 score zero PUMBILITY." xml:space="preserve">
+    <value>Les charts en dessous du niveau 10 rapportent zéro PUMBILITY.</value>
+  </data>
+  <data name="Click any value to lock it" xml:space="preserve">
+    <value>Cliquez sur une valeur pour la figer</value>
+  </data>
+  <data name="From a results screen" xml:space="preserve">
+    <value>Depuis un écran de résultats</value>
+  </data>
+  <data name="From a score" xml:space="preserve">
+    <value>Depuis un score</value>
+  </data>
+  <data name="Hide the value grid" xml:space="preserve">
+    <value>Masquer la grille de valeurs</value>
+  </data>
     <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
     <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
     <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
@@ -2656,6 +2677,9 @@
   <data name="Name, or shorthand like S18" xml:space="preserve">
     <value>Nom ou abrégé comme S18</value>
   </data>
+  <data name="Nearby folders" xml:space="preserve">
+    <value>Dossiers proches</value>
+  </data>
   <data name="Nearly complete folder" xml:space="preserve">
     <value>Dossier presque complet</value>
   </data>
@@ -2885,6 +2909,9 @@
   <data name="Not played yet" xml:space="preserve">
     <value>Pas encore joué</value>
   </data>
+  <data name="Not reachable by cleaning this play alone" xml:space="preserve">
+    <value>Impossible à atteindre en nettoyant cette partie seule</value>
+  </data>
   <data name="Not Recorded" xml:space="preserve">
     <value>Non enregistré</value>
   </data>
@@ -2930,6 +2957,9 @@
   </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Rien de ce dossier ne figure au classement de popularité.</value>
+  </data>
+  <data name="Nothing lost — a perfect million." xml:space="preserve">
+    <value>Rien de perdu — un million parfait.</value>
   </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>Rien ne correspond à ces filtres. Retirez-en un pour voir le reste.</value>
@@ -3263,6 +3293,9 @@
   <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
     <value>Phoenix 2 fait courir un effet électrique le long de la barre dès que le débordement est complètement plein : le seul moment où le jeu admet que cette vie cachée existe.</value>
   </data>
+  <data name="Phoenix Calculator" xml:space="preserve">
+    <value>Calculatrice Phoenix</value>
+  </data>
   <data name="Phoenix grade" xml:space="preserve">
     <value>Grade Phoenix</value>
   </data>
@@ -3521,6 +3554,9 @@
   <data name="Previous Folder" xml:space="preserve">
     <value>Dossier précédent</value>
   </data>
+  <data name="Priced at your {0} plate." xml:space="preserve">
+    <value>Calculé avec votre plaque {0}.</value>
+  </data>
   <data name="Prime" xml:space="preserve">
     <value>Prime</value>
   </data>
@@ -3581,6 +3617,9 @@
   </data>
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY by level and grade" xml:space="preserve">
+    <value>PUMBILITY par niveau et grade</value>
   </data>
   <data name="PUMBILITY movers" xml:space="preserve">
     <value>Mouvements PUMBILITY</value>
@@ -3909,6 +3948,9 @@
   <data name="Runs Without Twists" xml:space="preserve">
     <value>Runs sans twists</value>
   </data>
+  <data name="Same grade on {0}" xml:space="preserve">
+    <value>Le même grade sur {0}</value>
+  </data>
   <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
     <value>Mêmes compétences, deux questions : la vue dossier demande comment se passent les charts que vous avez joués ici — la vue mélange demande quelles compétences surperforment ou sous-performent sur tout ce que vous avez scoré à proximité. Une compétence peut sembler correcte ici et déplacer des charts quand même.</value>
   </data>
@@ -4229,6 +4271,9 @@
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>Afficher les charts les moins ressemblants</value>
+  </data>
+  <data name="Show the value grid" xml:space="preserve">
+    <value>Afficher la grille de valeurs</value>
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>Affichez à quoi ce salon est inscrit</value>
@@ -4662,6 +4707,9 @@
   <data name="The PIU Scores bot" xml:space="preserve">
     <value>Le bot PIU Scores</value>
   </data>
+  <data name="The plate makes no difference in Phoenix — PUMBILITY is grade and level only." xml:space="preserve">
+    <value>La plaque ne change rien dans Phoenix — PUMBILITY n'utilise que le grade et le niveau.</value>
+  </data>
   <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
     <value>La barre Rainbow, c'est 1000 de vie sur un 1 comme sur un 29. Ce qu'un chart plus difficile vous donne, c'est de la vie derrière la barre : invisible sur la borne, et la seule chose qui change avec le niveau. Le combo nécessaire par Miss est identique jusqu'en haut.</value>
   </data>
@@ -4914,6 +4962,9 @@
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>Meilleurs charts CO-OP par rating estimé - plaques déduites du score.</value>
   </data>
+  <data name="Top of the ladder" xml:space="preserve">
+    <value>Le sommet de l'échelle</value>
+  </data>
   <data name="Top scores" xml:space="preserve">
     <value>Meilleurs scores</value>
   </data>
@@ -4956,6 +5007,9 @@
   </data>
   <data name="Total life" xml:space="preserve">
     <value>Vie totale</value>
+  </data>
+  <data name="Total notes" xml:space="preserve">
+    <value>Notes totales</value>
   </data>
   <data name="Total Rating" xml:space="preserve">
     <value>Rating total</value>
@@ -5008,8 +5062,14 @@
   <data name="Type" xml:space="preserve">
     <value>Type</value>
   </data>
+  <data name="Type a score, pick a plate and a folder; see what it's worth." xml:space="preserve">
+    <value>Saisissez un score, choisissez une plaque et un dossier ; voyez ce que ça vaut.</value>
+  </data>
   <data name="Type the name of the account being deleted to confirm" xml:space="preserve">
     <value>Saisissez le nom du compte à supprimer pour confirmer</value>
+  </data>
+  <data name="Type the results screen; see what it scored and what it's worth." xml:space="preserve">
+    <value>Saisissez l'écran de résultats ; voyez ce qu'il a marqué et ce que ça vaut.</value>
   </data>
   <data name="Ultra Popular" xml:space="preserve">
     <value>Ultra populaire</value>
@@ -5291,14 +5351,26 @@
   <data name="What goes into your list" xml:space="preserve">
     <value>Ce qui entre dans votre liste</value>
   </data>
+  <data name="What it scores" xml:space="preserve">
+    <value>Ce que ça marque</value>
+  </data>
   <data name="What It Takes" xml:space="preserve">
     <value>Ce qu'il faut</value>
   </data>
   <data name="what it takes to hold each rung of the PUMBILITY board" xml:space="preserve">
     <value>ce qu'il faut pour tenir chaque palier du leaderboard PUMBILITY</value>
   </data>
+  <data name="What it's worth" xml:space="preserve">
+    <value>Ce que ça vaut</value>
+  </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>Sur quoi travailler (par défaut Title Hunt)</value>
+  </data>
+  <data name="What you lost" xml:space="preserve">
+    <value>Ce que vous avez perdu</value>
+  </data>
+  <data name="What you pressed" xml:space="preserve">
+    <value>Ce que vous avez tapé</value>
   </data>
   <data name="When" xml:space="preserve">
     <value>Quand</value>
@@ -5317,6 +5389,9 @@
   </data>
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>Là où votre liste diverge de la communauté, et les compétences qui l'ont poussée. Touchez un chart pour son détail complet par source.</value>
+  </data>
+  <data name="Where your score came from" xml:space="preserve">
+    <value>D'où vient votre score</value>
   </data>
   <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
     <value>Quels charts sont honnêtes pour leur niveau — et lesquels mentent.</value>
@@ -5726,6 +5801,9 @@
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>{0} plus difficiles pour vous — surtout {1}</value>
   </data>
+  <data name="{0} instead of {1}" xml:space="preserve">
+    <value>{0} au lieu de {1}</value>
+  </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} n'est pas dans {1} — toute la chanson est partie.</value>
   </data>
@@ -5813,6 +5891,9 @@
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} au classement</value>
   </data>
+  <data name="{0} other folders within {1}" xml:space="preserve">
+    <value>{0} autres dossiers à {1} près</value>
+  </data>
   <data name="{0} paragons" xml:space="preserve">
     <value>{0} paragons</value>
   </data>
@@ -5833,6 +5914,9 @@
   </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>{0} joueurs · semaine du {1}</value>
+  </data>
+  <data name="{0} points to {1}" xml:space="preserve">
+    <value>{0} points jusqu'à {1}</value>
   </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>{0} charts défis Pump It Up cette semaine, un chart quotidien avec classements en direct, et le tableau mensuel PUMBILITY.</value>
@@ -5917,6 +6001,9 @@
   </data>
   <data name="— Zelllooo" xml:space="preserve">
     <value>— Zelllooo</value>
+  </data>
+  <data name="≈ {0} arrows pressed" xml:space="preserve">
+    <value>≈ {0} flèches tapées</value>
   </data>
   <data name="▲ Harder" xml:space="preserve">
     <value>▲ Plus dur</value>

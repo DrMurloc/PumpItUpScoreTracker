@@ -17,6 +17,27 @@
     <resheader name="version">2.0</resheader>
     <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
     <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+  <data name="A play like yours gets there by cleaning about {0} notes:" xml:space="preserve">
+    <value>このようなプレイなら約 {0} ノーツをきれいにすれば届きます:</value>
+  </data>
+  <data name="Calories" xml:space="preserve">
+    <value>カロリー</value>
+  </data>
+  <data name="Charts under level 10 score zero PUMBILITY." xml:space="preserve">
+    <value>レベル10未満の譜面はPUMBILITYが0です。</value>
+  </data>
+  <data name="Click any value to lock it" xml:space="preserve">
+    <value>値をクリックすると固定されます</value>
+  </data>
+  <data name="From a results screen" xml:space="preserve">
+    <value>リザルト画面から</value>
+  </data>
+  <data name="From a score" xml:space="preserve">
+    <value>スコアから</value>
+  </data>
+  <data name="Hide the value grid" xml:space="preserve">
+    <value>数値表を隠す</value>
+  </data>
     <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
     <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
     <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
@@ -2657,6 +2678,9 @@
   <data name="Name, or shorthand like S18" xml:space="preserve">
     <value>曲名、または S18 のような略記</value>
   </data>
+  <data name="Nearby folders" xml:space="preserve">
+    <value>近くのフォルダ</value>
+  </data>
   <data name="Nearly complete folder" xml:space="preserve">
     <value>フォルダーほぼ制覇</value>
   </data>
@@ -2886,6 +2910,9 @@
   <data name="Not played yet" xml:space="preserve">
     <value>未プレイ</value>
   </data>
+  <data name="Not reachable by cleaning this play alone" xml:space="preserve">
+    <value>このプレイの整理だけでは届きません</value>
+  </data>
   <data name="Not Recorded" xml:space="preserve">
     <value>未記録</value>
   </data>
@@ -2931,6 +2958,9 @@
   </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>このフォルダーの譜面は人気ボードに入っていません。</value>
+  </data>
+  <data name="Nothing lost — a perfect million." xml:space="preserve">
+    <value>失点なし — 完璧な100万。</value>
   </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>この絞り込みに該当するものはありません。いずれかを解除してください。</value>
@@ -3264,6 +3294,9 @@
   <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
     <value>Phoenix 2 ではオーバーフローが完全に満タンになるとバーに電撃エフェクトが走ります。ゲームが隠れた体力の存在を認める唯一の瞬間です。</value>
   </data>
+  <data name="Phoenix Calculator" xml:space="preserve">
+    <value>Phoenix 計算機</value>
+  </data>
   <data name="Phoenix grade" xml:space="preserve">
     <value>Phoenixランク</value>
   </data>
@@ -3522,6 +3555,9 @@
   <data name="Previous Folder" xml:space="preserve">
     <value>前のフォルダー</value>
   </data>
+  <data name="Priced at your {0} plate." xml:space="preserve">
+    <value>{0} プレート基準です。</value>
+  </data>
   <data name="Prime" xml:space="preserve">
     <value>Prime</value>
   </data>
@@ -3582,6 +3618,9 @@
   </data>
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY by level and grade" xml:space="preserve">
+    <value>レベルとランク別のPUMBILITY</value>
   </data>
   <data name="PUMBILITY movers" xml:space="preserve">
     <value>PUMBILITY 変動</value>
@@ -3910,6 +3949,9 @@
   <data name="Runs Without Twists" xml:space="preserve">
     <value>捻りなしラン</value>
   </data>
+  <data name="Same grade on {0}" xml:space="preserve">
+    <value>{0} で同じランク</value>
+  </data>
   <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
     <value>同じスキルにふたつの問い: フォルダ表示は「ここでプレイした譜面は実際どうか」を、ブレンド表示は「近隣でスコアしたすべての中でどのスキルが強い/弱いか」を問います。ここでは問題なく見えるスキルが譜面を動かすこともあります。</value>
   </data>
@@ -4230,6 +4272,9 @@
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>最も似ていない譜面を表示</value>
+  </data>
+  <data name="Show the value grid" xml:space="preserve">
+    <value>数値表を表示</value>
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>このチャンネルの登録内容を表示</value>
@@ -4663,6 +4708,9 @@
   <data name="The PIU Scores bot" xml:space="preserve">
     <value>PIU Scoresボット</value>
   </data>
+  <data name="The plate makes no difference in Phoenix — PUMBILITY is grade and level only." xml:space="preserve">
+    <value>Phoenix ではプレートは影響しません — PUMBILITY はランクとレベルのみです。</value>
+  </data>
   <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
     <value>虹色バーはレベル1でも29でも1000体力です。難しい譜面が与えてくれるのはバーの裏側の体力、つまり筐体には見えず、レベルによって変わる唯一のものです。Miss 1回あたりに必要なコンボは、どのレベルでも同じです。</value>
   </data>
@@ -4915,6 +4963,9 @@
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>推定レーティング順のCO-OP譜面トップ - プレートはスコアから推定します。</value>
   </data>
+  <data name="Top of the ladder" xml:space="preserve">
+    <value>ランクの頂点</value>
+  </data>
   <data name="Top scores" xml:space="preserve">
     <value>トップスコア</value>
   </data>
@@ -4957,6 +5008,9 @@
   </data>
   <data name="Total life" xml:space="preserve">
     <value>総体力</value>
+  </data>
+  <data name="Total notes" xml:space="preserve">
+    <value>総ノーツ</value>
   </data>
   <data name="Total Rating" xml:space="preserve">
     <value>合計レーティング</value>
@@ -5009,8 +5063,14 @@
   <data name="Type" xml:space="preserve">
 	  <value>種類</value>
   </data>
+  <data name="Type a score, pick a plate and a folder; see what it's worth." xml:space="preserve">
+    <value>スコアを入力し、プレートとフォルダを選ぶと価値が分かります。</value>
+  </data>
   <data name="Type the name of the account being deleted to confirm" xml:space="preserve">
     <value>確認のため削除されるアカウントの名前を入力してください</value>
+  </data>
+  <data name="Type the results screen; see what it scored and what it's worth." xml:space="preserve">
+    <value>リザルト画面を入力すると、スコアと価値が分かります。</value>
   </data>
   <data name="Ultra Popular" xml:space="preserve">
     <value>超人気</value>
@@ -5292,14 +5352,26 @@
   <data name="What goes into your list" xml:space="preserve">
     <value>リストに入るもの</value>
   </data>
+  <data name="What it scores" xml:space="preserve">
+    <value>出るスコア</value>
+  </data>
   <data name="What It Takes" xml:space="preserve">
     <value>必要なもの</value>
   </data>
   <data name="what it takes to hold each rung of the PUMBILITY board" xml:space="preserve">
     <value>PUMBILITYボードの各順位を守るために必要な水準</value>
   </data>
+  <data name="What it's worth" xml:space="preserve">
+    <value>その価値</value>
+  </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>取り組む目標（既定は称号ハント）</value>
+  </data>
+  <data name="What you lost" xml:space="preserve">
+    <value>失った点</value>
+  </data>
+  <data name="What you pressed" xml:space="preserve">
+    <value>踏んだ判定</value>
   </data>
   <data name="When" xml:space="preserve">
     <value>日時</value>
@@ -5318,6 +5390,9 @@
   </data>
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>あなたのリストとコミュニティの違い、そしてそれを押したスキル。譜面をタップするとソース別の完全な内訳が見られます。</value>
+  </data>
+  <data name="Where your score came from" xml:space="preserve">
+    <value>スコアの内訳</value>
   </data>
   <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
     <value>レベル表記に正直なチャートはどれか — 嘘をついているのはどれか。</value>
@@ -5727,6 +5802,9 @@
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>あなたに難しいのは{0}譜面 — 主に{1}</value>
   </data>
+  <data name="{0} instead of {1}" xml:space="preserve">
+    <value>{1} ではなく {0}</value>
+  </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} は {1} に収録されていません — 曲ごと削除されました。</value>
   </data>
@@ -5814,6 +5892,9 @@
   <data name="{0} on the board" xml:space="preserve">
     <value>{0}人が参加中</value>
   </data>
+  <data name="{0} other folders within {1}" xml:space="preserve">
+    <value>{1} 以内の他のフォルダ {0} 件</value>
+  </data>
   <data name="{0} paragons" xml:space="preserve">
     <value>パラゴン {0} 件</value>
   </data>
@@ -5834,6 +5915,9 @@
   </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>プレーヤー {0} 人・{1} の週</value>
+  </data>
+  <data name="{0} points to {1}" xml:space="preserve">
+    <value>{1} まで {0} 点</value>
   </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>今週の Pump It Up チャレンジ譜面{0}件、ライブ順位付きのデイリー譜面、そして月間 PUMBILITY ボード。</value>
@@ -5918,6 +6002,9 @@
   </data>
   <data name="— Zelllooo" xml:space="preserve">
     <value>— Zelllooo</value>
+  </data>
+  <data name="≈ {0} arrows pressed" xml:space="preserve">
+    <value>≈ {0} 回の踏み込み</value>
   </data>
   <data name="▲ Harder" xml:space="preserve">
     <value>▲ 難化</value>
