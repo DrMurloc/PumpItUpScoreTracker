@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
@@ -11,36 +13,68 @@ namespace ScoreTracker.Tests.DomainTests;
 
 public sealed class UserQualifiersTests
 {
+    private static readonly DateTimeOffset SubmittedAt = new(2026, 5, 1, 0, 0, 0, TimeSpan.Zero);
+    private static readonly Uri Photo = new("https://example.invalid/proof.png");
+
     private static QualifiersConfiguration Config(IEnumerable<Chart> charts, string scoringType, int playCount = 2,
         IDictionary<Guid, int>? adjustments = null) =>
         new(charts, adjustments ?? new Dictionary<Guid, int>(), Name.From(scoringType), 0, playCount, null, false);
 
     private static UserQualifiers New(QualifiersConfiguration config) =>
-        new(config, false, Name.From("player"), Guid.NewGuid(), new Dictionary<Guid, UserQualifiers.Submission>());
+        new(config, Name.From("player"), Guid.NewGuid(), new Dictionary<Guid, UserQualifiers.Submission>());
 
     [Fact]
-    public void ApproveFlipsIsApprovedToTrue()
-    {
-        var qualifiers = New(Config(Array.Empty<Chart>(), "Score"));
-
-        qualifiers.Approve();
-
-        Assert.True(qualifiers.IsApproved);
-    }
-
-    [Fact]
-    public void AddPhoenixScoreRecordsSubmissionForChart()
+    public void ManualScoreRecordsPhotoSourceAndTimestamp()
     {
         var qualifiers = New(Config(Array.Empty<Chart>(), "Score"));
         var chartId = Guid.NewGuid();
-        var photo = new Uri("https://example.invalid/proof.png");
 
-        var added = qualifiers.AddPhoenixScore(chartId, 950000, photo);
+        var added = qualifiers.AddManualScore(chartId, 950000, Photo, SubmittedAt);
 
         Assert.True(added);
-        Assert.True(qualifiers.Submissions.ContainsKey(chartId));
-        Assert.Equal((PhoenixScore)950000, qualifiers.Submissions[chartId].Score);
-        Assert.Equal(photo, qualifiers.Submissions[chartId].PhotoUrl);
+        var submission = qualifiers.Submissions[chartId];
+        Assert.Equal((PhoenixScore)950000, submission.Score);
+        Assert.Equal(Photo, submission.PhotoUrl);
+        Assert.Equal(SubmissionSource.Manual, submission.Source);
+        Assert.Equal(SubmittedAt, submission.SubmittedAt);
+    }
+
+    [Fact]
+    public void ManualScoreWithoutAPhotoIsRejected()
+    {
+        var qualifiers = New(Config(Array.Empty<Chart>(), "Score"));
+
+        Assert.Throws<QualifierPhotoRequiredException>(() =>
+            qualifiers.AddManualScore(Guid.NewGuid(), 950000, null!, SubmittedAt));
+        Assert.Empty(qualifiers.Submissions);
+    }
+
+    [Fact]
+    public void ImportedScoreCarriesNoPhotoAndIsMarkedAsSuch()
+    {
+        var qualifiers = New(Config(Array.Empty<Chart>(), "Score"));
+        var chartId = Guid.NewGuid();
+
+        qualifiers.AddImportedScore(chartId, 970000, SubmittedAt);
+
+        var submission = qualifiers.Submissions[chartId];
+        Assert.Null(submission.PhotoUrl);
+        Assert.Equal(SubmissionSource.OfficialImport, submission.Source);
+        Assert.Equal(SubmittedAt, submission.SubmittedAt);
+    }
+
+    [Fact]
+    public void ResubmittingAChartReplacesThePreviousSubmission()
+    {
+        var qualifiers = New(Config(Array.Empty<Chart>(), "Score"));
+        var chartId = Guid.NewGuid();
+
+        qualifiers.AddImportedScore(chartId, 900000, SubmittedAt);
+        qualifiers.AddManualScore(chartId, 980000, Photo, SubmittedAt.AddHours(1));
+
+        Assert.Single(qualifiers.Submissions);
+        Assert.Equal((PhoenixScore)980000, qualifiers.Submissions[chartId].Score);
+        Assert.Equal(SubmissionSource.Manual, qualifiers.Submissions[chartId].Source);
     }
 
     [Fact]
@@ -82,7 +116,7 @@ public sealed class UserQualifiersTests
     {
         var chart = new ChartBuilder().WithLevel(20).Build();
         var qualifiers = New(Config(new[] { chart }, "Fungpapi"));
-        qualifiers.AddPhoenixScore(chart.Id, 965000, null);
+        qualifiers.AddImportedScore(chart.Id, 965000, SubmittedAt);
 
         // Fungpapi at 965,000 → level (20)
         Assert.Equal(20.0, qualifiers.Rating(chart.Id));
@@ -97,9 +131,9 @@ public sealed class UserQualifiersTests
         var config = Config(new[] { chartA, chartB, chartC }, "Score", playCount: 2);
         var qualifiers = New(config);
 
-        qualifiers.AddPhoenixScore(chartA.Id, 900000, null);
-        qualifiers.AddPhoenixScore(chartB.Id, 950000, null);
-        qualifiers.AddPhoenixScore(chartC.Id, 980000, null);
+        qualifiers.AddImportedScore(chartA.Id, 900000, SubmittedAt);
+        qualifiers.AddImportedScore(chartB.Id, 950000, SubmittedAt);
+        qualifiers.AddImportedScore(chartC.Id, 980000, SubmittedAt);
 
         var best = qualifiers.BestCharts().ToArray();
 
@@ -114,8 +148,8 @@ public sealed class UserQualifiersTests
         var chartA = new ChartBuilder().WithLevel(20).Build();
         var chartB = new ChartBuilder().WithLevel(20).Build();
         var qualifiers = New(Config(new[] { chartA, chartB }, "Score", playCount: 2));
-        qualifiers.AddPhoenixScore(chartA.Id, 900000, null);
-        qualifiers.AddPhoenixScore(chartB.Id, 950000, null);
+        qualifiers.AddImportedScore(chartA.Id, 900000, SubmittedAt);
+        qualifiers.AddImportedScore(chartB.Id, 950000, SubmittedAt);
 
         Assert.Equal(900000.0 + 950000.0, qualifiers.CalculateScore());
     }
@@ -126,8 +160,8 @@ public sealed class UserQualifiersTests
         var chartA = new ChartBuilder().WithLevel(20).Build();
         var chartB = new ChartBuilder().WithLevel(20).Build();
         var qualifiers = New(Config(new[] { chartA, chartB }, "Fungpapi", playCount: 4));
-        qualifiers.AddPhoenixScore(chartA.Id, 965000, null); // → 20
-        qualifiers.AddPhoenixScore(chartB.Id, 965000 + 17500, null); // → 21
+        qualifiers.AddImportedScore(chartA.Id, 965000, SubmittedAt); // → 20
+        qualifiers.AddImportedScore(chartB.Id, 965000 + 17500, SubmittedAt); // → 21
 
         // Fungpapi divides by configured PlayCount (4) even when fewer charts are submitted
         Assert.Equal((20.0 + 21.0) / 4.0, qualifiers.CalculateScore());
@@ -149,13 +183,26 @@ public sealed class UserQualifiersTests
         var adjustments = new Dictionary<Guid, int> { [chart.Id] = 10 };
         var qualifiers = New(Config(new[] { chart }, "Score", adjustments: adjustments));
         var baseline = New(Config(new[] { chart }, "Score"));
-        var photo = new Uri("https://example.invalid/x.png");
 
         // Use a step screen with greats so the score is below the 1M ceiling and the
         // adjustment (which lifts perfects + maxCombo) produces a measurably higher score.
-        baseline.AddXXScore(chart.Id, 90, 10, 0, 0, 0, 90, photo);
-        qualifiers.AddXXScore(chart.Id, 90, 10, 0, 0, 0, 90, photo);
+        baseline.AddXXScore(chart.Id, 90, 10, 0, 0, 0, 90, Photo, SubmittedAt);
+        qualifiers.AddXXScore(chart.Id, 90, 10, 0, 0, 0, 90, Photo, SubmittedAt);
 
         Assert.True(qualifiers.Submissions[chart.Id].Score > baseline.Submissions[chart.Id].Score);
+    }
+
+    [Fact]
+    public void AddXXScoreIsAManualSubmissionAndStillNeedsAPhoto()
+    {
+        var chart = new ChartBuilder().WithLevel(20).Build();
+        var qualifiers = New(Config(new[] { chart }, "Score"));
+
+        qualifiers.AddXXScore(chart.Id, 90, 10, 0, 0, 0, 90, Photo, SubmittedAt);
+        Assert.Equal(SubmissionSource.Manual, qualifiers.Submissions[chart.Id].Source);
+
+        var noPhoto = New(Config(new[] { chart }, "Score"));
+        Assert.Throws<QualifierPhotoRequiredException>(() =>
+            noPhoto.AddXXScore(chart.Id, 90, 10, 0, 0, 0, 90, null!, SubmittedAt));
     }
 }

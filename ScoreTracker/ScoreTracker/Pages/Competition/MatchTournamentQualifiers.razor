@@ -39,10 +39,9 @@
             <MudTh>#@place @L["Song"]</MudTh>
         }
         <MudTh>@L["Rating"]</MudTh>
-        <MudTh>@L["Photos"]</MudTh>
         @if (_myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
         {
-            <MudTh>Approve</MudTh>
+            <MudTh>@L["Photos"]</MudTh>
         }
     </HeaderContent>
     <RowTemplate>
@@ -79,23 +78,11 @@
                 @context.Score.ToString("0.###")
             }
         </MudTd>
-        <MudTd>
-            @if (context.IsApproved || _myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
-            {
-                <MudIconButton Icon="@Icons.Material.Filled.PhotoAlbum" Color="Color.Primary" OnClick="() => SelectEntry(context)"></MudIconButton>
-            }
-            else
-            {
-                <MudText>@L["Pending"]</MudText>
-            }
-        </MudTd>
+        @* Photos are organiser reference, not public evidence — players never see each other's. *@
         @if (_myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
         {
             <MudTd>
-                @if (!context.IsApproved)
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.Check" Color="Color.Primary" OnClick="() => Approve(context.Record)"></MudIconButton>
-                }
+                <MudIconButton Icon="@Icons.Material.Filled.PhotoAlbum" Color="Color.Primary" OnClick="() => SelectEntry(context)"></MudIconButton>
             </MudTd>
         }
     </RowTemplate>
@@ -182,13 +169,6 @@
         _selectedEntry = _selectedEntry?.UserName == entry.UserName ? null : entry;
     }
 
-    private async Task Approve(UserQualifiers qual)
-    {
-        qual.Approve();
-        await Qualifiers.SaveQualifiers(TournamentId, qual);
-        Snackbar.Add("Approved!", Severity.Success);
-    }
-
     private TournamentRole? _myRole;
     private static readonly Guid Bite8 = new Guid("F7B2AD89-FCE5-4D34-BFB5-0810B440A5E4");
     protected override async Task OnInitializedAsync()
@@ -217,7 +197,7 @@
             .OrderByDescending(q => q.CalculateScore())
             .Select((q, index) => new Entry(index + 1, q.UserName,
             
-            q.BestCharts().Select(c=>(c.Chart,c.Score,c.Rating,q.Submissions[c.Chart.Id].PhotoUrl??c.Chart.Song.ImagePath)).ToArray(),q.IsApproved,
+            q.BestCharts().Select(c=>(c.Chart,c.Score,c.Rating,q.Submissions[c.Chart.Id].PhotoUrl??c.Chart.Song.ImagePath)).ToArray(),
             q.CalculateScore(),q))
             .ToList();
 
@@ -231,7 +211,7 @@
     {
         await OnInitializedAsync();
     }
-    private sealed record Entry(int Place, string UserName, (Chart,PhoenixScore, double, Uri)[] Scores, bool IsApproved, double Score, UserQualifiers Record)
+    private sealed record Entry(int Place, string UserName, (Chart,PhoenixScore, double, Uri)[] Scores, double Score, UserQualifiers Record)
     {
 
     }

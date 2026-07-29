@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +15,7 @@ using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -23,6 +24,8 @@ public sealed class QualifiersSagaTests
 {
     private static QualifiersConfiguration Config(IEnumerable<Chart> charts) =>
         new(charts, new Dictionary<Guid, int>(), Name.From("Score"), 0, 1, null, false);
+
+    private static readonly DateTimeOffset ImportedAt = new(2026, 5, 1, 0, 0, 0, TimeSpan.Zero);
 
     private static Mock<ConsumeContext<ScoreImportCompletedEvent>> ContextOf(ScoreImportCompletedEvent message)
     {
@@ -40,9 +43,9 @@ public sealed class QualifiersSagaTests
         var tournamentId = Guid.NewGuid();
         var userId = Guid.NewGuid();
 
-        var existing = new UserQualifiers(config, false, Name.From("hero"), userId,
+        var existing = new UserQualifiers(config, Name.From("hero"), userId,
             new Dictionary<Guid, UserQualifiers.Submission>());
-        existing.AddPhoenixScore(chart.Id, 900000, null);
+        existing.AddImportedScore(chart.Id, 900000, ImportedAt);
 
         var qualifiersRepo = new Mock<IQualifiersRepository>();
         var userRepo = new Mock<IUserReader>();
@@ -56,7 +59,7 @@ public sealed class QualifiersSagaTests
             .ReturnsAsync(existing);
 
         var saga = new QualifiersSaga(qualifiersRepo.Object, userRepo.Object,
-            NullLogger<QualifiersSaga>.Instance, mediator.Object);
+            NullLogger<QualifiersSaga>.Instance, mediator.Object, FakeDateTime.At(ImportedAt).Object);
 
         var entry = new ScoreImportCompletedEvent.ImportedScore(chart.Id, 950000, "PerfectGame", false);
         var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, MixEnum.Phoenix, new[] { entry });
@@ -78,9 +81,9 @@ public sealed class QualifiersSagaTests
         var tournamentId = Guid.NewGuid();
         var userId = Guid.NewGuid();
 
-        var existing = new UserQualifiers(config, false, Name.From("hero"), userId,
+        var existing = new UserQualifiers(config, Name.From("hero"), userId,
             new Dictionary<Guid, UserQualifiers.Submission>());
-        existing.AddPhoenixScore(chart.Id, 950000, null);
+        existing.AddImportedScore(chart.Id, 950000, ImportedAt);
 
         var qualifiersRepo = new Mock<IQualifiersRepository>();
         var userRepo = new Mock<IUserReader>();
@@ -94,7 +97,7 @@ public sealed class QualifiersSagaTests
             .ReturnsAsync(existing);
 
         var saga = new QualifiersSaga(qualifiersRepo.Object, userRepo.Object,
-            NullLogger<QualifiersSaga>.Instance, mediator.Object);
+            NullLogger<QualifiersSaga>.Instance, mediator.Object, FakeDateTime.At(ImportedAt).Object);
 
         var entry = new ScoreImportCompletedEvent.ImportedScore(chart.Id, 800000, "PerfectGame", false);
         var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, MixEnum.Phoenix, new[] { entry });
@@ -128,7 +131,7 @@ public sealed class QualifiersSagaTests
             .ReturnsAsync(user);
 
         var saga = new QualifiersSaga(qualifiersRepo.Object, userRepo.Object,
-            NullLogger<QualifiersSaga>.Instance, mediator.Object);
+            NullLogger<QualifiersSaga>.Instance, mediator.Object, FakeDateTime.At(ImportedAt).Object);
 
         var entry = new ScoreImportCompletedEvent.ImportedScore(chart.Id, 900000, "PerfectGame", false);
         var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, MixEnum.Phoenix, new[] { entry });
@@ -165,7 +168,7 @@ public sealed class QualifiersSagaTests
             .ReturnsAsync((User?)null);
 
         var saga = new QualifiersSaga(qualifiersRepo.Object, userRepo.Object,
-            NullLogger<QualifiersSaga>.Instance, mediator.Object);
+            NullLogger<QualifiersSaga>.Instance, mediator.Object, FakeDateTime.At(ImportedAt).Object);
 
         var entry = new ScoreImportCompletedEvent.ImportedScore(chart.Id, 900000, "PerfectGame", false);
         var message = ScoreImportCompletedEvent.Create(new DateTimeOffset(2026, 5, 1, 0, 0, 0, TimeSpan.Zero), ScoreImportCompletedEvent.OfficialImportSource, userId, MixEnum.Phoenix, new[] { entry });

@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.EventCompetition.Infrastructure.Entities;
@@ -62,13 +62,16 @@ namespace ScoreTracker.EventCompetition.Infrastructure
         private static UserQualifiers From(UserQualifierEntity entity, QualifiersConfiguration config)
         {
             var entries = JsonSerializer.Deserialize<QualifierSubmissionDto[]>(entity.Entries);
-            return new UserQualifiers(config, entity.IsApproved, entity.Name, entity.UserId, entries!.ToDictionary(
+            return new UserQualifiers(config, entity.Name, entity.UserId, entries!.ToDictionary(
                 e => e.ChartId, e =>
                     new UserQualifiers.Submission
                     {
                         ChartId = e.ChartId,
                         PhotoUrl = e.PhotoUrl == null ? null : new Uri(e.PhotoUrl),
-                        Score = e.Score
+                        Score = e.Score,
+                        // Rows written before the source was recorded carry it implicitly: the
+                        // importer never attached a photo, the submit form always did.
+                        Source = e.PhotoUrl == null ? SubmissionSource.OfficialImport : SubmissionSource.Manual
                     }));
         }
 
@@ -99,13 +102,11 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                     Id = Guid.NewGuid(),
                     UserId = qualifiers.UserId,
                     Entries = entryJson,
-                    IsApproved = qualifiers.IsApproved,
                     Name = nameString
                 }, cancellationToken);
             }
             else
             {
-                entity.IsApproved = qualifiers.IsApproved;
                 entity.Entries = entryJson;
                 if (entity.UserId == null && qualifiers.UserId != null) entity.UserId = qualifiers.UserId;
                 entity.Name = nameString;
@@ -116,7 +117,6 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                 TournamentId = tournamentId,
                 Id = Guid.NewGuid(),
                 Entries = entryJson,
-                IsApproved = qualifiers.IsApproved,
                 Name = nameString,
                 RecordedDate = DateTimeOffset.Now
             }, cancellationToken);

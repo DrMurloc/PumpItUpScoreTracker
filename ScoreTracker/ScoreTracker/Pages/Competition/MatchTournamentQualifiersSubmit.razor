@@ -1,4 +1,4 @@
-@page "/Tournament/{TournamentId:guid}/Qualifiers/Submit"
+﻿@page "/Tournament/{TournamentId:guid}/Qualifiers/Submit"
 @rendermode RenderModes.Interactive
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Queries
@@ -446,7 +446,7 @@
             _currentQualifiers = await Qualifiers.GetQualifiers(TournamentId, CurrentUser.User.Name, _configuration);
             if (_currentQualifiers == null || (_currentQualifiers.UserId != null && _currentQualifiers.UserId != CurrentUser.User.Id))
             {
-                _currentQualifiers = new UserQualifiers(_configuration, false, CurrentUser.User.Name, CurrentUser.User.Id, new Dictionary<Guid, UserQualifiers.Submission>());
+                _currentQualifiers = new UserQualifiers(_configuration, CurrentUser.User.Name, CurrentUser.User.Id, new Dictionary<Guid, UserQualifiers.Submission>());
 
             }
         }
@@ -465,7 +465,7 @@
             if (qualifiers == null)
             {
                 _isNew = true;
-                qualifiers = new UserQualifiers(_configuration,false,"Not Set",CurrentUser.IsLoggedIn?CurrentUser.User.Id:null,new Dictionary<Guid, UserQualifiers.Submission>())
+                qualifiers = new UserQualifiers(_configuration,"Not Set",CurrentUser.IsLoggedIn?CurrentUser.User.Id:null,new Dictionary<Guid, UserQualifiers.Submission>())
                 {
                     UserName = nameString
                 };
@@ -576,8 +576,9 @@
         {
             return;
         }
-        var result = _addingMix == MixEnum.Phoenix ? _currentQualifiers.AddPhoenixScore(_submittingChart.Id, _score, _photoUrl)
-            : _currentQualifiers.AddXXScore(_submittingChart.Id, _perfects, _greats, _goods, _bads, _misses, _maxCombo, _photoUrl);
+        var submittedAt = DateTimeOffset.Now;
+        var result = _addingMix == MixEnum.Phoenix ? _currentQualifiers.AddManualScore(_submittingChart.Id, _score, _photoUrl, submittedAt)
+            : _currentQualifiers.AddXXScore(_submittingChart.Id, _perfects, _greats, _goods, _bads, _misses, _maxCombo, _photoUrl, submittedAt);
         if (!result)
         {
             Snackbar.Add("Your previous score for this chart was higher!", Severity.Error);
@@ -623,7 +624,7 @@
                     continue;
                 }
                 _importResults.Add($"{score.Chart.Song.Name} {score.Chart.DifficultyString} found with {score.Score}!");
-                _currentQualifiers.AddPhoenixScore(score.Chart.Id, score.Score, null);
+                _currentQualifiers.AddImportedScore(score.Chart.Id, score.Score, DateTimeOffset.Now);
                 newResults = true;
             }
             if (newResults)

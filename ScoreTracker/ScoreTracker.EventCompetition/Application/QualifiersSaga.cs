@@ -10,7 +10,8 @@ using ScoreTracker.Domain.SecondaryPorts;
 namespace ScoreTracker.EventCompetition.Application
 {
     internal sealed class QualifiersSaga(IQualifiersRepository qualifiersRepo, IUserReader userRepo,
-        ILogger<QualifiersSaga> logger, IMediator mediator) : IConsumer<ScoreImportCompletedEvent>
+        ILogger<QualifiersSaga> logger, IMediator mediator, IDateTimeOffsetAccessor dateTimeOffset)
+        : IConsumer<ScoreImportCompletedEvent>
     {
         public async Task Consume(ConsumeContext<ScoreImportCompletedEvent> context)
         {
@@ -33,7 +34,7 @@ namespace ScoreTracker.EventCompetition.Application
                         continue;
                     }
 
-                    userEntry = new UserQualifiers(qualifiers, false, userInfo.Name, userInfo.Id,
+                    userEntry = new UserQualifiers(qualifiers, userInfo.Name, userInfo.Id,
                         new Dictionary<Guid, UserQualifiers.Submission>());
                 }
 
@@ -44,7 +45,7 @@ namespace ScoreTracker.EventCompetition.Application
                     var score = charts[matchedChart.Id].Score;
                     if (existing >= score) continue;
 
-                    userEntry.AddPhoenixScore(matchedChart.Id, score, null);
+                    userEntry.AddImportedScore(matchedChart.Id, score, dateTimeOffset.Now);
                     needsSaved = true;
                 }
 
