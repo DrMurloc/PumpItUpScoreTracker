@@ -32,6 +32,12 @@
   <data name="Auto Submit On" xml:space="preserve">
     <value>Auto-submit is on. Qualifier scores found in your imports post here on their own.</value>
   </data>
+  <data name="Auto Submit Turned Off" xml:space="preserve">
+    <value>Auto-submit is off. Imports will no longer post here.</value>
+  </data>
+  <data name="Auto Submit Turned On" xml:space="preserve">
+    <value>Auto-submit is on. Imports will post here for you.</value>
+  </data>
   <data name="Bad" xml:space="preserve">
     <value>Bad</value>
   </data>
@@ -4721,6 +4727,9 @@
   </data>
   <data name="Submit" xml:space="preserve">
     <value>Submit</value>
+  </data>
+  <data name="Submit Qualifier" xml:space="preserve">
+    <value>Submit qualifier</value>
   </data>
   <data name="Submit Score" xml:space="preserve">
     <value>Submit score</value>

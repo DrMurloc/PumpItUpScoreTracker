@@ -32,6 +32,12 @@
   <data name="Auto Submit On" xml:space="preserve">
     <value>자동 제출이 켜져 있습니다. 가져오기에서 찾은 예선 점수가 자동으로 올라갑니다.</value>
   </data>
+  <data name="Auto Submit Turned Off" xml:space="preserve">
+    <value>자동 제출을 껐습니다. 가져오기가 더 이상 올라가지 않습니다.</value>
+  </data>
+  <data name="Auto Submit Turned On" xml:space="preserve">
+    <value>자동 제출을 켰습니다. 가져오기가 여기에 올라갑니다.</value>
+  </data>
   <data name="Bad" xml:space="preserve">
     <value>BAD</value>
   </data>
@@ -4663,6 +4669,9 @@
   </data>
   <data name="Submit" xml:space="preserve">
     <value>제출</value>
+  </data>
+  <data name="Submit Qualifier" xml:space="preserve">
+    <value>예선 제출</value>
   </data>
   <data name="Submit Score" xml:space="preserve">
     <value>점수 제출</value>

@@ -32,6 +32,12 @@
   <data name="Auto Submit On" xml:space="preserve">
     <value>Mrglaug gorb. Murglrgl mgrlgmrg glo murgla blarg mrgl.</value>
   </data>
+  <data name="Auto Submit Turned Off" xml:space="preserve">
+    <value>Mrglaug blorp. Murgla blub blarg lomo.</value>
+  </data>
+  <data name="Auto Submit Turned On" xml:space="preserve">
+    <value>Mrglaug gorb. Murgla blarg lomo.</value>
+  </data>
   <data name="Bad" xml:space="preserve">
     <value>Blab</value>
   </data>
@@ -4721,6 +4727,9 @@
   </data>
   <data name="Submit" xml:space="preserve">
     <value>Lurgmurp</value>
+  </data>
+  <data name="Submit Qualifier" xml:space="preserve">
+    <value>Blarg Murglrgl</value>
   </data>
   <data name="Submit Score" xml:space="preserve">
     <value>Blarg Mrglrgl</value>

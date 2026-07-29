@@ -17,7 +17,7 @@
 @* Photo, then score, then save. The photo is not optional for a score you type in - it is the
    only evidence an organiser has - but it never leaves the organiser screen, which is what the
    hint says out loud. *@
-<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" MaxWidth="MaxWidth.False" Class="qual-dialog">
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="_options" Class="qual-dialog">
     <DialogContent>
         @if (Chart != null)
         {
@@ -163,6 +163,11 @@
     [Parameter] public PhoenixScore? Existing { get; set; }
 
     [Parameter] public EventCallback Submitted { get; set; }
+
+    // MaxWidth.False on purpose: Small would tag the dialog `mud-dialog-width-sm`, which
+    // charts.css nulls with `max-width: none !important` — no normal rule can beat that.
+    private readonly DialogOptions _options = new()
+        { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.False };
 
     private const long MaxFileSize = 20000000;
 

@@ -54,8 +54,12 @@ namespace ScoreTracker.EventCompetition.Application
                              (await qualifiers.GetRegisteredUsers(request.TournamentId, cancellationToken))
                              .Contains(currentUser.User.Id);
 
+            // A signed-in player with no entry yet is exactly who suggestions are for, so they
+            // get a transient empty one rather than nothing. Nothing here is persisted.
             var mine = currentUser.IsLoggedIn
                 ? all.FirstOrDefault(q => q.UserId == currentUser.User.Id)
+                  ?? new UserQualifiers(config, currentUser.User.Name, currentUser.User.Id,
+                      new Dictionary<Guid, UserQualifiers.Submission>())
                 : null;
 
             return new QualifierBoard(

@@ -110,7 +110,7 @@ else
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
                                Disabled="!CanStartSubmission"
                                StartIcon="@Icons.Material.Filled.AddAPhoto" OnClick="OpenPicker">
-                        @L["Start A Submission"]
+                        @L["Submit Qualifier"]
                     </MudButton>
                 </MudStack>
             </div>
@@ -145,6 +145,9 @@ else
             @foreach (var (entry, index) in _board.Ranked.Select((e, i) => (e, i)))
             {
                 var isMe = _board.Yours != null && entry.UserName == _board.Yours.UserName;
+                var isOpen = _openEntry == entry.UserName.ToString();
+                @* A chip opens the row, not the chart: on a board you want the scores behind a
+                   total, and the chart page is a click away from the pool below. *@
                 <div class="olb-rank-card @(isMe ? "olb-row-me" : "")">
                     <span class="olb-board-place">@(index + 1)</span>
                     <span>@entry.UserName</span>
@@ -154,16 +157,42 @@ else
                             {
                                 <QualifierChip Chart="play.Chart" Score="play.Score" Rating="play.Rating"
                                                WholeNumberRating="IsRawScoreScoring"
-                                               ChartSelected="ShowChartDetails"></QualifierChip>
+                                               ChartSelected="_ => ToggleEntry(entry)"></QualifierChip>
                             }
                             @if (entry.Plays.Count > MaxChips)
                             {
-                                <span class="qual-chip-more">+@(entry.Plays.Count - MaxChips)</span>
+                                <MudButton Variant="Variant.Text" Size="Size.Small" Class="qual-chip-more"
+                                           OnClick="() => ToggleEntry(entry)">+@(entry.Plays.Count - MaxChips)</MudButton>
                             }
                         </span>
                         <span style="font-variant-numeric:tabular-nums;font-weight:700;">@Num(entry.Total)</span>
+                        <MudIconButton Size="Size.Small" aria-label=@L["Show Submissions"]
+                                       Icon="@(isOpen ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                       OnClick="() => ToggleEntry(entry)"></MudIconButton>
                     </span>
                 </div>
+                @if (isOpen)
+                {
+                    <div class="qual-breakdown">
+                        @foreach (var play in entry.Plays)
+                        {
+                            <div class="qual-breakdown-row">
+                                <img class="qual-breakdown-art" src="@play.Chart.Song.ImagePath" alt=""/>
+                                <span class="qual-breakdown-meta">
+                                    <span class="qual-breakdown-name">@play.Chart.Song.Name</span>
+                                    <span class="qual-breakdown-sub">
+                                        <DifficultyBubble Chart="play.Chart" Small="true"></DifficultyBubble>
+                                        <span class="qual-card-grade" style="color:@MixThemes.GradeVar(play.Score.LetterGradeFor(play.Chart.Mix))">
+                                            @play.Score.LetterGradeFor(play.Chart.Mix).GetName()
+                                        </span>
+                                        <span class="qual-card-score">@(((int)play.Score).ToString("N0"))</span>
+                                    </span>
+                                </span>
+                                <span class="qual-breakdown-rating">@Num(play.Rating)</span>
+                            </div>
+                        }
+                    </div>
+                }
             }
             @if (_board.WithoutScores.Any())
             {
@@ -248,17 +277,18 @@ else
                        UserName="@SubmissionName" Existing="ExistingFor(_submitChart?.Id)"
                        Submitted="Reload"></QualifierSubmitDialog>
 
-<MudDialog @bind-Visible="_pickerOpen" MaxWidth="MaxWidth.False" Class="qual-dialog">
+<MudDialog @bind-Visible="_pickerOpen" Options="_dialogOptions" Class="qual-dialog">
     <DialogContent>
         <MudText Typo="Typo.subtitle1">@L["Which Chart Did You Play"]</MudText>
         <MudList T="string">
-            @foreach (var chart in _board?.Configuration.Charts.OrderBy(c => c.Level) ?? Enumerable.Empty<Chart>())
+            @foreach (var chart in _board?.Configuration.Charts.OrderBy(c => c.Level).ThenBy(c => c.Type) ?? Enumerable.Empty<Chart>())
             {
                 <MudListItem T="string" OnClick="() => OpenSubmit(chart)">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <span class="qual-pick">
+                        <img class="qual-pick-art" src="@chart.Song.ImagePath" alt=""/>
                         <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
-                        <MudText>@chart.Song.Name</MudText>
-                    </MudStack>
+                        <span class="qual-pick-name">@chart.Song.Name</span>
+                    </span>
                 </MudListItem>
             }
         </MudList>
@@ -280,6 +310,10 @@ else
     private bool _submitOpen;
     private bool _pickerOpen;
     private bool _isTogglingAutoSubmit;
+    private string? _openEntry;
+
+    private readonly DialogOptions _dialogOptions = new()
+        { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.False };
 
     private string _title = "Qualifiers";
 
@@ -384,6 +418,12 @@ else
         _detailsOpen = true;
     }
 
+    private void ToggleEntry(QualifierEntry entry)
+    {
+        var key = entry.UserName.ToString();
+        _openEntry = _openEntry == key ? null : key;
+    }
+
     private void OpenPicker() => _pickerOpen = true;
 
     private void OpenSubmit(Chart chart)
@@ -400,8 +440,11 @@ else
         _isTogglingAutoSubmit = true;
         try
         {
-            await Mediator.Send(new SetQualifierAutoSubmitCommand(TournamentId, !_board.AutoSubmitEnabled));
+            var enabling = !_board.AutoSubmitEnabled;
+            await Mediator.Send(new SetQualifierAutoSubmitCommand(TournamentId, enabling));
             await Reload();
+            Snackbar.Add(enabling ? L["Auto Submit Turned On"] : L["Auto Submit Turned Off"],
+                Severity.Success);
         }
         catch (Exception)
         {

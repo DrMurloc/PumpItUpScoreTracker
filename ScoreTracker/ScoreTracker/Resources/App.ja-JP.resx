@@ -32,6 +32,12 @@
   <data name="Auto Submit On" xml:space="preserve">
     <value>自動提出はオンです。インポートで見つかった予選スコアは自動で登録されます。</value>
   </data>
+  <data name="Auto Submit Turned Off" xml:space="preserve">
+    <value>自動提出をオフにしました。インポートは登録されません。</value>
+  </data>
+  <data name="Auto Submit Turned On" xml:space="preserve">
+    <value>自動提出をオンにしました。インポートがここに登録されます。</value>
+  </data>
   <data name="Bad" xml:space="preserve">
     <value>BAD</value>
   </data>
@@ -4721,6 +4727,9 @@
   </data>
   <data name="Submit" xml:space="preserve">
     <value>登録</value>
+  </data>
+  <data name="Submit Qualifier" xml:space="preserve">
+    <value>予選を提出</value>
   </data>
   <data name="Submit Score" xml:space="preserve">
     <value>スコアを提出</value>

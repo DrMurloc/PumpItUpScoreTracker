@@ -32,6 +32,12 @@
   <data name="Auto Submit On" xml:space="preserve">
     <value>L'invio automatico è attivo. I punteggi di qualificazione delle tue importazioni si pubblicano da soli.</value>
   </data>
+  <data name="Auto Submit Turned Off" xml:space="preserve">
+    <value>Invio automatico disattivato. Le importazioni non si pubblicheranno più qui.</value>
+  </data>
+  <data name="Auto Submit Turned On" xml:space="preserve">
+    <value>Invio automatico attivo. Le importazioni si pubblicheranno qui.</value>
+  </data>
   <data name="Bad" xml:space="preserve">
     <value>Bad</value>
   </data>
@@ -4721,6 +4727,9 @@
   </data>
   <data name="Submit" xml:space="preserve">
     <value>Invia</value>
+  </data>
+  <data name="Submit Qualifier" xml:space="preserve">
+    <value>Invia qualificazione</value>
   </data>
   <data name="Submit Score" xml:space="preserve">
     <value>Invia punteggio</value>

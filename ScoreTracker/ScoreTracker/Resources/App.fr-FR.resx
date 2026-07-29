@@ -32,6 +32,12 @@
   <data name="Auto Submit On" xml:space="preserve">
     <value>L'envoi automatique est activé. Les scores de qualification de vos imports se publient tout seuls.</value>
   </data>
+  <data name="Auto Submit Turned Off" xml:space="preserve">
+    <value>Envoi automatique désactivé. Vos imports ne se publieront plus ici.</value>
+  </data>
+  <data name="Auto Submit Turned On" xml:space="preserve">
+    <value>Envoi automatique activé. Vos imports se publieront ici.</value>
+  </data>
   <data name="Bad" xml:space="preserve">
     <value>Bad</value>
   </data>
@@ -4720,6 +4726,9 @@
   </data>
   <data name="Submit" xml:space="preserve">
     <value>Envoyer</value>
+  </data>
+  <data name="Submit Qualifier" xml:space="preserve">
+    <value>Envoyer la qualification</value>
   </data>
   <data name="Submit Score" xml:space="preserve">
     <value>Envoyer le score</value>
