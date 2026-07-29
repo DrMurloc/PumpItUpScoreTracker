@@ -17,7 +17,67 @@
     <resheader name="version">2.0</resheader>
     <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
     <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Add A Photo" xml:space="preserve">
+    <value>写真を追加</value>
+  </data>
+  <data name="Add A Photo To Submit" xml:space="preserve">
+    <value>提出するには写真を追加</value>
+  </data>
+  <data name="Auto Submit Change Failed" xml:space="preserve">
+    <value>変更できませんでした。少し待ってからもう一度お試しください。</value>
+  </data>
+  <data name="Auto Submit Off" xml:space="preserve">
+    <value>自動提出はインポートで見つかった予選スコアをここに登録するので、二度入力する必要はありません。</value>
+  </data>
+  <data name="Auto Submit On" xml:space="preserve">
+    <value>自動提出はオンです。インポートで見つかった予選スコアは自動で登録されます。</value>
+  </data>
+  <data name="Bad" xml:space="preserve">
+    <value>BAD</value>
+  </data>
+  <data name="Best Of Count" xml:space="preserve">
+    <value>{1}譜面中の上位{0}譜面が対象</value>
+  </data>
+  <data name="Closed" xml:space="preserve">
+    <value>締め切り</value>
+  </data>
+  <data name="Closes In" xml:space="preserve">
+    <value>締め切りまで</value>
+  </data>
+  <data name="Counting" xml:space="preserve">
+    <value>対象</value>
+  </data>
+  <data name="Counting Toward Your Total" xml:space="preserve">
+    <value>合計に加算</value>
+  </data>
+  <data name="Days Hours Left" xml:space="preserve">
+    <value>{0}日{1}時間</value>
+  </data>
+  <data name="Enter A Score" xml:space="preserve">
+    <value>スコアを入力</value>
+  </data>
+  <data name="Enter Judgements" xml:space="preserve">
+    <value>判定を入力</value>
+  </data>
+  <data name="Fill In The Six Counts" xml:space="preserve">
+    <value>6つの判定数を入力してください</value>
+  </data>
+  <data name="Great" xml:space="preserve">
+    <value>GREAT</value>
+  </data>
+  <data name="Hours Minutes Left" xml:space="preserve">
+    <value>{0}時間{1}分</value>
+  </data>
+  <data name="How This Is Scored" xml:space="preserve">
+    <value>採点方法</value>
+  </data>
+  <data name="Leading The Field" xml:space="preserve">
+    <value>首位です</value>
+  </data>
+  <data name="Miss" xml:space="preserve">
+    <value>MISS</value>
+  </data>
+  <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
     <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
     <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
         <value>[base64 mime encoded serialized .NET Framework object]</value>
@@ -2660,6 +2720,9 @@
   <data name="Nearly complete folder" xml:space="preserve">
     <value>フォルダーほぼ制覇</value>
   </data>
+  <data name="Need To Pass" xml:space="preserve">
+    <value>{1}を抜くにはあと{0}</value>
+  </data>
   <data name="net" xml:space="preserve">
     <value>合計</value>
   </data>
@@ -2790,6 +2853,9 @@
   <data name="No Recorded Scores" xml:space="preserve">
 	  <value>スコア記録なし</value>
   </data>
+  <data name="No Score Yet" xml:space="preserve">
+    <value>スコアなし</value>
+  </data>
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>まだ記録がありません——最初の挑戦を記録するとここが灯ります。</value>
   </data>
@@ -2864,6 +2930,9 @@
   </data>
   <data name="not comparable to modern levels" xml:space="preserve">
     <value>現行レベルとは比較できません</value>
+  </data>
+  <data name="Not Counting" xml:space="preserve">
+    <value>対象外</value>
   </data>
   <data name="Not Enough Data" xml:space="preserve">
     <value>データ不足</value>
@@ -2961,6 +3030,9 @@
   </data>
   <data name="Of everything within reach, these are the least like it." xml:space="preserve">
     <value>対象範囲の中で、これらが最も似ていない譜面です。</value>
+  </data>
+  <data name="Of Field" xml:space="preserve">
+    <value>/ {0}人</value>
   </data>
   <data name="Of Note" xml:space="preserve">
     <value>注目</value>
@@ -3210,6 +3282,9 @@
   <data name="Percentile" xml:space="preserve">
     <value>Percentile</value>
   </data>
+  <data name="Perfect" xml:space="preserve">
+    <value>PERFECT</value>
+  </data>
   <data name="perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80" xml:space="preserve">
     <value>perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80</value>
   </data>
@@ -3298,8 +3373,17 @@
   <data name="Phoenix Scores" xml:space="preserve">
     <value>Phoenixスコア</value>
   </data>
+  <data name="Photo Hint Organizers Only" xml:space="preserve">
+    <value>筐体のリザルト画面の写真。主催者だけが見られます。</value>
+  </data>
   <data name="Photo proof" xml:space="preserve">
     <value>写真による証明</value>
+  </data>
+  <data name="Photo Too Large" xml:space="preserve">
+    <value>写真が20MBを超えています。小さくしてもう一度お試しください。</value>
+  </data>
+  <data name="Photo Upload Failed" xml:space="preserve">
+    <value>写真をアップロードできませんでした。もう一度お試しください。</value>
   </data>
   <data name="Photos" xml:space="preserve">
     <value>写真</value>
@@ -3441,6 +3525,9 @@
   <data name="Played" xml:space="preserve">
     <value>プレイ済み</value>
   </data>
+  <data name="Played Not Counting" xml:space="preserve">
+    <value>プレイ済み、対象外</value>
+  </data>
   <data name="Player" xml:space="preserve">
 	  <value>プレーヤー</value>
   </data>
@@ -3503,6 +3590,9 @@
   </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>人気度の更新をキューに追加しました - 最新のスナップショットに再適用されます</value>
+  </data>
+  <data name="Post A Score" xml:space="preserve">
+    <value>スコアを登録</value>
   </data>
   <data name="Post qualifier scores for community tournaments right from the site, and take on March of Murlocs — the site-run stamina session series. More formats on the way." xml:space="preserve">
     <value>コミュニティトーナメントの予選スコアをサイトから直接提出、そして March of Murlocs — サイト運営のスタミナセッションシリーズ — に挑戦。新フォーマットも準備中。</value>
@@ -3610,11 +3700,44 @@
   <data name="Pushing Title Charts" xml:space="preserve">
     <value>挑戦中の称号の譜面</value>
   </data>
+  <data name="Qualifier Existing Score" xml:space="preserve">
+    <value>すでに {0} {1} が登録されています。提出すると置き換わります。</value>
+  </data>
+  <data name="Qualifier First Submission Prompt" xml:space="preserve">
+    <value>下から譜面を選び、写真を添えてスコアを登録してください。アカウントは不要で、名前だけで大丈夫です。</value>
+  </data>
+  <data name="Qualifier Photo Rule" xml:space="preserve">
+    <value>手入力したスコアには写真が必要ですが、公式サイトから取り込んだスコアには不要です。写真は主催者にのみ渡されます。</value>
+  </data>
+  <data name="Qualifier Save Failed" xml:space="preserve">
+    <value>スコアを保存できませんでした。もう一度お試しください。</value>
+  </data>
+  <data name="Qualifier Saved" xml:space="preserve">
+    <value>保存しました。順位はすでに更新されています。</value>
+  </data>
+  <data name="Qualifier Scoring Explainer" xml:space="preserve">
+    <value>上位{0}譜面を合計します。同じ評価なら難しい譜面のほうが高くなります。</value>
+  </data>
+  <data name="Qualifier Step Photo" xml:space="preserve">
+    <value>1. リザルト画面の写真</value>
+  </data>
+  <data name="Qualifier Step Score" xml:space="preserve">
+    <value>2. スコア</value>
+  </data>
   <data name="Qualifier Submit Phrase 1" xml:space="preserve">
     <value>このツールはログイン必要ありません。登録前、ユーザー名を入力お願いします。</value>
   </data>
   <data name="Qualifier Submit Phrase 2" xml:space="preserve">
     <value>初めての登録！ユーザー名はdiscordとかstart.ggで同じく確認してください</value>
+  </data>
+  <data name="Qualifiers" xml:space="preserve">
+    <value>予選</value>
+  </data>
+  <data name="Qualifiers Admin" xml:space="preserve">
+    <value>予選の管理</value>
+  </data>
+  <data name="Qualifiers Are Closed" xml:space="preserve">
+    <value>予選は締め切られました。</value>
   </data>
   <data name="Qualifiers Leaderboard" xml:space="preserve">
     <value>{0}資格ランキング</value>
@@ -3701,6 +3824,9 @@
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>読み解くには、3つの異なる場所に保管された3つのものが同時に必要です：</value>
   </data>
+  <data name="Reads As Grade" xml:space="preserve">
+    <value>{0} 判定になります。</value>
+  </data>
   <data name="Ready" xml:space="preserve">
     <value>準備完了</value>
   </data>
@@ -3758,6 +3884,9 @@
   </data>
   <data name="Register this channel for a feed" xml:space="preserve">
     <value>このチャンネルをフィードに登録</value>
+  </data>
+  <data name="Registered No Score" xml:space="preserve">
+    <value>登録済み — スコア未提出</value>
   </data>
   <data name="Reload the page" xml:space="preserve">
     <value>ページを再読み込み</value>
@@ -4439,11 +4568,17 @@
   <data name="Stamina Session Builder" xml:space="preserve">
 	  <value>スタミナセッション構築</value>
   </data>
+  <data name="Standings" xml:space="preserve">
+    <value>順位</value>
+  </data>
   <data name="Standout bar" xml:space="preserve">
     <value>基準ライン</value>
   </data>
   <data name="Start" xml:space="preserve">
 	  <value>開始</value>
+  </data>
+  <data name="Start A Submission" xml:space="preserve">
+    <value>提出をはじめる</value>
   </data>
   <data name="Start Date" xml:space="preserve">
 	  <value>開始日</value>
@@ -4502,6 +4637,9 @@
   </data>
   <data name="Submit" xml:space="preserve">
     <value>登録</value>
+  </data>
+  <data name="Submit Score" xml:space="preserve">
+    <value>スコアを提出</value>
   </data>
   <data name="Suggested Chart" xml:space="preserve">
     <value>おすすめ譜面</value>
@@ -4611,6 +4749,9 @@
   </data>
   <data name="The Category Isn't Interesting to Me" xml:space="preserve">
     <value>このカテゴリに興味がない</value>
+  </data>
+  <data name="The Charts" xml:space="preserve">
+    <value>課題譜面</value>
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>暗号文はブラウザに、ラップされた鍵はデータベースに、マスターキーは Key Vault にあります。復号には3つすべてが必要です。1つ、あるいは2つが流出しても何も得られません。パスワードがデータベースやログに書き込まれることは決してありません。</value>
@@ -4994,6 +5135,12 @@
   <data name="Try again" xml:space="preserve">
     <value>再試行</value>
   </data>
+  <data name="Turn Off" xml:space="preserve">
+    <value>オフにする</value>
+  </data>
+  <data name="Turn On" xml:space="preserve">
+    <value>オンにする</value>
+  </data>
   <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
     <value>これを有効にするのは、自分のポケットに入れた付箋にパスワードを書くようなものです。ただし、そのメモは誰も — 私たちでさえ — 見ただけでは読めない暗号で書かれています。</value>
   </data>
@@ -5011,6 +5158,9 @@
   </data>
   <data name="Type the name of the account being deleted to confirm" xml:space="preserve">
     <value>確認のため削除されるアカウントの名前を入力してください</value>
+  </data>
+  <data name="Type The Score" xml:space="preserve">
+    <value>スコアを入力</value>
   </data>
   <data name="Ultra Popular" xml:space="preserve">
     <value>超人気</value>
@@ -5103,6 +5253,9 @@
   </data>
   <data name="Upload XX Scores" xml:space="preserve">
     <value>XXスコア更新</value>
+  </data>
+  <data name="Uploaded Result Screen" xml:space="preserve">
+    <value>アップロードしたリザルト画面</value>
   </data>
   <data name="Uploader" xml:space="preserve">
 	  <value>作者</value>
@@ -5319,6 +5472,9 @@
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>あなたのリストとコミュニティの違い、そしてそれを押したスキル。譜面をタップするとソース別の完全な内訳が見られます。</value>
   </data>
+  <data name="Which Chart Did You Play" xml:space="preserve">
+    <value>どの譜面をプレイしましたか？</value>
+  </data>
   <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
     <value>レベル表記に正直なチャートはどれか — 嘘をついているのはどれか。</value>
   </data>
@@ -5393,6 +5549,9 @@
 	  <value>{0}/{1} 成功. {2} 残り. {3}登録失敗</value>
 	  
   </data>
+  <data name="XX Conversion Hint" xml:space="preserve">
+    <value>XX 筐体から — 判定数はこの譜面のノーツ数で換算されます。</value>
+  </data>
   <data name="XX Scores" xml:space="preserve">
     <value>XXスコア</value>
   </data>
@@ -5435,6 +5594,9 @@
   </data>
   <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
     <value>条件に合う最近の好プレイがないため、自己ベストに似た譜面を提案しています。</value>
+  </data>
+  <data name="You Finished Place" xml:space="preserve">
+    <value>{1}人中{0}位で終了しました。</value>
   </data>
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
 	  <value>一部のスコアダウンロードが失敗しました。失敗したCSVファイルはダウンロードして編集して、もう一回アップロード可能です。</value>

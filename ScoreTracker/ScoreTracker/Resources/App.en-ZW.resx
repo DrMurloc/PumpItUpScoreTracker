@@ -17,7 +17,67 @@
     <resheader name="version">2.0</resheader>
     <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
     <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Add A Photo" xml:space="preserve">
+    <value>Aprgl Glub</value>
+  </data>
+  <data name="Add A Photo To Submit" xml:space="preserve">
+    <value>Aprgl Glub Ro Blarg</value>
+  </data>
+  <data name="Auto Submit Change Failed" xml:space="preserve">
+    <value>Blub morgl. Murgla gapa mrgl.</value>
+  </data>
+  <data name="Auto Submit Off" xml:space="preserve">
+    <value>Mrglaug blarg murglrgl mgrlgmrg glo murgla, blub mrgl garap.</value>
+  </data>
+  <data name="Auto Submit On" xml:space="preserve">
+    <value>Mrglaug gorb. Murglrgl mgrlgmrg glo murgla blarg mrgl.</value>
+  </data>
+  <data name="Bad" xml:space="preserve">
+    <value>Blab</value>
+  </data>
+  <data name="Best Of Count" xml:space="preserve">
+    <value>Mrrrgl {0} lo {1} grogmrgl</value>
+  </data>
+  <data name="Closed" xml:space="preserve">
+    <value>Grorpa</value>
+  </data>
+  <data name="Closes In" xml:space="preserve">
+    <value>Grorp lo</value>
+  </data>
+  <data name="Counting" xml:space="preserve">
+    <value>Grogmrgl</value>
+  </data>
+  <data name="Counting Toward Your Total" xml:space="preserve">
+    <value>Grogmrgl ma grogl</value>
+  </data>
+  <data name="Days Hours Left" xml:space="preserve">
+    <value>{0}g {1}m</value>
+  </data>
+  <data name="Enter A Score" xml:space="preserve">
+    <value>Grapl Mrglrgl</value>
+  </data>
+  <data name="Enter Judgements" xml:space="preserve">
+    <value>Grapl Murmgl</value>
+  </data>
+  <data name="Fill In The Six Counts" xml:space="preserve">
+    <value>Bloga la orgo murmgl</value>
+  </data>
+  <data name="Great" xml:space="preserve">
+    <value>Grarg</value>
+  </data>
+  <data name="Hours Minutes Left" xml:space="preserve">
+    <value>{0}m {1}p</value>
+  </data>
+  <data name="How This Is Scored" xml:space="preserve">
+    <value>Groga mrglrgl blurg</value>
+  </data>
+  <data name="Leading The Field" xml:space="preserve">
+    <value>Mrrrgl morp</value>
+  </data>
+  <data name="Miss" xml:space="preserve">
+    <value>Mrgla</value>
+  </data>
+  <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
     <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
     <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
         <value>[base64 mime encoded serialized .NET Framework object]</value>
@@ -2660,6 +2720,9 @@
   <data name="Nearly complete folder" xml:space="preserve">
     <value>Blgrlro roarglgrorp grrgllurg</value>
   </data>
+  <data name="Need To Pass" xml:space="preserve">
+    <value>Ropa {0} ro grubla {1}</value>
+  </data>
   <data name="net" xml:space="preserve">
     <value>glorg</value>
   </data>
@@ -2790,6 +2853,9 @@
   <data name="No Recorded Scores" xml:space="preserve">
 	  <value>Mrp Murmgrglurg Mgrlgmrg</value>
   </data>
+  <data name="No Score Yet" xml:space="preserve">
+    <value>Blub mrglrgl uma</value>
+  </data>
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>Mrp mrglrgl argl — blubgrorp gromurp murpargl glorgrglmurp ro grglmrp murpmagl morg.</value>
   </data>
@@ -2864,6 +2930,9 @@
   </data>
   <data name="not comparable to modern levels" xml:space="preserve">
     <value>murm urggrrglgrgl grgl rglmurm plglgrrgl</value>
+  </data>
+  <data name="Not Counting" xml:space="preserve">
+    <value>Blub grogmrgl</value>
   </data>
   <data name="Not Enough Data" xml:space="preserve">
     <value>Murm Mrpgl Gromurm</value>
@@ -2961,6 +3030,9 @@
   </data>
   <data name="Of everything within reach, these are the least like it." xml:space="preserve">
     <value>Mrgl grglmurpmurm arglblgrl mrargl, blgrlmrp mrp mrp mggl plglro gl.</value>
+  </data>
+  <data name="Of Field" xml:space="preserve">
+    <value>lo {0}</value>
   </data>
   <data name="Of Note" xml:space="preserve">
     <value>Mrgl Grogrgl</value>
@@ -3210,6 +3282,9 @@
   <data name="Percentile" xml:space="preserve">
     <value>Blargglorggrorp</value>
   </data>
+  <data name="Perfect" xml:space="preserve">
+    <value>Purgla</value>
+  </data>
   <data name="perfect +0.020 · great +0.016 · good +0 · clamped to 0 … 0.80" xml:space="preserve">
     <value>lurggrrglargl +0.020 · mrpargl +0.016 · lurggrgl +0 · plglblargblarg grgl 0 … 0.80</value>
   </data>
@@ -3298,8 +3373,17 @@
   <data name="Phoenix Scores" xml:space="preserve">
     <value>Phoenix Mgrlgmrg</value>
   </data>
+  <data name="Photo Hint Organizers Only" xml:space="preserve">
+    <value>Glub lo murgla. Amru orgluma bloga.</value>
+  </data>
   <data name="Photo proof" xml:space="preserve">
     <value>Murpplgl grglmrgl</value>
+  </data>
+  <data name="Photo Too Large" xml:space="preserve">
+    <value>Glub mrrgl lo 20MB. Mggl bo murgla gapa.</value>
+  </data>
+  <data name="Photo Upload Failed" xml:space="preserve">
+    <value>Glub blub murlg. Murgla gapa.</value>
   </data>
   <data name="Photos" xml:space="preserve">
     <value>Blubglorg</value>
@@ -3441,6 +3525,9 @@
   <data name="Played" xml:space="preserve">
     <value>Blubrgl</value>
   </data>
+  <data name="Played Not Counting" xml:space="preserve">
+    <value>Murpla, blub grogmrgl</value>
+  </data>
   <data name="Player" xml:space="preserve">
 	  <value>Morp</value>
   </data>
@@ -3503,6 +3590,9 @@
   </data>
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>Grorpmorgmurm grogrrgllurg lurggrgl - gl-grglblgrlmrgl grgl mrp mrpblarg mrpmaglmurp</value>
+  </data>
+  <data name="Post A Score" xml:space="preserve">
+    <value>Blarg Mrglrgl</value>
   </data>
   <data name="Post qualifier scores for community tournaments right from the site, and take on March of Murlocs — the site-run stamina session series. More formats on the way." xml:space="preserve">
     <value>Grogrgl mrpmrpmorg mgrlgmrg ro plglmurgblub mrllrlrlrlgl rogro romurg mrp plglmorg, ro murmglorg lurg Urgmr mrgl Murlocmrp — mrp plglmorg-plgl gromrgrgl grrglgrrglgl morggrorp. Mrrgl murmblubplgl lurg mrp urg.</value>
@@ -3610,11 +3700,44 @@
   <data name="Pushing Title Charts" xml:space="preserve">
     <value>Lurgglorgmrp Mrgl Murgl</value>
   </data>
+  <data name="Qualifier Existing Score" xml:space="preserve">
+    <value>Bragl {0} {1} lomo. Blarg morgla obo.</value>
+  </data>
+  <data name="Qualifier First Submission Prompt" xml:space="preserve">
+    <value>Broga murgl golom, bo blarg mrglrgl ba glub. Blub ropa grgl — mrg alopa.</value>
+  </data>
+  <data name="Qualifier Photo Rule" xml:space="preserve">
+    <value>Mgrlgmrg grapla ropa glub; mgrlgmrg murgla lo mrgloba blub. Glub gora orgluma amru.</value>
+  </data>
+  <data name="Qualifier Save Failed" xml:space="preserve">
+    <value>Mrglrgl blub murgo. Murgla gapa.</value>
+  </data>
+  <data name="Qualifier Saved" xml:space="preserve">
+    <value>Murgo. Grumla obo mrgla.</value>
+  </data>
+  <data name="Qualifier Scoring Explainer" xml:space="preserve">
+    <value>Mrrrgl {0} murgl grogmrgl obala. Mrglmrgl murgl mrrgl ba rorgl gapa.</value>
+  </data>
+  <data name="Qualifier Step Photo" xml:space="preserve">
+    <value>1. Glub lo murgla</value>
+  </data>
+  <data name="Qualifier Step Score" xml:space="preserve">
+    <value>2. Mrglrgl</value>
+  </data>
   <data name="Qualifier Submit Phrase 1" xml:space="preserve">
     <value>Blub urg murm arglmr grgl glorg blarggrorp mrp grgl murg grglmrp grrglmurp. Morg gro grrmrrgl grgl glorggl lurgmorgplgl.</value>
   </data>
   <data name="Qualifier Submit Phrase 2" xml:space="preserve">
     <value>Grglmrp urg gromurp murpargl murggrglmr! Blgrlro glorggrorp blargro gromurp Grrmrrgl urg grrglmaglmrglmurp blargmagl grrglrglro murprglmrgl argl Start.GG.</value>
+  </data>
+  <data name="Qualifiers" xml:space="preserve">
+    <value>Murglrgl</value>
+  </data>
+  <data name="Qualifiers Admin" xml:space="preserve">
+    <value>Murglrgl Grlgmrg</value>
+  </data>
+  <data name="Qualifiers Are Closed" xml:space="preserve">
+    <value>Murglrgl grorp.</value>
   </data>
   <data name="Qualifiers Leaderboard" xml:space="preserve">
     <value>{0} Glmrglgro Mrglrmrgl</value>
@@ -3701,6 +3824,9 @@
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>Glmaglplgl gl mrpplgl morgmr gromr mr mrmurm, glorgblgrl mrp morgmr roplglblgrl gromrgl:</value>
   </data>
+  <data name="Reads As Grade" xml:space="preserve">
+    <value>Obo blurg {0}.</value>
+  </data>
   <data name="Ready" xml:space="preserve">
     <value>Blargblgrl</value>
   </data>
@@ -3758,6 +3884,9 @@
   </data>
   <data name="Register this channel for a feed" xml:space="preserve">
     <value>Grorpplglblub grglmrp glmurmblarg ro gro grglgrrgl</value>
+  </data>
+  <data name="Registered No Score" xml:space="preserve">
+    <value>grumla — blub mrglrgl uma</value>
   </data>
   <data name="Reload the page" xml:space="preserve">
     <value>Mrglmurg mrp urggrgl</value>
@@ -4439,11 +4568,17 @@
   <data name="Stamina Session Builder" xml:space="preserve">
 	  <value>Gromrgrgl Grrglgrrglgl Grglmrglmagl</value>
   </data>
+  <data name="Standings" xml:space="preserve">
+    <value>Mrglrmrgl</value>
+  </data>
   <data name="Standout bar" xml:space="preserve">
     <value>Arglgromagl mr</value>
   </data>
   <data name="Start" xml:space="preserve">
 	  <value>Romurm</value>
+  </data>
+  <data name="Start A Submission" xml:space="preserve">
+    <value>Gapla Blarg</value>
   </data>
   <data name="Start Date" xml:space="preserve">
 	  <value>Romurm Morgmrp</value>
@@ -4502,6 +4637,9 @@
   </data>
   <data name="Submit" xml:space="preserve">
     <value>Lurgmurp</value>
+  </data>
+  <data name="Submit Score" xml:space="preserve">
+    <value>Blarg Mrglrgl</value>
   </data>
   <data name="Suggested Chart" xml:space="preserve">
     <value>Romorgrgl Murgl</value>
@@ -4611,6 +4749,9 @@
   </data>
   <data name="The Category Isn't Interesting to Me" xml:space="preserve">
     <value>Mrp Murmgrglgrgl Blgrlro Glrglblubgro grgl Argl</value>
+  </data>
+  <data name="The Charts" xml:space="preserve">
+    <value>La Murgl</value>
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>Mrp urgglorgglorg grglro mrp gromurp blgrlglorgmrgl; mrp grrgllurglurg grrgl grglro mrp magl plglrglmrgl; mrp mrmagl grrgl grglro mrp Grrgl Morgurg. Murpmurmro urgmrp rgl morgmr — gro grogrrgl mrgl ro argl, argl ro grrgl, grogl blarggllurg. Mrp glorgmrpmurm urg urgmorg grrglarglrgl grgl magl plglrglmrgl argl murggro.</value>
@@ -4994,6 +5135,12 @@
   <data name="Try again" xml:space="preserve">
     <value>Lurg morgro</value>
   </data>
+  <data name="Turn Off" xml:space="preserve">
+    <value>Blorp</value>
+  </data>
+  <data name="Turn On" xml:space="preserve">
+    <value>Gorb</value>
+  </data>
   <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
     <value>Mrglurgargl grglmrp lurg urg plglro maglmaglmr gromurp glorgmrpmurm lurg gro murmgrorp grogrgl blub murgro mrp gromurp grrgl murgglorg — grrglro mrp grogrgl urg mrp gro mrglrgl urggro grorp mrblgrl murm murmblgrlmrp mr gl, murm mrpplgl blarg.</value>
   </data>
@@ -5011,6 +5158,9 @@
   </data>
   <data name="Type the name of the account being deleted to confirm" xml:space="preserve">
     <value>Morg mrp mrg mrgl mrp grgl morgmorg mrglmorggrorp grgl grrglrolurg</value>
+  </data>
+  <data name="Type The Score" xml:space="preserve">
+    <value>Grapla Mrglrgl</value>
   </data>
   <data name="Ultra Popular" xml:space="preserve">
     <value>Blubmr Grolurgmrp</value>
@@ -5103,6 +5253,9 @@
   </data>
   <data name="Upload XX Scores" xml:space="preserve">
     <value>Grglargl XX Mgrlgmrg</value>
+  </data>
+  <data name="Uploaded Result Screen" xml:space="preserve">
+    <value>Murlg murgla glub</value>
   </data>
   <data name="Uploader" xml:space="preserve">
 	  <value>Glgrrglblarg</value>
@@ -5319,6 +5472,9 @@
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>Blarggrorp gromurp grog blubgrrglglorg glgrgl mrp glmorgmorg, ro mrp blarglurg blubgrrgl murpplgl gl. Morg gro murgl ro argl mrglmr maglgro maglgrogrrgl.</value>
   </data>
+  <data name="Which Chart Did You Play" xml:space="preserve">
+    <value>Guma murgl murpla?</value>
+  </data>
   <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
     <value>Gromorg murgl mrp arglmorg ro grglblarg grorpmurm — ro gromorg urg.</value>
   </data>
@@ -5393,6 +5549,9 @@
 	  <value>{0}/{1} Murgmrgllurg. {2} Rglblarglurg. {3} Rglmurm grgl blubgrorp</value>
 	  <comment>Save progress status. {0}=saved count, {1}=total, {2}=time remaining (m:ss), {3}=failed count</comment>
   </data>
+  <data name="XX Conversion Hint" xml:space="preserve">
+    <value>Lo XX murgla — murmgl obala ba murgl bloga.</value>
+  </data>
   <data name="XX Scores" xml:space="preserve">
     <value>XX Mgrlgmrg</value>
   </data>
@@ -5435,6 +5594,9 @@
   </data>
   <data name="You don't have any matching recent highlights — suggesting charts similar to your all-time best instead." xml:space="preserve">
     <value>Blub glorggrrgl mrglro ro grrglarglblarg blarggrrgl murmmurmgro — plglgrorpmorg murgl maglarglblgrl grgl gromurp rgl-grglmrgl mrpblarg grrglmurpblgrl.</value>
+  </data>
+  <data name="You Finished Place" xml:space="preserve">
+    <value>Morgrorp {0} lo {1}.</value>
   </data>
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
 	  <value>Blub urg gro rgl murgl blubgrrgl glmagl murm grorpmrgl grgl glorg murpmurgmurp. Blub grorp murlg gro CSV mrgl mrp rglgrglmr grgl glorggrorp blubglorgmaglurg ro lurg morgro.</value>

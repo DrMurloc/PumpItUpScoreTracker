@@ -36,8 +36,9 @@ public sealed class UiColorTokenTests
         // #FF0000/#00FF00 letter-graph threshold hack) — entry removed, ratchet tightened.
         // CommunityLeaderboard burned its 4 in the communities overhaul (the head-to-head
         // percentile legend went with the tool) — entry removed, ratchet tightened.
-        ["Pages/Competition/MatchTournamentQualifiers.razor"] = 1,
-        ["Pages/Competition/MatchTournamentQualifiersSubmit.razor"] = 4,
+        // The qualifiers pages burned their 5 literals in the qualifiers overhaul (the green /
+        // light-blue / grey card-state borders became the --mix-* and --grade-* tokens the rest
+        // of the site already uses) — entries removed, ratchet tightened.
         // ScoreRankings took its 7 literals (the percentile colour legend) with it when the
         // page was retired — entry removed, ratchet tightened.
         ["Pages/Competition/StaminaTournament.razor"] = 2,

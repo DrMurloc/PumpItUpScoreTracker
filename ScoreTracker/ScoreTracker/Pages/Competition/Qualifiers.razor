@@ -1,0 +1,379 @@
+@page "/Tournament/{TournamentId:guid}/Qualifiers"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Commands
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Theming
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IDateTimeOffsetAccessor DateTimeOffset
+@inject ISnackbar Snackbar
+@inject NavigationManager NavManager
+
+@* The one qualifiers page (docs/design/qualifiers-overhaul.md). Order is the point: what is
+   this and when is it due, where do I stand, who else is here, what do I play, how is it
+   scored. Submitting is a dialog on this page rather than a second route. *@
+
+<PageTitle>@_title</PageTitle>
+
+@if (_board == null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary"></MudProgressLinear>
+}
+else
+{
+    <MudStack Spacing="3">
+
+        @* 1. What this is, and when it closes. *@
+        <div class="qual-status">
+            <div class="qual-status-id">
+                <span class="qual-kicker">@L["Qualifiers"] &middot; @_board.Configuration.Mix.GetName()</span>
+                <h1>@_board.TournamentName</h1>
+            </div>
+            @if (_board.IsClosed)
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@L["Closed"]</MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">@L["Open"]</MudChip>
+                @if (Remaining != null)
+                {
+                    <div class="qual-clock">
+                        <span class="qual-clock-label">@L["Closes In"]</span>
+                        <span class="qual-clock-value @UrgencyClass">@RemainingText</span>
+                    </div>
+                }
+            }
+        </div>
+
+        @* 2. Where you stand, and the one action. *@
+        @if (_board.IsClosed)
+        {
+            <div class="qual-closed">
+                @L["Qualifiers Are Closed"]
+                @if (_board.Yours != null)
+                {
+                    <text> @L["You Finished Place", _board.Yours.Place, _board.Yours.FieldSize]</text>
+                }
+            </div>
+        }
+        else if (_board.Yours is { } mine)
+        {
+            <div class="qual-you">
+                <div class="qual-you-rank">
+                    <span class="qual-you-place">@mine.Place</span>
+                    <span class="qual-you-of">@L["Of Field", mine.FieldSize]</span>
+                </div>
+                <div class="qual-you-meta">
+                    <span class="qual-you-name">@mine.UserName</span>
+                    <span class="qual-you-gap">
+                        @if (mine.GapToNext is { } gap)
+                        {
+                            @L["Need To Pass", gap.ToString("N2"), mine.NextUp!.ToString()]
+                        }
+                        else
+                        {
+                            @L["Leading The Field"]
+                        }
+                    </span>
+                </div>
+                <div class="qual-you-total">
+                    <div class="qual-you-total-value">@mine.Total.ToString("N2")</div>
+                    <div class="qual-you-total-label">@L["Total"]</div>
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.AddAPhoto" OnClick="OpenPicker">
+                    @L["Post A Score"]
+                </MudButton>
+            </div>
+        }
+        else
+        {
+            <div class="qual-you qual-you-empty">
+                <MudStack Spacing="2" Style="width:100%">
+                    <MudText Typo="Typo.body2">@L["Qualifier First Submission Prompt"]</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                               StartIcon="@Icons.Material.Filled.AddAPhoto" OnClick="OpenPicker">
+                        @L["Start A Submission"]
+                    </MudButton>
+                </MudStack>
+            </div>
+        }
+
+        @* 3. Auto-submit. Signed in, the entry is yours because it is keyed to your account -
+             there is no name to match and nothing to claim. *@
+        @if (CurrentUser.IsLoggedIn && !_board.IsClosed)
+        {
+            <div class="qual-link @(_board.AutoSubmitEnabled ? "qual-link-on" : "")">
+                <span class="qual-link-dot"></span>
+                <span class="qual-link-text">
+                    @if (_board.AutoSubmitEnabled)
+                    {
+                        @L["Auto Submit On"]
+                    }
+                    else
+                    {
+                        @L["Auto Submit Off"]
+                    }
+                </span>
+                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                           Disabled="_isTogglingAutoSubmit" OnClick="ToggleAutoSubmit">
+                    @(_board.AutoSubmitEnabled ? L["Turn Off"] : L["Turn On"])
+                </MudButton>
+            </div>
+        }
+
+        @* 4. The board. Compact rows, the total right-aligned in the tail, no side scroll. *@
+        <MudText Typo="Typo.overline">@L["Standings"]</MudText>
+        <div>
+            @foreach (var (entry, index) in _board.Ranked.Select((e, i) => (e, i)))
+            {
+                var isMe = _board.Yours != null && entry.UserName == _board.Yours.UserName;
+                <div class="olb-rank-card @(isMe ? "olb-row-me" : "")">
+                    <span class="olb-board-place">@(index + 1)</span>
+                    <span>@entry.UserName</span>
+                    <span class="olb-rank-tail">
+                        <span class="qual-chips">
+                            @foreach (var play in entry.Plays.Take(MaxChips))
+                            {
+                                <QualifierChip Chart="play.Chart" Score="play.Score" Rating="play.Rating"
+                                               ChartSelected="ShowChartDetails"></QualifierChip>
+                            }
+                            @if (entry.Plays.Count > MaxChips)
+                            {
+                                <span class="qual-chip-more">+@(entry.Plays.Count - MaxChips)</span>
+                            }
+                        </span>
+                        <span style="font-variant-numeric:tabular-nums;font-weight:700;">@entry.Total.ToString("N2")</span>
+                    </span>
+                </div>
+            }
+            @if (_board.WithoutScores.Any())
+            {
+                <div class="qual-unscored">
+                    <b>@string.Join(", ", _board.WithoutScores)</b>
+                    <span>@L["Registered No Score"]</span>
+                </div>
+            }
+        </div>
+
+        @* 5. The pool. Renders for everyone, signed out included - it is what the page is for. *@
+        <MudStack Row="true" AlignItems="AlignItems.Baseline" Spacing="2">
+            <MudText Typo="Typo.overline">@L["The Charts"]</MudText>
+            <MudSpacer></MudSpacer>
+            <MudText Typo="Typo.caption">@L["Best Of Count", _board.Configuration.PlayCount, _board.Configuration.Charts.Count]</MudText>
+        </MudStack>
+        <div class="qual-pool @(_board.Configuration.Charts.Count > 6 ? "qual-pool-many" : "")">
+            @foreach (var chart in _board.Configuration.Charts.OrderBy(c => c.Level).ThenBy(c => c.Type))
+            {
+                var state = StateFor(chart.Id);
+                <button type="button" class="qual-card qual-card-@state.Slug"
+                        aria-label="@($"{chart.Song.Name} {chart.DifficultyString}, {state.Label}")"
+                        @onclick="() => ShowChartDetails(chart)">
+                    <span class="qual-card-jacket">
+                        <span class="qual-card-bubble">
+                            <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                        </span>
+                        <img src="@chart.Song.ImagePath" alt=""/>
+                        <span class="qual-card-play" aria-hidden="true"></span>
+                        <span class="qual-card-name">@chart.Song.Name</span>
+                    </span>
+                    <span class="qual-card-body">
+                        @if (MyPlay(chart.Id) is { } play)
+                        {
+                            <span class="qual-card-result">
+                                <span class="qual-card-grade" style="color:@MixThemes.GradeVar(play.Score.LetterGradeFor(chart.Mix))">
+                                    @play.Score.LetterGradeFor(chart.Mix).GetName()
+                                </span>
+                                <span class="qual-card-score">@(((int)play.Score).ToString("N0"))</span>
+                                <span class="qual-card-rating">@play.Rating.ToString("N2")</span>
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="qual-card-empty">@L["No Score Yet"]</span>
+                        }
+                        <span class="qual-card-state"><span class="qual-card-state-dot"></span>@state.Label</span>
+                    </span>
+                </button>
+            }
+        </div>
+        @* The legend only lists states that are on screen — never a caption for something you
+           cannot see. *@
+        <div class="qual-legend">
+            @foreach (var state in VisibleStates)
+            {
+                <span><i class="qual-legend-@state.Slug"></i>@state.LegendLabel</span>
+            }
+        </div>
+
+        @* 6. How this is scored, and the links every tournament gets. *@
+        <MudText Typo="Typo.overline">@L["How This Is Scored"]</MudText>
+        <div class="qual-rules">
+            <p>@L["Qualifier Scoring Explainer", _board.Configuration.PlayCount]</p>
+            <p>@L["Qualifier Photo Rule"]</p>
+        </div>
+
+        @if (_myRole is TournamentRole.HeadTournamentOrganizer or TournamentRole.TournamentOrganizer)
+        {
+            <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers/Admin") Variant="Variant.Outlined"
+                       Color="Color.Primary" StartIcon="@Icons.Material.Filled.AdminPanelSettings">
+                @L["Qualifiers Admin"]
+            </MudButton>
+        }
+    </MudStack>
+}
+
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_board?.Configuration.Mix ?? MixEnum.Phoenix"></ChartDetailsDialog>
+
+<QualifierSubmitDialog @bind-Visible="_submitOpen" Chart="_submitChart" TournamentId="TournamentId"
+                       UserName="@SubmissionName" Existing="ExistingFor(_submitChart?.Id)"
+                       Submitted="Reload"></QualifierSubmitDialog>
+
+<MudDialog @bind-Visible="_pickerOpen" MaxWidth="MaxWidth.False">
+    <DialogContent>
+        <MudText Typo="Typo.subtitle1">@L["Which Chart Did You Play"]</MudText>
+        <MudList T="string">
+            @foreach (var chart in _board?.Configuration.Charts.OrderBy(c => c.Level) ?? Enumerable.Empty<Chart>())
+            {
+                <MudListItem T="string" OnClick="() => OpenSubmit(chart)">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                        <MudText>@chart.Song.Name</MudText>
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _pickerOpen = false">@L["Cancel"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [Parameter] public Guid TournamentId { get; set; }
+
+    private QualifierBoard? _board;
+    private TournamentRole? _myRole;
+    private Chart? _detailsChart;
+    private bool _detailsOpen;
+    private Chart? _submitChart;
+    private bool _submitOpen;
+    private bool _pickerOpen;
+    private bool _isTogglingAutoSubmit;
+
+    private string _title = "Qualifiers";
+
+    // Falls out of the measured widths: a chip is 40px plus its gap, and the row also owes
+    // space to the place, the name and the total. Past this the row says "+N" rather than
+    // quietly dropping plays.
+    private const int MaxChips = 8;
+
+    private TimeSpan? Remaining => _board?.Configuration.CutoffTime == null
+        ? null
+        : _board.Configuration.CutoffTime - DateTimeOffset.Now;
+
+    private string RemainingText => Remaining is not { } r
+        ? string.Empty
+        : r.TotalDays >= 1
+            ? L["Days Hours Left", (int)r.TotalDays, r.Hours]
+            : L["Hours Minutes Left", (int)r.TotalHours, r.Minutes];
+
+    // The same thresholds the old page branched on, made visible.
+    private string UrgencyClass => Remaining is not { } r
+        ? string.Empty
+        : r.TotalDays > 14
+            ? "qual-clock-far"
+            : r.TotalDays > 7
+                ? "qual-clock-near"
+                : "qual-clock-now";
+
+    private Name SubmissionName => _board?.Yours?.UserName
+                                   ?? (CurrentUser.IsLoggedIn ? CurrentUser.User.Name : Name.From("Guest"));
+
+    private sealed record PoolState(string Slug, string Label, string LegendLabel);
+
+    private PoolState Counting => new("counting", L["Counting"], L["Counting Toward Your Total"]);
+    private PoolState Banked => new("banked", L["Not Counting"], L["Played Not Counting"]);
+    private PoolState Untouched => new("untouched", L["Not played"], L["Not played"]);
+
+    private QualifierPlay? MyPlay(Guid chartId) =>
+        _board?.Ranked.FirstOrDefault(e => _board.Yours != null && e.UserName == _board.Yours.UserName)
+            ?.Plays.FirstOrDefault(p => p.Chart.Id == chartId);
+
+    private PhoenixScore? ExistingFor(Guid? chartId) =>
+        chartId == null ? null : MyPlay(chartId.Value)?.Score;
+
+    private PoolState StateFor(Guid chartId) => MyPlay(chartId) != null ? Counting : Untouched;
+
+    private IEnumerable<PoolState> VisibleStates =>
+        (_board?.Configuration.Charts ?? Array.Empty<Chart>())
+        .Select(c => StateFor(c.Id))
+        .DistinctBy(s => s.Slug);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (TournamentId == default)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+
+        await Reload();
+
+        var roles = await Mediator.Send(new GetTournamentRolesQuery(TournamentId));
+        _myRole = !CurrentUser.IsLoggedIn
+            ? null
+            : CurrentUser.IsLoggedInAsAdmin
+                ? TournamentRole.HeadTournamentOrganizer
+                : roles.FirstOrDefault(r => r.UserId == CurrentUser.User?.Id)?.Role;
+    }
+
+    private async Task Reload()
+    {
+        _board = await Mediator.Send(new GetQualifiersBoardQuery(TournamentId));
+        _title = L["Qualifiers Leaderboard", _board.TournamentName.ToString()];
+    }
+
+    private void ShowChartDetails(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
+
+    private void OpenPicker() => _pickerOpen = true;
+
+    private void OpenSubmit(Chart chart)
+    {
+        _pickerOpen = false;
+        _submitChart = chart;
+        _submitOpen = true;
+    }
+
+    private async Task ToggleAutoSubmit()
+    {
+        if (_board == null) return;
+
+        _isTogglingAutoSubmit = true;
+        try
+        {
+            await Mediator.Send(new SetQualifierAutoSubmitCommand(TournamentId, !_board.AutoSubmitEnabled));
+            await Reload();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add(L["Auto Submit Change Failed"], Severity.Error);
+        }
+
+        _isTogglingAutoSubmit = false;
+    }
+
+}

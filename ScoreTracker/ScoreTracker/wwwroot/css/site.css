@@ -9947,3 +9947,598 @@ button.chart-card-art {
         justify-content: flex-start;
     }
 }
+
+/* ============================================================================
+   QUALIFIERS (docs/design/qualifiers-overhaul.md)
+
+   One player page: status, your standing, the board, the pool, how it is scored.
+   The board wears the sitewide .olb-rank-card skin; what is new here is the chip,
+   which carries one play as a jacket ringed in its grade's metal.
+   ============================================================================ */
+
+.qual-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+}
+
+.qual-status-id {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.qual-kicker {
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.qual-status h1 {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -.012em;
+    text-wrap: balance;
+}
+
+.qual-clock {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+    flex: 0 0 auto;
+}
+
+.qual-clock-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.qual-clock-value {
+    font-variant-numeric: tabular-nums;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.15;
+}
+
+/* The urgency thresholds the page already branched on, made visible. */
+.qual-clock-far { color: var(--mix-primary); }
+.qual-clock-near { color: var(--mix-accent); }
+.qual-clock-now { color: var(--mix-secondary); }
+
+/* ---- your standing ---- */
+.qual-you {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    padding: 12px 13px;
+    border-radius: 10px;
+    background: var(--mix-surface);
+    box-shadow: inset 0 0 0 1.5px var(--mix-primary), 0 0 22px -8px var(--mix-glow);
+}
+
+.qual-you-rank {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    flex: 0 0 auto;
+}
+
+.qual-you-place {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.03em;
+}
+
+.qual-you-of {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--mix-ink-muted);
+}
+
+.qual-you-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 130px;
+}
+
+.qual-you-name {
+    font-weight: 700;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.qual-you-gap { font-size: 12px; color: var(--mix-ink-muted); }
+.qual-you-gap b { color: var(--mix-accent); font-variant-numeric: tabular-nums; }
+
+.qual-you-total { text-align: right; flex: 0 0 auto; margin-left: auto; }
+
+.qual-you-total-value {
+    font-size: 19px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.015em;
+}
+
+.qual-you-total-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.qual-you-empty { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--mix-ink) 16%, transparent); }
+
+/* ---- auto-submit strip ---- */
+.qual-link {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+    padding: 9px 11px;
+    border-radius: 9px;
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    font-size: 12px;
+}
+
+.qual-link-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+    background: var(--mix-ink-muted);
+}
+
+.qual-link-on .qual-link-dot {
+    background: var(--type-doubles);
+    box-shadow: 0 0 7px var(--type-doubles);
+}
+
+.qual-link-text { color: var(--mix-ink-muted); flex: 1 1 150px; min-width: 0; }
+.qual-link-text b { color: var(--mix-ink); font-weight: 700; }
+
+/* ---- the chip: one play, jacket ringed in its grade ----
+   The grade rides as the ring rather than a separate icon, which is what buys
+   enough room to show a ten-chart top N in the row. The ladder is deliberately
+   not injective (SS+/SS share a metal), so the rating prints underneath and the
+   title carries the exact grade and score. */
+.qual-chips {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    flex-wrap: nowrap;
+}
+
+.qual-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    flex: 0 0 auto;
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.qual-chip-thumb {
+    position: relative;
+    width: 40px;
+    height: 23px;
+    border-radius: 3px;
+    overflow: hidden;
+    display: block;
+    box-shadow: 0 0 0 2px var(--qual-grade, var(--unplayed-grade));
+    transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.qual-chip-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Perfect Game is a plate, not a grade, so it layers a halo over the ring. */
+.qual-chip-pg .qual-chip-thumb {
+    box-shadow: 0 0 0 2px var(--plate-pg), 0 0 9px 1px color-mix(in srgb, var(--plate-pg) 85%, transparent);
+}
+
+.qual-chip-rating {
+    font-variant-numeric: tabular-nums;
+    font-size: 9.5px;
+    line-height: 1.1;
+    color: var(--mix-ink-muted);
+}
+
+.qual-chip:hover .qual-chip-thumb {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 2px var(--qual-grade, var(--unplayed-grade)), 0 3px 9px rgba(0, 0, 0, .55);
+}
+
+.qual-chip:focus-visible { outline: none; }
+.qual-chip:focus-visible .qual-chip-thumb { outline: 2px solid var(--mix-ink); outline-offset: 2px; }
+
+.qual-chip-more {
+    align-self: center;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--mix-ink-muted);
+    padding: 5px 6px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--mix-ink) 8%, transparent);
+}
+
+/* ---- the pool ----
+   Auto-fill on a minimum track, so a four-chart pool and a thirteen-chart pool
+   lay out without a mode switch; the tile floor just drops once it gets big. */
+.qual-pool {
+    display: grid;
+    gap: 9px;
+    --qual-card-min: 150px;
+    grid-template-columns: repeat(auto-fill, minmax(var(--qual-card-min), 1fr));
+}
+
+.qual-pool-many { --qual-card-min: 88px; gap: 7px; }
+
+@media (min-width: 720px) {
+    .qual-pool { --qual-card-min: 172px; }
+    .qual-pool-many { --qual-card-min: 108px; }
+}
+
+.qual-card {
+    border-radius: 9px;
+    overflow: hidden;
+    background: var(--mix-surface);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    appearance: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: transform .13s ease, filter .13s ease;
+}
+
+.qual-card:hover { transform: translateY(-2px); filter: brightness(1.09); }
+.qual-card:focus-visible { outline: 2px solid var(--mix-ink); outline-offset: 2px; }
+
+.qual-card-jacket {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    display: block;
+}
+
+.qual-card-jacket img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.qual-card-jacket::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(7, 11, 21, .05) 40%, rgba(7, 11, 21, .88));
+}
+
+/* Same treatment as .chart-jacket-play on the chart page - the jacket is the
+   button, and tapping it opens the chart with its video already running. */
+.qual-card-play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding-left: 2px;
+    border-radius: 99px;
+    pointer-events: none;
+    background: rgba(0, 0, 0, .8);
+    border: 1px solid rgba(255, 255, 255, .2);
+    color: #fff;
+    opacity: .85;
+    transform: scale(.94);
+    transition: opacity .12s, transform .12s, background .12s, border-color .12s;
+}
+
+.qual-card-play::before {
+    content: "";
+    border-style: solid;
+    border-width: 6px 0 6px 10px;
+    border-color: transparent transparent transparent currentColor;
+}
+
+.qual-card:hover .qual-card-play,
+.qual-card:focus-visible .qual-card-play { opacity: 1; transform: scale(1); }
+.qual-card:hover .qual-card-play { background: rgba(0, 0, 0, .93); border-color: var(--mix-primary); }
+
+.qual-pool-many .qual-card-play { width: 26px; height: 26px; }
+.qual-pool-many .qual-card-play::before { border-width: 5px 0 5px 8px; }
+
+.qual-card-bubble { position: absolute; left: 5px; top: 5px; z-index: 2; }
+
+.qual-card-name {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 4px;
+    z-index: 2;
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .9);
+}
+
+.qual-card-body {
+    padding: 7px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.qual-card-result { display: flex; align-items: center; gap: 6px; }
+
+.qual-card-grade {
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: .02em;
+    flex: 0 0 auto;
+}
+
+.qual-card-score { font-variant-numeric: tabular-nums; font-size: 11.5px; color: var(--mix-ink-muted); }
+
+.qual-card-rating {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.qual-card-empty { font-size: 11.5px; color: var(--mix-ink-muted); }
+
+.qual-card-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    align-self: flex-start;
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.qual-card-state-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: 0 0 auto;
+}
+
+/* Four states, each with a ring, a word and a legend entry that agree. */
+.qual-card-counting { box-shadow: inset 0 0 0 2px var(--mix-primary), 0 0 20px -10px var(--mix-glow); }
+
+.qual-card-counting .qual-card-state {
+    background: color-mix(in srgb, var(--mix-primary) 20%, transparent);
+    color: var(--mix-primary);
+}
+
+.qual-card-banked { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mix-ink) 28%, transparent); }
+
+.qual-card-banked .qual-card-state {
+    background: color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    color: var(--mix-ink-muted);
+}
+
+.qual-card-untouched {
+    border-style: dashed;
+    border-color: color-mix(in srgb, var(--mix-ink) 24%, transparent);
+    background: transparent;
+}
+
+.qual-card-untouched .qual-card-state {
+    background: color-mix(in srgb, var(--mix-ink) 7%, transparent);
+    color: var(--mix-ink-muted);
+}
+
+.qual-card-untouched .qual-card-jacket img { opacity: .5; }
+
+.qual-legend { display: flex; flex-wrap: wrap; gap: 5px 12px; padding-top: 2px; }
+
+.qual-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    color: var(--mix-ink-muted);
+}
+
+.qual-legend i { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 auto; }
+.qual-legend-counting { background: var(--mix-primary); }
+.qual-legend-banked { background: color-mix(in srgb, var(--mix-ink) 35%, transparent); }
+.qual-legend-untouched { border: 1.5px dashed color-mix(in srgb, var(--mix-ink) 45%, transparent); }
+
+/* ---- entrants with no score, off the ladder ---- */
+.qual-unscored {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 8px;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+    border-top: 1px dashed color-mix(in srgb, var(--mix-ink) 18%, transparent);
+}
+
+.qual-unscored b { color: var(--mix-ink); font-weight: 600; }
+
+/* ---- how this is scored ---- */
+.qual-rules {
+    padding: 11px 13px;
+    border-radius: 10px;
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.qual-rules p { margin: 0; font-size: 12.5px; color: var(--mix-ink-muted); }
+.qual-rules p b { color: var(--mix-ink); font-weight: 600; }
+
+.qual-closed {
+    padding: 11px 13px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    background: color-mix(in srgb, var(--mix-secondary) 14%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mix-secondary) 45%, transparent);
+}
+
+/* ---- submit dialog ---- */
+.qual-submit-hero {
+    position: relative;
+    aspect-ratio: 16 / 7;
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.qual-submit-hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.qual-submit-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(7, 11, 21, .15) 30%, rgba(22, 30, 44, .97));
+}
+
+.qual-submit-hero-text {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 8px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.qual-submit-hero-text h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, .85);
+}
+
+.qual-drop {
+    border: 2px dashed color-mix(in srgb, var(--mix-ink) 28%, transparent);
+    border-radius: 9px;
+    padding: 16px 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+    transition: border-color .13s, background .13s;
+}
+
+.qual-drop:hover {
+    border-color: var(--mix-primary);
+    background: color-mix(in srgb, var(--mix-primary) 8%, transparent);
+}
+
+.qual-drop-title { font-size: 13px; font-weight: 700; }
+.qual-drop-hint { font-size: 11px; color: var(--mix-ink-muted); }
+
+.qual-drop-filled {
+    border-style: solid;
+    border-color: var(--mix-primary);
+    padding: 0;
+    overflow: hidden;
+}
+
+.qual-drop-filled img { width: 100%; display: block; max-height: 150px; object-fit: cover; }
+
+.qual-judge {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+}
+
+.qual-calc {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 11px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--mix-ink) 6%, transparent);
+}
+
+.qual-calc-label {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.qual-calc-value {
+    font-size: 19px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.02em;
+}
+
+.qual-calc-tail {
+    margin-left: auto;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    align-items: flex-end;
+}
+
+.qual-calc-plate { font-size: 11px; font-weight: 700; }

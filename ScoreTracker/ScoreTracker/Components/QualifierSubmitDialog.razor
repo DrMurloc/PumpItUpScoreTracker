@@ -1,0 +1,273 @@
+@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Commands
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.Theming
+@using System.Web
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IFileUploadClient FileUpload
+@inject ILogger<QualifierSubmitDialog> Logger
+
+@* Photo, then score, then save. The photo is not optional for a score you type in - it is the
+   only evidence an organiser has - but it never leaves the organiser screen, which is what the
+   hint says out loud. *@
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" MaxWidth="MaxWidth.False" Class="qual-submit-dialog">
+    <DialogContent>
+        @if (Chart != null)
+        {
+            <div class="qual-submit-hero">
+                <img src="@Chart.Song.ImagePath" alt=""/>
+                <div class="qual-submit-hero-text">
+                    <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
+                    <h3>@Chart.Song.Name</h3>
+                </div>
+            </div>
+
+            <MudGrid>
+                @if (Existing != null)
+                {
+                    <MudItem xs="12">
+                        <MudAlert Severity="Severity.Info" Dense="true">
+                            @L["Qualifier Existing Score", Existing.Value.LetterGradeFor(Chart.Mix).GetName(), ((int)Existing.Value).ToString("N0")]
+                        </MudAlert>
+                    </MudItem>
+                }
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.subtitle2">@L["Qualifier Step Photo"]</MudText>
+                </MudItem>
+                <MudItem xs="12">
+                    @if (_photoUrl != null && !_isUploading)
+                    {
+                        <MudFileUpload T="IBrowserFile" Accept=".png, .gif, .jpg, .jpeg" MaximumFileCount="1"
+                                       FilesChanged="UploadFile" Disabled="_isUploading">
+                            <ActivatorContent>
+                                <div class="qual-drop qual-drop-filled">
+                                    <img src="@_photoUrl" alt="@L["Uploaded Result Screen"]"/>
+                                </div>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                    }
+                    else if (_isUploading)
+                    {
+                        <div class="qual-drop">
+                            <MudProgressCircular Indeterminate="true" Color="Color.Primary"></MudProgressCircular>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudFileUpload T="IBrowserFile" Accept=".png, .gif, .jpg, .jpeg" MaximumFileCount="1"
+                                       FilesChanged="UploadFile">
+                            <ActivatorContent>
+                                <div class="qual-drop">
+                                    <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Color="Color.Default"></MudIcon>
+                                    <span class="qual-drop-title">@L["Add A Photo"]</span>
+                                    <span class="qual-drop-hint">@L["Photo Hint Organizers Only"]</span>
+                                </div>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                    }
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.subtitle2">@L["Qualifier Step Score"]</MudText>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudToggleGroup T="bool" Value="_judgementMode" ValueChanged="SetMode" SelectionMode="SelectionMode.SingleSelection" Color="Color.Primary">
+                        <MudToggleItem Value="false" Text="@L["Type The Score"]"></MudToggleItem>
+                        <MudToggleItem Value="true" Text="@L["Enter Judgements"]"></MudToggleItem>
+                    </MudToggleGroup>
+                </MudItem>
+
+                @if (_judgementMode)
+                {
+                    <MudItem xs="12">
+                        <div class="qual-judge">
+                            <MudNumericField T="int" Label=@L["Perfect"] Value="_perfects" ValueChanged="v => Judgement(v, p: true)" Min="0" Max="9999" HideSpinButtons="true"></MudNumericField>
+                            <MudNumericField T="int" Label=@L["Great"] Value="_greats" ValueChanged="v => Judgement(v, g: true)" Min="0" Max="9999" HideSpinButtons="true"></MudNumericField>
+                            <MudNumericField T="int" Label=@L["Good"] Value="_goods" ValueChanged="v => Judgement(v, go: true)" Min="0" Max="9999" HideSpinButtons="true"></MudNumericField>
+                            <MudNumericField T="int" Label=@L["Bad"] Value="_bads" ValueChanged="v => Judgement(v, b: true)" Min="0" Max="9999" HideSpinButtons="true"></MudNumericField>
+                            <MudNumericField T="int" Label=@L["Miss"] Value="_misses" ValueChanged="v => Judgement(v, m: true)" Min="0" Max="9999" HideSpinButtons="true"></MudNumericField>
+                            <MudNumericField T="int" Label=@L["Max combo"] Value="_maxCombo" ValueChanged="v => Judgement(v, c: true)" Min="0" Max="9999" HideSpinButtons="true"></MudNumericField>
+                        </div>
+                    </MudItem>
+                    <MudItem xs="12">
+                        @if (Screen.IsValid)
+                        {
+                            <div class="qual-calc">
+                                <div>
+                                    <div class="qual-calc-label">@L["Phoenix score"]</div>
+                                    <div class="qual-calc-value">@(((int)Screen.CalculatePhoenixScore).ToString("N0"))</div>
+                                </div>
+                                <div class="qual-calc-tail">
+                                    <span class="qual-card-grade" style="color:@MixThemes.GradeVar(Screen.CalculatePhoenixScore.LetterGradeFor(Chart.Mix))">
+                                        @Screen.CalculatePhoenixScore.LetterGradeFor(Chart.Mix).GetName()
+                                    </span>
+                                    <span class="qual-calc-plate">@Screen.PlateText.GetName()</span>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.caption">@L["Fill In The Six Counts"]</MudText>
+                        }
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.caption">@L["XX Conversion Hint"]</MudText>
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem xs="12">
+                        <MudNumericField T="int" Label=@L["Score"] Value="_score" ValueChanged="v => _score = v"
+                                         Min="0" Max="1000000" HideSpinButtons="true"></MudNumericField>
+                    </MudItem>
+                    @if (_score > 0)
+                    {
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.caption">
+                                @L["Reads As Grade", ((PhoenixScore)_score).LetterGradeFor(Chart.Mix).GetName()]
+                            </MudText>
+                        </MudItem>
+                    }
+                }
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Close">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="!CanSubmit || _isSaving"
+                   OnClick="Save">@SubmitLabel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [Parameter] public bool Visible { get; set; }
+
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+
+    [Parameter] public Chart? Chart { get; set; }
+
+    [Parameter] public Guid TournamentId { get; set; }
+
+    [Parameter] public Name UserName { get; set; }
+
+    /// <summary>The score already recorded for this chart, if any — shown so a replacement is a choice.</summary>
+    [Parameter] public PhoenixScore? Existing { get; set; }
+
+    [Parameter] public EventCallback Submitted { get; set; }
+
+    private const long MaxFileSize = 20000000;
+
+    private Uri? _photoUrl;
+    private bool _isUploading;
+    private bool _isSaving;
+    private bool _judgementMode;
+    private int _score;
+    private int _perfects, _greats, _goods, _bads, _misses, _maxCombo;
+
+    private ScoreScreen Screen => new(_perfects, _greats, _goods, _bads, _misses, _maxCombo);
+
+    private bool HasScore => _judgementMode ? Screen.IsValid : _score > 0;
+
+    private bool CanSubmit => _photoUrl != null && HasScore;
+
+    // The button says what is missing rather than sitting there greyed out with no reason.
+    private string SubmitLabel => _photoUrl == null
+        ? L["Add A Photo To Submit"]
+        : !HasScore
+            ? L["Enter A Score"]
+            : L["Submit Score"];
+
+    protected override void OnParametersSet()
+    {
+        if (!Visible) Reset();
+    }
+
+    private void Reset()
+    {
+        _photoUrl = null;
+        _score = 0;
+        _perfects = _greats = _goods = _bads = _misses = _maxCombo = 0;
+        _judgementMode = false;
+        _isSaving = false;
+    }
+
+    private void SetMode(bool judgements) => _judgementMode = judgements;
+
+    private void Judgement(int value, bool p = false, bool g = false, bool go = false, bool b = false,
+        bool m = false, bool c = false)
+    {
+        if (p) _perfects = value;
+        if (g) _greats = value;
+        if (go) _goods = value;
+        if (b) _bads = value;
+        if (m) _misses = value;
+        if (c) _maxCombo = value;
+    }
+
+    private async Task UploadFile(IBrowserFile? file)
+    {
+        if (file == null || Chart == null) return;
+        if (file.Size > MaxFileSize)
+        {
+            Snackbar.Add(L["Photo Too Large"], Severity.Error);
+            return;
+        }
+
+        _isUploading = true;
+        try
+        {
+            var path =
+                $"qualifiers/{TournamentId}/{HttpUtility.UrlEncode(UserName.ToString())}/{Guid.NewGuid()}.{file.Name.Split('.')[^1]}";
+            _photoUrl = await FileUpload.UploadFile(path, file.OpenReadStream(MaxFileSize));
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(L["Photo Upload Failed"], Severity.Error);
+            Logger.LogError(e, "Qualifier photo upload failed for {File} ({Size} bytes)", file.Name, file.Size);
+        }
+
+        _isUploading = false;
+    }
+
+    private async Task Save()
+    {
+        if (Chart == null || _photoUrl == null) return;
+
+        _isSaving = true;
+        try
+        {
+            await Mediator.Send(new SubmitQualifierScoreCommand(TournamentId, UserName, Chart.Id, _photoUrl,
+                _judgementMode ? null : (PhoenixScore)_score,
+                _judgementMode
+                    ? new XxJudgements(_perfects, _greats, _goods, _bads, _misses, _maxCombo)
+                    : null));
+
+            Snackbar.Add(L["Qualifier Saved"], Severity.Success);
+            await Submitted.InvokeAsync();
+            await Close();
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(L["Qualifier Save Failed"], Severity.Error);
+            Logger.LogError(e, "Qualifier submission failed for tournament {Tournament}", TournamentId);
+        }
+
+        _isSaving = false;
+    }
+
+    private async Task Close()
+    {
+        Reset();
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+}
