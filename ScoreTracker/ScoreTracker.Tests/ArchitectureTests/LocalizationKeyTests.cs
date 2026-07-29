@@ -33,6 +33,39 @@ public sealed class LocalizationKeyTests
     /// <summary>The Murloc joke locale. At full key parity since 2026-07-28 — see MurlocLocale below.</summary>
     private const string MurlocLocale = "en-ZW";
 
+    /// <summary>
+    ///     Every resx opens with a schema comment that contains four example
+    ///     <c>&lt;data&gt;</c> elements. A tool inserting a key alphabetically can anchor on one
+    ///     of those examples and drop the new key <em>inside the comment</em>, where
+    ///     GenerateResource never sees it — and neither does any other check here, because
+    ///     XDocument does not treat commented-out markup as an element. The key is in the file,
+    ///     referenced by <c>L["…"]</c>, absent from every locale, and nothing goes red: the UI
+    ///     just renders the key name. That happened to 38 keys in the qualifiers overhaul.
+    /// </summary>
+    [Fact]
+    public void NoResxDataElementsHideInsideTheSchemaComment()
+    {
+        // The examples that legitimately live in the comment.
+        var allowed = new HashSet<string> { "Name1", "Color1", "Bitmap1", "Icon1" };
+        var violations = new List<string>();
+
+        var dir = Path.Combine(FindSolutionRoot(), "ScoreTracker", "Resources");
+        foreach (var file in Directory.EnumerateFiles(dir, "App.*.resx").OrderBy(f => f, StringComparer.Ordinal))
+        {
+            var text = File.ReadAllText(file);
+            foreach (Match comment in Regex.Matches(text, "<!--.*?-->", RegexOptions.Singleline))
+            foreach (Match data in Regex.Matches(comment.Value, "<data name=\"([^\"]+)\""))
+            {
+                var name = data.Groups[1].Value;
+                if (allowed.Contains(name)) continue;
+                violations.Add(
+                    $"{Path.GetFileName(file)}: '{name}' is inside an XML comment — it will never reach the compiled resources, and the UI will render the key name instead of the translation. Move it out to a real <data> element.");
+            }
+        }
+
+        Assert.True(violations.Count == 0, string.Join(Environment.NewLine, violations));
+    }
+
     [Fact]
     public void NoResxKeysCollideOnlyByCase()
     {
