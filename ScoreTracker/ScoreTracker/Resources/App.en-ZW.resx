@@ -4725,6 +4725,9 @@
   <data name="Submit Score" xml:space="preserve">
     <value>Blarg Mrglrgl</value>
   </data>
+  <data name="Suggested" xml:space="preserve">
+    <value>Groblu</value>
+  </data>
   <data name="Suggested Chart" xml:space="preserve">
     <value>Romorgrgl Murgl</value>
   </data>
@@ -4736,6 +4739,9 @@
   </data>
   <data name="Suggested level" xml:space="preserve">
     <value>Romorgrgl grorpmurm</value>
+  </data>
+  <data name="Suggested Next" xml:space="preserve">
+    <value>Groblu Gapa</value>
   </data>
   <data name="Suggested · Fill Gaps" xml:space="preserve">
     <value>Romorgrgl · Arglmr Glmorg</value>

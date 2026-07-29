@@ -4667,6 +4667,9 @@
   <data name="Submit Score" xml:space="preserve">
     <value>Enviar puntuación</value>
   </data>
+  <data name="Suggested" xml:space="preserve">
+    <value>Sugerida</value>
+  </data>
   <data name="Suggested Chart" xml:space="preserve">
     <value>Chart sugerido</value>
   </data>
@@ -4678,6 +4681,9 @@
   </data>
   <data name="Suggested level" xml:space="preserve">
     <value>Nivel sugerido</value>
+  </data>
+  <data name="Suggested Next" xml:space="preserve">
+    <value>Sugerida a continuación</value>
   </data>
   <data name="Suggested · Fill Gaps" xml:space="preserve">
     <value>Sugeridos · Completar huecos</value>

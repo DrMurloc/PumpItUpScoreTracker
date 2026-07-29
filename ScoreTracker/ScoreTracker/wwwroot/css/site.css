@@ -1,4 +1,4 @@
-/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
+﻿/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
    Korean/Japanese glyphs fall through per-glyph to the system CJK fonts in the stack
    (see --font-display), which keeps mixed-script headings from going anemic. */
 @font-face {
@@ -10371,6 +10371,17 @@ button.chart-card-art {
     background: color-mix(in srgb, var(--mix-ink) 10%, transparent);
     color: var(--mix-ink-muted);
 }
+
+/* The suggested state: a gold ring on a chart you have not posted yet. This is the
+   nudge the original page computed and, from 2025-06-16, stopped painting. */
+.qual-card-suggested { box-shadow: inset 0 0 0 2px var(--mix-accent); }
+
+.qual-card-suggested .qual-card-state {
+    background: color-mix(in srgb, var(--mix-accent) 20%, transparent);
+    color: var(--mix-accent);
+}
+
+.qual-legend-suggested { background: var(--mix-accent); }
 
 .qual-card-untouched {
     border-style: dashed;

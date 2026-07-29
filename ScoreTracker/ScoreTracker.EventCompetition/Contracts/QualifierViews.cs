@@ -28,7 +28,8 @@ public sealed record QualifierBoard(
     IReadOnlyList<Name> WithoutScores,
     QualifierStanding? Yours,
     bool AutoSubmitEnabled,
-    bool IsClosed);
+    bool IsClosed,
+    IReadOnlyList<Guid> SuggestedChartIds);
 
 /// <summary>Where the viewer sits, and what it would take to move up one.</summary>
 [ExcludeFromCodeCoverage]

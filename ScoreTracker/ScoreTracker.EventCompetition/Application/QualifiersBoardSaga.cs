@@ -6,6 +6,7 @@ using ScoreTracker.EventCompetition.Contracts;
 using ScoreTracker.EventCompetition.Contracts.Commands;
 using ScoreTracker.EventCompetition.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.EventCompetition.Infrastructure;
 
@@ -19,7 +20,9 @@ namespace ScoreTracker.EventCompetition.Application
         IQualifiersRepository qualifiers,
         IMediator mediator,
         ICurrentUserAccessor currentUser,
-        IDateTimeOffsetAccessor dateTimeOffset)
+        IDateTimeOffsetAccessor dateTimeOffset,
+        IScoreReader scores,
+        IChartRepository charts)
         : IRequestHandler<GetQualifiersBoardQuery, QualifierBoard>,
             IRequestHandler<SubmitQualifierScoreCommand>,
             IRequestHandler<SetQualifierAutoSubmitCommand>,
@@ -51,6 +54,10 @@ namespace ScoreTracker.EventCompetition.Application
                              (await qualifiers.GetRegisteredUsers(request.TournamentId, cancellationToken))
                              .Contains(currentUser.User.Id);
 
+            var mine = currentUser.IsLoggedIn
+                ? all.FirstOrDefault(q => q.UserId == currentUser.User.Id)
+                : null;
+
             return new QualifierBoard(
                 config,
                 tournament?.Name ?? Name.From("Qualifiers"),
@@ -58,7 +65,68 @@ namespace ScoreTracker.EventCompetition.Application
                 withoutScores,
                 StandingFor(scored, withoutScores.Length, cancellationToken),
                 autoSubmit,
-                config.CutoffTime != null && config.CutoffTime < dateTimeOffset.Now);
+                config.CutoffTime != null && config.CutoffTime < dateTimeOffset.Now,
+                await SuggestFor(mine, config, cancellationToken));
+        }
+
+        /// <summary>
+        ///     Which charts to nudge the player toward next. Two sources, both from the original
+        ///     page: the chart one rung above anything they have already SSS'd, and the pool
+        ///     charts their existing scores say suit them best. A chart they have already posted
+        ///     is never a suggestion.
+        /// </summary>
+        private async Task<IReadOnlyList<Guid>> SuggestFor(UserQualifiers? mine, QualifiersConfiguration config,
+            CancellationToken cancellationToken)
+        {
+            if (mine == null) return Array.Empty<Guid>();
+
+            var suggested = new HashSet<Guid>();
+
+            if (!config.AllCharts)
+            {
+                // Cleared this one outright — the next rung up is the obvious ask. The ladder is
+                // the pool's own order: level, then type.
+                var ladder = config.Charts.OrderBy(c => (int)c.Level).ThenBy(c => c.Type).ToArray();
+                var sssFloor = PhoenixLetterGrade.SSS.GetMinimumScoreFor(config.Mix);
+                foreach (var submission in mine.Submissions.Values.Where(s => s.Score >= sssFloor))
+                {
+                    var index = Array.FindIndex(ladder, c => c.Id == submission.ChartId);
+                    if (index >= 0 && index < ladder.Length - 1) suggested.Add(ladder[index + 1].Id);
+                }
+            }
+
+            if (currentUser.IsLoggedIn)
+            {
+                var best = (await scores.GetBestScores(config.Mix, currentUser.User.Id, cancellationToken))
+                    .ToDictionary(s => s.ChartId);
+                var catalog = (await charts.GetCharts(config.Mix, cancellationToken: cancellationToken))
+                    .ToDictionary(c => c.Id);
+
+                // A folder average stands in for charts they have never played, but only once
+                // there are enough plays in it to mean anything.
+                var levelAverages = best.Values
+                    .Where(s => s.Score != null && catalog.ContainsKey(s.ChartId))
+                    .GroupBy(s => (catalog[s.ChartId].Level, catalog[s.ChartId].Type))
+                    .Where(g => g.Count() >= 10)
+                    .ToDictionary(g => g.Key, g => (int)g.Average(s => (int)s.Score!.Value));
+
+                int Predicted(Chart chart) =>
+                    best.TryGetValue(chart.Id, out var score) && score.Score != null
+                        ? (int)score.Score.Value
+                        : levelAverages.TryGetValue((chart.Level, chart.Type), out var average)
+                            ? average
+                            : 0;
+
+                var floor = PhoenixLetterGrade.AA.GetMinimumScoreFor(config.Mix);
+                foreach (var chart in config.Charts
+                             .Where(c => Predicted(c) > floor)
+                             .OrderByDescending(c => mine.Rating(c.Level, Predicted(c)))
+                             .Take(config.PlayCount))
+                    suggested.Add(chart.Id);
+            }
+
+            foreach (var chartId in mine.Submissions.Keys) suggested.Remove(chartId);
+            return suggested.ToArray();
         }
 
         private QualifierStanding? StandingFor(IReadOnlyList<UserQualifiers> scored, int withoutScores,

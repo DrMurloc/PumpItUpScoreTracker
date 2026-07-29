@@ -4725,6 +4725,9 @@
   <data name="Submit Score" xml:space="preserve">
     <value>スコアを提出</value>
   </data>
+  <data name="Suggested" xml:space="preserve">
+    <value>おすすめ</value>
+  </data>
   <data name="Suggested Chart" xml:space="preserve">
     <value>おすすめ譜面</value>
   </data>
@@ -4736,6 +4739,9 @@
   </data>
   <data name="Suggested level" xml:space="preserve">
     <value>おすすめレベル</value>
+  </data>
+  <data name="Suggested Next" xml:space="preserve">
+    <value>次のおすすめ</value>
   </data>
   <data name="Suggested · Fill Gaps" xml:space="preserve">
     <value>おすすめ · 穴埋め</value>

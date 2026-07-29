@@ -82,7 +82,7 @@ public sealed class QualifiersPageTests : ComponentTestBase
     {
         var charts = new[] { BuildChart("Alpha", 22), BuildChart("Beta", 23) };
         GivenBoard(new QualifierBoard(Config(charts), Name.From("Test Cup"),
-            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), null, false, false));
+            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), null, false, false, Array.Empty<Guid>()));
 
         var page = Render();
 
@@ -97,7 +97,7 @@ public sealed class QualifiersPageTests : ComponentTestBase
     {
         var charts = new[] { BuildChart("Alpha", 22) };
         GivenBoard(new QualifierBoard(Config(charts), Name.From("Test Cup"),
-            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), null, false, false));
+            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), null, false, false, Array.Empty<Guid>()));
 
         var page = Render();
 
@@ -116,7 +116,7 @@ public sealed class QualifiersPageTests : ComponentTestBase
             new QualifierPlay(chartB, 985000, 1100.25, SubmissionSource.OfficialImport)
         });
         GivenBoard(new QualifierBoard(Config(new[] { chartA, chartB }), Name.From("Test Cup"),
-            new[] { entry }, Array.Empty<Name>(), null, false, false));
+            new[] { entry }, Array.Empty<Name>(), null, false, false, Array.Empty<Guid>()));
 
         var page = Render();
 
@@ -134,7 +134,7 @@ public sealed class QualifiersPageTests : ComponentTestBase
             new QualifierPlay(chart, 990000, 1300.25, SubmissionSource.Manual)
         });
         GivenBoard(new QualifierBoard(Config(new[] { chart }), Name.From("Test Cup"),
-            new[] { entry }, Array.Empty<Name>(), null, false, false));
+            new[] { entry }, Array.Empty<Name>(), null, false, false, Array.Empty<Guid>()));
 
         var page = Render();
 
@@ -148,7 +148,7 @@ public sealed class QualifiersPageTests : ComponentTestBase
     {
         var chart = BuildChart("Alpha", 22);
         GivenBoard(new QualifierBoard(Config(new[] { chart }), Name.From("Test Cup"),
-            Array.Empty<QualifierEntry>(), new[] { Name.From("registered-only") }, null, false, false));
+            Array.Empty<QualifierEntry>(), new[] { Name.From("registered-only") }, null, false, false, Array.Empty<Guid>()));
 
         var page = Render();
 
@@ -162,7 +162,7 @@ public sealed class QualifiersPageTests : ComponentTestBase
     {
         var charts = new[] { BuildChart("Alpha", 22), BuildChart("Beta", 23) };
         GivenBoard(new QualifierBoard(Config(charts), Name.From("Test Cup"),
-            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), null, false, false));
+            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), null, false, false, Array.Empty<Guid>()));
 
         var page = Render();
 
@@ -172,12 +172,53 @@ public sealed class QualifiersPageTests : ComponentTestBase
         Assert.Empty(page.FindAll(".qual-legend-counting"));
     }
 
+    /// <summary>
+    ///     The regression this exists to prevent: from 2025-06-16 the page computed suggestions
+    ///     and painted nothing, because the border style was gated on AllCharts while the legend
+    ///     was gated on its negation. A suggested chart must carry the ring AND the caption.
+    /// </summary>
+    [Fact]
+    public void ASuggestedChartIsPaintedAndAppearsInTheLegend()
+    {
+        var suggestedChart = BuildChart("Alpha", 22);
+        var plainChart = BuildChart("Beta", 23);
+        GivenBoard(new QualifierBoard(Config(new[] { suggestedChart, plainChart }), Name.From("Test Cup"),
+            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), null, false, false,
+            new[] { suggestedChart.Id }));
+
+        var page = Render();
+
+        Assert.Single(page.FindAll(".qual-card-suggested"));
+        Assert.Single(page.FindAll(".qual-legend-suggested"));
+        // And the untouched chart still reads as untouched, so the two states are distinct.
+        Assert.Single(page.FindAll(".qual-card-untouched"));
+    }
+
+    [Fact]
+    public void ASuggestionNeverOutranksAScoreYouAlreadyPosted()
+    {
+        var chart = BuildChart("Alpha", 22);
+        var standing = new QualifierStanding(Name.From("player"), 1, 1, 1300.25, null, null);
+        var entry = new QualifierEntry(Name.From("player"), true, 1300.25, new[]
+        {
+            new QualifierPlay(chart, 990000, 1300.25, SubmissionSource.Manual)
+        });
+        // A board that wrongly suggests a chart the player has already counted.
+        GivenBoard(new QualifierBoard(Config(new[] { chart }), Name.From("Test Cup"),
+            new[] { entry }, Array.Empty<Name>(), standing, false, false, new[] { chart.Id }));
+
+        var page = Render();
+
+        Assert.Single(page.FindAll(".qual-card-counting"));
+        Assert.Empty(page.FindAll(".qual-card-suggested"));
+    }
+
     [Fact]
     public void AClosedEventSaysSoInsteadOfHidingTheAction()
     {
         var chart = BuildChart("Alpha", 22);
         GivenBoard(new QualifierBoard(Config(new[] { chart }), Name.From("Test Cup"),
-            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), null, false, true));
+            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), null, false, true, Array.Empty<Guid>()));
 
         var page = Render();
 
@@ -192,7 +233,7 @@ public sealed class QualifiersPageTests : ComponentTestBase
     {
         var charts = Enumerable.Range(1, 13).Select(i => BuildChart($"Chart{i}", 20 + i % 4)).ToArray();
         GivenBoard(new QualifierBoard(Config(charts, 8), Name.From("Big Cup"),
-            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), null, false, false));
+            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), null, false, false, Array.Empty<Guid>()));
 
         var page = Render();
 
@@ -205,7 +246,7 @@ public sealed class QualifiersPageTests : ComponentTestBase
     {
         var charts = Enumerable.Range(1, 4).Select(i => BuildChart($"Chart{i}", 22)).ToArray();
         GivenBoard(new QualifierBoard(Config(charts), Name.From("Test Cup"),
-            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), null, false, false));
+            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), null, false, false, Array.Empty<Guid>()));
 
         var page = Render();
 
@@ -219,7 +260,7 @@ public sealed class QualifiersPageTests : ComponentTestBase
         var standing = new QualifierStanding(Name.From("chezmix"), 4, 5, 1206.89, 1141.30,
             Name.From("LIGHTW8"));
         GivenBoard(new QualifierBoard(Config(new[] { chart }), Name.From("Test Cup"),
-            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), standing, false, false));
+            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), standing, false, false, Array.Empty<Guid>()));
 
         var page = Render();
 

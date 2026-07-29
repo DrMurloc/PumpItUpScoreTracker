@@ -404,12 +404,28 @@ Commits 1–6 landed as planned. What differs from §1–8:
 - **No `QualifierPoolGrid` component.** The pool grid is markup on the page; it has one caller and
   extracting it bought nothing. `QualifierChip` and `QualifierSubmitDialog` are components as
   planned.
-- **The "suggested next chart" pool state is not implemented.** The old page computed
-  `_suggestedCharts` and then never rendered them (§5.3 of the audit), so there was nothing to
-  port — only a spec to invent. Shipping a guess at what a player should play next is worse than
-  shipping three honest states, so the pool has **counting / not counting / not played** and the
-  legend lists only what is on screen. The mock showed four. This is the one place the build is
-  deliberately smaller than the mock.
+- **The "suggested next chart" state is a restored regression, not a new feature.** The audit
+  concluded there was "nothing to port, only a spec to invent" — that was wrong, and the owner
+  caught it. `git log -L` on `CardStyle` shows the highlight shipped and worked: the line was
+
+  ```csharp
+  _suggestedCharts.Contains(chartId) ? $"border-color:{Colors.LightBlue.Darken1}" :
+  ```
+
+  with no guard, so suggested charts carried a light-blue border in ordinary pooled tournaments.
+  **`d7173f2d` ("Added support for an AllCharts qualifier leaderboard", 2025-06-16)** added
+  `_configuration.AllCharts &&` to that style *and* gated the legend on `!_configuration.AllCharts`
+  — two edits in one commit, in opposite directions. From that day the highlight could only fire
+  in AllCharts mode, where the grid renders `BestCharts()` (submitted charts only) while
+  `EvaluateRecommended` strips submitted charts from the set, so it fired nowhere. The feature was
+  dark for ~13 months and the caption stayed on screen the whole time.
+
+  Restored in `QualifiersBoardSaga.SuggestFor`, faithful to the original algorithm: the chart one
+  rung above anything already SSS'd, plus the pool charts the player's own scores predict they
+  will rate highest (folder average standing in where they have never played, at a ten-play
+  minimum), minus anything already submitted. One improvement: the grade floors read
+  `config.Mix` rather than a hardcoded `MixEnum.Phoenix`, which matters now that P2's bands differ.
+  `ASuggestedChartIsPaintedAndAppearsInTheLegend` is the assertion whose absence let it rot.
 - **`AddPhoenixScore` was removed outright** rather than kept as a shim. Its four call sites moved
   to `AddManualScore`/`AddImportedScore` in the same commit, so nothing needed a transitional
   overload.

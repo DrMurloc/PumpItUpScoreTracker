@@ -4667,6 +4667,9 @@
   <data name="Submit Score" xml:space="preserve">
     <value>점수 제출</value>
   </data>
+  <data name="Suggested" xml:space="preserve">
+    <value>추천</value>
+  </data>
   <data name="Suggested Chart" xml:space="preserve">
     <value>추천 채보</value>
   </data>
@@ -4678,6 +4681,9 @@
   </data>
   <data name="Suggested level" xml:space="preserve">
     <value>추천 레벨</value>
+  </data>
+  <data name="Suggested Next" xml:space="preserve">
+    <value>다음 추천</value>
   </data>
   <data name="Suggested · Fill Gaps" xml:space="preserve">
     <value>추천 · 빈칸 채우기</value>

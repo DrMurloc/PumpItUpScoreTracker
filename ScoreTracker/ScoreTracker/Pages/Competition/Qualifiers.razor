@@ -303,6 +303,7 @@ else
 
     private PoolState Counting => new("counting", L["Counting"], L["Counting Toward Your Total"]);
     private PoolState Banked => new("banked", L["Not Counting"], L["Played Not Counting"]);
+    private PoolState Suggested => new("suggested", L["Suggested"], L["Suggested Next"]);
     private PoolState Untouched => new("untouched", L["Not played"], L["Not played"]);
 
     private QualifierPlay? MyPlay(Guid chartId) =>
@@ -312,7 +313,10 @@ else
     private PhoenixScore? ExistingFor(Guid? chartId) =>
         chartId == null ? null : MyPlay(chartId.Value)?.Score;
 
-    private PoolState StateFor(Guid chartId) => MyPlay(chartId) != null ? Counting : Untouched;
+    private PoolState StateFor(Guid chartId) =>
+        MyPlay(chartId) != null ? Counting
+        : _board?.SuggestedChartIds.Contains(chartId) ?? false ? Suggested
+        : Untouched;
 
     private IEnumerable<PoolState> VisibleStates =>
         (_board?.Configuration.Charts ?? Array.Empty<Chart>())
