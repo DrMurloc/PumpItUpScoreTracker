@@ -40,5 +40,14 @@ namespace ScoreTracker.Web.Controllers
         {
             return RedirectPermanent("/MixChanges");
         }
+
+        // The rating calculator was the second half of one pipeline — a grade and a folder
+        // make PUMBILITY — so it folded into the Phoenix calculator's third step
+        // (docs/design/phoenix-calculator-redesign.md).
+        [HttpGet("/RatingCalculator")]
+        public IActionResult ToPhoenixCalculator()
+        {
+            return RedirectPermanent("/PhoenixCalculator");
+        }
     }
 }

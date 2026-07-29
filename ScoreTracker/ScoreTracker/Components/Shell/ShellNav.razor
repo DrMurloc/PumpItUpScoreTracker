@@ -97,8 +97,14 @@
     <ShellMenu Label=@L["Tools"]>
         @if (!Model.IsGatedMix)
         {
-            <ShellMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</ShellMenuItem>
-            <ShellMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</ShellMenuItem>
+            @* The calculator computes Phoenix-formula scores and prices PUMBILITY, so it shows
+               for the mixes that have both. XX is deliberately un-gated, so IsGatedMix is not
+               the right condition — XX scoring keyed off arbitrary combo and was never
+               computable from a results screen. *@
+            @if (!Model.CurrentMix.UsesLegacyScoring())
+            {
+                <ShellMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Calculator"]</ShellMenuItem>
+            }
             <ShellMenuItem Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</ShellMenuItem>
             <ShellMenuItem Href="/MixChanges" Icon="@Icons.Material.Filled.Compare">@L["Mix Changes"]</ShellMenuItem>
         }

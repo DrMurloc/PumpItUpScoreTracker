@@ -3285,9 +3285,6 @@
   <data name="Phoenix score" xml:space="preserve">
     <value>Phoenix 점수</value>
   </data>
-  <data name="Phoenix Score Calculator" xml:space="preserve">
-    <value>Phoenix 점수 계산기</value>
-  </data>
   <data name="Phoenix score from" xml:space="preserve">
     <value>Phoenix 최저 점수</value>
   </data>

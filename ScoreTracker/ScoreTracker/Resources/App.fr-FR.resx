@@ -3318,9 +3318,6 @@
   <data name="Phoenix score" xml:space="preserve">
     <value>Score Phoenix</value>
   </data>
-  <data name="Phoenix Score Calculator" xml:space="preserve">
-    <value>Calculateur de score Phoenix</value>
-  </data>
   <data name="Phoenix score from" xml:space="preserve">
     <value>Score Phoenix min</value>
   </data>
