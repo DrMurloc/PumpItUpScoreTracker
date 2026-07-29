@@ -1,5 +1,6 @@
 using ScoreTracker.SharedKernel.Models;
 ﻿using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -27,11 +28,10 @@ public sealed class UserQualifiers
 
     private static readonly ScoringConfiguration _stormScoreConfig = BuildStorm();
 
-    public UserQualifiers(QualifiersConfiguration config, bool isApproved, Name userName, Guid? userId,
+    public UserQualifiers(QualifiersConfiguration config, Name userName, Guid? userId,
         IDictionary<Guid, Submission> submissions)
     {
         Configuration = config;
-        IsApproved = isApproved;
         UserName = userName;
         Submissions = submissions;
         UserId = userId;
@@ -39,7 +39,6 @@ public sealed class UserQualifiers
 
     public QualifiersConfiguration Configuration { get; }
 
-    public bool IsApproved { get; private set; }
     public Name UserName { get; set; }
     public Guid? UserId { get; set; }
 
@@ -77,14 +76,28 @@ public sealed class UserQualifiers
                 : BestCharts().Sum(c => c.Rating);
     }
 
-    public void Approve()
+    /// <summary>
+    ///     A score the player entered. The photo is not optional: it is the only evidence an
+    ///     organiser has for a hand-typed number.
+    /// </summary>
+    public bool AddManualScore(Guid chartId, PhoenixScore score, Uri photo, DateTimeOffset submittedAt)
     {
-        IsApproved = true;
+        if (photo == null) throw new QualifierPhotoRequiredException();
+
+        return Record(chartId, score, photo, SubmissionSource.Manual, submittedAt);
+    }
+
+    /// <summary>
+    ///     A score read off the official site. The site is the evidence, so there is no photo.
+    /// </summary>
+    public bool AddImportedScore(Guid chartId, PhoenixScore score, DateTimeOffset submittedAt)
+    {
+        return Record(chartId, score, null, SubmissionSource.OfficialImport, submittedAt);
     }
 
     public bool AddXXScore(Guid chartId, StepCount perfects, StepCount greats, StepCount goods, StepCount bads,
         StepCount misses, StepCount maxCombo,
-        Uri uri)
+        Uri photo, DateTimeOffset submittedAt)
     {
         var offset = Configuration.NoteCountAdjustments.TryGetValue(chartId, out var adjustment)
             ? adjustment
@@ -92,16 +105,19 @@ public sealed class UserQualifiers
         perfects += offset;
         maxCombo += offset;
         var scoreScreen = new ScoreScreen(perfects, greats, goods, bads, misses, maxCombo);
-        return AddPhoenixScore(chartId, scoreScreen.CalculatePhoenixScore, uri);
+        return AddManualScore(chartId, scoreScreen.CalculatePhoenixScore, photo, submittedAt);
     }
 
-    public bool AddPhoenixScore(Guid chartId, PhoenixScore score, Uri? uri)
+    private bool Record(Guid chartId, PhoenixScore score, Uri? photo, SubmissionSource source,
+        DateTimeOffset submittedAt)
     {
         Submissions[chartId] = new Submission
         {
             ChartId = chartId,
-            PhotoUrl = uri,
-            Score = score
+            PhotoUrl = photo,
+            Score = score,
+            Source = source,
+            SubmittedAt = submittedAt
         };
         return true;
     }
@@ -111,5 +127,7 @@ public sealed class UserQualifiers
         public Guid ChartId { get; set; }
         public PhoenixScore Score { get; set; }
         public Uri? PhotoUrl { get; set; }
+        public SubmissionSource Source { get; set; }
+        public DateTimeOffset SubmittedAt { get; set; }
     }
 }

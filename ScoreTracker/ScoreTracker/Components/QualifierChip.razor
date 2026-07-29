@@ -1,0 +1,56 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.Theming
+
+@* One play on a board row: the jacket is the identifier, the letter grade rides as the ring
+   around it, the rating prints underneath. Dropping the separate grade icon is what buys room
+   for a ten-chart top N (docs/design/qualifiers-overhaul.md §5.4).
+
+   The grade ladder is deliberately not injective - SS+/SS share a metal, as do S+/S, AA+/AA and
+   A+/A - so the ring never travels alone: the rating is under it and the exact grade and score
+   are in the title. *@
+<button type="button" class="qual-chip @(IsPerfectGame ? "qual-chip-pg" : "")"
+        style="--qual-grade:@GradeVar" title="@Label" aria-label="@Label" @onclick="OnSelected">
+    <span class="qual-chip-thumb">
+        <img src="@Chart.Song.ImagePath" alt=""/>
+    </span>
+    <span class="qual-chip-rating">@Rating.ToString(RatingFormat)</span>
+</button>
+
+@code {
+
+    [Parameter] [EditorRequired] public Chart Chart { get; set; } = default!;
+
+    [Parameter] [EditorRequired] public PhoenixScore Score { get; set; }
+
+    [Parameter] [EditorRequired] public double Rating { get; set; }
+
+    [Parameter] public EventCallback<Chart> ChartSelected { get; set; }
+
+    /// <summary>
+    ///     True when the tournament scores on the raw score, where the "rating" is the score and
+    ///     a trailing .00 is noise. Rating-based scoring keeps two decimals — they separate people.
+    /// </summary>
+    [Parameter] public bool WholeNumberRating { get; set; }
+
+    private string RatingFormat => WholeNumberRating ? "N0" : "N2";
+
+    // A Perfect Game is every step perfect, which lands on exactly 1,000,000 and nothing else
+    // can - any great at all drops the weighted numerator below the note count. So the plate is
+    // derivable from the score and needs no separate field.
+    private bool IsPerfectGame => Score == (PhoenixScore)1000000;
+
+    private PhoenixLetterGrade Grade => Score.LetterGradeFor(Chart.Mix);
+
+    private string GradeVar => MixThemes.GradeVar(Grade);
+
+    private string Label =>
+        $"{Chart.Song.Name} {Chart.DifficultyString} - {Grade.GetName()} {(int)Score:N0}" +
+        (IsPerfectGame ? " (Perfect Game)" : string.Empty) +
+        $", {Rating:0.00} rating";
+
+    private Task OnSelected() => ChartSelected.InvokeAsync(Chart);
+
+}

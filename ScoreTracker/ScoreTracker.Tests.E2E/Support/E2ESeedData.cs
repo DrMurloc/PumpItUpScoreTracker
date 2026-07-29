@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.OfficialMirror.Infrastructure.Entities;
@@ -172,6 +172,45 @@ public sealed class E2ESeedData
         await using var context = await _factory.CreateDbContextAsync(cancellationToken);
         await context.Database.ExecuteSqlInterpolatedAsync(
             $"INSERT INTO [scores].[WeeklyUserEntry] ([UserId], [ChartId], [MixId], [Score], [Plate], [IsBroken], [WasWithinRange], [CompetitiveLevel], [Photo], [Source]) VALUES ({userId}, {chartId}, {PhoenixMixId}, {score}, {plate}, {false}, {true}, {competitiveLevel}, {null}, {source})",
+            cancellationToken);
+    }
+
+    /// <summary>A tournament row (EventCompetition-internal table — SQL, per the house rule).</summary>
+    public async Task<Guid> SeedTournamentAsync(string name, CancellationToken cancellationToken = default)
+    {
+        var id = Guid.NewGuid();
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO [scores].[Tournament] ([Id], [Name], [Configuration], [Type], [Location], [IsHighlighted], [IsMoM], [IsUnlisted]) VALUES ({id}, {name}, {"{}"}, {"Match"}, {"Remote"}, {true}, {false}, {false})",
+            cancellationToken);
+        return id;
+    }
+
+    /// <summary>The qualifiers configuration a tournament's board reads from.</summary>
+    public async Task SeedQualifiersConfigurationAsync(Guid tournamentId, IEnumerable<Guid> chartIds,
+        int playCount = 2, DateTimeOffset? cutoff = null, CancellationToken cancellationToken = default)
+    {
+        var charts = string.Join(",", chartIds);
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO [scores].[QualifiersConfiguration] ([TournamentId], [MixId], [ScoringType], [Charts], [AllCharts], [NotificationChannel], [ChartPlayCount], [CutoffTime]) VALUES ({tournamentId}, {PhoenixMixId}, {"Score"}, {charts}, {false}, {0L}, {playCount}, {cutoff})",
+            cancellationToken);
+    }
+
+    /// <summary>
+    ///     An entry on a qualifiers board. Entries is the submission blob; passing a photo URL
+    ///     marks it a manual submission, passing none marks it an official import.
+    /// </summary>
+    public async Task SeedQualifierEntryAsync(Guid tournamentId, string name, Guid chartId, int score,
+        Guid? userId = null, string? photoUrl = null, CancellationToken cancellationToken = default)
+    {
+        var photo = photoUrl == null ? "null" : $"\"{photoUrl}\"";
+        var source = photoUrl == null ? 1 : 0;
+        var entries =
+            $"[{{\"ChartId\":\"{chartId}\",\"Score\":{score},\"PhotoUrl\":{photo},\"Source\":{source}}}]";
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO [scores].[UserQualifier] ([Id], [TournamentId], [Name], [Entries], [IsApproved], [UserId]) VALUES ({Guid.NewGuid()}, {tournamentId}, {name}, {entries}, {false}, {userId})",
             cancellationToken);
     }
 

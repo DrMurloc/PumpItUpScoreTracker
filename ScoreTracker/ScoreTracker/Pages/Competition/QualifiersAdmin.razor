@@ -1,0 +1,361 @@
+﻿@page "/Tournament/{TournamentId:guid}/Qualifiers/Admin"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Commands
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Theming
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+
+@* The organiser's screen (docs/design/qualifiers-overhaul.md §5.5). Photos live here and
+   nowhere else - they are the TO's reference, not evidence the field audits - and there is no
+   approval queue, because verification is gone. What is left is the field, the evidence, and a
+   delete. The query itself re-checks the caller's role, so this markup is a convenience. *@
+
+<PageTitle>@_title</PageTitle>
+
+@if (_denied)
+{
+    <MudAlert Severity="Severity.Warning">@L["Qualifiers Admin Denied"]</MudAlert>
+}
+else if (_view == null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary"></MudProgressLinear>
+}
+else
+{
+    <MudStack Spacing="3" Class="pt-4 pb-8">
+
+        <div class="qual-admin-bar">
+            <div>
+                <div class="qual-admin-kicker">@L["Qualifiers Admin"]</div>
+                <h1>@_view.TournamentName</h1>
+            </div>
+            <MudSpacer></MudSpacer>
+            <MudButton Href=@($"/Tournament/{TournamentId}/Qualifiers") Variant="Variant.Text"
+                       Color="Color.Primary" StartIcon="@Icons.Material.Filled.Leaderboard">
+                @L["Player Page"]
+            </MudButton>
+        </div>
+
+        <div class="qual-tallies">
+            <div class="qual-tally">
+                <div class="qual-tally-key">@L["Entries"]</div>
+                <div class="qual-tally-value">@(_view.Entries.Count + _view.WithoutScores.Count)</div>
+            </div>
+            <div class="qual-tally">
+                <div class="qual-tally-key">@L["Scored"]</div>
+                <div class="qual-tally-value">@_view.Entries.Count</div>
+            </div>
+            <div class="qual-tally">
+                <div class="qual-tally-key">@L["Photos"]</div>
+                <div class="qual-tally-value">@_view.PhotoCount</div>
+            </div>
+            <div class="qual-tally">
+                <div class="qual-tally-key">@L["Duplicates"]</div>
+                <div class="qual-tally-value @(_view.Duplicates.Any() ? "qual-tally-flag" : "")">@_view.Duplicates.Count</div>
+            </div>
+        </div>
+
+        @* Duplicates. Without a name gate these get easier to create, not harder — which is
+           exactly why they surface here instead of being left for the TO to spot. *@
+        <MudText Typo="Typo.overline">@L["Duplicates"]</MudText>
+        @if (!_view.Duplicates.Any())
+        {
+            <div class="qual-dupe">
+                <p>@L["No Duplicates Flagged"]</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var group in _view.Duplicates)
+            {
+                <div class="qual-dupe">
+                    <p>@L["Duplicate Explainer", group.Entries[0].UserName.ToString()]</p>
+                    @foreach (var (entry, index) in group.Entries.Select((e, i) => (e, i)))
+                    {
+                        <div class="qual-dupe-row @(index == 0 ? "qual-dupe-keep" : "")">
+                            <span class="qual-dupe-name">@entry.UserName</span>
+                            <span class="qual-dupe-meta">
+                                @(entry.HasAccount ? L["Account"] : L["Anonymous"])
+                                &middot; @L["N Charts", entry.Plays.Count]
+                            </span>
+                            <span class="qual-dupe-total">@Num(entry.Total)</span>
+                            @if (index == 0)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">@L["Keep"]</MudChip>
+                            }
+                            else
+                            {
+                                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error"
+                                           OnClick="() => ConfirmDeleteEntry(entry)">@L["Delete"]</MudButton>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        @* Entries. Open one for its submissions and their photos. *@
+        <MudStack Row="true" AlignItems="AlignItems.Baseline" Spacing="2">
+            <MudText Typo="Typo.overline">@L["Entries"]</MudText>
+            <MudSpacer></MudSpacer>
+            <MudText Typo="Typo.caption">@L["Open A Row For Its Photos"]</MudText>
+        </MudStack>
+        <div>
+            @foreach (var entry in _view.Entries)
+            {
+                var photos = entry.Plays.Count(p => p.Source == SubmissionSource.Manual);
+                var isOpen = _openEntry == entry.UserName.ToString();
+                <div class="qual-entry">
+                    <div class="qual-entry-who">
+                        <span class="qual-entry-name">@entry.UserName</span>
+                        <span class="qual-entry-sub">
+                            <span class="qual-source-chip @(entry.HasAccount ? "qual-source-account" : "qual-source-anon")">
+                                @(entry.HasAccount ? L["Account"] : L["Anonymous"])
+                            </span>
+                            <span>@L["N Charts N Photos", entry.Plays.Count, photos]</span>
+                        </span>
+                    </div>
+                    <div class="qual-entry-tail">
+                        <span class="qual-entry-total">@Num(entry.Total)</span>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                       aria-label=@L["Delete Entry"] OnClick="() => ConfirmDeleteEntry(entry)"></MudIconButton>
+                        <MudIconButton Icon="@(isOpen ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                       Size="Size.Small" aria-label=@L["Show Submissions"]
+                                       OnClick="() => ToggleEntry(entry)"></MudIconButton>
+                    </div>
+                </div>
+                @if (isOpen)
+                {
+                    <MudStack Spacing="1" Class="pa-2">
+                        @foreach (var play in entry.Plays)
+                        {
+                            <div class="qual-submission">
+                                <img class="qual-submission-jacket" src="@play.Chart.Song.ImagePath" alt=""/>
+                                <div class="qual-submission-meta">
+                                    <span class="qual-submission-name">@play.Chart.Song.Name</span>
+                                    <span class="qual-submission-row">
+                                        <DifficultyBubble Chart="play.Chart" Small="true"></DifficultyBubble>
+                                        <span class="qual-card-grade" style="color:@MixThemes.GradeVar(play.Score.LetterGradeFor(play.Chart.Mix))">
+                                            @play.Score.LetterGradeFor(play.Chart.Mix).GetName()
+                                        </span>
+                                        <span>@(((int)play.Score).ToString("N0"))</span>
+                                    </span>
+                                </div>
+                                <div class="qual-submission-tail">
+                                    @if (play.Source == SubmissionSource.OfficialImport)
+                                    {
+                                        @* No photo, and none owed: the official site is the evidence. *@
+                                        <span class="qual-no-photo">@L["From Official"]</span>
+                                    }
+                                    else if (play.PhotoUrl != null)
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.PhotoCamera" Size="Size.Small"
+                                                       Color="Color.Primary" aria-label=@L["View Photo"]
+                                                       OnClick="() => ShowPhoto(entry, play)"></MudIconButton>
+                                    }
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                                   aria-label=@L["Remove This Score"]
+                                                   OnClick="() => ConfirmDeleteSubmission(entry, play)"></MudIconButton>
+                                </div>
+                            </div>
+                        }
+                    </MudStack>
+                }
+            }
+            @if (_view.WithoutScores.Any())
+            {
+                <div class="qual-unscored">
+                    <b>@string.Join(", ", _view.WithoutScores)</b>
+                    <span>@L["Registered No Score"]</span>
+                </div>
+            }
+        </div>
+
+        <MudText Typo="Typo.overline">@L["Setup"]</MudText>
+        <div class="qual-rules">
+            <div class="qual-setup-row">
+                <span class="qual-setup-key">@L["Charts In Pool"]</span>
+                <span class="qual-setup-value">@_view.Configuration.Charts.Count</span>
+            </div>
+            <div class="qual-setup-row">
+                <span class="qual-setup-key">@L["Counting"]</span>
+                <span class="qual-setup-value">@L["Best N", _view.Configuration.PlayCount]</span>
+            </div>
+            <div class="qual-setup-row">
+                <span class="qual-setup-key">@L["Scoring"]</span>
+                <span class="qual-setup-value">@_view.Configuration.ScoringType</span>
+            </div>
+            <div class="qual-setup-row">
+                <span class="qual-setup-key">@L["Closes"]</span>
+                <span class="qual-setup-value">
+                    @(_view.Configuration.CutoffTime?.ToString("d MMM yyyy, HH:mm") ?? L["No Cutoff"])
+                </span>
+            </div>
+        </div>
+    </MudStack>
+}
+
+@* Photo review. Only organisers reach this - players never see each other's. *@
+<MudDialog @bind-Visible="_photoOpen" Options="_dialogOptions" Class="qual-photo-dialog">
+    <DialogContent>
+        @if (_photoPlay != null)
+        {
+            <MudText Typo="Typo.subtitle2">@_photoOwner &middot; @_photoPlay.Chart.Song.Name @_photoPlay.Chart.DifficultyString</MudText>
+            <img class="qual-photo" src="@_photoPlay.PhotoUrl" alt=@L["Uploaded Result Screen"]/>
+            <MudText Typo="Typo.caption">@L["Photo Privacy Note"]</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _photoOpen = false">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Deleting is not undoable, so the confirm names exactly what goes. *@
+<MudDialog @bind-Visible="_confirmOpen" Options="_dialogOptions" Class="qual-dialog">
+    <DialogContent>
+        @if (_confirmEntry != null)
+        {
+            <div class="qual-danger">
+                @if (_confirmPlay == null)
+                {
+                    @L["Delete Entry Warning", _confirmEntry.UserName.ToString(), _confirmEntry.Plays.Count]
+                }
+                else
+                {
+                    @L["Delete Submission Warning", _confirmPlay.Chart.Song.Name, _confirmEntry.UserName.ToString()]
+                }
+                <b> @L["This Cannot Be Undone"]</b>
+            </div>
+            @if (_confirmPlay == null)
+            {
+                <div class="qual-confirm-list">
+                    @foreach (var play in _confirmEntry.Plays)
+                    {
+                        <div class="qual-confirm-item">
+                            <DifficultyBubble Chart="play.Chart" Small="true"></DifficultyBubble>
+                            <span>@play.Chart.Song.Name</span>
+                            <span class="qual-confirm-item-tail">
+                                @play.Score.LetterGradeFor(play.Chart.Mix).GetName() &middot; @Num(play.Rating)
+                            </span>
+                        </div>
+                    }
+                </div>
+            }
+            <MudText Typo="Typo.caption" Class="mt-2">@L["Can Submit Again"]</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _confirmOpen = false">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" Disabled="_isDeleting" OnClick="Delete">
+            @(_confirmPlay == null ? L["Delete Entry"] : L["Remove This Score"])
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [Parameter] public Guid TournamentId { get; set; }
+
+    // "Score" scoring means the rating is the score: commas matter, trailing zeros do not.
+    private bool IsRawScoreScoring => _view?.Configuration.ScoringType == "Score";
+
+    private string Num(double value) => value.ToString(IsRawScoreScoring ? "N0" : "N2");
+
+    private readonly DialogOptions _dialogOptions = new()
+        { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.False };
+
+    private QualifierAdminView? _view;
+    private bool _denied;
+    private string _title = "Qualifiers admin";
+    private string? _openEntry;
+
+    private bool _photoOpen;
+    private QualifierAdminPlay? _photoPlay;
+    private string? _photoOwner;
+
+    private bool _confirmOpen;
+    private QualifierAdminEntry? _confirmEntry;
+    private QualifierAdminPlay? _confirmPlay;
+    private bool _isDeleting;
+
+    protected override async Task OnInitializedAsync() => await Reload();
+
+    private async Task Reload()
+    {
+        try
+        {
+            _view = await Mediator.Send(new GetQualifiersAdminQuery(TournamentId));
+            _title = L["Qualifiers Admin Title", _view.TournamentName.ToString()];
+            _denied = false;
+        }
+        catch (NotAuthorizedException)
+        {
+            _denied = true;
+        }
+        catch (UserNotLoggedInException)
+        {
+            _denied = true;
+        }
+    }
+
+    private void ToggleEntry(QualifierAdminEntry entry)
+    {
+        var key = entry.UserName.ToString();
+        _openEntry = _openEntry == key ? null : key;
+    }
+
+    private void ShowPhoto(QualifierAdminEntry entry, QualifierAdminPlay play)
+    {
+        _photoOwner = entry.UserName.ToString();
+        _photoPlay = play;
+        _photoOpen = true;
+    }
+
+    private void ConfirmDeleteEntry(QualifierAdminEntry entry)
+    {
+        _confirmEntry = entry;
+        _confirmPlay = null;
+        _confirmOpen = true;
+    }
+
+    private void ConfirmDeleteSubmission(QualifierAdminEntry entry, QualifierAdminPlay play)
+    {
+        _confirmEntry = entry;
+        _confirmPlay = play;
+        _confirmOpen = true;
+    }
+
+    private async Task Delete()
+    {
+        if (_confirmEntry == null) return;
+
+        _isDeleting = true;
+        try
+        {
+            if (_confirmPlay == null)
+                await Mediator.Send(new DeleteQualifierEntryCommand(TournamentId, _confirmEntry.UserName));
+            else
+                await Mediator.Send(new DeleteQualifierSubmissionCommand(TournamentId, _confirmEntry.UserName,
+                    _confirmPlay.Chart.Id));
+
+            Snackbar.Add(L["Deleted"], Severity.Success);
+            _confirmOpen = false;
+            await Reload();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add(L["Delete Failed"], Severity.Error);
+        }
+
+        _isDeleting = false;
+    }
+
+}

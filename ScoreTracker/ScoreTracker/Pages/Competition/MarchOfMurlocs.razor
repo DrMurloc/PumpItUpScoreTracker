@@ -103,7 +103,6 @@
 
 @inject IMediator Mediator
 @inject NavigationManager NavManager;
-@inject IQualifiersRepository Qualifiers;
 @code
 {
     private bool _isLoading = false;
@@ -130,16 +129,8 @@
                 _hasQualifiers[tournament.Id] = false;
                 continue;
             }
-            try
-            {
-
-                var qualSettings = await Qualifiers.GetQualifiersConfiguration(tournament.Id);
-                _hasQualifiers[tournament.Id] = qualSettings.PlayCount > 0;
-            }
-            catch (Exception e)
-            {
-                _hasQualifiers[tournament.Id] = false;
-            }
+            _hasQualifiers[tournament.Id] =
+                await Mediator.Send(new TournamentHasQualifiersQuery(tournament.Id));
         }
         _upcoming = tournaments.Where(t => t.StartDate != null && t.StartDate > DateTimeOffset.Now).ToArray();
         _previous = tournaments.Where(t => t.EndDate != null && t.EndDate < DateTimeOffset.Now).ToArray();

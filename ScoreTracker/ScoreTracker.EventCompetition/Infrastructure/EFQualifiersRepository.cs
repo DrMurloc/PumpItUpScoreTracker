@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.EventCompetition.Infrastructure.Entities;
@@ -62,13 +62,20 @@ namespace ScoreTracker.EventCompetition.Infrastructure
         private static UserQualifiers From(UserQualifierEntity entity, QualifiersConfiguration config)
         {
             var entries = JsonSerializer.Deserialize<QualifierSubmissionDto[]>(entity.Entries);
-            return new UserQualifiers(config, entity.IsApproved, entity.Name, entity.UserId, entries!.ToDictionary(
+            return new UserQualifiers(config, entity.Name, entity.UserId, entries!.ToDictionary(
                 e => e.ChartId, e =>
                     new UserQualifiers.Submission
                     {
                         ChartId = e.ChartId,
                         PhotoUrl = e.PhotoUrl == null ? null : new Uri(e.PhotoUrl),
-                        Score = e.Score
+                        Score = e.Score,
+                        // Rows written before the source was recorded carry it implicitly: the
+                        // importer never attached a photo, the submit form always did.
+                        Source = e.Source ??
+                                 (e.PhotoUrl == null ? SubmissionSource.OfficialImport : SubmissionSource.Manual),
+                        // Older rows have no timestamp of their own; the entry's first history
+                        // snapshot is the closest honest answer and the admin screen reads that.
+                        SubmittedAt = e.SubmittedAt ?? default
                     }));
         }
 
@@ -89,7 +96,9 @@ namespace ScoreTracker.EventCompetition.Infrastructure
             {
                 ChartId = kv.Value.ChartId,
                 PhotoUrl = kv.Value.PhotoUrl?.ToString(),
-                Score = kv.Value.Score
+                Score = kv.Value.Score,
+                Source = kv.Value.Source,
+                SubmittedAt = kv.Value.SubmittedAt == default ? null : kv.Value.SubmittedAt
             }));
             if (entity == null)
             {
@@ -99,13 +108,11 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                     Id = Guid.NewGuid(),
                     UserId = qualifiers.UserId,
                     Entries = entryJson,
-                    IsApproved = qualifiers.IsApproved,
                     Name = nameString
                 }, cancellationToken);
             }
             else
             {
-                entity.IsApproved = qualifiers.IsApproved;
                 entity.Entries = entryJson;
                 if (entity.UserId == null && qualifiers.UserId != null) entity.UserId = qualifiers.UserId;
                 entity.Name = nameString;
@@ -116,7 +123,6 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                 TournamentId = tournamentId,
                 Id = Guid.NewGuid(),
                 Entries = entryJson,
-                IsApproved = qualifiers.IsApproved,
                 Name = nameString,
                 RecordedDate = DateTimeOffset.Now
             }, cancellationToken);
@@ -266,6 +272,39 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                 ).ToArrayAsync(cancellationToken);
         }
 
+        public async Task DeleteQualifiers(Guid tournamentId, Name userName,
+            CancellationToken cancellationToken = default)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var nameString = userName.ToString();
+            var entities = await database.Set<UserQualifierEntity>()
+                .Where(u => u.TournamentId == tournamentId && u.Name == nameString)
+                .ToArrayAsync(cancellationToken);
+            if (entities.Length == 0) return;
+
+            // The history snapshots stay: they are the record of what was submitted, and the
+            // entry going away does not make that untrue.
+            database.Set<UserQualifierEntity>().RemoveRange(entities);
+            await database.SaveChangesAsync(cancellationToken);
+        }
+
+        /// <summary>
+        ///     When an entry was first seen, per entrant. Submissions carry their own timestamp
+        ///     now, but rows written before that field existed do not — the first history
+        ///     snapshot is what dates those.
+        /// </summary>
+        public async Task<IDictionary<string, DateTimeOffset>> GetFirstSubmissionDates(Guid tournamentId,
+            CancellationToken cancellationToken = default)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var rows = await database.Set<UserQualifierHistoryEntity>()
+                .Where(h => h.TournamentId == tournamentId)
+                .GroupBy(h => h.Name)
+                .Select(g => new { Name = g.Key, FirstSeen = g.Min(h => h.RecordedDate) })
+                .ToArrayAsync(cancellationToken);
+            return rows.ToDictionary(r => r.Name, r => r.FirstSeen);
+        }
+
         public async Task RegisterUserToTournament(Guid tournamentId, Guid userId,
             CancellationToken cancellationToken = default)
         {
@@ -284,6 +323,19 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                 }, cancellationToken);
                 await database.SaveChangesAsync(cancellationToken);
             }
+        }
+
+        public async Task UnregisterUserFromTournament(Guid tournamentId, Guid userId,
+            CancellationToken cancellationToken = default)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var existing = await database.Set<UserTournamentRegistrationEntity>()
+                .Where(t => t.TournamentId == tournamentId && t.UserId == userId)
+                .ToArrayAsync(cancellationToken);
+            if (existing.Length == 0) return;
+
+            database.Set<UserTournamentRegistrationEntity>().RemoveRange(existing);
+            await database.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<Guid>> GetRegisteredUsers(Guid tournamentId,

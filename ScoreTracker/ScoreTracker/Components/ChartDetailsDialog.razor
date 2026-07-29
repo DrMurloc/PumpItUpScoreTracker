@@ -29,7 +29,7 @@
         {
             @if (!string.IsNullOrWhiteSpace(_videoUrl))
             {
-                <iframe class="chart-details-video" src="@_videoUrl" allow="encrypted-media" allowfullscreen></iframe>
+                <iframe class="chart-details-video" src="@EmbedUrl" allow="@(AutoPlay ? "autoplay; encrypted-media" : "encrypted-media")" allowfullscreen></iframe>
                 <div class="chart-details-video-report">
                     <MudTooltip Text=@L["Report Video Tooltip"]>
                         <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Report"
@@ -339,6 +339,17 @@
     [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
 
     [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    /// <summary>
+    ///     Opt-in: start the video on open. Callers that reach this dialog through a play badge
+    ///     set it, because the badge promised a video and a second click to get one reads as a
+    ///     dead control. Off by default so the chart page's own entry points are unchanged.
+    /// </summary>
+    [Parameter] public bool AutoPlay { get; set; }
+
+    private string? EmbedUrl => string.IsNullOrWhiteSpace(_videoUrl) || !AutoPlay
+        ? _videoUrl
+        : _videoUrl + (_videoUrl.Contains('?') ? "&" : "?") + "autoplay=1";
 
     [Parameter] public RecordedPhoenixScore? Score { get; set; }
 

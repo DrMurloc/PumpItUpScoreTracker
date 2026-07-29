@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,11 +11,14 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using Xunit;
+using ScoreTracker.EventCompetition.Infrastructure;
 
 namespace ScoreTracker.Tests.ApplicationTests;
 
 public sealed class SaveQualifiersHandlerTests
 {
+    private static readonly DateTimeOffset SubmittedAt = new(2026, 5, 1, 0, 0, 0, TimeSpan.Zero);
+
     private const ulong NotificationChannel = 12345UL;
 
     private static QualifiersConfiguration Config(IEnumerable<Chart> charts, int playCount = 2) =>
@@ -24,10 +27,10 @@ public sealed class SaveQualifiersHandlerTests
     private static UserQualifiers BuildEntry(QualifiersConfiguration config, string userName,
         IDictionary<Guid, PhoenixScore> submissions)
     {
-        var entry = new UserQualifiers(config, false, Name.From(userName), Guid.NewGuid(),
+        var entry = new UserQualifiers(config, Name.From(userName), Guid.NewGuid(),
             new Dictionary<Guid, UserQualifiers.Submission>());
         foreach (var kv in submissions)
-            entry.AddPhoenixScore(kv.Key, kv.Value, null);
+            entry.AddImportedScore(kv.Key, kv.Value, SubmittedAt);
         return entry;
     }
 
@@ -74,12 +77,12 @@ public sealed class SaveQualifiersHandlerTests
         var leader = BuildEntry(config, "leader", new Dictionary<Guid, PhoenixScore> { [chart.Id] = 970000 });
         // Our player starts at 900,000 (2nd) and improves to 990,000 (1st)
         var playerId = Guid.NewGuid();
-        var oldPlayer = new UserQualifiers(config, false, Name.From("hero"), playerId,
+        var oldPlayer = new UserQualifiers(config, Name.From("hero"), playerId,
             new Dictionary<Guid, UserQualifiers.Submission>());
-        oldPlayer.AddPhoenixScore(chart.Id, 900000, null);
-        var newPlayer = new UserQualifiers(config, false, Name.From("hero"), playerId,
+        oldPlayer.AddImportedScore(chart.Id, 900000, SubmittedAt);
+        var newPlayer = new UserQualifiers(config, Name.From("hero"), playerId,
             new Dictionary<Guid, UserQualifiers.Submission>());
-        newPlayer.AddPhoenixScore(chart.Id, 990000, null);
+        newPlayer.AddImportedScore(chart.Id, 990000, SubmittedAt);
 
         var qualifiersRepo = new Mock<IQualifiersRepository>();
         var bot = new Mock<IBotClient>();
@@ -112,12 +115,12 @@ public sealed class SaveQualifiersHandlerTests
         var playerId = Guid.NewGuid();
         var leader = BuildEntry(config, "leader",
             new Dictionary<Guid, PhoenixScore> { [chartA.Id] = 980000, [chartB.Id] = 970000 });
-        var oldPlayer = new UserQualifiers(config, false, Name.From("hero"), playerId,
+        var oldPlayer = new UserQualifiers(config, Name.From("hero"), playerId,
             new Dictionary<Guid, UserQualifiers.Submission>());
-        oldPlayer.AddPhoenixScore(chartA.Id, 900000, null);
-        var newPlayer = new UserQualifiers(config, false, Name.From("hero"), playerId,
+        oldPlayer.AddImportedScore(chartA.Id, 900000, SubmittedAt);
+        var newPlayer = new UserQualifiers(config, Name.From("hero"), playerId,
             new Dictionary<Guid, UserQualifiers.Submission>());
-        newPlayer.AddPhoenixScore(chartA.Id, 950000, null);
+        newPlayer.AddImportedScore(chartA.Id, 950000, SubmittedAt);
 
         var qualifiersRepo = new Mock<IQualifiersRepository>();
         var bot = new Mock<IBotClient>();
