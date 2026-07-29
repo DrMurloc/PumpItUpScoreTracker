@@ -1,4 +1,4 @@
-@page "/Tournament/{TournamentId:guid}/Qualifiers/Admin"
+﻿@page "/Tournament/{TournamentId:guid}/Qualifiers/Admin"
 @rendermode RenderModes.Interactive
 @using MediatR
 @using ScoreTracker.Domain.Exceptions
@@ -30,7 +30,7 @@ else if (_view == null)
 }
 else
 {
-    <MudStack Spacing="3">
+    <MudStack Spacing="3" Class="pt-4 pb-8">
 
         <div class="qual-admin-bar">
             <div>
@@ -86,7 +86,7 @@ else
                                 @(entry.HasAccount ? L["Account"] : L["Anonymous"])
                                 &middot; @L["N Charts", entry.Plays.Count]
                             </span>
-                            <span class="qual-dupe-total">@entry.Total.ToString("N2")</span>
+                            <span class="qual-dupe-total">@Num(entry.Total)</span>
                             @if (index == 0)
                             {
                                 <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">@L["Keep"]</MudChip>
@@ -124,7 +124,7 @@ else
                         </span>
                     </div>
                     <div class="qual-entry-tail">
-                        <span class="qual-entry-total">@entry.Total.ToString("N2")</span>
+                        <span class="qual-entry-total">@Num(entry.Total)</span>
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
                                        aria-label=@L["Delete Entry"] OnClick="() => ConfirmDeleteEntry(entry)"></MudIconButton>
                         <MudIconButton Icon="@(isOpen ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
@@ -204,7 +204,7 @@ else
 }
 
 @* Photo review. Only organisers reach this - players never see each other's. *@
-<MudDialog @bind-Visible="_photoOpen" MaxWidth="MaxWidth.False">
+<MudDialog @bind-Visible="_photoOpen" MaxWidth="MaxWidth.False" Class="qual-photo-dialog">
     <DialogContent>
         @if (_photoPlay != null)
         {
@@ -219,7 +219,7 @@ else
 </MudDialog>
 
 @* Deleting is not undoable, so the confirm names exactly what goes. *@
-<MudDialog @bind-Visible="_confirmOpen" MaxWidth="MaxWidth.False">
+<MudDialog @bind-Visible="_confirmOpen" MaxWidth="MaxWidth.False" Class="qual-dialog">
     <DialogContent>
         @if (_confirmEntry != null)
         {
@@ -243,7 +243,7 @@ else
                             <DifficultyBubble Chart="play.Chart" Small="true"></DifficultyBubble>
                             <span>@play.Chart.Song.Name</span>
                             <span class="qual-confirm-item-tail">
-                                @play.Score.LetterGradeFor(play.Chart.Mix).GetName() &middot; @play.Rating.ToString("N2")
+                                @play.Score.LetterGradeFor(play.Chart.Mix).GetName() &middot; @Num(play.Rating)
                             </span>
                         </div>
                     }
@@ -263,6 +263,11 @@ else
 @code {
 
     [Parameter] public Guid TournamentId { get; set; }
+
+    // "Score" scoring means the rating is the score: commas matter, trailing zeros do not.
+    private bool IsRawScoreScoring => _view?.Configuration.ScoringType == "Score";
+
+    private string Num(double value) => value.ToString(IsRawScoreScoring ? "N0" : "N2");
 
     private QualifierAdminView? _view;
     private bool _denied;

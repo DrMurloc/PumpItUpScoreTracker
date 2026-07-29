@@ -1,4 +1,4 @@
-@page "/Tournament/{TournamentId:guid}/Qualifiers"
+﻿@page "/Tournament/{TournamentId:guid}/Qualifiers"
 @rendermode RenderModes.Interactive
 @using MediatR
 @using ScoreTracker.Domain.SecondaryPorts
@@ -28,7 +28,7 @@
 }
 else
 {
-    <MudStack Spacing="3">
+    <MudStack Spacing="3" Class="pt-4 pb-8">
 
         @* 1. What this is, and when it closes. *@
         <div class="qual-status">
@@ -76,7 +76,7 @@ else
                     <span class="qual-you-gap">
                         @if (mine.GapToNext is { } gap)
                         {
-                            @L["Need To Pass", gap.ToString("N2"), mine.NextUp!.ToString()]
+                            @L["Need To Pass", Num(gap), mine.NextUp!.ToString()]
                         }
                         else
                         {
@@ -85,7 +85,7 @@ else
                     </span>
                 </div>
                 <div class="qual-you-total">
-                    <div class="qual-you-total-value">@mine.Total.ToString("N2")</div>
+                    <div class="qual-you-total-value">@Num(mine.Total)</div>
                     <div class="qual-you-total-label">@L["Total"]</div>
                 </div>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary"
@@ -99,7 +99,16 @@ else
             <div class="qual-you qual-you-empty">
                 <MudStack Spacing="2" Style="width:100%">
                     <MudText Typo="Typo.body2">@L["Qualifier First Submission Prompt"]</MudText>
+                    @* Signed in, the entry is keyed to the account and there is nothing to type.
+                       Signed out, a name is the only identity there is - so it is asked for once,
+                       here, rather than buried in the submit dialog. *@
+                    @if (!CurrentUser.IsLoggedIn)
+                    {
+                        <MudTextField T="string" MaxLength="32" Label=@L["Username"] Immediate="true"
+                                      Value="_anonymousName" ValueChanged="n => _anonymousName = n"></MudTextField>
+                    }
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                               Disabled="!CanStartSubmission"
                                StartIcon="@Icons.Material.Filled.AddAPhoto" OnClick="OpenPicker">
                         @L["Start A Submission"]
                     </MudButton>
@@ -144,6 +153,7 @@ else
                             @foreach (var play in entry.Plays.Take(MaxChips))
                             {
                                 <QualifierChip Chart="play.Chart" Score="play.Score" Rating="play.Rating"
+                                               WholeNumberRating="IsRawScoreScoring"
                                                ChartSelected="ShowChartDetails"></QualifierChip>
                             }
                             @if (entry.Plays.Count > MaxChips)
@@ -151,7 +161,7 @@ else
                                 <span class="qual-chip-more">+@(entry.Plays.Count - MaxChips)</span>
                             }
                         </span>
-                        <span style="font-variant-numeric:tabular-nums;font-weight:700;">@entry.Total.ToString("N2")</span>
+                        <span style="font-variant-numeric:tabular-nums;font-weight:700;">@Num(entry.Total)</span>
                     </span>
                 </div>
             }
@@ -181,7 +191,7 @@ else
                         <span class="qual-card-bubble">
                             <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
                         </span>
-                        <img src="@chart.Song.ImagePath" alt=""/>
+                        <img class="qual-card-art" src="@chart.Song.ImagePath" alt=""/>
                         <span class="qual-card-play" aria-hidden="true"></span>
                         <span class="qual-card-name">@chart.Song.Name</span>
                     </span>
@@ -193,7 +203,7 @@ else
                                     @play.Score.LetterGradeFor(chart.Mix).GetName()
                                 </span>
                                 <span class="qual-card-score">@(((int)play.Score).ToString("N0"))</span>
-                                <span class="qual-card-rating">@play.Rating.ToString("N2")</span>
+                                <span class="qual-card-rating">@Num(play.Rating)</span>
                             </span>
                         }
                         else
@@ -231,13 +241,14 @@ else
     </MudStack>
 }
 
-<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_board?.Configuration.Mix ?? MixEnum.Phoenix"></ChartDetailsDialog>
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" AutoPlay="true"
+                    Mix="_board?.Configuration.Mix ?? MixEnum.Phoenix"></ChartDetailsDialog>
 
 <QualifierSubmitDialog @bind-Visible="_submitOpen" Chart="_submitChart" TournamentId="TournamentId"
                        UserName="@SubmissionName" Existing="ExistingFor(_submitChart?.Id)"
                        Submitted="Reload"></QualifierSubmitDialog>
 
-<MudDialog @bind-Visible="_pickerOpen" MaxWidth="MaxWidth.False">
+<MudDialog @bind-Visible="_pickerOpen" MaxWidth="MaxWidth.False" Class="qual-dialog">
     <DialogContent>
         <MudText Typo="Typo.subtitle1">@L["Which Chart Did You Play"]</MudText>
         <MudList T="string">
@@ -296,8 +307,28 @@ else
                 ? "qual-clock-near"
                 : "qual-clock-now";
 
-    private Name SubmissionName => _board?.Yours?.UserName
-                                   ?? (CurrentUser.IsLoggedIn ? CurrentUser.User.Name : Name.From("Guest"));
+    private string _anonymousName = string.Empty;
+
+    // Signed in, everything runs off the account. Signed out, the typed name is the identity,
+    // and a submission cannot start without one.
+    private bool CanStartSubmission => CurrentUser.IsLoggedIn || Name.TryParse(_anonymousName, out _);
+
+    private Name SubmissionName =>
+        _board?.Yours?.UserName
+        ?? (CurrentUser.IsLoggedIn
+            ? CurrentUser.User.Name
+            : Name.TryParse(_anonymousName, out var typed)
+                ? typed
+                : Name.From("Guest"));
+
+    /// <summary>
+    ///     "Score" scoring means the rating <em>is</em> the score, where a trailing .00 is noise
+    ///     and the thousands separator is the whole point. Rating-based scoring keeps two
+    ///     decimals — they are what separates two players.
+    /// </summary>
+    private bool IsRawScoreScoring => _board?.Configuration.ScoringType == "Score";
+
+    private string Num(double value) => value.ToString(IsRawScoreScoring ? "N0" : "N2");
 
     private sealed record PoolState(string Slug, string Label, string LegendLabel);
 

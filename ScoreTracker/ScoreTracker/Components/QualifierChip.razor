@@ -16,7 +16,7 @@
     <span class="qual-chip-thumb">
         <img src="@Chart.Song.ImagePath" alt=""/>
     </span>
-    <span class="qual-chip-rating">@Rating.ToString("0.00")</span>
+    <span class="qual-chip-rating">@Rating.ToString(RatingFormat)</span>
 </button>
 
 @code {
@@ -28,6 +28,14 @@
     [Parameter] [EditorRequired] public double Rating { get; set; }
 
     [Parameter] public EventCallback<Chart> ChartSelected { get; set; }
+
+    /// <summary>
+    ///     True when the tournament scores on the raw score, where the "rating" is the score and
+    ///     a trailing .00 is noise. Rating-based scoring keeps two decimals — they separate people.
+    /// </summary>
+    [Parameter] public bool WholeNumberRating { get; set; }
+
+    private string RatingFormat => WholeNumberRating ? "N0" : "N2";
 
     // A Perfect Game is every step perfect, which lands on exactly 1,000,000 and nothing else
     // can - any great at all drops the weighted numerator below the note count. So the plate is

@@ -1,4 +1,4 @@
-@namespace ScoreTracker.Web.Components
+﻿@namespace ScoreTracker.Web.Components
 @using MediatR
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
@@ -17,12 +17,12 @@
 @* Photo, then score, then save. The photo is not optional for a score you type in - it is the
    only evidence an organiser has - but it never leaves the organiser screen, which is what the
    hint says out loud. *@
-<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" MaxWidth="MaxWidth.False" Class="qual-submit-dialog">
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" MaxWidth="MaxWidth.False" Class="qual-dialog">
     <DialogContent>
         @if (Chart != null)
         {
             <div class="qual-submit-hero">
-                <img src="@Chart.Song.ImagePath" alt=""/>
+                <img class="qual-submit-hero-art" src="@Chart.Song.ImagePath" alt=""/>
                 <div class="qual-submit-hero-text">
                     <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
                     <h3>@Chart.Song.Name</h3>

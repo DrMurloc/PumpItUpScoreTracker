@@ -10241,7 +10241,10 @@ button.chart-card-art {
     display: block;
 }
 
-.qual-card-jacket img {
+/* Scoped to the art itself, never `.qual-card-jacket img`: the difficulty bubble is a
+   MudImage in this box too, and telling it to fill the frame stretched it across the whole
+   tile. Same trap as .chart-jacket-art on the chart page. */
+.qual-card-art {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -10394,7 +10397,7 @@ button.chart-card-art {
     color: var(--mix-ink-muted);
 }
 
-.qual-card-untouched .qual-card-jacket img { opacity: .5; }
+.qual-card-untouched .qual-card-art { opacity: .5; }
 
 .qual-legend { display: flex; flex-wrap: wrap; gap: 5px 12px; padding-top: 2px; }
 
@@ -10456,7 +10459,8 @@ button.chart-card-art {
     margin-bottom: 10px;
 }
 
-.qual-submit-hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Same scoping as the pool tile: the hero carries a bubble as well as the art. */
+.qual-submit-hero-art { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .qual-submit-hero::after {
     content: "";
@@ -10836,3 +10840,21 @@ button.chart-card-art {
 .qual-setup-row:last-child { border-bottom: 0; }
 .qual-setup-key { color: var(--mix-ink-muted); }
 .qual-setup-value { margin-left: auto; font-weight: 700; text-align: right; }
+
+/* Both qualifier dialogs ask for MaxWidth.False on purpose: MaxWidth.Small would tag them
+   `mud-dialog-width-sm`, and charts.css carries a site-wide
+   `.mud-dialog-width-sm { max-width: none !important }` that no normal-weight rule can beat.
+   With False, MudBlazor never applies that class and these caps govern. */
+.mud-dialog.qual-dialog {
+    max-width: 520px;
+}
+
+.mud-dialog.qual-photo-dialog {
+    max-width: 720px;
+}
+
+.mud-dialog.qual-photo-dialog .qual-photo {
+    max-height: 60vh;
+    width: auto;
+    object-fit: contain;
+}

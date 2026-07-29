@@ -40,8 +40,11 @@ public sealed class QualifiersPageTests : ComponentTestBase
             MixEnum.Phoenix, null, null, new HashSet<Skill>());
     }
 
-    private static QualifiersConfiguration Config(IEnumerable<Chart> charts, int playCount = 2) =>
-        new(charts, new Dictionary<Guid, int>(), Name.From("Score"), 0, playCount, null, false);
+    // Defaults to a rating-based scoring type. "Score" scoring means the rating IS the score,
+    // which formats differently — the tests that care about that ask for it explicitly.
+    private static QualifiersConfiguration Config(IEnumerable<Chart> charts, int playCount = 2,
+        string scoringType = "Phoenix") =>
+        new(charts, new Dictionary<Guid, int>(), Name.From(scoringType), 0, playCount, null, false);
 
     private readonly Mock<IDateTimeOffsetAccessor> _clock = new();
     private readonly Mock<IAdminNotificationClient> _notifications = new();
@@ -123,6 +126,61 @@ public sealed class QualifiersPageTests : ComponentTestBase
         Assert.Equal(2, page.FindAll(".qual-chip").Count);
         // The total prints at two decimals so the column lines up.
         Assert.Contains("2,400.50", page.Markup);
+    }
+
+    /// <summary>
+    ///     Under "Score" scoring the rating IS the score, so a trailing .00 is noise and the
+    ///     thousands separator is the whole point — 996,770, not 996770.00.
+    /// </summary>
+    [Fact]
+    public void RawScoreScoringPrintsWholeNumbersWithSeparators()
+    {
+        var chart = BuildChart("Alpha", 22);
+        var entry = new QualifierEntry(Name.From("player"), true, 2986671, new[]
+        {
+            new QualifierPlay(chart, 996770, 996770, SubmissionSource.Manual)
+        });
+        GivenBoard(new QualifierBoard(Config(new[] { chart }, scoringType: "Score"),
+            Name.From("Test Cup"), new[] { entry }, Array.Empty<Name>(), null, false, false,
+            Array.Empty<Guid>()));
+
+        var page = Render();
+
+        Assert.Contains("2,986,671", page.Markup);
+        Assert.DoesNotContain("2,986,671.00", page.Markup);
+        Assert.Contains("996,770", page.Find(".qual-chip-rating").TextContent);
+    }
+
+    [Fact]
+    public void RatingScoringKeepsTwoDecimalsBecauseTheySeparatePeople()
+    {
+        var chart = BuildChart("Alpha", 22);
+        var entry = new QualifierEntry(Name.From("player"), true, 2547.04, new[]
+        {
+            new QualifierPlay(chart, 990000, 1319.04, SubmissionSource.Manual)
+        });
+        GivenBoard(new QualifierBoard(Config(new[] { chart }), Name.From("Test Cup"),
+            new[] { entry }, Array.Empty<Name>(), null, false, false, Array.Empty<Guid>()));
+
+        var page = Render();
+
+        Assert.Contains("2,547.04", page.Markup);
+        Assert.Contains("1,319.04", page.Find(".qual-chip-rating").TextContent);
+    }
+
+    [Fact]
+    public void SignedOutMustNameThemselvesBeforeSubmitting()
+    {
+        var chart = BuildChart("Alpha", 22);
+        GivenBoard(new QualifierBoard(Config(new[] { chart }), Name.From("Test Cup"),
+            Array.Empty<QualifierEntry>(), Array.Empty<Name>(), null, false, false, Array.Empty<Guid>()));
+
+        var page = Render();
+
+        // Signed out, a name is the only identity there is — so it is asked for, and the
+        // submission cannot start without one.
+        Assert.NotEmpty(page.FindAll(".qual-you-empty input"));
+        Assert.True(page.Find(".qual-you-empty button").HasAttribute("disabled"));
     }
 
     [Fact]
