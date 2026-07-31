@@ -342,9 +342,15 @@ assemblies cycle. It goes through the **published port** `ICommunityReader`
 (`Domain/SecondaryPorts/`), which is exactly the escape hatch `IDiscordFeedReader` already
 established for OfficialMirror → Communities. One new method, `GetOwnedCommunities(userId)`.
 
-**System communities are excluded.** World and the per-country communities are auto-joined and
-nobody can transfer them; `CommunityOverviewRecord` already carries the regional flag that
-distinguishes them. Counting them would block every account permanently.
+**System communities are excluded.** They are auto-joined and nobody can transfer or delete them,
+so counting them would block their owner's account forever.
+
+⚠ **`IsRegional` is not sufficient.** Verified against the prod-synced local database
+2026-07-31: the flag covers the 93 per-country communities but **World is `IsRegional = 0`**, and
+it is owned by a real account (DrMurloc, 793 members). Filtering on the flag alone would have
+blocked that account from ever being deleted, by the site's own community. The codebase already
+identifies World by name in `CommunityGlowReader` and `RecapSaga`; `GetOwnedCommunities` does the
+same.
 
 ## 9. Purge gaps
 
