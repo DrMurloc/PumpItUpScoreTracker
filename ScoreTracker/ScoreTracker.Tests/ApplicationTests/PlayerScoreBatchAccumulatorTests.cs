@@ -20,7 +20,9 @@ public sealed class PlayerScoreBatchAccumulatorTests
         var second = batcher.GetOrExtendSession(MixEnum.Phoenix, UserId, ScoreJournalEntry.ManualSource,
             Now + TimeSpan.FromHours(7));
 
-        Assert.Equal(first, second);
+        Assert.Equal(first.Id, second.Id);
+        Assert.True(first.IsNew);
+        Assert.False(second.IsNew);
     }
 
     [Fact]
@@ -36,8 +38,8 @@ public sealed class PlayerScoreBatchAccumulatorTests
         var third = batcher.GetOrExtendSession(MixEnum.Phoenix, UserId, ScoreJournalEntry.ManualSource,
             Now + TimeSpan.FromHours(12));
 
-        Assert.Equal(first, second);
-        Assert.Equal(second, third);
+        Assert.Equal(first.Id, second.Id);
+        Assert.Equal(second.Id, third.Id);
     }
 
     [Fact]
@@ -49,7 +51,10 @@ public sealed class PlayerScoreBatchAccumulatorTests
         var second = batcher.GetOrExtendSession(MixEnum.Phoenix, UserId, ScoreJournalEntry.ManualSource,
             Now + TimeSpan.FromHours(9));
 
-        Assert.NotEqual(first, second);
+        Assert.NotEqual(first.Id, second.Id);
+        // Both minted an id, so both report it — that is what makes the session recordable.
+        Assert.True(first.IsNew);
+        Assert.True(second.IsNew);
     }
 
     [Fact]
@@ -62,8 +67,8 @@ public sealed class PlayerScoreBatchAccumulatorTests
             Now);
         var phoenix2 = batcher.GetOrExtendSession(MixEnum.Phoenix2, UserId, ScoreJournalEntry.ManualSource, Now);
 
-        Assert.NotEqual(manual, import);
-        Assert.NotEqual(manual, phoenix2);
+        Assert.NotEqual(manual.Id, import.Id);
+        Assert.NotEqual(manual.Id, phoenix2.Id);
     }
 
     [Fact]
@@ -77,8 +82,10 @@ public sealed class PlayerScoreBatchAccumulatorTests
         var implicitFollowUp = batcher.GetOrExtendSession(MixEnum.Phoenix, UserId,
             ScoreJournalEntry.OfficialImportSource, Now + TimeSpan.FromMinutes(5));
 
-        Assert.Equal(runId, explicitId);
-        Assert.Equal(runId, implicitFollowUp);
+        Assert.Equal(runId, explicitId.Id);
+        Assert.Equal(runId, implicitFollowUp.Id);
+        // An explicit id belongs to a caller that already recorded the session itself.
+        Assert.False(explicitId.IsNew);
     }
 
     [Fact]

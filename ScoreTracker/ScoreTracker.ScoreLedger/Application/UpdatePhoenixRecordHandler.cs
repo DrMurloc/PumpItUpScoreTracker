@@ -20,7 +20,8 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         IBus bus,
         IMessageScheduler scheduler,
         IPlayerScoreBatchAccumulator batches,
-        IScoreJournalRepository journal)
+        IScoreJournalRepository journal,
+        IScoreSessionRepository sessions)
     : IRequestHandler<UpdatePhoenixBestAttemptCommand>,
         IConsumer<UpdatePhoenixRecordHandler.TryFireScoreCommand>,
         IConsumer<FlushOverdueScoreBatchesCommand>
@@ -29,8 +30,14 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
     {
         // Every submission — no-ops included — extends the session envelope: activity
         // keeps the session alive even when nothing lands.
-        var sessionId = batches.GetOrExtendSession(request.Mix, user.User.Id, request.Source, dateTimeOffset.Now,
-            request.SessionId);
+        var (sessionId, isNewSession) = batches.GetOrExtendSession(request.Mix, user.User.Id, request.Source,
+            dateTimeOffset.Now, request.SessionId);
+        // Recorded once, on the submission that minted it. Counts and the activity window
+        // follow at batch drain — an import posts thousands of scores and must not post
+        // thousands of updates.
+        if (isNewSession)
+            await sessions.Open(sessionId, user.User.Id, request.Mix, request.Source, null, null,
+                dateTimeOffset.Now, cancellationToken);
         // A stage break with nothing judged never enters the system, from any source.
         if (BestAttemptPolicy.IsWalkOff(request.IsBroken, request.Score, request.Judgements)) return;
 
@@ -128,6 +135,10 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
                 Plate: best?.Plate?.ToString(),
                 IsBroken: best?.IsBroken ?? false);
         }).ToArray();
+        // The drain is the session's checkpoint: one write per batch rather than one per score.
+        if (batch.SessionId is { } sessionId)
+            await sessions.Touch(sessionId, dateTimeOffset.Now, batch.NewChartIds.Length,
+                batch.UpscoredChartIds.Count, cancellationToken);
         await bus.Publish(
             PlayerScoresUpdatedEvent.Create(dateTimeOffset.Now, userId, batch.Mix, changes, batch.SessionId),
             cancellationToken);
