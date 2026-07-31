@@ -21,26 +21,77 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
     public async Task Append(ScoreJournalEntry entry, CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        await database.Set<ScoreEventJournalEntity>().AddAsync(new ScoreEventJournalEntity
+        var mixId = MixIds.For(entry.Mix);
+        // One import can see the same play twice — once in recently-played as an observation,
+        // once on the best list as the record change — and both carry the site's play time.
+        // Raising the existing row is what makes them one play instead of two.
+        var existing = await database.Set<ScoreEventJournalEntity>().FirstOrDefaultAsync(
+            e => e.UserId == entry.UserId && e.MixId == mixId && e.ChartId == entry.ChartId &&
+                 e.OccurredAt == entry.OccurredAt, cancellationToken);
+        if (existing != null)
+        {
+            existing.IsBest = true;
+            existing.SessionId ??= entry.SessionId;
+            await database.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        await database.AddAsync(Entity(entry, mixId, true), cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AppendObservations(IReadOnlyList<ScoreJournalEntry> entries,
+        CancellationToken cancellationToken)
+    {
+        if (entries.Count == 0) return;
+
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var userId = entries[0].UserId;
+        var chartIds = entries.Select(e => e.ChartId).Distinct().ToArray();
+        var occurred = entries.Select(e => e.OccurredAt).Distinct().ToArray();
+        // One read of the candidate window, then insert only what isn't there. An existing row
+        // is never touched: it may already be a best, and an observation must not demote it.
+        var known = (await database.Set<ScoreEventJournalEntity>()
+                .Where(e => e.UserId == userId && chartIds.Contains(e.ChartId) &&
+                            occurred.Contains(e.OccurredAt))
+                .Select(e => new { e.MixId, e.ChartId, e.OccurredAt })
+                .ToArrayAsync(cancellationToken))
+            .Select(e => (e.MixId, e.ChartId, e.OccurredAt))
+            .ToHashSet();
+
+        foreach (var entry in entries)
+        {
+            var mixId = MixIds.For(entry.Mix);
+            if (!known.Add((mixId, entry.ChartId, entry.OccurredAt))) continue;
+
+            await database.AddAsync(Entity(entry, mixId, false), cancellationToken);
+        }
+
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
+    private static ScoreEventJournalEntity Entity(ScoreJournalEntry entry, Guid mixId, bool isBest)
+    {
+        return new ScoreEventJournalEntity
         {
             Id = Guid.NewGuid(),
             EventId = Guid.NewGuid(),
             OccurredAt = entry.OccurredAt,
             Source = entry.Source,
-            MixId = MixIds.For(entry.Mix),
+            MixId = mixId,
             UserId = entry.UserId,
             ChartId = entry.ChartId,
             Score = entry.Score,
             Plate = entry.Plate?.GetName(),
             IsBroken = entry.IsBroken,
+            IsBest = isBest,
             SessionId = entry.SessionId,
             Perfects = entry.Judgements?.Perfects,
             Greats = entry.Judgements?.Greats,
             Goods = entry.Judgements?.Goods,
             Bads = entry.Judgements?.Bads,
             Misses = entry.Judgements?.Misses
-        }, cancellationToken);
-        await database.SaveChangesAsync(cancellationToken);
+        };
     }
 
     public async Task<(int TotalGroups, IReadOnlyList<JournalSessionRows> Groups)> GetSessionGroups(
@@ -110,7 +161,7 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
     {
         return new ScoreJournalEntry(e.OccurredAt, e.Source, e.UserId, e.ChartId, e.Score,
             PhoenixPlateHelperMethods.TryParse(e.Plate), e.IsBroken, MixIds.ToEnum(e.MixId), e.SessionId,
-            JudgementsOf(e));
+            JudgementsOf(e), e.IsBest);
     }
 
     internal static JudgementCounts? JudgementsOf(ScoreEventJournalEntity e)

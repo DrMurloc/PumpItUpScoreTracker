@@ -15,7 +15,10 @@ public sealed record ScoreJournalEntry(
     bool IsBroken,
     MixEnum Mix = MixEnum.Phoenix,
     Guid? SessionId = null,
-    JudgementCounts? Judgements = null)
+    JudgementCounts? Judgements = null,
+    // Whether this play became the record when it was written. False for the plays the
+    // official site's recently-played list reports that never beat a best.
+    bool IsBest = true)
 {
     public const string ManualSource = "manual";
     public const string OfficialImportSource = "officialImport";
