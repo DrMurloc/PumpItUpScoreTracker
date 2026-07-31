@@ -126,9 +126,10 @@ the only thing on the row that tells a player *whose* scores those are. Both alr
 them at session creation costs nothing. The tag displays; the card id is a tiebreak for players
 running several cards on one account, and rides the `title`.
 
-`ScoreEventJournal.SessionId` gains a foreign key. `ScoreHighlight` and `PlayerMilestone` keep
-theirs as a loose key — they live in PlayerProgress, and a cross-vertical FK would couple two
-verticals' entity models for no gain.
+`ScoreEventJournal.SessionId` stays a loose key rather than a foreign key — see §15 for why the
+constraint cannot be added without breaking `IsBest` updates on historical rows. `ScoreHighlight`
+and `PlayerMilestone` keep theirs loose too: they live in PlayerProgress, and a cross-vertical FK
+would couple two verticals' entity models for no gain.
 
 **Write path.** [`GetOrExtendSession`](../../ScoreTracker/ScoreTracker.ScoreLedger/Infrastructure/PlayerScoreBatchAccumulator.cs)
 is called on *every* submission including no-ops, so a row write per call would put thousands of
@@ -682,16 +683,25 @@ it. Phase 2 and phase 6 each add a table, so this is live risk now.
 Reflect over the vertical assemblies for `IDbModelContribution` implementations and assert
 `All()` contains one of each.
 
-### Not a test — the journal → session foreign key
+### The journal → session foreign key, and why there isn't one
 
-`ScoreEventJournal.SessionId` gaining an FK to `ScoreSession` is the strongest guarantee available
-that a score-writing path opened a session, because the database refuses the row otherwise. It has
-one migration problem: **existing journal rows carry `SessionId` values with no session behind
-them**, and §4 says no backfill. So the constraint is added `WITH NOCHECK` — binding on every new
-row, tolerant of the history it cannot vouch for.
+An FK from `ScoreEventJournal.SessionId` to `ScoreSession.Id` would be the strongest guarantee
+available that a score-writing path opened a session — the database would refuse the row
+otherwise. **It cannot be added.** Two facts collide:
 
-It also forces delete ordering: undo must remove the journal rows before the session row. Worth
-stating because the natural reading order is the opposite.
+- Existing journal rows carry `SessionId` values minted before the table existed, and §4 rules out
+  backfilling stubs for them.
+- Since PR #209 the journal is **updated in place** — an observed play already journaled is raised
+  to `IsBest` rather than duplicated.
+
+`WITH NOCHECK` handles the first (it skips validating existing rows) but not the second: the
+constraint still fires on every INSERT *and UPDATE*. So the first time an old row with an orphan
+`SessionId` was raised to `IsBest`, the update would fail — turning a silent gap into a live import
+error. Nulling the orphans instead would erase the grouping the Sessions page renders today.
+
+So the link stays a convention, guarded where it is actually written: the session row is opened
+before the id is handed out, in one place. Delete ordering still matters — undo removes journal
+rows before the session row — but by discipline rather than by constraint.
 
 ### Already guarded, no work needed
 

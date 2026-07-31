@@ -19,7 +19,9 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
         typeof(ScoreEventJournalEntity),
         typeof(PhoenixRecordStatsEntity),
         typeof(PhoenixRecordEntity),
-        typeof(BestAttemptEntity)
+        typeof(BestAttemptEntity),
+        // Last: the journal rows it groups go first, mirroring the ordering undo relies on.
+        typeof(ScoreSessionEntity)
     };
 
     private readonly IMemoryCache _cache;
