@@ -98,7 +98,7 @@ copy has to say so, because a stale re-upload will now knock scores down.
 | `scores.PhoenixRecord` | your current best per (user, chart, mix) — passing unless you have no pass | the policy says the submission wins, or a manual source overwrites |
 | `scores.ScoreEventJournal` | every observed play, best or not | on any record change, and on any dated recently-played card |
 
-The journal stays **append-only**: rows are never updated or deleted by the application. `IsBest`
+The journal stays **append-only on the write path**: no importer or handler rewrites history. A player deleting their own data is the sanctioned exception — the rule protects the record from us, not from the person whose plays it is ([delete-my-data.md](delete-my-data.md) D8). `IsBest`
 is set at insert. The one-time corrective migration in §6 is a migration, not application
 behavior — the same standing as the 2026-06 backfill seed.
 

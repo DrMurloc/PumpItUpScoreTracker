@@ -200,6 +200,8 @@ PR gate: the fast suites (`ScoreTracker.Tests`, `ScoreTracker.Tests.Api`, `Score
 
 Deliberate or transitional — read before flagging a violation.
 
+- **Account deletion is ratcheted three ways** (`AccountPurgeCoverageTests`, `ModelContributionRegistrationTests`): every entity with a `*UserId` column is named by some vertical's `UserOwned` manifest or by an exemption carrying its reason; every vertical `IConsumer<>` resolves from the host's real MassTransit registration; every `IDbModelContribution` is listed in `VerticalModelContributions.All()`. A vertical's purge manifest *is* its implementation — `UserDataPurge` executes the same array — so the two cannot drift.
+
 - **`ScoreTracker.Data` references `ScoreTracker.Application`.** Onion-direction divergence. Slated for removal — do not lean on it for new code.
 - **`Randomizer` references `Application`** transitionally (`GetRandomChartsQuery` lives there; RandomizerSaga is its handler). This was previously described as gated on the Match-subsystem deletion — that was wrong, and deleting the subsystem ([deletions-wave-1](docs/design/deletions-wave-1.md)) did not unpin it: `MatchSaga` was one of five senders and the other four are live (`ChartsController` and three call sites in `ChartRandomizer.razor`). Unpinning means **moving** the query into `Randomizer/Contracts/Queries/` and repointing those callers — a refactor, not a deletion. `DrawRandomChartsQuery` is already the landing pad. Relocated from `Catalog` at the randomizer overhaul — Catalog is clean.
 - **No domain-vs-integration-event distinction.** Single bounded context with an in-memory transport makes the distinction moot today. Revisit if a second bounded context appears.
