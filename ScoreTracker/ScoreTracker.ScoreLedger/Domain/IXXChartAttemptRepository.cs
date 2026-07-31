@@ -23,5 +23,6 @@ internal interface IXXChartAttemptRepository
     Task<IEnumerable<BestXXChartAttempt>> GetBestAttempts(Guid userId, MixEnum mix,
         CancellationToken cancellationToken = default);
 
-    Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default);
+    /// <summary>Deletes the user's legacy-model attempts. Null mix means every mix.</summary>
+    Task DeleteAllForUser(Guid userId, MixEnum? mix = null, CancellationToken cancellationToken = default);
 }

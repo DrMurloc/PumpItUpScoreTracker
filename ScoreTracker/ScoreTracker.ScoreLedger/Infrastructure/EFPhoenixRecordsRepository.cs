@@ -528,16 +528,19 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 g.Sum(e => e.prs.Pumbility), g.Sum(e => e.prs.PumbilityPlus))).ToArrayAsync(cancellationToken);
     }
 
-    public async Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default)
+    public async Task DeleteAllForUser(Guid userId, MixEnum? mix = null,
+        CancellationToken cancellationToken = default)
     {
+        var mixId = mix == null ? (Guid?)null : MixIds.For(mix.Value);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var scores = await database.Set<PhoenixRecordEntity>().Where(p => p.UserId == userId).ToArrayAsync(cancellationToken);
-        var stats = await database.Set<PhoenixRecordStatsEntity>().Where(p => p.UserId == userId).ToArrayAsync(cancellationToken);
-        database.Set<PhoenixRecordEntity>().RemoveRange(scores);
-        database.Set<PhoenixRecordStatsEntity>().RemoveRange(stats);
-        await database.SaveChangesAsync(cancellationToken);
-        // The purge spans mixes, so every per-(user, mix) cache entry goes.
-        foreach (var mix in Enum.GetValues<MixEnum>())
-            _cache.Remove(ScoreCache(userId, mix));
+        await database.Set<PhoenixRecordEntity>()
+            .Where(p => p.UserId == userId && (mixId == null || p.MixId == mixId))
+            .ExecuteDeleteAsync(cancellationToken);
+        await database.Set<PhoenixRecordStatsEntity>()
+            .Where(p => p.UserId == userId && (mixId == null || p.MixId == mixId))
+            .ExecuteDeleteAsync(cancellationToken);
+        // Cheaper to drop every per-(user, mix) entry than to reason about which survived.
+        foreach (var cached in Enum.GetValues<MixEnum>())
+            _cache.Remove(ScoreCache(userId, cached));
     }
 }

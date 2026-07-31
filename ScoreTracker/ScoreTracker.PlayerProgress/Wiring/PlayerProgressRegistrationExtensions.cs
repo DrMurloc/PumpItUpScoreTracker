@@ -26,6 +26,7 @@ public static class PlayerProgressRegistrationExtensions
         services.AddTransient<ITitleRepository, EFTitleRepository>();
         services.AddTransient<IFeedbackRepository, EFFeedbackRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
+        services.AddTransient<IPlayerScoreDataRepository, EFPlayerScoreDataRepository>();
         services.AddTransient<IScoreHighlightRepository, EFScoreHighlightRepository>();
         services.AddTransient<IPlayerMilestoneRepository, EFPlayerMilestoneRepository>();
         services.AddTransient<IPlayerSeasonRecapRepository, EFPlayerSeasonRecapRepository>();
@@ -49,6 +50,7 @@ public static class PlayerProgressRegistrationExtensions
         configurator.AddConsumer<TitleSaga>();
         configurator.AddConsumer<PlayerHistorySaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();
+        configurator.AddConsumer<PlayerScoreDataDeletedConsumer>();
         // The session-snapshot orchestrator: consumes every score batch, runs the
         // rating/title steps, publishes ScoreHighlightsCapturedEvent — if this
         // registration drops, stats, Pumbility, titles, AND the Discord cards all

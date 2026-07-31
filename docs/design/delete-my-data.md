@@ -137,11 +137,13 @@ writes on the import path. Insert on session creation; update `LastActivityAt` a
 batch drain, which is already a checkpoint every two minutes. The accumulator stays the source of
 session identity — the table records what it decided.
 
-**Reads.** The undo list queries this table directly. Today
-[`GetSessionGroups`](../../ScoreTracker/ScoreTracker.ScoreLedger/Infrastructure/EFScoreJournalRepository.cs)
-pulls every journal row a user has and groups in memory — a cost that gets materially worse once
-the journal starts carrying non-best plays. The Sessions page moves onto the table in the same
-pass.
+**Reads.** The undo list queries this table directly. **The public Sessions page does not** — it
+keeps grouping the journal through `GetSessionGroups`, and that is deliberate. Nothing before this
+ships has a session row, so moving that page onto the table would erase every historical session
+from a page players already use. The two lists have different jobs: Sessions is *all your play
+history*, Undo is *the sessions we recorded well enough to reverse*. The performance win of moving
+Sessions onto the table is real but costs history, so it stays a separate change with its own
+answer for the back catalogue.
 
 ## 5. The delete page
 

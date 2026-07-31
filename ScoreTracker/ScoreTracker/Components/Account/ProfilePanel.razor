@@ -4,6 +4,7 @@
 @using MediatR
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.ScoreLedger.Contracts
 @using ScoreTracker.ScoreLedger.Contracts.Commands
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
@@ -243,7 +244,10 @@
         _isWiping = true;
         try
         {
-            await Mediator.Send(new WipeUserScoresCommand(CurrentUser.User.Id, _wipeIncludeHistory));
+            await Mediator.Send(new WipeUserScoresCommand(CurrentUser.User.Id, null,
+                _wipeIncludeHistory
+                    ? ScoreDeletionItems.Everything
+                    : ScoreDeletionItems.BestScores));
             Snackbar.Add(L["Your scores have been deleted"], Severity.Success);
             _showWipeScoresDialog = false;
         }

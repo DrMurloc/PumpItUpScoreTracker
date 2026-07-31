@@ -37,6 +37,13 @@ internal interface IScoreJournalRepository
     /// </summary>
     Task<IReadOnlyList<ScoreJournalEntry>> GetChartHistories(Guid userId, IEnumerable<Guid> chartIds,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Deletes a player's journal, optionally scoped to one mix. The append-only rule above
+    ///     governs the *write* path — the importer must never rewrite history — and does not
+    ///     bind the person whose history it is (docs/design/delete-my-data.md D8).
+    /// </summary>
+    Task DeleteForUser(Guid userId, MixEnum? mix, CancellationToken cancellationToken);
 }
 
 internal sealed record JournalSessionRows(
