@@ -30,6 +30,10 @@ public sealed record ScoreImportCompletedEvent(
             mix, scores);
     }
 
+    /// <summary>
+    ///     Plate is null when the observed play was broken — the game awards no plate for a
+    ///     failed stage (docs/design/score-truth-model.md D8).
+    /// </summary>
     [ExcludeFromCodeCoverage]
-    public sealed record ImportedScore(Guid ChartId, int Score, string Plate, bool IsBroken);
+    public sealed record ImportedScore(Guid ChartId, int Score, string? Plate, bool IsBroken);
 }

@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Application.Queries;
+using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
@@ -198,25 +199,32 @@ namespace ScoreTracker.OfficialMirror.Application
                     : null;
             }
 
-            var scores =
-                (await _officialSite.GetRecordedScores(mix, userId, sid, cardId, includeBroken, limit,
-                    cancellationToken))
-                .ToArray();
+            var scrape = await _officialSite.GetRecordedScores(mix, userId, sid, cardId, includeBroken, limit,
+                cancellationToken);
+            var scores = scrape.Bests.ToArray();
+            // The plays that never became a record are history too — journaled before the
+            // bests, so a play arriving through both paths is one row that the best raises to
+            // IsBest rather than a second row racing it.
+            await _mediator.Send(new RecordObservedPlaysCommand(userId, mix,
+                ScoreJournalEntry.OfficialImportSource, importSessionId, scrape.Plays), cancellationToken);
             var count = 0;
             var batch = new List<RecordedPhoenixScore>();
             var existingScores =
                 (await _mediator.Send(new GetPhoenixRecordsQuery(userId, mix), cancellationToken))
                 .ToDictionary(s =>
                     s.ChartId);
+            // The import may only ever raise a record, and by the one published rule — a
+            // second, hand-written copy of it here is what let plate improvements drag scores
+            // down (docs/design/score-truth-model.md).
             var toSave = scores.Where(s =>
-                    !existingScores.TryGetValue(s.Chart.Id, out var sc) || (sc.IsBroken && !s.IsBroken) ||
-                    (sc.IsBroken == s.IsBroken && (sc.Plate < s.Plate ||
-                                                   sc.Score < s.Score)))
+                    BestAttemptPolicy.Beats(existingScores.GetValueOrDefault(s.Chart.Id), s.Score,
+                        BestAttemptPolicy.PlateFor(s.IsBroken, s.Plate), s.IsBroken))
                 .ToArray();
             foreach (var score in toSave)
             {
                 await _mediator.Send(
                     new UpdatePhoenixBestAttemptCommand(score.Chart.Id, score.IsBroken, score.Score, score.Plate,
+                        KeepBestStats: true,
                         Source: ScoreJournalEntry.OfficialImportSource, Mix: mix,
                         SessionId: importSessionId,
                         RecordedAt: score.RecordedAt,

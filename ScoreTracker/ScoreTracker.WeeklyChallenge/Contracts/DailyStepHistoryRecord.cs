@@ -16,5 +16,5 @@ public sealed record DailyStepHistoryRecord(
     int Place,
     int TotalPlayers,
     PhoenixScore Score,
-    PhoenixPlate Plate,
+    PhoenixPlate? Plate,
     bool IsBroken);

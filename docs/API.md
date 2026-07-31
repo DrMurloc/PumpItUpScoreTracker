@@ -19,9 +19,9 @@ These endpoints are the contract for community tool makers. Their exact JSON wir
 | Area | Route | What's there |
 |---|---|---|
 | Charts | `api/charts` | Paginated chart listing by mix/level/type; `api/charts/random` for weighted random draws |
-| Phoenix scores | `api/phoenixScores` | GET your recorded scores (paginated; sortable via `SortBy` = RecordedDate/Score/LetterGrade/Plate/Level/Pumbility/PumbilityPlus + `SortDir`; filterable via `MinLevel`/`MaxLevel`/`ChartType`/`MinLetterGrade`/`MinPlate`/`IsBroken`; each record carries its Pumbility and PUMBILITY+ worth — the Pumbility value uses the requested mix's formula, so the same score reads differently on `mix=Phoenix` vs `mix=Phoenix2`); POST a single best attempt; POST `import` to trigger an official-site import with your game account credentials |
+| Phoenix scores | `api/phoenixScores` | GET your recorded scores (paginated; sortable via `SortBy` = RecordedDate/Score/LetterGrade/Plate/Level/Pumbility/PumbilityPlus + `SortDir`; filterable via `MinLevel`/`MaxLevel`/`ChartType`/`MinLetterGrade`/`MinPlate`/`IsBroken`; each record carries its Pumbility and PUMBILITY+ worth — the Pumbility value uses the requested mix's formula, so the same score reads differently on `mix=Phoenix` vs `mix=Phoenix2`); POST a single best attempt — authoritative by default, so it **overwrites** the record and may lower it; pass `?KeepBestStats=true` to apply the best-attempt policy instead and only ever raise it ([score-truth-model.md](design/score-truth-model.md)); POST `import` to trigger an official-site import with your game account credentials |
 | Tier lists | `api/tierlist` | Four rankings per level+chart type: `scores`, `officialscores`, `passcount`, `popularity` |
-| Weekly charts | `api/weeklyCharts` | The current weekly challenge board and player scores on it |
+| Weekly charts | `api/weeklyCharts` | The current weekly challenge board and player scores on it. **Breaking change 2026-07-30:** a score's `Plate` is now `null` when `IsBroken` is true — the game awards no plate for a failed stage, and the field previously carried a fabricated one ([score-truth-model.md](design/score-truth-model.md) D8) |
 | Tournaments | `api/tournaments` | Tournament list |
 
 ### The `Mix` parameter (Phoenix 2)

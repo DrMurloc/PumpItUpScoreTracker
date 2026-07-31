@@ -8,7 +8,8 @@ namespace ScoreTracker.Domain.Events;
 ///     that chart; the WeeklyChallenge consumer — which owns the board — picks the best on a normal
 ///     day and the lowest passing on a Limbo day. LowestPass* is null when no recent run passed.
 ///     Deliberately targeted (one chart per import) rather than shipping every attempt for every
-///     chart.
+///     chart. BestPlate is null when the best recent play was broken — the game awards no plate
+///     for a failed stage.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record DailyStepScoreObservedEvent(
@@ -16,7 +17,7 @@ public sealed record DailyStepScoreObservedEvent(
     MixEnum Mix,
     Guid ChartId,
     int BestScore,
-    string BestPlate,
+    string? BestPlate,
     bool BestIsBroken,
     int? LowestPassScore,
     string? LowestPassPlate);

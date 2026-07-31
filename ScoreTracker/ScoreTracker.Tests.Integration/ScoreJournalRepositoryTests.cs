@@ -136,6 +136,73 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
         Assert.Single(groups[3].Rows);
     }
 
+    [Fact]
+    public async Task ReimportingTheSameWindowLeavesOneRowPerPlay()
+    {
+        // A journal row is one play, keyed by the site's stamped play time. The import
+        // deliberately re-reads past its cutoff, so the same recently-played window arrives
+        // again on the next run and must not pile up.
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        var plays = new[]
+        {
+            Observation(userId, chart, Now.AddMinutes(-10), 880000),
+            Observation(userId, chart, Now.AddMinutes(-5), 910000)
+        };
+
+        await repo.AppendObservations(plays, CancellationToken.None);
+        await repo.AppendObservations(plays, CancellationToken.None);
+
+        var history = await repo.GetChartHistories(userId, new[] { chart }, CancellationToken.None);
+        Assert.Equal(2, history.Count);
+        Assert.All(history, r => Assert.False(r.IsBest));
+    }
+
+    [Fact]
+    public async Task TheBestRaisesTheObservationOfTheSamePlayInsteadOfDuplicatingIt()
+    {
+        // One import sees the play twice — once in recently-played, once on the best list as
+        // the record change. Both carry the site's play time, so they are one row.
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        var playedAt = Now.AddMinutes(-5);
+        var sessionId = Guid.NewGuid();
+
+        await repo.AppendObservations(new[] { Observation(userId, chart, playedAt, 910000) },
+            CancellationToken.None);
+        await repo.Append(Entry(userId, chart, playedAt, 910000, sessionId), CancellationToken.None);
+
+        var row = Assert.Single(await repo.GetChartHistories(userId, new[] { chart },
+            CancellationToken.None));
+        Assert.True(row.IsBest);
+        // The observation had no session; the best supplies it.
+        Assert.Equal(sessionId, row.SessionId);
+    }
+
+    [Fact]
+    public async Task AnObservationNeverDemotesAPlayAlreadyRecordedAsTheBest()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        var playedAt = Now.AddMinutes(-5);
+
+        await repo.Append(Entry(userId, chart, playedAt, 910000), CancellationToken.None);
+        await repo.AppendObservations(new[] { Observation(userId, chart, playedAt, 910000) },
+            CancellationToken.None);
+
+        var row = Assert.Single(await repo.GetChartHistories(userId, new[] { chart },
+            CancellationToken.None));
+        Assert.True(row.IsBest);
+    }
+
+    private static ScoreJournalEntry Observation(Guid userId, Guid chartId, DateTimeOffset at, int score)
+    {
+        return Entry(userId, chartId, at, score) with { IsBest = false };
+    }
+
     private static ScoreJournalEntry Entry(Guid userId, Guid chartId, DateTimeOffset at, int score,
         Guid? sessionId = null, MixEnum mix = MixEnum.Phoenix)
     {

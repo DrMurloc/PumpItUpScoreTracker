@@ -16,4 +16,14 @@ public sealed record ImportScoresConfig
 
     // Also push imported scores to the community PIU Tracker site (the /UploadPhoenixScores option).
     public bool SyncPiuTracker { get; set; }
+
+    // On a chart you've never passed, save your best broken attempt as the record. NULL follows
+    // the mix (on for Phoenix 2, whose best list carries broken attempts; off for Phoenix), which
+    // is what every widget saved before this setting existed — so no config migration.
+    public bool? RecordBrokenAsBest { get; set; }
+
+    public bool RecordsBrokenFor(MixEnum mix)
+    {
+        return RecordBrokenAsBest ?? mix == MixEnum.Phoenix2;
+    }
 }

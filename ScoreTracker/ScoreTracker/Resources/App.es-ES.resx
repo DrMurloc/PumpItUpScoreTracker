@@ -465,6 +465,9 @@
   <data name="Also send scores to piutracker.app" xml:space="preserve">
     <value>Enviar también las puntuaciones a piutracker.app</value>
   </data>
+  <data name="Always" xml:space="preserve">
+    <value>Siempre</value>
+  </data>
   <data name="Amazing" xml:space="preserve">
     <value>Increíble</value>
   </data>
@@ -2071,13 +2074,13 @@
     <value>Importar</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>También importa los scores con break de tus partidas recientes; al pasar el chart, se reemplazan.</value>
+    <value>En charts que nunca has pasado, tu mejor intento con break pasa a ser tu marca. Un pase siempre gana.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Importación completada</value>
   </data>
   <data name="Import Confirming" xml:space="preserve">
-    <value>Solo se guardarán las puntuaciones nuevas o mejoradas. El guardado no se puede deshacer; si lo detienes a medias, lo ya guardado se conserva.</value>
+    <value>Tu archivo pasa a ser tu marca, incluso donde puntúa menos. El guardado no se puede deshacer; si lo detienes a medias, lo ya guardado se conserva.</value>
   </data>
   <data name="Import Error Notify" xml:space="preserve">
     <value>Hubo un error al importar tus puntuaciones. Inténtalo más tarde. Si persiste, avisa a DrMurloc.</value>
@@ -2180,9 +2183,6 @@
   </data>
   <data name="Include an unplayed segment" xml:space="preserve">
     <value>Incluir un segmento sin jugar</value>
-  </data>
-  <data name="Include Broken Scores" xml:space="preserve">
-    <value>Incluir scores con break</value>
   </data>
   <data name="Include my own wins" xml:space="preserve">
     <value>Incluir mis propios logros</value>
@@ -3884,6 +3884,9 @@
   </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>Anota una puntuación a mano para cualquier chart.</value>
+  </data>
+  <data name="Record broken scores as your best" xml:space="preserve">
+    <value>Registrar los scores con break como tu mejor marca</value>
   </data>
   <data name="Record Score" xml:space="preserve">
     <value>Registrar score</value>

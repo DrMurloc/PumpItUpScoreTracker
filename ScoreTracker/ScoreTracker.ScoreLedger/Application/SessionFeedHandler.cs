@@ -90,8 +90,12 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
         ScoreJournalEntry[] chartHistory, IReadOnlySet<Guid>? xxCleared = null)
     {
         // Same-mix only: a returning song carries one ChartId across Phoenix and Phoenix 2,
-        // so its Phoenix 1 history must not count as prior state for a Phoenix 2 play.
-        var prior = chartHistory.Where(h => h.Mix == row.Mix && h.OccurredAt < row.OccurredAt).ToArray();
+        // so its Phoenix 1 history must not count as prior state for a Phoenix 2 play. Only
+        // rows that were the record count as prior state — a losing attempt in the journal
+        // never moved the best, so it must not make the next genuine clear read as an upscore.
+        var prior = chartHistory
+            .Where(h => h.IsBest && h.Mix == row.Mix && h.OccurredAt < row.OccurredAt)
+            .ToArray();
         var priorBest = prior.Where(p => p.Score != null).Select(p => (int?)(int)p.Score!.Value).Max();
         var priorPassed = prior.Any(p => !p.IsBroken);
         var priorBestPlate = prior.Where(p => !p.IsBroken && p.Plate != null).Select(p => p.Plate).Max();
@@ -101,7 +105,7 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
         // Phoenix-family mix shows up in the cross-mix history, legacy XX comes in via
         // xxCleared. Only new passes qualify — matching the Discord card's "* = reclears".
         var isReclear = classification == ScoreEventClassification.NewPass
-                        && (chartHistory.Any(h => h.Mix != row.Mix && !h.IsBroken)
+                        && (chartHistory.Any(h => h.IsBest && h.Mix != row.Mix && !h.IsBroken)
                             || (xxCleared?.Contains(row.ChartId) ?? false));
 
         return new RecentSessionsPage.ScoreEventRecord(row.ChartId, row.OccurredAt,
@@ -114,6 +118,9 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
     private static ScoreEventClassification ClassifyRow(ScoreJournalEntry row, bool priorPassed, int? priorBest,
         PhoenixPlate? priorBestPlate)
     {
+        // A play the journal recorded as an observation never became the record, so it is a
+        // play and nothing more — no history walk can promote it.
+        if (!row.IsBest) return ScoreEventClassification.Played;
         if (row.IsBroken) return ScoreEventClassification.Break;
         if (!priorPassed) return ScoreEventClassification.NewPass;
         if (row.Score == null) return ScoreEventClassification.Played;

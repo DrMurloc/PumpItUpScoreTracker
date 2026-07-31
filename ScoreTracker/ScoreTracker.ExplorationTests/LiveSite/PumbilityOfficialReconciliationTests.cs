@@ -409,7 +409,7 @@ public sealed class PumbilityOfficialReconciliationTests : IClassFixture<PiuGame
         var recent = await _fixture.Api.GetRecentScores(MixEnum.Phoenix2, client, CancellationToken.None);
         foreach (var play in recent)
             _output.WriteLine($"  {play.RecordedAt:yyyy-MM-dd HH:mm zzz}  {play.SongName} {play.ChartType}" +
-                              $" {play.Level}  score {(int)play.Score:N0}  plate {play.Plate.GetShorthand()}" +
+                              $" {play.Level}  score {(int)play.Score:N0}  plate {play.Plate?.GetShorthand() ?? "--"}" +
                               $"  broken {play.IsBroken}");
     }
 

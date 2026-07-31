@@ -74,7 +74,7 @@
                 }
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudCheckBox T="bool" Label="@L["Include Broken Scores"]" @bind-Value="_includeBroken" Disabled="_isImporting"></MudCheckBox>
+                <MudCheckBox T="bool" Label="@L["Record broken scores as your best"]" @bind-Value="_includeBroken" Disabled="_isImporting"></MudCheckBox>
                 <MudText Typo="Typo.caption" Class="ml-10 d-block">@L["Import Broken Helper"]</MudText>
                 @* A saved credential already says so in the alert — the checkbox only offers
                    the choice while there is a typed password to remember. *@
@@ -689,13 +689,15 @@
         // One upload = one session.
         var uploadSessionId = Guid.NewGuid();
         var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(_userId, _currentMix), cancellationToken)).ToDictionary(s => s.ChartId);
-        // Same improvement guard as the official import: a stale or re-uploaded file must
-        // never regress records, and unchanged rows must not reach the ledger at all.
+        // A CSV is a manual submission: the file is what the player wants shown, so it is
+        // authoritative and may lower a record (docs/design/score-truth-model.md D9). Rows
+        // matching the record exactly are still skipped — the ledger would no-op them anyway,
+        // and this keeps a re-upload from walking every chart.
         var toSaveScores = _spreadSheetScores
             .Where(s => !myScores.TryGetValue(s.ChartId, out var existing)
                         || existing.IsBroken
-                        || existing.Plate < s.Plate
-                        || existing.Score < s.Score).ToArray();
+                        || existing.Plate != s.Plate
+                        || existing.Score != s.Score).ToArray();
 
         _maxSaving = toSaveScores.Length;
         foreach (var best in toSaveScores)

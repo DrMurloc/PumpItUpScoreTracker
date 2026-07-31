@@ -261,7 +261,10 @@ namespace ScoreTracker.WeeklyChallenge.Application
                 var chart = chartDict[entry.ChartId];
                 return request.Type == ChartType.CoOp
                     ? (int)entry.Score
-                    : scoring.GetScore(chart.Type, chart.Level, entry.Score, entry.Plate, entry.IsBroken);
+                    // A broken entry has no plate and prices at zero either way, so the
+                    // placeholder never reaches a counted score.
+                    : scoring.GetScore(chart.Type, chart.Level, entry.Score,
+                        entry.Plate ?? PhoenixPlate.RoughGame, entry.IsBroken);
             }
 
             var totals = entries.GroupBy(e => e.UserId).Select(g =>
@@ -464,7 +467,8 @@ namespace ScoreTracker.WeeklyChallenge.Application
             foreach (var score in context.Message.Scores.Where(s => weeklyChartIds.Contains(s.ChartId)))
                 await Handle(new RegisterWeeklyChartScoreCommand(
                         new WeeklyTournamentEntry(context.Message.UserId, score.ChartId, score.Score,
-                            Enum.Parse<PhoenixPlate>(score.Plate), score.IsBroken, null, 10.0), mix,
+                            Enum.TryParse<PhoenixPlate>(score.Plate, out var plate) ? plate : null,
+                            score.IsBroken, null, 10.0), mix,
                         ChallengeEntrySource.Official),
                     context.CancellationToken);
         }
@@ -507,11 +511,13 @@ namespace ScoreTracker.WeeklyChallenge.Application
                     entrySource = request.Source;
                 }
 
-                if (request.Entry.Plate > existingEntry.Plate)
-                    existingEntry = existingEntry with { Plate = request.Entry.Plate };
-
+                // A pass supersedes a break outright and brings its plate with it — the broken
+                // entry carries none, and a lifted-plate comparison against null is always
+                // false, which would otherwise leave a passing entry plateless.
                 if (!request.Entry.IsBroken && existingEntry.IsBroken)
-                    existingEntry = existingEntry with { IsBroken = false };
+                    existingEntry = existingEntry with { IsBroken = false, Plate = request.Entry.Plate };
+                else if (request.Entry.Plate > existingEntry.Plate)
+                    existingEntry = existingEntry with { Plate = request.Entry.Plate };
 
                 existingEntry = existingEntry with { CompetitiveLevel = competitiveLevel };
                 // Photos are optional proof (M3): a photo-less submit must not wipe one already attached.
@@ -530,7 +536,7 @@ namespace ScoreTracker.WeeklyChallenge.Application
             // per-progression Discord post retired with the hardcoded channel.
             if (existingPlace == null || existingPlace != newPlace)
                 await bus.Publish(new UserWeeklyChartsProgressedEvent(request.Entry.UserId, chart.Id,
-                    existingEntry.Score, existingEntry.Plate.ToString(), existingEntry.IsBroken, newPlace, mix),
+                    existingEntry.Score, existingEntry.Plate?.ToString(), existingEntry.IsBroken, newPlace, mix),
                     cancellationToken);
         }
     }

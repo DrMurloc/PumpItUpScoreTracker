@@ -85,6 +85,17 @@ Voice: second person, "PIU Scores" (with the space), no first-person "I", no apo
 - The CSV wire shape (`Song,Difficulty,Score,LetterGrade,Plate`) and
   `PhoenixScoreFileExtractor` are untouched.
 
+**Amended 2026-07-30 ([score-truth-model.md](score-truth-model.md)):** two copy changes ride
+with the truth-model work.
+
+- The broken-scores checkbox is **"Record broken scores as your best"**, not "Include Broken
+  Scores" — the old label said what was fetched, not what it did to your records. Its helper
+  states the rule the label cannot: *"On charts you've never passed, your best broken attempt
+  becomes your record. A pass always wins."*
+- **A CSV upload is a manual submission** (D9), so it is authoritative and may lower a record.
+  The confirm step's "Only new or improved scores will be saved" was true and is not any more;
+  it now reads *"Your file becomes your records, even where it scores lower."*
+
 ## Field-test rounds
 
 - **R1 (2026-07-16)**: top spacing on the card; the results skeleton gets a naming caption

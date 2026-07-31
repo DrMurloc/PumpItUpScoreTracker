@@ -104,7 +104,8 @@ public sealed class OfficialLeaderboardSagaTests
             .ReturnsAsync(maxPages);
         site.Setup(s => s.GetRecordedScores(mix, ImportUserId, It.IsAny<string>(), "card1", It.IsAny<bool>(),
                 It.IsAny<int?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(officialScores ?? Array.Empty<OfficialRecordedScore>());
+            .ReturnsAsync(new ScrapedScores((officialScores ?? Array.Empty<OfficialRecordedScore>()).ToArray(),
+                Array.Empty<RecordObservedPlaysCommand.ObservedPlay>()));
         site.Setup(s => s.GetGameCards(mix, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<GameCardRecord>());
 

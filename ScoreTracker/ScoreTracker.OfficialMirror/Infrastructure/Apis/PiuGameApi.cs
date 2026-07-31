@@ -458,8 +458,13 @@ internal sealed class PiuGameApi : IPiuGameApi
                     NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
                 var misses = int.Parse(card.SelectSingleNode(".//td[contains(@data-th,'MISS')]/div").InnerText,
                     NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
-                var scoreScreen = new ScoreScreen(perfects, greats, goods, bads, misses, 0);
-                var plate = scoreScreen.PlateText;
+                // The recent-play card shows no plate image, so a passed play's plate is
+                // derived from its judgement counts. A broken play gets none: the game awards
+                // no plate for a failed stage, and PlateText reads all-zero counts (a walk-off)
+                // as a Perfect Game.
+                var plate = isBroken
+                    ? (PhoenixPlate?)null
+                    : new ScoreScreen(perfects, greats, goods, bads, misses, 0).PlateText;
                 results.Add(new PiuGameGetRecentScoresResult
                 {
                     ChartType = chartType!.Value,

@@ -73,7 +73,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                     MixId = mixId,
                     IsBroken = h.IsBroken,
                     ObtainedDate = h.ReceivedOn,
-                    Plate = h.Plate.ToString(),
+                    Plate = PlateColumn.Write(h.Plate),
                     Place = h.Place,
                     Score = h.Score,
                     UserId = h.UserId,
@@ -144,7 +144,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
             if (chartId != null) query = query.Where(w => w.ChartId == chartId);
 
             return (await query.ToArrayAsync(cancellationToken)).Select(q => (
-                new WeeklyTournamentEntry(q.UserId, q.ChartId, q.Score, Enum.Parse<PhoenixPlate>(q.Plate),
+                new WeeklyTournamentEntry(q.UserId, q.ChartId, q.Score, PlateColumn.Read(q.Plate),
                     q.IsBroken, q.Photo == null ? null : new Uri(q.Photo, UriKind.Absolute),
                     q.CompetitiveLevel),
                 q.Source));
@@ -166,7 +166,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                     ChartId = entry.ChartId,
                     MixId = mixId,
                     IsBroken = entry.IsBroken,
-                    Plate = entry.Plate.ToString(),
+                    Plate = PlateColumn.Write(entry.Plate),
                     Score = entry.Score,
                     UserId = entry.UserId,
                     Photo = entry.PhotoUrl?.ToString(),
@@ -177,7 +177,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
             }
             else
             {
-                entity.Plate = entry.Plate.ToString();
+                entity.Plate = PlateColumn.Write(entry.Plate);
                 entity.Score = entry.Score;
                 entity.CompetitiveLevel = entry.CompetitiveLevel;
                 entity.IsBroken = entry.IsBroken;
@@ -205,7 +205,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
             var mixId = MixIds.For(mix);
             return (await database.Set<UserWeeklyPlacingEntity>()
                 .Where(e => e.ObtainedDate == date && e.MixId == mixId).ToArrayAsync(cancellationToken)).Select(u =>
-                new WeeklyTournamentEntry(u.UserId, u.ChartId, u.Score, Enum.Parse<PhoenixPlate>(u.Plate), u.IsBroken,
+                new WeeklyTournamentEntry(u.UserId, u.ChartId, u.Score, PlateColumn.Read(u.Plate), u.IsBroken,
                     null, u.CompetitiveLevel));
         }
 
@@ -219,7 +219,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                     .Where(e => dates.Contains(e.ObtainedDate) && e.MixId == mixId)
                     .ToArrayAsync(cancellationToken))
                 .Select(u => new WeeklyTournamentEntry(u.UserId, u.ChartId, u.Score,
-                    Enum.Parse<PhoenixPlate>(u.Plate), u.IsBroken, null, u.CompetitiveLevel));
+                    PlateColumn.Read(u.Plate), u.IsBroken, null, u.CompetitiveLevel));
         }
     }
 }

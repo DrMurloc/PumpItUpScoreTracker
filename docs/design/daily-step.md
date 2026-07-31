@@ -54,8 +54,10 @@ No `PastDailyStepChart` (L6 — dupes accepted; and Limbo-day selection is state
 
 ### 2.3 Cross-boundary contracts (shared, so OfficialMirror can feed the board without a vertical→vertical ref)
 
-- **Event** `DailyStepScoreObservedEvent(EventId, OccurredAt, UserId, Mix, ChartId, BestScore, BestPlate,
-  BestIsBroken, LowestPassScore?, LowestPassPlate?)` in **`Domain/Events/`** (same home as
+- **Event** `DailyStepScoreObservedEvent(EventId, OccurredAt, UserId, Mix, ChartId, BestScore, BestPlate?,
+  BestIsBroken, LowestPassScore?, LowestPassPlate?)` — `BestPlate` is null when the best recent play
+  was broken, since the game awards no plate for a failed stage
+  ([score-truth-model.md](score-truth-model.md) D8) — in **`Domain/Events/`** (same home as
   `ScoreImportCompletedEvent`; both the OfficialMirror publisher and the WeeklyChallenge consumer
   reference Domain, no vertical coupling). Carries **both** the best and the lowest-passing recent
   score for one chart; the consumer, which owns the board, picks by `IsLimbo`.

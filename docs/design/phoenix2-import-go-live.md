@@ -1,5 +1,15 @@
 # Phoenix 2 Import Go-Live
 
+> **Partly superseded by [score-truth-model.md](score-truth-model.md) (2026-07-30).** Four items
+> below no longer describe the code: §2's *"broken detection … never on `score == 0`"* still holds
+> for detection, but a broken best scoring 0 is now dropped rather than stored; §3.3/§4.5's
+> Include-Broken control keeps its Phoenix-2 default but is renamed and gains a per-widget
+> setting; §4.3's *"KeepBestStats broken-over-pass rule extends to judgements"* is restated by the
+> best-attempt policy, under which everything travels with the winning play; and §3.2/§4.2's
+> watermark cutoff **was already removed** before that effort — the best page's displayed date is
+> the chart's first play, so it truncated every import after the first, and `WalkDatedBestScores`
+> stops on a 5-page up-score window instead.
+
 Status: **implemented** (C0–C7 on `claude/phoenix-2-importer-validation-7c3eb1`, owner-approved
 plan) — awaiting field test and the §8 runbook. The recon instrument and the Phoenix 2 LiveSite
 canaries live in

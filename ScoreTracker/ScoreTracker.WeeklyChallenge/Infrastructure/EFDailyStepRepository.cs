@@ -84,7 +84,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
             if (chartId != null) query = query.Where(e => e.ChartId == chartId);
 
             return (await query.ToArrayAsync(cancellationToken)).Select(e => new DailyStepEntry(e.UserId,
-                e.ChartId, e.Score, Enum.Parse<PhoenixPlate>(e.Plate), e.IsBroken, e.CompetitiveLevel, e.Source));
+                e.ChartId, e.Score, PlateColumn.Read(e.Plate), e.IsBroken, e.CompetitiveLevel, e.Source));
         }
 
         public async Task SaveEntry(MixEnum mix, DailyStepEntry entry, CancellationToken cancellationToken)
@@ -100,7 +100,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                     ChartId = entry.ChartId,
                     MixId = mixId,
                     IsBroken = entry.IsBroken,
-                    Plate = entry.Plate.ToString(),
+                    Plate = PlateColumn.Write(entry.Plate),
                     Score = entry.Score,
                     UserId = entry.UserId,
                     CompetitiveLevel = entry.CompetitiveLevel,
@@ -109,7 +109,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
             }
             else
             {
-                entity.Plate = entry.Plate.ToString();
+                entity.Plate = PlateColumn.Write(entry.Plate);
                 entity.Score = entry.Score;
                 entity.CompetitiveLevel = entry.CompetitiveLevel;
                 entity.IsBroken = entry.IsBroken;
@@ -139,7 +139,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                 .ToDictionaryAsync(g => g.ForDate, g => g.Count, cancellationToken);
 
             return mine.Select(e => new DailyStepHistoryRecord(e.ForDate, e.ChartId, e.IsLimbo, e.Place,
-                totals.GetValueOrDefault(e.ForDate, 1), e.Score, Enum.Parse<PhoenixPlate>(e.Plate), e.IsBroken));
+                totals.GetValueOrDefault(e.ForDate, 1), e.Score, PlateColumn.Read(e.Plate), e.IsBroken));
         }
 
         public async Task WriteHistories(MixEnum mix, IEnumerable<DailyStepPlacing> placings,
@@ -157,7 +157,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
                     IsLimbo = p.IsLimbo,
                     Place = p.Place,
                     Score = p.Score,
-                    Plate = p.Plate.ToString(),
+                    Plate = PlateColumn.Write(p.Plate),
                     IsBroken = p.IsBroken,
                     CompetitiveLevel = p.CompetitiveLevel
                 }), cancellationToken);

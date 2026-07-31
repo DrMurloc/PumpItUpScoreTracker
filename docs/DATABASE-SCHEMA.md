@@ -31,10 +31,10 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.PhoenixRecord` | Best-known Phoenix-scoring attempt per user+chart+mix: score, plate, broken flag, and the `Source` of the current best (verified ⇔ `officialImport`; NULL predates capture). `Perfects/Greats/Goods/Bads/Misses` hold the producing play's judgement breakdown (all five set together; NULL = never observed). Unique on UserId+ChartId+MixId; pre-Phoenix-2 rows backfilled as Phoenix — as are all MixId columns below |
+| `scores.PhoenixRecord` | Best-known Phoenix-scoring attempt per user+chart+mix: score, plate (NULL when broken — the game awards none for a failed stage), broken flag, and the `Source` of the current best (verified ⇔ `officialImport`; NULL predates capture). `Perfects/Greats/Goods/Bads/Misses` hold the producing play's judgement breakdown (all five set together; NULL = never observed). Unique on UserId+ChartId+MixId; pre-Phoenix-2 rows backfilled as Phoenix — as are all MixId columns below |
 | `scores.BestAttempt` | Legacy-model best attempts (letter grade + broken + optional era-scale score) per user+chart+mix; `MixId` defaults to XX — the table's original implicit scope — and every pre-Phoenix mix records here ([legacy-mixes design](design/legacy-mixes.md)) |
 | `scores.PhoenixRecordStats` | Per-score Pumbility stats per user+chart+mix, written by PlayerProgress through a Ledger port |
-| `scores.ScoreEventJournal` | **Append-only** journal of best-attempt *changes* (progress only since 2026-07: first entries incl. broken, unbreaks, score/plate improvements, manual corrections — no-ops are never written; rows from before the guard include them). Rows are never updated or deleted. `SessionId` groups rows into play sessions / import runs (NULL predates capture). `Perfects/Greats/Goods/Bads/Misses` hold the event's judgement breakdown when observed (all five together; NULL otherwise); `OccurredAt` carries the official site's saved timestamp when the import had one, clock time otherwise. Seeded 2026-06 from `PhoenixRecord` (`Source='backfill'`, dated at the record's last update); the foundation of score-progression history |
+| `scores.ScoreEventJournal` | **Append-only** journal of observed plays. One row is one play, uniquely keyed **(UserId, MixId, ChartId, OccurredAt)** — the site's own play time — so re-importing a recently-played window collapses onto the existing row instead of duplicating it. `IsBest` says whether the play became the record when it was written; rows sourced from recently-played that beat nothing are `IsBest=0`, and are the only rows the ledger's record ignores. Rows are never updated (except to raise `IsBest`) or deleted. `SessionId` groups rows into play sessions / import runs (NULL predates capture). `Perfects/Greats/Goods/Bads/Misses` hold the play's judgement breakdown when observed (all five together; NULL otherwise); `OccurredAt` carries the official site's saved timestamp when the import had one, clock time otherwise. Seeded 2026-06 from `PhoenixRecord` (`Source='backfill'`, dated at the record's last update); every pre-2026-07-30 row is `IsBest=1`, because until then the journal was written only when the record changed. See [score-truth-model.md](design/score-truth-model.md) |
 
 ## Home Page (vertical: `ScoreTracker.HomePage`)
 
@@ -115,11 +115,11 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | Table | Purpose |
 |---|---|
 | `scores.WeeklyTournamentChart` | The active weekly chart set per mix, with expiration |
-| `scores.WeeklyUserEntry` | Player entries per mix: score, plate, optional photo proof, trust source (official import vs manual self-report) |
+| `scores.WeeklyUserEntry` | Player entries per mix: score, plate (NULL when broken), optional photo proof, trust source (official import vs manual self-report) |
 | `scores.UserWeeklyPlacing` | Historical placements from finished weeks, per mix |
 | `scores.PastTourneyCharts` | Archive of previously used weekly charts per mix (avoids repeats; PK ChartId+MixId) |
 | `scores.DailyStepChart` | The one live Daily Step chart per mix (0–1 rows): ChartId, ForDate, IsLimbo, ExpirationDate. Redrawn each midnight-ET rotation |
-| `scores.DailyStepEntry` | Player entries on today's Daily Step chart per mix (score, plate, competitive level, source: official import vs manual widget submission); cleared at rotation |
+| `scores.DailyStepEntry` | Player entries on today's Daily Step chart per mix (score, plate — NULL when broken —, competitive level, source: official import vs manual widget submission); cleared at rotation |
 | `scores.UserDailyStepPlacing` | Retained per-user Daily Step history, snapshotted at each rotation (ForDate, IsLimbo, Place) |
 
 ## Event Competition (vertical: `ScoreTracker.EventCompetition`)

@@ -467,6 +467,9 @@
   <data name="Also send scores to piutracker.app" xml:space="preserve">
     <value>Also send scores to piutracker.app</value>
   </data>
+  <data name="Always" xml:space="preserve">
+    <value>Always</value>
+  </data>
   <data name="Amazing" xml:space="preserve">
     <value>Amazing</value>
   </data>
@@ -2088,13 +2091,13 @@
     <value>Import</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>Also imports fails from your recent plays; passing scores replace them later.</value>
+    <value>On charts you've never passed, your best broken attempt becomes your record. A pass always wins.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Import complete</value>
   </data>
   <data name="Import Confirming" xml:space="preserve">
-    <value>Only new or improved scores will be saved. Saving can't be undone — stopping midway keeps what's already saved.</value>
+    <value>Your file becomes your records, even where it scores lower. Saving can't be undone — stopping midway keeps what's already saved.</value>
   </data>
   <data name="Import Error Notify" xml:space="preserve">
     <value>There was an error while trying to import your scores. Try again later. If this persists, notify DrMurloc.</value>
@@ -2197,9 +2200,6 @@
   </data>
   <data name="Include an unplayed segment" xml:space="preserve">
     <value>Include an unplayed segment</value>
-  </data>
-  <data name="Include Broken Scores" xml:space="preserve">
-    <value>Include Broken Scores</value>
   </data>
   <data name="Include my own wins" xml:space="preserve">
     <value>Include my own wins</value>
@@ -3925,6 +3925,9 @@
   </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>Record a score by hand for any chart.</value>
+  </data>
+  <data name="Record broken scores as your best" xml:space="preserve">
+    <value>Record broken scores as your best</value>
   </data>
   <data name="Record Score" xml:space="preserve">
     <value>Record Score</value>

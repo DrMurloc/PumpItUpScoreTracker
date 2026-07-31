@@ -467,6 +467,9 @@
   <data name="Also send scores to piutracker.app" xml:space="preserve">
     <value>piutracker.app にもスコアを送信する</value>
   </data>
+  <data name="Always" xml:space="preserve">
+    <value>常に</value>
+  </data>
   <data name="Amazing" xml:space="preserve">
     <value>素晴らしい</value>
   </data>
@@ -2088,13 +2091,13 @@
     <value>インポート</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>最近のプレイの失敗スコアもインポートします。後でクリアすると置き換えられます。</value>
+    <value>まだクリアしていない譜面では、最高のBreak Offスコアが記録になります。クリアは常に優先されます。</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>インポート完了</value>
   </data>
   <data name="Import Confirming" xml:space="preserve">
-    <value>保存されるのは新しいスコアと更新されたスコアだけです。保存は取り消せません。途中で止めても、保存済みの分は残ります。</value>
+    <value>ファイルの内容がそのまま記録になります。スコアが下がる場合も同じです。保存は取り消せません。途中で止めても保存済みの分は残ります。</value>
   </data>
   <data name="Import Error Notify" xml:space="preserve">
     <value>スコアのインポート中にエラーが発生しました。後でもう一度お試しください。続く場合は DrMurloc にお知らせください。</value>
@@ -2197,9 +2200,6 @@
   </data>
   <data name="Include an unplayed segment" xml:space="preserve">
     <value>未プレイのセグメントを含める</value>
-  </data>
-  <data name="Include Broken Scores" xml:space="preserve">
-    <value>Break Offスコアを含める</value>
   </data>
   <data name="Include my own wins" xml:space="preserve">
     <value>自分の記録も含める</value>
@@ -3925,6 +3925,9 @@
   </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>任意の譜面のスコアを手入力で記録します。</value>
+  </data>
+  <data name="Record broken scores as your best" xml:space="preserve">
+    <value>Break Offスコアをベストとして記録</value>
   </data>
   <data name="Record Score" xml:space="preserve">
     <value>スコアを記録</value>
