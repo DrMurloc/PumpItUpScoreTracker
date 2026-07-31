@@ -467,6 +467,9 @@
   <data name="Also send scores to piutracker.app" xml:space="preserve">
     <value>Morgglorg mrmr mgrlgmrg grgl plglgrorpgl.blub</value>
   </data>
+  <data name="Always" xml:space="preserve">
+    <value>Mrgmurg</value>
+  </data>
   <data name="Amazing" xml:space="preserve">
     <value>Maglglorgmr</value>
   </data>
@@ -2088,13 +2091,13 @@
     <value>Glorggl</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>Morgglorg murgmrblarg glorgmrgl romurg gromurp blarggrrgl mrpplgl; arglgrorpgro mgrlgmrg murgblargurg gllurg blubblub.</value>
+    <value>Lurg murgl gropmur mrgro maglplgl, gromurp mrpblarg morgl blurgmrp murgblarg gromurp blubgrorp. Argl maglplgl mrgmurg grorpgl.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Glorggl roarglgrorp</value>
   </data>
   <data name="Import Confirming" xml:space="preserve">
-    <value>Mrpmurg grgl argl grrglmurpblub mgrlgmrg murmurg glorg murpmurm. Urgmagl blargmr glorg arglglorg — murmmaglblgrl grorpgro mrpmr romurg glglgrrgl murpmurm.</value>
+    <value>Gromurp glublarg murgblarg gromurp blubgrorpgl, morgro grorpmur mo mgrlgmrg lurgmo. Urgmagl blargmr glorg arglglorg — murmmaglblgrl grorpgro mrpmr romurg glglgrrgl murpmurm.</value>
   </data>
   <data name="Import Error Notify" xml:space="preserve">
     <value>Blgrlgrrgl ro blgrl blargurg grglro grglgrorp grgl glorggl gromurp mgrlgmrg. Lurg morgro blubblub. Mr grglmrp argllurggrrgl, romr DrMurloc.</value>
@@ -2197,9 +2200,6 @@
   </data>
   <data name="Include an unplayed segment" xml:space="preserve">
     <value>Romurmmrp blgrl lurgarglmurg rogromrgl</value>
-  </data>
-  <data name="Include Broken Scores" xml:space="preserve">
-    <value>Romurmmrp Morgl Mgrlgmrg</value>
   </data>
   <data name="Include my own wins" xml:space="preserve">
     <value>Romurmmrp blgrl grrgl blgrlblarg</value>
@@ -3925,6 +3925,9 @@
   </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>Blubgrorp gro mrglrgl murm mrurg ro ro murgl.</value>
+  </data>
+  <data name="Record broken scores as your best" xml:space="preserve">
+    <value>Blubgrorp morgl mgrlgmrg gro gromurp mrpblarg</value>
   </data>
   <data name="Record Score" xml:space="preserve">
     <value>Blubgrorp Mrglrgl</value>

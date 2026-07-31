@@ -122,7 +122,7 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
             // saved alert already says it; the other options and Import stay.
             Assert.DoesNotContain(cut.FindAll("input"), i => i.GetAttribute("type") == "password");
             Assert.DoesNotContain("Remember my password on this device", cut.Markup);
-            Assert.Contains("Include Broken Scores", cut.Markup);
+            Assert.Contains("Record broken scores as your best", cut.Markup);
             Assert.All(ImportButtons(cut), b => Assert.False(b.HasAttribute("disabled")));
         });
     }
@@ -130,7 +130,7 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
     [Theory]
     [InlineData(MixEnum.Phoenix, false)]
     [InlineData(MixEnum.Phoenix2, true)]
-    public void IncludeBrokenDefaultsOnOnlyForPhoenix2(MixEnum mix, bool expectedChecked)
+    public void RecordBrokenAsBestDefaultsOnOnlyForPhoenix2(MixEnum mix, bool expectedChecked)
     {
         // Phoenix 2's best-scores list carries broken attempts with real partial scores, so
         // including them is that mix's default; Phoenix keeps the opt-in. The box stays
@@ -139,7 +139,7 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
 
         var cut = RenderComponent<UploadPhoenixScores>();
 
-        var label = cut.FindAll("label").First(l => l.TextContent.Contains("Include Broken Scores"));
+        var label = cut.FindAll("label").First(l => l.TextContent.Contains("Record broken scores as your best"));
         var input = label.QuerySelector("input");
         Assert.NotNull(input);
         Assert.Equal(expectedChecked, input!.HasAttribute("checked"));

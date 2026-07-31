@@ -467,6 +467,9 @@
   <data name="Also send scores to piutracker.app" xml:space="preserve">
     <value>Invia i punteggi anche a piutracker.app</value>
   </data>
+  <data name="Always" xml:space="preserve">
+    <value>Sempre</value>
+  </data>
   <data name="Amazing" xml:space="preserve">
     <value>Incredibile</value>
   </data>
@@ -2088,13 +2091,13 @@
     <value>Importa</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>Importa anche i punteggi rotti delle partite recenti; quando superi il chart vengono sostituiti.</value>
+    <value>Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Importazione completata</value>
   </data>
   <data name="Import Confirming" xml:space="preserve">
-    <value>Verranno salvati solo i punteggi nuovi o migliorati. Il salvataggio non si può annullare: fermarlo a metà conserva quanto già salvato.</value>
+    <value>Il tuo file diventa il tuo record, anche dove il punteggio è più basso. Il salvataggio non si può annullare: fermarlo a metà conserva quanto già salvato.</value>
   </data>
   <data name="Import Error Notify" xml:space="preserve">
     <value>Si è verificato un errore durante l'importazione dei punteggi. Riprova più tardi. Se persiste, avvisa DrMurloc.</value>
@@ -2197,9 +2200,6 @@
   </data>
   <data name="Include an unplayed segment" xml:space="preserve">
     <value>Includi un segmento non giocato</value>
-  </data>
-  <data name="Include Broken Scores" xml:space="preserve">
-    <value>Includi punteggi rotti</value>
   </data>
   <data name="Include my own wins" xml:space="preserve">
     <value>Includi le mie vittorie</value>
@@ -3925,6 +3925,9 @@
   </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>Registra un punteggio a mano per qualsiasi chart.</value>
+  </data>
+  <data name="Record broken scores as your best" xml:space="preserve">
+    <value>Registra i punteggi rotti come tuo record</value>
   </data>
   <data name="Record Score" xml:space="preserve">
     <value>Registra punteggio</value>

@@ -465,6 +465,9 @@
   <data name="Also send scores to piutracker.app" xml:space="preserve">
     <value>piutracker.app에도 점수 보내기</value>
   </data>
+  <data name="Always" xml:space="preserve">
+    <value>항상</value>
+  </data>
   <data name="Amazing" xml:space="preserve">
     <value>놀라움</value>
   </data>
@@ -2071,13 +2074,13 @@
     <value>가져오기</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>최근 플레이의 브레이크 오프 점수도 가져옵니다. 이후 클리어하면 대체됩니다.</value>
+    <value>아직 클리어하지 못한 채보에서는 최고 브레이크 오프 점수가 기록이 됩니다. 클리어가 항상 우선합니다.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>가져오기 완료</value>
   </data>
   <data name="Import Confirming" xml:space="preserve">
-    <value>새 점수나 갱신된 점수만 저장됩니다. 저장은 되돌릴 수 없으며, 중간에 멈춰도 이미 저장된 점수는 유지됩니다.</value>
+    <value>파일 내용이 그대로 기록이 됩니다. 점수가 낮아지는 경우도 마찬가지입니다. 저장은 취소할 수 없으며, 도중에 멈춰도 이미 저장된 항목은 남습니다.</value>
   </data>
   <data name="Import Error Notify" xml:space="preserve">
     <value>점수를 가져오는 중 오류가 발생했습니다. 나중에 다시 시도하세요. 계속되면 DrMurloc에게 알려주세요.</value>
@@ -2180,9 +2183,6 @@
   </data>
   <data name="Include an unplayed segment" xml:space="preserve">
     <value>미플레이 구간 포함</value>
-  </data>
-  <data name="Include Broken Scores" xml:space="preserve">
-    <value>브레이크 오프 점수 포함</value>
   </data>
   <data name="Include my own wins" xml:space="preserve">
     <value>내 성과도 포함</value>
@@ -3886,6 +3886,9 @@
   </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>아무 채보나 점수를 직접 입력해 기록하세요.</value>
+  </data>
+  <data name="Record broken scores as your best" xml:space="preserve">
+    <value>브레이크 오프 점수를 최고 기록으로 저장</value>
   </data>
   <data name="Record Score" xml:space="preserve">
     <value>점수 기록</value>
