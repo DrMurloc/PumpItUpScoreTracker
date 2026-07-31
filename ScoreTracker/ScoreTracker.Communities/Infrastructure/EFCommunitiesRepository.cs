@@ -264,6 +264,22 @@ namespace ScoreTracker.Communities.Infrastructure
             return await GetCommunities(userId, cancellationToken);
         }
 
+        async Task<IEnumerable<OwnedCommunityRecord>> ICommunityReader.GetOwnedCommunities(Guid userId,
+            CancellationToken cancellationToken)
+        {
+            // Regional communities are excluded: World and the per-country ones are auto-joined
+            // and nobody can transfer them, so counting them would block every account forever.
+            var adminRole = CommunityRole.Admin.ToString();
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return await (from c in database.Set<CommunityEntity>()
+                where c.OwningUserId == userId && !c.IsRegional
+                select new OwnedCommunityRecord(
+                    Name.From(c.Name),
+                    database.Set<CommunityMembershipEntity>().Count(m => m.CommunityId == c.Id),
+                    database.Set<CommunityMembershipEntity>()
+                        .Count(m => m.CommunityId == c.Id && m.Role == adminRole))).ToArrayAsync(cancellationToken);
+        }
+
         async Task<IEnumerable<Guid>> ICommunityReader.GetMembers(Name communityName,
             CancellationToken cancellationToken)
         {

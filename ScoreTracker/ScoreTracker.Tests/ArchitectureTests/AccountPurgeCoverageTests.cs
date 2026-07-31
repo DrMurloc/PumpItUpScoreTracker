@@ -59,7 +59,11 @@ public sealed class AccountPurgeCoverageTests
             "The merge's own audit trail, retained past the purge it drives. It carries two " +
             "user keys by design (survivor and retired).",
         ["UserEntity"] =
-            "Deleted by IAccountPurgeRepository.DeleteUser, last, a week after the purge began."
+            "Deleted by IAccountPurgeRepository.DeleteUser, last, a week after the purge began.",
+        ["AccountDeletionRequestEntity"] =
+            "The deletion's own audit trail, retained past the purge it drives — the same standing " +
+            "as MergeRequest. The game-tag snapshot it carried is nulled when the purge completes, " +
+            "so no personal data outlives the account."
     };
 
     /// <summary>
