@@ -1,0 +1,1118 @@
+<title>Pumbility vs Competitive Level, D18–D23</title>
+
+<style>
+  :root {
+    color-scheme: light;
+    --plane:      #F4F7F3;
+    --surface:    #FBFDFA;
+    --surface-2:  #F0F4EF;
+    --ink:        #0C1712;
+    --ink-2:      #4A5B51;
+    --muted:      #7C8C82;
+    --rule:       #DDE5DC;
+    --grid:       #E6ECE4;
+    --axis:       #C7D2C6;
+    --ring:       rgba(12, 23, 18, .10);
+    --accent:     #187D2A;
+    --accent-dim: rgba(24, 125, 42, .10);
+
+    --pumb:       #2a78d6;
+    --comp:       #eb6834;
+    --cloud:      #9FAEA5;
+
+    --div-p4: #287fe5;  --div-p3: #6eaaf8;  --div-p2: #afd2ff;  --div-p1: #dbe9fc;
+    --div-mid: #eceee9;
+    --div-c1: #fbe2d9;  --div-c2: #fbc0aa;  --div-c3: #ec8a66;  --div-c4: #d25117;
+
+    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --plane:      #080F0B;
+      --surface:    #101A14;
+      --surface-2:  #16221B;
+      --ink:        #E8F3EA;
+      --ink-2:      #A7BCAE;
+      --muted:      #78897E;
+      --rule:       #223029;
+      --grid:       #1C2921;
+      --axis:       #2E3E35;
+      --ring:       rgba(232, 243, 234, .12);
+      --accent:     #4FE33F;
+      --accent-dim: rgba(79, 227, 63, .12);
+
+      --pumb:       #3987e5;
+      --comp:       #d95926;
+      --cloud:      #5D6E64;
+
+      --div-p4: #3485e5;  --div-p3: #2662aa;  --div-p2: #244773;  --div-p1: #1e2f44;
+      --div-mid: #232b26;
+      --div-c1: #41261c;  --div-c2: #6c3420;  --div-c3: #9d4220;  --div-c4: #d35a2b;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --plane:      #080F0B;
+    --surface:    #101A14;
+    --surface-2:  #16221B;
+    --ink:        #E8F3EA;
+    --ink-2:      #A7BCAE;
+    --muted:      #78897E;
+    --rule:       #223029;
+    --grid:       #1C2921;
+    --axis:       #2E3E35;
+    --ring:       rgba(232, 243, 234, .12);
+    --accent:     #4FE33F;
+    --accent-dim: rgba(79, 227, 63, .12);
+
+    --pumb:       #3987e5;
+    --comp:       #d95926;
+    --cloud:      #5D6E64;
+
+    --div-p4: #3485e5;  --div-p3: #2662aa;  --div-p2: #244773;  --div-p1: #1e2f44;
+    --div-mid: #232b26;
+    --div-c1: #41261c;  --div-c2: #6c3420;  --div-c3: #9d4220;  --div-c4: #d35a2b;
+  }
+
+  body {
+    background: var(--plane);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px 96px; }
+
+  /* ---- masthead ---- */
+  .masthead { padding: 56px 0 28px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-size: clamp(30px, 4.4vw, 44px);
+    line-height: 1.1;
+    letter-spacing: -.02em;
+    font-weight: 620;
+    text-wrap: balance;
+    margin: 0 0 18px;
+    max-width: 20ch;
+  }
+  .standfirst {
+    font-size: 17px;
+    color: var(--ink-2);
+    max-width: 66ch;
+    margin: 0;
+  }
+  .standfirst strong { color: var(--ink); font-weight: 600; }
+
+  /* ---- the headline figures ---- */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 34px 0 0;
+  }
+  .tile { background: var(--surface); padding: 20px 22px 22px; }
+  .tile .label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 10px;
+  }
+  .tile .value { font-size: 34px; font-weight: 620; letter-spacing: -.02em; line-height: 1; }
+  .tile .value .unit { font-size: 16px; font-weight: 500; color: var(--ink-2); letter-spacing: 0; }
+  .tile .note { font-size: 13px; color: var(--ink-2); margin-top: 9px; }
+
+  /* ---- controls ---- */
+  .controls {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 22px;
+    padding: 14px 0;
+    margin: 44px 0 0;
+    background: color-mix(in srgb, var(--plane) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--rule);
+  }
+  .ctl { display: flex; flex-direction: column; gap: 6px; }
+  .ctl > span {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .seg { display: flex; border: 1px solid var(--rule); border-radius: 7px; overflow: hidden; background: var(--surface); }
+  .seg button {
+    font: inherit;
+    font-size: 13px;
+    padding: 6px 14px;
+    border: 0;
+    background: transparent;
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--rule); }
+  .seg button[aria-pressed="true"] { background: var(--accent-dim); color: var(--ink); font-weight: 600; }
+  .seg button:hover:not([aria-pressed="true"]) { background: var(--surface-2); }
+  select {
+    font: inherit;
+    font-size: 13px;
+    font-family: var(--mono);
+    padding: 6px 10px;
+    border: 1px solid var(--rule);
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--ink);
+  }
+  :is(button, select, a, summary):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---- panels ---- */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 26px 26px 22px;
+    margin-top: 26px;
+  }
+  .panel > header { margin-bottom: 22px; }
+  .panel h2 {
+    font-size: 21px;
+    font-weight: 620;
+    letter-spacing: -.015em;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+  .panel .read { font-size: 14px; color: var(--ink-2); margin: 0; max-width: 74ch; }
+  .panel-num {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 9px;
+  }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; margin: 0 0 16px; }
+  .legend .key { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+  .legend .key i { display: block; border-radius: 2px; }
+  .legend .key i.line { width: 18px; height: 2px; }
+  .legend .key i.dot { width: 9px; height: 9px; border-radius: 50%; }
+
+  .scroller { overflow-x: auto; }
+  svg { display: block; width: 100%; height: auto; }
+  svg text { font-family: var(--mono); }
+
+  .facets { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px 20px; }
+  .facet-title { font-family: var(--mono); font-size: 12px; color: var(--ink-2); margin: 0 0 2px; letter-spacing: .04em; }
+
+  /* ---- table twins ---- */
+  details.twin { margin-top: 18px; border-top: 1px solid var(--rule); padding-top: 12px; }
+  details.twin summary {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    list-style: none;
+  }
+  details.twin summary::-webkit-details-marker { display: none; }
+  details.twin summary::before { content: "▸ "; }
+  details[open].twin summary::before { content: "▾ "; }
+  details.twin summary:hover { color: var(--ink); }
+  table { border-collapse: collapse; font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; margin-top: 14px; }
+  th, td { padding: 5px 11px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--rule); }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { color: var(--muted); font-weight: 500; letter-spacing: .04em; }
+
+  /* ---- tooltip ---- */
+  .tip {
+    position: fixed;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .1s;
+    background: var(--surface);
+    border: 1px solid var(--ring);
+    border-radius: 8px;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, .16);
+    padding: 9px 12px;
+    font-size: 12.5px;
+    max-width: 260px;
+  }
+  .tip[data-show="1"] { opacity: 1; }
+  .tip .tip-head {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 7px;
+  }
+  .tip .row { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
+  .tip .row i { width: 14px; height: 2px; border-radius: 1px; flex: none; transform: translateY(-3px); }
+  .tip .row b { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 620; }
+  .tip .row span { color: var(--ink-2); font-size: 12px; }
+
+  /* ---- prose ---- */
+  .prose { max-width: 70ch; }
+  .prose h3 { font-size: 16px; font-weight: 620; margin: 26px 0 8px; }
+  .prose p { color: var(--ink-2); margin: 0 0 12px; }
+  .prose li { color: var(--ink-2); margin-bottom: 9px; }
+  .prose strong { color: var(--ink); font-weight: 600; }
+  code {
+    font-family: var(--mono);
+    font-size: .89em;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  .formulas { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .formula { border: 1px solid var(--rule); border-radius: 9px; padding: 18px 20px; background: var(--surface-2); }
+  .formula h3 { display: flex; align-items: center; gap: 9px; font-size: 14px; margin: 0 0 12px; font-weight: 620; }
+  .formula h3 i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .formula pre {
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.75;
+    margin: 0 0 12px;
+    overflow-x: auto;
+    color: var(--ink);
+  }
+  .formula ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-2); }
+  .formula li { margin-bottom: 5px; }
+
+  footer.page { margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--muted); max-width: 74ch; }
+  footer.page a { color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Phoenix 2 · scoring analysis</p>
+    <h1>Two rulers for the same shelf</h1>
+    <p class="standfirst">
+      Phoenix 2's PUMBILITY and our Competitive Level both turn a chart and a score into
+      one number, and both are used to say who is better. Across the doubles 18–23 band they
+      mostly agree — <strong>within half a level everywhere above A+</strong>. Then, on
+      barely-passed charts, on singles, and on players with thin score histories, they come
+      apart completely. Every chart below re-reads against the controls.
+    </p>
+    <div class="tiles" id="tiles"></div>
+  </header>
+
+  <div class="controls" role="group" aria-label="Scope for every chart below">
+    <label class="ctl">
+      <span>Chart type</span>
+      <span class="seg" id="type-seg">
+        <button type="button" data-v="D" aria-pressed="true">Doubles</button>
+        <button type="button" data-v="S" aria-pressed="false">Singles</button>
+      </span>
+    </label>
+    <label class="ctl">
+      <span>Plate</span>
+      <select id="plate-sel"></select>
+    </label>
+    <label class="ctl">
+      <span>Reference chart</span>
+      <select id="ref-level"></select>
+    </label>
+    <label class="ctl">
+      <span>Reference score</span>
+      <select id="ref-score"></select>
+    </label>
+  </div>
+
+  <!-- ============ 1 ============ -->
+  <section class="panel">
+    <header>
+      <span class="panel-num">01 · the shape of each ruler</span>
+      <h2>What one chart is worth, on a scale both formulas can read</h2>
+      <p class="read">
+        Every play is priced as <em>the level of chart a clean SSS+ would have to be to be worth the
+        same</em>, then plotted as credit lost against the chart's own level — so 0 means "worth exactly
+        its level" and −3 means "worth three levels less". One panel per chart level. Competitive
+        Level is a straight line; PUMBILITY is a staircase, because it reads the letter grade, not
+        the score.
+      </p>
+    </header>
+    <div class="legend">
+      <span class="key"><i class="line" style="background: var(--pumb)"></i> PUMBILITY</span>
+      <span class="key"><i class="line" style="background: var(--comp)"></i> Competitive Level</span>
+    </div>
+    <div class="facets" id="facets"></div>
+    <details class="twin"><summary>Table view</summary><div class="scroller" id="t-facets"></div></details>
+  </section>
+
+  <!-- ============ 2 ============ -->
+  <section class="panel">
+    <header>
+      <span class="panel-num">02 · where they disagree</span>
+      <h2>The disagreement is one column wide</h2>
+      <p class="read">
+        Each cell is how many levels of credit PUMBILITY gives a play <em>over</em> Competitive
+        Level, same play, same ruler as above. The A column is where they fork — and the colour
+        scale is clipped at ±1.0, so those cells run far past full saturation; read the printed
+        numbers.
+      </p>
+      <p class="read" id="heat-read" style="margin-top: 10px; color: var(--ink)"></p>
+    </header>
+    <div id="heat-legend"></div>
+    <div class="scroller"><div id="heat"></div></div>
+    <details class="twin"><summary>Table view</summary><div class="scroller" id="t-heat"></div></details>
+  </section>
+
+  <!-- ============ 3 ============ -->
+  <section class="panel">
+    <header>
+      <span class="panel-num">03 · the exchange rate</span>
+      <h2>What it takes to match the reference chart</h2>
+      <p class="read" id="ladder-read"></p>
+    </header>
+    <div class="legend">
+      <span class="key"><i class="dot" style="background: var(--pumb)"></i> Score needed for equal PUMBILITY</span>
+      <span class="key"><i class="dot" style="background: var(--comp)"></i> Score needed for equal Competitive Level</span>
+    </div>
+    <div class="scroller"><div id="ladder"></div></div>
+    <details class="twin"><summary>Table view</summary><div class="scroller" id="t-ladder"></div></details>
+  </section>
+
+  <!-- ============ 4 ============ -->
+  <section class="panel">
+    <header>
+      <span class="panel-num">04 · the answer to the question</span>
+      <h2>Similar PUMBILITY and similar Competitive Level are not the same cohort</h2>
+      <p class="read">
+        Every grey dot is a synthetic player whose whole record sits in the D18–D23 band — varying
+        how hard they play, how clean they play, and how many charts they have. Because PUMBILITY
+        <em>sums</em> its top 50 while Competitive Level <em>averages</em> its top 100, the cloud is
+        wide in both directions: pick a PUMBILITY and you have said almost nothing about the
+        competitive level, and vice versa.
+      </p>
+    </header>
+    <div class="legend">
+      <span class="key"><i class="dot" style="background: var(--cloud)"></i> Synthetic D18–D23 player</span>
+      <span class="key"><i class="dot" style="background: var(--ink)"></i> Named archetype</span>
+    </div>
+    <div class="scroller"><div id="cloud"></div></div>
+    <div id="cloud-callout"></div>
+    <details class="twin"><summary>Table view — the four archetypes</summary><div class="scroller" id="t-cloud"></div></details>
+  </section>
+
+  <!-- ============ formulas ============ -->
+  <section class="panel">
+    <header>
+      <span class="panel-num">05 · the source</span>
+      <h2>The two formulas, as implemented</h2>
+      <p class="read">
+        Ported verbatim from the repository and checked against the 30 golden per-chart rows in
+        <code>Phoenix2PumbilityScoringTests</code> — every one reproduces to the cent.
+      </p>
+    </header>
+    <div class="formulas">
+      <div class="formula">
+        <h3><i style="background: var(--pumb)"></i> Phoenix 2 PUMBILITY</h3>
+<pre>Base(L) = 130 + 5·L + 5·max(0, L−24)
+singles price at Base(L+1)
+
+chart = Base × (gradeMult + plateBonus)
+
+total   = Σ top 50 across both types
+singles = Σ top 50 singles
+doubles = Σ top 50 doubles</pre>
+        <ul>
+          <li>Grade multipliers run <strong>1.28 (A) → 1.50 (SSS+)</strong> — an 17% spread over the
+              whole grade ladder.</li>
+          <li>Plate is an <strong>additive</strong> term, RG 0.000 → PG 0.020.</li>
+          <li>Charts below level 10 and broken plays price at zero; CO-OP never counts.</li>
+          <li><code>ScoringConfiguration.Phoenix2PumbilityScoring</code></li>
+        </ul>
+      </div>
+      <div class="formula">
+        <h3><i style="background: var(--comp)"></i> Competitive Level</h3>
+<pre>chart = L + (score − 965,000) / 17,500
+singles ≥ L20 ×= 1.008^(L−19)
+
+combined = avg of top 100
+singles  = avg of top 50
+doubles  = avg of top 50</pre>
+        <ul>
+          <li>Linear and continuous: <strong>17,500 points of score = one level</strong>, at every
+              level and every grade.</li>
+          <li>Plate is ignored entirely; broken plays are excluded from the pool.</li>
+          <li>No floor — a D23 at 700,000 prices at 7.86.</li>
+          <li><code>ScoringConfiguration.CalculateFungScore</code>, aggregated in
+              <code>PlayerRatingSaga</code></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ findings ============ -->
+  <section class="panel">
+    <header>
+      <span class="panel-num">06 · what falls out of it</span>
+      <h2>Findings</h2>
+    </header>
+    <div class="prose">
+      <h3>On doubles, they are very nearly the same ruler above A+</h3>
+      <p>
+        This was the surprise. Over the whole D18–D23 × A+→SSS+ grid the two metrics never disagree
+        by more than <strong>0.46 of a level</strong>, and usually by under 0.2. The reason is
+        arithmetic coincidence rather than design: PUMBILITY's base curve grows 5 points per level
+        on a base of 220–245, so one level is worth ~2.1% of a chart's value, and the grade ladder
+        happens to spend about that much per 17,000–20,000 points of score in the S range. That is
+        Competitive Level's 17,500 to within rounding.
+      </p>
+
+      <h3>The fork is the A band, and it is a structural one</h3>
+      <p>
+        PUMBILITY reads the grade, so <strong>the A band — 100,000 points wide — is worth exactly
+        the same play at 800,000 as at 899,999</strong>. Competitive Level moves 5.71 levels across
+        that same span. That single band produces the whole +4 level disagreement, and it is why the
+        two metrics rank grinding and pushing so differently: to PUMBILITY a barely-passed D23 is
+        worth 95% of a polished D18, and to Competitive Level it is worth six levels less.
+      </p>
+
+      <h3>Singles is where the per-chart formulas actually disagree</h3>
+      <p>
+        Both formulas pay a singles bonus, and they pay it in different shapes. PUMBILITY prices a
+        single one level up its base curve — a flat <strong>+2.1%</strong> at every level in this
+        band. Competitive Level multiplies by <code>1.008^(L−19)</code>, which pays
+        <strong>nothing below level 20</strong> and then compounds: +0.17 of a level at 20, +0.79 at
+        23. Flip the chart-type control and the worst above-A+ disagreement widens from 0.46 to
+        <strong>1.3 levels</strong> — three times the doubles figure, and all of it from the bonus,
+        not the core curve.
+      </p>
+
+      <h3>Sum versus average is the bigger divergence</h3>
+      <p>
+        The per-chart formulas mostly agree; the <em>aggregations</em> do not. PUMBILITY sums 50
+        charts, so it is a volume metric — a player with 15 excellent scores can only ever reach 30%
+        of the number. Competitive Level averages, so those same 15 scores produce the highest
+        competitive level on the board. The "Sniper" archetype in panel 04 is exactly this: best
+        competitive level of the four, worst PUMBILITY by a factor of three.
+      </p>
+
+      <h3>Two implementation notes worth a look</h3>
+      <ul>
+        <li>
+          <strong>Singles Competitive Level selects and scores by different numbers.</strong> In
+          <code>PlayerRatingSaga.RecalculateCore</code> the per-type pools order by the type-aware
+          Fung score (which applies the <code>1.008^(L−19)</code> singles multiplier) and then average
+          the type-<em>blind</em> one. The selected 50 is therefore not the top 50 by the value being
+          averaged — at high level the multiplier reorders enough to swap charts near the cutoff.
+          Doubles is unaffected; the multiplier is singles-only.
+        </li>
+        <li>
+          <strong>The sub-A grade multipliers are still extrapolated.</strong> B and below are
+          extended at the last observed −0.05 step and marked <code>TODO(P2-pumbility)</code>. That
+          region does not matter for D18–D23 comparisons above A, but every number this page shows
+          left of the A floor inherits that uncertainty.
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <footer class="page">
+    Synthetic players throughout — this container has no database, so panel 04 is a parameter sweep
+    over plausible D18–D23 records, not a sample of real accounts. The per-chart maths in panels
+    01–03 is exact. Plate is held at the selected value for every chart, and PUMBILITY's per-chart
+    values assume the chart counts (not CO-OP, not a performance chart, not broken).
+  </footer>
+</div>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ══ model — ported from ScoringConfiguration.cs, verified against the golden rows ══
+  const GRADES = [
+    { name: 'F',    floor: 0,       mult: 1.08 }, { name: 'D',    floor: 500000, mult: 1.13 },
+    { name: 'C',    floor: 600000,  mult: 1.18 }, { name: 'B',    floor: 700000, mult: 1.23 },
+    { name: 'A',    floor: 800000,  mult: 1.28 }, { name: 'A+',   floor: 900000, mult: 1.33 },
+    { name: 'AA',   floor: 920000,  mult: 1.36 }, { name: 'AA+',  floor: 940000, mult: 1.39 },
+    { name: 'AAA',  floor: 950000,  mult: 1.41 }, { name: 'AAA+', floor: 960000, mult: 1.43 },
+    { name: 'S',    floor: 970000,  mult: 1.45 }, { name: 'S+',   floor: 975000, mult: 1.46 },
+    { name: 'SS',   floor: 980000,  mult: 1.47 }, { name: 'SS+',  floor: 985000, mult: 1.48 },
+    { name: 'SSS',  floor: 990000,  mult: 1.49 }, { name: 'SSS+', floor: 995000, mult: 1.50 }
+  ];
+  const PLATES = [
+    { key: 'RG', name: 'Rough (RG)', bonus: 0.000 },      { key: 'FG', name: 'Fair (FG)', bonus: 0.002 },
+    { key: 'TG', name: 'Talented (TG)', bonus: 0.004 },   { key: 'MG', name: 'Marvelous (MG)', bonus: 0.006 },
+    { key: 'SG', name: 'Superb (SG)', bonus: 0.008 },     { key: 'EG', name: 'Extreme (EG)', bonus: 0.012 },
+    { key: 'UG', name: 'Ultimate (UG)', bonus: 0.016 },   { key: 'PG', name: 'Perfect (PG)', bonus: 0.020 }
+  ];
+  const BAND = GRADES.filter(g => g.floor >= 800000);
+  const LEVELS = [18, 19, 20, 21, 22, 23];
+
+  const gradeFor = s => { for (let i = GRADES.length - 1; i >= 0; i--) if (s >= GRADES[i].floor) return GRADES[i]; return GRADES[0]; };
+  const baseRating = L => 130 + 5 * L + 5 * Math.max(0, L - 24);
+
+  const pumbility = (L, score, single, plateBonus) => {
+    if (L < 10) return 0;
+    let base = baseRating(L);
+    if (single) base += (L + 1 > 24 ? 10 : 5);
+    return base * (gradeFor(score).mult + plateBonus);
+  };
+  const fung = (L, score, single) => {
+    let r = L + (score - 965000) / 17500;
+    if (single && L >= 20) r *= Math.pow(1.008, L - 19);
+    return r;
+  };
+
+  // Common ruler: the doubles level whose clean SSS+ / Marvelous play is worth the same.
+  const ANCHOR_MULT = 1.506, ANCHOR_FUNG = 30000 / 17500;
+  const pEff = (L, s, single, pb) => (pumbility(L, s, single, pb) / ANCHOR_MULT - 130) / 5;
+  const cEff = (L, s, single) => fung(L, s, single) - ANCHOR_FUNG;
+
+  // ══ state ══
+  const state = { single: false, plate: 'MG', refLevel: 20, refScore: 970000 };
+  const plateBonus = () => PLATES.find(p => p.key === state.plate).bonus;
+  const T = () => state.single ? 'S' : 'D';
+
+  const fmt = new Intl.NumberFormat('en-US');
+  const f1 = n => (n >= 0 ? '+' : '−') + Math.abs(n).toFixed(1);
+  const f2 = n => (n >= 0 ? '+' : '−') + Math.abs(n).toFixed(2);
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs, parent) => {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+  const txt = (parent, s) => { parent.appendChild(document.createTextNode(s)); return parent; };
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+  // ══ tooltip ══
+  const tip = document.getElementById('tip');
+  function showTip(ev, head, rows) {
+    tip.textContent = '';
+    const h = document.createElement('div');
+    h.className = 'tip-head';
+    txt(h, head);
+    tip.appendChild(h);
+    for (const r of rows) {
+      const d = document.createElement('div');
+      d.className = 'row';
+      if (r.color) { const i = document.createElement('i'); i.style.background = r.color; d.appendChild(i); }
+      const b = document.createElement('b'); txt(b, r.value); d.appendChild(b);
+      const s = document.createElement('span'); txt(s, r.label); d.appendChild(s);
+      tip.appendChild(d);
+    }
+    tip.dataset.show = '1';
+    const pad = 14, w = tip.offsetWidth, ht = tip.offsetHeight;
+    let x = ev.clientX + pad, y = ev.clientY + pad;
+    if (x + w > innerWidth - 8) x = ev.clientX - w - pad;
+    if (y + ht > innerHeight - 8) y = ev.clientY - ht - pad;
+    tip.style.left = Math.max(8, x) + 'px';
+    tip.style.top = Math.max(8, y) + 'px';
+  }
+  const hideTip = () => { tip.dataset.show = '0'; };
+  addEventListener('scroll', hideTip, { passive: true });
+
+  // ══ 01 — small multiples ══════════════════════════════════════════════════
+  const F = { w: 320, h: 200, l: 40, r: 12, t: 12, b: 30 };
+  const X0 = 800000, X1 = 1000000, Y0 = -12, Y1 = 0.6;
+
+  function facet(level) {
+    const fx = s => F.l + (s - X0) / (X1 - X0) * (F.w - F.l - F.r);
+    const fy = v => F.t + (Y1 - v) / (Y1 - Y0) * (F.h - F.t - F.b);
+    const svg = el('svg', { viewBox: `0 0 ${F.w} ${F.h}`, role: 'img',
+      'aria-label': `Credit lost against chart level for a ${T()}${level}, by score, under both formulas` });
+
+    for (const v of [0, -3, -6, -9, -12]) {
+      el('line', { x1: F.l, x2: F.w - F.r, y1: fy(v), y2: fy(v), stroke: css('--grid'), 'stroke-width': 1 }, svg);
+      const t = el('text', { x: F.l - 7, y: fy(v) + 3.5, 'text-anchor': 'end', 'font-size': 9, fill: css('--muted') }, svg);
+      txt(t, String(v));
+    }
+    el('line', { x1: F.l, x2: F.w - F.r, y1: fy(Y0), y2: fy(Y0), stroke: css('--axis'), 'stroke-width': 1 }, svg);
+    for (const s of [800000, 900000, 1000000]) {
+      const t = el('text', { x: fx(s), y: F.h - 12, 'text-anchor': s === X0 ? 'start' : s === X1 ? 'end' : 'middle',
+        'font-size': 9, fill: css('--muted') }, svg);
+      txt(t, s === 1000000 ? '1.00M' : (s / 1000000).toFixed(2) + 'M');
+    }
+
+    // competitive — continuous
+    let d = '';
+    for (let s = X0; s <= X1; s += 2000) d += (d ? 'L' : 'M') + fx(s).toFixed(2) + ' ' + fy(cEff(level, s, state.single) - level).toFixed(2);
+    el('path', { d, fill: 'none', stroke: css('--comp'), 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+
+    // pumbility — staircase over the grade bands
+    let p = '';
+    for (const g of BAND) {
+      const hi = GRADES[GRADES.indexOf(g) + 1] ? GRADES[GRADES.indexOf(g) + 1].floor : X1;
+      const y = fy(pEff(level, g.floor, state.single, plateBonus()) - level).toFixed(2);
+      p += (p ? 'L' : 'M') + fx(Math.max(X0, g.floor)).toFixed(2) + ' ' + y + 'L' + fx(Math.min(X1, hi)).toFixed(2) + ' ' + y;
+    }
+    el('path', { d: p, fill: 'none', stroke: css('--pumb'), 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+
+    // crosshair + hit layer
+    const cross = el('line', { y1: F.t, y2: F.h - F.b, stroke: css('--axis'), 'stroke-width': 1, opacity: 0 }, svg);
+    const hit = el('rect', { x: F.l, y: F.t, width: F.w - F.l - F.r, height: F.h - F.t - F.b, fill: 'transparent' }, svg);
+    const move = ev => {
+      const r = hit.getBoundingClientRect();
+      const raw = X0 + (ev.clientX - r.left) / r.width * (X1 - X0);
+      const s = Math.max(X0, Math.min(X1, Math.round(raw / 1000) * 1000));
+      cross.setAttribute('x1', fx(s)); cross.setAttribute('x2', fx(s)); cross.setAttribute('opacity', 1);
+      showTip(ev, `${T()}${level} · ${fmt.format(s)} · ${gradeFor(s).name}`, [
+        { color: css('--pumb'), value: f2(pEff(level, s, state.single, plateBonus()) - level), label: 'PUMBILITY' },
+        { color: css('--comp'), value: f2(cEff(level, s, state.single) - level), label: 'Competitive' }
+      ]);
+    };
+    hit.addEventListener('pointermove', move);
+    hit.addEventListener('pointerleave', () => { cross.setAttribute('opacity', 0); hideTip(); });
+    return svg;
+  }
+
+  function drawFacets() {
+    const host = document.getElementById('facets');
+    host.textContent = '';
+    for (const L of LEVELS) {
+      const d = document.createElement('div');
+      const h = document.createElement('p');
+      h.className = 'facet-title';
+      txt(h, `${T()}${L}`);
+      d.appendChild(h);
+      d.appendChild(facet(L));
+      host.appendChild(d);
+    }
+
+    const rows = LEVELS.map(L => [`${T()}${L}`, ...BAND.flatMap(g => [
+      f2(pEff(L, g.floor, state.single, plateBonus()) - L), f2(cEff(L, g.floor, state.single) - L)])]);
+    table(document.getElementById('t-facets'),
+      ['Chart', ...BAND.flatMap(g => [`${g.name} pumb.`, `${g.name} comp.`])], rows);
+  }
+
+  // ══ 02 — disagreement heatmap ═════════════════════════════════════════════
+  const HEAT = ['--div-c4', '--div-c3', '--div-c2', '--div-c1', '--div-mid', '--div-p1', '--div-p2', '--div-p3', '--div-p4'];
+  const heatColor = v => {
+    const c = Math.max(-1, Math.min(1, v));
+    if (Math.abs(c) < 0.05) return css('--div-mid');
+    const idx = c > 0 ? 4 + Math.min(4, Math.ceil(c / 0.25)) : 4 - Math.min(4, Math.ceil(-c / 0.25));
+    return css(HEAT[idx]);
+  };
+  const lum = hex => {
+    const n = parseInt(hex.slice(1), 16);
+    const f = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    return 0.2126 * f((n >> 16) & 255) + 0.7152 * f((n >> 8) & 255) + 0.0722 * f(n & 255);
+  };
+
+  function drawHeat() {
+    const cw = 68, ch = 34, gap = 2, lw = 52, th = 26;
+    const w = lw + BAND.length * cw, h = th + LEVELS.length * ch + 4;
+    const host = document.getElementById('heat');
+    host.textContent = '';
+    const svg = el('svg', { viewBox: `0 0 ${w} ${h}`, style: `min-width:${w}px`, role: 'img',
+      'aria-label': 'Levels of credit PUMBILITY gives over Competitive Level, by chart level and grade' });
+
+    BAND.forEach((g, i) => {
+      const t = el('text', { x: lw + i * cw + cw / 2, y: th - 10, 'text-anchor': 'middle', 'font-size': 10, fill: css('--muted') }, svg);
+      txt(t, g.name);
+    });
+
+    LEVELS.forEach((L, r) => {
+      const t = el('text', { x: lw - 10, y: th + r * ch + ch / 2 + 3.5, 'text-anchor': 'end', 'font-size': 10.5, fill: css('--ink-2') }, svg);
+      txt(t, `${T()}${L}`);
+      BAND.forEach((g, i) => {
+        const v = pEff(L, g.floor, state.single, plateBonus()) - cEff(L, g.floor, state.single);
+        const fill = heatColor(v);
+        const x = lw + i * cw, y = th + r * ch;
+        const rect = el('rect', { x: x + gap / 2, y: y + gap / 2, width: cw - gap, height: ch - gap, rx: 2, fill }, svg);
+        const label = el('text', { x: x + cw / 2, y: y + ch / 2 + 3.5, 'text-anchor': 'middle', 'font-size': 10.5,
+          fill: lum(fill) > 0.45 ? '#0C1712' : '#F3F8F4', 'pointer-events': 'none' }, svg);
+        txt(label, f2(v));
+        rect.addEventListener('pointermove', ev => showTip(ev, `${T()}${L} at ${g.name} · ${fmt.format(g.floor)}`, [
+          { value: f2(v), label: 'levels PUMBILITY gives over Competitive', color: v >= 0 ? css('--pumb') : css('--comp') },
+          { value: (pEff(L, g.floor, state.single, plateBonus()) - L).toFixed(2), label: 'PUMBILITY credit vs chart level', color: css('--pumb') },
+          { value: (cEff(L, g.floor, state.single) - L).toFixed(2), label: 'Competitive credit vs chart level', color: css('--comp') }
+        ]));
+        rect.addEventListener('pointerleave', hideTip);
+      });
+    });
+    host.appendChild(svg);
+
+    // scale legend
+    const lg = document.getElementById('heat-legend');
+    lg.textContent = '';
+    const bw = 33, bx = 2;
+    const bar = el('svg', { viewBox: '0 0 400 52', style: 'width:400px;max-width:100%;margin-bottom:16px' });
+    const cap = el('text', { x: bx, y: 11, 'font-size': 9.5, 'letter-spacing': '.06em', fill: css('--muted') }, bar);
+    txt(cap, 'COMPETITIVE HIGHER  ←  levels of credit  →  PUMBILITY HIGHER');
+    HEAT.forEach((k, i) => {
+      el('rect', { x: bx + i * bw, y: 20, width: bw, height: 12, fill: css(k) }, bar);
+    });
+    [['≤ −1.0', bx, 'start'], ['0', bx + 4.5 * bw, 'middle'], ['≥ +1.0', bx + 9 * bw, 'end']].forEach(([s, x, a]) => {
+      const t = el('text', { x, y: 45, 'text-anchor': a, 'font-size': 10, fill: css('--muted') }, bar);
+      txt(t, s);
+    });
+    lg.appendChild(bar);
+
+    // the headline claim has to follow the controls — the singles bonuses disagree far more
+    // than the core curves do, so a hardcoded "never half a level" would be false on that tab
+    const cells = [];
+    for (const L of LEVELS) for (const g of BAND)
+      cells.push({ g, v: pEff(L, g.floor, state.single, plateBonus()) - cEff(L, g.floor, state.single) });
+    const above = cells.filter(c => c.g.floor >= 900000).map(c => Math.abs(c.v));
+    const aCol = cells.filter(c => c.g.floor === 800000).map(c => c.v);
+    const read = document.getElementById('heat-read');
+    read.textContent = `On ${state.single ? 'Singles' : 'Doubles'} at ${PLATES.find(p => p.key === state.plate).name}: ` +
+      `everywhere from A+ up, the two never differ by more than ${Math.max(...above).toFixed(2)} of a level. ` +
+      `In the A column alone, PUMBILITY runs up to ${Math.max(...aCol).toFixed(2)} levels higher.`;
+
+    table(document.getElementById('t-heat'),
+      ['Chart', ...BAND.map(g => g.name)],
+      LEVELS.map(L => [`${T()}${L}`, ...BAND.map(g => f2(pEff(L, g.floor, state.single, plateBonus()) - cEff(L, g.floor, state.single)))]));
+  }
+
+  // ══ 03 — equivalence ladder (dumbbell) ════════════════════════════════════
+  function equivalentScore(L, target, metric) {
+    let lo = 500000, hi = 1000000;
+    const val = s => metric === 'p' ? pumbility(L, s, state.single, plateBonus()) : fung(L, s, state.single);
+    if (val(hi) < target) return null;
+    if (val(lo) >= target) return lo;
+    for (let i = 0; i < 44; i++) { const m = (lo + hi) / 2; if (val(m) >= target) hi = m; else lo = m; }
+    const snapped = Math.round(hi / 100) * 100;
+    return val(snapped) >= target ? snapped : snapped + 100;
+  }
+
+  function drawLadder() {
+    const refP = pumbility(state.refLevel, state.refScore, state.single, plateBonus());
+    const refC = fung(state.refLevel, state.refScore, state.single);
+    const rows = LEVELS.map(L => ({ L, p: equivalentScore(L, refP, 'p'), c: equivalentScore(L, refC, 'c') }));
+
+    document.getElementById('ladder-read').textContent =
+      `Holding the reference at ${T()}${state.refLevel} scored ${fmt.format(state.refScore)} ` +
+      `(${gradeFor(state.refScore).name}), this is the score each other chart level needs to be worth ` +
+      `the same under each formula. Where the two dots sit apart, the formulas are pricing the trade ` +
+      `between difficulty and accuracy differently. A missing dot means that level cannot reach the ` +
+      `reference at any score.`;
+
+    // domain follows the data — the interesting spread is tens of thousands wide, not hundreds
+    const vals = rows.flatMap(r => [r.p, r.c]).filter(v => v !== null);
+    const span = Math.max(30000, (Math.max(...vals) - Math.min(...vals)) * 1.35);
+    const L1 = Math.min(1000000, Math.max(...vals) + span * 0.18);
+    const L0 = Math.max(500000, L1 - span - span * 0.18);
+    const tickStep = span > 120000 ? 40000 : span > 60000 ? 20000 : 10000;
+
+    const w = 720, rowH = 42, h = 40 + rows.length * rowH + 8, lw = 56, rp = 92;
+    const host = document.getElementById('ladder');
+    host.textContent = '';
+    const svg = el('svg', { viewBox: `0 0 ${w} ${h}`, style: `min-width:600px`, role: 'img',
+      'aria-label': 'Score needed at each level to match the reference chart, under each formula' });
+    const fx = s => lw + (s - L0) / (L1 - L0) * (w - lw - rp);
+
+    for (let s = Math.ceil(L0 / tickStep) * tickStep; s <= L1; s += tickStep) {
+      el('line', { x1: fx(s), x2: fx(s), y1: 32, y2: h - 22, stroke: css('--grid'), 'stroke-width': 1 }, svg);
+      // the last tick sits against the gap column — anchor it inward so the two never collide
+      const last = s + tickStep > L1;
+      const t = el('text', { x: fx(s), y: 24, 'text-anchor': last ? 'end' : 'middle', 'font-size': 10, fill: css('--muted') }, svg);
+      txt(t, fmt.format(s));
+    }
+
+    rows.forEach((r, i) => {
+      const y = 40 + i * rowH + rowH / 2;
+      const lab = el('text', { x: lw - 12, y: y + 4, 'text-anchor': 'end', 'font-size': 11.5,
+        fill: r.L === state.refLevel ? css('--ink') : css('--ink-2') }, svg);
+      txt(lab, `${T()}${r.L}`);
+
+      if (r.p === null && r.c === null) {
+        const t = el('text', { x: lw + 8, y: y + 4, 'font-size': 10.5, fill: css('--muted') }, svg);
+        txt(t, 'out of reach at any score');
+        return;
+      }
+      const coincident = r.p !== null && r.c !== null && Math.abs(fx(r.p) - fx(r.c)) < 9;
+      if (r.p !== null && r.c !== null && !coincident) {
+        el('line', { x1: fx(r.p), x2: fx(r.c), y1: y, y2: y, stroke: css('--axis'), 'stroke-width': 2, 'stroke-linecap': 'round' }, svg);
+      }
+      if (coincident) {
+        // one marker split down the middle, so an exact tie never hides a dot
+        const cx = (fx(r.p) + fx(r.c)) / 2, rad = 5.5;
+        el('path', { d: `M${cx} ${y - rad}A${rad} ${rad} 0 0 0 ${cx} ${y + rad}Z`, fill: css('--pumb'),
+          stroke: css('--surface'), 'stroke-width': 1.5 }, svg);
+        el('path', { d: `M${cx} ${y - rad}A${rad} ${rad} 0 0 1 ${cx} ${y + rad}Z`, fill: css('--comp'),
+          stroke: css('--surface'), 'stroke-width': 1.5 }, svg);
+      }
+      for (const [v, colorVar, name] of [[r.p, '--pumb', 'PUMBILITY'], [r.c, '--comp', 'Competitive Level']]) {
+        if (v === null) continue;
+        if (!coincident)
+          el('circle', { cx: fx(v), cy: y, r: 5, fill: css(colorVar), stroke: css('--surface'), 'stroke-width': 2 }, svg);
+        const hitc = el('circle', { cx: fx(v) + (coincident ? (colorVar === '--pumb' ? -5 : 5) : 0), cy: y, r: 13, fill: 'transparent' }, svg);
+        hitc.addEventListener('pointermove', ev => showTip(ev, `${T()}${r.L} · ${name}`, [
+          { value: fmt.format(v), label: `needed to match ${T()}${state.refLevel} at ${fmt.format(state.refScore)}`, color: css(colorVar) },
+          { value: gradeFor(v).name, label: 'letter grade', color: css(colorVar) }
+        ]));
+        hitc.addEventListener('pointerleave', hideTip);
+      }
+      // direct-label the gap where it is worth reading
+      if (r.p !== null && r.c !== null && Math.abs(r.p - r.c) >= 2000) {
+        const t = el('text', { x: w - rp + 10, y: y + 4, 'font-size': 10.5, fill: css('--ink-2') }, svg);
+        txt(t, `${(r.c - r.p) > 0 ? '+' : '−'}${fmt.format(Math.abs(r.c - r.p))}`);
+      }
+    });
+    const cap = el('text', { x: w - rp + 10, y: 24, 'font-size': 9, 'letter-spacing': '.05em', fill: css('--muted') }, svg);
+    txt(cap, 'COMP − PUMB');
+    host.appendChild(svg);
+
+    table(document.getElementById('t-ladder'),
+      ['Chart', 'PUMBILITY needs', 'grade', 'Competitive needs', 'grade', 'gap'],
+      rows.map(r => [`${T()}${r.L}`,
+        r.p === null ? 'unreachable' : fmt.format(r.p), r.p === null ? '—' : gradeFor(r.p).name,
+        r.c === null ? 'unreachable' : fmt.format(r.c), r.c === null ? '—' : gradeFor(r.c).name,
+        (r.p === null || r.c === null) ? '—' : fmt.format(r.c - r.p)]));
+  }
+
+  // ══ 04 — the player cloud ═════════════════════════════════════════════════
+  const ARCHETYPES = [
+    { name: 'Grinder',  n: 50, centre: 18.5, score: 992000, plate: 'MG', dy: 22,  blurb: 'sweeps the bottom of the band clean' },
+    { name: 'Balanced', n: 50, centre: 20.5, score: 972000, plate: 'MG', dy: -14, blurb: 'S-range across the middle' },
+    { name: 'Pusher',   n: 50, centre: 22.5, score: 820000, plate: 'FG', dy: 22,  blurb: 'barely passing at the top' },
+    { name: 'Sniper',   n: 15, centre: 21.5, score: 982000, plate: 'MG', dy: -14, blurb: 'only fifteen charts, all polished' }
+  ];
+
+  // deterministic spread — no Math.random, so the render is stable across redraws
+  const lcg = seed => () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+
+  function buildPlayer(n, centre, meanScore, plateB, seed) {
+    const rnd = lcg(seed), pool = [];
+    for (let i = 0; i < n; i++) {
+      const L = Math.max(18, Math.min(23, Math.round(centre + (rnd() - 0.5) * 3)));
+      const s = Math.max(760000, Math.min(1000000, Math.round(meanScore + (rnd() - 0.5) * 26000)));
+      pool.push({ L, s });
+    }
+    const pTotal = pool.map(c => pumbility(c.L, c.s, state.single, plateB))
+      .sort((a, b) => b - a).slice(0, 50).reduce((a, b) => a + b, 0);
+    const cv = pool.map(c => fung(c.L, c.s, state.single)).sort((a, b) => b - a).slice(0, 100);
+    return { pumb: pTotal, comp: cv.reduce((a, b) => a + b, 0) / cv.length, n };
+  }
+
+  function drawCloud() {
+    const pb = plateBonus();
+    const cloud = [];
+    // record size is drawn from a seeded stream across 12–80 charts: any regular set of
+    // sizes bands the cloud into vertical stripes that are an artefact, not a finding
+    const rn = lcg(20260731);
+    let seed = 7;
+    for (let c = 18; c <= 23; c += 0.5)
+      for (let s = 800000; s <= 1000000; s += 12500)
+        for (let j = 0; j < 4; j++)
+          cloud.push(buildPlayer(12 + Math.floor(rn() * 69), c, s, pb, seed += 9973));
+
+    const named = ARCHETYPES.map(a => Object.assign(
+      buildPlayer(a.n, a.centre, a.score, PLATES.find(p => p.key === a.plate).bonus, 4242), a));
+
+    const all = cloud.concat(named);
+    const px0 = 0, px1 = Math.max(...all.map(d => d.pumb)) * 1.04;
+    const py0 = Math.min(...all.map(d => d.comp)) - 0.6, py1 = Math.max(...all.map(d => d.comp)) + 0.6;
+
+    const w = 720, h = 440, l = 62, r = 26, t = 20, b = 52;
+    const host = document.getElementById('cloud');
+    host.textContent = '';
+    const svg = el('svg', { viewBox: `0 0 ${w} ${h}`, style: 'min-width:600px', role: 'img',
+      'aria-label': 'PUMBILITY total against competitive level for synthetic D18 to D23 players' });
+    const fx = v => l + (v - px0) / (px1 - px0) * (w - l - r);
+    const fy = v => t + (py1 - v) / (py1 - py0) * (h - t - b);
+
+    const yTicks = []; for (let v = Math.ceil(py0); v <= py1; v++) yTicks.push(v);
+    for (const v of yTicks) {
+      el('line', { x1: l, x2: w - r, y1: fy(v), y2: fy(v), stroke: css('--grid'), 'stroke-width': 1 }, svg);
+      const tt = el('text', { x: l - 9, y: fy(v) + 3.5, 'text-anchor': 'end', 'font-size': 10, fill: css('--muted') }, svg);
+      txt(tt, v.toFixed(0));
+    }
+    const step = px1 > 18000 ? 5000 : 4000;
+    for (let v = 0; v <= px1; v += step) {
+      el('line', { x1: fx(v), x2: fx(v), y1: t, y2: h - b, stroke: css('--grid'), 'stroke-width': 1 }, svg);
+      const tt = el('text', { x: fx(v), y: h - b + 16, 'text-anchor': 'middle', 'font-size': 10, fill: css('--muted') }, svg);
+      txt(tt, v === 0 ? '0' : (v / 1000) + 'k');
+    }
+
+    // the two cross-sections through Balanced
+    const anchor = named[1];
+    const bandX = [anchor.pumb * 0.97, anchor.pumb * 1.03];
+    const bandY = [anchor.comp - 0.35, anchor.comp + 0.35];
+    el('rect', { x: fx(bandX[0]), y: t, width: fx(bandX[1]) - fx(bandX[0]), height: h - b - t,
+      fill: css('--pumb'), opacity: 0.10 }, svg);
+    el('rect', { x: l, y: fy(bandY[1]), width: w - l - r, height: fy(bandY[0]) - fy(bandY[1]),
+      fill: css('--comp'), opacity: 0.10 }, svg);
+
+    for (const d of cloud) {
+      const dot = el('circle', { cx: fx(d.pumb), cy: fy(d.comp), r: 2.6, fill: css('--cloud'), opacity: 0.5 }, svg);
+      const hitd = el('circle', { cx: fx(d.pumb), cy: fy(d.comp), r: 9, fill: 'transparent' }, svg);
+      hitd.addEventListener('pointermove', ev => showTip(ev, `${d.n} charts on record`, [
+        { value: fmt.format(Math.round(d.pumb)), label: 'PUMBILITY', color: css('--pumb') },
+        { value: d.comp.toFixed(2), label: 'Competitive Level', color: css('--comp') }
+      ]));
+      hitd.addEventListener('pointerleave', hideTip);
+      dot.style.pointerEvents = 'none';
+    }
+
+    for (const a of named) {
+      el('circle', { cx: fx(a.pumb), cy: fy(a.comp), r: 6, fill: css('--ink'), stroke: css('--surface'), 'stroke-width': 2 }, svg);
+      const lab = el('text', { x: fx(a.pumb), y: fy(a.comp) + a.dy, 'text-anchor': 'middle',
+        'font-size': 11.5, fill: css('--ink') }, svg);
+      txt(lab, a.name);
+      const hita = el('circle', { cx: fx(a.pumb), cy: fy(a.comp), r: 16, fill: 'transparent' }, svg);
+      hita.addEventListener('pointermove', ev => showTip(ev, `${a.name} — ${a.blurb}`, [
+        { value: fmt.format(Math.round(a.pumb)), label: 'PUMBILITY', color: css('--pumb') },
+        { value: a.comp.toFixed(2), label: 'Competitive Level', color: css('--comp') },
+        { value: String(a.n), label: 'charts on record' }
+      ]));
+      hita.addEventListener('pointerleave', hideTip);
+    }
+
+    const ax = el('text', { x: l + (w - l - r) / 2, y: h - 12, 'text-anchor': 'middle', 'font-size': 11, fill: css('--ink-2') }, svg);
+    txt(ax, 'PUMBILITY total  (sum of top 50)');
+    const ay = el('text', { x: 0, y: 0, 'text-anchor': 'middle', 'font-size': 11, fill: css('--ink-2'),
+      transform: `translate(15, ${t + (h - t - b) / 2}) rotate(-90)` }, svg);
+    txt(ay, 'Competitive Level  (average of top 100)');
+    host.appendChild(svg);
+
+    // the cross-section widths, computed from the same cloud
+    const inX = cloud.filter(d => d.pumb >= bandX[0] && d.pumb <= bandX[1]).map(d => d.comp);
+    const inY = cloud.filter(d => d.comp >= bandY[0] && d.comp <= bandY[1]).map(d => d.pumb);
+    const co = document.getElementById('cloud-callout');
+    co.textContent = '';
+    const p = document.createElement('p');
+    p.className = 'read';
+    p.style.marginTop = '16px';
+    txt(p, inX.length && inY.length
+      ? `In the blue band — every player within 3% of Balanced's PUMBILITY — competitive levels run from ` +
+        `${Math.min(...inX).toFixed(1)} to ${Math.max(...inX).toFixed(1)}, a spread of ` +
+        `${(Math.max(...inX) - Math.min(...inX)).toFixed(1)} levels. In the orange band — every player within ` +
+        `0.35 of a level of Balanced's competitive level — PUMBILITY runs from ${fmt.format(Math.round(Math.min(...inY)))} ` +
+        `to ${fmt.format(Math.round(Math.max(...inY)))}, a spread of ` +
+        `${Math.round((Math.max(...inY) / Math.min(...inY) - 1) * 100)}%.`
+      : 'No synthetic players fall in the sampled bands at this plate setting.');
+    co.appendChild(p);
+
+    table(document.getElementById('t-cloud'),
+      ['Archetype', 'Charts', 'PUMBILITY', 'Competitive Level', 'Profile'],
+      named.map(a => [a.name, String(a.n), fmt.format(Math.round(a.pumb)), a.comp.toFixed(2), a.blurb]));
+  }
+
+  // ══ headline tiles ════════════════════════════════════════════════════════
+  function drawTiles() {
+    const gaps = [];
+    for (const L of LEVELS) for (const g of BAND)
+      gaps.push({ L, g, v: pEff(L, g.floor, state.single, plateBonus()) - cEff(L, g.floor, state.single) });
+    const above = gaps.filter(x => x.g.floor >= 900000);
+    const worstAbove = above.reduce((a, b) => Math.abs(b.v) > Math.abs(a.v) ? b : a);
+    const worstAll = gaps.reduce((a, b) => Math.abs(b.v) > Math.abs(a.v) ? b : a);
+
+    const article = g => /^(A|AA|AAA|S|SS|SSS)/.test(g) ? 'an' : 'a';
+    const tiles = [
+      { label: 'Worst disagreement, A+ and up', value: f1(worstAbove.v), unit: ' levels',
+        note: `at ${T()}${worstAbove.L} on ${article(worstAbove.g.name)} ${worstAbove.g.name}. Everywhere else in that range they are closer.` },
+      { label: 'Worst disagreement, whole band', value: f1(worstAll.v), unit: ' levels',
+        note: `at ${T()}${worstAll.L} on ${article(worstAll.g.name)} ${worstAll.g.name} — the one grade band where they truly fork.` },
+      { label: 'Score the A band ignores', value: '100,000', unit: ' pts',
+        note: 'worth zero PUMBILITY from 800,000 to 899,999 — and 5.71 competitive levels.' },
+      { label: 'Competitive exchange rate', value: '17,500', unit: ' pts',
+        note: 'buys exactly one level, at every level and every grade. PUMBILITY has no constant.' }
+    ];
+    const host = document.getElementById('tiles');
+    host.textContent = '';
+    for (const t of tiles) {
+      const d = document.createElement('div');
+      d.className = 'tile';
+      const l = document.createElement('span'); l.className = 'label'; txt(l, t.label); d.appendChild(l);
+      const v = document.createElement('div'); v.className = 'value'; txt(v, t.value);
+      const u = document.createElement('span'); u.className = 'unit'; txt(u, t.unit); v.appendChild(u);
+      d.appendChild(v);
+      const n = document.createElement('div'); n.className = 'note'; txt(n, t.note); d.appendChild(n);
+      host.appendChild(d);
+    }
+  }
+
+  // ══ table helper ══════════════════════════════════════════════════════════
+  function table(host, head, rows) {
+    host.textContent = '';
+    const t = document.createElement('table');
+    const thead = document.createElement('thead');
+    const hr = document.createElement('tr');
+    for (const h of head) { const th = document.createElement('th'); txt(th, h); hr.appendChild(th); }
+    thead.appendChild(hr); t.appendChild(thead);
+    const tb = document.createElement('tbody');
+    for (const r of rows) {
+      const tr = document.createElement('tr');
+      r.forEach((c, i) => { const td = document.createElement(i === 0 ? 'th' : 'td'); if (i === 0) td.scope = 'row'; txt(td, c); tr.appendChild(td); });
+      tb.appendChild(tr);
+    }
+    t.appendChild(tb); host.appendChild(t);
+  }
+
+  // ══ controls ══════════════════════════════════════════════════════════════
+  const plateSel = document.getElementById('plate-sel');
+  for (const p of PLATES) {
+    const o = document.createElement('option'); o.value = p.key; txt(o, p.name);
+    if (p.key === state.plate) o.selected = true;
+    plateSel.appendChild(o);
+  }
+  const refLevelSel = document.getElementById('ref-level');
+  for (const L of LEVELS) {
+    const o = document.createElement('option'); o.value = String(L); txt(o, `level ${L}`);
+    if (L === state.refLevel) o.selected = true;
+    refLevelSel.appendChild(o);
+  }
+  const refScoreSel = document.getElementById('ref-score');
+  for (const g of BAND) {
+    const o = document.createElement('option'); o.value = String(g.floor);
+    txt(o, `${fmt.format(g.floor)} · ${g.name}`);
+    if (g.floor === state.refScore) o.selected = true;
+    refScoreSel.appendChild(o);
+  }
+
+  function renderAll() { drawTiles(); drawFacets(); drawHeat(); drawLadder(); drawCloud(); }
+
+  document.getElementById('type-seg').addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-v]');
+    if (!b) return;
+    state.single = b.dataset.v === 'S';
+    for (const x of ev.currentTarget.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+    renderAll();
+  });
+  plateSel.addEventListener('change', e => { state.plate = e.target.value; renderAll(); });
+  refLevelSel.addEventListener('change', e => { state.refLevel = +e.target.value; drawLadder(); });
+  refScoreSel.addEventListener('change', e => { state.refScore = +e.target.value; drawLadder(); });
+
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderAll);
+  new MutationObserver(renderAll).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  renderAll();
+})();
+</script>
