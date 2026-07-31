@@ -44,6 +44,13 @@ internal interface IScoreJournalRepository
     ///     bind the person whose history it is (docs/design/delete-my-data.md D8).
     /// </summary>
     Task DeleteForUser(Guid userId, MixEnum? mix, CancellationToken cancellationToken);
+
+    /// <summary>Every play one session wrote, for the undo preview and the replay that follows.</summary>
+    Task<IReadOnlyList<ScoreJournalEntry>> GetSessionEntries(Guid userId, Guid sessionId,
+        CancellationToken cancellationToken);
+
+    /// <summary>Removes one session's plays. The survivors are what the replay rebuilds from.</summary>
+    Task DeleteSession(Guid userId, Guid sessionId, CancellationToken cancellationToken);
 }
 
 internal sealed record JournalSessionRows(

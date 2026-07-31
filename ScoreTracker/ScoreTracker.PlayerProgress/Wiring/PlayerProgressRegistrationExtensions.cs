@@ -51,6 +51,7 @@ public static class PlayerProgressRegistrationExtensions
         configurator.AddConsumer<PlayerHistorySaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();
         configurator.AddConsumer<PlayerScoreDataDeletedConsumer>();
+        configurator.AddConsumer<ScoreSessionUndoneConsumer>();
         // The session-snapshot orchestrator: consumes every score batch, runs the
         // rating/title steps, publishes ScoreHighlightsCapturedEvent — if this
         // registration drops, stats, Pumbility, titles, AND the Discord cards all

@@ -54,6 +54,9 @@ internal interface IPhoenixRecordRepository
         CancellationToken cancellationToken = default);
 
     // Account purge spans mixes by design — no mix parameter.
+    /// <summary>Removes one chart's record — the undo case where no earlier play survives.</summary>
+    Task DeleteRecord(MixEnum mix, Guid userId, Guid chartId, CancellationToken cancellationToken = default);
+
     /// <summary>Deletes the user's records and per-score stats. Null mix means every mix.</summary>
     Task DeleteAllForUser(Guid userId, MixEnum? mix = null, CancellationToken cancellationToken = default);
 }

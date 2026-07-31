@@ -66,11 +66,17 @@ all: it is strictly worse than doing nothing.
   carries plays that never became a record, so the winner is whatever `Beats` selects across the
   lot — filtering on `IsBest` first would drop the very row that is about to become the new best.
 
-  **And the survivors' `IsBest` is raised to match.** Removing rows can promote a surviving play,
-  and `SessionFeedHandler` renders that flag — leave it stale and the page marks the wrong play as
-  the record. Only *raising* is ever needed: undo removes rows, so a survivor can gain best-ness
-  and never lose it. `IScoreJournalRepository`'s own contract already sanctions exactly this —
-  *"rows are never updated except to raise IsBest."*
+  **`IsBest` is not rewritten.** It records whether a play became the record *when it was
+  written* — a fact about that moment, not about now — so removing a later row cannot make it
+  untrue. Leaving it alone keeps the journal an honest log; the current best lives in
+  `PhoenixRecord`, which is what the replay updates.
+
+  **Replay honours source authority, not just the policy.** `BestAttemptPolicy.Beats` governs
+  acquisition sources, but `manual` and `csv` are authoritative and may *lower* a record
+  ([score-truth-model.md](score-truth-model.md) D9). A replay that only ever took the maximum
+  would resurrect a score the player had deliberately corrected downward, so it walks the
+  survivors in time order and lets an authoritative source overwrite — the same rule the write
+  path applies.
 
 - **D7 — everything a session produced travels with it.** Journal rows, `ScoreHighlight`,
   `PlayerMilestone`. A milestone is not recomputed from scores, so leaving it behind would strand

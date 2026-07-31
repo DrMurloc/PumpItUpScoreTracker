@@ -528,6 +528,20 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 g.Sum(e => e.prs.Pumbility), g.Sum(e => e.prs.PumbilityPlus))).ToArrayAsync(cancellationToken);
     }
 
+    public async Task DeleteRecord(MixEnum mix, Guid userId, Guid chartId,
+        CancellationToken cancellationToken = default)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        await database.Set<PhoenixRecordEntity>()
+            .Where(p => p.UserId == userId && p.ChartId == chartId && p.MixId == mixId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await database.Set<PhoenixRecordStatsEntity>()
+            .Where(p => p.UserId == userId && p.ChartId == chartId && p.MixId == mixId)
+            .ExecuteDeleteAsync(cancellationToken);
+        _cache.Remove(ScoreCache(userId, mix));
+    }
+
     public async Task DeleteAllForUser(Guid userId, MixEnum? mix = null,
         CancellationToken cancellationToken = default)
     {
