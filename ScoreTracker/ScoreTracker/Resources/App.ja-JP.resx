@@ -6054,6 +6054,9 @@
   <data name="{0} arrived" xml:space="preserve">
     <value>{0} 件が入った</value>
   </data>
+  <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
+    <value>{0} がこのコミュニティの作成者になり、あなたは管理者になります。作成者は 1 人だけなので、自分では戻せません。</value>
+  </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
   </data>

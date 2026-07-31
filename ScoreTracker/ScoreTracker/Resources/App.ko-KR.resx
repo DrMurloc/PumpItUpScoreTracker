@@ -5984,6 +5984,9 @@
   <data name="{0} arrived" xml:space="preserve">
     <value>{0}개 들어옴</value>
   </data>
+  <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
+    <value>{0}님이 이 커뮤니티의 개설자가 되고 회원님은 관리자가 됩니다. 개설자 자리는 하나뿐이라 직접 되돌릴 수 없습니다.</value>
+  </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
   </data>

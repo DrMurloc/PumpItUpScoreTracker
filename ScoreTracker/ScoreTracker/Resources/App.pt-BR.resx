@@ -5984,6 +5984,9 @@
   <data name="{0} arrived" xml:space="preserve">
     <value>{0} entraram</value>
   </data>
+  <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
+    <value>{0} passa a ser o criador desta comunidade e você passa a ser administrador. Só existe uma vaga de criador, então você não poderá retomá-la sozinho.</value>
+  </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
   </data>

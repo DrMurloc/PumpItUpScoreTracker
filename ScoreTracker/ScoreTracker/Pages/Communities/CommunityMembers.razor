@@ -114,7 +114,7 @@ else
                     @if (_myRole?.Role == CommunityRole.Creator && context.Role is CommunityRole.Member or CommunityRole.Admin)
                     {
                         <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" Disabled="_isSaving"
-                                   OnClick="() => Transfer(context)">@L["Make Creator"]</MudButton>
+                                   OnClick="() => AskTransfer(context)">@L["Make Creator"]</MudButton>
                     }
                     @if (CanManageUsers && context.Role is CommunityRole.Member or CommunityRole.Admin)
                     {
@@ -195,6 +195,22 @@ else
     </DialogActions>
 </MudDialog>
 
+<MudDialog @bind-Visible="_showTransferConfirm">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Make Creator"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2">
+            @L["{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself.", _transferTarget?.Name.ToString() ?? string.Empty]
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" OnClick="() => _showTransferConfirm = false">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="ConfirmTransfer">@L["Make Creator"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject NavigationManager NavManager
@@ -204,6 +220,8 @@ else
     [Parameter, SupplyParameterFromQuery] public string? CommunityName { get; set; }
 
     private bool _loading = true;
+    private CommunityMemberRecord? _transferTarget;
+    private bool _showTransferConfirm;
     private bool _isSaving;
     private Community? _community;
     private CommunityRoleRecord? _myRole;
@@ -323,9 +341,23 @@ else
     private Task Unban(CommunityMemberRecord member) =>
         Dispatch(new UnbanMemberCommand(_community!.Name, member.UserId), "Could not unban this member.");
 
-    private Task Transfer(CommunityMemberRecord member) =>
-        Dispatch(new TransferCommunityOwnershipCommand(_community!.Name, member.UserId),
+    // One click used to hand away the only creator seat. Survivable while the members page was
+    // somewhere you went on purpose to manage roles; account deletion now sends people here to
+    // do exactly this, in a hurry, so a mistap costs somebody their community.
+    private void AskTransfer(CommunityMemberRecord member)
+    {
+        _transferTarget = member;
+        _showTransferConfirm = true;
+    }
+
+    private async Task ConfirmTransfer()
+    {
+        _showTransferConfirm = false;
+        if (_transferTarget is null) return;
+        await Dispatch(new TransferCommunityOwnershipCommand(_community!.Name, _transferTarget.UserId),
             "Could not transfer the community.");
+        _transferTarget = null;
+    }
 
     private void OpenEditPermissions(CommunityMemberRecord member)
     {
