@@ -9,5 +9,5 @@ namespace ScoreTracker.WeeklyChallenge.Contracts;
 ///     verified official-import scores apart from self-reported manual ones.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record DailyStepEntry(Guid UserId, Guid ChartId, PhoenixScore Score, PhoenixPlate Plate,
+public sealed record DailyStepEntry(Guid UserId, Guid ChartId, PhoenixScore Score, PhoenixPlate? Plate,
     bool IsBroken, double CompetitiveLevel, ChallengeEntrySource Source);

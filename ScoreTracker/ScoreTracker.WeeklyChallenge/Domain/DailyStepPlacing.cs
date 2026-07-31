@@ -9,4 +9,4 @@ namespace ScoreTracker.WeeklyChallenge.Domain;
 ///     correctly. Mirrors <see cref="ScoreTracker.Domain.Records.UserTourneyHistory" /> for Weekly.
 /// </summary>
 internal sealed record DailyStepPlacing(Guid UserId, Guid ChartId, DateTimeOffset ForDate, bool IsLimbo, int Place,
-    PhoenixScore Score, PhoenixPlate Plate, bool IsBroken, double CompetitiveLevel);
+    PhoenixScore Score, PhoenixPlate? Plate, bool IsBroken, double CompetitiveLevel);

@@ -124,20 +124,21 @@ internal sealed class DailyStepSaga(
             return; // the play doesn't match today's live chart (e.g. the board rotated mid-import)
 
         int score;
-        PhoenixPlate plate;
+        // Null on a broken best — the game awards no plate for a failed stage.
+        PhoenixPlate? plate;
         bool isBroken;
         if (board.IsLimbo)
         {
             // Limbo needs a passing run; a broken "best" doesn't qualify.
             if (msg.LowestPassScore == null) return;
             score = msg.LowestPassScore.Value;
-            plate = Enum.Parse<PhoenixPlate>(msg.LowestPassPlate!);
+            plate = ParsePlate(msg.LowestPassPlate);
             isBroken = false;
         }
         else
         {
             score = msg.BestScore;
-            plate = Enum.Parse<PhoenixPlate>(msg.BestPlate);
+            plate = ParsePlate(msg.BestPlate);
             isBroken = msg.BestIsBroken;
         }
 
@@ -159,8 +160,13 @@ internal sealed class DailyStepSaga(
     // Limbo, highest otherwise — and stamp the winning score's source. So a manual Limbo low naturally
     // beats an official best on a Limbo day (and reads Manual), while a higher official best wins a
     // normal day (and reads Official).
+    private static PhoenixPlate? ParsePlate(string? plate)
+    {
+        return Enum.TryParse<PhoenixPlate>(plate, out var parsed) ? parsed : null;
+    }
+
     private async Task UpsertEntry(MixEnum mix, DailyStepBoard board, Guid userId, PhoenixScore score,
-        PhoenixPlate plate, bool isBroken, ChallengeEntrySource source, CancellationToken ct)
+        PhoenixPlate? plate, bool isBroken, ChallengeEntrySource source, CancellationToken ct)
     {
         var chart = (await charts.GetCharts(mix, chartIds: new[] { board.ChartId }, cancellationToken: ct))
             .SingleOrDefault();

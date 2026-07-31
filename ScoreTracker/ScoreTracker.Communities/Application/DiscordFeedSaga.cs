@@ -220,9 +220,12 @@ namespace ScoreTracker.Communities.Application
 
         // The community name (when the row's player is in one of the channel's non-regional
         // communities) trails the row, e.g. "…SSS SG (Arrow Eclipse)".
-        private static string LeaderRow(MixEnum mix, int place, string name, PhoenixScore score, PhoenixPlate plate,
+        // A broken entry carries no plate, so its token is omitted rather than emitted empty —
+        // the adapter would render "#PLATE||#" as a stray literal.
+        private static string LeaderRow(MixEnum mix, int place, string name, PhoenixScore score, PhoenixPlate? plate,
             bool isBroken, string? community) =>
-            $"`{place,2}` **{name}** — {(int)score:N0} #LETTERGRADE|{score.LetterGradeFor(mix)}|{isBroken}##PLATE|{plate}#"
+            $"`{place,2}` **{name}** — {(int)score:N0} #LETTERGRADE|{score.LetterGradeFor(mix)}|{isBroken}#"
+            + (plate != null ? $"#PLATE|{plate}#" : string.Empty)
             + (community != null ? $" ({community})" : string.Empty);
 
         private static string PlayerName(IReadOnlyDictionary<Guid, string> names, Guid userId) =>

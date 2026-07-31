@@ -19,7 +19,8 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure.Entities
         public bool WasWithinRange { get; set; }
         public double CompetitiveLevel { get; set; }
         public int Score { get; set; }
-        [MaxLength(32)] public string Plate { get; set; }
+        // NULL on a broken entry — no plate is awarded for a failed stage.
+        [MaxLength(32)] public string? Plate { get; set; }
         public bool IsBroken { get; set; }
     }
 }

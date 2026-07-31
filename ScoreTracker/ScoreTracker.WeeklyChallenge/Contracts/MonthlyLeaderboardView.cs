@@ -39,4 +39,5 @@ public sealed record MonthlyLeaderboardRow(
 ///     <see cref="Queries.GetMonthlyLeaderboardQuery" />).
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record MonthlyEntry(Guid ChartId, PhoenixScore Score, PhoenixPlate Plate, bool IsBroken, double Points);
+public sealed record MonthlyEntry(Guid ChartId, PhoenixScore Score, PhoenixPlate? Plate, bool IsBroken,
+    double Points);
