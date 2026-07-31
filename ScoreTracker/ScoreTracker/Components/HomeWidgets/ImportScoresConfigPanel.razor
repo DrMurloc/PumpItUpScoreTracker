@@ -33,6 +33,17 @@
     @L["Use your saved game tag and import straight away. Off = pick a card each time after sign-in."]
 </MudText>
 
+@* Three states, not a checkbox: "follow the mix" is the shipped default and a checkbox would
+   have to render it as one of the other two, silently changing what the widget does on save. *@
+<MudSelect T="BrokenMode" @bind-Value="_recordBroken" Label="@L["Record broken scores as your best"]" Class="mb-1">
+    <MudSelectItem T="BrokenMode" Value="BrokenMode.FollowMix">@L["Follow current mix"]</MudSelectItem>
+    <MudSelectItem T="BrokenMode" Value="BrokenMode.Always">@L["Always"]</MudSelectItem>
+    <MudSelectItem T="BrokenMode" Value="BrokenMode.Never">@L["Never"]</MudSelectItem>
+</MudSelect>
+<MudText Typo="Typo.caption" Class="d-block mb-3">
+    @L["Import Broken Helper"]
+</MudText>
+
 <MudCheckBox T="bool" @bind-Value="_syncPiuTracker" Label="@L["Also send scores to piutracker.app"]" Dense="true"/>
 <MudText Typo="Typo.caption" Class="d-block">
     @L["Also send imported scores to PIU Tracker, a community score site."]
@@ -97,6 +108,13 @@ else if (_hasStoredCredential)
         All
     }
 
+    private enum BrokenMode
+    {
+        FollowMix,
+        Always,
+        Never
+    }
+
     [Parameter] public HomePageWidgetRecord Widget { get; set; } = null!;
     [Parameter] public EventCallback<(string ConfigJson, int ConfigVersion)> OnSave { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
@@ -107,6 +125,7 @@ else if (_hasStoredCredential)
     private MixMode _mode;
     private bool _skipGameTag = true;
     private bool _syncPiuTracker;
+    private BrokenMode _recordBroken;
     private bool _isPublic;
     private bool _remember;
     private bool _showStoreForm;
@@ -128,6 +147,12 @@ else if (_hasStoredCredential)
             };
         _skipGameTag = config.SkipGameTag;
         _syncPiuTracker = config.SyncPiuTracker;
+        _recordBroken = config.RecordBrokenAsBest switch
+        {
+            true => BrokenMode.Always,
+            false => BrokenMode.Never,
+            null => BrokenMode.FollowMix
+        };
         _isPublic = CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic;
         _hasStoredCredential = await ClientStore.Read() != null;
         _remember = _hasStoredCredential;
@@ -213,6 +238,12 @@ else if (_hasStoredCredential)
 
     private async Task Save()
     {
+        bool? recordBroken = _recordBroken switch
+        {
+            BrokenMode.Always => true,
+            BrokenMode.Never => false,
+            _ => null
+        };
         var config = _mode switch
         {
             MixMode.All => new ImportScoresConfig
@@ -223,6 +254,7 @@ else if (_hasStoredCredential)
                 { Mix = MixEnum.Phoenix2, SkipGameTag = _skipGameTag, SyncPiuTracker = _syncPiuTracker },
             _ => new ImportScoresConfig { SkipGameTag = _skipGameTag, SyncPiuTracker = _syncPiuTracker }
         };
+        config.RecordBrokenAsBest = recordBroken;
         await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
     }
 

@@ -148,6 +148,7 @@ else
     private bool _allMixes;
     private bool _skipGameTag = true;
     private bool _syncPiuTracker;
+    private bool? _recordBrokenAsBest;
     private MixEnum? _mix;
 
     private ImportUiState _state = ImportUiState.Idle;
@@ -194,12 +195,13 @@ else
         var config = WidgetConfigJson.Read<ImportScoresConfig>(Widget.ConfigJson);
         var allMixes = config.AllMixes;
         var pinned = allMixes ? (MixEnum?)null : config.Mix ?? EffectiveMix;
-        var signature = $"{Widget.Id}|{allMixes}|{pinned}|{config.SkipGameTag}|{config.SyncPiuTracker}";
+        var signature = $"{Widget.Id}|{allMixes}|{pinned}|{config.SkipGameTag}|{config.SyncPiuTracker}|{config.RecordBrokenAsBest}";
         if (signature == _loadedFor) return;
         _loadedFor = signature;
         _allMixes = allMixes;
         _skipGameTag = config.SkipGameTag;
         _syncPiuTracker = config.SyncPiuTracker;
+        _recordBrokenAsBest = config.RecordBrokenAsBest;
         _mix = pinned;
         _state = ImportUiState.Idle;
         _error = null;
@@ -273,10 +275,12 @@ else
         var cardId = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameId") ?? "";
         var gameTag = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameTag") ?? "";
 
-        // Phoenix 2's best-scores list carries broken attempts — the widget mirrors the
-        // import page's default of including them there.
+        // Configurable per widget; unset follows the mix, since Phoenix 2's best-scores list
+        // carries broken attempts and Phoenix's does not.
+        var recordBroken = new ImportScoresConfig { RecordBrokenAsBest = _recordBrokenAsBest }
+            .RecordsBrokenFor(_mix!.Value);
         var result = await Mediator.Send(new StartOfficialImportCommand(source, _mix!.Value, cardId, gameTag,
-            _mix!.Value == MixEnum.Phoenix2, _syncPiuTracker));
+            recordBroken, _syncPiuTracker));
 
         switch (result.Outcome)
         {
