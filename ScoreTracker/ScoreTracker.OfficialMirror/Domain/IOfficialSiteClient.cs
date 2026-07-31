@@ -31,9 +31,11 @@ internal interface IOfficialSiteClient
 
     /// <summary>
     ///     <paramref name="maxPages" /> drives the classic (undated) page walk; the dated
-    ///     (redesigned) walk ignores it and instead stops on its up-score window.
+    ///     (redesigned) walk ignores it and instead stops on its up-score window. Returns the
+    ///     best-list scrape AND the recently-played window it read alongside it, which the
+    ///     caller journals as observations.
     /// </summary>
-    Task<IEnumerable<OfficialRecordedScore>> GetRecordedScores(MixEnum mix, Guid userId, string sid, string id,
+    Task<ScrapedScores> GetRecordedScores(MixEnum mix, Guid userId, string sid, string id,
         bool includeBroken,
         int? maxPages,
         CancellationToken cancellationToken);

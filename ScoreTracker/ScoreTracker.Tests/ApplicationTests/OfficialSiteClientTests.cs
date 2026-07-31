@@ -413,7 +413,7 @@ public sealed class OfficialSiteClientTests
         h.GivenBestScorePage(6); // empty → end of list
 
         var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
-            includeBroken: false, maxPages: null, CancellationToken.None)).ToArray();
+            includeBroken: false, maxPages: null, CancellationToken.None)).Bests.ToArray();
 
         Assert.Contains(results, r => r.Chart.Id == upscored.Id && (int)r.Score == 990000);
         h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 5, It.IsAny<CancellationToken>()),
@@ -440,7 +440,7 @@ public sealed class OfficialSiteClientTests
         h.GivenBestScorePage(6, Card(beyond, 999000, T0.AddHours(-99)));
 
         var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
-            includeBroken: false, maxPages: null, CancellationToken.None)).ToArray();
+            includeBroken: false, maxPages: null, CancellationToken.None)).Bests.ToArray();
 
         Assert.DoesNotContain(results, r => r.Chart.Id == beyond.Id);
         h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 6, It.IsAny<CancellationToken>()),
@@ -459,7 +459,7 @@ public sealed class OfficialSiteClientTests
         h.GivenBestScorePage(2, card);
 
         var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
-            includeBroken: false, maxPages: null, CancellationToken.None)).ToArray();
+            includeBroken: false, maxPages: null, CancellationToken.None)).Bests.ToArray();
 
         Assert.Single(results);
         h.Api.Verify(a => a.GetBestScores(MixEnum.Phoenix2, It.IsAny<HttpClient>(), 3, It.IsAny<CancellationToken>()),
@@ -472,21 +472,39 @@ public sealed class OfficialSiteClientTests
         var h = new ImportHarness();
         var chart = h.GivenChart(new ChartBuilder().WithSongName("Chimera").WithType(ChartType.Double)
             .WithLevel(26).WithNoteCount(51).Build());
-        var brokenCard = Card(chart, 0, T0, plate: null, isBroken: true);
+        var brokenCard = Card(chart, 250000, T0, plate: null, isBroken: true);
         h.GivenBestScorePage(1, brokenCard);
         h.GivenBestScorePage(2, brokenCard); // the clamp: out-of-range pages repeat the last page
 
         var without = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
-            includeBroken: false, maxPages: null, CancellationToken.None)).ToArray();
+            includeBroken: false, maxPages: null, CancellationToken.None)).Bests.ToArray();
         var withBroken = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
-            includeBroken: true, maxPages: null, CancellationToken.None)).ToArray();
+            includeBroken: true, maxPages: null, CancellationToken.None)).Bests.ToArray();
 
         Assert.Empty(without);
         var saved = Assert.Single(withBroken);
         Assert.True(saved.IsBroken);
         Assert.Null(saved.Plate);
-        Assert.Equal(0, (int)saved.Score);
+        Assert.Equal(250000, (int)saved.Score);
         Assert.Equal(T0, saved.RecordedAt);
+    }
+
+    [Fact]
+    public async Task AZeroScoringBrokenBestIsDroppedEvenWhenBrokenBestsAreOptedIn()
+    {
+        // Someone started the song and let it fail out. The redesigned best list carries those;
+        // we never store one, so the opt-in has nothing to save.
+        var h = new ImportHarness();
+        var chart = h.GivenChart(new ChartBuilder().WithSongName("Chimera").WithType(ChartType.Double)
+            .WithLevel(26).WithNoteCount(51).Build());
+        var walkOff = Card(chart, 0, T0, plate: null, isBroken: true);
+        h.GivenBestScorePage(1, walkOff);
+        h.GivenBestScorePage(2, walkOff);
+
+        var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: true, maxPages: null, CancellationToken.None)).Bests.ToArray();
+
+        Assert.Empty(results);
     }
 
     [Fact]
@@ -504,7 +522,7 @@ public sealed class OfficialSiteClientTests
             Play(chart, 960000, T0.AddMinutes(-10), perfects: 1000, greats: 60, goods: 30, bads: 20, misses: 20));
 
         var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
-            includeBroken: false, maxPages: null, CancellationToken.None)).ToArray();
+            includeBroken: false, maxPages: null, CancellationToken.None)).Bests.ToArray();
 
         var saved = Assert.Single(results);
         Assert.Equal(new JudgementCounts(1100, 14, 1, 1, 14), saved.Judgements);
@@ -523,7 +541,7 @@ public sealed class OfficialSiteClientTests
         h.GivenBestScorePage(4, maxPage: 4);
 
         var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix, ImportUserId, "sid", "card1",
-            includeBroken: false, maxPages: 2, CancellationToken.None)).ToArray();
+            includeBroken: false, maxPages: 2, CancellationToken.None)).Bests.ToArray();
 
         Assert.Equal(2, results.Length);
         Assert.All(results, r => Assert.Null(r.RecordedAt));

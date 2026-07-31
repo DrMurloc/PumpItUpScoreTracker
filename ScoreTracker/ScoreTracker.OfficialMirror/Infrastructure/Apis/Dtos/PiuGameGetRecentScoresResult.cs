@@ -9,7 +9,13 @@ internal sealed class PiuGameGetRecentScoresResult
     public DifficultyLevel Level { get; set; }
     public ChartType ChartType { get; set; }
     public PhoenixScore Score { get; set; }
-    public PhoenixPlate Plate { get; set; }
+
+    /// <summary>
+    ///     NULL on a broken play — the game awards no plate for a failed stage. Deriving one
+    ///     from the judgement counts minted a Perfect Game for every walk-off, whose counts are
+    ///     all zero.
+    /// </summary>
+    public PhoenixPlate? Plate { get; set; }
     public int NoteCount { get; set; }
     public bool IsBroken { get; set; }
     public int Perfects { get; set; }
