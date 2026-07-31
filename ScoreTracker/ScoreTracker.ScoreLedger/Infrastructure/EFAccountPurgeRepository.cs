@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.ScoreLedger.Infrastructure.Entities;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.ScoreLedger.Infrastructure;
 
@@ -15,18 +17,25 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
     internal static readonly Type[] UserOwned =
     {
         typeof(ScoreEventJournalEntity),
-        typeof(PhoenixRecordStatsEntity)
+        typeof(PhoenixRecordStatsEntity),
+        typeof(PhoenixRecordEntity),
+        typeof(BestAttemptEntity)
     };
 
+    private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
-    public EFAccountPurgeRepository(IDbContextFactory<ChartAttemptDbContext> factory)
+    public EFAccountPurgeRepository(IDbContextFactory<ChartAttemptDbContext> factory, IMemoryCache cache)
     {
         _factory = factory;
+        _cache = cache;
     }
 
-    public Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default)
+    public async Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default)
     {
-        return UserDataPurge.DeleteAll(_factory, UserOwned, userId, cancellationToken);
+        await UserDataPurge.DeleteAll(_factory, UserOwned, userId, cancellationToken);
+        // The purge spans mixes, so every per-(user, mix) score cache entry goes with it.
+        foreach (var mix in Enum.GetValues<MixEnum>())
+            _cache.Remove(EFPhoenixRecordsRepository.ScoreCache(userId, mix));
     }
 }

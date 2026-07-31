@@ -20,10 +20,12 @@ using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.EventCompetition.Wiring;
+using ScoreTracker.HomePage.Wiring;
 using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.Identity.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
+using ScoreTracker.Randomizer.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.Web;
@@ -95,6 +97,8 @@ builder.Services.AddMassTransit(o =>
     o.AddCommunitiesConsumers();
     o.AddCatalogConsumers();
     o.AddIdentityConsumers();
+    o.AddRandomizerConsumers();
+    o.AddHomePageConsumers();
 
     o.AddDelayedMessageScheduler();
 

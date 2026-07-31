@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Identity.Domain;
+using ScoreTracker.Identity.Infrastructure.Entities;
 
 namespace ScoreTracker.Identity.Infrastructure;
 
@@ -18,7 +19,10 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
         typeof(UserApiTokenEntity),
         typeof(UserSettingsEntity),
         typeof(SavedChartEntity),
-        typeof(ExternalLoginEntity)
+        typeof(ExternalLoginEntity),
+        // The envelope key for a remembered piugame password. Missing it left the one piece
+        // of a purged account's data that is actually a credential sitting in the table.
+        typeof(UserImportCredentialKeyEntity)
     };
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;

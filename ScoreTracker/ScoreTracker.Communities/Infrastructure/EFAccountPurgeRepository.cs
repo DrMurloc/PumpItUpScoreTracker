@@ -14,7 +14,8 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
     /// </summary>
     internal static readonly Type[] UserOwned =
     {
-        typeof(CommunityMembershipEntity)
+        typeof(CommunityMembershipEntity),
+        typeof(CommunityHighlightEntity)
     };
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;

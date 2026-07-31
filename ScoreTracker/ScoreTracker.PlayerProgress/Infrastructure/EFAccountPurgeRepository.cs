@@ -15,7 +15,16 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
     internal static readonly Type[] UserOwned =
     {
         typeof(UserTitleEntity),
-        typeof(SuggestionFeedbackEntity)
+        typeof(SuggestionFeedbackEntity),
+        typeof(ScoreHighlightEntity),
+        typeof(PlayerMilestoneEntity),
+        typeof(PlayerFolderLevelEntity),
+        typeof(PlayerSeasonRecapEntity),
+        typeof(PlayerHistoryEntity),
+        // Derived per-mix state. It used to reach this vertical only through the Ledger's
+        // score wipe, which covered Phoenix and Phoenix 2 and left every other mix behind.
+        typeof(PlayerStatsEntity),
+        typeof(UserHighestTitleEntity)
     };
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;

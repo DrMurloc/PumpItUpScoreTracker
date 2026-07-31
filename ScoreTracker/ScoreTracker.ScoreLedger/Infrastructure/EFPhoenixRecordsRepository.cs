@@ -174,7 +174,9 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     private readonly IMediator _mediator;
     private readonly IPlayerStatsReader _playerStats;
 
-    private static string ScoreCache(Guid userId, MixEnum mix)
+    // Internal so the purge repository evicts under the identical key rather than
+    // reconstructing the format and drifting from it.
+    internal static string ScoreCache(Guid userId, MixEnum mix)
     {
         return $"{nameof(EFPhoenixRecordsRepository)}_UserScores_{userId}_{mix}";
     }
