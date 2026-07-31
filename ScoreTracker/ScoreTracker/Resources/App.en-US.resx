@@ -510,6 +510,9 @@
   <data name="Any level" xml:space="preserve">
     <value>Any level</value>
   </data>
+  <data name="any moment now" xml:space="preserve">
+    <value>any moment now</value>
+  </data>
   <data name="API" xml:space="preserve">
     <value>API</value>
   </data>
@@ -1916,6 +1919,9 @@
   <data name="Give a song name." xml:space="preserve">
     <value>Give a song name.</value>
   </data>
+  <data name="Go to account page" xml:space="preserve">
+    <value>Go to account page</value>
+  </data>
   <data name="Go to Delete" xml:space="preserve">
     <value>Go to Delete</value>
   </data>
@@ -3077,6 +3083,9 @@
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>Not in {0} — all {1} charts left with the song.</value>
+  </data>
+  <data name="Not now" xml:space="preserve">
+    <value>Not now</value>
   </data>
   <data name="Not played" xml:space="preserve">
     <value>Not played</value>
@@ -5047,6 +5056,9 @@
   <data name="Third" xml:space="preserve">
     <value>Third</value>
   </data>
+  <data name="This account is scheduled for deletion" xml:space="preserve">
+    <value>This account is scheduled for deletion</value>
+  </data>
   <data name="This account will be deleted" xml:space="preserve">
     <value>This account will be deleted</value>
   </data>
@@ -5438,6 +5450,9 @@
   </data>
   <data name="Unranked" xml:space="preserve">
     <value>Unranked</value>
+  </data>
+  <data name="until everything is deleted" xml:space="preserve">
+    <value>until everything is deleted</value>
   </data>
   <data name="Until then your profile is hidden and your game tag is cleared." xml:space="preserve">
     <value>Until then your profile is hidden and your game tag is cleared.</value>
@@ -6117,6 +6132,9 @@
   <data name="{0} days old" xml:space="preserve">
     <value>{0} days old</value>
   </data>
+  <data name="{0} days, {1} hours" xml:space="preserve">
+    <value>{0} days, {1} hours</value>
+  </data>
   <data name="{0} didn't move." xml:space="preserve">
     <value>{0} didn't move.</value>
   </data>
@@ -6146,6 +6164,9 @@
   </data>
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>{0} harder for you — mostly {1}</value>
+  </data>
+  <data name="{0} hours, {1} minutes" xml:space="preserve">
+    <value>{0} hours, {1} minutes</value>
   </data>
   <data name="{0} improved" xml:space="preserve">
     <value>{0} improved</value>

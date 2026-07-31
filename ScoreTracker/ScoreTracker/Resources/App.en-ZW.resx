@@ -510,6 +510,9 @@
   <data name="Any level" xml:space="preserve">
     <value>Ro grorpmurm</value>
   </data>
+  <data name="any moment now" xml:space="preserve">
+    <value>puluma</value>
+  </data>
   <data name="API" xml:space="preserve">
     <value>API</value>
   </data>
@@ -1916,6 +1919,9 @@
   <data name="Give a song name." xml:space="preserve">
     <value>Blgrlgro gro mrgl mrg.</value>
   </data>
+  <data name="Go to account page" xml:space="preserve">
+    <value>Ombu gorbam</value>
+  </data>
   <data name="Go to Delete" xml:space="preserve">
     <value>Ombu Blurp</value>
   </data>
@@ -3077,6 +3083,9 @@
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>Murm mrp {0} — rgl {1} murgl rolurg glgrgl mrp mrgl.</value>
+  </data>
+  <data name="Not now" xml:space="preserve">
+    <value>Gorb umba</value>
   </data>
   <data name="Not played" xml:space="preserve">
     <value>Murm blubrgl</value>
@@ -5047,6 +5056,9 @@
   <data name="Third" xml:space="preserve">
     <value>Grogl</value>
   </data>
+  <data name="This account is scheduled for deletion" xml:space="preserve">
+    <value>Oba gorbam blurpa</value>
+  </data>
   <data name="This account will be deleted" xml:space="preserve">
     <value>Grglmrp grgl murmurg glorg mrglmorggrorp</value>
   </data>
@@ -5438,6 +5450,9 @@
   </data>
   <data name="Unranked" xml:space="preserve">
     <value>Groglubblarg</value>
+  </data>
+  <data name="until everything is deleted" xml:space="preserve">
+    <value>molu blurpa gorbo</value>
   </data>
   <data name="Until then your profile is hidden and your game tag is cleared." xml:space="preserve">
     <value>Golu marbul plumo, gorbam glarb.</value>
@@ -6117,6 +6132,9 @@
   <data name="{0} days old" xml:space="preserve">
     <value>{0} grrglmrgl rgl</value>
   </data>
+  <data name="{0} days, {1} hours" xml:space="preserve">
+    <value>{0} lorga, {1} obla</value>
+  </data>
   <data name="{0} didn't move." xml:space="preserve">
     <value>{0} mrglblgrl grrglmurm.</value>
   </data>
@@ -6146,6 +6164,9 @@
   </data>
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>{0} mrrglmrgl ro blub — arglrgl {1}</value>
+  </data>
+  <data name="{0} hours, {1} minutes" xml:space="preserve">
+    <value>{0} obla, {1} malbu</value>
   </data>
   <data name="{0} improved" xml:space="preserve">
     <value>{0} uplarga</value>

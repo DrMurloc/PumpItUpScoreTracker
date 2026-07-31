@@ -507,6 +507,9 @@
   <data name="Any level" xml:space="preserve">
     <value>모든 레벨</value>
   </data>
+  <data name="any moment now" xml:space="preserve">
+    <value>곧</value>
+  </data>
   <data name="API" xml:space="preserve">
     <value>API</value>
   </data>
@@ -1899,6 +1902,9 @@
   <data name="Give a song name." xml:space="preserve">
     <value>곡 이름을 입력해주세요.</value>
   </data>
+  <data name="Go to account page" xml:space="preserve">
+    <value>계정 페이지로</value>
+  </data>
   <data name="Go to Delete" xml:space="preserve">
     <value>삭제로 이동</value>
   </data>
@@ -3047,6 +3053,9 @@
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>{0}에 없음 — 채보 {1}개가 노래와 함께 삭제되었습니다.</value>
+  </data>
+  <data name="Not now" xml:space="preserve">
+    <value>나중에</value>
   </data>
   <data name="Not played" xml:space="preserve">
     <value>미플레이</value>
@@ -4988,6 +4997,9 @@
   <data name="Third" xml:space="preserve">
     <value>세 번째</value>
   </data>
+  <data name="This account is scheduled for deletion" xml:space="preserve">
+    <value>이 계정은 삭제 예정입니다</value>
+  </data>
   <data name="This account will be deleted" xml:space="preserve">
     <value>이 계정은 삭제됩니다</value>
   </data>
@@ -5377,6 +5389,9 @@
   </data>
   <data name="Unranked" xml:space="preserve">
     <value>미분류</value>
+  </data>
+  <data name="until everything is deleted" xml:space="preserve">
+    <value>모두 삭제되기까지</value>
   </data>
   <data name="Until then your profile is hidden and your game tag is cleared." xml:space="preserve">
     <value>그때까지 프로필은 숨겨지고 게임 태그는 지워집니다.</value>
@@ -6047,6 +6062,9 @@
   <data name="{0} days old" xml:space="preserve">
     <value>{0}일 전</value>
   </data>
+  <data name="{0} days, {1} hours" xml:space="preserve">
+    <value>{0}일 {1}시간</value>
+  </data>
   <data name="{0} didn't move." xml:space="preserve">
     <value>{0}은(는) 그대로입니다.</value>
   </data>
@@ -6076,6 +6094,9 @@
   </data>
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>{0}개가 나에게 더 어려움 — 주로 {1}</value>
+  </data>
+  <data name="{0} hours, {1} minutes" xml:space="preserve">
+    <value>{0}시간 {1}분</value>
   </data>
   <data name="{0} improved" xml:space="preserve">
     <value>{0}개 갱신</value>

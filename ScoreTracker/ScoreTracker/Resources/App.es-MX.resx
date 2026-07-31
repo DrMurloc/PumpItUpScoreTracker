@@ -507,6 +507,9 @@
   <data name="Any level" xml:space="preserve">
     <value>Cualquier nivel</value>
   </data>
+  <data name="any moment now" xml:space="preserve">
+    <value>en cualquier momento</value>
+  </data>
   <data name="API" xml:space="preserve">
     <value>API</value>
   </data>
@@ -1899,6 +1902,9 @@
   <data name="Give a song name." xml:space="preserve">
     <value>Escribe el nombre de una canción.</value>
   </data>
+  <data name="Go to account page" xml:space="preserve">
+    <value>Ir a mi cuenta</value>
+  </data>
   <data name="Go to Delete" xml:space="preserve">
     <value>Ir a Eliminar</value>
   </data>
@@ -3047,6 +3053,9 @@
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>No está en {0} — sus {1} charts se fueron con la canción.</value>
+  </data>
+  <data name="Not now" xml:space="preserve">
+    <value>Ahora no</value>
   </data>
   <data name="Not played" xml:space="preserve">
     <value>No jugado</value>
@@ -4988,6 +4997,9 @@
   <data name="Third" xml:space="preserve">
     <value>Tercer</value>
   </data>
+  <data name="This account is scheduled for deletion" xml:space="preserve">
+    <value>Esta cuenta está programada para eliminarse</value>
+  </data>
   <data name="This account will be deleted" xml:space="preserve">
     <value>Esta cuenta será eliminada</value>
   </data>
@@ -5377,6 +5389,9 @@
   </data>
   <data name="Unranked" xml:space="preserve">
     <value>Sin clasificar</value>
+  </data>
+  <data name="until everything is deleted" xml:space="preserve">
+    <value>hasta que se elimine todo</value>
   </data>
   <data name="Until then your profile is hidden and your game tag is cleared." xml:space="preserve">
     <value>Hasta entonces tu perfil está oculto y tu game tag se borra.</value>
@@ -6047,6 +6062,9 @@
   <data name="{0} days old" xml:space="preserve">
     <value>hace {0} días</value>
   </data>
+  <data name="{0} days, {1} hours" xml:space="preserve">
+    <value>{0} días, {1} horas</value>
+  </data>
   <data name="{0} didn't move." xml:space="preserve">
     <value>{0} no cambió.</value>
   </data>
@@ -6076,6 +6094,9 @@
   </data>
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>{0} más difíciles para ti — sobre todo {1}</value>
+  </data>
+  <data name="{0} hours, {1} minutes" xml:space="preserve">
+    <value>{0} horas, {1} minutos</value>
   </data>
   <data name="{0} improved" xml:space="preserve">
     <value>{0} mejoradas</value>

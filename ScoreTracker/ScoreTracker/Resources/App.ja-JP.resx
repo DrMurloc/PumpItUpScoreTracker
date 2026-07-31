@@ -510,6 +510,9 @@
   <data name="Any level" xml:space="preserve">
     <value>レベル指定なし</value>
   </data>
+  <data name="any moment now" xml:space="preserve">
+    <value>まもなく</value>
+  </data>
   <data name="API" xml:space="preserve">
     <value>API</value>
   </data>
@@ -1916,6 +1919,9 @@
   <data name="Give a song name." xml:space="preserve">
     <value>曲名を入力してください。</value>
   </data>
+  <data name="Go to account page" xml:space="preserve">
+    <value>アカウントページへ</value>
+  </data>
   <data name="Go to Delete" xml:space="preserve">
     <value>削除へ</value>
   </data>
@@ -3077,6 +3083,9 @@
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>{0} には収録なし — {1} 譜面すべてが曲ごと削除されました。</value>
+  </data>
+  <data name="Not now" xml:space="preserve">
+    <value>あとで</value>
   </data>
   <data name="Not played" xml:space="preserve">
     <value>未プレイ</value>
@@ -5047,6 +5056,9 @@
   <data name="Third" xml:space="preserve">
     <value>3 枚目</value>
   </data>
+  <data name="This account is scheduled for deletion" xml:space="preserve">
+    <value>このアカウントは削除予定です</value>
+  </data>
   <data name="This account will be deleted" xml:space="preserve">
     <value>このアカウントは削除されます</value>
   </data>
@@ -5438,6 +5450,9 @@
   </data>
   <data name="Unranked" xml:space="preserve">
     <value>未分類</value>
+  </data>
+  <data name="until everything is deleted" xml:space="preserve">
+    <value>すべてが削除されるまで</value>
   </data>
   <data name="Until then your profile is hidden and your game tag is cleared." xml:space="preserve">
     <value>それまではプロフィールは非表示になり、ゲームタグは消えます。</value>
@@ -6117,6 +6132,9 @@
   <data name="{0} days old" xml:space="preserve">
     <value>{0}日前</value>
   </data>
+  <data name="{0} days, {1} hours" xml:space="preserve">
+    <value>{0} 日 {1} 時間</value>
+  </data>
   <data name="{0} didn't move." xml:space="preserve">
     <value>{0} は変わっていません。</value>
   </data>
@@ -6146,6 +6164,9 @@
   </data>
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>あなたに難しいのは{0}譜面 — 主に{1}</value>
+  </data>
+  <data name="{0} hours, {1} minutes" xml:space="preserve">
+    <value>{0} 時間 {1} 分</value>
   </data>
   <data name="{0} improved" xml:space="preserve">
     <value>更新 {0}</value>
