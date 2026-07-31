@@ -1,11 +1,26 @@
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Identity.Domain;
 
 namespace ScoreTracker.Identity.Infrastructure;
 
 internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
 {
+    /// <summary>
+    ///     Every table Identity keys to a user. These entities live in ScoreTracker.Data rather
+    ///     than this vertical — they predate the split and still hang off the shared context's
+    ///     DbSet properties — so AccountPurgeCoverageTests attributes Data's user-keyed types to
+    ///     this manifest. UserDataPurge executes it.
+    /// </summary>
+    internal static readonly Type[] UserOwned =
+    {
+        typeof(UserApiTokenEntity),
+        typeof(UserSettingsEntity),
+        typeof(SavedChartEntity),
+        typeof(ExternalLoginEntity)
+    };
+
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
     public EFAccountPurgeRepository(IDbContextFactory<ChartAttemptDbContext> factory)
@@ -13,13 +28,9 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
         _factory = factory;
     }
 
-    public async Task DeleteIdentityData(Guid userId, CancellationToken cancellationToken = default)
+    public Task DeleteIdentityData(Guid userId, CancellationToken cancellationToken = default)
     {
-        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        await database.UserApiToken.Where(t => t.UserId == userId).ExecuteDeleteAsync(cancellationToken);
-        await database.UserSettings.Where(s => s.UserId == userId).ExecuteDeleteAsync(cancellationToken);
-        await database.SavedChart.Where(s => s.UserId == userId).ExecuteDeleteAsync(cancellationToken);
-        await database.ExternalLogin.Where(l => l.UserId == userId).ExecuteDeleteAsync(cancellationToken);
+        return UserDataPurge.DeleteAll(_factory, UserOwned, userId, cancellationToken);
     }
 
     public async Task DeleteUser(Guid userId, CancellationToken cancellationToken = default)
