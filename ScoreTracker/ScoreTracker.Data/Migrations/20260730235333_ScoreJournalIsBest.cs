@@ -41,13 +41,19 @@ namespace ScoreTracker.Data.Migrations
                 oldType: "nvarchar(32)",
                 oldMaxLength: 32);
 
+            // Defaults TRUE, which also backfills every existing row: the journal was
+            // progress-only, so nothing reached it that did not change the best attempt. That
+            // includes the plate-leak regressions — those DID become the record, which is
+            // exactly the bug, and marking them false would be revisionist. The default stays
+            // true afterwards because only the observation path writes false, and it always
+            // says so explicitly.
             migrationBuilder.AddColumn<bool>(
                 name: "IsBest",
                 schema: "scores",
                 table: "ScoreEventJournal",
                 type: "bit",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: true);
 
             migrationBuilder.AlterColumn<string>(
                 name: "Plate",
@@ -59,12 +65,6 @@ namespace ScoreTracker.Data.Migrations
                 oldClrType: typeof(string),
                 oldType: "nvarchar(32)",
                 oldMaxLength: 32);
-
-            // Every row written before this migration became the record when it was written:
-            // the journal was progress-only, so nothing reached it that did not change the
-            // best attempt. That includes the plate-leak regressions — those DID become the
-            // record, which is exactly the bug. Marking them false would be revisionist.
-            migrationBuilder.Sql("UPDATE [scores].[ScoreEventJournal] SET [IsBest] = 1;");
 
             // A journal row is one play, keyed by the site's play time, and the unique index
             // below is what keeps a re-imported recently-played window from duplicating it.

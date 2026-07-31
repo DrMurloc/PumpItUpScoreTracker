@@ -129,7 +129,10 @@
         // Universal noteworthy ordering for flagged rows, then the rest by level.
         Ordered = Group.Rows
             .OrderByDescending(r => FlagsFor(r) != HighlightFlags.None)
-            .ThenByDescending(r => Charts.GetValueOrDefault(r.ChartId)?.Level ?? 0)
+            // Cast to int BEFORE the coalesce: DifficultyLevel rejects 0, so a chart the page
+            // could not resolve used to throw out of OnParametersSet and take the whole
+            // sessions page down rather than sorting that one row last.
+            .ThenByDescending(r => (int?)Charts.GetValueOrDefault(r.ChartId)?.Level ?? 0)
             .ThenByDescending(r => r.OccurredAt)
             .ToArray();
         Highlighted = Ordered.Where(r => FlagsFor(r) != HighlightFlags.None).ToArray();

@@ -39,9 +39,13 @@ internal sealed class ScoreEventJournalEntity
     /// <summary>
     ///     Whether this play became the player's record when it was written. False for the
     ///     plays the official site's recently-played list reports that never beat a best.
+    ///     Defaults to TRUE, in both the CLR and the column: every row written before the
+    ///     observation path existed was a best, and only that one path ever writes false — so
+    ///     an omitted value is right far more often than not, and a wrong "false" is invisible
+    ///     (the play silently drops out of a chart's history as a mere replay).
     /// </summary>
     [Required]
-    public bool IsBest { get; set; }
+    public bool IsBest { get; set; } = true;
 
     /// <summary>
     ///     Play-session / import-run grouping (Session Batcher). NULL = row predates
