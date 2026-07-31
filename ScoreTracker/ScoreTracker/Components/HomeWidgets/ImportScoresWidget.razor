@@ -278,7 +278,7 @@ else
         // Configurable per widget; unset follows the mix, since Phoenix 2's best-scores list
         // carries broken attempts and Phoenix's does not.
         var recordBroken = new ImportScoresConfig { RecordBrokenAsBest = _recordBrokenAsBest }
-            .RecordsBrokenFor(_mix!.Value);
+            .RecordsBrokenFor(_mix.Value);
         var result = await Mediator.Send(new StartOfficialImportCommand(source, _mix!.Value, cardId, gameTag,
             recordBroken, _syncPiuTracker));
 

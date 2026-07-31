@@ -8,7 +8,9 @@ namespace ScoreTracker.Tests.DomainTests;
 
 public sealed class BestAttemptPolicyTests
 {
-    public static TheoryData<string, PhoenixScore?, PhoenixPlate?, bool, PhoenixScore?, PhoenixPlate?, bool, bool>
+    // Scores ride as int? rather than PhoenixScore?: the value type is not serializable, and
+    // Test Explorer silently stops enumerating the individual rows when a case fails.
+    public static TheoryData<string, int?, PhoenixPlate?, bool, int?, PhoenixPlate?, bool, bool>
         Comparisons => new()
     {
         // stored                                    incoming                                   beats?
@@ -38,12 +40,19 @@ public sealed class BestAttemptPolicyTests
 
     [Theory]
     [MemberData(nameof(Comparisons))]
-    public void BeatsFollowsPassThenScoreThenPlate(string because, PhoenixScore? storedScore,
-        PhoenixPlate? storedPlate, bool storedIsBroken, PhoenixScore? incomingScore, PhoenixPlate? incomingPlate,
+    public void BeatsFollowsPassThenScoreThenPlate(string because, int? storedScore,
+        PhoenixPlate? storedPlate, bool storedIsBroken, int? incomingScore, PhoenixPlate? incomingPlate,
         bool incomingIsBroken, bool expected)
     {
-        Assert.Equal(expected, BestAttemptPolicy.Beats(storedScore, storedPlate, storedIsBroken, incomingScore,
-            incomingPlate, incomingIsBroken));
+        var actual = BestAttemptPolicy.Beats(Score(storedScore), storedPlate, storedIsBroken,
+            Score(incomingScore), incomingPlate, incomingIsBroken);
+
+        Assert.True(actual == expected, $"{because} — expected {expected}, got {actual}");
+    }
+
+    private static PhoenixScore? Score(int? score)
+    {
+        return score == null ? null : PhoenixScore.From(score.Value);
     }
 
     [Fact]

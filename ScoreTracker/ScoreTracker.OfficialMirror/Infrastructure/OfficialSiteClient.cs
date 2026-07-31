@@ -330,16 +330,69 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             ? await WalkDatedBestScores(mix, userId, sessionId, firstPage, cancellationToken)
             : await WalkClassicBestScores(mix, userId, sessionId, firstPage, maxPages, cancellationToken);
 
+        var results = await MapBestList(mix, responses, includeBroken, cancellationToken);
+        var recentPlays = await ResolveRecentPlays(mix, sessionId, cancellationToken);
+
+        await LearnNoteCounts(mix, recentPlays, cancellationToken);
+        await AnnounceDailySteps(mix, userId, recentPlays, cancellationToken);
+        EnrichBestsFromRecentPlays(recentPlays, results, includeBroken);
+
+        var entries = recentPlays.Select(p =>
+        {
+            var best = BestOf(p.Plays);
+            return new ScoreImportCompletedEvent.ImportedScore(p.Chart.Id, best.Score,
+                best.Plate?.ToString(), best.IsBroken);
+        }).ToArray();
+        // Every dated play is journal history, best or not. Undated ones are skipped: the site's
+        // play time IS the row's identity, and without it a re-import would duplicate the window.
+        var observed = recentPlays
+            .SelectMany(p => p.Plays.Where(s => s.RecordedAt != null)
+                .Select(s => new RecordObservedPlaysCommand.ObservedPlay(p.Chart.Id, s.Score, s.Plate,
+                    s.IsBroken, s.RecordedAt!.Value, JudgementsOf(s))))
+            .ToArray();
+
+        await _bus.Publish(ScoreImportCompletedEvent.Create(_dateTime.Now,
+                ScoreImportCompletedEvent.OfficialImportSource, userId, mix, entries.ToArray()),
+            cancellationToken);
+        return new ScrapedScores(results.Values.ToArray(), observed);
+    }
+
+    private static JudgementCounts JudgementsOf(PiuGameGetRecentScoresResult play)
+    {
+        return new JudgementCounts(play.Perfects, play.Greats, play.Goods, play.Bads, play.Misses);
+    }
+
+    /// <summary>One chart's recently-played attempts, walk-offs already removed.</summary>
+    private sealed record ChartPlays(Chart Chart, PiuGameGetRecentScoresResult[] Plays);
+
+    /// <summary>
+    ///     ONE play wins a chart's recent window, and its score, plate and broken flag travel
+    ///     together. Taking the best of each column independently produced attempts nobody
+    ///     played — a higher break's score wearing a lower pass's cleared flag.
+    /// </summary>
+    private static PiuGameGetRecentScoresResult BestOf(PiuGameGetRecentScoresResult[] plays)
+    {
+        return plays.Aggregate((winner, next) =>
+            BestAttemptPolicy.Beats(winner.Score, winner.Plate, winner.IsBroken,
+                next.Score, next.Plate, next.IsBroken)
+                ? next
+                : winner);
+    }
+
+    /// <summary>
+    ///     My Best Scores is the source of truth for the record (score-truth-model.md D3): this
+    ///     maps its cards onto charts, and nothing here consults the recent window.
+    /// </summary>
+    private async Task<Dictionary<Guid, OfficialRecordedScore>> MapBestList(MixEnum mix,
+        IEnumerable<PiuGameGetBestScoresResult.ScoreDto> responses, bool includeBroken,
+        CancellationToken cancellationToken)
+    {
         var results = new Dictionary<Guid, OfficialRecordedScore>();
         foreach (var response in responses)
         {
-            var chartType = response.ChartType;
-
-
             var song = await GetMappedName(response.SongName, cancellationToken);
-
             var chart = (await _charts.GetChartsForSong(mix, song, cancellationToken))
-                .FirstOrDefault(c => c.Type == chartType && c.Level == response.Level);
+                .FirstOrDefault(c => c.Type == response.ChartType && c.Level == response.Level);
             if (chart == null) continue;
 
             // The redesigned best list includes stage-failed bests (no plate, real partial
@@ -359,102 +412,115 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 response.IsBroken, response.RecordedAt);
         }
 
+        return results;
+    }
+
+    /// <summary>
+    ///     Reads the recently-played window and resolves each group onto a catalog chart,
+    ///     dropping walk-offs — a break that judged nothing is neither a storable score nor a
+    ///     usable note-count sample.
+    /// </summary>
+    private async Task<IReadOnlyList<ChartPlays>> ResolveRecentPlays(MixEnum mix, HttpClient sessionId,
+        CancellationToken cancellationToken)
+    {
         var recent = (await _piuGame.GetRecentScores(mix, sessionId, cancellationToken)).ToArray();
-        // Daily Step's Limbo Day needs the lowest PASSING recent score — data the best-only
-        // ScoreImportCompletedEvent can't carry, but the raw recent plays here can. Read today's
-        // daily chart id(s) once, then emit a targeted observation for a matching chart below.
-        var dailyChartIds = (await _dailyStep.GetCurrentChartIds(mix, cancellationToken)).ToHashSet();
-        var entries = new List<ScoreImportCompletedEvent.ImportedScore>();
-        var observed = new List<RecordObservedPlaysCommand.ObservedPlay>();
+        var resolved = new List<ChartPlays>();
         foreach (var songGroup in recent.GroupBy(s => s.SongName))
         {
             var songName = await GetMappedName(songGroup.Key, cancellationToken);
-
-            var chartDict =
-                (await _charts.GetChartsForSong(mix, songName, cancellationToken)).ToArray();
+            var chartDict = (await _charts.GetChartsForSong(mix, songName, cancellationToken)).ToArray();
             foreach (var chartGroup in songGroup.GroupBy(g => (g.Level, g.ChartType)))
             {
                 var chart = chartDict.FirstOrDefault(c =>
                     c.Level == chartGroup.Key.Level && c.Type == chartGroup.Key.ChartType);
                 if (chart == null) continue;
 
-                // A walk-off judges nothing, so it is neither a storable score nor a usable
-                // note-count sample — teaching the catalog from one wrote a note count of 0.
                 var plays = chartGroup
                     .Where(s => !BestAttemptPolicy.IsWalkOff(s.IsBroken, s.Score, JudgementsOf(s)))
                     .ToArray();
                 if (plays.Length == 0) continue;
 
-                // Only a PASS judges every note — a break's counts stop where the stage did, so
-                // they are always short of the chart's real total. The catalog learns a note
-                // count once and never revisits it, so a partial one sticks forever; with no
-                // passing play in the window we leave it for a later import instead of guessing.
-                var passed = plays.FirstOrDefault(s => !s.IsBroken);
-                if (chart.NoteCount == null && passed != null)
-                    await _charts.UpdateNoteCount(mix, chart.Id, passed.NoteCount, cancellationToken);
-
-                // Every dated play is journal history, best or not. Undated ones are skipped:
-                // the site's play time IS the row's identity, and without it a re-import would
-                // duplicate the window every time.
-                observed.AddRange(plays.Where(s => s.RecordedAt != null)
-                    .Select(s => new RecordObservedPlaysCommand.ObservedPlay(chart.Id, s.Score, s.Plate,
-                        s.IsBroken, s.RecordedAt!.Value, JudgementsOf(s))));
-
-                // ONE play wins, and its score, plate and broken flag travel together. Taking
-                // the best of each column independently produced attempts nobody played — a
-                // higher break's score wearing a lower pass's cleared flag.
-                var best = plays.Aggregate((winner, next) =>
-                    BestAttemptPolicy.Beats(winner.Score, winner.Plate, winner.IsBroken,
-                        next.Score, next.Plate, next.IsBroken)
-                        ? next
-                        : winner);
-                entries.Add(new ScoreImportCompletedEvent.ImportedScore(chart.Id, best.Score,
-                    best.Plate?.ToString(), best.IsBroken));
-
-                if (dailyChartIds.Contains(chart.Id))
-                {
-                    // Best feeds a normal-day board; lowest passing feeds a Limbo-day board — the
-                    // WeeklyChallenge consumer picks which. Null lowest-pass = no recent run passed.
-                    var lowestPass = plays.Where(s => !s.IsBroken).OrderBy(s => (int)s.Score)
-                        .FirstOrDefault();
-                    await _bus.Publish(new DailyStepScoreObservedEvent(userId, mix, chart.Id,
-                        (int)best.Score, best.Plate?.ToString(), best.IsBroken,
-                        lowestPass == null ? (int?)null : (int)lowestPass.Score,
-                        lowestPass?.Plate?.ToString()), cancellationToken);
-                }
-
-                if (includeBroken && !results.ContainsKey(chart.Id))
-                    results[chart.Id] = new OfficialRecordedScore(chart, best.Score, best.Plate, best.IsBroken);
-
-                // A recent play whose chart, score, and broken-ness match the best being saved
-                // is the play that produced it: its judgement breakdown — and its timestamp,
-                // when the best list carried none — ride onto the record.
-                if (results.TryGetValue(chart.Id, out var saved))
-                {
-                    var producing = plays
-                        .Where(s => s.Score == saved.Score && s.IsBroken == saved.IsBroken)
-                        .OrderByDescending(s => s.RecordedAt ?? DateTimeOffset.MinValue)
-                        .FirstOrDefault();
-                    if (producing != null)
-                        results[chart.Id] = saved with
-                        {
-                            Judgements = new JudgementCounts(producing.Perfects, producing.Greats,
-                                producing.Goods, producing.Bads, producing.Misses),
-                            RecordedAt = saved.RecordedAt ?? producing.RecordedAt
-                        };
-                }
+                resolved.Add(new ChartPlays(chart, plays));
             }
         }
 
-        await _bus.Publish(ScoreImportCompletedEvent.Create(_dateTime.Now,
-                ScoreImportCompletedEvent.OfficialImportSource, userId, mix, entries.ToArray()),
-            cancellationToken);
-        return new ScrapedScores(results.Values.ToArray(), observed);
+        return resolved;
     }
 
-    private static JudgementCounts JudgementsOf(PiuGameGetRecentScoresResult play)
+    /// <summary>
+    ///     Only a PASS judges every note — a break's counts stop where the stage did, so they are
+    ///     always short of the chart's real total. The catalog learns a note count once and never
+    ///     revisits it, so a partial one sticks forever; with no passing play in the window we
+    ///     leave it for a later import instead of guessing.
+    /// </summary>
+    private async Task LearnNoteCounts(MixEnum mix, IReadOnlyList<ChartPlays> recentPlays,
+        CancellationToken cancellationToken)
     {
-        return new JudgementCounts(play.Perfects, play.Greats, play.Goods, play.Bads, play.Misses);
+        foreach (var (chart, plays) in recentPlays)
+        {
+            if (chart.NoteCount != null) continue;
+
+            var passed = plays.FirstOrDefault(s => !s.IsBroken);
+            if (passed == null) continue;
+
+            await _charts.UpdateNoteCount(mix, chart.Id, passed.NoteCount, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    ///     Daily Step's Limbo Day needs the lowest PASSING recent score — data the best-only
+    ///     ScoreImportCompletedEvent can't carry, but the raw recent plays can. Best feeds a
+    ///     normal-day board, lowest passing feeds a Limbo-day one; the WeeklyChallenge consumer
+    ///     picks which. Null lowest-pass = no recent run passed.
+    /// </summary>
+    private async Task AnnounceDailySteps(MixEnum mix, Guid userId, IReadOnlyList<ChartPlays> recentPlays,
+        CancellationToken cancellationToken)
+    {
+        var dailyChartIds = (await _dailyStep.GetCurrentChartIds(mix, cancellationToken)).ToHashSet();
+        foreach (var (chart, plays) in recentPlays.Where(p => dailyChartIds.Contains(p.Chart.Id)))
+        {
+            var best = BestOf(plays);
+            var lowestPass = plays.Where(s => !s.IsBroken).OrderBy(s => (int)s.Score).FirstOrDefault();
+            await _bus.Publish(new DailyStepScoreObservedEvent(userId, mix, chart.Id,
+                (int)best.Score, best.Plate?.ToString(), best.IsBroken,
+                lowestPass == null ? (int?)null : (int)lowestPass.Score,
+                lowestPass?.Plate?.ToString()), cancellationToken);
+        }
+    }
+
+    /// <summary>
+    ///     What the recent window contributes to the RECORD, which the best list otherwise owns:
+    ///     a broken best for a chart the best page never listed (opt-in only), and the judgement
+    ///     breakdown — plus the timestamp, when the best list carried none — of the play that
+    ///     produced whatever is being saved.
+    /// </summary>
+    private static void EnrichBestsFromRecentPlays(IReadOnlyList<ChartPlays> recentPlays,
+        IDictionary<Guid, OfficialRecordedScore> results, bool includeBroken)
+    {
+        foreach (var (chart, plays) in recentPlays)
+        {
+            if (includeBroken && !results.ContainsKey(chart.Id))
+            {
+                var best = BestOf(plays);
+                results[chart.Id] = new OfficialRecordedScore(chart, best.Score, best.Plate, best.IsBroken);
+            }
+
+            if (!results.TryGetValue(chart.Id, out var saved)) continue;
+
+            // A recent play whose chart, score and broken-ness match the best being saved IS the
+            // play that produced it.
+            var producing = plays
+                .Where(s => s.Score == saved.Score && s.IsBroken == saved.IsBroken)
+                .OrderByDescending(s => s.RecordedAt ?? DateTimeOffset.MinValue)
+                .FirstOrDefault();
+            if (producing == null) continue;
+
+            results[chart.Id] = saved with
+            {
+                Judgements = JudgementsOf(producing),
+                RecordedAt = saved.RecordedAt ?? producing.RecordedAt
+            };
+        }
     }
 
     // Five consecutive best pages holding nothing new-or-improved end the dated walk — the
