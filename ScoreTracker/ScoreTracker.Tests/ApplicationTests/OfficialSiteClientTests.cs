@@ -530,6 +530,83 @@ public sealed class OfficialSiteClientTests
     }
 
     [Fact]
+    public async Task AHigherBrokenRecentPlayNeverBecomesAPassingRecord()
+    {
+        // The franken-record: Max(score) with All(broken) for the flag used to save the break's
+        // 900k wearing the pass's cleared flag — an attempt nobody played. One play wins, and
+        // its score, plate and broken flag travel together.
+        var h = new ImportHarness();
+        var chart = h.GivenChart(new ChartBuilder().WithSongName("Frankenstein").WithType(ChartType.Single)
+            .WithLevel(22).WithNoteCount(1000).Build());
+        h.GivenBestScorePage(1);
+        h.GivenBestScorePage(2);
+        h.GivenRecentScores(
+            Broken(chart, 900000, T0.AddMinutes(-10), perfects: 800, greats: 50, goods: 10, bads: 5, misses: 20),
+            Play(chart, 850000, T0, perfects: 700, greats: 200, goods: 50, bads: 30, misses: 20));
+
+        var saved = Assert.Single((await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: true, maxPages: null, CancellationToken.None)).Bests);
+
+        Assert.False(saved.IsBroken);
+        Assert.Equal(850000, (int)saved.Score);
+        Assert.Equal(PhoenixPlate.FairGame, saved.Plate);
+    }
+
+    [Fact]
+    public async Task ABrokenOnlyChartIsFilledInFromRecentPlaysWithoutAPlate()
+    {
+        // The chart never reached the best list, so the recent window is the only place it
+        // exists — and a break carries no plate, whatever the parser handed us.
+        var h = new ImportHarness();
+        var chart = h.GivenChart(new ChartBuilder().WithSongName("Never Passed").WithType(ChartType.Double)
+            .WithLevel(24).WithNoteCount(800).Build());
+        h.GivenBestScorePage(1);
+        h.GivenBestScorePage(2);
+        h.GivenRecentScores(
+            Broken(chart, 410000, T0.AddMinutes(-20), perfects: 300, greats: 20, goods: 5, bads: 2, misses: 9),
+            Broken(chart, 620000, T0, perfects: 500, greats: 30, goods: 4, bads: 1, misses: 12));
+
+        var withOptIn = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: true, maxPages: null, CancellationToken.None)).Bests.ToArray();
+        var without = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: false, maxPages: null, CancellationToken.None)).Bests.ToArray();
+
+        Assert.Empty(without);
+        var saved = Assert.Single(withOptIn);
+        Assert.True(saved.IsBroken);
+        Assert.Null(saved.Plate);
+        // The deeper break wins the group, and its own judgements ride along.
+        Assert.Equal(620000, (int)saved.Score);
+        Assert.Equal(new JudgementCounts(500, 30, 4, 1, 12), saved.Judgements);
+    }
+
+    [Fact]
+    public async Task EveryDatedRecentPlayIsReturnedAsAnObservation()
+    {
+        // Non-best plays are journal history; the record only ever takes the winner.
+        var h = new ImportHarness();
+        var chart = h.GivenChart(new ChartBuilder().WithSongName("Three Runs").WithType(ChartType.Single)
+            .WithLevel(19).WithNoteCount(600).Build());
+        h.GivenBestScorePage(1, Card(chart, 970000, T0));
+        h.GivenBestScorePage(2, Card(chart, 970000, T0));
+        h.GivenRecentScores(
+            Play(chart, 910000, T0.AddMinutes(-20), perfects: 500, greats: 60, goods: 20, bads: 10, misses: 10),
+            Broken(chart, 400000, T0.AddMinutes(-10), perfects: 250, greats: 20, goods: 5, bads: 2, misses: 8),
+            Play(chart, 970000, T0, perfects: 560, greats: 30, goods: 5, bads: 2, misses: 3));
+
+        var scrape = await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: false, maxPages: null, CancellationToken.None);
+
+        Assert.Equal(3, scrape.Plays.Count);
+        Assert.All(scrape.Plays, p => Assert.Equal(chart.Id, p.ChartId));
+        Assert.Equal(new[] { 400000, 910000, 970000 },
+            scrape.Plays.Select(p => (int)p.Score).OrderBy(x => x).ToArray());
+        // The record still comes off the best list, untouched by the losing plays.
+        var saved = Assert.Single(scrape.Bests);
+        Assert.Equal(970000, (int)saved.Score);
+    }
+
+    [Fact]
     public async Task ClassicWalkReadsLimitPagesThenHuntsUpscoresReusingTheFirstFetch()
     {
         var h = new ImportHarness();
