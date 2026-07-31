@@ -479,6 +479,35 @@ doubles  = avg of top 50</pre>
         </ul>
       </div>
     </div>
+
+    <div class="prose" style="margin-top: 26px">
+      <h3>How the shared ruler is built</h3>
+      <p>
+        The two numbers are not comparable as they stand — one is a few hundred points per chart,
+        the other is a level. Both are restated as <strong>the doubles level whose clean SSS+ /
+        Marvelous play is worth the same</strong>. On the PUMBILITY side that means dividing the
+        chart's value by the anchor performance (<code>1.50 + 0.006</code>) to recover an implied
+        <code>Base</code>, then inverting the base curve — piecewise, since <code>Base</code> grows
+        10 per level above 24. On the Competitive side it means subtracting the same anchor's score
+        term (<code>(995,000 − 965,000) / 17,500 = 1.714</code>). Both sides therefore return the
+        chart's own level for that one play, and every other cell is a real difference.
+      </p>
+      <p>
+        This is a normalisation invented for this page, not a formula the site ships. It is
+        <strong>per chart</strong> — a player's PUMBILITY <em>total</em> is deliberately never
+        mapped to a level, because sum-of-50 against average-of-100 has no honest single conversion
+        (that is the whole of panel 04). The site's nearest relative,
+        <code>SuggestedTitleLevel</code>, does the same trick at a different granularity: it inverts
+        a title's 50-chart threshold to a folder at a fixed AAA / Talented reference.
+      </p>
+      <p>
+        The anchor choice moves the small numbers and not the large one. Re-anchoring on AAA /
+        Talented gives a worst above-A+ disagreement of 0.55 instead of 0.46; on S / Marvelous,
+        0.37; on A+ / Rough, 0.84. <strong>Read "under a level above A+" as the finding, not the
+        second decimal.</strong> The A-column fork barely moves at all across those same anchors —
+        +4.06 to +4.77 — which is why that one is quoted as a result.
+      </p>
+    </div>
   </section>
 
   <!-- ============ findings ============ -->
@@ -491,7 +520,8 @@ doubles  = avg of top 50</pre>
       <h3>On doubles, they are very nearly the same ruler above A+</h3>
       <p>
         This was the surprise. Over the whole D18–D23 × A+→SSS+ grid the two metrics never disagree
-        by more than <strong>0.46 of a level</strong>, and usually by under 0.2. The reason is
+        by more than <strong>half a level</strong> (0.46 on this page's anchor; under a level on any
+        anchor — see panel 05), and usually by under 0.2. The reason is
         arithmetic coincidence rather than design: PUMBILITY's base curve grows 5 points per level
         on a base of 220–245, so one level is worth ~2.1% of a chart's value, and the grade ladder
         happens to spend about that much per 17,000–20,000 points of score in the S range. That is
@@ -597,8 +627,12 @@ doubles  = avg of top 50</pre>
   };
 
   // Common ruler: the doubles level whose clean SSS+ / Marvelous play is worth the same.
+  // Divide out the anchor performance to get the implied Base, then invert the base curve —
+  // piecewise, because Base grows 10 per level above 24, not 5. A high-plate S23 SSS+ implies
+  // a base past 250, and a purely linear inverse would read it 0.23 of a level too high.
   const ANCHOR_MULT = 1.506, ANCHOR_FUNG = 30000 / 17500;
-  const pEff = (L, s, single, pb) => (pumbility(L, s, single, pb) / ANCHOR_MULT - 130) / 5;
+  const inverseBase = b => b <= 250 ? (b - 130) / 5 : 24 + (b - 250) / 10;
+  const pEff = (L, s, single, pb) => inverseBase(pumbility(L, s, single, pb) / ANCHOR_MULT);
   const cEff = (L, s, single) => fung(L, s, single) - ANCHOR_FUNG;
 
   // ══ state ══

@@ -17,16 +17,47 @@ The two formulas as implemented:
 | aggregation | **sum** of top 50 (and top-50 pools per type) | **average** of top 100 (top 50 per type) |
 | source | `ScoringConfiguration.Phoenix2PumbilityScoring` | `ScoringConfiguration.CalculateFungScore`, aggregated in `PlayerRatingSaga.RecalculateCore` |
 
-The comparison needs a common unit. Both are expressed as **the doubles level whose clean SSS+ /
-Marvelous play is worth the same** — an anchor that is identical on both sides, so the two agree
-exactly on a doubles SSS+ MG play at any level and every other cell is a real difference.
+## 0. The shared ruler
+
+The two numbers are not comparable as they stand — one is a few hundred points per chart, the other
+is a level. Both are restated as **the doubles level whose clean SSS+ / Marvelous play is worth the
+same**:
+
+```
+pumbilityLevel(chart) = inverseBase( Base(L)·(gradeMult + plateBonus) / (1.50 + 0.006) )
+    where inverseBase(b) = b ≤ 250 ? (b − 130)/5 : 24 + (b − 250)/10
+
+competitiveLevel(chart) = fung(L, score) − (995,000 − 965,000)/17,500      // − 1.714
+```
+
+Divide out the anchor performance to recover an implied `Base`, then invert the base curve —
+piecewise, because `Base` grows 10 per level above 24 rather than 5. Both sides therefore return the
+chart's own level for that one play, and every other cell is a real difference.
+
+Three things this is **not**:
+
+- **Not `SuggestedTitleLevel`.** That does the same trick at a different granularity — it inverts a
+  title's 50-chart *total* threshold to a folder at a fixed AAA / Talented reference. Nearest
+  relative in the codebase, but it answers "which folder is this title", not "what is this play
+  worth".
+- **Not `PumbilityProjectionSaga`.** That projects gains from a cohort keyed on competitive level;
+  it consumes both metrics rather than relating them.
+- **Not a mapping for a player's PUMBILITY *total*.** Deliberately per-chart only. Sum-of-50 against
+  average-of-100 has no honest single conversion, which is the whole point of §4 — so panel 04 keeps
+  the total in raw units on its x-axis.
+
+**Anchor sensitivity.** The anchor moves the small numbers and not the large one. Worst above-A+
+disagreement by choice of anchor: SSS+/MG **0.46**, AAA/TG (the `SuggestedTitleLevel` reference)
+0.55, S/MG 0.37, A+/RG 0.84. Read *"under a level above A+"* as the finding, not the second decimal.
+The A-column fork barely moves across those same anchors — **+4.06 to +4.77** — which is why that
+one is quoted as a result.
 
 ---
 
 ## 1. On doubles above A+, they are very nearly the same ruler
 
-Over the whole D18–D23 × A+→SSS+ grid the two never disagree by more than **0.46 of a level**, and
-usually by under 0.2.
+Over the whole D18–D23 × A+→SSS+ grid the two never disagree by more than **half a level** (0.46 on
+the SSS+/MG anchor, under a level on any anchor — see §0), and usually by under 0.2.
 
 This is arithmetic coincidence rather than shared design. PUMBILITY's base grows 5 points per level
 on a base of 220–245, so one level is worth ~2.1% of a chart's value; the grade ladder happens to
