@@ -461,6 +461,9 @@
   <data name="Already have an account? Any sign-in method you've linked works — and you can link more from your Account page." xml:space="preserve">
     <value>Glglgrrgl mrglro blgrl grgl? Ro mrpmurp-mrp glorgmagl plglgrrgl glgl glgrorp — ro blub grorp grorpgl mrrgl romurg gromurp Grgl urggrgl.</value>
   </data>
+  <data name="Also forget my saved PIUGAME password" xml:space="preserve">
+    <value>Blurp PIUGAME gorbal ampu</value>
+  </data>
   <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
     <value>Morgglorg mrmr plglgromurm mgrlgmrg grgl PIU Grrglgroblarg, gro plglmurgblub mrglrgl plglmorg.</value>
   </data>
@@ -469,6 +472,9 @@
   </data>
   <data name="Always" xml:space="preserve">
     <value>Mrgmurg</value>
+  </data>
+  <data name="always all mixes" xml:space="preserve">
+    <value>arba molu mulgo</value>
   </data>
   <data name="Amazing" xml:space="preserve">
     <value>Maglglorgmr</value>
@@ -809,6 +815,9 @@
   <data name="Cancel" xml:space="preserve">
     <value>Margl</value>
   </data>
+  <data name="Cancel deletion" xml:space="preserve">
+    <value>Glop blurpa</value>
+  </data>
   <data name="Capped — perfects pay +{0}" xml:space="preserve">
     <value>Rglgro — plglgrglurg glorg +{0}</value>
   </data>
@@ -937,6 +946,9 @@
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>Arglro gro glorgargl mrpmorg, mrplurg urgglorg Glorggl morgro.</value>
   </data>
+  <data name="Choose a new creator" xml:space="preserve">
+    <value>Grula burg</value>
+  </data>
   <data name="Choose the account to merge with" xml:space="preserve">
     <value>Arglro mrp grgl grgl murmplgl glgrgl</value>
   </data>
@@ -1045,6 +1057,9 @@
   </data>
   <data name="Communities to include" xml:space="preserve">
     <value>Grglrglplglblub grgl romurmmrp</value>
+  </data>
+  <data name="Communities you've only joined are fine — you can't transfer those, and they don't block anything." xml:space="preserve">
+    <value>Grumba oba blug murgal, arga bumpo lorga gorb.</value>
   </data>
   <data name="Community" xml:space="preserve">
     <value>Plglmurgblub</value>
@@ -1175,6 +1190,9 @@
   <data name="Continous Modifier Scale (modifier increments between letter grades)" xml:space="preserve">
 	  <value>Murpgrorpmrp Blgrlblargblarg Murpgrrgl (blgrlblargblarg glglargl blgrlarglblgrl mrlurg urglurg)</value>
 	  <comment>Source spelling preserved verbatim ("Continous" rather than "Continuous").</comment>
+  </data>
+  <data name="Contributions" xml:space="preserve">
+    <value>Grumbalu</value>
   </data>
   <data name="CoOp" xml:space="preserve">
     <value>Mrglrl</value>
@@ -1339,6 +1357,9 @@
   <data name="Delete" xml:space="preserve">
 	  <value>Lurggrgl</value>
   </data>
+  <data name="Delete all my scores" xml:space="preserve">
+    <value>Blurp molu blorgu</value>
+  </data>
   <data name="Delete All Scores" xml:space="preserve">
 	  <value>Lurggrgl Rgl Mgrlgmrg</value>
   </data>
@@ -1354,17 +1375,35 @@
   <data name="Delete Failed" xml:space="preserve">
     <value>Blub murgro. Murgla gapa.</value>
   </data>
+  <data name="Delete my account" xml:space="preserve">
+    <value>Blurp mu gorbam</value>
+  </data>
+  <data name="Delete my {0} scores" xml:space="preserve">
+    <value>Blurp mu {0} blorgu</value>
+  </data>
   <data name="Delete Submission Warning" xml:space="preserve">
     <value>Murgro {0} lo {1} grumla gora mrglrgl bo glub lo mrglrmrgl.</value>
   </data>
+  <data name="Delete the data I selected" xml:space="preserve">
+    <value>Blurp grabo mu lurga</value>
+  </data>
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>Lurggrgl grglmrp plglmurgblub ro grglmurpmurm mrp gl? Grglmrp blubmrp glorg arglglorg.</value>
+  </data>
+  <data name="Delete your account" xml:space="preserve">
+    <value>Blurp golu gorbam</value>
   </data>
   <data name="Deleted" xml:space="preserve">
     <value>Murgro.</value>
   </data>
   <data name="Deletes every saved import password on every device. Users re-enter on their next import. Use if you suspect a breach." xml:space="preserve">
     <value>Grrglmaglgrgl murgglorg murpmurm glorggl glorgmrpmurm lurg murgglorg grglgrgl. Lurggl gl-morgmurp lurg grglblarg grorpglorg glorggl. Murg mr blub glblgrlblub gro mrgrorp.</value>
+  </data>
+  <data name="Deleting every mix resets your Pumbility, your titles and your folder progress everywhere." xml:space="preserve">
+    <value>Blurp mulgo, Pumbility arga gorbalu larpu.</value>
+  </data>
+  <data name="Deleting your {0} scores resets your Pumbility, your titles and your folder progress for that mix. Other mixes are untouched." xml:space="preserve">
+    <value>Blurp {0} blorgu, Pumbility arga gorbalu larpu. Bulmo mulgo grob.</value>
   </data>
   <data name="Demote" xml:space="preserve">
     <value>Romurm</value>
@@ -1609,6 +1648,9 @@
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>Grglmurpmurm blgrlblarg urg mrmrp plglmorg gromurm — mrp rglargl urgmurpgrrgl, murm rglmaglmurmmurg.</value>
   </data>
+  <data name="Everything goes — scores, history, votes, tournament results, communities, and the account itself." xml:space="preserve">
+    <value>Molu blurpa — blorgu, larpu,grumba, gorbam.</value>
+  </data>
   <data name="Everything it can do in your server" xml:space="preserve">
     <value>Grglmurpmurm gl grorp urg mrp gromurp blargmrp</value>
   </data>
@@ -1811,6 +1853,9 @@
   <data name="From" xml:space="preserve">
 	  <value>Romurg</value>
   </data>
+  <data name="From now on, every import and play session shows up here and you can undo any of them. Scores you already had can still be deleted." xml:space="preserve">
+    <value>Aluma bumpo grabo laragu, murgl oba glop. Bulmo blorgu ampu blurpa.</value>
+  </data>
   <data name="From Official" xml:space="preserve">
     <value>Lo mrgloba</value>
   </data>
@@ -1871,6 +1916,9 @@
   <data name="Give a song name." xml:space="preserve">
     <value>Blgrlgro gro mrgl mrg.</value>
   </data>
+  <data name="Go to Delete" xml:space="preserve">
+    <value>Ombu Blurp</value>
+  </data>
   <data name="Goal" xml:space="preserve">
     <value>Mrpmrp</value>
   </data>
@@ -1928,11 +1976,17 @@
   <data name="Grouped by" xml:space="preserve">
     <value>Murmblargargl murm</value>
   </data>
+  <data name="Had a bad import?" xml:space="preserve">
+    <value>Grabo malu?</value>
+  </data>
   <data name="Half bar · 500" xml:space="preserve">
     <value>Mrmurm mr · 500</value>
   </data>
   <data name="Half-Double" xml:space="preserve">
     <value>Mrmurm-Groggl</value>
+  </data>
+  <data name="Hand over your communities first" xml:space="preserve">
+    <value>Grumba obla polu</value>
   </data>
   <data name="Hands" xml:space="preserve">
     <value>Mrpro</value>
@@ -2144,6 +2198,9 @@
   <data name="Import to" xml:space="preserve">
     <value>Glorggl grgl</value>
   </data>
+  <data name="Import undone" xml:space="preserve">
+    <value>Grabo glopa</value>
+  </data>
   <data name="Import Your Phoenix Scores" xml:space="preserve">
 	  <value>Glorggl Gromurp Phoenix Mgrlgmrg</value>
   </data>
@@ -2158,6 +2215,9 @@
   </data>
   <data name="Imported {0} new scores" xml:space="preserve">
     <value>Plglgromurm {0} grgl mgrlgmrg</value>
+  </data>
+  <data name="Importing again will bring these scores straight back." xml:space="preserve">
+    <value>Grabo aluma, blorgu uroba.</value>
   </data>
   <data name="Importing scores…" xml:space="preserve">
     <value>Murggrrglmrgl mgrlgmrg…</value>
@@ -2500,11 +2560,17 @@
   <data name="Manage invite links" xml:space="preserve">
     <value>Blubblub blargmurgl grrglglorg</value>
   </data>
+  <data name="Manage or delete my data" xml:space="preserve">
+    <value>Marbo oba blurp mu grabo</value>
+  </data>
   <data name="Manage users (ban/unban)" xml:space="preserve">
     <value>Blubblub lurggl (mrgl/arglgrorp)</value>
   </data>
   <data name="manual" xml:space="preserve">
     <value>murggrgl</value>
+  </data>
+  <data name="Manual entry" xml:space="preserve">
+    <value>Marbul grabo</value>
   </data>
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>Murggrgl glorggl — blubmrmr blubblgrl + CSV</value>
@@ -2961,6 +3027,9 @@
   <data name="No unmatched keys" xml:space="preserve">
     <value>Mrp maglblarglurg blargurg</value>
   </data>
+  <data name="No — I want to permanently delete data." xml:space="preserve">
+    <value>Gorb — mu blurpa grabo molu.</value>
+  </data>
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>Urggro grogrglro gro murgl mrglblarg grglmrp plglmorg.</value>
   </data>
@@ -3069,6 +3138,9 @@
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>Blarggllurg grgl blgrlblgrlgrorp argl — grrglgrrgl ro glorggl mrgrgl mgrlgmrg murpargl.</value>
+  </data>
+  <data name="Nothing to undo yet" xml:space="preserve">
+    <value>Gorb glopa muru</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>magl</value>
@@ -3508,6 +3580,9 @@
   </data>
   <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
     <value>PIU Grrglgroblarg urg plglgrgl mrglrgll — mgrlgmrg blub mrmr blgrlgrrgl mrp mrglrgll mrpplgl mr gromurp mrglarglrgl blgrlro.</value>
+  </data>
+  <data name="PIUGAME" xml:space="preserve">
+    <value>PIUGAME</value>
   </data>
   <data name="PIUGAME Login" xml:space="preserve">
     <value>PIUGAME Mrglmrp</value>
@@ -4229,6 +4304,9 @@
   <data name="Scores by competitive level" xml:space="preserve">
     <value>Mgrlgmrg murm arglrglmrmurm grorpmurm</value>
   </data>
+  <data name="Scores from before we started recording sessions can't be undone — we didn't capture when they arrived, only when they were played. You can still delete them." xml:space="preserve">
+    <value>Blorgu paluma murgl gorb glopa — gorb larpu, ampu blurpa.</value>
+  </data>
   <data name="Scores land here as boards close." xml:space="preserve">
     <value>Mgrlgmrg grogrrgl blubmorg lurg grrglplgl grorp.</value>
   </data>
@@ -4243,6 +4321,9 @@
   </data>
   <data name="Scores tracked" xml:space="preserve">
     <value>Mgrlgmrg mrplglmagl</value>
+  </data>
+  <data name="Scores you've added since this import stay exactly as they are." xml:space="preserve">
+    <value>Blorgu aluma grabo grob murgl.</value>
   </data>
   <data name="Scores, vs your level" xml:space="preserve">
     <value>Mgrlgmrg, grrgl gromurp grorpmurm</value>
@@ -4321,6 +4402,9 @@
   </data>
   <data name="Select Folders" xml:space="preserve">
     <value>Mrglgrorp Blargblgrlmurp</value>
+  </data>
+  <data name="Select what to delete" xml:space="preserve">
+    <value>Lurga blurpa grabo</value>
   </data>
   <data name="Selected Chart" xml:space="preserve">
 	  <value>Urggrrglgro Murgl</value>
@@ -4831,6 +4915,9 @@
   <data name="That scoring configuration is invalid." xml:space="preserve">
     <value>Blubgrrgl blgrlblgrlplgl grgllurgblubblub urg arglgrourg.</value>
   </data>
+  <data name="That session can't be undone." xml:space="preserve">
+    <value>Murgl gorb glopa.</value>
+  </data>
   <data name="The arc" xml:space="preserve">
     <value>Mrp gl</value>
   </data>
@@ -4963,6 +5050,9 @@
   <data name="This account will be deleted" xml:space="preserve">
     <value>Grglmrp grgl murmurg glorg mrglmorggrorp</value>
   </data>
+  <data name="This can't be undone" xml:space="preserve">
+    <value>Oba gorb glopa</value>
+  </data>
   <data name="This Cannot Be Undone" xml:space="preserve">
     <value>Obo blub morgla gapa.</value>
   </data>
@@ -5007,6 +5097,9 @@
   </data>
   <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
     <value>Grglmrp mrg blgrlro mrglrgl-urgblubmorg — mrpmurg Mrlurg Rorgl &amp; Maglplgl mrp blargromrp.</value>
+  </data>
+  <data name="this mix only" xml:space="preserve">
+    <value>oba mulgo umba</value>
   </data>
   <data name="This page is full." xml:space="preserve">
     <value>Grglmrp urggrgl urg mrglmr.</value>
@@ -5267,6 +5360,9 @@
   <data name="Type The Score" xml:space="preserve">
     <value>Grapla Mrglrgl</value>
   </data>
+  <data name="Type {0} to confirm" xml:space="preserve">
+    <value>Larbo {0} probu</value>
+  </data>
   <data name="Ultra Popular" xml:space="preserve">
     <value>Blubmr Grolurgmrp</value>
   </data>
@@ -5288,8 +5384,29 @@
   <data name="Underrated" xml:space="preserve">
     <value>Plglblgrllurg</value>
   </data>
+  <data name="Undo" xml:space="preserve">
+    <value>Glop</value>
+  </data>
+  <data name="Undo an import instead" xml:space="preserve">
+    <value>Glop grabo obla</value>
+  </data>
+  <data name="Undo an import, delete scores for one mix or all of them, or delete your account." xml:space="preserve">
+    <value>Glop grabo, blurp blorgu, oba blurp gorbam.</value>
+  </data>
   <data name="Undo Merge" xml:space="preserve">
     <value>Rogrgl Murmplgl</value>
+  </data>
+  <data name="Undo this import" xml:space="preserve">
+    <value>Glop oba grabo</value>
+  </data>
+  <data name="Undo this import?" xml:space="preserve">
+    <value>Glop oba grabo?</value>
+  </data>
+  <data name="Undoing a session removes only the scores it added and puts back what you had before it. Other sessions aren't affected, including newer ones, and you can undo them in any order." xml:space="preserve">
+    <value>Glop murgl, blorgu blurpa, bulmo uroba. Bulmo murgl grob, ampu glop marbo.</value>
+  </data>
+  <data name="Undoing puts your scores back the way they were before it. Nothing is lost." xml:space="preserve">
+    <value>Glop blorgu uroba. Gorb blurpa.</value>
   </data>
   <data name="Unknown" xml:space="preserve">
 	  <value>Glorgarglro</value>
@@ -5321,6 +5438,9 @@
   </data>
   <data name="Unranked" xml:space="preserve">
     <value>Groglubblarg</value>
+  </data>
+  <data name="Until then your profile is hidden and your game tag is cleared." xml:space="preserve">
+    <value>Golu marbul plumo, gorbam glarb.</value>
   </data>
   <data name="Update Chart" xml:space="preserve">
 	  <value>Plglmrgl Murgl</value>
@@ -5742,6 +5862,9 @@
   <data name="You're already a member of this community." xml:space="preserve">
     <value>Grglargl glglgrrgl gro rgllurg mrgl grglmrp plglmurgblub.</value>
   </data>
+  <data name="You're the creator of {0} communities. Someone has to own them, so pick a new creator for each — or delete it, if you're the only one left." xml:space="preserve">
+    <value>Golu grumba {0} malu. Burgo prala, oba blurp.</value>
+  </data>
   <data name="You've been banned from this community and can't rejoin." xml:space="preserve">
     <value>Plglgrrgl murmmrp morgmrgl romurg grglmrp plglmurgblub ro blargmr arglmurp.</value>
   </data>
@@ -5757,8 +5880,17 @@
   <data name="Your account is content-locked. Message an admin if you have questions." xml:space="preserve">
 	  <value>Gromurp grgl urg grrglmorgblarg-murgmr. Grrglmrmagl blgrl blgrlrgl mr blub mrglro roplglgrgl.</value>
   </data>
+  <data name="Your account is hidden right away and permanently deleted on {0}. Sign in before then to cancel." xml:space="preserve">
+    <value>Gorbam plumo, blurpa {0}. Ombu polu glop.</value>
+  </data>
   <data name="Your account is not associated with a game profile yet. Play a game on your account first, then try again." xml:space="preserve">
     <value>Gromurp grgl urg murm lurgmrglblarg glgrgl gro glorgargl mrglarglrgl argl. Grrglgrrgl gro glorgargl lurg gromurp grgl murpargl, mrplurg lurg morgro.</value>
+  </data>
+  <data name="Your account is scheduled for deletion on {0}." xml:space="preserve">
+    <value>Gorbam blurpa {0}.</value>
+  </data>
+  <data name="Your account will not be deleted" xml:space="preserve">
+    <value>Gorbam gorb blurpa</value>
   </data>
   <data name="Your best" xml:space="preserve">
     <value>Gromurp mrpblarg</value>
@@ -5777,6 +5909,9 @@
   </data>
   <data name="Your Data" xml:space="preserve">
     <value>Gromurp Gromurm</value>
+  </data>
+  <data name="Your data has been deleted" xml:space="preserve">
+    <value>Grabo blurpa</value>
   </data>
   <data name="Your data is yours" xml:space="preserve">
     <value>Gromurp gromurm urg glmagl</value>
@@ -5825,6 +5960,9 @@
   </data>
   <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
     <value>Gromurp Pumbility ro arglrglmrmurm grorpmurm, grglgrrgl gromurp murmurgmurp morgmaglblgrl.</value>
+  </data>
+  <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
+    <value>Pumbility, gorbalu, larpu — molu blurpa. Gorb prala.</value>
   </data>
   <data name="Your Region" xml:space="preserve">
     <value>Gromurp Rglargl</value>
@@ -5910,6 +6048,9 @@
   <data name="{0} / {1} cleared" xml:space="preserve">
     <value>{0} / {1} blarggrrglglorg</value>
   </data>
+  <data name="{0} admins" xml:space="preserve">
+    <value>{0} burgola</value>
+  </data>
   <data name="{0} arrived" xml:space="preserve">
     <value>{0} gromurgargl</value>
   </data>
@@ -5924,6 +6065,12 @@
   </data>
   <data name="{0} charts added to songs that were already here" xml:space="preserve">
     <value>{0} murgl murpgrrgl grgl mrgl blubgrrgl glmagl glglgrrgl blubmorg</value>
+  </data>
+  <data name="{0} charts go back to their previous best" xml:space="preserve">
+    <value>{0} plarga uroba blorgu</value>
+  </data>
+  <data name="{0} charts had no previous score and will be removed" xml:space="preserve">
+    <value>{0} plarga gorb blorgu, blurpa</value>
   </data>
   <data name="{0} charts have a different note count in {1} — the steps changed, not just the rating." xml:space="preserve">
     <value>{0} murgl mrglro gro roplglblgrl grogrgl glorgmurp mrp {1} — mrp plglmrgl maglrogrorp, murm murgmorg mrp mrglrg.</value>
@@ -5996,6 +6143,9 @@
   </data>
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>{0} mrrglmrgl ro blub — arglrgl {1}</value>
+  </data>
+  <data name="{0} improved" xml:space="preserve">
+    <value>{0} uplarga</value>
   </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} urg murm mrp {1} — mrp grorpro mrgl rolurg.</value>

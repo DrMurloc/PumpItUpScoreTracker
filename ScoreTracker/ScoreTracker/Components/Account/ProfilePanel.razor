@@ -4,6 +4,9 @@
 @using MediatR
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Identity.Contracts
+@using ScoreTracker.Identity.Contracts.Commands
+@using ScoreTracker.Identity.Contracts.Queries
 @using ScoreTracker.ScoreLedger.Contracts
 @using ScoreTracker.ScoreLedger.Contracts.Commands
 @using ScoreTracker.ScoreLedger.Contracts.Queries
@@ -64,10 +67,34 @@
     <MudButton Href="/UploadXXScores" StartIcon="@Icons.Material.Filled.UploadFile" Variant="Variant.Text">@L["Upload XX Scores"]</MudButton>
 </div>
 
+@if (_pendingDeletion is not null)
+{
+    @* Where the sign-in notice sends people, carrying the same countdown so the two surfaces
+       never disagree about how long is left. *@
+    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mt-6">
+        <div class="d-flex align-center justify-space-between flex-wrap gap-3">
+            <div>
+                <MudText Typo="Typo.body2">
+                    <b>@L["Your account is scheduled for deletion on {0}.", _pendingDeletion.PurgeAfter.LocalDateTime.ToString("D")]</b>
+                </MudText>
+                <MudText Typo="Typo.body2" Style="opacity:.8;">
+                    @L["Until then your profile is hidden and your game tag is cleared."]
+                </MudText>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CancelDeletion">
+                @L["Cancel deletion"]
+            </MudButton>
+        </div>
+    </MudAlert>
+}
+
 <MudPaper Outlined="true" Class="pa-4 mt-6" Style="border-color: var(--mud-palette-error);">
     <MudText Typo="Typo.h6" Color="Color.Error">@L["Danger Zone"]</MudText>
-    <MudText Typo="Typo.body2" Class="mb-3">@L["This will delete all of your scores and reset your player stats and title progress"]</MudText>
-    <MudButton StartIcon="@Icons.Material.Filled.DeleteForever" Variant="Variant.Outlined" Color="Color.Error" OnClick="OpenWipeDialog">@L["Delete All Scores"]</MudButton>
+    <MudText Typo="Typo.body2" Class="mb-3">
+        @L["Undo an import, delete scores for one mix or all of them, or delete your account."]
+    </MudText>
+    <MudButton StartIcon="@Icons.Material.Filled.DeleteForever" Variant="Variant.Outlined" Color="Color.Error"
+               Href="/Account/Data/Delete">@L["Manage or delete my data"]</MudButton>
 </MudPaper>
 
 <div class="d-flex align-center gap-1 mt-6">
@@ -101,31 +128,6 @@
     </DialogActions>
 </MudDialog>
 
-<MudDialog @bind-Visible="_showWipeScoresDialog">
-    <TitleContent>
-        <MudText Typo="Typo.h6">@L["Delete All Scores"]</MudText>
-    </TitleContent>
-    <DialogContent>
-        <MudCheckBox T="bool" @bind-Value="_wipeAcknowledged" Color="Color.Error" Disabled="_isWiping">
-            @L["This will delete all of your scores and reset your player stats and title progress"]
-        </MudCheckBox>
-        <MudCheckBox T="bool" @bind-Value="_wipeIncludeHistory" Color="Color.Error" Disabled="_isWiping">
-            @L["(Optional) Also delete historical data"]
-        </MudCheckBox>
-    </DialogContent>
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text"
-                   OnClick="() => _showWipeScoresDialog = false"
-                   Disabled="_isWiping"
-                   Color="Color.Primary">@L["Cancel"]</MudButton>
-        <MudButton Variant="Variant.Filled"
-                   OnClick="ConfirmWipeScores"
-                   Disabled="@(!_wipeAcknowledged || _isWiping)"
-                   Color="Color.Error">@L["Confirm"]</MudButton>
-    </DialogActions>
-</MudDialog>
-
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
@@ -140,15 +142,12 @@
     private bool _isPublic = false;
     private bool _isContentLocked = false;
     private bool _showPublicConfirmDialog = false;
-    private bool _showWipeScoresDialog = false;
-    private bool _wipeAcknowledged = false;
-    private bool _wipeIncludeHistory = false;
-    private bool _isWiping = false;
     private bool _isUpdatingUser = false;
     private IEnumerable<CountryRecord> _countries = Array.Empty<CountryRecord>();
     private string _countryName = null;
     private string _currentCulture = "en-US";
     private string _themeOverride = MixThemes.MatchMixValue;
+    private PendingAccountDeletion? _pendingDeletion;
 
     protected override async Task OnInitializedAsync()
     {
@@ -161,6 +160,7 @@
         _isPublic = CurrentUser.User.IsPublic;
         _isContentLocked = CurrentUser.User.IsContentLocked;
         _countries = (await Users.GetCountries()).OrderBy(c => c.Name);
+        _pendingDeletion = await Mediator.Send(new GetPendingAccountDeletionQuery(CurrentUser.User.Id));
     }
 
     private async Task UpdateCulture(string newCulture)
@@ -232,29 +232,11 @@
         }
     }
 
-    private void OpenWipeDialog()
+    private async Task CancelDeletion()
     {
-        _wipeAcknowledged = false;
-        _wipeIncludeHistory = false;
-        _showWipeScoresDialog = true;
-    }
-
-    private async Task ConfirmWipeScores()
-    {
-        _isWiping = true;
-        try
-        {
-            await Mediator.Send(new WipeUserScoresCommand(CurrentUser.User.Id, null,
-                _wipeIncludeHistory
-                    ? ScoreDeletionItems.Everything
-                    : ScoreDeletionItems.BestScores));
-            Snackbar.Add(L["Your scores have been deleted"], Severity.Success);
-            _showWipeScoresDialog = false;
-        }
-        finally
-        {
-            _isWiping = false;
-        }
+        await Mediator.Send(new CancelAccountDeletionCommand(CurrentUser.User.Id));
+        _pendingDeletion = null;
+        Snackbar.Add(L["Your account will not be deleted"], Severity.Success);
     }
 
     private async Task DownloadScores()

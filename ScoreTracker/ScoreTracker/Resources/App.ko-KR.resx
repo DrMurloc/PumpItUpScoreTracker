@@ -459,6 +459,9 @@
   <data name="Already have an account? Any sign-in method you've linked works — and you can link more from your Account page." xml:space="preserve">
     <value>이미 계정이 있으신가요? 연결된 로그인 방법이라면 무엇이든 사용할 수 있고, 계정 페이지에서 더 연결할 수 있습니다.</value>
   </data>
+  <data name="Also forget my saved PIUGAME password" xml:space="preserve">
+    <value>저장된 PIUGAME 비밀번호도 삭제</value>
+  </data>
   <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
     <value>가져온 점수를 커뮤니티 점수 사이트인 PIU Tracker에도 전송합니다.</value>
   </data>
@@ -467,6 +470,9 @@
   </data>
   <data name="Always" xml:space="preserve">
     <value>항상</value>
+  </data>
+  <data name="always all mixes" xml:space="preserve">
+    <value>항상 모든 시리즈</value>
   </data>
   <data name="Amazing" xml:space="preserve">
     <value>놀라움</value>
@@ -801,6 +807,9 @@
   <data name="Cancel" xml:space="preserve">
     <value>취소</value>
   </data>
+  <data name="Cancel deletion" xml:space="preserve">
+    <value>삭제 취소</value>
+  </data>
   <data name="Capped — perfects pay +{0}" xml:space="preserve">
     <value>상한 — Perfect가 +{0}</value>
   </data>
@@ -927,6 +936,9 @@
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>게임 카드를 선택한 다음 가져오기를 다시 누르세요.</value>
   </data>
+  <data name="Choose a new creator" xml:space="preserve">
+    <value>새 개설자 선택</value>
+  </data>
   <data name="Choose the account to merge with" xml:space="preserve">
     <value>병합할 계정을 선택하세요</value>
   </data>
@@ -1034,6 +1046,9 @@
   </data>
   <data name="Communities to include" xml:space="preserve">
     <value>포함할 커뮤니티</value>
+  </data>
+  <data name="Communities you've only joined are fine — you can't transfer those, and they don't block anything." xml:space="preserve">
+    <value>가입만 한 커뮤니티는 괜찮습니다. 양도할 수 없고 아무것도 막지 않습니다.</value>
   </data>
   <data name="Community" xml:space="preserve">
     <value>커뮤니티</value>
@@ -1163,6 +1178,9 @@
   </data>
   <data name="Continous Modifier Scale (modifier increments between letter grades)" xml:space="preserve">
     <value>연속 배율 스케일 (랭크 사이의 배율 증가)</value>
+  </data>
+  <data name="Contributions" xml:space="preserve">
+    <value>기여한 것</value>
   </data>
   <data name="CoOp" xml:space="preserve">
     <value>코옵</value>
@@ -1326,6 +1344,9 @@
   <data name="Delete" xml:space="preserve">
     <value>삭제</value>
   </data>
+  <data name="Delete all my scores" xml:space="preserve">
+    <value>모든 점수 삭제</value>
+  </data>
   <data name="Delete All Scores" xml:space="preserve">
     <value>모든 점수 삭제</value>
   </data>
@@ -1341,17 +1362,35 @@
   <data name="Delete Failed" xml:space="preserve">
     <value>삭제되지 않았습니다. 다시 시도하세요.</value>
   </data>
+  <data name="Delete my account" xml:space="preserve">
+    <value>계정 삭제</value>
+  </data>
+  <data name="Delete my {0} scores" xml:space="preserve">
+    <value>{0} 점수 삭제</value>
+  </data>
   <data name="Delete Submission Warning" xml:space="preserve">
     <value>{1}의 기록에서 {0}을(를) 삭제하면 그 점수와 사진이 순위에서 사라집니다.</value>
   </data>
+  <data name="Delete the data I selected" xml:space="preserve">
+    <value>선택한 데이터 삭제</value>
+  </data>
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>이 커뮤니티와 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.</value>
+  </data>
+  <data name="Delete your account" xml:space="preserve">
+    <value>계정 삭제</value>
   </data>
   <data name="Deleted" xml:space="preserve">
     <value>삭제되었습니다.</value>
   </data>
   <data name="Deletes every saved import password on every device. Users re-enter on their next import. Use if you suspect a breach." xml:space="preserve">
     <value>모든 기기에 저장된 가져오기 비밀번호를 삭제합니다. 사용자는 다음 가져오기 때 다시 입력합니다. 유출이 의심될 때 사용하세요.</value>
+  </data>
+  <data name="Deleting every mix resets your Pumbility, your titles and your folder progress everywhere." xml:space="preserve">
+    <value>모든 시리즈를 삭제하면 Pumbility, 칭호, 폴더 진행도가 전부 초기화됩니다.</value>
+  </data>
+  <data name="Deleting your {0} scores resets your Pumbility, your titles and your folder progress for that mix. Other mixes are untouched." xml:space="preserve">
+    <value>{0} 점수를 삭제하면 해당 시리즈의 Pumbility, 칭호, 폴더 진행도가 초기화됩니다. 다른 시리즈는 그대로입니다.</value>
   </data>
   <data name="Demote" xml:space="preserve">
     <value>강등</value>
@@ -1593,6 +1632,9 @@
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>아래는 모두 사이트의 실제 데이터입니다 — 스크린샷이 아니라 실제 프로덕트입니다.</value>
   </data>
+  <data name="Everything goes — scores, history, votes, tournament results, communities, and the account itself." xml:space="preserve">
+    <value>전부 사라집니다 — 점수, 기록, 투표, 대회 결과, 커뮤니티, 그리고 계정 자체까지.</value>
+  </data>
   <data name="Everything it can do in your server" xml:space="preserve">
     <value>서버에서 할 수 있는 모든 것</value>
   </data>
@@ -1794,6 +1836,9 @@
   <data name="From" xml:space="preserve">
     <value>원본</value>
   </data>
+  <data name="From now on, every import and play session shows up here and you can undo any of them. Scores you already had can still be deleted." xml:space="preserve">
+    <value>이제부터 모든 가져오기와 플레이 세션이 여기에 표시되며 언제든 되돌릴 수 있습니다. 이미 있던 점수도 삭제는 가능합니다.</value>
+  </data>
   <data name="From Official" xml:space="preserve">
     <value>공식 사이트</value>
   </data>
@@ -1854,6 +1899,9 @@
   <data name="Give a song name." xml:space="preserve">
     <value>곡 이름을 입력해주세요.</value>
   </data>
+  <data name="Go to Delete" xml:space="preserve">
+    <value>삭제로 이동</value>
+  </data>
   <data name="Goal" xml:space="preserve">
     <value>목표</value>
   </data>
@@ -1911,11 +1959,17 @@
   <data name="Grouped by" xml:space="preserve">
     <value>그룹 기준</value>
   </data>
+  <data name="Had a bad import?" xml:space="preserve">
+    <value>잘못 가져오셨나요?</value>
+  </data>
   <data name="Half bar · 500" xml:space="preserve">
     <value>바의 절반 · 500</value>
   </data>
   <data name="Half-Double" xml:space="preserve">
     <value>하프 더블</value>
+  </data>
+  <data name="Hand over your communities first" xml:space="preserve">
+    <value>먼저 커뮤니티를 넘겨주세요</value>
   </data>
   <data name="Hands" xml:space="preserve">
     <value>손</value>
@@ -2127,6 +2181,9 @@
   <data name="Import to" xml:space="preserve">
     <value>가져올 대상</value>
   </data>
+  <data name="Import undone" xml:space="preserve">
+    <value>가져오기를 되돌렸습니다</value>
+  </data>
   <data name="Import Your Phoenix Scores" xml:space="preserve">
     <value>본인의 Phoenix 점수 불러오기</value>
   </data>
@@ -2141,6 +2198,9 @@
   </data>
   <data name="Imported {0} new scores" xml:space="preserve">
     <value>새 점수 {0}개를 가져왔습니다</value>
+  </data>
+  <data name="Importing again will bring these scores straight back." xml:space="preserve">
+    <value>다시 가져오면 이 점수들이 그대로 돌아옵니다.</value>
   </data>
   <data name="Importing scores…" xml:space="preserve">
     <value>점수 가져오는 중…</value>
@@ -2478,11 +2538,17 @@
   <data name="Manage invite links" xml:space="preserve">
     <value>초대 링크 관리</value>
   </data>
+  <data name="Manage or delete my data" xml:space="preserve">
+    <value>내 데이터 관리 또는 삭제</value>
+  </data>
   <data name="Manage users (ban/unban)" xml:space="preserve">
     <value>유저 관리 (차단/차단 해제)</value>
   </data>
   <data name="manual" xml:space="preserve">
     <value>수동</value>
+  </data>
+  <data name="Manual entry" xml:space="preserve">
+    <value>직접 입력</value>
   </data>
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>수동 가져오기 — 콘솔 스크립트 + CSV</value>
@@ -2931,6 +2997,9 @@
   <data name="No unmatched keys" xml:space="preserve">
     <value>매칭되지 않은 키가 없습니다</value>
   </data>
+  <data name="No — I want to permanently delete data." xml:space="preserve">
+    <value>아니요 — 데이터를 영구히 삭제하겠습니다.</value>
+  </data>
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>이번 주에는 채보 보드에서 상승한 플레이어가 없습니다.</value>
   </data>
@@ -3038,6 +3107,9 @@
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>아직 추천할 것이 없습니다 — 먼저 플레이하고 점수를 가져오세요.</value>
+  </data>
+  <data name="Nothing to undo yet" xml:space="preserve">
+    <value>아직 되돌릴 것이 없습니다</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>방금</value>
@@ -3473,6 +3545,9 @@
   </data>
   <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
     <value>PIU Tracker는 완전히 공개됩니다 — 프로필이 비공개여도 전송한 점수는 공개됩니다.</value>
+  </data>
+  <data name="PIUGAME" xml:space="preserve">
+    <value>PIUGAME</value>
   </data>
   <data name="PIUGAME Login" xml:space="preserve">
     <value>PIUGAME 로그인</value>
@@ -4181,6 +4256,9 @@
   <data name="Scores by competitive level" xml:space="preserve">
     <value>경쟁 레벨별 점수</value>
   </data>
+  <data name="Scores from before we started recording sessions can't be undone — we didn't capture when they arrived, only when they were played. You can still delete them." xml:space="preserve">
+    <value>세션 기록을 시작하기 전의 점수는 되돌릴 수 없습니다. 도착 시각이 아니라 플레이 시각만 남아 있기 때문입니다. 삭제는 가능합니다.</value>
+  </data>
   <data name="Scores land here as boards close." xml:space="preserve">
     <value>보드가 마감되면 점수가 여기에 표시됩니다.</value>
   </data>
@@ -4195,6 +4273,9 @@
   </data>
   <data name="Scores tracked" xml:space="preserve">
     <value>기록된 스코어</value>
+  </data>
+  <data name="Scores you've added since this import stay exactly as they are." xml:space="preserve">
+    <value>이 가져오기 이후에 추가한 점수는 그대로 남습니다.</value>
   </data>
   <data name="Scores, vs your level" xml:space="preserve">
     <value>점수 (동레벨 비교)</value>
@@ -4273,6 +4354,9 @@
   </data>
   <data name="Select Folders" xml:space="preserve">
     <value>폴더 선택</value>
+  </data>
+  <data name="Select what to delete" xml:space="preserve">
+    <value>삭제할 항목 선택</value>
   </data>
   <data name="Selected Chart" xml:space="preserve">
     <value>선택된 채보</value>
@@ -4772,6 +4856,9 @@
   <data name="That scoring configuration is invalid." xml:space="preserve">
     <value>유효하지 않은 점수 구성입니다.</value>
   </data>
+  <data name="That session can't be undone." xml:space="preserve">
+    <value>그 세션은 되돌릴 수 없습니다.</value>
+  </data>
   <data name="The arc" xml:space="preserve">
     <value>성장 곡선</value>
   </data>
@@ -4904,6 +4991,9 @@
   <data name="This account will be deleted" xml:space="preserve">
     <value>이 계정은 삭제됩니다</value>
   </data>
+  <data name="This can't be undone" xml:space="preserve">
+    <value>되돌릴 수 없습니다</value>
+  </data>
   <data name="This Cannot Be Undone" xml:space="preserve">
     <value>되돌릴 수 없습니다.</value>
   </data>
@@ -4948,6 +5038,9 @@
   </data>
   <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
     <value>이 시리즈는 점수 정규화가 없습니다 — 등급과 클리어만 사용할 수 있습니다.</value>
+  </data>
+  <data name="this mix only" xml:space="preserve">
+    <value>이 시리즈만</value>
   </data>
   <data name="This page is full." xml:space="preserve">
     <value>이 페이지는 가득 찼습니다.</value>
@@ -5207,6 +5300,9 @@
   <data name="Type The Score" xml:space="preserve">
     <value>점수 입력</value>
   </data>
+  <data name="Type {0} to confirm" xml:space="preserve">
+    <value>확인하려면 {0} 을(를) 입력하세요</value>
+  </data>
   <data name="Ultra Popular" xml:space="preserve">
     <value>초인기</value>
   </data>
@@ -5228,8 +5324,29 @@
   <data name="Underrated" xml:space="preserve">
     <value>과소평가</value>
   </data>
+  <data name="Undo" xml:space="preserve">
+    <value>되돌리기</value>
+  </data>
+  <data name="Undo an import instead" xml:space="preserve">
+    <value>대신 가져오기 되돌리기</value>
+  </data>
+  <data name="Undo an import, delete scores for one mix or all of them, or delete your account." xml:space="preserve">
+    <value>가져오기를 되돌리거나, 한 시리즈 또는 전체 점수를 삭제하거나, 계정을 삭제할 수 있습니다.</value>
+  </data>
   <data name="Undo Merge" xml:space="preserve">
     <value>병합 취소</value>
+  </data>
+  <data name="Undo this import" xml:space="preserve">
+    <value>이 가져오기 되돌리기</value>
+  </data>
+  <data name="Undo this import?" xml:space="preserve">
+    <value>이 가져오기를 되돌릴까요?</value>
+  </data>
+  <data name="Undoing a session removes only the scores it added and puts back what you had before it. Other sessions aren't affected, including newer ones, and you can undo them in any order." xml:space="preserve">
+    <value>세션을 되돌리면 그 세션이 추가한 점수만 사라지고 그 이전 상태로 돌아갑니다. 더 최근 것을 포함해 다른 세션은 영향을 받지 않으며, 순서에 상관없이 되돌릴 수 있습니다.</value>
+  </data>
+  <data name="Undoing puts your scores back the way they were before it. Nothing is lost." xml:space="preserve">
+    <value>되돌리면 점수가 이전 상태로 돌아갑니다. 잃는 것은 없습니다.</value>
   </data>
   <data name="Unknown" xml:space="preserve">
     <value>알 수 없음</value>
@@ -5260,6 +5377,9 @@
   </data>
   <data name="Unranked" xml:space="preserve">
     <value>미분류</value>
+  </data>
+  <data name="Until then your profile is hidden and your game tag is cleared." xml:space="preserve">
+    <value>그때까지 프로필은 숨겨지고 게임 태그는 지워집니다.</value>
   </data>
   <data name="Update Chart" xml:space="preserve">
     <value>채보 업데이트</value>
@@ -5672,6 +5792,9 @@
   <data name="You're already a member of this community." xml:space="preserve">
     <value>이미 이 커뮤니티의 멤버입니다.</value>
   </data>
+  <data name="You're the creator of {0} communities. Someone has to own them, so pick a new creator for each — or delete it, if you're the only one left." xml:space="preserve">
+    <value>{0}개 커뮤니티의 개설자입니다. 누군가는 맡아야 하니 각각 새 개설자를 정하거나, 혼자뿐이라면 삭제하세요.</value>
+  </data>
   <data name="You've been banned from this community and can't rejoin." xml:space="preserve">
     <value>이 커뮤니티에서 차단되어 다시 가입할 수 없습니다.</value>
   </data>
@@ -5687,8 +5810,17 @@
   <data name="Your account is content-locked. Message an admin if you have questions." xml:space="preserve">
     <value>본인의 계정은 콘텐츠 잠금 상태입니다. 문의 사항이 있으시면 관리자에게 메시지를 보내주세요.</value>
   </data>
+  <data name="Your account is hidden right away and permanently deleted on {0}. Sign in before then to cancel." xml:space="preserve">
+    <value>계정은 즉시 숨겨지고 {0}에 영구 삭제됩니다. 그 전에 로그인하면 취소할 수 있습니다.</value>
+  </data>
   <data name="Your account is not associated with a game profile yet. Play a game on your account first, then try again." xml:space="preserve">
     <value>계정에 아직 게임 프로필이 연결되어 있지 않습니다. 먼저 계정으로 게임을 플레이한 후 다시 시도해 주세요.</value>
+  </data>
+  <data name="Your account is scheduled for deletion on {0}." xml:space="preserve">
+    <value>이 계정은 {0}에 삭제될 예정입니다.</value>
+  </data>
+  <data name="Your account will not be deleted" xml:space="preserve">
+    <value>계정이 삭제되지 않습니다</value>
   </data>
   <data name="Your best" xml:space="preserve">
     <value>내 최고 기록</value>
@@ -5707,6 +5839,9 @@
   </data>
   <data name="Your Data" xml:space="preserve">
     <value>내 데이터</value>
+  </data>
+  <data name="Your data has been deleted" xml:space="preserve">
+    <value>데이터를 삭제했습니다</value>
   </data>
   <data name="Your data is yours" xml:space="preserve">
     <value>데이터는 당신의 것</value>
@@ -5755,6 +5890,9 @@
   </data>
   <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
     <value>당신의 Pumbility와 경쟁 레벨, 그리고 가장 가까운 상대.</value>
+  </data>
+  <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
+    <value>Pumbility, 칭호, 폴더 램프, 플레이어 통계는 이 데이터에서 계산되므로 자동으로 초기화됩니다. 남길 수 없습니다.</value>
   </data>
   <data name="Your Region" xml:space="preserve">
     <value>내 지역</value>
@@ -5840,6 +5978,9 @@
   <data name="{0} / {1} cleared" xml:space="preserve">
     <value>{0} / {1} 클리어</value>
   </data>
+  <data name="{0} admins" xml:space="preserve">
+    <value>관리자 {0}명</value>
+  </data>
   <data name="{0} arrived" xml:space="preserve">
     <value>{0}개 들어옴</value>
   </data>
@@ -5854,6 +5995,12 @@
   </data>
   <data name="{0} charts added to songs that were already here" xml:space="preserve">
     <value>기존 노래에 추가된 채보 {0}개</value>
+  </data>
+  <data name="{0} charts go back to their previous best" xml:space="preserve">
+    <value>{0}개 채보가 이전 최고 기록으로 돌아갑니다</value>
+  </data>
+  <data name="{0} charts had no previous score and will be removed" xml:space="preserve">
+    <value>{0}개 채보는 이전 점수가 없어 삭제됩니다</value>
   </data>
   <data name="{0} charts have a different note count in {1} — the steps changed, not just the rating." xml:space="preserve">
     <value>{1}에서 노트 수가 달라진 채보가 {0}개 있습니다. 난이도만이 아니라 채보 자체가 바뀌었습니다.</value>
@@ -5926,6 +6073,9 @@
   </data>
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>{0}개가 나에게 더 어려움 — 주로 {1}</value>
+  </data>
+  <data name="{0} improved" xml:space="preserve">
+    <value>{0}개 갱신</value>
   </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0}은(는) {1}에 없습니다 — 노래 전체가 삭제되었습니다.</value>

@@ -1,0 +1,35 @@
+@namespace ScoreTracker.Web.Components.Account
+
+@* The shared chrome for the two Your Data routes. Undo comes first because it is the safer of
+   the pair and the one most people actually want. *@
+<div class="d-flex align-end justify-space-between flex-wrap gap-4 mb-4 pb-3 yourdata-head">
+    <MudText Typo="Typo.h5">@L["Your Data"]</MudText>
+    <div class="d-flex gap-1">
+        <MudButton Href="/Account/Data/Undo"
+                   Variant="@(Active == YourDataTab.Undo ? Variant.Filled : Variant.Text)"
+                   Color="@(Active == YourDataTab.Undo ? Color.Primary : Color.Default)">@L["Undo"]</MudButton>
+        <MudButton Href="/Account/Data/Delete"
+                   Variant="@(Active == YourDataTab.Delete ? Variant.Filled : Variant.Text)"
+                   Color="@(Active == YourDataTab.Delete ? Color.Primary : Color.Default)">@L["Delete"]</MudButton>
+    </div>
+</div>
+
+@ChildContent
+
+<style>
+    .yourdata-head { border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); }
+</style>
+
+@code {
+
+    public enum YourDataTab
+    {
+        Undo,
+        Delete
+    }
+
+    [Parameter] public YourDataTab Active { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+}

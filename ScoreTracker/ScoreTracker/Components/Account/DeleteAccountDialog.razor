@@ -1,0 +1,104 @@
+@namespace ScoreTracker.Web.Components.Account
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+
+@* Two states in one dialog. When the player still creates communities there is nothing to
+   confirm yet, so the confirm controls are absent rather than disabled — a greyed button with no
+   explanation is the worst of both. See docs/design/delete-my-data.md §8.1. *@
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="_options">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            @(Blockers.Any() ? L["Hand over your communities first"] : L["Delete your account"])
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (Blockers.Any())
+        {
+            <div class="d-flex flex-column gap-3">
+                <MudText Typo="Typo.body2">
+                    @L["You're the creator of {0} communities. Someone has to own them, so pick a new creator for each — or delete it, if you're the only one left.", Blockers.Count]
+                </MudText>
+                @foreach (var community in Blockers)
+                {
+                    <MudPaper Outlined="true" Class="pa-3 d-flex align-center gap-3 flex-wrap">
+                        <div class="flex-grow-1">
+                            <MudText Typo="Typo.body1"><b>@community.CommunityName</b></MudText>
+                            <MudText Typo="Typo.caption" Style="opacity:.75;">
+                                @L["{0} members", community.MemberCount] · @L["{0} admins", community.AdminCount]
+                            </MudText>
+                        </div>
+                        @* The transfer UX already exists as Make Creator on each member's row —
+                           the right shape, because you can only hand a community to someone
+                           already in it. Linking rather than rebuilding it. *@
+                        <MudButton Variant="Variant.Outlined" Size="Size.Small"
+                                   Href="@($"/Community/Members?communityName={Uri.EscapeDataString(community.CommunityName.ToString())}")">
+                            @(community.MemberCount > 1 ? L["Choose a new creator"] : L["Delete Community"])
+                        </MudButton>
+                    </MudPaper>
+                }
+                <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
+                    @L["Communities you've only joined are fine — you can't transfer those, and they don't block anything."]
+                </MudAlert>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex flex-column gap-3">
+                <MudText Typo="Typo.body2">
+                    @L["Everything goes — scores, history, votes, tournament results, communities, and the account itself."]
+                </MudText>
+                @if (PurgeAfter is not null)
+                {
+                    <MudText Typo="Typo.body2" Style="opacity:.8;">
+                        @L["Your account is hidden right away and permanently deleted on {0}. Sign in before then to cancel.", PurgeAfter.Value.LocalDateTime.ToString("D")]
+                    </MudText>
+                }
+                <MudTextField T="string" @bind-Value="_typed" Immediate="true"
+                              Label="@L["Type {0} to confirm", CurrentUser.User.Name.ToString()]"
+                              autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false"/>
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer/>
+        @if (Blockers.Any())
+        {
+            <MudButton Variant="Variant.Text" OnClick="Close">@L["Close"]</MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Text" OnClick="Close">@L["Cancel"]</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" Disabled="@(!Matches)"
+                       OnClick="OnConfirmed">@L["Delete my account"]</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@inject ICurrentUserAccessor CurrentUser
+@code {
+    // MaxWidth.Small is defeated site-wide by charts.scss, so the cap has to be ours.
+    private readonly DialogOptions _options = new() { MaxWidth = MaxWidth.False, FullWidth = true };
+
+    private string _typed = string.Empty;
+
+    [Parameter] public bool Visible { get; set; }
+
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+
+    [Parameter] public IReadOnlyList<OwnedCommunityRecord> Blockers { get; set; } = Array.Empty<OwnedCommunityRecord>();
+
+    [Parameter] public DateTimeOffset? PurgeAfter { get; set; }
+
+    [Parameter] public EventCallback OnConfirmed { get; set; }
+
+    // Case-insensitive: the username is what they type, not a password.
+    private bool Matches => string.Equals(_typed.Trim(), CurrentUser.User.Name.ToString(),
+        StringComparison.OrdinalIgnoreCase);
+
+    private Task Close()
+    {
+        _typed = string.Empty;
+        return VisibleChanged.InvokeAsync(false);
+    }
+
+}

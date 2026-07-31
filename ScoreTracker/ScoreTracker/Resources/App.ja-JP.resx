@@ -461,6 +461,9 @@
   <data name="Already have an account? Any sign-in method you've linked works — and you can link more from your Account page." xml:space="preserve">
     <value>すでにアカウントをお持ちですか？連携済みのログイン方法ならどれでも使えます。アカウントページからさらに追加できます。</value>
   </data>
+  <data name="Also forget my saved PIUGAME password" xml:space="preserve">
+    <value>保存された PIUGAME のパスワードも削除する</value>
+  </data>
   <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
     <value>インポートしたスコアをコミュニティのスコアサイト PIU Tracker にも送信します。</value>
   </data>
@@ -469,6 +472,9 @@
   </data>
   <data name="Always" xml:space="preserve">
     <value>常に</value>
+  </data>
+  <data name="always all mixes" xml:space="preserve">
+    <value>常にすべてのバージョン</value>
   </data>
   <data name="Amazing" xml:space="preserve">
     <value>素晴らしい</value>
@@ -809,6 +815,9 @@
   <data name="Cancel" xml:space="preserve">
     <value>キャンセル</value>
   </data>
+  <data name="Cancel deletion" xml:space="preserve">
+    <value>削除を取り消す</value>
+  </data>
   <data name="Capped — perfects pay +{0}" xml:space="preserve">
     <value>上限 — Perfect は +{0}</value>
   </data>
@@ -937,6 +946,9 @@
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>ゲームカードを選んでから、もう一度インポートを押してください。</value>
   </data>
+  <data name="Choose a new creator" xml:space="preserve">
+    <value>新しい作成者を選ぶ</value>
+  </data>
   <data name="Choose the account to merge with" xml:space="preserve">
     <value>統合するアカウントを選択してください</value>
   </data>
@@ -1045,6 +1057,9 @@
   </data>
   <data name="Communities to include" xml:space="preserve">
     <value>含めるコミュニティ</value>
+  </data>
+  <data name="Communities you've only joined are fine — you can't transfer those, and they don't block anything." xml:space="preserve">
+    <value>参加しているだけのコミュニティは問題ありません。譲渡できず、何も妨げません。</value>
   </data>
   <data name="Community" xml:space="preserve">
     <value>コミュニティ</value>
@@ -1175,6 +1190,9 @@
   <data name="Continous Modifier Scale (modifier increments between letter grades)" xml:space="preserve">
 	  <value>連続倍率スケール（ランク間で倍率が増加）</value>
 	  
+  </data>
+  <data name="Contributions" xml:space="preserve">
+    <value>投稿したもの</value>
   </data>
   <data name="CoOp" xml:space="preserve">
     <value>CoOp</value>
@@ -1339,6 +1357,9 @@
   <data name="Delete" xml:space="preserve">
 	  <value>削除</value>
   </data>
+  <data name="Delete all my scores" xml:space="preserve">
+    <value>すべてのスコアを削除する</value>
+  </data>
   <data name="Delete All Scores" xml:space="preserve">
 	  <value>全スコア削除</value>
   </data>
@@ -1354,17 +1375,35 @@
   <data name="Delete Failed" xml:space="preserve">
     <value>削除できませんでした。もう一度お試しください。</value>
   </data>
+  <data name="Delete my account" xml:space="preserve">
+    <value>アカウントを削除する</value>
+  </data>
+  <data name="Delete my {0} scores" xml:space="preserve">
+    <value>{0} のスコアを削除する</value>
+  </data>
   <data name="Delete Submission Warning" xml:space="preserve">
     <value>{1} のエントリーから {0} を削除すると、そのスコアと写真が順位から消えます。</value>
   </data>
+  <data name="Delete the data I selected" xml:space="preserve">
+    <value>選んだデータを削除する</value>
+  </data>
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>このコミュニティと全データを削除しますか？元に戻せません。</value>
+  </data>
+  <data name="Delete your account" xml:space="preserve">
+    <value>アカウントの削除</value>
   </data>
   <data name="Deleted" xml:space="preserve">
     <value>削除しました。</value>
   </data>
   <data name="Deletes every saved import password on every device. Users re-enter on their next import. Use if you suspect a breach." xml:space="preserve">
     <value>すべてのデバイスに保存されたインポート用パスワードを削除します。ユーザーは次回のインポート時に再入力します。情報漏洩が疑われる場合に使用してください。</value>
+  </data>
+  <data name="Deleting every mix resets your Pumbility, your titles and your folder progress everywhere." xml:space="preserve">
+    <value>すべてのバージョンを削除すると、Pumbility・称号・フォルダ進捗がすべてリセットされます。</value>
+  </data>
+  <data name="Deleting your {0} scores resets your Pumbility, your titles and your folder progress for that mix. Other mixes are untouched." xml:space="preserve">
+    <value>{0} のスコアを削除すると、そのバージョンの Pumbility・称号・フォルダ進捗がリセットされます。他のバージョンはそのままです。</value>
   </data>
   <data name="Demote" xml:space="preserve">
     <value>降格</value>
@@ -1609,6 +1648,9 @@
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>この下はすべてサイトの実データです — スクリーンショットではなく、実際のプロダクトです。</value>
   </data>
+  <data name="Everything goes — scores, history, votes, tournament results, communities, and the account itself." xml:space="preserve">
+    <value>すべて消えます — スコア、履歴、投票、大会結果、コミュニティ、そしてアカウント自体。</value>
+  </data>
   <data name="Everything it can do in your server" xml:space="preserve">
     <value>サーバーでできるすべてのこと</value>
   </data>
@@ -1811,6 +1853,9 @@
   <data name="From" xml:space="preserve">
 	  <value>から</value>
   </data>
+  <data name="From now on, every import and play session shows up here and you can undo any of them. Scores you already had can still be deleted." xml:space="preserve">
+    <value>これ以降、インポートとプレイセッションはすべてここに表示され、どれでも取り消せます。すでにあるスコアも削除はできます。</value>
+  </data>
   <data name="From Official" xml:space="preserve">
     <value>公式サイト</value>
   </data>
@@ -1871,6 +1916,9 @@
   <data name="Give a song name." xml:space="preserve">
     <value>曲名を入力してください。</value>
   </data>
+  <data name="Go to Delete" xml:space="preserve">
+    <value>削除へ</value>
+  </data>
   <data name="Goal" xml:space="preserve">
     <value>目標</value>
   </data>
@@ -1928,11 +1976,17 @@
   <data name="Grouped by" xml:space="preserve">
     <value>グループ化</value>
   </data>
+  <data name="Had a bad import?" xml:space="preserve">
+    <value>インポートを間違えましたか？</value>
+  </data>
   <data name="Half bar · 500" xml:space="preserve">
     <value>バーの半分 · 500</value>
   </data>
   <data name="Half-Double" xml:space="preserve">
     <value>ハーフダブル</value>
+  </data>
+  <data name="Hand over your communities first" xml:space="preserve">
+    <value>先にコミュニティを譲渡してください</value>
   </data>
   <data name="Hands" xml:space="preserve">
     <value>ハンド</value>
@@ -2144,6 +2198,9 @@
   <data name="Import to" xml:space="preserve">
     <value>インポート先</value>
   </data>
+  <data name="Import undone" xml:space="preserve">
+    <value>インポートを取り消しました</value>
+  </data>
   <data name="Import Your Phoenix Scores" xml:space="preserve">
 	  <value>Phoenixスコアをインポート</value>
   </data>
@@ -2158,6 +2215,9 @@
   </data>
   <data name="Imported {0} new scores" xml:space="preserve">
     <value>{0}件の新しいスコアをインポートしました</value>
+  </data>
+  <data name="Importing again will bring these scores straight back." xml:space="preserve">
+    <value>もう一度インポートすると、これらのスコアはそのまま戻ります。</value>
   </data>
   <data name="Importing scores…" xml:space="preserve">
     <value>スコアをインポート中…</value>
@@ -2500,11 +2560,17 @@
   <data name="Manage invite links" xml:space="preserve">
     <value>招待リンクの管理</value>
   </data>
+  <data name="Manage or delete my data" xml:space="preserve">
+    <value>データの管理・削除</value>
+  </data>
   <data name="Manage users (ban/unban)" xml:space="preserve">
     <value>ユーザー管理（BAN／BAN解除）</value>
   </data>
   <data name="manual" xml:space="preserve">
     <value>手動</value>
+  </data>
+  <data name="Manual entry" xml:space="preserve">
+    <value>手入力</value>
   </data>
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>手動インポート — コンソールスクリプト + CSV</value>
@@ -2961,6 +3027,9 @@
   <data name="No unmatched keys" xml:space="preserve">
     <value>未マッチのキーはありません</value>
   </data>
+  <data name="No — I want to permanently delete data." xml:space="preserve">
+    <value>いいえ — データを完全に削除したいです。</value>
+  </data>
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>今週は譜面ボードで順位を上げたプレイヤーはいません。</value>
   </data>
@@ -3069,6 +3138,9 @@
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>まだ提案できるものがありません — プレイしてスコアをインポートしてください。</value>
+  </data>
+  <data name="Nothing to undo yet" xml:space="preserve">
+    <value>取り消せるものはまだありません</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>たった今</value>
@@ -3508,6 +3580,9 @@
   </data>
   <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
     <value>PIU Tracker は完全に公開されています。プロフィールが非公開でも、送信したスコアは公開されます。</value>
+  </data>
+  <data name="PIUGAME" xml:space="preserve">
+    <value>PIUGAME</value>
   </data>
   <data name="PIUGAME Login" xml:space="preserve">
     <value>PIUGAMEログイン</value>
@@ -4229,6 +4304,9 @@
   <data name="Scores by competitive level" xml:space="preserve">
     <value>競技レベル別スコア</value>
   </data>
+  <data name="Scores from before we started recording sessions can't be undone — we didn't capture when they arrived, only when they were played. You can still delete them." xml:space="preserve">
+    <value>セッションの記録を始める前のスコアは取り消せません。届いた時刻ではなく、プレイした時刻しか残っていないためです。削除はできます。</value>
+  </data>
   <data name="Scores land here as boards close." xml:space="preserve">
     <value>ボードが締まるとスコアがここに表示されます。</value>
   </data>
@@ -4243,6 +4321,9 @@
   </data>
   <data name="Scores tracked" xml:space="preserve">
     <value>記録済みスコア</value>
+  </data>
+  <data name="Scores you've added since this import stay exactly as they are." xml:space="preserve">
+    <value>このインポート以降に追加したスコアはそのまま残ります。</value>
   </data>
   <data name="Scores, vs your level" xml:space="preserve">
     <value>スコア（同レベル帯比較）</value>
@@ -4321,6 +4402,9 @@
   </data>
   <data name="Select Folders" xml:space="preserve">
     <value>フォルダを選択</value>
+  </data>
+  <data name="Select what to delete" xml:space="preserve">
+    <value>削除するものを選ぶ</value>
   </data>
   <data name="Selected Chart" xml:space="preserve">
 	  <value>選択した譜面</value>
@@ -4831,6 +4915,9 @@
   <data name="That scoring configuration is invalid." xml:space="preserve">
     <value>このスコア構成は無効です。</value>
   </data>
+  <data name="That session can't be undone." xml:space="preserve">
+    <value>そのセッションは取り消せません。</value>
+  </data>
   <data name="The arc" xml:space="preserve">
     <value>あなたの軌跡</value>
   </data>
@@ -4963,6 +5050,9 @@
   <data name="This account will be deleted" xml:space="preserve">
     <value>このアカウントは削除されます</value>
   </data>
+  <data name="This can't be undone" xml:space="preserve">
+    <value>これは取り消せません</value>
+  </data>
   <data name="This Cannot Be Undone" xml:space="preserve">
     <value>取り消せません。</value>
   </data>
@@ -5007,6 +5097,9 @@
   </data>
   <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
     <value>このバージョンはスコア正規化されていません — レターグレードとクリアのみ利用可能です。</value>
+  </data>
+  <data name="this mix only" xml:space="preserve">
+    <value>このバージョンのみ</value>
   </data>
   <data name="This page is full." xml:space="preserve">
     <value>このページは満杯です。</value>
@@ -5267,6 +5360,9 @@
   <data name="Type The Score" xml:space="preserve">
     <value>スコアを入力</value>
   </data>
+  <data name="Type {0} to confirm" xml:space="preserve">
+    <value>確認のため {0} と入力してください</value>
+  </data>
   <data name="Ultra Popular" xml:space="preserve">
     <value>超人気</value>
   </data>
@@ -5288,8 +5384,29 @@
   <data name="Underrated" xml:space="preserve">
     <value>過小評価</value>
   </data>
+  <data name="Undo" xml:space="preserve">
+    <value>取り消し</value>
+  </data>
+  <data name="Undo an import instead" xml:space="preserve">
+    <value>代わりにインポートを取り消す</value>
+  </data>
+  <data name="Undo an import, delete scores for one mix or all of them, or delete your account." xml:space="preserve">
+    <value>インポートの取り消し、バージョン単位または全体のスコア削除、アカウントの削除ができます。</value>
+  </data>
   <data name="Undo Merge" xml:space="preserve">
     <value>統合を取り消す</value>
+  </data>
+  <data name="Undo this import" xml:space="preserve">
+    <value>このインポートを取り消す</value>
+  </data>
+  <data name="Undo this import?" xml:space="preserve">
+    <value>このインポートを取り消しますか？</value>
+  </data>
+  <data name="Undoing a session removes only the scores it added and puts back what you had before it. Other sessions aren't affected, including newer ones, and you can undo them in any order." xml:space="preserve">
+    <value>セッションを取り消すと、そのセッションが追加したスコアだけが消え、その前の状態に戻ります。他のセッションは新しいものも含めて影響を受けず、どの順番でも取り消せます。</value>
+  </data>
+  <data name="Undoing puts your scores back the way they were before it. Nothing is lost." xml:space="preserve">
+    <value>取り消すと、スコアは以前の状態に戻ります。失われるものはありません。</value>
   </data>
   <data name="Unknown" xml:space="preserve">
 	  <value>不明</value>
@@ -5321,6 +5438,9 @@
   </data>
   <data name="Unranked" xml:space="preserve">
     <value>未分類</value>
+  </data>
+  <data name="Until then your profile is hidden and your game tag is cleared." xml:space="preserve">
+    <value>それまではプロフィールは非表示になり、ゲームタグは消えます。</value>
   </data>
   <data name="Update Chart" xml:space="preserve">
 	  <value>譜面更新</value>
@@ -5742,6 +5862,9 @@
   <data name="You're already a member of this community." xml:space="preserve">
     <value>すでにこのコミュニティのメンバーです。</value>
   </data>
+  <data name="You're the creator of {0} communities. Someone has to own them, so pick a new creator for each — or delete it, if you're the only one left." xml:space="preserve">
+    <value>あなたは {0} 個のコミュニティの作成者です。誰かが引き継ぐ必要があるので、それぞれに新しい作成者を選ぶか、あなただけなら削除してください。</value>
+  </data>
   <data name="You've been banned from this community and can't rejoin." xml:space="preserve">
     <value>このコミュニティからBANされているため、再参加できません。</value>
   </data>
@@ -5757,8 +5880,17 @@
   <data name="Your account is content-locked. Message an admin if you have questions." xml:space="preserve">
 	  <value>アカウントはコンテンツロック中です。質問があれば管理者へご連絡ください。</value>
   </data>
+  <data name="Your account is hidden right away and permanently deleted on {0}. Sign in before then to cancel." xml:space="preserve">
+    <value>アカウントはすぐに非表示になり、{0} に完全に削除されます。それまでにサインインすれば取り消せます。</value>
+  </data>
   <data name="Your account is not associated with a game profile yet. Play a game on your account first, then try again." xml:space="preserve">
     <value>アカウントにはまだゲームプロフィールが関連付けられていません。まずアカウントでプレイしてから、もう一度お試しください。</value>
+  </data>
+  <data name="Your account is scheduled for deletion on {0}." xml:space="preserve">
+    <value>このアカウントは {0} に削除される予定です。</value>
+  </data>
+  <data name="Your account will not be deleted" xml:space="preserve">
+    <value>アカウントは削除されません</value>
   </data>
   <data name="Your best" xml:space="preserve">
     <value>自己ベスト</value>
@@ -5777,6 +5909,9 @@
   </data>
   <data name="Your Data" xml:space="preserve">
     <value>あなたのデータ</value>
+  </data>
+  <data name="Your data has been deleted" xml:space="preserve">
+    <value>データを削除しました</value>
   </data>
   <data name="Your data is yours" xml:space="preserve">
     <value>データはあなたのもの</value>
@@ -5825,6 +5960,9 @@
   </data>
   <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
     <value>あなたのPumbilityと競技レベル、そして最も近いライバル。</value>
+  </data>
+  <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
+    <value>Pumbility・称号・フォルダランプ・プレイヤー統計はこれらから計算されるため、自動的にリセットされます。残すことはできません。</value>
   </data>
   <data name="Your Region" xml:space="preserve">
     <value>自分の地域</value>
@@ -5910,6 +6048,9 @@
   <data name="{0} / {1} cleared" xml:space="preserve">
     <value>{0} / {1} クリア</value>
   </data>
+  <data name="{0} admins" xml:space="preserve">
+    <value>管理者 {0} 人</value>
+  </data>
   <data name="{0} arrived" xml:space="preserve">
     <value>{0} 件が入った</value>
   </data>
@@ -5924,6 +6065,12 @@
   </data>
   <data name="{0} charts added to songs that were already here" xml:space="preserve">
     <value>既存曲に追加された {0} 譜面</value>
+  </data>
+  <data name="{0} charts go back to their previous best" xml:space="preserve">
+    <value>{0} 譜面が以前のベストに戻ります</value>
+  </data>
+  <data name="{0} charts had no previous score and will be removed" xml:space="preserve">
+    <value>{0} 譜面には以前のスコアがなく、削除されます</value>
   </data>
   <data name="{0} charts have a different note count in {1} — the steps changed, not just the rating." xml:space="preserve">
     <value>{1} でノーツ数が変わった譜面が {0} 件あります。難度だけでなく譜面そのものが変わっています。</value>
@@ -5996,6 +6143,9 @@
   </data>
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>あなたに難しいのは{0}譜面 — 主に{1}</value>
+  </data>
+  <data name="{0} improved" xml:space="preserve">
+    <value>更新 {0}</value>
   </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} は {1} に収録されていません — 曲ごと削除されました。</value>

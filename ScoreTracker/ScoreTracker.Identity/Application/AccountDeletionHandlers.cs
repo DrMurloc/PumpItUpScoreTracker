@@ -1,4 +1,5 @@
 using MediatR;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts;
 using ScoreTracker.Identity.Contracts.Commands;
@@ -21,7 +22,8 @@ internal sealed class AccountDeletionHandlers(
         IDateTimeOffsetAccessor dateTime)
     : IRequestHandler<RequestAccountDeletionCommand, AccountDeletionResult>,
         IRequestHandler<CancelAccountDeletionCommand>,
-        IRequestHandler<GetPendingAccountDeletionQuery, PendingAccountDeletion?>
+        IRequestHandler<GetPendingAccountDeletionQuery, PendingAccountDeletion?>,
+        IRequestHandler<GetAccountDeletionBlockersQuery, IReadOnlyList<OwnedCommunityRecord>>
 {
     /// <summary>The grace window. Long enough to change your mind, short enough to mean it.</summary>
     private static readonly TimeSpan GracePeriod = TimeSpan.FromDays(7);
@@ -71,6 +73,12 @@ internal sealed class AccountDeletionHandlers(
             IsPublic = pending.WasPublic,
             GameTag = pending.GameTag == null ? null : Name.From(pending.GameTag)
         }, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<OwnedCommunityRecord>> Handle(GetAccountDeletionBlockersQuery request,
+        CancellationToken cancellationToken)
+    {
+        return (await communities.GetOwnedCommunities(request.UserId, cancellationToken)).ToArray();
     }
 
     public async Task<PendingAccountDeletion?> Handle(GetPendingAccountDeletionQuery request,

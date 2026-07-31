@@ -1,0 +1,198 @@
+@page "/Account/Data/Undo"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Identity.Contracts.Commands
+@using ScoreTracker.ScoreLedger.Contracts
+@using ScoreTracker.ScoreLedger.Contracts.Commands
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components.Account
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+<PageTitle>@L["Undo"]</PageTitle>
+
+@* Undo removes ONE session and rebuilds the charts it touched from what remains. It is not a
+   rewind to a point in time, and the copy must never let anyone read it that way — no
+   "restore to", no "roll back to". See docs/design/delete-my-data.md §6. *@
+<YourDataFrame Active="YourDataFrame.YourDataTab.Undo">
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4">
+        @L["Undoing a session removes only the scores it added and puts back what you had before it. Other sessions aren't affected, including newer ones, and you can undo them in any order."]
+    </MudAlert>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary"/>
+    }
+    else if (!_sessions.Any())
+    {
+        <MudPaper Outlined="true" Class="pa-8 d-flex flex-column align-center gap-3">
+            <MudText Typo="Typo.h6">@L["Nothing to undo yet"]</MudText>
+            <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Style="max-width: 46ch;">
+                @L["From now on, every import and play session shows up here and you can undo any of them. Scores you already had can still be deleted."]
+            </MudText>
+            <MudButton Href="/Account/Data/Delete" Variant="Variant.Outlined">@L["Go to Delete"]</MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        <div class="d-flex flex-column gap-2">
+            @foreach (var session in _sessions)
+            {
+                <MudPaper Outlined="true" Class="pa-3 undo-row">
+                    <div class="d-flex align-center gap-3 flex-wrap">
+                        <MudChip T="string" Size="Size.Small" Class="ma-0">@KindOf(session)</MudChip>
+                        <div class="flex-grow-1">
+                            <MudText Typo="Typo.body2">
+                                @L["{0} scores", session.ScoreCount]
+                                @if (session.AccountTag is not null)
+                                {
+                                    <span class="undo-tag" title="@session.CardId">@session.AccountTag</span>
+                                }
+                            </MudText>
+                            <MudText Typo="Typo.caption" Style="opacity:.75;">
+                                @session.StartedAt.LocalDateTime.ToString("g")
+                                · @L["{0} new", session.NewCount]
+                                · @L["{0} improved", session.UpscoreCount]
+                                · @session.Mix.GetName()
+                            </MudText>
+                        </div>
+                        @if (session.CanUndo)
+                        {
+                            <MudButton Variant="Variant.Outlined" Disabled="_busy"
+                                       OnClick="@(() => OpenPreview(session))">@L["Undo"]</MudButton>
+                        }
+                    </div>
+                </MudPaper>
+            }
+        </div>
+
+        <MudText Typo="Typo.caption" Class="mt-4 d-block" Style="opacity:.7;">
+            @L["Scores from before we started recording sessions can't be undone — we didn't capture when they arrived, only when they were played. You can still delete them."]
+        </MudText>
+    }
+</YourDataFrame>
+
+<MudDialog @bind-Visible="_showPreview" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Undo this import?"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_preview is not null)
+        {
+            <div class="d-flex flex-column gap-3">
+                <MudText Typo="Typo.body2" Style="opacity:.75;">
+                    @KindOf(_preview.Session) · @_preview.Session.StartedAt.LocalDateTime.ToString("g")
+                    · @_preview.Session.Mix.GetName()
+                </MudText>
+                <div class="d-flex flex-column gap-1">
+                    <MudText Typo="Typo.body2">@L["{0} charts go back to their previous best", _preview.ChartsRestored]</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Error">@L["{0} charts had no previous score and will be removed", _preview.ChartsRemoved]</MudText>
+                </div>
+                <MudText Typo="Typo.body2" Style="opacity:.75;">
+                    @L["Scores you've added since this import stay exactly as they are."]
+                </MudText>
+                @if (_preview.Session.Source == ScoreJournalEntry.OfficialImportSource)
+                {
+                    @* The journal keys a play by its site timestamp, so a re-import collapses onto
+                       the same rows and brings all of this straight back. A fix that lasts until
+                       the next click of Import is not a fix. *@
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                        <MudText Typo="Typo.body2">@L["Importing again will bring these scores straight back."]</MudText>
+                        <MudCheckBox T="bool" @bind-Value="_forgetCredential" Dense="true">
+                            @L["Also forget my saved PIUGAME password"]
+                        </MudCheckBox>
+                    </MudAlert>
+                }
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer/>
+        <MudButton Variant="Variant.Text" Disabled="_busy" OnClick="@(() => _showPreview = false)">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_busy"
+                   OnClick="ConfirmUndo">@L["Undo this import"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    /* The game tag is the "whose card is this" answer, so it gets the accent. */
+    .undo-tag { font-weight: 700; color: var(--mix-accent); margin-left: .4rem; }
+</style>
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ISnackbar Snackbar
+@code {
+    // MaxWidth.Small is dead site-wide: charts.scss forces .mud-dialog-width-sm max-width to
+    // none, so a Small dialog renders near-viewport-width. False keeps the cap ours.
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.False, FullWidth = true };
+
+    private IReadOnlyList<ScoreSessionRecord> _sessions = Array.Empty<ScoreSessionRecord>();
+    private ScoreSessionUndoPreview? _preview;
+    private bool _showPreview;
+    private bool _forgetCredential = true;
+    private bool _loading = true;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        _loading = true;
+        _sessions = await Mediator.Send(new GetScoreSessionsQuery(CurrentUser.User.Id));
+        _loading = false;
+    }
+
+    private string KindOf(ScoreSessionRecord session)
+    {
+        // Named for what a player recognizes, not for the Source enum. "Played" was the first
+        // draft and it is wrong — nobody plays on this site.
+        return session.Source switch
+        {
+            ScoreJournalEntry.OfficialImportSource => L["PIUGAME"],
+            ScoreJournalEntry.CsvSource => L["CSV Upload"],
+            _ => L["Manual entry"]
+        };
+    }
+
+    private async Task OpenPreview(ScoreSessionRecord session)
+    {
+        _preview = await Mediator.Send(new GetScoreSessionUndoPreviewQuery(CurrentUser.User.Id, session.Id));
+        _forgetCredential = true;
+        _showPreview = _preview is not null;
+    }
+
+    private async Task ConfirmUndo()
+    {
+        if (_preview is null) return;
+        _busy = true;
+        try
+        {
+            var result = await Mediator.Send(
+                new UndoScoreSessionCommand(CurrentUser.User.Id, _preview.Session.Id, _forgetCredential));
+            if (result.Outcome == ScoreSessionUndoOutcome.Undone)
+            {
+                if (_forgetCredential && _preview.Session.Source == ScoreJournalEntry.OfficialImportSource)
+                    await Mediator.Send(new ForgetAllImportCredentialsCommand());
+                Snackbar.Add(L["Import undone"], Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(L["That session can't be undone."], Severity.Warning);
+            }
+
+            _showPreview = false;
+            await Load();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+}
