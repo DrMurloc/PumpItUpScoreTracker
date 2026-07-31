@@ -352,7 +352,7 @@ aggregate + new ports, if structural), this file, and — only if deferred work 
 
 Owning a community **blocks account deletion outright** — the creator hands it over themselves
 rather than having the system pick an heir, because a community is other people's
-([delete-my-data.md](delete-my-data.md) §8.1). Two guards, and the second is what makes the first
+([delete-my-data.md](delete-my-data.md) §8.2). Two guards, and the second is what makes the first
 real:
 
 - `RequestAccountDeletionCommand` refuses while the player creates any non-regional community, and

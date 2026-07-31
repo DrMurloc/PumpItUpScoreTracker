@@ -298,7 +298,23 @@ and the actual **Cancel deletion** control.
 
 **Cancel** restores the snapshot: `IsPublic`, game tag, and the purge row marked undone.
 
-### 8.1 Owning a community blocks deletion
+### 8.1 The admin account cannot be deleted
+
+Owner call, 2026-07-31. `RequestAccountDeletionCommand` refuses outright for the account
+`User.IsAdmin` recognises. It administers the site and owns the World community, and no
+self-serve flow should be able to take either away by accident.
+
+The refusal lives in the **handler**, not only in the UI — the command is a public contract and
+the delete page is not the only thing that can send it. The page additionally hides the panel,
+because a refusal you can only discover by pressing the most frightening button on the page is a
+dead end rather than an answer.
+
+This is what the World finding in §9 was really pointing at: filtering the community blocker on
+`IsRegional` alone would have blocked that account for the wrong reason, by a community nobody can
+transfer. The right answer was both — exclude World from the blocker, and refuse the account
+outright.
+
+### 8.2 Owning a community blocks deletion
 
 Owner call, 2026-07-30. A community is other people's, so the creator hands it over **themselves**
 rather than having the system pick an heir. Two guards, and they close a loop:
@@ -378,7 +394,7 @@ Two rows in that table are **not** deletions:
 - **`Community.OwningUserId`** is a *twelfth* missed table, and the one that is a product question
   rather than a coverage bug — it is also the reason the ratchet must match `*UserId`, not `UserId`
   (§15). Deleting a community because its creator left would take everyone else's community with
-  it. **Owning a community blocks account deletion outright** (§8.1, owner 2026-07-30): the player
+  it. **Owning a community blocks account deletion outright** (§8.2, owner 2026-07-30): the player
   hands each one over or deletes it first. So the purge never encounters an owned community, and
   the row needs no purge behavior at all.
 
@@ -664,7 +680,7 @@ access styles in use today (`Set<TEntity>()` and `database.<DbSet>`). It is also
 eight hand-written repositories it replaces.
 
 Two exemptions, each carrying its reason in the list: `OfficialPlayer` (unlinked, not deleted — an
-UPDATE) and `Community` (an account that owns one cannot be deleted at all, §8.1, so the purge never
+UPDATE) and `Community` (an account that owns one cannot be deleted at all, §8.2, so the purge never
 meets one).
 
 **The blind spot to know about**: matching on the `*UserId` suffix catches `OwningUserId` and would
@@ -745,7 +761,7 @@ only `Contracts/` and `Wiring/` are public) · `Tests.Api` goldens (no public wi
 | [UX-GUIDELINES.md](../UX-GUIDELINES.md) | two additions to §2: **the armed-form gate** (a destructive form renders visible-but-inert until an explicit opt-in, because hiding it makes people hunt) and **the blast-radius button** (a destructive confirm names its count, which outperforms another acknowledgement checkbox) |
 | [score-truth-model.md](score-truth-model.md) | §3's "never updated or deleted by the application" is amended — the write path never rewrites history, a player deleting their own data is the sanctioned exception (D8). **Whichever PR lands second makes this edit** |
 | [login-overhaul.md](login-overhaul.md) | §"Merge execution" line 139 calls self-serve delete a future feature; it points here instead |
-| [communities-overhaul.md](communities-overhaul.md) | owning a community blocks account deletion, and a pending deletion blocks creating one or receiving the creator seat (§8.1) |
+| [communities-overhaul.md](communities-overhaul.md) | owning a community blocks account deletion, and a pending deletion blocks creating one or receiving the creator seat (§8.2) |
 | [CLAUDE.md](../../CLAUDE.md) | the three new ratchets in the architecture-test list; note that Randomizer and HomePage now have bus consumers and therefore `AddXxxConsumers` hooks |
 
 **No change needed**: [API.md](../API.md) (no public endpoint deletes scores — the wipe is MediatR-only,
@@ -766,7 +782,9 @@ TECHNOLOGIES, CONTRIBUTING, DOMAIN.
 - **Type the username** to confirm.
 - **The sign-in dialog does not auto-cancel** — it points at the account page.
 - **The journal append-only sentence is overstated** and does not bind here (D8).
+- **The admin account can never be deleted** (§8.1, owner 2026-07-31) — a hard refusal in the
+  handler, not just a hidden button.
 - **"Revert" → "Undo"**, and the session kinds are named PIUGAME / CSV upload / Manual (§6).
 - **Official imports record the game tag** they pulled from (§4).
-- **Owning a community blocks account deletion** (§8.1) — hand it over or delete it first; the
+- **Owning a community blocks account deletion** (§8.2) — hand it over or delete it first; the
   system never picks an heir. A flagged account also cannot create a community or be handed one.

@@ -871,7 +871,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     {
         var userId = _currentUser.User.Id;
         // An account on its way out must not pick up a community other people would then lose
-        // with it (docs/design/delete-my-data.md §8.1). Read live rather than copied, so
+        // with it (docs/design/delete-my-data.md §8.2). Read live rather than copied, so
         // cancelling the deletion lifts this on its own.
         if (await _mediator.Send(new GetPendingAccountDeletionQuery(userId), cancellationToken) != null)
             throw new DeniedFromCommunityException(

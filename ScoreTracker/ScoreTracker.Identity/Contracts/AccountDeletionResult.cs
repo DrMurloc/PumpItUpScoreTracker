@@ -13,7 +13,14 @@ public enum AccountDeletionOutcome
     ///     The player still creates communities other people are in. They hand each one over or
     ///     delete it first; the system never picks an heir (delete-my-data.md §8.1).
     /// </summary>
-    BlockedByOwnedCommunities
+    BlockedByOwnedCommunities,
+
+    /// <summary>
+    ///     The site's admin account, which cannot delete itself. Losing it would take the
+    ///     administrator and the owner of the World community with it — and no self-serve flow
+    ///     should be able to do that by accident.
+    /// </summary>
+    NotPermitted
 }
 
 /// <summary>

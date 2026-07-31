@@ -53,7 +53,7 @@ public sealed class AccountPurgeCoverageTests
             "Unlinked, not deleted. The row mirrors a public piugame leaderboard entry that " +
             "exists whether we do or not; deleting it would corrupt the mirror.",
         ["CommunityEntity"] =
-            "Owning a community blocks account deletion outright (delete-my-data.md §8.1), so " +
+            "Owning a community blocks account deletion outright (delete-my-data.md §8.2), so " +
             "a purge never meets one — the creator hands it over or deletes it first.",
         ["MergeRequestEntity"] =
             "The merge's own audit trail, retained past the purge it drives. It carries two " +

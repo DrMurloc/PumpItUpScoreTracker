@@ -31,6 +31,13 @@ internal sealed class AccountDeletionHandlers(
     public async Task<AccountDeletionResult> Handle(RequestAccountDeletionCommand request,
         CancellationToken cancellationToken)
     {
+        var requester = await users.GetUser(request.UserId, cancellationToken);
+        // The admin account is not self-deletable, full stop. It administers the site and owns
+        // the World community; a self-serve flow must not be able to take either away. Checked
+        // in the handler rather than only hidden in the UI, because the command is a public
+        // contract and the page is not the only thing that can send it.
+        if (requester?.IsAdmin == true) return new AccountDeletionResult(AccountDeletionOutcome.NotPermitted);
+
         var existing = await deletions.GetPending(request.UserId, cancellationToken);
         if (existing != null)
             return new AccountDeletionResult(AccountDeletionOutcome.AlreadyScheduled, existing.PurgeAfter);
@@ -43,16 +50,16 @@ internal sealed class AccountDeletionHandlers(
             return new AccountDeletionResult(AccountDeletionOutcome.BlockedByOwnedCommunities,
                 OwnedCommunities: owned);
 
-        var user = await users.GetUser(request.UserId, cancellationToken);
-        if (user == null) return new AccountDeletionResult(AccountDeletionOutcome.Scheduled);
+        if (requester == null) return new AccountDeletionResult(AccountDeletionOutcome.Scheduled);
 
         var now = dateTime.Now;
         await deletions.Save(new AccountDeletionRequest(Guid.NewGuid(), request.UserId, now,
-            now + GracePeriod, null, null, user.IsPublic, user.GameTag?.ToString()), cancellationToken);
+            now + GracePeriod, null, null, requester.IsPublic, requester.GameTag?.ToString()),
+            cancellationToken);
 
         // Hidden right away: out of the leaderboards and off the game tag, so nobody meets a
         // ghost during the window. The snapshot above is what puts it back.
-        await users.SaveUser(user with { IsPublic = false, GameTag = null, ClaimsInvalidatedAt = now },
+        await users.SaveUser(requester with { IsPublic = false, GameTag = null, ClaimsInvalidatedAt = now },
             cancellationToken);
 
         return new AccountDeletionResult(AccountDeletionOutcome.Scheduled, now + GracePeriod);

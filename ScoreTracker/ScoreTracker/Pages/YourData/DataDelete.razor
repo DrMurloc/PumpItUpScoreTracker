@@ -100,16 +100,22 @@
         </div>
     </div>
 
-    <MudDivider Class="my-8"/>
+    @* The admin account is not self-deletable (the handler refuses regardless). Not offering it
+       beats offering it and refusing on click — a dead end you can only find by pressing the
+       most frightening button on the page. *@
+    @if (!CurrentUser.User.IsAdmin)
+    {
+        <MudDivider Class="my-8"/>
 
-    <MudPaper Outlined="true" Class="pa-4" Style="border-color: var(--mud-palette-error);">
-        <MudText Typo="Typo.h6" Color="Color.Error">@L["Delete your account"]</MudText>
-        <MudText Typo="Typo.body2" Class="mb-3">
-            @L["Everything goes — scores, history, votes, tournament results, communities, and the account itself."]
-        </MudText>
-        <MudButton Variant="Variant.Filled" Color="Color.Error" Disabled="_busy"
-                   OnClick="StartAccountDeletion">@L["Delete my account"]</MudButton>
-    </MudPaper>
+        <MudPaper Outlined="true" Class="pa-4" Style="border-color: var(--mud-palette-error);">
+            <MudText Typo="Typo.h6" Color="Color.Error">@L["Delete your account"]</MudText>
+            <MudText Typo="Typo.body2" Class="mb-3">
+                @L["Everything goes — scores, history, votes, tournament results, communities, and the account itself."]
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" Disabled="_busy"
+                       OnClick="StartAccountDeletion">@L["Delete my account"]</MudButton>
+        </MudPaper>
+    }
 </YourDataFrame>
 
 <DeleteAccountDialog @bind-Visible="_showAccountDialog" Blockers="_blockers" PurgeAfter="_purgeAfter"
