@@ -1,5 +1,6 @@
 using MassTransit;
 using MediatR;
+using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.SharedKernel.Enums;
@@ -30,46 +31,44 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         // keeps the session alive even when nothing lands.
         var sessionId = batches.GetOrExtendSession(request.Mix, user.User.Id, request.Source, dateTimeOffset.Now,
             request.SessionId);
+        // A stage break with nothing judged never enters the system, from any source.
+        if (BestAttemptPolicy.IsWalkOff(request.IsBroken, request.Score, request.Judgements)) return;
+
         var existing = await records.GetRecordedScore(request.Mix, user.User.Id, request.ChartId, cancellationToken);
-        var score = request.Score;
-        var plate = request.Plate;
-        var isBroken = request.IsBroken;
-        if (request.KeepBestStats && existing?.Score != null && request.Score < existing?.Score)
-            score = existing.Score;
+        // The game awards no plate on a failed stage, so a broken attempt carries none.
+        var plate = BestAttemptPolicy.PlateFor(request.IsBroken, request.Plate);
 
-        if (request.KeepBestStats && existing?.Plate != null && request.Plate < existing?.Plate)
-            plate = existing.Plate;
-
-        if (request.KeepBestStats && !(existing?.IsBroken ?? true) && request.IsBroken)
-            isBroken = false;
+        // KeepBestStats means "apply the best-attempt policy" — the acquisition sources, which
+        // may only ever raise a record. Without it the submission is authoritative and
+        // overwrites: the manual routes, and the only way a personal best can decrease.
+        if (request.KeepBestStats &&
+            !BestAttemptPolicy.Beats(existing, request.Score, plate, request.IsBroken)) return;
 
         // Progress only: a submission that leaves the best attempt unchanged is noise
         // (the import deliberately re-scrapes past its cutoff, so repeats are expected),
         // not history — it must not touch the record, the journal, or RecordedDate.
-        var recordChanged = existing == null || score != existing.Score || plate != existing.Plate ||
-                            isBroken != existing.IsBroken;
+        var recordChanged = existing == null || request.Score != existing.Score || plate != existing.Plate ||
+                            request.IsBroken != existing.IsBroken;
         if (!recordChanged) return;
 
-        // Judgements decompose one specific play's score, so they follow whichever play
-        // supplied the resulting score: the incoming one when its score stands, the existing
-        // record's when KeepBestStats kept the old score. A score change with no observed
-        // breakdown clears them rather than mislabeling the previous play's counts.
-        var judgements = score == request.Score
-            ? request.Judgements ?? (score == existing?.Score ? existing?.Judgements : null)
-            : existing?.Judgements;
+        // Judgements decompose one specific play's score. Reaching this line means the result
+        // changed, so a different play produced it — the previous play's counts describe the
+        // old result and are dropped rather than mislabeled onto the new one.
+        var judgements = request.Judgements;
         // The site's saved timestamp, when it supplied one, is the truthful record/journal
         // time; the clock only stamps submissions the site never dated.
         var recordedAt = request.RecordedAt ?? dateTimeOffset.Now;
 
         await records.UpdateBestAttempt(request.Mix, user.User.Id,
-            new RecordedPhoenixScore(request.ChartId, score, plate, isBroken,
+            new RecordedPhoenixScore(request.ChartId, request.Score, plate, request.IsBroken,
                 recordedAt, request.Source, judgements), cancellationToken);
         // The journal is the record's history: it gets the resulting best-attempt state,
         // exactly and only when that state changes.
         await journal.Append(new ScoreJournalEntry(recordedAt, request.Source, user.User.Id,
-            request.ChartId, score, plate, isBroken, request.Mix, sessionId, judgements), cancellationToken);
-        var isNewScore = (existing?.IsBroken ?? true) && !isBroken;
-        var isUpscore = existing?.Score != null && score != null && existing.Score < score;
+                request.ChartId, request.Score, plate, request.IsBroken, request.Mix, sessionId, judgements),
+            cancellationToken);
+        var isNewScore = (existing?.IsBroken ?? true) && !request.IsBroken;
+        var isUpscore = existing?.Score != null && request.Score != null && existing.Score < request.Score;
         if (!isNewScore && !isUpscore) return;
 
         // Batch up score posts to reduce noise. AddToBatch atomically creates-or-extends
