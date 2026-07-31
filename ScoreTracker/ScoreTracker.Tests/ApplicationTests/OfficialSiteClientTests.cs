@@ -568,6 +568,43 @@ public sealed class OfficialSiteClientTests
         };
     }
 
+    [Fact]
+    public async Task ANoteCountIsOnlyLearnedFromAPassingPlay()
+    {
+        // A break's judgements stop where the stage did, so its total is short of the chart's.
+        // The catalog learns a note count once and never revisits it, so a partial one sticks.
+        var h = new ImportHarness();
+        var chart = h.GivenChart(new ChartBuilder().WithSongName("Unknown Notes").Build());
+        h.GivenBestScorePage(1, Card(chart, 950000, T0));
+        h.GivenBestScorePage(2, Card(chart, 950000, T0));
+        h.GivenRecentScores(
+            Broken(chart, 300000, T0.AddMinutes(-10), perfects: 300, greats: 10, goods: 0, bads: 0, misses: 5),
+            Play(chart, 950000, T0, perfects: 900, greats: 80, goods: 10, bads: 5, misses: 5));
+
+        await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: false, maxPages: null, CancellationToken.None);
+
+        h.Charts.Verify(c => c.UpdateNoteCount(MixEnum.Phoenix2, chart.Id, 1000,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task NoPassingPlayMeansTheNoteCountIsLeftForALaterImport()
+    {
+        var h = new ImportHarness();
+        var chart = h.GivenChart(new ChartBuilder().WithSongName("Only Broken").Build());
+        h.GivenBestScorePage(1, Card(chart, 300000, T0, plate: null, isBroken: true));
+        h.GivenBestScorePage(2, Card(chart, 300000, T0, plate: null, isBroken: true));
+        h.GivenRecentScores(
+            Broken(chart, 300000, T0, perfects: 300, greats: 10, goods: 0, bads: 0, misses: 5));
+
+        await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: true, maxPages: null, CancellationToken.None);
+
+        h.Charts.Verify(c => c.UpdateNoteCount(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<int>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private static PiuGameGetRecentScoresResult Play(Chart chart, int score,
         DateTimeOffset? recordedAt, int perfects, int greats, int goods, int bads, int misses)
     {
@@ -587,6 +624,16 @@ public sealed class OfficialSiteClientTests
             Misses = misses,
             RecordedAt = recordedAt
         };
+    }
+
+    /// <summary>A stage-broken recent play: no plate, and judgements that stop where it did.</summary>
+    private static PiuGameGetRecentScoresResult Broken(Chart chart, int score,
+        DateTimeOffset? recordedAt, int perfects, int greats, int goods, int bads, int misses)
+    {
+        var play = Play(chart, score, recordedAt, perfects, greats, goods, bads, misses);
+        play.IsBroken = true;
+        play.Plate = null;
+        return play;
     }
 
     private sealed class ImportHarness

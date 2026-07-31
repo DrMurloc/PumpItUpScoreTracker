@@ -385,8 +385,13 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                     .ToArray();
                 if (plays.Length == 0) continue;
 
-                if (chart.NoteCount == null)
-                    await _charts.UpdateNoteCount(mix, chart.Id, plays.Max(s => s.NoteCount), cancellationToken);
+                // Only a PASS judges every note — a break's counts stop where the stage did, so
+                // they are always short of the chart's real total. The catalog learns a note
+                // count once and never revisits it, so a partial one sticks forever; with no
+                // passing play in the window we leave it for a later import instead of guessing.
+                var passed = plays.FirstOrDefault(s => !s.IsBroken);
+                if (chart.NoteCount == null && passed != null)
+                    await _charts.UpdateNoteCount(mix, chart.Id, passed.NoteCount, cancellationToken);
 
                 // Every dated play is journal history, best or not. Undated ones are skipped:
                 // the site's play time IS the row's identity, and without it a re-import would

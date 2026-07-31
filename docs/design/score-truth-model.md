@@ -132,7 +132,7 @@ in `WalkDatedBestScores`).
 the Daily Step observation, non-best journal rows, and — when D2 is on — a broken best for a
 chart the best page never listed.
 
-Three things it must stop doing:
+Two things it must stop doing:
 
 - **Building a record out of separate maxima.** `Max(score)` across the group with
   `All(broken)` for the flag produces attempts that never happened: one 900k break plus one
@@ -140,11 +140,23 @@ Three things it must stop doing:
   the policy; its own score, plate and flag travel together.
 - **Deriving a plate for a break.** `ScoreScreen.PlateText` returns `PerfectGame` when every
   judgement count is zero, so a zero-note break mints a Perfect Game. Plate is null when broken.
-- **Teaching the catalog a note count from a zero-note card.** `UpdateNoteCount` takes the first
-  card in the group; a walk-off writes 0.
 
-Cards the site labels `STAGE BREAK` are already skipped. D7 extends that to any card whose
-judgements sum to zero, and to a broken best-page card scoring 0.
+Cards the site labels `STAGE BREAK` are already skipped, and have been since
+`a0a54e72`. D7 extends that to any card whose judgements sum to zero, and to a broken
+best-page card scoring 0.
+
+**Note counts were not affected, and are not part of this effort.** Only a pass judges every
+note, so only a pass is a valid `UpdateNoteCount` sample — and that already held, because the
+`STAGE BREAK` skip drops breaks before they can reach the group. Verified 2026-07-30 against
+that day's production backup, comparing `ChartMix.NoteCount` to the judgement sums of journaled
+passes: **Phoenix 2 is exact on all 1032 checkable charts**, Phoenix on 2577 of 2579. The two
+Phoenix outliers (`Simon Says, EURODANCE!!` S20 stores 938 vs 1005 observed; `Over the Horizon`
+S20 stores 980 vs 1000) are short by whole-chart margins rather than mid-song ones, which reads
+as a chart re-step the stored count predates — not a partial sample. Unresolved, and small.
+
+`UpdateNoteCount` now takes its sample from a passing play explicitly rather than relying on the
+parser upstream to have removed the alternative. That is defence, not a fix: the catalog learns a
+note count once and never revisits it, so a wrong value is permanent, and the guard is two lines.
 
 ## 5. What the numbers say
 
