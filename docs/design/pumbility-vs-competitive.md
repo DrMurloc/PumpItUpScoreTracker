@@ -68,6 +68,44 @@ Practical consequence: for a **doubles player scoring A+ or better**, the two me
 almost identically. Anywhere that matters, the disagreement people feel is not coming from the
 per-chart formulas.
 
+## 1a. Falloff inside one folder (D23)
+
+Holding the level fixed isolates how each formula prices *score*. Levels lost per 10,000 points,
+D23, plate held at Marvelous:
+
+| region | PUMBILITY | Competitive | ratio | what it means |
+|---|---|---|---|---|
+| 940,000 → 995,000 (AA+ … SSS+) | 0.651 | 0.571 | **1.14×** | PUMBILITY is 14% *steeper* |
+| 900,000 → 940,000 (A+, AA) | 0.488 | 0.571 | **0.85×** | PUMBILITY 15% shallower |
+| below 900,000 (A and down) | 0.163 | 0.571 | **0.28×** | PUMBILITY nearly stops charging |
+| above 995,000 | 0.000 | 0.571 | **0×** | grade is capped; only the plate still pays |
+
+Over the span asked about — 995,000 down to 900,000 — the **totals are nearly identical**: PUMBILITY
+loses 5.53 levels, Competitive 5.43. They differ in *where* they spend it. PUMBILITY puts **65%** of
+that drop above 940,000 against Competitive's **58%**, because its rate tracks band width and the
+bands narrow from 20,000 to 5,000 as the grade climbs.
+
+Which is the honest answer to "which grades does each highlight":
+
+- **Competitive Level highlights nothing.** Every point of score is worth `1/17,500` of a level at
+  every grade. It is a pure accuracy meter with no opinion about which grade you are in.
+- **PUMBILITY highlights the narrow bands — AA+ through SSS+** — and only at their *edges*. Inside a
+  band the marginal value of a point is exactly **zero**; all of it sits on the thresholds:
+
+  | crossing | PUMBILITY gain, in one point of score |
+  |---|---|
+  | 900,000 (into A+) | **+1.63 levels** |
+  | 920,000 / 940,000 (AA, AA+) | +0.98 each |
+  | 950,000 / 960,000 / 970,000 (AAA, AAA+, S) | +0.65 each |
+  | 975,000 … 995,000 (S+ … SSS+) | +0.33 each |
+
+  The single most valuable point of score in the D23 folder is the one that crosses **900,000**.
+
+The ratios shift a little with folder, since PUMBILITY's rate scales with `Base(L)` while
+Competitive's does not: the top-region ratio is 1.02× at D18, 1.07× at D20, 1.14× at D23. So the
+"PUMBILITY is steeper at the top" effect only really exists in the upper folders — at D18 the two
+are within 2% of each other up there.
+
 ## 2. The fork is the A band, and it is structural
 
 PUMBILITY reads the grade, so the A band — **100,000 points wide** — prices identically at 800,000

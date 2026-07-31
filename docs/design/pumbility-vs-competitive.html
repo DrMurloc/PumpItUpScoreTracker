@@ -347,7 +347,7 @@
       <select id="plate-sel"></select>
     </label>
     <label class="ctl">
-      <span>Reference chart</span>
+      <span>Folder / reference</span>
       <select id="ref-level"></select>
     </label>
     <label class="ctl">
@@ -380,7 +380,29 @@
   <!-- ============ 2 ============ -->
   <section class="panel">
     <header>
-      <span class="panel-num">02 · where they disagree</span>
+      <span class="panel-num">02 · falloff inside one folder</span>
+      <h2 id="fall-title"></h2>
+      <p class="read">
+        Level is fixed here, so this is purely how each formula prices score: how much you lose per
+        10,000 points as the score drops. Competitive Level is a flat line by construction — every
+        point of score is worth the same everywhere. PUMBILITY has three plateaus and a cliff at
+        each grade threshold, so the answer to "which grades does it highlight" is: the ones with
+        the narrowest bands.
+      </p>
+      <p class="read" id="fall-read" style="margin-top: 10px; color: var(--ink)"></p>
+    </header>
+    <div class="legend">
+      <span class="key"><i class="line" style="background: var(--pumb)"></i> PUMBILITY, band-averaged</span>
+      <span class="key"><i class="line" style="background: var(--comp)"></i> Competitive Level</span>
+    </div>
+    <div class="scroller"><div id="fall"></div></div>
+    <details class="twin"><summary>Table view — including the size of each threshold cliff</summary><div class="scroller" id="t-fall"></div></details>
+  </section>
+
+  <!-- ============ 3 ============ -->
+  <section class="panel">
+    <header>
+      <span class="panel-num">03 · where they disagree</span>
       <h2>The disagreement is one column wide</h2>
       <p class="read">
         Each cell is how many levels of credit PUMBILITY gives a play <em>over</em> Competitive
@@ -398,7 +420,7 @@
   <!-- ============ 3 ============ -->
   <section class="panel">
     <header>
-      <span class="panel-num">03 · the exchange rate</span>
+      <span class="panel-num">04 · the exchange rate</span>
       <h2>What it takes to match the reference chart</h2>
       <p class="read" id="ladder-read"></p>
     </header>
@@ -413,7 +435,7 @@
   <!-- ============ 4 ============ -->
   <section class="panel">
     <header>
-      <span class="panel-num">04 · the answer to the question</span>
+      <span class="panel-num">05 · the answer to the question</span>
       <h2>Similar PUMBILITY and similar Competitive Level are not the same cohort</h2>
       <p class="read">
         Every grey dot is a synthetic player whose whole record sits in the D18–D23 band — varying
@@ -435,7 +457,7 @@
   <!-- ============ formulas ============ -->
   <section class="panel">
     <header>
-      <span class="panel-num">05 · the source</span>
+      <span class="panel-num">06 · the source</span>
       <h2>The two formulas, as implemented</h2>
       <p class="read">
         Ported verbatim from the repository and checked against the 30 golden per-chart rows in
@@ -496,7 +518,7 @@ doubles  = avg of top 50</pre>
         This is a normalisation invented for this page, not a formula the site ships. It is
         <strong>per chart</strong> — a player's PUMBILITY <em>total</em> is deliberately never
         mapped to a level, because sum-of-50 against average-of-100 has no honest single conversion
-        (that is the whole of panel 04). The site's nearest relative,
+        (that is the whole of panel 05). The site's nearest relative,
         <code>SuggestedTitleLevel</code>, does the same trick at a different granularity: it inverts
         a title's 50-chart threshold to a folder at a fixed AAA / Talented reference.
       </p>
@@ -513,7 +535,7 @@ doubles  = avg of top 50</pre>
   <!-- ============ findings ============ -->
   <section class="panel">
     <header>
-      <span class="panel-num">06 · what falls out of it</span>
+      <span class="panel-num">07 · what falls out of it</span>
       <h2>Findings</h2>
     </header>
     <div class="prose">
@@ -521,7 +543,7 @@ doubles  = avg of top 50</pre>
       <p>
         This was the surprise. Over the whole D18–D23 × A+→SSS+ grid the two metrics never disagree
         by more than <strong>half a level</strong> (0.46 on this page's anchor; under a level on any
-        anchor — see panel 05), and usually by under 0.2. The reason is
+        anchor — see panel 06), and usually by under 0.2. The reason is
         arithmetic coincidence rather than design: PUMBILITY's base curve grows 5 points per level
         on a base of 220–245, so one level is worth ~2.1% of a chart's value, and the grade ladder
         happens to spend about that much per 17,000–20,000 points of score in the S range. That is
@@ -553,7 +575,7 @@ doubles  = avg of top 50</pre>
         The per-chart formulas mostly agree; the <em>aggregations</em> do not. PUMBILITY sums 50
         charts, so it is a volume metric — a player with 15 excellent scores can only ever reach 30%
         of the number. Competitive Level averages, so those same 15 scores produce the highest
-        competitive level on the board. The "Sniper" archetype in panel 04 is exactly this: best
+        competitive level on the board. The "Sniper" archetype in panel 05 is exactly this: best
         competitive level of the four, worst PUMBILITY by a factor of three.
       </p>
 
@@ -578,7 +600,7 @@ doubles  = avg of top 50</pre>
   </section>
 
   <footer class="page">
-    Synthetic players throughout — this container has no database, so panel 04 is a parameter sweep
+    Synthetic players throughout — this container has no database, so panel 05 is a parameter sweep
     over plausible D18–D23 records, not a sample of real accounts. The per-chart maths in panels
     01–03 is exact. Plate is held at the selected value for every chart, and PUMBILITY's per-chart
     values assume the chart counts (not CO-OP, not a performance chart, not broken).
@@ -636,7 +658,7 @@ doubles  = avg of top 50</pre>
   const cEff = (L, s, single) => fung(L, s, single) - ANCHOR_FUNG;
 
   // ══ state ══
-  const state = { single: false, plate: 'MG', refLevel: 20, refScore: 970000 };
+  const state = { single: false, plate: 'MG', refLevel: 23, refScore: 920000 };
   const plateBonus = () => PLATES.find(p => p.key === state.plate).bonus;
   const T = () => state.single ? 'S' : 'D';
 
@@ -753,7 +775,123 @@ doubles  = avg of top 50</pre>
       ['Chart', ...BAND.flatMap(g => [`${g.name} pumb.`, `${g.name} comp.`])], rows);
   }
 
-  // ══ 02 — disagreement heatmap ═════════════════════════════════════════════
+  // ══ 02 — falloff inside one folder ════════════════════════════════════════
+  // Level is fixed, so this isolates how each formula prices score. The rate is the
+  // band-averaged loss per 10,000 points: PUMBILITY pays nothing inside a band and
+  // everything at the threshold, so a per-band average is the only honest smooth form —
+  // the cliff heights ride the table view and the tooltip.
+  const COMP_RATE = 10000 / 17500;
+
+  function falloffBands() {
+    const L = state.refLevel, pb = plateBonus();
+    const pl = s => pEff(L, s, state.single, pb);
+    return GRADES.filter(g => g.floor >= 800000).map((g, i, a) => {
+      const hi = i + 1 < a.length ? a[i + 1].floor : 1000000;
+      return {
+        name: g.name, lo: g.floor, hi, width: hi - g.floor,
+        // climbing out of this band into the next
+        pRate: (pl(hi) - pl(g.floor)) / (hi - g.floor) * 10000,
+        cliff: pl(hi) - pl(g.floor),
+        level: pl(g.floor)
+      };
+    });
+  }
+
+  function drawFalloff() {
+    const L = state.refLevel, bands = falloffBands();
+    const X0 = 800000, X1 = 1000000;
+    const w = 720, h = 300, l = 54, r = 108, t = 18, b = 46;
+    const yMax = Math.max(COMP_RATE, ...bands.map(x => x.pRate)) * 1.22;
+
+    document.getElementById('fall-title').textContent =
+      `Losing a ${T()}${L}: what each formula charges per 10,000 points of score`;
+
+    const host = document.getElementById('fall');
+    host.textContent = '';
+    const svg = el('svg', { viewBox: `0 0 ${w} ${h}`, style: 'min-width:600px', role: 'img',
+      'aria-label': `Levels lost per 10,000 points of score on a ${T()}${L}, under both formulas` });
+    const fx = s => l + (s - X0) / (X1 - X0) * (w - l - r);
+    const fy = v => t + (yMax - v) / yMax * (h - t - b);
+
+    for (let v = 0; v <= yMax; v += 0.2) {
+      el('line', { x1: l, x2: w - r, y1: fy(v), y2: fy(v), stroke: css('--grid'), 'stroke-width': 1 }, svg);
+      const tt = el('text', { x: l - 8, y: fy(v) + 3.5, 'text-anchor': 'end', 'font-size': 9.5, fill: css('--muted') }, svg);
+      txt(tt, v.toFixed(1));
+    }
+    for (const s of [800000, 850000, 900000, 950000, 1000000]) {
+      const tt = el('text', { x: fx(s), y: h - 26, 'text-anchor': s === X0 ? 'start' : s === X1 ? 'end' : 'middle',
+        'font-size': 9.5, fill: css('--muted') }, svg);
+      txt(tt, fmt.format(s));
+    }
+    const axl = el('text', { x: l + (w - l - r) / 2, y: h - 8, 'text-anchor': 'middle', 'font-size': 10,
+      fill: css('--ink-2') }, svg);
+    txt(axl, 'score');
+    const ayl = el('text', { x: 0, y: 0, 'text-anchor': 'middle', 'font-size': 10, fill: css('--ink-2'),
+      transform: `translate(13, ${t + (h - t - b) / 2}) rotate(-90)` }, svg);
+    txt(ayl, 'levels lost per 10,000 points');
+
+    // the 900,000 marker — the floor of the span this panel is usually read over
+    el('line', { x1: fx(900000), x2: fx(900000), y1: t, y2: h - b, stroke: css('--axis'), 'stroke-width': 1 }, svg);
+    const mk = el('text', { x: fx(900000) + 5, y: t + 10, 'font-size': 9.5, fill: css('--muted') }, svg);
+    txt(mk, 'A+ floor');
+
+    // competitive — one flat line
+    el('line', { x1: l, x2: w - r, y1: fy(COMP_RATE), y2: fy(COMP_RATE), stroke: css('--comp'),
+      'stroke-width': 2, 'stroke-linecap': 'round' }, svg);
+    const cl = el('text', { x: w - r + 8, y: fy(COMP_RATE) + 3.5, 'font-size': 10.5, fill: css('--ink-2') }, svg);
+    txt(cl, `${COMP_RATE.toFixed(2)} flat`);
+
+    // pumbility — a step per grade band
+    let d = '';
+    for (const x of bands)
+      d += (d ? 'L' : 'M') + fx(x.lo).toFixed(2) + ' ' + fy(x.pRate).toFixed(2) +
+           'L' + fx(x.hi).toFixed(2) + ' ' + fy(x.pRate).toFixed(2);
+    el('path', { d, fill: 'none', stroke: css('--pumb'), 'stroke-width': 2, 'stroke-linejoin': 'round',
+      'stroke-linecap': 'round' }, svg);
+
+    // label each distinct plateau once, at its right-hand end
+    const seen = new Set();
+    for (let i = bands.length - 1; i >= 0; i--) {
+      const x = bands[i], k = x.pRate.toFixed(3);
+      if (seen.has(k) || x.pRate <= 0.001) continue;
+      seen.add(k);
+      // a surface-coloured halo keeps the label readable where it crosses a gridline
+      const tt = el('text', { x: fx(x.hi) - 4, y: fy(x.pRate) - 9, 'text-anchor': 'end', 'font-size': 10.5,
+        fill: css('--ink-2'), stroke: css('--surface'), 'stroke-width': 3.5, 'paint-order': 'stroke' }, svg);
+      txt(tt, `${x.pRate.toFixed(2)}  (${(x.pRate / COMP_RATE).toFixed(2)}× comp)`);
+    }
+
+    for (const x of bands) {
+      const hit = el('rect', { x: fx(x.lo), y: t, width: Math.max(2, fx(x.hi) - fx(x.lo)), height: h - t - b,
+        fill: 'transparent' }, svg);
+      hit.addEventListener('pointermove', ev => showTip(ev, `${T()}${L} · ${x.name} band · ${fmt.format(x.width)} pts wide`, [
+        { value: x.pRate.toFixed(3), label: 'PUMBILITY levels per 10,000', color: css('--pumb') },
+        { value: COMP_RATE.toFixed(3), label: 'Competitive levels per 10,000', color: css('--comp') },
+        { value: x.cliff > 0.001 ? '+' + x.cliff.toFixed(2) : 'nothing',
+          label: x.cliff > 0.001 ? `PUMBILITY jump on crossing ${fmt.format(x.hi)}` : 'PUMBILITY pays nothing above this floor' }
+      ]));
+      hit.addEventListener('pointerleave', hideTip);
+    }
+    host.appendChild(svg);
+
+    // the headline: totals over the span, and where each spends its drop
+    const pl = s => pEff(L, s, state.single, plateBonus());
+    const pTot = pl(995000) - pl(900000), cTot = (995000 - 900000) / 17500;
+    const pTop = (pl(995000) - pl(940000)) / pTot, cTop = 55000 / 95000;
+    document.getElementById('fall-read').textContent =
+      `From 995,000 down to 900,000 the two lose almost the same amount — PUMBILITY ${pTot.toFixed(2)} levels, ` +
+      `Competitive ${cTot.toFixed(2)} — but not in the same places. PUMBILITY spends ` +
+      `${Math.round(pTop * 100)}% of that drop above 940,000 against Competitive's ${Math.round(cTop * 100)}%, ` +
+      `and below the A+ floor its rate collapses to ${(bands[0].pRate / COMP_RATE).toFixed(2)}× Competitive's.`;
+
+    table(document.getElementById('t-fall'),
+      ['Band', 'Floor', 'Width', 'PUMB / 10k', 'COMP / 10k', 'ratio', 'Cliff at the top of the band'],
+      bands.map(x => [x.name, fmt.format(x.lo), fmt.format(x.width), x.pRate.toFixed(3),
+        COMP_RATE.toFixed(3), x.pRate > 0.001 ? (x.pRate / COMP_RATE).toFixed(2) + '×' : '0×',
+        x.cliff > 0.001 ? `+${x.cliff.toFixed(2)} levels at ${fmt.format(x.hi)}` : 'none — grade is capped']));
+  }
+
+  // ══ 03 — disagreement heatmap ═════════════════════════════════════════════
   const HEAT = ['--div-c4', '--div-c3', '--div-c2', '--div-c1', '--div-mid', '--div-p1', '--div-p2', '--div-p3', '--div-p4'];
   const heatColor = v => {
     const c = Math.max(-1, Math.min(1, v));
@@ -1131,7 +1269,7 @@ doubles  = avg of top 50</pre>
     refScoreSel.appendChild(o);
   }
 
-  function renderAll() { drawTiles(); drawFacets(); drawHeat(); drawLadder(); drawCloud(); }
+  function renderAll() { drawTiles(); drawFacets(); drawFalloff(); drawHeat(); drawLadder(); drawCloud(); }
 
   document.getElementById('type-seg').addEventListener('click', ev => {
     const b = ev.target.closest('button[data-v]');
@@ -1141,7 +1279,7 @@ doubles  = avg of top 50</pre>
     renderAll();
   });
   plateSel.addEventListener('change', e => { state.plate = e.target.value; renderAll(); });
-  refLevelSel.addEventListener('change', e => { state.refLevel = +e.target.value; drawLadder(); });
+  refLevelSel.addEventListener('change', e => { state.refLevel = +e.target.value; drawFalloff(); drawLadder(); });
   refScoreSel.addEventListener('change', e => { state.refScore = +e.target.value; drawLadder(); });
 
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderAll);
