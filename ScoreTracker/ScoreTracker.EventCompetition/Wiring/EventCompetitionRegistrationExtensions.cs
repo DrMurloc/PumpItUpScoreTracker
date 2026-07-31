@@ -24,6 +24,7 @@ public static class EventCompetitionRegistrationExtensions
         services.AddTransient<ITournamentRepository, EFTournamentRepository>();
         services.AddTransient<IQualifiersRepository, EFQualifiersRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
+        services.AddTransient<IContributionDeletionRepository, EFContributionDeletionRepository>();
         services.AddSingleton<IDbModelContribution, EventCompetitionModelContribution>();
         return services;
     }
@@ -35,6 +36,7 @@ public static class EventCompetitionRegistrationExtensions
     /// </summary>
     public static void AddEventCompetitionConsumers(this IRegistrationConfigurator configurator)
     {
+        configurator.AddConsumer<ContributionsDeletionConsumer>();
         configurator.AddConsumer<QualifiersSaga>();
         configurator.AddConsumer<MarchOfMurlocsHandler>();
         configurator.AddConsumer<AccountPurgeConsumer>();
