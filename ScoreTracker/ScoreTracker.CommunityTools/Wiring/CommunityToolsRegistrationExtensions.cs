@@ -4,6 +4,7 @@ using ScoreTracker.CommunityTools.Application;
 using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.CommunityTools.Infrastructure;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.CommunityTools.Wiring;
 
@@ -25,6 +26,9 @@ public static class CommunityToolsRegistrationExtensions
         // A typed client, so the vertical owns its own outbound policy rather than borrowing one.
         services.AddHttpClient<IWebhookDeliveryClient, WebhookDeliveryClient>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
+        // The Domain port OfficialMirror hands a live piugame session to. Registered here rather
+        // than by the CompositionRoot's reflection pass, which only scans ScoreTracker.Data.
+        services.AddTransient<ISessionDeliveryClient, SessionDeliveryClient>();
         services.AddSingleton<IDbModelContribution, CommunityToolsModelContribution>();
         return services;
     }
