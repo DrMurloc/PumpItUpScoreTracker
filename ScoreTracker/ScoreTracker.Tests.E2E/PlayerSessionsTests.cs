@@ -55,29 +55,28 @@ public sealed class PlayerSessionsTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task SessionsPageRendersRoundupCardsWithTheFullBreakdownBehindADialog()
+    public async Task SessionsPageRendersTheNewestSessionAsAHeroWithTheRestAsRows()
     {
         await _page.GotoAsync($"/Player/{_publicUser}/Sessions");
 
         var timeout = new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 };
         await Expect(_page.GetByText("SessionHero — Sessions")).ToBeVisibleAsync(timeout);
 
-        // Two groups: the import session and the pre-capture day group.
-        var cards = _page.Locator("[data-testid='session-card']");
-        await Expect(cards).ToHaveCountAsync(2, new LocatorAssertionsToHaveCountOptions { Timeout = 60_000 });
+        // ONE hero, not a card per session — that is the whole shape of the overhaul.
+        var hero = _page.Locator("[data-testid='session-hero']");
+        await Expect(hero).ToHaveCountAsync(1, new LocatorAssertionsToHaveCountOptions { Timeout = 60_000 });
 
-        // The milestone strip renders the Pumbility gain.
-        await Expect(_page.Locator("[data-testid='milestone-strip']")).ToBeVisibleAsync(timeout);
-        await Expect(_page.GetByText("8,000 → 8,100")).ToBeVisibleAsync();
+        // The answer above the fold: the ceremony band carries the Pumbility movement.
+        await Expect(_page.Locator("[data-testid='session-ceremony']")).ToBeVisibleAsync(timeout);
+        await Expect(_page.GetByText("8,100").First).ToBeVisibleAsync();
 
-        // The card leads with the flagged row, whose crown badge now carries the pumbility rank.
-        await Expect(_page.GetByText("New Pass").First).ToBeVisibleAsync();
-        await Expect(cards.First.GetByText("#4")).ToBeVisibleAsync();
-        await cards.First.Locator("[data-testid='view-all-scores']").ClickAsync();
-        var dialog = _page.Locator("[data-testid='session-scores-dialog']");
-        await Expect(dialog).ToBeVisibleAsync(timeout);
-        await Expect(dialog.GetByText("Session Anthem")).ToBeVisibleAsync();
-        await Expect(dialog.GetByText("Journal Groove")).ToBeVisibleAsync();
+        // Everything older is a row with a View button rather than a second card.
+        await Expect(_page.Locator("[data-testid='session-history']")).ToBeVisibleAsync(timeout);
+
+        // All plays holds the session's journal, breaks included, as an ordinary log.
+        var plays = _page.Locator("[data-testid='session-all-plays']");
+        await Expect(plays).ToBeVisibleAsync(timeout);
+        await Expect(plays.GetByText("Session Anthem")).ToBeVisibleAsync();
     }
 
     [Fact]

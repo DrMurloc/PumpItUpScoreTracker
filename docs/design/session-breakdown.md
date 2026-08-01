@@ -1,6 +1,7 @@
 # Session Breakdown (`/Player/{id}/Sessions`) — design
 
-> **Status: DESIGNED, NOT BUILT** (workshopped 2026-08-01). Supersedes the "Recent Scores
+> **Status: BUILT (B1–B8, B10), one item outstanding** — see §4.6. Workshopped and built
+> 2026-08-01 on `claude/session-highlights-overhaul-35efba`, PR #211. Supersedes the "Recent Scores
 > page" section of [discord-rich-score-notifications.md](discord-rich-score-notifications.md),
 > which specified the page as the Discord card's link target. That page shipped as a paged grid
 > of equal-weight `SessionRoundupCard`s — the card at web resolution. Owner: *"we kind of hacked
@@ -324,16 +325,33 @@ Each commit green on the fast suites.
 
 | # | Commit | Layer |
 |---|---|---|
-| B1 | Migration + entity/record fields + DATABASE-SCHEMA rows | Data / PlayerProgress |
-| B2 | Contract queries: attempts (ScoreLedger), placement estimates (OfficialMirror), community peer scores (Communities) — additive, nothing consumes them yet | verticals |
-| B3 | Capture: per-score percentile, attempts, placement flag, title-delta persistence | PlayerProgress |
-| B4 | Estimated PUMBILITY rank + `OfficialPumbilityRank` milestone + the snapshot-sealed re-estimate consumer | PlayerProgress |
-| B5 | `GetSessionBreakdownQuery` — the page's single read, joining `GetScoreSessionsQuery` enrichment onto the journal groups | PlayerProgress |
-| B6 | `ChartLeaderboardDialog` + generalize `ChartLeaderboardSection` into its World scope | Web |
-| B7 | The page: hero components, history table, skill focus service, l10n ×9 | Web |
-| B8 | Discord card: the placement caption on a score row, the estimated-rank line in the stats block | Communities |
-| B9 | Admin backfill button + consumer (tolerating "no most-recent session") | Web / PlayerProgress |
-| B10 | E2E rework, docs sweep, this doc flipped to implemented | tests / docs |
+| B1 | ✅ Migration + entity/record fields + DATABASE-SCHEMA rows | Data / PlayerProgress |
+| B2 | ✅ Contract queries: attempts (ScoreLedger), placement estimates (OfficialMirror), community peer scores (Communities) — additive, nothing consumes them yet | verticals |
+| B3 | ✅ Capture: per-score percentile, attempts, placement flag, title-delta persistence | PlayerProgress |
+| B4 | ✅ Estimated PUMBILITY rank + `OfficialPumbilityRank` milestone + the snapshot-sealed re-estimate consumer | PlayerProgress |
+| B5 | ✅ `SessionBreakdownBuilder` — one session assembled, `ScoreSession` joined on as enrichment. **Landed in Web, not PlayerProgress**: its pieces span four verticals and none can reference all four | Web |
+| B6 | ✅ `ChartLeaderboardDialog` + generalize `ChartLeaderboardSection` into its World scope | Web |
+| B7 | ✅ The page: hero components, history table, skill focus service, l10n ×9 | Web |
+| B8 | ✅ Discord card: the placement caption on a score row, the estimated-rank line in the stats block | Communities |
+| B9 | ⛔ **NOT BUILT** — admin backfill button + consumer | Web / PlayerProgress |
+| B10 | ✅ E2E rework, docs sweep, this doc | tests / docs |
+
+### 4.7 What the build changed about the design
+
+Three things the reference graph decided rather than the design:
+
+1. **The two capture reads are Domain ports, not contract queries** (§2.3 predicted the undo
+   coupling but not this). PlayerProgress sits UPSTREAM of both ScoreLedger and OfficialMirror
+   (`OfficialMirror → ScoreLedger → Communities → PlayerProgress`), so a contract query from
+   capture into either closes a reference cycle. `IScoreAttemptReader` and
+   `IOfficialPlacementReader` are each a thin dispatch onto the owning vertical's own query, so
+   the rules still live in one place. Same escape hatch as `IDiscordFeedReader`.
+2. **B5 is a Web service, not a vertical query**, for the same reason — its pieces span
+   ScoreLedger, PlayerProgress, Communities and Catalog.
+3. **A Phoenix difficulty title is scoped to a LEVEL, not a (type, level) folder.**
+   `PhoenixDifficultyTitle.CompletionProgress` accepts any chart at the level, single or double.
+   So a bar's scope is `21`, never `S21`/`D21` — ⚠ **the approved mock labels them S21/D23 and
+   is wrong on this point.**
 
 ---
 
