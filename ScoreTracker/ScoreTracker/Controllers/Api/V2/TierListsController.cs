@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Dtos.ApiV2;
@@ -12,6 +13,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     here the list is a path value, so a fifth list is data rather than a deployment.
 /// </summary>
 [ApiV2]
+[EnableRateLimiting(ApiV2RateLimiting.PolicyName)]
 [Route(RoutePrefix + "/tier-lists")]
 public sealed class TierListsController : ApiV2ControllerBase
 {

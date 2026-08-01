@@ -179,6 +179,7 @@ builder.Services.AddAuthentication("DefaultAuthentication")
     .AddScheme<AuthenticationSchemeOptions, ToolKeyAuthenticationScheme>(
         ToolKeyAuthenticationScheme.SchemeName, o => { });
 
+builder.Services.AddRateLimiter(o => o.AddApiV2Policy());
 builder.Services.AddSwaggerExamplesFromAssemblyOf<RecordPhoenixScoreDtoExample>();
 builder.Services.AddSwaggerGen(o =>
 {
@@ -362,6 +363,7 @@ app.UseRouting();
 
 app.UseCors();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 // Required by MapRazorComponents: a static-rendered form posts back to its own endpoint, so the
 // endpoint carries an antiforgery requirement and the middleware is what satisfies it. Without

@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.Web.Dtos.ApiV2;
 using ScoreTracker.Web.Security;
@@ -17,6 +18,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     </para>
 /// </summary>
 [ApiV2]
+[EnableRateLimiting(ApiV2RateLimiting.PolicyName)]
 [Route(RoutePrefix + "/official")]
 public sealed class OfficialController : ApiV2ControllerBase
 {

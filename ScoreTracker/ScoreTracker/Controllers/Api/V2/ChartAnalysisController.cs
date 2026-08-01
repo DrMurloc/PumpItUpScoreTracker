@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Web.Dtos.ApiV2;
@@ -12,6 +13,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     Neither has ever been readable through the API.
 /// </summary>
 [ApiV2]
+[EnableRateLimiting(ApiV2RateLimiting.PolicyName)]
 public sealed class ChartAnalysisController : ApiV2ControllerBase
 {
     private readonly IMediator _mediator;

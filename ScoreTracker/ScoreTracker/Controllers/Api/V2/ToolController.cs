@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.Web.Security;
 
@@ -14,6 +15,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     </para>
 /// </summary>
 [ApiV2]
+[EnableRateLimiting(ApiV2RateLimiting.PolicyName)]
 [Route(RoutePrefix + "/tool")]
 public sealed class ToolController : ApiV2ControllerBase
 {

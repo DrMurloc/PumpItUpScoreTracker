@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -21,6 +22,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     </para>
 /// </summary>
 [ApiV2]
+[EnableRateLimiting(ApiV2RateLimiting.PolicyName)]
 [Route(RoutePrefix + "/players")]
 public sealed class PlayersController : ApiV2ControllerBase
 {

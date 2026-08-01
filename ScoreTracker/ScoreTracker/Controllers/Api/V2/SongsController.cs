@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Web.Dtos.ApiV2;
 using ScoreTracker.Web.Security;
@@ -8,6 +9,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 
 /// <summary>Songs in a mix, with the artist, duration and BPM range v1 never exposed.</summary>
 [ApiV2]
+[EnableRateLimiting(ApiV2RateLimiting.PolicyName)]
 [Route(RoutePrefix + "/songs")]
 public sealed class SongsController : ApiV2ControllerBase
 {

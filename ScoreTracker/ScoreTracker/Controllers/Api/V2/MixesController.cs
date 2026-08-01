@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Web.Dtos.ApiV2;
 using ScoreTracker.Web.Security;
@@ -12,6 +13,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     plausible, wrong answer.
 /// </summary>
 [ApiV2]
+[EnableRateLimiting(ApiV2RateLimiting.PolicyName)]
 [Route(RoutePrefix + "/mixes")]
 public sealed class MixesController : ApiV2ControllerBase
 {

@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts;
@@ -19,6 +20,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     in another.
 /// </summary>
 [ApiV2]
+[EnableRateLimiting(ApiV2RateLimiting.PolicyName)]
 [Route(RoutePrefix + "/charts")]
 public sealed class ChartsController : ApiV2ControllerBase
 {

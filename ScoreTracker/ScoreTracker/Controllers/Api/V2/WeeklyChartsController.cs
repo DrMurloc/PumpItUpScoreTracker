@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.WeeklyChallenge.Contracts.Queries;
@@ -12,6 +13,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     The weekly challenge board. Each mix runs its own board, so <c>mix</c> selects which.
 /// </summary>
 [ApiV2]
+[EnableRateLimiting(ApiV2RateLimiting.PolicyName)]
 [Route(RoutePrefix + "/weekly-charts")]
 public sealed class WeeklyChartsController : ApiV2ControllerBase
 {
