@@ -315,6 +315,9 @@
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>Une clé sans expiration reste valide jusqu'à ce que vous la révoquiez à la main — y compris après la perte d'un portable ou la publication d'un dépôt. Choisissez une date sauf raison contraire.</value>
   </data>
+  <data name="A listed tool appears in the directory and can accept players who share with all tools. You keep working while it's reviewed." xml:space="preserve">
+    <value>Un outil référencé apparaît dans l'annuaire et peut accepter les joueurs qui partagent avec tous les outils. Vous continuez à travailler pendant la revue.</value>
+  </data>
   <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
     <value>Un Miss à 100 de vie. Les Miss coûtent moins cher à mesure que vous vous videz.</value>
   </data>
@@ -603,6 +606,9 @@
     <value>As</value>
     <comment>Pluriel du rang A — en-tête de colonne comptant les rangs A.</comment>
   </data>
+  <data name="Ask on Discord" xml:space="preserve">
+    <value>Demander sur Discord</value>
+  </data>
   <data name="Ask to be listed" xml:space="preserve">
     <value>Demander le référencement</value>
   </data>
@@ -826,6 +832,9 @@
   </data>
   <data name="Browse tools" xml:space="preserve">
     <value>Parcourir les outils</value>
+  </data>
+  <data name="Build a tool" xml:space="preserve">
+    <value>Créer un outil</value>
   </data>
   <data name="Build Session" xml:space="preserve">
     <value>Construire la session</value>
@@ -1350,6 +1359,9 @@
   <data name="Create" xml:space="preserve">
     <value>Créer</value>
   </data>
+  <data name="Create an API key" xml:space="preserve">
+    <value>Créez une clé d'API</value>
+  </data>
   <data name="Create API key" xml:space="preserve">
     <value>Créer une clé d'API</value>
   </data>
@@ -1361,6 +1373,9 @@
   </data>
   <data name="Create Song" xml:space="preserve">
     <value>Créer une chanson</value>
+  </data>
+  <data name="Create your tool" xml:space="preserve">
+    <value>Créez votre outil</value>
   </data>
   <data name="Created" xml:space="preserve">
     <value>Créée</value>
@@ -1581,6 +1596,9 @@
   </data>
   <data name="Done" xml:space="preserve">
     <value>Terminé</value>
+  </data>
+  <data name="Done automatically when you created it, so you always have one real player to test against — yourself." xml:space="preserve">
+    <value>Fait automatiquement à la création, pour que vous ayez toujours un joueur réel pour tester — vous.</value>
   </data>
   <data name="Done — this channel is registered for that community." xml:space="preserve">
     <value>C'est fait — ce salon est inscrit pour cette communauté.</value>
@@ -2002,6 +2020,9 @@
   <data name="Full Privacy Policy" xml:space="preserve">
     <value>Politique de confidentialité complète</value>
   </data>
+  <data name="Full reference" xml:space="preserve">
+    <value>Référence complète</value>
+  </data>
   <data name="Full Song" xml:space="preserve">
     <value>Full Song</value>
   </data>
@@ -2422,6 +2443,9 @@
   <data name="Invite" xml:space="preserve">
     <value>Inviter</value>
   </data>
+  <data name="Invite a friend" xml:space="preserve">
+    <value>Invitez quelqu'un</value>
+  </data>
   <data name="Invite code (private communities only)" xml:space="preserve">
     <value>Code d'invitation (communautés privées uniquement)</value>
   </data>
@@ -2455,6 +2479,9 @@
   </data>
   <data name="It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory." xml:space="preserve">
     <value>Il démarre privé et pleinement fonctionnel — liens d'invitation, clés et webhooks marchent. Le référencement ne fait que vous ajouter à l'annuaire.</value>
+  </data>
+  <data name="It starts private and fully working. Listing only puts you in the directory." xml:space="preserve">
+    <value>Il démarre privé et pleinement fonctionnel. Le référencement ne fait que vous ajouter à l'annuaire.</value>
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>Il pourra lire</value>
@@ -3505,6 +3532,9 @@
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>Ouvrir les charts suggérés</value>
   </data>
+  <data name="Open Swagger, press Authorize, paste your key, then try GET /api/v2/players/me/scores?mix=Phoenix." xml:space="preserve">
+    <value>Ouvrez Swagger, appuyez sur Authorize, collez votre clé, puis essayez GET /api/v2/players/me/scores?mix=Phoenix.</value>
+  </data>
   <data name="Open Video" xml:space="preserve">
     <value>Ouvrir Vidéo</value>
   </data>
@@ -3935,6 +3965,9 @@
   <data name="Point it at your PIUGAME account once — grades, plates, and history land intact." xml:space="preserve">
     <value>Reliez-le une fois à votre compte PIUGAME — grades, plaques et historique arrivent intacts.</value>
   </data>
+  <data name="Point us at a URL and we'll POST there whenever one of your players imports." xml:space="preserve">
+    <value>Donnez-nous une URL et nous y ferons un POST à chaque import d'un de vos joueurs.</value>
+  </data>
   <data name="Point your community's channel at the bot and placements, milestones, and session highlights land in your server the moment scores come in." xml:space="preserve">
     <value>Reliez le salon de votre communauté au bot : classements, jalons et temps forts de session arrivent sur votre serveur dès que les scores tombent.</value>
   </data>
@@ -4052,6 +4085,9 @@
   </data>
   <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
     <value>afficher les statistiques d'un Chart et les Charts similaires, avec des liens vers ses pages</value>
+  </data>
+  <data name="Pull your scores" xml:space="preserve">
+    <value>Récupérez vos scores</value>
   </data>
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
@@ -4230,6 +4266,9 @@
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Recalculé plusieurs fois par jour</value>
+  </data>
+  <data name="Receive imports" xml:space="preserve">
+    <value>Recevez les imports</value>
   </data>
   <data name="Recent big wins from the communities you pick." xml:space="preserve">
     <value>Les grandes réussites récentes des communautés que vous choisissez.</value>
@@ -4427,6 +4466,9 @@
   </data>
   <data name="Run import now" xml:space="preserve">
     <value>Lancer l'import maintenant</value>
+  </data>
+  <data name="Run it locally" xml:space="preserve">
+    <value>L'exécuter en local</value>
   </data>
   <data name="Run PIU Center Crawl" xml:space="preserve">
     <value>Lancer l'exploration PIU Center</value>
@@ -4663,6 +4705,9 @@
   <data name="selected mixes only" xml:space="preserve">
     <value>uniquement les Mix sélectionnés</value>
   </data>
+  <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
+    <value>Envoyez-la via Authorization: Bearer. Affichée une seule fois — nous stockons une empreinte.</value>
+  </data>
   <data name="Sent for review" xml:space="preserve">
     <value>Envoyé pour revue</value>
   </data>
@@ -4709,6 +4754,9 @@
   <data name="Setup" xml:space="preserve">
     <value>Configuration</value>
   </data>
+  <data name="Seven steps from nothing to a listed tool." xml:space="preserve">
+    <value>Sept étapes, de rien du tout à un outil référencé.</value>
+  </data>
   <data name="Shade band" xml:space="preserve">
     <value>Bande ombrée</value>
   </data>
@@ -4720,6 +4768,9 @@
   </data>
   <data name="Shaded range: ±1σ" xml:space="preserve">
     <value>Shaded range: ±1σ</value>
+  </data>
+  <data name="Share an invite link. Anyone with it can connect, public profile or not." xml:space="preserve">
+    <value>Partagez un lien d'invitation. Toute personne qui l'a peut se connecter, profil public ou non.</value>
   </data>
   <data name="Share my scores with community tools" xml:space="preserve">
     <value>Partager mes scores avec les outils de la communauté</value>
@@ -5140,6 +5191,9 @@
   </data>
   <data name="Sustained — it holds you under tension for most of its runtime." xml:space="preserve">
     <value>Soutenu — vous reste sous tension presque toute la chanson.</value>
+  </data>
+  <data name="Swagger" xml:space="preserve">
+    <value>Swagger</value>
   </data>
   <data name="Swap direction" xml:space="preserve">
     <value>Inverser le sens</value>
@@ -6217,6 +6271,9 @@
   </data>
   <data name="You're already a member of this community." xml:space="preserve">
     <value>Vous êtes déjà membre de cette communauté.</value>
+  </data>
+  <data name="You're connected to your own tool" xml:space="preserve">
+    <value>Vous êtes déjà connecté à votre propre outil</value>
   </data>
   <data name="You're the creator of {0} communities. Someone has to own them, so pick a new creator for each — or delete it, if you're the only one left." xml:space="preserve">
     <value>Vous êtes le créateur de {0} communautés. Quelqu'un doit les reprendre : choisissez un nouveau créateur pour chacune, ou supprimez-la si vous êtes seul.</value>

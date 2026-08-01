@@ -161,7 +161,9 @@ public sealed class LocalizationKeyTests
         [
             "Pump It Up", "PIUGame.com", "PIUGAME.com", "piugame.com", "PIU Center", "Iolite Sky",
             "Start.GG", "SkillAttack", "DrMurloc", "PUMBILITY", "Pumbility", "piuscores", "PIUGAME",
-            "PIUGame", "YouTube", "Youtube", "Discord", "Phoenix", "Murloc", "BITE"
+            "PIUGame", "YouTube", "Youtube", "Discord", "Phoenix", "Murloc", "BITE",
+            // The API docs surface names an external tool by its brand, same standing as Discord.
+            "Swagger"
         ];
 
         var violations = new List<string>();

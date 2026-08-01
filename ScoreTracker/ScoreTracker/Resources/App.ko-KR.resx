@@ -315,6 +315,9 @@
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>만료가 없는 키는 직접 취소할 때까지 유효합니다 — 노트북을 잃어버리거나 저장소가 공개된 뒤에도요. 특별한 이유가 없다면 날짜를 정하세요.</value>
   </data>
+  <data name="A listed tool appears in the directory and can accept players who share with all tools. You keep working while it's reviewed." xml:space="preserve">
+    <value>등록된 도구는 목록에 표시되고 모든 도구와 공유하는 플레이어를 받을 수 있습니다. 검토 중에도 계속 작업할 수 있습니다.</value>
+  </data>
   <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
     <value>라이프 100에서의 Miss. 라이프가 줄수록 Miss는 싸집니다.</value>
   </data>
@@ -597,6 +600,9 @@
   <data name="As" xml:space="preserve">
     <value>As</value>
   </data>
+  <data name="Ask on Discord" xml:space="preserve">
+    <value>Discord에 문의</value>
+  </data>
   <data name="Ask to be listed" xml:space="preserve">
     <value>등록 요청</value>
   </data>
@@ -818,6 +824,9 @@
   </data>
   <data name="Browse tools" xml:space="preserve">
     <value>도구 둘러보기</value>
+  </data>
+  <data name="Build a tool" xml:space="preserve">
+    <value>도구 만들기</value>
   </data>
   <data name="Build Session" xml:space="preserve">
     <value>세션 만들기</value>
@@ -1338,6 +1347,9 @@
   <data name="Create" xml:space="preserve">
     <value>생성</value>
   </data>
+  <data name="Create an API key" xml:space="preserve">
+    <value>API 키 만들기</value>
+  </data>
   <data name="Create API key" xml:space="preserve">
     <value>API 키 만들기</value>
   </data>
@@ -1349,6 +1361,9 @@
   </data>
   <data name="Create Song" xml:space="preserve">
     <value>음악 만들기</value>
+  </data>
+  <data name="Create your tool" xml:space="preserve">
+    <value>도구 만들기</value>
   </data>
   <data name="Created" xml:space="preserve">
     <value>생성됨</value>
@@ -1568,6 +1583,9 @@
   </data>
   <data name="Done" xml:space="preserve">
     <value>완료</value>
+  </data>
+  <data name="Done automatically when you created it, so you always have one real player to test against — yourself." xml:space="preserve">
+    <value>도구를 만들 때 자동으로 처리되므로, 테스트할 실제 플레이어가 항상 한 명 — 바로 나 — 있습니다.</value>
   </data>
   <data name="Done — this channel is registered for that community." xml:space="preserve">
     <value>완료 — 이 채널이 해당 커뮤니티에 등록되었습니다.</value>
@@ -1985,6 +2003,9 @@
   </data>
   <data name="Full Privacy Policy" xml:space="preserve">
     <value>개인정보 방침</value>
+  </data>
+  <data name="Full reference" xml:space="preserve">
+    <value>전체 문서</value>
   </data>
   <data name="Full Song" xml:space="preserve">
     <value>풀 송</value>
@@ -2406,6 +2427,9 @@
   <data name="Invite" xml:space="preserve">
     <value>초대</value>
   </data>
+  <data name="Invite a friend" xml:space="preserve">
+    <value>친구 초대하기</value>
+  </data>
   <data name="Invite code (private communities only)" xml:space="preserve">
     <value>초대 코드 (비공개 커뮤니티 전용)</value>
   </data>
@@ -2438,6 +2462,9 @@
   </data>
   <data name="It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory." xml:space="preserve">
     <value>비공개로 시작하지만 완전히 동작합니다 — 초대 링크, 키, 웹훅 모두 작동합니다. 등록은 목록에 올리는 것뿐입니다.</value>
+  </data>
+  <data name="It starts private and fully working. Listing only puts you in the directory." xml:space="preserve">
+    <value>비공개로 시작하지만 완전히 동작합니다. 등록은 목록에 올리는 것뿐입니다.</value>
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>읽을 수 있는 항목</value>
@@ -3474,6 +3501,9 @@
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>추천 채보 열기</value>
   </data>
+  <data name="Open Swagger, press Authorize, paste your key, then try GET /api/v2/players/me/scores?mix=Phoenix." xml:space="preserve">
+    <value>Swagger를 열고 Authorize를 눌러 키를 붙여넣은 뒤 GET /api/v2/players/me/scores?mix=Phoenix를 시도하세요.</value>
+  </data>
   <data name="Open Video" xml:space="preserve">
     <value>동영상 보기</value>
   </data>
@@ -3900,6 +3930,9 @@
   <data name="Point it at your PIUGAME account once — grades, plates, and history land intact." xml:space="preserve">
     <value>PIUGAME 계정에 한 번만 연결하세요 — 등급, 플레이트, 기록이 그대로 들어옵니다.</value>
   </data>
+  <data name="Point us at a URL and we'll POST there whenever one of your players imports." xml:space="preserve">
+    <value>URL을 알려 주시면 플레이어가 임포트할 때마다 그곳으로 POST합니다.</value>
+  </data>
   <data name="Point your community's channel at the bot and placements, milestones, and session highlights land in your server the moment scores come in." xml:space="preserve">
     <value>커뮤니티 채널을 봇에 연결하면 스코어가 들어오는 순간 순위, 마일스톤, 세션 하이라이트가 서버로 전달됩니다.</value>
   </data>
@@ -4016,6 +4049,9 @@
   </data>
   <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
     <value>채보의 통계와 유사 채보를 보여주고 페이지 링크도 안내합니다</value>
+  </data>
+  <data name="Pull your scores" xml:space="preserve">
+    <value>내 점수 가져오기</value>
   </data>
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
@@ -4192,6 +4228,9 @@
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>몇 시간마다 다시 계산됩니다</value>
+  </data>
+  <data name="Receive imports" xml:space="preserve">
+    <value>임포트 받기</value>
   </data>
   <data name="Recent big wins from the communities you pick." xml:space="preserve">
     <value>선택한 커뮤니티의 최근 큰 성과.</value>
@@ -4384,6 +4423,9 @@
   </data>
   <data name="Run import now" xml:space="preserve">
     <value>지금 가져오기 실행</value>
+  </data>
+  <data name="Run it locally" xml:space="preserve">
+    <value>로컬에서 실행</value>
   </data>
   <data name="Run PIU Center Crawl" xml:space="preserve">
     <value>PIU Center 크롤 실행</value>
@@ -4616,6 +4658,9 @@
   <data name="selected mixes only" xml:space="preserve">
     <value>선택한 시리즈만</value>
   </data>
+  <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
+    <value>Authorization: Bearer로 보내세요. 한 번만 표시되며 저희는 해시를 저장합니다.</value>
+  </data>
   <data name="Sent for review" xml:space="preserve">
     <value>검토 요청됨</value>
   </data>
@@ -4661,6 +4706,9 @@
   <data name="Setup" xml:space="preserve">
     <value>설정</value>
   </data>
+  <data name="Seven steps from nothing to a listed tool." xml:space="preserve">
+    <value>아무것도 없는 상태에서 등록된 도구까지 일곱 단계.</value>
+  </data>
   <data name="Shade band" xml:space="preserve">
     <value>음영 밴드</value>
   </data>
@@ -4672,6 +4720,9 @@
   </data>
   <data name="Shaded range: ±1σ" xml:space="preserve">
     <value>Shaded range: ±1σ</value>
+  </data>
+  <data name="Share an invite link. Anyone with it can connect, public profile or not." xml:space="preserve">
+    <value>초대 링크를 공유하세요. 링크가 있으면 공개 프로필이든 아니든 연결할 수 있습니다.</value>
   </data>
   <data name="Share my scores with community tools" xml:space="preserve">
     <value>커뮤니티 도구와 내 점수 공유</value>
@@ -5083,6 +5134,9 @@
   </data>
   <data name="Sustained — it holds you under tension for most of its runtime." xml:space="preserve">
     <value>지속형 — 곡 대부분 동안 긴장을 유지시킵니다.</value>
+  </data>
+  <data name="Swagger" xml:space="preserve">
+    <value>Swagger</value>
   </data>
   <data name="Swap direction" xml:space="preserve">
     <value>방향 바꾸기</value>
@@ -6148,6 +6202,9 @@
   </data>
   <data name="You're already a member of this community." xml:space="preserve">
     <value>이미 이 커뮤니티의 멤버입니다.</value>
+  </data>
+  <data name="You're connected to your own tool" xml:space="preserve">
+    <value>내 도구에 이미 연결되어 있습니다</value>
   </data>
   <data name="You're the creator of {0} communities. Someone has to own them, so pick a new creator for each — or delete it, if you're the only one left." xml:space="preserve">
     <value>{0}개 커뮤니티의 개설자입니다. 누군가는 맡아야 하니 각각 새 개설자를 정하거나, 혼자뿐이라면 삭제하세요.</value>

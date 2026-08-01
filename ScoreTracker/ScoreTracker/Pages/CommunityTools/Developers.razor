@@ -44,12 +44,7 @@
 }
 else if (!_tools.Any())
 {
-    <MudAlert Severity="Severity.Normal" Variant="Variant.Outlined">
-        <MudText Typo="Typo.body2"><b>@L["You haven't made a tool yet"]</b></MudText>
-        <MudText Typo="Typo.body2">
-            @L["A tool is how a program reads the scores players share with it. Create one to get a key."]
-        </MudText>
-    </MudAlert>
+    <ToolIntegrationChecklist Tool="null"></ToolIntegrationChecklist>
 }
 else
 {
@@ -75,6 +70,8 @@ else
 
     @if (_selected is not null)
     {
+        <ToolIntegrationChecklist Tool="_selected"></ToolIntegrationChecklist>
+
         <MudPaper Outlined="true" Class="pa-4 mb-4">
             <MudText Typo="Typo.subtitle2" Class="mb-3">@L["{0} — settings", _selected.Name]</MudText>
             <MudGrid>
