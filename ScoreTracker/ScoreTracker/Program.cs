@@ -12,6 +12,7 @@ using ScoreTracker.Application.Handlers;
 using ScoreTracker.Catalog.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
+using ScoreTracker.CommunityTools.Wiring;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.Records;
@@ -93,6 +94,7 @@ builder.Services.AddMassTransit(o =>
     o.AddOfficialMirrorConsumers();
     o.AddChartIntelligenceConsumers();
     o.AddWeeklyChallengeConsumers();
+    o.AddCommunityToolsConsumers();
     o.AddEventCompetitionConsumers();
     o.AddCommunitiesConsumers();
     o.AddCatalogConsumers();

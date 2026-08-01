@@ -42,6 +42,7 @@
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
     <ProjectReference Include="..\ScoreTracker.Identity\ScoreTracker.Identity.csproj" />
     <ProjectReference Include="..\ScoreTracker.ScoreLedger\ScoreTracker.ScoreLedger.csproj" />
+    <ProjectReference Include="..\ScoreTracker.CommunityTools\ScoreTracker.CommunityTools.csproj" />
   </ItemGroup>
 
 </Project>
