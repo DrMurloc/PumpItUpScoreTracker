@@ -15,10 +15,10 @@ namespace ScoreTracker.Data.Persistence;
 public static class UserDataPurge
 {
     private static readonly MethodInfo DeleteForMethod =
-        typeof(UserDataPurge).GetMethod(nameof(DeleteFor), BindingFlags.NonPublic | BindingFlags.Static)!;
+        typeof(UserDataPurge).GetMethod(nameof(DeleteFor), BindingFlags.Public | BindingFlags.Static)!;
 
     private static readonly MethodInfo DeleteForNullableMethod =
-        typeof(UserDataPurge).GetMethod(nameof(DeleteForNullable), BindingFlags.NonPublic | BindingFlags.Static)!;
+        typeof(UserDataPurge).GetMethod(nameof(DeleteForNullable), BindingFlags.Public | BindingFlags.Static)!;
 
     private static readonly ConcurrentDictionary<Type, (MethodInfo Bound, string Column)> Plans = new();
 
@@ -37,7 +37,12 @@ public static class UserDataPurge
         }
     }
 
-    private static Task DeleteFor<TEntity>(ChartAttemptDbContext database, string column, Guid userId,
+    /// <summary>
+    ///     Public only so the reflection above binds without asking for non-public members —
+    ///     an accessibility bypass in a helper whose whole job is deleting rows is worth not
+    ///     having. Call it through <see cref="DeleteAll" />.
+    /// </summary>
+    public static Task DeleteFor<TEntity>(ChartAttemptDbContext database, string column, Guid userId,
         CancellationToken cancellationToken) where TEntity : class
     {
         return database.Set<TEntity>().Where(e => EF.Property<Guid>(e, column) == userId)
@@ -46,7 +51,8 @@ public static class UserDataPurge
 
     // A nullable owning key means the row is only sometimes a user's — a randomizer draw
     // belongs to a player or to a tournament, never both. NULL rows are nobody's and stay.
-    private static Task DeleteForNullable<TEntity>(ChartAttemptDbContext database, string column, Guid userId,
+    // Public for the same reason as DeleteFor above.
+    public static Task DeleteForNullable<TEntity>(ChartAttemptDbContext database, string column, Guid userId,
         CancellationToken cancellationToken) where TEntity : class
     {
         return database.Set<TEntity>().Where(e => EF.Property<Guid?>(e, column) == userId)

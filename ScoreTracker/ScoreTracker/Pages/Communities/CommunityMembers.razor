@@ -353,8 +353,8 @@ else
     private async Task ConfirmTransfer()
     {
         _showTransferConfirm = false;
-        if (_transferTarget is null) return;
-        await Dispatch(new TransferCommunityOwnershipCommand(_community!.Name, _transferTarget.UserId),
+        if (_transferTarget is null || _community is null) return;
+        await Dispatch(new TransferCommunityOwnershipCommand(_community.Name, _transferTarget.UserId),
             "Could not transfer the community.");
         _transferTarget = null;
     }

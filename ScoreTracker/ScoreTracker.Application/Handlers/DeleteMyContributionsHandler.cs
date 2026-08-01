@@ -6,7 +6,7 @@ using ScoreTracker.Domain.Records;
 
 namespace ScoreTracker.Application.Handlers;
 
-internal sealed class DeleteMyContributionsHandler(IBus bus) : IRequestHandler<DeleteMyContributionsCommand>
+public sealed class DeleteMyContributionsHandler(IBus bus) : IRequestHandler<DeleteMyContributionsCommand>
 {
     public Task Handle(DeleteMyContributionsCommand request, CancellationToken cancellationToken)
     {

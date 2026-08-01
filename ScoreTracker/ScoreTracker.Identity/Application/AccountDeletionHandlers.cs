@@ -78,7 +78,7 @@ internal sealed class AccountDeletionHandlers(
         await users.SaveUser(user with
         {
             IsPublic = pending.WasPublic,
-            GameTag = pending.GameTag == null ? null : Name.From(pending.GameTag)
+            GameTag = pending.GameTag == null ? (Name?)null : Name.From(pending.GameTag)
         }, cancellationToken);
     }
 
