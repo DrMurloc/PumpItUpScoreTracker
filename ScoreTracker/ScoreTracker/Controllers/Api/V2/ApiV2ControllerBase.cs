@@ -88,11 +88,16 @@ public abstract class ApiV2ControllerBase : Controller
             Data = rows.ToArray(),
             Limit = limit,
             Total = total,
-            Next = next is null ? null : NextUrl(next.Value)
+            Next = next is null ? null : NextUrlFor(next.Value)
         };
     }
 
-    private string NextUrl(ContinuationToken token)
+    /// <summary>
+    ///     The absolute next-page URL, preserving every filter the caller sent. Internal rather than
+    ///     private because an endpoint whose envelope is not <see cref="CursorPageDto{T}" /> — a score
+    ///     page also carries its mix and scoring model — still needs the same link.
+    /// </summary>
+    internal string NextUrlFor(ContinuationToken token)
     {
         var query = Request.Query
             .Where(q => !string.Equals(q.Key, "cursor", StringComparison.OrdinalIgnoreCase))
