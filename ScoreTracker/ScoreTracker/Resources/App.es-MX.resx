@@ -120,6 +120,9 @@
   <data name="&quot;Lifebars are weird.&quot;" xml:space="preserve">
     <value>&quot;Lifebars are weird.&quot;</value>
   </data>
+  <data name="&quot;Never&quot; means never" xml:space="preserve">
+    <value>«Nunca» significa nunca</value>
+  </data>
   <data name="&quot;{0}&quot; didn't match any charts right now." xml:space="preserve">
     <value>&quot;{0}&quot; no coincidió con ningún chart en este momento.</value>
   </data>
@@ -231,6 +234,9 @@
   <data name="1 title" xml:space="preserve">
     <value>1 título</value>
   </data>
+  <data name="1 year" xml:space="preserve">
+    <value>1 año</value>
+  </data>
   <data name="1+ Level Easier" xml:space="preserve">
     <value>1+ nivel más fácil</value>
   </data>
@@ -252,6 +258,9 @@
   <data name="25% -> 50%" xml:space="preserve">
     <value>25% -> 50%</value>
   </data>
+  <data name="30 days" xml:space="preserve">
+    <value>30 días</value>
+  </data>
   <data name="5-Stairs" xml:space="preserve">
     <value>Escaleras de 5</value>
   </data>
@@ -261,8 +270,14 @@
   <data name="50% -> 75%" xml:space="preserve">
     <value>50% -> 75%</value>
   </data>
+  <data name="6 months" xml:space="preserve">
+    <value>6 meses</value>
+  </data>
   <data name="75% -> 90%" xml:space="preserve">
     <value>75% -> 90%</value>
+  </data>
+  <data name="90 days" xml:space="preserve">
+    <value>90 días</value>
   </data>
   <data name="90% -> 99.9%" xml:space="preserve">
     <value>90% -> 99.9%</value>
@@ -296,6 +311,9 @@
   </data>
   <data name="A home page that's yours" xml:space="preserve">
     <value>Una página de inicio que es tuya</value>
+  </data>
+  <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
+    <value>Una clave sin caducidad sigue siendo válida hasta que la revoques a mano — incluso después de perder un portátil o de que un repositorio se haga público. Elige una fecha salvo que tengas un motivo.</value>
   </data>
   <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
     <value>Un Miss con 100 de vida. Los Miss salen más baratos conforme te vacías.</value>
@@ -522,6 +540,9 @@
   <data name="any moment now" xml:space="preserve">
     <value>en cualquier momento</value>
   </data>
+  <data name="Anyone with an invite link can connect, whether their profile is public or private." xml:space="preserve">
+    <value>Cualquiera con un enlace de invitación puede conectarse, tenga el perfil público o privado.</value>
+  </data>
   <data name="API" xml:space="preserve">
     <value>API</value>
   </data>
@@ -530,6 +551,9 @@
   </data>
   <data name="API for tool makers" xml:space="preserve">
     <value>API para creadores de herramientas</value>
+  </data>
+  <data name="API keys" xml:space="preserve">
+    <value>Claves de API</value>
   </data>
   <data name="Applied filters" xml:space="preserve">
     <value>Filtros aplicados</value>
@@ -1245,6 +1269,9 @@
   <data name="CoOp Completion" xml:space="preserve">
     <value>Completitud CoOp</value>
   </data>
+  <data name="Copied" xml:space="preserve">
+    <value>Copiado</value>
+  </data>
   <data name="Copied to clipboard!" xml:space="preserve">
     <value>¡Copiado al portapapeles!</value>
   </data>
@@ -1253,6 +1280,9 @@
   </data>
   <data name="Copy Script" xml:space="preserve">
     <value>Copiar script</value>
+  </data>
+  <data name="Copy your key now" xml:space="preserve">
+    <value>Copia tu clave ahora</value>
   </data>
   <data name="Could not create the invite link." xml:space="preserve">
     <value>No se pudo crear el enlace de invitación.</value>
@@ -1308,8 +1338,14 @@
   <data name="Create" xml:space="preserve">
     <value>Crear</value>
   </data>
+  <data name="Create API key" xml:space="preserve">
+    <value>Crear clave de API</value>
+  </data>
   <data name="Create Community" xml:space="preserve">
     <value>Crear comunidad</value>
+  </data>
+  <data name="Create key" xml:space="preserve">
+    <value>Crear clave</value>
   </data>
   <data name="Create Song" xml:space="preserve">
     <value>Crear canción</value>
@@ -1731,11 +1767,23 @@
   <data name="Expanding soon" xml:space="preserve">
     <value>Pronto se expande</value>
   </data>
+  <data name="Expired" xml:space="preserve">
+    <value>Caducada</value>
+  </data>
+  <data name="Expires" xml:space="preserve">
+    <value>Caduca</value>
+  </data>
   <data name="Expires (optional)" xml:space="preserve">
     <value>Expira (opcional)</value>
   </data>
+  <data name="Expires in {0} days" xml:space="preserve">
+    <value>Caduca en {0} días</value>
+  </data>
   <data name="Expires {0}" xml:space="preserve">
     <value>Expira {0}</value>
+  </data>
+  <data name="Expires {0}. Put it in your calendar — we don't send reminder emails." xml:space="preserve">
+    <value>Caduca el {0}. Apúntalo en tu calendario — no enviamos recordatorios por correo.</value>
   </data>
   <data name="Explore" xml:space="preserve">
     <value>Explorar</value>
@@ -2205,6 +2253,9 @@
   <data name="I understand — remember it" xml:space="preserve">
     <value>Entiendo — recordarla</value>
   </data>
+  <data name="I've saved it" xml:space="preserve">
+    <value>La he guardado</value>
+  </data>
   <data name="If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload." xml:space="preserve">
     <value>Si abandona esta página o cancela, la carga se detendrá pero no perderá ningún puntaje que ya haya sido registrado desde su carga.</value>
   </data>
@@ -2459,6 +2510,9 @@
   </data>
   <data name="Last Updated" xml:space="preserve">
     <value>Última actualización</value>
+  </data>
+  <data name="Last used {0}" xml:space="preserve">
+    <value>Último uso {0}</value>
   </data>
   <data name="Last year" xml:space="preserve">
     <value>Último año</value>
@@ -2948,6 +3002,9 @@
   </data>
   <data name="Never expires" xml:space="preserve">
     <value>No expira</value>
+  </data>
+  <data name="Never used" xml:space="preserve">
+    <value>Nunca usada</value>
   </data>
   <data name="New" xml:space="preserve">
     <value>Nuevo</value>
@@ -4298,6 +4355,12 @@
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>Revisa puntuaciones antiguas</value>
   </data>
+  <data name="Revoke" xml:space="preserve">
+    <value>Revocar</value>
+  </data>
+  <data name="Revoked" xml:space="preserve">
+    <value>Revocada</value>
+  </data>
   <data name="Role" xml:space="preserve">
     <value>Rol</value>
   </data>
@@ -5267,8 +5330,14 @@
   <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
     <value>Esto no es de conocimiento cero: como el inicio de sesión se ejecuta en nuestro servidor, técnicamente podemos descifrar tu credencial en el momento en que importas. No la registramos ni la conservamos, pero nos estás confiando el mismo acceso que ya tenemos en cada importación manual.</value>
   </data>
+  <data name="This is the only time we'll show it." xml:space="preserve">
+    <value>Es la única vez que te la mostramos.</value>
+  </data>
   <data name="This is your only sign-in method and cannot be disconnected" xml:space="preserve">
     <value>Este es tu único método de inicio de sesión y no se puede desconectar</value>
+  </data>
+  <data name="This key never expires." xml:space="preserve">
+    <value>Esta clave no caduca.</value>
   </data>
   <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
     <value>Esta versión no está normalizada por puntuación: solo Nota y Pass están disponibles.</value>
@@ -5536,6 +5605,9 @@
   </data>
   <data name="Twists" xml:space="preserve">
     <value>Twists</value>
+  </data>
+  <data name="Two keys can be active at once so you can rotate without downtime." xml:space="preserve">
+    <value>Puede haber dos claves activas a la vez para que rotes sin interrupciones.</value>
   </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>Dos vistas de las mismas habilidades. La izquierda alimenta la mezcla de arriba; la derecha es esta carpeta tal como la muestran las estadísticas de la carpeta.</value>
@@ -5810,6 +5882,9 @@
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Solo enviamos importaciones de las versiones que elijas. Las versiones antiguas puntúan con letras en vez de la escala de 1M — el payload indica qué modelo usa.</value>
   </data>
+  <data name="We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
+    <value>Guardamos un hash, no la clave. Si la pierdes, crea otra — puedes tener dos claves a la vez, así que reemplazar una no cuesta tiempo de caída.</value>
+  </data>
   <data name="weaker" xml:space="preserve">
     <value>más débil</value>
   </data>
@@ -5887,6 +5962,9 @@
   </data>
   <data name="What we send you" xml:space="preserve">
     <value>Lo que te enviamos</value>
+  </data>
+  <data name="What's it for" xml:space="preserve">
+    <value>Para qué es</value>
   </data>
   <data name="When" xml:space="preserve">
     <value>Cuándo</value>

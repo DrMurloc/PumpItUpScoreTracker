@@ -120,6 +120,9 @@
   <data name="&quot;Lifebars are weird.&quot;" xml:space="preserve">
     <value>&quot;Lifebars are weird.&quot;</value>
   </data>
+  <data name="&quot;Never&quot; means never" xml:space="preserve">
+    <value>"없음"은 정말 없음입니다</value>
+  </data>
   <data name="&quot;{0}&quot; didn't match any charts right now." xml:space="preserve">
     <value>&quot;{0}&quot;에 맞는 채보가 지금은 없습니다.</value>
   </data>
@@ -231,6 +234,9 @@
   <data name="1 title" xml:space="preserve">
     <value>타이틀 1개</value>
   </data>
+  <data name="1 year" xml:space="preserve">
+    <value>1년</value>
+  </data>
   <data name="1+ Level Easier" xml:space="preserve">
     <value>1 레벨 쉬움</value>
   </data>
@@ -252,6 +258,9 @@
   <data name="25% -> 50%" xml:space="preserve">
     <value>25% -> 50%</value>
   </data>
+  <data name="30 days" xml:space="preserve">
+    <value>30일</value>
+  </data>
   <data name="5-Stairs" xml:space="preserve">
     <value>5계단</value>
   </data>
@@ -261,8 +270,14 @@
   <data name="50% -> 75%" xml:space="preserve">
     <value>50% -> 75%</value>
   </data>
+  <data name="6 months" xml:space="preserve">
+    <value>6개월</value>
+  </data>
   <data name="75% -> 90%" xml:space="preserve">
     <value>75% -> 90%</value>
+  </data>
+  <data name="90 days" xml:space="preserve">
+    <value>90일</value>
   </data>
   <data name="90% -> 99.9%" xml:space="preserve">
     <value>90% -> 99.9%</value>
@@ -296,6 +311,9 @@
   </data>
   <data name="A home page that's yours" xml:space="preserve">
     <value>온전히 내 것인 홈 화면</value>
+  </data>
+  <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
+    <value>만료가 없는 키는 직접 취소할 때까지 유효합니다 — 노트북을 잃어버리거나 저장소가 공개된 뒤에도요. 특별한 이유가 없다면 날짜를 정하세요.</value>
   </data>
   <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
     <value>라이프 100에서의 Miss. 라이프가 줄수록 Miss는 싸집니다.</value>
@@ -522,6 +540,9 @@
   <data name="any moment now" xml:space="preserve">
     <value>곧</value>
   </data>
+  <data name="Anyone with an invite link can connect, whether their profile is public or private." xml:space="preserve">
+    <value>초대 링크가 있으면 프로필이 공개든 비공개든 연결할 수 있습니다.</value>
+  </data>
   <data name="API" xml:space="preserve">
     <value>API</value>
   </data>
@@ -530,6 +551,9 @@
   </data>
   <data name="API for tool makers" xml:space="preserve">
     <value>툴 제작자용 API</value>
+  </data>
+  <data name="API keys" xml:space="preserve">
+    <value>API 키</value>
   </data>
   <data name="Applied filters" xml:space="preserve">
     <value>적용된 필터</value>
@@ -1245,6 +1269,9 @@
   <data name="CoOp Completion" xml:space="preserve">
     <value>코옵 완료율</value>
   </data>
+  <data name="Copied" xml:space="preserve">
+    <value>복사됨</value>
+  </data>
   <data name="Copied to clipboard!" xml:space="preserve">
     <value>클립보드에 복사됨!</value>
   </data>
@@ -1253,6 +1280,9 @@
   </data>
   <data name="Copy Script" xml:space="preserve">
     <value>스크립트 복사</value>
+  </data>
+  <data name="Copy your key now" xml:space="preserve">
+    <value>지금 키를 복사하세요</value>
   </data>
   <data name="Could not create the invite link." xml:space="preserve">
     <value>초대 링크를 생성할 수 없습니다.</value>
@@ -1308,8 +1338,14 @@
   <data name="Create" xml:space="preserve">
     <value>생성</value>
   </data>
+  <data name="Create API key" xml:space="preserve">
+    <value>API 키 만들기</value>
+  </data>
   <data name="Create Community" xml:space="preserve">
     <value>커뮤니티 만들기</value>
+  </data>
+  <data name="Create key" xml:space="preserve">
+    <value>키 만들기</value>
   </data>
   <data name="Create Song" xml:space="preserve">
     <value>음악 만들기</value>
@@ -1731,11 +1767,23 @@
   <data name="Expanding soon" xml:space="preserve">
     <value>곧 확장</value>
   </data>
+  <data name="Expired" xml:space="preserve">
+    <value>만료됨</value>
+  </data>
+  <data name="Expires" xml:space="preserve">
+    <value>만료</value>
+  </data>
   <data name="Expires (optional)" xml:space="preserve">
     <value>만료일 (선택)</value>
   </data>
+  <data name="Expires in {0} days" xml:space="preserve">
+    <value>{0}일 후 만료</value>
+  </data>
   <data name="Expires {0}" xml:space="preserve">
     <value>{0} 만료</value>
+  </data>
+  <data name="Expires {0}. Put it in your calendar — we don't send reminder emails." xml:space="preserve">
+    <value>{0}에 만료됩니다. 캘린더에 적어 두세요 — 리마인더 메일은 보내지 않습니다.</value>
   </data>
   <data name="Explore" xml:space="preserve">
     <value>둘러보기</value>
@@ -2205,6 +2253,9 @@
   <data name="I understand — remember it" xml:space="preserve">
     <value>이해했습니다 — 기억하기</value>
   </data>
+  <data name="I've saved it" xml:space="preserve">
+    <value>저장했습니다</value>
+  </data>
   <data name="If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload." xml:space="preserve">
     <value>이 페이지를 떠나시거나 취소하시면 업로드가 중지되지만, 이미 기록된 점수는 손실되지 않습니다.</value>
   </data>
@@ -2459,6 +2510,9 @@
   </data>
   <data name="Last Updated" xml:space="preserve">
     <value>최근 업데이트</value>
+  </data>
+  <data name="Last used {0}" xml:space="preserve">
+    <value>마지막 사용 {0}</value>
   </data>
   <data name="Last year" xml:space="preserve">
     <value>최근 1년</value>
@@ -2948,6 +3002,9 @@
   </data>
   <data name="Never expires" xml:space="preserve">
     <value>만료 없음</value>
+  </data>
+  <data name="Never used" xml:space="preserve">
+    <value>사용된 적 없음</value>
   </data>
   <data name="New" xml:space="preserve">
     <value>새로움</value>
@@ -4298,6 +4355,12 @@
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>오래된 점수 다시 보기</value>
   </data>
+  <data name="Revoke" xml:space="preserve">
+    <value>취소</value>
+  </data>
+  <data name="Revoked" xml:space="preserve">
+    <value>취소됨</value>
+  </data>
   <data name="Role" xml:space="preserve">
     <value>역할</value>
   </data>
@@ -5267,8 +5330,14 @@
   <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
     <value>이것은 영지식이 아닙니다. 로그인은 우리 서버에서 실행되므로, 당신이 가져오는 순간에는 기술적으로 자격 증명을 복호화할 수 있습니다. 우리는 그것을 기록하거나 보관하지 않지만, 매번 수동 가져오기에서 이미 가진 것과 동일한 접근 권한을 당신은 우리에게 맡기는 것입니다.</value>
   </data>
+  <data name="This is the only time we'll show it." xml:space="preserve">
+    <value>키를 보여 드리는 것은 이번 한 번뿐입니다.</value>
+  </data>
   <data name="This is your only sign-in method and cannot be disconnected" xml:space="preserve">
     <value>유일한 로그인 방법이므로 연결 해제할 수 없습니다</value>
+  </data>
+  <data name="This key never expires." xml:space="preserve">
+    <value>이 키는 만료되지 않습니다.</value>
   </data>
   <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
     <value>이 시리즈는 점수 정규화가 없습니다 — 등급과 클리어만 사용할 수 있습니다.</value>
@@ -5536,6 +5605,9 @@
   </data>
   <data name="Twists" xml:space="preserve">
     <value>틀기</value>
+  </data>
+  <data name="Two keys can be active at once so you can rotate without downtime." xml:space="preserve">
+    <value>동시에 두 개의 키를 사용할 수 있어 중단 없이 교체할 수 있습니다.</value>
   </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>같은 스킬의 두 가지 보기. 왼쪽은 위 블렌드에 쓰이고, 오른쪽은 폴더 통계와 같은 이 폴더의 수치입니다.</value>
@@ -5810,6 +5882,9 @@
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>선택한 시리즈의 임포트만 보냅니다. 옛 시리즈는 1M 척도가 아니라 등급으로 채점되며, 페이로드가 어떤 모델인지 알려줍니다.</value>
   </data>
+  <data name="We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
+    <value>저희는 키가 아니라 해시를 저장합니다. 잃어버리면 새로 만드세요 — 키를 두 개까지 동시에 쓸 수 있으므로 교체에 중단 시간이 없습니다.</value>
+  </data>
   <data name="weaker" xml:space="preserve">
     <value>약함</value>
   </data>
@@ -5887,6 +5962,9 @@
   </data>
   <data name="What we send you" xml:space="preserve">
     <value>전달 방식</value>
+  </data>
+  <data name="What's it for" xml:space="preserve">
+    <value>용도</value>
   </data>
   <data name="When" xml:space="preserve">
     <value>일시</value>
