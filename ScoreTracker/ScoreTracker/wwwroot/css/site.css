@@ -10937,3 +10937,86 @@ button.chart-card-art {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* ===== ChartLeaderboardDialog =====================================================
+   The scope rail is the only new furniture here; rows, glows and place colouring are
+   LeaderboardDialog's .weekly-lb-* vocabulary so the two boards read as one system. */
+
+.cld-scopes {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+
+.cld-sub {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+
+.cld-chip {
+    font-size: .74rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    background: color-mix(in srgb, var(--mix-ink) 4%, transparent);
+    color: var(--mix-ink-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.cld-chip:hover:not(:disabled) {
+    color: var(--mix-ink);
+}
+
+.cld-chip-on {
+    background: color-mix(in srgb, var(--mix-primary) 16%, transparent);
+    border-color: color-mix(in srgb, var(--mix-primary) 55%, transparent);
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+/* A scope with nothing behind it greys and explains nothing — a disabled control already
+   reads as "not here", and a sentence about cohorts costs more than it buys. */
+.cld-chip-off {
+    opacity: .4;
+    cursor: default;
+}
+
+.cld-standing {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    padding: 10px 0 8px;
+}
+
+.cld-standing-place {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.35rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.cld-standing-scope {
+    font-size: .72rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.cld-body {
+    max-height: 46vh;
+    overflow-y: auto;
+}
+
+.cld-empty {
+    padding: 18px 4px;
+    text-align: center;
+    font-size: .85rem;
+    color: var(--mix-ink-muted);
+}

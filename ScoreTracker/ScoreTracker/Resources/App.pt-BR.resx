@@ -135,6 +135,9 @@
   <data name="#{0} in your PUMBILITY" xml:space="preserve">
     <value>#{0} no seu PUMBILITY</value>
   </data>
+  <data name="#{0} of {1}" xml:space="preserve">
+    <value>#{0} de {1}</value>
+  </data>
   <data name="#{0} of {1} peers" xml:space="preserve">
     <value>#{0} de {1} pares</value>
   </data>
@@ -1133,6 +1136,9 @@
   </data>
   <data name="Competitive Level over time for your selected mixes." xml:space="preserve">
     <value>Seu nível competitivo ao longo do tempo nas versões selecionadas.</value>
+  </data>
+  <data name="Competitive Peers" xml:space="preserve">
+    <value>Nível competitivo similar</value>
   </data>
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>singles competitivo, todos jogadores PIUScores</value>
@@ -3009,6 +3015,9 @@
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>Ninguém subiu em um placar de charts esta semana.</value>
   </data>
+  <data name="Nobody here has played this yet." xml:space="preserve">
+    <value>Ninguém aqui jogou isto ainda.</value>
+  </data>
   <data name="Nobody here holds this title yet." xml:space="preserve">
     <value>Ninguém aqui tem este título ainda.</value>
   </data>
@@ -4006,6 +4015,9 @@
   </data>
   <data name="Refresh popularity" xml:space="preserve">
     <value>Atualizar popularidade</value>
+  </data>
+  <data name="Region" xml:space="preserve">
+    <value>Região</value>
   </data>
   <data name="Register this channel for a feed" xml:space="preserve">
     <value>Registre este canal para um feed</value>

@@ -135,6 +135,9 @@
   <data name="#{0} in your PUMBILITY" xml:space="preserve">
     <value>#{0} mrp gromurp PUMBILITY</value>
   </data>
+  <data name="#{0} of {1}" xml:space="preserve">
+    <value>#{0} ub {1}</value>
+  </data>
   <data name="#{0} of {1} peers" xml:space="preserve">
     <value>#{0} mrgl {1} maglmurp</value>
   </data>
@@ -1144,6 +1147,9 @@
   </data>
   <data name="Competitive Level over time for your selected mixes." xml:space="preserve">
     <value>Arglrglmrmurm Grorpmurm grglglorg grglmrgl ro gromurp urggrrglgro mrgrgl.</value>
+  </data>
+  <data name="Competitive Peers" xml:space="preserve">
+    <value>Blarg Murlog</value>
   </data>
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>arglrglmrmurm mrglrlgl, rgl Urgrogrgl morp</value>
@@ -3039,6 +3045,9 @@
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>Urggro grogrglro gro murgl mrglblarg grglmrp plglmorg.</value>
   </data>
+  <data name="Nobody here has played this yet." xml:space="preserve">
+    <value>Mo murlog blub gurgl allo.</value>
+  </data>
   <data name="Nobody here holds this title yet." xml:space="preserve">
     <value>Urggro blubmorg murpgrorp grglmrp mrgl argl.</value>
   </data>
@@ -4046,6 +4055,9 @@
   </data>
   <data name="Refresh popularity" xml:space="preserve">
     <value>Grogrrgllurg grorpmorgmurm</value>
+  </data>
+  <data name="Region" xml:space="preserve">
+    <value>Lagoom</value>
   </data>
   <data name="Register this channel for a feed" xml:space="preserve">
     <value>Grorpplglblub grglmrp glmurmblarg ro gro grglgrrgl</value>
