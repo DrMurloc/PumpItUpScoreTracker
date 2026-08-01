@@ -157,6 +157,35 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             .ToArray();
     }
 
+    public async Task<IReadOnlyList<ScoreJournalEntry>> GetJournalPage(Guid userId, MixEnum mix,
+        DateTimeOffset? beforeOccurredAt, Guid? beforeChartId, DateTimeOffset? since, int limit,
+        CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+
+        var query = database.Set<ScoreEventJournalEntity>()
+            .Where(e => e.UserId == userId && e.MixId == mixId);
+
+        if (since is not null) query = query.Where(e => e.OccurredAt >= since.Value);
+
+        // The compound keyset: strictly older, or the same instant and a lower chart id. Written as
+        // one predicate rather than a tuple comparison because the provider translates this form.
+        if (beforeOccurredAt is not null)
+            query = beforeChartId is null
+                ? query.Where(e => e.OccurredAt < beforeOccurredAt.Value)
+                : query.Where(e => e.OccurredAt < beforeOccurredAt.Value
+                                   || (e.OccurredAt == beforeOccurredAt.Value && e.ChartId < beforeChartId.Value));
+
+        return (await query
+                .OrderByDescending(e => e.OccurredAt)
+                .ThenByDescending(e => e.ChartId)
+                .Take(limit)
+                .ToArrayAsync(cancellationToken))
+            .Select(Map)
+            .ToArray();
+    }
+
     public async Task DeleteForUser(Guid userId, MixEnum? mix, CancellationToken cancellationToken)
     {
         var mixId = mix == null ? (Guid?)null : MixIds.For(mix.Value);

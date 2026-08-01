@@ -39,6 +39,20 @@ internal interface IScoreJournalRepository
         CancellationToken cancellationToken);
 
     /// <summary>
+    ///     One page of a player's journal in one mix, newest first, for the partner API.
+    ///     <para>
+    ///         Keyset rather than offset: the journal is appended to while a caller is walking it, so
+    ///         an offset would skip or repeat rows at every page boundary. The key is
+    ///         (OccurredAt, ChartId) descending — <paramref name="beforeOccurredAt" /> and
+    ///         <paramref name="beforeChartId" /> are the last row the caller saw, and rows are
+    ///         append-only so a key never moves.
+    ///     </para>
+    /// </summary>
+    Task<IReadOnlyList<ScoreJournalEntry>> GetJournalPage(Guid userId, MixEnum mix,
+        DateTimeOffset? beforeOccurredAt, Guid? beforeChartId, DateTimeOffset? since, int limit,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     ///     Deletes a player's journal, optionally scoped to one mix. The append-only rule above
     ///     governs the *write* path — the importer must never rewrite history — and does not
     ///     bind the person whose history it is (docs/design/delete-my-data.md D8).
