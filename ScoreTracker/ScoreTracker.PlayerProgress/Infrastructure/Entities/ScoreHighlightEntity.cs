@@ -50,4 +50,21 @@ internal sealed class ScoreHighlightEntity
     public int? SkillTitleScore { get; set; }
 
     public int? SkillTitleThreshold { get; set; }
+
+    /// <summary>
+    ///     Tie-inclusive percentile against the competitive cohort. Set on every captured
+    ///     score, not only flagged ones — the Sessions page colours every row by it. Null
+    ///     means no cohort existed (co-op, or below the competitive − 5 gate).
+    /// </summary>
+    public double? PeerPercentile { get; set; }
+
+    /// <summary>Plays of this chart in the same session before the one that cleared it.</summary>
+    public int? AttemptsBeforeClear { get; set; }
+
+    public int? OfficialPlace { get; set; }
+
+    public int? OfficialBoardDepth { get; set; }
+
+    /// <summary>The sealed snapshot the placement was estimated against.</summary>
+    public DateTimeOffset? OfficialAsOf { get; set; }
 }

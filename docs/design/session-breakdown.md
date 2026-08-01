@@ -48,7 +48,7 @@ positions.
 | D22 | Official placement **rides the Discord card**. |
 | D23 | **The journal stays the spine; `ScoreSession` is enrichment** (§2.3). [delete-my-data.md §4](delete-my-data.md) leaves this page on `GetSessionGroups` on purpose and hands the move to "a separate change with its own answer for the back catalogue" — this is that change, and the answer is *don't move, join*. |
 | D24 | **No undo affordance on this page.** Owner-settled in the delete work: the undo banner lives on the delete page, *"not on the public Sessions page."* The hero never grows an Undo button. |
-| D25 | **Every new capture stays on `ScoreHighlight` / `PlayerMilestone`, keyed by `SessionId`** — that is what makes it vanish with an undo (§2.3). Not a convenience: a new table would survive one. |
+| D25 | **This design's new capture reuses `ScoreHighlight` / `PlayerMilestone`, keyed by `SessionId`** — it needs no new shape, and those two are already wired into undo and the purge. A new table is a perfectly ordinary thing to add; it just inherits both duties explicitly (§2.3). |
 | D26 | **`OfficialPumbilityRank` mints on improvement only**, matching every other rating milestone — otherwise an undo announces the rank it just cost you. |
 
 ### Deliberately not decided here
@@ -140,15 +140,20 @@ heavy per import, and it answers last Sunday's question rather than tonight's.
 Merged from main 2026-08-01 ([delete-my-data.md](delete-my-data.md)). It lands squarely on this
 page and settles four things.
 
-**Undo already carries the capture, and that is a constraint.**
-`ScoreSessionUndoneConsumer` (PlayerProgress) drops the session's `ScoreHighlight` and
-`PlayerMilestone` rows on `ScoreSessionUndoneEvent` — *"neither is recomputed from scores, so an
-undo that left them behind would keep claiming the player hit a title they no longer hold."*
-Everything §2.2 adds lives on those two tables keyed by `SessionId`, so it travels for free. **Do
-not move any of it to a new table.** A dedicated title-progress table would survive an undo and
-keep asserting progress the player no longer has — and it would additionally fail
-`AccountPurgeCoverageTests`, which requires every user-keyed entity to appear in a vertical's
-`UserOwned` manifest or carry a written exemption.
+**Session-scoped data now owes undo an answer.** `ScoreSessionUndoneConsumer` (PlayerProgress)
+drops the session's `ScoreHighlight` and `PlayerMilestone` rows on `ScoreSessionUndoneEvent` —
+*"neither is recomputed from scores, so an undo that left them behind would keep claiming the
+player hit a title they no longer hold."* Everything §2.2 adds lives on those two tables keyed by
+`SessionId`, so it travels for free.
+
+That is a reason this design reuses them, **not a rule against new tables**. Adding one is
+ordinary; it simply inherits two duties that the existing tables already discharge:
+
+1. **If it is session-scoped, delete it on `ScoreSessionUndoneEvent`** — extend
+   `IPlayerScoreDataRepository.DeleteForSession` rather than adding a second consumer.
+2. **If it carries a user key, declare it** in the owning vertical's
+   `EFAccountPurgeRepository.UserOwned`, or write the exemption and its reason.
+   `AccountPurgeCoverageTests` fails the build otherwise — which is the point of it.
 
 **The estimated rank recomputes on undo, and must not announce it.** Undo publishes a
 `PlayerScoresUpdatedEvent` with an **empty change set**, which still reaches
