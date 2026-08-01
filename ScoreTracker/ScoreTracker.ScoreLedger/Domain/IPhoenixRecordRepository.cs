@@ -4,6 +4,8 @@ using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.SharedKernel.ValueTypes;
 
+using ScoreTracker.ScoreLedger.Contracts;
+
 namespace ScoreTracker.ScoreLedger.Domain;
 
 internal interface IPhoenixRecordRepository
@@ -55,11 +57,13 @@ internal interface IPhoenixRecordRepository
 
     // Account purge spans mixes by design — no mix parameter.
     /// <summary>
-    ///     Every mix this player actually holds scores in, oldest first by the Mix table's own
-    ///     SortOrder. Spans BOTH score tables: legacy mixes record in BestAttempt and are just as
-    ///     deletable as Phoenix — there is nothing read-only about an old mix.
+    ///     Every mix that can hold scores, oldest first by the Mix table's own SortOrder, with
+    ///     this player's count in each. Counts span BOTH score tables: legacy mixes record in
+    ///     BestAttempt and are just as deletable as Phoenix — there is nothing read-only about an
+    ///     old mix.
     /// </summary>
-    Task<IReadOnlyList<MixEnum>> GetMixesWithScores(Guid userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<MixScoreCount>> GetMixesWithScores(Guid userId,
+        CancellationToken cancellationToken = default);
 
     /// <summary>Removes one chart's record — the undo case where no earlier play survives.</summary>
     Task DeleteRecord(MixEnum mix, Guid userId, Guid chartId, CancellationToken cancellationToken = default);

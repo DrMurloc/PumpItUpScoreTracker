@@ -44,24 +44,29 @@
     </MudPaper>
 
     <div class="@(_armed ? "" : "delete-inert")">
-        @if (_mixesWithData.Count > 1)
+        @* EVERY mix, not only the ones with scores in them — hiding the empties is
+           indistinguishable from having forgotten they exist, which is how the hardcoded
+           Phoenix/Phoenix 2/XX list read. The primary trio shows as chips and everything older
+           sits behind "More mixes", mirroring the site's own mix picker. *@
+        <MudText Typo="Typo.overline" Class="d-block mb-2">@L["Which mix"]</MudText>
+        <MudChipSet T="string" SelectedValue="@_mixValue" SelectedValueChanged="MixChanged"
+                    SelectionMode="SelectionMode.SingleSelection" CheckMark="true" Class="mb-2">
+            <MudChip T="string" Value="@AllMixes" Variant="Variant.Outlined">@L["All mixes"]</MudChip>
+            @foreach (var mix in _mixes.Where(m => m.IsPrimary || m.ScoreCount > 0 || _showAllMixes))
+            {
+                <MudChip T="string" Value="@mix.Mix.ToString()" Variant="Variant.Outlined">
+                    @mix.Mix.GetName()@(mix.ScoreCount > 0 ? $" ({mix.ScoreCount:N0})" : "")
+                </MudChip>
+            }
+        </MudChipSet>
+        @if (!_showAllMixes && _mixes.Any(m => !m.IsPrimary && m.ScoreCount == 0))
         {
-            <MudText Typo="Typo.overline" Class="d-block mb-2">@L["Which mix"]</MudText>
-            <MudChipSet T="string" SelectedValue="@_mixValue" SelectedValueChanged="MixChanged"
-                        SelectionMode="SelectionMode.SingleSelection" CheckMark="true" Class="mb-4">
-                <MudChip T="string" Value="@AllMixes" Variant="Variant.Outlined">@L["All mixes"]</MudChip>
-                @foreach (var mix in _mixesWithData)
-                {
-                    <MudChip T="string" Value="@mix.ToString()" Variant="Variant.Outlined">@mix.GetName()</MudChip>
-                }
-            </MudChipSet>
+            <MudButton Size="Size.Small" Variant="Variant.Text" Class="mb-4"
+                       OnClick="@(() => _showAllMixes = true)">@L["More Mixes"]</MudButton>
         }
-        else if (!_loadingMixes && _mixesWithData.Count == 1)
+        else
         {
-            @* Nothing to choose between — say which mix this is about and move on. *@
-            <MudText Typo="Typo.body2" Class="mb-4" Style="opacity:.8;">
-                @L["Your scores are all in {0}.", _mixesWithData[0].GetName()]
-            </MudText>
+            <div class="mb-4"></div>
         }
 
         <MudExpansionPanels MultiExpansion="true" Class="mb-4">
@@ -166,11 +171,11 @@
     };
 
     // Read, never assumed. Every mix stores scores — the legacy ones in BestAttempt rather
-    // than PhoenixRecord — so the picker offers whatever this player actually has.
-    private IReadOnlyList<MixEnum> _mixesWithData = Array.Empty<MixEnum>();
+    // than PhoenixRecord — so all of them are selectable, with counts where the player has any.
+    private IReadOnlyList<MixScoreCount> _mixes = Array.Empty<MixScoreCount>();
+    private bool _showAllMixes;
 
     private bool _armed;
-    private bool _loadingMixes = true;
     private bool _busy;
     private bool _showAccountDialog;
     private string _mixValue = AllMixes;
@@ -183,8 +188,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _mixesWithData = await Mediator.Send(new GetMixesWithScoresQuery(CurrentUser.User.Id));
-        _loadingMixes = false;
+        _mixes = await Mediator.Send(new GetMixesWithScoresQuery(CurrentUser.User.Id));
     }
 
     private bool NothingChosen =>

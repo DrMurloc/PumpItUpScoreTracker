@@ -10,9 +10,9 @@ internal sealed class ScoreSessionQueryHandlers(IScoreSessionRepository sessions
         IPhoenixRecordRepository records)
     : IRequestHandler<GetScoreSessionsQuery, IReadOnlyList<ScoreSessionRecord>>,
         IRequestHandler<GetScoreSessionUndoPreviewQuery, ScoreSessionUndoPreview?>,
-        IRequestHandler<GetMixesWithScoresQuery, IReadOnlyList<MixEnum>>
+        IRequestHandler<GetMixesWithScoresQuery, IReadOnlyList<MixScoreCount>>
 {
-    public Task<IReadOnlyList<MixEnum>> Handle(GetMixesWithScoresQuery request,
+    public Task<IReadOnlyList<MixScoreCount>> Handle(GetMixesWithScoresQuery request,
         CancellationToken cancellationToken)
     {
         return records.GetMixesWithScores(request.UserId, cancellationToken);

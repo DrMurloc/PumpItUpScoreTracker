@@ -167,15 +167,18 @@ makes people hunt, and hunting makes them determined; a visible one lets them re
 and conclude for themselves that undo is what they wanted. The guard is one deliberate act, and it
 is reversible.
 
-**Scope.** A mix selector listing **every mix this player actually holds scores in**, read from
-the data rather than hardcoded — `GetMixesWithScoresQuery` unions `PhoenixRecord` and
-`BestAttempt` and orders by the Mix table's own `SortOrder`. An account with scores in one mix
-gets a sentence instead of a chip row; there is nothing to choose between.
+**Scope.** A mix selector listing **every mix**, primary trio as chips with everything older
+behind *More Mixes* — the same shape as the site's own mix picker, driven by `Mix.IsPrimary`.
+`GetMixesWithScoresQuery` walks the Mix table and attaches this player's count from both score
+tables, ordered by `SortOrder` (never enum order). Mixes the player has scores in show their
+count and are promoted out of the More list.
 
-⚠ **Every mix is deletable, including the legacy ones.** Phoenix-scoring mixes record in
-`PhoenixRecord` and every pre-Phoenix mix in `BestAttempt` — a storage detail, not a reason to
-leave a mix out of the picker. There is nothing read-only about an old mix, and any code or copy
-implying otherwise is wrong.
+⚠ **Every mix is deletable, including the legacy ones**, and the picker must not hide the empty
+ones. Phoenix-scoring mixes record in `PhoenixRecord`, every pre-Phoenix mix in `BestAttempt` — a
+storage detail, never a reason to leave a mix out. Two wrong versions shipped in draft before
+this: a hardcoded `Phoenix / Phoenix 2 / XX` array, then a filter down to mixes-with-scores. Both
+looked identical from an account holding only Phoenix scores, which is to say both looked like the
+old mixes had been forgotten. There is nothing read-only about an old mix.
 
 Above two buckets. Each bucket header is a tri-state master; open it to cherry-pick.
 

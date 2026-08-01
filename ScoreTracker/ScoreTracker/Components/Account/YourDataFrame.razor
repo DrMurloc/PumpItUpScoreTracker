@@ -1,13 +1,14 @@
 @namespace ScoreTracker.Web.Components.Account
 
 @* The shared chrome for the two Your Data routes. Undo comes first because it is the safer of
-   the pair and the one most people actually want. *@
-@* Same segmented control the folder picker uses for chart type: filled = active, outlined =
-   not. Sat right-aligned across the header first and was easy to miss — it reads as a switch
-   only when it is next to the thing it switches. *@
-<div class="d-flex align-center flex-wrap gap-4 mb-4 pb-3 yourdata-head">
-    <MudText Typo="Typo.h5" Class="mr-1">@L["Your Data"]</MudText>
-    <MudButtonGroup OverrideStyles="false" Class="folder-picker-types">
+   the pair and the one most people actually want.
+
+   The switch is the same segmented control the folder picker uses for chart type — filled =
+   active, outlined = not — and it sits immediately beside the heading. Right-aligned across the
+   header it read as page chrome; a switch has to be next to the thing it switches. *@
+<div class="yourdata-head">
+    <MudText Typo="Typo.h5" Class="yourdata-title">@L["Your Data"]</MudText>
+    <MudButtonGroup OverrideStyles="false" Class="folder-picker-types yourdata-switch">
         <MudButton Href="/Account/Data/Undo" Size="Size.Small" Color="Color.Primary"
                    Variant="@(Active == YourDataTab.Undo ? Variant.Filled : Variant.Outlined)">@L["Undo"]</MudButton>
         <MudButton Href="/Account/Data/Delete" Size="Size.Small" Color="Color.Primary"
@@ -18,7 +19,28 @@
 @ChildContent
 
 <style>
-    .yourdata-head { border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); }
+    /* The layout's container pads sideways but not down, so pages space their own top edge. */
+    .yourdata-head {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: .5rem 1rem;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: .75rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    }
+
+    /* Centring a heading against buttons only works once the heading's own leading is out of
+       the way — h5 line-height is taller than a Small button, so it drags the row off. */
+    .yourdata-head .yourdata-title {
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .yourdata-head .yourdata-switch {
+        align-self: center;
+    }
 </style>
 
 @code {

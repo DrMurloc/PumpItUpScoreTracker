@@ -11,6 +11,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.ScoreLedger.Infrastructure.Entities;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -528,21 +529,36 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 g.Sum(e => e.prs.Pumbility), g.Sum(e => e.prs.PumbilityPlus))).ToArrayAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<MixEnum>> GetMixesWithScores(Guid userId,
+    public async Task<IReadOnlyList<MixScoreCount>> GetMixesWithScores(Guid userId,
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         // Both tables: Phoenix-scoring mixes record in PhoenixRecord, every pre-Phoenix mix in
-        // BestAttempt. Ordered by the Mix table's SortOrder, never enum order.
-        var phoenix = database.Set<PhoenixRecordEntity>().Where(p => p.UserId == userId).Select(p => p.MixId);
-        var legacy = database.Set<BestAttemptEntity>().Where(b => b.UserId == userId).Select(b => b.MixId);
-        var ids = await phoenix.Union(legacy).Distinct().ToArrayAsync(cancellationToken);
-        var ordered = await database.Set<MixEntity>()
-            .Where(m => ids.Contains(m.Id))
-            .OrderBy(m => m.SortOrder)
-            .Select(m => m.Id)
+        // BestAttempt. A mix with nothing in it still comes back — hiding the empties is what
+        // made the picker look like it had forgotten the old mixes existed.
+        var phoenix = await database.Set<PhoenixRecordEntity>()
+            .Where(p => p.UserId == userId)
+            .GroupBy(p => p.MixId)
+            .Select(g => new { MixId = g.Key, Count = g.Count() })
             .ToArrayAsync(cancellationToken);
-        return ordered.Select(MixIds.ToEnum).ToArray();
+        var legacy = await database.Set<BestAttemptEntity>()
+            .Where(b => b.UserId == userId)
+            .GroupBy(b => b.MixId)
+            .Select(g => new { MixId = g.Key, Count = g.Count() })
+            .ToArrayAsync(cancellationToken);
+        var counts = phoenix.Concat(legacy)
+            .GroupBy(x => x.MixId)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Count));
+
+        // Ordered by the Mix table's SortOrder, never enum order.
+        var mixes = await database.Set<MixEntity>()
+            .OrderBy(m => m.SortOrder)
+            .Select(m => new { m.Id, m.IsPrimary })
+            .ToArrayAsync(cancellationToken);
+        return mixes
+            .Where(m => MixIds.IsKnown(m.Id))
+            .Select(m => new MixScoreCount(MixIds.ToEnum(m.Id), counts.GetValueOrDefault(m.Id), m.IsPrimary))
+            .ToArray();
     }
 
     public async Task DeleteRecord(MixEnum mix, Guid userId, Guid chartId,
