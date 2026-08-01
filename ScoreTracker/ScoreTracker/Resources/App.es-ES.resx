@@ -375,6 +375,12 @@
   <data name="Active — {0} scores nearby, {1} skills have enough evidence" xml:space="preserve">
     <value>Activa — {0} scores cercanos, {1} skills con datos suficientes</value>
   </data>
+  <data name="Activity" xml:space="preserve">
+    <value>Actividad</value>
+  </data>
+  <data name="Activity appears once a player connects and imports. Send someone your invite link to get started." xml:space="preserve">
+    <value>La actividad aparece cuando un jugador se conecta e importa. Envía tu enlace de invitación a alguien para empezar.</value>
+  </data>
   <data name="Add" xml:space="preserve">
     <value>Añadir</value>
   </data>
@@ -665,6 +671,9 @@
   </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>Volver a la tier list</value>
+  </data>
+  <data name="Back to tool" xml:space="preserve">
+    <value>Volver a la herramienta</value>
   </data>
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Volver a Weekly Charts</value>
@@ -1314,6 +1323,9 @@
   <data name="Couldn't parse JSON" xml:space="preserve">
     <value>No se pudo leer el JSON</value>
   </data>
+  <data name="Couldn't reach your server" xml:space="preserve">
+    <value>No pudimos contactar con tu servidor</value>
+  </data>
   <data name="Couldn't reconnect." xml:space="preserve">
     <value>No se pudo reconectar.</value>
   </data>
@@ -1508,6 +1520,12 @@
   </data>
   <data name="Deliver to" xml:space="preserve">
     <value>Entregar a</value>
+  </data>
+  <data name="Delivered" xml:space="preserve">
+    <value>Entregada</value>
+  </data>
+  <data name="Deliveries" xml:space="preserve">
+    <value>Entregas</value>
   </data>
   <data name="Demote" xml:space="preserve">
     <value>Degradar</value>
@@ -2505,6 +2523,9 @@
   <data name="Key" xml:space="preserve">
     <value>Clave</value>
   </data>
+  <data name="Key used {0} times" xml:space="preserve">
+    <value>Clave usada {0} veces</value>
+  </data>
   <data name="Korean Name" xml:space="preserve">
     <value>Nombre en coreano</value>
   </data>
@@ -2519,6 +2540,9 @@
   </data>
   <data name="last 14 days" xml:space="preserve">
     <value>últimos 14 días</value>
+  </data>
+  <data name="Last 14 days. Older entries are removed automatically." xml:space="preserve">
+    <value>Últimos 14 días. Las entradas más antiguas se eliminan solas.</value>
   </data>
   <data name="Last 30 days" xml:space="preserve">
     <value>Últimos 30 días</value>
@@ -3330,6 +3354,9 @@
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Nada de este folder está en la tabla de popularidad.</value>
   </data>
+  <data name="Nothing here yet" xml:space="preserve">
+    <value>Todavía no hay nada aquí</value>
+  </data>
   <data name="Nothing is shared with tools" xml:space="preserve">
     <value>No se comparte nada con herramientas</value>
   </data>
@@ -3888,6 +3915,12 @@
   <data name="Player" xml:space="preserve">
     <value>Jugador/a</value>
   </data>
+  <data name="Player connected" xml:space="preserve">
+    <value>Jugador conectado</value>
+  </data>
+  <data name="Player disconnected" xml:space="preserve">
+    <value>Jugador desconectado</value>
+  </data>
   <data name="Player Page" xml:space="preserve">
     <value>Página de jugador</value>
   </data>
@@ -4191,6 +4224,12 @@
   <data name="Rarest titles" xml:space="preserve">
     <value>Títulos más raros</value>
   </data>
+  <data name="Rate limit hit {0} times" xml:space="preserve">
+    <value>Límite alcanzado {0} veces</value>
+  </data>
+  <data name="Rate limited" xml:space="preserve">
+    <value>Limitadas</value>
+  </data>
   <data name="Rating" xml:space="preserve">
     <value>Rating</value>
   </data>
@@ -4280,6 +4319,9 @@
   </data>
   <data name="Registered No Score" xml:space="preserve">
     <value>inscrito — aún sin puntuación</value>
+  </data>
+  <data name="Rejected: key expired" xml:space="preserve">
+    <value>Rechazada: clave caducada</value>
   </data>
   <data name="Reload the page" xml:space="preserve">
     <value>Recargar la página</value>
@@ -5940,6 +5982,9 @@
   <data name="weaker" xml:space="preserve">
     <value>más floja</value>
   </data>
+  <data name="Webhook timed out" xml:space="preserve">
+    <value>El webhook agotó el tiempo</value>
+  </data>
   <data name="Website" xml:space="preserve">
     <value>Sitio web</value>
   </data>
@@ -6342,6 +6387,9 @@
   <data name="Your scores, your plates and your player profile, on every mix you've played. It cannot record scores, change anything, or act as you." xml:space="preserve">
     <value>Tus puntuaciones, tus plates y tu perfil de jugador, en todas las versiones que hayas jugado. No puede registrar puntuaciones, cambiar nada, ni actuar como tú.</value>
   </data>
+  <data name="Your server returned an error" xml:space="preserve">
+    <value>Tu servidor devolvió un error</value>
+  </data>
   <data name="Your session ended." xml:space="preserve">
     <value>Tu sesión ha terminado.</value>
   </data>
@@ -6689,6 +6737,9 @@
   </data>
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0} · niveles {1}–{2} · {3}</value>
+  </data>
+  <data name="{0} — activity" xml:space="preserve">
+    <value>{0} — actividad</value>
   </data>
   <data name="{0} — settings" xml:space="preserve">
     <value>{0} — ajustes</value>

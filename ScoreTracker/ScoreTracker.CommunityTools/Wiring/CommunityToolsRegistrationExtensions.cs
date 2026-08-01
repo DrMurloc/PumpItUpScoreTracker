@@ -20,6 +20,7 @@ public static class CommunityToolsRegistrationExtensions
         services.AddTransient<IToolKeyRepository, EFToolKeyRepository>();
         services.AddTransient<IWebhookDeliveryRepository, EFWebhookDeliveryRepository>();
         services.AddTransient<IToolSecretReader, EFToolSecretReader>();
+        services.AddTransient<IToolActivityRepository, EFToolActivityRepository>();
         services.AddTransient<IWebhookDeliveryDispatcher, WebhookDeliveryDispatcher>();
         // A typed client, so the vertical owns its own outbound policy rather than borrowing one.
         services.AddHttpClient<IWebhookDeliveryClient, WebhookDeliveryClient>();

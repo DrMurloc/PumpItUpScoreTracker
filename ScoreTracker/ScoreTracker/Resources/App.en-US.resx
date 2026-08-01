@@ -375,6 +375,12 @@
   <data name="Active — {0} scores nearby, {1} skills have enough evidence" xml:space="preserve">
     <value>Active — {0} scores nearby, {1} skills have enough evidence</value>
   </data>
+  <data name="Activity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="Activity appears once a player connects and imports. Send someone your invite link to get started." xml:space="preserve">
+    <value>Activity appears once a player connects and imports. Send someone your invite link to get started.</value>
+  </data>
   <data name="Add" xml:space="preserve">
 	  <value>Add</value>
 	  <comment>Add</comment>
@@ -672,6 +678,9 @@
   </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>Back to Tier List</value>
+  </data>
+  <data name="Back to tool" xml:space="preserve">
+    <value>Back to tool</value>
   </data>
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Back to Weekly Charts</value>
@@ -1326,6 +1335,9 @@
   <data name="Couldn't parse JSON" xml:space="preserve">
 	  <value>Couldn't parse JSON</value>
   </data>
+  <data name="Couldn't reach your server" xml:space="preserve">
+    <value>Couldn't reach your server</value>
+  </data>
   <data name="Couldn't reconnect." xml:space="preserve">
     <value>Couldn't reconnect.</value>
   </data>
@@ -1521,6 +1533,12 @@
   </data>
   <data name="Deliver to" xml:space="preserve">
     <value>Deliver to</value>
+  </data>
+  <data name="Delivered" xml:space="preserve">
+    <value>Delivered</value>
+  </data>
+  <data name="Deliveries" xml:space="preserve">
+    <value>Deliveries</value>
   </data>
   <data name="Demote" xml:space="preserve">
     <value>Demote</value>
@@ -2523,6 +2541,9 @@
   <data name="Key" xml:space="preserve">
     <value>Key</value>
   </data>
+  <data name="Key used {0} times" xml:space="preserve">
+    <value>Key used {0} times</value>
+  </data>
   <data name="Korean Name" xml:space="preserve">
 	  <value>Korean Name</value>
   </data>
@@ -2537,6 +2558,9 @@
   </data>
   <data name="last 14 days" xml:space="preserve">
     <value>last 14 days</value>
+  </data>
+  <data name="Last 14 days. Older entries are removed automatically." xml:space="preserve">
+    <value>Last 14 days. Older entries are removed automatically.</value>
   </data>
   <data name="Last 30 days" xml:space="preserve">
     <value>Last 30 days</value>
@@ -3361,6 +3385,9 @@
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Nothing from this folder is on the popularity board.</value>
   </data>
+  <data name="Nothing here yet" xml:space="preserve">
+    <value>Nothing here yet</value>
+  </data>
   <data name="Nothing is shared with tools" xml:space="preserve">
     <value>Nothing is shared with tools</value>
   </data>
@@ -3924,6 +3951,12 @@
   <data name="Player" xml:space="preserve">
 	  <value>Player</value>
   </data>
+  <data name="Player connected" xml:space="preserve">
+    <value>Player connected</value>
+  </data>
+  <data name="Player disconnected" xml:space="preserve">
+    <value>Player disconnected</value>
+  </data>
   <data name="Player Page" xml:space="preserve">
     <value>Player page</value>
   </data>
@@ -4231,6 +4264,12 @@
   <data name="Rarest titles" xml:space="preserve">
     <value>Rarest titles</value>
   </data>
+  <data name="Rate limit hit {0} times" xml:space="preserve">
+    <value>Rate limit hit {0} times</value>
+  </data>
+  <data name="Rate limited" xml:space="preserve">
+    <value>Rate limited</value>
+  </data>
   <data name="Rating" xml:space="preserve">
     <value>Rating</value>
     <comment>Rating</comment>
@@ -4322,6 +4361,9 @@
   </data>
   <data name="Registered No Score" xml:space="preserve">
     <value>registered — no score posted yet</value>
+  </data>
+  <data name="Rejected: key expired" xml:space="preserve">
+    <value>Rejected: key expired</value>
   </data>
   <data name="Reload the page" xml:space="preserve">
     <value>Reload the page</value>
@@ -6005,6 +6047,9 @@
   <data name="weaker" xml:space="preserve">
     <value>weaker</value>
   </data>
+  <data name="Webhook timed out" xml:space="preserve">
+    <value>Webhook timed out</value>
+  </data>
   <data name="Website" xml:space="preserve">
     <value>Website</value>
     <comment>Website</comment>
@@ -6414,6 +6459,9 @@
   <data name="Your scores, your plates and your player profile, on every mix you've played. It cannot record scores, change anything, or act as you." xml:space="preserve">
     <value>Your scores, your plates and your player profile, on every mix you've played. It cannot record scores, change anything, or act as you.</value>
   </data>
+  <data name="Your server returned an error" xml:space="preserve">
+    <value>Your server returned an error</value>
+  </data>
   <data name="Your session ended." xml:space="preserve">
     <value>Your session ended.</value>
   </data>
@@ -6761,6 +6809,9 @@
   </data>
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0} · levels {1}–{2} · {3}</value>
+  </data>
+  <data name="{0} — activity" xml:space="preserve">
+    <value>{0} — activity</value>
   </data>
   <data name="{0} — settings" xml:space="preserve">
     <value>{0} — settings</value>

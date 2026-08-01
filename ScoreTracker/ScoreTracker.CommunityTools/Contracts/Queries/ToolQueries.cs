@@ -40,3 +40,21 @@ public sealed record GetToolReadablePlayersQuery(Guid ToolId) : IQuery<IReadOnly
 
 [ExcludeFromCodeCoverage]
 public sealed record CanToolReadPlayerQuery(Guid ToolId, Guid UserId) : IQuery<bool>;
+
+[ExcludeFromCodeCoverage]
+public sealed record GetToolActivityQuery(Guid ToolId, int Limit = 100)
+    : IQuery<IReadOnlyList<ToolActivityRecord>>;
+
+[ExcludeFromCodeCoverage]
+public sealed record GetToolActivitySummaryQuery(Guid ToolId) : IQuery<ToolActivitySummary>;
+
+/// <summary>The exact bytes we signed for the tool's most recent delivery.</summary>
+[ExcludeFromCodeCoverage]
+public sealed record GetToolSignatureEchoQuery(Guid ToolId) : IQuery<SignatureEcho?>;
+
+/// <summary>
+///     The delivery table as a pull, for a tool that would rather poll than host an endpoint.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record GetToolDeliveryFeedQuery(Guid ToolId, string? After = null, int Limit = 100)
+    : IQuery<IReadOnlyList<DeliveryFeedRecord>>;

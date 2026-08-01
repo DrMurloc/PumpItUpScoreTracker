@@ -375,6 +375,12 @@
   <data name="Active — {0} scores nearby, {1} skills have enough evidence" xml:space="preserve">
     <value>Grglmurp — {0} mgrlgmrg rglmurg, {1} blarglurg mrglro mrpgl grrglgrorpblarg</value>
   </data>
+  <data name="Activity" xml:space="preserve">
+    <value>Murgblarg</value>
+  </data>
+  <data name="Activity appears once a player connects and imports. Send someone your invite link to get started." xml:space="preserve">
+    <value>Murgblarg murgl blorm Morp galm murm murpmurp. Murpo murpgrogl grabla blu morp blu murgargl.</value>
+  </data>
   <data name="Add" xml:space="preserve">
 	  <value>Glorg</value>
 	  <comment>Add</comment>
@@ -672,6 +678,9 @@
   </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>Arglblgrl grgl Mrpgrrgl Grog</value>
+  </data>
+  <data name="Back to tool" xml:space="preserve">
+    <value>Blurgl blu Rorgl</value>
   </data>
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Arglblgrl grgl Murmmr Murgl</value>
@@ -1326,6 +1335,9 @@
   <data name="Couldn't parse JSON" xml:space="preserve">
 	  <value>Glorgmrgrorp arglgrrgl JSON</value>
   </data>
+  <data name="Couldn't reach your server" xml:space="preserve">
+    <value>Bam murp murgargl gromurp murgblub</value>
+  </data>
   <data name="Couldn't reconnect." xml:space="preserve">
     <value>Glorgmrgrorp lurgmrpblarg.</value>
   </data>
@@ -1521,6 +1533,12 @@
   </data>
   <data name="Deliver to" xml:space="preserve">
     <value>Murpo blu</value>
+  </data>
+  <data name="Delivered" xml:space="preserve">
+    <value>Murpo blorm</value>
+  </data>
+  <data name="Deliveries" xml:space="preserve">
+    <value>Murpo</value>
   </data>
   <data name="Demote" xml:space="preserve">
     <value>Romurm</value>
@@ -2523,6 +2541,9 @@
   <data name="Key" xml:space="preserve">
     <value>Grrgl</value>
   </data>
+  <data name="Key used {0} times" xml:space="preserve">
+    <value>Blarglurp murgm {0} murgl</value>
+  </data>
   <data name="Korean Name" xml:space="preserve">
 	  <value>Urgglorg Mrg</value>
   </data>
@@ -2537,6 +2558,9 @@
   </data>
   <data name="last 14 days" xml:space="preserve">
     <value>blgrlmrgl 14 grrglmrgl</value>
+  </data>
+  <data name="Last 14 days. Older entries are removed automatically." xml:space="preserve">
+    <value>Blomurp 14 murgl. Murmo murgm murgloo murgargl.</value>
   </data>
   <data name="Last 30 days" xml:space="preserve">
     <value>Blgrlmrgl 30 grrglmrgl</value>
@@ -3361,6 +3385,9 @@
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Blarggllurg romurg grglmrp grrgllurg urg lurg mrp grorpmorgmurm mrglblarg.</value>
   </data>
+  <data name="Nothing here yet" xml:space="preserve">
+    <value>Bam murgm blorm</value>
+  </data>
   <data name="Nothing is shared with tools" xml:space="preserve">
     <value>Bo murgblub blu Rorgl</value>
   </data>
@@ -3924,6 +3951,12 @@
   <data name="Player" xml:space="preserve">
 	  <value>Morp</value>
   </data>
+  <data name="Player connected" xml:space="preserve">
+    <value>Morp galmoo</value>
+  </data>
+  <data name="Player disconnected" xml:space="preserve">
+    <value>Morp blugrorp</value>
+  </data>
   <data name="Player Page" xml:space="preserve">
     <value>Morp Murgla</value>
   </data>
@@ -4231,6 +4264,12 @@
   <data name="Rarest titles" xml:space="preserve">
     <value>Urgblgrl mrgl</value>
   </data>
+  <data name="Rate limit hit {0} times" xml:space="preserve">
+    <value>Murgm murmo {0} murgl</value>
+  </data>
+  <data name="Rate limited" xml:space="preserve">
+    <value>Murgm murmo</value>
+  </data>
   <data name="Rating" xml:space="preserve">
     <value>Mrglrg</value>
     <comment>Rating</comment>
@@ -4322,6 +4361,9 @@
   </data>
   <data name="Registered No Score" xml:space="preserve">
     <value>grumla — blub mrglrgl uma</value>
+  </data>
+  <data name="Rejected: key expired" xml:space="preserve">
+    <value>Murgloo: blarglurp murgloo</value>
   </data>
   <data name="Reload the page" xml:space="preserve">
     <value>Mrglmurg mrp urggrgl</value>
@@ -6005,6 +6047,9 @@
   <data name="weaker" xml:space="preserve">
     <value>morgmrgl</value>
   </data>
+  <data name="Webhook timed out" xml:space="preserve">
+    <value>Murgm murgloo blu murgl</value>
+  </data>
   <data name="Website" xml:space="preserve">
     <value>Grorpgrglblarg</value>
     <comment>Website</comment>
@@ -6414,6 +6459,9 @@
   <data name="Your scores, your plates and your player profile, on every mix you've played. It cannot record scores, change anything, or act as you." xml:space="preserve">
     <value>Gromurp Mgrlgmrg, gromurp blarglurp murm gromurp Morp mrpgrogl, blu argla murgl gromurp murpmurp. Murp bo murpmurp Mgrlgmrg, murgloo bam, arplo murpmurp blu gromurp.</value>
   </data>
+  <data name="Your server returned an error" xml:space="preserve">
+    <value>Gromurp murgblub murpo murgloo</value>
+  </data>
   <data name="Your session ended." xml:space="preserve">
     <value>Gromurp grrglgrrglgl lurgblub.</value>
   </data>
@@ -6761,6 +6809,9 @@
   </data>
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0} · plglgrrgl {1}–{2} · {3}</value>
+  </data>
+  <data name="{0} — activity" xml:space="preserve">
+    <value>{0} — murgblarg</value>
   </data>
   <data name="{0} — settings" xml:space="preserve">
     <value>{0} — mrpgrogl</value>

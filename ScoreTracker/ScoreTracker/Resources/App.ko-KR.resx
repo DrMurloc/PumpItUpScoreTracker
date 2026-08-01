@@ -375,6 +375,12 @@
   <data name="Active — {0} scores nearby, {1} skills have enough evidence" xml:space="preserve">
     <value>활성 — 주변 스코어 {0}개, 근거가 충분한 스킬 {1}개</value>
   </data>
+  <data name="Activity" xml:space="preserve">
+    <value>활동</value>
+  </data>
+  <data name="Activity appears once a player connects and imports. Send someone your invite link to get started." xml:space="preserve">
+    <value>플레이어가 연결하고 임포트하면 기록이 나타납니다. 초대 링크를 보내 시작하세요.</value>
+  </data>
   <data name="Add" xml:space="preserve">
     <value>추가</value>
   </data>
@@ -665,6 +671,9 @@
   </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>티어리스트로 돌아가기</value>
+  </data>
+  <data name="Back to tool" xml:space="preserve">
+    <value>도구로 돌아가기</value>
   </data>
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Weekly Charts로 돌아가기</value>
@@ -1314,6 +1323,9 @@
   <data name="Couldn't parse JSON" xml:space="preserve">
     <value>JSON 파싱 실패</value>
   </data>
+  <data name="Couldn't reach your server" xml:space="preserve">
+    <value>서버에 연결할 수 없습니다</value>
+  </data>
   <data name="Couldn't reconnect." xml:space="preserve">
     <value>다시 연결하지 못했습니다.</value>
   </data>
@@ -1508,6 +1520,12 @@
   </data>
   <data name="Deliver to" xml:space="preserve">
     <value>전달 주소</value>
+  </data>
+  <data name="Delivered" xml:space="preserve">
+    <value>전달됨</value>
+  </data>
+  <data name="Deliveries" xml:space="preserve">
+    <value>전달</value>
   </data>
   <data name="Demote" xml:space="preserve">
     <value>강등</value>
@@ -2505,6 +2523,9 @@
   <data name="Key" xml:space="preserve">
     <value>키</value>
   </data>
+  <data name="Key used {0} times" xml:space="preserve">
+    <value>키 {0}회 사용</value>
+  </data>
   <data name="Korean Name" xml:space="preserve">
     <value>한국어 이름</value>
   </data>
@@ -2519,6 +2540,9 @@
   </data>
   <data name="last 14 days" xml:space="preserve">
     <value>최근 14일</value>
+  </data>
+  <data name="Last 14 days. Older entries are removed automatically." xml:space="preserve">
+    <value>최근 14일. 이전 기록은 자동으로 삭제됩니다.</value>
   </data>
   <data name="Last 30 days" xml:space="preserve">
     <value>최근 30일</value>
@@ -3330,6 +3354,9 @@
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>이 폴더의 채보는 인기 보드에 없습니다.</value>
   </data>
+  <data name="Nothing here yet" xml:space="preserve">
+    <value>아직 기록이 없습니다</value>
+  </data>
   <data name="Nothing is shared with tools" xml:space="preserve">
     <value>도구와 공유된 것이 없습니다</value>
   </data>
@@ -3888,6 +3915,12 @@
   <data name="Player" xml:space="preserve">
     <value>플레이어</value>
   </data>
+  <data name="Player connected" xml:space="preserve">
+    <value>플레이어 연결됨</value>
+  </data>
+  <data name="Player disconnected" xml:space="preserve">
+    <value>플레이어 연결 해제됨</value>
+  </data>
   <data name="Player Page" xml:space="preserve">
     <value>참가자 화면</value>
   </data>
@@ -4193,6 +4226,12 @@
   <data name="Rarest titles" xml:space="preserve">
     <value>가장 희귀한 타이틀</value>
   </data>
+  <data name="Rate limit hit {0} times" xml:space="preserve">
+    <value>속도 제한 {0}회 발생</value>
+  </data>
+  <data name="Rate limited" xml:space="preserve">
+    <value>속도 제한</value>
+  </data>
   <data name="Rating" xml:space="preserve">
     <value>레이팅</value>
   </data>
@@ -4282,6 +4321,9 @@
   </data>
   <data name="Registered No Score" xml:space="preserve">
     <value>등록됨 — 아직 점수 없음</value>
+  </data>
+  <data name="Rejected: key expired" xml:space="preserve">
+    <value>거부됨: 키 만료</value>
   </data>
   <data name="Reload the page" xml:space="preserve">
     <value>페이지 새로 고침</value>
@@ -5942,6 +5984,9 @@
   <data name="weaker" xml:space="preserve">
     <value>약함</value>
   </data>
+  <data name="Webhook timed out" xml:space="preserve">
+    <value>웹훅 시간 초과</value>
+  </data>
   <data name="Website" xml:space="preserve">
     <value>웹사이트</value>
   </data>
@@ -6344,6 +6389,9 @@
   <data name="Your scores, your plates and your player profile, on every mix you've played. It cannot record scores, change anything, or act as you." xml:space="preserve">
     <value>플레이한 모든 시리즈의 점수, 플레이트, 플레이어 프로필. 점수를 기록하거나 무언가를 변경하거나 나를 대신해 행동할 수는 없습니다.</value>
   </data>
+  <data name="Your server returned an error" xml:space="preserve">
+    <value>서버가 오류를 반환했습니다</value>
+  </data>
   <data name="Your session ended." xml:space="preserve">
     <value>세션이 종료되었습니다.</value>
   </data>
@@ -6691,6 +6739,9 @@
   </data>
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0} · 레벨 {1}–{2} · {3}</value>
+  </data>
+  <data name="{0} — activity" xml:space="preserve">
+    <value>{0} — 활동</value>
   </data>
   <data name="{0} — settings" xml:space="preserve">
     <value>{0} — 설정</value>
