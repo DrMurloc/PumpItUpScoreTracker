@@ -646,6 +646,13 @@ state, which doubles as the `/Developers` empty state.
 
 ## 14. Sequencing
 
+> **Build status, 2026-08-01.** C0–C12 are built, tested and pushed: the whole v2 API surface,
+> the CommunityTools vertical, purge coverage, keys/shares, tool-key auth with share gating, and
+> rate limiting. C13–C30 — the player and maker UI, webhook delivery, session mode, admin review
+> and the `dev/export` retirement — are **not built**. The branch is coherent and green at every
+> commit; nothing below C12 is half-done.
+
+
 **One PR** (owner, 2026-08-01), built as an ordered commit chain. Every commit compiles and every
 suite passes at every commit — the chain is a reviewable narrative, not a bisect hazard.
 
