@@ -504,6 +504,9 @@
   <data name="Any" xml:space="preserve">
     <value>Todos</value>
   </data>
+  <data name="Any approved tool can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
+    <value>Qualquer ferramenta aprovada pode ler suas pontuações. Isso serve principalmente para ferramentas de análise. Desativar interrompe novos acessos, mas as ferramentas podem manter o que já coletaram.</value>
+  </data>
   <data name="Any level" xml:space="preserve">
     <value>Qualquer nível</value>
   </data>
@@ -530,6 +533,9 @@
   </data>
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>Charts acessíveis não passados perto do seu nível.</value>
+  </data>
+  <data name="Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
+    <value>Ferramentas aprovadas poderão ler suas pontuações — é isso que move a maioria das ferramentas de análise. É um ajuste separado e você pode desativá-lo logo em seguida, nesta página.</value>
   </data>
   <data name="Arcade" xml:space="preserve">
     <value>Arcade</value>
@@ -767,6 +773,9 @@
   </data>
   <data name="Browse regions" xml:space="preserve">
     <value>Explorar regiões</value>
+  </data>
+  <data name="Browse tools" xml:space="preserve">
+    <value>Explorar ferramentas</value>
   </data>
   <data name="Build Session" xml:space="preserve">
     <value>Construir sessão</value>
@@ -1901,6 +1910,9 @@
   </data>
   <data name="Give a song name." xml:space="preserve">
     <value>Informe o nome de uma música.</value>
+  </data>
+  <data name="Go public" xml:space="preserve">
+    <value>Tornar público</value>
   </data>
   <data name="Go to account page" xml:space="preserve">
     <value>Ir para minha conta</value>
@@ -3107,6 +3119,9 @@
   </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Nada desta pasta está no quadro de popularidade.</value>
+  </data>
+  <data name="Nothing is shared with tools" xml:space="preserve">
+    <value>Nada é compartilhado com ferramentas</value>
   </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>Nada corresponde a estes filtros. Remova um para ver o resto.</value>
@@ -4352,6 +4367,9 @@
   <data name="See where you stand" xml:space="preserve">
     <value>Veja onde você está</value>
   </data>
+  <data name="See which" xml:space="preserve">
+    <value>Ver quais</value>
+  </data>
   <data name="See you in" xml:space="preserve">
     <value>Até logo no</value>
   </data>
@@ -4430,6 +4448,9 @@
   <data name="Shaded range: ±1σ" xml:space="preserve">
     <value>Shaded range: ±1σ</value>
   </data>
+  <data name="Share my scores with community tools" xml:space="preserve">
+    <value>Compartilhar minhas pontuações com ferramentas da comunidade</value>
+  </data>
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>Proporção de seções do chart com cada habilidade</value>
   </data>
@@ -4438,6 +4459,12 @@
   </data>
   <data name="shared top-50 charts" xml:space="preserve">
     <value>charts do top 50 em comum</value>
+  </data>
+  <data name="Sharing with community tools needs a public profile, so it will be turned off. Tools you connected individually stay connected." xml:space="preserve">
+    <value>Compartilhar com ferramentas da comunidade exige um perfil público, então será desativado. As ferramentas às quais você se conectou individualmente continuam conectadas.</value>
+  </data>
+  <data name="Sharing your scores with community tools needs a public profile. You can also connect to a single tool with an invite link from its maker — that works either way." xml:space="preserve">
+    <value>Compartilhar suas pontuações com ferramentas da comunidade exige um perfil público. Você também pode conectar-se a uma única ferramenta com um link de convite do criador — isso funciona de qualquer forma.</value>
   </data>
   <data name="Short Cut" xml:space="preserve">
     <value>Short Cut</value>
@@ -5008,6 +5035,12 @@
   </data>
   <data name="This account will be deleted" xml:space="preserve">
     <value>Esta conta será excluída</value>
+  </data>
+  <data name="This also disconnects {0} community tools." xml:space="preserve">
+    <value>Isso também desconecta {0} ferramentas da comunidade.</value>
+  </data>
+  <data name="This also turns on sharing with community tools." xml:space="preserve">
+    <value>Isso também ativa o compartilhamento com ferramentas da comunidade.</value>
   </data>
   <data name="This can't be undone" xml:space="preserve">
     <value>Isso não pode ser desfeito</value>
@@ -6250,6 +6283,9 @@
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>{0} para o PG</value>
+  </data>
+  <data name="{0} tools reading now" xml:space="preserve">
+    <value>{0} ferramentas lendo agora</value>
   </data>
   <data name="{0} top-board charts" xml:space="preserve">
     <value>{0} charts no top oficial</value>

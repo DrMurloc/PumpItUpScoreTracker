@@ -504,6 +504,9 @@
   <data name="Any" xml:space="preserve">
     <value>Cualquiera</value>
   </data>
+  <data name="Any approved tool can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
+    <value>Cualquier herramienta aprobada puede leer tus puntuaciones. Sobre todo sirve para herramientas de análisis. Si lo desactivas se detiene el acceso nuevo, pero las herramientas pueden conservar lo que ya recopilaron.</value>
+  </data>
   <data name="Any level" xml:space="preserve">
     <value>Cualquier nivel</value>
   </data>
@@ -530,6 +533,9 @@
   </data>
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>Charts accesibles sin pasar alrededor de tu nivel.</value>
+  </data>
+  <data name="Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
+    <value>Las herramientas aprobadas podrán leer tus puntuaciones — eso es lo que impulsa la mayoría de las herramientas de análisis. Es un ajuste aparte y puedes desactivarlo justo después, en esta página.</value>
   </data>
   <data name="Arcade" xml:space="preserve">
     <value>Arcade</value>
@@ -767,6 +773,9 @@
   </data>
   <data name="Browse regions" xml:space="preserve">
     <value>Explorar regiones</value>
+  </data>
+  <data name="Browse tools" xml:space="preserve">
+    <value>Explorar herramientas</value>
   </data>
   <data name="Build Session" xml:space="preserve">
     <value>Construir sesión</value>
@@ -1901,6 +1910,9 @@
   </data>
   <data name="Give a song name." xml:space="preserve">
     <value>Escribe el nombre de una canción.</value>
+  </data>
+  <data name="Go public" xml:space="preserve">
+    <value>Hacer público</value>
   </data>
   <data name="Go to account page" xml:space="preserve">
     <value>Ir a mi cuenta</value>
@@ -3107,6 +3119,9 @@
   </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Nada de esta carpeta está en el tablero de popularidad.</value>
+  </data>
+  <data name="Nothing is shared with tools" xml:space="preserve">
+    <value>No se comparte nada con herramientas</value>
   </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>Nada coincide con estos filtros. Quita uno para ver el resto.</value>
@@ -4352,6 +4367,9 @@
   <data name="See where you stand" xml:space="preserve">
     <value>Mira dónde estás</value>
   </data>
+  <data name="See which" xml:space="preserve">
+    <value>Ver cuáles</value>
+  </data>
   <data name="See you in" xml:space="preserve">
     <value>Nos vemos en</value>
   </data>
@@ -4430,6 +4448,9 @@
   <data name="Shaded range: ±1σ" xml:space="preserve">
     <value>Shaded range: ±1σ</value>
   </data>
+  <data name="Share my scores with community tools" xml:space="preserve">
+    <value>Compartir mis puntuaciones con herramientas de la comunidad</value>
+  </data>
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>Proporción de secciones del chart con cada habilidad</value>
   </data>
@@ -4438,6 +4459,12 @@
   </data>
   <data name="shared top-50 charts" xml:space="preserve">
     <value>charts compartidos del top 50</value>
+  </data>
+  <data name="Sharing with community tools needs a public profile, so it will be turned off. Tools you connected individually stay connected." xml:space="preserve">
+    <value>Compartir con herramientas de la comunidad requiere un perfil público, así que se desactivará. Las herramientas a las que te conectaste individualmente siguen conectadas.</value>
+  </data>
+  <data name="Sharing your scores with community tools needs a public profile. You can also connect to a single tool with an invite link from its maker — that works either way." xml:space="preserve">
+    <value>Compartir tus puntuaciones con herramientas de la comunidad requiere un perfil público. También puedes conectarte a una sola herramienta con un enlace de invitación de su creador — eso funciona de cualquier modo.</value>
   </data>
   <data name="Short Cut" xml:space="preserve">
     <value>Short Cut</value>
@@ -5008,6 +5035,12 @@
   </data>
   <data name="This account will be deleted" xml:space="preserve">
     <value>Esta cuenta será eliminada</value>
+  </data>
+  <data name="This also disconnects {0} community tools." xml:space="preserve">
+    <value>Esto también desconecta {0} herramientas de la comunidad.</value>
+  </data>
+  <data name="This also turns on sharing with community tools." xml:space="preserve">
+    <value>Esto también activa el uso compartido con herramientas de la comunidad.</value>
   </data>
   <data name="This can't be undone" xml:space="preserve">
     <value>Esto no se puede deshacer</value>
@@ -6250,6 +6283,9 @@
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>{0} para el PG</value>
+  </data>
+  <data name="{0} tools reading now" xml:space="preserve">
+    <value>{0} herramientas leyendo ahora</value>
   </data>
   <data name="{0} top-board charts" xml:space="preserve">
     <value>{0} charts en el top oficial</value>

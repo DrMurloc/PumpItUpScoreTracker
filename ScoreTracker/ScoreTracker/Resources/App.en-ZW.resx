@@ -507,6 +507,9 @@
   <data name="Any" xml:space="preserve">
     <value>Ro</value>
   </data>
+  <data name="Any approved tool can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
+    <value>Argla Rorgl murp blurgl gromurp Mgrlgmrg. Ormo blu mgrlgmrg-rorgblub. Murgloo grorp mrpgrogl, blu Rorgl grabla morgmurm.</value>
+  </data>
   <data name="Any level" xml:space="preserve">
     <value>Ro grorpmurm</value>
   </data>
@@ -533,6 +536,9 @@
   </data>
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>Lurggrgllurggl rglgrglblub murgl blubmurm gromurp grorpmurm.</value>
+  </data>
+  <data name="Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
+    <value>Argla Rorgl murp blurgl gromurp Mgrlgmrg — ormo blu mgrlgmrg-rorgblub. Amurmo murgargl, gromurp murp grorp murmarglmurp, blu blaromurp.</value>
   </data>
   <data name="Arcade" xml:space="preserve">
     <value>Blubgro</value>
@@ -775,6 +781,9 @@
   </data>
   <data name="Browse regions" xml:space="preserve">
     <value>Murpmurp arglmrglrgl</value>
+  </data>
+  <data name="Browse tools" xml:space="preserve">
+    <value>Murpmurp Rorgl</value>
   </data>
   <data name="Build Session" xml:space="preserve">
 	  <value>Glorgmurg Grrglgrrglgl</value>
@@ -1918,6 +1927,9 @@
   </data>
   <data name="Give a song name." xml:space="preserve">
     <value>Blgrlgro gro mrgl mrg.</value>
+  </data>
+  <data name="Go public" xml:space="preserve">
+    <value>Murp Mrglrgll</value>
   </data>
   <data name="Go to account page" xml:space="preserve">
     <value>Ombu gorbam</value>
@@ -3138,6 +3150,9 @@
   </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Blarggllurg romurg grglmrp grrgllurg urg lurg mrp grorpmorgmurm mrglblarg.</value>
+  </data>
+  <data name="Nothing is shared with tools" xml:space="preserve">
+    <value>Bo murgblub blu Rorgl</value>
   </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>Blarggllurg morgmaglblgrl blgrlmrp glrglmurg. Mrpmurg argl grgl blarg mrp morggl.</value>
@@ -4400,6 +4415,9 @@
   <data name="See where you stand" xml:space="preserve">
     <value>Blarg blarggrorp blub blgrlmrgl</value>
   </data>
+  <data name="See which" xml:space="preserve">
+    <value>Blorgl murgl</value>
+  </data>
   <data name="See you in" xml:space="preserve">
     <value>Blarg blub mrp</value>
   </data>
@@ -4479,6 +4497,9 @@
   <data name="Shaded range: ±1σ" xml:space="preserve">
     <value>Blubmrgl blubmrgl: ±1σ</value>
   </data>
+  <data name="Share my scores with community tools" xml:space="preserve">
+    <value>Murgblub gromurp Mgrlgmrg blu Plglmurgblub Rorgl</value>
+  </data>
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>Murmmurm mrgl murgl glorgmaglro arglplglblub blubmurp morgmurm</value>
   </data>
@@ -4487,6 +4508,12 @@
   </data>
   <data name="shared top-50 charts" xml:space="preserve">
     <value>murpro blarg-50 murgl</value>
+  </data>
+  <data name="Sharing with community tools needs a public profile, so it will be turned off. Tools you connected individually stay connected." xml:space="preserve">
+    <value>Murgblub blu Plglmurgblub Rorgl grolm Mrglrgll grgl, murgloo grorp. Rorgl gromurp galm murmo mrbla galmoo.</value>
+  </data>
+  <data name="Sharing your scores with community tools needs a public profile. You can also connect to a single tool with an invite link from its maker — that works either way." xml:space="preserve">
+    <value>Murgblub gromurp Mgrlgmrg blu Plglmurgblub Rorgl grolm Mrglrgll grgl. Gromurp murp galm blu murmo Rorgl blu murpgrogl — arplo grolamurp.</value>
   </data>
   <data name="Short Cut" xml:space="preserve">
     <value>Glorgurg Argl</value>
@@ -5067,6 +5094,12 @@
   </data>
   <data name="This account will be deleted" xml:space="preserve">
     <value>Grglmrp grgl murmurg glorg mrglmorggrorp</value>
+  </data>
+  <data name="This also disconnects {0} community tools." xml:space="preserve">
+    <value>Blugrorp murgm {0} Plglmurgblub Rorgl.</value>
+  </data>
+  <data name="This also turns on sharing with community tools." xml:space="preserve">
+    <value>Blugrorp murgblub blu Plglmurgblub Rorgl mublu.</value>
   </data>
   <data name="This can't be undone" xml:space="preserve">
     <value>Oba gorb glopa</value>
@@ -6320,6 +6353,9 @@
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>{0} grgl PG</value>
+  </data>
+  <data name="{0} tools reading now" xml:space="preserve">
+    <value>{0} Rorgl blurglmurp</value>
   </data>
   <data name="{0} top-board charts" xml:space="preserve">
     <value>{0} blarg-mrglblarg murgl</value>

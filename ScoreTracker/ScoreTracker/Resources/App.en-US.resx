@@ -507,6 +507,9 @@
   <data name="Any" xml:space="preserve">
     <value>Any</value>
   </data>
+  <data name="Any approved tool can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
+    <value>Any approved tool can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected.</value>
+  </data>
   <data name="Any level" xml:space="preserve">
     <value>Any level</value>
   </data>
@@ -533,6 +536,9 @@
   </data>
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>Approachable unpassed charts around your level.</value>
+  </data>
+  <data name="Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
+    <value>Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page.</value>
   </data>
   <data name="Arcade" xml:space="preserve">
     <value>Arcade</value>
@@ -775,6 +781,9 @@
   </data>
   <data name="Browse regions" xml:space="preserve">
     <value>Browse regions</value>
+  </data>
+  <data name="Browse tools" xml:space="preserve">
+    <value>Browse tools</value>
   </data>
   <data name="Build Session" xml:space="preserve">
 	  <value>Build Session</value>
@@ -1918,6 +1927,9 @@
   </data>
   <data name="Give a song name." xml:space="preserve">
     <value>Give a song name.</value>
+  </data>
+  <data name="Go public" xml:space="preserve">
+    <value>Go public</value>
   </data>
   <data name="Go to account page" xml:space="preserve">
     <value>Go to account page</value>
@@ -3138,6 +3150,9 @@
   </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Nothing from this folder is on the popularity board.</value>
+  </data>
+  <data name="Nothing is shared with tools" xml:space="preserve">
+    <value>Nothing is shared with tools</value>
   </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>Nothing matches these filters. Clear one to see the rest.</value>
@@ -4400,6 +4415,9 @@
   <data name="See where you stand" xml:space="preserve">
     <value>See where you stand</value>
   </data>
+  <data name="See which" xml:space="preserve">
+    <value>See which</value>
+  </data>
   <data name="See you in" xml:space="preserve">
     <value>See you in</value>
   </data>
@@ -4479,6 +4497,9 @@
   <data name="Shaded range: ±1σ" xml:space="preserve">
     <value>Shaded range: ±1σ</value>
   </data>
+  <data name="Share my scores with community tools" xml:space="preserve">
+    <value>Share my scores with community tools</value>
+  </data>
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>Share of chart sections featuring each skill</value>
   </data>
@@ -4487,6 +4508,12 @@
   </data>
   <data name="shared top-50 charts" xml:space="preserve">
     <value>shared top-50 charts</value>
+  </data>
+  <data name="Sharing with community tools needs a public profile, so it will be turned off. Tools you connected individually stay connected." xml:space="preserve">
+    <value>Sharing with community tools needs a public profile, so it will be turned off. Tools you connected individually stay connected.</value>
+  </data>
+  <data name="Sharing your scores with community tools needs a public profile. You can also connect to a single tool with an invite link from its maker — that works either way." xml:space="preserve">
+    <value>Sharing your scores with community tools needs a public profile. You can also connect to a single tool with an invite link from its maker — that works either way.</value>
   </data>
   <data name="Short Cut" xml:space="preserve">
     <value>Short Cut</value>
@@ -5067,6 +5094,12 @@
   </data>
   <data name="This account will be deleted" xml:space="preserve">
     <value>This account will be deleted</value>
+  </data>
+  <data name="This also disconnects {0} community tools." xml:space="preserve">
+    <value>This also disconnects {0} community tools.</value>
+  </data>
+  <data name="This also turns on sharing with community tools." xml:space="preserve">
+    <value>This also turns on sharing with community tools.</value>
   </data>
   <data name="This can't be undone" xml:space="preserve">
     <value>This can't be undone</value>
@@ -6320,6 +6353,9 @@
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>{0} to PG</value>
+  </data>
+  <data name="{0} tools reading now" xml:space="preserve">
+    <value>{0} tools reading now</value>
   </data>
   <data name="{0} top-board charts" xml:space="preserve">
     <value>{0} top-board charts</value>

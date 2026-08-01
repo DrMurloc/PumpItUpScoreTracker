@@ -1,3 +1,5 @@
+@using ScoreTracker.CommunityTools.Contracts.Commands
+@using ScoreTracker.CommunityTools.Contracts.Queries
 @using System.Globalization
 @using System.Web
 @using CsvHelper
@@ -58,6 +60,40 @@
     <MudItem xs="12">
         <MudSwitch T="bool" Disabled="_isUpdatingUser" Label=@L["Public"] Value="_isPublic" ValueChanged="() => _showPublicConfirmDialog = true" Color="Color.Success"></MudSwitch>
     </MudItem>
+    @* Sharing needs a public profile, so the switch is absent rather than disabled when private
+       (owner call) — and the card below takes its place, because a lot of players don't know
+       going public is an option at all. *@
+    <MudItem xs="12">
+        @if (_isPublic)
+        {
+            <MudSwitch T="bool" Disabled="_isUpdatingUser" Value="_shareWithAllTools"
+                       ValueChanged="ToggleShareWithAllTools" Color="Color.Success"
+                       Label=@L["Share my scores with community tools"]></MudSwitch>
+            <MudText Typo="Typo.body2" Style="opacity:.75;" Class="ml-11">
+                @L["Any approved tool can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected."]
+            </MudText>
+            <div class="d-flex align-center gap-2 ml-11 mt-2 flex-wrap">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">
+                    @L["{0} tools reading now", _connectedToolCount]
+                </MudChip>
+                <MudButton Size="Size.Small" Variant="Variant.Text" Href="/CommunityTools">@L["See which"]</MudButton>
+            </div>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Normal" Variant="Variant.Outlined" Dense="true">
+                <MudText Typo="Typo.body2"><b>@L["Nothing is shared with tools"]</b></MudText>
+                <MudText Typo="Typo.body2">
+                    @L["Sharing your scores with community tools needs a public profile. You can also connect to a single tool with an invite link from its maker — that works either way."]
+                </MudText>
+                <div class="d-flex gap-2 mt-2 flex-wrap">
+                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                               OnClick="() => _showPublicConfirmDialog = true">@L["Go public"]</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Text" Href="/CommunityTools">@L["Browse tools"]</MudButton>
+                </div>
+            </MudAlert>
+        }
+    </MudItem>
 </MudGrid>
 
 <MudDivider Class="my-6"></MudDivider>
@@ -106,15 +142,35 @@
 
 <MudDialog @bind-Visible="_showPublicConfirmDialog">
     <DialogContent>
+        @* Both branches gained copy: going public switches tool sharing ON, and going private
+           switches it off and disconnects whatever was reading. Neither is a surprise a player
+           should discover afterwards. *@
         @if (_isPublic)
         {
             <MudText>@L["Make Not Public Disclaimer"]</MudText>
+            @if (_shareWithAllTools && _connectedToolCount > 0)
+            {
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-3">
+                    <MudText Typo="Typo.body2">
+                        <b>@L["This also disconnects {0} community tools.", _connectedToolCount]</b>
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        @L["Sharing with community tools needs a public profile, so it will be turned off. Tools you connected individually stay connected."]
+                    </MudText>
+                </MudAlert>
+            }
         }
         else
         {
             <MudText>@L["Make Public Disclaimer 1"]</MudText>
             <br/>
             <MudText>@L["Make Public Disclaimer 2"]</MudText>
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-3">
+                <MudText Typo="Typo.body2"><b>@L["This also turns on sharing with community tools."]</b></MudText>
+                <MudText Typo="Typo.body2">
+                    @L["Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page."]
+                </MudText>
+            </MudAlert>
         }
     </DialogContent>
     <DialogActions>
@@ -148,6 +204,8 @@
     private string _currentCulture = "en-US";
     private string _themeOverride = MixThemes.MatchMixValue;
     private PendingAccountDeletion? _pendingDeletion;
+    private bool _shareWithAllTools;
+    private int _connectedToolCount;
 
     protected override async Task OnInitializedAsync()
     {
@@ -161,6 +219,8 @@
         _isContentLocked = CurrentUser.User.IsContentLocked;
         _countries = (await Users.GetCountries()).OrderBy(c => c.Name);
         _pendingDeletion = await Mediator.Send(new GetPendingAccountDeletionQuery(CurrentUser.User.Id));
+        _shareWithAllTools = await Mediator.Send(new GetShareWithAllToolsQuery());
+        await RefreshToolCount();
     }
 
     private async Task UpdateCulture(string newCulture)
@@ -206,10 +266,33 @@
     {
         _showPublicConfirmDialog = false;
         _isPublic = !_isPublic;
+
+        // Sharing follows privacy in both directions (owner call): going public turns it on every
+        // time, and going private turns it off because a private profile cannot carry the blanket
+        // grant. Direct connections to a named tool survive either way — that is a deliberate
+        // grant, not public visibility.
+        _shareWithAllTools = _isPublic;
+        await Mediator.Send(new SetShareWithAllToolsCommand(_shareWithAllTools));
+        await RefreshToolCount();
         await UpdateUser();
 
         var message = _isPublic ? "Public" : "Private";
         Snackbar.Add($"Account made {message}", Severity.Success);
+    }
+
+    private async Task ToggleShareWithAllTools(bool share)
+    {
+        _shareWithAllTools = share;
+        await Mediator.Send(new SetShareWithAllToolsCommand(share));
+        await RefreshToolCount();
+        Snackbar.Add(share
+            ? "Community tools can read your scores"
+            : "Community tools can no longer read your scores", Severity.Success);
+    }
+
+    private async Task RefreshToolCount()
+    {
+        _connectedToolCount = (await Mediator.Send(new GetMyToolConnectionsQuery())).Count;
     }
 
     private async Task UpdateCountry(string newCountry)

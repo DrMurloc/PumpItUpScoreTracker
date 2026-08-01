@@ -507,6 +507,9 @@
   <data name="Any" xml:space="preserve">
     <value>すべて</value>
   </data>
+  <data name="Any approved tool can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
+    <value>承認されたツールがあなたのスコアを読み取れます。主にスコア分析ツールで使われます。オフにすると新しいアクセスは止まりますが、すでに取得されたデータはツール側に残る場合があります。</value>
+  </data>
   <data name="Any level" xml:space="preserve">
     <value>レベル指定なし</value>
   </data>
@@ -533,6 +536,9 @@
   </data>
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>自分のレベル前後の、まだクリアしていない取り組みやすい譜面。</value>
+  </data>
+  <data name="Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
+    <value>承認されたツールがあなたのスコアを読み取れるようになります。ほとんどのスコア分析ツールがこれを使っています。別の設定なので、このページですぐにオフにできます。</value>
   </data>
   <data name="Arcade" xml:space="preserve">
     <value>アーケード</value>
@@ -775,6 +781,9 @@
   </data>
   <data name="Browse regions" xml:space="preserve">
     <value>地域を見る</value>
+  </data>
+  <data name="Browse tools" xml:space="preserve">
+    <value>ツールを見る</value>
   </data>
   <data name="Build Session" xml:space="preserve">
 	  <value>セッション構築</value>
@@ -1918,6 +1927,9 @@
   </data>
   <data name="Give a song name." xml:space="preserve">
     <value>曲名を入力してください。</value>
+  </data>
+  <data name="Go public" xml:space="preserve">
+    <value>公開にする</value>
   </data>
   <data name="Go to account page" xml:space="preserve">
     <value>アカウントページへ</value>
@@ -3138,6 +3150,9 @@
   </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>このフォルダーの譜面は人気ボードに入っていません。</value>
+  </data>
+  <data name="Nothing is shared with tools" xml:space="preserve">
+    <value>ツールと共有しているものはありません</value>
   </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>この絞り込みに該当するものはありません。いずれかを解除してください。</value>
@@ -4400,6 +4415,9 @@
   <data name="See where you stand" xml:space="preserve">
     <value>自分の立ち位置を知ろう</value>
   </data>
+  <data name="See which" xml:space="preserve">
+    <value>一覧を見る</value>
+  </data>
   <data name="See you in" xml:space="preserve">
     <value>また会おう、</value>
   </data>
@@ -4479,6 +4497,9 @@
   <data name="Shaded range: ±1σ" xml:space="preserve">
     <value>Shaded range: ±1σ</value>
   </data>
+  <data name="Share my scores with community tools" xml:space="preserve">
+    <value>コミュニティツールとスコアを共有する</value>
+  </data>
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>各スキルが登場するチャートセクションの割合</value>
   </data>
@@ -4487,6 +4508,12 @@
   </data>
   <data name="shared top-50 charts" xml:space="preserve">
     <value>トップ50共通譜面</value>
+  </data>
+  <data name="Sharing with community tools needs a public profile, so it will be turned off. Tools you connected individually stay connected." xml:space="preserve">
+    <value>コミュニティツールとの共有には公開プロフィールが必要なため、共有はオフになります。個別に接続したツールはそのまま残ります。</value>
+  </data>
+  <data name="Sharing your scores with community tools needs a public profile. You can also connect to a single tool with an invite link from its maker — that works either way." xml:space="preserve">
+    <value>コミュニティツールとスコアを共有するには公開プロフィールが必要です。制作者の招待リンクを使って特定のツール1つだけに接続することもでき、そちらはどちらの設定でも利用できます。</value>
   </data>
   <data name="Short Cut" xml:space="preserve">
     <value>ショートカット</value>
@@ -5067,6 +5094,12 @@
   </data>
   <data name="This account will be deleted" xml:space="preserve">
     <value>このアカウントは削除されます</value>
+  </data>
+  <data name="This also disconnects {0} community tools." xml:space="preserve">
+    <value>コミュニティツール{0}個との接続も解除されます。</value>
+  </data>
+  <data name="This also turns on sharing with community tools." xml:space="preserve">
+    <value>コミュニティツールとの共有もオンになります。</value>
   </data>
   <data name="This can't be undone" xml:space="preserve">
     <value>これは取り消せません</value>
@@ -6320,6 +6353,9 @@
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>PGまで{0}</value>
+  </data>
+  <data name="{0} tools reading now" xml:space="preserve">
+    <value>{0}個のツールが読み取り中</value>
   </data>
   <data name="{0} top-board charts" xml:space="preserve">
     <value>ランキング入り譜面{0}件</value>
