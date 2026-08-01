@@ -1,0 +1,124 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.ScoreLedger.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components
+
+@* The most recent session, rendered big. Section order is the design's: header, the answer,
+   what you earned, what mattered, who else played it, everything. *@
+<MudPaper Elevation="3" Class="sbd-hero" data-testid="session-hero"
+          Style="@($"border-top: 2px solid #{Breakdown.Group.Mix.GetAccentColor():X6}")">
+    <div class="sbd-hero-head">
+        <div class="sbd-hero-who">
+            <span class="sbd-hero-title">@SourceLabel</span>
+            <span class="sbd-hero-when">
+                @Breakdown.Group.Mix.GetName() · @Breakdown.Group.End.ToLocalTime().ToString("g")@DurationSuffix
+                @if (Breakdown.AccountTag != null)
+                {
+                    @* Which card this came from. The wrong-card case is exactly when a player
+                       stares at a session thinking "these aren't my scores". *@
+                    <span class="sbd-hero-tag">@L["imported from {0}", Breakdown.AccountTag]</span>
+                }
+            </span>
+        </div>
+        <div class="sbd-tally">
+            <div><span class="sbd-tally-v sbd-pass">@Breakdown.PassCount</span><span class="sbd-tally-k">@L["Passes"]</span></div>
+            <div><span class="sbd-tally-v sbd-up">@Breakdown.UpscoreCount</span><span class="sbd-tally-k">@L["Upscores"]</span></div>
+            <div><span class="sbd-tally-v">@Breakdown.PlayCount</span><span class="sbd-tally-k">@L["Plays"]</span></div>
+        </div>
+    </div>
+
+    <SessionCeremonyBand Ceremony="Breakdown.Ceremony"></SessionCeremonyBand>
+    <SessionTitleBars Bars="Breakdown.TitleBars"></SessionTitleBars>
+
+    @if (Breakdown.Milestones.Count > 0)
+    {
+        <div class="sbd-section" data-testid="session-milestones">
+            <div class="sbd-eyebrow sbd-section-head">@L["Titles you earned"]</div>
+            @foreach (var milestone in Breakdown.Milestones.OrderBy(m => m.Kind))
+            {
+                <MilestoneStrip Milestone="milestone"></MilestoneStrip>
+            }
+        </div>
+    }
+
+    @if (Flagged.Count > 0)
+    {
+        <div class="sbd-section" data-testid="session-notable">
+            <div class="sbd-section-head">
+                <span class="sbd-eyebrow">@L["Scores that mattered"]</span>
+                <span class="sbd-section-note">@L["Coloured by your standing among players at your level"]</span>
+            </div>
+            @foreach (var score in Flagged)
+            {
+                <SessionScoreRow Score="score" OnOpenLeaderboard="OnOpenLeaderboard"></SessionScoreRow>
+            }
+        </div>
+    }
+
+    <CommunityPeersSection Boards="Breakdown.PeerBoards" OnOpenLeaderboard="OnOpenLeaderboard">
+    </CommunityPeersSection>
+
+    <div class="sbd-section" data-testid="session-all-plays">
+        <div class="sbd-section-head">
+            <span class="sbd-eyebrow">@L["All plays"]</span>
+            <span class="sbd-section-note">@Breakdown.Scores.Count</span>
+        </div>
+        @* The record, not a highlight: breaks appear here as ordinary rows and are never
+           counted anywhere else. *@
+        @foreach (var score in Ordered.Take(_visiblePlays))
+        {
+            <SessionScoreRow Score="score" OnOpenLeaderboard="OnOpenLeaderboard"></SessionScoreRow>
+        }
+        @if (_visiblePlays < Ordered.Count)
+        {
+            <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="ShowAllPlays"
+                       data-testid="session-show-all-plays">
+                @L["Show all {0} plays", Ordered.Count]
+            </MudButton>
+        }
+    </div>
+</MudPaper>
+
+@code {
+    private const int InitialPlays = 8;
+
+    [Parameter] [EditorRequired] public SessionBreakdown Breakdown { get; set; } = null!;
+    [Parameter] public EventCallback<Guid> OnOpenLeaderboard { get; set; }
+
+    private int _visiblePlays = InitialPlays;
+    private IReadOnlyList<SessionScore> Flagged = Array.Empty<SessionScore>();
+    private IReadOnlyList<SessionScore> Ordered = Array.Empty<SessionScore>();
+
+    protected override void OnParametersSet()
+    {
+        // Cast to int BEFORE the coalesce: DifficultyLevel rejects 0, so a chart the page
+        // could not resolve would throw out of here rather than sorting last.
+        Ordered = Breakdown.Scores
+            .OrderByDescending(s => (int?)s.Chart?.Level ?? 0)
+            .ThenByDescending(s => s.Row.OccurredAt)
+            .ToArray();
+        Flagged = Ordered.Where(s => s.IsFlagged).ToArray();
+        _visiblePlays = InitialPlays;
+    }
+
+    private void ShowAllPlays() => _visiblePlays = Ordered.Count;
+
+    private string SourceLabel => Breakdown.Group.Source switch
+    {
+        "officialImport" => L["Official Import"],
+        "csv" => L["CSV Upload"],
+        "backfill" => L["Backfill"],
+        _ => L["Play Session"]
+    };
+
+    private string DurationSuffix
+    {
+        get
+        {
+            var duration = Breakdown.Group.End - Breakdown.Group.Start;
+            return duration.TotalMinutes < 5 ? string.Empty : $" · {L["{0} min", (int)duration.TotalMinutes]}";
+        }
+    }
+}

@@ -435,6 +435,9 @@
   <data name="all permissions" xml:space="preserve">
     <value>모든 권한</value>
   </data>
+  <data name="All plays" xml:space="preserve">
+    <value>전체 플레이</value>
+  </data>
   <data name="All saved credentials have been cleared." xml:space="preserve">
     <value>저장된 모든 자격 증명이 삭제되었습니다.</value>
   </data>
@@ -566,6 +569,9 @@
   </data>
   <data name="At least" xml:space="preserve">
     <value>이상</value>
+  </data>
+  <data name="Attempts before this clear" xml:space="preserve">
+    <value>클리어까지의 시도 횟수</value>
   </data>
   <data name="Auto Submit Change Failed" xml:space="preserve">
     <value>변경되지 않았습니다. 잠시 후 다시 시도하세요.</value>
@@ -1023,6 +1029,9 @@
   <data name="Coldest Charts" xml:space="preserve">
     <value>최저 인기 채보</value>
   </data>
+  <data name="Coloured by your standing among players at your level" xml:space="preserve">
+    <value>같은 실력대에서의 순위로 색상 표시</value>
+  </data>
   <data name="Combined" xml:space="preserve">
     <value>통합</value>
   </data>
@@ -1073,6 +1082,9 @@
   </data>
   <data name="Community name" xml:space="preserve">
     <value>커뮤니티 이름</value>
+  </data>
+  <data name="Community Peers" xml:space="preserve">
+    <value>커뮤니티 동료</value>
   </data>
   <data name="Community Rating" xml:space="preserve">
     <value>커뮤니티 평가</value>
@@ -1595,6 +1607,9 @@
   </data>
   <data name="entry cutlines" xml:space="preserve">
     <value>진입 커트라인</value>
+  </data>
+  <data name="Estimated place on the official board" xml:space="preserve">
+    <value>공식 순위표 예상 등수</value>
   </data>
   <data name="Estimated Point Gain Timeline" xml:space="preserve">
     <value>예상 점수 획득 타임라인</value>
@@ -2205,6 +2220,9 @@
   <data name="Imported" xml:space="preserve">
     <value>공식 가져오기</value>
   </data>
+  <data name="imported from {0}" xml:space="preserve">
+    <value>{0}에서 가져옴</value>
+  </data>
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>가져온 점수는 도착하는 대로 여기에 표시됩니다.</value>
   </data>
@@ -2300,6 +2318,9 @@
   </data>
   <data name="Join a community to use this widget." xml:space="preserve">
     <value>이 위젯을 사용하려면 커뮤니티에 참여하세요.</value>
+  </data>
+  <data name="Join a player-run community to line your scores up against people you know." xml:space="preserve">
+    <value>아는 사람들과 점수를 견주려면 플레이어 커뮤니티에 참여하세요.</value>
   </data>
   <data name="Join by going public" xml:space="preserve">
     <value>공개로 전환하고 가입</value>
@@ -2820,6 +2841,9 @@
   <data name="Name, or shorthand like S18" xml:space="preserve">
     <value>곡명 또는 S18 같은 약어</value>
   </data>
+  <data name="Nearest competitive level first" xml:space="preserve">
+    <value>비슷한 실력 순</value>
+  </data>
   <data name="Nearly complete folder" xml:space="preserve">
     <value>폴더 거의 완료</value>
   </data>
@@ -2924,6 +2948,9 @@
   </data>
   <data name="No close matches yet." xml:space="preserve">
     <value>아직 가까운 상대가 없습니다.</value>
+  </data>
+  <data name="No community peers yet" xml:space="preserve">
+    <value>커뮤니티 동료가 아직 없습니다</value>
   </data>
   <data name="No Cutoff" xml:space="preserve">
     <value>마감 없음</value>
@@ -3170,6 +3197,9 @@
   </data>
   <data name="official" xml:space="preserve">
     <value>공식</value>
+  </data>
+  <data name="official board · as of {0}" xml:space="preserve">
+    <value>공식 순위표 · {0} 기준</value>
   </data>
   <data name="Official Boards" xml:space="preserve">
     <value>공식 보드</value>
@@ -3677,6 +3707,9 @@
   </data>
   <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
     <value>경쟁 레벨이 ±1 이내인 플레이어 — 레벨이 가까울수록, 그리고 폴더 평가가 나와 일치할수록 더 크게 반영됩니다.</value>
+  </data>
+  <data name="Plays" xml:space="preserve">
+    <value>플레이</value>
   </data>
   <data name="Plays a level easier than its label" xml:space="preserve">
     <value>표기보다 한 레벨 쉽게 느껴짐</value>
@@ -4295,6 +4328,9 @@
   <data name="Scores recorded, last {0} days" xml:space="preserve">
     <value>최근 {0}일간 기록된 스코어</value>
   </data>
+  <data name="Scores that mattered" xml:space="preserve">
+    <value>주목할 점수</value>
+  </data>
   <data name="Scores tracked" xml:space="preserve">
     <value>기록된 스코어</value>
   </data>
@@ -4394,8 +4430,14 @@
   <data name="Seriously, Leave Some Titles for the Rest of Us" xml:space="preserve">
     <value>Seriously, Leave Some Titles for the Rest of Us</value>
   </data>
+  <data name="Session" xml:space="preserve">
+    <value>세션</value>
+  </data>
   <data name="Session Duration (Minutes)" xml:space="preserve">
     <value>세션 시간 (분)</value>
+  </data>
+  <data name="Session history" xml:space="preserve">
+    <value>세션 기록</value>
   </data>
   <data name="Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp." xml:space="preserve">
     <value>임포트하는 동안 세션 요약이 기록됩니다 — 새 UG 플레이트, 개인 기록 2개, 폴더 램프 1개.</value>
@@ -4463,6 +4505,9 @@
   <data name="show all {0}" xml:space="preserve">
     <value>전체 {0}개 보기</value>
   </data>
+  <data name="Show all {0} plays" xml:space="preserve">
+    <value>전체 {0}개 보기</value>
+  </data>
   <data name="Show all {0} scores" xml:space="preserve">
     <value>{0}개 기록 모두 보기</value>
   </data>
@@ -4513,6 +4558,9 @@
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>이 채널의 등록 내역 보기</value>
+  </data>
+  <data name="Showing" xml:space="preserve">
+    <value>표시 중</value>
   </data>
   <data name="showing suggested" xml:space="preserve">
     <value>추천 표시 중</value>
@@ -4886,6 +4934,9 @@
   <data name="That session can't be undone." xml:space="preserve">
     <value>그 세션은 되돌릴 수 없습니다.</value>
   </data>
+  <data name="That session was undone, so it no longer exists. Showing your most recent one instead." xml:space="preserve">
+    <value>해당 세션은 취소되어 더 이상 없습니다. 가장 최근 세션을 표시합니다.</value>
+  </data>
   <data name="The arc" xml:space="preserve">
     <value>성장 곡선</value>
   </data>
@@ -5180,6 +5231,12 @@
   <data name="titles earned" xml:space="preserve">
     <value>칭호 획득</value>
   </data>
+  <data name="Titles you earned" xml:space="preserve">
+    <value>획득한 칭호</value>
+  </data>
+  <data name="Titles you&apos;re working on" xml:space="preserve">
+    <value>진행 중인 칭호</value>
+  </data>
   <data name="To" xml:space="preserve">
     <value>변환</value>
   </data>
@@ -5242,6 +5299,9 @@
   </data>
   <data name="Top {0}%" xml:space="preserve">
     <value>상위 {0}%</value>
+  </data>
+  <data name="top {0}% at your level · {1} in cohort" xml:space="preserve">
+    <value>같은 실력대 상위 {0}% · {1}명 중</value>
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>동급 상위 {0}%</value>
@@ -5530,6 +5590,9 @@
   </data>
   <data name="Video URL" xml:space="preserve">
     <value>동영상 URL</value>
+  </data>
+  <data name="View" xml:space="preserve">
+    <value>보기</value>
   </data>
   <data name="View all scores" xml:space="preserve">
     <value>모든 점수 보기</value>
@@ -5891,6 +5954,9 @@
   <data name="Your list currently matches the community's on every rated chart." xml:space="preserve">
     <value>지금은 평가된 모든 채보에서 내 리스트가 커뮤니티와 일치합니다.</value>
   </data>
+  <data name="Your most recent session, in full" xml:space="preserve">
+    <value>가장 최근 세션 전체</value>
+  </data>
   <data name="Your personalized list moves {0} of {1} charts away from the community's." xml:space="preserve">
     <value>내 개인화 리스트는 {1}개 채보 중 {0}개를 커뮤니티와 다르게 배치합니다.</value>
   </data>
@@ -6196,6 +6262,9 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>폴더 {1}개 중 {0}개</value>
+  </data>
+  <data name="{0} of {1} rating" xml:space="preserve">
+    <value>레이팅 {0} / {1}</value>
   </data>
   <data name="{0} of {1} tracked players" xml:space="preserve">
     <value>기록된 유저 {1}명 중 {0}명</value>

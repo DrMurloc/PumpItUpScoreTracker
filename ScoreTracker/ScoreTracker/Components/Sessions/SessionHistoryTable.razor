@@ -1,0 +1,59 @@
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components
+
+@* Everything older, as rows. The board-table skin (UX rule 5): flat surface, hairline
+   separators, quiet headers — never a card per session. *@
+<div class="sbd-history" data-testid="session-history">
+    <div class="sbd-section-head">
+        <span class="sbd-eyebrow">@L["Session history"]</span>
+    </div>
+    <div class="olb-table-scroll">
+        <table class="olb-board-table sbd-history-table">
+            <thead>
+            <tr>
+                <th>@L["Session"]</th>
+                <th>@L["Mix"]</th>
+                <th class="sbd-num">@L["Passes"]</th>
+                <th class="sbd-num">@L["Upscores"]</th>
+                <th class="sbd-num">@L["Plays"]</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var row in Rows)
+            {
+                <tr class="@(row.SessionId == SelectedSessionId ? "sbd-history-current" : null)">
+                    <td>@row.End.ToLocalTime().ToString("g")</td>
+                    <td>
+                        <span class="sbd-mixdot" style="@($"background:#{row.Mix.GetAccentColor():X6}")"></span>
+                        @row.Mix.GetName()
+                    </td>
+                    <td class="sbd-num">@row.Passes</td>
+                    <td class="sbd-num">@row.Upscores</td>
+                    <td class="sbd-num">@row.Plays</td>
+                    <td class="sbd-num">
+                        @if (row.SessionId == SelectedSessionId)
+                        {
+                            <span class="sbd-viewing">@L["Showing"]</span>
+                        }
+                        else if (row.SessionId != null)
+                        {
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined"
+                                       data-testid="session-history-view"
+                                       OnClick="() => OnView.InvokeAsync(row.SessionId.Value)">@L["View"]</MudButton>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<SessionHistoryRow> Rows { get; set; } = Array.Empty<SessionHistoryRow>();
+    [Parameter] public Guid? SelectedSessionId { get; set; }
+    [Parameter] public EventCallback<Guid> OnView { get; set; }
+}

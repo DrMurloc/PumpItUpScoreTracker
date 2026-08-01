@@ -1,0 +1,41 @@
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components
+
+@* One bar per scope played, showing the title being worked on in it and how far the session
+   travelled. The held segment is quiet and the travelled one glows: reading the climb is the
+   point, and a bar that only showed the total would hide it. *@
+@if (Bars.Count > 0)
+{
+    <div class="sbd-section" data-testid="session-title-bars">
+        <div class="sbd-eyebrow sbd-section-head">@L["Titles you're working on"]</div>
+        @foreach (var bar in Bars)
+        {
+            <div class="sbd-tbar">
+                <div class="sbd-tbar-meta">
+                    <span class="sbd-tbar-scope">@bar.Scope</span>
+                    <span class="sbd-tbar-name">@bar.Title</span>
+                    <span class="sbd-tbar-pct">
+                        <span class="sbd-tbar-was">@Percent(bar.OldPercent) →</span> @Percent(bar.NewPercent)
+                    </span>
+                </div>
+                <div class="sbd-track">
+                    <span class="sbd-track-held" style="@($"width:{Clamp(bar.OldPercent)}%")"></span>
+                    <span class="sbd-track-gain"
+                          style="@($"left:{Clamp(bar.OldPercent)}%;width:{Clamp(bar.NewPercent) - Clamp(bar.OldPercent)}%")"></span>
+                </div>
+                @if (bar.Required > 0)
+                {
+                    <div class="sbd-tbar-cap">@L["{0} of {1} rating", bar.Current.ToString("N0"), bar.Required.ToString("N0")]</div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<SessionTitleBarModel> Bars { get; set; } = Array.Empty<SessionTitleBarModel>();
+
+    private static double Clamp(double percent) => Math.Clamp(percent, 0, 1) * 100;
+
+    private static string Percent(double percent) => $"{Math.Round(Math.Clamp(percent, 0, 1) * 100)}%";
+}

@@ -1,0 +1,118 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.ScoreLedger.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@* One score, with whatever capture learned about it. The score's colour is its percentile
+   among players at the same competitive level, and the percentile always prints beside it —
+   colour is never the only channel. A chart with no cohort (co-op, or far below competitive)
+   renders in plain ink and says nothing about it. *@
+<div class="sbd-row" data-testid="session-score-row">
+    @if (Score.Chart != null)
+    {
+        <SongImage Song="Score.Chart.Song" Size="44"></SongImage>
+        <div class="sbd-row-body">
+            <div class="sbd-row-line">
+                <DifficultyBubble Chart="Score.Chart" Small="true"></DifficultyBubble>
+                <MudLink Href="@Score.Chart.CanonicalPath()">@Score.Chart.Song.Name</MudLink>
+                @foreach (var badge in Badges)
+                {
+                    <MudTooltip Text="@badge.Tooltip">
+                        <span tabindex="0" class="sbd-badge">@badge.Glyph@(badge.Suffix == null ? "" : $" {badge.Suffix}")</span>
+                    </MudTooltip>
+                }
+            </div>
+            <div class="sbd-row-line">
+                <span class="sbd-score @GlowClass" style="@ScoreColor">
+                    <ScoreBreakdown Score="Score.Row.Score == null ? null : PhoenixScore.From(Score.Row.Score.Value)"
+                                    Mix="Score.Chart.Mix" IsBroken="Score.Row.IsBroken"
+                                    Plate="PhoenixPlateHelperMethods.TryParse(Score.Row.Plate)"
+                                    ShowScore="true" OneLine="true"></ScoreBreakdown>
+                </span>
+                @if (PercentileText != null)
+                {
+                    <span class="sbd-peerpct">@PercentileText</span>
+                }
+            </div>
+        </div>
+        <MudIconButton Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small" Class="sbd-lbbtn"
+                       aria-label="@L["Leaderboard"]" data-testid="session-row-leaderboard"
+                       OnClick="() => OnOpenLeaderboard.InvokeAsync(Score.Row.ChartId)"></MudIconButton>
+        <div class="sbd-row-tail">
+            <ClassificationChip Classification="Score.Row.Classification"></ClassificationChip>
+            @if (Score.Row.Classification == ScoreEventClassification.Upscore
+                 && Score.Row.PreviousBest != null && Score.Row.Score != null)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Success">
+                    +@((Score.Row.Score.Value - Score.Row.PreviousBest.Value).ToString("N0"))
+                </MudText>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public SessionScore Score { get; set; } = null!;
+    [Parameter] public EventCallback<Guid> OnOpenLeaderboard { get; set; }
+
+    private string ScoreColor => Score.PeerPercentile == null
+        ? string.Empty
+        : ThemeScales.RarityStyle(Score.PeerPercentile.Value);
+
+    private string GlowClass => Score.PeerPercentile == null
+        ? string.Empty
+        : ThemeScales.RarityClass(ThemeScales.BandFor(Score.PeerPercentile.Value));
+
+    /// <summary>
+    ///     Null when nothing measured this score. The row then says nothing about it — a
+    ///     disclaimer there confuses more than it clarifies (owner call).
+    /// </summary>
+    private string? PercentileText
+    {
+        get
+        {
+            if (Score.PeerPercentile is not { } percentile || Score.Detail?.PeerCount is not { } count) return null;
+            return L["top {0}% at your level · {1} in cohort", Math.Round(percentile * 100), count];
+        }
+    }
+
+    private IEnumerable<(string Glyph, string? Suffix, string Tooltip)> Badges
+    {
+        get
+        {
+            var detail = Score.Detail;
+            if (Score.Flags.HasFlag(HighlightFlags.PumbilityTop50))
+                yield return ("👑", detail?.PumbilityRank is { } r ? $"#{r}" : null,
+                    L["In your PUMBILITY top 50"].Value);
+            if (Score.Flags.HasFlag(HighlightFlags.ScoreQuality90))
+                yield return ("📊", PeerSuffix, L["Top scores among comparable players"].Value);
+            if (Score.Flags.HasFlag(HighlightFlags.FolderCompletion90))
+                yield return ("📁", null, L["Nearly complete folder"].Value);
+            if (Score.Flags.HasFlag(HighlightFlags.CompetitiveImprover))
+                yield return ("⬆", null, L["Raised your competitive level"].Value);
+            if (Score.Flags.HasFlag(HighlightFlags.FolderDebut))
+                yield return ("🆕", detail?.FolderDebutOrdinal is { } o ? $"#{o}" : null,
+                    L["One of your first passes in this folder"].Value);
+            if (Score.Flags.HasFlag(HighlightFlags.OfficialBoardPlacement) && detail?.OfficialPlace is { } place)
+                yield return ("🌐", $"~#{place}", L["Estimated place on the official board"].Value);
+            // Only ever counted on the clear that ended them, which reads as a win.
+            if (detail?.AttemptsBeforeClear is { } attempts && attempts > 0)
+                yield return ("🎯", $"{attempts + 1}", L["Attempts before this clear"].Value);
+            if (Score.Row.IsReclear)
+                yield return ("🔁", null, L["Passed in another mix"].Value);
+        }
+    }
+
+    private string? PeerSuffix
+    {
+        get
+        {
+            if (Score.Detail?.PeerCount is not { } count || count == 0) return null;
+            if (Score.Row.Score == 1_000_000 && Score.Detail.PeerPgCount is { } pg) return $"PG {pg}/{count}";
+            return $"#{(Score.Detail.PeerBetterCount ?? 0) + 1}/{count}";
+        }
+    }
+}

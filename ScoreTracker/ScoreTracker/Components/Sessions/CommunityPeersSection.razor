@@ -1,0 +1,61 @@
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@* Named clubmates on the charts that mattered, nearest competitive level first. Closeness
+   sorts and never filters — a clubmate three levels away is still a clubmate.
+   Deliberately no "#X of Y" here: on a seven-person board a place is a fact about who has
+   played the chart, not about standing, so the number lives in the dialog where it can name
+   the scope it counted. *@
+<div class="sbd-section" data-testid="community-peers">
+    <div class="sbd-section-head">
+        <span class="sbd-eyebrow">@L["Community Peers"]</span>
+        @if (Boards.Count > 0)
+        {
+            <span class="sbd-section-note">@L["Nearest competitive level first"]</span>
+        }
+    </div>
+
+    @if (Boards.Count == 0)
+    {
+        <div class="sbd-empty" data-testid="community-peers-empty">
+            <b>@L["No community peers yet"]</b>
+            <span>@L["Join a player-run community to line your scores up against people you know."]</span>
+            <MudButton Href="/Communities" Variant="Variant.Outlined" Size="Size.Small" Class="mt-2">
+                @L["Browse Communities"]
+            </MudButton>
+        </div>
+    }
+    else
+    {
+        foreach (var board in Boards)
+        {
+            <div class="sbd-peerboard">
+                <div class="sbd-peerboard-head">
+                    <DifficultyBubble Chart="board.Chart" Small="true"></DifficultyBubble>
+                    <span class="sbd-peerboard-name">@board.Chart.Song.Name</span>
+                    <MudIconButton Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small"
+                                   aria-label="@L["Leaderboard"]" Class="sbd-lbbtn ml-auto"
+                                   OnClick="() => OnOpenLeaderboard.InvokeAsync(board.Chart.Id)"></MudIconButton>
+                </div>
+                @foreach (var (peer, place) in board.Peers.Select((p, i) => (p, i + 1)))
+                {
+                    <div class="weekly-lb-row">
+                        <span class="weekly-lb-place">#@place</span>
+                        <span class="weekly-lb-user">
+                            @peer.PlayerName
+                            <span class="sbd-peer-club">@string.Join(" · ", peer.CommunityNames)</span>
+                        </span>
+                        <ScoreBreakdown Score="peer.Score" Plate="peer.Plate" Mix="board.Chart.Mix"
+                                        IsBroken="peer.IsBroken" OneLine="true" ShowScore="true"></ScoreBreakdown>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<SessionPeerBoard> Boards { get; set; } = Array.Empty<SessionPeerBoard>();
+    [Parameter] public EventCallback<Guid> OnOpenLeaderboard { get; set; }
+}

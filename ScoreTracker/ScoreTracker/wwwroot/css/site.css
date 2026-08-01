@@ -11020,3 +11020,454 @@ button.chart-card-art {
     font-size: .85rem;
     color: var(--mix-ink-muted);
 }
+
+/* ===== Session breakdown (/Player/{id}/Sessions) ==================================
+   The hero's own vocabulary. Score rows are the page's own; the peer boards borrow
+   .weekly-lb-* so every ranked list on the site reads the same way. */
+
+.sbd-hero {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.sbd-hero-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+
+.sbd-hero-who {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.sbd-hero-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.1;
+}
+
+.sbd-hero-when {
+    font-size: .78rem;
+    color: var(--mix-ink-muted);
+}
+
+.sbd-hero-tag {
+    margin-left: 6px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .14);
+}
+
+.sbd-tally {
+    margin-left: auto;
+    display: flex;
+    gap: 18px;
+}
+
+.sbd-tally div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.sbd-tally-v {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.sbd-pass {
+    color: var(--mud-palette-success);
+}
+
+.sbd-up {
+    color: var(--mix-primary);
+}
+
+.sbd-tally-k {
+    font-size: .62rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.sbd-eyebrow {
+    font-family: var(--font-display);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+/* --- the answer, above the fold --------------------------------------------- */
+.sbd-ceremony {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+
+.sbd-pumb {
+    padding: 20px 18px 18px;
+    border-right: 1px solid rgba(255, 255, 255, .07);
+}
+
+.sbd-pumb-lead {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.sbd-pumb-big {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 3.6rem;
+    line-height: .86;
+    letter-spacing: -.015em;
+    font-variant-numeric: tabular-nums;
+    color: var(--rarity-prism);
+    text-shadow: 0 0 14px var(--mix-glow);
+}
+
+.sbd-delta {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    line-height: 1;
+    color: var(--mud-palette-success);
+    font-variant-numeric: tabular-nums;
+}
+
+.sbd-from {
+    margin-top: 8px;
+    font-size: .76rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.sbd-rank {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, .07);
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    flex-wrap: wrap;
+}
+
+.sbd-rank-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.35rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--rarity-sapphire);
+}
+
+.sbd-asof {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+}
+
+.sbd-compet {
+    padding: 20px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sbd-compet-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.sbd-compet-label {
+    font-size: .76rem;
+    color: var(--mix-ink-muted);
+    width: 62px;
+    flex: none;
+}
+
+.sbd-compet-value {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.3rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+/* --- sections ---------------------------------------------------------------- */
+.sbd-section {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+
+.sbd-section:last-child {
+    border-bottom: 0;
+}
+
+.sbd-section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.sbd-section-note {
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    margin-left: auto;
+}
+
+/* --- title bars -------------------------------------------------------------- */
+.sbd-tbar {
+    margin-bottom: 14px;
+}
+
+.sbd-tbar:last-child {
+    margin-bottom: 0;
+}
+
+.sbd-tbar-meta {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.sbd-tbar-scope {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: .8rem;
+    color: var(--mix-ink-muted);
+    min-width: 28px;
+}
+
+.sbd-tbar-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.sbd-tbar-pct {
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.sbd-tbar-was {
+    color: var(--mix-ink-muted);
+    font-weight: 400;
+}
+
+.sbd-tbar-cap {
+    margin-top: 5px;
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.sbd-track {
+    position: relative;
+    height: 11px;
+    border-radius: 6px;
+    background: var(--mix-surface-muted);
+    border: 1px solid rgba(255, 255, 255, .07);
+    overflow: hidden;
+}
+
+.sbd-track-held {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: color-mix(in srgb, var(--mix-primary) 34%, transparent);
+}
+
+/* The travelled segment is the point of the bar, so it is the only part that glows. */
+.sbd-track-gain {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, var(--mix-primary), var(--rarity-prism));
+    box-shadow: 0 0 12px var(--mix-glow);
+}
+
+/* --- score rows --------------------------------------------------------------- */
+.sbd-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, .05);
+}
+
+.sbd-row:last-child {
+    border-bottom: 0;
+}
+
+.sbd-row-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.sbd-row-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sbd-badge {
+    font-size: .74rem;
+}
+
+.sbd-peerpct {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.sbd-row-tail {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.sbd-lbbtn {
+    flex: none;
+}
+
+/* --- community peers ---------------------------------------------------------- */
+.sbd-peerboard {
+    margin-bottom: 14px;
+}
+
+.sbd-peerboard:last-child {
+    margin-bottom: 0;
+}
+
+.sbd-peerboard-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.sbd-peerboard-name {
+    font-weight: 600;
+    font-size: .86rem;
+}
+
+.sbd-peer-club {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    margin-left: 6px;
+}
+
+/* Empty states name the action that fills them (UX rule 9). */
+.sbd-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 3px;
+    padding: 18px;
+    border: 1px dashed rgba(255, 255, 255, .14);
+    border-radius: 6px;
+    font-size: .8rem;
+    color: var(--mix-ink-muted);
+}
+
+/* --- history table ------------------------------------------------------------ */
+.sbd-history {
+    margin-top: 8px;
+}
+
+.sbd-history-table .sbd-num {
+    text-align: right;
+}
+
+.sbd-history-current td {
+    background: color-mix(in srgb, var(--mix-primary) 8%, transparent);
+}
+
+.sbd-mixdot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.sbd-viewing {
+    font-size: .7rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+/* The width ladder stacks the ceremony below the shell's own 960 switch. */
+@media (max-width: 959.98px) {
+    .sbd-ceremony {
+        grid-template-columns: 1fr;
+    }
+
+    .sbd-pumb {
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, .07);
+    }
+
+    .sbd-tally {
+        width: 100%;
+        margin-left: 0;
+        justify-content: space-between;
+    }
+}
+
+/* Height, not aspect: a landscape phone is 844 WIDE and 390 TALL, so the width rule above
+   would stack the ceremony exactly when the scarce axis is vertical. A fold unfolded and a
+   landscape tablet are both squarish but have height to spare and must not compress. */
+@media (max-height: 520px) {
+    .sbd-ceremony {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .sbd-pumb {
+        border-right: 1px solid rgba(255, 255, 255, .07);
+        border-bottom: 0;
+        padding: 12px 16px;
+    }
+
+    .sbd-pumb-big {
+        font-size: 2.4rem;
+    }
+
+    .sbd-from {
+        display: none;
+    }
+
+    .sbd-compet {
+        padding: 12px 16px;
+        gap: 8px;
+    }
+
+    .sbd-tbar-cap {
+        display: none;
+    }
+}

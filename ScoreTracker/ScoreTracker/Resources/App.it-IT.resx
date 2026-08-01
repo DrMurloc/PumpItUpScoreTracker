@@ -437,6 +437,9 @@
   <data name="all permissions" xml:space="preserve">
     <value>tutte le autorizzazioni</value>
   </data>
+  <data name="All plays" xml:space="preserve">
+    <value>Tutti i tentativi</value>
+  </data>
   <data name="All saved credentials have been cleared." xml:space="preserve">
     <value>Tutte le credenziali salvate sono state cancellate.</value>
   </data>
@@ -572,6 +575,9 @@
   </data>
   <data name="At least" xml:space="preserve">
     <value>Almeno</value>
+  </data>
+  <data name="Attempts before this clear" xml:space="preserve">
+    <value>Tentativi prima di superarlo</value>
   </data>
   <data name="Auto Submit Change Failed" xml:space="preserve">
     <value>Non è stato modificato. Riprova tra poco.</value>
@@ -1034,6 +1040,9 @@
   <data name="Coldest Charts" xml:space="preserve">
     <value>Chart meno popolari</value>
   </data>
+  <data name="Coloured by your standing among players at your level" xml:space="preserve">
+    <value>Colorato in base alla tua posizione tra giocatori del tuo livello</value>
+  </data>
   <data name="Combined" xml:space="preserve">
     <value>Combinato</value>
   </data>
@@ -1084,6 +1093,9 @@
   </data>
   <data name="Community name" xml:space="preserve">
     <value>Nome della comunità</value>
+  </data>
+  <data name="Community Peers" xml:space="preserve">
+    <value>Membri della community</value>
   </data>
   <data name="Community Rating" xml:space="preserve">
     <value>Valutazione della community</value>
@@ -1609,6 +1621,9 @@
   </data>
   <data name="entry cutlines" xml:space="preserve">
     <value>soglie d'ingresso</value>
+  </data>
+  <data name="Estimated place on the official board" xml:space="preserve">
+    <value>Posizione stimata nella classifica ufficiale</value>
   </data>
   <data name="Estimated Point Gain Timeline" xml:space="preserve">
     <value>Cronologia stimata dei guadagni di punti</value>
@@ -2222,6 +2237,9 @@
   <data name="Imported" xml:space="preserve">
     <value>Importato</value>
   </data>
+  <data name="imported from {0}" xml:space="preserve">
+    <value>importato da {0}</value>
+  </data>
   <data name="Imported scores will appear here as they come in." xml:space="preserve">
     <value>I punteggi importati appariranno qui man mano che arrivano.</value>
   </data>
@@ -2318,6 +2336,9 @@
   </data>
   <data name="Join a community to use this widget." xml:space="preserve">
     <value>Unisciti a una comunità per usare questo widget.</value>
+  </data>
+  <data name="Join a player-run community to line your scores up against people you know." xml:space="preserve">
+    <value>Entra in una community di giocatori per confrontare i tuoi risultati con persone che conosci.</value>
   </data>
   <data name="Join by going public" xml:space="preserve">
     <value>Unisciti diventando pubblico</value>
@@ -2849,6 +2870,9 @@
   <data name="Name, or shorthand like S18" xml:space="preserve">
     <value>Nome o sigla come S18</value>
   </data>
+  <data name="Nearest competitive level first" xml:space="preserve">
+    <value>Livello competitivo più vicino per primo</value>
+  </data>
   <data name="Nearly complete folder" xml:space="preserve">
     <value>Cartella quasi completa</value>
   </data>
@@ -2954,6 +2978,9 @@
   </data>
   <data name="No close matches yet." xml:space="preserve">
     <value>Ancora nessun rivale vicino.</value>
+  </data>
+  <data name="No community peers yet" xml:space="preserve">
+    <value>Ancora nessun membro della community</value>
   </data>
   <data name="No Cutoff" xml:space="preserve">
     <value>Nessuna scadenza</value>
@@ -3201,6 +3228,9 @@
   </data>
   <data name="official" xml:space="preserve">
     <value>ufficiale</value>
+  </data>
+  <data name="official board · as of {0}" xml:space="preserve">
+    <value>classifica ufficiale · al {0}</value>
   </data>
   <data name="Official Boards" xml:space="preserve">
     <value>Classifiche ufficiali</value>
@@ -3713,6 +3743,9 @@
   </data>
   <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
     <value>Giocatori entro un livello competitivo dal tuo — i più vicini contano di più, come chi valuta le cartelle in modo simile al tuo.</value>
+  </data>
+  <data name="Plays" xml:space="preserve">
+    <value>Tentativi</value>
   </data>
   <data name="Plays a level easier than its label" xml:space="preserve">
     <value>Si gioca un livello più facile della sua etichetta</value>
@@ -4343,6 +4376,9 @@
   <data name="Scores recorded, last {0} days" xml:space="preserve">
     <value>Punteggi registrati negli ultimi {0} giorni</value>
   </data>
+  <data name="Scores that mattered" xml:space="preserve">
+    <value>Risultati che contano</value>
+  </data>
   <data name="Scores tracked" xml:space="preserve">
     <value>Punteggi conservati</value>
   </data>
@@ -4442,8 +4478,14 @@
   <data name="Seriously, Leave Some Titles for the Rest of Us" xml:space="preserve">
     <value>Seriously, Leave Some Titles for the Rest of Us</value>
   </data>
+  <data name="Session" xml:space="preserve">
+    <value>Sessione</value>
+  </data>
   <data name="Session Duration (Minutes)" xml:space="preserve">
     <value>Durata della sessione (minuti)</value>
+  </data>
+  <data name="Session history" xml:space="preserve">
+    <value>Cronologia sessioni</value>
   </data>
   <data name="Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp." xml:space="preserve">
     <value>Riepilogo di sessione catturato all'importazione — una nuova targa UG, 2 record personali, una lampada di cartella.</value>
@@ -4513,6 +4555,9 @@
   <data name="show all {0}" xml:space="preserve">
     <value>mostra tutti i {0}</value>
   </data>
+  <data name="Show all {0} plays" xml:space="preserve">
+    <value>Mostra tutti i {0} tentativi</value>
+  </data>
   <data name="Show all {0} scores" xml:space="preserve">
     <value>Mostra tutti i {0} punteggi</value>
   </data>
@@ -4566,6 +4611,9 @@
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>Mostra a cosa è registrato questo canale</value>
+  </data>
+  <data name="Showing" xml:space="preserve">
+    <value>Mostrato</value>
   </data>
   <data name="showing suggested" xml:space="preserve">
     <value>consigliati mostrati</value>
@@ -4945,6 +4993,9 @@
   <data name="That session can't be undone." xml:space="preserve">
     <value>Quella sessione non si può annullare.</value>
   </data>
+  <data name="That session was undone, so it no longer exists. Showing your most recent one instead." xml:space="preserve">
+    <value>Quella sessione è stata annullata e non esiste più. Ecco la più recente.</value>
+  </data>
   <data name="The arc" xml:space="preserve">
     <value>L&apos;arco</value>
   </data>
@@ -5239,6 +5290,12 @@
   <data name="titles earned" xml:space="preserve">
     <value>titoli ottenuti</value>
   </data>
+  <data name="Titles you earned" xml:space="preserve">
+    <value>Titoli ottenuti</value>
+  </data>
+  <data name="Titles you&apos;re working on" xml:space="preserve">
+    <value>Titoli in corso</value>
+  </data>
   <data name="To" xml:space="preserve">
     <value>A</value>
   </data>
@@ -5301,6 +5358,9 @@
   </data>
   <data name="Top {0}%" xml:space="preserve">
     <value>Top {0}%</value>
+  </data>
+  <data name="top {0}% at your level · {1} in cohort" xml:space="preserve">
+    <value>top {0}% al tuo livello · {1} confrontabili</value>
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>top {0}% tra i pari</value>
@@ -5593,6 +5653,9 @@
   </data>
   <data name="Video URL" xml:space="preserve">
     <value>URL del video</value>
+  </data>
+  <data name="View" xml:space="preserve">
+    <value>Vedi</value>
   </data>
   <data name="View all scores" xml:space="preserve">
     <value>Vedi tutti i punteggi</value>
@@ -5961,6 +6024,9 @@
   <data name="Your list currently matches the community's on every rated chart." xml:space="preserve">
     <value>Per ora la tua lista coincide con quella della community su tutti i chart valutati.</value>
   </data>
+  <data name="Your most recent session, in full" xml:space="preserve">
+    <value>La tua sessione più recente, per intero</value>
+  </data>
   <data name="Your personalized list moves {0} of {1} charts away from the community's." xml:space="preserve">
     <value>La tua lista personalizzata sposta {0} chart su {1} rispetto alla community.</value>
   </data>
@@ -6266,6 +6332,9 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{0} di {1} cartelle</value>
+  </data>
+  <data name="{0} of {1} rating" xml:space="preserve">
+    <value>{0} su {1} di punteggio</value>
   </data>
   <data name="{0} of {1} tracked players" xml:space="preserve">
     <value>{0} di {1} giocatori registrati</value>
