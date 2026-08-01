@@ -23,6 +23,7 @@ public static class ScoreLedgerRegistrationExtensions
         services.AddTransient<IScoreSessionRepository, EFScoreSessionRepository>();
         services.AddTransient<IXXChartAttemptRepository, EFXXChartAttemptRepository>();
         services.AddTransient<IScoreReader, EFPhoenixRecordsRepository>();
+        services.AddTransient<IScoreAttemptReader, SessionAttemptReader>();
         services.AddTransient<IPhoenixRecordStatsRepository, EFPhoenixRecordStatsRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddTransient<ILedgerStatsRepository, EFLedgerStatsRepository>();

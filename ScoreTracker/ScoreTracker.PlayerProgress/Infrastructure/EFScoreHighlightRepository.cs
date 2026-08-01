@@ -19,7 +19,10 @@ internal sealed class EFScoreHighlightRepository : IScoreHighlightRepository
     public async Task UpsertFlags(MixEnum mix, Guid userId, IEnumerable<ScoreHighlightWrite> highlights,
         CancellationToken cancellationToken)
     {
-        var writes = highlights.Where(h => h.Flags != HighlightFlags.None).ToArray();
+        // Flagless rows are real: a score's peer percentile is captured whether or not it
+        // cleared any flag, because the page colours every row by it. Rows carrying neither a
+        // flag nor detail are the only ones with nothing to say.
+        var writes = highlights.Where(h => h.Flags != HighlightFlags.None || h.Detail != null).ToArray();
         if (!writes.Any()) return;
 
         var mixId = MixIds.For(mix);

@@ -45,12 +45,17 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     private readonly IPlayerMilestoneRepository _milestones;
     private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreReader _scores;
+    private readonly IScoreAttemptReader _attempts;
+    private readonly IOfficialPlacementReader _officialPlacements;
 
     public HighlightCaptureSaga(IChartRepository charts, IScoreReader scores,
         IPlayerStatsReader playerStats, IScoreHighlightRepository highlights,
         IPlayerMilestoneRepository milestones, IPlayerFolderLevelRepository folderLevels, IMediator mediator,
-        IMemoryCache cache, IDateTimeOffsetAccessor dateTime, ILogger<HighlightCaptureSaga> logger)
+        IMemoryCache cache, IDateTimeOffsetAccessor dateTime, IScoreAttemptReader attempts,
+        IOfficialPlacementReader officialPlacements, ILogger<HighlightCaptureSaga> logger)
     {
+        _attempts = attempts;
+        _officialPlacements = officialPlacements;
         _charts = charts;
         _scores = scores;
         _playerStats = playerStats;
@@ -234,13 +239,90 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
 
         await SaveFolderLevels(e, touchedFolders, cancellationToken);
 
+        await FlagOfficialPlacements(e, known, data, flags, details, cancellationToken);
+        await RecordAttempts(e, known, data, details, cancellationToken);
+
+        // A row is written when the batch learned ANYTHING about the score — a flag, or just
+        // its standing among peers. Detail-only rows are what let the page colour an ordinary
+        // score; charts with neither (co-op, or below the competitive gate) stay unwritten,
+        // and the page renders those in plain ink.
         return known
-            .Where(c => flags.GetValueOrDefault(c.ChartId) != HighlightFlags.None)
-            .Select(c => new ScoreHighlightWrite(c.ChartId, e.SessionId, e.OccurredAt, flags[c.ChartId],
+            .Where(c => flags.GetValueOrDefault(c.ChartId) != HighlightFlags.None
+                        || details.ContainsKey(c.ChartId))
+            .Select(c => new ScoreHighlightWrite(c.ChartId, e.SessionId, e.OccurredAt,
+                flags.GetValueOrDefault(c.ChartId),
                 data.Charts[c.ChartId].Level,
                 data.ScoringLevels.TryGetValue(c.ChartId, out var sl) ? sl : null,
                 details.GetValueOrDefault(c.ChartId)))
             .ToList();
+    }
+
+    /// <summary>
+    ///     Flags scores that place inside their chart's mirrored official board. Estimated
+    ///     against the last sealed snapshot, so the detail carries the board's date and the UI
+    ///     prints a "~" — the sweep runs weekly and has not seen tonight's scores.
+    /// </summary>
+    private async Task FlagOfficialPlacements(PlayerScoresUpdatedEvent e,
+        PlayerScoresUpdatedEvent.ScoreChange[] known, CaptureData data,
+        Dictionary<Guid, HighlightFlags> flags, Dictionary<Guid, HighlightDetail> details,
+        CancellationToken cancellationToken)
+    {
+        var scored = known
+            .Select(c => data.Bests[c.ChartId])
+            .Where(b => !b.IsBroken && b.Score != null)
+            .Select(b => (b.ChartId, Score: (int)b.Score!.Value))
+            .ToArray();
+        if (scored.Length == 0) return;
+
+        try
+        {
+            var placements = await _officialPlacements.EstimatePlacements(e.Mix, e.UserId, scored,
+                cancellationToken);
+            foreach (var (chartId, estimate) in placements)
+            {
+                flags[chartId] = flags.GetValueOrDefault(chartId) | HighlightFlags.OfficialBoardPlacement;
+                details[chartId] = Detail(details, chartId) with
+                {
+                    OfficialPlace = estimate.Place,
+                    OfficialBoardDepth = estimate.BoardDepth,
+                    OfficialAsOf = estimate.AsOf
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            // The mirror is a different vertical on a weekly cadence — a bad snapshot read
+            // costs this caption, never the capture around it.
+            _logger.LogError(ex, "Official placement estimate failed for user {UserId} ({Mix})", e.UserId, e.Mix);
+        }
+    }
+
+    /// <summary>
+    ///     Records how many times a chart was played before the play that cleared it. New passes
+    ///     only, and only within this session — the journal has held losing plays since
+    ///     2026-07-30 and only as deep as the site's recently-played page reached.
+    /// </summary>
+    private async Task RecordAttempts(PlayerScoresUpdatedEvent e, PlayerScoresUpdatedEvent.ScoreChange[] known,
+        CaptureData data, Dictionary<Guid, HighlightDetail> details, CancellationToken cancellationToken)
+    {
+        if (e.SessionId == null) return;
+        var passes = known
+            .Where(c => c.IsNewPass && !data.Bests[c.ChartId].IsBroken)
+            .Select(c => c.ChartId)
+            .ToArray();
+        if (passes.Length == 0) return;
+
+        try
+        {
+            var counts = await _attempts.GetSessionAttemptCounts(e.UserId, e.SessionId.Value, passes,
+                cancellationToken);
+            foreach (var (chartId, attempts) in counts)
+                details[chartId] = Detail(details, chartId) with { AttemptsBeforeClear = attempts };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Attempt counts failed for user {UserId} ({Mix})", e.UserId, e.Mix);
+        }
     }
 
     private async Task<CaptureData> LoadCaptureData(PlayerScoresUpdatedEvent e,
@@ -317,20 +399,28 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             var cohortScores = cohort.GetValueOrDefault(change.ChartId, Array.Empty<PhoenixScore>());
             // "Top scores among peers" needs peers.
             if (cohortScores.Length == 0) continue;
-            if (ScoreRankings.TieInclusivePercentile(cohortScores, best.Score.Value) < 0.9) continue;
 
             var score = (int)best.Score.Value;
+            var percentile = ScoreRankings.TieInclusivePercentile(cohortScores, best.Score.Value);
             var pgCount = cohortScores.Count(s => (int)s == PerfectGameScore);
-            // A PG most peers also hold isn't noteworthy (owner call) — suppress it.
-            if (score == PerfectGameScore && pgCount * 2 > cohortScores.Length) continue;
 
-            flags[change.ChartId] = flags.GetValueOrDefault(change.ChartId) | HighlightFlags.ScoreQuality90;
+            // The cohort standing is recorded for EVERY score it could be computed for, not
+            // only the ones that clear the flag — the Sessions page colours every row by this
+            // percentile, and a row with no number would read as a bad score rather than an
+            // unmeasured one. The flag below keeps its own, stricter bar.
             details[change.ChartId] = Detail(details, change.ChartId) with
             {
                 PeerCount = cohortScores.Length,
                 PeerBetterCount = cohortScores.Count(s => (int)s > score),
-                PeerPgCount = pgCount
+                PeerPgCount = pgCount,
+                PeerPercentile = percentile
             };
+
+            if (percentile < 0.9) continue;
+            // A PG most peers also hold isn't noteworthy (owner call) — suppress it.
+            if (score == PerfectGameScore && pgCount * 2 > cohortScores.Length) continue;
+
+            flags[change.ChartId] = flags.GetValueOrDefault(change.ChartId) | HighlightFlags.ScoreQuality90;
         }
     }
 
