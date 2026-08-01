@@ -11,7 +11,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 /// <summary>
 ///     The weekly challenge board. Each mix runs its own board, so <c>mix</c> selects which.
 /// </summary>
-[ApiToken]
+[ApiV2]
 [Route(RoutePrefix + "/weekly-charts")]
 public sealed class WeeklyChartsController : ApiV2ControllerBase
 {

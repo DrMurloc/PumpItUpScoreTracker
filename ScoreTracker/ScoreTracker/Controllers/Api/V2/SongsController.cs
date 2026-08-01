@@ -7,7 +7,7 @@ using ScoreTracker.Web.Security;
 namespace ScoreTracker.Web.Controllers.Api.V2;
 
 /// <summary>Songs in a mix, with the artist, duration and BPM range v1 never exposed.</summary>
-[ApiToken]
+[ApiV2]
 [Route(RoutePrefix + "/songs")]
 public sealed class SongsController : ApiV2ControllerBase
 {

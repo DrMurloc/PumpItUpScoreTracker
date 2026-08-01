@@ -11,7 +11,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     The four tier lists behind one route. v1 spends an action per list for an identical shape;
 ///     here the list is a path value, so a fifth list is data rather than a deployment.
 /// </summary>
-[ApiToken]
+[ApiV2]
 [Route(RoutePrefix + "/tier-lists")]
 public sealed class TierListsController : ApiV2ControllerBase
 {

@@ -11,7 +11,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     Derived chart analysis: the site's scoring-difficulty numbers, and PIU Center's step analysis.
 ///     Neither has ever been readable through the API.
 /// </summary>
-[ApiToken]
+[ApiV2]
 public sealed class ChartAnalysisController : ApiV2ControllerBase
 {
     private readonly IMediator _mediator;

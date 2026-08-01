@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
@@ -19,7 +20,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///         to its own user and nothing else.
 ///     </para>
 /// </summary>
-[ApiToken]
+[ApiV2]
 [Route(RoutePrefix + "/players")]
 public sealed class PlayersController : ApiV2ControllerBase
 {
@@ -38,26 +39,97 @@ public sealed class PlayersController : ApiV2ControllerBase
     }
 
     /// <summary>
-    ///     Resolves the route's player id. "me" is the caller; anything else is refused until a
-    ///     credential exists that can legitimately name another player.
+    ///     Resolves the route's player id against the caller's credential.
+    ///     <para>
+    ///         A personal token reaches only its own user. A tool key reaches every player who
+    ///         granted it access, and cannot use "me" — a tool is not a player.
+    ///     </para>
+    ///     <para>
+    ///         An unreachable player is 404, never 403. A 403 would confirm the player exists, which
+    ///         turns this endpoint into an account-enumeration oracle.
+    ///     </para>
     /// </summary>
-    private bool TryResolvePlayer(string playerId, out Guid userId, out ObjectResult? failure)
+    private async Task<(Guid? UserId, ObjectResult? Failure)> ResolvePlayer(string playerId)
     {
-        userId = _currentUser.User.Id;
-        failure = null;
-        if (string.Equals(playerId, "me", StringComparison.OrdinalIgnoreCase)) return true;
-        if (Guid.TryParse(playerId, out var requested) && requested == userId) return true;
+        var toolId = User.ToolId();
+        var isMe = string.Equals(playerId, "me", StringComparison.OrdinalIgnoreCase);
 
-        // 404, not 403: a 403 would confirm the player exists.
-        failure = NotFoundProblem("No player with that id is readable with this credential.");
-        return false;
+        if (toolId is null)
+        {
+            var self = _currentUser.User.Id;
+            if (isMe) return (self, null);
+            if (Guid.TryParse(playerId, out var requested) && requested == self) return (self, null);
+            return (null, Unreachable());
+        }
+
+        if (isMe)
+            return (null, Problem("tool-has-no-self", "A tool has no 'me'.",
+                detail: "Address a player by id. GET /api/v2/players lists the ones that shared with you."));
+
+        if (!Guid.TryParse(playerId, out var target)) return (null, Unreachable());
+
+        return await _mediator.Send(new CanToolReadPlayerQuery(toolId.Value, target))
+            ? (target, null)
+            : (null, Unreachable());
+    }
+
+    private ObjectResult Unreachable()
+    {
+        return NotFoundProblem("No player with that id is readable with this credential.");
+    }
+
+    /// <summary>
+    ///     Every player who has shared with the calling tool.
+    ///     <para>
+    ///         The endpoint the whole sharing model exists to serve: without it a tool has no way to
+    ///         learn who consented. A personal token gets a one-row list of itself.
+    ///     </para>
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetPlayers(
+        [FromQuery(Name = "cursor")] string? cursor = null,
+        [FromQuery(Name = "limit")] int? limit = null)
+    {
+        var pageSize = Math.Clamp(limit ?? DefaultLimit, 1, MaxLimit);
+        var toolId = User.ToolId();
+
+        var userIds = toolId is null
+            ? new[] { _currentUser.User.Id }
+            : (await _mediator.Send(new GetToolReadablePlayersQuery(toolId.Value))).OrderBy(id => id).ToArray();
+
+        var fingerprint = ContinuationToken.FingerprintOf(toolId, pageSize);
+        var offset = 0;
+        if (cursor is not null)
+        {
+            if (!ContinuationToken.TryDecode(cursor, fingerprint, out var token)) return InvalidCursorProblem();
+            offset = token.Offset;
+        }
+
+        var page = userIds.Skip(offset).Take(pageSize).ToArray();
+        var rows = new List<PlayerV2Dto>();
+        foreach (var id in page)
+        {
+            var user = await _mediator.Send(new GetUserByIdQuery(id));
+            if (user is null) continue;
+
+            var (tag, seenAt) = await ResolveGameTag(id);
+            rows.Add(new PlayerV2Dto(user, tag, seenAt));
+        }
+
+        var next = offset + page.Length < userIds.Length
+            ? ContinuationToken.FromOffset(offset + page.Length, fingerprint)
+            : (ContinuationToken?)null;
+
+        return Json(Page(rows, pageSize, userIds.Length, next));
     }
 
     /// <summary>The player's profile, with their most recently observed in-game tag.</summary>
     [HttpGet("{playerId}")]
     public async Task<IActionResult> GetPlayer([FromRoute] string playerId)
     {
-        if (!TryResolvePlayer(playerId, out var userId, out var failure)) return failure!;
+        var (resolved, failure) = await ResolvePlayer(playerId);
+        if (resolved is null) return failure!;
+        var userId = resolved.Value;
 
         var user = await _mediator.Send(new GetUserByIdQuery(userId));
         if (user is null) return NotFoundProblem("No player with that id is readable with this credential.");
@@ -84,7 +156,9 @@ public sealed class PlayersController : ApiV2ControllerBase
         [FromQuery(Name = "cursor")] string? cursor = null,
         [FromQuery(Name = "limit")] int? limit = null)
     {
-        if (!TryResolvePlayer(playerId, out var userId, out var failure)) return failure!;
+        var (resolved, failure) = await ResolvePlayer(playerId);
+        if (resolved is null) return failure!;
+        var userId = resolved.Value;
         if (!TryReadRequest(mixValue, limit, out var mix, out var pageSize, out var mixFailure))
             return mixFailure!;
 
@@ -154,7 +228,9 @@ public sealed class PlayersController : ApiV2ControllerBase
         [FromQuery(Name = "cursor")] string? cursor = null,
         [FromQuery(Name = "limit")] int? limit = null)
     {
-        if (!TryResolvePlayer(playerId, out var userId, out var failure)) return failure!;
+        var (resolved, failure) = await ResolvePlayer(playerId);
+        if (resolved is null) return failure!;
+        var userId = resolved.Value;
         if (!TryReadRequest(mixValue, limit, out var mix, out var pageSize, out var mixFailure))
             return mixFailure!;
 
@@ -189,7 +265,9 @@ public sealed class PlayersController : ApiV2ControllerBase
         [FromQuery(Name = "cursor")] string? cursor = null,
         [FromQuery(Name = "limit")] int? limit = null)
     {
-        if (!TryResolvePlayer(playerId, out var userId, out var failure)) return failure!;
+        var (resolved, failure) = await ResolvePlayer(playerId);
+        if (resolved is null) return failure!;
+        var userId = resolved.Value;
         if (!TryReadRequest(mixValue, limit, out var mix, out var pageSize, out var mixFailure))
             return mixFailure!;
 

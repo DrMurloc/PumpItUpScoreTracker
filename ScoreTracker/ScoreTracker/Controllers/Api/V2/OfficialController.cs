@@ -16,7 +16,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///         map for free, private profiles included.
 ///     </para>
 /// </summary>
-[ApiToken]
+[ApiV2]
 [Route(RoutePrefix + "/official")]
 public sealed class OfficialController : ApiV2ControllerBase
 {

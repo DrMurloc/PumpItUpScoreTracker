@@ -18,7 +18,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     why <c>mix</c> is required rather than optional — the same chart id is S17 in one mix and S18
 ///     in another.
 /// </summary>
-[ApiToken]
+[ApiV2]
 [Route(RoutePrefix + "/charts")]
 public sealed class ChartsController : ApiV2ControllerBase
 {

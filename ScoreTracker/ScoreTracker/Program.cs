@@ -175,7 +175,9 @@ builder.Services.AddAuthentication("DefaultAuthentication")
         o.AppSecret = facebookConfig.AppSecret;
         o.SignInScheme = "ExternalAuthentication";
     })
-    .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationScheme>("ApiToken", o => { });
+    .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationScheme>("ApiToken", o => { })
+    .AddScheme<AuthenticationSchemeOptions, ToolKeyAuthenticationScheme>(
+        ToolKeyAuthenticationScheme.SchemeName, o => { });
 
 builder.Services.AddSwaggerExamplesFromAssemblyOf<RecordPhoenixScoreDtoExample>();
 builder.Services.AddSwaggerGen(o =>
@@ -208,6 +210,7 @@ builder.Services.AddSwaggerGen(o =>
 builder.Services.AddAuthorization(o =>
     {
         o.AddPolicy(nameof(ApiTokenAttribute), p => p.RequireAssertion(ApiTokenAttribute.AuthPolicy));
+        o.AddPolicy(nameof(ApiV2Attribute), p => p.RequireAssertion(ApiV2Attribute.AuthPolicy));
     });
 builder.Services.AddBlazorApplicationInsights()
     .AddTransient<IPhoenixScoreFileExtractor, PhoenixScoreFileExtractor>()

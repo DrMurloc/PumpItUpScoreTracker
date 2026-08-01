@@ -11,7 +11,7 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     1M-scale numbers or letter grades, and reading a legacy record as a Phoenix one gives a
 ///     plausible, wrong answer.
 /// </summary>
-[ApiToken]
+[ApiV2]
 [Route(RoutePrefix + "/mixes")]
 public sealed class MixesController : ApiV2ControllerBase
 {
