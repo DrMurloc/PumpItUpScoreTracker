@@ -595,6 +595,14 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
                     lines.Add("📈 " + _localizer.Get(culture, "**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})",
                         m.OldValue, m.NewValue, m.NewValue - m.OldValue));
                     break;
+                case MilestoneKind.OfficialPumbilityRank:
+                    // A line in the stats block, never a card of its own. Estimated, so it
+                    // wears the same tilde the chart placements do.
+                    lines.Add("🌐 " + (m.OldValue == null
+                        ? _localizer.Get(culture, "**{0}** — now ~#{1:0}", m.Detail, m.NewValue)
+                        : _localizer.Get(culture, "**{0}** ~#{1:0} → ~#{2:0}", m.Detail, m.OldValue,
+                            m.NewValue)));
+                    break;
                 case MilestoneKind.DoublesPumbilityGain:
                     lines.Add("📈 " + _localizer.Get(culture, "**PUMBILITY (D)** {0:N0} → **{1:N0}** (+{2:N0})",
                         m.OldValue, m.NewValue, m.NewValue - m.OldValue));
@@ -784,6 +792,12 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             parts.Add("📁 " + _localizer.Get(culture, "Nearly complete folder"));
         if (flags.HasFlag(HighlightFlags.CompetitiveImprover))
             parts.Add("⬆ " + _localizer.Get(culture, "Raised competitive level"));
+        // The tilde is load-bearing: the board is swept weekly and has not seen this score,
+        // so the number is our own count against the last sealed snapshot.
+        if (flags.HasFlag(HighlightFlags.OfficialBoardPlacement) && d?.OfficialPlace != null)
+            parts.Add("🌐 " + _localizer.Get(culture, "~#{0} on the official board", d.OfficialPlace));
+        if (d?.AttemptsBeforeClear is > 0)
+            parts.Add("🎯 " + _localizer.Get(culture, "Cleared on attempt {0}", d.AttemptsBeforeClear + 1));
         if (bigGain) parts.Add("💥 " + _localizer.Get(culture, "Biggest gain of the session"));
         return "\n-# " + string.Join(" · ", parts);
     }

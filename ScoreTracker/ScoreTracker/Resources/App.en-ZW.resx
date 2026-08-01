@@ -198,6 +198,12 @@
   <data name="**{0}** paragon → {1}" xml:space="preserve">
     <value>**{0}** mrpurggl → {1}</value>
   </data>
+  <data name="**{0}** ~#{1:0} → ~#{2:0}" xml:space="preserve">
+    <value>**{0}** ~#{1:0} → ~#{2:0}</value>
+  </data>
+  <data name="**{0}** — now ~#{1:0}" xml:space="preserve">
+    <value>**{0}** — bulo ~#{1:0}</value>
+  </data>
   <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
     <value>**{0}** — {1} murgl grrglplgl ({2} grgl, glorg +{3})</value>
   </data>
@@ -987,6 +993,9 @@
   </data>
   <data name="Cleared all of {0}" xml:space="preserve">
     <value>Blarggrrglglorg rgl mrgl {0}</value>
+  </data>
+  <data name="Cleared on attempt {0}" xml:space="preserve">
+    <value>Palo blub {0}</value>
   </data>
   <data name="Clearly Has Friends" xml:space="preserve">
     <value>Grorprglgrorp Rgl Murggrorpurg</value>
@@ -6446,6 +6455,9 @@
   </data>
   <data name="{0}y old" xml:space="preserve">
     <value>{0}ro rgl</value>
+  </data>
+  <data name="~#{0} on the official board" xml:space="preserve">
+    <value>~#{0} orb pum</value>
   </data>
   <data name="~{0} more charts in this folder" xml:space="preserve">
     <value>~{0} mrrgl murgl mrp grglmrp grrgllurg</value>

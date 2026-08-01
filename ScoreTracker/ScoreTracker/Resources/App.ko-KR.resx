@@ -198,6 +198,12 @@
   <data name="**{0}** paragon → {1}" xml:space="preserve">
     <value>**{0}** 파라곤 → {1}</value>
   </data>
+  <data name="**{0}** ~#{1:0} → ~#{2:0}" xml:space="preserve">
+    <value>**{0}** ~#{1:0} → ~#{2:0}</value>
+  </data>
+  <data name="**{0}** — now ~#{1:0}" xml:space="preserve">
+    <value>**{0}** — 현재 ~#{1:0}</value>
+  </data>
   <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
     <value>**{0}** — 채보 보드 {1}개 ({2} 신규, 순 +{3})</value>
   </data>
@@ -977,6 +983,9 @@
   </data>
   <data name="Cleared all of {0}" xml:space="preserve">
     <value>{0} 전부 클리어</value>
+  </data>
+  <data name="Cleared on attempt {0}" xml:space="preserve">
+    <value>{0}번째 시도에 클리어</value>
   </data>
   <data name="Clearly Has Friends" xml:space="preserve">
     <value>Clearly Has Friends</value>
@@ -6376,6 +6385,9 @@
   </data>
   <data name="{0}y old" xml:space="preserve">
     <value>{0}년 전</value>
+  </data>
+  <data name="~#{0} on the official board" xml:space="preserve">
+    <value>공식 순위표 ~#{0}</value>
   </data>
   <data name="~{0} more charts in this folder" xml:space="preserve">
     <value>이 폴더에서 약 {0}개 더</value>
