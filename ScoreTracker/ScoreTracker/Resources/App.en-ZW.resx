@@ -5991,6 +5991,9 @@
   <data name="Your score spread per level, Singles against Doubles, the middle 50% shaded." xml:space="preserve">
     <value>Gromurp mrglrgl arglmurp morg grorpmurm, Mrglrlgl murmlurgmurp Groggl, mrp glgrgl 50% blubmrgl.</value>
   </data>
+  <data name="Your scores are all in {0}." xml:space="preserve">
+    <value>Golu blorgu molu {0}.</value>
+  </data>
   <data name="Your scores have been deleted" xml:space="preserve">
 	  <value>Gromurp mgrlgmrg mrglro murmmrp mrglmorggrorp</value>
   </data>

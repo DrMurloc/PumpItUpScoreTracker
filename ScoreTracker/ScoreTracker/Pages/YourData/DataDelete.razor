@@ -44,15 +44,25 @@
     </MudPaper>
 
     <div class="@(_armed ? "" : "delete-inert")">
-        <MudText Typo="Typo.overline" Class="d-block mb-2">@L["Which mix"]</MudText>
-        <MudChipSet T="string" SelectedValue="@_mixValue" SelectedValueChanged="MixChanged"
-                    SelectionMode="SelectionMode.SingleSelection" CheckMark="true" Class="mb-4">
-            <MudChip T="string" Value="@AllMixes" Variant="Variant.Outlined">@L["All mixes"]</MudChip>
-            @foreach (var mix in _mixesWithData)
-            {
-                <MudChip T="string" Value="@mix.ToString()" Variant="Variant.Outlined">@mix.GetName()</MudChip>
-            }
-        </MudChipSet>
+        @if (_mixesWithData.Count > 1)
+        {
+            <MudText Typo="Typo.overline" Class="d-block mb-2">@L["Which mix"]</MudText>
+            <MudChipSet T="string" SelectedValue="@_mixValue" SelectedValueChanged="MixChanged"
+                        SelectionMode="SelectionMode.SingleSelection" CheckMark="true" Class="mb-4">
+                <MudChip T="string" Value="@AllMixes" Variant="Variant.Outlined">@L["All mixes"]</MudChip>
+                @foreach (var mix in _mixesWithData)
+                {
+                    <MudChip T="string" Value="@mix.ToString()" Variant="Variant.Outlined">@mix.GetName()</MudChip>
+                }
+            </MudChipSet>
+        }
+        else if (!_loadingMixes && _mixesWithData.Count == 1)
+        {
+            @* Nothing to choose between — say which mix this is about and move on. *@
+            <MudText Typo="Typo.body2" Class="mb-4" Style="opacity:.8;">
+                @L["Your scores are all in {0}.", _mixesWithData[0].GetName()]
+            </MudText>
+        }
 
         <MudExpansionPanels MultiExpansion="true" Class="mb-4">
             <MudExpansionPanel Expanded="true">
@@ -155,9 +165,12 @@
         (ContributionDeletionItems.CommunityMemberships, "Community memberships")
     };
 
-    private readonly MixEnum[] _mixesWithData = { MixEnum.Phoenix, MixEnum.Phoenix2, MixEnum.XX };
+    // Read, never assumed. Every mix stores scores — the legacy ones in BestAttempt rather
+    // than PhoenixRecord — so the picker offers whatever this player actually has.
+    private IReadOnlyList<MixEnum> _mixesWithData = Array.Empty<MixEnum>();
 
     private bool _armed;
+    private bool _loadingMixes = true;
     private bool _busy;
     private bool _showAccountDialog;
     private string _mixValue = AllMixes;
@@ -167,6 +180,12 @@
     private DateTimeOffset? _purgeAfter;
 
     private MixEnum? SelectedMix => _mixValue == AllMixes ? null : Enum.Parse<MixEnum>(_mixValue);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _mixesWithData = await Mediator.Send(new GetMixesWithScoresQuery(CurrentUser.User.Id));
+        _loadingMixes = false;
+    }
 
     private bool NothingChosen =>
         _scoreItems == ScoreDeletionItems.None && _contributionItems == ContributionDeletionItems.None;

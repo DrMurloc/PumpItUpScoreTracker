@@ -5921,6 +5921,9 @@
   <data name="Your score spread per level, Singles against Doubles, the middle 50% shaded." xml:space="preserve">
     <value>Tu distribución de puntuación por nivel, Singles contra Doubles, con el 50 % central sombreado.</value>
   </data>
+  <data name="Your scores are all in {0}." xml:space="preserve">
+    <value>Todas tus puntuaciones están en {0}.</value>
+  </data>
   <data name="Your scores have been deleted" xml:space="preserve">
     <value>Sus puntajes han sido borrados</value>
   </data>

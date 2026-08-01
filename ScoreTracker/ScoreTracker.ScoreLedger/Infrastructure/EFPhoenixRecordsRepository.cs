@@ -528,6 +528,23 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 g.Sum(e => e.prs.Pumbility), g.Sum(e => e.prs.PumbilityPlus))).ToArrayAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<MixEnum>> GetMixesWithScores(Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Both tables: Phoenix-scoring mixes record in PhoenixRecord, every pre-Phoenix mix in
+        // BestAttempt. Ordered by the Mix table's SortOrder, never enum order.
+        var phoenix = database.Set<PhoenixRecordEntity>().Where(p => p.UserId == userId).Select(p => p.MixId);
+        var legacy = database.Set<BestAttemptEntity>().Where(b => b.UserId == userId).Select(b => b.MixId);
+        var ids = await phoenix.Union(legacy).Distinct().ToArrayAsync(cancellationToken);
+        var ordered = await database.Set<MixEntity>()
+            .Where(m => ids.Contains(m.Id))
+            .OrderBy(m => m.SortOrder)
+            .Select(m => m.Id)
+            .ToArrayAsync(cancellationToken);
+        return ordered.Select(MixIds.ToEnum).ToArray();
+    }
+
     public async Task DeleteRecord(MixEnum mix, Guid userId, Guid chartId,
         CancellationToken cancellationToken = default)
     {

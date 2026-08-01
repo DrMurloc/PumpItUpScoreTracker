@@ -2,16 +2,17 @@
 
 @* The shared chrome for the two Your Data routes. Undo comes first because it is the safer of
    the pair and the one most people actually want. *@
-<div class="d-flex align-end justify-space-between flex-wrap gap-4 mb-4 pb-3 yourdata-head">
-    <MudText Typo="Typo.h5">@L["Your Data"]</MudText>
-    <div class="d-flex gap-1">
-        <MudButton Href="/Account/Data/Undo"
-                   Variant="@(Active == YourDataTab.Undo ? Variant.Filled : Variant.Text)"
-                   Color="@(Active == YourDataTab.Undo ? Color.Primary : Color.Default)">@L["Undo"]</MudButton>
-        <MudButton Href="/Account/Data/Delete"
-                   Variant="@(Active == YourDataTab.Delete ? Variant.Filled : Variant.Text)"
-                   Color="@(Active == YourDataTab.Delete ? Color.Primary : Color.Default)">@L["Delete"]</MudButton>
-    </div>
+@* Same segmented control the folder picker uses for chart type: filled = active, outlined =
+   not. Sat right-aligned across the header first and was easy to miss — it reads as a switch
+   only when it is next to the thing it switches. *@
+<div class="d-flex align-center flex-wrap gap-4 mb-4 pb-3 yourdata-head">
+    <MudText Typo="Typo.h5" Class="mr-1">@L["Your Data"]</MudText>
+    <MudButtonGroup OverrideStyles="false" Class="folder-picker-types">
+        <MudButton Href="/Account/Data/Undo" Size="Size.Small" Color="Color.Primary"
+                   Variant="@(Active == YourDataTab.Undo ? Variant.Filled : Variant.Outlined)">@L["Undo"]</MudButton>
+        <MudButton Href="/Account/Data/Delete" Size="Size.Small" Color="Color.Primary"
+                   Variant="@(Active == YourDataTab.Delete ? Variant.Filled : Variant.Outlined)">@L["Delete"]</MudButton>
+    </MudButtonGroup>
 </div>
 
 @ChildContent

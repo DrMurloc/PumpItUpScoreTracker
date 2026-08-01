@@ -5991,6 +5991,9 @@
   <data name="Your score spread per level, Singles against Doubles, the middle 50% shaded." xml:space="preserve">
     <value>レベルごとのスコア分布、シングル対ダブル、中央50%を網掛け。</value>
   </data>
+  <data name="Your scores are all in {0}." xml:space="preserve">
+    <value>スコアはすべて {0} にあります。</value>
+  </data>
   <data name="Your scores have been deleted" xml:space="preserve">
 	  <value>スコアを削除しました</value>
   </data>

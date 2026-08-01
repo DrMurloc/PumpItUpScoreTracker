@@ -5921,6 +5921,9 @@
   <data name="Your score spread per level, Singles against Doubles, the middle 50% shaded." xml:space="preserve">
     <value>레벨별 점수 분포, 싱글 대 더블, 가운데 50% 음영.</value>
   </data>
+  <data name="Your scores are all in {0}." xml:space="preserve">
+    <value>점수가 모두 {0}에 있습니다.</value>
+  </data>
   <data name="Your scores have been deleted" xml:space="preserve">
     <value>본인의 점수가 삭제되었습니다</value>
   </data>

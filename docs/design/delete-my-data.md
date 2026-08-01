@@ -167,8 +167,17 @@ makes people hunt, and hunting makes them determined; a visible one lets them re
 and conclude for themselves that undo is what they wanted. The guard is one deliberate act, and it
 is reversible.
 
-**Scope.** A mix selector — All / Phoenix / Phoenix 2 / XX, listing only mixes with data — above
-two buckets. Each bucket header is a tri-state master; open it to cherry-pick.
+**Scope.** A mix selector listing **every mix this player actually holds scores in**, read from
+the data rather than hardcoded — `GetMixesWithScoresQuery` unions `PhoenixRecord` and
+`BestAttempt` and orders by the Mix table's own `SortOrder`. An account with scores in one mix
+gets a sentence instead of a chip row; there is nothing to choose between.
+
+⚠ **Every mix is deletable, including the legacy ones.** Phoenix-scoring mixes record in
+`PhoenixRecord` and every pre-Phoenix mix in `BestAttempt` — a storage detail, not a reason to
+leave a mix out of the picker. There is nothing read-only about an old mix, and any code or copy
+implying otherwise is wrong.
+
+Above two buckets. Each bucket header is a tri-state master; open it to cherry-pick.
 
 **Scores** (mix-scoped)
 

@@ -2,13 +2,22 @@ using MediatR;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Domain;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.ScoreLedger.Application;
 
-internal sealed class ScoreSessionQueryHandlers(IScoreSessionRepository sessions, IScoreJournalRepository journal)
+internal sealed class ScoreSessionQueryHandlers(IScoreSessionRepository sessions, IScoreJournalRepository journal,
+        IPhoenixRecordRepository records)
     : IRequestHandler<GetScoreSessionsQuery, IReadOnlyList<ScoreSessionRecord>>,
-        IRequestHandler<GetScoreSessionUndoPreviewQuery, ScoreSessionUndoPreview?>
+        IRequestHandler<GetScoreSessionUndoPreviewQuery, ScoreSessionUndoPreview?>,
+        IRequestHandler<GetMixesWithScoresQuery, IReadOnlyList<MixEnum>>
 {
+    public Task<IReadOnlyList<MixEnum>> Handle(GetMixesWithScoresQuery request,
+        CancellationToken cancellationToken)
+    {
+        return records.GetMixesWithScores(request.UserId, cancellationToken);
+    }
+
     public Task<IReadOnlyList<ScoreSessionRecord>> Handle(GetScoreSessionsQuery request,
         CancellationToken cancellationToken)
     {
