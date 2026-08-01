@@ -321,6 +321,9 @@
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>Uno zip di snapshot importa direttamente una versione dei dati già scaricata: stesso processo della scansione, senza download</value>
   </data>
+  <data name="A tool is how a program reads the scores players share with it. Create one to get a key." xml:space="preserve">
+    <value>Uno strumento è il modo in cui un programma legge i punteggi che i giocatori condividono con lui. Creane uno per ottenere una chiave.</value>
+  </data>
   <data name="About" xml:space="preserve">
     <value>Informazioni</value>
   </data>
@@ -332,6 +335,9 @@
   </data>
   <data name="Accept invite &amp; join" xml:space="preserve">
     <value>Accetta l'invito e unisciti</value>
+  </data>
+  <data name="Accept players who share with all tools" xml:space="preserve">
+    <value>Accetta i giocatori che condividono con tutti gli strumenti</value>
   </data>
   <data name="Account" xml:space="preserve">
     <value>Account</value>
@@ -573,6 +579,9 @@
     <value>As</value>
     <comment>Plural of letter grade A — column header counting A grades.</comment>
   </data>
+  <data name="Ask to be listed" xml:space="preserve">
+    <value>Chiedi di essere elencato</value>
+  </data>
   <data name="Assuming {0} with a {1} plate." xml:space="preserve">
     <value>Ipotizzando {0} con plate {1}.</value>
   </data>
@@ -618,6 +627,9 @@
   </data>
   <data name="Avg" xml:space="preserve">
     <value>Media</value>
+  </data>
+  <data name="Awaiting review" xml:space="preserve">
+    <value>In attesa di revisione</value>
   </data>
   <data name="Back" xml:space="preserve">
     <value>Indietro</value>
@@ -1435,8 +1447,14 @@
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>Eliminare questa comunità e tutto il suo contenuto? Non può essere annullato.</value>
   </data>
+  <data name="Delete tool" xml:space="preserve">
+    <value>Elimina strumento</value>
+  </data>
   <data name="Delete your account" xml:space="preserve">
     <value>Elimina il tuo account</value>
+  </data>
+  <data name="Delete {0}" xml:space="preserve">
+    <value>Elimina {0}</value>
   </data>
   <data name="Deleted" xml:space="preserve">
     <value>Eliminato.</value>
@@ -1449,6 +1467,9 @@
   </data>
   <data name="Deleting your {0} scores resets your Pumbility, your titles and your folder progress for that mix. Other mixes are untouched." xml:space="preserve">
     <value>Eliminare i punteggi {0} azzera Pumbility, titoli e avanzamento delle cartelle per quel Mix. Gli altri Mix restano intatti.</value>
+  </data>
+  <data name="Deliver to" xml:space="preserve">
+    <value>Consegna a</value>
   </data>
   <data name="Demote" xml:space="preserve">
     <value>Retrocedi</value>
@@ -1464,6 +1485,9 @@
   </data>
   <data name="dethroned" xml:space="preserve">
     <value>ha spodestato</value>
+  </data>
+  <data name="Developers" xml:space="preserve">
+    <value>Sviluppatori</value>
   </data>
   <data name="Didn't quite make the cut ({0})" xml:space="preserve">
     <value>Non ce l'hanno fatta per poco ({0})</value>
@@ -2379,8 +2403,14 @@
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>Potrebbe essere stato revocato, o lo strumento non esiste più. Chiedi un link nuovo a chi te l'ha mandato.</value>
   </data>
+  <data name="It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory." xml:space="preserve">
+    <value>Parte privato e pienamente funzionante — link d'invito, chiavi e webhook funzionano tutti. L'inserimento ti mette solo nell'elenco.</value>
+  </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>Potrà leggere</value>
+  </data>
+  <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access. Nobody can take a tool over — it's yours or it's gone." xml:space="preserve">
+    <value>Le sue chiavi smettono di funzionare, i suoi webhook smettono di partire, e i {0} giocatori collegati perdono l'accesso. Nessuno può rilevare uno strumento — è tuo o sparisce.</value>
   </data>
   <data name="Jacks" xml:space="preserve">
     <value>Jacks</value>
@@ -2396,6 +2426,9 @@
   </data>
   <data name="Jumps" xml:space="preserve">
     <value>Jumps</value>
+  </data>
+  <data name="Just &quot;this player imported&quot;. You pull what you need from the API." xml:space="preserve">
+    <value>Solo «questo giocatore ha importato». Il resto lo chiedi all'API.</value>
   </data>
   <data name="Just browsing?" xml:space="preserve">
     <value>Stai solo dando un'occhiata?</value>
@@ -2562,6 +2595,9 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>Collegato a un account del sito</value>
   </data>
+  <data name="Listing was turned down" xml:space="preserve">
+    <value>L'inserimento è stato rifiutato</value>
+  </data>
   <data name="LIVE" xml:space="preserve">
     <value>LIVE</value>
   </data>
@@ -2579,6 +2615,9 @@
   </data>
   <data name="locked in a vault inside Microsoft Azure." xml:space="preserve">
     <value>custodita in un caveau all'interno di Microsoft Azure.</value>
+  </data>
+  <data name="Locked: every connected player must agree to it individually, so this can only be turned on while no one is connected." xml:space="preserve">
+    <value>Bloccato: ogni giocatore collegato deve accettarlo singolarmente, quindi si può attivare solo senza nessuno collegato.</value>
   </data>
   <data name="Locking will set this user's username to their GameTag." xml:space="preserve">
     <value>Bloccando, il nome utente di questo utente verrà impostato sul suo GameTag.</value>
@@ -2979,6 +3018,9 @@
   <data name="New this week" xml:space="preserve">
     <value>Nuovo questa settimana</value>
   </data>
+  <data name="New tool" xml:space="preserve">
+    <value>Nuovo strumento</value>
+  </data>
   <data name="New Username" xml:space="preserve">
     <value>Nuovo nome utente</value>
   </data>
@@ -3120,6 +3162,9 @@
   <data name="No unmatched keys" xml:space="preserve">
     <value>Nessuna chiave non abbinata</value>
   </data>
+  <data name="No webhook" xml:space="preserve">
+    <value>Nessun webhook</value>
+  </data>
   <data name="No — I want to permanently delete data." xml:space="preserve">
     <value>No — voglio eliminare i dati in modo definitivo.</value>
   </data>
@@ -3220,6 +3265,9 @@
   <data name="Notes since your last break" xml:space="preserve">
     <value>Note dall'ultima rottura</value>
   </data>
+  <data name="Nothing" xml:space="preserve">
+    <value>Niente</value>
+  </data>
   <data name="Nothing changed between these two mixes." xml:space="preserve">
     <value>Non è cambiato nulla tra questi due mix.</value>
   </data>
@@ -3283,6 +3331,9 @@
   <data name="Off" xml:space="preserve">
     <value>Disattivato</value>
   </data>
+  <data name="Off means only players who connect to you directly, by invite. Turn it off if your tool is for one crew and a thousand strangers would be noise." xml:space="preserve">
+    <value>Disattivato significa solo giocatori che si collegano direttamente, su invito. Disattivalo se il tuo strumento è per un gruppo e mille sconosciuti sarebbero rumore.</value>
+  </data>
   <data name="official" xml:space="preserve">
     <value>ufficiale</value>
   </data>
@@ -3312,6 +3363,9 @@
   </data>
   <data name="Old folder" xml:space="preserve">
     <value>Cartella precedente</value>
+  </data>
+  <data name="Older mixes ({0})" xml:space="preserve">
+    <value>Mix più vecchi ({0})</value>
   </data>
   <data name="Older scores count for less — {0} of your nearby scores are much older than the rest of your record." xml:space="preserve">
     <value>I punteggi vecchi contano meno — {0} dei tuoi punteggi nelle vicinanze sono molto più vecchi del resto del tuo storico.</value>
@@ -3786,6 +3840,9 @@
   <data name="Player Page" xml:space="preserve">
     <value>Pagina giocatore</value>
   </data>
+  <data name="Player ping" xml:space="preserve">
+    <value>Notifica giocatore</value>
+  </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
     <value>Giocatore da testare (deve essere impostato come Pubblico)</value>
   </data>
@@ -3833,6 +3890,9 @@
   </data>
   <data name="Points Pre-Score" xml:space="preserve">
     <value>Punti pre-punteggio</value>
+  </data>
+  <data name="Poll the API, or read the event feed." xml:space="preserve">
+    <value>Interroga l'API, o leggi il feed degli eventi.</value>
   </data>
   <data name="Popular" xml:space="preserve">
     <value>Popolare</value>
@@ -4541,6 +4601,9 @@
   <data name="selected mixes only" xml:space="preserve">
     <value>solo i Mix selezionati</value>
   </data>
+  <data name="Sent for review" xml:space="preserve">
+    <value>Inviato in revisione</value>
+  </data>
   <data name="Series" xml:space="preserve">
     <value>Serie</value>
   </data>
@@ -4683,6 +4746,9 @@
   </data>
   <data name="showing suggested" xml:space="preserve">
     <value>consigliati mostrati</value>
+  </data>
+  <data name="Shown in the tool directory. Players read this before they connect." xml:space="preserve">
+    <value>Compare nell'elenco. I giocatori lo leggono prima di collegarsi.</value>
   </data>
   <data name="Shuffle suggestions" xml:space="preserve">
     <value>Mescola i suggerimenti</value>
@@ -5154,6 +5220,9 @@
   </data>
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>Lo stesso Perfect all'inizio della canzone, prima di qualsiasi combo.</value>
+  </data>
+  <data name="The scores themselves, 100 per delivery, with a next link when there are more." xml:space="preserve">
+    <value>I punteggi stessi, 100 per consegna, con un link next quando ce ne sono altri.</value>
   </data>
   <data name="The shared tier list for this folder, built from everyone's data." xml:space="preserve">
     <value>La tier list condivisa di questa cartella, costruita con i dati di tutti.</value>
@@ -5789,11 +5858,20 @@
   <data name="Watch {0}" xml:space="preserve">
     <value>Guarda {0}</value>
   </data>
+  <data name="We don't email reminders, so this banner is the reminder. Create a replacement now and run both until you've swapped it over." xml:space="preserve">
+    <value>Non mandiamo promemoria via email, quindi questo avviso è il promemoria. Crea una sostituta adesso e tieni entrambe attive finché non hai completato il passaggio.</value>
+  </data>
+  <data name="We forward the piugame.com session key so you run your own import." xml:space="preserve">
+    <value>Inoltriamo la chiave di sessione di piugame.com così esegui la tua importazione.</value>
+  </data>
   <data name="We hold a sealed key" xml:space="preserve">
     <value>Noi abbiamo una chiave sigillata</value>
   </data>
   <data name="We hold the master key" xml:space="preserve">
     <value>Noi abbiamo la chiave principale</value>
+  </data>
+  <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
+    <value>Mandiamo solo le importazioni dei mix che scegli. I mix più vecchi si valutano a lettere e non sulla scala del milione — il payload dice quale modello usa.</value>
   </data>
   <data name="weaker" xml:space="preserve">
     <value>più debole</value>
@@ -5870,6 +5948,9 @@
   </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>Su cosa lavorare (predefinito Title Hunt)</value>
+  </data>
+  <data name="What we send you" xml:space="preserve">
+    <value>Cosa ti mandiamo</value>
   </data>
   <data name="When" xml:space="preserve">
     <value>Quando</value>
@@ -6023,6 +6104,9 @@
   </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>Non ti sei ancora unito a nessuna comunità — trovane una qui sotto o crea la tua.</value>
+  </data>
+  <data name="You haven't made a tool yet" xml:space="preserve">
+    <value>Non hai ancora creato uno strumento</value>
   </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>Tu hai il biglietto in codice</value>
@@ -6222,6 +6306,12 @@
   <data name="Your title" xml:space="preserve">
     <value>Il tuo titolo</value>
   </data>
+  <data name="Your tools" xml:space="preserve">
+    <value>I tuoi strumenti</value>
+  </data>
+  <data name="Your tools, their keys, and how they hear about new scores." xml:space="preserve">
+    <value>I tuoi strumenti, le loro chiavi, e come vengono a sapere dei punteggi nuovi.</value>
+  </data>
   <data name="Your username and password are sealed together with AES-256-GCM under a random data key. That data key is wrapped by a master key that never leaves Azure Key Vault." xml:space="preserve">
     <value>Nome utente e password vengono sigillati insieme con AES-256-GCM sotto una chiave dati casuale. Quella chiave dati è avvolta da una chiave principale che non lascia mai Azure Key Vault.</value>
   </data>
@@ -6350,6 +6440,9 @@
   </data>
   <data name="{0} easier for you — mostly {1}" xml:space="preserve">
     <value>{0} più facili per te — soprattutto {1}</value>
+  </data>
+  <data name="{0} expires in {1} days" xml:space="preserve">
+    <value>{0} scade tra {1} giorni</value>
   </data>
   <data name="{0} folder" xml:space="preserve">
     <value>Cartella {0}</value>
@@ -6533,6 +6626,9 @@
   </data>
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0} · livelli {1}–{2} · {3}</value>
+  </data>
+  <data name="{0} — settings" xml:space="preserve">
+    <value>{0} — impostazioni</value>
   </data>
   <data name="{0} — {1} at {2}" xml:space="preserve">
     <value>{0} — {1} con {2}</value>

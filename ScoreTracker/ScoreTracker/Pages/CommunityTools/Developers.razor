@@ -1,0 +1,341 @@
+@page "/Developers"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.CommunityTools.Contracts
+@using ScoreTracker.CommunityTools.Contracts.Commands
+@using ScoreTracker.CommunityTools.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components.CommunityTools
+@using ScoreTracker.Web.Services
+<PageTitle>@L["Developers"]</PageTitle>
+
+@* Maker-facing, so the jargon is allowed here — webhook, API key, rate limit. Player-facing
+   screens never use those words. *@
+
+<div class="d-flex align-end gap-3 flex-wrap mt-2 mb-4">
+    <div class="flex-grow-1">
+        <MudText Typo="Typo.h4">@L["Developers"]</MudText>
+        <MudText Typo="Typo.body2" Style="opacity:.75;">
+            @L["Your tools, their keys, and how they hear about new scores."]
+        </MudText>
+    </div>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="() => _showCreate = true">@L["New tool"]</MudButton>
+</div>
+
+@if (_expiringSoon.Any())
+{
+    @* There are no expiry emails, so this banner is the whole warning. It has to be loud rather
+       than precise — a key that dies unannounced breaks a tool at 2am. *@
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
+        <MudText Typo="Typo.body2">
+            <b>@L["{0} expires in {1} days", _expiringSoon[0].Name, _expiringSoon[0].DaysLeft]</b>
+        </MudText>
+        <MudText Typo="Typo.body2">
+            @L["We don't email reminders, so this banner is the reminder. Create a replacement now and run both until you've swapped it over."]
+        </MudText>
+    </MudAlert>
+}
+
+@if (_loading)
+{
+    <MudSkeleton Height="180px"></MudSkeleton>
+}
+else if (!_tools.Any())
+{
+    <MudAlert Severity="Severity.Normal" Variant="Variant.Outlined">
+        <MudText Typo="Typo.body2"><b>@L["You haven't made a tool yet"]</b></MudText>
+        <MudText Typo="Typo.body2">
+            @L["A tool is how a program reads the scores players share with it. Create one to get a key."]
+        </MudText>
+    </MudAlert>
+}
+else
+{
+    <MudPaper Outlined="true" Class="pa-3 mb-4">
+        <MudText Typo="Typo.subtitle2" Class="mb-2">@L["Your tools"]</MudText>
+        @foreach (var tool in _tools)
+        {
+            <div class="olb-rank-card" style="cursor:pointer;" @onclick="() => Select(tool)">
+                <div class="flex-grow-1" style="min-width:0;">
+                    <MudText Typo="Typo.body1">
+                        <b>@tool.Name</b>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                                 Color="@VisibilityColor(tool.Visibility)">@VisibilityLabel(tool.Visibility)</MudChip>
+                    </MudText>
+                    <MudText Typo="Typo.caption" Style="opacity:.7;">
+                        @WebhookLabel(tool.WebhookMode)
+                        · @L["{0} Players", tool.ConnectedPlayers]
+                    </MudText>
+                </div>
+            </div>
+        }
+    </MudPaper>
+
+    @if (_selected is not null)
+    {
+        <MudPaper Outlined="true" Class="pa-4 mb-4">
+            <MudText Typo="Typo.subtitle2" Class="mb-3">@L["{0} — settings", _selected.Name]</MudText>
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" @bind-Value="_editName" Label=@L["Name"] MaxLength="64"></MudTextField>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" @bind-Value="_editUrl" Label=@L["Link"] MaxLength="500"></MudTextField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" @bind-Value="_editDescription" Label=@L["Description"] MaxLength="500"
+                                  Lines="2"
+                                  HelperText='@L["Shown in the tool directory. Players read this before they connect."].Value'></MudTextField>
+                </MudItem>
+            </MudGrid>
+
+            <MudSwitch T="bool" @bind-Value="_editAcceptsAllTools" Color="Color.Success" Class="mt-3"
+                       Label=@L["Accept players who share with all tools"]></MudSwitch>
+            <MudText Typo="Typo.body2" Style="opacity:.7;" Class="ml-11">
+                @L["Off means only players who connect to you directly, by invite. Turn it off if your tool is for one crew and a thousand strangers would be noise."]
+            </MudText>
+
+            <MudDivider Class="my-4"></MudDivider>
+            <MudText Typo="Typo.subtitle2" Class="mb-2">@L["What we send you"]</MudText>
+            <MudRadioGroup T="WebhookMode" @bind-Value="_editMode">
+                <MudRadio T="WebhookMode" Value="WebhookMode.ScorePush" Color="Color.Primary">
+                    <b>@L["Score Push"]</b> — @L["The scores themselves, 100 per delivery, with a next link when there are more."]
+                </MudRadio>
+                <MudRadio T="WebhookMode" Value="WebhookMode.PlayerPing" Color="Color.Primary">
+                    <b>@L["Player ping"]</b> — @L["Just \"this player imported\". You pull what you need from the API."]
+                </MudRadio>
+                <MudRadio T="WebhookMode" Value="WebhookMode.None" Color="Color.Primary">
+                    <b>@L["Nothing"]</b> — @L["Poll the API, or read the event feed."]
+                </MudRadio>
+                <MudRadio T="WebhookMode" Value="WebhookMode.PiuGameSession" Color="Color.Warning"
+                          Disabled="@(_selected.ConnectedPlayers > 0 && _selected.WebhookMode != WebhookMode.PiuGameSession)">
+                    <b>@L["PIUGame session"]</b>
+                    @if (_selected.ConnectedPlayers > 0 && _selected.WebhookMode != WebhookMode.PiuGameSession)
+                    {
+                        <span> — @L["Locked: every connected player must agree to it individually, so this can only be turned on while no one is connected."]</span>
+                    }
+                    else
+                    {
+                        <span> — @L["We forward the piugame.com session key so you run your own import."]</span>
+                    }
+                </MudRadio>
+            </MudRadioGroup>
+
+            @if (_editMode != WebhookMode.None)
+            {
+                <MudTextField T="string" @bind-Value="_editWebhookUrl" Label=@L["Deliver to"] Class="mt-3"
+                              MaxLength="500"></MudTextField>
+            }
+
+            <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">@L["Mixes"]</MudText>
+            <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
+                @L["We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using."]
+            </MudText>
+            <div class="d-flex gap-2 flex-wrap">
+                @foreach (var mix in PrimaryMixes)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="@(_editMixes.Contains(mix) ? Color.Info : Color.Default)"
+                             Variant="Variant.Outlined" OnClick="() => ToggleMix(mix)">@mix.GetName()</MudChip>
+                }
+            </div>
+            <MudExpansionPanels Class="mt-2" Elevation="0">
+                <MudExpansionPanel Text='@L["Older mixes ({0})", OlderMixes.Length].Value'>
+                    <div class="d-flex gap-2 flex-wrap">
+                        @foreach (var mix in OlderMixes)
+                        {
+                            <MudChip T="string" Size="Size.Small"
+                                     Color="@(_editMixes.Contains(mix) ? Color.Info : Color.Default)"
+                                     Variant="Variant.Outlined" OnClick="() => ToggleMix(mix)">@mix.GetName()</MudChip>
+                        }
+                    </div>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+
+            <div class="d-flex gap-2 mt-4 flex-wrap">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">@L["Save"]</MudButton>
+                @if (_selected.Visibility != ToolVisibility.Public
+                     && _selected.Visibility != ToolVisibility.PendingApproval)
+                {
+                    <MudButton Variant="Variant.Outlined" OnClick="RequestListing">@L["Ask to be listed"]</MudButton>
+                }
+                <MudSpacer></MudSpacer>
+                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => _showDelete = true">
+                    @L["Delete tool"]
+                </MudButton>
+            </div>
+
+            @if (_selected.Visibility == ToolVisibility.Rejected
+                 && !string.IsNullOrWhiteSpace(_selected.RejectionReason))
+            {
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-3">
+                    <MudText Typo="Typo.body2"><b>@L["Listing was turned down"]</b></MudText>
+                    <MudText Typo="Typo.body2">@_selected.RejectionReason</MudText>
+                </MudAlert>
+            }
+        </MudPaper>
+    }
+}
+
+<MudDialog @bind-Visible="_showCreate">
+    <TitleContent><MudText Typo="Typo.h6">@L["New tool"]</MudText></TitleContent>
+    <DialogContent>
+        <MudTextField T="string" @bind-Value="_newName" Label=@L["Name"] MaxLength="64" Immediate="true"></MudTextField>
+        <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mt-2">
+            @L["It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory."]
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" OnClick="() => _showCreate = false">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="@(string.IsNullOrWhiteSpace(_newName))" OnClick="Create">@L["Create"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-Visible="_showDelete">
+    <TitleContent><MudText Typo="Typo.h6">@L["Delete {0}", _selected?.Name ?? string.Empty]</MudText></TitleContent>
+    <DialogContent>
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">
+            <MudText Typo="Typo.body2">
+                @L["Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access. Nobody can take a tool over — it's yours or it's gone.", _selected?.ConnectedPlayers ?? 0]
+            </MudText>
+        </MudAlert>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" OnClick="() => _showDelete = false">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="Delete">@L["Delete tool"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@code {
+    private static readonly MixEnum[] PrimaryMixes =
+        Enum.GetValues<MixEnum>().Where(m => m.IsPrimary()).OrderByDescending(m => m.DisplayOrder()).ToArray();
+
+    private static readonly MixEnum[] OlderMixes =
+        Enum.GetValues<MixEnum>().Where(m => !m.IsPrimary()).OrderByDescending(m => m.DisplayOrder()).ToArray();
+
+    private IReadOnlyList<ToolRecord> _tools = Array.Empty<ToolRecord>();
+    private ToolRecord? _selected;
+    private bool _loading = true;
+    private bool _showCreate;
+    private bool _showDelete;
+    private string _newName = string.Empty;
+
+    private string _editName = string.Empty;
+    private string _editDescription = string.Empty;
+    private string _editUrl = string.Empty;
+    private string _editWebhookUrl = string.Empty;
+    private bool _editAcceptsAllTools = true;
+    private WebhookMode _editMode = WebhookMode.None;
+    private HashSet<MixEnum> _editMixes = new();
+
+    private IReadOnlyList<(string Name, int DaysLeft)> _expiringSoon = Array.Empty<(string, int)>();
+
+    protected override async Task OnInitializedAsync() => await Reload();
+
+    private async Task Reload()
+    {
+        _tools = await Mediator.Send(new GetMyToolsQuery());
+        if (_selected is not null) _selected = _tools.FirstOrDefault(t => t.Id == _selected.Id);
+        if (_selected is null && _tools.Any()) Select(_tools[0]);
+
+        var expiring = new List<(string, int)>();
+        foreach (var tool in _tools)
+        foreach (var key in await Mediator.Send(new GetToolApiKeysQuery(tool.Id)))
+            if (key.IsExpiringSoon(DateTimeOffset.Now))
+                expiring.Add(($"{tool.Name} · {key.Name}", (int)(key.ExpiresAt!.Value - DateTimeOffset.Now).TotalDays));
+
+        _expiringSoon = expiring;
+        _loading = false;
+    }
+
+    private void Select(ToolRecord tool)
+    {
+        _selected = tool;
+        _editName = tool.Name;
+        _editDescription = tool.Description ?? string.Empty;
+        _editUrl = tool.Url ?? string.Empty;
+        _editWebhookUrl = tool.WebhookUrl ?? string.Empty;
+        _editAcceptsAllTools = tool.AcceptsAllToolsShare;
+        _editMode = tool.WebhookMode;
+        _editMixes = tool.Mixes.ToHashSet();
+    }
+
+    private void ToggleMix(MixEnum mix)
+    {
+        if (!_editMixes.Add(mix)) _editMixes.Remove(mix);
+    }
+
+    private async Task Create()
+    {
+        var id = await Mediator.Send(new CreateToolCommand(_newName));
+        _newName = string.Empty;
+        _showCreate = false;
+        await Reload();
+        var created = _tools.FirstOrDefault(t => t.Id == id);
+        if (created is not null) Select(created);
+    }
+
+    private async Task Save()
+    {
+        if (_selected is null) return;
+
+        await Mediator.Send(new UpdateToolCommand(_selected.Id, _editName,
+            string.IsNullOrWhiteSpace(_editDescription) ? null : _editDescription,
+            string.IsNullOrWhiteSpace(_editUrl) ? null : _editUrl));
+        await Mediator.Send(new SetToolAllToolsShareCommand(_selected.Id, _editAcceptsAllTools));
+        await Mediator.Send(new SetToolWebhookCommand(_selected.Id, _editMode,
+            string.IsNullOrWhiteSpace(_editWebhookUrl) ? null : _editWebhookUrl, _editMixes.ToArray()));
+
+        Snackbar.Add(L["Saved"].Value, Severity.Success);
+        await Reload();
+    }
+
+    private async Task RequestListing()
+    {
+        if (_selected is null) return;
+
+        await Mediator.Send(new RequestToolListingCommand(_selected.Id));
+        Snackbar.Add(L["Sent for review"].Value, Severity.Success);
+        await Reload();
+    }
+
+    private async Task Delete()
+    {
+        if (_selected is null) return;
+
+        await Mediator.Send(new DeleteToolCommand(_selected.Id));
+        _showDelete = false;
+        _selected = null;
+        await Reload();
+    }
+
+    private string VisibilityLabel(ToolVisibility visibility) => visibility switch
+    {
+        ToolVisibility.Public => L["Public"].Value,
+        ToolVisibility.PendingApproval => L["Awaiting review"].Value,
+        ToolVisibility.Rejected => L["Listing was turned down"].Value,
+        _ => L["Private"].Value
+    };
+
+    private static Color VisibilityColor(ToolVisibility visibility) => visibility switch
+    {
+        ToolVisibility.Public => Color.Success,
+        ToolVisibility.PendingApproval => Color.Warning,
+        ToolVisibility.Rejected => Color.Error,
+        _ => Color.Default
+    };
+
+    private string WebhookLabel(WebhookMode mode) => mode switch
+    {
+        WebhookMode.ScorePush => L["Score Push"].Value,
+        WebhookMode.PlayerPing => L["Player ping"].Value,
+        WebhookMode.PiuGameSession => L["PIUGame session"].Value,
+        _ => L["No webhook"].Value
+    };
+}

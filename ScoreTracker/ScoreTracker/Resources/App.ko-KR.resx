@@ -321,6 +321,9 @@
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>스냅샷 zip은 이미 받아 둔 데이터 릴리스를 직접 가져옵니다. 크롤과 같은 과정이며 별도 다운로드가 없습니다</value>
   </data>
+  <data name="A tool is how a program reads the scores players share with it. Create one to get a key." xml:space="preserve">
+    <value>도구는 플레이어가 공유한 점수를 프로그램이 읽는 방법입니다. 하나 만들면 키가 발급됩니다.</value>
+  </data>
   <data name="About" xml:space="preserve">
     <value>Score Tracker 소개</value>
   </data>
@@ -332,6 +335,9 @@
   </data>
   <data name="Accept invite &amp; join" xml:space="preserve">
     <value>초대 수락 후 가입</value>
+  </data>
+  <data name="Accept players who share with all tools" xml:space="preserve">
+    <value>모든 도구와 공유하는 플레이어 허용</value>
   </data>
   <data name="Account" xml:space="preserve">
     <value>나의 계정</value>
@@ -567,6 +573,9 @@
   <data name="As" xml:space="preserve">
     <value>As</value>
   </data>
+  <data name="Ask to be listed" xml:space="preserve">
+    <value>등록 요청</value>
+  </data>
   <data name="Assuming {0} with a {1} plate." xml:space="preserve">
     <value>{0} 등급, {1} 플레이트 기준입니다.</value>
   </data>
@@ -611,6 +620,9 @@
   </data>
   <data name="Avg" xml:space="preserve">
     <value>평균</value>
+  </data>
+  <data name="Awaiting review" xml:space="preserve">
+    <value>검토 대기 중</value>
   </data>
   <data name="Back" xml:space="preserve">
     <value>뒤로</value>
@@ -1422,8 +1434,14 @@
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>이 커뮤니티와 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.</value>
   </data>
+  <data name="Delete tool" xml:space="preserve">
+    <value>도구 삭제</value>
+  </data>
   <data name="Delete your account" xml:space="preserve">
     <value>계정 삭제</value>
+  </data>
+  <data name="Delete {0}" xml:space="preserve">
+    <value>{0} 삭제</value>
   </data>
   <data name="Deleted" xml:space="preserve">
     <value>삭제되었습니다.</value>
@@ -1436,6 +1454,9 @@
   </data>
   <data name="Deleting your {0} scores resets your Pumbility, your titles and your folder progress for that mix. Other mixes are untouched." xml:space="preserve">
     <value>{0} 점수를 삭제하면 해당 시리즈의 Pumbility, 칭호, 폴더 진행도가 초기화됩니다. 다른 시리즈는 그대로입니다.</value>
+  </data>
+  <data name="Deliver to" xml:space="preserve">
+    <value>전달 주소</value>
   </data>
   <data name="Demote" xml:space="preserve">
     <value>강등</value>
@@ -1451,6 +1472,9 @@
   </data>
   <data name="dethroned" xml:space="preserve">
     <value>이전 1위:</value>
+  </data>
+  <data name="Developers" xml:space="preserve">
+    <value>개발자</value>
   </data>
   <data name="Didn't quite make the cut ({0})" xml:space="preserve">
     <value>아쉽게 탈락한 채보 ({0})</value>
@@ -2361,8 +2385,14 @@
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>취소되었거나 도구가 삭제되었을 수 있습니다. 보낸 사람에게 새 링크를 요청하세요.</value>
   </data>
+  <data name="It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory." xml:space="preserve">
+    <value>비공개로 시작하지만 완전히 동작합니다 — 초대 링크, 키, 웹훅 모두 작동합니다. 등록은 목록에 올리는 것뿐입니다.</value>
+  </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>읽을 수 있는 항목</value>
+  </data>
+  <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access. Nobody can take a tool over — it's yours or it's gone." xml:space="preserve">
+    <value>키가 작동을 멈추고, 웹훅이 중단되며, 연결된 플레이어 {0}명이 접근을 잃습니다. 도구는 인계할 수 없습니다 — 내 것이거나 사라지거나입니다.</value>
   </data>
   <data name="Jacks" xml:space="preserve">
     <value>잭</value>
@@ -2378,6 +2408,9 @@
   </data>
   <data name="Jumps" xml:space="preserve">
     <value>점프</value>
+  </data>
+  <data name="Just &quot;this player imported&quot;. You pull what you need from the API." xml:space="preserve">
+    <value>"이 플레이어가 임포트함"만 알립니다. 필요한 것은 API에서 가져오세요.</value>
   </data>
   <data name="Just browsing?" xml:space="preserve">
     <value>구경만 하시나요?</value>
@@ -2541,6 +2574,9 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>사이트 계정과 연결됨</value>
   </data>
+  <data name="Listing was turned down" xml:space="preserve">
+    <value>등록이 거절되었습니다</value>
+  </data>
   <data name="LIVE" xml:space="preserve">
     <value>LIVE</value>
   </data>
@@ -2558,6 +2594,9 @@
   </data>
   <data name="locked in a vault inside Microsoft Azure." xml:space="preserve">
     <value>Microsoft Azure 내 금고에 잠겨 있습니다.</value>
+  </data>
+  <data name="Locked: every connected player must agree to it individually, so this can only be turned on while no one is connected." xml:space="preserve">
+    <value>잠김: 연결된 모든 플레이어가 개별적으로 동의해야 하므로, 아무도 연결되지 않았을 때만 켤 수 있습니다.</value>
   </data>
   <data name="Locking will set this user's username to their GameTag." xml:space="preserve">
     <value>잠금하면 이 유저의 아이디가 게임태그로 설정됩니다.</value>
@@ -2949,6 +2988,9 @@
   <data name="New this week" xml:space="preserve">
     <value>이번 주 신규</value>
   </data>
+  <data name="New tool" xml:space="preserve">
+    <value>새 도구</value>
+  </data>
   <data name="New Username" xml:space="preserve">
     <value>새 아이디</value>
   </data>
@@ -3090,6 +3132,9 @@
   <data name="No unmatched keys" xml:space="preserve">
     <value>매칭되지 않은 키가 없습니다</value>
   </data>
+  <data name="No webhook" xml:space="preserve">
+    <value>웹훅 없음</value>
+  </data>
   <data name="No — I want to permanently delete data." xml:space="preserve">
     <value>아니요 — 데이터를 영구히 삭제하겠습니다.</value>
   </data>
@@ -3189,6 +3234,9 @@
   <data name="Notes since your last break" xml:space="preserve">
     <value>마지막 브레이크 이후 노트 수</value>
   </data>
+  <data name="Nothing" xml:space="preserve">
+    <value>없음</value>
+  </data>
   <data name="Nothing changed between these two mixes." xml:space="preserve">
     <value>이 두 시리즈 사이에 바뀐 것이 없습니다.</value>
   </data>
@@ -3252,6 +3300,9 @@
   <data name="Off" xml:space="preserve">
     <value>꺼짐</value>
   </data>
+  <data name="Off means only players who connect to you directly, by invite. Turn it off if your tool is for one crew and a thousand strangers would be noise." xml:space="preserve">
+    <value>끄면 초대를 통해 직접 연결한 플레이어만 받습니다. 특정 그룹을 위한 도구여서 낯선 사람 수천 명이 방해가 된다면 끄세요.</value>
+  </data>
   <data name="official" xml:space="preserve">
     <value>공식</value>
   </data>
@@ -3281,6 +3332,9 @@
   </data>
   <data name="Old folder" xml:space="preserve">
     <value>이전 폴더</value>
+  </data>
+  <data name="Older mixes ({0})" xml:space="preserve">
+    <value>옛 시리즈 ({0})</value>
   </data>
   <data name="Older scores count for less — {0} of your nearby scores are much older than the rest of your record." xml:space="preserve">
     <value>오래된 스코어는 덜 반영됩니다 — 주변 스코어 중 {0}개가 나머지 기록보다 훨씬 오래되었습니다.</value>
@@ -3750,6 +3804,9 @@
   <data name="Player Page" xml:space="preserve">
     <value>참가자 화면</value>
   </data>
+  <data name="Player ping" xml:space="preserve">
+    <value>플레이어 핑</value>
+  </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
     <value>테스트할 플레이어 (공개 설정 필수)</value>
   </data>
@@ -3797,6 +3854,9 @@
   </data>
   <data name="Points Pre-Score" xml:space="preserve">
     <value>점수 환산 전 포인트</value>
+  </data>
+  <data name="Poll the API, or read the event feed." xml:space="preserve">
+    <value>API를 폴링하거나 이벤트 피드를 읽으세요.</value>
   </data>
   <data name="Popular" xml:space="preserve">
     <value>인기</value>
@@ -4493,6 +4553,9 @@
   <data name="selected mixes only" xml:space="preserve">
     <value>선택한 시리즈만</value>
   </data>
+  <data name="Sent for review" xml:space="preserve">
+    <value>검토 요청됨</value>
+  </data>
   <data name="Series" xml:space="preserve">
     <value>계열</value>
   </data>
@@ -4630,6 +4693,9 @@
   </data>
   <data name="showing suggested" xml:space="preserve">
     <value>추천 표시 중</value>
+  </data>
+  <data name="Shown in the tool directory. Players read this before they connect." xml:space="preserve">
+    <value>도구 목록에 표시됩니다. 플레이어가 연결 전에 읽습니다.</value>
   </data>
   <data name="Shuffle suggestions" xml:space="preserve">
     <value>추천 섞기</value>
@@ -5095,6 +5161,9 @@
   </data>
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>같은 Perfect라도 콤보 전, 곡 시작 시점.</value>
+  </data>
+  <data name="The scores themselves, 100 per delivery, with a next link when there are more." xml:space="preserve">
+    <value>점수 자체를 전달당 100개씩, 더 있으면 next 링크와 함께 보냅니다.</value>
   </data>
   <data name="The shared tier list for this folder, built from everyone's data." xml:space="preserve">
     <value>이 폴더의 공유 티어리스트로, 모두의 데이터로 만들어집니다.</value>
@@ -5726,11 +5795,20 @@
   <data name="Watch {0}" xml:space="preserve">
     <value>{0} 영상 보기</value>
   </data>
+  <data name="We don't email reminders, so this banner is the reminder. Create a replacement now and run both until you've swapped it over." xml:space="preserve">
+    <value>리마인더 메일은 보내지 않으므로 이 배너가 알림입니다. 지금 교체용 키를 만들고 전환이 끝날 때까지 둘 다 사용하세요.</value>
+  </data>
+  <data name="We forward the piugame.com session key so you run your own import." xml:space="preserve">
+    <value>piugame.com 세션 키를 전달해 직접 임포트를 실행할 수 있게 합니다.</value>
+  </data>
   <data name="We hold a sealed key" xml:space="preserve">
     <value>우리는 봉인된 키를 보관합니다</value>
   </data>
   <data name="We hold the master key" xml:space="preserve">
     <value>우리는 마스터 키를 보관합니다</value>
+  </data>
+  <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
+    <value>선택한 시리즈의 임포트만 보냅니다. 옛 시리즈는 1M 척도가 아니라 등급으로 채점되며, 페이로드가 어떤 모델인지 알려줍니다.</value>
   </data>
   <data name="weaker" xml:space="preserve">
     <value>약함</value>
@@ -5806,6 +5884,9 @@
   </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>목표 (기본 칭호 사냥)</value>
+  </data>
+  <data name="What we send you" xml:space="preserve">
+    <value>전달 방식</value>
   </data>
   <data name="When" xml:space="preserve">
     <value>일시</value>
@@ -5953,6 +6034,9 @@
   </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>아직 가입한 커뮤니티가 없습니다 — 아래에서 찾거나 직접 만들어보세요.</value>
+  </data>
+  <data name="You haven't made a tool yet" xml:space="preserve">
+    <value>아직 만든 도구가 없습니다</value>
   </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>당신은 암호화된 메모를 가지고 있습니다</value>
@@ -6152,6 +6236,12 @@
   <data name="Your title" xml:space="preserve">
     <value>내 칭호</value>
   </data>
+  <data name="Your tools" xml:space="preserve">
+    <value>내 도구</value>
+  </data>
+  <data name="Your tools, their keys, and how they hear about new scores." xml:space="preserve">
+    <value>내 도구, 도구의 키, 그리고 새 점수를 전달받는 방식.</value>
+  </data>
   <data name="Your username and password are sealed together with AES-256-GCM under a random data key. That data key is wrapped by a master key that never leaves Azure Key Vault." xml:space="preserve">
     <value>사용자 이름과 비밀번호는 무작위 데이터 키 아래 AES-256-GCM으로 함께 봉인됩니다. 그 데이터 키는 Azure Key Vault를 절대 벗어나지 않는 마스터 키로 래핑됩니다.</value>
   </data>
@@ -6280,6 +6370,9 @@
   </data>
   <data name="{0} easier for you — mostly {1}" xml:space="preserve">
     <value>{0}개가 나에게 더 쉬움 — 주로 {1}</value>
+  </data>
+  <data name="{0} expires in {1} days" xml:space="preserve">
+    <value>{0}이(가) {1}일 후 만료됩니다</value>
   </data>
   <data name="{0} folder" xml:space="preserve">
     <value>{0} 폴더</value>
@@ -6463,6 +6556,9 @@
   </data>
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0} · 레벨 {1}–{2} · {3}</value>
+  </data>
+  <data name="{0} — settings" xml:space="preserve">
+    <value>{0} — 설정</value>
   </data>
   <data name="{0} — {1} at {2}" xml:space="preserve">
     <value>{0} — {1} · {2}</value>

@@ -321,6 +321,9 @@
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>GRO mrpmaglmurp ro murgmrblarg gro groblgrlmagl gromurm grrglurgmurp grorpmrglblgrl - blubmurm blubgrrglmurm lurg mrp morgmurg, mrp maglplglblub</value>
   </data>
+  <data name="A tool is how a program reads the scores players share with it. Create one to get a key." xml:space="preserve">
+    <value>Rorgl murgm murgargl murp blurgl Mgrlgmrg Morp murgblub. Murpmurp murmo blu murgm blarglurp.</value>
+  </data>
   <data name="About" xml:space="preserve">
     <value>Rrglrmrgl</value>
   </data>
@@ -332,6 +335,9 @@
   </data>
   <data name="Accept invite &amp; join" xml:space="preserve">
     <value>Blargmrgl blargmurgl &amp; grorpblgrl</value>
+  </data>
+  <data name="Accept players who share with all tools" xml:space="preserve">
+    <value>Argla Morp murgblub blu argla Rorgl</value>
   </data>
   <data name="Account" xml:space="preserve">
     <value>Grgl</value>
@@ -573,6 +579,9 @@
 	  <value>Lurg</value>
 	  <comment>Plural of letter grade A — column header counting A grades.</comment>
   </data>
+  <data name="Ask to be listed" xml:space="preserve">
+    <value>Murgargl blu mrpgrogl</value>
+  </data>
   <data name="Assuming {0} with a {1} plate." xml:space="preserve">
     <value>Glromrp {0} glgrgl gro {1} murp.</value>
   </data>
@@ -618,6 +627,9 @@
   </data>
   <data name="Avg" xml:space="preserve">
     <value>Blub</value>
+  </data>
+  <data name="Awaiting review" xml:space="preserve">
+    <value>Murgargl murgblub</value>
   </data>
   <data name="Back" xml:space="preserve">
     <value>Arglblgrl</value>
@@ -1435,8 +1447,14 @@
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>Lurggrgl grglmrp plglmurgblub ro grglmurpmurm mrp gl? Grglmrp blubmrp glorg arglglorg.</value>
   </data>
+  <data name="Delete tool" xml:space="preserve">
+    <value>Lurggrgl Rorgl</value>
+  </data>
   <data name="Delete your account" xml:space="preserve">
     <value>Blurp golu gorbam</value>
+  </data>
+  <data name="Delete {0}" xml:space="preserve">
+    <value>Lurggrgl {0}</value>
   </data>
   <data name="Deleted" xml:space="preserve">
     <value>Murgro.</value>
@@ -1449,6 +1467,9 @@
   </data>
   <data name="Deleting your {0} scores resets your Pumbility, your titles and your folder progress for that mix. Other mixes are untouched." xml:space="preserve">
     <value>Blurp {0} blorgu, Pumbility arga gorbalu larpu. Bulmo mulgo grob.</value>
+  </data>
+  <data name="Deliver to" xml:space="preserve">
+    <value>Murpo blu</value>
   </data>
   <data name="Demote" xml:space="preserve">
     <value>Romurm</value>
@@ -1464,6 +1485,9 @@
   </data>
   <data name="dethroned" xml:space="preserve">
     <value>mrglplglgrrgl</value>
+  </data>
+  <data name="Developers" xml:space="preserve">
+    <value>Murpmurpgrogl</value>
   </data>
   <data name="Didn't quite make the cut ({0})" xml:space="preserve">
     <value>Mrglblgrl grrglmrp glorggrorp mrp argl ({0})</value>
@@ -2379,8 +2403,14 @@
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>Murgloo blorm, arplo Rorgl blorm murgm. Murmargl morp murpmurp blu grabla blorm.</value>
   </data>
+  <data name="It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory." xml:space="preserve">
+    <value>Murgm murmo murm argla murpmurp — murpgrogl grabla, blarglurp murm murgm argla murpmurp. Mrpgrogl murmo murgm gromurp blu grog.</value>
+  </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>Murp blurgl</value>
+  </data>
+  <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access. Nobody can take a tool over — it's yours or it's gone." xml:space="preserve">
+    <value>Blarglurp grorp murpmurp, murgm grorp murpo, murm {0} Morp galmoo murgloo argla. Bo morp murp murgm Rorgl — murgm gromurp arplo murgm blorm.</value>
   </data>
   <data name="Jacks" xml:space="preserve">
     <value>Plglmurm</value>
@@ -2396,6 +2426,9 @@
   </data>
   <data name="Jumps" xml:space="preserve">
     <value>Murmmr</value>
+  </data>
+  <data name="Just &quot;this player imported&quot;. You pull what you need from the API." xml:space="preserve">
+    <value>Murmo «blu Morp murpmurp». Gromurp murgargl murgm blu API.</value>
   </data>
   <data name="Just browsing?" xml:space="preserve">
     <value>Murgmorg murgurglurg?</value>
@@ -2562,6 +2595,9 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>Glgl grgl gro plglmorg grgl</value>
   </data>
+  <data name="Listing was turned down" xml:space="preserve">
+    <value>Mrpgrogl murgm murgloo</value>
+  </data>
   <data name="LIVE" xml:space="preserve">
     <value>LIVE</value>
   </data>
@@ -2579,6 +2615,9 @@
   </data>
   <data name="locked in a vault inside Microsoft Azure." xml:space="preserve">
     <value>murgmr mrp gro morgurg urgmurm Grglmaglblgrl Arglblub.</value>
+  </data>
+  <data name="Locked: every connected player must agree to it individually, so this can only be turned on while no one is connected." xml:space="preserve">
+    <value>Murgloo: argla Morp galmoo murgargl murmo murpmurp, murgloo murgm murp mublu murmo bo morp galmoo.</value>
   </data>
   <data name="Locking will set this user's username to their GameTag." xml:space="preserve">
 	  <value>Roblubmagl murmurg gro grglmrp lurggl grrmrrgl grgl grglblarg Grrglurgblarg.</value>
@@ -2979,6 +3018,9 @@
   <data name="New this week" xml:space="preserve">
     <value>Grgl grglmrp plglmorg</value>
   </data>
+  <data name="New tool" xml:space="preserve">
+    <value>Blorm Rorgl</value>
+  </data>
   <data name="New Username" xml:space="preserve">
 	  <value>Grgl Grrmrrgl</value>
   </data>
@@ -3120,6 +3162,9 @@
   <data name="No unmatched keys" xml:space="preserve">
     <value>Mrp maglblarglurg blargurg</value>
   </data>
+  <data name="No webhook" xml:space="preserve">
+    <value>Bo murgm</value>
+  </data>
   <data name="No — I want to permanently delete data." xml:space="preserve">
     <value>Gorb — mu blurpa grabo molu.</value>
   </data>
@@ -3220,6 +3265,9 @@
   <data name="Notes since your last break" xml:space="preserve">
     <value>Roblub grglglorg gromurp blgrlmrgl arglglorg</value>
   </data>
+  <data name="Nothing" xml:space="preserve">
+    <value>Bam</value>
+  </data>
   <data name="Nothing changed between these two mixes." xml:space="preserve">
     <value>Blarggllurg maglrogrorp blgrlarglblgrl blgrlmrp grrgl mrgrgl.</value>
   </data>
@@ -3283,6 +3331,9 @@
   <data name="Off" xml:space="preserve">
     <value>Morg</value>
   </data>
+  <data name="Off means only players who connect to you directly, by invite. Turn it off if your tool is for one crew and a thousand strangers would be noise." xml:space="preserve">
+    <value>Grorp murgm murmo Morp galm murgargl, blu murpgrogl. Grorp murgm Rorgl murmo blu murmo mrgloo murm murpmurp Morp murgm murgblarg.</value>
+  </data>
   <data name="official" xml:space="preserve">
     <value>urgmrmurg</value>
   </data>
@@ -3312,6 +3363,9 @@
   </data>
   <data name="Old folder" xml:space="preserve">
     <value>Rgl grrgllurg</value>
+  </data>
+  <data name="Older mixes ({0})" xml:space="preserve">
+    <value>Murgl murmo ({0})</value>
   </data>
   <data name="Older scores count for less — {0} of your nearby scores are much older than the rest of your record." xml:space="preserve">
     <value>Grrglgro mgrlgmrg glorgmurp ro mgl — {0} mrgl gromurp rglmurg mgrlgmrg mrp grrglmrp grrglgro grogrgl mrp morggl mrgl gromurp blubgrorp.</value>
@@ -3786,6 +3840,9 @@
   <data name="Player Page" xml:space="preserve">
     <value>Morp Murgla</value>
   </data>
+  <data name="Player ping" xml:space="preserve">
+    <value>Morp mrgloo</value>
+  </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
 	  <value>Morp Grgl Rglgrgl (Romurm Glorg Gro Grgl Mrglrgll)</value>
   </data>
@@ -3833,6 +3890,9 @@
   </data>
   <data name="Points Pre-Score" xml:space="preserve">
 	  <value>Blargro Grorp-Mrglrgl</value>
+  </data>
+  <data name="Poll the API, or read the event feed." xml:space="preserve">
+    <value>Murgargl API, arplo blurgl murgm blaromurp.</value>
   </data>
   <data name="Popular" xml:space="preserve">
     <value>Grolurgmrp</value>
@@ -4541,6 +4601,9 @@
   <data name="selected mixes only" xml:space="preserve">
     <value>lurga mulgo umba</value>
   </data>
+  <data name="Sent for review" xml:space="preserve">
+    <value>Murpo blu murgargl</value>
+  </data>
   <data name="Series" xml:space="preserve">
     <value>Morggrorp</value>
   </data>
@@ -4683,6 +4746,9 @@
   </data>
   <data name="showing suggested" xml:space="preserve">
     <value>mrarglblgrl romorgrgl</value>
+  </data>
+  <data name="Shown in the tool directory. Players read this before they connect." xml:space="preserve">
+    <value>Murgl blu Rorgl grog. Morp murp blurgl blorm murgargl galm.</value>
   </data>
   <data name="Shuffle suggestions" xml:space="preserve">
     <value>Blgrlmrmurp glrglmurpmrp</value>
@@ -5154,6 +5220,9 @@
   </data>
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>Mrp blubmurm lurggrrglargl mr mrp romurm mrgl gro mrgl, glorggro ro grogrgl.</value>
+  </data>
+  <data name="The scores themselves, 100 per delivery, with a next link when there are more." xml:space="preserve">
+    <value>Mgrlgmrg murgm, 100 blu murpo, murm grabla blorm murgm murmo.</value>
   </data>
   <data name="The shared tier list for this folder, built from everyone's data." xml:space="preserve">
     <value>Mrp murpro mrpgrrgl grog ro grglmrp grrgllurg, morgblarg romurg glorgplglmurm gromurm.</value>
@@ -5789,11 +5858,20 @@
   <data name="Watch {0}" xml:space="preserve">
     <value>Grorplurg {0}</value>
   </data>
+  <data name="We don't email reminders, so this banner is the reminder. Create a replacement now and run both until you've swapped it over." xml:space="preserve">
+    <value>Bam murpmurp mrgloo grabla, murgloo blu murgm murgargl. Murpmurp blorm murmo murgm murm murgloo bam murgm gromurp murgblarg.</value>
+  </data>
+  <data name="We forward the piugame.com session key so you run your own import." xml:space="preserve">
+    <value>Bam murpo piugame.com murgloborg blarglurp murgloo gromurp murpmurp murmo murgblub.</value>
+  </data>
   <data name="We hold a sealed key" xml:space="preserve">
     <value>Mrgl rglmr gro urgrgl grrgl</value>
   </data>
   <data name="We hold the master key" xml:space="preserve">
     <value>Mrgl rglmr mrp mrmagl grrgl</value>
+  </data>
+  <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
+    <value>Bam murpo murgblub blu murgl gromurp murgargl. Murgl murmo murgm blarglurp murm bo 1M murgloo — murpo murgm murgblarg murmo.</value>
   </data>
   <data name="weaker" xml:space="preserve">
     <value>morgmrgl</value>
@@ -5870,6 +5948,9 @@
   </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>Rglmorg grgl murglurg lurg (plglgrgllurg Mrgl Murgblgrl)</value>
+  </data>
+  <data name="What we send you" xml:space="preserve">
+    <value>Murgm bam murpmurp gromurp</value>
   </data>
   <data name="When" xml:space="preserve">
     <value>Mrpgrrgl</value>
@@ -6023,6 +6104,9 @@
   </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>Blub blubmurm urgmr ro grglrglplglblub argl — blubgl argl blgrlblarg argl mrpmurp gromurp grrgl.</value>
+  </data>
+  <data name="You haven't made a tool yet" xml:space="preserve">
+    <value>Gromurp bo murpmurp Rorgl blorm</value>
   </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>Blub rglmr mrp urgrgl grogrgl</value>
@@ -6222,6 +6306,12 @@
   <data name="Your title" xml:space="preserve">
     <value>Gromurp mrgl</value>
   </data>
+  <data name="Your tools" xml:space="preserve">
+    <value>Gromurp Rorgl</value>
+  </data>
+  <data name="Your tools, their keys, and how they hear about new scores." xml:space="preserve">
+    <value>Gromurp Rorgl, mrpgrogl blarglurp, murm murgm murp murgargl blorm Mgrlgmrg.</value>
+  </data>
   <data name="Your username and password are sealed together with AES-256-GCM under a random data key. That data key is wrapped by a master key that never leaves Azure Key Vault." xml:space="preserve">
     <value>Gromurp grrmrrgl ro glorgmrpmurm mrp urgrgl arglglorgmurm glgrgl AES-256-GCM murgblub gro romorg gromurm grrgl. Blubgrrgl gromurm grrgl urg grrgllurglurg murm gro mrmagl grrgl blubgrrgl glargl plglmurm Arglblub Grrgl Morgurg.</value>
   </data>
@@ -6350,6 +6440,9 @@
   </data>
   <data name="{0} easier for you — mostly {1}" xml:space="preserve">
     <value>{0} mrrgl ro blub — arglrgl {1}</value>
+  </data>
+  <data name="{0} expires in {1} days" xml:space="preserve">
+    <value>{0} murgloo blu {1} murgl</value>
   </data>
   <data name="{0} folder" xml:space="preserve">
     <value>{0} grrgllurg</value>
@@ -6533,6 +6626,9 @@
   </data>
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0} · plglgrrgl {1}–{2} · {3}</value>
+  </data>
+  <data name="{0} — settings" xml:space="preserve">
+    <value>{0} — mrpgrogl</value>
   </data>
   <data name="{0} — {1} at {2}" xml:space="preserve">
     <value>{0} — {1} mr {2}</value>

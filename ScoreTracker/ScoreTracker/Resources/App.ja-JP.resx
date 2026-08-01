@@ -321,6 +321,9 @@
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>スナップショットzipは取得済みのデータリリースを直接インポートします。クロールと同じ処理で、フェッチはありません</value>
   </data>
+  <data name="A tool is how a program reads the scores players share with it. Create one to get a key." xml:space="preserve">
+    <value>ツールは、プレイヤーが共有したスコアをプログラムが読むための仕組みです。作るとキーが発行されます。</value>
+  </data>
   <data name="About" xml:space="preserve">
     <value>概要</value>
   </data>
@@ -332,6 +335,9 @@
   </data>
   <data name="Accept invite &amp; join" xml:space="preserve">
     <value>招待を受けて参加</value>
+  </data>
+  <data name="Accept players who share with all tools" xml:space="preserve">
+    <value>すべてのツールと共有するプレイヤーを受け入れる</value>
   </data>
   <data name="Account" xml:space="preserve">
     <value>アカウント</value>
@@ -573,6 +579,9 @@
 	  <value>A数</value>
 	  
   </data>
+  <data name="Ask to be listed" xml:space="preserve">
+    <value>掲載を申請</value>
+  </data>
   <data name="Assuming {0} with a {1} plate." xml:space="preserve">
     <value>{0}、{1}プレート想定です。</value>
   </data>
@@ -618,6 +627,9 @@
   </data>
   <data name="Avg" xml:space="preserve">
     <value>平均</value>
+  </data>
+  <data name="Awaiting review" xml:space="preserve">
+    <value>審査待ち</value>
   </data>
   <data name="Back" xml:space="preserve">
     <value>戻る</value>
@@ -1435,8 +1447,14 @@
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>このコミュニティと全データを削除しますか？元に戻せません。</value>
   </data>
+  <data name="Delete tool" xml:space="preserve">
+    <value>ツールを削除</value>
+  </data>
   <data name="Delete your account" xml:space="preserve">
     <value>アカウントの削除</value>
+  </data>
+  <data name="Delete {0}" xml:space="preserve">
+    <value>{0}を削除</value>
   </data>
   <data name="Deleted" xml:space="preserve">
     <value>削除しました。</value>
@@ -1449,6 +1467,9 @@
   </data>
   <data name="Deleting your {0} scores resets your Pumbility, your titles and your folder progress for that mix. Other mixes are untouched." xml:space="preserve">
     <value>{0} のスコアを削除すると、そのバージョンの Pumbility・称号・フォルダ進捗がリセットされます。他のバージョンはそのままです。</value>
+  </data>
+  <data name="Deliver to" xml:space="preserve">
+    <value>送信先</value>
   </data>
   <data name="Demote" xml:space="preserve">
     <value>降格</value>
@@ -1464,6 +1485,9 @@
   </data>
   <data name="dethroned" xml:space="preserve">
     <value>前王者:</value>
+  </data>
+  <data name="Developers" xml:space="preserve">
+    <value>開発者</value>
   </data>
   <data name="Didn't quite make the cut ({0})" xml:space="preserve">
     <value>あと一歩だった譜面（{0}）</value>
@@ -2379,8 +2403,14 @@
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>取り消されたか、ツールが削除された可能性があります。送った人に新しいリンクをもらってください。</value>
   </data>
+  <data name="It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory." xml:space="preserve">
+    <value>非公開で始まりますが完全に動作します — 招待リンク、キー、Webhookはすべて機能します。掲載は一覧に載るだけです。</value>
+  </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>読み取れる情報</value>
+  </data>
+  <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access. Nobody can take a tool over — it's yours or it's gone." xml:space="preserve">
+    <value>キーは動かなくなり、Webhookは止まり、接続中の{0}人のプレイヤーがアクセスを失います。ツールは引き継げません — あなたのものか、消えるかです。</value>
   </data>
   <data name="Jacks" xml:space="preserve">
     <value>ジャック</value>
@@ -2396,6 +2426,9 @@
   </data>
   <data name="Jumps" xml:space="preserve">
     <value>ジャンプ</value>
+  </data>
+  <data name="Just &quot;this player imported&quot;. You pull what you need from the API." xml:space="preserve">
+    <value>「このプレイヤーがインポートした」だけ。必要なものはAPIから取得してください。</value>
   </data>
   <data name="Just browsing?" xml:space="preserve">
     <value>見るだけですか？</value>
@@ -2562,6 +2595,9 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>サイトアカウントと連携済み</value>
   </data>
+  <data name="Listing was turned down" xml:space="preserve">
+    <value>掲載が却下されました</value>
+  </data>
   <data name="LIVE" xml:space="preserve">
     <value>LIVE</value>
   </data>
@@ -2579,6 +2615,9 @@
   </data>
   <data name="locked in a vault inside Microsoft Azure." xml:space="preserve">
     <value>Microsoft Azure 内の保管庫にロックされています。</value>
+  </data>
+  <data name="Locked: every connected player must agree to it individually, so this can only be turned on while no one is connected." xml:space="preserve">
+    <value>ロック中: 接続中のプレイヤー全員が個別に同意する必要があるため、誰も接続していないときだけオンにできます。</value>
   </data>
   <data name="Locking will set this user's username to their GameTag." xml:space="preserve">
 	  <value>ロックすると、このユーザーのユーザー名がGameTagに設定されます。</value>
@@ -2979,6 +3018,9 @@
   <data name="New this week" xml:space="preserve">
     <value>今週初登場</value>
   </data>
+  <data name="New tool" xml:space="preserve">
+    <value>新しいツール</value>
+  </data>
   <data name="New Username" xml:space="preserve">
 	  <value>新ユーザー名</value>
   </data>
@@ -3120,6 +3162,9 @@
   <data name="No unmatched keys" xml:space="preserve">
     <value>未マッチのキーはありません</value>
   </data>
+  <data name="No webhook" xml:space="preserve">
+    <value>Webhookなし</value>
+  </data>
   <data name="No — I want to permanently delete data." xml:space="preserve">
     <value>いいえ — データを完全に削除したいです。</value>
   </data>
@@ -3220,6 +3265,9 @@
   <data name="Notes since your last break" xml:space="preserve">
     <value>最後の失敗からのノート数</value>
   </data>
+  <data name="Nothing" xml:space="preserve">
+    <value>なし</value>
+  </data>
   <data name="Nothing changed between these two mixes." xml:space="preserve">
     <value>この2つのバージョンの間に変更はありません。</value>
   </data>
@@ -3283,6 +3331,9 @@
   <data name="Off" xml:space="preserve">
     <value>オフ</value>
   </data>
+  <data name="Off means only players who connect to you directly, by invite. Turn it off if your tool is for one crew and a thousand strangers would be noise." xml:space="preserve">
+    <value>オフにすると、招待から直接接続したプレイヤーだけになります。特定の仲間向けのツールで、見知らぬ千人がノイズになるならオフに。</value>
+  </data>
   <data name="official" xml:space="preserve">
     <value>公式</value>
   </data>
@@ -3312,6 +3363,9 @@
   </data>
   <data name="Old folder" xml:space="preserve">
     <value>変更前のフォルダ</value>
+  </data>
+  <data name="Older mixes ({0})" xml:space="preserve">
+    <value>古いバージョン ({0})</value>
   </data>
   <data name="Older scores count for less — {0} of your nearby scores are much older than the rest of your record." xml:space="preserve">
     <value>古いスコアは軽く数えられます — 近隣スコアのうち{0}件が他と比べて大幅に古くなっています。</value>
@@ -3786,6 +3840,9 @@
   <data name="Player Page" xml:space="preserve">
     <value>プレイヤー画面</value>
   </data>
+  <data name="Player ping" xml:space="preserve">
+    <value>プレイヤー通知</value>
+  </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
 	  <value>テスト対象プレーヤー（公開設定必須）</value>
   </data>
@@ -3833,6 +3890,9 @@
   </data>
   <data name="Points Pre-Score" xml:space="preserve">
 	  <value>ポイント（スコア前）</value>
+  </data>
+  <data name="Poll the API, or read the event feed." xml:space="preserve">
+    <value>APIをポーリングするか、イベントフィードを読んでください。</value>
   </data>
   <data name="Popular" xml:space="preserve">
     <value>人気</value>
@@ -4541,6 +4601,9 @@
   <data name="selected mixes only" xml:space="preserve">
     <value>選んだバージョンのみ</value>
   </data>
+  <data name="Sent for review" xml:space="preserve">
+    <value>審査に送信しました</value>
+  </data>
   <data name="Series" xml:space="preserve">
     <value>系列</value>
   </data>
@@ -4683,6 +4746,9 @@
   </data>
   <data name="showing suggested" xml:space="preserve">
     <value>おすすめを表示中</value>
+  </data>
+  <data name="Shown in the tool directory. Players read this before they connect." xml:space="preserve">
+    <value>ツール一覧に表示されます。プレイヤーは接続前にこれを読みます。</value>
   </data>
   <data name="Shuffle suggestions" xml:space="preserve">
     <value>候補をシャッフル</value>
@@ -5154,6 +5220,9 @@
   </data>
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>同じ Perfect でも、コンボ前の曲開始時。</value>
+  </data>
+  <data name="The scores themselves, 100 per delivery, with a next link when there are more." xml:space="preserve">
+    <value>スコアそのものを1回あたり100件、続きがあればnextリンク付きで送ります。</value>
   </data>
   <data name="The shared tier list for this folder, built from everyone's data." xml:space="preserve">
     <value>このフォルダの共有ティアリスト。全員のデータから作られます。</value>
@@ -5789,11 +5858,20 @@
   <data name="Watch {0}" xml:space="preserve">
     <value>{0} の動画を見る</value>
   </data>
+  <data name="We don't email reminders, so this banner is the reminder. Create a replacement now and run both until you've swapped it over." xml:space="preserve">
+    <value>リマインダーメールは送らないので、このバナーが通知です。今すぐ交換用を作り、切り替えが済むまで両方動かしてください。</value>
+  </data>
+  <data name="We forward the piugame.com session key so you run your own import." xml:space="preserve">
+    <value>piugame.comのセッションキーを転送し、自分でインポートを実行できるようにします。</value>
+  </data>
   <data name="We hold a sealed key" xml:space="preserve">
     <value>私たちは封印された鍵を保管しています</value>
   </data>
   <data name="We hold the master key" xml:space="preserve">
     <value>私たちはマスターキーを保管しています</value>
+  </data>
+  <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
+    <value>選んだバージョンのインポートだけを送ります。古いバージョンは1Mスケールではなく グレードで採点され、ペイロードがどちらのモデルかを示します。</value>
   </data>
   <data name="weaker" xml:space="preserve">
     <value>弱い</value>
@@ -5870,6 +5948,9 @@
   </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>取り組む目標（既定は称号ハント）</value>
+  </data>
+  <data name="What we send you" xml:space="preserve">
+    <value>送る内容</value>
   </data>
   <data name="When" xml:space="preserve">
     <value>日時</value>
@@ -6023,6 +6104,9 @@
   </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>まだコミュニティに参加していません。下から探すか、自分で作成しましょう。</value>
+  </data>
+  <data name="You haven't made a tool yet" xml:space="preserve">
+    <value>まだツールを作っていません</value>
   </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>あなたは暗号化されたメモを持っています</value>
@@ -6222,6 +6306,12 @@
   <data name="Your title" xml:space="preserve">
     <value>あなたの称号</value>
   </data>
+  <data name="Your tools" xml:space="preserve">
+    <value>あなたのツール</value>
+  </data>
+  <data name="Your tools, their keys, and how they hear about new scores." xml:space="preserve">
+    <value>あなたのツール、そのキー、そして新しいスコアの受け取り方。</value>
+  </data>
   <data name="Your username and password are sealed together with AES-256-GCM under a random data key. That data key is wrapped by a master key that never leaves Azure Key Vault." xml:space="preserve">
     <value>ユーザー名とパスワードは、ランダムなデータキーの下で AES-256-GCM により一緒に封印されます。そのデータキーは、Azure Key Vault から決して出ないマスターキーでラップされます。</value>
   </data>
@@ -6350,6 +6440,9 @@
   </data>
   <data name="{0} easier for you — mostly {1}" xml:space="preserve">
     <value>あなたに易しいのは{0}譜面 — 主に{1}</value>
+  </data>
+  <data name="{0} expires in {1} days" xml:space="preserve">
+    <value>{0}は{1}日後に期限切れになります</value>
   </data>
   <data name="{0} folder" xml:space="preserve">
     <value>{0} フォルダ</value>
@@ -6533,6 +6626,9 @@
   </data>
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0}・レベル {1}–{2}・{3}</value>
+  </data>
+  <data name="{0} — settings" xml:space="preserve">
+    <value>{0} — 設定</value>
   </data>
   <data name="{0} — {1} at {2}" xml:space="preserve">
     <value>{0} — {1}（{2}）</value>
