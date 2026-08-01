@@ -4046,8 +4046,14 @@
   <data name="Reason" xml:space="preserve">
 	  <value>Groglorg</value>
   </data>
+  <data name="Rebuild Latest Sessions" xml:space="preserve">
+    <value>Bagl Orgab Lorg</value>
+  </data>
   <data name="Rebuild weekly highlights" xml:space="preserve">
     <value>Glrolurg murmmr murmmurmgro</value>
+  </data>
+  <data name="Rebuilding the latest session for every player." xml:space="preserve">
+    <value>Bagl orgab murlog al.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Groglorgplglmorg murgglorg rgl blargmrp</value>

@@ -1,6 +1,6 @@
 # Session Breakdown (`/Player/{id}/Sessions`) — design
 
-> **Status: BUILT (B1–B8, B10), one item outstanding** — see §4.6. Workshopped and built
+> **Status: BUILT (B1–B10).** Workshopped and built
 > 2026-08-01 on `claude/session-highlights-overhaul-35efba`, PR #211. Supersedes the "Recent Scores
 > page" section of [discord-rich-score-notifications.md](discord-rich-score-notifications.md),
 > which specified the page as the Discord card's link target. That page shipped as a paged grid
@@ -333,7 +333,7 @@ Each commit green on the fast suites.
 | B6 | ✅ `ChartLeaderboardDialog` + generalize `ChartLeaderboardSection` into its World scope | Web |
 | B7 | ✅ The page: hero components, history table, skill focus service, l10n ×9 | Web |
 | B8 | ✅ Discord card: the placement caption on a score row, the estimated-rank line in the stats block | Communities |
-| B9 | ⛔ **NOT BUILT** — admin backfill button + consumer | Web / PlayerProgress |
+| B9 | ✅ Admin backfill button + `RebuildLatestSessionsConsumer`, which replays through the LIVE pipeline rather than adding a second capture path | Web / PlayerProgress |
 | B10 | ✅ E2E rework, docs sweep, this doc | tests / docs |
 
 ### 4.7 What the build changed about the design

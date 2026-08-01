@@ -4046,8 +4046,14 @@
   <data name="Reason" xml:space="preserve">
 	  <value>理由</value>
   </data>
+  <data name="Rebuild Latest Sessions" xml:space="preserve">
+    <value>最新セッションを再構築</value>
+  </data>
   <data name="Rebuild weekly highlights" xml:space="preserve">
     <value>週間ハイライトを再計算</value>
+  </data>
+  <data name="Rebuilding the latest session for every player." xml:space="preserve">
+    <value>全プレイヤーの最新セッションを再構築しています。</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>数時間ごとに再計算されます</value>

@@ -45,5 +45,6 @@ public static class ScoreLedgerRegistrationExtensions
     {
         configurator.AddConsumer<UpdatePhoenixRecordHandler>();
         configurator.AddConsumer<AccountPurgeConsumer>();
+        configurator.AddConsumer<RebuildLatestSessionsConsumer>();
     }
 }
