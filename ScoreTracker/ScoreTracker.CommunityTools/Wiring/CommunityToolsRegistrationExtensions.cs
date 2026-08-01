@@ -18,6 +18,11 @@ public static class CommunityToolsRegistrationExtensions
     {
         services.AddTransient<IToolRepository, EFToolRepository>();
         services.AddTransient<IToolKeyRepository, EFToolKeyRepository>();
+        services.AddTransient<IWebhookDeliveryRepository, EFWebhookDeliveryRepository>();
+        services.AddTransient<IToolSecretReader, EFToolSecretReader>();
+        services.AddTransient<IWebhookDeliveryDispatcher, WebhookDeliveryDispatcher>();
+        // A typed client, so the vertical owns its own outbound policy rather than borrowing one.
+        services.AddHttpClient<IWebhookDeliveryClient, WebhookDeliveryClient>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, CommunityToolsModelContribution>();
         return services;
@@ -31,5 +36,6 @@ public static class CommunityToolsRegistrationExtensions
     public static void AddCommunityToolsConsumers(this IRegistrationConfigurator configurator)
     {
         configurator.AddConsumer<AccountPurgeConsumer>();
+        configurator.AddConsumer<WebhookDeliverySaga>();
     }
 }
