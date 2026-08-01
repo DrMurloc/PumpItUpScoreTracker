@@ -253,7 +253,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         var ctx = new HandlerContext();
         var sessionId = Guid.NewGuid();
         ctx.Batches.Setup(b => b.GetOrExtendSession(MixEnum.Phoenix, UserId,
-            ScoreJournalEntry.OfficialImportSource, Now, null)).Returns(sessionId);
+            ScoreJournalEntry.OfficialImportSource, Now, null)).Returns((sessionId, false));
         ctx.Batches.Setup(b => b.AddToBatch(MixEnum.Phoenix, UserId, It.IsAny<DateTime>(), ChartId, true,
             It.IsAny<PhoenixScore?>(), It.IsAny<Guid>())).Returns(true);
 
@@ -302,6 +302,42 @@ public sealed class UpdatePhoenixRecordHandlerTests
 
         ctx.Batches.Verify(b => b.GetOrExtendSession(MixEnum.Phoenix, UserId,
             ScoreJournalEntry.ManualSource, Now, null), Times.Once);
+    }
+
+    [Fact]
+    public async Task AMintedSessionIsRecordedOnce()
+    {
+        var ctx = new HandlerContext();
+        var sessionId = Guid.NewGuid();
+        ctx.Batches.Setup(b => b.GetOrExtendSession(MixEnum.Phoenix, UserId,
+            ScoreJournalEntry.ManualSource, Now, null)).Returns((sessionId, true));
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
+                Plate: PhoenixPlate.SuperbGame),
+            CancellationToken.None);
+
+        ctx.Sessions.Verify(s => s.Open(sessionId, UserId, MixEnum.Phoenix, ScoreJournalEntry.ManualSource,
+            null, null, Now, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnAlreadyOpenSessionIsNotRecordedAgain()
+    {
+        // Only the call that minted the id reports IsNew, so an import posting thousands of
+        // scores writes the session row once rather than thousands of times.
+        var ctx = new HandlerContext();
+        ctx.Batches.Setup(b => b.GetOrExtendSession(MixEnum.Phoenix, UserId,
+            ScoreJournalEntry.ManualSource, Now, null)).Returns((Guid.NewGuid(), false));
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
+                Plate: PhoenixPlate.SuperbGame),
+            CancellationToken.None);
+
+        ctx.Sessions.Verify(s => s.Open(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+            It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -829,6 +865,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         public Mock<IMessageScheduler> Scheduler { get; } = new();
         public Mock<IPlayerScoreBatchAccumulator> Batches { get; } = new();
         public Mock<IScoreJournalRepository> Journal { get; } = new();
+        public Mock<IScoreSessionRepository> Sessions { get; } = new();
 
         public UpdatePhoenixRecordHandler Handler { get; }
 
@@ -836,7 +873,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
         {
             CurrentUser.SetupGet(u => u.User).Returns(new UserBuilder().WithId(UserId).Build());
             Handler = new UpdatePhoenixRecordHandler(Records.Object, CurrentUser.Object, DateTime.Object,
-                Bus.Object, Scheduler.Object, Batches.Object, Journal.Object);
+                Bus.Object, Scheduler.Object, Batches.Object, Journal.Object, Sessions.Object);
         }
 
         public void GivenExistingScore(PhoenixScore score, PhoenixPlate plate, bool isBroken,

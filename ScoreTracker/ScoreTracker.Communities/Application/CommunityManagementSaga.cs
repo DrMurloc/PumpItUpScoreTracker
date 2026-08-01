@@ -10,6 +10,8 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
+using ScoreTracker.Identity.Contracts.Queries;
+
 namespace ScoreTracker.Communities.Application;
 
 /// <summary>
@@ -35,11 +37,14 @@ internal sealed class CommunityManagementSaga :
 {
     private readonly ICommunityRepository _communities;
     private readonly ICurrentUserAccessor _currentUser;
+    private readonly IMediator _mediator;
 
-    public CommunityManagementSaga(ICommunityRepository communities, ICurrentUserAccessor currentUser)
+    public CommunityManagementSaga(ICommunityRepository communities, ICurrentUserAccessor currentUser,
+        IMediator mediator)
     {
         _communities = communities;
         _currentUser = currentUser;
+        _mediator = mediator;
     }
 
     public Task Handle(PromoteMemberCommand request, CancellationToken cancellationToken) =>
@@ -63,9 +68,17 @@ internal sealed class CommunityManagementSaga :
         Mutate(request.CommunityName, community =>
             community.Unban(_currentUser.User.Id, request.UserId), cancellationToken);
 
-    public Task Handle(TransferCommunityOwnershipCommand request, CancellationToken cancellationToken) =>
-        Mutate(request.CommunityName, community =>
+    public async Task Handle(TransferCommunityOwnershipCommand request, CancellationToken cancellationToken)
+    {
+        // The recipient, not the sender. Handing a community to an account that is on its way
+        // out would take the community with it a few days later.
+        if (await _mediator.Send(new GetPendingAccountDeletionQuery(request.UserId), cancellationToken) != null)
+            throw new DeniedFromCommunityException(
+                "That player's account is scheduled for deletion, so they can't take over a community.");
+
+        await Mutate(request.CommunityName, community =>
             community.TransferCreator(_currentUser.User.Id, request.UserId), cancellationToken);
+    }
 
     public Task Handle(SetCommunityPrivacyCommand request, CancellationToken cancellationToken) =>
         Mutate(request.CommunityName, community =>

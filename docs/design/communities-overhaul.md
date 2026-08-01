@@ -347,3 +347,26 @@ aggregate + new ports, if structural), this file, and — only if deferred work 
   with the rank-delta snapshot work.
 - **Players tab dropped entirely** (owner call): ranking rows deep-link straight to
   `/Community/Player`.
+
+## Account deletion and community ownership (2026-07-31)
+
+Owning a community **blocks account deletion outright** — the creator hands it over themselves
+rather than having the system pick an heir, because a community is other people's
+([delete-my-data.md](delete-my-data.md) §8.2). Two guards, and the second is what makes the first
+real:
+
+- `RequestAccountDeletionCommand` refuses while the player creates any non-regional community, and
+  returns the list so the dialog can link to each one. World and the per-country communities are
+  excluded: nobody can transfer those, so counting them would block every account forever.
+- `CreateCommunityCommand` refuses while a deletion is pending, and
+  `TransferCommunityOwnershipCommand` checks the **recipient**. Without that second check the block
+  is decorative — request deletion owning nothing, get handed a community on day three of the
+  window, lose it on day seven.
+
+Both read the pending row live rather than copying a flag, so cancelling lifts them on its own.
+Identity asks through the published `ICommunityReader` port, never a reference: Communities already
+references Identity, so the assemblies would cycle.
+
+**Make Creator now confirms.** It used to dispatch on a single click and hand away the only creator
+seat. That was survivable while the members page was somewhere you went on purpose; account
+deletion routes people there deliberately now, so a mistap costs somebody their community.

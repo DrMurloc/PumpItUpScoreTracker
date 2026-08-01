@@ -23,6 +23,8 @@ public sealed class IdentityModelContribution : IDbModelContribution
 
         var credentialKey = modelBuilder.Entity<UserImportCredentialKeyEntity>();
         credentialKey.ToTable("UserImportCredentialKey");
+
+        modelBuilder.Entity<AccountDeletionRequestEntity>().ToTable("AccountDeletionRequest");
         credentialKey.HasKey(k => k.KeyId);
         credentialKey.HasIndex(k => k.UserId);
     }

@@ -24,6 +24,7 @@ public static class WeeklyChallengeRegistrationExtensions
         services.AddTransient<IDailyStepRepository, EFDailyStepRepository>();
         services.AddTransient<IDailyStepReader, EFDailyStepRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
+        services.AddTransient<IContributionDeletionRepository, EFContributionDeletionRepository>();
         services.AddSingleton<IDbModelContribution, WeeklyChallengeModelContribution>();
         return services;
     }
@@ -35,6 +36,7 @@ public static class WeeklyChallengeRegistrationExtensions
     /// </summary>
     public static void AddWeeklyChallengeConsumers(this IRegistrationConfigurator configurator)
     {
+        configurator.AddConsumer<ContributionsDeletionConsumer>();
         configurator.AddConsumer<WeeklyTournamentSaga>();
         configurator.AddConsumer<DailyStepSaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();

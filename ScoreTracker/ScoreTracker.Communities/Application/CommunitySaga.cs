@@ -20,6 +20,8 @@ using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.WeeklyChallenge.Contracts;
 using ScoreTracker.WeeklyChallenge.Contracts.Queries;
 
+using ScoreTracker.Identity.Contracts.Queries;
+
 namespace ScoreTracker.Communities.Application;
 
 internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRequestHandler<JoinCommunityCommand>,
@@ -868,6 +870,13 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     public async Task Handle(CreateCommunityCommand request, CancellationToken cancellationToken)
     {
         var userId = _currentUser.User.Id;
+        // An account on its way out must not pick up a community other people would then lose
+        // with it (docs/design/delete-my-data.md §8.2). Read live rather than copied, so
+        // cancelling the deletion lifts this on its own.
+        if (await _mediator.Send(new GetPendingAccountDeletionQuery(userId), cancellationToken) != null)
+            throw new DeniedFromCommunityException(
+                "Your account is scheduled for deletion, so you can't create a community.");
+
         var community = await _communities.GetCommunityByName(request.CommunityName, cancellationToken);
         if (community != null) throw new CommunityAlreadyExistsException(request.CommunityName);
         community = new Community(request.CommunityName, userId, request.PrivacyType, false);

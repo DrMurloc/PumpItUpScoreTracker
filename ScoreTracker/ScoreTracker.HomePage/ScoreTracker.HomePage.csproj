@@ -14,8 +14,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- No bus consumers in this vertical (layout persistence is synchronous CRUD),
-         so no MassTransit reference at all. -->
+    <!-- Layout persistence is synchronous CRUD, but the vertical consumes the account-purge
+         event — so it needs the full package: IRegistrationConfigurator, which the
+         AddHomePageConsumers hook takes, is not in Abstractions. -->
+    <PackageReference Include="MassTransit" Version="8.5.7" />
+    <PackageReference Include="MassTransit.Abstractions" Version="8.5.7" />
     <PackageReference Include="MediatR" Version="14.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
   </ItemGroup>

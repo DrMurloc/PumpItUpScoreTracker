@@ -1,0 +1,74 @@
+@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Identity.Contracts
+@using ScoreTracker.Identity.Contracts.Queries
+
+@* The doomsday notice. Raised on every sign-in during the grace window, and it deliberately does
+   NOT cancel the deletion — signing in is not consent to keep an account, and a silent cancel
+   would let a stray login quietly undo a deliberate decision. It points at the account page,
+   where the real control lives (docs/design/delete-my-data.md §8).
+
+   A render-nothing-until-relevant island, modelled on RecapPointer: MainLayout renders
+   statically now, so this cannot be a plain dialog sitting in it. *@
+@if (_pending is not null)
+{
+    <MudDialog @bind-Visible="_show" Options="_options">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["This account is scheduled for deletion"]</MudText>
+        </TitleContent>
+        <DialogContent>
+            <div class="d-flex flex-column gap-3 align-center">
+                <MudText Typo="Typo.h4" Color="Color.Error" Class="deletion-clock">@Remaining()</MudText>
+                <MudText Typo="Typo.caption" Style="letter-spacing:.14em; text-transform:uppercase; opacity:.7;">
+                    @L["until everything is deleted"]
+                </MudText>
+                <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center">
+                    @L["Your account is hidden right away and permanently deleted on {0}. Sign in before then to cancel.", _pending.PurgeAfter.LocalDateTime.ToString("D")]
+                </MudText>
+            </div>
+        </DialogContent>
+        <DialogActions>
+            <MudSpacer/>
+            <MudButton Variant="Variant.Text" OnClick="@(() => _show = false)">@L["Not now"]</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/Account">
+                @L["Go to account page"]
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+<style>
+    .deletion-clock { font-variant-numeric: tabular-nums; }
+</style>
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IDateTimeOffsetAccessor Clock
+@code {
+    // MaxWidth.Small is defeated site-wide by charts.scss, so the cap has to be ours.
+    private readonly DialogOptions _options = new() { MaxWidth = MaxWidth.False, FullWidth = true };
+
+    private PendingAccountDeletion? _pending;
+    private bool _show;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn) return;
+        _pending = await Mediator.Send(new GetPendingAccountDeletionQuery(CurrentUser.User.Id));
+        // No shown-once flag on purpose: this is not a nudge, and someone who dismissed it
+        // yesterday should still be told their account goes tomorrow.
+        _show = _pending is not null;
+    }
+
+    private string Remaining()
+    {
+        if (_pending is null) return string.Empty;
+        var left = _pending.PurgeAfter - Clock.Now;
+        if (left <= TimeSpan.Zero) return L["any moment now"];
+        return left.TotalDays >= 1
+            ? L["{0} days, {1} hours", (int)left.TotalDays, left.Hours]
+            : L["{0} hours, {1} minutes", (int)left.TotalHours, left.Minutes];
+    }
+
+}

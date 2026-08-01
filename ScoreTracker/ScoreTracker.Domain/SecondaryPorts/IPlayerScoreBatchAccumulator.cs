@@ -21,8 +21,13 @@ public interface IPlayerScoreBatchAccumulator
     /// An explicit id (an import/CSV run id) takes over the envelope. Session
     /// envelopes are identity only: they group journal rows and never delay the
     /// event batches below.
+    ///
+    /// <c>IsNew</c> is true only on the call that minted the id, so the caller can record
+    /// the session once. This stays a pure in-memory decision — the accumulator is a
+    /// concurrency primitive and never touches the database; persisting what it decided
+    /// is the handler's job.
     /// </summary>
-    Guid GetOrExtendSession(MixEnum mix, Guid userId, string source, DateTimeOffset now,
+    (Guid Id, bool IsNew) GetOrExtendSession(MixEnum mix, Guid userId, string source, DateTimeOffset now,
         Guid? explicitSessionId = null);
 
     /// <summary>

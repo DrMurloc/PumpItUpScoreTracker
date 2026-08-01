@@ -23,6 +23,7 @@ public static class CommunitiesRegistrationExtensions
         services.AddTransient<IDiscordFeedSubscriptionRepository, EFDiscordFeedSubscriptionRepository>();
         services.AddTransient<IDiscordFeedReader, EFDiscordFeedSubscriptionRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
+        services.AddTransient<IContributionDeletionRepository, EFContributionDeletionRepository>();
         services.AddTransient<ICommunityHighlightRepository, EFCommunityHighlightRepository>();
         services.AddTransient<ICommunityHighlightCapturer, CommunityHighlightCapturer>();
         services.AddSingleton<IDbModelContribution, CommunitiesModelContribution>();
@@ -39,6 +40,7 @@ public static class CommunitiesRegistrationExtensions
     /// </summary>
     public static void AddCommunitiesConsumers(this IRegistrationConfigurator configurator)
     {
+        configurator.AddConsumer<ContributionsDeletionConsumer>();
         configurator.AddConsumer<CommunitySaga>();
         configurator.AddConsumer<DiscordFeedSaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();

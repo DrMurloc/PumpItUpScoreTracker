@@ -142,11 +142,14 @@ internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
             .ToArrayAsync(cancellationToken);
     }
 
-    public async Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default)
+    public async Task DeleteAllForUser(Guid userId, MixEnum? mix = null,
+        CancellationToken cancellationToken = default)
     {
+        // Every pre-Phoenix mix records here, so a scoped delete filters rather than truncating.
+        var mixId = mix == null ? (Guid?)null : MixIds.For(mix.Value);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var attempts = await database.Set<BestAttemptEntity>().Where(b => b.UserId == userId).ToArrayAsync(cancellationToken);
-        database.Set<BestAttemptEntity>().RemoveRange(attempts);
-        await database.SaveChangesAsync(cancellationToken);
+        await database.Set<BestAttemptEntity>()
+            .Where(b => b.UserId == userId && (mixId == null || b.MixId == mixId))
+            .ExecuteDeleteAsync(cancellationToken);
     }
 }
