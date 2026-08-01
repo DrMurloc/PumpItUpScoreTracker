@@ -43,37 +43,36 @@ internal sealed class WipeUserScoresHandler : IRequestHandler<WipeUserScoresComm
     public async Task Handle(WipeUserScoresCommand request, CancellationToken cancellationToken)
     {
         var items = request.Items;
-        if (items == ScoreDeletionItems.None) return;
+        if (items == ScoreDeletionItems.None || request.Mixes.Count == 0) return;
 
-        if (items.HasFlag(ScoreDeletionItems.BestScores))
+        foreach (var mix in request.Mixes.Distinct())
         {
-            await _phoenixScores.DeleteAllForUser(request.UserId, request.Mix, cancellationToken);
-            await _xxScores.DeleteAllForUser(request.UserId, request.Mix, cancellationToken);
-        }
+            if (items.HasFlag(ScoreDeletionItems.BestScores))
+            {
+                await _phoenixScores.DeleteAllForUser(request.UserId, mix, cancellationToken);
+                await _xxScores.DeleteAllForUser(request.UserId, mix, cancellationToken);
+            }
 
-        // The journal goes with a wipe. It used to survive one, which made "delete my scores"
-        // quietly untrue — the plays were still there, chart by chart (D8).
-        if (items.HasFlag(ScoreDeletionItems.PlayHistory))
-            await _journal.DeleteForUser(request.UserId, request.Mix, cancellationToken);
+            // The journal goes with a wipe. It used to survive one, which made "delete my
+            // scores" quietly untrue — the plays were still there, chart by chart (D8).
+            if (items.HasFlag(ScoreDeletionItems.PlayHistory))
+                await _journal.DeleteForUser(request.UserId, mix, cancellationToken);
 
-        // Rating history, highlights and milestones are PlayerProgress's. None of them are
-        // recomputed from scores, so deleting the scores behind them strands them rather than
-        // clearing them — it has to be told.
-        var progression = new PlayerScoreDataDeletedEvent(request.UserId, request.Mix,
-            items.HasFlag(ScoreDeletionItems.RatingHistory),
-            items.HasFlag(ScoreDeletionItems.Highlights),
-            items.HasFlag(ScoreDeletionItems.Milestones));
-        if (progression.AnythingToDo) await _bus.Publish(progression, cancellationToken);
+            // Rating history, highlights and milestones are PlayerProgress's. None of them are
+            // recomputed from scores, so deleting the scores behind them strands them rather
+            // than clearing them — it has to be told.
+            var progression = new PlayerScoreDataDeletedEvent(request.UserId, mix,
+                items.HasFlag(ScoreDeletionItems.RatingHistory),
+                items.HasFlag(ScoreDeletionItems.Highlights),
+                items.HasFlag(ScoreDeletionItems.Milestones));
+            if (progression.AnythingToDo) await _bus.Publish(progression, cancellationToken);
 
-        // Derived per-mix state is recomputed from the records that just went, so it is reset
-        // rather than chosen — and only where the records actually changed.
-        if (!items.HasFlag(ScoreDeletionItems.BestScores)) return;
-        foreach (var mix in ParallelMixes)
-        {
-            if (request.Mix != null && request.Mix != mix) continue;
+            // Derived per-mix state is recomputed from the records that just went, so it is
+            // reset rather than chosen — and only for the mixes that have such a pipeline.
+            if (!items.HasFlag(ScoreDeletionItems.BestScores) || !ParallelMixes.Contains(mix)) continue;
+
             await _playerStats.DeleteStats(mix, request.UserId, cancellationToken);
             await _titles.DeleteHighestTitle(mix, request.UserId, cancellationToken);
-
             await _bus.Publish(
                 PlayerScoresUpdatedEvent.Create(_dateTime.Now, request.UserId, mix,
                     Array.Empty<PlayerScoresUpdatedEvent.ScoreChange>()),

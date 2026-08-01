@@ -20,6 +20,10 @@ public sealed class WipeUserScoresHandlerTests
 {
     private static readonly DateTimeOffset Now = new(2026, 7, 31, 12, 0, 0, TimeSpan.Zero);
 
+    // The mixes with a derived-state pipeline. Every mix is now passed explicitly — the
+    // command has no "null means all" default to get wrong.
+    private static readonly MixEnum[] BothParallel = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+
     private static (WipeUserScoresHandler Handler, Context Ctx) Build()
     {
         var ctx = new Context();
@@ -33,11 +37,15 @@ public sealed class WipeUserScoresHandlerTests
         var (handler, ctx) = Build();
         var userId = Guid.NewGuid();
 
-        await handler.Handle(new WipeUserScoresCommand(userId, null, ScoreDeletionItems.BestScores),
+        await handler.Handle(new WipeUserScoresCommand(userId, BothParallel, ScoreDeletionItems.BestScores),
             CancellationToken.None);
 
-        ctx.PhoenixScores.Verify(p => p.DeleteAllForUser(userId, null, It.IsAny<CancellationToken>()), Times.Once);
-        ctx.XxScores.Verify(p => p.DeleteAllForUser(userId, null, It.IsAny<CancellationToken>()), Times.Once);
+        foreach (var mix in BothParallel)
+        {
+            ctx.PhoenixScores.Verify(p => p.DeleteAllForUser(userId, mix, It.IsAny<CancellationToken>()),
+                Times.Once);
+            ctx.XxScores.Verify(p => p.DeleteAllForUser(userId, mix, It.IsAny<CancellationToken>()), Times.Once);
+        }
         ctx.Journal.Verify(j => j.DeleteForUser(It.IsAny<Guid>(), It.IsAny<MixEnum?>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -50,10 +58,11 @@ public sealed class WipeUserScoresHandlerTests
         var (handler, ctx) = Build();
         var userId = Guid.NewGuid();
 
-        await handler.Handle(new WipeUserScoresCommand(userId, null, ScoreDeletionItems.PlayHistory),
+        await handler.Handle(new WipeUserScoresCommand(userId, BothParallel, ScoreDeletionItems.PlayHistory),
             CancellationToken.None);
 
-        ctx.Journal.Verify(j => j.DeleteForUser(userId, null, It.IsAny<CancellationToken>()), Times.Once);
+        foreach (var mix in BothParallel)
+            ctx.Journal.Verify(j => j.DeleteForUser(userId, mix, It.IsAny<CancellationToken>()), Times.Once);
         ctx.PhoenixScores.Verify(p => p.DeleteAllForUser(It.IsAny<Guid>(), It.IsAny<MixEnum?>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -64,7 +73,7 @@ public sealed class WipeUserScoresHandlerTests
         var (handler, ctx) = Build();
         var userId = Guid.NewGuid();
 
-        await handler.Handle(new WipeUserScoresCommand(userId, MixEnum.Phoenix2, ScoreDeletionItems.BestScores),
+        await handler.Handle(new WipeUserScoresCommand(userId, new[] { MixEnum.Phoenix2 }, ScoreDeletionItems.BestScores),
             CancellationToken.None);
 
         ctx.PhoenixScores.Verify(p => p.DeleteAllForUser(userId, MixEnum.Phoenix2, It.IsAny<CancellationToken>()),
@@ -83,7 +92,7 @@ public sealed class WipeUserScoresHandlerTests
         var (handler, ctx) = Build();
         var userId = Guid.NewGuid();
 
-        await handler.Handle(new WipeUserScoresCommand(userId, null, ScoreDeletionItems.BestScores),
+        await handler.Handle(new WipeUserScoresCommand(userId, BothParallel, ScoreDeletionItems.BestScores),
             CancellationToken.None);
 
         foreach (var mix in new[] { MixEnum.Phoenix, MixEnum.Phoenix2 })
@@ -104,7 +113,7 @@ public sealed class WipeUserScoresHandlerTests
         var (handler, ctx) = Build();
         var userId = Guid.NewGuid();
 
-        await handler.Handle(new WipeUserScoresCommand(userId, MixEnum.Phoenix,
+        await handler.Handle(new WipeUserScoresCommand(userId, new[] { MixEnum.Phoenix },
             ScoreDeletionItems.Milestones | ScoreDeletionItems.Highlights), CancellationToken.None);
 
         ctx.Bus.Verify(b => b.Publish(It.Is<PlayerScoreDataDeletedEvent>(e =>
@@ -117,7 +126,7 @@ public sealed class WipeUserScoresHandlerTests
     {
         var (handler, ctx) = Build();
 
-        await handler.Handle(new WipeUserScoresCommand(Guid.NewGuid(), null, ScoreDeletionItems.BestScores),
+        await handler.Handle(new WipeUserScoresCommand(Guid.NewGuid(), BothParallel, ScoreDeletionItems.BestScores),
             CancellationToken.None);
 
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoreDataDeletedEvent>(), It.IsAny<CancellationToken>()),
@@ -125,11 +134,25 @@ public sealed class WipeUserScoresHandlerTests
     }
 
     [Fact]
+    public async Task ChoosingNoMixDeletesNothingEvenWithItemsTicked()
+    {
+        // Scores need a mix to delete from. An empty set is "nothing selected", never "all".
+        var (handler, ctx) = Build();
+
+        await handler.Handle(new WipeUserScoresCommand(Guid.NewGuid(), Array.Empty<MixEnum>(),
+            ScoreDeletionItems.Everything), CancellationToken.None);
+
+        ctx.PhoenixScores.VerifyNoOtherCalls();
+        ctx.Journal.VerifyNoOtherCalls();
+        ctx.Bus.VerifyNoOtherCalls();
+    }
+
+    [Fact]
     public async Task ChoosingNothingDoesNothing()
     {
         var (handler, ctx) = Build();
 
-        await handler.Handle(new WipeUserScoresCommand(Guid.NewGuid(), null, ScoreDeletionItems.None),
+        await handler.Handle(new WipeUserScoresCommand(Guid.NewGuid(), BothParallel, ScoreDeletionItems.None),
             CancellationToken.None);
 
         ctx.PhoenixScores.VerifyNoOtherCalls();

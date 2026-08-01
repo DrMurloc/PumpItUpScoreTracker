@@ -104,7 +104,7 @@ all: it is strictly worse than doing nothing.
 | | Undo | Delete scope | Delete account |
 |---|---|---|---|
 | Route | `/Account/Data/Undo` | `/Account/Data/Delete` | dialog off the delete page |
-| Scope | one session | mix × selected items | everything |
+| Scope | one session | chosen mixes × chosen items | everything |
 | Reversible | n/a (it *is* the undo) | no | 7-day grace |
 | Confirm | preview + button | type username | type username |
 | Floor | 2026-08-01 | none | none |
@@ -167,11 +167,21 @@ makes people hunt, and hunting makes them determined; a visible one lets them re
 and conclude for themselves that undo is what they wanted. The guard is one deliberate act, and it
 is reversible.
 
-**Scope.** A mix selector listing **every mix**, primary trio as chips with everything older
-behind *More Mixes* — the same shape as the site's own mix picker, driven by `Mix.IsPrimary`.
-`GetMixesWithScoresQuery` walks the Mix table and attaches this player's count from both score
-tables, ordered by `SortOrder` (never enum order). Mixes the player has scores in show their
-count and are promoted out of the More list.
+**Scope.** A **multi-select** mix picker listing **every mix**, primary trio as chips with
+everything older behind *More Mixes* — the same shape as the site's own mix picker, driven by
+`Mix.IsPrimary`. `GetMixesWithScoresQuery` walks the Mix table and attaches this player's count
+from both score tables, ordered by `SortOrder` (never enum order). Mixes the player has scores in
+show their count and are promoted out of the More list.
+
+Selected chips render **red**, not the usual primary: these chips choose what gets destroyed, not
+what gets shown. *All mixes* is a select-all action rather than a mutually-exclusive option, and
+it opens the More list — a selection the player cannot see is worse than one they have to expand
+to make.
+
+`WipeUserScoresCommand` therefore takes a **set** of mixes and no nullable "all" sentinel.
+Selecting nothing deletes nothing, including when items are ticked: an empty set means *nothing
+selected*, never *everything*, which is the sort of default that empties an account when a caller
+forgets to set it.
 
 ⚠ **Every mix is deletable, including the legacy ones**, and the picker must not hide the empty
 ones. Phoenix-scoring mixes record in `PhoenixRecord`, every pre-Phoenix mix in `BestAttempt` — a

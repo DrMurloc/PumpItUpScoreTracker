@@ -47,11 +47,24 @@
         @* EVERY mix, not only the ones with scores in them — hiding the empties is
            indistinguishable from having forgotten they exist, which is how the hardcoded
            Phoenix/Phoenix 2/XX list read. The primary trio shows as chips and everything older
-           sits behind "More mixes", mirroring the site's own mix picker. *@
-        <MudText Typo="Typo.overline" Class="d-block mb-2">@L["Which mix"]</MudText>
-        <MudChipSet T="string" SelectedValue="@_mixValue" SelectedValueChanged="MixChanged"
-                    SelectionMode="SelectionMode.SingleSelection" CheckMark="true" Class="mb-2">
-            <MudChip T="string" Value="@AllMixes" Variant="Variant.Outlined">@L["All mixes"]</MudChip>
+           sits behind "More Mixes", mirroring the site's own mix picker.
+
+           Multi-select, and selected reads red like everything else here: these chips choose
+           what gets destroyed, not what gets shown. *@
+        <div class="d-flex align-center flex-wrap gap-2 mb-2">
+            <MudText Typo="Typo.overline">@L["Which mix"]</MudText>
+            <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="SelectAllMixes">@L["All mixes"]</MudButton>
+            @if (_selectedMixes.Any())
+            {
+                <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => _selectedMixes.Clear())">
+                    @L["Clear"]
+                </MudButton>
+            }
+        </div>
+        <MudChipSet T="string" SelectedValues="@_selectedMixes.Select(m => m.ToString()).ToHashSet()"
+                    SelectedValuesChanged="MixesChanged"
+                    SelectionMode="SelectionMode.MultiSelection" CheckMark="true"
+                    SelectedColor="Color.Error" Class="mb-2">
             @foreach (var mix in _mixes.Where(m => m.IsPrimary || m.ScoreCount > 0 || _showAllMixes))
             {
                 <MudChip T="string" Value="@mix.Mix.ToString()" Variant="Variant.Outlined">
@@ -148,8 +161,6 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Nav
 @code {
-    private const string AllMixes = "All";
-
     private static readonly (ScoreDeletionItems Flag, string Label)[] ScoreItems =
     {
         (ScoreDeletionItems.BestScores, "Best scores"),
@@ -178,25 +189,36 @@
     private bool _armed;
     private bool _busy;
     private bool _showAccountDialog;
-    private string _mixValue = AllMixes;
+    private readonly HashSet<MixEnum> _selectedMixes = new();
     private ScoreDeletionItems _scoreItems = ScoreDeletionItems.BestScores;
     private ContributionDeletionItems _contributionItems = ContributionDeletionItems.None;
     private IReadOnlyList<OwnedCommunityRecord> _blockers = Array.Empty<OwnedCommunityRecord>();
     private DateTimeOffset? _purgeAfter;
 
-    private MixEnum? SelectedMix => _mixValue == AllMixes ? null : Enum.Parse<MixEnum>(_mixValue);
 
     protected override async Task OnInitializedAsync()
     {
         _mixes = await Mediator.Send(new GetMixesWithScoresQuery(CurrentUser.User.Id));
     }
 
+    // Scores need a mix to delete from; contributions are account-wide and need none.
     private bool NothingChosen =>
-        _scoreItems == ScoreDeletionItems.None && _contributionItems == ContributionDeletionItems.None;
+        (_scoreItems == ScoreDeletionItems.None || _selectedMixes.Count == 0) &&
+        _contributionItems == ContributionDeletionItems.None;
 
-    private void MixChanged(string value)
+    private void MixesChanged(IReadOnlyCollection<string> values)
     {
-        _mixValue = value ?? AllMixes;
+        _selectedMixes.Clear();
+        foreach (var value in values) _selectedMixes.Add(Enum.Parse<MixEnum>(value));
+    }
+
+    private void SelectAllMixes()
+    {
+        _selectedMixes.Clear();
+        foreach (var mix in _mixes) _selectedMixes.Add(mix.Mix);
+        // Selecting everything means the older ones must be visible, or the row would claim a
+        // selection the player cannot see.
+        _showAllMixes = true;
     }
 
     private void ToggleScore(ScoreDeletionItems flag, bool on)
@@ -211,9 +233,10 @@
 
     private string ConsequenceCopy()
     {
-        return SelectedMix is null
-            ? L["Deleting every mix resets your Pumbility, your titles and your folder progress everywhere."]
-            : L["Deleting your {0} scores resets your Pumbility, your titles and your folder progress for that mix. Other mixes are untouched.", SelectedMix.Value.GetName()];
+        if (_selectedMixes.Count == 0 || _selectedMixes.Count == _mixes.Count)
+            return L["Deleting every mix resets your Pumbility, your titles and your folder progress everywhere."];
+        return L["Deleting your {0} scores resets your Pumbility, your titles and your folder progress for that mix. Other mixes are untouched.",
+            string.Join(", ", _selectedMixes.Select(m => m.GetName()))];
     }
 
     // The button names what is about to happen rather than saying Confirm. The count is the
@@ -221,10 +244,10 @@
     private string BlastRadiusLabel()
     {
         if (NothingChosen) return L["Select what to delete"];
-        if (!_scoreItems.HasFlag(ScoreDeletionItems.BestScores)) return L["Delete the data I selected"];
-        return SelectedMix is null
-            ? L["Delete all my scores"]
-            : L["Delete my {0} scores", SelectedMix.Value.GetName()];
+        if (!_scoreItems.HasFlag(ScoreDeletionItems.BestScores) || _selectedMixes.Count == 0)
+            return L["Delete the data I selected"];
+        if (_selectedMixes.Count == _mixes.Count) return L["Delete all my scores"];
+        return L["Delete my {0} scores", string.Join(", ", _selectedMixes.Select(m => m.GetName()))];
     }
 
     private async Task Delete()
@@ -232,14 +255,16 @@
         _busy = true;
         try
         {
-            if (_scoreItems != ScoreDeletionItems.None)
-                await Mediator.Send(new WipeUserScoresCommand(CurrentUser.User.Id, SelectedMix, _scoreItems));
+            if (_scoreItems != ScoreDeletionItems.None && _selectedMixes.Count > 0)
+                await Mediator.Send(new WipeUserScoresCommand(CurrentUser.User.Id, _selectedMixes.ToArray(),
+                    _scoreItems));
             if (_contributionItems != ContributionDeletionItems.None)
                 await Mediator.Send(new DeleteMyContributionsCommand(CurrentUser.User.Id, _contributionItems));
 
             Snackbar.Add(L["Your data has been deleted"], Severity.Success);
             _scoreItems = ScoreDeletionItems.None;
             _contributionItems = ContributionDeletionItems.None;
+            _selectedMixes.Clear();
             _armed = false;
         }
         finally
