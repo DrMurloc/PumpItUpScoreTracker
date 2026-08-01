@@ -46,6 +46,10 @@ positions.
 | D20 | **Rivals is not hinted at anywhere** in this iteration — no disabled chip, no "soon" tag. It is the next project and this branch blocks it. |
 | D21 | **Backfill is one session per player** (the most recent), behind an admin button. No historical backfill. |
 | D22 | Official placement **rides the Discord card**. |
+| D23 | **The journal stays the spine; `ScoreSession` is enrichment** (§2.3). [delete-my-data.md §4](delete-my-data.md) leaves this page on `GetSessionGroups` on purpose and hands the move to "a separate change with its own answer for the back catalogue" — this is that change, and the answer is *don't move, join*. |
+| D24 | **No undo affordance on this page.** Owner-settled in the delete work: the undo banner lives on the delete page, *"not on the public Sessions page."* The hero never grows an Undo button. |
+| D25 | **Every new capture stays on `ScoreHighlight` / `PlayerMilestone`, keyed by `SessionId`** — that is what makes it vanish with an undo (§2.3). Not a convenience: a new table would survive one. |
+| D26 | **`OfficialPumbilityRank` mints on improvement only**, matching every other rating milestone — otherwise an undo announces the rank it just cost you. |
 
 ### Deliberately not decided here
 
@@ -131,7 +135,66 @@ Two things it is honest about, and both must reach the UI:
 pulling the whole rankings list per board and scanning it — fine for a profile page, far too
 heavy per import, and it answers last Sunday's question rather than tonight's.
 
-### 2.3 Skill focus
+### 2.3 The delete / undo ecosystem
+
+Merged from main 2026-08-01 ([delete-my-data.md](delete-my-data.md)). It lands squarely on this
+page and settles four things.
+
+**Undo already carries the capture, and that is a constraint.**
+`ScoreSessionUndoneConsumer` (PlayerProgress) drops the session's `ScoreHighlight` and
+`PlayerMilestone` rows on `ScoreSessionUndoneEvent` — *"neither is recomputed from scores, so an
+undo that left them behind would keep claiming the player hit a title they no longer hold."*
+Everything §2.2 adds lives on those two tables keyed by `SessionId`, so it travels for free. **Do
+not move any of it to a new table.** A dedicated title-progress table would survive an undo and
+keep asserting progress the player no longer has — and it would additionally fail
+`AccountPurgeCoverageTests`, which requires every user-keyed entity to appear in a vertical's
+`UserOwned` manifest or carry a written exemption.
+
+**The estimated rank recomputes on undo, and must not announce it.** Undo publishes a
+`PlayerScoresUpdatedEvent` with an **empty change set**, which still reaches
+`CaptureSessionStats` → `RecalculateCore` — exactly where the rank is stamped — so the rank falls
+back correctly with the scores. The milestone must therefore mint on **improvement only**, like
+`PumbilityGain` and the competitive gains already do (D26). That event also carries **no
+`SessionId`**, so anything minted on the undo path is session-less by construction.
+
+**The journal stays the spine, `ScoreSession` joins onto it** (D23). The delete doc keeps this
+page on `GetSessionGroups` because *"nothing before this ships has a session row"* and moving the
+page to the table *"would erase every historical session from a page players already use"*. The
+answer for the back catalogue is not to move but to **join**: group the journal as today, then
+enrich each group from `GetScoreSessionsQuery` where a row exists. That buys three things without
+costing a day of history:
+
+- **`ScoreCount` / `NewCount` / `UpscoreCount` come denormalized** for the history table on
+  post-floor sessions; pre-floor rows fall back to counting journal rows, exactly as now.
+- **`AccountTag` and `CardId`** name *which card* an official import pulled from. This belongs on
+  the hero header, not just the undo list — the wrong-card case is precisely when a player stares
+  at a session and thinks "these aren't my scores."
+- **Two clocks become distinguishable.** `StartedAt` / `LastActivityAt` are **wall clock — when
+  the scores reached us**; the journal's `OccurredAt` is **the official site's play date**. The
+  hero shows one today. Where both exist, wall clock is the honest answer to "when was this
+  session"; pre-floor sessions have only the journal clock, which is why the enrichment is
+  optional and never load-bearing.
+
+`ScoreSessionRecord.UndoFloor` is `2026-08-01T05:00:00Z`; nothing before it has a session row.
+
+**Sessions can now disappear.** An undo **deletes** the journal rows (§17 of that doc retires the
+"append-only" claim). Three consequences this page owns:
+
+1. The hero's "most recent session" can change under a refresh.
+2. **A Discord `?session=` deep link can point at an undone session.** The card outlives the
+   thing it links to. That needs a stated "this session was undone" state, not an empty hero —
+   the one place a 404-shaped hole would read as the page being broken.
+3. The **backfill** (§4.4) must tolerate a player whose most recent session no longer exists, and
+   must never resurrect an undone one. It reads current journal state, so an undone session
+   simply is not there — but "most recent session" being null is a real case, not a defensive one.
+
+**A scoped mix wipe empties this page for that mix.** `PlayerStatsEntity`, `ScoreHighlightEntity`
+and `PlayerMilestoneEntity` are all in PlayerProgress's `UserOwned` manifest, so a wipe takes the
+capture with it and the page falls to its empty state — which is the correct behaviour and needs
+no new work, only a check that the empty state reads well after a deliberate wipe rather than
+only before a first import.
+
+### 2.4 Skill focus
 
 The **piucenter badges** (33 keys with measured `badge_fraction:` coverage), never the `Skill`
 enum — that rollup is scheduled for deletion, see [nuke-old-skill-categories.md](nuke-old-skill-categories.md).
@@ -205,7 +268,8 @@ the hero should not assemble itself from six queries).
 **Web** — `Pages/Progress/PlayerSessions.razor` rewritten.
 New in `Components/Sessions/`: `SessionHero`, `SessionCeremonyBand`, `SessionTitleBar`,
 `SessionTitlesEarned`, `SessionScoreRow`, `CommunityPeersSection`, `SessionSkillFocus`,
-`SessionAllPlays`, `SessionHistoryTable`.
+`SessionAllPlays`, `SessionHistoryTable`. The hero owns an **undone-session state** for a
+`?session=` deep link whose session no longer exists (§2.3).
 New in `Components/`: `ChartLeaderboardDialog`.
 New in `Services/`: `SessionSkillFocus.cs` (pure, the `FolderTitleTrack` pattern).
 Retired: `SessionRoundupCard` (the grid dies with it). Kept: `MilestoneStrip`,
@@ -241,8 +305,8 @@ same, which is exactly why the scope is one session and not history.
 | Suite | Coverage |
 |---|---|
 | `ScoreTracker.Tests/DomainTests` | placement-estimate math (self-row exclusion, below-depth ⇒ no flag), attempts counting, `SessionSkillFocus` composition + the evidence floor |
-| `ScoreTracker.Tests/ApplicationTests` | capture writes un-flagged rows with a percentile; the new flag; title-delta persistence + per-session aggregation (min-old/max-new across batches); rank stamping per mix (P1 combined only); the snapshot-sealed refresh; the rebuild consumer |
-| `ScoreTracker.Tests.Components` | hero at each state (fat, thin, no communities, insufficient skill evidence); dialog scope switching; the single-community picker rule; the history table. ⚠ bUnit takes **one render per test** — `TestContext` refuses new services after the first resolve |
+| `ScoreTracker.Tests/ApplicationTests` | capture writes un-flagged rows with a percentile; the new flag; title-delta persistence + per-session aggregation (min-old/max-new across batches); rank stamping per mix (P1 combined only); **the rank milestone does not mint on the undo path** (empty change set, value falls); the snapshot-sealed refresh; the rebuild consumer |
+| `ScoreTracker.Tests.Components` | hero at each state (fat, thin, no communities, insufficient skill evidence, **undone-session deep link**); dialog scope switching; the single-community picker rule; the history table with and without `ScoreSession` enrichment. ⚠ bUnit takes **one render per test** — `TestContext` refuses new services after the first resolve |
 | `ScoreTracker.Tests.Integration` | every new EF read gets a fact — a mocked-repo component test cannot catch an EF translation failure (the lesson from `GetPlayerTimeline`) |
 | `ScoreTracker.Tests.E2E` | `PlayerSessionsTests` exists and must be reworked for the new page |
 
@@ -259,11 +323,11 @@ Each commit green on the fast suites.
 | B2 | Contract queries: attempts (ScoreLedger), placement estimates (OfficialMirror), community peer scores (Communities) — additive, nothing consumes them yet | verticals |
 | B3 | Capture: per-score percentile, attempts, placement flag, title-delta persistence | PlayerProgress |
 | B4 | Estimated PUMBILITY rank + `OfficialPumbilityRank` milestone + the snapshot-sealed re-estimate consumer | PlayerProgress |
-| B5 | `GetSessionBreakdownQuery` — the page's single read | PlayerProgress |
+| B5 | `GetSessionBreakdownQuery` — the page's single read, joining `GetScoreSessionsQuery` enrichment onto the journal groups | PlayerProgress |
 | B6 | `ChartLeaderboardDialog` + generalize `ChartLeaderboardSection` into its World scope | Web |
 | B7 | The page: hero components, history table, skill focus service, l10n ×9 | Web |
 | B8 | Discord card: the placement caption on a score row, the estimated-rank line in the stats block | Communities |
-| B9 | Admin backfill button + consumer | Web / PlayerProgress |
+| B9 | Admin backfill button + consumer (tolerating "no most-recent session") | Web / PlayerProgress |
 | B10 | E2E rework, docs sweep, this doc flipped to implemented | tests / docs |
 
 ---
@@ -298,3 +362,5 @@ would be a lie:
    B-and-below on Phoenix 2.
 3. **The new sections light up going forward.** Older sessions render thinner, and the backfill
    deliberately reaches exactly one session back.
+4. **A session can be undone out from under a link.** The Discord card outlives the session it
+   points at, so the page says "this session was undone" rather than rendering an empty hero.
