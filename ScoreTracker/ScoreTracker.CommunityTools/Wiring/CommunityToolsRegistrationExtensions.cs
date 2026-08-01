@@ -1,5 +1,6 @@
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using ScoreTracker.CommunityTools.Application;
 using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.CommunityTools.Infrastructure;
 using ScoreTracker.Data.Persistence;
@@ -16,6 +17,7 @@ public static class CommunityToolsRegistrationExtensions
     public static IServiceCollection AddCommunityTools(this IServiceCollection services)
     {
         services.AddTransient<IToolRepository, EFToolRepository>();
+        services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, CommunityToolsModelContribution>();
         return services;
     }
@@ -27,5 +29,6 @@ public static class CommunityToolsRegistrationExtensions
     /// </summary>
     public static void AddCommunityToolsConsumers(this IRegistrationConfigurator configurator)
     {
+        configurator.AddConsumer<AccountPurgeConsumer>();
     }
 }
