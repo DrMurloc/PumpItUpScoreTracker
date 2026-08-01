@@ -1,0 +1,209 @@
+using System;
+using System.Linq;
+using ScoreTracker.CommunityTools.Contracts;
+using ScoreTracker.CommunityTools.Domain;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
+using Xunit;
+
+namespace ScoreTracker.Tests.DomainTests;
+
+/// <summary>
+///     The Tool aggregate's invariants: the listing flow, and the gate on entering PIUGame-session
+///     mode. Both live in the aggregate rather than in a handler because a handler is one caller.
+/// </summary>
+public sealed class ToolTests
+{
+    private static readonly DateTimeOffset Now = new(2026, 8, 1, 12, 0, 0, TimeSpan.Zero);
+    private static readonly Uri Hook = new("https://pumbility.app/hooks/piuscores");
+
+    private static Tool NewTool()
+    {
+        return Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Pumbility Planner"), Now);
+    }
+
+    private static Tool ListedTool()
+    {
+        var tool = NewTool();
+        tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null);
+        tool.RequestListing();
+        tool.Approve(Now);
+        return tool;
+    }
+
+    [Fact]
+    public void ANewToolStartsPrivateAndFullyFunctional()
+    {
+        var tool = NewTool();
+
+        Assert.Equal(ToolVisibility.Private, tool.Visibility);
+        Assert.Equal(WebhookMode.None, tool.WebhookMode);
+        Assert.True(tool.AcceptsAllToolsShare);
+    }
+
+    // Players read the description before deciding to connect; listing without one asks them to
+    // trust a name alone.
+    [Fact]
+    public void ListingWithoutADescriptionIsRefused()
+    {
+        var tool = NewTool();
+
+        Assert.Throws<ToolListingException>(() => tool.RequestListing());
+    }
+
+    [Fact]
+    public void ApprovalMovesAToolIntoTheDirectoryAndClearsAnyPriorRejection()
+    {
+        var tool = NewTool();
+        tool.Describe(Name.From("Planner"), "Plans things.", null);
+        tool.RequestListing();
+        tool.Reject("Needs a link.");
+        tool.RequestListing();
+        tool.Approve(Now);
+
+        Assert.Equal(ToolVisibility.Public, tool.Visibility);
+        Assert.Equal(Now, tool.ApprovedAt);
+        Assert.Null(tool.RejectionReason);
+    }
+
+    [Fact]
+    public void RejectionNeedsAReasonTheMakerCanActOn()
+    {
+        var tool = NewTool();
+        tool.Describe(Name.From("Planner"), "Plans things.", null);
+        tool.RequestListing();
+
+        Assert.Throws<ToolListingException>(() => tool.Reject("  "));
+    }
+
+    [Fact]
+    public void OnlyAToolAwaitingReviewCanBeApprovedOrRejected()
+    {
+        Assert.Throws<ToolListingException>(() => NewTool().Approve(Now));
+        Assert.Throws<ToolListingException>(() => NewTool().Reject("no"));
+    }
+
+    // A maker could otherwise pass review as one thing and rename to another the next day.
+    [Fact]
+    public void RenamingAListedToolSendsItBackForReview()
+    {
+        var tool = ListedTool();
+
+        tool.Describe(Name.From("Something Else"), "Plans what to push next.", null);
+
+        Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
+        Assert.Null(tool.ApprovedAt);
+    }
+
+    [Fact]
+    public void RewritingTheDescriptionAlsoSendsItBackForReview()
+    {
+        var tool = ListedTool();
+
+        tool.Describe(Name.From("Pumbility Planner"), "Actually it does something else now.", null);
+
+        Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
+    }
+
+    [Fact]
+    public void SavingAListedToolWithoutChangingWhatPlayersSeeKeepsItListed()
+    {
+        var tool = ListedTool();
+
+        tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null);
+
+        Assert.Equal(ToolVisibility.Public, tool.Visibility);
+    }
+
+    [Theory]
+    [InlineData(WebhookMode.PlayerPing)]
+    [InlineData(WebhookMode.ScorePush)]
+    [InlineData(WebhookMode.None)]
+    public void MovingWithinTheReadTierIsFreeEvenWithPlayersConnected(WebhookMode mode)
+    {
+        var tool = NewTool();
+        tool.SetWebhook(WebhookMode.ScorePush, Hook, 0);
+
+        tool.SetWebhook(mode, Hook, 1204);
+
+        Assert.Equal(mode, tool.WebhookMode);
+    }
+
+    // The players already connected agreed to score reads, not to handing over a piugame session.
+    [Fact]
+    public void EnteringSessionModeWithPlayersConnectedIsRefused()
+    {
+        var tool = NewTool();
+        tool.SetWebhook(WebhookMode.ScorePush, Hook, 0);
+
+        var error = Assert.Throws<ToolWebhookModeException>(() =>
+            tool.SetWebhook(WebhookMode.PiuGameSession, Hook, 1204));
+
+        Assert.Contains("1204", error.Message);
+        Assert.Equal(WebhookMode.ScorePush, tool.WebhookMode);
+    }
+
+    [Fact]
+    public void EnteringSessionModeWithNobodyConnectedIsAllowed()
+    {
+        var tool = NewTool();
+
+        tool.SetWebhook(WebhookMode.PiuGameSession, Hook, 0);
+
+        Assert.Equal(WebhookMode.PiuGameSession, tool.WebhookMode);
+        Assert.True(tool.RequiresExplicitShare);
+    }
+
+    // Staying in session mode is not entering it; a maker who is already there can still edit
+    // the URL without disconnecting their players first.
+    [Fact]
+    public void StayingInSessionModeIsNotGatedOnPlayerCount()
+    {
+        var tool = NewTool();
+        tool.SetWebhook(WebhookMode.PiuGameSession, Hook, 0);
+
+        tool.SetWebhook(WebhookMode.PiuGameSession, new Uri("https://elsewhere.example/hook"), 1204);
+
+        Assert.Equal("https://elsewhere.example/hook", tool.WebhookUrl!.ToString());
+    }
+
+    [Fact]
+    public void LeavingSessionModeIsAlwaysAllowed()
+    {
+        var tool = NewTool();
+        tool.SetWebhook(WebhookMode.PiuGameSession, Hook, 0);
+
+        tool.SetWebhook(WebhookMode.ScorePush, Hook, 1204);
+
+        Assert.Equal(WebhookMode.ScorePush, tool.WebhookMode);
+        Assert.False(tool.RequiresExplicitShare);
+    }
+
+    [Fact]
+    public void ADeliveryModeNeedsSomewhereToDeliver()
+    {
+        Assert.Throws<ToolWebhookModeException>(() => NewTool().SetWebhook(WebhookMode.ScorePush, null, 0));
+    }
+
+    [Fact]
+    public void TurningDeliveryOffClearsTheUrl()
+    {
+        var tool = NewTool();
+        tool.SetWebhook(WebhookMode.ScorePush, Hook, 0);
+
+        tool.SetWebhook(WebhookMode.None, Hook, 0);
+
+        Assert.Null(tool.WebhookUrl);
+    }
+
+    [Fact]
+    public void MixSubscriptionsReplaceRatherThanAccumulate()
+    {
+        var tool = NewTool();
+        tool.SetMixes(new[] { MixEnum.Phoenix, MixEnum.Phoenix2 });
+
+        tool.SetMixes(new[] { MixEnum.FiestaEx });
+
+        Assert.Equal(new[] { MixEnum.FiestaEx }, tool.Mixes.ToArray());
+    }
+}

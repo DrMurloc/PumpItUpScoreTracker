@@ -1,5 +1,7 @@
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using ScoreTracker.CommunityTools.Domain;
+using ScoreTracker.CommunityTools.Infrastructure;
 using ScoreTracker.Data.Persistence;
 
 namespace ScoreTracker.CommunityTools.Wiring;
@@ -13,6 +15,7 @@ public static class CommunityToolsRegistrationExtensions
     /// </summary>
     public static IServiceCollection AddCommunityTools(this IServiceCollection services)
     {
+        services.AddTransient<IToolRepository, EFToolRepository>();
         services.AddSingleton<IDbModelContribution, CommunityToolsModelContribution>();
         return services;
     }
